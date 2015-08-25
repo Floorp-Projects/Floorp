@@ -483,6 +483,12 @@ U_INTERNAL int32_t  U_EXPORT2 uprv_timezone(void);
 U_INTERNAL const char* U_EXPORT2 uprv_tzname(int n);
 
 /**
+ * Reset the global tzname cache.
+ * @internal
+ */
+U_INTERNAL void uprv_tzname_clear_cache();
+
+/**
  * Get UTC (GMT) time measured in milliseconds since 0:00 on 1/1/1970.
  * This function is affected by 'faketime' and should be the bottleneck for all user-visible ICU time functions.
  * @return the UTC time measured in milliseconds

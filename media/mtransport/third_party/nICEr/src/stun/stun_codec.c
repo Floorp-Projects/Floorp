@@ -1322,7 +1322,7 @@ nr_stun_encode_message(nr_stun_message *msg)
             ABORT(R_INTERNAL);
         }
 
-        attr_info->name = attr_info->name;
+        attr->name = attr_info->name;
         attr->type_name = attr_info->codec->name;
         attr->encoding = (nr_stun_encoded_attribute*)&msg->buffer[msg->length];
 
@@ -1354,6 +1354,9 @@ nr_stun_encode_message(nr_stun_message *msg)
             msg->header.length += attr->encoding_length;
             length_offset = length_offset_hold;
             (void)nr_stun_encode_htons(msg->header.length, sizeof(msg->buffer), msg->buffer, &length_offset);
+        }
+        else {
+            r_log(NR_LOG_STUN, LOG_WARNING, "Missing encode function for attribute: %s", attr_info->name);
         }
     }
 

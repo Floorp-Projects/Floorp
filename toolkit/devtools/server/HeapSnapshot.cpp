@@ -19,6 +19,7 @@
 #include "mozilla/devtools/ZeroCopyNSIOutputStream.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/HeapSnapshotBinding.h"
+#include "mozilla/RangedPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -122,6 +123,10 @@ HeapSnapshot::saveNode(const protobuf::Node& node)
     return false;
   NodeId id = node.id();
 
+  // Should only deserialize each node once.
+  if (nodes.has(id))
+    return false;
+
   if (!node.has_typename_())
     return false;
 
@@ -148,8 +153,110 @@ HeapSnapshot::saveNode(const protobuf::Node& node)
     edges.infallibleAppend(Move(edge));
   }
 
-  DeserializedNode dn(id, typeName, size, Move(edges), *this);
-  return nodes.putNew(id, Move(dn));
+  Maybe<StackFrameId> allocationStack;
+  if (node.has_allocationstack()) {
+    StackFrameId id = 0;
+    if (!saveStackFrame(node.allocationstack(), id))
+      return false;
+    allocationStack = Some(id);
+  }
+
+  UniquePtr<char[]> jsObjectClassName;
+  if (node.has_jsobjectclassname()) {
+    auto length = node.jsobjectclassname().length();
+    jsObjectClassName.reset(static_cast<char*>(malloc(length + 1)));
+    if (!jsObjectClassName)
+      return false;
+    strncpy(jsObjectClassName.get(), node.jsobjectclassname().data(),
+            length);
+    jsObjectClassName.get()[length] = '\0';
+  }
+
+  return nodes.putNew(id, DeserializedNode(id, typeName, size, Move(edges),
+                                           allocationStack,
+                                           Move(jsObjectClassName),
+                                           *this));
+}
+
+bool
+HeapSnapshot::saveStackFrame(const protobuf::StackFrame& frame,
+                             StackFrameId& outFrameId)
+{
+  if (frame.has_ref()) {
+    // We should only get a reference to the previous frame if we have already
+    // seen the previous frame.
+    if (!frames.has(frame.ref()))
+      return false;
+
+    outFrameId = frame.ref();
+    return true;
+  }
+
+  // Incomplete message.
+  if (!frame.has_data())
+    return false;
+
+  auto data = frame.data();
+
+  if (!data.has_id())
+    return false;
+  StackFrameId id = data.id();
+
+  // This should be the first and only time we see this frame.
+  if (frames.has(id))
+    return false;
+
+  Maybe<StackFrameId> parent;
+  if (data.has_parent()) {
+    StackFrameId parentId = 0;
+    if (!saveStackFrame(data.parent(), parentId))
+      return false;
+    parent = Some(parentId);
+  }
+
+  if (!data.has_line())
+    return false;
+  uint32_t line = data.line();
+
+  if (!data.has_column())
+    return false;
+  uint32_t column = data.column();
+
+  auto duplicatedSource = reinterpret_cast<const char16_t*>(
+    data.source().data());
+  size_t sourceLength = data.source().length() / sizeof(char16_t);
+  const char16_t* source = borrowUniqueString(duplicatedSource, sourceLength);
+  if (!source)
+    return false;
+
+  const char16_t* functionDisplayName = nullptr;
+  if (data.has_functiondisplayname()) {
+    auto duplicatedName = reinterpret_cast<const char16_t*>(
+      data.functiondisplayname().data());
+    size_t nameLength = data.functiondisplayname().length() / sizeof(char16_t);
+    const char16_t* functionDisplayName = borrowUniqueString(duplicatedName,
+                                                             nameLength);
+    if (!functionDisplayName)
+      return false;
+  }
+
+  if (!data.has_issystem())
+    return false;
+  bool isSystem = data.issystem();
+
+  if (!data.has_isselfhosted())
+    return false;
+  bool isSelfHosted = data.isselfhosted();
+
+  if (!frames.putNew(id, DeserializedStackFrame(id, parent, line, column,
+                                                source, functionDisplayName,
+                                                isSystem, isSelfHosted, *this)))
+  {
+    return false;
+  }
+
+  outFrameId = id;
+  return true;
 }
 
 static inline bool
@@ -178,7 +285,7 @@ StreamHasData(GzipInputStream& stream)
 bool
 HeapSnapshot::init(const uint8_t* buffer, uint32_t size)
 {
-  if (!nodes.init() || !strings.init())
+  if (!nodes.init() || !frames.init() || !strings.init())
     return false;
 
   ArrayInputStream stream(buffer, size);
@@ -381,8 +488,13 @@ EstablishBoundaries(JSContext* cx,
 // given `ZeroCopyOutputStream`.
 class MOZ_STACK_CLASS StreamWriter : public CoreDumpWriter
 {
+  using Set = js::HashSet<uint64_t>;
+
   JSContext* cx;
-  bool      wantNames;
+  bool       wantNames;
+  // The set of |JS::ubi::StackFrame::identifier()|s that have already been
+  // serialized and written to the core dump.
+  Set        framesAlreadySerialized;
 
   ::google::protobuf::io::ZeroCopyOutputStream& stream;
 
@@ -396,14 +508,78 @@ class MOZ_STACK_CLASS StreamWriter : public CoreDumpWriter
     return !codedStream.HadError();
   }
 
+  protobuf::StackFrame* getProtobufStackFrame(JS::ubi::StackFrame& frame) {
+    MOZ_ASSERT(frame,
+               "null frames should be represented as the lack of a serialized "
+               "stack frame");
+
+    auto id = frame.identifier();
+    auto protobufStackFrame = MakeUnique<protobuf::StackFrame>();
+    if (!protobufStackFrame)
+      return nullptr;
+
+    if (framesAlreadySerialized.has(id)) {
+      protobufStackFrame->set_ref(id);
+      return protobufStackFrame.release();
+    }
+
+    auto data = MakeUnique<protobuf::StackFrame_Data>();
+    if (!data)
+      return nullptr;
+
+    data->set_id(id);
+    data->set_line(frame.line());
+    data->set_column(frame.column());
+    data->set_issystem(frame.isSystem());
+    data->set_isselfhosted(frame.isSelfHosted());
+
+    auto source = MakeUnique<std::string>(frame.sourceLength() * sizeof(char16_t),
+                                          '\0');
+    if (!source)
+      return nullptr;
+    auto buf = const_cast<char16_t*>(reinterpret_cast<const char16_t*>(source->data()));
+    frame.source(RangedPtr<char16_t>(buf, frame.sourceLength()),
+                 frame.sourceLength());
+    data->set_allocated_source(source.release());
+
+    auto nameLength = frame.functionDisplayNameLength();
+    if (nameLength > 0) {
+      auto functionDisplayName = MakeUnique<std::string>(nameLength * sizeof(char16_t),
+                                                         '\0');
+      if (!functionDisplayName)
+        return nullptr;
+      auto buf = const_cast<char16_t*>(reinterpret_cast<const char16_t*>(functionDisplayName->data()));
+      frame.functionDisplayName(RangedPtr<char16_t>(buf, nameLength), nameLength);
+      data->set_allocated_functiondisplayname(functionDisplayName.release());
+    }
+
+    auto parent = frame.parent();
+    if (parent) {
+      auto protobufParent = getProtobufStackFrame(parent);
+      if (!protobufParent)
+        return nullptr;
+      data->set_allocated_parent(protobufParent);
+    }
+
+    protobufStackFrame->set_allocated_data(data.release());
+
+    if (!framesAlreadySerialized.put(id))
+      return nullptr;
+
+    return protobufStackFrame.release();
+  }
+
 public:
   StreamWriter(JSContext* cx,
                ::google::protobuf::io::ZeroCopyOutputStream& stream,
                bool wantNames)
     : cx(cx)
     , wantNames(wantNames)
+    , framesAlreadySerialized(cx)
     , stream(stream)
   { }
+
+  bool init() { return framesAlreadySerialized.init(); }
 
   ~StreamWriter() override { }
 
@@ -414,7 +590,7 @@ public:
   }
 
   virtual bool writeNode(const JS::ubi::Node& ubiNode,
-                         EdgePolicy includeEdges) override {
+                         EdgePolicy includeEdges) final {
     protobuf::Node protobufNode;
     protobufNode.set_id(ubiNode.identifier());
 
@@ -426,6 +602,19 @@ public:
     mozilla::MallocSizeOf mallocSizeOf = dbg::GetDebuggerMallocSizeOf(rt);
     MOZ_ASSERT(mallocSizeOf);
     protobufNode.set_size(ubiNode.size(mallocSizeOf));
+
+    if (ubiNode.hasAllocationStack()) {
+      auto ubiStackFrame = ubiNode.allocationStack();
+      auto protoStackFrame = getProtobufStackFrame(ubiStackFrame);
+      if (NS_WARN_IF(!protoStackFrame))
+        return false;
+      protobufNode.set_allocated_allocationstack(protoStackFrame);
+    }
+
+    if (auto className = ubiNode.jsObjectClassName()) {
+      size_t length = strlen(className);
+      protobufNode.set_jsobjectclassname(className, length);
+    }
 
     if (includeEdges) {
       auto edges = ubiNode.edges(cx, wantNames);
@@ -592,6 +781,10 @@ ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
   ::google::protobuf::io::GzipOutputStream gzipStream(&zeroCopyStream);
 
   StreamWriter writer(cx, gzipStream, wantNames);
+  if (NS_WARN_IF(!writer.init())) {
+    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
 
   {
     Maybe<AutoCheckCannotGC> maybeNoGC;

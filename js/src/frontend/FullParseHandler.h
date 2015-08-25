@@ -635,7 +635,7 @@ class FullParseHandler
     inline void setLastFunctionArgumentDestructuring(ParseNode* funcpn, ParseNode* pn);
 
     ParseNode* newFunctionDefinition() {
-        return new_<CodeNode>(pos());
+        return new_<CodeNode>(PNK_FUNCTION, pos());
     }
     void setFunctionBody(ParseNode* pn, ParseNode* kid) {
         pn->pn_body = kid;
@@ -650,6 +650,14 @@ class FullParseHandler
     void setDerivedClassConstructor(ParseNode* pn) {
         MOZ_ASSERT(pn->isKind(PNK_FUNCTION));
         pn->pn_funbox->setDerivedClassConstructor();
+    }
+
+    ParseNode* newModule() {
+        return new_<CodeNode>(PNK_MODULE, pos());
+    }
+    void setModuleBox(ParseNode* pn, ModuleBox* modulebox) {
+        MOZ_ASSERT(pn->isKind(PNK_MODULE));
+        pn->pn_modulebox = modulebox;
     }
 
     ParseNode* newLexicalScope(ObjectBox* blockBox) {

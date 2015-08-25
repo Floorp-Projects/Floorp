@@ -457,10 +457,9 @@ function downloadIcon(aIconURI) {
     // installing the app, hence app.origin is not available yet and
     // therefore we can not call getAppCodebasePrincipal.
     let principal =
-      aIconURI.schemeIs("chrome") ? Services.scriptSecurityManager
-                                            .getSystemPrincipal()
-                                  : Services.scriptSecurityManager
-                                            .getNoAppCodebasePrincipal(aIconURI);
+      aIconURI.schemeIs("chrome") ?
+        Services.scriptSecurityManager.getSystemPrincipal() :
+        Services.scriptSecurityManager.createCodebasePrincipal(aIconURI, {});
 
     let channel = NetUtil.newChannel({
       uri: aIconURI,

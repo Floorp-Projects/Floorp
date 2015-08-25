@@ -381,7 +381,7 @@ MozInputMethod.prototype = {
   },
 
   addInput: function(inputId, inputManifest) {
-    return this._sendPromise(function(resolverId) {
+    return this.createPromiseWithId(function(resolverId) {
       let appId = this._window.document.nodePrincipal.appId;
 
       cpmm.sendAsyncMessage('InputRegistry:Add', {
@@ -573,7 +573,7 @@ MozInputContext.prototype = {
 
     switch (msg.name) {
       case "Keyboard:SendKey:Result:OK":
-        resolver.resolve();
+        resolver.resolve(true);
         break;
       case "Keyboard:SendKey:Result:Error":
         resolver.reject(json.error);
@@ -596,7 +596,7 @@ MozInputContext.prototype = {
         break;
       case "Keyboard:SetComposition:Result:OK": // Fall through.
       case "Keyboard:EndComposition:Result:OK":
-        resolver.resolve();
+        resolver.resolve(true);
         break;
       default:
         dump("Could not find a handler for " + msg.name);
@@ -738,40 +738,79 @@ MozInputContext.prototype = {
     return this.replaceSurroundingText(null, offset, length);
   },
 
-  sendKey: function ic_sendKey(keyCode, charCode, modifiers, repeat) {
-    let self = this;
-    return this._sendPromise(function(resolverId) {
-      cpmmSendAsyncMessageWithKbID(self, 'Keyboard:SendKey', {
-        contextId: self._contextId,
+  sendKey: function ic_sendKey(dictOrKeyCode, charCode, modifiers, repeat) {
+    if (typeof dictOrKeyCode === 'number') {
+      // XXX: modifiers are ignored in this API method.
+
+      return this._sendPromise((resolverId) => {
+        cpmmSendAsyncMessageWithKbID(this, 'Keyboard:SendKey', {
+          contextId: this._contextId,
+          requestId: resolverId,
+          method: 'sendKey',
+          keyCode: dictOrKeyCode,
+          charCode: charCode,
+          repeat: repeat
+        });
+      });
+    } else if (typeof dictOrKeyCode === 'object') {
+      return this._sendPromise((resolverId) => {
+        cpmmSendAsyncMessageWithKbID(this, 'Keyboard:SendKey', {
+          contextId: this._contextId,
+          requestId: resolverId,
+          method: 'sendKey',
+          keyboardEventDict: this._getkeyboardEventDict(dictOrKeyCode)
+        });
+      });
+    } else {
+      // XXX: Should not reach here; implies WebIDL binding error.
+      throw new TypeError('Unknown argument passed.');
+    }
+  },
+
+  keydown: function ic_keydown(dict) {
+    return this._sendPromise((resolverId) => {
+      cpmmSendAsyncMessageWithKbID(this, 'Keyboard:SendKey', {
+        contextId: this._contextId,
+         requestId: resolverId,
+        method: 'keydown',
+        keyboardEventDict: this._getkeyboardEventDict(dict)
+       });
+     });
+   },
+
+  keyup: function ic_keyup(dict) {
+    return this._sendPromise((resolverId) => {
+      cpmmSendAsyncMessageWithKbID(this, 'Keyboard:SendKey', {
+        contextId: this._contextId,
         requestId: resolverId,
-        keyCode: keyCode,
-        charCode: charCode,
-        modifiers: modifiers,
-        repeat: repeat
+        method: 'keyup',
+        keyboardEventDict: this._getkeyboardEventDict(dict)
       });
     });
   },
 
-  setComposition: function ic_setComposition(text, cursor, clauses) {
+  setComposition: function ic_setComposition(text, cursor, clauses, dict) {
     let self = this;
-    return this._sendPromise(function(resolverId) {
+    return this._sendPromise((resolverId) => {
       cpmmSendAsyncMessageWithKbID(self, 'Keyboard:SetComposition', {
         contextId: self._contextId,
         requestId: resolverId,
         text: text,
         cursor: (typeof cursor !== 'undefined') ? cursor : text.length,
-        clauses: clauses || null
+        clauses: clauses || null,
+        keyboardEventDict: this._getkeyboardEventDict(dict)
       });
     });
   },
 
-  endComposition: function ic_endComposition(text) {
+  endComposition: function ic_endComposition(text, dict) {
     let self = this;
-    return this._sendPromise(function(resolverId) {
+    return this._sendPromise((resolverId) => {
       cpmmSendAsyncMessageWithKbID(self, 'Keyboard:EndComposition', {
         contextId: self._contextId,
         requestId: resolverId,
-        text: text || ''
+        text: text || '',
+        keyboardEventDict: this._getkeyboardEventDict(dict)
       });
     });
   },
@@ -786,6 +825,43 @@ MozInputContext.prototype = {
       }
       callback(aResolverId);
     });
+  },
+
+  // Take a MozInputMethodKeyboardEventDict dict, creates a keyboardEventDict
+  // object that can be sent to forms.js
+  _getkeyboardEventDict: function(dict) {
+    if (typeof dict !== 'object' || !dict.key) {
+      return;
+    }
+
+    var keyboardEventDict = {
+      key: dict.key,
+      code: dict.code,
+      repeat: dict.repeat,
+      flags: 0
+    };
+
+    if (dict.printable) {
+      keyboardEventDict.flags |=
+        Ci.nsITextInputProcessor.KEY_FORCE_PRINTABLE_KEY;
+    }
+
+    if (/^[a-zA-Z0-9]$/.test(dict.key)) {
+      // keyCode must follow the key value in this range;
+      // disregard the keyCode from content.
+      keyboardEventDict.keyCode = dict.key.toUpperCase().charCodeAt(0);
+    } else if (typeof dict.keyCode === 'number') {
+      // Allow keyCode to be specified for other key values.
+      keyboardEventDict.keyCode = dict.keyCode;
+
+      // Allow keyCode to be explicitly set to zero.
+      if (dict.keyCode === 0) {
+        keyboardEventDict.flags |=
+          Ci.nsITextInputProcessor.KEY_KEEP_KEYCODE_ZERO;
+      }
+    }
+
+    return keyboardEventDict;
   }
 };
 

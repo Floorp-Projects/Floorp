@@ -460,7 +460,6 @@ description > html|a {
 }
 
 #signedOutAccountBoxTitle {
-  margin-inline-start: 6px !important;
   font-weight: bold;
 }
 
@@ -469,9 +468,14 @@ description > html|a {
   margin-top: 11px;
 }
 
-.fxaAccountBoxButtons > button {
+.fxaAccountBoxButtons button {
   padding-left: 11px;
   padding-right: 11px;
+  margin: 0;
+}
+
+.fxaAccountBoxButtons button:first-child {
+  margin-right: 14px !important;
 }
 
 .fxaSyncIllustration {

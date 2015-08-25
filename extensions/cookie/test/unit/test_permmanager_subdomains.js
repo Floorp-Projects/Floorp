@@ -1,10 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function getPrincipalFromURI(uri) {
-  return Cc["@mozilla.org/scriptsecuritymanager;1"]
-           .getService(Ci.nsIScriptSecurityManager)
-           .getNoAppCodebasePrincipal(NetUtil.newURI(uri));
+function getPrincipalFromURI(aURI) {
+  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+              .getService(Ci.nsIScriptSecurityManager);
+  let uri = NetUtil.newURI(aURI);
+  return ssm.createCodebasePrincipal(uri, {});
 }
 
 function run_test() {

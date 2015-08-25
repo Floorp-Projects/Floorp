@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<script>
+  var obj, embed;
+
+  function ok(v, msg) {
+    window.opener.postMessage({status: "ok", result: !!v, message: msg}, "*");
+  }
+
+  function finish() {
+    document.documentElement.removeChild(obj);
+    document.documentElement.removeChild(embed);
+    window.opener.postMessage({status: "done"}, "*");
+  }
+
+  function test_object() {
+    obj = document.createElement("object");
+    obj.setAttribute('data', "object");
+    document.documentElement.appendChild(obj);
+  }
+
+  function test_embed() {
+    embed = document.createElement("embed");
+    embed.setAttribute('src', "embed");
+    document.documentElement.appendChild(embed);
+  }
+
+  navigator.serviceWorker.addEventListener("message", function onMessage(e) {
+    if (e.data.context === "object") {
+      ok(false, "<object> should not be intercepted");
+    } else if (e.data.context === "embed") {
+      ok(false, "<embed> should not be intercepted");
+    } else if (e.data.context === "fetch" && e.data.resource === "foo.txt") {
+      navigator.serviceWorker.removeEventListener("message", onMessage);
+      finish();
+    }
+  }, false);
+
+  test_object();
+  test_embed();
+  // SW will definitely intercept fetch API, use this to see if plugins are
+  // intercepted before fetch().
+  fetch("foo.txt");
+</script>

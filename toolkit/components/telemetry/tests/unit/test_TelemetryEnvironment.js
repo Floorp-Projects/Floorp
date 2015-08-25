@@ -640,19 +640,23 @@ add_task(function* test_prefWatchPolicies() {
   const PREF_TEST_2 = "toolkit.telemetry.test.pref1";
   const PREF_TEST_3 = "toolkit.telemetry.test.pref2";
   const PREF_TEST_4 = "toolkit.telemetry.test.pref_old";
+  const PREF_TEST_5 = "toolkit.telemetry.test.requiresRestart";
 
   const expectedValue = "some-test-value";
+  const unexpectedValue = "unexpected-test-value";
   gNow = futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE);
   fakeNow(gNow);
 
   const PREFS_TO_WATCH = new Map([
-    [PREF_TEST_1, TelemetryEnvironment.RECORD_PREF_VALUE],
-    [PREF_TEST_2, TelemetryEnvironment.RECORD_PREF_STATE],
-    [PREF_TEST_3, TelemetryEnvironment.RECORD_PREF_STATE],
-    [PREF_TEST_4, TelemetryEnvironment.RECORD_PREF_VALUE],
+    [PREF_TEST_1, {what: TelemetryEnvironment.RECORD_PREF_VALUE}],
+    [PREF_TEST_2, {what: TelemetryEnvironment.RECORD_PREF_STATE}],
+    [PREF_TEST_3, {what: TelemetryEnvironment.RECORD_PREF_STATE}],
+    [PREF_TEST_4, {what: TelemetryEnvironment.RECORD_PREF_VALUE}],
+    [PREF_TEST_5, {what: TelemetryEnvironment.RECORD_PREF_VALUE, requiresRestart: true}],
   ]);
 
   Preferences.set(PREF_TEST_4, expectedValue);
+  Preferences.set(PREF_TEST_5, expectedValue);
 
   // Set the Environment preferences to watch.
   TelemetryEnvironment._watchPreferences(PREFS_TO_WATCH);
@@ -661,6 +665,7 @@ add_task(function* test_prefWatchPolicies() {
   // Check that the pref values are missing or present as expected
   Assert.strictEqual(TelemetryEnvironment.currentEnvironment.settings.userPrefs[PREF_TEST_1], undefined);
   Assert.strictEqual(TelemetryEnvironment.currentEnvironment.settings.userPrefs[PREF_TEST_4], expectedValue);
+  Assert.strictEqual(TelemetryEnvironment.currentEnvironment.settings.userPrefs[PREF_TEST_5], expectedValue);
 
   TelemetryEnvironment.registerChangeListener("testWatchPrefs",
     (reason, data) => deferred.resolve(data));
@@ -669,6 +674,7 @@ add_task(function* test_prefWatchPolicies() {
   // Trigger a change in the watched preferences.
   Preferences.set(PREF_TEST_1, expectedValue);
   Preferences.set(PREF_TEST_2, false);
+  Preferences.set(PREF_TEST_5, unexpectedValue);
   let eventEnvironmentData = yield deferred.promise;
 
   // Unregister the listener.
@@ -684,12 +690,14 @@ add_task(function* test_prefWatchPolicies() {
                "Report that the pref was user set but the value is not shown.");
   Assert.ok(!(PREF_TEST_3 in userPrefs),
             "Do not report if preference not user set.");
+  Assert.equal(userPrefs[PREF_TEST_5], expectedValue,
+	      "The pref value in the environment data should still be the same");
 });
 
 add_task(function* test_prefWatch_prefReset() {
   const PREF_TEST = "toolkit.telemetry.test.pref1";
   const PREFS_TO_WATCH = new Map([
-    [PREF_TEST, TelemetryEnvironment.RECORD_PREF_STATE],
+    [PREF_TEST, {what: TelemetryEnvironment.RECORD_PREF_STATE}],
   ]);
 
   // Set the preference to a non-default value.
@@ -973,7 +981,7 @@ add_task(function* test_signedAddon() {
 add_task(function* test_changeThrottling() {
   const PREF_TEST = "toolkit.telemetry.test.pref1";
   const PREFS_TO_WATCH = new Map([
-    [PREF_TEST, TelemetryEnvironment.RECORD_PREF_STATE],
+    [PREF_TEST, {what: TelemetryEnvironment.RECORD_PREF_STATE}],
   ]);
   Preferences.reset(PREF_TEST);
 
@@ -1082,7 +1090,7 @@ add_task(function* test_defaultSearchEngine() {
   // Define and reset the test preference.
   const PREF_TEST = "toolkit.telemetry.test.pref1";
   const PREFS_TO_WATCH = new Map([
-    [PREF_TEST, TelemetryEnvironment.RECORD_PREF_STATE],
+    [PREF_TEST, {what: TelemetryEnvironment.RECORD_PREF_STATE}],
   ]);
   Preferences.reset(PREF_TEST);
 

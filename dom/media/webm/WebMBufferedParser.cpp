@@ -34,6 +34,7 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
                                 nsTArray<WebMTimeDataOffset>& aMapping,
                                 ReentrantMonitor& aReentrantMonitor)
 {
+  static const uint32_t EBML_ID = 0x1a45dfa3;
   static const uint32_t SEGMENT_ID = 0x18538067;
   static const uint32_t SEGINFO_ID = 0x1549a966;
   static const uint32_t TRACKS_ID = 0x1654AE6B;
@@ -102,6 +103,12 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
       case CLUSTER_ID:
         mClusterOffset = mCurrentOffset + (p - aBuffer) -
                         (mElement.mID.mLength + mElement.mSize.mLength);
+        // Handle "unknown" length;
+        if (mElement.mSize.mValue + 1 != uint64_t(1) << (mElement.mSize.mLength * 7)) {
+          mClusterEndOffset = mClusterOffset + mElement.mID.mLength + mElement.mSize.mLength + mElement.mSize.mValue;
+        } else {
+          mClusterEndOffset = -1;
+        }
         mState = READ_ELEMENT_ID;
         break;
       case SIMPLEBLOCK_ID:
@@ -119,6 +126,10 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
         mSkipBytes = mElement.mSize.mValue;
         mState = CHECK_INIT_FOUND;
         break;
+      case EBML_ID:
+        mLastInitStartOffset = mCurrentOffset + (p - aBuffer) -
+                            (mElement.mID.mLength + mElement.mSize.mLength);
+        /* FALLTHROUGH */
       default:
         mSkipBytes = mElement.mSize.mValue;
         mState = SKIP_DATA;
@@ -172,7 +183,8 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
               MOZ_ASSERT(mGotTimecodeScale);
               uint64_t absTimecode = mClusterTimecode + mBlockTimecode;
               absTimecode *= mTimecodeScale;
-              WebMTimeDataOffset entry(endOffset, absTimecode, mClusterOffset);
+              WebMTimeDataOffset entry(endOffset, absTimecode, mLastInitStartOffset,
+                                       mClusterOffset, mClusterEndOffset);
               aMapping.InsertElementAt(idx, entry);
             }
           }
@@ -192,7 +204,9 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
         left = std::min(left, mSkipBytes);
         p += left;
         mSkipBytes -= left;
-      } else {
+      }
+      if (!mSkipBytes) {
+        mBlockEndOffset = mCurrentOffset + (p - aBuffer);
         mState = mNextState;
       }
       break;
@@ -206,6 +220,7 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
       if (!mSkipBytes) {
         if (mInitEndOffset < 0) {
           mInitEndOffset = mCurrentOffset + (p - aBuffer);
+          mBlockEndOffset = mCurrentOffset + (p - aBuffer);
         }
         mState = READ_ELEMENT_ID;
       }
@@ -215,6 +230,16 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
 
   NS_ASSERTION(p == aBuffer + aLength, "Must have parsed to end of data.");
   mCurrentOffset += aLength;
+}
+
+int64_t
+WebMBufferedParser::EndSegmentOffset(int64_t aOffset)
+{
+  if (mLastInitStartOffset > aOffset || mClusterOffset > aOffset) {
+    return std::min(mLastInitStartOffset >= 0 ? mLastInitStartOffset : INT64_MAX,
+                    mClusterOffset >= 0 ? mClusterOffset : INT64_MAX);
+  }
+  return mBlockEndOffset;
 }
 
 // SyncOffsetComparator and TimeComparator are slightly confusing, in that
@@ -344,6 +369,13 @@ void WebMBufferedState::NotifyDataArrived(const unsigned char* aBuffer, uint32_t
       i += 1;
     }
   }
+
+  if (mRangeParsers.IsEmpty()) {
+    return;
+  }
+
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  mLastBlockOffset = mRangeParsers.LastElement().mBlockEndOffset;
 }
 
 void WebMBufferedState::Reset() {
@@ -396,6 +428,13 @@ int64_t WebMBufferedState::GetInitEndOffset()
     return -1;
   }
   return mRangeParsers[0].mInitEndOffset;
+}
+
+int64_t WebMBufferedState::GetLastBlockOffset()
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+  return mLastBlockOffset;
 }
 
 bool WebMBufferedState::GetStartTime(uint64_t *aTime)

@@ -100,6 +100,10 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
         *result = false;
         return true;
 
+      case PNK_MODULE:
+        *result = false;
+        return true;
+
       // Statements with no sub-components at all.
       case PNK_NOP: // induced by function f() {} function f() {}
       case PNK_DEBUGGER:
@@ -1115,6 +1119,17 @@ ComputeBinary(ParseNodeKind kind, double left, double right)
 }
 
 static bool
+FoldModule(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser)
+{
+    MOZ_ASSERT(node->isKind(PNK_MODULE));
+    MOZ_ASSERT(node->isArity(PN_CODE));
+
+    ParseNode*& moduleBody = node->pn_body;
+    MOZ_ASSERT(moduleBody);
+    return Fold(cx, &moduleBody, parser, false);
+}
+
+static bool
 FoldBinaryArithmetic(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
                      bool inGenexpLambda)
 {
@@ -1786,6 +1801,9 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
 
       case PNK_FUNCTION:
         return FoldFunction(cx, pn, parser, inGenexpLambda);
+
+      case PNK_MODULE:
+        return FoldModule(cx, pn, parser);
 
       case PNK_SUB:
       case PNK_STAR:

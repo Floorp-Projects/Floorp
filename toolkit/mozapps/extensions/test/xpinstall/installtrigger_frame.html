@@ -3,7 +3,7 @@
 
 <html>
 
-<!-- This page will accept some json as the uri query and pass it to
+<!-- This page will accept some url as the uri query and load it in
      an inner iframe, which will run InstallTrigger.install -->
 
 <head>
@@ -12,8 +12,8 @@
 function prepChild() {
   // Pass our parameters over to the child
   var child = window.frames[0];
-  var params = document.location.search.substr(1);
-  child.location = "installtrigger.html?" + params;
+  var url = decodeURIComponent(document.location.search.substr(1));
+  child.location = url;
 }
 </script>
 </head>

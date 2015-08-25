@@ -258,6 +258,14 @@ public:
   {
     return mValue != aOther.mValue;
   }
+  bool IsZero() const
+  {
+    return mValue == 0;
+  }
+  explicit operator bool() const
+  {
+    return mValue != 0;
+  }
 
   // Return a best guess at the system's current timing resolution,
   // which might be variable.  BaseTimeDurations below this order of
@@ -412,6 +420,15 @@ public:
    * Return true if this is the "null" moment
    */
   bool IsNull() const { return mValue == 0; }
+
+  /**
+   * Return true if this is not the "null" moment, may be used in tests, e.g.:
+   * |if (timestamp) { ... }|
+   */
+  explicit operator bool() const
+  {
+    return mValue != 0;
+  }
 
   /**
    * Return a timestamp reflecting the current elapsed system time. This

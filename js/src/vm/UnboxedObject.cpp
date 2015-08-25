@@ -521,6 +521,10 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
             if (!PropagatePropertyTypes(cx, id, group, nativeGroup))
                 return false;
 
+            // If we are OOM we may not be able to propagate properties.
+            if (nativeGroup->unknownProperties())
+                break;
+
             HeapTypeSet* nativeProperty = nativeGroup->maybeGetProperty(id);
             if (nativeProperty && nativeProperty->canSetDefinite(i))
                 nativeProperty->setDefinite(i);

@@ -17,7 +17,7 @@ function* spawnTest() {
   OverviewView.isRealtimeRenderingEnabled = () => false;
 
   yield startRecording(panel, { waitForOverview: false, waitForStateChange: true });
-  is($("#overview-pane").hidden, true, "overview graphs hidden");
+  is(isVisible($("#overview-pane")), false, "overview graphs hidden");
   is(updated, 0, "Overview graphs have still not been updated");
   yield waitUntil(() => PerformanceController.getCurrentRecording().getMarkers().length);
   yield waitUntil(() => PerformanceController.getCurrentRecording().getTicks().length);
@@ -34,18 +34,18 @@ function* spawnTest() {
     "The overview's framerate graph has a width.");
 
   is(updated, 1, "Overview graphs rendered upon completion.");
-  is($("#overview-pane").hidden, false, "overview graphs no longer hidden");
+  is(isVisible($("#overview-pane")), true, "overview graphs no longer hidden");
 
   yield startRecording(panel, { waitForOverview: false, waitForStateChange: true });
-  is($("#overview-pane").hidden, true, "overview graphs hidden again when starting new recording");
+  is(isVisible($("#overview-pane")), false, "overview graphs hidden again when starting new recording");
 
   RecordingsView.selectedIndex = 0;
-  is($("#overview-pane").hidden, false, "overview graphs no longer hidden when switching back to complete recording.");
+  is(isVisible($("#overview-pane")), true, "overview graphs no longer hidden when switching back to complete recording.");
   RecordingsView.selectedIndex = 1;
-  is($("#overview-pane").hidden, true, "overview graphs hidden again when going back to inprogress recording.");
+  is(isVisible($("#overview-pane")), false, "overview graphs hidden again when going back to inprogress recording.");
 
   yield stopRecording(panel);
-  is($("#overview-pane").hidden, false, "overview graphs no longer hidden when recording finishes");
+  is(isVisible($("#overview-pane")), true, "overview graphs no longer hidden when recording finishes");
 
   yield teardown(panel);
   finish();

@@ -64,6 +64,7 @@
 #include "nsRange.h"
 #include "nsContentUtils.h"
 #include "nsEditor.h"
+#include "nsEditorUtils.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "nsITextControlElement.h"
@@ -945,7 +946,7 @@ mozInlineSpellChecker::ReplaceWord(nsIDOMNode *aNode, int32_t aOffset,
 
   if (range)
   {
-    editor->BeginTransaction();
+    nsAutoPlaceHolderBatch phb(editor, nullptr);
   
     nsCOMPtr<nsISelection> selection;
     res = editor->GetSelection(getter_AddRefs(selection));
@@ -957,8 +958,6 @@ mozInlineSpellChecker::ReplaceWord(nsIDOMNode *aNode, int32_t aOffset,
     nsCOMPtr<nsIPlaintextEditor> textEditor(do_QueryReferent(mEditor));
     if (textEditor)
       textEditor->InsertText(newword);
-
-    editor->EndTransaction();
   }
 
   return NS_OK;

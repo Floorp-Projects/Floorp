@@ -62,11 +62,13 @@ class HeapSnapshot final : public nsISupports
                          , public nsWrapperCache
 {
   friend struct DeserializedNode;
+  friend struct DeserializedStackFrame;
 
   explicit HeapSnapshot(JSContext* cx, nsISupports* aParent)
     : timestamp(Nothing())
     , rootId(0)
     , nodes(cx)
+    , frames(cx)
     , strings(cx)
     , mParent(aParent)
   {
@@ -82,6 +84,12 @@ class HeapSnapshot final : public nsISupports
   // `DeserializedNode`.
   bool saveNode(const protobuf::Node& node);
 
+  // Save the given `protobuf::StackFrame` message in this `HeapSnapshot` as a
+  // `DeserializedStackFrame`. The saved stack frame's id is returned via the
+  // out parameter.
+  bool saveStackFrame(const protobuf::StackFrame& frame,
+                      StackFrameId& outFrameId);
+
   // If present, a timestamp in the same units that `PR_Now` gives.
   Maybe<uint64_t> timestamp;
 
@@ -91,6 +99,11 @@ class HeapSnapshot final : public nsISupports
   // The set of nodes in this deserialized heap graph, keyed by id.
   using NodeSet = js::HashSet<DeserializedNode, DeserializedNode::HashPolicy>;
   NodeSet nodes;
+
+  // The set of stack frames in this deserialized heap graph, keyed by id.
+  using FrameSet = js::HashSet<DeserializedStackFrame,
+                               DeserializedStackFrame::HashPolicy>;
+  FrameSet frames;
 
   // Core dump files have many duplicate strings: type names are repeated for
   // each node, and although in theory edge names are highly customizable for

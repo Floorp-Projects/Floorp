@@ -22,7 +22,7 @@ class LIRGeneratorMIPS : public LIRGeneratorShared
   protected:
     // Adds a box input to an instruction, setting operand |n| to the type and
     // |n+1| to the payload.
-    void useBoxFixed(LInstruction* lir, size_t n, MDefinition* mir, Register reg1, Register reg2
+    void useBoxFixed(LInstruction* lir, size_t n, MDefinition* mir, Register reg1, Register reg2,
                      bool useAtStart = false);
 
     // x86 has constraints on what registers can be formatted for 1-byte

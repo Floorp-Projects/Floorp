@@ -113,6 +113,7 @@ private:
   void InitializationSegmentReceived();
   void ShutdownDemuxers();
   void CreateDemuxerforMIMEType();
+  void ResetDemuxingState();
   void NeedMoreData();
   void RejectAppend(nsresult aRejectValue, const char* aName);
   // Will return a promise that will be resolved once all frames of the current
@@ -151,6 +152,8 @@ private:
   // TODO: Unused for now.
   Atomic<bool> mBufferFull;
   bool mFirstInitializationSegmentReceived;
+  // Set to true once a new segment is started.
+  bool mNewSegmentStarted;
   bool mActiveTrack;
   Maybe<media::TimeUnit> mGroupStartTimestamp;
   media::TimeUnit mGroupEndTimestamp;
@@ -171,9 +174,11 @@ private:
   nsRefPtr<MediaDataDemuxer> mInputDemuxer;
   // Length already processed in current media segment.
   uint32_t mProcessedInput;
+  Maybe<media::TimeUnit> mLastParsedEndTime;
 
   void OnDemuxerInitDone(nsresult);
   void OnDemuxerInitFailed(DemuxerFailureReason aFailure);
+  void OnDemuxerResetDone(nsresult);
   MozPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;
   bool mEncrypted;
 

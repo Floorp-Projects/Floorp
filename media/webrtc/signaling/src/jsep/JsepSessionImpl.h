@@ -44,6 +44,8 @@ public:
   {
   }
 
+  virtual ~JsepSessionImpl();
+
   // Implement JsepSession methods.
   virtual nsresult Init() override;
 
@@ -80,7 +82,7 @@ public:
   virtual std::vector<JsepCodecDescription*>&
   Codecs() override
   {
-    return mCodecs.values;
+    return mSupportedCodecs.values;
   }
 
   virtual nsresult ReplaceTrack(const std::string& oldStreamId,
@@ -180,6 +182,13 @@ private:
   // Non-const so it can set mLastError
   nsresult CreateGenericSDP(UniquePtr<Sdp>* sdp);
   void AddCodecs(SdpMediaSection* msection) const;
+  void PopulateCodecsByLevel(size_t numLevels);
+  void UpdateCodecsForOffer(size_t level);
+  void ResetNonNegotiatedCodecs(size_t level);
+  void GetNegotiatedPayloadTypes(size_t level,
+                                 std::set<uint16_t>* types) const;
+  void EnsureNoDuplicatePayloadTypes(size_t level);
+  std::vector<JsepCodecDescription*> CreateCodecClones() const;
   void AddExtmap(SdpMediaSection* msection) const;
   void AddMid(const std::string& mid, SdpMediaSection* msection) const;
   void AddLocalIds(const JsepTrack& track, SdpMediaSection* msection) const;
@@ -189,7 +198,7 @@ private:
   const std::vector<SdpExtmapAttributeList::Extmap>* GetRtpExtensions(
       SdpMediaSection::MediaType type) const;
 
-  PtrVector<JsepCodecDescription> GetCommonCodecs(
+  std::vector<JsepCodecDescription*> GetCommonCodecs(
       const SdpMediaSection& offerMsection);
   void AddCommonExtmaps(const SdpMediaSection& remoteMsection,
                         SdpMediaSection* msection);
@@ -325,7 +334,11 @@ private:
   UniquePtr<Sdp> mCurrentRemoteDescription;
   UniquePtr<Sdp> mPendingLocalDescription;
   UniquePtr<Sdp> mPendingRemoteDescription;
-  PtrVector<JsepCodecDescription> mCodecs;
+  PtrVector<JsepCodecDescription> mSupportedCodecs;
+  // For each level, contains a full clone of
+  // mSupportedCodecs. If any have been negotiated, this negotiation is taken
+  // into account.
+  std::vector<std::vector<JsepCodecDescription*>> mCodecsByLevel;
   std::string mLastError;
   SipccSdpParser mParser;
   SdpHelper mSdpHelper;

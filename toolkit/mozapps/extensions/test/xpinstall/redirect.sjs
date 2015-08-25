@@ -9,7 +9,7 @@ function handleRequest(request, response)
 
   parts.forEach(function(aString) {
     let [k, v] = aString.split("=");
-    settings[k] = v;
+    settings[k] = decodeURIComponent(v);
   })
 
   if (settings.mode == "setup") {

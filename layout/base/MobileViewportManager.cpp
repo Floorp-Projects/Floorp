@@ -116,11 +116,6 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
     / mPresShell->GetPresContext()->AppUnitsPerDevPixel());
   LayoutDeviceToLayerScale res(nsLayoutUtils::GetResolution(mPresShell));
 
-  if (!gfxPrefs::APZAllowZooming()) {
-    return ViewTargetAs<ScreenPixel>(cssToDev * res / ParentLayerToLayerScale(1),
-      PixelCastJustification::ScreenIsParentLayerForRoot);
-  }
-
   if (mIsFirstPaint) {
     CSSToScreenScale defaultZoom = aViewportInfo.GetDefaultZoom();
     MVM_LOG("%p: default zoom from viewport is %f\n", this, defaultZoom.scale);
@@ -272,11 +267,15 @@ MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution)
   MVM_LOG("%p: Updating properties because %d || %d\n", this,
     mIsFirstPaint, mMobileViewportSize != viewport);
 
-  CSSToScreenScale zoom = UpdateResolution(viewportInfo, displaySize, viewport,
-    displayWidthChangeRatio);
-  MVM_LOG("%p: New zoom is %f\n", this, zoom.scale);
-  UpdateSPCSPS(displaySize, zoom);
-  UpdateDisplayPortMargins();
+  if (gfxPrefs::APZAllowZooming()) {
+    CSSToScreenScale zoom = UpdateResolution(viewportInfo, displaySize, viewport,
+      displayWidthChangeRatio);
+    MVM_LOG("%p: New zoom is %f\n", this, zoom.scale);
+    UpdateSPCSPS(displaySize, zoom);
+  }
+  if (gfxPlatform::AsyncPanZoomEnabled()) {
+    UpdateDisplayPortMargins();
+  }
 
   // Update internal state.
   mIsFirstPaint = false;

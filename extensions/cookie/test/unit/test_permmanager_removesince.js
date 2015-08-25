@@ -24,10 +24,10 @@ function do_run_test() {
   // to help with testing edge-cases, we will arrange for .removeAllSince to
   // remove *all* permissions from one principal and one permission from another.
   let permURI1 = NetUtil.newURI("http://example.com");
-  let principal1 = Services.scriptSecurityManager.getNoAppCodebasePrincipal(permURI1);
+  let principal1 = Services.scriptSecurityManager.createCodebasePrincipal(permURI1, {});
 
   let permURI2 = NetUtil.newURI("http://example.org");
-  let principal2 = Services.scriptSecurityManager.getNoAppCodebasePrincipal(permURI2);
+  let principal2 = Services.scriptSecurityManager.createCodebasePrincipal(permURI2, {});
 
   // add a permission now - this isn't going to be removed.
   pm.addFromPrincipal(principal1, "test/remove-since", 1);
