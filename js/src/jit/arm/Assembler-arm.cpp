@@ -602,8 +602,7 @@ jit::PatchJump(CodeLocationJump& jump_, CodeLocationLabel label, ReprotectCode r
     // entry).
     Instruction* jump = (Instruction*)jump_.raw();
     // jumpWithPatch() returns the offset of the jump and never a pool or nop.
-    Assembler::Condition c;
-    jump->extractCond(&c);
+    Assembler::Condition c = jump->extractCond();
     MOZ_ASSERT(jump->is<InstBranchImm>() || jump->is<InstLDR>());
 
     int jumpOffset = label.raw() - jump_.raw();
@@ -2153,9 +2152,7 @@ Assembler::WritePoolEntry(Instruction* addr, Condition c, uint32_t data)
     char * rawAddr = reinterpret_cast<char*>(addr);
     uint32_t * dest = reinterpret_cast<uint32_t*>(&rawAddr[offset + 8]);
     *dest = data;
-    Condition orig_cond;
-    addr->extractCond(&orig_cond);
-    MOZ_ASSERT(orig_cond == c);
+    MOZ_ASSERT(addr->extractCond() == c);
 }
 
 BufferOffset
@@ -2802,8 +2799,7 @@ Assembler::bind(Label* label, BufferOffset boff)
             BufferOffset next;
             more = nextLink(b, &next);
             Instruction branch = *editSrc(b);
-            Condition c;
-            branch.extractCond(&c);
+            Condition c = branch.extractCond();
             if (branch.is<InstBImm>())
                 as_b(dest.diffB<BOffImm>(b), c, b);
             else if (branch.is<InstBLImm>())
@@ -2836,7 +2832,7 @@ Assembler::bind(RepatchLabel* label)
         if (p.phd.isValidPoolHint())
             cond = p.phd.getCond();
         else
-            branch->extractCond(&cond);
+            cond = branch->extractCond();
         as_b(dest.diffB<BOffImm>(branchOff), cond, branchOff);
     }
     label->bind(dest.getOffset());
@@ -2864,8 +2860,7 @@ Assembler::retarget(Label* label, Label* target)
             // Then patch the head of label's use chain to the tail of target's
             // use chain, prepending the entire use chain of target.
             Instruction branch = *editSrc(labelBranchOffset);
-            Condition c;
-            branch.extractCond(&c);
+            Condition c = branch.extractCond();
             int32_t prev = target->use(label->offset());
             if (branch.is<InstBImm>())
                 as_b(BOffImm(prev), c, labelBranchOffset);
@@ -2942,8 +2937,7 @@ Assembler::GetBranchOffset(const Instruction* i_)
 void
 Assembler::RetargetNearBranch(Instruction* i, int offset, bool final)
 {
-    Assembler::Condition c;
-    i->extractCond(&c);
+    Assembler::Condition c = i->extractCond();
     RetargetNearBranch(i, offset, c, final);
 }
 
@@ -3115,8 +3109,7 @@ Assembler::NextInstruction(uint8_t* inst_, uint32_t* count)
 static bool
 InstIsGuard(Instruction* inst, const PoolHeader** ph)
 {
-    Assembler::Condition c;
-    inst->extractCond(&c);
+    Assembler::Condition c = inst->extractCond();
     if (c != Assembler::Always)
         return false;
     if (!(inst->is<InstBXReg>() || inst->is<InstBImm>()))
@@ -3134,8 +3127,7 @@ InstIsBNop(Instruction* inst)
     // about it, make sure it gets skipped when Instruction::next() is called.
     // this generates a very specific nop, namely a branch to the next
     // instruction.
-    Assembler::Condition c;
-    inst->extractCond(&c);
+    Assembler::Condition c = inst->extractCond();
     if (c != Assembler::Always)
         return false;
     if (!inst->is<InstBImm>())
