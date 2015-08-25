@@ -501,7 +501,15 @@ nsHtml5TreeBuilder::insertFosterParentedCharacters(char16_t* aBuffer, int32_t aS
     return;
   }
 
-  char16_t* bufferCopy = new char16_t[aLength];
+  char16_t* bufferCopy = new (mozilla::fallible) char16_t[aLength];
+  if (!bufferCopy) {
+    // Just assigning mBroken instead of generating tree op. The caller
+    // of tokenizeBuffer() will call MarkAsBroken() as appropriate.
+    mBroken = NS_ERROR_OUT_OF_MEMORY;
+    requestSuspension();
+    return;
+  }
+
   memcpy(bufferCopy, aBuffer, aLength * sizeof(char16_t));
   
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -553,7 +561,15 @@ nsHtml5TreeBuilder::appendCharacters(nsIContentHandle* aParent, char16_t* aBuffe
     return;
   }
 
-  char16_t* bufferCopy = new char16_t[aLength];
+  char16_t* bufferCopy = new (mozilla::fallible) char16_t[aLength];
+  if (!bufferCopy) {
+    // Just assigning mBroken instead of generating tree op. The caller
+    // of tokenizeBuffer() will call MarkAsBroken() as appropriate.
+    mBroken = NS_ERROR_OUT_OF_MEMORY;
+    requestSuspension();
+    return;
+  }
+
   memcpy(bufferCopy, aBuffer, aLength * sizeof(char16_t));
   
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -605,7 +621,15 @@ nsHtml5TreeBuilder::appendComment(nsIContentHandle* aParent, char16_t* aBuffer, 
     return;
   }
 
-  char16_t* bufferCopy = new char16_t[aLength];
+  char16_t* bufferCopy = new (mozilla::fallible) char16_t[aLength];
+  if (!bufferCopy) {
+    // Just assigning mBroken instead of generating tree op. The caller
+    // of tokenizeBuffer() will call MarkAsBroken() as appropriate.
+    mBroken = NS_ERROR_OUT_OF_MEMORY;
+    requestSuspension();
+    return;
+  }
+
   memcpy(bufferCopy, aBuffer, aLength * sizeof(char16_t));
   
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -630,7 +654,15 @@ nsHtml5TreeBuilder::appendCommentToDocument(char16_t* aBuffer, int32_t aStart, i
     return;
   }
 
-  char16_t* bufferCopy = new char16_t[aLength];
+  char16_t* bufferCopy = new (mozilla::fallible) char16_t[aLength];
+  if (!bufferCopy) {
+    // Just assigning mBroken instead of generating tree op. The caller
+    // of tokenizeBuffer() will call MarkAsBroken() as appropriate.
+    mBroken = NS_ERROR_OUT_OF_MEMORY;
+    requestSuspension();
+    return;
+  }
+
   memcpy(bufferCopy, aBuffer, aLength * sizeof(char16_t));
   
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -984,20 +1016,30 @@ nsHtml5TreeBuilder::Flush(bool aDiscretionary)
     MOZ_ASSERT_UNREACHABLE("Must never flush with builder.");
     return false;
   }
-  if (!aDiscretionary ||
-      !(charBufferLen &&
-        currentPtr >= 0 &&
-        stack[currentPtr]->isFosterParenting())) {
-    // Don't flush text on discretionary flushes if the current element on
-    // the stack is a foster-parenting element and there's pending text,
-    // because flushing in that case would make the tree shape dependent on
-    // where the flush points fall.
-    flushCharacters();
+  if (NS_SUCCEEDED(mBroken)) {
+    if (!aDiscretionary ||
+        !(charBufferLen &&
+          currentPtr >= 0 &&
+          stack[currentPtr]->isFosterParenting())) {
+      // Don't flush text on discretionary flushes if the current element on
+      // the stack is a foster-parenting element and there's pending text,
+      // because flushing in that case would make the tree shape dependent on
+      // where the flush points fall.
+      flushCharacters();
+    }
+    FlushLoads();
   }
-  FlushLoads();
   if (mOpSink) {
     bool hasOps = !mOpQueue.IsEmpty();
     if (hasOps) {
+      // If the builder is broken and mOpQueue is not empty, there must be
+      // one op and it must be eTreeOpMarkAsBroken.
+      if (NS_FAILED(mBroken)) {
+        MOZ_ASSERT(mOpQueue.Length() == 1,
+          "Tree builder is broken with a non-empty op queue whose length isn't 1.");
+        MOZ_ASSERT(mOpQueue[0].IsMarkAsBroken(),
+          "Tree builder is broken but the op in queue is not marked as broken.");
+      }
       mOpSink->MoveOpsFrom(mOpQueue);
     }
     return hasOps;
