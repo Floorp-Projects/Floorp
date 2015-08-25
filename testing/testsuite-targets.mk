@@ -174,7 +174,7 @@ REMOTE_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/remotereftest.py \
   --dm_trans=$(DM_TRANS) --ignore-window-size \
   --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
   --httpd-path=_tests/modules \
-  $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) '$(1)' | tee ./$@.log
+  $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
 
 RUN_REFTEST_B2G = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftestb2g.py \
   --remote-webserver=10.0.2.2 --b2gpath=${B2G_PATH} --adbpath=${ADB_PATH} \
@@ -209,7 +209,7 @@ reftest-remote:
         echo 'please prepare your host with the environment variable TEST_DEVICE'; \
     else \
         ln -s $(abspath $(topsrcdir)) _tests/reftest/tests; \
-        $(call REMOTE_REFTEST,tests/$(TEST_PATH)); \
+        $(call REMOTE_REFTEST,'tests/$(TEST_PATH)'); \
         $(CHECK_TEST_ERROR); \
     fi
 
