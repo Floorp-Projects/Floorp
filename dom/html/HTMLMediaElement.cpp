@@ -4710,7 +4710,9 @@ NS_IMETHODIMP HTMLMediaElement::WindowAudioCaptureChanged()
       nsCOMPtr<nsPIDOMWindow> window =
         do_QueryInterface(OwnerDoc()->GetParentObject());
       uint64_t id = window->WindowID();
-      MediaStreamGraph* msg = MediaStreamGraph::GetInstance();
+      MediaStreamGraph* msg =
+        MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
+                                      AudioChannel::Normal);
 
       if (!mPlaybackStream) {
         nsRefPtr<DOMMediaStream> stream = CaptureStreamInternal(false, msg);
