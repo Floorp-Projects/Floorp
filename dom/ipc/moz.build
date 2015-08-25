@@ -130,7 +130,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/bluetooth',
     '/dom/bluetooth/bluetooth2',
-    '/dom/bluetooth/bluetooth2/ipc',
+    '/dom/bluetooth/ipc',
     '/dom/devicestorage',
     '/dom/filesystem',
     '/dom/fmradio/ipc',

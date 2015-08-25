@@ -41,13 +41,13 @@ if CONFIG['MOZ_B2G_BT']:
         'bluetooth2/BluetoothProfileController.cpp',
         'bluetooth2/BluetoothReplyRunnable.cpp',
         'bluetooth2/BluetoothService.cpp',
-        'bluetooth2/ipc/BluetoothChild.cpp',
-        'bluetooth2/ipc/BluetoothParent.cpp',
-        'bluetooth2/ipc/BluetoothServiceChildProcess.cpp',
+        'ipc/BluetoothChild.cpp',
+        'ipc/BluetoothParent.cpp',
+        'ipc/BluetoothServiceChildProcess.cpp',
     ]
     LOCAL_INCLUDES += [
         'bluetooth2',
-        'bluetooth2/ipc',
+        'ipc',
     ]
 
     #
@@ -129,7 +129,7 @@ if CONFIG['MOZ_B2G_BT']:
 #
 
 EXPORTS.mozilla.dom.bluetooth.ipc += [
-    'bluetooth2/ipc/BluetoothMessageUtils.h',
+    'ipc/BluetoothMessageUtils.h',
 ]
 EXPORTS.mozilla.dom.bluetooth += [
     'bluetooth2/BluetoothAdapter.h',
@@ -149,9 +149,9 @@ EXPORTS.mozilla.dom.bluetooth += [
     'BluetoothPbapRequestHandle.h',
 ]
 IPDL_SOURCES += [
-    'bluetooth2/ipc/BluetoothTypes.ipdlh',
-    'bluetooth2/ipc/PBluetooth.ipdl',
-    'bluetooth2/ipc/PBluetoothRequest.ipdl',
+    'ipc/BluetoothTypes.ipdlh',
+    'ipc/PBluetooth.ipdl',
+    'ipc/PBluetoothRequest.ipdl',
 ]
 
 FAIL_ON_WARNINGS = True
