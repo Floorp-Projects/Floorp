@@ -130,19 +130,15 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
     public void setPrivateMode(final boolean isPrivate) {
         super.setPrivateMode(isPrivate);
 
-        // Better done with android:tint but it doesn't take a ColorStateList:
-        //   https://code.google.com/p/android/issues/detail?can=2&start=0&num=100&q=&colspec=ID%20Type%20Status%20Owner%20Summary%20Stars&groupby=&sort=&id=18220
-        // Nor can we use DrawableCompat because the drawables (as opposed
-        // to the Views) don't receive gecko:state_private.
+        // If we had backgroundTintList, we could remove the colorFilter
+        // code in favor of setPrivateMode (bug 1197432).
         final PorterDuffColorFilter colorFilter =
                 isPrivate ? privateBrowsingTabletMenuItemColorFilter : null;
-        backButton.setColorFilter(colorFilter);
-        forwardButton.setColorFilter(colorFilter);
         setTabsCounterPrivateMode(isPrivate, colorFilter);
-        menuIcon.setColorFilter(colorFilter);
 
         backButton.setPrivateMode(isPrivate);
         forwardButton.setPrivateMode(isPrivate);
+        menuIcon.setPrivateMode(isPrivate);
         for (int i = 0; i < actionItemBar.getChildCount(); ++i) {
             final MenuItemActionBar child = (MenuItemActionBar) actionItemBar.getChildAt(i);
             child.setPrivateMode(isPrivate);
@@ -177,11 +173,6 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
     }
 
     protected static void setButtonEnabled(final ImageButton button, final boolean enabled) {
-        final Drawable drawable = button.getDrawable();
-        if (drawable != null) {
-            drawable.setAlpha(enabled ? 255 : 61);
-        }
-
         button.setEnabled(enabled);
     }
 }

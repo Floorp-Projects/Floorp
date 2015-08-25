@@ -46,6 +46,8 @@ var Harness = {
   // If set then the callback is called when an install is attempted and
   // then canceled.
   installCancelledCallback: null,
+  // If set then the callback will be called when an install's origin is blocked.
+  installOriginBlockedCallback: null,
   // If set then the callback will be called when an install is blocked by the
   // whitelist. The callback should return true to continue with the install
   // anyway.
@@ -89,6 +91,10 @@ var Harness = {
 
   waitingForFinish: false,
 
+  // A unique value to return from the installConfirmCallback to indicate that
+  // the install UI shouldn't be closed automatically
+  leaveOpen: {},
+
   // Setup and tear down functions
   setup: function() {
     if (!this.waitingForFinish) {
@@ -100,6 +106,7 @@ var Harness = {
       Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
       Services.obs.addObserver(this, "addon-install-started", false);
       Services.obs.addObserver(this, "addon-install-disabled", false);
+      Services.obs.addObserver(this, "addon-install-origin-blocked", false);
       Services.obs.addObserver(this, "addon-install-blocked", false);
       Services.obs.addObserver(this, "addon-install-failed", false);
       Services.obs.addObserver(this, "addon-install-complete", false);
@@ -114,6 +121,7 @@ var Harness = {
         Services.prefs.clearUserPref(PREF_INSTALL_REQUIRESECUREORIGIN);
         Services.obs.removeObserver(self, "addon-install-started");
         Services.obs.removeObserver(self, "addon-install-disabled");
+        Services.obs.removeObserver(self, "addon-install-origin-blocked");
         Services.obs.removeObserver(self, "addon-install-blocked");
         Services.obs.removeObserver(self, "addon-install-failed");
         Services.obs.removeObserver(self, "addon-install-complete");
@@ -150,6 +158,7 @@ var Harness = {
       info("Install for " + aInstall.sourceURI + " is in state " + aInstall.state);
     });
 
+    this.installOriginBlockedCallback = null;
     this.installBlockedCallback = null;
     this.authenticationCallback = null;
     this.installConfirmCallback = null;
@@ -177,7 +186,14 @@ var Harness = {
 
       // If there is a confirm callback then its return status determines whether
       // to install the items or not. If not the test is over.
-      if (this.installConfirmCallback && !this.installConfirmCallback(window)) {
+      let result = true;
+      if (this.installConfirmCallback) {
+        result = this.installConfirmCallback(window);
+        if (result === this.leaveOpen)
+          return;
+      }
+
+      if (!result) {
         window.document.documentElement.cancelDialog();
       }
       else {
@@ -243,6 +259,13 @@ var Harness = {
     ok(!!this.installCancelledCallback, "Installation shouldn't have been cancelled");
     if (this.installCancelledCallback)
       this.installCancelledCallback(installInfo);
+    this.endTest();
+  },
+
+  installOriginBlocked: function(installInfo) {
+    ok(!!this.installOriginBlockedCallback, "Shouldn't have been blocked");
+    if (this.installOriginBlockedCallback)
+      this.installOriginBlockedCallback(installInfo);
     this.endTest();
   },
 
@@ -370,6 +393,9 @@ var Harness = {
       break;
     case "addon-install-cancelled":
       this.installCancelled(installInfo);
+      break;
+    case "addon-install-origin-blocked":
+      this.installOriginBlocked(installInfo);
       break;
     case "addon-install-blocked":
       this.installBlocked(installInfo);

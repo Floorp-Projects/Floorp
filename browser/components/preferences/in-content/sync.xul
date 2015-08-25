@@ -211,10 +211,10 @@
               </vbox>
               <vbox flex="1">
                 <label id="signedOutAccountBoxTitle">&signedOut.accountBox.title;</label>
-                <description class="fxaAccountBoxButtons">
+                <hbox class="fxaAccountBoxButtons" align="center">
                   <button id="noFxaSignUp">&signedOut.accountBox.create;</button>
                   <button id="noFxaSignIn">&signedOut.accountBox.signin;</button>
-                </description>
+                </hbox>
               </vbox>
             </hbox>
           </vbox>
@@ -251,10 +251,10 @@
               <vbox flex="1">
                 <label id="fxaEmailAddress1"/>
                 <label id="fxaDisplayName" hidden="true"/>
-                <description class="fxaAccountBoxButtons">
-                  <button id="verifiedManage">&manage.label;</button>
-                  <button id="fxaUnlinkButton">&disconnect.label;</button>
-                </description>
+                <hbox class="fxaAccountBoxButtons" align="center">
+                  <vbox flex="1"><button id="fxaUnlinkButton">&disconnect.label;</button></vbox>
+                  <vbox flex="1"><label id="verifiedManage" class="text-link">&manageAccount.label;</label></vbox>
+                </hbox>
               </vbox>
             </hbox>
 
@@ -272,10 +272,10 @@
                     &signedInUnverified.aftername.label;
                   </description>
                 </hbox>
-                <description class="fxaAccountBoxButtons">
+                <hbox class="fxaAccountBoxButtons" align="center">
                   <button id="verifyFxaAccount">&verify.label;</button>
                   <button id="unverifiedUnlinkFxaAccount">&forget.label;</button>
-                </description>
+                </hbox>
               </vbox>
             </hbox>
 
@@ -293,10 +293,10 @@
                     &signedInLoginFailure.aftername.label;
                   </description>
                 </hbox>
-                <description class="fxaAccountBoxButtons">
+                <hbox class="fxaAccountBoxButtons" align="center">
                   <button id="rejectReSignIn">&signIn.label;</button>
                   <button id="rejectUnlinkFxaAccount">&forget.label;</button>
-                </description>
+                </hbox>
               </vbox>
             </hbox>
           </deck>

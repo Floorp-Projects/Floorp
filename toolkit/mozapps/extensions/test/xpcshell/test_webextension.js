@@ -35,6 +35,16 @@ add_task(function*() {
   do_check_eq(GlobalManager.count, 1);
   do_check_true(GlobalManager.extensionMap.has(ID));
 
+  let chromeReg = AM_Cc["@mozilla.org/chrome/chrome-registry;1"].
+                  getService(AM_Ci.nsIChromeRegistry);
+  try {
+    chromeReg.convertChromeURL(NetUtil.newURI("chrome://webex/content/webex.xul"));
+    do_throw("Chrome manifest should not have been registered");
+  }
+  catch (e) {
+    // Expected the chrome url to not be registered
+  }
+
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
   do_check_eq(addon.version, "1.0");
