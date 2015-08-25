@@ -12,16 +12,24 @@ function packagedAppContentHandler(metadata, response)
   gRequestNo++;
 }
 
-function getPrincipal(url) {
+function getChannelForURL(url) {
+  let uri = createURI(url);
   let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
               .getService(Ci.nsIScriptSecurityManager);
-  let uri = createURI(url);
-  return ssm.createCodebasePrincipal(uri, {});
-}
+  let principal = ssm.createCodebasePrincipal(uri, {});
+  let tmpChannel =
+    NetUtil.newChannel({
+      uri: url,
+      loadingPrincipal: principal,
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
+    });
 
-function getLoadInfo(url) {
-  let tmpChannel = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
-  return tmpChannel.loadInfo;
+  tmpChannel.notificationCallbacks =
+    new LoadContextCallback(principal.appId,
+                            principal.isInBrowserElement,
+                            false,
+                            false);
+  return tmpChannel;
 }
 
 var subresourcePaths = [
@@ -126,8 +134,7 @@ function test_paths() {
     packagePath = "/package/" + i;
     dump("Iteration " + i + "\n");
     let url = uri + packagePath + "!//" + subresourcePaths[i][1];
-    paservice.getResource(getPrincipal(url), getLoadInfo(url), 0,
-      LoadContextInfo.default,
+    paservice.getResource(getChannelForURL(url),
       new packagedResourceListener(subresourcePaths[i][1], content));
     yield undefined;
   }
