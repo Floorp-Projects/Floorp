@@ -1369,9 +1369,14 @@ nsHtml5StreamParser::ParseAvailableData()
             }
             if (NS_SUCCEEDED(mTreeBuilder->IsBroken())) {
               mTokenizer->eof();
-              mTreeBuilder->StreamEnded();
-              if (mMode == VIEW_SOURCE_HTML || mMode == VIEW_SOURCE_XML) {
-                mTokenizer->EndViewSource();
+              nsresult rv;
+              if (NS_FAILED((rv = mTreeBuilder->IsBroken()))) {
+                MarkAsBroken(rv);
+              } else {
+                mTreeBuilder->StreamEnded();
+                if (mMode == VIEW_SOURCE_HTML || mMode == VIEW_SOURCE_XML) {
+                  mTokenizer->EndViewSource();
+                }
               }
             }
             FlushTreeOpsAndDisarmTimer();
@@ -1394,6 +1399,11 @@ nsHtml5StreamParser::ParseAvailableData()
         return;
       }
       mLastWasCR = mTokenizer->tokenizeBuffer(mFirstBuffer);
+      nsresult rv;
+      if (NS_FAILED((rv = mTreeBuilder->IsBroken()))) {
+        MarkAsBroken(rv);
+        return;
+      }
       // At this point, internalEncodingDeclaration() may have called 
       // Terminate, but that never happens together with script.
       // Can't assert that here, though, because it's possible that the main
