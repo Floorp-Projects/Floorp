@@ -1148,6 +1148,17 @@ nsHtml5TreeBuilder::MarkAsBroken(nsresult aRv)
 }
 
 void
+nsHtml5TreeBuilder::MarkAsBrokenFromPortability(nsresult aRv)
+{
+  if (mBuilder) {
+    MarkAsBrokenAndRequestSuspension(aRv);
+    return;
+  }
+  mBroken = aRv;
+  requestSuspension();
+}
+
+void
 nsHtml5TreeBuilder::StartPlainTextViewSource(const nsAutoString& aTitle)
 {
   MOZ_ASSERT(!mBuilder, "Must not view source with builder.");

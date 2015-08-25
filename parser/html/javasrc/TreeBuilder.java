@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007 Henri Sivonen
- * Copyright (c) 2007-2011 Mozilla Foundation
+ * Copyright (c) 2007-2015 Mozilla Foundation
  * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla
  * Foundation, and Opera Software ASA.
  *
@@ -3184,7 +3184,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      * @throws SAXException
      * @throws StopSniffingException
      */
-    public static String extractCharsetFromContent(String attributeValue) {
+    public static String extractCharsetFromContent(String attributeValue
+        // CPPONLY: , TreeBuilder tb
+    ) {
         // This is a bit ugly. Converting the string to char array in order to
         // make the portability layer smaller.
         int charsetState = CHARSET_INITIAL;
@@ -3336,7 +3338,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 end = buffer.length;
             }
             charset = Portability.newStringFromBuffer(buffer, start, end
-                    - start);
+                    - start
+                // CPPONLY: , tb
+            );
         }
         return charset;
     }
@@ -3358,7 +3362,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         }
         String content = attributes.getValue(AttributeName.CONTENT);
         if (content != null) {
-            String extract = TreeBuilder.extractCharsetFromContent(content);
+            String extract = TreeBuilder.extractCharsetFromContent(content
+                // CPPONLY: , this
+            );
             // remember not to return early without releasing the string
             if (extract != null) {
                 if (tokenizer.internalEncodingDeclaration(extract)) {

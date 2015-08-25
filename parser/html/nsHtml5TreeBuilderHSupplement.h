@@ -71,6 +71,8 @@
       requestSuspension();
     }
 
+    void MarkAsBrokenFromPortability(nsresult aRv);
+
   public:
 
     explicit nsHtml5TreeBuilder(nsHtml5OplessBuilder* aBuilder);
