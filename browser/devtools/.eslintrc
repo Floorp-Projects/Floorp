@@ -78,7 +78,7 @@
     // Only useful in a node environment.
     "handle-callback-err": 0,
     // Tab width.
-    "indent": [2, 2],
+    "indent": [2, 2, {"SwitchCase": 1}],
     // Enforces spacing between keys and values in object literal properties.
     "key-spacing": [1, {"beforeColon": false, "afterColon": true}],
     // Allow mixed 'LF' and 'CRLF' as linebreaks.
