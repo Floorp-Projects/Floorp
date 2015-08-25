@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>System messages registration tests</title>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1162281}">Mozilla Bug {1162281}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+// We need to keep the same CID as the one used on activities tests.
+// Check https://bugzilla.mozilla.org/show_bug.cgi?id=1176712#c13
+const SYS_MSG_GLUE_CID = Components.ID("{b0b6b9af-bc4e-4200-bffe-fb7691065ec9}");
+
+XPCOMUtils.defineLazyGetter(this, "messenger", () => {
+   return Cc["@mozilla.org/system-message-internal;1"]
+   .getService(Ci.nsISystemMessagesInternal);
+});
+
+let gRootUrl = "http://test/chrome/dom/messages/test/";
+let validAppUrl = gRootUrl + "manifest.webapp";
+let invalidAppUrl = gRootUrl + "invalid_manifest.webapp";
+let validApp;
+let initialAppsCount;
+let index = 0;
+
+SimpleTest.waitForExplicitFinish();
+
+function go() {
+  SpecialPowers.pushPermissions(
+    [{ "type": "webapps-manage", "allow": 1, "context": document },
+     { "type": "browser", "allow": 1, "context": document },
+     { "type": "embed-apps", "allow": 1, "context": document }],
+    function() {
+      SpecialPowers.pushPrefEnv(
+        {'set': [["dom.mozBrowserFramesEnabled", true],
+                 ["dom.sysmsg.enabled", true]]},
+        next) });
+}
+
+function finish() {
+  unregisterComponent(SystemMessageGlue);
+  SimpleTest.finish();
+}
+
+function next() {
+  info("Step " + index);
+  if (index >= steps.length) {
+    ok(false, "Shouldn't get here!");
+    return;
+  }
+  try {
+    let i = index++;
+    steps[i]();
+  } catch(ex) {
+    ok(false, "Caught exception", ex);
+  }
+}
+
+function cbError(aEvent) {
+  ok(false, "Error callback invoked " +
+            aEvent.target.error.name + " " + aEvent.target.error.message);
+  finish();
+}
+
+function uninstall(aApp) {
+  info("Uninstalling " + (aApp ? aApp.manifestURL : "NO APP!!"));
+}
+
+function registerComponent(aObject, aDescription, aContract) {
+  info("Registering " + SYS_MSG_GLUE_CID);
+
+  let componentManager =
+    Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  componentManager.registerFactory(SYS_MSG_GLUE_CID, aDescription, aContract, aObject);
+}
+
+function unregisterComponent(aObject) {
+  info("Unregistering " + SYS_MSG_GLUE_CID);
+  let componentManager =
+    Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  componentManager.unregisterFactory(SYS_MSG_GLUE_CID, aObject);
+}
+
+let SystemMessageGlue = {
+  // nsISupports implementation.
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIFactory) ||
+        iid.equals(Ci.nsISystemMessageGlue)) {
+      return this;
+    }
+
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsIFactory implementation.
+  createInstance: function(outer, iid) {
+    return this.QueryInterface(iid);
+  },
+
+  _lastManifestURL: null,
+
+  // nsISystemMessageGlue implementation.
+  openApp(pageURL, manifestURL, type, target, showApp, onlyShowApp, extra) {
+    this._lastManifestURL = manifestURL;
+  }
+};
+
+registerComponent(SystemMessageGlue,
+                  "System Message Glue",
+                  "@mozilla.org/dom/messages/system-message-glue;1");
+
+function testBroadcastMessage(aMessage, aExpectedManifestURL, aMsg) {
+  SystemMessageGlue._lastManifestURL = null;
+  messenger.broadcastMessage(aMessage, {}, {})
+  .then(() => {
+    is(SystemMessageGlue._lastManifestURL, aExpectedManifestURL, aMsg);
+    next();
+  })
+  .catch(cbError);
+}
+
+/**
+ * TESTS
+ */
+let steps = [() => {
+  Services.obs.notifyObservers(null, "webapps-registry-ready", null);
+  SpecialPowers.setAllAppsLaunchable(true);
+  SpecialPowers.autoConfirmAppInstall(next);
+}, () => {
+  SpecialPowers.autoConfirmAppUninstall(next);
+}, () => {
+  // Check how many apps we are starting with.
+  let request = navigator.mozApps.mgmt.getAll();
+  request.onerror = cbError;
+  request.onsuccess = () => {
+    initialAppsCount = request.result.length;
+    info("Starting with " + initialAppsCount + " apps installed.");
+    next();
+  };
+}, () => {
+  // We still have not installed any app handling dummy-system-message.
+  testBroadcastMessage("dummy-system-message", null,
+                       "no system message should be sent");
+}, () => {
+  testBroadcastMessage("dummy-system-message2", null,
+                       "no system message should be sent");
+}, () => {
+  navigator.mozApps.mgmt.oninstall = ()  => {
+    validApp = request.result;
+    next();
+  };
+  let request = navigator.mozApps.install(validAppUrl, { });
+  request.error = cbError;
+  request.onsuccess = () => {
+    validApp = request.result;
+  };
+}, () => {
+  // Installing the test app should register the system message.
+  testBroadcastMessage("dummy-system-message", validAppUrl,
+                       "system message should be sent");
+}, () => {
+  // Installing the test app should register the system message.
+  testBroadcastMessage("dummy-system-message2", validAppUrl,
+                       "system message should be sent");
+}, () => {
+  navigator.mozApps.mgmt.onuninstall = ()  => {
+    validApp = null;
+    next();
+  };
+  let request = navigator.mozApps.mgmt.uninstall(validApp);
+  request.onerror = cbError;
+}, () => {
+  // Uninstalling the app should unregister the system messages.
+  testBroadcastMessage("dummy-system-message", null,
+                       "no system message should be sent");
+}, () => {
+  // Uninstalling the app should unregister the system messages.
+  testBroadcastMessage("dummy-system-message2", null,
+                       "no system message should be sent");
+}, () => {
+  navigator.mozApps.mgmt.oninstall = ()  => {
+    validApp = request.result;
+    next();
+  };
+  let request = navigator.mozApps.install(invalidAppUrl, { });
+  request.onerror = () => {
+    ok(true, "should not install invalid app");
+    next();
+  };
+  request.onsuccess = () => {
+    ok(false, "should not install invalid app");
+    finish();
+  };
+}, () => {
+  testBroadcastMessage("dummy-system-message", null,
+                       "no system message should be sent");
+}, () => {
+  testBroadcastMessage("dummy-system-message2", null,
+                       "no system message should be sent");
+}, () => {
+   // Check how many apps we are finishing with.
+  let request = navigator.mozApps.mgmt.getAll();
+  request.onerror = cbError;
+  request.onsuccess = () => {
+    info("Finishing with " + request.result.length + " apps installed.");
+    is(initialAppsCount, request.result.length, "All apps are uninstalled");
+    next();
+  };
+}, finish];
+
+addLoadEvent(go);
+
+</script>
+</pre>
+</body>
+</html>

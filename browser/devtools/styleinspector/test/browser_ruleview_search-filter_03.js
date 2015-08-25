@@ -4,20 +4,17 @@
 
 "use strict";
 
-// Tests that the rule view search filter works properly for rule selectors.
+// Tests that the rule view search filter works properly for inline styles.
 
-const SEARCH = "#test";
+const SEARCH = "color";
 
 const TEST_URI = `
   <style type="text/css">
     #testid {
-      background-color: #00F;
-    }
-    .testclass {
       width: 100%;
     }
   </style>
-  <h1 id="testid" class="testclass">Styled Node</h1>
+  <div id="testid" style="background-color:aliceblue">Styled Node</div>
 `;
 
 add_task(function*() {
@@ -27,25 +24,16 @@ add_task(function*() {
   yield testAddTextInFilter(inspector, view);
 });
 
-function* testAddTextInFilter(inspector, ruleView) {
-  info("Setting filter text to \"" + SEARCH + "\"");
-
-  let win = ruleView.styleWindow;
-  let searchField = ruleView.searchField;
-  let onRuleViewFilter = inspector.once("ruleview-filtered");
-
-  searchField.focus();
-  synthesizeKeys(SEARCH, win);
-  yield onRuleViewFilter;
+function* testAddTextInFilter(inspector, view) {
+  yield setSearchFilter(view, SEARCH);
 
   info("Check that the correct rules are visible");
-  is(ruleView.element.children.length, 2, "Should have 2 rules.");
-  is(getRuleViewRuleEditor(ruleView, 0).rule.selectorText, "element",
-    "First rule is inline element.");
+  is(view.element.children.length, 1, "Should have 1 rule.");
 
-  let ruleEditor = getRuleViewRuleEditor(ruleView, 1);
+  let rule = getRuleViewRuleEditor(view, 0).rule;
 
-  is(ruleEditor.rule.selectorText, "#testid", "Second rule is #testid.");
-  ok(ruleEditor.selectorText.children[0].classList
-    .contains("ruleview-highlight"), "#testid selector is highlighted.");
+  is(rule.selectorText, "element", "First rule is inline element.");
+  ok(rule.textProps[0].editor.container.classList
+    .contains("ruleview-highlight"),
+    "background-color text property is correctly highlighted.");
 }

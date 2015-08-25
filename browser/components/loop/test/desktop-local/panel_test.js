@@ -237,6 +237,36 @@ describe("loop.panel", function() {
       });
     });
 
+    describe("Contacts", function() {
+      var view, roomsTab, contactsTab;
+
+      beforeEach(function() {
+        view = TestUtils.renderIntoDocument(
+          React.createElement(loop.panel.PanelView, {
+            dispatcher: dispatcher,
+            initialSelectedTabComponent: "contactList",
+            mozLoop: navigator.mozLoop,
+            notifications: notifications,
+            roomStore: roomStore,
+            selectedTab: "contacts",
+            showTabButtons: true
+          }));
+
+        [roomsTab, contactsTab] =
+          TestUtils.scryRenderedDOMComponentsWithClass(view, "tab");
+      });
+
+      it("should expect Contacts tab to be selected when Contacts List displayed", function() {
+        expect(contactsTab.getDOMNode().classList.contains("selected"))
+          .to.be.true;
+      });
+
+      it("should expect Rooms tab to be not selected when Contacts List displayed", function() {
+        expect(roomsTab.getDOMNode().classList.contains("selected"))
+          .to.be.false;
+      });
+    });
+
     describe("AccountLink", function() {
       beforeEach(function() {
         navigator.mozLoop.calls = { clearCallInProgress: function() {} };

@@ -22,8 +22,8 @@ nsresult
 Convert(bool aIn, BluetoothScanMode& aOut)
 {
   static const BluetoothScanMode sScanMode[] = {
-    CONVERT(false, SCAN_MODE_CONNECTABLE),
-    CONVERT(true, SCAN_MODE_CONNECTABLE_DISCOVERABLE)
+    [false] = SCAN_MODE_CONNECTABLE,
+    [true] = SCAN_MODE_CONNECTABLE_DISCOVERABLE
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sScanMode))) {
     aOut = SCAN_MODE_NONE; // silences compiler warning
@@ -37,10 +37,10 @@ nsresult
 Convert(int32_t aIn, BluetoothTypeOfDevice& aOut)
 {
   static const BluetoothTypeOfDevice sTypeOfDevice[] = {
-    CONVERT(0x00, static_cast<BluetoothTypeOfDevice>(0)), // invalid, required by gcc
-    CONVERT(0x01, TYPE_OF_DEVICE_BREDR),
-    CONVERT(0x02, TYPE_OF_DEVICE_BLE),
-    CONVERT(0x03, TYPE_OF_DEVICE_DUAL)
+    [0x00] = static_cast<BluetoothTypeOfDevice>(0), // invalid, required by gcc
+    [0x01] = TYPE_OF_DEVICE_BREDR,
+    [0x02] = TYPE_OF_DEVICE_BLE,
+    [0x03] = TYPE_OF_DEVICE_DUAL
   };
   if (NS_WARN_IF(!aIn) ||
       NS_WARN_IF(static_cast<size_t>(aIn) >= MOZ_ARRAY_LENGTH(sTypeOfDevice))) {
@@ -54,9 +54,9 @@ nsresult
 Convert(int32_t aIn, BluetoothScanMode& aOut)
 {
   static const BluetoothScanMode sScanMode[] = {
-    CONVERT(0x00, SCAN_MODE_NONE),
-    CONVERT(0x01, SCAN_MODE_CONNECTABLE),
-    CONVERT(0x02, SCAN_MODE_CONNECTABLE_DISCOVERABLE)
+    [0x00] = SCAN_MODE_NONE,
+    [0x01] = SCAN_MODE_CONNECTABLE,
+    [0x02] = SCAN_MODE_CONNECTABLE_DISCOVERABLE
   };
   if (NS_WARN_IF(aIn < 0) ||
       NS_WARN_IF(static_cast<size_t>(aIn) >= MOZ_ARRAY_LENGTH(sScanMode))) {
@@ -70,9 +70,9 @@ nsresult
 Convert(uint8_t aIn, BluetoothA2dpAudioState& aOut)
 {
   static const BluetoothA2dpAudioState sAudioState[] = {
-    CONVERT(0x00, A2DP_AUDIO_STATE_REMOTE_SUSPEND),
-    CONVERT(0x01, A2DP_AUDIO_STATE_STOPPED),
-    CONVERT(0x02, A2DP_AUDIO_STATE_STARTED)
+    [0x00] = A2DP_AUDIO_STATE_REMOTE_SUSPEND,
+    [0x01] = A2DP_AUDIO_STATE_STOPPED,
+    [0x02] = A2DP_AUDIO_STATE_STARTED
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sAudioState))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -85,10 +85,10 @@ nsresult
 Convert(uint8_t aIn, BluetoothA2dpConnectionState& aOut)
 {
   static const BluetoothA2dpConnectionState sConnectionState[] = {
-    CONVERT(0x00, A2DP_CONNECTION_STATE_DISCONNECTED),
-    CONVERT(0x01, A2DP_CONNECTION_STATE_CONNECTING),
-    CONVERT(0x02, A2DP_CONNECTION_STATE_CONNECTED),
-    CONVERT(0x03, A2DP_CONNECTION_STATE_DISCONNECTING)
+    [0x00] = A2DP_CONNECTION_STATE_DISCONNECTED,
+    [0x01] = A2DP_CONNECTION_STATE_CONNECTING,
+    [0x02] = A2DP_CONNECTION_STATE_CONNECTED,
+    [0x03] = A2DP_CONNECTION_STATE_DISCONNECTING
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sConnectionState))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -101,8 +101,8 @@ nsresult
 Convert(uint8_t aIn, BluetoothAclState& aOut)
 {
   static const BluetoothAclState sAclState[] = {
-    CONVERT(0x00, ACL_STATE_CONNECTED),
-    CONVERT(0x01, ACL_STATE_DISCONNECTED),
+    [0x00] = ACL_STATE_CONNECTED,
+    [0x01] = ACL_STATE_DISCONNECTED
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sAclState))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -115,15 +115,15 @@ nsresult
 Convert(uint8_t aIn, BluetoothAvrcpEvent& aOut)
 {
   static const BluetoothAvrcpEvent sAvrcpEvent[] = {
-    CONVERT(0x00, static_cast<BluetoothAvrcpEvent>(0)),
-    CONVERT(0x01, AVRCP_EVENT_PLAY_STATUS_CHANGED),
-    CONVERT(0x02, AVRCP_EVENT_TRACK_CHANGE),
-    CONVERT(0x03, AVRCP_EVENT_TRACK_REACHED_END),
-    CONVERT(0x04, AVRCP_EVENT_TRACK_REACHED_START),
-    CONVERT(0x05, AVRCP_EVENT_PLAY_POS_CHANGED),
-    CONVERT(0x06, static_cast<BluetoothAvrcpEvent>(0)),
-    CONVERT(0x07, static_cast<BluetoothAvrcpEvent>(0)),
-    CONVERT(0x08, AVRCP_EVENT_APP_SETTINGS_CHANGED)
+    [0x00] = static_cast<BluetoothAvrcpEvent>(0),
+    [0x01] = AVRCP_EVENT_PLAY_STATUS_CHANGED,
+    [0x02] = AVRCP_EVENT_TRACK_CHANGE,
+    [0x03] = AVRCP_EVENT_TRACK_REACHED_END,
+    [0x04] = AVRCP_EVENT_TRACK_REACHED_START,
+    [0x05] = AVRCP_EVENT_PLAY_POS_CHANGED,
+    [0x06] = static_cast<BluetoothAvrcpEvent>(0),
+    [0x07] = static_cast<BluetoothAvrcpEvent>(0),
+    [0x08] = AVRCP_EVENT_APP_SETTINGS_CHANGED
   };
   if (NS_WARN_IF(!aIn) ||
       NS_WARN_IF(aIn == 0x06) ||
@@ -140,14 +140,14 @@ nsresult
 Convert(uint8_t aIn, BluetoothAvrcpMediaAttribute& aOut)
 {
   static const BluetoothAvrcpMediaAttribute sAvrcpMediaAttribute[] = {
-    CONVERT(0x00, static_cast<BluetoothAvrcpMediaAttribute>(0)),
-    CONVERT(0x01, AVRCP_MEDIA_ATTRIBUTE_TITLE),
-    CONVERT(0x02, AVRCP_MEDIA_ATTRIBUTE_ARTIST),
-    CONVERT(0x03, AVRCP_MEDIA_ATTRIBUTE_ALBUM),
-    CONVERT(0x04, AVRCP_MEDIA_ATTRIBUTE_TRACK_NUM),
-    CONVERT(0x05, AVRCP_MEDIA_ATTRIBUTE_NUM_TRACKS),
-    CONVERT(0x06, AVRCP_MEDIA_ATTRIBUTE_GENRE),
-    CONVERT(0x07, AVRCP_MEDIA_ATTRIBUTE_PLAYING_TIME)
+    [0x00] = static_cast<BluetoothAvrcpMediaAttribute>(0),
+    [0x01] = AVRCP_MEDIA_ATTRIBUTE_TITLE,
+    [0x02] = AVRCP_MEDIA_ATTRIBUTE_ARTIST,
+    [0x03] = AVRCP_MEDIA_ATTRIBUTE_ALBUM,
+    [0x04] = AVRCP_MEDIA_ATTRIBUTE_TRACK_NUM,
+    [0x05] = AVRCP_MEDIA_ATTRIBUTE_NUM_TRACKS,
+    [0x06] = AVRCP_MEDIA_ATTRIBUTE_GENRE,
+    [0x07] = AVRCP_MEDIA_ATTRIBUTE_PLAYING_TIME
   };
   if (NS_WARN_IF(!aIn) ||
       NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sAvrcpMediaAttribute))) {
@@ -163,11 +163,11 @@ nsresult
 Convert(uint8_t aIn, BluetoothAvrcpPlayerAttribute& aOut)
 {
   static const BluetoothAvrcpPlayerAttribute sAvrcpPlayerAttribute[] = {
-    CONVERT(0x00, static_cast<BluetoothAvrcpPlayerAttribute>(0)),
-    CONVERT(0x01, AVRCP_PLAYER_ATTRIBUTE_EQUALIZER),
-    CONVERT(0x02, AVRCP_PLAYER_ATTRIBUTE_REPEAT),
-    CONVERT(0x03, AVRCP_PLAYER_ATTRIBUTE_SHUFFLE),
-    CONVERT(0x04, AVRCP_PLAYER_ATTRIBUTE_SCAN)
+    [0x00] = static_cast<BluetoothAvrcpPlayerAttribute>(0),
+    [0x01] = AVRCP_PLAYER_ATTRIBUTE_EQUALIZER,
+    [0x02] = AVRCP_PLAYER_ATTRIBUTE_REPEAT,
+    [0x03] = AVRCP_PLAYER_ATTRIBUTE_SHUFFLE,
+    [0x04] = AVRCP_PLAYER_ATTRIBUTE_SCAN
   };
   if (NS_WARN_IF(!aIn) ||
       NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sAvrcpPlayerAttribute))) {
@@ -183,10 +183,10 @@ nsresult
 Convert(uint8_t aIn, BluetoothAvrcpRemoteFeature& aOut)
 {
   static const BluetoothAvrcpRemoteFeature sAvrcpRemoteFeature[] = {
-    CONVERT(0x00, AVRCP_REMOTE_FEATURE_NONE),
-    CONVERT(0x01, AVRCP_REMOTE_FEATURE_METADATA),
-    CONVERT(0x02, AVRCP_REMOTE_FEATURE_ABSOLUTE_VOLUME),
-    CONVERT(0x03, AVRCP_REMOTE_FEATURE_BROWSE)
+    [0x00] = AVRCP_REMOTE_FEATURE_NONE,
+    [0x01] = AVRCP_REMOTE_FEATURE_METADATA,
+    [0x02] = AVRCP_REMOTE_FEATURE_ABSOLUTE_VOLUME,
+    [0x03] = AVRCP_REMOTE_FEATURE_BROWSE
   };
   if (NS_WARN_IF(!aIn) ||
       NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sAvrcpRemoteFeature))) {
@@ -202,9 +202,9 @@ nsresult
 Convert(uint8_t aIn, BluetoothBondState& aOut)
 {
   static const BluetoothBondState sBondState[] = {
-    CONVERT(0x00, BOND_STATE_NONE),
-    CONVERT(0x01, BOND_STATE_BONDING),
-    CONVERT(0x02, BOND_STATE_BONDED)
+    [0x00] = BOND_STATE_NONE,
+    [0x01] = BOND_STATE_BONDING,
+    [0x02] = BOND_STATE_BONDED
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sBondState))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -217,10 +217,10 @@ nsresult
 Convert(uint8_t aIn, BluetoothHandsfreeAudioState& aOut)
 {
   static const BluetoothHandsfreeAudioState sAudioState[] = {
-    CONVERT(0x00, HFP_AUDIO_STATE_DISCONNECTED),
-    CONVERT(0x01, HFP_AUDIO_STATE_CONNECTING),
-    CONVERT(0x02, HFP_AUDIO_STATE_CONNECTED),
-    CONVERT(0x03, HFP_AUDIO_STATE_DISCONNECTING)
+    [0x00] = HFP_AUDIO_STATE_DISCONNECTED,
+    [0x01] = HFP_AUDIO_STATE_CONNECTING,
+    [0x02] = HFP_AUDIO_STATE_CONNECTED,
+    [0x03] = HFP_AUDIO_STATE_DISCONNECTING
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sAudioState))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -233,10 +233,10 @@ nsresult
 Convert(uint8_t aIn, BluetoothHandsfreeCallHoldType& aOut)
 {
   static const BluetoothHandsfreeCallHoldType sCallHoldType[] = {
-    CONVERT(0x00, HFP_CALL_HOLD_RELEASEHELD),
-    CONVERT(0x01, HFP_CALL_HOLD_RELEASEACTIVE_ACCEPTHELD),
-    CONVERT(0x02, HFP_CALL_HOLD_HOLDACTIVE_ACCEPTHELD),
-    CONVERT(0x03, HFP_CALL_HOLD_ADDHELDTOCONF)
+    [0x00] = HFP_CALL_HOLD_RELEASEHELD,
+    [0x01] = HFP_CALL_HOLD_RELEASEACTIVE_ACCEPTHELD,
+    [0x02] = HFP_CALL_HOLD_HOLDACTIVE_ACCEPTHELD,
+    [0x03] = HFP_CALL_HOLD_ADDHELDTOCONF
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sCallHoldType))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -249,11 +249,11 @@ nsresult
 Convert(uint8_t aIn, BluetoothHandsfreeConnectionState& aOut)
 {
   static const BluetoothHandsfreeConnectionState sConnectionState[] = {
-    CONVERT(0x00, HFP_CONNECTION_STATE_DISCONNECTED),
-    CONVERT(0x01, HFP_CONNECTION_STATE_CONNECTING),
-    CONVERT(0x02, HFP_CONNECTION_STATE_CONNECTED),
-    CONVERT(0x03, HFP_CONNECTION_STATE_SLC_CONNECTED),
-    CONVERT(0x04, HFP_CONNECTION_STATE_DISCONNECTING)
+    [0x00] = HFP_CONNECTION_STATE_DISCONNECTED,
+    [0x01] = HFP_CONNECTION_STATE_CONNECTING,
+    [0x02] = HFP_CONNECTION_STATE_CONNECTED,
+    [0x03] = HFP_CONNECTION_STATE_SLC_CONNECTED,
+    [0x04] = HFP_CONNECTION_STATE_DISCONNECTING
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sConnectionState))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -266,8 +266,8 @@ nsresult
 Convert(uint8_t aIn, BluetoothHandsfreeNRECState& aOut)
 {
   static const BluetoothHandsfreeNRECState sNRECState[] = {
-    CONVERT(0x00, HFP_NREC_STOPPED),
-    CONVERT(0x01, HFP_NREC_STARTED)
+    [0x00] = HFP_NREC_STOPPED,
+    [0x01] = HFP_NREC_STARTED
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sNRECState))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -280,8 +280,8 @@ nsresult
 Convert(uint8_t aIn, BluetoothHandsfreeVoiceRecognitionState& aOut)
 {
   static const BluetoothHandsfreeVoiceRecognitionState sState[] = {
-    CONVERT(0x00, HFP_VOICE_RECOGNITION_STOPPED),
-    CONVERT(0x01, HFP_VOICE_RECOGNITION_STOPPED)
+    [0x00] = HFP_VOICE_RECOGNITION_STOPPED,
+    [0x01] = HFP_VOICE_RECOGNITION_STARTED
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sState))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -294,8 +294,8 @@ nsresult
 Convert(uint8_t aIn, BluetoothHandsfreeVolumeType& aOut)
 {
   static const BluetoothHandsfreeVolumeType sVolumeType[] = {
-    CONVERT(0x00, HFP_VOLUME_TYPE_SPEAKER),
-    CONVERT(0x01, HFP_VOLUME_TYPE_MICROPHONE)
+    [0x00] = HFP_VOLUME_TYPE_SPEAKER,
+    [0x01] = HFP_VOLUME_TYPE_MICROPHONE
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sVolumeType))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -308,9 +308,9 @@ nsresult
 Convert(uint8_t aIn, BluetoothHandsfreeWbsConfig& aOut)
 {
   static const BluetoothHandsfreeWbsConfig sWbsConfig[] = {
-    CONVERT(0x00, HFP_WBS_NONE),
-    CONVERT(0x01, HFP_WBS_NO),
-    CONVERT(0x02, HFP_WBS_YES)
+    [0x00] = HFP_WBS_NONE,
+    [0x01] = HFP_WBS_NO,
+    [0x02] = HFP_WBS_YES
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sWbsConfig))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -329,19 +329,19 @@ nsresult
 Convert(uint8_t aIn, BluetoothPropertyType& aOut)
 {
   static const BluetoothPropertyType sPropertyType[] = {
-    CONVERT(0x00, static_cast<BluetoothPropertyType>(0)), // invalid, required by gcc
-    CONVERT(0x01, PROPERTY_BDNAME),
-    CONVERT(0x02, PROPERTY_BDADDR),
-    CONVERT(0x03, PROPERTY_UUIDS),
-    CONVERT(0x04, PROPERTY_CLASS_OF_DEVICE),
-    CONVERT(0x05, PROPERTY_TYPE_OF_DEVICE),
-    CONVERT(0x06, PROPERTY_SERVICE_RECORD),
-    CONVERT(0x07, PROPERTY_ADAPTER_SCAN_MODE),
-    CONVERT(0x08, PROPERTY_ADAPTER_BONDED_DEVICES),
-    CONVERT(0x09, PROPERTY_ADAPTER_DISCOVERY_TIMEOUT),
-    CONVERT(0x0a, PROPERTY_REMOTE_FRIENDLY_NAME),
-    CONVERT(0x0b, PROPERTY_REMOTE_RSSI),
-    CONVERT(0x0c, PROPERTY_REMOTE_VERSION_INFO)
+    [0x00] = static_cast<BluetoothPropertyType>(0), // invalid, required by gcc
+    [0x01] = PROPERTY_BDNAME,
+    [0x02] = PROPERTY_BDADDR,
+    [0x03] = PROPERTY_UUIDS,
+    [0x04] = PROPERTY_CLASS_OF_DEVICE,
+    [0x05] = PROPERTY_TYPE_OF_DEVICE,
+    [0x06] = PROPERTY_SERVICE_RECORD,
+    [0x07] = PROPERTY_ADAPTER_SCAN_MODE,
+    [0x08] = PROPERTY_ADAPTER_BONDED_DEVICES,
+    [0x09] = PROPERTY_ADAPTER_DISCOVERY_TIMEOUT,
+    [0x0a] = PROPERTY_REMOTE_FRIENDLY_NAME,
+    [0x0b] = PROPERTY_REMOTE_RSSI,
+    [0x0c] = PROPERTY_REMOTE_VERSION_INFO
   };
   if (aIn == 0xff) {
     /* This case is handled separately to not populate
@@ -361,10 +361,10 @@ nsresult
 Convert(BluetoothSocketType aIn, uint8_t& aOut)
 {
   static const uint8_t sSocketType[] = {
-    CONVERT(0, 0), // silences compiler warning
-    CONVERT(BluetoothSocketType::RFCOMM, 0x01),
-    CONVERT(BluetoothSocketType::SCO, 0x02),
-    CONVERT(BluetoothSocketType::L2CAP, 0x03)
+    [0] = 0, // silences compiler warning
+    [BluetoothSocketType::RFCOMM] = 0x01,
+    [BluetoothSocketType::SCO] = 0x02,
+    [BluetoothSocketType::L2CAP] = 0x03
     // EL2CAP not supported
   };
   if (NS_WARN_IF(aIn == BluetoothSocketType::EL2CAP) ||
@@ -381,10 +381,10 @@ nsresult
 Convert(uint8_t aIn, BluetoothSspVariant& aOut)
 {
   static const BluetoothSspVariant sSspVariant[] = {
-    CONVERT(0x00, SSP_VARIANT_PASSKEY_CONFIRMATION),
-    CONVERT(0x01, SSP_VARIANT_PASSKEY_ENTRY),
-    CONVERT(0x02, SSP_VARIANT_CONSENT),
-    CONVERT(0x03, SSP_VARIANT_PASSKEY_NOTIFICATION)
+    [0x00] = SSP_VARIANT_PASSKEY_CONFIRMATION,
+    [0x01] = SSP_VARIANT_PASSKEY_ENTRY,
+    [0x02] = SSP_VARIANT_CONSENT,
+    [0x03] = SSP_VARIANT_PASSKEY_NOTIFICATION
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sSspVariant))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -397,17 +397,17 @@ nsresult
 Convert(uint8_t aIn, BluetoothStatus& aOut)
 {
   static const BluetoothStatus sStatus[] = {
-    CONVERT(0x00, STATUS_SUCCESS),
-    CONVERT(0x01, STATUS_FAIL),
-    CONVERT(0x02, STATUS_NOT_READY),
-    CONVERT(0x03, STATUS_NOMEM),
-    CONVERT(0x04, STATUS_BUSY),
-    CONVERT(0x05, STATUS_DONE),
-    CONVERT(0x06, STATUS_UNSUPPORTED),
-    CONVERT(0x07, STATUS_PARM_INVALID),
-    CONVERT(0x08, STATUS_UNHANDLED),
-    CONVERT(0x09, STATUS_AUTH_FAILURE),
-    CONVERT(0x0a, STATUS_RMT_DEV_DOWN)
+    [0x00] = STATUS_SUCCESS,
+    [0x01] = STATUS_FAIL,
+    [0x02] = STATUS_NOT_READY,
+    [0x03] = STATUS_NOMEM,
+    [0x04] = STATUS_BUSY,
+    [0x05] = STATUS_DONE,
+    [0x06] = STATUS_UNSUPPORTED,
+    [0x07] = STATUS_PARM_INVALID,
+    [0x08] = STATUS_UNHANDLED,
+    [0x09] = STATUS_AUTH_FAILURE,
+    [0x0a] = STATUS_RMT_DEV_DOWN
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sStatus))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -421,24 +421,24 @@ Convert(int32_t aIn, BluetoothGattStatus& aOut)
 {
   /* Reference: $B2G/external/bluetooth/bluedroid/stack/include/gatt_api.h */
   static const BluetoothGattStatus sGattStatus[] = {
-    CONVERT(0x0000, GATT_STATUS_SUCCESS),
-    CONVERT(0x0001, GATT_STATUS_INVALID_HANDLE),
-    CONVERT(0x0002, GATT_STATUS_READ_NOT_PERMITTED),
-    CONVERT(0x0003, GATT_STATUS_WRITE_NOT_PERMITTED),
-    CONVERT(0x0004, GATT_STATUS_INVALID_PDU),
-    CONVERT(0x0005, GATT_STATUS_INSUFFICIENT_AUTHENTICATION),
-    CONVERT(0x0006, GATT_STATUS_REQUEST_NOT_SUPPORTED),
-    CONVERT(0x0007, GATT_STATUS_INVALID_OFFSET),
-    CONVERT(0x0008, GATT_STATUS_INSUFFICIENT_AUTHORIZATION),
-    CONVERT(0x0009, GATT_STATUS_PREPARE_QUEUE_FULL),
-    CONVERT(0x000a, GATT_STATUS_ATTRIBUTE_NOT_FOUND),
-    CONVERT(0x000b, GATT_STATUS_ATTRIBUTE_NOT_LONG),
-    CONVERT(0x000c, GATT_STATUS_INSUFFICIENT_ENCRYPTION_KEY_SIZE),
-    CONVERT(0x000d, GATT_STATUS_INVALID_ATTRIBUTE_LENGTH),
-    CONVERT(0x000e, GATT_STATUS_UNLIKELY_ERROR),
-    CONVERT(0x000f, GATT_STATUS_INSUFFICIENT_ENCRYPTION),
-    CONVERT(0x0010, GATT_STATUS_UNSUPPORTED_GROUP_TYPE),
-    CONVERT(0x0011, GATT_STATUS_INSUFFICIENT_RESOURCES)
+    [0x0000] = GATT_STATUS_SUCCESS,
+    [0x0001] = GATT_STATUS_INVALID_HANDLE,
+    [0x0002] = GATT_STATUS_READ_NOT_PERMITTED,
+    [0x0003] = GATT_STATUS_WRITE_NOT_PERMITTED,
+    [0x0004] = GATT_STATUS_INVALID_PDU,
+    [0x0005] = GATT_STATUS_INSUFFICIENT_AUTHENTICATION,
+    [0x0006] = GATT_STATUS_REQUEST_NOT_SUPPORTED,
+    [0x0007] = GATT_STATUS_INVALID_OFFSET,
+    [0x0008] = GATT_STATUS_INSUFFICIENT_AUTHORIZATION,
+    [0x0009] = GATT_STATUS_PREPARE_QUEUE_FULL,
+    [0x000a] = GATT_STATUS_ATTRIBUTE_NOT_FOUND,
+    [0x000b] = GATT_STATUS_ATTRIBUTE_NOT_LONG,
+    [0x000c] = GATT_STATUS_INSUFFICIENT_ENCRYPTION_KEY_SIZE,
+    [0x000d] = GATT_STATUS_INVALID_ATTRIBUTE_LENGTH,
+    [0x000e] = GATT_STATUS_UNLIKELY_ERROR,
+    [0x000f] = GATT_STATUS_INSUFFICIENT_ENCRYPTION,
+    [0x0010] = GATT_STATUS_UNSUPPORTED_GROUP_TYPE,
+    [0x0011] = GATT_STATUS_INSUFFICIENT_RESOURCES
   };
   if (NS_WARN_IF(aIn < 0) ||
       NS_WARN_IF(aIn >= static_cast<ssize_t>(MOZ_ARRAY_LENGTH(sGattStatus)))) {
@@ -541,8 +541,8 @@ nsresult
 Convert(BluetoothAclState aIn, bool& aOut)
 {
   static const bool sBool[] = {
-    CONVERT(ACL_STATE_CONNECTED, true),
-    CONVERT(ACL_STATE_DISCONNECTED, false)
+    [ACL_STATE_CONNECTED] = true,
+    [ACL_STATE_DISCONNECTED] = false
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sBool))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -578,12 +578,12 @@ nsresult
 Convert(BluetoothAvrcpEvent aIn, uint8_t& aOut)
 {
   static const uint8_t sValue[] = {
-    CONVERT(AVRCP_EVENT_PLAY_STATUS_CHANGED, 0x01),
-    CONVERT(AVRCP_EVENT_TRACK_CHANGE, 0x02),
-    CONVERT(AVRCP_EVENT_TRACK_REACHED_END, 0x03),
-    CONVERT(AVRCP_EVENT_TRACK_REACHED_START, 0x04),
-    CONVERT(AVRCP_EVENT_PLAY_POS_CHANGED, 0x05),
-    CONVERT(AVRCP_EVENT_APP_SETTINGS_CHANGED, 0x08)
+    [AVRCP_EVENT_PLAY_STATUS_CHANGED] = 0x01,
+    [AVRCP_EVENT_TRACK_CHANGE] = 0x02,
+    [AVRCP_EVENT_TRACK_REACHED_END] = 0x03,
+    [AVRCP_EVENT_TRACK_REACHED_START] = 0x04,
+    [AVRCP_EVENT_PLAY_POS_CHANGED] = 0x05,
+    [AVRCP_EVENT_APP_SETTINGS_CHANGED] = 0x08
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sValue))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -596,8 +596,8 @@ nsresult
 Convert(BluetoothAvrcpNotification aIn, uint8_t& aOut)
 {
   static const bool sValue[] = {
-    CONVERT(AVRCP_NTF_INTERIM, 0x00),
-    CONVERT(AVRCP_NTF_CHANGED, 0x01)
+    [AVRCP_NTF_INTERIM] = 0x00,
+    [AVRCP_NTF_CHANGED] = 0x01
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sValue))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -610,10 +610,10 @@ nsresult
 Convert(BluetoothAvrcpPlayerAttribute aIn, uint8_t& aOut)
 {
   static const uint8_t sValue[] = {
-    CONVERT(AVRCP_PLAYER_ATTRIBUTE_EQUALIZER, 0x01),
-    CONVERT(AVRCP_PLAYER_ATTRIBUTE_REPEAT, 0x02),
-    CONVERT(AVRCP_PLAYER_ATTRIBUTE_SHUFFLE, 0x03),
-    CONVERT(AVRCP_PLAYER_ATTRIBUTE_SCAN, 0x04)
+    [AVRCP_PLAYER_ATTRIBUTE_EQUALIZER] = 0x01,
+    [AVRCP_PLAYER_ATTRIBUTE_REPEAT] = 0x02,
+    [AVRCP_PLAYER_ATTRIBUTE_SHUFFLE] = 0x03,
+    [AVRCP_PLAYER_ATTRIBUTE_SCAN] = 0x04
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sValue))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -638,11 +638,11 @@ nsresult
 Convert(BluetoothAvrcpStatus aIn, uint8_t& aOut)
 {
   static const uint8_t sValue[] = {
-    CONVERT(AVRCP_STATUS_BAD_COMMAND, 0x00),
-    CONVERT(AVRCP_STATUS_BAD_PARAMETER, 0x01),
-    CONVERT(AVRCP_STATUS_NOT_FOUND, 0x02),
-    CONVERT(AVRCP_STATUS_INTERNAL_ERROR, 0x03),
-    CONVERT(AVRCP_STATUS_SUCCESS, 0x04)
+    [AVRCP_STATUS_BAD_COMMAND] = 0x00,
+    [AVRCP_STATUS_BAD_PARAMETER] = 0x01,
+    [AVRCP_STATUS_NOT_FOUND] = 0x02,
+    [AVRCP_STATUS_INTERNAL_ERROR] = 0x03,
+    [AVRCP_STATUS_SUCCESS] = 0x04
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sValue))) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -655,8 +655,8 @@ nsresult
 Convert(BluetoothHandsfreeAtResponse aIn, uint8_t& aOut)
 {
   static const uint8_t sAtResponse[] = {
-    CONVERT(HFP_AT_RESPONSE_ERROR, 0x00),
-    CONVERT(HFP_AT_RESPONSE_OK, 0x01)
+    [HFP_AT_RESPONSE_ERROR] = 0x00,
+    [HFP_AT_RESPONSE_OK] = 0x01
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sAtResponse))) {
     aOut = 0x00; // silences compiler warning
@@ -670,8 +670,8 @@ nsresult
 Convert(BluetoothHandsfreeCallAddressType aIn, uint8_t& aOut)
 {
   static const uint8_t sCallAddressType[] = {
-    CONVERT(HFP_CALL_ADDRESS_TYPE_UNKNOWN, 0x81),
-    CONVERT(HFP_CALL_ADDRESS_TYPE_INTERNATIONAL, 0x91)
+    [HFP_CALL_ADDRESS_TYPE_UNKNOWN] = 0x81,
+    [HFP_CALL_ADDRESS_TYPE_INTERNATIONAL] = 0x91
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sCallAddressType))) {
     aOut = 0x00; // silences compiler warning
@@ -685,8 +685,8 @@ nsresult
 Convert(BluetoothHandsfreeCallDirection aIn, uint8_t& aOut)
 {
   static const uint8_t sCallDirection[] = {
-    CONVERT(HFP_CALL_DIRECTION_OUTGOING, 0x00),
-    CONVERT(HFP_CALL_DIRECTION_INCOMING, 0x01)
+    [HFP_CALL_DIRECTION_OUTGOING] = 0x00,
+    [HFP_CALL_DIRECTION_INCOMING] = 0x01
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sCallDirection))) {
     aOut = 0x00; // silences compiler warning
@@ -700,13 +700,13 @@ nsresult
 Convert(BluetoothHandsfreeCallState aIn, uint8_t& aOut)
 {
   static const uint8_t sCallState[] = {
-    CONVERT(HFP_CALL_STATE_ACTIVE, 0x00),
-    CONVERT(HFP_CALL_STATE_HELD, 0x01),
-    CONVERT(HFP_CALL_STATE_DIALING, 0x02),
-    CONVERT(HFP_CALL_STATE_ALERTING, 0x03),
-    CONVERT(HFP_CALL_STATE_INCOMING, 0x04),
-    CONVERT(HFP_CALL_STATE_WAITING, 0x05),
-    CONVERT(HFP_CALL_STATE_IDLE, 0x06)
+    [HFP_CALL_STATE_ACTIVE] = 0x00,
+    [HFP_CALL_STATE_HELD] = 0x01,
+    [HFP_CALL_STATE_DIALING] = 0x02,
+    [HFP_CALL_STATE_ALERTING] = 0x03,
+    [HFP_CALL_STATE_INCOMING] = 0x04,
+    [HFP_CALL_STATE_WAITING] = 0x05,
+    [HFP_CALL_STATE_IDLE] = 0x06
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sCallState))) {
     aOut = 0x00; // silences compiler warning
@@ -720,9 +720,9 @@ nsresult
 Convert(BluetoothHandsfreeCallMode aIn, uint8_t& aOut)
 {
   static const uint8_t sCallMode[] = {
-    CONVERT(HFP_CALL_MODE_VOICE, 0x00),
-    CONVERT(HFP_CALL_MODE_DATA, 0x01),
-    CONVERT(HFP_CALL_MODE_FAX, 0x02)
+    [HFP_CALL_MODE_VOICE] = 0x00,
+    [HFP_CALL_MODE_DATA] = 0x01,
+    [HFP_CALL_MODE_FAX] = 0x02
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sCallMode))) {
     aOut = 0x00; // silences compiler warning
@@ -736,8 +736,8 @@ nsresult
 Convert(BluetoothHandsfreeCallMptyType aIn, uint8_t& aOut)
 {
   static const uint8_t sCallMptyType[] = {
-    CONVERT(HFP_CALL_MPTY_TYPE_SINGLE, 0x00),
-    CONVERT(HFP_CALL_MPTY_TYPE_MULTI, 0x01)
+    [HFP_CALL_MPTY_TYPE_SINGLE] = 0x00,
+    [HFP_CALL_MPTY_TYPE_MULTI] = 0x01
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sCallMptyType))) {
     aOut = 0x00; // silences compiler warning
@@ -751,8 +751,8 @@ nsresult
 Convert(BluetoothHandsfreeNetworkState aIn, uint8_t& aOut)
 {
   static const uint8_t sNetworkState[] = {
-    CONVERT(HFP_NETWORK_STATE_NOT_AVAILABLE, 0x00),
-    CONVERT(HFP_NETWORK_STATE_AVAILABLE, 0x01)
+    [HFP_NETWORK_STATE_NOT_AVAILABLE] = 0x00,
+    [HFP_NETWORK_STATE_AVAILABLE] = 0x01
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sNetworkState))) {
     aOut = 0x00; // silences compiler warning
@@ -766,8 +766,8 @@ nsresult
 Convert(BluetoothHandsfreeServiceType aIn, uint8_t& aOut)
 {
   static const uint8_t sServiceType[] = {
-    CONVERT(HFP_SERVICE_TYPE_HOME, 0x00),
-    CONVERT(HFP_SERVICE_TYPE_ROAMING, 0x01)
+    [HFP_SERVICE_TYPE_HOME] = 0x00,
+    [HFP_SERVICE_TYPE_ROAMING] = 0x01
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sServiceType))) {
     aOut = 0x00; // silences compiler warning
@@ -781,8 +781,8 @@ nsresult
 Convert(BluetoothHandsfreeVolumeType aIn, uint8_t& aOut)
 {
   static const uint8_t sVolumeType[] = {
-    CONVERT(HFP_VOLUME_TYPE_SPEAKER, 0x00),
-    CONVERT(HFP_VOLUME_TYPE_MICROPHONE, 0x01)
+    [HFP_VOLUME_TYPE_SPEAKER] = 0x00,
+    [HFP_VOLUME_TYPE_MICROPHONE] = 0x01
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sVolumeType))) {
     aOut = 0x00; // silences compiler warning
@@ -796,9 +796,9 @@ nsresult
 Convert(BluetoothHandsfreeWbsConfig aIn, uint8_t& aOut)
 {
   static const uint8_t sWbsConfig[] = {
-    CONVERT(HFP_WBS_NONE, 0x00),
-    CONVERT(HFP_WBS_NO, 0x01),
-    CONVERT(HFP_WBS_YES, 0x02)
+    [HFP_WBS_NONE] = 0x00,
+    [HFP_WBS_NO] = 0x01,
+    [HFP_WBS_YES] = 0x02
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sWbsConfig))) {
     aOut = 0x00; // silences compiler warning
@@ -812,20 +812,20 @@ nsresult
 Convert(BluetoothPropertyType aIn, uint8_t& aOut)
 {
   static const uint8_t sPropertyType[] = {
-    CONVERT(PROPERTY_UNKNOWN, 0x00),
-    CONVERT(PROPERTY_BDNAME, 0x01),
-    CONVERT(PROPERTY_BDADDR, 0x02),
-    CONVERT(PROPERTY_UUIDS, 0x03),
-    CONVERT(PROPERTY_CLASS_OF_DEVICE, 0x04),
-    CONVERT(PROPERTY_TYPE_OF_DEVICE, 0x05),
-    CONVERT(PROPERTY_SERVICE_RECORD, 0x06),
-    CONVERT(PROPERTY_ADAPTER_SCAN_MODE, 0x07),
-    CONVERT(PROPERTY_ADAPTER_BONDED_DEVICES, 0x08),
-    CONVERT(PROPERTY_ADAPTER_DISCOVERY_TIMEOUT, 0x09),
-    CONVERT(PROPERTY_REMOTE_FRIENDLY_NAME, 0x0a),
-    CONVERT(PROPERTY_REMOTE_RSSI, 0x0b),
-    CONVERT(PROPERTY_REMOTE_VERSION_INFO, 0x0c),
-    CONVERT(PROPERTY_REMOTE_DEVICE_TIMESTAMP, 0xff)
+    [PROPERTY_UNKNOWN] = 0x00,
+    [PROPERTY_BDNAME] = 0x01,
+    [PROPERTY_BDADDR] = 0x02,
+    [PROPERTY_UUIDS] = 0x03,
+    [PROPERTY_CLASS_OF_DEVICE] = 0x04,
+    [PROPERTY_TYPE_OF_DEVICE] = 0x05,
+    [PROPERTY_SERVICE_RECORD] = 0x06,
+    [PROPERTY_ADAPTER_SCAN_MODE] = 0x07,
+    [PROPERTY_ADAPTER_BONDED_DEVICES] = 0x08,
+    [PROPERTY_ADAPTER_DISCOVERY_TIMEOUT] = 0x09,
+    [PROPERTY_REMOTE_FRIENDLY_NAME] = 0x0a,
+    [PROPERTY_REMOTE_RSSI] = 0x0b,
+    [PROPERTY_REMOTE_VERSION_INFO] = 0x0c,
+    [PROPERTY_REMOTE_DEVICE_TIMESTAMP] = 0xff
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sPropertyType))) {
     aOut = 0x00; // silences compiler warning
@@ -851,9 +851,9 @@ nsresult
 Convert(BluetoothScanMode aIn, int32_t& aOut)
 {
   static const int32_t sScanMode[] = {
-    CONVERT(SCAN_MODE_NONE, 0x00),
-    CONVERT(SCAN_MODE_CONNECTABLE, 0x01),
-    CONVERT(SCAN_MODE_CONNECTABLE_DISCOVERABLE, 0x02)
+    [SCAN_MODE_NONE] = 0x00,
+    [SCAN_MODE_CONNECTABLE] = 0x01,
+    [SCAN_MODE_CONNECTABLE_DISCOVERABLE] = 0x02
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sScanMode))) {
     aOut = 0; // silences compiler warning
@@ -867,10 +867,10 @@ nsresult
 Convert(BluetoothSspVariant aIn, uint8_t& aOut)
 {
   static const uint8_t sValue[] = {
-    CONVERT(SSP_VARIANT_PASSKEY_CONFIRMATION, 0x00),
-    CONVERT(SSP_VARIANT_PASSKEY_ENTRY, 0x01),
-    CONVERT(SSP_VARIANT_CONSENT, 0x02),
-    CONVERT(SSP_VARIANT_PASSKEY_NOTIFICATION, 0x03)
+    [SSP_VARIANT_PASSKEY_CONFIRMATION] = 0x00,
+    [SSP_VARIANT_PASSKEY_ENTRY] = 0x01,
+    [SSP_VARIANT_CONSENT] = 0x02,
+    [SSP_VARIANT_PASSKEY_NOTIFICATION] = 0x03
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sValue))) {
     aOut = 0; // silences compiler warning
@@ -884,11 +884,11 @@ nsresult
 Convert(ControlPlayStatus aIn, uint8_t& aOut)
 {
   static const uint8_t sValue[] = {
-    CONVERT(PLAYSTATUS_STOPPED, 0x00),
-    CONVERT(PLAYSTATUS_PLAYING, 0x01),
-    CONVERT(PLAYSTATUS_PAUSED, 0x02),
-    CONVERT(PLAYSTATUS_FWD_SEEK, 0x03),
-    CONVERT(PLAYSTATUS_REV_SEEK, 0x04)
+    [PLAYSTATUS_STOPPED] = 0x00,
+    [PLAYSTATUS_PLAYING] = 0x01,
+    [PLAYSTATUS_PAUSED] = 0x02,
+    [PLAYSTATUS_FWD_SEEK] = 0x03,
+    [PLAYSTATUS_REV_SEEK] = 0x04
   };
   if (aIn == PLAYSTATUS_ERROR) {
     /* This case is handled separately to not populate
@@ -908,11 +908,11 @@ nsresult
 Convert(BluetoothGattAuthReq aIn, int32_t& aOut)
 {
   static const int32_t sGattAuthReq[] = {
-    CONVERT(GATT_AUTH_REQ_NONE, 0x00),
-    CONVERT(GATT_AUTH_REQ_NO_MITM, 0x01),
-    CONVERT(GATT_AUTH_REQ_MITM, 0x02),
-    CONVERT(GATT_AUTH_REQ_SIGNED_NO_MITM, 0x03),
-    CONVERT(GATT_AUTH_REQ_SIGNED_MITM, 0x04)
+    [GATT_AUTH_REQ_NONE] = 0x00,
+    [GATT_AUTH_REQ_NO_MITM] = 0x01,
+    [GATT_AUTH_REQ_MITM] = 0x02,
+    [GATT_AUTH_REQ_SIGNED_NO_MITM] = 0x03,
+    [GATT_AUTH_REQ_SIGNED_MITM] = 0x04
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sGattAuthReq))) {
     aOut = GATT_AUTH_REQ_NONE; // silences compiler warning
@@ -926,10 +926,10 @@ nsresult
 Convert(BluetoothGattWriteType aIn, int32_t& aOut)
 {
   static const int32_t sGattWriteType[] = {
-    CONVERT(GATT_WRITE_TYPE_NO_RESPONSE, 0x01),
-    CONVERT(GATT_WRITE_TYPE_NORMAL, 0x02),
-    CONVERT(GATT_WRITE_TYPE_PREPARE, 0x03),
-    CONVERT(GATT_WRITE_TYPE_SIGNED, 0x04)
+    [GATT_WRITE_TYPE_NO_RESPONSE] = 0x01,
+    [GATT_WRITE_TYPE_NORMAL] = 0x02,
+    [GATT_WRITE_TYPE_PREPARE] = 0x03,
+    [GATT_WRITE_TYPE_SIGNED] = 0x04
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sGattWriteType))) {
     aOut = GATT_WRITE_TYPE_NORMAL; // silences compiler warning

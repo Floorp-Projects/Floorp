@@ -345,15 +345,17 @@ CompositorChild::RecvUpdatePluginVisibility(const uintptr_t& aOwnerWidget,
 }
 
 bool
-CompositorChild::RecvDidComposite(const uint64_t& aId, const uint64_t& aTransactionId)
+CompositorChild::RecvDidComposite(const uint64_t& aId, const uint64_t& aTransactionId,
+                                  const TimeStamp& aCompositeStart,
+                                  const TimeStamp& aCompositeEnd)
 {
   if (mLayerManager) {
     MOZ_ASSERT(aId == 0);
-    mLayerManager->DidComposite(aTransactionId);
+    mLayerManager->DidComposite(aTransactionId, aCompositeStart, aCompositeEnd);
   } else if (aId != 0) {
     dom::TabChild *child = dom::TabChild::GetFrom(aId);
     if (child) {
-      child->DidComposite(aTransactionId);
+      child->DidComposite(aTransactionId, aCompositeStart, aCompositeEnd);
     }
   }
   return true;

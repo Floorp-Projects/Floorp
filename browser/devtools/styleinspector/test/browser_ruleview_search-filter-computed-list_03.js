@@ -5,61 +5,43 @@
 "use strict";
 
 // Tests that the rule view search filter works properly in the computed list
-// for property line input.
+// for color values.
 
-const SEARCH = "margin-top:4px";
+const SEARCH = "background-color: #F3F3F3";
 
 const TEST_URI = `
   <style type="text/css">
-    #testid {
-      margin: 4px 0px;
-    }
     .testclass {
-      background-color: red;
+      background: #F3F3F3 none repeat scroll 0% 0%;
     }
   </style>
-  <h1 id="testid" class="testclass">Styled Node</h1>
+  <div class="testclass">Styled Node</h1>
 `;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
-  yield selectNode("#testid", inspector);
+  yield selectNode(".testclass", inspector);
   yield testAddTextInFilter(inspector, view);
 });
 
-function* testAddTextInFilter(inspector, ruleView) {
-  info("Setting filter text to \"" + SEARCH + "\"");
-
-  let win = ruleView.styleWindow;
-  let searchField = ruleView.searchField;
-  let onRuleViewFiltered = inspector.once("ruleview-filtered");
-
-  searchField.focus();
-  synthesizeKeys(SEARCH, win);
-  yield onRuleViewFiltered;
+function* testAddTextInFilter(inspector, view) {
+  yield setSearchFilter(view, SEARCH);
 
   info("Check that the correct rules are visible");
-  is(ruleView.element.children.length, 2, "Should have 2 rules.");
-  is(getRuleViewRuleEditor(ruleView, 0).rule.selectorText, "element",
+  is(view.element.children.length, 2, "Should have 2 rules.");
+  is(getRuleViewRuleEditor(view, 0).rule.selectorText, "element",
     "First rule is inline element.");
 
-  let rule = getRuleViewRuleEditor(ruleView, 1).rule;
+  let rule = getRuleViewRuleEditor(view, 1).rule;
   let ruleEditor = rule.textProps[0].editor;
   let computed = ruleEditor.computed;
 
-  is(rule.selectorText, "#testid", "Second rule is #testid.");
+  is(rule.selectorText, ".testclass", "Second rule is .testclass.");
   ok(ruleEditor.expander.getAttribute("open"), "Expander is open.");
   ok(!ruleEditor.container.classList.contains("ruleview-highlight"),
-    "margin text property is not highlighted.");
-  ok(computed.hasAttribute("filter-open"), "margin computed list is open.");
-
+    "background property is not highlighted.");
+  ok(computed.hasAttribute("filter-open"), "background computed list is open.");
   ok(computed.children[0].classList.contains("ruleview-highlight"),
-    "margin-top computed property is not highlighted.");
-  ok(!computed.children[1].classList.contains("ruleview-highlight"),
-    "margin-right computed property is not highlighted.");
-  ok(!computed.children[2].classList.contains("ruleview-highlight"),
-    "margin-bottom computed property is not highlighted.");
-  ok(!computed.children[3].classList.contains("ruleview-highlight"),
-    "margin-left computed property is not highlighted.");
+    "background-color computed property is highlighted.");
 }

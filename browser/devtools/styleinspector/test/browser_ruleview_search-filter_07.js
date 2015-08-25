@@ -4,50 +4,52 @@
 
 "use strict";
 
-// Tests that the rule view search filter works properly for parsed property
-// value.
+// Tests that the rule view search filter works properly for newly modified
+// property name.
 
-const SEARCH = ":00F";
+const SEARCH = "e";
 
 const TEST_URI = `
-  <style type="text/css">
+  <style type='text/css'>
     #testid {
-      background-color: #00F;
-    }
-    .testclass {
       width: 100%;
+      height: 50%;
     }
   </style>
-  <div id="testid" class="testclass">Styled Node</div>
+  <h1 id='testid'>Styled Node</h1>
 `;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
-  yield testAddTextInFilter(inspector, view);
+  yield testModifyPropertyNameFilter(inspector, view);
 });
 
-function* testAddTextInFilter(inspector, ruleView) {
-  info("Setting filter text to \"" + SEARCH + "\"");
+function* testModifyPropertyNameFilter(inspector, view) {
+  yield setSearchFilter(view, SEARCH);
 
-  let win = ruleView.styleWindow;
-  let searchField = ruleView.searchField;
-  let onRuleViewFiltered = inspector.once("ruleview-filtered");
-
-  searchField.focus();
-  synthesizeKeys(SEARCH, win);
-  yield onRuleViewFiltered;
+  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  let rule = ruleEditor.rule;
+  let propEditor = rule.textProps[0].editor;
+  let editor = yield focusEditableField(view, propEditor.nameSpan);
 
   info("Check that the correct rules are visible");
-  is(ruleView.element.children.length, 2, "Should have 2 rules.");
-  is(getRuleViewRuleEditor(ruleView, 0).rule.selectorText, "element",
-    "First rule is inline element.");
-
-  let rule = getRuleViewRuleEditor(ruleView, 1).rule;
-
+  is(view.element.children.length, 2, "Should have 2 rules.");
   is(rule.selectorText, "#testid", "Second rule is #testid.");
-  ok(rule.textProps[0].editor.container.classList
+  ok(!propEditor.container.classList.contains("ruleview-highlight"),
+    "width text property is not highlighted.");
+  ok(rule.textProps[1].editor.container.classList
     .contains("ruleview-highlight"),
-    "background-color text property is correctly highlighted.");
+    "height text property is correctly highlighted.");
+
+  let onBlur = once(editor.input, "blur");
+  let onModification = rule._applyingModifications;
+  EventUtils.sendString("margin-left", view.styleWindow);
+  EventUtils.synthesizeKey("VK_RETURN", {});
+  yield onBlur;
+  yield onModification;
+
+  ok(propEditor.container.classList.contains("ruleview-highlight"),
+    "margin-left text property is correctly highlighted.");
 }

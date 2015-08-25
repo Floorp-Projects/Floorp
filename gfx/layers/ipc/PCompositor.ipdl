@@ -45,7 +45,8 @@ child:
   // the root layer tree).
   // transactionId is the id of the transaction before this composite, or 0
   // if there was no transaction since the last composite.
-  async DidComposite(uint64_t id, uint64_t transactionId);
+  async DidComposite(uint64_t id, uint64_t transactionId,
+                     TimeStamp compositeStart, TimeStamp compositeEnd);
 
   // The parent sends the child the requested fill ratio numbers.
   async Overfill(uint32_t aOverfill);
