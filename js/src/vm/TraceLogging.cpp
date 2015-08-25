@@ -672,6 +672,7 @@ TraceLoggerThreadState::init()
         enabledTextIds[TraceLogger_ParserCompileFunction] = true;
         enabledTextIds[TraceLogger_ParserCompileLazy] = true;
         enabledTextIds[TraceLogger_ParserCompileScript] = true;
+        enabledTextIds[TraceLogger_ParserCompileModule] = true;
         enabledTextIds[TraceLogger_IrregexpCompile] = true;
         enabledTextIds[TraceLogger_IrregexpExecute] = true;
         enabledTextIds[TraceLogger_Scripts] = true;

@@ -76,7 +76,7 @@ struct EventTypeTraits<void> {
  * Test if a method function or lambda accepts one or more arguments.
  */
 template <typename T>
-class TakeArgs {
+class TakeArgsHelper {
   template <typename C> static FalseType test(void(C::*)(), int);
   template <typename C> static FalseType test(void(C::*)() const, int);
   template <typename C> static FalseType test(void(C::*)() volatile, int);
@@ -86,6 +86,9 @@ class TakeArgs {
 public:
   typedef decltype(test(DeclVal<T>(), 0)) Type;
 };
+
+template <typename T>
+struct TakeArgs : public TakeArgsHelper<T>::Type {};
 
 template <typename T> struct EventTarget;
 
@@ -116,6 +119,193 @@ public:
   T* get() const { return mPtr; }
 private:
   T* const mPtr;
+};
+
+/**
+ * A helper class to pass event data to the listeners. Optimized to save
+ * copy when Move is possible or |Function| takes no arguments.
+ */
+template<typename Target, typename Function>
+class ListenerHelper {
+  // Define our custom runnable to minimize copy of the event data.
+  // NS_NewRunnableFunction will result in 2 copies of the event data.
+  // One is captured by the lambda and the other is the copy of the lambda.
+  template <typename T>
+  class R : public nsRunnable {
+    typedef typename RemoveCV<typename RemoveReference<T>::Type>::Type ArgType;
+  public:
+    template <typename U>
+    R(RevocableToken* aToken, const Function& aFunction, U&& aEvent)
+      : mToken(aToken), mFunction(aFunction), mEvent(Forward<U>(aEvent)) {}
+
+    NS_IMETHOD Run() override {
+      // Don't call the listener if it is disconnected.
+      if (!mToken->IsRevoked()) {
+        // Enable move whenever possible since mEvent won't be used anymore.
+        mFunction(Move(mEvent));
+      }
+      return NS_OK;
+    }
+
+  private:
+    nsRefPtr<RevocableToken> mToken;
+    Function mFunction;
+    ArgType mEvent;
+  };
+
+public:
+  ListenerHelper(RevocableToken* aToken, Target* aTarget, const Function& aFunc)
+    : mToken(aToken), mTarget(aTarget), mFunction(aFunc) {}
+
+  // |F| takes one argument.
+  template <typename F, typename T>
+  typename EnableIf<TakeArgs<F>::value, void>::Type
+  Dispatch(const F& aFunc, T&& aEvent) {
+    nsCOMPtr<nsIRunnable> r = new R<T>(mToken, aFunc, Forward<T>(aEvent));
+    EventTarget<Target>::Dispatch(mTarget.get(), r.forget());
+  }
+
+  // |F| takes no arguments. Don't bother passing aEvent.
+  template <typename F, typename T>
+  typename EnableIf<!TakeArgs<F>::value, void>::Type
+  Dispatch(const F& aFunc, T&&) {
+    const nsRefPtr<RevocableToken>& token = mToken;
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+      // Don't call the listener if it is disconnected.
+      if (!token->IsRevoked()) {
+        aFunc();
+      }
+    });
+    EventTarget<Target>::Dispatch(mTarget.get(), r.forget());
+  }
+
+  template <typename T>
+  void Dispatch(T&& aEvent) {
+    Dispatch(mFunction, Forward<T>(aEvent));
+  }
+
+private:
+  nsRefPtr<RevocableToken> mToken;
+  const nsRefPtr<Target> mTarget;
+  Function mFunction;
+};
+
+/**
+ * Define whether an event data should be copied or moved to the listeners.
+ *
+ * @Copy Data will always be copied. Each listener gets a copy.
+ * @Move Data will always be moved.
+ * @Both Data will be moved when possible or copied when necessary.
+ */
+enum class EventPassMode : int8_t {
+  Copy,
+  Move,
+  Both
+};
+
+class ListenerBase {
+public:
+  ListenerBase() : mToken(new RevocableToken()) {}
+  ~ListenerBase() {
+    MOZ_ASSERT(Token()->IsRevoked(), "Must disconnect the listener.");
+  }
+  RevocableToken* Token() const {
+    return mToken;
+  }
+private:
+  const nsRefPtr<RevocableToken> mToken;
+};
+
+/**
+ * Stored by MediaEventSource to send notifications to the listener.
+ * Since virtual methods can not be templated, this class is specialized
+ * to provide different Dispatch() overloads depending on EventPassMode.
+ */
+template <typename ArgType, EventPassMode Mode = EventPassMode::Copy>
+class Listener : public ListenerBase {
+public:
+  virtual ~Listener() {}
+  virtual void Dispatch(const ArgType& aEvent) = 0;
+};
+
+template <typename ArgType>
+class Listener<ArgType, EventPassMode::Both> : public ListenerBase {
+public:
+  virtual ~Listener() {}
+  virtual void Dispatch(const ArgType& aEvent) = 0;
+  virtual void Dispatch(ArgType&& aEvent) = 0;
+};
+
+template <typename ArgType>
+class Listener<ArgType, EventPassMode::Move> : public ListenerBase {
+public:
+  virtual ~Listener() {}
+  virtual void Dispatch(ArgType&& aEvent) = 0;
+};
+
+/**
+ * Store the registered target thread and function so it knows where and to
+ * whom to send the event data.
+ */
+template <typename Target, typename Function, typename ArgType, EventPassMode>
+class ListenerImpl : public Listener<ArgType, EventPassMode::Copy> {
+public:
+  ListenerImpl(Target* aTarget, const Function& aFunction)
+    : mHelper(ListenerBase::Token(), aTarget, aFunction) {}
+  void Dispatch(const ArgType& aEvent) override {
+    mHelper.Dispatch(aEvent);
+  }
+private:
+  ListenerHelper<Target, Function> mHelper;
+};
+
+template <typename Target, typename Function, typename ArgType>
+class ListenerImpl<Target, Function, ArgType, EventPassMode::Both>
+  : public Listener<ArgType, EventPassMode::Both> {
+public:
+  ListenerImpl(Target* aTarget, const Function& aFunction)
+    : mHelper(ListenerBase::Token(), aTarget, aFunction) {}
+  void Dispatch(const ArgType& aEvent) override {
+    mHelper.Dispatch(aEvent);
+  }
+  void Dispatch(ArgType&& aEvent) override {
+    mHelper.Dispatch(Move(aEvent));
+  }
+private:
+  ListenerHelper<Target, Function> mHelper;
+};
+
+template <typename Target, typename Function, typename ArgType>
+class ListenerImpl<Target, Function, ArgType, EventPassMode::Move>
+  : public Listener<ArgType, EventPassMode::Move> {
+public:
+  ListenerImpl(Target* aTarget, const Function& aFunction)
+    : mHelper(ListenerBase::Token(), aTarget, aFunction) {}
+  void Dispatch(ArgType&& aEvent) override {
+    mHelper.Dispatch(Move(aEvent));
+  }
+private:
+  ListenerHelper<Target, Function> mHelper;
+};
+
+/**
+ * Select EventPassMode based on ListenerMode and if the type is copyable.
+ *
+ * @Copy Selected when ListenerMode is NonExclusive because each listener
+ * must get a copy.
+ *
+ * @Move Selected when ListenerMode is Exclusive and the type is move-only.
+ *
+ * @Both Selected when ListenerMode is Exclusive and the type is copyable.
+ * The data will be moved when possible and copied when necessary.
+ */
+template <typename ArgType, ListenerMode Mode>
+struct PassModePicker {
+  // TODO: pick EventPassMode::Both when we can detect if a type is
+  // copy-constructible to allow copy-only types in Exclusive mode.
+  static const EventPassMode Value =
+    Mode == ListenerMode::NonExclusive ?
+    EventPassMode::Copy : EventPassMode::Move;
 };
 
 } // namespace detail
@@ -167,89 +357,15 @@ template <typename EventType, ListenerMode Mode = ListenerMode::NonExclusive>
 class MediaEventSource {
   static_assert(!IsReference<EventType>::value, "Ref-type not supported!");
   typedef typename detail::EventTypeTraits<EventType>::ArgType ArgType;
+  static const detail::EventPassMode PassMode
+    = detail::PassModePicker<ArgType, Mode>::Value;
+  typedef detail::Listener<ArgType, PassMode> Listener;
 
-  /**
-   * Stored by MediaEventSource to send notifications to the listener.
-   */
-  class Listener {
-  public:
-    Listener() : mToken(new RevocableToken()) {}
+  template<typename Target, typename Func>
+  using ListenerImpl = detail::ListenerImpl<Target, Func, ArgType, PassMode>;
 
-    virtual ~Listener() {
-      MOZ_ASSERT(Token()->IsRevoked(), "Must disconnect the listener.");
-    }
-
-    virtual void Dispatch(const ArgType& aEvent) = 0;
-
-    RevocableToken* Token() const {
-      return mToken;
-    }
-
-  private:
-    const nsRefPtr<RevocableToken> mToken;
-  };
-
-  /**
-   * Store the registered target thread and function so it knows where and to
-   * whom to send the event data.
-   */
-  template<typename Target, typename Function>
-  class ListenerImpl : public Listener {
-  public:
-    explicit ListenerImpl(Target* aTarget, const Function& aFunction)
-      : mTarget(aTarget), mFunction(aFunction) {}
-
-    // |Function| takes one argument.
-    void Dispatch(const ArgType& aEvent, TrueType) {
-      // Define our custom runnable to minimize copy of the event data.
-      // NS_NewRunnableFunction will result in 2 copies of the event data.
-      // One is captured by the lambda and the other is the copy of the lambda.
-      class R : public nsRunnable {
-      public:
-        R(RevocableToken* aToken,
-          const Function& aFunction, const ArgType& aEvent)
-          : mToken(aToken), mFunction(aFunction), mEvent(aEvent) {}
-
-        NS_IMETHOD Run() override {
-          // Don't call the listener if it is disconnected.
-          if (!mToken->IsRevoked()) {
-            // Enable move whenever possible since mEvent won't be used anymore.
-            mFunction(Move(mEvent));
-          }
-          return NS_OK;
-        }
-
-      private:
-        nsRefPtr<RevocableToken> mToken;
-        Function mFunction;
-        ArgType mEvent;
-      };
-
-      nsCOMPtr<nsIRunnable> r = new R(this->Token(), mFunction, aEvent);
-      detail::EventTarget<Target>::Dispatch(mTarget.get(), r.forget());
-    }
-
-    // |Function| takes no arguments. Don't bother passing aEvent.
-    void Dispatch(const ArgType& aEvent, FalseType) {
-      nsRefPtr<RevocableToken> token = this->Token();
-      const Function& function = mFunction;
-      nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-        // Don't call the listener if it is disconnected.
-        if (!token->IsRevoked()) {
-          function();
-        }
-      });
-      detail::EventTarget<Target>::Dispatch(mTarget.get(), r.forget());
-    }
-
-    void Dispatch(const ArgType& aEvent) override {
-      Dispatch(aEvent, typename detail::TakeArgs<Function>::Type());
-    }
-
-  private:
-    const nsRefPtr<Target> mTarget;
-    Function mFunction;
-  };
+  template <typename Method>
+  using TakeArgs = detail::TakeArgs<Method>;
 
   template<typename Target, typename Function>
   MediaEventListener
@@ -263,8 +379,8 @@ class MediaEventSource {
 
   // |Method| takes one argument.
   template <typename Target, typename This, typename Method>
-  MediaEventListener
-  ConnectInternal(Target* aTarget, This* aThis, Method aMethod, TrueType) {
+  typename EnableIf<TakeArgs<Method>::value, MediaEventListener>::Type
+  ConnectInternal(Target* aTarget, This* aThis, Method aMethod) {
     detail::RawPtr<This> thiz(aThis);
     auto f = [=] (ArgType&& aEvent) {
       (thiz.get()->*aMethod)(Move(aEvent));
@@ -274,8 +390,8 @@ class MediaEventSource {
 
   // |Method| takes no arguments. Don't bother passing the event data.
   template <typename Target, typename This, typename Method>
-  MediaEventListener
-  ConnectInternal(Target* aTarget, This* aThis, Method aMethod, FalseType) {
+  typename EnableIf<!TakeArgs<Method>::value, MediaEventListener>::Type
+  ConnectInternal(Target* aTarget, This* aThis, Method aMethod) {
     detail::RawPtr<This> thiz(aThis);
     auto f = [=] () {
       (thiz.get()->*aMethod)();
@@ -318,21 +434,20 @@ public:
   template <typename This, typename Method>
   MediaEventListener
   Connect(AbstractThread* aTarget, This* aThis, Method aMethod) {
-    return ConnectInternal(aTarget, aThis, aMethod,
-      typename detail::TakeArgs<Method>::Type());
+    return ConnectInternal(aTarget, aThis, aMethod);
   }
 
   template <typename This, typename Method>
   MediaEventListener
   Connect(nsIEventTarget* aTarget, This* aThis, Method aMethod) {
-    return ConnectInternal(aTarget, aThis, aMethod,
-      typename detail::TakeArgs<Method>::Type());
+    return ConnectInternal(aTarget, aThis, aMethod);
   }
 
 protected:
   MediaEventSource() : mMutex("MediaEventSource::mMutex") {}
 
-  void NotifyInternal(const ArgType& aEvent) {
+  template <typename T>
+  void NotifyInternal(T&& aEvent) {
     MutexAutoLock lock(mMutex);
     for (int32_t i = mListeners.Length() - 1; i >= 0; --i) {
       auto&& l = mListeners[i];
@@ -342,7 +457,7 @@ protected:
         mListeners.RemoveElementAt(i);
         continue;
       }
-      l->Dispatch(aEvent);
+      l->Dispatch(Forward<T>(aEvent));
     }
   }
 
@@ -359,8 +474,9 @@ private:
 template <typename EventType, ListenerMode Mode = ListenerMode::NonExclusive>
 class MediaEventProducer : public MediaEventSource<EventType, Mode> {
 public:
-  void Notify(const EventType& aEvent) {
-    this->NotifyInternal(aEvent);
+  template <typename T>
+  void Notify(T&& aEvent) {
+    this->NotifyInternal(Forward<T>(aEvent));
   }
 };
 

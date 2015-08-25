@@ -219,7 +219,7 @@ nr_stun_build_req_stund_0_96(nr_stun_client_stun_binding_request_stund_0_96_para
 
 #ifdef USE_ICE
 int
-nr_stun_build_use_candidate(nr_stun_client_ice_use_candidate_params *params, nr_stun_message **msg)
+nr_stun_build_use_candidate(nr_stun_client_ice_binding_request_params *params, nr_stun_message **msg)
 {
    int r,_status;
    nr_stun_message *req = 0;

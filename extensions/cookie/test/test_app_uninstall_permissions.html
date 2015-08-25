@@ -67,19 +67,22 @@ function onInstall() {
 
   var currentPermissionCount = getPermissionCountForApp(-1);
 
-  var principal = secMan.getAppCodebasePrincipal(ioService.newURI("http://www.example.com", null, null),
-                                                 testAppId, false);
+  var attrs = {appId: testAppId};
+  var principal = secMan.createCodebasePrincipal(ioService.newURI("http://www.example.com", null, null),
+                                                 attrs);
 
   permManager.addFromPrincipal(principal, "foobar", Ci.nsIPermissionManager.ALLOW_ACTION);
   permManager.addFromPrincipal(principal, "foo", Ci.nsIPermissionManager.DENY_ACTION);
   permManager.addFromPrincipal(principal, "bar", Ci.nsIPermissionManager.ALLOW_ACTION, Ci.nsIPermissionManager.EXPIRE_SESSION, 0);
 
-  principal = secMan.getAppCodebasePrincipal(ioService.newURI("http://www.example.com", null, null),
-                                             testAppId, true);
+  attrs = {appId: testAppId, inBrowser: true};
+  principal = secMan.createCodebasePrincipal(ioService.newURI("http://www.example.com", null, null),
+                                             attrs);
   permManager.addFromPrincipal(principal, "foobar", Ci.nsIPermissionManager.ALLOW_ACTION);
 
-  principal = secMan.getAppCodebasePrincipal(ioService.newURI("http://www.example.org", null, null),
-                                             testAppId, false);
+  attrs = {appId: testAppId};
+  principal = secMan.createCodebasePrincipal(ioService.newURI("http://www.example.org", null, null),
+                                             attrs);
   permManager.addFromPrincipal(principal, "foobar", Ci.nsIPermissionManager.ALLOW_ACTION);
 
   is(getPermissionCountForApp(testAppId), 5, "App should have 5 permissions");

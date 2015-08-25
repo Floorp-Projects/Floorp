@@ -1,0 +1,75 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1182103 - Test EventSource scenarios with fetch interception</title>
+  <script type="text/javascript">
+
+  var prefix = "http://mochi.test:8888/tests/dom/workers/test/serviceworkers/eventsource/";
+
+  function ok(aCondition, aMessage) {
+    parent.postMessage({status: "callback", data: "ok", condition: aCondition, message: aMessage}, "*");
+  }
+
+  function doUnregister() {
+    navigator.serviceWorker.getRegistration().then(swr => {
+      swr.unregister().then(function(result) {
+        ok(result, "Unregister should return true.");
+        parent.postMessage({status: "callback", data: "done"}, "*");
+      }, function(e) {
+        ok(false, "Unregistering the SW failed with " + e);
+      });
+    });
+  }
+
+  function doEventSource() {
+    var source = new EventSource(prefix + "eventsource.resource");
+    source.onmessage = function(e) {
+      source.onmessage = null;
+      source.close();
+      ok(false, "Something went wrong");
+    };
+    source.onerror = function(error) {
+      source.onerror = null;
+      source.close();
+      ok(true, "EventSource should not work with opaque responses");
+      doUnregister();
+    };
+  }
+
+  function onLoad() {
+    if (!parent) {
+      dump("eventsource/eventsource_opaque_response.html shouldn't be launched directly!");
+    }
+
+    window.addEventListener("message", function onMessage(e) {
+      if (e.data.status === "callback") {
+        switch(e.data.data) {
+          case "eventsource":
+            doEventSource();
+            window.removeEventListener("message", onMessage);
+            break;
+          default:
+            ok(false, "Something went wrong")
+            break
+        }
+      }
+    });
+
+    navigator.serviceWorker.ready.then(function() {
+      parent.postMessage({status: "callback", data: "ready"}, "*");
+    });
+
+    navigator.serviceWorker.addEventListener("message", function(event) {
+      parent.postMessage(event.data, "*");
+    });
+  }
+
+  </script>
+</head>
+<body onload="onLoad()">
+</body>
+</html>

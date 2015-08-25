@@ -1,0 +1,27 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1182103 - Test EventSource scenarios with fetch interception</title>
+  <script type="text/javascript">
+
+  function getURLParam (aTarget, aValue) {
+    return decodeURI(aTarget.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(aValue).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
+  }
+
+  function onLoad() {
+    navigator.serviceWorker.ready.then(function() {
+      parent.postMessage({status: "callback", data: "done"}, "*");
+    });
+
+    navigator.serviceWorker.register(getURLParam(document.location, "script"), {scope: "."});
+  }
+
+  </script>
+</head>
+<body onload="onLoad()">
+</body>
+</html>

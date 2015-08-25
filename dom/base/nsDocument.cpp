@@ -7904,8 +7904,12 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
   nsPIDOMWindow* win = GetWindow();
   if (win && win->IsDesktopModeViewport())
   {
-    return nsViewportInfo(aDisplaySize,
-                          defaultScale,
+    float viewportWidth = gfxPrefs::DesktopViewportWidth() / fullZoom;
+    float scaleToFit = aDisplaySize.width / viewportWidth;
+    float aspectRatio = (float)aDisplaySize.height / aDisplaySize.width;
+    ScreenSize viewportSize(viewportWidth, viewportWidth * aspectRatio);
+    return nsViewportInfo(RoundedToInt(viewportSize),
+                          CSSToScreenScale(scaleToFit),
                           /*allowZoom*/false,
                           /*allowDoubleTapZoom*/ false);
   }
@@ -8060,8 +8064,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
         // Stretch CSS pixel size of viewport to keep device pixel size
         // unchanged after full zoom applied.
         // See bug 974242.
-        size.width = Preferences::GetInt("browser.viewport.desktopWidth",
-                                         kViewportDefaultScreenWidth) / fullZoom;
+        size.width = gfxPrefs::DesktopViewportWidth() / fullZoom;
       }
     }
 

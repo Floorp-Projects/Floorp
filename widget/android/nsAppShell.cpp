@@ -24,7 +24,10 @@
 #include "nsIDOMWakeLockListener.h"
 #include "nsIPowerManagerService.h"
 #include "nsINetworkLinkService.h"
+#include "nsISpeculativeConnect.h"
+#include "nsIURIFixup.h"
 #include "nsCategoryManagerUtils.h"
+#include "nsCDefaultURIFixup.h"
 
 #include "mozilla/HangMonitor.h"
 #include "mozilla/Services.h"
@@ -35,6 +38,7 @@
 
 #include "AndroidBridge.h"
 #include "AndroidBridgeUtilities.h"
+#include "GeneratedJNINatives.h"
 #include <android/log.h>
 #include <pthread.h>
 #include <wchar.h>
@@ -128,6 +132,57 @@ NS_IMPL_ISUPPORTS(WakeLockListener, nsIDOMMozWakeLockListener)
 nsCOMPtr<nsIPowerManagerService> sPowerManagerService = nullptr;
 StaticRefPtr<WakeLockListener> sWakeLockListener;
 
+namespace {
+
+already_AddRefed<nsIURI>
+ResolveURI(const nsCString& uriStr)
+{
+    nsCOMPtr<nsIIOService> ioServ = do_GetIOService();
+    nsCOMPtr<nsIURI> uri;
+
+    if (NS_SUCCEEDED(ioServ->NewURI(uriStr, nullptr,
+                                    nullptr, getter_AddRefs(uri)))) {
+        return uri.forget();
+    }
+
+    nsCOMPtr<nsIURIFixup> fixup = do_GetService(NS_URIFIXUP_CONTRACTID);
+    if (fixup && NS_SUCCEEDED(
+            fixup->CreateFixupURI(uriStr, 0, nullptr, getter_AddRefs(uri)))) {
+        return uri.forget();
+    }
+    return nullptr;
+}
+
+} // namespace
+
+class GeckoThreadNatives final
+    : public widget::GeckoThread::Natives<GeckoThreadNatives>
+{
+public:
+    static void SpeculativeConnect(jni::String::Param uriStr)
+    {
+        if (!NS_IsMainThread()) {
+            // We will be on the main thread if the call was queued on the Java
+            // side during startup. Otherwise, the call was not queued, which
+            // means Gecko is already sufficiently loaded, and we don't really
+            // care about speculative connections at this point.
+            return;
+        }
+
+        nsCOMPtr<nsIIOService> ioServ = do_GetIOService();
+        nsCOMPtr<nsISpeculativeConnect> specConn = do_QueryInterface(ioServ);
+        if (!specConn) {
+            return;
+        }
+
+        nsCOMPtr<nsIURI> uri = ResolveURI(nsCString(uriStr));
+        if (!uri) {
+            return;
+        }
+        specConn->SpeculativeConnect(uri, nullptr);
+    }
+};
+
 nsAppShell::nsAppShell()
     : mQueueLock("nsAppShell.mQueueLock"),
       mCondLock("nsAppShell.mCondLock"),
@@ -143,6 +198,7 @@ nsAppShell::nsAppShell()
     if (jni::IsAvailable()) {
         // Initialize JNI and Set the corresponding state in GeckoThread.
         AndroidBridge::ConstructBridge();
+        GeckoThreadNatives::Init();
         mozilla::ANRReporter::Init();
 
         widget::GeckoThread::SetState(widget::GeckoThread::State::JNI_READY());
@@ -196,8 +252,9 @@ nsAppShell::Init()
     nsCOMPtr<nsIObserverService> obsServ =
         mozilla::services::GetObserverService();
     if (obsServ) {
-        obsServ->AddObserver(this, "xpcom-shutdown", false);
         obsServ->AddObserver(this, "browser-delayed-startup-finished", false);
+        obsServ->AddObserver(this, "profile-do-change", false);
+        obsServ->AddObserver(this, "xpcom-shutdown", false);
     }
 
     if (sPowerManagerService)
@@ -226,6 +283,16 @@ nsAppShell::Observe(nsISupports* aSubject,
     } else if (!strcmp(aTopic, "browser-delayed-startup-finished")) {
         NS_CreateServicesFromCategory("browser-delayed-startup-finished", nullptr,
                                       "browser-delayed-startup-finished");
+    } else if (!strcmp(aTopic, "profile-do-change")) {
+        if (jni::IsAvailable()) {
+            widget::GeckoThread::SetState(
+                    widget::GeckoThread::State::PROFILE_READY());
+        }
+        nsCOMPtr<nsIObserverService> obsServ =
+            mozilla::services::GetObserverService();
+        if (obsServ) {
+            obsServ->RemoveObserver(this, "profile-do-change");
+        }
     }
     return NS_OK;
 }

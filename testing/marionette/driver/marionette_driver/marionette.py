@@ -809,9 +809,10 @@ class Marionette(object):
                 Components.utils.import("resource://gre/modules/Services.jsm");
                 let perm = arguments[0];
                 let secMan = Services.scriptSecurityManager;
-                let principal = secMan.getAppCodebasePrincipal(
+                let attrs = {appId: perm.appId, inBrowser: perm.isInBrowserElement};
+                let principal = secMan.createCodebasePrincipal(
                                 Services.io.newURI(perm.url, null, null),
-                                perm.appId, perm.isInBrowserElement);
+                                attrs);
                 let testPerm = Services.perms.testPermissionFromPrincipal(
                                principal, perm.type);
                 return testPerm;
@@ -870,8 +871,9 @@ class Marionette(object):
                 Components.utils.import("resource://gre/modules/Services.jsm");
                 let perm = arguments[0];
                 let secMan = Services.scriptSecurityManager;
-                let principal = secMan.getAppCodebasePrincipal(Services.io.newURI(perm.url, null, null),
-                                perm.appId, perm.isInBrowserElement);
+                let attrs = {appId: perm.appId, inBrowser: perm.isInBrowserElement};
+                let principal = secMan.createCodebasePrincipal(Services.io.newURI(perm.url, null, null),
+                                                               attrs);
                 Services.perms.addFromPrincipal(principal, perm.type, perm.action);
                 return true;
                 """, script_args=[perm])

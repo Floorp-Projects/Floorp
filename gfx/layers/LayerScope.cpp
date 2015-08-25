@@ -87,8 +87,6 @@ public:
 
     bool WriteAll(void *ptr, uint32_t size)
     {
-        MOZ_ASSERT(NS_IsMainThread());
-
         for (int32_t i = mHandlers.Length() - 1; i >= 0; --i) {
             if (!mHandlers[i]->WriteToStream(ptr, size)) {
                 // Send failed, remove this handler
@@ -125,7 +123,12 @@ private:
 
     void RemoveConnection(uint32_t aIndex)
     {
-        MOZ_ASSERT(NS_IsMainThread());
+        // TBD: RemoveConnection is executed on the compositor thread and
+        // AddConntection is executed on the main thread, which might be
+        // a problem if a user disconnect and connect readlly quickly at
+        // viewer side.
+
+        // We should dispatch RemoveConnection onto main thead.
         MOZ_ASSERT(aIndex < mHandlers.Length());
 
         MutexAutoLock lock(mHandlerMutex);
@@ -743,23 +746,109 @@ protected:
     uint64_t mLayerRef;
 };
 
-class DebugDataSender : public nsIRunnable
+class DebugDataSender
 {
-    virtual ~DebugDataSender() {
-        Cleanup();
-    }
-
 public:
+   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DebugDataSender)
 
-    NS_DECL_THREADSAFE_ISUPPORTS
+    // Append a DebugData into mList on mThread
+    class AppendTask: public nsIRunnable
+    {
+    public:
+        NS_DECL_THREADSAFE_ISUPPORTS
 
-    DebugDataSender() { }
+        AppendTask(DebugDataSender *host, DebugGLData *d)
+            : mData(d),
+              mHost(host)
+        {  }
+
+        NS_IMETHODIMP Run() override {
+            mHost->mList.insertBack(mData);
+            return NS_OK;
+        }
+
+    private:
+        virtual ~AppendTask() { }
+
+        DebugGLData *mData;
+        // Keep a strong reference to DebugDataSender to prevent this object
+        // accessing mHost on mThread, when it's been destroyed on the main
+        // thread.
+        nsRefPtr<DebugDataSender> mHost;
+    };
+
+    // Clear all DebugData in mList on mThead.
+    class ClearTask: public nsIRunnable
+    {
+    public:
+        NS_DECL_THREADSAFE_ISUPPORTS
+        explicit ClearTask(DebugDataSender *host)
+            : mHost(host)
+        {  }
+
+        NS_IMETHODIMP Run() override {
+            mHost->RemoveData();
+            return NS_OK;
+        }
+
+    private:
+        virtual ~ClearTask() { }
+
+        nsRefPtr<DebugDataSender> mHost;
+    };
+
+    // Send all DebugData in mList via websocket, and then, clean up
+    // mList on mThread.
+    class SendTask: public nsIRunnable
+    {
+    public:
+        NS_DECL_THREADSAFE_ISUPPORTS
+
+        explicit SendTask(DebugDataSender *host)
+            : mHost(host)
+        {  }
+
+        NS_IMETHODIMP Run() override {
+            // Sendout all appended debug data.
+            DebugGLData *d = nullptr;
+            while ((d = mHost->mList.popFirst()) != nullptr) {
+                UniquePtr<DebugGLData> cleaner(d);
+                if (!d->Write()) {
+                    gLayerScopeManager.DestroyServerSocket();
+                    break;
+                }
+            }
+
+            // Cleanup.
+            mHost->RemoveData();
+            return NS_OK;
+        }
+    private:
+        virtual ~SendTask() { }
+
+        nsRefPtr<DebugDataSender> mHost;
+    };
+
+    explicit DebugDataSender(nsIThread *thread)
+        : mThread(thread)
+    {  }
 
     void Append(DebugGLData *d) {
-        mList.insertBack(d);
+        mThread->Dispatch(new AppendTask(this, d), NS_DISPATCH_NORMAL);
     }
 
     void Cleanup() {
+        mThread->Dispatch(new ClearTask(this), NS_DISPATCH_NORMAL);
+    }
+
+    void Send() {
+        mThread->Dispatch(new SendTask(this), NS_DISPATCH_NORMAL);
+    }
+
+protected:
+    virtual ~DebugDataSender() {}
+    void RemoveData() {
+        MOZ_ASSERT(NS_GetCurrentThread() == mThread);
         if (mList.isEmpty())
             return;
 
@@ -768,32 +857,14 @@ public:
             delete d;
     }
 
-    NS_IMETHODIMP Run() override {
-        DebugGLData *d;
-        nsresult rv = NS_OK;
-
-        while ((d = mList.popFirst()) != nullptr) {
-            UniquePtr<DebugGLData> cleaner(d);
-            if (!d->Write()) {
-                rv = NS_ERROR_FAILURE;
-                break;
-            }
-        }
-
-        Cleanup();
-
-        if (NS_FAILED(rv)) {
-            gLayerScopeManager.DestroyServerSocket();
-        }
-
-        return NS_OK;
-    }
-
-protected:
+    // We can only modify or aceess mList on mThread.
     LinkedList<DebugGLData> mList;
+    nsCOMPtr<nsIThread>     mThread;
 };
 
-NS_IMPL_ISUPPORTS(DebugDataSender, nsIRunnable);
+NS_IMPL_ISUPPORTS(DebugDataSender::AppendTask, nsIRunnable);
+NS_IMPL_ISUPPORTS(DebugDataSender::ClearTask, nsIRunnable);
+NS_IMPL_ISUPPORTS(DebugDataSender::SendTask, nsIRunnable);
 
 
 /*
@@ -1580,7 +1651,7 @@ void
 LayerScopeWebSocketManager::AppendDebugData(DebugGLData *aDebugData)
 {
     if (!mCurrentSender) {
-        mCurrentSender = new DebugDataSender();
+        mCurrentSender = new DebugDataSender(mDebugSenderThread);
     }
 
     mCurrentSender->Append(aDebugData);
@@ -1597,7 +1668,9 @@ LayerScopeWebSocketManager::CleanDebugData()
 void
 LayerScopeWebSocketManager::DispatchDebugData()
 {
-    mDebugSenderThread->Dispatch(mCurrentSender, NS_DISPATCH_NORMAL);
+    MOZ_ASSERT(mCurrentSender.get() != nullptr);
+
+    mCurrentSender->Send();
     mCurrentSender = nullptr;
 }
 

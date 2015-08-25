@@ -1058,13 +1058,11 @@ nsBaseWidget::GetDocument() const
 
 void nsBaseWidget::CreateCompositorVsyncDispatcher()
 {
-  if (gfxPrefs::HardwareVsyncEnabled()) {
-    // Parent directly listens to the vsync source whereas
-    // child process communicate via IPC
-    // Should be called AFTER gfxPlatform is initialized
-    if (XRE_IsParentProcess()) {
-      mCompositorVsyncDispatcher = new CompositorVsyncDispatcher();
-    }
+  // Parent directly listens to the vsync source whereas
+  // child process communicate via IPC
+  // Should be called AFTER gfxPlatform is initialized
+  if (XRE_IsParentProcess()) {
+    mCompositorVsyncDispatcher = new CompositorVsyncDispatcher();
   }
 }
 

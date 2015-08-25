@@ -71,6 +71,7 @@ gujar.sources += [
     'util/ActivityResultHandler.java',
     'util/ActivityResultHandlerMap.java',
     'util/ActivityUtils.java',
+    'util/BundleEventListener.java',
     'util/Clipboard.java',
     'util/ColorUtils.java',
     'util/DrawableUtil.java',

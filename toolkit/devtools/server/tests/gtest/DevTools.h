@@ -18,6 +18,7 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
+#include "js/Principals.h"
 #include "js/UbiNode.h"
 
 using namespace mozilla;

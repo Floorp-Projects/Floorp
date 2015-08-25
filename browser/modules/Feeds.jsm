@@ -66,7 +66,8 @@ this.Feeds = {
     if (aIsFeed) {
       // re-create the principal as it may be a CPOW.
       let principalURI = BrowserUtils.makeURIFromCPOW(aPrincipal.URI);
-      let principalToCheck = Services.scriptSecurityManager.getNoAppCodebasePrincipal(principalURI);
+      let principalToCheck =
+        Services.scriptSecurityManager.createCodebasePrincipal(principalURI, {});
       try {
         BrowserUtils.urlSecurityCheck(aLink.href, principalToCheck,
                                       Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);

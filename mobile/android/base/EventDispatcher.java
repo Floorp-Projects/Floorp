@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.NativeEventListener;
@@ -17,8 +18,12 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,13 +44,19 @@ public final class EventDispatcher {
      * empirically determine the initial capacity that avoids rehashing, we need to
      * determine the initial size, divide it by 75%, and round up to the next power-of-2.
      */
-    private static final int GECKO_NATIVE_EVENTS_COUNT = 0; // Default for HashMap
-    private static final int GECKO_JSON_EVENTS_COUNT = 256; // Empirically measured
+    private static final int DEFAULT_GECKO_NATIVE_EVENTS_COUNT = 0; // Default for HashMap
+    private static final int DEFAULT_GECKO_JSON_EVENTS_COUNT = 256; // Empirically measured
+    private static final int DEFAULT_UI_EVENTS_COUNT = 0; // Default for HashMap
+    private static final int DEFAULT_BACKGROUND_EVENTS_COUNT = 0; // Default for HashMap
 
     private final Map<String, List<NativeEventListener>> mGeckoThreadNativeListeners =
-        new HashMap<String, List<NativeEventListener>>(GECKO_NATIVE_EVENTS_COUNT);
+        new HashMap<String, List<NativeEventListener>>(DEFAULT_GECKO_NATIVE_EVENTS_COUNT);
     private final Map<String, List<GeckoEventListener>> mGeckoThreadJSONListeners =
-        new HashMap<String, List<GeckoEventListener>>(GECKO_JSON_EVENTS_COUNT);
+        new HashMap<String, List<GeckoEventListener>>(DEFAULT_GECKO_JSON_EVENTS_COUNT);
+    private final Map<String, List<BundleEventListener>> mUiThreadListeners =
+        new HashMap<String, List<BundleEventListener>>(DEFAULT_UI_EVENTS_COUNT);
+    private final Map<String, List<BundleEventListener>> mBackgroundThreadListeners =
+        new HashMap<String, List<BundleEventListener>>(DEFAULT_BACKGROUND_EVENTS_COUNT);
 
     public static EventDispatcher getInstance() {
         return INSTANCE;
@@ -54,7 +65,7 @@ public final class EventDispatcher {
     private EventDispatcher() {
     }
 
-    private <T> void registerListener(final Class<? extends List<T>> listType,
+    private <T> void registerListener(final Class<?> listType,
                                       final Map<String, List<T>> listenersMap,
                                       final T listener,
                                       final String[] events) {
@@ -63,7 +74,10 @@ public final class EventDispatcher {
                 for (final String event : events) {
                     List<T> listeners = listenersMap.get(event);
                     if (listeners == null) {
-                        listeners = listType.newInstance();
+                        // Java doesn't let us put Class<? extends List<T>> as the type for listType.
+                        @SuppressWarnings("unchecked")
+                        final Class<? extends List<T>> type = (Class) listType;
+                        listeners = type.newInstance();
                         listenersMap.put(event, listeners);
                     }
                     if (!AppConstants.RELEASE_BUILD && listeners.contains(listener)) {
@@ -77,13 +91,26 @@ public final class EventDispatcher {
         }
     }
 
-    private <T> void checkNotRegistered(final Map<String, List<T>> listenersMap,
-                                        final String[] events) {
-        synchronized (listenersMap) {
-            for (final String event: events) {
-                if (listenersMap.get(event) != null) {
-                    throw new IllegalStateException(
-                        "Already registered " + event + " under a different type");
+    private void checkNotRegisteredElsewhere(final Map<String, ?> allowedMap,
+                                             final String[] events) {
+        if (AppConstants.RELEASE_BUILD) {
+            // for performance reasons, we only check for
+            // already-registered listeners in non-release builds.
+            return;
+        }
+        for (final Map<String, ?> listenersMap : Arrays.asList(mGeckoThreadNativeListeners,
+                                                               mGeckoThreadJSONListeners,
+                                                               mUiThreadListeners,
+                                                               mBackgroundThreadListeners)) {
+            if (listenersMap == allowedMap) {
+                continue;
+            }
+            synchronized (listenersMap) {
+                for (final String event : events) {
+                    if (listenersMap.get(event) != null) {
+                        throw new IllegalStateException(
+                            "Already registered " + event + " under a different type");
+                    }
                 }
             }
         }
@@ -103,28 +130,42 @@ public final class EventDispatcher {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public void registerGeckoThreadListener(final NativeEventListener listener,
                                             final String... events) {
-        checkNotRegistered(mGeckoThreadJSONListeners, events);
+        checkNotRegisteredElsewhere(mGeckoThreadNativeListeners, events);
 
         // For listeners running on the Gecko thread, we want to notify the listeners
         // outside of our synchronized block, because the listeners may take an
         // indeterminate amount of time to run. Therefore, to ensure concurrency when
         // iterating the list outside of the synchronized block, we use a
         // CopyOnWriteArrayList.
-        registerListener((Class)CopyOnWriteArrayList.class,
+        registerListener(CopyOnWriteArrayList.class,
                          mGeckoThreadNativeListeners, listener, events);
     }
 
     @Deprecated // Use NativeEventListener instead
-    @SuppressWarnings("unchecked")
     public void registerGeckoThreadListener(final GeckoEventListener listener,
                                             final String... events) {
-        checkNotRegistered(mGeckoThreadNativeListeners, events);
+        checkNotRegisteredElsewhere(mGeckoThreadJSONListeners, events);
 
-        registerListener((Class)CopyOnWriteArrayList.class,
+        registerListener(CopyOnWriteArrayList.class,
                          mGeckoThreadJSONListeners, listener, events);
+    }
+
+    public void registerUiThreadListener(final BundleEventListener listener,
+                                         final String... events) {
+        checkNotRegisteredElsewhere(mUiThreadListeners, events);
+
+        registerListener(ArrayList.class,
+                         mUiThreadListeners, listener, events);
+    }
+
+    public void registerBackgroundThreadListener(final BundleEventListener listener,
+                                                 final String... events) {
+        checkNotRegisteredElsewhere(mBackgroundThreadListeners, events);
+
+        registerListener(ArrayList.class,
+                         mBackgroundThreadListeners, listener, events);
     }
 
     public void unregisterGeckoThreadListener(final NativeEventListener listener,
@@ -136,6 +177,16 @@ public final class EventDispatcher {
     public void unregisterGeckoThreadListener(final GeckoEventListener listener,
                                               final String... events) {
         unregisterListener(mGeckoThreadJSONListeners, listener, events);
+    }
+
+    public void unregisterUiThreadListener(final BundleEventListener listener,
+                                           final String... events) {
+        unregisterListener(mUiThreadListeners, listener, events);
+    }
+
+    public void unregisterBackgroundThreadListener(final BundleEventListener listener,
+                                                   final String... events) {
+        unregisterListener(mBackgroundThreadListeners, listener, events);
     }
 
     public void dispatchEvent(final NativeJSContainer message) {
@@ -174,7 +225,20 @@ public final class EventDispatcher {
             } catch (final NativeJSObject.InvalidPropertyException e) {
                 Log.e(LOGTAG, "Exception occurred while handling " + type, e);
             }
-            // If we found native listeners, we assume we don't have any JSON listeners
+            // If we found native listeners, we assume we don't have any other types of listeners
+            // and return early. This assumption is checked when registering listeners.
+            return;
+        }
+
+        // Check for thread event listeners before checking for JSON event listeners,
+        // because checking for thread listeners is very fast and doesn't require us to
+        // serialize into JSON and construct a JSONObject.
+        if (dispatchToThread(type, message, callback,
+                             mUiThreadListeners, ThreadUtils.getUiHandler()) ||
+            dispatchToThread(type, message, callback,
+                             mBackgroundThreadListeners, ThreadUtils.getBackgroundHandler())) {
+
+            // If we found thread listeners, we assume we don't have any other types of listeners
             // and return early. This assumption is checked when registering listeners.
             return;
         }
@@ -186,6 +250,53 @@ public final class EventDispatcher {
             Log.e(LOGTAG, "Cannot parse JSON", e);
         } catch (final UnsupportedOperationException e) {
             Log.e(LOGTAG, "Cannot convert message to JSON", e);
+        }
+    }
+
+    private boolean dispatchToThread(final String type,
+                                     final NativeJSObject message,
+                                     final EventCallback callback,
+                                     final Map<String, List<BundleEventListener>> listenersMap,
+                                     final Handler thread) {
+        // We need to hold the lock throughout dispatching, to ensure the listeners list
+        // is consistent, while we iterate over it. We don't have to worry about listeners
+        // running for a long time while we have the lock, because the listeners will run
+        // on a separate thread.
+        synchronized (listenersMap) {
+            final List<BundleEventListener> listeners = listenersMap.get(type);
+            if (listeners == null) {
+                return false;
+            }
+
+            if (listeners.isEmpty()) {
+                Log.w(LOGTAG, "No listeners for " + type);
+
+                // There were native listeners, and they're gone.
+                // Dispatch an error rather than looking for more listeners.
+                if (callback != null) {
+                    callback.sendError("No listeners for request");
+                }
+                return true;
+            }
+
+            final Bundle messageAsBundle;
+            try {
+                messageAsBundle = message.toBundle();
+            } catch (final NativeJSObject.InvalidPropertyException e) {
+                Log.e(LOGTAG, "Exception occurred while handling " + type, e);
+                return true;
+            }
+
+            // Event listeners will call | callback.sendError | if applicable.
+            for (final BundleEventListener listener : listeners) {
+                thread.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.handleMessage(type, messageAsBundle, callback);
+                    }
+                });
+            }
+            return true;
         }
     }
 
