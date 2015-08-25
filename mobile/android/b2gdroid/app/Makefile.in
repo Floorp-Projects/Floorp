@@ -1,0 +1,33 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ANDROID_MANIFEST_FILE := src/main/AndroidManifest.xml
+
+JAVAFILES := \
+  src/main/java/org/mozilla/b2gdroid/Launcher.java \
+  $(NULL)
+
+# The GeckoView consuming APK depends on the GeckoView JAR files.  There are two
+# issues: first, the GeckoView JAR files need to be built before they are
+# consumed here.  This happens for delicate reasons.  In the (serial) libs tier,
+# base/ is traversed before b2gdroid/app.  Since base/libs builds classes.dex,
+# the underlying JAR files are built before the libs tier of b2gdroid/app is
+# processed.  Second, there is a correctness issue: the GeckoView JAR providing
+# org.mozilla.gecko.R does not have the correct resource IDs for the consuming
+# application, so we skip it.  The b2gdroid APK builds a JAR containing
+# org.mozilla.gecko.R itself.
+jars_dir := $(DEPTH)/mobile/android/base
+ANDROID_EXTRA_JARS := $(filter-out %gecko-R.jar,$(wildcard $(jars_dir)/*.jar))
+
+# The GeckoView consuming APK depends on the GeckoView resources.  This hacks a
+# type of poor man's AAR support.
+.aapt.deps: .geckoview_resources.deps
+
+.geckoview_resources.deps: $(DEPTH)/mobile/android/base/geckoview_resources.zip
+	@$(TOUCH) $@
+	$(UNZIP) -u -o $< -d $(CURDIR)/geckoview_resources
+
+include $(topsrcdir)/config/rules.mk
+
+libs:: $(ANDROID_APK_NAME).apk

@@ -1,0 +1,25 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ANDROID_APK_NAME = 'b2gdroid'
+ANDROID_APK_PACKAGE = 'org.mozilla.b2gdroid'
+
+ANDROID_RES_DIRS += [
+    'src/main/res',
+    '!geckoview_resources',
+]
+ANDROID_ASSETS_DIRS += [
+    'src/main/assets',
+]
+
+# Make aapt generate org/mozilla/gecko/R.java.  There's a problem hidden here:
+# the GeckoView classes may reference resources provided by other packages.
+# That is, the GeckoView JAR files may reference android.support.v7.appcompat.R
+# (say) at runtime.  That class is in the gecko-R.jar file which is not (and can
+# not!) be included as part of GeckoView.  To avoid this, we'd need to include
+# the transitive set of resource classes.  For now, let's assume that b2gdroid
+# will not induce accesses to other package's resources at runtime.
+ANDROID_EXTRA_PACKAGES += ['org.mozilla.gecko']
