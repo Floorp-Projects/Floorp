@@ -183,15 +183,16 @@ namespace detail {
 // We need specialization for return type, because void return type requires
 // us to not deal with the return value.
 
-template<bool IsStatic, typename ReturnType,
-         class Traits, class Impl, class Args>
+template<class Traits, class Impl, class Args, bool IsStatic, bool IsVoid>
 class NativeStubImpl;
 
 // Specialization for instance methods with non-void return type
-template<typename ReturnType, class Traits, class Impl, typename... Args>
-class NativeStubImpl<false, ReturnType, Traits, Impl, jni::Args<Args...>>
+template<class Traits, class Impl, typename... Args>
+class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
+                     /* IsStatic = */ false, /* IsVoid = */ false>
 {
     typedef typename Traits::Owner Owner;
+    typedef typename Traits::ReturnType ReturnType;
     typedef typename TypeAdapter<ReturnType>::JNIType ReturnJNIType;
 
 public:
@@ -227,7 +228,8 @@ public:
 
 // Specialization for instance methods with void return type
 template<class Traits, class Impl, typename... Args>
-class NativeStubImpl<false, void, Traits, Impl, jni::Args<Args...>>
+class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
+                     /* IsStatic = */ false, /* IsVoid = */ true>
 {
     typedef typename Traits::Owner Owner;
 
@@ -260,9 +262,11 @@ public:
 };
 
 // Specialization for static methods with non-void return type
-template<typename ReturnType, class Traits, class Impl, typename... Args>
-class NativeStubImpl<true, ReturnType, Traits, Impl, jni::Args<Args...>>
+template<class Traits, class Impl, typename... Args>
+class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
+                     /* IsStatic = */ true, /* IsVoid = */ false>
 {
+    typedef typename Traits::ReturnType ReturnType;
     typedef typename TypeAdapter<ReturnType>::JNIType ReturnJNIType;
 
 public:
@@ -290,7 +294,8 @@ public:
 
 // Specialization for static methods with void return type
 template<class Traits, class Impl, typename... Args>
-class NativeStubImpl<true, void, Traits, Impl, jni::Args<Args...>>
+class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
+                     /* IsStatic = */ true, /* IsVoid = */ true>
 {
 public:
     // Static method
@@ -317,9 +322,9 @@ public:
 // Form a stub wrapper from a native method's traits class and an implementing
 // class. The stub wrapper has a Wrap function that will form a wrapped stub.
 template<class Traits, class Impl>
-struct NativeStub : detail::NativeStubImpl<Traits::isStatic,
-                                           typename Traits::ReturnType,
-                                           Traits, Impl, typename Traits::Args>
+struct NativeStub : detail::NativeStubImpl
+    <Traits, Impl, typename Traits::Args, Traits::isStatic,
+     mozilla::IsVoid<typename Traits::ReturnType>::value>
 {
 };
 
