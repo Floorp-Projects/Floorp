@@ -850,12 +850,14 @@ DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
 {
   nsCOMPtr<nsINode> parentNode = do_QueryInterface(mParent);
   if (!parentNode) {
+    aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
   nsCOMPtr<nsIGlobalObject> global = parentNode->OwnerDoc()->GetScopeObject();
   MOZ_ASSERT(global);
   if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
@@ -865,9 +867,13 @@ DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
   }
 
   if (!mFiles) {
-    ErrorResult dummy;
-    GetFiles(dummy);
+    GetFiles(aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+
     if (!mFiles) {
+      aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
   }
