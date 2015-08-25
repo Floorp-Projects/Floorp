@@ -3654,17 +3654,6 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, const BaseIndex& dest)
 // ION ABI says *sp should be the address that we will return to when leaving
 // this function.
 void
-MacroAssemblerARM::ma_callJitNoPush(const Register r)
-{
-    // Since we just write the return address into the stack, which is popped on
-    // return, the net effect is removing 4 bytes from the stack.
-
-    // Bug 1103108: remove this function, and refactor all uses.
-    as_add(sp, sp, Imm8(4));
-    as_blx(r);
-}
-
-void
 MacroAssemblerARM::ma_callJitHalfPush(const Register r)
 {
     // The stack is unaligned by 4 bytes. We push the pc to the stack to align
