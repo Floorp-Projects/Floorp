@@ -107,7 +107,8 @@ nsIWidgetListener::DidPaintWindow()
 }
 
 void
-nsIWidgetListener::DidCompositeWindow()
+nsIWidgetListener::DidCompositeWindow(const TimeStamp& aCompositeStart,
+                                      const TimeStamp& aCompositeEnd)
 {
 }
 

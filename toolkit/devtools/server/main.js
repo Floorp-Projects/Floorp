@@ -548,7 +548,7 @@ var DebuggerServer = {
     this.registerModule("devtools/server/actors/promises", {
       prefix: "promises",
       constructor: "PromisesActor",
-      type: { global: true, tab: true }
+      type: { tab: true }
     });
     this.registerModule("devtools/server/actors/performance-entries", {
       prefix: "performanceEntries",

@@ -7,9 +7,11 @@
 const TEST_URI = "data:text/xml;charset=UTF-8,<?xml version='1.0'?>" +
   "<?xml-stylesheet href='chrome://global/skin/global.css'?>" +
   "<?xml-stylesheet href='chrome://browser/skin/devtools/common.css'?>" +
+  "<?xml-stylesheet href='chrome://browser/skin/devtools/light-theme.css'?>" +
   "<?xml-stylesheet href='chrome://browser/skin/devtools/widgets.css'?>" +
   "<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'" +
-  " title='Table Widget' width='600' height='500'><box flex='1'/></window>";
+  " title='Table Widget' width='600' height='500'>" +
+  "<box flex='1' class='theme-light'/></window>";
 const TEST_OPT = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
 const {TableWidget} = require("devtools/shared/widgets/TableWidget");

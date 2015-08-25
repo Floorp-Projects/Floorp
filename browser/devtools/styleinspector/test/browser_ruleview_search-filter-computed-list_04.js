@@ -5,61 +5,59 @@
 "use strict";
 
 // Tests that the rule view search filter works properly in the computed list
-// for parsed property value.
+// for newly modified property values.
 
-const SEARCH = ":4px";
+const SEARCH = "0px";
 
 const TEST_URI = `
-  <style type="text/css">
+  <style type='text/css'>
     #testid {
-      margin: 4px 0px;
-    }
-    .testclass {
-      background-color: red;
+      margin: 4px;
+      top: 0px;
     }
   </style>
-  <h1 id="testid" class="testclass">Styled Node</h1>
+  <h1 id='testid'>Styled Node</h1>
 `;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
-  yield testAddTextInFilter(inspector, view);
+  yield testModifyPropertyValueFilter(inspector, view);
 });
 
-function* testAddTextInFilter(inspector, ruleView) {
-  info("Setting filter text to \"" + SEARCH + "\"");
+function* testModifyPropertyValueFilter(inspector, view) {
+  yield setSearchFilter(view, SEARCH);
 
-  let win = ruleView.styleWindow;
-  let searchField = ruleView.searchField;
-  let onRuleViewFiltered = inspector.once("ruleview-filtered");
-
-  searchField.focus();
-  synthesizeKeys(SEARCH, win);
-  yield onRuleViewFiltered;
+  let rule = getRuleViewRuleEditor(view, 1).rule;
+  let propEditor = rule.textProps[0].editor;
+  let computed = propEditor.computed;
+  let editor = yield focusEditableField(view, propEditor.valueSpan);
 
   info("Check that the correct rules are visible");
-  is(ruleView.element.children.length, 2, "Should have 2 rules.");
-  is(getRuleViewRuleEditor(ruleView, 0).rule.selectorText, "element",
-    "First rule is inline element.");
-
-  let rule = getRuleViewRuleEditor(ruleView, 1).rule;
-  let ruleEditor = rule.textProps[0].editor;
-  let computed = ruleEditor.computed;
-
   is(rule.selectorText, "#testid", "Second rule is #testid.");
-  ok(!ruleEditor.expander.getAttribute("open"), "Expander is closed.");
-  ok(ruleEditor.container.classList.contains("ruleview-highlight"),
+  ok(!propEditor.container.classList.contains("ruleview-highlight"),
+    "margin text property is not highlighted.");
+  ok(rule.textProps[1].editor.container.classList
+    .contains("ruleview-highlight"),
+    "top text property is correctly highlighted.");
+
+  let onBlur = once(editor.input, "blur");
+  let onModification = rule._applyingModifications;
+  EventUtils.sendString("4px 0px", view.styleWindow);
+  EventUtils.synthesizeKey("VK_RETURN", {});
+  yield onBlur;
+  yield onModification;
+
+  ok(propEditor.container.classList.contains("ruleview-highlight"),
     "margin text property is correctly highlighted.");
   ok(!computed.hasAttribute("filter-open"), "margin computed list is closed.");
-
-  ok(computed.children[0].classList.contains("ruleview-highlight"),
-    "margin-top computed property is correctly highlighted.");
-  ok(!computed.children[1].classList.contains("ruleview-highlight"),
-    "margin-right computed property is not highlighted.");
-  ok(computed.children[2].classList.contains("ruleview-highlight"),
-    "margin-bottom computed property is correctly highlighted.");
-  ok(!computed.children[3].classList.contains("ruleview-highlight"),
-    "margin-left computed property is not highlighted.");
+  ok(!computed.children[0].classList.contains("ruleview-highlight"),
+    "margin-top computed property is not highlighted.");
+  ok(computed.children[1].classList.contains("ruleview-highlight"),
+    "margin-right computed property is correctly highlighted.");
+  ok(!computed.children[2].classList.contains("ruleview-highlight"),
+    "margin-bottom computed property is not highlighted.");
+  ok(computed.children[3].classList.contains("ruleview-highlight"),
+    "margin-left computed property is correctly highlighted.");
 }

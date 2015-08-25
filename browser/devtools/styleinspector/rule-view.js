@@ -58,7 +58,9 @@ const FILTER_CHANGED_TIMEOUT = 150;
 
 // This is used to parse user input when filtering.
 const FILTER_PROP_RE = /\s*([^:\s]*)\s*:\s*(.*?)\s*;?$/;
-
+// This is used to parse the filter search value to see if the filter
+// should be strict or not
+const FILTER_STRICT_RE = /\s*`(.*?)`\s*$/;
 const IOService = Cc["@mozilla.org/network/io-service;1"]
                   .getService(Ci.nsIIOService);
 
@@ -1604,14 +1606,57 @@ CssRuleView.prototype = {
         this.searchField.removeAttribute("filled");
       }
 
-      // Parse search value as a single property line and extract the property
-      // name and value. Otherwise, use the search value as both the name and
-      // value.
-      this.searchPropertyMatch = FILTER_PROP_RE.exec(this.searchValue);
-      this.searchPropertyName = this.searchPropertyMatch ?
-                                this.searchPropertyMatch[1] : this.searchValue;
-      this.searchPropertyValue = this.searchPropertyMatch ?
-                                 this.searchPropertyMatch[2] : this.searchValue;
+      this.searchData = {
+        searchPropertyMatch: FILTER_PROP_RE.exec(this.searchValue),
+        searchPropertyName: this.searchValue,
+        searchPropertyValue: this.searchValue,
+        strictSearchValue: "",
+        strictSearchPropertyName: false,
+        strictSearchPropertyValue: false,
+        strictSearchAllValues: false
+      };
+
+      if (this.searchData.searchPropertyMatch) {
+        // Parse search value as a single property line and extract the
+        // property name and value. If the parsed property name or value is
+        // contained in backquotes (`), extract the value within the backquotes
+        // and set the corresponding strict search for the property to true.
+        if (FILTER_STRICT_RE.test(this.searchData.searchPropertyMatch[1])) {
+          this.searchData.strictSearchPropertyName = true;
+          this.searchData.searchPropertyName =
+            FILTER_STRICT_RE.exec(this.searchData.searchPropertyMatch[1])[1];
+        } else {
+          this.searchData.searchPropertyName =
+            this.searchData.searchPropertyMatch[1];
+        }
+
+        if (FILTER_STRICT_RE.test(this.searchData.searchPropertyMatch[2])) {
+          this.searchData.strictSearchPropertyValue = true;
+          this.searchData.searchPropertyValue =
+            FILTER_STRICT_RE.exec(this.searchData.searchPropertyMatch[2])[1];
+        } else {
+          this.searchData.searchPropertyValue =
+            this.searchData.searchPropertyMatch[2];
+        }
+
+        // Strict search for stylesheets will match the property line regex.
+        // Extract the search value within the backquotes to be used
+        // in the strict search for stylesheets in _highlightStyleSheet.
+        if (FILTER_STRICT_RE.test(this.searchValue)) {
+          this.searchData.strictSearchValue =
+            FILTER_STRICT_RE.exec(this.searchValue)[1];
+        }
+      } else if (FILTER_STRICT_RE.test(this.searchValue)) {
+        // If the search value does not correspond to a property line and
+        // is contained in backquotes, extract the search value within the
+        // backquotes and set the flag to perform a strict search for all
+        // the values (selector, stylesheet, property and computed values).
+        let searchValue = FILTER_STRICT_RE.exec(this.searchValue)[1];
+        this.searchData.strictSearchAllValues = true;
+        this.searchData.searchPropertyName = searchValue;
+        this.searchData.searchPropertyValue = searchValue;
+        this.searchData.strictSearchValue = searchValue;
+      }
 
       this._clearHighlight(this.element);
       this._clearRules();
@@ -2034,7 +2079,7 @@ CssRuleView.prototype = {
       }
 
       // Filter the rules and highlight any matches if there is a search input
-      if (this.searchValue) {
+      if (this.searchValue && this.searchData) {
         if (this.highlightRule(rule)) {
           seenSearchTerm = true;
         } else if (rule.domRule.type !== ELEMENT_STYLE) {
@@ -2131,7 +2176,11 @@ CssRuleView.prototype = {
 
     // Highlight search matches in the rule selectors
     for (let selectorNode of selectorNodes) {
-      if (selectorNode.textContent.toLowerCase().includes(this.searchValue)) {
+      let selector = selectorNode.textContent.toLowerCase();
+      if ((this.searchData.strictSearchAllValues &&
+           selector === this.searchData.strictSearchValue) ||
+          (!this.searchData.strictSearchAllValues &&
+           selector.includes(this.searchValue))) {
         selectorNode.classList.add("ruleview-highlight");
         isSelectorHighlighted = true;
       }
@@ -2150,7 +2199,9 @@ CssRuleView.prototype = {
    */
   _highlightStyleSheet: function(rule) {
     let styleSheetSource = rule.title.toLowerCase();
-    let isStyleSheetHighlighted = styleSheetSource.includes(this.searchValue);
+    let isStyleSheetHighlighted = this.searchData.strictSearchValue ?
+      styleSheetSource === this.searchData.strictSearchValue :
+      styleSheetSource.includes(this.searchValue);
 
     if (isStyleSheetHighlighted) {
       rule.editor.source.classList.add("ruleview-highlight");
@@ -2191,7 +2242,7 @@ CssRuleView.prototype = {
    *         The rule property TextPropertyEditor object.
    */
   _updatePropertyHighlight: function(editor) {
-    if (!this.searchValue) {
+    if (!this.searchValue || !this.searchData) {
       return;
     }
 
@@ -2217,15 +2268,8 @@ CssRuleView.prototype = {
     let propertyName = editor.prop.name.toLowerCase();
     let propertyValue = editor.valueSpan.textContent.toLowerCase();
 
-    let isPropertyHighlighted = this._highlightMatches(editor.container, {
-      searchName: this.searchPropertyName,
-      searchValue: this.searchPropertyValue,
-      propertyName: propertyName,
-      propertyValue: propertyValue,
-      propertyMatch: this.searchPropertyMatch
-    });
-
-    return isPropertyHighlighted;
+    return this._highlightMatches(editor.container, propertyName,
+                                  propertyValue);
   },
 
   /**
@@ -2249,13 +2293,8 @@ CssRuleView.prototype = {
         let computedName = computed.name.toLowerCase();
         let computedValue = computed.parsedValue.toLowerCase();
 
-        isComputedHighlighted = this._highlightMatches(computed.element, {
-          searchName: this.searchPropertyName,
-          searchValue: this.searchPropertyValue,
-          propertyName: computedName,
-          propertyValue: computedValue,
-          propertyMatch: this.searchPropertyMatch
-        }) ? true : isComputedHighlighted;
+        isComputedHighlighted = this._highlightMatches(computed.element,
+          computedName, computedValue) ? true : isComputedHighlighted;
       }
     }
 
@@ -2264,39 +2303,50 @@ CssRuleView.prototype = {
 
   /**
    * Helper function for highlightRules that carries out highlighting the given
-   * element if the provided search terms match the property, and returns
-   * a boolean indicating whether or not the search terms match.
+   * element if the search terms match the property, and returns a boolean
+   * indicating whether or not the search terms match.
    *
    * @param  {DOMNode} element
    *         The node to highlight if search terms match
-   * @param  {String} searchName
-   *         The parsed search name
-   * @param  {String} searchValue
-   *         The parsed search value
    * @param  {String} propertyName
    *         The property name of a rule
    * @param  {String} propertyValue
    *         The property value of a rule
-   * @param  {Boolean} propertyMatch
-   *         Whether or not the search term matches a property line like
-   *         `font-family: arial`
    * @return {Boolean} true if the given search terms match the property, false
    *         otherwise.
    */
-  _highlightMatches: function(element, { searchName, searchValue, propertyName,
-      propertyValue, propertyMatch }) {
+  _highlightMatches: function(element, propertyName, propertyValue) {
+    let {
+      searchPropertyName,
+      searchPropertyValue,
+      searchPropertyMatch,
+      strictSearchPropertyName,
+      strictSearchPropertyValue,
+      strictSearchAllValues,
+    } = this.searchData;
     let matches = false;
 
     // If the inputted search value matches a property line like
     // `font-family: arial`, then check to make sure the name and value match.
     // Otherwise, just compare the inputted search string directly against the
     // name and value of the rule property.
-    if (propertyMatch && searchName && searchValue) {
-      matches = propertyName.includes(searchName) &&
-                propertyValue.includes(searchValue);
+    let hasNameAndValue = searchPropertyMatch &&
+                          searchPropertyName &&
+                          searchPropertyValue;
+    let isMatch = (value, query, isStrict) => {
+      return isStrict ? value === query : query && value.includes(query);
+    };
+
+    if (hasNameAndValue) {
+      matches =
+        isMatch(propertyName, searchPropertyName, strictSearchPropertyName) &&
+        isMatch(propertyValue, searchPropertyValue, strictSearchPropertyValue);
     } else {
-      matches = (searchName && propertyName.includes(searchName)) ||
-                (searchValue && propertyValue.includes(searchValue));
+      matches =
+        isMatch(propertyName, searchPropertyName,
+                strictSearchPropertyName || strictSearchAllValues) ||
+        isMatch(propertyValue, searchPropertyValue,
+                strictSearchPropertyValue || strictSearchAllValues);
     }
 
     if (matches) {
@@ -2982,6 +3032,19 @@ TextPropertyEditor.prototype = {
       title: CssLogic.l10n("rule.warning.title"),
     });
 
+    // Filter button that filters for the current property name and is
+    // displayed when the property is overridden by another rule.
+    this.filterProperty = createChild(this.container, "div", {
+      class: "ruleview-overridden-rule-filter",
+      hidden: "",
+      title: CssLogic.l10n("rule.filterProperty.title"),
+    });
+
+    this.filterProperty.addEventListener("click", event => {
+      this.ruleEditor.ruleView.setFilterStyles("`" + this.prop.name + "`");
+      event.stopPropagation();
+    }, false);
+
     // Holds the viewers for the computed properties.
     // will be populated in |_updateComputed|.
     this.computed = createChild(this.element, "ul", {
@@ -3109,6 +3172,9 @@ TextPropertyEditor.prototype = {
     }
 
     this.warning.hidden = this.editing || this.isValid();
+    this.filterProperty.hidden = this.editing ||
+                                 !this.isValid() ||
+                                 !this.prop.overridden;
 
     if (this.prop.overridden || !this.prop.enabled) {
       this.element.classList.add("ruleview-overridden");

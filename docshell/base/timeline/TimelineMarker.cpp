@@ -21,6 +21,15 @@ TimelineMarker::TimelineMarker(nsDocShell* aDocShell, const char* aName,
 }
 
 TimelineMarker::TimelineMarker(nsDocShell* aDocShell, const char* aName,
+                               const mozilla::TimeStamp& aTime,
+                               TracingMetadata aMetaData)
+  : TimelineMarker(aDocShell, aName, aMetaData)
+{
+  bool isInconsistent = false;
+  mTime = (aTime - mozilla::TimeStamp::ProcessCreation(isInconsistent)).ToMilliseconds();
+}
+
+TimelineMarker::TimelineMarker(nsDocShell* aDocShell, const char* aName,
                                TracingMetadata aMetaData,
                                const nsAString& aCause,
                                TimelineStackRequest aStackRequest)

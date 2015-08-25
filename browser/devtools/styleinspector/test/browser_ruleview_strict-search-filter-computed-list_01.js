@@ -4,13 +4,13 @@
 
 "use strict";
 
-// Tests that the rule view search filter and clear button works properly in
-// the computed list.
+// Tests that the rule view strict search filter and clear button works properly
+// in the computed list
 
 const TEST_URI = `
   <style type="text/css">
     #testid {
-      margin: 4px 0px;
+      margin: 4px 0px 10px 44px;
     }
     .testclass {
       background-color: red;
@@ -21,30 +21,41 @@ const TEST_URI = `
 
 const TEST_DATA = [
   {
-    desc: "Tests that the search filter works properly in the computed list for property names",
-    search: "margin",
-    isExpanderOpen: false,
-    isFilterOpen: false,
-    isMarginHighlighted: true,
-    isMarginTopHighlighted: true,
-    isMarginRightHighlighted: true,
-    isMarginBottomHighlighted: true,
+    desc: "Tests that the strict search filter works properly in the computed list for property names",
+    search: "`margin-left`",
+    isExpanderOpen: true,
+    isFilterOpen: true,
+    isMarginHighlighted: false,
+    isMarginTopHighlighted: false,
+    isMarginRightHighlighted: false,
+    isMarginBottomHighlighted: false,
     isMarginLeftHighlighted: true
   },
   {
-    desc: "Tests that the search filter works properly in the computed list for property values",
-    search: "0px",
-    isExpanderOpen: false,
-    isFilterOpen: false,
-    isMarginHighlighted: true,
+    desc: "Tests that the strict search filter works properly in the computed list for property values",
+    search: "`0px`",
+    isExpanderOpen: true,
+    isFilterOpen: true,
+    isMarginHighlighted: false,
     isMarginTopHighlighted: false,
     isMarginRightHighlighted: true,
     isMarginBottomHighlighted: false,
+    isMarginLeftHighlighted: false
+  },
+  {
+    desc: "Tests that the strict search filter works properly in the computed list for parsed property names",
+    search: "`margin-left`:",
+    isExpanderOpen: true,
+    isFilterOpen: true,
+    isMarginHighlighted: false,
+    isMarginTopHighlighted: false,
+    isMarginRightHighlighted: false,
+    isMarginBottomHighlighted: false,
     isMarginLeftHighlighted: true
   },
   {
-    desc: "Tests that the search filter works properly in the computed list for property line input",
-    search: "margin-top:4px",
+    desc: "Tests that the strict search filter works properly in the computed list for parsed property values",
+    search: ":`4px`",
     isExpanderOpen: true,
     isFilterOpen: true,
     isMarginHighlighted: false,
@@ -54,8 +65,8 @@ const TEST_DATA = [
     isMarginLeftHighlighted: false
   },
   {
-    desc: "Tests that the search filter works properly in the computed list for parsed name",
-    search: "margin-top:",
+    desc: "Tests that the strict search filter works properly in the computed list for property line input",
+    search: "`margin-top`:`4px`",
     isExpanderOpen: true,
     isFilterOpen: true,
     isMarginHighlighted: false,
@@ -65,16 +76,29 @@ const TEST_DATA = [
     isMarginLeftHighlighted: false
   },
   {
-    desc: "Tests that the search filter works properly in the computed list for parsed property value",
-    search: ":4px",
-    isExpanderOpen: false,
-    isFilterOpen: false,
-    isMarginHighlighted: true,
+    desc: "Tests that the strict search filter works properly in the " +
+          "computed list for a parsed strict property name and non-strict property value",
+    search: "`margin-top`:4px",
+    isExpanderOpen: true,
+    isFilterOpen: true,
+    isMarginHighlighted: false,
     isMarginTopHighlighted: true,
     isMarginRightHighlighted: false,
-    isMarginBottomHighlighted: true,
+    isMarginBottomHighlighted: false,
     isMarginLeftHighlighted: false
-  }
+  },
+  {
+    desc: "Tests that the strict search filter works properly in the " +
+          "computed list for a parsed strict property value and non-strict property name",
+    search: "i:`4px`",
+    isExpanderOpen: true,
+    isFilterOpen: true,
+    isMarginHighlighted: false,
+    isMarginTopHighlighted: true,
+    isMarginRightHighlighted: false,
+    isMarginBottomHighlighted: false,
+    isMarginLeftHighlighted: false
+  },
 ];
 
 add_task(function*() {

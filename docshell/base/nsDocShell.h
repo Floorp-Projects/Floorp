@@ -278,9 +278,11 @@ private:
   friend void mozilla::TimelineConsumers::AddConsumer(nsDocShell* aDocShell);
   friend void mozilla::TimelineConsumers::RemoveConsumer(nsDocShell* aDocShell);
   friend void mozilla::TimelineConsumers::AddMarkerForDocShell(
-    nsDocShell* aDocShell, UniquePtr<TimelineMarker>&& aMarker);
-  friend void mozilla::TimelineConsumers::AddMarkerForDocShell(
     nsDocShell* aDocShell, const char* aName, TracingMetadata aMetaData);
+  friend void mozilla::TimelineConsumers::AddMarkerForDocShell(
+    nsDocShell* aDocShell, const char* aName, const TimeStamp& aTime, TracingMetadata aMetaData);
+  friend void mozilla::TimelineConsumers::AddMarkerForDocShell(
+    nsDocShell* aDocShell, UniquePtr<TimelineMarker>&& aMarker);
 
 public:
   // Tell the favicon service that aNewURI has the same favicon as aOldURI.
