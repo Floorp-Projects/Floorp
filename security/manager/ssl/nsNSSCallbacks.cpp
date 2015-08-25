@@ -1246,8 +1246,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   // to log the warning. In particular, these warnings should go to the web
   // console instead of to the error console. Also, the warning is not
   // localized.
-  if (!siteSupportsSafeRenego &&
-      ioLayerHelpers.getWarnLevelMissingRFC5746() > 0) {
+  if (!siteSupportsSafeRenego) {
     nsXPIDLCString hostName;
     infoObject->GetHostName(getter_Copies(hostName));
 
