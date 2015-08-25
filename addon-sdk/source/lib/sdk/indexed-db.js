@@ -32,9 +32,9 @@ let principaluri = Cc["@mozilla.org/network/io-service;1"].
               getService(Ci.nsIIOService).
               newURI(PSEUDOURI, null, null);
 
-let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-            .getService(Ci.nsIScriptSecurityManager);
-let principal = ssm.createCodebasePrincipal(principaluri, {});
+let principal = Cc["@mozilla.org/scriptsecuritymanager;1"].
+	               getService(Ci.nsIScriptSecurityManager).
+	               getCodebasePrincipal(principaluri);
 
 function toArray(args) {
   return Array.prototype.slice.call(args);

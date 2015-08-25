@@ -188,8 +188,7 @@ AboutWeaveLog.prototype = {
     // view. That way links to files can be opened.
     let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
                 .getService(Ci.nsIScriptSecurityManager);
-    let principal = ssm.createCodebasePrincipal(uri, {});
-
+    let principal = ssm.getNoAppCodebasePrincipal(uri);
     channel.owner = principal;
     return channel;
   }

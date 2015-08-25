@@ -48,9 +48,9 @@ function testSteps()
   let uri = Components.classes["@mozilla.org/network/io-service;1"]
                       .getService(Components.interfaces.nsIIOService)
                       .newURI("http://appdata.example.com", null, null);
-  let ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                      .getService(Components.interfaces.nsIScriptSecurityManager);
-  let principal = ssm.createCodebasePrincipal(uri, {});
+  let principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                     .getService(Components.interfaces.nsIScriptSecurityManager)
+                     .getNoAppCodebasePrincipal(uri);
 
   request = indexedDB.openForPrincipal(principal, name, 1);
   request.onerror = errorHandler;

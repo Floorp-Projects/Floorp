@@ -12,6 +12,7 @@
 #include "mozilla/hal_sandbox/PHalParent.h"
 #include "nsIAppsService.h"
 #include "nsIPrincipal.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsPrintfCString.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -231,10 +232,21 @@ GetAppPrincipal(uint32_t aAppId)
   nsresult rv = appsService->GetAppByLocalId(aAppId, getter_AddRefs(app));
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  nsCOMPtr<nsIPrincipal> principal;
-  app->GetPrincipal(getter_AddRefs(principal));
+  nsString origin;
+  rv = app->GetOrigin(origin);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
-  return principal.forget();
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), origin);
+
+  nsCOMPtr<nsIScriptSecurityManager> secMan =
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+
+  nsCOMPtr<nsIPrincipal> appPrincipal;
+  rv = secMan->GetAppCodebasePrincipal(uri, aAppId, false,
+                                       getter_AddRefs(appPrincipal));
+  NS_ENSURE_SUCCESS(rv, nullptr);
+  return appPrincipal.forget();
 }
 
 uint32_t
