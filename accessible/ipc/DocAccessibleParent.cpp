@@ -266,14 +266,14 @@ DocAccessibleParent::Destroy()
 }
 
 bool
-DocAccessibleParent::CheckDocTreeInternal() const
+DocAccessibleParent::CheckDocTree() const
 {
   size_t childDocs = mChildDocs.Length();
   for (size_t i = 0; i < childDocs; i++) {
     if (!mChildDocs[i] || mChildDocs[i]->mParentDoc != this)
       return false;
 
-    if (!mChildDocs[i]->CheckDocTreeInternal()) {
+    if (!mChildDocs[i]->CheckDocTree()) {
       return false;
     }
   }
@@ -281,23 +281,5 @@ DocAccessibleParent::CheckDocTreeInternal() const
   return true;
 }
 
-const DocAccessibleParent*
-DocAccessibleParent::CheckTopDoc() const
-{
-  const DocAccessibleParent* doc = this;
-  while (doc->ParentDoc()) {
-    doc = doc->ParentDoc();
-  }
-
-  MOZ_DIAGNOSTIC_ASSERT(doc->mTopLevel);
-
-  return doc;
-}
-
-bool
-DocAccessibleParent::CheckDocTree() const
-{
-  return CheckTopDoc()->CheckDocTreeInternal();
-}
 } // a11y
 } // mozilla
