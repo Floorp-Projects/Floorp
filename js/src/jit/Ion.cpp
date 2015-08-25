@@ -469,8 +469,6 @@ PrepareForDebuggerOnIonCompilationHook(JSContext* cx, jit::MIRGraph& graph,
 void
 jit::FinishOffThreadBuilder(JSContext* cx, IonBuilder* builder)
 {
-    MOZ_ASSERT(HelperThreadState().isLocked());
-
     // Clean the references to the pending IonBuilder, if we just finished it.
     if (builder->script()->baselineScript()->hasPendingIonBuilder() &&
         builder->script()->baselineScript()->pendingIonBuilder() == builder)
@@ -585,6 +583,9 @@ jit::LazyLink(JSContext* cx, HandleScript calleeScript)
     AutoScriptVector debugScripts(cx);
     OnIonCompilationInfo info(builder->alloc().lifoAlloc());
 
+    // Remove from pending.
+    builder->removeFrom(HelperThreadState().ionLazyLinkList());
+
     {
         AutoEnterAnalysis enterTypes(cx);
         if (!LinkBackgroundCodeGen(cx, builder, &debugScripts, &info)) {
@@ -598,10 +599,7 @@ jit::LazyLink(JSContext* cx, HandleScript calleeScript)
     if (info.filled())
         Debugger::onIonCompilation(cx, debugScripts, info.graph);
 
-    {
-        AutoLockHelperThreadState lock;
-        FinishOffThreadBuilder(cx, builder);
-    }
+    FinishOffThreadBuilder(cx, builder);
 
     MOZ_ASSERT(calleeScript->hasBaselineScript());
     MOZ_ASSERT(calleeScript->baselineOrIonRawPointer());
