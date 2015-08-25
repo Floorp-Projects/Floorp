@@ -41,7 +41,7 @@ let AnimationsPanel = {
 
     // If the server doesn't support toggling all animations at once, hide the
     // whole bottom toolbar.
-    if (!AnimationsController.hasToggleAll) {
+    if (!AnimationsController.traits.hasToggleAll) {
       document.querySelector("#toolbar").style.display = "none";
     }
 
@@ -52,13 +52,14 @@ let AnimationsPanel = {
     this.refreshAnimations = this.refreshAnimations.bind(this);
     this.toggleAll = this.toggleAll.bind(this);
     this.onTabNavigated = this.onTabNavigated.bind(this);
+    this.onTimelineTimeChanged = this.onTimelineTimeChanged.bind(this);
 
-    this.startListeners();
-
-    if (AnimationsController.isNewUI) {
+    if (AnimationsController.traits.isNewUI) {
       this.animationsTimelineComponent = new AnimationsTimeline(gInspector);
       this.animationsTimelineComponent.init(this.playersEl);
     }
+
+    this.startListeners();
 
     yield this.refreshAnimations();
 
@@ -101,6 +102,11 @@ let AnimationsPanel = {
 
     this.toggleAllButtonEl.addEventListener("click", this.toggleAll, false);
     gToolbox.target.on("navigate", this.onTabNavigated);
+
+    if (this.animationsTimelineComponent) {
+      this.animationsTimelineComponent.on("current-time-changed",
+        this.onTimelineTimeChanged);
+    }
   },
 
   stopListeners: function() {
@@ -113,6 +119,11 @@ let AnimationsPanel = {
 
     this.toggleAllButtonEl.removeEventListener("click", this.toggleAll, false);
     gToolbox.target.off("navigate", this.onTabNavigated);
+
+    if (this.animationsTimelineComponent) {
+      this.animationsTimelineComponent.off("current-time-changed",
+        this.onTimelineTimeChanged);
+    }
   },
 
   displayErrorMessage: function() {
@@ -136,7 +147,7 @@ let AnimationsPanel = {
   toggleAll: Task.async(function*() {
     let btnClass = this.toggleAllButtonEl.classList;
 
-    if (!AnimationsController.isNewUI) {
+    if (!AnimationsController.traits.isNewUI) {
       // Toggling all animations is async and it may be some time before each of
       // the current players get their states updated, so toggle locally too, to
       // avoid the timelines from jumping back and forth.
@@ -146,7 +157,7 @@ let AnimationsPanel = {
           currentWidgetStateChange.push(btnClass.contains("paused")
             ? widget.play() : widget.pause());
         }
-        yield promise.all(currentWidgetStateChange).catch(Cu.reportError);
+        yield promise.all(currentWidgetStateChange).catch(e => console.error(e));
       }
     }
 
@@ -156,6 +167,10 @@ let AnimationsPanel = {
 
   onTabNavigated: function() {
     this.toggleAllButtonEl.classList.remove("paused");
+  },
+
+  onTimelineTimeChanged: function(e, time) {
+    AnimationsController.setCurrentTimeAll(time, true).catch(e => console.error(e));
   },
 
   refreshAnimations: Task.async(function*() {
@@ -182,7 +197,7 @@ let AnimationsPanel = {
 
     // Otherwise, create player widgets (only when isNewUI is false, the
     // timeline has already been re-rendered).
-    if (!AnimationsController.isNewUI) {
+    if (!AnimationsController.traits.isNewUI) {
       this.playerWidgets = [];
       let initPromises = [];
 
@@ -230,10 +245,10 @@ function PlayerWidget(player, containerEl) {
   this.onPlaybackRateChanged = this.onPlaybackRateChanged.bind(this);
 
   this.metaDataComponent = new PlayerMetaDataHeader();
-  if (AnimationsController.hasSetPlaybackRate) {
+  if (AnimationsController.traits.hasSetPlaybackRate) {
     this.rateComponent = new PlaybackRateSelector();
   }
-  if (AnimationsController.hasTargetNode) {
+  if (AnimationsController.traits.hasTargetNode) {
     this.targetNodeComponent = new AnimationTargetNode(gInspector);
   }
 }
@@ -274,7 +289,7 @@ PlayerWidget.prototype = {
   startListeners: function() {
     this.player.on(this.player.AUTO_REFRESH_EVENT, this.onStateChanged);
     this.playPauseBtnEl.addEventListener("click", this.onPlayPauseBtnClick);
-    if (AnimationsController.hasSetCurrentTime) {
+    if (AnimationsController.traits.hasSetCurrentTime) {
       this.rewindBtnEl.addEventListener("click", this.onRewindBtnClick);
       this.fastForwardBtnEl.addEventListener("click", this.onFastForwardBtnClick);
       this.currentTimeEl.addEventListener("input", this.onCurrentTimeChanged);
@@ -287,7 +302,7 @@ PlayerWidget.prototype = {
   stopListeners: function() {
     this.player.off(this.player.AUTO_REFRESH_EVENT, this.onStateChanged);
     this.playPauseBtnEl.removeEventListener("click", this.onPlayPauseBtnClick);
-    if (AnimationsController.hasSetCurrentTime) {
+    if (AnimationsController.traits.hasSetCurrentTime) {
       this.rewindBtnEl.removeEventListener("click", this.onRewindBtnClick);
       this.fastForwardBtnEl.removeEventListener("click", this.onFastForwardBtnClick);
       this.currentTimeEl.removeEventListener("input", this.onCurrentTimeChanged);
@@ -340,7 +355,7 @@ PlayerWidget.prototype = {
       }
     });
 
-    if (AnimationsController.hasSetCurrentTime) {
+    if (AnimationsController.traits.hasSetCurrentTime) {
       this.rewindBtnEl = createNode({
         parent: playbackControlsEl,
         nodeType: "button",
@@ -393,7 +408,7 @@ PlayerWidget.prototype = {
       }
     });
 
-    if (!AnimationsController.hasSetCurrentTime) {
+    if (!AnimationsController.traits.hasSetCurrentTime) {
       this.currentTimeEl.setAttribute("disabled", "true");
     }
 
@@ -491,7 +506,7 @@ PlayerWidget.prototype = {
    * @return {Promise} Resolves when the current time has been set.
    */
   setCurrentTime: Task.async(function*(time, shouldPause) {
-    if (!AnimationsController.hasSetCurrentTime) {
+    if (!AnimationsController.traits.hasSetCurrentTime) {
       throw new Error("This server version doesn't support setting " +
                       "animations' currentTime");
     }
@@ -518,7 +533,7 @@ PlayerWidget.prototype = {
    * @return {Promise} Resolves when the rate has been set.
    */
   setPlaybackRate: function(rate) {
-    if (!AnimationsController.hasSetPlaybackRate) {
+    if (!AnimationsController.traits.hasSetPlaybackRate) {
       throw new Error("This server version doesn't support setting " +
                       "animations' playbackRate");
     }

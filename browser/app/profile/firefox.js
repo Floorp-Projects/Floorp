@@ -1446,6 +1446,10 @@ pref("devtools.performance.ui.enable-allocations", false);
 pref("devtools.performance.ui.enable-framerate", true);
 pref("devtools.performance.ui.enable-jit-optimizations", false);
 
+// Temporary pref disabling memory flame views
+// TODO remove once we have flame charts via bug 1148663
+pref("devtools.performance.ui.enable-memory-flame", false);
+
 // Enable experimental options in the UI only in Nightly
 #if defined(NIGHTLY_BUILD)
 pref("devtools.performance.ui.experimental", true);
@@ -1875,10 +1879,9 @@ pref("browser.apps.URL", "https://marketplace.firefox.com/discovery/");
 #ifdef NIGHTLY_BUILD
 pref("browser.polaris.enabled", false);
 pref("privacy.trackingprotection.ui.enabled", false);
-pref("privacy.trackingprotection.introURL", "https://support.mozilla.org/kb/tracking-protection-firefox");
 #endif
 pref("privacy.trackingprotection.introCount", 0);
-pref("privacy.trackingprotection.introURL", "https://support.mozilla.org/kb/tracking-protection-firefox");
+pref("privacy.trackingprotection.introURL", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/tracking-protection-pbm");
 
 #ifndef RELEASE_BUILD
 // At the moment, autostart.2 is used, while autostart.1 is unused.
