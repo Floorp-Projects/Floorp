@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2005-2007 Henri Sivonen
- * Copyright (c) 2007-2013 Mozilla Foundation
+ * Copyright (c) 2007-2015 Mozilla Foundation
  * Portions of comments Copyright 2004-2010 Apple Computer, Inc., Mozilla 
  * Foundation, and Opera Software ASA.
  *
@@ -229,7 +229,7 @@ nsHtml5Tokenizer::appendStrBuf(char16_t c)
 nsString* 
 nsHtml5Tokenizer::strBufToString()
 {
-  return nsHtml5Portability::newStringFromBuffer(strBuf, 0, strBufLen);
+  return nsHtml5Portability::newStringFromBuffer(strBuf, 0, strBufLen, tokenHandler);
 }
 
 void 

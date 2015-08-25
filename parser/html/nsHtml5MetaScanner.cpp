@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007 Henri Sivonen
- * Copyright (c) 2008-2010 Mozilla Foundation
+ * Copyright (c) 2008-2015 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -64,7 +64,7 @@ staticJArray<char16_t,int32_t> nsHtml5MetaScanner::HTTP_EQUIV = { HTTP_EQUIV_DAT
 static char16_t const CONTENT_TYPE_DATA[] = { 'c', 'o', 'n', 't', 'e', 'n', 't', '-', 't', 'y', 'p', 'e' };
 staticJArray<char16_t,int32_t> nsHtml5MetaScanner::CONTENT_TYPE = { CONTENT_TYPE_DATA, MOZ_ARRAY_LENGTH(CONTENT_TYPE_DATA) };
 
-nsHtml5MetaScanner::nsHtml5MetaScanner()
+nsHtml5MetaScanner::nsHtml5MetaScanner(nsHtml5TreeBuilder* tb)
   : readable(nullptr),
     metaState(NS_HTML5META_SCANNER_NO),
     contentIndex(INT32_MAX),
@@ -76,7 +76,8 @@ nsHtml5MetaScanner::nsHtml5MetaScanner()
     strBuf(jArray<char16_t,int32_t>::newJArray(36)),
     content(nullptr),
     charset(nullptr),
-    httpEquivState(NS_HTML5META_SCANNER_HTTP_EQUIV_NOT_SEEN)
+    httpEquivState(NS_HTML5META_SCANNER_HTTP_EQUIV_NOT_SEEN),
+    treeBuilder(tb)
 {
   MOZ_COUNT_CTOR(nsHtml5MetaScanner);
 }
@@ -753,11 +754,11 @@ nsHtml5MetaScanner::handleAttributeValue()
     return;
   }
   if (contentIndex == CONTENT.length && !content) {
-    content = nsHtml5Portability::newStringFromBuffer(strBuf, 0, strBufLen);
+    content = nsHtml5Portability::newStringFromBuffer(strBuf, 0, strBufLen, treeBuilder);
     return;
   }
   if (charsetIndex == CHARSET.length && !charset) {
-    charset = nsHtml5Portability::newStringFromBuffer(strBuf, 0, strBufLen);
+    charset = nsHtml5Portability::newStringFromBuffer(strBuf, 0, strBufLen, treeBuilder);
     return;
   }
   if (httpEquivIndex == HTTP_EQUIV.length && httpEquivState == NS_HTML5META_SCANNER_HTTP_EQUIV_NOT_SEEN) {
@@ -785,7 +786,7 @@ nsHtml5MetaScanner::handleTagInner()
     return true;
   }
   if (!!content && httpEquivState == NS_HTML5META_SCANNER_HTTP_EQUIV_CONTENT_TYPE) {
-    nsString* extract = nsHtml5TreeBuilder::extractCharsetFromContent(content);
+    nsString* extract = nsHtml5TreeBuilder::extractCharsetFromContent(content, treeBuilder);
     if (!extract) {
       return false;
     }
