@@ -49,7 +49,7 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
     // newTarget = NullValue is an initial sentinel for "please fill me in from the stack".
     // It should never be passed from Ion code.
     RootedValue newTarget(cx, newTargetValue);
-    if (!(flags_ & (GLOBAL))) {
+    if (!(flags_ & (GLOBAL | MODULE))) {
         if (evalInFramePrev) {
             MOZ_ASSERT(evalInFramePrev.isFunctionFrame() || evalInFramePrev.isGlobalFrame());
             if (evalInFramePrev.isFunctionFrame()) {
@@ -83,7 +83,7 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
         exec.fun = &callee->as<JSFunction>();
         u.evalScript = script;
     } else {
-        MOZ_ASSERT(isGlobalFrame());
+        MOZ_ASSERT(isGlobalFrame() || isModuleFrame());
         dstvp[1] = NullValue();
         exec.script = script;
 #ifdef DEBUG
@@ -149,6 +149,10 @@ AssertDynamicScopeMatchesStaticScope(JSContext* cx, JSScript* script, JSObject* 
             }
         } else if (i.hasSyntacticDynamicScopeObject()) {
             switch (i.type()) {
+              case StaticScopeIter<NoGC>::Module:
+                MOZ_ASSERT(scope->as<ModuleEnvironmentObject>().module().script() == i.moduleScript());
+                scope = &scope->as<ModuleEnvironmentObject>().enclosingScope();
+                break;
               case StaticScopeIter<NoGC>::Function:
                 MOZ_ASSERT(scope->as<CallObject>().callee().nonLazyScript() == i.funScript());
                 scope = &scope->as<CallObject>().enclosingScope();
@@ -194,6 +198,7 @@ InterpreterFrame::prologue(JSContext* cx)
 {
     RootedScript script(cx, this->script());
 
+    MOZ_ASSERT(isModuleFrame() == !!script->module());
     MOZ_ASSERT(cx->interpreterRegs().pc == script->code());
 
     if (isEvalFrame()) {
@@ -210,9 +215,16 @@ InterpreterFrame::prologue(JSContext* cx)
     if (isGlobalFrame())
         return probes::EnterScript(cx, script, nullptr, this);
 
-    MOZ_ASSERT(isNonEvalFunctionFrame());
     AssertDynamicScopeMatchesStaticScope(cx, script, scopeChain());
 
+    if (isModuleFrame()) {
+        RootedModuleEnvironmentObject scope(cx, &script->module()->initialEnvironment());
+        MOZ_ASSERT(&scope->enclosingScope() == scopeChain());
+        pushOnScopeChain(*scope);
+        return probes::EnterScript(cx, script, nullptr, this);
+    }
+
+    MOZ_ASSERT(isNonEvalFunctionFrame());
     if (fun()->isHeavyweight() && !initFunctionScopeObjects(cx))
         return false;
 
@@ -263,6 +275,9 @@ InterpreterFrame::epilogue(JSContext* cx)
         MOZ_ASSERT(!IsSyntacticScope(scopeChain()));
         return;
     }
+
+    if (isModuleFrame())
+        return;
 
     MOZ_ASSERT(isNonEvalFunctionFrame());
 

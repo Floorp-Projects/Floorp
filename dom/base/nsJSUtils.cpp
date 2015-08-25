@@ -307,6 +307,12 @@ nsJSUtils::GetScopeChainForElement(JSContext* aCx,
   return true;
 }
 
+/* static */
+void
+nsJSUtils::ResetTimeZone()
+{
+  JS::ResetTimeZone();
+}
 
 //
 // nsDOMJSUtils.h

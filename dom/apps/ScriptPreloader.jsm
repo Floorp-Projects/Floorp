@@ -40,7 +40,7 @@ this.ScriptPreloader = {
       let toLoad = aManifest.precompile.length;
       let principal =
         Services.scriptSecurityManager
-                .getAppCodebasePrincipal(origin, aApp.localId, false);
+                .createCodebasePrincipal(origin, {appId: aApp.localId});
 
       aManifest.precompile.forEach((aPath) => {
         let uri = Services.io.newURI(aPath, null, origin);

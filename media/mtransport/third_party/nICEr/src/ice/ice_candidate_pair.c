@@ -125,7 +125,7 @@ int nr_ice_candidate_pair_create(nr_ice_peer_ctx *pctx, nr_ice_candidate *lcand,
     /* TODO(ekr@rtfm.com): Do we need to frob this when we change role. Bug 890667 */
     pair->stun_client->params.ice_binding_request.control = pctx->controlling?
       NR_ICE_CONTROLLING:NR_ICE_CONTROLLED;
-    pair->stun_client->params.ice_use_candidate.priority=t_priority;
+    pair->stun_client->params.ice_binding_request.priority=t_priority;
 
     pair->stun_client->params.ice_binding_request.tiebreaker=pctx->tiebreaker;
 

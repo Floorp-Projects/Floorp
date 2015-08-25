@@ -21,6 +21,7 @@ namespace js {
 namespace frontend {
 struct Definition;
 class FunctionBox;
+class ModuleBox;
 }
 
 class StaticWithObject;
@@ -47,6 +48,9 @@ class StaticNonSyntacticScopeObjects;
  * JSFunction
  *   Scope for function bodies. e.g., |function f() { var x; let y; }|
  *
+ * ModuleObject
+ *   Scope for moddules.
+ *
  * StaticWithObject
  *   Scope for |with|. e.g., |with ({}) { ... }|
  *
@@ -63,8 +67,8 @@ class StaticNonSyntacticScopeObjects;
  *
  *   (function f() { var x; function g() { } })
  *
- * All static scope objects are ScopeObjects with the exception of
- * JSFunction. A JSFunction keeps its enclosing scope link on
+ * All static scope objects are ScopeObjects with the exception of JSFunction
+ * and ModuleObject, which keeps their enclosing scope link on
  * |JSScript::enclosingStaticScope()|.
  */
 template <AllowGC allowGC>
@@ -78,7 +82,8 @@ class StaticScopeIter
                obj->is<StaticWithObject>() ||
                obj->is<StaticEvalObject>() ||
                obj->is<StaticNonSyntacticScopeObjects>() ||
-               obj->is<JSFunction>();
+               obj->is<JSFunction>() ||
+               obj->is<ModuleObject>();
     }
 
   public:
@@ -125,7 +130,7 @@ class StaticScopeIter
     bool hasSyntacticDynamicScopeObject() const;
     Shape* scopeShape() const;
 
-    enum Type { Function, Block, With, NamedLambda, Eval, NonSyntactic };
+    enum Type { Module, Function, Block, With, NamedLambda, Eval, NonSyntactic };
     Type type() const;
 
     StaticBlockObject& block() const;
@@ -135,6 +140,8 @@ class StaticScopeIter
     JSScript* funScript() const;
     JSFunction& fun() const;
     frontend::FunctionBox* maybeFunctionBox() const;
+    JSScript* moduleScript() const;
+    ModuleObject& module() const;
 };
 
 /*****************************************************************************/
@@ -213,6 +220,8 @@ ScopeCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
  *     |   |  DeclEnvObject         Holds name of recursive/heavyweight named lambda
  *     |   |
  *     |  CallObject                Scope of entire function or strict eval
+ *     |   |
+ *     |  ModuleEnvironmentObject   Module top-level scope on run-time scope chain
  *     |
  *   NestedScopeObject              Statement scopes; don't cross script boundaries
  *     |   |   |
@@ -281,6 +290,7 @@ class ScopeObject : public NativeObject
 
 class CallObject : public ScopeObject
 {
+  protected:
     static const uint32_t CALLEE_SLOT = 1;
 
     static CallObject*
@@ -365,6 +375,21 @@ class CallObject : public ScopeObject
         return CALLEE_SLOT;
     }
 };
+
+class ModuleEnvironmentObject : public CallObject
+{
+    static const uint32_t MODULE_SLOT = CallObject::CALLEE_SLOT;
+
+  public:
+    static const Class class_;
+
+    static ModuleEnvironmentObject* create(ExclusiveContext* cx, HandleModuleObject module);
+    ModuleObject& module() const;
+};
+
+typedef Rooted<ModuleEnvironmentObject*> RootedModuleEnvironmentObject;
+typedef Handle<ModuleEnvironmentObject*> HandleModuleEnvironmentObject;
+typedef MutableHandle<ModuleEnvironmentObject*> MutableHandleModuleEnvironmentObject;
 
 class DeclEnvObject : public ScopeObject
 {
@@ -825,7 +850,7 @@ class ScopeIter
     inline JSObject& enclosingScope() const;
 
     // If !done():
-    enum Type { Call, Block, With, Eval, NonSyntactic };
+    enum Type { Module, Call, Block, With, Eval, NonSyntactic };
     Type type() const;
 
     inline bool hasNonSyntacticScopeObject() const;
@@ -840,6 +865,7 @@ class ScopeIter
     StaticEvalObject& staticEval() const { return ssi_.eval(); }
     StaticNonSyntacticScopeObjects& staticNonSyntactic() const { return ssi_.nonSyntactic(); }
     JSFunction& fun() const { return ssi_.fun(); }
+    ModuleObject& module() const { return ssi_.module(); }
 
     bool withinInitialFrame() const { return !!frame_; }
     AbstractFramePtr initialFrame() const { MOZ_ASSERT(withinInitialFrame()); return frame_; }
@@ -1073,6 +1099,14 @@ JSObject::is<js::NestedScopeObject>() const
 
 template<>
 inline bool
+JSObject::is<js::CallObject>() const
+{
+    return getClass() == &js::CallObject::class_ ||
+           is<js::ModuleEnvironmentObject>();
+}
+
+template<>
+inline bool
 JSObject::is<js::ScopeObject>() const
 {
     return is<js::CallObject>() ||
@@ -1169,15 +1203,16 @@ ScopeIter::canHaveSyntacticScopeObject() const
         return false;
 
     switch (type()) {
+      case Module:
       case Call:
-        return true;
       case Block:
-        return true;
       case With:
         return true;
+
       case Eval:
         // Only strict eval scopes can have dynamic scope objects.
         return staticEval().isStrict();
+
       case NonSyntactic:
         return false;
     }

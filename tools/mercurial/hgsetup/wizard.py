@@ -10,7 +10,6 @@ import os
 import shutil
 import stat
 import sys
-import which
 import subprocess
 
 from distutils.version import LooseVersion
@@ -18,7 +17,7 @@ from distutils.version import LooseVersion
 from configobj import ConfigObjError
 from StringIO import StringIO
 
-from mozversioncontrol import get_hg_version
+from mozversioncontrol import get_hg_path, get_hg_version
 
 from .update import MercurialUpdater
 from .config import (
@@ -236,7 +235,6 @@ class MercurialSetupWizard(object):
         self.state_dir = os.path.normpath(state_dir)
         self.ext_dir = os.path.join(self.state_dir, 'mercurial', 'extensions')
         self.vcs_tools_dir = os.path.join(self.state_dir, 'version-control-tools')
-        self.update_vcs_tools = False
         self.updater = MercurialUpdater(state_dir)
 
     def run(self, config_paths):
@@ -246,22 +244,7 @@ class MercurialSetupWizard(object):
             if e.errno != errno.EEXIST:
                 raise
 
-        # We use subprocess in places, which expects a Win32 executable or
-        # batch script. On some versions of MozillaBuild, we have "hg.exe",
-        # "hg.bat," and "hg" (a Python script). "which" will happily return the
-        # Python script, which will cause subprocess to choke. Explicitly favor
-        # the Windows version over the plain script.
-        try:
-            hg = which.which('hg.exe')
-        except which.WhichError:
-            try:
-                hg = which.which('hg')
-            except which.WhichError as e:
-                print(e)
-                print('Try running |mach bootstrap| to ensure your environment is '
-                      'up to date.')
-                return 1
-
+        hg = get_hg_path()
         config_path = config_file(config_paths)
 
         try:
@@ -277,6 +260,8 @@ class MercurialSetupWizard(object):
             print('Line %d: %s' % (e.line, e.message))
 
             return 1
+
+        self.updater.update_all()
 
         print(INITIAL_MESSAGE)
         raw_input()
@@ -399,14 +384,6 @@ class MercurialSetupWizard(object):
             if bzuser or bzpass:
                 c.set_bugzilla_credentials(bzuser, bzpass)
 
-        if self.update_vcs_tools:
-            self.updater.update_mercurial_repo(
-                hg,
-                'https://hg.mozilla.org/hgcustom/version-control-tools',
-                self.vcs_tools_dir,
-                'default',
-                'Ensuring version-control-tools is up to date...')
-
         # Look for and clean up old extensions.
         for ext in {'bzexport', 'qimportbz', 'mqext'}:
             path = os.path.join(self.ext_dir, ext)
@@ -517,7 +494,6 @@ class MercurialSetupWizard(object):
                 return
         if not path:
             path = os.path.join(self.vcs_tools_dir, 'hgext', name)
-        self.update_vcs_tools = True
         c.activate_extension(name, path)
         print('Activated %s extension.\n' % name)
 

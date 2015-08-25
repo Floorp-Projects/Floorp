@@ -13,6 +13,7 @@
 #include "jsscript.h"
 #include "jstypes.h"
 
+#include "builtin/ModuleObject.h"
 #include "frontend/ParseMaps.h"
 #include "frontend/ParseNode.h"
 #include "frontend/TokenStream.h"
@@ -215,8 +216,12 @@ class SharedContext
     void computeInWith(JSObject* staticScope);
 
     virtual ObjectBox* toObjectBox() { return nullptr; }
-    inline bool isFunctionBox() { return toObjectBox() && toObjectBox()->isFunctionBox(); }
+    bool isObjectBox() { return toObjectBox() != nullptr; }
+    bool isFunctionBox() { return isObjectBox() && toObjectBox()->isFunctionBox(); }
     inline FunctionBox* asFunctionBox();
+    bool isModuleBox() { return isObjectBox() && toObjectBox()->isModuleBox(); }
+    inline ModuleBox* asModuleBox();
+    bool isGlobalContext() { return !toObjectBox(); }
 
     bool allowNewTarget()              const { return allowNewTarget_; }
     bool allowSuperProperty()          const { return allowSuperProperty_; }
@@ -368,11 +373,32 @@ class FunctionBox : public ObjectBox, public SharedContext
     }
 };
 
+class ModuleBox : public ObjectBox, public SharedContext
+{
+  public:
+    Bindings bindings;
+
+    template <typename ParseHandler>
+    ModuleBox(ExclusiveContext* cx, ObjectBox* traceListHead, ModuleObject* module,
+              ParseContext<ParseHandler>* pc);
+
+    ObjectBox* toObjectBox() override { return this; }
+    ModuleObject* module() const { return &object->as<ModuleObject>(); }
+    JSObject* staticScope() const override { return module(); }
+};
+
 inline FunctionBox*
 SharedContext::asFunctionBox()
 {
     MOZ_ASSERT(isFunctionBox());
     return static_cast<FunctionBox*>(this);
+}
+
+inline ModuleBox*
+SharedContext::asModuleBox()
+{
+    MOZ_ASSERT(isModuleBox());
+    return static_cast<ModuleBox*>(this);
 }
 
 

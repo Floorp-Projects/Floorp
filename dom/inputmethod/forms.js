@@ -11,6 +11,7 @@ dump("###################################### forms.js loaded\n");
 let Ci = Components.interfaces;
 let Cc = Components.classes;
 let Cu = Components.utils;
+let Cr = Components.results;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
@@ -18,10 +19,50 @@ XPCOMUtils.defineLazyServiceGetter(Services, "fm",
                                    "@mozilla.org/focus-manager;1",
                                    "nsIFocusManager");
 
-XPCOMUtils.defineLazyGetter(this, "domWindowUtils", function () {
-  return content.QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIDOMWindowUtils);
-});
+/*
+ * A WeakMap to map window to objects keeping it's TextInputProcessor instance.
+ */
+let WindowMap = {
+  // WeakMap of <window, object> pairs.
+  _map: null,
+
+  /*
+   * Set the object associated to the window and return it.
+   */
+  _getObjForWin: function(win) {
+    if (!this._map) {
+      this._map = new WeakMap();
+    }
+    if (this._map.has(win)) {
+      return this._map.get(win);
+    } else {
+      let obj = {
+        tip: null
+      };
+      this._map.set(win, obj);
+
+      return obj;
+    }
+  },
+
+  getTextInputProcessor: function(win) {
+    if (!win) {
+      return;
+    }
+    let obj = this._getObjForWin(win);
+    let tip = obj.tip
+
+    if (!tip) {
+      tip = obj.tip = Cc["@mozilla.org/text-input-processor;1"]
+        .createInstance(Ci.nsITextInputProcessor);
+    }
+
+    if (!tip.beginInputTransaction(win, textInputProcessorCallback)) {
+      tip = obj.tip = null;
+    }
+    return tip;
+  }
+};
 
 const RESIZE_SCROLL_DELAY = 20;
 // In content editable node, when there are hidden elements such as <br>, it
@@ -40,6 +81,151 @@ let HTMLTextAreaElement = Ci.nsIDOMHTMLTextAreaElement;
 let HTMLSelectElement = Ci.nsIDOMHTMLSelectElement;
 let HTMLOptGroupElement = Ci.nsIDOMHTMLOptGroupElement;
 let HTMLOptionElement = Ci.nsIDOMHTMLOptionElement;
+
+function guessKeyNameFromKeyCode(KeyboardEvent, aKeyCode) {
+  switch (aKeyCode) {
+    case KeyboardEvent.DOM_VK_CANCEL:
+      return "Cancel";
+    case KeyboardEvent.DOM_VK_HELP:
+      return "Help";
+    case KeyboardEvent.DOM_VK_BACK_SPACE:
+      return "Backspace";
+    case KeyboardEvent.DOM_VK_TAB:
+      return "Tab";
+    case KeyboardEvent.DOM_VK_CLEAR:
+      return "Clear";
+    case KeyboardEvent.DOM_VK_RETURN:
+      return "Enter";
+    case KeyboardEvent.DOM_VK_SHIFT:
+      return "Shift";
+    case KeyboardEvent.DOM_VK_CONTROL:
+      return "Control";
+    case KeyboardEvent.DOM_VK_ALT:
+      return "Alt";
+    case KeyboardEvent.DOM_VK_PAUSE:
+      return "Pause";
+    case KeyboardEvent.DOM_VK_EISU:
+      return "Eisu";
+    case KeyboardEvent.DOM_VK_ESCAPE:
+      return "Escape";
+    case KeyboardEvent.DOM_VK_CONVERT:
+      return "Convert";
+    case KeyboardEvent.DOM_VK_NONCONVERT:
+      return "NonConvert";
+    case KeyboardEvent.DOM_VK_ACCEPT:
+      return "Accept";
+    case KeyboardEvent.DOM_VK_MODECHANGE:
+      return "ModeChange";
+    case KeyboardEvent.DOM_VK_PAGE_UP:
+      return "PageUp";
+    case KeyboardEvent.DOM_VK_PAGE_DOWN:
+      return "PageDown";
+    case KeyboardEvent.DOM_VK_END:
+      return "End";
+    case KeyboardEvent.DOM_VK_HOME:
+      return "Home";
+    case KeyboardEvent.DOM_VK_LEFT:
+      return "ArrowLeft";
+    case KeyboardEvent.DOM_VK_UP:
+      return "ArrowUp";
+    case KeyboardEvent.DOM_VK_RIGHT:
+      return "ArrowRight";
+    case KeyboardEvent.DOM_VK_DOWN:
+      return "ArrowDown";
+    case KeyboardEvent.DOM_VK_SELECT:
+      return "Select";
+    case KeyboardEvent.DOM_VK_PRINT:
+      return "Print";
+    case KeyboardEvent.DOM_VK_EXECUTE:
+      return "Execute";
+    case KeyboardEvent.DOM_VK_PRINTSCREEN:
+      return "PrintScreen";
+    case KeyboardEvent.DOM_VK_INSERT:
+      return "Insert";
+    case KeyboardEvent.DOM_VK_DELETE:
+      return "Delete";
+    case KeyboardEvent.DOM_VK_WIN:
+      return "OS";
+    case KeyboardEvent.DOM_VK_CONTEXT_MENU:
+      return "ContextMenu";
+    case KeyboardEvent.DOM_VK_SLEEP:
+      return "Standby";
+    case KeyboardEvent.DOM_VK_F1:
+      return "F1";
+    case KeyboardEvent.DOM_VK_F2:
+      return "F2";
+    case KeyboardEvent.DOM_VK_F3:
+      return "F3";
+    case KeyboardEvent.DOM_VK_F4:
+      return "F4";
+    case KeyboardEvent.DOM_VK_F5:
+      return "F5";
+    case KeyboardEvent.DOM_VK_F6:
+      return "F6";
+    case KeyboardEvent.DOM_VK_F7:
+      return "F7";
+    case KeyboardEvent.DOM_VK_F8:
+      return "F8";
+    case KeyboardEvent.DOM_VK_F9:
+      return "F9";
+    case KeyboardEvent.DOM_VK_F10:
+      return "F10";
+    case KeyboardEvent.DOM_VK_F11:
+      return "F11";
+    case KeyboardEvent.DOM_VK_F12:
+      return "F12";
+    case KeyboardEvent.DOM_VK_F13:
+      return "F13";
+    case KeyboardEvent.DOM_VK_F14:
+      return "F14";
+    case KeyboardEvent.DOM_VK_F15:
+      return "F15";
+    case KeyboardEvent.DOM_VK_F16:
+      return "F16";
+    case KeyboardEvent.DOM_VK_F17:
+      return "F17";
+    case KeyboardEvent.DOM_VK_F18:
+      return "F18";
+    case KeyboardEvent.DOM_VK_F19:
+      return "F19";
+    case KeyboardEvent.DOM_VK_F20:
+      return "F20";
+    case KeyboardEvent.DOM_VK_F21:
+      return "F21";
+    case KeyboardEvent.DOM_VK_F22:
+      return "F22";
+    case KeyboardEvent.DOM_VK_F23:
+      return "F23";
+    case KeyboardEvent.DOM_VK_F24:
+      return "F24";
+    case KeyboardEvent.DOM_VK_NUM_LOCK:
+      return "NumLock";
+    case KeyboardEvent.DOM_VK_SCROLL_LOCK:
+      return "ScrollLock";
+    case KeyboardEvent.DOM_VK_VOLUME_MUTE:
+      return "VolumeMute";
+    case KeyboardEvent.DOM_VK_VOLUME_DOWN:
+      return "VolumeDown";
+    case KeyboardEvent.DOM_VK_VOLUME_UP:
+      return "VolumeUp";
+    case KeyboardEvent.DOM_VK_META:
+      return "Meta";
+    case KeyboardEvent.DOM_VK_ALTGR:
+      return "AltGraph";
+    case KeyboardEvent.DOM_VK_ATTN:
+      return "Attn";
+    case KeyboardEvent.DOM_VK_CRSEL:
+      return "CrSel";
+    case KeyboardEvent.DOM_VK_EXSEL:
+      return "ExSel";
+    case KeyboardEvent.DOM_VK_EREOF:
+      return "EraseEof";
+    case KeyboardEvent.DOM_VK_PLAY:
+      return "Play";
+    default:
+      return "Unidentified";
+  }
+}
 
 let FormVisibility = {
   /**
@@ -181,6 +367,41 @@ let FormVisibility = {
     );
 
     return visible;
+  }
+};
+
+// This object implements nsITextInputProcessorCallback
+let textInputProcessorCallback = {
+  onNotify: function(aTextInputProcessor, aNotification) {
+    try {
+      switch (aNotification.type) {
+        case "request-to-commit":
+          // TODO: Send a notification through asyncMessage to the keyboard here.
+          aTextInputProcessor.commitComposition();
+
+          break;
+        case "request-to-cancel":
+          // TODO: Send a notification through asyncMessage to the keyboard here.
+          aTextInputProcessor.cancelComposition();
+
+          break;
+
+        case "notify-detached":
+          // TODO: Send a notification through asyncMessage to the keyboard here.
+          break;
+
+        // TODO: Manage _focusedElement for text input from here instead.
+        //       (except for <select> which will be need to handled elsewhere)
+        case "notify-focus":
+          break;
+
+        case "notify-blur":
+          break;
+      }
+    } catch (e) {
+      return false;
+    }
+    return true;
   }
 };
 
@@ -432,7 +653,7 @@ let FormAssistant = {
         break;
 
       case "keydown":
-        if (!this.focusedElement) {
+        if (!this.focusedElement || this._editing) {
           break;
         }
 
@@ -440,7 +661,7 @@ let FormAssistant = {
         break;
 
       case "keyup":
-        if (!this.focusedElement) {
+        if (!this.focusedElement || this._editing) {
           break;
         }
 
@@ -502,34 +723,132 @@ let FormAssistant = {
       case "Forms:Input:SendKey":
         CompositionManager.endComposition('');
 
-        let flags = domWindowUtils.KEY_FLAG_NOT_SYNTHESIZED_FOR_TESTS;
-        this._editing = true;
-        let doKeypress = domWindowUtils.sendKeyEvent('keydown', json.keyCode,
-                                                     json.charCode, json.modifiers, flags);
-        if (doKeypress) {
-          domWindowUtils.sendKeyEvent('keypress', json.keyCode,
-                                      json.charCode, json.modifiers, flags);
+        let win = target.ownerDocument.defaultView;
+        let tip = WindowMap.getTextInputProcessor(win);
+        if (!tip) {
+          if (json.requestId) {
+            sendAsyncMessage("Forms:SendKey:Result:Error", {
+              requestId: json.requestId,
+              error: "Unable to start input transaction."
+            });
+          }
+
+          break;
         }
 
-        if(!json.repeat) {
-          domWindowUtils.sendKeyEvent('keyup', json.keyCode,
-                                      json.charCode, json.modifiers, flags);
+        // If we receive a keyboardEventDict from json, that means the user
+        // is calling the method with the new arguments.
+        // Otherwise, we would have to construct our own keyboardEventDict
+        // based on legacy values we have received.
+        let keyboardEventDict = json.keyboardEventDict;
+        let flags = 0;
+
+        if (keyboardEventDict) {
+          if ('flags' in keyboardEventDict) {
+            flags = keyboardEventDict.flags;
+          }
+        } else {
+          // The naive way to figure out if the key to dispatch is printable.
+          let printable = !!json.charCode;
+
+          // For printable keys, the value should be the actual character.
+          // For non-printable keys, it should be a value in the D3E spec.
+          // Here we make some educated guess for it.
+          let key = printable ?
+              String.fromCharCode(json.charCode) :
+              guessKeyNameFromKeyCode(win.KeyboardEvent, json.keyCode);
+
+          // keyCode from content is only respected when the key is not an
+          // an alphanumeric character. We also ask TextInputProcessor not to
+          // infer this value for non-printable keys to keep the original
+          // behavior.
+          let keyCode = (printable && /^[a-zA-Z0-9]$/.test(key)) ?
+              key.toUpperCase().charCodeAt(0) :
+              json.keyCode;
+
+          keyboardEventDict = {
+            key: key,
+            keyCode: keyCode,
+            // We don't have any information to tell the virtual key the
+            // user have interacted with.
+            code: "",
+            // We do not have the information to infer location of the virtual key
+            // either (and we would need TextInputProcessor not to compute it).
+            location: 0,
+            // This indicates the key is triggered for repeats.
+            repeat: json.repeat
+          };
+
+          flags = tip.KEY_KEEP_KEY_LOCATION_STANDARD;
+          if (!printable) {
+            flags |= tip.KEY_NON_PRINTABLE_KEY;
+          }
+          if (!keyboardEventDict.keyCode) {
+            flags |= tip.KEY_KEEP_KEYCODE_ZERO;
+          }
         }
 
-        this._editing = false;
+        let keyboardEvent = new win.KeyboardEvent("", keyboardEventDict);
 
-        if (json.requestId && doKeypress) {
-          sendAsyncMessage("Forms:SendKey:Result:OK", {
-            requestId: json.requestId,
-            selectioninfo: this.getSelectionInfo()
-          });
+        let keydownDefaultPrevented = false;
+        try {
+          switch (json.method) {
+            case 'sendKey': {
+              let consumedFlags = tip.keydown(keyboardEvent, flags);
+              keydownDefaultPrevented =
+                !!(tip.KEYDOWN_IS_CONSUMED & consumedFlags);
+              if (!keyboardEventDict.repeat) {
+                tip.keyup(keyboardEvent, flags);
+              }
+              break;
+            }
+            case 'keydown': {
+              let consumedFlags = tip.keydown(keyboardEvent, flags);
+              keydownDefaultPrevented =
+                !!(tip.KEYDOWN_IS_CONSUMED & consumedFlags);
+              break;
+            }
+            case 'keyup': {
+              tip.keyup(keyboardEvent, flags);
+
+              break;
+            }
+          }
+        } catch (err) {
+          dump("forms.js:" + err.toString() + "\n");
+
+          if (json.requestId) {
+            if (err instanceof Ci.nsIException &&
+                err.result == Cr.NS_ERROR_ILLEGAL_VALUE) {
+              sendAsyncMessage("Forms:SendKey:Result:Error", {
+                requestId: json.requestId,
+                error: "The values specified are illegal."
+              });
+            } else {
+              sendAsyncMessage("Forms:SendKey:Result:Error", {
+                requestId: json.requestId,
+                error: "Unable to type into destroyed input."
+              });
+            }
+          }
+
+          break;
         }
-        else if (json.requestId && !doKeypress) {
-          sendAsyncMessage("Forms:SendKey:Result:Error", {
-            requestId: json.requestId,
-            error: "Keydown event got canceled"
-          });
+
+        if (json.requestId) {
+          if (keydownDefaultPrevented) {
+            sendAsyncMessage("Forms:SendKey:Result:Error", {
+              requestId: json.requestId,
+              error: "Key event(s) was cancelled."
+            });
+          } else {
+            sendAsyncMessage("Forms:SendKey:Result:OK", {
+              requestId: json.requestId,
+              selectioninfo: this.getSelectionInfo()
+            });
+          }
         }
+
         break;
 
       case "Forms:Select:Choice":
@@ -642,7 +961,7 @@ let FormAssistant = {
 
       case "Forms:SetComposition": {
         CompositionManager.setComposition(target, json.text, json.cursor,
-                                          json.clauses);
+                                          json.clauses, json.keyboardEventDict);
         sendAsyncMessage("Forms:SetComposition:Result:OK", {
           requestId: json.requestId,
           selectioninfo: this.getSelectionInfo()
@@ -651,7 +970,7 @@ let FormAssistant = {
       }
 
       case "Forms:EndComposition": {
-        CompositionManager.endComposition(json.text);
+        CompositionManager.endComposition(json.text, json.keyboardEventDict);
         sendAsyncMessage("Forms:EndComposition:Result:OK", {
           requestId: json.requestId,
           selectioninfo: this.getSelectionInfo()
@@ -1170,7 +1489,8 @@ function replaceSurroundingText(element, text, offset, length) {
 
 let CompositionManager =  {
   _isStarted: false,
-  _textInputProcessor: null,
+  _tip: null,
+  _KeyboardEventForWin: null,
   _clauseAttrMap: {
     'raw-input':
       Ci.nsITextInputProcessor.ATTR_RAW_CLAUSE,
@@ -1182,35 +1502,7 @@ let CompositionManager =  {
       Ci.nsITextInputProcessor.ATTR_SELECTED_CLAUSE
   },
 
-  _callback: function cm_callback(aTIP, aNotification)
-  {
-    try {
-      switch (aNotification.type) {
-        case "request-to-commit":
-          aTIP.commitComposition();
-          break;
-        case "request-to-cancel":
-          aTIP.cancelComposition();
-          break;
-      }
-    } catch (e) {
-      return false;
-    }
-    return true;
-  },
-
-  _prepareTextInputProcessor: function cm_prepareTextInputProcessor(aWindow)
-  {
-    if (!this._textInputProcessor) {
-      this._textInputProcessor =
-        Cc["@mozilla.org/text-input-processor;1"].
-          createInstance(Ci.nsITextInputProcessor);
-    }
-    return this._textInputProcessor.beginInputTransaction(aWindow,
-                                                          this._callback);
-  },
-
-  setComposition: function cm_setComposition(element, text, cursor, clauses) {
+  setComposition: function cm_setComposition(element, text, cursor, clauses, dict) {
     // Check parameters.
     if (!element) {
       return;
@@ -1248,30 +1540,57 @@ let CompositionManager =  {
     }
 
     let win = element.ownerDocument.defaultView;
-    if (!this._prepareTextInputProcessor(win)) {
+    let tip = WindowMap.getTextInputProcessor(win);
+    if (!tip) {
       return;
     }
     // Update the composing text.
-    this._textInputProcessor.setPendingCompositionString(text);
+    tip.setPendingCompositionString(text);
     for (var i = 0; i < clauseLens.length; i++) {
       if (!clauseLens[i]) {
         continue;
       }
-      this._textInputProcessor.appendClauseToPendingComposition(clauseLens[i],
-                                                                clauseAttrs[i]);
+      tip.appendClauseToPendingComposition(clauseLens[i], clauseAttrs[i]);
     }
     if (cursor >= 0) {
-      this._textInputProcessor.setCaretInPendingComposition(cursor);
+      tip.setCaretInPendingComposition(cursor);
     }
-    this._isStarted = this._textInputProcessor.flushPendingComposition();
+
+    if (!dict) {
+      this._isStarted = tip.flushPendingComposition();
+    } else {
+      let keyboardEvent = new win.KeyboardEvent("", dict);
+      let flags = dict.flags;
+      this._isStarted = tip.flushPendingComposition(keyboardEvent, flags);
+    }
+
+    if (this._isStarted) {
+      this._tip = tip;
+      this._KeyboardEventForWin = win.KeyboardEvent;
+    }
   },
 
-  endComposition: function cm_endComposition(text) {
+  endComposition: function cm_endComposition(text, dict) {
     if (!this._isStarted) {
       return;
     }
-    this._textInputProcessor.commitCompositionWith(text ? text : "");
+    let tip = this._tip;
+    if (!tip) {
+      return;
+    }
+
+    text = text || "";
+    if (!dict) {
+      tip.commitCompositionWith(text);
+    } else {
+      let keyboardEvent = new this._KeyboardEventForWin("", dict);
+      let flags = dict.flags;
+      tip.commitCompositionWith(text, keyboardEvent, flags);
+    }
+
     this._isStarted = false;
+    this._tip = null;
+    this._KeyboardEventForWin = null;
   },
 
   // Composition ends due to external actions.
@@ -1281,5 +1600,7 @@ let CompositionManager =  {
     }
 
     this._isStarted = false;
+    this._tip = null;
+    this._KeyboardEventForWin = null;
   }
 };

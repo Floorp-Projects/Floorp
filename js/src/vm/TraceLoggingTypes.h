@@ -32,6 +32,7 @@
     _(ParserCompileFunction)                          \
     _(ParserCompileLazy)                              \
     _(ParserCompileScript)                            \
+    _(ParserCompileModule)                            \
     _(Scripts)                                        \
     _(VM)                                             \
                                                       \

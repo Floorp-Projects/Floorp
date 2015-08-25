@@ -89,7 +89,7 @@ GonkVideoDecoderManager::Init(MediaDataDecoderCallback* aCallback)
   mReaderCallback = aCallback;
 
   mReaderTaskQueue = AbstractThread::GetCurrent()->AsTaskQueue();
-  MOZ_ASSERT(!mReaderTaskQueue);
+  MOZ_ASSERT(mReaderTaskQueue);
 
   if (mLooper.get() != nullptr) {
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);

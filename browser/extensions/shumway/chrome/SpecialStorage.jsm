@@ -22,9 +22,9 @@ var SpecialStorageUtils = {
   createWrappedSpecialStorage: function (sandbox, swfUrl, privateBrowsing) {
     // Creating internal localStorage object based on url and privateBrowsing setting.
     var uri = Services.io.newURI(swfUrl, null, null);
-    var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                              .getService(Components.interfaces.nsIScriptSecurityManager)
-                              .getNoAppCodebasePrincipal(uri);
+    var ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                                .getService(Components.interfaces.nsIScriptSecurityManager);
+    var principal = ssm.createCodebasePrincipal(uri, {});
     var dsm = Components.classes["@mozilla.org/dom/localStorage-manager;1"]
                                 .getService(Components.interfaces.nsIDOMStorageManager);
     var storage = dsm.createStorage(null, principal, privateBrowsing);

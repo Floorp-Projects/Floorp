@@ -593,11 +593,6 @@ protected:
   TimeStamp mCachedHitTestTime;
   int32_t mCachedHitTestResult;
 
-  // For converting native event times to timestamps we record the time of the
-  // first received event in each time scale.
-  static DWORD     sFirstEventTime;
-  static TimeStamp sFirstEventTimeStamp;
-
   static bool sNeedsToInitMouseWheelSettings;
   static void InitMouseWheelScrollData();
 

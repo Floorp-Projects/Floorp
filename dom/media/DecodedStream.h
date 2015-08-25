@@ -8,8 +8,10 @@
 #define DecodedStream_h_
 
 #include "nsTArray.h"
+#include "MediaEventSource.h"
 #include "MediaInfo.h"
 
+#include "mozilla/AbstractThread.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
@@ -100,7 +102,8 @@ private:
 class DecodedStream {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodedStream);
 public:
-  DecodedStream(MediaQueue<MediaData>& aAudioQueue,
+  DecodedStream(AbstractThread* aOwnerThread,
+                MediaQueue<MediaData>& aAudioQueue,
                 MediaQueue<MediaData>& aVideoQueue);
 
   // Mimic MDSM::StartAudioThread.
@@ -125,8 +128,6 @@ public:
   bool IsFinished() const;
   bool HasConsumers() const;
 
-  void SendData();
-
 protected:
   virtual ~DecodedStream();
 
@@ -137,6 +138,16 @@ private:
   void AdvanceTracks();
   void SendAudio(double aVolume, bool aIsSameOrigin);
   void SendVideo(bool aIsSameOrigin);
+  void SendData();
+
+  void AssertOwnerThread() const {
+    MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  }
+
+  void ConnectListener();
+  void DisconnectListener();
+
+  const nsRefPtr<AbstractThread> mOwnerThread;
 
   UniquePtr<DecodedStreamData> mData;
   // Data about MediaStreams that are being fed by the decoder.
@@ -160,6 +171,11 @@ private:
 
   MediaQueue<MediaData>& mAudioQueue;
   MediaQueue<MediaData>& mVideoQueue;
+
+  MediaEventListener mAudioPushListener;
+  MediaEventListener mVideoPushListener;
+  MediaEventListener mAudioFinishListener;
+  MediaEventListener mVideoFinishListener;
 };
 
 } // namespace mozilla

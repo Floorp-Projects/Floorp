@@ -1,0 +1,105 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1182103 - Test EventSource scenarios with fetch interception</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  function testFrame(src) {
+    return new Promise(function(resolve, reject) {
+      var iframe = document.createElement("iframe");
+      iframe.src = src;
+      window.onmessage = function(e) {
+        if (e.data.status == "callback") {
+          switch(e.data.data) {
+            case "ok":
+              ok(e.data.condition, e.data.message);
+              break;
+            case "ready":
+              iframe.contentWindow.postMessage({status: "callback", data: "eventsource"}, "*");
+              break;
+            case "done":
+              window.onmessage = null;
+              iframe.src = "about:blank";
+              document.body.removeChild(iframe);
+              iframe = null;
+              resolve();
+              break;
+            default:
+              ok(false, "Something went wrong");
+              break;
+          }
+        } else {
+          ok(false, "Something went wrong");
+        }
+      };
+      document.body.appendChild(iframe);
+    });
+  }
+
+  function runTest() {
+      Promise.resolve()
+        .then(() => {
+        info("Going to intercept and test opaque responses");
+        return testFrame("eventsource/eventsource_register_worker.html" +
+                         "?script=eventsource_opaque_response_intercept_worker.js");
+      })
+      .then(() => {
+        return testFrame("eventsource/eventsource_opaque_response.html");
+      })
+      .then(() => {
+        info("Going to intercept and test cors responses");
+        return testFrame("eventsource/eventsource_register_worker.html" +
+                         "?script=eventsource_cors_response_intercept_worker.js");
+      })
+      .then(() => {
+        return testFrame("eventsource/eventsource_cors_response.html");
+      })
+      .then(() => {
+        info("Going to intercept and test synthetic responses");
+        return testFrame("eventsource/eventsource_register_worker.html" +
+                         "?script=eventsource_synthetic_response_intercept_worker.js");
+      })
+      .then(() => {
+        return testFrame("eventsource/eventsource_synthetic_response.html");
+      })
+      .then(() => {
+        info("Going to intercept and test mixed content cors responses");
+        return testFrame("https://example.com/tests/dom/workers/test/serviceworkers/" +
+                         "eventsource/eventsource_register_worker.html" +
+                         "?script=eventsource_mixed_content_cors_response_intercept_worker.js");
+      })
+      .then(() => {
+        return testFrame("https://example.com/tests/dom/workers/test/serviceworkers/" +
+                         "eventsource/eventsource_mixed_content_cors_response.html");
+      })
+      .then(SimpleTest.finish)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["dom.serviceWorkers.interception.enabled", true],
+    ["dom.serviceWorkers.interception.opaque.enabled", true],
+    ["dom.caches.enabled", true],
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
