@@ -17,8 +17,15 @@ function log(aMsg) {
 }
 
 // Helper class to transform return objects to correct type.
-function ListenerWrapper(aListener) {
+function ListenerWrapper(aListener, aMdns) {
   this.listener = aListener;
+  this.mdns = aMdns;
+
+  this.discoveryStarting = false;
+  this.stopDiscovery = false;
+
+  this.registrationStarting = false;
+  this.stopRegistration = false;
 }
 
 ListenerWrapper.prototype = {
@@ -39,16 +46,25 @@ ListenerWrapper.prototype = {
 
   /* transparent types */
   onDiscoveryStarted: function(aServiceType) {
+    this.discoveryStarting = false;
     this.listener.onDiscoveryStarted(aServiceType);
+
+    if (this.stopDiscovery) {
+      this.mdns.stopDiscovery(aServiceType, this);
+    }
   },
   onDiscoveryStopped: function(aServiceType) {
     this.listener.onDiscoveryStopped(aServiceType);
   },
   onStartDiscoveryFailed: function(aServiceType, aErrorCode) {
-    this.listener.onStartDiscoveryFailed(aServiceType);
+    log('onStartDiscoveryFailed: ' + aServiceType + ' (' + aErrorCode + ')');
+    this.discoveryStarting = false;
+    this.stopDiscovery = true;
+    this.listener.onStartDiscoveryFailed(aServiceType, aErrorCode);
   },
   onStopDiscoveryFailed: function(aServiceType, aErrorCode) {
-    this.listener.onStopDiscoveryFailed(aServiceType);
+    log('onStopDiscoveryFailed: ' + aServiceType + ' (' + aErrorCode + ')');
+    this.listener.onStopDiscoveryFailed(aServiceType, aErrorCode);
   },
 
   /* transform types */
@@ -59,7 +75,12 @@ ListenerWrapper.prototype = {
     this.listener.onServiceLost(this.makeServiceInfo(aServiceInfo));
   },
   onServiceRegistered: function(aServiceInfo) {
+    this.registrationStarting = false;
     this.listener.onServiceRegistered(this.makeServiceInfo(aServiceInfo));
+
+    if (this.stopRegistration) {
+      this.mdns.unregisterService(aServiceInfo, this);
+    }
   },
   onServiceUnregistered: function(aServiceInfo) {
     this.listener.onServiceUnregistered(this.makeServiceInfo(aServiceInfo));
@@ -69,12 +90,17 @@ ListenerWrapper.prototype = {
   },
 
   onRegistrationFailed: function(aServiceInfo, aErrorCode) {
+    log('onRegistrationFailed: (' + aErrorCode + ')');
+    this.registrationStarting = false;
+    this.stopRegistration = true;
     this.listener.onRegistrationFailed(this.makeServiceInfo(aServiceInfo), aErrorCode);
   },
   onUnregistrationFailed: function(aServiceInfo, aErrorCode) {
+    log('onUnregistrationFailed: (' + aErrorCode + ')');
     this.listener.onUnregistrationFailed(this.makeServiceInfo(aServiceInfo), aErrorCode);
   },
   onResolveFailed: function(aServiceInfo, aErrorCode) {
+    log('onResolveFailed: (' + aErrorCode + ')');
     this.listener.onResolveFailed(this.makeServiceInfo(aServiceInfo), aErrorCode);
   }
 };
@@ -90,27 +116,37 @@ nsDNSServiceDiscovery.prototype = {
 
   startDiscovery: function(aServiceType, aListener) {
     log("startDiscovery");
-    let listener = new ListenerWrapper(aListener);
+    let listener = new ListenerWrapper(aListener, this.mdns);
+    listener.discoveryStarting = true;
     this.mdns.startDiscovery(aServiceType, listener);
 
     return {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
       cancel: (function() {
-        this.mdns.stopDiscovery(aServiceType, listener);
-      }).bind(this)
+        if (this.discoveryStarting || this.stopDiscovery) {
+          this.stopDiscovery = true;
+          return;
+        }
+        this.mdns.stopDiscovery(aServiceType, this);
+      }).bind(listener)
     };
   },
 
   registerService: function(aServiceInfo, aListener) {
     log("registerService");
-    let listener = new ListenerWrapper(aListener);
+    let listener = new ListenerWrapper(aListener, this.mdns);
+    listener.registrationStarting = true;
     this.mdns.registerService(aServiceInfo, listener);
 
     return {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
       cancel: (function() {
-        this.mdns.unregisterService(aServiceInfo, listener);
-      }).bind(this)
+        if (this.registrationStarting || this.stopRegistration) {
+          this.stopRegistration = true;
+          return;
+        }
+        this.mdns.unregisterService(aServiceInfo, this);
+      }).bind(listener)
     };
   },
 
