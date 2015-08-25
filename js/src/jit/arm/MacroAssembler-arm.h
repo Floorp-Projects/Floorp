@@ -980,9 +980,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void moveValue(const Value& val, Register type, Register data);
 
-    CodeOffsetJump jumpWithPatch(RepatchLabel* label, Condition cond = Always);
-    CodeOffsetJump backedgeJump(RepatchLabel* label) {
-        return jumpWithPatch(label);
+    CodeOffsetJump jumpWithPatch(RepatchLabel* label, Condition cond = Always,
+                                 Label* documentation = nullptr);
+    CodeOffsetJump backedgeJump(RepatchLabel* label, Label* documentation) {
+        return jumpWithPatch(label, Always, documentation);
     }
     template <typename T>
     CodeOffsetJump branchPtrWithPatch(Condition cond, Register reg, T ptr, RepatchLabel* label) {
