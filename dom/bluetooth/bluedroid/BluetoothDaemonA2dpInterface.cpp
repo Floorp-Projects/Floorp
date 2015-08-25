@@ -47,8 +47,8 @@ BluetoothDaemonA2dpModule::HandleSvc(const DaemonSocketPDUHeader& aHeader,
 {
   static void (BluetoothDaemonA2dpModule::* const HandleOp[])(
     const DaemonSocketPDUHeader&, DaemonSocketPDU&, void*) = {
-    INIT_ARRAY_AT(0, &BluetoothDaemonA2dpModule::HandleRsp),
-    INIT_ARRAY_AT(1, &BluetoothDaemonA2dpModule::HandleNtf),
+    [0] = &BluetoothDaemonA2dpModule::HandleRsp,
+    [1] = &BluetoothDaemonA2dpModule::HandleNtf
   };
 
   MOZ_ASSERT(!NS_IsMainThread());
@@ -145,12 +145,9 @@ BluetoothDaemonA2dpModule::HandleRsp(
     const DaemonSocketPDUHeader&,
     DaemonSocketPDU&,
     BluetoothA2dpResultHandler*) = {
-    INIT_ARRAY_AT(OPCODE_ERROR,
-      &BluetoothDaemonA2dpModule::ErrorRsp),
-    INIT_ARRAY_AT(OPCODE_CONNECT,
-      &BluetoothDaemonA2dpModule::ConnectRsp),
-    INIT_ARRAY_AT(OPCODE_DISCONNECT,
-      &BluetoothDaemonA2dpModule::DisconnectRsp),
+    [OPCODE_ERROR] = &BluetoothDaemonA2dpModule::ErrorRsp,
+    [OPCODE_CONNECT] = &BluetoothDaemonA2dpModule::ConnectRsp,
+    [OPCODE_DISCONNECT] = &BluetoothDaemonA2dpModule::DisconnectRsp
   };
 
   MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
@@ -322,10 +319,10 @@ BluetoothDaemonA2dpModule::HandleNtf(
 {
   static void (BluetoothDaemonA2dpModule::* const HandleNtf[])(
     const DaemonSocketPDUHeader&, DaemonSocketPDU&) = {
-    INIT_ARRAY_AT(0, &BluetoothDaemonA2dpModule::ConnectionStateNtf),
-    INIT_ARRAY_AT(1, &BluetoothDaemonA2dpModule::AudioStateNtf),
+    [0] = &BluetoothDaemonA2dpModule::ConnectionStateNtf,
+    [1] = &BluetoothDaemonA2dpModule::AudioStateNtf,
 #if ANDROID_VERSION >= 21
-    INIT_ARRAY_AT(2, &BluetoothDaemonA2dpModule::AudioConfigNtf),
+    [2] = &BluetoothDaemonA2dpModule::AudioConfigNtf
 #endif
   };
 
