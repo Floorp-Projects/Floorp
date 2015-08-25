@@ -21,6 +21,7 @@
 #include "nsPrefetchService.h"
 #include "nsOfflineCacheUpdate.h"
 #include "nsLocalHandlerApp.h"
+#include "ContentHandlerService.h"
 #ifdef MOZ_ENABLE_DBUS
 #include "nsDBusHandlerApp.h"
 #endif
@@ -37,6 +38,8 @@
 
 // download history
 #include "nsDownloadHistory.h"
+
+using mozilla::dom::ContentHandlerService;
 
 static bool gInitialized = false;
 
@@ -86,6 +89,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDBusHandlerApp)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExternalSharingAppService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExternalURLHandlerService)
 #endif
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ContentHandlerService, Init)
 
 // session history
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHEntry)
@@ -119,6 +123,7 @@ NS_DEFINE_NAMED_CID(NS_SHTRANSACTION_CID);
 NS_DEFINE_NAMED_CID(NS_SHISTORY_CID);
 NS_DEFINE_NAMED_CID(NS_SHISTORY_INTERNAL_CID);
 NS_DEFINE_NAMED_CID(NS_DOWNLOADHISTORY_CID);
+NS_DEFINE_NAMED_CID(NS_CONTENTHANDLERSERVICE_CID);
 
 const mozilla::Module::CIDEntry kDocShellCIDs[] = {
   { &kNS_DOCSHELL_CID, false, nullptr, nsDocShellConstructor },
@@ -128,6 +133,8 @@ const mozilla::Module::CIDEntry kDocShellCIDs[] = {
   { &kNS_URI_LOADER_CID, false, nullptr, nsURILoaderConstructor },
   { &kNS_DOCUMENTLOADER_SERVICE_CID, false, nullptr, nsDocLoaderConstructor },
   { &kNS_EXTERNALHELPERAPPSERVICE_CID, false, nullptr, nsOSHelperAppServiceConstructor },
+  { &kNS_CONTENTHANDLERSERVICE_CID, false, nullptr, ContentHandlerServiceConstructor,
+    mozilla::Module::CONTENT_PROCESS_ONLY },
   { &kNS_EXTERNALPROTOCOLHANDLER_CID, false, nullptr, nsExternalProtocolHandlerConstructor },
   { &kNS_PREFETCHSERVICE_CID, false, nullptr, nsPrefetchServiceConstructor },
   { &kNS_OFFLINECACHEUPDATESERVICE_CID, false, nullptr, nsOfflineCacheUpdateServiceConstructor },
@@ -179,6 +186,7 @@ const mozilla::Module::ContractIDEntry kDocShellContracts[] = {
   { NS_ABOUT_MODULE_CONTRACTID_PREFIX "webrtc", &kNS_ABOUT_REDIRECTOR_MODULE_CID },
   { NS_URI_LOADER_CONTRACTID, &kNS_URI_LOADER_CID },
   { NS_DOCUMENTLOADER_SERVICE_CONTRACTID, &kNS_DOCUMENTLOADER_SERVICE_CID },
+  { NS_HANDLERSERVICE_CONTRACTID, &kNS_CONTENTHANDLERSERVICE_CID, mozilla::Module::CONTENT_PROCESS_ONLY },
   { NS_EXTERNALHELPERAPPSERVICE_CONTRACTID, &kNS_EXTERNALHELPERAPPSERVICE_CID },
   { NS_EXTERNALPROTOCOLSERVICE_CONTRACTID, &kNS_EXTERNALHELPERAPPSERVICE_CID },
   { NS_MIMESERVICE_CONTRACTID, &kNS_EXTERNALHELPERAPPSERVICE_CID },
