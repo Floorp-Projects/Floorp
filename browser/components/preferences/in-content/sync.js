@@ -168,6 +168,14 @@ let gSyncPane = {
     textbox.setSelectionRange(valLength, valLength);
   },
 
+  _blurComputerNameTextbox: function() {
+    document.getElementById("fxaSyncComputerName").blur();
+  },
+
+  _focusChangeDeviceNameButton: function() {
+    document.getElementById("fxaChangeDeviceName").focus();
+  },
+
   _updateComputerNameValue: function(save) {
     let textbox = document.getElementById("fxaSyncComputerName");
     if (save) {
@@ -214,12 +222,17 @@ let gSyncPane = {
       this._focusComputerNameTextbox();
     });
     setEventListener("fxaCancelChangeDeviceName", "command", function () {
+      // We explicitly blur the textbox because of bug 1194032
+      this._blurComputerNameTextbox();
       this._toggleComputerNameControls(false);
       this._updateComputerNameValue(false);
+      this._focusChangeDeviceNameButton();
     });
     setEventListener("fxaSaveChangeDeviceName", "command", function () {
+      this._blurComputerNameTextbox();
       this._toggleComputerNameControls(false);
       this._updateComputerNameValue(true);
+      this._focusChangeDeviceNameButton();
     });
     setEventListener("unlinkDevice", "click", function () {
       gSyncPane.startOver(true);
