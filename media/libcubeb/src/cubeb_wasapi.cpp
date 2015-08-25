@@ -8,7 +8,6 @@
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
 #endif
-#include <algorithm>
 #include <windows.h>
 #include <mmdeviceapi.h>
 #include <windef.h>
@@ -259,6 +258,9 @@ struct cubeb_stream
   /* Buffer used to downmix or upmix to the number of channels the mixer has.
    * its size is |frames_to_bytes_before_mix(buffer_frame_count)|. */
   float * mix_buffer;
+  /* Stream volume.  Set via stream_set_volume and used to reset volume on
+   * device changes. */
+  float volume;
   /* True if the stream is draining. */
   bool draining;
 };
@@ -720,6 +722,37 @@ current_stream_delay(cubeb_stream * stm)
 
   return delay;
 }
+
+int
+stream_set_volume(cubeb_stream * stm, float volume)
+{
+  stm->stream_reset_lock->assert_current_thread_owns();
+
+  uint32_t channels;
+  HRESULT hr = stm->audio_stream_volume->GetChannelCount(&channels);
+  if (hr != S_OK) {
+    LOG("could not get the channel count: %x\n", hr);
+    return CUBEB_ERROR;
+  }
+
+  /* up to 9.1 for now */
+  if (channels > 10) {
+    return CUBEB_ERROR_NOT_SUPPORTED;
+  }
+
+  float volumes[10];
+  for (uint32_t i = 0; i < channels; i++) {
+    volumes[i] = volume;
+  }
+
+  hr = stm->audio_stream_volume->SetAllVolumes(channels,  volumes);
+  if (hr != S_OK) {
+    LOG("could not set the channels volume: %x\n", hr);
+    return CUBEB_ERROR;
+  }
+
+  return CUBEB_OK;
+}
 } // namespace anonymous
 
 extern "C" {
@@ -1109,6 +1142,11 @@ int setup_wasapi_stream(cubeb_stream * stm)
     return CUBEB_ERROR;
   }
 
+  /* Restore the stream volume over a device change. */
+  if (stream_set_volume(stm, stm->volume) != CUBEB_OK) {
+    return CUBEB_ERROR;
+  }
+
   /* If we are playing a mono stream, we only resample one channel,
    * and copy it over, so we are always resampling the number
    * of channels of the stream, not the number of channels
@@ -1153,6 +1191,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   stm->stream_params = stream_params;
   stm->draining = false;
   stm->latency = latency;
+  stm->volume = 1.0;
 
   stm->stream_reset_lock = new owned_critical_section();
 
@@ -1363,30 +1402,14 @@ int wasapi_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
 
 int wasapi_stream_set_volume(cubeb_stream * stm, float volume)
 {
-  HRESULT hr;
-  uint32_t channels;
-  /* up to 9.1 for now */
-  float volumes[10];
-
   auto_lock lock(stm->stream_reset_lock);
 
-  hr = stm->audio_stream_volume->GetChannelCount(&channels);
-  if (hr != S_OK) {
-    LOG("could not get the channel count: %x\n", hr);
+  if (stream_set_volume(stm, volume) != CUBEB_OK) {
     return CUBEB_ERROR;
   }
 
-  XASSERT(channels <= 10 && "bump the array size");
+  stm->volume = volume;
 
-  for (uint32_t i = 0; i < channels; i++) {
-    volumes[i] = volume;
-  }
-
-  hr = stm->audio_stream_volume->SetAllVolumes(channels,  volumes);
-  if (hr != S_OK) {
-    LOG("could not set the channels volume: %x\n", hr);
-    return CUBEB_ERROR;
-  }
   return CUBEB_OK;
 }
 

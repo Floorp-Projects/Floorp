@@ -19,6 +19,9 @@ body[tpEnabled] .showTpDisabled,
 body:not([tpEnabled]) .showTpEnabled {
   display: none !important;
 }
+body[globalTpEnabled] .showGlobalTpDisabled {
+  display: none !important;
+}
 
 @media screen and (min-width: 1200px) and (min-height: 700px) {
   body.private {

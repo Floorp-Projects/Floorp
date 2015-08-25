@@ -1242,6 +1242,7 @@ _releaseobject(NPObject* npobj)
 {
   if (!NS_IsMainThread()) {
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_releaseobject called from the wrong thread\n"));
+    MOZ_CRASH("NPN_releaseobject called from the wrong thread");
   }
   if (!npobj)
     return;

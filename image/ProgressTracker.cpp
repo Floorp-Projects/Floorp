@@ -425,20 +425,6 @@ ProgressTracker::RemoveObserver(IProgressObserver* aObserver)
   return removed;
 }
 
-bool
-ProgressTracker::FirstObserverIs(IProgressObserver* aObserver)
-{
-  MOZ_ASSERT(NS_IsMainThread(), "Use mObservers on main thread only");
-  ObserverArray::ForwardIterator iter(mObservers);
-  while (iter.HasMore()) {
-    nsRefPtr<IProgressObserver> observer = iter.GetNext().get();
-    if (observer) {
-      return observer.get() == aObserver;
-    }
-  }
-  return false;
-}
-
 void
 ProgressTracker::OnUnlockedDraw()
 {

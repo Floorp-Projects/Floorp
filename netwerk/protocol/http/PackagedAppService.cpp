@@ -690,28 +690,55 @@ PackagedAppService::GetPackageURI(nsIURI *aURI, nsIURI **aPackageURI)
 }
 
 NS_IMETHODIMP
-PackagedAppService::GetResource(nsIPrincipal *aPrincipal,
-                                uint32_t aLoadFlags,
-                                nsILoadContextInfo *aInfo,
+PackagedAppService::GetResource(nsIChannel *aChannel,
                                 nsICacheEntryOpenCallback *aCallback)
 {
-  // Check arguments are not null
-  if (!aPrincipal || !aCallback || !aInfo) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread(), "mDownloadingPackages hashtable is not thread safe");
+  LOG(("[%p] PackagedAppService::GetResource(aChannel: %p, aCallback: %p)\n",
+       this, aChannel, aCallback));
+
+  if (!aChannel || !aCallback) {
     return NS_ERROR_INVALID_ARG;
   }
 
   nsresult rv;
+  nsIScriptSecurityManager *securityManager =
+    nsContentUtils::GetSecurityManager();
+  if (!securityManager) {
+    LOG(("[%p]    > No securityManager\n", this));
+    return NS_ERROR_UNEXPECTED;
+  }
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = securityManager->GetChannelURIPrincipal(aChannel, getter_AddRefs(principal));
+  if (NS_FAILED(rv) || !principal) {
+    LOG(("[%p]    > Error getting principal rv=%X principal=%p\n",
+         this, rv, principal.get()));
+    return NS_FAILED(rv) ? rv : NS_ERROR_NULL_POINTER;
+  }
 
-  nsCOMPtr<nsIURI> uri;
-  rv = aPrincipal->GetURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  nsCOMPtr<nsILoadContextInfo> loadContextInfo = GetLoadContextInfo(aChannel);
+  if (!loadContextInfo) {
+    LOG(("[%p]    > Channel has no loadContextInfo\n", this));
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsLoadFlags loadFlags = 0;
+  rv = aChannel->GetLoadFlags(&loadFlags);
+  if (NS_FAILED(rv)) {
+    LOG(("[%p]    > Error calling GetLoadFlags rv=%X\n", this, rv));
     return rv;
   }
 
-  LogURI("PackagedAppService::GetResource", this, uri, aInfo);
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread(), "mDownloadingPackages hashtable is not thread safe");
+  nsCOMPtr<nsIURI> uri;
+  rv = principal->GetURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("[%p]    > Error calling GetURI rv=%X\n", this, rv));
+    return rv;
+  }
 
+  LogURI("PackagedAppService::GetResource", this, uri, loadContextInfo);
   nsCOMPtr<nsIURI> packageURI;
   rv = GetPackageURI(uri, getter_AddRefs(packageURI));
   if (NS_FAILED(rv)) {
@@ -719,7 +746,7 @@ PackagedAppService::GetResource(nsIPrincipal *aPrincipal,
   }
 
   nsAutoCString key;
-  CacheFileUtils::AppendKeyPrefix(aInfo, key);
+  CacheFileUtils::AppendKeyPrefix(loadContextInfo, key);
 
   {
     nsAutoCString spec;
@@ -740,10 +767,10 @@ PackagedAppService::GetResource(nsIPrincipal *aPrincipal,
   }
 
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(
-    getter_AddRefs(channel), packageURI, aPrincipal,
-    nsILoadInfo::SEC_NORMAL, nsIContentPolicy::TYPE_OTHER, nullptr, nullptr,
-    aLoadFlags);
+  rv = NS_NewChannelInternal(
+    getter_AddRefs(channel), packageURI,
+    loadInfo,
+    nullptr, nullptr, loadFlags);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -758,7 +785,7 @@ PackagedAppService::GetResource(nsIPrincipal *aPrincipal,
   }
 
   downloader = new PackagedAppDownloader();
-  rv = downloader->Init(aInfo, key);
+  rv = downloader->Init(loadContextInfo, key);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -783,6 +810,10 @@ PackagedAppService::GetResource(nsIPrincipal *aPrincipal,
 
   nsRefPtr<PackagedAppChannelListener> listener =
     new PackagedAppChannelListener(downloader, mimeConverter);
+
+  if (loadInfo && loadInfo->GetEnforceSecurity()) {
+    return channel->AsyncOpen2(listener);
+  }
 
   return channel->AsyncOpen(listener, nullptr);
 }

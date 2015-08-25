@@ -5206,12 +5206,6 @@ nsHttpChannel::BeginConnect()
         // by the packaged app service into the cache, and the cache entry will
         // be passed to OnCacheEntryAvailable.
 
-        // Pass the original load flags to the packaged app request.
-        uint32_t loadFlags = mLoadFlags;
-
-        mLoadFlags |= LOAD_ONLY_FROM_CACHE;
-        mLoadFlags |= LOAD_FROM_CACHE;
-        mLoadFlags &= ~VALIDATE_ALWAYS;
         nsCOMPtr<nsIPackagedAppService> pas =
             do_GetService("@mozilla.org/network/packaged-app-service;1", &rv);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5219,12 +5213,18 @@ nsHttpChannel::BeginConnect()
             return rv;
         }
 
-        nsCOMPtr<nsIPrincipal> principal = GetURIPrincipal();
-        nsCOMPtr<nsILoadContextInfo> loadInfo = GetLoadContextInfo(this);
-        rv = pas->GetResource(principal, loadFlags, loadInfo, this);
+        rv = pas->GetResource(this, this);
         if (NS_FAILED(rv)) {
             AsyncAbort(rv);
         }
+
+        // We need to alter the flags so the cache entry returned by the
+        // packaged app service is always accepted. Revalidation is handled
+        // by the service.
+        mLoadFlags |= LOAD_ONLY_FROM_CACHE;
+        mLoadFlags |= LOAD_FROM_CACHE;
+        mLoadFlags &= ~VALIDATE_ALWAYS;
+
         return rv;
     }
 

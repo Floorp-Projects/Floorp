@@ -106,6 +106,8 @@ public:
                 MediaQueue<MediaData>& aAudioQueue,
                 MediaQueue<MediaData>& aVideoQueue);
 
+  void Shutdown();
+
   // Mimic MDSM::StartAudioThread.
   // Must be called before any calls to SendData().
   //
@@ -132,8 +134,9 @@ protected:
   virtual ~DecodedStream();
 
 private:
-  ReentrantMonitor& GetReentrantMonitor() const;
   void CreateData(MozPromiseHolder<GenericPromise>&& aPromise);
+  void DestroyData(UniquePtr<DecodedStreamData> aData);
+  void OnDataCreated(UniquePtr<DecodedStreamData> aData);
   void InitTracks();
   void AdvanceTracks();
   void SendAudio(double aVolume, bool aIsSameOrigin);
@@ -149,18 +152,18 @@ private:
 
   const nsRefPtr<AbstractThread> mOwnerThread;
 
-  UniquePtr<DecodedStreamData> mData;
+  /*
+   * Main thread only members.
+   */
   // Data about MediaStreams that are being fed by the decoder.
   OutputStreamManager mOutputStreamManager;
+  // True if MDSM has begun shutdown.
+  bool mShuttingDown;
 
-  // TODO: This is a temp solution to get rid of decoder monitor on the main
-  // thread in MDSM::AddOutputStream and MDSM::RecreateDecodedStream as
-  // required by bug 1146482. DecodedStream needs to release monitor before
-  // calling back into MDSM functions in order to prevent deadlocks.
-  //
-  // Please move all capture-stream related code from MDSM into DecodedStream
-  // and apply "dispatch + mirroring" to get rid of this monitor in the future.
-  mutable ReentrantMonitor mMonitor;
+  /*
+   * Worker thread only members.
+   */
+  UniquePtr<DecodedStreamData> mData;
 
   bool mPlaying;
   double mVolume;

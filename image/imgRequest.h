@@ -256,6 +256,10 @@ private:
 
   void* mLoadId;
 
+  /// Raw pointer to the first proxy that was added to this imgRequest. Use only
+  /// pointer comparisons; there's no guarantee this will remain valid.
+  void* mFirstProxy;
+
   imgCacheValidator* mValidator;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIChannel> mNewRedirectChannel;
