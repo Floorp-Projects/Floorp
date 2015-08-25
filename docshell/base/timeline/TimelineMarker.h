@@ -27,6 +27,10 @@ public:
                  TracingMetadata aMetaData);
 
   TimelineMarker(nsDocShell* aDocShell, const char* aName,
+                 const mozilla::TimeStamp& aTime,
+                 TracingMetadata aMetaData);
+
+  TimelineMarker(nsDocShell* aDocShell, const char* aName,
                  TracingMetadata aMetaData,
                  const nsAString& aCause,
                  TimelineStackRequest aStackRequest = STACK);

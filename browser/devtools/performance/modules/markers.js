@@ -73,6 +73,11 @@ const TIMELINE_BLUEPRINT = {
     colorName: "graphs-green",
     label: L10N.getStr("marker.label.paint"),
   },
+  "Composite": {
+    group: 0,
+    colorName: "graphs-green",
+    label: L10N.getStr("marker.label.composite"),
+  },
 
   /* Group 1 - JS */
   "DOMEvent": {

@@ -2862,7 +2862,9 @@ TabChild::GetFrom(uint64_t aLayersId)
 }
 
 void
-TabChild::DidComposite(uint64_t aTransactionId)
+TabChild::DidComposite(uint64_t aTransactionId,
+                       const TimeStamp& aCompositeStart,
+                       const TimeStamp& aCompositeEnd)
 {
   MOZ_ASSERT(mPuppetWidget);
   MOZ_ASSERT(mPuppetWidget->GetLayerManager());
@@ -2871,7 +2873,8 @@ TabChild::DidComposite(uint64_t aTransactionId)
 
   ClientLayerManager *manager =
     static_cast<ClientLayerManager*>(mPuppetWidget->GetLayerManager());
-  manager->DidComposite(aTransactionId);
+
+  manager->DidComposite(aTransactionId, aCompositeStart, aCompositeEnd);
 }
 
 void
