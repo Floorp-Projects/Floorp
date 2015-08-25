@@ -5220,8 +5220,8 @@ nsHttpChannel::BeginConnect()
         }
 
         nsCOMPtr<nsIPrincipal> principal = GetURIPrincipal();
-        nsCOMPtr<nsILoadContextInfo> loadInfo = GetLoadContextInfo(this);
-        rv = pas->GetResource(principal, loadFlags, loadInfo, this);
+        nsCOMPtr<nsILoadContextInfo> loadContextInfo = GetLoadContextInfo(this);
+        rv = pas->GetResource(principal, mLoadInfo, loadFlags, loadContextInfo, this);
         if (NS_FAILED(rv)) {
             AsyncAbort(rv);
         }

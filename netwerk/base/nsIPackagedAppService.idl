@@ -8,6 +8,7 @@
 interface nsIPrincipal;
 interface nsILoadContextInfo;
 interface nsICacheEntryOpenCallback;
+interface nsILoadInfo;
 
 %{C++
   #define PACKAGED_APP_TOKEN "!//"
@@ -16,7 +17,7 @@ interface nsICacheEntryOpenCallback;
 /**
  * nsIPackagedAppService
  */
-[scriptable, builtinclass, uuid(f35e5229-d08a-46eb-a574-2db4e22aee98)]
+[scriptable, builtinclass, uuid(b36efde7-6596-4082-a5fc-fc223148489f)]
 interface nsIPackagedAppService : nsISupports
 {
   /**
@@ -44,6 +45,7 @@ interface nsIPackagedAppService : nsISupports
    * the cache.
    */
   void getResource(in nsIPrincipal aPrincipal,
+                   in nsILoadInfo aLoadInfo,
                    in uint32_t aFlags,
                    in nsILoadContextInfo aInfo,
                    in nsICacheEntryOpenCallback aCallback);
