@@ -60,8 +60,9 @@ ChannelSplitterNode::ChannelSplitterNode(AudioContext* aContext,
               ChannelInterpretation::Speakers)
   , mOutputCount(aOutputCount)
 {
-  mStream = aContext->Graph()->CreateAudioNodeStream(new ChannelSplitterNodeEngine(this),
-                                                     MediaStreamGraph::INTERNAL_STREAM);
+  mStream = AudioNodeStream::Create(aContext->Graph(),
+                                    new ChannelSplitterNodeEngine(this),
+                                    AudioNodeStream::NO_STREAM_FLAGS);
 }
 
 ChannelSplitterNode::~ChannelSplitterNode()

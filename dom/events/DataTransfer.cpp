@@ -850,12 +850,14 @@ DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
 {
   nsCOMPtr<nsINode> parentNode = do_QueryInterface(mParent);
   if (!parentNode) {
+    aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
   nsCOMPtr<nsIGlobalObject> global = parentNode->OwnerDoc()->GetScopeObject();
   MOZ_ASSERT(global);
   if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
@@ -865,43 +867,44 @@ DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
   }
 
   if (!mFiles) {
-    ErrorResult dummy;
-    GetFiles(dummy);
-    if (!mFiles) {
+    GetFiles(aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
   }
 
   Sequence<OwningFileOrDirectory> filesAndDirsSeq;
 
-  if (!filesAndDirsSeq.SetLength(mFiles->Length(), mozilla::fallible_t())) {
-    p->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-    return p.forget();
-  }
+  if (mFiles && mFiles->Length()) {
+    if (!filesAndDirsSeq.SetLength(mFiles->Length(), mozilla::fallible_t())) {
+      p->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+      return p.forget();
+    }
 
-  nsPIDOMWindow* window = parentNode->OwnerDoc()->GetInnerWindow();
+    nsPIDOMWindow* window = parentNode->OwnerDoc()->GetInnerWindow();
 
-  nsRefPtr<OSFileSystem> fs;
-  for (uint32_t i = 0; i < mFiles->Length(); ++i) {
-    if (mFiles->Item(i)->Impl()->IsDirectory()) {
+    nsRefPtr<OSFileSystem> fs;
+    for (uint32_t i = 0; i < mFiles->Length(); ++i) {
+      if (mFiles->Item(i)->Impl()->IsDirectory()) {
 #if defined(ANDROID) || defined(MOZ_B2G)
-      MOZ_ASSERT(false,
-                 "Directory picking should have been redirected to normal "
-                 "file picking for platforms that don't have a directory "
-                 "picker");
+        MOZ_ASSERT(false,
+                   "Directory picking should have been redirected to normal "
+                   "file picking for platforms that don't have a directory "
+                   "picker");
 #endif
-      nsAutoString path;
-      mFiles->Item(i)->GetMozFullPathInternal(path, aRv);
-      if (aRv.Failed()) {
-        return nullptr;
+        nsAutoString path;
+        mFiles->Item(i)->GetMozFullPathInternal(path, aRv);
+        if (aRv.Failed()) {
+          return nullptr;
+        }
+        int32_t leafSeparatorIndex = path.RFind(FILE_PATH_SEPARATOR);
+        nsDependentSubstring dirname = Substring(path, 0, leafSeparatorIndex);
+        nsDependentSubstring basename = Substring(path, leafSeparatorIndex);
+        fs = MakeOrReuseFileSystem(dirname, fs, window);
+        filesAndDirsSeq[i].SetAsDirectory() = new Directory(fs, basename);
+      } else {
+        filesAndDirsSeq[i].SetAsFile() = mFiles->Item(i);
       }
-      int32_t leafSeparatorIndex = path.RFind(FILE_PATH_SEPARATOR);
-      nsDependentSubstring dirname = Substring(path, 0, leafSeparatorIndex);
-      nsDependentSubstring basename = Substring(path, leafSeparatorIndex);
-      fs = MakeOrReuseFileSystem(dirname, fs, window);
-      filesAndDirsSeq[i].SetAsDirectory() = new Directory(fs, basename);
-    } else {
-      filesAndDirsSeq[i].SetAsFile() = mFiles->Item(i);
     }
   }
 

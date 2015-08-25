@@ -1639,7 +1639,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         loadPtr(address, scratch);
         branchTest32(cond, scratch, imm, label);
     }
-    CodeOffsetJump jumpWithPatch(RepatchLabel* label, Condition cond = Always) {
+    CodeOffsetJump jumpWithPatch(RepatchLabel* label, Condition cond = Always,
+                                 Label* documentation = nullptr)
+    {
         ARMBuffer::PoolEntry pe;
         BufferOffset load_bo;
         BufferOffset branch_bo;
@@ -1664,8 +1666,8 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         label->use(branch_bo.getOffset());
         return CodeOffsetJump(load_bo.getOffset(), pe.index());
     }
-    CodeOffsetJump backedgeJump(RepatchLabel* label) {
-        return jumpWithPatch(label);
+    CodeOffsetJump backedgeJump(RepatchLabel* label, Label* documentation = nullptr) {
+        return jumpWithPatch(label, documentation);
     }
     template <typename T>
     CodeOffsetJump branchPtrWithPatch(Condition cond, Register reg, T ptr, RepatchLabel* label) {

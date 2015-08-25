@@ -2865,7 +2865,7 @@ MacroAssemblerMIPSCompat::backedgeJump(RepatchLabel* label)
 }
 
 CodeOffsetJump
-MacroAssemblerMIPSCompat::jumpWithPatch(RepatchLabel* label)
+MacroAssemblerMIPSCompat::jumpWithPatch(RepatchLabel* label, Label* documentation)
 {
     // Only one branch per label.
     MOZ_ASSERT(!label->used());

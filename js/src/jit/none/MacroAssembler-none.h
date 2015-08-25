@@ -233,9 +233,9 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void Pop(T) { MOZ_CRASH(); }
     template <typename T> CodeOffsetLabel pushWithPatch(T) { MOZ_CRASH(); }
 
-    CodeOffsetJump jumpWithPatch(RepatchLabel*) { MOZ_CRASH(); }
-    CodeOffsetJump jumpWithPatch(RepatchLabel*, Condition) { MOZ_CRASH(); }
-    CodeOffsetJump backedgeJump(RepatchLabel* label) { MOZ_CRASH(); }
+    CodeOffsetJump jumpWithPatch(RepatchLabel*, Label* doc = nullptr) { MOZ_CRASH(); }
+    CodeOffsetJump jumpWithPatch(RepatchLabel*, Condition, Label* doc = nullptr) { MOZ_CRASH(); }
+    CodeOffsetJump backedgeJump(RepatchLabel* label, Label* doc = nullptr) { MOZ_CRASH(); }
     template <typename T, typename S>
     CodeOffsetJump branchPtrWithPatch(Condition, T, S, RepatchLabel*) { MOZ_CRASH(); }
 

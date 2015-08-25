@@ -26,14 +26,14 @@ namespace mozilla {
  */
 
 AudioNodeStream::AudioNodeStream(AudioNodeEngine* aEngine,
-                                 MediaStreamGraph::AudioNodeStreamKind aKind,
+                                 Flags aFlags,
                                  TrackRate aSampleRate,
                                  AudioContext::AudioContextId aContextId)
   : ProcessedMediaStream(nullptr),
     mEngine(aEngine),
     mSampleRate(aSampleRate),
     mAudioContextId(aContextId),
-    mKind(aKind),
+    mFlags(aFlags),
     mNumberOfInputChannels(2),
     mMarkAsFinishedAfterThisBlock(false),
     mAudioParamStream(false),
@@ -51,6 +51,30 @@ AudioNodeStream::AudioNodeStream(AudioNodeEngine* aEngine,
 AudioNodeStream::~AudioNodeStream()
 {
   MOZ_COUNT_DTOR(AudioNodeStream);
+}
+
+/* static */ already_AddRefed<AudioNodeStream>
+AudioNodeStream::Create(MediaStreamGraph* aGraph, AudioNodeEngine* aEngine,
+                        Flags aFlags)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // MediaRecorders use an AudioNodeStream, but no AudioNode
+  AudioNode* node = aEngine->NodeMainThread();
+  MOZ_ASSERT(!node || aGraph->GraphRate() == node->Context()->SampleRate());
+
+  dom::AudioContext::AudioContextId contextIdForStream = node ? node->Context()->Id() :
+                                                                NO_AUDIO_CONTEXT;
+  nsRefPtr<AudioNodeStream> stream =
+    new AudioNodeStream(aEngine, aFlags, aGraph->GraphRate(),
+                        contextIdForStream);
+  if (aEngine->HasNode()) {
+    stream->SetChannelMixingParametersImpl(aEngine->NodeMainThread()->ChannelCount(),
+                                           aEngine->NodeMainThread()->ChannelCountModeValue(),
+                                           aEngine->NodeMainThread()->ChannelInterpretationValue());
+  }
+  aGraph->AddStream(stream);
+  return stream.forget();
 }
 
 size_t
@@ -490,27 +514,33 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
   bool blocked = mFinished || mBlocked.GetAt(aFrom);
   // If the stream has finished at this time, it will be blocked.
   if (blocked || InMutedCycle()) {
+    mInputChunks.Clear();
     for (uint16_t i = 0; i < outputCount; ++i) {
       mLastChunks[i].SetNull(WEBAUDIO_BLOCK_SIZE);
     }
   } else {
     // We need to generate at least one input
     uint16_t maxInputs = std::max(uint16_t(1), mEngine->InputCount());
-    OutputChunks inputChunks;
-    inputChunks.SetLength(maxInputs);
+    mInputChunks.SetLength(maxInputs);
     for (uint16_t i = 0; i < maxInputs; ++i) {
-      ObtainInputBlock(inputChunks[i], i);
+      ObtainInputBlock(mInputChunks[i], i);
     }
     bool finished = false;
     if (mPassThrough) {
       MOZ_ASSERT(outputCount == 1, "For now, we only support nodes that have one output port");
-      mLastChunks[0] = inputChunks[0];
+      mLastChunks[0] = mInputChunks[0];
     } else {
       if (maxInputs <= 1 && outputCount <= 1) {
-        mEngine->ProcessBlock(this, inputChunks[0], &mLastChunks[0], &finished);
+        mEngine->ProcessBlock(this, mInputChunks[0], &mLastChunks[0], &finished);
       } else {
-        mEngine->ProcessBlocksOnPorts(this, inputChunks, mLastChunks, &finished);
+        mEngine->ProcessBlocksOnPorts(this, mInputChunks, mLastChunks, &finished);
       }
+    }
+    for (auto& chunk : mInputChunks) {
+      // If the buffer is shared then it won't be reused, so release the
+      // reference now.  Keep the channel data array to save a free/alloc
+      // pair.
+      chunk.ReleaseBufferIfShared();
     }
     for (uint16_t i = 0; i < outputCount; ++i) {
       NS_ASSERTION(mLastChunks[i].GetDuration() == WEBAUDIO_BLOCK_SIZE,
@@ -571,7 +601,7 @@ AudioNodeStream::AdvanceOutputSegment()
   StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK);
   AudioSegment* segment = track->Get<AudioSegment>();
 
-  if (mKind == MediaStreamGraph::EXTERNAL_STREAM) {
+  if (mFlags & EXTERNAL_OUTPUT) {
     segment->AppendAndConsumeChunk(&mLastChunks[0]);
   } else {
     segment->AppendNullData(mLastChunks[0].GetDuration());

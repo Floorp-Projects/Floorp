@@ -401,6 +401,7 @@ struct BaselineScript
 
     bool addDependentAsmJSModule(JSContext* cx, DependentAsmJSModuleExit exit);
     void unlinkDependentAsmJSModules(FreeOp* fop);
+    void clearDependentAsmJSModules();
     void removeDependentAsmJSModule(DependentAsmJSModuleExit exit);
 
     // Toggle debug traps (used for breakpoints and step mode) in the script.
@@ -476,6 +477,9 @@ struct BaselineScript
             script->setIonScript(maybecx, ION_PENDING_SCRIPT);
 
         pendingBuilder_ = builder;
+
+        // lazy linking cannot happen during asmjs to ion.
+        clearDependentAsmJSModules();
 
         script->updateBaselineOrIonRaw(maybecx);
     }
