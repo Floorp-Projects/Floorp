@@ -11,7 +11,7 @@ const { Class } = require('./core/heritage');
 const { on, emit, off, setListeners } = require('./event/core');
 const { filter, pipe, map, merge: streamMerge, stripListeners } = require('./event/utils');
 const { detach, attach, destroy, WorkerHost } = require('./content/utils');
-const { Worker } = require('./content/worker');
+const { Worker } = require('./deprecated/sync-worker');
 const { Disposable } = require('./core/disposable');
 const { WeakReference } = require('./core/reference');
 const { EventTarget } = require('./event/target');
@@ -105,6 +105,7 @@ const Page = Class({
       allowPlugins: true,
       allowAuth: true
     });
+    view.setAttribute('data-src', uri);
 
     ['contentScriptFile', 'contentScript', 'contentScriptWhen']
       .forEach(prop => page[prop] = options[prop]);
