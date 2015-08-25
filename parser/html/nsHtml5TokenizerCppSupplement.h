@@ -4,6 +4,44 @@
 
 #include "mozilla/Likely.h"
 
+bool
+nsHtml5Tokenizer::EnsureBufferSpace(int32_t aLength)
+{
+  MOZ_ASSERT(aLength >= 0, "Negative length.");
+  // Add 2 to account for emissions of LT_GT, LT_SOLIDUS and RSQB_RSQB.
+  // Adding to the general worst case instead of only the
+  // TreeBuilder-exposed worst case to avoid re-introducing a bug when
+  // unifying the tokenizer and tree builder buffers in the future.
+  size_t worstCase = size_t(strBufLen) +
+                     size_t(aLength) +
+                     size_t(charRefBufLen) +
+                     size_t(2);
+  if (worstCase > INT32_MAX) {
+    // Since we index into the buffer using int32_t due to the Java heritage
+    // of the code, let's treat this as OOM.
+    return false;
+  }
+  // TODO: Unify nsHtml5Tokenizer::strBuf and nsHtml5TreeBuilder::charBuffer
+  // so that the call below becomes unnecessary.
+  tokenHandler->EnsureBufferSpace(worstCase);
+  if (!strBuf) {
+    // Add one to round to the next power of two to avoid immediate
+    // reallocation once there are a few characters in the buffer.
+    strBuf = jArray<char16_t,int32_t>::newFallibleJArray(mozilla::RoundUpPow2(worstCase + 1));
+    if (!strBuf) {
+      return false;
+    }
+  } else if (worstCase > size_t(strBuf.length)) {
+    jArray<char16_t,int32_t> newBuf = jArray<char16_t,int32_t>::newFallibleJArray(mozilla::RoundUpPow2(worstCase));
+    if (!newBuf) {
+      return false;
+    }
+    memcpy(newBuf,strBuf, sizeof(char16_t) * strBufLen);
+    strBuf = newBuf;
+  }
+  return true;
+}
+
 void
 nsHtml5Tokenizer::StartPlainText()
 {

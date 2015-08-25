@@ -53,7 +53,7 @@ import org.xml.sax.SAXParseException;
 
 /**
  * An implementation of
- * http://www.whatwg.org/specs/web-apps/current-work/multipage/tokenization.html
+ * https://html.spec.whatwg.org/multipage/syntax.html#tokenization
  * 
  * This class implements the <code>Locator</code> interface. This is not an
  * incidental implementation detail: Users of this class are encouraged to make
@@ -263,11 +263,6 @@ public class Tokenizer implements Locator {
     private static final @NoLength char[] LF = { '\n' };
 
     /**
-     * Buffer growth parameter.
-     */
-    private static final int BUFFER_GROW_BY = 1024;
-
-    /**
      * "CDATA[" as <code>char[]</code>
      */
     private static final @NoLength char[] CDATA_LSQB = { 'C', 'D', 'A', 'T',
@@ -442,7 +437,7 @@ public class Tokenizer implements Locator {
     protected boolean html4;
 
     /**
-     * Whether the stream is past the first 512 bytes.
+     * Whether the stream is past the first 1024 bytes.
      */
     private boolean metaBoundaryPassed;
 
@@ -842,37 +837,32 @@ public class Tokenizer implements Locator {
     }
 
     /**
-     * Appends to the smaller buffer.
+     * Appends to the buffer.
      * 
      * @param c
      *            the UTF-16 code unit to append
      */
     private void appendStrBuf(char c) {
-        if (strBufLen == strBuf.length) {
-            char[] newBuf = new char[strBuf.length + Tokenizer.BUFFER_GROW_BY];
-            System.arraycopy(strBuf, 0, newBuf, 0, strBuf.length);
-            strBuf = newBuf;
-        }
         strBuf[strBufLen++] = c;
     }
 
     /**
-     * The smaller buffer as a String. Currently only used for error reporting.
+     * The buffer as a String. Currently only used for error reporting.
      * 
      * <p>
      * C++ memory note: The return value must be released.
      * 
-     * @return the smaller buffer as a string
+     * @return the buffer as a string
      */
     protected String strBufToString() {
         return Portability.newStringFromBuffer(strBuf, 0, strBufLen);
     }
 
     /**
-     * Returns the short buffer as a local name. The return value is released in
+     * Returns the buffer as a local name. The return value is released in
      * emitDoctypeToken().
      * 
-     * @return the smaller buffer as local name
+     * @return the buffer as local name
      */
     private void strBufToDoctypeName() {
         doctypeName = Portability.newLocalNameFromBuffer(strBuf, 0, strBufLen,
@@ -880,7 +870,7 @@ public class Tokenizer implements Locator {
     }
 
     /**
-     * Emits the smaller buffer as character tokens.
+     * Emits the buffer as character tokens.
      * 
      * @throws SAXException
      *             if the token handler threw
@@ -962,7 +952,7 @@ public class Tokenizer implements Locator {
     }
 
     /**
-     * Append the contents of the smaller buffer to the larger one.
+     * Append the contents of the char reference buffer to the main one.
      */
     @Inline private void appendCharRefBufToStrBuf() {
         appendStrBuf(charRefBuf, 0, charRefBufLen);
@@ -1260,6 +1250,13 @@ public class Tokenizer implements Locator {
         lastCR = false;
 
         int start = buffer.getStart();
+        int end = buffer.getEnd();
+
+        // In C++, the caller of tokenizeBuffer needs to do this explicitly.
+        // [NOCPP[
+        ensureBufferSpace(end - start);
+        // ]NOCPP]
+
         /**
          * The index of the last <code>char</code> read from <code>buf</code>.
          */
@@ -1310,9 +1307,9 @@ public class Tokenizer implements Locator {
         // CPPONLY: }
         // [NOCPP[
         pos = stateLoop(state, c, pos, buffer.getBuffer(), false, returnState,
-                buffer.getEnd());
+                end);
         // ]NOCPP]
-        if (pos == buffer.getEnd()) {
+        if (pos == end) {
             // exiting due to end of buffer
             buffer.setStart(pos);
         } else {
@@ -1320,6 +1317,32 @@ public class Tokenizer implements Locator {
         }
         return lastCR;
     }
+
+    // [NOCPP[
+    private void ensureBufferSpace(int inputLength) throws SAXException {
+        // Add 2 to account for emissions of LT_GT, LT_SOLIDUS and RSQB_RSQB.
+        // Adding to the general worst case instead of only the
+        // TreeBuilder-exposed worst case to avoid re-introducing a bug when
+        // unifying the tokenizer and tree builder buffers in the future.
+        int worstCase = strBufLen + inputLength + charRefBufLen + 2;
+        tokenHandler.ensureBufferSpace(worstCase);
+        if (strBuf == null) {
+            // Add an arbitrary small value to avoid immediate reallocation
+            // once there are a few characters in the buffer.
+            strBuf = new char[worstCase + 128];
+        } else if (worstCase > strBuf.length) {
+            // HotSpot reportedly allocates memory with 8-byte accuracy, so
+            // there's no point in trying to do math here to avoid slop.
+            // Maybe we should add some small constant to worstCase here
+            // but not doing that without profiling. In C++ with jemalloc,
+            // the corresponding method should do math to round up here
+            // to avoid slop.
+            char[] newBuf = new char[worstCase];
+            System.arraycopy(strBuf, 0, newBuf, 0, strBufLen);
+            strBuf = newBuf;
+        }
+    }
+    // ]NOCPP]
 
     @SuppressWarnings("unused") private int stateLoop(int state, char c,
             int pos, @NoLength char[] buf, boolean reconsume, int returnState,
@@ -6710,7 +6733,7 @@ public class Tokenizer implements Locator {
 
     public void initializeWithoutStarting() throws SAXException {
         confident = false;
-        strBuf = new char[1024];
+        strBuf = null;
         line = 1;
         // [NOCPP[
         html4 = false;

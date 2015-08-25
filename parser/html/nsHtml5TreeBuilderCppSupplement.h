@@ -24,6 +24,7 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5OplessBuilder* aBuilder)
   , mHandles(nullptr)
   , mHandlesUsed(0)
   , mSpeculativeLoadStage(nullptr)
+  , mBroken(NS_OK)
   , mCurrentHtmlScriptIsAsyncOrDefer(false)
   , mPreventScriptExecution(false)
 #ifdef DEBUG
@@ -48,6 +49,7 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsAHtml5TreeOpSink* aOpSink,
   , mHandles(new nsIContent*[NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH])
   , mHandlesUsed(0)
   , mSpeculativeLoadStage(aStage)
+  , mBroken(NS_OK)
   , mCurrentHtmlScriptIsAsyncOrDefer(false)
   , mPreventScriptExecution(false)
 #ifdef DEBUG
@@ -912,15 +914,39 @@ nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContent
 void
 nsHtml5TreeBuilder::accumulateCharacters(const char16_t* aBuf, int32_t aStart, int32_t aLength)
 {
-  int32_t newFillLen = charBufferLen + aLength;
-  if (newFillLen > charBuffer.length) {
-    int32_t newAllocLength = newFillLen + (newFillLen >> 1);
-    jArray<char16_t,int32_t> newBuf = jArray<char16_t,int32_t>::newJArray(newAllocLength);
+  MOZ_ASSERT(charBufferLen + aLength <= charBuffer.length,
+             "About to memcpy past the end of the buffer!");
+  memcpy(charBuffer + charBufferLen, aBuf + aStart, sizeof(char16_t) * aLength);
+  charBufferLen += aLength;
+}
+
+bool
+nsHtml5TreeBuilder::EnsureBufferSpace(size_t aLength)
+{
+  // TODO: Unify nsHtml5Tokenizer::strBuf and nsHtml5TreeBuilder::charBuffer
+  // so that this method becomes unnecessary.
+  size_t worstCase = size_t(charBufferLen) + aLength;
+  if (worstCase > INT32_MAX) {
+    // Since we index into the buffer using int32_t due to the Java heritage
+    // of the code, let's treat this as OOM.
+    return false;
+  }
+  if (!charBuffer) {
+    // Add one to round to the next power of two to avoid immediate
+    // reallocation once there are a few characters in the buffer.
+    charBuffer = jArray<char16_t,int32_t>::newFallibleJArray(mozilla::RoundUpPow2(worstCase + 1));
+    if (!charBuffer) {
+      return false;
+    }
+  } else if (worstCase > size_t(charBuffer.length)) {
+    jArray<char16_t,int32_t> newBuf = jArray<char16_t,int32_t>::newFallibleJArray(mozilla::RoundUpPow2(worstCase));
+    if (!newBuf) {
+      return false;
+    }
     memcpy(newBuf, charBuffer, sizeof(char16_t) * charBufferLen);
     charBuffer = newBuf;
   }
-  memcpy(charBuffer + charBufferLen, aBuf + aStart, sizeof(char16_t) * aLength);
-  charBufferLen = newFillLen;
+  return true;
 }
 
 nsIContentHandle*
@@ -1074,6 +1100,7 @@ nsHtml5TreeBuilder::MarkAsBroken(nsresult aRv)
     MOZ_ASSERT_UNREACHABLE("Must not call this with builder.");
     return;
   }
+  mBroken = aRv;
   mOpQueue.Clear(); // Previous ops don't matter anymore
   mOpQueue.AppendElement()->Init(aRv);
 }
