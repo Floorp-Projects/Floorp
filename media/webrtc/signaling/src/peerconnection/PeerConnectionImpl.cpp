@@ -87,6 +87,7 @@
 #include "AudioStreamTrack.h"
 #include "VideoStreamTrack.h"
 #include "nsIScriptGlobalObject.h"
+#include "MediaStreamGraph.h"
 #include "DOMMediaStream.h"
 #include "rlogringbuffer.h"
 #include "WebrtcGlobalInformation.h"
@@ -443,9 +444,12 @@ PeerConnectionImpl::~PeerConnectionImpl()
 already_AddRefed<DOMMediaStream>
 PeerConnectionImpl::MakeMediaStream()
 {
-  nsRefPtr<DOMMediaStream> stream =
-    DOMMediaStream::CreateSourceStream(GetWindow());
+  MediaStreamGraph* graph =
+    MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
+                                  AudioChannel::Normal);
 
+  nsRefPtr<DOMMediaStream> stream =
+    DOMMediaStream::CreateSourceStream(GetWindow(), graph);
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   // Make the stream data (audio/video samples) accessible to the receiving page.
   // We're only certain that privacy hasn't been requested if we're connected.
