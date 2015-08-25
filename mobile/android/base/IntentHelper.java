@@ -181,16 +181,19 @@ public final class IntentHelper implements GeckoEventListener,
 
         // For this flow, we follow Chrome's lead:
         //   https://developer.chrome.com/multidevice/android/intents
-        //
-        // Note on alternative flows: we could get the intent package from a component, however, for
-        // security reasons, components are ignored when opening URIs (bug 1168998) so we should
-        // ignore it here too.
-        //
-        // Our old flow used to prompt the user to search for their app in the market by scheme and
-        // while this could help the user find a new app, there is not always a correlation in
-        // scheme to application name and we could end up steering the user wrong (potentially to
-        // malicious software). Better to leave that one alone.
-        if (intent.getPackage() != null) {
+        if (intent.hasExtra(EXTRA_BROWSER_FALLBACK_URL)) {
+            final String fallbackUrl = intent.getStringExtra(EXTRA_BROWSER_FALLBACK_URL);
+            callback.sendError(fallbackUrl);
+
+        } else if (intent.getPackage() != null) {
+            // Note on alternative flows: we could get the intent package from a component, however, for
+            // security reasons, components are ignored when opening URIs (bug 1168998) so we should
+            // ignore it here too.
+            //
+            // Our old flow used to prompt the user to search for their app in the market by scheme and
+            // while this could help the user find a new app, there is not always a correlation in
+            // scheme to application name and we could end up steering the user wrong (potentially to
+            // malicious software). Better to leave that one alone.
             final String marketUri = MARKET_INTENT_URI_PACKAGE_PREFIX + intent.getPackage();
             final Intent marketIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(marketUri));
             marketIntent.addCategory(Intent.CATEGORY_BROWSABLE);
@@ -200,10 +203,6 @@ public final class IntentHelper implements GeckoEventListener,
             // Store devices). If it doesn't, clicking the link will cause no action to occur.
             activity.startActivity(marketIntent);
             callback.sendSuccess(null);
-
-        } else if (intent.hasExtra(EXTRA_BROWSER_FALLBACK_URL)) {
-            final String fallbackUrl = intent.getStringExtra(EXTRA_BROWSER_FALLBACK_URL);
-            callback.sendError(fallbackUrl);
 
         }  else {
             // Don't log the URI to prevent leaking it.
