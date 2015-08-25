@@ -25,6 +25,8 @@
 import sys, os
 import re
 import json
+import errno
+import hashlib
 from optparse import OptionParser
 from subprocess import check_call, check_output, STDOUT
 import redo
@@ -119,6 +121,33 @@ def GetRemotePath(path, local_file, base_path):
     dir = dir[len(base_path)+1:].replace('\\','/')
     return path + dir
 
+def GetFileHashAndSize(filename):
+    sha512Hash = 'UNKNOWN'
+    size = 'UNKNOWN'
+
+    try:
+        # open in binary mode to make sure we get consistent results
+        # across all platforms
+        with open(filename, "rb") as f:
+            shaObj = hashlib.sha512(f.read())
+            sha512Hash = shaObj.hexdigest()
+
+        size = os.path.getsize(filename)
+    except:
+        raise Exception("Unable to get filesize/hash from file: %s" % filename)
+
+    return (sha512Hash, size)
+
+def GetMarProperties(filename):
+    if not os.path.exists(filename):
+        return {}
+    (mar_hash, mar_size) = GetFileHashAndSize(filename)
+    return {
+        'completeMarFilename': os.path.basename(filename),
+        'completeMarSize': mar_size,
+        'completeMarHash': mar_hash,
+    }
+
 def GetUrlProperties(output, package):
     # let's create a switch case using name-spaces/dict
     # rather than a long if/else with duplicate code
@@ -174,6 +203,7 @@ def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None,
     if base_path is not None:
         base_path = os.path.abspath(base_path)
     remote_files = []
+    properties = {}
     try:
         for file in files:
             file = os.path.abspath(file)
@@ -186,6 +216,9 @@ def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None,
                 print "Uploading " + file
             DoSCPFile(file, remote_path, user, host, port=port, ssh_key=ssh_key)
             remote_files.append(remote_path + '/' + os.path.basename(file))
+
+            if file.endswith('.complete.mar'):
+                properties.update(GetMarProperties(file))
         if post_upload_command is not None:
             if verbose:
                 print "Running post-upload command: " + post_upload_command
@@ -195,7 +228,7 @@ def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None,
             print output
             if properties_file:
                 with open(properties_file, 'w') as outfile:
-                    properties = GetUrlProperties(output, package)
+                    properties.update(GetUrlProperties(output, package))
                     properties['packageFilename'] = package
                     properties['uploadFiles'] = [os.path.abspath(f) for f in files]
                     json.dump(properties, outfile, indent=4)
