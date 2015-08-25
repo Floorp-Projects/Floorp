@@ -163,7 +163,7 @@ public:
   /**
    * Returns whether this axis can scroll any more in a particular direction.
    */
-  bool CanScroll(double aDelta) const;
+  bool CanScroll(ParentLayerCoord aDelta) const;
 
   /**
    * Returns true if the page has room to be scrolled along this axis
