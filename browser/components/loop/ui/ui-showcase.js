@@ -892,11 +892,24 @@
               React.createElement("div", {className: "panel"}, 
                 React.createElement(PanelView, {client: mockClient, 
                            dispatcher: dispatcher, 
+                           initialSelectedTabComponent: "contactAdd", 
                            mozLoop: mockMozLoopLoggedIn, 
                            notifications: notifications, 
                            roomStore: roomStore, 
-                           selectedTab: "contacts_add", 
+                           selectedTab: "contacts", 
                            userProfile: {email: "test@example.com"}})
+              )
+            ), 
+            React.createElement(FramedExample, {cssClass: "fx-embedded-panel", 
+                           dashed: true, 
+                           height: 321, 
+                           summary: "Contact Form - Edit", 
+                           width: 332}, 
+              React.createElement("div", {className: "panel"}, 
+                React.createElement(ContactDetailsForm, {contactFormData: fakeManyContacts[1], 
+                                    mode: "edit", 
+                                    mozLoop: mockMozLoopLoggedIn, 
+                                    switchToInitialView: noop})
               )
             )
           ), 
