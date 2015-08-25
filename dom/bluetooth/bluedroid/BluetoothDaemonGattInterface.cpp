@@ -47,8 +47,8 @@ BluetoothDaemonGattModule::HandleSvc(const DaemonSocketPDUHeader& aHeader,
 {
   static void (BluetoothDaemonGattModule::* const HandleOp[])(
     const DaemonSocketPDUHeader&, DaemonSocketPDU&, void*) = {
-    INIT_ARRAY_AT(0, &BluetoothDaemonGattModule::HandleRsp),
-    INIT_ARRAY_AT(1, &BluetoothDaemonGattModule::HandleNtf),
+    [0] = &BluetoothDaemonGattModule::HandleRsp,
+    [1] = &BluetoothDaemonGattModule::HandleNtf
   };
 
   MOZ_ASSERT(!NS_IsMainThread());
@@ -1411,78 +1411,78 @@ BluetoothDaemonGattModule::HandleRsp(
     const DaemonSocketPDUHeader&,
     DaemonSocketPDU&,
     BluetoothGattResultHandler*) = {
-    INIT_ARRAY_AT(OPCODE_ERROR,
-      &BluetoothDaemonGattModule::ErrorRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_REGISTER,
-      &BluetoothDaemonGattModule::ClientRegisterRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_UNREGISTER,
-      &BluetoothDaemonGattModule::ClientUnregisterRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_SCAN,
-      &BluetoothDaemonGattModule::ClientScanRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_CONNECT,
-      &BluetoothDaemonGattModule::ClientConnectRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_DISCONNECT,
-      &BluetoothDaemonGattModule::ClientDisconnectRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_LISTEN,
-      &BluetoothDaemonGattModule::ClientListenRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_REFRESH,
-      &BluetoothDaemonGattModule::ClientRefreshRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_SEARCH_SERVICE,
-      &BluetoothDaemonGattModule::ClientSearchServiceRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_GET_INCLUDED_SERVICE,
-      &BluetoothDaemonGattModule::ClientGetIncludedServiceRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_GET_CHARACTERISTIC,
-      &BluetoothDaemonGattModule::ClientGetCharacteristicRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_GET_DESCRIPTOR,
-      &BluetoothDaemonGattModule::ClientGetDescriptorRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_READ_CHARACTERISTIC,
-      &BluetoothDaemonGattModule::ClientReadCharacteristicRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_WRITE_CHARACTERISTIC,
-      &BluetoothDaemonGattModule::ClientWriteCharacteristicRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_READ_DESCRIPTOR,
-      &BluetoothDaemonGattModule::ClientReadDescriptorRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_WRITE_DESCRIPTOR,
-      &BluetoothDaemonGattModule::ClientWriteDescriptorRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_EXECUTE_WRITE,
-      &BluetoothDaemonGattModule::ClientExecuteWriteRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_REGISTER_NOTIFICATION,
-      &BluetoothDaemonGattModule::ClientRegisterNotificationRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_DEREGISTER_NOTIFICATION,
-      &BluetoothDaemonGattModule::ClientDeregisterNotificationRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_READ_REMOTE_RSSI,
-      &BluetoothDaemonGattModule::ClientReadRemoteRssiRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_GET_DEVICE_TYPE,
-      &BluetoothDaemonGattModule::ClientGetDeviceTypeRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_SET_ADV_DATA,
-      &BluetoothDaemonGattModule::ClientSetAdvDataRsp),
-    INIT_ARRAY_AT(OPCODE_CLIENT_TEST_COMMAND,
-      &BluetoothDaemonGattModule::ClientTestCommandRsp),
-    INIT_ARRAY_AT(OPCODE_SERVER_REGISTER,
-      &BluetoothDaemonGattModule::ServerRegisterRsp),
-    INIT_ARRAY_AT(OPCODE_SERVER_UNREGISTER,
-      &BluetoothDaemonGattModule::ServerUnregisterRsp),
-    INIT_ARRAY_AT(OPCODE_SERVER_CONNECT_PERIPHERAL,
-      &BluetoothDaemonGattModule::ServerConnectPeripheralRsp),
-    INIT_ARRAY_AT(OPCODE_SERVER_DISCONNECT_PERIPHERAL,
-      &BluetoothDaemonGattModule::ServerDisconnectPeripheralRsp),
-    INIT_ARRAY_AT(OPCODE_SERVER_ADD_SERVICE,
-      &BluetoothDaemonGattModule::ServerAddServiceRsp),
-    INIT_ARRAY_AT(OPCODE_SERVER_ADD_INCLUDED_SERVICE,
-      &BluetoothDaemonGattModule::ServerAddIncludedServiceRsp),
-    INIT_ARRAY_AT(OPCODE_SERVER_ADD_CHARACTERISTIC,
-      &BluetoothDaemonGattModule::ServerAddCharacteristicRsp),
-    INIT_ARRAY_AT(OPCODE_SERVER_ADD_DESCRIPTOR,
-      &BluetoothDaemonGattModule::ServerAddDescriptorRsp),
-    INIT_ARRAY_AT(OPCODE_SERVER_START_SERVICE,
-      &BluetoothDaemonGattModule::ServerStartServiceRsp),
-    INIT_ARRAY_AT(OPCODE_SERVER_STOP_SERVICE,
-      &BluetoothDaemonGattModule::ServerStopServiceRsp),
-    INIT_ARRAY_AT(OPCODE_SERVER_DELETE_SERVICE,
-      &BluetoothDaemonGattModule::ServerDeleteServiceRsp),
-    INIT_ARRAY_AT(OPCODE_SERVER_SEND_INDICATION,
-      &BluetoothDaemonGattModule::ServerSendIndicationRsp),
-    INIT_ARRAY_AT(OPCODE_SERVER_SEND_RESPONSE,
-      &BluetoothDaemonGattModule::ServerSendResponseRsp)
+    [OPCODE_ERROR] =
+      &BluetoothDaemonGattModule::ErrorRsp,
+    [OPCODE_CLIENT_REGISTER] =
+      &BluetoothDaemonGattModule::ClientRegisterRsp,
+    [OPCODE_CLIENT_UNREGISTER] =
+      &BluetoothDaemonGattModule::ClientUnregisterRsp,
+    [OPCODE_CLIENT_SCAN] =
+      &BluetoothDaemonGattModule::ClientScanRsp,
+    [OPCODE_CLIENT_CONNECT] =
+      &BluetoothDaemonGattModule::ClientConnectRsp,
+    [OPCODE_CLIENT_DISCONNECT] =
+      &BluetoothDaemonGattModule::ClientDisconnectRsp,
+    [OPCODE_CLIENT_LISTEN] =
+      &BluetoothDaemonGattModule::ClientListenRsp,
+    [OPCODE_CLIENT_REFRESH] =
+      &BluetoothDaemonGattModule::ClientRefreshRsp,
+    [OPCODE_CLIENT_SEARCH_SERVICE] =
+      &BluetoothDaemonGattModule::ClientSearchServiceRsp,
+    [OPCODE_CLIENT_GET_INCLUDED_SERVICE] =
+      &BluetoothDaemonGattModule::ClientGetIncludedServiceRsp,
+    [OPCODE_CLIENT_GET_CHARACTERISTIC] =
+      &BluetoothDaemonGattModule::ClientGetCharacteristicRsp,
+    [OPCODE_CLIENT_GET_DESCRIPTOR] =
+      &BluetoothDaemonGattModule::ClientGetDescriptorRsp,
+    [OPCODE_CLIENT_READ_CHARACTERISTIC] =
+      &BluetoothDaemonGattModule::ClientReadCharacteristicRsp,
+    [OPCODE_CLIENT_WRITE_CHARACTERISTIC] =
+      &BluetoothDaemonGattModule::ClientWriteCharacteristicRsp,
+    [OPCODE_CLIENT_READ_DESCRIPTOR] =
+      &BluetoothDaemonGattModule::ClientReadDescriptorRsp,
+    [OPCODE_CLIENT_WRITE_DESCRIPTOR] =
+      &BluetoothDaemonGattModule::ClientWriteDescriptorRsp,
+    [OPCODE_CLIENT_EXECUTE_WRITE] =
+      &BluetoothDaemonGattModule::ClientExecuteWriteRsp,
+    [OPCODE_CLIENT_REGISTER_NOTIFICATION] =
+      &BluetoothDaemonGattModule::ClientRegisterNotificationRsp,
+    [OPCODE_CLIENT_DEREGISTER_NOTIFICATION] =
+      &BluetoothDaemonGattModule::ClientDeregisterNotificationRsp,
+    [OPCODE_CLIENT_READ_REMOTE_RSSI] =
+      &BluetoothDaemonGattModule::ClientReadRemoteRssiRsp,
+    [OPCODE_CLIENT_GET_DEVICE_TYPE] =
+      &BluetoothDaemonGattModule::ClientGetDeviceTypeRsp,
+    [OPCODE_CLIENT_SET_ADV_DATA] =
+      &BluetoothDaemonGattModule::ClientSetAdvDataRsp,
+    [OPCODE_CLIENT_TEST_COMMAND] =
+      &BluetoothDaemonGattModule::ClientTestCommandRsp,
+    [OPCODE_SERVER_REGISTER] =
+      &BluetoothDaemonGattModule::ServerRegisterRsp,
+    [OPCODE_SERVER_UNREGISTER] =
+      &BluetoothDaemonGattModule::ServerUnregisterRsp,
+    [OPCODE_SERVER_CONNECT_PERIPHERAL] =
+      &BluetoothDaemonGattModule::ServerConnectPeripheralRsp,
+    [OPCODE_SERVER_DISCONNECT_PERIPHERAL] =
+      &BluetoothDaemonGattModule::ServerDisconnectPeripheralRsp,
+    [OPCODE_SERVER_ADD_SERVICE] =
+      &BluetoothDaemonGattModule::ServerAddServiceRsp,
+    [OPCODE_SERVER_ADD_INCLUDED_SERVICE] =
+      &BluetoothDaemonGattModule::ServerAddIncludedServiceRsp,
+    [OPCODE_SERVER_ADD_CHARACTERISTIC] =
+      &BluetoothDaemonGattModule::ServerAddCharacteristicRsp,
+    [OPCODE_SERVER_ADD_DESCRIPTOR] =
+      &BluetoothDaemonGattModule::ServerAddDescriptorRsp,
+    [OPCODE_SERVER_START_SERVICE] =
+      &BluetoothDaemonGattModule::ServerStartServiceRsp,
+    [OPCODE_SERVER_STOP_SERVICE] =
+      &BluetoothDaemonGattModule::ServerStopServiceRsp,
+    [OPCODE_SERVER_DELETE_SERVICE] =
+      &BluetoothDaemonGattModule::ServerDeleteServiceRsp,
+    [OPCODE_SERVER_SEND_INDICATION] =
+      &BluetoothDaemonGattModule::ServerSendIndicationRsp,
+    [OPCODE_SERVER_SEND_RESPONSE] =
+      &BluetoothDaemonGattModule::ServerSendResponseRsp
   };
 
   MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
@@ -2156,37 +2156,37 @@ BluetoothDaemonGattModule::HandleNtf(
 {
   static void (BluetoothDaemonGattModule::* const HandleNtf[])(
     const DaemonSocketPDUHeader&, DaemonSocketPDU&) = {
-    INIT_ARRAY_AT(0, &BluetoothDaemonGattModule::ClientRegisterNtf),
-    INIT_ARRAY_AT(1, &BluetoothDaemonGattModule::ClientScanResultNtf),
-    INIT_ARRAY_AT(2, &BluetoothDaemonGattModule::ClientConnectNtf),
-    INIT_ARRAY_AT(3, &BluetoothDaemonGattModule::ClientDisconnectNtf),
-    INIT_ARRAY_AT(4, &BluetoothDaemonGattModule::ClientSearchCompleteNtf),
-    INIT_ARRAY_AT(5, &BluetoothDaemonGattModule::ClientSearchResultNtf),
-    INIT_ARRAY_AT(6, &BluetoothDaemonGattModule::ClientGetCharacteristicNtf),
-    INIT_ARRAY_AT(7, &BluetoothDaemonGattModule::ClientGetDescriptorNtf),
-    INIT_ARRAY_AT(8, &BluetoothDaemonGattModule::ClientGetIncludedServiceNtf),
-    INIT_ARRAY_AT(9, &BluetoothDaemonGattModule::ClientRegisterNotificationNtf),
-    INIT_ARRAY_AT(10, &BluetoothDaemonGattModule::ClientNotifyNtf),
-    INIT_ARRAY_AT(11, &BluetoothDaemonGattModule::ClientReadCharacteristicNtf),
-    INIT_ARRAY_AT(12, &BluetoothDaemonGattModule::ClientWriteCharacteristicNtf),
-    INIT_ARRAY_AT(13, &BluetoothDaemonGattModule::ClientReadDescriptorNtf),
-    INIT_ARRAY_AT(14, &BluetoothDaemonGattModule::ClientWriteDescriptorNtf),
-    INIT_ARRAY_AT(15, &BluetoothDaemonGattModule::ClientExecuteWriteNtf),
-    INIT_ARRAY_AT(16, &BluetoothDaemonGattModule::ClientReadRemoteRssiNtf),
-    INIT_ARRAY_AT(17, &BluetoothDaemonGattModule::ClientListenNtf),
-    INIT_ARRAY_AT(18, &BluetoothDaemonGattModule::ServerRegisterNtf),
-    INIT_ARRAY_AT(19, &BluetoothDaemonGattModule::ServerConnectionNtf),
-    INIT_ARRAY_AT(20, &BluetoothDaemonGattModule::ServerServiceAddedNtf),
-    INIT_ARRAY_AT(21, &BluetoothDaemonGattModule::ServerIncludedServiceAddedNtf),
-    INIT_ARRAY_AT(22, &BluetoothDaemonGattModule::ServerCharacteristicAddedNtf),
-    INIT_ARRAY_AT(23, &BluetoothDaemonGattModule::ServerDescriptorAddedNtf),
-    INIT_ARRAY_AT(24, &BluetoothDaemonGattModule::ServerServiceStartedNtf),
-    INIT_ARRAY_AT(25, &BluetoothDaemonGattModule::ServerServiceStoppedNtf),
-    INIT_ARRAY_AT(26, &BluetoothDaemonGattModule::ServerServiceDeletedNtf),
-    INIT_ARRAY_AT(27, &BluetoothDaemonGattModule::ServerRequestReadNtf),
-    INIT_ARRAY_AT(28, &BluetoothDaemonGattModule::ServerRequestWriteNtf),
-    INIT_ARRAY_AT(29, &BluetoothDaemonGattModule::ServerRequestExecuteWriteNtf),
-    INIT_ARRAY_AT(30, &BluetoothDaemonGattModule::ServerResponseConfirmationNtf)
+    [0] = &BluetoothDaemonGattModule::ClientRegisterNtf,
+    [1] = &BluetoothDaemonGattModule::ClientScanResultNtf,
+    [2] = &BluetoothDaemonGattModule::ClientConnectNtf,
+    [3] = &BluetoothDaemonGattModule::ClientDisconnectNtf,
+    [4] = &BluetoothDaemonGattModule::ClientSearchCompleteNtf,
+    [5] = &BluetoothDaemonGattModule::ClientSearchResultNtf,
+    [6] = &BluetoothDaemonGattModule::ClientGetCharacteristicNtf,
+    [7] = &BluetoothDaemonGattModule::ClientGetDescriptorNtf,
+    [8] = &BluetoothDaemonGattModule::ClientGetIncludedServiceNtf,
+    [9] = &BluetoothDaemonGattModule::ClientRegisterNotificationNtf,
+    [10] = &BluetoothDaemonGattModule::ClientNotifyNtf,
+    [11] = &BluetoothDaemonGattModule::ClientReadCharacteristicNtf,
+    [12] = &BluetoothDaemonGattModule::ClientWriteCharacteristicNtf,
+    [13] = &BluetoothDaemonGattModule::ClientReadDescriptorNtf,
+    [14] = &BluetoothDaemonGattModule::ClientWriteDescriptorNtf,
+    [15] = &BluetoothDaemonGattModule::ClientExecuteWriteNtf,
+    [16] = &BluetoothDaemonGattModule::ClientReadRemoteRssiNtf,
+    [17] = &BluetoothDaemonGattModule::ClientListenNtf,
+    [18] = &BluetoothDaemonGattModule::ServerRegisterNtf,
+    [19] = &BluetoothDaemonGattModule::ServerConnectionNtf,
+    [20] = &BluetoothDaemonGattModule::ServerServiceAddedNtf,
+    [21] = &BluetoothDaemonGattModule::ServerIncludedServiceAddedNtf,
+    [22] = &BluetoothDaemonGattModule::ServerCharacteristicAddedNtf,
+    [23] = &BluetoothDaemonGattModule::ServerDescriptorAddedNtf,
+    [24] = &BluetoothDaemonGattModule::ServerServiceStartedNtf,
+    [25] = &BluetoothDaemonGattModule::ServerServiceStoppedNtf,
+    [26] = &BluetoothDaemonGattModule::ServerServiceDeletedNtf,
+    [27] = &BluetoothDaemonGattModule::ServerRequestReadNtf,
+    [28] = &BluetoothDaemonGattModule::ServerRequestWriteNtf,
+    [29] = &BluetoothDaemonGattModule::ServerRequestExecuteWriteNtf,
+    [30] = &BluetoothDaemonGattModule::ServerResponseConfirmationNtf
   };
 
   MOZ_ASSERT(!NS_IsMainThread());
