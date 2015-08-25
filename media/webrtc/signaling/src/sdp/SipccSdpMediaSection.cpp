@@ -127,7 +127,10 @@ SipccSdpMediaSection::Load(sdp_t* sdp, uint16_t level,
   if (!LoadProtocol(sdp, level, errorHolder)) {
     return false;
   }
-  LoadFormats(sdp, level);
+
+  if (!LoadFormats(sdp, level, errorHolder)) {
+    return false;
+  }
 
   if (!mAttributeList.Load(sdp, level, errorHolder)) {
     return false;
@@ -181,8 +184,10 @@ SipccSdpMediaSection::LoadProtocol(sdp_t* sdp, uint16_t level,
   return true;
 }
 
-void
-SipccSdpMediaSection::LoadFormats(sdp_t* sdp, uint16_t level)
+bool
+SipccSdpMediaSection::LoadFormats(sdp_t* sdp,
+                                  uint16_t level,
+                                  SdpErrorHolder& errorHolder)
 {
   sdp_media_e mtype = sdp_get_media_type(sdp, level);
 
@@ -198,6 +203,12 @@ SipccSdpMediaSection::LoadFormats(sdp_t* sdp, uint16_t level)
       uint32_t ptype =
           sdp_get_media_payload_type(sdp, level, i + 1, &indicator);
 
+      if (GET_DYN_PAYLOAD_TYPE_VALUE(ptype) > UINT8_MAX) {
+        errorHolder.AddParseError(sdp_get_media_line_number(sdp, level),
+                                  "Format is too large");
+        return false;
+      }
+
       std::ostringstream osPayloadType;
       // sipcc stores payload types in a funny way. When sipcc and the SDP it
       // parsed differ on what payload type number should be used for a given
@@ -208,6 +219,8 @@ SipccSdpMediaSection::LoadFormats(sdp_t* sdp, uint16_t level)
       mFormats.push_back(osPayloadType.str());
     }
   }
+
+  return true;
 }
 
 bool

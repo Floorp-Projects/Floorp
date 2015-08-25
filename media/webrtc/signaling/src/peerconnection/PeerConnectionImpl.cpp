@@ -389,6 +389,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mUuidGen(MakeUnique<PCUuidGenerator>())
   , mNumAudioStreams(0)
   , mNumVideoStreams(0)
+  , mHaveConfiguredCodecs(false)
   , mHaveDataStream(false)
   , mAddCandidateErrorCount(0)
   , mTrickle(true) // TODO(ekr@rtfm.com): Use pref
@@ -929,6 +930,11 @@ class CompareCodecPriority {
 
 nsresult
 PeerConnectionImpl::ConfigureJsepSessionCodecs() {
+  if (mHaveConfiguredCodecs) {
+    return NS_OK;
+  }
+  mHaveConfiguredCodecs = true;
+
 #if !defined(MOZILLA_XPCOMRT_API)
   nsresult res;
   nsCOMPtr<nsIPrefService> prefs =
@@ -1150,15 +1156,8 @@ PeerConnectionImpl::GetDatachannelParameters(
       for (size_t i = 0;
            i < trackPair.mSending->GetNegotiatedDetails()->GetCodecCount();
            ++i) {
-        const JsepCodecDescription* codec;
-        nsresult res =
-          trackPair.mSending->GetNegotiatedDetails()->GetCodec(i, &codec);
-
-        if (NS_FAILED(res)) {
-          CSFLogError(logTag, "%s: Failed getting codec for m=application.",
-                              __FUNCTION__);
-          continue;
-        }
+        const JsepCodecDescription* codec =
+          trackPair.mSending->GetNegotiatedDetails()->GetCodec(i);
 
         if (codec->mType != SdpMediaSection::kApplication) {
           CSFLogError(logTag, "%s: Codec type for m=application was %u, this "
@@ -1191,6 +1190,63 @@ PeerConnectionImpl::GetDatachannelParameters(
 
   *datachannelCodec = nullptr;
   *level = 0;
+  return NS_OK;
+}
+
+/* static */
+void
+PeerConnectionImpl::DeferredAddTrackToJsepSession(
+    const std::string& pcHandle,
+    SdpMediaSection::MediaType type,
+    const std::string& streamId,
+    const std::string& trackId)
+{
+  PeerConnectionWrapper wrapper(pcHandle);
+
+  if (wrapper.impl()) {
+    if (!PeerConnectionCtx::GetInstance()->isReady()) {
+      MOZ_CRASH("Why is DeferredAddTrackToJsepSession being executed when the "
+                "PeerConnectionCtx isn't ready?");
+    }
+    wrapper.impl()->AddTrackToJsepSession(type, streamId, trackId);
+  }
+}
+
+nsresult
+PeerConnectionImpl::AddTrackToJsepSession(SdpMediaSection::MediaType type,
+                                          const std::string& streamId,
+                                          const std::string& trackId)
+{
+  if (!PeerConnectionCtx::GetInstance()->isReady()) {
+    // We are not ready to configure codecs for this track. We need to defer.
+    PeerConnectionCtx::GetInstance()->queueJSEPOperation(
+        WrapRunnableNM(DeferredAddTrackToJsepSession,
+                       mHandle,
+                       type,
+                       streamId,
+                       trackId));
+    return NS_OK;
+  }
+
+  nsresult res = ConfigureJsepSessionCodecs();
+  if (NS_FAILED(res)) {
+    CSFLogError(logTag, "Failed to configure codecs");
+    return res;
+  }
+
+  res = mJsepSession->AddTrack(
+      new JsepTrack(type, streamId, trackId, sdp::kSend));
+
+  if (NS_FAILED(res)) {
+    std::string errorString = mJsepSession->GetLastError();
+    CSFLogError(logTag, "%s (%s) : pc = %s, error = %s",
+                __FUNCTION__,
+                type == SdpMediaSection::kAudio ? "audio" : "video",
+                mHandle.c_str(),
+                errorString.c_str());
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
 
@@ -1319,7 +1375,7 @@ PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
           mozilla::SdpMediaSection::kApplication,
           streamId,
           trackId,
-          JsepTrack::kJsepTrackSending));
+          sdp::kSend));
 
     rv = mJsepSession->AddTrack(track);
     if (NS_FAILED(rv)) {
@@ -2077,6 +2133,7 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
     CSFLogError(logTag, "%s: At least one stream arg required", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
+
   return AddTrack(aTrack, aStreams[0]);
 }
 
@@ -2105,16 +2162,9 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
   }
 
   if (aTrack.AsAudioStreamTrack()) {
-    res = mJsepSession->AddTrack(new JsepTrack(
-        mozilla::SdpMediaSection::kAudio,
-        streamId,
-        trackId,
-        JsepTrack::kJsepTrackSending));
+    res = AddTrackToJsepSession(SdpMediaSection::kAudio, streamId, trackId);
     if (NS_FAILED(res)) {
-      std::string errorString = mJsepSession->GetLastError();
-      CSFLogError(logTag, "%s (audio) : pc = %s, error = %s",
-                  __FUNCTION__, mHandle.c_str(), errorString.c_str());
-      return NS_ERROR_FAILURE;
+      return res;
     }
     mNumAudioStreams++;
   }
@@ -2128,16 +2178,9 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
     }
 #endif
 
-    res = mJsepSession->AddTrack(new JsepTrack(
-        mozilla::SdpMediaSection::kVideo,
-        streamId,
-        trackId,
-        JsepTrack::kJsepTrackSending));
+    res = AddTrackToJsepSession(SdpMediaSection::kVideo, streamId, trackId);
     if (NS_FAILED(res)) {
-      std::string errorString = mJsepSession->GetLastError();
-      CSFLogError(logTag, "%s (video) : pc = %s, error = %s",
-                  __FUNCTION__, mHandle.c_str(), errorString.c_str());
-      return NS_ERROR_FAILURE;
+      return res;
     }
     mNumVideoStreams++;
   }
