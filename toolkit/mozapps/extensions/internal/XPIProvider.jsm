@@ -2312,7 +2312,8 @@ this.XPIProvider = {
       }
 
       try {
-        var location = new DirectoryInstallLocation(aName, dir, aScope, aLocked);
+        var location = aLocked ? new DirectoryInstallLocation(aName, dir, aScope)
+                               : new MutableDirectoryInstallLocation(aName, dir, aScope);
       }
       catch (e) {
         logger.warn("Failed to add directory install location " + aName, e);
@@ -6752,30 +6753,20 @@ function AddonWrapper(aAddon) {
  * containing the add-ons files. The directory or text file must have the same
  * name as the add-on's ID.
  *
- * There may also a special directory named "staged" which can contain
- * directories with the same name as an add-on ID. If the directory is empty
- * then it means the add-on will be uninstalled from this location during the
- * next startup. If the directory contains the add-on's files then they will be
- * installed during the next startup.
- *
  * @param  aName
  *         The string identifier for the install location
  * @param  aDirectory
  *         The nsIFile directory for the install location
  * @param  aScope
  *         The scope of add-ons installed in this location
- * @param  aLocked
- *         true if add-ons cannot be installed, uninstalled or upgraded in the
- *         install location
  */
-function DirectoryInstallLocation(aName, aDirectory, aScope, aLocked) {
+function DirectoryInstallLocation(aName, aDirectory, aScope) {
   this._name = aName;
-  this.locked = aLocked;
+  this.locked = true;
   this._directory = aDirectory;
   this._scope = aScope
   this._IDToFileMap = {};
   this._linkedAddons = [];
-  this._stagingDirLock = 0;
 
   if (!aDirectory.exists())
     return;
@@ -6910,6 +6901,51 @@ DirectoryInstallLocation.prototype = {
     return locations;
   },
 
+  /**
+   * Gets the directory that the add-on with the given ID is installed in.
+   *
+   * @param  aId
+   *         The ID of the add-on
+   * @return The nsIFile
+   * @throws if the ID does not match any of the add-ons installed
+   */
+  getLocationForID: function DirInstallLocation_getLocationForID(aId) {
+    if (aId in this._IDToFileMap)
+      return this._IDToFileMap[aId].clone();
+    throw new Error("Unknown add-on ID " + aId);
+  },
+
+  /**
+   * Returns true if the given addon was installed in this location by a text
+   * file pointing to its real path.
+   *
+   * @param aId
+   *        The ID of the addon
+   */
+  isLinkedAddon: function DirInstallLocation__isLinkedAddon(aId) {
+    return this._linkedAddons.indexOf(aId) != -1;
+  }
+};
+
+/**
+ * An extension of DirectoryInstallLocation which adds methods to installing
+ * and removing add-ons from the directory at runtime.
+ *
+ * @param  aName
+ *         The string identifier for the install location
+ * @param  aDirectory
+ *         The nsIFile directory for the install location
+ * @param  aScope
+ *         The scope of add-ons installed in this location
+ */
+function MutableDirectoryInstallLocation(aName, aDirectory, aScope) {
+  DirectoryInstallLocation.call(this, aName, aDirectory, aScope);
+  this.locked = false;
+  this._stagingDirLock = 0;
+}
+
+MutableDirectoryInstallLocation.prototype = Object.create(DirectoryInstallLocation.prototype);
+Object.assign(MutableDirectoryInstallLocation.prototype, {
   /**
    * Gets the staging directory to put add-ons that are pending install and
    * uninstall into.
@@ -7174,32 +7210,7 @@ DirectoryInstallLocation.prototype = {
 
     delete this._IDToFileMap[aId];
   },
-
-  /**
-   * Gets the directory that the add-on with the given ID is installed in.
-   *
-   * @param  aId
-   *         The ID of the add-on
-   * @return The nsIFile
-   * @throws if the ID does not match any of the add-ons installed
-   */
-  getLocationForID: function DirInstallLocation_getLocationForID(aId) {
-    if (aId in this._IDToFileMap)
-      return this._IDToFileMap[aId].clone();
-    throw new Error("Unknown add-on ID " + aId);
-  },
-
-  /**
-   * Returns true if the given addon was installed in this location by a text
-   * file pointing to its real path.
-   *
-   * @param aId
-   *        The ID of the addon
-   */
-  isLinkedAddon: function DirInstallLocation__isLinkedAddon(aId) {
-    return this._linkedAddons.indexOf(aId) != -1;
-  }
-};
+});
 
 #ifdef XP_WIN
 /**
