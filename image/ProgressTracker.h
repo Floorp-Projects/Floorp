@@ -155,11 +155,6 @@ public:
     return mObservers.Length();
   }
 
-  // This is intentionally non-general because its sole purpose is to support
-  // some obscure network priority logic in imgRequest. That stuff could
-  // probably be improved, but it's too scary to mess with at the moment.
-  bool FirstObserverIs(IProgressObserver* aObserver);
-
   // Resets our weak reference to our image. Image subclasses should call this
   // in their destructor.
   void ResetImage();
