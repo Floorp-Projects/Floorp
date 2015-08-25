@@ -1658,7 +1658,6 @@ nsHtml5Tokenizer::stateLoop(int32_t state, char16_t c, int32_t pos, char16_t* bu
           NS_HTML5_BREAK(stateloop);
         }
         c = checkChar(buf, pos);
-        prevValue = -1;
         value = 0;
         seenDigits = false;
         switch(c) {
@@ -1684,14 +1683,13 @@ nsHtml5Tokenizer::stateLoop(int32_t state, char16_t c, int32_t pos, char16_t* bu
             }
             c = checkChar(buf, pos);
           }
-          if (value < prevValue) {
-            value = 0x110000;
-          }
-          prevValue = value;
+          MOZ_ASSERT(value >= 0, "value must not become negative.");
           if (c >= '0' && c <= '9') {
             seenDigits = true;
-            value *= 10;
-            value += c - '0';
+            if (value <= 0x10FFFF) {
+              value *= 10;
+              value += c - '0';
+            }
             continue;
           } else if (c == ';') {
             if (seenDigits) {
@@ -1750,24 +1748,27 @@ nsHtml5Tokenizer::stateLoop(int32_t state, char16_t c, int32_t pos, char16_t* bu
             NS_HTML5_BREAK(stateloop);
           }
           c = checkChar(buf, pos);
-          if (value < prevValue) {
-            value = 0x110000;
-          }
-          prevValue = value;
+          MOZ_ASSERT(value >= 0, "value must not become negative.");
           if (c >= '0' && c <= '9') {
             seenDigits = true;
-            value *= 16;
-            value += c - '0';
+            if (value <= 0x10FFFF) {
+              value *= 16;
+              value += c - '0';
+            }
             continue;
           } else if (c >= 'A' && c <= 'F') {
             seenDigits = true;
-            value *= 16;
-            value += c - 'A' + 10;
+            if (value <= 0x10FFFF) {
+              value *= 16;
+              value += c - 'A' + 10;
+            }
             continue;
           } else if (c >= 'a' && c <= 'f') {
             seenDigits = true;
-            value *= 16;
-            value += c - 'a' + 10;
+            if (value <= 0x10FFFF) {
+              value *= 16;
+              value += c - 'a' + 10;
+            }
             continue;
           } else if (c == ';') {
             if (seenDigits) {
@@ -3950,7 +3951,6 @@ nsHtml5Tokenizer::resetToDataState()
   hi = 0;
   candidate = -1;
   charRefBufMark = 0;
-  prevValue = -1;
   value = 0;
   seenDigits = false;
   endTag = false;
@@ -3999,7 +3999,6 @@ nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other)
   hi = other->hi;
   candidate = other->candidate;
   charRefBufMark = other->charRefBufMark;
-  prevValue = other->prevValue;
   value = other->value;
   seenDigits = other->seenDigits;
   endTag = other->endTag;
