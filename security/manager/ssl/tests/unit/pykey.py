@@ -700,6 +700,9 @@ def keyFromSpecification(specification):
 def main(output, inputPath):
     with open(inputPath) as configStream:
         output.write(keyFromSpecification(configStream.read().strip()).toPEM())
+    # Force updating the output file even if the content does not change
+    # so that we won't be called again simply because of the mtime.
+    output.force_update = True
 
 # When run as a standalone program, this will read a specification from
 # stdin and output the certificate as PEM to stdout.
