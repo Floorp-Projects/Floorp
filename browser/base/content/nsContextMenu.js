@@ -506,13 +506,35 @@ nsContextMenu.prototype = {
   },
 
   initPasswordManagerItems: function() {
-    let showFillPassword = this.onPassword;
-    let disableFillPassword = !Services.logins.isLoggedIn || this.target.disabled || this.target.readOnly;
-    this.showItem("fill-login-separator", showFillPassword);
-    this.showItem("fill-login", showFillPassword);
-    this.setItemAttr("fill-login", "disabled", disableFillPassword);
+    let loginFillInfo = gContextMenuContentData && gContextMenuContentData.loginFillInfo;
 
-    if (!showFillPassword || disableFillPassword) {
+    // If we could not find a password field we
+    // don't want to show the form fill option.
+    let showFill = loginFillInfo && loginFillInfo.passwordField.found;
+
+    // Disable the fill option if the user has set a master password
+    // or if the password field or target field are disabled.
+    let disableFill = !loginFillInfo ||
+                      !Services.logins ||
+                      !Services.logins.isLoggedIn ||
+                      loginFillInfo.passwordField.disabled ||
+                      (!this.onPassword && loginFillInfo.usernameField.disabled);
+
+    this.showItem("fill-login-separator", showFill);
+    this.showItem("fill-login", showFill);
+    this.setItemAttr("fill-login", "disabled", disableFill);
+
+    // Set the correct label for the fill menu
+    let fillMenu = document.getElementById("fill-login");
+    if (this.onPassword) {
+      fillMenu.setAttribute("label", fillMenu.getAttribute("label-password"));
+      fillMenu.setAttribute("accesskey", fillMenu.getAttribute("accesskey-password"));
+    } else {
+      fillMenu.setAttribute("label", fillMenu.getAttribute("label-login"));
+      fillMenu.setAttribute("accesskey", fillMenu.getAttribute("accesskey-login"));
+    }
+
+    if (!showFill || disableFill) {
       return;
     }
     let documentURI = gContextMenuContentData.documentURIObject;
