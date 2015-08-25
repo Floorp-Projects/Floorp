@@ -3083,6 +3083,10 @@ var LightWeightThemeWebInstaller = {
     BrowserApp.deck.addEventListener("InstallBrowserTheme", this, false, true);
     BrowserApp.deck.addEventListener("PreviewBrowserTheme", this, false, true);
     BrowserApp.deck.addEventListener("ResetBrowserThemePreview", this, false, true);
+
+    if (ParentalControls.parentalControlsEnabled && !this._manager.currentTheme) {
+      this._installParentalControlsTheme();
+    }
   },
 
   handleEvent: function (event) {
@@ -3117,6 +3121,18 @@ var LightWeightThemeWebInstaller = {
     Cu.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
     delete this._manager;
     return this._manager = temp.LightweightThemeManager;
+  },
+
+  _installParentalControlsTheme: function() {
+    let mgr = this._manager;
+    let parentalControlsTheme = {
+      "headerURL": "resource://android/assets/parental_controls_theme.png",
+      "name": "Parental Controls Theme",
+      "id": "parental-controls-theme@mozilla.org"
+    };
+
+    mgr.addBuiltInTheme(parentalControlsTheme);
+    mgr.themeChanged(parentalControlsTheme);
   },
 
   _installRequest: function (event) {
@@ -6214,9 +6230,7 @@ var XPInstallObserver = {
     this._showErrorMessage(aInstall);
   },
 
-  onDownloadCancelled: function(aInstall) {
-    this._showErrorMessage(aInstall);
-  },
+  onDownloadCancelled: function(aInstall) {},
 
   _showErrorMessage: function(aInstall) {
     // Don't create a notification for distribution add-ons.

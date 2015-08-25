@@ -29,24 +29,19 @@ add_task(function*() {
   yield testClearSearchFilter(inspector, view);
 });
 
-function* testOpenExpanderAndAddTextInFilter(inspector, ruleView) {
-  let searchField = ruleView.searchField;
-  let onRuleViewFiltered = inspector.once("ruleview-filtered");
-  let rule = getRuleViewRuleEditor(ruleView, 1).rule;
+function* testOpenExpanderAndAddTextInFilter(inspector, view) {
+  let rule = getRuleViewRuleEditor(view, 1).rule;
   let ruleEditor = rule.textProps[0].editor;
   let computed = ruleEditor.computed;
 
   info("Opening the computed list of margin property");
   ruleEditor.expander.click();
 
-  info("Setting filter text to \"" + SEARCH + "\"");
-  searchField.focus();
-  synthesizeKeys(SEARCH, ruleView.styleWindow);
-  yield onRuleViewFiltered;
+  yield setSearchFilter(view, SEARCH);
 
   info("Check that the correct rules are visible");
-  is(ruleView.element.children.length, 2, "Should have 2 rules.");
-  is(getRuleViewRuleEditor(ruleView, 0).rule.selectorText, "element",
+  is(view.element.children.length, 2, "Should have 2 rules.");
+  is(getRuleViewRuleEditor(view, 0).rule.selectorText, "element",
     "First rule is inline element.");
 
   is(rule.selectorText, "#testid", "Second rule is #testid.");
@@ -68,25 +63,25 @@ function* testOpenExpanderAndAddTextInFilter(inspector, ruleView) {
     "margin-left computed property is correctly highlighted.");
 }
 
-function* testClearSearchFilter(inspector, ruleView) {
+function* testClearSearchFilter(inspector, view) {
   info("Clearing the search filter");
 
-  let searchField = ruleView.searchField;
-  let searchClearButton = ruleView.searchClearButton;
+  let searchField = view.searchField;
+  let searchClearButton = view.searchClearButton;
   let onRuleViewFiltered = inspector.once("ruleview-filtered");
 
   EventUtils.synthesizeMouseAtCenter(searchClearButton, {},
-    ruleView.styleWindow);
+    view.styleWindow);
 
   yield onRuleViewFiltered;
 
   info("Check the search filter is cleared and no rules are highlighted");
-  is(ruleView.element.children.length, 3, "Should have 3 rules.");
+  is(view.element.children.length, 3, "Should have 3 rules.");
   ok(!searchField.value, "Search filter is cleared");
-  ok(!ruleView.styleDocument.querySelectorAll(".ruleview-highlight").length,
+  ok(!view.styleDocument.querySelectorAll(".ruleview-highlight").length,
     "No rules are higlighted");
 
-  let ruleEditor = getRuleViewRuleEditor(ruleView, 1).rule.textProps[0].editor;
+  let ruleEditor = getRuleViewRuleEditor(view, 1).rule.textProps[0].editor;
   let computed = ruleEditor.computed;
 
   ok(ruleEditor.expander.getAttribute("open"), "Expander is open.");

@@ -14,8 +14,7 @@ loop.panel = (function(_, mozL10n) {
   var Button = sharedViews.Button;
   var ButtonGroup = sharedViews.ButtonGroup;
   var Checkbox = sharedViews.Checkbox;
-  var ContactsList = loop.contacts.ContactsList;
-  var ContactDetailsForm = loop.contacts.ContactDetailsForm;
+  var ContactsControllerView = loop.contacts.ContactsControllerView;
 
   var TabView = React.createClass({displayName: "TabView",
     propTypes: {
@@ -838,6 +837,7 @@ loop.panel = (function(_, mozL10n) {
   var PanelView = React.createClass({displayName: "PanelView",
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      initialSelectedTabComponent: React.PropTypes.string,
       mozLoop: React.PropTypes.object.isRequired,
       notifications: React.PropTypes.object.isRequired,
       roomStore:
@@ -916,11 +916,6 @@ loop.panel = (function(_, mozL10n) {
       }
     },
 
-    startForm: function(name, contact) {
-      this.refs[name].initForm(contact);
-      this.selectTab(name);
-    },
-
     selectTab: function(name) {
       // The tab view might not be created yet (e.g. getting started or fxa
       // re-sign in.
@@ -987,28 +982,10 @@ loop.panel = (function(_, mozL10n) {
                         userProfile: this.state.userProfile})
             ), 
             React.createElement(Tab, {name: "contacts"}, 
-              React.createElement(ContactsList, {mozLoop: this.props.mozLoop, 
-                            notifications: this.props.notifications, 
-                            selectTab: this.selectTab, 
-                            startForm: this.startForm})
-            ), 
-            React.createElement(Tab, {hidden: true, name: "contacts_add"}, 
-              React.createElement(ContactDetailsForm, {
-                mode: "add", 
-                ref: "contacts_add", 
-                selectTab: this.selectTab})
-            ), 
-            React.createElement(Tab, {hidden: true, name: "contacts_edit"}, 
-              React.createElement(ContactDetailsForm, {
-                mode: "edit", 
-                ref: "contacts_edit", 
-                selectTab: this.selectTab})
-            ), 
-            React.createElement(Tab, {hidden: true, name: "contacts_import"}, 
-              React.createElement(ContactDetailsForm, {
-                mode: "import", 
-                ref: "contacts_import", 
-                selectTab: this.selectTab})
+              React.createElement(ContactsControllerView, {initialSelectedTabComponent: this.props.initialSelectedTabComponent, 
+                                      mozLoop: this.props.mozLoop, 
+                                      notifications: this.props.notifications, 
+                                      ref: "contactControllerView"})
             )
           ), 
           React.createElement("div", {className: "footer"}, 

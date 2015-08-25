@@ -110,7 +110,8 @@ ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
 ClientLayerManager::~ClientLayerManager()
 {
   if (mTransactionIdAllocator) {
-    DidComposite(mLatestTransactionId);
+    TimeStamp now = TimeStamp::Now();
+    DidComposite(mLatestTransactionId, now, now);
   }
   mMemoryPressureObserver->Destroy();
   ClearCachedResources();
@@ -384,16 +385,18 @@ ClientLayerManager::Composite()
 }
 
 void
-ClientLayerManager::DidComposite(uint64_t aTransactionId)
+ClientLayerManager::DidComposite(uint64_t aTransactionId,
+                                 const TimeStamp& aCompositeStart,
+                                 const TimeStamp& aCompositeEnd)
 {
   MOZ_ASSERT(mWidget);
   nsIWidgetListener *listener = mWidget->GetWidgetListener();
   if (listener) {
-    listener->DidCompositeWindow();
+    listener->DidCompositeWindow(aCompositeStart, aCompositeEnd);
   }
   listener = mWidget->GetAttachedWidgetListener();
   if (listener) {
-    listener->DidCompositeWindow();
+    listener->DidCompositeWindow(aCompositeStart, aCompositeEnd);
   }
   mTransactionIdAllocator->NotifyTransactionCompleted(aTransactionId);
 }
