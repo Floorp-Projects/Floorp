@@ -801,9 +801,7 @@ TypedArrayObject::protoFunctions[] = {
     // Both of these are actually defined to the same object in FinishTypedArrayInit.
     JS_SELF_HOSTED_FN("values", "TypedArrayValues", 0, JSPROP_DEFINE_LATE),
     JS_SELF_HOSTED_SYM_FN(iterator, "TypedArrayValues", 0, JSPROP_DEFINE_LATE),
-#ifdef NIGHTLY_BUILD
     JS_SELF_HOSTED_FN("includes", "TypedArrayIncludes", 2, 0),
-#endif
     JS_FS_END
 };
 
