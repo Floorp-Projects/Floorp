@@ -76,8 +76,7 @@ loop.shared.views.chat = (function(mozL10n) {
     mixins: [React.addons.PureRenderMixin],
 
     propTypes: {
-      message: React.PropTypes.string.isRequired,
-      useDesktopPaths: React.PropTypes.bool.isRequired
+      message: React.PropTypes.string.isRequired
     },
 
     render: function() {
@@ -180,8 +179,7 @@ loop.shared.views.chat = (function(mozL10n) {
                       return (
                         React.createElement(TextChatRoomName, {
                           key: i, 
-                          message: entry.message, 
-                          useDesktopPaths: this.props.useDesktopPaths})
+                          message: entry.message})
                       );
                     case CHAT_CONTENT_TYPES.CONTEXT:
                       return (

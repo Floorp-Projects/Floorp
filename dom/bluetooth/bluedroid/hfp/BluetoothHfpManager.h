@@ -92,7 +92,6 @@ public:
 
   bool ConnectSco();
   bool DisconnectSco();
-  bool IsNrecEnabled();
 
   /**
    * @param aSend A boolean indicates whether we need to notify headset or not

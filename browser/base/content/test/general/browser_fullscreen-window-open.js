@@ -332,7 +332,7 @@ WindowListener.prototype = {
 
     let domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIDOMWindow);
-    domwindow.addEventListener("load", function onLoad(aEvent) {
+    let onLoad = aEvent => {
       is(domwindow.document.location.href, this.test_url,
         "Opened Window is expected: "+ this.test_title);
       if (this.callback_onSuccess) {
@@ -352,7 +352,8 @@ WindowListener.prototype = {
         domwindow.close();
         executeSoon(this.callBack_onFinalize);
       }
-    }.bind(this), true);
+    };
+    domwindow.addEventListener("load", onLoad, true);
   },
   onCloseWindow: function(aXULWindow) {},
   onWindowTitleChange: function(aXULWindow, aNewTitle) {},

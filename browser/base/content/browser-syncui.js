@@ -271,20 +271,12 @@ let gSyncUI = {
                                 .getService(Components.interfaces.nsISupports)
                                 .wrappedJSObject;
     if (xps.fxAccountsEnabled) {
-      fxAccounts.getSignedInUser().then(userData => {
-        if (userData) {
-          this.openPrefs();
-        } else {
-          // If the user is also in an uitour, set the entrypoint to `uitour`
-          if (UITour.tourBrowsersByWindow.get(window) &&
-              UITour.tourBrowsersByWindow.get(window).has(gBrowser.selectedBrowser)) {
-            entryPoint = "uitour";
-          }
-          switchToTabHavingURI("about:accounts?entrypoint=" + entryPoint, true, {
-            replaceQueryString: true
-          });
-        }
-      });
+      // If the user is also in an uitour, set the entrypoint to `uitour`
+      if (UITour.tourBrowsersByWindow.get(window) &&
+          UITour.tourBrowsersByWindow.get(window).has(gBrowser.selectedBrowser)) {
+        entryPoint = "uitour";
+      }
+      this.openPrefs(entryPoint);
     } else {
       let win = Services.wm.getMostRecentWindow("Weave:AccountSetup");
       if (win)
@@ -309,8 +301,8 @@ let gSyncUI = {
                         "syncAddDevice", "centerscreen,chrome,resizable=no");
   },
 
-  openPrefs: function SUI_openPrefs() {
-    openPreferences("paneSync");
+  openPrefs: function (entryPoint) {
+    openPreferences("paneSync", { urlParams: { entrypoint: entryPoint } });
   },
 
   openSignInAgainPage: function (entryPoint = "syncbutton") {
