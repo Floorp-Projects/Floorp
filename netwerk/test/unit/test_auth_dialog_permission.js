@@ -111,10 +111,11 @@ function make_uri(url) {
 }
 
 function makeChan(loadingUrl, url, contentPolicy) {
-  var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-              .getService(Ci.nsIScriptSecurityManager);
-  var uri = make_uri(loadingUrl);
-  var principal = ssm.createCodebasePrincipal(uri, {});
+  var loadingUri = make_uri(loadingUrl);
+  var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                    .getService(Ci.nsIScriptSecurityManager)
+                    .getNoAppCodebasePrincipal(loadingUri);
+
   var ios = Components.classes["@mozilla.org/network/io-service;1"]
                       .getService(Components.interfaces.nsIIOService);
   var chan = ios.newChannel2(url,

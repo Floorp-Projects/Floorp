@@ -314,9 +314,7 @@ SpecialPowersObserverAPI.prototype = {
         let msg = aMessage.json;
 
         let secMan = Services.scriptSecurityManager;
-        // TODO: Bug 1196665 - Add originAttributes into SpecialPowers
-        let attrs = {appId: msg.appId, inBrowser: msg.isInBrowserElement};
-        let principal = secMan.createCodebasePrincipal(this._getURI(msg.url), attrs);
+        let principal = secMan.getAppCodebasePrincipal(this._getURI(msg.url), msg.appId, msg.isInBrowserElement);
 
         switch (msg.op) {
           case "add":
