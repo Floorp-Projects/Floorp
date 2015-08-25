@@ -122,6 +122,11 @@ protected:
   bool mUseSoftwareImages;
   bool mIs106;
 
+  // Number of times a sample was queued via Input(). Will be decreased upon
+  // the decoder's callback being invoked.
+  // This is used to calculate how many frames has been buffered by the decoder.
+  uint32_t mQueuedSamples;
+
   // For wait on mIsFlushing during Shutdown() process.
   Monitor mMonitor;
   // Set on reader/decode thread calling Flush() to indicate that output is
