@@ -31,11 +31,9 @@ using namespace mozilla::dom;
  * nsAutoSelectionReset
  *****************************************************************************/
 
-nsAutoSelectionReset::nsAutoSelectionReset(Selection* aSel, nsEditor* aEd
-                                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+nsAutoSelectionReset::nsAutoSelectionReset(Selection* aSel, nsEditor* aEd)
   : mSel(nullptr), mEd(nullptr)
 {
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   if (!aSel || !aEd) return;    // not much we can do, bail.
   if (aEd->ArePreservingSelection()) return;   // we already have initted mSavedSel, so this must be nested call.
   mSel = aSel;
@@ -68,9 +66,8 @@ nsAutoSelectionReset::Abort()
  * some helper classes for iterating the dom tree
  *****************************************************************************/
 
-nsDOMIterator::nsDOMIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+nsDOMIterator::nsDOMIterator(nsINode& aNode)
 {
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   mIter = NS_NewContentIterator();
   DebugOnly<nsresult> res = mIter->Init(&aNode);
   MOZ_ASSERT(NS_SUCCEEDED(res));
@@ -83,9 +80,8 @@ nsDOMIterator::Init(nsRange& aRange)
   return mIter->Init(&aRange);
 }
 
-nsDOMIterator::nsDOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+nsDOMIterator::nsDOMIterator()
 {
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
 
 nsDOMIterator::~nsDOMIterator()
@@ -106,8 +102,7 @@ nsDOMIterator::AppendList(const nsBoolDomIterFunctor& functor,
   }
 }
 
-nsDOMSubtreeIterator::nsDOMSubtreeIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
-  : nsDOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
+nsDOMSubtreeIterator::nsDOMSubtreeIterator()
 {
 }
 
