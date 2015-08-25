@@ -109,6 +109,10 @@ nsHtml5StringParser::Tokenize(const nsAString& aSourceBuffer,
       buffer.adjust(lastWasCR);
       lastWasCR = false;
       if (buffer.hasMore()) {
+        if (!mTokenizer->EnsureBufferSpace(buffer.getLength())) {
+          rv = mBuilder->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
+          break;
+        }
         lastWasCR = mTokenizer->tokenizeBuffer(&buffer);
         if (NS_FAILED(rv = mBuilder->IsBroken())) {
           break;
@@ -116,7 +120,9 @@ nsHtml5StringParser::Tokenize(const nsAString& aSourceBuffer,
       }
     }
   }
-  mTokenizer->eof();
+  if (NS_SUCCEEDED(rv)) {
+    mTokenizer->eof();
+  }
   mTokenizer->end();
   mBuilder->Finish();
   mAtomTable.Clear();
