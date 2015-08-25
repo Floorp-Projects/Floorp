@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007 Henri Sivonen
- * Copyright (c) 2007-2011 Mozilla Foundation
+ * Copyright (c) 2007-2015 Mozilla Foundation
  * Portions of comments Copyright 2004-2008 Apple Computer, Inc., Mozilla
  * Foundation, and Opera Software ASA.
  *
@@ -119,7 +119,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     bool isTemplateModeStackEmpty();
     bool isSpecialParentInForeign(nsHtml5StackNode* stackNode);
   public:
-    static nsString* extractCharsetFromContent(nsString* attributeValue);
+    static nsString* extractCharsetFromContent(nsString* attributeValue, nsHtml5TreeBuilder* tb);
   private:
     void checkMetaCharset(nsHtml5HtmlAttributes* attributes);
   public:

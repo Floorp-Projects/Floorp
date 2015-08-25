@@ -43,10 +43,12 @@ window.addEventListener("message", function(event) {
       var uri1 = ioService.newURI(frames.testFrame.location, null, null);
       var uri2 = ioService.newURI(frames.testFrame3.location, null, null);
 
-      var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                  .getService(SpecialPowers.Ci.nsIScriptSecurityManager);
-      var principal1 = ssm.createCodebasePrincipal(uri1, {});
-      var principal2 = ssm.createCodebasePrincipal(uri2, {});
+      var principal1 = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                        .getService(SpecialPowers.Ci.nsIScriptSecurityManager)
+                        .getNoAppCodebasePrincipal(uri1);
+      var principal2 = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                        .getService(SpecialPowers.Ci.nsIScriptSecurityManager)
+                        .getNoAppCodebasePrincipal(uri2);
 
       pm.removeFromPrincipal(principal1, "offline-app");
       pm.removeFromPrincipal(principal2, "offline-app");

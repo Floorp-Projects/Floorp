@@ -55,8 +55,7 @@
       // the error message.
       if (!config.origin) {
         let URI = Services.io.newURI(url, null, null);
-        config.origin =
-          Services.scriptSecurityManager.createCodebasePrincipal(URI, {}).origin;
+        config.origin = Services.scriptSecurityManager.getNoAppCodebasePrincipal(URI).origin;
       }
 
       switch (mode) {

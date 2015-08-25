@@ -153,7 +153,7 @@ XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function () {
 function getOriginActivationType(origin) {
   // if this is an about uri, treat it as a directory
   let URI = Services.io.newURI(origin, null, null);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(URI, {});
+  let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(URI);
   if (Services.scriptSecurityManager.isSystemPrincipal(principal) || origin == "moz-safe-about:home") {
     return "internal";
   }
@@ -513,7 +513,7 @@ this.SocialService = {
     }
     // force/fixup origin
     let URI = Services.io.newURI(installOrigin, null, null);
-    principal = Services.scriptSecurityManager.createCodebasePrincipal(URI, {});
+    principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(URI);
     data.origin = principal.origin;
 
     // iconURL and name are required
@@ -714,7 +714,7 @@ function SocialProvider(input) {
   this.postActivationURL = input.postActivationURL;
   this.origin = input.origin;
   let originUri = Services.io.newURI(input.origin, null, null);
-  this.principal = Services.scriptSecurityManager.createCodebasePrincipal(originUri, {});
+  this.principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(originUri);
   this.ambientNotificationIcons = {};
   this.errorState = null;
   this.frecency = 0;

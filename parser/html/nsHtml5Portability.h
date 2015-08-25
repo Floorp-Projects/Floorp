@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009 Mozilla Foundation
+ * Copyright (c) 2008-2015 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -59,7 +59,7 @@ class nsHtml5Portability
 {
   public:
     static nsIAtom* newLocalNameFromBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner);
-    static nsString* newStringFromBuffer(char16_t* buf, int32_t offset, int32_t length);
+    static nsString* newStringFromBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5TreeBuilder* treeBuilder);
     static nsString* newEmptyString();
     static nsString* newStringFromLiteral(const char* literal);
     static nsString* newStringFromString(nsString* string);

@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "BinarySearch",
 
 XPCOMUtils.defineLazyGetter(this, "gPrincipal", function () {
   let uri = Services.io.newURI("about:newtab", null, null);
-  return Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  return Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
 });
 
 XPCOMUtils.defineLazyGetter(this, "gCryptoHash", function () {

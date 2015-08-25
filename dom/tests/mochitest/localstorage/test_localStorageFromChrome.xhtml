@@ -18,11 +18,11 @@ function startTest()
     .getService(Components.interfaces.nsIDOMStorageManager);
 
   var uri = ios.newURI(url, "", null);
-  var principal = ssm.createCodebasePrincipal(uri, {});
+  var principal = ssm.getNoAppCodebasePrincipal(uri);
   var storage = dsm.createStorage(window, principal, "");
-
+  
   storage.setItem("chromekey", "chromevalue");
-
+  
   var aframe = document.getElementById("aframe");
   aframe.onload = function()
   {

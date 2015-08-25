@@ -40,8 +40,9 @@ void GStreamerFormatHelper::Shutdown() {
   gInstance = nullptr;
 }
 
-static char const *const sContainers[6][2] = {
+static char const *const sContainers[][2] = {
   {"video/mp4", "video/quicktime"},
+  {"video/x-m4v", "video/quicktime"},
   {"video/quicktime", "video/quicktime"},
   {"audio/mp4", "audio/x-m4a"},
   {"audio/x-m4a", "audio/x-m4a"},
@@ -63,6 +64,7 @@ static char const *const sCodecs[9][2] = {
 
 static char const * const sDefaultCodecCaps[][2] = {
   {"video/mp4", "video/x-h264"},
+  {"video/x-m4v", "video/x-h264"},
   {"video/quicktime", "video/x-h264"},
   {"audio/mp4", "audio/mpeg, mpegversion=(int)4"},
   {"audio/x-m4a", "audio/mpeg, mpegversion=(int)4"},

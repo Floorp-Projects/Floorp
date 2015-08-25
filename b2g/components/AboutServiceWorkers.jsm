@@ -154,10 +154,11 @@ this.AboutServiceWorkers = {
           return;
         }
 
-        let principal = Services.scriptSecurityManager.createCodebasePrincipal(
-          // TODO: Bug 1196652. use originNoSuffix
+        let principal = Services.scriptSecurityManager.getAppCodebasePrincipal(
           Services.io.newURI(message.principal.origin, null, null),
-          message.principal.originAttributes);
+          message.principal.originAttributes.appId,
+          message.principal.originAttributes.inBrowser
+        );
 
         if (!message.scope) {
           self.sendError(message.id, "MissingScope");

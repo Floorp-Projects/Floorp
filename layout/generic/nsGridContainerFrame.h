@@ -173,6 +173,20 @@ protected:
   };
 
   /**
+   * Return aLine if it's inside the aMin..aMax range (inclusive),
+   * otherwise return kAutoLine.
+   */
+  static int32_t
+  AutoIfOutside(int32_t aLine, int32_t aMin, int32_t aMax)
+  {
+    MOZ_ASSERT(aMin <= aMax);
+    if (aLine < aMin || aLine > aMax) {
+      return kAutoLine;
+    }
+    return aLine;
+  }
+
+  /**
    * A GridArea is the area in the grid for a grid item.
    * The area is represented by two LineRanges, both of which can be auto
    * (@see LineRange) in intermediate steps while the item is being placed.

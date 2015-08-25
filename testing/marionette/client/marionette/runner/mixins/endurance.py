@@ -7,40 +7,34 @@ import sys
 import time
 
 
-class EnduranceOptionsMixin(object):
+class EnduranceArguments(object):
+    name = 'endurance'
+    args = [
+        [['--iterations'],
+         {'type': int,
+          'metavar': 'int',
+          'help': 'iterations for endurance tests',
+          }],
+        [['--checkpoint'],
+         {'dest': 'checkpoint_interval',
+          'type': int,
+          'metavar': 'int',
+          'help': 'checkpoint interval for endurance tests',
+          }],
+    ]
 
-    # parse_args
-    def endurance_parse_args(self, options, tests, args=None, values=None):
-        if options.iterations is not None:
-            if options.checkpoint_interval is None or options.checkpoint_interval > options.iterations:
-                options.checkpoint_interval = options.iterations
+    def parse_args_handler(self, args):
+        if args.iterations is not None:
+            if args.checkpoint_interval is None or args.checkpoint_interval > args.iterations:
+                args.checkpoint_interval = args.iterations
 
-    # verify_usage
-    def endurance_verify_usage(self, options, tests):
-        if options.iterations is not None and options.iterations < 1:
+    def verify_usage_handler(self, args):
+        if args.iterations is not None and args.iterations < 1:
             raise ValueError('iterations must be a positive integer')
-        if options.checkpoint_interval is not None and options.checkpoint_interval < 1:
+        if args.checkpoint_interval is not None and args.checkpoint_interval < 1:
             raise ValueError('checkpoint interval must be a positive integer')
-        if options.checkpoint_interval and not options.iterations:
+        if args.checkpoint_interval and not args.iterations:
             raise ValueError('you must specify iterations when using checkpoint intervals')
-
-    def __init__(self, **kwargs):
-        # Inheriting object must call this __init__ to set up option handling
-        group = self.add_option_group('endurance')
-        group.add_option('--iterations',
-                         action='store',
-                         dest='iterations',
-                         type='int',
-                         metavar='int',
-                         help='iterations for endurance tests')
-        group.add_option('--checkpoint',
-                         action='store',
-                         dest='checkpoint_interval',
-                         type='int',
-                         metavar='int',
-                         help='checkpoint interval for endurance tests')
-        self.parse_args_handlers.append(self.endurance_parse_args)
-        self.verify_usage_handlers.append(self.endurance_verify_usage)
 
 
 class EnduranceTestCaseMixin(object):

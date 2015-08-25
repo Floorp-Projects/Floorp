@@ -139,7 +139,6 @@ MSG_DEF(JSMSG_BAD_APPLY_ARGS,          1, JSEXN_TYPEERR, "second argument to Fun
 MSG_DEF(JSMSG_BAD_FORMAL,              0, JSEXN_SYNTAXERR, "malformed formal parameter")
 MSG_DEF(JSMSG_CALLER_IS_STRICT,        0, JSEXN_TYPEERR, "access to strict mode caller function is censored")
 MSG_DEF(JSMSG_DEPRECATED_USAGE,        1, JSEXN_REFERENCEERR, "deprecated {0} usage")
-MSG_DEF(JSMSG_FUNCTION_ARGUMENTS_AND_REST, 0, JSEXN_TYPEERR, "the 'arguments' property of a function with a rest parameter may not be used")
 MSG_DEF(JSMSG_NOT_SCRIPTED_FUNCTION,   1, JSEXN_TYPEERR, "{0} is not a scripted function")
 MSG_DEF(JSMSG_NO_REST_NAME,            0, JSEXN_SYNTAXERR, "no parameter name after ...")
 MSG_DEF(JSMSG_PARAMETER_AFTER_REST,    0, JSEXN_SYNTAXERR, "parameter after rest parameter")
@@ -181,7 +180,6 @@ MSG_DEF(JSMSG_UNKNOWN_FORMAT,          1, JSEXN_INTERNALERR, "unknown bytecode f
 
 // Frontend
 MSG_DEF(JSMSG_ACCESSOR_WRONG_ARGS,     3, JSEXN_SYNTAXERR, "{0} functions must have {1} argument{2}")
-MSG_DEF(JSMSG_ARGUMENTS_AND_REST,      0, JSEXN_SYNTAXERR, "'arguments' object may not be used in conjunction with a rest parameter")
 MSG_DEF(JSMSG_ARRAY_COMP_LEFTSIDE,     0, JSEXN_SYNTAXERR, "invalid array comprehension left-hand side")
 MSG_DEF(JSMSG_ARRAY_INIT_TOO_BIG,      0, JSEXN_INTERNALERR, "array initialiser too large")
 MSG_DEF(JSMSG_AS_AFTER_IMPORT_STAR,    0, JSEXN_SYNTAXERR, "missing keyword 'as' after import *")

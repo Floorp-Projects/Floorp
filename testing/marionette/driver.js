@@ -1945,10 +1945,10 @@ GeckoDriver.prototype.findElements = function(cmd, resp) {
 
     case Context.CONTENT:
       resp.value = yield this.listener.findElementsContent({
-        value: cmd.parameters.value,
-        using: cmd.parameters.using,
-        element: cmd.parameters.element,
-        searchTimeout: this.searchTimeout});
+          value: cmd.parameters.value,
+          using: cmd.parameters.using,
+          element: cmd.parameters.element,
+          searchTimeout: this.searchTimeout});
       break;
   }
 };
@@ -2094,7 +2094,7 @@ GeckoDriver.prototype.isElementDisplayed = function(cmd, resp) {
       break;
 
     case Context.CONTENT:
-      resp.value = yield this.listener.isElementDisplayed({id: id});
+      resp.value = yield this.listener.isElementDisplayed(id);
       break;
   }
 };
@@ -2119,8 +2119,7 @@ GeckoDriver.prototype.getElementValueOfCssProperty = function(cmd, resp) {
       break;
 
     case Context.CONTENT:
-      resp.value = yield this.listener.getElementValueOfCssProperty(
-          {id: id, propertyName: prop});
+      resp.value = yield this.listener.getElementValueOfCssProperty(id, prop);
       break;
   }
 };
@@ -2172,7 +2171,7 @@ GeckoDriver.prototype.isElementSelected = function(cmd, resp) {
       break;
 
     case Context.CONTENT:
-      resp.value = yield this.listener.isElementSelected({id: id});
+      resp.value = yield this.listener.isElementSelected(id);
       break;
   }
 };
@@ -2309,7 +2308,7 @@ GeckoDriver.prototype.clearElement = function(cmd, resp) {
       break;
 
     case Context.CONTENT:
-      yield this.listener.clearElement({id: id});
+      yield this.listener.clearElement(id);
       break;
   }
 };
@@ -2325,8 +2324,7 @@ GeckoDriver.prototype.clearElement = function(cmd, resp) {
  *     A point containing X and Y coordinates as properties.
  */
 GeckoDriver.prototype.getElementLocation = function(cmd, resp) {
-  resp.value = yield this.listener.getElementLocation(
-      {id: cmd.parameters.id});
+  return this.listener.getElementLocation(cmd.parameters.id);
 };
 
 /** Add a cookie to the document. */

@@ -15,14 +15,13 @@ body,html { color:black; background:white; font-size:16px; padding:0; margin:0; 
 .grid {
  display: grid;
  position: relative;
- border: 0 dashed blue;
- border-width: 7px 11px 13px 17px;
+ border: 1px solid;
  grid-auto-flow: row;
  grid-auto-columns: 23px;
- grid-auto-rows: 17px;
+ grid-auto-rows: 7px;
  padding: 17px 7px 11px 13px;
  width: 100px;
- height: 100px;
+ height: 60px;
 }
 .zero-size { width:0; height:0; }
 .auto-size { width:auto; height:auto; }
@@ -65,6 +64,16 @@ body,html { color:black; background:white; font-size:16px; padding:0; margin:0; 
   grid-column:  auto / auto;
   grid-row:     auto / auto; 
 }
+.i {
+  grid-column:  span 1 / span 2;
+  grid-row:     span 2 / span A;
+  background: lime;
+}
+.j {
+  grid-column:  span A / span 2;
+  grid-row:     span 2 / span 1;
+  background: lime;
+}
 span {
   background: lime;
   border: 1px solid;
@@ -73,25 +82,71 @@ span {
 </head>
 <body>
 
+<div style="float:left">
+
 <div class="grid">
 <span class="a">a</span>
 <span class="b abs">b</span>
-<span class="c abs">c</span>
-<span class="d abs">d</span>
-<span class="e abs">e</span>
-<span class="f abs">f</span>
-<span class="g abs">g</span>
 </div>
 
 <div class="grid">
 <span class="a">a</span>
-<div><span class="b abs">b</span></div>
-<x><span class="c abs">c</span></x>
+<span class="c abs">c</span>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
 <span class="d abs">d</span>
-<div><span class="e abs">e</span></div>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
+<span class="e abs">e</span>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
 <span class="f abs">f</span>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
+<span class="g abs">g</span>
+</div>
+
+</div><div style="float:left">
+
+<div class="grid">
+<span class="a">a</span>
+<div><span class="b abs">b</span></div>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
+<x><span class="c abs">c</span></x>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
+<span class="d abs">d</span>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
+<div><span class="e abs">e</span></div>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
+<span class="f abs">f</span>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
 <x><span class="g abs">g</span></x>
 </div>
+
+</div><div style="float:left">
 
 <div class="grid zero-size">
 <span class="b abs">b</span>
@@ -99,6 +154,16 @@ span {
 
 <div class="grid auto-size">
 <span class="h abs">h</span>
+</div>
+
+<div class="grid" style="height:auto">
+<div style="grid-column: 1 / span 3"></div>
+<div class="i abs">i</div>
+</div>
+
+<div class="grid" style="height:auto">
+<div style="grid-column: 1 / span 3"></div>
+<div class="j abs">j</div>
 </div>
 
 <div class="grid" style="width:43px; height:53px">
@@ -109,9 +174,15 @@ span {
 </div>
 
 <div class="grid" style="width:0px; height:0px; border-width:0;">
-<span class="abs" style="grid-column-start:2; grid-row-end:1;">b</span>
-<span class="abs" style="grid-column-end:1; grid-row-start:2;">c</span>
-<span class="abs" style="grid-column-start:2; grid-row-start:2;">d</span>
+<span class="abs" style="grid-column-start:2; grid-row-end:1;"></span>
+</div>
+<div class="grid" style="width:0px; height:0px; border-width:0;">
+<span class="abs" style="grid-column-end:1; grid-row-start:2;"></span>
+</div>
+<div class="grid" style="width:0px; height:0px; border-width:0;">
+<span class="abs" style="grid-column-start:2; grid-row-start:2;"></span>
+</div>
+
 </div>
 
 </body>
