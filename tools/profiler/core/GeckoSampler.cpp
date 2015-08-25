@@ -549,7 +549,11 @@ void GeckoSampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
       if (ProfileJava()) {
         mozilla::widget::GeckoJavaSampler::PauseJavaProfiling();
 
-        BuildJavaThreadJSObject(aWriter);
+        aWriter.Start();
+        {
+          BuildJavaThreadJSObject(aWriter);
+        }
+        aWriter.End();
 
         mozilla::widget::GeckoJavaSampler::UnpauseJavaProfiling();
       }
