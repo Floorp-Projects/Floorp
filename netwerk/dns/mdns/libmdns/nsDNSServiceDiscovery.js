@@ -16,6 +16,12 @@ function log(aMsg) {
   dump("-*- nsDNSServiceDiscovery.js : " + aMsg + "\n");
 }
 
+function generateUuid() {
+  var uuidGenerator = Components.classes["@mozilla.org/uuid-generator;1"].
+    getService(Ci.nsIUUIDGenerator);
+  return uuidGenerator.generateUUID().toString();
+}
+
 // Helper class to transform return objects to correct type.
 function ListenerWrapper(aListener, aMdns) {
   this.listener = aListener;
@@ -26,6 +32,8 @@ function ListenerWrapper(aListener, aMdns) {
 
   this.registrationStarting = false;
   this.stopRegistration = false;
+
+  this.uuid = generateUuid();
 }
 
 ListenerWrapper.prototype = {
