@@ -1383,7 +1383,9 @@ class Assembler : public AssemblerShared
     bool oom() const;
 
     void setPrinter(Sprinter* sp) {
+#ifdef JS_DISASM_ARM
         printer_ = sp;
+#endif
     }
 
     static const Register getStackPointer() {
