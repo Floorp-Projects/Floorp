@@ -12,7 +12,7 @@ function testAddrInUse()
 {
   // Windows lets us have as many sockets listening on the same address as
   // we like, evidently.
-  if ("@mozilla.org/windows-registry-key;1" in Cc) {
+  if (mozinfo.os == "win") {
     return;
   }
 
