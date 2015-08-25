@@ -102,9 +102,7 @@ public class TabsLayoutItemView extends LinearLayout
         mAudioPlayingButton = (ImageView) findViewById(R.id.audio_playing);
         mThumbnailWrapper = (TabThumbnailWrapper) findViewById(R.id.wrapper);
 
-        if (HardwareUtils.isTablet()) {
-            growCloseButtonHitArea();
-        }
+        growCloseButtonHitArea();
 
         mAudioPlayingButton.setOnClickListener(new View.OnClickListener() {
             @Override
