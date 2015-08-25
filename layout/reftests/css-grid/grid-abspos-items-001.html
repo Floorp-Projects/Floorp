@@ -65,6 +65,16 @@ body,html { color:black; background:white; font-size:16px; padding:0; margin:0; 
   grid-column:  auto / auto;
   grid-row:     auto / auto; 
 }
+.i {
+  grid-column:  span 1 / span 2;
+  grid-row:     span 2 / span A;
+  background: lime;
+}
+.j {
+  grid-column:  span A / span 2;
+  grid-row:     span 2 / span 1;
+  background: lime;
+}
 span {
   background: lime;
   border: 1px solid;
@@ -99,6 +109,16 @@ span {
 
 <div class="grid auto-size">
 <span class="h abs">h</span>
+</div>
+
+<div class="grid" style="height:auto">
+<div style="grid-column: 1 / span 3"></div>
+<div class="i abs">i</div>
+</div>
+
+<div class="grid" style="height:auto">
+<div style="grid-column: 1 / span 3"></div>
+<div class="j abs">j</div>
 </div>
 
 <div class="grid" style="width:43px; height:53px">
