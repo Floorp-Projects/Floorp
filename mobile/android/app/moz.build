@@ -14,7 +14,7 @@ if CONFIG['MOZ_PKG_SPECIAL']:
     DEFINES['MOZ_PKG_SPECIAL'] = CONFIG['MOZ_PKG_SPECIAL']
 
 JS_PREFERENCE_FILES += [
-    'mobile.js',
+     'mobile.js',
 ]
 
 DIST_FILES += [

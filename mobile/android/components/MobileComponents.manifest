@@ -28,17 +28,24 @@ component {ef0f7a87-c1ee-45a8-8d67-26f586e46a4b} DirectoryProvider.js
 contract @mozilla.org/browser/directory-provider;1 {ef0f7a87-c1ee-45a8-8d67-26f586e46a4b}
 category xpcom-directory-providers browser-directory-provider @mozilla.org/browser/directory-provider;1
 
+# stylesheets
+category agent-style-sheets browser-content-stylesheet chrome://browser/skin/content.css
+
+#ifndef MOZ_B2GDROID
 # SessionStore.js
 component {8c1f07d6-cba3-4226-a315-8bd43d67d032} SessionStore.js
 contract @mozilla.org/browser/sessionstore;1 {8c1f07d6-cba3-4226-a315-8bd43d67d032}
 category app-startup SessionStore service,@mozilla.org/browser/sessionstore;1
 
-# stylesheets
-category agent-style-sheets browser-content-stylesheet chrome://browser/skin/content.css
-
 # ContentPermissionPrompt.js
 component {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5} ContentPermissionPrompt.js
 contract @mozilla.org/content-permission/prompt;1 {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}
+
+# WebappsUpdateTimer.js
+component {8f7002cb-e959-4f0a-a2e8-563232564385} WebappsUpdateTimer.js
+contract @mozilla.org/webapps-update-timer;1 {8f7002cb-e959-4f0a-a2e8-563232564385}
+category update-timer WebappsUpdateTimer @mozilla.org/webapps-update-timer;1,getService,webapp-background-update-timer,browser.webapps.updateInterval,86400
+#endif
 
 # XPIDialogService.js
 component {c1242012-27d8-477e-a0f1-0b098ffc329b} XPIDialogService.js
@@ -107,11 +114,6 @@ component {a78d7e59-b558-4321-a3d6-dffe2f1e76dd} Snippets.js
 contract @mozilla.org/snippets;1 {a78d7e59-b558-4321-a3d6-dffe2f1e76dd}
 category browser-delayed-startup-finished Snippets @mozilla.org/snippets;1
 category update-timer Snippets @mozilla.org/snippets;1,getService,snippets-update-timer,browser.snippets.updateInterval,86400
-
-# WebappsUpdateTimer.js
-component {8f7002cb-e959-4f0a-a2e8-563232564385} WebappsUpdateTimer.js
-contract @mozilla.org/webapps-update-timer;1 {8f7002cb-e959-4f0a-a2e8-563232564385}
-category update-timer WebappsUpdateTimer @mozilla.org/webapps-update-timer;1,getService,webapp-background-update-timer,browser.webapps.updateInterval,86400
 
 # ColorPicker.js
 component {430b987f-bb9f-46a3-99a5-241749220b29} ColorPicker.js
