@@ -24,7 +24,8 @@ public:
 
 #define BT_DECL_HFP_MGR_BASE                  \
   BT_DECL_PROFILE_MGR_BASE                    \
-  virtual bool IsScoConnected() override;
+  virtual bool IsScoConnected() override;     \
+  virtual bool IsNrecEnabled() override;
 
 END_BLUETOOTH_NAMESPACE
 

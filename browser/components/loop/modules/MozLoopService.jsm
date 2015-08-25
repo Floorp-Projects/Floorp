@@ -898,7 +898,7 @@ let MozLoopServiceInternal = {
         return;
       }
 
-      chatbox.addEventListener("DOMContentLoaded", function loaded(event) {
+      let loaded = event => {
         if (event.target != chatbox.contentDocument) {
           return;
         }
@@ -987,7 +987,8 @@ let MozLoopServiceInternal = {
         pc_static.registerPeerConnectionLifecycleCallback(onPCLifecycleChange);
 
         UITour.notify("Loop:ChatWindowOpened");
-      }.bind(this), true);
+      };
+      chatbox.addEventListener("DOMContentLoaded", loaded, true);
     };
 
     let chatboxInstance = Chat.open(null, origin, "", url, undefined, undefined,

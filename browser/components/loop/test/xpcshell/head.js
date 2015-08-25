@@ -71,7 +71,7 @@ function setupFakeFxAUserProfile() {
   });
 }
 
-function waitForCondition(aConditionFn, aMaxTries=50, aCheckInterval=100) {
+function waitForCondition(aConditionFn, aMaxTries = 50, aCheckInterval = 100) {
   function tryAgain() {
     function tryNow() {
       tries++;
