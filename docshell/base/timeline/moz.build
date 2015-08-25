@@ -7,7 +7,9 @@
 EXPORTS.mozilla += [
     'AutoGlobalTimelineMarker.h',
     'AutoTimelineMarker.h',
+    'ObservedDocShell.h',
     'TimelineConsumers.h',
+    'TimelineMarker.h',
 ]
 
 UNIFIED_SOURCES += [

@@ -7,7 +7,6 @@
 #ifndef ObservedDocShell_h_
 #define ObservedDocShell_h_
 
-#include "GeckoProfiler.h"
 #include "nsTArray.h"
 #include "mozilla/nsRefPtr.h"
 
@@ -33,7 +32,6 @@ public:
   explicit ObservedDocShell(nsDocShell* aDocShell);
   nsDocShell* operator*() const { return mDocShell.get(); }
 
-  void AddMarker(const char* aName, TracingMetadata aMetaData);
   void AddMarker(UniquePtr<TimelineMarker>&& aMarker);
   void ClearMarkers();
   void PopMarkers(JSContext* aCx, nsTArray<dom::ProfileTimelineMarker>& aStore);
