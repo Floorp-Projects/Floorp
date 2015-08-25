@@ -148,6 +148,14 @@ ProjectList.prototype = {
     }
   },
 
+  refreshTabs: function() {
+    if (AppManager.connected) {
+      return AppManager.listTabs().then(() => {
+        this.updateTabs();
+      }).catch(console.error);
+    }
+  },
+
   updateTabs: function() {
     let tabsHeaderNode = this._doc.querySelector("#panel-header-tabs");
     let tabsNode = this._doc.querySelector("#project-panel-tabs");
@@ -183,7 +191,9 @@ ProjectList.prototype = {
       // tabs, so that's no help for any remote tabs.  Maybe some favicon wizard
       // knows how to get high-res favicons easily, or we could offer actor
       // support for this (bug 1061654).
-      tab.favicon = url.origin + "/favicon.ico";
+      if (url.origin) {
+        tab.favicon = url.origin + "/favicon.ico";
+      }
       tab.name = tab.title || Strings.GetStringFromName("project_tab_loading");
       if (url.protocol.startsWith("http")) {
         tab.name = url.hostname + ": " + tab.name;
@@ -194,7 +204,7 @@ ProjectList.prototype = {
       this._renderProjectItem({
         panel: panelItemNode,
         name: tab.name,
-        icon: tab.favicon
+        icon: tab.favicon || AppManager.DEFAULT_PROJECT_ICON
       });
       panelItemNode.addEventListener("click", () => {
         if (!this._sidebarsEnabled) {
@@ -203,7 +213,7 @@ ProjectList.prototype = {
         AppManager.selectedProject = {
           type: "tab",
           app: tab,
-          icon: tab.favicon,
+          icon: tab.favicon || AppManager.DEFAULT_PROJECT_ICON,
           location: tab.url,
           name: tab.name
         };

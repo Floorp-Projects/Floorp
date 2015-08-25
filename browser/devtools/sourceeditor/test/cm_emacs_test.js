@@ -128,7 +128,7 @@
   sim("clearMark", "abcde", Pos(0, 2), "Ctrl-Space", "Ctrl-F", "Ctrl-F",
       "Ctrl-G", "Ctrl-W", txt("abcde"));
 
-  testCM("save", function(cm) {
+  testCM("saveRequested", function(cm) {
     var saved = false;
     CodeMirror.commands.save = function(cm) { saved = cm.getValue(); };
     cm.triggerOnKeyDown(fakeEvent("Ctrl-X"));
