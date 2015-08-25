@@ -2771,7 +2771,7 @@ MacroAssemblerMIPSCompat::moveValue(const Value& val, const ValueOperand& dest)
  * being executed. Look also at jit::PatchBackedge().
  */
 CodeOffsetJump
-MacroAssemblerMIPSCompat::backedgeJump(RepatchLabel* label)
+MacroAssemblerMIPSCompat::backedgeJump(RepatchLabel* label, Label* documentation)
 {
     // Only one branch per label.
     MOZ_ASSERT(!label->used());
