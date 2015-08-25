@@ -31,6 +31,7 @@
 #include "BlobParent.h"
 #include "CrashReporterParent.h"
 #include "GMPServiceParent.h"
+#include "HandlerServiceParent.h"
 #include "IHistory.h"
 #include "imgIContainer.h"
 #include "mozIApplication.h"
@@ -3908,6 +3909,21 @@ ContentParent::DeallocPExternalHelperAppParent(PExternalHelperAppParent* aServic
 {
     ExternalHelperAppParent *parent = static_cast<ExternalHelperAppParent *>(aService);
     parent->Release();
+    return true;
+}
+
+PHandlerServiceParent*
+ContentParent::AllocPHandlerServiceParent()
+{
+    HandlerServiceParent* actor =  new HandlerServiceParent();
+    actor->AddRef();
+    return actor;
+}
+
+bool
+ContentParent::DeallocPHandlerServiceParent(PHandlerServiceParent* aHandlerServiceParent)
+{
+    static_cast<HandlerServiceParent*>(aHandlerServiceParent)->Release();
     return true;
 }
 
