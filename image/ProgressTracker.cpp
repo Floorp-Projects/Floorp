@@ -243,33 +243,76 @@ ProgressTracker::NotifyCurrentState(IProgressObserver* aObserver)
   NS_DispatchToCurrentThread(ev);
 }
 
-#define NOTIFY_IMAGE_OBSERVERS(OBSERVERS, FUNC) \
-  do { \
-    ObserverArray::ForwardIterator iter(OBSERVERS); \
-    while (iter.HasMore()) { \
-      nsRefPtr<IProgressObserver> observer = iter.GetNext().get(); \
-      if (observer && !observer->NotificationsDeferred()) { \
-        observer->FUNC; \
-      } \
-    } \
-  } while (false);
+/**
+ * ImageObserverNotifier is a helper type that abstracts over the difference
+ * between sending notifications to all of the observers in an ObserverTable,
+ * and sending them to a single observer. This allows the same notification code
+ * to be used for both cases.
+ */
+template <typename T> struct ImageObserverNotifier;
 
-/* static */ void
-ProgressTracker::SyncNotifyInternal(ObserverArray& aObservers,
-                                    bool aHasImage,
-                                    Progress aProgress,
-                                    const nsIntRect& aDirtyRect)
+template <>
+struct MOZ_STACK_CLASS ImageObserverNotifier<const ObserverTable*>
+{
+  explicit ImageObserverNotifier(const ObserverTable* aObservers,
+                                 bool aIgnoreDeferral = false)
+    : mObservers(aObservers)
+    , mIgnoreDeferral(aIgnoreDeferral)
+  { }
+
+  template <typename Lambda>
+  void operator()(Lambda aFunc)
+  {
+    for (auto iter = mObservers->ConstIter(); !iter.Done(); iter.Next()) {
+      nsRefPtr<IProgressObserver> observer = iter.Data().get();
+      if (observer &&
+          (mIgnoreDeferral || !observer->NotificationsDeferred())) {
+        aFunc(observer);
+      }
+    }
+  }
+
+private:
+  const ObserverTable* mObservers;
+  const bool mIgnoreDeferral;
+};
+
+template <>
+struct MOZ_STACK_CLASS ImageObserverNotifier<IProgressObserver*>
+{
+  explicit ImageObserverNotifier(IProgressObserver* aObserver)
+    : mObserver(aObserver)
+  { }
+
+  template <typename Lambda>
+  void operator()(Lambda aFunc)
+  {
+    if (mObserver && !mObserver->NotificationsDeferred()) {
+      aFunc(mObserver);
+    }
+  }
+
+private:
+  IProgressObserver* mObserver;
+};
+
+template <typename T> void
+SyncNotifyInternal(const T& aObservers,
+                   bool aHasImage,
+                   Progress aProgress,
+                   const nsIntRect& aDirtyRect)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   typedef imgINotificationObserver I;
+  ImageObserverNotifier<T> notify(aObservers);
 
   if (aProgress & FLAG_SIZE_AVAILABLE) {
-    NOTIFY_IMAGE_OBSERVERS(aObservers, Notify(I::SIZE_AVAILABLE));
+    notify([](IProgressObserver* aObs) { aObs->Notify(I::SIZE_AVAILABLE); });
   }
 
   if (aProgress & FLAG_ONLOAD_BLOCKED) {
-    NOTIFY_IMAGE_OBSERVERS(aObservers, BlockOnload());
+    notify([](IProgressObserver* aObs) { aObs->BlockOnload(); });
   }
 
   if (aHasImage) {
@@ -278,19 +321,21 @@ ProgressTracker::SyncNotifyInternal(ObserverArray& aObservers,
     // vector images, true for raster images that have decoded at
     // least one frame) then send OnFrameUpdate.
     if (!aDirtyRect.IsEmpty()) {
-      NOTIFY_IMAGE_OBSERVERS(aObservers, Notify(I::FRAME_UPDATE, &aDirtyRect));
+      notify([&](IProgressObserver* aObs) {
+        aObs->Notify(I::FRAME_UPDATE, &aDirtyRect);
+      });
     }
 
     if (aProgress & FLAG_FRAME_COMPLETE) {
-      NOTIFY_IMAGE_OBSERVERS(aObservers, Notify(I::FRAME_COMPLETE));
+      notify([](IProgressObserver* aObs) { aObs->Notify(I::FRAME_COMPLETE); });
     }
 
     if (aProgress & FLAG_HAS_TRANSPARENCY) {
-      NOTIFY_IMAGE_OBSERVERS(aObservers, Notify(I::HAS_TRANSPARENCY));
+      notify([](IProgressObserver* aObs) { aObs->Notify(I::HAS_TRANSPARENCY); });
     }
 
     if (aProgress & FLAG_IS_ANIMATED) {
-      NOTIFY_IMAGE_OBSERVERS(aObservers, Notify(I::IS_ANIMATED));
+      notify([](IProgressObserver* aObs) { aObs->Notify(I::IS_ANIMATED); });
     }
   }
 
@@ -298,17 +343,18 @@ ProgressTracker::SyncNotifyInternal(ObserverArray& aObservers,
   // observers that can fire events when they receive those notifications to do
   // so then, instead of being forced to wait for UnblockOnload.
   if (aProgress & FLAG_ONLOAD_UNBLOCKED) {
-    NOTIFY_IMAGE_OBSERVERS(aObservers, UnblockOnload());
+    notify([](IProgressObserver* aObs) { aObs->UnblockOnload(); });
   }
 
   if (aProgress & FLAG_DECODE_COMPLETE) {
     MOZ_ASSERT(aHasImage, "Stopped decoding without ever having an image?");
-    NOTIFY_IMAGE_OBSERVERS(aObservers, Notify(I::DECODE_COMPLETE));
+    notify([](IProgressObserver* aObs) { aObs->Notify(I::DECODE_COMPLETE); });
   }
 
   if (aProgress & FLAG_LOAD_COMPLETE) {
-    NOTIFY_IMAGE_OBSERVERS(aObservers,
-                           OnLoadComplete(aProgress & FLAG_LAST_PART_COMPLETE));
+    notify([=](IProgressObserver* aObs) {
+      aObs->OnLoadComplete(aProgress & FLAG_LAST_PART_COMPLETE);
+    });
   }
 }
 
@@ -340,7 +386,9 @@ ProgressTracker::SyncNotifyProgress(Progress aProgress,
   CheckProgressConsistency(mProgress);
 
   // Send notifications.
-  SyncNotifyInternal(mObservers, HasImage(), progress, aInvalidRect);
+  mObservers.Read([&](const ObserverTable* aTable) {
+    SyncNotifyInternal(aTable, HasImage(), progress, aInvalidRect);
+  });
 
   if (progress & FLAG_HAS_ERROR) {
     FireFailureNotification();
@@ -370,9 +418,7 @@ ProgressTracker::SyncNotify(IProgressObserver* aObserver)
     }
   }
 
-  ObserverArray array;
-  array.AppendElement(aObserver);
-  SyncNotifyInternal(array, !!image, mProgress, rect);
+  SyncNotifyInternal(aObserver, !!image, mProgress, rect);
 }
 
 void
@@ -395,7 +441,14 @@ void
 ProgressTracker::AddObserver(IProgressObserver* aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mObservers.AppendElementUnlessExists(aObserver);
+
+  mObservers.Write([=](ObserverTable* aTable) {
+    MOZ_ASSERT(!aTable->Get(aObserver, nullptr),
+               "Adding duplicate entry for image observer");
+
+    WeakPtr<IProgressObserver> weakPtr = aObserver;
+    aTable->Put(aObserver, weakPtr);
+  });
 }
 
 bool
@@ -404,7 +457,11 @@ ProgressTracker::RemoveObserver(IProgressObserver* aObserver)
   MOZ_ASSERT(NS_IsMainThread());
 
   // Remove the observer from the list.
-  bool removed = mObservers.RemoveElement(aObserver);
+  bool removed = mObservers.Write([=](ObserverTable* aTable) {
+    bool removed = aTable->Get(aObserver, nullptr);
+    aTable->Remove(aObserver);
+    return removed;
+  });
 
   // Observers can get confused if they don't get all the proper teardown
   // notifications. Part ways on good terms.
@@ -425,12 +482,25 @@ ProgressTracker::RemoveObserver(IProgressObserver* aObserver)
   return removed;
 }
 
+uint32_t
+ProgressTracker::ObserverCount() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mObservers.Read([](const ObserverTable* aTable) {
+    return aTable->Count();
+  });
+}
+
 void
 ProgressTracker::OnUnlockedDraw()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NOTIFY_IMAGE_OBSERVERS(mObservers,
-                         Notify(imgINotificationObserver::UNLOCKED_DRAW));
+  mObservers.Read([](const ObserverTable* aTable) {
+    ImageObserverNotifier<const ObserverTable*> notify(aTable);
+    notify([](IProgressObserver* aObs) {
+      aObs->Notify(imgINotificationObserver::UNLOCKED_DRAW);
+    });
+  });
 }
 
 void
@@ -445,8 +515,12 @@ void
 ProgressTracker::OnDiscard()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NOTIFY_IMAGE_OBSERVERS(mObservers,
-                         Notify(imgINotificationObserver::DISCARD));
+  mObservers.Read([](const ObserverTable* aTable) {
+    ImageObserverNotifier<const ObserverTable*> notify(aTable);
+    notify([](IProgressObserver* aObs) {
+      aObs->Notify(imgINotificationObserver::DISCARD);
+    });
+  });
 }
 
 void
@@ -454,13 +528,13 @@ ProgressTracker::OnImageAvailable()
 {
   MOZ_ASSERT(NS_IsMainThread());
   // Notify any imgRequestProxys that are observing us that we have an Image.
-  ObserverArray::ForwardIterator iter(mObservers);
-  while (iter.HasMore()) {
-    nsRefPtr<IProgressObserver> observer = iter.GetNext().get();
-    if (observer) {
-      observer->SetHasImage();
-    }
-  }
+  mObservers.Read([](const ObserverTable* aTable) {
+    ImageObserverNotifier<const ObserverTable*>
+      notify(aTable, /* aIgnoreDeferral = */ true);
+    notify([](IProgressObserver* aObs) {
+      aObs->SetHasImage();
+    });
+  });
 }
 
 void
