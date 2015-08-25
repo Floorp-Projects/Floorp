@@ -374,6 +374,9 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
         return mExecutor->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
       }
       mLastWasCR = mTokenizer->tokenizeBuffer(&stackBuffer);
+      if (NS_FAILED((rv = mTreeBuilder->IsBroken()))) {
+        return mExecutor->MarkAsBroken(rv);
+      }
 
       if (inRootContext) {
         mRootContextLineNumber = mTokenizer->getLineNumber();
@@ -485,6 +488,10 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
         }
         mDocWriteSpeculativeLastWasCR =
             mDocWriteSpeculativeTokenizer->tokenizeBuffer(&stackBuffer);
+        nsresult rv;
+        if (NS_FAILED((rv = mDocWriteSpeculativeTreeBuilder->IsBroken()))) {
+          return mExecutor->MarkAsBroken(rv);
+        }
       }
     }
 
@@ -625,7 +632,11 @@ nsHtml5Parser::ParseUntilBlocked()
                        "This should only happen with script-created parser.");
           if (NS_SUCCEEDED((rv = mExecutor->IsBroken()))) {
             mTokenizer->eof();
-            mTreeBuilder->StreamEnded();
+            if (NS_FAILED((rv = mTreeBuilder->IsBroken()))) {
+              mExecutor->MarkAsBroken(rv);
+            } else {
+              mTreeBuilder->StreamEnded();
+            }
           }
           mTreeBuilder->Flush();
           mExecutor->FlushDocumentWrite();
@@ -676,12 +687,16 @@ nsHtml5Parser::ParseUntilBlocked()
         return mExecutor->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
       }
       mLastWasCR = mTokenizer->tokenizeBuffer(mFirstBuffer);
+      nsresult rv;
+      if (NS_FAILED((rv = mTreeBuilder->IsBroken()))) {
+        return mExecutor->MarkAsBroken(rv);
+      }
       if (inRootContext) {
         mRootContextLineNumber = mTokenizer->getLineNumber();
       }
       if (mTreeBuilder->HasScript()) {
         mTreeBuilder->Flush();
-        nsresult rv = mExecutor->FlushDocumentWrite();
+        rv = mExecutor->FlushDocumentWrite();
         NS_ENSURE_SUCCESS(rv, rv);
       }
       if (mBlocked) {
