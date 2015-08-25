@@ -329,13 +329,15 @@ function DBAddonInternal(aLoaded) {
 
   this._key = this.location + ":" + this.id;
 
-  try {
-    this._sourceBundle = this._installLocation.getLocationForID(this.id);
+  if (aLoaded._sourceBundle) {
+    this._sourceBundle = aLoaded._sourceBundle;
   }
-  catch (e) {
-    // An exception will be thrown if the add-on appears in the database but
-    // not on disk. In general this should only happen during startup as
-    // this change is being detected.
+  else if (aLoaded.descriptor) {
+    this._sourceBundle = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    this._sourceBundle.persistentDescriptor = aLoaded.descriptor;
+  }
+  else {
+    throw new Error("Expected passed argument to contain a descriptor");
   }
 
   XPCOMUtils.defineLazyGetter(this, "pendingUpgrade",
@@ -1595,7 +1597,8 @@ this.XPIDatabaseReconcile = {
     try {
       if (!aNewAddon) {
         // Load the manifest from the add-on.
-        let file = aInstallLocation.getLocationForID(aId);
+        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+        file.persistentDescriptor = aAddonState.descriptor;
         aNewAddon = syncLoadManifestFromFile(file);
       }
       // The add-on in the manifest should match the add-on ID.
@@ -1713,7 +1716,8 @@ this.XPIDatabaseReconcile = {
     try {
       // If there isn't an updated install manifest for this add-on then load it.
       if (!aNewAddon) {
-        let file = aInstallLocation.getLocationForID(aOldAddon.id);
+        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+        file.persistentDescriptor = aAddonState.descriptor;
         aNewAddon = syncLoadManifestFromFile(file);
         applyBlocklistChanges(aOldAddon, aNewAddon);
 
@@ -1766,6 +1770,7 @@ this.XPIDatabaseReconcile = {
   updateDescriptor(aInstallLocation, aOldAddon, aAddonState) {
     logger.debug("Add-on " + aOldAddon.id + " moved to " + aAddonState.descriptor);
     aOldAddon.descriptor = aAddonState.descriptor;
+    aOldAddon._sourceBundle.persistentDescriptor = aAddonState.descriptor;
 
     return aOldAddon;
   },
@@ -1779,6 +1784,8 @@ this.XPIDatabaseReconcile = {
    * @param  aOldAddon
    *         The AddonInternal as it appeared the last time the application
    *         ran
+   * @param  aAddonState
+   *         The new state of the add-on
    * @param  aOldAppVersion
    *         The version of the application last run with this profile or null
    *         if it is a new profile or the version is unknown
@@ -1788,14 +1795,15 @@ this.XPIDatabaseReconcile = {
    * @return a boolean indicating if flushing caches is required to complete
    *         changing this add-on
    */
-  updateCompatibility(aInstallLocation, aOldAddon, aOldAppVersion, aOldPlatformVersion) {
+  updateCompatibility(aInstallLocation, aOldAddon, aAddonState, aOldAppVersion, aOldPlatformVersion) {
     logger.debug("Updating compatibility for add-on " + aOldAddon.id + " in " + aInstallLocation.name);
 
     // If updating from a version of the app that didn't support signedState
     // then fetch that property now
     if (aOldAddon.signedState === undefined && ADDON_SIGNING &&
         SIGNED_TYPES.has(aOldAddon.type)) {
-      let file = aInstallLocation.getLocationForID(aOldAddon.id);
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+      file.persistentDescriptor = aAddonState.descriptor;
       let manifest = syncLoadManifestFromFile(file);
       aOldAddon.signedState = manifest.signedState;
     }
@@ -1900,7 +1908,8 @@ this.XPIDatabaseReconcile = {
               newAddon = this.updateDescriptor(installLocation, oldAddon, xpiState);
             }
             else if (aUpdateCompatibility) {
-              newAddon = this.updateCompatibility(installLocation, oldAddon, aOldAppVersion, aOldPlatformVersion);
+              newAddon = this.updateCompatibility(installLocation, oldAddon, xpiState,
+                                                  aOldAppVersion, aOldPlatformVersion);
             }
             else {
               // No change
