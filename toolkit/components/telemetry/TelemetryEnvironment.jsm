@@ -72,7 +72,6 @@ this.TelemetryEnvironment = {
   // Policy to use when saving preferences. Exported for using them in tests.
   RECORD_PREF_STATE: 1, // Don't record the preference value
   RECORD_PREF_VALUE: 2, // We only record user-set prefs.
-  RECORD_PREF_NOTIFY_ONLY: 3, // Record nothing, just notify of changes.
 
   // Testing method
   _watchPreferences: function(prefMap) {
@@ -80,66 +79,68 @@ this.TelemetryEnvironment = {
   },
 };
 
+const RECORD_PREF_STATE = TelemetryEnvironment.RECORD_PREF_STATE;
+const RECORD_PREF_VALUE = TelemetryEnvironment.RECORD_PREF_VALUE;
 const DEFAULT_ENVIRONMENT_PREFS = new Map([
-  ["app.feedback.baseURL", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["app.support.baseURL", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["accessibility.browsewithcaret", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["accessibility.force_disabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["app.update.auto", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["app.update.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["app.update.interval", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["app.update.service.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["app.update.silent", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["app.update.url", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["browser.cache.disk.enable", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["browser.cache.disk.capacity", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["browser.cache.memory.enable", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["browser.cache.offline.enable", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["browser.formfill.enable", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["browser.newtab.url", TelemetryEnvironment.RECORD_PREF_STATE],
-  ["browser.newtabpage.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["browser.newtabpage.enhanced", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["browser.polaris.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["browser.shell.checkDefaultBrowser", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["browser.startup.homepage", TelemetryEnvironment.RECORD_PREF_STATE],
-  ["browser.startup.page", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["devtools.chrome.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["devtools.debugger.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["devtools.debugger.remote-enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["dom.ipc.plugins.asyncInit", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["dom.ipc.plugins.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["dom.ipc.processCount", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["experiments.manifest.uri", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["extensions.blocklist.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["extensions.blocklist.url", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["extensions.strictCompatibility", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["extensions.update.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["extensions.update.url", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["extensions.update.background.url", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["general.smoothScroll", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["gfx.direct2d.disabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["gfx.direct2d.force-enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["gfx.direct2d.use1_1", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["layers.acceleration.disabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["layers.acceleration.force-enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["layers.async-pan-zoom.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["layers.async-video-oop.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["layers.async-video.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["layers.componentalpha.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["layers.d3d11.disable-warp", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["layers.d3d11.force-warp", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["layers.offmainthreadcomposition.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["layers.prefer-d3d9", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["layers.prefer-opengl", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["layout.css.devPixelsPerPx", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["network.proxy.autoconfig_url", TelemetryEnvironment.RECORD_PREF_STATE],
-  ["network.proxy.http", TelemetryEnvironment.RECORD_PREF_STATE],
-  ["network.proxy.ssl", TelemetryEnvironment.RECORD_PREF_STATE],
-  ["pdfjs.disabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["places.history.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["privacy.trackingprotection.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["privacy.donottrackheader.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["services.sync.serverURL", TelemetryEnvironment.RECORD_PREF_STATE],
+  ["app.feedback.baseURL", {what: RECORD_PREF_VALUE}],
+  ["app.support.baseURL", {what: RECORD_PREF_VALUE}],
+  ["accessibility.browsewithcaret", {what: RECORD_PREF_VALUE}],
+  ["accessibility.force_disabled", {what:  RECORD_PREF_VALUE}],
+  ["app.update.auto", {what: RECORD_PREF_VALUE}],
+  ["app.update.enabled", {what: RECORD_PREF_VALUE}],
+  ["app.update.interval", {what: RECORD_PREF_VALUE}],
+  ["app.update.service.enabled", {what: RECORD_PREF_VALUE}],
+  ["app.update.silent", {what: RECORD_PREF_VALUE}],
+  ["app.update.url", {what: RECORD_PREF_VALUE}],
+  ["browser.cache.disk.enable", {what: RECORD_PREF_VALUE}],
+  ["browser.cache.disk.capacity", {what: RECORD_PREF_VALUE}],
+  ["browser.cache.memory.enable", {what: RECORD_PREF_VALUE}],
+  ["browser.cache.offline.enable", {what: RECORD_PREF_VALUE}],
+  ["browser.formfill.enable", {what: RECORD_PREF_VALUE}],
+  ["browser.newtab.url", {what: RECORD_PREF_STATE}],
+  ["browser.newtabpage.enabled", {what: RECORD_PREF_VALUE}],
+  ["browser.newtabpage.enhanced", {what: RECORD_PREF_VALUE}],
+  ["browser.polaris.enabled", {what: RECORD_PREF_VALUE}],
+  ["browser.shell.checkDefaultBrowser", {what: RECORD_PREF_VALUE}],
+  ["browser.startup.homepage", {what: RECORD_PREF_STATE}],
+  ["browser.startup.page", {what: RECORD_PREF_VALUE}],
+  ["devtools.chrome.enabled", {what: RECORD_PREF_VALUE}],
+  ["devtools.debugger.enabled", {what: RECORD_PREF_VALUE}],
+  ["devtools.debugger.remote-enabled", {what: RECORD_PREF_VALUE}],
+  ["dom.ipc.plugins.asyncInit", {what: RECORD_PREF_VALUE}],
+  ["dom.ipc.plugins.enabled", {what: RECORD_PREF_VALUE}],
+  ["dom.ipc.processCount", {what: RECORD_PREF_VALUE, requiresRestart: true}],
+  ["experiments.manifest.uri", {what: RECORD_PREF_VALUE}],
+  ["extensions.blocklist.enabled", {what: RECORD_PREF_VALUE}],
+  ["extensions.blocklist.url", {what: RECORD_PREF_VALUE}],
+  ["extensions.strictCompatibility", {what: RECORD_PREF_VALUE}],
+  ["extensions.update.enabled", {what: RECORD_PREF_VALUE}],
+  ["extensions.update.url", {what: RECORD_PREF_VALUE}],
+  ["extensions.update.background.url", {what: RECORD_PREF_VALUE}],
+  ["general.smoothScroll", {what: RECORD_PREF_VALUE}],
+  ["gfx.direct2d.disabled", {what: RECORD_PREF_VALUE}],
+  ["gfx.direct2d.force-enabled", {what: RECORD_PREF_VALUE}],
+  ["gfx.direct2d.use1_1", {what: RECORD_PREF_VALUE}],
+  ["layers.acceleration.disabled", {what: RECORD_PREF_VALUE}],
+  ["layers.acceleration.force-enabled", {what: RECORD_PREF_VALUE}],
+  ["layers.async-pan-zoom.enabled", {what: RECORD_PREF_VALUE}],
+  ["layers.async-video-oop.enabled", {what: RECORD_PREF_VALUE}],
+  ["layers.async-video.enabled", {what: RECORD_PREF_VALUE}],
+  ["layers.componentalpha.enabled", {what: RECORD_PREF_VALUE}],
+  ["layers.d3d11.disable-warp", {what: RECORD_PREF_VALUE}],
+  ["layers.d3d11.force-warp", {what: RECORD_PREF_VALUE}],
+  ["layers.offmainthreadcomposition.enabled", {what: RECORD_PREF_VALUE}],
+  ["layers.prefer-d3d9", {what: RECORD_PREF_VALUE}],
+  ["layers.prefer-opengl", {what: RECORD_PREF_VALUE}],
+  ["layout.css.devPixelsPerPx", {what: RECORD_PREF_VALUE}],
+  ["network.proxy.autoconfig_url", {what: RECORD_PREF_STATE}],
+  ["network.proxy.http", {what: RECORD_PREF_STATE}],
+  ["network.proxy.ssl", {what: RECORD_PREF_STATE}],
+  ["pdfjs.disabled", {what: RECORD_PREF_VALUE}],
+  ["places.history.enabled", {what: RECORD_PREF_VALUE}],
+  ["privacy.trackingprotection.enabled", {what: RECORD_PREF_VALUE}],
+  ["privacy.donottrackheader.enabled", {what: RECORD_PREF_VALUE}],
+  ["services.sync.serverURL", {what: RECORD_PREF_STATE}],
 ]);
 
 const LOGGER_NAME = "Toolkit.Telemetry";
@@ -762,16 +763,15 @@ EnvironmentCache.prototype = {
   _getPrefData: function () {
     let prefData = {};
     for (let [pref, policy] of this._watchedPrefs.entries()) {
-      // Only record preferences if they are non-default and policy allows recording.
-      if (!Preferences.isSet(pref) ||
-          policy == TelemetryEnvironment.RECORD_PREF_NOTIFY_ONLY) {
+      // Only record preferences if they are non-default
+      if (!Preferences.isSet(pref)) {
         continue;
       }
-
+      
       // Check the policy for the preference and decide if we need to store its value
       // or whether it changed from the default value.
       let prefValue = undefined;
-      if (policy == TelemetryEnvironment.RECORD_PREF_STATE) {
+      if (policy.what == TelemetryEnvironment.RECORD_PREF_STATE) {
         prefValue = "<user-set>";
       } else {
         prefValue = Preferences.get(pref, null);
@@ -787,8 +787,10 @@ EnvironmentCache.prototype = {
   _startWatchingPrefs: function () {
     this._log.trace("_startWatchingPrefs - " + this._watchedPrefs);
 
-    for (let pref of this._watchedPrefs.keys()) {
-      Preferences.observe(pref, this._onPrefChanged, this);
+    for (let [pref, options] of this._watchedPrefs) {
+      if(!("requiresRestart" in options) || !options.requiresRestart) {
+        Preferences.observe(pref, this._onPrefChanged, this);
+      }
     }
   },
 
@@ -805,8 +807,10 @@ EnvironmentCache.prototype = {
   _stopWatchingPrefs: function () {
     this._log.trace("_stopWatchingPrefs");
 
-    for (let pref of this._watchedPrefs.keys()) {
-      Preferences.ignore(pref, this._onPrefChanged, this);
+    for (let [pref, options] of this._watchedPrefs) {
+      if(!("requiresRestart" in options) || !options.requiresRestart) {
+        Preferences.ignore(pref, this._onPrefChanged, this);
+      }
     }
   },
 

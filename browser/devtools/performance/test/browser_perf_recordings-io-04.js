@@ -106,10 +106,10 @@ let test = Task.async(function*() {
   ok(true, "The imported data was re-rendered.");
 
   // Ensure that only framerate and js calltree/flamegraph view are available
-  is($("#overview-pane").hidden, false, "overview graph container still shown");
-  is($("#memory-overview").hidden, true, "memory graph hidden");
-  is($("#markers-overview").hidden, true, "markers overview graph hidden");
-  is($("#time-framerate").hidden, false, "fps graph shown");
+  is(isVisible($("#overview-pane")), true, "overview graph container still shown");
+  is(isVisible($("#memory-overview")), false, "memory graph hidden");
+  is(isVisible($("#markers-overview")), false, "markers overview graph hidden");
+  is(isVisible($("#time-framerate")), true, "fps graph shown");
   is($("#select-waterfall-view").hidden, true, "waterfall button hidden");
   is($("#select-js-calltree-view").hidden, false, "jscalltree button shown");
   is($("#select-js-flamegraph-view").hidden, false, "jsflamegraph button shown");

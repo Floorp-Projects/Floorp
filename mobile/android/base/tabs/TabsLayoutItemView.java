@@ -10,7 +10,6 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.TabThumbnailWrapper;
-import org.mozilla.gecko.widget.ThumbnailView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -37,7 +36,7 @@ public class TabsLayoutItemView extends LinearLayout
 
     private int mTabId;
     private TextView mTitle;
-    private ThumbnailView mThumbnail;
+    private TabsPanelThumbnailView mThumbnail;
     private ImageView mCloseButton;
     private ImageView mAudioPlayingButton;
     private TabThumbnailWrapper mThumbnailWrapper;
@@ -98,7 +97,7 @@ public class TabsLayoutItemView extends LinearLayout
     protected void onFinishInflate() {
         super.onFinishInflate();
         mTitle = (TextView) findViewById(R.id.title);
-        mThumbnail = (ThumbnailView) findViewById(R.id.thumbnail);
+        mThumbnail = (TabsPanelThumbnailView) findViewById(R.id.thumbnail);
         mCloseButton = (ImageView) findViewById(R.id.close);
         mAudioPlayingButton = (ImageView) findViewById(R.id.audio_playing);
         mThumbnailWrapper = (TabThumbnailWrapper) findViewById(R.id.wrapper);
