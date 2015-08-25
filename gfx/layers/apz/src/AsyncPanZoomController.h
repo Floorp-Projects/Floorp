@@ -374,7 +374,7 @@ public:
 
   // Return whether or not a scroll delta will be able to scroll in either
   // direction.
-  bool CanScrollWithWheel(const LayoutDevicePoint& aDelta) const;
+  bool CanScrollWithWheel(const ParentLayerPoint& aDelta) const;
 
   // Return whether or not there is room to scroll this APZC
   // in the given direction.
@@ -450,7 +450,7 @@ protected:
    */
   nsEventStatus OnScrollWheel(const ScrollWheelInput& aEvent);
 
-  LayoutDevicePoint GetScrollWheelDelta(const ScrollWheelInput& aEvent) const;
+  ParentLayerPoint GetScrollWheelDelta(const ScrollWheelInput& aEvent) const;
 
   /**
    * Helper methods for long press gestures.
