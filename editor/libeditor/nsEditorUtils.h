@@ -200,7 +200,7 @@ class nsBoolDomIterFunctor
 class MOZ_STACK_CLASS nsDOMIterator
 {
   public:
-    nsDOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+    explicit nsDOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
 
     explicit nsDOMIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     virtual ~nsDOMIterator();
@@ -217,7 +217,7 @@ class MOZ_STACK_CLASS nsDOMIterator
 class MOZ_STACK_CLASS nsDOMSubtreeIterator : public nsDOMIterator
 {
   public:
-    nsDOMSubtreeIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+    explicit nsDOMSubtreeIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
     virtual ~nsDOMSubtreeIterator();
 
     nsresult Init(nsRange& aRange);
