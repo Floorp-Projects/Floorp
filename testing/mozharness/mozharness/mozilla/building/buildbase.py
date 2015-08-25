@@ -1241,7 +1241,7 @@ or run without that action (ie: --no-{action})"
 
     def _query_props_set_by_mach(self, console_output=True, error_level=FATAL):
         mach_properties_path = os.path.join(
-            self.query_abs_dirs()['abs_obj_dir'], 'mach_build_properties.json'
+            self.query_abs_dirs()['abs_obj_dir'], 'dist', 'mach_build_properties.json'
         )
         self.info("setting properties set by mach build. Looking in path: %s"
                   % mach_properties_path)
@@ -1262,9 +1262,7 @@ or run without that action (ie: --no-{action})"
                 if prop != 'UNKNOWN':
                     self.set_buildbot_property(key, prop, write_to_file=True)
         else:
-            self.log("Could not determine path for build properties. "
-                     "Does this exist: `%s` ?" % mach_properties_path,
-                     level=error_level)
+            self.info("No mach_build_properties.json found - not importing properties.")
 
     def generate_build_props(self, console_output=True, halt_on_failure=False):
         """sets props found from mach build and, in addition, buildid,
@@ -1644,7 +1642,7 @@ or run without that action (ie: --no-{action})"
         self._run_tooltool()
         self._create_mozbuild_dir()
         mach_props = os.path.join(
-            self.query_abs_dirs()['abs_obj_dir'], 'mach_build_properties.json'
+            self.query_abs_dirs()['abs_obj_dir'], 'dist', 'mach_build_properties.json'
         )
         if os.path.exists(mach_props):
             self.info("Removing previous mach property file: %s" % mach_props)
