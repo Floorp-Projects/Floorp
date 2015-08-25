@@ -480,6 +480,9 @@ struct ParseTask
     // ParseTask.
     JSScript* script;
 
+    // Holds the ScriptSourceObject generated for the script compilation.
+    ScriptSourceObject* sourceObject;
+
     // Any errors or warnings produced during compilation. These are reported
     // when finishing the script.
     Vector<frontend::CompileError*> errors;
