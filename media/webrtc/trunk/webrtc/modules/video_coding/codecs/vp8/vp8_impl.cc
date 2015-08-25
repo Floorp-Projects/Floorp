@@ -430,6 +430,16 @@ int VP8EncoderImpl::UpdateCodecFrameSize(const I420VideoFrame& input_image) {
   // doing only a configuration change causes
   // horizontal streaking and distortion in the output.
   vpx_codec_flags_t flags = VPX_CODEC_USE_OUTPUT_PARTITION;
+
+  // Re-initing will leak memory so we have to destroy the old context first.
+  if (vpx_codec_destroy(encoder_)) {
+    return WEBRTC_VIDEO_CODEC_MEMORY;
+  }
+
+  // For full paranoia satisfaction we also do a full reset of |encoder_|.
+  delete encoder_;
+  encoder_ = new vpx_codec_ctx_t;
+
   if (vpx_codec_enc_init(encoder_, vpx_codec_vp8_cx(), config_, flags)) {
 #else
   if (vpx_codec_enc_config_set(encoder_, config_)) {
