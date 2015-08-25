@@ -691,12 +691,13 @@ PackagedAppService::GetPackageURI(nsIURI *aURI, nsIURI **aPackageURI)
 
 NS_IMETHODIMP
 PackagedAppService::GetResource(nsIPrincipal *aPrincipal,
+                                nsILoadInfo *aLoadInfo,
                                 uint32_t aLoadFlags,
                                 nsILoadContextInfo *aInfo,
                                 nsICacheEntryOpenCallback *aCallback)
 {
   // Check arguments are not null
-  if (!aPrincipal || !aCallback || !aInfo) {
+  if (!aPrincipal || !aLoadInfo || !aCallback || !aInfo) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -740,10 +741,10 @@ PackagedAppService::GetResource(nsIPrincipal *aPrincipal,
   }
 
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(
-    getter_AddRefs(channel), packageURI, aPrincipal,
-    nsILoadInfo::SEC_NORMAL, nsIContentPolicy::TYPE_OTHER, nullptr, nullptr,
-    aLoadFlags);
+  rv = NS_NewChannelInternal(
+    getter_AddRefs(channel), packageURI,
+    aLoadInfo,
+    nullptr, nullptr, aLoadFlags);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -783,6 +784,10 @@ PackagedAppService::GetResource(nsIPrincipal *aPrincipal,
 
   nsRefPtr<PackagedAppChannelListener> listener =
     new PackagedAppChannelListener(downloader, mimeConverter);
+
+  if (aLoadInfo->GetEnforceSecurity()) {
+    return channel->AsyncOpen2(listener);
+  }
 
   return channel->AsyncOpen(listener, nullptr);
 }
