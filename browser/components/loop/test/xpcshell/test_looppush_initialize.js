@@ -161,28 +161,27 @@ add_test(function test_retry_pushurl() {
   loopServer.registerPathHandler("/push-server-config", (request, response) => {
     // The PushHandler should retry the request for the push-server-config for
     // each of these cases without throwing an error.
-    let n = 0;
     switch (++pushServerRequestCount) {
-    case ++n:
+    case 1:
       // Non-200 response
       response.setStatusLine(null, 500, "Retry");
       response.processAsync();
       response.finish();
       break;
-    case ++n:
+    case 2:
       // missing parameter
       response.setStatusLine(null, 200, "OK");
       response.write(JSON.stringify({pushServerURI: null}));
       response.processAsync();
       response.finish();
       break;
-    case ++n:
+    case 3:
       // json parse error
       response.setStatusLine(null, 200, "OK");
       response.processAsync();
       response.finish();
       break;
-    case ++n:
+    case 4:
       response.setStatusLine(null, 200, "OK");
       response.write(JSON.stringify({pushServerURI: kServerPushUrl}));
       response.processAsync();

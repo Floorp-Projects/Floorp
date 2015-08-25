@@ -1,7 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
-
-
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
@@ -285,27 +281,32 @@ function isToolbarVisible(aToolbar) {
 /**
  * Executes a task after opening the bookmarks dialog, then cancels the dialog.
  *
+ * @param autoCancel
+ *        whether to automatically cancel the dialog at the end of the task
  * @param openFn
  *        generator function causing the dialog to open
  * @param task
  *        the task to execute once the dialog is open
  */
-let withBookmarksDialog = Task.async(function* (openFn, taskFn) {
+let withBookmarksDialog = Task.async(function* (autoCancel, openFn, taskFn) {
+  let closed = false;
   let dialogPromise = new Promise(resolve => {
     Services.ww.registerNotification(function winObserver(subject, topic, data) {
-      if (topic != "domwindowopened")
-        return;
-      let win = subject.QueryInterface(Ci.nsIDOMWindow);
-      win.addEventListener("load", function load() {
-        win.removeEventListener("load", load);
-        ok(win.location.href.startsWith("chrome://browser/content/places/bookmarkProperties"),
-           "The bookmark properties dialog is ready");
+      if (topic == "domwindowopened") {
+        let win = subject.QueryInterface(Ci.nsIDOMWindow);
+        win.addEventListener("load", function load() {
+          win.removeEventListener("load", load);
+          ok(win.location.href.startsWith("chrome://browser/content/places/bookmarkProperties"),
+             "The bookmark properties dialog is ready");
+          // This is needed for the overlay.
+          waitForFocus(() => {
+            resolve(win);
+          }, win);
+        });
+      } else if (topic == "domwindowclosed") {
         Services.ww.unregisterNotification(winObserver);
-        // This is needed for the overlay.
-        waitForFocus(() => {
-          resolve(win);
-        }, win);
-      });
+        closed = true;
+      }
     });
   });
 
@@ -323,8 +324,13 @@ let withBookmarksDialog = Task.async(function* (openFn, taskFn) {
   try {
     yield taskFn(dialogWin);
   } finally {
-    info("withBookmarksDialog: canceling the dialog");
-    dialogWin.document.documentElement.cancelDialog();
+    if (!closed) {
+      if (!autoCancel) {
+        ok(false, "The test should have closed the dialog!");
+      }
+      info("withBookmarksDialog: canceling the dialog");
+      dialogWin.document.documentElement.cancelDialog();
+    }
   }
 });
 
@@ -401,13 +407,53 @@ let waitForCondition = Task.async(function* (conditionFn, errorMsg) {
  *        text to fill in
  * @param win
  *        dialog window
+ * @param [optional] blur
+ *        whether to blur at the end.
  */
-function fillBookmarkTextField(id, text, win) {
+function fillBookmarkTextField(id, text, win, blur = true) {
   let elt = win.document.getElementById(id);
   elt.focus();
   elt.select();
   for (let c of text.split("")) {
     EventUtils.synthesizeKey(c, {}, win);
   }
-  elt.blur();
+  if (blur)
+    elt.blur();
 }
+
+/**
+ * Executes a task after opening the bookmarks or history sidebar. Takes care
+ * of closing the sidebar once done.
+ *
+ * @param type
+ *        either "bookmarks" or "history".
+ * @param taskFn
+ *        The task to execute once the sidebar is ready. Will get the Places
+ *        tree view as input.
+ */
+let withSidebarTree = Task.async(function* (type, taskFn) {
+  let sidebar = document.getElementById("sidebar");
+  info("withSidebarTree: waiting sidebar load");
+  let sidebarLoadedPromise = new Promise(resolve => {
+    sidebar.addEventListener("load", function load() {
+      sidebar.removeEventListener("load", load, true);
+      resolve();
+    }, true);
+  });
+  let sidebarId = type == "bookmarks" ? "viewBookmarksSidebar"
+                                      : "viewHistorySidebar";
+  SidebarUI.show(sidebarId);
+  yield sidebarLoadedPromise;
+
+  let treeId = type == "bookmarks" ? "bookmarks-view"
+                                   : "historyTree";
+  let tree = sidebar.contentDocument.getElementById(treeId);
+
+  // Need to executeSoon since the tree is initialized on sidebar load.
+  info("withSidebarTree: executing the task");
+  try {
+    yield taskFn(tree);
+  } finally {
+    SidebarUI.hide();
+  }
+});

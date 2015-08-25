@@ -413,6 +413,66 @@ describe("loop.OTSdkDriver", function () {
       sinon.assert.calledOnce(session.disconnect);
     });
 
+    it("should unsubscribe to all the publisher events that were subscribed to in #setupStreamElements", function() {
+      var subscribedEvents = [];
+
+      // First find out which events were subscribed to.
+      sandbox.stub(publisher, "on", function(eventName) {
+        subscribedEvents.push(eventName);
+      });
+
+      driver.setupStreamElements(new sharedActions.SetupStreamElements({
+        publisherConfig: publisherConfig
+      }));
+
+      // Now disconnect, checking for any unexpected unsubscribes, or any missed
+      // unsubscribes.
+      sandbox.stub(publisher, "off", function(eventNames) {
+        var events = eventNames.split(" ");
+
+        events.forEach(function(eventName) {
+          var index = subscribedEvents.indexOf(eventName);
+
+          expect(index).not.eql(-1);
+
+          subscribedEvents.splice(index, 1);
+        });
+      });
+
+      driver.disconnectSession();
+
+      expect(subscribedEvents).eql([]);
+    });
+
+    it("should unsubscribe to all the subscriber events that were subscribed to in #connectSession", function() {
+      var subscribedEvents = [];
+
+      // First find out which events were subscribed to.
+      sandbox.stub(session, "on", function(eventName) {
+        subscribedEvents.push(eventName);
+      });
+
+      driver.connectSession(sessionData);
+
+      // Now disconnect, checking for any unexpected unsubscribes, or any missed
+      // unsubscribes.
+      sandbox.stub(session, "off", function(eventNames) {
+        var events = eventNames.split(" ");
+
+        events.forEach(function(eventName) {
+          var index = subscribedEvents.indexOf(eventName);
+
+          expect(index).not.eql(-1);
+
+          subscribedEvents.splice(index, 1);
+        });
+      });
+
+      driver.disconnectSession();
+
+      expect(subscribedEvents).eql([]);
+    });
+
     it("should dispatch a DataChannelsAvailable action with available = false", function() {
       driver.disconnectSession();
 

@@ -1155,7 +1155,7 @@ loop.shared.views = (function(_, mozL10n) {
             <loop.shared.views.chat.TextChatView
               dispatcher={this.props.dispatcher}
               showRoomName={this.props.showContextRoomName}
-              useDesktopPaths={false} />
+              useDesktopPaths={this.props.useDesktopPaths} />
             { this.state.localMediaAboslutelyPositioned ?
               null : this.renderLocalVideo() }
           </div>
