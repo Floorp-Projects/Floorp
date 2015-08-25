@@ -283,9 +283,6 @@ DOMMediaStream::InitSourceStream(nsIDOMWindow* aWindow,
                                  MediaStreamGraph* aGraph)
 {
   mWindow = aWindow;
-  if (!aGraph) {
-    aGraph = MediaStreamGraph::GetInstance();
-  }
   InitStreamCommon(aGraph->CreateSourceStream(this));
 }
 
@@ -295,9 +292,6 @@ DOMMediaStream::InitTrackUnionStream(nsIDOMWindow* aWindow,
 {
   mWindow = aWindow;
 
-  if (!aGraph) {
-    aGraph = MediaStreamGraph::GetInstance();
-  }
   InitStreamCommon(aGraph->CreateTrackUnionStream(this));
 }
 
@@ -307,9 +301,6 @@ DOMMediaStream::InitAudioCaptureStream(nsIDOMWindow* aWindow,
 {
   mWindow = aWindow;
 
-  if (!aGraph) {
-    aGraph = MediaStreamGraph::GetInstance();
-  }
   InitStreamCommon(aGraph->CreateAudioCaptureStream(this));
 }
 
