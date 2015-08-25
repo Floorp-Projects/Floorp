@@ -48,7 +48,7 @@ var gShuffle = false;
 var gTotalChunks = 0;
 var gThisChunk = 0;
 var gContainingWindow = null;
-var gURLFilterRegex = null;
+var gURLFilterRegex = {};
 const FOCUS_FILTER_ALL_TESTS = "all";
 const FOCUS_FILTER_NEEDS_FOCUS_TESTS = "needs-focus";
 const FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS = "non-needs-focus";
@@ -390,10 +390,6 @@ function InitAndStartRefTests()
     }
 
     try {
-        gURLFilterRegex = new RegExp(prefs.getCharPref("reftest.filter"));
-    } catch(e) {}
-
-    try {
         gFocusFilterMode = prefs.getCharPref("reftest.focusFilterMode");
     } catch(e) {}
 
@@ -449,7 +445,7 @@ function Shuffle(array)
 
 function StartTests()
 {
-    var uri;
+    var manifests;
     /* These prefs are optional, so we don't need to spit an error to the log */
     try {
         var prefs = Components.classes["@mozilla.org/preferences-service;1"].
@@ -476,23 +472,29 @@ function StartTests()
         gRunSlowTests = false;
     }
 
-    try {
-        uri = prefs.getCharPref("reftest.uri");
-    } catch(e) {
-        uri = "";
-    }
-
-    if (uri == "") {
-        gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | | Unable to find reftest.uri pref.  Please ensure your profile is setup properly\n");
-        DoneTests();
-    }
-
     if (gShuffle) {
         gNoCanvasCache = true;
     }
 
+    gURLs = [];
+
     try {
-        ReadTopManifest(uri);
+        var manifests = JSON.parse(prefs.getCharPref("reftest.manifests"));
+        gURLFilterRegex = manifests[null];
+    } catch(e) {
+        gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | | Unable to find reftest.manifests pref.  Please ensure your profile is setup properly\n");
+        DoneTests();
+    }
+
+    try {
+        var globalFilter = manifests.hasOwnProperty("") ? new RegExp(manifests[""]) : null;
+        var manifestURLs = Object.keys(manifests);
+        manifestURLs.sort();
+        manifestURLs.forEach(function(manifestURL) {
+            gDumpLog("Readings manifest" + manifestURL + "\n");
+            var pathFilters = manifests[manifestURL].map(function(x) {return new RegExp(x)});
+            ReadTopManifest(manifestURL, [globalFilter, pathFilters]);
+        });
         BuildUseCounts();
 
         // Filter tests which will be skipped to get a more even distribution when chunking
@@ -745,18 +747,22 @@ function AddPrefSettings(aWhere, aPrefName, aPrefValExpression, aSandbox, aTestP
     return true;
 }
 
-function ReadTopManifest(aFileURL)
+function ReadTopManifest(aFileURL, aFilters)
 {
-    gURLs = new Array();
     var url = gIOService.newURI(aFileURL, null, null);
     if (!url)
         throw "Expected a file or http URL for the manifest.";
-    ReadManifest(url, EXPECTED_PASS);
+    ReadManifest(url, EXPECTED_PASS, aFilters);
 }
 
-function AddTestItem(aTest)
+function AddTestItem(aTest, aFilters)
 {
-    if (gURLFilterRegex && !gURLFilterRegex.test(aTest.url1.spec))
+    if (!aFilters)
+        aFilters = [null, []];
+
+    if ((aFilters[0] && !aFilters[0].test(aTest.url1.spec)) ||
+        (aFilters[1].length > 0 &&
+         !aFilters[1].some(function(filter) {return filter.test(aTest.url1.spec)})))
         return;
     if (gFocusFilterMode == FOCUS_FILTER_NEEDS_FOCUS_TESTS &&
         !aTest.needsFocus)
@@ -769,7 +775,7 @@ function AddTestItem(aTest)
 
 // Note: If you materially change the reftest manifest parsing,
 // please keep the parser in print-manifest-dirs.py in sync.
-function ReadManifest(aURL, inherited_status)
+function ReadManifest(aURL, inherited_status, aFilters)
 {
     var secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
                      .getService(CI.nsIScriptSecurityManager);
@@ -986,7 +992,7 @@ function ReadManifest(aURL, inherited_status)
             var incURI = gIOService.newURI(items[1], null, listURL);
             secMan.checkLoadURIWithPrincipal(principal, incURI,
                                              CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-            ReadManifest(incURI, expected_status);
+            ReadManifest(incURI, expected_status, aFilters);
         } else if (items[0] == TYPE_LOAD) {
             if (items.length != 2)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": incorrect number of arguments to load";
@@ -1016,7 +1022,7 @@ function ReadManifest(aURL, inherited_status)
                           fuzzyMaxPixels: fuzzy_max_pixels,
                           url1: testURI,
                           url2: null,
-                          chaosMode: chaosMode });
+                          chaosMode: chaosMode }, aFilters);
         } else if (items[0] == TYPE_SCRIPT) {
             if (items.length != 2)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": incorrect number of arguments to script";
@@ -1043,7 +1049,7 @@ function ReadManifest(aURL, inherited_status)
                           fuzzyMaxPixels: fuzzy_max_pixels,
                           url1: testURI,
                           url2: null,
-                          chaosMode: chaosMode });
+                          chaosMode: chaosMode }, aFilters);
         } else if (items[0] == TYPE_REFTEST_EQUAL || items[0] == TYPE_REFTEST_NOTEQUAL) {
             if (items.length != 3)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": incorrect number of arguments to " + items[0];
@@ -1073,7 +1079,7 @@ function ReadManifest(aURL, inherited_status)
                           fuzzyMaxPixels: fuzzy_max_pixels,
                           url1: testURI,
                           url2: refURI,
-                          chaosMode: chaosMode });
+                          chaosMode: chaosMode }, aFilters);
         } else {
             throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": unknown test type " + items[0];
         }
