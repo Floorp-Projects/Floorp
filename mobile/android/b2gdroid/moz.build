@@ -12,10 +12,13 @@ DIRS += [
 ]
 
 DIRS += [
+    'components',
     '../components',
     '../modules',
     '../javaaddons',
     '../base',
     '../fonts',
     '../geckoview_library',
+    '/b2g/components',
+    '/b2g/chrome',
 ]
