@@ -27,9 +27,9 @@ function make_uri(url) {
 // Ensure "fullscreen" permissions are not present on the test URI.
 var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
 var uri = make_uri("http://mochi.test:8888");
-var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                  .getService(Ci.nsIScriptSecurityManager)
-                  .getNoAppCodebasePrincipal(uri);
+var ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                            .getService(Ci.nsIScriptSecurityManager);
+var principal = ssm.createCodebasePrincipal(uri, {});
 pm.removeFromPrincipal(principal, "fullscreen");
 
 SpecialPowers.pushPrefEnv({"set": [

@@ -37,6 +37,21 @@ template<class Impl>
 constexpr JNINativeMethod ANRReporter::Natives<Impl>::methods[];
 
 template<class Impl>
+class GeckoThread::Natives : public mozilla::jni::NativeImpl<GeckoThread, Impl>
+{
+public:
+    static constexpr JNINativeMethod methods[] = {
+
+        mozilla::jni::MakeNativeMethod<GeckoThread::SpeculativeConnect_t>(
+                mozilla::jni::NativeStub<GeckoThread::SpeculativeConnect_t, Impl>
+                ::template Wrap<&Impl::SpeculativeConnect>)
+    };
+};
+
+template<class Impl>
+constexpr JNINativeMethod GeckoThread::Natives<Impl>::methods[];
+
+template<class Impl>
 class NativeJSContainer::Natives : public mozilla::jni::NativeImpl<NativeJSContainer, Impl>
 {
 public:

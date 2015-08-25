@@ -250,7 +250,7 @@ class LuciddreamTest(TestingMixin, MercurialScript, MozbaseMixin, BaseScript,
             str_format_values['gaia_profile'] = os.path.join(dirs['abs_gaia_dir'], 'profile')
 
         suite = 'luciddream-emulator' if self.config.get('emulator_url') else 'luciddream-b2gdt'
-        options = self.tree_config['suite_definitions'][suite]['options']
+        options = self.config['suite_definitions'][suite]['options']
         for option in options:
             option = option % str_format_values
             if not option.endswith('None'):

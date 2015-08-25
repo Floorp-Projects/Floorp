@@ -113,6 +113,9 @@ static const int32_t       UNKNOWN_ZONE_ID_LENGTH = 11;
 static icu::TimeZone* DEFAULT_ZONE = NULL;
 static icu::UInitOnce gDefaultZoneInitOnce = U_INITONCE_INITIALIZER;
 
+// Prevents DEFAULT_ZONE from being deleted while another thread is cloning it.
+static UMutex gDefaultZoneMutex = U_MUTEX_INITIALIZER;
+
 static icu::TimeZone* _GMT = NULL;
 static icu::TimeZone* _UNKNOWN_ZONE = NULL;
 static icu::UInitOnce gStaticZonesInitOnce = U_INITONCE_INITIALIZER;
@@ -458,6 +461,8 @@ TimeZone::detectHostTimeZone()
 
     uprv_tzset(); // Initialize tz... system data
 
+    uprv_tzname_clear_cache();
+
     // Get the timezone ID from the host.  This function should do
     // any required host-specific remapping; e.g., on Windows this
     // function maps the Date and Time control panel setting to an
@@ -559,7 +564,16 @@ TimeZone* U_EXPORT2
 TimeZone::createDefault()
 {
     umtx_initOnce(gDefaultZoneInitOnce, initDefault);
+
+    Mutex mutex_lock(&gDefaultZoneMutex);
     return (DEFAULT_ZONE != NULL) ? DEFAULT_ZONE->clone() : NULL;
+}
+
+void
+TimeZone::recreateDefault()
+{
+    TimeZone *default_zone = TimeZone::detectHostTimeZone();
+    adoptDefault(default_zone);
 }
 
 // -------------------------------------
@@ -569,6 +583,7 @@ TimeZone::adoptDefault(TimeZone* zone)
 {
     if (zone != NULL)
     {
+        Mutex mutex_lock(&gDefaultZoneMutex);
         TimeZone *old = DEFAULT_ZONE;
         DEFAULT_ZONE = zone;
         delete old;

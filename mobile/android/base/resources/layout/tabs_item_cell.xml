@@ -25,9 +25,9 @@
             android:background="@drawable/tab_thumbnail"
             android:duplicateParentState="true">
 
-        <org.mozilla.gecko.widget.ThumbnailView android:id="@+id/thumbnail"
-                                                android:layout_width="@dimen/tab_thumbnail_width"
-                                                android:layout_height="@dimen/tab_thumbnail_height"/>
+        <org.mozilla.gecko.tabs.TabsPanelThumbnailView android:id="@+id/thumbnail"
+                                                       android:layout_width="@dimen/tab_thumbnail_width"
+                                                       android:layout_height="@dimen/tab_thumbnail_height"/>
 
         <LinearLayout android:layout_width="@dimen/tab_thumbnail_width"
                       android:layout_height="wrap_content"

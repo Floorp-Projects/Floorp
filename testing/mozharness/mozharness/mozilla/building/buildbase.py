@@ -1280,8 +1280,8 @@ or run without that action (ie: --no-{action})"
         if os.path.exists(mach_properties_path):
             with self.opened(mach_properties_path, error_level=error_level) as (fh, err):
                 build_props = json.load(fh)
-                if not build_props or err:
-                    self.log("%s exists but there was an error finding any "
+                if err:
+                    self.log("%s exists but there was an error reading the "
                              "properties. props: `%s` - error: "
                              "`%s`" % (mach_properties_path,
                                        build_props or 'None',

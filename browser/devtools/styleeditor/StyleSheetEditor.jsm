@@ -386,7 +386,7 @@ StyleSheetEditor.prototype = {
     sourceEditor.on("dirty-change", this._onPropertyChange);
 
     return sourceEditor.appendTo(inputElement).then(() => {
-      sourceEditor.on("save", this.saveToFile);
+      sourceEditor.on("saveRequested", this.saveToFile);
 
       if (this.styleSheet.update) {
         sourceEditor.on("change", this.updateStyleSheet);
@@ -715,7 +715,7 @@ StyleSheetEditor.prototype = {
   destroy: function() {
     if (this._sourceEditor) {
       this._sourceEditor.off("dirty-change", this._onPropertyChange);
-      this._sourceEditor.off("save", this.saveToFile);
+      this._sourceEditor.off("saveRequested", this.saveToFile);
       this._sourceEditor.off("change", this.updateStyleSheet);
       if (this.highlighter && this.walker && this._sourceEditor.container) {
         this._sourceEditor.container.removeEventListener("mousemove",

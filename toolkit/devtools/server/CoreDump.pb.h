@@ -36,6 +36,8 @@ void protobuf_AssignDesc_CoreDump_2eproto();
 void protobuf_ShutdownFile_CoreDump_2eproto();
 
 class Metadata;
+class StackFrame;
+class StackFrame_Data;
 class Node;
 class Edge;
 
@@ -117,6 +119,273 @@ class Metadata : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static Metadata* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class StackFrame_Data : public ::google::protobuf::Message {
+ public:
+  StackFrame_Data();
+  virtual ~StackFrame_Data();
+
+  StackFrame_Data(const StackFrame_Data& from);
+
+  inline StackFrame_Data& operator=(const StackFrame_Data& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const StackFrame_Data& default_instance();
+
+  void Swap(StackFrame_Data* other);
+
+  // implements Message ----------------------------------------------
+
+  StackFrame_Data* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const StackFrame_Data& from);
+  void MergeFrom(const StackFrame_Data& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional uint64 id = 1;
+  inline bool has_id() const;
+  inline void clear_id();
+  static const int kIdFieldNumber = 1;
+  inline ::google::protobuf::uint64 id() const;
+  inline void set_id(::google::protobuf::uint64 value);
+
+  // optional .mozilla.devtools.protobuf.StackFrame parent = 2;
+  inline bool has_parent() const;
+  inline void clear_parent();
+  static const int kParentFieldNumber = 2;
+  inline const ::mozilla::devtools::protobuf::StackFrame& parent() const;
+  inline ::mozilla::devtools::protobuf::StackFrame* mutable_parent();
+  inline ::mozilla::devtools::protobuf::StackFrame* release_parent();
+  inline void set_allocated_parent(::mozilla::devtools::protobuf::StackFrame* parent);
+
+  // optional uint32 line = 3;
+  inline bool has_line() const;
+  inline void clear_line();
+  static const int kLineFieldNumber = 3;
+  inline ::google::protobuf::uint32 line() const;
+  inline void set_line(::google::protobuf::uint32 value);
+
+  // optional uint32 column = 4;
+  inline bool has_column() const;
+  inline void clear_column();
+  static const int kColumnFieldNumber = 4;
+  inline ::google::protobuf::uint32 column() const;
+  inline void set_column(::google::protobuf::uint32 value);
+
+  // optional bytes source = 5;
+  inline bool has_source() const;
+  inline void clear_source();
+  static const int kSourceFieldNumber = 5;
+  inline const ::std::string& source() const;
+  inline void set_source(const ::std::string& value);
+  inline void set_source(const char* value);
+  inline void set_source(const void* value, size_t size);
+  inline ::std::string* mutable_source();
+  inline ::std::string* release_source();
+  inline void set_allocated_source(::std::string* source);
+
+  // optional bytes functionDisplayName = 6;
+  inline bool has_functiondisplayname() const;
+  inline void clear_functiondisplayname();
+  static const int kFunctionDisplayNameFieldNumber = 6;
+  inline const ::std::string& functiondisplayname() const;
+  inline void set_functiondisplayname(const ::std::string& value);
+  inline void set_functiondisplayname(const char* value);
+  inline void set_functiondisplayname(const void* value, size_t size);
+  inline ::std::string* mutable_functiondisplayname();
+  inline ::std::string* release_functiondisplayname();
+  inline void set_allocated_functiondisplayname(::std::string* functiondisplayname);
+
+  // optional bool isSystem = 7;
+  inline bool has_issystem() const;
+  inline void clear_issystem();
+  static const int kIsSystemFieldNumber = 7;
+  inline bool issystem() const;
+  inline void set_issystem(bool value);
+
+  // optional bool isSelfHosted = 8;
+  inline bool has_isselfhosted() const;
+  inline void clear_isselfhosted();
+  static const int kIsSelfHostedFieldNumber = 8;
+  inline bool isselfhosted() const;
+  inline void set_isselfhosted(bool value);
+
+  // @@protoc_insertion_point(class_scope:mozilla.devtools.protobuf.StackFrame.Data)
+ private:
+  inline void set_has_id();
+  inline void clear_has_id();
+  inline void set_has_parent();
+  inline void clear_has_parent();
+  inline void set_has_line();
+  inline void clear_has_line();
+  inline void set_has_column();
+  inline void clear_has_column();
+  inline void set_has_source();
+  inline void clear_has_source();
+  inline void set_has_functiondisplayname();
+  inline void clear_has_functiondisplayname();
+  inline void set_has_issystem();
+  inline void clear_has_issystem();
+  inline void set_has_isselfhosted();
+  inline void clear_has_isselfhosted();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  ::google::protobuf::uint64 id_;
+  ::mozilla::devtools::protobuf::StackFrame* parent_;
+  ::google::protobuf::uint32 line_;
+  ::google::protobuf::uint32 column_;
+  ::std::string* source_;
+  ::std::string* functiondisplayname_;
+  bool issystem_;
+  bool isselfhosted_;
+  friend void  protobuf_AddDesc_CoreDump_2eproto();
+  friend void protobuf_AssignDesc_CoreDump_2eproto();
+  friend void protobuf_ShutdownFile_CoreDump_2eproto();
+
+  void InitAsDefaultInstance();
+  static StackFrame_Data* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class StackFrame : public ::google::protobuf::Message {
+ public:
+  StackFrame();
+  virtual ~StackFrame();
+
+  StackFrame(const StackFrame& from);
+
+  inline StackFrame& operator=(const StackFrame& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const StackFrame& default_instance();
+
+  enum StackFrameTypeCase {
+    kData = 1,
+    kRef = 2,
+    STACKFRAMETYPE_NOT_SET = 0,
+  };
+
+  void Swap(StackFrame* other);
+
+  // implements Message ----------------------------------------------
+
+  StackFrame* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const StackFrame& from);
+  void MergeFrom(const StackFrame& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  typedef StackFrame_Data Data;
+
+  // accessors -------------------------------------------------------
+
+  // optional .mozilla.devtools.protobuf.StackFrame.Data data = 1;
+  inline bool has_data() const;
+  inline void clear_data();
+  static const int kDataFieldNumber = 1;
+  inline const ::mozilla::devtools::protobuf::StackFrame_Data& data() const;
+  inline ::mozilla::devtools::protobuf::StackFrame_Data* mutable_data();
+  inline ::mozilla::devtools::protobuf::StackFrame_Data* release_data();
+  inline void set_allocated_data(::mozilla::devtools::protobuf::StackFrame_Data* data);
+
+  // optional uint64 ref = 2;
+  inline bool has_ref() const;
+  inline void clear_ref();
+  static const int kRefFieldNumber = 2;
+  inline ::google::protobuf::uint64 ref() const;
+  inline void set_ref(::google::protobuf::uint64 value);
+
+  inline StackFrameTypeCase StackFrameType_case() const;
+  // @@protoc_insertion_point(class_scope:mozilla.devtools.protobuf.StackFrame)
+ private:
+  inline void set_has_data();
+  inline void set_has_ref();
+
+  inline bool has_StackFrameType();
+  void clear_StackFrameType();
+  inline void clear_has_StackFrameType();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  union StackFrameTypeUnion {
+    ::mozilla::devtools::protobuf::StackFrame_Data* data_;
+    ::google::protobuf::uint64 ref_;
+  } StackFrameType_;
+  ::google::protobuf::uint32 _oneof_case_[1];
+
+  friend void  protobuf_AddDesc_CoreDump_2eproto();
+  friend void protobuf_AssignDesc_CoreDump_2eproto();
+  friend void protobuf_ShutdownFile_CoreDump_2eproto();
+
+  void InitAsDefaultInstance();
+  static StackFrame* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -211,6 +480,27 @@ class Node : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedPtrField< ::mozilla::devtools::protobuf::Edge >*
       mutable_edges();
 
+  // optional .mozilla.devtools.protobuf.StackFrame allocationStack = 5;
+  inline bool has_allocationstack() const;
+  inline void clear_allocationstack();
+  static const int kAllocationStackFieldNumber = 5;
+  inline const ::mozilla::devtools::protobuf::StackFrame& allocationstack() const;
+  inline ::mozilla::devtools::protobuf::StackFrame* mutable_allocationstack();
+  inline ::mozilla::devtools::protobuf::StackFrame* release_allocationstack();
+  inline void set_allocated_allocationstack(::mozilla::devtools::protobuf::StackFrame* allocationstack);
+
+  // optional bytes jsObjectClassName = 6;
+  inline bool has_jsobjectclassname() const;
+  inline void clear_jsobjectclassname();
+  static const int kJsObjectClassNameFieldNumber = 6;
+  inline const ::std::string& jsobjectclassname() const;
+  inline void set_jsobjectclassname(const ::std::string& value);
+  inline void set_jsobjectclassname(const char* value);
+  inline void set_jsobjectclassname(const void* value, size_t size);
+  inline ::std::string* mutable_jsobjectclassname();
+  inline ::std::string* release_jsobjectclassname();
+  inline void set_allocated_jsobjectclassname(::std::string* jsobjectclassname);
+
   // @@protoc_insertion_point(class_scope:mozilla.devtools.protobuf.Node)
  private:
   inline void set_has_id();
@@ -219,6 +509,10 @@ class Node : public ::google::protobuf::Message {
   inline void clear_has_typename_();
   inline void set_has_size();
   inline void clear_has_size();
+  inline void set_has_allocationstack();
+  inline void clear_has_allocationstack();
+  inline void set_has_jsobjectclassname();
+  inline void clear_has_jsobjectclassname();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -228,6 +522,8 @@ class Node : public ::google::protobuf::Message {
   ::std::string* typename__;
   ::google::protobuf::uint64 size_;
   ::google::protobuf::RepeatedPtrField< ::mozilla::devtools::protobuf::Edge > edges_;
+  ::mozilla::devtools::protobuf::StackFrame* allocationstack_;
+  ::std::string* jsobjectclassname_;
   friend void  protobuf_AddDesc_CoreDump_2eproto();
   friend void protobuf_AssignDesc_CoreDump_2eproto();
   friend void protobuf_ShutdownFile_CoreDump_2eproto();
@@ -360,6 +656,406 @@ inline void Metadata::set_timestamp(::google::protobuf::uint64 value) {
   // @@protoc_insertion_point(field_set:mozilla.devtools.protobuf.Metadata.timeStamp)
 }
 
+// -------------------------------------------------------------------
+
+// StackFrame_Data
+
+// optional uint64 id = 1;
+inline bool StackFrame_Data::has_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void StackFrame_Data::set_has_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void StackFrame_Data::clear_has_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void StackFrame_Data::clear_id() {
+  id_ = GOOGLE_ULONGLONG(0);
+  clear_has_id();
+}
+inline ::google::protobuf::uint64 StackFrame_Data::id() const {
+  // @@protoc_insertion_point(field_get:mozilla.devtools.protobuf.StackFrame.Data.id)
+  return id_;
+}
+inline void StackFrame_Data::set_id(::google::protobuf::uint64 value) {
+  set_has_id();
+  id_ = value;
+  // @@protoc_insertion_point(field_set:mozilla.devtools.protobuf.StackFrame.Data.id)
+}
+
+// optional .mozilla.devtools.protobuf.StackFrame parent = 2;
+inline bool StackFrame_Data::has_parent() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void StackFrame_Data::set_has_parent() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void StackFrame_Data::clear_has_parent() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void StackFrame_Data::clear_parent() {
+  if (parent_ != NULL) parent_->::mozilla::devtools::protobuf::StackFrame::Clear();
+  clear_has_parent();
+}
+inline const ::mozilla::devtools::protobuf::StackFrame& StackFrame_Data::parent() const {
+  // @@protoc_insertion_point(field_get:mozilla.devtools.protobuf.StackFrame.Data.parent)
+  return parent_ != NULL ? *parent_ : *default_instance_->parent_;
+}
+inline ::mozilla::devtools::protobuf::StackFrame* StackFrame_Data::mutable_parent() {
+  set_has_parent();
+  if (parent_ == NULL) parent_ = new ::mozilla::devtools::protobuf::StackFrame;
+  // @@protoc_insertion_point(field_mutable:mozilla.devtools.protobuf.StackFrame.Data.parent)
+  return parent_;
+}
+inline ::mozilla::devtools::protobuf::StackFrame* StackFrame_Data::release_parent() {
+  clear_has_parent();
+  ::mozilla::devtools::protobuf::StackFrame* temp = parent_;
+  parent_ = NULL;
+  return temp;
+}
+inline void StackFrame_Data::set_allocated_parent(::mozilla::devtools::protobuf::StackFrame* parent) {
+  delete parent_;
+  parent_ = parent;
+  if (parent) {
+    set_has_parent();
+  } else {
+    clear_has_parent();
+  }
+  // @@protoc_insertion_point(field_set_allocated:mozilla.devtools.protobuf.StackFrame.Data.parent)
+}
+
+// optional uint32 line = 3;
+inline bool StackFrame_Data::has_line() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void StackFrame_Data::set_has_line() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void StackFrame_Data::clear_has_line() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void StackFrame_Data::clear_line() {
+  line_ = 0u;
+  clear_has_line();
+}
+inline ::google::protobuf::uint32 StackFrame_Data::line() const {
+  // @@protoc_insertion_point(field_get:mozilla.devtools.protobuf.StackFrame.Data.line)
+  return line_;
+}
+inline void StackFrame_Data::set_line(::google::protobuf::uint32 value) {
+  set_has_line();
+  line_ = value;
+  // @@protoc_insertion_point(field_set:mozilla.devtools.protobuf.StackFrame.Data.line)
+}
+
+// optional uint32 column = 4;
+inline bool StackFrame_Data::has_column() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void StackFrame_Data::set_has_column() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void StackFrame_Data::clear_has_column() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void StackFrame_Data::clear_column() {
+  column_ = 0u;
+  clear_has_column();
+}
+inline ::google::protobuf::uint32 StackFrame_Data::column() const {
+  // @@protoc_insertion_point(field_get:mozilla.devtools.protobuf.StackFrame.Data.column)
+  return column_;
+}
+inline void StackFrame_Data::set_column(::google::protobuf::uint32 value) {
+  set_has_column();
+  column_ = value;
+  // @@protoc_insertion_point(field_set:mozilla.devtools.protobuf.StackFrame.Data.column)
+}
+
+// optional bytes source = 5;
+inline bool StackFrame_Data::has_source() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void StackFrame_Data::set_has_source() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void StackFrame_Data::clear_has_source() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void StackFrame_Data::clear_source() {
+  if (source_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    source_->clear();
+  }
+  clear_has_source();
+}
+inline const ::std::string& StackFrame_Data::source() const {
+  // @@protoc_insertion_point(field_get:mozilla.devtools.protobuf.StackFrame.Data.source)
+  return *source_;
+}
+inline void StackFrame_Data::set_source(const ::std::string& value) {
+  set_has_source();
+  if (source_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    source_ = new ::std::string;
+  }
+  source_->assign(value);
+  // @@protoc_insertion_point(field_set:mozilla.devtools.protobuf.StackFrame.Data.source)
+}
+inline void StackFrame_Data::set_source(const char* value) {
+  set_has_source();
+  if (source_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    source_ = new ::std::string;
+  }
+  source_->assign(value);
+  // @@protoc_insertion_point(field_set_char:mozilla.devtools.protobuf.StackFrame.Data.source)
+}
+inline void StackFrame_Data::set_source(const void* value, size_t size) {
+  set_has_source();
+  if (source_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    source_ = new ::std::string;
+  }
+  source_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:mozilla.devtools.protobuf.StackFrame.Data.source)
+}
+inline ::std::string* StackFrame_Data::mutable_source() {
+  set_has_source();
+  if (source_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    source_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:mozilla.devtools.protobuf.StackFrame.Data.source)
+  return source_;
+}
+inline ::std::string* StackFrame_Data::release_source() {
+  clear_has_source();
+  if (source_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = source_;
+    source_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void StackFrame_Data::set_allocated_source(::std::string* source) {
+  if (source_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete source_;
+  }
+  if (source) {
+    set_has_source();
+    source_ = source;
+  } else {
+    clear_has_source();
+    source_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:mozilla.devtools.protobuf.StackFrame.Data.source)
+}
+
+// optional bytes functionDisplayName = 6;
+inline bool StackFrame_Data::has_functiondisplayname() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void StackFrame_Data::set_has_functiondisplayname() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void StackFrame_Data::clear_has_functiondisplayname() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void StackFrame_Data::clear_functiondisplayname() {
+  if (functiondisplayname_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    functiondisplayname_->clear();
+  }
+  clear_has_functiondisplayname();
+}
+inline const ::std::string& StackFrame_Data::functiondisplayname() const {
+  // @@protoc_insertion_point(field_get:mozilla.devtools.protobuf.StackFrame.Data.functionDisplayName)
+  return *functiondisplayname_;
+}
+inline void StackFrame_Data::set_functiondisplayname(const ::std::string& value) {
+  set_has_functiondisplayname();
+  if (functiondisplayname_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    functiondisplayname_ = new ::std::string;
+  }
+  functiondisplayname_->assign(value);
+  // @@protoc_insertion_point(field_set:mozilla.devtools.protobuf.StackFrame.Data.functionDisplayName)
+}
+inline void StackFrame_Data::set_functiondisplayname(const char* value) {
+  set_has_functiondisplayname();
+  if (functiondisplayname_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    functiondisplayname_ = new ::std::string;
+  }
+  functiondisplayname_->assign(value);
+  // @@protoc_insertion_point(field_set_char:mozilla.devtools.protobuf.StackFrame.Data.functionDisplayName)
+}
+inline void StackFrame_Data::set_functiondisplayname(const void* value, size_t size) {
+  set_has_functiondisplayname();
+  if (functiondisplayname_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    functiondisplayname_ = new ::std::string;
+  }
+  functiondisplayname_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:mozilla.devtools.protobuf.StackFrame.Data.functionDisplayName)
+}
+inline ::std::string* StackFrame_Data::mutable_functiondisplayname() {
+  set_has_functiondisplayname();
+  if (functiondisplayname_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    functiondisplayname_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:mozilla.devtools.protobuf.StackFrame.Data.functionDisplayName)
+  return functiondisplayname_;
+}
+inline ::std::string* StackFrame_Data::release_functiondisplayname() {
+  clear_has_functiondisplayname();
+  if (functiondisplayname_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = functiondisplayname_;
+    functiondisplayname_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void StackFrame_Data::set_allocated_functiondisplayname(::std::string* functiondisplayname) {
+  if (functiondisplayname_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete functiondisplayname_;
+  }
+  if (functiondisplayname) {
+    set_has_functiondisplayname();
+    functiondisplayname_ = functiondisplayname;
+  } else {
+    clear_has_functiondisplayname();
+    functiondisplayname_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:mozilla.devtools.protobuf.StackFrame.Data.functionDisplayName)
+}
+
+// optional bool isSystem = 7;
+inline bool StackFrame_Data::has_issystem() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void StackFrame_Data::set_has_issystem() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void StackFrame_Data::clear_has_issystem() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void StackFrame_Data::clear_issystem() {
+  issystem_ = false;
+  clear_has_issystem();
+}
+inline bool StackFrame_Data::issystem() const {
+  // @@protoc_insertion_point(field_get:mozilla.devtools.protobuf.StackFrame.Data.isSystem)
+  return issystem_;
+}
+inline void StackFrame_Data::set_issystem(bool value) {
+  set_has_issystem();
+  issystem_ = value;
+  // @@protoc_insertion_point(field_set:mozilla.devtools.protobuf.StackFrame.Data.isSystem)
+}
+
+// optional bool isSelfHosted = 8;
+inline bool StackFrame_Data::has_isselfhosted() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void StackFrame_Data::set_has_isselfhosted() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void StackFrame_Data::clear_has_isselfhosted() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void StackFrame_Data::clear_isselfhosted() {
+  isselfhosted_ = false;
+  clear_has_isselfhosted();
+}
+inline bool StackFrame_Data::isselfhosted() const {
+  // @@protoc_insertion_point(field_get:mozilla.devtools.protobuf.StackFrame.Data.isSelfHosted)
+  return isselfhosted_;
+}
+inline void StackFrame_Data::set_isselfhosted(bool value) {
+  set_has_isselfhosted();
+  isselfhosted_ = value;
+  // @@protoc_insertion_point(field_set:mozilla.devtools.protobuf.StackFrame.Data.isSelfHosted)
+}
+
+// -------------------------------------------------------------------
+
+// StackFrame
+
+// optional .mozilla.devtools.protobuf.StackFrame.Data data = 1;
+inline bool StackFrame::has_data() const {
+  return StackFrameType_case() == kData;
+}
+inline void StackFrame::set_has_data() {
+  _oneof_case_[0] = kData;
+}
+inline void StackFrame::clear_data() {
+  if (has_data()) {
+    delete StackFrameType_.data_;
+    clear_has_StackFrameType();
+  }
+}
+inline const ::mozilla::devtools::protobuf::StackFrame_Data& StackFrame::data() const {
+  return has_data() ? *StackFrameType_.data_
+                      : ::mozilla::devtools::protobuf::StackFrame_Data::default_instance();
+}
+inline ::mozilla::devtools::protobuf::StackFrame_Data* StackFrame::mutable_data() {
+  if (!has_data()) {
+    clear_StackFrameType();
+    set_has_data();
+    StackFrameType_.data_ = new ::mozilla::devtools::protobuf::StackFrame_Data;
+  }
+  return StackFrameType_.data_;
+}
+inline ::mozilla::devtools::protobuf::StackFrame_Data* StackFrame::release_data() {
+  if (has_data()) {
+    clear_has_StackFrameType();
+    ::mozilla::devtools::protobuf::StackFrame_Data* temp = StackFrameType_.data_;
+    StackFrameType_.data_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void StackFrame::set_allocated_data(::mozilla::devtools::protobuf::StackFrame_Data* data) {
+  clear_StackFrameType();
+  if (data) {
+    set_has_data();
+    StackFrameType_.data_ = data;
+  }
+}
+
+// optional uint64 ref = 2;
+inline bool StackFrame::has_ref() const {
+  return StackFrameType_case() == kRef;
+}
+inline void StackFrame::set_has_ref() {
+  _oneof_case_[0] = kRef;
+}
+inline void StackFrame::clear_ref() {
+  if (has_ref()) {
+    StackFrameType_.ref_ = GOOGLE_ULONGLONG(0);
+    clear_has_StackFrameType();
+  }
+}
+inline ::google::protobuf::uint64 StackFrame::ref() const {
+  if (has_ref()) {
+    return StackFrameType_.ref_;
+  }
+  return GOOGLE_ULONGLONG(0);
+}
+inline void StackFrame::set_ref(::google::protobuf::uint64 value) {
+  if (!has_ref()) {
+    clear_StackFrameType();
+    set_has_ref();
+  }
+  StackFrameType_.ref_ = value;
+}
+
+inline bool StackFrame::has_StackFrameType() {
+  return StackFrameType_case() != STACKFRAMETYPE_NOT_SET;
+}
+inline void StackFrame::clear_has_StackFrameType() {
+  _oneof_case_[0] = STACKFRAMETYPE_NOT_SET;
+}
+inline StackFrame::StackFrameTypeCase StackFrame::StackFrameType_case() const {
+  return StackFrame::StackFrameTypeCase(_oneof_case_[0]);
+}
 // -------------------------------------------------------------------
 
 // Node
@@ -518,6 +1214,123 @@ Node::mutable_edges() {
   return &edges_;
 }
 
+// optional .mozilla.devtools.protobuf.StackFrame allocationStack = 5;
+inline bool Node::has_allocationstack() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void Node::set_has_allocationstack() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void Node::clear_has_allocationstack() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void Node::clear_allocationstack() {
+  if (allocationstack_ != NULL) allocationstack_->::mozilla::devtools::protobuf::StackFrame::Clear();
+  clear_has_allocationstack();
+}
+inline const ::mozilla::devtools::protobuf::StackFrame& Node::allocationstack() const {
+  // @@protoc_insertion_point(field_get:mozilla.devtools.protobuf.Node.allocationStack)
+  return allocationstack_ != NULL ? *allocationstack_ : *default_instance_->allocationstack_;
+}
+inline ::mozilla::devtools::protobuf::StackFrame* Node::mutable_allocationstack() {
+  set_has_allocationstack();
+  if (allocationstack_ == NULL) allocationstack_ = new ::mozilla::devtools::protobuf::StackFrame;
+  // @@protoc_insertion_point(field_mutable:mozilla.devtools.protobuf.Node.allocationStack)
+  return allocationstack_;
+}
+inline ::mozilla::devtools::protobuf::StackFrame* Node::release_allocationstack() {
+  clear_has_allocationstack();
+  ::mozilla::devtools::protobuf::StackFrame* temp = allocationstack_;
+  allocationstack_ = NULL;
+  return temp;
+}
+inline void Node::set_allocated_allocationstack(::mozilla::devtools::protobuf::StackFrame* allocationstack) {
+  delete allocationstack_;
+  allocationstack_ = allocationstack;
+  if (allocationstack) {
+    set_has_allocationstack();
+  } else {
+    clear_has_allocationstack();
+  }
+  // @@protoc_insertion_point(field_set_allocated:mozilla.devtools.protobuf.Node.allocationStack)
+}
+
+// optional bytes jsObjectClassName = 6;
+inline bool Node::has_jsobjectclassname() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void Node::set_has_jsobjectclassname() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void Node::clear_has_jsobjectclassname() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void Node::clear_jsobjectclassname() {
+  if (jsobjectclassname_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    jsobjectclassname_->clear();
+  }
+  clear_has_jsobjectclassname();
+}
+inline const ::std::string& Node::jsobjectclassname() const {
+  // @@protoc_insertion_point(field_get:mozilla.devtools.protobuf.Node.jsObjectClassName)
+  return *jsobjectclassname_;
+}
+inline void Node::set_jsobjectclassname(const ::std::string& value) {
+  set_has_jsobjectclassname();
+  if (jsobjectclassname_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    jsobjectclassname_ = new ::std::string;
+  }
+  jsobjectclassname_->assign(value);
+  // @@protoc_insertion_point(field_set:mozilla.devtools.protobuf.Node.jsObjectClassName)
+}
+inline void Node::set_jsobjectclassname(const char* value) {
+  set_has_jsobjectclassname();
+  if (jsobjectclassname_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    jsobjectclassname_ = new ::std::string;
+  }
+  jsobjectclassname_->assign(value);
+  // @@protoc_insertion_point(field_set_char:mozilla.devtools.protobuf.Node.jsObjectClassName)
+}
+inline void Node::set_jsobjectclassname(const void* value, size_t size) {
+  set_has_jsobjectclassname();
+  if (jsobjectclassname_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    jsobjectclassname_ = new ::std::string;
+  }
+  jsobjectclassname_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:mozilla.devtools.protobuf.Node.jsObjectClassName)
+}
+inline ::std::string* Node::mutable_jsobjectclassname() {
+  set_has_jsobjectclassname();
+  if (jsobjectclassname_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    jsobjectclassname_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:mozilla.devtools.protobuf.Node.jsObjectClassName)
+  return jsobjectclassname_;
+}
+inline ::std::string* Node::release_jsobjectclassname() {
+  clear_has_jsobjectclassname();
+  if (jsobjectclassname_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = jsobjectclassname_;
+    jsobjectclassname_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void Node::set_allocated_jsobjectclassname(::std::string* jsobjectclassname) {
+  if (jsobjectclassname_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete jsobjectclassname_;
+  }
+  if (jsobjectclassname) {
+    set_has_jsobjectclassname();
+    jsobjectclassname_ = jsobjectclassname;
+  } else {
+    clear_has_jsobjectclassname();
+    jsobjectclassname_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:mozilla.devtools.protobuf.Node.jsObjectClassName)
+}
+
 // -------------------------------------------------------------------
 
 // Edge
@@ -634,8 +1447,8 @@ namespace google {
 namespace protobuf {
 
 
-} // namespace protobuf
-} // namespace google
+}  // namespace google
+}  // namespace protobuf
 #endif  // SWIG
 
 // @@protoc_insertion_point(global_scope)

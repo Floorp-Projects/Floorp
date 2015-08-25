@@ -1,4 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -184,14 +183,18 @@ function removeMessageListenerId(messageName, handler) {
   removeMessageListener(messageName + listenerId, handler);
 }
 
+let getTitleFn = dispatch(getTitle);
 let getElementSizeFn = dispatch(getElementSize);
+let getPageSourceFn = dispatch(getPageSource);
 let getActiveElementFn = dispatch(getActiveElement);
 let clickElementFn = dispatch(clickElement);
+let goBackFn = dispatch(goBack);
 let getElementAttributeFn = dispatch(getElementAttribute);
 let getElementTextFn = dispatch(getElementText);
 let getElementTagNameFn = dispatch(getElementTagName);
 let getElementRectFn = dispatch(getElementRect);
 let isElementEnabledFn = dispatch(isElementEnabled);
+let getCurrentUrlFn = dispatch(getCurrentUrl);
 
 /**
  * Start all message listeners
@@ -208,10 +211,10 @@ function startListeners() {
   addMessageListenerId("Marionette:get", get);
   addMessageListenerId("Marionette:pollForReadyState", pollForReadyState);
   addMessageListenerId("Marionette:cancelRequest", cancelRequest);
-  addMessageListenerId("Marionette:getCurrentUrl", getCurrentUrl);
-  addMessageListenerId("Marionette:getTitle", getTitle);
-  addMessageListenerId("Marionette:getPageSource", getPageSource);
-  addMessageListenerId("Marionette:goBack", goBack);
+  addMessageListenerId("Marionette:getCurrentUrl", getCurrentUrlFn);
+  addMessageListenerId("Marionette:getTitle", getTitleFn);
+  addMessageListenerId("Marionette:getPageSource", getPageSourceFn);
+  addMessageListenerId("Marionette:goBack", goBackFn);
   addMessageListenerId("Marionette:goForward", goForward);
   addMessageListenerId("Marionette:refresh", refresh);
   addMessageListenerId("Marionette:findElementContent", findElementContent);
@@ -313,10 +316,10 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:get", get);
   removeMessageListenerId("Marionette:pollForReadyState", pollForReadyState);
   removeMessageListenerId("Marionette:cancelRequest", cancelRequest);
-  removeMessageListenerId("Marionette:getTitle", getTitle);
-  removeMessageListenerId("Marionette:getPageSource", getPageSource);
-  removeMessageListenerId("Marionette:getCurrentUrl", getCurrentUrl);
-  removeMessageListenerId("Marionette:goBack", goBack);
+  removeMessageListenerId("Marionette:getTitle", getTitleFn);
+  removeMessageListenerId("Marionette:getPageSource", getPageSourceFn);
+  removeMessageListenerId("Marionette:getCurrentUrl", getCurrentUrlFn);
+  removeMessageListenerId("Marionette:goBack", goBackFn);
   removeMessageListenerId("Marionette:goForward", goForward);
   removeMessageListenerId("Marionette:refresh", refresh);
   removeMessageListenerId("Marionette:findElementContent", findElementContent);
@@ -1321,40 +1324,38 @@ function cancelRequest() {
 }
 
 /**
- * Get URL of the top level browsing context.
+ * Get URL of the top-level browsing context.
  */
-function getCurrentUrl(msg) {
-  let url;
-  if (msg.json.isB2G) {
-    url = curFrame.location.href;
+function getCurrentUrl(isB2G) {
+  if (isB2G) {
+    return curFrame.location.href;
   } else {
-    url = content.location.href;
+    return content.location.href;
   }
-  sendResponse({value: url}, msg.json.command_id);
 }
 
 /**
- * Get the current Title of the window
+ * Get the title of the current browsing context.
  */
-function getTitle(msg) {
-  sendResponse({value: curFrame.top.document.title}, msg.json.command_id);
+function getTitle() {
+  return curFrame.top.document.title;
 }
 
 /**
- * Get the current page source
+ * Get source of the current browsing context's DOM.
  */
-function getPageSource(msg) {
-  var XMLSerializer = curFrame.XMLSerializer;
-  var pageSource = new XMLSerializer().serializeToString(curFrame.document);
-  sendResponse({value: pageSource}, msg.json.command_id);
+function getPageSource() {
+  let XMLSerializer = curFrame.XMLSerializer;
+  let source = new XMLSerializer().serializeToString(curFrame.document);
+  return source;
 }
 
 /**
- * Go back in history
+ * Cause the browser to traverse one step backward in the joint history
+ * of the current top-level browsing context.
  */
-function goBack(msg) {
+function goBack() {
   curFrame.history.back();
-  sendOk(msg.json.command_id);
 }
 
 /**

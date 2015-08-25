@@ -66,9 +66,9 @@
             android:background="@drawable/tab_thumbnail"
             android:duplicateParentState="true">
 
-        <org.mozilla.gecko.widget.ThumbnailView android:id="@+id/thumbnail"
-                                                android:layout_width="@dimen/tablet_tab_thumbnail_width"
-                                                android:layout_height="@dimen/tablet_tab_thumbnail_height"
+        <org.mozilla.gecko.tabs.TabsPanelThumbnailView android:id="@+id/thumbnail"
+                                                       android:layout_width="@dimen/tablet_tab_thumbnail_width"
+                                                       android:layout_height="@dimen/tablet_tab_thumbnail_height"
                                                 />
 
     </org.mozilla.gecko.widget.TabThumbnailWrapper>

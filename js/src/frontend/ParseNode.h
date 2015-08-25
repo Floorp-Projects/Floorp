@@ -19,6 +19,7 @@ struct ParseContext;
 
 class FullParseHandler;
 class FunctionBox;
+class ModuleBox;
 class ObjectBox;
 
 // A packed ScopeCoordinate for use in the frontend during bytecode
@@ -118,6 +119,7 @@ class PackedScopeCoordinate
     F(NULL) \
     F(THIS) \
     F(FUNCTION) \
+    F(MODULE) \
     F(IF) \
     F(SWITCH) \
     F(CASE) \
@@ -636,9 +638,10 @@ class ParseNode
         } unary;
         struct {                        /* name, labeled statement, etc. */
             union {
-                JSAtom*     atom;      /* lexical name or label atom */
-                ObjectBox*  objbox;    /* block or regexp object */
+                JSAtom*      atom;      /* lexical name or label atom */
+                ObjectBox*   objbox;    /* block or regexp object */
                 FunctionBox* funbox;    /* function object */
+                ModuleBox*   modulebox; /* module object */
             };
             union {
                 ParseNode*  expr;      /* module or function body, var
@@ -662,6 +665,7 @@ class ParseNode
     } pn_u;
 
 #define pn_modulebox    pn_u.name.modulebox
+#define pn_objbox       pn_u.name.objbox
 #define pn_funbox       pn_u.name.funbox
 #define pn_body         pn_u.name.expr
 #define pn_scopecoord   pn_u.name.scopeCoord
@@ -1072,15 +1076,17 @@ struct ListNode : public ParseNode
 
 struct CodeNode : public ParseNode
 {
-    explicit CodeNode(const TokenPos& pos)
-      : ParseNode(PNK_FUNCTION, JSOP_NOP, PN_CODE, pos)
+    CodeNode(ParseNodeKind kind, const TokenPos& pos)
+      : ParseNode(kind, JSOP_NOP, PN_CODE, pos)
     {
+        MOZ_ASSERT(kind == PNK_FUNCTION || kind == PNK_MODULE);
         MOZ_ASSERT(!pn_body);
-        MOZ_ASSERT(!pn_funbox);
+        MOZ_ASSERT(!pn_objbox);
         MOZ_ASSERT(pn_dflags == 0);
         pn_scopecoord.makeFree();
     }
 
+  public:
 #ifdef DEBUG
     void dump(int indent);
 #endif
@@ -1687,6 +1693,8 @@ class ObjectBox
     ObjectBox(JSObject* object, ObjectBox* traceLink);
     bool isFunctionBox() { return object->is<JSFunction>(); }
     FunctionBox* asFunctionBox();
+    bool isModuleBox() { return object->is<ModuleObject>(); }
+    ModuleBox* asModuleBox();
     void trace(JSTracer* trc);
 
   protected:

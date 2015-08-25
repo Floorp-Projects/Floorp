@@ -175,6 +175,16 @@ function check_test_1() {
 
       let dir = do_get_addon_root_uri(profileDir, "ab-CD@dictionaries.addons.mozilla.org");
 
+      let chromeReg = AM_Cc["@mozilla.org/chrome/chrome-registry;1"].
+                      getService(AM_Ci.nsIChromeRegistry);
+      try {
+        chromeReg.convertChromeURL(NetUtil.newURI("chrome://dict/content/dict.xul"));
+        do_throw("Chrome manifest should not have been registered");
+      }
+      catch (e) {
+        // Expected the chrome url to not be registered
+      }
+
       AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
         do_check_eq(list.length, 0);
 

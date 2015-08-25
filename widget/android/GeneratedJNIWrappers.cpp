@@ -781,6 +781,9 @@ auto GeckoThread::SetState(mozilla::jni::Object::Param a0) -> void
     return mozilla::jni::Method<SetState_t>::Call(nullptr, nullptr, a0);
 }
 
+constexpr char GeckoThread::SpeculativeConnect_t::name[];
+constexpr char GeckoThread::SpeculativeConnect_t::signature[];
+
 constexpr char GeckoThread::ClsLoader_t::name[];
 constexpr char GeckoThread::ClsLoader_t::signature[];
 
@@ -914,6 +917,14 @@ constexpr char GeckoThread::State::MOZGLUE_READY_t::signature[];
 auto GeckoThread::State::MOZGLUE_READY() -> State::LocalRef
 {
     return mozilla::jni::Field<MOZGLUE_READY_t>::Get(nullptr, nullptr);
+}
+
+constexpr char GeckoThread::State::PROFILE_READY_t::name[];
+constexpr char GeckoThread::State::PROFILE_READY_t::signature[];
+
+auto GeckoThread::State::PROFILE_READY() -> State::LocalRef
+{
+    return mozilla::jni::Field<PROFILE_READY_t>::Get(nullptr, nullptr);
 }
 
 constexpr char GeckoThread::State::RUNNING_t::name[];

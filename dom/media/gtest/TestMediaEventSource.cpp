@@ -6,6 +6,7 @@
 #include "gtest/gtest.h"
 
 #include "mozilla/TaskQueue.h"
+#include "mozilla/UniquePtr.h"
 #include "MediaEventSource.h"
 #include "VideoUtils.h"
 
@@ -293,4 +294,30 @@ TEST(MediaEventSource, CopyEvent2)
   EXPECT_EQ(i, 0);
   listener1.Disconnect();
   listener2.Disconnect();
+}
+
+/*
+ * Test move-only types.
+ */
+TEST(MediaEventSource, MoveOnly)
+{
+  nsRefPtr<TaskQueue> queue = new TaskQueue(
+    GetMediaThreadPool(MediaThreadType::PLAYBACK));
+
+  MediaEventProducer<UniquePtr<int>, ListenerMode::Exclusive> source;
+
+  auto func = [] (UniquePtr<int>&& aEvent) {
+    EXPECT_EQ(*aEvent, 20);
+  };
+  MediaEventListener listener = source.Connect(queue, func);
+
+  // It is OK to pass an rvalue which is move-only.
+  source.Notify(UniquePtr<int>(new int(20)));
+  // It is an error to pass an lvalue which is move-only.
+  // UniquePtr<int> event(new int(30));
+  // source.Notify(event);
+
+  queue->BeginShutdown();
+  queue->AwaitShutdownAndIdle();
+  listener.Disconnect();
 }

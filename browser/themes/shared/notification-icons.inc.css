@@ -19,7 +19,8 @@
 }
 
 .popup-notification-icon[popupid="xpinstall-disabled"],
-.popup-notification-icon[popupid="addon-install-blocked"] {
+.popup-notification-icon[popupid="addon-install-blocked"],
+.popup-notification-icon[popupid="addon-install-origin-blocked"] {
   list-style-image: url(chrome://browser/skin/addons/addon-install-blocked.svg);
 }
 
