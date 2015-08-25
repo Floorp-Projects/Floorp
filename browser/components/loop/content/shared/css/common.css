@@ -586,7 +586,10 @@ html[dir="rtl"] .context-wrapper > .context-preview {
 }
 
 .clicks-allowed.context-wrapper:hover {
-  background-color: #dbf7ff;
+  border: 2px solid #5cccee;
+  /* Due to the increased border width, reduce the padding accordingly so that
+     the text doesn't move. */
+  padding: calc(.8em - 1px);
 }
 
 /* Only underline the url, not the associated text */
