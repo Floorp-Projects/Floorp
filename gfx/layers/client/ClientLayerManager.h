@@ -203,7 +203,9 @@ public:
   virtual bool RequestOverfill(mozilla::dom::OverfillCallback* aCallback) override;
   virtual void RunOverfillCallback(const uint32_t aOverfill) override;
 
-  void DidComposite(uint64_t aTransactionId);
+  void DidComposite(uint64_t aTransactionId,
+                    const mozilla::TimeStamp& aCompositeStart,
+                    const mozilla::TimeStamp& aCompositeEnd);
 
   virtual bool SupportsMixBlendModes(EnumSet<gfx::CompositionOp>& aMixBlendModes) override
   {

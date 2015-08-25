@@ -381,7 +381,8 @@ public:
   virtual void WillPaintWindow(nsIWidget* aWidget) override;
   virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion) override;
   virtual void DidPaintWindow() override;
-  virtual void DidCompositeWindow() override;
+  virtual void DidCompositeWindow(const mozilla::TimeStamp& aCompositeStart,
+                                  const mozilla::TimeStamp& aCompositeEnd) override;
   virtual void RequestRepaint() override;
   virtual nsEventStatus HandleEvent(mozilla::WidgetGUIEvent* aEvent,
                                     bool aUseAttachedEvents) override;
