@@ -685,7 +685,14 @@ nsGridContainerFrame::ResolveAbsPosLineRange(
 
   LineRange r = ResolveLineRange(aStart, aEnd, aLineNameList, aAreaStart,
                                  aAreaEnd, aExplicitGridEnd, aStyle);
-  MOZ_ASSERT(!r.IsAuto(), "resolving definite lines shouldn't result in auto");
+  if (r.IsAuto()) {
+    MOZ_ASSERT(aStart.mHasSpan && aEnd.mHasSpan, "span / span is the only case "
+               "leading to IsAuto here -- we dealt with the other cases above");
+    // The second span was ignored per 9.2.1.  For abs.pos., 10.1 says that this
+    // case should result in "auto / auto" unlike normal flow grid items.
+    return LineRange(kAutoLine, kAutoLine);
+  }
+
   // Clamp definite lines to be within the implicit grid.
   // Note that this implies mUntranslatedStart may be equal to mUntranslatedEnd.
   r.mUntranslatedStart = clamped(r.mUntranslatedStart, aGridStart, aGridEnd);
