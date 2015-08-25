@@ -356,7 +356,10 @@ CanvasCaptureMediaStream::CreateSourceStream(nsIDOMWindow* aWindow,
                                              HTMLCanvasElement* aCanvas)
 {
   nsRefPtr<CanvasCaptureMediaStream> stream = new CanvasCaptureMediaStream(aCanvas);
-  stream->InitSourceStream(aWindow);
+  MediaStreamGraph* graph =
+    MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER,
+                                  AudioChannel::Normal);
+  stream->InitSourceStream(aWindow, graph);
   return stream.forget();
 }
 
