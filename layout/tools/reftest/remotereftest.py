@@ -9,10 +9,9 @@ import tempfile
 import traceback
 
 # We need to know our current directory so that we can serve our test files from it.
-SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
+SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 
-from runreftest import RefTest
-from runreftest import ReftestOptions
+from runreftest import RefTest, ReftestResolver
 from automation import Automation
 import devicemanager
 import droid
@@ -20,159 +19,26 @@ import mozinfo
 import moznetwork
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
 
-class RemoteOptions(ReftestOptions):
-    def __init__(self, automation):
-        ReftestOptions.__init__(self)
-        self.automation = automation
+import reftestcommandline
 
-        defaults = {}
-        defaults["logFile"] = "reftest.log"
-        # app, xrePath and utilityPath variables are set in main function
-        defaults["app"] = ""
-        defaults["xrePath"] = ""
-        defaults["utilityPath"] = ""
-        defaults["runTestsInParallel"] = False
-
-        self.add_option("--remote-app-path", action="store",
-                    type = "string", dest = "remoteAppPath",
-                    help = "Path to remote executable relative to device root using only forward slashes.  Either this or app must be specified, but not both.")
-        defaults["remoteAppPath"] = None
-
-        self.add_option("--deviceIP", action="store",
-                    type = "string", dest = "deviceIP",
-                    help = "ip address of remote device to test")
-        defaults["deviceIP"] = None
-
-        self.add_option("--deviceSerial", action="store",
-                    type = "string", dest = "deviceSerial",
-                    help = "adb serial number of remote device to test")
-        defaults["deviceSerial"] = None
-
-        self.add_option("--devicePort", action="store",
-                    type = "string", dest = "devicePort",
-                    help = "port of remote device to test")
-        defaults["devicePort"] = 20701
-
-        self.add_option("--remote-product-name", action="store",
-                    type = "string", dest = "remoteProductName",
-                    help = "Name of product to test - either fennec or firefox, defaults to fennec")
-        defaults["remoteProductName"] = "fennec"
-
-        self.add_option("--remote-webserver", action="store",
-                    type = "string", dest = "remoteWebServer",
-                    help = "IP Address of the webserver hosting the reftest content")
-        defaults["remoteWebServer"] = moznetwork.get_ip()
-
-        self.add_option("--http-port", action = "store",
-                    type = "string", dest = "httpPort",
-                    help = "port of the web server for http traffic")
-        defaults["httpPort"] = automation.DEFAULT_HTTP_PORT
-
-        self.add_option("--ssl-port", action = "store",
-                    type = "string", dest = "sslPort",
-                    help = "Port for https traffic to the web server")
-        defaults["sslPort"] = automation.DEFAULT_SSL_PORT
-
-        self.add_option("--remote-logfile", action="store",
-                    type = "string", dest = "remoteLogFile",
-                    help = "Name of log file on the device relative to device root.  PLEASE USE ONLY A FILENAME.")
-        defaults["remoteLogFile"] = None
-
-        self.add_option("--pidfile", action = "store",
-                    type = "string", dest = "pidFile",
-                    help = "name of the pidfile to generate")
-        defaults["pidFile"] = ""
-
-        self.add_option("--bootstrap", action="store_true", dest = "bootstrap",
-                    help = "test with a bootstrap addon required for native Fennec")
-        defaults["bootstrap"] = False
-
-        self.add_option("--dm_trans", action="store",
-                    type = "string", dest = "dm_trans",
-                    help = "the transport to use to communicate with device: [adb|sut]; default=sut")
-        defaults["dm_trans"] = "sut"
-
-        self.add_option("--remoteTestRoot", action = "store",
-                    type = "string", dest = "remoteTestRoot",
-                    help = "remote directory to use as test root (eg. /mnt/sdcard/tests or /data/local/tests)")
-        defaults["remoteTestRoot"] = None
-
-        self.add_option("--httpd-path", action = "store",
-                    type = "string", dest = "httpdPath",
-                    help = "path to the httpd.js file")
-        defaults["httpdPath"] = None
-
-        defaults["localLogName"] = None
-
-        self.set_defaults(**defaults)
-
-    def verifyRemoteOptions(self, options):
-        if options.runTestsInParallel:
-            self.error("Cannot run parallel tests here")
-
-        # Ensure our defaults are set properly for everything we can infer
-        if not options.remoteTestRoot:
-            options.remoteTestRoot = self.automation._devicemanager.deviceRoot + '/reftest'
-        options.remoteProfile = options.remoteTestRoot + "/profile"
-
-        # Verify that our remotewebserver is set properly
-        if (options.remoteWebServer == None or
-            options.remoteWebServer == '127.0.0.1'):
-            print "ERROR: Either you specified the loopback for the remote webserver or ",
-            print "your local IP cannot be detected.  Please provide the local ip in --remote-webserver"
-            return None
-
-        # One of remoteAppPath (relative path to application) or the app (executable) must be
-        # set, but not both.  If both are set, we destroy the user's selection for app
-        # so instead of silently destroying a user specificied setting, we error.
-        if (options.remoteAppPath and options.app):
-            print "ERROR: You cannot specify both the remoteAppPath and the app"
-            return None
-        elif (options.remoteAppPath):
-            options.app = options.remoteTestRoot + "/" + options.remoteAppPath
-        elif (options.app == None):
-            # Neither remoteAppPath nor app are set -- error
-            print "ERROR: You must specify either appPath or app"
-            return None
-
-        if (options.xrePath == None):
-            print "ERROR: You must specify the path to the controller xre directory"
-            return None
+class RemoteReftestResolver(ReftestResolver):
+    def absManifestPath(self, path):
+        script_abs_path = os.path.join(SCRIPT_DIRECTORY, path)
+        if os.path.exists(script_abs_path):
+            rv = script_abs_path
+        elif os.path.exists(os.path.abspath(path)):
+            rv = os.path.abspath(path)
         else:
-            # Ensure xrepath is a full path
-            options.xrePath = os.path.abspath(options.xrePath)
+            print >> sys.stderr, "Could not find manifest %s" % script_abs_path
+            sys.exit(1)
+        return os.path.normpath(rv)
 
-        # Default to <deviceroot>/reftest/reftest.log
-        if (options.remoteLogFile == None):
-            options.remoteLogFile = 'reftest.log'
+    def manifestURL(self, options, path):
+        # Dynamically build the reftest URL if possible, beware that args[0] should exist 'inside' the webroot
+        # It's possible for this url to have a leading "..", but reftest.js will fix that up
+        relPath = os.path.relpath(path, SCRIPT_DIRECTORY)
+        return "http://%s:%s/%s" % (options.remoteWebServer, options.httpPort, relPath)
 
-        options.localLogName = options.remoteLogFile
-        options.remoteLogFile = options.remoteTestRoot + '/' + options.remoteLogFile
-
-        # Ensure that the options.logfile (which the base class uses) is set to
-        # the remote setting when running remote. Also, if the user set the
-        # log file name there, use that instead of reusing the remotelogfile as above.
-        if (options.logFile):
-            # If the user specified a local logfile name use that
-            options.localLogName = options.logFile
-
-        options.logFile = options.remoteLogFile
-
-        if (options.pidFile != ""):
-            f = open(options.pidFile, 'w')
-            f.write("%s" % os.getpid())
-            f.close()
-
-        # httpd-path is specified by standard makefile targets and may be specified
-        # on the command line to select a particular version of httpd.js. If not
-        # specified, try to select the one from hostutils.zip, as required in bug 882932.
-        if not options.httpdPath:
-            options.httpdPath = os.path.join(options.utilityPath, "components")
-
-        # TODO: Copied from main, but I think these are no longer used in a post xulrunner world
-        #options.xrePath = options.remoteTestRoot + self.automation._product + '/xulrunner'
-        #options.utilityPath = options.testRoot + self.automation._product + '/bin'
-        return options
 
 class ReftestServer:
     """ Web server used to serve Reftests, for closer fidelity to the real web.
@@ -260,6 +126,7 @@ class ReftestServer:
 
 class RemoteReftest(RefTest):
     remoteApp = ''
+    resolver_cls = RemoteReftestResolver
 
     def __init__(self, automation, devicemanager, options, scriptDir):
         RefTest.__init__(self)
@@ -342,8 +209,12 @@ class RemoteReftest(RefTest):
     def stopWebServer(self, options):
         self.server.stop()
 
-    def createReftestProfile(self, options, reftestlist):
-        profile = RefTest.createReftestProfile(self, options, reftestlist, server=options.remoteWebServer, port=options.httpPort)
+    def createReftestProfile(self, options, manifest):
+        profile = RefTest.createReftestProfile(self,
+                                               options,
+                                               manifest,
+                                               server=options.remoteWebServer,
+                                               port=options.httpPort)
         profileDir = profile.profile
 
         prefs = {}
@@ -355,7 +226,6 @@ class RemoteReftest(RefTest):
         # Set a future policy version to avoid the telemetry prompt.
         prefs["toolkit.telemetry.prompted"] = 999
         prefs["toolkit.telemetry.notifiedOptOut"] = 999
-        prefs["reftest.uri"] = "%s" % reftestlist
         prefs["datareporting.policy.dataSubmissionPolicyBypassAcceptance"] = True
 
         # Point the url-classifier to the local testing server for fast failures
@@ -409,9 +279,6 @@ class RemoteReftest(RefTest):
         except devicemanager.DMError:
             print "Automation Error: Failed to copy extra files to device"
             raise
-
-    def getManifestPath(self, path):
-        return path
 
     def printDeviceInfo(self, printLogcat=False):
         try:
@@ -473,10 +340,10 @@ class RemoteReftest(RefTest):
             except:
                 print "Warning: cleaning up pidfile '%s' was unsuccessful from the test harness" % self.pidFile
 
-def main(args):
+def main():
     automation = RemoteAutomation(None)
-    parser = RemoteOptions(automation)
-    options, args = parser.parse_args()
+    parser = reftestcommandline.RemoteArgumentsParser()
+    options = parser.parse_args()
 
     if (options.dm_trans == 'sut' and options.deviceIP == None):
         print "Error: If --dm_trans = sut, you must provide a device IP to connect to via the --deviceIP option"
@@ -502,18 +369,7 @@ def main(args):
         automation.setProduct(options.remoteProductName)
 
     # Set up the defaults and ensure options are set
-    options = parser.verifyRemoteOptions(options)
-    if (options == None):
-        print "ERROR: Invalid options specified, use --help for a list of valid options"
-        return 1
-
-    if not options.ignoreWindowSize:
-        parts = dm.getInfo('screen')['screen'][0].split()
-        width = int(parts[0].split(':')[1])
-        height = int(parts[1].split(':')[1])
-        if (width < 1050 or height < 1050):
-            print "ERROR: Invalid screen resolution %sx%s, please adjust to 1366x1050 or higher" % (width, height)
-            return 1
+    parser.validate_remote(options, automation)
 
     # Check that Firefox is installed
     expected = options.app.split('/')[-1]
@@ -526,7 +382,7 @@ def main(args):
     automation.setRemoteProfile(options.remoteProfile)
     automation.setRemoteLog(options.remoteLogFile)
     reftest = RemoteReftest(automation, dm, options, SCRIPT_DIRECTORY)
-    options = parser.verifyCommonOptions(options, reftest)
+    parser.validate(options, reftest)
 
     if mozinfo.info['debug']:
         print "changing timeout for remote debug reftests from %s to 600 seconds" % options.timeout
@@ -534,17 +390,6 @@ def main(args):
 
     # Hack in a symbolic link for jsreftest
     os.system("ln -s ../jsreftest " + str(os.path.join(SCRIPT_DIRECTORY, "jsreftest")))
-
-    # Dynamically build the reftest URL if possible, beware that args[0] should exist 'inside' the webroot
-    manifest = args[0]
-    if os.path.exists(os.path.join(SCRIPT_DIRECTORY, args[0])):
-        manifest = "http://" + str(options.remoteWebServer) + ":" + str(options.httpPort) + "/" + args[0]
-    elif os.path.exists(args[0]):
-        manifestPath = os.path.abspath(args[0]).split(SCRIPT_DIRECTORY)[1].strip('/')
-        manifest = "http://" + str(options.remoteWebServer) + ":" + str(options.httpPort) + "/" + manifestPath
-    else:
-        print "ERROR: Could not find test manifest '%s'" % manifest
-        return 1
 
     # Start the webserver
     retVal = reftest.startWebServer(options)
@@ -561,11 +406,8 @@ def main(args):
 #    manifest = "http://" + options.remoteWebServer + "/reftests/layout/reftests/reftest-sanity/reftest.list"
     retVal = 0
     try:
-        cmdlineArgs = ["-reftest", manifest]
-        if options.bootstrap:
-            cmdlineArgs = []
         dm.recordLogcat()
-        retVal = reftest.runTests(manifest, options, cmdlineArgs)
+        retVal = reftest.runTests(options.tests, options)
     except:
         print "Automation Error: Exception caught while running tests"
         traceback.print_exc()
@@ -578,5 +420,5 @@ def main(args):
     return retVal
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())
 
