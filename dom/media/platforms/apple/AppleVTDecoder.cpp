@@ -167,14 +167,13 @@ PlatformCallback(void* decompressionOutputRefCon,
   // Validate our arguments.
   if (status != noErr || !image) {
     NS_WARNING("VideoToolbox decoder returned no data");
-    return;
-  }
-  if (flags & kVTDecodeInfo_FrameDropped) {
+    image = nullptr;
+  } else if (flags & kVTDecodeInfo_FrameDropped) {
     NS_WARNING("  ...frame tagged as dropped...");
+  } else {
+    MOZ_ASSERT(CFGetTypeID(image) == CVPixelBufferGetTypeID(),
+      "VideoToolbox returned an unexpected image type");
   }
-  MOZ_ASSERT(CFGetTypeID(image) == CVPixelBufferGetTypeID(),
-    "VideoToolbox returned an unexpected image type");
-
   nsCOMPtr<nsIRunnable> task =
     NS_NewRunnableMethodWithArgs<CFRefPtr<CVPixelBufferRef>, AppleVTDecoder::AppleFrameRef>(
       decoder, &AppleVTDecoder::OutputFrame, image, *frameRef);
@@ -242,6 +241,8 @@ AppleVTDecoder::SubmitFrame(MediaRawData* aSample)
     return NS_ERROR_FAILURE;
   }
 
+  mQueuedSamples++;
+
   VTDecodeFrameFlags decodeFlags =
     kVTDecodeFrame_EnableAsynchronousDecompression;
   rv = VTDecompressionSessionDecodeFrame(mSession,
@@ -257,7 +258,7 @@ AppleVTDecoder::SubmitFrame(MediaRawData* aSample)
   }
 
   // Ask for more data.
-  if (!mInputIncoming) {
+  if (!mInputIncoming && mQueuedSamples <= mMaxRefFrames) {
     LOG("AppleVTDecoder task queue empty; requesting more data");
     mCallback->InputExhausted();
   }
