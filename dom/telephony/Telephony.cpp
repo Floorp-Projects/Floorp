@@ -7,7 +7,6 @@
 #include "Telephony.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/dom/CallEvent.h"
 #include "mozilla/dom/MozMobileConnectionBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -21,7 +20,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
-#include "AudioChannelService.h"
 #include "CallsList.h"
 #include "TelephonyCall.h"
 #include "TelephonyCallGroup.h"
@@ -64,12 +62,8 @@ public:
 };
 
 Telephony::Telephony(nsPIDOMWindow* aOwner)
-  : DOMEventTargetHelper(aOwner),
-    mIsAudioStartPlaying(false),
-    mAudioAgentNotify(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY),
-    mHaveDispatchedInterruptBeginEvent(false)
+  : DOMEventTargetHelper(aOwner)
 {
-  MOZ_ASSERT(aOwner);
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aOwner);
   MOZ_ASSERT(global);
 
@@ -78,7 +72,6 @@ Telephony::Telephony(nsPIDOMWindow* aOwner)
   MOZ_ASSERT(!rv.Failed());
 
   mReadyPromise = promise;
-  mMuted = AudioChannelService::IsAudioChannelMutedByDefault();
 }
 
 Telephony::~Telephony()
@@ -525,61 +518,6 @@ Telephony::StopTone(const Optional<uint32_t>& aServiceId, ErrorResult& aRv)
   aRv = mService->StopTone(serviceId);
 }
 
-void
-Telephony::OwnAudioChannel(ErrorResult& aRv)
-{
-  if (mAudioAgent) {
-    return;
-  }
-
-  mAudioAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1");
-  MOZ_ASSERT(mAudioAgent);
-  aRv = mAudioAgent->Init(GetParentObject(),
-                         (int32_t)AudioChannel::Telephony, this);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-  aRv = HandleAudioAgentState();
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-}
-
-nsresult
-Telephony::HandleAudioAgentState()
-{
-  if (!mAudioAgent) {
-    return NS_OK;
-  }
-
-  Nullable<OwningTelephonyCallOrTelephonyCallGroup> activeCall;
-  GetActive(activeCall);
-  nsresult rv;
-  // Only stop agent when the call is disconnected.
-  if ((!mCalls.Length() && !mGroup->CallsArray().Length()) &&
-       mIsAudioStartPlaying) {
-    mIsAudioStartPlaying = false;
-    rv = mAudioAgent->NotifyStoppedPlaying(mAudioAgentNotify);
-    mAudioAgent = nullptr;
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  } else if (!activeCall.IsNull() && !mIsAudioStartPlaying) {
-    mIsAudioStartPlaying = true;
-    float volume = 1.0;
-    bool muted = false;
-    rv = mAudioAgent->NotifyStartedPlaying(mAudioAgentNotify, &volume, &muted);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    rv = WindowVolumeChanged(volume, muted);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-  return NS_OK;
-}
-
 bool
 Telephony::GetMuted(ErrorResult& aRv) const
 {
@@ -653,78 +591,13 @@ Telephony::GetReady(ErrorResult& aRv) const
   return promise.forget();
 }
 
-// nsIAudioChannelAgentCallback
-
-NS_IMETHODIMP
-Telephony::WindowVolumeChanged(float aVolume, bool aMuted)
-{
-  // Check the limitation of the network connection
-  if (mCalls.Length() > 1 ||
-     (mCalls.Length() == 1 && mGroup->CallsArray().Length())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  ErrorResult rv;
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
-  nsRefPtr<Promise> promise = Promise::Create(global, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  // Check the single call or conference call
-  bool isSingleCall = mCalls.Length();
-  nsCOMPtr<nsITelephonyCallback> callback = new TelephonyCallback(promise);
-  if (isSingleCall) {
-    rv = aMuted ? mCalls[0]->Hold(callback) : mCalls[0]->Resume(callback);
-  } else {
-    rv = aMuted ? mGroup->Hold(callback) : mGroup->Resume(callback);
-  }
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  // These events will be triggered when the telephony is interrupted by other
-  // audio channel.
-  if (mMuted != aMuted) {
-    mMuted = aMuted;
-    // We should not dispatch "mozinterruptend" when the system app initializes
-    // the telephony audio from muted to unmuted at the first time. The event
-    // "mozinterruptend" must be dispatched after the "mozinterruptbegin".
-    if (!mHaveDispatchedInterruptBeginEvent && mMuted) {
-      DispatchTrustedEvent(NS_LITERAL_STRING("mozinterruptbegin"));
-      mHaveDispatchedInterruptBeginEvent = mMuted;
-    } else if (mHaveDispatchedInterruptBeginEvent && !mMuted) {
-      DispatchTrustedEvent(NS_LITERAL_STRING("mozinterruptend"));
-      mHaveDispatchedInterruptBeginEvent = mMuted;
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Telephony::WindowAudioCaptureChanged()
-{
-  // Do nothing
-  return NS_OK;
-}
-
 // nsITelephonyListener
 
 NS_IMETHODIMP
 Telephony::CallStateChanged(uint32_t aLength, nsITelephonyCallInfo** aAllInfo)
 {
-  nsresult rv;
   for (uint32_t i = 0; i < aLength; ++i) {
-    rv = HandleCallInfo(aAllInfo[i]);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  rv = HandleAudioAgentState();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    HandleCallInfo(aAllInfo[i]);
   }
   return NS_OK;
 }
@@ -732,8 +605,7 @@ Telephony::CallStateChanged(uint32_t aLength, nsITelephonyCallInfo** aAllInfo)
 NS_IMETHODIMP
 Telephony::EnumerateCallState(nsITelephonyCallInfo* aInfo)
 {
-  uint32_t currentCallNum = 1;
-  return CallStateChanged(currentCallNum, &aInfo);
+  return HandleCallInfo(aInfo);
 }
 
 NS_IMETHODIMP

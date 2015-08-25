@@ -216,15 +216,6 @@ nsPNGDecoder::EndImageFrame()
     opacity = Opacity::OPAQUE;
   }
 
-#ifdef PNG_APNG_SUPPORTED
-  uint32_t numFrames = GetFrameCount();
-
-  // We can't use mPNG->num_frames_read as it may be one ahead.
-  if (numFrames > 1) {
-    PostInvalidation(mFrameRect);
-  }
-#endif
-
   PostFrameStop(opacity, mAnimInfo.mDispose, mAnimInfo.mTimeout,
                 mAnimInfo.mBlend);
 }

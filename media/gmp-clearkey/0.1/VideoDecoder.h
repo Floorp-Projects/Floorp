@@ -17,6 +17,8 @@
 #ifndef __VideoDecoder_h__
 #define __VideoDecoder_h__
 
+#include <atomic>
+
 #include "gmp-task-utils.h"
 #include "gmp-video-decode.h"
 #include "gmp-video-host.h"

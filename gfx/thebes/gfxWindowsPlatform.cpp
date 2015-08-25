@@ -658,7 +658,7 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
         mozilla::gfx::Factory::SetDirect3D10Device(mD3D10Device);
     }
 
-    ScopedGfxFeatureReporter reporter1_1("D2D1.1");
+    ScopedGfxFeatureReporter reporter1_1("D2D1.1V");
 
     if (Factory::SupportsD2D1()) {
       reporter1_1.SetSuccessful();
