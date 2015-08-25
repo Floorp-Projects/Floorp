@@ -13,7 +13,7 @@ function run_test() {
 
   // If this test is not running on the Windows platform, stop now, before
   // calling XPCOMUtils.generateQI during the MockWindowsRegKey declaration.
-  if (!("@mozilla.org/windows-registry-key;1" in Components.classes))
+  if (mozinfo.os != "win")
     return;
 
   // --- Modified nsIWindowsRegKey implementation ---
