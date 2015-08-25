@@ -22,7 +22,7 @@ const allPermissions = parseInt("777", 8);
 function run_test()
 {
   // If we're on Windows, simply check for graceful failure.
-  if ("@mozilla.org/windows-registry-key;1" in Cc) {
+  if (mozinfo.os == "win") {
     test_not_supported();
     return;
   }
