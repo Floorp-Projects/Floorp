@@ -4249,10 +4249,10 @@ MacroAssemblerARMCompat::roundf(FloatRegister input, Register output, Label* bai
 }
 
 CodeOffsetJump
-MacroAssemblerARMCompat::jumpWithPatch(RepatchLabel* label, Condition cond)
+MacroAssemblerARMCompat::jumpWithPatch(RepatchLabel* label, Condition cond, Label* documentation)
 {
     ARMBuffer::PoolEntry pe;
-    BufferOffset bo = as_BranchPool(0xdeadbeef, label, &pe, cond);
+    BufferOffset bo = as_BranchPool(0xdeadbeef, label, &pe, cond, documentation);
     // Fill in a new CodeOffset with both the load and the pool entry that the
     // instruction loads from.
     CodeOffsetJump ret(bo.getOffset(), pe.index());
