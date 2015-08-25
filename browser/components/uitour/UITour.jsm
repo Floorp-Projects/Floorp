@@ -1985,30 +1985,30 @@ this.UITour = {
   },
 
   _addAnnotationPanelMutationObserver: function(aPanelEl) {
-#ifdef XP_LINUX
-    let observer = this._annotationPanelMutationObservers.get(aPanelEl);
-    if (observer) {
-      return;
+    if (AppConstants.platform == "linux") {
+      let observer = this._annotationPanelMutationObservers.get(aPanelEl);
+      if (observer) {
+        return;
+      }
+      let win = aPanelEl.ownerDocument.defaultView;
+      observer = new win.MutationObserver(this._annotationMutationCallback);
+      this._annotationPanelMutationObservers.set(aPanelEl, observer);
+      let observerOptions = {
+        attributeFilter: ["height", "width"],
+        attributes: true,
+      };
+      observer.observe(aPanelEl, observerOptions);
     }
-    let win = aPanelEl.ownerDocument.defaultView;
-    observer = new win.MutationObserver(this._annotationMutationCallback);
-    this._annotationPanelMutationObservers.set(aPanelEl, observer);
-    let observerOptions = {
-      attributeFilter: ["height", "width"],
-      attributes: true,
-    };
-    observer.observe(aPanelEl, observerOptions);
-#endif
   },
 
   _removeAnnotationPanelMutationObserver: function(aPanelEl) {
-#ifdef XP_LINUX
-    let observer = this._annotationPanelMutationObservers.get(aPanelEl);
-    if (observer) {
-      observer.disconnect();
-      this._annotationPanelMutationObservers.delete(aPanelEl);
+    if (AppConstants.platform == "linux") {
+      let observer = this._annotationPanelMutationObservers.get(aPanelEl);
+      if (observer) {
+        observer.disconnect();
+        this._annotationPanelMutationObservers.delete(aPanelEl);
+      }
     }
-#endif
   },
 
 /**
@@ -2165,68 +2165,28 @@ const UITourHealthReport = {
       addClientId: true,
       addEnvironment: true,
     });
-#ifdef MOZ_SERVICES_HEALTHREPORT
-    Task.spawn(function*() {
-      let reporter = Cc["@mozilla.org/datareporting/service;1"]
-                       .getService()
-                       .wrappedJSObject
-                       .healthReporter;
 
-      // This can happen if the FHR component of the data reporting service is
-      // disabled. This is controlled by a pref that most will never use.
-      if (!reporter) {
-        return;
-      }
+    if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
+      Task.spawn(function*() {
+        let reporter = Cc["@mozilla.org/datareporting/service;1"]
+                         .getService()
+                         .wrappedJSObject
+                         .healthReporter;
 
-      yield reporter.onInit();
+        // This can happen if the FHR component of the data reporting service is
+        // disabled. This is controlled by a pref that most will never use.
+        if (!reporter) {
+          return;
+        }
 
-      // Get the UITourMetricsProvider instance from the Health Reporter
-      reporter.getProvider("org.mozilla.uitour").recordTreatmentTag(tag, value);
-    });
-#endif
+        yield reporter.onInit();
+
+        // Get the UITourMetricsProvider instance from the Health Reporter
+        reporter.getProvider("org.mozilla.uitour").recordTreatmentTag(tag, value);
+      });
+    }
   }
 };
-
-#ifdef MOZ_SERVICES_HEALTHREPORT
-const DAILY_DISCRETE_TEXT_FIELD = Metrics.Storage.FIELD_DAILY_DISCRETE_TEXT;
-
-this.UITourMetricsProvider = function() {
-  Metrics.Provider.call(this);
-}
-
-UITourMetricsProvider.prototype = Object.freeze({
-  __proto__: Metrics.Provider.prototype,
-
-  name: "org.mozilla.uitour",
-
-  measurementTypes: [
-    UITourTreatmentMeasurement1,
-  ],
-
-  recordTreatmentTag: function(tag, value) {
-    let m = this.getMeasurement(UITourTreatmentMeasurement1.prototype.name,
-                                UITourTreatmentMeasurement1.prototype.version);
-    let field = tag;
-
-    if (this.storage.hasFieldFromMeasurement(m.id, field,
-                                             DAILY_DISCRETE_TEXT_FIELD)) {
-      let fieldID = this.storage.fieldIDFromMeasurement(m.id, field);
-      return this.enqueueStorageOperation(function recordKnownField() {
-        return this.storage.addDailyDiscreteTextFromFieldID(fieldID, value);
-      }.bind(this));
-    }
-
-    // Otherwise, we first need to create the field.
-    return this.enqueueStorageOperation(function recordField() {
-      // This function has to return a promise.
-      return Task.spawn(function () {
-        let fieldID = yield this.storage.registerField(m.id, field,
-                                                       DAILY_DISCRETE_TEXT_FIELD);
-        yield this.storage.addDailyDiscreteTextFromFieldID(fieldID, value);
-      }.bind(this));
-    }.bind(this));
-  },
-});
 
 function UITourTreatmentMeasurement1() {
   Metrics.Measurement.call(this);
@@ -2239,24 +2199,66 @@ function UITourTreatmentMeasurement1() {
 
 }
 
-UITourTreatmentMeasurement1.prototype = Object.freeze({
-  __proto__: Metrics.Measurement.prototype,
+if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
 
-  name: "treatment",
-  version: 1,
+  const DAILY_DISCRETE_TEXT_FIELD = Metrics.Storage.FIELD_DAILY_DISCRETE_TEXT;
 
-  // our fields are dynamic
-  fields: { },
-
-  // We need a custom serializer because the default one doesn't accept unknown fields
-  _serializeJSONDaily: function(data) {
-    let result = {_v: this.version };
-
-    for (let [field, data] of data) {
-      result[field] = data;
-    }
-
-    return result;
+  this.UITourMetricsProvider = function() {
+    Metrics.Provider.call(this);
   }
-});
-#endif
+
+  UITourMetricsProvider.prototype = Object.freeze({
+    __proto__: Metrics.Provider.prototype,
+
+    name: "org.mozilla.uitour",
+
+    measurementTypes: [
+      UITourTreatmentMeasurement1,
+    ],
+
+    recordTreatmentTag: function(tag, value) {
+      let m = this.getMeasurement(UITourTreatmentMeasurement1.prototype.name,
+                                  UITourTreatmentMeasurement1.prototype.version);
+      let field = tag;
+
+      if (this.storage.hasFieldFromMeasurement(m.id, field,
+                                               DAILY_DISCRETE_TEXT_FIELD)) {
+        let fieldID = this.storage.fieldIDFromMeasurement(m.id, field);
+        return this.enqueueStorageOperation(function recordKnownField() {
+          return this.storage.addDailyDiscreteTextFromFieldID(fieldID, value);
+        }.bind(this));
+      }
+
+      // Otherwise, we first need to create the field.
+      return this.enqueueStorageOperation(function recordField() {
+        // This function has to return a promise.
+        return Task.spawn(function () {
+          let fieldID = yield this.storage.registerField(m.id, field,
+                                                         DAILY_DISCRETE_TEXT_FIELD);
+          yield this.storage.addDailyDiscreteTextFromFieldID(fieldID, value);
+        }.bind(this));
+      }.bind(this));
+    },
+  });
+
+  UITourTreatmentMeasurement1.prototype = Object.freeze({
+    __proto__: Metrics.Measurement.prototype,
+
+    name: "treatment",
+    version: 1,
+
+    // our fields are dynamic
+    fields: { },
+
+    // We need a custom serializer because the default one doesn't accept unknown fields
+    _serializeJSONDaily: function(data) {
+      let result = {_v: this.version };
+
+      for (let [field, data] of data) {
+        result[field] = data;
+      }
+
+      return result;
+    }
+  });
+}

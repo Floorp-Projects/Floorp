@@ -564,7 +564,7 @@ var gAllTests = [
 
     var sm = Cc["@mozilla.org/scriptsecuritymanager;1"]
              .getService(Ci.nsIScriptSecurityManager);
-    var principal = sm.getNoAppCodebasePrincipal(URI);
+    var principal = sm.createCodebasePrincipal(URI, {});
 
     // Give www.example.com privileges to store offline data
     var pm = Cc["@mozilla.org/permissionmanager;1"]
@@ -634,7 +634,7 @@ var gAllTests = [
 
     var sm = Cc["@mozilla.org/scriptsecuritymanager;1"]
              .getService(Ci.nsIScriptSecurityManager);
-    var principal = sm.getNoAppCodebasePrincipal(URI);
+    var principal = sm.createCodebasePrincipal(URI, {});
 
     // Open the dialog
     let wh = new WindowHelper();

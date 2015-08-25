@@ -56,14 +56,15 @@ if __name__ == '__main__':
     parser.add_argument("--partial-mar-file", required=False,
                         action="store", dest="partial_mar_file",
                         help="Path to the partial MAR file, relative to the objdir.")
-    parser.add_argument("--upload-properties", required=True,
+    parser.add_argument("--upload-properties", required=False,
                         action="store", dest="upload_properties",
                         help="Path to the properties written by 'make upload'")
     args = parser.parse_args()
 
     json_data = getMarProperties(args.complete_mar_file)
-    with open(args.upload_properties) as f:
-        json_data.update(json.load(f))
+    if args.upload_properties:
+        with open(args.upload_properties) as f:
+            json_data.update(json.load(f))
     if args.partial_mar_file:
         json_data.update(getMarProperties(args.partial_mar_file, partial=True))
 

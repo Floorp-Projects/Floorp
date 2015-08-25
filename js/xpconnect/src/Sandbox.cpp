@@ -16,7 +16,6 @@
 #include "nsGlobalWindow.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsIURI.h"
 #include "nsJSUtils.h"
 #include "nsNetUtil.h"
@@ -1193,15 +1192,15 @@ ParsePrincipal(JSContext* cx, HandleString codebase, nsIPrincipal** principal)
         return false;
     }
 
-    nsCOMPtr<nsIScriptSecurityManager> secman =
-        do_GetService(kScriptSecurityManagerContractID);
-    NS_ENSURE_TRUE(secman, false);
-
     // We could allow passing in the app-id and browser-element info to the
     // sandbox constructor. But creating a sandbox based on a string is a
     // deprecated API so no need to add features to it.
-    rv = secman->GetNoAppCodebasePrincipal(uri, principal);
-    if (NS_FAILED(rv) || !*principal) {
+    OriginAttributes attrs;
+    nsCOMPtr<nsIPrincipal> prin =
+        BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+    prin.forget(principal);
+
+    if (!*principal) {
         JS_ReportError(cx, "Creating Principal from URI failed");
         return false;
     }

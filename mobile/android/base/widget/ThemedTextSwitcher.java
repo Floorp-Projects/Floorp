@@ -10,10 +10,13 @@ import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.ColorUtils;
+import org.mozilla.gecko.util.DrawableUtil;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 
 public class ThemedTextSwitcher extends android.widget.TextSwitcher
@@ -33,12 +36,14 @@ public class ThemedTextSwitcher extends android.widget.TextSwitcher
     private boolean mIsDark;
     private boolean mAutoUpdateTheme;        // always false if there's no theme.
 
+    private ColorStateList mDrawableColors;
+
     public ThemedTextSwitcher(Context context, AttributeSet attrs) {
         super(context, attrs);
-        initialize(context, attrs);
+        initialize(context, attrs, 0);
     }
 
-    private void initialize(final Context context, final AttributeSet attrs) {
+    private void initialize(final Context context, final AttributeSet attrs, final int defStyle) {
         // The theme can be null, particularly for webapps: Bug 1089266.  Or we
         // might be instantiating this View in an IDE, with no ambient GeckoApplication.
         final Context applicationContext = context.getApplicationContext();

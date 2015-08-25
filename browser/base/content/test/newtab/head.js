@@ -18,7 +18,7 @@ Cu.import("resource://gre/modules/Timer.jsm", tmp);
 let {Promise, NewTabUtils, Sanitizer, clearTimeout, setTimeout, DirectoryLinksProvider, PlacesTestUtils} = tmp;
 
 let uri = Services.io.newURI("about:newtab", null, null);
-let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
+let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
 
 let isMac = ("nsILocalFileMac" in Ci);
 let isLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc);

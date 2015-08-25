@@ -125,9 +125,10 @@ function addPermission(aAction) {
   let uri = Cc["@mozilla.org/network/io-service;1"]
               .getService(Ci.nsIIOService)
               .newURI(ORIGIN, null, null);
+  let attrs = {appId: APP_ID};
   let _principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
                      .getService(Ci.nsIScriptSecurityManager)
-                     .getAppCodebasePrincipal(uri, APP_ID, false);
+                     .createCodebasePrincipal(uri, attrs);
   let pm = Cc["@mozilla.org/permissionmanager;1"]
              .getService(Ci.nsIPermissionManager);
   pm.addFromPrincipal(_principal, MOBILEID_PERM, aAction);
@@ -137,9 +138,10 @@ function removePermission() {
   let uri = Cc["@mozilla.org/network/io-service;1"]
               .getService(Ci.nsIIOService)
               .newURI(ORIGIN, null, null);
+  let attrs = {appId: APP_ID};
   let _principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
                      .getService(Ci.nsIScriptSecurityManager)
-                     .getAppCodebasePrincipal(uri, APP_ID, false);
+                     .createCodebasePrincipal(uri, attrs);
   let pm = Cc["@mozilla.org/permissionmanager;1"]
              .getService(Ci.nsIPermissionManager);
   pm.removeFromPrincipal(_principal, MOBILEID_PERM);

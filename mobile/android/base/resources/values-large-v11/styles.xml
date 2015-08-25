@@ -9,6 +9,12 @@
         <item name="android:layout_width">@dimen/tablet_browser_toolbar_menu_item_width</item>
     </style>
 
+    <!-- If this style wasn't actually shared outside the
+         url bar, this name could be improved (bug 1197424). -->
+    <style name="UrlBar.ImageButton.BrowserToolbarColors">
+        <item name="drawableTintList">@color/action_bar_menu_item_colors</item>
+    </style>
+
     <style name="UrlBar.ImageButton.TabCount">
         <item name="android:background">@drawable/tabs_count</item>
     </style>

@@ -224,7 +224,8 @@ struct BytecodeEmitter
     JSObject* innermostStaticScope() const;
     JSObject* blockScopeOfDef(ParseNode* pn) const {
         MOZ_ASSERT(pn->resolve());
-        return parser->blockScopes[pn->resolve()->pn_blockid];
+        unsigned blockid = pn->resolve()->pn_blockid;
+        return parser->blockScopes[blockid];
     }
 
     uint32_t computeHops(ParseNode* pn, BytecodeEmitter** bceOfDefOut);
@@ -319,6 +320,12 @@ struct BytecodeEmitter
 
     // Emit function code for the tree rooted at body.
     bool emitFunctionScript(ParseNode* body);
+
+    // Emit module code for the tree rooted at body.
+    bool emitModuleScript(ParseNode* body);
+
+    // Report an error if we are not processing a module.
+    bool checkIsModule();
 
     // If op is JOF_TYPESET (see the type barriers comment in TypeInference.h),
     // reserve a type set to store its result.

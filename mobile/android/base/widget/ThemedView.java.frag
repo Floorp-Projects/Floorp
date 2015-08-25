@@ -11,10 +11,13 @@ import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.ColorUtils;
+import org.mozilla.gecko.util.DrawableUtil;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 
 public class Themed@VIEW_NAME_SUFFIX@ extends @BASE_TYPE@
@@ -34,19 +37,21 @@ public class Themed@VIEW_NAME_SUFFIX@ extends @BASE_TYPE@
     private boolean mIsDark;
     private boolean mAutoUpdateTheme;        // always false if there's no theme.
 
+    private ColorStateList mDrawableColors;
+
     public Themed@VIEW_NAME_SUFFIX@(Context context, AttributeSet attrs) {
         super(context, attrs);
-        initialize(context, attrs);
+        initialize(context, attrs, 0);
     }
 
 //#ifdef STYLE_CONSTRUCTOR
     public Themed@VIEW_NAME_SUFFIX@(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        initialize(context, attrs);
+        initialize(context, attrs, defStyle);
     }
 
 //#endif
-    private void initialize(final Context context, final AttributeSet attrs) {
+    private void initialize(final Context context, final AttributeSet attrs, final int defStyle) {
         // The theme can be null, particularly for webapps: Bug 1089266.  Or we
         // might be instantiating this View in an IDE, with no ambient GeckoApplication.
         final Context applicationContext = context.getApplicationContext();
@@ -57,6 +62,16 @@ public class Themed@VIEW_NAME_SUFFIX@ extends @BASE_TYPE@
         final TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.LightweightTheme);
         mAutoUpdateTheme = mTheme != null && a.getBoolean(R.styleable.LightweightTheme_autoUpdateTheme, true);
         a.recycle();
+//#if TINT_FOREGROUND_DRAWABLE
+
+        final TypedArray themedA = context.obtainStyledAttributes(attrs, R.styleable.ThemedView, defStyle, 0);
+        mDrawableColors = themedA.getColorStateList(R.styleable.ThemedView_drawableTintList);
+        themedA.recycle();
+
+        // Apply the tint initially - the Drawable is
+        // initially set by XML via super's constructor.
+        setTintedImageDrawable(getDrawable());
+//#endif
     }
 
     @Override
@@ -160,6 +175,27 @@ public class Themed@VIEW_NAME_SUFFIX@ extends @BASE_TYPE@
         }
     }
 
+//#ifdef TINT_FOREGROUND_DRAWABLE
+    @Override
+    public void setImageDrawable(final Drawable drawable) {
+        setTintedImageDrawable(drawable);
+    }
+
+    private void setTintedImageDrawable(final Drawable drawable) {
+        final Drawable tintedDrawable;
+        if (mDrawableColors == null) {
+            // If we tint a drawable with a null ColorStateList, it will override
+            // any existing colorFilters and tint... so don't!
+            tintedDrawable = drawable;
+        } else if (drawable == null) {
+            tintedDrawable = null;
+        } else {
+            tintedDrawable = DrawableUtil.tintDrawableWithStateList(drawable, mDrawableColors);
+        }
+        super.setImageDrawable(tintedDrawable);
+    }
+
+//#endif
     public ColorDrawable getColorDrawable(int id) {
         return new ColorDrawable(ColorUtils.getColor(getContext(), id));
     }

@@ -34,7 +34,8 @@ let DetailsView = {
     "memory-flamegraph": {
       id: "memory-flamegraph-view",
       view: MemoryFlameGraphView,
-      features: ["withAllocations"]
+      features: ["withAllocations"],
+      prefs: ["enable-memory-flame"],
     },
     "optimizations": {
       id: "optimizations-view",
@@ -126,14 +127,17 @@ let DetailsView = {
    * @return {boolean}
    */
   _isViewSupported: function (viewName) {
-    let { features } = this.components[viewName];
+    let { features, prefs } = this.components[viewName];
     let recording = PerformanceController.getCurrentRecording();
 
     if (!recording || !recording.isCompleted()) {
       return false;
     }
 
-    return PerformanceController.isFeatureSupported(features);
+    let prefSupported = (prefs && prefs.length) ?
+                        prefs.every(p => PerformanceController.getPref(p)) :
+                        true;
+    return PerformanceController.isFeatureSupported(features) && prefSupported;
   },
 
   /**

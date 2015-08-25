@@ -2535,11 +2535,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   .tab-throbber[progress] {
     list-style-image: url("chrome://browser/skin/tabbrowser/loading@2x.png");
   }
-
-  /* Background tab separators */
-  #TabsToolbar:not([brighttext]) {
-    --tab-separator-image: url(chrome://browser/skin/tabbrowser/tab-separator@2x.png);
-  }
 }
 
 .tabbrowser-tab:not(:hover) > .tab-stack > .tab-content > .tab-icon-image:not([visuallyselected="true"]) {

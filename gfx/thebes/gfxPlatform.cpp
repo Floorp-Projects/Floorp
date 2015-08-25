@@ -580,7 +580,7 @@ gfxPlatform::Init()
 
     RegisterStrongMemoryReporter(new GfxMemoryImageReporter());
 
-    if (XRE_IsParentProcess() && gfxPrefs::HardwareVsyncEnabled()) {
+    if (XRE_IsParentProcess()) {
       gPlatform->mVsyncSource = gPlatform->CreateHardwareVsyncSource();
     }
 }

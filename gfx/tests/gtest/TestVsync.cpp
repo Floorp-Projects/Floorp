@@ -78,10 +78,8 @@ protected:
   {
     gfxPlatform::GetPlatform();
     gfxPrefs::GetSingleton();
-    if (gfxPrefs::HardwareVsyncEnabled() ) {
-      mVsyncSource = gfxPlatform::GetPlatform()->GetHardwareVsync();
-      MOZ_RELEASE_ASSERT(mVsyncSource);
-    }
+    mVsyncSource = gfxPlatform::GetPlatform()->GetHardwareVsync();
+    MOZ_RELEASE_ASSERT(mVsyncSource);
   }
 
   virtual ~VsyncTester()
@@ -112,10 +110,6 @@ FlushMainThreadLoop()
 // Tests that we can enable/disable vsync notifications
 TEST_F(VsyncTester, EnableVsync)
 {
-  if (!gfxPrefs::HardwareVsyncEnabled()) {
-    return;
-  }
-
   VsyncSource::Display& globalDisplay = mVsyncSource->GetGlobalDisplay();
   globalDisplay.DisableVsync();
   ASSERT_FALSE(globalDisplay.IsVsyncEnabled());
@@ -130,10 +124,6 @@ TEST_F(VsyncTester, EnableVsync)
 // Test that if we have vsync enabled, the display should get vsync notifications
 TEST_F(VsyncTester, CompositorGetVsyncNotifications)
 {
-  if (!gfxPrefs::HardwareVsyncEnabled() || !gfxPrefs::VsyncAlignedCompositor()) {
-    return;
-  }
-
   CompositorVsyncDispatcher::SetThreadAssertionsEnabled(false);
 
   VsyncSource::Display& globalDisplay = mVsyncSource->GetGlobalDisplay();
@@ -157,7 +147,7 @@ TEST_F(VsyncTester, CompositorGetVsyncNotifications)
 // Test that if we have vsync enabled, the parent refresh driver should get notifications
 TEST_F(VsyncTester, ParentRefreshDriverGetVsyncNotifications)
 {
-  if (!gfxPrefs::HardwareVsyncEnabled() || !gfxPrefs::VsyncAlignedRefreshDriver()) {
+  if (!gfxPrefs::VsyncAlignedRefreshDriver()) {
     return;
   }
 
@@ -187,7 +177,7 @@ TEST_F(VsyncTester, ParentRefreshDriverGetVsyncNotifications)
 // Test that child refresh vsync observers get vsync notifications
 TEST_F(VsyncTester, ChildRefreshDriverGetVsyncNotifications)
 {
-  if (!gfxPrefs::HardwareVsyncEnabled() || !gfxPrefs::VsyncAlignedRefreshDriver()) {
+  if (!gfxPrefs::VsyncAlignedRefreshDriver()) {
     return;
   }
 

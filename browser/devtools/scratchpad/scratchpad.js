@@ -1734,7 +1734,7 @@ var Scratchpad = {
                                                       msg, okstring);
       editorElement.addEventListener("paste", this._onPaste);
       editorElement.addEventListener("drop", this._onPaste);
-      this.editor.on("save", () => this.saveFile());
+      this.editor.on("saveRequested", () => this.saveFile());
       this.editor.focus();
       this.editor.setCursor({ line: lines.length, ch: lines.pop().length });
 

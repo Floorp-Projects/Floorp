@@ -1,0 +1,26 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+
+<!-- This page will accept some url as the uri query and navigate to it by
+     clicking a link -->
+
+<head>
+<title>Navigation tests</title>
+<script type="text/javascript">
+function navigate() {
+  // Pass our parameters over to the child
+  var child = window.frames[0];
+  var url = decodeURIComponent(document.location.search.substr(1));
+  var link = document.getElementById("link");
+  link.href = url;
+  link.click();
+}
+</script>
+</head>
+<body onload="navigate()">
+
+<p><a id="link">Test Link</a></p>
+</body>
+</html>

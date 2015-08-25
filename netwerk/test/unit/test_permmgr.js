@@ -46,7 +46,7 @@ function run_test() {
   // put a few hosts in
   for (var i = 0; i < hosts.length; ++i) {
     let uri = ioService.newURI(hosts[i][0], null, null);
-    let principal = secMan.getNoAppCodebasePrincipal(uri);
+    let principal = secMan.createCodebasePrincipal(uri, {});
 
     pm.addFromPrincipal(principal, hosts[i][1], hosts[i][2]);
   }
@@ -54,7 +54,7 @@ function run_test() {
   // test the result
   for (var i = 0; i < results.length; ++i) {
     let uri = ioService.newURI(results[i][0], null, null);
-    let principal = secMan.getNoAppCodebasePrincipal(uri);
+    let principal = secMan.createCodebasePrincipal(uri, {});
 
     do_check_eq(pm.testPermissionFromPrincipal(principal, results[i][1]), results[i][2]);
     do_check_eq(pm.testExactPermissionFromPrincipal(principal, results[i][1]), results[i][3]);

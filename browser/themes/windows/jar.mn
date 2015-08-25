@@ -391,9 +391,6 @@ browser.jar:
         skin/classic/browser/tabbrowser/tab-stroke-start.png         (tabbrowser/tab-stroke-start.png)
         skin/classic/browser/tabbrowser/tab-stroke-start@2x.png      (tabbrowser/tab-stroke-start@2x.png)
         skin/classic/browser/tabbrowser/tabDragIndicator.png         (tabbrowser/tabDragIndicator.png)
-        skin/classic/browser/tabbrowser/tab-separator.png            (tabbrowser/tab-separator.png)
-        skin/classic/browser/tabbrowser/tab-separator-XP.png         (tabbrowser/tab-separator-XP.png)
-        skin/classic/browser/tabbrowser/tab-separator-luna-blue.png  (tabbrowser/tab-separator-luna-blue.png)
         skin/classic/browser/tabview/close.png                      (tabview/close.png)
         skin/classic/browser/tabview/edit-light.png                 (tabview/edit-light.png)
         skin/classic/browser/tabview/grain.png                      (tabview/grain.png)
@@ -672,7 +669,6 @@ browser.jar:
 % override chrome://browser/skin/preferences/mail.png                 chrome://browser/skin/preferences/mail-XP.png                     os=WINNT osversion<6
 % override chrome://browser/skin/preferences/Options.png              chrome://browser/skin/preferences/Options-XP.png                  os=WINNT osversion<6
 % override chrome://browser/skin/preferences/saveFile.png             chrome://browser/skin/preferences/saveFile-XP.png                 os=WINNT osversion<6
-% override chrome://browser/skin/tabbrowser/tab-separator.png         chrome://browser/skin/tabbrowser/tab-separator-XP.png             os=WINNT osversion<6
 
 % override chrome://browser/skin/actionicon-tab.png                   chrome://browser/skin/actionicon-tab-XPVista7.png                 os=WINNT osversion<=6.1
 % override chrome://browser/skin/sync-horizontalbar.png               chrome://browser/skin/sync-horizontalbar-XPVista7.png             os=WINNT osversion<=6.1

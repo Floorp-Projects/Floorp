@@ -180,6 +180,26 @@ public:
    */
   nsresult NotifyIME(const IMENotification& aIMENotification);
 
+
+  /**
+   * DispatchTo indicates whether the event may be dispatched to its parent
+   * process first (if there is) or not.  If the event is dispatched to the
+   * parent process, APZ will handle it first.  Otherwise, the event won't be
+   * handled by APZ if it's in a child process.
+   */
+  enum DispatchTo
+  {
+    // The event may be dispatched to its parent process if there is a parent.
+    // In such case, the event will be handled asynchronously.  Additionally,
+    // the event may be sent to its child process if a child process (including
+    // the dispatching process) has focus.
+    eDispatchToParentProcess = 0,
+    // The event must be dispatched in the current process.  But of course,
+    // the event may be sent to a child process when it has focus.  If there is
+    // no child process, the event may be handled synchronously.
+    eDispatchToCurrentProcess = 1
+  };
+
   /**
    * DispatchKeyboardEvent() maybe dispatches aKeyboardEvent.
    *
@@ -192,11 +212,13 @@ public:
    *                        set nsEventStatus_eIgnore.  After dispatching
    *                        a event and it's consumed this returns
    *                        nsEventStatus_eConsumeNoDefault.
+   * @param aDispatchTo     See comments of DispatchTo.
    * @return                true if an event is dispatched.  Otherwise, false.
    */
   bool DispatchKeyboardEvent(uint32_t aMessage,
                              const WidgetKeyboardEvent& aKeyboardEvent,
-                             nsEventStatus& aStatus);
+                             nsEventStatus& aStatus,
+                             DispatchTo aDispatchTo = eDispatchToParentProcess);
 
   /**
    * MaybeDispatchKeypressEvents() maybe dispatches a keypress event which is
@@ -210,11 +232,14 @@ public:
    *                        When this method dispatches one or more keypress
    *                        events and one of them is consumed, this returns
    *                        nsEventStatus_eConsumeNoDefault.
+   * @param aDispatchTo     See comments of DispatchTo.
    * @return                true if one or more events are dispatched.
    *                        Otherwise, false.
    */
   bool MaybeDispatchKeypressEvents(const WidgetKeyboardEvent& aKeyboardEvent,
-                                   nsEventStatus& aStatus);
+                                   nsEventStatus& aStatus,
+                                   DispatchTo aDispatchTo =
+                                     eDispatchToParentProcess);
 
 private:
   // mWidget is owner of the instance.  When this is created, this is set.
@@ -273,12 +298,23 @@ private:
    */
   void InitEvent(WidgetGUIEvent& aEvent) const;
 
+
   /**
    * DispatchEvent() dispatches aEvent on aWidget.
    */
   nsresult DispatchEvent(nsIWidget* aWidget,
                          WidgetGUIEvent& aEvent,
                          nsEventStatus& aStatus);
+
+  /**
+   * DispatchInputEvent() dispatches aEvent on aWidget.
+   *
+   * @param aDispatchTo     See comments of DispatchTo.
+   */
+  nsresult DispatchInputEvent(nsIWidget* aWidget,
+                              WidgetInputEvent& aEvent,
+                              nsEventStatus& aStatus,
+                              DispatchTo aDispatchTo);
 
   /**
    * StartCompositionAutomaticallyIfNecessary() starts composition if it hasn't
@@ -308,6 +344,7 @@ private:
    *                        set nsEventStatus_eIgnore.  After dispatching
    *                        a event and it's consumed this returns
    *                        nsEventStatus_eConsumeNoDefault.
+   * @param aDispatchTo     See comments of DispatchTo.
    * @param aIndexOfKeypress    This must be 0 if aMessage isn't NS_KEY_PRESS or
    *                            aKeyboard.mKeyNameIndex isn't
    *                            KEY_NAME_INDEX_USE_STRING.  Otherwise, i.e.,
@@ -320,6 +357,8 @@ private:
   bool DispatchKeyboardEventInternal(uint32_t aMessage,
                                      const WidgetKeyboardEvent& aKeyboardEvent,
                                      nsEventStatus& aStatus,
+                                     DispatchTo aDispatchTo =
+                                       eDispatchToParentProcess,
                                      uint32_t aIndexOfKeypress = 0);
 };
 

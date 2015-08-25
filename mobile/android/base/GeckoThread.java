@@ -49,6 +49,8 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         LIBS_READY,
         // After initializing nsAppShell and JNI calls.
         JNI_READY,
+        // After initializing profile and prefs.
+        PROFILE_READY,
         // After initializing frontend JS (corresponding to "Gecko:Ready" event)
         RUNNING,
         // After leaving Gecko event loop
@@ -84,11 +86,14 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         public Method method;
         public Object target;
         public Object[] args;
+        public State state;
 
-        public QueuedCall(final Method method, final Object target, final Object[] args) {
+        public QueuedCall(final Method method, final Object target,
+                          final Object[] args, final State state) {
             this.method = method;
             this.target = target;
             this.args = args;
+            this.state = state;
         }
     }
 
@@ -161,7 +166,8 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
     // Queue a call to the given method.
     private static void queueNativeCallLocked(final Class<?> cls, final String methodName,
-                                              final Object obj, final Object[] args) {
+                                              final Object obj, final Object[] args,
+                                              final State state) {
         final Class<?>[] argTypes = new Class<?>[args.length];
         for (int i = 0; i < args.length; i++) {
             Class<?> argType = args[i].getClass();
@@ -182,48 +188,83 @@ public class GeckoThread extends Thread implements GeckoEventListener {
             throw new UnsupportedOperationException("Cannot find method", e);
         }
 
-        if (QUEUED_CALLS.size() == 0 && isRunning()) {
+        if (QUEUED_CALLS.size() == 0 && isStateAtLeast(state)) {
             invokeMethod(method, obj, args);
             return;
         }
-        QUEUED_CALLS.add(new QueuedCall(method, obj, args));
+        QUEUED_CALLS.add(new QueuedCall(method, obj, args, state));
     }
 
     /**
-     * Queue a call to the given static method until Gecko is in RUNNING state.
+     * Queue a call to the given static method until Gecko is in the given state.
      *
+     * @param state The Gecko state in which the native call could be executed.
+     *              Default is State.RUNNING, which means this queued call will
+     *              run when Gecko is at or after RUNNING state.
      * @param cls Class that declares the static method.
      * @param methodName Name of the static method.
      * @param args Args to call the static method with.
      */
-    public static void queueNativeCall(final Class<?> cls, final String methodName,
-                                       final Object... args) {
+    public static void queueNativeCallUntil(final State state, final Class<?> cls,
+                                            final String methodName, final Object... args) {
         synchronized (QUEUED_CALLS) {
-            queueNativeCallLocked(cls, methodName, null, args);
+            queueNativeCallLocked(cls, methodName, null, args, state);
         }
     }
 
     /**
-     * Queue a call to the given instance method until Gecko is in RUNNING state.
+     * Queue a call to the given static method until Gecko is in the RUNNING state.
+     */
+    public static void queueNativeCall(final Class<?> cls, final String methodName,
+                                       final Object... args) {
+        synchronized (QUEUED_CALLS) {
+            queueNativeCallLocked(cls, methodName, null, args, State.RUNNING);
+        }
+    }
+
+    /**
+     * Queue a call to the given instance method until Gecko is in the given state.
      *
+     * @param state The Gecko state in which the native call could be executed.
      * @param obj Object that declares the instance method.
      * @param methodName Name of the instance method.
      * @param args Args to call the instance method with.
      */
+    public static void queueNativeCallUntil(final State state, final Object obj,
+                                            final String methodName, final Object... args) {
+        synchronized (QUEUED_CALLS) {
+            queueNativeCallLocked(obj.getClass(), methodName, obj, args, state);
+        }
+    }
+
+    /**
+     * Queue a call to the given instance method until Gecko is in the RUNNING state.
+     */
     public static void queueNativeCall(final Object obj, final String methodName,
                                        final Object... args) {
         synchronized (QUEUED_CALLS) {
-            queueNativeCallLocked(obj.getClass(), methodName, obj, args);
+            queueNativeCallLocked(obj.getClass(), methodName, obj, args, State.RUNNING);
         }
     }
 
     // Run all queued methods
     private static void flushQueuedNativeCalls(final State state) {
-        if (!state.is(State.RUNNING)) {
-            return;
-        }
         synchronized (QUEUED_CALLS) {
-            for (QueuedCall call : QUEUED_CALLS) {
+            int lastSkipped = -1;
+            for (int i = 0; i < QUEUED_CALLS.size(); i++) {
+                final QueuedCall call = QUEUED_CALLS.get(i);
+                if (call == null) {
+                    // We already handled the call.
+                    continue;
+                }
+                if (!state.isAtLeast(call.state)) {
+                    // The call is not ready yet; skip it.
+                    lastSkipped = i;
+                    continue;
+                }
+                // Mark as handled.
+                QUEUED_CALLS.set(i, null);
+
                 if (call.method == null) {
                     final GeckoEvent e = (GeckoEvent) call.target;
                     GeckoAppShell.notifyGeckoOfEvent(e);
@@ -232,8 +273,15 @@ public class GeckoThread extends Thread implements GeckoEventListener {
                 }
                 invokeMethod(call.method, call.target, call.args);
             }
-            QUEUED_CALLS.clear();
-            QUEUED_CALLS.trimToSize();
+            if (lastSkipped < 0) {
+                // We're done here; release the memory
+                QUEUED_CALLS.clear();
+                QUEUED_CALLS.trimToSize();
+            } else if (lastSkipped < QUEUED_CALLS.size() - 1) {
+                // We skipped some; free up null entries at the end,
+                // but keep all the previous entries for later.
+                QUEUED_CALLS.subList(lastSkipped + 1, QUEUED_CALLS.size()).clear();
+            }
         }
     }
 
@@ -409,7 +457,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
                 GeckoAppShell.notifyGeckoOfEvent(e);
                 e.recycle();
             } else {
-                QUEUED_CALLS.add(new QueuedCall(null, e, null));
+                QUEUED_CALLS.add(new QueuedCall(null, e, null, State.RUNNING));
             }
         }
     }
@@ -497,5 +545,17 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         }
         flushQueuedNativeCalls(newState);
         return true;
+    }
+
+    @WrapForJNI(stubName = "SpeculativeConnect")
+    private static native void speculativeConnectNative(String uri);
+
+    public static void speculativeConnect(final String uri) {
+        // This is almost always called before Gecko loads, so we don't
+        // bother checking here if Gecko is actually loaded or not.
+        // Speculative connection depends on proxy settings,
+        // so the earliest it can happen is after profile is ready.
+        queueNativeCallUntil(State.PROFILE_READY, GeckoThread.class,
+                             "speculativeConnectNative", uri);
     }
 }

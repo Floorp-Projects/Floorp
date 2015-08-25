@@ -10,6 +10,7 @@
 #include "jsscript.h"
 
 #include "asmjs/AsmJSLink.h"
+#include "builtin/ModuleObject.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/NameFunctions.h"
@@ -57,6 +58,7 @@ class MOZ_STACK_CLASS BytecodeCompiler
     void setSourceArgumentsNotIncluded();
 
     JSScript* compileScript(HandleObject scopeChain, HandleScript evalCaller);
+    ModuleObject* compileModule();
     bool compileFunctionBody(MutableHandleFunction fun, Handle<PropertyNameVector> formals,
                              GeneratorKind generatorKind);
 
@@ -606,6 +608,60 @@ BytecodeCompiler::compileScript(HandleObject scopeChain, HandleScript evalCaller
     return script;
 }
 
+ModuleObject* BytecodeCompiler::compileModule()
+{
+    MOZ_ASSERT(!enclosingStaticScope);
+
+    if (!createSourceAndParser())
+        return nullptr;
+
+    if (!createScript())
+        return nullptr;
+
+    Rooted<ModuleObject*> module(cx, ModuleObject::create(cx));
+    if (!module)
+        return nullptr;
+
+    module->init(script);
+
+    ParseNode* pn = parser->standaloneModule(module);
+    if (!pn)
+        return nullptr;
+
+    if (!NameFunctions(cx, pn) ||
+        !maybeSetDisplayURL(parser->tokenStream) ||
+        !maybeSetSourceMap(parser->tokenStream))
+    {
+        return nullptr;
+    }
+
+    script->bindings = pn->pn_modulebox->bindings;
+
+    RootedModuleEnvironmentObject dynamicScope(cx, ModuleEnvironmentObject::create(cx, module));
+    if (!dynamicScope)
+        return nullptr;
+
+    module->setInitialEnvironment(dynamicScope);
+
+    if (!createEmitter(pn->pn_modulebox) ||
+        !emitter->emitModuleScript(pn->pn_body))
+    {
+        return nullptr;
+    }
+
+    ModuleBuilder builder(cx->asJSContext());
+    if (!builder.buildAndInit(pn, module))
+        return nullptr;
+
+    parser->handler.freeTree(pn);
+
+    if (!maybeCompleteCompressSource())
+        return nullptr;
+
+    MOZ_ASSERT_IF(cx->isJSContext(), !cx->asJSContext()->isExceptionPending());
+    return module;
+}
+
 bool
 BytecodeCompiler::compileFunctionBody(MutableHandleFunction fun,
                                       Handle<PropertyNameVector> formals,
@@ -719,6 +775,22 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
                               TraceLogger_ParserCompileScript);
     compiler.maybeSetSourceCompressor(extraSct);
     return compiler.compileScript(scopeChain, evalCaller);
+}
+
+ModuleObject*
+frontend::CompileModule(JSContext* cx, HandleObject obj,
+                        const ReadOnlyCompileOptions& optionsInput,
+                        SourceBufferHolder& srcBuf)
+{
+    MOZ_ASSERT(srcBuf.get());
+
+    CompileOptions options(cx, optionsInput);
+    options.maybeMakeStrictMode(true); // ES6 10.2.1 Module code is always strict mode code.
+    options.setIsRunOnce(true);
+
+    BytecodeCompiler compiler(cx, &cx->tempLifoAlloc(), options, srcBuf, nullptr,
+                              TraceLogger_ParserCompileModule);
+    return compiler.compileModule();
 }
 
 bool

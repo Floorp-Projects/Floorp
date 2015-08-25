@@ -6,6 +6,9 @@
  * The Security devtool supports the following arguments:
  * * Security CSP
  *   Provides feedback about the current CSP
+ *
+ *  * Security referrer
+ *    Provides information about the current referrer policy
  */
 
 "use strict";
@@ -34,6 +37,11 @@ const XSS_WARNING_MSG = l10n.lookup("securityCSPPotentialXSS");
 const NO_CSP_ON_PAGE_MSG = l10n.lookup("securityCSPNoCSPOnPage");
 const CONTENT_SECURITY_POLICY_MSG = l10n.lookup("securityCSPHeaderOnPage");
 const CONTENT_SECURITY_POLICY_REPORT_ONLY_MSG = l10n.lookup("securityCSPROHeaderOnPage");
+
+const NEXT_URI_HEADER = l10n.lookup("securityReferrerNextURI");
+const CALCULATED_REFERRER_HEADER = l10n.lookup("securityReferrerCalculatedReferrer");
+/* The official names from the W3C Referrer Policy Draft http://www.w3.org/TR/referrer-policy/ */
+const REFERRER_POLICY_NAMES = [ "None When Downgrade", "None", "Origin Only", "Origin When Cross-Origin", "Unsafe URL" ];
 
 exports.items = [
   {
@@ -176,4 +184,98 @@ exports.items = [
         });
     }
   },
+  {
+    // --- Referrer Policy specific Security information
+    item: "command",
+    runAt: "server",
+    name: "security referrer",
+    description: l10n.lookup("securityReferrerPolicyDesc"),
+    manual: l10n.lookup("securityReferrerPolicyManual"),
+    returnType: "securityReferrerPolicyInfo",
+    exec: function(args, context) {
+      var doc = context.environment.document;
+
+      var referrerPolicy = doc.referrerPolicy;
+
+      var pageURI = doc.documentURIObject;
+      var sameDomainReferrer = "";
+      var otherDomainReferrer = "";
+      var downgradeReferrer = "";
+      var origin = pageURI.prePath;
+
+      switch (referrerPolicy) {
+        case Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER:
+          // sends no referrer
+          sameDomainReferrer = otherDomainReferrer = downgradeReferrer = "(no referrer)";
+          break;
+        case Ci.nsIHttpChannel.REFERRER_POLICY_ORIGIN:
+          // only sends the origin of the referring URL
+          sameDomainReferrer = otherDomainReferrer = downgradeReferrer = origin;
+          break;
+        case Ci.nsIHttpChannel.REFERRER_POLICY_ORIGIN_WHEN_XORIGIN:
+          // same as default, but reduced to ORIGIN when cross-origin.
+          sameDomainReferrer = pageURI.spec;
+          otherDomainReferrer = origin;
+          downgradeReferrer = "(no referrer)";
+          break;
+        case Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL:
+          // always sends the referrer, even on downgrade.
+          sameDomainReferrer = otherDomainReferrer = downgradeReferrer = pageURI.spec;
+          break;
+        case Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE:
+          // default state, doesn't send referrer from https->http
+          sameDomainReferrer = otherDomainReferrer = pageURI.spec;
+          downgradeReferrer = "(no referrer)";
+          break;
+        default:
+          // this is a new referrer policy which we do not know about
+          sameDomainReferrer = otherDomainReferrer = downgradeReferrer = "(unknown Referrer Policy)";
+          break;
+      }
+
+      var sameDomainUri = origin + "/*";
+
+      var referrerUrls = [
+        // add the referrer uri 'referrer' we would send when visiting 'uri'
+        {uri: 'http://example.com/', referrer: otherDomainReferrer},
+        {uri: sameDomainUri, referrer: sameDomainReferrer}
+      ];
+
+      if (pageURI.schemeIs('https')) {
+        // add the referrer we would send on downgrading http->https
+        referrerUrls.push({uri: "http://"+pageURI.hostPort+"/*", referrer: downgradeReferrer});
+      }
+
+      return {
+        header: l10n.lookupFormat("securityReferrerPolicyReportHeader", [pageURI.spec]),
+        policyName: REFERRER_POLICY_NAMES[referrerPolicy],
+        urls: referrerUrls
+      }
+    }
+  },
+  {
+    item: "converter",
+    from: "securityReferrerPolicyInfo",
+    to: "view",
+    exec: function(referrerPolicyInfo, context) {
+      return context.createView({
+          html:
+          "<div class='gcli-referrer-policy'>" +
+          "  <strong> ${rpi.header} </strong> <br />" +
+          "  ${rpi.policyName} <br />" +
+          "  <table class='gcli-referrer-policy-detail' cellspacing='10' >" +
+          "    <tr><th> " + NEXT_URI_HEADER + " </th><th> " + CALCULATED_REFERRER_HEADER + " </th></tr>" +
+          // iterate all policies
+          "    <tr foreach='nextURI in ${rpi.urls}' >" +
+          "      <td> ${nextURI.uri} </td>" +
+          "      <td> ${nextURI.referrer} </td>" +
+          "    </tr>" +
+          "  </table>" +
+          "</div>",
+          data: {
+            rpi: referrerPolicyInfo,
+          }
+        });
+     }
+  }
 ];
