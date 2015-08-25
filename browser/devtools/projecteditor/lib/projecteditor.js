@@ -554,6 +554,7 @@ var ProjectEditor = Class({
     this._editorListenAndDispatch(editor, "change", "onEditorChange");
     this._editorListenAndDispatch(editor, "cursorActivity", "onEditorCursorActivity");
     this._editorListenAndDispatch(editor, "load", "onEditorLoad");
+    this._editorListenAndDispatch(editor, "saveRequested", "onEditorSaveRequested");
     this._editorListenAndDispatch(editor, "save", "onEditorSave");
 
     editor.on("focus", () => {

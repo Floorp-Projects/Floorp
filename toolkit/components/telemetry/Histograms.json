@@ -5118,6 +5118,19 @@
     "keyed": true,
     "description": "Longest blocking operation performed by the add-on (log2(duration in ms), keyed by add-on, updated every 15s by default)"
   },
+  "SLOW_ADDON_WARNING_STATES": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "The states the Slow Add-on Warning goes through. 0: Displayed the warning. 1: User clicked on 'Disable add-on'. 2: User clicked 'Ignore add-on for now'. 3: User clicked 'Ignore add-on permanently'. 4: User closed notification. Other values are reserved for future uses."
+  },
+  "SLOW_ADDON_WARNING_RESPONSE_TIME": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "86400000",
+    "n_buckets": 30,
+    "description": "Time elapsed between before responding to Slow Add-on Warning UI (ms). Not updated if the user doesn't respond at all."
+  },
   "SEARCH_COUNTS": {
     "expires_in_version": "never",
     "kind": "count",
@@ -8764,6 +8777,70 @@
     "n_values": 20,
     "releaseChannelCollection": "opt-out",
     "description": "Reports why a graphics sanity test was run. 0=First Run, 1=App Updated, 2=Device Change, 3=Driver Change."
+  },
+  "TRANSLATION_OPPORTUNITIES": {
+    "expires_in_version": "default",
+    "kind": "boolean",
+    "description": "A number of successful and failed attempts to translate a document"
+  },
+  "TRANSLATION_OPPORTUNITIES_BY_LANGUAGE": {
+    "expires_in_version": "default",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "A number of successful and failed attempts to translate a document grouped by language"
+  },
+  "TRANSLATED_PAGES": {
+    "expires_in_version": "default",
+    "kind": "count",
+    "description": "A number of sucessfully translated pages"
+  },
+  "TRANSLATED_PAGES_BY_LANGUAGE": {
+    "expires_in_version": "default",
+    "kind": "count",
+    "keyed": true,
+    "description": "A number of sucessfully translated pages by language"
+  },
+  "TRANSLATED_CHARACTERS": {
+    "expires_in_version": "default",
+    "kind": "exponential",
+    "high": "10 * 1024",
+    "n_buckets": 50,
+    "description": "A number of sucessfully translated characters"
+  },
+  "DENIED_TRANSLATION_OFFERS": {
+    "expires_in_version": "default",
+    "kind": "count",
+    "description": "A number of tranlation offers the user denied"
+  },
+  "AUTO_REJECTED_TRANSLATION_OFFERS": {
+    "expires_in_version": "default",
+    "kind": "count",
+    "description": "A number of auto-rejected tranlation offers"
+  },
+  "REQUESTS_OF_ORIGINAL_CONTENT": {
+    "expires_in_version": "default",
+    "kind": "count",
+    "description": "A number of times the user requested to see the original content of a translated page"
+  },
+  "CHANGES_OF_TARGET_LANGUAGE": {
+    "expires_in_version": "default",
+    "kind": "count",
+    "description": "A number of times when the target language was changed by the user"
+  },
+  "CHANGES_OF_DETECTED_LANGUAGE": {
+    "expires_in_version": "default",
+    "kind": "boolean",
+    "description": "A number of changes of detected language before (true) or after (false) translating a page for the first time."
+  },
+  "SHOULD_TRANSLATION_UI_APPEAR": {
+    "expires_in_version": "default",
+    "kind": "flag",
+    "description": "Tracks situations when the user opts for displaying translation UI"
+  },
+  "SHOULD_AUTO_DETECT_LANGUAGE": {
+    "expires_in_version": "default",
+    "kind": "flag",
+    "description": "Tracks situations when the user opts for auto-detecting the language of a page"
   },
   "PERMISSIONS_REMIGRATION_COMPARISON": {
     "alert_emails": ["michael@thelayzells.com"],

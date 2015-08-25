@@ -191,16 +191,16 @@ interface nsIScriptSecurityManager : nsISupports
 
     /**
      * Returns a principal whose origin is composed of |uri| and |originAttributes|.
-     * See nsIPrincipal.h for a description of origin attributes, and
-     * SystemDictionaries.webidl for a list of origin attributes and their defaults.
+     * See nsIPrincipal.idl for a description of origin attributes, and
+     * ChromeUtils.webidl for a list of origin attributes and their defaults.
      */
     [implicit_jscontext]
     nsIPrincipal createCodebasePrincipal(in nsIURI uri, in jsval originAttributes);
 
     /**
      * Returns a unique nonce principal with |originAttributes|.
-     * See nsIPrincipal.h for a description of origin attributes, and
-     * SystemDictionaries.webidl for a list of origin attributes and their defaults.
+     * See nsIPrincipal.idl for a description of origin attributes, and
+     * ChromeUtils.webidl for a list of origin attributes and their defaults.
      */
     [implicit_jscontext]
     nsIPrincipal createNullPrincipal(in jsval originAttributes);

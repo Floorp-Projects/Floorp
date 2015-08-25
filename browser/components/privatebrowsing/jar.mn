@@ -3,6 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
-*   content/browser/aboutPrivateBrowsing.css              (content/aboutPrivateBrowsing.css)
-    content/browser/aboutPrivateBrowsing.xhtml            (content/aboutPrivateBrowsing.xhtml) 
+    content/browser/aboutPrivateBrowsing.css              (content/aboutPrivateBrowsing.css)
+    content/browser/aboutPrivateBrowsing.xhtml            (content/aboutPrivateBrowsing.xhtml)
     content/browser/aboutPrivateBrowsing.js               (content/aboutPrivateBrowsing.js)

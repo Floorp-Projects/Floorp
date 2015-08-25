@@ -10,8 +10,14 @@
 
   <body>
     <script type="text/javascript">
+    var x = 1;
     window.test = function () {
       SpecialPowers.Cu.forceGC();
+      document.body.style.borderTop = x + "px solid red";
+      x = 1^x;
+      document.body.innerHeight; // flush pending reflows
+
+      // Prevent this script from being garbage collected.
       setTimeout(window.test, 100);
     };
     test();

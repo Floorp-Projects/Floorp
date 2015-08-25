@@ -2203,9 +2203,6 @@ function MarkupElementContainer(markupView, node) {
   }
 
   this.tagLine.appendChild(this.editor.elt);
-
-  // Prepare the image preview tooltip data if any
-  this._prepareImagePreview();
 }
 
 MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
@@ -2231,37 +2228,44 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
   },
 
   /**
-   * If the node is an image or canvas (@see isPreviewable), then get the
-   * image data uri from the server so that it can then later be previewed in
-   * a tooltip if needed.
-   * Stores a promise in this.tooltipData.data that resolves when the data has
-   * been retrieved
+   * Generates the an image preview for this Element. The element must be an
+   * image or canvas (@see isPreviewable).
+   *
+   * @return A Promise that is resolved with an object of form
+   * { data, size: { naturalWidth, naturalHeight, resizeRatio } } where
+   *   - data is the data-uri for the image preview.
+   *   - size contains information about the original image size and if the
+   *     preview has been resized.
+   *
+   * If this element is not previewable or the preview cannot be generated for
+   * some reason, the Promise is rejected.
    */
-  _prepareImagePreview: function() {
-    if (this.isPreviewable()) {
-      // Get the image data for later so that when the user actually hovers over
-      // the element, the tooltip does contain the image
-      let def = promise.defer();
-
-      let hasSrc = this.editor.getAttributeElement("src");
-      this.tooltipData = {
-        target: hasSrc ? hasSrc.querySelector(".link") : this.editor.tag,
-        data: def.promise
-      };
-
-      let maxDim = Services.prefs.getIntPref("devtools.inspector.imagePreviewTooltipSize");
-      this.node.getImageData(maxDim).then(data => {
-        data.data.string().then(str => {
-          let res = {data: str, size: data.size};
-          // Resolving the data promise and, to always keep tooltipData.data
-          // as a promise, create a new one that resolves immediately
-          def.resolve(res);
-          this.tooltipData.data = promise.resolve(res);
-        });
-      }, () => {
-        this.tooltipData.data = promise.resolve({});
-      });
+  _getPreview: function() {
+    if (!this.isPreviewable()) {
+      return promise.reject("_getPreview called on a non-previewable element.");
     }
+
+    if (this.tooltipDataPromise) {
+      // A preview request is already pending. Re-use that request.
+      return this.tooltipDataPromise;
+    }
+
+    let maxDim =
+      Services.prefs.getIntPref("devtools.inspector.imagePreviewTooltipSize");
+
+    // Fetch the preview from the server.
+    this.tooltipDataPromise = Task.spawn(function*() {
+      let preview = yield this.node.getImageData(maxDim);
+      let data = yield preview.data.string();
+
+      // Clear the pending preview request. We can't reuse the results later as
+      // the preview contents might have changed.
+      this.tooltipDataPromise = null;
+
+      return { data, size: preview.size };
+    }.bind(this));
+
+    return this.tooltipDataPromise;
   },
 
   /**
@@ -2274,16 +2278,26 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
    * to decide if/when to show the tooltip
    */
   isImagePreviewTarget: function(target, tooltip) {
-    if (!this.tooltipData || this.tooltipData.target !== target) {
+    // Is this Element previewable.
+    if (!this.isPreviewable()) {
       return promise.reject(false);
     }
 
-    return this.tooltipData.data.then(({data, size}) => {
-      if (data && size) {
-        tooltip.setImageContent(data, size);
-      } else {
-        tooltip.setBrokenImageContent();
-      }
+    // If the Element has an src attribute, the tooltip is shown when hovering
+    // over the src url. If not, the tooltip is shown when hovering over the tag
+    // name.
+    let src = this.editor.getAttributeElement("src");
+    let expectedTarget = src ? src.querySelector(".link") : this.editor.tag;
+    if (target !== expectedTarget) {
+      return promise.reject(false);
+    }
+
+    return this._getPreview().then(({data, size}) => {
+      // The preview is ready.
+      tooltip.setImageContent(data, size);
+    }, () => {
+      // Indicate the failure but show the tooltip anyway.
+      tooltip.setBrokenImageContent();
     });
   },
 

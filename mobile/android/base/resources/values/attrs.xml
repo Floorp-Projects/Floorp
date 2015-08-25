@@ -193,9 +193,13 @@
         <attr name="disabledText" format="string" />
     </declare-styleable>
 
-    <declare-styleable name="MenuItemActionBar">
-        <!-- We reimplement tint list XML attrs here because it is
-             only available in Android 21+. -->
+    <declare-styleable name="ThemedView">
+        <!-- A reimplementation of android:tintList which is
+             otherwise only available on API 21+.
+
+             Using this attribute is mutually exclusive with android:tint
+             and setting colorFilters in code. This is because on pre-Lollipop,
+             android:tint and DrawableCompat.tint* uses colorFilters under the hood. -->
         <attr name="drawableTintList" format="color" />
     </declare-styleable>
 

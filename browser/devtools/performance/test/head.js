@@ -79,6 +79,10 @@ Services.prefs.setBoolPref("devtools.performance.enabled", true);
 // be affected by this pref.
 Services.prefs.setBoolPref("devtools.debugger.log", false);
 
+// By default, enable memory flame graphs for tests for now
+// TODO remove when we have flame charts via bug 1148663
+Services.prefs.setBoolPref("devtools.performance.ui.enable-memory-flame", true);
+
 /**
  * Call manually in tests that use frame script utils after initializing
  * the tool. Must be called after initializing (once we have a tab).
@@ -540,4 +544,8 @@ function synthesizeProfileForTest(samples) {
     samples: samples,
     markers: []
   }, uniqueStacks);
+}
+
+function isVisible (element) {
+  return !element.classList.contains("hidden") && !element.hidden;
 }

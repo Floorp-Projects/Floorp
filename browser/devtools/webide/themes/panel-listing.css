@@ -72,6 +72,15 @@ button.panel-item {
   width: 100%;
 }
 
+button.project-panel-item-refreshtabs {
+  display: inline-block;
+  float: right;
+  padding: 3px;
+  text-transform: none;
+  width: auto;
+  margin: 0 4px 5px 5px;
+}
+
 .panel-item:disabled {
   background-color: #FFF;
   color: #5A5A5A;

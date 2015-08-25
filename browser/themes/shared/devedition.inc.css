@@ -31,7 +31,6 @@
   --tabs-toolbar-color: #F5F7FA;
   --tab-background-color: #1C2126;
   --tab-hover-background-color: #07090a;
-  --tab-separator-color: #474C50;
   --tab-selection-color: #f5f7fa;
   --tab-selection-background-color: #1a4666;
   --tab-selection-box-shadow: 0 2px 0 #D7F1FF inset,
@@ -92,7 +91,6 @@
 
   --tab-background-color: #E3E4E6;
   --tab-hover-background-color: #D7D8DA;
-  --tab-separator-color: #C6C6C7;
   --tab-selection-color: #f5f7fa;
   --tab-selection-background-color: #4c9ed9;
   --tab-selection-box-shadow: 0 2px 0 #9FDFFF inset,
@@ -285,24 +283,10 @@ searchbar:not([oneoffui]) .search-go-button {
   visibility: hidden;
 }
 
-/* Make the tab splitter 1px wide with a solid background. */
-#tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
-.tabbrowser-tab:not([visuallyselected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
-#tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([visuallyselected]):not([beforehovered]):not(:hover)::after {
-  background: var(--tab-separator-color);
-  opacity: 1;
-  width: 1px;
-  -moz-margin-start: 0;
-  -moz-margin-end: -1px;
-}
 
-/* For the last tab separator, use margin-start of -1px to prevent jittering
-   due to the ::after element causing the width of the tab to extend, which
-   causes an overflow and makes it disappear, which removes the overflow and
-   causes it to reappear, etc, etc. */
-#tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([visuallyselected]):not([beforehovered]):not(:hover)::after {
-  -moz-margin-start: -1px;
-  -moz-margin-end: 0;
+#TabsToolbar {
+  --tab-separator-margin: 0;
+  --tab-separator-opacity: 0.2 !important;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down,

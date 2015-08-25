@@ -29,11 +29,11 @@ add_task(function*() {
     "The container contains the playback rate select");
 
   info("Faking an older server version by setting " +
-    "AnimationsController.hasSetCurrentTime to false");
+    "AnimationsController.traits.hasSetCurrentTime to false");
 
   // Selecting <div.still> to make sure no widgets are displayed in the panel.
   yield selectNode(".still", inspector);
-  controller.hasSetCurrentTime = false;
+  controller.traits.hasSetCurrentTime = false;
 
   info("Selecting the animated node again");
   yield selectNode(".animated", inspector);
@@ -48,12 +48,12 @@ add_task(function*() {
     "The first button is the play/pause button");
 
   yield selectNode(".still", inspector);
-  controller.hasSetCurrentTime = true;
+  controller.traits.hasSetCurrentTime = true;
 
   info("Faking an older server version by setting " +
-    "AnimationsController.hasSetPlaybackRate to false");
+    "AnimationsController.traits.hasSetPlaybackRate to false");
 
-  controller.hasSetPlaybackRate = false;
+  controller.traits.hasSetPlaybackRate = false;
 
   info("Selecting the animated node again");
   yield selectNode(".animated", inspector);
@@ -66,5 +66,5 @@ add_task(function*() {
     "The playback rate select does not exist");
 
   yield selectNode(".still", inspector);
-  controller.hasSetPlaybackRate = true;
+  controller.traits.hasSetPlaybackRate = true;
 });
