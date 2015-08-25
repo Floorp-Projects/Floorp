@@ -87,7 +87,7 @@ public:
     if (mIsShutDown || mIsFlushing) {
       return;
     }
-    mTaskQueue->Dispatch(task.forget());
+    mTaskQueue->Dispatch(task.forget(), AbstractThread::DontAssertDispatchSuccess);
   }
 
   nsresult OutputFrame(CFRefPtr<CVPixelBufferRef> aImage,
