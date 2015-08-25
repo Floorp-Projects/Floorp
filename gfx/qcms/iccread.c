@@ -715,6 +715,11 @@ static struct lutType *read_tag_lutType(struct mem_source *src, struct tag_index
 		return NULL;
 	}
 
+	if (clut_size <= 0) {
+		invalid_source(src, "CLUT must not be empty.");
+		return NULL;
+	}
+
 	if (in_chan != 3 || out_chan != 3) {
 		invalid_source(src, "CLUT only supports RGB");
 		return NULL;
