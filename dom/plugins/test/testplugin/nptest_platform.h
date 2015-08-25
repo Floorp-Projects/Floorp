@@ -145,4 +145,11 @@ bool pluginCrashInNestedLoop(InstanceData* instanceData);
  */
 bool pluginDestroySharedGfxStuff(InstanceData* instanceData);
 
+/**
+ * Checks to see if the native widget is marked as visible. Works
+ * in e10s and non-e10s. Useful in testing e10s related compositor
+ * plugin window functionality. Supported on Windows.
+ */
+bool pluginNativeWidgetIsVisible(InstanceData* instanceData);
+
 #endif // nptest_platform_h_

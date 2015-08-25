@@ -591,3 +591,15 @@ void pluginDoInternalConsistencyCheck(InstanceData* instanceData, string& error)
     checkEquals(childRect.bottom, childRect.top + CHILD_WIDGET_SIZE, "Child widget height", error);
   }
 }
+
+bool pluginNativeWidgetIsVisible(InstanceData* instanceData)
+{
+  HWND hWnd = (HWND)instanceData->window.window;
+  wchar_t className[60];
+  if (::GetClassNameW(hWnd, className, sizeof(className) / sizeof(char16_t)) &&
+      !wcsicmp(className, L"GeckoPluginWindow")) {
+    return ::IsWindowVisible(hWnd);
+  }
+  // something isn't right, fail the check
+  return false;
+}

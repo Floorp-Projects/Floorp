@@ -422,13 +422,6 @@ BytecodeCompiler::maybeSetSourceMapFromOptions()
 bool
 BytecodeCompiler::checkArgumentsWithinEval(JSContext* cx, HandleFunction fun)
 {
-    if (fun->hasRest()) {
-        // It's an error to use |arguments| in a function that has a rest
-        // parameter.
-        parser->report(ParseError, false, nullptr, JSMSG_ARGUMENTS_AND_REST);
-        return false;
-    }
-
     RootedScript script(cx, fun->getOrCreateScript(cx));
     if (!script)
         return false;

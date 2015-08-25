@@ -1040,9 +1040,14 @@ UnboxedArrayObject::convertInt32ToDouble(ExclusiveContext* cx, ObjectGroup* grou
     for (size_t i = 0; i < initializedLength(); i++)
         values.infallibleAppend(getElementSpecific<JSVAL_TYPE_INT32>(i).toInt32());
 
-    uint8_t* newElements = ReallocateObjectBuffer<uint8_t>(cx, this, elements(),
-                                                           capacity() * sizeof(int32_t),
-                                                           capacity() * sizeof(double));
+    uint8_t* newElements;
+    if (hasInlineElements()) {
+        newElements = AllocateObjectBuffer<uint8_t>(cx, this, capacity() * sizeof(double));
+    } else {
+        newElements = ReallocateObjectBuffer<uint8_t>(cx, this, elements(),
+                                                      capacity() * sizeof(int32_t),
+                                                      capacity() * sizeof(double));
+    }
     if (!newElements)
         return false;
 
@@ -2001,8 +2006,7 @@ js::TryConvertToUnboxedLayout(ExclusiveContext* cx, Shape* templateShape,
             return true;
     }
 
-    UniquePtr<UnboxedLayout, JS::DeletePolicy<UnboxedLayout> > layout;
-    layout.reset(group->zone()->new_<UnboxedLayout>());
+    AutoInitGCManagedObject<UnboxedLayout> layout(group->zone()->make_unique<UnboxedLayout>());
     if (!layout)
         return false;
 
@@ -2058,7 +2062,7 @@ js::TryConvertToUnboxedLayout(ExclusiveContext* cx, Shape* templateShape,
     }
 
     group->setClasp(clasp);
-    group->setUnboxedLayout(layout.get());
+    group->setUnboxedLayout(layout.release());
 
     size_t valueCursor = 0;
     for (size_t i = 0; i < PreliminaryObjectArray::COUNT; i++) {

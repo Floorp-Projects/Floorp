@@ -34,9 +34,9 @@ function testSteps()
     let uri = Cc["@mozilla.org/network/io-service;1"]
                 .getService(Ci.nsIIOService)
                 .newURI(url, null, null);
-    let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                .getService(Ci.nsIScriptSecurityManager);
-    return ssm.createCodebasePrincipal(uri, {});
+    return Cc["@mozilla.org/scriptsecuritymanager;1"]
+             .getService(Ci.nsIScriptSecurityManager)
+             .getNoAppCodebasePrincipal(uri);
   }
 
   for (let temporary of [true, false]) {

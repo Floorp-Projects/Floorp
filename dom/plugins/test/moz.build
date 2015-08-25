@@ -11,4 +11,5 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3', 'cocoa', 'windows'):
     MOCHITEST_MANIFESTS += ['mochitest/mochitest.ini']
     MOCHITEST_CHROME_MANIFESTS += ['mochitest/chrome.ini']
+    BROWSER_CHROME_MANIFESTS += ['mochitest/browser.ini']
 

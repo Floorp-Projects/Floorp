@@ -147,11 +147,18 @@ private:
   void ScheduleMainThreadTimeout(const nsRefPtr<AsyncPanZoomController>& aTarget, uint64_t aInputBlockId);
   void MainThreadTimeout(const uint64_t& aInputBlockId);
   void ProcessInputBlocks();
+  void UpdateActiveApzc(const nsRefPtr<AsyncPanZoomController>& aNewActive);
 
 private:
   // The queue of touch blocks that have not yet been fully processed.
   // This member must only be accessed on the controller/UI thread.
   nsTArray<UniquePtr<CancelableBlockState>> mInputBlockQueue;
+
+  // The APZC to which the last event was delivered
+  nsRefPtr<AsyncPanZoomController> mLastActiveApzc;
+
+  // Track touches so we know when to clear mLastActiveApzc
+  TouchCounter mTouchCounter;
 };
 
 } // namespace layers
