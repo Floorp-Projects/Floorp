@@ -287,7 +287,13 @@ GonkDisplayJB::Post(buffer_handle_t buf, int fence)
 #endif
     mHwc->prepare(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
     int err = mHwc->set(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
-    mDispSurface->setReleaseFenceFd(mList->hwLayers[1].releaseFenceFd);
+
+    if (!mBootAnimDispSurface.get()) {
+        mDispSurface->setReleaseFenceFd(mList->hwLayers[1].releaseFenceFd);
+    } else {
+        mBootAnimDispSurface->setReleaseFenceFd(mList->hwLayers[1].releaseFenceFd);
+    }
+
     if (mList->retireFenceFd >= 0)
         close(mList->retireFenceFd);
     return !err;
