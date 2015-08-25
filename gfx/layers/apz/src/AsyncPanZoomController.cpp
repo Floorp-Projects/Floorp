@@ -3138,13 +3138,12 @@ AsyncPanZoomController::CurrentTouchBlock()
 void
 AsyncPanZoomController::ResetInputState()
 {
-  SetState(NOTHING);
-  // Also clear the state in the gesture event listener
+  MultiTouchInput cancel(MultiTouchInput::MULTITOUCH_CANCEL, 0, TimeStamp::Now(), 0);
   nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
   if (listener) {
-    MultiTouchInput cancel(MultiTouchInput::MULTITOUCH_CANCEL, 0, TimeStamp::Now(), 0);
     listener->HandleInputEvent(cancel);
   }
+  OnTouchCancel(cancel);
 }
 
 bool

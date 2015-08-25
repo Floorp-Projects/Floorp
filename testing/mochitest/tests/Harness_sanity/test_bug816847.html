@@ -34,14 +34,19 @@ const unknown = Ci.nsIPermissionManager.UNKNOWN_ACTION;
 const perms = ['network-events', 'geolocation', 'camera', 'alarms']
 
 function createPrincipal(aURI, aIsApp, aIsInBrowserElement) {
-  if (aIsApp) {
+  if(aIsApp) {
     var app = appsSvc.getAppByManifestURL(aURI);
-    return app.principal;
+    var localId = appsSvc.getAppLocalIdByManifestURL(aURI);
+    var uri = Services.io.newURI(app.origin, null, null);
+    return Services.scriptSecurityManager
+                   .getAppCodebasePrincipal(uri,
+                                            localId,
+                                            aIsInBrowserElement);
   }
 
   var uri = Services.io.newURI(aURI, null, null);
   return Services.scriptSecurityManager
-                 .createCodebasePrincipal(uri, {});
+                 .getNoAppCodebasePrincipal(uri);
 }
 
 // test addPermission and removePermission

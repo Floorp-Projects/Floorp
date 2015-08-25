@@ -4783,7 +4783,7 @@ BytecodeEmitter::emitCallSiteObject(ParseNode* pn)
 
     MOZ_ASSERT(value.isObject());
 
-    ObjectBox* objbox1 = parser->newObjectBox(&value.toObject().as<NativeObject>());
+    ObjectBox* objbox1 = parser->newObjectBox(&value.toObject());
     if (!objbox1)
         return false;
 
@@ -4792,7 +4792,7 @@ BytecodeEmitter::emitCallSiteObject(ParseNode* pn)
 
     MOZ_ASSERT(value.isObject());
 
-    ObjectBox* objbox2 = parser->newObjectBox(&value.toObject().as<NativeObject>());
+    ObjectBox* objbox2 = parser->newObjectBox(&value.toObject());
     if (!objbox2)
         return false;
 
@@ -7583,8 +7583,6 @@ BytecodeEmitter::emitTree(ParseNode* pn)
         ParseNode* rest = nullptr;
         bool restIsDefn = false;
         if (fun->hasRest() && hasDefaults) {
-            MOZ_ASSERT(!sc->asFunctionBox()->argumentsHasLocalBinding());
-
             // Defaults with a rest parameter need special handling. The
             // rest parameter needs to be undefined while defaults are being
             // processed. To do this, we create the rest argument and let it
@@ -7629,7 +7627,6 @@ BytecodeEmitter::emitTree(ParseNode* pn)
                 return false;
             if (pn2->pn_next == pnlast && fun->hasRest() && !hasDefaults) {
                 // Fill rest parameter. We handled the case with defaults above.
-                MOZ_ASSERT(!sc->asFunctionBox()->argumentsHasLocalBinding());
                 switchToPrologue();
                 if (!emit1(JSOP_REST))
                     return false;

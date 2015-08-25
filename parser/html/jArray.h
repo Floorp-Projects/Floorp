@@ -53,6 +53,12 @@ struct jArray {
     jArray<T,L> newArray = { new T[len], len };
     return newArray;
   }
+  static jArray<T,L> newFallibleJArray(L const len) {
+    MOZ_ASSERT(len >= 0, "Negative length.");
+    T* a = new (mozilla::fallible) T[len];
+    jArray<T,L> newArray = { a, a ? len : 0 };
+    return newArray;
+  }
   operator T*() { return arr; }
   T& operator[] (L const index) {
     MOZ_ASSERT(index >= 0, "Array access with negative index.");

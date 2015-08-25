@@ -9,11 +9,11 @@
 #include "nsIStyleRuleProcessor.h"
 #include "nsIStyleRule.h"
 #include "nsRefreshDriver.h"
-#include "prclist.h"
 #include "nsChangeHint.h"
 #include "nsCSSProperty.h"
 #include "nsDisplayList.h" // For nsDisplayItem::Type
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/Animation.h"
@@ -179,7 +179,7 @@ public:
   GetAnimationCollection(const nsIFrame* aFrame);
 
 protected:
-  PRCList mElementCollections;
+  LinkedList<AnimationCollection> mElementCollections;
   nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)
   bool mIsObservingRefreshDriver;
 };
@@ -234,7 +234,7 @@ private:
 
 typedef InfallibleTArray<nsRefPtr<dom::Animation>> AnimationPtrArray;
 
-struct AnimationCollection : public PRCList
+struct AnimationCollection : public LinkedListElement<AnimationCollection>
 {
   AnimationCollection(dom::Element *aElement, nsIAtom *aElementProperty,
                       CommonAnimationManager *aManager)
@@ -250,14 +250,13 @@ struct AnimationCollection : public PRCList
 #endif
   {
     MOZ_COUNT_CTOR(AnimationCollection);
-    PR_INIT_CLIST(this);
   }
   ~AnimationCollection()
   {
     MOZ_ASSERT(mCalledPropertyDtor,
                "must call destructor through element property dtor");
     MOZ_COUNT_DTOR(AnimationCollection);
-    PR_REMOVE_LINK(this);
+    remove();
     mManager->ElementCollectionRemoved();
   }
 

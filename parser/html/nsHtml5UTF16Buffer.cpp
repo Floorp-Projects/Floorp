@@ -84,6 +84,12 @@ nsHtml5UTF16Buffer::hasMore()
   return start < end;
 }
 
+int32_t 
+nsHtml5UTF16Buffer::getLength()
+{
+  return end - start;
+}
+
 void 
 nsHtml5UTF16Buffer::adjust(bool lastWasCR)
 {

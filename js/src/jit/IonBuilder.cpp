@@ -9735,6 +9735,15 @@ IonBuilder::jsop_newtarget()
 bool
 IonBuilder::jsop_rest()
 {
+    if (info().analysisMode() == Analysis_ArgumentsUsage) {
+        // There's no BaselineScript with the template object. Just push a
+        // dummy value, it does not affect the arguments analysis.
+        MUnknownValue* unknown = MUnknownValue::New(alloc());
+        current->add(unknown);
+        current->push(unknown);
+        return true;
+    }
+
     ArrayObject* templateObject = &inspector->getTemplateObject(pc)->as<ArrayObject>();
 
     if (inliningDepth_ == 0) {

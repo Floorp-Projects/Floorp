@@ -995,21 +995,14 @@ PdfStreamConverter.prototype = {
 
     // We can use resource principal when data is fetched by the chrome
     // e.g. useful for NoScript
-    var ssm = Cc['@mozilla.org/scriptsecuritymanager;1']
-                .getService(Ci.nsIScriptSecurityManager);
+    var securityManager = Cc['@mozilla.org/scriptsecuritymanager;1']
+                          .getService(Ci.nsIScriptSecurityManager);
     var uri = NetUtil.newURI(PDF_VIEWER_WEB_PAGE, null, null);
     // FF16 and below had getCodebasePrincipal, it was replaced by
     // getNoAppCodebasePrincipal (bug 758258).
-    // FF 43 added createCodebasePrincipal to replace getNoAppCodebasePrincipal
-    // (bug 1165272).
-    var resourcePrincipal
-    if ('createCodebasePrincipal' in ssm) {
-      resourcePrincipal = ssm.createCodebasePrincipal(uri, {});
-    } else if ('getNoAppCodebasePrincipal' in ssm) {
-      resourcePrincipal = ssm.getNoAppCodebasePrincipal(uri)
-    } else {
-      resourcePrincipal = ssm.getCodebasePrincipal(uri);
-    }
+    var resourcePrincipal = 'getNoAppCodebasePrincipal' in securityManager ?
+                            securityManager.getNoAppCodebasePrincipal(uri) :
+                            securityManager.getCodebasePrincipal(uri);
     aRequest.owner = resourcePrincipal;
     channel.asyncOpen(proxy, aContext);
   },

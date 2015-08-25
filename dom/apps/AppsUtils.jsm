@@ -73,9 +73,11 @@ mozIApplication.prototype = {
     this._principal = null;
 
     try {
-      this._principal = Services.scriptSecurityManager.createCodebasePrincipal(
+      this._principal = Services.scriptSecurityManager.getAppCodebasePrincipal(
         Services.io.newURI(this.origin, null, null),
-        {appId: this.localId});
+        this.localId,
+        false /* mozbrowser */
+      );
     } catch(e) {
       dump("Could not create app principal " + e + "\n");
     }

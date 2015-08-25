@@ -7,6 +7,16 @@ inline nsHtml5HtmlAttributes* GetAttributes()
   return attributes;
 }
 
+/**
+ * Makes sure the buffers are large enough to be able to tokenize aLength
+ * UTF-16 code units before having to make the buffers larger.
+ *
+ * @param aLength the number of UTF-16 code units to be tokenized before the
+ *                next call to this method.
+ * @return true if successful; false if out of memory
+ */
+bool EnsureBufferSpace(int32_t aLength);
+
 nsAutoPtr<nsHtml5Highlighter> mViewSource;
 
 /**
