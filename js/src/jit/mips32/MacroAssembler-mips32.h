@@ -315,8 +315,6 @@ class MacroAssemblerMIPS : public Assembler
                               FPConditionBit fcc = FCC0);
 
   public:
-    // callso an Ion function, assuming that sp has already been decremented
-    void ma_callJitNoPush(const Register reg);
     // calls an ion function, assuming that the stack is currently not 8 byte aligned
     void ma_callJitHalfPush(const Register reg);
     void ma_callJitHalfPush(Label* label);

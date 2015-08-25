@@ -3063,14 +3063,6 @@ MacroAssemblerMIPSCompat::storeTypeTag(ImmTag tag, const BaseIndex& dest)
     as_sw(ScratchRegister, SecondScratchReg, TAG_OFFSET);
 }
 
-void
-MacroAssemblerMIPS::ma_callJitNoPush(const Register r)
-{
-    // This is a MIPS hack to push return address during jalr delay slot.
-    as_jalr(r);
-    as_sw(ra, StackPointer, 0);
-}
-
 // This macrosintruction calls the ion code and pushes the return address to
 // the stack in the case when stack is not alligned.
 void
