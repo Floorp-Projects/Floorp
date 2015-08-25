@@ -6,6 +6,8 @@
 #define _JSEPTRACK_H_
 
 #include <string>
+#include <map>
+#include <set>
 
 #include <mozilla/RefPtr.h>
 #include <mozilla/UniquePtr.h>
@@ -15,46 +17,66 @@
 
 #include "signaling/src/jsep/JsepTransport.h"
 #include "signaling/src/sdp/Sdp.h"
+#include "signaling/src/sdp/SdpAttribute.h"
 #include "signaling/src/sdp/SdpMediaSection.h"
+#include "signaling/src/common/PtrVector.h"
 
 namespace mozilla {
 
 // Forward reference.
-struct JsepCodecDescription;
+class JsepCodecDescription;
 
 class JsepTrackNegotiatedDetails
 {
 public:
-  virtual ~JsepTrackNegotiatedDetails() {}
+  size_t
+  GetCodecCount() const
+  {
+    return mCodecs.values.size();
+  }
 
-  virtual mozilla::SdpMediaSection::Protocol GetProtocol() const = 0;
-  virtual Maybe<std::string> GetBandwidth(const std::string& type) const = 0;
-  virtual size_t GetCodecCount() const = 0;
-  virtual nsresult GetCodec(size_t index,
-                            const JsepCodecDescription** config) const = 0;
-  virtual const SdpExtmapAttributeList::Extmap* GetExt(
-      const std::string& ext_name) const = 0;
-  virtual std::vector<uint8_t> GetUniquePayloadTypes() const = 0;
+  const JsepCodecDescription*
+  GetCodec(size_t index) const
+  {
+    MOZ_RELEASE_ASSERT(index < mCodecs.values.size());
+    return mCodecs.values[index];
+  }
 
-  virtual void AddUniquePayloadType(uint8_t pt) = 0;
-  virtual void ClearUniquePayloadTypes() = 0;
+  const SdpExtmapAttributeList::Extmap*
+  GetExt(const std::string& ext_name) const
+  {
+    auto it = mExtmap.find(ext_name);
+    if (it != mExtmap.end()) {
+      return &it->second;
+    }
+    return nullptr;
+  }
+
+  std::vector<uint8_t> GetUniquePayloadTypes() const
+  {
+    return mUniquePayloadTypes;
+  }
+
+private:
+  friend class JsepTrack;
+
+  std::map<std::string, SdpExtmapAttributeList::Extmap> mExtmap;
+  std::vector<uint8_t> mUniquePayloadTypes;
+  PtrVector<JsepCodecDescription> mCodecs;
 };
 
 class JsepTrack
 {
 public:
-  enum Direction { kJsepTrackSending, kJsepTrackReceiving };
-
   JsepTrack(mozilla::SdpMediaSection::MediaType type,
             const std::string& streamid,
             const std::string& trackid,
-            Direction direction = kJsepTrackSending)
+            sdp::Direction direction = sdp::kSend)
       : mType(type),
         mStreamId(streamid),
         mTrackId(trackid),
         mDirection(direction)
-  {
-  }
+  {}
 
   virtual mozilla::SdpMediaSection::MediaType
   GetMediaType() const
@@ -98,7 +120,7 @@ public:
     mCNAME = cname;
   }
 
-  virtual Direction
+  virtual sdp::Direction
   GetDirection() const
   {
     return mDirection;
@@ -115,6 +137,17 @@ public:
   {
     mSsrcs.push_back(ssrc);
   }
+
+  virtual void PopulateCodecs(
+      const std::vector<JsepCodecDescription*>& prototype);
+  virtual void AddToOffer(SdpMediaSection* offer) const;
+  virtual void AddToAnswer(const SdpMediaSection& offer,
+                           SdpMediaSection* answer) const;
+  virtual void Negotiate(const SdpMediaSection& answer,
+                         const SdpMediaSection& remote);
+  static void SetUniquePayloadTypes(
+      const std::vector<RefPtr<JsepTrack>>& tracks);
+  virtual void GetNegotiatedPayloadTypes(std::vector<uint16_t>* payloadTypes);
 
   // This will be set when negotiation is carried out.
   virtual const JsepTrackNegotiatedDetails*
@@ -135,11 +168,10 @@ public:
     return nullptr;
   }
 
-  // This is for JsepSession's use.
   virtual void
-  SetNegotiatedDetails(UniquePtr<JsepTrackNegotiatedDetails> details)
+  ClearNegotiatedDetails()
   {
-    mNegotiatedDetails = Move(details);
+    mNegotiatedDetails.reset();
   }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(JsepTrack);
@@ -148,11 +180,34 @@ protected:
   virtual ~JsepTrack() {}
 
 private:
+  virtual std::vector<JsepCodecDescription*> GetCodecClones() const;
+  static void EnsureNoDuplicatePayloadTypes(
+      std::vector<JsepCodecDescription*>* codecs);
+  static void GetPayloadTypes(
+      const std::vector<JsepCodecDescription*>& codecs,
+      std::vector<uint16_t>* pts);
+  static void EnsurePayloadTypeIsUnique(std::set<uint16_t>* uniquePayloadTypes,
+                                        JsepCodecDescription* codec);
+  virtual void AddToMsection(const std::vector<JsepCodecDescription*>& codecs,
+                             SdpMediaSection* msection) const;
+
+  // |answer| is set when performing the final negotiation on completion of
+  // offer/answer, and is used to update the formats in |codecs|, since the
+  // answer is authoritative. |formatChanges| is also set on completion of
+  // offer/answer, and records how the formats in |codecs| were changed, which
+  // is used by |Negotiate| to update |mPrototypeCodecs|.
+  virtual void NegotiateCodecs(
+      const SdpMediaSection& remote,
+      std::vector<JsepCodecDescription*>* codecs,
+      const SdpMediaSection* answer = nullptr,
+      std::map<std::string, std::string>* formatChanges = nullptr) const;
+
   const mozilla::SdpMediaSection::MediaType mType;
   std::string mStreamId;
   std::string mTrackId;
   std::string mCNAME;
-  const Direction mDirection;
+  const sdp::Direction mDirection;
+  PtrVector<JsepCodecDescription> mPrototypeCodecs;
   UniquePtr<JsepTrackNegotiatedDetails> mNegotiatedDetails;
   std::vector<uint32_t> mSsrcs;
 };

@@ -19,7 +19,7 @@
 namespace mozilla {
 
 // Forward declarations
-struct JsepCodecDescription;
+class JsepCodecDescription;
 class JsepTrack;
 struct JsepTrackPair;
 
