@@ -13,6 +13,7 @@ ANDROID_RES_DIRS += [
 ]
 ANDROID_ASSETS_DIRS += [
     'src/main/assets',
+    '!/dist/bin/gaia/assets', # We must have built /b2g/gaia before building app/.
 ]
 
 # Make aapt generate org/mozilla/gecko/R.java.  There's a problem hidden here:
