@@ -214,22 +214,15 @@ var AddonWatcher = {
         // By default, warn only after an add-on has been spotted misbehaving 3 times.
         let tolerance = Preferences.get("browser.addon-watch.tolerance", 3);
 
-        for (let item of snapshot.componentsData) {
-          let addonId = item.addonId;
-          if (!item.isSystem || !addonId) {
-            // We are only interested in add-ons.
-            continue;
-          }
+        for (let [addonId, item] of snapshot.addons) {
           if (this._ignoreList.has(addonId)) {
             // This add-on has been explicitly put in the ignore list
             // by the user. Don't waste time with it.
             continue;
           }
 
-          // Store the activity for the group – not the entire add-on, as we
-          // can have one group per process for each add-on.
-          let previous = this._previousPerformanceIndicators[item.groupId];
-          this._previousPerformanceIndicators[item.groupId] = item;
+          let previous = this._previousPerformanceIndicators[addonId];
+          this._previousPerformanceIndicators[addonId] = item;
 
           if (!previous) {
             // This is the first time we see the addon, so we are probably
@@ -281,7 +274,7 @@ var AddonWatcher = {
 
             stats.alerts[filter] = (stats.alerts[filter] || 0) + 1;
 
-		    if (stats.alerts[filter] % tolerance != 0) {
+            if (stats.alerts[filter] % tolerance != 0) {
               continue;
             }
 
