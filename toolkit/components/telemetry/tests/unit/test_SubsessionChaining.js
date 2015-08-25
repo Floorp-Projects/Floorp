@@ -105,7 +105,7 @@ add_task(function* test_subsessionsChaining() {
 
   const PREF_TEST = PREF_BRANCH + "test.pref1";
   const PREFS_TO_WATCH = new Map([
-    [PREF_TEST, TelemetryEnvironment.RECORD_PREF_VALUE],
+    [PREF_TEST, {what: TelemetryEnvironment.RECORD_PREF_VALUE}],
   ]);
   Preferences.reset(PREF_TEST);
 

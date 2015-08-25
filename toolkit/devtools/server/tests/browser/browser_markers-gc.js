@@ -25,6 +25,23 @@ add_task(function*() {
   ok(markers.every(({causeName}) => typeof causeName === "string"),
     "All markers have a causeName.");
 
+  markers = rec.getMarkers();
+
+  // Bug 1197646
+  let ordered = true;
+  markers.reduce((previousStart, current, i) => {
+    if (i === 0) {
+      return current.start;
+    }
+    if (current.start < previousStart) {
+      ok(false, `markers must be in order. ${current.name} marker has later start time (${current.start}) thanprevious: ${previousStart}`);
+      ordered = false;
+    }
+    return current.start;
+  });
+
+  is(ordered, true, "All GC and non-GC markers are in order by start time.");
+
   yield closeDebuggerClient(client);
   gBrowser.removeCurrentTab();
 });

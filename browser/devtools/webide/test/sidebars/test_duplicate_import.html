@@ -54,8 +54,8 @@
 
           let panelNode = docProject.querySelector("#project-panel");
           let items = panelNode.querySelectorAll(".panel-item");
-          // 3 controls, + 2 projects
-          is(items.length, 5, "5 projects in panel");
+          // 4 controls, + 2 projects
+          is(items.length, 6, "6 projects in panel");
           is(items[3].querySelector("span").textContent, "A name (in app directory)", "Panel text is correct");
           is(items[4].querySelector("span").textContent, "hosted manifest name property", "Panel text is correct");
 
