@@ -203,7 +203,8 @@ DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)
   , mRelease(new AudioParam(this, SendReleaseToStream, 0.25f, "release"))
 {
   DynamicsCompressorNodeEngine* engine = new DynamicsCompressorNodeEngine(this, aContext->Destination());
-  mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
+  mStream = AudioNodeStream::Create(aContext->Graph(), engine,
+                                    AudioNodeStream::NO_STREAM_FLAGS);
   engine->SetSourceStream(mStream);
 }
 

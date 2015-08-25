@@ -128,7 +128,8 @@ GainNode::GainNode(AudioContext* aContext)
   , mGain(new AudioParam(this, SendGainToStream, 1.0f, "gain"))
 {
   GainNodeEngine* engine = new GainNodeEngine(this, aContext->Destination());
-  mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
+  mStream = AudioNodeStream::Create(aContext->Graph(), engine,
+                                    AudioNodeStream::NO_STREAM_FLAGS);
   engine->SetSourceStream(mStream);
 }
 

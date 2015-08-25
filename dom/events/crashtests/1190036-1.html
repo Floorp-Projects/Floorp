@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom() {
+    var ev = new ClipboardEvent("p");
+    ev.clipboardData.getFilesAndDirectories();
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

@@ -54,6 +54,7 @@
 #  define MOZ_HAVE_NORETURN              __declspec(noreturn)
 #  if _MSC_VER >= 1900
 #    define MOZ_HAVE_CXX11_CONSTEXPR
+#    define MOZ_HAVE_CXX11_CONSTEXPR_IN_TEMPLATES
 #    define MOZ_HAVE_EXPLICIT_CONVERSION
 #  endif
 #  ifdef __clang__

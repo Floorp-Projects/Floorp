@@ -539,6 +539,12 @@ TryEnablingJit(JSContext* cx, AsmJSModule& module, HandleFunction fun, uint32_t 
         return true;
     }
 
+    // Don't enable jit entry when we have a pending ion builder.
+    // Take the interpreter path which will link it and enable
+    // the fast path on the next call.
+    if (script->baselineScript()->hasPendingIonBuilder())
+        return true;
+
     // Currently we can't rectify arguments. Therefore disabling if argc is too low.
     if (fun->nargs() > size_t(argc))
         return true;

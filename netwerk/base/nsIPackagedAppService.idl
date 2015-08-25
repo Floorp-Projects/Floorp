@@ -5,8 +5,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIPrincipal;
-interface nsILoadContextInfo;
+interface nsIChannel;
 interface nsICacheEntryOpenCallback;
 
 %{C++
@@ -16,16 +15,16 @@ interface nsICacheEntryOpenCallback;
 /**
  * nsIPackagedAppService
  */
-[scriptable, builtinclass, uuid(f35e5229-d08a-46eb-a574-2db4e22aee98)]
+[scriptable, builtinclass, uuid(9c96c638-e80c-4dce-abec-c96fdb7a25d8)]
 interface nsIPackagedAppService : nsISupports
 {
   /**
-   * @param aPrincipal
-   *    the principal associated to the URL of a packaged resource
-   *    URL format:  package_url + PACKAGED_APP_TOKEN + resource_path
-   *    example: http://test.com/path/to/package!//resource.html
-   * @param aFlags
-   *    the load flags used for downloading the package
+   * @param aChannel
+   *    this param is passed to the packaged app service in order to provide
+   *    info about the requesting channel, which wants to access the contents
+   *    of a packaged app resource. Its URI has the following format:
+   *          http://domain.com/path/to/package.pak!//path/to/subresource.html
+   *
    * @param aCallback
    *    an object implementing nsICacheEntryOpenCallback
    *    this is the target of the async result of the operation
@@ -34,17 +33,12 @@ interface nsIPackagedAppService : nsISupports
    *    the cached entry, if one exists, or an error code otherwise
    *    aCallback is kept alive using an nsCOMPtr until OnCacheEntryAvailable
    *    is called
-   * @param aInfo
-   *    an object used to determine the cache jar this resource goes in.
-   *    usually created by calling GetLoadContextInfo(requestingChannel)
    *
    * Calling this method will either download the package containing the given
    * resource URI, store it in the cache and pass the cache entry to aCallback,
    * or if that resource has already been downloaded it will be served from
    * the cache.
    */
-  void getResource(in nsIPrincipal aPrincipal,
-                   in uint32_t aFlags,
-                   in nsILoadContextInfo aInfo,
+  void getResource(in nsIChannel aChannel,
                    in nsICacheEntryOpenCallback aCallback);
 };

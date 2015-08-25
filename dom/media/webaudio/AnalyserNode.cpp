@@ -85,8 +85,9 @@ AnalyserNode::AnalyserNode(AudioContext* aContext)
   , mMaxDecibels(-30.)
   , mSmoothingTimeConstant(.8)
 {
-  mStream = aContext->Graph()->CreateAudioNodeStream(new AnalyserNodeEngine(this),
-                                                     MediaStreamGraph::INTERNAL_STREAM);
+  mStream = AudioNodeStream::Create(aContext->Graph(),
+                                    new AnalyserNodeEngine(this),
+                                    AudioNodeStream::NO_STREAM_FLAGS);
 
   // Enough chunks must be recorded to handle the case of fftSize being
   // increased to maximum immediately before getFloatTimeDomainData() is

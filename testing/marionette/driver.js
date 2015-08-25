@@ -501,9 +501,10 @@ GeckoDriver.prototype.listeningPromise = function() {
 
 /** Create a new session. */
 GeckoDriver.prototype.newSession = function(cmd, resp) {
+  let uuid = uuidGen.generateUUID().toString();
   this.sessionId = cmd.parameters.sessionId ||
       cmd.parameters.session_id ||
-      uuidGen.generateUUID().toString();
+      uuid.substring(1, uuid.length - 1);
 
   this.newSessionCommandId = cmd.id;
   this.setSessionCapabilities(cmd.parameters.capabilities);
