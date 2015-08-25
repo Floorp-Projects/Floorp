@@ -15,22 +15,21 @@ body,html { color:black; background:white; font-size:16px; padding:0; margin:0; 
 .grid {
  /*display: grid;*/
  position: relative;
- border: 0 dashed blue;
- border-width: 7px 11px 13px 17px;
+ border: 1px solid;
  grid-auto-flow: row;
  grid-auto-columns: 23px;
- grid-auto-rows: 17px;
+ grid-auto-rows: 7px;
  padding: 17px 7px 11px 13px;
  width: 100px;
- height: 100px;
+ height: 60px;
 }
 .zero-size { width:0; height:0; }
 .auto-size { width:auto; height:0px; }
 
 .a {
   position: absolute;
-  left: 13px; top: 51px;
-  height: 32px; width: 44px;
+  left: 13px; top: 31px;
+  height: 12px; width: 44px;
 }
 
 .abs {
@@ -45,26 +44,31 @@ body,html { color:black; background:white; font-size:16px; padding:0; margin:0; 
 }
 .c {
   right: 5px; bottom: 1px;
-  width: 53px; height: 37px;
+  width: 112px; height: 82px;
 }
 .d {
-  left: 1px; top: 37px;
-  width: 5px; height: 11px;
+  left: 1px; top: 27px;
+  width: 5px; height: 1px;
 }
 .e {
   right: 5px; bottom: 1px;
-  width: 53px; height: 71px;
+  width: 112px; height: 51px;
 }
 .f {
   right: 5px; top: 3px;
-  width: 53px; height: 11px;
+  width: 112px; height: 11px;
 }
 .g {
-  left: 14px; top: 37px;
-  width: 38px; height: 11px;
+  left: 14px; top: 27px;
+  width: 38px; height: 1px;
 }
 .h {
   top:3px; left:1px; right:5px; bottom:1px;
+  width:auto; height:auto;
+}
+.i, .j {
+  top:3px; left:1px; right:5px; bottom:1px;
+  border:none;
   width:auto; height:auto;
 }
 span {
@@ -75,32 +79,86 @@ span {
 </head>
 <body>
 
-<div class="grid">
-<span class="a">a</span>
-<span class="b abs">b</span>
-<span class="c abs">c</span>
-<span class="d abs">d</span>
-<span class="e abs">e</span>
-<span class="f abs">f</span>
-<span class="g abs">g</span>
-</div>
+<div style="float:left">
 
 <div class="grid">
 <span class="a">a</span>
 <span class="b abs">b</span>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
 <span class="c abs">c</span>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
 <span class="d abs">d</span>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
 <span class="e abs">e</span>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
 <span class="f abs">f</span>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
 <span class="g abs">g</span>
 </div>
+
+</div><div style="float:left">
+
+<div class="grid">
+<span class="a">a</span>
+<span class="b abs">b</span>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
+<span class="c abs">c</span>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
+<span class="d abs">d</span>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
+<span class="e abs">e</span>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
+<span class="f abs">f</span>
+</div>
+
+<div class="grid">
+<span class="a">a</span>
+<span class="g abs">g</span>
+</div>
+
+</div><div style="float:left">
 
 <div class="grid zero-size">
-<span class="b abs" style="width:5px">b</span>
+<span class="b abs" style="width:12px">b</span>
 </div>
 
 <div class="grid auto-size">
 <span class="h abs">h</span>
+</div>
+
+<div class="grid" style="height:7px">
+<span class="i abs">i</span>
+</div>
+
+<div class="grid" style="height:7px">
+<span class="j abs">j</span>
 </div>
 
 <div class="grid" style="width:43px; height:53px">
@@ -110,10 +168,16 @@ span {
 <span class="abs" style="right:5px; bottom:1px; height:58px; width:42px;">d</span>
 </div>
 
-<div class="grid" style="width:43px; height:53px; border-width:0;">
-<span class="abs" style="right:47px; top:3px; height:11px; width:0px;">b</span>
-<span class="abs" style="left:1px; bottom:54px; height:5px; width:5px;">c</span>
-<span class="abs" style="right:47px; bottom:54px; height:5px; width:0px;">d</span>
+<div class="grid" style="width:43px; height:28px; border-width:0;">
+<span class="abs" style="right:48px; top:3px; height:11px; width:12px;"></span>
+</div>
+<div class="grid" style="width:43px; height:28px; border-width:0;">
+<span class="abs" style="left:1px; bottom:57px; height:22px; width:5px;"></span>
+</div>
+<div class="grid" style="width:43px; height:28px; border-width:0;">
+<span class="abs" style="right:48px; bottom:85px; height:22px; width:12px;"></span>
+</div>
+
 </div>
 
 </body>

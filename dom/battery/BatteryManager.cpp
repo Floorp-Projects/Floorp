@@ -10,6 +10,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/Hal.h"
 #include "mozilla/dom/BatteryManagerBinding.h"
+#include "mozilla/Preferences.h"
 #include "nsIDOMClassInfo.h"
 
 /**
@@ -56,10 +57,37 @@ BatteryManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return BatteryManagerBinding::Wrap(aCx, this, aGivenProto);
 }
 
+bool
+BatteryManager::Charging() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // For testing, unable to report the battery status information
+  if (Preferences::GetBool("dom.battery.test.default", false)) {
+    return true;
+  }
+  if (Preferences::GetBool("dom.battery.test.charging", false)) {
+    return true;
+  }
+  if (Preferences::GetBool("dom.battery.test.discharging", false)) {
+    return false;
+  }
+
+  return mCharging;
+}
+
 double
 BatteryManager::DischargingTime() const
 {
-  if (mCharging || mRemainingTime == kUnknownRemainingTime) {
+  MOZ_ASSERT(NS_IsMainThread());
+  // For testing, unable to report the battery status information
+  if (Preferences::GetBool("dom.battery.test.default", false)) {
+    return std::numeric_limits<double>::infinity();
+  }
+  if (Preferences::GetBool("dom.battery.test.discharging", false)) {
+    return 42.0;
+  }
+
+  if (Charging() || mRemainingTime == kUnknownRemainingTime) {
     return std::numeric_limits<double>::infinity();
   }
 
@@ -69,11 +97,32 @@ BatteryManager::DischargingTime() const
 double
 BatteryManager::ChargingTime() const
 {
-  if (!mCharging || mRemainingTime == kUnknownRemainingTime) {
+  MOZ_ASSERT(NS_IsMainThread());
+  // For testing, unable to report the battery status information
+  if (Preferences::GetBool("dom.battery.test.default", false)) {
+    return 0.0;
+  }
+  if (Preferences::GetBool("dom.battery.test.charging", false)) {
+    return 42.0;
+  }
+
+  if (!Charging() || mRemainingTime == kUnknownRemainingTime) {
     return std::numeric_limits<double>::infinity();
   }
 
   return mRemainingTime;
+}
+
+double
+BatteryManager::Level() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // For testing, unable to report the battery status information
+  if (Preferences::GetBool("dom.battery.test.default")) {
+    return 1.0;
+  }
+
+  return mLevel;
 }
 
 void

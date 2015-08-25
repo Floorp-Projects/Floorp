@@ -147,8 +147,7 @@ MP4Decoder::CanHandleMediaType(const nsACString& aType,
     return Preferences::GetBool("media.fragmented-mp4.gonk.enabled", false);
   }
 #endif
-
-  if (!aType.EqualsASCII("video/mp4") ||
+  if ((!aType.EqualsASCII("video/mp4") && !aType.EqualsASCII("video/x-m4v")) ||
       !MP4Decoder::CanCreateH264Decoder()) {
     return false;
   }

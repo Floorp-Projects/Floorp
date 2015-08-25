@@ -5288,9 +5288,10 @@ StorageDirectoryHelper::RunOnMainThread()
           rv = secMan->GetSimpleCodebasePrincipal(uri,
                                                   getter_AddRefs(principal));
         } else {
-          OriginAttributes attrs(originProps.mAppId, originProps.mInMozBrowser);
-          principal = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
-          rv = principal ? NS_OK : NS_ERROR_FAILURE;
+          rv = secMan->GetAppCodebasePrincipal(uri,
+                                               originProps.mAppId,
+                                               originProps.mInMozBrowser,
+                                               getter_AddRefs(principal));
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;

@@ -7,7 +7,6 @@
 #include "mozilla/dom/PContentParent.h"
 #include "mozilla/net/NeckoParent.h"
 
-#include "mozilla/BasePrincipal.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsCookieService.h"
 #include "nsIScriptSecurityManager.h"
@@ -17,8 +16,6 @@
 #include "SerializedLoadContext.h"
 
 using namespace mozilla::ipc;
-using mozilla::BasePrincipal;
-using mozilla::OriginAttributes;
 using mozilla::dom::PContentParent;
 using mozilla::net::NeckoParent;
 
@@ -32,16 +29,16 @@ CreateDummyChannel(nsIURI* aHostURI, uint32_t aAppId, bool aInMozBrowser,
 {
   MOZ_ASSERT(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
 
-  // TODO: Bug 1165267 - Use OriginAttributes for nsCookieService 
-  OriginAttributes attrs(aAppId, aInMozBrowser);
-  nsCOMPtr<nsIPrincipal> principal =
-    BasePrincipal::CreateCodebasePrincipal(aHostURI, attrs);
-  if (!principal) {
+  nsCOMPtr<nsIPrincipal> principal;
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  nsresult rv = ssm->GetAppCodebasePrincipal(aHostURI, aAppId, aInMozBrowser,
+                                             getter_AddRefs(principal));
+  if (NS_FAILED(rv)) {
     return;
   }
 
   nsCOMPtr<nsIURI> dummyURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(dummyURI), "about:blank");
+  rv = NS_NewURI(getter_AddRefs(dummyURI), "about:blank");
   if (NS_FAILED(rv)) {
       return;
   }
