@@ -10,6 +10,7 @@
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/LocalMediaStreamBinding.h"
 #include "mozilla/dom/AudioNode.h"
+#include "AudioChannelAgent.h"
 #include "mozilla/dom/AudioTrack.h"
 #include "mozilla/dom/AudioTrackList.h"
 #include "mozilla/dom/VideoTrack.h"
@@ -713,7 +714,11 @@ already_AddRefed<DOMHwMediaStream>
 DOMHwMediaStream::CreateHwStream(nsIDOMWindow* aWindow)
 {
   nsRefPtr<DOMHwMediaStream> stream = new DOMHwMediaStream();
-  stream->InitSourceStream(aWindow);
+
+  MediaStreamGraph* graph =
+    MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER,
+                                  AudioChannel::Normal);
+  stream->InitSourceStream(aWindow, graph);
   stream->Init(stream->GetStream());
 
   return stream.forget();
