@@ -1323,18 +1323,18 @@ MediaFormatReader::OnVideoSkipFailed(MediaTrackDemuxer::SkipFailureHolder aFailu
   switch (aFailure.mFailure) {
     case DemuxerFailureReason::END_OF_STREAM:
       NotifyEndOfStream(TrackType::kVideoTrack);
-      mVideo.RejectPromise(END_OF_STREAM, __func__);
       break;
     case DemuxerFailureReason::WAITING_FOR_DATA:
       NotifyWaitingForData(TrackType::kVideoTrack);
-      mVideo.RejectPromise(WAITING_FOR_DATA, __func__);
       break;
     case DemuxerFailureReason::CANCELED:
     case DemuxerFailureReason::SHUTDOWN:
+      if (mVideo.HasPromise()) {
+        mVideo.RejectPromise(CANCELED, __func__);
+      }
       break;
     default:
       NotifyError(TrackType::kVideoTrack);
-      mVideo.RejectPromise(DECODE_ERROR, __func__);
       break;
   }
 }
