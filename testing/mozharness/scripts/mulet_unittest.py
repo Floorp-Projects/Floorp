@@ -59,11 +59,6 @@ class MuletUnittest(B2GDesktopTest, GaiaMixin, TransferMixin):
         if not self.binary_path:
             self.fatal("Use --binary-path as it is needed for _query_abs_dir().")
 
-        # This is if we don't run all actions since we set this inside
-        # of download-and-extract()
-        if not self.tree_config:
-            self._read_tree_config()
-
     def run_tests(self):
         """
         Run the unit test suite.

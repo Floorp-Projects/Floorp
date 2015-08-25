@@ -1098,10 +1098,18 @@ RToDouble::RToDouble(CompactBufferReader& reader)
 bool
 RToDouble::recover(JSContext* cx, SnapshotIterator& iter) const
 {
-    Value v = iter.read();
+    RootedValue v(cx, iter.read());
+    RootedValue result(cx);
 
     MOZ_ASSERT(!v.isObject());
-    iter.storeInstructionResult(v);
+    MOZ_ASSERT(!v.isSymbol());
+
+    double dbl;
+    if (!ToNumber(cx, v, &dbl))
+        return false;
+
+    result.setDouble(dbl);
+    iter.storeInstructionResult(result);
     return true;
 }
 

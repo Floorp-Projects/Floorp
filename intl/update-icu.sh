@@ -55,6 +55,8 @@ svn info $1 | grep -v '^Revision: [[:digit:]]\+$' > ${icu_dir}/SVN-INFO
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-915735
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/suppress-warnings.diff
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/pkgdata-large-buffer.diff
+patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-1172609-icu-fix.diff
+patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-1172609-timezone-recreateDefault.diff
 
 # NOTE: If you're updating this script for a new ICU version, you have to rerun
 # js/src/tests/ecma_6/String/make-normalize-generateddata-input.py for any

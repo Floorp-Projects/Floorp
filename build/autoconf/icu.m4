@@ -19,22 +19,6 @@ MOZ_ARG_WITH_BOOL(system-icu,
 if test -n "$MOZ_NATIVE_ICU"; then
     PKG_CHECK_MODULES(MOZ_ICU, icu-i18n >= 50.1)
     MOZ_SHARED_ICU=1
-elif test -n "$gonkdir" && test "$ANDROID_VERSION" -ge 18; then
-    dnl Use system's ICU since version is 50.1+.
-    if test -d "$gonkdir/external/icu/icu4c/source"; then
-        dnl gonk-L (API version is 21)
-        MOZ_ICU_GONK_PATH="$gonkdir/external/icu/icu4c/source"
-    elif test -d "$gonkdir/external/icu4c"; then
-        MOZ_ICU_GONK_PATH="$gonkdir/external/icu4c"
-    else
-        AC_MSG_ERROR([Cannot find ICU source code under gonk])
-    fi
-    MOZ_ICU_CFLAGS="-I$MOZ_ICU_GONK_PATH/common -I$MOZ_ICU_GONK_PATH/i18n"
-    dnl icudata is a datafile under /usr/icu/icudt<version number>l.dat,
-    dnl not shared library.  So we don't link to icudata on B2G.
-    MOZ_ICU_LIBS='-licui18n -licuuc'
-    MOZ_NATIVE_ICU=1
-    MOZ_SHARED_ICU=1
 else
     MOZ_ICU_CFLAGS='-I$(topsrcdir)/intl/icu/source/common -I$(topsrcdir)/intl/icu/source/i18n'
     AC_SUBST_LIST(MOZ_ICU_CFLAGS)

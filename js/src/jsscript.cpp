@@ -75,7 +75,7 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, MutableHandle<Bindings>
                                    uint32_t numArgs, uint32_t numVars,
                                    uint32_t numBodyLevelLexicals, uint32_t numBlockScoped,
                                    uint32_t numUnaliasedVars, uint32_t numUnaliasedBodyLevelLexicals,
-                                   const Binding* bindingArray)
+                                   const Binding* bindingArray, bool isModule /* = false */)
 {
     MOZ_ASSERT(!self.callObjShape());
     MOZ_ASSERT(self.bindingArrayUsingTemporaryStorage());
@@ -141,9 +141,10 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, MutableHandle<Bindings>
     uint32_t nfixed = gc::GetGCKindSlots(gc::GetGCObjectKind(nslots));
 
     // Start with the empty shape and then append one shape per aliased binding.
+    const Class* cls = isModule ? &ModuleEnvironmentObject::class_ : &CallObject::class_;
     RootedShape shape(cx,
-        EmptyShape::getInitialShape(cx, &CallObject::class_, TaggedProto(nullptr),
-                                    nfixed, BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE));
+        EmptyShape::getInitialShape(cx, cls, TaggedProto(nullptr), nfixed,
+                                    BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE));
     if (!shape)
         return false;
 
@@ -157,6 +158,7 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, MutableHandle<Bindings>
 
     uint32_t slot = CallObject::RESERVED_SLOTS;
     for (BindingIter bi(self); bi; bi++) {
+        MOZ_ASSERT_IF(isModule, bi->aliased());
         if (!bi->aliased())
             continue;
 
@@ -169,9 +171,7 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, MutableHandle<Bindings>
         }
 #endif
 
-        StackBaseShape stackBase(cx, &CallObject::class_,
-                                 BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE);
-
+        StackBaseShape stackBase(cx, cls, BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE);
         UnownedBaseShape* base = BaseShape::getUnowned(cx, stackBase);
         if (!base)
             return false;
@@ -2652,6 +2652,25 @@ JSScript::linkToFunctionFromEmitter(js::ExclusiveContext* cx, JS::Handle<JSScrip
         fun->setScript(script);
 }
 
+/* static */ void
+JSScript::linkToModuleFromEmitter(js::ExclusiveContext* cx, JS::Handle<JSScript*> script,
+                                    js::frontend::ModuleBox* modulebox)
+{
+    script->funHasExtensibleScope_ = false;
+    script->funNeedsDeclEnvObject_ = false;
+    script->needsHomeObject_ = false;
+    script->isDerivedClassConstructor_ = false;
+    script->funLength_ = 0;
+
+    script->isGeneratorExp_ = false;
+    script->setGeneratorKind(NotGenerator);
+
+    // Link the module and the script to each other, so that StaticScopeIter
+    // may walk the scope chain of currently compiling scripts.
+    RootedModuleObject module(cx, modulebox->module());
+    script->setModule(module);
+}
+
 /* static */ bool
 JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, BytecodeEmitter* bce)
 {
@@ -3595,6 +3614,9 @@ JSScript::traceChildren(JSTracer* trc)
     if (functionNonDelazifying())
         TraceEdge(trc, &function_, "function");
 
+    if (module_)
+        TraceEdge(trc, &module_, "module");
+
     if (enclosingStaticScope_)
         TraceEdge(trc, &enclosingStaticScope_, "enclosingStaticScope");
 
@@ -3707,6 +3729,8 @@ JSScript::innermostStaticScopeInScript(jsbytecode* pc)
 {
     if (JSObject* scope = getStaticBlockScope(pc))
         return scope;
+    if (module())
+        return module();
     return functionNonDelazifying();
 }
 

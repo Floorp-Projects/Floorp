@@ -19,6 +19,8 @@
 
 namespace js {
 
+class WeakMapBase;
+
 // A subclass template of js::HashMap whose keys and values may be garbage-collected. When
 // a key is collected, the table entry disappears, dropping its reference to the value.
 //

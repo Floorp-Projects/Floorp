@@ -815,7 +815,7 @@ BytecodeEmitter::computeAliasedSlots(Handle<StaticBlockObject*> blockObj)
 void
 BytecodeEmitter::computeLocalOffset(Handle<StaticBlockObject*> blockObj)
 {
-    unsigned nbodyfixed = sc->isFunctionBox()
+    unsigned nbodyfixed = !sc->isGlobalContext()
                           ? script->bindings.numUnaliasedBodyLevelLocals()
                           : 0;
     unsigned localOffset = nbodyfixed;
@@ -1427,7 +1427,9 @@ BytecodeEmitter::computeDefinitionIsAliased(BytecodeEmitter* bceOfDef, Definitio
         // object. Aliased block bindings do not need adjusting; see
         // computeAliasedSlots.
         uint32_t slot = dn->pn_scopecoord.slot();
-        if (blockScopeOfDef(dn)->is<JSFunction>()) {
+        if (blockScopeOfDef(dn)->is<JSFunction>() ||
+            blockScopeOfDef(dn)->is<ModuleObject>())
+        {
             MOZ_ASSERT(IsArgOp(*op) || slot < bceOfDef->script->bindings.numBodyLevelLocals());
             MOZ_ALWAYS_TRUE(bceOfDef->lookupAliasedName(bceOfDef->script, dn->name(), &slot));
         }
@@ -2209,6 +2211,10 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
          * (the object and binding can be detected and hijacked or captured).
          * This is a bug fix to ES3; it is fixed in ES3.1 drafts.
          */
+        *answer = false;
+        return true;
+
+      case PNK_MODULE:
         *answer = false;
         return true;
 
@@ -3494,6 +3500,56 @@ BytecodeEmitter::emitFunctionScript(ParseNode* body)
         script->setTreatAsRunOnce();
         MOZ_ASSERT(!script->hasRunOnce());
     }
+
+    tellDebuggerAboutCompiledScript(cx);
+
+    return true;
+}
+
+bool
+BytecodeEmitter::emitModuleScript(ParseNode* body)
+{
+    if (!updateLocalsToFrameSlots())
+        return false;
+
+    /*
+     * IonBuilder has assumptions about what may occur immediately after
+     * script->main (e.g., in the case of destructuring params). Thus, put the
+     * following ops into the range [script->code, script->main). Note:
+     * execution starts from script->code, so this has no semantic effect.
+     */
+
+    ModuleBox* modulebox = sc->asModuleBox();
+    MOZ_ASSERT(modulebox);
+
+    // Link the module and the script to each other, so that StaticScopeIter
+    // may walk the scope chain of currently compiling scripts.
+    JSScript::linkToModuleFromEmitter(cx, script, modulebox);
+
+    if (!emitTree(body))
+        return false;
+
+    // Always end the script with a JSOP_RETRVAL. Some other parts of the codebase
+    // depend on this opcode, e.g. InterpreterRegs::setToEndOfScript.
+    if (!emit1(JSOP_RETRVAL))
+        return false;
+
+    // If all locals are aliased, the frame's block slots won't be used, so we
+    // can set numBlockScoped = 0. This is nice for generators as it ensures
+    // nfixed == 0, so we don't have to initialize any local slots when resuming
+    // a generator.
+    if (sc->allLocalsAliased())
+        script->bindings.setAllLocalsAliased();
+
+    if (!JSScript::fullyInitFromEmitter(cx, script, this))
+        return false;
+
+    /*
+     * Since modules are only run once. Mark the script so that initializers
+     * created within it may be given more precise types.
+     */
+    script->setTreatAsRunOnce();
+    MOZ_ASSERT(!script->hasRunOnce());
 
     tellDebuggerAboutCompiledScript(cx);
 
@@ -5827,10 +5883,10 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
      * invocation of the emitter and calls to emitTree for function
      * definitions can be scheduled before generating the rest of code.
      */
-    if (!sc->isFunctionBox()) {
+    if (sc->isGlobalContext()) {
         MOZ_ASSERT(pn->pn_scopecoord.isFree());
         MOZ_ASSERT(pn->getOp() == JSOP_NOP);
-        MOZ_ASSERT(!innermostStmt());
+        MOZ_ASSERT(!innermostStmt() || sc->isModuleBox());
         switchToPrologue();
         if (!emitIndex32(JSOP_DEFFUN, index))
             return false;
@@ -7861,12 +7917,36 @@ BytecodeEmitter::emitTree(ParseNode* pn)
         break;
 
       case PNK_IMPORT:
+        if (!checkIsModule())
+            return false;
+        ok = true;
+        break;
+
       case PNK_EXPORT:
+        if (!checkIsModule())
+            return false;
+        if (pn->pn_kid->getKind() != PNK_EXPORT_SPEC_LIST)
+            ok = emitTree(pn->pn_kid);
+        else
+            ok = true;
+        break;
+
       case PNK_EXPORT_DEFAULT:
+        if (!checkIsModule())
+            return false;
+        if (pn->pn_kid->isDefn()) {
+            ok = emitTree(pn->pn_kid);
+        } else {
+            // TODO: Emit a definition of *default* from child expression.
+            ok = true;
+        }
+        break;
+
       case PNK_EXPORT_FROM:
-       // TODO: Implement emitter support for modules
-       reportError(nullptr, JSMSG_MODULES_NOT_IMPLEMENTED);
-       return false;
+        if (!checkIsModule())
+            return false;
+        ok = true;
+        break;
 
       case PNK_ARRAYPUSH: {
         /*
@@ -7997,6 +8077,16 @@ BytecodeEmitter::emitTree(ParseNode* pn)
     }
 
     return ok;
+}
+
+bool
+BytecodeEmitter::checkIsModule()
+{
+    if (!sc->isModuleBox()) {
+        reportError(nullptr, JSMSG_INVALID_OUTSIDE_MODULE);
+        return false;
+    }
+    return true;
 }
 
 static bool

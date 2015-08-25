@@ -67,8 +67,16 @@ JSScript::functionDelazifying() const
 inline void
 JSScript::setFunction(JSFunction* fun)
 {
+    MOZ_ASSERT(!function_ && !module_);
     MOZ_ASSERT(fun->isTenured());
     function_ = fun;
+}
+
+inline void
+JSScript::setModule(js::ModuleObject* module)
+{
+    MOZ_ASSERT(!function_ && !module_);
+    module_ = module;
 }
 
 inline void

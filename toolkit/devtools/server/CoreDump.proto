@@ -52,13 +52,42 @@ message Metadata {
     optional uint64 timeStamp = 1;
 }
 
+// A serialized version of `JS::ubi::StackFrame`. Older parent frame tails are
+// de-duplicated to cut down on [de]serialization and size costs.
+message StackFrame {
+    oneof StackFrameType {
+        // This is the first time this stack frame has been serialized, and so
+        // here is all of its data.
+        Data   data = 1;
+        // A reference to a stack frame that has already been serialized and has
+        // the given number as its id.
+        uint64 ref  = 2;
+    }
+
+    message Data {
+        optional uint64 id = 1;
+        optional StackFrame parent = 2;
+        optional uint32 line = 3;
+        optional uint32 column = 4;
+        // char16_t[]
+        optional bytes source = 5;
+        // char16_t[]
+        optional bytes functionDisplayName = 6;
+        optional bool isSystem = 7;
+        optional bool isSelfHosted = 8;
+    }
+}
+
 // A serialized version of `JS::ubi::Node` and its outgoing edges.
 message Node {
-    optional uint64 id       = 1;
+    optional uint64     id              = 1;
     // char16_t[]
-    optional bytes  typeName = 2;
-    optional uint64 size     = 3;
-    repeated Edge   edges    = 4;
+    optional bytes      typeName        = 2;
+    optional uint64     size            = 3;
+    repeated Edge       edges           = 4;
+    optional StackFrame allocationStack = 5;
+    // char[]
+    optional bytes      jsObjectClassName = 6;
 }
 
 // A serialized edge from the heap graph.

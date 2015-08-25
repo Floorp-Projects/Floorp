@@ -226,18 +226,6 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
 
     @PreScriptAction('create-virtualenv')
     def _configure_marionette_virtualenv(self, action):
-        # XXX Bug 981030 - hack to unbreak b2g18. Remove when b2g18 no longer supported
-        try:
-            branch = self.buildbot_config['properties']['branch']
-        except:
-            branch = None
-        if self.tree_config.get('use_puppetagain_packages') or branch in ('mozilla-b2g18', 'mozilla-b2g18_v1_1_0_hd'):
-            self.register_virtualenv_module('mozinstall')
-            self.register_virtualenv_module(
-                'marionette', os.path.join('tests', 'marionette'))
-
-            return
-
         dirs = self.query_abs_dirs()
         requirements = os.path.join(dirs['abs_test_install_dir'],
                                     'config',
@@ -307,7 +295,7 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
         # tests. This method will need to change if this does.
         if is_emulator and not is_gaiatest:
             testsuite = 'webapi'
-        return '_'.join([testsuite, platform, 'options'])
+        return '{}_{}'.format(testsuite, platform)
 
     def download_and_extract(self):
         super(MarionetteTest, self).download_and_extract()
@@ -327,12 +315,6 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
             self.info("Emulator tests; skipping.")
         else:
             super(MarionetteTest, self).install()
-
-    def preflight_run_marionette(self):
-        """preflight commands for all tests"""
-        # If the in tree config hasn't been loaded by a previous step, load it here.
-        if not self.tree_config:
-            self._read_tree_config()
 
     def run_marionette(self):
         """
@@ -440,23 +422,17 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
             cmd.append('--gecko-log=%s' % os.path.join(dirs["abs_blob_upload_dir"],
                                                        'gecko.log'))
 
-        options_group = self._get_options_group(self.config.get('emulator'),
-                                                self.config.get('gaiatest'))
-
         if self.config.get("structured_output"):
             config_fmt_args["raw_log_file"]= "-"
 
-        if options_group not in self.tree_config:
-            # This allows using the new in-tree format
-            options_group = options_group.split("_options")[0]
-            if options_group not in self.tree_config["suite_definitions"]:
-                self.fatal("%s is not defined in the in-tree config" %
-                           options_group)
-            for s in self.tree_config["suite_definitions"][options_group]["options"]:
-                cmd.append(s % config_fmt_args)
-        else:
-            for s in self.tree_config[options_group]:
-                cmd.append(s % config_fmt_args)
+        options_group = self._get_options_group(self.config.get('emulator'),
+                                                self.config.get('gaiatest'))
+
+        if options_group not in self.config["suite_definitions"]:
+            self.fatal("%s is not defined in the config!" % options_group)
+
+        for s in self.config["suite_definitions"][options_group]["options"]:
+            cmd.append(s % config_fmt_args)
 
         if self.mkdir_p(dirs["abs_blob_upload_dir"]) == -1:
             # Make sure that the logging directory exists

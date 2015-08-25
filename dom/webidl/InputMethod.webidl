@@ -192,17 +192,54 @@ interface MozInputContext: EventTarget {
     attribute EventHandler onsurroundingtextchange;
 
     /*
-      * send a character with its key events.
-      * @param modifiers see http://mxr.mozilla.org/mozilla-central/source/dom/interfaces/base/nsIDOMWindowUtils.idl#206
-      * @param repeat indicates whether a key would be sent repeatedly.
-      * @return true if succeeds. Otherwise false if the input context becomes void.
-      * Alternative: sendKey(KeyboardEvent event), but we will likely
-      * waste memory for creating the KeyboardEvent object.
-      * Note that, if you want to send a key n times repeatedly, make sure set
-      * parameter repeat to true and invoke sendKey n-1 times, and then set
-      * repeat to false in the last invoke.
-      */
-    Promise<boolean> sendKey(long keyCode, long charCode, long modifiers, optional boolean repeat);
+     * Send a string/character with its key events. There are two ways of invocating 
+     * the method for backward compability purpose.
+     *
+     * (1) The recommended way, allow specifying DOM level 3 properties like |code|.
+     * @param dictOrKeyCode See MozInputMethodKeyboardEventDict.
+     * @param charCode disregarded
+     * @param modifiers disregarded
+     * @param repeat disregarded
+     *
+     * (2) Deprecated, reserved for backward compability.
+     * @param dictOrKeyCode keyCode of the key to send, should be one of the DOM_VK_ value in KeyboardEvent.
+     * @param charCode charCode of the character, should be 0 for non-printable keys.
+     * @param modifiers this paramater is no longer honored.
+     * @param repeat indicates whether a key would be sent repeatedly.
+     *
+     * @return A promise. Resolve to true if succeeds.
+     *                    Rejects to a string indicating the error.
+     *
+     * Note that, if you want to send a key n times repeatedly, make sure set
+     * parameter repeat to true and invoke sendKey n times, and invoke keyup
+     * after the end of the input.
+     */
+    Promise<boolean> sendKey((MozInputMethodRequiredKeyboardEventDict or long) dictOrKeyCode,
+                             optional long charCode, 
+                             optional long modifiers, 
+                             optional boolean repeat);
+
+    /*
+     * Send a string/character with keydown, and keypress events.
+     * keyup should be called afterwards to ensure properly sequence.
+     *
+     * @param dict See MozInputMethodKeyboardEventDict.
+     *
+     * @return A promise. Resolve to true if succeeds.
+     *                    Rejects to a string indicating the error.
+     */
+    Promise<boolean> keydown(MozInputMethodRequiredKeyboardEventDict dict);
+
+    /*
+     * Send a keyup event. keydown should be called first to ensure properly sequence.
+     *
+     * @param dict See MozInputMethodKeyboardEventDict.
+     *
+     * @return A promise. Resolve to true if succeeds.
+     *                    Rejects to a string indicating the error.
+     *
+     */
+    Promise<boolean> keyup(MozInputMethodRequiredKeyboardEventDict dict);
 
     /*
      * Set current composing text. This method will start composition or update
@@ -218,7 +255,11 @@ interface MozInputContext: EventTarget {
      * cursor will be positioned after the composition text.
      * @param clauses The array of composition clause information. If not set,
      * only one clause is supported.
-     *
+     * @param dict The properties of the keyboard event that cause the composition
+     * to set. keydown or keyup event will be fired if it's necessary.
+     * For compatibility, we recommend that you should always set this argument 
+     * if it's caused by a key operation.
+     * 
      * The composing text, which is shown with underlined style to distinguish
      * from the existing text, is used to compose non-ASCII characters from
      * keystrokes, e.g. Pinyin or Hiragana. The composing text is the
@@ -231,9 +272,10 @@ interface MozInputContext: EventTarget {
      * To finish composition and commit text to current input field, an IME
      * should call |endComposition|.
      */
-    // XXXbz what is this promise resolved with?
-    Promise<any> setComposition(DOMString text, optional long cursor,
-                                optional sequence<CompositionClauseParameters> clauses);
+    Promise<boolean> setComposition(DOMString text, 
+                                    optional long cursor,
+                                    optional sequence<CompositionClauseParameters> clauses,
+                                    optional MozInputMethodKeyboardEventDict dict);
 
     /*
      * End composition, clear the composing text and commit given text to
@@ -241,6 +283,10 @@ interface MozInputContext: EventTarget {
      * position.
      * @param text The text to commited before cursor position. If empty string
      * is given, no text will be committed.
+     * @param dict The properties of the keyboard event that cause the composition
+     * to end. keydown or keyup event will be fired if it's necessary.
+     * For compatibility, we recommend that you should always set this argument 
+     * if it's caused by a key operation.
      *
      * Note that composition always ends automatically with nothing to commit if
      * the composition does not explicitly end by calling |endComposition|, but
@@ -248,8 +294,8 @@ interface MozInputContext: EventTarget {
      * |replaceSurroundingText|, |deleteSurroundingText|, user moving the
      * cursor, changing the focus, etc.
      */
-    // XXXbz what is this promise resolved with?
-    Promise<any> endComposition(optional DOMString text);
+    Promise<boolean> endComposition(optional DOMString text, 
+                                    optional MozInputMethodKeyboardEventDict dict);
 };
 
 enum CompositionClauseSelectionType {
@@ -262,4 +308,67 @@ enum CompositionClauseSelectionType {
 dictionary CompositionClauseParameters {
   DOMString selectionType = "raw-input";
   long length;
+};
+
+/*
+ * A MozInputMethodKeyboardEventDictBase contains the following properties,
+ * indicating the properties of the keyboard event caused.
+ *
+ * This is the base dictionary type for us to create two child types that could
+ * be used as argument type in two types of methods, as WebIDL parser required.
+ * 
+ */
+dictionary MozInputMethodKeyboardEventDictBase {
+  /*
+   * String/character to output, or a registered name of non-printable key.
+   * (To be defined in the inheriting dictionary types.)
+   */
+  // DOMString key;
+  /*
+   * String/char indicating the virtual hardware key pressed. Optional.
+   * Must be a value defined in
+   * http://www.w3.org/TR/DOM-Level-3-Events-code/#keyboard-chording-virtual
+   * If your keyboard app emulates physical keyboard layout, this value should
+   * not be empty string. Otherwise, it should be empty string.
+   */
+  DOMString code = "";
+  /*
+   * keyCode of the keyboard event. Optional.
+   * To be disregarded if |key| is an alphanumeric character.
+   * If the key causes inputting a character and if your keyboard app emulates
+   * a physical keyboard layout, this value should be same as the value used
+   * by Firefox for desktop. If the key causes inputting an ASCII character
+   * but if your keyboard app doesn't emulate any physical keyboard layouts,
+   * the value should be proper value for the key value.
+   */
+  long? keyCode;
+  /*
+   * Indicates whether a key would be sent repeatedly. Optional.
+   */
+  boolean repeat = false;
+  /*
+   * Optional. True if |key| property is explicitly referring to a printable key.
+   * When this is set, key will be printable even if the |key| value matches any
+   * of the registered name of non-printable keys.
+   */
+  boolean printable = false;
+};
+
+/*
+ * For methods like setComposition() and endComposition(), the optional
+ * dictionary type argument is really optional when all of it's property
+ * are optional.
+ * This dictionary type is used to denote that argument.
+ */
+dictionary MozInputMethodKeyboardEventDict : MozInputMethodKeyboardEventDictBase {
+  DOMString? key;
+};
+
+/*
+ * For methods like keydown() and keyup(), the dictionary type argument is
+ * considered required only if at least one of it's property is required.
+ * This dictionary type is used to denote that argument.
+ */
+dictionary MozInputMethodRequiredKeyboardEventDict : MozInputMethodKeyboardEventDictBase {
+  required DOMString key;
 };

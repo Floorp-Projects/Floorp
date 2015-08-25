@@ -38,10 +38,13 @@ size_t fakeMallocSizeOf(const void*) {
 
 DEF_TEST(DeserializedNodeUbiNodes, {
     const char16_t* typeName = MOZ_UTF16("TestTypeName");
+    const char* className = "MyObjectClassName";
 
     NodeId id = 1L << 33;
     uint64_t size = 1L << 60;
     MockDeserializedNode mocked(id, typeName, size);
+    mocked.jsObjectClassName = mozilla::UniquePtr<char[]>(strdup(className));
+    ASSERT_TRUE(!!mocked.jsObjectClassName);
 
     DeserializedNode& deserialized = mocked;
     JS::ubi::Node ubi(&deserialized);
@@ -52,6 +55,7 @@ DEF_TEST(DeserializedNodeUbiNodes, {
     EXPECT_EQ(typeName, ubi.typeName());
     EXPECT_EQ(id, ubi.identifier());
     EXPECT_FALSE(ubi.isLive());
+    EXPECT_EQ(strcmp(ubi.jsObjectClassName(), className), 0);
 
     // Test the ubi::Node's edges.
 

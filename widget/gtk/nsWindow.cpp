@@ -22,6 +22,7 @@
 #include "nsDragService.h"
 #include "nsIWidgetListener.h"
 #include "nsIScreenManager.h"
+#include "SystemTimeConverter.h"
 
 #include "nsGtkKeyUtils.h"
 #include "nsGtkCursors.h"
@@ -145,7 +146,8 @@ const gint kEvents = GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
                      GDK_SMOOTH_SCROLL_MASK |
 #endif
                      GDK_SCROLL_MASK |
-                     GDK_POINTER_MOTION_MASK;
+                     GDK_POINTER_MOTION_MASK |
+                     GDK_PROPERTY_CHANGE_MASK;
 
 /* utility functions */
 static bool       is_mouse_in_window(GdkWindow* aWindow,
@@ -199,6 +201,8 @@ static gboolean key_press_event_cb        (GtkWidget *widget,
                                            GdkEventKey *event);
 static gboolean key_release_event_cb      (GtkWidget *widget,
                                            GdkEventKey *event);
+static gboolean property_notify_event_cb  (GtkWidget *widget,
+                                           GdkEventProperty *event);
 static gboolean scroll_event_cb           (GtkWidget *widget,
                                            GdkEventScroll *event);
 static gboolean visibility_notify_event_cb(GtkWidget *widget,
@@ -260,6 +264,75 @@ static nsresult    initialize_prefs        (void);
 
 static guint32 sLastUserInputTime = GDK_CURRENT_TIME;
 static guint32 sRetryGrabTime;
+
+static SystemTimeConverter<guint32>&
+TimeConverter() {
+    static SystemTimeConverter<guint32> sTimeConverterSingleton;
+    return sTimeConverterSingleton;
+}
+
+namespace mozilla {
+
+class CurrentX11TimeGetter
+{
+public:
+    explicit CurrentX11TimeGetter(GdkWindow* aWindow)
+        : mWindow(aWindow)
+        , mAsyncUpdateStart()
+    {
+    }
+
+    guint32 GetCurrentTime() const
+    {
+        return gdk_x11_get_server_time(mWindow);
+    }
+
+    void GetTimeAsyncForPossibleBackwardsSkew(const TimeStamp& aNow)
+    {
+        // Check for in-flight request
+        if (!mAsyncUpdateStart.IsNull()) {
+            return;
+        }
+        mAsyncUpdateStart = aNow;
+
+        Display* xDisplay = GDK_WINDOW_XDISPLAY(mWindow);
+        Window xWindow = GDK_WINDOW_XID(mWindow);
+        unsigned char c = 'a';
+        Atom timeStampPropAtom = TimeStampPropAtom();
+        XChangeProperty(xDisplay, xWindow, timeStampPropAtom,
+                        timeStampPropAtom, 8, PropModeReplace, &c, 1);
+        XFlush(xDisplay);
+    }
+
+    gboolean PropertyNotifyHandler(GtkWidget* aWidget,
+                                   GdkEventProperty* aEvent)
+    {
+        if (aEvent->atom !=
+            gdk_x11_xatom_to_atom(TimeStampPropAtom())) {
+            return FALSE;
+        }
+
+        guint32 eventTime = aEvent->time;
+        TimeStamp lowerBound = mAsyncUpdateStart;
+
+        TimeConverter().CompensateForBackwardsSkew(eventTime, lowerBound);
+        mAsyncUpdateStart = TimeStamp();
+        return TRUE;
+    }
+
+private:
+    static Atom TimeStampPropAtom() {
+        return gdk_x11_get_xatom_by_name_for_display(
+            gdk_display_get_default(), "GDK_TIMESTAMP_PROP");
+    }
+
+    // This is safe because this class is stored as a member of mWindow and
+    // won't outlive it.
+    GdkWindow* mWindow;
+    TimeStamp  mAsyncUpdateStart;
+};
+
+} // namespace mozilla
 
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
@@ -2376,6 +2449,7 @@ nsWindow::OnEnterNotifyEvent(GdkEventCrossing *aEvent)
     event.refPoint.y = nscoord(aEvent->y);
 
     event.time = aEvent->time;
+    event.timeStamp = GetEventTimeStamp(aEvent->time);
 
     LOG(("OnEnterNotify: %p\n", (void *)this));
 
@@ -2417,6 +2491,7 @@ nsWindow::OnLeaveNotifyEvent(GdkEventCrossing *aEvent)
     event.refPoint.y = nscoord(aEvent->y);
 
     event.time = aEvent->time;
+    event.timeStamp = GetEventTimeStamp(aEvent->time);
 
     event.exit = is_top_level_mouse_exit(mGdkWindow, aEvent)
         ? WidgetMouseEvent::eTopLevel : WidgetMouseEvent::eChild;
@@ -2477,6 +2552,7 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
         modifierState = xevent.xmotion.state;
 
         event.time = xevent.xmotion.time;
+        event.timeStamp = GetEventTimeStamp(xevent.xmotion.time);
 #else
         event.refPoint.x = nscoord(aEvent->x);
         event.refPoint.y = nscoord(aEvent->y);
@@ -2484,6 +2560,7 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
         modifierState = aEvent->state;
 
         event.time = aEvent->time;
+        event.timeStamp = GetEventTimeStamp(aEvent->time);
 #endif /* MOZ_X11 */
     }
     else {
@@ -2500,6 +2577,7 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
         modifierState = aEvent->state;
 
         event.time = aEvent->time;
+        event.timeStamp = GetEventTimeStamp(aEvent->time);
     }
 
     KeymapWrapper::InitInputEvent(event, modifierState);
@@ -2596,6 +2674,7 @@ nsWindow::InitButtonEvent(WidgetMouseEvent& aEvent,
     KeymapWrapper::InitInputEvent(aEvent, modifierState);
 
     aEvent.time = aGdkEvent->time;
+    aEvent.timeStamp = GetEventTimeStamp(aGdkEvent->time);
 
     switch (aGdkEvent->type) {
     case GDK_2BUTTON_PRESS:
@@ -2855,6 +2934,35 @@ nsWindow::DispatchKeyDownEvent(GdkEventKey *aEvent, bool *aCancelled)
     return true;
 }
 
+TimeStamp
+nsWindow::GetEventTimeStamp(guint32 aEventTime)
+{
+    if (MOZ_UNLIKELY(!mGdkWindow)) {
+        // nsWindow has been Destroy()ed.
+        return TimeStamp::Now();
+    }
+    if (aEventTime == 0) {
+        // Some X11 and GDK events may be received with a time of 0 to indicate
+        // that they are synthetic events. Some input method editors do this.
+        // In this case too, just return the current timestamp.
+        return TimeStamp::Now();
+    }
+    CurrentX11TimeGetter* getCurrentTime = GetCurrentTimeGetter();
+    MOZ_ASSERT(getCurrentTime,
+               "Null current time getter despite having a window");
+    return TimeConverter().GetTimeStampFromSystemTime(aEventTime,
+                                                      *getCurrentTime);
+}
+
+mozilla::CurrentX11TimeGetter*
+nsWindow::GetCurrentTimeGetter() {
+    MOZ_ASSERT(mGdkWindow, "Expected mGdkWindow to be set");
+    if (MOZ_UNLIKELY(!mCurrentTimeGetter)) {
+        mCurrentTimeGetter = new CurrentX11TimeGetter(mGdkWindow);
+    }
+    return mCurrentTimeGetter;
+}
+
 gboolean
 nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
 {
@@ -2958,6 +3066,7 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
 
         contextMenuEvent.refPoint = LayoutDeviceIntPoint(0, 0);
         contextMenuEvent.time = aEvent->time;
+        contextMenuEvent.timeStamp = GetEventTimeStamp(aEvent->time);
         contextMenuEvent.clickCount = 1;
         KeymapWrapper::InitInputEvent(contextMenuEvent, aEvent->state);
         status = DispatchInputEvent(&contextMenuEvent);
@@ -2978,6 +3087,7 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
             textString[2] = 0;
             compositionChangeEvent.mData = textString;
             compositionChangeEvent.time = event.time;
+            compositionChangeEvent.timeStamp = GetEventTimeStamp(aEvent->time);
             DispatchEvent(&compositionChangeEvent, status);
         }
     }
@@ -3084,6 +3194,7 @@ nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
     KeymapWrapper::InitInputEvent(wheelEvent, aEvent->state);
 
     wheelEvent.time = aEvent->time;
+    wheelEvent.timeStamp = GetEventTimeStamp(aEvent->time);
 
     DispatchAPZAwareEvent(&wheelEvent);
 }
@@ -3228,6 +3339,7 @@ nsWindow::DispatchDragEvent(uint32_t aMsg, const nsIntPoint& aRefPoint,
 
     event.refPoint = LayoutDeviceIntPoint::FromUntyped(aRefPoint);
     event.time = aTime;
+    event.timeStamp = GetEventTimeStamp(aTime);
 
     DispatchInputEvent(&event);
 }
@@ -3695,6 +3807,8 @@ nsWindow::Create(nsIWidget        *aParent,
                          G_CALLBACK(button_press_event_cb), nullptr);
         g_signal_connect(eventWidget, "button-release-event",
                          G_CALLBACK(button_release_event_cb), nullptr);
+        g_signal_connect(eventWidget, "property-notify-event",
+                         G_CALLBACK(property_notify_event_cb), nullptr);
         g_signal_connect(eventWidget, "scroll-event",
                          G_CALLBACK(scroll_event_cb), nullptr);
     }
@@ -5616,6 +5730,17 @@ key_release_event_cb(GtkWidget *widget, GdkEventKey *event)
     nsRefPtr<nsWindow> focusWindow = gFocusWindow ? gFocusWindow : window;
 
     return focusWindow->OnKeyReleaseEvent(event);
+}
+
+static gboolean
+property_notify_event_cb(GtkWidget* aWidget, GdkEventProperty* aEvent)
+{
+    nsRefPtr<nsWindow> window = get_window_for_gdk_window(aEvent->window);
+    if (!window)
+        return FALSE;
+
+    CurrentX11TimeGetter* currentTimeGetter = window->GetCurrentTimeGetter();
+    return currentTimeGetter->PropertyNotifyHandler(aWidget, aEvent);
 }
 
 static gboolean

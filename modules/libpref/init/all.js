@@ -1093,7 +1093,7 @@ pref("privacy.trackingprotection.pbmode.enabled",  true);
 
 pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.clipboardevents.enabled",   true);
-#if defined(XP_WIN) && !defined(RELEASE_BUILD)
+#if defined(XP_WIN) && !defined(RELEASE_BUILD) || defined(MOZ_WIDGET_GTK) && !defined(RELEASE_BUILD)
 pref("dom.event.highrestimestamp.enabled",  true);
 #else
 pref("dom.event.highrestimestamp.enabled",  false);
@@ -5049,8 +5049,6 @@ pref("dom.audiochannel.mutedByDefault", false);
 // Use vsync aligned rendering. b2g prefs are in b2g.js.
 // Hardware vsync supported on windows, os x, and b2g.
 // Linux and fennec will use software vsync.
-pref("gfx.vsync.hw-vsync.enabled", true);
-pref("gfx.vsync.compositor", true);
 pref("gfx.vsync.refreshdriver", true);
 
 // Secure Element API

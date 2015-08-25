@@ -1,0 +1,84 @@
+# Adds threadsafe recreateDefault() method to ICU::Timezone.
+
+diff --git a/intl/icu/source/i18n/timezone.cpp b/intl/icu/source/i18n/timezone.cpp
+--- a/intl/icu/source/i18n/timezone.cpp
++++ b/intl/icu/source/i18n/timezone.cpp
+@@ -108,16 +108,19 @@ static const UChar         WORLD[] = {0x
+ static const UChar         GMT_ID[] = {0x47, 0x4D, 0x54, 0x00}; /* "GMT" */
+ static const UChar         UNKNOWN_ZONE_ID[] = {0x45, 0x74, 0x63, 0x2F, 0x55, 0x6E, 0x6B, 0x6E, 0x6F, 0x77, 0x6E, 0x00}; /* "Etc/Unknown" */
+ static const int32_t       GMT_ID_LENGTH = 3;
+ static const int32_t       UNKNOWN_ZONE_ID_LENGTH = 11;
+ 
+ static icu::TimeZone* DEFAULT_ZONE = NULL;
+ static icu::UInitOnce gDefaultZoneInitOnce = U_INITONCE_INITIALIZER;
+ 
++// Prevents DEFAULT_ZONE from being deleted while another thread is cloning it.
++static UMutex gDefaultZoneMutex = U_MUTEX_INITIALIZER;
++
+ static icu::TimeZone* _GMT = NULL;
+ static icu::TimeZone* _UNKNOWN_ZONE = NULL;
+ static icu::UInitOnce gStaticZonesInitOnce = U_INITONCE_INITIALIZER;
+ 
+ static char TZDATA_VERSION[16];
+ static icu::UInitOnce gTZDataVersionInitOnce = U_INITONCE_INITIALIZER;
+ 
+ static int32_t* MAP_SYSTEM_ZONES = NULL;
+@@ -554,26 +557,36 @@ static void U_CALLCONV initDefault()
+ }
+ 
+ // -------------------------------------
+ 
+ TimeZone* U_EXPORT2
+ TimeZone::createDefault()
+ {
+     umtx_initOnce(gDefaultZoneInitOnce, initDefault);
++
++    Mutex mutex_lock(&gDefaultZoneMutex);
+     return (DEFAULT_ZONE != NULL) ? DEFAULT_ZONE->clone() : NULL;
+ }
+ 
++void
++TimeZone::recreateDefault()
++{
++    TimeZone *default_zone = TimeZone::detectHostTimeZone();
++    adoptDefault(default_zone);
++}
++
+ // -------------------------------------
+ 
+ void U_EXPORT2
+ TimeZone::adoptDefault(TimeZone* zone)
+ {
+     if (zone != NULL)
+     {
++        Mutex mutex_lock(&gDefaultZoneMutex);
+         TimeZone *old = DEFAULT_ZONE;
+         DEFAULT_ZONE = zone;
+         delete old;
+         ucln_i18n_registerCleanup(UCLN_I18N_TIMEZONE, timeZone_cleanup);
+     }
+ }
+ // -------------------------------------
+ 
+diff --git a/intl/icu/source/i18n/unicode/timezone.h b/intl/icu/source/i18n/unicode/timezone.h
+--- a/intl/icu/source/i18n/unicode/timezone.h
++++ b/intl/icu/source/i18n/unicode/timezone.h
+@@ -299,16 +299,18 @@ public:
+      * and made the default.
+      *
+      * @return   A default TimeZone. Clients are responsible for deleting the time zone
+      *           object returned.
+      * @stable ICU 2.0
+      */
+     static TimeZone* U_EXPORT2 createDefault(void);
+ 
++    static void U_EXPORT2 recreateDefault();
++
+     /**
+      * Sets the default time zone (i.e., what's returned by createDefault()) to be the
+      * specified time zone.  If NULL is specified for the time zone, the default time
+      * zone is set to the default host time zone.  This call adopts the TimeZone object
+      * passed in; the client is no longer responsible for deleting it.
+      *
+      * <p>This function is not thread safe. It is an error for multiple threads
+      * to concurrently attempt to set the default time zone, or for any thread

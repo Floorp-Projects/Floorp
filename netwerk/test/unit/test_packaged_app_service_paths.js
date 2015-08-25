@@ -12,10 +12,10 @@ function packagedAppContentHandler(metadata, response)
 }
 
 function getPrincipal(url) {
+  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+              .getService(Ci.nsIScriptSecurityManager);
   let uri = createURI(url);
-  return Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-         .getService(Ci.nsIScriptSecurityManager)
-         .getNoAppCodebasePrincipal(uri);
+  return ssm.createCodebasePrincipal(uri, {});
 }
 
 var subresourcePaths = [

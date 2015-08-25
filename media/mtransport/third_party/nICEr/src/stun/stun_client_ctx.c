@@ -337,7 +337,7 @@ static int nr_stun_client_send_request(nr_stun_client_ctx *ctx)
 
 #ifdef USE_ICE
         case NR_ICE_CLIENT_MODE_USE_CANDIDATE:
-            if ((r=nr_stun_build_use_candidate(&ctx->params.ice_use_candidate, &ctx->request)))
+            if ((r=nr_stun_build_use_candidate(&ctx->params.ice_binding_request, &ctx->request)))
                 ABORT(r);
             break;
         case NR_ICE_CLIENT_MODE_BINDING_REQUEST:

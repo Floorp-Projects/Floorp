@@ -431,6 +431,9 @@ class ConcreteStackFrame<void> : public BaseStackFrame {
     bool isSelfHosted() const override { MOZ_CRASH("null JS::ubi::StackFrame"); }
 };
 
+bool ConstructSavedFrameStackSlow(JSContext* cx, JS::ubi::StackFrame& frame,
+                                  MutableHandleObject outSavedFrameStack);
+
 
 /*** ubi::Node ************************************************************************************/
 

@@ -389,6 +389,7 @@ public class CrashReporter extends Activity
             sendPart(os, boundary, "Android_Device", Build.DEVICE);
             sendPart(os, boundary, "Android_Display", Build.DISPLAY);
             sendPart(os, boundary, "Android_Fingerprint", Build.FINGERPRINT);
+            sendPart(os, boundary, "Android_APP_ABI", AppConstants.MOZ_APP_ABI);
             sendPart(os, boundary, "Android_CPU_ABI", Build.CPU_ABI);
             sendPart(os, boundary, "Android_MIN_SDK", Integer.toString(AppConstants.Versions.MIN_SDK_VERSION));
             sendPart(os, boundary, "Android_MAX_SDK", Integer.toString(AppConstants.Versions.MAX_SDK_VERSION));
