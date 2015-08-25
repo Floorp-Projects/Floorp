@@ -149,7 +149,6 @@ static inline void profiler_resume() {}
 
 // Immediately capture the current thread's call stack and return it
 static inline ProfilerBacktrace* profiler_get_backtrace() { return nullptr; }
-static inline void profiler_get_backtrace_noalloc(char *output, size_t outputSize) { return; }
 
 // Free a ProfilerBacktrace returned by profiler_get_backtrace()
 static inline void profiler_free_backtrace(ProfilerBacktrace* aBacktrace) {}
