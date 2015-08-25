@@ -910,6 +910,25 @@ let createNewRuleViewProperty = Task.async(function*(ruleEditor, inputValue) {
   yield onFocus;
 });
 
+/**
+ * Set the search value for the rule-view filter styles search box.
+ *
+ * @param {CssRuleView} view
+ *        The instance of the rule-view panel
+ * @param {String} searchValue
+ *        The filter search value
+ * @return a promise that resolves when the rule-view is filtered for the
+ * search term
+ */
+let setSearchFilter = Task.async(function*(view, searchValue) {
+  info("Setting filter text to \"" + searchValue + "\"");
+  let win = view.styleWindow;
+  let searchField = view.searchField;
+  searchField.focus();
+  synthesizeKeys(searchValue, win);
+  yield view.inspector.once("ruleview-filtered");
+});
+
 /* *********************************************
  * COMPUTED-VIEW
  * *********************************************
