@@ -4,37 +4,73 @@
 
 "use strict";
 
-// Tests that the rule view search filter works properly for keyframe rule
-// selectors.
+// Tests that the rule view search filter works properly when modifying the
+// existing search filter value.
 
-const SEARCH = "20%";
-const TEST_URI = TEST_URL_ROOT + "doc_keyframeanimation.html";
+const SEARCH = "00F";
+
+const TEST_URI = `
+  <style type="text/css">
+    #testid {
+      background-color: #00F;
+    }
+    .testclass {
+      width: 100%;
+    }
+  </style>
+  <div id="testid" class="testclass">Styled Node</div>
+`;
 
 add_task(function*() {
-  yield addTab(TEST_URI);
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
-  yield selectNode("#boxy", inspector);
+  yield selectNode("#testid", inspector);
   yield testAddTextInFilter(inspector, view);
+  yield testRemoveTextInFilter(inspector, view);
 });
 
-function* testAddTextInFilter(inspector, ruleView) {
-  info("Setting filter text to \"" + SEARCH + "\"");
-
-  let win = ruleView.styleWindow;
-  let searchField = ruleView.searchField;
-  let onRuleViewFilter = inspector.once("ruleview-filtered");
-
-  searchField.focus();
-  synthesizeKeys(SEARCH, win);
-  yield onRuleViewFilter;
+function* testAddTextInFilter(inspector, view) {
+  yield setSearchFilter(view, SEARCH);
 
   info("Check that the correct rules are visible");
-  is(getRuleViewRuleEditor(ruleView, 0).rule.selectorText, "element",
+  is(view.element.children.length, 2, "Should have 2 rules.");
+  is(getRuleViewRuleEditor(view, 0).rule.selectorText, "element",
     "First rule is inline element.");
 
-  let ruleEditor = getRuleViewRuleEditor(ruleView, 2, 0);
+  let rule = getRuleViewRuleEditor(view, 1).rule;
 
-  is(ruleEditor.rule.domRule.keyText, "20%", "Second rule is 20%.");
-  ok(ruleEditor.selectorText.classList.contains("ruleview-highlight"),
-    "20% selector is highlighted.");
+  is(rule.selectorText, "#testid", "Second rule is #testid.");
+  ok(rule.textProps[0].editor.container.classList
+    .contains("ruleview-highlight"),
+    "background-color text property is correctly highlighted.");
+}
+
+function* testRemoveTextInFilter(inspector, view) {
+  info("Press backspace and set filter text to \"00\"");
+
+  let win = view.styleWindow;
+  let searchField = view.searchField;
+
+  searchField.focus();
+  EventUtils.synthesizeKey("VK_BACK_SPACE", {}, win);
+  yield inspector.once("ruleview-filtered");
+
+  info("Check that the correct rules are visible");
+  is(view.element.children.length, 3, "Should have 3 rules.");
+  is(getRuleViewRuleEditor(view, 0).rule.selectorText, "element",
+    "First rule is inline element.");
+
+  let rule = getRuleViewRuleEditor(view, 1).rule;
+
+  is(rule.selectorText, "#testid", "Second rule is #testid.");
+  ok(rule.textProps[0].editor.container.classList
+    .contains("ruleview-highlight"),
+    "background-color text property is correctly highlighted.");
+
+  rule = getRuleViewRuleEditor(view, 2).rule;
+
+  is(rule.selectorText, ".testclass", "Second rule is .testclass.");
+  ok(rule.textProps[0].editor.container.classList
+    .contains("ruleview-highlight"),
+    "width text property is correctly highlighted.");
 }
