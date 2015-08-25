@@ -1040,9 +1040,14 @@ UnboxedArrayObject::convertInt32ToDouble(ExclusiveContext* cx, ObjectGroup* grou
     for (size_t i = 0; i < initializedLength(); i++)
         values.infallibleAppend(getElementSpecific<JSVAL_TYPE_INT32>(i).toInt32());
 
-    uint8_t* newElements = ReallocateObjectBuffer<uint8_t>(cx, this, elements(),
-                                                           capacity() * sizeof(int32_t),
-                                                           capacity() * sizeof(double));
+    uint8_t* newElements;
+    if (hasInlineElements()) {
+        newElements = AllocateObjectBuffer<uint8_t>(cx, this, capacity() * sizeof(double));
+    } else {
+        newElements = ReallocateObjectBuffer<uint8_t>(cx, this, elements(),
+                                                      capacity() * sizeof(int32_t),
+                                                      capacity() * sizeof(double));
+    }
     if (!newElements)
         return false;
 
