@@ -708,7 +708,7 @@ nsHtml5StreamParser::SniffStreamBytes(const uint8_t* aFromSegment,
   if (!mMetaScanner && (mMode == NORMAL ||
                         mMode == VIEW_SOURCE_HTML ||
                         mMode == LOAD_AS_DATA)) {
-    mMetaScanner = new nsHtml5MetaScanner();
+    mMetaScanner = new nsHtml5MetaScanner(mTreeBuilder);
   }
   
   if (mSniffingLength + aCount >= NS_HTML5_STREAM_PARSER_SNIFFING_BUFFER_SIZE) {
@@ -720,6 +720,12 @@ nsHtml5StreamParser::SniffStreamBytes(const uint8_t* aFromSegment,
           countToSniffingLimit);
       nsAutoCString encoding;
       mMetaScanner->sniff(&readable, encoding);
+      // Due to the way nsHtml5Portability reports OOM, ask the tree buider
+      nsresult rv;
+      if (NS_FAILED((rv = mTreeBuilder->IsBroken()))) {
+        MarkAsBroken(rv);
+        return rv;
+      }
       if (!encoding.IsEmpty()) {
         // meta scan successful; honor overrides unless meta is XSS-dangerous
         if ((mCharsetSource == kCharsetFromParentForced ||
@@ -752,6 +758,12 @@ nsHtml5StreamParser::SniffStreamBytes(const uint8_t* aFromSegment,
     nsHtml5ByteReadable readable(aFromSegment, aFromSegment + aCount);
     nsAutoCString encoding;
     mMetaScanner->sniff(&readable, encoding);
+    // Due to the way nsHtml5Portability reports OOM, ask the tree buider
+    nsresult rv;
+    if (NS_FAILED((rv = mTreeBuilder->IsBroken()))) {
+      MarkAsBroken(rv);
+      return rv;
+    }
     if (!encoding.IsEmpty()) {
       // meta scan successful; honor overrides unless meta is XSS-dangerous
       if ((mCharsetSource == kCharsetFromParentForced ||
