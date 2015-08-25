@@ -704,6 +704,9 @@ private:
             PBrowserParent* aBrowser) override;
     virtual bool DeallocPExternalHelperAppParent(PExternalHelperAppParent* aService) override;
 
+    virtual PHandlerServiceParent* AllocPHandlerServiceParent() override;
+    virtual bool DeallocPHandlerServiceParent(PHandlerServiceParent*) override;
+
     virtual PCellBroadcastParent* AllocPCellBroadcastParent() override;
     virtual bool DeallocPCellBroadcastParent(PCellBroadcastParent*) override;
     virtual bool RecvPCellBroadcastConstructor(PCellBroadcastParent* aActor) override;
