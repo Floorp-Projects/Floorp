@@ -252,12 +252,159 @@ describe("loop.shared.views", function() {
       });
   });
 
+  describe("SettingsControlButton", function() {
+    var fakeMozLoop;
+    var support_url = "https://support.com";
+    var feedback_url = "https://feedback.com";
+
+    beforeEach(function() {
+      fakeMozLoop = {
+        openURL: sandbox.stub(),
+        setLoopPref: sandbox.stub(),
+        getLoopPref: function (prefName) {
+          switch (prefName) {
+            case "support_url":
+              return support_url;
+            case "feedback.formURL":
+              return feedback_url;
+            default:
+              return prefName;
+          }
+        }
+      };
+    });
+
+    function mountTestComponent(props) {
+      props = _.extend({
+        mozLoop: fakeMozLoop
+      }, props);
+
+      return TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.SettingsControlButton, props));
+    }
+
+    it("should render a visible button", function() {
+      var settingsMenuItems = [{ id: "feedback" }];
+      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+
+      var node = comp.getDOMNode().querySelector(".btn-settings");
+      expect(node.classList.contains("hide")).eql(false);
+    });
+
+    it("should not render anything", function() {
+      var comp = mountTestComponent();
+      expect(comp.getDOMNode()).to.eql(null);
+    });
+
+    it("should not show an indefined menu option", function() {
+      var settingsMenuItems = [
+        { id: "not Defined" },
+        { id: "help" }
+      ];
+      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+      var menuItems = comp.getDOMNode().querySelectorAll(".settings-menu > li");
+      expect(menuItems).to.have.length.of(1);
+    });
+
+    it("should not render anythin if not exists any valid item to show", function() {
+      var settingsMenuItems = [
+        { id: "not Defined" },
+        { id: "another wrong menu item" }
+      ];
+      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+      expect(comp.getDOMNode()).to.eql(null);
+    });
+
+    it("should show the settings dropdown on click", function() {
+      var settingsMenuItems = [{ id: "feedback" }];
+      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+
+      expect(comp.state.showMenu).eql(false);
+      TestUtils.Simulate.click(comp.getDOMNode().querySelector(".btn-settings"));
+
+      expect(comp.state.showMenu).eql(true);
+    });
+
+    it("should show edit Context on menu when the option is enabled", function() {
+      var settingsMenuItems = [
+        {
+          id: "edit",
+          enabled: true,
+          visible: true,
+          onClick: function() {}
+        }
+      ];
+      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+
+      var node = comp.getDOMNode().querySelector(".settings-menu > li.entry-settings-edit");
+      expect(node.classList.contains("hide")).eql(false);
+    });
+
+    it("should hide edit Context on menu when the option is not visible", function() {
+      var settingsMenuItems = [
+        {
+          id: "edit",
+          enabled: false,
+          visible: false,
+          onClick: function() {}
+        }
+      ];
+      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+
+      var node = comp.getDOMNode().querySelector(".settings-menu > li.entry-settings-edit");
+      expect(node.classList.contains("hide")).eql(true);
+    });
+
+    it("should call onClick method when the edit context menu item is clicked", function() {
+      var onClickCalled = false;
+      var settingsMenuItems = [
+        {
+          id: "edit",
+          enabled: true,
+          visible: true,
+          onClick: sandbox.stub()
+        }
+      ];
+      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+
+      TestUtils.Simulate.click(comp.getDOMNode().querySelector(".settings-menu > li.entry-settings-edit"));
+      sinon.assert.calledOnce(settingsMenuItems[0].onClick);
+    });
+
+    it("should open a tab to the feedback url when the feedback menu item is clicked", function() {
+      var settingsMenuItems = [
+        { id: "feedback" },
+        { id: "help" }
+      ];
+      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+
+      TestUtils.Simulate.click(comp.getDOMNode().querySelector(".settings-menu > li:first-child"));
+
+      sinon.assert.calledOnce(fakeMozLoop.openURL);
+      sinon.assert.calledWithExactly(fakeMozLoop.openURL, feedback_url);
+    });
+
+    it("should open a tab to the support url when the support menu item is clicked", function() {
+      var settingsMenuItems = [
+        { id: "feedback" },
+        { id: "help" }
+      ];
+      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+
+      TestUtils.Simulate.click(comp.getDOMNode().querySelector(".settings-menu > li:last-child"));
+
+      sinon.assert.calledOnce(fakeMozLoop.openURL);
+      sinon.assert.calledWithExactly(fakeMozLoop.openURL, support_url);
+    });
+  });
+
   describe("ConversationToolbar", function() {
     var clock, hangup, publishStream;
 
     function mountTestComponent(props) {
       props = _.extend({
-        dispatcher: dispatcher
+        dispatcher: dispatcher,
+        mozLoop: {}
       }, props || {});
       return TestUtils.renderIntoDocument(
         React.createElement(sharedViews.ConversationToolbar, props));
@@ -407,7 +554,8 @@ describe("loop.shared.views", function() {
 
     function mountTestComponent(props) {
       props = _.extend({
-        dispatcher: dispatcher
+        dispatcher: dispatcher,
+        mozLoop: {}
       }, props || {});
       return TestUtils.renderIntoDocument(
         React.createElement(sharedViews.ConversationView, props));

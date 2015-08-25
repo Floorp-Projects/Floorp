@@ -1028,6 +1028,7 @@
                   <ConversationToolbar audio={{ enabled: true, visible: true }}
                                        hangup={noop}
                                        publishStream={noop}
+                                       settingsMenuItems={[{ id: "feedback" }]}
                                        video={{ enabled: true, visible: true }} />
                 </div>
               </FramedExample>
@@ -1039,6 +1040,7 @@
                   <ConversationToolbar audio={{ enabled: true, visible: true }}
                                        hangup={noop}
                                        publishStream={noop}
+                                       settingsMenuItems={[{ id: "feedback" }]}
                                        video={{ enabled: false, visible: true }} />
                 </div>
               </FramedExample>
@@ -1050,6 +1052,7 @@
                   <ConversationToolbar audio={{ enabled: false, visible: true }}
                                        hangup={noop}
                                        publishStream={noop}
+                                       settingsMenuItems={[{ id: "feedback" }]}
                                        video={{ enabled: true, visible: true }} />
                 </div>
               </FramedExample>

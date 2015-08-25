@@ -583,6 +583,7 @@ loop.conversationViews = (function(mozL10n) {
       // This is used from the props rather than the state to make it easier for
       // the ui-showcase.
       mediaConnected: React.PropTypes.bool,
+      mozLoop: React.PropTypes.object,
       remotePosterUrl: React.PropTypes.string,
       remoteVideoEnabled: React.PropTypes.bool,
       // local
@@ -680,6 +681,16 @@ loop.conversationViews = (function(mozL10n) {
     },
 
     render: function() {
+      // 'visible' and 'enabled' are true by default.
+      var settingsMenuItems = [
+        {
+          id: "edit",
+          visible: false,
+          enabled: false
+        },
+        { id: "feedback" },
+        { id: "help" }
+      ];
       return (
         <div className="desktop-call-wrapper">
           <sharedViews.MediaLayoutView
@@ -702,9 +713,10 @@ loop.conversationViews = (function(mozL10n) {
             <loop.shared.views.ConversationToolbar
               audio={this.props.audio}
               dispatcher={this.props.dispatcher}
-              edit={{ visible: false, enabled: false }}
               hangup={this.hangup}
+              mozLoop={this.props.mozLoop}
               publishStream={this.publishStream}
+              settingsMenuItems={settingsMenuItems}
               video={this.props.video} />
           </sharedViews.MediaLayoutView>
         </div>
@@ -807,6 +819,7 @@ loop.conversationViews = (function(mozL10n) {
             conversationStore={this.getStore()}
             dispatcher={this.props.dispatcher}
             mediaConnected={this.state.mediaConnected}
+            mozLoop={this.props.mozLoop}
             remoteSrcVideoObject={this.state.remoteSrcVideoObject}
             remoteVideoEnabled={this.state.remoteVideoEnabled}
             video={{ enabled: !this.state.videoMuted, visible: true }} />

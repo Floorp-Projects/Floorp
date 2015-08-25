@@ -479,6 +479,7 @@ describe("loop.conversationViews", function () {
       var props = _.extend({
         conversationStore: conversationStore,
         dispatcher: dispatcher,
+        mozLoop: {},
         matchMedia: window.matchMedia
       }, extraProps);
       return TestUtils.renderIntoDocument(
