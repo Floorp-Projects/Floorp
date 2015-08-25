@@ -74,7 +74,9 @@ public:
   RecvClearCachedResources(const uint64_t& id) override;
 
   virtual bool
-  RecvDidComposite(const uint64_t& aId, const uint64_t& aTransactionId) override;
+  RecvDidComposite(const uint64_t& aId, const uint64_t& aTransactionId,
+                   const TimeStamp& aCompositeStart,
+                   const TimeStamp& aCompositeEnd) override;
 
   virtual bool
   RecvInvalidateAll() override;

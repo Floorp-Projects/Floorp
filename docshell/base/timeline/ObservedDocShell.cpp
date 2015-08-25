@@ -16,13 +16,6 @@ ObservedDocShell::ObservedDocShell(nsDocShell* aDocShell)
 {}
 
 void
-ObservedDocShell::AddMarker(const char* aName, TracingMetadata aMetaData)
-{
-  TimelineMarker* marker = new TimelineMarker(mDocShell, aName, aMetaData);
-  mTimelineMarkers.AppendElement(marker);
-}
-
-void
 ObservedDocShell::AddMarker(UniquePtr<TimelineMarker>&& aMarker)
 {
   mTimelineMarkers.AppendElement(Move(aMarker));

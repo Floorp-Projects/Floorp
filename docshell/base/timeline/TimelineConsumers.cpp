@@ -67,6 +67,27 @@ TimelineConsumers::GetKnownDocShells(Vector<nsRefPtr<nsDocShell>>& aStore)
 
 void
 TimelineConsumers::AddMarkerForDocShell(nsDocShell* aDocShell,
+                                        const char* aName,
+                                        TracingMetadata aMetaData)
+{
+  if (aDocShell->IsObserved()) {
+    aDocShell->mObserved->AddMarker(Move(MakeUnique<TimelineMarker>(aDocShell, aName, aMetaData)));
+  }
+}
+
+void
+TimelineConsumers::AddMarkerForDocShell(nsDocShell* aDocShell,
+                                        const char* aName,
+                                        const TimeStamp& aTime,
+                                        TracingMetadata aMetaData)
+{
+  if (aDocShell->IsObserved()) {
+    aDocShell->mObserved->AddMarker(Move(MakeUnique<TimelineMarker>(aDocShell, aName, aTime, aMetaData)));
+  }
+}
+
+void
+TimelineConsumers::AddMarkerForDocShell(nsDocShell* aDocShell,
                                         UniquePtr<TimelineMarker>&& aMarker)
 {
   if (aDocShell->IsObserved()) {
@@ -75,17 +96,33 @@ TimelineConsumers::AddMarkerForDocShell(nsDocShell* aDocShell,
 }
 
 void
-TimelineConsumers::AddMarkerForDocShell(nsDocShell* aDocShell,
-                                        const char* aName, TracingMetadata aMetaData)
+TimelineConsumers::AddMarkerForDocShell(nsIDocShell* aDocShell,
+                                        const char* aName,
+                                        TracingMetadata aMetaData)
 {
-  if (aDocShell->IsObserved()) {
-    aDocShell->mObserved->AddMarker(aName, aMetaData);
-  }
+  AddMarkerForDocShell(static_cast<nsDocShell*>(aDocShell), aName, aMetaData);
+}
+
+void
+TimelineConsumers::AddMarkerForDocShell(nsIDocShell* aDocShell,
+                                        const char* aName,
+                                        const TimeStamp& aTime,
+                                        TracingMetadata aMetaData)
+{
+  AddMarkerForDocShell(static_cast<nsDocShell*>(aDocShell), aName, aTime, aMetaData);
+}
+
+void
+TimelineConsumers::AddMarkerForDocShell(nsIDocShell* aDocShell,
+                                        UniquePtr<TimelineMarker>&& aMarker)
+{
+  AddMarkerForDocShell(static_cast<nsDocShell*>(aDocShell), Move(aMarker));
 }
 
 void
 TimelineConsumers::AddMarkerForDocShellsList(Vector<nsRefPtr<nsDocShell>>& aDocShells,
-                                             const char* aName, TracingMetadata aMetaData)
+                                             const char* aName,
+                                             TracingMetadata aMetaData)
 {
   for (Vector<nsRefPtr<nsDocShell>>::Range range = aDocShells.all();
        !range.empty();
@@ -95,7 +132,8 @@ TimelineConsumers::AddMarkerForDocShellsList(Vector<nsRefPtr<nsDocShell>>& aDocS
 }
 
 void
-TimelineConsumers::AddMarkerForAllObservedDocShells(const char* aName, TracingMetadata aMetaData)
+TimelineConsumers::AddMarkerForAllObservedDocShells(const char* aName,
+                                                    TracingMetadata aMetaData)
 {
   Vector<nsRefPtr<nsDocShell>> docShells;
   if (!GetKnownDocShells(docShells)) {
