@@ -320,10 +320,9 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   , mExtraCurrentTimeUpdatedSinceLastStableState(false)
   , mCaptured(false)
 {
-  bool startWithAudioDriver = true;
   MediaStreamGraph* graph = aIsOffline ?
                             MediaStreamGraph::CreateNonRealtimeInstance(aSampleRate) :
-                            MediaStreamGraph::GetInstance(startWithAudioDriver, aChannel);
+                            MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER, aChannel);
   AudioNodeEngine* engine = aIsOffline ?
                             new OfflineDestinationNodeEngine(this, aNumberOfChannels,
                                                              aLength, aSampleRate) :
