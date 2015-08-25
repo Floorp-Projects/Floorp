@@ -13,22 +13,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1009645
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1009645">Mozilla Bug 1009645</a>
 <script type="application/javascript">
 
-function testAPIs() {
-  function pref(name) {
-    try {
-      return SpecialPowers.getBoolPref(name);
-    } catch (e) {
-      return false;
-    }
+var b2gOnly;
+
+function pref(name) {
+  try {
+    return SpecialPowers.getBoolPref(name);
+  } catch (e) {
+    return false;
   }
+}
 
-  var b2gOnly = (function() {
-    var isAndroid = !!navigator.userAgent.includes("Android");
-    var isMulet = pref("b2g.is_mulet");
-    var isB2g = isMulet || (!isAndroid && /Mobile|Tablet/.test(navigator.userAgent));
-    return isB2g ? true : undefined;
-  })();
-
+function testAPIs() {
   var APIEndPoints = [
     { name: "MozMobileNetworkInfo", enabled: pref("dom.mobileconnection.enabled") },
     // { name: "Navigator.mozBluetooth", enabled: b2gOnly }, // conditional on MOZ_B2G_BT, tricky to test
@@ -52,25 +47,45 @@ function testAPIs() {
   APIEndPoints.forEach(function(v) {
     promises.push(navigator.hasFeature("api.window." + v.name));
   });
-  Promise.all(promises).then(function(values) {
+
+  return Promise.all(promises).then(function(values) {
     for (var i = 0; i < values.length; ++i) {
       is(values[i], APIEndPoints[i].enabled,
          "Endpoint " + APIEndPoints[i].name + " resolved with the correct value. " +
          "If this is failing because you're changing how an API is exposed, you " +
          "must contact the Marketplace team to let them know about the change.");
     }
-    SimpleTest.finish();
   }, function() {
     ok(false, "The Promise should not be rejected");
-    SimpleTest.finish();
+  });
+}
+
+function testExtensions() {
+  if (!b2gOnly) {
+    return Promise.resolve();
+  }
+
+  return navigator.hasFeature("web-extensions").then(function(value) {
+    is(value, true, "Resolve the Promise with " + value + " for web-extensions");
+  }, function() {
+    ok(false, "The Promise should not be rejected");
   });
 }
 
 SpecialPowers.pushPermissions([
   {type: "feature-detection", allow: true, context: document}
 ], function() {
+  b2gOnly = (function() {
+    var isAndroid = !!navigator.userAgent.includes("Android");
+    var isMulet = pref("b2g.is_mulet");
+    var isB2g = isMulet || (!isAndroid && /Mobile|Tablet/.test(navigator.userAgent));
+    return isB2g ? true : undefined;
+  })();
+
   ok('hasFeature' in navigator, "navigator.hasFeature should exist");
-  testAPIs();
+  testAPIs().then(testExtensions).catch(function(e) {
+    ok(false, "The Promise should not be rejected: " + e);
+  }).then(SimpleTest.finish);
 });
 
 SimpleTest.waitForExplicitFinish();
