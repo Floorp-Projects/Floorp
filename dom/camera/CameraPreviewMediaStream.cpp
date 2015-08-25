@@ -36,7 +36,9 @@ CameraPreviewMediaStream::CameraPreviewMediaStream(DOMMediaStream* aWrapper)
   , mRateLimit(false)
   , mTrackCreated(false)
 {
-  SetGraphImpl(MediaStreamGraph::GetInstance());
+  SetGraphImpl(
+      MediaStreamGraph::GetInstance(
+        MediaStreamGraph::SYSTEM_THREAD_DRIVER, AudioChannel::Normal));
   mFakeMediaStreamGraph = new FakeMediaStreamGraph();
   mIsConsumed = false;
 }
