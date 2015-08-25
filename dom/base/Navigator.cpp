@@ -1598,6 +1598,14 @@ Navigator::HasFeature(const nsAString& aName, ErrorResult& aRv)
     return nullptr;
   }
 
+  // Hardcoded web-extensions feature which is b2g specific.
+#ifdef MOZ_B2G
+  if (aName.EqualsLiteral("web-extensions")) {
+    p->MaybeResolve(true);
+    return p.forget();
+  }
+#endif
+
   // Hardcoded manifest features. Some are still b2g specific.
   const char manifestFeatures[][64] = {
     "manifest.origin"
