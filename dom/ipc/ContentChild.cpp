@@ -18,6 +18,7 @@
 #include "CrashReporterChild.h"
 #include "GeckoProfiler.h"
 #include "TabChild.h"
+#include "HandlerServiceChild.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/LookAndFeel.h"
@@ -1891,6 +1892,20 @@ ContentChild::DeallocPExternalHelperAppChild(PExternalHelperAppChild* aService)
 {
     ExternalHelperAppChild *child = static_cast<ExternalHelperAppChild*>(aService);
     child->Release();
+    return true;
+}
+
+PHandlerServiceChild*
+ContentChild::AllocPHandlerServiceChild()
+{
+    HandlerServiceChild* actor =  new HandlerServiceChild();
+    actor->AddRef();
+    return actor;
+}
+
+bool ContentChild::DeallocPHandlerServiceChild(PHandlerServiceChild* aHandlerServiceChild)
+{
+    static_cast<HandlerServiceChild*>(aHandlerServiceChild)->Release();
     return true;
 }
 
