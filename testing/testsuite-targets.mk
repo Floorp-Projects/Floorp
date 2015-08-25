@@ -445,9 +445,13 @@ endif
                                 zip -rq9D '$(abspath $(DIST))/$(PKG_PATH)$(PKG_BASENAME).'$(name)'.tests.zip' \
                                 $(name) -x \*/.mkdir.done \*.pyc ;)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+ifeq ($(MOZ_BUILD_APP),mobile/android)
 package-tests: stage-android
 package-tests: stage-instrumentation-tests
+endif
+
+ifeq ($(MOZ_BUILD_APP),mobile/android/b2gdroid)
+package-tests: stage-android
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
