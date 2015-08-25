@@ -424,8 +424,6 @@ class MacroAssemblerARM : public Assembler
     BufferOffset ma_vstr(VFPRegister src, Register base, Register index, int32_t shift,
                          int32_t offset, Condition cc = Always);
 
-    // Calls an Ion function, assuming that sp has already been decremented.
-    void ma_callJitNoPush(const Register reg);
     // Calls an ion function, assuming that the stack is currently not 8 byte
     // aligned.
     void ma_callJitHalfPush(const Register reg);
