@@ -10,6 +10,7 @@ FAIL_ON_WARNINGS = True
 
 UNIFIED_SOURCES = [
     'Common.cpp',
+    'TestCopyOnWrite.cpp',
     'TestDecoders.cpp',
     'TestDecodeToSurface.cpp',
     'TestMetadata.cpp',
