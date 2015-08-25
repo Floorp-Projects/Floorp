@@ -16,10 +16,15 @@ contract @mozilla.org/updates/update-prompt;1 {88b3eb21-d072-4e3b-886d-f89d8c49f
 category system-update-provider MozillaProvider @mozilla.org/updates/update-prompt;1,{88b3eb21-d072-4e3b-886d-f89d8c49fe59}
 #endif
 
+# On b2gdroid we want to use the android implementation of the directory service.
+#ifndef MOZ_B2GDROID
+#ifdef MOZ_B2G
 # DirectoryProvider.js
 component {9181eb7c-6f87-11e1-90b1-4f59d80dd2e5} DirectoryProvider.js
 contract @mozilla.org/b2g/directory-provider;1 {9181eb7c-6f87-11e1-90b1-4f59d80dd2e5}
 category xpcom-directory-providers b2g-directory-provider @mozilla.org/b2g/directory-provider;1
+#endif
+#endif
 
 # ActivitiesGlue.js
 component {3a54788b-48cc-4ab4-93d6-0d6a8ef74f8e} ActivitiesGlue.js
@@ -87,6 +92,7 @@ contract @mozilla.org/fxaccounts/fxaccounts-ui-glue;1 {51875c14-91d7-4b8c-b65d-3
 component {710322af-e6ae-4b0c-b2c9-1474a87b077e} HelperAppDialog.js
 contract @mozilla.org/helperapplauncherdialog;1 {710322af-e6ae-4b0c-b2c9-1474a87b077e}
 
+#ifndef MOZ_B2GDROID
 #ifndef MOZ_WIDGET_GONK
 component {c83c02c0-5d43-4e3e-987f-9173b313e880} SimulatorScreen.js
 contract @mozilla.org/simulator-screen;1 {c83c02c0-5d43-4e3e-987f-9173b313e880}
@@ -99,6 +105,7 @@ category command-line-handler m-b2goop @mozilla.org/commandlinehandler/general-s
 component {385993fe-8710-4621-9fb1-00a09d8bec37} CommandLine.js
 contract @mozilla.org/commandlinehandler/general-startup;1?type=b2gcmds {385993fe-8710-4621-9fb1-00a09d8bec37}
 category command-line-handler m-b2gcmds @mozilla.org/commandlinehandler/general-startup;1?type=b2gcmds
+#endif
 #endif
 
 # BootstrapCommandLine.js

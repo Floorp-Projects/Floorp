@@ -18,20 +18,24 @@ EXTRA_COMPONENTS += [
     'BrowserCLH.js',
     'ColorPicker.js',
     'ContentDispatchChooser.js',
-    'ContentPermissionPrompt.js',
     'DirectoryProvider.js',
     'FilePicker.js',
     'HelperAppDialog.js',
     'LoginManagerPrompter.js',
     'NSSDialogService.js',
     'PromptService.js',
-    'SessionStore.js',
     'SiteSpecificUserAgent.js',
     'Snippets.js',
     'TabSource.js',
-    'WebappsUpdateTimer.js',
     'XPIDialogService.js',
 ]
+
+if not CONFIG['MOZ_B2GDROID']:
+    EXTRA_COMPONENTS += [
+        'ContentPermissionPrompt.js',
+        'SessionStore.js',
+        'WebappsUpdateTimer.js',
+    ]
 
 if CONFIG['MOZ_PAY']:
     EXTRA_COMPONENTS += [

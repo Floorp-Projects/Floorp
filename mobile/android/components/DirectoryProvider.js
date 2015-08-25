@@ -77,6 +77,9 @@ DirectoryProvider.prototype = {
       // implementation would have returned.
       let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
       return new FileUtils.File(env.get("DOWNLOADS_DIRECTORY"));
+    } else if (AppConstants.MOZ_B2GDROID && prop === "coreAppsDir") {
+      let dirsvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+      return dirsvc.get("DefRt", Ci.nsIFile);
     }
 
     // We are retuning null to show failure instead for throwing an error. The
