@@ -871,22 +871,26 @@ AnimationsTimeline.prototype = {
   drawTimeBlock: function({state}, el) {
     let width = el.offsetWidth;
 
-    // Container for all iterations and delay. Positioned at the right start
-    // time.
-    let x = TimeScale.startTimeToDistance(state.startTime + (state.delay || 0),
-                                          width);
-    // With the right width (duration*duration).
-    let count = state.iterationCount || 1;
-    let w = TimeScale.durationToDistance(state.duration, width);
+    // Create a container element to hold the delay and iterations.
+    // It is positioned according to its delay (divided by the playbackrate),
+    // and its width is according to its duration (divided by the playbackrate).
+    let start = state.startTime;
+    let duration = state.duration;
+    let rate = state.playbackRate;
+    let count = state.iterationCount;
+    let delay = state.delay || 0;
+
+    let x = TimeScale.startTimeToDistance(start + (delay / rate), width);
+    let w = TimeScale.durationToDistance(duration / rate, width);
 
     let iterations = createNode({
       parent: el,
       attributes: {
-        "class": "iterations" + (state.iterationCount ? "" : " infinite"),
+        "class": "iterations" + (count ? "" : " infinite"),
         // Individual iterations are represented by setting the size of the
         // repeating linear-gradient.
         "style": `left:${x}px;
-                  width:${w * count}px;
+                  width:${w * (count || 1)}px;
                   background-size:${Math.max(w, 2)}px 100%;`
       }
     });
@@ -901,14 +905,14 @@ AnimationsTimeline.prototype = {
     });
 
     // Delay.
-    if (state.delay) {
-      let delay = TimeScale.durationToDistance(state.delay, width);
+    if (delay) {
+      let w = TimeScale.durationToDistance(delay / rate, width);
       createNode({
         parent: iterations,
         attributes: {
           "class": "delay",
-          "style": `left:-${delay}px;
-                    width:${delay}px;`
+          "style": `left:-${w}px;
+                    width:${w}px;`
         }
       });
     }
