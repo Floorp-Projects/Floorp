@@ -7,17 +7,18 @@
 // that these items actually work
 
 const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+const TEST_URI = "data:text/html;charset=UTF-8," +
+                 "pseudo-class lock node menu tests";
 const PSEUDOS = ["hover", "active", "focus"];
 
 add_task(function*() {
-  yield addTab("data:text/html,pseudo-class lock node menu tests");
+  let {inspector} = yield openInspectorForURL(TEST_URI);
 
   info("Creating the test element");
   let div = content.document.createElement("div");
   div.textContent = "test div";
   content.document.body.appendChild(div);
 
-  let {inspector} = yield openInspector();
   yield selectNode("div", inspector);
 
   info("Getting the inspector ctx menu and opening it");
