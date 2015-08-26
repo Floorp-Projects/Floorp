@@ -288,7 +288,6 @@ MPAPI::Decoder *AndroidMediaPluginHost::CreateDecoder(MediaResource *aResource, 
 
     decoder->mResource = strdup(url.get());
     if (plugin->CreateDecoder(&sPluginHost, decoder, chars, len)) {
-      aResource->AddRef();
       return decoder.forget();
     }
   }
