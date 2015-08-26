@@ -23,6 +23,7 @@ Cu.import('resource://gre/modules/SystemUpdateService.jsm');
 Cu.import('resource://gre/modules/NetworkStatsService.jsm');
 Cu.import('resource://gre/modules/ResourceStatsService.jsm');
 #endif
+Cu.import('resource://gre/modules/KillSwitchMain.jsm');
 
 // Identity
 Cu.import('resource://gre/modules/SignInToWebsite.jsm');
