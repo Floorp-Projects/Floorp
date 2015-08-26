@@ -613,7 +613,7 @@ DataChannelConnection::CompleteConnect(TransportFlow *flow, TransportLayer::Stat
       } else {
         // draft-ietf-rtcweb-data-channel-13 section 5: max initial MTU IPV4 1200, IPV6 1280
         paddrparams.spp_pathmtu = 1200; // safe for either
-        paddrparams.spp_flags &= !SPP_PMTUD_ENABLE;
+        paddrparams.spp_flags &= ~SPP_PMTUD_ENABLE;
         paddrparams.spp_flags |= SPP_PMTUD_DISABLE;
         opt_len = (socklen_t)sizeof(struct sctp_paddrparams);
         r = usrsctp_setsockopt(mMasterSocket, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS,
