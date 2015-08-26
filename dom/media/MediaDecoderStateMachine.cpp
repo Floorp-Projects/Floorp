@@ -171,7 +171,6 @@ static int64_t DurationToUsecs(TimeDuration aDuration) {
 
 static const uint32_t MIN_VIDEO_QUEUE_SIZE = 3;
 static const uint32_t MAX_VIDEO_QUEUE_SIZE = 10;
-static const uint32_t SCARCE_VIDEO_QUEUE_SIZE = 1;
 static const uint32_t VIDEO_QUEUE_SEND_TO_COMPOSITOR_SIZE = 9999;
 
 static uint32_t sVideoQueueDefaultSize = MAX_VIDEO_QUEUE_SIZE;
@@ -1710,8 +1709,6 @@ MediaDecoderStateMachine::RequestVideoData()
   bool skipToNextKeyFrame = mSentFirstFrameLoadedEvent &&
     NeedToSkipToNextKeyframe();
   int64_t currentTime = mState == DECODER_STATE_SEEKING ? 0 : GetMediaTime();
-  bool forceDecodeAhead = mSentFirstFrameLoadedEvent && !IsSeeking() &&
-    static_cast<uint32_t>(VideoQueue().GetSize()) <= SCARCE_VIDEO_QUEUE_SIZE;
 
   SAMPLE_LOG("Queueing video task - queued=%i, decoder-queued=%o, skip=%i, time=%lld",
              VideoQueue().GetSize(), mReader->SizeOfVideoQueueInFrames(), skipToNextKeyFrame,
@@ -1721,7 +1718,7 @@ MediaDecoderStateMachine::RequestVideoData()
     mVideoDataRequest.Begin(
       InvokeAsync(DecodeTaskQueue(), mReader.get(), __func__,
                   &MediaDecoderReader::RequestVideoData,
-                  skipToNextKeyFrame, currentTime, forceDecodeAhead)
+                  skipToNextKeyFrame, currentTime)
       ->Then(OwnerThread(), __func__, this,
              &MediaDecoderStateMachine::OnVideoDecoded,
              &MediaDecoderStateMachine::OnVideoNotDecoded));
@@ -1729,7 +1726,7 @@ MediaDecoderStateMachine::RequestVideoData()
     mVideoDataRequest.Begin(
       InvokeAsync(DecodeTaskQueue(), mReader.get(), __func__,
                   &MediaDecoderReader::RequestVideoData,
-                  skipToNextKeyFrame, currentTime, forceDecodeAhead)
+                  skipToNextKeyFrame, currentTime)
       ->Then(OwnerThread(), __func__, mStartTimeRendezvous.get(),
              &StartTimeRendezvous::ProcessFirstSample<VideoDataPromise>,
              &StartTimeRendezvous::FirstSampleRejected<VideoData>)

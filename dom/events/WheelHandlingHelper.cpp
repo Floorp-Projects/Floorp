@@ -218,6 +218,8 @@ WheelTransaction::OnEvent(WidgetEvent* aEvent)
     case NS_DRAGDROP_DROP:
       EndTransaction();
       return;
+    default:
+      break;
   }
 }
 

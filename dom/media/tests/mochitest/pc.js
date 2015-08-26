@@ -1254,62 +1254,6 @@ PeerConnectionWrapper.prototype = {
     return constraints.reduce((sum, c) => sum + (c[type] ? 1 : 0), 0);
   },
 
-  /**
-   * Checks for audio in given offer options.
-   *
-   * @param options
-   *        The options to be examined.
-   */
-  audioInOfferOptions : function(options) {
-    if (!options) {
-      return 0;
-    }
-
-    var offerToReceiveAudio = options.offerToReceiveAudio;
-
-    // TODO: Remove tests of old constraint-like RTCOptions soon (Bug 1064223).
-    if (options.mandatory && options.mandatory.OfferToReceiveAudio !== undefined) {
-      offerToReceiveAudio = options.mandatory.OfferToReceiveAudio;
-    } else if (options.optional && options.optional[0] &&
-               options.optional[0].OfferToReceiveAudio !== undefined) {
-      offerToReceiveAudio = options.optional[0].OfferToReceiveAudio;
-    }
-
-    if (offerToReceiveAudio) {
-      return 1;
-    } else {
-      return 0;
-    }
-  },
-
-  /**
-   * Checks for video in given offer options.
-   *
-   * @param options
-   *        The options to be examined.
-   */
-  videoInOfferOptions : function(options) {
-    if (!options) {
-      return 0;
-    }
-
-    var offerToReceiveVideo = options.offerToReceiveVideo;
-
-    // TODO: Remove tests of old constraint-like RTCOptions soon (Bug 1064223).
-    if (options.mandatory && options.mandatory.OfferToReceiveVideo !== undefined) {
-      offerToReceiveVideo = options.mandatory.OfferToReceiveVideo;
-    } else if (options.optional && options.optional[0] &&
-               options.optional[0].OfferToReceiveVideo !== undefined) {
-      offerToReceiveVideo = options.optional[0].OfferToReceiveVideo;
-    }
-
-    if (offerToReceiveVideo) {
-      return 1;
-    } else {
-      return 0;
-    }
-  },
-
   checkLocalMediaTracks : function() {
     var observed = {};
     info(this + " Checking local tracks " + JSON.stringify(this.expectedLocalTrackInfoById));
@@ -1386,7 +1330,7 @@ PeerConnectionWrapper.prototype = {
 
     var audioTracks =
         this.countTracksInConstraint('audio', offerConstraintsList) ||
-      this.audioInOfferOptions(offerOptions);
+        ((offerOptions && offerOptions.offerToReceiveAudio) ? 1 : 0);
 
     info("expected audio tracks: " + audioTracks);
     if (audioTracks == 0) {
@@ -1401,7 +1345,7 @@ PeerConnectionWrapper.prototype = {
 
     var videoTracks =
         this.countTracksInConstraint('video', offerConstraintsList) ||
-      this.videoInOfferOptions(offerOptions);
+        ((offerOptions && offerOptions.offerToReceiveVideo) ? 1 : 0);
 
     info("expected video tracks: " + videoTracks);
     if (videoTracks == 0) {
@@ -1767,11 +1711,11 @@ PeerConnectionWrapper.prototype = {
       // codec mismatch or other unrecoverable negotiation failures.
       var numAudioTracks =
           this.countTracksInConstraint('audio', offerConstraintsList) ||
-        this.audioInOfferOptions(offerOptions);
+          ((offerOptions && offerOptions.offerToReceiveAudio) ? 1 : 0);
 
       var numVideoTracks =
           this.countTracksInConstraint('video', offerConstraintsList) ||
-        this.videoInOfferOptions(offerOptions);
+          ((offerOptions && offerOptions.offerToReceiveVideo) ? 1 : 0);
 
       var numDataTracks = this.dataChannels.length;
 

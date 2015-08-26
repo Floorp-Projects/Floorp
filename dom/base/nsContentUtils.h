@@ -165,8 +165,8 @@ struct EventNameMapping
   // This holds pointers to nsGkAtoms members, and is therefore safe as a
   // non-owning reference.
   nsIAtom* MOZ_NON_OWNING_REF mAtom;
-  uint32_t mId;
   int32_t  mType;
+  mozilla::EventMessage mMessage;
   mozilla::EventClassID mEventClassID;
 };
 
@@ -1100,13 +1100,13 @@ public:
   static bool IsEventAttributeName(nsIAtom* aName, int32_t aType);
 
   /**
-   * Return the event id for the event with the given name. The name is the
-   * event name with the 'on' prefix. Returns NS_USER_DEFINED_EVENT if the
+   * Return the event message for the event with the given name. The name is
+   * the event name with the 'on' prefix. Returns NS_USER_DEFINED_EVENT if the
    * event doesn't match a known event name.
    *
    * @param aName the event name to look up
    */
-  static uint32_t GetEventId(nsIAtom* aName);
+  static mozilla::EventMessage GetEventMessage(nsIAtom* aName);
 
   /**
    * Return the EventClassID for the event with the given name. The name is the
@@ -1118,7 +1118,7 @@ public:
   static mozilla::EventClassID GetEventClassID(const nsAString& aName);
 
   /**
-   * Return the event id and atom for the event with the given name.
+   * Return the event message and atom for the event with the given name.
    * The name is the event name *without* the 'on' prefix.
    * Returns NS_USER_DEFINED_EVENT on the aEventID if the
    * event doesn't match a known event name in the category.
@@ -1126,9 +1126,9 @@ public:
    * @param aName the event name to look up
    * @param aEventClassID only return event id for aEventClassID
    */
-  static nsIAtom* GetEventIdAndAtom(const nsAString& aName,
-                                    mozilla::EventClassID aEventClassID,
-                                    uint32_t* aEventID);
+  static nsIAtom* GetEventMessageAndAtom(const nsAString& aName,
+                                         mozilla::EventClassID aEventClassID,
+                                         mozilla::EventMessage* aEventMessage);
 
   /**
    * Used only during traversal of the XPCOM graph by the cycle
@@ -1696,16 +1696,12 @@ public:
 
   /**
    * Convert ASCII A-Z to a-z.
-   * @return NS_OK on success, or NS_ERROR_OUT_OF_MEMORY if making the string
-   * writable needs to allocate memory and that allocation fails.
    */
   static void ASCIIToLower(nsAString& aStr);
   static void ASCIIToLower(const nsAString& aSource, nsAString& aDest);
 
   /**
    * Convert ASCII a-z to A-Z.
-   * @return NS_OK on success, or NS_ERROR_OUT_OF_MEMORY if making the string
-   * writable needs to allocate memory and that allocation fails.
    */
   static void ASCIIToUpper(nsAString& aStr);
   static void ASCIIToUpper(const nsAString& aSource, nsAString& aDest);

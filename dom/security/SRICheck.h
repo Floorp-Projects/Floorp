@@ -11,8 +11,8 @@
 #include "nsCOMPtr.h"
 #include "SRIMetadata.h"
 
+class nsIChannel;
 class nsIDocument;
-class nsIHttpChannel;
 class nsIScriptSecurityManager;
 class nsIStreamLoader;
 class nsIURI;
@@ -39,7 +39,7 @@ public:
    * must prevent the resource from loading.
    */
   static nsresult VerifyIntegrity(const SRIMetadata& aMetadata,
-                                  nsIURI* aRequestURI,
+                                  nsIChannel* aChannel,
                                   const CORSMode aCORSMode,
                                   const nsAString& aString,
                                   const nsIDocument* aDocument);
@@ -49,7 +49,7 @@ public:
    * must prevent the resource from loading.
    */
   static nsresult VerifyIntegrity(const SRIMetadata& aMetadata,
-                                  nsIURI* aRequestURI,
+                                  nsIChannel* aChannel,
                                   const CORSMode aCORSMode,
                                   uint32_t aStringLen,
                                   const uint8_t* aString,

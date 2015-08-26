@@ -124,7 +124,7 @@ public:
 
   static void Shutdown();
 
-  static const char* GetEventName(uint32_t aEventType);
+  static const char* GetEventName(EventMessage aEventType);
   static CSSIntPoint GetClientCoords(nsPresContext* aPresContext,
                                      WidgetEvent* aEvent,
                                      LayoutDeviceIntPoint aPoint,

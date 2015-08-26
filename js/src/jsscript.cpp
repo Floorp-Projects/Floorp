@@ -3994,6 +3994,7 @@ LazyScript::CreateRaw(ExclusiveContext* cx, HandleFunction fun,
     p.hasDirectEval = false;
     p.usesArgumentsApplyAndThis = false;
     p.isDerivedClassConstructor = false;
+    p.needsHomeObject = false;
 
     LazyScript* res = LazyScript::CreateRaw(cx, fun, packedFields, begin, end, lineno, column);
     MOZ_ASSERT_IF(res, res->version() == version);

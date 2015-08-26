@@ -82,12 +82,15 @@ namespace
   {
   protected:
     nsRefPtr<nsIContent> mTarget;
-    uint32_t             mMsg;
+    EventMessage         mMsg;
     int32_t              mDetail;
 
   public:
-    AsyncTimeEventRunner(nsIContent* aTarget, uint32_t aMsg, int32_t aDetail)
-      : mTarget(aTarget), mMsg(aMsg), mDetail(aDetail)
+    AsyncTimeEventRunner(nsIContent* aTarget, EventMessage aMsg,
+                         int32_t aDetail)
+      : mTarget(aTarget)
+      , mMsg(aMsg)
+      , mDetail(aDetail)
     {
     }
 
@@ -2365,7 +2368,7 @@ nsSMILTimedElement::NotifyChangedInterval(nsSMILInterval* aInterval,
 }
 
 void
-nsSMILTimedElement::FireTimeEventAsync(uint32_t aMsg, int32_t aDetail)
+nsSMILTimedElement::FireTimeEventAsync(EventMessage aMsg, int32_t aDetail)
 {
   if (!mAnimationElement)
     return;

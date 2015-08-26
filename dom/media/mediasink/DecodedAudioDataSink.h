@@ -7,6 +7,7 @@
 #define DecodedAudioDataSink_h__
 
 #include "AudioSink.h"
+#include "MediaEventSource.h"
 #include "MediaInfo.h"
 #include "mozilla/nsRefPtr.h"
 #include "nsISupportsImpl.h"
@@ -18,6 +19,9 @@
 #include "mozilla/ReentrantMonitor.h"
 
 namespace mozilla {
+
+class AudioStream;
+
 namespace media {
 
 class DecodedAudioDataSink : public AudioSink {
@@ -59,7 +63,7 @@ private:
     AUDIOSINK_STATE_ERROR
   };
 
-  virtual ~DecodedAudioDataSink() {}
+  virtual ~DecodedAudioDataSink();
 
   void DispatchTask(already_AddRefed<nsIRunnable>&& event);
   void SetState(State aState);

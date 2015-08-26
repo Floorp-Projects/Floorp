@@ -16,7 +16,8 @@ DragEvent::DragEvent(EventTarget* aOwner,
                      nsPresContext* aPresContext,
                      WidgetDragEvent* aEvent)
   : MouseEvent(aOwner, aPresContext,
-               aEvent ? aEvent : new WidgetDragEvent(false, 0, nullptr))
+               aEvent ? aEvent :
+                        new WidgetDragEvent(false, NS_EVENT_NULL, nullptr))
 {
   if (aEvent) {
     mEventIsInternal = false;

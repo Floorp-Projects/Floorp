@@ -9,6 +9,7 @@
 
 #include "nsIStructuredCloneContainer.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/StructuredCloneHelper.h"
 
 #define NS_STRUCTUREDCLONECONTAINER_CONTRACTID \
   "@mozilla.org/docshell/structured-clone-container;1"
@@ -20,7 +21,9 @@
   {0xb8, 0x5f, 0x13, 0xce, 0xd8, 0x89, 0xee, 0xec} \
 }
 
-class nsStructuredCloneContainer final : public nsIStructuredCloneContainer
+class nsStructuredCloneContainer final
+  : public nsIStructuredCloneContainer
+  , public mozilla::dom::StructuredCloneHelper
 {
   public:
     nsStructuredCloneContainer();
@@ -30,6 +33,12 @@ class nsStructuredCloneContainer final : public nsIStructuredCloneContainer
 
   private:
     ~nsStructuredCloneContainer();
+
+    enum {
+      eNotInitialized = 0,
+      eInitializedFromJSVal,
+      eInitializedFromBase64,
+    } mState;
 
     uint64_t* mData;
 

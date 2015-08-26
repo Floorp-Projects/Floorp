@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1064223",
+    title: "CreateOffer fails without streams or modern RTCOfferOptions"
+  });
+
+  runNetworkTest(function () {
+    var pc = new mozRTCPeerConnection();
+    var options = { mandatory: { OfferToReceiveVideo: true } }; // obsolete
+
+    pc.createOffer(options).then(() => ok(false, "createOffer must fail"),
+                                 e => is(e.name, "InternalError",
+                                         "createOffer must fail"))
+    .catch(e => ok(false, e.message))
+    .then(() => {
+      pc.close();
+      networkTestFinished();
+    })
+    .catch(e => ok(false, e.message));
+  });
+</script>
+</pre>
+</body>
+</html>

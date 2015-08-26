@@ -17,7 +17,7 @@ TimeEvent::TimeEvent(EventTarget* aOwner,
                      nsPresContext* aPresContext,
                      InternalSMILTimeEvent* aEvent)
   : Event(aOwner, aPresContext,
-          aEvent ? aEvent : new InternalSMILTimeEvent(false, 0))
+          aEvent ? aEvent : new InternalSMILTimeEvent(false, NS_EVENT_NULL))
   , mDetail(mEvent->AsSMILTimeEvent()->detail)
 {
   if (aEvent) {

@@ -6874,6 +6874,14 @@ nsHttpChannel::MarkIntercepted()
     mInterceptCache = INTERCEPTED;
 }
 
+NS_IMETHODIMP
+nsHttpChannel::GetResponseSynthesized(bool* aSynthesized)
+{
+    NS_ENSURE_ARG_POINTER(aSynthesized);
+    *aSynthesized = (mInterceptCache == INTERCEPTED);
+    return NS_OK;
+}
+
 bool
 nsHttpChannel::AwaitingCacheCallbacks()
 {

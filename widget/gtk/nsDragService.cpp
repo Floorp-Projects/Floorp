@@ -784,8 +784,8 @@ nsDragService::GetData(nsITransferable * aTransferable,
                         if (convertedText) {
                             nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
                             nsCOMPtr<nsIURI> fileURI;
-                            nsresult rv = ioService->NewURI(NS_ConvertUTF16toUTF8(convertedText),
-                                                            nullptr, nullptr, getter_AddRefs(fileURI));
+                            rv = ioService->NewURI(NS_ConvertUTF16toUTF8(convertedText),
+                                                   nullptr, nullptr, getter_AddRefs(fileURI));
                             if (NS_SUCCEEDED(rv)) {
                                 nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(fileURI, &rv);
                                 if (NS_SUCCEEDED(rv)) {
@@ -2052,7 +2052,7 @@ nsDragService::DispatchDropEvent()
     if (mTargetWindow->IsDestroyed())
         return FALSE;
 
-    uint32_t msg = mCanDrop ? NS_DRAGDROP_DROP : NS_DRAGDROP_EXIT;
+    EventMessage msg = mCanDrop ? NS_DRAGDROP_DROP : NS_DRAGDROP_EXIT;
 
     mTargetWindow->DispatchDragEvent(msg, mTargetWindowPoint, mTargetTime);
 
