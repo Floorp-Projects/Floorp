@@ -10,10 +10,6 @@
 #include "nsMimeTypes.h"
 #include "mozilla/Preferences.h"
 
-#ifdef MOZ_ANDROID_OMX
-#include "AndroidMediaPluginHost.h"
-#endif
-
 #include "OggDecoder.h"
 #include "OggReader.h"
 #ifdef MOZ_WAVE
@@ -34,7 +30,6 @@
 #include "GStreamerReader.h"
 #endif
 #ifdef MOZ_ANDROID_OMX
-#include "AndroidMediaPluginHost.h"
 #include "AndroidMediaDecoder.h"
 #include "AndroidMediaReader.h"
 #include "AndroidMediaPluginHost.h"
