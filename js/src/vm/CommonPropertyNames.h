@@ -92,6 +92,7 @@
     macro(format, format, "format") \
     macro(frame, frame, "frame") \
     macro(from, from, "from") \
+    macro(gcCycleNumber, gcCycleNumber, "gcCycleNumber") \
     macro(get, get, "get") \
     macro(getInternals, getInternals, "getInternals") \
     macro(getOwnPropertyDescriptor, getOwnPropertyDescriptor, "getOwnPropertyDescriptor") \
