@@ -6,12 +6,10 @@
 
 // Check the position and text content of the highlighter nodeinfo bar.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/inspector/" +
-                 "test/doc_inspector_infobar_01.html";
+const TEST_URI = TEST_URL_ROOT + "doc_inspector_infobar_01.html";
 
 add_task(function*() {
-  yield addTab(TEST_URI);
-  let {inspector} = yield openInspector();
+  let {inspector} = yield openInspectorForURL(TEST_URI);
 
   let testData = [
     {
