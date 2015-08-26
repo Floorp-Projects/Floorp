@@ -4,7 +4,7 @@
 "use strict";
 
 const { Cu, Ci, Cc } = require("chrome");
-const { defer, all, resolve } = require("sdk/core/promise");
+const { defer, all, resolve } = require("promise");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 loader.lazyImporter(this, "ViewHelpers", "resource:///modules/devtools/ViewHelpers.jsm");
