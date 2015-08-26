@@ -1502,12 +1502,12 @@ bool RStringReplace::recover(JSContext* cx, SnapshotIterator& iter) const
     RootedString string(cx, iter.read().toString());
     RootedString pattern(cx, iter.read().toString());
     RootedString replace(cx, iter.read().toString());
-    RootedValue result(cx);
 
-    if (!js::str_replace_string_raw(cx, string, pattern, replace, &result))
+    JSString* result = js::str_replace_string_raw(cx, string, pattern, replace);
+    if (!result)
         return false;
 
-    iter.storeInstructionResult(result);
+    iter.storeInstructionResult(StringValue(result));
     return true;
 }
 
