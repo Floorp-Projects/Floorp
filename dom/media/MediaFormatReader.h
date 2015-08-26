@@ -46,12 +46,12 @@ public:
 
   bool HasVideo() override
   {
-    return mInfo.HasVideo();
+    return mVideo.mTrackDemuxer;
   }
 
   bool HasAudio() override
   {
-    return mInfo.HasAudio();
+    return mAudio.mTrackDemuxer;
   }
 
   nsRefPtr<MetadataPromise> AsyncReadMetadata() override;
