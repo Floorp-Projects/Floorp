@@ -81,6 +81,7 @@ import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.hardware.display.DisplayManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
@@ -107,6 +108,7 @@ import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
+import android.view.Display;
 import android.view.HapticFeedbackConstants;
 import android.view.Surface;
 import android.view.SurfaceView;
@@ -2670,5 +2672,16 @@ public class GeckoAppShell
             return 1;
         }
         return 0;
+    }
+
+    @WrapForJNI
+    static Rect getScreenSize() {
+        DisplayManager dm = (DisplayManager)getContext().getSystemService(Context.DISPLAY_SERVICE);
+        if (dm == null) {
+          return new Rect(0, 0, 0, 0);
+        }
+
+        Display disp = dm.getDisplay(Display.DEFAULT_DISPLAY);
+        return new Rect(0, 0, disp.getWidth(), disp.getHeight());
     }
 }
