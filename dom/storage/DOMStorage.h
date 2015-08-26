@@ -18,7 +18,6 @@
 
 class nsIPrincipal;
 class nsIDOMWindow;
-class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
@@ -123,7 +122,7 @@ public:
   // It is an optimization since the privileges check and session only
   // state determination are complex and share the code (comes hand in
   // hand together).
-  static bool CanUseStorage(nsPIDOMWindow* aWindow, DOMStorage* aStorage = nullptr);
+  static bool CanUseStorage(DOMStorage* aStorage = nullptr);
 
   bool IsPrivate() const { return mIsPrivate; }
   bool IsSessionOnly() const { return mIsSessionOnly; }

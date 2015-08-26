@@ -49,9 +49,7 @@ function todo(a, b, message)
 
 function finishTest()
 {
-  try {
-    localStorage.clear();
-  } catch (e) {}
+  localStorage.clear();
   postMsg("done");
   return false;
 }
