@@ -14,12 +14,17 @@ add_task(function*() {
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   let toolbox = yield gDevTools.showToolbox(target, "inspector");
+
+  // Wait for the inspector to be initialized
+  yield toolbox.getPanel("inspector").once("inspector-updated");
+
   info("inspector opened");
 
   info("testing the tilt button");
   yield testButton(toolbox, Telemetry);
 
   stopRecordingTelemetryLogs(Telemetry);
+
   yield gDevTools.closeToolbox(target);
   gBrowser.removeCurrentTab();
 });
@@ -31,6 +36,7 @@ function* testButton(toolbox, Telemetry) {
   ok(button, "Captain, we have the button");
 
   yield delayedClicks(button, 4)
+
   checkResults("_TILT_", Telemetry);
 }
 
@@ -40,15 +46,30 @@ function delayedClicks(node, clicks) {
 
     // See TOOL_DELAY for why we need setTimeout here
     setTimeout(function delayedClick() {
-      info("Clicking button " + node.id);
-      node.click();
-      clicked++;
-
       if (clicked >= clicks) {
-        resolve(node);
-      } else {
-        setTimeout(delayedClick, TOOL_DELAY);
+        resolve();
+        return;
       }
+      info("Clicking button " + node.id);
+
+      // Depending on odd/even click we are either opening
+      // or closing tilt
+      let event;
+      if (clicked % 2 == 0) {
+        info("Waiting for opening\n");
+        event = "tilt-initialized";
+      } else {
+        dump("Waiting for closing\n");
+        event = "tilt-destroyed";
+      }
+      let f = function () {
+        Services.obs.removeObserver(f, event, false);
+        setTimeout(delayedClick, 200);
+      };
+      Services.obs.addObserver(f, event, false);
+
+      clicked++;
+      node.click();
     }, TOOL_DELAY);
   });
 }
