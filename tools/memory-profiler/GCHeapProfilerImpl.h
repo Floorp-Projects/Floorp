@@ -21,9 +21,9 @@ public:
   GCHeapProfilerImpl();
   ~GCHeapProfilerImpl() override;
 
-  u_vector<u_string> GetNames() const override;
-  u_vector<TrieNode> GetTraces() const override;
-  const u_vector<AllocEvent>& GetEvents() const override;
+  nsTArray<nsCString> GetNames() const override;
+  nsTArray<TrieNode> GetTraces() const override;
+  const nsTArray<AllocEvent>& GetEvents() const override;
 
   void reset() override;
   void sampleTenured(void* addr, uint32_t size) override;
@@ -44,7 +44,7 @@ private:
   AllocMap mTenuredEntriesFG;
   AllocMap mTenuredEntriesBG;
 
-  u_vector<AllocEvent> mAllocEvents;
+  nsTArray<AllocEvent> mAllocEvents;
   CompactTraceTable mTraceTable;
 };
 
