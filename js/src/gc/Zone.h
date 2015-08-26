@@ -125,7 +125,8 @@ struct Zone : public JS::shadow::Zone,
 
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 size_t* typePool,
-                                size_t* baselineStubsOptimized);
+                                size_t* baselineStubsOptimized,
+                                size_t* uniqueIdMap);
 
     void resetGCMallocBytes();
     void setGCMaxMallocBytes(size_t value);
