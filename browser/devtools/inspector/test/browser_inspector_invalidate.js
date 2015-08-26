@@ -11,26 +11,22 @@ const TEST_URI = "data:text/html;charset=utf-8," +
   "<div style=\"width: 100px; height: 100px; background:yellow;\"></div>";
 
 add_task(function*() {
-  let {toolbox, inspector} = yield openInspectorForURL(TEST_URI);
-  let div = getNode("div");
+  let {toolbox, inspector, testActor} = yield openInspectorForURL(TEST_URI);
   let divFront = yield getNodeFront("div", inspector);
 
   info("Waiting for highlighter to activate");
   yield inspector.toolbox.highlighter.showBoxModel(divFront);
 
-  let rect = yield getSimpleBorderRect(toolbox);
+  let rect = yield testActor.getSimpleBorderRect();
   is(rect.width, 100, "The highlighter has the right width.");
 
   info("Changing the test element's size and waiting for the highlighter to update");
-  let {actorID, connPrefix} = getHighlighterActorID(toolbox.highlighter);
-  yield executeInContent("Test:ChangeHighlightedNodeWaitForUpdate", {
-    name: "style",
-    value: "width: 200px; height: 100px; background:yellow;",
-    actorID,
-    connPrefix
-  });
+  yield testActor.changeHighlightedNodeWaitForUpdate(
+    "style",
+    "width: 200px; height: 100px; background:yellow;"
+  );
 
-  rect = yield getSimpleBorderRect(toolbox);
+  rect = yield testActor.getSimpleBorderRect();
   is(rect.width, 200, "The highlighter has the right width after update");
 
   info("Waiting for highlighter to hide");

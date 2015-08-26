@@ -6,26 +6,22 @@
 // Test that the inspector has the correct pseudo-class locking menu items and
 // that these items actually work
 
-const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 const TEST_URI = "data:text/html;charset=UTF-8," +
-                 "pseudo-class lock node menu tests";
+                 "pseudo-class lock node menu tests" +
+                 "<div>test div</div>";
 const PSEUDOS = ["hover", "active", "focus"];
 
 add_task(function*() {
-  let {inspector} = yield openInspectorForURL(TEST_URI);
-
-  info("Creating the test element");
-  let div = content.document.createElement("div");
-  div.textContent = "test div";
-  content.document.body.appendChild(div);
-
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URI);
   yield selectNode("div", inspector);
 
   info("Getting the inspector ctx menu and opening it");
   let menu = inspector.panelDoc.getElementById("inspector-node-popup");
   yield openMenu(menu);
 
-  yield testMenuItems(div, menu, inspector);
+  yield testMenuItems(testActor, menu, inspector);
+
+  menu.hidePopup();
 });
 
 function openMenu(menu) {
@@ -34,7 +30,7 @@ function openMenu(menu) {
   return promise;
 }
 
-function* testMenuItems(div, menu, inspector) {
+function* testMenuItems(testActor, menu, inspector) {
   for (let pseudo of PSEUDOS) {
     let menuitem = inspector.panelDoc.getElementById("node-menu-pseudo-" + pseudo);
     ok(menuitem, ":" + pseudo + " menuitem exists");
@@ -52,9 +48,7 @@ function* testMenuItems(div, menu, inspector) {
     yield onRefresh;
     yield onMutations;
 
-    let {data: hasLock} = yield executeInContent("Test:HasPseudoClassLock",
-                                                 {pseudo: ":" + pseudo},
-                                                 {node: div});
+    let hasLock = yield testActor.hasPseudoClassLock("div", ":" + pseudo);
     ok(hasLock, "pseudo-class lock has been applied");
   }
 }

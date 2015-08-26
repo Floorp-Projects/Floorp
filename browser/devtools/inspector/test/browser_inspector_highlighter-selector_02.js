@@ -31,7 +31,7 @@ const TEST_DATA = [{
 }];
 
 add_task(function*() {
-  let {inspector, toolbox} = yield openInspectorForURL(TEST_URL);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
   let highlighter = yield front.getHighlighterByType("SelectorHighlighter");
 
@@ -48,9 +48,7 @@ add_task(function*() {
 
     yield highlighter.show(contextNode, {selector});
 
-    let {actorID, connPrefix} = getHighlighterActorID(highlighter);
-    let {data: nb} = yield executeInContent("Test:GetSelectorHighlighterBoxNb",
-                                            {actorID, connPrefix});
+    let nb = yield testActor.getSelectorHighlighterBoxNb(highlighter.actorID);
     ok(nb !== null, "The number of highlighters was retrieved");
 
     is(nb, containerCount, "The correct number of highlighers were created");
