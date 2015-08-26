@@ -307,9 +307,15 @@ public:
     : InputData(PANGESTURE_INPUT, aTime, aTimeStamp, aModifiers),
       mType(aType),
       mPanStartPoint(aPanStartPoint),
-      mPanDisplacement(aPanDisplacement)
+      mPanDisplacement(aPanDisplacement),
+      mLineOrPageDeltaX(0),
+      mLineOrPageDeltaY(0)
   {
   }
+
+  bool IsMomentum() const;
+
+  WidgetWheelEvent ToWidgetWheelEvent(nsIWidget* aWidget) const;
 
   bool TransformToLocal(const gfx::Matrix4x4& aTransform);
 
@@ -323,6 +329,10 @@ public:
   // coordinates of the APZC receiving the pan. These are set and used by APZ.
   ParentLayerPoint mLocalPanStartPoint;
   ParentLayerPoint mLocalPanDisplacement;
+
+  // See lineOrPageDeltaX/Y on WidgetWheelEvent.
+  int32_t mLineOrPageDeltaX;
+  int32_t mLineOrPageDeltaY;
 };
 
 /**
@@ -503,9 +513,13 @@ public:
      mScrollMode(aScrollMode),
      mOrigin(aOrigin),
      mDeltaX(aDeltaX),
-     mDeltaY(aDeltaY)
+     mDeltaY(aDeltaY),
+     mLineOrPageDeltaX(0),
+     mLineOrPageDeltaY(0),
+     mIsMomentum(false)
   {}
 
+  WidgetWheelEvent ToWidgetWheelEvent(nsIWidget* aWidget) const;
   bool TransformToLocal(const gfx::Matrix4x4& aTransform);
 
   ScrollDeltaType mDeltaType;
@@ -525,6 +539,12 @@ public:
   // The location of the scroll in local coordinates. This is set and used by
   // APZ.
   ParentLayerPoint mLocalOrigin;
+
+  // See lineOrPageDeltaX/Y on WidgetWheelEvent.
+  int32_t mLineOrPageDeltaX;
+  int32_t mLineOrPageDeltaY;
+
+  bool mIsMomentum;
 };
 
 } // namespace mozilla
