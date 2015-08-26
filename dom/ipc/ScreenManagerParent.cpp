@@ -169,6 +169,10 @@ ScreenManagerParent::RecvScreenForBrowser(const TabId& aTabId,
 bool
 ScreenManagerParent::ExtractScreenDetails(nsIScreen* aScreen, ScreenDetails &aDetails)
 {
+  if (!aScreen) {
+    return false;
+  }
+
   uint32_t id;
   nsresult rv = aScreen->GetId(&id);
   NS_ENSURE_SUCCESS(rv, false);
