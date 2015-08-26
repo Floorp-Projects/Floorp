@@ -27,6 +27,9 @@ function handleRequest(request, response) {
     data += str.value;
   } while (read != 0);
 
+  // No scheme is provided in data URIs, so explicitly provide one
+  data = data.replace('//example.com', 'http://example.com');
+
   // Write out the file as a data: URI, and redirect to it
   response.setStatusLine('1.1', 302, 'Found');
   response.setHeader('Location', 'data:text/html,' + encodeURIComponent(data) + "#nullprincipal");
