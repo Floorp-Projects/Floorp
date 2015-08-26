@@ -45,6 +45,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <numeric>
 #include <vector>
 
 //---------------------------------------------------------------------------
