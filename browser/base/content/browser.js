@@ -4881,7 +4881,9 @@ nsBrowserAccess.prototype = {
     if (aOpener && aOpener.document) {
       referrerPolicy = aOpener.document.referrerPolicy;
     }
-    let isPrivate = PrivateBrowsingUtils.isWindowPrivate(aOpener || window);
+    let isPrivate = aOpener
+                  ? PrivateBrowsingUtils.isContentWindowPrivate(aOpener)
+                  : PrivateBrowsingUtils.isWindowPrivate(window);
 
     switch (aWhere) {
       case Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW :
