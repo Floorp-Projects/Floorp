@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en-US" reftest-zoom="1.0">
+<head>
+  <title>Testcase, bug 1157984</title>
+  <meta charset=UTF-8>
+  <style type="text/css">
+
+  #outer {
+    position:absolute;
+    width: 60px;
+    height: 60px;
+    perspective-origin: 300px 300px;
+    perspective: 300px;
+    overflow: hidden;
+  }
+
+  #inner {
+    position:absolute;
+    background-color: green;
+    width: 600px;
+    height: 600px;
+    transform-origin: 300px 300px 0px;
+    transform: translateZ(300px) rotateY(-2rad) translateZ(300px);
+  }
+  </style>
+</head>
+<body>
+  <div id="outer">
+    <div id="inner"></div>
+  </div>
+</body>
+</html>
