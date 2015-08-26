@@ -85,6 +85,13 @@ endif
 DEFINES += -DBINPATH=$(BINPATH)
 DEFINES += -DRESPATH=$(RESPATH)
 
+LPROJ_ROOT = $(firstword $(subst -, ,$(AB_CD)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+ifeq (zh-TW,$(AB_CD))
+LPROJ_ROOT := $(subst -,_,$(AB_CD))
+endif
+endif
+DEFINES += -DLPROJ_ROOT=$(LPROJ_ROOT)
 
 ifneq (,$(filter WINNT Darwin Android,$(OS_TARGET)))
 DEFINES += -DMOZ_SHARED_MOZGLUE=1
