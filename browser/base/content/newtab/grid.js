@@ -9,6 +9,7 @@
  */
 const GRID_BOTTOM_EXTRA = 7; // title's line-height extends 7px past the margin
 const GRID_WIDTH_EXTRA = 1; // provide 1px buffer to allow for rounding error
+const SPONSORED_TAG_BUFFER = 2; // 2px buffer to clip off top of sponsored tag
 
 /**
  * This singleton represents the grid that contains all sites.
@@ -176,6 +177,15 @@ let gGrid = {
   },
 
   /**
+   * Test a tile at a given position for being pinned or history
+   * @param position Position in sites array
+   */
+  _isHistoricalTile: function Grid_isHistoricalTile(aPos) {
+    let site = this.sites[aPos];
+    return site && (site.isPinned() || site.link && site.link.type == "history");
+  },
+
+  /**
    * Make sure the correct number of rows and columns are visible
    */
   _resizeGrid: function Grid_resizeGrid() {
@@ -195,9 +205,50 @@ let gGrid = {
         parseFloat(getComputedStyle(refCell).marginBottom);
       this._cellWidth = refCell.offsetWidth + this._cellMargin;
     }
-    this._node.style.height = this._computeHeight() + "px";
-    this._node.style.maxHeight = this._node.style.height;
+
+    let searchContainer = document.querySelector("#newtab-search-container");
+    // Save search-container margin height
+    if (this._searchContainerMargin  === undefined) {
+      this._searchContainerMargin = parseFloat(getComputedStyle(searchContainer).marginBottom) +
+                                    parseFloat(getComputedStyle(searchContainer).marginTop);
+    }
+
+    // Find the number of rows we can place into view port
+    let availHeight = document.documentElement.clientHeight - this._cellMargin -
+                      searchContainer.offsetHeight - this._searchContainerMargin;
+    let visibleRows = Math.floor(availHeight / this._cellHeight);
+
+    // Find the number of columns that fit into view port
+    let maxGridWidth = gGridPrefs.gridColumns * this._cellWidth + GRID_WIDTH_EXTRA;
+    // available width is current grid width, but no greater than maxGridWidth
+    let availWidth = Math.min(document.querySelector("#newtab-grid").clientWidth,
+                              maxGridWidth);
+    // finally get the number of columns we can fit into view port
+    let gridColumns =  Math.floor(availWidth / this._cellWidth);
+    // walk sites backwords until a pinned or history tile is found or visibleRows reached
+    let tileIndex = Math.min(gGridPrefs.gridRows * gridColumns, this.sites.length) - 1;
+    while (tileIndex >= visibleRows * gridColumns) {
+      if (this._isHistoricalTile(tileIndex)) {
+        break;
+      }
+      tileIndex --;
+    }
+
+    // Compute the actual number of grid rows we will display (potentially
+    // with a scroll bar). tileIndex now points to a historical tile with
+    // heighest index or to the last index of the visible row, if none found
+    // Dividing tileIndex by number of tiles in a column gives the rows
+    let gridRows = Math.floor(tileIndex / gridColumns) + 1;
+
+    // we need to set grid width, for otherwise the scrollbar may shrink
+    // the grid when shown and cause grid layout to be different from
+    // what being computed above. This, in turn, may cause scrollbar shown
+    // for directory tiles, and introduce jitter when grid width is aligned
+    // exactly on the column boundary
+    this._node.style.width = gridColumns * this._cellWidth + "px";
     this._node.style.maxWidth = gGridPrefs.gridColumns * this._cellWidth +
                                 GRID_WIDTH_EXTRA + "px";
+    this._node.style.height = this._computeHeight() + "px";
+    this._node.style.maxHeight = this._computeHeight(gridRows) - SPONSORED_TAG_BUFFER + "px";
   }
 };
