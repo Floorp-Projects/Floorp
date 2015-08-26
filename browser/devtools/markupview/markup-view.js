@@ -330,17 +330,24 @@ MarkupView.prototype = {
   _clearBriefBoxModelTimer: function() {
     if (this._briefBoxModelTimer) {
       clearTimeout(this._briefBoxModelTimer);
+      this._briefBoxModelPromise.resolve();
+      this._briefBoxModelPromise = null;
       this._briefBoxModelTimer = null;
     }
   },
 
   _brieflyShowBoxModel: function(nodeFront) {
     this._clearBriefBoxModelTimer();
-    this._showBoxModel(nodeFront);
+    let onShown = this._showBoxModel(nodeFront);
+    this._briefBoxModelPromise = promise.defer();
 
     this._briefBoxModelTimer = setTimeout(() => {
-      this._hideBoxModel();
+      this._hideBoxModel()
+          .then(this._briefBoxModelPromise.resolve,
+                this._briefBoxModelPromise.resolve);
     }, NEW_SELECTION_HIGHLIGHTER_TIMER);
+
+    return promise.all([onShown, this._briefBoxModelPromise.promise]);
   },
 
   template: function(aName, aDest, aOptions={stack: "markup-view.xhtml"}) {
@@ -447,13 +454,14 @@ MarkupView.prototype = {
     }
 
     let done = this._inspector.updating("markup-view");
+    let onShowBoxModel, onShow;
 
     // Highlight the element briefly if needed.
     if (this._shouldNewSelectionBeHighlighted()) {
-      this._brieflyShowBoxModel(selection.nodeFront);
+      onShowBoxModel = this._brieflyShowBoxModel(selection.nodeFront);
     }
 
-    this.showNode(selection.nodeFront).then(() => {
+    onShow = this.showNode(selection.nodeFront).then(() => {
       // We could be destroyed by now.
       if (this._destroyer) {
         return promise.reject("markupview destroyed");
@@ -464,8 +472,6 @@ MarkupView.prototype = {
 
       // Make sure the new selection receives focus so the keyboard can be used.
       this.maybeFocusNewSelection();
-
-      done();
     }).catch(e => {
       if (!this._destroyer) {
         console.error(e);
@@ -473,9 +479,9 @@ MarkupView.prototype = {
         console.warn("Could not mark node as selected, the markup-view was " +
           "destroyed while showing the node.");
       }
-
-      done();
     });
+
+    promise.all([onShowBoxModel, onShow]).then(done);
   },
 
   /**
