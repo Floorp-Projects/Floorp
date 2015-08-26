@@ -52,6 +52,7 @@
 #include "gfxGraphiteShaper.h"
 #include "gfx2DGlue.h"
 #include "gfxGradientCache.h"
+#include "gfxUtils.h" // for NextPowerOfTwo
 
 #include "nsUnicodeRange.h"
 #include "nsServiceManagerUtils.h"
@@ -394,6 +395,7 @@ gfxPlatform::gfxPlatform()
   , mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureBackendInfo)
   , mApzSupportCollector(this, &gfxPlatform::GetApzSupportInfo)
   , mCompositorBackend(layers::LayersBackend::LAYERS_NONE)
+  , mScreenDepth(0)
 {
     mAllowDownloadableFonts = UNINITIALIZED_VALUE;
     mFallbackUsesCmaps = UNINITIALIZED_VALUE;
@@ -1025,41 +1027,26 @@ gfxPlatform::ComputeTileSize()
   int32_t w = gfxPrefs::LayersTileWidth();
   int32_t h = gfxPrefs::LayersTileHeight();
 
-  // TODO We may want to take the screen size into consideration here.
   if (gfxPrefs::LayersTilesAdjust()) {
+    gfx::IntSize screenSize = GetScreenSize();
+    if (screenSize.width > 0) {
+      // FIXME: we should probably make sure this is within the max texture size,
+      // but I think everything should at least support 1024
+      w = h = std::max(std::min(NextPowerOfTwo(screenSize.width) / 2, 1024), 256);
+    }
+
 #ifdef MOZ_WIDGET_GONK
-    int32_t format = android::PIXEL_FORMAT_RGBA_8888;
     android::sp<android::GraphicBuffer> alloc =
-      new android::GraphicBuffer(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight(),
-                                 format,
-                                 android::GraphicBuffer::USAGE_SW_READ_OFTEN |
-                                 android::GraphicBuffer::USAGE_SW_WRITE_OFTEN |
-                                 android::GraphicBuffer::USAGE_HW_TEXTURE);
+          new android::GraphicBuffer(w, h, android::PIXEL_FORMAT_RGBA_8888,
+                                     android::GraphicBuffer::USAGE_SW_READ_OFTEN |
+                                     android::GraphicBuffer::USAGE_SW_WRITE_OFTEN |
+                                     android::GraphicBuffer::USAGE_HW_TEXTURE);
 
     if (alloc.get()) {
       w = alloc->getStride(); // We want the tiles to be gralloc stride aligned.
-      // No need to adjust the height here.
     }
 #endif
   }
-
-#ifdef XP_MACOSX
-  // Use double sized tiles for HiDPI screens.
-  nsCOMPtr<nsIScreenManager> screenManager =
-    do_GetService("@mozilla.org/gfx/screenmanager;1");
-  if (screenManager) {
-    nsCOMPtr<nsIScreen> primaryScreen;
-    screenManager->GetPrimaryScreen(getter_AddRefs(primaryScreen));
-    double scaleFactor = 1.0;
-    if (primaryScreen) {
-      primaryScreen->GetContentsScaleFactor(&scaleFactor);
-    }
-    if (scaleFactor > 1.0) {
-      w *= 2;
-      h *= 2;
-    }
-  }
-#endif
 
   SetTileSize(w, h);
 }
@@ -1072,7 +1059,10 @@ gfxPlatform::PopulateScreenInfo()
 
   nsCOMPtr<nsIScreen> screen;
   manager->GetPrimaryScreen(getter_AddRefs(screen));
-  MOZ_ASSERT(screen, "failed to get primary screen");
+  if (!screen) {
+    // This can happen in xpcshell, for instance
+    return;
+  }
 
   screen->GetColorDepth(&mScreenDepth);
 
