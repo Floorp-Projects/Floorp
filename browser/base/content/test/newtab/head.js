@@ -785,3 +785,11 @@ function customizeNewTabPage(aTheme) {
 
   promise.then(TestRunner.next);
 }
+
+/**
+ * Reports presence of a scrollbar
+ */
+function hasScrollbar() {
+  let docElement = getContentDocument().documentElement;
+  return docElement.scrollHeight > docElement.clientHeight;
+}
