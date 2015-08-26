@@ -1951,6 +1951,20 @@ protected:
     SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 500, 500));
   }
 
+  void CreateSimpleDTCScrollingLayer() {
+    const char* layerTreeSyntax = "t";
+    nsIntRegion layerVisibleRegion[] = {
+      nsIntRegion(IntRect(0,0,200,200)),
+    };
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 500, 500));
+
+    EventRegions regions;
+    regions.mHitRegion = nsIntRegion(IntRect(0, 0, 200, 200));
+    regions.mDispatchToContentHitRegion = regions.mHitRegion;
+    layers[0]->SetEventRegions(regions);
+  }
+
   void CreateSimpleMultiLayerTree() {
     const char* layerTreeSyntax = "c(tt)";
     // LayerID                     0 12
@@ -2347,6 +2361,22 @@ TEST_F(APZCTreeManagerTester, Bug1194876) {
   // otherwise it will do things like dispatch spurious long-tap events.
 
   EXPECT_CALL(*mcc, HandleLongTap(_, _, _, _)).Times(0);
+}
+
+TEST_F(APZCTreeManagerTester, Bug1198900) {
+  // This is just a test that cancels a wheel event to make sure it doesn't
+  // crash.
+  CreateSimpleDTCScrollingLayer();
+  ScopedLayerTreeRegistration registration(0, root, mcc);
+  manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+
+  ScreenPoint origin(100, 50);
+  ScrollWheelInput swi(MillisecondsSinceStartup(mcc->Time()), mcc->Time(), 0,
+    ScrollWheelInput::SCROLLMODE_INSTANT, ScrollWheelInput::SCROLLDELTA_PIXEL,
+    origin, 0, 10);
+  uint64_t blockId;
+  manager->ReceiveInputEvent(swi, nullptr, &blockId);
+  manager->ContentReceivedInputBlock(blockId, /* preventDefault= */ true);
 }
 
 TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
