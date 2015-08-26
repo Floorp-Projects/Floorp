@@ -45,6 +45,10 @@ DecodedAudioDataSink::DecodedAudioDataSink(MediaQueue<MediaData>& aAudioQueue,
 {
 }
 
+DecodedAudioDataSink::~DecodedAudioDataSink()
+{
+}
+
 void
 DecodedAudioDataSink::SetState(State aState)
 {
