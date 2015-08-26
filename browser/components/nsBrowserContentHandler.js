@@ -267,11 +267,20 @@ function getMostRecentWindow(aType) {
   return wm.getMostRecentWindow(aType);
 }
 
+function logSystemBasedSearch(engine) {
+  var countId = (engine.identifier || ("other-" + engine.name)) + ".system";
+  var count = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
+  count.add(countId);
+}
+
 function doSearch(searchTerm, cmdLine) {
   var ss = Components.classes["@mozilla.org/browser/search-service;1"]
                      .getService(nsIBrowserSearchService);
 
-  var submission = ss.defaultEngine.getSubmission(searchTerm, null, "system");
+  var engine = ss.defaultEngine;
+  logSystemBasedSearch(engine);
+
+  var submission = engine.getSubmission(searchTerm, null, "system");
 
   // fill our nsISupportsArray with uri-as-wstring, null, null, postData
   var sa = Components.classes["@mozilla.org/supports-array;1"]
@@ -789,7 +798,9 @@ nsDefaultCommandLineHandler.prototype = {
               var term = params.get("q");
               var ss = Components.classes["@mozilla.org/browser/search-service;1"]
                                  .getService(nsIBrowserSearchService);
-              var submission = ss.defaultEngine.getSubmission(term, null, "system");
+              var engine = ss.defaultEngine;
+              logSystemBasedSearch(engine);
+              var submission = engine.getSubmission(term, null, "system");
               uri = submission.uri;
             }
           } catch (e) {
