@@ -8,7 +8,7 @@ package org.mozilla.gecko.toolbar;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.animation.Rotate3DAnimation;
-import org.mozilla.gecko.widget.ThemedTextSwitcher;
+import org.mozilla.gecko.widget.themed.ThemedTextSwitcher;
 
 import android.content.Context;
 import android.content.res.TypedArray;

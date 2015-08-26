@@ -4,16 +4,12 @@
 
 package org.mozilla.gecko.toolbar;
 
-import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.lwt.LightweightThemeDrawable;
-import org.mozilla.gecko.tabs.TabCurve;
 import org.mozilla.gecko.util.ColorUtils;
-import org.mozilla.gecko.widget.ThemedImageButton;
+import org.mozilla.gecko.widget.themed.ThemedImageButton;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
