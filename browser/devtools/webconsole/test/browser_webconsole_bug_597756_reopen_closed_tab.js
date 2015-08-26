@@ -16,12 +16,18 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
 let HUD;
 
 let test = asyncTest(function* () {
-  expectUncaughtException();
+  // On e10s, the exception is triggered in child process
+  // and is ignored by test harness
+  if (!Services.appinfo.browserTabsRemoteAutostart) {
+    expectUncaughtException();
+  }
 
   let { browser } = yield loadTab(TEST_URI);
   HUD = yield openConsole();
 
-  expectUncaughtException();
+  if (!Services.appinfo.browserTabsRemoteAutostart) {
+    expectUncaughtException();
+  }
 
   yield reload(browser);
 
@@ -32,12 +38,16 @@ let test = asyncTest(function* () {
   // Close and reopen
   gBrowser.removeCurrentTab();
 
-  expectUncaughtException();
+  if (!Services.appinfo.browserTabsRemoteAutostart) {
+    expectUncaughtException();
+  }
 
   let tab = yield loadTab(TEST_URI);
   HUD = yield openConsole();
 
-  expectUncaughtException();
+  if (!Services.appinfo.browserTabsRemoteAutostart) {
+    expectUncaughtException();
+  }
 
   yield reload(tab.browser);
 
