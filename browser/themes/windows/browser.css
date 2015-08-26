@@ -1255,6 +1255,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
       box-shadow: 0 1px 0 hsla(0,0%,0%,.01) inset,
                   0 1px 0 hsla(0,0%,100%,.1);
     }
+
+    #urlbar:not(:-moz-lwtheme):hover,
+    .searchbar-textbox:not(:-moz-lwtheme):hover {
+      border-color: hsla(210,54%,20%,.35) hsla(210,54%,20%,.37) hsla(210,54%,20%,.4);
+    }
   }
 
   @media (-moz-os-version: windows-win10) {
@@ -1312,8 +1317,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   color: black;
 }
 
-#urlbar:-moz-lwtheme:hover:not([focused]):not([readonly]),
-.searchbar-textbox:-moz-lwtheme:hover:not([focused]) {
+#urlbar:-moz-lwtheme:hover:not([readonly]),
+.searchbar-textbox:-moz-lwtheme:hover {
   background-color: rgba(255,255,255,.9);
 }
 

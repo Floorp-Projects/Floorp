@@ -68,16 +68,6 @@
     .tab-background-middle[visuallyselected=true]:not(:-moz-lwtheme) {
       background-color: @customToolbarColor@;
     }
-
-    #urlbar:not(:-moz-lwtheme):not([focused]):hover,
-    .searchbar-textbox:not(:-moz-lwtheme):not([focused]):hover {
-      border-color: hsla(210,54%,20%,.35) hsla(210,54%,20%,.37) hsla(210,54%,20%,.4);
-    }
-
-    #urlbar:not(:-moz-lwtheme)[focused],
-    .searchbar-textbox:not(:-moz-lwtheme)[focused] {
-      border-color: hsla(206,100%,60%,.65) hsla(206,100%,55%,.65) hsla(206,100%,50%,.65);
-    }
   }
 }
 
