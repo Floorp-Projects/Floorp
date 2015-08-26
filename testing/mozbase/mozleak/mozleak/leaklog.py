@@ -5,7 +5,10 @@
 
 import os
 import re
+import sys
 
+import mozinfo
+import mozrunner.utils
 
 def _raw_log():
     import logging
@@ -13,7 +16,8 @@ def _raw_log():
 
 
 def process_single_leak_file(leakLogFileName, processType, leakThreshold,
-                             ignoreMissingLeaks, log=None):
+                             ignoreMissingLeaks, log=None,
+                             stackFixer=None):
     """Process a single leak log.
     """
 
@@ -44,7 +48,8 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
             matches = lineRe.match(line)
             if not matches:
                 # eg: the leak table header row
-                log.info(line.rstrip())
+                strippedLine = line.rstrip()
+                log.info(stackFixer(strippedLine) if stackFixer else strippedLine)
                 continue
             name = matches.group("name").rstrip()
             size = int(matches.group("size"))
@@ -136,7 +141,8 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
 
 
 def process_leak_log(leak_log_file, leak_thresholds=None,
-                     ignore_missing_leaks=None, log=None):
+                     ignore_missing_leaks=None, log=None,
+                     stack_fixer=None):
     """Process the leak log, including separate leak logs created
     by child processes.
 
@@ -206,4 +212,4 @@ def process_leak_log(leak_log_file, leak_thresholds=None,
             leakThreshold = leakThresholds.get(processType, 0)
             process_single_leak_file(thisFile, processType, leakThreshold,
                                      processType in ignoreMissingLeaks,
-                                     log=log)
+                                     log=log, stackFixer=stack_fixer)
