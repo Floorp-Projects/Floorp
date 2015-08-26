@@ -6,9 +6,7 @@
 
 #include "GCHeapProfilerImpl.h"
 
-#include "mozilla/TimeStamp.h"
-
-#include "prlock.h"
+#include "UncensoredAllocator.h"
 
 namespace mozilla {
 
@@ -25,19 +23,19 @@ GCHeapProfilerImpl::~GCHeapProfilerImpl()
   }
 }
 
-u_vector<u_string>
+nsTArray<nsCString>
 GCHeapProfilerImpl::GetNames() const
 {
   return mTraceTable.GetNames();
 }
 
-u_vector<TrieNode>
+nsTArray<TrieNode>
 GCHeapProfilerImpl::GetTraces() const
 {
   return mTraceTable.GetTraces();
 }
 
-const u_vector<AllocEvent>&
+const nsTArray<AllocEvent>&
 GCHeapProfilerImpl::GetEvents() const
 {
   return mAllocEvents;
@@ -47,10 +45,10 @@ void
 GCHeapProfilerImpl::reset()
 {
   mTraceTable.Reset();
-  mAllocEvents.clear();
-  mNurseryEntries.clear();
-  mTenuredEntriesFG.clear();
-  mTenuredEntriesBG.clear();
+  mAllocEvents.Clear();
+  mNurseryEntries.Clear();
+  mTenuredEntriesFG.Clear();
+  mTenuredEntriesBG.Clear();
 }
 
 void
@@ -68,22 +66,25 @@ GCHeapProfilerImpl::sampleNursery(void* addr, uint32_t size)
 void
 GCHeapProfilerImpl::markTenuredStart()
 {
+  AutoUseUncensoredAllocator ua;
   AutoMPLock lock(mLock);
   if (!mMarking) {
     mMarking = true;
-    Swap(mTenuredEntriesFG, mTenuredEntriesBG);
-    MOZ_ASSERT(mTenuredEntriesFG.empty());
+    mTenuredEntriesFG.SwapElements(mTenuredEntriesBG);
+    MOZ_ASSERT(mTenuredEntriesFG.Count() == 0);
   }
 }
 
 void
 GCHeapProfilerImpl::markTenured(void* addr)
 {
+  AutoUseUncensoredAllocator ua;
   AutoMPLock lock(mLock);
   if (mMarking) {
-    auto res = mTenuredEntriesBG.find(addr);
-    if (res != mTenuredEntriesBG.end()) {
-      res->second.mMarked = true;
+    AllocEntry entry;
+    if (mTenuredEntriesBG.Get(addr, &entry)) {
+      entry.mMarked = true;
+      mTenuredEntriesBG.Put(addr, entry);
     }
   }
 }
@@ -91,72 +92,76 @@ GCHeapProfilerImpl::markTenured(void* addr)
 void
 GCHeapProfilerImpl::sweepTenured()
 {
+  AutoUseUncensoredAllocator ua;
   AutoMPLock lock(mLock);
   if (mMarking) {
     mMarking = false;
-    for (auto& entry: mTenuredEntriesBG) {
-      if (entry.second.mMarked) {
-        entry.second.mMarked = false;
-        mTenuredEntriesFG.insert(entry);
+    for (auto iter = mTenuredEntriesBG.Iter(); !iter.Done(); iter.Next()) {
+      if (iter.Data().mMarked) {
+        iter.Data().mMarked = false;
+        mTenuredEntriesFG.Put(iter.Key(), iter.Data());
       } else {
-        AllocEvent& oldEvent = mAllocEvents[entry.second.mEventIdx];
+        AllocEvent& oldEvent = mAllocEvents[iter.Data().mEventIdx];
         AllocEvent newEvent(oldEvent.mTraceIdx, -oldEvent.mSize, TimeStamp::Now());
-        mAllocEvents.push_back(newEvent);
+        mAllocEvents.AppendElement(newEvent);
       }
     }
-    mTenuredEntriesBG.clear();
+    mTenuredEntriesBG.Clear();
   }
 }
 
 void
 GCHeapProfilerImpl::sweepNursery()
 {
+  AutoUseUncensoredAllocator ua;
   AutoMPLock lock(mLock);
-  for (auto& entry: mNurseryEntries) {
-    AllocEvent& oldEvent = mAllocEvents[entry.second.mEventIdx];
+  for (auto iter = mNurseryEntries.Iter(); !iter.Done(); iter.Next()) {
+    AllocEvent& oldEvent = mAllocEvents[iter.Data().mEventIdx];
     AllocEvent newEvent(oldEvent.mTraceIdx, -oldEvent.mSize, TimeStamp::Now());
-    mAllocEvents.push_back(newEvent);
+    mAllocEvents.AppendElement(newEvent);
   }
-  mNurseryEntries.clear();
+  mNurseryEntries.Clear();
 }
 
 void
 GCHeapProfilerImpl::moveNurseryToTenured(void* addrOld, void* addrNew)
 {
+  AutoUseUncensoredAllocator ua;
   AutoMPLock lock(mLock);
-  auto iterOld = mNurseryEntries.find(addrOld);
-  if (iterOld == mNurseryEntries.end()) {
+  AllocEntry entryOld;
+  if (!mNurseryEntries.Get(addrOld, &entryOld)) {
     return;
   }
 
   // Because the tenured heap is sampled, the address might already be there.
   // If not, the address is inserted with the old event.
-  auto res = mTenuredEntriesFG.insert(
-    std::make_pair(addrNew, AllocEntry(iterOld->second.mEventIdx)));
-  auto iterNew = res.first;
-
-  // If it is already inserted, the insertion above will fail and the
-  // iterator of the already-inserted element is returned.
-  // We choose to ignore the the new event by setting its size zero and point
-  // the newly allocated address to the old event.
-  // An event of size zero will be skipped when reporting.
-  if (!res.second) {
-    mAllocEvents[iterNew->second.mEventIdx].mSize = 0;
-    iterNew->second.mEventIdx = iterOld->second.mEventIdx;
+  AllocEntry tenuredEntryOld;
+  if (!mTenuredEntriesFG.Get(addrNew, &tenuredEntryOld)) {
+    mTenuredEntriesFG.Put(addrNew, AllocEntry(entryOld.mEventIdx));
+  } else {
+    // If it is already inserted, the insertion above will fail and the
+    // iterator of the already-inserted element is returned.
+    // We choose to ignore the the new event by setting its size zero and point
+    // the newly allocated address to the old event.
+    // An event of size zero will be skipped when reporting.
+    mAllocEvents[entryOld.mEventIdx].mSize = 0;
+    tenuredEntryOld.mEventIdx = entryOld.mEventIdx;
+    mTenuredEntriesFG.Put(addrNew, tenuredEntryOld);
   }
-  mNurseryEntries.erase(iterOld);
+  mNurseryEntries.Remove(addrOld);
 }
 
 void
 GCHeapProfilerImpl::SampleInternal(void* aAddr, uint32_t aSize, AllocMap& aTable)
 {
+  AutoUseUncensoredAllocator ua;
   AutoMPLock lock(mLock);
   size_t nSamples = AddBytesSampled(aSize);
   if (nSamples > 0) {
-    u_vector<u_string> trace = GetStacktrace();
+    nsTArray<nsCString> trace = GetStacktrace();
     AllocEvent ai(mTraceTable.Insert(trace), nSamples * mSampleSize, TimeStamp::Now());
-    aTable.insert(std::make_pair(aAddr, AllocEntry(mAllocEvents.size())));
-    mAllocEvents.push_back(ai);
+    aTable.Put(aAddr, AllocEntry(mAllocEvents.Length()));
+    mAllocEvents.AppendElement(ai);
   }
 }
 
