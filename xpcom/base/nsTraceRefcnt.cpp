@@ -19,7 +19,6 @@
 #include <math.h>
 #include "nsHashKeys.h"
 #include "mozilla/StackWalk.h"
-#include "nsString.h"
 #include "nsThreadUtils.h"
 #include "CodeAddressService.h"
 
