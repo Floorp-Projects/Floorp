@@ -469,6 +469,8 @@ PrepareForDebuggerOnIonCompilationHook(JSContext* cx, jit::MIRGraph& graph,
 void
 jit::FinishOffThreadBuilder(JSContext* cx, IonBuilder* builder)
 {
+    MOZ_ASSERT(HelperThreadState().isLocked());
+
     // Clean the references to the pending IonBuilder, if we just finished it.
     if (builder->script()->baselineScript()->hasPendingIonBuilder() &&
         builder->script()->baselineScript()->pendingIonBuilder() == builder)
@@ -574,17 +576,23 @@ LinkBackgroundCodeGen(JSContext* cx, IonBuilder* builder,
 void
 jit::LazyLink(JSContext* cx, HandleScript calleeScript)
 {
-    // Get the pending builder from the Ion frame.
-    MOZ_ASSERT(calleeScript->hasBaselineScript());
-    IonBuilder* builder = calleeScript->baselineScript()->pendingIonBuilder();
-    calleeScript->baselineScript()->removePendingIonBuilder(calleeScript);
+    IonBuilder* builder;
+
+    {
+        AutoLockHelperThreadState lock;
+
+        // Get the pending builder from the Ion frame.
+        MOZ_ASSERT(calleeScript->hasBaselineScript());
+        builder = calleeScript->baselineScript()->pendingIonBuilder();
+        calleeScript->baselineScript()->removePendingIonBuilder(calleeScript);
+
+        // Remove from pending.
+        builder->removeFrom(HelperThreadState().ionLazyLinkList());
+    }
 
     // See PrepareForDebuggerOnIonCompilationHook
     AutoScriptVector debugScripts(cx);
     OnIonCompilationInfo info(builder->alloc().lifoAlloc());
-
-    // Remove from pending.
-    builder->removeFrom(HelperThreadState().ionLazyLinkList());
 
     {
         AutoEnterAnalysis enterTypes(cx);
@@ -599,7 +607,10 @@ jit::LazyLink(JSContext* cx, HandleScript calleeScript)
     if (info.filled())
         Debugger::onIonCompilation(cx, debugScripts, info.graph);
 
-    FinishOffThreadBuilder(cx, builder);
+    {
+        AutoLockHelperThreadState lock;
+        FinishOffThreadBuilder(cx, builder);
+    }
 
     MOZ_ASSERT(calleeScript->hasBaselineScript());
     MOZ_ASSERT(calleeScript->baselineOrIonRawPointer());
@@ -2590,15 +2601,15 @@ jit::SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& state, AutoVal
             ScriptFrameIter iter(cx);
             if (iter.isFunctionFrame())
                 data.calleeToken = CalleeToToken(iter.callee(cx), /* constructing = */ false);
-                
+
             // Push newTarget onto the stack, as well as Argv.
             if (!vals.reserve(2))
                 return false;
-            
+
             data.maxArgc = 2;
             data.maxArgv = vals.begin();
             vals.infallibleAppend(state.asExecute()->thisv());
-            if (iter.isFunctionFrame()) { 
+            if (iter.isFunctionFrame()) {
                 if (state.asExecute()->newTarget().isNull())
                     vals.infallibleAppend(iter.newTarget());
                 else
