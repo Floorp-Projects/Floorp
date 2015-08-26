@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.widget;
+package org.mozilla.gecko.widget.themed;
 
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.lwt.LightweightTheme;
@@ -19,7 +19,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 
-public class ThemedRelativeLayout extends android.widget.RelativeLayout
+public class ThemedImageView extends android.widget.ImageView
                                      implements LightweightTheme.OnChangeListener {
     private LightweightTheme mTheme;
 
@@ -38,12 +38,12 @@ public class ThemedRelativeLayout extends android.widget.RelativeLayout
 
     private ColorStateList mDrawableColors;
 
-    public ThemedRelativeLayout(Context context, AttributeSet attrs) {
+    public ThemedImageView(Context context, AttributeSet attrs) {
         super(context, attrs);
         initialize(context, attrs, 0);
     }
 
-    public ThemedRelativeLayout(Context context, AttributeSet attrs, int defStyle) {
+    public ThemedImageView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         initialize(context, attrs, defStyle);
     }
@@ -59,6 +59,14 @@ public class ThemedRelativeLayout extends android.widget.RelativeLayout
         final TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.LightweightTheme);
         mAutoUpdateTheme = mTheme != null && a.getBoolean(R.styleable.LightweightTheme_autoUpdateTheme, true);
         a.recycle();
+
+        final TypedArray themedA = context.obtainStyledAttributes(attrs, R.styleable.ThemedView, defStyle, 0);
+        mDrawableColors = themedA.getColorStateList(R.styleable.ThemedView_drawableTintList);
+        themedA.recycle();
+
+        // Apply the tint initially - the Drawable is
+        // initially set by XML via super's constructor.
+        setTintedImageDrawable(getDrawable());
     }
 
     @Override
@@ -160,6 +168,25 @@ public class ThemedRelativeLayout extends android.widget.RelativeLayout
             else
                 mTheme.removeListener(this);
         }
+    }
+
+    @Override
+    public void setImageDrawable(final Drawable drawable) {
+        setTintedImageDrawable(drawable);
+    }
+
+    private void setTintedImageDrawable(final Drawable drawable) {
+        final Drawable tintedDrawable;
+        if (mDrawableColors == null) {
+            // If we tint a drawable with a null ColorStateList, it will override
+            // any existing colorFilters and tint... so don't!
+            tintedDrawable = drawable;
+        } else if (drawable == null) {
+            tintedDrawable = null;
+        } else {
+            tintedDrawable = DrawableUtil.tintDrawableWithStateList(drawable, mDrawableColors);
+        }
+        super.setImageDrawable(tintedDrawable);
     }
 
     public ColorDrawable getColorDrawable(int id) {

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.widget;
+package org.mozilla.gecko.widget.themed;
 
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.lwt.LightweightTheme;
@@ -19,7 +19,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 
-public class ThemedTextView extends android.widget.TextView
+public class ThemedView extends android.view.View
                                      implements LightweightTheme.OnChangeListener {
     private LightweightTheme mTheme;
 
@@ -38,12 +38,12 @@ public class ThemedTextView extends android.widget.TextView
 
     private ColorStateList mDrawableColors;
 
-    public ThemedTextView(Context context, AttributeSet attrs) {
+    public ThemedView(Context context, AttributeSet attrs) {
         super(context, attrs);
         initialize(context, attrs, 0);
     }
 
-    public ThemedTextView(Context context, AttributeSet attrs, int defStyle) {
+    public ThemedView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         initialize(context, attrs, defStyle);
     }

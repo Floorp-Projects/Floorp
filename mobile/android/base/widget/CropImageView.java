@@ -13,6 +13,7 @@ import android.util.AttributeSet;
 import android.widget.ImageView;
 
 import com.nineoldandroids.view.ViewHelper;
+import org.mozilla.gecko.widget.themed.ThemedImageView;
 
 /**
  * An ImageView which will always display at the given width and calculated height (based on the width and
