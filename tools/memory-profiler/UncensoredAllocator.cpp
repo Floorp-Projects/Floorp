@@ -6,102 +6,119 @@
 
 #include "UncensoredAllocator.h"
 
+#include "mozilla/Assertions.h"
 #include "mozilla/unused.h"
 
+#include "MainThreadUtils.h"
 #include "jsfriendapi.h"
+#include "nsDebug.h"
+#include "prlock.h"
 #ifdef MOZ_REPLACE_MALLOC
 #include "replace_malloc_bridge.h"
 #endif
 
 namespace mozilla {
 
-static void* (*uncensored_malloc)(size_t size);
-static void (*uncensored_free)(void* ptr);
-
 #ifdef MOZ_REPLACE_MALLOC
-
-static bool sMemoryHookEnabled = false;
-static NativeProfiler* sNativeProfiler;
-static malloc_hook_table_t sMallocHook;
-
-static void*
-SampleNative(void* addr, size_t size)
-{
-  if (sMemoryHookEnabled) {
-    sNativeProfiler->sampleNative(addr, size);
-  }
-  return addr;
-}
-
-static void
-RemoveNative(void* addr)
-{
-  if (sMemoryHookEnabled) {
-    sNativeProfiler->removeNative(addr);
-  }
-}
+ThreadLocal<bool> MallocHook::mEnabledTLS;
+NativeProfiler* MallocHook::mNativeProfiler;
+malloc_hook_table_t MallocHook::mMallocHook;
 #endif
 
-void*
-u_malloc(size_t size)
+AutoUseUncensoredAllocator::AutoUseUncensoredAllocator()
 {
-  if (uncensored_malloc) {
-    return uncensored_malloc(size);
-  } else {
-    return malloc(size);
+#ifdef MOZ_REPLACE_MALLOC
+  MallocHook::mEnabledTLS.set(false);
+#endif
+}
+
+AutoUseUncensoredAllocator::~AutoUseUncensoredAllocator()
+{
+#ifdef MOZ_REPLACE_MALLOC
+  MallocHook::mEnabledTLS.set(true);
+#endif
+}
+
+bool
+MallocHook::Enabled()
+{
+#ifdef MOZ_REPLACE_MALLOC
+  return mEnabledTLS.get() && mNativeProfiler;
+#else
+  return false;
+#endif
+}
+
+void*
+MallocHook::SampleNative(void* aAddr, size_t aSize)
+{
+#ifdef MOZ_REPLACE_MALLOC
+  if (MallocHook::Enabled()) {
+    mNativeProfiler->sampleNative(aAddr, aSize);
   }
+#endif
+  return aAddr;
 }
 
 void
-u_free(void* ptr)
-{
-  if (uncensored_free) {
-    uncensored_free(ptr);
-  } else {
-    free(ptr);
-  }
-}
-
-void InitializeMallocHook()
+MallocHook::RemoveNative(void* aAddr)
 {
 #ifdef MOZ_REPLACE_MALLOC
-  sMallocHook.free_hook = RemoveNative;
-  sMallocHook.malloc_hook = SampleNative;
+  if (MallocHook::Enabled()) {
+    mNativeProfiler->removeNative(aAddr);
+  }
+#endif
+}
+
+void
+MallocHook::Initialize()
+{
+#ifdef MOZ_REPLACE_MALLOC
+  MOZ_ASSERT(NS_IsMainThread());
+  mMallocHook.free_hook = RemoveNative;
+  mMallocHook.malloc_hook = SampleNative;
   ReplaceMallocBridge* bridge = ReplaceMallocBridge::Get(3);
   if (bridge) {
     mozilla::unused << bridge->RegisterHook("memory-profiler", nullptr, nullptr);
   }
-#endif
-  if (!uncensored_malloc && !uncensored_free) {
-    uncensored_malloc = malloc;
-    uncensored_free = free;
+  if (!mEnabledTLS.initialized()) {
+    bool success = mEnabledTLS.init();
+    if (NS_WARN_IF(!success)) {
+      return;
+    }
+    mEnabledTLS.set(false);
   }
+#endif
 }
 
-void EnableMallocHook(NativeProfiler* aNativeProfiler)
+void
+MallocHook::Enable(NativeProfiler* aNativeProfiler)
 {
 #ifdef MOZ_REPLACE_MALLOC
+  MOZ_ASSERT(NS_IsMainThread());
+  if (NS_WARN_IF(!mEnabledTLS.initialized())) {
+    return;
+  }
   ReplaceMallocBridge* bridge = ReplaceMallocBridge::Get(3);
   if (bridge) {
     const malloc_table_t* alloc_funcs =
-      bridge->RegisterHook("memory-profiler", nullptr, &sMallocHook);
+      bridge->RegisterHook("memory-profiler", nullptr, &mMallocHook);
     if (alloc_funcs) {
-      uncensored_malloc = alloc_funcs->malloc;
-      uncensored_free = alloc_funcs->free;
-      sNativeProfiler = aNativeProfiler;
-      sMemoryHookEnabled = true;
+      mNativeProfiler = aNativeProfiler;
     }
   }
 #endif
 }
 
-void DisableMallocHook()
+void
+MallocHook::Disable()
 {
 #ifdef MOZ_REPLACE_MALLOC
+  MOZ_ASSERT(NS_IsMainThread());
   ReplaceMallocBridge* bridge = ReplaceMallocBridge::Get(3);
   if (bridge) {
     bridge->RegisterHook("memory-profiler", nullptr, nullptr);
-    sMemoryHookEnabled = false;
+    mNativeProfiler = nullptr;
   }
 #endif
 }

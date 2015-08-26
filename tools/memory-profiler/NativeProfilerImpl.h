@@ -23,9 +23,9 @@ public:
   NativeProfilerImpl();
   ~NativeProfilerImpl() override;
 
-  u_vector<u_string> GetNames() const override;
-  u_vector<TrieNode> GetTraces() const override;
-  const u_vector<AllocEvent>& GetEvents() const override;
+  nsTArray<nsCString> GetNames() const override;
+  nsTArray<TrieNode> GetTraces() const override;
+  const nsTArray<AllocEvent>& GetEvents() const override;
 
   void reset() override;
   void sampleNative(void* addr, uint32_t size) override;
@@ -34,7 +34,7 @@ public:
 private:
   PRLock* mLock;
   AllocMap mNativeEntries;
-  u_vector<AllocEvent> mAllocEvents;
+  nsTArray<AllocEvent> mAllocEvents;
   CompactTraceTable mTraceTable;
 };
 

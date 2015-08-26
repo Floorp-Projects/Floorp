@@ -6,9 +6,7 @@
 
 #include "NativeProfilerImpl.h"
 
-#include "mozilla/TimeStamp.h"
-
-#include "prlock.h"
+#include "UncensoredAllocator.h"
 
 namespace mozilla {
 
@@ -24,19 +22,19 @@ NativeProfilerImpl::~NativeProfilerImpl()
   }
 }
 
-u_vector<u_string>
+nsTArray<nsCString>
 NativeProfilerImpl::GetNames() const
 {
   return mTraceTable.GetNames();
 }
 
-u_vector<TrieNode>
+nsTArray<TrieNode>
 NativeProfilerImpl::GetTraces() const
 {
   return mTraceTable.GetTraces();
 }
 
-const u_vector<AllocEvent>&
+const nsTArray<AllocEvent>&
 NativeProfilerImpl::GetEvents() const
 {
   return mAllocEvents;
@@ -46,37 +44,39 @@ void
 NativeProfilerImpl::reset()
 {
   mTraceTable.Reset();
-  mAllocEvents.clear();
-  mNativeEntries.clear();
+  mAllocEvents.Clear();
+  mNativeEntries.Clear();
 }
 
 void
 NativeProfilerImpl::sampleNative(void* addr, uint32_t size)
 {
+  AutoUseUncensoredAllocator ua;
   AutoMPLock lock(mLock);
   size_t nSamples = AddBytesSampled(size);
   if (nSamples > 0) {
-    u_vector<u_string> trace = GetStacktrace();
+    nsTArray<nsCString> trace = GetStacktrace();
     AllocEvent ai(mTraceTable.Insert(trace), nSamples * mSampleSize, TimeStamp::Now());
-    mNativeEntries.insert(std::make_pair(addr, AllocEntry(mAllocEvents.size())));
-    mAllocEvents.push_back(ai);
+    mNativeEntries.Put(addr, AllocEntry(mAllocEvents.Length()));
+    mAllocEvents.AppendElement(ai);
   }
 }
 
 void
 NativeProfilerImpl::removeNative(void* addr)
 {
+  AutoUseUncensoredAllocator ua;
   AutoMPLock lock(mLock);
 
-  auto res = mNativeEntries.find(addr);
-  if (res == mNativeEntries.end()) {
+  AllocEntry entry;
+  if (!mNativeEntries.Get(addr, &entry)) {
     return;
   }
 
-  AllocEvent& oldEvent = mAllocEvents[res->second.mEventIdx];
+  AllocEvent& oldEvent = mAllocEvents[entry.mEventIdx];
   AllocEvent newEvent(oldEvent.mTraceIdx, -oldEvent.mSize, TimeStamp::Now());
-  mAllocEvents.push_back(newEvent);
-  mNativeEntries.erase(res);
+  mAllocEvents.AppendElement(newEvent);
+  mNativeEntries.Remove(addr);
 }
 
 } // namespace mozilla
