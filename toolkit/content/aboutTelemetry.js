@@ -1593,14 +1593,17 @@ function displayPingData(ping) {
   let keyedDiv = document.getElementById("keyed-histograms");
   removeAllChildNodes(keyedDiv);
 
+  setHasData("keyed-histograms-section", false);
   let keyedHistograms = payload.keyedHistograms;
-  hasData = Object.keys(keyedHistograms).length > 0;
-  setHasData("keyed-histograms-section", hasData);
-
-  if (hasData) {
+  if (keyedHistograms) {
+    let hasData = false;
     for (let [id, keyed] of Iterator(keyedHistograms)) {
-      KeyedHistogram.render(keyedDiv, id, keyed, {unpacked: true});
+      if (Object.keys(keyed).length > 0) {
+        hasData = true;
+        KeyedHistogram.render(keyedDiv, id, keyed, {unpacked: true});
+      }
     }
+    setHasData("keyed-histograms-section", hasData);
   }
 
   // Show addon histogram data
