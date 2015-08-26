@@ -421,6 +421,103 @@ WheelBlockState::EndTransaction()
   mTransactionEnded = true;
 }
 
+PanGestureBlockState::PanGestureBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
+                                           bool aTargetConfirmed,
+                                           const PanGestureInput& aInitialEvent)
+  : CancelableBlockState(aTargetApzc, aTargetConfirmed)
+  , mInterrupted(false)
+{
+  if (aTargetConfirmed) {
+    // Find the nearest APZC in the overscroll handoff chain that is scrollable.
+    // If we get a content confirmation later that the apzc is different, then
+    // content should have found a scrollable apzc, so we don't need to handle
+    // that case.
+    nsRefPtr<AsyncPanZoomController> apzc =
+      mOverscrollHandoffChain->FindFirstScrollable(aInitialEvent);
+
+    if (apzc && apzc != GetTargetApzc()) {
+      UpdateTargetApzc(apzc);
+    }
+  }
+}
+
+bool
+PanGestureBlockState::SetConfirmedTargetApzc(const nsRefPtr<AsyncPanZoomController>& aTargetApzc)
+{
+  // The APZC that we find via APZCCallbackHelpers may not be the same APZC
+  // ESM or OverscrollHandoff would have computed. Make sure we get the right
+  // one by looking for the first apzc the next pending event can scroll.
+  nsRefPtr<AsyncPanZoomController> apzc = aTargetApzc;
+  if (apzc && mEvents.Length() > 0) {
+    const PanGestureInput& event = mEvents.ElementAt(0);
+    nsRefPtr<AsyncPanZoomController> scrollableApzc =
+      apzc->BuildOverscrollHandoffChain()->FindFirstScrollable(event);
+    if (scrollableApzc) {
+      apzc = scrollableApzc;
+    }
+  }
+
+  InputBlockState::SetConfirmedTargetApzc(apzc);
+  return true;
+}
+
+void
+PanGestureBlockState::AddEvent(const PanGestureInput& aEvent)
+{
+  mEvents.AppendElement(aEvent);
+}
+
+bool
+PanGestureBlockState::HasEvents() const
+{
+  return !mEvents.IsEmpty();
+}
+
+void
+PanGestureBlockState::DropEvents()
+{
+  TBS_LOG("%p dropping %" PRIuSIZE " events\n", this, mEvents.Length());
+  mEvents.Clear();
+}
+
+void
+PanGestureBlockState::HandleEvents()
+{
+  while (HasEvents()) {
+    TBS_LOG("%p returning first of %" PRIuSIZE " events\n", this, mEvents.Length());
+    PanGestureInput event = mEvents[0];
+    mEvents.RemoveElementAt(0);
+    DispatchEvent(event);
+  }
+}
+
+bool
+PanGestureBlockState::MustStayActive()
+{
+  return !mInterrupted;
+}
+
+const char*
+PanGestureBlockState::Type()
+{
+  return "pan gesture";
+}
+
+bool
+PanGestureBlockState::SetContentResponse(bool aPreventDefault)
+{
+  if (aPreventDefault) {
+    mInterrupted = true;
+  }
+  return CancelableBlockState::SetContentResponse(aPreventDefault);
+}
+
+bool
+PanGestureBlockState::AllowScrollHandoff() const
+{
+  return false;
+}
+
 TouchBlockState::TouchBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
                                  bool aTargetConfirmed, TouchCounter& aCounter)
   : CancelableBlockState(aTargetApzc, aTargetConfirmed)
