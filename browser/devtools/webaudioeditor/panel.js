@@ -8,7 +8,7 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const { WebAudioFront } = require("devtools/server/actors/webaudio");
-let Promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+let Promise = require("promise");
 
 function WebAudioEditorPanel (iframeWindow, toolbox) {
   this.panelWin = iframeWindow;

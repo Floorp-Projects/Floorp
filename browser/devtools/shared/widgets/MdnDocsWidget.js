@@ -26,7 +26,7 @@
 
 const {Cc, Cu, Ci} = require("chrome");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
+const Promise = require("promise");
 const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
                  .getService(Ci.inIDOMUtils);
 

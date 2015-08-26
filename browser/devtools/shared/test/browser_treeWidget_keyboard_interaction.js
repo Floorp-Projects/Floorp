@@ -9,7 +9,7 @@ const TEST_URI = "data:text/html;charset=utf-8,<head><link rel='stylesheet' " +
   "rel='stylesheet' type='text/css' href='chrome://browser/skin/devtools/widg" +
   "ets.css'></head><body><div></div><span></span></body>";
 const {TreeWidget} = require("devtools/shared/widgets/TreeWidget");
-const {Promise} = require("resource://gre/modules/Promise.jsm");
+const Promise = require("promise");
 
 add_task(function*() {
   yield promiseTab("about:blank");

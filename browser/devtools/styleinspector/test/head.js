@@ -12,7 +12,7 @@ let {CssComputedView} = require("devtools/styleinspector/computed-view");
 let {CssRuleView, _ElementStyle} = require("devtools/styleinspector/rule-view");
 let {CssLogic, CssSelector} = require("devtools/styleinspector/css-logic");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+let promise = require("promise");
 let {editableField, getInplaceEditorForSpan: inplaceEditor} =
   require("devtools/shared/inplace-editor");
 let {console} =

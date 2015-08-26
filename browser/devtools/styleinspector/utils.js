@@ -13,7 +13,7 @@ const {setTimeout, clearTimeout} =
       Cu.import("resource://gre/modules/Timer.jsm", {});
 const {parseDeclarations} =
       require("devtools/styleinspector/css-parsing-utils");
-const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const promise = require("promise");
 
 loader.lazyServiceGetter(this, "domUtils",
   "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");

@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyGetter(this, "Telemetry", function () {
 XPCOMUtils.defineLazyGetter(this, "EventEmitter", function () {
   return require("devtools/toolkit/event-emitter");
 });
-const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
+const promise = require("promise");
 
 this.EXPORTED_SYMBOLS = ["BrowserToolboxProcess"];
 

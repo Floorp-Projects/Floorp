@@ -8,7 +8,7 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-let promise = require("resource://gre/modules/Promise.jsm").Promise;
+let promise = require("promise");
 let EventEmitter = require("devtools/toolkit/event-emitter");
 let clipboard = require("sdk/clipboard");
 let {HostType} = require("devtools/framework/toolbox").Toolbox;

@@ -51,8 +51,8 @@ const TargetFactory = require("devtools/framework/target").TargetFactory;
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const {DevToolsWorker} = require("devtools/toolkit/shared/worker");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const promise = require("promise");
 
-const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");

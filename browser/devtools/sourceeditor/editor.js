@@ -29,7 +29,7 @@ const MAX_VERTICAL_OFFSET = 3;
 const RE_SCRATCHPAD_ERROR = /(?:@Scratchpad\/\d+:|\()(\d+):?(\d+)?(?:\)|\n)/;
 const RE_JUMP_TO_LINE = /^(\d+):?(\d+)?/;
 
-const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const promise = require("promise");
 const events  = require("devtools/toolkit/event-emitter");
 const { PrefObserver } = require("devtools/styleeditor/utils");
 

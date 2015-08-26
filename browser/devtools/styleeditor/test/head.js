@@ -10,7 +10,7 @@ const TEST_HOST = 'mochi.test:8888';
 let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let {TargetFactory} = require("devtools/framework/target");
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+let promise = require("promise");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 // Import the GCLI test helper

@@ -6,7 +6,7 @@ const {Cc, Ci, Cu, CC} = require("chrome");
 const protocol = require("devtools/server/protocol");
 const {Arg, method, RetVal} = protocol;
 const {DebuggerServer} = require("devtools/server/main");
-const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const promise = require("promise");
 
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");

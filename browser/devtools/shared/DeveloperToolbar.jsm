@@ -15,6 +15,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const { TargetFactory } = require("devtools/framework/target");
+const promise = require("promise");
 
 const Node = Ci.nsIDOMNode;
 
@@ -60,8 +61,6 @@ Object.defineProperty(this, "ConsoleServiceListener", {
   configurable: true,
   enumerable: true
 });
-
-const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 
 /**
  * A collection of utilities to help working with commands
