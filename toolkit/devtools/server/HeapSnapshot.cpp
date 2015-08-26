@@ -11,6 +11,7 @@
 
 #include "js/Debug.h"
 #include "js/TypeDecls.h"
+#include "js/UbiNodeCensus.h"
 #include "js/UbiNodeTraverse.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/devtools/AutoMemMap.h"
@@ -73,6 +74,8 @@ HeapSnapshot::WrapObject(JSContext* aCx, HandleObject aGivenProto)
   return HeapSnapshotBinding::Wrap(aCx, this, aGivenProto);
 }
 
+/*** Reading Heap Snapshots ***********************************************************************/
+
 /* static */ already_AddRefed<HeapSnapshot>
 HeapSnapshot::Create(JSContext* cx,
                      GlobalObject& global,
@@ -130,13 +133,22 @@ HeapSnapshot::saveNode(const protobuf::Node& node)
   if (!node.has_typename_())
     return false;
 
-  const auto* duplicatedTypeName = reinterpret_cast<const char16_t*>(
-    node.typename_().c_str());
-  const char16_t* typeName = borrowUniqueString(
-    duplicatedTypeName,
-    node.typename_().length() / sizeof(char16_t));
-  if (!typeName)
-    return false;
+  // First, try and get the canonical type name in the case where the type name
+  // is one of the known concrete specializations that our analyses check for
+  // with is<T>(). If that fails, then just use a generic unique string, but all
+  // subsequent JS::ubi::Node::is<T>() checks will always return false for the
+  // node with this type name. That's fine though because we already check for
+  // all the Ts that are of interest to us in the first case.
+  auto duplicatedTypeName = reinterpret_cast<const char16_t*>(
+    node.typename_().data());
+  auto length = node.typename_().length() / sizeof(char16_t);
+  auto typeName = JS::ubi::Node::getCanonicalTypeName(duplicatedTypeName, length);
+  if (!typeName) {
+    typeName = borrowUniqueString(duplicatedTypeName, length);
+    if (!typeName)
+      return false;
+  }
+  MOZ_ASSERT(typeName);
 
   if (!node.has_size())
     return false;
@@ -158,8 +170,9 @@ HeapSnapshot::saveNode(const protobuf::Node& node)
     StackFrameId id = 0;
     if (!saveStackFrame(node.allocationstack(), id))
       return false;
-    allocationStack = Some(id);
+    allocationStack.emplace(id);
   }
+  MOZ_ASSERT(allocationStack.isSome() == node.has_allocationstack());
 
   UniquePtr<char[]> jsObjectClassName;
   if (node.has_jsobjectclassname()) {
@@ -230,15 +243,16 @@ HeapSnapshot::saveStackFrame(const protobuf::StackFrame& frame,
     return false;
 
   const char16_t* functionDisplayName = nullptr;
-  if (data.has_functiondisplayname()) {
+  if (data.has_functiondisplayname() && data.functiondisplayname().length() > 0) {
     auto duplicatedName = reinterpret_cast<const char16_t*>(
       data.functiondisplayname().data());
     size_t nameLength = data.functiondisplayname().length() / sizeof(char16_t);
-    const char16_t* functionDisplayName = borrowUniqueString(duplicatedName,
-                                                             nameLength);
+    functionDisplayName = borrowUniqueString(duplicatedName, nameLength);
     if (!functionDisplayName)
       return false;
   }
+  MOZ_ASSERT(!!functionDisplayName == (data.has_functiondisplayname() &&
+                                       data.functiondisplayname().length() > 0));
 
   if (!data.has_issystem())
     return false;
@@ -343,6 +357,60 @@ HeapSnapshot::borrowUniqueString(const char16_t* duplicateString, size_t length)
   MOZ_ASSERT(ptr->get() != duplicateString);
   return ptr->get();
 }
+
+/*** Heap Snapshot Analyses ***********************************************************************/
+
+void
+HeapSnapshot::TakeCensus(JSContext* cx, JS::HandleObject options,
+                         JS::MutableHandleValue rval, ErrorResult& rv)
+{
+  JS::ubi::Census census(cx);
+  if (NS_WARN_IF(!census.init())) {
+    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  JS::ubi::CountTypePtr rootType;
+  if (NS_WARN_IF(!JS::ubi::ParseCensusOptions(cx,  census, options, rootType))) {
+    rv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  JS::ubi::RootedCount rootCount(cx, rootType->makeCount());
+  if (NS_WARN_IF(!rootCount)) {
+    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  JS::ubi::CensusHandler handler(census, rootCount);
+
+  {
+    JS::AutoCheckCannotGC nogc;
+
+    JS::ubi::CensusTraversal traversal(cx, handler, nogc);
+    if (NS_WARN_IF(!traversal.init())) {
+      rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+
+    if (NS_WARN_IF(!traversal.addStart(getRoot()))) {
+      rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+
+    if (NS_WARN_IF(!traversal.traverse())) {
+      rv.Throw(NS_ERROR_UNEXPECTED);
+      return;
+    }
+  }
+
+  if (NS_WARN_IF(!handler.report(rval))) {
+    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+}
+
+/*** Saving Heap Snapshots ************************************************************************/
 
 // If we are only taking a snapshot of the heap affected by the given set of
 // globals, find the set of zones the globals are allocated within. Returns
