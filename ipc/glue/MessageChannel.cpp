@@ -995,7 +995,6 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
 
 #ifdef OS_WIN
     SyncStackFrame frame(this, true);
-    NeuteredWindowRegion neuteredRgn(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION);
 #endif
 
     // This must come before MonitorAutoLock, as its destructor acquires the
@@ -1035,9 +1034,16 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
         }
 
 #ifdef OS_WIN
-        /* We should pump messages at this point to ensure that the IPC peer
-           does not become deadlocked on a pending inter-thread SendMessage() */
-        neuteredRgn.PumpOnce();
+        // We need to limit the scoped of neuteredRgn to this spot in the code.
+        // Window neutering can't be enabled during some plugin calls because
+        // we then risk the neutered window procedure being subclassed by a
+        // plugin.
+        {
+            NeuteredWindowRegion neuteredRgn(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION);
+            /* We should pump messages at this point to ensure that the IPC peer
+               does not become deadlocked on a pending inter-thread SendMessage() */
+            neuteredRgn.PumpOnce();
+        }
 #endif
 
         // Now might be the time to process a message deferred because of race

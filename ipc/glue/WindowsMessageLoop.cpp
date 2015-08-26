@@ -894,10 +894,10 @@ StopNeutering()
 }
 
 NeuteredWindowRegion::NeuteredWindowRegion(bool aDoNeuter MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : mNeuteredByThis(!gWindowHook)
+  : mNeuteredByThis(!gWindowHook && aDoNeuter)
 {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  if (aDoNeuter && mNeuteredByThis) {
+  if (mNeuteredByThis) {
     StartNeutering();
   }
 }
@@ -912,6 +912,11 @@ NeuteredWindowRegion::~NeuteredWindowRegion()
 void
 NeuteredWindowRegion::PumpOnce()
 {
+  if (!gWindowHook) {
+    // This should be a no-op if nothing has been neutered.
+    return;
+  }
+
   MSG msg = {0};
   // Pump any COM messages so that we don't hang due to STA marshaling.
   if (gCOMWindow && ::PeekMessageW(&msg, gCOMWindow, 0, 0, PM_REMOVE)) {
