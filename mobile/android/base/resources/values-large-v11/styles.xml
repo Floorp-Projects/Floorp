@@ -64,10 +64,6 @@
         <item name="android:paddingRight">@dimen/tablet_browser_toolbar_menu_item_padding_horizontal</item>
     </style>
 
-    <style name="Widget.MenuItemSecondaryActionBar" parent="Widget.MenuItemSecondaryActionBarBase">
-        <item name="drawableTintList">@color/action_bar_secondary_menu_item_colors</item>
-    </style>
-
     <style name="Widget.BookmarksListView" parent="Widget.HomeListView">
         <item name="android:scrollbarStyle">outsideOverlay</item>
     </style>
