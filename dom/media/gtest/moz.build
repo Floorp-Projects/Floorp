@@ -45,6 +45,7 @@ TEST_HARNESS_FILES.gtest += [
     'mediasource_test.mp4',
     'noise.mp3',
     'noise_vbr.mp3',
+    'short-zero-in-moov.mp4',
     'test.webm',
 ]
 
