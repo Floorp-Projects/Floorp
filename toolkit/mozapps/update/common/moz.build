@@ -12,7 +12,9 @@ EXPORTS += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += [
+        'certificatecheck.h',
         'pathhash.h',
+        'registrycertificates.h',
         'uachelper.h',
         'updatehelper.cpp',
         'updatehelper.h',
@@ -20,10 +22,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 
 Library('updatecommon')
 
+DEFINES['NS_NO_XPCOM'] = True
+
 srcdir = '.'
 
 include('sources.mozbuild')
-
-FINAL_LIBRARY = 'xul'
 
 FAIL_ON_WARNINGS = True

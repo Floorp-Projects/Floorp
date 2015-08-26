@@ -8,8 +8,7 @@
 
 #include "registrycertificates.h"
 #include "pathhash.h"
-#include "nsWindowsHelpers.h"
-#include "servicebase.h"
+#include "updatelogging.h"
 #include "updatehelper.h"
 #define MAX_KEY_LENGTH 255
 
@@ -41,10 +40,10 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
   // to put those certificate attributes in and hence why we always
   // force the non redirected registry under Wow6432Node.
   // This flag is ignored on 32bit systems.
-  HKEY baseKeyRaw;
+  HKEY baseKey;
   LONG retCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
                                maintenanceServiceKey, 0, 
-                               KEY_READ | KEY_WOW64_64KEY, &baseKeyRaw);
+                               KEY_READ | KEY_WOW64_64KEY, &baseKey);
   if (retCode != ERROR_SUCCESS) {
     LOG_WARN(("Could not open key.  (%d)", retCode));
     // Our tests run with a different apply directory for each test.
@@ -52,7 +51,7 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
     // allowed name/issuers.
     retCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
                             TEST_ONLY_FALLBACK_KEY_PATH, 0,
-                            KEY_READ | KEY_WOW64_64KEY, &baseKeyRaw);
+                            KEY_READ | KEY_WOW64_64KEY, &baseKey);
     if (retCode != ERROR_SUCCESS) {
       LOG_WARN(("Could not open fallback key.  (%d)", retCode));
       return FALSE;
@@ -60,10 +59,10 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
       LOG_WARN(("Fallback key present, skipping VerifyCertificateTrustForFile "
                 "check and the certificate attribute registry matching "
                 "check."));
+      RegCloseKey(baseKey);
       return TRUE;
     }
   }
-  nsAutoRegKey baseKey(baseKeyRaw);
 
   // Get the number of subkeys.
   DWORD subkeyCount = 0;
@@ -72,6 +71,7 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
                              nullptr, nullptr);
   if (retCode != ERROR_SUCCESS) {
     LOG_WARN(("Could not query info key.  (%d)", retCode));
+    RegCloseKey(baseKey);
     return FALSE;
   }
 
@@ -84,17 +84,17 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
                             nullptr, nullptr, nullptr); 
     if (retCode != ERROR_SUCCESS) {
       LOG_WARN(("Could not enum certs.  (%d)", retCode));
+      RegCloseKey(baseKey);
       return FALSE;
     }
 
     // Open the subkey for the current certificate
-    HKEY subKeyRaw;
+    HKEY subKey;
     retCode = RegOpenKeyExW(baseKey, 
                             subkeyBuffer, 
                             0, 
                             KEY_READ | KEY_WOW64_64KEY, 
-                            &subKeyRaw);
-    nsAutoRegKey subKey(subKeyRaw);
+                            &subKey);
     if (retCode != ERROR_SUCCESS) {
       LOG_WARN(("Could not open subkey.  (%d)", retCode));
       continue; // Try the next subkey
@@ -110,6 +110,7 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
                                (LPBYTE)name, &valueBufSize);
     if (retCode != ERROR_SUCCESS) {
       LOG_WARN(("Could not obtain name from registry.  (%d)", retCode));
+      RegCloseKey(subKey);
       continue; // Try the next subkey
     }
 
@@ -119,6 +120,7 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
                                (LPBYTE)issuer, &valueBufSize);
     if (retCode != ERROR_SUCCESS) {
       LOG_WARN(("Could not obtain issuer from registry.  (%d)", retCode));
+      RegCloseKey(subKey);
       continue; // Try the next subkey
     }
 
@@ -130,19 +132,23 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
     retCode = CheckCertificateForPEFile(filePath, allowedCertificate);
     if (retCode != ERROR_SUCCESS) {
       LOG_WARN(("Error on certificate check.  (%d)", retCode));
+      RegCloseKey(subKey);
       continue; // Try the next subkey
     }
 
     retCode = VerifyCertificateTrustForFile(filePath);
     if (retCode != ERROR_SUCCESS) {
       LOG_WARN(("Error on certificate trust check.  (%d)", retCode));
+      RegCloseKey(subKey);
       continue; // Try the next subkey
     }
 
+    RegCloseKey(baseKey);
     // Raise the roof, we found a match!
     return TRUE; 
   }
   
+  RegCloseKey(baseKey);
   // No certificates match, :'(
   return FALSE;
 }

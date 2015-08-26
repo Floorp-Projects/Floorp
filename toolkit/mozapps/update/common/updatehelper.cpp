@@ -21,8 +21,10 @@
 using mozilla::MakeUnique;
 using mozilla::UniquePtr;
 
-WCHAR* MakeCommandLine(int argc, WCHAR **argv);
 BOOL PathAppendSafe(LPWSTR base, LPCWSTR extra);
+BOOL PathGetSiblingFilePath(LPWSTR destinationBuffer,
+                            LPCWSTR siblingFilePath,
+                            LPCWSTR newFileName);
 
 /**
  * Obtains the path of a file in the same directory as the specified file.
@@ -51,137 +53,6 @@ PathGetSiblingFilePath(LPWSTR destinationBuffer,
   }
 
   return PathAppendSafe(destinationBuffer, newFileName);
-}
-
-/**
- * Launch the post update application as the specified user (helper.exe).
- * It takes in the path of the callback application to calculate the path
- * of helper.exe.  For service updates this is called from both the system
- * account and the current user account.
- *
- * @param  installationDir The path to the callback application binary.
- * @param  updateInfoDir   The directory where update info is stored.
- * @param  forceSync       If true even if the ini file specifies async, the
- *                         process will wait for termination of PostUpdate.
- * @param  userToken       The user token to run as, if nullptr the current
- *                         user will be used.
- * @return TRUE if there was no error starting the process.
- */
-BOOL
-LaunchWinPostProcess(const WCHAR *installationDir,
-                     const WCHAR *updateInfoDir,
-                     bool forceSync,
-                     HANDLE userToken)
-{
-  WCHAR workingDirectory[MAX_PATH + 1] = { L'\0' };
-  wcsncpy(workingDirectory, installationDir, MAX_PATH);
-
-  // Launch helper.exe to perform post processing (e.g. registry and log file
-  // modifications) for the update.
-  WCHAR inifile[MAX_PATH + 1] = { L'\0' };
-  wcsncpy(inifile, installationDir, MAX_PATH);
-  if (!PathAppendSafe(inifile, L"updater.ini")) {
-    return FALSE;
-  }
-
-  WCHAR exefile[MAX_PATH + 1];
-  WCHAR exearg[MAX_PATH + 1];
-  WCHAR exeasync[10];
-  bool async = true;
-  if (!GetPrivateProfileStringW(L"PostUpdateWin", L"ExeRelPath", nullptr,
-                                exefile, MAX_PATH + 1, inifile)) {
-    return FALSE;
-  }
-
-  if (!GetPrivateProfileStringW(L"PostUpdateWin", L"ExeArg", nullptr, exearg,
-                                MAX_PATH + 1, inifile)) {
-    return FALSE;
-  }
-
-  if (!GetPrivateProfileStringW(L"PostUpdateWin", L"ExeAsync", L"TRUE",
-                                exeasync,
-                                sizeof(exeasync)/sizeof(exeasync[0]),
-                                inifile)) {
-    return FALSE;
-  }
-
-  WCHAR exefullpath[MAX_PATH + 1] = { L'\0' };
-  wcsncpy(exefullpath, installationDir, MAX_PATH);
-  if (!PathAppendSafe(exefullpath, exefile)) {
-    return false;
-  }
-
-  WCHAR dlogFile[MAX_PATH + 1];
-  if (!PathGetSiblingFilePath(dlogFile, exefullpath, L"uninstall.update")) {
-    return FALSE;
-  }
-
-  WCHAR slogFile[MAX_PATH + 1] = { L'\0' };
-  wcsncpy(slogFile, updateInfoDir, MAX_PATH);
-  if (!PathAppendSafe(slogFile, L"update.log")) {
-    return FALSE;
-  }
-
-  WCHAR dummyArg[14] = { L'\0' };
-  wcsncpy(dummyArg, L"argv0ignored ", sizeof(dummyArg) / sizeof(dummyArg[0]) - 1);
-
-  size_t len = wcslen(exearg) + wcslen(dummyArg);
-  WCHAR *cmdline = (WCHAR *) malloc((len + 1) * sizeof(WCHAR));
-  if (!cmdline) {
-    return FALSE;
-  }
-
-  wcsncpy(cmdline, dummyArg, len);
-  wcscat(cmdline, exearg);
-
-  if (forceSync ||
-      !_wcsnicmp(exeasync, L"false", 6) ||
-      !_wcsnicmp(exeasync, L"0", 2)) {
-    async = false;
-  }
-
-  // We want to launch the post update helper app to update the Windows
-  // registry even if there is a failure with removing the uninstall.update
-  // file or copying the update.log file.
-  CopyFileW(slogFile, dlogFile, false);
-
-  STARTUPINFOW si = {sizeof(si), 0};
-  si.lpDesktop = L"";
-  PROCESS_INFORMATION pi = {0};
-
-  bool ok;
-  if (userToken) {
-    ok = CreateProcessAsUserW(userToken,
-                              exefullpath,
-                              cmdline,
-                              nullptr,  // no special security attributes
-                              nullptr,  // no special thread attributes
-                              false,    // don't inherit filehandles
-                              0,        // No special process creation flags
-                              nullptr,  // inherit my environment
-                              workingDirectory,
-                              &si,
-                              &pi);
-  } else {
-    ok = CreateProcessW(exefullpath,
-                        cmdline,
-                        nullptr,  // no special security attributes
-                        nullptr,  // no special thread attributes
-                        false,    // don't inherit filehandles
-                        0,        // No special process creation flags
-                        nullptr,  // inherit my environment
-                        workingDirectory,
-                        &si,
-                        &pi);
-  }
-  free(cmdline);
-  if (ok) {
-    if (!async)
-      WaitForSingleObject(pi.hProcess, INFINITE);
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
-  }
-  return ok;
 }
 
 /**
