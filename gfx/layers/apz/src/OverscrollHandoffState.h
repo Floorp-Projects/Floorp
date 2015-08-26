@@ -86,7 +86,7 @@ public:
   // Determine whether any APZC along this handoff chain has been flung fast.
   bool HasFastFlungApzc() const;
 
-  nsRefPtr<AsyncPanZoomController> FindFirstScrollable(const ScrollWheelInput& aInput) const;
+  nsRefPtr<AsyncPanZoomController> FindFirstScrollable(const InputData& aInput) const;
 
 private:
   std::vector<nsRefPtr<AsyncPanZoomController>> mChain;

@@ -370,7 +370,7 @@ public:
 
   // Return whether or not a wheel event will be able to scroll in either
   // direction.
-  bool CanScroll(const ScrollWheelInput& aEvent) const;
+  bool CanScroll(const InputData& aEvent) const;
 
   // Return whether or not a scroll delta will be able to scroll in either
   // direction.
