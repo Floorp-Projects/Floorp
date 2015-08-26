@@ -9,10 +9,9 @@
 #include <cmath>
 #include <cstdlib>
 
-#include "mozilla/Compiler.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Move.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/unused.h"
 
 #include "GCHeapProfilerImpl.h"
 #include "GeckoProfiler.h"
@@ -27,19 +26,6 @@
 
 struct JSRuntime;
 
-#if MOZ_USING_STLPORT
-namespace std {
-template<class T>
-struct hash<T*>
-{
-  size_t operator()(T* v) const
-  {
-    return hash<void*>()(static_cast<void*>(v));
-  }
-};
-} // namespace std
-#endif
-
 namespace mozilla {
 
 #define MEMORY_PROFILER_SAMPLE_SIZE 65536
@@ -52,18 +38,17 @@ ProfilerImpl::ProfilerImpl()
   mRemainingBytes = std::floor(std::log(1.0 - DRandom()) / mLog1minusP);
 }
 
-u_vector<u_string>
+nsTArray<nsCString>
 ProfilerImpl::GetStacktrace()
 {
-  u_vector<u_string> trace;
-  char* output = (char*)u_malloc(BACKTRACE_BUFFER_SIZE);
+  nsTArray<nsCString> trace;
+  nsAutoArrayPtr<char> output(new char[BACKTRACE_BUFFER_SIZE]);
 
   profiler_get_backtrace_noalloc(output, BACKTRACE_BUFFER_SIZE);
   for (const char* p = output; *p; p += strlen(p) + 1) {
-    trace.push_back(p);
+    trace.AppendElement(nsDependentCString(p));
   }
 
-  u_free(output);
   return trace;
 }
 
@@ -92,8 +77,8 @@ NS_IMPL_ISUPPORTS(MemoryProfiler, nsIMemoryProfiler)
 
 PRLock* MemoryProfiler::sLock;
 uint32_t MemoryProfiler::sProfileRuntimeCount;
-NativeProfilerImpl* MemoryProfiler::sNativeProfiler;
-JSRuntimeProfilerMap* MemoryProfiler::sJSRuntimeProfilerMap;
+StaticAutoPtr<NativeProfilerImpl> MemoryProfiler::sNativeProfiler;
+StaticAutoPtr<JSRuntimeProfilerMap> MemoryProfiler::sJSRuntimeProfilerMap;
 TimeStamp MemoryProfiler::sStartTime;
 
 void
@@ -104,10 +89,12 @@ MemoryProfiler::InitOnce()
   static bool initialized = false;
 
   if (!initialized) {
-    InitializeMallocHook();
+    MallocHook::Initialize();
     sLock = PR_NewLock();
     sProfileRuntimeCount = 0;
     sJSRuntimeProfilerMap = new JSRuntimeProfilerMap();
+    ClearOnShutdown(&sJSRuntimeProfilerMap);
+    ClearOnShutdown(&sNativeProfiler);
     std::srand(PR_Now());
     bool ignored;
     sStartTime = TimeStamp::ProcessCreation(ignored);
@@ -119,10 +106,12 @@ NS_IMETHODIMP
 MemoryProfiler::StartProfiler()
 {
   InitOnce();
-  JSRuntime* runtime = XPCJSRuntime::Get()->Runtime();
+  AutoUseUncensoredAllocator ua;
   AutoMPLock lock(sLock);
-  if (!(*sJSRuntimeProfilerMap)[runtime].mEnabled) {
-    (*sJSRuntimeProfilerMap)[runtime].mEnabled = true;
+  JSRuntime* runtime = XPCJSRuntime::Get()->Runtime();
+  ProfilerForJSRuntime profiler;
+  if (!sJSRuntimeProfilerMap->Get(runtime, &profiler) ||
+      !profiler.mEnabled) {
     if (sProfileRuntimeCount == 0) {
       js::EnableRuntimeProfilingStack(runtime, true);
       if (!sNativeProfiler) {
@@ -131,10 +120,12 @@ MemoryProfiler::StartProfiler()
       MemProfiler::SetNativeProfiler(sNativeProfiler);
     }
     GCHeapProfilerImpl* gp = new GCHeapProfilerImpl();
-    (*sJSRuntimeProfilerMap)[runtime].mProfiler = gp;
+    profiler.mEnabled = true;
+    profiler.mProfiler = gp;
+    sJSRuntimeProfilerMap->Put(runtime, profiler);
     MemProfiler::GetMemProfiler(runtime)->start(gp);
     if (sProfileRuntimeCount == 0) {
-      EnableMallocHook(sNativeProfiler);
+      MallocHook::Enable(sNativeProfiler);
     }
     sProfileRuntimeCount++;
   }
@@ -145,16 +136,20 @@ NS_IMETHODIMP
 MemoryProfiler::StopProfiler()
 {
   InitOnce();
-  JSRuntime* runtime = XPCJSRuntime::Get()->Runtime();
+  AutoUseUncensoredAllocator ua;
   AutoMPLock lock(sLock);
-  if ((*sJSRuntimeProfilerMap)[runtime].mEnabled) {
+  JSRuntime* runtime = XPCJSRuntime::Get()->Runtime();
+  ProfilerForJSRuntime profiler;
+  if (sJSRuntimeProfilerMap->Get(runtime, &profiler) &&
+      profiler.mEnabled) {
     MemProfiler::GetMemProfiler(runtime)->stop();
     if (--sProfileRuntimeCount == 0) {
-      DisableMallocHook();
+      MallocHook::Disable();
       MemProfiler::SetNativeProfiler(nullptr);
       js::EnableRuntimeProfilingStack(runtime, false);
     }
-    (*sJSRuntimeProfilerMap)[runtime].mEnabled = false;
+    profiler.mEnabled = false;
+    sJSRuntimeProfilerMap->Put(runtime, profiler);
   }
   return NS_OK;
 }
@@ -163,14 +158,17 @@ NS_IMETHODIMP
 MemoryProfiler::ResetProfiler()
 {
   InitOnce();
-  JSRuntime* runtime = XPCJSRuntime::Get()->Runtime();
+  AutoUseUncensoredAllocator ua;
   AutoMPLock lock(sLock);
-  if (!(*sJSRuntimeProfilerMap)[runtime].mEnabled) {
-    delete (*sJSRuntimeProfilerMap)[runtime].mProfiler;
-    (*sJSRuntimeProfilerMap)[runtime].mProfiler = nullptr;
+  JSRuntime* runtime = XPCJSRuntime::Get()->Runtime();
+  ProfilerForJSRuntime profiler;
+  if (!sJSRuntimeProfilerMap->Get(runtime, &profiler) ||
+      !profiler.mEnabled) {
+    delete profiler.mProfiler;
+    profiler.mProfiler = nullptr;
+    sJSRuntimeProfilerMap->Put(runtime, profiler);
   }
   if (sProfileRuntimeCount == 0) {
-    delete sNativeProfiler;
     sNativeProfiler = nullptr;
   }
   return NS_OK;
@@ -178,45 +176,45 @@ MemoryProfiler::ResetProfiler()
 
 struct MergedTraces
 {
-  u_vector<u_string> mNames;
-  u_vector<TrieNode> mTraces;
-  u_vector<AllocEvent> mEvents;
+  nsTArray<nsCString> mNames;
+  nsTArray<TrieNode> mTraces;
+  nsTArray<AllocEvent> mEvents;
 };
 
 // Merge events and corresponding traces and names.
 static MergedTraces
-MergeResults(u_vector<u_string> names0, u_vector<TrieNode> traces0, u_vector<AllocEvent> events0,
-             u_vector<u_string> names1, u_vector<TrieNode> traces1, u_vector<AllocEvent> events1)
+MergeResults(const nsTArray<nsCString>& names0,
+             const nsTArray<TrieNode>& traces0,
+             const nsTArray<AllocEvent>& events0,
+             const nsTArray<nsCString>& names1,
+             const nsTArray<TrieNode>& traces1,
+             const nsTArray<AllocEvent>& events1)
 {
-  NodeIndexMap<u_string> names;
-  NodeIndexMap<TrieNode> traces;
-  u_vector<AllocEvent> events;
+  NodeIndexMap<nsCStringHashKey, nsCString> names;
+  NodeIndexMap<nsGenericHashKey<TrieNode>, TrieNode> traces;
+  nsTArray<AllocEvent> events;
 
-  u_vector<size_t> names1Tonames0;
-  u_vector<size_t> traces1Totraces0(1, 0);
+  nsTArray<size_t> names1Tonames0(names1.Length());
+  nsTArray<size_t> traces1Totraces0(traces1.Length());
 
   // Merge names.
   for (auto& i: names0) {
     names.Insert(i);
   }
   for (auto& i: names1) {
-    names1Tonames0.push_back(names.Insert(i));
+    names1Tonames0.AppendElement(names.Insert(i));
   }
 
   // Merge traces. Note that traces1[i].parentIdx < i for all i > 0.
   for (auto& i: traces0) {
     traces.Insert(i);
   }
-  for (size_t i = 1; i < traces1.size(); i++) {
+  traces1Totraces0.AppendElement(0);
+  for (size_t i = 1; i < traces1.Length(); i++) {
     TrieNode node = traces1[i];
     node.parentIdx = traces1Totraces0[node.parentIdx];
     node.nameIdx = names1Tonames0[node.nameIdx];
-    traces1Totraces0.push_back(traces.Insert(node));
-  }
-
-  // Update events1
-  for (auto& i: events1) {
-    i.mTraceIdx = traces1Totraces0[i.mTraceIdx];
+    traces1Totraces0.AppendElement(traces.Insert(node));
   }
 
   // Merge the events according to timestamps.
@@ -225,18 +223,22 @@ MergeResults(u_vector<u_string> names0, u_vector<TrieNode> traces0, u_vector<All
 
   while (p0 != events0.end() && p1 != events1.end()) {
     if (p0->mTimestamp < p1->mTimestamp) {
-      events.push_back(*p0++);
+      events.AppendElement(*p0++);
     } else {
-      events.push_back(*p1++);
+      events.AppendElement(*p1++);
+      events.LastElement().mTraceIdx =
+        traces1Totraces0[events.LastElement().mTraceIdx];
     }
   }
 
   while (p0 != events0.end()) {
-    events.push_back(*p0++);
+    events.AppendElement(*p0++);
   }
 
   while (p1 != events1.end()) {
-    events.push_back(*p1++);
+    events.AppendElement(*p1++);
+    events.LastElement().mTraceIdx =
+      traces1Totraces0[events.LastElement().mTraceIdx];
   }
 
   return MergedTraces{names.Serialize(), traces.Serialize(), Move(events)};
@@ -246,8 +248,9 @@ NS_IMETHODIMP
 MemoryProfiler::GetResults(JSContext* cx, JS::MutableHandle<JS::Value> aResult)
 {
   InitOnce();
-  JSRuntime* runtime = XPCJSRuntime::Get()->Runtime();
+  AutoUseUncensoredAllocator ua;
   AutoMPLock lock(sLock);
+  JSRuntime* runtime = XPCJSRuntime::Get()->Runtime();
   // Getting results when the profiler is running is not allowed.
   if (sProfileRuntimeCount > 0) {
     return NS_OK;
@@ -257,29 +260,31 @@ MemoryProfiler::GetResults(JSContext* cx, JS::MutableHandle<JS::Value> aResult)
     return NS_OK;
   }
   // Return immediately when there's no result in current runtime.
-  if (!(*sJSRuntimeProfilerMap)[runtime].mProfiler) {
+  ProfilerForJSRuntime profiler;
+  if (!sJSRuntimeProfilerMap->Get(runtime, &profiler) ||
+      !profiler.mProfiler) {
     return NS_OK;
   }
-  GCHeapProfilerImpl* gp = (*sJSRuntimeProfilerMap)[runtime].mProfiler;
+  GCHeapProfilerImpl* gp = profiler.mProfiler;
 
   auto results = MergeResults(gp->GetNames(), gp->GetTraces(), gp->GetEvents(),
                               sNativeProfiler->GetNames(),
                               sNativeProfiler->GetTraces(),
                               sNativeProfiler->GetEvents());
-  u_vector<u_string> names = Move(results.mNames);
-  u_vector<TrieNode> traces = Move(results.mTraces);
-  u_vector<AllocEvent> events = Move(results.mEvents);
+  const nsTArray<nsCString>& names = results.mNames;
+  const nsTArray<TrieNode>& traces = results.mTraces;
+  const nsTArray<AllocEvent>& events = results.mEvents;
 
-  JS::RootedObject jsnames(cx, JS_NewArrayObject(cx, names.size()));
-  JS::RootedObject jstraces(cx, JS_NewArrayObject(cx, traces.size()));
-  JS::RootedObject jsevents(cx, JS_NewArrayObject(cx, events.size()));
+  JS::RootedObject jsnames(cx, JS_NewArrayObject(cx, names.Length()));
+  JS::RootedObject jstraces(cx, JS_NewArrayObject(cx, traces.Length()));
+  JS::RootedObject jsevents(cx, JS_NewArrayObject(cx, events.Length()));
 
-  for (size_t i = 0; i < names.size(); i++) {
-    JS::RootedString name(cx, JS_NewStringCopyZ(cx, names[i].c_str()));
+  for (size_t i = 0; i < names.Length(); i++) {
+    JS::RootedString name(cx, JS_NewStringCopyZ(cx, names[i].get()));
     JS_SetElement(cx, jsnames, i, name);
   }
 
-  for (size_t i = 0; i < traces.size(); i++) {
+  for (size_t i = 0; i < traces.Length(); i++) {
     JS::RootedObject tn(cx, JS_NewPlainObject(cx));
     JS::RootedValue nameIdx(cx, JS_NumberValue(traces[i].nameIdx));
     JS::RootedValue parentIdx(cx, JS_NumberValue(traces[i].parentIdx));
@@ -294,7 +299,7 @@ MemoryProfiler::GetResults(JSContext* cx, JS::MutableHandle<JS::Value> aResult)
       continue;
     }
     MOZ_ASSERT(!sStartTime.IsNull());
-    double time = (sStartTime - ent.mTimestamp).ToMilliseconds();
+    double time = (ent.mTimestamp - sStartTime).ToMilliseconds();
     JS::RootedObject tn(cx, JS_NewPlainObject(cx));
     JS::RootedValue size(cx, JS_NumberValue(ent.mSize));
     JS::RootedValue traceIdx(cx, JS_NumberValue(ent.mTraceIdx));
