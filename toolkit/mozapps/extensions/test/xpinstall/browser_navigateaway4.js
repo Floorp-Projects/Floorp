@@ -1,8 +1,10 @@
 // ----------------------------------------------------------------------------
-// Tests that closing the initiating page during the install cancels the install
-// to avoid spoofing the user.
+// Tests that navigating to a new origin cancels ongoing installs and closes
+// the install UI.
+let sawUnload = null;
+
 function test() {
-  Harness.downloadProgressCallback = download_progress;
+  Harness.installConfirmCallback = confirm_install;
   Harness.installEndedCallback = install_ended;
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
@@ -17,8 +19,12 @@ function test() {
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
 }
 
-function download_progress(addon, value, maxValue) {
-  gBrowser.removeCurrentTab();
+function confirm_install(window) {
+  sawUnload = BrowserTestUtils.waitForEvent(window, "unload");
+
+  gBrowser.loadURI(TESTROOT2 + "enabled.html");
+
+  return Harness.leaveOpen;
 }
 
 function install_ended(install, addon) {
@@ -28,7 +34,11 @@ function install_ended(install, addon) {
 function finish_test(count) {
   is(count, 0, "No add-ons should have been successfully installed");
 
-  Services.perms.remove("example.com", "install");
+  Services.perms.remove("http://example.com", "install");
 
-  Harness.finish();
+  sawUnload.then(() => {
+    ok(true, "The install UI should have closed itself.");
+    gBrowser.removeCurrentTab();
+    Harness.finish();
+  });
 }

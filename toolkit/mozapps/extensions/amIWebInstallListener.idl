@@ -87,6 +87,27 @@ interface amIWebInstallListener : nsISupports
                                 [optional] in uint32_t aCount);
 };
 
+[scriptable, uuid(a80b89ad-bb1a-4c43-9cb7-3ae656556f78)]
+interface amIWebInstallListener2 : nsISupports
+{
+  /**
+   * Called when a non-same-origin resource attempted to initiate an install.
+   * Installs will have already been cancelled and cannot be restarted.
+   *
+   * @param  aBrowser
+   *         The browser that triggered the installs
+   * @param  aUri
+   *         The URI of the site that triggered the installs
+   * @param  aInstalls
+   *         The AddonInstalls that were blocked
+   * @param  aCount
+   *         The number of AddonInstalls
+   */
+  boolean onWebInstallOriginBlocked(in nsIDOMElement aBrowser, in nsIURI aUri,
+                                    [array, size_is(aCount)] in nsIVariant aInstalls,
+                                    [optional] in uint32_t aCount);
+};
+
 /**
  * amIWebInstallPrompt is used, if available, by the default implementation of 
  * amIWebInstallInfo to display a confirmation UI to the user before running

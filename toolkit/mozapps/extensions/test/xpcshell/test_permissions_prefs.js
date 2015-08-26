@@ -8,6 +8,10 @@
 const PREF_XPI_WHITELIST_PERMISSIONS  = "xpinstall.whitelist.add";
 const PREF_XPI_BLACKLIST_PERMISSIONS  = "xpinstall.blacklist.add";
 
+function newPrincipal(uri) {
+  return Services.scriptSecurityManager.getNoAppCodebasePrincipal(NetUtil.newURI(uri));
+}
+
 function do_check_permission_prefs(preferences) {
   // Check preferences were emptied
   for (let pref of preferences) {
@@ -43,8 +47,7 @@ function run_test() {
 
   // Permissions are imported lazily - act as thought we're checking an install,
   // to trigger on-deman importing of the permissions.
-  let url = Services.io.newURI("http://example.com/file.xpi", null, null);
-  AddonManager.isInstallAllowed("application/x-xpinstall", url);
+  AddonManager.isInstallAllowed("application/x-xpinstall", newPrincipal("http://example.com/file.xpi"));
   do_check_permission_prefs(preferences);
 
 
