@@ -2181,7 +2181,7 @@ WorkerLoadInfo::WorkerLoadInfo()
   , mPrincipalIsSystem(false)
   , mIsInPrivilegedApp(false)
   , mIsInCertifiedApp(false)
-  , mStorageAllowed(false)
+  , mIndexedDBAllowed(false)
   , mPrivateBrowsing(true)
   , mServiceWorkersTestingInWindow(false)
 {
@@ -2240,7 +2240,7 @@ WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
   mPrincipalIsSystem = aOther.mPrincipalIsSystem;
   mIsInPrivilegedApp = aOther.mIsInPrivilegedApp;
   mIsInCertifiedApp = aOther.mIsInCertifiedApp;
-  mStorageAllowed = aOther.mStorageAllowed;
+  mIndexedDBAllowed = aOther.mIndexedDBAllowed;
   mPrivateBrowsing = aOther.mPrivateBrowsing;
   mServiceWorkersTestingInWindow = aOther.mServiceWorkersTestingInWindow;
 }
@@ -4807,15 +4807,12 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
     loadInfo.mDomain = aParent->Domain();
     loadInfo.mFromWindow = aParent->IsFromWindow();
     loadInfo.mWindowID = aParent->WindowID();
-    loadInfo.mStorageAllowed = aParent->IsStorageAllowed();
+    loadInfo.mIndexedDBAllowed = aParent->IsIndexedDBAllowed();
     loadInfo.mPrivateBrowsing = aParent->IsInPrivateBrowsing();
     loadInfo.mServiceWorkersTestingInWindow =
       aParent->ServiceWorkersTestingInWindow();
   } else {
     AssertIsOnMainThread();
-
-    // Make sure that the IndexedDatabaseManager is set up
-    NS_WARN_IF(!indexedDB::IndexedDatabaseManager::GetOrCreate());
 
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
     MOZ_ASSERT(ssm);
@@ -4935,9 +4932,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
       loadInfo.mIsInCertifiedApp = (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED);
       loadInfo.mFromWindow = true;
       loadInfo.mWindowID = globalWindow->WindowID();
-      nsContentUtils::StorageAccess access =
-        nsContentUtils::StorageAllowedForWindow(globalWindow);
-      loadInfo.mStorageAllowed = access > nsContentUtils::StorageAccess::eDeny;
+      loadInfo.mIndexedDBAllowed = IDBFactory::AllowedForWindow(globalWindow);
       loadInfo.mPrivateBrowsing = nsContentUtils::IsInPrivateBrowsing(document);
     } else {
       // Not a window
@@ -4979,7 +4974,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
       loadInfo.mXHRParamsAllowed = true;
       loadInfo.mFromWindow = false;
       loadInfo.mWindowID = UINT64_MAX;
-      loadInfo.mStorageAllowed = true;
+      loadInfo.mIndexedDBAllowed = true;
       loadInfo.mPrivateBrowsing = false;
     }
 

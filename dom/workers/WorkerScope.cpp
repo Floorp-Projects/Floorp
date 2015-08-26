@@ -358,9 +358,8 @@ WorkerGlobalScope::GetIndexedDB(ErrorResult& aErrorResult)
   nsRefPtr<IDBFactory> indexedDB = mIndexedDB;
 
   if (!indexedDB) {
-    if (!mWorkerPrivate->IsStorageAllowed()) {
+    if (!mWorkerPrivate->IsIndexedDBAllowed()) {
       NS_WARNING("IndexedDB is not allowed in this worker!");
-      aErrorResult = NS_ERROR_DOM_SECURITY_ERR;
       return nullptr;
     }
 

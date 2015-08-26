@@ -769,9 +769,9 @@ public:
   }
 
   bool
-  IsStorageAllowed() const
+  IsIndexedDBAllowed() const
   {
-    return mLoadInfo.mStorageAllowed;
+    return mLoadInfo.mIndexedDBAllowed;
   }
 
   bool

@@ -10910,7 +10910,7 @@ nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
   }
 
   if (!mLocalStorage) {
-    if (!DOMStorage::CanUseStorage(this)) {
+    if (!DOMStorage::CanUseStorage()) {
       aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
       return nullptr;
     }
@@ -10925,6 +10925,13 @@ nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
       do_GetService("@mozilla.org/dom/localStorage-manager;1", &rv);
     if (NS_FAILED(rv)) {
       aError.Throw(rv);
+      return nullptr;
+    }
+
+    // If the document has the sandboxed origin flag set
+    // don't allow access to localStorage.
+    if (mDoc && (mDoc->GetSandboxFlags() & SANDBOXED_ORIGIN)) {
+      aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
       return nullptr;
     }
 
@@ -11073,16 +11080,9 @@ nsGlobalWindow::GetCaches(ErrorResult& aRv)
     bool forceTrustedOrigin =
       GetOuterWindowInternal()->GetServiceWorkersTestingEnabled();
 
-    nsContentUtils::StorageAccess access =
-      nsContentUtils::StorageAllowedForWindow(this);
-
-    // We don't block the cache API when being told to only allow storage for the
-    // current session.
-    bool storageBlocked = access <= nsContentUtils::StorageAccess::ePrivateBrowsing;
-
     mCacheStorage = CacheStorage::CreateOnMainThread(cache::DEFAULT_NAMESPACE,
                                                      this, GetPrincipal(),
-                                                     storageBlocked,
+                                                     IsPrivateBrowsing(),
                                                      forceTrustedOrigin, aRv);
   }
 
