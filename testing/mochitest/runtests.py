@@ -2248,6 +2248,8 @@ class Mochitest(MochitestUtilsMixin):
             leak_thresholds=options.leakThresholds,
             ignore_missing_leaks=options.ignoreMissingLeaks,
             log=self.log,
+            stack_fixer=get_stack_fixer_function(options.utilityPath,
+                                                 options.symbolsPath),
         )
 
         if self.nsprLogs:

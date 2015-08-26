@@ -630,7 +630,10 @@ class RefTest(object):
                                  debuggerInfo=debuggerInfo)
             mozleak.process_leak_log(self.leakLogFile,
                                      leak_thresholds=options.leakThresholds,
-                                     log=log)
+                                     log=log,
+                                     stack_fixer=get_stack_fixer_function(options.utilityPath,
+                                                                          options.symbolsPath),
+            )
             log.info("\nREFTEST INFO | runreftest.py | Running tests: end.")
         finally:
             self.cleanup(profileDir)
