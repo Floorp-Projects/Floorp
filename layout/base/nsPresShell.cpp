@@ -1795,6 +1795,12 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     return NS_OK;
   }
 
+  if (mZoomConstraintsClient) {
+    // If we have a ZoomConstraintsClient and the available screen area
+    // changed, then we might need to disable double-tap-to-zoom, so notify
+    // the ZCC to update itself.
+    mZoomConstraintsClient->ScreenSizeChanged();
+  }
   if (mMobileViewportManager) {
     // If we have a mobile viewport manager, request a reflow from it. It can
     // recompute the final CSS viewport and trigger a call to

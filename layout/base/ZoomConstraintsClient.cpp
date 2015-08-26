@@ -133,6 +133,13 @@ ZoomConstraintsClient::Observe(nsISupports* aSubject, const char* aTopic, const 
   return NS_OK;
 }
 
+void
+ZoomConstraintsClient::ScreenSizeChanged()
+{
+  ZCC_LOG("Got a screen-size change notification in %p\n", this);
+  RefreshZoomConstraints();
+}
+
 mozilla::layers::ZoomConstraints
 ComputeZoomConstraintsFromViewportInfo(const nsViewportInfo& aViewportInfo)
 {
