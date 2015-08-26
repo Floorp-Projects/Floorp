@@ -138,7 +138,12 @@ function editCustomForm(callback) {
     }, false);
     headers.focus();
   }, false);
-  query.focus();
+
+  // Bug 1195825: Due to some unexplained dark-matter with promise,
+  // focus only works if delayed by one tick.
+  executeSoon(() => {
+    query.focus();
+  });
 }
 
 /*
