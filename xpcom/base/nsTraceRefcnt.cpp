@@ -109,7 +109,7 @@ static FILE* gRefcntsLog = nullptr;
 static FILE* gAllocLog = nullptr;
 static FILE* gCOMPtrLog = nullptr;
 
-struct serialNumberRecord
+struct SerialNumberRecord
 {
   intptr_t serialNumber;
   int32_t refCount;
@@ -162,7 +162,7 @@ AssertActivityIsLegal()
 #endif  // DEBUG
 
 // These functions are copied from nsprpub/lib/ds/plhash.c, with changes
-// to the functions not called Default* to free the serialNumberRecord or
+// to the functions not called Default* to free the SerialNumberRecord or
 // the BloatEntry.
 
 static void*
@@ -187,7 +187,7 @@ static void
 SerialNumberFreeEntry(void* aPool, PLHashEntry* aHashEntry, unsigned aFlag)
 {
   if (aFlag == HT_FREE_ENTRY) {
-    PR_Free(reinterpret_cast<serialNumberRecord*>(aHashEntry->value));
+    PR_Free(reinterpret_cast<SerialNumberRecord*>(aHashEntry->value));
     PR_Free(aHashEntry);
   }
 }
@@ -448,8 +448,8 @@ GetBloatEntry(const char* aTypeName, uint32_t aInstanceSize)
 static int
 DumpSerialNumbers(PLHashEntry* aHashEntry, int aIndex, void* aClosure)
 {
-  serialNumberRecord* record =
-    reinterpret_cast<serialNumberRecord*>(aHashEntry->value);
+  SerialNumberRecord* record =
+    reinterpret_cast<SerialNumberRecord*>(aHashEntry->value);
 #ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
   fprintf((FILE*)aClosure, "%" PRIdPTR
           " @%p (%d references; %d from COMPtrs)\n",
@@ -579,9 +579,9 @@ GetSerialNumber(void* aPtr, bool aCreate)
                                             HashNumber(aPtr),
                                             aPtr);
   if (hep && *hep) {
-    return reinterpret_cast<serialNumberRecord*>((*hep)->value)->serialNumber;
+    return reinterpret_cast<SerialNumberRecord*>((*hep)->value)->serialNumber;
   } else if (aCreate) {
-    serialNumberRecord* record = PR_NEW(serialNumberRecord);
+    SerialNumberRecord* record = PR_NEW(SerialNumberRecord);
     record->serialNumber = ++gNextSerialNumber;
     record->refCount = 0;
     record->COMPtrCount = 0;
@@ -599,7 +599,7 @@ GetRefCount(void* aPtr)
                                             HashNumber(aPtr),
                                             aPtr);
   if (hep && *hep) {
-    return &((reinterpret_cast<serialNumberRecord*>((*hep)->value))->refCount);
+    return &((reinterpret_cast<SerialNumberRecord*>((*hep)->value))->refCount);
   } else {
     return nullptr;
   }
@@ -613,7 +613,7 @@ GetCOMPtrCount(void* aPtr)
                                             HashNumber(aPtr),
                                             aPtr);
   if (hep && *hep) {
-    return &((reinterpret_cast<serialNumberRecord*>((*hep)->value))->COMPtrCount);
+    return &((reinterpret_cast<SerialNumberRecord*>((*hep)->value))->COMPtrCount);
   }
   return nullptr;
 }
