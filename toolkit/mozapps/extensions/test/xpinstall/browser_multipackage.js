@@ -6,8 +6,10 @@ function test() {
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.loadURI(TESTROOT + "multipackage.xpi");
+  gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
+    gBrowser.loadURI(TESTROOT + "multipackage.xpi");
+  });
 }
 
 function get_item(items, name) {

@@ -43,15 +43,6 @@ amContentHandler.prototype = {
     if (callbacks)
       window = callbacks.getInterface(Ci.nsIDOMWindow);
 
-    let referer = null;
-    if (aRequest instanceof Ci.nsIPropertyBag2) {
-      referer = aRequest.getPropertyAsInterface("docshell.internalReferrer",
-                                                Ci.nsIURI);
-    }
-
-    if (!referer && aRequest instanceof Ci.nsIHttpChannel)
-      referer = aRequest.referrer;
-
     aRequest.cancel(Cr.NS_BINDING_ABORTED);
 
     let messageManager = window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -65,7 +56,7 @@ amContentHandler.prototype = {
       names: [null],
       icons: [null],
       mimetype: XPI_CONTENT_TYPE,
-      referer: referer ? referer.spec : null,
+      triggeringPrincipal: aRequest.loadInfo.triggeringPrincipal,
       callbackID: -1
     });
   },
