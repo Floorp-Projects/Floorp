@@ -22,7 +22,11 @@ let test = asyncTest(function* () {
 
   let hud = yield openConsole();
 
-  expectUncaughtException();
+  // On e10s, the exception is triggered in child process
+  // and is ignored by test harness
+  if (!Services.appinfo.browserTabsRemoteAutostart) {
+    expectUncaughtException();
+  }
 
   yield testLogLevels(hud);
 

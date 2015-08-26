@@ -28,7 +28,11 @@ let test = asyncTest(function* () {
 
   let loaded = loadBrowser(browser);
 
-  expectUncaughtException();
+  // On e10s, the exception is triggered in child process
+  // and is ignored by test harness
+  if (!Services.appinfo.browserTabsRemoteAutostart) {
+    expectUncaughtException();
+  }
 
   content.location = TEST_URI;
   yield loaded;
@@ -108,7 +112,9 @@ function testJsLimits2() {
     let script = content.document.createElement("script");
     script.text = "fubar" + i + ".bogus(6);";
 
-    expectUncaughtException();
+    if (!Services.appinfo.browserTabsRemoteAutostart) {
+      expectUncaughtException();
+    }
     head.insertBefore(script, head.firstChild);
   }
 
