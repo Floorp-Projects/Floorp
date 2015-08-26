@@ -31,7 +31,7 @@ RUN git config --global user.email "mozilla@example.com" && \
 
 
 # Get node packages
-RUN npm install -g taskcluster-vcs@2.3.8
+RUN npm install -g taskcluster-vcs@2.3.9
 
 WORKDIR /home/worker
 
