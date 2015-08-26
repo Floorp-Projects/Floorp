@@ -25,7 +25,7 @@ function run_test() {
   // Now save a snapshot that will include the allocation stacks and read it
   // back again.
 
-  const filePath = getFilePath("core-dump.tmp", true, true);
+  const filePath = getFilePath("core-dump-" + Math.random() + ".tmp", true, true);
   ok(filePath, "Should get a file path");
 
   ChromeUtils.saveHeapSnapshot(filePath, { runtime: true });
