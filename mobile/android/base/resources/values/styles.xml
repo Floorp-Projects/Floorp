@@ -91,14 +91,11 @@
         <item name="drawableTintList">@color/action_bar_menu_item_colors</item>"
     </style>
 
-    <style name="Widget.MenuItemSecondaryActionBarBase">
+    <style name="Widget.MenuItemSecondaryActionBar">
         <item name="android:padding">8dip</item>
         <item name="android:background">@drawable/action_bar_button</item>
         <item name="android:scaleType">centerInside</item>
-    </style>
-
-    <style name="Widget.MenuItemSecondaryActionBar" parent="Widget.MenuItemSecondaryActionBarBase">
-        <!-- Overridden in large config -->
+        <item name="drawableTintList">@color/action_bar_secondary_menu_item_colors</item>
     </style>
 
     <style name="Widget.MenuItemActionView">
