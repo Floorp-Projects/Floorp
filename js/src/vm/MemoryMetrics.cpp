@@ -311,7 +311,8 @@ StatsZoneCallback(JSRuntime* rt, void* data, Zone* zone)
 
     zone->addSizeOfIncludingThis(rtStats->mallocSizeOf_,
                                  &zStats.typePool,
-                                 &zStats.baselineStubsOptimized);
+                                 &zStats.baselineStubsOptimized,
+                                 &zStats.uniqueIdMap);
 }
 
 static void
