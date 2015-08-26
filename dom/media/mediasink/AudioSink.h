@@ -6,6 +6,7 @@
 #if !defined(AudioSink_h__)
 #define AudioSink_h__
 
+#include "mozilla/MozPromise.h"
 #include "mozilla/nsRefPtr.h"
 #include "nsISupportsImpl.h"
 
