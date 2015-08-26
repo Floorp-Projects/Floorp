@@ -6371,6 +6371,8 @@ PresShell::UpdateActivePointerState(WidgetGUIEvent* aEvent)
       gActivePointersIds->Remove(mouseEvent->pointerId);
     }
     break;
+  default:
+    break;
   }
 }
 
@@ -6653,7 +6655,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
                                 nsEventStatus* aStatus,
                                 nsIContent** aTargetContent)
 {
-  uint32_t pointerMessage = 0;
+  EventMessage pointerMessage = NS_EVENT_NULL;
   if (aEvent->mClass == eMouseEventClass) {
     WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
     // if it is not mouse then it is likely will come as touch event
@@ -6838,7 +6840,7 @@ PresShell::DispatchBeforeKeyboardEventInternal(const nsTArray<nsCOMPtr<Element> 
     return;
   }
 
-  uint32_t message =
+  EventMessage message =
     (aEvent.mMessage == NS_KEY_DOWN) ? NS_KEY_BEFORE_DOWN : NS_KEY_BEFORE_UP;
   nsCOMPtr<EventTarget> eventTarget;
   // Dispatch before events from the outermost element.
@@ -6872,7 +6874,7 @@ PresShell::DispatchAfterKeyboardEventInternal(const nsTArray<nsCOMPtr<Element> >
     return;
   }
 
-  uint32_t message =
+  EventMessage message =
     (aEvent.mMessage == NS_KEY_DOWN) ? NS_KEY_AFTER_DOWN : NS_KEY_AFTER_UP;
   bool embeddedCancelled = aEmbeddedCancelled;
   nsCOMPtr<EventTarget> eventTarget;
@@ -7529,6 +7531,8 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         }
         break;
       }
+    default:
+      break;
     }
 
     // Check if we have an active EventStateManager which isn't the
@@ -7884,7 +7888,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
         isHandlingUserInput = true;
         break;
 
-      case NS_DRAGDROP_DROP:
+      case NS_DRAGDROP_DROP: {
         nsCOMPtr<nsIDragSession> session = nsContentUtils::GetDragSession();
         if (session) {
           bool onlyChromeDrop = false;
@@ -7893,6 +7897,10 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
             aEvent->mFlags.mOnlyChromeDispatch = true;
           }
         }
+        break;
+      }
+
+      default:
         break;
       }
 
@@ -7986,6 +7994,8 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
       break;
     case NS_MOUSE_MOVE:
       nsIPresShell::AllowMouseCapture(false);
+      break;
+    default:
       break;
     }
   }

@@ -322,7 +322,7 @@ public:
    *          TabParent or aWidget.  Therefore, the caller must not destroy
    *          this instance during a call of this method.
    */
-  void OnEventNeedingAckHandled(nsIWidget* aWidget, uint32_t aMessage);
+  void OnEventNeedingAckHandled(nsIWidget* aWidget, EventMessage aMessage);
 
   /**
    * RequestToCommitComposition() requests to commit or cancel composition to

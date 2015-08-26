@@ -236,7 +236,7 @@ CSSAnimation::QueueEvents()
     mPreviousPhaseOrIteration = PREVIOUS_PHASE_AFTER;
   }
 
-  uint32_t message;
+  EventMessage message;
 
   if (!wasActive && isActive) {
     message = NS_ANIMATION_START;

@@ -15,7 +15,7 @@ TransitionEvent::TransitionEvent(EventTarget* aOwner,
                                  nsPresContext* aPresContext,
                                  InternalTransitionEvent* aEvent)
   : Event(aOwner, aPresContext,
-          aEvent ? aEvent : new InternalTransitionEvent(false, 0))
+          aEvent ? aEvent : new InternalTransitionEvent(false, NS_EVENT_NULL))
 {
   if (aEvent) {
     mEventIsInternal = false;

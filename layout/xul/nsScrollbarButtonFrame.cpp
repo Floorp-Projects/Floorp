@@ -73,6 +73,8 @@ nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
       mCursorOnThis = frameRect.Contains(cursor);
       break;
     }
+    default:
+      break;
   }
 
   return nsButtonBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);

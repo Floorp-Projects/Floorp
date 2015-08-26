@@ -535,7 +535,7 @@ nsresult
 HTMLFormElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   if (aVisitor.mEvent->originalTarget == static_cast<nsIContent*>(this)) {
-    uint32_t msg = aVisitor.mEvent->mMessage;
+    EventMessage msg = aVisitor.mEvent->mMessage;
     if (msg == NS_FORM_SUBMIT) {
       // let the form know not to defer subsequent submissions
       mDeferSubmission = false;
@@ -555,8 +555,10 @@ HTMLFormElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
             mPendingSubmission = nullptr;
           }
           DoSubmitOrReset(aVisitor.mEvent, msg);
+          break;
         }
-        break;
+        default:
+          break;
       }
     } else {
       if (msg == NS_FORM_SUBMIT) {

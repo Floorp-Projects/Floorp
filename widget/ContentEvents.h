@@ -38,7 +38,7 @@ public:
     both       = 2
   };
 
-  InternalScrollPortEvent(bool aIsTrusted, uint32_t aMessage,
+  InternalScrollPortEvent(bool aIsTrusted, EventMessage aMessage,
                           nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eScrollPortEventClass)
     , orient(vertical)
@@ -80,7 +80,7 @@ public:
     return this;
   }
 
-  InternalScrollAreaEvent(bool aIsTrusted, uint32_t aMessage,
+  InternalScrollAreaEvent(bool aIsTrusted, EventMessage aMessage,
                           nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eScrollAreaEventClass)
   {
@@ -121,7 +121,7 @@ class InternalFormEvent : public WidgetEvent
 public:
   virtual InternalFormEvent* AsFormEvent() override { return this; }
 
-  InternalFormEvent(bool aIsTrusted, uint32_t aMessage)
+  InternalFormEvent(bool aIsTrusted, EventMessage aMessage)
     : WidgetEvent(aIsTrusted, aMessage, eFormEventClass)
     , originator(nullptr)
   {
@@ -159,7 +159,7 @@ public:
     return this;
   }
 
-  InternalClipboardEvent(bool aIsTrusted, uint32_t aMessage)
+  InternalClipboardEvent(bool aIsTrusted, EventMessage aMessage)
     : WidgetEvent(aIsTrusted, aMessage, eClipboardEventClass)
   {
   }
@@ -195,7 +195,7 @@ class InternalFocusEvent : public InternalUIEvent
 public:
   virtual InternalFocusEvent* AsFocusEvent() override { return this; }
 
-  InternalFocusEvent(bool aIsTrusted, uint32_t aMessage)
+  InternalFocusEvent(bool aIsTrusted, EventMessage aMessage)
     : InternalUIEvent(aIsTrusted, aMessage, eFocusEventClass)
     , fromRaise(false)
     , isRefocus(false)
@@ -240,7 +240,7 @@ public:
     return this;
   }
 
-  InternalTransitionEvent(bool aIsTrusted, uint32_t aMessage)
+  InternalTransitionEvent(bool aIsTrusted, EventMessage aMessage)
     : WidgetEvent(aIsTrusted, aMessage, eTransitionEventClass)
     , elapsedTime(0.0)
   {
@@ -285,7 +285,7 @@ public:
     return this;
   }
 
-  InternalAnimationEvent(bool aIsTrusted, uint32_t aMessage)
+  InternalAnimationEvent(bool aIsTrusted, EventMessage aMessage)
     : WidgetEvent(aIsTrusted, aMessage, eAnimationEventClass)
     , elapsedTime(0.0)
   {
@@ -327,7 +327,7 @@ class InternalSVGZoomEvent : public WidgetGUIEvent
 public:
   virtual InternalSVGZoomEvent* AsSVGZoomEvent() override { return this; }
 
-  InternalSVGZoomEvent(bool aIsTrusted, uint32_t aMessage)
+  InternalSVGZoomEvent(bool aIsTrusted, EventMessage aMessage)
     : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, eSVGZoomEventClass)
   {
     mFlags.mCancelable = false;
@@ -363,7 +363,7 @@ public:
     return this;
   }
 
-  InternalSMILTimeEvent(bool aIsTrusted, uint32_t aMessage)
+  InternalSMILTimeEvent(bool aIsTrusted, EventMessage aMessage)
     : InternalUIEvent(aIsTrusted, aMessage, eSMILTimeEventClass)
   {
     mFlags.mBubbles = false;

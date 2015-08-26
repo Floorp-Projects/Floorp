@@ -152,10 +152,11 @@ IsKeyDown(char key)
 }
 
 void
-nsNativeDragTarget::DispatchDragDropEvent(uint32_t aEventType, POINTL aPT)
+nsNativeDragTarget::DispatchDragDropEvent(EventMessage aEventMessage,
+                                          const POINTL& aPT)
 {
   nsEventStatus status;
-  WidgetDragEvent event(true, aEventType, mWidget);
+  WidgetDragEvent event(true, aEventMessage, mWidget);
 
   nsWindow * win = static_cast<nsWindow *>(mWidget);
   win->InitEvent(event);
@@ -182,7 +183,7 @@ nsNativeDragTarget::DispatchDragDropEvent(uint32_t aEventType, POINTL aPT)
 }
 
 void
-nsNativeDragTarget::ProcessDrag(uint32_t     aEventType,
+nsNativeDragTarget::ProcessDrag(EventMessage aEventMessage,
                                 DWORD        grfKeyState,
                                 POINTL       ptl,
                                 DWORD*       pdwEffect)
@@ -201,7 +202,7 @@ nsNativeDragTarget::ProcessDrag(uint32_t     aEventType,
   currSession->SetDragAction(geckoAction);
 
   // Dispatch the event into Gecko
-  DispatchDragDropEvent(aEventType, ptl);
+  DispatchDragDropEvent(aEventMessage, ptl);
 
   // If TakeChildProcessDragAction returns something other than
   // DRAGDROP_ACTION_UNINITIALIZED, it means that the last event was sent
@@ -228,7 +229,7 @@ nsNativeDragTarget::ProcessDrag(uint32_t     aEventType,
     *pdwEffect = DROPEFFECT_NONE;
   }
 
-  if (aEventType != NS_DRAGDROP_DROP) {
+  if (aEventMessage != NS_DRAGDROP_DROP) {
     // Get the cached drag effect from the drag service, the data member should
     // have been set by whoever handled the WidgetGUIEvent or nsIDOMEvent on
     // drags.

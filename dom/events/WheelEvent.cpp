@@ -16,7 +16,8 @@ WheelEvent::WheelEvent(EventTarget* aOwner,
                        WidgetWheelEvent* aWheelEvent)
   : MouseEvent(aOwner, aPresContext,
                aWheelEvent ? aWheelEvent :
-                             new WidgetWheelEvent(false, 0, nullptr))
+                             new WidgetWheelEvent(false, NS_EVENT_NULL,
+                                                  nullptr))
   , mAppUnitsPerDevPixel(0)
 {
   if (aWheelEvent) {

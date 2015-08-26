@@ -677,8 +677,9 @@ public:
 
 #ifdef MOZ_B2G
   // Inner windows only.
-  virtual void EnableNetworkEvent(uint32_t aType) override;
-  virtual void DisableNetworkEvent(uint32_t aType) override;
+  virtual void EnableNetworkEvent(mozilla::EventMessage aEventMessage) override;
+  virtual void DisableNetworkEvent(
+                 mozilla::EventMessage aEventMessage) override;
 #endif // MOZ_B2G
 
   virtual nsresult SetArguments(nsIArray* aArguments) override;
