@@ -1082,6 +1082,8 @@ InnerViewTable::addView(JSContext* cx, ArrayBufferObject* buffer, ArrayBufferVie
             ReportOutOfMemory(cx);
             return false;
         }
+        // ViewVector has one inline element, so the first insertion is
+        // guaranteed to succeed.
         MOZ_ALWAYS_TRUE(p->value().append(view));
     }
 
@@ -1138,11 +1140,8 @@ InnerViewTable::sweep(JSRuntime* rt)
         return;
 
     for (Map::Enum e(map); !e.empty(); e.popFront()) {
-        JSObject* key = e.front().key();
-        if (sweepEntry(&key, e.front().value()))
+        if (sweepEntry(&e.front().mutableKey(), e.front().value()))
             e.removeFront();
-        else if (key != e.front().key())
-            e.rekeyFront(key);
     }
 }
 
@@ -1153,15 +1152,13 @@ InnerViewTable::sweepAfterMinorGC(JSRuntime* rt)
 
     if (nurseryKeysValid) {
         for (size_t i = 0; i < nurseryKeys.length(); i++) {
-            JSObject* key = nurseryKeys[i];
-            Map::Ptr p = map.lookup(key);
+            JSObject* buffer = MaybeForwarded(nurseryKeys[i]);
+            Map::Ptr p = map.lookup(buffer);
             if (!p)
                 continue;
 
-            if (sweepEntry(&key, p->value()))
-                map.remove(nurseryKeys[i]);
-            else
-                map.rekeyIfMoved(nurseryKeys[i], key);
+            if (sweepEntry(&p->mutableKey(), p->value()))
+                map.remove(buffer);
         }
         nurseryKeys.clear();
     } else {
