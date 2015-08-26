@@ -291,6 +291,7 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
         fi
 
         (export AR="$AR"
+         export RANLIB="$RANLIB"
          export CC="$CC"
          export CXX="$CXX"
          export LD="$LD"
