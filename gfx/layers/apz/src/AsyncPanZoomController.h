@@ -49,6 +49,7 @@ class AsyncPanZoomAnimation;
 class FlingAnimation;
 class InputBlockState;
 class TouchBlockState;
+class PanGestureBlockState;
 class OverscrollHandoffChain;
 class StateChangeNotificationBlocker;
 
@@ -832,6 +833,7 @@ private:
   TouchBlockState* CurrentTouchBlock();
   bool HasReadyTouchBlock();
 
+  PanGestureBlockState* CurrentPanGestureBlock();
 
   /* ===================================================================
    * The functions and members in this section are used to manage
