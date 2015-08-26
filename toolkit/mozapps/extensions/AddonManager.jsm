@@ -304,6 +304,37 @@ function getLocale() {
 }
 
 /**
+ * Previously the APIs for installing add-ons from webpages accepted nsIURI
+ * arguments for the installing page. They now take an nsIPrincipal but for now
+ * maintain backwards compatibility by converting an nsIURI to an nsIPrincipal.
+ *
+ * @param  aPrincipalOrURI
+ *         The argument passed to the API function. Can be null, an nsIURI or
+ *         an nsIPrincipal.
+ * @return an nsIPrincipal.
+ */
+function ensurePrincipal(principalOrURI) {
+  if (principalOrURI instanceof Ci.nsIPrincipal)
+    return principalOrURI;
+
+  logger.warn("Deprecated API call, please pass a non-null nsIPrincipal instead of an nsIURI");
+
+  // Previously a null installing URI meant allowing the install regardless.
+  if (!principalOrURI) {
+    return Services.scriptSecurityManager.getSystemPrincipal();
+  }
+
+  if (principalOrURI instanceof Ci.nsIURI) {
+    return Services.scriptSecurityManager.createCodebasePrincipal(principalOrURI, {
+      inBrowser: true
+    });
+  }
+
+  // Just return whatever we have, the API method will log an error about it.
+  return principalOrURI;
+}
+
+/**
  * A helper class to repeatedly call a listener with each object in an array
  * optionally checking whether the object has a method in it.
  *
@@ -347,6 +378,100 @@ AsyncObjectCaller.prototype = {
     else
       this.callNext();
   }
+};
+
+/**
+ * Listens for a browser changing origin and cancels the installs that were
+ * started by it.
+ */
+function BrowserListener(aBrowser, aInstallingPrincipal, aInstalls) {
+  this.browser = aBrowser;
+  this.principal = aInstallingPrincipal;
+  this.installs = aInstalls;
+  this.installCount = aInstalls.length;
+
+  aBrowser.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
+  Services.obs.addObserver(this, "message-manager-close", true);
+
+  for (let install of this.installs)
+    install.addListener(this);
+
+  this.registered = true;
+}
+
+BrowserListener.prototype = {
+  browser: null,
+  installs: null,
+  installCount: null,
+  registered: false,
+
+  unregister: function() {
+    if (!this.registered)
+      return;
+    this.registered = false;
+
+    Services.obs.removeObserver(this, "message-manager-close");
+    // The browser may have already been detached
+    if (this.browser.removeProgressListener)
+      this.browser.removeProgressListener(this);
+
+    for (let install of this.installs)
+      install.removeListener(this);
+    this.installs = null;
+  },
+
+  cancelInstalls: function() {
+    for (let install of this.installs) {
+      try {
+        install.cancel();
+      }
+      catch (e) {
+        // Some installs may have already failed or been cancelled, ignore these
+      }
+    }
+  },
+
+  observe: function(subject, topic, data) {
+    if (subject != this.browser.messageManager)
+      return;
+
+    // The browser's message manager has closed and so the browser is
+    // going away, cancel all installs
+    this.cancelInstalls();
+  },
+
+  onLocationChange: function(webProgress, request, location) {
+    if (this.browser.contentPrincipal && this.principal.subsumes(this.browser.contentPrincipal))
+      return;
+
+    // The browser has navigated to a new origin so cancel all installs
+    this.cancelInstalls();
+  },
+
+  onDownloadCancelled: function(install) {
+    // Don't need to hear more events from this install
+    install.removeListener(this);
+
+    // Once all installs have ended unregister everything
+    if (--this.installCount == 0)
+      this.unregister();
+  },
+
+  onDownloadFailed: function(install) {
+    this.onDownloadCancelled(install);
+  },
+
+  onInstallFailed: function(install) {
+    this.onDownloadCancelled(install);
+  },
+
+  onInstallEnded: function(install) {
+    this.onDownloadCancelled(install);
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference,
+                                         Ci.nsIWebProgressListener,
+                                         Ci.nsIObserver])
 };
 
 /**
@@ -1988,11 +2113,11 @@ var AddonManagerInternal = {
    *
    * @param  aMimetype
    *         The mimetype of the add-on
-   * @param  aURI
-   *         The optional nsIURI of the source
+   * @param  aInstallingPrincipal
+   *         The nsIPrincipal that initiated the install
    * @return true if the source is allowed to install this mimetype
    */
-  isInstallAllowed: function AMI_isInstallAllowed(aMimetype, aURI) {
+  isInstallAllowed: function AMI_isInstallAllowed(aMimetype, aInstallingPrincipal) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -2001,14 +2126,14 @@ var AddonManagerInternal = {
       throw Components.Exception("aMimetype must be a non-empty string",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (aURI && !(aURI instanceof Ci.nsIURI))
-      throw Components.Exception("aURI must be a nsIURI or null",
+    if (!aInstallingPrincipal || !(aInstallingPrincipal instanceof Ci.nsIPrincipal))
+      throw Components.Exception("aInstallingPrincipal must be a nsIPrincipal",
                                  Cr.NS_ERROR_INVALID_ARG);
 
     let providers = [...this.providers];
     for (let provider of providers) {
       if (callProvider(provider, "supportsMimetype", false, aMimetype) &&
-          callProvider(provider, "isInstallAllowed", null, aURI))
+          callProvider(provider, "isInstallAllowed", null, aInstallingPrincipal))
         return true;
     }
     return false;
@@ -2022,14 +2147,14 @@ var AddonManagerInternal = {
    *         The mimetype of add-ons being installed
    * @param  aBrowser
    *         The optional browser element that started the installs
-   * @param  aURI
-   *         The optional nsIURI that started the installs
+   * @param  aInstallingPrincipal
+   *         The nsIPrincipal that initiated the install
    * @param  aInstalls
    *         The array of AddonInstalls to be installed
    */
   installAddonsFromWebpage: function AMI_installAddonsFromWebpage(aMimetype,
                                                                   aBrowser,
-                                                                  aURI,
+                                                                  aInstallingPrincipal,
                                                                   aInstalls) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
@@ -2043,8 +2168,8 @@ var AddonManagerInternal = {
       throw Components.Exception("aSource must be a nsIDOMElement, or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (aURI && !(aURI instanceof Ci.nsIURI))
-      throw Components.Exception("aURI must be a nsIURI or null",
+    if (!aInstallingPrincipal || !(aInstallingPrincipal instanceof Ci.nsIPrincipal))
+      throw Components.Exception("aInstallingPrincipal must be a nsIPrincipal",
                                  Cr.NS_ERROR_INVALID_ARG);
 
     if (!Array.isArray(aInstalls))
@@ -2063,20 +2188,40 @@ var AddonManagerInternal = {
       let weblistener = Cc["@mozilla.org/addons/web-install-listener;1"].
                         getService(Ci.amIWebInstallListener);
 
-      if (!this.isInstallEnabled(aMimetype, aURI)) {
-        weblistener.onWebInstallDisabled(aBrowser, aURI, aInstalls,
-                                         aInstalls.length);
+      if (!this.isInstallEnabled(aMimetype)) {
+        for (let install of aInstalls)
+          install.cancel();
+
+        weblistener.onWebInstallDisabled(aBrowser, aInstallingPrincipal.URI,
+                                         aInstalls, aInstalls.length);
+        return;
       }
-      else if (!this.isInstallAllowed(aMimetype, aURI)) {
-        if (weblistener.onWebInstallBlocked(aBrowser, aURI, aInstalls,
-                                            aInstalls.length)) {
+      else if (!aBrowser.contentPrincipal || !aInstallingPrincipal.subsumes(aBrowser.contentPrincipal)) {
+        for (let install of aInstalls)
+          install.cancel();
+
+        if (weblistener instanceof Ci.amIWebInstallListener2) {
+          weblistener.onWebInstallOriginBlocked(aBrowser, aInstallingPrincipal.URI,
+                                                aInstalls, aInstalls.length);
+        }
+        return;
+      }
+
+      // The installs may start now depending on the web install listener,
+      // listen for the browser navigating to a new origin and cancel the
+      // installs in that case.
+      new BrowserListener(aBrowser, aInstallingPrincipal, aInstalls);
+
+      if (!this.isInstallAllowed(aMimetype, aInstallingPrincipal)) {
+        if (weblistener.onWebInstallBlocked(aBrowser, aInstallingPrincipal.URI,
+                                            aInstalls, aInstalls.length)) {
           aInstalls.forEach(function(aInstall) {
             aInstall.install();
           });
         }
       }
-      else if (weblistener.onWebInstallRequested(aBrowser, aURI, aInstalls,
-                                                   aInstalls.length)) {
+      else if (weblistener.onWebInstallRequested(aBrowser, aInstallingPrincipal.URI,
+                                                 aInstalls, aInstalls.length)) {
         aInstalls.forEach(function(aInstall) {
           aInstall.install();
         });
@@ -2931,13 +3076,16 @@ this.AddonManager = {
     return AddonManagerInternal.isInstallEnabled(aType);
   },
 
-  isInstallAllowed: function AM_isInstallAllowed(aType, aUri) {
-    return AddonManagerInternal.isInstallAllowed(aType, aUri);
+  isInstallAllowed: function AM_isInstallAllowed(aType, aInstallingPrincipal) {
+    return AddonManagerInternal.isInstallAllowed(aType, ensurePrincipal(aInstallingPrincipal));
   },
 
   installAddonsFromWebpage: function AM_installAddonsFromWebpage(aType, aBrowser,
-                                                                 aUri, aInstalls) {
-    AddonManagerInternal.installAddonsFromWebpage(aType, aBrowser, aUri, aInstalls);
+                                                                 aInstallingPrincipal,
+                                                                 aInstalls) {
+    AddonManagerInternal.installAddonsFromWebpage(aType, aBrowser,
+                                                  ensurePrincipal(aInstallingPrincipal),
+                                                  aInstalls);
   },
 
   addManagerListener: function AM_addManagerListener(aListener) {
