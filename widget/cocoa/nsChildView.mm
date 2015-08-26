@@ -3436,6 +3436,28 @@ NSEvent* gLastDragMouseDownEvent = nil;
          [(BaseWindow*)[self window] drawsContentsIntoWindowFrame];
 }
 
+- (void)viewWillStartLiveResize
+{
+  nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+
+  if (!observerService) {
+    return;
+  }
+
+  observerService->NotifyObservers(nullptr, "live-resize-start", nullptr);
+}
+
+- (void)viewDidEndLiveResize
+{
+  nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+
+  if (!observerService) {
+    return;
+  }
+
+  observerService->NotifyObservers(nullptr, "live-resize-end", nullptr);
+}
+
 - (NSColor*)vibrancyFillColorForThemeGeometryType:(nsITheme::ThemeGeometryType)aThemeGeometryType
 {
   if (!mGeckoChild) {
