@@ -13,14 +13,14 @@
 #include "nsServiceManagerUtils.h"
 #include "nsContentUtils.h"
 #include "jsapi.h"
-#include "jsfriendapi.h"
-#include "js/StructuredClone.h"
 #include "xpcpublic.h"
 
 #include "mozilla/Base64.h"
+#include "mozilla/dom/StructuredCloneHelper.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 NS_IMPL_ADDREF(nsStructuredCloneContainer)
 NS_IMPL_RELEASE(nsStructuredCloneContainer)
@@ -31,53 +31,44 @@ NS_INTERFACE_MAP_BEGIN(nsStructuredCloneContainer)
 NS_INTERFACE_MAP_END
 
 nsStructuredCloneContainer::nsStructuredCloneContainer()
-  : mData(nullptr), mSize(0), mVersion(0)
+  : StructuredCloneHelper(CloningSupported, TransferringNotSupported)
+  , mState(eNotInitialized) , mData(nullptr), mSize(0), mVersion(0)
 {
 }
 
 nsStructuredCloneContainer::~nsStructuredCloneContainer()
 {
-  free(mData);
+  if (mData) {
+    free(mData);
+  }
 }
 
-nsresult
+NS_IMETHODIMP
 nsStructuredCloneContainer::InitFromJSVal(JS::Handle<JS::Value> aData,
                                           JSContext* aCx)
 {
-  NS_ENSURE_STATE(!mData);
-
-  uint64_t* jsBytes = nullptr;
-  bool success = JS_WriteStructuredClone(aCx, aData, &jsBytes, &mSize,
-                                           nullptr, nullptr,
-                                           JS::UndefinedHandleValue);
-  NS_ENSURE_STATE(success);
-  NS_ENSURE_STATE(jsBytes);
-
-  // Copy jsBytes into our own buffer.
-  mData = (uint64_t*) malloc(mSize);
-  if (!mData) {
-    mSize = 0;
-    mVersion = 0;
-
-    JS_ClearStructuredClone(jsBytes, mSize, nullptr, nullptr);
+  if (mState != eNotInitialized) {
     return NS_ERROR_FAILURE;
   }
-  else {
-    mVersion = JS_STRUCTURED_CLONE_VERSION;
+
+  ErrorResult rv;
+  Write(aCx, aData, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
 
-  memcpy(mData, jsBytes, mSize);
-
-  JS_ClearStructuredClone(jsBytes, mSize, nullptr, nullptr);
+  mState = eInitializedFromJSVal;
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsStructuredCloneContainer::InitFromBase64(const nsAString &aData,
                                            uint32_t aFormatVersion,
-                                           JSContext *aCx)
+                                           JSContext* aCx)
 {
-  NS_ENSURE_STATE(!mData);
+  if (mState != eNotInitialized) {
+    return NS_ERROR_FAILURE;
+  }
 
   NS_ConvertUTF16toUTF8 data(aData);
 
@@ -92,6 +83,8 @@ nsStructuredCloneContainer::InitFromBase64(const nsAString &aData,
 
   mSize = binaryData.Length();
   mVersion = aFormatVersion;
+
+  mState = eInitializedFromBase64;
   return NS_OK;
 }
 
@@ -101,31 +94,45 @@ nsStructuredCloneContainer::DeserializeToJsval(JSContext* aCx,
 {
   aValue.setNull();
   JS::Rooted<JS::Value> jsStateObj(aCx);
-  bool hasTransferable = false;
-  bool success = JS_ReadStructuredClone(aCx, mData, mSize, mVersion,
-                                        &jsStateObj, nullptr, nullptr) &&
-                 JS_StructuredCloneHasTransferables(mData, mSize,
-                                                    &hasTransferable);
-  // We want to be sure that mData doesn't contain transferable objects
-  MOZ_ASSERT(!hasTransferable);
-  NS_ENSURE_STATE(success && !hasTransferable);
+
+  if (mState == eInitializedFromJSVal) {
+    ErrorResult rv;
+    Read(nullptr, aCx, &jsStateObj, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
+    }
+  } else {
+    MOZ_ASSERT(mState == eInitializedFromBase64);
+    MOZ_ASSERT(mData);
+
+    ErrorResult rv;
+    ReadFromBuffer(nullptr, aCx, mData, mSize, mVersion, &jsStateObj, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
+    }
+  }
 
   aValue.set(jsStateObj);
   return NS_OK;
 }
 
-nsresult
-nsStructuredCloneContainer::DeserializeToVariant(JSContext *aCx,
-                                                 nsIVariant **aData)
+NS_IMETHODIMP
+nsStructuredCloneContainer::DeserializeToVariant(JSContext* aCx,
+                                                 nsIVariant** aData)
 {
-  NS_ENSURE_STATE(mData);
   NS_ENSURE_ARG_POINTER(aData);
   *aData = nullptr;
+
+  if (mState == eNotInitialized) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Deserialize to a JS::Value.
   JS::Rooted<JS::Value> jsStateObj(aCx);
   nsresult rv = DeserializeToJsval(aCx, &jsStateObj);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // Now wrap the JS::Value as an nsIVariant.
   nsCOMPtr<nsIVariant> varStateObj;
@@ -134,30 +141,63 @@ nsStructuredCloneContainer::DeserializeToVariant(JSContext *aCx,
   xpconnect->JSValToVariant(aCx, jsStateObj, getter_AddRefs(varStateObj));
   NS_ENSURE_STATE(varStateObj);
 
-  NS_ADDREF(*aData = varStateObj);
+  varStateObj.forget(aData);
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsStructuredCloneContainer::GetDataAsBase64(nsAString &aOut)
 {
-  NS_ENSURE_STATE(mData);
   aOut.Truncate();
 
-  nsAutoCString binaryData(reinterpret_cast<char*>(mData), mSize);
+  if (mState == eNotInitialized) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint64_t* data;
+  size_t size;
+
+  if (mState == eInitializedFromJSVal) {
+    if (HasClonedDOMObjects()) {
+      return NS_ERROR_FAILURE;
+    }
+
+    data = BufferData();
+    size = BufferSize();
+  } else {
+    MOZ_ASSERT(mState == eInitializedFromBase64);
+    MOZ_ASSERT(mData);
+
+    data = mData;
+    size = mSize;
+  }
+
+  nsAutoCString binaryData(reinterpret_cast<char*>(data), size);
   nsAutoCString base64Data;
   nsresult rv = Base64Encode(binaryData, base64Data);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  aOut.Assign(NS_ConvertASCIItoUTF16(base64Data));
+  CopyASCIItoUTF16(base64Data, aOut);
   return NS_OK;
 }
 
-nsresult
-nsStructuredCloneContainer::GetSerializedNBytes(uint64_t *aSize)
+NS_IMETHODIMP
+nsStructuredCloneContainer::GetSerializedNBytes(uint64_t* aSize)
 {
-  NS_ENSURE_STATE(mData);
   NS_ENSURE_ARG_POINTER(aSize);
+
+  if (mState == eNotInitialized) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mState == eInitializedFromJSVal) {
+    *aSize = BufferSize();
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(mState == eInitializedFromBase64);
 
   // mSize is a size_t, while aSize is a uint64_t.  We rely on an implicit cast
   // here so that we'll get a compile error if a size_t-to-uint64_t cast is
@@ -167,11 +207,21 @@ nsStructuredCloneContainer::GetSerializedNBytes(uint64_t *aSize)
   return NS_OK;
 }
 
-nsresult
-nsStructuredCloneContainer::GetFormatVersion(uint32_t *aFormatVersion)
+NS_IMETHODIMP
+nsStructuredCloneContainer::GetFormatVersion(uint32_t* aFormatVersion)
 {
-  NS_ENSURE_STATE(mData);
   NS_ENSURE_ARG_POINTER(aFormatVersion);
+
+  if (mState == eNotInitialized) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mState == eInitializedFromJSVal) {
+    *aFormatVersion = JS_STRUCTURED_CLONE_VERSION;
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(mState == eInitializedFromBase64);
   *aFormatVersion = mVersion;
   return NS_OK;
 }
