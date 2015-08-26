@@ -224,6 +224,10 @@ compartment.
         * "allocation trigger"
         * "requested"
 
+    `gcCycleNumber`
+    :   The GC cycle's "number". Does not correspond to the number
+        of GC cycles that have run, but is guaranteed to be monotonically
+        increasing.
 
 Function Properties of the `Debugger.Memory.prototype` Object
 -------------------------------------------------------------
