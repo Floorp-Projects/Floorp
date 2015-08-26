@@ -10,6 +10,8 @@
 #include "mozilla/Pair.h"
 #include "PlatformDecoderModule.h"
 
+#include <deque>
+
 namespace mozilla {
 
 // Fuzzing wrapper for media decoders.
@@ -77,7 +79,7 @@ private:
   // Second member is true if an 'InputExhausted' arrived after that frame; in
   // which case an InputExhausted will be sent after finally outputting the frame.
   typedef Pair<nsRefPtr<MediaData>, bool> MediaDataAndInputExhausted;
-  nsTArray<MediaDataAndInputExhausted> mDelayedOutput;
+  std::deque<MediaDataAndInputExhausted> mDelayedOutput;
   nsRefPtr<MediaTimer> mDelayedOutputTimer;
   // If draining, a 'DrainComplete' will be sent after all delayed frames have
   // been output.
