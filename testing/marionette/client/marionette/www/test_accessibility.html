@@ -32,22 +32,7 @@
   <button id="button11" disabled>button11</button>
   <button id="button12" aria-disabled="true">button12</button>
   <span id="no_accessible_but_disabled" disabled>I have no accessible object</span>
-  <span id="button13" tabindex="0" role="button" aria-label="Span button">Span button</span>
-  <span id="button14" role="button" aria-label="Span button">Unexplorable Span button</span>
-  <button id="button15" style="pointer-events:none;">button15</button>
-  <div style="pointer-events:none;">
-    <button id="button16">button16</button>
-  </div>
-  <div style="pointer-events:none;">
-    <button style="pointer-events:all;" id="button17">button17</button>
-  </div>
-  <input id="input1" title="My Input 1" name="myInput1" type="text" value="asdf"/>
-  <select>
-    <option id="option1" value="val1">Val1</option>
-    <option id="option2" value="val2" selected>Val2</option>
-  </select>
   <script>
-      'use strict';
       document.getElementById('button5').addEventListener('click', function() {
         // A pseudo button that has a listener but is missing button semantics.
         return true;
