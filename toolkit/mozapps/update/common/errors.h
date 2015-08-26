@@ -82,6 +82,8 @@
 #define WRITE_ERROR_DIR_ACCESS_DENIED 68
 #define WRITE_ERROR_DELETE_BACKUP 69
 #define WRITE_ERROR_EXTRACT 70
+#define REMOVE_FILE_SPEC_ERROR 71
+#define INVALID_STAGED_PARENT_ERROR 72
 
 // Error codes 80 through 99 are reserved for nsUpdateService.js
 
