@@ -665,6 +665,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               case "userMadeSearchSuggestionsChoice":
                 this._userMadeSearchSuggestionsChoice =
                   this._prefs.getBoolPref(aData);
+                this.popup.searchSuggestionsNotificationWasDismissed(
+                  this._prefs.getBoolPref("suggest.searches")
+                );
                 break;
               case "trimURLs":
                 this._mayTrimURLs = this._prefs.getBoolPref(aData);
@@ -1554,16 +1557,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <parameter name="enableSuggestions"/>
         <body><![CDATA[
           Services.prefs.setBoolPref(
-            "browser.urlbar.userMadeSearchSuggestionsChoice", true
-          );
-          Services.prefs.setBoolPref(
             "browser.urlbar.suggest.searches", enableSuggestions
           );
-          this._hideSearchSuggestionsNotification(true);
-          if (enableSuggestions && this.input.textValue) {
-            // Start a new search so that suggestions appear immediately.
-            this.input.controller.startSearch(this.input.textValue);
-          }
+          Services.prefs.setBoolPref(
+            "browser.urlbar.userMadeSearchSuggestionsChoice", true
+          );
+          // The input's pref observer will now hide the notification.
         ]]></body>
       </method>
 
@@ -1688,14 +1687,27 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         </body>
       </method>
 
-      <method name="_hideSearchSuggestionsNotification">
-        <parameter name="animate"/>
+      <method name="searchSuggestionsNotificationWasDismissed">
+        <parameter name="enableSuggestions"/>
         <body>
           <![CDATA[
-          if (animate) {
-            this._hideSearchSuggestionsNotificationWithAnimation();
+          if (!this.popupOpen) {
+            this._hideSearchSuggestionsNotification();
             return;
           }
+          this._hideSearchSuggestionsNotificationWithAnimation().then(() => {
+            if (enableSuggestions && this.input.textValue) {
+              // Start a new search so that suggestions appear immediately.
+              this.input.controller.startSearch(this.input.textValue);
+            }
+          });
+          ]]>
+        </body>
+      </method>
+
+      <method name="_hideSearchSuggestionsNotification">
+        <body>
+          <![CDATA[
           this.classList.remove("showSearchSuggestionsNotification");
           this.richlistbox.flex = 1;
           this.removeAttribute("dontanimate");
@@ -1712,23 +1724,26 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <method name="_hideSearchSuggestionsNotificationWithAnimation">
         <body>
           <![CDATA[
-          let notificationHeight = this.searchSuggestionsNotification
-                                       .getBoundingClientRect()
-                                       .height;
-          this.searchSuggestionsNotification.style.marginTop =
-            "-" + notificationHeight + "px";
+          return new Promise(resolve => {
+            let notificationHeight = this.searchSuggestionsNotification
+                                         .getBoundingClientRect()
+                                         .height;
+            this.searchSuggestionsNotification.style.marginTop =
+              "-" + notificationHeight + "px";
 
-          let popupHeightPx =
-            (this.getBoundingClientRect().height - notificationHeight) + "px";
-          this.style.height = popupHeightPx;
+            let popupHeightPx =
+              (this.getBoundingClientRect().height - notificationHeight) + "px";
+            this.style.height = popupHeightPx;
 
-          let onTransitionEnd = () => {
-            this.removeEventListener("transitionend", onTransitionEnd, true);
-            this.searchSuggestionsNotification.style.marginTop = "0px";
-            this.style.removeProperty("height");
-            this._hideSearchSuggestionsNotification(false);
-          };
-          this.addEventListener("transitionend", onTransitionEnd, true);
+            let onTransitionEnd = () => {
+              this.removeEventListener("transitionend", onTransitionEnd, true);
+              this.searchSuggestionsNotification.style.marginTop = "0px";
+              this.style.removeProperty("height");
+              this._hideSearchSuggestionsNotification();
+              resolve();
+            };
+            this.addEventListener("transitionend", onTransitionEnd, true);
+          });
           ]]>
         </body>
       </method>
