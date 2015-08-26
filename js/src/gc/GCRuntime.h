@@ -767,13 +767,12 @@ class GCRuntime
     void setFoundBlackGrayEdges() { foundBlackGrayEdges = true; }
 
     uint64_t gcNumber() const { return number; }
-    void incGcNumber() { ++number; }
 
     uint64_t minorGCCount() const { return minorGCNumber; }
-    void incMinorGcNumber() { ++minorGCNumber; }
+    void incMinorGcNumber() { ++minorGCNumber; ++number; }
 
     uint64_t majorGCCount() const { return majorGCNumber; }
-    void incMajorGcNumber() { ++majorGCNumber; }
+    void incMajorGcNumber() { ++majorGCNumber; ++number; }
 
     int64_t defaultSliceBudget() const { return defaultTimeBudget_; }
 
