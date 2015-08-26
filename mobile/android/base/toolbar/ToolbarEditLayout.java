@@ -6,14 +6,11 @@
 package org.mozilla.gecko.toolbar;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.speech.RecognizerIntent;
 import android.widget.Button;
 import android.widget.ImageButton;
 import org.mozilla.gecko.ActivityHandlerHelper;
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
@@ -29,7 +26,7 @@ import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.InputOptionsUtils;
-import org.mozilla.gecko.widget.ThemedLinearLayout;
+import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 
 import android.content.Context;
 import android.util.AttributeSet;
