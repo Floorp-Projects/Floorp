@@ -666,15 +666,15 @@ nsContentUtils::InitializeModifierStrings()
 }
 
 // Because of SVG/SMIL we have several atoms mapped to the same
-// id, but we can rely on ID_TO_EVENT to map id to only one atom.
+// id, but we can rely on MESSAGE_TO_EVENT to map id to only one atom.
 static bool
 ShouldAddEventToStringEventTable(const EventNameMapping& aMapping)
 {
-  switch(aMapping.mId) {
-#define ID_TO_EVENT(name_, id_, type_, struct_) \
-  case id_: return nsGkAtoms::on##name_ == aMapping.mAtom;
+  switch(aMapping.mMessage) {
+#define MESSAGE_TO_EVENT(name_, message_, type_, struct_) \
+  case message_: return nsGkAtoms::on##name_ == aMapping.mAtom;
 #include "mozilla/EventNameList.h"
-#undef ID_TO_EVENT
+#undef MESSAGE_TO_EVENT
   default:
     break;
   }
@@ -687,8 +687,8 @@ nsContentUtils::InitializeEventTable() {
   NS_ASSERTION(!sStringEventTable, "EventTable already initialized!");
 
   static const EventNameMapping eventArray[] = {
-#define EVENT(name_,  _id, _type, _class)          \
-    { nsGkAtoms::on##name_, _id, _type, _class },
+#define EVENT(name_,  _message, _type, _class)          \
+    { nsGkAtoms::on##name_, _type, _message, _class },
 #define WINDOW_ONLY_EVENT EVENT
 #define NON_IDL_EVENT EVENT
 #include "mozilla/EventNameList.h"
@@ -724,9 +724,9 @@ nsContentUtils::InitializeTouchEventTable()
   if (!sEventTableInitialized && sAtomEventTable && sStringEventTable) {
     sEventTableInitialized = true;
     static const EventNameMapping touchEventArray[] = {
-#define EVENT(name_,  _id, _type, _class)
-#define TOUCH_EVENT(name_,  _id, _type, _class)      \
-      { nsGkAtoms::on##name_, _id, _type, _class },
+#define EVENT(name_,  _message, _type, _class)
+#define TOUCH_EVENT(name_,  _message, _type, _class)      \
+      { nsGkAtoms::on##name_, _type, _message, _class },
 #include "mozilla/EventNameList.h"
 #undef TOUCH_EVENT
 #undef EVENT
@@ -3655,13 +3655,13 @@ nsContentUtils::IsEventAttributeName(nsIAtom* aName, int32_t aType)
 }
 
 // static
-uint32_t
-nsContentUtils::GetEventId(nsIAtom* aName)
+EventMessage
+nsContentUtils::GetEventMessage(nsIAtom* aName)
 {
   if (aName) {
     EventNameMapping mapping;
     if (sAtomEventTable->Get(aName, &mapping)) {
-      return mapping.mId;
+      return mapping.mMessage;
     }
   }
 
@@ -3680,14 +3680,15 @@ nsContentUtils::GetEventClassID(const nsAString& aName)
 }
 
 nsIAtom*
-nsContentUtils::GetEventIdAndAtom(const nsAString& aName,
-                                  mozilla::EventClassID aEventClassID,
-                                  uint32_t* aEventID)
+nsContentUtils::GetEventMessageAndAtom(const nsAString& aName,
+                                       mozilla::EventClassID aEventClassID,
+                                       EventMessage* aEventMessage)
 {
   EventNameMapping mapping;
   if (sStringEventTable->Get(aName, &mapping)) {
-    *aEventID = mapping.mEventClassID == aEventClassID ? mapping.mId :
-                                                         NS_USER_DEFINED_EVENT;
+    *aEventMessage =
+      mapping.mEventClassID == aEventClassID ? mapping.mMessage :
+                                               NS_USER_DEFINED_EVENT;
     return mapping.mAtom;
   }
 
@@ -3700,11 +3701,11 @@ nsContentUtils::GetEventIdAndAtom(const nsAString& aName,
     }
   }
 
-  *aEventID = NS_USER_DEFINED_EVENT;
+  *aEventMessage = NS_USER_DEFINED_EVENT;
   nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aName);
   sUserDefinedEvents->AppendObject(atom);
   mapping.mAtom = atom;
-  mapping.mId = NS_USER_DEFINED_EVENT;
+  mapping.mMessage = NS_USER_DEFINED_EVENT;
   mapping.mType = EventNameType_None;
   mapping.mEventClassID = eBasicEventClass;
   sStringEventTable->Put(aName, mapping);
@@ -7706,7 +7707,7 @@ nsContentUtils::SendKeyEvent(nsIWidget* aWidget,
   if (!aWidget)
     return NS_ERROR_FAILURE;
 
-  int32_t msg;
+  EventMessage msg;
   if (aType.EqualsLiteral("keydown"))
     msg = NS_KEY_DOWN;
   else if (aType.EqualsLiteral("keyup"))
@@ -7819,7 +7820,7 @@ nsContentUtils::SendMouseEvent(nsCOMPtr<nsIPresShell> aPresShell,
   if (!widget)
     return NS_ERROR_FAILURE;
 
-  int32_t msg;
+  EventMessage msg;
   bool contextMenuKey = false;
   if (aType.EqualsLiteral("mousedown"))
     msg = NS_MOUSE_BUTTON_DOWN;

@@ -184,12 +184,9 @@ public:
   static PRIOMethods nsSSLPlaintextLayerMethods;
 
   bool mTreatUnsafeNegotiationAsBroken;
-  int32_t mWarnLevelMissingRFC5746;
 
   void setTreatUnsafeNegotiationAsBroken(bool broken);
   bool treatUnsafeNegotiationAsBroken();
-  void setWarnLevelMissingRFC5746(int32_t level);
-  int32_t getWarnLevelMissingRFC5746();
 
 private:
   struct IntoleranceEntry

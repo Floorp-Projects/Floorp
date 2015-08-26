@@ -66,5 +66,15 @@ inline bool log_test(const PRLogModuleInfo* module, LogLevel level) {
 #undef PR_LOG
 #undef PR_LOG_TEST
 
-#endif // mozilla_logging_h
+/*
+ * __func__ was standardized in C++11 and is supported by clang, gcc, and MSVC
+ * 2015. Here we polyfill __func__ for earlier versions of MSVC.
+ * http://blogs.msdn.com/b/vcblog/archive/2015/06/19/c-11-14-17-features-in-vs-2015-rtm.aspx
+ */
+#ifdef _MSC_VER
+#  if _MSC_VER < 1900
+#    define __func__ __FUNCTION__
+#  endif
+#endif
 
+#endif // mozilla_logging_h

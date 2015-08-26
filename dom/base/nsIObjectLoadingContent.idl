@@ -25,7 +25,7 @@ class nsNPAPIPluginInstance;
  * interface to mirror this interface when changing it.
  */
 
-[scriptable, uuid(5efbd411-5bbe-4de1-9f3a-1c3459696eb2)]
+[scriptable, uuid(2eb3195e-3eea-4083-bb1d-d2d70fa35ccb)]
 interface nsIObjectLoadingContent : nsISupports
 {
   /**
@@ -65,8 +65,6 @@ interface nsIObjectLoadingContent : nsISupports
   const unsigned long PLUGIN_VULNERABLE_UPDATABLE = 9;
   // The plugin is vulnerable (no update available)
   const unsigned long PLUGIN_VULNERABLE_NO_UPDATE = 10;
-  // The plugin is in play preview mode
-  const unsigned long PLUGIN_PLAY_PREVIEW         = 11;
 
   /**
    * The actual mime type (the one we got back from the network
@@ -128,8 +126,7 @@ interface nsIObjectLoadingContent : nsISupports
                                 in boolean submittedCrashReport);
 
   /**
-   * This method will play a plugin that has been stopped by the
-   * click-to-play plugins or play-preview features.
+   * This method will play a plugin that has been stopped by click-to-play.
    */
   void playPlugin();
 
@@ -144,7 +141,7 @@ interface nsIObjectLoadingContent : nsISupports
   /**
    * This attribute will return true if the current content type has been
    * activated, either explicitly or by passing checks that would have it be
-   * click-to-play or play-preview.
+   * click-to-play.
    */
   readonly attribute boolean activated;
 
@@ -183,11 +180,6 @@ interface nsIObjectLoadingContent : nsISupports
    * not one is pending spawn/despawn.
    */
   readonly attribute bool hasRunningPlugin;
-
-  /**
-   * This method will disable the play-preview plugin state.
-   */
-  void cancelPlayPreview();
 
   /**
    * If this plugin runs out-of-process, it has a runID to differentiate

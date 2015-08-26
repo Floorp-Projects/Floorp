@@ -833,6 +833,8 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
           }
         }
         break;
+      default:
+        break;
     }
 
     if (stopEvent) {

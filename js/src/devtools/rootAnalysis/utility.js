@@ -111,26 +111,25 @@ function getSuccessors(body)
 // no mangled name was given, use the unmangled name as its mangled name
 function splitFunction(func)
 {
-    var split = func.indexOf("|");
-    if (split == -1)
-        return [ func, func ];
-    return [ func.substr(0, split), func.substr(split+1) ];
+    var split = func.indexOf("$");
+    if (split != -1)
+        return [ func.substr(0, split), func.substr(split+1) ];
+    split = func.indexOf("|");
+    if (split != -1)
+        return [ func.substr(0, split), func.substr(split+1) ];
+    return [ func, func ];
 }
 
 function mangled(fullname)
 {
-    var split = fullname.indexOf("|");
-    if (split == -1)
-        return fullname;
-    return fullname.substr(0, split);
+    var [ mangled, unmangled ] = splitFunction(fullname);
+    return mangled;
 }
 
 function readable(fullname)
 {
-    var split = fullname.indexOf("|");
-    if (split == -1)
-        return fullname;
-    return fullname.substr(split+1);
+    var [ mangled, unmangled ] = splitFunction(fullname);
+    return unmangled;
 }
 
 function xdbLibrary()

@@ -14,9 +14,7 @@
   runNetworkTest(function() {
     var test = new PeerConnectionTest();
     test.setMediaConstraints([], [{audio: true}]);
-    // TODO: Stop using old constraint-like RTCOptions soon (Bug 1064223).
-    // Watch out for case-difference when fixing: { offerToReceiveAudio: true }
-    test.setOfferOptions({ mandatory: { OfferToReceiveAudio: true } });
+    test.setOfferOptions({ offerToReceiveAudio: true });
     test.run();
   });
 </script>

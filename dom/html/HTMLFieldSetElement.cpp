@@ -63,7 +63,7 @@ NS_IMPL_STRING_ATTR(HTMLFieldSetElement, Name, name)
 NS_IMPL_NSICONSTRAINTVALIDATION(HTMLFieldSetElement)
 
 bool
-HTMLFieldSetElement::IsDisabledForEvents(uint32_t aMessage)
+HTMLFieldSetElement::IsDisabledForEvents(EventMessage aMessage)
 {
   return IsElementDisabledForEvents(aMessage, nullptr);
 }
