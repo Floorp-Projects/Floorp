@@ -240,6 +240,22 @@
   }
 }
 
+/* Restored windows get an artificial border on windows, because the lwtheme background
+ * overlaps the regular window border. That isn't the case for us, so we avoid painting
+ * over the native border with our custom borders: */
+#browser-panel {
+  /* These are !important to avoid specificity-wars with the selectors that add borders here. */
+  background-image: none !important;
+  border-top: none !important;
+}
+
+#navigator-toolbox {
+  /* The side borders on the toolbox also look out-of-place because we don't paint over
+   * the native background color at all, and these are !important for the same reason as above. */
+  border-left: none !important;
+  border-right: none !important;
+}
+
 @media (-moz-os-version: windows-win10) {
   /* Always keep draggable space on the sides of tabs since there is no top margin on Win10 */
   #main-window .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
