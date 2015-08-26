@@ -13,36 +13,75 @@ const { L10N } = require("devtools/performance/global");
 const { Heritage } = require("resource:///modules/devtools/ViewHelpers.jsm");
 const { AbstractTreeItem } = require("resource:///modules/devtools/AbstractTreeItem.jsm");
 
-const MILLISECOND_UNITS = L10N.getStr("table.ms");
-const PERCENTAGE_UNITS = L10N.getStr("table.percentage");
 const URL_LABEL_TOOLTIP = L10N.getStr("table.url.tooltiptext");
 const VIEW_OPTIMIZATIONS_TOOLTIP = L10N.getStr("table.view-optimizations.tooltiptext");
 
 const CALL_TREE_INDENTATION = 16; // px
 
+// Used for rendering values in cells
+const FORMATTERS = {
+  TIME: (value) => L10N.getFormatStr("table.ms2", L10N.numberWithDecimals(value, 2)),
+  PERCENT: (value) => L10N.getFormatStr("table.percentage2", L10N.numberWithDecimals(value, 2)),
+  NUMBER: (value) => value || 0,
+  BYTESIZE: (value) => L10N.getFormatStr("table.bytes", (value || 0))
+};
+
+/**
+ * Definitions for rendering cells. Triads of class name, property name from
+ * `frame.getInfo()`, and a formatter function.
+ */
+const CELLS = {
+  duration:       ["duration", "totalDuration", FORMATTERS.TIME],
+  percentage:     ["percentage", "totalPercentage", FORMATTERS.PERCENT],
+  selfDuration:   ["self-duration", "selfDuration", FORMATTERS.TIME],
+  selfPercentage: ["self-percentage", "selfPercentage", FORMATTERS.PERCENT],
+  samples:        ["samples", "samples", FORMATTERS.NUMBER],
+
+  selfSize:            ["self-size", "selfSize", FORMATTERS.BYTESIZE],
+  selfSizePercentage:  ["self-size-percentage", "selfSizePercentage", FORMATTERS.PERCENT],
+  selfCount:           ["self-count", "selfCount", FORMATTERS.NUMBER],
+  selfCountPercentage: ["self-count-percentage", "selfCountPercentage", FORMATTERS.PERCENT],
+  size:                ["size", "totalSize", FORMATTERS.BYTESIZE],
+  sizePercentage:      ["size-percentage", "totalSizePercentage", FORMATTERS.PERCENT],
+  count:               ["count", "totalCount", FORMATTERS.NUMBER],
+  countPercentage:     ["count-percentage", "totalCountPercentage", FORMATTERS.PERCENT],
+};
+const CELL_TYPES = Object.keys(CELLS);
+
 const DEFAULT_SORTING_PREDICATE = (frameA, frameB) => {
   let dataA = frameA.getDisplayedData();
   let dataB = frameB.getDisplayedData();
-  if (this.inverted) {
-    // Invert trees, sort by selfPercentage, and then totalPercentage
-    if (dataA.selfPercentage === dataB.selfPercentage) {
-      return dataA.totalPercentage < dataB.totalPercentage ? 1 : -1;
-    }
-    return dataA.selfPercentage < dataB.selfPercentage ? 1 : - 1;
+  let isAllocations = "totalSize" in dataA;
+
+  if (isAllocations) {
+    return this.inverted && dataA.selfSize !== dataB.selfSize ?
+           (dataA.selfSize < dataB.selfSize ? 1 : - 1) :
+           (dataA.totalSize < dataB.totalSize ? 1 : -1);
   }
-  return dataA.totalPercentage < dataB.totalPercentage ? 1 : -1;
+
+  return this.inverted && dataA.selfPercentage !== dataB.selfPercentage ?
+         (dataA.selfPercentage < dataB.selfPercentage ? 1 : - 1) :
+         (dataA.totalPercentage < dataB.totalPercentage ? 1 : -1);
 };
 
 const DEFAULT_AUTO_EXPAND_DEPTH = 3; // depth
 const DEFAULT_VISIBLE_CELLS = {
   duration: true,
   percentage: true,
-  count: false,
   selfDuration: true,
   selfPercentage: true,
-  selfCount: false,
   samples: true,
-  function: true
+  function: true,
+
+  // allocation columns
+  count: false,
+  selfCount: false,
+  size: false,
+  selfSize: false,
+  countPercentage: false,
+  selfCountPercentage: false,
+  sizePercentage: false,
+  selfSizePercentage: false,
 };
 
 const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
@@ -136,27 +175,14 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     let frameInfo = this.getDisplayedData();
     let cells = [];
 
-    if (this.visibleCells.duration) {
-      cells.push(this._createTimeCell(document, frameInfo.totalDuration));
+    for (let type of CELL_TYPES) {
+      if (this.visibleCells[type]) {
+        // Inline for speed, but pass in the formatted value via
+        // cell definition, as well as the element type.
+        cells.push(this._createCell(document, CELLS[type][2](frameInfo[CELLS[type][1]]), CELLS[type][0]));
+      }
     }
-    if (this.visibleCells.percentage) {
-      cells.push(this._createExecutionCell(document, frameInfo.totalPercentage));
-    }
-    if (this.visibleCells.count) {
-      cells.push(this._createCountCell(document, frameInfo.totalCount));
-    }
-    if (this.visibleCells.selfDuration) {
-      cells.push(this._createTimeCell(document, frameInfo.selfDuration, true));
-    }
-    if (this.visibleCells.selfPercentage) {
-      cells.push(this._createExecutionCell(document, frameInfo.selfPercentage, true));
-    }
-    if (this.visibleCells.selfCount) {
-      cells.push(this._createCountCell(document, frameInfo.selfCount, true));
-    }
-    if (this.visibleCells.samples) {
-      cells.push(this._createSamplesCell(document, frameInfo.samples));
-    }
+
     if (this.visibleCells.function) {
       cells.push(this._createFunctionCell(document, arrowNode, frameInfo.name, frameInfo, this.level));
     }
@@ -204,38 +230,15 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
    * Functions creating each cell in this call view.
    * Invoked by `_displaySelf`.
    */
-  _createTimeCell: function(doc, duration, isSelf = false) {
+  _createCell: function (doc, value, type) {
     let cell = doc.createElement("description");
     cell.className = "plain call-tree-cell";
-    cell.setAttribute("type", isSelf ? "self-duration" : "duration");
+    cell.setAttribute("type", type);
     cell.setAttribute("crop", "end");
-    cell.setAttribute("value", L10N.numberWithDecimals(duration, 2) + " " + MILLISECOND_UNITS);
+    cell.setAttribute("value", value);
     return cell;
   },
-  _createExecutionCell: function(doc, percentage, isSelf = false) {
-    let cell = doc.createElement("description");
-    cell.className = "plain call-tree-cell";
-    cell.setAttribute("type", isSelf ? "self-percentage" : "percentage");
-    cell.setAttribute("crop", "end");
-    cell.setAttribute("value", L10N.numberWithDecimals(percentage, 2) + PERCENTAGE_UNITS);
-    return cell;
-  },
-  _createCountCell: function(doc, count, isSelf = false) {
-    let cell = doc.createElement("description");
-    cell.className = "plain call-tree-cell";
-    cell.setAttribute("type", isSelf ? "self-count" : "count");
-    cell.setAttribute("crop", "end");
-    cell.setAttribute("value", count || 0);
-    return cell;
-  },
-  _createSamplesCell: function(doc, count) {
-    let cell = doc.createElement("description");
-    cell.className = "plain call-tree-cell";
-    cell.setAttribute("type", "samples");
-    cell.setAttribute("crop", "end");
-    cell.setAttribute("value", count || 0);
-    return cell;
-  },
+
   _createFunctionCell: function(doc, arrowNode, frameName, frameInfo, frameLevel) {
     let cell = doc.createElement("hbox");
     cell.className = "call-tree-cell";
