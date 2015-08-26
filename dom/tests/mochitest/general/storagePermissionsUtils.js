@@ -230,3 +230,27 @@ function task(fn) {
 }
 
 var thirdparty = "https://example.com/tests/dom/tests/mochitest/general/";
+
+// XXX B2G HACK
+
+var b2gOnly = (function() {
+  function pref(name) {
+    try {
+      return SpecialPowers.getBoolPref(name);
+    } catch (e) {
+      // Out of an over-abundance of caution, don't use https
+      // if we can't check the pref
+      return true;
+    }
+  }
+
+  var isAndroid = !!navigator.userAgent.includes("Android");
+  var isMulet = pref("b2g.is_mulet");
+  var isB2g = isMulet || (!isAndroid && /Mobile|Tablet/.test(navigator.userAgent));
+  return isB2g ? true : undefined;
+})();
+
+// Switch to http:// in b2g because https:// in tests isn't supported
+if (b2gOnly) {
+  thirdparty = "http://example.com/tests/dom/tests/mochitest/general/";
+}
