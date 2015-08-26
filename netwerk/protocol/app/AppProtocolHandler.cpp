@@ -465,11 +465,12 @@ AppProtocolHandler::NewChannel2(nsIURI* aUri,
     mAppInfoCache.Put(host, appInfo);
   }
 
-  // Even core apps are on /system partition and can be accessed directly, but
-  // to ease sandboxing code not to handle the special case of core apps, only
-  // use scheme jar:file in parent, see bug 1119692 comment 20.
-  nsAutoCString jarSpec(XRE_IsParentProcess() ? "jar:file://"
-                                              : "jar:remoteopenfile://");
+  bool noRemote = (appInfo->mIsCoreApp ||
+                   XRE_IsParentProcess());
+
+  // In-parent and CoreApps can directly access files, so use jar:file://
+  nsAutoCString jarSpec(noRemote ? "jar:file://"
+                                 : "jar:remoteopenfile://");
   jarSpec += NS_ConvertUTF16toUTF8(appInfo->mPath) +
              NS_LITERAL_CSTRING("/application.zip!") +
              fileSpec;
