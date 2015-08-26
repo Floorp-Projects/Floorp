@@ -19,8 +19,6 @@
   .sidebar-header,
   #sidebar-header {
     -moz-appearance: none;
-    color: black;
-    background-color: #EEF3FA;
     border-bottom: none;
     text-shadow: none;
   }
@@ -32,7 +30,7 @@
 
   .sidebar-splitter {
     border: 0;
-    -moz-border-end: 1px solid #A9B7C9;
+    -moz-border-end: 1px solid ThreeDLightShadow;
     min-width: 0;
     width: 3px;
     background-color: transparent;
@@ -41,7 +39,7 @@
   }
 
   #appcontent ~ .sidebar-splitter {
-    -moz-border-start: 1px solid #A9B7C9;
+    -moz-border-start: 1px solid ThreeDLightShadow;
     -moz-border-end: none;
     -moz-margin-start: 0;
     -moz-margin-end: -3px;
@@ -52,13 +50,20 @@
     color: graytext;
   }
 
-  .chatbar-button,
-  chatbar > chatbox {
-    border-color: #A9B7C9;
-  }
-
   @media (-moz-os-version: windows-vista),
          (-moz-os-version: windows-win7) {
+    .sidebar-header,
+    #sidebar-header {
+      background-color: #EEF3FA;
+    }
+
+    .sidebar-splitter,
+    #appcontent ~ .sidebar-splitter,
+    .chatbar-button,
+    chatbar > chatbox {
+      border-color: #A9B7C9;
+    }
+
     #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme),
     #browser-bottombox:not(:-moz-lwtheme),
     .browserContainer > findbar {
