@@ -243,3 +243,53 @@ def test_environment(xrePath, env=None, crashreporter=True, debugger=False,
                      " symbolizer at %s" % llvmsym)
 
     return env
+
+
+def get_stack_fixer_function(utilityPath, symbolsPath):
+    """
+    Return a stack fixing function, if possible, to use on output lines.
+
+    A stack fixing function checks if a line conforms to the output from
+    MozFormatCodeAddressDetails.  If the line does not, the line is returned
+    unchanged.  If the line does, an attempt is made to convert the
+    file+offset into something human-readable (e.g. a function name).
+    """
+    if not mozinfo.info.get('debug'):
+        return None
+
+    stack_fixer_function = None
+
+    def import_stack_fixer_module(module_name):
+        sys.path.insert(0, utilityPath)
+        module = __import__(module_name, globals(), locals(), [])
+        sys.path.pop(0)
+        return module
+
+    if symbolsPath and os.path.exists(symbolsPath):
+        # Run each line through a function in fix_stack_using_bpsyms.py (uses breakpad symbol files).
+        # This method is preferred for Tinderbox builds, since native
+        # symbols may have been stripped.
+        stack_fixer_module = import_stack_fixer_module(
+            'fix_stack_using_bpsyms')
+        stack_fixer_function = lambda line: stack_fixer_module.fixSymbols(
+            line, symbolsPath)
+
+    elif mozinfo.isMac:
+        # Run each line through fix_macosx_stack.py (uses atos).
+        # This method is preferred for developer machines, so we don't
+        # have to run "make buildsymbols".
+        stack_fixer_module = import_stack_fixer_module(
+            'fix_macosx_stack')
+        stack_fixer_function = lambda line: stack_fixer_module.fixSymbols(
+            line)
+
+    elif mozinfo.isLinux:
+        # Run each line through fix_linux_stack.py (uses addr2line).
+        # This method is preferred for developer machines, so we don't
+        # have to run "make buildsymbols".
+        stack_fixer_module = import_stack_fixer_module(
+            'fix_linux_stack')
+        stack_fixer_function = lambda line: stack_fixer_module.fixSymbols(
+            line)
+
+    return stack_fixer_function

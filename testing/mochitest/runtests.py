@@ -51,7 +51,7 @@ from mozprofile.permissions import ServerLocations
 from urllib import quote_plus as encodeURIComponent
 from mozlog.formatters import TbplFormatter
 from mozlog import commandline
-from mozrunner.utils import test_environment
+from mozrunner.utils import get_stack_fixer_function, test_environment
 from mozscreenshot import dump_screen
 import mozleak
 
@@ -2357,47 +2357,9 @@ class Mochitest(MochitestUtilsMixin):
 
         def stackFixer(self):
             """
-            return stackFixerFunction, if any, to use on the output lines
+            return get_stack_fixer_function, if any, to use on the output lines
             """
-
-            if not mozinfo.info.get('debug'):
-                return None
-
-            stackFixerFunction = None
-
-            def import_stackFixerModule(module_name):
-                sys.path.insert(0, self.utilityPath)
-                module = __import__(module_name, globals(), locals(), [])
-                sys.path.pop(0)
-                return module
-
-            if self.symbolsPath and os.path.exists(self.symbolsPath):
-                # Run each line through a function in fix_stack_using_bpsyms.py (uses breakpad symbol files).
-                # This method is preferred for Tinderbox builds, since native
-                # symbols may have been stripped.
-                stackFixerModule = import_stackFixerModule(
-                    'fix_stack_using_bpsyms')
-                stackFixerFunction = lambda line: stackFixerModule.fixSymbols(
-                    line,
-                    self.symbolsPath)
-
-            elif mozinfo.isMac:
-                # Run each line through fix_macosx_stack.py (uses atos).
-                # This method is preferred for developer machines, so we don't
-                # have to run "make buildsymbols".
-                stackFixerModule = import_stackFixerModule('fix_macosx_stack')
-                stackFixerFunction = lambda line: stackFixerModule.fixSymbols(
-                    line)
-
-            elif mozinfo.isLinux:
-                # Run each line through fix_linux_stack.py (uses addr2line).
-                # This method is preferred for developer machines, so we don't
-                # have to run "make buildsymbols".
-                stackFixerModule = import_stackFixerModule('fix_linux_stack')
-                stackFixerFunction = lambda line: stackFixerModule.fixSymbols(
-                    line)
-
-            return stackFixerFunction
+            return get_stack_fixer_function(self.utilityPath, self.symbolsPath)
 
         def finish(self):
             if self.shutdownLeaks:
