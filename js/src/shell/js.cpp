@@ -3074,8 +3074,8 @@ ParseModule(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
     if (!args[0].isString()) {
-        JS_ReportError(cx, "expected string to compile, got %s",
-                       JS_TypeOfValue(cx, args[0]));
+        const char* typeName = InformalValueTypeName(args[0]);
+        JS_ReportError(cx, "expected string to compile, got %s", typeName);
         return false;
     }
 
