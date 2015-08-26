@@ -807,12 +807,18 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
             }
         }
 
-        // Allow chrome://
-        if (sourceScheme.EqualsLiteral("chrome")) {
+        // resource: and chrome: are equivalent, securitywise
+        // That's bogus!!  Fix this.  But watch out for
+        // the view-source stylesheet?
+        bool sourceIsChrome;
+        rv = NS_URIChainHasFlags(sourceURI,
+                                 nsIProtocolHandler::URI_IS_UI_RESOURCE,
+                                 &sourceIsChrome);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (sourceIsChrome) {
             return NS_OK;
         }
 
-        // Nothing else.
         if (reportErrors) {
             ReportError(nullptr, errorTag, sourceURI, aTargetURI);
         }
