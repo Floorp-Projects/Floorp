@@ -209,8 +209,11 @@ function run_test()
   testURI("data:text/html,Hello World", "data resource", "data resource");
   testURI("jar:http://www.mozilla.com/file!/magic", "mozilla.com", "www.mozilla.com");
   testURI("file:///C:/Cool/Stuff/", "local file", "local file");
-  testURI("moz-icon:file:///test.extension", "local file", "local file");
-  testURI("moz-icon://.extension", "moz-icon resource", "moz-icon resource");
+  // Don't test for moz-icon if we don't have a protocol handler for it (e.g. b2g):
+  if ("@mozilla.org/network/protocol;1?name=moz-icon" in Components.classes) {
+    testURI("moz-icon:file:///test.extension", "local file", "local file");
+    testURI("moz-icon://.extension", "moz-icon resource", "moz-icon resource");
+  }
   testURI("about:config", "about resource", "about resource");
 
   testAllGetReadableDates();
