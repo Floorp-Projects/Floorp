@@ -465,20 +465,33 @@ DumpSerialNumbers(PLHashEntry* aHashEntry, int aIndex, void* aClosure)
 {
   SerialNumberRecord* record =
     reinterpret_cast<SerialNumberRecord*>(aHashEntry->value);
+  auto* outputFile = static_cast<FILE*>(aClosure);
 #ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
-  fprintf((FILE*)aClosure, "%" PRIdPTR
+  fprintf(outputFile, "%" PRIdPTR
           " @%p (%d references; %d from COMPtrs)\n",
           record->serialNumber,
           NS_INT32_TO_PTR(aHashEntry->key),
           record->refCount,
           record->COMPtrCount);
 #else
-  fprintf((FILE*)aClosure, "%" PRIdPTR
+  fprintf(outputFile, "%" PRIdPTR
           " @%p (%d references)\n",
           record->serialNumber,
           NS_INT32_TO_PTR(aHashEntry->key),
           record->refCount);
 #endif
+  if (!record->allocationStack.empty()) {
+    static const size_t bufLen = 1024;
+    char buf[bufLen];
+    fprintf(outputFile, "allocation stack:\n");
+    for (size_t i = 0, length = record->allocationStack.size();
+         i < length;
+         ++i) {
+      gCodeAddressService->GetLocation(i, record->allocationStack[i],
+                                       buf, bufLen);
+      fprintf(outputFile, "%s\n", buf);
+    }
+  }
   return HT_ENUMERATE_NEXT;
 }
 
