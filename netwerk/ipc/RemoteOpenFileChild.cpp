@@ -229,8 +229,6 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
     MOZ_CRASH("Couldn't get path from file!");
   }
 
-  mListener = aListener;
-
   if (mTabChild) {
     if (mTabChild->GetCachedFileDescriptor(path, this)) {
       // The file descriptor was found in the cache and OnCachedFileDescriptor()
@@ -250,6 +248,7 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
   // The chrome process now has a logical ref to us until it calls Send__delete.
   AddIPDLReference();
 
+  mListener = aListener;
   mAsyncOpenCalled = true;
   return NS_OK;
 #endif
