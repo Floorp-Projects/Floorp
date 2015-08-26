@@ -3900,26 +3900,28 @@ this.XPIProvider = {
   /**
    * Called to test whether installing XPI add-ons from a URI is allowed.
    *
-   * @param  aUri
-   *         The URI being installed from
+   * @param  aInstallingPrincipal
+   *         The nsIPrincipal that initiated the install
    * @return true if installing is allowed
    */
-  isInstallAllowed: function XPI_isInstallAllowed(aUri) {
+  isInstallAllowed: function XPI_isInstallAllowed(aInstallingPrincipal) {
     if (!this.isInstallEnabled())
       return false;
 
+    let uri = aInstallingPrincipal.URI;
+
     // Direct requests without a referrer are either whitelisted or blocked.
-    if (!aUri)
+    if (!uri)
       return this.isDirectRequestWhitelisted();
 
     // Local referrers can be whitelisted.
     if (this.isFileRequestWhitelisted() &&
-        (aUri.schemeIs("chrome") || aUri.schemeIs("file")))
+        (uri.schemeIs("chrome") || uri.schemeIs("file")))
       return true;
 
     this.importPermissions();
 
-    let permission = Services.perms.testPermission(aUri, XPI_PERMISSION);
+    let permission = Services.perms.testPermissionFromPrincipal(aInstallingPrincipal, XPI_PERMISSION);
     if (permission == Ci.nsIPermissionManager.DENY_ACTION)
       return false;
 
@@ -3929,7 +3931,7 @@ this.XPIProvider = {
 
     let requireSecureOrigin = Preferences.get(PREF_INSTALL_REQUIRESECUREORIGIN, true);
     let safeSchemes = ["https", "chrome", "file"];
-    if (requireSecureOrigin && safeSchemes.indexOf(aUri.scheme) == -1)
+    if (requireSecureOrigin && safeSchemes.indexOf(uri.scheme) == -1)
       return false;
 
     return true;

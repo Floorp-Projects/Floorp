@@ -19,7 +19,7 @@ function test() {
 }
 
 function download_progress(addon, value, maxValue) {
-  gBrowser.loadURI("about:blank");
+  gBrowser.loadURI(TESTROOT + "enabled.html");
 }
 
 function install_ended(install, addon) {

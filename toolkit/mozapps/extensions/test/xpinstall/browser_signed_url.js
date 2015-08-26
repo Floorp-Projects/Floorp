@@ -6,8 +6,10 @@ function test() {
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.loadURI(TESTROOT + "signed.xpi");
+  gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
+    gBrowser.loadURI(TESTROOT + "signed.xpi");
+  });
 }
 
 function confirm_install(window) {

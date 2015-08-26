@@ -1,6 +1,9 @@
 // ----------------------------------------------------------------------------
-// Tests that closing the initiating page during the install cancels the install
-// to avoid spoofing the user.
+// Tests that navigating to a new origin cancels ongoing installs.
+
+// Block the modal install UI from showing.
+Services.prefs.setBoolPref(PREF_CUSTOM_CONFIRMATION_UI, true);
+
 function test() {
   Harness.downloadProgressCallback = download_progress;
   Harness.installEndedCallback = install_ended;
@@ -18,7 +21,7 @@ function test() {
 }
 
 function download_progress(addon, value, maxValue) {
-  gBrowser.removeCurrentTab();
+  gBrowser.loadURI(TESTROOT2 + "enabled.html");
 }
 
 function install_ended(install, addon) {
@@ -28,7 +31,8 @@ function install_ended(install, addon) {
 function finish_test(count) {
   is(count, 0, "No add-ons should have been successfully installed");
 
-  Services.perms.remove("example.com", "install");
+  Services.perms.remove("http://example.com", "install");
 
+  gBrowser.removeCurrentTab();
   Harness.finish();
 }
