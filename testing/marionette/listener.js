@@ -17,7 +17,6 @@ Cu.import("chrome://marionette/content/elements.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 let utils = {};
 utils.window = content;
@@ -148,34 +147,25 @@ function emitTouchEventForIFrame(message) {
     message.force, 90);
 }
 
-// Eventually we will not have a closure for every single command, but
-// use a generic dispatch for all listener commands.
-//
-// Perhaps one could even conceive having a separate instance of
-// CommandProcessor for the listener, because the code is mostly the same.
 function dispatch(fn) {
   return function(msg) {
     let id = msg.json.command_id;
-
-    let req = Task.spawn(function*() {
+    try {
       let rv;
       if (typeof msg.json == "undefined" || msg.json instanceof Array) {
-        return yield fn.apply(null, msg.json);
+        rv = fn.apply(null, msg.json);
       } else {
-        return yield fn(msg.json);
+        rv = fn(msg.json);
       }
-    });
 
-    let okOrValueResponse = rv => {
       if (typeof rv == "undefined") {
         sendOk(id);
       } else {
         sendResponse({value: rv}, id);
       }
-    };
-
-    req.then(okOrValueResponse, err => sendError(err, id))
-        .catch(error.report);
+    } catch (e) {
+      sendError(e, id);
+    }
   };
 }
 
@@ -205,13 +195,6 @@ let getElementTagNameFn = dispatch(getElementTagName);
 let getElementRectFn = dispatch(getElementRect);
 let isElementEnabledFn = dispatch(isElementEnabled);
 let getCurrentUrlFn = dispatch(getCurrentUrl);
-let findElementContentFn = dispatch(findElementContent);
-let findElementsContentFn = dispatch(findElementsContent);
-let isElementSelectedFn = dispatch(isElementSelected);
-let getElementLocationFn = dispatch(getElementLocation);
-let clearElementFn = dispatch(clearElement);
-let isElementDisplayedFn = dispatch(isElementDisplayed);
-let getElementValueOfCssPropertyFn = dispatch(getElementValueOfCssProperty);
 
 /**
  * Start all message listeners
@@ -234,22 +217,22 @@ function startListeners() {
   addMessageListenerId("Marionette:goBack", goBackFn);
   addMessageListenerId("Marionette:goForward", goForward);
   addMessageListenerId("Marionette:refresh", refresh);
-  addMessageListenerId("Marionette:findElementContent", findElementContentFn);
-  addMessageListenerId("Marionette:findElementsContent", findElementsContentFn);
+  addMessageListenerId("Marionette:findElementContent", findElementContent);
+  addMessageListenerId("Marionette:findElementsContent", findElementsContent);
   addMessageListenerId("Marionette:getActiveElement", getActiveElementFn);
   addMessageListenerId("Marionette:clickElement", clickElementFn);
   addMessageListenerId("Marionette:getElementAttribute", getElementAttributeFn);
   addMessageListenerId("Marionette:getElementText", getElementTextFn);
   addMessageListenerId("Marionette:getElementTagName", getElementTagNameFn);
-  addMessageListenerId("Marionette:isElementDisplayed", isElementDisplayedFn);
-  addMessageListenerId("Marionette:getElementValueOfCssProperty", getElementValueOfCssPropertyFn);
+  addMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
+  addMessageListenerId("Marionette:getElementValueOfCssProperty", getElementValueOfCssProperty);
   addMessageListenerId("Marionette:getElementSize", getElementSizeFn);  // deprecated
   addMessageListenerId("Marionette:getElementRect", getElementRectFn);
   addMessageListenerId("Marionette:isElementEnabled", isElementEnabledFn);
-  addMessageListenerId("Marionette:isElementSelected", isElementSelectedFn);
+  addMessageListenerId("Marionette:isElementSelected", isElementSelected);
   addMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
-  addMessageListenerId("Marionette:getElementLocation", getElementLocationFn); //deprecated
-  addMessageListenerId("Marionette:clearElement", clearElementFn);
+  addMessageListenerId("Marionette:getElementLocation", getElementLocation); //deprecated
+  addMessageListenerId("Marionette:clearElement", clearElement);
   addMessageListenerId("Marionette:switchToFrame", switchToFrame);
   addMessageListenerId("Marionette:deleteSession", deleteSession);
   addMessageListenerId("Marionette:sleepSession", sleepSession);
@@ -339,22 +322,22 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:goBack", goBackFn);
   removeMessageListenerId("Marionette:goForward", goForward);
   removeMessageListenerId("Marionette:refresh", refresh);
-  removeMessageListenerId("Marionette:findElementContent", findElementContentFn);
-  removeMessageListenerId("Marionette:findElementsContent", findElementsContentFn);
+  removeMessageListenerId("Marionette:findElementContent", findElementContent);
+  removeMessageListenerId("Marionette:findElementsContent", findElementsContent);
   removeMessageListenerId("Marionette:getActiveElement", getActiveElementFn);
   removeMessageListenerId("Marionette:clickElement", clickElementFn);
   removeMessageListenerId("Marionette:getElementAttribute", getElementAttributeFn);
   removeMessageListenerId("Marionette:getElementText", getElementTextFn);
   removeMessageListenerId("Marionette:getElementTagName", getElementTagNameFn);
-  removeMessageListenerId("Marionette:isElementDisplayed", isElementDisplayedFn);
-  removeMessageListenerId("Marionette:getElementValueOfCssProperty", getElementValueOfCssPropertyFn);
+  removeMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
+  removeMessageListenerId("Marionette:getElementValueOfCssProperty", getElementValueOfCssProperty);
   removeMessageListenerId("Marionette:getElementSize", getElementSizeFn); // deprecated
   removeMessageListenerId("Marionette:getElementRect", getElementRectFn);
   removeMessageListenerId("Marionette:isElementEnabled", isElementEnabledFn);
-  removeMessageListenerId("Marionette:isElementSelected", isElementSelectedFn);
+  removeMessageListenerId("Marionette:isElementSelected", isElementSelected);
   removeMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
-  removeMessageListenerId("Marionette:getElementLocation", getElementLocationFn);
-  removeMessageListenerId("Marionette:clearElement", clearElementFn);
+  removeMessageListenerId("Marionette:getElementLocation", getElementLocation);
+  removeMessageListenerId("Marionette:clearElement", clearElement);
   removeMessageListenerId("Marionette:switchToFrame", switchToFrame);
   removeMessageListenerId("Marionette:deleteSession", deleteSession);
   removeMessageListenerId("Marionette:sleepSession", sleepSession);
@@ -1357,35 +1340,33 @@ function refresh(msg) {
 }
 
 /**
- * Find an element in the current browsing context's document using the
- * given search strategy.
+ * Find an element in the document using requested search strategy
  */
-function findElementContent(opts) {
-  return new Promise((resolve, reject) => {
-    elementManager.find(
-        curFrame,
-        opts,
-        opts.searchTimeout,
-        false /* all */,
-        resolve,
-        reject);
-  });
+function findElementContent(msg) {
+  let command_id = msg.json.command_id;
+  try {
+    let onSuccess = (el, id) => sendResponse({value: el}, id);
+    let onError = (err, id) => sendError(err, id);
+    elementManager.find(curFrame, msg.json, msg.json.searchTimeout,
+        false /* all */, onSuccess, onError, command_id);
+  } catch (e) {
+    sendError(e, command_id);
+  }
 }
 
 /**
- * Find elements in the current browsing context's document using the
- * given search strategy.
+ * Find elements in the document using requested search strategy
  */
-function findElementsContent(opts) {
-  return new Promise((resolve, reject) => {
-    elementManager.find(
-        curFrame,
-        opts,
-        opts.searchTimeout,
-        true /* all */,
-        resolve,
-        reject);
-  });
+function findElementsContent(msg) {
+  let command_id = msg.json.command_id;
+  try {
+    let onSuccess = (els, id) => sendResponse({value: els}, id);
+    let onError = (err, id) => sendError(err, id);
+    elementManager.find(curFrame, msg.json, msg.json.searchTimeout,
+        true /* all */, onSuccess, onError, command_id);
+  } catch (e) {
+    sendError(e, command_id);
+  }
 }
 
 /**
@@ -1466,34 +1447,38 @@ function getElementTagName(id) {
 }
 
 /**
- * Determine the element displayedness of the given web element.
- *
- * Also performs additional accessibility checks if enabled by session
- * capability.
+ * Check if element is displayed
  */
-function isElementDisplayed(id) {
-  let el = elementManager.getKnownElement(id, curFrame);
-  let displayed = utils.isElementDisplayed(el);
-  checkVisibleAccessibility(accessibility.getAccessibleObject(el), displayed);
-  return displayed;
+function isElementDisplayed(msg) {
+  let command_id = msg.json.command_id;
+  try {
+    let el = elementManager.getKnownElement(msg.json.id, curFrame);
+    let displayed = utils.isElementDisplayed(el);
+    checkVisibleAccessibility(accessibility.getAccessibleObject(el), displayed);
+    sendResponse({value: displayed}, command_id);
+  } catch (e) {
+    sendError(e, command_id);
+  }
 }
 
 /**
- * Retrieves the computed value of the given CSS property of the given
- * web element.
+ * Return the property of the computed style of an element
  *
- * @param {String} id
- *     Web element reference.
- * @param {String} prop
- *     The CSS property to get.
- *
- * @return {String}
- *     Effective value of the requested CSS property.
+ * @param object aRequest
+ *               'element' member holds the reference id to
+ *               the element that will be checked
+ *               'propertyName' is the CSS rule that is being requested
  */
-function getElementValueOfCssProperty(id, prop) {
-  let el = elementManager.getKnownElement(id, curFrame);
-  let st = curFrame.document.defaultView.getComputedStyle(el, null);
-  return st.getPropertyValue(prop);
+function getElementValueOfCssProperty(msg) {
+  let command_id = msg.json.command_id;
+  let propertyName = msg.json.propertyName;
+  try {
+    let el = elementManager.getKnownElement(msg.json.id, curFrame);
+    sendResponse({value: curFrame.document.defaultView.getComputedStyle(el, null).getPropertyValue(propertyName)},
+                 command_id);
+  } catch (e) {
+    sendError(e, command_id);
+  }
 }
 
 /**
@@ -1548,14 +1533,16 @@ function isElementEnabled(id) {
 }
 
 /**
- * Determines if the referenced element is selected or not.
- *
- * This operation only makes sense on input elements of the Checkbox-
- * and Radio Button states, or option elements.
+ * Check if element is selected
  */
-function isElementSelected(id) {
-  let el = elementManager.getKnownElement(id, curFrame);
-  return selected;
+function isElementSelected(msg) {
+  let command_id = msg.json.command_id;
+  try {
+    let el = elementManager.getKnownElement(msg.json.id, curFrame);
+    sendResponse({value: utils.isElementSelected(el)}, command_id);
+  } catch (e) {
+    sendError(e, command_id);
+  }
 }
 
 /**
@@ -1582,31 +1569,42 @@ function sendKeysToElement(msg) {
 /**
  * Get the element's top left-hand corner point.
  */
-function getElementLocation(id) {
-  let el = elementManager.getKnownElement(id, curFrame);
-  let rect = el.getBoundingClientRect();
-  return {x: rect.left, y: rect.top};
+function getElementLocation(msg) {
+  let command_id = msg.json.command_id;
+  try {
+    let el = elementManager.getKnownElement(msg.json.id, curFrame);
+    let rect = el.getBoundingClientRect();
+
+    let location = {};
+    location.x = rect.left;
+    location.y = rect.top;
+
+    sendResponse({value: location}, command_id);
+  } catch (e) {
+    sendError(e, command_id);
+  }
 }
 
 /**
- * Clear the text of an element.
+ * Clear the text of an element
  */
-function clearElement(id) {
+function clearElement(msg) {
+  let command_id = msg.json.command_id;
   try {
-    let el = elementManager.getKnownElement(id, curFrame);
+    let el = elementManager.getKnownElement(msg.json.id, curFrame);
     if (el.type == "file") {
       el.value = null;
     } else {
       utils.clearElement(el);
     }
+    sendOk(command_id);
   } catch (e) {
     // Bug 964738: Newer atoms contain status codes which makes wrapping
     // this in an error prototype that has a status property unnecessary
     if (e.name == "InvalidElementStateError") {
-      throw new InvalidElementStateError(e.message);
-    } else {
-      throw e;
+      e = new InvalidElementStateError(e.message);
     }
+    sendError(e, command_id);
   }
 }
 
