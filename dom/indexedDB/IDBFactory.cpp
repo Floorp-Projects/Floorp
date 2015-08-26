@@ -362,13 +362,8 @@ IDBFactory::AllowedForWindowInternal(nsPIDOMWindow* aWindow,
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  nsContentUtils::StorageAccess access =
-    nsContentUtils::StorageAllowedForWindow(aWindow);
-
-  // the factory callsite records whether the browser is in private browsing.
-  // and thus we don't have to respect that setting here. IndexedDB has no
-  // concept of session-local storage, and thus ignores it.
-  if (access == nsContentUtils::StorageAccess::eDeny) {
+  nsIDocument* document = aWindow->GetExtantDoc();
+  if (document->GetSandboxFlags() & SANDBOXED_ORIGIN) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -378,21 +373,26 @@ IDBFactory::AllowedForWindowInternal(nsPIDOMWindow* aWindow,
   nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
   if (NS_WARN_IF(!principal)) {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-
   }
 
-  if (nsContentUtils::IsSystemPrincipal(principal)) {
+  bool isSystemPrincipal;
+  if (!AllowedForPrincipal(principal, &isSystemPrincipal)) {
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  if (isSystemPrincipal) {
     principal.forget(aPrincipal);
     return NS_OK;
   }
 
-  // About URIs shouldn't be able to access IndexedDB unless they have the
-  // nsIAboutModule::ENABLE_INDEXED_DB flag set on them.
+  // Whitelist about:home, since it doesn't have a base domain it would not
+  // pass the ThirdPartyUtil check, though it should be able to use indexedDB.
+  bool skipThirdPartyCheck = false;
+
   nsCOMPtr<nsIURI> uri;
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(principal->GetURI(getter_AddRefs(uri))));
-  MOZ_ASSERT(uri);
 
-  bool isAbout = false;
+  bool isAbout;
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)));
 
   if (isAbout) {
@@ -400,13 +400,29 @@ IDBFactory::AllowedForWindowInternal(nsPIDOMWindow* aWindow,
     if (NS_SUCCEEDED(NS_GetAboutModule(uri, getter_AddRefs(module)))) {
       uint32_t flags;
       if (NS_SUCCEEDED(module->GetURIFlags(uri, &flags))) {
-        if (!(flags & nsIAboutModule::ENABLE_INDEXED_DB)) {
-          return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-        }
+        skipThirdPartyCheck = flags & nsIAboutModule::ENABLE_INDEXED_DB;
       } else {
-        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+        NS_WARNING("GetURIFlags failed!");
       }
     } else {
+      NS_WARNING("NS_GetAboutModule failed!");
+    }
+  }
+
+  if (!skipThirdPartyCheck) {
+    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+      do_GetService(THIRDPARTYUTIL_CONTRACTID);
+    MOZ_ASSERT(thirdPartyUtil);
+
+    bool isThirdParty;
+    if (NS_WARN_IF(NS_FAILED(
+          thirdPartyUtil->IsThirdPartyWindow(aWindow,
+                                             nullptr,
+                                             &isThirdParty)))) {
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    if (isThirdParty) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
   }
