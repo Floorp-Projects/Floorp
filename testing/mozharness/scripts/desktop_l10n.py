@@ -63,9 +63,7 @@ configuration_tokens = ('branch',
                         'en_us_binary_url',
                         'update_platform',
                         'update_channel',
-                        'ssh_key_dir',
-                        'stage_product',
-                        )
+                        'ssh_key_dir')
 # some other values such as "%(version)s", "%(buildid)s", ...
 # are defined at run time and they cannot be enforced in the _pre_config_lock
 # phase
@@ -161,7 +159,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
                 "list-locales",
                 "setup",
                 "repack",
-                "create-virtualenv",
                 "taskcluster-upload",
                 "funsize-props",
                 "submit-to-balrog",
@@ -1012,6 +1009,14 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             self.warning('Skipping S3 file upload: No taskcluster credentials.')
             return
 
+        # We need to activate the virtualenv so that we can import taskcluster
+        # (and its dependent modules, like requests and hawk).  Normally we
+        # could create the virtualenv as an action, but due to some odd
+        # dependencies with query_build_env() being called from build(), which
+        # is necessary before the virtualenv can be created.
+        self.disable_mock()
+        self.create_virtualenv()
+        self.enable_mock()
         self.activate_virtualenv()
 
         # Enable Taskcluster debug logging, so at least we get some debug

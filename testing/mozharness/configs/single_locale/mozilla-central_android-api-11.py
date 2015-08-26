@@ -3,6 +3,10 @@ MOZ_UPDATE_CHANNEL = "nightly"
 MOZILLA_DIR = BRANCH
 OBJDIR = "obj-l10n"
 EN_US_BINARY_URL = "http://stage.mozilla.org/pub/mozilla.org/mobile/nightly/latest-%s-android-api-11/en-US" % (BRANCH)
+#STAGE_SERVER = "dev-stage01.srv.releng.scl3.mozilla.com"
+STAGE_SERVER = "stage.mozilla.org"
+STAGE_USER = "ffxbld"
+STAGE_SSH_KEY = "~/.ssh/ffxbld_rsa"
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
 
 config = {
@@ -56,8 +60,15 @@ config = {
         "LOCALE_MERGEDIR": "%(abs_merge_dir)s/",
         "MOZ_UPDATE_CHANNEL": MOZ_UPDATE_CHANNEL,
     },
-    "upload_branch": "%s-android-api-11" % BRANCH,
-    "ssh_key_dir": "~/.ssh",
+    # TODO ideally we could get this info from a central location.
+    # However, the agility of these individual config files might trump that.
+    "upload_env": {
+        "UPLOAD_USER": STAGE_USER,
+        "UPLOAD_SSH_KEY": STAGE_SSH_KEY,
+        "UPLOAD_HOST": STAGE_SERVER,
+        "POST_UPLOAD_CMD": "post_upload.py -b mozilla-central-android-api-11-l10n -p mobile -i %(buildid)s --release-to-latest --release-to-dated",
+        "UPLOAD_TO_TEMP": "1",
+    },
     "merge_locales": True,
     "make_dirs": ['config'],
     "mozilla_dir": MOZILLA_DIR,
