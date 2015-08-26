@@ -10,6 +10,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
+#include "nsIChannel.h"
 #include "nsICryptoHash.h"
 #include "nsIDocument.h"
 #include "nsIProtocolHandler.h"
@@ -41,16 +42,11 @@ namespace dom {
  * sub-resource will be loaded.
  */
 static nsresult
-IsEligible(nsIURI* aRequestURI, const CORSMode aCORSMode,
+IsEligible(nsIChannel* aChannel, const CORSMode aCORSMode,
            const nsIDocument* aDocument)
 {
-  NS_ENSURE_ARG_POINTER(aRequestURI);
+  NS_ENSURE_ARG_POINTER(aChannel);
   NS_ENSURE_ARG_POINTER(aDocument);
-
-  nsAutoCString requestSpec;
-  nsresult rv = aRequestURI->GetSpec(requestSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ConvertUTF8toUTF16 requestSpecUTF16(requestSpec);
 
   // Was the sub-resource loaded via CORS?
   if (aCORSMode != CORS_NONE) {
@@ -58,21 +54,36 @@ IsEligible(nsIURI* aRequestURI, const CORSMode aCORSMode,
     return NS_OK;
   }
 
+  nsCOMPtr<nsIURI> finalURI;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(finalURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIURI> originalURI;
+  rv = aChannel->GetOriginalURI(getter_AddRefs(originalURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoCString requestSpec;
+  rv = originalURI->GetSpec(requestSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (MOZ_LOG_TEST(GetSriLog(), mozilla::LogLevel::Debug)) {
+    nsAutoCString documentSpec, finalSpec;
+    aDocument->GetDocumentURI()->GetAsciiSpec(documentSpec);
+    if (finalURI) {
+      finalURI->GetSpec(finalSpec);
+    }
+    SRILOG(("SRICheck::IsEligible, documentURI=%s; requestURI=%s; finalURI=%s",
+            documentSpec.get(), requestSpec.get(), finalSpec.get()));
+  }
+
   // Is the sub-resource same-origin?
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   if (NS_SUCCEEDED(ssm->CheckSameOriginURI(aDocument->GetDocumentURI(),
-                                           aRequestURI, false))) {
+                                           finalURI, false))) {
     SRILOG(("SRICheck::IsEligible, same-origin"));
     return NS_OK;
   }
-  if (MOZ_LOG_TEST(GetSriLog(), mozilla::LogLevel::Debug)) {
-    nsAutoCString documentURI;
-    aDocument->GetDocumentURI()->GetAsciiSpec(documentURI);
-    // documentURI will be empty if GetAsciiSpec failed
-    SRILOG(("SRICheck::IsEligible, NOT same origin: documentURI=%s; requestURI=%s",
-            documentURI.get(), requestSpec.get()));
-  }
+  SRILOG(("SRICheck::IsEligible, NOT same origin"));
 
+  NS_ConvertUTF8toUTF16 requestSpecUTF16(requestSpec);
   const char16_t* params[] = { requestSpecUTF16.get() };
   nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
                                   NS_LITERAL_CSTRING("Sub-resource Integrity"),
@@ -227,19 +238,19 @@ SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
 
 /* static */ nsresult
 SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
-                          nsIURI* aRequestURI,
+                          nsIChannel* aChannel,
                           const CORSMode aCORSMode,
                           const nsAString& aString,
                           const nsIDocument* aDocument)
 {
   NS_ConvertUTF16toUTF8 utf8Hash(aString);
-  return VerifyIntegrity(aMetadata, aRequestURI, aCORSMode, utf8Hash.Length(),
+  return VerifyIntegrity(aMetadata, aChannel, aCORSMode, utf8Hash.Length(),
                          (uint8_t*)utf8Hash.get(), aDocument);
 }
 
 /* static */ nsresult
 SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
-                          nsIURI* aRequestURI,
+                          nsIChannel* aChannel,
                           const CORSMode aCORSMode,
                           uint32_t aStringLen,
                           const uint8_t* aString,
@@ -247,8 +258,12 @@ SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
 {
   if (MOZ_LOG_TEST(GetSriLog(), mozilla::LogLevel::Debug)) {
     nsAutoCString requestURL;
-    aRequestURI->GetAsciiSpec(requestURL);
-    // requestURL will be empty if GetAsciiSpec fails
+    nsCOMPtr<nsIURI> originalURI;
+    if (NS_SUCCEEDED(aChannel->GetOriginalURI(getter_AddRefs(originalURI))) &&
+        originalURI) {
+      originalURI->GetAsciiSpec(requestURL);
+      // requestURL will be empty if GetAsciiSpec fails
+    }
     SRILOG(("SRICheck::VerifyIntegrity, url=%s (length=%u)",
             requestURL.get(), aStringLen));
   }
@@ -259,7 +274,7 @@ SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
   // it's disabled so we should never make it this far
   MOZ_ASSERT(Preferences::GetBool("security.sri.enable", false));
 
-  if (NS_FAILED(IsEligible(aRequestURI, aCORSMode, aDocument))) {
+  if (NS_FAILED(IsEligible(aChannel, aCORSMode, aDocument))) {
     return NS_OK; // ignore non-CORS resources for forward-compatibility
   }
   if (!aMetadata.IsValid()) {

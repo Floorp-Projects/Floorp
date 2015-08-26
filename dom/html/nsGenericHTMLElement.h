@@ -7,6 +7,7 @@
 #define nsGenericHTMLElement_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EventForwards.h"
 #include "nsMappedAttributeElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsNameSpaceManager.h"  // for kNameSpaceID_None
@@ -1408,7 +1409,8 @@ protected:
                               void* aData);
 
   // Returns true if the event should not be handled from PreHandleEvent
-  bool IsElementDisabledForEvents(uint32_t aMessage, nsIFrame* aFrame);
+  bool IsElementDisabledForEvents(mozilla::EventMessage aMessage,
+                                  nsIFrame* aFrame);
 
   // The focusability state of this form control.  eUnfocusable means that it
   // shouldn't be focused at all, eInactiveWindow means it's in an inactive

@@ -15,7 +15,8 @@ KeyboardEvent::KeyboardEvent(EventTarget* aOwner,
                              nsPresContext* aPresContext,
                              WidgetKeyboardEvent* aEvent)
   : UIEvent(aOwner, aPresContext,
-            aEvent ? aEvent : new WidgetKeyboardEvent(false, 0, nullptr))
+            aEvent ? aEvent :
+                     new WidgetKeyboardEvent(false, NS_EVENT_NULL, nullptr))
   , mInitializedByCtor(false)
   , mInitializedWhichValue(0)
 {
@@ -161,6 +162,8 @@ KeyboardEvent::CharCode()
     return 0;
   case NS_KEY_PRESS:
     return mEvent->AsKeyboardEvent()->charCode;
+  default:
+    break;
   }
   return 0;
 }
@@ -213,6 +216,8 @@ KeyboardEvent::Which()
         }
         return CharCode();
       }
+    default:
+      break;
   }
 
   return 0;

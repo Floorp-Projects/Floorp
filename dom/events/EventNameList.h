@@ -11,7 +11,7 @@
  *
  * Each entry consists of 4 pieces of information:
  * 1) The name of the event
- * 2) The event ID (see BasicEvents.h)
+ * 2) The event message
  * 3) The event type (see the EventNameType enum in nsContentUtils.h)
  * 4) The event struct type for this event.
  * Items 2-4 might be empty strings for events for which they don't make sense.
@@ -52,7 +52,7 @@
  * update the tests for bug 689564 and bug 659350 as needed.
  */
 
-#ifdef ID_TO_EVENT
+#ifdef MESSAGE_TO_EVENT
 #ifdef EVENT
 #error "Don't define EVENT"
 #endif /* EVENT */
@@ -69,11 +69,11 @@
 #error "Don't define NON_IDL_EVENT"
 #endif /* NON_IDL_EVENT */
 
-#define EVENT ID_TO_EVENT
-#define WINDOW_ONLY_EVENT ID_TO_EVENT
-#define TOUCH_EVENT ID_TO_EVENT
-#define DOCUMENT_ONLY_EVENT ID_TO_EVENT
-#define NON_IDL_EVENT ID_TO_EVENT
+#define EVENT MESSAGE_TO_EVENT
+#define WINDOW_ONLY_EVENT MESSAGE_TO_EVENT
+#define TOUCH_EVENT MESSAGE_TO_EVENT
+#define DOCUMENT_ONLY_EVENT MESSAGE_TO_EVENT
+#define NON_IDL_EVENT MESSAGE_TO_EVENT
 #endif
 
 #ifdef DEFINED_FORWARDED_EVENT
@@ -90,7 +90,7 @@
 #endif /* DEFINED_WINDOW_ONLY_EVENT */
 
 #ifndef WINDOW_ONLY_EVENT
-#define WINDOW_ONLY_EVENT(_name, _id, _type, _struct)
+#define WINDOW_ONLY_EVENT(_name, _message, _type, _struct)
 #define DEFINED_WINDOW_ONLY_EVENT
 #endif /* WINDOW_ONLY_EVENT */
 
@@ -108,7 +108,7 @@
 #endif /* DEFINED_TOUCH_EVENT */
 
 #ifndef TOUCH_EVENT
-#define TOUCH_EVENT(_name, _id, _type, _struct)
+#define TOUCH_EVENT(_name, _message, _type, _struct)
 #define DEFINED_TOUCH_EVENT
 #endif /* TOUCH_EVENT */
 
@@ -117,7 +117,7 @@
 #endif /* DEFINED_DOCUMENT_ONLY_EVENT */
 
 #ifndef DOCUMENT_ONLY_EVENT
-#define DOCUMENT_ONLY_EVENT(_name, _id, _type, _struct)
+#define DOCUMENT_ONLY_EVENT(_name, _message, _type, _struct)
 #define DEFINED_DOCUMENT_ONLY_EVENT
 #endif /* DOCUMENT_ONLY_EVENT */
 
@@ -126,7 +126,7 @@
 #endif /* DEFINED_NON_IDL_EVENT */
 
 #ifndef NON_IDL_EVENT
-#define NON_IDL_EVENT(_name, _id, _type, _struct)
+#define NON_IDL_EVENT(_name, _message, _type, _struct)
 #define DEFINED_NON_IDL_EVENT
 #endif /* NON_IDL_EVENT */
 
@@ -763,16 +763,16 @@ NON_IDL_EVENT(SVGZoom,
               EventNameType_None,
               eSVGZoomEventClass)
 
-// Only map the ID to the real event name when ID_TO_EVENT is defined.
-#ifndef ID_TO_EVENT
+// Only map the ID to the real event name when MESSAGE_TO_EVENT is defined.
+#ifndef MESSAGE_TO_EVENT
 // This is a bit hackish, but SVG's event names are weird.
 NON_IDL_EVENT(zoom,
               NS_SVG_ZOOM,
               EventNameType_SVGSVG,
               eBasicEventClass)
 #endif
-// Only map the ID to the real event name when ID_TO_EVENT is defined.
-#ifndef ID_TO_EVENT
+// Only map the ID to the real event name when MESSAGE_TO_EVENT is defined.
+#ifndef MESSAGE_TO_EVENT
 NON_IDL_EVENT(begin,
               NS_SMIL_BEGIN,
               EventNameType_SMIL,
@@ -782,8 +782,8 @@ NON_IDL_EVENT(beginEvent,
               NS_SMIL_BEGIN,
               EventNameType_None,
               eSMILTimeEventClass)
-// Only map the ID to the real event name when ID_TO_EVENT is defined.
-#ifndef ID_TO_EVENT
+// Only map the ID to the real event name when MESSAGE_TO_EVENT is defined.
+#ifndef MESSAGE_TO_EVENT
 NON_IDL_EVENT(end,
               NS_SMIL_END,
               EventNameType_SMIL,
@@ -793,8 +793,8 @@ NON_IDL_EVENT(endEvent,
               NS_SMIL_END,
               EventNameType_None,
               eSMILTimeEventClass)
-// Only map the ID to the real event name when ID_TO_EVENT is defined.
-#ifndef ID_TO_EVENT
+// Only map the ID to the real event name when MESSAGE_TO_EVENT is defined.
+#ifndef MESSAGE_TO_EVENT
 NON_IDL_EVENT(repeat,
               NS_SMIL_REPEAT,
               EventNameType_SMIL,
@@ -967,11 +967,11 @@ NON_IDL_EVENT(complete,
 #undef BEFOREUNLOAD_EVENT
 #endif /* BEFOREUNLOAD_EVENT */
 
-#ifdef ID_TO_EVENT
+#ifdef MESSAGE_TO_EVENT
 #undef EVENT
 #undef WINDOW_ONLY_EVENT
 #undef TOUCH_EVENT
 #undef DOCUMENT_ONLY_EVENT
 #undef NON_IDL_EVENT
-#endif /* ID_TO_EVENT */
+#endif /* MESSAGE_TO_EVENT */
 

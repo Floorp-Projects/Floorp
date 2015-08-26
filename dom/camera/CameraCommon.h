@@ -7,14 +7,6 @@
 #ifndef DOM_CAMERA_CAMERACOMMON_H
 #define DOM_CAMERA_CAMERACOMMON_H
 
-#ifndef __func__
-#ifdef __FUNCTION__
-#define __func__ __FUNCTION__
-#else
-#define __func__ __FILE__
-#endif
-#endif
-
 #include "mozilla/Logging.h"
 
 extern PRLogModuleInfo* GetCameraLog();

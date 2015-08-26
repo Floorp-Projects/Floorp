@@ -19,7 +19,7 @@ class InternalMutationEvent : public WidgetEvent
 public:
   virtual InternalMutationEvent* AsMutationEvent() override { return this; }
 
-  InternalMutationEvent(bool aIsTrusted, uint32_t aMessage)
+  InternalMutationEvent(bool aIsTrusted, EventMessage aMessage)
     : WidgetEvent(aIsTrusted, aMessage, eMutationEventClass)
     , mAttrChange(0)
   {

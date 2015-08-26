@@ -6322,11 +6322,13 @@ var ViewportHandler = {
 
   init: function init() {
     addEventListener("DOMMetaAdded", this, false);
+    addEventListener("DOMMetaChanged", this, false);
     Services.obs.addObserver(this, "Window:Resize", false);
   },
 
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
+      case "DOMMetaChanged":
       case "DOMMetaAdded":
         let target = aEvent.originalTarget;
         if (target.name != "viewport")

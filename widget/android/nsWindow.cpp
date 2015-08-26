@@ -1118,7 +1118,7 @@ nsWindow::OnNativeGestureEvent(AndroidGeckoEvent *ae)
     LayoutDeviceIntPoint pt(ae->Points()[0].x,
                             ae->Points()[0].y);
     double delta = ae->X();
-    int msg = 0;
+    EventMessage msg = NS_EVENT_NULL;
 
     switch (ae->Action()) {
         case AndroidMotionEvent::ACTION_MAGNIFY_START:
@@ -1577,7 +1577,7 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
 {
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
     RemoveIMEComposition();
-    uint32_t msg;
+    EventMessage msg;
     switch (ae->Action()) {
     case AKEY_EVENT_ACTION_DOWN:
         msg = NS_KEY_DOWN;

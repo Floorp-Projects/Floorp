@@ -1,0 +1,13 @@
+{
+  "name": "webRequest extension test",
+  "version": "1.0",
+  "manifest_version": 2,
+  "description": "",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "permissions": [
+    "webRequest",
+    "webRequestBlocking"
+  ]
+}

@@ -281,7 +281,7 @@ public:
   IMPL_EVENT_HANDLER(error)
 
   already_AddRefed<DOMStringList>
-  ObjectStoreNames();
+  ObjectStoreNames() const;
 
   void
   FireCompleteOrAbortEvents(nsresult aResult);

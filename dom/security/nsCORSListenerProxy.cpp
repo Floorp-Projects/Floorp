@@ -548,6 +548,18 @@ nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
     return NS_ERROR_DOM_BAD_URI;
   }
 
+  nsCOMPtr<nsIHttpChannelInternal> internal = do_QueryInterface(aRequest);
+  NS_ENSURE_STATE(internal);
+  bool responseSynthesized = false;
+  if (NS_SUCCEEDED(internal->GetResponseSynthesized(&responseSynthesized)) &&
+      responseSynthesized) {
+    // For synthesized responses, we don't need to perform any checks.
+    // Note: This would be unsafe if we ever changed our behavior to allow
+    // service workers to intercept CORS preflights.
+    MOZ_ASSERT(!mIsPreflight);
+    return NS_OK;
+  }
+
   // Check the Access-Control-Allow-Origin header
   nsAutoCString allowedOriginHeader;
   rv = http->GetResponseHeader(
@@ -1325,6 +1337,11 @@ NS_StartCORSPreflight(nsIChannel* aRequestChannel,
   // Preflight requests should never be intercepted by service workers.
   nsCOMPtr<nsIHttpChannelInternal> preInternal = do_QueryInterface(preflightChannel);
   if (preInternal) {
+    // NOTE: We ignore CORS checks on synthesized responses (see the CORS
+    // preflights, then we need to extend the GetResponseSynthesized() check in
+    // nsCORSListenerProxy::CheckRequestApproved()). If we change our behavior
+    // here and allow service workers to intercept CORS preflights, then that
+    // check won't be safe any more.
     preInternal->ForceNoIntercept();
   }
   

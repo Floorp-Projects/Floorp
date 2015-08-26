@@ -36,7 +36,7 @@ public:
     return this;
   }
 
-  WidgetGestureNotifyEvent(bool aIsTrusted, uint32_t aMessage,
+  WidgetGestureNotifyEvent(bool aIsTrusted, EventMessage aMessage,
                            nsIWidget *aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eGestureNotifyEventClass)
     , panDirection(ePanNone)
@@ -94,7 +94,7 @@ public:
     return this;
   }
 
-  WidgetSimpleGestureEvent(bool aIsTrusted, uint32_t aMessage,
+  WidgetSimpleGestureEvent(bool aIsTrusted, EventMessage aMessage,
                            nsIWidget* aWidget)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget,
                            eSimpleGestureEventClass)
@@ -177,7 +177,7 @@ public:
     MOZ_COUNT_CTOR(WidgetTouchEvent);
   }
 
-  WidgetTouchEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
+  WidgetTouchEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
     : WidgetInputEvent(aIsTrusted, aMessage, aWidget, eTouchEventClass)
   {
     MOZ_COUNT_CTOR(WidgetTouchEvent);

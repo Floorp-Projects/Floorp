@@ -7,6 +7,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/EventForwards.h"
 #include "AnimationCommon.h"
 #include "nsCSSPseudoElements.h"
 #include "mozilla/dom/Animation.h"
@@ -30,7 +31,7 @@ struct AnimationEventInfo {
 
   AnimationEventInfo(mozilla::dom::Element *aElement,
                      const nsSubstring& aAnimationName,
-                     uint32_t aMessage,
+                     EventMessage aMessage,
                      const mozilla::StickyTimeDuration& aElapsedTime,
                      nsCSSPseudoElements::Type aPseudoType)
     : mElement(aElement), mEvent(true, aMessage)

@@ -134,7 +134,7 @@ GetIMEStateSetOpenName(IMEState::Open aOpen)
 }
 
 static const char*
-GetEventMessageName(uint32_t aMessage)
+GetEventMessageName(EventMessage aMessage)
 {
   switch (aMessage) {
     case NS_COMPOSITION_START:

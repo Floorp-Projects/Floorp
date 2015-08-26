@@ -62,4 +62,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']
+
 FAIL_ON_WARNINGS = True

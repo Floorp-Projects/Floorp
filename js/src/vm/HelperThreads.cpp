@@ -203,7 +203,7 @@ ParseTask::ParseTask(ExclusiveContext* cx, JSObject* exclusiveContextGlobal, JSC
     alloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     exclusiveContextGlobal(initCx->runtime(), exclusiveContextGlobal),
     callback(callback), callbackData(callbackData),
-    script(nullptr), errors(cx), overRecursed(false)
+    script(nullptr), sourceObject(nullptr), errors(cx), overRecursed(false)
 {
 }
 
@@ -233,10 +233,8 @@ ParseTask::activate(JSRuntime* rt)
 bool
 ParseTask::finish(JSContext* cx)
 {
-    if (script) {
-        // Finish off the ScriptSourceObject initialization that we put off in
-        // js::frontend::CreateScriptSourceObject.
-        RootedScriptSource sso(cx, &script->sourceObject()->as<ScriptSourceObject>());
+    if (sourceObject) {
+        RootedScriptSource sso(cx, sourceObject);
         if (!ScriptSourceObject::initFromOptions(cx, sso, options))
             return false;
     }
@@ -920,7 +918,8 @@ GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, void
         !EnsureConstructor(cx, global, JSProto_Array) ||
         !EnsureConstructor(cx, global, JSProto_Function) ||
         !EnsureConstructor(cx, global, JSProto_RegExp) ||
-        !EnsureConstructor(cx, global, JSProto_Iterator))
+        !EnsureConstructor(cx, global, JSProto_Iterator) ||
+        !EnsureConstructor(cx, global, JSProto_GeneratorFunction))
     {
         LeaveParseTaskZone(rt, parseTask);
         return nullptr;
@@ -984,11 +983,18 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSRuntime* rt, ParseTask* par
             continue;
 
         JSProtoKey key = JS::IdentifyStandardPrototype(proto.toObject());
-        if (key == JSProto_Null)
-            continue;
+        if (key == JSProto_Null) {
+            // Generator functions don't have Function.prototype as prototype
+            // but a different function object, so IdentifyStandardPrototype
+            // doesn't work. Just special-case it here.
+            if (IsStandardPrototype(proto.toObject(), JSProto_GeneratorFunction))
+                key = JSProto_GeneratorFunction;
+            else
+                continue;
+        }
         MOZ_ASSERT(key == JSProto_Object || key == JSProto_Array ||
                    key == JSProto_Function || key == JSProto_RegExp ||
-                   key == JSProto_Iterator);
+                   key == JSProto_Iterator || key == JSProto_GeneratorFunction);
 
         JSObject* newProto = GetBuiltinPrototypePure(global, key);
         MOZ_ASSERT(newProto);
@@ -1248,7 +1254,10 @@ HelperThread::handleParseWorkload()
         parseTask->script = frontend::CompileScript(parseTask->cx, &parseTask->alloc,
                                                     nullptr, nullptr, nullptr,
                                                     parseTask->options,
-                                                    srcBuf);
+                                                    srcBuf,
+                                                    /* source_ = */ nullptr,
+                                                    /* extraSct = */ nullptr,
+                                                    /* sourceObjectOut = */ &(parseTask->sourceObject));
     }
 
     // The callback is invoked while we are still off the main thread.

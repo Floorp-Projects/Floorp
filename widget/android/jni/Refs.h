@@ -214,8 +214,6 @@ template<class Cls>
 class Ref : public RefBase<Cls, jobject>
 {
     template<class C, typename T> friend class RefBase;
-    friend class jni::LocalRef<Cls>;
-    friend class jni::GlobalRef<Cls>;
     friend struct detail::TypeAdapter<Ref<Cls>>;
 
     typedef RefBase<Cls, jobject> Base;
@@ -248,8 +246,6 @@ class Ref<TypedObject<T>>
         : public RefBase<TypedObject<T>, T>
 {
     friend class RefBase<TypedObject<T>, T>;
-    friend class jni::LocalRef<TypedObject<T>>;
-    friend class jni::GlobalRef<TypedObject<T>>;
     friend struct detail::TypeAdapter<Ref<TypedObject<T>>>;
 
     typedef RefBase<TypedObject<T>, T> Base;
@@ -300,6 +296,14 @@ private:
     template<class C> using GenericLocalRef
             = typename GenericLocalRef<Cls>::template Type<C>;
 
+    static jobject NewLocalRef(JNIEnv* env, jobject obj)
+    {
+        if (!obj) {
+            return nullptr;
+        }
+        return env->NewLocalRef(obj);
+    }
+
     JNIEnv* const mEnv;
 
     LocalRef(JNIEnv* env, jobject instance)
@@ -331,7 +335,7 @@ public:
 
     // Copy constructor.
     LocalRef(const LocalRef<Cls>& ref)
-        : Ref<Cls>(ref.mEnv->NewLocalRef(ref.mInstance))
+        : Ref<Cls>(NewLocalRef(ref.mEnv, ref.mInstance))
         , mEnv(ref.mEnv)
     {}
 
@@ -354,8 +358,13 @@ public:
         : Ref<Cls>(nullptr)
         , mEnv(GetEnvForThread())
     {
-        Ref<Cls>::mInstance = mEnv->NewLocalRef(ref.mInstance);
+        Ref<Cls>::mInstance = NewLocalRef(mEnv, ref.Get());
     }
+
+    LocalRef(JNIEnv* env, const Ref<Cls>& ref)
+        : Ref<Cls>(NewLocalRef(env, ref.Get()))
+        , mEnv(env)
+    {}
 
     // Move a LocalRef<Object> into a LocalRef<Cls> without
     // creating/deleting local references.
@@ -410,7 +419,7 @@ public:
 
     LocalRef<Cls>& operator=(const Ref<Cls>& ref)
     {
-        LocalRef<Cls> newRef(mEnv, mEnv->NewLocalRef(ref.mInstance));
+        LocalRef<Cls> newRef(mEnv, ref);
         return swap(newRef);
     }
 
@@ -444,9 +453,6 @@ private:
         if (!instance) {
             return nullptr;
         }
-        if (!env) {
-            env = GetEnvForThread();
-        }
         return env->NewGlobalRef(instance);
     }
 
@@ -465,7 +471,7 @@ public:
 
     // Copy constructor
     GlobalRef(const GlobalRef& ref)
-        : Ref<Cls>(NewGlobalRef(nullptr, ref.mInstance))
+        : Ref<Cls>(NewGlobalRef(GetEnvForThread(), ref.mInstance))
     {}
 
     // Move constructor
@@ -476,11 +482,15 @@ public:
     }
 
     MOZ_IMPLICIT GlobalRef(const Ref<Cls>& ref)
-        : Ref<Cls>(NewGlobalRef(nullptr, ref.mInstance))
+        : Ref<Cls>(NewGlobalRef(GetEnvForThread(), ref.Get()))
     {}
 
     GlobalRef(JNIEnv* env, const Ref<Cls>& ref)
-        : Ref<Cls>(NewGlobalRef(env, ref.mInstance))
+        : Ref<Cls>(NewGlobalRef(env, ref.Get()))
+    {}
+
+    MOZ_IMPLICIT GlobalRef(const LocalRef<Cls>& ref)
+        : Ref<Cls>(NewGlobalRef(ref.Env(), ref.Get()))
     {}
 
     // Implicitly converts nullptr to GlobalRef.
@@ -491,9 +501,7 @@ public:
     ~GlobalRef()
     {
         if (Ref<Cls>::mInstance) {
-            JNIEnv* const env = GetEnvForThread();
-            env->DeleteGlobalRef(Ref<Cls>::mInstance);
-            Ref<Cls>::mInstance = nullptr;
+            Clear(GetEnvForThread());
         }
     }
 
@@ -504,6 +512,14 @@ public:
         const auto obj = Ref<Cls>::Get();
         Ref<Cls>::mInstance = nullptr;
         return obj;
+    }
+
+    void Clear(JNIEnv* env)
+    {
+        if (Ref<Cls>::mInstance) {
+            env->DeleteGlobalRef(Ref<Cls>::mInstance);
+            Ref<Cls>::mInstance = nullptr;
+        }
     }
 
     GlobalRef<Cls>& operator=(GlobalRef<Cls> ref)
@@ -530,8 +546,6 @@ template<>
 class Ref<String> : public RefBase<String, jstring>
 {
     friend class RefBase<String, jstring>;
-    friend class jni::LocalRef<String>;
-    friend class jni::GlobalRef<String>;
     friend struct detail::TypeAdapter<Ref<String>>;
 
     typedef RefBase<TypedObject<jstring>, jstring> Base;
@@ -625,10 +639,9 @@ public:
 
     operator String::LocalRef() const
     {
-        JNIEnv* const env = mEnv ? mEnv : GetEnvForThread();
         // We can't return our existing ref because the returned
         // LocalRef could be freed first, so we need a new local ref.
-        return String::LocalRef::Adopt(env, env->NewLocalRef(Get()));
+        return String::LocalRef(mEnv ? mEnv : GetEnvForThread(), *this);
     }
 };
 
