@@ -306,7 +306,10 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
   if (videoActive) {
     // We currently only handle the first video track.
     mVideo.mTrackDemuxer = mDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
-    MOZ_ASSERT(mVideo.mTrackDemuxer);
+    if (!mVideo.mTrackDemuxer) {
+      mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
+      return;
+    }
     mInfo.mVideo = *mVideo.mTrackDemuxer->GetInfo()->GetAsVideoInfo();
     mVideo.mCallback = new DecoderCallback(this, TrackInfo::kVideoTrack);
     mVideo.mTimeRanges = mVideo.mTrackDemuxer->GetBuffered();
@@ -316,7 +319,10 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
   bool audioActive = !!mDemuxer->GetNumberTracks(TrackInfo::kAudioTrack);
   if (audioActive) {
     mAudio.mTrackDemuxer = mDemuxer->GetTrackDemuxer(TrackInfo::kAudioTrack, 0);
-    MOZ_ASSERT(mAudio.mTrackDemuxer);
+    if (!mAudio.mTrackDemuxer) {
+      mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
+      return;
+    }
     mInfo.mAudio = *mAudio.mTrackDemuxer->GetInfo()->GetAsAudioInfo();
     mAudio.mCallback = new DecoderCallback(this, TrackInfo::kAudioTrack);
     mAudio.mTimeRanges = mAudio.mTrackDemuxer->GetBuffered();
@@ -362,12 +368,18 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
   if (videoActive) {
     mVideoTrackDemuxer =
       mMainThreadDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
-    MOZ_ASSERT(mVideoTrackDemuxer);
+    if (!mVideoTrackDemuxer) {
+      mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
+      return;
+    }
   }
   if (audioActive) {
     mAudioTrackDemuxer =
       mMainThreadDemuxer->GetTrackDemuxer(TrackInfo::kAudioTrack, 0);
-    MOZ_ASSERT(mAudioTrackDemuxer);
+    if (!mAudioTrackDemuxer) {
+      mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
+      return;
+    }
   }
 
   mInitDone = true;
