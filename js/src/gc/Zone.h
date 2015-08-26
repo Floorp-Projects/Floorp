@@ -119,6 +119,11 @@ class UniqueIdMap
     void remove(Cell* cell) {
         map.remove(Pair(cell, 0));
     }
+
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        // All data allocated by |map| is contained in |alloc|.
+        return alloc.sizeOfExcludingThis(mallocSizeOf);
+    }
 };
 
 extern uint64_t NextCellUniqueId(JSRuntime* rt);
@@ -183,7 +188,8 @@ struct Zone : public JS::shadow::Zone,
 
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 size_t* typePool,
-                                size_t* baselineStubsOptimized);
+                                size_t* baselineStubsOptimized,
+                                size_t* uniqueIdMap);
 
     void resetGCMallocBytes();
     void setGCMaxMallocBytes(size_t value);
