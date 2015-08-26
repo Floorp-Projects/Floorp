@@ -461,7 +461,7 @@ AndroidMediaResourceServer::AddResource(mozilla::MediaResource* aResource, nsCSt
     MutexAutoLock lock(mMutex);
 
     // Adding a resource URL that already exists is considered an error.
-    if (mResources.find(aUrl) != mResources.end()) return NS_ERROR_FAILURE;
+    if (mResources.find(url) != mResources.end()) return NS_ERROR_FAILURE;
     mResources[url] = aResource;
   }
 
