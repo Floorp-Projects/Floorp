@@ -253,7 +253,6 @@ HTMLVideoElement::UpdateScreenWakeLock()
   if (mScreenWakeLock && (mPaused || hidden)) {
     ErrorResult rv;
     mScreenWakeLock->Unlock(rv);
-    NS_WARN_IF_FALSE(!rv.Failed(), "Failed to unlock the wakelock.");
     mScreenWakeLock = nullptr;
     return;
   }

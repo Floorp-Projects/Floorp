@@ -2334,7 +2334,6 @@ HTMLMediaElement::WakeLockRelease()
   if (mWakeLock) {
     ErrorResult rv;
     mWakeLock->Unlock(rv);
-    NS_WARN_IF_FALSE(!rv.Failed(), "Failed to unlock the wakelock.");
     mWakeLock = nullptr;
   }
 }
