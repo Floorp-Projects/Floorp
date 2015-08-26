@@ -79,8 +79,6 @@ Accessibility.prototype = {
     'radio menu item',
     'option',
     'radiobutton',
-    'rowheader',
-    'switch',
     'slider',
     'spinbutton',
     'pagetab',
