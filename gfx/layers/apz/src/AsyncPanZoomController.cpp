@@ -1434,8 +1434,8 @@ AsyncPanZoomController::ConvertToGecko(const ScreenIntPoint& aPoint, CSSPoint* a
 ParentLayerPoint
 AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) const
 {
-  ParentLayerPoint scrollAmount;
-  ParentLayerPoint pageScrollSize;
+  ParentLayerSize scrollAmount;
+  ParentLayerSize pageScrollSize;
   bool isRootContent = false;
 
   {
@@ -1444,17 +1444,17 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) cons
     LayoutDeviceIntSize scrollAmountLD = mFrameMetrics.GetLineScrollAmount();
     LayoutDeviceIntSize pageScrollSizeLD = mFrameMetrics.GetPageScrollAmount();
     isRootContent = mFrameMetrics.IsRootContent();
-    scrollAmount = LayoutDevicePoint(scrollAmountLD.width, scrollAmountLD.height) /
+    scrollAmount = scrollAmountLD /
       mFrameMetrics.GetDevPixelsPerCSSPixel() * mFrameMetrics.GetZoom();
-    pageScrollSize = LayoutDevicePoint(pageScrollSizeLD.width, pageScrollSizeLD.height) /
+    pageScrollSize = pageScrollSizeLD /
       mFrameMetrics.GetDevPixelsPerCSSPixel() * mFrameMetrics.GetZoom();
   }
 
   ParentLayerPoint delta;
   switch (aEvent.mDeltaType) {
     case ScrollWheelInput::SCROLLDELTA_LINE: {
-      delta.x = aEvent.mDeltaX * scrollAmount.x;
-      delta.y = aEvent.mDeltaY * scrollAmount.y;
+      delta.x = aEvent.mDeltaX * scrollAmount.width;
+      delta.y = aEvent.mDeltaY * scrollAmount.height;
       break;
     }
     case ScrollWheelInput::SCROLLDELTA_PIXEL: {
@@ -1477,15 +1477,15 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) cons
     }
   }
 
-  if (Abs(delta.x) > pageScrollSize.x) {
+  if (Abs(delta.x) > pageScrollSize.width) {
     delta.x = (delta.x >= 0)
-              ? pageScrollSize.x
-              : -pageScrollSize.x;
+              ? pageScrollSize.width
+              : -pageScrollSize.width;
   }
-  if (Abs(delta.y) > pageScrollSize.y) {
+  if (Abs(delta.y) > pageScrollSize.height) {
     delta.y = (delta.y >= 0)
-              ? pageScrollSize.y
-              : -pageScrollSize.y;
+              ? pageScrollSize.height
+              : -pageScrollSize.height;
   }
 
   return delta;
@@ -1493,9 +1493,15 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) cons
 
 // Return whether or not the underlying layer can be scrolled on either axis.
 bool
-AsyncPanZoomController::CanScroll(const ScrollWheelInput& aEvent) const
+AsyncPanZoomController::CanScroll(const InputData& aEvent) const
 {
-  ParentLayerPoint delta = GetScrollWheelDelta(aEvent);
+  ParentLayerPoint delta;
+  if (aEvent.mInputType == SCROLLWHEEL_INPUT) {
+    delta = GetScrollWheelDelta(aEvent.AsScrollWheelInput());
+  } else if (aEvent.mInputType == PANGESTURE_INPUT) {
+    const PanGestureInput& panInput = aEvent.AsPanGestureInput();
+    delta = ToParentLayerCoordinates(panInput.mPanDisplacement, panInput.mPanStartPoint);
+  }
   if (!delta.x && !delta.y) {
     return false;
   }

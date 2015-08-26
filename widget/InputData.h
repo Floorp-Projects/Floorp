@@ -529,6 +529,7 @@ public:
   // Deltas are in units corresponding to the delta type. For line deltas, they
   // are the number of line units to scroll. The number of device pixels for a
   // horizontal and vertical line unit are in FrameMetrics::mLineScrollAmount.
+  // For pixel deltas, these values are in ScreenCoords.
   //
   // The horizontal (X) delta is > 0 for scrolling right and < 0 for scrolling
   // left. The vertical (Y) delta is < 0 for scrolling up and > 0 for
