@@ -111,6 +111,12 @@ static FILE* gCOMPtrLog = nullptr;
 
 struct SerialNumberRecord
 {
+  SerialNumberRecord()
+    : serialNumber(++gNextSerialNumber)
+    , refCount(0)
+    , COMPtrCount(0)
+  {}
+
   intptr_t serialNumber;
   int32_t refCount;
   int32_t COMPtrCount;
@@ -187,7 +193,7 @@ static void
 SerialNumberFreeEntry(void* aPool, PLHashEntry* aHashEntry, unsigned aFlag)
 {
   if (aFlag == HT_FREE_ENTRY) {
-    PR_Free(reinterpret_cast<SerialNumberRecord*>(aHashEntry->value));
+    delete reinterpret_cast<SerialNumberRecord*>(aHashEntry->value);
     PR_Free(aHashEntry);
   }
 }
@@ -581,10 +587,7 @@ GetSerialNumber(void* aPtr, bool aCreate)
   if (hep && *hep) {
     return reinterpret_cast<SerialNumberRecord*>((*hep)->value)->serialNumber;
   } else if (aCreate) {
-    SerialNumberRecord* record = PR_NEW(SerialNumberRecord);
-    record->serialNumber = ++gNextSerialNumber;
-    record->refCount = 0;
-    record->COMPtrCount = 0;
+    SerialNumberRecord* record = new SerialNumberRecord();
     PL_HashTableRawAdd(gSerialNumbers, hep, HashNumber(aPtr),
                        aPtr, reinterpret_cast<void*>(record));
     return gNextSerialNumber;
