@@ -9,7 +9,7 @@
 const TEST_URL = TEST_URL_ROOT + "doc_inspector_highlighter_dom.html";
 
 add_task(function*() {
-  let {inspector, toolbox} = yield openInspectorForURL(TEST_URL);
+  let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Starting element picker");
   yield toolbox.highlighterUtils.startPicker();
@@ -33,28 +33,28 @@ add_task(function*() {
   yield doKeyStop({key: "VK_ESCAPE", options: {}});
   is(inspector.selection.nodeFront.id, "simple-div2", "The simple-div2 DIV is still selected. Passed.");
 
-  function doKeyPick(msg) {
+  function doKeyPick(args) {
     info("Key pressed. Waiting for element to be picked");
-    executeInContent("Test:SynthesizeKey", msg);
+    testActor.synthesizeKey(args);
     return promise.all([
       toolbox.selection.once("new-node-front"),
       inspector.once("inspector-updated")
     ]);
   }
 
-  function doKeyStop(msg) {
+  function doKeyStop(args) {
     info("Key pressed. Waiting for picker to be canceled");
-    executeInContent("Test:SynthesizeKey", msg);
+    testActor.synthesizeKey(args);
     return inspector.toolbox.once("picker-stopped");
   }
 
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
-    executeInContent("Test:SynthesizeMouse", {
+    testActor.synthesizeMouse({
       options: {type: "mousemove"},
       center: true,
       selector: selector
-    }, null, false);
+    });
     return inspector.toolbox.once("picker-node-hovered");
   }
 

@@ -11,40 +11,33 @@ const TEST_URI = "data:text/html;charset=utf-8," +
   "<iframe src='data:text/html;charset=utf-8,hello world'></iframe>";
 
 add_task(function* () {
-  let { inspector, toolbox } = yield openInspectorForURL(TEST_URI);
-  let iframe = getNode("iframe");
+  let { inspector, toolbox, testActor } = yield openInspectorForURL(TEST_URI);
 
   info("Starting element picker.");
   yield toolbox.highlighterUtils.startPicker();
 
   info("Waiting for highlighter to activate.");
   let highlighterShowing = toolbox.once("highlighter-ready");
-  executeInContent("Test:SynthesizeMouse", {
+  testActor.synthesizeMouse({
+    selector: "body",
     options: {type: "mousemove"},
     x: 1,
     y: 1
-  }, {node: content.document.body}, false);
+  });
   yield highlighterShowing;
 
-  let isVisible = yield isHighlighting(toolbox);
+  let isVisible = yield testActor.isHighlighting();
   ok(isVisible, "Inspector is highlighting.");
 
-  yield reloadFrame();
+  yield testActor.reloadFrame("iframe");
   info("Frame reloaded. Reloading again.");
 
-  yield reloadFrame();
+  yield testActor.reloadFrame("iframe");
   info("Frame reloaded twice.");
 
-  isVisible = yield isHighlighting(toolbox);
+  isVisible = yield testActor.isHighlighting();
   ok(isVisible, "Inspector is highlighting after iframe nav.");
 
   info("Stopping element picker.");
   yield toolbox.highlighterUtils.stopPicker();
-
-  function reloadFrame() {
-    info("Reloading frame.");
-    let frameLoaded = once(iframe, "load");
-    iframe.contentWindow.location.reload();
-    return frameLoaded;
-  }
 });

@@ -27,9 +27,15 @@ add_task(function* () {
   content.document.body.innerHTML = DOCUMENT_HTML;
   content.document.title = "Inspector Initialization Test";
 
+  let deferred = promise.defer();
+  executeSoon(deferred.resolve);
+  yield deferred.promise;
+
+  let testActor = yield getTestActorWithoutToolbox(tab);
+
   yield testToolboxInitialization(tab);
-  yield testContextMenuInitialization();
-  yield testContextMenuInspectorAlreadyOpen();
+  yield testContextMenuInitialization(testActor);
+  yield testContextMenuInspectorAlreadyOpen(testActor);
 });
 
 function* testToolboxInitialization(tab) {
@@ -64,25 +70,22 @@ function* testToolboxInitialization(tab) {
   ok(!gDevTools.getToolbox(target), "Toolbox destroyed.");
 }
 
-function* testContextMenuInitialization() {
+function* testContextMenuInitialization(testActor) {
   info("Opening inspector by clicking on 'Inspect Element' context menu item");
-  let salutation = getNode("#salutation");
-
-  yield clickOnInspectMenuItem(salutation);
+  yield clickOnInspectMenuItem(testActor, "#salutation");
 
   info("Checking inspector state.");
   yield testMarkupView("#salutation");
   yield testBreadcrumbs("#salutation");
 }
 
-function* testContextMenuInspectorAlreadyOpen() {
+function* testContextMenuInspectorAlreadyOpen(testActor) {
   info("Changing node by clicking on 'Inspect Element' context menu item");
 
   let inspector = getActiveInspector();
   ok(inspector, "Inspector is active");
 
-  let closing = getNode("#closing");
-  yield clickOnInspectMenuItem(closing);
+  yield clickOnInspectMenuItem(testActor, "#closing");
 
   ok(true, "Inspector was updated when 'Inspect Element' was clicked.");
   yield testMarkupView("#closing", inspector);
@@ -112,18 +115,19 @@ function* testBreadcrumbs(selector, inspector) {
   is(button.getAttribute("tooltiptext"), expectedText, "Crumb refers to the right node");
 }
 
-function* clickOnInspectMenuItem(node) {
-  info("Showing the contextual menu on node " + node);
-  yield executeInContent("Test:SynthesizeMouse", {
+function* clickOnInspectMenuItem(testActor, selector) {
+  info("Showing the contextual menu on node " + selector);
+  yield testActor.synthesizeMouse({
+    selector: selector,
     center: true,
     options: {type: "contextmenu", button: 2}
-  }, {node});
+  });
 
   // nsContextMenu also requires the popupNode to be set, but we can't set it to
   // node under e10s as it's a CPOW, not a DOM node. But under e10s,
   // nsContextMenu won't use the property anyway, so just try/catching is ok.
   try {
-    document.popupNode = node;
+    document.popupNode = content.document.querySelector(selector);
   } catch (e) {}
 
   let contentAreaContextMenu = document.querySelector("#contentAreaContextMenu");
