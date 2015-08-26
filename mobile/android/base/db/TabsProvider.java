@@ -8,22 +8,23 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.db.BrowserContract.Clients;
 import org.mozilla.gecko.db.BrowserContract.Tabs;
 
 import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
 
 public class TabsProvider extends SharedBrowserDatabaseProvider {
+    private static final long ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
+    private static final long ONE_WEEK_IN_MILLISECONDS = 7 * ONE_DAY_IN_MILLISECONDS;
+    private static final long THREE_WEEKS_IN_MILLISECONDS = 3 * ONE_WEEK_IN_MILLISECONDS;
+
     static final String TABLE_TABS = "tabs";
     static final String TABLE_CLIENTS = "clients";
 
@@ -32,6 +33,31 @@ public class TabsProvider extends SharedBrowserDatabaseProvider {
     static final int CLIENTS = 602;
     static final int CLIENTS_ID = 603;
     static final int CLIENTS_RECENCY = 604;
+
+    // Exclude clients that are more than three weeks old and also any duplicates that are older than one week old.
+    static final String EXCLUDE_STALE_CLIENTS_SUBQUERY =
+    "(SELECT " + Clients.GUID +
+    ", " + Clients.NAME +
+    ", " + Clients.LAST_MODIFIED +
+    ", " + Clients.DEVICE_TYPE +
+    "  FROM " + TABLE_CLIENTS +
+    "  WHERE " + Clients.LAST_MODIFIED + " > %1$s " +
+    " GROUP BY " + Clients.NAME +
+    " UNION ALL " +
+    " SELECT c." +  Clients.GUID + " AS " + Clients.GUID +
+    ", c." + Clients.NAME + " AS " + Clients.NAME +
+    ", c." + Clients.LAST_MODIFIED + " AS " + Clients.LAST_MODIFIED +
+    ", c." + Clients.DEVICE_TYPE + " AS " + Clients.DEVICE_TYPE +
+    " FROM " + TABLE_CLIENTS + " AS c " +
+    " JOIN (" +
+        " SELECT " + Clients.GUID +
+        ", " + "MAX( " + Clients.LAST_MODIFIED + ") AS " + Clients.LAST_MODIFIED +
+        " FROM " + TABLE_CLIENTS +
+        " WHERE (" + Clients.LAST_MODIFIED + " < %1$s" + " AND " + Clients.LAST_MODIFIED + " > %2$s) AND " +
+        Clients.NAME + " NOT IN " + "( SELECT " + Clients.NAME + " FROM " + TABLE_CLIENTS + " WHERE " + Clients.LAST_MODIFIED + " > %1$s)" +
+        " GROUP BY " + Clients.NAME +
+    ") AS c2" +
+    " ON c." + Clients.GUID + " = c2." + Clients.GUID + ")";
 
     static final String DEFAULT_TABS_SORT_ORDER = Clients.LAST_MODIFIED + " DESC, " + Tabs.LAST_USED + " DESC";
     static final String DEFAULT_CLIENTS_SORT_ORDER = Clients.LAST_MODIFIED + " DESC";
@@ -295,8 +321,15 @@ public class TabsProvider extends SharedBrowserDatabaseProvider {
                     debug("Using sort order " + sortOrder + ".");
                 }
 
+                final long oneWeekAgo = System.currentTimeMillis() - ONE_WEEK_IN_MILLISECONDS;
+                final long threeWeeksAgo = System.currentTimeMillis() - THREE_WEEKS_IN_MILLISECONDS;
+
+                final String excludeStaleClientsTable = String.format(EXCLUDE_STALE_CLIENTS_SUBQUERY, oneWeekAgo, threeWeeksAgo);
+
                 qb.setProjectionMap(CLIENTS_RECENCY_PROJECTION_MAP);
-                qb.setTables(TABLE_CLIENTS + " LEFT OUTER JOIN " + TABLE_TABS +
+
+                // Use a subquery to quietly exclude stale duplicate client records.
+                qb.setTables(excludeStaleClientsTable + " AS " + TABLE_CLIENTS + " LEFT OUTER JOIN " + TABLE_TABS +
                         " ON (" + projectColumn(TABLE_CLIENTS, Clients.GUID) +
                         " = " + projectColumn(TABLE_TABS,Tabs.CLIENT_GUID) + ")");
                 groupBy = projectColumn(TABLE_CLIENTS, Clients.GUID);
