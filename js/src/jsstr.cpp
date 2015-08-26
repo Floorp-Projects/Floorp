@@ -2903,9 +2903,9 @@ ReplaceRegExp(JSContext* cx, RegExpStatics* res, ReplaceData& rdata)
     return true;
 }
 
-static bool
+static JSString*
 BuildFlatReplacement(JSContext* cx, HandleString textstr, HandleString repstr,
-                     const FlatMatch& fm, MutableHandleValue rval)
+                     const FlatMatch& fm)
 {
     RopeBuilder builder(cx);
     size_t match = fm.match();
@@ -2918,7 +2918,8 @@ BuildFlatReplacement(JSContext* cx, HandleString textstr, HandleString repstr,
          */
         StringSegmentRange r(cx);
         if (!r.init(textstr))
-            return false;
+            return nullptr;
+
         size_t pos = 0;
         while (!r.empty()) {
             RootedString str(cx, r.front());
@@ -2939,8 +2940,9 @@ BuildFlatReplacement(JSContext* cx, HandleString textstr, HandleString repstr,
                     RootedString leftSide(cx, NewDependentString(cx, str, 0, match - pos));
                     if (!leftSide ||
                         !builder.append(leftSide) ||
-                        !builder.append(repstr)) {
-                        return false;
+                        !builder.append(repstr))
+                    {
+                        return nullptr;
                     }
                 }
 
@@ -2952,33 +2954,33 @@ BuildFlatReplacement(JSContext* cx, HandleString textstr, HandleString repstr,
                     RootedString rightSide(cx, NewDependentString(cx, str, matchEnd - pos,
                                                                   strEnd - matchEnd));
                     if (!rightSide || !builder.append(rightSide))
-                        return false;
+                        return nullptr;
                 }
             } else {
                 if (!builder.append(str))
-                    return false;
+                    return nullptr;
             }
             pos += str->length();
             if (!r.popFront())
-                return false;
+                return nullptr;
         }
     } else {
         RootedString leftSide(cx, NewDependentString(cx, textstr, 0, match));
         if (!leftSide)
-            return false;
+            return nullptr;
         RootedString rightSide(cx);
         rightSide = NewDependentString(cx, textstr, match + fm.patternLength(),
                                        textstr->length() - match - fm.patternLength());
         if (!rightSide ||
             !builder.append(leftSide) ||
             !builder.append(repstr) ||
-            !builder.append(rightSide)) {
-            return false;
+            !builder.append(rightSide))
+        {
+            return nullptr;
         }
     }
 
-    rval.setString(builder.result());
-    return true;
+    return builder.result();
 }
 
 template <typename CharT>
@@ -3038,13 +3040,13 @@ AppendDollarReplacement(StringBuffer& newReplaceChars, size_t firstDollarIndex,
  *
  *      newstring = string[:matchStart] + dollarSub(replaceValue) + string[matchLimit:]
  */
-static inline bool
+static JSString*
 BuildDollarReplacement(JSContext* cx, JSString* textstrArg, JSLinearString* repstr,
-                       uint32_t firstDollarIndex, const FlatMatch& fm, MutableHandleValue rval)
+                       uint32_t firstDollarIndex, const FlatMatch& fm)
 {
     RootedLinearString textstr(cx, textstrArg->ensureLinear(cx));
     if (!textstr)
-        return false;
+        return nullptr;
 
     size_t matchStart = fm.match();
     size_t matchLimit = matchStart + fm.patternLength();
@@ -3058,10 +3060,10 @@ BuildDollarReplacement(JSContext* cx, JSString* textstrArg, JSLinearString* reps
      */
     StringBuffer newReplaceChars(cx);
     if (repstr->hasTwoByteChars() && !newReplaceChars.ensureTwoByteChars())
-        return false;
+        return nullptr;
 
     if (!newReplaceChars.reserve(textstr->length() - fm.patternLength() + repstr->length()))
-        return false;
+        return nullptr;
 
     bool res;
     if (repstr->hasLatin1Chars()) {
@@ -3074,28 +3076,27 @@ BuildDollarReplacement(JSContext* cx, JSString* textstrArg, JSLinearString* reps
                                       repstr->twoByteChars(nogc), repstr->length());
     }
     if (!res)
-        return false;
+        return nullptr;
 
     RootedString leftSide(cx, NewDependentString(cx, textstr, 0, matchStart));
     if (!leftSide)
-        return false;
+        return nullptr;
 
     RootedString newReplace(cx, newReplaceChars.finishString());
     if (!newReplace)
-        return false;
+        return nullptr;
 
     MOZ_ASSERT(textstr->length() >= matchLimit);
     RootedString rightSide(cx, NewDependentString(cx, textstr, matchLimit,
                                                   textstr->length() - matchLimit));
     if (!rightSide)
-        return false;
+        return nullptr;
 
     RopeBuilder builder(cx);
     if (!builder.append(leftSide) || !builder.append(newReplace) || !builder.append(rightSide))
-        return false;
+        return nullptr;
 
-    rval.setString(builder.result());
-    return true;
+    return builder.result();
 }
 
 struct StringRange
@@ -3364,42 +3365,40 @@ js::str_replace_regexp_raw(JSContext* cx, HandleString string, Handle<RegExpObje
     return StrReplaceRegExp(cx, rdata);
 }
 
-static inline bool
-StrReplaceString(JSContext* cx, ReplaceData& rdata, const FlatMatch& fm, MutableHandleValue rval)
+static JSString*
+StrReplaceString(JSContext* cx, ReplaceData& rdata, const FlatMatch& fm)
 {
     /*
      * Note: we could optimize the text.length == pattern.length case if we wanted,
      * even in the presence of dollar metachars.
      */
     if (rdata.dollarIndex != UINT32_MAX)
-        return BuildDollarReplacement(cx, rdata.str, rdata.repstr, rdata.dollarIndex, fm, rval);
-    return BuildFlatReplacement(cx, rdata.str, rdata.repstr, fm, rval);
+        return BuildDollarReplacement(cx, rdata.str, rdata.repstr, rdata.dollarIndex, fm);
+    return BuildFlatReplacement(cx, rdata.str, rdata.repstr, fm);
 }
 
 static const uint32_t ReplaceOptArg = 2;
 
-bool
+JSString*
 js::str_replace_string_raw(JSContext* cx, HandleString string, HandleString pattern,
-                          HandleString replacement, MutableHandleValue rval)
+                          HandleString replacement)
 {
     ReplaceData rdata(cx);
 
     rdata.str = string;
     JSLinearString* repl = replacement->ensureLinear(cx);
     if (!repl)
-        return false;
+        return nullptr;
     rdata.setReplacementString(repl);
 
     if (!rdata.g.init(cx, pattern))
-        return false;
+        return nullptr;
     const FlatMatch* fm = rdata.g.tryFlatMatch(cx, rdata.str, ReplaceOptArg, ReplaceOptArg, false);
 
-    if (fm->match() < 0) {
-        rval.setString(string);
-        return true;
-    }
+    if (fm->match() < 0)
+        return string;
 
-    return StrReplaceString(cx, rdata, *fm, rval);
+    return StrReplaceString(cx, rdata, *fm);
 }
 
 static inline bool
@@ -3570,7 +3569,13 @@ js::str_replace(JSContext* cx, unsigned argc, Value* vp)
 
     if (rdata.lambda)
         return str_replace_flat_lambda(cx, args, rdata, *fm);
-    return StrReplaceString(cx, rdata, *fm, args.rval());
+
+    JSString* res = StrReplaceString(cx, rdata, *fm);
+    if (!res)
+        return false;
+
+    args.rval().setString(res);
+    return true;
 }
 
 namespace {
