@@ -55,7 +55,12 @@ DecoderFuzzingWrapper::Flush()
 {
   DFW_LOGV("");
   MOZ_ASSERT(mDecoder);
-  return mDecoder->Flush();
+  // Flush may output some frames (though unlikely).
+  // Flush may block a bit, it's ok if we output some frames in the meantime.
+  nsresult result = mDecoder->Flush();
+  // Clear any delayed output we may have.
+  mCallbackWrapper->ClearDelayedOutput();
+  return result;
 }
 
 nsresult
@@ -63,6 +68,8 @@ DecoderFuzzingWrapper::Drain()
 {
   DFW_LOGV("");
   MOZ_ASSERT(mDecoder);
+  // Note: The decoder should callback DrainComplete(), we'll drain the
+  // delayed output (if any) then.
   return mDecoder->Drain();
 }
 
@@ -71,7 +78,10 @@ DecoderFuzzingWrapper::Shutdown()
 {
   DFW_LOGV("");
   MOZ_ASSERT(mDecoder);
-  return mDecoder->Shutdown();
+  // Both shutdowns below may block a bit.
+  nsresult result = mDecoder->Shutdown();
+  mCallbackWrapper->Shutdown();
+  return result;
 }
 
 bool
@@ -93,6 +103,9 @@ DecoderFuzzingWrapper::ConfigurationChanged(const TrackInfo& aConfig)
 
 DecoderCallbackFuzzingWrapper::DecoderCallbackFuzzingWrapper(MediaDataDecoderCallback* aCallback)
   : mCallback(aCallback)
+  , mDontDelayInputExhausted(false)
+  , mDraining(false)
+  , mTaskQueue(new TaskQueue(SharedThreadPool::Get(NS_LITERAL_CSTRING("MediaFuzzingWrapper"), 1)))
 {
   CFW_LOGV("aCallback=%p", aCallback);
 }
@@ -103,24 +116,95 @@ DecoderCallbackFuzzingWrapper::~DecoderCallbackFuzzingWrapper()
 }
 
 void
+DecoderCallbackFuzzingWrapper::SetVideoOutputMinimumInterval(
+  TimeDuration aFrameOutputMinimumInterval)
+{
+  CFW_LOGD("aFrameOutputMinimumInterval=%fms",
+      aFrameOutputMinimumInterval.ToMilliseconds());
+  mFrameOutputMinimumInterval = aFrameOutputMinimumInterval;
+}
+
+void
+DecoderCallbackFuzzingWrapper::SetDontDelayInputExhausted(
+  bool aDontDelayInputExhausted)
+{
+  CFW_LOGD("aDontDelayInputExhausted=%d",
+      aDontDelayInputExhausted);
+  mDontDelayInputExhausted = aDontDelayInputExhausted;
+}
+
+void
 DecoderCallbackFuzzingWrapper::Output(MediaData* aData)
 {
+  if (!mTaskQueue->IsCurrentThreadIn()) {
+    nsCOMPtr<nsIRunnable> task =
+      NS_NewRunnableMethodWithArg<StorensRefPtrPassByPtr<MediaData>>(
+        this, &DecoderCallbackFuzzingWrapper::Output, aData);
+    mTaskQueue->Dispatch(task.forget());
+    return;
+  }
   CFW_LOGV("aData.mTime=%lld", aData->mTime);
   MOZ_ASSERT(mCallback);
+  if (mFrameOutputMinimumInterval) {
+    if (!mPreviousOutput.IsNull()) {
+      if (!mDelayedOutput.IsEmpty()) {
+        // We already have some delayed frames, just add this one to the queue.
+        mDelayedOutput.AppendElement(MakePair<nsRefPtr<MediaData>, bool>(aData, false));
+        CFW_LOGD("delaying output of sample@%lld, total queued:%d",
+                 aData->mTime, int(mDelayedOutput.Length()));
+        return;
+      }
+      if (TimeStamp::Now() < mPreviousOutput + mFrameOutputMinimumInterval) {
+        // Frame arriving too soon after the previous one, start queuing.
+        mDelayedOutput.AppendElement(MakePair<nsRefPtr<MediaData>, bool>(aData, false));
+        CFW_LOGD("delaying output of sample@%lld, first queued", aData->mTime);
+        if (!mDelayedOutputTimer) {
+          mDelayedOutputTimer = new MediaTimer();
+        }
+        ScheduleOutputDelayedFrame();
+        return;
+      }
+    }
+    // If we're here, we're going to actually output a frame -> Record time.
+    mPreviousOutput = TimeStamp::Now();
+  }
+
+  // Passing the data straight through, no need to dispatch to another queue,
+  // callback should deal with that.
   mCallback->Output(aData);
 }
 
 void
 DecoderCallbackFuzzingWrapper::Error()
 {
+  if (!mTaskQueue->IsCurrentThreadIn()) {
+    nsCOMPtr<nsIRunnable> task =
+      NS_NewRunnableMethod(this, &DecoderCallbackFuzzingWrapper::Error);
+    mTaskQueue->Dispatch(task.forget());
+    return;
+  }
   CFW_LOGV("");
   MOZ_ASSERT(mCallback);
+  ClearDelayedOutput();
   mCallback->Error();
 }
 
 void
 DecoderCallbackFuzzingWrapper::InputExhausted()
 {
+  if (!mTaskQueue->IsCurrentThreadIn()) {
+    nsCOMPtr<nsIRunnable> task =
+      NS_NewRunnableMethod(this, &DecoderCallbackFuzzingWrapper::InputExhausted);
+    mTaskQueue->Dispatch(task.forget());
+    return;
+  }
+  if (!mDontDelayInputExhausted && !mDelayedOutput.IsEmpty()) {
+    MediaDataAndInputExhausted& last = mDelayedOutput.LastElement();
+    CFW_LOGD("InputExhausted delayed until after output of sample@%lld",
+             last.first()->mTime);
+    last.second() = true;
+    return;
+  }
   CFW_LOGV("");
   MOZ_ASSERT(mCallback);
   mCallback->InputExhausted();
@@ -129,14 +213,33 @@ DecoderCallbackFuzzingWrapper::InputExhausted()
 void
 DecoderCallbackFuzzingWrapper::DrainComplete()
 {
-  CFW_LOGV("");
+  if (!mTaskQueue->IsCurrentThreadIn()) {
+    nsCOMPtr<nsIRunnable> task =
+      NS_NewRunnableMethod(this, &DecoderCallbackFuzzingWrapper::DrainComplete);
+    mTaskQueue->Dispatch(task.forget());
+    return;
+  }
   MOZ_ASSERT(mCallback);
-  mCallback->DrainComplete();
+  if (mDelayedOutput.IsEmpty()) {
+    // No queued output -> Draining is complete now.
+    CFW_LOGV("No delayed output -> DrainComplete now");
+    mCallback->DrainComplete();
+  } else {
+    // Queued output waiting -> Make sure we call DrainComplete when it's empty.
+    CFW_LOGD("Delayed output -> DrainComplete later");
+    mDraining = true;
+  }
 }
 
 void
 DecoderCallbackFuzzingWrapper::ReleaseMediaResources()
 {
+  if (!mTaskQueue->IsCurrentThreadIn()) {
+    nsCOMPtr<nsIRunnable> task =
+      NS_NewRunnableMethod(this, &DecoderCallbackFuzzingWrapper::ReleaseMediaResources);
+    mTaskQueue->Dispatch(task.forget());
+    return;
+  }
   CFW_LOGV("");
   MOZ_ASSERT(mCallback);
   mCallback->ReleaseMediaResources();
@@ -148,6 +251,74 @@ DecoderCallbackFuzzingWrapper::OnReaderTaskQueue()
   CFW_LOGV("");
   MOZ_ASSERT(mCallback);
   return mCallback->OnReaderTaskQueue();
+}
+
+void
+DecoderCallbackFuzzingWrapper::ScheduleOutputDelayedFrame()
+{
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  nsRefPtr<DecoderCallbackFuzzingWrapper> self = this;
+  mDelayedOutputTimer->WaitUntil(
+    mPreviousOutput + mFrameOutputMinimumInterval,
+    __func__)
+  ->Then(mTaskQueue, __func__,
+         [self] () -> void { self->OutputDelayedFrame(); },
+         [self] () -> void { self->OutputDelayedFrame(); });
+}
+
+void
+DecoderCallbackFuzzingWrapper::OutputDelayedFrame()
+{
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  if (mDelayedOutput.IsEmpty()) {
+    if (mDraining) {
+      // No more output, and we were draining -> Send DrainComplete.
+      mDraining = false;
+      mCallback->DrainComplete();
+    }
+    return;
+  }
+  MediaDataAndInputExhausted& data = mDelayedOutput[0];
+  CFW_LOGD("Outputting delayed sample@%lld, remaining:%d",
+          data.first()->mTime, int(mDelayedOutput.Length() - 1));
+  mPreviousOutput = TimeStamp::Now();
+  mCallback->Output(data.first());
+  if (data.second()) {
+    CFW_LOGD("InputExhausted after delayed sample@%lld", data.first()->mTime);
+    mCallback->InputExhausted();
+  }
+  mDelayedOutput.RemoveElementAt(0);
+  if (!mDelayedOutput.IsEmpty()) {
+    // More output -> Send it later.
+    ScheduleOutputDelayedFrame();
+  } else if (mDraining) {
+    // No more output, and we were draining -> Send DrainComplete.
+    CFW_LOGD("DrainComplete");
+    mDraining = false;
+    mCallback->DrainComplete();
+  }
+}
+
+void
+DecoderCallbackFuzzingWrapper::ClearDelayedOutput()
+{
+  if (!mTaskQueue->IsCurrentThreadIn()) {
+    nsCOMPtr<nsIRunnable> task =
+      NS_NewRunnableMethod(this, &DecoderCallbackFuzzingWrapper::ClearDelayedOutput);
+    mTaskQueue->Dispatch(task.forget());
+    return;
+  }
+  mDelayedOutputTimer = nullptr;
+  mDelayedOutput.Clear();
+}
+
+void
+DecoderCallbackFuzzingWrapper::Shutdown()
+{
+  DFW_LOGV("Shutting down mTaskQueue");
+  mTaskQueue->BeginShutdown();
+  mTaskQueue->AwaitIdle();
+  DFW_LOGV("mTaskQueue shut down");
 }
 
 } // namespace mozilla
