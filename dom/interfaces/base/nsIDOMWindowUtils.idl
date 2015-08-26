@@ -1091,8 +1091,6 @@ interface nsIDOMWindowUtils : nsISupports {
                                in long aY,
                                [optional] in unsigned long aAdditionalFlags);
 
-  // NOTE: following values are same as NS_QUERY_* in BasicEvents.h
-
   /**
    * QUERY_SELECTED_TEXT queries the first selection range's information.
    *

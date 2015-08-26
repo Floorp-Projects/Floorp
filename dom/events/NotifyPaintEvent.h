@@ -28,7 +28,7 @@ public:
   NotifyPaintEvent(EventTarget* aOwner,
                    nsPresContext* aPresContext,
                    WidgetEvent* aEvent,
-                   uint32_t aEventType,
+                   EventMessage aEventMessage,
                    nsInvalidateRequestList* aInvalidateRequests);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -72,7 +72,9 @@ already_AddRefed<mozilla::dom::NotifyPaintEvent>
 NS_NewDOMNotifyPaintEvent(mozilla::dom::EventTarget* aOwner,
                           nsPresContext* aPresContext,
                           mozilla::WidgetEvent* aEvent,
-                          uint32_t aEventType = 0,
-                          nsInvalidateRequestList* aInvalidateRequests = nullptr);
+                          mozilla::EventMessage aEventMessage =
+                            mozilla::NS_EVENT_NULL,
+                          nsInvalidateRequestList* aInvalidateRequests =
+                            nullptr);
 
 #endif // mozilla_dom_NotifyPaintEvent_h_

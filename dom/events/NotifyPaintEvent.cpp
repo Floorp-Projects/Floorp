@@ -18,12 +18,12 @@ namespace dom {
 NotifyPaintEvent::NotifyPaintEvent(EventTarget* aOwner,
                                    nsPresContext* aPresContext,
                                    WidgetEvent* aEvent,
-                                   uint32_t aEventType,
+                                   EventMessage aEventMessage,
                                    nsInvalidateRequestList* aInvalidateRequests)
   : Event(aOwner, aPresContext, aEvent)
 {
   if (mEvent) {
-    mEvent->mMessage = aEventType;
+    mEvent->mMessage = aEventMessage;
   }
   if (aInvalidateRequests) {
     mInvalidateRequests.AppendElements(Move(aInvalidateRequests->mRequests));
@@ -166,11 +166,11 @@ already_AddRefed<NotifyPaintEvent>
 NS_NewDOMNotifyPaintEvent(EventTarget* aOwner,
                           nsPresContext* aPresContext,
                           WidgetEvent* aEvent,
-                          uint32_t aEventType,
+                          EventMessage aEventMessage,
                           nsInvalidateRequestList* aInvalidateRequests) 
 {
   nsRefPtr<NotifyPaintEvent> it =
-    new NotifyPaintEvent(aOwner, aPresContext, aEvent, aEventType,
+    new NotifyPaintEvent(aOwner, aPresContext, aEvent, aEventMessage,
                          aInvalidateRequests);
   return it.forget();
 }

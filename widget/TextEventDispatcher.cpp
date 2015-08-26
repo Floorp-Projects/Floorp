@@ -268,8 +268,8 @@ TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
   // End current composition and make this free for other IMEs.
   mIsComposing = false;
 
-  uint32_t message = aCommitString ? NS_COMPOSITION_COMMIT :
-                                     NS_COMPOSITION_COMMIT_AS_IS;
+  EventMessage message = aCommitString ? NS_COMPOSITION_COMMIT :
+                                         NS_COMPOSITION_COMMIT_AS_IS;
   WidgetCompositionEvent compositionCommitEvent(true, message, widget);
   InitEvent(compositionCommitEvent);
   if (message == NS_COMPOSITION_COMMIT) {
@@ -302,7 +302,7 @@ TextEventDispatcher::NotifyIME(const IMENotification& aIMENotification)
 
 bool
 TextEventDispatcher::DispatchKeyboardEvent(
-                       uint32_t aMessage,
+                       EventMessage aMessage,
                        const WidgetKeyboardEvent& aKeyboardEvent,
                        nsEventStatus& aStatus,
                        DispatchTo aDispatchTo)
@@ -313,7 +313,7 @@ TextEventDispatcher::DispatchKeyboardEvent(
 
 bool
 TextEventDispatcher::DispatchKeyboardEventInternal(
-                       uint32_t aMessage,
+                       EventMessage aMessage,
                        const WidgetKeyboardEvent& aKeyboardEvent,
                        nsEventStatus& aStatus,
                        DispatchTo aDispatchTo,

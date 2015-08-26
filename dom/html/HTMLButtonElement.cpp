@@ -200,7 +200,7 @@ HTMLButtonElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 bool
-HTMLButtonElement::IsDisabledForEvents(uint32_t aMessage)
+HTMLButtonElement::IsDisabledForEvents(EventMessage aMessage)
 {
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
   nsIFrame* formFrame = do_QueryFrame(formControlFrame);

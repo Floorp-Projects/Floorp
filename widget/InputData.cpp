@@ -81,27 +81,27 @@ MultiTouchInput::ToWidgetTouchEvent(nsIWidget* aWidget) const
   MOZ_ASSERT(NS_IsMainThread(),
              "Can only convert To WidgetTouchEvent on main thread");
 
-  uint32_t touchType = NS_EVENT_NULL;
+  EventMessage touchEventMessage = NS_EVENT_NULL;
   switch (mType) {
   case MULTITOUCH_START:
-    touchType = NS_TOUCH_START;
+    touchEventMessage = NS_TOUCH_START;
     break;
   case MULTITOUCH_MOVE:
-    touchType = NS_TOUCH_MOVE;
+    touchEventMessage = NS_TOUCH_MOVE;
     break;
   case MULTITOUCH_END:
-    touchType = NS_TOUCH_END;
+    touchEventMessage = NS_TOUCH_END;
     break;
   case MULTITOUCH_CANCEL:
-    touchType = NS_TOUCH_CANCEL;
+    touchEventMessage = NS_TOUCH_CANCEL;
     break;
   default:
     MOZ_ASSERT_UNREACHABLE("Did not assign a type to WidgetTouchEvent in MultiTouchInput");
     break;
   }
 
-  WidgetTouchEvent event(true, touchType, aWidget);
-  if (touchType == NS_EVENT_NULL) {
+  WidgetTouchEvent event(true, touchEventMessage, aWidget);
+  if (touchEventMessage == NS_EVENT_NULL) {
     return event;
   }
 
@@ -122,24 +122,24 @@ MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
   MOZ_ASSERT(NS_IsMainThread(),
              "Can only convert To WidgetMouseEvent on main thread");
 
-  uint32_t mouseEventType = NS_EVENT_NULL;
+  EventMessage mouseEventMessage = NS_EVENT_NULL;
   switch (mType) {
     case MultiTouchInput::MULTITOUCH_START:
-      mouseEventType = NS_MOUSE_BUTTON_DOWN;
+      mouseEventMessage = NS_MOUSE_BUTTON_DOWN;
       break;
     case MultiTouchInput::MULTITOUCH_MOVE:
-      mouseEventType = NS_MOUSE_MOVE;
+      mouseEventMessage = NS_MOUSE_MOVE;
       break;
     case MultiTouchInput::MULTITOUCH_CANCEL:
     case MultiTouchInput::MULTITOUCH_END:
-      mouseEventType = NS_MOUSE_BUTTON_UP;
+      mouseEventMessage = NS_MOUSE_BUTTON_UP;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Did not assign a type to WidgetMouseEvent");
       break;
   }
 
-  WidgetMouseEvent event(true, mouseEventType, aWidget,
+  WidgetMouseEvent event(true, mouseEventMessage, aWidget,
                          WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
 
   const SingleTouchData& firstTouch = mTouches[0];
@@ -151,7 +151,7 @@ MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
   event.modifiers = modifiers;
 
-  if (mouseEventType != NS_MOUSE_MOVE) {
+  if (mouseEventMessage != NS_MOUSE_MOVE) {
     event.clickCount = 1;
   }
 

@@ -24,7 +24,7 @@ GetBoolName(bool aBool)
 }
 
 static const char*
-GetEventMessageName(uint32_t aMessage)
+GetEventMessageName(EventMessage aMessage)
 {
   switch (aMessage) {
     case NS_COMPOSITION_START:
@@ -676,6 +676,8 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
          "Succeeded, aEvent={ mReply={ mRect=%s } }",
          this, GetRectText(aEvent.mReply.mRect).get()));
       break;
+    default:
+      break;
   }
   aEvent.mSucceeded = true;
   return true;
@@ -915,7 +917,7 @@ ContentCacheInParent::OnSelectionEvent(
 
 void
 ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
-                                                uint32_t aMessage)
+                                                EventMessage aMessage)
 {
   // This is called when the child process receives WidgetCompositionEvent or
   // WidgetSelectionEvent.

@@ -146,11 +146,31 @@ inline EventListenerFlags AllEventsAtSystemGroupCapture()
   return flags;
 }
 
+class EventListenerManagerBase
+{
+protected:
+  EventListenerManagerBase();
+
+  EventMessage mNoListenerForEvent;
+  uint16_t mMayHavePaintEventListener : 1;
+  uint16_t mMayHaveMutationListeners : 1;
+  uint16_t mMayHaveCapturingListeners : 1;
+  uint16_t mMayHaveSystemGroupListeners : 1;
+  uint16_t mMayHaveTouchEventListener : 1;
+  uint16_t mMayHaveMouseEnterLeaveEventListener : 1;
+  uint16_t mMayHavePointerEnterLeaveEventListener : 1;
+  uint16_t mMayHaveKeyEventListener : 1;
+  uint16_t mMayHaveInputOrCompositionEventListener : 1;
+  uint16_t mClearingListeners : 1;
+  uint16_t mIsMainThreadELM : 1;
+  // uint16_t mUnused : 5;
+};
+
 /*
  * Event listener manager
  */
 
-class EventListenerManager final
+class EventListenerManager final : public EventListenerManagerBase
 {
   ~EventListenerManager();
 
@@ -160,7 +180,7 @@ public:
     EventListenerHolder mListener;
     nsCOMPtr<nsIAtom> mTypeAtom; // for the main thread
     nsString mTypeString; // for non-main-threads
-    uint16_t mEventType;
+    EventMessage mEventMessage;
 
     enum ListenerType : uint8_t
     {
@@ -449,7 +469,7 @@ protected:
   /**
    * Find the Listener for the "inline" event listener for aTypeAtom.
    */
-  Listener* FindEventHandler(uint32_t aEventType,
+  Listener* FindEventHandler(EventMessage aEventMessage,
                              nsIAtom* aTypeAtom,
                              const nsAString& aTypeString);
 
@@ -465,9 +485,9 @@ protected:
                                     const TypedEventHandler& aHandler,
                                     bool aPermitUntrustedEvents);
 
-  bool IsDeviceType(uint32_t aType);
-  void EnableDevice(uint32_t aType);
-  void DisableDevice(uint32_t aType);
+  bool IsDeviceType(EventMessage aEventMessage);
+  void EnableDevice(EventMessage aEventMessage);
+  void DisableDevice(EventMessage aEventMessage);
 
 public:
   /**
@@ -529,14 +549,14 @@ protected:
                            bool aUseCapture);
 
   void AddEventListenerInternal(const EventListenerHolder& aListener,
-                                uint32_t aType,
+                                EventMessage aEventMessage,
                                 nsIAtom* aTypeAtom,
                                 const nsAString& aTypeString,
                                 const EventListenerFlags& aFlags,
                                 bool aHandler = false,
                                 bool aAllEvents = false);
   void RemoveEventListenerInternal(const EventListenerHolder& aListener,
-                                   uint32_t aType,
+                                   EventMessage aEventMessage,
                                    nsIAtom* aUserType,
                                    const nsAString& aTypeString,
                                    const EventListenerFlags& aFlags,
@@ -549,21 +569,13 @@ protected:
 
   bool ListenerCanHandle(Listener* aListener, WidgetEvent* aEvent);
 
+  // BE AWARE, a lot of instances of EventListenerManager will be created.
+  // Therefor, we need to keep this class compact.  When you add integer
+  // members, please add them to EventListemerManagerBase and check the size
+  // at build time.
+
   already_AddRefed<nsIScriptGlobalObject>
   GetScriptGlobalAndDocument(nsIDocument** aDoc);
-
-  uint32_t mMayHavePaintEventListener : 1;
-  uint32_t mMayHaveMutationListeners : 1;
-  uint32_t mMayHaveCapturingListeners : 1;
-  uint32_t mMayHaveSystemGroupListeners : 1;
-  uint32_t mMayHaveTouchEventListener : 1;
-  uint32_t mMayHaveMouseEnterLeaveEventListener : 1;
-  uint32_t mMayHavePointerEnterLeaveEventListener : 1;
-  uint32_t mMayHaveKeyEventListener : 1;
-  uint32_t mMayHaveInputOrCompositionEventListener : 1;
-  uint32_t mClearingListeners : 1;
-  uint32_t mIsMainThreadELM : 1;
-  uint32_t mNoListenerForEvent : 21;
 
   nsAutoTObserverArray<Listener, 2> mListeners;
   dom::EventTarget* MOZ_NON_OWNING_REF mTarget;

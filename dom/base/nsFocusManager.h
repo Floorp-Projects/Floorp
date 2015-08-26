@@ -280,12 +280,12 @@ protected:
   /**
    * Fires a focus or blur event at aTarget.
    *
-   * aType should be either NS_FOCUS_CONTENT or NS_BLUR_CONTENT. For blur
-   * events, aFocusMethod should normally be non-zero.
+   * aEventMessage should be either NS_FOCUS_CONTENT or NS_BLUR_CONTENT.
+   * For blur events, aFocusMethod should normally be non-zero.
    *
    * aWindowRaised should only be true if called from WindowRaised.
    */
-  void SendFocusOrBlurEvent(uint32_t aType,
+  void SendFocusOrBlurEvent(mozilla::EventMessage aEventMessage,
                             nsIPresShell* aPresShell,
                             nsIDocument* aDocument,
                             nsISupports* aTarget,

@@ -16,7 +16,8 @@ SimpleGestureEvent::SimpleGestureEvent(EventTarget* aOwner,
                                        WidgetSimpleGestureEvent* aEvent)
   : MouseEvent(aOwner, aPresContext,
                aEvent ? aEvent :
-                        new WidgetSimpleGestureEvent(false, 0, nullptr))
+                        new WidgetSimpleGestureEvent(false, NS_EVENT_NULL,
+                                                     nullptr))
 {
   NS_ASSERTION(mEvent->mClass == eSimpleGestureEventClass,
                "event type mismatch");

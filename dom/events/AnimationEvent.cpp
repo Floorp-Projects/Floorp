@@ -15,7 +15,7 @@ AnimationEvent::AnimationEvent(EventTarget* aOwner,
                                nsPresContext* aPresContext,
                                InternalAnimationEvent* aEvent)
   : Event(aOwner, aPresContext,
-          aEvent ? aEvent : new InternalAnimationEvent(false, 0))
+          aEvent ? aEvent : new InternalAnimationEvent(false, NS_EVENT_NULL))
 {
   if (aEvent) {
     mEventIsInternal = false;

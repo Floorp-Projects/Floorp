@@ -77,8 +77,8 @@ protected:
   {
   }
 
-  WidgetMouseEventBase(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget,
-                       EventClassID aEventClassID)
+  WidgetMouseEventBase(bool aIsTrusted, EventMessage aMessage,
+                       nsIWidget* aWidget, EventClassID aEventClassID)
     : WidgetInputEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
     , button(0)
     , buttons(0)
@@ -193,7 +193,7 @@ protected:
   {
   }
 
-  WidgetMouseEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget,
+  WidgetMouseEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
                    EventClassID aEventClassID, reasonType aReason)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, aEventClassID)
     , acceptActivation(false)
@@ -217,7 +217,7 @@ protected:
 public:
   virtual WidgetMouseEvent* AsMouseEvent() override { return this; }
 
-  WidgetMouseEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget,
+  WidgetMouseEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
                    reasonType aReason, contextType aContext = eNormal) :
     WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eMouseEventClass),
     acceptActivation(false), ignoreRootScrollFrame(false),
@@ -316,7 +316,7 @@ protected:
 public:
   virtual WidgetDragEvent* AsDragEvent() override { return this; }
 
-  WidgetDragEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
+  WidgetDragEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
     : WidgetMouseEvent(aIsTrusted, aMessage, aWidget, eDragEventClass, eReal)
     , userCancelled(false)
     , mDefaultPreventedOnContent(false)
@@ -379,7 +379,7 @@ public:
     return this;
   }
 
-  WidgetMouseScrollEvent(bool aIsTrusted, uint32_t aMessage,
+  WidgetMouseScrollEvent(bool aIsTrusted, EventMessage aMessage,
                          nsIWidget* aWidget)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget,
                            eMouseScrollEventClass)
@@ -439,7 +439,7 @@ private:
 public:
   virtual WidgetWheelEvent* AsWheelEvent() override { return this; }
 
-  WidgetWheelEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
+  WidgetWheelEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eWheelEventClass)
     , deltaX(0.0)
     , deltaY(0.0)
@@ -587,7 +587,7 @@ class WidgetPointerEvent : public WidgetMouseEvent
 public:
   virtual WidgetPointerEvent* AsPointerEvent() override { return this; }
 
-  WidgetPointerEvent(bool aIsTrusted, uint32_t aMsg, nsIWidget* w)
+  WidgetPointerEvent(bool aIsTrusted, EventMessage aMsg, nsIWidget* w)
     : WidgetMouseEvent(aIsTrusted, aMsg, w, ePointerEventClass, eReal)
     , width(0)
     , height(0)
