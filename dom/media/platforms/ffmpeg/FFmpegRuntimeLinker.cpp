@@ -32,6 +32,7 @@ public:
 };
 
 static const AvFormatLib sLibs[] = {
+  { "libavformat-ffmpeg.so.56", FFmpegDecoderModule<55>::Create, 55 },
   { "libavformat.so.56", FFmpegDecoderModule<55>::Create, 55 },
   { "libavformat.so.55", FFmpegDecoderModule<55>::Create, 55 },
   { "libavformat.so.54", FFmpegDecoderModule<54>::Create, 54 },

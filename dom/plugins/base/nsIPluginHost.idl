@@ -12,21 +12,6 @@
   "@mozilla.org/plugin/host;1"
 %}
 
-[scriptable, uuid(57069ada-2845-46ef-b57f-233596d1c02c)]
-interface nsIPluginPlayPreviewInfo : nsISupports
-{
-  readonly attribute AUTF8String mimeType;
-  readonly attribute boolean     ignoreCTP;
-  readonly attribute AUTF8String redirectURL;
-  readonly attribute AUTF8String whitelist;
-
-  /**
-   * Checks if pageURI and objectURI matches once of the entries in
-   * the whitelist. If whitelist is empty, returns true. 
-   */
-  boolean checkWhitelist(in AUTF8String pageURI, in AUTF8String objectURI);
-};
-
 [scriptable, function, uuid(9c311778-7c2c-4ad8-b439-b8a2786a20dd)]
 interface nsIClearSiteDataCallback : nsISupports
 {
@@ -36,7 +21,7 @@ interface nsIClearSiteDataCallback : nsISupports
     void callback(in nsresult rv);
 };
 
-[scriptable, uuid(0f73bbd2-fc89-41df-b31b-38c09903d187)]
+[scriptable, uuid(f938f5ba-7093-42cd-a559-af8039d99204)]
 interface nsIPluginHost : nsISupports
 {
   /**
@@ -101,27 +86,6 @@ interface nsIPluginHost : nsISupports
    *                subdomains is found, return true.
    */
   boolean siteHasData(in nsIPluginTag plugin, in AUTF8String domain);
-
-  /**
-   * Registers the play preview plugin mode for specific mime type
-   *
-   * @param mimeType: specifies plugin mime type.
-   * @param ignoreCTP: if true, the play preview ignores CTP rules, e.g.
-                       whitelisted websites, will not notify about plugin
-                       presence in the address bar.
-   * @param redirectURL: specifies url for the overlay iframe
-   * @param whitelist: specifies plugin whitelist in form of comma separated
-   *                   "[@page_url object_url|@page_url|object_url]" entries,
-   *                    e.g. @http://example.org/* http://example.org/t.swf
-   */
-  void registerPlayPreviewMimeType(in AUTF8String mimeType,
-                                   [optional] in boolean ignoreCTP,
-                                   [optional] in AUTF8String redirectURL,
-                                   [optional] in AUTF8String whitelist);
-
-  void unregisterPlayPreviewMimeType(in AUTF8String mimeType);
-
-  nsIPluginPlayPreviewInfo getPlayPreviewInfo(in AUTF8String mimeType);
 
   /**
    * Get the "permission string" for the plugin.  This is a string that can be

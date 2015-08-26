@@ -847,6 +847,8 @@ APZCTreeManager::UpdateWheelTransaction(WidgetInputEvent& aEvent)
    case NS_DRAGDROP_DROP:
      txn->EndTransaction();
      return;
+   default:
+     break;
   }
 }
 

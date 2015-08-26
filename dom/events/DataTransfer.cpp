@@ -155,9 +155,9 @@ DataTransfer::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  uint32_t eventType = nsContentUtils::GetEventId(eventTypeAtom);
+  EventMessage eventMessage = nsContentUtils::GetEventMessage(eventTypeAtom);
   nsRefPtr<DataTransfer> transfer = new DataTransfer(aGlobal.GetAsSupports(),
-                                                     eventType, aIsExternal,
+                                                     eventMessage, aIsExternal,
                                                      -1);
   return transfer.forget();
 }

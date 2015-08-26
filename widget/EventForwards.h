@@ -28,11 +28,15 @@ enum nsEventStatus
   nsEventStatus_eSentinel
 };
 
+namespace mozilla {
+
 /**
  * Event messages
  */
 
-enum
+typedef uint16_t EventMessageType;
+
+enum EventMessage : EventMessageType
 {
 
 #define NS_EVENT_MESSAGE(aMessage, aValue) aMessage = aValue,
@@ -44,8 +48,6 @@ enum
   // For preventing bustage due to "," after the last item.
   eEventMessage_MaxValue
 };
-
-namespace mozilla {
 
 /**
  * Event class IDs

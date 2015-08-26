@@ -106,7 +106,7 @@ Event::ConstructorInit(EventTarget* aOwner,
           ...
         }
      */
-    mEvent = new WidgetEvent(false, 0);
+    mEvent = new WidgetEvent(false, NS_EVENT_NULL);
     mEvent->time = PR_Now();
   }
 
@@ -563,8 +563,8 @@ Event::SetEventType(const nsAString& aEventTypeArg)
   if (mIsMainThreadEvent) {
     mEvent->typeString.Truncate();
     mEvent->userType =
-      nsContentUtils::GetEventIdAndAtom(aEventTypeArg, mEvent->mClass,
-                                        &(mEvent->mMessage));
+      nsContentUtils::GetEventMessageAndAtom(aEventTypeArg, mEvent->mClass,
+                                             &(mEvent->mMessage));
   } else {
     mEvent->userType = nullptr;
     mEvent->mMessage = NS_USER_DEFINED_EVENT;
@@ -726,6 +726,8 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
           abuse = openControlled;
         }
         break;
+      default:
+        break;
       }
     }
     break;
@@ -739,6 +741,8 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
         if (PopupAllowedForEvent("input")) {
           abuse = openControlled;
         }
+        break;
+      default:
         break;
       }
     }
@@ -756,6 +760,8 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
         break;
       case NS_XUL_COMMAND:
         abuse = openControlled;
+        break;
+      default:
         break;
       }
     }
@@ -785,6 +791,8 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
           abuse = openControlled;
         }
         break;
+      default:
+        break;
       }
     }
     break;
@@ -800,6 +808,8 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
         if (PopupAllowedForEvent("touchend")) {
           abuse = openControlled;
         }
+        break;
+      default:
         break;
       }
     }
@@ -832,6 +842,8 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
           abuse = openControlled;
         }
         break;
+      default:
+        break;
       }
     }
     break;
@@ -850,6 +862,8 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
         if (PopupAllowedForEvent("reset")) {
           abuse = openControlled;
         }
+        break;
+      default:
         break;
       }
     }
@@ -1026,13 +1040,13 @@ Event::GetOffsetCoords(nsPresContext* aPresContext,
 // logic for handling user-defined events).
 // static
 const char*
-Event::GetEventName(uint32_t aEventType)
+Event::GetEventName(EventMessage aEventType)
 {
   switch(aEventType) {
-#define ID_TO_EVENT(name_, _id, _type, _struct) \
-  case _id: return #name_;
+#define MESSAGE_TO_EVENT(name_, _message, _type, _struct) \
+  case _message: return #name_;
 #include "mozilla/EventNameList.h"
-#undef ID_TO_EVENT
+#undef MESSAGE_TO_EVENT
   default:
     break;
   }

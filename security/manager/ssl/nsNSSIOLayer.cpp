@@ -1319,7 +1319,6 @@ nsSSLIOLayerPoll(PRFileDesc* fd, int16_t in_flags, int16_t* out_flags)
 
 nsSSLIOLayerHelpers::nsSSLIOLayerHelpers()
   : mTreatUnsafeNegotiationAsBroken(false)
-  , mWarnLevelMissingRFC5746(1)
   , mTLSIntoleranceInfo()
   , mFalseStartRequireNPN(false)
   , mUseStaticFallbackList(true)
@@ -1533,10 +1532,6 @@ PrefObserver::Observe(nsISupports* aSubject, const char* aTopic,
       bool enabled;
       Preferences::GetBool("security.ssl.treat_unsafe_negotiation_as_broken", &enabled);
       mOwner->setTreatUnsafeNegotiationAsBroken(enabled);
-    } else if (prefName.EqualsLiteral("security.ssl.warn_missing_rfc5746")) {
-      int32_t warnLevel = 1;
-      Preferences::GetInt("security.ssl.warn_missing_rfc5746", &warnLevel);
-      mOwner->setWarnLevelMissingRFC5746(warnLevel);
     } else if (prefName.EqualsLiteral("security.ssl.false_start.require-npn")) {
       mOwner->mFalseStartRequireNPN =
         Preferences::GetBool("security.ssl.false_start.require-npn",
@@ -1583,8 +1578,6 @@ nsSSLIOLayerHelpers::~nsSSLIOLayerHelpers()
   if (mPrefObserver) {
     Preferences::RemoveObserver(mPrefObserver,
         "security.ssl.treat_unsafe_negotiation_as_broken");
-    Preferences::RemoveObserver(mPrefObserver,
-        "security.ssl.warn_missing_rfc5746");
     Preferences::RemoveObserver(mPrefObserver,
         "security.ssl.false_start.require-npn");
     Preferences::RemoveObserver(mPrefObserver,
@@ -1645,10 +1638,6 @@ nsSSLIOLayerHelpers::Init()
   Preferences::GetBool("security.ssl.treat_unsafe_negotiation_as_broken", &enabled);
   setTreatUnsafeNegotiationAsBroken(enabled);
 
-  int32_t warnLevel = 1;
-  Preferences::GetInt("security.ssl.warn_missing_rfc5746", &warnLevel);
-  setWarnLevelMissingRFC5746(warnLevel);
-
   mFalseStartRequireNPN =
     Preferences::GetBool("security.ssl.false_start.require-npn",
                          FALSE_START_REQUIRE_NPN_DEFAULT);
@@ -1664,8 +1653,6 @@ nsSSLIOLayerHelpers::Init()
   mPrefObserver = new PrefObserver(this);
   Preferences::AddStrongObserver(mPrefObserver,
                                  "security.ssl.treat_unsafe_negotiation_as_broken");
-  Preferences::AddStrongObserver(mPrefObserver,
-                                 "security.ssl.warn_missing_rfc5746");
   Preferences::AddStrongObserver(mPrefObserver,
                                  "security.ssl.false_start.require-npn");
   Preferences::AddStrongObserver(mPrefObserver,
@@ -1777,20 +1764,6 @@ nsSSLIOLayerHelpers::treatUnsafeNegotiationAsBroken()
 {
   MutexAutoLock lock(mutex);
   return mTreatUnsafeNegotiationAsBroken;
-}
-
-void
-nsSSLIOLayerHelpers::setWarnLevelMissingRFC5746(int32_t level)
-{
-  MutexAutoLock lock(mutex);
-  mWarnLevelMissingRFC5746 = level;
-}
-
-int32_t
-nsSSLIOLayerHelpers::getWarnLevelMissingRFC5746()
-{
-  MutexAutoLock lock(mutex);
-  return mWarnLevelMissingRFC5746;
 }
 
 nsresult

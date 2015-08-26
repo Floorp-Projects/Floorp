@@ -154,6 +154,9 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
       }
       break;
     }
+
+    default:
+      break;
   }
 
   if ( doDefault )

@@ -16,6 +16,7 @@
 #include "mozilla/dom/URL.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/workers/bindings/URL.h"
+#include "mozilla/unused.h"
 
 #include "WorkerPrivate.h"
 
@@ -81,7 +82,17 @@ GetRequestURLFromDocument(nsIDocument* aDocument, const nsAString& aInput,
   nsCOMPtr<nsIURI> resolvedURI;
   aRv = NS_NewURI(getter_AddRefs(resolvedURI), aInput, nullptr, baseURI);
   if (NS_WARN_IF(aRv.Failed())) {
-      return;
+    aRv.ThrowTypeError(MSG_INVALID_URL, &aInput);
+    return;
+  }
+
+  // This fails with URIs with weird protocols, even when they are valid,
+  // so we ignore the failure
+  nsAutoCString credentials;
+  unused << resolvedURI->GetUserPass(credentials);
+  if (!credentials.IsEmpty()) {
+    aRv.ThrowTypeError(MSG_URL_HAS_CREDENTIALS, &aInput);
+    return;
   }
 
   nsCOMPtr<nsIURI> resolvedURIClone;
@@ -110,6 +121,16 @@ GetRequestURLFromChrome(const nsAString& aInput, nsAString& aRequestURL,
   nsCOMPtr<nsIURI> uri;
   aRv = NS_NewURI(getter_AddRefs(uri), aInput, nullptr, nullptr);
   if (NS_WARN_IF(aRv.Failed())) {
+    aRv.ThrowTypeError(MSG_INVALID_URL, &aInput);
+    return;
+  }
+
+  // This fails with URIs with weird protocols, even when they are valid,
+  // so we ignore the failure
+  nsAutoCString credentials;
+  unused << uri->GetUserPass(credentials);
+  if (!credentials.IsEmpty()) {
+    aRv.ThrowTypeError(MSG_URL_HAS_CREDENTIALS, &aInput);
     return;
   }
 
@@ -142,6 +163,24 @@ GetRequestURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
   nsRefPtr<workers::URL> url =
     workers::URL::Constructor(aGlobal, aInput, baseURL, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
+    aRv.ThrowTypeError(MSG_INVALID_URL, &aInput);
+    return;
+  }
+
+  nsString username;
+  url->GetUsername(username, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  nsString password;
+  url->GetPassword(password, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  if (!username.IsEmpty() || !password.IsEmpty()) {
+    aRv.ThrowTypeError(MSG_URL_HAS_CREDENTIALS, &aInput);
     return;
   }
 
