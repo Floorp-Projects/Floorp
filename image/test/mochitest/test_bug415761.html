@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for icon filenames</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// We want to make sure that moz-icon URIs with non-ascii characters work. To that
+// end, we compare the rendering of an icon without non-ascii characters to that
+// of one that does include such characters.
+
+// First, obtain the file URI to the ourselves:
+var chromeURI = location.href;
+var io = Components.classes['@mozilla.org/network/io-service;1']
+           .getService(Components.interfaces.nsIIOService);
+chromeURI = io.newURI(chromeURI, null, null);
+var chromeReg = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                  .getService(Components.interfaces.nsIChromeRegistry);
+fileURI = chromeReg.convertChromeURL(chromeURI);
+fileURI.QueryInterface(Components.interfaces.nsIFileURL);
+var self = fileURI.file;
+
+// Check if the non-ascii-named icon is still hanging around from a previous test
+var dest = self.parent;
+dest.append("\u263a.ico");
+if (dest.exists()) {
+  dest.remove(false);
+}
+
+// Copy the source icon so that we have an identical icon with non-ascii characters
+// in its name
+var src = self.parent;
+src.append("bug415761.ico");
+src.copyTo(null, dest.leafName);
+
+// Now load both icons in an Image() with a moz-icon URI
+var testImage = new Image();
+var refImage = new Image();
+
+var loadedImages = 0;
+testImage.onload = refImage.onload = function() {
+  loadedImages++;
+  if (loadedImages == 2) {
+    finishTest();
+  }
+};
+testImage.onerror = refImage.onerror = function() {
+  testImage.onload = refImage.onload = function() {};
+
+  ok(false, "Icon did not load successfully");
+  SimpleTest.finish();
+};
+
+function finishTest() {
+  ok(true, "Both icons loaded successfully");
+  // Render the reference to a canvas
+  var refCanvas = document.createElement("canvas");
+  refCanvas.setAttribute("height", 32);
+  refCanvas.setAttribute("width", 32);
+  refCanvas.getContext('2d').drawImage(refImage, 0, 0, 32, 32);
+
+  // Render the icon with a non-ascii character in its name to a canvas
+  var testCanvas = document.createElement("canvas");
+  testCanvas.setAttribute("height", 32);
+  testCanvas.setAttribute("width", 32);
+  testCanvas.getContext('2d').drawImage(testImage, 0, 0, 32, 32);
+
+  // Assert that they should be the same.
+  assertSnapshots(refCanvas, testCanvas, true, 0, "icon", "reference icon");
+  SimpleTest.finish();
+};
+
+var testURI = io.newFileURI(dest).spec;
+var refURI = io.newFileURI(src).spec;
+testImage.src = "moz-icon:" + testURI;
+refImage.src = "moz-icon:" + refURI;
+
+SimpleTest.registerCleanupFunction(function() {
+  // Remove the copied file if it exists.
+  if (dest.exists()) {
+    dest.remove(false);
+  }
+});
+
+</script>
+</pre>
+</body>
+
+</html>
+
