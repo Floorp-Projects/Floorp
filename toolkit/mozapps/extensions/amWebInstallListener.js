@@ -292,6 +292,25 @@ extWebInstallListener.prototype = {
   /**
    * @see amIWebInstallListener.idl
    */
+  onWebInstallOriginBlocked: function extWebInstallListener_onWebInstallOriginBlocked(aBrowser, aUri, aInstalls) {
+    let info = {
+      browser: aBrowser,
+      originatingURI: aUri,
+      installs: aInstalls,
+
+      install: function onWebInstallBlocked_install() {
+      },
+
+      QueryInterface: XPCOMUtils.generateQI([Ci.amIWebInstallInfo])
+    };
+    Services.obs.notifyObservers(info, "addon-install-origin-blocked", null);
+
+    return false;
+  },
+
+  /**
+   * @see amIWebInstallListener.idl
+   */
   onWebInstallBlocked: function extWebInstallListener_onWebInstallBlocked(aBrowser, aUri, aInstalls) {
     let info = {
       browser: aBrowser,
@@ -322,7 +341,8 @@ extWebInstallListener.prototype = {
   classDescription: "XPI Install Handler",
   contractID: "@mozilla.org/addons/web-install-listener;1",
   classID: Components.ID("{0f38e086-89a3-40a5-8ffc-9b694de1d04a}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.amIWebInstallListener])
+  QueryInterface: XPCOMUtils.generateQI([Ci.amIWebInstallListener,
+                                         Ci.amIWebInstallListener2])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([extWebInstallListener]);

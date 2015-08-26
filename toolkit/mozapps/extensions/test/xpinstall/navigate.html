@@ -3,27 +3,24 @@
 
 <html>
 
-<!-- This page will accept some url as the uri query and load it in
-     an inner iframe, which will run InstallTrigger.install -->
+<!-- This page will accept some url as the uri query and navigate to it by
+     clicking a link -->
 
 <head>
-<title>InstallTrigger frame tests</title>
+<title>Navigation tests</title>
 <script type="text/javascript">
-function prepChild() {
+function navigate() {
   // Pass our parameters over to the child
   var child = window.frames[0];
   var url = decodeURIComponent(document.location.search.substr(1));
-  child.location = url;
+  var link = document.getElementById("link");
+  link.href = url;
+  link.click();
 }
 </script>
 </head>
-<body onload="prepChild()">
+<body onload="navigate()">
 
-<iframe src="about:blank">
-</iframe>
-
-<p>InstallTrigger tests</p>
-<p id="return"></p>
-<p id="status"></p>
+<p><a id="link">Test Link</a></p>
 </body>
 </html>
