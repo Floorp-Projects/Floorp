@@ -122,8 +122,6 @@ public:
 
     virtual gfxImageFormat GetOffscreenFormat() override;
 
-    virtual int GetScreenDepth() const override;
-
     bool SupportsApzWheelInput() const override {
       return true;
     }
