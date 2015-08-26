@@ -2101,7 +2101,7 @@ class MOZ_STACK_CLASS StringRegExpGuard
     bool init(JSContext* cx, const CallArgs& args, bool convertVoid = false)
     {
         if (args.length() != 0 && IsObjectWithClass(args[0], ESClass_RegExp, cx))
-            return init(cx, &args[0].toObject());
+            return initRegExp(cx, &args[0].toObject());
 
         if (convertVoid && !args.hasDefined(0)) {
             fm.pat_ = cx->runtime()->emptyString;
@@ -2119,14 +2119,12 @@ class MOZ_STACK_CLASS StringRegExpGuard
         return true;
     }
 
-    bool init(JSContext* cx, JSObject* regexp) {
+    bool initRegExp(JSContext* cx, JSObject* regexp) {
         obj_ = regexp;
 
         MOZ_ASSERT(ObjectClassIs(obj_, ESClass_RegExp, cx));
 
-        if (!RegExpToShared(cx, obj_, &re_))
-            return false;
-        return true;
+        return RegExpToShared(cx, obj_, &re_);
     }
 
     bool init(JSContext* cx, HandleString pattern) {
@@ -3346,13 +3344,13 @@ str_replace_regexp(JSContext* cx, const CallArgs& args, ReplaceData& rdata)
 }
 
 bool
-js::str_replace_regexp_raw(JSContext* cx, HandleString string, HandleObject regexp,
-                       HandleString replacement, MutableHandleValue rval)
+js::str_replace_regexp_raw(JSContext* cx, HandleString string, Handle<RegExpObject*> regexp,
+                           HandleString replacement, MutableHandleValue rval)
 {
     /* Optimize removal, so we don't have to create ReplaceData */
     if (replacement->length() == 0) {
         StringRegExpGuard guard(cx);
-        if (!guard.init(cx, regexp))
+        if (!guard.initRegExp(cx, regexp))
             return false;
 
         RegExpShared& re = guard.regExp();
@@ -3368,7 +3366,7 @@ js::str_replace_regexp_raw(JSContext* cx, HandleString string, HandleObject rege
 
     rdata.setReplacementString(repl);
 
-    if (!rdata.g.init(cx, regexp))
+    if (!rdata.g.initRegExp(cx, regexp))
         return false;
 
     return StrReplaceRegExp(cx, rdata, rval);

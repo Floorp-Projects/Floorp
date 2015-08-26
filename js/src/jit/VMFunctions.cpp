@@ -1042,7 +1042,7 @@ RegExpReplace(JSContext* cx, HandleString string, HandleObject regexp, HandleStr
     MOZ_ASSERT(repl);
 
     RootedValue rval(cx);
-    if (!str_replace_regexp_raw(cx, string, regexp, repl, &rval))
+    if (!str_replace_regexp_raw(cx, string, regexp.as<RegExpObject>(), repl, &rval))
         return nullptr;
 
     return rval.toString();
