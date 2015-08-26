@@ -7,7 +7,7 @@
 let {Cu} = require("chrome");
 let {DebuggerServer} = require("devtools/server/main");
 
-let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+let promise = require("promise");
 let {Class} = require("sdk/core/heritage");
 
 let protocol = require("devtools/server/protocol");

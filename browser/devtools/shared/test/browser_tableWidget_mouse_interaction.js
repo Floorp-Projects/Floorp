@@ -15,8 +15,7 @@ const TEST_URI = "data:text/xml;charset=UTF-8,<?xml version='1.0'?>" +
 const TEST_OPT = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
 const {TableWidget} = require("devtools/shared/widgets/TableWidget");
-let {Task} = require("resource://gre/modules/Task.jsm");
-let {Promise} = require("resource://gre/modules/Promise.jsm");
+const Promise = require("promise");
 
 let doc, table;
 

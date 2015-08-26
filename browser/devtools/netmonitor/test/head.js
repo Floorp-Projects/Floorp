@@ -6,10 +6,10 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { CurlUtils } = Cu.import("resource:///modules/devtools/Curl.jsm", {});
+let promise = require("promise");
 let NetworkHelper = require("devtools/toolkit/webconsole/network-helper");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let { TargetFactory } = require("devtools/framework/target");

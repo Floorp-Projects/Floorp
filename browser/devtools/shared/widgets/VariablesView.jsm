@@ -21,10 +21,10 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/event-emitter.js");
+Cu.import("resource://gre/modules/Task.jsm");
 const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-Cu.import("resource://gre/modules/Task.jsm");
-let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const promise = require("promise");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");

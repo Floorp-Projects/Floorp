@@ -11,8 +11,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
-let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
-
+let promise = require("promise");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let { ActorPool } = require("devtools/server/actors/common");
 let { DebuggerServer } = require("devtools/server/main");

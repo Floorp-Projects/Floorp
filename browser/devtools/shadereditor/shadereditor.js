@@ -13,7 +13,7 @@ Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/Console.jsm");
 
 const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+const promise = require("promise");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const {Tooltip} = require("devtools/shared/widgets/Tooltip");
 const Editor = require("devtools/sourceeditor/editor");

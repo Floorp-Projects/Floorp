@@ -6,7 +6,7 @@
 
 const { Cu } = require("chrome");
 
-const promise = require("resource://gre/modules/Promise.jsm").Promise;
+const promise = require("promise");
 loader.lazyGetter(this, "EventEmitter", () => require("devtools/toolkit/event-emitter"));
 loader.lazyGetter(this, "AutocompletePopup", () => require("devtools/shared/autocomplete-popup").AutocompletePopup);
 

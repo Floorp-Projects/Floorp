@@ -18,7 +18,7 @@ const OS_IS_64_BITS = "DEVTOOLS_OS_IS_64_BITS_PER_USER";
 const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
 
 let {Cc, Ci, Cu} = require("chrome");
-let {Promise: promise} = require("resource://gre/modules/Promise.jsm");
+let promise = require("promise");
 let EventEmitter = require("devtools/toolkit/event-emitter");
 let Telemetry = require("devtools/shared/telemetry");
 let HUDService = require("devtools/webconsole/hudservice");

@@ -14,8 +14,7 @@ do_register_cleanup(() => {
 
 const { require } =
   Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const { Promise: promise } =
-  Cu.import("resource://gre/modules/Promise.jsm", {});
+const promise = require("promise");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const discovery = require("devtools/toolkit/discovery/discovery");
 const { setTimeout, clearTimeout } = require("sdk/timers");

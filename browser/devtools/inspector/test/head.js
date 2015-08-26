@@ -19,7 +19,6 @@ const Cc = Components.classes;
 const TEST_URL_ROOT = "http://example.com/browser/browser/devtools/inspector/test/";
 const ROOT_TEST_DIR = getRootDirectory(gTestPath);
 const FRAME_SCRIPT_URL = ROOT_TEST_DIR + "doc_frame_script.js";
-const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 // All test are asynchronous
 waitForExplicitFinish();
@@ -28,6 +27,7 @@ let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let {TargetFactory} = require("devtools/framework/target");
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+let promise = require("promise");
 
 // Import the GCLI test helper
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));

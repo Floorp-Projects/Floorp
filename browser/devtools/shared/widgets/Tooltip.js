@@ -8,7 +8,7 @@
    VariablesViewController, Task */
 
 const {Cu, Ci} = require("chrome");
-const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const promise = require("promise");
 const {Spectrum} = require("devtools/shared/widgets/Spectrum");
 const {CubicBezierWidget} =
       require("devtools/shared/widgets/CubicBezierWidget");

@@ -5,7 +5,8 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/Task.jsm");
-let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+let {require} = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
+let promise = require("promise");
 
 const TESTCASE_URI_HTML = TEST_BASE_HTTP + "sourcemaps-watching.html";
 const TESTCASE_URI_CSS = TEST_BASE_HTTP + "sourcemap-css/sourcemaps.css";
