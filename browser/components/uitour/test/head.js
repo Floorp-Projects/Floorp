@@ -41,13 +41,11 @@ function waitForCondition(condition, nextTest, errorMsg) {
  */
 function taskify(fun) {
   return (done) => {
-    // Output the inner function name otherwise no name will be output.
-    info("\t" + fun.name);
     return Task.spawn(fun).then(done, (reason) => {
       ok(false, reason);
       done();
     });
-  };
+  }
 }
 
 function is_hidden(element) {
@@ -189,21 +187,6 @@ function promisePanelElementHidden(win, aPanel) {
 function is_element_hidden(element, msg) {
   isnot(element, null, "Element should not be null, when checking visibility");
   ok(is_hidden(element), msg);
-}
-
-function isTourBrowser(aBrowser) {
-  let chromeWindow = aBrowser.ownerDocument.defaultView;
-  return UITour.tourBrowsersByWindow.has(chromeWindow) &&
-         UITour.tourBrowsersByWindow.get(chromeWindow).has(aBrowser);
-}
-
-function promisePageEvent() {
-  return new Promise((resolve) => {
-    Services.mm.addMessageListener("UITour:onPageEvent", function onPageEvent(aMessage) {
-      Services.mm.removeMessageListener("UITour:onPageEvent", onPageEvent);
-      SimpleTest.executeSoon(resolve);
-    });
-  });
 }
 
 function loadUITourTestPage(callback, host = "https://example.org/") {
