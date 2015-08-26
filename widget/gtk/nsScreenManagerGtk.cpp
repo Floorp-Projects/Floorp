@@ -99,6 +99,11 @@ nsScreenManagerGtk :: EnsureInit()
     return NS_OK;
 
   mRootWindow = gdk_get_default_root_window();
+  if (!mRootWindow) {
+    // Sometimes we don't initial X (e.g., xpcshell)
+    return NS_OK;
+  }
+
   g_object_ref(mRootWindow);
 
   // GDK_PROPERTY_CHANGE_MASK ==> PropertyChangeMask, for PropertyNotify

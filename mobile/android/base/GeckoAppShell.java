@@ -2676,12 +2676,7 @@ public class GeckoAppShell
 
     @WrapForJNI
     static Rect getScreenSize() {
-        DisplayManager dm = (DisplayManager)getContext().getSystemService(Context.DISPLAY_SERVICE);
-        if (dm == null) {
-          return new Rect(0, 0, 0, 0);
-        }
-
-        Display disp = dm.getDisplay(Display.DEFAULT_DISPLAY);
+        Display disp = getGeckoInterface().getActivity().getWindowManager().getDefaultDisplay();
         return new Rect(0, 0, disp.getWidth(), disp.getHeight());
     }
 }
