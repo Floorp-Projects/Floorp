@@ -7,7 +7,7 @@
 
 const {Cu} = require("chrome");
 const EventEmitter = require("devtools/toolkit/event-emitter");
-const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const promise = require("promise");
 
 
 function ScratchpadPanel(iframeWindow, toolbox) {

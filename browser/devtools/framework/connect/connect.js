@@ -14,7 +14,7 @@ let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let {TargetFactory} = require("devtools/framework/target");
 let {Toolbox} = require("devtools/framework/toolbox")
-let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+let promise = require("promise");
 let {DebuggerClient} = require("devtools/toolkit/client/main");
 
 let gClient;

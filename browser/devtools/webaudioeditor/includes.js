@@ -32,7 +32,7 @@ loader.lazyRequireGetter(this, "LineGraphWidget",
 let AUDIO_NODE_DEFINITION;
 
 // Override DOM promises with Promise.jsm helpers
-const { defer, all } = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+const { defer, all } = require("promise");
 
 /* Events fired on `window` to indicate state or actions*/
 const EVENTS = {

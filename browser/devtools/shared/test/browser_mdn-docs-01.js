@@ -22,7 +22,7 @@
 
 const {CssDocsTooltip} = require("devtools/shared/widgets/Tooltip");
 const {setBaseCssDocsUrl, MdnDocsWidget} = require("devtools/shared/widgets/MdnDocsWidget");
-const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const promise = require("promise");
 
 // frame to load the tooltip into
 const MDN_DOCS_TOOLTIP_FRAME = "chrome://browser/content/devtools/mdn-docs-frame.xhtml";

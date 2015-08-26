@@ -4,9 +4,11 @@
 
 "use strict";
 
+let { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { TargetFactory } = require("devtools/framework/target");
-let { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+let promise = require("promise");
+let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 const SPLIT_CONSOLE_PREF = "devtools.toolbox.splitconsoleEnabled";
 const STORAGE_PREF = "devtools.storage.enabled";
@@ -16,9 +18,6 @@ const PATH = "browser/browser/devtools/storage/test/";
 const MAIN_DOMAIN = "http://test1.example.org/" + PATH;
 const ALT_DOMAIN = "http://sectest1.example.org/" + PATH;
 const ALT_DOMAIN_SECURED = "https://sectest1.example.org:443/" + PATH;
-
-let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
-let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 waitForExplicitFinish();
 

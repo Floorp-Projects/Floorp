@@ -4,8 +4,8 @@
 
 "use strict";
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-const { loader } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-loader.lazyImporter(this, "promise", "resource://gre/modules/Promise.jsm", "Promise");
+const {require, loader} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const promise = require("promise");
 loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm", "Task");
 const subScriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                           .getService(Ci.mozIJSSubScriptLoader);

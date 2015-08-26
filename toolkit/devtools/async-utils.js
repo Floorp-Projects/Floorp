@@ -15,7 +15,7 @@
 
 let {Cu} = require("chrome");
 let {Task} = require("resource://gre/modules/Task.jsm");
-let {Promise} = require("resource://gre/modules/Promise.jsm");
+let Promise = require("promise");
 
 /**
  * Create an async function from a generator function.

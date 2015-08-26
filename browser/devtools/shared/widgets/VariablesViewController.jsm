@@ -9,10 +9,10 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 Cu.import("resource:///modules/devtools/VariablesView.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let promise = require("promise");
 
 Object.defineProperty(this, "WebConsoleUtils", {
   get: function() {

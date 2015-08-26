@@ -13,7 +13,7 @@ const Cu = Components.utils;
 
 const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const Editor  = require("devtools/sourceeditor/editor");
-const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const promise = require("promise");
 const {CssLogic} = require("devtools/styleinspector/css-logic");
 const {console} = require("resource://gre/modules/devtools/Console.jsm");
 
