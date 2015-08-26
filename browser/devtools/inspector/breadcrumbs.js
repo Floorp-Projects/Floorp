@@ -237,7 +237,7 @@ HTMLBreadcrumbs.prototype = {
     // We make sure that the targeted node is selected
     // because we want to use the nodemenu that only works
     // for inspector.selection
-    this.selection.setNodeFront(node, "breadcrumbs");
+    this.navigateTo(node);
 
     // Build a list of extra menu items that will be appended at the end of the
     // inspector node context menu.
@@ -262,10 +262,10 @@ HTMLBreadcrumbs.prototype = {
         item.setAttribute("type", "radio");
         item.setAttribute("label", this.prettyPrintNodeAsText(nodes[i]));
 
-        let selection = this.selection;
+        let self = this;
         item.onmouseup = (function(node) {
           return function() {
-            selection.setNodeFront(node, "breadcrumbs");
+            self.navigateTo(node);
           };
         })(nodes[i]);
 
@@ -353,39 +353,37 @@ HTMLBreadcrumbs.prototype = {
    * @param {DOMEvent} event.
    */
   handleKeyPress: function(event) {
-    let node = null;
-    this._keyPromise = this._keyPromise || promise.resolve(null);
+    let navigate = promise.resolve(null);
 
     this._keyPromise = (this._keyPromise || promise.resolve(null)).then(() => {
       switch (event.keyCode) {
         case this.chromeWin.KeyEvent.DOM_VK_LEFT:
           if (this.currentIndex != 0) {
-            node = promise.resolve(this.nodeHierarchy[this.currentIndex - 1].node);
+            navigate = promise.resolve(
+              this.nodeHierarchy[this.currentIndex - 1].node);
           }
           break;
         case this.chromeWin.KeyEvent.DOM_VK_RIGHT:
           if (this.currentIndex < this.nodeHierarchy.length - 1) {
-            node = promise.resolve(this.nodeHierarchy[this.currentIndex + 1].node);
+            navigate = promise.resolve(
+              this.nodeHierarchy[this.currentIndex + 1].node);
           }
           break;
         case this.chromeWin.KeyEvent.DOM_VK_UP:
-          node = this.walker.previousSibling(this.selection.nodeFront, {
+          navigate = this.walker.previousSibling(this.selection.nodeFront, {
             whatToShow: Ci.nsIDOMNodeFilter.SHOW_ELEMENT
           });
           break;
         case this.chromeWin.KeyEvent.DOM_VK_DOWN:
-          node = this.walker.nextSibling(this.selection.nodeFront, {
+          navigate = this.walker.nextSibling(this.selection.nodeFront, {
             whatToShow: Ci.nsIDOMNodeFilter.SHOW_ELEMENT
           });
           break;
       }
 
-      return node.then((node) => {
-        if (node) {
-          this.selection.setNodeFront(node, "breadcrumbs");
-        }
-      });
+      return navigate.then(node => this.navigateTo(node));
     });
+
     event.preventDefault();
     event.stopPropagation();
   },
@@ -470,6 +468,14 @@ HTMLBreadcrumbs.prototype = {
     }
   },
 
+  navigateTo: function(node) {
+    if (node) {
+      this.selection.setNodeFront(node, "breadcrumbs");
+    } else {
+      this.inspector.emit("breadcrumbs-navigation-cancelled");
+    }
+  },
+
   /**
    * Build a button representing the node.
    * @param {NodeFront} node The node from the page.
@@ -490,7 +496,7 @@ HTMLBreadcrumbs.prototype = {
     };
 
     button.onBreadcrumbsClick = () => {
-      this.selection.setNodeFront(node, "breadcrumbs");
+      this.navigateTo(node);
     };
 
     button.onBreadcrumbsHover = () => {
