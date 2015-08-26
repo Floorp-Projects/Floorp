@@ -1552,13 +1552,11 @@ var PDFLinkService = (function () {
           this.page = pageNumber; // simple page
         }
         if ('pagemode' in params) {
-          if (params.pagemode === 'thumbs' || params.pagemode === 'bookmarks' ||
-              params.pagemode === 'attachments') {
-            this.switchSidebarView((params.pagemode === 'bookmarks' ?
-                                   'outline' : params.pagemode), true);
-          } else if (params.pagemode === 'none' && this.sidebarOpen) {
-            document.getElementById('sidebarToggle').click();
-          }
+          var event = document.createEvent('CustomEvent');
+          event.initCustomEvent('pagemode', true, true, {
+            mode: params.pagemode,
+          });
+          this.pdfViewer.container.dispatchEvent(event);
         }
       } else if (/^\d+$/.test(hash)) { // page number
         this.page = hash;
@@ -6790,29 +6788,27 @@ var PDFViewerApplication = {
         break;
 
       case 'outline':
+        if (outlineButton.disabled) {
+          return;
+        }
         thumbsButton.classList.remove('toggled');
         outlineButton.classList.add('toggled');
         attachmentsButton.classList.remove('toggled');
         thumbsView.classList.add('hidden');
         outlineView.classList.remove('hidden');
         attachmentsView.classList.add('hidden');
-
-        if (outlineButton.getAttribute('disabled')) {
-          return;
-        }
         break;
 
       case 'attachments':
+        if (attachmentsButton.disabled) {
+          return;
+        }
         thumbsButton.classList.remove('toggled');
         outlineButton.classList.remove('toggled');
         attachmentsButton.classList.add('toggled');
         thumbsView.classList.add('hidden');
         outlineView.classList.add('hidden');
         attachmentsView.classList.remove('hidden');
-
-        if (attachmentsButton.getAttribute('disabled')) {
-          return;
-        }
         break;
     }
   },
@@ -7195,18 +7191,45 @@ document.addEventListener('textlayerrendered', function (e) {
   }
 }, true);
 
+document.addEventListener('pagemode', function (evt) {
+  if (!PDFViewerApplication.initialized) {
+    return;
+  }
+  // Handle the 'pagemode' hash parameter, see also `PDFLinkService_setHash`.
+  var mode = evt.detail.mode;
+  switch (mode) {
+    case 'bookmarks':
+      // Note: Our code calls this property 'outline', even though the
+      //       Open Parameter specification calls it 'bookmarks'.
+      mode = 'outline';
+      /* falls through */
+    case 'thumbs':
+    case 'attachments':
+      PDFViewerApplication.switchSidebarView(mode, true);
+      break;
+    case 'none':
+      if (PDFViewerApplication.sidebarOpen) {
+        document.getElementById('sidebarToggle').click();
+      }
+      break;
+  }
+}, true);
+
 document.addEventListener('namedaction', function (e) {
+  if (!PDFViewerApplication.initialized) {
+    return;
+  }
   // Processing couple of named actions that might be useful.
   // See also PDFLinkService.executeNamedAction
-  var action = e.action;
+  var action = e.detail.action;
   switch (action) {
     case 'GoToPage':
       document.getElementById('pageNumber').focus();
       break;
 
     case 'Find':
-      if (!this.supportsIntegratedFind) {
-        this.findBar.toggle();
+      if (!PDFViewerApplication.supportsIntegratedFind) {
+        PDFViewerApplication.findBar.toggle();
       }
       break;
   }
