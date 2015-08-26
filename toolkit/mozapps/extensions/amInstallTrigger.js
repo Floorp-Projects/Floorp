@@ -61,13 +61,12 @@ RemoteMediator.prototype = {
 
   enabled: function(url) {
     let params = {
-      referer: url,
       mimetype: XPINSTALL_MIMETYPE
     };
     return this.mm.sendSyncMessage(MSG_INSTALL_ENABLED, params)[0];
   },
 
-  install: function(installs, referer, callback, window) {
+  install: function(installs, principal, callback, window) {
     let messageManager = window.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIWebNavigation)
                          .QueryInterface(Ci.nsIDocShell)
@@ -77,7 +76,7 @@ RemoteMediator.prototype = {
     let callbackID = this._addCallback(callback, installs.uris);
 
     installs.mimetype = XPINSTALL_MIMETYPE;
-    installs.referer = referer;
+    installs.triggeringPrincipal = principal;
     installs.callbackID = callbackID;
 
     return messageManager.sendSyncMessage(MSG_INSTALL_ADDONS, installs)[0];
@@ -167,7 +166,7 @@ InstallTrigger.prototype = {
       installData.icons.push(iconUrl ? iconUrl.spec : null);
     }
 
-    return this._mediator.install(installData, this._url.spec, callback, this._window);
+    return this._mediator.install(installData, this._principal, callback, this._window);
   },
 
   startSoftwareUpdate: function(url, flags) {
