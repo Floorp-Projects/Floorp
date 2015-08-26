@@ -449,20 +449,19 @@ private:
   nsRefPtr<VsyncChild> mVsyncChild;
 }; // VsyncRefreshDriverTimer
 
-/*
- * PreciseRefreshDriverTimer schedules ticks based on the current time
- * and when the next tick -should- be sent if we were hitting our
- * rate.  It always schedules ticks on multiples of aRate -- meaning that
- * if some execution takes longer than an alloted slot, the next tick
- * will be delayed instead of triggering instantly.  This might not be
- * desired -- there's an #if 0'd block below that we could put behind
- * a pref to control this behaviour.
+/**
+ * Since the content process takes some time to setup
+ * the vsync IPC connection, this timer is used
+ * during the intial startup process.
+ * During initial startup, the refresh drivers
+ * are ticked off this timer, and are swapped out once content
+ * vsync IPC connection is established.
  */
-class PreciseRefreshDriverTimer :
+class StartupRefreshDriverTimer :
     public SimpleTimerBasedRefreshDriverTimer
 {
 public:
-  explicit PreciseRefreshDriverTimer(double aRate)
+  explicit StartupRefreshDriverTimer(double aRate)
     : SimpleTimerBasedRefreshDriverTimer(aRate)
   {
   }
@@ -470,54 +469,11 @@ public:
 protected:
   virtual void ScheduleNextTick(TimeStamp aNowTime)
   {
-    // The number of (whole) elapsed intervals between the last target
-    // time and the actual time.  We want to truncate the double down
-    // to an int number of intervals.
-    int numElapsedIntervals = static_cast<int>((aNowTime - mTargetTime) / mRateDuration);
-
-    if (numElapsedIntervals < 0) {
-      // It's possible that numElapsedIntervals is negative (e.g. timer compensation
-      // may result in (aNowTime - mTargetTime) < -1.0/mRateDuration, which will result in
-      // negative numElapsedIntervals), so make sure we don't target the same timestamp.
-      numElapsedIntervals = 0;
-    }
-
-    // the last "tick" that may or may not have been actually sent was
-    // at this time.  For example, if the rate is 15ms, the target
-    // time is 200ms, and it's now 225ms, the last effective tick
-    // would have been at 215ms.  The next one should then be
-    // scheduled for 5 ms from now.
-    //
-    // We then add another mRateDuration to find the next tick target.
-    TimeStamp newTarget = mTargetTime + mRateDuration * (numElapsedIntervals + 1);
-
-    // the amount of (integer) ms until the next time we should tick
+    // Since this is only used for startup, it isn't super critical
+    // that we tick at consistent intervals.
+    TimeStamp newTarget = aNowTime + mRateDuration;
     uint32_t delay = static_cast<uint32_t>((newTarget - aNowTime).ToMilliseconds());
-
-    // Without this block, we'll always schedule on interval ticks;
-    // with it, we'll schedule immediately if we missed our tick target
-    // last time.
-#if 0
-    if (numElapsedIntervals > 0) {
-      // we're late, so reset
-      newTarget = aNowTime;
-      delay = 0;
-    }
-#endif
-
-    // log info & lateness
-    LOG("[%p] precise timer last tick late by %f ms, next tick in %d ms",
-        this,
-        (aNowTime - mTargetTime).ToMilliseconds(),
-        delay);
-#ifndef ANDROID  /* bug 1142079 */
-    Telemetry::Accumulate(Telemetry::FX_REFRESH_DRIVER_FRAME_DELAY_MS, (aNowTime - mTargetTime).ToMilliseconds());
-#endif
-
-    // then schedule the timer
-    LOG("[%p] scheduling callback for %d ms (2)", this, delay);
     mTimer->InitWithFuncCallback(TimerTick, this, delay, nsITimer::TYPE_ONE_SHOT);
-
     mTargetTime = newTarget;
   }
 };
@@ -887,7 +843,7 @@ nsRefreshDriver::ChooseTimer() const
     CreateVsyncRefreshTimer();
 
     if (!sRegularRateTimer) {
-      sRegularRateTimer = new PreciseRefreshDriverTimer(rate);
+      sRegularRateTimer = new StartupRefreshDriverTimer(rate);
     }
   }
   return sRegularRateTimer;

@@ -35,18 +35,18 @@ public:
   size_t SizeOfAudioQueueInFrames() override;
 
   nsRefPtr<VideoDataPromise>
-  RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold, bool aForceDecodeAhead) override;
+  RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold) override;
 
   nsRefPtr<AudioDataPromise> RequestAudioData() override;
 
   bool HasVideo() override
   {
-    return mInfo.HasVideo();
+    return mVideo.mTrackDemuxer;
   }
 
   bool HasAudio() override
   {
-    return mInfo.HasAudio();
+    return mAudio.mTrackDemuxer;
   }
 
   nsRefPtr<MetadataPromise> AsyncReadMetadata() override;
@@ -130,6 +130,7 @@ private:
   void NotifyError(TrackType aTrack);
   void NotifyWaitingForData(TrackType aTrack);
   void NotifyEndOfStream(TrackType aTrack);
+  void NotifyDecodingRequested(TrackType aTrack);
 
   void ExtractCryptoInitData(nsTArray<uint8_t>& aInitData);
 
@@ -191,13 +192,13 @@ private:
       : mOwner(aOwner)
       , mType(aType)
       , mDecodeAhead(aDecodeAhead)
-      , mForceDecodeAhead(false)
       , mUpdateScheduled(false)
       , mDemuxEOS(false)
       , mWaitingForData(false)
       , mReceivedNewData(false)
       , mDiscontinuity(true)
       , mDecoderInitialized(false)
+      , mDecodingRequested(false)
       , mOutputRequested(false)
       , mInputExhausted(false)
       , mError(false)
@@ -226,7 +227,6 @@ private:
 
     // Only accessed from reader's task queue.
     uint32_t mDecodeAhead;
-    bool mForceDecodeAhead;
     bool mUpdateScheduled;
     bool mDemuxEOS;
     bool mWaitingForData;
@@ -249,6 +249,7 @@ private:
     // MediaDataDecoder handler's variables.
     // False when decoder is created. True when decoder Init() promise is resolved.
     bool mDecoderInitialized;
+    bool mDecodingRequested;
     bool mOutputRequested;
     bool mInputExhausted;
     bool mError;
@@ -268,6 +269,7 @@ private:
 
     // These get overriden in the templated concrete class.
     // Indicate if we have a pending promise for decoded frame.
+    // Rejecting the promise will stop the reader from decoding ahead.
     virtual bool HasPromise() = 0;
     virtual void RejectPromise(MediaDecoderReader::NotDecodedReason aReason,
                                const char* aMethodName) = 0;
@@ -282,7 +284,6 @@ private:
     void ResetState()
     {
       MOZ_ASSERT(mOwner->OnTaskQueue());
-      mForceDecodeAhead = false;
       mDemuxEOS = false;
       mWaitingForData = false;
       mReceivedNewData = false;
@@ -334,6 +335,7 @@ private:
     {
       MOZ_ASSERT(mOwner->OnTaskQueue());
       mPromise.Reject(aReason, aMethodName);
+      mDecodingRequested = false;
     }
   };
 

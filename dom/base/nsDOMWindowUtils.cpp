@@ -700,7 +700,7 @@ nsDOMWindowUtils::SendPointerEventCommon(const nsAString& aType,
     return NS_ERROR_FAILURE;
   }
 
-  int32_t msg;
+  EventMessage msg;
   if (aType.EqualsLiteral("pointerdown")) {
     msg = NS_POINTER_DOWN;
   } else if (aType.EqualsLiteral("pointerup")) {
@@ -979,7 +979,7 @@ nsDOMWindowUtils::SendTouchEventCommon(const nsAString& aType,
   if (!widget) {
     return NS_ERROR_NULL_POINTER;
   }
-  int32_t msg;
+  EventMessage msg;
   if (aType.EqualsLiteral("touchstart")) {
     msg = NS_TOUCH_START;
   } else if (aType.EqualsLiteral("touchmove")) {
@@ -1314,7 +1314,7 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
   if (!widget)
     return NS_ERROR_FAILURE;
 
-  int32_t msg;
+  EventMessage msg;
   if (aType.EqualsLiteral("MozSwipeGestureStart"))
     msg = NS_SIMPLE_GESTURE_SWIPE_START;
   else if (aType.EqualsLiteral("MozSwipeGestureUpdate"))
@@ -1941,13 +1941,28 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
     return NS_ERROR_FAILURE;
   }
 
-  if (aType != NS_QUERY_SELECTED_TEXT &&
-      aType != NS_QUERY_TEXT_CONTENT &&
-      aType != NS_QUERY_CARET_RECT &&
-      aType != NS_QUERY_TEXT_RECT &&
-      aType != NS_QUERY_EDITOR_RECT &&
-      aType != NS_QUERY_CHARACTER_AT_POINT) {
-    return NS_ERROR_INVALID_ARG;
+  EventMessage message;
+  switch (aType) {
+    case QUERY_SELECTED_TEXT:
+      message = NS_QUERY_SELECTED_TEXT;
+      break;
+    case QUERY_TEXT_CONTENT:
+      message = NS_QUERY_TEXT_CONTENT;
+      break;
+    case QUERY_CARET_RECT:
+      message = NS_QUERY_CARET_RECT;
+      break;
+    case QUERY_TEXT_RECT:
+      message = NS_QUERY_TEXT_RECT;
+      break;
+    case QUERY_EDITOR_RECT:
+      message = NS_QUERY_EDITOR_RECT;
+      break;
+    case QUERY_CHARACTER_AT_POINT:
+      message = NS_QUERY_CHARACTER_AT_POINT;
+      break;
+    default:
+      return NS_ERROR_INVALID_ARG;
   }
 
   nsCOMPtr<nsIWidget> targetWidget = widget;
@@ -1956,7 +1971,7 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
   bool useNativeLineBreak =
     !(aAdditionalFlags & QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK);
 
-  if (aType == QUERY_CHARACTER_AT_POINT) {
+  if (message == NS_QUERY_CHARACTER_AT_POINT) {
     // Looking for the widget at the point.
     WidgetQueryContentEvent dummyEvent(true, NS_QUERY_CONTENT_STATE, widget);
     dummyEvent.mUseNativeLineBreak = useNativeLineBreak;
@@ -1983,10 +1998,10 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
 
   pt += widget->WidgetToScreenOffset() - targetWidget->WidgetToScreenOffset();
 
-  WidgetQueryContentEvent queryEvent(true, aType, targetWidget);
+  WidgetQueryContentEvent queryEvent(true, message, targetWidget);
   InitEvent(queryEvent, &pt);
 
-  switch (aType) {
+  switch (message) {
     case NS_QUERY_TEXT_CONTENT:
       queryEvent.InitForQueryTextContent(aOffset, aLength, useNativeLineBreak);
       break;
@@ -2056,7 +2071,7 @@ nsDOMWindowUtils::SendContentCommandEvent(const nsAString& aType,
   if (!widget)
     return NS_ERROR_FAILURE;
 
-  int32_t msg;
+  EventMessage msg;
   if (aType.EqualsLiteral("cut"))
     msg = NS_CONTENT_COMMAND_CUT;
   else if (aType.EqualsLiteral("copy"))

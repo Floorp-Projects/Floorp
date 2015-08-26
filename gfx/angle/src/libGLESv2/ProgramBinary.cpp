@@ -671,6 +671,12 @@ bool ProgramBinary::linkAttributes(InfoLog &infoLog, const AttributeBindings &at
     unsigned int usedLocations = 0;
     const std::vector<sh::Attribute> &shaderAttributes = vertexShader->getActiveAttributes();
 
+    if (shaderAttributes.size() > gl::MAX_VERTEX_ATTRIBS)
+    {
+        infoLog.append("%u vertex attributes passed in exceeds maximum of %u.", shaderAttributes.size(), gl::MAX_VERTEX_ATTRIBS);
+        return false;
+    }
+
     // Link attributes that have a binding location
     for (unsigned int attributeIndex = 0; attributeIndex < shaderAttributes.size(); attributeIndex++)
     {

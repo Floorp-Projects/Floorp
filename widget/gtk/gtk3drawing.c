@@ -2719,13 +2719,11 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
         }
     case MOZ_GTK_TREE_HEADER_CELL:
         {
-            /* A Tree Header in GTK is just a different styled button 
+            /* A Tree Header in GTK is just a different styled button
              * It must be placed in a TreeView for getting the correct style
              * assigned.
-             * That is why the following code is the same as for MOZ_GTK_BUTTON.  
+             * That is why the following code is the same as for MOZ_GTK_BUTTON.
              * */
-            GtkStyleContext *style;
-
             ensure_tree_header_cell_widget();
             *left = *top = *right = *bottom = gtk_container_get_border_width(GTK_CONTAINER(gTreeHeaderCellWidget));
 

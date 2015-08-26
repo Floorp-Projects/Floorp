@@ -1168,10 +1168,13 @@ nsPlaintextEditor::CanCutOrCopy(PasswordFieldAllowed aPasswordFieldAllowed)
 }
 
 bool
-nsPlaintextEditor::FireClipboardEvent(int32_t aType, int32_t aSelectionType, bool* aActionTaken)
+nsPlaintextEditor::FireClipboardEvent(EventMessage aEventMessage,
+                                      int32_t aSelectionType,
+                                      bool* aActionTaken)
 {
-  if (aType == NS_PASTE)
+  if (aEventMessage == NS_PASTE) {
     ForceCompositionEnd();
+  }
 
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   NS_ENSURE_TRUE(presShell, false);
@@ -1181,8 +1184,10 @@ nsPlaintextEditor::FireClipboardEvent(int32_t aType, int32_t aSelectionType, boo
     return false;
   }
 
-  if (!nsCopySupport::FireClipboardEvent(aType, aSelectionType, presShell, selection, aActionTaken))
+  if (!nsCopySupport::FireClipboardEvent(aEventMessage, aSelectionType,
+                                         presShell, selection, aActionTaken)) {
     return false;
+  }
 
   // If the event handler caused the editor to be destroyed, return false.
   // Otherwise return true to indicate that the event was not cancelled.

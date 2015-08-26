@@ -12,7 +12,6 @@
 #include "prlink.h"
 #include "prclist.h"
 #include "nsIPluginTag.h"
-#include "nsPluginPlayPreviewInfo.h"
 #include "nsPluginsDir.h"
 #include "nsPluginDirServiceProvider.h"
 #include "nsAutoPtr.h"
@@ -369,7 +368,6 @@ private:
   nsRefPtr<nsPluginTag> mPlugins;
   nsRefPtr<nsPluginTag> mCachedPlugins;
   nsRefPtr<nsInvalidPluginTag> mInvalidPlugins;
-  nsTArray< nsRefPtr<nsPluginPlayPreviewInfo> > mPlayPreviewMimeTypes;
 
   nsTArray< nsRefPtr<nsFakePluginTag> > mFakePlugins;
 

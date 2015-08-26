@@ -76,6 +76,27 @@ function get_tab_attributes(tab) {
   return attributes;
 }
 
+function* test_muting_using_menu(tab, expectMuted) {
+  // Show the popup menu
+  let contextMenu = document.getElementById("tabContextMenu");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(tab, {type: "contextmenu", button: 2});
+  yield popupShownPromise;
+
+  // Check the menu
+  let expectedLabel = expectMuted ? "Unmute Tab" : "Mute Tab";
+  let toggleMute = document.getElementById("context_toggleMuteTab");
+  is(toggleMute.label, expectedLabel, "Correct label expected");
+  is(toggleMute.accessKey, "M", "Correct accessKey expected");
+
+  // Click on the menu and wait for the tab to be muted.
+  let mutedPromise = get_wait_for_mute_promise(tab, !expectMuted);
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+  EventUtils.synthesizeMouseAtCenter(toggleMute, {});
+  yield popupHiddenPromise;
+  yield mutedPromise;
+}
+
 function* test_playing_icon_on_tab(tab, browser, isPinned) {
   let icon = document.getAnonymousElementByAttribute(tab, "anonid",
                                                      isPinned ? "overlay-icon" : "soundplaying-icon");
@@ -120,6 +141,12 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
 
   ok(!tab.hasAttribute("muted") &&
      !tab.hasAttribute("soundplaying"), "Tab should not be be muted or playing");
+
+  // Make sure it's possible to mute using the context menu.
+  yield test_muting_using_menu(tab, false);
+
+  // Make sure it's possible to unmute using the context menu.
+  yield test_muting_using_menu(tab, true);
 }
 
 function* test_swapped_browser(oldTab, newBrowser, isPlaying) {

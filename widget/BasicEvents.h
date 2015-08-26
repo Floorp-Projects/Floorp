@@ -171,7 +171,9 @@ struct EventFlags : public BaseEventFlags
 class WidgetEvent
 {
 protected:
-  WidgetEvent(bool aIsTrusted, uint32_t aMessage, EventClassID aEventClassID)
+  WidgetEvent(bool aIsTrusted,
+              EventMessage aMessage,
+              EventClassID aEventClassID)
     : mClass(aEventClassID)
     , mMessage(aMessage)
     , refPoint(0, 0)
@@ -193,7 +195,7 @@ protected:
   }
 
 public:
-  WidgetEvent(bool aIsTrusted, uint32_t aMessage)
+  WidgetEvent(bool aIsTrusted, EventMessage aMessage)
     : mClass(eBasicEventClass)
     , mMessage(aMessage)
     , refPoint(0, 0)
@@ -231,8 +233,7 @@ public:
   }
 
   EventClassID mClass;
-  // See GUI MESSAGES,
-  uint32_t mMessage;
+  EventMessage mMessage;
   // Relative to the widget of the event, or if there is no widget then it is
   // in screen coordinates. Not modified by layout code.
   LayoutDeviceIntPoint refPoint;
@@ -391,7 +392,7 @@ public:
 class WidgetGUIEvent : public WidgetEvent
 {
 protected:
-  WidgetGUIEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget,
+  WidgetGUIEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
                  EventClassID aEventClassID)
     : WidgetEvent(aIsTrusted, aMessage, aEventClassID)
     , widget(aWidget)
@@ -405,9 +406,9 @@ protected:
 public:
   virtual WidgetGUIEvent* AsGUIEvent() override { return this; }
 
-  WidgetGUIEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget) :
-    WidgetEvent(aIsTrusted, aMessage, eGUIEventClass),
-    widget(aWidget)
+  WidgetGUIEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
+    : WidgetEvent(aIsTrusted, aMessage, eGUIEventClass)
+    , widget(aWidget)
   {
   }
 
@@ -555,7 +556,7 @@ typedef uint16_t Modifiers;
 class WidgetInputEvent : public WidgetGUIEvent
 {
 protected:
-  WidgetInputEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget,
+  WidgetInputEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
                    EventClassID aEventClassID)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
     , modifiers(0)
@@ -569,7 +570,7 @@ protected:
 public:
   virtual WidgetInputEvent* AsInputEvent() override { return this; }
 
-  WidgetInputEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
+  WidgetInputEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eInputEventClass)
     , modifiers(0)
   {
@@ -723,7 +724,7 @@ protected:
   {
   }
 
-  InternalUIEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget,
+  InternalUIEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
                   EventClassID aEventClassID)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
     , detail(0)
@@ -731,7 +732,7 @@ protected:
   {
   }
 
-  InternalUIEvent(bool aIsTrusted, uint32_t aMessage,
+  InternalUIEvent(bool aIsTrusted, EventMessage aMessage,
                   EventClassID aEventClassID)
     : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, aEventClassID)
     , detail(0)
@@ -747,7 +748,7 @@ public:
    * aEventCausesThisEvent should be the event.  If there is no such event,
    * this should be nullptr.
    */
-  InternalUIEvent(bool aIsTrusted, uint32_t aMessage,
+  InternalUIEvent(bool aIsTrusted, EventMessage aMessage,
                   const WidgetEvent* aEventCausesThisEvent)
     : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, eUIEventClass)
     , detail(0)

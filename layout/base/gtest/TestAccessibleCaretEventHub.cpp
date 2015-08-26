@@ -111,7 +111,8 @@ public:
     EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
   }
 
-  static UniquePtr<WidgetEvent> CreateMouseEvent(uint32_t aMessage, nscoord aX,
+  static UniquePtr<WidgetEvent> CreateMouseEvent(EventMessage aMessage,
+                                                 nscoord aX,
                                                  nscoord aY)
   {
     auto event = MakeUnique<WidgetMouseEvent>(true, aMessage, nullptr,
@@ -143,7 +144,8 @@ public:
     return CreateMouseEvent(NS_MOUSE_MOZLONGTAP, aX, aY);
   }
 
-  static UniquePtr<WidgetEvent> CreateTouchEvent(uint32_t aMessage, nscoord aX,
+  static UniquePtr<WidgetEvent> CreateTouchEvent(EventMessage aMessage,
+                                                 nscoord aX,
                                                  nscoord aY)
   {
     auto event = MakeUnique<WidgetTouchEvent>(true, aMessage, nullptr);
@@ -175,7 +177,7 @@ public:
     return CreateTouchEvent(NS_TOUCH_END, aX, aY);
   }
 
-  static UniquePtr<WidgetEvent> CreateWheelEvent(uint32_t aMessage)
+  static UniquePtr<WidgetEvent> CreateWheelEvent(EventMessage aMessage)
   {
     auto event = MakeUnique<WidgetWheelEvent>(true, aMessage, nullptr);
 

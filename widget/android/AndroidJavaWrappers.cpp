@@ -689,7 +689,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
         return mApzInput.ToWidgetTouchEvent(widget);
     }
 
-    int type = NS_EVENT_NULL;
+    EventMessage type = NS_EVENT_NULL;
     int startIndex = 0;
     int endIndex = Count();
 
@@ -830,7 +830,7 @@ AndroidGeckoEvent::MakeMultiTouchInput(nsIWidget* widget)
 WidgetMouseEvent
 AndroidGeckoEvent::MakeMouseEvent(nsIWidget* widget)
 {
-    uint32_t msg = NS_EVENT_NULL;
+    EventMessage msg = NS_EVENT_NULL;
     if (Points().Length() > 0) {
         switch (Action()) {
             case AndroidMotionEvent::ACTION_HOVER_MOVE:

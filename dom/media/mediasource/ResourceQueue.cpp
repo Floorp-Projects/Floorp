@@ -12,11 +12,6 @@
 
 extern PRLogModuleInfo* GetSourceBufferResourceLog();
 
-/* Polyfill __func__ on MSVC to pass to the log. */
-#ifdef _MSC_VER
-#define __func__ __FUNCTION__
-#endif
-
 #define SBR_DEBUG(arg, ...) MOZ_LOG(GetSourceBufferResourceLog(), mozilla::LogLevel::Debug, ("ResourceQueue(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 #define SBR_DEBUGV(arg, ...) MOZ_LOG(GetSourceBufferResourceLog(), mozilla::LogLevel::Verbose, ("ResourceQueue(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 

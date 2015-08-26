@@ -16,7 +16,7 @@ ClipboardEvent::ClipboardEvent(EventTarget* aOwner,
                                nsPresContext* aPresContext,
                                InternalClipboardEvent* aEvent)
   : Event(aOwner, aPresContext,
-          aEvent ? aEvent : new InternalClipboardEvent(false, 0))
+          aEvent ? aEvent : new InternalClipboardEvent(false, NS_EVENT_NULL))
 {
   if (aEvent) {
     mEventIsInternal = false;

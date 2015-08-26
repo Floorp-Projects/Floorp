@@ -7,6 +7,7 @@
 #ifndef NS_SMILTIMEDELEMENT_H_
 #define NS_SMILTIMEDELEMENT_H_
 
+#include "mozilla/EventForwards.h"
 #include "mozilla/Move.h"
 #include "nsSMILInterval.h"
 #include "nsSMILInstanceTime.h"
@@ -539,7 +540,8 @@ protected:
                                           bool aBeginObjectChanged,
                                           bool aEndObjectChanged);
 
-  void              FireTimeEventAsync(uint32_t aMsg, int32_t aDetail);
+  void              FireTimeEventAsync(mozilla::EventMessage aMsg,
+                                       int32_t aDetail);
   const nsSMILInstanceTime* GetEffectiveBeginInstance() const;
   const nsSMILInterval* GetPreviousInterval() const;
   bool              HasPlayed() const { return !mOldIntervals.IsEmpty(); }

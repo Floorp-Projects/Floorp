@@ -7,9 +7,11 @@
 #ifndef mozilla_image_ProgressTracker_h
 #define mozilla_image_ProgressTracker_h
 
+#include "CopyOnWrite.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/WeakPtr.h"
+#include "nsDataHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsTObserverArray.h"
 #include "nsThreadUtils.h"
@@ -58,6 +60,37 @@ inline Progress LoadCompleteProgress(bool aLastPart,
 }
 
 /**
+ * ProgressTracker stores its observers in an ObserverTable, which is a hash
+ * table mapping raw pointers to WeakPtr's to the same objects. This sounds like
+ * unnecessary duplication of information, but it's necessary for stable hash
+ * values since WeakPtr's lose the knowledge of which object they used to point
+ * to when that object is destroyed.
+ *
+ * ObserverTable subclasses nsDataHashtable to add reference counting support
+ * and a copy constructor, both of which are needed for use with CopyOnWrite<T>.
+ */
+class ObserverTable
+  : public nsDataHashtable<nsPtrHashKey<IProgressObserver>,
+                           WeakPtr<IProgressObserver>>
+{
+public:
+  NS_INLINE_DECL_REFCOUNTING(ObserverTable);
+
+  ObserverTable() = default;
+
+  ObserverTable(const ObserverTable& aOther)
+  {
+    NS_WARNING("Forced to copy ObserverTable due to nested notifications");
+    for (auto iter = aOther.ConstIter(); !iter.Done(); iter.Next()) {
+      this->Put(iter.Key(), iter.Data());
+    }
+  }
+
+private:
+  ~ObserverTable() { }
+};
+
+/**
  * ProgressTracker is a class that records an Image's progress through the
  * loading and decoding process, and makes it possible to send notifications to
  * IProgressObservers, both synchronously and asynchronously.
@@ -78,6 +111,7 @@ public:
   ProgressTracker()
     : mImageMutex("ProgressTracker::mImage")
     , mImage(nullptr)
+    , mObservers(new ObserverTable)
     , mProgress(NoProgress)
   { }
 
@@ -150,17 +184,13 @@ public:
   // with its loading progress. Weak pointers.
   void AddObserver(IProgressObserver* aObserver);
   bool RemoveObserver(IProgressObserver* aObserver);
-  size_t ObserverCount() const {
-    MOZ_ASSERT(NS_IsMainThread(), "Use mObservers on main thread only");
-    return mObservers.Length();
-  }
+  uint32_t ObserverCount() const;
 
   // Resets our weak reference to our image. Image subclasses should call this
   // in their destructor.
   void ResetImage();
 
 private:
-  typedef nsTObserverArray<mozilla::WeakPtr<IProgressObserver>> ObserverArray;
   friend class AsyncNotifyRunnable;
   friend class AsyncNotifyCurrentStateRunnable;
   friend class ImageFactory;
@@ -178,12 +208,7 @@ private:
   // Main thread only because it deals with the observer service.
   void FireFailureNotification();
 
-  // Main thread only, since notifications are expected on the main thread, and
-  // mObservers is not threadsafe.
-  static void SyncNotifyInternal(ObserverArray& aObservers,
-                                 bool aHasImage, Progress aProgress,
-                                 const nsIntRect& aInvalidRect);
-
+  // The runnable, if any, that we've scheduled to deliver async notifications.
   nsCOMPtr<nsIRunnable> mRunnable;
 
   // mImage is a weak ref; it should be set to null when the image goes out of
@@ -191,10 +216,9 @@ private:
   mutable Mutex mImageMutex;
   Image* mImage;
 
-  // List of observers attached to the image. Each observer represents a
-  // consumer using the image. Array and/or individual elements should only be
-  // accessed on the main thread.
-  ObserverArray mObservers;
+  // Hashtable of observers attached to the image. Each observer represents a
+  // consumer using the image. Main thread only.
+  CopyOnWrite<ObserverTable> mObservers;
 
   Progress mProgress;
 };
