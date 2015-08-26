@@ -11,7 +11,7 @@ const {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {DebuggerClient} = require("devtools/toolkit/client/main");
 const {DebuggerServer} = require("devtools/server/main");
-const {defer} = require("sdk/core/promise");
+const {defer} = require("promise");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 const PATH = "browser/toolkit/devtools/server/tests/browser/";
