@@ -165,12 +165,12 @@ LayerManager::CreatePersistentBufferProvider(const mozilla::gfx::IntSize &aSize,
                                              mozilla::gfx::SurfaceFormat aFormat)
 {
   RefPtr<PersistentBufferProviderBasic> bufferProvider =
-    new PersistentBufferProviderBasic(this, aSize, aFormat,
+    new PersistentBufferProviderBasic(aSize, aFormat,
                                       gfxPlatform::GetPlatform()->GetPreferredCanvasBackend());
 
   if (!bufferProvider->IsValid()) {
     bufferProvider =
-      new PersistentBufferProviderBasic(this, aSize, aFormat,
+      new PersistentBufferProviderBasic(aSize, aFormat,
                                         gfxPlatform::GetPlatform()->GetFallbackCanvasBackend());
   }
 
