@@ -14,9 +14,7 @@
   runNetworkTest(function() {
     var test = new PeerConnectionTest();
     test.setMediaConstraints([], [{video: true}]);
-    // TODO: Stop using old constraint-like RTCOptions soon (Bug 1064223).
-    // Watch out for case-difference when fixing: { offerToReceiveVideo: true }
-    test.setOfferOptions({ optional: [{ OfferToReceiveVideo: true }] });
+    test.setOfferOptions({ offerToReceiveVideo: true });
     test.run();
   });
 </script>

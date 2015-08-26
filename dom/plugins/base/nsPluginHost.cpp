@@ -1598,58 +1598,6 @@ nsPluginHost::UnregisterFakePlugin(const nsACString& aHandlerURI)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPluginHost::RegisterPlayPreviewMimeType(const nsACString& mimeType,
-                                          bool ignoreCTP,
-                                          const nsACString& redirectURL,
-                                          const nsACString& whitelist)
-{
-  nsAutoCString mt(mimeType);
-  nsAutoCString url(redirectURL);
-  if (url.Length() == 0) {
-    // using default play preview iframe URL, if redirectURL is not specified
-    url.AssignLiteral("data:application/x-moz-playpreview;,");
-    url.Append(mimeType);
-  }
-  nsAutoCString wl(whitelist);
-
-  nsRefPtr<nsPluginPlayPreviewInfo> playPreview =
-    new nsPluginPlayPreviewInfo(mt.get(), ignoreCTP, url.get(), wl.get());
-  mPlayPreviewMimeTypes.AppendElement(playPreview);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginHost::UnregisterPlayPreviewMimeType(const nsACString& mimeType)
-{
-  nsAutoCString mimeTypeToRemove(mimeType);
-  for (uint32_t i = mPlayPreviewMimeTypes.Length(); i > 0; i--) {
-    nsRefPtr<nsPluginPlayPreviewInfo> pp = mPlayPreviewMimeTypes[i - 1];
-    if (PL_strcasecmp(pp.get()->mMimeType.get(), mimeTypeToRemove.get()) == 0) {
-      mPlayPreviewMimeTypes.RemoveElementAt(i - 1);
-      break;
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginHost::GetPlayPreviewInfo(const nsACString& mimeType,
-                                 nsIPluginPlayPreviewInfo** aResult)
-{
-  nsAutoCString mimeTypeToFind(mimeType);
-  for (uint32_t i = 0; i < mPlayPreviewMimeTypes.Length(); i++) {
-    nsRefPtr<nsPluginPlayPreviewInfo> pp = mPlayPreviewMimeTypes[i];
-    if (PL_strcasecmp(pp.get()->mMimeType.get(), mimeTypeToFind.get()) == 0) {
-      *aResult = new nsPluginPlayPreviewInfo(pp.get());
-      NS_ADDREF(*aResult);
-      return NS_OK;
-    }
-  }
-  *aResult = nullptr;
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
 // FIXME-jsplugins Is this method actually needed?
 NS_IMETHODIMP
 nsPluginHost::GetFakePlugin(const nsACString & aMimeType,

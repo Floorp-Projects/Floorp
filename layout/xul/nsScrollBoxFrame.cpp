@@ -111,6 +111,9 @@ nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
       }
       break;
     }
+
+    default:
+      break;
   }
      
   return nsButtonBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);

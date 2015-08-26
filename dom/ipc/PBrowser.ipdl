@@ -65,6 +65,7 @@ using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
 using nsIWidget::TouchPointerState from "nsIWidget.h";
 using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
 using struct mozilla::OwningSerializedStructuredCloneBuffer from "ipc/IPCMessageUtils.h";
+using mozilla::EventMessage from "mozilla/EventForwards.h";
 using nsEventStatus from "mozilla/EventForwards.h";
 
 namespace mozilla {
@@ -276,7 +277,7 @@ parent:
      *
      * message      The message value of the handled event.
      */
-    prio(urgent) async OnEventNeedingAckHandled(uint32_t message);
+    prio(urgent) async OnEventNeedingAckHandled(EventMessage message);
 
     /**
      * Tells chrome to start plugin IME.  If this results in a string getting

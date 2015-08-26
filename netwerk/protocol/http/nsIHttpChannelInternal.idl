@@ -38,7 +38,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(4c9e681e-efd8-4ed2-b57f-20d48c9b3c3b)]
+[scriptable, uuid(c4fab96f-0b10-4b14-b45b-517fc3f36842)]
 
 interface nsIHttpChannelInternal : nsISupports
 {
@@ -220,6 +220,8 @@ interface nsIHttpChannelInternal : nsISupports
      * interception and proceed immediately to the network/cache.
      */
     void forceNoIntercept();
+
+    readonly attribute boolean responseSynthesized;
 
     /**
      * Set by nsCORSListenerProxy if credentials should be included in

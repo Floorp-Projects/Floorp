@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+    window.onload = function() {
+      SimpleTest.finish();
+    }
+  </script>
+  <script>
+    function good_correctHashLoaded() {
+      ok(true, "A non-CORS cross-domain stylesheet was correctly loaded when integrity matched.");
+    }
+    function bad_correctHashBlocked() {
+      ok(false, "We should load non-CORS cross-domain stylesheets with hashes that match!");
+    }
+
+    function good_incorrectHashLoaded() {
+      ok(true, "A non-CORS cross-domain stylesheet was correctly loaded even when integrity didn't match.");
+    }
+    function bad_incorrectHashBlocked() {
+      ok(false, "We should load non-CORS cross-domain stylesheets even when hashes don't match!");
+    }
+
+  </script>
+
+  <!-- valid non-CORS sha256 hash. should trigger onload -->
+  <link rel="stylesheet" href="style_301.css"
+        integrity="sha256-qs8lnkunWoVldk5d5E+652yth4VTSHohlBKQvvgGwa8="
+        onerror="bad_correctHashBlocked()"
+        onload="good_correctHashLoaded()">
+
+  <!-- invalid non-CORS sha256 hash. should trigger onload -->
+  <link rel="stylesheet" href="style_301.css?again"
+        integrity="sha256-bogus"
+        onerror="bad_incorrectHashBlocked()"
+        onload="good_incorrectHashLoaded()">
+</head>
+<body>
+<p><span id="red-text">This should be red.</span></p>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

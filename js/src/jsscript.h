@@ -2044,7 +2044,7 @@ class LazyScript : public gc::TenuredCell
         uint32_t version : 8;
 
         uint32_t numFreeVariables : 24;
-        uint32_t numInnerFunctions : 21;
+        uint32_t numInnerFunctions : 20;
 
         uint32_t generatorKindBits : 2;
 
@@ -2059,6 +2059,7 @@ class LazyScript : public gc::TenuredCell
         uint32_t hasBeenCloned : 1;
         uint32_t treatAsRunOnce : 1;
         uint32_t isDerivedClassConstructor : 1;
+        uint32_t needsHomeObject : 1;
     };
 
     union {
@@ -2228,6 +2229,13 @@ class LazyScript : public gc::TenuredCell
     }
     void setIsDerivedClassConstructor() {
         p_.isDerivedClassConstructor = true;
+    }
+
+    bool needsHomeObject() const {
+        return p_.needsHomeObject;
+    }
+    void setNeedsHomeObject() {
+        p_.needsHomeObject = true;
     }
 
     const char* filename() const {

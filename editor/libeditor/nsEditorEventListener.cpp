@@ -469,6 +469,8 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
     case NS_COMPOSITION_END:
       HandleEndComposition(aEvent);
       return NS_OK;
+    default:
+      break;
   }
 
   nsAutoString eventType;

@@ -44,6 +44,7 @@ ExtensionManagement.registerScript("chrome://extensions/content/ext-extension.js
 ExtensionManagement.registerScript("chrome://extensions/content/ext-webNavigation.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-webRequest.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-storage.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-test.js");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 let {
@@ -259,7 +260,8 @@ let GlobalManager = {
 
   observe(contentWindow, topic, data) {
     function inject(extension, context) {
-      let chromeObj = Cu.createObjectIn(contentWindow, {defineAs: "chrome"});
+      let chromeObj = Cu.createObjectIn(contentWindow, {defineAs: "browser"});
+      contentWindow.wrappedJSObject.chrome = contentWindow.wrappedJSObject.browser;
       let api = Management.generateAPIs(extension, context);
       injectAPI(api, chromeObj);
     }
@@ -330,10 +332,26 @@ this.Extension = function(addonData)
   this.whiteListedHosts = null;
   this.webAccessibleResources = new Set();
 
-  ExtensionManagement.startupExtension(this.uuid, this.addonData.resourceURI, this);
+  this.emitter = new EventEmitter();
 }
 
 Extension.prototype = {
+  on(hook, f) {
+    return this.emitter.on(hook, f);
+  },
+
+  off(hook, f) {
+    return this.emitter.off(hook, f);
+  },
+
+  emit(...args) {
+    return this.emitter.emit(...args);
+  },
+
+  testMessage(...args) {
+    Management.emit("test-message", this, ...args);
+  },
+
   // Representation of the extension to send to content
   // processes. This should include anything the content process might
   // need.
@@ -533,6 +551,12 @@ Extension.prototype = {
   },
 
   startup() {
+    try {
+      ExtensionManagement.startupExtension(this.uuid, this.addonData.resourceURI, this);
+    } catch (e) {
+      return Promise.reject(e);
+    }
+
     return Promise.all([this.readManifest(), this.readLocaleMessages()]).then(([manifest, messages]) => {
       if (this.hasShutdown) {
         return;
@@ -549,6 +573,7 @@ Extension.prototype = {
     }).catch(e => {
       dump(`Extension error: ${e} ${e.fileName}:${e.lineNumber}\n`);
       Cu.reportError(e);
+      throw e;
     });
   },
 

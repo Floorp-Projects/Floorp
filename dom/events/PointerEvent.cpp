@@ -17,7 +17,8 @@ PointerEvent::PointerEvent(EventTarget* aOwner,
                            nsPresContext* aPresContext,
                            WidgetPointerEvent* aEvent)
   : MouseEvent(aOwner, aPresContext,
-               aEvent ? aEvent : new WidgetPointerEvent(false, 0, nullptr))
+               aEvent ? aEvent :
+                        new WidgetPointerEvent(false, NS_EVENT_NULL, nullptr))
 {
   NS_ASSERTION(mEvent->mClass == ePointerEventClass,
                "event type mismatch ePointerEventClass");

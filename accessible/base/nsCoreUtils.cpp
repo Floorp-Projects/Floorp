@@ -118,11 +118,11 @@ nsCoreUtils::DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
 }
 
 void
-nsCoreUtils::DispatchMouseEvent(uint32_t aEventType, int32_t aX, int32_t aY,
+nsCoreUtils::DispatchMouseEvent(EventMessage aMessage, int32_t aX, int32_t aY,
                                 nsIContent *aContent, nsIFrame *aFrame,
                                 nsIPresShell *aPresShell, nsIWidget *aRootWidget)
 {
-  WidgetMouseEvent event(true, aEventType, aRootWidget,
+  WidgetMouseEvent event(true, aMessage, aRootWidget,
                          WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
 
   event.refPoint = LayoutDeviceIntPoint(aX, aY);
@@ -137,14 +137,14 @@ nsCoreUtils::DispatchMouseEvent(uint32_t aEventType, int32_t aX, int32_t aY,
 }
 
 void
-nsCoreUtils::DispatchTouchEvent(uint32_t aEventType, int32_t aX, int32_t aY,
+nsCoreUtils::DispatchTouchEvent(EventMessage aMessage, int32_t aX, int32_t aY,
                                 nsIContent* aContent, nsIFrame* aFrame,
                                 nsIPresShell* aPresShell, nsIWidget* aRootWidget)
 {
   if (!dom::TouchEvent::PrefEnabled())
     return;
 
-  WidgetTouchEvent event(true, aEventType, aRootWidget);
+  WidgetTouchEvent event(true, aMessage, aRootWidget);
 
   event.time = PR_IntervalNow();
 

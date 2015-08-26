@@ -366,7 +366,7 @@ public:
 
     mNetworkFinished = true;
 
-    if (NS_FAILED(aStatus)) {
+    if (NS_WARN_IF(NS_FAILED(aStatus))) {
       if (mCC) {
         mCC->Abort();
       }
@@ -386,7 +386,7 @@ public:
     mCacheFinished = true;
     mInCache = aInCache;
 
-    if (NS_FAILED(aStatus)) {
+    if (NS_WARN_IF(NS_FAILED(aStatus))) {
       if (mCN) {
         mCN->Abort();
       }
@@ -407,7 +407,7 @@ public:
       return;
     }
 
-    if (!mCC || !mInCache) {
+    if (NS_WARN_IF(!mCC || !mInCache)) {
       ComparisonFinished(NS_OK, false);
       return;
     }
@@ -536,7 +536,7 @@ private:
     AssertIsOnMainThread();
     MOZ_ASSERT(mCallback);
 
-    if (NS_FAILED(aStatus)) {
+    if (NS_WARN_IF(NS_FAILED(aStatus))) {
       Fail(aStatus);
       return;
     }
@@ -695,7 +695,11 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
   }
 
   if (NS_WARN_IF(NS_FAILED(aStatus))) {
-    mManager->NetworkFinished(aStatus);
+    if (aStatus == NS_ERROR_REDIRECT_LOOP) {
+      mManager->NetworkFinished(NS_ERROR_DOM_SECURITY_ERR);
+    } else {
+      mManager->NetworkFinished(aStatus);
+    }
     return NS_OK;
   }
 
@@ -715,18 +719,32 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
       return NS_OK;
     }
 
-    if (!requestSucceeded) {
+    if (NS_WARN_IF(!requestSucceeded)) {
       mManager->NetworkFinished(NS_ERROR_FAILURE);
       return NS_OK;
     }
 
     nsAutoCString maxScope;
     // Note: we explicitly don't check for the return value here, because the
-    // absense of the header is not an error condition.
+    // absence of the header is not an error condition.
     unused << httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Service-Worker-Allowed"),
                                              maxScope);
 
     mManager->SetMaxScope(maxScope);
+
+    nsAutoCString mimeType;
+    rv = httpChannel->GetContentType(mimeType);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mManager->NetworkFinished(NS_ERROR_DOM_SECURITY_ERR);
+      return rv;
+    }
+
+    if (!mimeType.LowerCaseEqualsLiteral("text/javascript") &&
+        !mimeType.LowerCaseEqualsLiteral("application/x-javascript") &&
+        !mimeType.LowerCaseEqualsLiteral("application/javascript")) {
+      mManager->NetworkFinished(NS_ERROR_DOM_SECURITY_ERR);
+      return rv;
+    }
   }
   else {
     // The only supported request schemes are http, https, and app.
@@ -752,13 +770,11 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
       return NS_OK;
     }
 
-    if (!scheme.LowerCaseEqualsLiteral("app")) {
+    if (NS_WARN_IF(!scheme.LowerCaseEqualsLiteral("app"))) {
       mManager->NetworkFinished(NS_ERROR_FAILURE);
       return NS_OK;      
     }
   }
-
-  // FIXME(nsm): "Extract mime type..."
 
   char16_t* buffer = nullptr;
   size_t len = 0;

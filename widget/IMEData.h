@@ -396,6 +396,7 @@ struct IMENotification final
   }
 
   IMENotification(const IMENotification& aOther)
+    : mMessage(NOTIFY_IME_OF_NOTHING)
   {
     Assign(aOther);
   }
@@ -417,7 +418,7 @@ struct IMENotification final
         mTextChangeData.Clear();
         break;
       case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
-        mMouseButtonEventData.mEventMessage = 0;
+        mMouseButtonEventData.mEventMessage = NS_EVENT_NULL;
         mMouseButtonEventData.mOffset = UINT32_MAX;
         mMouseButtonEventData.mCursorPos.Set(nsIntPoint(0, 0));
         mMouseButtonEventData.mCharRect.Set(nsIntRect(0, 0, 0, 0));
@@ -730,8 +731,8 @@ struct IMENotification final
 
   struct MouseButtonEventData
   {
-    // The value of WidgetEvent::message
-    uint32_t mEventMessage;
+    // The value of WidgetEvent::mMessage
+    EventMessage mEventMessage;
     // Character offset from the start of the focused editor under the cursor
     uint32_t mOffset;
     // Cursor position in pixels relative to the widget

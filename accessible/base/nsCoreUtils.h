@@ -6,6 +6,7 @@
 #ifndef nsCoreUtils_h_
 #define nsCoreUtils_h_
 
+#include "mozilla/EventForwards.h"
 #include "nsIContent.h"
 #include "nsIDocument.h" // for GetShell()
 #include "nsIPresShell.h"
@@ -49,7 +50,7 @@ public:
   /**
    * Send mouse event to the given element.
    *
-   * @param aEventType   [in] an event type (see BasicEvents.h for constants)
+   * @param aMessage     [in] an event message (see EventForwards.h)
    * @param aX           [in] x coordinate in dev pixels
    * @param aY           [in] y coordinate in dev pixels
    * @param aContent     [in] the element
@@ -57,14 +58,15 @@ public:
    * @param aPresShell   [in] the presshell for the element
    * @param aRootWidget  [in] the root widget of the element
    */
-  static void DispatchMouseEvent(uint32_t aEventType, int32_t aX, int32_t aY,
+  static void DispatchMouseEvent(mozilla::EventMessage aMessage,
+                                 int32_t aX, int32_t aY,
                                  nsIContent *aContent, nsIFrame *aFrame,
                                  nsIPresShell *aPresShell, nsIWidget *aRootWidget);
 
   /**
    * Send a touch event with a single touch point to the given element.
    *
-   * @param aEventType   [in] an event type (see BasicEvents.h for constants)
+   * @param aMessage     [in] an event message (see EventForwards.h)
    * @param aX           [in] x coordinate in dev pixels
    * @param aY           [in] y coordinate in dev pixels
    * @param aContent     [in] the element
@@ -72,7 +74,8 @@ public:
    * @param aPresShell   [in] the presshell for the element
    * @param aRootWidget  [in] the root widget of the element
    */
-  static void DispatchTouchEvent(uint32_t aEventType, int32_t aX, int32_t aY,
+  static void DispatchTouchEvent(mozilla::EventMessage aMessage,
+                                 int32_t aX, int32_t aY,
                                  nsIContent* aContent, nsIFrame* aFrame,
                                  nsIPresShell* aPresShell, nsIWidget* aRootWidget);
 
