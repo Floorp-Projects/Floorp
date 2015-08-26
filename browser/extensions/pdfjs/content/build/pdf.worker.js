@@ -22,8 +22,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.1.366';
-PDFJS.build = '9e9df56';
+PDFJS.version = '1.1.403';
+PDFJS.build = '88e0326';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -1196,6 +1196,10 @@ function MessageHandler(name, comObj) {
             data: result
           });
         }, function (reason) {
+          if (reason instanceof Error) {
+            // Serialize error to avoid "DataCloneError"
+            reason = reason + '';
+          }
           comObj.postMessage({
             isReply: true,
             callbackId: data.callbackId,
@@ -3529,9 +3533,12 @@ var XRef = (function XRefClosure() {
     indexObjects: function XRef_indexObjects() {
       // Simple scan through the PDF content to find objects,
       // trailers and XRef streams.
+      var TAB = 0x9, LF = 0xA, CR = 0xD, SPACE = 0x20;
+      var PERCENT = 0x25, LT = 0x3C;
+
       function readToken(data, offset) {
         var token = '', ch = data[offset];
-        while (ch !== 13 && ch !== 10) {
+        while (ch !== LF && ch !== CR && ch !== LT) {
           if (++offset >= data.length) {
             break;
           }
@@ -3563,6 +3570,9 @@ var XRef = (function XRefClosure() {
       var endobjBytes = new Uint8Array([101, 110, 100, 111, 98, 106]);
       var xrefBytes = new Uint8Array([47, 88, 82, 101, 102]);
 
+      // Clear out any existing entries, since they may be bogus.
+      this.entries.length = 0;
+
       var stream = this.stream;
       stream.pos = 0;
       var buffer = stream.getBytes();
@@ -3570,23 +3580,24 @@ var XRef = (function XRefClosure() {
       var trailers = [], xrefStms = [];
       while (position < length) {
         var ch = buffer[position];
-        if (ch === 32 || ch === 9 || ch === 13 || ch === 10) {
+        if (ch === TAB || ch === LF || ch === CR || ch === SPACE) {
           ++position;
           continue;
         }
-        if (ch === 37) { // %-comment
+        if (ch === PERCENT) { // %-comment
           do {
             ++position;
             if (position >= length) {
               break;
             }
             ch = buffer[position];
-          } while (ch !== 13 && ch !== 10);
+          } while (ch !== LF && ch !== CR);
           continue;
         }
         var token = readToken(buffer, position);
         var m;
-        if (token === 'xref') {
+        if (token.indexOf('xref') === 0 &&
+            (token.length === 4 || /\s/.test(token[4]))) {
           position += skipUntil(buffer, position, trailerBytes);
           trailers.push(position);
           position += skipUntil(buffer, position, startxrefBytes);
@@ -11530,11 +11541,11 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         if (cmap instanceof IdentityCMap) {
           return new IdentityToUnicodeMap(0, 0xFFFF);
         }
-        cmap = cmap.getMap();
+        var map = [];
         // Convert UTF-16BE
         // NOTE: cmap can be a sparse array, so use forEach instead of for(;;)
         // to iterate over all keys.
-        cmap.forEach(function(token, i) {
+        cmap.forEach(function(charCode, token) {
           var str = [];
           for (var k = 0; k < token.length; k += 2) {
             var w1 = (token.charCodeAt(k) << 8) | token.charCodeAt(k + 1);
@@ -11546,9 +11557,9 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             var w2 = (token.charCodeAt(k) << 8) | token.charCodeAt(k + 1);
             str.push(((w1 & 0x3ff) << 10) + (w2 & 0x3ff) + 0x10000);
           }
-          cmap[i] = String.fromCharCode.apply(String, str);
+          map[charCode] = String.fromCharCode.apply(String, str);
         });
-        return new ToUnicodeMap(cmap);
+        return new ToUnicodeMap(map);
       }
       return null;
     },
@@ -18039,9 +18050,10 @@ var Font = (function FontClosure() {
             if (!glyphName) {
               continue;
             }
-            var unicodeOrCharCode;
+            var unicodeOrCharCode, isUnicode = false;
             if (cmapPlatformId === 3 && cmapEncodingId === 1) {
               unicodeOrCharCode = GlyphsUnicode[glyphName];
+              isUnicode = true;
             } else if (cmapPlatformId === 1 && cmapEncodingId === 0) {
               // TODO: the encoding needs to be updated with mac os table.
               unicodeOrCharCode = Encodings.MacRomanEncoding.indexOf(glyphName);
@@ -18049,8 +18061,11 @@ var Font = (function FontClosure() {
 
             var found = false;
             for (i = 0; i < cmapMappingsLength; ++i) {
-              if (cmapMappings[i].charCode === unicodeOrCharCode &&
-                  hasGlyph(cmapMappings[i].glyphId, unicodeOrCharCode, -1)) {
+              if (cmapMappings[i].charCode !== unicodeOrCharCode) {
+                continue;
+              }
+              var code = isUnicode ? charCode : unicodeOrCharCode;
+              if (hasGlyph(cmapMappings[i].glyphId, code, -1)) {
                 charCodeToGlyphId[charCode] = cmapMappings[i].glyphId;
                 found = true;
                 break;
@@ -21258,16 +21273,15 @@ var FontRendererFactory = (function FontRendererFactoryClosure() {
     return 0;
   }
 
-  function compileGlyf(code, js, font) {
+  function compileGlyf(code, cmds, font) {
     function moveTo(x, y) {
-      js.push('c.moveTo(' + x + ',' + y + ');');
+      cmds.push({cmd: 'moveTo', args: [x, y]});
     }
     function lineTo(x, y) {
-      js.push('c.lineTo(' + x + ',' + y + ');');
+      cmds.push({cmd: 'lineTo', args: [x, y]});
     }
     function quadraticCurveTo(xa, ya, x, y) {
-      js.push('c.quadraticCurveTo(' + xa + ',' + ya + ',' +
-                                   x + ',' + y + ');');
+      cmds.push({cmd: 'quadraticCurveTo', args: [xa, ya, x, y]});
     }
 
     var i = 0;
@@ -21313,11 +21327,11 @@ var FontRendererFactory = (function FontRendererFactoryClosure() {
         }
         var subglyph = font.glyphs[glyphIndex];
         if (subglyph) {
-          js.push('c.save();');
-          js.push('c.transform(' + scaleX + ',' + scale01 + ',' +
-                  scale10 + ',' + scaleY + ',' + x + ',' + y + ');');
-          compileGlyf(subglyph, js, font);
-          js.push('c.restore();');
+          cmds.push({cmd: 'save'});
+          cmds.push({cmd: 'transform',
+                     args: [scaleX, scale01, scale10, scaleY, x, y]});
+          compileGlyf(subglyph, cmds, font);
+          cmds.push({cmd: 'restore'});
         }
       } while ((flags & 0x20));
     } else {
@@ -21413,20 +21427,19 @@ var FontRendererFactory = (function FontRendererFactoryClosure() {
     }
   }
 
-  function compileCharString(code, js, font) {
+  function compileCharString(code, cmds, font) {
     var stack = [];
     var x = 0, y = 0;
     var stems = 0;
 
     function moveTo(x, y) {
-      js.push('c.moveTo(' + x + ',' + y + ');');
+      cmds.push({cmd: 'moveTo', args: [x, y]});
     }
     function lineTo(x, y) {
-      js.push('c.lineTo(' + x + ',' + y + ');');
+      cmds.push({cmd: 'lineTo', args: [x, y]});
     }
     function bezierCurveTo(x1, y1, x2, y2, x, y) {
-      js.push('c.bezierCurveTo(' + x1 + ',' + y1 + ',' + x2 + ',' + y2 + ',' +
-                                   x + ',' + y + ');');
+      cmds.push({cmd: 'bezierCurveTo', args: [x1, y1, x2, y2, x, y]});
     }
 
     function parse(code) {
@@ -21555,16 +21568,16 @@ var FontRendererFactory = (function FontRendererFactoryClosure() {
               var bchar = stack.pop();
               y = stack.pop();
               x = stack.pop();
-              js.push('c.save();');
-              js.push('c.translate('+ x + ',' + y + ');');
+              cmds.push({cmd: 'save'});
+              cmds.push({cmd: 'translate', args: [x, y]});
               var gid = lookupCmap(font.cmap, String.fromCharCode(
                 font.glyphNameMap[Encodings.StandardEncoding[achar]]));
-              compileCharString(font.glyphs[gid], js, font);
-              js.push('c.restore();');
+              compileCharString(font.glyphs[gid], cmds, font);
+              cmds.push({cmd: 'restore'});
 
               gid = lookupCmap(font.cmap, String.fromCharCode(
                 font.glyphNameMap[Encodings.StandardEncoding[bchar]]));
-              compileCharString(font.glyphs[gid], js, font);
+              compileCharString(font.glyphs[gid], cmds, font);
             }
             return;
           case 18: // hstemhm
@@ -21733,16 +21746,16 @@ var FontRendererFactory = (function FontRendererFactoryClosure() {
         return noop;
       }
 
-      var js = [];
-      js.push('c.save();');
-      js.push('c.transform(' + this.fontMatrix.join(',') + ');');
-      js.push('c.scale(size, -size);');
+      var cmds = [];
+      cmds.push({cmd: 'save'});
+      cmds.push({cmd: 'transform', args: this.fontMatrix.slice()});
+      cmds.push({cmd: 'scale', args: ['size', '-size']});
 
-      this.compileGlyphImpl(code, js);
+      this.compileGlyphImpl(code, cmds);
 
-      js.push('c.restore();');
+      cmds.push({cmd: 'restore'});
 
-      return js.join('\n');
+      return cmds;
     },
 
     compileGlyphImpl: function () {
@@ -21766,8 +21779,8 @@ var FontRendererFactory = (function FontRendererFactoryClosure() {
   }
 
   Util.inherit(TrueTypeCompiled, CompiledFont, {
-    compileGlyphImpl: function (code, js) {
-      compileGlyf(code, js, this);
+    compileGlyphImpl: function (code, cmds) {
+      compileGlyf(code, cmds, this);
     }
   });
 
@@ -21788,8 +21801,8 @@ var FontRendererFactory = (function FontRendererFactoryClosure() {
   }
 
   Util.inherit(Type2Compiled, CompiledFont, {
-    compileGlyphImpl: function (code, js) {
-      compileCharString(code, js, this);
+    compileGlyphImpl: function (code, cmds) {
+      compileCharString(code, cmds, this);
     }
   });
 
@@ -26793,7 +26806,10 @@ var PDFImage = (function PDFImageClosure() {
           }
           return imgData;
         }
-        if (this.image instanceof JpegStream && !this.smask && !this.mask) {
+        if (this.image instanceof JpegStream && !this.smask && !this.mask &&
+            (this.colorSpace.name === 'DeviceGray' ||
+             this.colorSpace.name === 'DeviceRGB' ||
+             this.colorSpace.name === 'DeviceCMYK')) {
           imgData.kind = ImageKind.RGB_24BPP;
           imgData.data = this.getImageBytes(originalHeight * rowBytes,
                                             drawWidth, drawHeight, true);
@@ -30344,7 +30360,7 @@ var Parser = (function ParserClosure() {
       return stream;
     },
     makeFilter: function Parser_makeFilter(stream, name, maybeLength, params) {
-      if (stream.dict.get('Length') === 0) {
+      if (stream.dict.get('Length') === 0 && !maybeLength) {
         return new NullStream(stream);
       }
       try {
