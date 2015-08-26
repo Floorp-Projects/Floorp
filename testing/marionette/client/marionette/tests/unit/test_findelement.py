@@ -159,3 +159,13 @@ class TestElements(MarionetteTestCase):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
         self.assertRaises(InvalidSelectorException, self.marionette.find_element, "Brie Search Type", "doesn't matter")
+
+    def test_element_id_is_valid_uuid(self):
+        import re
+        test_html = self.marionette.absolute_url("test.html")
+        self.marionette.navigate(test_html)
+        el = self.marionette.find_element(By.TAG_NAME, "body")
+        uuid_regex = re.compile('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')
+        self.assertIsNotNone(re.search(uuid_regex, el.id),
+                             'UUID for the WebElement is not valid. ID is {}'\
+                             .format(el.id))
