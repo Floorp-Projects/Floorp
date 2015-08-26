@@ -1043,10 +1043,10 @@ const char*
 Event::GetEventName(EventMessage aEventType)
 {
   switch(aEventType) {
-#define ID_TO_EVENT(name_, _id, _type, _struct) \
-  case _id: return #name_;
+#define MESSAGE_TO_EVENT(name_, _message, _type, _struct) \
+  case _message: return #name_;
 #include "mozilla/EventNameList.h"
-#undef ID_TO_EVENT
+#undef MESSAGE_TO_EVENT
   default:
     break;
   }
