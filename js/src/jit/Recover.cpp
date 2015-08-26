@@ -1054,12 +1054,12 @@ RRegExpReplace::recover(JSContext* cx, SnapshotIterator& iter) const
     RootedString string(cx, iter.read().toString());
     Rooted<RegExpObject*> regexp(cx, &iter.read().toObject().as<RegExpObject>());
     RootedString repl(cx, iter.read().toString());
-    RootedValue result(cx);
 
-    if (!js::str_replace_regexp_raw(cx, string, regexp, repl, &result))
+    JSString* result = js::str_replace_regexp_raw(cx, string, regexp, repl);
+    if (!result)
         return false;
 
-    iter.storeInstructionResult(result);
+    iter.storeInstructionResult(StringValue(result));
     return true;
 }
 
