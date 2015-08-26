@@ -829,6 +829,8 @@ public:
   void ResetInputState();
 
 private:
+  void CancelAnimationAndGestureState();
+
   nsRefPtr<InputQueue> mInputQueue;
   TouchBlockState* CurrentTouchBlock();
   bool HasReadyTouchBlock();

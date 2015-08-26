@@ -59,12 +59,12 @@ public:
   void EndTouch(uint32_t aTimestampMs);
 
   /**
-   * Notify this Axis that a touch has ended forcefully. Useful for stopping
+   * Notify this Axis that the gesture has ended forcefully. Useful for stopping
    * flings when a user puts their finger down in the middle of one (i.e. to
    * stop a previous touch including its fling so that a new one can take its
    * place).
    */
-  void CancelTouch();
+  void CancelGesture();
 
   /**
    * Takes a requested displacement to the position of this axis, and adjusts it
