@@ -4,7 +4,7 @@
 "use strict";
 
 const { Cu, Ci, Cc } = require("chrome");
-const { defer, all } = require("sdk/core/promise");
+const { defer, all } = require("promise");
 const { setTimeout, clearTimeout } = require("sdk/timers");
 const { makeInfallible } = require("devtools/toolkit/DevToolsUtils.js");
 
