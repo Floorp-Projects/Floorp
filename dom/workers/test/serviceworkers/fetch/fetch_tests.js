@@ -1,4 +1,4 @@
-function fetchXHR(name, onload, onerror, headers) {
+function fetchXHRWithMethod(name, method, onload, onerror, headers) {
   expectAsyncResult();
 
   onload = onload || function() {
@@ -11,7 +11,7 @@ function fetchXHR(name, onload, onerror, headers) {
   };
 
   var x = new XMLHttpRequest();
-  x.open('GET', name, true);
+  x.open(method, name, true);
   x.onload = function() { onload(x) };
   x.onerror = function() { onerror(x) };
   headers = headers || [];
@@ -19,6 +19,10 @@ function fetchXHR(name, onload, onerror, headers) {
     x.setRequestHeader(header[0], header[1]);
   });
   x.send();
+}
+
+function fetchXHR(name, onload, onerror, headers) {
+  return fetchXHRWithMethod(name, 'GET', onload, onerror, headers);
 }
 
 fetchXHR('bare-synthesized.txt', function(xhr) {
@@ -296,4 +300,12 @@ fetch(new Request('body-blob', {method: 'POST', body: new Blob(new String('my bo
 }).then(function(body) {
   my_ok(body == 'my bodymy body', "the Blob body of the intercepted fetch should be visible in the SW");
   finish();
+});
+
+['DELETE', 'GET', 'HEAD', 'OPTIONS', 'POST', 'PUT'].forEach(function(method) {
+  fetchXHRWithMethod('xhr-method-test.txt', method, function(xhr) {
+    my_ok(xhr.status == 200, method + " load should be successful");
+    my_ok(xhr.responseText == ("intercepted " + method), method + " load should have synthesized response");
+    finish();
+  });
 });
