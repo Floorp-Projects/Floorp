@@ -514,6 +514,7 @@ gfxPlatform::Init()
     InitLayersAccelerationPrefs();
     InitLayersIPC();
 
+    gPlatform->PopulateScreenInfo();
     gPlatform->ComputeTileSize();
 
     nsresult rv;
@@ -1061,6 +1062,22 @@ gfxPlatform::ComputeTileSize()
 #endif
 
   SetTileSize(w, h);
+}
+
+void
+gfxPlatform::PopulateScreenInfo()
+{
+  nsCOMPtr<nsIScreenManager> manager = do_GetService("@mozilla.org/gfx/screenmanager;1");
+  MOZ_ASSERT(manager, "failed to get nsIScreenManager");
+
+  nsCOMPtr<nsIScreen> screen;
+  manager->GetPrimaryScreen(getter_AddRefs(screen));
+  MOZ_ASSERT(screen, "failed to get primary screen");
+
+  screen->GetColorDepth(&mScreenDepth);
+
+  int left, top;
+  screen->GetRect(&left, &top, &mScreenSize.width, &mScreenSize.height);
 }
 
 bool
@@ -2091,13 +2108,6 @@ gfxPlatform::GetLog(eGfxLog aWhichLog)
 
     MOZ_ASSERT_UNREACHABLE("Unexpected log type");
     return nullptr;
-}
-
-int
-gfxPlatform::GetScreenDepth() const
-{
-    NS_WARNING("GetScreenDepth not implemented on this platform -- returning 0!");
-    return 0;
 }
 
 mozilla::gfx::SurfaceFormat
