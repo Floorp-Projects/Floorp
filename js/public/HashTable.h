@@ -740,6 +740,7 @@ class HashTableEntry
     }
 
     T& get() { MOZ_ASSERT(isLive()); return *mem.addr(); }
+    NonConstT& getMutable() { MOZ_ASSERT(isLive()); return *mem.addr(); }
 
     bool isFree() const    { return keyHash == sFreeKey; }
     void clearLive()       { MOZ_ASSERT(isLive()); keyHash = sFreeKey; mem.addr()->~T(); }
@@ -977,6 +978,16 @@ class HashTable : private AllocPolicy
             this->validEntry = false;
             this->mutationCount = table_.mutationCount;
 #endif
+        }
+
+        NonConstT& mutableFront() {
+            MOZ_ASSERT(!this->empty());
+#ifdef JS_DEBUG
+            MOZ_ASSERT(this->validEntry);
+            MOZ_ASSERT(this->generation == this->Range::table_->generation());
+            MOZ_ASSERT(this->mutationCount == this->Range::table_->mutationCount);
+#endif
+            return this->cur->getMutable();
         }
 
         // Removes the |front()| element and re-inserts it into the table with
