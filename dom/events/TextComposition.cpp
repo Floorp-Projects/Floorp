@@ -100,7 +100,7 @@ TextComposition::MaybeDispatchCompositionUpdate(
 BaseEventFlags
 TextComposition::CloneAndDispatchAs(
                    const WidgetCompositionEvent* aCompositionEvent,
-                   uint32_t aMessage,
+                   EventMessage aMessage,
                    nsEventStatus* aStatus,
                    EventDispatchingCallback* aCallBack)
 {
@@ -437,7 +437,7 @@ TextComposition::NotityUpdateComposition(
 }
 
 void
-TextComposition::DispatchCompositionEventRunnable(uint32_t aEventMessage,
+TextComposition::DispatchCompositionEventRunnable(EventMessage aEventMessage,
                                                   const nsAString& aData,
                                                   bool aIsSynthesizingCommit)
 {
@@ -585,13 +585,13 @@ TextComposition::HasEditor() const
 TextComposition::CompositionEventDispatcher::CompositionEventDispatcher(
                                                TextComposition* aComposition,
                                                nsINode* aEventTarget,
-                                               uint32_t aEventMessage,
+                                               EventMessage aEventMessage,
                                                const nsAString& aData,
                                                bool aIsSynthesizedEvent)
   : mTextComposition(aComposition)
   , mEventTarget(aEventTarget)
-  , mEventMessage(aEventMessage)
   , mData(aData)
+  , mEventMessage(aEventMessage)
   , mIsSynthesizedEvent(aIsSynthesizedEvent)
 {
 }

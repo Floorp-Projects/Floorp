@@ -2269,6 +2269,8 @@ nsGenericHTMLFormElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
           formControlFrame->SetFocus(false, false);
         break;
       }
+      default:
+        break;
     }
   }
 
@@ -2454,8 +2456,8 @@ nsGenericHTMLFormElement::FormIdUpdated(Element* aOldElement,
 }
 
 bool 
-nsGenericHTMLFormElement::IsElementDisabledForEvents(uint32_t aMessage, 
-                                                    nsIFrame* aFrame)
+nsGenericHTMLFormElement::IsElementDisabledForEvents(EventMessage aMessage,
+                                                     nsIFrame* aFrame)
 {
   bool disabled = IsDisabled();
   if (!disabled && aFrame) {

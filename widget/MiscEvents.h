@@ -27,7 +27,7 @@ public:
     return this;
   }
 
-  WidgetContentCommandEvent(bool aIsTrusted, uint32_t aMessage,
+  WidgetContentCommandEvent(bool aIsTrusted, EventMessage aMessage,
                             nsIWidget* aWidget,
                             bool aOnlyEnabledCheck = false)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eContentCommandEventClass)
@@ -145,7 +145,7 @@ class WidgetPluginEvent : public WidgetGUIEvent
 public:
   virtual WidgetPluginEvent* AsPluginEvent() override { return this; }
 
-  WidgetPluginEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
+  WidgetPluginEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, ePluginEventClass)
     , retargetToFocusedDocument(false)
   {

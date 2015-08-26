@@ -87,7 +87,8 @@ protected:
 public:
   virtual WidgetKeyboardEvent* AsKeyboardEvent() override { return this; }
 
-  WidgetKeyboardEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget,
+  WidgetKeyboardEvent(bool aIsTrusted, EventMessage aMessage,
+                      nsIWidget* aWidget,
                       EventClassID aEventClassID = eKeyboardEventClass)
     : WidgetInputEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
     , keyCode(0)
@@ -306,9 +307,10 @@ public:
     return this;
   }
 
-  InternalBeforeAfterKeyboardEvent(bool aIsTrusted, uint32_t aMessage,
+  InternalBeforeAfterKeyboardEvent(bool aIsTrusted, EventMessage aMessage,
                                    nsIWidget* aWidget)
-    : WidgetKeyboardEvent(aIsTrusted, aMessage, aWidget, eBeforeAfterKeyboardEventClass)
+    : WidgetKeyboardEvent(aIsTrusted, aMessage, aWidget,
+                          eBeforeAfterKeyboardEventClass)
   {
   }
 
@@ -360,7 +362,7 @@ public:
     return this;
   }
 
-  WidgetCompositionEvent(bool aIsTrusted, uint32_t aMessage,
+  WidgetCompositionEvent(bool aIsTrusted, EventMessage aMessage,
                          nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eCompositionEventClass)
   {
@@ -460,7 +462,7 @@ public:
     return this;
   }
 
-  WidgetQueryContentEvent(bool aIsTrusted, uint32_t aMessage,
+  WidgetQueryContentEvent(bool aIsTrusted, EventMessage aMessage,
                           nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eQueryContentEventClass)
     , mSucceeded(false)
@@ -636,7 +638,8 @@ public:
     return this;
   }
 
-  WidgetSelectionEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
+  WidgetSelectionEvent(bool aIsTrusted, EventMessage aMessage,
+                       nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eSelectionEventClass)
     , mOffset(0)
     , mLength(0)
@@ -688,7 +691,7 @@ public:
     return this;
   }
 
-  InternalEditorInputEvent(bool aIsTrusted, uint32_t aMessage,
+  InternalEditorInputEvent(bool aIsTrusted, EventMessage aMessage,
                            nsIWidget* aWidget)
     : InternalUIEvent(aIsTrusted, aMessage, aWidget, eEditorInputEventClass)
     , mIsComposing(false)

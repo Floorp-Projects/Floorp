@@ -1524,7 +1524,7 @@ IMMHandler::HandleEndComposition(nsWindow* aWindow,
     mNativeCaretIsCreated = false;
   }
 
-  uint32_t message =
+  EventMessage message =
     aCommitString ? NS_COMPOSITION_COMMIT : NS_COMPOSITION_COMMIT_AS_IS;
   WidgetCompositionEvent compositionCommitEvent(true, message, aWindow);
   nsIntPoint point(0, 0);

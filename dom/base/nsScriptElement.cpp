@@ -59,10 +59,10 @@ nsScriptElement::ScriptEvaluated(nsresult aResult,
       nsContentUtils::GetContextForContent(cont);
 
     nsEventStatus status = nsEventStatus_eIgnore;
-    uint32_t type = NS_SUCCEEDED(aResult) ? NS_LOAD : NS_LOAD_ERROR;
-    WidgetEvent event(true, type);
+    EventMessage message = NS_SUCCEEDED(aResult) ? NS_LOAD : NS_LOAD_ERROR;
+    WidgetEvent event(true, message);
     // Load event doesn't bubble.
-    event.mFlags.mBubbles = (type != NS_LOAD);
+    event.mFlags.mBubbles = (message != NS_LOAD);
 
     EventDispatcher::Dispatch(cont, presContext, &event, nullptr, &status);
   }

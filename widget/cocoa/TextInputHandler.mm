@@ -2006,7 +2006,7 @@ TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
     return;
   }
 
-  uint32_t message = aDispatchKeyDown ? NS_KEY_DOWN : NS_KEY_UP;
+  EventMessage message = aDispatchKeyDown ? NS_KEY_DOWN : NS_KEY_UP;
 
   // Fire a key event.
   WidgetKeyboardEvent keyEvent(true, message, mWidget);
@@ -2740,7 +2740,7 @@ IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitString)
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
-  uint32_t message =
+  EventMessage message =
     aCommitString ? NS_COMPOSITION_COMMIT : NS_COMPOSITION_COMMIT_AS_IS;
   WidgetCompositionEvent compositionCommitEvent(true, message, mWidget);
   compositionCommitEvent.time = PR_IntervalNow();
