@@ -1242,24 +1242,6 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
   HWND hWnd = GetHWNDFor(accessible);
   NS_ENSURE_TRUE(hWnd, NS_ERROR_FAILURE);
 
-  nsAutoString tag;
-  nsAutoCString id;
-  nsIContent* cnt = accessible->GetContent();
-  if (cnt) {
-    cnt->NodeInfo()->NameAtom()->ToString(tag);
-    nsIAtom* aid = cnt->GetID();
-    if (aid)
-      aid->ToUTF8String(id);
-  }
-
-#ifdef A11Y_LOG
-  if (logging::IsEnabled(logging::ePlatforms)) {
-    printf("\n\nMSAA event: event: %d, target: %s@id='%s', childid: %d, hwnd: %p\n\n",
-           eventType, NS_ConvertUTF16toUTF8(tag).get(), id.get(),
-           childID, hWnd);
-  }
-#endif
-
   // Fire MSAA event for client area window.
   ::NotifyWinEvent(winEvent, hWnd, OBJID_CLIENT, childID);
 
