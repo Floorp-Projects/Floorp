@@ -13,7 +13,7 @@ add_task(function* () {
 
   info("Navigating to different URL.");
   let navigated = toolbox.target.once("navigate");
-  content.location = URL_2;
+  navigateTo(toolbox, URL_2);
 
   info("Waiting for 'navigate' event from toolbox target.");
   yield navigated;

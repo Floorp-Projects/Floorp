@@ -20,7 +20,7 @@ add_task(function* () {
   yield selectNode("#i1", inspector);
 
   info("Navigating to a different page.");
-  content.location = TEST_URL_2;
+  yield navigateTo(toolbox, TEST_URL_2);
 
   info("Waiting for markup view to load after navigation.");
   yield markuploaded;
