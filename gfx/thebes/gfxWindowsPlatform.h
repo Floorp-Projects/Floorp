@@ -140,8 +140,6 @@ public:
         RENDER_MODE_MAX
     };
 
-    int GetScreenDepth() const;
-
     RenderMode GetRenderMode() { return mRenderMode; }
     void SetRenderMode(RenderMode rmode) { mRenderMode = rmode; }
 
