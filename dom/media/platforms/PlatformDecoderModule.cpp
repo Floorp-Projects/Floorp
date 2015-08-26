@@ -52,6 +52,8 @@ bool PlatformDecoderModule::sAndroidMCDecoderEnabled = false;
 bool PlatformDecoderModule::sAndroidMCDecoderPreferred = false;
 bool PlatformDecoderModule::sGMPDecoderEnabled = false;
 bool PlatformDecoderModule::sEnableFuzzingWrapper = false;
+uint32_t PlatformDecoderModule::sVideoOutputMinimumInterval_ms = 0;
+bool PlatformDecoderModule::sDontDelayInputExhausted = false;
 
 /* static */
 void
@@ -85,6 +87,10 @@ PlatformDecoderModule::Init()
 
   Preferences::AddBoolVarCache(&sEnableFuzzingWrapper,
                                "media.decoder.fuzzing.enabled", false);
+  Preferences::AddUintVarCache(&sVideoOutputMinimumInterval_ms,
+                               "media.decoder.fuzzing.video-output-minimum-interval-ms", 0);
+  Preferences::AddBoolVarCache(&sDontDelayInputExhausted,
+                               "media.decoder.fuzzing.dont-delay-inputexhausted", false);
 
 #ifdef XP_WIN
   WMFDecoderModule::Init();
@@ -221,6 +227,9 @@ PlatformDecoderModule::CreateDecoder(const TrackInfo& aConfig,
   nsRefPtr<DecoderCallbackFuzzingWrapper> callbackWrapper;
   if (sEnableFuzzingWrapper) {
     callbackWrapper = new DecoderCallbackFuzzingWrapper(aCallback);
+    callbackWrapper->SetVideoOutputMinimumInterval(
+      TimeDuration::FromMilliseconds(sVideoOutputMinimumInterval_ms));
+    callbackWrapper->SetDontDelayInputExhausted(sDontDelayInputExhausted);
     callback = callbackWrapper.get();
   }
 
