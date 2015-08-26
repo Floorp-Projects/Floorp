@@ -20,22 +20,22 @@ const RULERS_MAX_Y_AXIS = 15000;
 const RULERS_TEXT_STEP = 100;
 
 add_task(function*() {
-  let { inspector, toolbox } = yield openInspectorForURL(TEST_URL);
+  let { inspector, toolbox, testActor } = yield openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
 
   let highlighter = yield front.getHighlighterByType("RulersHighlighter");
 
-  yield isHiddenByDefault(highlighter, inspector);
-  yield hasRightLabelsContent(highlighter, inspector);
+  yield isHiddenByDefault(highlighter, inspector, testActor);
+  yield hasRightLabelsContent(highlighter, inspector, testActor);
 
   yield highlighter.finalize();
 });
 
-function* isHiddenByDefault(highlighterFront, inspector) {
+function* isHiddenByDefault(highlighterFront, inspector, testActor) {
   info("Checking the highlighter is hidden by default");
 
-  let hidden = yield getHighlighterNodeAttribute(highlighterFront,
-      ID + "elements", "hidden");
+  let hidden = yield testActor.getHighlighterNodeAttribute(
+      ID + "elements", "hidden", highlighterFront);
 
   is(hidden, "true", "highlighter is hidden by default");
 
@@ -45,17 +45,17 @@ function* isHiddenByDefault(highlighterFront, inspector) {
   let body = yield getNodeFront("body", inspector);
   yield highlighterFront.show(body);
 
-  hidden = yield getHighlighterNodeAttribute(highlighterFront,
-      ID + "elements", "hidden");
+  hidden = yield testActor.getHighlighterNodeAttribute(
+      ID + "elements", "hidden", highlighterFront);
 
   isnot(hidden, "true", "highlighter is visible after show");
 }
 
-function* hasRightLabelsContent(highlighterFront, inspector) {
+function* hasRightLabelsContent(highlighterFront, inspector, testActor) {
   info("Checking the rulers have the proper text, based on rulers' size");
 
-  let contentX = yield getHighlighterNodeTextContent(highlighterFront, `${ID}x-axis-text`);
-  let contentY = yield getHighlighterNodeTextContent(highlighterFront, `${ID}y-axis-text`);
+  let contentX = yield testActor.getHighlighterNodeTextContent(`${ID}x-axis-text`, highlighterFront);
+  let contentY = yield testActor.getHighlighterNodeTextContent(`${ID}y-axis-text`, highlighterFront);
 
   let expectedX = "";
   for (let i = RULERS_TEXT_STEP; i < RULERS_MAX_X_AXIS; i+= RULERS_TEXT_STEP)

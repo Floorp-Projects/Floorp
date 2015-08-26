@@ -20,18 +20,15 @@ const TEST_DATA = [
   {
     desc: "Guides and infobar should be shown by default",
     options: {},
-    checkHighlighter: function*(toolbox) {
-      let hidden = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-nodeinfobar-container", "hidden");
+    checkHighlighter: function*(testActor) {
+      let hidden = yield testActor.getHighlighterNodeAttribute("box-model-nodeinfobar-container", "hidden");
       ok(!hidden, "Node infobar is visible");
 
-      hidden = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-elements", "hidden");
+      hidden = yield testActor.getHighlighterNodeAttribute("box-model-elements", "hidden");
       ok(!hidden, "SVG container is visible");
 
       for (let side of ["top", "right", "bottom", "left"]) {
-        hidden = yield getHighlighterNodeAttribute(toolbox.highlighter,
-          "box-model-guide-" + side, "hidden");
+        hidden = yield testActor.getHighlighterNodeAttribute("box-model-guide-" + side, "hidden");
         ok(!hidden, side + " guide is visible");
       }
     }
@@ -39,9 +36,9 @@ const TEST_DATA = [
   {
     desc: "All regions should be shown by default",
     options: {},
-    checkHighlighter: function*(toolbox) {
+    checkHighlighter: function*(testActor) {
       for (let region of ["margin", "border", "padding", "content"]) {
-        let {d} = yield getHighlighterRegionPath(region, toolbox.highlighter);
+        let {d} = yield testActor.getHighlighterRegionPath(region);
         ok(d, "Region " + region + " has set coordinates");
       }
     }
@@ -49,10 +46,9 @@ const TEST_DATA = [
   {
     desc: "Guides can be hidden",
     options: {hideGuides: true},
-    checkHighlighter: function*(toolbox) {
+    checkHighlighter: function*(testActor) {
       for (let side of ["top", "right", "bottom", "left"]) {
-        let hidden = yield getHighlighterNodeAttribute(toolbox.highlighter,
-          "box-model-guide-" + side, "hidden");
+        let hidden = yield testActor.getHighlighterNodeAttribute("box-model-guide-" + side, "hidden");
         is(hidden, "true", side + " guide has been hidden");
       }
     }
@@ -60,60 +56,55 @@ const TEST_DATA = [
   {
     desc: "Infobar can be hidden",
     options: {hideInfoBar: true},
-    checkHighlighter: function*(toolbox) {
-      let hidden = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-nodeinfobar-container", "hidden");
+    checkHighlighter: function*(testActor) {
+      let hidden = yield testActor.getHighlighterNodeAttribute("box-model-nodeinfobar-container", "hidden");
       is(hidden, "true", "nodeinfobar has been hidden");
     }
   },
   {
     desc: "One region only can be shown (1)",
     options: {showOnly: "content"},
-    checkHighlighter: function*(toolbox) {
-      let {d} = yield getHighlighterRegionPath("margin", toolbox.highlighter);
+    checkHighlighter: function*(testActor) {
+      let {d} = yield testActor.getHighlighterRegionPath("margin");
       ok(!d, "margin region is hidden");
 
-      ({d} = yield getHighlighterRegionPath("border", toolbox.highlighter));
+      ({d} = yield testActor.getHighlighterRegionPath("border"));
       ok(!d, "border region is hidden");
 
-      ({d} = yield getHighlighterRegionPath("padding", toolbox.highlighter));
+      ({d} = yield testActor.getHighlighterRegionPath("padding"));
       ok(!d, "padding region is hidden");
 
-      ({d} = yield getHighlighterRegionPath("content", toolbox.highlighter));
+      ({d} = yield testActor.getHighlighterRegionPath("content"));
       ok(d, "content region is shown");
     }
   },
   {
     desc: "One region only can be shown (2)",
     options: {showOnly: "margin"},
-    checkHighlighter: function*(toolbox) {
-      let {d} = yield getHighlighterRegionPath("margin", toolbox.highlighter);
+    checkHighlighter: function*(testActor) {
+      let {d} = yield testActor.getHighlighterRegionPath("margin");
       ok(d, "margin region is shown");
 
-      ({d} = yield getHighlighterRegionPath("border", toolbox.highlighter));
+      ({d} = yield testActor.getHighlighterRegionPath("border"));
       ok(!d, "border region is hidden");
 
-      ({d} = yield getHighlighterRegionPath("padding", toolbox.highlighter));
+      ({d} = yield testActor.getHighlighterRegionPath("padding"));
       ok(!d, "padding region is hidden");
 
-      ({d} = yield getHighlighterRegionPath("content", toolbox.highlighter));
+      ({d} = yield testActor.getHighlighterRegionPath("content"));
       ok(!d, "content region is hidden");
     }
   },
   {
     desc: "Guides can be drawn around a given region (1)",
     options: {region: "padding"},
-    checkHighlighter: function*(toolbox) {
-      let topY1 = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-guide-top", "y1");
-      let rightX1 = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-guide-right", "x1");
-      let bottomY1 = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-guide-bottom", "y1");
-      let leftX1 = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-guide-left", "x1");
+    checkHighlighter: function*(testActor) {
+      let topY1 = yield testActor.getHighlighterNodeAttribute("box-model-guide-top", "y1");
+      let rightX1 = yield testActor.getHighlighterNodeAttribute("box-model-guide-right", "x1");
+      let bottomY1 = yield testActor.getHighlighterNodeAttribute("box-model-guide-bottom", "y1");
+      let leftX1 = yield testActor.getHighlighterNodeAttribute("box-model-guide-left", "x1");
 
-      let {points} = yield getHighlighterRegionPath("padding", toolbox.highlighter);
+      let {points} = yield testActor.getHighlighterRegionPath("padding");
       points = points[0];
 
       is(Math.ceil(topY1), points[0][1], "Top guide's y1 is correct");
@@ -125,17 +116,13 @@ const TEST_DATA = [
   {
     desc: "Guides can be drawn around a given region (2)",
     options: {region: "margin"},
-    checkHighlighter: function*(toolbox) {
-      let topY1 = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-guide-top", "y1");
-      let rightX1 = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-guide-right", "x1");
-      let bottomY1 = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-guide-bottom", "y1");
-      let leftX1 = yield getHighlighterNodeAttribute(toolbox.highlighter,
-        "box-model-guide-left", "x1");
+    checkHighlighter: function*(testActor) {
+      let topY1 = yield testActor.getHighlighterNodeAttribute("box-model-guide-top", "y1");
+      let rightX1 = yield testActor.getHighlighterNodeAttribute("box-model-guide-right", "x1");
+      let bottomY1 = yield testActor.getHighlighterNodeAttribute("box-model-guide-bottom", "y1");
+      let leftX1 = yield testActor.getHighlighterNodeAttribute("box-model-guide-left", "x1");
 
-      let {points} = yield getHighlighterRegionPath("margin", toolbox.highlighter);
+      let {points} = yield testActor.getHighlighterRegionPath("margin");
       points = points[0];
 
       is(Math.ceil(topY1), points[0][1], "Top guide's y1 is correct");
@@ -147,14 +134,12 @@ const TEST_DATA = [
   {
     desc: "When showOnly is used, other regions can be faded",
     options: {showOnly: "margin", onlyRegionArea: true},
-    checkHighlighter: function*(toolbox) {
-      let h = toolbox.highlighter;
-
+    checkHighlighter: function*(testActor) {
       for (let region of ["margin", "border", "padding", "content"]) {
-        let {d} = yield getHighlighterRegionPath(region, h);
+        let {d} = yield testActor.getHighlighterRegionPath(region);
         ok(d, "Region " + region + " is shown (it has a d attribute)");
 
-        let faded = yield getHighlighterNodeAttribute(h,
+        let faded = yield testActor.getHighlighterNodeAttribute(
                           "box-model-" + region, "faded");
         if (region === "margin") {
           ok(!faded, "The margin region is not faded");
@@ -167,14 +152,12 @@ const TEST_DATA = [
   {
     desc: "When showOnly is used, other regions can be faded (2)",
     options: {showOnly: "padding", onlyRegionArea: true},
-    checkHighlighter: function*(toolbox) {
-      let h = toolbox.highlighter;
-
+    checkHighlighter: function*(testActor) {
       for (let region of ["margin", "border", "padding", "content"]) {
-        let {d} = yield getHighlighterRegionPath(region, h);
+        let {d} = yield testActor.getHighlighterRegionPath(region);
         ok(d, "Region " + region + " is shown (it has a d attribute)");
 
-        let faded = yield getHighlighterNodeAttribute(h,
+        let faded = yield testActor.getHighlighterNodeAttribute(
                           "box-model-" + region, "faded");
         if (region === "padding") {
           ok(!faded, "The padding region is not faded");
@@ -187,7 +170,7 @@ const TEST_DATA = [
 ];
 
 add_task(function*() {
-  let {inspector, toolbox} = yield openInspectorForURL(TEST_URL);
+  let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
 
   let divFront = yield getNodeFront("div", inspector);
 
@@ -197,7 +180,7 @@ add_task(function*() {
     info("Show the box-model highlighter with options " + options);
     yield toolbox.highlighter.showBoxModel(divFront, options);
 
-    yield checkHighlighter(toolbox);
+    yield checkHighlighter(testActor);
 
     info("Hide the box-model highlighter");
     yield toolbox.highlighter.hideBoxModel();
