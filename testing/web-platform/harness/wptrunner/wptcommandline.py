@@ -154,6 +154,8 @@ def create_parser(product_choices=None):
     gecko_group = parser.add_argument_group("Gecko-specific")
     gecko_group.add_argument("--prefs-root", dest="prefs_root", action="store", type=abs_path,
                              help="Path to the folder containing browser prefs")
+    gecko_group.add_argument("--e10s", dest="gecko_e10s", action="store_true",
+                             help="Path to the folder containing browser prefs")
 
     b2g_group = parser.add_argument_group("B2G-specific")
     b2g_group.add_argument("--b2g-no-backup", action="store_true", default=False,
