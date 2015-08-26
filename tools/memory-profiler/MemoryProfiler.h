@@ -9,11 +9,11 @@
 
 #include "nsIMemoryProfiler.h"
 
+#include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
 
 #include "CompactTraceTable.h"
-#include "UncensoredAllocator.h"
-
+#include "nsTArray.h"
 #include "prlock.h"
 
 #define MEMORY_PROFILER_CID                                     \
@@ -23,6 +23,7 @@
 #define MEMORY_PROFILER_CONTRACT_ID "@mozilla.org/tools/memory-profiler;1"
 
 struct JSRuntime;
+struct PRLock;
 
 namespace mozilla {
 
@@ -38,7 +39,8 @@ struct ProfilerForJSRuntime
   GCHeapProfilerImpl* mProfiler;
   bool mEnabled;
 };
-using JSRuntimeProfilerMap = u_unordered_map<JSRuntime*, ProfilerForJSRuntime>;
+using JSRuntimeProfilerMap =
+  nsDataHashtable<nsClearingPtrHashKey<JSRuntime>, ProfilerForJSRuntime>;
 
 class MemoryProfiler final : public nsIMemoryProfiler
 {
@@ -55,8 +57,8 @@ private:
   static PRLock* sLock;
   static uint32_t sProfileRuntimeCount;
 
-  static NativeProfilerImpl* sNativeProfiler;
-  static JSRuntimeProfilerMap* sJSRuntimeProfilerMap;
+  static StaticAutoPtr<NativeProfilerImpl> sNativeProfiler;
+  static StaticAutoPtr<JSRuntimeProfilerMap> sJSRuntimeProfilerMap;
   static TimeStamp sStartTime;
 };
 
@@ -80,24 +82,30 @@ struct AllocEntry {
   uint32_t mEventIdx : 31;
   bool mMarked : 1;
 
-  AllocEntry(int aEventIdx)
+  // Default constructor for uninitialized stack value required by
+  // getter methods.
+  AllocEntry()
+    : mEventIdx(0)
+    , mMarked(false)
+  {}
+  explicit AllocEntry(int aEventIdx)
     : mEventIdx(aEventIdx)
     , mMarked(false)
   {}
 };
 
-using AllocMap = u_unordered_map<void*, AllocEntry>;
+using AllocMap = nsDataHashtable<nsClearingVoidPtrHashKey, AllocEntry>;
 
 class ProfilerImpl
 {
 public:
-  static u_vector<u_string> GetStacktrace();
+  static nsTArray<nsCString> GetStacktrace();
   static double DRandom();
 
   ProfilerImpl();
-  virtual u_vector<u_string> GetNames() const = 0;
-  virtual u_vector<TrieNode> GetTraces() const = 0;
-  virtual const u_vector<AllocEvent>& GetEvents() const = 0;
+  virtual nsTArray<nsCString> GetNames() const = 0;
+  virtual nsTArray<TrieNode> GetTraces() const = 0;
+  virtual const nsTArray<AllocEvent>& GetEvents() const = 0;
 
 protected:
   /**
