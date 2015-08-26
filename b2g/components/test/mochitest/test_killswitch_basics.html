@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Enabling of killswitch feature</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+  <script type="application/javascript">
+
+  "use strict";
+
+  function testNotExposed(check) {
+    ok(!("mozKillSwitch" in navigator),
+       "mozKillSwitch not exposed in navigator: " + check);
+  }
+
+  function testIsExposed() {
+    ok(("mozKillSwitch" in navigator), "mozKillSwitch is exposed in navigator");
+    ok(("enable" in navigator.mozKillSwitch), "mozKillSwitch has |enable|");
+    ok(("disable" in navigator.mozKillSwitch), "mozKillSwitch has |disable|");
+  }
+
+  function continueTests() {
+    // Now we should have it!
+    testIsExposed();
+    finish();
+  }
+
+  function finish() {
+    SpecialPowers.removePermission("killswitch", document);
+    SimpleTest.finish();
+  }
+
+  function alreadyHasPermission() {
+    return SpecialPowers.hasPermission("killswitch", document);
+  }
+
+  function addPermission() {
+    var allow = SpecialPowers.Ci.nsIPermissionManager.ALLOW_ACTION;
+    SpecialPowers.addPermission("killswitch", allow, document);
+    window.location.reload();
+  }
+
+  function addPrefIgnoreWebIDL(next) {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["dom.ignore_webidl_scope_checks", true],
+    ]}, next);
+  }
+
+  function addPrefKillSwitch(next) {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["dom.mozKillSwitch.enabled", true],
+    ]}, next);
+  }
+
+  function startTests() {
+    if (alreadyHasPermission()) {
+      continueTests();
+    } else {
+      // Make sure it's not exposed
+      testNotExposed("webidl, pref, perm");
+
+      // Expose certified APIs
+      addPrefIgnoreWebIDL(() => {
+        // Still not exposed because not perm and pref
+        testNotExposed("pref, perm");
+
+        // Add the kill switch pref
+        addPrefKillSwitch(() => {
+          // Still not exposed because not perm
+          testNotExposed("perm");
+
+          // Will reload the page
+          addPermission();
+        });
+      });
+    }
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  startTests();
+  </script>
+</pre>
+</body>
+</html>
