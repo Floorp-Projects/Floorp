@@ -148,7 +148,32 @@ class AddonIDTest(unittest.TestCase):
      <foobar:description>A testing extension based on the Windmill Testing Framework client source</foobar:description>
      <foobar:unpack>true</foobar:unpack>
     </Description>
- </RDF>"""]
+ </RDF>""",
+"""<?xml version="1.0"?>
+<!--
+
+-->
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest"
+               em:id="winning"
+               em:name="Language Pack"
+               em:version="42.0a2"
+               em:type="8"
+               em:creator="Some Contributor">
+    <em:contributor></em:contributor>
+
+    <em:targetApplication>
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>42.0a2</em:minVersion>
+        <em:maxVersion>42.0a2</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+  </Description>
+</RDF>
+"""]
         return tests
 
 if __name__ == '__main__':
