@@ -1146,7 +1146,7 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext* cx)
     // Going into the conditionals, we will have:
     //      FrameDescriptor.size in scratch1
     //      FrameDescriptor.type in scratch2
-    masm.ma_and(scratch2, scratch1, Imm32((1 << FRAMESIZE_SHIFT) - 1));
+    masm.ma_and(scratch2, scratch1, Imm32((1 << FRAMETYPE_BITS) - 1));
     masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), scratch1);
 
     // Handling of each case is dependent on FrameDescriptor.type
