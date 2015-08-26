@@ -32,7 +32,8 @@
 @APPNAME@/Contents/Info.plist
 @APPNAME@/Contents/PkgInfo
 @APPNAME@/Contents/Plug-Ins/
-@RESPATH@
+@RESPATH@/b2g.icns
+@RESPATH@/@LPROJ_ROOT@.lproj/*
 #endif
 
 [@AB_CD@]
