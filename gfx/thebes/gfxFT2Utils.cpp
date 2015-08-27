@@ -123,13 +123,9 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
         lineHeight = typoHeight * yScale;
 
         // If the OS/2 fsSelection USE_TYPO_METRICS bit is set,
-        // or if this is an OpenType Math font,
         // set maxAscent/Descent from the sTypo* fields instead of hhea.
         const uint16_t kUseTypoMetricsMask = 1 << 7;
-        FT_ULong length = 0;
-        if ((os2->fsSelection & kUseTypoMetricsMask) ||
-            0 == FT_Load_Sfnt_Table(mFace, FT_MAKE_TAG('M','A','T','H'),
-                                    0, nullptr, &length)) {
+        if (os2->fsSelection & kUseTypoMetricsMask) {
             aMetrics->maxAscent = NS_round(aMetrics->emAscent);
             aMetrics->maxDescent = NS_round(aMetrics->emDescent);
         } else {
