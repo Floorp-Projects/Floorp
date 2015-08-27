@@ -126,29 +126,54 @@ PathSkia::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule)
   return MakeAndAddRef<PathBuilderSkia>(aTransform, mPath, aFillRule);
 }
 
-bool
-PathSkia::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
+static bool
+SkPathContainsPoint(const SkPath& aPath, const Point& aPoint, const Matrix& aTransform)
 {
+  // Skia's SkPath::contains method does not support the inclusive boundary conditions
+  // required by canvas (bug 831259), so we employ the same workaround as used by Blink.
+  // First, we scale the path up to the largest coordinates that won't cause precision
+  // issues (2^15) and consequently also scale larger paths than that down.
+  // Next, we make a clip region representing the point to be tested and convert the
+  // path to a region within this clip region.
+  // If the resulting region is non-empty, then the path should contain the point.
   Matrix inverse = aTransform;
   inverse.Invert();
-  Point transformed = inverse * aPoint;
+  SkPoint point = PointToSkPoint(inverse * aPoint);
 
-  Rect bounds = GetBounds(aTransform);
-
-  if (aPoint.x < bounds.x || aPoint.y < bounds.y ||
-      aPoint.x > bounds.XMost() || aPoint.y > bounds.YMost()) {
+  SkRect bounds = aPath.getBounds();
+  if (point.fX < bounds.fLeft || point.fY < bounds.fTop ||
+      point.fX > bounds.fRight || point.fY > bounds.fBottom) {
     return false;
   }
 
-  SkRegion pointRect;
-  pointRect.setRect(int32_t(SkFloatToScalar(transformed.x - 1.f)),
-                    int32_t(SkFloatToScalar(transformed.y - 1.f)),
-                    int32_t(SkFloatToScalar(transformed.x + 1.f)),
-                    int32_t(SkFloatToScalar(transformed.y + 1.f)));
+  SkPoint scale = SkPoint::Make(SkMaxScalar(bounds.fRight, -bounds.fLeft),
+                                SkMaxScalar(bounds.fBottom, -bounds.fTop));
+  if (SkScalarNearlyZero(scale.fX) || SkScalarNearlyZero(scale.fY)) {
+    return false;
+  }
+  scale.set(SkMaxScalar(scale.fX, SkScalarAbs(point.fX) + SK_Scalar1),
+            SkMaxScalar(scale.fY, SkScalarAbs(point.fY) + SK_Scalar1));
+
+  const SkScalar maxCoord = SkIntToScalar(1 << 15);
+  SkMatrix scaleMatrix;
+  scaleMatrix.setScale(maxCoord / scale.fX, maxCoord / scale.fY);
+
+  SkPath scaledPath(aPath);
+  scaledPath.transform(scaleMatrix, nullptr);
+
+  scaleMatrix.mapPoints(&point, 1);
+  SkRegion pointClip(SkIRect::MakeXYWH(SkScalarRoundToInt(point.fX) - 1,
+                                       SkScalarRoundToInt(point.fY) - 1,
+                                       2, 2));
 
   SkRegion pathRegion;
-  
-  return pathRegion.setPath(mPath, pointRect);
+  return pathRegion.setPath(scaledPath, pointClip);
+}
+
+bool
+PathSkia::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
+{
+  return SkPathContainsPoint(mPath, aPoint, aTransform);
 }
 
 bool
@@ -156,32 +181,13 @@ PathSkia::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
                               const Point &aPoint,
                               const Matrix &aTransform) const
 {
-  Matrix inverse = aTransform;
-  inverse.Invert();
-  Point transformed = inverse * aPoint;
-
   SkPaint paint;
   StrokeOptionsToPaint(paint, aStrokeOptions);
 
   SkPath strokePath;
   paint.getFillPath(mPath, &strokePath);
 
-  Rect bounds = aTransform.TransformBounds(SkRectToRect(strokePath.getBounds()));
-
-  if (aPoint.x < bounds.x || aPoint.y < bounds.y ||
-      aPoint.x > bounds.XMost() || aPoint.y > bounds.YMost()) {
-    return false;
-  }
-
-  SkRegion pointRect;
-  pointRect.setRect(int32_t(SkFloatToScalar(transformed.x - 1.f)),
-                    int32_t(SkFloatToScalar(transformed.y - 1.f)),
-                    int32_t(SkFloatToScalar(transformed.x + 1.f)),
-                    int32_t(SkFloatToScalar(transformed.y + 1.f)));
-
-  SkRegion pathRegion;
-  
-  return pathRegion.setPath(strokePath, pointRect);
+  return SkPathContainsPoint(strokePath, aPoint, aTransform);
 }
 
 Rect
