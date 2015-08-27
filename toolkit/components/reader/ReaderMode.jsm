@@ -228,6 +228,12 @@ this.ReaderMode = {
             }
           }
         }
+        if (xhr.responseURL != url) {
+          // We were redirected without a meta refresh tag.
+          // Force redirect to the correct place:
+          reject({newURL: xhr.responseURL});
+          return;
+        }
         resolve(doc);
         histogram.add(DOWNLOAD_SUCCESS);
       }
