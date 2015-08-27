@@ -34,7 +34,6 @@ public:
   uint32_t RegisterForCommand(nsMenuItemX* aItem);
   void UnregisterCommand(uint32_t aCommandID);
   nsMenuItemX* GetMenuItemForCommandID(uint32_t inCommandID);
-  void AddMenuItemInfoToSet(MenuItemInfo* info);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMUTATIONOBSERVER
@@ -52,12 +51,6 @@ protected:
 
   // stores mapping of command IDs to menu objects
   nsDataHashtable<nsUint32HashKey, nsMenuItemX *> mCommandToMenuObjectTable;
-
-  // Stores references to all the MenuItemInfo objects created with weak
-  // references to us.  They may live longer than we do, so when we're
-  // destroyed we need to clear all their weak references.  This avoids
-  // crashes in -[NativeMenuItemTarget menuItemHit:].  See bug 1131473.
-  NSMutableSet* mInfoSet;
 };
 
 #endif // nsMenuGroupOwner_h_
