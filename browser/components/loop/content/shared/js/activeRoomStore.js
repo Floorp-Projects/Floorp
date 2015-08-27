@@ -273,7 +273,6 @@ loop.store.ActiveRoomStore = (function() {
             roomContextUrls: roomData.decryptedContext.urls,
             roomDescription: roomData.decryptedContext.description,
             roomName: roomData.decryptedContext.roomName,
-            roomOwner: roomData.roomOwner,
             roomUrl: roomData.roomUrl,
             socialShareProviders: this._mozLoop.getSocialShareProviders()
           }));
@@ -325,7 +324,6 @@ loop.store.ActiveRoomStore = (function() {
         }
 
         var roomInfoData = new sharedActions.UpdateRoomInfo({
-          roomOwner: result.roomOwner,
           roomUrl: result.roomUrl
         });
 
@@ -396,7 +394,6 @@ loop.store.ActiveRoomStore = (function() {
         roomContextUrls: actionData.roomContextUrls,
         roomDescription: actionData.roomDescription,
         roomName: actionData.roomName,
-        roomOwner: actionData.roomOwner,
         roomState: ROOM_STATES.READY,
         roomToken: actionData.roomToken,
         roomUrl: actionData.roomUrl,
@@ -420,7 +417,6 @@ loop.store.ActiveRoomStore = (function() {
      */
     updateRoomInfo: function(actionData) {
       var newState = {
-        roomOwner: actionData.roomOwner,
         roomUrl: actionData.roomUrl
       };
       // Iterate over the optional fields that _may_ be present on the actionData
@@ -456,7 +452,6 @@ loop.store.ActiveRoomStore = (function() {
         urls: roomData.decryptedContext.urls,
         description: roomData.decryptedContext.description,
         roomName: roomData.decryptedContext.roomName,
-        roomOwner: roomData.roomOwner,
         roomUrl: roomData.roomUrl
       }));
     },
