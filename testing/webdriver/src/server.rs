@@ -210,8 +210,8 @@ impl Handler for HttpHandler {
                         (err.http_status(), err.to_json_string())
                     }
                 };
-                error!("Returning status {:?}", status);
-                error!("Returning body {}", resp_body);
+                debug!("Returning status {:?}", status);
+                debug!("Returning body {}", resp_body);
                 {
                     let resp_status = res.status_mut();
                     *resp_status = status;
