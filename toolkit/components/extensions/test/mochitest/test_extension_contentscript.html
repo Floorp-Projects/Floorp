@@ -4,7 +4,7 @@
   <title>Test for content script</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript;version=1.8" src="head.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -12,11 +12,9 @@
 <script type="application/javascript;version=1.8">
 "use strict";
 
-const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
-
 add_task(function* test_contentscript()
 {
-  let extension = loadExtension("content_script");
+  let extension = ExtensionTestUtils.loadExtension("content_script");
   yield extension.startup();
   info("extension loaded");
 
