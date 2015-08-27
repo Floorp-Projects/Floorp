@@ -33,6 +33,7 @@ OptimizationInfo::initNormalOptimizationInfo()
     licm_ = true;
     rangeAnalysis_ = true;
     loopUnrolling_ = true;
+    reordering_ = true;
     autoTruncate_ = true;
     sink_ = true;
     registerAllocator_ = RegisterAllocator_Backtracking;
