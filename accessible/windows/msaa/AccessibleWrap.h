@@ -177,6 +177,11 @@ public: // construction, destruction
 
   static IDispatch* NativeAccessible(Accessible* aAccessible);
 
+#ifdef _WIN64
+  uint32_t GetExistingID() const { return mID; }
+  static const uint32_t kNoID = 0;
+#endif
+
 protected:
   virtual ~AccessibleWrap();
 

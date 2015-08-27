@@ -59,6 +59,17 @@ a11y::ProxyDestroyed(ProxyAccessible* aProxy)
   if (!wrapper)
     return;
 
+  auto doc =
+    static_cast<DocProxyAccessibleWrap*>(WrapperFor(aProxy->Document()));
+#ifdef _WIN64
+  uint32_t id = wrapper->GetExistingID();
+  if (id != AccessibleWrap::kNoID) {
+    doc->RemoveID(id);
+  }
+#else
+  doc->RemoveID(-reinterpret_cast<int32_t>(wrapper));
+#endif
+
   wrapper->Shutdown();
   aProxy->SetWrapper(0);
   wrapper->Release();
