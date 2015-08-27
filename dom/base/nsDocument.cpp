@@ -11733,7 +11733,14 @@ nsDocument::RequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
   // If we have been in fullscreen, apply the new state directly.
   // Note that we should check both condition, because if we are in
   // child process, our window may not report to be in fullscreen.
-  if (static_cast<nsGlobalWindow*>(rootWin.get())->FullScreen() ||
+  // Also, it is possible that the root window reports that it is in
+  // fullscreen while there exists pending fullscreen request because
+  // of ongoing fullscreen transition. In that case, we shouldn't
+  // apply the state before any previous request.
+  if ((static_cast<nsGlobalWindow*>(rootWin.get())->FullScreen() &&
+       // The iterator being at end at the beginning indicates there is
+       // no pending fullscreen request which relates to this document.
+       PendingFullscreenRequestList::Iterator(this).AtEnd()) ||
       nsContentUtils::GetRootDocument(this)->IsFullScreenDoc()) {
     ApplyFullscreen(*aRequest);
     return;
