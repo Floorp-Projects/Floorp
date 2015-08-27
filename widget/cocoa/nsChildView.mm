@@ -4975,6 +4975,22 @@ PanGestureTypeForEvent(NSEvent* aEvent)
     panEvent.mLineOrPageDeltaX = lineOrPageDeltaX;
     panEvent.mLineOrPageDeltaY = lineOrPageDeltaY;
     widgetWheelEvent = mGeckoChild->DispatchAPZWheelInputEvent(panEvent);
+
+    if (!mGeckoChild) {
+      return;
+    }
+
+#ifdef __LP64__
+    if ((widgetWheelEvent.deltaX != 0.0 || widgetWheelEvent.deltaY != 0.0)) {
+      // overflowDeltaX and overflowDeltaY tell us when the user has tried to
+      // scroll past the edge of a page (in those cases it's non-zero).
+      [self maybeTrackScrollEventAsSwipe:theEvent
+                         scrollOverflowX:widgetWheelEvent.overflowDeltaX
+                         scrollOverflowY:widgetWheelEvent.overflowDeltaY
+                  viewPortIsOverscrolled:widgetWheelEvent.mViewPortIsOverscrolled];
+    }
+#endif // #ifdef __LP64__
+
   } else if (usePreciseDeltas) {
     // This is on 10.6 or old touchpads that don't have any phase information.
     ScrollWheelInput wheelEvent(eventIntervalTime, eventTimeStamp, modifiers,
@@ -5002,22 +5018,6 @@ PanGestureTypeForEvent(NSEvent* aEvent)
     wheelEvent.mLineOrPageDeltaY = lineOrPageDeltaY;
     widgetWheelEvent = mGeckoChild->DispatchAPZWheelInputEvent(wheelEvent);
   }
-
-  if (!mGeckoChild) {
-    return;
-  }
-
-#ifdef __LP64__
-  // overflowDeltaX and overflowDeltaY tell us when the user has tried to
-  // scroll past the edge of a page (in those cases it's non-zero).
-  if (usePreciseDeltas &&
-      (widgetWheelEvent.deltaX != 0.0 || widgetWheelEvent.deltaY != 0.0)) {
-    [self maybeTrackScrollEventAsSwipe:theEvent
-                       scrollOverflowX:widgetWheelEvent.overflowDeltaX
-                       scrollOverflowY:widgetWheelEvent.overflowDeltaY
-                viewPortIsOverscrolled:widgetWheelEvent.mViewPortIsOverscrolled];
-  }
-#endif // #ifdef __LP64__
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
