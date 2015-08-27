@@ -4,7 +4,7 @@
   <title>Test for simple WebExtension</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript;version=1.8" src="head.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -75,7 +75,7 @@ function compareLists(list1, list2, kind)
 
 function* test_once()
 {
-  let extension = loadExtension("webrequest");
+  let extension = ExtensionTestUtils.loadExtension("webrequest");
   yield extension.startup();
   yield extension.awaitMessage("ready");
   info("webrequest extension loaded");

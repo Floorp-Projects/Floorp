@@ -9,6 +9,7 @@ TEST_HARNESS_FILES.testing.mochitest.tests.SimpleTest += [
     '/testing/specialpowers/content/MozillaLogger.js',
     'ChromeUtils.js',
     'EventUtils.js',
+    'ExtensionTestUtils.js',
     'iframe-between-tests.html',
     'LogController.js',
     'MemoryStats.js',
