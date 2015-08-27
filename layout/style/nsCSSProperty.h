@@ -8,6 +8,8 @@
 #ifndef nsCSSProperty_h___
 #define nsCSSProperty_h___
 
+#include <nsHashKeys.h>
+
 /*
    Declare the enum list using the magic of preprocessing
    enum values are "eCSSProperty_foo" (where foo is the property)
@@ -63,6 +65,17 @@ enum nsCSSProperty {
   // Extra value to represent custom properties (--*).
   eCSSPropertyExtra_variable
 };
+
+namespace mozilla {
+
+template<>
+inline PLDHashNumber
+Hash<nsCSSProperty>(const nsCSSProperty& aValue)
+{
+  return uint32_t(aValue);
+}
+
+} // namespace mozilla
 
 // The "descriptors" that can appear in a @font-face rule.
 // They have the syntax of properties but different value rules.
