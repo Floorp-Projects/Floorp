@@ -22,11 +22,13 @@
 class nsIURI;
 class nsIPrincipal;
 class nsINetworkInterceptController;
+class nsICorsPreflightCallback;
 
 nsresult
 NS_StartCORSPreflight(nsIChannel* aRequestChannel,
                       nsIStreamListener* aListener,
                       nsIPrincipal* aPrincipal,
+                      nsICorsPreflightCallback* aCallback,
                       bool aWithCredentials,
                       nsTArray<nsCString>& aACUnsafeHeaders,
                       nsIChannel** aPreflightChannel);
