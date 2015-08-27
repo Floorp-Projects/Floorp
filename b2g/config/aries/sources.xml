@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="e935894ef5f27e2f04b9e929a45a958e6288a223">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="ae6ec2b676d2170ac77daf86749e451547b07807"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="628a4c4a0ca74fad7107883e1832527293e0575e"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="62cfa11ae7d77f6330de019a5aa79607e35be7d1"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -73,7 +73,7 @@
   <project name="platform/external/libselinux" path="external/libselinux" revision="1e2cf2c4a2d15a9b1ca2d353b99fb6884413ffe1"/>
   <project name="platform/external/libsepol" path="external/libsepol" revision="edc447a138ec77236f1cbfd36c1211a38ba21418"/>
   <project name="platform/external/libvpx" path="external/libvpx" revision="ca9281af0bfe816f1ae2fc3e8771524164a0a03c"/>
-  <project name="platform/external/mdnsresponder" path="external/mdnsresponder" revision="c46f53f5e072f23051c4eedef730386f7634dc11"/>
+  <project name="platform/external/mdnsresponder" path="external/mdnsresponder" remote="caf" revision="dd17df3f6775c4366a5c1d21865370d60a3b1295"/>
   <project name="platform/external/mksh" path="external/mksh" revision="f8c396c4d446a038358106a301b329607a04633d"/>
   <project name="platform/external/netcat" path="external/netcat" revision="444644cfa9a2f3002863caa168fb2d6b34dfd1e8"/>
   <project name="platform/external/openssl" path="external/openssl" revision="bb8428f762b3632f493572c4f73957e1281ade79"/>
