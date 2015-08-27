@@ -68,6 +68,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIStringStream.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "TimeManager.h"
 #include "DeviceStorage.h"
 #include "nsIDOMNavigatorSystemMessages.h"
@@ -1322,18 +1323,24 @@ Navigator::SendBeacon(const nsAString& aUrl,
     nsCOMPtr<nsIInterfaceRequestor> soc = nsContentUtils::SameOriginChecker();
     channel->SetNotificationCallbacks(soc);
 
-    nsCOMPtr<nsIChannel> preflightChannel;
+    nsCOMPtr<nsIHttpChannelInternal> internalChannel =
+      do_QueryInterface(channel);
+    if (!internalChannel) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return false;
+    }
     nsTArray<nsCString> unsafeHeaders;
     unsafeHeaders.AppendElement(NS_LITERAL_CSTRING("Content-Type"));
-    rv = NS_StartCORSPreflight(channel,
-                               beaconListener,
-                               doc->NodePrincipal(),
-                               true,
-                               unsafeHeaders,
-                               getter_AddRefs(preflightChannel));
-  } else {
-    rv = channel->AsyncOpen2(beaconListener);
+    rv = internalChannel->SetCorsPreflightParameters(unsafeHeaders,
+                                                     true,
+                                                     doc->NodePrincipal());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return false;
+    }
   }
+
+  rv = channel->AsyncOpen2(beaconListener);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return false;
