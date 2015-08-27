@@ -248,6 +248,7 @@ Function Properties of the `Debugger.Memory.prototype` Object
       "class": <i>className</i>,
       "constructor": <i>constructorName</i>,
       "size": <i>byteSize</i>,
+      "inNursery": <i>inNursery</i>,
     }
     </code></pre>
 
@@ -268,6 +269,9 @@ Function Properties of the `Debugger.Memory.prototype` Object
       not created with a `new` expression, this property is `null`.
 
     * *byteSize* is the size of the object in bytes.
+
+    * *inNursery* is true if the allocation happened inside the nursery. False
+      if the allocation skipped the nursery and started in the tenured heap.
 
     When `trackingAllocationSites` is `false`, `drainAllocationsLog()` throws an
     `Error`.

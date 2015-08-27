@@ -228,6 +228,10 @@ DebuggerMemory::drainAllocationsLog(JSContext* cx, unsigned argc, Value* vp)
         if (!DefineProperty(cx, obj, cx->names().size, size))
             return false;
 
+        RootedValue inNursery(cx, BooleanValue(entry.inNursery));
+        if (!DefineProperty(cx, obj, cx->names().inNursery, inNursery))
+            return false;
+
         result->setDenseElement(i, ObjectValue(*obj));
 
         // Pop the front queue entry, and delete it immediately, so that the GC
