@@ -446,15 +446,40 @@ bool ConstructSavedFrameStackSlow(JSContext* cx, JS::ubi::StackFrame& frame,
 // variant, is "Other".
 //
 // NB: the values associated with a particular enum variant must not change or
-// be reused for new variants. Doing so will cause inspecting ubi::Node's backed
+// be reused for new variants. Doing so will cause inspecting ubi::Nodes backed
 // by an offline heap snapshot from an older SpiderMonkey/Firefox version to
 // break. Consider this enum append only.
 enum class CoarseType: uint32_t {
-    Object = 0,
-    Script = 1,
-    String = 2,
-    Other  = 3
+    Other  = 0,
+    Object = 1,
+    Script = 2,
+    String = 3,
+
+    FIRST  = Other,
+    LAST   = String
 };
+
+inline uint32_t
+CoarseTypeToUint32(CoarseType type)
+{
+    return static_cast<uint32_t>(type);
+}
+
+inline bool
+Uint32IsValidCoarseType(uint32_t n)
+{
+    auto first = static_cast<uint32_t>(CoarseType::FIRST);
+    auto last = static_cast<uint32_t>(CoarseType::LAST);
+    MOZ_ASSERT(first < last);
+    return first <= n && n <= last;
+}
+
+inline CoarseType
+Uint32ToCoarseType(uint32_t n)
+{
+    MOZ_ASSERT(Uint32IsValidCoarseType(n));
+    return static_cast<CoarseType>(n);
+}
 
 // The base class implemented by each ubi::Node referent type. Subclasses must
 // not add data members to this class.
