@@ -52,6 +52,25 @@ nsHttpHeaderArray::SetHeader(nsHttpAtom header,
 }
 
 nsresult
+nsHttpHeaderArray::SetEmptyHeader(nsHttpAtom header)
+{
+    nsEntry *entry = nullptr;
+
+    LookupEntry(header, &entry);
+
+    if (!entry) {
+        entry = mHeaders.AppendElement(); // new nsEntry()
+        if (!entry)
+            return NS_ERROR_OUT_OF_MEMORY;
+        entry->header = header;
+    } else {
+        entry->value.Truncate();
+    }
+
+    return NS_OK;
+}
+
+nsresult
 nsHttpHeaderArray::SetHeaderFromNet(nsHttpAtom header, const nsACString &value)
 {
     nsEntry *entry = nullptr;
