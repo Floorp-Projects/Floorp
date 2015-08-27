@@ -453,6 +453,40 @@ describe("loop.shared.views.TextChatView", function () {
       expect(view.getDOMNode().classList.contains("text-chat-entries-empty")).eql(false);
     });
 
+    it("should add a showing room name class when the view shows room names and it has a room name", function() {
+      view = mountTestComponent({
+        showRoomName: true
+      });
+
+      store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
+        roomName: "Study",
+        roomUrl: "Fake"
+      }));
+
+      expect(view.getDOMNode().classList.contains("showing-room-name")).eql(true);
+    });
+
+    it("shouldn't add a showing room name class when the view doesn't show room names", function() {
+      view = mountTestComponent({
+        showRoomName: false
+      });
+
+      store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
+        roomName: "Study",
+        roomUrl: "Fake"
+      }));
+
+      expect(view.getDOMNode().classList.contains("showing-room-name")).eql(false);
+    });
+
+    it("shouldn't add a showing room name class when the view doesn't have a name", function() {
+      view = mountTestComponent({
+        showRoomName: true
+      });
+
+      expect(view.getDOMNode().classList.contains("showing-room-name")).eql(false);
+    });
+
     it("should show timestamps from msgs sent more than 1 min apart", function() {
       view = mountTestComponent();
 
