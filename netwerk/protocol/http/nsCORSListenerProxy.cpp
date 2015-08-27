@@ -39,6 +39,7 @@
 #include "nsIDOMWindow.h"
 #include "nsINetworkInterceptController.h"
 #include "nsNullPrincipal.h"
+#include "nsICorsPreflightCallback.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -1045,11 +1046,11 @@ public:
                           nsIStreamListener* aOuterListener,
                           nsISupports* aOuterContext,
                           nsIPrincipal* aReferrerPrincipal,
-                          const nsACString& aRequestMethod,
+                          nsICorsPreflightCallback* aCallback,
                           bool aWithCredentials)
    : mOuterChannel(aOuterChannel), mOuterListener(aOuterListener),
      mOuterContext(aOuterContext), mReferrerPrincipal(aReferrerPrincipal),
-     mRequestMethod(aRequestMethod), mWithCredentials(aWithCredentials)
+     mCallback(aCallback), mWithCredentials(aWithCredentials)
   { }
 
   NS_DECL_ISUPPORTS
@@ -1067,7 +1068,7 @@ private:
   nsCOMPtr<nsIStreamListener> mOuterListener;
   nsCOMPtr<nsISupports> mOuterContext;
   nsCOMPtr<nsIPrincipal> mReferrerPrincipal;
-  nsCString mRequestMethod;
+  nsCOMPtr<nsICorsPreflightCallback> mCallback;
   bool mWithCredentials;
 };
 
@@ -1203,35 +1204,14 @@ nsCORSPreflightListener::OnStartRequest(nsIRequest *aRequest,
     // Everything worked, try to cache and then fire off the actual request.
     AddResultToCache(aRequest);
 
-    nsCOMPtr<nsILoadInfo> loadInfo = mOuterChannel->GetLoadInfo();
-    MOZ_ASSERT(loadInfo, "can not perform CORS preflight without a loadInfo");
-    if (!loadInfo) {
-      return NS_ERROR_FAILURE;
-    }
-    nsSecurityFlags securityMode = loadInfo->GetSecurityMode();
-
-    MOZ_ASSERT(securityMode == 0 ||
-               securityMode == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS,
-               "how did we end up here?");
-
-    if (securityMode == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) {
-      MOZ_ASSERT(!mOuterContext, "AsyncOpen(2) does not take context as a second arg");
-      rv = mOuterChannel->AsyncOpen2(mOuterListener);
-    }
-    else {
-      rv = mOuterChannel->AsyncOpen(mOuterListener, mOuterContext);
-    }
-  }
-
-  if (NS_FAILED(rv)) {
-    mOuterChannel->Cancel(rv);
+    mCallback->OnPreflightSucceeded();
+  } else {
+    mCallback->OnPreflightFailed(rv);
     mOuterListener->OnStartRequest(mOuterChannel, mOuterContext);
     mOuterListener->OnStopRequest(mOuterChannel, mOuterContext, rv);
-    
-    return rv;
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1242,6 +1222,7 @@ nsCORSPreflightListener::OnStopRequest(nsIRequest *aRequest,
   mOuterChannel = nullptr;
   mOuterListener = nullptr;
   mOuterContext = nullptr;
+  mCallback = nullptr;
   return NS_OK;
 }
 
@@ -1283,6 +1264,7 @@ nsresult
 NS_StartCORSPreflight(nsIChannel* aRequestChannel,
                       nsIStreamListener* aListener,
                       nsIPrincipal* aPrincipal,
+                      nsICorsPreflightCallback* aCallback,
                       bool aWithCredentials,
                       nsTArray<nsCString>& aUnsafeHeaders,
                       nsIChannel** aPreflightChannel)
@@ -1316,11 +1298,8 @@ NS_StartCORSPreflight(nsIChannel* aRequestChannel,
     nullptr;
 
   if (entry && entry->CheckRequest(method, aUnsafeHeaders)) {
-    // We have a cached preflight result, just start the original channel
-    if (securityMode == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) {
-      return aRequestChannel->AsyncOpen2(aListener);
-    }
-    return aRequestChannel->AsyncOpen(aListener, nullptr);
+    aCallback->OnPreflightSucceeded();
+    return NS_OK;
   }
 
   // Either it wasn't cached or the cached result has expired. Build a
@@ -1363,7 +1342,7 @@ NS_StartCORSPreflight(nsIChannel* aRequestChannel,
   // Set up listener which will start the original channel
   nsCOMPtr<nsIStreamListener> preflightListener =
     new nsCORSPreflightListener(aRequestChannel, aListener, nullptr, aPrincipal,
-                                method, aWithCredentials);
+                                aCallback, aWithCredentials);
   NS_ENSURE_TRUE(preflightListener, NS_ERROR_OUT_OF_MEMORY);
 
   // Start preflight
