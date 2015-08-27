@@ -8,10 +8,13 @@
 
 <!ENTITY privateBrowsing.title                 "Private Browsing">
 
-<!-- LOCALIZATION NOTE (aboutPrivateBrowsing.width):
-     Width of the Private Browsing section.
+<!-- LOCALIZATION NOTE (aboutPrivateBrowsing.width1):
+     Width of the Private Browsing section. This should depend primarily on the
+     length of the headers and text, but should be roughly 1.5 times the width
+     of the Tracking Protection section, and in general not much larger than
+     30em to prevent the sections from wrapping on smaller window sizes.
      -->
-<!ENTITY aboutPrivateBrowsing.width            "25em">
+<!ENTITY aboutPrivateBrowsing.width1           "30em">
 
 <!-- LOCALIZATION NOTE (aboutPrivateBrowsing.subtitle,
      aboutPrivateBrowsing.info.forgotten, aboutPrivateBrowsing.info.kept):
@@ -36,11 +39,15 @@
 <!ENTITY aboutPrivateBrowsing.note1            "Please note that your employer or Internet service provider can still track the pages you visit.">
 <!ENTITY aboutPrivateBrowsing.learnMore        "Learn More.">
 
-<!-- LOCALIZATION NOTE (trackingProtection.width):
-     Width of the Tracking Protection section. This should be enough to
-     accommodate the title as well as the enabled or disabled indicator.
+<!-- LOCALIZATION NOTE (trackingProtection.width1):
+     Width of the Tracking Protection section. It is fine for the enabled or
+     disabled indicator or the words in the title to wrap to the next line, but
+     you can expand or reduce this section to fit better, as long as the width
+     of the Private Browsing section is roughly 1.5 times the width of this one.
+     Note that the required space may vary between platforms because fonts are
+     different, so testing on Windows, Mac, and Linux is encouraged.
      -->
-<!ENTITY trackingProtection.width              "22em">
+<!ENTITY trackingProtection.width1             "22em">
 <!ENTITY trackingProtection.title              "Tracking Protection">
 
 <!-- LOCALIZATION NOTE (trackingProtection.state.width):
