@@ -4,9 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['_MSC_VER'] and CONFIG['OS_TEST'] != 'x86_64':
-    TEST_DIRS += ['vmwarerecordinghelper']
-
 TEST_DIRS += ['crashinjectdll']
 
 if CONFIG['ENABLE_TESTS']:

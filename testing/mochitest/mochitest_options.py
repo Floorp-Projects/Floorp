@@ -30,9 +30,6 @@ except ImportError:
     conditions = None
 
 
-VMWARE_RECORDING_HELPER_BASENAME = "vmwarerecordinghelper"
-
-
 class ArgumentContainer():
     __metaclass__ = ABCMeta
 
@@ -288,14 +285,6 @@ class MochitestArguments(ArgumentContainer):
          {"dest": "testingModulesDir",
           "default": None,
           "help": "Directory where testing-only JS modules are located.",
-          "suppress": True,
-          }],
-        [["--use-vmware-recording"],
-         {"action": "store_true",
-          "dest": "vmwareRecording",
-          "default": False,
-          "help": "Enables recording while the application is running inside a VMware "
-                  "Workstation 7.0 or later VM.",
           "suppress": True,
           }],
         [["--repeat"],
@@ -626,16 +615,6 @@ class MochitestArguments(ArgumentContainer):
             options.symbolsPath = self.get_full_path(options.symbolsPath, parser.oldcwd)
         elif not options.symbolsPath and build_obj:
             options.symbolsPath = os.path.join(build_obj.distdir, 'crashreporter-symbols')
-
-        if options.vmwareRecording:
-            if not mozinfo.isWin:
-                parser.error(
-                    "use-vmware-recording is only supported on Windows.")
-            options.vmwareHelperPath = os.path.join(
-                options.utilityPath, VMWARE_RECORDING_HELPER_BASENAME + ".dll")
-            if not os.path.exists(options.vmwareHelperPath):
-                parser.error("%s not found, cannot automate VMware recording." %
-                             options.vmwareHelperPath)
 
         if options.webapprtContent and options.webapprtChrome:
             parser.error(
