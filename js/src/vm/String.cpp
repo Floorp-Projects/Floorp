@@ -67,7 +67,7 @@ JSString::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
            : mallocSizeOf(flat.rawTwoByteChars());
 }
 
-size_t
+JS::ubi::Node::Size
 JS::ubi::Concrete<JSString>::size(mozilla::MallocSizeOf mallocSizeOf) const
 {
     JSString &str = get();
