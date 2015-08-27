@@ -173,7 +173,7 @@ js::AsArrayBuffer(JSObject* obj)
 }
 
 MOZ_ALWAYS_INLINE bool
-ArrayBufferObject::byteLengthGetterImpl(JSContext* cx, CallArgs args)
+ArrayBufferObject::byteLengthGetterImpl(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(IsArrayBuffer(args.thisv()));
     args.rval().setInt32(args.thisv().toObject().as<ArrayBufferObject>().byteLength());
@@ -188,7 +188,7 @@ ArrayBufferObject::byteLengthGetter(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-ArrayBufferObject::fun_slice_impl(JSContext* cx, CallArgs args)
+ArrayBufferObject::fun_slice_impl(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(IsArrayBuffer(args.thisv()));
 
@@ -266,8 +266,8 @@ ReleaseAsmJSMappedData(void* base)
 #ifdef NIGHTLY_BUILD
 # if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 static bool
-TransferAsmJSMappedBuffer(JSContext* cx, CallArgs args, Handle<ArrayBufferObject*> oldBuffer,
-                          size_t newByteLength)
+TransferAsmJSMappedBuffer(JSContext* cx, const CallArgs& args,
+                          Handle<ArrayBufferObject*> oldBuffer, size_t newByteLength)
 {
     size_t oldByteLength = oldBuffer->byteLength();
     MOZ_ASSERT(oldByteLength % AsmJSPageSize == 0);
@@ -863,7 +863,7 @@ ArrayBufferObject::createSlice(JSContext* cx, Handle<ArrayBufferObject*> arrayBu
 }
 
 bool
-ArrayBufferObject::createDataViewForThisImpl(JSContext* cx, CallArgs args)
+ArrayBufferObject::createDataViewForThisImpl(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(IsArrayBuffer(args.thisv()));
 

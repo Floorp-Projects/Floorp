@@ -319,7 +319,8 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const;
     virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
                                               AutoIdVector& props) const;
-    virtual bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl, CallArgs args) const;
+    virtual bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
+                            const CallArgs& args) const;
     virtual bool hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue v, bool* bp) const;
     virtual bool objectClassIs(HandleObject obj, ESClassValue classValue, JSContext* cx) const;
     virtual const char* className(JSContext* cx, HandleObject proxy) const;
@@ -408,7 +409,7 @@ class JS_FRIEND_API(DirectProxyHandler) : public BaseProxyHandler
     virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
                                               AutoIdVector& props) const override;
     virtual bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
-                            CallArgs args) const override;
+                            const CallArgs& args) const override;
     virtual bool hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue v,
                              bool* bp) const override;
     virtual bool objectClassIs(HandleObject obj, ESClassValue classValue,

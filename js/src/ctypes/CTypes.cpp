@@ -233,10 +233,10 @@ namespace CType {
   bool IsCType(HandleValue v);
   bool IsCTypeOrProto(HandleValue v);
 
-  bool PrototypeGetter(JSContext* cx, JS::CallArgs args);
-  bool NameGetter(JSContext* cx, JS::CallArgs args);
-  bool SizeGetter(JSContext* cx, JS::CallArgs args);
-  bool PtrGetter(JSContext* cx, JS::CallArgs args);
+  bool PrototypeGetter(JSContext* cx, const JS::CallArgs& args);
+  bool NameGetter(JSContext* cx, const JS::CallArgs& args);
+  bool SizeGetter(JSContext* cx, const JS::CallArgs& args);
+  bool PtrGetter(JSContext* cx, const JS::CallArgs& args);
 
   static bool CreateArray(JSContext* cx, unsigned argc, Value* vp);
   static bool ToString(JSContext* cx, unsigned argc, Value* vp);
@@ -267,9 +267,9 @@ namespace PointerType {
   bool IsPointerType(HandleValue v);
   bool IsPointer(HandleValue v);
 
-  bool TargetTypeGetter(JSContext* cx, JS::CallArgs args);
-  bool ContentsGetter(JSContext* cx, JS::CallArgs args);
-  bool ContentsSetter(JSContext* cx, JS::CallArgs args);
+  bool TargetTypeGetter(JSContext* cx, const JS::CallArgs& args);
+  bool ContentsGetter(JSContext* cx, const JS::CallArgs& args);
+  bool ContentsSetter(JSContext* cx, const JS::CallArgs& args);
 
   static bool IsNull(JSContext* cx, unsigned argc, Value* vp);
   static bool Increment(JSContext* cx, unsigned argc, Value* vp);
@@ -286,8 +286,8 @@ namespace ArrayType {
   static bool Create(JSContext* cx, unsigned argc, Value* vp);
   static bool ConstructData(JSContext* cx, HandleObject obj, const CallArgs& args);
 
-  bool ElementTypeGetter(JSContext* cx, JS::CallArgs args);
-  bool LengthGetter(JSContext* cx, JS::CallArgs args);
+  bool ElementTypeGetter(JSContext* cx, const JS::CallArgs& args);
+  bool LengthGetter(JSContext* cx, const JS::CallArgs& args);
 
   static bool Getter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp);
   static bool Setter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandleValue vp,
@@ -301,7 +301,7 @@ namespace StructType {
   static bool Create(JSContext* cx, unsigned argc, Value* vp);
   static bool ConstructData(JSContext* cx, HandleObject obj, const CallArgs& args);
 
-  bool FieldsArrayGetter(JSContext* cx, JS::CallArgs args);
+  bool FieldsArrayGetter(JSContext* cx, const JS::CallArgs& args);
 
   enum {
     SLOT_FIELDNAME
@@ -322,10 +322,10 @@ namespace FunctionType {
 
   bool IsFunctionType(HandleValue v);
 
-  bool ArgTypesGetter(JSContext* cx, JS::CallArgs args);
-  bool ReturnTypeGetter(JSContext* cx, JS::CallArgs args);
-  bool ABIGetter(JSContext* cx, JS::CallArgs args);
-  bool IsVariadicGetter(JSContext* cx, JS::CallArgs args);
+  bool ArgTypesGetter(JSContext* cx, const JS::CallArgs& args);
+  bool ReturnTypeGetter(JSContext* cx, const JS::CallArgs& args);
+  bool ABIGetter(JSContext* cx, const JS::CallArgs& args);
+  bool IsVariadicGetter(JSContext* cx, const JS::CallArgs& args);
 } // namespace FunctionType
 
 namespace CClosure {
@@ -352,8 +352,8 @@ namespace CClosure {
 namespace CData {
   static void Finalize(JSFreeOp* fop, JSObject* obj);
 
-  bool ValueGetter(JSContext* cx, JS::CallArgs args);
-  bool ValueSetter(JSContext* cx, JS::CallArgs args);
+  bool ValueGetter(JSContext* cx, const JS::CallArgs& args);
+  bool ValueSetter(JSContext* cx, const JS::CallArgs& args);
 
   static bool Address(JSContext* cx, unsigned argc, Value* vp);
   static bool ReadString(JSContext* cx, unsigned argc, Value* vp);
@@ -362,10 +362,10 @@ namespace CData {
   static JSString* GetSourceString(JSContext* cx, HandleObject typeObj,
                                    void* data);
 
-  bool ErrnoGetter(JSContext* cx, JS::CallArgs args);
+  bool ErrnoGetter(JSContext* cx, const JS::CallArgs& args);
 
 #if defined(XP_WIN)
-  bool LastErrorGetter(JSContext* cx, JS::CallArgs args);
+  bool LastErrorGetter(JSContext* cx, const JS::CallArgs& args);
 #endif // defined(XP_WIN)
 } // namespace CData
 
@@ -4327,7 +4327,7 @@ CType::IsCTypeOrProto(HandleValue v)
 }
 
 bool
-CType::PrototypeGetter(JSContext* cx, JS::CallArgs args)
+CType::PrototypeGetter(JSContext* cx, const JS::CallArgs& args)
 {
   RootedObject obj(cx, &args.thisv().toObject());
   unsigned slot = CType::IsCTypeProto(obj) ? (unsigned) SLOT_OURDATAPROTO
@@ -4344,7 +4344,7 @@ CType::IsCType(HandleValue v)
 }
 
 bool
-CType::NameGetter(JSContext* cx, JS::CallArgs args)
+CType::NameGetter(JSContext* cx, const JS::CallArgs& args)
 {
   RootedObject obj(cx, &args.thisv().toObject());
   JSString* name = CType::GetName(cx, obj);
@@ -4356,7 +4356,7 @@ CType::NameGetter(JSContext* cx, JS::CallArgs args)
 }
 
 bool
-CType::SizeGetter(JSContext* cx, JS::CallArgs args)
+CType::SizeGetter(JSContext* cx, const JS::CallArgs& args)
 {
   RootedObject obj(cx, &args.thisv().toObject());
   args.rval().set(JS_GetReservedSlot(obj, SLOT_SIZE));
@@ -4365,7 +4365,7 @@ CType::SizeGetter(JSContext* cx, JS::CallArgs args)
 }
 
 bool
-CType::PtrGetter(JSContext* cx, JS::CallArgs args)
+CType::PtrGetter(JSContext* cx, const JS::CallArgs& args)
 {
   RootedObject obj(cx, &args.thisv().toObject());
   JSObject* pointerType = PointerType::CreateInternal(cx, obj);
@@ -4736,7 +4736,7 @@ PointerType::IsPointer(HandleValue v)
 }
 
 bool
-PointerType::TargetTypeGetter(JSContext* cx, JS::CallArgs args)
+PointerType::TargetTypeGetter(JSContext* cx, const JS::CallArgs& args)
 {
   RootedObject obj(cx, &args.thisv().toObject());
   args.rval().set(JS_GetReservedSlot(obj, SLOT_TARGET_T));
@@ -4819,7 +4819,7 @@ PointerType::Decrement(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-PointerType::ContentsGetter(JSContext* cx, JS::CallArgs args)
+PointerType::ContentsGetter(JSContext* cx, const JS::CallArgs& args)
 {
   RootedObject obj(cx, &args.thisv().toObject());
   RootedObject baseType(cx, GetBaseType(CData::GetCType(obj)));
@@ -4843,7 +4843,7 @@ PointerType::ContentsGetter(JSContext* cx, JS::CallArgs args)
 }
 
 bool
-PointerType::ContentsSetter(JSContext* cx, JS::CallArgs args)
+PointerType::ContentsSetter(JSContext* cx, const JS::CallArgs& args)
 {
   RootedObject obj(cx, &args.thisv().toObject());
   RootedObject baseType(cx, GetBaseType(CData::GetCType(obj)));
@@ -5176,7 +5176,7 @@ ArrayType::IsArrayOrArrayType(HandleValue v)
 }
 
 bool
-ArrayType::ElementTypeGetter(JSContext* cx, JS::CallArgs args)
+ArrayType::ElementTypeGetter(JSContext* cx, const JS::CallArgs& args)
 {
   RootedObject obj(cx, &args.thisv().toObject());
   args.rval().set(JS_GetReservedSlot(obj, SLOT_ELEMENT_T));
@@ -5185,7 +5185,7 @@ ArrayType::ElementTypeGetter(JSContext* cx, JS::CallArgs args)
 }
 
 bool
-ArrayType::LengthGetter(JSContext* cx, JS::CallArgs args)
+ArrayType::LengthGetter(JSContext* cx, const JS::CallArgs& args)
 {
   JSObject* obj = &args.thisv().toObject();
 
@@ -5873,7 +5873,7 @@ StructType::IsStruct(HandleValue v)
 }
 
 bool
-StructType::FieldsArrayGetter(JSContext* cx, JS::CallArgs args)
+StructType::FieldsArrayGetter(JSContext* cx, const JS::CallArgs& args)
 {
   RootedObject obj(cx, &args.thisv().toObject());
 
@@ -6674,7 +6674,7 @@ FunctionType::IsFunctionType(HandleValue v)
 }
 
 bool
-FunctionType::ArgTypesGetter(JSContext* cx, JS::CallArgs args)
+FunctionType::ArgTypesGetter(JSContext* cx, const JS::CallArgs& args)
 {
   JS::Rooted<JSObject*> obj(cx, &args.thisv().toObject());
 
@@ -6710,7 +6710,7 @@ FunctionType::ArgTypesGetter(JSContext* cx, JS::CallArgs args)
 }
 
 bool
-FunctionType::ReturnTypeGetter(JSContext* cx, JS::CallArgs args)
+FunctionType::ReturnTypeGetter(JSContext* cx, const JS::CallArgs& args)
 {
   // Get the returnType object from the FunctionInfo.
   args.rval().setObject(*GetFunctionInfo(&args.thisv().toObject())->mReturnType);
@@ -6718,7 +6718,7 @@ FunctionType::ReturnTypeGetter(JSContext* cx, JS::CallArgs args)
 }
 
 bool
-FunctionType::ABIGetter(JSContext* cx, JS::CallArgs args)
+FunctionType::ABIGetter(JSContext* cx, const JS::CallArgs& args)
 {
   // Get the abi object from the FunctionInfo.
   args.rval().setObject(*GetFunctionInfo(&args.thisv().toObject())->mABI);
@@ -6726,7 +6726,7 @@ FunctionType::ABIGetter(JSContext* cx, JS::CallArgs args)
 }
 
 bool
-FunctionType::IsVariadicGetter(JSContext* cx, JS::CallArgs args)
+FunctionType::IsVariadicGetter(JSContext* cx, const JS::CallArgs& args)
 {
   args.rval().setBoolean(GetFunctionInfo(&args.thisv().toObject())->mIsVariadic);
   return true;
@@ -7152,7 +7152,7 @@ CData::IsCDataProto(JSObject* obj)
 }
 
 bool
-CData::ValueGetter(JSContext* cx, JS::CallArgs args)
+CData::ValueGetter(JSContext* cx, const JS::CallArgs& args)
 {
   RootedObject obj(cx, &args.thisv().toObject());
 
@@ -7162,7 +7162,7 @@ CData::ValueGetter(JSContext* cx, JS::CallArgs args)
 }
 
 bool
-CData::ValueSetter(JSContext* cx, JS::CallArgs args)
+CData::ValueSetter(JSContext* cx, const JS::CallArgs& args)
 {
   RootedObject obj(cx, &args.thisv().toObject());
   args.rval().setUndefined();
@@ -7426,7 +7426,7 @@ CData::ToSource(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-CData::ErrnoGetter(JSContext* cx, JS::CallArgs args)
+CData::ErrnoGetter(JSContext* cx, const JS::CallArgs& args)
 {
   args.rval().set(JS_GetReservedSlot(&args.thisv().toObject(), SLOT_ERRNO));
   return true;
@@ -7434,7 +7434,7 @@ CData::ErrnoGetter(JSContext* cx, JS::CallArgs args)
 
 #if defined(XP_WIN)
 bool
-CData::LastErrorGetter(JSContext* cx, JS::CallArgs args)
+CData::LastErrorGetter(JSContext* cx, const JS::CallArgs& args)
 {
   args.rval().set(JS_GetReservedSlot(&args.thisv().toObject(), SLOT_LASTERROR));
   return true;

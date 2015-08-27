@@ -47,7 +47,7 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
     virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
                                               AutoIdVector& props) const override;
     virtual bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
-                            CallArgs args) const override;
+                            const CallArgs& args) const override;
     virtual JSString* fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const override;
     virtual bool isScripted() const override { return true; }
 

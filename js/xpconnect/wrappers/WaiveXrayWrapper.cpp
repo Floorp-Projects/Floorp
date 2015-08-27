@@ -84,7 +84,7 @@ WaiveXrayWrapper::construct(JSContext* cx, HandleObject wrapper, const JS::CallA
 // nsXBLProtoImplField.cpp.
 bool
 WaiveXrayWrapper::nativeCall(JSContext* cx, JS::IsAcceptableThis test,
-                             JS::NativeImpl impl, JS::CallArgs args) const
+                             JS::NativeImpl impl, const JS::CallArgs& args) const
 {
     return CrossCompartmentWrapper::nativeCall(cx, test, impl, args) &&
            WrapperFactory::WaiveXrayAndWrap(cx, args.rval());

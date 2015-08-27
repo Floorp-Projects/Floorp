@@ -1685,7 +1685,7 @@ class CloneBufferObject : public NativeObject {
     }
 
     static bool
-    setCloneBuffer_impl(JSContext* cx, CallArgs args) {
+    setCloneBuffer_impl(JSContext* cx, const CallArgs& args) {
         if (args.length() != 1 || !args[0].isString()) {
             JS_ReportError(cx,
                            "the first argument argument must be maxBytes, "
@@ -1726,7 +1726,7 @@ class CloneBufferObject : public NativeObject {
     }
 
     static bool
-    getCloneBuffer_impl(JSContext* cx, CallArgs args) {
+    getCloneBuffer_impl(JSContext* cx, const CallArgs& args) {
         Rooted<CloneBufferObject*> obj(cx, &args.thisv().toObject().as<CloneBufferObject>());
         MOZ_ASSERT(args.length() == 0);
 

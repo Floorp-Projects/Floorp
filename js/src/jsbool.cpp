@@ -37,7 +37,7 @@ IsBoolean(HandleValue v)
 
 #if JS_HAS_TOSOURCE
 MOZ_ALWAYS_INLINE bool
-bool_toSource_impl(JSContext* cx, CallArgs args)
+bool_toSource_impl(JSContext* cx, const CallArgs& args)
 {
     HandleValue thisv = args.thisv();
     MOZ_ASSERT(IsBoolean(thisv));
@@ -64,7 +64,7 @@ bool_toSource(JSContext* cx, unsigned argc, Value* vp)
 #endif
 
 MOZ_ALWAYS_INLINE bool
-bool_toString_impl(JSContext* cx, CallArgs args)
+bool_toString_impl(JSContext* cx, const CallArgs& args)
 {
     HandleValue thisv = args.thisv();
     MOZ_ASSERT(IsBoolean(thisv));
@@ -82,7 +82,7 @@ bool_toString(JSContext* cx, unsigned argc, Value* vp)
 }
 
 MOZ_ALWAYS_INLINE bool
-bool_valueOf_impl(JSContext* cx, CallArgs args)
+bool_valueOf_impl(JSContext* cx, const CallArgs& args)
 {
     HandleValue thisv = args.thisv();
     MOZ_ASSERT(IsBoolean(thisv));

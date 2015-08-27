@@ -30,7 +30,7 @@ SecurityWrapper<Base>::enter(JSContext* cx, HandleObject wrapper, HandleId id,
 template <class Base>
 bool
 SecurityWrapper<Base>::nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
-                                  CallArgs args) const
+                                  const CallArgs& args) const
 {
     ReportUnwrapDenied(cx);
     return false;

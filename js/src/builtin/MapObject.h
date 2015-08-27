@@ -122,23 +122,23 @@ class MapObject : public NativeObject {
     static bool is(HandleValue v);
     static bool is(HandleObject o);
 
-    static bool iterator_impl(JSContext* cx, CallArgs args, IteratorKind kind);
+    static bool iterator_impl(JSContext* cx, const CallArgs& args, IteratorKind kind);
 
-    static bool size_impl(JSContext* cx, CallArgs args);
+    static bool size_impl(JSContext* cx, const CallArgs& args);
     static bool size(JSContext* cx, unsigned argc, Value* vp);
-    static bool get_impl(JSContext* cx, CallArgs args);
+    static bool get_impl(JSContext* cx, const CallArgs& args);
     static bool get(JSContext* cx, unsigned argc, Value* vp);
-    static bool has_impl(JSContext* cx, CallArgs args);
-    static bool set_impl(JSContext* cx, CallArgs args);
+    static bool has_impl(JSContext* cx, const CallArgs& args);
+    static bool set_impl(JSContext* cx, const CallArgs& args);
     static bool set(JSContext* cx, unsigned argc, Value* vp);
-    static bool delete_impl(JSContext* cx, CallArgs args);
+    static bool delete_impl(JSContext* cx, const CallArgs& args);
     static bool delete_(JSContext* cx, unsigned argc, Value* vp);
-    static bool keys_impl(JSContext* cx, CallArgs args);
+    static bool keys_impl(JSContext* cx, const CallArgs& args);
     static bool keys(JSContext* cx, unsigned argc, Value* vp);
-    static bool values_impl(JSContext* cx, CallArgs args);
+    static bool values_impl(JSContext* cx, const CallArgs& args);
     static bool values(JSContext* cx, unsigned argc, Value* vp);
-    static bool entries_impl(JSContext* cx, CallArgs args);
-    static bool clear_impl(JSContext* cx, CallArgs args);
+    static bool entries_impl(JSContext* cx, const CallArgs& args);
+    static bool clear_impl(JSContext* cx, const CallArgs& args);
     static bool clear(JSContext* cx, unsigned argc, Value* vp);
 };
 
@@ -202,19 +202,19 @@ class SetObject : public NativeObject {
     static bool is(HandleValue v);
     static bool is(HandleObject o);
 
-    static bool iterator_impl(JSContext* cx, CallArgs args, IteratorKind kind);
+    static bool iterator_impl(JSContext* cx, const CallArgs& args, IteratorKind kind);
 
-    static bool size_impl(JSContext* cx, CallArgs args);
+    static bool size_impl(JSContext* cx, const CallArgs& args);
     static bool size(JSContext* cx, unsigned argc, Value* vp);
-    static bool has_impl(JSContext* cx, CallArgs args);
-    static bool add_impl(JSContext* cx, CallArgs args);
+    static bool has_impl(JSContext* cx, const CallArgs& args);
+    static bool add_impl(JSContext* cx, const CallArgs& args);
     static bool add(JSContext* cx, unsigned argc, Value* vp);
-    static bool delete_impl(JSContext* cx, CallArgs args);
+    static bool delete_impl(JSContext* cx, const CallArgs& args);
     static bool delete_(JSContext* cx, unsigned argc, Value* vp);
-    static bool values_impl(JSContext* cx, CallArgs args);
-    static bool entries_impl(JSContext* cx, CallArgs args);
+    static bool values_impl(JSContext* cx, const CallArgs& args);
+    static bool entries_impl(JSContext* cx, const CallArgs& args);
     static bool entries(JSContext* cx, unsigned argc, Value* vp);
-    static bool clear_impl(JSContext* cx, CallArgs args);
+    static bool clear_impl(JSContext* cx, const CallArgs& args);
     static bool clear(JSContext* cx, unsigned argc, Value* vp);
 };
 

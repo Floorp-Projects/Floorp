@@ -299,7 +299,7 @@ BaseProxyHandler::defaultValue(JSContext* cx, HandleObject proxy, JSType hint,
 
 bool
 BaseProxyHandler::nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
-                             CallArgs args) const
+                             const CallArgs& args) const
 {
     ReportIncompatible(cx, args);
     return false;

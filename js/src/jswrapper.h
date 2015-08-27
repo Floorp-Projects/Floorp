@@ -147,7 +147,7 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject wrapper,
                                               AutoIdVector& props) const override;
     virtual bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
-                            CallArgs args) const override;
+                            const CallArgs& args) const override;
     virtual bool hasInstance(JSContext* cx, HandleObject wrapper, MutableHandleValue v,
                              bool* bp) const override;
     virtual const char* className(JSContext* cx, HandleObject proxy) const override;
@@ -244,7 +244,7 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
     virtual bool setImmutablePrototype(JSContext* cx, HandleObject proxy, bool* succeeded) const override;
 
     virtual bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
-                            CallArgs args) const override;
+                            const CallArgs& args) const override;
     virtual bool objectClassIs(HandleObject obj, ESClassValue classValue,
                                JSContext* cx) const override;
     virtual bool regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g) const override;

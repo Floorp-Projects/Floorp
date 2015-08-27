@@ -141,7 +141,7 @@ ArgumentsRestrictions(JSContext* cx, HandleFunction fun)
 }
 
 bool
-ArgumentsGetterImpl(JSContext* cx, CallArgs args)
+ArgumentsGetterImpl(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(IsFunction(args.thisv()));
 
@@ -178,7 +178,7 @@ ArgumentsGetter(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-ArgumentsSetterImpl(JSContext* cx, CallArgs args)
+ArgumentsSetterImpl(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(IsFunction(args.thisv()));
 
@@ -230,7 +230,7 @@ CallerRestrictions(JSContext* cx, HandleFunction fun)
 }
 
 bool
-CallerGetterImpl(JSContext* cx, CallArgs args)
+CallerGetterImpl(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(IsFunction(args.thisv()));
 
@@ -291,7 +291,7 @@ CallerGetter(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-CallerSetterImpl(JSContext* cx, CallArgs args)
+CallerSetterImpl(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(IsFunction(args.thisv()));
 
