@@ -15,24 +15,15 @@
      30em to prevent the sections from wrapping on smaller window sizes.
      -->
 <!ENTITY aboutPrivateBrowsing.width1           "30em">
-
-<!-- LOCALIZATION NOTE (aboutPrivateBrowsing.subtitle,
-     aboutPrivateBrowsing.info.forgotten, aboutPrivateBrowsing.info.kept):
-     These strings will be replaced by aboutPrivateBrowsing.forgotten and
-     aboutPrivateBrowsing.kept when the new visual design lands (bug 1192625).
-     -->
 <!ENTITY aboutPrivateBrowsing.title            "You're browsing privately">
-<!ENTITY aboutPrivateBrowsing.subtitle         "In this window, &brandShortName; will not remember any history.">
 
-<!ENTITY aboutPrivateBrowsing.forgotten        "In this window, &brandShortName; will not remember:">
-<!ENTITY aboutPrivateBrowsing.info.forgotten   "Forgotten">
+<!ENTITY aboutPrivateBrowsing.info.notsaved    "Not Saved">
 <!ENTITY aboutPrivateBrowsing.info.history     "History">
 <!ENTITY aboutPrivateBrowsing.info.searches    "Searches">
 <!ENTITY aboutPrivateBrowsing.info.cookies     "Cookies">
 <!ENTITY aboutPrivateBrowsing.info.temporaryFiles "Temporary Files">
 
-<!ENTITY aboutPrivateBrowsing.kept             "&brandShortName; will keep:">
-<!ENTITY aboutPrivateBrowsing.info.kept        "Kept">
+<!ENTITY aboutPrivateBrowsing.info.saved       "Saved">
 <!ENTITY aboutPrivateBrowsing.info.downloads   "Downloads">
 <!ENTITY aboutPrivateBrowsing.info.bookmarks   "Bookmarks">
 
