@@ -6,8 +6,8 @@
 
 /* For documentation, see jit/AtomicOperations.h */
 
-#ifndef jit_mips32_AtomicOperations_mips32_h
-#define jit_mips32_AtomicOperations_mips32_h
+#ifndef jit_mips_shared_AtomicOperations_mips_shared_h
+#define jit_mips_shared_AtomicOperations_mips_shared_h
 
 #include "jit/AtomicOperations.h"
 
@@ -102,4 +102,4 @@ js::jit::RegionLock::release(void* addr)
     MOZ_CRASH();
 }
 
-#endif // jit_mips32_AtomicOperations_mips32_h
+#endif // jit_mips_shared_AtomicOperations_mips_shared_h
