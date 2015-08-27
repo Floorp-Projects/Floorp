@@ -432,7 +432,7 @@ DevToolsLoader.prototype = {
   /**
    * Reload the current provider.
    */
-  reload: function(showToolbox) {
+  reload: function() {
     var events = this.require("sdk/system/events");
     events.emit("startupcache-invalidate", {});
     events.emit("devtools-unloaded", {});
@@ -442,14 +442,6 @@ DevToolsLoader.prototype = {
     delete this._mainid;
     this._chooseProvider();
     this.main("main");
-
-    // Reopen the toolbox automatically if requested
-    if (showToolbox) {
-      let { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
-      let target = this.TargetFactory.forTab(gBrowser.selectedTab);
-      const { gDevTools } = this.require("resource:///modules/devtools/gDevTools.jsm");
-      gDevTools.showToolbox(target);
-    }
   },
 
   /**

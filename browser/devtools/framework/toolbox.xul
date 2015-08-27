@@ -78,10 +78,6 @@
          key="&toolboxToggle.key;"
          oncommand="void(0);"
          modifiers="accel shift"/>
-    <key id="tools-reload-key"
-         keycode="&toolboxReload.key;"
-         oncommand="void(0);"
-         modifiers="accel alt"/>
   </keyset>
 
   <popupset>
