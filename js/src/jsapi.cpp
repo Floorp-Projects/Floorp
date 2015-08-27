@@ -6268,7 +6268,7 @@ JS::GetObjectZone(JSObject* obj)
 JS_PUBLIC_API(void)
 JS::ResetTimeZone()
 {
-#if ENABLE_INTL_API
+#if ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
     icu::TimeZone::recreateDefault();
 #endif
 }
