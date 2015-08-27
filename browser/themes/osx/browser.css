@@ -35,9 +35,6 @@
 
   --toolbarbutton-checkedhover-backgroundcolor: hsla(0,0%,0%,.09);
 
-  --toolbarbutton-combined-boxshadow: 0 0 0 1px hsla(0,0%,100%,.15);
-  --toolbarbutton-combined-backgroundimage: linear-gradient(hsla(0,0%,0%,.15) 0, hsla(0,0%,0%,.15) 18px);
-
   --urlbar-dropmarker-url: url("chrome://browser/skin/urlbar-history-dropmarker.png");
   --urlbar-dropmarker-region: rect(0, 11px, 14px, 0);
   --urlbar-dropmarker-active-region: rect(0, 22px, 14px, 11px);
@@ -691,25 +688,23 @@ toolbar .toolbarbutton-1:not([type="menu-button"]) {
  * Draw seperators before toolbar button dropmarkers, as well as between
  * consecutive toolbarbutton-1's within a toolbaritem.
  */
-toolbar .toolbaritem-combined-buttons > separator,
-toolbar .toolbarbutton-1:not(:-moz-any([open],:hover)) > .toolbarbutton-menubutton-dropmarker::before {
+toolbar .toolbaritem-combined-buttons:not(:hover) > separator,
+toolbar .toolbarbutton-1:not(:hover):not(:active):not([open]) > .toolbarbutton-menubutton-dropmarker::before {
   content: "";
   display: -moz-box;
-  position: relative;
-  top: calc(50% - 9px);
   width: 1px;
   height: 18px;
   -moz-margin-start: -1px;
-  background-image: var(--toolbarbutton-combined-backgroundimage);
-  background-clip: padding-box;
+  background-image: linear-gradient(currentColor 0, currentColor 100%);
   background-position: center;
   background-repeat: no-repeat;
   background-size: 1px 18px;
-  box-shadow: var(--toolbarbutton-combined-boxshadow);
+  opacity: .2;
 }
 
-toolbar .toolbaritem-combined-buttons:hover > separator {
-  display: none;
+toolbar[brighttext] .toolbaritem-combined-buttons > separator,
+toolbar[brighttext] .toolbarbutton-1:not(:hover):not(:active):not([open]) > .toolbarbutton-menubutton-dropmarker::before {
+  opacity: .3;
 }
 
 toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {

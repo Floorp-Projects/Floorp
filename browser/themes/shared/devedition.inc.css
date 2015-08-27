@@ -46,8 +46,6 @@
   --toolbarbutton-active-boxshadow: none;
   --toolbarbutton-active-bordercolor: rgba(25,33,38,.8);
   --toolbarbutton-checkedhover-backgroundcolor: #1D4F73;
-  --toolbarbutton-combined-boxshadow: none;
-  --toolbarbutton-combined-backgroundimage: linear-gradient(#5F6670 0, #5F6670 18px);
 
   /* Url and search bars */
   --url-and-searchbar-background-color: #171B1F;
@@ -107,8 +105,6 @@
   --toolbarbutton-active-boxshadow: none;
   --toolbarbutton-active-bordercolor: rgba(0,0,0,0.15);
   --toolbarbutton-checkedhover-backgroundcolor: #d7d7d8;
-  --toolbarbutton-combined-boxshadow: none;
-  --toolbarbutton-combined-backgroundimage: linear-gradient(rgba(0,0,0,0.1) 0, rgba(0,0,0,0.1) 18px);
 
   /* Url and search bars */
   --search-button-image: url("chrome://browser/skin/devedition/search.svg#search-icon");
