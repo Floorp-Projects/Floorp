@@ -1050,6 +1050,10 @@
         "url": "/screen-orientation/page-visibility-manual.html"
       },
       {
+        "path": "selection/dir-manual.html",
+        "url": "/selection/dir-manual.html"
+      },
+      {
         "path": "svg/import/animate-dom-01-f-manual.svg",
         "url": "/svg/import/animate-dom-01-f-manual.svg"
       },
@@ -12144,22 +12148,6 @@
         "url": "/ambient-light/idlharness.html"
       },
       {
-        "path": "animation-timing/callback-invoked.html",
-        "url": "/animation-timing/callback-invoked.html"
-      },
-      {
-        "path": "animation-timing/cancel-invoked.html",
-        "url": "/animation-timing/cancel-invoked.html"
-      },
-      {
-        "path": "animation-timing/idlharness.html",
-        "url": "/animation-timing/idlharness.html"
-      },
-      {
-        "path": "animation-timing/same-dispatch-time.html",
-        "url": "/animation-timing/same-dispatch-time.html"
-      },
-      {
         "path": "battery-status/battery-interface-idlharness.html",
         "url": "/battery-status/battery-interface-idlharness.html"
       },
@@ -13010,6 +12998,10 @@
       {
         "path": "dom/collections/HTMLCollection-empty-name.html",
         "url": "/dom/collections/HTMLCollection-empty-name.html"
+      },
+      {
+        "path": "dom/collections/HTMLCollection-supported-property-names.html",
+        "url": "/dom/collections/HTMLCollection-supported-property-names.html"
       },
       {
         "path": "dom/events/Event-constants.html",
@@ -15412,6 +15404,10 @@
         "url": "/html/dom/elements/global-attributes/the-translate-attribute-012.html"
       },
       {
+        "path": "html/editing/activation/click.html",
+        "url": "/html/editing/activation/click.html"
+      },
+      {
         "path": "html/editing/dnd/dom/draggable.html",
         "url": "/html/editing/dnd/dom/draggable.html"
       },
@@ -17780,6 +17776,26 @@
         "url": "/html/syntax/serializing-html-fragments/outerHTML.html"
       },
       {
+        "path": "html/webappapis/animation-frames/callback-exception.html",
+        "url": "/html/webappapis/animation-frames/callback-exception.html"
+      },
+      {
+        "path": "html/webappapis/animation-frames/callback-invoked.html",
+        "url": "/html/webappapis/animation-frames/callback-invoked.html"
+      },
+      {
+        "path": "html/webappapis/animation-frames/cancel-invoked.html",
+        "url": "/html/webappapis/animation-frames/cancel-invoked.html"
+      },
+      {
+        "path": "html/webappapis/animation-frames/idlharness.html",
+        "url": "/html/webappapis/animation-frames/idlharness.html"
+      },
+      {
+        "path": "html/webappapis/animation-frames/same-dispatch-time.html",
+        "url": "/html/webappapis/animation-frames/same-dispatch-time.html"
+      },
+      {
         "path": "html/webappapis/atob/base64.html",
         "url": "/html/webappapis/atob/base64.html"
       },
@@ -18010,6 +18026,10 @@
       {
         "path": "js/builtins/Object.prototype.freeze.html",
         "url": "/js/builtins/Object.prototype.freeze.html"
+      },
+      {
+        "path": "js/builtins/Object.prototype.getOwnPropertyNames.html",
+        "url": "/js/builtins/Object.prototype.getOwnPropertyNames.html"
       },
       {
         "path": "js/builtins/Object.prototype.hasOwnProperty-order.html",
@@ -24904,10 +24924,6 @@
         "url": "/selection/Document-open.html"
       },
       {
-        "path": "selection/addRange.html",
-        "url": "/selection/addRange.html"
-      },
-      {
         "path": "selection/collapse.html",
         "url": "/selection/collapse.html"
       },
@@ -24918,10 +24934,6 @@
       {
         "path": "selection/deleteFromDocument.html",
         "url": "/selection/deleteFromDocument.html"
-      },
-      {
-        "path": "selection/dir.manual.html",
-        "url": "/selection/dir.manual.html"
       },
       {
         "path": "selection/extend.html",
@@ -25072,10 +25084,6 @@
         "url": "/shadow-dom/elements-and-dom-objects/the-content-html-element/test-003.html"
       },
       {
-        "path": "shadow-dom/elements-and-dom-objects/the-content-html-element/test-004.html",
-        "url": "/shadow-dom/elements-and-dom-objects/the-content-html-element/test-004.html"
-      },
-      {
         "path": "shadow-dom/elements-and-dom-objects/the-content-html-element/test-005.html",
         "url": "/shadow-dom/elements-and-dom-objects/the-content-html-element/test-005.html"
       },
@@ -25090,10 +25098,6 @@
       {
         "path": "shadow-dom/elements-and-dom-objects/the-shadow-html-element/test-002.html",
         "url": "/shadow-dom/elements-and-dom-objects/the-shadow-html-element/test-002.html"
-      },
-      {
-        "path": "shadow-dom/elements-and-dom-objects/the-shadow-html-element/test-003.html",
-        "url": "/shadow-dom/elements-and-dom-objects/the-shadow-html-element/test-003.html"
       },
       {
         "path": "shadow-dom/elements-and-dom-objects/the-shadow-html-element/test-004.html",
@@ -27492,6 +27496,10 @@
         "url": "/workers/semantics/encodings/004.html"
       },
       {
+        "path": "workers/semantics/encodings/004.worker.js",
+        "url": "/workers/semantics/encodings/004.worker"
+      },
+      {
         "path": "workers/semantics/interface-objects/001.worker.js",
         "url": "/workers/semantics/interface-objects/001.worker"
       },
@@ -28768,6 +28776,11 @@
         "url": "/quirks-mode/hashless-hex-color.html"
       },
       {
+        "path": "selection/addRange.html",
+        "timeout": "long",
+        "url": "/selection/addRange.html"
+      },
+      {
         "path": "service-workers/cache-storage/common.https.html",
         "timeout": "long",
         "url": "/service-workers/cache-storage/common.https.html"
@@ -29034,17 +29047,7 @@
   },
   "local_changes": {
     "deleted": [],
-    "items": {
-      "testharness": {
-        "selection/addRange.html": [
-          {
-            "path": "selection/addRange.html",
-            "timeout": "long",
-            "url": "/selection/addRange.html"
-          }
-        ]
-      }
-    },
+    "items": {},
     "reftest_nodes": {}
   },
   "reftest_nodes": {
@@ -34449,7 +34452,7 @@
       }
     ]
   },
-  "rev": "b54dddfdcc4761d2f8a892fd783d60353949992d",
+  "rev": "4600b7dbae996754fe52f48bc9c225834f11a686",
   "url_base": "/",
   "version": 2
 }

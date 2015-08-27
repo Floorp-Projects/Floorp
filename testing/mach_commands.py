@@ -470,8 +470,9 @@ class PushToTry(MachCommandBase):
             print('ERROR please commit changes before continuing')
             sys.exit(1)
 
-        driver = self._spawn(BuildDriver)
-        driver.install_tests(remove=False)
+        if paths or tags:
+            driver = self._spawn(BuildDriver)
+            driver.install_tests(remove=False)
 
         manifests_by_flavor = at.resolve_manifests(paths=paths, tags=tags)
 

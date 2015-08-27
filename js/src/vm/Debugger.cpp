@@ -1743,8 +1743,9 @@ Debugger::appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame
 
     auto className = obj->getClass()->name;
     auto size = JS::ubi::Node(obj.get()).size(cx->runtime()->debuggerMallocSizeOf);
+    auto inNursery = gc::IsInsideNursery(obj);
 
-    if (!allocationsLog.emplaceBack(wrappedFrame, when, className, ctorName, size)) {
+    if (!allocationsLog.emplaceBack(wrappedFrame, when, className, ctorName, size, inNursery)) {
         ReportOutOfMemory(cx);
         return false;
     }
@@ -8182,9 +8183,11 @@ JSObject*
 GarbageCollectionEvent::toJSObject(JSContext* cx) const
 {
     RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    RootedValue gcCycleNumberVal(cx, NumberValue(majorGCNumber_));
     if (!obj ||
         !DefineStringProperty(cx, obj, cx->names().nonincrementalReason, nonincrementalReason) ||
-        !DefineStringProperty(cx, obj, cx->names().reason, reason))
+        !DefineStringProperty(cx, obj, cx->names().reason, reason) ||
+        !DefineProperty(cx, obj, cx->names().gcCycleNumber, gcCycleNumberVal))
     {
         return nullptr;
     }
