@@ -30,6 +30,9 @@ public:
     nsresult SetHeader(nsHttpAtom header, const nsACString &value,
                        bool merge = false);
 
+    // Used by internal setters to set an empty header
+    nsresult SetEmptyHeader(nsHttpAtom header);
+
     // Merges supported headers. For other duplicate values, determines if error
     // needs to be thrown or 1st value kept.
     nsresult SetHeaderFromNet(nsHttpAtom header, const nsACString &value);
@@ -169,18 +172,20 @@ nsHttpHeaderArray::MergeHeader(nsHttpAtom header,
     if (value.IsEmpty())
         return;   // merge of empty header = no-op
 
-    // Append the new value to the existing value
-    if (header == nsHttp::Set_Cookie ||
-        header == nsHttp::WWW_Authenticate ||
-        header == nsHttp::Proxy_Authenticate)
-    {
-        // Special case these headers and use a newline delimiter to
-        // delimit the values from one another as commas may appear
-        // in the values of these headers contrary to what the spec says.
-        entry->value.Append('\n');
-    } else {
-        // Delimit each value from the others using a comma (per HTTP spec)
-        entry->value.AppendLiteral(", ");
+    if (!entry->value.IsEmpty()) {
+        // Append the new value to the existing value
+        if (header == nsHttp::Set_Cookie ||
+            header == nsHttp::WWW_Authenticate ||
+            header == nsHttp::Proxy_Authenticate)
+        {
+            // Special case these headers and use a newline delimiter to
+            // delimit the values from one another as commas may appear
+            // in the values of these headers contrary to what the spec says.
+            entry->value.Append('\n');
+        } else {
+            // Delimit each value from the others using a comma (per HTTP spec)
+            entry->value.AppendLiteral(", ");
+        }
     }
     entry->value.Append(value);
 }
