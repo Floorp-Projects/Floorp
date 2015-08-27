@@ -88,15 +88,6 @@
           <vbox id="identity-popup-permission-list"/>
         </vbox>
       </hbox>
-
-      <spacer flex="1"/>
-
-      <!-- More Information Button -->
-      <hbox id="identity-popup-button-container" align="center">
-        <button id="identity-popup-more-info-button" flex="1"
-                label="&identity.moreInfoLinkText2;"
-                oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
-      </hbox>
     </panelview>
 
     <!-- Security SubView -->
@@ -131,6 +122,10 @@
         <description class="identity-popup-warning-yellow"
                      when-ciphers="weak">&identity.description.weakCipher2;</description>
 
+        <!-- More Security Information -->
+        <button label="&identity.moreInfoLinkText2;"
+                oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
+
         <!-- Active Mixed Content Blocked -->
         <description class="identity-popup-warning-gray"
                      when-mixedcontent="active-blocked">&identity.description.activeBlocked; <label observes="identity-popup-mcb-learn-more"/></description>
@@ -159,6 +154,7 @@
                 accesskey="&identity.enableMixedContentBlocking.accesskey;"
                 oncommand="gIdentityHandler.enableMixedContentProtection()"/>
       </vbox>
+
     </panelview>
   </panelmultiview>
 </panel>
