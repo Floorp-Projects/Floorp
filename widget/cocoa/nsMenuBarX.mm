@@ -932,28 +932,11 @@ static BOOL gMenuItemsExecuteCommands = YES;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  // menuGroupOwner below is an nsMenuBarX object, which we sometimes access
-  // after it's been deleted, causing crashes (see bug 704866 and bug 670914).
-  // To fix this "correctly", in nsMenuBarX::~nsMenuBarX() we'd need to
-  // iterate through every NSMenuItem in nsMenuBarX::mNativeMenu and its
-  // submenus, which might be quite time consuming.  (For every NSMenuItem
-  // that has a "representedObject" that's a MenuItemInfo object, we'd need
-  // need to null out its "menuGroupOwner" if it's the same as the nsMenuBarX
-  // object being destroyed.)  But if the nsMenuBarX object being destroyed
-  // corresponds to the currently focused window, it's likely that the
-  // nsMenuBarX destructor will null out sLastGeckoMenuBarPainted.  So we can
-  // probably eliminate most of these crashes if we use this variable being
-  // null as an indicator that we're likely to crash below when we dereference
-  // menuGroupOwner.
-  if (!nsMenuBarX::sLastGeckoMenuBarPainted) {
+  if (!gMenuItemsExecuteCommands) {
     return;
   }
 
   int tag = [sender tag];
-
-  if (!gMenuItemsExecuteCommands) {
-    return;
-  }
 
   nsMenuGroupOwnerX* menuGroupOwner = nullptr;
   nsMenuBarX* menuBar = nullptr;
