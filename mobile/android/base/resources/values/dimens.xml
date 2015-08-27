@@ -130,6 +130,8 @@
     <dimen name="prompt_service_inputs_padding">16dp</dimen>
     <dimen name="prompt_service_left_right_text_with_icon_padding">10dp</dimen>
     <dimen name="prompt_service_top_bottom_text_with_icon_padding">8dp</dimen>
+    <dimen name="tab_thumbnail_height">90dp</dimen>
+    <dimen name="tab_thumbnail_width">160dp</dimen>
     <dimen name="tabs_panel_indicator_width">60dp</dimen>
     <dimen name="tabs_panel_button_width">48dp</dimen>
     <dimen name="tabs_strip_height">48dp</dimen>
@@ -143,14 +145,14 @@
     <dimen name="validation_message_height">50dp</dimen>
     <dimen name="validation_message_margin_top">6dp</dimen>
 
-    <dimen name="tab_thumbnail_width">121dp</dimen>
-    <dimen name="tab_thumbnail_height">90dp</dimen>
-    <dimen name="tab_panel_column_width">129dp</dimen>
-    <dimen name="tab_panel_grid_padding">20dp</dimen>
-    <dimen name="tab_panel_grid_vspacing">20dp</dimen>
-    <dimen name="tab_panel_grid_padding_top">19dp</dimen>
+    <dimen name="tablet_tab_thumbnail_width">168dp</dimen>
+    <dimen name="tablet_tab_thumbnail_height">140dp</dimen>
+    <dimen name="tablet_tab_panel_column_width">178dp</dimen>
+    <dimen name="tablet_tab_panel_grid_padding">19dp</dimen>
+    <dimen name="tablet_tab_panel_grid_vspacing">21dp</dimen>
+    <dimen name="tablet_tab_panel_grid_padding_top">24dp</dimen>
 
-    <dimen name="tab_highlight_stroke_width">4dp</dimen>
+    <dimen name="tablet_tab_highlight_stroke_width">5dp</dimen>
 
     <!-- PageActionButtons dimensions -->
     <dimen name="page_action_button_width">32dp</dimen>
