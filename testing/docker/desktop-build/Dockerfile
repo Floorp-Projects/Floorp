@@ -29,5 +29,9 @@ ADD           oauth.txt /home/worker/
 # the directory where mozharness is run (not its --work-dir)
 ADD           buildprops.json /home/worker/
 
+# Make sure commands from here on run as `worker`
+# XXX but non-root tasks aren't yet supported - bug 1093833
+# USER worker
+
 # Set a default command useful for debugging
 CMD ["/bin/bash", "--login"]
