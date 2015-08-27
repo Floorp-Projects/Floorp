@@ -11,6 +11,38 @@ using namespace std;
 namespace mozilla {
 namespace gfx {
 
+void* ThreadCallback(void* threadData);
+
+class WorkerThreadPosix : public WorkerThread {
+public:
+  WorkerThreadPosix(MultiThreadedTaskQueue* aTaskQueue)
+  : WorkerThread(aTaskQueue)
+  {
+    pthread_create(&mThread, nullptr, ThreadCallback, static_cast<WorkerThread*>(this));
+  }
+
+  ~WorkerThreadPosix()
+  {
+    pthread_join(mThread, nullptr);
+  }
+
+protected:
+  pthread_t mThread;
+};
+
+void* ThreadCallback(void* threadData)
+{
+  WorkerThread* thread = static_cast<WorkerThread*>(threadData);
+  thread->Run();
+  return nullptr;
+}
+
+WorkerThread*
+WorkerThread::Create(MultiThreadedTaskQueue* aTaskQueue)
+{
+  return new WorkerThreadPosix(aTaskQueue);
+}
+
 MultiThreadedTaskQueue::MultiThreadedTaskQueue()
 : mThreadsCount(0)
 , mShuttingDown(false)
@@ -103,45 +135,6 @@ MultiThreadedTaskQueue::UnregisterThread()
   mThreadsCount -= 1;
   if (mThreadsCount == 0) {
     mShutdownCondvar.Broadcast();
-  }
-}
-
-void* ThreadCallback(void* threadData)
-{
-  WorkerThread* thread = (WorkerThread*)threadData;
-  thread->Run();
-  return nullptr;
-}
-
-WorkerThread::WorkerThread(MultiThreadedTaskQueue* aTaskQueue)
-: mQueue(aTaskQueue)
-{
-  aTaskQueue->RegisterThread();
-  pthread_create(&mThread, nullptr, ThreadCallback, this);
-}
-
-WorkerThread::~WorkerThread()
-{
-  pthread_join(mThread, nullptr);
-}
-
-void
-WorkerThread::Run()
-{
-  for (;;) {
-    Task* commands = nullptr;
-    if (!mQueue->WaitForTask(commands)) {
-      mQueue->UnregisterThread();
-      return;
-    }
-
-    TaskStatus status = TaskScheduler::ProcessTask(commands);
-
-    if (status == TaskStatus::Error) {
-      // Don't try to handle errors for now, but that's open to discussions.
-      // I expect errors to be mostly OOM issues.
-      MOZ_CRASH();
-    }
   }
 }
 
