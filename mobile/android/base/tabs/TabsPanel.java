@@ -56,6 +56,7 @@ public class TabsPanel extends LinearLayout
         void setTabsPanel(TabsPanel panel);
         void show();
         void hide();
+        boolean shouldExpand();
     }
 
     public interface CloseAllPanelView extends PanelView {
@@ -64,6 +65,14 @@ public class TabsPanel extends LinearLayout
 
     public interface TabsLayout extends CloseAllPanelView {
         void setEmptyView(View view);
+    }
+
+    public static View createTabsLayout(final Context context, final AttributeSet attrs) {
+        if (HardwareUtils.isTablet()) {
+            return new TabsGridLayout(context, attrs);
+        } else {
+            return new TabsListLayout(context, attrs);
+        }
     }
 
     public interface TabsLayoutChangeListener {
@@ -422,6 +431,10 @@ public class TabsPanel extends LinearLayout
     @Override
     public boolean isShown() {
         return mVisible;
+    }
+
+    public Panel getCurrentPanel() {
+        return mCurrentPanel;
     }
 
     public void setHWLayerEnabled(boolean enabled) {

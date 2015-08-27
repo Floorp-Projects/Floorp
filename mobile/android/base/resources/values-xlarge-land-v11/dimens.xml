@@ -5,6 +5,6 @@
 
 <resources>
 
-    <dimen name="tab_panel_grid_padding">64dp</dimen>
+    <dimen name="tablet_tab_panel_grid_padding">64dp</dimen>
 
 </resources>
