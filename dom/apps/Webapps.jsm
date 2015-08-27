@@ -858,9 +858,13 @@ this.DOMApplicationRegistry = {
       root = aManifest.entry_points[aEntryPoint];
     }
 
-    if (!root.messages || !Array.isArray(root.messages) ||
-        root.messages.length == 0) {
-      dump("Could not register invalid system message entry\n");
+    if (!root.messages) {
+      // This application just doesn't use system messages.
+      return;
+    }
+
+    if (!Array.isArray(root.messages) || root.messages.length == 0) {
+      dump("Could not register invalid system message entry for " + aApp.manifestURL + "\n");
       try {
         dump(JSON.stringify(root.messages) + "\n");
       } catch(e) {}
@@ -874,7 +878,7 @@ this.DOMApplicationRegistry = {
       let handlerPageURI = launchPathURI;
       let messageName;
       if (typeof(aMessage) !== "object" || Object.keys(aMessage).length !== 1) {
-        dump("Could not register invalid system message entry\n");
+        dump("Could not register invalid system message entry for " + aApp.manifestURL + "\n");
         try {
           dump(JSON.stringify(aMessage) + "\n");
         } catch(e) {}
