@@ -571,24 +571,6 @@ CreateHeadlessANGLE(CreateContextFlags flags, const nsCOMPtr<nsIGfxInfo>& gfxInf
 {
     nsRefPtr<GLContext> gl;
 
-    // ANGLE doesn't really support non-alpha backbuffers.
-    flags |= CreateContextFlags::SUPPORT_ALPHA;
-
-    // ANGLE also doesn't really support depth without stencil, and vice-versa.
-    // While we could fake that we don't have one or the other, instead, we *should* just
-    // fail to create a context without both. However, since the defaults are depth:true,
-    // stencil:false, many demos that rely on the implicit depth allocation will fail.
-    // Thus we must limp along for depth:true, stencil:false, but we shouldn't support
-    // depth:false, stencil:true.
-
-    // That is, if there's depth, give depth+stencil, else give neither.
-    if (flags & CreateContextFlags::SUPPORT_DEPTH) {
-        flags |= CreateContextFlags::SUPPORT_STENCIL;
-    } else {
-        flags &= ~CreateContextFlags::SUPPORT_DEPTH;
-        flags &= ~CreateContextFlags::SUPPORT_STENCIL;
-    }
-
 #ifdef XP_WIN
     gl = gl::GLContextProviderEGL::CreateHeadless(flags);
     if (!gl) {
@@ -775,16 +757,6 @@ WebGLContext::CreateOffscreenGL(bool forceEnabled)
 
     CreateContextFlags flags = forceEnabled ? CreateContextFlags::FORCE_ENABLE_HARDWARE :
                                               CreateContextFlags::NONE;
-
-    if (mOptions.alpha)
-        flags |= CreateContextFlags::SUPPORT_ALPHA;
-
-    if (!mOptions.antialias) {
-        if (mOptions.depth)
-            flags |= CreateContextFlags::SUPPORT_DEPTH;
-        if (mOptions.stencil)
-            flags |= CreateContextFlags::SUPPORT_STENCIL;
-    }
 
     gl = CreateHeadlessGL(flags, gfxInfo, this);
 
