@@ -109,6 +109,7 @@
     macro(InitializeCollator, InitializeCollator, "InitializeCollator") \
     macro(InitializeDateTimeFormat, InitializeDateTimeFormat, "InitializeDateTimeFormat") \
     macro(InitializeNumberFormat, InitializeNumberFormat, "InitializeNumberFormat") \
+    macro(inNursery, inNursery, "inNursery") \
     macro(innermost, innermost, "innermost") \
     macro(input, input, "input") \
     macro(int8x16, int8x16, "Int8x16") \

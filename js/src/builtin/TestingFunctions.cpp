@@ -2521,11 +2521,23 @@ AllocationMarker(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    static const JSClass cls = { "AllocationMarker" };
+    bool allocateInsideNursery = true;
+    if (args.length() > 0 && args[0].isObject()) {
+        RootedObject options(cx, &args[0].toObject());
 
-    RootedObject obj(cx, JS_NewObject(cx, &cls));
+        RootedValue nurseryVal(cx);
+        if (!JS_GetProperty(cx, options, "nursery", &nurseryVal))
+            return false;
+        allocateInsideNursery = ToBoolean(nurseryVal);
+    }
+
+    static const Class cls = { "AllocationMarker" };
+
+    auto newKind = allocateInsideNursery ? GenericObject : TenuredObject;
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, &cls, nullptr, newKind));
     if (!obj)
         return false;
+
     args.rval().setObject(*obj);
     return true;
 }
@@ -3122,11 +3134,13 @@ gc::ZealModeHelpText),
 "  Otherwise, return null."),
 
     JS_FN_HELP("allocationMarker", AllocationMarker, 0, 0,
-"allocationMarker()",
+"allocationMarker([options])",
 "  Return a freshly allocated object whose [[Class]] name is\n"
 "  \"AllocationMarker\". Such objects are allocated only by calls\n"
 "  to this function, never implicitly by the system, making them\n"
-"  suitable for use in allocation tooling tests.\n"),
+"  suitable for use in allocation tooling tests. Takes an optional\n"
+"  options object which may contain the following properties:\n"
+"    * nursery: bool, whether to allocate the object in the nursery\n"),
 
     JS_FN_HELP("setGCCallback", SetGCCallback, 1, 0,
 "setGCCallback({action:\"...\", options...})",
