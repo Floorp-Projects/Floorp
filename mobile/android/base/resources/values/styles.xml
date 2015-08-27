@@ -208,9 +208,9 @@
         <item name="android:scrollbarStyle">outsideOverlay</item>
         <item name="android:gravity">center</item>
         <item name="android:numColumns">auto_fit</item>
-        <item name="android:columnWidth">@dimen/tablet_tab_panel_column_width</item>
+        <item name="android:columnWidth">@dimen/tab_panel_column_width</item>
         <item name="android:horizontalSpacing">2dp</item>
-        <item name="android:verticalSpacing">@dimen/tablet_tab_panel_grid_vspacing</item>
+        <item name="android:verticalSpacing">@dimen/tab_panel_grid_vspacing</item>
         <item name="android:drawSelectorOnTop">true</item>
         <item name="android:clipToPadding">false</item>
     </style>
