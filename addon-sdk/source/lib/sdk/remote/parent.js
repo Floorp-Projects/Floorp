@@ -239,7 +239,7 @@ const FrameList = Class({
         return frame;
     }
     return null;
-  }
+  },
 });
 let frames = exports.frames = new FrameList();
 
