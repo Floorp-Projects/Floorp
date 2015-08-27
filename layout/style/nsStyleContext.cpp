@@ -5,6 +5,7 @@
  
 /* the interface (to internal code) for retrieving computed style data */
 
+#include "CSSVariableImageTable.h"
 #include "mozilla/DebugOnly.h"
 
 #include "nsCSSAnonBoxes.h"
@@ -165,6 +166,9 @@ nsStyleContext::~nsStyleContext()
   if (mCachedResetData) {
     mCachedResetData->Destroy(mBits, presContext);
   }
+
+  // Free any ImageValues we were holding on to for CSS variable values.
+  CSSVariableImageTable::RemoveAll(this);
 }
 
 #ifdef DEBUG
