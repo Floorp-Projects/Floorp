@@ -13,17 +13,23 @@ class TestClass {
 
 var test = new TestClass();
 
-assertEq(test.constructor.hasOwnProperty('prototype'), true);
+var hasPrototype = [
+    test.constructor,
+    test.generator,
+    TestClass.staticGenerator
+]
+
+for (var fun of hasPrototype) {
+    assertEq(fun.hasOwnProperty('prototype'), true);
+}
 
 var hasNoPrototype = [
     test.method,
-    test.generator,
-    TestClass.staticGenerator,
     Object.getOwnPropertyDescriptor(test.__proto__, 'getter').get,
     Object.getOwnPropertyDescriptor(test.__proto__, 'setter').set,
     TestClass.staticMethod,
     Object.getOwnPropertyDescriptor(TestClass, 'staticGetter').get,
-    Object.getOwnPropertyDescriptor(TestClass, 'staticSetter').set
+    Object.getOwnPropertyDescriptor(TestClass, 'staticSetter').set,
 ]
 
 for (var fun of hasNoPrototype) {
