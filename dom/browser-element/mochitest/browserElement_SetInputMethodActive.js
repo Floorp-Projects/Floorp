@@ -17,13 +17,11 @@ function setup() {
   }
 
   SpecialPowers.setBoolPref("dom.mozInputMethod.enabled", true);
-  SpecialPowers.setBoolPref("dom.mozInputMethod.testing", true);
   SpecialPowers.addPermission('input-manage', true, document);
 }
 
 function tearDown() {
   SpecialPowers.setBoolPref("dom.mozInputMethod.enabled", false);
-  SpecialPowers.setBoolPref("dom.mozInputMethod.testing", false);
   SpecialPowers.removePermission('input-manage', document);
   SimpleTest.finish();
 }
