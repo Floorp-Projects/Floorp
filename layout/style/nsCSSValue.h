@@ -1542,18 +1542,6 @@ public:
   uint32_t mLineNumber;
   uint32_t mLineOffset;
 
-  // This table is used to hold a reference on to any ImageValue that results
-  // from re-parsing this token stream at computed value time.  When properties
-  // like background-image contain a normal url(), the Declaration's data block
-  // will hold a reference to the ImageValue.  When a token stream is used,
-  // the Declaration only holds on to this nsCSSValueTokenStream object, and
-  // the ImageValue would only exist for the duration of
-  // nsRuleNode::WalkRuleTree, in the AutoCSSValueArray.  So instead when
-  // we re-parse a token stream and get an ImageValue, we record it in this
-  // table so that the Declaration can be the object that keeps holding
-  // a reference to it.
-  nsTHashtable<nsRefPtrHashKey<mozilla::css::ImageValue> > mImageValues;
-
 private:
   nsCSSValueTokenStream(const nsCSSValueTokenStream& aOther) = delete;
   nsCSSValueTokenStream& operator=(const nsCSSValueTokenStream& aOther) = delete;
