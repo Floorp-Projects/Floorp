@@ -60,8 +60,6 @@ static gAccessibles = 0;
 
 #ifdef _WIN64
 IDSet AccessibleWrap::sIDGen;
-
-static const uint32_t kNoID = 0;
 #endif
 
 static const int32_t kIEnumVariantDisconnected = -1;
