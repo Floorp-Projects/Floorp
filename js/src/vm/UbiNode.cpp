@@ -42,6 +42,7 @@ using JS::HandleValue;
 using JS::Value;
 using JS::ZoneSet;
 using JS::ubi::AtomOrTwoByteChars;
+using JS::ubi::CoarseType;
 using JS::ubi::Concrete;
 using JS::ubi::Edge;
 using JS::ubi::EdgeRange;
@@ -272,6 +273,7 @@ Node::getCanonicalTypeName(const char16_t* dupe, size_t length)
 }
 
 // All operations on null ubi::Nodes crash.
+CoarseType Concrete<void>::coarseType() const      { MOZ_CRASH("null ubi::Node"); }
 const char16_t* Concrete<void>::typeName() const   { MOZ_CRASH("null ubi::Node"); }
 JS::Zone* Concrete<void>::zone() const             { MOZ_CRASH("null ubi::Node"); }
 JSCompartment* Concrete<void>::compartment() const { MOZ_CRASH("null ubi::Node"); }
