@@ -234,6 +234,15 @@ void nsCocoaUtils::GetScrollingDeltas(NSEvent* aEvent, CGFloat* aOutDeltaX, CGFl
   *aOutDeltaY = [aEvent deltaY] * lineDeltaPixels;
 }
 
+BOOL nsCocoaUtils::EventHasPhaseInformation(NSEvent* aEvent)
+{
+  if (![aEvent respondsToSelector:@selector(phase)]) {
+    return NO;
+  }
+  return EventPhase(aEvent) != NSEventPhaseNone ||
+         EventMomentumPhase(aEvent) != NSEventPhaseNone;
+}
+
 void nsCocoaUtils::HideOSChromeOnScreen(bool aShouldHide)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -598,40 +607,38 @@ nsCocoaUtils::InitInputEvent(WidgetInputEvent& aInputEvent,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSUInteger modifiers =
-    aNativeEvent ? [aNativeEvent modifierFlags] : [NSEvent modifierFlags];
-  InitInputEvent(aInputEvent, modifiers);
-
+  aInputEvent.modifiers = ModifiersForEvent(aNativeEvent);
   aInputEvent.time = PR_IntervalNow();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // static
-void
-nsCocoaUtils::InitInputEvent(WidgetInputEvent& aInputEvent,
-                             NSUInteger aModifiers)
+Modifiers
+nsCocoaUtils::ModifiersForEvent(NSEvent* aNativeEvent)
 {
-  aInputEvent.modifiers = 0;
-  if (aModifiers & NSShiftKeyMask) {
-    aInputEvent.modifiers |= MODIFIER_SHIFT;
+  NSUInteger modifiers =
+    aNativeEvent ? [aNativeEvent modifierFlags] : [NSEvent modifierFlags];
+  Modifiers result = 0;
+  if (modifiers & NSShiftKeyMask) {
+    result |= MODIFIER_SHIFT;
   }
-  if (aModifiers & NSControlKeyMask) {
-    aInputEvent.modifiers |= MODIFIER_CONTROL;
+  if (modifiers & NSControlKeyMask) {
+    result |= MODIFIER_CONTROL;
   }
-  if (aModifiers & NSAlternateKeyMask) {
-    aInputEvent.modifiers |= MODIFIER_ALT;
+  if (modifiers & NSAlternateKeyMask) {
+    result |= MODIFIER_ALT;
     // Mac's option key is similar to other platforms' AltGr key.
     // Let's set AltGr flag when option key is pressed for consistency with
     // other platforms.
-    aInputEvent.modifiers |= MODIFIER_ALTGRAPH;
+    result |= MODIFIER_ALTGRAPH;
   }
-  if (aModifiers & NSCommandKeyMask) {
-    aInputEvent.modifiers |= MODIFIER_META;
+  if (modifiers & NSCommandKeyMask) {
+    result |= MODIFIER_META;
   }
 
-  if (aModifiers & NSAlphaShiftKeyMask) {
-    aInputEvent.modifiers |= MODIFIER_CAPSLOCK;
+  if (modifiers & NSAlphaShiftKeyMask) {
+    result |= MODIFIER_CAPSLOCK;
   }
   // Mac doesn't have NumLock key.  We can assume that NumLock is always locked
   // if user is using a keyboard which has numpad.  Otherwise, if user is using
@@ -641,14 +648,15 @@ nsCocoaUtils::InitInputEvent(WidgetInputEvent& aInputEvent,
   // We should notify locked state only when keys in numpad are pressed.
   // By this, web applications may not be confused by unexpected numpad key's
   // key event with unlocked state.
-  if (aModifiers & NSNumericPadKeyMask) {
-    aInputEvent.modifiers |= MODIFIER_NUMLOCK;
+  if (modifiers & NSNumericPadKeyMask) {
+    result |= MODIFIER_NUMLOCK;
   }
 
   // Be aware, NSFunctionKeyMask is included when arrow keys, home key or some
   // other keys are pressed. We cannot check whether 'fn' key is pressed or
   // not by the flag.
 
+  return result;
 }
 
 // static
