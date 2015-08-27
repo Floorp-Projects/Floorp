@@ -1846,12 +1846,8 @@ class Mochitest(MochitestUtilsMixin):
         options.profilePath = None
         self.urlOpts = []
 
-    def resolve_runtime_file(self, options, info):
-        platform = info['platform_guess']
-        buildtype = info['buildtype_guess']
-
-        data_dir = os.path.join(SCRIPT_DIR, 'runtimes', '{}-{}'.format(
-            platform, buildtype))
+    def resolve_runtime_file(self, options):
+        data_dir = os.path.join(SCRIPT_DIR, 'runtimes')
 
         flavor = self.getTestFlavor(options)
         if flavor == 'browser-chrome' and options.subsuite == 'devtools':
@@ -1913,7 +1909,7 @@ class Mochitest(MochitestUtilsMixin):
             # Add chunking filters if specified
             if options.totalChunks:
                 if options.chunkByRuntime:
-                    runtime_file = self.resolve_runtime_file(options, info)
+                    runtime_file = self.resolve_runtime_file(options)
                     if not os.path.exists(runtime_file):
                         self.log.warning("runtime file %s not found; defaulting to chunk-by-dir" %
                                          runtime_file)
