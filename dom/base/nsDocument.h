@@ -100,6 +100,7 @@ class CallbackFunction;
 struct FullscreenRequest : public LinkedListElement<FullscreenRequest>
 {
   explicit FullscreenRequest(Element* aElement);
+  FullscreenRequest(const FullscreenRequest&) = delete;
   ~FullscreenRequest();
 
   Element* GetElement() const { return mElement; }
