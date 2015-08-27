@@ -10,12 +10,7 @@
   --tab-min-height: 31px;
 }
 #TabsToolbar {
-  --tab-separator-opacity: 0.2;
-  --tab-separator-margin: 4px;
   --tab-stroke-background-size: auto 100%;
-}
-#TabsToolbar[brighttext] {
-  --tab-separator-opacity: 0.4;
 }
 
 %define tabCurveWidth 30px
@@ -431,17 +426,28 @@
   background-size: 85% 100%;
 }
 
-/* Background tab separators.
-   Also show separators beside the selected tab when dragging it. */
+/* Tab separators */
+
+.tabbrowser-tab::after,
+.tabbrowser-tab::before {
+  width: 1px;
+  -moz-margin-start: -1px;
+  background-image: linear-gradient(transparent 5px,
+                                    currentColor 5px,
+                                    currentColor calc(100% - 4px),
+                                    transparent calc(100% - 4px));
+  opacity: 0.2;
+}
+
+#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab::before,
+#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab::after {
+  opacity: 0.4;
+}
+
+/* Also show separators beside the selected tab when dragging it. */
 #tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
 .tabbrowser-tab:not([visuallyselected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
 #tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([visuallyselected]):not([beforehovered]):not(:hover)::after {
-  width: 1px;
-  -moz-margin-start: -1px;
-  margin-top: calc(var(--tab-separator-margin) + 1px);
-  margin-bottom: var(--tab-separator-margin);
-  background-color: currentColor;
-  opacity: var(--tab-separator-opacity);
   content: "";
   display: -moz-box;
 }
