@@ -185,6 +185,12 @@ fetchXHR('redirect_serviceworker.sjs', function(xhr) {
   finish();
 });
 
+fetchXHR('empty-header', function(xhr) {
+  my_ok(xhr.status == 200, "load should be successful");
+  my_ok(xhr.responseText == "emptyheader", "load should have the expected content");
+  finish();
+}, null, [["emptyheader", ""]]);
+
 expectAsyncResult();
 fetch('http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200&allowOrigin=*')
 .then(function(res) {
