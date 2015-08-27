@@ -37,6 +37,7 @@ EXPORTS += [
     'nsSize.h',
     'nsThemeConstants.h',
     'nsTransform2D.h',
+    'PingPongRegion.h',
     'RegionBuilder.h',
 ]
 
