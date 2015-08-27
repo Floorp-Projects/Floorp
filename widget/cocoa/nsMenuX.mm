@@ -62,7 +62,6 @@ int32_t nsMenuX::sIndexingMenuLevel = 0;
 - (id) initWithMenuGroupOwner:(nsMenuGroupOwnerX *)aMenuGroupOwner
 {
   if ((self = [super init]) != nil) {
-    mMenuGroupOwner = nullptr;
     [self setMenuGroupOwner:aMenuGroupOwner];
   }
   return self;
@@ -83,6 +82,9 @@ int32_t nsMenuX::sIndexingMenuLevel = 0;
 {
   // weak reference as the nsMenuGroupOwnerX owns all of its sub-objects
   mMenuGroupOwner = aMenuGroupOwner;
+  if (aMenuGroupOwner) {
+    aMenuGroupOwner->AddMenuItemInfoToSet(self);
+  }
 }
 
 @end
