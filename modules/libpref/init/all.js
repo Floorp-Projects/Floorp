@@ -4996,7 +4996,7 @@ pref("media.gmp-manager.cert.requireBuiltIn", true);
 pref("media.gmp-manager.cert.checkAttributes", true);
 pref("media.gmp-manager.certs.1.issuerName", "CN=DigiCert SHA2 Secure Server CA,O=DigiCert Inc,C=US");
 pref("media.gmp-manager.certs.1.commonName", "aus5.mozilla.org");
-pref("media.gmp-manager.certs.2.issuerName", "CN=thawte SSL CA - G2,O=thawte, Inc.,C=US");
+pref("media.gmp-manager.certs.2.issuerName", "CN=thawte SSL CA - G2,O=\"thawte, Inc.\",C=US");
 pref("media.gmp-manager.certs.2.commonName", "aus5.mozilla.org");
 #endif
 

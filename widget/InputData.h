@@ -307,22 +307,35 @@ public:
     : InputData(PANGESTURE_INPUT, aTime, aTimeStamp, aModifiers),
       mType(aType),
       mPanStartPoint(aPanStartPoint),
-      mPanDisplacement(aPanDisplacement)
+      mPanDisplacement(aPanDisplacement),
+      mLineOrPageDeltaX(0),
+      mLineOrPageDeltaY(0),
+      mHandledByAPZ(false)
   {
   }
+
+  bool IsMomentum() const;
+
+  WidgetWheelEvent ToWidgetWheelEvent(nsIWidget* aWidget) const;
 
   bool TransformToLocal(const gfx::Matrix4x4& aTransform);
 
   PanGestureType mType;
   ScreenPoint mPanStartPoint;
 
-  // Only non-zero if mType is PANGESTURE_PAN or PANGESTURE_MOMENTUMPAN.
+  // The delta. This can be non-zero on any type of event.
   ScreenPoint mPanDisplacement;
 
   // Versions of |mPanStartPoint| and |mPanDisplacement| in the local
   // coordinates of the APZC receiving the pan. These are set and used by APZ.
   ParentLayerPoint mLocalPanStartPoint;
   ParentLayerPoint mLocalPanDisplacement;
+
+  // See lineOrPageDeltaX/Y on WidgetWheelEvent.
+  int32_t mLineOrPageDeltaX;
+  int32_t mLineOrPageDeltaY;
+
+  bool mHandledByAPZ;
 };
 
 /**
@@ -502,19 +515,27 @@ public:
      mDeltaType(aDeltaType),
      mScrollMode(aScrollMode),
      mOrigin(aOrigin),
+     mHandledByAPZ(false),
      mDeltaX(aDeltaX),
-     mDeltaY(aDeltaY)
+     mDeltaY(aDeltaY),
+     mLineOrPageDeltaX(0),
+     mLineOrPageDeltaY(0),
+     mIsMomentum(false)
   {}
 
+  WidgetWheelEvent ToWidgetWheelEvent(nsIWidget* aWidget) const;
   bool TransformToLocal(const gfx::Matrix4x4& aTransform);
 
   ScrollDeltaType mDeltaType;
   ScrollMode mScrollMode;
   ScreenPoint mOrigin;
 
+  bool mHandledByAPZ;
+
   // Deltas are in units corresponding to the delta type. For line deltas, they
   // are the number of line units to scroll. The number of device pixels for a
   // horizontal and vertical line unit are in FrameMetrics::mLineScrollAmount.
+  // For pixel deltas, these values are in ScreenCoords.
   //
   // The horizontal (X) delta is > 0 for scrolling right and < 0 for scrolling
   // left. The vertical (Y) delta is < 0 for scrolling up and > 0 for
@@ -525,6 +546,12 @@ public:
   // The location of the scroll in local coordinates. This is set and used by
   // APZ.
   ParentLayerPoint mLocalOrigin;
+
+  // See lineOrPageDeltaX/Y on WidgetWheelEvent.
+  int32_t mLineOrPageDeltaX;
+  int32_t mLineOrPageDeltaY;
+
+  bool mIsMomentum;
 };
 
 } // namespace mozilla

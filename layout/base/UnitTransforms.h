@@ -184,12 +184,12 @@ template <typename TargetUnits, typename SourceUnits>
 static Maybe<gfx::PointTyped<TargetUnits>> UntransformVector(const gfx::Matrix4x4& aTransform,
                                                     const gfx::PointTyped<SourceUnits>& aVector,
                                                     const gfx::PointTyped<SourceUnits>& aAnchor) {
-  gfx::Point4D point = aTransform.ProjectPoint(aAnchor.ToUnknownPoint() + aVector.ToUnknownPoint()) 
-    - aTransform.ProjectPoint(aAnchor.ToUnknownPoint());
-  if (!point.HasPositiveWCoord()){
+  gfx::Point4D projectedAnchor = aTransform.ProjectPoint(aAnchor.ToUnknownPoint());
+  gfx::Point4D projectedTarget = aTransform.ProjectPoint(aAnchor.ToUnknownPoint() + aVector.ToUnknownPoint());
+  if (!projectedAnchor.HasPositiveWCoord() || !projectedTarget.HasPositiveWCoord()){
     return Nothing();
   }
-  return Some(ViewAs<TargetUnits>(point.As2DPoint()));
+  return Some(ViewAs<TargetUnits>(projectedAnchor.As2DPoint() - projectedTarget.As2DPoint()));
 }
 
 } // namespace mozilla

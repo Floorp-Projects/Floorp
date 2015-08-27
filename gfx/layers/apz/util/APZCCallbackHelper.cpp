@@ -10,6 +10,7 @@
 #include "gfxPrefs.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/TouchEvents.h"
@@ -31,6 +32,8 @@ namespace mozilla {
 namespace layers {
 
 using dom::TabParent;
+
+uint64_t APZCCallbackHelper::sLastTargetAPZCNotificationInputBlock = uint64_t(-1);
 
 static void
 AdjustDisplayPortForScrollDelta(mozilla::layers::FrameMetrics& aFrameMetrics,
@@ -741,6 +744,16 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
   if (!aWidget || !aDocument) {
     return;
   }
+  if (aInputBlockId == sLastTargetAPZCNotificationInputBlock) {
+    // We have already confirmed the target APZC for a previous event of this
+    // input block. If we activated a scroll frame for this input block,
+    // sending another target APZC confirmation would be harmful, as it might
+    // race the original confirmation (which needs to go through a layers
+    // transaction).
+    APZCCH_LOG("Not resending target APZC confirmation for input block %" PRIu64 "\n", aInputBlockId);
+    return;
+  }
+  sLastTargetAPZCNotificationInputBlock = aInputBlockId;
   if (nsIPresShell* shell = aDocument->GetShell()) {
     if (nsIFrame* rootFrame = shell->GetRootFrame()) {
       bool waitForRefresh = false;

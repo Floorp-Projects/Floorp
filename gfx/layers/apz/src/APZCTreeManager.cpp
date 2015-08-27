@@ -554,6 +554,33 @@ APZCTreeManager::UpdateHitTestingTree(TreeBuildingState& aState,
   return node;
 }
 
+// Returns whether or not a wheel event action will be (or was) performed by
+// APZ. If this returns true, the event must not perform a synchronous
+// scroll.
+//
+// Even if this returns false, all wheel events in APZ-aware widgets must
+// be sent through APZ so they are transformed correctly for TabParent.
+static bool
+WillHandleWheelEvent(WidgetWheelEvent* aEvent)
+{
+  return EventStateManager::WheelEventIsScrollAction(aEvent) &&
+         (aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE
+            || aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) &&
+         !EventStateManager::WheelEventNeedsDeltaMultipliers(aEvent);
+}
+
+template<typename PanGestureOrScrollWheelInput>
+static bool
+WillHandleInput(const PanGestureOrScrollWheelInput& aPanInput)
+{
+  if (!NS_IsMainThread()) {
+    return true;
+  }
+
+  WidgetWheelEvent wheelEvent = aPanInput.ToWidgetWheelEvent(nullptr);
+  return WillHandleWheelEvent(&wheelEvent);
+}
+
 void
 APZCTreeManager::FlushApzRepaints(uint64_t aLayersId)
 {
@@ -591,6 +618,12 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       FlushRepaintsToClearScreenToGeckoTransform();
 
       ScrollWheelInput& wheelInput = aEvent.AsScrollWheelInput();
+
+      wheelInput.mHandledByAPZ = WillHandleInput(wheelInput);
+      if (!wheelInput.mHandledByAPZ) {
+        return result;
+      }
+
       nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(wheelInput.mOrigin,
                                                             &hitResult);
       if (apzc) {
@@ -620,11 +653,33 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       }
       break;
     } case PANGESTURE_INPUT: {
+      FlushRepaintsToClearScreenToGeckoTransform();
+
       PanGestureInput& panInput = aEvent.AsPanGestureInput();
+      panInput.mHandledByAPZ = WillHandleInput(panInput);
+      if (!panInput.mHandledByAPZ) {
+        return result;
+      }
+
       nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(panInput.mPanStartPoint,
                                                             &hitResult);
       if (apzc) {
         MOZ_ASSERT(hitResult == HitLayer || hitResult == HitDispatchToContentRegion);
+
+        // For pan gesture events, the call to ReceiveInputEvent below may result in
+        // scrolling, which changes the async transform. However, the event we
+        // want to pass to gecko should be the pre-scroll event coordinates,
+        // transformed into the gecko space. (pre-scroll because the mouse
+        // cursor is stationary during pan gesture scrolling, unlike touchmove
+        // events). Since we just flushed the pending repaints the transform to
+        // gecko space should only consist of overscroll-cancelling transforms.
+        Matrix4x4 transformToGecko = GetScreenToApzcTransform(apzc)
+                                   * GetApzcToGeckoTransform(apzc);
+        MOZ_ASSERT(transformToGecko.Is2D());
+        ScreenPoint untransformedStartPoint = TransformTo<ScreenPixel>(
+          transformToGecko, panInput.mPanStartPoint);
+        ScreenPoint untransformedDisplacement = TransformVector<ScreenPixel>(
+            transformToGecko, panInput.mPanDisplacement, panInput.mPanStartPoint);
 
         result = mInputQueue->ReceiveInputEvent(
             apzc,
@@ -633,13 +688,8 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
-        Matrix4x4 transformToGecko = GetScreenToApzcTransform(apzc)
-                                   * GetApzcToGeckoTransform(apzc);
-        MOZ_ASSERT(transformToGecko.Is2D());
-        panInput.mPanStartPoint = TransformTo<ScreenPixel>(
-            transformToGecko, panInput.mPanStartPoint);
-        panInput.mPanDisplacement = TransformVector<ScreenPixel>(
-            transformToGecko, panInput.mPanDisplacement, panInput.mPanStartPoint);
+        panInput.mPanStartPoint = untransformedStartPoint;
+        panInput.mPanDisplacement = untransformedDisplacement;
       }
       break;
     } case PINCHGESTURE_INPUT: {  // note: no one currently sends these
@@ -902,23 +952,8 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
   nsEventStatus status = ReceiveInputEvent(input, aOutTargetGuid, aOutInputBlockId);
   aEvent.refPoint.x = input.mOrigin.x;
   aEvent.refPoint.y = input.mOrigin.y;
-  aEvent.mFlags.mHandledByAPZ = true;
+  aEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
   return status;
-}
-
-// Returns whether or not a wheel event action will be (or was) performed by
-// APZ. If this returns true, the event must not perform a synchronous
-// scroll.
-//
-// Even if this returns false, all wheel events in APZ-aware widgets must
-// be sent through APZ so they are transformed correctly for TabParent.
-static bool
-WillHandleWheelEvent(WidgetWheelEvent* aEvent)
-{
-  return EventStateManager::WheelEventIsScrollAction(aEvent) &&
-         (aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE
-            || aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) &&
-         !EventStateManager::WheelEventNeedsDeltaMultipliers(aEvent);
 }
 
 nsEventStatus
@@ -958,12 +993,10 @@ APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
     }
     case eWheelEventClass: {
       WidgetWheelEvent& wheelEvent = *aEvent.AsWheelEvent();
-      if (!WillHandleWheelEvent(&wheelEvent)) {
-        // Don't send through APZ if we're not scrolling or if the delta mode
-        // is not line-based.
-        return ProcessEvent(aEvent, aOutTargetGuid, aOutInputBlockId);
+      if (WillHandleWheelEvent(&wheelEvent)) {
+        return ProcessWheelEvent(wheelEvent, aOutTargetGuid, aOutInputBlockId);
       }
-      return ProcessWheelEvent(wheelEvent, aOutTargetGuid, aOutInputBlockId);
+      return ProcessEvent(aEvent, aOutTargetGuid, aOutInputBlockId);
     }
     default: {
       return ProcessEvent(aEvent, aOutTargetGuid, aOutInputBlockId);

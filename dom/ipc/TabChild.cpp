@@ -1870,7 +1870,7 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
                               const ScrollableLayerGuid& aGuid,
                               const uint64_t& aInputBlockId)
 {
-  if (AsyncPanZoomEnabled()) {
+  if (aEvent.mFlags.mHandledByAPZ) {
     nsCOMPtr<nsIDocument> document(GetDocument());
     APZCCallbackHelper::SendSetTargetAPZCNotification(
       mPuppetWidget, document, aEvent, aGuid, aInputBlockId);
@@ -1880,7 +1880,7 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
   event.widget = mPuppetWidget;
   APZCCallbackHelper::DispatchWidgetEvent(event);
 
-  if (AsyncPanZoomEnabled()) {
+  if (aEvent.mFlags.mHandledByAPZ) {
     mAPZEventState->ProcessWheelEvent(event, aGuid, aInputBlockId);
   }
   return true;
