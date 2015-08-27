@@ -498,6 +498,8 @@ public:
     FullscreenReason aReason, bool aIsFullscreen,
     mozilla::gfx::VRHMDInfo *aHMD = nullptr) override final;
   virtual void FinishFullscreenChange(bool aIsFullscreen) override final;
+  void SetWidgetFullscreen(FullscreenReason aReason, bool aIsFullscreen,
+                           nsIWidget* aWidget, nsIScreen* aScreen);
   bool FullScreen() const;
 
   // Inner windows only.

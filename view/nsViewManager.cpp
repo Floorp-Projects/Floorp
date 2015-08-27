@@ -197,7 +197,8 @@ void
 nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight)
 {
   if (mRootView) {
-    if (mRootView->IsEffectivelyVisible() && mPresShell && mPresShell->IsVisible()) {
+    if (mRootView->IsEffectivelyVisible() && mPresShell &&
+        mPresShell->IsVisible() && !mPresShell->IsInFullscreenChange()) {
       if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
           mDelayedResize != nsSize(aWidth, aHeight)) {
         // We have a delayed resize; that now obsolete size may already have
