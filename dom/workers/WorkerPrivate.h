@@ -28,12 +28,10 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "nsTObserverArray.h"
-#include "mozilla/dom/StructuredCloneTags.h"
 
 #include "Queue.h"
 #include "WorkerFeature.h"
 
-class JSAutoStructuredCloneBuffer;
 class nsIChannel;
 class nsIDocument;
 class nsIEventTarget;
@@ -52,6 +50,7 @@ struct RuntimeStats;
 namespace mozilla {
 namespace dom {
 class Function;
+class StructuredCloneHelper;
 } // namespace dom
 namespace ipc {
 class PrincipalInfo;
@@ -74,7 +73,6 @@ class WorkerDebuggerGlobalScope;
 class WorkerGlobalScope;
 class WorkerPrivate;
 class WorkerRunnable;
-class WorkerStructuredCloneClosure;
 class WorkerThread;
 
 // SharedMutex is a small wrapper around an (internal) reference-counted Mutex
@@ -350,8 +348,7 @@ public:
   DispatchMessageEventToMessagePort(
                                JSContext* aCx,
                                uint64_t aMessagePortSerial,
-                               JSAutoStructuredCloneBuffer&& aBuffer,
-                               WorkerStructuredCloneClosure& aClosure);
+                               StructuredCloneHelper& aHelper);
 
   void
   UpdateRuntimeOptions(JSContext* aCx,
@@ -1508,17 +1505,6 @@ IsCurrentThreadRunningChromeWorker();
 
 JSContext*
 GetCurrentThreadJSContext();
-
-enum WorkerStructuredDataType
-{
-  DOMWORKER_SCTAG_BLOB = SCTAG_DOM_MAX,
-  DOMWORKER_SCTAG_FORMDATA = SCTAG_DOM_MAX + 1,
-
-  DOMWORKER_SCTAG_END
-};
-
-const JSStructuredCloneCallbacks*
-WorkerStructuredCloneCallbacks();
 
 class AutoSyncLoopHolder
 {
