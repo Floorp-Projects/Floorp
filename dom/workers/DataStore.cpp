@@ -233,7 +233,7 @@ public:
     aWorkerPrivate->AssertIsOnWorkerThread();
 
     // This needs to be structured cloned while it's still on the worker thread.
-    Write(aCx, aObj, true, mRv);
+    Write(aCx, aObj, mRv);
     NS_WARN_IF(mRv.Failed());
   }
 
@@ -294,7 +294,7 @@ public:
     aWorkerPrivate->AssertIsOnWorkerThread();
 
     // This needs to be structured cloned while it's still on the worker thread.
-    Write(aCx, aObj, true, mRv);
+    Write(aCx, aObj, mRv);
     NS_WARN_IF(mRv.Failed());
   }
 
