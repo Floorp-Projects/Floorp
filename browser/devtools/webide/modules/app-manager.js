@@ -659,7 +659,7 @@ let AppManager = exports.AppManager = {
 
       // Addons don't have any document to load (yet?)
       // So that there is no need to run them, installing is enough
-      if (project.manifest.role && project.manifest.role === "addon") {
+      if (project.manifest.manifest_version || project.manifest.role === "addon") {
         return;
       }
 
