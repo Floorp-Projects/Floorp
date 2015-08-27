@@ -118,7 +118,7 @@ Concrete<DeserializedNode>::typeName() const
   return get().typeName;
 }
 
-size_t
+Node::Size
 Concrete<DeserializedNode>::size(mozilla::MallocSizeOf mallocSizeof) const
 {
   return get().size;
