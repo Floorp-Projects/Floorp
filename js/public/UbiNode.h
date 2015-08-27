@@ -495,8 +495,8 @@ class Base {
     // Return the size of this node, in bytes. Include any structures that this
     // node owns exclusively that are not exposed as their own ubi::Nodes.
     // |mallocSizeOf| should be a malloc block sizing function; see
-    // |mfbt/MemoryReporting.h.
-    virtual size_t size(mozilla::MallocSizeOf mallocSizeof) const { return 0; }
+    // |mfbt/MemoryReporting.h|.
+    virtual size_t size(mozilla::MallocSizeOf mallocSizeof) const { return 1; }
 
     // Return an EdgeRange that initially contains all the referent's outgoing
     // edges. The caller takes ownership of the EdgeRange.
