@@ -39,7 +39,7 @@ class DrawingCommand
 public:
   virtual ~DrawingCommand() {}
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix& aTransform) = 0;
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aTransform = nullptr) = 0;
 
 protected:
   explicit DrawingCommand(CommandType aType)
@@ -130,7 +130,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
   {
     aDT->DrawSurface(mSurface, mDest, mSource, mSurfOptions, mOptions);
   }
@@ -154,7 +154,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
   {
     aDT->DrawFilter(mFilter, mSourceRect, mDestPoint, mOptions);
   }
@@ -175,7 +175,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
   {
     aDT->ClearRect(mRect);
   }
@@ -197,11 +197,13 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix& aTransform)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aTransform)
   {
-    MOZ_ASSERT(!aTransform.HasNonIntegerTranslation());
+    MOZ_ASSERT(!aTransform || !aTransform->HasNonIntegerTranslation());
     Point dest(Float(mDestination.x), Float(mDestination.y));
-    dest = aTransform * dest;
+    if (aTransform) {
+      dest = (*aTransform) * dest;
+    }
     aDT->CopySurface(mSurface, mSourceRect, IntPoint(uint32_t(dest.x), uint32_t(dest.y)));
   }
 
@@ -224,7 +226,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
   {
     aDT->FillRect(mRect, mPattern, mOptions);
   }
@@ -250,7 +252,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
   {
     aDT->StrokeRect(mRect, mPattern, mStrokeOptions, mOptions);
   }
@@ -279,7 +281,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
   {
     aDT->StrokeLine(mStart, mEnd, mPattern, mStrokeOptions, mOptions);
   }
@@ -305,7 +307,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
   {
     aDT->Fill(mPath, mPattern, mOptions);
   }
@@ -331,7 +333,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
   {
     aDT->Stroke(mPath, mPattern, mStrokeOptions, mOptions);
   }
@@ -361,7 +363,7 @@ public:
     memcpy(&mGlyphs.front(), aBuffer.mGlyphs, sizeof(Glyph) * aBuffer.mNumGlyphs);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
   {
     GlyphBuffer buf;
     buf.mNumGlyphs = mGlyphs.size();
@@ -390,7 +392,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
   {
     aDT->Mask(mSource, mMask, mOptions);
   }
@@ -416,7 +418,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
   {
     aDT->MaskSurface(mSource, mMask, mOffset, mOptions);
   }
@@ -437,7 +439,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
   {
     aDT->PushClip(mPath);
   }
@@ -455,7 +457,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
   {
     aDT->PushClipRect(mRect);
   }
@@ -472,7 +474,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
   {
     aDT->PopClip();
   }
@@ -487,11 +489,13 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix& aMatrix)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aMatrix)
   {
-    Matrix transform = mTransform;
-    transform *= aMatrix;
-    aDT->SetTransform(transform);
+    if (aMatrix) {
+      aDT->SetTransform(mTransform * (*aMatrix));
+    } else {
+      aDT->SetTransform(mTransform);
+    }
   }
 
 private:
