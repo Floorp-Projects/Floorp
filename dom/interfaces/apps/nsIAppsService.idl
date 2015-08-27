@@ -16,7 +16,7 @@ interface nsIURI;
  * This service allows accessing some DOMApplicationRegistry methods from
  * non-javascript code.
  */
-[scriptable, uuid(03f1e30e-a1aa-4e18-ab3f-cd04b3b35a54)]
+[scriptable, uuid(8a035714-ed14-446f-8bd7-837e91cdce9e)]
 interface nsIAppsService : nsISupports
 {
   mozIApplication getAppByManifestURL(in DOMString manifestURL);
@@ -83,4 +83,11 @@ interface nsIAppsService : nsISupports
    * Returns the scope for app to use with service workers.
    */
   DOMString getScopeByLocalId(in unsigned long localId);
+
+  /**
+   * Returns true if this uri is a script or css resource loaded
+   * from an extension.
+   * Available only in the parent process.
+   */
+   bool isExtensionResource(in nsIURI uri);
 };
