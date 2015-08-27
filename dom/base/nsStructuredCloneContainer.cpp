@@ -52,7 +52,7 @@ nsStructuredCloneContainer::InitFromJSVal(JS::Handle<JS::Value> aData,
   }
 
   ErrorResult rv;
-  Write(aCx, aData, rv);
+  Write(aCx, aData, true, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
