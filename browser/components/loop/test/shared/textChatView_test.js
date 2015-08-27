@@ -540,7 +540,6 @@ describe("loop.shared.views.TextChatView", function () {
 
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
         roomName: "A wonderful surprise!",
-        roomOwner: "Chris",
         roomUrl: "Fake"
       }));
 
@@ -558,7 +557,6 @@ describe("loop.shared.views.TextChatView", function () {
 
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
         roomName: "A Very Long Conversation Name",
-        roomOwner: "fake",
         roomUrl: "http://showcase",
         urls: [{
           description: "A wonderful page!",
