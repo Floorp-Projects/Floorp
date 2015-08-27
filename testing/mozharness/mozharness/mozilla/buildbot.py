@@ -49,7 +49,7 @@ TBPL_WORST_LEVEL_TUPLE = (TBPL_RETRY, TBPL_EXCEPTION, TBPL_FAILURE,
 
 
 class BuildbotMixin(object):
-    buildbot_config = None
+    buildbot_config = {}
     buildbot_properties = {}
     worst_buildbot_status = TBPL_SUCCESS
 
