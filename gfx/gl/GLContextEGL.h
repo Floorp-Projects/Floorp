@@ -92,15 +92,19 @@ public:
     // for the lifetime of this context.
     void HoldSurface(gfxASurface *aSurf);
 
-    EGLContext GetEGLContext() {
+    EGLContext GetEGLContext() const {
         return mContext;
     }
 
-    EGLSurface GetEGLSurface() {
+    EGLConfig GetEGLConfig() const {
+        return mConfig;
+    }
+
+    EGLSurface GetEGLSurface() const {
         return mSurface;
     }
 
-    EGLDisplay GetEGLDisplay() {
+    EGLDisplay GetEGLDisplay() const {
         return EGL_DISPLAY();
     }
 
@@ -112,7 +116,7 @@ public:
     CreateEGLPixmapOffscreenContext(const gfx::IntSize& size);
 
     static already_AddRefed<GLContextEGL>
-    CreateEGLPBufferOffscreenContext(const gfx::IntSize& size);
+    CreateEGLPBufferOffscreenContext(CreateContextFlags flags, const gfx::IntSize& size);
 
 protected:
     friend class GLContextProviderEGL;

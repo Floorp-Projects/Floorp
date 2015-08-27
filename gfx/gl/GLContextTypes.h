@@ -7,6 +7,7 @@
 #define GLCONTEXT_TYPES_H_
 
 #include "GLTypes.h"
+#include "mozilla/TypedEnumBits.h"
 
 namespace mozilla {
 namespace gl {
@@ -42,6 +43,22 @@ struct GLFormats
 
     GLsizei samples;
 };
+
+enum class CreateContextFlags : int8_t {
+    NONE = 0,
+
+    REQUIRE_COMPAT_PROFILE = 1 << 0,
+    // Force the use of hardware backed GL, don't allow software implementations.
+    FORCE_ENABLE_HARDWARE = 1 << 1,
+    // Don't force discrete GPU to be used. (if applicable)
+    ALLOW_OFFLINE_RENDERER = 1 << 2,
+
+    // Ensure that later we'll be able to attach a backbuffer with these properties:
+    SUPPORT_ALPHA = 1 << 3,
+    SUPPORT_DEPTH = 1 << 4,
+    SUPPORT_STENCIL = 1 << 5,
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CreateContextFlags)
 
 } /* namespace gl */
 } /* namespace mozilla */
