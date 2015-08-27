@@ -191,10 +191,37 @@ const Tab = Class({
     if (isDestroyed(this))
       return;
 
-    // BUG 792946 https://bugzilla.mozilla.org/show_bug.cgi?id=792946
-    // TODO: fix this circular dependency
-    let { Worker } = require('./worker');
-    return Worker(options, browser(this).contentWindow);
+    let { Worker } = require('../content/worker');
+    let { connect, makeChildOptions } = require('../content/utils');
+
+    let worker = Worker(options);
+    worker.once("detach", () => {
+      worker.destroy();
+    });
+
+    let attach = frame => {
+      let childOptions = makeChildOptions(options);
+      frame.port.emit("sdk/tab/attach", childOptions);
+      connect(worker, frame, { id: childOptions.id, url: this.url });
+    };
+
+    // Do this synchronously if possible
+    let frame = frames.getFrameForBrowser(browser(this));
+    if (frame) {
+      attach(frame);
+    }
+    else {
+      let listener = (frame) => {
+        if (frame.frameElement != browser(this))
+          return;
+
+        listener.off("attach", listener);
+        attach(frame);
+      };
+      frames.on("attach", listener);
+    }
+
+    return worker;
   },
 
   destroy: function() {

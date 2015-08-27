@@ -5,6 +5,7 @@
 
 const system = require('sdk/system/events');
 const { frames } = require('sdk/remote/child');
+const { WorkerChild } = require('sdk/content/worker-child');
 
 // map observer topics to tab event names
 const EVENTS = {
@@ -34,3 +35,8 @@ function eventListener({target, type, persisted}) {
     frame.port.emit('sdk/tab/event', type, persisted);
 }
 frames.addEventListener('pageshow', eventListener, true);
+
+frames.port.on('sdk/tab/attach', (frame, options) => {
+  options.window = frame.content;
+  new WorkerChild(options);
+});
