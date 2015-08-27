@@ -156,7 +156,6 @@ describe("loop.store.TextChatStore", function () {
     it("should add the room name to the list", function() {
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
         roomName: "Let's share!",
-        roomOwner: "Mark",
         roomUrl: "fake"
       }));
 
@@ -173,7 +172,6 @@ describe("loop.store.TextChatStore", function () {
     it("should add the context to the list", function() {
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
         roomName: "Let's share!",
-        roomOwner: "Mark",
         roomUrl: "fake",
         urls: [{
           description: "A wonderful event",
@@ -206,7 +204,6 @@ describe("loop.store.TextChatStore", function () {
 
     it("should not add more than one context message", function() {
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
-        roomOwner: "Mark",
         roomUrl: "fake",
         urls: [{
           description: "A wonderful event",
@@ -228,7 +225,6 @@ describe("loop.store.TextChatStore", function () {
       }]);
 
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
-        roomOwner: "Mark",
         roomUrl: "fake",
         urls: [{
           description: "A wonderful event2",
@@ -253,7 +249,6 @@ describe("loop.store.TextChatStore", function () {
     it("should not dispatch a LoopChatMessageAppended event", function() {
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
         roomName: "Let's share!",
-        roomOwner: "Mark",
         roomUrl: "fake"
       }));
 
