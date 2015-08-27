@@ -14,7 +14,7 @@
 
     <!-- Note: for an unknown reason, scrolling in the TabsLayout
          does not work unless it is laid out after the empty view. -->
-    <org.mozilla.gecko.tabs.TabsGridLayout
+    <view class="org.mozilla.gecko.tabs.TabsPanel$TabsLayout"
           android:id="@+id/private_tabs_layout"
           style="@style/TabsLayout"
           android:layout_width="match_parent"

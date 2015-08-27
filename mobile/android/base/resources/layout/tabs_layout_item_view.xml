@@ -16,9 +16,9 @@
                   android:layout_height="wrap_content"
                   android:orientation="horizontal"
                   android:duplicateParentState="true"
-                  android:paddingLeft="@dimen/tab_highlight_stroke_width"
-                  android:paddingRight="@dimen/tab_highlight_stroke_width"
-                  android:paddingBottom="@dimen/tab_highlight_stroke_width">
+                  android:paddingLeft="@dimen/tablet_tab_highlight_stroke_width"
+                  android:paddingRight="@dimen/tablet_tab_highlight_stroke_width"
+                  android:paddingBottom="@dimen/tablet_tab_highlight_stroke_width">
 
        <org.mozilla.gecko.widget.FadedSingleColorTextView
                android:id="@+id/title"
@@ -62,13 +62,13 @@
             android:id="@+id/wrapper"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="@dimen/tab_highlight_stroke_width"
+            android:padding="@dimen/tablet_tab_highlight_stroke_width"
             android:background="@drawable/tab_thumbnail"
             android:duplicateParentState="true">
 
         <org.mozilla.gecko.tabs.TabsPanelThumbnailView android:id="@+id/thumbnail"
-                                                       android:layout_width="@dimen/tab_thumbnail_width"
-                                                       android:layout_height="@dimen/tab_thumbnail_height"
+                                                       android:layout_width="@dimen/tablet_tab_thumbnail_width"
+                                                       android:layout_height="@dimen/tablet_tab_thumbnail_height"
                                                 />
 
     </org.mozilla.gecko.widget.TabThumbnailWrapper>

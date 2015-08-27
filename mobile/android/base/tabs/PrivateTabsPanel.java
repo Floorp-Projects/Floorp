@@ -13,7 +13,9 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 /**
  * A container that wraps the private tabs {@link android.widget.AdapterView} and empty
@@ -24,7 +26,7 @@ import android.widget.FrameLayout;
 class PrivateTabsPanel extends FrameLayout implements CloseAllPanelView {
     private final TabsLayout tabsLayout;
 
-    public PrivateTabsPanel(final Context context, final AttributeSet attrs) {
+    public PrivateTabsPanel(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         LayoutInflater.from(context).inflate(R.layout.private_tabs_panel, this);
@@ -35,7 +37,7 @@ class PrivateTabsPanel extends FrameLayout implements CloseAllPanelView {
     }
 
     @Override
-    public void setTabsPanel(final TabsPanel panel) {
+    public void setTabsPanel(TabsPanel panel) {
         tabsLayout.setTabsPanel(panel);
     }
 
@@ -49,6 +51,11 @@ class PrivateTabsPanel extends FrameLayout implements CloseAllPanelView {
     public void hide() {
         setVisibility(View.GONE);
         tabsLayout.hide();
+    }
+
+    @Override
+    public boolean shouldExpand() {
+        return tabsLayout.shouldExpand();
     }
 
     @Override
