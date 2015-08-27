@@ -31,12 +31,19 @@ class ThreadSharedFloatArrayBufferList final : public ThreadSharedObject
 {
 public:
   /**
-   * Construct with null data.
+   * Construct with null channel data pointers.
    */
   explicit ThreadSharedFloatArrayBufferList(uint32_t aCount)
   {
     mContents.SetLength(aCount);
   }
+  /**
+   * Create with buffers suitable for transfer to
+   * JS_NewArrayBufferWithContents().  The buffer contents are uninitialized
+   * and so should be set using GetDataForWrite().
+   */
+  static already_AddRefed<ThreadSharedFloatArrayBufferList>
+  Create(uint32_t aChannelCount, size_t aLength, const mozilla::fallible_t&);
 
   struct Storage final
   {
