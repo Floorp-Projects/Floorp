@@ -221,11 +221,13 @@ config = {
                                       'tests/reftest/tests/testing/crashtest/crashtests.list']},
     },
     "all_xpcshell_suites": {
-        "xpcshell": ["--manifest=tests/xpcshell/tests/all-test-dirs.list",
-                     "%(abs_app_dir)s/" + XPCSHELL_NAME],
-        "xpcshell-addons": ["--manifest=tests/xpcshell/tests/all-test-dirs.list",
-                            "--tag=addons",
-                            "%(abs_app_dir)s/" + XPCSHELL_NAME]
+        "xpcshell": {'options': ["--xpcshell=%(abs_app_dir)s/" + XPCSHELL_NAME,
+                                 "--manifest=tests/xpcshell/tests/all-test-dirs.list"],
+                     'tests': []},
+        "xpcshell-addons": {'options': ["--xpcshell=%(abs_app_dir)s/" + XPCSHELL_NAME,
+                                        "--manifest=tests/xpcshell/tests/all-test-dirs.list",
+                                        "--tag=addons"],
+                            'tests': []}
     },
     "all_cppunittest_suites": {
         "cppunittest": ['tests/cppunittest']
