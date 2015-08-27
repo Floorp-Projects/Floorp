@@ -16,7 +16,6 @@
 #include "nsThreadUtils.h"
 #include "nsIFile.h"
 #include "nsIFileChannel.h"
-#include "nsIFileStreams.h"
 #include "nsIHttpChannel.h"
 #include "nsISeekableStream.h"
 #include "nsIInputStream.h"
@@ -1368,8 +1367,7 @@ nsresult FileMediaResource::Open(nsIStreamListener** aStreamListener)
       rv = fc->GetFile(getter_AddRefs(file));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = NS_NewLocalFileInputStream(
-        getter_AddRefs(mInput), file, -1, -1, nsIFileInputStream::SHARE_DELETE);
+      rv = NS_NewLocalFileInputStream(getter_AddRefs(mInput), file);
     } else if (IsBlobURI(mURI)) {
       rv = NS_GetStreamForBlobURI(mURI, getter_AddRefs(mInput));
     }
