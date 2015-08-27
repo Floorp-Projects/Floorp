@@ -56,6 +56,7 @@ add_task(function*() {
     "There should be no samples from the first recording in the second one, " +
     "even though the total number of frames did not overflow.");
 
+  yield front.destroy();
   yield closeDebuggerClient(client);
   gBrowser.removeCurrentTab();
 });
