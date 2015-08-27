@@ -1509,10 +1509,31 @@ or run without that action (ie: --no-{action})"
         dirs = self.query_abs_dirs()
         paths = [
             (packageName, os.path.join(dirs['abs_obj_dir'], 'dist', packageName)),
-            ('libxul.so', os.path.join(dirs['abs_obj_dir'], 'dist', 'bin', 'libxul.so')),
             ('omni.ja', os.path.join(dirs['abs_obj_dir'], 'dist', 'fennec', 'assets', 'omni.ja')),
             ('classes.dex', os.path.join(dirs['abs_obj_dir'], 'dist', 'fennec', 'classes.dex'))
         ]
+
+        # Find a stripped version of libxul if possible
+        def find_file(rootPath, fileName):
+            for root, dirs, files in os.walk(rootPath):
+               for file in files:
+                   if file == fileName:
+                        return (fileName, os.path.join(root, file))
+            return None
+
+        # Check in the firefox and fennec dist dirs
+        libxul = None
+        dist_root = os.path.join(dirs['abs_obj_dir'], 'dist')
+        for dist in ('firefox', 'fennec', 'b2g'):
+            libxul = find_file(os.path.join(dist_root, dist), 'libxul.so')
+            if libxul:
+                break
+
+        if libxul:
+            paths.append(libxul)
+        else:
+            paths.append( ('libxul.so', os.path.join(dirs['abs_obj_dir'], 'dist', 'bin', 'libxul.so')) )
+
         for (name, path) in paths:
             if os.path.exists(path):
                 self.info('TinderboxPrint: Size of %s<br/>%s bytes\n' % (name, self.query_filesize(path)))
