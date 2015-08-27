@@ -209,8 +209,13 @@ MobileViewportManager::UpdateSPCSPS(const ScreenIntSize& aDisplaySize,
 void
 MobileViewportManager::UpdateDisplayPortMargins()
 {
-  if (nsIScrollableFrame* root = mPresShell->GetRootScrollFrameAsScrollable()) {
-    nsLayoutUtils::CalculateAndSetDisplayPortMargins(root,
+  if (nsIFrame* root = mPresShell->GetRootScrollFrame()) {
+    if (!nsLayoutUtils::GetDisplayPort(root->GetContent(), nullptr)) {
+      // There isn't already a displayport, so we don't want to add one.
+      return;
+    }
+    nsIScrollableFrame* scrollable = do_QueryFrame(root);
+    nsLayoutUtils::CalculateAndSetDisplayPortMargins(scrollable,
       nsLayoutUtils::RepaintMode::DoNotRepaint);
   }
 }
