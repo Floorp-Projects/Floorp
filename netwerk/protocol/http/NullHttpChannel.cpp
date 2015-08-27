@@ -106,6 +106,12 @@ NullHttpChannel::SetRequestHeader(const nsACString & aHeader, const nsACString &
 }
 
 NS_IMETHODIMP
+NullHttpChannel::SetEmptyRequestHeader(const nsACString & aHeader)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 NullHttpChannel::VisitRequestHeaders(nsIHttpHeaderVisitor *aVisitor)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

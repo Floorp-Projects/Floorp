@@ -46,6 +46,7 @@ public:
         return mHeaders.PeekHeader(h);
     }
     nsresult SetHeader(nsHttpAtom h, const nsACString &v, bool m=false) { return mHeaders.SetHeader(h, v, m); }
+    nsresult SetEmptyHeader(nsHttpAtom h) { return mHeaders.SetEmptyHeader(h); }
     nsresult GetHeader(nsHttpAtom h, nsACString &v) const
     {
         return mHeaders.GetHeader(h, v);
