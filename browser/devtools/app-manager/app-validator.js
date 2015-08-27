@@ -37,12 +37,22 @@ AppValidator.prototype._getPackagedManifestFile = function () {
     this.error(strings.GetStringFromName("validator.expectProjectFolder"));
     return null;
   }
-  manifestFile.append("manifest.webapp");
-  if (!manifestFile.exists() || !manifestFile.isFile()) {
+
+  let appManifestFile = manifestFile.clone();
+  appManifestFile.append("manifest.webapp");
+
+  let jsonManifestFile = manifestFile.clone();
+  jsonManifestFile.append("manifest.json");
+
+  let hasAppManifest = appManifestFile.exists() && appManifestFile.isFile();
+  let hasJsonManifest = jsonManifestFile.exists() && jsonManifestFile.isFile();
+
+  if (!hasAppManifest && !hasJsonManifest) {
     this.error(strings.GetStringFromName("validator.wrongManifestFileName"));
     return null;
   }
-  return manifestFile;
+
+  return hasAppManifest ? appManifestFile : jsonManifestFile;
 };
 
 AppValidator.prototype._getPackagedManifestURL = function () {
@@ -191,10 +201,6 @@ AppValidator.prototype._getOriginURL = function () {
 };
 
 AppValidator.prototype.validateLaunchPath = function (manifest) {
-  // Addons don't use index page (yet?)
-  if (manifest.role && manifest.role === "addon") {
-    return promise.resolve();
-  }
   let deferred = promise.defer();
   // The launch_path field has to start with a `/`
   if (manifest.launch_path && manifest.launch_path[0] !== "/") {
@@ -267,14 +273,20 @@ AppValidator.prototype.validate = function () {
   this.errors = [];
   this.warnings = [];
   return this._getManifest().
-    then((function (manifest) {
+    then((manifest) => {
       if (manifest) {
         this.manifest = manifest;
+
+        // Skip validations for add-ons
+        if (manifest.role === "addon" || manifest.manifest_version) {
+          return promise.resolve();
+        }
+
         this.validateManifest(manifest);
         this.validateType(manifest);
         return this.validateLaunchPath(manifest);
       }
-    }).bind(this));
+    });
 };
 
 exports.AppValidator = AppValidator;
