@@ -15,11 +15,11 @@
   <project name="platform_build" path="build" remote="b2g" revision="05a36844c1046a1eb07d5b1325f85ed741f961ea">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="7d394d6bdb17a007ec773ce25ca0c81ab196e203"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="14f32ddf49e9c1f2b30c391a26ba2dc867e948c1"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="62cfa11ae7d77f6330de019a5aa79607e35be7d1"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
-  <project name="moztt" path="external/moztt" remote="b2g" revision="39462392383bd40894f1b5525a0997ec1390cd0e"/>
+  <project name="moztt" path="external/moztt" remote="b2g" revision="51ebaf824cc634665c5efcae95b8301ad1758c5e"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
