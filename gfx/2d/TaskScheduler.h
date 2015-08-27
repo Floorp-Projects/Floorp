@@ -118,7 +118,7 @@ class EventObject;
 class SetEventTask : public Task
 {
 public:
-  SetEventTask(MultiThreadedTaskQueue* aQueue, SyncObject* aStart = nullptr, SyncObject* aCompletion = nullptr);
+  explicit SetEventTask(MultiThreadedTaskQueue* aQueue, SyncObject* aStart = nullptr, SyncObject* aCompletion = nullptr);
 
   ~SetEventTask();
 
@@ -206,7 +206,7 @@ private:
 
 /// RAII helper.
 struct MutexAutoLock {
-    MutexAutoLock(Mutex* aMutex) : mMutex(aMutex) { mMutex->Lock(); }
+    explicit MutexAutoLock(Mutex* aMutex) : mMutex(aMutex) { mMutex->Lock(); }
     ~MutexAutoLock() { mMutex->Unlock(); }
 protected:
     Mutex* mMutex;
@@ -222,7 +222,7 @@ public:
 
   void Run();
 protected:
-  WorkerThread(MultiThreadedTaskQueue* aTaskQueue);
+  explicit WorkerThread(MultiThreadedTaskQueue* aTaskQueue);
 
   MultiThreadedTaskQueue* mQueue;
 };
