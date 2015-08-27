@@ -115,7 +115,7 @@
 .newtab-cell:not([ignorehover]) .newtab-link:hover,
 .newtab-site[dragged] {
   border: 2px solid white;
-  box-shadow: 0 0 6px 2px #4cb1ff;
+  box-shadow: 0 0 6px 1px #add6ff;
   margin: -2px;
 }
 
@@ -168,8 +168,8 @@
 
 .newtab-site:hover .newtab-title {
   color: white;
-  background-color: black;
-  border: 1px solid black;
+  background-color: #333;
+  border: 1px solid #333;
   border-top: 1px solid white;
 }
 
