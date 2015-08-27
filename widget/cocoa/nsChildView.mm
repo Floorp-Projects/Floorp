@@ -2820,6 +2820,19 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
   switch(aEvent.mInputType) {
     case PANGESTURE_INPUT: {
       PanGestureInput panInput = aEvent.AsPanGestureInput();
+      if (panInput.mType == PanGestureInput::PANGESTURE_MAYSTART ||
+          panInput.mType == PanGestureInput::PANGESTURE_START) {
+        mCurrentPanGestureBelongsToSwipe = false;
+      }
+      if (mCurrentPanGestureBelongsToSwipe) {
+        // Ignore this event. It's a momentum event from a scroll gesture
+        // that was processed as a swipe, and the swipe animation has
+        // already finished (so mSwipeTracker is already null).
+        MOZ_ASSERT(panInput.IsMomentum(),
+          "If the fingers are still on the touchpad, we should still have a SwipeTracker, and it should have consumed this event.");
+        return;
+      }
+
       event = panInput.ToWidgetWheelEvent(this);
       if (aCanTriggerSwipe) {
         SwipeInfo swipeInfo = SendMayStartSwipe(panInput);
@@ -2827,6 +2840,7 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
         DispatchEvent(&event, status);
         if (event.TriggersSwipe()) {
           TrackScrollEventAsSwipe(panInput, swipeInfo.allowedDirections);
+          mCurrentPanGestureBelongsToSwipe = true;
         }
         return;
       }
