@@ -421,7 +421,7 @@ class TabsGridLayout extends GridView
         final private Button.OnClickListener mCloseClickListener;
 
         public TabsGridLayoutAdapter(Context context) {
-            super(context, R.layout.tablet_tabs_item_cell);
+            super(context, R.layout.tabs_layout_item_view);
 
             mCloseClickListener = new Button.OnClickListener() {
                 @Override

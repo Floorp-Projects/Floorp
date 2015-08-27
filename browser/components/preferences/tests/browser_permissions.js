@@ -8,8 +8,10 @@ const ABOUT_PERMISSIONS_SPEC = "about:permissions";
 const TEST_URI_1 = NetUtil.newURI("http://mozilla.com/");
 const TEST_URI_2 = NetUtil.newURI("http://mozilla.org/");
 
-const TEST_PRINCIPAL_1 = Services.scriptSecurityManager.getNoAppCodebasePrincipal(TEST_URI_1);
-const TEST_PRINCIPAL_2 = Services.scriptSecurityManager.getNoAppCodebasePrincipal(TEST_URI_2);
+const TEST_PRINCIPAL_1 =
+  Services.scriptSecurityManager.createCodebasePrincipal(TEST_URI_1, {});
+const TEST_PRINCIPAL_2 =
+  Services.scriptSecurityManager.createCodebasePrincipal(TEST_URI_2, {});
 
 // values from DefaultPermissions object
 const PERM_UNKNOWN = 0;

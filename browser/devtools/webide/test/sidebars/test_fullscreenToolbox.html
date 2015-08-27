@@ -51,7 +51,7 @@
           ok(win.UI.toolboxIframe, "Toolbox iframe exists");
 
           let nbox = win.document.querySelector("#notificationbox");
-          ok(nbox.hasAttribute("toolboxfullscreen"), "Toolbox is fullsreen");
+          ok(!nbox.hasAttribute("toolboxfullscreen"), "Toolbox is not fullscreen");
 
           win.Cmds.showRuntimeDetails();
 

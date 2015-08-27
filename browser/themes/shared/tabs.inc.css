@@ -438,9 +438,8 @@
 #tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([visuallyselected]):not([beforehovered]):not(:hover)::after {
   width: 1px;
   -moz-margin-start: -1px;
-  padding-top: calc(var(--tab-separator-margin) + 1px);
-  padding-bottom: var(--tab-separator-margin);
-  background-clip: content-box;
+  margin-top: calc(var(--tab-separator-margin) + 1px);
+  margin-bottom: var(--tab-separator-margin);
   background-color: currentColor;
   opacity: var(--tab-separator-opacity);
   content: "";

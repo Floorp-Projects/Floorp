@@ -404,9 +404,8 @@ function open_properties_dialog() {
       if (aTopic != "domwindowopened")
         return;
       ww.unregisterNotification(windowObserver);
-      var win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      win.addEventListener("focus", function (event) {
-        win.removeEventListener("focus", arguments.callee, false);
+      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      waitForFocus(() => {
         // Windows has been loaded, execute our test now.
         executeSoon(function () {
           // Ensure overlay is loaded
@@ -418,7 +417,7 @@ function open_properties_dialog() {
             ok(false, "An error occured during test run: " + ex.message);
           }
         });
-      }, false);
+      }, win);
     }
     ww.registerNotification(windowObserver);
 

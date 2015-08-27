@@ -462,7 +462,6 @@ loop.shared.actions = (function() {
       // roomContextUrls: Array - Optional.
       // roomDescription: String - Optional.
       // roomName: String - Optional.
-      roomOwner: String,
       roomToken: String,
       roomUrl: String,
       socialShareProviders: Array
@@ -477,7 +476,6 @@ loop.shared.actions = (function() {
     UpdateRoomInfo: Action.define("updateRoomInfo", {
       // description: String - Optional.
       // roomName: String - Optional.
-      roomOwner: String,
       roomUrl: String
       // urls: Array - Optional.
       // See https://wiki.mozilla.org/Loop/Architecture/Context#Format_of_context.value
