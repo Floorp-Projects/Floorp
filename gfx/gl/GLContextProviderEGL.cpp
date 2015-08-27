@@ -593,17 +593,6 @@ TRY_AGAIN_POWER_OF_TWO:
     return surface;
 }
 
-static const EGLint kEGLConfigAttribsOffscreenPBuffer[] = {
-    LOCAL_EGL_SURFACE_TYPE,    LOCAL_EGL_PBUFFER_BIT,
-    LOCAL_EGL_RENDERABLE_TYPE, LOCAL_EGL_OPENGL_ES2_BIT,
-    // Old versions of llvmpipe seem to need this to properly create the pbuffer (bug 981856)
-    LOCAL_EGL_RED_SIZE,        8,
-    LOCAL_EGL_GREEN_SIZE,      8,
-    LOCAL_EGL_BLUE_SIZE,       8,
-    LOCAL_EGL_ALPHA_SIZE,      0,
-    EGL_ATTRIBS_LIST_SAFE_TERMINATION_WORKING_AROUND_BUGS
-};
-
 static const EGLint kEGLConfigAttribsRGB16[] = {
     LOCAL_EGL_SURFACE_TYPE,    LOCAL_EGL_WINDOW_BIT,
     LOCAL_EGL_RENDERABLE_TYPE, LOCAL_EGL_OPENGL_ES2_BIT,
@@ -839,18 +828,72 @@ GLContextProviderEGL::DestroyEGLSurface(EGLSurface surface)
 }
 #endif // defined(ANDROID)
 
-already_AddRefed<GLContextEGL>
-GLContextEGL::CreateEGLPBufferOffscreenContext(const mozilla::gfx::IntSize& size)
-{
-    EGLConfig config;
-    EGLSurface surface;
 
-    const EGLint numConfigs = 1; // We only need one.
-    EGLConfig configs[numConfigs];
+static void
+FillContextAttribs(bool alpha, bool depth, bool stencil, std::vector<EGLint>* out)
+{
+    out->push_back(LOCAL_EGL_SURFACE_TYPE);
+    out->push_back(LOCAL_EGL_PBUFFER_BIT);
+
+    out->push_back(LOCAL_EGL_RENDERABLE_TYPE);
+    out->push_back(LOCAL_EGL_OPENGL_ES2_BIT);
+
+    out->push_back(LOCAL_EGL_RED_SIZE);
+    out->push_back(8);
+
+    out->push_back(LOCAL_EGL_GREEN_SIZE);
+    out->push_back(8);
+
+    out->push_back(LOCAL_EGL_BLUE_SIZE);
+    out->push_back(8);
+
+    out->push_back(LOCAL_EGL_ALPHA_SIZE);
+    out->push_back(alpha ? 8 : 0);
+
+    out->push_back(LOCAL_EGL_DEPTH_SIZE);
+    out->push_back(depth ? 24 : 0);
+
+    out->push_back(LOCAL_EGL_STENCIL_SIZE);
+    out->push_back(stencil ? 8 : 0);
+
+    // EGL_ATTRIBS_LIST_SAFE_TERMINATION_WORKING_AROUND_BUGS
+    out->push_back(LOCAL_EGL_NONE);
+    out->push_back(0);
+
+    out->push_back(0);
+    out->push_back(0);
+}
+
+static bool
+DoesAttribPresenceMatch(GLLibraryEGL& egl, EGLConfig config, EGLint attrib,
+                        bool shouldHaveBits)
+{
+    EGLint bits = 0;
+    egl.fGetConfigAttrib(egl.Display(), config, attrib, &bits);
+    MOZ_ASSERT(egl.fGetError() == LOCAL_EGL_SUCCESS);
+
+    return bool(bits) == shouldHaveBits;
+}
+
+already_AddRefed<GLContextEGL>
+GLContextEGL::CreateEGLPBufferOffscreenContext(CreateContextFlags flags,
+                                               const mozilla::gfx::IntSize& size)
+{
+    const bool alpha = (flags & CreateContextFlags::SUPPORT_ALPHA);
+    const bool depth = (flags & CreateContextFlags::SUPPORT_DEPTH);
+    const bool stencil = (flags & CreateContextFlags::SUPPORT_STENCIL);
+
+    std::vector<EGLint> configAttribVec;
+    FillContextAttribs(alpha, depth, stencil, &configAttribVec);
+
+    const EGLint* configAttribs = configAttribVec.data();
+
+    const EGLint kMaxConfigs = 256;
+    EGLConfig configs[kMaxConfigs];
     EGLint foundConfigs = 0;
     if (!sEGLLibrary.fChooseConfig(EGL_DISPLAY(),
-                                   kEGLConfigAttribsOffscreenPBuffer,
-                                   configs, numConfigs,
+                                   configAttribs,
+                                   configs, kMaxConfigs,
                                    &foundConfigs)
         || foundConfigs == 0)
     {
@@ -858,15 +901,33 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(const mozilla::gfx::IntSize& size
         return nullptr;
     }
 
-    // We absolutely don't care, so just pick the first one.
-    config = configs[0];
+    EGLConfig config = EGL_NO_CONFIG;
+    for (EGLint i = 0; i < foundConfigs; i++) {
+        EGLConfig& cur = configs[i];
+
+        bool doesMatch = true;
+        doesMatch &= DoesAttribPresenceMatch(sEGLLibrary, cur, LOCAL_EGL_ALPHA_SIZE, alpha);
+        doesMatch &= DoesAttribPresenceMatch(sEGLLibrary, cur, LOCAL_EGL_DEPTH_SIZE, depth);
+        doesMatch &= DoesAttribPresenceMatch(sEGLLibrary, cur, LOCAL_EGL_STENCIL_SIZE, stencil);
+
+        if (doesMatch) {
+            config = cur;
+            break;
+        }
+    }
+
+    if (config == EGL_NO_CONFIG) {
+        NS_WARNING("Failed to find a compatible config.");
+        return nullptr;
+    }
+
     if (GLContext::ShouldSpew())
         sEGLLibrary.DumpEGLConfig(config);
 
     mozilla::gfx::IntSize pbSize(size);
-    surface = GLContextEGL::CreatePBufferSurfaceTryingPowerOfTwo(config,
-                                                                 LOCAL_EGL_NONE,
-                                                                 pbSize);
+    EGLSurface surface = GLContextEGL::CreatePBufferSurfaceTryingPowerOfTwo(config,
+                                                                            LOCAL_EGL_NONE,
+                                                                            pbSize);
     if (!surface) {
         NS_WARNING("Failed to create PBuffer for context!");
         return nullptr;
@@ -941,7 +1002,7 @@ GLContextProviderEGL::CreateHeadless(CreateContextFlags flags)
 
     mozilla::gfx::IntSize dummySize = mozilla::gfx::IntSize(16, 16);
     nsRefPtr<GLContext> glContext;
-    glContext = GLContextEGL::CreateEGLPBufferOffscreenContext(dummySize);
+    glContext = GLContextEGL::CreateEGLPBufferOffscreenContext(flags, dummySize);
     if (!glContext)
         return nullptr;
 
