@@ -897,6 +897,10 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   background-color: #dbf7ff;
 }
 
+.showing-room-name > .text-chat-entries > .text-chat-scroller > .context-url-view-wrapper {
+  padding-top: 0;
+}
+
 .room-context {
   background: rgba(0,0,0,.8);
   border-top: 2px solid #444;
@@ -1638,7 +1642,6 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
   /* 18px for indent of .text-chat-arrow, 1px for border of .text-chat-entry > p,
    0.5rem for padding of .text-chat-entry > p */
   padding: calc(18px - 1px - 0.5rem);
-  padding-bottom: 0px;
 }
 
 .text-chat-entry.special > p {
