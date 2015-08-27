@@ -24,6 +24,8 @@ add_task(function*() {
   ok(markers.some(m => m.name === MARKER_NAME), `got some ${MARKER_NAME} markers`);
   ok(markers.every(({causeName}) => typeof causeName === "string"),
     "All markers have a causeName.");
+  ok(markers.every(({cycle}) => typeof cycle === "number"),
+    "All markers have a `cycle` ID.");
 
   markers = rec.getMarkers();
 
