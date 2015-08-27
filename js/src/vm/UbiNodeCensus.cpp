@@ -489,6 +489,7 @@ ByUbinodeType::count(CountBase& countBase, const Node& node)
     count.total_++;
 
     const char16_t* key = node.typeName();
+    MOZ_ASSERT(key);
     Table::AddPtr p = count.table.lookupForAdd(key);
     if (!p) {
         CountBasePtr typesCount(entryType->makeCount());

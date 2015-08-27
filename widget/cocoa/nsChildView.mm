@@ -1127,7 +1127,7 @@ nsresult nsChildView::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
   NSEvent* event = [NSEvent mouseEventWithType:(NSEventType)aNativeMessage
                                       location:windowPoint
                                  modifierFlags:aModifierFlags
-                                     timestamp:[NSDate timeIntervalSinceReferenceDate]
+                                     timestamp:[[NSProcessInfo processInfo] systemUptime]
                                   windowNumber:[[mView window] windowNumber]
                                        context:nil
                                    eventNumber:0
@@ -2648,6 +2648,60 @@ nsChildView::UpdateWindowDraggingRegion(const nsIntRegion& aRegion)
     mDraggableRegion = aRegion;
     [(ChildView*)mView updateWindowDraggableState];
   }
+}
+
+WidgetWheelEvent
+nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent)
+{
+  WidgetWheelEvent event(true, NS_WHEEL_WHEEL, this);
+  if (mAPZC) {
+    uint64_t inputBlockId = 0;
+    ScrollableLayerGuid guid;
+
+    nsEventStatus result = mAPZC->ReceiveInputEvent(aEvent, &guid, &inputBlockId);
+    if (result == nsEventStatus_eConsumeNoDefault) {
+      return event;
+    }
+
+    switch(aEvent.mInputType) {
+      case PANGESTURE_INPUT: {
+        event = aEvent.AsPanGestureInput().ToWidgetWheelEvent(this);
+        break;
+      }
+      case SCROLLWHEEL_INPUT: {
+        event = aEvent.AsScrollWheelInput().ToWidgetWheelEvent(this);
+        break;
+      };
+      default:
+        MOZ_CRASH("unsupported event type");
+        return event;
+    }
+    if (event.mMessage == NS_WHEEL_WHEEL &&
+        (event.deltaX != 0 || event.deltaY != 0)) {
+      ProcessUntransformedAPZEvent(&event, guid, inputBlockId, result);
+    }
+    return event;
+  }
+
+  nsEventStatus status;
+  switch(aEvent.mInputType) {
+    case PANGESTURE_INPUT: {
+      event = aEvent.AsPanGestureInput().ToWidgetWheelEvent(this);
+      break;
+    }
+    case SCROLLWHEEL_INPUT: {
+      event = aEvent.AsScrollWheelInput().ToWidgetWheelEvent(this);
+      break;
+    }
+    default:
+      MOZ_CRASH("unexpected event type");
+      return event;
+  }
+  if (event.mMessage == NS_WHEEL_WHEEL &&
+      (event.deltaX != 0 || event.deltaY != 0)) {
+    DispatchEvent(&event, status);
+  }
+  return event;
 }
 
 #ifdef ACCESSIBILITY
@@ -4836,6 +4890,38 @@ static int32_t RoundUp(double aDouble)
   [self sendWheelStartOrStop:second forEvent:theEvent];
 }
 
+static PanGestureInput::PanGestureType
+PanGestureTypeForEvent(NSEvent* aEvent)
+{
+  switch (nsCocoaUtils::EventPhase(aEvent)) {
+    case NSEventPhaseMayBegin:
+      return PanGestureInput::PANGESTURE_MAYSTART;
+    case NSEventPhaseCancelled:
+      return PanGestureInput::PANGESTURE_CANCELLED;
+    case NSEventPhaseBegan:
+      return PanGestureInput::PANGESTURE_START;
+    case NSEventPhaseChanged:
+      return PanGestureInput::PANGESTURE_PAN;
+    case NSEventPhaseEnded:
+      return PanGestureInput::PANGESTURE_END;
+    case NSEventPhaseNone:
+      switch (nsCocoaUtils::EventMomentumPhase(aEvent)) {
+        case NSEventPhaseBegan:
+          return PanGestureInput::PANGESTURE_MOMENTUMSTART;
+        case NSEventPhaseChanged:
+          return PanGestureInput::PANGESTURE_MOMENTUMPAN;
+        case NSEventPhaseEnded:
+          return PanGestureInput::PANGESTURE_MOMENTUMEND;
+        default:
+          NS_ERROR("unexpected event phase");
+          return PanGestureInput::PANGESTURE_PAN;
+      }
+    default:
+      NS_ERROR("unexpected event phase");
+      return PanGestureInput::PANGESTURE_PAN;
+  }
+}
+
 - (void)scrollWheel:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -4862,43 +4948,73 @@ static int32_t RoundUp(double aDouble)
   // Fire NS_WHEEL_START/STOP events when 2 fingers touch/release the touchpad.
   if (phase & NSEventPhaseMayBegin) {
     [self sendWheelCondition:YES first:NS_WHEEL_STOP second:NS_WHEEL_START forEvent:theEvent];
-    return;
-  }
-
-  if (phase & (NSEventPhaseEnded | NSEventPhaseCancelled)) {
+  } else if (phase & (NSEventPhaseEnded | NSEventPhaseCancelled)) {
     [self sendWheelCondition:NO first:NS_WHEEL_START second:NS_WHEEL_STOP forEvent:theEvent];
-    return;
   }
 
-  WidgetWheelEvent wheelEvent(true, NS_WHEEL_WHEEL, mGeckoChild);
-  [self convertCocoaMouseWheelEvent:theEvent toGeckoEvent:&wheelEvent];
+  NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(theEvent, [self window]);
 
-  wheelEvent.lineOrPageDeltaX = RoundUp(-[theEvent deltaX]);
-  wheelEvent.lineOrPageDeltaY = RoundUp(-[theEvent deltaY]);
+  ScreenPoint position = ScreenPoint::FromUntyped(
+    [self convertWindowCoordinates:locationInWindow]);
 
-  // wheelEvent.deltaMode was set by convertCocoaMouseWheelEvent:toGeckoEvent:
-  // and depends on whether the current scrolling device supports pixel deltas.
-  if (wheelEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
-    double scale = mGeckoChild->BackingScaleFactor();
+  bool usePreciseDeltas = nsCocoaUtils::HasPreciseScrollingDeltas(theEvent) &&
+    Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
+  bool hasPhaseInformation = nsCocoaUtils::EventHasPhaseInformation(theEvent);
+
+  int32_t lineOrPageDeltaX = RoundUp(-[theEvent deltaX]);
+  int32_t lineOrPageDeltaY = RoundUp(-[theEvent deltaY]);
+
+  Modifiers modifiers = nsCocoaUtils::ModifiersForEvent(theEvent);
+
+  WidgetWheelEvent widgetWheelEvent(true, NS_WHEEL_WHEEL, mGeckoChild);
+
+  NSTimeInterval beforeNow = [[NSProcessInfo processInfo] systemUptime] - [theEvent timestamp];
+  PRIntervalTime eventIntervalTime = PR_IntervalNow() - PR_MillisecondsToInterval(beforeNow * 1000);
+  TimeStamp eventTimeStamp = TimeStamp::Now() - TimeDuration::FromSeconds(beforeNow);
+
+  ScreenPoint preciseDelta;
+  if (usePreciseDeltas) {
     CGFloat pixelDeltaX = 0, pixelDeltaY = 0;
     nsCocoaUtils::GetScrollingDeltas(theEvent, &pixelDeltaX, &pixelDeltaY);
-    wheelEvent.deltaX = -pixelDeltaX * scale;
-    wheelEvent.deltaY = -pixelDeltaY * scale;
+    double scale = mGeckoChild->BackingScaleFactor();
+    preciseDelta = ScreenPoint(-pixelDeltaX * scale, -pixelDeltaY * scale);
+  }
+
+  if (usePreciseDeltas && hasPhaseInformation) {
+    PanGestureInput panEvent(PanGestureTypeForEvent(theEvent),
+                             eventIntervalTime, eventTimeStamp,
+                             position, preciseDelta, modifiers);
+    panEvent.mLineOrPageDeltaX = lineOrPageDeltaX;
+    panEvent.mLineOrPageDeltaY = lineOrPageDeltaY;
+    widgetWheelEvent = mGeckoChild->DispatchAPZWheelInputEvent(panEvent);
+  } else if (usePreciseDeltas) {
+    // This is on 10.6 or old touchpads that don't have any phase information.
+    ScrollWheelInput wheelEvent(eventIntervalTime, eventTimeStamp, modifiers,
+                                ScrollWheelInput::SCROLLMODE_INSTANT,
+                                ScrollWheelInput::SCROLLDELTA_PIXEL,
+                                position,
+                                preciseDelta.x,
+                                preciseDelta.y);
+    wheelEvent.mLineOrPageDeltaX = lineOrPageDeltaX;
+    wheelEvent.mLineOrPageDeltaY = lineOrPageDeltaY;
+    wheelEvent.mIsMomentum = nsCocoaUtils::IsMomentumScrollEvent(theEvent);
+    widgetWheelEvent = mGeckoChild->DispatchAPZWheelInputEvent(wheelEvent);
   } else {
-    wheelEvent.deltaX = -[theEvent deltaX];
-    wheelEvent.deltaY = -[theEvent deltaY];
+    ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
+    if (gfxPrefs::SmoothScrollEnabled() && gfxPrefs::WheelSmoothScrollEnabled()) {
+      scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
+    }
+    ScrollWheelInput wheelEvent(eventIntervalTime, eventTimeStamp, modifiers,
+                                scrollMode,
+                                ScrollWheelInput::SCROLLDELTA_LINE,
+                                position,
+                                lineOrPageDeltaX,
+                                lineOrPageDeltaY);
+    wheelEvent.mLineOrPageDeltaX = lineOrPageDeltaX;
+    wheelEvent.mLineOrPageDeltaY = lineOrPageDeltaY;
+    widgetWheelEvent = mGeckoChild->DispatchAPZWheelInputEvent(wheelEvent);
   }
 
-  // TODO: We should not set deltaZ for now because we're not sure if we should
-  //       revert the sign.
-  // wheelEvent.deltaZ = [theEvent deltaZ];
-
-  if (!wheelEvent.deltaX && !wheelEvent.deltaY && !wheelEvent.deltaZ) {
-    // No sense in firing off a Gecko event.
-    return;
-  }
-
-  mGeckoChild->DispatchAPZAwareEvent(wheelEvent.AsInputEvent());
   if (!mGeckoChild) {
     return;
   }
@@ -4906,12 +5022,12 @@ static int32_t RoundUp(double aDouble)
 #ifdef __LP64__
   // overflowDeltaX and overflowDeltaY tell us when the user has tried to
   // scroll past the edge of a page (in those cases it's non-zero).
-  if ((wheelEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) &&
-      (wheelEvent.deltaX != 0.0 || wheelEvent.deltaY != 0.0)) {
+  if (usePreciseDeltas &&
+      (widgetWheelEvent.deltaX != 0.0 || widgetWheelEvent.deltaY != 0.0)) {
     [self maybeTrackScrollEventAsSwipe:theEvent
-                       scrollOverflowX:wheelEvent.overflowDeltaX
-                       scrollOverflowY:wheelEvent.overflowDeltaY
-                viewPortIsOverscrolled:wheelEvent.mViewPortIsOverscrolled];
+                       scrollOverflowX:widgetWheelEvent.overflowDeltaX
+                       scrollOverflowY:widgetWheelEvent.overflowDeltaY
+                viewPortIsOverscrolled:widgetWheelEvent.mViewPortIsOverscrolled];
   }
 #endif // #ifdef __LP64__
 

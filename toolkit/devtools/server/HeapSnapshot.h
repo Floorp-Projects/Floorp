@@ -63,6 +63,7 @@ class HeapSnapshot final : public nsISupports
 {
   friend struct DeserializedNode;
   friend struct DeserializedStackFrame;
+  friend struct JS::ubi::Concrete<JS::ubi::DeserializedNode>;
 
   explicit HeapSnapshot(JSContext* cx, nsISupports* aParent)
     : timestamp(Nothing())
@@ -140,6 +141,18 @@ public:
 
   const char16_t* borrowUniqueString(const char16_t* duplicateString,
                                      size_t length);
+
+  // Get the root node of this heap snapshot's graph.
+  JS::ubi::Node getRoot() {
+    MOZ_ASSERT(nodes.initialized());
+    auto p = nodes.lookup(rootId);
+    MOZ_ASSERT(p);
+    const DeserializedNode& node = *p;
+    return JS::ubi::Node(const_cast<DeserializedNode*>(&node));
+  }
+
+  void TakeCensus(JSContext* cx, JS::HandleObject options,
+                  JS::MutableHandleValue rval, ErrorResult& rv);
 };
 
 // A `CoreDumpWriter` is given the data we wish to save in a core dump and

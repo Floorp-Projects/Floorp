@@ -226,6 +226,40 @@ MultiTouchInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
 }
 
 bool
+PanGestureInput::IsMomentum() const
+{
+  switch (mType) {
+    case PanGestureInput::PANGESTURE_MOMENTUMSTART:
+    case PanGestureInput::PANGESTURE_MOMENTUMPAN:
+    case PanGestureInput::PANGESTURE_MOMENTUMEND:
+      return true;
+    default:
+      return false;
+  }
+}
+
+WidgetWheelEvent
+PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
+{
+  WidgetWheelEvent wheelEvent(true, NS_WHEEL_WHEEL, aWidget);
+  wheelEvent.modifiers = this->modifiers;
+  wheelEvent.time = mTime;
+  wheelEvent.timeStamp = mTimeStamp;
+  wheelEvent.refPoint =
+    RoundedToInt(ViewAs<LayoutDevicePixel>(mPanStartPoint,
+      PixelCastJustification::LayoutDeviceToScreenForUntransformedEvent));
+  wheelEvent.buttons = 0;
+  wheelEvent.deltaMode = nsIDOMWheelEvent::DOM_DELTA_PIXEL;
+  wheelEvent.isMomentum = IsMomentum();
+  wheelEvent.lineOrPageDeltaX = mLineOrPageDeltaX;
+  wheelEvent.lineOrPageDeltaY = mLineOrPageDeltaY;
+  wheelEvent.deltaX = mPanDisplacement.x;
+  wheelEvent.deltaY = mPanDisplacement.y;
+  wheelEvent.mFlags.mHandledByAPZ = mHandledByAPZ;
+  return wheelEvent;
+}
+
+bool
 PanGestureInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
 { 
   Maybe<ParentLayerPoint> panStartPoint = UntransformTo<ParentLayerPixel>(aTransform, mPanStartPoint);
@@ -262,6 +296,39 @@ TapGestureInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
   }
   mLocalPoint = *point;
   return true;
+}
+
+static uint32_t
+DeltaModeForDeltaType(ScrollWheelInput::ScrollDeltaType aDeltaType)
+{
+  switch (aDeltaType) {
+    case ScrollWheelInput::SCROLLDELTA_LINE:
+      return nsIDOMWheelEvent::DOM_DELTA_LINE;
+    case ScrollWheelInput::SCROLLDELTA_PIXEL:
+    default:
+      return nsIDOMWheelEvent::DOM_DELTA_PIXEL;
+  }
+}
+
+WidgetWheelEvent
+ScrollWheelInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
+{
+  WidgetWheelEvent wheelEvent(true, NS_WHEEL_WHEEL, aWidget);
+  wheelEvent.modifiers = this->modifiers;
+  wheelEvent.time = mTime;
+  wheelEvent.timeStamp = mTimeStamp;
+  wheelEvent.refPoint =
+    RoundedToInt(ViewAs<LayoutDevicePixel>(mOrigin,
+      PixelCastJustification::LayoutDeviceToScreenForUntransformedEvent));
+  wheelEvent.buttons = 0;
+  wheelEvent.deltaMode = DeltaModeForDeltaType(mDeltaType);
+  wheelEvent.isMomentum = mIsMomentum;
+  wheelEvent.deltaX = mDeltaX;
+  wheelEvent.deltaY = mDeltaY;
+  wheelEvent.lineOrPageDeltaX = mLineOrPageDeltaX;
+  wheelEvent.lineOrPageDeltaY = mLineOrPageDeltaY;
+  wheelEvent.mFlags.mHandledByAPZ = mHandledByAPZ;
+  return wheelEvent;
 }
 
 bool

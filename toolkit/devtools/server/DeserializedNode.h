@@ -231,6 +231,9 @@ public:
   size_t size(mozilla::MallocSizeOf mallocSizeof) const override;
   const char* jsObjectClassName() const override { return get().jsObjectClassName.get(); }
 
+  bool hasAllocationStack() const override { return get().allocationStack.isSome(); }
+  StackFrame allocationStack() const override;
+
   // We ignore the `bool wantNames` parameter because we can't control whether
   // the core dump was serialized with edge names or not.
   UniquePtr<EdgeRange> edges(JSContext* cx, bool) const override;

@@ -133,6 +133,13 @@ ZoomConstraintsClient::Observe(nsISupports* aSubject, const char* aTopic, const 
   return NS_OK;
 }
 
+void
+ZoomConstraintsClient::ScreenSizeChanged()
+{
+  ZCC_LOG("Got a screen-size change notification in %p\n", this);
+  RefreshZoomConstraints();
+}
+
 mozilla::layers::ZoomConstraints
 ComputeZoomConstraintsFromViewportInfo(const nsViewportInfo& aViewportInfo)
 {
@@ -161,14 +168,10 @@ ZoomConstraintsClient::RefreshZoomConstraints()
     return;
   }
 
-  nsIFrame* rootFrame = mPresShell->GetRootScrollFrame();
-  if (!rootFrame) {
-    rootFrame = mPresShell->GetRootFrame();
+  LayoutDeviceIntSize screenSize;
+  if (!nsLayoutUtils::GetContentViewerSize(mPresShell->GetPresContext(), screenSize)) {
+    return;
   }
-  nsSize size = nsLayoutUtils::CalculateCompositionSizeForFrame(rootFrame, false);
-  int32_t auPerDevPixel = mPresShell->GetPresContext()->AppUnitsPerDevPixel();
-  LayoutDeviceIntSize screenSize = LayoutDeviceIntSize::FromAppUnitsRounded(
-        size, auPerDevPixel);
 
   nsViewportInfo viewportInfo = nsContentUtils::GetViewportInfo(
     mDocument,
@@ -180,6 +183,7 @@ ZoomConstraintsClient::RefreshZoomConstraints()
   if (zoomConstraints.mAllowDoubleTapZoom) {
     // If the CSS viewport is narrower than the screen (i.e. width <= device-width)
     // then we disable double-tap-to-zoom behaviour.
+    int32_t auPerDevPixel = mPresShell->GetPresContext()->AppUnitsPerDevPixel();
     CSSToLayoutDeviceScale scale(
       (float)nsPresContext::AppUnitsPerCSSPixel() / auPerDevPixel);
     if ((viewportInfo.GetSize() * scale).width <= screenSize.width) {

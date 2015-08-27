@@ -174,7 +174,7 @@ OverscrollHandoffChain::HasFastFlungApzc() const
 }
 
 nsRefPtr<AsyncPanZoomController>
-OverscrollHandoffChain::FindFirstScrollable(const ScrollWheelInput& aInput) const
+OverscrollHandoffChain::FindFirstScrollable(const InputData& aInput) const
 {
   for (size_t i = 0; i < Length(); i++) {
     if (mChain[i]->CanScroll(aInput)) {

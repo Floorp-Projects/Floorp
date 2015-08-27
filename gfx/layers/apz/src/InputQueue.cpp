@@ -45,6 +45,11 @@ InputQueue::ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget,
       return ReceiveScrollWheelInput(aTarget, aTargetConfirmed, event, aOutInputBlockId);
     }
 
+    case PANGESTURE_INPUT: {
+      const PanGestureInput& event = aEvent.AsPanGestureInput();
+      return ReceivePanGestureInput(aTarget, aTargetConfirmed, event, aOutInputBlockId);
+    }
+
     default:
       // The return value for non-touch input is only used by tests, so just pass
       // through the return value for now. This can be changed later if needed.
@@ -209,6 +214,56 @@ InputQueue::ReceiveScrollWheelInput(const nsRefPtr<AsyncPanZoomController>& aTar
   return nsEventStatus_eConsumeDoDefault;
 }
 
+nsEventStatus
+InputQueue::ReceivePanGestureInput(const nsRefPtr<AsyncPanZoomController>& aTarget,
+                                   bool aTargetConfirmed,
+                                   const PanGestureInput& aEvent,
+                                   uint64_t* aOutInputBlockId) {
+  if (aEvent.mType == PanGestureInput::PANGESTURE_MAYSTART ||
+      aEvent.mType == PanGestureInput::PANGESTURE_CANCELLED) {
+    // Ignore these events for now.
+    return nsEventStatus_eConsumeDoDefault;
+  }
+
+  PanGestureBlockState* block = nullptr;
+  if (!mInputBlockQueue.IsEmpty() &&
+      aEvent.mType != PanGestureInput::PANGESTURE_START) {
+    block = mInputBlockQueue.LastElement()->AsPanGestureBlock();
+  }
+
+  if (!block || block->WasInterrupted()) {
+    if (aEvent.mType != PanGestureInput::PANGESTURE_START) {
+      // Only PANGESTURE_START events are allowed to start a new pan gesture block.
+      return nsEventStatus_eConsumeDoDefault;
+    }
+    block = new PanGestureBlockState(aTarget, aTargetConfirmed, aEvent);
+    INPQ_LOG("started new pan gesture block %p for target %p\n", block, aTarget.get());
+
+    SweepDepletedBlocks();
+    mInputBlockQueue.AppendElement(block);
+
+    CancelAnimationsForNewBlock(block);
+    MaybeRequestContentResponse(aTarget, block);
+  } else {
+    INPQ_LOG("received new event in block %p\n", block);
+  }
+
+  if (aOutInputBlockId) {
+    *aOutInputBlockId = block->GetBlockId();
+  }
+
+  // Note that the |aTarget| the APZCTM sent us may contradict the confirmed
+  // target set on the block. In this case the confirmed target (which may be
+  // null) should take priority. This is equivalent to just always using the
+  // target (confirmed or not) from the block, which is what
+  // MaybeHandleCurrentBlock() does.
+  if (!MaybeHandleCurrentBlock(block, aEvent)) {
+    block->AddEvent(aEvent.AsPanGestureInput());
+  }
+
+  return nsEventStatus_eConsumeDoDefault;
+}
+
 void
 InputQueue::CancelAnimationsForNewBlock(CancelableBlockState* aBlock)
 {
@@ -321,6 +376,14 @@ InputQueue::CurrentWheelBlock() const
   return block;
 }
 
+PanGestureBlockState*
+InputQueue::CurrentPanGestureBlock() const
+{
+  PanGestureBlockState* block = CurrentBlock()->AsPanGestureBlock();
+  MOZ_ASSERT(block);
+  return block;
+}
+
 WheelBlockState*
 InputQueue::GetCurrentWheelTransaction() const
 {
@@ -340,6 +403,19 @@ InputQueue::HasReadyTouchBlock() const
   return !mInputBlockQueue.IsEmpty() &&
          mInputBlockQueue[0]->AsTouchBlock() &&
          mInputBlockQueue[0]->IsReadyForHandling();
+}
+
+bool
+InputQueue::AllowScrollHandoff() const
+{
+  MOZ_ASSERT(CurrentBlock());
+  if (CurrentBlock()->AsWheelBlock()) {
+    return CurrentBlock()->AsWheelBlock()->AllowScrollHandoff();
+  }
+  if (CurrentBlock()->AsPanGestureBlock()) {
+    return CurrentBlock()->AsPanGestureBlock()->AllowScrollHandoff();
+  }
+  return true;
 }
 
 void
