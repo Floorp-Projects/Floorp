@@ -32,7 +32,7 @@ const {
 const STRINGS_URI = "chrome://browser/locale/devtools/animationinspector.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
 const MILLIS_TIME_FORMAT_MAX_DURATION = 4000;
-// The minimum spacing between 2 time graduation headers in the timeline (ms).
+// The minimum spacing between 2 time graduation headers in the timeline (px).
 const TIME_GRADUATION_MIN_SPACING = 40;
 
 /**
@@ -939,7 +939,8 @@ AnimationsTimeline.prototype = {
     createNode({
       parent: iterations,
       attributes: {
-        "class": "name"
+        "class": "name",
+        "title": state.name
       },
       textContent: state.name
     });
