@@ -30,8 +30,7 @@ NS_IMPL_ISUPPORTS(nsMenuGroupOwnerX, nsIMutationObserver)
 
 
 nsMenuGroupOwnerX::nsMenuGroupOwnerX()
-: mCurrentCommandID(eCommand_ID_Last),
-  mInfoSet([NSMutableSet setWithCapacity:10])
+: mCurrentCommandID(eCommand_ID_Last)
 {
 }
 
@@ -39,15 +38,6 @@ nsMenuGroupOwnerX::nsMenuGroupOwnerX()
 nsMenuGroupOwnerX::~nsMenuGroupOwnerX()
 {
   MOZ_ASSERT(mContentToObserverTable.Count() == 0, "have outstanding mutation observers!\n");
-
-  // The MenuItemInfo objects in mInfoSet may live longer than we do.  So when
-  // we get destroyed we need to invalidate all their mMenuGroupOwner pointers.
-  NSEnumerator* counter = [mInfoSet objectEnumerator];
-  MenuItemInfo* info;
-  while ((info = (MenuItemInfo*) [counter nextObject])) {
-    [info setMenuGroupOwner:nil];
-  }
-  [mInfoSet release];
 }
 
 
@@ -248,9 +238,4 @@ nsMenuItemX* nsMenuGroupOwnerX::GetMenuItemForCommandID(uint32_t inCommandID)
     return result;
   else
     return nullptr;
-}
-
-void nsMenuGroupOwnerX::AddMenuItemInfoToSet(MenuItemInfo* info)
-{
-  [mInfoSet addObject:info];
 }
