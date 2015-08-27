@@ -593,19 +593,12 @@ AudioStream::GetPosition()
   return mAudioClock.GetPositionUnlocked();
 }
 
-// This function is miscompiled by PGO with MSVC 2010.  See bug 768333.
-#ifdef _MSC_VER
-#pragma optimize("", off)
-#endif
 int64_t
 AudioStream::GetPositionInFrames()
 {
   MonitorAutoLock mon(mMonitor);
   return mAudioClock.GetPositionInFrames();
 }
-#ifdef _MSC_VER
-#pragma optimize("", on)
-#endif
 
 int64_t
 AudioStream::GetPositionInFramesUnlocked()
