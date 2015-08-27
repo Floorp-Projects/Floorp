@@ -182,7 +182,11 @@ this.PageMetadata = {
       switch (key) {
         case "title":
         case "og:title": {
-          result.title = value;
+          // Only set the title if one hasn't already been obtained (e.g. from the
+          // document title element).
+          if (!result.title) {
+            result.title = value;
+          }
           break;
         }
 
