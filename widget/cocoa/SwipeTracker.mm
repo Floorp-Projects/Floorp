@@ -51,6 +51,7 @@ SwipeTracker::SwipeTracker(nsChildView& aWidget,
   , mEventsHaveStartedNewGesture(false)
   , mRegisteredWithRefreshDriver(false)
 {
+  SendSwipeEvent(NS_SIMPLE_GESTURE_SWIPE_START, 0, 0.0);
   ProcessEvent(aSwipeStartEvent);
 }
 
