@@ -28,6 +28,9 @@
   padding: 3px 5px;
   margin-inline-end: 4px;
   overflow: hidden;
+  /* The latter two properties have a transition to handle the delayed hiding of
+     the forward button when hovered. */
+  transition: background-color 150ms ease, padding-left, padding-right;
 }
 
 #identity-box:hover,
@@ -57,17 +60,15 @@
   border-radius: 0;
 }
 
-@conditionalForwardWithUrlbar@:not([switchingtabs]) > #urlbar > #identity-box {
-  transition: padding-left, padding-right;
-}
-
 @conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box {
   padding-inline-start: calc(var(--backbutton-urlbar-overlap) + 4px);
 }
 
 @conditionalForwardWithUrlbar@:hover:not([switchingtabs]) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box {
-  /* forward button hiding is delayed when hovered */
-  transition-delay: 100s;
+  /* Forward button hiding is delayed when hovered, so we should use the same
+     delay for the identity box. We handle both horizontal paddings (for LTR and
+     RTL), the latter two delays here are for padding-left and padding-right. */
+  transition-delay: 0s, 100s, 100s;
 }
 
 @conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box {
