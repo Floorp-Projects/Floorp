@@ -560,7 +560,13 @@ SpecialPowersObserverAPI.prototype = {
         let {Extension} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
 
         let id = aMessage.data.id;
-        let uri = Services.io.newURI(aMessage.data.url, null, null);
+        let name = aMessage.data.name;
+
+        let target = "resource://testing-common/extensions/" + name + "/";
+        let resourceHandler = Services.io.getProtocolHandler("resource")
+                                      .QueryInterface(Ci.nsISubstitutingProtocolHandler);
+        let resURI = Services.io.newURI(target, null, null);
+        let uri = Services.io.newURI(resourceHandler.resolveURI(resURI), null, null);
         let extension = new Extension({
           id,
           resourceURI: uri
