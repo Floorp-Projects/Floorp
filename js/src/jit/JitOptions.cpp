@@ -98,6 +98,9 @@ JitOptions::JitOptions()
     // Toggles whether Loop Unrolling is globally disabled.
     SET_DEFAULT(disableLoopUnrolling, true);
 
+    // Toggles whether instruction reordering is globally disabled.
+    SET_DEFAULT(disableInstructionReordering, false);
+
     // Toggles whether Range Analysis is globally disabled.
     SET_DEFAULT(disableRangeAnalysis, false);
 
