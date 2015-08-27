@@ -21,43 +21,53 @@ SimpleTest.waitForExplicitFinish();
  * The expected output of each test is a sequence of chars.
  * E.g. the default char we expect is 'a', depending on what inline scripts
  * are allowed to run we also expect 'b', 'c', 'd'.
+ *
+ * The test also covers the handling of multiple policies where the second
+ * policy makes use of a directive that should *not* fallback to
+ * default-src, see Bug 1198422.
  */
 
-var POLICY_PREFIX = "default-src 'none'; script-src ";
+const POLICY_PREFIX = "default-src 'none'; script-src ";
 
 var tests = [
   {
-    policy: POLICY_PREFIX + "'unsafe-inline'",
+    policy1: POLICY_PREFIX + "'unsafe-inline'",
+    policy2: "frame-ancestors 'self'",
     description: "'unsafe-inline' allows all scripts to execute",
     file: "file_ignore_unsafe_inline.html",
     result: "abcd",
   },
   {
-    policy: POLICY_PREFIX + "'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI='",
+    policy1: POLICY_PREFIX + "'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI='",
+    policy2: "base-uri http://mochi.test",
     description: "defining a hash should only allow one script to execute",
     file: "file_ignore_unsafe_inline.html",
     result: "ac",
   },
   {
-    policy: POLICY_PREFIX + "'unsafe-inline' 'nonce-FooNonce'",
+    policy1: POLICY_PREFIX + "'unsafe-inline' 'nonce-FooNonce'",
+    policy2: "form-action 'none'",
     description: "defining a nonce should only allow one script to execute",
     file: "file_ignore_unsafe_inline.html",
     result: "ad",
   },
   {
-    policy: POLICY_PREFIX + "'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI=' 'nonce-FooNonce'",
+    policy1: POLICY_PREFIX + "'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI=' 'nonce-FooNonce'",
+    policy2: "upgrade-insecure-requests",
     description: "defining hash and nonce should allow two scripts to execute",
     file: "file_ignore_unsafe_inline.html",
     result: "acd",
   },
   {
-    policy: POLICY_PREFIX + "'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI=' 'nonce-FooNonce' 'unsafe-inline'",
+    policy1: POLICY_PREFIX + "'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI=' 'nonce-FooNonce' 'unsafe-inline'",
+    policy2: "referrer origin",
     description: "defining hash, nonce and 'unsafe-inline' twice should still only allow two scripts to execute",
     file: "file_ignore_unsafe_inline.html",
     result: "acd",
   },
   {
-    policy: "default-src 'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI=' 'nonce-FooNonce' ",
+    policy1: "default-src 'unsafe-inline' 'sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI=' 'nonce-FooNonce' ",
+    policy2: "sandbox allow-forms",
     description: "unsafe-inline should *not* be ignored within default-src even if hash or nonce is specified",
     file: "file_ignore_unsafe_inline.html",
     result: "abcd",
@@ -75,12 +85,14 @@ function loadNextTest() {
   }
 
   curTest = tests[counter++];
-  var src = "file_testserver.sjs?file=";
+  var src = "file_ignore_unsafe_inline_multiple_policies_server.sjs?file=";
   // append the file that should be served
   src += escape("tests/dom/security/test/csp/" + curTest.file);
 
-  // append the CSP that should be used to serve the file
-  src += "&csp=" + escape(curTest.policy);
+  // append the first CSP that should be used to serve the file
+  src += "&csp1=" + escape(curTest.policy1);
+  // append the second CSP that should be used to serve the file
+  src += "&csp2=" + escape(curTest.policy2);
 
   document.getElementById("testframe").addEventListener("load", test, false);
   document.getElementById("testframe").src = src;
