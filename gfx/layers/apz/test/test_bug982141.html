@@ -17,9 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
     // inside an iframe which means we have no control over the root APZC.
     var w = null;
     window.onload = function() {
-      SpecialPowers.pushPrefEnv({"set": [["apz.test.logging_enabled", true]]}, function() {
-        w = window.open("helper_bug982141.html", "_blank");
-      });
+      w = window.open("helper_bug982141.html", "_blank");
     };
 
     function finishTest() {
