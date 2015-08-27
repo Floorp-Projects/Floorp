@@ -3,15 +3,16 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-#ifndef WIN32
-
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
 #include "mozilla/gfx/TaskScheduler.h"
 
+#ifndef WIN32
 #include <pthread.h>
 #include <sched.h>
+#endif
+
 #include <stdlib.h>
 #include <time.h>
 
@@ -24,9 +25,11 @@ using namespace mozilla;
 // things more apparent (if any).
 void MaybeYieldThread()
 {
+#ifndef WIN32
   if (rand() % 5 == 0) {
     sched_yield();
   }
+#endif
 }
 
 /// Used by the TestCommand to check that tasks are processed in the right order.
@@ -242,5 +245,3 @@ TEST(Moz2D, TaskScheduler_Chain) {
     }
   }
 }
-
-#endif

@@ -22,6 +22,7 @@ namespace gfx {
 
 class Task;
 class PosixCondVar;
+class WorkerThread;
 
 class Mutex {
 public:
@@ -129,23 +130,6 @@ protected:
   bool mShuttingDown;
 
   friend class WorkerThread;
-};
-
-/// Worker thread that continuously dequeues Tasks from a MultiThreadedTaskQueue
-/// and process them.
-///
-/// The public interface of this class must remain identical to its equivalent
-/// in TaskScheduler_win32.h
-class WorkerThread {
-public:
-  WorkerThread(MultiThreadedTaskQueue* aTaskQueue);
-
-  ~WorkerThread();
-
-  void Run();
-protected:
-  MultiThreadedTaskQueue* mQueue;
-  pthread_t mThread;
 };
 
 /// An object that a thread can synchronously wait on.
