@@ -92,6 +92,7 @@
     macro(format, format, "format") \
     macro(frame, frame, "frame") \
     macro(from, from, "from") \
+    macro(gcCycleNumber, gcCycleNumber, "gcCycleNumber") \
     macro(get, get, "get") \
     macro(getInternals, getInternals, "getInternals") \
     macro(getOwnPropertyDescriptor, getOwnPropertyDescriptor, "getOwnPropertyDescriptor") \
@@ -108,6 +109,7 @@
     macro(InitializeCollator, InitializeCollator, "InitializeCollator") \
     macro(InitializeDateTimeFormat, InitializeDateTimeFormat, "InitializeDateTimeFormat") \
     macro(InitializeNumberFormat, InitializeNumberFormat, "InitializeNumberFormat") \
+    macro(inNursery, inNursery, "inNursery") \
     macro(innermost, innermost, "innermost") \
     macro(input, input, "input") \
     macro(int8x16, int8x16, "Int8x16") \

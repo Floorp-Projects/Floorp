@@ -112,16 +112,13 @@ static const uintptr_t IS_PROXY = 1;
 // returns the native window we're inside.
 - (NSWindow*)window;
 
-// the accessible description of this particular instance.
-- (NSString*)customDescription;
-
 // the value of this element.
 - (id)value;
 
 // name that is associated with this accessible (for buttons, etc)
 - (NSString*)title;
 
-// help text associated with this element.
+// the accessible description (help text) of this particular instance.
 - (NSString*)help;
 
 - (BOOL)isEnabled;

@@ -11631,7 +11631,84 @@ FullscreenRequest::~FullscreenRequest()
 // of nsDocument because in the majority of time, there would be at most
 // one document requesting fullscreen. We shouldn't waste the space to
 // hold for it in every document.
-static LinkedList<FullscreenRequest> sPendingFullscreenRequests;
+class PendingFullscreenRequestList
+{
+public:
+  static void Add(UniquePtr<FullscreenRequest>&& aRequest)
+  {
+    sList.insertBack(aRequest.release());
+  }
+
+  static const FullscreenRequest* GetLast()
+  {
+    return sList.getLast();
+  }
+
+  class Iterator
+  {
+  public:
+    explicit Iterator(nsIDocument* aDoc)
+      : mCurrent(PendingFullscreenRequestList::sList.getFirst())
+    {
+      if (mCurrent) {
+        mRootShell = GetRootShell(aDoc);
+        SkipToNextMatch();
+      }
+    }
+
+    void DeleteAndNext()
+    {
+      DeleteAndNextInternal();
+      SkipToNextMatch();
+    }
+    bool AtEnd() const { return mCurrent == nullptr; }
+    const FullscreenRequest& Get() const { return *mCurrent; }
+
+  private:
+    already_AddRefed<nsIDocShellTreeItem> GetRootShell(nsIDocument* aDoc)
+    {
+      if (nsIDocShellTreeItem* shell = aDoc->GetDocShell()) {
+        nsCOMPtr<nsIDocShellTreeItem> rootShell;
+        shell->GetRootTreeItem(getter_AddRefs(rootShell));
+        return rootShell.forget();
+      }
+      return nullptr;
+    }
+
+    void DeleteAndNextInternal()
+    {
+      FullscreenRequest* thisRequest = mCurrent;
+      mCurrent = mCurrent->getNext();
+      delete thisRequest;
+    }
+    void SkipToNextMatch()
+    {
+      while (mCurrent) {
+        nsCOMPtr<nsIDocShellTreeItem>
+          rootShell = GetRootShell(mCurrent->GetDocument());
+        if (!rootShell) {
+          // Always automatically drop documents which has been
+          // detached from the doc shell.
+          DeleteAndNextInternal();
+        } else if (rootShell != mRootShell) {
+          mCurrent = mCurrent->getNext();
+        } else {
+          break;
+        }
+      }
+    }
+
+    FullscreenRequest* mCurrent;
+    nsCOMPtr<nsIDocShellTreeItem> mRootShell;
+  };
+
+private:
+  PendingFullscreenRequestList() = delete;
+
+  static LinkedList<FullscreenRequest> sList;
+};
+
+/* static */ LinkedList<FullscreenRequest> PendingFullscreenRequestList::sList;
 
 static nsCOMPtr<nsPIDOMWindow>
 GetRootWindow(nsIDocument* aDoc)
@@ -11656,7 +11733,14 @@ nsDocument::RequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
   // If we have been in fullscreen, apply the new state directly.
   // Note that we should check both condition, because if we are in
   // child process, our window may not report to be in fullscreen.
-  if (static_cast<nsGlobalWindow*>(rootWin.get())->FullScreen() ||
+  // Also, it is possible that the root window reports that it is in
+  // fullscreen while there exists pending fullscreen request because
+  // of ongoing fullscreen transition. In that case, we shouldn't
+  // apply the state before any previous request.
+  if ((static_cast<nsGlobalWindow*>(rootWin.get())->FullScreen() &&
+       // The iterator being at end at the beginning indicates there is
+       // no pending fullscreen request which relates to this document.
+       PendingFullscreenRequestList::Iterator(this).AtEnd()) ||
       nsContentUtils::GetRootDocument(this)->IsFullScreenDoc()) {
     ApplyFullscreen(*aRequest);
     return;
@@ -11669,7 +11753,7 @@ nsDocument::RequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
     return;
   }
 
-  sPendingFullscreenRequests.insertBack(aRequest.release());
+  PendingFullscreenRequestList::Add(Move(aRequest));
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     // If we are not the top level process, dispatch an event to make
     // our parent process go fullscreen first.
@@ -11678,58 +11762,24 @@ nsDocument::RequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
       /* Bubbles */ true, /* Cancelable */ false, /* DefaultAction */ nullptr);
   } else {
     // Make the window fullscreen.
-    FullscreenRequest* lastRequest = sPendingFullscreenRequests.getLast();
+    const FullscreenRequest*
+      lastRequest = PendingFullscreenRequestList::GetLast();
     rootWin->SetFullscreenInternal(nsPIDOMWindow::eForFullscreenAPI, true,
                                    lastRequest->mVRHMDDevice);
   }
 }
 
 /* static */ bool
-nsIDocument::HandlePendingFullscreenRequest(const FullscreenRequest& aRequest,
-                                            nsIDocShellTreeItem* aRootShell,
-                                            bool* aHandled)
-{
-  nsDocument* doc = aRequest.GetDocument();
-  nsIDocShellTreeItem* shell = doc->GetDocShell();
-  if (!shell) {
-    return true;
-  }
-  nsCOMPtr<nsIDocShellTreeItem> rootShell;
-  shell->GetRootTreeItem(getter_AddRefs(rootShell));
-  if (rootShell != aRootShell) {
-    return false;
-  }
-
-  if (doc->ApplyFullscreen(aRequest)) {
-    *aHandled = true;
-  }
-  return true;
-}
-
-/* static */ bool
 nsIDocument::HandlePendingFullscreenRequests(nsIDocument* aDoc)
 {
-  if (sPendingFullscreenRequests.isEmpty()) {
-    return false;
-  }
-
   bool handled = false;
-  nsIDocShellTreeItem* shell = aDoc->GetDocShell();
-  nsCOMPtr<nsIDocShellTreeItem> rootShell;
-  if (shell) {
-    shell->GetRootTreeItem(getter_AddRefs(rootShell));
-  }
-  FullscreenRequest* request = sPendingFullscreenRequests.getFirst();
-  while (request) {
-    if (HandlePendingFullscreenRequest(*request, rootShell, &handled)) {
-      // Drop requests, which either have been detached from document/
-      // document shell, or are handled by HandleFullscreenRequest.
-      FullscreenRequest* thisRequest = request;
-      request = request->getNext();
-      delete thisRequest;
-    } else {
-      request = request->getNext();
+  PendingFullscreenRequestList::Iterator iter(aDoc);
+  while (!iter.AtEnd()) {
+    const FullscreenRequest& request = iter.Get();
+    if (request.GetDocument()->ApplyFullscreen(request)) {
+      handled = true;
     }
+    iter.DeleteAndNext();
   }
   return handled;
 }
@@ -11737,29 +11787,9 @@ nsIDocument::HandlePendingFullscreenRequests(nsIDocument* aDoc)
 static void
 ClearPendingFullscreenRequests(nsIDocument* aDoc)
 {
-  nsIDocShellTreeItem* shell = aDoc->GetDocShell();
-  if (!shell) {
-    return;
-  }
-
-  FullscreenRequest* request = sPendingFullscreenRequests.getFirst();
-  while (request) {
-    nsIDocument* doc = request->GetDocument();
-    bool shouldRemove = false;
-    for (nsCOMPtr<nsIDocShellTreeItem> docShell = doc->GetDocShell();
-         docShell; docShell->GetParent(getter_AddRefs(docShell))) {
-      if (docShell == shell) {
-        shouldRemove = true;
-        break;
-      }
-    }
-    if (shouldRemove) {
-      FullscreenRequest* thisRequest = request;
-      request = request->getNext();
-      delete thisRequest;
-    } else {
-      request = request->getNext();
-    }
+  PendingFullscreenRequestList::Iterator iter(aDoc);
+  while (!iter.AtEnd()) {
+    iter.DeleteAndNext();
   }
 }
 

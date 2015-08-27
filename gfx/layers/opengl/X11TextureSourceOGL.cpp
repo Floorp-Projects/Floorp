@@ -18,6 +18,7 @@ X11TextureSourceOGL::X11TextureSourceOGL(CompositorOGL* aCompositor, gfxXlibSurf
   : mCompositor(aCompositor)
   , mSurface(aSurface)
   , mTexture(0)
+  , mUpdated(false)
 {
 }
 
@@ -51,7 +52,10 @@ X11TextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
     gl::sGLXLibrary.BindTexImage(mSurface->XDisplay(), mSurface->GetGLXPixmap());
   } else {
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-    gl::sGLXLibrary.UpdateTexImage(mSurface->XDisplay(), mSurface->GetGLXPixmap());
+    if (mUpdated) {
+      gl::sGLXLibrary.UpdateTexImage(mSurface->XDisplay(), mSurface->GetGLXPixmap());
+      mUpdated = false;
+    }
   }
 
   ApplyFilterToBoundTexture(gl(), aFilter, LOCAL_GL_TEXTURE_2D);
