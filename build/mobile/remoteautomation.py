@@ -287,8 +287,8 @@ class RemoteAutomation(Automation):
                 self.procName = app
 
             # Setting timeout at 1 hour since on a remote device this takes much longer.
-            # Temporarily increased to 75 minutes because no more chunks can be created.
-            self.timeout = 4500
+            # Temporarily increased to 90 minutes because no more chunks can be created.
+            self.timeout = 5400
             # The benefit of the following sleep is unclear; it was formerly 15 seconds
             time.sleep(1)
 
