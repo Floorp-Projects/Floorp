@@ -501,7 +501,7 @@ class Node : public ::google::protobuf::Message {
   inline ::std::string* release_jsobjectclassname();
   inline void set_allocated_jsobjectclassname(::std::string* jsobjectclassname);
 
-  // optional uint32 coarseType = 7 [default = 3];
+  // optional uint32 coarseType = 7 [default = 0];
   inline bool has_coarsetype() const;
   inline void clear_coarsetype();
   static const int kCoarseTypeFieldNumber = 7;
@@ -1341,7 +1341,7 @@ inline void Node::set_allocated_jsobjectclassname(::std::string* jsobjectclassna
   // @@protoc_insertion_point(field_set_allocated:mozilla.devtools.protobuf.Node.jsObjectClassName)
 }
 
-// optional uint32 coarseType = 7 [default = 3];
+// optional uint32 coarseType = 7 [default = 0];
 inline bool Node::has_coarsetype() const {
   return (_has_bits_[0] & 0x00000040u) != 0;
 }
@@ -1352,7 +1352,7 @@ inline void Node::clear_has_coarsetype() {
   _has_bits_[0] &= ~0x00000040u;
 }
 inline void Node::clear_coarsetype() {
-  coarsetype_ = 3u;
+  coarsetype_ = 0u;
   clear_has_coarsetype();
 }
 inline ::google::protobuf::uint32 Node::coarsetype() const {

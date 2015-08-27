@@ -89,7 +89,7 @@ message Node {
     // char[]
     optional bytes      jsObjectClassName = 6;
     // JS::ubi::CoarseType. Defaults to Other.
-    optional uint32     coarseType        = 7 [default = 3];
+    optional uint32     coarseType        = 7 [default = 0];
 }
 
 // A serialized edge from the heap graph.
