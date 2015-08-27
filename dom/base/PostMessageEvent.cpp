@@ -113,8 +113,11 @@ PostMessageEvent::Run()
                           false /*cancelable */, messageData, mCallerOrigin,
                           EmptyString(), mSource);
 
+  nsTArray<nsRefPtr<MessagePortBase>> ports;
+  TakeTransferredPorts(ports);
+
   event->SetPorts(new MessagePortList(static_cast<dom::Event*>(event.get()),
-                                      GetTransferredPorts()));
+                                      ports));
 
   // We can't simply call dispatchEvent on the window because doing so ends
   // up flipping the trusted bit on the event, and we don't want that to
