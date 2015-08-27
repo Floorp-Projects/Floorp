@@ -2402,6 +2402,20 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         }
         document.getAnonymousElementByAttribute(this, "anonid", "center-item-warning-label").value = warningString;
 
+        let chromeWin = window.QueryInterface(Ci.nsIDOMChromeWindow);
+        let isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(chromeWin);
+
+        if (isWindowPrivate) {
+          // TODO: temporary compromise of hiding some privacy leaks, remove once bug 892487 is fixed
+          let allowalways = document.getAnonymousElementByAttribute(this, "anonid", "allowalways");
+          let block = document.getAnonymousElementByAttribute(this, "anonid", "block");
+          let allownow = document.getAnonymousElementByAttribute(this, "anonid", "allownow");
+
+          allowalways.hidden = curState !== "allowalways";
+          block.hidden       = curState !== "block";
+          allownow.hidden    = curState === "allowalways";
+        }
+
         if (url || linkHandler) {
           link.value = linkString;
           if (url) {
@@ -2577,6 +2591,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <body><![CDATA[
           var action = this._items[0].action;
           var prePath = action.pluginPermissionPrePath;
+          let chromeWin = window.QueryInterface(Ci.nsIDOMChromeWindow);
+          let isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(chromeWin);
 
           let label, linkLabel, linkUrl, button1, button2;
 
@@ -2614,6 +2630,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
             default:
               Cu.reportError(Error("Unexpected blocklist state"));
+            }
+
+            // TODO: temporary compromise, remove this once bug 892487 is fixed
+            if (isWindowPrivate) {
+              this._buttonContainer.hidden = true;
             }
           }
           else if (action.pluginTag.enabledState == Ci.nsIPluginTag.STATE_DISABLED) {
@@ -2669,6 +2690,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
             default:
               Cu.reportError(Error("Unexpected blocklist state"));
+            }
+
+            // TODO: temporary compromise, remove this once bug 892487 is fixed
+            if (isWindowPrivate) {
+              button1.default = true;
+              this._secondaryButton.hidden = true;
             }
           }
           this._setupDescription(label, action.pluginName, prePath);

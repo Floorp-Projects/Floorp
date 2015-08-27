@@ -36,9 +36,9 @@ body[globalTpEnabled] .showGlobalTpDisabled {
   background-size: 47px 26px;
   padding-inline-start: 87px;
   color: white;
-  font-size: 24pt;
+  font-size: 1.5em;
   font-weight: 200;
-  line-height: 60pt;
+  line-height: 2.5em;
 }
 
 #main {
@@ -62,7 +62,7 @@ body[globalTpEnabled] .showGlobalTpDisabled {
 }
 
 ul {
-  margin-bottom: 0;
+  margin: 0;
   padding-inline-start: 8px;
 }
 
@@ -100,10 +100,11 @@ li {
 }
 
 #list-area > div {
-  margin-inline-end: 1em;
+  margin-inline-end: 3em;
 }
 
 .list-header {
+  margin-bottom: 0.4em;
   font-weight: bold;
 }
 
@@ -156,8 +157,7 @@ li {
 }
 
 #startTour {
-  display: inline-block;
-  width: 16em;
+  display: block;
   border-radius: 2px;
   background-color: var(--in-content-primary-button-background);
   color: var(--in-content-selected-text);
