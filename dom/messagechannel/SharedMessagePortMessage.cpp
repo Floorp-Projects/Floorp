@@ -46,9 +46,17 @@ SharedMessagePortMessage::Write(JSContext* aCx,
                                 JS::Handle<JS::Value> aTransfer,
                                 ErrorResult& aRv)
 {
-  StructuredCloneHelper::Write(aCx, aValue, aTransfer, true, aRv);
+  StructuredCloneHelper::Write(aCx, aValue, aTransfer, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
+  }
+
+  const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = BlobImpls();
+  for (uint32_t i = 0, len = blobImpls.Length(); i < len; ++i) {
+    if (!blobImpls[i]->MayBeClonedToOtherThreads()) {
+      aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+      return;
+    }
   }
 
   FallibleTArray<uint8_t> cloneData;

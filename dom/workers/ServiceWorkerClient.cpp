@@ -13,6 +13,7 @@
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
 #include "WorkerPrivate.h"
+#include "WorkerStructuredClone.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -72,17 +73,24 @@ ServiceWorkerClient::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 
 namespace {
 
-class ServiceWorkerClientPostMessageRunnable final
-  : public nsRunnable
-  , public StructuredCloneHelper
+class ServiceWorkerClientPostMessageRunnable final : public nsRunnable
 {
   uint64_t mWindowId;
+  JSAutoStructuredCloneBuffer mBuffer;
+  WorkerStructuredCloneClosure mClosure;
 
 public:
-  explicit ServiceWorkerClientPostMessageRunnable(uint64_t aWindowId)
-    : StructuredCloneHelper(CloningSupported, TransferringSupported)
-    , mWindowId(aWindowId)
-  {}
+  ServiceWorkerClientPostMessageRunnable(uint64_t aWindowId,
+                                         JSAutoStructuredCloneBuffer&& aData,
+                                         WorkerStructuredCloneClosure& aClosure)
+    : mWindowId(aWindowId),
+      mBuffer(Move(aData))
+  {
+    mClosure.mClonedObjects.SwapElements(aClosure.mClonedObjects);
+    mClosure.mClonedImages.SwapElements(aClosure.mClonedImages);
+    MOZ_ASSERT(aClosure.mMessagePorts.IsEmpty());
+    mClosure.mMessagePortIdentifiers.SwapElements(aClosure.mMessagePortIdentifiers);
+  }
 
   NS_IMETHOD
   Run()
@@ -115,40 +123,40 @@ private:
   {
     AssertIsOnMainThread();
 
+    // Release reference to objects that were AddRef'd for
+    // cloning into worker when array goes out of scope.
+    WorkerStructuredCloneClosure closure;
+    closure.mClonedObjects.SwapElements(mClosure.mClonedObjects);
+    closure.mClonedImages.SwapElements(mClosure.mClonedImages);
+    MOZ_ASSERT(mClosure.mMessagePorts.IsEmpty());
+    closure.mMessagePortIdentifiers.SwapElements(mClosure.mMessagePortIdentifiers);
+    closure.mParentWindow = do_QueryInterface(aTargetContainer->GetParentObject());
+
     JS::Rooted<JS::Value> messageData(aCx);
-    ErrorResult rv;
-    Read(aTargetContainer->GetParentObject(), aCx, &messageData, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      xpc::Throw(aCx, rv.StealNSResult());
+    if (!mBuffer.read(aCx, &messageData,
+                      WorkerStructuredCloneCallbacks(), &closure)) {
+      xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
       return NS_ERROR_FAILURE;
     }
 
-    nsRefPtr<MessageEvent> event = new MessageEvent(aTargetContainer,
-                                                    nullptr, nullptr);
-    rv = event->InitMessageEvent(NS_LITERAL_STRING("message"),
-                                 false /* non-bubbling */,
-                                 false /* not cancelable */,
-                                 messageData,
-                                 EmptyString(),
-                                 EmptyString(),
-                                 nullptr);
-    if (NS_WARN_IF(rv.Failed())) {
-      xpc::Throw(aCx, rv.StealNSResult());
+    nsCOMPtr<nsIDOMMessageEvent> event = new MessageEvent(aTargetContainer,
+                                                          nullptr, nullptr);
+    nsresult rv =
+      event->InitMessageEvent(NS_LITERAL_STRING("message"),
+                              false /* non-bubbling */,
+                              false /* not cancelable */,
+                              messageData,
+                              EmptyString(),
+                              EmptyString(),
+                              nullptr);
+    if (NS_FAILED(rv)) {
+      xpc::Throw(aCx, rv);
       return NS_ERROR_FAILURE;
     }
-
-    nsTArray<nsRefPtr<MessagePortBase>> ports;
-    TakeTransferredPorts(ports);
-
-    nsRefPtr<MessagePortList> portList =
-      new MessagePortList(static_cast<dom::Event*>(event.get()),
-                          ports);
-    event->SetPorts(portList);
 
     event->SetTrusted(true);
     bool status = false;
-    aTargetContainer->DispatchEvent(static_cast<dom::Event*>(event.get()),
-                                    &status);
+    aTargetContainer->DispatchEvent(event, &status);
 
     if (!status) {
       return NS_ERROR_FAILURE;
@@ -186,17 +194,22 @@ ServiceWorkerClient::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     transferable.setObject(*array);
   }
 
-  nsRefPtr<ServiceWorkerClientPostMessageRunnable> runnable =
-    new ServiceWorkerClientPostMessageRunnable(mWindowId);
+  const JSStructuredCloneCallbacks* callbacks = WorkerStructuredCloneCallbacks();
 
-  runnable->Write(aCx, aMessage, transferable, true, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
+  WorkerStructuredCloneClosure closure;
+
+  JSAutoStructuredCloneBuffer buffer;
+  if (!buffer.write(aCx, aMessage, transferable, callbacks, &closure)) {
+    aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
   }
 
-  aRv = NS_DispatchToMainThread(runnable);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
+  nsRefPtr<ServiceWorkerClientPostMessageRunnable> runnable =
+    new ServiceWorkerClientPostMessageRunnable(mWindowId, Move(buffer),
+                                               closure);
+  nsresult rv = NS_DispatchToMainThread(runnable);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(NS_ERROR_FAILURE);
   }
 }
 
