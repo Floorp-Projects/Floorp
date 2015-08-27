@@ -6,21 +6,25 @@ package org.mozilla.tests.browser.junit3;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.RemoteException;
 import android.test.InstrumentationTestCase;
 
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.background.db.CursorDumper;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.LocalTabsAccessor;
 import org.mozilla.gecko.db.RemoteClient;
-import org.mozilla.gecko.db.TabsAccessor;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 
 import java.util.List;
 
 public class TestRemoteTabs extends InstrumentationTestCase {
+    private static final long ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
+    private static final long ONE_WEEK_IN_MILLISECONDS = 7 * ONE_DAY_IN_MILLISECONDS;
+    private static final long THREE_WEEKS_IN_MILLISECONDS = 3 * ONE_WEEK_IN_MILLISECONDS;
+
     public void testGetClientsWithoutTabsByRecencyFromCursor() throws Exception {
         final Uri uri = BrowserContractHelpers.CLIENTS_CONTENT_URI;
         final ContentResolver cr = getInstrumentation().getTargetContext().getContentResolver();
@@ -119,6 +123,91 @@ public class TestRemoteTabs extends InstrumentationTestCase {
                 assertEquals("guid2", clients.get(1).guid);
             } finally {
                 allClients.close();
+            }
+        } finally {
+            cpc.release();
+        }
+    }
+
+    public void testGetRecentRemoteClientsUpToOneWeekOld() throws Exception {
+        final Uri uri = BrowserContractHelpers.CLIENTS_CONTENT_URI;
+        final Context context = getInstrumentation().getTargetContext();
+        final String profileName = GeckoProfile.get(context).getName();
+        final ContentResolver cr = context.getContentResolver();
+        final ContentProviderClient cpc = cr.acquireContentProviderClient(uri);
+        final LocalTabsAccessor accessor = new LocalTabsAccessor(profileName);
+
+        try {
+            // Start Clean
+            cpc.delete(uri, null, null);
+            final Cursor allClients = cpc.query(uri, null, null, null, null);
+            try {
+                assertEquals(0, allClients.getCount());
+            } finally {
+                allClients.close();
+            }
+
+            // Insert a local and remote1 client record, neither with tabs.
+            final long now = System.currentTimeMillis();
+            // Local client has GUID = null.
+            final ContentValues local = new ContentValues();
+            local.put(BrowserContract.Clients.NAME, "local");
+            local.put(BrowserContract.Clients.LAST_MODIFIED, now + 1);
+            // Remote clients have GUID != null.
+            final ContentValues remote1 = new ContentValues();
+            remote1.put(BrowserContract.Clients.GUID, "guid1");
+            remote1.put(BrowserContract.Clients.NAME, "remote1");
+            remote1.put(BrowserContract.Clients.LAST_MODIFIED, now + 2);
+
+            // Insert a Remote Client that is 6 days old.
+            final ContentValues remote2 = new ContentValues();
+            remote2.put(BrowserContract.Clients.GUID, "guid2");
+            remote2.put(BrowserContract.Clients.NAME, "remote2");
+            remote2.put(BrowserContract.Clients.LAST_MODIFIED, now - ONE_WEEK_IN_MILLISECONDS + ONE_DAY_IN_MILLISECONDS);
+
+            // Insert a Remote Client with the same name as previous but with more than 3 weeks old
+            final ContentValues remote3 = new ContentValues();
+            remote3.put(BrowserContract.Clients.GUID, "guid21");
+            remote3.put(BrowserContract.Clients.NAME, "remote2");
+            remote3.put(BrowserContract.Clients.LAST_MODIFIED, now - THREE_WEEKS_IN_MILLISECONDS - ONE_DAY_IN_MILLISECONDS);
+
+            // Insert another remote client with the same name as previous but with 3 weeks - 1 day old.
+            final ContentValues remote4 = new ContentValues();
+            remote4.put(BrowserContract.Clients.GUID, "guid22");
+            remote4.put(BrowserContract.Clients.NAME, "remote2");
+            remote4.put(BrowserContract.Clients.LAST_MODIFIED, now - THREE_WEEKS_IN_MILLISECONDS + ONE_DAY_IN_MILLISECONDS);
+
+            // Insert a Remote Client that is exactly one week old.
+            final ContentValues remote5 = new ContentValues();
+            remote5.put(BrowserContract.Clients.GUID, "guid3");
+            remote5.put(BrowserContract.Clients.NAME, "remote3");
+            remote5.put(BrowserContract.Clients.LAST_MODIFIED, now - ONE_WEEK_IN_MILLISECONDS);
+
+            ContentValues[] values = new ContentValues[]{local, remote1, remote2, remote3, remote4, remote5};
+            int inserted = cpc.bulkInsert(uri, values);
+            assertEquals(values.length, inserted);
+
+            final Cursor remoteClients =
+                    accessor.getRemoteClientsByRecencyCursor(context);
+
+            try {
+                CursorDumper.dumpCursor(remoteClients);
+                // Local client is not included.
+                // (remote1, guid1), (remote2, guid2), (remote3, guid3) are expected.
+                assertEquals(3, remoteClients.getCount());
+
+                // Check the inner data, according to recency.
+                List<RemoteClient> recentRemoteClientsList =
+                        accessor.getClientsWithoutTabsByRecencyFromCursor(remoteClients);
+                assertEquals(3, recentRemoteClientsList.size());
+                assertEquals("remote1", recentRemoteClientsList.get(0).name);
+                assertEquals("guid1", recentRemoteClientsList.get(0).guid);
+                assertEquals("remote2", recentRemoteClientsList.get(1).name);
+                assertEquals("guid2", recentRemoteClientsList.get(1).guid);
+                assertEquals("remote3", recentRemoteClientsList.get(2).name);
+                assertEquals("guid3", recentRemoteClientsList.get(2).guid);
+            } finally {
+                remoteClients.close();
             }
         } finally {
             cpc.release();

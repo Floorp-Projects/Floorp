@@ -91,7 +91,6 @@ loop.StandaloneMozLoop = (function(mozL10n) {
         try {
           // We currently only require things we need rather than everything possible.
           callback(null, validate(responseData, {
-            roomOwner: String,
             roomUrl: String
           }));
         } catch (err) {

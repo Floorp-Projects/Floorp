@@ -221,7 +221,7 @@ checkUrls: function(urls, expected, cb)
   var doLookup = function() {
     if (urls.length > 0) {
       var fragment = urls.shift();
-      var principal = secMan.getNoAppCodebasePrincipal(iosvc.newURI("http://" + fragment, null, null));
+      var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + fragment, null, null), {});
       dbservice.lookup(principal, allTables,
                                 function(arg) {
                                   do_check_eq(expected, arg);

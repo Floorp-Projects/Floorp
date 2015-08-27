@@ -6,7 +6,8 @@ let pm;
 // Create a principal based on the { origin, appId, browserElement }.
 function createPrincipal(aOrigin, aAppId, aBrowserElement)
 {
-  return Services.scriptSecurityManager.getAppCodebasePrincipal(NetUtil.newURI(aOrigin), aAppId, aBrowserElement);
+  var attrs = {appId: aAppId, inBrowser: aBrowserElement};
+  return Services.scriptSecurityManager.createCodebasePrincipal(NetUtil.newURI(aOrigin), attrs);
 }
 
 // Return the subject required by 'webapps-clear-data' notification.
