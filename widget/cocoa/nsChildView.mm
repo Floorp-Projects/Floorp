@@ -196,6 +196,8 @@ static uint32_t gNumberOfWidgetsNeedingEventThread = 0;
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent;
 - (void)updateWindowDraggableState;
 
+- (bool)shouldConsiderStartingSwipeFromEvent:(NSEvent*)aEvent;
+
 @end
 
 @interface EventThreadRunner : NSObject
@@ -4280,6 +4282,42 @@ NSEvent* gLastDragMouseDownEvent = nil;
                    delta:0.0];
 }
 
+- (bool)shouldConsiderStartingSwipeFromEvent:(NSEvent*)anEvent
+{
+  if (!nsCocoaFeatures::OnLionOrLater()) {
+    return false;
+  }
+
+  // This method checks whether the AppleEnableSwipeNavigateWithScrolls global
+  // preference is set.  If it isn't, fluid swipe tracking is disabled, and a
+  // horizontal two-finger gesture is always a scroll (even in Safari).  This
+  // preference can't (currently) be set from the Preferences UI -- only using
+  // 'defaults write'.
+  if (![NSEvent isSwipeTrackingFromScrollEventsEnabled]) {
+    return false;
+  }
+
+  // Only initiate horizontal tracking for gestures that have just begun --
+  // otherwise a scroll to one side of the page can have a swipe tacked on
+  // to it.
+  NSEventPhase eventPhase = nsCocoaUtils::EventPhase(anEvent);
+  if ([anEvent type] != NSScrollWheel ||
+      eventPhase != NSEventPhaseBegan ||
+      ![anEvent hasPreciseScrollingDeltas]) {
+    return false;
+  }
+
+  // Only initiate horizontal tracking for events whose horizontal element is
+  // at least eight times larger than its vertical element. This minimizes
+  // performance problems with vertical scrolls (by minimizing the possibility
+  // that they'll be misinterpreted as horizontal swipes), while still
+  // tolerating a small vertical element to a true horizontal swipe.  The number
+  // '8' was arrived at by trial and error.
+  CGFloat deltaX = [anEvent scrollingDeltaX];
+  CGFloat deltaY = [anEvent scrollingDeltaY];
+  return std::abs(deltaX) > std::abs(deltaY) * 8;
+}
+
 // Support fluid swipe tracking on OS X 10.7 and higher. We must be careful
 // to only invoke this support on a two-finger gesture that really
 // is a swipe (and not a scroll) -- in other words, the app is responsible
@@ -4295,29 +4333,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
                      scrollOverflowY:(double)anOverflowY
               viewPortIsOverscrolled:(BOOL)aViewPortIsOverscrolled
 {
-  if (!nsCocoaFeatures::OnLionOrLater()) {
-    return;
-  }
-
-  // This method checks whether the AppleEnableSwipeNavigateWithScrolls global
-  // preference is set.  If it isn't, fluid swipe tracking is disabled, and a
-  // horizontal two-finger gesture is always a scroll (even in Safari).  This
-  // preference can't (currently) be set from the Preferences UI -- only using
-  // 'defaults write'.
-  if (![NSEvent isSwipeTrackingFromScrollEventsEnabled]) {
-    return;
-  }
-
   // We should only track scroll events as swipe if the viewport is being
   // overscrolled.
   if (!aViewPortIsOverscrolled) {
-    return;
-  }
-
-  NSEventPhase eventPhase = nsCocoaUtils::EventPhase(anEvent);
-  // Verify that this is a scroll wheel event with proper phase to be tracked
-  // by the OS.
-  if ([anEvent type] != NSScrollWheel || eventPhase == NSEventPhaseNone) {
     return;
   }
 
@@ -4325,48 +4343,20 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // the current page (as indicated by 'anOverflowX' or 'anOverflowY' being
   // non-zero). Gecko only sets WidgetMouseScrollEvent.scrollOverflow when it's
   // processing NS_MOUSE_PIXEL_SCROLL events (not NS_MOUSE_SCROLL events).
-  if (anOverflowX == 0.0 && anOverflowY == 0.0) {
+  if (anOverflowX == 0.0) {
     return;
   }
 
-  CGFloat deltaX, deltaY;
-  if ([anEvent hasPreciseScrollingDeltas]) {
-    deltaX = [anEvent scrollingDeltaX];
-    deltaY = [anEvent scrollingDeltaY];
-  } else {
-    return;
-  }
+  CGFloat deltaX = [anEvent scrollingDeltaX];
 
-  uint32_t direction = 0;
+  uint32_t direction = (deltaX < 0.0)
+    ? (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_RIGHT
+    : (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
 
-  // Only initiate horizontal tracking for events whose horizontal element is
-  // at least eight times larger than its vertical element. This minimizes
-  // performance problems with vertical scrolls (by minimizing the possibility
-  // that they'll be misinterpreted as horizontal swipes), while still
-  // tolerating a small vertical element to a true horizontal swipe.  The number
-  // '8' was arrived at by trial and error.
-  if (anOverflowX != 0.0 && deltaX != 0.0 &&
-      std::abs(deltaX) > std::abs(deltaY) * 8) {
-    // Only initiate horizontal tracking for gestures that have just begun --
-    // otherwise a scroll to one side of the page can have a swipe tacked on
-    // to it.
-    if (eventPhase != NSEventPhaseBegan) {
-      return;
-    }
-
-    if (deltaX < 0.0) {
-      direction = (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_RIGHT;
-    } else {
-      direction = (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
-    }
-  } else {
-    return;
-  }
-
-  uint32_t allowedDirections = 0;
   // We're ready to start the animation. Tell Gecko about it, and at the same
   // time ask it if it really wants to start an animation for this event.
   // This event also reports back the directions that we can swipe in.
+  uint32_t allowedDirections = 0;
   bool shouldStartSwipe = [self sendSwipeEvent:anEvent
                                       withKind:NS_SIMPLE_GESTURE_SWIPE_START
                              allowedDirections:&allowedDirections
@@ -4974,6 +4964,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
                              position, preciseDelta, modifiers);
     panEvent.mLineOrPageDeltaX = lineOrPageDeltaX;
     panEvent.mLineOrPageDeltaY = lineOrPageDeltaY;
+
     widgetWheelEvent = mGeckoChild->DispatchAPZWheelInputEvent(panEvent);
 
     if (!mGeckoChild) {
@@ -4981,7 +4972,8 @@ PanGestureTypeForEvent(NSEvent* aEvent)
     }
 
 #ifdef __LP64__
-    if ((widgetWheelEvent.deltaX != 0.0 || widgetWheelEvent.deltaY != 0.0)) {
+    bool canTriggerSwipe = [self shouldConsiderStartingSwipeFromEvent:theEvent];
+    if (canTriggerSwipe) {
       // overflowDeltaX and overflowDeltaY tell us when the user has tried to
       // scroll past the edge of a page (in those cases it's non-zero).
       [self maybeTrackScrollEventAsSwipe:theEvent
