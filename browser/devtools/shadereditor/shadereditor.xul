@@ -28,8 +28,7 @@
       <button id="requests-menu-reload-notice-button"
               class="devtools-toolbarbutton"
               standalone="true"
-              label="&shaderEditorUI.reloadNotice1;"
-              oncommand="gFront.setup({ reload: true });"/>
+              label="&shaderEditorUI.reloadNotice1;"/>
       <label id="requests-menu-reload-notice-label"
              class="plain"
              value="&shaderEditorUI.reloadNotice2;"/>
