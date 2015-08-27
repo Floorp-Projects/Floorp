@@ -35,6 +35,7 @@ let {
   Messenger,
   ignoreEvent,
   injectAPI,
+  flushJarCache,
 } = ExtensionUtils;
 
 function isWhenBeforeOrSame(when1, when2)
@@ -461,6 +462,7 @@ let ExtensionManager = {
   init() {
     Services.cpmm.addMessageListener("Extension:Startup", this);
     Services.cpmm.addMessageListener("Extension:Shutdown", this);
+    Services.cpmm.addMessageListener("Extension:FlushJarCache", this);
 
     if (Services.cpmm.initialProcessData && "Extension:Extensions" in Services.cpmm.initialProcessData) {
       let extensions = Services.cpmm.initialProcessData["Extension:Extensions"];
@@ -478,18 +480,29 @@ let ExtensionManager = {
   receiveMessage({name, data}) {
     let extension;
     switch (name) {
-    case "Extension:Startup":
-      extension = new BrowserExtensionContent(data);
-      this.extensions.set(data.id, extension);
-      DocumentManager.startupExtension(data.id);
-      break;
+      case "Extension:Startup": {
+        extension = new BrowserExtensionContent(data);
+        this.extensions.set(data.id, extension);
+        DocumentManager.startupExtension(data.id);
+        break;
+      }
 
-    case "Extension:Shutdown":
-      extension = this.extensions.get(data.id);
-      extension.shutdown();
-      DocumentManager.shutdownExtension(data.id);
-      this.extensions.delete(data.id);
-      break;
+      case "Extension:Shutdown": {
+        extension = this.extensions.get(data.id);
+        extension.shutdown();
+        DocumentManager.shutdownExtension(data.id);
+        this.extensions.delete(data.id);
+        break;
+      }
+
+      case "Extension:FlushJarCache": {
+        let nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
+                                             "initWithPath");
+        let file = new nsIFile(data.path);
+        flushJarCache(file);
+        Services.cpmm.sendAsyncMessage("Extension:FlushJarCacheComplete");
+        break;
+      }
     }
   }
 };
