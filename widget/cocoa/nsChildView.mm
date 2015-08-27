@@ -89,6 +89,7 @@
 #include "mozilla/layers/ChromeProcessController.h"
 #include "nsLayoutUtils.h"
 #include "InputData.h"
+#include "SwipeTracker.h"
 #include "VibrancyManager.h"
 #include "nsNativeThemeCocoa.h"
 #include "nsIDOMWindowUtils.h"
@@ -396,6 +397,11 @@ nsChildView::nsChildView() : nsBaseWidget()
 nsChildView::~nsChildView()
 {
   ReleaseTitlebarCGContext();
+
+  if (mSwipeTracker) {
+    mSwipeTracker->Destroy();
+    mSwipeTracker = nullptr;
+  }
 
   // Notify the children that we're gone.  childView->ResetParent() can change
   // our list of children while it's being iterated, so the way we iterate the
@@ -2564,6 +2570,49 @@ nsChildView::EnsureVibrancyManager()
   return *mVibrancyManager;
 }
 
+void
+nsChildView::MaybeTrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStartEvent)
+{
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+
+  uint32_t direction = (aSwipeStartEvent.mPanDisplacement.x > 0.0)
+    ? (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_RIGHT
+    : (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
+
+  // We're ready to start the animation. Tell Gecko about it, and at the same
+  // time ask it if it really wants to start an animation for this event.
+  // This event also reports back the directions that we can swipe in.
+  LayoutDeviceIntPoint position =
+    RoundedToInt(aSwipeStartEvent.mPanStartPoint * ScreenToLayoutDeviceScale(1));
+  WidgetSimpleGestureEvent geckoEvent =
+    SwipeTracker::CreateSwipeGestureEvent(NS_SIMPLE_GESTURE_SWIPE_START, this, position);
+  geckoEvent.direction = direction;
+  geckoEvent.delta = 0.0;
+  geckoEvent.allowedDirections = 0;
+  bool shouldStartSwipe = DispatchWindowEvent(geckoEvent); // event cancelled == swipe should start
+
+  if (!shouldStartSwipe) {
+    return;
+  }
+
+  // If a swipe is currently being tracked kill it -- it's been interrupted
+  // by another gesture event.
+  if (mSwipeTracker) {
+    mSwipeTracker->CancelSwipe();
+    mSwipeTracker->Destroy();
+    mSwipeTracker = nullptr;
+  }
+
+  mSwipeTracker = new SwipeTracker(*this, aSwipeStartEvent,
+                                   geckoEvent.allowedDirections, direction);
+}
+
+void
+nsChildView::SwipeFinished()
+{
+  mSwipeTracker = nullptr;
+}
+
 already_AddRefed<gfx::DrawTarget>
 nsChildView::StartRemoteDrawing()
 {
@@ -2659,6 +2708,7 @@ WidgetWheelEvent
 nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent)
 {
   WidgetWheelEvent event(true, NS_WHEEL_WHEEL, this);
+
   if (mAPZC) {
     uint64_t inputBlockId = 0;
     ScrollableLayerGuid guid;
@@ -4250,38 +4300,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
          [anEvent subtype] == 0x16;
 }
 
-#ifdef __LP64__
-- (bool)sendSwipeEvent:(NSEvent*)aEvent
-                withKind:(EventMessage)aMsg
-       allowedDirections:(uint32_t*)aAllowedDirections
-               direction:(uint32_t)aDirection
-                   delta:(double)aDelta
-{
-  if (!mGeckoChild)
-    return false;
-
-  WidgetSimpleGestureEvent geckoEvent(true, aMsg, mGeckoChild);
-  geckoEvent.direction = aDirection;
-  geckoEvent.delta = aDelta;
-  geckoEvent.allowedDirections = *aAllowedDirections;
-  [self convertCocoaMouseEvent:aEvent toGeckoEvent:&geckoEvent];
-  bool eventCancelled = mGeckoChild->DispatchWindowEvent(geckoEvent);
-  *aAllowedDirections = geckoEvent.allowedDirections;
-  return eventCancelled; // event cancelled == swipe should start
-}
-
-- (void)sendSwipeEndEvent:(NSEvent *)anEvent
-        allowedDirections:(uint32_t)aAllowedDirections
-{
-    // Tear down animation overlay by sending a swipe end event.
-    uint32_t allowedDirectionsCopy = aAllowedDirections;
-    [self sendSwipeEvent:anEvent
-                withKind:NS_SIMPLE_GESTURE_SWIPE_END
-       allowedDirections:&allowedDirectionsCopy
-               direction:0
-                   delta:0.0];
-}
-
 - (bool)shouldConsiderStartingSwipeFromEvent:(NSEvent*)anEvent
 {
   if (!nsCocoaFeatures::OnLionOrLater()) {
@@ -4317,132 +4335,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   CGFloat deltaY = [anEvent scrollingDeltaY];
   return std::abs(deltaX) > std::abs(deltaY) * 8;
 }
-
-// Support fluid swipe tracking on OS X 10.7 and higher. We must be careful
-// to only invoke this support on a two-finger gesture that really
-// is a swipe (and not a scroll) -- in other words, the app is responsible
-// for deciding which is which. But once the decision is made, the OS tracks
-// the swipe until it has finished, and decides whether or not it succeeded.
-// A horizontal swipe has the same functionality as the Back and Forward
-// buttons.
-// This method is partly based on Apple sample code available at
-// developer.apple.com/library/mac/#releasenotes/Cocoa/AppKitOlderNotes.html
-// (under Fluid Swipe Tracking API).
-- (void)maybeTrackScrollEventAsSwipe:(NSEvent *)anEvent
-{
-  CGFloat deltaX = [anEvent scrollingDeltaX];
-
-  uint32_t direction = (deltaX < 0.0)
-    ? (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_RIGHT
-    : (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
-
-  // We're ready to start the animation. Tell Gecko about it, and at the same
-  // time ask it if it really wants to start an animation for this event.
-  // This event also reports back the directions that we can swipe in.
-  uint32_t allowedDirections = 0;
-  bool shouldStartSwipe = [self sendSwipeEvent:anEvent
-                                      withKind:NS_SIMPLE_GESTURE_SWIPE_START
-                             allowedDirections:&allowedDirections
-                                     direction:direction
-                                         delta:0.0];
-
-  if (!shouldStartSwipe) {
-    return;
-  }
-
-  // If a swipe is currently being tracked kill it -- it's been interrupted
-  // by another gesture event.
-  if (mCancelSwipeAnimation && *mCancelSwipeAnimation == NO) {
-    *mCancelSwipeAnimation = YES;
-    mCancelSwipeAnimation = nil;
-  }
-
-  CGFloat min = (allowedDirections & nsIDOMSimpleGestureEvent::DIRECTION_RIGHT) ? -1.0 : 0.0;
-  CGFloat max = (allowedDirections & nsIDOMSimpleGestureEvent::DIRECTION_LEFT) ? 1.0 : 0.0;
-
-  __block BOOL animationCanceled = NO;
-  __block BOOL geckoSwipeEventSent = NO;
-  // At this point, anEvent is the first scroll wheel event in a two-finger
-  // horizontal gesture that we've decided to treat as a swipe.  When we call
-  // [NSEvent trackSwipeEventWithOptions:...], the OS interprets all
-  // subsequent scroll wheel events that are part of this gesture as a swipe,
-  // and stops sending them to us.  The OS calls the trackingHandler "block"
-  // multiple times, asynchronously (sometimes after [NSEvent
-  // maybeTrackScrollEventAsSwipe:...] has returned).  The OS determines when
-  // the gesture has finished, and whether or not it was "successful" -- this
-  // information is passed to trackingHandler.  We must be careful to only
-  // call [NSEvent maybeTrackScrollEventAsSwipe:...] on a "real" swipe --
-  // otherwise two-finger scrolling performance will suffer significantly.
-  // Note that we use anEvent inside the block. This extends the lifetime of
-  // the anEvent object because it's retained by the block, see bug 682445.
-  // The block will release it when the block goes away at the end of the
-  // animation, or when the animation is canceled.
-  [anEvent trackSwipeEventWithOptions:NSEventSwipeTrackingLockDirection |
-                                      NSEventSwipeTrackingClampGestureAmount
-             dampenAmountThresholdMin:min
-                                  max:max
-                         usingHandler:^(CGFloat gestureAmount,
-                                        NSEventPhase phase,
-                                        BOOL isComplete,
-                                        BOOL *stop) {
-    uint32_t allowedDirectionsCopy = allowedDirections;
-    // Since this tracking handler can be called asynchronously, mGeckoChild
-    // might have become NULL here (our child widget might have been
-    // destroyed).
-    // Checking for gestureAmount == 0.0 also works around bug 770626, which
-    // happens when DispatchWindowEvent() triggers a modal dialog, which spins
-    // the event loop and confuses the OS. This results in several re-entrant
-    // calls to this handler.
-    if (animationCanceled || !mGeckoChild || gestureAmount == 0.0) {
-      *stop = YES;
-      animationCanceled = YES;
-      if (gestureAmount == 0.0) {
-        if (mCancelSwipeAnimation)
-          *mCancelSwipeAnimation = YES;
-        mCancelSwipeAnimation = nil;
-        [self sendSwipeEndEvent:anEvent
-              allowedDirections:allowedDirectionsCopy];
-      }
-      return;
-    }
-
-    // Update animation overlay to match gestureAmount.
-    [self sendSwipeEvent:anEvent
-                withKind:NS_SIMPLE_GESTURE_SWIPE_UPDATE
-       allowedDirections:&allowedDirectionsCopy
-               direction:0.0
-                   delta:gestureAmount];
-
-    if (phase == NSEventPhaseEnded && !geckoSwipeEventSent) {
-      // The result of the swipe is now known, so the main event can be sent.
-      // The animation might continue even after this event was sent, so
-      // don't tear down the animation overlay yet.
-
-      uint32_t directionCopy = direction;
-
-      // gestureAmount is documented to be '-1', '0' or '1' when isComplete
-      // is TRUE, but the docs don't say anything about its value at other
-      // times.  However, tests show that, when phase == NSEventPhaseEnded,
-      // gestureAmount is negative when it will be '-1' at isComplete, and
-      // positive when it will be '1'.  And phase is never equal to
-      // NSEventPhaseEnded when gestureAmount will be '0' at isComplete.
-      geckoSwipeEventSent = YES;
-      [self sendSwipeEvent:anEvent
-                  withKind:NS_SIMPLE_GESTURE_SWIPE
-         allowedDirections:&allowedDirectionsCopy
-                 direction:directionCopy
-                     delta:0.0];
-    }
-
-    if (isComplete) {
-      [self sendSwipeEndEvent:anEvent allowedDirections:allowedDirectionsCopy];
-      mCancelSwipeAnimation = nil;
-    }
-  }];
-
-  mCancelSwipeAnimation = &animationCanceled;
-}
-#endif // #ifdef __LP64__
 
 - (void)setUsingOMTCompositor:(BOOL)aUseOMTC
 {
@@ -4956,19 +4848,23 @@ IsPotentialSwipeStartEventOverscrollingViewport(const WidgetWheelEvent& aEvent)
     panEvent.mLineOrPageDeltaX = lineOrPageDeltaX;
     panEvent.mLineOrPageDeltaY = lineOrPageDeltaY;
 
+    if (SwipeTracker* swipeTracker = mGeckoChild->GetSwipeTracker()) {
+      nsEventStatus status = swipeTracker->ProcessEvent(panEvent);
+      if (status == nsEventStatus_eConsumeNoDefault) {
+        return;
+      }
+    }
+
     widgetWheelEvent = mGeckoChild->DispatchAPZWheelInputEvent(panEvent);
 
     if (!mGeckoChild) {
       return;
     }
 
-#ifdef __LP64__
     bool canTriggerSwipe = [self shouldConsiderStartingSwipeFromEvent:theEvent];
     if (canTriggerSwipe && IsPotentialSwipeStartEventOverscrollingViewport(widgetWheelEvent)) {
-      [self maybeTrackScrollEventAsSwipe:theEvent];
+      mGeckoChild->MaybeTrackScrollEventAsSwipe(panEvent);
     }
-#endif // #ifdef __LP64__
-
   } else if (usePreciseDeltas) {
     // This is on 10.6 or old touchpads that don't have any phase information.
     ScrollWheelInput wheelEvent(eventIntervalTime, eventTimeStamp, modifiers,
