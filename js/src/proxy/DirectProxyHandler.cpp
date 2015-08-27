@@ -97,7 +97,7 @@ DirectProxyHandler::construct(JSContext* cx, HandleObject proxy, const CallArgs&
 
 bool
 DirectProxyHandler::nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
-                               CallArgs args) const
+                               const CallArgs& args) const
 {
     args.setThis(ObjectValue(*args.thisv().toObject().as<ProxyObject>().target()));
     if (!test(args.thisv())) {

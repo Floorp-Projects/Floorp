@@ -189,7 +189,7 @@ IsSymbol(HandleValue v)
 
 // ES6 rev 27 (2014 Aug 24) 19.4.3.2
 bool
-SymbolObject::toString_impl(JSContext* cx, CallArgs args)
+SymbolObject::toString_impl(JSContext* cx, const CallArgs& args)
 {
     // steps 1-3
     HandleValue thisv = args.thisv();
@@ -211,7 +211,7 @@ SymbolObject::toString(JSContext* cx, unsigned argc, Value* vp)
 
 //ES6 rev 24 (2014 Apr 27) 19.4.3.3
 bool
-SymbolObject::valueOf_impl(JSContext* cx, CallArgs args)
+SymbolObject::valueOf_impl(JSContext* cx, const CallArgs& args)
 {
     // Step 3, the error case, is handled by CallNonGenericMethod.
     HandleValue thisv = args.thisv();

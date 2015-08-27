@@ -18,13 +18,13 @@ typedef bool (*IsAcceptableThis)(HandleValue v);
 
 // Implements the guts of a method; guaranteed to be provided an acceptable
 // this-value, as determined by a corresponding IsAcceptableThis method.
-typedef bool (*NativeImpl)(JSContext* cx, CallArgs args);
+typedef bool (*NativeImpl)(JSContext* cx, const CallArgs& args);
 
 namespace detail {
 
 // DON'T CALL THIS DIRECTLY.  It's for use only by CallNonGenericMethod!
 extern JS_PUBLIC_API(bool)
-CallMethodIfWrapped(JSContext* cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
+CallMethodIfWrapped(JSContext* cx, IsAcceptableThis test, NativeImpl impl, const CallArgs& args);
 
 } // namespace detail
 
@@ -93,7 +93,7 @@ CallMethodIfWrapped(JSContext* cx, IsAcceptableThis test, NativeImpl impl, CallA
 //
 template<IsAcceptableThis Test, NativeImpl Impl>
 MOZ_ALWAYS_INLINE bool
-CallNonGenericMethod(JSContext* cx, CallArgs args)
+CallNonGenericMethod(JSContext* cx, const CallArgs& args)
 {
     HandleValue thisv = args.thisv();
     if (Test(thisv))
@@ -103,7 +103,7 @@ CallNonGenericMethod(JSContext* cx, CallArgs args)
 }
 
 MOZ_ALWAYS_INLINE bool
-CallNonGenericMethod(JSContext* cx, IsAcceptableThis Test, NativeImpl Impl, CallArgs args)
+CallNonGenericMethod(JSContext* cx, IsAcceptableThis Test, NativeImpl Impl, const CallArgs& args)
 {
     HandleValue thisv = args.thisv();
     if (Test(thisv))

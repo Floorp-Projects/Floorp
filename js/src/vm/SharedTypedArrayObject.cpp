@@ -309,7 +309,7 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
 
     template<Value ValueGetter(SharedTypedArrayObject* tarr)>
     static bool
-    GetterImpl(JSContext* cx, CallArgs args)
+    GetterImpl(JSContext* cx, const CallArgs& args)
     {
         MOZ_ASSERT(is(args.thisv()));
         args.rval().set(ValueGetter(&args.thisv().toObject().as<SharedTypedArrayObject>()));
@@ -328,7 +328,7 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
     }
 
     static bool
-    BufferGetterImpl(JSContext* cx, CallArgs args)
+    BufferGetterImpl(JSContext* cx, const CallArgs& args)
     {
         MOZ_ASSERT(is(args.thisv()));
         Rooted<SharedTypedArrayObject*> tarray(cx, &args.thisv().toObject().as<SharedTypedArrayObject>());

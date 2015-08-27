@@ -221,7 +221,7 @@ InstallXBLField(JSContext* cx,
 }
 
 bool
-FieldGetterImpl(JSContext *cx, JS::CallArgs args)
+FieldGetterImpl(JSContext *cx, const JS::CallArgs& args)
 {
   JS::Handle<JS::Value> thisv = args.thisv();
   MOZ_ASSERT(ValueHasISupportsPrivate(thisv));
@@ -257,7 +257,7 @@ FieldGetter(JSContext *cx, unsigned argc, JS::Value *vp)
 }
 
 bool
-FieldSetterImpl(JSContext *cx, JS::CallArgs args)
+FieldSetterImpl(JSContext *cx, const JS::CallArgs& args)
 {
   JS::Handle<JS::Value> thisv = args.thisv();
   MOZ_ASSERT(ValueHasISupportsPrivate(thisv));

@@ -566,7 +566,7 @@ MapObject::size(JSContext* cx, HandleObject obj)
 }
 
 bool
-MapObject::size_impl(JSContext* cx, CallArgs args)
+MapObject::size_impl(JSContext* cx, const CallArgs& args)
 {
     RootedObject obj(cx, &args.thisv().toObject());
     args.rval().setNumber(size(cx, obj));
@@ -599,7 +599,7 @@ MapObject::get(JSContext* cx, HandleObject obj,
 }
 
 bool
-MapObject::get_impl(JSContext* cx, CallArgs args)
+MapObject::get_impl(JSContext* cx, const CallArgs& args)
 {
     RootedObject obj(cx, &args.thisv().toObject());
     return get(cx, obj, args.get(0), args.rval());
@@ -626,7 +626,7 @@ MapObject::has(JSContext* cx, HandleObject obj, HandleValue key, bool* rval)
 }
 
 bool
-MapObject::has_impl(JSContext* cx, CallArgs args)
+MapObject::has_impl(JSContext* cx, const CallArgs& args)
 {
     bool found;
     RootedObject obj(cx, &args.thisv().toObject());
@@ -645,7 +645,7 @@ MapObject::has(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-MapObject::set_impl(JSContext* cx, CallArgs args)
+MapObject::set_impl(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(MapObject::is(args.thisv()));
 
@@ -685,7 +685,7 @@ MapObject::delete_(JSContext *cx, HandleObject obj, HandleValue key, bool *rval)
 }
 
 bool
-MapObject::delete_impl(JSContext *cx, CallArgs args)
+MapObject::delete_impl(JSContext *cx, const CallArgs& args)
 {
     // MapObject::mark does not mark deleted entries. Incremental GC therefore
     // requires that no RelocatableValue objects pointing to heap values be
@@ -726,14 +726,14 @@ MapObject::iterator(JSContext* cx, IteratorKind kind,
 }
 
 bool
-MapObject::iterator_impl(JSContext* cx, CallArgs args, IteratorKind kind)
+MapObject::iterator_impl(JSContext* cx, const CallArgs& args, IteratorKind kind)
 {
     RootedObject obj(cx, &args.thisv().toObject());
     return iterator(cx, kind, obj, args.rval());
 }
 
 bool
-MapObject::keys_impl(JSContext* cx, CallArgs args)
+MapObject::keys_impl(JSContext* cx, const CallArgs& args)
 {
     return iterator_impl(cx, args, Keys);
 }
@@ -746,7 +746,7 @@ MapObject::keys(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-MapObject::values_impl(JSContext* cx, CallArgs args)
+MapObject::values_impl(JSContext* cx, const CallArgs& args)
 {
     return iterator_impl(cx, args, Values);
 }
@@ -759,7 +759,7 @@ MapObject::values(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-MapObject::entries_impl(JSContext* cx, CallArgs args)
+MapObject::entries_impl(JSContext* cx, const CallArgs& args)
 {
     return iterator_impl(cx, args, Entries);
 }
@@ -772,7 +772,7 @@ MapObject::entries(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-MapObject::clear_impl(JSContext* cx, CallArgs args)
+MapObject::clear_impl(JSContext* cx, const CallArgs& args)
 {
     RootedObject obj(cx, &args.thisv().toObject());
     args.rval().setUndefined();
@@ -824,7 +824,7 @@ class SetIteratorObject : public NativeObject
     static inline bool is(HandleValue v);
     inline ValueSet::Range* range();
     inline SetObject::IteratorKind kind() const;
-    static bool next_impl(JSContext* cx, CallArgs args);
+    static bool next_impl(JSContext* cx, const CallArgs& args);
 };
 
 } /* anonymous namespace */
@@ -918,7 +918,7 @@ SetIteratorObject::is(HandleValue v)
 }
 
 bool
-SetIteratorObject::next_impl(JSContext* cx, CallArgs args)
+SetIteratorObject::next_impl(JSContext* cx, const CallArgs& args)
 {
     SetIteratorObject& thisobj = args.thisv().toObject().as<SetIteratorObject>();
     ValueSet::Range* range = thisobj.range();
@@ -1206,7 +1206,7 @@ SetObject::size(JSContext *cx, HandleObject obj)
 }
 
 bool
-SetObject::size_impl(JSContext* cx, CallArgs args)
+SetObject::size_impl(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(is(args.thisv()));
 
@@ -1225,7 +1225,7 @@ SetObject::size(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-SetObject::has_impl(JSContext* cx, CallArgs args)
+SetObject::has_impl(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(is(args.thisv()));
 
@@ -1258,7 +1258,7 @@ SetObject::has(JSContext *cx, unsigned argc, Value *vp)
 }
 
 bool
-SetObject::add_impl(JSContext* cx, CallArgs args)
+SetObject::add_impl(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(is(args.thisv()));
 
@@ -1299,7 +1299,7 @@ SetObject::delete_(JSContext *cx, HandleObject obj, HandleValue key, bool *rval)
 }
 
 bool
-SetObject::delete_impl(JSContext *cx, CallArgs args)
+SetObject::delete_impl(JSContext *cx, const CallArgs& args)
 {
     MOZ_ASSERT(is(args.thisv()));
 
@@ -1332,7 +1332,7 @@ SetObject::iterator(JSContext *cx, IteratorKind kind,
 }
 
 bool
-SetObject::iterator_impl(JSContext *cx, CallArgs args, IteratorKind kind)
+SetObject::iterator_impl(JSContext *cx, const CallArgs& args, IteratorKind kind)
 {
     Rooted<SetObject*> setobj(cx, &args.thisv().toObject().as<SetObject>());
     ValueSet& set = *setobj->getData();
@@ -1344,7 +1344,7 @@ SetObject::iterator_impl(JSContext *cx, CallArgs args, IteratorKind kind)
 }
 
 bool
-SetObject::values_impl(JSContext* cx, CallArgs args)
+SetObject::values_impl(JSContext* cx, const CallArgs& args)
 {
     return iterator_impl(cx, args, Values);
 }
@@ -1357,7 +1357,7 @@ SetObject::values(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-SetObject::entries_impl(JSContext* cx, CallArgs args)
+SetObject::entries_impl(JSContext* cx, const CallArgs& args)
 {
     return iterator_impl(cx, args, Entries);
 }
@@ -1382,7 +1382,7 @@ SetObject::clear(JSContext *cx, HandleObject obj)
 }
 
 bool
-SetObject::clear_impl(JSContext *cx, CallArgs args)
+SetObject::clear_impl(JSContext *cx, const CallArgs& args)
 {
     Rooted<SetObject*> setobj(cx, &args.thisv().toObject().as<SetObject>());
     if (!setobj->getData()->clear()) {

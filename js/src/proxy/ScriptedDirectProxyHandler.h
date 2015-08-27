@@ -67,7 +67,7 @@ class ScriptedDirectProxyHandler : public BaseProxyHandler {
 
     // A scripted proxy should not be treated as generic in most contexts.
     virtual bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
-                            CallArgs args) const override;
+                            const CallArgs& args) const override;
     virtual bool hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue v,
                              bool* bp) const override;
     virtual bool objectClassIs(HandleObject obj, ESClassValue classValue,

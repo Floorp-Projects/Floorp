@@ -432,7 +432,7 @@ Proxy::construct(JSContext* cx, HandleObject proxy, const CallArgs& args)
 }
 
 bool
-Proxy::nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl, CallArgs args)
+Proxy::nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl, const CallArgs& args)
 {
     JS_CHECK_RECURSION(cx, return false);
     RootedObject proxy(cx, &args.thisv().toObject());

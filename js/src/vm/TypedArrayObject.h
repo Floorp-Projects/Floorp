@@ -205,7 +205,7 @@ class TypedArrayObject : public NativeObject
 
     template<Value ValueGetter(TypedArrayObject* tarr)>
     static bool
-    GetterImpl(JSContext* cx, CallArgs args)
+    GetterImpl(JSContext* cx, const CallArgs& args)
     {
         MOZ_ASSERT(is(args.thisv()));
         args.rval().set(ValueGetter(&args.thisv().toObject().as<TypedArrayObject>()));
@@ -364,7 +364,7 @@ class DataViewObject : public NativeObject
 
     template<Value ValueGetter(DataViewObject* view)>
     static bool
-    getterImpl(JSContext* cx, CallArgs args);
+    getterImpl(JSContext* cx, const CallArgs& args);
 
     template<Value ValueGetter(DataViewObject* view)>
     static bool
@@ -418,62 +418,62 @@ class DataViewObject : public NativeObject
     create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
            Handle<ArrayBufferObject*> arrayBuffer, JSObject* proto);
 
-    static bool getInt8Impl(JSContext* cx, CallArgs args);
+    static bool getInt8Impl(JSContext* cx, const CallArgs& args);
     static bool fun_getInt8(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool getUint8Impl(JSContext* cx, CallArgs args);
+    static bool getUint8Impl(JSContext* cx, const CallArgs& args);
     static bool fun_getUint8(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool getInt16Impl(JSContext* cx, CallArgs args);
+    static bool getInt16Impl(JSContext* cx, const CallArgs& args);
     static bool fun_getInt16(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool getUint16Impl(JSContext* cx, CallArgs args);
+    static bool getUint16Impl(JSContext* cx, const CallArgs& args);
     static bool fun_getUint16(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool getInt32Impl(JSContext* cx, CallArgs args);
+    static bool getInt32Impl(JSContext* cx, const CallArgs& args);
     static bool fun_getInt32(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool getUint32Impl(JSContext* cx, CallArgs args);
+    static bool getUint32Impl(JSContext* cx, const CallArgs& args);
     static bool fun_getUint32(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool getFloat32Impl(JSContext* cx, CallArgs args);
+    static bool getFloat32Impl(JSContext* cx, const CallArgs& args);
     static bool fun_getFloat32(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool getFloat64Impl(JSContext* cx, CallArgs args);
+    static bool getFloat64Impl(JSContext* cx, const CallArgs& args);
     static bool fun_getFloat64(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool setInt8Impl(JSContext* cx, CallArgs args);
+    static bool setInt8Impl(JSContext* cx, const CallArgs& args);
     static bool fun_setInt8(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool setUint8Impl(JSContext* cx, CallArgs args);
+    static bool setUint8Impl(JSContext* cx, const CallArgs& args);
     static bool fun_setUint8(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool setInt16Impl(JSContext* cx, CallArgs args);
+    static bool setInt16Impl(JSContext* cx, const CallArgs& args);
     static bool fun_setInt16(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool setUint16Impl(JSContext* cx, CallArgs args);
+    static bool setUint16Impl(JSContext* cx, const CallArgs& args);
     static bool fun_setUint16(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool setInt32Impl(JSContext* cx, CallArgs args);
+    static bool setInt32Impl(JSContext* cx, const CallArgs& args);
     static bool fun_setInt32(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool setUint32Impl(JSContext* cx, CallArgs args);
+    static bool setUint32Impl(JSContext* cx, const CallArgs& args);
     static bool fun_setUint32(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool setFloat32Impl(JSContext* cx, CallArgs args);
+    static bool setFloat32Impl(JSContext* cx, const CallArgs& args);
     static bool fun_setFloat32(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool setFloat64Impl(JSContext* cx, CallArgs args);
+    static bool setFloat64Impl(JSContext* cx, const CallArgs& args);
     static bool fun_setFloat64(JSContext* cx, unsigned argc, Value* vp);
 
     static bool initClass(JSContext* cx);
     static void neuter(JSObject* view);
     template<typename NativeType>
     static bool read(JSContext* cx, Handle<DataViewObject*> obj,
-                     CallArgs& args, NativeType* val, const char* method);
+                     const CallArgs& args, NativeType* val, const char* method);
     template<typename NativeType>
     static bool write(JSContext* cx, Handle<DataViewObject*> obj,
-                      CallArgs& args, const char* method);
+                      const CallArgs& args, const char* method);
 
     void neuter(void* newData);
 

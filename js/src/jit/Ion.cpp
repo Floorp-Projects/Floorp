@@ -2568,7 +2568,7 @@ jit::SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& state, AutoVal
     data.osrFrame = nullptr;
 
     if (state.isInvoke()) {
-        CallArgs& args = state.asInvoke()->args();
+        const CallArgs& args = state.asInvoke()->args();
         unsigned numFormals = state.script()->functionNonDelazifying()->nargs();
         data.constructing = state.asInvoke()->constructing();
         data.numActualArgs = args.length();

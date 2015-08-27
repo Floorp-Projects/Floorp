@@ -488,7 +488,7 @@ class TypedArrayMethods
     // with shared typed arrays), but we need to rejigger the shared typed
     // array prototype chain before we can do that.
     static bool
-    subarray(JSContext* cx, CallArgs args)
+    subarray(JSContext* cx, const CallArgs& args)
     {
         MOZ_ASSERT(SomeTypedArray::is(args.thisv()));
 
@@ -580,7 +580,7 @@ class TypedArrayMethods
     // usable for shared typed arrays), but we need to rejigger the shared
     // typed array prototype chain before we can do that.
     static bool
-    copyWithin(JSContext* cx, CallArgs args)
+    copyWithin(JSContext* cx, const CallArgs& args)
     {
         MOZ_ASSERT(SomeTypedArray::is(args.thisv()));
 
@@ -667,7 +667,7 @@ class TypedArrayMethods
 
     /* set(array[, offset]) */
     static bool
-    set(JSContext* cx, CallArgs args)
+    set(JSContext* cx, const CallArgs& args)
     {
         MOZ_ASSERT(SomeTypedArray::is(args.thisv()));
 

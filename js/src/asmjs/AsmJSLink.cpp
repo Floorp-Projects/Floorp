@@ -528,7 +528,7 @@ LinkModuleToHeap(JSContext* cx, AsmJSModule& module, Handle<ArrayBufferObjectMay
 }
 
 static bool
-DynamicallyLinkModule(JSContext* cx, CallArgs args, AsmJSModule& module)
+DynamicallyLinkModule(JSContext* cx, const CallArgs& args, AsmJSModule& module)
 {
     module.setIsDynamicallyLinked(cx->runtime());
 
@@ -607,7 +607,7 @@ DynamicallyLinkModule(JSContext* cx, CallArgs args, AsmJSModule& module)
 }
 
 static bool
-ChangeHeap(JSContext* cx, AsmJSModule& module, CallArgs args)
+ChangeHeap(JSContext* cx, AsmJSModule& module, const CallArgs& args)
 {
     HandleValue bufferArg = args.get(0);
     if (!IsArrayBuffer(bufferArg)) {
@@ -819,7 +819,8 @@ NewExportedFunction(JSContext* cx, const AsmJSModule::ExportedFunction& func,
 }
 
 static bool
-HandleDynamicLinkFailure(JSContext* cx, CallArgs args, AsmJSModule& module, HandlePropertyName name)
+HandleDynamicLinkFailure(JSContext* cx, const CallArgs& args, AsmJSModule& module,
+                         HandlePropertyName name)
 {
     if (cx->isExceptionPending())
         return false;
