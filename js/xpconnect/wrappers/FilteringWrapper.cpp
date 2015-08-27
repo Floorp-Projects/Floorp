@@ -147,7 +147,7 @@ FilteringWrapper<Base, Policy>::construct(JSContext* cx, JS::Handle<JSObject*> w
 template <typename Base, typename Policy>
 bool
 FilteringWrapper<Base, Policy>::nativeCall(JSContext* cx, JS::IsAcceptableThis test,
-                                           JS::NativeImpl impl, JS::CallArgs args) const
+                                           JS::NativeImpl impl, const JS::CallArgs& args) const
 {
     if (Policy::allowNativeCall(cx, test, impl))
         return Base::Permissive::nativeCall(cx, test, impl, args);

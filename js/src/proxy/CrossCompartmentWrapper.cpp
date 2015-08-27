@@ -314,7 +314,7 @@ CrossCompartmentWrapper::construct(JSContext* cx, HandleObject wrapper, const Ca
 
 bool
 CrossCompartmentWrapper::nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
-                                    CallArgs srcArgs) const
+                                    const CallArgs& srcArgs) const
 {
     RootedObject wrapper(cx, &srcArgs.thisv().toObject());
     MOZ_ASSERT(srcArgs.thisv().isMagic(JS_IS_CONSTRUCTING) ||

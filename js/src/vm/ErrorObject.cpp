@@ -231,7 +231,7 @@ js::ErrorObject::setStack(JSContext* cx, unsigned argc, Value* vp)
 }
 
 /* static */ bool
-js::ErrorObject::setStack_impl(JSContext* cx, CallArgs args)
+js::ErrorObject::setStack_impl(JSContext* cx, const CallArgs& args)
 {
     const Value& thisValue = args.thisv();
     MOZ_ASSERT(thisValue.isObject());

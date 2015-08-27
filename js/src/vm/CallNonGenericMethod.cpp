@@ -16,7 +16,7 @@ using namespace js;
 
 bool
 JS::detail::CallMethodIfWrapped(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
-                                CallArgs args)
+                                const CallArgs& args)
 {
     HandleValue thisv = args.thisv();
     MOZ_ASSERT(!test(thisv));

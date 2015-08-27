@@ -108,7 +108,7 @@ class SharedArrayRawBuffer
  */
 class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared
 {
-    static bool byteLengthGetterImpl(JSContext* cx, CallArgs args);
+    static bool byteLengthGetterImpl(JSContext* cx, const CallArgs& args);
 
   public:
     // RAWBUF_SLOT holds a pointer (as "private" data) to the

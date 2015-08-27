@@ -1080,7 +1080,7 @@ ScriptedDirectProxyHandler::construct(JSContext* cx, HandleObject proxy, const C
 
 bool
 ScriptedDirectProxyHandler::nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
-                                       CallArgs args) const
+                                       const CallArgs& args) const
 {
     ReportIncompatible(cx, args);
     return false;

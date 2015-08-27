@@ -99,7 +99,7 @@ DeadObjectProxy::construct(JSContext* cx, HandleObject wrapper, const CallArgs& 
 
 bool
 DeadObjectProxy::nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
-                            CallArgs args) const
+                            const CallArgs& args) const
 {
     ReportDead(cx);
     return false;

@@ -104,8 +104,8 @@ class ArrayBufferObjectMaybeShared : public NativeObject
  */
 class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 {
-    static bool byteLengthGetterImpl(JSContext* cx, CallArgs args);
-    static bool fun_slice_impl(JSContext* cx, CallArgs args);
+    static bool byteLengthGetterImpl(JSContext* cx, const CallArgs& args);
+    static bool fun_slice_impl(JSContext* cx, const CallArgs& args);
 
   public:
     static const uint8_t DATA_SLOT = 0;
@@ -227,11 +227,11 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     static JSObject* createSlice(JSContext* cx, Handle<ArrayBufferObject*> arrayBuffer,
                                  uint32_t begin, uint32_t end);
 
-    static bool createDataViewForThisImpl(JSContext* cx, CallArgs args);
+    static bool createDataViewForThisImpl(JSContext* cx, const CallArgs& args);
     static bool createDataViewForThis(JSContext* cx, unsigned argc, Value* vp);
 
     template<typename T>
-    static bool createTypedArrayFromBufferImpl(JSContext* cx, CallArgs args);
+    static bool createTypedArrayFromBufferImpl(JSContext* cx, const CallArgs& args);
 
     template<typename T>
     static bool createTypedArrayFromBuffer(JSContext* cx, unsigned argc, Value* vp);

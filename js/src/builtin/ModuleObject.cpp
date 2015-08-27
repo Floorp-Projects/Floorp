@@ -17,7 +17,7 @@ typedef JS::Rooted<ExportEntryObject*> RootedExportEntry;
 
 template<typename T, Value ValueGetter(T* obj)>
 static bool
-ModuleValueGetterImpl(JSContext* cx, CallArgs args)
+ModuleValueGetterImpl(JSContext* cx, const CallArgs& args)
 {
     args.rval().set(ValueGetter(&args.thisv().toObject().as<T>()));
     return true;
