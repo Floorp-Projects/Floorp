@@ -42,8 +42,10 @@ class RectTextureImage;
 } // namespace
 
 namespace mozilla {
-class VibrancyManager;
 class InputData;
+class PanGestureInput;
+class SwipeTracker;
+class VibrancyManager;
 namespace layers {
 class GLManager;
 class APZCTreeManager;
@@ -308,11 +310,6 @@ typedef NSInteger NSEventGestureAxis;
 // Helper function for Lion smart magnify events
 + (BOOL)isLionSmartMagnifyEvent:(NSEvent*)anEvent;
 
-// Support for fluid swipe tracking.
-#ifdef __LP64__
-- (void)maybeTrackScrollEventAsSwipe:(NSEvent *)anEvent;
-#endif
-
 - (void)setUsingOMTCompositor:(BOOL)aUseOMTC;
 
 - (NSEvent*)lastKeyDownEvent;
@@ -555,6 +552,10 @@ public:
 
   mozilla::WidgetWheelEvent DispatchAPZWheelInputEvent(mozilla::InputData& aEvent);
 
+  mozilla::SwipeTracker* GetSwipeTracker() { return mSwipeTracker.get(); }
+  void MaybeTrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStartEvent);
+  void SwipeFinished();
+
 protected:
   virtual ~nsChildView();
 
@@ -663,6 +664,7 @@ protected:
   nsAutoPtr<GLPresenter> mGLPresenter;
 
   mozilla::UniquePtr<mozilla::VibrancyManager> mVibrancyManager;
+  nsRefPtr<mozilla::SwipeTracker> mSwipeTracker;
 
   static uint32_t sLastInputEventCount;
 
