@@ -32,7 +32,7 @@
 
   <popupset id="performance-options-popupset">
     <menupopup id="performance-filter-menupopup"/>
-    <menupopup id="performance-options-menupopup" position="before_end">
+    <menupopup id="performance-options-menupopup">
       <menuitem id="option-show-platform-data"
                 type="checkbox"
                 data-pref="show-platform-data"
@@ -119,26 +119,22 @@
                          class="devtools-toolbarbutton devtools-button"
                          label="&performanceUI.toolbar.waterfall;"
                          hidden="true"
-                         data-view="waterfall"
-                         tooltiptext="&performanceUI.toolbar.waterfall.tooltiptext;" />
+                         data-view="waterfall" />
           <toolbarbutton id="select-js-calltree-view"
                          class="devtools-toolbarbutton devtools-button"
                          label="&performanceUI.toolbar.js-calltree;"
                          hidden="true"
-                         data-view="js-calltree"
-                         tooltiptext="&performanceUI.toolbar.js-calltree.tooltiptext;" />
+                         data-view="js-calltree" />
           <toolbarbutton id="select-js-flamegraph-view"
                          class="devtools-toolbarbutton devtools-button"
                          label="&performanceUI.toolbar.js-flamegraph;"
                          hidden="true"
-                         data-view="js-flamegraph"
-                         tooltiptext="&performanceUI.toolbar.js-flamegraph.tooltiptext;" />
+                         data-view="js-flamegraph" />
           <toolbarbutton id="select-memory-calltree-view"
                          class="devtools-toolbarbutton devtools-button"
                          label="&performanceUI.toolbar.memory-calltree;"
                          hidden="true"
-                         data-view="memory-calltree"
-                         tooltiptext="&performanceUI.toolbar.allocations.tooltiptext;" />
+                         data-view="memory-calltree" />
           <toolbarbutton id="select-memory-flamegraph-view"
                          class="devtools-toolbarbutton devtools-button"
                          label="&performanceUI.toolbar.memory-flamegraph;"
