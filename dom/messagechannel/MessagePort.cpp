@@ -140,12 +140,9 @@ public:
     event->SetTrusted(true);
     event->SetSource(mPort);
 
-    nsTArray<nsRefPtr<MessagePortBase>> ports;
-    mData->TakeTransferredPorts(ports);
-
     nsRefPtr<MessagePortList> portList =
       new MessagePortList(static_cast<dom::Event*>(event.get()),
-                          ports);
+                          mData->GetTransferredPorts());
     event->SetPorts(portList);
 
     bool dummy;
