@@ -546,6 +546,10 @@ box.requests-menu-status[code^="5"] {
   -moz-padding-start: 1em;
 }
 
+.theme-dark #security-error-message {
+  color: var(--theme-selection-color);
+}
+
 #security-tabpanel {
   overflow: auto;
 }

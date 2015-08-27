@@ -12,9 +12,9 @@ function isParentProcess() {
 
 function getPrincipalForURI(aURI) {
   var uri = gIoService.newURI(aURI, null, null);
-  return Cc["@mozilla.org/scriptsecuritymanager;1"]
-           .getService(Ci.nsIScriptSecurityManager)
-           .getNoAppCodebasePrincipal(uri);
+  var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+              .getService(Ci.nsIScriptSecurityManager);
+  return ssm.createCodebasePrincipal(uri, {});
 }
 
 function run_test() {

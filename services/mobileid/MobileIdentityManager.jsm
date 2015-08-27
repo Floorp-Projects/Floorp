@@ -897,9 +897,7 @@ this.MobileIdentityManager = {
   getMobileIdAssertion: function(aPrincipal, aPromiseId, aOptions) {
     log.debug("getMobileIdAssertion ${}", aPrincipal);
 
-    let uri = Services.io.newURI(aPrincipal.origin, null, null);
-    let principal = securityManager.getAppCodebasePrincipal(
-      uri, aPrincipal.appId, aPrincipal.isInBrowserElement);
+    let principal = aPrincipal;
     let manifestURL = appsService.getManifestURLByLocalId(aPrincipal.appId);
 
     let permission = permissionManager.testPermissionFromPrincipal(

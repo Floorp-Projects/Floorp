@@ -210,10 +210,6 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
 
   mTabChild = static_cast<TabChild*>(aTabChild);
 
-  if (MissingRequiredTabChild(mTabChild, "remoteopenfile")) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
 #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
   // Windows/OSX desktop builds skip remoting, and just open file in child
   // process when asked for NSPR handle

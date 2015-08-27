@@ -15,7 +15,6 @@ var fakeRooms = [
       }]
     },
     "roomUrl": "http://localhost:3000/rooms/_nxD4V4FflQ",
-    "roomOwner": "Alexis",
     "maxSize": 2,
     "creationTime": 1405517546,
     "ctime": 1405517546,
@@ -28,7 +27,6 @@ var fakeRooms = [
       "roomName": "Second Room Name"
     },
     "roomUrl": "http://localhost:3000/rooms/QzBbvGmIZWU",
-    "roomOwner": "Alexis",
     "maxSize": 2,
     "creationTime": 1405517546,
     "ctime": 1405517546,
@@ -41,7 +39,6 @@ var fakeRooms = [
       "roomName": "UX Discussion"
     },
     "roomUrl": "http://localhost:3000/rooms/3jKS_Els9IU",
-    "roomOwner": "Alexis",
     "maxSize": 2,
     "clientMaxSize": 2,
     "creationTime": 1405517546,

@@ -39,9 +39,9 @@ function finishTest() {
 
   var uri = Cc["@mozilla.org/network/io-service;1"].getService(SpecialPowers.Ci.nsIIOService)
               .newURI(window.frames[0].location, null, null);
-  var principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                   .getService(SpecialPowers.Ci.nsIScriptSecurityManager)
-                   .getNoAppCodebasePrincipal(uri);
+  var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+              .getService(SpecialPowers.Ci.nsIScriptSecurityManager);
+  var principal = ssm.createCodebasePrincipal(uri, {});
 
   pm.removeFromPrincipal(principal, "offline-app");
 

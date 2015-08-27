@@ -260,7 +260,7 @@ let gSyncPane = {
       gSyncPane.signIn();
       return false;
     });
-    setEventListener("verifiedManage", "command",
+    setEventListener("verifiedManage", "click",
       gSyncPane.manageFirefoxAccount);
     setEventListener("fxaUnlinkButton", "click", function () {
       gSyncPane.unlinkFirefoxAccount(true);

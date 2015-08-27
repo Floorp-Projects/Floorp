@@ -158,15 +158,17 @@ function testAuthJarNoInterfere(e) {
 
   // Set a bunch of auth data that should not conflict with the correct auth data already
   // stored in the cache.
-  var principal = secMan.getAppCodebasePrincipal(uri, 1, false);
+  var attrs = {appId: 1};
+  var principal = secMan.createCodebasePrincipal(uri, attrs);
   authMgr.setAuthIdentity('http', 'test', -1, 'basic', 'http_realm',
                           'tests/dom/browser-element/mochitest/file_http_401_response.sjs',
                           '', 'httpuser', 'wrongpass', false, principal);
-  principal = secMan.getAppCodebasePrincipal(uri, 1, true);
+  attrs = {appId: 1, inBrowser: true};
+  principal = secMan.createCodebasePrincipal(uri, attrs);
   authMgr.setAuthIdentity('http', 'test', -1, 'basic', 'http_realm',
                           'tests/dom/browser-element/mochitest/file_http_401_response.sjs',
                           '', 'httpuser', 'wrongpass', false, principal);
-  principal = secMan.getAppCodebasePrincipal(uri, secMan.NO_APP_ID, false);
+  principal = secMan.createCodebasePrincipal(uri, {});
   authMgr.setAuthIdentity('http', 'test', -1, 'basic', 'http_realm',
                           'tests/dom/browser-element/mochitest/file_http_401_response.sjs',
                           '', 'httpuser', 'wrongpass', false, principal);
@@ -196,7 +198,7 @@ function testAuthJarInterfere(e) {
   var uri = ioService.newURI("http://test/tests/dom/browser-element/mochitest/file_http_401_response.sjs", null, null);
 
   // Set some auth data that should overwrite the successful stored details.
-  var principal = secMan.getAppCodebasePrincipal(uri, secMan.NO_APP_ID, true);
+  var principal = secMan.createCodebasePrincipal(uri, {inBrowser: true});
   authMgr.setAuthIdentity('http', 'test', -1, 'basic', 'http_realm',
                           'tests/dom/browser-element/mochitest/file_http_401_response.sjs',
                           '', 'httpuser', 'wrongpass', false, principal);

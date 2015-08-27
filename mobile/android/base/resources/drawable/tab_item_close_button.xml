@@ -7,12 +7,12 @@
 
     <!-- pressed state -->
     <item android:state_pressed="true"
-          android:drawable="@drawable/tablet_tab_close_active"/>
+          android:drawable="@drawable/tab_close_active"/>
 
     <item android:state_checked="true"
-          android:drawable="@drawable/tablet_tab_close_active"/>
+          android:drawable="@drawable/tab_close_active"/>
 
     <!-- normal mode -->
-    <item android:drawable="@drawable/tablet_tab_close"/>
+    <item android:drawable="@drawable/tab_close"/>
 
 </selector>

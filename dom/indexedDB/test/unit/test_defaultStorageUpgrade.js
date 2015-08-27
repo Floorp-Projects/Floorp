@@ -90,13 +90,10 @@ function testSteps()
     let request;
     if ("url" in params) {
       let uri = ios.newURI(params.url, null, null);
-      let principal;
-      if ("appId" in params) {
-        principal = ssm.getAppCodebasePrincipal(uri, params.appId,
-                                                params.inMozBrowser);
-      } else {
-        principal = ssm.getNoAppCodebasePrincipal(uri);
-      }
+      let principal =
+        ssm.createCodebasePrincipal(uri,
+                                    {appId: params.appId || ssm.NO_APPID,
+                                     inBrowser: params.inMozBrowser});
       if ("dbVersion" in params) {
         request = indexedDB.openForPrincipal(principal, params.dbName,
                                              params.dbVersion);

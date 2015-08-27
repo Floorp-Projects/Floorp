@@ -8,6 +8,7 @@ package org.mozilla.gecko.restrictions;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.restrictions.RestrictedProfileConfiguration;
 import org.mozilla.gecko.restrictions.Restriction;
+import org.mozilla.gecko.sync.setup.Constants;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -53,6 +54,10 @@ public class RestrictionProvider extends BroadcastReceiver {
         ArrayList<RestrictionEntry> entries = new ArrayList<RestrictionEntry>();
 
         for (Restriction restriction : RestrictedProfileConfiguration.DEFAULT_RESTRICTIONS) {
+            if (restriction == Restriction.DISALLOW_LOCATION_SERVICE && !AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED) {
+                continue;
+            }
+
             RestrictionEntry entry = createRestrictionEntryWithDefaultValue(context, restriction,
                     oldRestrictions.getBoolean(restriction.name, true));
             entries.add(entry);

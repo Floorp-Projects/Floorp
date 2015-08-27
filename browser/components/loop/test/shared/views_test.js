@@ -941,7 +941,7 @@ describe("loop.shared.views", function() {
         view = mountTestComponent({ label: "Some label" });
 
         var node = view.getDOMNode();
-        expect(node.lastChild.localName).to.eql("label");
+        expect(node.lastChild.localName).to.eql("div");
         expect(node.lastChild.textContent).to.eql("Some label");
       });
 
@@ -973,6 +973,26 @@ describe("loop.shared.views", function() {
 
         var checkbox = view.getDOMNode().querySelector(".checkbox");
         expect(checkbox.classList.contains("checked")).eql(false);
+      });
+
+      it("should add an ellipsis class when the prop is set", function() {
+        view = mountTestComponent({
+          label: "Some label",
+          useEllipsis: true
+        });
+
+        var label = view.getDOMNode().querySelector(".checkbox-label");
+        expect(label.classList.contains("ellipsis")).eql(true);
+      });
+
+      it("should not add an ellipsis class when the prop is not set", function() {
+        view = mountTestComponent({
+          label: "Some label",
+          useEllipsis: false
+        });
+
+        var label = view.getDOMNode().querySelector(".checkbox-label");
+        expect(label.classList.contains("ellipsis")).eql(false);
       });
     });
 
