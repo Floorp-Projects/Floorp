@@ -1381,11 +1381,7 @@ bool TabParent::SendRealMouseEvent(WidgetMouseEvent& event)
   }
 
   if (NS_MOUSE_MOVE == event.mMessage) {
-    if (event.reason == WidgetMouseEvent::eSynthesized) {
-      return SendSynthMouseMoveEvent(event);
-    } else {
-      return SendRealMouseMoveEvent(event);
-    }
+    return SendRealMouseMoveEvent(event);
   }
   return SendRealMouseButtonEvent(event);
 }
