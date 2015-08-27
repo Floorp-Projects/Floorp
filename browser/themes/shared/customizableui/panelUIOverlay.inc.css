@@ -1222,19 +1222,9 @@ toolbarpaletteitem[haswideitem][place="panel"] + toolbarpaletteitem[haswideitem]
   border-bottom-left-radius: 0;
 }
 
-.toolbaritem-combined-buttons > separator {
-  -moz-appearance: none;
-  width: 3px;
-  -moz-box-align: stretch;
-  background-image: linear-gradient(to bottom, transparent, hsla(0,0%,100%,.3) 40%, hsla(0,0%,100%,.3) 60%, transparent),
-                    linear-gradient(to bottom, transparent, hsla(210,54%,20%,.15) 40%, hsla(210,54%,20%,.15) 60%, transparent),
-                    linear-gradient(to bottom, transparent, hsla(0,0%,100%,.3) 40%, hsla(0,0%,100%,.3) 60%, transparent);
-  background-size: 1px, 1px, 1px;
-  background-position: 0 0, 1px 0, 2px 0;
-  background-repeat: no-repeat;
-}
-
 .toolbaritem-combined-buttons@inAnyPanel@ > separator {
+  -moz-appearance: none;
+  -moz-box-align: stretch;
   margin: .5em 0;
   width: 1px;
   height: auto;
