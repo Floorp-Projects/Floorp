@@ -202,7 +202,7 @@ static void
 SerialNumberFreeEntry(void* aPool, PLHashEntry* aHashEntry, unsigned aFlag)
 {
   if (aFlag == HT_FREE_ENTRY) {
-    delete reinterpret_cast<SerialNumberRecord*>(aHashEntry->value);
+    delete static_cast<SerialNumberRecord*>(aHashEntry->value);
     PR_Free(aHashEntry);
   }
 }
@@ -211,7 +211,7 @@ static void
 TypesToLogFreeEntry(void* aPool, PLHashEntry* aHashEntry, unsigned aFlag)
 {
   if (aFlag == HT_FREE_ENTRY) {
-    free(const_cast<char*>(reinterpret_cast<const char*>(aHashEntry->key)));
+    free(const_cast<char*>(static_cast<const char*>(aHashEntry->key)));
     PR_Free(aHashEntry);
   }
 }
@@ -405,7 +405,7 @@ static void
 BloatViewFreeEntry(void* aPool, PLHashEntry* aHashEntry, unsigned aFlag)
 {
   if (aFlag == HT_FREE_ENTRY) {
-    BloatEntry* entry = reinterpret_cast<BloatEntry*>(aHashEntry->value);
+    BloatEntry* entry = static_cast<BloatEntry*>(aHashEntry->value);
     delete entry;
     PR_Free(aHashEntry);
   }
@@ -464,7 +464,7 @@ static int
 DumpSerialNumbers(PLHashEntry* aHashEntry, int aIndex, void* aClosure)
 {
   SerialNumberRecord* record =
-    reinterpret_cast<SerialNumberRecord*>(aHashEntry->value);
+    static_cast<SerialNumberRecord*>(aHashEntry->value);
   auto* outputFile = static_cast<FILE*>(aClosure);
 #ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
   fprintf(outputFile, "%" PRIdPTR
@@ -607,12 +607,12 @@ GetSerialNumber(void* aPtr, bool aCreate)
                                             HashNumber(aPtr),
                                             aPtr);
   if (hep && *hep) {
-    return reinterpret_cast<SerialNumberRecord*>((*hep)->value)->serialNumber;
+    return static_cast<SerialNumberRecord*>((*hep)->value)->serialNumber;
   } else if (aCreate) {
     SerialNumberRecord* record = new SerialNumberRecord();
     WalkTheStackSavingLocations(record->allocationStack);
     PL_HashTableRawAdd(gSerialNumbers, hep, HashNumber(aPtr),
-                       aPtr, reinterpret_cast<void*>(record));
+                       aPtr, static_cast<void*>(record));
     return gNextSerialNumber;
   }
   return 0;
@@ -625,7 +625,7 @@ GetRefCount(void* aPtr)
                                             HashNumber(aPtr),
                                             aPtr);
   if (hep && *hep) {
-    return &((reinterpret_cast<SerialNumberRecord*>((*hep)->value))->refCount);
+    return &(static_cast<SerialNumberRecord*>((*hep)->value)->refCount);
   } else {
     return nullptr;
   }
@@ -639,7 +639,7 @@ GetCOMPtrCount(void* aPtr)
                                             HashNumber(aPtr),
                                             aPtr);
   if (hep && *hep) {
-    return &((reinterpret_cast<SerialNumberRecord*>((*hep)->value))->COMPtrCount);
+    return &(static_cast<SerialNumberRecord*>((*hep)->value)->COMPtrCount);
   }
   return nullptr;
 }
