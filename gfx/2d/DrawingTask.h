@@ -43,7 +43,7 @@ public:
 
   ~CommandBuffer();
 
-  DrawingCommand* GetDrawingCommand(ptrdiff_t aId);
+  const DrawingCommand* GetDrawingCommand(ptrdiff_t aId);
 
 protected:
   CommandBuffer(size_t aSize = 256)
