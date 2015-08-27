@@ -140,13 +140,9 @@ HeapSnapshot::saveNode(const protobuf::Node& node)
   auto duplicatedTypeName = reinterpret_cast<const char16_t*>(
     node.typename_().data());
   auto length = node.typename_().length() / sizeof(char16_t);
-  auto typeName = JS::ubi::Node::getCanonicalTypeName(duplicatedTypeName, length);
-  if (!typeName) {
-    typeName = borrowUniqueString(duplicatedTypeName, length);
-    if (!typeName)
-      return false;
-  }
-  MOZ_ASSERT(typeName);
+  auto typeName = borrowUniqueString(duplicatedTypeName, length);
+  if (!typeName)
+    return false;
 
   if (!node.has_size())
     return false;
