@@ -839,6 +839,10 @@ NON_IDL_EVENT(gamepaddisconnected,
 #endif
 
 // Simple gesture events
+NON_IDL_EVENT(MozSwipeGestureMayStart,
+              NS_SIMPLE_GESTURE_SWIPE_MAY_START,
+              EventNameType_None,
+              eSimpleGestureEventClass)
 NON_IDL_EVENT(MozSwipeGestureStart,
               NS_SIMPLE_GESTURE_SWIPE_START,
               EventNameType_None,

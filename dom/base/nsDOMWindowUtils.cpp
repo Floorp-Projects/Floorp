@@ -1315,7 +1315,9 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
     return NS_ERROR_FAILURE;
 
   EventMessage msg;
-  if (aType.EqualsLiteral("MozSwipeGestureStart"))
+  if (aType.EqualsLiteral("MozSwipeGestureMayStart"))
+    msg = NS_SIMPLE_GESTURE_SWIPE_MAY_START;
+  else if (aType.EqualsLiteral("MozSwipeGestureStart"))
     msg = NS_SIMPLE_GESTURE_SWIPE_START;
   else if (aType.EqualsLiteral("MozSwipeGestureUpdate"))
     msg = NS_SIMPLE_GESTURE_SWIPE_UPDATE;
