@@ -956,6 +956,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 
 .room-context > .checkbox-wrapper {
   margin-bottom: .5em;
+  width: 100%;
 }
 
 .room-context-label {
