@@ -950,10 +950,7 @@ void GeckoSampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSampl
 
   uint32_t maxFrames = uint32_t(nativeStack.size - nativeStack.count);
 #ifdef XP_MACOSX
-  pthread_t pt = GetProfiledThread(aSample->threadProfile->GetPlatformData());
-  void *stackEnd = reinterpret_cast<void*>(-1);
-  if (pt)
-    stackEnd = static_cast<char*>(pthread_get_stackaddr_np(pt));
+  void *stackEnd = aSample->threadProfile->GetStackTop();
   bool rv = true;
   if (aSample->fp >= aSample->sp && aSample->fp <= stackEnd)
     rv = FramePointerStackWalk(StackWalkCallback, /* skipFrames */ 0,

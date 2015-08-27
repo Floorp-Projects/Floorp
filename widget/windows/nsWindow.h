@@ -562,6 +562,14 @@ protected:
 
   nsIntRect             mLastPaintBounds;
 
+  // Used for displayport suppression during window resize
+  enum ResizeState {
+    NOT_RESIZING,
+    IN_SIZEMOVE,
+    RESIZING,
+  };
+  ResizeState mResizeState;
+
   // Transparency
 #ifdef MOZ_XUL
   // Use layered windows to support full 256 level alpha translucency

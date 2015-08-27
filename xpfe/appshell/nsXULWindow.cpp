@@ -441,8 +441,13 @@ NS_IMETHODIMP nsXULWindow::Destroy()
   // destroyed window. This is especially necessary when the eldest window
   // in a stack of modal windows is destroyed first. It happens.
   ExitModalLoop(NS_OK);
+  // XXX: Skip unmapping the window on Linux due to GLX hangs on the compositor
+  // thread with NVIDIA driver 310.32. We don't need to worry about user
+  // interactions with destroyed windows on X11 either.
+#ifndef MOZ_WIDGET_GTK
   if (mWindow)
     mWindow->Show(false);
+#endif
 
 #if defined(XP_WIN)
   // We need to explicitly set the focus on Windows, but 
