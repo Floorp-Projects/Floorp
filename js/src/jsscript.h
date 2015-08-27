@@ -2408,7 +2408,16 @@ CloneGlobalScript(JSContext* cx, Handle<ScopeObject*> enclosingScope, HandleScri
 // with no associated compartment.
 namespace JS {
 namespace ubi {
-template<> struct Concrete<js::LazyScript> : TracerConcrete<js::LazyScript> { };
+template<>
+struct Concrete<js::LazyScript> : TracerConcrete<js::LazyScript> {
+    CoarseType coarseType() const final { return CoarseType::Script; }
+
+  protected:
+    explicit Concrete(js::LazyScript *ptr) : TracerConcrete<js::LazyScript>(ptr) { }
+
+  public:
+    static void construct(void *storage, js::LazyScript *ptr) { new (storage) Concrete(ptr); }
+};
 } // namespace ubi
 } // namespace JS
 
