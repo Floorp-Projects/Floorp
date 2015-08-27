@@ -1830,6 +1830,14 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
     return nullptr;
   }
 #endif
+
+  if (!aGraph) {
+    MediaStreamGraph::GraphDriverType graphDriverType =
+      HasAudio() ? MediaStreamGraph::AUDIO_THREAD_DRIVER
+                 : MediaStreamGraph::SYSTEM_THREAD_DRIVER;
+    aGraph = MediaStreamGraph::GetInstance(graphDriverType, mAudioChannel);
+  }
+
   OutputMediaStream* out = mOutputStreams.AppendElement();
   out->mStream = DOMMediaStream::CreateTrackUnionStream(window, aGraph);
   nsRefPtr<nsIPrincipal> principal = GetCurrentPrincipal();
