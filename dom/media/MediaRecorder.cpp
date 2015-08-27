@@ -367,7 +367,7 @@ public:
     : mRecorder(aRecorder)
     , mTimeSlice(aTimeSlice)
     , mStopIssued(false)
-    , mCanRetrieveData(false)
+    , mIsStartEventFired(false)
     , mIsRegisterProfiler(false)
     , mNeedSessionEndTask(true)
   {
@@ -494,10 +494,10 @@ private:
       if (!encodedBuf[i].IsEmpty()) {
         mEncodedBufferCache->AppendBuffer(encodedBuf[i]);
         // Fire the start event when encoded data is available.
-        if (!mCanRetrieveData) {
+        if (!mIsStartEventFired) {
           NS_DispatchToMainThread(
             new DispatchStartEventRunnable(this, NS_LITERAL_STRING("start")));
-          mCanRetrieveData = true;
+          mIsStartEventFired = true;
         }
       }
     }
@@ -510,6 +510,12 @@ private:
       pushBlob = true;
     }
     if (pushBlob || aForceFlush) {
+      // Fire the start event before the blob.
+      if (!mIsStartEventFired) {
+        NS_DispatchToMainThread(
+          new DispatchStartEventRunnable(this, NS_LITERAL_STRING("start")));
+        mIsStartEventFired = true;
+      }
       if (NS_FAILED(NS_DispatchToMainThread(new EncoderErrorNotifierRunnable(this)))) {
         MOZ_ASSERT(false, "NS_DispatchToMainThread EncoderErrorNotifierRunnable failed");
       }
@@ -639,6 +645,9 @@ private:
   {
     MOZ_ASSERT(NS_IsMainThread());
     CleanupStreams();
+    NS_DispatchToMainThread(
+      new DispatchStartEventRunnable(this, NS_LITERAL_STRING("start")));
+
     if (NS_FAILED(rv)) {
       nsCOMPtr<nsIRunnable> runnable =
         NS_NewRunnableMethodWithArg<nsresult>(mRecorder,
@@ -724,8 +733,8 @@ private:
   const int32_t mTimeSlice;
   // Indicate this session's stop has been called.
   bool mStopIssued;
-  // Indicate session has encoded data. This can be changed in recording thread.
-  bool mCanRetrieveData;
+  // Indicate the session had fire start event. Encoding thread only.
+  bool mIsStartEventFired;
   // The register flag for "Media_Encoder" thread to profiler
   bool mIsRegisterProfiler;
   // False if the InitEncoder called successfully, ensure the
