@@ -666,6 +666,11 @@ gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough', '-J-Xmx512m', '-J-
 # gecko-thirdparty is a good place to put small independent libraries
 gtjar = add_java_jar('gecko-thirdparty')
 gtjar.sources += [ thirdparty_source_dir + f for f in [
+    'com/keepsafe/switchboard/AsyncConfigLoader.java',
+    'com/keepsafe/switchboard/DeviceUuidFactory.java',
+    'com/keepsafe/switchboard/Preferences.java',
+    'com/keepsafe/switchboard/Switch.java',
+    'com/keepsafe/switchboard/SwitchBoard.java',
     'com/nineoldandroids/animation/Animator.java',
     'com/nineoldandroids/animation/AnimatorInflater.java',
     'com/nineoldandroids/animation/AnimatorListenerAdapter.java',
