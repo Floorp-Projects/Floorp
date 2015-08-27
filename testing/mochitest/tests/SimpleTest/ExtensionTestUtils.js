@@ -1,6 +1,6 @@
 var ExtensionTestUtils = {};
 
-ExtensionTestUtils.loadExtension = function(name)
+ExtensionTestUtils.loadExtension = function(ext)
 {
   var testResolve;
   var testDone = new Promise(resolve => { testResolve = resolve; });
@@ -37,7 +37,7 @@ ExtensionTestUtils.loadExtension = function(name)
     },
   };
 
-  var extension = SpecialPowers.loadExtension(name, handler);
+  var extension = SpecialPowers.loadExtension(ext, handler);
 
   extension.awaitMessage = (msg) => {
     return new Promise(resolve => {
