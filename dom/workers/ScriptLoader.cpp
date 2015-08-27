@@ -1727,10 +1727,7 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     if (NS_FAILED(loadInfo.mLoadResult)) {
       scriptloader::ReportLoadError(aCx, loadInfo.mURL, loadInfo.mLoadResult,
                                     false);
-      // Top level scripts only!
-      if (mIsWorkerScript) {
-        aWorkerPrivate->MaybeDispatchLoadFailedRunnable();
-      }
+      aWorkerPrivate->MaybeDispatchLoadFailedRunnable();
       return true;
     }
 
