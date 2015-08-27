@@ -6,6 +6,8 @@
 <script type="application/javascript"
   src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 <script type="application/javascript"
+  src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+<script type="application/javascript"
   src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 <link rel="stylesheet" type="text/css"
   href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
@@ -13,7 +15,7 @@
 @keyframes anim {
   to { transform: translate(100px) }
 }
-.target {
+div {
   /* Element needs geometry to be eligible for layerization */
   width: 100px;
   height: 100px;
@@ -24,42 +26,47 @@
 <body>
 <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1045994"
   target="_blank">Mozilla Bug 1045994</a>
-<div class="target"></div>
 <script>
 'use strict';
 
 /** Test for bug 1045994 - Add a chrome-only property to inspect if an
     animation is running on the compositor or not **/
 
-SimpleTest.waitForExplicitFinish();
-
-var div = document.querySelector('div.target');
+function addDiv(attrs) {
+  var div = document.createElement('div');
+  if (attrs) {
+    for (var attrName in attrs) {
+      div.setAttribute(attrName, attrs[attrName]);
+    }
+  }
+  document.body.appendChild(div);
+  return div;
+}
 
 const OMTAPrefKey = 'layers.offmainthreadcomposition.async-animations';
 var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
                   SpecialPowers.getBoolPref(OMTAPrefKey);
 
-// FIXME: When we implement Element.animate, use that here instead of CSS
-// so that we remove any dependency on the CSS mapping.
-div.style.animation = 'anim 100s';
-var animation = div.getAnimations()[0];
+add_task(function* play_and_pause_from_style() {
+  // FIXME: When we implement Element.animate, use that here instead of CSS
+  // so that we remove any dependency on the CSS mapping.
+  var div = addDiv({ style: 'animation: anim 100s' });
+  var animation = div.getAnimations()[0];
 
-animation.ready.then(function() {
+  yield animation.ready;
+
   is(animation.isRunningOnCompositor, omtaEnabled,
      'Animation reports that it is running on the compositor'
      + ' during playback');
 
   div.style.animationPlayState = 'paused';
-  window.getComputedStyle(div).animationPlayState;
 
-  // FIXME: When we implement deferred pausing (bug 1109390), we should wait
-  // on animation.ready here.
-  window.requestAnimationFrame(function() {
-    is(animation.isRunningOnCompositor, false,
-       'Animation reports that it is NOT running on the compositor'
-       + ' when paused');
-    SimpleTest.finish();
-  });
+  yield animation.ready;
+
+  is(animation.isRunningOnCompositor, false,
+     'Animation reports that it is NOT running on the compositor'
+     + ' when paused');
+  div.parentNode.removeChild(div);
 });
 </script>
 </body>
