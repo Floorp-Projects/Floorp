@@ -40,12 +40,10 @@ function startTest() {
       is(evt.type, 'dataavailable',
          'Event type should dataavailable');
       ok(evt.data.size >= 0,
-         'Blob data size received is greater than or equal to zero');
-
-      is(evt.data.type, 'video/webm',
-         'Blob data received should have type = ' + 'video/webm');
-      is(mediaRecorder.mimeType, 'video/webm',
-         'Mime type in ondataavailable = ' + mediaRecorder.mimeType);
+         'Blob data size ' + evt.data.size + ' received is greater than or equal to zero');
+      is(mediaRecorder.mimeType, evt.data.type,
+         'Mime type in MediaRecorder and ondataavailable : '
+         + mediaRecorder.mimeType + ' == ' + evt.data.type);
 
       // We'll stop recording upon the 1st blob being received
       if (dataAvailableCount === 1) {
