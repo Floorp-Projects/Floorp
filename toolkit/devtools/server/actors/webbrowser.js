@@ -1143,12 +1143,6 @@ TabActor.prototype = {
     //   http://hg.mozilla.org/mozilla-central/annotate/74d7fb43bb44/dom/ipc/TabChild.cpp#l944
     // So wait a tick before watching it:
     DevToolsUtils.executeSoon(() => {
-      // Bug 1142752: sometimes, the docshell appears to be immediately destroyed,
-      // bailout early to prevent random exceptions.
-      if (docShell.isBeingDestroyed()) {
-        return;
-      }
-
       // In child processes, we have new root docshells,
       // let's watch them and all their child docshells.
       if (this._isRootDocShell(docShell)) {
