@@ -256,12 +256,7 @@ PlatformCallback(void* decompressionOutputRefCon,
       byte_offset,
       is_sync_point == 1);
 
-  // Forward the data back to an object method which can access
-  // the correct reader's callback.
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableMethodWithArgs<CFRefPtr<CVPixelBufferRef>, AppleVDADecoder::AppleFrameRef>(
-      decoder, &AppleVDADecoder::OutputFrame, image, frameRef);
-  decoder->DispatchOutputTask(task.forget());
+  decoder->OutputFrame(image, frameRef);
 }
 
 AppleVDADecoder::AppleFrameRef*
@@ -274,6 +269,7 @@ AppleVDADecoder::CreateAppleFrameRef(const MediaRawData* aSample)
 void
 AppleVDADecoder::DrainReorderedFrames()
 {
+  MonitorAutoLock mon(mMonitor);
   while (!mReorderQueue.IsEmpty()) {
     mCallback->Output(mReorderQueue.Pop().get());
   }
@@ -283,6 +279,7 @@ AppleVDADecoder::DrainReorderedFrames()
 void
 AppleVDADecoder::ClearReorderedFrames()
 {
+  MonitorAutoLock mon(mMonitor);
   while (!mReorderQueue.IsEmpty()) {
     mReorderQueue.Pop();
   }
@@ -291,13 +288,11 @@ AppleVDADecoder::ClearReorderedFrames()
 
 // Copy and return a decoded frame.
 nsresult
-AppleVDADecoder::OutputFrame(CFRefPtr<CVPixelBufferRef> aImage,
+AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
                              AppleVDADecoder::AppleFrameRef aFrameRef)
 {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-
-  if (mIsFlushing) {
-    // We are in the process of flushing; ignore frame.
+  if (mIsShutDown || mIsFlushing) {
+    // We are in the process of flushing or shutting down; ignore frame.
     return NS_OK;
   }
 
@@ -418,6 +413,7 @@ AppleVDADecoder::OutputFrame(CFRefPtr<CVPixelBufferRef> aImage,
 
   // Frames come out in DTS order but we need to output them
   // in composition order.
+  MonitorAutoLock mon(mMonitor);
   mReorderQueue.Push(data);
   while (mReorderQueue.Length() > mMaxRefFrames) {
     mCallback->Output(mReorderQueue.Pop().get());
