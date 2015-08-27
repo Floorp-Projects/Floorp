@@ -101,6 +101,13 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+  MOZ_SWITCHBOARD:
+#ifdef MOZ_SWITCHBOARD
+  true,
+#else
+  false,
+#endif
+
   MOZ_WEBRTC:
 #ifdef MOZ_WEBRTC
   true,
