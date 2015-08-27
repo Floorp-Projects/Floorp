@@ -107,7 +107,8 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         {"action": "extend",
          "dest": "locales",
          "type": "string",
-         "help": "Specify the locale(s) to sign and update"}
+         "help": "Specify the locale(s) to sign and update. Optionally pass"
+                 " revision separated by colon, en-GB:default."}
     ], [
         ['--locales-file', ],
         {"action": "store",
@@ -333,6 +334,13 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         if config.get('en_us_binary_url') and \
            config.get('release_config_file'):
             bootstrap_env['EN_US_BINARY_URL'] = config['en_us_binary_url']
+        # Override en_us_binary_url if passed as a buildbot property
+        self.read_buildbot_config()
+        if self.buildbot_config.get("en_us_binary_url"):
+            self.info("Overriding en_us_binary_url with %s" %
+                      self.buildbot_config["en_us_binary_url"])
+            bootstrap_env['EN_US_BINARY_URL'] = \
+                self.buildbot_config["en_us_binary_url"]
         if 'MOZ_SIGNING_SERVERS' in os.environ:
             sign_cmd = self.query_moz_sign_cmd(formats=None)
             sign_cmd = subprocess.list2cmdline(sign_cmd)
