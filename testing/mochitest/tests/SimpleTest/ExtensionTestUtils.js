@@ -37,13 +37,7 @@ ExtensionTestUtils.loadExtension = function(name)
     },
   };
 
-  var target = "resource://testing-common/extensions/" + name + "/";
-  var resourceHandler = SpecialPowers.Services.io.getProtocolHandler("resource")
-                                     .QueryInterface(SpecialPowers.Ci.nsISubstitutingProtocolHandler);
-  var url = SpecialPowers.Services.io.newURI(target, null, null);
-  var filePath = resourceHandler.resolveURI(url);
-
-  var extension = SpecialPowers.loadExtension(filePath, handler);
+  var extension = SpecialPowers.loadExtension(name, handler);
 
   extension.awaitMessage = (msg) => {
     return new Promise(resolve => {
