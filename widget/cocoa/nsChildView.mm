@@ -2585,7 +2585,7 @@ nsChildView::MaybeTrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipe
   LayoutDeviceIntPoint position =
     RoundedToInt(aSwipeStartEvent.mPanStartPoint * ScreenToLayoutDeviceScale(1));
   WidgetSimpleGestureEvent geckoEvent =
-    SwipeTracker::CreateSwipeGestureEvent(NS_SIMPLE_GESTURE_SWIPE_START, this, position);
+    SwipeTracker::CreateSwipeGestureEvent(NS_SIMPLE_GESTURE_SWIPE_MAY_START, this, position);
   geckoEvent.direction = direction;
   geckoEvent.delta = 0.0;
   geckoEvent.allowedDirections = 0;

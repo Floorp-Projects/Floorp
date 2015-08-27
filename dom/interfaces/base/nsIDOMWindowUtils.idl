@@ -819,11 +819,11 @@ interface nsIDOMWindowUtils : nsISupports {
   void runNextCollectorTimer();
 
   /** Synthesize a simple gesture event for a window. The event types
-   *  supported are: MozSwipeGestureStart, MozSwipeGestureUpdate,
-   *  MozSwipeGestureEnd, MozSwipeGesture, MozMagnifyGestureStart,
-   *  MozMagnifyGestureUpdate, MozMagnifyGesture, MozRotateGestureStart,
-   *  MozRotateGestureUpdate, MozRotateGesture, MozPressTapGesture,
-   *  MozTapGesture, and MozEdgeUIGesture.
+   *  supported are: MozSwipeGestureMayStart, MozSwipeGestureStart,
+   *  MozSwipeGestureUpdate, MozSwipeGestureEnd, MozSwipeGesture,
+   *  MozMagnifyGestureStart, MozMagnifyGestureUpdate, MozMagnifyGesture,
+   *  MozRotateGestureStart, MozRotateGestureUpdate, MozRotateGesture,
+   *  MozPressTapGesture, MozTapGesture, and MozEdgeUIGesture.
    *
    * Cannot be accessed from unprivileged context (not
    * content-accessible) Will throw a DOM security error if called
