@@ -565,6 +565,10 @@ PluginAsyncSurrogate::NotifyAsyncInitFailed()
   }
   mPendingNewStreamCalls.Clear();
 
+  // Make sure that any WaitForInit calls on this surrogate will fail, or else
+  // we'll be perma-blocked
+  mInitCancelled = true;
+
   nsNPAPIPluginInstance* inst =
     static_cast<nsNPAPIPluginInstance*>(mInstance->ndata);
   if (!inst) {
