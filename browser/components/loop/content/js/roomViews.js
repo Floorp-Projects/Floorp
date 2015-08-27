@@ -508,6 +508,7 @@ loop.roomViews = (function(mozL10n) {
             disabled: checked, 
             label: checkboxLabel, 
             onChange: this.handleCheckboxChange, 
+            useEllipsis: true, 
             value: location}), 
           React.createElement("form", {onSubmit: this.handleFormSubmit}, 
             React.createElement("input", {className: "room-context-name", 
@@ -525,7 +526,7 @@ loop.roomViews = (function(mozL10n) {
             React.createElement("textarea", {className: "room-context-comments", 
               onKeyDown: this.handleTextareaKeyDown, 
               placeholder: mozL10n.get("context_edit_comments_placeholder"), 
-              rows: "3", type: "text", 
+              rows: "2", type: "text", 
               valueLink: this.linkState("newRoomDescription")})
           ), 
           React.createElement("button", {className: "btn btn-info", 

@@ -648,6 +648,9 @@ loop.shared.views = (function(_, mozL10n) {
       disabled: React.PropTypes.bool,
       label: React.PropTypes.string,
       onChange: React.PropTypes.func.isRequired,
+      // If true, this will cause the label to be cut off at the end of the
+      // first line with an ellipsis, and a tooltip supplied.
+      useEllipsis: React.PropTypes.bool,
       // If `value` is not supplied, the consumer should rely on the boolean
       // `checked` state changes.
       value: React.PropTypes.string
@@ -659,6 +662,7 @@ loop.shared.views = (function(_, mozL10n) {
         checked: false,
         disabled: false,
         label: null,
+        useEllipsis: false,
         value: ""
       };
     },
@@ -701,6 +705,11 @@ loop.shared.views = (function(_, mozL10n) {
         checked: this.state.checked,
         disabled: this.props.disabled
       };
+      var labelClasses = {
+        "checkbox-label": true,
+        "ellipsis": this.props.useEllipsis
+      };
+
       if (this.props.additionalClass) {
         wrapperClasses[this.props.additionalClass] = true;
       }
@@ -709,9 +718,13 @@ loop.shared.views = (function(_, mozL10n) {
              disabled: this.props.disabled, 
              onClick: this._handleClick}, 
           React.createElement("div", {className: cx(checkClasses)}), 
-          this.props.label ?
-            React.createElement("label", null, this.props.label) :
-            null
+          
+            this.props.label ?
+              React.createElement("div", {className: cx(labelClasses), 
+                   title: this.props.useEllipsis ? this.props.label : ""}, 
+                this.props.label
+              ) : null
+          
         )
       );
     }
