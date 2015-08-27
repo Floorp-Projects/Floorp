@@ -169,10 +169,7 @@ PlatformCallback(void* decompressionOutputRefCon,
     MOZ_ASSERT(CFGetTypeID(image) == CVPixelBufferGetTypeID(),
       "VideoToolbox returned an unexpected image type");
   }
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableMethodWithArgs<CFRefPtr<CVPixelBufferRef>, AppleVTDecoder::AppleFrameRef>(
-      decoder, &AppleVTDecoder::OutputFrame, image, *frameRef);
-  decoder->DispatchOutputTask(task.forget());
+  decoder->OutputFrame(image, *frameRef);
 }
 
 nsresult
