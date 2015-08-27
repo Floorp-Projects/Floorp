@@ -27,6 +27,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsILoadContext.h"
 #include "nsIURL.h"
+#include "mozilla/Telemetry.h"
 
 namespace mozilla {
 namespace net {
@@ -34,6 +35,10 @@ namespace net {
 #define SUBRESOURCE_AUTH_DIALOG_DISALLOW_ALL 0
 #define SUBRESOURCE_AUTH_DIALOG_DISALLOW_CROSS_ORIGIN 1
 #define SUBRESOURCE_AUTH_DIALOG_ALLOW_ALL 2
+
+#define HTTP_AUTH_DIALOG_TOP_LEVEL_DOC 0
+#define HTTP_AUTH_DIALOG_SAME_ORIGIN_SUBRESOURCE 1
+#define HTTP_AUTH_DIALOG_CROSS_ORIGIN_SUBRESOURCE 2
 
 static void
 GetAppIdAndBrowserStatus(nsIChannel* aChan, uint32_t* aAppId, bool* aInBrowserElem)
@@ -816,6 +821,24 @@ nsHttpChannelAuthProvider::BlockPrompt()
     chan->GetLoadInfo(getter_AddRefs(loadInfo));
     if (!loadInfo) {
         return false;
+    }
+
+    if (gHttpHandler->IsTelemetryEnabled()) {
+      if (loadInfo->GetContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) {
+        Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS,
+                              HTTP_AUTH_DIALOG_TOP_LEVEL_DOC);
+      } else {
+        nsCOMPtr<nsIPrincipal> loadingPrincipal = loadInfo->LoadingPrincipal();
+        if (loadingPrincipal) {
+          if (NS_SUCCEEDED(loadingPrincipal->CheckMayLoad(mURI, false, false))) {
+            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS,
+              HTTP_AUTH_DIALOG_SAME_ORIGIN_SUBRESOURCE);
+          } else {
+            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS,
+              HTTP_AUTH_DIALOG_CROSS_ORIGIN_SUBRESOURCE);
+          }
+        }
+      }
     }
 
     // Allow if it is the top-level document or xhr.

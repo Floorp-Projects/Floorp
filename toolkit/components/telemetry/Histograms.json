@@ -1280,6 +1280,12 @@
     "n_values": 10,
     "description": "Was the URL upgraded to HTTPS?  (0=already HTTPS, 1=no reason to upgrade, 2=STS upgrade blocked by pref, 3=upgraded with STS, 4=upgraded with CSP)"
   },
+  "HTTP_AUTH_DIALOG_STATS": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "Stats about what kind of resource requested http authentication. (0=top-level doc, 1=same origin subresources 2=cross-origin subresources)"
+  },
   "SSL_HANDSHAKE_VERSION": {
     "expires_in_version": "never",
     "kind": "enumerated",
