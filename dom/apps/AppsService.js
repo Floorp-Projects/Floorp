@@ -11,15 +11,14 @@ function debug(s) {
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
+const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
-try {
-  if (Services.prefs.getBoolPref("dom.apps.customization.enabled")) {
-    Cu.import("resource://gre/modules/UserCustomizations.jsm");
-  }
-} catch(e) {}
+
+XPCOMUtils.defineLazyModuleGetter(this, "UserCustomizations",
+  "resource://gre/modules/UserCustomizations.jsm");
 
 const APPS_SERVICE_CID = Components.ID("{05072afa-92fe-45bf-ae22-39b69c117058}");
 
@@ -155,6 +154,16 @@ AppsService.prototype = {
     // TODO : implement properly!
     // We just return null for now to not break PushService.jsm
     return null;
+  },
+
+  isExtensionResource: function(aURI) {
+    // This is only expected to be used by NeckoParent, and will not work
+    // properly in child processes.
+    if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+      throw Cr.NS_ERROR_FAILURE;
+    }
+
+    return UserCustomizations.isFromExtension(aURI);
   },
 
   classID : APPS_SERVICE_CID,
