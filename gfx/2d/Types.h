@@ -289,13 +289,6 @@ struct GradientStop
   Color color;
 };
 
-enum class TaskStatus {
-    Complete,
-    Wait,
-    Yield,
-    Error
-};
-
 } // namespace gfx
 } // namespace mozilla
 
