@@ -128,6 +128,7 @@ UNIFIED_SOURCES += [
     'DataSourceSurface.cpp',
     'DataSurfaceHelpers.cpp',
     'DrawEventRecorder.cpp',
+    'DrawingTask.cpp',
     'DrawTarget.cpp',
     'DrawTargetCairo.cpp',
     'DrawTargetCapture.cpp',
