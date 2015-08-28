@@ -223,7 +223,10 @@ function ExtensionContext(extensionId, contentWindow)
                                  {id: extensionId, frameId}, delegate);
 
   let chromeObj = Cu.createObjectIn(this.sandbox, {defineAs: "browser"});
-  this.sandbox.wrappedJSObject.chrome = this.sandbox.wrappedJSObject.browser;
+
+  // Sandboxes don't get Xrays for some weird compatibility
+  // reason. However, we waive here anyway in case that changes.
+  Cu.waiveXrays(this.sandbox).chrome = Cu.waiveXrays(this.sandbox).browser;
   injectAPI(api(this), chromeObj);
 
   this.onClose = new Set();
