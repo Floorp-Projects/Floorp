@@ -152,7 +152,7 @@ bool
 WidgetEvent::HasPluginActivationEventMessage() const
 {
   return mMessage == ePluginActivate ||
-         mMessage == NS_PLUGIN_FOCUS;
+         mMessage == ePluginFocus;
 }
 
 /******************************************************************************
