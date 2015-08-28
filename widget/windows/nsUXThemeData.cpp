@@ -168,7 +168,7 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
     }
   }
 
-  if (sTitlebarInfoPopulatedThemed)
+  if (sTitlebarInfoPopulatedThemed || IsWin8OrLater())
     return;
 
   // Query a temporary, visible window with command buttons to get
