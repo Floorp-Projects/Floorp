@@ -15,8 +15,6 @@ SOURCES += [
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wshadow']
 
-FAIL_ON_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [

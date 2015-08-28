@@ -29,7 +29,5 @@ EXTRA_JS_MODULES += [
 
 JAR_MANIFESTS += ['jar.mn']
 
-FAIL_ON_WARNINGS = True
-
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Application Update')

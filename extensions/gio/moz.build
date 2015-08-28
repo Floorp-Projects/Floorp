@@ -8,8 +8,6 @@ SOURCES += [
     'nsGIOProtocolHandler.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'
 
 CXXFLAGS += CONFIG['MOZ_GIO_CFLAGS']

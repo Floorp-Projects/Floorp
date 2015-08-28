@@ -25,8 +25,6 @@ UNIFIED_SOURCES += [
     'nsEditorSpellCheck.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'
 RESOURCE_FILES += [
     'res/EditorOverride.css',

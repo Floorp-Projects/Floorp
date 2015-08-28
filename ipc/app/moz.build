@@ -101,8 +101,8 @@ if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
     LDFLAGS += ['/HEAP:0x40000']
 
 # Windows builds have dll linkage warnings due to msvcrt static linkage
-if CONFIG['OS_ARCH'] != 'WINNT':
-    FAIL_ON_WARNINGS = True
+if CONFIG['OS_ARCH'] == 'WINNT':
+    ALLOW_COMPILER_WARNINGS = True
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     OS_LIBS += [

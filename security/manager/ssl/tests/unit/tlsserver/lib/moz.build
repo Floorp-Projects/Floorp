@@ -15,5 +15,3 @@ LOCAL_INCLUDES += [
 ]
 
 Library('tlsserver')
-
-FAIL_ON_WARNINGS = True

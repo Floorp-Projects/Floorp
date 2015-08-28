@@ -183,8 +183,6 @@ EXTRA_COMPONENTS += [
     'CSSUnprefixingService.manifest',
 ]
 
-FAIL_ON_WARNINGS = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

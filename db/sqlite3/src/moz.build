@@ -9,6 +9,8 @@ EXPORTS += [
     'sqlite3.h',
 ]
 
+ALLOW_COMPILER_WARNINGS = True
+
 if CONFIG['MOZ_FOLD_LIBS']:
     # When folding libraries, sqlite is actually in the nss library.
     FINAL_LIBRARY = 'nss'

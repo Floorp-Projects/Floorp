@@ -21,6 +21,8 @@ UNIFIED_SOURCES += [
     'tokenize.cc',
 ]
 
+ALLOW_COMPILER_WARNINGS = True
+
 FINAL_LIBRARY = 'xul'
 
 DEFINES['BP_LOGGING_INCLUDE'] = '"BreakpadLogging.h"'

@@ -32,6 +32,8 @@ SOURCES += [
 
 Library('breakpad_mac_common_s')
 
+ALLOW_COMPILER_WARNINGS = True
+
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [

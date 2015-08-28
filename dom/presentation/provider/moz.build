@@ -14,7 +14,5 @@ UNIFIED_SOURCES += [
     'PresentationDeviceProviderModule.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'

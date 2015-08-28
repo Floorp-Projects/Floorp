@@ -71,3 +71,5 @@ DEFINES['abort'] = 'moz_abort'
 
 GENERATED_INCLUDES += ['src/include']
 LOCAL_INCLUDES += ['src/include']
+
+ALLOW_COMPILER_WARNINGS = True

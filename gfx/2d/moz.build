@@ -156,8 +156,6 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
     SOURCES += ['BlurNEON.cpp']
     SOURCES['BlurNEON.cpp'].flags += ['-mfpu=neon']
 
-FAIL_ON_WARNINGS = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

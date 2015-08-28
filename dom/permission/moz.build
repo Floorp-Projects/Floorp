@@ -46,6 +46,4 @@ if CONFIG['MOZ_WEBSMS_BACKEND']:
 if CONFIG['MOZ_TIME_MANAGER']:
     MOCHITEST_MANIFESTS += ['tests/mochitest-time.ini']
 
-FAIL_ON_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'

@@ -12,8 +12,6 @@ UNIFIED_SOURCES += [
     'nsJSProtocolHandler.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
-
 LOCAL_INCLUDES += [
     "/dom/base",
     "/netwerk/base",

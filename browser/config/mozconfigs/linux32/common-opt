@@ -13,7 +13,7 @@ export MOZILLA_OFFICIAL=1
 
 export MOZ_TELEMETRY_REPORTING=1
 
-# Treat warnings as errors in directories with FAIL_ON_WARNINGS.
+# Treat warnings as errors (modulo ALLOW_COMPILER_WARNINGS).
 ac_add_options --enable-warnings-as-errors
 
 # Package js shell.

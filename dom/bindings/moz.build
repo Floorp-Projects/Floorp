@@ -39,8 +39,6 @@ EXPORTS.mozilla.dom += [
     'UnionMember.h',
 ]
 
-FAIL_ON_WARNINGS = True
-
 LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/battery',

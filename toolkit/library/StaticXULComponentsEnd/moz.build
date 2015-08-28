@@ -13,5 +13,3 @@ if '-flto' in CONFIG['OS_CXXFLAGS']:
 Library('StaticXULComponentsEnd')
 
 DEFINES['MOZILLA_INTERNAL_API'] = True
-
-FAIL_ON_WARNINGS = True

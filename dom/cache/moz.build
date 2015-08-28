@@ -87,8 +87,6 @@ LOCAL_INCLUDES += [
     '../workers',
 ]
 
-FAIL_ON_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'
 
 MOCHITEST_MANIFESTS += [

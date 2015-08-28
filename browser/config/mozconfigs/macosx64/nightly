@@ -10,7 +10,7 @@ if test "${MOZ_UPDATE_CHANNEL}" = "nightly"; then
 ac_add_options --with-macbundlename-prefix=Firefox
 fi
 
-# Treat warnings as errors in directories with FAIL_ON_WARNINGS.
+# Treat warnings as errors (modulo ALLOW_COMPILER_WARNINGS).
 ac_add_options --enable-warnings-as-errors
 
 # Package js shell.

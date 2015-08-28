@@ -26,7 +26,8 @@ else:
     ]
 
 # osx_corewlan.mm has warnings I don't understand.
-FAIL_ON_WARNINGS = CONFIG['OS_ARCH'] != 'Darwin'
+if CONFIG['OS_ARCH'] == 'Darwin':
+    ALLOW_COMPILER_WARNINGS = True
 
 if CONFIG['OS_ARCH'] == 'Darwin':
     UNIFIED_SOURCES += [
