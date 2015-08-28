@@ -12,8 +12,6 @@
 #include <limits.h>
 #include <stdint.h>
 
-#include "js/Utility.h"
-
 #define REGISTERS_NAMES         \
     { "zero", "at", "v0", "v1", "a0", "a1", "a2", "a3", \
       "t0",   "t1", "t2", "t3", "t4", "t5", "t6", "t7", \
@@ -32,6 +30,8 @@
     (1 << Registers::v1);  // used for double-size returns
 
 #include "jit/mips-shared/Architecture-mips-shared.h"
+
+#include "js/Utility.h"
 
 namespace js {
 namespace jit {
