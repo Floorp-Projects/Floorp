@@ -294,7 +294,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
     }
     break;
   }
-  case NS_MOUSE_DOUBLECLICK:
+  case eMouseDoubleClick:
     if (aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
       nsCOMPtr<nsIBaseWindow> window;
       nsIPresShell* presShell = aPresContext->GetPresShell();

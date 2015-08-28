@@ -837,7 +837,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
           abuse = openAllowed;
         }
         break;
-      case NS_MOUSE_DOUBLECLICK :
+      case eMouseDoubleClick:
         if (PopupAllowedForEvent("dblclick")) {
           abuse = openControlled;
         }

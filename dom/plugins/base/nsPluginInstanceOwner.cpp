@@ -2081,7 +2081,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
         pluginEvent.event = upMsgs[mouseEvent->button];
         break;
       }
-      // don't synthesize anything for NS_MOUSE_DOUBLECLICK, since that
+      // don't synthesize anything for eMouseDoubleClick, since that
       // is a synthetic event generated on mouse-up, and Windows WM_*DBLCLK
       // messages are sent on mouse-down
       default:
@@ -2106,7 +2106,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
       // for why this assert should be safe
       NS_ASSERTION(anEvent.mMessage == eMouseDown ||
                    anEvent.mMessage == eMouseUp ||
-                   anEvent.mMessage == NS_MOUSE_DOUBLECLICK ||
+                   anEvent.mMessage == eMouseDoubleClick ||
                    anEvent.mMessage == NS_MOUSE_OVER ||
                    anEvent.mMessage == NS_MOUSE_OUT ||
                    anEvent.mMessage == eMouseMove,
@@ -2168,7 +2168,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
         switch (anEvent.mMessage)
           {
           case NS_MOUSE_CLICK:
-          case NS_MOUSE_DOUBLECLICK:
+          case eMouseDoubleClick:
             // Button up/down events sent instead.
             return rv;
           default:
@@ -2375,7 +2375,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
         switch (anEvent.mMessage)
           {
           case NS_MOUSE_CLICK:
-          case NS_MOUSE_DOUBLECLICK:
+          case eMouseDoubleClick:
             // Button up/down events sent instead.
             return rv;
           default:
