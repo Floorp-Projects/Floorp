@@ -1363,6 +1363,13 @@ static inline ScriptCountsMap::Ptr GetScriptCountsMapEntry(JSScript* script)
     return p;
 }
 
+ScriptCounts&
+JSScript::getScriptCounts()
+{
+    ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
+    return p->value();
+}
+
 js::PCCounts*
 ScriptCounts::maybeGetPCCounts(size_t offset) {
     PCCounts searched = PCCounts(offset);
@@ -1408,13 +1415,6 @@ JSScript::setIonScript(JSContext* maybecx, js::jit::IonScript* ionScript)
     ion = ionScript;
     MOZ_ASSERT_IF(hasIonScript(), hasBaselineScript());
     updateBaselineOrIonRaw(maybecx);
-}
-
-ScriptCounts&
-JSScript::getScriptCounts()
-{
-    ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
-    return p->value();
 }
 
 js::PCCounts*
