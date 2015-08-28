@@ -5,6 +5,7 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 this.EXPORTED_SYMBOLS = [
+  "parseKeyValuePairsFromLines",
   "parseKeyValuePairs",
   "parseKeyValuePairsFromFile"
 ];
@@ -12,24 +13,28 @@ this.EXPORTED_SYMBOLS = [
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-this.parseKeyValuePairs = function parseKeyValuePairs(text) {
-  let lines = text.split('\n');
+this.parseKeyValuePairsFromLines = function(lines) {
   let data = {};
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i] == '')
+  for (let line of lines) {
+    if (line == '')
       continue;
 
     // can't just .split() because the value might contain = characters
-    let eq = lines[i].indexOf('=');
+    let eq = line.indexOf('=');
     if (eq != -1) {
-      let [key, value] = [lines[i].substring(0, eq),
-                          lines[i].substring(eq + 1)];
+      let [key, value] = [line.substring(0, eq),
+                          line.substring(eq + 1)];
       if (key && value)
         data[key] = value.replace(/\\n/g, "\n").replace(/\\\\/g, "\\");
     }
   }
   return data;
 }
+
+this.parseKeyValuePairs = function parseKeyValuePairs(text) {
+  let lines = text.split('\n');
+  return parseKeyValuePairsFromLines(lines);
+};
 
 this.parseKeyValuePairsFromFile = function parseKeyValuePairsFromFile(file) {
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
