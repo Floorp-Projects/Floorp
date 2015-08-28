@@ -689,11 +689,14 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
         // already have, it means it's a transition that's re-starting. So send
         // a "removed" event for the one we already have.
         let index = this.actors.findIndex(a => {
-          return a.player.constructor === player.constructor &&
-                 ((a.isAnimation() &&
-                   a.player.animationName === player.animationName) ||
-                  (a.isTransition() &&
-                   a.player.transitionProperty === player.transitionProperty));
+          let isSameType = a.player.constructor === player.constructor;
+          let isSameName = (a.isAnimation() &&
+                            a.player.animationName === player.animationName) ||
+                           (a.isTransition() &&
+                            a.player.transitionProperty === player.transitionProperty);
+          let isSameNode = a.player.effect.target === player.effect.target;
+
+          return isSameType && isSameNode && isSameName;
         });
         if (index !== -1) {
           eventData.push({
