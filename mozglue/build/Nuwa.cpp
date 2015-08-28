@@ -2077,4 +2077,28 @@ IsNuwaReady() {
   return sNuwaReady;
 }
 
+#if defined(DEBUG) || defined(ENABLE_TESTS)
+MFBT_API void
+NuwaAssertNotFrozen(unsigned int aThread, const char* aThreadName) {
+  if (!sIsNuwaProcess || !sIsFreezing) {
+    return;
+  }
+
+  thread_info_t *tinfo = GetThreadInfo(static_cast<pthread_t>(aThread));
+  if (!tinfo) {
+    return;
+  }
+
+  if ((tinfo->flags & TINFO_FLAG_NUWA_SUPPORT) &&
+      !(tinfo->flags & TINFO_FLAG_NUWA_EXPLICIT_CHECKPOINT)) {
+    __android_log_print(ANDROID_LOG_FATAL, "Nuwa",
+                        "Fatal error: the Nuwa process is about to deadlock in "
+                        "accessing a frozen thread (%s, tid=%d).",
+                        aThreadName ? aThreadName : "(unnamed)",
+                        tinfo->origNativeThreadID);
+    abort();
+  }
+}
+#endif
+
 }      // extern "C"

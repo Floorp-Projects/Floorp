@@ -536,12 +536,6 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
         mEngine->ProcessBlocksOnPorts(this, mInputChunks, mLastChunks, &finished);
       }
     }
-    for (auto& chunk : mInputChunks) {
-      // If the buffer is shared then it won't be reused, so release the
-      // reference now.  Keep the channel data array to save a free/alloc
-      // pair.
-      chunk.ReleaseBufferIfShared();
-    }
     for (uint16_t i = 0; i < outputCount; ++i) {
       NS_ASSERTION(mLastChunks[i].GetDuration() == WEBAUDIO_BLOCK_SIZE,
                    "Invalid WebAudio chunk size");
@@ -616,6 +610,22 @@ AudioNodeStream::AdvanceOutputSegment()
                                 segment->GetDuration(), 0, tmpSegment);
   }
 }
+
+void
+AudioNodeStream::ReleaseSharedBuffers()
+{
+  // A shared buffer can't be reused, so release the reference now.  Keep
+  // the channel data arrays to save unnecessary free/alloc.
+  // Release shared output buffers first, as they may be shared with input
+  // buffers which can be re-used if there are no other references.
+  for (auto& chunk : mLastChunks) {
+    chunk.ReleaseBufferIfShared();
+  }
+  for (auto& chunk : mInputChunks) {
+    chunk.ReleaseBufferIfShared();
+  }
+}
+
 
 StreamTime
 AudioNodeStream::GetCurrentPosition()

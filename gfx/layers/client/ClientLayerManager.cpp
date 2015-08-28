@@ -231,9 +231,14 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   }
 
   // If this is a new paint, increment the paint sequence number.
-  if (!mIsRepeatTransaction && gfxPrefs::APZTestLoggingEnabled()) {
+  if (!mIsRepeatTransaction) {
+    // Increment the paint sequence number even if test logging isn't
+    // enabled in this process; it may be enabled in the parent process,
+    // and the parent process expects unique sequence numbers.
     ++mPaintSequenceNumber;
-    mApzTestData.StartNewPaint(mPaintSequenceNumber);
+    if (gfxPrefs::APZTestLoggingEnabled()) {
+      mApzTestData.StartNewPaint(mPaintSequenceNumber);
+    }
   }
 }
 

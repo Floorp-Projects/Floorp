@@ -16,6 +16,10 @@
 #include "mozilla/dom/PContent.h"
 #include "mozilla/dom/PNuwa.h"
 #include "mozilla/hal_sandbox/PHal.h"
+#if defined(DEBUG) || defined(ENABLE_TESTS)
+#include "jsprf.h"
+extern "C" char* PrintJSStack();
+#endif
 #endif
 
 #include "mozilla/Assertions.h"
@@ -75,6 +79,7 @@ ProcessLink::ProcessLink(MessageChannel *aChan)
   , mExistingListener(nullptr)
 #ifdef MOZ_NUWA_PROCESS
   , mIsToNuwaProcess(false)
+  , mIsBlocked(false)
 #endif
 {
 }
@@ -175,6 +180,8 @@ ProcessLink::SendMessage(Message *msg)
     mChan->mMonitor->AssertCurrentThreadOwns();
 
 #ifdef MOZ_NUWA_PROCESS
+    // Parent to child: check whether we are sending some unexpected message to
+    // the Nuwa process.
     if (mIsToNuwaProcess && mozilla::dom::ContentParent::IsNuwaReady()) {
         switch (msg->type()) {
         case mozilla::dom::PNuwa::Msg_Fork__ID:
@@ -193,6 +200,19 @@ ProcessLink::SendMessage(Message *msg)
 #endif
         }
     }
+
+    // Nuwa to parent: check whether we are currently blocked.
+    if (IsNuwaProcess() && mIsBlocked) {
+#if defined(ENABLE_TESTS) || defined(DEBUG)
+        char* jsstack = PrintJSStack();
+        printf_stderr("Fatal error: sending a message to the chrome process"
+                      "with a blocked IPC channel from \n%s",
+                      jsstack ? jsstack : "<no JS stack>");
+        JS_smprintf_free(jsstack);
+        MOZ_CRASH();
+#endif
+    }
+
 #endif
 
     mIOLoop->PostTask(

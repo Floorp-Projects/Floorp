@@ -381,7 +381,6 @@ js::TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
   , head(nullptr)
   , tail(&head)
 {
-    rt->gc.incGcNumber();
 }
 
 #define TIME_START(name) int64_t timestampStart_##name = enableProfiling_ ? PRMJ_Now() : 0

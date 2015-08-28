@@ -235,6 +235,12 @@ static inline SkColor ColorToSkColor(const Color &color, Float aAlpha)
                         ColorFloatToByte(color.g), ColorFloatToByte(color.b));
 }
 
+static inline SkPoint
+PointToSkPoint(const Point &aPoint)
+{
+  return SkPoint::Make(SkFloatToScalar(aPoint.x), SkFloatToScalar(aPoint.y));
+}
+
 static inline SkRect
 RectToSkRect(const Rect& aRect)
 {

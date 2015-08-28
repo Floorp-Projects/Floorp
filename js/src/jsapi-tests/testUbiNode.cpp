@@ -195,3 +195,31 @@ BEGIN_TEST(test_ubiStackFrame)
     return true;
 }
 END_TEST(test_ubiStackFrame)
+
+BEGIN_TEST(test_ubiCoarseType)
+{
+    // Test that our explicit coarseType() overrides work as expected.
+
+    JSObject* obj = nullptr;
+    CHECK(JS::ubi::Node(obj).coarseType() == JS::ubi::CoarseType::Object);
+
+    JSScript* script = nullptr;
+    CHECK(JS::ubi::Node(script).coarseType() == JS::ubi::CoarseType::Script);
+
+    js::LazyScript* lazyScript = nullptr;
+    CHECK(JS::ubi::Node(lazyScript).coarseType() == JS::ubi::CoarseType::Script);
+
+    js::jit::JitCode* jitCode = nullptr;
+    CHECK(JS::ubi::Node(jitCode).coarseType() == JS::ubi::CoarseType::Script);
+
+    JSString* str = nullptr;
+    CHECK(JS::ubi::Node(str).coarseType() == JS::ubi::CoarseType::String);
+
+    // Test that the default when coarseType() is not overridden is Other.
+
+    JS::Symbol* sym = nullptr;
+    CHECK(JS::ubi::Node(sym).coarseType() == JS::ubi::CoarseType::Other);
+
+    return true;
+}
+END_TEST(test_ubiCoarseType)

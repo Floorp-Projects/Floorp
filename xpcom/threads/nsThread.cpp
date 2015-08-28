@@ -41,6 +41,10 @@
 #include "nsICrashReporter.h"
 #endif
 
+#ifdef MOZ_NUWA_PROCESS
+#include "private/pprthred.h"
+#endif
+
 #ifdef XP_LINUX
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -510,6 +514,12 @@ nsresult
 nsThread::PutEvent(already_AddRefed<nsIRunnable>&& aEvent, nsNestedEventTarget* aTarget)
 {
   nsCOMPtr<nsIThreadObserver> obs;
+
+#ifdef MOZ_NUWA_PROCESS
+  // On debug build or when tests are enabled, assert that we are not about to
+  // create a deadlock in the Nuwa process.
+  NuwaAssertNotFrozen(PR_GetThreadID(mThread), PR_GetThreadName(mThread));
+#endif
 
   {
     MutexAutoLock lock(mLock);
