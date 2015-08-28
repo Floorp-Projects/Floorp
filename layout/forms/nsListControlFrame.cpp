@@ -898,8 +898,8 @@ nsListControlFrame::HandleEvent(nsPresContext* aPresContext,
                           "NS_MOUSE_LEFT_CLICK",
                           "NS_MOUSE_MIDDLE_CLICK",
                           "NS_MOUSE_RIGHT_CLICK"};
-  int inx = aEvent->mMessage-NS_MOUSE_MESSAGE_START;
-  if (inx >= 0 && inx <= (NS_MOUSE_RIGHT_CLICK-NS_MOUSE_MESSAGE_START)) {
+  int inx = aEvent->mMessage - eMouseEventFirst;
+  if (inx >= 0 && inx <= (NS_MOUSE_RIGHT_CLICK - eMouseEventFirst)) {
     printf("Mouse in ListFrame %s [%d]\n", desc[inx], aEvent->mMessage);
   } else {
     printf("Mouse in ListFrame <UNKNOWN> [%d]\n", aEvent->mMessage);
