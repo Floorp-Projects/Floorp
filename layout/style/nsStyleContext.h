@@ -173,6 +173,9 @@ public:
   bool HasPseudoElementData() const
     { return !!(mBits & NS_STYLE_HAS_PSEUDO_ELEMENT_DATA); }
 
+  bool HasChildThatUsesResetStyle() const
+    { return mBits & NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE; }
+
   // Is the only link whose visitedness is allowed to influence the
   // style of the node this style context is for (which is that element
   // or its nearest ancestor that is a link) visited?
