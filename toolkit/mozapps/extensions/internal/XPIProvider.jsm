@@ -8060,7 +8060,7 @@ Object.defineProperty(this, "REQUIRE_SIGNING", {
   configurable: false,
   enumerable: false,
   writable: false,
-#ifdef MOZ_REQUIRE_SIGNING
+#ifdef MOZ_REQUIRE_ADDON_SIGNING
   value: true,
 #else
   value: false,
