@@ -204,7 +204,7 @@ protected:
     , clickCount(0)
   {
     switch (aMessage) {
-      case NS_MOUSEENTER:
+      case eMouseEnter:
       case NS_MOUSELEAVE:
         mFlags.mBubbles = false;
         mFlags.mCancelable = false;
@@ -224,7 +224,7 @@ public:
     reason(aReason), context(aContext), exit(eChild), clickCount(0)
   {
     switch (aMessage) {
-      case NS_MOUSEENTER:
+      case eMouseEnter:
       case NS_MOUSELEAVE:
         mFlags.mBubbles = false;
         mFlags.mCancelable = false;
