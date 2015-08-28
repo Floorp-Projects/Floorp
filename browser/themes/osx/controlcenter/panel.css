@@ -9,13 +9,11 @@
   margin-top: 1px;
 }
 
-.identity-popup-expander:-moz-focusring,
-#identity-popup-more-info-button {
+.identity-popup-expander:-moz-focusring {
   padding: 2px;
 }
 
-.identity-popup-expander:-moz-focusring > .button-box,
-#identity-popup-more-info-button:-moz-focusring > .button-box {
+.identity-popup-expander:-moz-focusring > .button-box {
   @hudButtonFocused@
 }
 

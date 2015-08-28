@@ -200,6 +200,12 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Used for notifying that a waiting tile was shown.
+     */
+    TileShown: Action.define("tileShown", {
+    }),
+
+    /**
      * Used for notifying that local media has been obtained.
      */
     GotMediaPermission: Action.define("gotMediaPermission", {
