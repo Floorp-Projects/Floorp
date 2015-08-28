@@ -2644,7 +2644,7 @@ case _value: eventName.AssignLiteral(_name) ; break
     _ASSIGN_eventName(NS_FORM_SUBMIT,"NS_FORM_SUBMIT");
     _ASSIGN_eventName(NS_IMAGE_ABORT,"NS_IMAGE_ABORT");
     _ASSIGN_eventName(NS_LOAD_ERROR,"NS_LOAD_ERROR");
-    _ASSIGN_eventName(NS_KEY_DOWN,"NS_KEY_DOWN");
+    _ASSIGN_eventName(eKeyDown,"eKeyDown");
     _ASSIGN_eventName(eKeyPress,"eKeyPress");
     _ASSIGN_eventName(eKeyUp,"eKeyUp");
     _ASSIGN_eventName(NS_MOUSE_ENTER_WIDGET,"NS_MOUSE_ENTER_WIDGET");

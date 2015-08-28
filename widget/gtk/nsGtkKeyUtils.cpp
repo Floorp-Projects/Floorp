@@ -983,9 +983,8 @@ KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
          aGdkKeyEvent->keyval, aGdkKeyEvent->state,
          aGdkKeyEvent->hardware_keycode,
          GetBoolName(aGdkKeyEvent->is_modifier),
-         ((aKeyEvent.mMessage == NS_KEY_DOWN) ? "NS_KEY_DOWN" :
-               (aKeyEvent.mMessage == eKeyPress) ? "eKeyPress" :
-                                                   "eKeyUp"),
+         ((aKeyEvent.mMessage == eKeyDown) ? "eKeyDown" :
+              (aKeyEvent.mMessage == eKeyPress) ? "eKeyPress" : "eKeyUp"),
          GetBoolName(aKeyEvent.IsShift()), GetBoolName(aKeyEvent.IsControl()),
          GetBoolName(aKeyEvent.IsAlt()), GetBoolName(aKeyEvent.IsMeta())));
 

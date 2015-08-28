@@ -786,7 +786,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
           abuse = openControlled;
         }
         break;
-      case NS_KEY_DOWN :
+      case eKeyDown:
         if (PopupAllowedForEvent("keydown")) {
           abuse = openControlled;
         }

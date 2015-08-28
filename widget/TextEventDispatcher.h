@@ -203,7 +203,7 @@ public:
   /**
    * DispatchKeyboardEvent() maybe dispatches aKeyboardEvent.
    *
-   * @param aMessage        Must be NS_KEY_DOWN or eKeyUp.
+   * @param aMessage        Must be eKeyDown or eKeyUp.
    *                        Use MaybeDispatchKeypressEvents() for dispatching
    *                        eKeyPress.
    * @param aKeyboardEvent  A keyboard event.
@@ -335,7 +335,7 @@ private:
   /**
    * DispatchKeyboardEventInternal() maybe dispatches aKeyboardEvent.
    *
-   * @param aMessage        Must be NS_KEY_DOWN, eKeyUp or eKeyPress.
+   * @param aMessage        Must be eKeyDown, eKeyUp or eKeyPress.
    * @param aKeyboardEvent  A keyboard event.  If aMessage is eKeyPress and
    *                        the event is for second or later character, its
    *                        mKeyValue should be empty string.

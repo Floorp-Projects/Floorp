@@ -227,7 +227,7 @@ EVENT(invalid,
       EventNameType_HTMLXUL,
       eBasicEventClass)
 EVENT(keydown,
-      NS_KEY_DOWN,
+      eKeyDown,
       EventNameType_HTMLXUL,
       eKeyboardEventClass)
 EVENT(keypress,

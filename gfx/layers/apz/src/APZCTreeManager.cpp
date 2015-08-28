@@ -888,7 +888,7 @@ APZCTreeManager::UpdateWheelTransaction(WidgetInputEvent& aEvent)
    }
    case eKeyPress:
    case eKeyUp:
-   case NS_KEY_DOWN:
+   case eKeyDown:
    case NS_MOUSE_BUTTON_UP:
    case NS_MOUSE_BUTTON_DOWN:
    case NS_MOUSE_DOUBLECLICK:
