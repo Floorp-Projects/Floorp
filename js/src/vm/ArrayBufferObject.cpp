@@ -1025,17 +1025,19 @@ ArrayBufferObject::addView(JSContext* cx, JSObject* viewArg)
 static size_t VIEW_LIST_MAX_LENGTH = 500;
 
 bool
-InnerViewTable::addView(JSContext* cx, ArrayBufferObject* obj, ArrayBufferViewObject* view)
+InnerViewTable::addView(JSContext* cx, ArrayBufferObject* buffer, ArrayBufferViewObject* view)
 {
     // ArrayBufferObject entries are only added when there are multiple views.
-    MOZ_ASSERT(obj->firstView());
+    MOZ_ASSERT(buffer->firstView());
 
-    if (!map.initialized() && !map.init())
+    if (!map.initialized() && !map.init()) {
+        ReportOutOfMemory(cx);
         return false;
+    }
 
-    Map::AddPtr p = map.lookupForAdd(obj);
+    Map::AddPtr p = map.lookupForAdd(buffer);
 
-    MOZ_ASSERT(!gc::IsInsideNursery(obj));
+    MOZ_ASSERT(!gc::IsInsideNursery(buffer));
     bool addToNursery = nurseryKeysValid && gc::IsInsideNursery(view);
 
     if (p) {
@@ -1050,8 +1052,10 @@ InnerViewTable::addView(JSContext* cx, ArrayBufferObject* obj, ArrayBufferViewOb
                 nurseryKeysValid = false;
             } else {
                 for (size_t i = 0; i < views.length(); i++) {
-                    if (gc::IsInsideNursery(views[i]))
+                    if (gc::IsInsideNursery(views[i])) {
                         addToNursery = false;
+                        break;
+                    }
                 }
             }
         }
@@ -1061,33 +1065,35 @@ InnerViewTable::addView(JSContext* cx, ArrayBufferObject* obj, ArrayBufferViewOb
             return false;
         }
     } else {
-        if (!map.add(p, obj, ViewVector()))
+        if (!map.add(p, buffer, ViewVector())) {
+            ReportOutOfMemory(cx);
             return false;
-        JS_ALWAYS_TRUE(p->value().append(view));
+        }
+        MOZ_ALWAYS_TRUE(p->value().append(view));
     }
 
-    if (addToNursery && !nurseryKeys.append(obj))
+    if (addToNursery && !nurseryKeys.append(buffer))
         nurseryKeysValid = false;
 
     return true;
 }
 
 InnerViewTable::ViewVector*
-InnerViewTable::maybeViewsUnbarriered(ArrayBufferObject* obj)
+InnerViewTable::maybeViewsUnbarriered(ArrayBufferObject* buffer)
 {
     if (!map.initialized())
         return nullptr;
 
-    Map::Ptr p = map.lookup(obj);
+    Map::Ptr p = map.lookup(buffer);
     if (p)
         return &p->value();
     return nullptr;
 }
 
 void
-InnerViewTable::removeViews(ArrayBufferObject* obj)
+InnerViewTable::removeViews(ArrayBufferObject* buffer)
 {
-    Map::Ptr p = map.lookup(obj);
+    Map::Ptr p = map.lookup(buffer);
     MOZ_ASSERT(p);
 
     map.remove(p);

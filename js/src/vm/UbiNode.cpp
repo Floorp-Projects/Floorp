@@ -42,6 +42,7 @@ using JS::HandleValue;
 using JS::Value;
 using JS::ZoneSet;
 using JS::ubi::AtomOrTwoByteChars;
+using JS::ubi::CoarseType;
 using JS::ubi::Concrete;
 using JS::ubi::Edge;
 using JS::ubi::EdgeRange;
@@ -143,135 +144,8 @@ StackFrame::functionDisplayNameLength()
     return functionDisplayName().match(m);
 }
 
-/* static */ const char16_t*
-Node::getCanonicalTypeName(const char16_t* dupe, size_t length)
-{
-    // This function is a hot mess of practicality.
-    //
-    // JS::ubi::Node::is<T> uses pointer identity to T's canonical type name
-    // string to determine type equivalence because (a) we don't have RTTI, and
-    // (b) a JS::ubi::Node instance backed by an offline heap snapshot wants
-    // is<JSScript>() to be true if that node represents a JSScript that was
-    // live when the heap snapshot was taken, but obviously there isn't a live
-    // JSScript backing it anymore. So, we need to be able to get a pointer to
-    // T's canonical type name string if we want is<T>() to work properly with
-    // nodes backed by an offline heap snapshot.
-    //
-    // Enter JS::ubi::Node::getCanonicalTypeName, stage right.
-    //
-    // Ideally, this function would return a pointer to the canonical
-    // Concrete<T>::concreteTypeName string that is structurally identical to
-    // the given in dupe string for all Concrete<T> specializations. In a
-    // perfect world, we could use static constructors in Firefox and
-    // SpiderMonkey and build up a registry of canonical type names at
-    // compile/link time. This is not the world we live in. We observe that
-    // while the set of concrete JS::ubi::Node specializations is open ended,
-    // there is a finite set of Ts passed to is<T>() in our various
-    // JS::ubi::Node analyses and we only really need is<T>() to work for
-    // them. That set is hard coded here.
-    //
-    // Uh... static_assert(grep for is<T>() calls and we got them all), right?
-    // Hold me and tell me it will be ok? Please?
-    //
-    // Oh and to top it off, this function is pretty hot: it's called for every
-    // single node we deserialize in a heap snapshot, and there tend to be a lot
-    // of those.
-
-    MOZ_ASSERT(8 == strlen("JSObject") &&
-               8 == strlen("JSScript") &&
-               8 == strlen("JSString"));
-    if (length == 8) {
-        if (dupe[0] == 'J' &&
-            dupe[1] == 'S' &&
-            dupe[2] == 'O' &&
-            dupe[3] == 'b' &&
-            dupe[4] == 'j' &&
-            dupe[5] == 'e' &&
-            dupe[6] == 'c' &&
-            dupe[7] == 't')
-        {
-            return JS::ubi::Node::canonicalTypeName<JSObject>();
-        }
-
-        if (dupe[0] == 'J' &&
-            dupe[1] == 'S' &&
-            dupe[2] == 'S' &&
-            dupe[3] == 'c' &&
-            dupe[4] == 'r' &&
-            dupe[5] == 'i' &&
-            dupe[6] == 'p' &&
-            dupe[7] == 't')
-        {
-            return JS::ubi::Node::canonicalTypeName<JSScript>();
-        }
-
-        if (dupe[0] == 'J' &&
-            dupe[1] == 'S' &&
-            dupe[2] == 'S' &&
-            dupe[3] == 't' &&
-            dupe[4] == 'r' &&
-            dupe[5] == 'i' &&
-            dupe[6] == 'n' &&
-            dupe[7] == 'g')
-        {
-            return JS::ubi::Node::canonicalTypeName<JSString>();
-        }
-
-        return nullptr;
-    }
-
-    MOZ_ASSERT(14 == strlen("js::LazyScript"));
-    if (length == 14) {
-        if (dupe[0]  == 'j' &&
-            dupe[1]  == 's' &&
-            dupe[2]  == ':' &&
-            dupe[3]  == ':' &&
-            dupe[4]  == 'L' &&
-            dupe[5]  == 'a' &&
-            dupe[6]  == 'z' &&
-            dupe[7]  == 'y' &&
-            dupe[8]  == 'S' &&
-            dupe[9]  == 'c' &&
-            dupe[10] == 'r' &&
-            dupe[11] == 'i' &&
-            dupe[12] == 'p' &&
-            dupe[13] == 't')
-        {
-            return JS::ubi::Node::canonicalTypeName<js::LazyScript>();
-        }
-
-        return nullptr;
-    }
-
-    MOZ_ASSERT(16 == strlen("js::jit::JitCode"));
-    if (length == 16) {
-        if (dupe[0]  == 'j' &&
-            dupe[1]  == 's' &&
-            dupe[2]  == ':' &&
-            dupe[3]  == ':' &&
-            dupe[4]  == 'j' &&
-            dupe[5]  == 'i' &&
-            dupe[6]  == 't' &&
-            dupe[7]  == ':' &&
-            dupe[8]  == ':' &&
-            dupe[9]  == 'J' &&
-            dupe[10] == 'i' &&
-            dupe[11] == 't' &&
-            dupe[12] == 'C' &&
-            dupe[13] == 'o' &&
-            dupe[14] == 'd' &&
-            dupe[15] == 'e')
-        {
-            return JS::ubi::Node::canonicalTypeName<js::jit::JitCode>();
-        }
-
-        return nullptr;
-    }
-
-    return nullptr;
-}
-
 // All operations on null ubi::Nodes crash.
+CoarseType Concrete<void>::coarseType() const      { MOZ_CRASH("null ubi::Node"); }
 const char16_t* Concrete<void>::typeName() const   { MOZ_CRASH("null ubi::Node"); }
 JS::Zone* Concrete<void>::zone() const             { MOZ_CRASH("null ubi::Node"); }
 JSCompartment* Concrete<void>::compartment() const { MOZ_CRASH("null ubi::Node"); }
