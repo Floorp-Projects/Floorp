@@ -50,7 +50,5 @@ for var in ('MOZ_APP_NAME', 'MOZ_APP_VERSION'):
 
 CXXFLAGS += CONFIG['TK_CFLAGS']
 
-FAIL_ON_WARNINGS = True
-
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Shell Integration')

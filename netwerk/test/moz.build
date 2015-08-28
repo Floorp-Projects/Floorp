@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['httpserver']
 
-FAIL_ON_WARNINGS = True
-
 BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
 MOCHITEST_MANIFESTS += ['mochitests/mochitest.ini']
 

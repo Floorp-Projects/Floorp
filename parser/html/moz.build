@@ -97,5 +97,3 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/dom/base',
 ]
-
-FAIL_ON_WARNINGS = True

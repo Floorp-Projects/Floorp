@@ -58,6 +58,8 @@ SOURCES += [
     'pixman.c',
 ]
 
+ALLOW_COMPILER_WARNINGS = True
+
 FINAL_LIBRARY = 'gkmedias'
 LOCAL_INCLUDES += [
     '../../cairo/src',

@@ -51,6 +51,8 @@ if CONFIG['OS_ARCH'] == 'SunOS':
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 
+ALLOW_COMPILER_WARNINGS = True
+
 FINAL_LIBRARY = 'gkmedias'
 
 # Suppress warnings in third-party code.

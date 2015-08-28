@@ -16,5 +16,3 @@ EXTRA_COMPONENTS += [
 ]
 
 XPI_NAME = 'simple'
-
-FAIL_ON_WARNINGS = True

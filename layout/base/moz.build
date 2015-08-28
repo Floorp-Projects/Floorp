@@ -161,8 +161,6 @@ SOURCES += [
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['gtest']
 
-FAIL_ON_WARNINGS = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [

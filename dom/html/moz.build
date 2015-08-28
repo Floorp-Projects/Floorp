@@ -222,8 +222,6 @@ EXTRA_COMPONENTS += [
     'htmlMenuBuilder.manifest'
 ]
 
-FAIL_ON_WARNINGS = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [

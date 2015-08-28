@@ -133,8 +133,6 @@ if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
 # comment this out to use Unsafe Shmem for more performance
 DEFINES['GMP_SAFE_SHMEM'] = True
 
-FAIL_ON_WARNINGS = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

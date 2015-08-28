@@ -12,8 +12,6 @@ SOURCES += [
     'webapprt.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
-
 GENERATED_INCLUDES += ['/build']
 LOCAL_INCLUDES += [
     '/toolkit/xre',

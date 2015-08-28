@@ -44,7 +44,6 @@ LOCAL_INCLUDES += [
     '/netwerk/protocol/http',
 ]
 
-FAIL_ON_WARNINGS = True
 FINAL_LIBRARY = 'xul'
 
 include('/ipc/chromium/chromium-config.mozbuild')

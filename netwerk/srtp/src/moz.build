@@ -68,5 +68,3 @@ if CONFIG['OS_TARGET'] == 'WINNT':
 
 if CONFIG['GNU_CC']:
     CFLAGS += ['-std=gnu99']
-
-FAIL_ON_WARNINGS = True

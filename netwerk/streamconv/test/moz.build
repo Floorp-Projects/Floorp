@@ -11,8 +11,6 @@ UNIFIED_SOURCES += [
     'TestStreamConv.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
-
 if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['NGPREFS'] = True
     if CONFIG['GNU_CXX']:

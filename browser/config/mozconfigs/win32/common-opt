@@ -29,7 +29,7 @@ export MOZ_TELEMETRY_REPORTING=1
 
 . $topsrcdir/build/win32/mozconfig.vs2013-win64
 
-# Treat warnings as errors in directories with FAIL_ON_WARNINGS.
+# Treat warnings as errors (modulo ALLOW_COMPILER_WARNINGS).
 ac_add_options --enable-warnings-as-errors
 
 # Enable Adobe Primetime CDM on 32-bit Windows in Mozilla builds.

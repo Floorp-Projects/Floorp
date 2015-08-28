@@ -38,8 +38,6 @@ src_list += [
 
 SOURCES += sorted(src_list)
 
-FAIL_ON_WARNINGS = True
-
 LOCAL_INCLUDES = [
     '../base',
     '../build',

@@ -30,6 +30,4 @@ UNIFIED_SOURCES += [
     'PendingAnimationTracker.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'

@@ -12,7 +12,5 @@ Library('breakpad_logging')
 
 FINAL_LIBRARY = 'xul'
 
-FAIL_ON_WARNINGS = True
-
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Breakpad Integration')

@@ -73,5 +73,3 @@ RCINCLUDE = 'crashreporter.rc'
 DISABLE_STL_WRAPPING = True
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')
-
-FAIL_ON_WARNINGS = True

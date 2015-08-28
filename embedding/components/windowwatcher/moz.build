@@ -34,8 +34,6 @@ if CONFIG['MOZ_XUL']:
         'nsDialogParamBlock.cpp',
     ]
 
-FAIL_ON_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'
 # For nsJSUtils
 LOCAL_INCLUDES += [

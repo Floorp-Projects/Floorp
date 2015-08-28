@@ -24,8 +24,6 @@ UNIFIED_SOURCES += [
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wshadow']
 
-FAIL_ON_WARNINGS = True
-
 LOCAL_INCLUDES += [
     '../base',
 ]

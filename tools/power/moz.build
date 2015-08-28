@@ -18,6 +18,4 @@ if do_rapl:
         'rapl',
     ])
 
-FAIL_ON_WARNINGS = True
-
 DISABLE_STL_WRAPPING = True

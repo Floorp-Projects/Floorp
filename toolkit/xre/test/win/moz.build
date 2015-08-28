@@ -26,5 +26,3 @@ OS_LIBS += [
     'ws2_32',
     'shell32',
 ]
-
-FAIL_ON_WARNINGS = True

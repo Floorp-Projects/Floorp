@@ -56,8 +56,6 @@ if CONFIG['_MSC_VER']:
     '-wd4530', # C++ exception handler used, but unwind semantics are not enabled
   ]
 
-FAIL_ON_WARNINGS = True
-
 USE_LIBS += [
     'mfbt',
 ]

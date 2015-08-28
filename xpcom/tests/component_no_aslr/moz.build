@@ -21,5 +21,3 @@ DEFINES['LIBRARY_FILENAME'] = '%s%s%s' % (
 # Need to link with CoreFoundation on Mac
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     OS_LIBS += CONFIG['TK_LIBS']
-
-FAIL_ON_WARNINGS = True

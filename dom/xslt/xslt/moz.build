@@ -46,8 +46,6 @@ EXTRA_COMPONENTS += [
     'txEXSLTRegExFunctions.manifest',
 ]
 
-FAIL_ON_WARNINGS = True
-
 # For nsAutoJSString
 LOCAL_INCLUDES += ["/dom/base"]
 

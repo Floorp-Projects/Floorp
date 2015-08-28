@@ -220,8 +220,6 @@ if toolkit == 'gtk3':
 if not CONFIG['MOZ_B2G']:
     DEFINES['MOZ_CROSS_PROCESS_IME'] = True
 
-FAIL_ON_WARNINGS = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [

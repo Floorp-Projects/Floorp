@@ -25,8 +25,6 @@ FINAL_LIBRARY = 'xul'
 GENERATED_INCLUDES += ['/xpcom/base']
 LOCAL_INCLUDES += ['/xpcom/base']
 
-FAIL_ON_WARNINGS = True
-
 if CONFIG['_MSC_VER']:
     CFLAGS += ['-Zl']
 

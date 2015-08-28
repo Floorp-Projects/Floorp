@@ -7,5 +7,3 @@
 GeckoCppUnitTests([
     'TestTXMgr',
 ])
-
-FAIL_ON_WARNINGS = True
