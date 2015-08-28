@@ -237,7 +237,9 @@ APZEventState::ProcessLongTap(const nsCOMPtr<nsIPresShell>& aPresShell,
       * widget->GetDefaultScale();
     int time = 0;
     nsEventStatus status =
-        APZCCallbackHelper::DispatchSynthesizedMouseEvent(NS_MOUSE_MOZLONGTAP, time, currentPoint, aModifiers, widget);
+        APZCCallbackHelper::DispatchSynthesizedMouseEvent(eMouseLongTap, time,
+                                                          currentPoint,
+                                                          aModifiers, widget);
     eventHandled = (status == nsEventStatus_eConsumeNoDefault);
     APZES_LOG("MOZLONGTAP event handled: %d\n", eventHandled);
   }

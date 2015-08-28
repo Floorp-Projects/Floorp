@@ -271,15 +271,15 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
       CancelLongTapDetector();
     }
 
-  } else if (aEvent->mMessage == NS_MOUSE_MOZLONGTAP) {
+  } else if (aEvent->mMessage == eMouseLongTap) {
     if (!mVisible || !sSelectionCaretDetectsLongTap) {
-      SELECTIONCARETS_LOG("SelectWord from NS_MOUSE_MOZLONGTAP");
+      SELECTIONCARETS_LOG("SelectWord from eMouseLongTap");
 
       mDownPoint = ptInRoot;
       nsresult wordSelected = SelectWord();
 
       if (NS_FAILED(wordSelected)) {
-        SELECTIONCARETS_LOG("SelectWord from NS_MOUSE_MOZLONGTAP failed!");
+        SELECTIONCARETS_LOG("SelectWord from eMouseLongTap failed!");
         return nsEventStatus_eIgnore;
       }
 

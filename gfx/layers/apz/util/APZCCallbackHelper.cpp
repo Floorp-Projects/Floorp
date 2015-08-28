@@ -497,7 +497,7 @@ APZCCallbackHelper::DispatchSynthesizedMouseEvent(EventMessage aMsg,
                                                   nsIWidget* aWidget)
 {
   MOZ_ASSERT(aMsg == eMouseMove || aMsg == eMouseDown ||
-             aMsg == eMouseUp || aMsg == NS_MOUSE_MOZLONGTAP);
+             aMsg == eMouseUp || aMsg == eMouseLongTap);
 
   WidgetMouseEvent event(true, aMsg, nullptr,
                          WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);

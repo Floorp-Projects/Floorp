@@ -60,7 +60,7 @@ NS_EVENT_MESSAGE(eMouseOut,             eMouseEventFirst + 32)
 NS_EVENT_MESSAGE(eMouseHitTest,         eMouseEventFirst + 33)
 NS_EVENT_MESSAGE(eMouseEnter,           eMouseEventFirst + 34)
 NS_EVENT_MESSAGE(eMouseLeave,           eMouseEventFirst + 35)
-NS_EVENT_MESSAGE(NS_MOUSE_MOZLONGTAP,   eMouseEventFirst + 36)
+NS_EVENT_MESSAGE(eMouseLongTap,         eMouseEventFirst + 36)
 
 // Pointer spec events
 NS_EVENT_MESSAGE(NS_POINTER_EVENT_START,  4400)
