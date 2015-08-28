@@ -14,7 +14,9 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Vector.h"
 
+#include <algorithm>
 #include <string.h>
 
 #include "jsapi.h"
@@ -1271,14 +1273,42 @@ JSScript::initScriptCounts(JSContext* cx)
 {
     MOZ_ASSERT(!hasScriptCounts());
 
-    // We allocate one PCCounts for each offset, instead of for each bytecode,
-    // because the pcCountsVector maps an offset to a PCCounts structure.
-    size_t nbytes = length() * sizeof(PCCounts);
+    // Record all pc which are the first instruction of a basic block.
+    mozilla::Vector<jsbytecode*, 16, SystemAllocPolicy> jumpTargets;
+    jsbytecode* end = codeEnd();
+    jsbytecode* mainEntry = main();
+    for (jsbytecode* pc = code(); pc != end; pc = GetNextPc(pc)) {
+        if (pc == mainEntry) {
+            if (!jumpTargets.append(pc))
+                return false;
+        }
+
+        bool jump = IsJumpOpcode(JSOp(*pc));
+        if (jump) {
+            jsbytecode* target = pc + GET_JUMP_OFFSET(pc);
+            if (!jumpTargets.append(target))
+                return false;
+
+            if (BytecodeFallsThrough(JSOp(*pc))) {
+                jsbytecode* fallthrough = GetNextPc(pc);
+                if (!jumpTargets.append(fallthrough))
+                    return false;
+            }
+        }
+    }
+
+    // Sort all pc, and remove duplicates.
+    std::sort(jumpTargets.begin(), jumpTargets.end());
+    auto last = std::unique(jumpTargets.begin(), jumpTargets.end());
+    jumpTargets.erase(last, jumpTargets.end());
 
     // Initialize all PCCounts counters to 0.
-    uint8_t* base = zone()->pod_calloc<uint8_t>(nbytes);
+    PCCounts* base = zone()->pod_malloc<PCCounts>(jumpTargets.length());
     if (!base)
         return false;
+
+    for (size_t i = 0; i < jumpTargets.length(); i++)
+        new (base + i) PCCounts(pcToOffset(jumpTargets[i]));
 
     // Create compartment's scriptCountsMap if necessary.
     ScriptCountsMap* map = compartment()->scriptCountsMap;
@@ -1294,6 +1324,7 @@ JSScript::initScriptCounts(JSContext* cx)
 
     ScriptCounts scriptCounts;
     scriptCounts.pcCountsVector = (PCCounts*) base;
+    scriptCounts.pcCountsSize = jumpTargets.length();
 
     // Register the current ScriptCount in the compartment's map.
     if (!map->putNew(this, scriptCounts)) {
@@ -1320,11 +1351,22 @@ static inline ScriptCountsMap::Ptr GetScriptCountsMapEntry(JSScript* script)
     return p;
 }
 
-js::PCCounts&
+js::PCCounts*
+ScriptCounts::getPCCounts(size_t offset) const {
+    PCCounts searched = PCCounts(offset);
+    PCCounts* begin = pcCountsVector;
+    PCCounts* end = begin + pcCountsSize;
+    PCCounts* elem = std::lower_bound(begin, end, searched);
+    if (elem == end || elem->pcOffset() != offset)
+        return nullptr;
+    return elem;
+}
+
+js::PCCounts*
 JSScript::getPCCounts(jsbytecode* pc) {
     MOZ_ASSERT(containsPC(pc));
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
-    return p->value().pcCountsVector[pcToOffset(pc)];
+    return p->value().getPCCounts(pcToOffset(pc));
 }
 
 void

@@ -459,12 +459,15 @@ class ScriptCounts
      * pointer into the array of doubles.
      */
     PCCounts* pcCountsVector;
+    size_t pcCountsSize;
 
     /* Information about any Ion compilations for the script. */
     jit::IonScriptCounts* ionCounts;
 
  public:
     ScriptCounts() : pcCountsVector(nullptr), ionCounts(nullptr) { }
+
+    PCCounts* getPCCounts(size_t offset) const;
 
     inline void destroy(FreeOp* fop);
 
@@ -1609,7 +1612,7 @@ class JSScript : public js::gc::TenuredCell
 
   public:
     bool initScriptCounts(JSContext* cx);
-    js::PCCounts& getPCCounts(jsbytecode* pc);
+    js::PCCounts* getPCCounts(jsbytecode* pc);
     void addIonCounts(js::jit::IonScriptCounts* ionCounts);
     js::jit::IonScriptCounts* getIonCounts();
     js::ScriptCounts releaseScriptCounts();
@@ -2337,8 +2340,8 @@ struct ScriptAndCounts
     JSScript* script;
     ScriptCounts scriptCounts;
 
-    PCCounts& getPCCounts(jsbytecode* pc) const {
-        return scriptCounts.pcCountsVector[script->pcToOffset(pc)];
+    const PCCounts* getPCCounts(jsbytecode* pc) const {
+        return scriptCounts.getPCCounts(script->pcToOffset(pc));
     }
 
     jit::IonScriptCounts* getIonCounts() const {
