@@ -1742,7 +1742,7 @@ nsXULElement::ClickWithInputSource(uint16_t aInputSource)
 
             WidgetMouseEvent eventDown(isCallerChrome, NS_MOUSE_BUTTON_DOWN,
                                        nullptr, WidgetMouseEvent::eReal);
-            WidgetMouseEvent eventUp(isCallerChrome, NS_MOUSE_BUTTON_UP,
+            WidgetMouseEvent eventUp(isCallerChrome, eMouseUp,
                                      nullptr, WidgetMouseEvent::eReal);
             WidgetMouseEvent eventClick(isCallerChrome, NS_MOUSE_CLICK, nullptr,
                                         WidgetMouseEvent::eReal);

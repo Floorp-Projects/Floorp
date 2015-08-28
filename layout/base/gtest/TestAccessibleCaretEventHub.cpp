@@ -136,7 +136,7 @@ public:
 
   static UniquePtr<WidgetEvent> CreateMouseReleaseEvent(nscoord aX, nscoord aY)
   {
-    return CreateMouseEvent(NS_MOUSE_BUTTON_UP, aX, aY);
+    return CreateMouseEvent(eMouseUp, aX, aY);
   }
 
   static UniquePtr<WidgetEvent> CreateLongTapEvent(nscoord aX, nscoord aY)

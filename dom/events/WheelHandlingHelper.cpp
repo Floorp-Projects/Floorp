@@ -210,7 +210,7 @@ WheelTransaction::OnEvent(WidgetEvent* aEvent)
     case eKeyPress:
     case eKeyUp:
     case eKeyDown:
-    case NS_MOUSE_BUTTON_UP:
+    case eMouseUp:
     case NS_MOUSE_BUTTON_DOWN:
     case NS_MOUSE_DOUBLECLICK:
     case NS_MOUSE_CLICK:

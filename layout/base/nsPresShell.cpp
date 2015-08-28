@@ -468,7 +468,7 @@ public:
   {
     if (aVisitor.mPresContext && aVisitor.mEvent->mClass != eBasicEventClass) {
       if (aVisitor.mEvent->mMessage == NS_MOUSE_BUTTON_DOWN ||
-          aVisitor.mEvent->mMessage == NS_MOUSE_BUTTON_UP) {
+          aVisitor.mEvent->mMessage == eMouseUp) {
         // Mouse-up and mouse-down events call nsFrame::HandlePress/Release
         // which call GetContentOffsetsFromPoint which requires up-to-date layout.
         // Bring layout up-to-date now so that GetCurrentEventFrame() below
@@ -492,7 +492,7 @@ public:
       }
       nsIFrame* frame = mPresShell->GetCurrentEventFrame();
       if (!frame &&
-          (aVisitor.mEvent->mMessage == NS_MOUSE_BUTTON_UP ||
+          (aVisitor.mEvent->mMessage == eMouseUp ||
            aVisitor.mEvent->mMessage == NS_TOUCH_END)) {
         // Redirect BUTTON_UP and TOUCH_END events to the root frame to ensure
         // that capturing is released.
@@ -6571,7 +6571,7 @@ PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent)
        aEvent->AsMouseEvent()->reason == WidgetMouseEvent::eReal) ||
       aEvent->mMessage == NS_MOUSE_ENTER_WIDGET ||
       aEvent->mMessage == NS_MOUSE_BUTTON_DOWN ||
-      aEvent->mMessage == NS_MOUSE_BUTTON_UP) {
+      aEvent->mMessage == eMouseUp) {
     nsIFrame* rootFrame = GetRootFrame();
     if (!rootFrame) {
       nsView* rootView = mViewManager->GetRootView();
@@ -6676,7 +6676,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
       }
       pointerMessage = NS_POINTER_MOVE;
       break;
-    case NS_MOUSE_BUTTON_UP:
+    case eMouseUp:
       pointerMessage = NS_POINTER_UP;
       break;
     case NS_MOUSE_BUTTON_DOWN:
@@ -7483,8 +7483,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         frame->PresContext()->Document()->EventHandlingSuppressed()) {
       if (aEvent->mMessage == NS_MOUSE_BUTTON_DOWN) {
         mNoDelayedMouseEvents = true;
-      } else if (!mNoDelayedMouseEvents &&
-                 aEvent->mMessage == NS_MOUSE_BUTTON_UP) {
+      } else if (!mNoDelayedMouseEvents && aEvent->mMessage == eMouseUp) {
         DelayedEvent* event = new DelayedMouseEvent(aEvent->AsMouseEvent());
         if (!mDelayedEvents.AppendElement(event)) {
           delete event;
@@ -7889,7 +7888,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
         break;
       }
       case NS_MOUSE_BUTTON_DOWN:
-      case NS_MOUSE_BUTTON_UP:
+      case eMouseUp:
         isHandlingUserInput = true;
         break;
 
@@ -7993,7 +7992,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
       }
       break;
     }
-    case NS_MOUSE_BUTTON_UP:
+    case eMouseUp:
       // reset the capturing content now that the mouse button is up
       SetCapturingContent(nullptr, 0);
       break;

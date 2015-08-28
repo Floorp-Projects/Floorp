@@ -233,7 +233,7 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
     }
   } else if (aEvent->mMessage == NS_TOUCH_END ||
              aEvent->mMessage == NS_TOUCH_CANCEL ||
-             aEvent->mMessage == NS_MOUSE_BUTTON_UP) {
+             aEvent->mMessage == eMouseUp) {
     CancelLongTapDetector();
     if (mDragMode != NONE) {
       // Only care about same id
