@@ -49,32 +49,6 @@ DeserializedEdge::init(const protobuf::Edge& edge, HeapSnapshot& owner)
   return true;
 }
 
-DeserializedNode::DeserializedNode(DeserializedNode&& rhs)
-  : id(rhs.id)
-  , typeName(rhs.typeName)
-  , size(rhs.size)
-  , edges(Move(rhs.edges))
-  , allocationStack(rhs.allocationStack)
-  , jsObjectClassName(Move(rhs.jsObjectClassName))
-  , owner(rhs.owner)
-{ }
-
-DeserializedNode& DeserializedNode::operator=(DeserializedNode&& rhs)
-{
-  MOZ_ASSERT(&rhs != this);
-  this->~DeserializedNode();
-  new(this) DeserializedNode(Move(rhs));
-  return *this;
-}
-
-DeserializedNode::DeserializedNode(NodeId id, const char16_t* typeName, uint64_t size)
-  : id(id)
-  , typeName(typeName)
-  , size(size)
-  , edges()
-  , owner(nullptr)
-{ }
-
 JS::ubi::Node
 DeserializedNode::getEdgeReferent(const DeserializedEdge& edge)
 {

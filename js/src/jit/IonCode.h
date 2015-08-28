@@ -776,7 +776,17 @@ IsMarked(const jit::VMFunction*)
 // instances with no associated compartment.
 namespace JS {
 namespace ubi {
-template<> struct Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> { };
+template<>
+struct Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> {
+    CoarseType coarseType() const final { return CoarseType::Script; }
+
+  protected:
+    explicit Concrete(js::jit::JitCode *ptr) : TracerConcrete<js::jit::JitCode>(ptr) { }
+
+  public:
+    static void construct(void *storage, js::jit::JitCode *ptr) { new (storage) Concrete(ptr); }
+};
+
 } // namespace ubi
 } // namespace JS
 

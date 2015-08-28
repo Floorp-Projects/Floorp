@@ -1,6 +1,6 @@
 en_US-mozilla Hunspell Dictionary
-Generated from SCOWL Version 2015.05.18
-Wed May 27 08:05:38 EDT 2015
+Generated from SCOWL Version 2015.08.24
+Thu Aug 27 23:04:57 EDT 2015
 
 http://wordlist.sourceforge.net
 
@@ -311,4 +311,4 @@ from the Ispell distribution they are under the Ispell copyright:
   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 
-Build Date: Wed May 27 08:05:38 EDT 2015
+Build Date: Thu Aug 27 23:04:57 EDT 2015

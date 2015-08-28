@@ -80,14 +80,16 @@ message StackFrame {
 
 // A serialized version of `JS::ubi::Node` and its outgoing edges.
 message Node {
-    optional uint64     id              = 1;
+    optional uint64     id                = 1;
     // char16_t[]
-    optional bytes      typeName        = 2;
-    optional uint64     size            = 3;
-    repeated Edge       edges           = 4;
-    optional StackFrame allocationStack = 5;
+    optional bytes      typeName          = 2;
+    optional uint64     size              = 3;
+    repeated Edge       edges             = 4;
+    optional StackFrame allocationStack   = 5;
     // char[]
     optional bytes      jsObjectClassName = 6;
+    // JS::ubi::CoarseType. Defaults to Other.
+    optional uint32     coarseType        = 7 [default = 0];
 }
 
 // A serialized edge from the heap graph.

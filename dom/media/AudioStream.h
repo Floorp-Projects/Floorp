@@ -10,9 +10,10 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
-#include "Latency.h"
 #include "mozilla/dom/AudioChannelBinding.h"
+#include "mozilla/Monitor.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "CubebUtils.h"
 #include "soundtouch/SoundTouchFactory.h"
@@ -71,7 +72,7 @@ private:
   int mInRate;
   // True if the we are timestretching, false if we are resampling.
   bool mPreservesPitch;
-  // The history of frames sent to the audio engine in each Datacallback.
+  // The history of frames sent to the audio engine in each DataCallback.
   const nsAutoPtr<FrameHistory> mFrameHistory;
 };
 
@@ -133,32 +134,11 @@ public:
     mStart %= mCapacity;
   }
 
-  // Throw away all but aSize bytes from the buffer.  Returns new size, which
-  // may be less than aSize
-  uint32_t ContractTo(uint32_t aSize) {
-    MOZ_ASSERT(mBuffer && mCapacity, "Buffer not initialized.");
-    if (aSize >= mCount) {
-      return mCount;
-    }
-    mStart += (mCount - aSize);
-    mCount = aSize;
-    mStart %= mCapacity;
-    return mCount;
-  }
-
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
     size_t amount = 0;
     amount += mBuffer.SizeOfExcludingThis(aMallocSizeOf);
     return amount;
-  }
-
-  void Reset()
-  {
-    mBuffer = nullptr;
-    mCapacity = 0;
-    mStart = 0;
-    mCount = 0;
   }
 
 private:
@@ -167,8 +147,6 @@ private:
   uint32_t mStart;
   uint32_t mCount;
 };
-
-class AudioInitTask;
 
 // Access to a single instance of this class must be synchronized by
 // callers, or made from a single thread.  One exception is that access to
@@ -182,17 +160,11 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioStream)
   AudioStream();
 
-  enum LatencyRequest {
-    HighLatency,
-    LowLatency
-  };
-
   // Initialize the audio stream. aNumChannels is the number of audio
   // channels (1 for mono, 2 for stereo, etc) and aRate is the sample rate
   // (22050Hz, 44100Hz, etc).
   nsresult Init(int32_t aNumChannels, int32_t aRate,
-                const dom::AudioChannel aAudioStreamChannel,
-                LatencyRequest aLatencyRequest);
+                const dom::AudioChannel aAudioStreamChannel);
 
   // Closes the stream. All future use of the stream is an error.
   void Shutdown();
@@ -202,9 +174,8 @@ public:
   // Write audio data to the audio hardware.  aBuf is an array of AudioDataValues
   // AudioDataValue of length aFrames*mChannels.  If aFrames is larger
   // than the result of Available(), the write will block until sufficient
-  // buffer space is available.  aTime is the time in ms associated with the first sample
-  // for latency calculations
-  nsresult Write(const AudioDataValue* aBuf, uint32_t aFrames, TimeStamp* aTime = nullptr);
+  // buffer space is available.
+  nsresult Write(const AudioDataValue* aBuf, uint32_t aFrames);
 
   // Return the number of audio frames that can be written without blocking.
   uint32_t Available();
@@ -212,12 +183,6 @@ public:
   // Set the current volume of the audio playback. This is a value from
   // 0 (meaning muted) to 1 (meaning full volume).  Thread-safe.
   void SetVolume(double aVolume);
-
-  // Informs the AudioStream that a microphone is being used by someone in the
-  // application.
-  void SetMicrophoneActive(bool aActive);
-  void PanOutputIfNeeded(bool aMicrophoneActive);
-  void ResetStreamIfNeeded();
 
   // Block until buffered audio data has been consumed.
   void Drain();
@@ -271,14 +236,7 @@ protected:
   int64_t GetPositionInFramesUnlocked();
 
 private:
-  friend class AudioInitTask;
-
-  // So we can call it asynchronously from AudioInitTask
-  nsresult OpenCubeb(cubeb_stream_params &aParams,
-                     LatencyRequest aLatencyRequest);
-  void AudioInitTaskFinished();
-
-  void CheckForStart();
+  nsresult OpenCubeb(cubeb_stream_params &aParams);
 
   static long DataCallback_S(cubeb_stream*, void* aThis, void* aBuffer, long aFrames)
   {
@@ -291,23 +249,13 @@ private:
   }
 
 
-  static void DeviceChangedCallback_s(void * aThis) {
-    static_cast<AudioStream*>(aThis)->DeviceChangedCallback();
-  }
-
   long DataCallback(void* aBuffer, long aFrames);
   void StateCallback(cubeb_state aState);
-  void DeviceChangedCallback();
 
   nsresult EnsureTimeStretcherInitializedUnlocked();
 
-  // aTime is the time in ms the samples were inserted into MediaStreamGraph
-  long GetUnprocessed(void* aBuffer, long aFrames, int64_t &aTime);
-  long GetTimeStretched(void* aBuffer, long aFrames, int64_t &aTime);
-  long GetUnprocessedWithSilencePadding(void* aBuffer, long aFrames, int64_t &aTime);
-
-  int64_t GetLatencyInFrames();
-  void GetBufferInsertTime(int64_t &aTimeMs);
+  long GetUnprocessed(void* aBuffer, long aFrames);
+  long GetTimeStretched(void* aBuffer, long aFrames);
 
   void StartUnlocked();
 
@@ -330,22 +278,9 @@ private:
   int64_t mWritten;
   AudioClock mAudioClock;
   soundtouch::SoundTouch* mTimeStretcher;
-  nsRefPtr<AsyncLatencyLogger> mLatencyLog;
 
-  // copy of Latency logger's starting time for offset calculations
+  // Stream start time for stream open delay telemetry.
   TimeStamp mStartTime;
-  // Whether we are playing a low latency stream, or a normal stream.
-  LatencyRequest mLatencyRequest;
-  // Where in the current mInserts[0] block cubeb has read to
-  int64_t mReadPoint;
-  // Keep track of each inserted block of samples and the time it was inserted
-  // so we can estimate the clock time for a specific sample's insertion (for when
-  // we send data to cubeb).  Blocks are aged out as needed.
-  struct Inserts {
-    int64_t mTimeMs;
-    int64_t mFrames;
-  };
-  nsAutoTArray<Inserts, 8> mInserts;
 
   // Output file for dumping audio
   FILE* mDumpFile;
@@ -386,55 +321,10 @@ private:
   };
 
   StreamState mState;
-  bool mNeedsStart; // needed in case Start() is called before cubeb is open
   bool mIsFirst;
-  // True if a microphone is active.
-  bool mMicrophoneActive;
-  // When we are in the process of changing the output device, and the callback
-  // is not going to be called for a little while, simply drop incoming frames.
-  // This is only on OSX for now, because other systems handle this gracefully.
-  bool mShouldDropFrames;
-  // True if there is a pending AudioInitTask. Shutdown() will wait until the
-  // pending AudioInitTask is finished.
-  bool mPendingAudioInitTask;
   // The last good position returned by cubeb_stream_get_position(). Used to
   // check if the cubeb position is going backward.
   uint64_t mLastGoodPosition;
-};
-
-class AudioInitTask : public nsRunnable
-{
-public:
-  AudioInitTask(AudioStream *aStream,
-                AudioStream::LatencyRequest aLatencyRequest,
-                const cubeb_stream_params &aParams)
-    : mAudioStream(aStream)
-    , mLatencyRequest(aLatencyRequest)
-    , mParams(aParams)
-  {}
-
-  nsresult Dispatch()
-  {
-    // Can't add 'this' as the event to run, since mThread may not be set yet
-    nsresult rv = NS_NewNamedThread("CubebInit", getter_AddRefs(mThread));
-    if (NS_SUCCEEDED(rv)) {
-      // Note: event must not null out mThread!
-      rv = mThread->Dispatch(this, NS_DISPATCH_NORMAL);
-    }
-    return rv;
-  }
-
-protected:
-  virtual ~AudioInitTask() {};
-
-private:
-  NS_IMETHOD Run() override final;
-
-  RefPtr<AudioStream> mAudioStream;
-  AudioStream::LatencyRequest mLatencyRequest;
-  cubeb_stream_params mParams;
-
-  nsCOMPtr<nsIThread> mThread;
 };
 
 } // namespace mozilla

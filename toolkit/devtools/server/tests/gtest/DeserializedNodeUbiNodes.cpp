@@ -45,6 +45,7 @@ DEF_TEST(DeserializedNodeUbiNodes, {
     MockDeserializedNode mocked(id, typeName, size);
     mocked.jsObjectClassName = mozilla::UniquePtr<char[]>(strdup(className));
     ASSERT_TRUE(!!mocked.jsObjectClassName);
+    mocked.coarseType = JS::ubi::CoarseType::Script;
 
     DeserializedNode& deserialized = mocked;
     JS::ubi::Node ubi(&deserialized);
@@ -53,6 +54,7 @@ DEF_TEST(DeserializedNodeUbiNodes, {
 
     EXPECT_EQ(size, ubi.size(fakeMallocSizeOf));
     EXPECT_EQ(typeName, ubi.typeName());
+    EXPECT_EQ(JS::ubi::CoarseType::Script, ubi.coarseType());
     EXPECT_EQ(id, ubi.identifier());
     EXPECT_FALSE(ubi.isLive());
     EXPECT_EQ(strcmp(ubi.jsObjectClassName(), className), 0);

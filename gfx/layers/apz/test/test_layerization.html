@@ -14,6 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1173580
   <style>
   #container {
     display: flex;
+    overflow: scroll;
+    height: 500px;
   }
   .outer-frame {
     height: 500px;
@@ -21,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1173580
     flex-basis: 100%;
     background: repeating-linear-gradient(#CCC, #CCC 100px, #BBB 100px, #BBB 200px);
   }
-  #page-content {
+  #container-content {
     height: 200%;
   }
   </style>
@@ -42,11 +44,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1173580
   </div>
   <iframe id="outer3" class="outer-frame" src="helper_iframe1.html"></iframe>
   <iframe id="outer4" class="outer-frame" src="helper_iframe2.html"></iframe>
+<!-- The container-content div ensures 'container' is scrollable, so the
+     optimization that layerizes the primary async-scrollable frame on page
+     load layerizes it rather than its child subframes. -->
+  <div id="container-content"></div>
 </div>
-<!-- The page-content div ensures the page is scrollable, so none of the
-     subframes are layerized by the optimization that layerizes the
-     primary async-scrollable frame on page load. -->
-<div id="page-content"></div>
 <pre id="test">
 <script type="application/javascript;version=1.7">
 
@@ -148,8 +150,18 @@ function startTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(startTest, window);
+SimpleTest.testInChaosMode();
 
+// Disable smooth scrolling, because it results in long-running scroll
+// animations that can result in a 'scroll' event triggered by an earlier
+// wheel event as corresponding to a later wheel event.
+// Also enable APZ test logging, since we use that data to determine whether
+// a scroll frame was layerized.
+SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false],
+                                   ["apz.test.logging_enabled", true]]},
+                          function() {
+                            SimpleTest.waitForFocus(startTest, window);
+                          });
 </script>
 </pre>
 </body>
