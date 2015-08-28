@@ -35,7 +35,6 @@ function NetworkPanel(aParent, aHttpActivity, aWebConsoleFrame)
   let doc = aParent.ownerDocument;
   this.httpActivity = aHttpActivity;
   this.webconsole = aWebConsoleFrame;
-  this._longStringClick = this._longStringClick.bind(this);
   this._responseBodyFetch = this._responseBodyFetch.bind(this);
   this._requestBodyFetch = this._requestBodyFetch.bind(this);
 

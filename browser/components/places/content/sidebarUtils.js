@@ -1,7 +1,8 @@
-# -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
 var SidebarUtils = {
   handleTreeClick: function SU_handleTreeClick(aTree, aEvent, aGutterSelect) {
@@ -30,12 +31,9 @@ var SidebarUtils = {
         mouseInGutter = aEvent.clientX < rect.x;
     }
 
-#ifdef XP_MACOSX
-    var modifKey = aEvent.metaKey || aEvent.shiftKey;
-#else
-    var modifKey = aEvent.ctrlKey || aEvent.shiftKey;
-#endif
-
+    var metaKey = AppConstants.platform === "macosx" ? aEvent.metaKey
+                                                     : aEvent.ctrlKey;
+    var modifKey = metaKey || aEvent.shiftKey;
     var isContainer = tbo.view.isContainer(cell.row);
     var openInTabs = isContainer &&
                      (aEvent.button == 1 ||

@@ -13,6 +13,8 @@ function test() {
     let gDebugger = aPanel.panelWin;
     let gView = gDebugger.DebuggerView;
     let gEvents = gView.EventListeners;
+    let gDispatcher = gDebugger.dispatcher;
+    let constants = gDebugger.require('./content/constants');
 
     Task.spawn(function*() {
       yield waitForSourceShown(aPanel, ".html");
@@ -24,7 +26,7 @@ function test() {
 
     function testFetchOnFocus() {
       return Task.spawn(function*() {
-        let fetched = waitForDebuggerEvents(aPanel, gDebugger.EVENTS.EVENT_LISTENERS_FETCHED);
+        let fetched = afterDispatch(gDispatcher, constants.FETCH_EVENT_LISTENERS);
 
         gView.toggleInstrumentsPane({ visible: true, animated: false }, 1);
         is(gView.instrumentsPaneHidden, false,
@@ -43,7 +45,7 @@ function test() {
 
     function testFetchOnReloadWhenFocused() {
       return Task.spawn(function*() {
-        let fetched = waitForDebuggerEvents(aPanel, gDebugger.EVENTS.EVENT_LISTENERS_FETCHED);
+        let fetched = afterDispatch(gDispatcher, constants.FETCH_EVENT_LISTENERS);
 
         let reloading = once(gDebugger.gTarget, "will-navigate");
         let reloaded = waitForSourcesAfterReload();
@@ -74,11 +76,20 @@ function test() {
 
     function testFetchOnReloadWhenNotFocused() {
       return Task.spawn(function*() {
-        gDebugger.on(gDebugger.EVENTS.EVENT_LISTENERS_FETCHED, () => {
-          ok(false, "Shouldn't have fetched any event listeners.");
-        });
-        gDebugger.on(gDebugger.EVENTS.EVENT_BREAKPOINTS_UPDATED, () => {
-          ok(false, "Shouldn't have updated any event breakpoints.");
+        gDispatcher.dispatch({
+          type: gDebugger.services.WAIT_UNTIL,
+          predicate: action => {
+            return (action.type === constants.FETCH_EVENT_LISTENERS ||
+                    action.type === constants.UPDATE_EVENT_BREAKPOINTS);
+          },
+          run: (dispatch, getState, action) => {
+            if(action.type === constants.FETCH_EVENT_LISTENERS) {
+              ok(false, "Shouldn't have fetched any event listeners.");
+            }
+            else if(action.type === constants.UPDATE_EVENT_BREAKPOINTS) {
+              ok(false, "Shouldn't have updated any event breakpoints.");
+            }
+          }
         });
 
         gView.toggleInstrumentsPane({ visible: true, animated: false }, 0);

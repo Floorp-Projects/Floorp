@@ -1,10 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
-
 add_task(function*() {
   let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                url: "http://example.com/",
+                                                url: "http://bug1105244.example.com/",
                                                 title: "test" });
 
   registerCleanupFunction(function* () {
@@ -38,16 +34,16 @@ function sendDelete() {
 }
 
 function* testDelete() {
-  yield promiseAutocompleteResultPopup("exam");
+  yield promiseAutocompleteResultPopup("bug1105244");
 
   // move to the start.
   sendHome();
   // delete the first few chars - each delete should operate on the input field.
   sendDelete();
-  Assert.equal(gURLBar.inputField.value, "xam");
+  Assert.equal(gURLBar.inputField.value, "ug1105244");
 
   yield promisePopupShown(gURLBar.popup);
 
   sendDelete();
-  Assert.equal(gURLBar.inputField.value, "am");
+  Assert.equal(gURLBar.inputField.value, "g1105244");
 }

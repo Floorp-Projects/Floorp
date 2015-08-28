@@ -34,12 +34,12 @@ function* getVariablesView(hud) {
 
   let deferred = promise.defer();
   hud.jsterm.clearOutput();
-  hud.jsterm.execute("new Object()");
+  hud.jsterm.execute("new Object({ browser_console_hide_jsterm_test: true })");
 
   let [message] = yield waitForMessages({
     webconsole: hud,
     messages: [{
-      text: "Object",
+      text: "Object { browser_console_hide_jsterm_test: true }",
       category: CATEGORY_OUTPUT,
     }],
   });

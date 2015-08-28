@@ -8,4 +8,19 @@ EXTRA_JS_MODULES.devtools.debugger += [
     'panel.js'
 ]
 
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+EXTRA_JS_MODULES.devtools.debugger.content += [
+    'content/constants.js',
+    'content/globalActions.js',
+    'content/utils.js'
+]
+
+EXTRA_JS_MODULES.devtools.debugger.content.views += [
+    'content/views/event-listeners-view.js'
+]
+
+EXTRA_JS_MODULES.devtools.debugger.content.stores += [
+    'content/stores/event-listeners.js',
+    'content/stores/index.js'
+]
+
+BROWSER_CHROME_MANIFESTS += ['test/mochitest/browser.ini']
