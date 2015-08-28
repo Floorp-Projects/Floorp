@@ -2830,6 +2830,36 @@ ElementRestyler::AddPendingRestylesForDescendantsMatchingSelectors(
   }
 }
 
+void
+ElementRestyler::AddPendingRestylesForDescendantsMatchingSelectors(
+    nsIContent* aContent)
+{
+  if (!mContent->IsElement() || mSelectorsForDescendants.IsEmpty()) {
+    return;
+  }
+
+  Element* element = mContent->AsElement();
+
+  LOG_RESTYLE("traversing descendants of element %s to propagate "
+              "eRestyle_SomeDescendants for these %d selectors:",
+              ElementTagToString(element).get(),
+              int(mSelectorsForDescendants.Length()));
+  LOG_RESTYLE_INDENT();
+#ifdef RESTYLE_LOGGING
+  for (nsCSSSelector* sel : mSelectorsForDescendants) {
+    LOG_RESTYLE("%s", sel->RestrictedSelectorToString().get());
+  }
+#endif
+  Element* restyleRoot = mRestyleTracker.FindClosestRestyleRoot(element);
+  FlattenedChildIterator it(element);
+  for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
+    if (n->IsElement()) {
+      AddPendingRestylesForDescendantsMatchingSelectors(n->AsElement(),
+                                                        restyleRoot);
+    }
+  }
+}
+
 /**
  * Recompute style for mFrame (which should not have a prev continuation
  * with the same style), all of its next continuations with the same
@@ -3014,30 +3044,8 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     }
 
     mRestyleTracker.AddRestyleRootsIfAwaitingRestyle(descendants);
-
-    if (mContent->IsElement()) {
-      if ((aRestyleHint & eRestyle_SomeDescendants) &&
-          !mSelectorsForDescendants.IsEmpty()) {
-        Element* element = mContent->AsElement();
-        LOG_RESTYLE("traversing descendants of element %s to propagate "
-                    "eRestyle_SomeDescendants for these %d selectors:",
-                    ElementTagToString(element).get(),
-                    int(mSelectorsForDescendants.Length()));
-        LOG_RESTYLE_INDENT();
-#ifdef RESTYLE_LOGGING
-        for (nsCSSSelector* sel : mSelectorsForDescendants) {
-          LOG_RESTYLE("%s", sel->RestrictedSelectorToString().get());
-        }
-#endif
-        Element* restyleRoot = mRestyleTracker.FindClosestRestyleRoot(element);
-        FlattenedChildIterator it(element);
-        for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
-          if (n->IsElement()) {
-            AddPendingRestylesForDescendantsMatchingSelectors(n->AsElement(),
-                                                              restyleRoot);
-          }
-        }
-      }
+    if (aRestyleHint & eRestyle_SomeDescendants) {
+      AddPendingRestylesForDescendantsMatchingSelectors(mContent);
     }
     return;
   }
