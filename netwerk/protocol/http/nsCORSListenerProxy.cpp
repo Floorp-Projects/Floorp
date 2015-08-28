@@ -1290,13 +1290,13 @@ nsCORSListenerProxy::RemoveFromCorsPreflightCache(nsIURI* aURI,
 }
 
 nsresult
-NS_StartCORSPreflight(nsIChannel* aRequestChannel,
-                      nsIStreamListener* aListener,
-                      nsIPrincipal* aPrincipal,
-                      nsICorsPreflightCallback* aCallback,
-                      bool aWithCredentials,
-                      nsTArray<nsCString>& aUnsafeHeaders,
-                      nsIChannel** aPreflightChannel)
+nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
+                                        nsIStreamListener* aListener,
+                                        nsIPrincipal* aPrincipal,
+                                        nsICorsPreflightCallback* aCallback,
+                                        bool aWithCredentials,
+                                        nsTArray<nsCString>& aUnsafeHeaders,
+                                        nsIChannel** aPreflightChannel)
 {
   *aPreflightChannel = nullptr;
 

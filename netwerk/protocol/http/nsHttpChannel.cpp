@@ -453,10 +453,12 @@ nsHttpChannel::ContinueConnect()
     if (!mIsCorsPreflightDone && mRequireCORSPreflight &&
         mInterceptCache != INTERCEPTED) {
         nsCOMPtr<nsIChannel> preflightChannel;
-        nsresult rv = NS_StartCORSPreflight(this, mListener,
-                                            mPreflightPrincipal, this,
-                                            mWithCredentials, mUnsafeHeaders,
-                                            getter_AddRefs(preflightChannel));
+        nsresult rv =
+            nsCORSListenerProxy::StartCORSPreflight(this, mListener,
+                                                    mPreflightPrincipal, this,
+                                                    mWithCredentials,
+                                                    mUnsafeHeaders,
+                                                    getter_AddRefs(preflightChannel));
         return rv;
     }
 
