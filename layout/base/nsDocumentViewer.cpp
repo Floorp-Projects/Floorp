@@ -166,8 +166,7 @@ public:
 
                        nsDocViewerSelectionListener()
                        : mDocViewer(nullptr)
-                       , mGotSelectionState(false)
-                       , mSelectionWasCollapsed(false)
+                       , mSelectionWasCollapsed(true)
                        {
                        }
 
@@ -177,8 +176,7 @@ protected:
 
   virtual              ~nsDocViewerSelectionListener() {}
 
-  nsDocumentViewer*  mDocViewer;
-  bool                 mGotSelectionState;
+  nsDocumentViewer*    mDocViewer;
   bool                 mSelectionWasCollapsed;
 
 };
@@ -3572,13 +3570,13 @@ NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDOMDocumen
 
   bool selectionCollapsed;
   selection->GetIsCollapsed(&selectionCollapsed);
-  // we only call UpdateCommands when the selection changes from collapsed
-  // to non-collapsed or vice versa. We might need another update string
-  // for simple selection changes, but that would be expenseive.
-  if (!mGotSelectionState || mSelectionWasCollapsed != selectionCollapsed)
+  // We only call UpdateCommands when the selection changes from collapsed to
+  // non-collapsed or vice versa, however we skip the initializing collapse. We
+  // might need another update string for simple selection changes, but that
+  // would be expenseive.
+  if (mSelectionWasCollapsed != selectionCollapsed)
   {
     domWindow->UpdateCommands(NS_LITERAL_STRING("select"), selection, aReason);
-    mGotSelectionState = true;
     mSelectionWasCollapsed = selectionCollapsed;
   }
 
