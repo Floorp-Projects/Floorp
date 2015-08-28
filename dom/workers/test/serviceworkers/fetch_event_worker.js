@@ -14,6 +14,8 @@ onfetch = function(ev) {
     if (ev.request.method == 'OPTIONS') {
       ev.respondWith(new Response('', {headers: {'Access-Control-Allow-Origin': '*',
                                                  'Access-Control-Allow-Headers': 'X-Unsafe'}}))
+    } else if (ev.request.url.includes('example.org')) {
+      ev.respondWith(fetch(ev.request));
     }
   }
 
