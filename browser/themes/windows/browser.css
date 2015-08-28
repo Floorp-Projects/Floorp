@@ -35,9 +35,6 @@
 
   --toolbarbutton-checkedhover-backgroundcolor: hsla(210,4%,10%,.12);
 
-  --toolbarbutton-combined-boxshadow: none;
-  --toolbarbutton-combined-backgroundimage: linear-gradient(hsla(210,54%,20%,.2) 0, hsla(210,54%,20%,.2) 16px);
-
   --identity-box-verified-background-color: #fff;
 
   --urlbar-dropmarker-url: url("chrome://browser/skin/urlbar-history-dropmarker.png");
@@ -763,9 +760,6 @@ toolbarbutton[cui-areatype="toolbar"] > :-moz-any(@nestedButtons@) > .toolbarbut
                                       0 0 2px hsla(210,54%,20%,0);
 
     --toolbarbutton-checkedhover-backgroundcolor: rgba(90%,90%,90%,.4);
-
-    --toolbarbutton-combined-backgroundimage: linear-gradient(hsla(210,54%,20%,.2) 0, hsla(210,54%,20%,.2) 18px);
-    --toolbarbutton-combined-boxshadow: 0 0 0 1px hsla(0,0%,100%,.2);
   }
   .findbar-button > .toolbarbutton-text,
   #nav-bar .toolbarbutton-1 > .toolbarbutton-icon,
@@ -838,19 +832,23 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   padding-right: 0;
 }
 
-#nav-bar .toolbarbutton-1:not(:hover):not(:active):not([open]) > .toolbarbutton-menubutton-dropmarker::before,
-#nav-bar .toolbaritem-combined-buttons > .toolbarbutton-1:-moz-any(:not(:hover):not([open]),[disabled=true]) + .toolbarbutton-1:-moz-any(:not(:hover):not([open]),[disabled=true])::before {
+#nav-bar .toolbaritem-combined-buttons:not(:hover) > separator,
+#nav-bar .toolbarbutton-1:not(:hover):not(:active):not([open]) > .toolbarbutton-menubutton-dropmarker::before {
   content: "";
   display: -moz-box;
   width: 1px;
   height: 16px;
   -moz-margin-end: -1px;
-  background-image: var(--toolbarbutton-combined-backgroundimage);
-  box-shadow: var(--toolbarbutton-combined-boxshadow);
-  background-clip: padding-box;
+  background-image: linear-gradient(currentColor 0, currentColor 100%);
   background-position: center;
   background-repeat: no-repeat;
   background-size: 1px 16px;
+  opacity: .2;
+}
+
+#nav-bar[brighttext] .toolbaritem-combined-buttons > separator,
+#nav-bar[brighttext] .toolbarbutton-1:not(:hover):not(:active):not([open]) > .toolbarbutton-menubutton-dropmarker::before {
+  opacity: .3;
 }
 
 @conditionalForwardWithUrlbar@ > .toolbarbutton-1:-moz-any([disabled],:not([open]):not([disabled]):not(:active)) > .toolbarbutton-icon {

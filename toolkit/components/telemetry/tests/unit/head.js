@@ -327,6 +327,8 @@ if (runningInParent) {
   Services.prefs.setBoolPref("toolkit.telemetry.archive.enabled", true);
   // Telemetry xpcshell tests cannot show the infobar.
   Services.prefs.setBoolPref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
+  // FHR uploads should be enabled.
+  Services.prefs.setBoolPref("datareporting.healthreport.uploadEnabled", true);
 
   fakePingSendTimer((callback, timeout) => {
     Services.tm.mainThread.dispatch(() => callback(), Ci.nsIThread.DISPATCH_NORMAL);
