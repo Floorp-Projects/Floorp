@@ -793,9 +793,9 @@ protected:
   // During the documet is locked, we shouldn't destroy the instance.
   // If this is true, the instance will be destroyed after unlocked.
   bool                         mPendingDestroy;
-  // If this is true, MaybeFlushPendingNotifications() will clear the
+  // If this is false, MaybeFlushPendingNotifications() will clear the
   // mLockedContent.
-  bool                         mPendingClearLockedContent;
+  bool                         mDeferClearingLockedContent;
   // While there is native caret, this is true.  Otherwise, false.
   bool                         mNativeCaretIsCreated;
   // While the instance is dispatching events, the event may not be handled
