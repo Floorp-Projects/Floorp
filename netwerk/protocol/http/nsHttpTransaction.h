@@ -273,6 +273,7 @@ private:
     Atomic<uint32_t>                mCapsToClear;
 
     nsHttpVersion                   mHttpVersion;
+    uint16_t                        mHttpResponseCode;
 
     // state flags, all logically boolean, but not packed together into a
     // bitfield so as to avoid bitfield-induced races.  See bug 560579.

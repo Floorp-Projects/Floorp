@@ -126,6 +126,29 @@ function completeTest1(request, data, ctx)
 {
   do_check_eq(request.status, Components.results.NS_ERROR_NET_PARTIAL_TRANSFER);
 
+  run_test_number(11);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Test 11: PASS because of Content-Length underrun with HTTP 1.1 but non 2xx
+test_flags[11] = CL_IGNORE_CL;
+
+function handler11(metadata, response)
+{
+  var body = "blablabla";
+
+  response.seizePower();
+  response.write("HTTP/1.1 404 NotOK\r\n");
+  response.write("Content-Type: text/plain\r\n");
+  response.write("Content-Length: 556677\r\n");
+  response.write("\r\n");
+  response.write(body);
+  response.finish();
+}
+
+function completeTest11(request, data, ctx)
+{
+  do_check_eq(request.status, Components.results.NS_OK);
   run_test_number(2);
 }
 

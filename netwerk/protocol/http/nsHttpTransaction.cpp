@@ -103,6 +103,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mPipelinePosition(0)
     , mCapsToClear(0)
     , mHttpVersion(NS_HTTP_VERSION_UNKNOWN)
+    , mHttpResponseCode(0)
     , mClosed(false)
     , mConnected(false)
     , mHaveStatusLine(false)
@@ -960,7 +961,8 @@ nsHttpTransaction::Close(nsresult reason)
 
         NS_WARNING("Partial transfer, incomplete HTTP response received");
 
-        if (mHttpVersion >= NS_HTTP_VERSION_1_1) {
+        if ((mHttpResponseCode / 100 == 2) &&
+            (mHttpVersion >= NS_HTTP_VERSION_1_1)) {
             FrameCheckLevel clevel = gHttpHandler->GetEnforceH1Framing();
             if (clevel >= FRAMECHECK_BARELY) {
                 if ((clevel == FRAMECHECK_STRICT) ||
@@ -1507,6 +1509,7 @@ nsHttpTransaction::HandleContentStart()
         // Save http version, mResponseHead isn't available anymore after
         // TakeResponseHead() is called
         mHttpVersion = mResponseHead->Version();
+        mHttpResponseCode = mResponseHead->Status();
 
         // notify the connection, give it a chance to cause a reset.
         bool reset = false;
