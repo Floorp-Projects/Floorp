@@ -29,6 +29,7 @@
 #include "nsIPresShell.h"
 #include "nsIScriptError.h"
 #include "nsIWindowMediator.h"
+#include "nsIPrefService.h"
 
 nsChromeRegistry* nsChromeRegistry::gChromeRegistry;
 
@@ -655,6 +656,31 @@ nsChromeRegistry::MustLoadURLRemotely(nsIURI *aURI, bool *aResult)
     *aResult = !!(flags & REMOTE_REQUIRED);
   }
   return NS_OK;
+}
+
+bool
+nsChromeRegistry::GetDirectionForLocale(const nsACString& aLocale)
+{
+  // first check the intl.uidirection.<locale> preference, and if that is not
+  // set, check the same preference but with just the first two characters of
+  // the locale. If that isn't set, default to left-to-right.
+  nsAutoCString prefString = NS_LITERAL_CSTRING("intl.uidirection.") + aLocale;
+  nsCOMPtr<nsIPrefBranch> prefBranch (do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (!prefBranch) {
+    return false;
+  }
+
+  nsXPIDLCString dir;
+  prefBranch->GetCharPref(prefString.get(), getter_Copies(dir));
+  if (dir.IsEmpty()) {
+    int32_t hyphen = prefString.FindChar('-');
+    if (hyphen >= 1) {
+      nsAutoCString shortPref(Substring(prefString, 0, hyphen));
+      prefBranch->GetCharPref(shortPref.get(), getter_Copies(dir));
+    }
+  }
+
+  return dir.EqualsLiteral("rtl");
 }
 
 NS_IMETHODIMP_(bool)
