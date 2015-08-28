@@ -6847,7 +6847,7 @@ PresShell::DispatchBeforeKeyboardEventInternal(const nsTArray<nsCOMPtr<Element> 
   }
 
   EventMessage message =
-    (aEvent.mMessage == eKeyDown) ? eBeforeKeyDown : NS_KEY_BEFORE_UP;
+    (aEvent.mMessage == eKeyDown) ? eBeforeKeyDown : eBeforeKeyUp;
   nsCOMPtr<EventTarget> eventTarget;
   // Dispatch before events from the outermost element.
   for (int32_t i = length - 1; i >= 0; i--) {

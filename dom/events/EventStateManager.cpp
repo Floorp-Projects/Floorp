@@ -686,7 +686,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   case eBeforeKeyDown:
   case eKeyDown:
   case eAfterKeyDown:
-  case NS_KEY_BEFORE_UP:
+  case eBeforeKeyUp:
   case eKeyUp:
   case NS_KEY_AFTER_UP:
     {
@@ -3305,7 +3305,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     GenerateDragDropEnterExit(presContext, aEvent->AsDragEvent());
     break;
 
-  case NS_KEY_BEFORE_UP:
+  case eBeforeKeyUp:
   case eKeyUp:
   case NS_KEY_AFTER_UP:
     break;
