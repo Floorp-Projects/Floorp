@@ -407,10 +407,22 @@ this.MigrationUtils = Object.freeze({
    */
   getLocalizedString: function MU_getLocalizedString(aKey, aReplacements) {
     const OVERRIDES = {
+      //XXXgijs no strings for Edge, pretend we're MSIE for all the different import flavours:
+      "1_edge": "1_ie",
+      "2_edge": "2_ie",
+      "4_edge": "4_ie",
+      "8_edge": "8_ie",
+      "16_edge": "16_ie",
+      "32_edge": "32_ie",
+      "64_edge": "64_ie",
       "4_firefox": "4_firefox_history_and_bookmarks",
       "64_firefox": "64_firefox_other"
     };
     aKey = OVERRIDES[aKey] || aKey;
+
+    if (aKey == "sourceNameEdge") {
+      return "Microsoft Edge";
+    }
 
     if (aReplacements === undefined)
       return getMigrationBundle().GetStringFromName(aKey);
@@ -449,6 +461,7 @@ this.MigrationUtils = Object.freeze({
    *
    * @param aKey internal name of the migration source.
    *             Supported values: ie (windows),
+   *                               edge (windows),
    *                               safari (mac/windows),
    *                               chrome (mac/windows/linux),
    *                               360se (windows),
@@ -472,11 +485,13 @@ this.MigrationUtils = Object.freeze({
         migrator = Cc["@mozilla.org/profile/migrator;1?app=browser&type=" +
                       aKey].createInstance(Ci.nsIBrowserProfileMigrator);
       }
-      catch(ex) { }
+      catch(ex) { Cu.reportError(ex) }
       this._migrators.set(aKey, migrator);
     }
 
-    return migrator && migrator.sourceExists ? migrator : null;
+    try {
+      return migrator && migrator.sourceExists ? migrator : null;
+    } catch (ex) { Cu.reportError(ex); return null }
   },
 
   // Iterates the available migrators, in the most suitable
@@ -484,7 +499,7 @@ this.MigrationUtils = Object.freeze({
   get migrators() {
     let migratorKeysOrdered = [
 #ifdef XP_WIN
-      "firefox", "ie", "chrome", "safari", "360se"
+      "firefox", "edge", "ie", "chrome", "safari", "360se"
 #elifdef XP_MACOSX
       "firefox", "safari", "chrome"
 #elifdef XP_UNIX

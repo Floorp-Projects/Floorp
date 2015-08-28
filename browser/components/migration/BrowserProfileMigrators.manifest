@@ -8,6 +8,11 @@ contract @mozilla.org/profile/migrator;1?app=browser&type=firefox {91185366-ba97
 component {3d2532e3-4932-4774-b7ba-968f5899d3a4} IEProfileMigrator.js
 contract @mozilla.org/profile/migrator;1?app=browser&type=ie {3d2532e3-4932-4774-b7ba-968f5899d3a4}
 #endif
+
+#ifdef HAS_EDGE_MIGRATOR
+component {62e8834b-2d17-49f5-96ff-56344903a2ae} EdgeProfileMigrator.js
+contract @mozilla.org/profile/migrator;1?app=browser&type=edge {62e8834b-2d17-49f5-96ff-56344903a2ae}
+#endif
 #ifdef HAS_SAFARI_MIGRATOR
 component {4b609ecf-60b2-4655-9df4-dc149e474da1} SafariProfileMigrator.js
 contract @mozilla.org/profile/migrator;1?app=browser&type=safari {4b609ecf-60b2-4655-9df4-dc149e474da1}
