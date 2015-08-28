@@ -33,10 +33,22 @@ class AudioContext;
 class AudioBuffer final : public nsWrapperCache
 {
 public:
+  // If non-null, aInitialContents must have number of channels equal to
+  // aNumberOfChannels and their lengths must be at least aLength.
   static already_AddRefed<AudioBuffer>
   Create(AudioContext* aContext, uint32_t aNumberOfChannels,
          uint32_t aLength, float aSampleRate,
+         already_AddRefed<ThreadSharedFloatArrayBufferList> aInitialContents,
          JSContext* aJSContext, ErrorResult& aRv);
+
+  static already_AddRefed<AudioBuffer>
+  Create(AudioContext* aContext, uint32_t aNumberOfChannels,
+         uint32_t aLength, float aSampleRate,
+         JSContext* aJSContext, ErrorResult& aRv)
+  {
+    return Create(aContext, aNumberOfChannels, aLength, aSampleRate,
+                  nullptr, aJSContext, aRv);
+  }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -99,7 +111,9 @@ public:
 
 protected:
   AudioBuffer(AudioContext* aContext, uint32_t aNumberOfChannels,
-              uint32_t aLength, float aSampleRate);
+              uint32_t aLength, float aSampleRate,
+              already_AddRefed<ThreadSharedFloatArrayBufferList>
+                aInitialContents);
   ~AudioBuffer();
 
   bool RestoreJSChannelData(JSContext* aJSContext);
