@@ -345,12 +345,16 @@ public class TopSitesPanel extends HomeFragment {
             return;
         }
 
+        final Context context = view.getContext();
+
         // Long pressed item was a Top Sites GridView item, handle it.
-        MenuInflater inflater = new MenuInflater(view.getContext());
+        MenuInflater inflater = new MenuInflater(context);
         inflater.inflate(R.menu.home_contextmenu, menu);
 
         // Hide unused menu items.
         menu.findItem(R.id.home_edit_bookmark).setVisible(false);
+
+        menu.findItem(R.id.home_remove).setVisible(RestrictedProfiles.isAllowed(context, Restriction.DISALLOW_CLEAR_HISTORY));
 
         TopSitesGridContextMenuInfo info = (TopSitesGridContextMenuInfo) menuInfo;
         menu.setHeaderTitle(info.getDisplayTitle());
@@ -372,7 +376,7 @@ public class TopSitesPanel extends HomeFragment {
             menu.findItem(R.id.home_share).setVisible(false);
         }
 
-        if (!RestrictedProfiles.isAllowed(view.getContext(), Restriction.DISALLOW_PRIVATE_BROWSING)) {
+        if (!RestrictedProfiles.isAllowed(context, Restriction.DISALLOW_PRIVATE_BROWSING)) {
             menu.findItem(R.id.home_open_private_tab).setVisible(false);
         }
 
