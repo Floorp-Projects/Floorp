@@ -509,7 +509,7 @@ ClientLayerManager::MakeSnapshotIfRequired()
         gfx::Matrix rotate = ComputeTransformForUnRotation(outerBounds, mTargetRotation);
 
         gfx::Matrix oldMatrix = dt->GetTransform();
-        dt->SetTransform(oldMatrix * rotate);
+        dt->SetTransform(rotate * oldMatrix);
         dt->DrawSurface(surf, dstRect, srcRect,
                         DrawSurfaceOptions(),
                         DrawOptions(1.0f, CompositionOp::OP_OVER));

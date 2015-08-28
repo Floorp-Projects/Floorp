@@ -213,14 +213,8 @@ MozInputMethod.prototype = {
       this._isSystem = true;
     }
 
-    // Check if we can use keyboard related APIs.
-    let testing = false;
-    try {
-      testing = Services.prefs.getBoolPref("dom.mozInputMethod.testing");
-    } catch (e) {
-    }
     perm = Services.perms.testExactPermissionFromPrincipal(principal, "input");
-    if (!testing && perm !== Ci.nsIPermissionManager.ALLOW_ACTION) {
+    if (perm !== Ci.nsIPermissionManager.ALLOW_ACTION) {
       this._isKeyboard = false;
       return;
     }

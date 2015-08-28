@@ -1,4 +1,4 @@
-Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+Components.utils.import("resource://gre/modules/ExtensionUtils.jsm");
 let {
   EventManager,
 } = ExtensionUtils;

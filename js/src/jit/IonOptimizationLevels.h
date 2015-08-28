@@ -79,6 +79,9 @@ class OptimizationInfo
     // Toggles whether loop unrolling is performed.
     bool loopUnrolling_;
 
+    // Toggles whether instruction reordering is performed.
+    bool reordering_;
+
     // Toggles whether Truncation based on Range Analysis is used.
     bool autoTruncate_;
 
@@ -173,6 +176,10 @@ class OptimizationInfo
 
     bool loopUnrollingEnabled() const {
         return loopUnrolling_ && !js_JitOptions.disableLoopUnrolling;
+    }
+
+    bool instructionReorderingEnabled() const {
+        return reordering_ && !js_JitOptions.disableInstructionReordering;
     }
 
     bool autoTruncateEnabled() const {

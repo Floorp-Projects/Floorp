@@ -36,15 +36,6 @@ let Utils = {
     return mm;
   },
   checkPermissionForMM: function u_checkPermissionForMM(mm, permName) {
-    let testing = false;
-    try {
-      testing = Services.prefs.getBoolPref("dom.mozInputMethod.testing");
-    } catch (e) { }
-
-    if (testing) {
-      return true;
-    }
-
     return mm.assertPermission(permName);
   }
 };

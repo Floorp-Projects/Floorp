@@ -1482,6 +1482,9 @@ GetPropertyIC::tryAttachUnboxedArrayLength(JSContext* cx, HandleScript outerScri
     if (obj->as<UnboxedArrayObject>().length() > INT32_MAX)
         return true;
 
+    if (!allowArrayLength(cx))
+        return true;
+
     *emitted = true;
 
     MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
