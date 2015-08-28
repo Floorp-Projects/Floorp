@@ -209,12 +209,12 @@ TranslateShadowLayer(Layer* aLayer,
 
   if (aAdjustClipRect) {
     TransformClipRect(aLayer, Matrix4x4::Translation(aTranslation.x, aTranslation.y, 0));
-  }
 
-  // If a fixed- or sticky-position layer has a mask layer, that mask should
-  // move along with the layer, so apply the translation to the mask layer too.
-  if (Layer* maskLayer = aLayer->GetMaskLayer()) {
-    TranslateShadowLayer(maskLayer, aTranslation, false);
+    // If a fixed- or sticky-position layer has a mask layer, that mask should
+    // move along with the layer, so apply the translation to the mask layer too.
+    if (Layer* maskLayer = aLayer->GetMaskLayer()) {
+      TranslateShadowLayer(maskLayer, aTranslation, false);
+    }
   }
 }
 
