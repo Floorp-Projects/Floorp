@@ -41,7 +41,7 @@ namespace dom {
 
 NS_IMPL_ISUPPORTS(FetchDriver,
                   nsIStreamListener, nsIChannelEventSink, nsIInterfaceRequestor,
-                  nsIAsyncVerifyRedirectCallback)
+                  nsIAsyncVerifyRedirectCallback, nsIThreadRetargetableStreamListener)
 
 FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
                          nsILoadGroup* aLoadGroup)
@@ -782,9 +782,8 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   }
 
   // Try to retarget off main thread.
-  nsCOMPtr<nsIThreadRetargetableRequest> rr = do_QueryInterface(aRequest);
-  if (rr) {
-    rr->RetargetDeliveryTo(sts);
+  if (nsCOMPtr<nsIThreadRetargetableRequest> rr = do_QueryInterface(aRequest)) {
+    NS_WARN_IF(NS_FAILED(rr->RetargetDeliveryTo(sts)));
   }
   return NS_OK;
 }
@@ -796,6 +795,10 @@ FetchDriver::OnDataAvailable(nsIRequest* aRequest,
                              uint64_t aOffset,
                              uint32_t aCount)
 {
+  // NB: This can be called on any thread!  But we're guaranteed that it is
+  // called between OnStartRequest and OnStopRequest, so we don't need to worry
+  // about races.
+
   uint32_t aRead;
   MOZ_ASSERT(mResponse);
   MOZ_ASSERT(mPipeOutputStream);
@@ -884,6 +887,12 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   }
 
   (void) OnRedirectVerifyCallback(NS_OK);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FetchDriver::CheckListenerChain()
+{
   return NS_OK;
 }
 
