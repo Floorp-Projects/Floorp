@@ -524,7 +524,7 @@ pref("app.update.timerMinimumDelay", 30); // seconds
 // used by update service to decide whether or not to
 // automatically download an update
 pref("app.update.autodownload", "wifi");
-pref("app.update.url.android", "https://aus4.mozilla.org/update/4/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/%MOZ_VERSION%/update.xml");
+pref("app.update.url.android", "https://aus5.mozilla.org/update/4/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/%MOZ_VERSION%/update.xml");
 
 #ifdef MOZ_UPDATER
 /* prefs used specifically for updating the app */
