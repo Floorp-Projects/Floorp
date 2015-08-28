@@ -54,10 +54,7 @@ class WebMDemuxer : public MediaDataDemuxer
 {
 public:
   explicit WebMDemuxer(MediaResource* aResource);
-  // Indicate if the WebMDemuxer is to be used with MediaSource. In which
-  // case the demuxer will stop reads to the last known complete block.
-  WebMDemuxer(MediaResource* aResource, bool aIsMediaSource);
-  
+
   nsRefPtr<InitPromise> Init() override;
 
   already_AddRefed<MediaDataDemuxer> Clone() const override;
@@ -87,22 +84,6 @@ public:
 
   // Pushes a packet to the front of the video packet queue.
   virtual void PushVideoPacket(NesteggPacketHolder* aItem);
-
-  // Public accessor for nestegg callbacks
-  MediaResourceIndex* GetResource()
-  {
-    return &mResource;
-  }
-
-  int64_t GetEndDataOffset() const
-  {
-    return (!mIsMediaSource || mLastWebMBlockOffset < 0)
-      ? mResource.GetLength() : mLastWebMBlockOffset;
-  }
-  int64_t IsMediaSource() const
-  {
-    return mIsMediaSource;
-  }
 
 private:
   friend class WebMTrackDemuxer;
@@ -171,12 +152,6 @@ private:
   bool mHasVideo;
   bool mHasAudio;
   bool mNeedReIndex;
-
-  // The last complete block parsed by the WebMBufferedState. -1 if not set.
-  // We cache those values rather than retrieving them for performance reasons
-  // as nestegg only performs 1-byte read at a time.
-  int64_t mLastWebMBlockOffset;
-  const bool mIsMediaSource;
 };
 
 class WebMTrackDemuxer : public MediaTrackDemuxer

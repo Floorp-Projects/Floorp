@@ -82,10 +82,13 @@ RtspMediaCodecReader::RequestAudioData()
 
 nsRefPtr<MediaDecoderReader::VideoDataPromise>
 RtspMediaCodecReader::RequestVideoData(bool aSkipToNextKeyframe,
-                                       int64_t aTimeThreshold)
+                                       int64_t aTimeThreshold,
+                                       bool aForceDecodeAhead)
 {
   EnsureActive();
-  return MediaCodecReader::RequestVideoData(aSkipToNextKeyframe, aTimeThreshold);
+  return MediaCodecReader::RequestVideoData(aSkipToNextKeyframe,
+                                            aTimeThreshold,
+                                            aForceDecodeAhead);
 }
 
 nsRefPtr<MediaDecoderReader::MetadataPromise>
