@@ -459,10 +459,14 @@ function ensureThreadClientState(aPanel, aState) {
   }
 }
 
-function navigateActiveTabTo(aPanel, aUrl, aWaitForEventName, aEventRepeat) {
-  let finished = waitForDebuggerEvents(aPanel, aWaitForEventName, aEventRepeat);
+function reload(aPanel, aUrl) {
   let activeTab = aPanel.panelWin.DebuggerController._target.activeTab;
   aUrl ? activeTab.navigateTo(aUrl) : activeTab.reload();
+}
+
+function navigateActiveTabTo(aPanel, aUrl, aWaitForEventName, aEventRepeat) {
+  let finished = waitForDebuggerEvents(aPanel, aWaitForEventName, aEventRepeat);
+  reload(aPanel, aUrl);
   return finished;
 }
 
@@ -1196,7 +1200,10 @@ function afterDispatch(dispatcher, type) {
       // internal name here so tests aren't forced to always pass it
       // in
       type: "@@service/waitUntil",
-      predicate: action => action.type === type,
+      predicate: action => (
+        action.type === type &&
+        action.status ? action.status === "done" : true
+      ),
       run: resolve
     });
   });

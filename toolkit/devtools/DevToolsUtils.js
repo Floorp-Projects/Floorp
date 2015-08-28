@@ -116,6 +116,38 @@ exports.zip = function zip(a, b) {
   return pairs;
 };
 
+
+/**
+ * Converts an object into an array with 2-element arrays as key/value
+ * pairs of the object. `{ foo: 1, bar: 2}` would become
+ * `[[foo, 1], [bar 2]]` (order not guaranteed);
+ *
+ * @param object obj
+ * @returns array
+ */
+exports.entries = function entries(obj) {
+  return Object.keys(obj).map(k => [k, obj[k]]);
+}
+
+/**
+ * Composes the given functions into a single function, which will
+ * apply the results of each function right-to-left, starting with
+ * applying the given arguments to the right-most function.
+ * `compose(foo, bar, baz)` === `args => foo(bar(baz(args)`
+ *
+ * @param ...function funcs
+ * @returns function
+ */
+exports.compose = function compose(...funcs) {
+  return (...args) => {
+    const initialValue = funcs[funcs.length - 1].apply(null, args);
+    const leftFuncs = funcs.slice(0, -1);
+    return leftFuncs.reduceRight((composed, f) => f(composed),
+                                 initialValue);
+  };
+}
+
+
 /**
  * Waits for the next tick in the event loop to execute a callback.
  */
