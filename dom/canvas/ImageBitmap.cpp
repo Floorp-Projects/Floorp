@@ -7,11 +7,11 @@
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/gfx/2D.h"
 #include "imgTools.h"
-#include "js/StructuredClone.h"
 #include "libyuv.h"
 #include "nsLayoutUtils.h"
 

@@ -268,4 +268,8 @@ onfetch = function(ev) {
     var url = 'http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200';
     ev.respondWith(fetch(url, { mode: 'no-cors' }));
   }
+
+  else if (ev.request.url.includes('xhr-method-test.txt')) {
+    ev.respondWith(new Response('intercepted ' + ev.request.method));
+  }
 };
