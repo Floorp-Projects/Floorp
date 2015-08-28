@@ -306,7 +306,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
         }
         break;
 
-      case NS_MOUSE_BUTTON_DOWN:
+      case eMouseDown:
         {
           WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
           if (mouseEvent->button == WidgetMouseEvent::eLeftButton) {

@@ -999,8 +999,7 @@ nsWindow::mousePressEvent(QMouseEvent* aEvent)
         return nsEventStatus_eIgnore;
     }
 
-    WidgetMouseEvent event(true, NS_MOUSE_BUTTON_DOWN, this,
-                           WidgetMouseEvent::eReal);
+    WidgetMouseEvent event(true, eMouseDown, this, WidgetMouseEvent::eReal);
     InitMouseEvent(event, aEvent, 1);
     nsEventStatus status = DispatchEvent(&event);
 

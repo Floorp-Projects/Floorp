@@ -496,7 +496,7 @@ APZCCallbackHelper::DispatchSynthesizedMouseEvent(EventMessage aMsg,
                                                   Modifiers aModifiers,
                                                   nsIWidget* aWidget)
 {
-  MOZ_ASSERT(aMsg == eMouseMove || aMsg == NS_MOUSE_BUTTON_DOWN ||
+  MOZ_ASSERT(aMsg == eMouseMove || aMsg == eMouseDown ||
              aMsg == eMouseUp || aMsg == NS_MOUSE_MOZLONGTAP);
 
   WidgetMouseEvent event(true, aMsg, nullptr,
@@ -547,7 +547,7 @@ APZCCallbackHelper::FireSingleTapEvent(const LayoutDevicePoint& aPoint,
     Stringify(aPoint).c_str());
   int time = 0;
   DispatchSynthesizedMouseEvent(eMouseMove, time, aPoint, aModifiers, aWidget);
-  DispatchSynthesizedMouseEvent(NS_MOUSE_BUTTON_DOWN, time, aPoint, aModifiers, aWidget);
+  DispatchSynthesizedMouseEvent(eMouseDown, time, aPoint, aModifiers, aWidget);
   DispatchSynthesizedMouseEvent(eMouseUp, time, aPoint, aModifiers, aWidget);
 }
 

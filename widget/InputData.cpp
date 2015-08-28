@@ -125,7 +125,7 @@ MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
   EventMessage mouseEventMessage = eVoidEvent;
   switch (mType) {
     case MultiTouchInput::MULTITOUCH_START:
-      mouseEventMessage = NS_MOUSE_BUTTON_DOWN;
+      mouseEventMessage = eMouseDown;
       break;
     case MultiTouchInput::MULTITOUCH_MOVE:
       mouseEventMessage = eMouseMove;
@@ -182,7 +182,7 @@ MultiTouchInput::MultiTouchInput(const WidgetMouseEvent& aMouseEvent)
   MOZ_ASSERT(NS_IsMainThread(),
              "Can only copy from WidgetMouseEvent on main thread");
   switch (aMouseEvent.mMessage) {
-  case NS_MOUSE_BUTTON_DOWN:
+  case eMouseDown:
     mType = MULTITOUCH_START;
     break;
   case eMouseMove:

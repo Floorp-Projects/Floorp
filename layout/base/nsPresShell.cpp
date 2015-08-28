@@ -467,7 +467,7 @@ public:
   virtual void HandleEvent(EventChainPostVisitor& aVisitor) override
   {
     if (aVisitor.mPresContext && aVisitor.mEvent->mClass != eBasicEventClass) {
-      if (aVisitor.mEvent->mMessage == NS_MOUSE_BUTTON_DOWN ||
+      if (aVisitor.mEvent->mMessage == eMouseDown ||
           aVisitor.mEvent->mMessage == eMouseUp) {
         // Mouse-up and mouse-down events call nsFrame::HandlePress/Release
         // which call GetContentOffsetsFromPoint which requires up-to-date layout.
@@ -6570,7 +6570,7 @@ PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent)
   if ((aEvent->mMessage == eMouseMove &&
        aEvent->AsMouseEvent()->reason == WidgetMouseEvent::eReal) ||
       aEvent->mMessage == NS_MOUSE_ENTER_WIDGET ||
-      aEvent->mMessage == NS_MOUSE_BUTTON_DOWN ||
+      aEvent->mMessage == eMouseDown ||
       aEvent->mMessage == eMouseUp) {
     nsIFrame* rootFrame = GetRootFrame();
     if (!rootFrame) {
@@ -6679,7 +6679,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
     case eMouseUp:
       pointerMessage = NS_POINTER_UP;
       break;
-    case NS_MOUSE_BUTTON_DOWN:
+    case eMouseDown:
       pointerMessage = NS_POINTER_DOWN;
       break;
     default:
@@ -7481,7 +7481,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     // a document which needs events suppressed
     if (aEvent->mClass == eMouseEventClass &&
         frame->PresContext()->Document()->EventHandlingSuppressed()) {
-      if (aEvent->mMessage == NS_MOUSE_BUTTON_DOWN) {
+      if (aEvent->mMessage == eMouseDown) {
         mNoDelayedMouseEvents = true;
       } else if (!mNoDelayedMouseEvents && aEvent->mMessage == eMouseUp) {
         DelayedEvent* event = new DelayedMouseEvent(aEvent->AsMouseEvent());
@@ -7887,7 +7887,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
         }
         break;
       }
-      case NS_MOUSE_BUTTON_DOWN:
+      case eMouseDown:
       case eMouseUp:
         isHandlingUserInput = true;
         break;

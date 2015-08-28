@@ -548,7 +548,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
     break;
-  case NS_MOUSE_BUTTON_DOWN: {
+  case eMouseDown: {
     switch (mouseEvent->button) {
     case WidgetMouseEvent::eLeftButton:
       BeginTrackingDragGesture(aPresContext, mouseEvent, aTargetFrame);
@@ -1170,7 +1170,7 @@ CrossProcessSafeEvent(const WidgetEvent& aEvent)
     return true;
   case eMouseEventClass:
     switch (aEvent.mMessage) {
-    case NS_MOUSE_BUTTON_DOWN:
+    case eMouseDown:
     case eMouseUp:
     case eMouseMove:
     case NS_CONTEXTMENU:
@@ -2796,7 +2796,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   // Most of the events we handle below require a frame.
   // Add special cases here.
   if (!mCurrentTarget && aEvent->mMessage != eMouseUp &&
-      aEvent->mMessage != NS_MOUSE_BUTTON_DOWN) {
+      aEvent->mMessage != eMouseDown) {
     return NS_OK;
   }
 
@@ -2805,7 +2805,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   nsresult ret = NS_OK;
 
   switch (aEvent->mMessage) {
-  case NS_MOUSE_BUTTON_DOWN:
+  case eMouseDown:
     {
       WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
       if (mouseEvent->button == WidgetMouseEvent::eLeftButton &&
@@ -4438,7 +4438,7 @@ EventStateManager::SetClickCount(nsPresContext* aPresContext,
 
   switch (aEvent->button) {
   case WidgetMouseEvent::eLeftButton:
-    if (aEvent->mMessage == NS_MOUSE_BUTTON_DOWN) {
+    if (aEvent->mMessage == eMouseDown) {
       mLastLeftMouseDownContent = mouseContent;
       mLastLeftMouseDownContentParent = mouseContentParent;
     } else if (aEvent->mMessage == eMouseUp) {
@@ -4456,7 +4456,7 @@ EventStateManager::SetClickCount(nsPresContext* aPresContext,
     break;
 
   case WidgetMouseEvent::eMiddleButton:
-    if (aEvent->mMessage == NS_MOUSE_BUTTON_DOWN) {
+    if (aEvent->mMessage == eMouseDown) {
       mLastMiddleMouseDownContent = mouseContent;
       mLastMiddleMouseDownContentParent = mouseContentParent;
     } else if (aEvent->mMessage == eMouseUp) {
@@ -4474,7 +4474,7 @@ EventStateManager::SetClickCount(nsPresContext* aPresContext,
     break;
 
   case WidgetMouseEvent::eRightButton:
-    if (aEvent->mMessage == NS_MOUSE_BUTTON_DOWN) {
+    if (aEvent->mMessage == eMouseDown) {
       mLastRightMouseDownContent = mouseContent;
       mLastRightMouseDownContentParent = mouseContentParent;
     } else if (aEvent->mMessage == eMouseUp) {
@@ -4960,7 +4960,7 @@ EventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
 bool
 EventStateManager::EventStatusOK(WidgetGUIEvent* aEvent)
 {
-  return !(aEvent->mMessage == NS_MOUSE_BUTTON_DOWN &&
+  return !(aEvent->mMessage == eMouseDown &&
            aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton &&
            !sNormalLMouseEventInProcess);
 }
@@ -5749,7 +5749,7 @@ AutoHandlingUserInputStatePusher::AutoHandlingUserInputStatePusher(
                                     WidgetEvent* aEvent,
                                     nsIDocument* aDocument) :
   mIsHandlingUserInput(aIsHandlingUserInput),
-  mIsMouseDown(aEvent && aEvent->mMessage == NS_MOUSE_BUTTON_DOWN),
+  mIsMouseDown(aEvent && aEvent->mMessage == eMouseDown),
   mResetFMMouseButtonHandlingState(false)
 {
   if (!aIsHandlingUserInput) {
@@ -5764,8 +5764,7 @@ AutoHandlingUserInputStatePusher::AutoHandlingUserInputStatePusher(
     return;
   }
   mResetFMMouseButtonHandlingState =
-    (aEvent->mMessage == NS_MOUSE_BUTTON_DOWN ||
-     aEvent->mMessage == eMouseUp);
+    (aEvent->mMessage == eMouseDown || aEvent->mMessage == eMouseUp);
   if (mResetFMMouseButtonHandlingState) {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
     NS_ENSURE_TRUE_VOID(fm);

@@ -538,8 +538,8 @@ static const char*
 GetEventMessageName(uint32_t aMessage)
 {
   switch (aMessage) {
-    case NS_MOUSE_BUTTON_DOWN:
-      return "NS_MOUSE_BUTTON_DOWN";
+    case eMouseDown:
+      return "eMouseDown";
     case eMouseUp:
       return "eMouseUp";
     default:

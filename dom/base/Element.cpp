@@ -2929,7 +2929,7 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
   // Optimisation: return early if this event doesn't interest us.
   // IMPORTANT: this switch and the switch below it must be kept in sync!
   switch (aVisitor.mEvent->mMessage) {
-  case NS_MOUSE_BUTTON_DOWN:
+  case eMouseDown:
   case NS_MOUSE_CLICK:
   case NS_UI_ACTIVATE:
   case eKeyPress:
@@ -2947,7 +2947,7 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
   nsresult rv = NS_OK;
 
   switch (aVisitor.mEvent->mMessage) {
-  case NS_MOUSE_BUTTON_DOWN:
+  case eMouseDown:
     {
       if (aVisitor.mEvent->AsMouseEvent()->button ==
             WidgetMouseEvent::eLeftButton) {

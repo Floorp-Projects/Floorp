@@ -1539,7 +1539,7 @@ nsHTMLFramesetBorderFrame::HandleEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  if (aEvent->mMessage == NS_MOUSE_BUTTON_DOWN &&
+  if (aEvent->mMessage == eMouseDown &&
       aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
     nsHTMLFramesetFrame* parentFrame = do_QueryFrame(GetParent());
     if (parentFrame) {
