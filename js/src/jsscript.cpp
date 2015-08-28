@@ -3693,7 +3693,7 @@ JSScript::traceChildren(JSTracer* trc)
 
     if (hasRegexps()) {
         ObjectArray* objarray = regexps();
-        TraceRange(trc, objarray->length, objarray->vector, "objects");
+        TraceRange(trc, objarray->length, objarray->vector, "regexps");
     }
 
     if (hasConsts()) {
