@@ -327,6 +327,12 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         requestRender();
     }
 
+    void setSurfaceBackgroundColor(int newColor) {
+        if (mSurfaceView != null) {
+            mSurfaceView.setBackgroundColor(newColor);
+        }
+    }
+
     public void setZoomConstraints(ZoomConstraints constraints) {
         mLayerClient.setZoomConstraints(constraints);
     }

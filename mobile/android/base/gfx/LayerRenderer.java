@@ -636,7 +636,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
                 mView.post(new Runnable() {
                     @Override
                     public void run() {
-                        mView.getChildAt(0).setBackgroundColor(Color.TRANSPARENT);
+                        mView.setSurfaceBackgroundColor(Color.TRANSPARENT);
                     }
                 });
                 mView.setPaintState(LayerView.PAINT_AFTER_FIRST);
@@ -653,9 +653,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         // thread, so this may need to be changed if any problems appear.
         if (msg == Tabs.TabEvents.SELECTED) {
             if (mView != null) {
-                if (mView.getChildAt(0) != null) {
-                    mView.getChildAt(0).setBackgroundColor(tab.getBackgroundColor());
-                }
+                mView.setSurfaceBackgroundColor(tab.getBackgroundColor());
                 mView.setPaintState(LayerView.PAINT_START);
             }
         }
