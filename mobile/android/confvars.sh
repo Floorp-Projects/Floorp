@@ -108,9 +108,6 @@ export JS_GC_SMALL_CHUNK_SIZE=1
 # Enable Firefox Account avatars.
 MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES=1
 
-# Enable checking that add-ons are signed by the trusted root
-MOZ_ADDON_SIGNING=1
-
 # Enable the Switchboard A/B framework code.
 # Note: The framework is always included in the app. This flag controls
 # usage of the framework.

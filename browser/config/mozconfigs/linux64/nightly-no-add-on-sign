@@ -1,0 +1,4 @@
+# addon signing is checked but not required
+MOZ_REQUIRE_ADDON_SIGNING=0
+MOZ_ADDON_SIGNING=1
+. $topsrcdir/browser/config/mozconfigs/linux64/nightly
