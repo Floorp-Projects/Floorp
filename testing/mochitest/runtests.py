@@ -1885,6 +1885,8 @@ class Mochitest(MochitestUtilsMixin):
 
         manifest = self.getTestManifest(options)
         if manifest:
+            if options.extra_mozinfo_json:
+                mozinfo.update(options.extra_mozinfo_json)
             info = mozinfo.info
 
             # Bug 1089034 - imptest failure expectations are encoded as
