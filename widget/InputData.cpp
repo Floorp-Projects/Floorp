@@ -81,7 +81,7 @@ MultiTouchInput::ToWidgetTouchEvent(nsIWidget* aWidget) const
   MOZ_ASSERT(NS_IsMainThread(),
              "Can only convert To WidgetTouchEvent on main thread");
 
-  EventMessage touchEventMessage = NS_EVENT_NULL;
+  EventMessage touchEventMessage = eVoidEvent;
   switch (mType) {
   case MULTITOUCH_START:
     touchEventMessage = NS_TOUCH_START;
@@ -101,7 +101,7 @@ MultiTouchInput::ToWidgetTouchEvent(nsIWidget* aWidget) const
   }
 
   WidgetTouchEvent event(true, touchEventMessage, aWidget);
-  if (touchEventMessage == NS_EVENT_NULL) {
+  if (touchEventMessage == eVoidEvent) {
     return event;
   }
 
@@ -122,7 +122,7 @@ MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
   MOZ_ASSERT(NS_IsMainThread(),
              "Can only convert To WidgetMouseEvent on main thread");
 
-  EventMessage mouseEventMessage = NS_EVENT_NULL;
+  EventMessage mouseEventMessage = eVoidEvent;
   switch (mType) {
     case MultiTouchInput::MULTITOUCH_START:
       mouseEventMessage = NS_MOUSE_BUTTON_DOWN;

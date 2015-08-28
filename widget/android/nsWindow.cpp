@@ -966,7 +966,7 @@ nsWindow::OnMouseEvent(AndroidGeckoEvent *ae)
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
     WidgetMouseEvent event = ae->MakeMouseEvent(this);
-    if (event.mMessage == NS_EVENT_NULL) {
+    if (event.mMessage == eVoidEvent) {
         // invalid event type, abort
         return;
     }
@@ -1052,7 +1052,7 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
     bool isDownEvent = false;
 
     WidgetTouchEvent event = ae->MakeTouchEvent(this);
-    if (event.mMessage != NS_EVENT_NULL) {
+    if (event.mMessage != eVoidEvent) {
         nsEventStatus status;
         DispatchEvent(&event, status);
         // We check mMultipleActionsPrevented because that's what <input type=range>
@@ -1118,7 +1118,7 @@ nsWindow::OnNativeGestureEvent(AndroidGeckoEvent *ae)
     LayoutDeviceIntPoint pt(ae->Points()[0].x,
                             ae->Points()[0].y);
     double delta = ae->X();
-    EventMessage msg = NS_EVENT_NULL;
+    EventMessage msg = eVoidEvent;
 
     switch (ae->Action()) {
         case AndroidMotionEvent::ACTION_MAGNIFY_START:

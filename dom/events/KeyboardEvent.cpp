@@ -16,7 +16,7 @@ KeyboardEvent::KeyboardEvent(EventTarget* aOwner,
                              WidgetKeyboardEvent* aEvent)
   : UIEvent(aOwner, aPresContext,
             aEvent ? aEvent :
-                     new WidgetKeyboardEvent(false, NS_EVENT_NULL, nullptr))
+                     new WidgetKeyboardEvent(false, eVoidEvent, nullptr))
   , mInitializedByCtor(false)
   , mInitializedWhichValue(0)
 {

@@ -106,7 +106,7 @@ Event::ConstructorInit(EventTarget* aOwner,
           ...
         }
      */
-    mEvent = new WidgetEvent(false, NS_EVENT_NULL);
+    mEvent = new WidgetEvent(false, eVoidEvent);
     mEvent->time = PR_Now();
   }
 

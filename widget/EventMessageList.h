@@ -9,7 +9,7 @@
  * NS_EVENT_MESSAGE(aMessage, aValue)
  */
 
-NS_EVENT_MESSAGE(NS_EVENT_NULL,         0)
+NS_EVENT_MESSAGE(eVoidEvent,            0)
 
 // This is a dummy event message for all event listener implementation in
 // EventListenerManager.
