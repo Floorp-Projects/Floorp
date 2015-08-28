@@ -115,9 +115,13 @@ protected:
   void UpdateCaretsForSelectionMode();
   void UpdateCaretsForTilt();
 
-  // Change focus to the nearest enclosing focusable frame of aFrame.
+  // Get the nearest enclosing focusable frame of aFrame.
   // @return focusable frame if there is any; nullptr otherwise.
-  nsIFrame* ChangeFocus(nsIFrame* aFrame) const;
+  nsIFrame* GetFocusableFrame(nsIFrame* aFrame) const;
+
+  // Change focus to aFrame if it isn't nullptr. Otherwise, clear the old focus
+  // then re-focus the window.
+  void ChangeFocusToOrClearOldFocus(nsIFrame* aFrame) const;
 
   nsresult SelectWord(nsIFrame* aFrame, const nsPoint& aPoint) const;
   void SetSelectionDragState(bool aState) const;
