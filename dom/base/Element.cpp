@@ -2868,7 +2868,7 @@ Element::PreHandleEventForLinks(EventChainPreVisitor& aVisitor)
   // Optimisation: return early if this event doesn't interest us.
   // IMPORTANT: this switch and the switch below it must be kept in sync!
   switch (aVisitor.mEvent->mMessage) {
-  case NS_MOUSE_OVER:
+  case eMouseOver:
   case NS_FOCUS_CONTENT:
   case NS_MOUSE_OUT:
   case NS_BLUR_CONTENT:
@@ -2889,7 +2889,7 @@ Element::PreHandleEventForLinks(EventChainPreVisitor& aVisitor)
   // updated even if the event is consumed before we have a chance to set it.
   switch (aVisitor.mEvent->mMessage) {
   // Set the status bar similarly for mouseover and focus
-  case NS_MOUSE_OVER:
+  case eMouseOver:
     aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
     // FALL THROUGH
   case NS_FOCUS_CONTENT: {

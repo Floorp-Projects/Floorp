@@ -287,7 +287,7 @@ EVENT(mouseout,
       EventNameType_All,
       eMouseEventClass)
 EVENT(mouseover,
-      NS_MOUSE_OVER,
+      eMouseOver,
       EventNameType_All,
       eMouseEventClass)
 EVENT(mouseup,
