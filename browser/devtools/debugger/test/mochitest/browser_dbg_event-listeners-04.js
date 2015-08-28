@@ -31,10 +31,13 @@ add_task(function* () {
 
   let [,, panel, win] = yield initDebugger(tab);
   let gDebugger = panel.panelWin;
-  let fetched = waitForDebuggerEvents(panel, gDebugger.EVENTS.EVENT_LISTENERS_FETCHED);
+  let gDispatcher = gDebugger.dispatcher;
+  let constants = gDebugger.require('./content/constants');
+  let eventListeners = gDebugger.require('./content/stores/event-listeners');
+  let fetched = afterDispatch(gDispatcher, constants.FETCH_EVENT_LISTENERS);
 
   info("Scheduling event listener fetch.");
-  gDebugger.DebuggerController.Breakpoints.DOM.scheduleEventListenersFetch();
+  gDispatcher.dispatch(eventListeners.actions.fetchEventListeners());
 
   info("Waiting for updated event listeners to arrive.");
   yield fetched;

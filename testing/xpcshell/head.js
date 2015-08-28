@@ -378,7 +378,7 @@ function _setupDebuggerServer(breakpointFiles, callback) {
     prefs.setBoolPref("devtools.debugger.log.verbose", true);
   }
 
-  let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+  let { require } = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
   let { DebuggerServer } = require("devtools/server/main");
   let { OriginalLocation } = require("devtools/server/actors/common");
   DebuggerServer.init();
