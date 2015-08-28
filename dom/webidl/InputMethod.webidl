@@ -6,7 +6,8 @@
 
 [JSImplementation="@mozilla.org/b2g-inputmethod;1",
  NavigatorProperty="mozInputMethod",
- Func="Navigator::HasInputMethodSupport"]
+ Pref="dom.mozInputMethod.enabled",
+ CheckAnyPermissions="input input-manage"]
 interface MozInputMethod : EventTarget {
   // Input Method Manager contain a few global methods expose to apps
   readonly attribute MozInputMethodManager mgmt;

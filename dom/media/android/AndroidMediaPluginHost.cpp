@@ -10,7 +10,6 @@
 #include "AndroidMediaPluginHost.h"
 #include "nsXPCOMStrings.h"
 #include "nsISeekableStream.h"
-#include "AndroidMediaReader.h"
 #include "nsIGfxInfo.h"
 #include "gfxCrashReporterUtils.h"
 #include "prmem.h"
@@ -288,7 +287,6 @@ MPAPI::Decoder *AndroidMediaPluginHost::CreateDecoder(MediaResource *aResource, 
 
     decoder->mResource = strdup(url.get());
     if (plugin->CreateDecoder(&sPluginHost, decoder, chars, len)) {
-      aResource->AddRef();
       return decoder.forget();
     }
   }

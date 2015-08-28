@@ -101,6 +101,8 @@ class FirefoxUIUpdates(FirefoxUITests):
             }],
             [['--limit-locales'], {
                 'dest': 'limit_locales',
+                'default': -1,
+                'type': int,
                 'help': 'Limit the number of locales to run.',
             }],
         ] + copy.deepcopy(self.harness_extra_args)
@@ -121,13 +123,8 @@ class FirefoxUIUpdates(FirefoxUITests):
 
         self.limit_locales = int(self.config.get('limit_locales'))
 
-        if self.config.get('tools_tag') is None:
-            # We want to make sure that anyone trying to reproduce a job will
-            # is using the exact tools tag for reproducibility's sake
-            self.fatal('Make sure to specify the --tools-tag')
-
         self.tools_repo = self.config['tools_repo']
-        self.tools_tag = self.config['tools_tag']
+        self.tools_tag = self.config.get('tools_tag')
 
         if self.config.get('update_verify_config'):
             self.update_verify_config = self.config['update_verify_config']
@@ -135,20 +132,25 @@ class FirefoxUIUpdates(FirefoxUITests):
                 dirs['abs_tools_dir'], 'release', 'updates',
                 self.config['update_verify_config']
             )
-        else:
-            self.fatal('Make sure to specify --update-verify-config. '
-                       'See under the directory release/updates in %s.' % self.tools_repo)
+
+            # We want to make sure that anyone trying to reproduce a job will
+            # is using the exact tools tag for reproducibility's sake
+            if self.config.get('tools_tag') is None:
+                self.fatal('Make sure to specify the --tools-tag')
 
         self.installer_url = self.config.get('installer_url')
         self.installer_path = self.config.get('installer_path')
 
         if self.installer_path:
+            self.installer_path = os.path.abspath(self.installer_path)
+
             if not os.path.exists(self.installer_path):
                 self.critical('Please make sure that the path to the installer exists.')
                 exit(1)
 
-        assert 'update_verify_config' in self.config or self.installer_url or self.installer_path, \
-            'Either specify --update-verify-config, --installer-url or --installer-path.'
+        assert ('update_verify_config' in self.config or
+                self.installer_url or self.installer_path,
+                'Either specify --update-verify-config, --installer-url or --installer-path.')
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -165,21 +167,23 @@ class FirefoxUIUpdates(FirefoxUITests):
 
     def checkout(self):
         '''
-        This checkouts the tools repo because it contains the configuration
-        files about which locales to test.
-
-        We also checkout firefox_ui_tests and update to the right branch
+        This checkouts firefox_ui_tests and update to the right branch
         for it.
+
+        We also checkout the tools repo if requested because it contains the
+        configuration files about which locales to test.
+
         '''
         super(FirefoxUIUpdates, self).checkout()
         dirs = self.query_abs_dirs()
 
-        self.vcs_checkout(
-            repo=self.tools_repo,
-            dest=dirs['abs_tools_dir'],
-            revision=self.tools_tag,
-            vcs='hgtool'
-        )
+        if self.tools_tag:
+            self.vcs_checkout(
+                repo=self.tools_repo,
+                dest=dirs['abs_tools_dir'],
+                revision=self.tools_tag,
+                vcs='hgtool'
+            )
 
     def determine_testing_configuration(self):
         '''
@@ -387,7 +391,7 @@ class FirefoxUIUpdates(FirefoxUITests):
                     locales_counter += 1
                     self.info("Running %s %s" % (build_id, locale))
 
-                    if locales_counter > self.limit_locales:
+                    if self.limit_locales and locales_counter > self.limit_locales:
                         self.info("We have reached the limit of locales we were intending to run")
                         break
 
@@ -440,7 +444,7 @@ class FirefoxUIUpdates(FirefoxUITests):
 
                     self.info("Completed %s %s with return code: %s" % (build_id, locale, retcode))
 
-                if locales_counter > self.limit_locales:
+                if self.limit_locales and locales_counter > self.limit_locales:
                     break
 
             # Determine which locales have failed and set scripts exit code

@@ -228,7 +228,7 @@ public:
   Id identifier() const override { return get().id; }
   bool isLive() const override { return false; }
   const char16_t* typeName() const override;
-  size_t size(mozilla::MallocSizeOf mallocSizeof) const override;
+  Node::Size size(mozilla::MallocSizeOf mallocSizeof) const override;
   const char* jsObjectClassName() const override { return get().jsObjectClassName.get(); }
 
   bool hasAllocationStack() const override { return get().allocationStack.isSome(); }
@@ -256,7 +256,7 @@ public:
     new (storage) ConcreteStackFrame(ptr);
   }
 
-  uintptr_t identifier() const override { return get().id; }
+  uint64_t identifier() const override { return get().id; }
   uint32_t line() const override { return get().line; }
   uint32_t column() const override { return get().column; }
   bool isSystem() const override { return get().isSystem; }

@@ -186,7 +186,7 @@ class Concrete<FakeNode> : public Base
     return UniquePtr<EdgeRange>(js_new<PreComputedEdgeRange>(cx, get().edges));
   }
 
-  size_t size(mozilla::MallocSizeOf) const override {
+  Size size(mozilla::MallocSizeOf) const override {
     return get().size;
   }
 

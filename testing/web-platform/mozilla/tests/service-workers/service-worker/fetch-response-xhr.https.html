@@ -22,7 +22,7 @@ async_test(function(t) {
               service_worker_unregister_and_done(t, SCOPE);
             });
           frame.contentWindow.postMessage({},
-                                          host_info['HTTP_ORIGIN'],
+                                          host_info['HTTPS_ORIGIN'],
                                           [channel.port2]);
         })
       .catch(unreached_rejection(t));
