@@ -243,7 +243,7 @@ NON_IDL_EVENT(mozbrowserbeforekeydown,
               EventNameType_None,
               eBeforeAfterKeyboardEventClass)
 NON_IDL_EVENT(mozbrowserafterkeydown,
-              NS_KEY_AFTER_DOWN,
+              eAfterKeyDown,
               EventNameType_None,
               eBeforeAfterKeyboardEventClass)
 NON_IDL_EVENT(mozbrowserbeforekeyup,
