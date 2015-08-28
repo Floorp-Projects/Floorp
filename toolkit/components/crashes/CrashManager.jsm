@@ -16,6 +16,7 @@ Cu.import("resource://gre/modules/Timer.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://services-common/utils.js", this);
 Cu.import("resource://gre/modules/TelemetryController.jsm");
+Cu.import("resource://gre/modules/KeyValueParser.jsm");
 
 this.EXPORTED_SYMBOLS = [
   "CrashManager",
@@ -524,11 +525,7 @@ this.CrashManager.prototype = Object.freeze({
           // fall-through
         case "crash.main.2":
           let crashID = lines[0];
-          let metadata = {};
-          for (let i = 1; i < lines.length; i++) {
-            let [key, val] = lines[i].split("=");
-            metadata[key] = val;
-          }
+          let metadata = parseKeyValuePairsFromLines(lines.slice(1));
           store.addCrash(this.PROCESS_TYPE_MAIN, this.CRASH_TYPE_CRASH,
                          crashID, date, metadata);
 
