@@ -2361,6 +2361,9 @@ struct ScriptAndCounts
     const PCCounts* maybeGetPCCounts(jsbytecode* pc) const {
         return scriptCounts.maybeGetPCCounts(script->pcToOffset(pc));
     }
+    const PCCounts* maybeGetThrowCounts(jsbytecode* pc) const {
+        return scriptCounts.maybeGetThrowCounts(script->pcToOffset(pc));
+    }
 
     jit::IonScriptCounts* getIonCounts() const {
         return scriptCounts.ionCounts_;
