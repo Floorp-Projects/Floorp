@@ -3029,7 +3029,7 @@ HTMLInputElement::NeedToInitializeEditorForEvent(
   case eMouseEnterIntoWidget:
   case eMouseExitFromWidget:
   case eMouseOver:
-  case NS_MOUSE_OUT:
+  case eMouseOut:
   case NS_SCROLLPORT_UNDERFLOW:
   case NS_SCROLLPORT_OVERFLOW:
     return false;

@@ -2576,7 +2576,7 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
       if (mMouseOverRow != -1)
         InvalidateRow(mMouseOverRow);
     }
-  } else if (aEvent->mMessage == NS_MOUSE_OUT) {
+  } else if (aEvent->mMessage == eMouseOut) {
     if (mMouseOverRow != -1) {
       InvalidateRow(mMouseOverRow);
       mMouseOverRow = -1;

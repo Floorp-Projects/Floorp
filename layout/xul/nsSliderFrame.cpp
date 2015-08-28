@@ -610,13 +610,13 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 #endif
 
   // XXX hack until handle release is actually called in nsframe.
-  //  if (aEvent->mMessage == NS_MOUSE_OUT ||
+  //  if (aEvent->mMessage == eMouseOut ||
   //      aEvent->mMessage == NS_MOUSE_RIGHT_BUTTON_UP ||
   //      aEvent->mMessage == NS_MOUSE_LEFT_BUTTON_UP) {
   //    HandleRelease(aPresContext, aEvent, aEventStatus);
   //  }
 
-  if (aEvent->mMessage == NS_MOUSE_OUT && mChange)
+  if (aEvent->mMessage == eMouseOut && mChange)
      HandleRelease(aPresContext, aEvent, aEventStatus);
 
   return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
