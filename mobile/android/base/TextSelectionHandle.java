@@ -132,7 +132,7 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
         // so subtracting that from newY puts newY into the desired coordinate
         // space. We also need to include the offset amount of the touch location
         // relative to the top left of the handle (mTouchStart).
-        float layerViewTranslation = ViewHelper.getTranslationY(GeckoAppShell.getLayerView());
+        float layerViewTranslation = GeckoAppShell.getLayerView().getSurfaceTranslation();
         int[] layerViewPosition = new int[2];
         GeckoAppShell.getLayerView().getLocationOnScreen(layerViewPosition);
         float ancestorOrigin = layerViewPosition[1] - layerViewTranslation;
@@ -191,7 +191,7 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
         PointF viewPoint = new PointF((mGeckoPoint.x * zoom) - x,
                                       (mGeckoPoint.y * zoom) - y);
         mLeft = viewPoint.x - adjustLeftForHandle();
-        mTop = viewPoint.y + ViewHelper.getTranslationY(GeckoAppShell.getLayerView());
+        mTop = viewPoint.y + GeckoAppShell.getLayerView().getSurfaceTranslation();
 
         setLayoutPosition();
     }

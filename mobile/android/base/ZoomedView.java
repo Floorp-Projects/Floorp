@@ -334,7 +334,7 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
         visibleContentPixels = viewHeight / zoomFactor;
         maxContentOffset = parentHeight - visibleContentPixels;
         maxZoomedViewOffset = parentHeight - (viewContainerHeight - toolbarHeight);
-        float zoomedAreaOffset = (float)params.topMargin + offsetDueToToolBarPosition - ViewHelper.getTranslationY(layerView);
+        float zoomedAreaOffset = (float)params.topMargin + offsetDueToToolBarPosition - layerView.getSurfaceTranslation();
         zoomedContentOffset = zoomedAreaOffset * maxContentOffset / maxZoomedViewOffset;
         returnValue.y = (int)(zoomedContentOffset + ((y - offsetDueToToolBarPosition) / zoomFactor));
 
@@ -364,7 +364,7 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
         maxContentOffset = parentHeight - visibleContentPixels;
         maxZoomedViewOffset = parentHeight - (viewContainerHeight - toolbarHeight);
         contentPixelOffset = y - (visibleContentPixels / 2.0f);
-        float unscaledViewOffset = ViewHelper.getTranslationY(layerView) - offsetDueToToolBarPosition;
+        float unscaledViewOffset = layerView.getSurfaceTranslation() - offsetDueToToolBarPosition;
         returnValue.y = (int)((contentPixelOffset * (maxZoomedViewOffset / maxContentOffset)) + unscaledViewOffset);
 
         return returnValue;
@@ -375,7 +375,7 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
         RelativeLayout.LayoutParams newLayoutParams = (RelativeLayout.LayoutParams) getLayoutParams();
         newLayoutParams.leftMargin = (int) newLeftMargin;
         newLayoutParams.topMargin = (int) newTopMargin;
-        int topMarginMin = (int)(ViewHelper.getTranslationY(layerView) + dynamicToolbarOverlap);
+        int topMarginMin = (int)(layerView.getSurfaceTranslation() + dynamicToolbarOverlap);
         int topMarginMax = layerView.getHeight() - viewContainerHeight;
         int leftMarginMin = 0;
         int leftMarginMax = layerView.getWidth() - viewContainerWidth;
@@ -550,7 +550,7 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
         // Later, it will be converted relative to the zoomed view as soon as
         // the position of the zoomed view will be calculated.
         animationStart.x = (float) leftFromGecko * metrics.zoomFactor;
-        animationStart.y = (float) topFromGecko * metrics.zoomFactor + ViewHelper.getTranslationY(layerView);
+        animationStart.y = (float) topFromGecko * metrics.zoomFactor + layerView.getSurfaceTranslation();
 
         moveUsingGeckoPosition(leftFromGecko, topFromGecko);
     }
