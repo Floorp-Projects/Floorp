@@ -588,9 +588,18 @@ describe("loop.panel", function() {
     }
 
     describe("Copy button", function() {
-      var roomEntry, copyButton;
+      var roomStore, roomEntry, copyButton;
 
       beforeEach(function() {
+        roomStore = new loop.store.RoomStore(dispatcher, {
+          mozLoop: navigator.mozLoop
+        });
+        roomStore.setStoreState({
+          pendingCreation: false,
+          pendingInitialRetrieval: false,
+          rooms: [],
+          error: undefined
+        });
         roomEntry = mountRoomEntry({
           deleteRoom: sandbox.stub(),
           room: new loop.store.Room(roomData)

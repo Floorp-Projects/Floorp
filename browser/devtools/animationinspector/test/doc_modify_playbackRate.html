@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+  div {
+    width: 50px;
+    height: 50px;
+    background: blue;
+    animation: move 20s 20s linear;
+    animation-fill-mode: forwards;
+  }
+
+  @keyframes move {
+    to {
+      margin-left: 200px;
+    }
+  }
+  </style>
+</head>
+<body>
+  <div></div>
+  <div class="rate"></div>
+  <script>
+    var el = document.querySelector(".rate");
+    var ani = el.getAnimations()[0];
+    ani.playbackRate = 2;
+  </script>
+</body>
+</html>

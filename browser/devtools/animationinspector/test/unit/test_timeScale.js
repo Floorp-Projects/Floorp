@@ -13,17 +13,20 @@ const TEST_ANIMATIONS = [{
   startTime: 500,
   delay: 0,
   duration: 1000,
-  iterationCount: 1
+  iterationCount: 1,
+  playbackRate: 1
 }, {
   startTime: 400,
   delay: 100,
   duration: 10,
-  iterationCount: 100
+  iterationCount: 100,
+  playbackRate: 1
 }, {
   startTime: 50,
   delay: 1000,
   duration: 100,
-  iterationCount: 20
+  iterationCount: 20,
+  playbackRate: 1
 }];
 const EXPECTED_MIN_START = 50;
 const EXPECTED_MAX_END = 3050;
@@ -124,8 +127,8 @@ function run_test() {
   equal(TimeScale.maxEndTime, 0);
 
   do_print("Test adding a few animations");
-  for (let {startTime, delay, duration, iterationCount} of TEST_ANIMATIONS) {
-    TimeScale.addAnimation({startTime, delay, duration, iterationCount});
+  for (let state of TEST_ANIMATIONS) {
+    TimeScale.addAnimation(state);
   }
   equal(TimeScale.minStartTime, EXPECTED_MIN_START);
   equal(TimeScale.maxEndTime, EXPECTED_MAX_END);
@@ -136,8 +139,8 @@ function run_test() {
   equal(TimeScale.maxEndTime, 0);
 
   do_print("Test adding the animations again");
-  for (let {startTime, delay, duration, iterationCount} of TEST_ANIMATIONS) {
-    TimeScale.addAnimation({startTime, delay, duration, iterationCount});
+  for (let state of TEST_ANIMATIONS) {
+    TimeScale.addAnimation(state);
   }
   equal(TimeScale.minStartTime, EXPECTED_MIN_START);
   equal(TimeScale.maxEndTime, EXPECTED_MAX_END);

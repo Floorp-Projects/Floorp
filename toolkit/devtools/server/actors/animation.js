@@ -268,7 +268,11 @@ let AnimationPlayerActor = ActorClass({
       // Firefox OS (where we have compositor animations enabled).
       // Returns false whenever the animation is paused as it is taken off the
       // compositor then.
-      isRunningOnCompositor: this.player.isRunningOnCompositor
+      isRunningOnCompositor: this.player.isRunningOnCompositor,
+      // The document timeline's currentTime is being sent along too. This is
+      // not strictly related to the node's animationPlayer, but is useful to
+      // know the current time of the animation with respect to the document's.
+      documentCurrentTime: this.node.ownerDocument.timeline.currentTime
     };
 
     // If we've saved a state before, compare and only send what has changed.
@@ -420,7 +424,8 @@ let AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
       duration: this._form.duration,
       delay: this._form.delay,
       iterationCount: this._form.iterationCount,
-      isRunningOnCompositor: this._form.isRunningOnCompositor
+      isRunningOnCompositor: this._form.isRunningOnCompositor,
+      documentCurrentTime: this._form.documentCurrentTime
     };
   },
 
@@ -622,6 +627,7 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
 
   onAnimationMutation: function(mutations) {
     let eventData = [];
+    let readyPromises = [];
 
     for (let {addedAnimations, removedAnimations} of mutations) {
       for (let player of removedAnimations) {
@@ -675,11 +681,16 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
           type: "added",
           player: actor
         });
+        readyPromises.push(player.ready);
       }
     }
 
     if (eventData.length) {
-      events.emit(this, "mutations", eventData);
+      // Let's wait for all added animations to be ready before telling the
+      // front-end.
+      Promise.all(readyPromises).then(() => {
+        events.emit(this, "mutations", eventData);
+      });
     }
   },
 

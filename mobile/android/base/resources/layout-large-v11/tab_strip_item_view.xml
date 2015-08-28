@@ -28,7 +28,7 @@
         gecko:fadeWidth="30dip"
         android:duplicateParentState="true"/>
 
-    <org.mozilla.gecko.widget.ThemedImageButton
+    <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/audio_playing"
         android:visibility="gone"
         android:layout_width="20dip"
@@ -39,7 +39,7 @@
         android:contentDescription="@string/tab_audio_playing"
         android:src="@drawable/tab_audio_playing"/>
 
-    <org.mozilla.gecko.widget.ThemedImageButton
+    <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/close"
         android:layout_width="40dip"
         android:layout_height="match_parent"

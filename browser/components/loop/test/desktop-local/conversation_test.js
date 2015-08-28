@@ -138,8 +138,9 @@ describe("loop.conversation", function() {
   });
 
   describe("AppControllerView", function() {
-    var conversationStore, client, ccView, dispatcher;
+    var conversationStore, activeRoomStore, client, ccView, dispatcher;
     var conversationAppStore, roomStore, feedbackPeriodMs = 15770000000;
+    var ROOM_STATES = loop.store.ROOM_STATES;
 
     function mountTestComponent() {
       return TestUtils.renderIntoDocument(
@@ -169,8 +170,13 @@ describe("loop.conversation", function() {
         }]
       }});
 
+      activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
+        mozLoop: {},
+        sdkDriver: {}
+      });
       roomStore = new loop.store.RoomStore(dispatcher, {
-        mozLoop: navigator.mozLoop
+        mozLoop: navigator.mozLoop,
+        activeRoomStore: activeRoomStore
       });
       conversationAppStore = new loop.store.ConversationAppStore({
         dispatcher: dispatcher,
@@ -207,6 +213,7 @@ describe("loop.conversation", function() {
 
     it("should display the RoomView for rooms", function() {
       conversationAppStore.setStoreState({windowType: "room"});
+      activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
 
       ccView = mountTestComponent();
 
