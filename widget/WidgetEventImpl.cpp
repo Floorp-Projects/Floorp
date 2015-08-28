@@ -82,7 +82,7 @@ WidgetEvent::HasMouseEventMessage() const
     case eMouseUp:
     case NS_MOUSE_CLICK:
     case NS_MOUSE_DOUBLECLICK:
-    case NS_MOUSE_ENTER_WIDGET:
+    case eMouseEnterIntoWidget:
     case NS_MOUSE_EXIT_WIDGET:
     case NS_MOUSE_ACTIVATE:
     case NS_MOUSE_OVER:

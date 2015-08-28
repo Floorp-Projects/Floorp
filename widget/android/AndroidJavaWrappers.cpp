@@ -837,7 +837,7 @@ AndroidGeckoEvent::MakeMouseEvent(nsIWidget* widget)
                 msg = eMouseMove;
                 break;
             case AndroidMotionEvent::ACTION_HOVER_ENTER:
-                msg = NS_MOUSE_ENTER_WIDGET;
+                msg = eMouseEnterIntoWidget;
                 break;
             case AndroidMotionEvent::ACTION_HOVER_EXIT:
                 msg = NS_MOUSE_EXIT_WIDGET;
