@@ -25,7 +25,7 @@ NS_EVENT_MESSAGE(eKeyDown,              eWindowEventFirst + 33)
 
 NS_EVENT_MESSAGE(eBeforeKeyDown,        eWindowEventFirst + 34)
 NS_EVENT_MESSAGE(eAfterKeyDown,         eWindowEventFirst + 35)
-NS_EVENT_MESSAGE(NS_KEY_BEFORE_UP,      eWindowEventFirst + 36)
+NS_EVENT_MESSAGE(eBeforeKeyUp,          eWindowEventFirst + 36)
 NS_EVENT_MESSAGE(NS_KEY_AFTER_UP,       eWindowEventFirst + 37)
 
 NS_EVENT_MESSAGE(NS_RESIZE_EVENT,       eWindowEventFirst + 60)

@@ -283,7 +283,7 @@ private:
  * "BeforeAfterKeyboardEvent".
  *
  * Event mMessage: eBeforeKeyDown
- *                 NS_KEY_BEFORE_UP
+ *                 eBeforeKeyUp
  *                 eAfterKeyDown
  *                 NS_KEY_AFTER_UP
  ******************************************************************************/
