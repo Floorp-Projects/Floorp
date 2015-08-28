@@ -1003,6 +1003,9 @@ pref("dom.mozPermissionSettings.enabled", true);
 // TCPSocket
 pref("dom.mozTCPSocket.enabled", true);
 
+// Contacts API.
+pref("dom.mozContacts.enabled", true);
+
 // OOP apps.
 pref("dom.ipc.tabs.disabled", true);
 pref("dom.ipc.processCount", 100000);
