@@ -284,13 +284,10 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   bool isFixedOrSticky = (isRootFixedForSubtree || isStickyForSubtree);
 
   // We want to process all the fixed and sticky children of
-  // aTransformedSubtreeRoot. Also, once we do encounter such a child, we don't
-  // need to recurse any deeper because the fixed layers are relative to their
-  // nearest scrollable layer.
+  // aTransformedSubtreeRoot. Once we do encounter such a child, we don't
+  // need to recurse any deeper because the adjustment to the fixed or sticky
+  // layer will apply to its subtree.
   if (!isFixedOrSticky) {
-    // ApplyAsyncContentTransformToTree will call this function again for
-    // nested scrollable layers, so we don't need to recurse if the layer is
-    // scrollable.
     for (Layer* child = aLayer->GetFirstChild(); child; child = child->GetNextSibling()) {
       AlignFixedAndStickyLayers(child, aTransformedSubtreeRoot, aTransformScrollId,
                                 aPreviousTransformForRoot,
