@@ -11,7 +11,7 @@ Services.prefs.setBoolPref(INVERT_PREF, false);
 function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, $, $$, window, PerformanceController } = panel.panelWin;
-  let { OverviewView, DetailsView, JITOptimizationsView, JsCallTreeView, RecordingsView } = panel.panelWin;
+  let { OverviewView, DetailsView, OptimizationsListView, JsCallTreeView, RecordingsView } = panel.panelWin;
 
   let profilerData = { threads: [gThread] }
 
@@ -42,7 +42,7 @@ function* spawnTest() {
   yield checkFrame(3);
 
   let select = once(PerformanceController, EVENTS.RECORDING_SELECTED);
-  let reset = once(JITOptimizationsView, EVENTS.OPTIMIZATIONS_RESET);
+  let reset = once(OptimizationsListView, EVENTS.OPTIMIZATIONS_RESET);
   RecordingsView.selectedIndex = 0;
   yield Promise.all([select, reset]);
   ok(true, "JITOptimizations view correctly reset when switching recordings.");
@@ -67,11 +67,12 @@ function* spawnTest() {
   }
 
   function *checkFrame (frameIndex, expectedOpts=[]) {
+    info(`Checking frame ${frameIndex}`);
     // Click the frame
-    let rendered = once(JITOptimizationsView, EVENTS.OPTIMIZATIONS_RENDERED);
+    let rendered = once(OptimizationsListView, EVENTS.OPTIMIZATIONS_RENDERED);
     mousedown(window, $$(".call-tree-item")[frameIndex]);
     yield rendered;
-    ok(true, "JITOptimizationsView rendered when enabling with the current frame node selected");
+    ok(true, "OptimizationsListView rendered when enabling with the current frame node selected");
 
     let isEmpty = $("#jit-optimizations-view").classList.contains("empty");
     if (expectedOpts.length === 0) {
@@ -85,7 +86,7 @@ function* spawnTest() {
     // share the same frame info
     let frameInfo = expectedOpts[0].opt._testFrameInfo;
 
-    let { $headerName, $headerLine, $headerFile } = JITOptimizationsView;
+    let { $headerName, $headerLine, $headerFile } = OptimizationsListView;
     ok(!$headerName.hidden, "header function name should be shown");
     ok(!$headerLine.hidden, "header line should be shown");
     ok(!$headerFile.hidden, "header file should be shown");
