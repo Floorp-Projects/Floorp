@@ -690,8 +690,8 @@ GroupPos
 ARIAGridCellAccessible::GroupPosition()
 {
   int32_t count = 0, index = 0;
-  Accessible* table = Table()->AsAccessible();
-  if (table && nsCoreUtils::GetUIntAttr(table->GetContent(),
+  TableAccessible* table = Table();
+  if (table && nsCoreUtils::GetUIntAttr(table->AsAccessible()->GetContent(),
                                         nsGkAtoms::aria_colcount, &count) &&
       nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_colindex, &index)) {
     return GroupPos(0, index, count);
