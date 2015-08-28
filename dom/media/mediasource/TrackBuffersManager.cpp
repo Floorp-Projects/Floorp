@@ -97,7 +97,6 @@ TrackBuffersManager::TrackBuffersManager(dom::SourceBufferAttributes* aAttribute
   , mAppendState(AppendState::WAITING_FOR_SEGMENT)
   , mBufferFull(false)
   , mFirstInitializationSegmentReceived(false)
-  , mNewSegmentStarted(false)
   , mActiveTrack(false)
   , mType(aType)
   , mParser(ContainerParser::CreateForMIMEType(aType))
@@ -460,22 +459,27 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
   // 30s is a value chosen as it appears to work with YouTube.
   TimeUnit upperLimit =
     std::max(aPlaybackTime, track.mNextSampleTime) + TimeUnit::FromSeconds(30);
-  uint32_t evictedFramesStartIndex = buffer.Length();
+  lastKeyFrameIndex = buffer.Length();
   for (int32_t i = buffer.Length() - 1; i >= 0; i--) {
     const auto& frame = buffer[i];
-    if (frame->mTime <= upperLimit.ToMicroseconds() || toEvict < 0) {
-      // We've reached a frame that shouldn't be evicted -> Evict after it -> i+1.
-      // Or the previous loop reached the eviction threshold -> Evict from it -> i+1.
-      evictedFramesStartIndex = i + 1;
+    if (frame->mKeyframe) {
+      lastKeyFrameIndex = i;
+      toEvict -= partialEvict;
+      if (toEvict < 0) {
+        break;
+      }
+      partialEvict = 0;
+    }
+    if (frame->mTime <= upperLimit.ToMicroseconds()) {
       break;
     }
-    toEvict -= frame->ComputedSizeOfIncludingThis();
+    partialEvict += frame->ComputedSizeOfIncludingThis();
   }
-  if (evictedFramesStartIndex < buffer.Length()) {
+  if (lastKeyFrameIndex < buffer.Length()) {
     MSE_DEBUG("Step2. Evicting %u bytes from trailing data",
               mSizeSourceBuffer - finalSize);
     CodedFrameRemoval(
-      TimeInterval(TimeUnit::FromMicroseconds(buffer[evictedFramesStartIndex]->mTime),
+      TimeInterval(TimeUnit::FromMicroseconds(buffer[lastKeyFrameIndex]->GetEndTime() + 1),
                    TimeUnit::FromInfinity()));
   }
 }
@@ -656,12 +660,10 @@ TrackBuffersManager::SegmentParserLoop()
           // This is a new initialization segment. Obsolete the old one.
           RecreateParser(false);
         }
-        mNewSegmentStarted = true;
         continue;
       }
       if (mParser->IsMediaSegmentPresent(mInputBuffer)) {
         SetAppendState(AppendState::PARSING_MEDIA_SEGMENT);
-        mNewSegmentStarted = true;
         continue;
       }
       // We have neither an init segment nor a media segment, this is either
@@ -672,7 +674,7 @@ TrackBuffersManager::SegmentParserLoop()
     }
 
     int64_t start, end;
-    bool newData = mParser->ParseStartAndEndTimestamps(mInputBuffer, start, end);
+    mParser->ParseStartAndEndTimestamps(mInputBuffer, start, end);
     mProcessedInput += mInputBuffer->Length();
 
     // 5. If the append state equals PARSING_INIT_SEGMENT, then run the
@@ -699,22 +701,6 @@ TrackBuffersManager::SegmentParserLoop()
         NeedMoreData();
         return;
       }
-
-      // We can't feed some demuxers (WebMDemuxer) with data that do not have
-      // monotonizally increasing timestamps. So we check if we have a
-      // discontinuity from the previous segment parsed.
-      // If so, recreate a new demuxer to ensure that the demuxer is only fed
-      // monotonically increasing data.
-      if (newData) {
-        if (mNewSegmentStarted && mLastParsedEndTime.isSome() &&
-            start < mLastParsedEndTime.ref().ToMicroseconds()) {
-          ResetDemuxingState();
-          return;
-        }
-        mNewSegmentStarted = false;
-        mLastParsedEndTime = Some(TimeUnit::FromMicroseconds(end));
-      }
-
       // 3. If the input buffer contains one or more complete coded frames, then run the coded frame processing algorithm.
       nsRefPtr<TrackBuffersManager> self = this;
       mProcessingRequest.Begin(CodedFrameProcessing()
@@ -775,7 +761,6 @@ TrackBuffersManager::ShutdownDemuxers()
     mAudioTracks.mDemuxer = nullptr;
   }
   mInputDemuxer = nullptr;
-  mLastParsedEndTime.reset();
 }
 
 void
@@ -785,7 +770,7 @@ TrackBuffersManager::CreateDemuxerforMIMEType()
 
 #ifdef MOZ_WEBM
   if (mType.LowerCaseEqualsLiteral("video/webm") || mType.LowerCaseEqualsLiteral("audio/webm")) {
-    mInputDemuxer = new WebMDemuxer(mCurrentInputBuffer, true /* IsMediaSource*/ );
+    mInputDemuxer = new WebMDemuxer(mCurrentInputBuffer);
     return;
   }
 #endif
@@ -798,58 +783,6 @@ TrackBuffersManager::CreateDemuxerforMIMEType()
 #endif
   NS_WARNING("Not supported (yet)");
   return;
-}
-
-// We reset the demuxer by creating a new one and initializing it.
-void
-TrackBuffersManager::ResetDemuxingState()
-{
-  MOZ_ASSERT(mParser && mParser->HasInitData());
-  RecreateParser(true);
-  mCurrentInputBuffer = new SourceBufferResource(mType);
-  // The demuxer isn't initialized yet ; we don't want to notify it
-  // that data has been appended yet ; so we simply append the init segment
-  // to the resource.
-  mCurrentInputBuffer->AppendData(mParser->InitData());
-  CreateDemuxerforMIMEType();
-  if (!mInputDemuxer) {
-    RejectAppend(NS_ERROR_FAILURE, __func__);
-    return;
-  }
-  mDemuxerInitRequest.Begin(mInputDemuxer->Init()
-                      ->Then(GetTaskQueue(), __func__,
-                             this,
-                             &TrackBuffersManager::OnDemuxerResetDone,
-                             &TrackBuffersManager::OnDemuxerInitFailed));
-}
-
-void
-TrackBuffersManager::OnDemuxerResetDone(nsresult)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MSE_DEBUG("mAbort:%d", static_cast<bool>(mAbort));
-  mDemuxerInitRequest.Complete();
-  if (mAbort) {
-    RejectAppend(NS_ERROR_ABORT, __func__);
-    return;
-  }
-
-  // Recreate track demuxers.
-  uint32_t numVideos = mInputDemuxer->GetNumberTracks(TrackInfo::kVideoTrack);
-  if (numVideos) {
-    // We currently only handle the first video track.
-    mVideoTracks.mDemuxer = mInputDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
-    MOZ_ASSERT(mVideoTracks.mDemuxer);
-  }
-
-  uint32_t numAudios = mInputDemuxer->GetNumberTracks(TrackInfo::kAudioTrack);
-  if (numAudios) {
-    // We currently only handle the first audio track.
-    mAudioTracks.mDemuxer = mInputDemuxer->GetTrackDemuxer(TrackInfo::kAudioTrack, 0);
-    MOZ_ASSERT(mAudioTracks.mDemuxer);
-  }
-
-  SegmentParserLoop();
 }
 
 void
@@ -1050,13 +983,6 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
     // 6. Set first initialization segment received flag to true.
     mFirstInitializationSegmentReceived = true;
   } else {
-    // Check that audio configuration hasn't changed as this is something
-    // we do not support yet (bug 1185827).
-    if (mAudioTracks.mNumTracks &&
-        (info.mAudio.mChannels != mAudioTracks.mInfo->GetAsAudioInfo()->mChannels ||
-         info.mAudio.mRate != mAudioTracks.mInfo->GetAsAudioInfo()->mRate)) {
-      RejectAppend(NS_ERROR_FAILURE, __func__);
-    }
     mAudioTracks.mLastInfo = new SharedTrackInfo(info.mAudio, streamID);
     mVideoTracks.mLastInfo = new SharedTrackInfo(info.mVideo, streamID);
   }
@@ -1128,14 +1054,6 @@ TrackBuffersManager::CodedFrameProcessing()
     // The mediaRange is offset by the init segment position previously added.
     uint32_t length =
       mediaRange.mEnd - (mProcessedInput - mInputBuffer->Length());
-    if (!length) {
-      // We've completed our earlier media segment and no new data is to be
-      // processed. This happens with some containers that can't detect that a
-      // media segment is ending until a new one starts.
-      nsRefPtr<CodedFrameProcessingPromise> p = mProcessingPromise.Ensure(__func__);
-      CompleteCodedFrameProcessing();
-      return p;
-    }
     nsRefPtr<MediaByteBuffer> segment = new MediaByteBuffer;
     if (!segment->AppendElements(mInputBuffer->Elements(), length, fallible)) {
       return CodedFrameProcessingPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
@@ -1701,6 +1619,8 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
     }
     aTrackData.mSizeBuffer -= sample->ComputedSizeOfIncludingThis();
   }
+
+  removedIntervals.SetFuzz(TimeUnit::FromMicroseconds(maxSampleDuration));
 
   MSE_DEBUG("Removing frames from:%u (frames:%u) ([%f, %f))",
             firstRemovedIndex.ref(),

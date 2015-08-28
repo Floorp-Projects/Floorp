@@ -381,10 +381,6 @@ nsresult MediaCodecDataDecoder::InitDecoder(Surface::Param aSurface)
 #define HANDLE_DECODER_ERROR() \
   if (NS_FAILED(res)) { \
     NS_WARNING("exiting decoder loop due to exception"); \
-    if (mDraining) { \
-      ENVOKE_CALLBACK(DrainComplete); \
-      mDraining = false; \
-    } \
     ENVOKE_CALLBACK(Error); \
     break; \
   }

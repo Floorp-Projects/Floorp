@@ -308,10 +308,14 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
   }
   switch (aError.Value()) {
   case MediaSourceEndOfStreamError::Network:
-    mDecoder->NetworkError();
+    // TODO: If media element has a readyState of:
+    //   HAVE_NOTHING -> run resource fetch algorithm
+    // > HAVE_NOTHING -> run "interrupted" steps of resource fetch
     break;
   case MediaSourceEndOfStreamError::Decode:
-    mDecoder->DecodeError();
+    // TODO: If media element has a readyState of:
+    //   HAVE_NOTHING -> run "unsupported" steps of resource fetch
+    // > HAVE_NOTHING -> run "corrupted" steps of resource fetch
     break;
   default:
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
