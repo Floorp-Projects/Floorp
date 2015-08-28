@@ -13,7 +13,7 @@ NS_EVENT_MESSAGE(eVoidEvent,            0)
 
 // This is a dummy event message for all event listener implementation in
 // EventListenerManager.
-NS_EVENT_MESSAGE(NS_EVENT_ALL,          1)
+NS_EVENT_MESSAGE(eAllEvents,            1)
 
 NS_EVENT_MESSAGE(NS_WINDOW_START,       100)
 // Widget may be destroyed
