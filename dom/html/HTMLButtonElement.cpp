@@ -283,7 +283,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
   if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
     switch (aVisitor.mEvent->mMessage) {
       case eKeyPress:
-      case NS_KEY_UP:
+      case eKeyUp:
         {
           // For backwards compat, trigger buttons with space or enter
           // (bug 25300)
@@ -291,7 +291,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
           if ((keyEvent->keyCode == NS_VK_RETURN &&
                eKeyPress == aVisitor.mEvent->mMessage) ||
               (keyEvent->keyCode == NS_VK_SPACE &&
-               NS_KEY_UP == aVisitor.mEvent->mMessage)) {
+               eKeyUp == aVisitor.mEvent->mMessage)) {
             nsEventStatus status = nsEventStatus_eIgnore;
 
             WidgetMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,

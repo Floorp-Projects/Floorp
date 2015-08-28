@@ -397,7 +397,7 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       return KeyDown(keyEvent);
     }
     // keyup
-    case NS_KEY_UP: {
+    case eKeyUp: {
       nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
       return KeyUp(keyEvent);
     }

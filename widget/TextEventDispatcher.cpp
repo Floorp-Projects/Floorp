@@ -319,7 +319,7 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
                        DispatchTo aDispatchTo,
                        uint32_t aIndexOfKeypress)
 {
-  MOZ_ASSERT(aMessage == NS_KEY_DOWN || aMessage == NS_KEY_UP ||
+  MOZ_ASSERT(aMessage == NS_KEY_DOWN || aMessage == eKeyUp ||
              aMessage == eKeyPress, "Invalid aMessage value");
   nsresult rv = GetState();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -356,9 +356,9 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
   }
 
   // Corrects each member for the specific key event type.
-  if (aMessage == NS_KEY_DOWN || aMessage == NS_KEY_UP) {
+  if (aMessage == NS_KEY_DOWN || aMessage == eKeyUp) {
     MOZ_ASSERT(!aIndexOfKeypress,
-      "aIndexOfKeypress must be 0 for either NS_KEY_DOWN or NS_KEY_UP");
+      "aIndexOfKeypress must be 0 for either NS_KEY_DOWN or eKeyUp");
     // charCode of keydown and keyup should be 0.
     keyEvent.charCode = 0;
   } else if (keyEvent.mKeyNameIndex != KEY_NAME_INDEX_USE_STRING) {
@@ -381,7 +381,7 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
       keyEvent.mKeyValue.Truncate();
     }
   }
-  if (aMessage == NS_KEY_UP) {
+  if (aMessage == eKeyUp) {
     // mIsRepeat of keyup event must be false.
     keyEvent.mIsRepeat = false;
   }
