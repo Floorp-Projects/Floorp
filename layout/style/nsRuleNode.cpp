@@ -2754,6 +2754,14 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     /* We can't be cached in the rule node.  We have to be put right */       \
     /* on the style context. */                                               \
     aContext->SetStyle(eStyleStruct_##type_, data_);                          \
+    if (aContext->GetParent()) {                                              \
+      /* This is pessimistic; we could be uncacheable because we had a */     \
+      /* relative font-weight, for example, which does not need to defeat */  \
+      /* the restyle optimizations in RestyleManager.cpp that look at */      \
+      /* NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE. */                         \
+      aContext->GetParent()->                                                 \
+        AddStyleBit(NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE);                \
+    }                                                                         \
   }                                                                           \
                                                                               \
   return data_;
