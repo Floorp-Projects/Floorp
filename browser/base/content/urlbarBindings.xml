@@ -1010,6 +1010,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                .supportsSelectionClipboard())
           return;
 
+        if (!window.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindowUtils)
+                   .isHandlingUserInput)
+          return;
+
         var val = this._getSelectedValueForClipboard();
         if (!val)
           return;
