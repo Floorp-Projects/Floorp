@@ -15,39 +15,39 @@ NS_EVENT_MESSAGE(eVoidEvent,            0)
 // EventListenerManager.
 NS_EVENT_MESSAGE(eAllEvents,            1)
 
-NS_EVENT_MESSAGE(NS_WINDOW_START,       100)
+NS_EVENT_MESSAGE(eWindowEventFirst,     100)
 // Widget may be destroyed
-NS_EVENT_MESSAGE(NS_XUL_CLOSE,          NS_WINDOW_START + 1)
+NS_EVENT_MESSAGE(NS_XUL_CLOSE,          eWindowEventFirst + 1)
 
-NS_EVENT_MESSAGE(NS_KEY_PRESS,          NS_WINDOW_START + 31)
-NS_EVENT_MESSAGE(NS_KEY_UP,             NS_WINDOW_START + 32)
-NS_EVENT_MESSAGE(NS_KEY_DOWN,           NS_WINDOW_START + 33)
+NS_EVENT_MESSAGE(NS_KEY_PRESS,          eWindowEventFirst + 31)
+NS_EVENT_MESSAGE(NS_KEY_UP,             eWindowEventFirst + 32)
+NS_EVENT_MESSAGE(NS_KEY_DOWN,           eWindowEventFirst + 33)
 
-NS_EVENT_MESSAGE(NS_KEY_BEFORE_DOWN,    NS_WINDOW_START + 34)
-NS_EVENT_MESSAGE(NS_KEY_AFTER_DOWN,     NS_WINDOW_START + 35)
-NS_EVENT_MESSAGE(NS_KEY_BEFORE_UP,      NS_WINDOW_START + 36)
-NS_EVENT_MESSAGE(NS_KEY_AFTER_UP,       NS_WINDOW_START + 37)
+NS_EVENT_MESSAGE(NS_KEY_BEFORE_DOWN,    eWindowEventFirst + 34)
+NS_EVENT_MESSAGE(NS_KEY_AFTER_DOWN,     eWindowEventFirst + 35)
+NS_EVENT_MESSAGE(NS_KEY_BEFORE_UP,      eWindowEventFirst + 36)
+NS_EVENT_MESSAGE(NS_KEY_AFTER_UP,       eWindowEventFirst + 37)
 
-NS_EVENT_MESSAGE(NS_RESIZE_EVENT,       NS_WINDOW_START + 60)
-NS_EVENT_MESSAGE(NS_SCROLL_EVENT,       NS_WINDOW_START + 61)
+NS_EVENT_MESSAGE(NS_RESIZE_EVENT,       eWindowEventFirst + 60)
+NS_EVENT_MESSAGE(NS_SCROLL_EVENT,       eWindowEventFirst + 61)
 
 // A plugin was clicked or otherwise focused. NS_PLUGIN_ACTIVATE should be
 // used when the window is not active. NS_PLUGIN_FOCUS should be used when
 // the window is active. In the latter case, the dispatcher of the event
 // is expected to ensure that the plugin's widget is focused beforehand.
-NS_EVENT_MESSAGE(NS_PLUGIN_ACTIVATE,    NS_WINDOW_START + 62)
-NS_EVENT_MESSAGE(NS_PLUGIN_FOCUS,       NS_WINDOW_START + 63)
+NS_EVENT_MESSAGE(NS_PLUGIN_ACTIVATE,    eWindowEventFirst + 62)
+NS_EVENT_MESSAGE(NS_PLUGIN_FOCUS,       eWindowEventFirst + 63)
 
-NS_EVENT_MESSAGE(NS_OFFLINE,            NS_WINDOW_START + 64)
-NS_EVENT_MESSAGE(NS_ONLINE,             NS_WINDOW_START + 65)
+NS_EVENT_MESSAGE(NS_OFFLINE,            eWindowEventFirst + 64)
+NS_EVENT_MESSAGE(NS_ONLINE,             eWindowEventFirst + 65)
 
-// NS_BEFORERESIZE_EVENT used to be here (NS_WINDOW_START + 66)
+// NS_BEFORERESIZE_EVENT used to be here (eWindowEventFirst + 66)
 
 // Indicates that the user is either idle or active
-NS_EVENT_MESSAGE(NS_MOZ_USER_IDLE,      NS_WINDOW_START + 67)
-NS_EVENT_MESSAGE(NS_MOZ_USER_ACTIVE,    NS_WINDOW_START + 68)
+NS_EVENT_MESSAGE(NS_MOZ_USER_IDLE,      eWindowEventFirst + 67)
+NS_EVENT_MESSAGE(NS_MOZ_USER_ACTIVE,    eWindowEventFirst + 68)
 
-NS_EVENT_MESSAGE(NS_LANGUAGECHANGE,     NS_WINDOW_START + 70)
+NS_EVENT_MESSAGE(NS_LANGUAGECHANGE,     eWindowEventFirst + 70)
 
 NS_EVENT_MESSAGE(NS_MOUSE_MESSAGE_START, 300)
 NS_EVENT_MESSAGE(NS_MOUSE_MOVE,         NS_MOUSE_MESSAGE_START)
