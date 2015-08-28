@@ -754,7 +754,7 @@ nsViewManager::DispatchEvent(WidgetGUIEvent *aEvent,
        // Ignore mouse exit and enter (we'll get moves if the user
        // is really moving the mouse) since we get them when we
        // create and destroy widgets.
-       mouseEvent->mMessage != NS_MOUSE_EXIT_WIDGET &&
+       mouseEvent->mMessage != eMouseExitFromWidget &&
        mouseEvent->mMessage != eMouseEnterIntoWidget) ||
       aEvent->HasKeyEventMessage() ||
       aEvent->HasIMEEventMessage() ||

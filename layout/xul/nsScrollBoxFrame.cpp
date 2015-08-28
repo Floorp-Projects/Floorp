@@ -95,7 +95,7 @@ nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
       }
       break;
 
-    case NS_MOUSE_EXIT_WIDGET:
+    case eMouseExitFromWidget:
     case NS_MOUSE_OUT:
       // always stop on mouse exit
       StopRepeat();
