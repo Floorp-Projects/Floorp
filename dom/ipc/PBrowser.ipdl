@@ -634,6 +634,14 @@ child:
      * they are 'compressed' by dumping the oldest one.
      */
     RealMouseMoveEvent(WidgetMouseEvent event) compress;
+    /**
+     * Mouse move events with |reason == eSynthesized| are sent via a separate
+     * message because they do not generate DOM 'mousemove' events, and the
+     * 'compress' attribute on RealMouseMoveEvent() could result in a
+     * |reason == eReal| event being dropped in favour of an |eSynthesized|
+     * event, and thus a DOM 'mousemove' event to be lost.
+     */
+    SynthMouseMoveEvent(WidgetMouseEvent event);
     RealMouseButtonEvent(WidgetMouseEvent event);
     RealKeyEvent(WidgetKeyboardEvent event, MaybeNativeKeyBinding keyBinding);
     MouseWheelEvent(WidgetWheelEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);

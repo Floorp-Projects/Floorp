@@ -210,10 +210,15 @@ nsChromeRegistryContent::CheckForNewChrome()
 }
 
 NS_IMETHODIMP
-nsChromeRegistryContent::IsLocaleRTL(const nsACString& package,
+nsChromeRegistryContent::IsLocaleRTL(const nsACString& aPackage,
                                      bool *aResult)
 {
-  CONTENT_NOT_IMPLEMENTED();
+  if (aPackage != nsDependentCString("global")) {
+    NS_ERROR("Packages other than global unavailable");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aResult = GetDirectionForLocale(mLocale);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

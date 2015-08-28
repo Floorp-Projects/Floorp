@@ -29,8 +29,10 @@ const CHAR_CODE_0 = "0".charCodeAt(0);
 const CHAR_CODE_9 = "9".charCodeAt(0);
 
 const CHAR_CODE_LPAREN = "(".charCodeAt(0);
+const CHAR_CODE_RPAREN = ")".charCodeAt(0);
 const CHAR_CODE_COLON = ":".charCodeAt(0);
 const CHAR_CODE_SLASH = "/".charCodeAt(0);
+const CHAR_CODE_SPACE = " ".charCodeAt(0);
 
 // The cache used in the `nsIURL` function.
 const gNSURLStore = new Map();
@@ -51,77 +53,95 @@ function parseLocation(location, fallbackLine, fallbackColumn) {
   let line, column, url;
 
   // These two indices are used to extract the resource substring, which is
-  // location[firstParenIndex + 1 .. lineAndColumnIndex].
+  // location[parenIndex + 1 .. lineAndColumnIndex].
   //
-  // The resource substring is extracted iff a line number was found. There
-  // may be no parentheses, in which case the substring starts at 0.
+  // There are 3 variants of location strings in the profiler (with optional
+  // column numbers):
+  //   1) "name (resource:line)"
+  //   2) "resource:line"
+  //   3) "resource"
   //
-  // For example, take "foo (bar.js:1)".
-  //                        ^      ^
-  //                        |      -----+
-  //                        +-------+   |
-  //                                |   |
-  // firstParenIndex will point to -+   |
-  //                                    |
-  // lineAndColumnIndex will point to --+
+  // For example for (1), take "foo (bar.js:1)".
+  //                                ^      ^
+  //                                |      |
+  //                                |      |
+  //                                |      |
+  // parenIndex will point to ------+      |
+  //                                       |
+  // lineAndColumnIndex will point to -----+
   //
   // For an example without parentheses, take "bar.js:2".
   //                                          ^      ^
   //                                          |      |
-  // firstParenIndex will point to -----------+      |
+  // parenIndex will point to ----------------+      |
   //                                                 |
   // lineAndColumIndex will point to ----------------+
-  let firstParenIndex = -1;
+  //
+  // To parse, we look for the last occurrence of the string ' ('.
+  //
+  // For 1), all occurrences of space ' ' characters in the resource string
+  // are urlencoded, so the last occurrence of ' (' is the separator between
+  // the function name and the resource.
+  //
+  // For 2) and 3), there can be no occurences of ' (' since ' ' characters
+  // are urlencoded in the resource string.
+  //
+  // XXX: Note that 3) is ambiguous with SPS marker locations like
+  // "EnterJIT". We can't distinguish the two, so we treat 3) like a function
+  // name.
+  let parenIndex = -1;
   let lineAndColumnIndex = -1;
 
-  // Compute firstParenIndex and lineAndColumnIndex. If lineAndColumnIndex is
-  // found, also extract the line and column.
-  for (let i = 0; i < location.length; i++) {
-    let c = location.charCodeAt(i);
+  let lastCharCode = location.charCodeAt(location.length - 1);
+  let i;
+  if (lastCharCode === CHAR_CODE_RPAREN) {
+    // Case 1)
+    i = location.length - 2;
+  } else if (isNumeric(lastCharCode)) {
+    // Case 2)
+    i = location.length - 1;
+  } else {
+    // Case 3)
+    i = 0;
+  }
 
-    // The url and line information might be inside parentheses.
-    if (c === CHAR_CODE_LPAREN) {
-      if (firstParenIndex < 0) {
-        firstParenIndex = i;
-      }
-      continue;
+  if (i !== 0) {
+    // Look for a :number.
+    let end = i;
+    while (isNumeric(location.charCodeAt(i))) {
+      i--;
+    }
+    if (location.charCodeAt(i) === CHAR_CODE_COLON) {
+      column = location.substr(i + 1, end - i);
+      i--;
     }
 
-    // Look for numbers after colons, twice. Firstly for the line, secondly
-    // for the column.
-    if (c === CHAR_CODE_COLON) {
-      if (isNumeric(location.charCodeAt(i + 1))) {
-        // If we found a line number, remember when it starts.
-        if (lineAndColumnIndex < 0) {
-          lineAndColumnIndex = i;
-        }
+    // Look for a preceding :number.
+    end = i;
+    while (isNumeric(location.charCodeAt(i))) {
+      i--;
+    }
 
-        let start = ++i;
-        let length = 1;
-        while (isNumeric(location.charCodeAt(++i))) {
-          length++;
-        }
+    // If two were found, the first is the line and the second is the
+    // column. If only a single :number was found, then it is the line number.
+    if (location.charCodeAt(i) === CHAR_CODE_COLON) {
+      line = location.substr(i + 1, end - i);
+      lineAndColumnIndex = i;
+      i--;
+    } else {
+      lineAndColumnIndex = i + 1;
+      line = column;
+      column = undefined;
+    }
+  }
 
-        // Discard port numbers
-        if (location.charCodeAt(i) === CHAR_CODE_SLASH) {
-          lineAndColumnIndex = -1;
-          --i;
-          continue;
-        }
-
-        if (!line) {
-          line = location.substr(start, length);
-
-          // Unwind a character due to the isNumeric loop above.
-          --i;
-
-          // There still might be a column number, continue looking.
-          continue;
-        }
-
-        column = location.substr(start, length);
-
-        // We've gotten both a line and a column, stop looking.
+  // Look for the last occurrence of ' (' in case 1).
+  if (lastCharCode === CHAR_CODE_RPAREN) {
+    for (; i >= 0; i--) {
+      if (location.charCodeAt(i) === CHAR_CODE_LPAREN &&
+          i > 0 &&
+          location.charCodeAt(i - 1) === CHAR_CODE_SPACE) {
+        parenIndex = i;
         break;
       }
     }
@@ -129,7 +149,7 @@ function parseLocation(location, fallbackLine, fallbackColumn) {
 
   let uri;
   if (lineAndColumnIndex > 0) {
-    let resource = location.substring(firstParenIndex + 1, lineAndColumnIndex);
+    let resource = location.substring(parenIndex + 1, lineAndColumnIndex);
     url = resource.split(" -> ").pop();
     if (url) {
       uri = nsIURL(url);
@@ -142,7 +162,7 @@ function parseLocation(location, fallbackLine, fallbackColumn) {
 
   // If the URI digged out from the `location` is valid, this is a JS frame.
   if (uri) {
-    functionName = location.substring(0, firstParenIndex - 1);
+    functionName = location.substring(0, parenIndex - 1);
     fileName = uri.fileName || "/";
     hostName = getHost(url, uri.host);
     // nsIURL throws when accessing a piece of a URL that doesn't
@@ -177,35 +197,46 @@ function computeIsContentAndCategory(frame) {
 
   let location = frame.location;
 
-  // Locations in frames with function names look like:
-  //   "functionName (foo://bar)".
-  // Look for the starting left parenthesis, then try to match a
-  // scheme name.
-  for (let i = 0; i < location.length; i++) {
-    if (location.charCodeAt(i) === CHAR_CODE_LPAREN) {
-      if (isContentScheme(location, i + 1)) {
-        frame.isContent = true;
-        return;
+  // There are 3 variants of location strings in the profiler (with optional
+  // column numbers):
+  //   1) "name (resource:line)"
+  //   2) "resource:line"
+  //   3) "resource"
+  let lastCharCode = location.charCodeAt(location.length - 1);
+  let schemeStartIndex = -1;
+  if (lastCharCode === CHAR_CODE_RPAREN) {
+    // Case 1)
+    //
+    // Need to search for the last occurrence of ' (' to find the start of the
+    // resource string.
+    for (let i = location.length - 2; i >= 0; i--) {
+      if (location.charCodeAt(i) === CHAR_CODE_LPAREN &&
+          i > 0 &&
+          location.charCodeAt(i - 1) === CHAR_CODE_SPACE) {
+        schemeStartIndex = i + 1;
+        break;
       }
-
-      for (let j = i + 1; j < location.length; j++) {
-        if (location.charCodeAt(j) === CHAR_CODE_R &&
-            isChromeScheme(location, j) &&
-            (location.indexOf("resource://gre/modules/devtools") !== -1 ||
-             location.indexOf("resource:///modules/devtools") !== -1)) {
-          frame.category = global.CATEGORY_DEVTOOLS;
-          return;
-        }
-      }
-
-      break;
     }
+  } else {
+    // Cases 2) and 3)
+    schemeStartIndex = 0;
   }
 
-  // If there was no left parenthesis, try matching from the start.
-  if (isContentScheme(location, 0)) {
+  if (isContentScheme(location, schemeStartIndex)) {
     frame.isContent = true;
     return;
+  }
+
+  if (schemeStartIndex !== 0) {
+    for (let j = schemeStartIndex; j < location.length; j++) {
+      if (location.charCodeAt(j) === CHAR_CODE_R &&
+          isChromeScheme(location, j) &&
+          (location.indexOf("resource://gre/modules/devtools") !== -1 ||
+           location.indexOf("resource:///modules/devtools") !== -1)) {
+        frame.category = global.CATEGORY_DEVTOOLS;
+        return;
+      }
+    }
   }
 
   if (location === "EnterJIT") {
