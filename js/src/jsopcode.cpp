@@ -1741,13 +1741,12 @@ js::GetPCCountScriptSummary(JSContext* cx, size_t index)
         }
     }
 
-    double total = 0.0;
+    uint64_t total = 0;
 
     jsbytecode* codeEnd = script->codeEnd();
     for (jsbytecode* pc = script->code(); pc < codeEnd; pc = GetNextPc(pc)) {
         PCCounts& counts = sac.getPCCounts(pc);
-        double value = counts.numExec();
-        total += value;
+        total += counts.numExec();
     }
 
     AppendJSONProperty(buf, "totals");
