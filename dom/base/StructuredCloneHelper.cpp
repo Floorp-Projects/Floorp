@@ -277,6 +277,7 @@ StructuredCloneHelper::Read(nsISupports* aParent,
   // If we are tranferring something, we cannot call 'Read()' more than once.
   if (mSupportsTransferring) {
     mBlobImplArray.Clear();
+    mClonedImages.Clear();
     Shutdown();
   }
 }
@@ -433,7 +434,7 @@ ReadBlob(JSContext* aCx,
 {
   MOZ_ASSERT(aHelper);
   MOZ_ASSERT(aIndex < aHelper->BlobImpls().Length());
-  nsRefPtr<BlobImpl> blobImpl =  aHelper->BlobImpls()[aIndex];
+  nsRefPtr<BlobImpl> blobImpl = aHelper->BlobImpls()[aIndex];
 
   blobImpl = EnsureBlobForBackgroundManager(blobImpl);
   MOZ_ASSERT(blobImpl);
@@ -507,6 +508,9 @@ ReadFileList(JSContext* aCx,
       nsRefPtr<BlobImpl> blobImpl = aHelper->BlobImpls()[index];
       MOZ_ASSERT(blobImpl->IsFile());
 
+      blobImpl = EnsureBlobForBackgroundManager(blobImpl);
+      MOZ_ASSERT(blobImpl);
+
       nsRefPtr<File> file = File::Create(aHelper->ParentDuringRead(), blobImpl);
       if (!fileList->Append(file)) {
         return nullptr;
@@ -544,7 +548,11 @@ WriteFileList(JSStructuredCloneWriter* aWriter,
   }
 
   for (uint32_t i = 0; i < aFileList->Length(); ++i) {
-    aHelper->BlobImpls().AppendElement(aFileList->Item(i)->Impl());
+    nsRefPtr<BlobImpl> blobImpl =
+      EnsureBlobForBackgroundManager(aFileList->Item(i)->Impl());
+    MOZ_ASSERT(blobImpl);
+
+    aHelper->BlobImpls().AppendElement(blobImpl);
   }
 
   return true;
