@@ -3028,7 +3028,7 @@ HTMLInputElement::NeedToInitializeEditorForEvent(
   switch (aVisitor.mEvent->mMessage) {
   case eMouseMove:
   case eMouseEnterIntoWidget:
-  case NS_MOUSE_EXIT_WIDGET:
+  case eMouseExitFromWidget:
   case NS_MOUSE_OVER:
   case NS_MOUSE_OUT:
   case NS_SCROLLPORT_UNDERFLOW:

@@ -384,7 +384,7 @@ nsWindow::Show(bool aState)
         // XXX should we bring this to the front when it's shown,
         // if it's a toplevel widget?
 
-        // XXX we should synthesize a NS_MOUSE_EXIT_WIDGET (for old top
+        // XXX we should synthesize a eMouseExitFromWidget (for old top
         // window)/eMouseEnterIntoWidget (for new top window) since we need
         // to pretend that the top window always has focus.  Not sure
         // if Show() is the right place to do this, though.

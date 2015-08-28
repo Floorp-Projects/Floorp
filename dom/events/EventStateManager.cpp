@@ -500,7 +500,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   if (aEvent->mFlags.mIsTrusted &&
       ((mouseEvent && mouseEvent->IsReal() &&
         mouseEvent->mMessage != eMouseEnterIntoWidget &&
-        mouseEvent->mMessage != NS_MOUSE_EXIT_WIDGET) ||
+        mouseEvent->mMessage != eMouseExitFromWidget) ||
        aEvent->mClass == eWheelEventClass ||
        aEvent->mClass == eKeyboardEventClass)) {
     if (gMouseOrKeyboardEventCounter == 0) {
@@ -592,14 +592,15 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     // suppress sending accidental event from widget code.
     aEvent->mFlags.mNoCrossProcessBoundaryForwarding = true;
     break;
-  case NS_MOUSE_EXIT_WIDGET:
-    // If this is a remote frame, we receive NS_MOUSE_EXIT_WIDGET from the parent
-    // the mouse exits our content. Since the parent may update the cursor
-    // while the mouse is outside our frame, and since PuppetWidget caches the
-    // current cursor internally, re-entering our content (say from over a
-    // window edge) wont update the cursor if the cached value and the current
-    // cursor match. So when the mouse exits a remote frame, clear the cached
-    // widget cursor so a proper update will occur when the mouse re-enters.
+  case eMouseExitFromWidget:
+    // If this is a remote frame, we receive eMouseExitFromWidget from the
+    // parent the mouse exits our content. Since the parent may update the
+    // cursor while the mouse is outside our frame, and since PuppetWidget
+    // caches the current cursor internally, re-entering our content (say from
+    // over a window edge) wont update the cursor if the cached value and the
+    // current cursor match. So when the mouse exits a remote frame, clear the
+    // cached widget cursor so a proper update will occur when the mouse
+    // re-enters.
     if (XRE_IsContentProcess()) {
       ClearCachedWidgetCursor(mCurrentTarget);
     }
@@ -1175,7 +1176,7 @@ CrossProcessSafeEvent(const WidgetEvent& aEvent)
     case eMouseMove:
     case NS_CONTEXTMENU:
     case eMouseEnterIntoWidget:
-    case NS_MOUSE_EXIT_WIDGET:
+    case eMouseExitFromWidget:
       return true;
     default:
       return false;
@@ -3791,7 +3792,7 @@ EventStateManager::DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
       if (aMessage == NS_MOUSE_OUT) {
         // For remote content, send a "top-level" widget mouse exit event.
         nsAutoPtr<WidgetMouseEvent> remoteEvent;
-        CreateMouseOrPointerWidgetEvent(aMouseEvent, NS_MOUSE_EXIT_WIDGET,
+        CreateMouseOrPointerWidgetEvent(aMouseEvent, eMouseExitFromWidget,
                                         aRelatedContent, remoteEvent);
         remoteEvent->exit = WidgetMouseEvent::eTopLevel;
 
@@ -4166,7 +4167,7 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
     break;
   case NS_POINTER_LEAVE:
   case NS_POINTER_CANCEL:
-  case NS_MOUSE_EXIT_WIDGET:
+  case eMouseExitFromWidget:
     {
       // This is actually the window mouse exit or pointer leave event. We're not moving
       // into any new element.
