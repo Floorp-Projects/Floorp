@@ -6,7 +6,7 @@ use hyper::method::Method::{Get, Post, Delete};
 use command::{WebDriverMessage};
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
 
-static ROUTES: [(Method, &'static str, Route); 47] = [
+static ROUTES: [(Method, &'static str, Route); 56] = [
     (Post, "/session", Route::NewSession),
     (Delete, "/session/{sessionId}", Route::DeleteSession),
     (Post, "/session/{sessionId}/url", Route::Get),
@@ -15,9 +15,9 @@ static ROUTES: [(Method, &'static str, Route); 47] = [
     (Post, "/session/{sessionId}/forward", Route::GoForward),
     (Post, "/session/{sessionId}/refresh", Route::Refresh),
     (Get, "/session/{sessionId}/title", Route::GetTitle),
-    (Get, "/session/{sessionId}/window_handle", Route::GetWindowHandle),
-    (Get, "/session/{sessionId}/window_handles", Route::GetWindowHandles),
-    (Delete, "/session/{sessionId}/window_handle", Route::Close),
+    (Get, "/session/{sessionId}/window", Route::GetWindowHandle),
+    (Get, "/session/{sessionId}/window/handles", Route::GetWindowHandles),
+    (Delete, "/session/{sessionId}/window", Route::Close),
     (Post, "/session/{sessionId}/window/size", Route::SetWindowSize),
     (Get, "/session/{sessionId}/window/size", Route::GetWindowSize),
     (Post, "/session/{sessionId}/window/maximize", Route::MaximizeWindow),
@@ -37,8 +37,8 @@ static ROUTES: [(Method, &'static str, Route); 47] = [
     (Get, "/session/{sessionId}/element/{elementId}/name", Route::GetElementTagName),
     (Get, "/session/{sessionId}/element/{elementId}/rect", Route::GetElementRect),
     (Get, "/session/{sessionId}/element/{elementId}/enabled", Route::IsEnabled),
-    (Post, "/session/{sessionId}/execute", Route::ExecuteScript),
-    (Post, "/session/{sessionId}/execute_async", Route::ExecuteAsyncScript),
+    (Post, "/session/{sessionId}/execute/sync", Route::ExecuteScript),
+    (Post, "/session/{sessionId}/execute/async", Route::ExecuteAsyncScript),
     (Get, "/session/{sessionId}/cookie", Route::GetCookies),
     (Get, "/session/{sessionId}/cookie/{name}", Route::GetCookie),
     (Post, "/session/{sessionId}/cookie", Route::AddCookie),
@@ -50,11 +50,22 @@ static ROUTES: [(Method, &'static str, Route); 47] = [
     (Post, "/session/{sessionId}/element/{elementId}/tap", Route::ElementTap),
     (Post, "/session/{sessionId}/element/{elementId}/clear", Route::ElementClear),
     (Post, "/session/{sessionId}/element/{elementId}/value", Route::ElementSendKeys),
-    (Post, "/session/{sessionId}/dismiss_alert", Route::DismissAlert),
-    (Post, "/session/{sessionId}/accept_alert", Route::AcceptAlert),
+    (Post, "/session/{sessionId}/alert/dismiss", Route::DismissAlert),
+    (Post, "/session/{sessionId}/alert/accept", Route::AcceptAlert),
+    (Get, "/session/{sessionId}/alert/text", Route::GetAlertText),
+    (Post, "/session/{sessionId}/alert/text", Route::SendAlertText),
+    (Get, "/session/{sessionId}/screenshot", Route::TakeScreenshot),
+    // TODO Remove this when > v0.5 is released. There for compatibility reasons with existing
+    //      Webdriver implementations.
     (Get, "/session/{sessionId}/alert_text", Route::GetAlertText),
     (Post, "/session/{sessionId}/alert_text", Route::SendAlertText),
-    (Get, "/session/{sessionId}/screenshot", Route::TakeScreenshot)
+    (Post, "/session/{sessionId}/accept_alert", Route::AcceptAlert),
+    (Post, "/session/{sessionId}/dismiss_alert", Route::DismissAlert),
+    (Get, "/session/{sessionId}/window_handle", Route::GetWindowHandle),
+    (Get, "/session/{sessionId}/window_handles", Route::GetWindowHandles),
+    (Delete, "/session/{sessionId}/window_handle", Route::Close),
+    (Post, "/session/{sessionId}/execute_async", Route::ExecuteAsyncScript),
+    (Post, "/session/{sessionId}/execute", Route::ExecuteScript),
 ];
 
 #[derive(Clone, Copy)]
