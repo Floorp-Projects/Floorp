@@ -263,8 +263,7 @@ DecodedAudioDataSink::InitializeAudioStream()
   // circumstances, so we take care to drop the decoder monitor while
   // initializing.
   RefPtr<AudioStream> audioStream(new AudioStream());
-  nsresult rv = audioStream->Init(mInfo.mChannels, mInfo.mRate,
-                                  mChannel, AudioStream::HighLatency);
+  nsresult rv = audioStream->Init(mInfo.mChannels, mInfo.mRate, mChannel);
   if (NS_FAILED(rv)) {
     audioStream->Shutdown();
     return rv;

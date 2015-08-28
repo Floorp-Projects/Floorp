@@ -1,4 +1,4 @@
-54838
+54850
 0/nm
 0th/pt
 1/n1
@@ -5293,6 +5293,7 @@ FSLIC
 FTC
 FUD/S
 FWD
+FWIW
 FY
 FYI
 Fabe/RM
@@ -5637,6 +5638,7 @@ Francklyn/M
 Franco/M
 Francois/M
 Francoise/M
+Francophile
 Francyne/M
 Franglais/M
 Frank/SM
@@ -10421,6 +10423,7 @@ Mensa/M
 Mentholatum/M
 Menuhin/M
 Menzies/M
+Mephisto
 Mephistopheles/M
 Merak/M
 Mercado/M
@@ -15438,6 +15441,7 @@ USPS
 USS
 USSR/M
 UT/M
+UTC
 UV/M
 Ubangi/M
 Ubiquity/M
@@ -18451,9 +18455,9 @@ assay/ZGMDRS
 assayer/M
 assemblage/SM
 assemble/AEGSD
-assembler/MS
+assembler/MSE
 assemblies
-assembly/AM
+assembly/AME
 assemblyman/M
 assemblymen
 assemblywoman/M
@@ -22620,7 +22624,8 @@ claustrophobic
 clavichord/SM
 clavicle/MS
 clavier/MS
-claw/SGMD
+claw's
+claw/CSGD
 clay/M
 clayey
 clayier
@@ -24373,9 +24378,9 @@ crap/MS
 crape/SM
 crapped
 crapper/S
-crappie/RSMT
+crappie/M
 crapping
-crappy/P
+crappy/RSPT
 craps/M
 crapshooter/MS
 crash/MDSG
@@ -26701,6 +26706,7 @@ drivel/SZGMDR
 driveler/M
 driven
 driver/M
+driveshaft/SM
 driveway/MS
 drizzle/MGDS
 drizzly
@@ -29289,6 +29295,7 @@ flask/SM
 flat/MYPS
 flatbed/SM
 flatboat/SM
+flatbread
 flatcar/SM
 flatfeet
 flatfish/MS
@@ -32566,6 +32573,7 @@ homiest
 homiletic
 homily/SM
 hominid/SM
+hominoid/S
 hominy/M
 homo/MS
 homoerotic
@@ -37058,6 +37066,7 @@ measureless
 measurement/MS
 meat/MS
 meatball/MS
+meathead/MS
 meatiness/M
 meatless
 meatloaf/M
@@ -41903,6 +41912,7 @@ piece/DSMG
 piecemeal
 piecework/MRZ
 pieceworker/M
+piecrust/SM
 pieing
 pier/M
 pierce/JGDS
@@ -42697,6 +42707,7 @@ potent/Y
 potentate/MS
 potential/MYS
 potentiality/SM
+potentiate/GDS
 potful/SM
 pothead/SM
 pother/SMDG
@@ -50478,6 +50489,7 @@ technician/SM
 technicolor
 technique/SM
 techno
+technobabble
 technocracy/SM
 technocrat/MS
 technocratic

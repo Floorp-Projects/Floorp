@@ -59,6 +59,7 @@ struct DeserializedNode {
   using UniqueStringPtr = UniquePtr<char16_t[]>;
 
   NodeId              id;
+  JS::ubi::CoarseType coarseType;
   // A borrowed reference to a string owned by this node's owning HeapSnapshot.
   const char16_t*     typeName;
   uint64_t            size;
@@ -70,6 +71,7 @@ struct DeserializedNode {
   HeapSnapshot*       owner;
 
   DeserializedNode(NodeId id,
+                   JS::ubi::CoarseType coarseType,
                    const char16_t* typeName,
                    uint64_t size,
                    EdgeVector&& edges,
@@ -77,6 +79,7 @@ struct DeserializedNode {
                    UniquePtr<char[]>&& className,
                    HeapSnapshot& owner)
     : id(id)
+    , coarseType(coarseType)
     , typeName(typeName)
     , size(size)
     , edges(Move(edges))
@@ -86,8 +89,24 @@ struct DeserializedNode {
   { }
   virtual ~DeserializedNode() { }
 
-  DeserializedNode(DeserializedNode&& rhs);
-  DeserializedNode& operator=(DeserializedNode&& rhs);
+  DeserializedNode(DeserializedNode&& rhs)
+    : id(rhs.id)
+    , coarseType(rhs.coarseType)
+    , typeName(rhs.typeName)
+    , size(rhs.size)
+    , edges(Move(rhs.edges))
+    , allocationStack(rhs.allocationStack)
+    , jsObjectClassName(Move(rhs.jsObjectClassName))
+    , owner(rhs.owner)
+  { }
+
+  DeserializedNode& operator=(DeserializedNode&& rhs)
+  {
+    MOZ_ASSERT(&rhs != this);
+    this->~DeserializedNode();
+    new(this) DeserializedNode(Move(rhs));
+    return *this;
+  }
 
   // Get a borrowed reference to the given edge's referent. This method is
   // virtual to provide a hook for gmock and gtest.
@@ -97,7 +116,16 @@ struct DeserializedNode {
 
 protected:
   // This is only for use with `MockDeserializedNode` in testing.
-  DeserializedNode(NodeId id, const char16_t* typeName, uint64_t size);
+  DeserializedNode(NodeId id, const char16_t* typeName, uint64_t size)
+    : id(id)
+    , coarseType(JS::ubi::CoarseType::Other)
+    , typeName(typeName)
+    , size(size)
+    , edges()
+    , allocationStack(Nothing())
+    , jsObjectClassName(nullptr)
+    , owner(nullptr)
+  { }
 
 private:
   DeserializedNode(const DeserializedNode&) = delete;
@@ -225,6 +253,7 @@ public:
     new (storage) Concrete(ptr);
   }
 
+  CoarseType coarseType() const final { return get().coarseType; }
   Id identifier() const override { return get().id; }
   bool isLive() const override { return false; }
   const char16_t* typeName() const override;

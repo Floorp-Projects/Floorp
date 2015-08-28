@@ -81,16 +81,9 @@ public:
     return true;
   }
 
-  void DispatchOutputTask(already_AddRefed<nsIRunnable> aTask)
-  {
-    nsCOMPtr<nsIRunnable> task = aTask;
-    if (mIsShutDown || mIsFlushing) {
-      return;
-    }
-    mTaskQueue->Dispatch(task.forget(), AbstractThread::DontAssertDispatchSuccess);
-  }
-
-  nsresult OutputFrame(CFRefPtr<CVPixelBufferRef> aImage,
+  // Access from the taskqueue and the decoder's thread.
+  // OutputFrame is thread-safe.
+  nsresult OutputFrame(CVPixelBufferRef aImage,
                        AppleFrameRef aFrameRef);
 
 protected:
@@ -108,26 +101,33 @@ protected:
   nsRefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
   nsRefPtr<layers::ImageContainer> mImageContainer;
-  ReorderQueue mReorderQueue;
   uint32_t mPictureWidth;
   uint32_t mPictureHeight;
   uint32_t mDisplayWidth;
   uint32_t mDisplayHeight;
+  // Accessed on multiple threads, but only set in constructor.
   uint32_t mMaxRefFrames;
   // Increased when Input is called, and decreased when ProcessFrame runs.
   // Reaching 0 indicates that there's no pending Input.
   Atomic<uint32_t> mInputIncoming;
   Atomic<bool> mIsShutDown;
 
-  bool mUseSoftwareImages;
-  bool mIs106;
+  const bool mUseSoftwareImages;
+  const bool mIs106;
+
+  // Number of times a sample was queued via Input(). Will be decreased upon
+  // the decoder's callback being invoked.
+  // This is used to calculate how many frames has been buffered by the decoder.
+  Atomic<uint32_t> mQueuedSamples;
 
   // For wait on mIsFlushing during Shutdown() process.
+  // Protects mReorderQueue.
   Monitor mMonitor;
   // Set on reader/decode thread calling Flush() to indicate that output is
   // not required and so input samples on mTaskQueue need not be processed.
   // Cleared on mTaskQueue in ProcessDrain().
   Atomic<bool> mIsFlushing;
+  ReorderQueue mReorderQueue;
 
 private:
   VDADecoder mDecoder;

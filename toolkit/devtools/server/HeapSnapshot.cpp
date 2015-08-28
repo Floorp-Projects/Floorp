@@ -130,25 +130,19 @@ HeapSnapshot::saveNode(const protobuf::Node& node)
   if (nodes.has(id))
     return false;
 
+  if (!JS::ubi::Uint32IsValidCoarseType(node.coarsetype()))
+    return false;
+  auto coarseType = JS::ubi::Uint32ToCoarseType(node.coarsetype());
+
   if (!node.has_typename_())
     return false;
 
-  // First, try and get the canonical type name in the case where the type name
-  // is one of the known concrete specializations that our analyses check for
-  // with is<T>(). If that fails, then just use a generic unique string, but all
-  // subsequent JS::ubi::Node::is<T>() checks will always return false for the
-  // node with this type name. That's fine though because we already check for
-  // all the Ts that are of interest to us in the first case.
   auto duplicatedTypeName = reinterpret_cast<const char16_t*>(
     node.typename_().data());
   auto length = node.typename_().length() / sizeof(char16_t);
-  auto typeName = JS::ubi::Node::getCanonicalTypeName(duplicatedTypeName, length);
-  if (!typeName) {
-    typeName = borrowUniqueString(duplicatedTypeName, length);
-    if (!typeName)
-      return false;
-  }
-  MOZ_ASSERT(typeName);
+  auto typeName = borrowUniqueString(duplicatedTypeName, length);
+  if (!typeName)
+    return false;
 
   if (!node.has_size())
     return false;
@@ -185,8 +179,8 @@ HeapSnapshot::saveNode(const protobuf::Node& node)
     jsObjectClassName.get()[length] = '\0';
   }
 
-  return nodes.putNew(id, DeserializedNode(id, typeName, size, Move(edges),
-                                           allocationStack,
+  return nodes.putNew(id, DeserializedNode(id, coarseType, typeName, size,
+                                           Move(edges), allocationStack,
                                            Move(jsObjectClassName),
                                            *this));
 }
@@ -661,6 +655,8 @@ public:
                          EdgePolicy includeEdges) final {
     protobuf::Node protobufNode;
     protobufNode.set_id(ubiNode.identifier());
+
+    protobufNode.set_coarsetype(JS::ubi::CoarseTypeToUint32(ubiNode.coarseType()));
 
     const char16_t* typeName = ubiNode.typeName();
     size_t length = NS_strlen(typeName) * sizeof(char16_t);

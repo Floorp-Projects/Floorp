@@ -7,7 +7,7 @@
 for var in ('MOZ_APP_NAME', 'MOZ_MACBUNDLE_NAME'):
     DEFINES[var] = CONFIG[var]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk2', 'cocoa'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk2', 'gtk3', 'cocoa'):
     DEFINES['HAVE_SHELL_SERVICE'] = 1
 
 JAR_MANIFESTS += ['jar.mn']
