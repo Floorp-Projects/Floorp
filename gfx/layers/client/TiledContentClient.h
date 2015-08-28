@@ -352,6 +352,11 @@ struct BasicTiledLayerPaintData {
    * progressively.
    */
   bool mPaintFinished : 1;
+
+  /*
+   * Initializes/clears data to prepare for paint action.
+   */
+  void ResetPaintData();
 };
 
 class SharedFrameMetricsHelper

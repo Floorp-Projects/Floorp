@@ -158,6 +158,7 @@ static void
 TransformClipRect(Layer* aLayer,
                   const Matrix4x4& aTransform)
 {
+  MOZ_ASSERT(aTransform.Is2D());
   const Maybe<ParentLayerIntRect>& clipRect = aLayer->AsLayerComposite()->GetShadowClipRect();
   if (clipRect) {
     ParentLayerIntRect transformed = TransformTo<ParentLayerPixel>(aTransform, *clipRect);
@@ -663,6 +664,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     // using containerful scrolling, then the clip is not part of the scrolled
     // frame and should not be transformed.
     if (asyncClip && !metrics.UsesContainerScrolling()) {
+      MOZ_ASSERT(asyncTransform.Is2D());
       asyncClip = Some(TransformTo<ParentLayerPixel>(asyncTransform, *asyncClip));
     }
 
