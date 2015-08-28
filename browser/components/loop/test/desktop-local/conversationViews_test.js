@@ -270,7 +270,8 @@ describe("loop.conversationViews", function () {
       return TestUtils.renderIntoDocument(
         React.createElement(loop.conversationViews.CallFailedView, {
           dispatcher: dispatcher,
-          contact: options.contact
+          contact: options.contact,
+          outgoing: true
         }));
     }
 
@@ -646,7 +647,8 @@ describe("loop.conversationViews", function () {
       function() {
         conversationStore.setStoreState({
           callState: CALL_STATES.TERMINATED,
-          contact: contact
+          contact: contact,
+          outgoing: true
         });
 
         view = mountTestComponent();
@@ -672,7 +674,8 @@ describe("loop.conversationViews", function () {
     it("should render the AcceptCallView for incoming calls when the call state is 'alerting'", function() {
       conversationStore.setStoreState({
         callState: CALL_STATES.ALERTING,
-        outgoing: false
+        outgoing: false,
+        callerId: "fake@invalid.com"
       });
 
       view = mountTestComponent();

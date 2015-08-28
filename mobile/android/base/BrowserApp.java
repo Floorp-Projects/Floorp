@@ -140,6 +140,8 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
+import com.keepsafe.switchboard.AsyncConfigLoader;
+import com.keepsafe.switchboard.SwitchBoard;
 import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.ObjectAnimator;
 import org.json.JSONException;
@@ -739,6 +741,21 @@ public class BrowserApp extends GeckoApp
         super.onCreate(savedInstanceState);
 
         final Context appContext = getApplicationContext();
+
+        if (AppConstants.MOZ_SWITCHBOARD) {
+            // Initializes the default URLs the first time.
+            Log.d(LOGTAG, "init Server Urls");
+            SwitchBoard.initDefaultServerUrls("https://mozilla-switchboard.herokuapp.com/SwitchboardURLs.php", "https://mozilla-switchboard.herokuapp.com/SwitchboardDriver.php", true);
+
+            // Looks at the server if there are changes in the server URL that should be used in the future
+            Log.d(LOGTAG, "update server urls from remote");
+            new AsyncConfigLoader(this, AsyncConfigLoader.UPDATE_SERVER).execute();
+
+            // Loads the actual config. This can be done on app start or on app onResume() depending
+            // how often you want to update the config.
+            Log.d(LOGTAG, "update app config");
+            new AsyncConfigLoader(this, AsyncConfigLoader.CONFIG_SERVER).execute();
+        }
 
         mBrowserChrome = (ViewGroup) findViewById(R.id.browser_chrome);
         mActionBarFlipper = (ViewFlipper) findViewById(R.id.browser_actionbar);
@@ -3167,7 +3184,6 @@ public class BrowserApp extends GeckoApp
                                                         ClearOnShutdownPref.PREF,
                                                         new HashSet<String>()).isEmpty();
         aMenu.findItem(R.id.quit).setVisible(visible);
-        aMenu.findItem(R.id.logins).setVisible(visible);
 
         if (tab == null || tab.getURL() == null) {
             bookmark.setEnabled(false);

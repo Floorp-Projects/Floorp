@@ -5,8 +5,7 @@
 package org.mozilla.gecko.menu;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.DrawableUtil;
-import org.mozilla.gecko.widget.ThemedImageButton;
+import org.mozilla.gecko.widget.themed.ThemedImageButton;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;

@@ -14,7 +14,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.util.ColorUtils;
-import org.mozilla.gecko.widget.ThemedImageView;
+import org.mozilla.gecko.widget.themed.ThemedImageView;
 
 import android.content.Context;
 import android.content.res.Resources;

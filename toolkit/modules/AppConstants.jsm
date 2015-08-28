@@ -101,6 +101,13 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+  MOZ_SWITCHBOARD:
+#ifdef MOZ_SWITCHBOARD
+  true,
+#else
+  false,
+#endif
+
   MOZ_WEBRTC:
 #ifdef MOZ_WEBRTC
   true,
@@ -173,6 +180,20 @@ this.AppConstants = Object.freeze({
 
   DEBUG:
 #ifdef DEBUG
+  true,
+#else
+  false,
+#endif
+
+  MOZ_B2G:
+#ifdef MOZ_B2G
+  true,
+#else
+  false,
+#endif
+
+  MOZ_B2GDROID:
+#ifdef MOZ_B2GDROID
   true,
 #else
   false,
