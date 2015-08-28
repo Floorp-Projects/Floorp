@@ -9,6 +9,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
+#include "mozilla/layers/LayerManagerComposite.h"
 
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
@@ -2300,6 +2301,33 @@ gfxPlatform::DisableBufferRotation()
 
   sBufferRotationCheckPref = false;
 }
+
+bool
+gfxPlatform::CanUseDoubleBufferedContent(LayersBackend aBackend) const
+{
+  bool useDoubleBuffering = false;
+
+#ifdef XP_WIN
+  if (aBackend == LayersBackend::LAYERS_D3D11) {
+    useDoubleBuffering = !!gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
+  } else
+#endif
+#ifdef MOZ_WIDGET_GTK
+  // We can't use double buffering when using image content with
+  // Xrender support on Linux, as ContentHostDoubleBuffered is not
+  // suited for direct uploads to the server.
+  if (!gfxPlatformGtk::GetPlatform()->UseImageOffscreenSurfaces() ||
+      !gfxPlatformGtk::GetPlatform()->UseXRender())
+#endif
+  {
+    useDoubleBuffering = (LayerManagerComposite::SupportsDirectTexturing() &&
+                         aBackend != LayersBackend::LAYERS_D3D9) ||
+                         aBackend == LayersBackend::LAYERS_BASIC;
+  }
+
+  return useDoubleBuffering || PR_GetEnv("MOZ_FORCE_DOUBLE_BUFFERING");
+}
+
 
 already_AddRefed<ScaledFont>
 gfxPlatform::GetScaledFontForFontWithCairoSkia(DrawTarget* aTarget, gfxFont* aFont)
