@@ -74,11 +74,20 @@ function test() {
 
     function testFetchOnReloadWhenNotFocused() {
       return Task.spawn(function*() {
-        gDebugger.on(gDebugger.EVENTS.EVENT_LISTENERS_FETCHED, () => {
-          ok(false, "Shouldn't have fetched any event listeners.");
-        });
-        gDebugger.on(gDebugger.EVENTS.EVENT_BREAKPOINTS_UPDATED, () => {
-          ok(false, "Shouldn't have updated any event breakpoints.");
+        gDispatcher.dispatch({
+          type: gDebugger.services.WAIT_UNTIL,
+          predicate: action => {
+            return (action.type === constants.FETCH_EVENT_LISTENERS ||
+                    action.type === constants.UPDATE_EVENT_BREAKPOINTS);
+          },
+          run: (dispatch, getState, action) => {
+            if(action.type === constants.FETCH_EVENT_LISTENERS) {
+              ok(false, "Shouldn't have fetched any event listeners.");
+            }
+            else if(action.type === constants.UPDATE_EVENT_BREAKPOINTS) {
+              ok(false, "Shouldn't have updated any event breakpoints.");
+            }
+          }
         });
 
         gView.toggleInstrumentsPane({ visible: true, animated: false }, 0);
