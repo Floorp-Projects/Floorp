@@ -17,7 +17,7 @@ NS_EVENT_MESSAGE(eAllEvents,            1)
 
 NS_EVENT_MESSAGE(eWindowEventFirst,     100)
 // Widget may be destroyed
-NS_EVENT_MESSAGE(NS_XUL_CLOSE,          eWindowEventFirst + 1)
+NS_EVENT_MESSAGE(eWindowClose,          eWindowEventFirst + 1)
 
 NS_EVENT_MESSAGE(NS_KEY_PRESS,          eWindowEventFirst + 31)
 NS_EVENT_MESSAGE(NS_KEY_UP,             eWindowEventFirst + 32)
