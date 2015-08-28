@@ -87,7 +87,7 @@ nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
     // repeat mode may be "hover" for repeating while the mouse is hovering
     // over the element, otherwise repetition is done while the element is
     // active (pressed).
-    case NS_MOUSE_ENTER_WIDGET:
+    case eMouseEnterIntoWidget:
     case NS_MOUSE_OVER:
       if (IsActivatedOnHover()) {
         StartRepeat();

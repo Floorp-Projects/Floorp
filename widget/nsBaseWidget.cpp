@@ -2647,7 +2647,7 @@ case _value: eventName.AssignLiteral(_name) ; break
     _ASSIGN_eventName(eKeyDown,"eKeyDown");
     _ASSIGN_eventName(eKeyPress,"eKeyPress");
     _ASSIGN_eventName(eKeyUp,"eKeyUp");
-    _ASSIGN_eventName(NS_MOUSE_ENTER_WIDGET,"NS_MOUSE_ENTER_WIDGET");
+    _ASSIGN_eventName(eMouseEnterIntoWidget,"eMouseEnterIntoWidget");
     _ASSIGN_eventName(NS_MOUSE_EXIT_WIDGET,"NS_MOUSE_EXIT_WIDGET");
     _ASSIGN_eventName(eMouseDown,"eMouseDown");
     _ASSIGN_eventName(eMouseUp,"eMouseUp");
@@ -2807,7 +2807,7 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
       return;
   }
 
-  if (aGuiEvent->mMessage == NS_MOUSE_ENTER_WIDGET ||
+  if (aGuiEvent->mMessage == eMouseEnterIntoWidget ||
       aGuiEvent->mMessage == NS_MOUSE_EXIT_WIDGET) {
     if (!debug_GetCachedBoolPref("nglayout.debug.crossing_event_dumping"))
       return;
