@@ -34,6 +34,7 @@ inline void
 ScriptCounts::destroy(FreeOp* fop)
 {
     fop->free_(pcCountsVector);
+    fop->free_(throwCountsVector);
     fop->delete_(ionCounts);
 }
 

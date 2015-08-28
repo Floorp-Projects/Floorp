@@ -453,26 +453,50 @@ class ScriptCounts
     friend class ::JSScript;
     friend struct ScriptAndCounts;
 
-    /*
-     * This points to a single block that holds an array of PCCounts followed
-     * by an array of doubles.  Each element in the PCCounts array has a
-     * pointer into the array of doubles.
-     */
+    // This sorted array is used to map an offset to the number of times a
+    // branch got visited.
     PCCounts* pcCountsVector;
     size_t pcCountsSize;
 
-    /* Information about any Ion compilations for the script. */
+    // This sorted vector is used to map an offset to the number of times an
+    // instruction throw.
+    PCCounts* throwCountsVector;
+    size_t throwCountsSize;
+
+    // Information about any Ion compilations for the script.
     jit::IonScriptCounts* ionCounts;
 
  public:
-    ScriptCounts() : pcCountsVector(nullptr), ionCounts(nullptr) { }
+    ScriptCounts()
+      : pcCountsVector(nullptr),
+        pcCountsSize(0),
+        throwCountsVector(nullptr),
+        throwCountsSize(0),
+        ionCounts(nullptr)
+    { }
 
-    PCCounts* getPCCounts(size_t offset) const;
+    // Return the counter used to count the number of visits. Returns null if
+    // the element is not found.
+    PCCounts* maybeGetPCCounts(size_t offset);
+    const PCCounts* maybeGetPCCounts(size_t offset) const;
+
+    // Return the counter used to count the number of throws. Returns null if
+    // the element is not found.
+    PCCounts* maybeGetThrowCounts(size_t offset) const;
+
+    // Return the counter used to count the number of throws. Allocate it if
+    // none exists yet. Returns null if the allocation failed.
+    PCCounts* getThrowCounts(size_t offset);
 
     inline void destroy(FreeOp* fop);
 
     void set(js::ScriptCounts counts) {
         pcCountsVector = counts.pcCountsVector;
+        pcCountsSize = counts.pcCountsSize;
+
+        throwCountsVector = counts.throwCountsVector;
+        throwCountsSize = counts.throwCountsSize;
+
         ionCounts = counts.ionCounts;
     }
 };
@@ -1612,9 +1636,12 @@ class JSScript : public js::gc::TenuredCell
 
   public:
     bool initScriptCounts(JSContext* cx);
-    js::PCCounts* getPCCounts(jsbytecode* pc);
+    js::PCCounts* maybeGetPCCounts(jsbytecode* pc);
+    js::PCCounts* maybeGetThrowCounts(jsbytecode* pc);
+    js::PCCounts* getThrowCounts(jsbytecode* pc);
     void addIonCounts(js::jit::IonScriptCounts* ionCounts);
     js::jit::IonScriptCounts* getIonCounts();
+    js::ScriptCounts& getScriptCounts();
     js::ScriptCounts releaseScriptCounts();
     void destroyScriptCounts(js::FreeOp* fop);
 
@@ -2340,8 +2367,8 @@ struct ScriptAndCounts
     JSScript* script;
     ScriptCounts scriptCounts;
 
-    const PCCounts* getPCCounts(jsbytecode* pc) const {
-        return scriptCounts.getPCCounts(script->pcToOffset(pc));
+    const PCCounts* maybeGetPCCounts(jsbytecode* pc) const {
+        return scriptCounts.maybeGetPCCounts(script->pcToOffset(pc));
     }
 
     jit::IonScriptCounts* getIonCounts() const {

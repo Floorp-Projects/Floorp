@@ -1297,6 +1297,22 @@ JSScript::initScriptCounts(JSContext* cx)
         }
     }
 
+    // Mark catch/finally blocks as being jump targets.
+    if (hasTrynotes()) {
+        JSTryNote* tn = trynotes()->vector;
+        JSTryNote* tnlimit = tn + trynotes()->length;
+        for (; tn < tnlimit; tn++) {
+            jsbytecode* tryStart = mainEntry + tn->start;
+            jsbytecode* tryPc = tryStart - 1;
+            if (JSOp(*tryPc) != JSOP_TRY)
+                continue;
+
+            jsbytecode* tryTarget = tryStart + tn->length;
+            if (!jumpTargets.append(tryTarget))
+                return false;
+        }
+    }
+
     // Sort all pc, and remove duplicates.
     std::sort(jumpTargets.begin(), jumpTargets.end());
     auto last = std::unique(jumpTargets.begin(), jumpTargets.end());
@@ -1352,7 +1368,18 @@ static inline ScriptCountsMap::Ptr GetScriptCountsMapEntry(JSScript* script)
 }
 
 js::PCCounts*
-ScriptCounts::getPCCounts(size_t offset) const {
+ScriptCounts::maybeGetPCCounts(size_t offset) {
+    PCCounts searched = PCCounts(offset);
+    PCCounts* begin = pcCountsVector;
+    PCCounts* end = begin + pcCountsSize;
+    PCCounts* elem = std::lower_bound(begin, end, searched);
+    if (elem == end || elem->pcOffset() != offset)
+        return nullptr;
+    return elem;
+}
+
+const js::PCCounts*
+ScriptCounts::maybeGetPCCounts(size_t offset) const {
     PCCounts searched = PCCounts(offset);
     PCCounts* begin = pcCountsVector;
     PCCounts* end = begin + pcCountsSize;
@@ -1363,10 +1390,45 @@ ScriptCounts::getPCCounts(size_t offset) const {
 }
 
 js::PCCounts*
-JSScript::getPCCounts(jsbytecode* pc) {
+ScriptCounts::maybeGetThrowCounts(size_t offset) const {
+    PCCounts searched = PCCounts(offset);
+    PCCounts* begin = throwCountsVector;
+    PCCounts* end = throwCountsVector + throwCountsSize;
+    PCCounts* elem = std::lower_bound(begin, end, searched);
+    if (elem == end || elem->pcOffset() != offset)
+        return nullptr;
+    return elem;
+}
+
+js::PCCounts*
+ScriptCounts::getThrowCounts(size_t offset) {
+    PCCounts searched = PCCounts(offset);
+    PCCounts* begin = throwCountsVector;
+    PCCounts* end = throwCountsVector + throwCountsSize;
+    PCCounts* elem = std::lower_bound(begin, end, searched);
+    if (elem == end || elem->pcOffset() != offset) {
+        size_t index = elem - begin;
+
+        size_t numBytes = (1 + throwCountsSize) * sizeof(PCCounts);
+        PCCounts* vec = (PCCounts*) js_realloc(throwCountsVector, numBytes);
+        if (!vec)
+            return nullptr;
+        throwCountsVector = vec;
+        throwCountsSize += 1;
+
+        elem = throwCountsVector + index;
+        end = throwCountsVector + throwCountsSize;
+        std::copy_backward(elem, end - 1, end);
+        *elem = searched;
+    }
+    return elem;
+}
+
+js::PCCounts*
+JSScript::maybeGetPCCounts(jsbytecode* pc) {
     MOZ_ASSERT(containsPC(pc));
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
-    return p->value().getPCCounts(pcToOffset(pc));
+    return p->value().maybeGetPCCounts(pcToOffset(pc));
 }
 
 void
@@ -1378,6 +1440,25 @@ JSScript::setIonScript(JSContext* maybecx, js::jit::IonScript* ionScript)
     ion = ionScript;
     MOZ_ASSERT_IF(hasIonScript(), hasBaselineScript());
     updateBaselineOrIonRaw(maybecx);
+}
+
+ScriptCounts&
+JSScript::getScriptCounts()
+{
+    ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
+    return p->value();
+}
+
+js::PCCounts*
+JSScript::maybeGetThrowCounts(jsbytecode* pc) {
+    MOZ_ASSERT(containsPC(pc));
+    return getScriptCounts().maybeGetThrowCounts(pcToOffset(pc));
+}
+
+js::PCCounts*
+JSScript::getThrowCounts(jsbytecode* pc) {
+    MOZ_ASSERT(containsPC(pc));
+    return getScriptCounts().getThrowCounts(pcToOffset(pc));
 }
 
 void
