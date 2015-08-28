@@ -5686,7 +5686,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   if (!mGeckoChild)
     return YES;
 
-  WidgetMouseEvent geckoEvent(true, NS_MOUSE_ACTIVATE, mGeckoChild,
+  WidgetMouseEvent geckoEvent(true, eMouseActivate, mGeckoChild,
                               WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:aEvent toGeckoEvent:&geckoEvent];
   return (mGeckoChild->DispatchInputEvent(&geckoEvent) != nsEventStatus_eConsumeNoDefault);
