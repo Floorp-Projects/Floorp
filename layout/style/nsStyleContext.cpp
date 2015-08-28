@@ -312,6 +312,10 @@ nsStyleContext::MoveTo(nsStyleContext* aNewParent)
 
   nsStyleContext* oldParent = mParent;
 
+  if (oldParent->HasChildThatUsesResetStyle()) {
+    aNewParent->AddStyleBit(NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE);
+  }
+
   aNewParent->AddRef();
 
   mParent->RemoveChild(this);
