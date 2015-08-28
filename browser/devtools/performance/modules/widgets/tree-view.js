@@ -246,12 +246,10 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     cell.setAttribute("type", "function");
     cell.appendChild(arrowNode);
 
-    // Render optimization link to JIT view if the frame
-    // has optimizations
+    // Render optimization hint if this frame has opt data.
     if (this.root.showOptimizationHint && frameInfo.hasOptimizations && !frameInfo.isMetaCategory) {
       let icon = doc.createElement("description");
       icon.setAttribute("tooltiptext", VIEW_OPTIMIZATIONS_TOOLTIP);
-      icon.setAttribute("type", "linkable");
       icon.className = "opt-icon";
       cell.appendChild(icon);
     }
