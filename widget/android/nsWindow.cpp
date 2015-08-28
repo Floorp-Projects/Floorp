@@ -1473,7 +1473,7 @@ nsWindow::InitKeyEvent(WidgetKeyboardEvent& event, AndroidGeckoEvent& key,
         event.mPluginEvent.Clear();
     } else {
 #ifdef DEBUG
-        if (event.mMessage != NS_KEY_DOWN && event.mMessage != NS_KEY_UP) {
+        if (event.mMessage != NS_KEY_DOWN && event.mMessage != eKeyUp) {
             ALOG("InitKeyEvent: unexpected event.mMessage %d", event.mMessage);
         }
 #endif // DEBUG
@@ -1583,7 +1583,7 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
         msg = NS_KEY_DOWN;
         break;
     case AKEY_EVENT_ACTION_UP:
-        msg = NS_KEY_UP;
+        msg = eKeyUp;
         break;
     case AKEY_EVENT_ACTION_MULTIPLE:
         // Keys with multiple action are handled in Java,
@@ -1701,7 +1701,7 @@ nsWindow::SendIMEDummyKeyEvents()
     MOZ_ASSERT(downEvent.keyCode == 0);
     DispatchEvent(&downEvent);
 
-    WidgetKeyboardEvent upEvent(true, NS_KEY_UP, this);
+    WidgetKeyboardEvent upEvent(true, eKeyUp, this);
     MOZ_ASSERT(upEvent.keyCode == 0);
     DispatchEvent(&upEvent);
 }

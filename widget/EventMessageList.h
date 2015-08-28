@@ -20,7 +20,7 @@ NS_EVENT_MESSAGE(eWindowEventFirst,     100)
 NS_EVENT_MESSAGE(eWindowClose,          eWindowEventFirst + 1)
 
 NS_EVENT_MESSAGE(eKeyPress,             eWindowEventFirst + 31)
-NS_EVENT_MESSAGE(NS_KEY_UP,             eWindowEventFirst + 32)
+NS_EVENT_MESSAGE(eKeyUp,                eWindowEventFirst + 32)
 NS_EVENT_MESSAGE(NS_KEY_DOWN,           eWindowEventFirst + 33)
 
 NS_EVENT_MESSAGE(NS_KEY_BEFORE_DOWN,    eWindowEventFirst + 34)

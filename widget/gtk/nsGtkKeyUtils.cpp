@@ -985,7 +985,7 @@ KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
          GetBoolName(aGdkKeyEvent->is_modifier),
          ((aKeyEvent.mMessage == NS_KEY_DOWN) ? "NS_KEY_DOWN" :
                (aKeyEvent.mMessage == eKeyPress) ? "eKeyPress" :
-                                                   "NS_KEY_UP"),
+                                                   "eKeyUp"),
          GetBoolName(aKeyEvent.IsShift()), GetBoolName(aKeyEvent.IsControl()),
          GetBoolName(aKeyEvent.IsAlt()), GetBoolName(aKeyEvent.IsMeta())));
 

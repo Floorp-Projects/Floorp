@@ -227,7 +227,7 @@ GetGeckoKeyEventType(const WidgetEvent& aEvent)
 {
   switch (aEvent.mMessage) {
     case NS_KEY_DOWN:    return "NS_KEY_DOWN";
-    case NS_KEY_UP:      return "NS_KEY_UP";
+    case eKeyUp:         return "eKeyUp";
     case eKeyPress:      return "eKeyPress";
     default:             return "not key event";
   }
@@ -1662,7 +1662,7 @@ TextInputHandler::HandleKeyUpEvent(NSEvent* aNativeEvent)
     return;
   }
 
-  WidgetKeyboardEvent keyupEvent(true, NS_KEY_UP, mWidget);
+  WidgetKeyboardEvent keyupEvent(true, eKeyUp, mWidget);
   InitKeyEvent(aNativeEvent, keyupEvent);
 
   DispatchEvent(keyupEvent);
@@ -2006,7 +2006,7 @@ TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
     return;
   }
 
-  EventMessage message = aDispatchKeyDown ? NS_KEY_DOWN : NS_KEY_UP;
+  EventMessage message = aDispatchKeyDown ? NS_KEY_DOWN : eKeyUp;
 
   // Fire a key event.
   WidgetKeyboardEvent keyEvent(true, message, mWidget);
@@ -3919,7 +3919,7 @@ TextInputHandlerBase::AttachNativeKeyEvent(WidgetKeyboardEvent& aKeyEvent)
      aKeyEvent.modifiers));
 
   NSEventType eventType;
-  if (aKeyEvent.mMessage == NS_KEY_UP) {
+  if (aKeyEvent.mMessage == eKeyUp) {
     eventType = NSKeyUp;
   } else {
     eventType = NSKeyDown;

@@ -920,8 +920,7 @@ TextInputProcessor::KeyupInternal(const WidgetKeyboardEvent& aKeyboardEvent,
 
   nsEventStatus status = aDoDefault ? nsEventStatus_eIgnore :
                                       nsEventStatus_eConsumeNoDefault;
-  mDispatcher->DispatchKeyboardEvent(NS_KEY_UP, keyEvent, status,
-                                     GetDispatchTo());
+  mDispatcher->DispatchKeyboardEvent(eKeyUp, keyEvent, status, GetDispatchTo());
   aDoDefault = (status != nsEventStatus_eConsumeNoDefault);
   return NS_OK;
 }
