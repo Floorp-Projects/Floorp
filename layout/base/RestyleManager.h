@@ -620,8 +620,12 @@ private:
   // the work of the earlier values is also done.
   enum RestyleResult {
 
-    // do not restyle children
+    // we left the old style context on the frame; do not restyle children
     eRestyleResult_Stop = 1,
+
+    // we got a new style context on this frame, but we know that children
+    // do not depend on the changed values; do not restyle children
+    eRestyleResult_StopWithStyleChange,
 
     // continue restyling children
     eRestyleResult_Continue,
@@ -630,12 +634,20 @@ private:
     eRestyleResult_ContinueAndForceDescendants
   };
 
+  struct SwapInstruction
+  {
+    nsRefPtr<nsStyleContext> mOldContext;
+    nsRefPtr<nsStyleContext> mNewContext;
+    uint32_t mStructsToSwap;
+  };
+
   /**
    * First half of Restyle().
    */
   RestyleResult RestyleSelf(nsIFrame* aSelf,
                             nsRestyleHint aRestyleHint,
-                            uint32_t* aSwappedStructs);
+                            uint32_t* aSwappedStructs,
+                            nsTArray<SwapInstruction>& aSwaps);
 
   /**
    * Restyle the children of this frame (and, in turn, their children).
@@ -674,6 +686,11 @@ private:
    */
   void AddLayerChangesForAnimation();
 
+  bool MoveStyleContextsForContentChildren(nsIFrame* aParent,
+                                           nsStyleContext* aOldContext,
+                                           nsTArray<nsStyleContext*>& aContextsToMove);
+  bool MoveStyleContextsForChildren(nsStyleContext* aOldContext);
+
   /**
    * Helpers for RestyleSelf().
    */
@@ -682,9 +699,13 @@ private:
                      nsChangeHint aChangeToAssume,
                      uint32_t* aEqualStructs,
                      uint32_t* aSamePointerStructs);
-  RestyleResult ComputeRestyleResultFromFrame(nsIFrame* aSelf);
-  RestyleResult ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
-                                                   nsStyleContext* aNewContext);
+  void ComputeRestyleResultFromFrame(nsIFrame* aSelf,
+                                     RestyleResult& aRestyleResult,
+                                     bool& aCanStopWithStyleChange);
+  void ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
+                                          nsStyleContext* aNewContext,
+                                          RestyleResult& aRestyleResult,
+                                          bool& aCanStopWithStyleChange);
 
   // Helpers for RestyleChildren().
   void RestyleUndisplayedDescendants(nsRestyleHint aChildRestyleHint);
