@@ -32,11 +32,11 @@ NS_EVENT_MESSAGE(eResize,               eWindowEventFirst + 60)
 NS_EVENT_MESSAGE(eScroll,               eWindowEventFirst + 61)
 
 // A plugin was clicked or otherwise focused. ePluginActivate should be
-// used when the window is not active. NS_PLUGIN_FOCUS should be used when
+// used when the window is not active. ePluginFocus should be used when
 // the window is active. In the latter case, the dispatcher of the event
 // is expected to ensure that the plugin's widget is focused beforehand.
 NS_EVENT_MESSAGE(ePluginActivate,       eWindowEventFirst + 62)
-NS_EVENT_MESSAGE(NS_PLUGIN_FOCUS,       eWindowEventFirst + 63)
+NS_EVENT_MESSAGE(ePluginFocus,          eWindowEventFirst + 63)
 
 NS_EVENT_MESSAGE(NS_OFFLINE,            eWindowEventFirst + 64)
 NS_EVENT_MESSAGE(NS_ONLINE,             eWindowEventFirst + 65)
