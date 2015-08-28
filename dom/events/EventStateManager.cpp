@@ -3741,7 +3741,7 @@ EventStateManager::DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
   // "[When the mouse is locked on an element...e]vents that require the concept
   // of a mouse cursor must not be dispatched (for example: mouseover, mouseout).
   if (sIsPointerLocked &&
-      (aMessage == NS_MOUSELEAVE ||
+      (aMessage == eMouseLeave ||
        aMessage == eMouseEnter ||
        aMessage == eMouseOver ||
        aMessage == eMouseOut)) {
@@ -3932,7 +3932,7 @@ EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
 
   EnterLeaveDispatcher leaveDispatcher(this, wrapper->mLastOverElement,
                                        movingInto, aMouseEvent,
-                                       isPointer ? NS_POINTER_LEAVE : NS_MOUSELEAVE);
+                                       isPointer ? NS_POINTER_LEAVE : eMouseLeave);
 
   // Fire mouseout
   DispatchMouseOrPointerEvent(aMouseEvent, isPointer ? NS_POINTER_OUT : eMouseOut,
