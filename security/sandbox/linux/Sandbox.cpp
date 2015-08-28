@@ -558,8 +558,22 @@ SandboxEarlyInit(GeckoProcessType aType, bool aIsNuwa)
     return;
   }
 
+  {
+    LinuxCapabilities existingCaps;
+    if (existingCaps.GetCurrent() && existingCaps.AnyEffective()) {
+      SANDBOX_LOG_ERROR("PLEASE DO NOT RUN THIS AS ROOT.  Strange things may"
+                        " happen when capabilities are dropped.");
+    }
+  }
+
   // If capabilities can't be gained, then nothing can be done.
   if (!info.Test(SandboxInfo::kHasUserNamespaces)) {
+    // Drop any existing capabilities; unsharing the user namespace
+    // would implicitly drop them, so if we're running in a broken
+    // configuration where that would matter (e.g., running as root
+    // from a non-root-owned mode-0700 directory) this means it will
+    // break the same way on all kernels and be easier to troubleshoot.
+    LinuxCapabilities().SetCurrent();
     return;
   }
 

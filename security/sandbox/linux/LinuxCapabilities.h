@@ -84,6 +84,15 @@ public:
     }
   }
 
+  bool AnyEffective() const {
+    for (size_t i = 0; i < _LINUX_CAPABILITY_U32S_3; ++i) {
+      if (mBits[i].effective != 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // These three methods expose individual bits in the three
   // capability sets as objects that can be used as bool lvalues.
   // The argument is the capability number, as defined in
