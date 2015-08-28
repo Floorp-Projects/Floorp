@@ -10,6 +10,7 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 
 import org.mozilla.gecko.AndroidGamepadManager;
+import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants.Versions;
@@ -655,6 +656,14 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
 
     public FullScreenState getFullScreenState() {
         return mFullScreenState;
+    }
+
+    public void setSurfaceTranslation(float translation) {
+        ViewHelper.setTranslationY(this, translation);
+    }
+
+    public float getSurfaceTranslation() {
+        return ViewHelper.getTranslationY(this);
     }
 
     @Override
