@@ -2591,40 +2591,51 @@ UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing)
 
     do {
         MOZ_ASSERT(!shape->isMarked(js::gc::GRAY));
-        TraceChildren(&childTracer, shape, JS::TraceKind::Shape);
+        shape->traceChildren(&childTracer);
         shape = childTracer.previousShape;
         childTracer.previousShape = nullptr;
     } while (shape);
     unmarkedAny |= childTracer.unmarkedAny;
 }
 
-bool
-js::UnmarkGrayCellRecursively(gc::Cell* cell, JS::TraceKind kind)
+template <typename T>
+static bool
+TypedUnmarkGrayCellRecursively(T* t)
 {
-    MOZ_ASSERT(cell);
+    MOZ_ASSERT(t);
 
-    JSRuntime* rt = cell->runtimeFromMainThread();
+    JSRuntime* rt = t->runtimeFromMainThread();
     MOZ_ASSERT(!rt->isHeapBusy());
 
     bool unmarkedArg = false;
-    if (cell->isTenured()) {
-        if (!cell->asTenured().isMarked(GRAY))
+    if (t->isTenured()) {
+        if (!t->asTenured().isMarked(GRAY))
             return false;
 
-        cell->asTenured().unmark(GRAY);
+        t->asTenured().unmark(GRAY);
         unmarkedArg = true;
     }
 
     UnmarkGrayTracer trc(rt);
-    TraceChildren(&trc, cell, kind);
+    t->traceChildren(&trc);
 
     return unmarkedArg || trc.unmarkedAny;
+}
+
+struct UnmarkGrayCellRecursivelyFunctor {
+    template <typename T> bool operator()(T* t) { return TypedUnmarkGrayCellRecursively(t); }
+};
+
+bool
+js::UnmarkGrayCellRecursively(Cell* cell, JS::TraceKind kind)
+{
+    return DispatchTraceKindTyped(UnmarkGrayCellRecursivelyFunctor(), cell, kind);
 }
 
 bool
 js::UnmarkGrayShapeRecursively(Shape* shape)
 {
-    return js::UnmarkGrayCellRecursively(shape, JS::TraceKind::Shape);
+    return TypedUnmarkGrayCellRecursively(shape);
 }
 
 JS_FRIEND_API(bool)
