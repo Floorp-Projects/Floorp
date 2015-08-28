@@ -1570,6 +1570,10 @@ nsTextStore::DidLockGranted()
     CompleteLastActionIfStillIncomplete();
 
     FlushPendingActions();
+  } else {
+    // Even if its read-only lock, mLockedContent may cache the content.
+    // We need to clear it instead of calling FlushPendingActions().
+    mLockedContent.Clear();
   }
 
   // If the widget has gone, we don't need to notify anything.
