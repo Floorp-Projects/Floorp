@@ -282,7 +282,7 @@ private:
  * This is extended from WidgetKeyboardEvent and is mapped to DOM event
  * "BeforeAfterKeyboardEvent".
  *
- * Event mMessage: NS_KEY_BEFORE_DOWN
+ * Event mMessage: eBeforeKeyDown
  *                 NS_KEY_BEFORE_UP
  *                 NS_KEY_AFTER_DOWN
  *                 NS_KEY_AFTER_UP
