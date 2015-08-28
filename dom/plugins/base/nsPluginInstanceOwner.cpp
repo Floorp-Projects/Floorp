@@ -1827,7 +1827,7 @@ CocoaEventTypeForEvent(const WidgetGUIEvent& anEvent, nsIFrame* aObjectFrame)
       return NPCocoaEventMouseDown;
     case NS_MOUSE_BUTTON_UP:
       return NPCocoaEventMouseUp;
-    case NS_KEY_DOWN:
+    case eKeyDown:
       return NPCocoaEventKeyDown;
     case eKeyUp:
       return NPCocoaEventKeyUp;
@@ -1905,14 +1905,14 @@ TranslateToNPCocoaEvent(WidgetGUIEvent* anEvent, nsIFrame* aObjectFrame)
       }
       break;
     }
-    case NS_KEY_DOWN:
+    case eKeyDown:
     case eKeyUp:
     {
       WidgetKeyboardEvent* keyEvent = anEvent->AsKeyboardEvent();
 
       // That keyEvent->mPluginTextEventString is non-empty is a signal that we should
       // create a text event for the plugin, instead of a key event.
-      if (anEvent->mMessage == NS_KEY_DOWN &&
+      if (anEvent->mMessage == eKeyDown &&
           !keyEvent->mPluginTextEventString.IsEmpty()) {
         cocoaEvent.type = NPCocoaEventTextInput;
         const char16_t* pluginTextEventString = keyEvent->mPluginTextEventString.get();
@@ -2288,8 +2288,8 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
           event.state = gdkEvent->state;
           switch (anEvent.mMessage)
             {
-            case NS_KEY_DOWN:
-              // Handle NS_KEY_DOWN for modifier key presses
+            case eKeyDown:
+              // Handle eKeyDown for modifier key presses
               // For non-modifiers we get eKeyPress
               if (gdkEvent->is_modifier)
                 event.type = XKeyPress;

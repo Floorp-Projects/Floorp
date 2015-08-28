@@ -1144,7 +1144,7 @@ NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
   mWidget->InitEvent(aKeyEvent, &point);
 
   switch (aKeyEvent.mMessage) {
-    case NS_KEY_DOWN:
+    case eKeyDown:
       aKeyEvent.keyCode = mDOMKeyCode;
       // Unique id for this keydown event and its associated keypress.
       sUniqueKeyEventId++;
@@ -1308,7 +1308,7 @@ NativeKey::HandleAppCommandMessage() const
   bool consumed = false;
 
   if (dispatchKeyEvent) {
-    WidgetKeyboardEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
+    WidgetKeyboardEvent keydownEvent(true, eKeyDown, mWidget);
     InitKeyEvent(keydownEvent, mModKeyState);
     // NOTE: If the keydown event is consumed by web contents, we shouldn't
     //       continue to handle the command.
@@ -1425,7 +1425,7 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
     }
 
     bool isIMEEnabled = WinUtils::IsIMEEnabled(mWidget->GetInputContext());
-    WidgetKeyboardEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
+    WidgetKeyboardEvent keydownEvent(true, eKeyDown, mWidget);
     InitKeyEvent(keydownEvent, mModKeyState);
     if (aEventDispatched) {
       *aEventDispatched = true;

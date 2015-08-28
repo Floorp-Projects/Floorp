@@ -226,7 +226,7 @@ static const char*
 GetGeckoKeyEventType(const WidgetEvent& aEvent)
 {
   switch (aEvent.mMessage) {
-    case NS_KEY_DOWN:    return "NS_KEY_DOWN";
+    case eKeyDown:       return "eKeyDown";
     case eKeyUp:         return "eKeyUp";
     case eKeyPress:      return "eKeyPress";
     default:             return "not key event";
@@ -1521,7 +1521,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     nsAutoString committed;
     ctiPanel->InterpretKeyEvent(aNativeEvent, committed);
     if (!committed.IsEmpty()) {
-      WidgetKeyboardEvent imeEvent(true, NS_KEY_DOWN, mWidget);
+      WidgetKeyboardEvent imeEvent(true, eKeyDown, mWidget);
       InitKeyEvent(aNativeEvent, imeEvent);
       imeEvent.mPluginTextEventString.Assign(committed);
       DispatchEvent(imeEvent);
@@ -1532,7 +1532,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
   if (mWidget->IsPluginFocused() || !IsIMEComposing()) {
     NSResponder* firstResponder = [[mView window] firstResponder];
 
-    WidgetKeyboardEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
+    WidgetKeyboardEvent keydownEvent(true, eKeyDown, mWidget);
     InitKeyEvent(aNativeEvent, keydownEvent);
 
     currentKeyEvent->mKeyDownHandled = DispatchEvent(keydownEvent);
@@ -2006,7 +2006,7 @@ TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
     return;
   }
 
-  EventMessage message = aDispatchKeyDown ? NS_KEY_DOWN : eKeyUp;
+  EventMessage message = aDispatchKeyDown ? eKeyDown : eKeyUp;
 
   // Fire a key event.
   WidgetKeyboardEvent keyEvent(true, message, mWidget);
