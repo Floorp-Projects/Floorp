@@ -3830,10 +3830,12 @@ ElementRestyler::RestyleChildrenOfDisplayContentsElement(
   const bool mightReframePseudos = aRestyleHint & eRestyle_Subtree;
   DoRestyleUndisplayedDescendants(nsRestyleHint(0), mContent, aNewContext);
   if (!(mHintsHandled & nsChangeHint_ReconstructFrame) && mightReframePseudos) {
-    MaybeReframeForBeforePseudo(aParentFrame, nullptr, mContent, aNewContext);
+    MaybeReframeForPseudo(nsCSSPseudoElements::ePseudo_before,
+                          aParentFrame, nullptr, mContent, aNewContext);
   }
   if (!(mHintsHandled & nsChangeHint_ReconstructFrame) && mightReframePseudos) {
-    MaybeReframeForAfterPseudo(aParentFrame, nullptr, mContent, aNewContext);
+    MaybeReframeForPseudo(nsCSSPseudoElements::ePseudo_after,
+                          aParentFrame, nullptr, mContent, aNewContext);
   }
   if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
     InitializeAccessibilityNotifications(aNewContext);
@@ -4065,43 +4067,9 @@ ElementRestyler::RestyleUndisplayedNodes(nsRestyleHint    aChildRestyleHint,
 void
 ElementRestyler::MaybeReframeForBeforePseudo()
 {
-  MaybeReframeForBeforePseudo(mFrame, mFrame, mFrame->GetContent(),
-                              mFrame->StyleContext());
-}
-
-void
-ElementRestyler::MaybeReframeForBeforePseudo(nsIFrame* aGenConParentFrame,
-                                             nsIFrame* aFrame,
-                                             nsIContent* aContent,
-                                             nsStyleContext* aStyleContext)
-{
-  // Make sure not to do this for pseudo-frames or frames that
-  // can't have generated content.
-  nsContainerFrame* cif;
-  if (!aStyleContext->GetPseudo() &&
-      ((aGenConParentFrame->GetStateBits() & NS_FRAME_MAY_HAVE_GENERATED_CONTENT) ||
-       // Our content insertion frame might have gotten flagged.
-       ((cif = aGenConParentFrame->GetContentInsertionFrame()) &&
-        (cif->GetStateBits() & NS_FRAME_MAY_HAVE_GENERATED_CONTENT)))) {
-    // Check for a ::before pseudo style and the absence of a ::before content,
-    // but only if aFrame is null or is the first continuation/ib-split.
-    if (!aFrame ||
-        nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(aFrame)) {
-      // Checking for a ::before frame is cheaper than getting the
-      // ::before style context.
-      if (!nsLayoutUtils::GetBeforeFrameForContent(aGenConParentFrame, aContent) &&
-          nsLayoutUtils::HasPseudoStyle(aContent, aStyleContext,
-                                        nsCSSPseudoElements::ePseudo_before,
-                                        mPresContext)) {
-        // Have to create the new ::before frame.
-        LOG_RESTYLE("MaybeReframeForBeforePseudo, appending "
-                    "nsChangeHint_ReconstructFrame");
-        NS_UpdateHint(mHintsHandled, nsChangeHint_ReconstructFrame);
-        mChangeList->AppendChange(aFrame, aContent,
-                                  nsChangeHint_ReconstructFrame);
-      }
-    }
-  }
+  MaybeReframeForPseudo(nsCSSPseudoElements::ePseudo_before,
+                        mFrame, mFrame, mFrame->GetContent(),
+                        mFrame->StyleContext());
 }
 
 /**
@@ -4112,43 +4080,91 @@ void
 ElementRestyler::MaybeReframeForAfterPseudo(nsIFrame* aFrame)
 {
   MOZ_ASSERT(aFrame);
-  MaybeReframeForAfterPseudo(aFrame, aFrame, aFrame->GetContent(),
-                             aFrame->StyleContext());
+  MaybeReframeForPseudo(nsCSSPseudoElements::ePseudo_after,
+                        aFrame, aFrame, aFrame->GetContent(),
+                        aFrame->StyleContext());
 }
 
-void
-ElementRestyler::MaybeReframeForAfterPseudo(nsIFrame* aGenConParentFrame,
-                                            nsIFrame* aFrame,
-                                            nsIContent* aContent,
-                                            nsStyleContext* aStyleContext)
+#ifdef DEBUG
+bool
+ElementRestyler::MustReframeForBeforePseudo()
 {
-  // Make sure not to do this for pseudo-frames or frames that
-  // can't have generated content.
-  nsContainerFrame* cif;
-  if (!aStyleContext->GetPseudo() &&
-      ((aGenConParentFrame->GetStateBits() & NS_FRAME_MAY_HAVE_GENERATED_CONTENT) ||
-       // Our content insertion frame might have gotten flagged.
-       ((cif = aGenConParentFrame->GetContentInsertionFrame()) &&
-        (cif->GetStateBits() & NS_FRAME_MAY_HAVE_GENERATED_CONTENT)))) {
-    // Check for an ::after pseudo style and the absence of an ::after content,
-    // but only if aFrame is null or is the last continuation/ib-split.
-    if (!aFrame ||
-        !nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame)) {
-      // Checking for an ::after frame is cheaper than getting the
-      // ::after style context.
-      if (!nsLayoutUtils::GetAfterFrameForContent(aGenConParentFrame, aContent) &&
-          nsLayoutUtils::HasPseudoStyle(aContent, aStyleContext,
-                                        nsCSSPseudoElements::ePseudo_after,
-                                        mPresContext)) {
-        // Have to create the new ::after frame.
-        LOG_RESTYLE("MaybeReframeForAfterPseudo, appending "
-                    "nsChangeHint_ReconstructFrame");
-        NS_UpdateHint(mHintsHandled, nsChangeHint_ReconstructFrame);
-        mChangeList->AppendChange(aFrame, mContent,
-                                  nsChangeHint_ReconstructFrame);
-      }
+  return MustReframeForPseudo(nsCSSPseudoElements::ePseudo_before,
+                              mFrame, mFrame, mFrame->GetContent(),
+                              mFrame->StyleContext());
+}
+
+bool
+ElementRestyler::MustReframeForAfterPseudo(nsIFrame* aFrame)
+{
+  MOZ_ASSERT(aFrame);
+  return MustReframeForPseudo(nsCSSPseudoElements::ePseudo_after,
+                              aFrame, aFrame, aFrame->GetContent(),
+                              aFrame->StyleContext());
+}
+#endif
+
+void
+ElementRestyler::MaybeReframeForPseudo(nsCSSPseudoElements::Type aPseudoType,
+                                       nsIFrame* aGenConParentFrame,
+                                       nsIFrame* aFrame,
+                                       nsIContent* aContent,
+                                       nsStyleContext* aStyleContext)
+{
+  if (MustReframeForPseudo(aPseudoType, aGenConParentFrame, aFrame, aContent,
+                           aStyleContext)) {
+    // Have to create the new ::before/::after frame.
+    LOG_RESTYLE("MaybeReframeForPseudo, appending "
+                "nsChangeHint_ReconstructFrame");
+    NS_UpdateHint(mHintsHandled, nsChangeHint_ReconstructFrame);
+    mChangeList->AppendChange(aFrame, aContent, nsChangeHint_ReconstructFrame);
+  }
+}
+
+bool
+ElementRestyler::MustReframeForPseudo(nsCSSPseudoElements::Type aPseudoType,
+                                      nsIFrame* aGenConParentFrame,
+                                      nsIFrame* aFrame,
+                                      nsIContent* aContent,
+                                      nsStyleContext* aStyleContext)
+{
+  MOZ_ASSERT(aPseudoType == nsCSSPseudoElements::ePseudo_before ||
+             aPseudoType == nsCSSPseudoElements::ePseudo_after);
+
+  // Make sure not to do this for pseudo-frames...
+  if (aStyleContext->GetPseudo()) {
+    return false;
+  }
+
+  // ... or frames that can't have generated content.
+  if (!(aGenConParentFrame->GetStateBits() & NS_FRAME_MAY_HAVE_GENERATED_CONTENT)) {
+    // Our content insertion frame might have gotten flagged.
+    nsContainerFrame* cif = aGenConParentFrame->GetContentInsertionFrame();
+    if (!cif || !(cif->GetStateBits() & NS_FRAME_MAY_HAVE_GENERATED_CONTENT)) {
+      return false;
     }
   }
+
+  if (aPseudoType == nsCSSPseudoElements::ePseudo_before) {
+    // Check for a ::before pseudo style and the absence of a ::before content,
+    // but only if aFrame is null or is the first continuation/ib-split.
+    if ((aFrame && !nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(aFrame)) ||
+        nsLayoutUtils::GetBeforeFrameForContent(aGenConParentFrame, aContent)) {
+      return false;
+    }
+  } else {
+    // Similarly for ::after, but check for being the last continuation/
+    // ib-split.
+    if ((aFrame && nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame)) ||
+        nsLayoutUtils::GetAfterFrameForContent(aGenConParentFrame, aContent)) {
+      return false;
+    }
+  }
+
+  // Checking for a ::before frame (which we do above) is cheaper than getting
+  // the ::before style context here.
+  return nsLayoutUtils::HasPseudoStyle(aContent, aStyleContext, aPseudoType,
+                                       mPresContext);
 }
 
 void
