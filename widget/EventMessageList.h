@@ -43,7 +43,7 @@ NS_EVENT_MESSAGE(eOnline,               eWindowEventFirst + 65)
 
 // NS_BEFORERESIZE_EVENT used to be here (eWindowEventFirst + 66)
 
-NS_EVENT_MESSAGE(NS_LANGUAGECHANGE,     eWindowEventFirst + 70)
+NS_EVENT_MESSAGE(eLanguageChange,       eWindowEventFirst + 70)
 
 NS_EVENT_MESSAGE(NS_MOUSE_MESSAGE_START, 300)
 NS_EVENT_MESSAGE(NS_MOUSE_MOVE,         NS_MOUSE_MESSAGE_START)
