@@ -54,6 +54,7 @@ function checkLcov(fun) {
   for (ref of lcovRef) {
     if (lcovRes.indexOf(ref) == -1) {
       print("Cannot find `" + ref + "` in the following Lcov result:\n", lcovResRaw);
+      print("In the following source:\n", source);
       assertEq(true, false);
     }
   }
@@ -150,4 +151,65 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   f(5);           //DA:$,1
   //FNF:2
   //FNH:2
+});
+
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  try {                     //DA:$,1
+    var l = ",".split(','); //DA:$,1
+    if (l.length == 2) {    //DA:$,1 // BRDA:$,0
+      l.push('');           //DA:$,1
+      throw l;              //DA:$,1
+    }
+    l.pop();                //DA:$,0
+  } catch (x) {             //DA:$,1
+    x.pop();                //DA:$,1
+  }
+  //FNF:1
+  //FNH:1
+  //LF:9 // Expected LF:8 , Apparently if the first statement is a try, the
+         // statement following the "try{" statement is visited twice.
+  //LH:8 // Expected LH:7
+  //BRF:1
+  //BRH:1
+});
+
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  var l = ",".split(',');   //DA:$,1
+  try {                     //DA:$,1
+    try {                   //DA:$,1
+      if (l.length == 2) {  //DA:$,1 // BRDA:$,0
+        l.push('');         //DA:$,1
+        throw l;            //DA:$,1
+      }
+      l.pop();              //DA:$,0 // BRDA:$,-
+    } finally {             //DA:$,1
+      l.pop();              //DA:$,1
+    }
+  } catch (x) {             //DA:$,1
+  }
+  //FNF:1
+  //FNH:1
+  //LF:10
+  //LH:9
+  //BRF:2
+  //BRH:1
+});
+
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  function f() {            //FN:$,f //FNDA:1,%
+    throw 1;                //DA:$,1
+    f();                    //DA:$,0
+  }
+  var l = ",".split(',');   //DA:$,1
+  try {                     //DA:$,1
+    f();                    //DA:$,1
+    f();                    //DA:$,0
+  } catch (x) {             //DA:$,1
+  }
+  //FNF:2
+  //FNH:2
+  //LF:7
+  //LH:5
+  //BRF:0
+  //BRH:0
 });
