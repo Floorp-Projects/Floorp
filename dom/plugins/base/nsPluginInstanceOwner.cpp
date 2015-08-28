@@ -1812,8 +1812,7 @@ CocoaEventTypeForEvent(const WidgetGUIEvent& anEvent, nsIFrame* aObjectFrame)
       return NPCocoaEventMouseEntered;
     case NS_MOUSE_OUT:
       return NPCocoaEventMouseExited;
-    case NS_MOUSE_MOVE:
-    {
+    case eMouseMove: {
       // We don't know via information on events from the widget code whether or not
       // we're dragging. The widget code just generates mouse move events from native
       // drag events. If anybody is capturing, this is a drag event.
@@ -1848,7 +1847,7 @@ TranslateToNPCocoaEvent(WidgetGUIEvent* anEvent, nsIFrame* aObjectFrame)
   InitializeNPCocoaEvent(&cocoaEvent);
   cocoaEvent.type = CocoaEventTypeForEvent(*anEvent, aObjectFrame);
 
-  if (anEvent->mMessage == NS_MOUSE_MOVE ||
+  if (anEvent->mMessage == eMouseMove ||
       anEvent->mMessage == NS_MOUSE_BUTTON_DOWN ||
       anEvent->mMessage == NS_MOUSE_BUTTON_UP ||
       anEvent->mMessage == NS_MOUSE_SCROLL ||
@@ -2062,7 +2061,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
       pluginEvent.event = 0;
       const WidgetMouseEvent* mouseEvent = anEvent.AsMouseEvent();
       switch (anEvent.mMessage) {
-      case NS_MOUSE_MOVE:
+      case eMouseMove:
         pluginEvent.event = WM_MOUSEMOVE;
         break;
       case NS_MOUSE_BUTTON_DOWN: {
@@ -2111,7 +2110,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
                    anEvent.mMessage == NS_MOUSE_DOUBLECLICK ||
                    anEvent.mMessage == NS_MOUSE_OVER ||
                    anEvent.mMessage == NS_MOUSE_OUT ||
-                   anEvent.mMessage == NS_MOUSE_MOVE,
+                   anEvent.mMessage == eMouseMove,
                    "Incorrect event type for coordinate translation");
       nsPoint pt =
         nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mPluginFrame) -
@@ -2220,7 +2219,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
               event.focus = mContentFocused;
             }
             break;
-          case NS_MOUSE_MOVE:
+          case eMouseMove:
             {
               XMotionEvent& event = pluginEvent.xmotion;
               event.type = MotionNotify;
@@ -2392,9 +2391,8 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
         nsIntPoint pluginPoint(presContext->AppUnitsToDevPixels(appPoint.x),
                                presContext->AppUnitsToDevPixels(appPoint.y));
 
-        switch (anEvent.mMessage)
-          {
-          case NS_MOUSE_MOVE:
+        switch (anEvent.mMessage) {
+          case eMouseMove:
             {
               // are these going to be touch events?
               // pluginPoint.x;

@@ -881,7 +881,7 @@ nsListControlFrame::HandleEvent(nsPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
-  /*const char * desc[] = {"NS_MOUSE_MOVE", 
+  /*const char * desc[] = {"eMouseMove", 
                           "NS_MOUSE_LEFT_BUTTON_UP",
                           "NS_MOUSE_LEFT_BUTTON_DOWN",
                           "<NA>","<NA>","<NA>","<NA>","<NA>","<NA>","<NA>",

@@ -3026,7 +3026,7 @@ HTMLInputElement::NeedToInitializeEditorForEvent(
   }
 
   switch (aVisitor.mEvent->mMessage) {
-  case NS_MOUSE_MOVE:
+  case eMouseMove:
   case NS_MOUSE_ENTER_WIDGET:
   case NS_MOUSE_EXIT_WIDGET:
   case NS_MOUSE_OVER:
@@ -3197,7 +3197,7 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
       // we want to end the spin. We do this here (rather than in
       // PostHandleEvent) because we don't want to let content preventDefault()
       // the end of the spin.
-      if (aVisitor.mEvent->mMessage == NS_MOUSE_MOVE) {
+      if (aVisitor.mEvent->mMessage == eMouseMove) {
         // Be aggressive about stopping the spin:
         bool stopSpin = true;
         nsNumberControlFrame* numberControlFrame =
@@ -4118,7 +4118,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor)
       aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
     } break;
 
-    case NS_MOUSE_MOVE:
+    case eMouseMove:
     case NS_TOUCH_MOVE:
       if (!mIsDraggingRange) {
         break;
