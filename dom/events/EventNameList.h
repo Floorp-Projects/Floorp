@@ -464,7 +464,7 @@ FORWARDED_EVENT(resize,
                 EventNameType_All,
                 eBasicEventClass)
 FORWARDED_EVENT(scroll,
-                NS_SCROLL_EVENT,
+                eScroll,
                 (EventNameType_HTMLXUL | EventNameType_SVGSVG),
                 eBasicEventClass)
 

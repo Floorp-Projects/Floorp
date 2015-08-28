@@ -4116,7 +4116,7 @@ ScrollFrameHelper::FireScrollEvent()
 {
   mScrollEvent.Forget();
 
-  WidgetGUIEvent event(true, NS_SCROLL_EVENT, nullptr);
+  WidgetGUIEvent event(true, eScroll, nullptr);
   nsEventStatus status = nsEventStatus_eIgnore;
   nsIContent* content = mOuter->GetContent();
   nsPresContext* prescontext = mOuter->PresContext();
