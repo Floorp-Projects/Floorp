@@ -30,10 +30,9 @@ buildscript {
     }
 
     dependencies {
-        // IntelliJ 14.0.2 wants 0.14.4; IntelliJ 14.0.3 and Android Studio want
-        // 1.0.0.  There are major issues with the combination of 0.14.4, Gradle
-        // 2.2.1, and IntelliJ 14.0.2: see Bug 1120032.
-        classpath 'com.android.tools.build:gradle:1.0.0'
+        // Unit testing support was added in 1.1.0. IntelliJ 14.1.4 and Android
+        // Studio 1.2.1.1 appear to work fine with plugin version 1.3.0.
+        classpath 'com.android.tools.build:gradle:1.3.0'
         classpath('com.stanfy.spoon:spoon-gradle-plugin:1.0.3-SNAPSHOT') {
             // Without these, we get errors linting.
             exclude module: 'guava'
