@@ -283,6 +283,8 @@ public:
 
   bool WasInterrupted() const { return mInterrupted; }
 
+  void SetNeedsToWaitForContentResponse(bool aWaitForContentResponse);
+
 private:
   nsTArray<PanGestureInput> mEvents;
   bool mInterrupted;

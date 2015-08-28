@@ -2776,8 +2776,23 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
           SwipeInfo swipeInfo = SendMayStartSwipe(panInput);
           event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
           if (swipeInfo.wantsSwipe) {
-            mSwipeEventQueue = MakeUnique<SwipeEventQueue>(swipeInfo.allowedDirections,
-                                                           inputBlockId);
+            if (result == nsEventStatus_eIgnore) {
+              // APZ has determined and that scrolling horizontally in the
+              // requested direction is impossible, so it didn't do any
+              // scrolling for the event.
+              // We know now that MayStartSwipe wants a swipe, so we can start
+              // the swipe now.
+              TrackScrollEventAsSwipe(panInput, swipeInfo.allowedDirections);
+            } else {
+              // We don't know whether this event can start a swipe, so we need
+              // to queue up events and wait for a call to ReportSwipeStarted.
+              // APZ might already have started scrolling in response to the
+              // event if it knew that it's the right thing to do. In that case
+              // we'll still get a call to ReportSwipeStarted, and we will
+              // discard the queued events at that point.
+              mSwipeEventQueue = MakeUnique<SwipeEventQueue>(swipeInfo.allowedDirections,
+                                                             inputBlockId);
+            }
           }
         }
 
@@ -4911,7 +4926,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
     panEvent.mLineOrPageDeltaY = lineOrPageDeltaY;
 
     bool canTriggerSwipe = [self shouldConsiderStartingSwipeFromEvent:theEvent];
-    panEvent.mRequiresContentResponse = canTriggerSwipe;
+    panEvent.mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection = canTriggerSwipe;
     mGeckoChild->DispatchAPZWheelInputEvent(panEvent, canTriggerSwipe);
   } else if (usePreciseDeltas) {
     // This is on 10.6 or old touchpads that don't have any phase information.

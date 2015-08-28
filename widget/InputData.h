@@ -311,7 +311,7 @@ public:
       mLineOrPageDeltaX(0),
       mLineOrPageDeltaY(0),
       mHandledByAPZ(false),
-      mRequiresContentResponse(false)
+      mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(false)
   {
   }
 
@@ -338,11 +338,13 @@ public:
 
   bool mHandledByAPZ;
 
-  // If this is true, the input block started by this event needs to be put
-  // on hold until a content response has arrived, even if the block has a
-  // confirmed target. This is used by events that can result in a swipe
-  // instead of a scroll.
-  bool mRequiresContentResponse;
+  // If this is true, and this event started a new input block that couldn't
+  // find a scrollable target which is scrollable in the horizontal component
+  // of the scroll start direction, then this input block needs to be put on
+  // hold until a content response has arrived, even if the block has a
+  // confirmed target.
+  // This is used by events that can result in a swipe instead of a scroll.
+  bool mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection;
 };
 
 /**
