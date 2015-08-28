@@ -1335,13 +1335,6 @@ nsStyleContext::LookupStruct(const nsACString& aName, nsStyleStructID& aResult)
 }
 #endif
 
-bool
-nsStyleContext::HasSameCachedStyleData(nsStyleContext* aOther,
-                                       nsStyleStructID aSID)
-{
-  return GetCachedStyleData(aSID) == aOther->GetCachedStyleData(aSID);
-}
-
 void
 nsStyleContext::SwapStyleData(nsStyleContext* aNewContext, uint32_t aStructs)
 {
