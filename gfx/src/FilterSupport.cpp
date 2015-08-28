@@ -747,8 +747,10 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
           BLEND_MODE_LUMINOSITY
         };
         filter->SetAttribute(ATT_BLEND_BLENDMODE, (uint32_t)blendModes[mode]);
-        filter->SetInput(IN_BLEND_IN, aSources[0]);
-        filter->SetInput(IN_BLEND_IN2, aSources[1]);
+        // The correct input order for both software and D2D filters is flipped
+        // from our source order, so flip here.
+        filter->SetInput(IN_BLEND_IN, aSources[1]);
+        filter->SetInput(IN_BLEND_IN2, aSources[0]);
       }
       return filter.forget();
     }
