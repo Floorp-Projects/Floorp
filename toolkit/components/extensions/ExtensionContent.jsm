@@ -336,11 +336,7 @@ let DocumentManager = {
 
   executeScript(global, extensionId, script) {
     let window = global.content;
-    let extensions = this.windows.get(window);
-    if (!extensions) {
-      return;
-    }
-    let context = extensions.get(extensionId);
+    let context = this.getContext(extensionId, window);
     if (!context) {
       return;
     }
