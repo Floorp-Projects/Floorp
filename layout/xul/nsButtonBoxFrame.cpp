@@ -144,7 +144,7 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
     }
 #endif
 
-    case NS_KEY_UP: {
+    case eKeyUp: {
       WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
       if (!keyEvent) {
         break;

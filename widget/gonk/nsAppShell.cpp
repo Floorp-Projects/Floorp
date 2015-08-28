@@ -350,7 +350,7 @@ KeyEventDispatcher::DispatchKeyDownEvent()
 void
 KeyEventDispatcher::DispatchKeyUpEvent()
 {
-    DispatchKeyEventInternal(NS_KEY_UP);
+    DispatchKeyEventInternal(eKeyUp);
 }
 
 class SwitchEventRunnable : public nsRunnable {

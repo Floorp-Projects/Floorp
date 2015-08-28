@@ -235,7 +235,7 @@ EVENT(keypress,
       EventNameType_HTMLXUL,
       eKeyboardEventClass)
 EVENT(keyup,
-      NS_KEY_UP,
+      eKeyUp,
       EventNameType_HTMLXUL,
       eKeyboardEventClass)
 NON_IDL_EVENT(mozbrowserbeforekeydown,
