@@ -2870,7 +2870,7 @@ Element::PreHandleEventForLinks(EventChainPreVisitor& aVisitor)
   switch (aVisitor.mEvent->mMessage) {
   case eMouseOver:
   case NS_FOCUS_CONTENT:
-  case NS_MOUSE_OUT:
+  case eMouseOut:
   case NS_BLUR_CONTENT:
     break;
   default:
@@ -2904,7 +2904,7 @@ Element::PreHandleEventForLinks(EventChainPreVisitor& aVisitor)
     }
     break;
   }
-  case NS_MOUSE_OUT:
+  case eMouseOut:
     aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
     // FALL THROUGH
   case NS_BLUR_CONTENT:

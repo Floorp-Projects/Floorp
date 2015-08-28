@@ -86,7 +86,7 @@ WidgetEvent::HasMouseEventMessage() const
     case eMouseExitFromWidget:
     case eMouseActivate:
     case eMouseOver:
-    case NS_MOUSE_OUT:
+    case eMouseOut:
     case NS_MOUSE_MOZHITTEST:
     case eMouseMove:
       return true;
