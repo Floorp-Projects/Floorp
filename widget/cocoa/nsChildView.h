@@ -550,10 +550,8 @@ public:
 
   virtual nsIntPoint GetClientOffset() override;
 
-  mozilla::WidgetWheelEvent DispatchAPZWheelInputEvent(mozilla::InputData& aEvent);
+  void DispatchAPZWheelInputEvent(mozilla::InputData& aEvent, bool aCanTriggerSwipe);
 
-  mozilla::SwipeTracker* GetSwipeTracker() { return mSwipeTracker.get(); }
-  void MaybeTrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStartEvent);
   void SwipeFinished();
 
 protected:
@@ -598,6 +596,8 @@ protected:
 
   virtual nsresult NotifyIMEInternal(
                      const IMENotification& aIMENotification) override;
+
+  void MaybeTrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStartEvent);
 
 protected:
 
