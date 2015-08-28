@@ -3,7 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<org.mozilla.gecko.widget.ThemedTextView xmlns:android="http://schemas.android.com/apk/res/android"
+<org.mozilla.gecko.widget.themed.ThemedTextView xmlns:android="http://schemas.android.com/apk/res/android"
                                          android:layout_width="24dip"
                                          android:layout_height="24dip"
                                          android:paddingTop="3dip"

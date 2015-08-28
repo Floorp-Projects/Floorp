@@ -26,6 +26,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "Notifications", "resource://gre/modules
 XPCOMUtils.defineLazyModuleGetter(this, "Messaging", "resource://gre/modules/Messaging.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
+// Import AppsServiceChild.DOMApplicationRegistry for its getAll method.
+var AppsServiceChild = {};
+XPCOMUtils.defineLazyModuleGetter(AppsServiceChild, "DOMApplicationRegistry",
+                                  "resource://gre/modules/AppsServiceChild.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "Strings", function() {
   return Services.strings.createBundle("chrome://browser/locale/webapp.properties");
 });
@@ -463,7 +468,7 @@ this.WebappManager = {
 
   _getInstalledApps: function() {
     let deferred = Promise.defer();
-    DOMApplicationRegistry.getAll(apps => deferred.resolve(apps));
+    AppsServiceChild.DOMApplicationRegistry.getAll(apps => deferred.resolve(apps));
     return deferred.promise;
   },
 

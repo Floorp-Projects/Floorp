@@ -11,6 +11,7 @@ describe("loop.store.ConversationAppStore", function () {
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     dispatcher = new loop.Dispatcher();
+    sandbox.stub(dispatcher, "dispatch");
   });
 
   afterEach(function() {
@@ -70,7 +71,7 @@ describe("loop.store.ConversationAppStore", function () {
     });
 
     it("should fetch the window type from the mozLoop API", function() {
-      dispatcher.dispatch(new sharedActions.GetWindowData(fakeGetWindowData));
+      store.getWindowData(new sharedActions.GetWindowData(fakeGetWindowData));
 
       expect(store.getStoreState()).eql({
         windowType: "incoming"
@@ -107,7 +108,7 @@ describe("loop.store.ConversationAppStore", function () {
     it("should set showFeedbackForm to true when action is triggered", function() {
       var showFeedbackFormStub = sandbox.stub(store, "showFeedbackForm");
 
-      dispatcher.dispatch(new sharedActions.ShowFeedbackForm());
+      store.showFeedbackForm(new sharedActions.ShowFeedbackForm());
 
       sinon.assert.calledOnce(showFeedbackFormStub);
     });
@@ -116,7 +117,7 @@ describe("loop.store.ConversationAppStore", function () {
       var clock = sandbox.useFakeTimers();
       // Make sure we round down the value.
       clock.tick(1001);
-      dispatcher.dispatch(new sharedActions.ShowFeedbackForm());
+      store.showFeedbackForm(new sharedActions.ShowFeedbackForm());
 
       sinon.assert.calledOnce(setLoopPrefStub);
       sinon.assert.calledWithExactly(setLoopPrefStub,
@@ -125,8 +126,6 @@ describe("loop.store.ConversationAppStore", function () {
 
     it("should dispatch a SetupWindowData action with the data from the mozLoop API",
       function() {
-        sandbox.stub(dispatcher, "dispatch");
-
         store.getWindowData(new sharedActions.GetWindowData(fakeGetWindowData));
 
         sinon.assert.calledOnce(dispatcher.dispatch);

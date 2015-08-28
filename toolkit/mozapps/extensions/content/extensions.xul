@@ -78,7 +78,8 @@
   <!-- global commands - these act on all addons, or affect the addons manager
        in some other way -->
   <commandset id="globalCommandSet">
-    <command id="cmd_focusSearch"/>
+    <!-- XXXsw remove useless oncommand attribute once bug 371900 is fixed -->
+    <command id="cmd_focusSearch" oncommand=";"/>
     <command id="cmd_findAllUpdates"/>
     <command id="cmd_restartApp"/>
     <command id="cmd_goToDiscoverPane"/>
@@ -120,9 +121,8 @@
   </commandset>
 
   <keyset>
-    <!-- XXXunf Disabled until bug 371900 is fixed. -->
     <key id="focusSearch" key="&search.commandkey;" modifiers="accel"
-         disabled="true"/>
+         command="cmd_focusSearch"/>
   </keyset>
   <hbox flex="1">
     <vbox>
