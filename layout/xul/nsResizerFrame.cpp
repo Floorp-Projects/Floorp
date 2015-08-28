@@ -129,7 +129,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
     break;
 
   case NS_TOUCH_END:
-  case NS_MOUSE_BUTTON_UP: {
+  case eMouseUp: {
     if (aEvent->mClass == eTouchEventClass ||
         (aEvent->mClass == eMouseEventClass &&
          aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton)) {

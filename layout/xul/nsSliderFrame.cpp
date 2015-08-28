@@ -541,7 +541,7 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
     break;
 
     case NS_TOUCH_END:
-    case NS_MOUSE_BUTTON_UP:
+    case eMouseUp:
       if (ShouldScrollForEvent(aEvent)) {
         StopDrag();
         //we MUST call nsFrame HandleEvent for mouse ups to maintain the selection state and capture state.
@@ -601,7 +601,7 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
     // nsFrame::HandleEvent, but only for the left mouse button.
     if (aEvent->mMessage == NS_MOUSE_BUTTON_DOWN) {
       HandlePress(aPresContext, aEvent, aEventStatus);
-    } else if (aEvent->mMessage == NS_MOUSE_BUTTON_UP) {
+    } else if (aEvent->mMessage == eMouseUp) {
       HandleRelease(aPresContext, aEvent, aEventStatus);
     }
 
@@ -1053,7 +1053,7 @@ nsSliderFrame::ShouldScrollForEvent(WidgetGUIEvent* aEvent)
     case NS_TOUCH_END:
       return true;
     case NS_MOUSE_BUTTON_DOWN:
-    case NS_MOUSE_BUTTON_UP: {
+    case eMouseUp: {
       uint16_t button = aEvent->AsMouseEvent()->button;
 #ifdef MOZ_WIDGET_GTK
       return (button == WidgetMouseEvent::eLeftButton) ||

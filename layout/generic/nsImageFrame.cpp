@@ -2010,7 +2010,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
-  if ((aEvent->mMessage == NS_MOUSE_BUTTON_UP && 
+  if ((aEvent->mMessage == eMouseUp && 
        aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) ||
       aEvent->mMessage == eMouseMove) {
     nsImageMap* map = GetImageMap();
@@ -2050,7 +2050,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
           uri->SetSpec(spec);                
           
           bool clicked = false;
-          if (aEvent->mMessage == NS_MOUSE_BUTTON_UP) {
+          if (aEvent->mMessage == eMouseUp) {
             *aEventStatus = nsEventStatus_eConsumeDoDefault; 
             clicked = true;
           }

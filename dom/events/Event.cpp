@@ -818,7 +818,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
     if (aEvent->mFlags.mIsTrusted &&
         aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
       switch(aEvent->mMessage) {
-      case NS_MOUSE_BUTTON_UP :
+      case eMouseUp:
         if (PopupAllowedForEvent("mouseup")) {
           abuse = openControlled;
         }

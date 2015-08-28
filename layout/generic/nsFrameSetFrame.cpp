@@ -655,7 +655,7 @@ nsresult nsHTMLFramesetFrame::HandleEvent(nsPresContext* aPresContext,
       case eMouseMove:
         MouseDrag(aPresContext, aEvent);
 	      break;
-      case NS_MOUSE_BUTTON_UP:
+      case eMouseUp:
         if (aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
           EndMouseDrag(aPresContext);
         }

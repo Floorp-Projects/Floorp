@@ -457,7 +457,7 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
   }
   // Now, we need to notify only mouse down and mouse up event.
   switch (aMouseEvent->mMessage) {
-    case NS_MOUSE_BUTTON_UP:
+    case eMouseUp:
     case NS_MOUSE_BUTTON_DOWN:
       break;
     default:

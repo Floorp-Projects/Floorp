@@ -2650,7 +2650,7 @@ case _value: eventName.AssignLiteral(_name) ; break
     _ASSIGN_eventName(NS_MOUSE_ENTER_WIDGET,"NS_MOUSE_ENTER_WIDGET");
     _ASSIGN_eventName(NS_MOUSE_EXIT_WIDGET,"NS_MOUSE_EXIT_WIDGET");
     _ASSIGN_eventName(NS_MOUSE_BUTTON_DOWN,"NS_MOUSE_BUTTON_DOWN");
-    _ASSIGN_eventName(NS_MOUSE_BUTTON_UP,"NS_MOUSE_BUTTON_UP");
+    _ASSIGN_eventName(eMouseUp,"eMouseUp");
     _ASSIGN_eventName(NS_MOUSE_CLICK,"NS_MOUSE_CLICK");
     _ASSIGN_eventName(NS_MOUSE_DOUBLECLICK,"NS_MOUSE_DBLCLICK");
     _ASSIGN_eventName(eMouseMove,"eMouseMove");

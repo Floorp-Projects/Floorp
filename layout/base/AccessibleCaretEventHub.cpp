@@ -514,10 +514,10 @@ AccessibleCaretEventHub::HandleMouseEvent(WidgetMouseEvent* aEvent)
     AC_LOGV("After eMouseMove, state: %s, consume: %d", mState->Name(), rv);
     break;
 
-  case NS_MOUSE_BUTTON_UP:
-    AC_LOGV("Before NS_MOUSE_BUTTON_UP, state: %s", mState->Name());
+  case eMouseUp:
+    AC_LOGV("Before eMouseUp, state: %s", mState->Name());
     rv = mState->OnRelease(this);
-    AC_LOGV("After NS_MOUSE_BUTTON_UP, state: %s, consume: %d", mState->Name(),
+    AC_LOGV("After eMouseUp, state: %s, consume: %d", mState->Name(),
             rv);
     break;
 

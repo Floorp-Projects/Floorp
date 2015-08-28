@@ -540,8 +540,8 @@ GetEventMessageName(uint32_t aMessage)
   switch (aMessage) {
     case NS_MOUSE_BUTTON_DOWN:
       return "NS_MOUSE_BUTTON_DOWN";
-    case NS_MOUSE_BUTTON_UP:
-      return "NS_MOUSE_BUTTON_UP";
+    case eMouseUp:
+      return "eMouseUp";
     default:
       return "Unknown";
   }
@@ -4757,7 +4757,7 @@ TSFTextStore::OnMouseButtonEventInternal(
   ULONG edge = quadrant < 2 ? offset + 1 : offset;
   DWORD buttonStatus = 0;
   bool isMouseUp =
-    aIMENotification.mMouseButtonEventData.mEventMessage == NS_MOUSE_BUTTON_UP;
+    aIMENotification.mMouseButtonEventData.mEventMessage == eMouseUp;
   if (!isMouseUp) {
     switch (aIMENotification.mMouseButtonEventData.mButton) {
       case WidgetMouseEventBase::eLeftButton:

@@ -2570,7 +2570,7 @@ nsFrame::HandleEvent(nsPresContext* aPresContext,
     if (aEvent->mMessage == NS_MOUSE_BUTTON_DOWN ||
         aEvent->mMessage == NS_TOUCH_START) {
       HandlePress(aPresContext, aEvent, aEventStatus);
-    } else if (aEvent->mMessage == NS_MOUSE_BUTTON_UP ||
+    } else if (aEvent->mMessage == eMouseUp ||
                aEvent->mMessage == NS_TOUCH_END) {
       HandleRelease(aPresContext, aEvent, aEventStatus);
     }
@@ -2605,7 +2605,7 @@ nsFrame::GetDataForTableSelection(const nsFrameSelection* aFrameSelection,
   bool doTableSelection =
      displaySelection == nsISelectionDisplay::DISPLAY_ALL && selectingTableCells &&
      (aMouseEvent->mMessage == eMouseMove ||
-      (aMouseEvent->mMessage == NS_MOUSE_BUTTON_UP &&
+      (aMouseEvent->mMessage == eMouseUp &&
        aMouseEvent->button == WidgetMouseEvent::eLeftButton) ||
       aMouseEvent->IsShift());
 

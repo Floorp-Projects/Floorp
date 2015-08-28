@@ -132,7 +132,7 @@ MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
       break;
     case MultiTouchInput::MULTITOUCH_CANCEL:
     case MultiTouchInput::MULTITOUCH_END:
-      mouseEventMessage = NS_MOUSE_BUTTON_UP;
+      mouseEventMessage = eMouseUp;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Did not assign a type to WidgetMouseEvent");
@@ -188,7 +188,7 @@ MultiTouchInput::MultiTouchInput(const WidgetMouseEvent& aMouseEvent)
   case eMouseMove:
     mType = MULTITOUCH_MOVE;
     break;
-  case NS_MOUSE_BUTTON_UP:
+  case eMouseUp:
     mType = MULTITOUCH_END;
     break;
   // The mouse pointer has been interrupted in an implementation-specific

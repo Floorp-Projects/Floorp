@@ -4032,7 +4032,7 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
     // eMouseMove and NS_MOUSE_EXIT_WIDGET are here because we need to make
     // sure capture flag isn't left on after a drag where we wouldn't see a
     // button up message (see bug 324131).
-    case NS_MOUSE_BUTTON_UP:
+    case eMouseUp:
     case eMouseMove:
     case NS_MOUSE_EXIT_WIDGET:
       if (!(wParam & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON)) && sIsInMouseCapture)
@@ -4106,7 +4106,7 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
       sLastClickCount = 2;
       sLastMouseDownTime = curMsgTime;
       break;
-    case NS_MOUSE_BUTTON_UP:
+    case eMouseUp:
       // remember when this happened for the next mouse down
       sLastMousePoint.x = eventPoint.x;
       sLastMousePoint.y = eventPoint.y;
@@ -4162,7 +4162,7 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
           break;
       }
       break;
-    case NS_MOUSE_BUTTON_UP:
+    case eMouseUp:
       switch (aButton) {
         case WidgetMouseEvent::eLeftButton:
           pluginEvent.event = WM_LBUTTONUP;
@@ -5151,7 +5151,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_LBUTTONUP:
     {
-      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, wParam, lParam,
+      result = DispatchMouseEvent(eMouseUp, wParam, lParam,
                                   false, WidgetMouseEvent::eLeftButton,
                                   MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
@@ -5241,7 +5241,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_MBUTTONUP:
-      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, wParam,
+      result = DispatchMouseEvent(eMouseUp, wParam,
                                   lParam, false,
                                   WidgetMouseEvent::eMiddleButton,
                                   MOUSE_INPUT_SOURCE());
@@ -5265,7 +5265,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_NCMBUTTONUP:
-      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, 0,
+      result = DispatchMouseEvent(eMouseUp, 0,
                                   lParamToClient(lParam), false,
                                   WidgetMouseEvent::eMiddleButton,
                                   MOUSE_INPUT_SOURCE());
@@ -5289,7 +5289,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_RBUTTONUP:
-      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, wParam,
+      result = DispatchMouseEvent(eMouseUp, wParam,
                                   lParam, false,
                                   WidgetMouseEvent::eRightButton,
                                   MOUSE_INPUT_SOURCE());
@@ -5313,7 +5313,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_NCRBUTTONUP:
-      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, 0,
+      result = DispatchMouseEvent(eMouseUp, 0,
                                   lParamToClient(lParam), false,
                                   WidgetMouseEvent::eRightButton,
                                   MOUSE_INPUT_SOURCE());
@@ -5377,7 +5377,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
                          false, WidgetMouseEvent::eLeftButton,
                          MOUSE_INPUT_SOURCE());
       result = 
-        DispatchMouseEvent(NS_MOUSE_BUTTON_UP, 0, lParamToClient(lParam),
+        DispatchMouseEvent(eMouseUp, 0, lParamToClient(lParam),
                            false, WidgetMouseEvent::eLeftButton,
                            MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();

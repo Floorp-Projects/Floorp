@@ -3087,8 +3087,7 @@ nsGlobalWindow::PreHandleEvent(EventChainPreVisitor& aVisitor)
   } else if (msg == NS_MOUSE_BUTTON_DOWN &&
              aVisitor.mEvent->mFlags.mIsTrusted) {
     gMouseDown = true;
-  } else if ((msg == NS_MOUSE_BUTTON_UP ||
-              msg == NS_DRAGDROP_END) &&
+  } else if ((msg == eMouseUp || msg == NS_DRAGDROP_END) &&
              aVisitor.mEvent->mFlags.mIsTrusted) {
     gMouseDown = false;
     if (gDragServiceDisabled) {

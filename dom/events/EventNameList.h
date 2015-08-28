@@ -291,7 +291,7 @@ EVENT(mouseover,
       EventNameType_All,
       eMouseEventClass)
 EVENT(mouseup,
-      NS_MOUSE_BUTTON_UP,
+      eMouseUp,
       EventNameType_All,
       eMouseEventClass)
 EVENT(mozfullscreenchange,

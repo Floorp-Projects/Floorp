@@ -1683,7 +1683,7 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent,
         aMouseEvent->StopPropagation();
       }
     }
-    if (mouseEvent->mMessage == NS_MOUSE_BUTTON_UP) {
+    if (mouseEvent->mMessage == eMouseUp) {
       mLastMouseDownButtonType = -1;
     }
   }
@@ -1824,7 +1824,7 @@ CocoaEventTypeForEvent(const WidgetGUIEvent& anEvent, nsIFrame* aObjectFrame)
     }
     case NS_MOUSE_BUTTON_DOWN:
       return NPCocoaEventMouseDown;
-    case NS_MOUSE_BUTTON_UP:
+    case eMouseUp:
       return NPCocoaEventMouseUp;
     case eKeyDown:
       return NPCocoaEventKeyDown;
@@ -1849,7 +1849,7 @@ TranslateToNPCocoaEvent(WidgetGUIEvent* anEvent, nsIFrame* aObjectFrame)
 
   if (anEvent->mMessage == eMouseMove ||
       anEvent->mMessage == NS_MOUSE_BUTTON_DOWN ||
-      anEvent->mMessage == NS_MOUSE_BUTTON_UP ||
+      anEvent->mMessage == eMouseUp ||
       anEvent->mMessage == NS_MOUSE_SCROLL ||
       anEvent->mMessage == NS_MOUSE_OVER ||
       anEvent->mMessage == NS_MOUSE_OUT)
@@ -1870,8 +1870,7 @@ TranslateToNPCocoaEvent(WidgetGUIEvent* anEvent, nsIFrame* aObjectFrame)
 
   switch (anEvent->mMessage) {
     case NS_MOUSE_BUTTON_DOWN:
-    case NS_MOUSE_BUTTON_UP:
-    {
+    case eMouseUp: {
       WidgetMouseEvent* mouseEvent = anEvent->AsMouseEvent();
       if (mouseEvent) {
         switch (mouseEvent->button) {
@@ -1889,7 +1888,7 @@ TranslateToNPCocoaEvent(WidgetGUIEvent* anEvent, nsIFrame* aObjectFrame)
         }
         cocoaEvent.data.mouse.clickCount = mouseEvent->clickCount;
       } else {
-        NS_WARNING("NS_MOUSE_BUTTON_UP/DOWN is not a WidgetMouseEvent?");
+        NS_WARNING("eMouseUp/DOWN is not a WidgetMouseEvent?");
       }
       break;
     }
@@ -2076,7 +2075,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
         }
         break;
       }
-      case NS_MOUSE_BUTTON_UP: {
+      case eMouseUp: {
         static const int upMsgs[] =
           { WM_LBUTTONUP, WM_MBUTTONUP, WM_RBUTTONUP };
         pluginEvent.event = upMsgs[mouseEvent->button];
@@ -2106,7 +2105,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
       // See use of NPEvent in widget/windows/nsWindow.cpp
       // for why this assert should be safe
       NS_ASSERTION(anEvent.mMessage == NS_MOUSE_BUTTON_DOWN ||
-                   anEvent.mMessage == NS_MOUSE_BUTTON_UP ||
+                   anEvent.mMessage == eMouseUp ||
                    anEvent.mMessage == NS_MOUSE_DOUBLECLICK ||
                    anEvent.mMessage == NS_MOUSE_OVER ||
                    anEvent.mMessage == NS_MOUSE_OUT ||
@@ -2237,7 +2236,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
             }
             break;
           case NS_MOUSE_BUTTON_DOWN:
-          case NS_MOUSE_BUTTON_UP:
+          case eMouseUp:
             {
               XButtonEvent& event = pluginEvent.xbutton;
               event.type = anEvent.mMessage == NS_MOUSE_BUTTON_DOWN ?
@@ -2410,7 +2409,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
               mInstance->HandleEvent(&event, nullptr, NS_PLUGIN_CALL_SAFE_TO_REENTER_GECKO);
             }
             break;
-          case NS_MOUSE_BUTTON_UP:
+          case eMouseUp:
             {
               ANPEvent event;
               event.inSize = sizeof(ANPEvent);
