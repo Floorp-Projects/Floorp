@@ -11,9 +11,6 @@
 #include "certificatecheck.h"
 #include "updatelogging.h"
 
-#pragma comment(lib, "wintrust.lib")
-#pragma comment(lib, "crypt32.lib")
-
 static const int ENCODING = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING;
 
 /**

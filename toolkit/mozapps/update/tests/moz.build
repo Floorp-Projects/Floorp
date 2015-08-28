@@ -32,7 +32,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
 
     OS_LIBS += [
-        'wintrust',
         'shlwapi',
       ]
 else:
