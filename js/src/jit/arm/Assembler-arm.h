@@ -50,7 +50,7 @@ static MOZ_CONSTEXPR_VAR Register ScratchRegister = {Registers::ip};
 // of code thinks it has exclusive ownership of the scratch register.
 struct ScratchRegisterScope : public AutoRegisterScope
 {
-    ScratchRegisterScope(MacroAssembler& masm)
+    explicit ScratchRegisterScope(MacroAssembler& masm)
       : AutoRegisterScope(masm, ScratchRegister)
     { }
 };
@@ -130,13 +130,13 @@ static MOZ_CONSTEXPR_VAR FloatRegister ScratchIntReg = { FloatRegisters::d15, VF
 
 struct ScratchFloat32Scope : public AutoFloatRegisterScope
 {
-    ScratchFloat32Scope(MacroAssembler& masm)
+    explicit ScratchFloat32Scope(MacroAssembler& masm)
       : AutoFloatRegisterScope(masm, ScratchFloat32Reg)
     { }
 };
 struct ScratchDoubleScope : public AutoFloatRegisterScope
 {
-    ScratchDoubleScope(MacroAssembler& masm)
+    explicit ScratchDoubleScope(MacroAssembler& masm)
       : AutoFloatRegisterScope(masm, ScratchDoubleReg)
     { }
 };

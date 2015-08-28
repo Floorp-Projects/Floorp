@@ -62,13 +62,13 @@ static MOZ_CONSTEXPR_VAR Register SecondScratchReg = t8;
 // of code thinks it has exclusive ownership of each scratch register.
 struct ScratchRegisterScope : public AutoRegisterScope
 {
-    ScratchRegisterScope(MacroAssembler& masm)
+    explicit ScratchRegisterScope(MacroAssembler& masm)
       : AutoRegisterScope(masm, ScratchRegister)
     { }
 };
 struct SecondScratchRegisterScope : public AutoRegisterScope
 {
-    SecondScratchRegisterScope(MacroAssembler& masm)
+    explicit SecondScratchRegisterScope(MacroAssembler& masm)
       : AutoRegisterScope(masm, SecondScratchReg)
     { }
 };
