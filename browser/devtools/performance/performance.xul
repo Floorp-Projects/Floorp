@@ -24,11 +24,9 @@
   <script type="application/javascript" src="performance/views/details-js-flamegraph.js"/>
   <script type="application/javascript" src="performance/views/details-memory-call-tree.js"/>
   <script type="application/javascript" src="performance/views/details-memory-flamegraph.js"/>
-  <script type="application/javascript" src="performance/views/details-optimizations.js"/>
   <script type="application/javascript" src="performance/views/details.js"/>
   <script type="application/javascript" src="performance/views/recordings.js"/>
   <script type="application/javascript" src="performance/views/optimizations-list.js"/>
-  <script type="application/javascript" src="performance/views/frames-list.js"/>
 
   <popupset id="performance-options-popupset">
     <menupopup id="performance-filter-menupopup"/>
@@ -144,11 +142,6 @@
                          label="&performanceUI.toolbar.memory-flamegraph;"
                          hidden="true"
                          data-view="memory-flamegraph" />
-          <toolbarbutton id="select-optimizations-view"
-                         class="devtools-toolbarbutton devtools-button"
-                         label="Optimizations"
-                         hidden="true"
-                         data-view="optimizations" />
         </hbox>
         <spacer flex="1"></spacer>
         <hbox id="performance-toolbar-controls-options"
@@ -298,6 +291,20 @@
                   </hbox>
                   <vbox class="call-tree-cells-container" flex="1"/>
                 </vbox>
+                <splitter class="devtools-side-splitter"/>
+                <!-- Optimizations Panel -->
+                <vbox id="jit-optimizations-view"
+                      class="hidden">
+                  <toolbar id="jit-optimizations-toolbar" class="devtools-toolbar">
+                    <hbox id="jit-optimizations-header">
+                      <span class="jit-optimizations-title">&performanceUI.JITOptimizationsTitle;</span>
+                      <span class="header-function-name" />
+                      <span class="header-file opt-url debugger-link" />
+                      <span class="header-line opt-line" />
+                    </hbox>
+                  </toolbar>
+                  <vbox id="jit-optimizations-raw-view"></vbox>
+                </vbox>
               </hbox>
 
               <!-- JS FlameChart -->
@@ -358,47 +365,6 @@
               <!-- Memory FlameChart -->
               <hbox id="memory-flamegraph-view" flex="1">
               </hbox>
-
-              <!-- JIT View -->
-              <hbox id="optimizations-view" flex="1">
-                <hbox id="graph-placeholder" flex="1">
-                </hbox>
-                <splitter id="optimizations-splitter" class="devtools-side-splitter"/>
-                <tabbox id="optimizations-tabs"
-                        class="devtools-sidebar-tabs"
-                        handleCtrlTab="false">
-                  <tabs>
-                    <tab id="optimizations-optimizations-tab"
-                         label="Optimizations" />
-                    <tab id="optimizations-frames-tab"
-                         label="Frames" />
-                  </tabs>
-                  <tabpanels flex="1">
-
-                    <!-- Optimizations Panel -->
-                    <tabpanel id="optimizations-tabpanel"
-                              class="tabpanel-content">
-                      <vbox id="jit-optimizations-view">
-                        <toolbar id="jit-optimizations-toolbar" class="devtools-toolbar">
-                          <hbox id="jit-optimizations-header">
-                            <span class="jit-optimizations-title">&performanceUI.JITOptimizationsTitle;</span>
-                            <span class="header-function-name" />
-                            <span class="header-file opt-url debugger-link" />
-                            <span class="header-line opt-line" />
-                          </hbox>
-                        </toolbar>
-                        <vbox id="jit-optimizations-raw-view"></vbox>
-                      </vbox>
-                    </tabpanel>
-
-                    <!-- Frames Panel -->
-                    <tabpanel id="frames-tabpanel"
-                              class="tabpanel-content">
-                    </tabpanel>
-                  </tabpanels>
-                </tabbox>
-              </hbox>
-              <!-- /JIT View -->
             </deck>
           </deck>
         </vbox>

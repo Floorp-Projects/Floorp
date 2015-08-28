@@ -697,9 +697,6 @@ description.opt-icon::before {
 .opt-icon[severity=warning]::before {
   background-position: -24px -24px;
 }
-.opt-icon[type=linkable]::before {
-  cursor: pointer;
-}
 
 ul.frames-list {
   list-style-type: none;
