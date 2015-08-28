@@ -55,7 +55,7 @@ NS_EVENT_MESSAGE(eMouseDoubleClick,     eMouseEventFirst + 24)
 NS_EVENT_MESSAGE(eMouseClick,           eMouseEventFirst + 27)
 // eMouseActivate is fired when the widget is activated by a click.
 NS_EVENT_MESSAGE(eMouseActivate,        eMouseEventFirst + 30)
-NS_EVENT_MESSAGE(NS_MOUSE_OVER,         eMouseEventFirst + 31)
+NS_EVENT_MESSAGE(eMouseOver,            eMouseEventFirst + 31)
 NS_EVENT_MESSAGE(NS_MOUSE_OUT,          eMouseEventFirst + 32)
 NS_EVENT_MESSAGE(NS_MOUSE_MOZHITTEST,   eMouseEventFirst + 33)
 NS_EVENT_MESSAGE(NS_MOUSEENTER,         eMouseEventFirst + 34)

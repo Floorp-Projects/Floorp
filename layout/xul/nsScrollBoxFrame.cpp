@@ -88,7 +88,7 @@ nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
     // over the element, otherwise repetition is done while the element is
     // active (pressed).
     case eMouseEnterIntoWidget:
-    case NS_MOUSE_OVER:
+    case eMouseOver:
       if (IsActivatedOnHover()) {
         StartRepeat();
         mTrustedEvent = aEvent->mFlags.mIsTrusted;
