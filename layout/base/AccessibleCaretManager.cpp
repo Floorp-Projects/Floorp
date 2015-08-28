@@ -335,26 +335,42 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
     return NS_ERROR_FAILURE;
   }
 
-  nsIFrame* focusedFrame = ChangeFocus(ptFrame);
+  nsIFrame* focusableFrame = GetFocusableFrame(ptFrame);
 
 #ifdef DEBUG_FRAME_DUMP
   AC_LOG("%s: Found %s under (%d, %d)", __FUNCTION__, ptFrame->ListTag().get(),
          aPoint.x, aPoint.y);
-  AC_LOG("%s: Focused on %s", __FUNCTION__,
-         focusedFrame ? focusedFrame->ListTag().get() : "no frame");
+  AC_LOG("%s: Found %s focusable", __FUNCTION__,
+         focusableFrame ? focusableFrame->ListTag().get() : "no frame");
 #endif
 
   // Firstly check long press on an empty editable content.
   Element* newFocusEditingHost = ptFrame->GetContent()->GetEditingHost();
-  if (focusedFrame && newFocusEditingHost &&
+  if (focusableFrame && newFocusEditingHost &&
       !nsContentUtils::HasNonEmptyTextContent(
         newFocusEditingHost, nsContentUtils::eRecurseIntoChildren)) {
+    ChangeFocusToOrClearOldFocus(focusableFrame);
     // We need to update carets to get correct information before dispatching
     // CaretStateChangedEvent.
     UpdateCarets();
     DispatchCaretStateChangedEvent(CaretChangedReason::Longpressonemptycontent);
     return NS_OK;
   }
+
+  bool selectable = false;
+  ptFrame->IsSelectable(&selectable, nullptr);
+
+#ifdef DEBUG_FRAME_DUMP
+  AC_LOG("%s: %s %s selectable.", __FUNCTION__, ptFrame->ListTag().get(),
+         selectable ? "is" : "is NOT");
+#endif
+
+  if (!selectable) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // ptFrame is selectable. Now change the focus.
+  ChangeFocusToOrClearOldFocus(focusableFrame);
 
   // Then try select a word under point.
   nsPoint ptInFrame = aPoint;
@@ -508,7 +524,7 @@ AccessibleCaretManager::GetCaretMode() const
 }
 
 nsIFrame*
-AccessibleCaretManager::ChangeFocus(nsIFrame* aFrame) const
+AccessibleCaretManager::GetFocusableFrame(nsIFrame* aFrame) const
 {
   // This implementation is similar to EventStateManager::PostHandleEvent().
   // Look for the nearest enclosing focusable frame.
@@ -519,14 +535,17 @@ AccessibleCaretManager::ChangeFocus(nsIFrame* aFrame) const
     }
     focusableFrame = focusableFrame->GetParent();
   }
+  return focusableFrame;
+}
 
-  // If a focusable frame is found, move focus to it. Otherwise, clear the old
-  // focus then re-focus the window.
+void
+AccessibleCaretManager::ChangeFocusToOrClearOldFocus(nsIFrame* aFrame) const
+{
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   MOZ_ASSERT(fm);
 
-  if (focusableFrame) {
-    nsIContent* focusableContent = focusableFrame->GetContent();
+  if (aFrame) {
+    nsIContent* focusableContent = aFrame->GetContent();
     MOZ_ASSERT(focusableContent, "Focusable frame must have content!");
     nsCOMPtr<nsIDOMElement> focusableElement = do_QueryInterface(focusableContent);
     fm->SetFocus(focusableElement, nsIFocusManager::FLAG_BYMOUSE);
@@ -537,19 +556,11 @@ AccessibleCaretManager::ChangeFocus(nsIFrame* aFrame) const
       fm->SetFocusedWindow(win);
     }
   }
-
-  return focusableFrame;
 }
 
 nsresult
 AccessibleCaretManager::SelectWord(nsIFrame* aFrame, const nsPoint& aPoint) const
 {
-  bool selectable;
-  aFrame->IsSelectable(&selectable, nullptr);
-  if (!selectable) {
-    return NS_ERROR_FAILURE;
-  }
-
   SetSelectionDragState(true);
   nsFrame* frame = static_cast<nsFrame*>(aFrame);
   nsresult rs = frame->SelectByTypeAtPoint(mPresShell->GetPresContext(), aPoint,
