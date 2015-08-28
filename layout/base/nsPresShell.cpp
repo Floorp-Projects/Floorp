@@ -6938,7 +6938,7 @@ PresShell::HandleKeyboardEvent(nsINode* aTarget,
                                nsEventStatus* aStatus,
                                EventDispatchingCallback* aEventCB)
 {
-  if (aEvent.mMessage == NS_KEY_PRESS ||
+  if (aEvent.mMessage == eKeyPress ||
       !BeforeAfterKeyboardEventEnabled()) {
     EventDispatcher::Dispatch(aTarget, mPresContext,
                               &aEvent, nullptr, aStatus, aEventCB);
@@ -7637,7 +7637,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         NS_IF_RELEASE(gKeyDownTarget);
         NS_IF_ADDREF(gKeyDownTarget = eventTarget);
       }
-      else if ((aEvent->mMessage == NS_KEY_PRESS ||
+      else if ((aEvent->mMessage == eKeyPress ||
                 aEvent->mMessage == NS_KEY_UP) &&
                gKeyDownTarget) {
         // If a different element is now focused for the keypress/keyup event
@@ -7843,7 +7843,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
     // XXX How about IME events and input events for plugins?
     if (aEvent->mFlags.mIsTrusted) {
       switch (aEvent->mMessage) {
-      case NS_KEY_PRESS:
+      case eKeyPress:
       case NS_KEY_DOWN:
       case NS_KEY_UP: {
         nsIDocument* doc = GetCurrentEventContent() ?
@@ -7978,7 +7978,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
     }
 
     switch (aEvent->mMessage) {
-    case NS_KEY_PRESS:
+    case eKeyPress:
     case NS_KEY_DOWN:
     case NS_KEY_UP: {
       if (aEvent->AsKeyboardEvent()->keyCode == NS_VK_ESCAPE) {

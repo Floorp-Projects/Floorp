@@ -333,7 +333,7 @@ protected:
      * InitKeypressEvent() intializes keyCode, charCode and
      * alternativeCharCodes of keypress event.
      *
-     * @param aKeyEvent         An NS_KEY_PRESS event, must not be nullptr.
+     * @param aKeyEvent         An eKeyPress event, must not be nullptr.
      *                          The modifier related members and keyCode must
      *                          be initialized already.
      * @param aGdkKeyEvent      A native key event which causes dispatching

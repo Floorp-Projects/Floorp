@@ -1461,7 +1461,7 @@ nsWindow::InitKeyEvent(WidgetKeyboardEvent& event, AndroidGeckoEvent& key,
     event.mCodeNameIndex = ConvertAndroidScanCodeToCodeNameIndex(key);
     uint32_t domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(key.KeyCode());
 
-    if (event.mMessage == NS_KEY_PRESS) {
+    if (event.mMessage == eKeyPress) {
         // Android gives us \n, so filter out some control characters.
         int charCode = key.UnicodeChar();
         if (!charCode) {
@@ -1500,13 +1500,13 @@ nsWindow::InitKeyEvent(WidgetKeyboardEvent& event, AndroidGeckoEvent& key,
     // Note that on Android 4.x, Alt modifier isn't set when the key input
     // causes text input even while right Alt key is pressed.  However, this
     // is necessary for Android 2.3 compatibility.
-    if (event.mMessage == NS_KEY_PRESS &&
+    if (event.mMessage == eKeyPress &&
         key.UnicodeChar() && key.UnicodeChar() != key.BaseUnicodeChar()) {
         event.modifiers &= ~(MODIFIER_ALT | MODIFIER_CONTROL | MODIFIER_META);
     }
 
     event.mIsRepeat =
-        (event.mMessage == NS_KEY_DOWN || event.mMessage == NS_KEY_PRESS) &&
+        (event.mMessage == NS_KEY_DOWN || event.mMessage == eKeyPress) &&
         (!!(key.Flags() & AKEY_EVENT_FLAG_LONG_PRESS) || !!key.RepeatCount());
     event.location =
         WidgetKeyboardEvent::ComputeLocationFromCodeValue(event.mCodeNameIndex);
@@ -1543,7 +1543,7 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
         switch (keyCode) {
             case AKEYCODE_BACK: {
                 // XXX Where is the keydown event for this??
-                WidgetKeyboardEvent pressEvent(true, NS_KEY_PRESS, this);
+                WidgetKeyboardEvent pressEvent(true, eKeyPress, this);
                 ANPEvent pluginEvent;
                 InitKeyEvent(pressEvent, *ae, &pluginEvent);
                 DispatchEvent(&pressEvent);
@@ -1623,7 +1623,7 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
         return;
     }
 
-    WidgetKeyboardEvent pressEvent(true, NS_KEY_PRESS, this);
+    WidgetKeyboardEvent pressEvent(true, eKeyPress, this);
     InitKeyEvent(pressEvent, *ae, &pluginEvent);
 #ifdef DEBUG_ANDROID_WIDGET
     __android_log_print(ANDROID_LOG_INFO, "Gecko", "Dispatching key pressEvent with keyCode %d charCode %d shift %d alt %d sym/ctrl %d metamask %d", pressEvent.keyCode, pressEvent.charCode, pressEvent.IsShift(), pressEvent.IsAlt(), pressEvent.IsControl(), ae->MetaState());

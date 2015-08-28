@@ -394,7 +394,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
 
   bool onmenu = IsOnMenu();
 
-  if (aEvent->mMessage == NS_KEY_PRESS && !IsDisabled()) {
+  if (aEvent->mMessage == eKeyPress && !IsDisabled()) {
     WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
     uint32_t keyCode = keyEvent->keyCode;
 #ifdef XP_MACOSX

@@ -785,7 +785,7 @@ TouchCaret::HandleEvent(WidgetEvent* aEvent)
       break;
     case NS_KEY_UP:
     case NS_KEY_DOWN:
-    case NS_KEY_PRESS:
+    case eKeyPress:
     case NS_WHEEL_WHEEL:
     case NS_WHEEL_START:
     case NS_WHEEL_STOP:
