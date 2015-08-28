@@ -29,7 +29,7 @@ NS_EVENT_MESSAGE(eBeforeKeyUp,          eWindowEventFirst + 36)
 NS_EVENT_MESSAGE(eAfterKeyUp,           eWindowEventFirst + 37)
 
 NS_EVENT_MESSAGE(eResize,               eWindowEventFirst + 60)
-NS_EVENT_MESSAGE(NS_SCROLL_EVENT,       eWindowEventFirst + 61)
+NS_EVENT_MESSAGE(eScroll,               eWindowEventFirst + 61)
 
 // A plugin was clicked or otherwise focused. NS_PLUGIN_ACTIVATE should be
 // used when the window is not active. NS_PLUGIN_FOCUS should be used when
