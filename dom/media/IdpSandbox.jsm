@@ -218,9 +218,25 @@ IdpSandbox.prototype = {
     // have to use the ultimate URI, not the starting one to avoid
     // that origin stealing from the one that redirected to it
     this._populateSandbox(result.request.URI);
-    // putting a javascript version of 1.8 here seems fragile
-    Cu.evalInSandbox(result.data, this.sandbox,
-                     '1.8', result.request.URI.spec, 1);
+    try {
+      Cu.evalInSandbox(result.data, this.sandbox,
+                       'latest', result.request.URI.spec, 1);
+    } catch (e) {
+      if (e.name === 'IdpError' || e.name === 'IdpLoginError') {
+        throw e;
+      }
+      // Capture all the details from the error and log them to the console.
+      // This can't rethrow anything else because that could leak information
+      // about the internal workings of the IdP across origins.
+      let scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
+      let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
+      scriptError.init(e.message, e.fileName, null, e.lineNumber, e.columnNumber,
+                       Ci.nsIScriptError.errorFlag, "content javascript");
+      let consoleService = Cc['@mozilla.org/consoleservice;1']
+          .getService(Ci.nsIConsoleService);
+      consoleService.logMessage(scriptError);
+      throw new Error('Error in IdP, check console for details');
+    }
 
     if (!registrar.idp) {
       throw new Error('IdP failed to call rtcIdentityProvider.register()');
