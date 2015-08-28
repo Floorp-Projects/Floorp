@@ -183,10 +183,10 @@ struct AutoGenericRegisterScope : public RegisterType
 
 #ifdef DEBUG
     MacroAssembler& masm_;
-    AutoGenericRegisterScope(MacroAssembler& masm, RegisterType reg);
+    explicit AutoGenericRegisterScope(MacroAssembler& masm, RegisterType reg);
     ~AutoGenericRegisterScope();
 #else
-    MOZ_CONSTEXPR AutoGenericRegisterScope(MacroAssembler& masm, RegisterType reg)
+    MOZ_CONSTEXPR explicit AutoGenericRegisterScope(MacroAssembler& masm, RegisterType reg)
       : RegisterType(reg)
     { }
 #endif

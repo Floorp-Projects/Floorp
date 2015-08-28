@@ -17,21 +17,21 @@ namespace jit {
 
 struct ScratchFloat32Scope : public AutoFloatRegisterScope
 {
-    ScratchFloat32Scope(MacroAssembler& masm)
+    explicit ScratchFloat32Scope(MacroAssembler& masm)
       : AutoFloatRegisterScope(masm, ScratchFloat32Reg)
     { }
 };
 
 struct ScratchDoubleScope : public AutoFloatRegisterScope
 {
-    ScratchDoubleScope(MacroAssembler& masm)
+    explicit ScratchDoubleScope(MacroAssembler& masm)
       : AutoFloatRegisterScope(masm, ScratchDoubleReg)
     { }
 };
 
 struct ScratchSimdScope : public AutoFloatRegisterScope
 {
-    ScratchSimdScope(MacroAssembler& masm)
+    explicit ScratchSimdScope(MacroAssembler& masm)
       : AutoFloatRegisterScope(masm, ScratchSimdReg)
     { }
 };
