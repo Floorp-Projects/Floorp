@@ -793,7 +793,7 @@ TouchCaret::HandleEvent(WidgetEvent* aEvent)
       TOUCHCARET_LOG("Receive key/wheel event %d", aEvent->mMessage);
       SetVisibility(false);
       break;
-    case NS_MOUSE_MOZLONGTAP:
+    case eMouseLongTap:
       if (mState == TOUCHCARET_TOUCHDRAG_ACTIVE) {
         // Disable long tap event from APZ while dragging the touch caret.
         status = nsEventStatus_eConsumeNoDefault;

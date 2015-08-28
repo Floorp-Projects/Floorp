@@ -521,10 +521,10 @@ AccessibleCaretEventHub::HandleMouseEvent(WidgetMouseEvent* aEvent)
             rv);
     break;
 
-  case NS_MOUSE_MOZLONGTAP:
-    AC_LOGV("Before NS_MOUSE_MOZLONGTAP, state: %s", mState->Name());
+  case eMouseLongTap:
+    AC_LOGV("Before eMouseLongTap, state: %s", mState->Name());
     rv = mState->OnLongTap(this, point);
-    AC_LOGV("After NS_MOUSE_MOZLONGTAP, state: %s, consume: %d", mState->Name(),
+    AC_LOGV("After eMouseLongTap, state: %s, consume: %d", mState->Name(),
             rv);
     break;
 

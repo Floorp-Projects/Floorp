@@ -141,7 +141,7 @@ public:
 
   static UniquePtr<WidgetEvent> CreateLongTapEvent(nscoord aX, nscoord aY)
   {
-    return CreateMouseEvent(NS_MOUSE_MOZLONGTAP, aX, aY);
+    return CreateMouseEvent(eMouseLongTap, aX, aY);
   }
 
   static UniquePtr<WidgetEvent> CreateTouchEvent(EventMessage aMessage,
