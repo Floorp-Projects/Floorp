@@ -92,9 +92,6 @@ nsEventQueue::PutEvent(nsIRunnable* aRunnable)
 void
 nsEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  // Avoid calling AddRef+Release while holding our monitor.
-  nsCOMPtr<nsIRunnable> event(aRunnable);
-
   if (ChaosMode::isActive(ChaosFeature::ThreadScheduling)) {
     // With probability 0.5, yield so other threads have a chance to
     // dispatch events to this queue first.
@@ -121,7 +118,9 @@ nsEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable)
     mOffsetTail = 0;
   }
 
-  event.swap(mTail->mEvents[mOffsetTail]);
+  nsIRunnable*& queueLocation = mTail->mEvents[mOffsetTail];
+  MOZ_ASSERT(!queueLocation);
+  queueLocation = aRunnable.take();
   ++mOffsetTail;
   LOG(("EVENTQ(%p): notify\n", this));
   mon.NotifyAll();
