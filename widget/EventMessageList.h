@@ -43,10 +43,6 @@ NS_EVENT_MESSAGE(eOnline,               eWindowEventFirst + 65)
 
 // NS_BEFORERESIZE_EVENT used to be here (eWindowEventFirst + 66)
 
-// Indicates that the user is either idle or active
-NS_EVENT_MESSAGE(NS_MOZ_USER_IDLE,      eWindowEventFirst + 67)
-NS_EVENT_MESSAGE(NS_MOZ_USER_ACTIVE,    eWindowEventFirst + 68)
-
 NS_EVENT_MESSAGE(NS_LANGUAGECHANGE,     eWindowEventFirst + 70)
 
 NS_EVENT_MESSAGE(NS_MOUSE_MESSAGE_START, 300)
