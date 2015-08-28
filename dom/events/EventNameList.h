@@ -165,7 +165,7 @@ EVENT(change,
       EventNameType_HTMLXUL,
       eBasicEventClass)
 EVENT(click,
-      NS_MOUSE_CLICK,
+      eMouseClick,
       EventNameType_All,
       eMouseEventClass)
 EVENT(contextmenu,
