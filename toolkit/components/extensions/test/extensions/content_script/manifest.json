@@ -19,6 +19,11 @@
       "matches": ["http://mochi.test/tests/toolkit/components/extensions/test/mochitest/file_contentscript_*.html"],
       "js": ["content_script_idle.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["http://mochi.test/tests/toolkit/components/extensions/test/mochitest/file_contentscript_*.html"],
+      "js": ["content_script.js"],
+      "run_at": "document_idle"
     }
   ],
 

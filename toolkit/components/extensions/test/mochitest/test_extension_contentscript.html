@@ -28,6 +28,8 @@ add_task(function* test_contentscript()
     extension.onMessage("script-run-complete", () => { completeCount++; resolve(); });
   });
 
+  let chromeNamespacePromise = extension.awaitMessage("chrome-namespace-ok");
+
   yield new Promise(resolve => { setTimeout(resolve, 0); });
 
   let win = window.open();
@@ -36,7 +38,7 @@ add_task(function* test_contentscript()
 
   ok(true, "page loaded");
 
-  yield Promise.all([waitForLoad(win), completePromise]);
+  yield Promise.all([waitForLoad(win), completePromise, chromeNamespacePromise]);
   info("test page loaded");
 
   win.close();
