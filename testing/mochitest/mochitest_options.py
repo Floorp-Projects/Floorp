@@ -6,6 +6,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 from argparse import ArgumentParser, SUPPRESS
 from distutils.util import strtobool
 from urlparse import urlparse
+import json
 import os
 import tempfile
 
@@ -315,6 +316,12 @@ class MochitestArguments(ArgumentContainer):
           "help": "Path to a manifestparser (.ini formatted) manifest of tests to run.",
           "suppress": True,
           }],
+        [["--extra-mozinfo-json"],
+         {"dest": "extra_mozinfo_json",
+          "default": None,
+          "help": "Filter tests based on a given mozinfo file.",
+          "suppress": True,
+          }],
         [["--testrun-manifest-file"],
          {"dest": "testRunManifestFile",
           "default": 'tests.json',
@@ -557,6 +564,13 @@ class MochitestArguments(ArgumentContainer):
         if options.totalChunks is not None and options.thisChunk is None:
             parser.error(
                 "thisChunk must be specified when totalChunks is specified")
+
+        if options.extra_mozinfo_json:
+            if not os.path.isfile(options.extra_mozinfo_json):
+               parser.error("Error: couldn't find mozinfo.json at '%s'."\
+                             % options.extra_mozinfo_json)
+
+            options.extra_mozinfo_json = json.load(open(options.extra_mozinfo_json))
 
         if options.totalChunks:
             if not 1 <= options.thisChunk <= options.totalChunks:
