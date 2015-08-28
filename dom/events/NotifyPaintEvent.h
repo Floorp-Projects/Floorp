@@ -73,7 +73,7 @@ NS_NewDOMNotifyPaintEvent(mozilla::dom::EventTarget* aOwner,
                           nsPresContext* aPresContext,
                           mozilla::WidgetEvent* aEvent,
                           mozilla::EventMessage aEventMessage =
-                            mozilla::NS_EVENT_NULL,
+                            mozilla::eVoidEvent,
                           nsInvalidateRequestList* aInvalidateRequests =
                             nullptr);
 

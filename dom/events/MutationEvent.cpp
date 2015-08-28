@@ -17,7 +17,7 @@ MutationEvent::MutationEvent(EventTarget* aOwner,
                              nsPresContext* aPresContext,
                              InternalMutationEvent* aEvent)
   : Event(aOwner, aPresContext,
-          aEvent ? aEvent : new InternalMutationEvent(false, NS_EVENT_NULL))
+          aEvent ? aEvent : new InternalMutationEvent(false, eVoidEvent))
 {
   mEventIsInternal = (aEvent == nullptr);
 }

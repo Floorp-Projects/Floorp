@@ -64,7 +64,7 @@ TouchEvent::TouchEvent(EventTarget* aOwner,
                        WidgetTouchEvent* aEvent)
   : UIEvent(aOwner, aPresContext,
             aEvent ? aEvent :
-                     new WidgetTouchEvent(false, NS_EVENT_NULL, nullptr))
+                     new WidgetTouchEvent(false, eVoidEvent, nullptr))
 {
   if (aEvent) {
     mEventIsInternal = false;
