@@ -205,7 +205,7 @@ protected:
   {
     switch (aMessage) {
       case eMouseEnter:
-      case NS_MOUSELEAVE:
+      case eMouseLeave:
         mFlags.mBubbles = false;
         mFlags.mCancelable = false;
         break;
@@ -225,7 +225,7 @@ public:
   {
     switch (aMessage) {
       case eMouseEnter:
-      case NS_MOUSELEAVE:
+      case eMouseLeave:
         mFlags.mBubbles = false;
         mFlags.mCancelable = false;
         break;
