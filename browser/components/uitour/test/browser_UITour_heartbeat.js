@@ -346,7 +346,7 @@ let tests = [
 
   taskify(function test_invalidEngagementButtonLabel(done) {
     let engagementURL = "http://example.com";
-    let flowId = "ui-engagewithfirefox-" + Math.random();
+    let flowId = "invalidEngagementButtonLabel-" + Math.random();
 
     let eventPromise = promisePageEvent();
 
@@ -363,7 +363,7 @@ let tests = [
 
   taskify(function test_privateWindowsOnly_noneOpen(done) {
     let engagementURL = "http://example.com";
-    let flowId = "ui-engagewithfirefox-" + Math.random();
+    let flowId = "privateWindowsOnly_noneOpen-" + Math.random();
 
     let eventPromise = promisePageEvent();
 
@@ -380,7 +380,7 @@ let tests = [
 
   taskify(function test_privateWindowsOnly_notMostRecent(done) {
     let engagementURL = "http://example.com";
-    let flowId = "ui-engagewithfirefox-" + Math.random();
+    let flowId = "notMostRecent-" + Math.random();
 
     let privateWin = yield BrowserTestUtils.openNewBrowserWindow({ private: true });
     let mostRecentWin = yield BrowserTestUtils.openNewBrowserWindow();
@@ -408,9 +408,16 @@ let tests = [
   taskify(function test_privateWindowsOnly() {
     let engagementURL = "http://example.com";
     let learnMoreURL = "http://example.org/learnmore/";
-    let flowId = "ui-engagewithfirefox-" + Math.random();
+    let flowId = "ui-privateWindowsOnly-" + Math.random();
 
     let privateWin = yield BrowserTestUtils.openNewBrowserWindow({ private: true });
+
+    yield new Promise((resolve) => {
+      gContentAPI.observe(function(aEventName, aData) {
+        info(aEventName + " notification received: " + JSON.stringify(aData, null, 2));
+        ok(false, "No heartbeat notifications should arrive for privateWindowsOnly");
+      }, resolve);
+    });
 
     gContentAPI.showHeartbeat("Do you want to engage with us?", "Thank you!", flowId, engagementURL,
                               "Learn More", learnMoreURL, {
