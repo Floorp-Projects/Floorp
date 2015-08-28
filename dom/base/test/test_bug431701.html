@@ -105,7 +105,7 @@ function startTest() {
   xhr.send(createDoc());
   is(SpecialPowers.wrap(xhr).channel.QueryInterface(SpecialPowers.Ci.nsIHttpChannel)
                 .getRequestHeader("Content-Type"),
-     "application/xml; charset=UTF-8", "Testing correct type on the wire");
+     "application/xml;charset=UTF-8", "Testing correct type on the wire");
   xhr.abort();
                      
   SimpleTest.finish();
