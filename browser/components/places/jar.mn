@@ -8,17 +8,17 @@ browser.jar:
 # attributes separately
     content/browser/places/bookmarkProperties2.xul       (content/bookmarkProperties.xul)
 *   content/browser/places/places.xul                    (content/places.xul) 
-*   content/browser/places/places.js                     (content/places.js)
+    content/browser/places/places.js                     (content/places.js)
     content/browser/places/places.css                    (content/places.css)
     content/browser/places/organizer.css                 (content/organizer.css)
     content/browser/places/bookmarkProperties.xul        (content/bookmarkProperties.xul)
     content/browser/places/bookmarkProperties.js         (content/bookmarkProperties.js)
     content/browser/places/placesOverlay.xul             (content/placesOverlay.xul)
-*   content/browser/places/menu.xml                      (content/menu.xml)
+    content/browser/places/menu.xml                      (content/menu.xml)
     content/browser/places/tree.xml                      (content/tree.xml)
     content/browser/places/controller.js                 (content/controller.js)
     content/browser/places/treeView.js                   (content/treeView.js)
-*   content/browser/places/browserPlacesViews.js         (content/browserPlacesViews.js)
+    content/browser/places/browserPlacesViews.js         (content/browserPlacesViews.js)
 # keep the Places version of the history sidebar at history/history-panel.xul 
 # to prevent having to worry about between versions of the browser
 *   content/browser/history/history-panel.xul            (content/history-panel.xul) 
@@ -26,7 +26,7 @@ browser.jar:
 # ditto for the bookmarks sidebar
     content/browser/bookmarks/bookmarksPanel.xul         (content/bookmarksPanel.xul)
     content/browser/bookmarks/bookmarksPanel.js          (content/bookmarksPanel.js)
-*   content/browser/bookmarks/sidebarUtils.js            (content/sidebarUtils.js)
+    content/browser/bookmarks/sidebarUtils.js            (content/sidebarUtils.js)
     content/browser/places/moveBookmarks.xul             (content/moveBookmarks.xul)
     content/browser/places/moveBookmarks.js              (content/moveBookmarks.js)
     content/browser/places/editBookmarkOverlay.xul       (content/editBookmarkOverlay.xul)
