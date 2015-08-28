@@ -140,6 +140,7 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
+import com.keepsafe.switchboard.AsyncConfigLoader;
 import com.keepsafe.switchboard.SwitchBoard;
 import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.ObjectAnimator;
@@ -746,22 +747,14 @@ public class BrowserApp extends GeckoApp
             Log.d(LOGTAG, "init Server Urls");
             SwitchBoard.initDefaultServerUrls("https://mozilla-switchboard.herokuapp.com/SwitchboardURLs.php", "https://mozilla-switchboard.herokuapp.com/SwitchboardDriver.php", true);
 
-            /* Looks at the server if there are changes in the server URL that should be used in the future
-             *
-             * In production you should be loaded asynchronous with AsyncConfigLoader.
-             * new AsyncConfigLoader(this, AsyncConfigLoader.UPDATE_SERVER);
-             */
+            // Looks at the server if there are changes in the server URL that should be used in the future
             Log.d(LOGTAG, "update server urls from remote");
-            SwitchBoard.updateConfigServerUrl(this);
+            new AsyncConfigLoader(this, AsyncConfigLoader.UPDATE_SERVER).execute();
 
-            /* Loads the actual config. This can be done on app start or on app onResume().
-             * depending how often you want to update the config.
-             *
-             * In production you should be loaded asynchronous with AsyncConfigLoader.
-             * new AsyncConfigLoader(this, AsyncConfigLoader.CONFIG_SERVER);
-             */
+            // Loads the actual config. This can be done on app start or on app onResume() depending
+            // how often you want to update the config.
             Log.d(LOGTAG, "update app config");
-            SwitchBoard.loadConfig(this);
+            new AsyncConfigLoader(this, AsyncConfigLoader.CONFIG_SERVER).execute();
         }
 
         mBrowserChrome = (ViewGroup) findViewById(R.id.browser_chrome);
