@@ -47,9 +47,9 @@ function* performTest() {
 
 let TEST_DATA = synthesizeProfileForTest([{
   frames: [{
-    location: "A (http://path/to/file.js:10:5"
+    location: "A (http://path/to/file.js:10:5)"
   }, {
-    location: "B (http://path/to/file.js:100:5"
+    location: "B (http://path/to/file.js:100:5)"
   }],
   time: 50,
 }]);
@@ -65,7 +65,7 @@ let EXPECTED_OUTPUT = [{
 }, {
   blocks: [{
     startTime: 0,
-    frameKey: "A (http://path/to/file.js:10:5",
+    frameKey: "A (http://path/to/file.js:10:5)",
     x: 0,
     y: 0,
     width: 50,
@@ -95,7 +95,7 @@ let EXPECTED_OUTPUT = [{
 }, {
   blocks: [{
     startTime: 0,
-    frameKey: "B (http://path/to/file.js:100:5",
+    frameKey: "B (http://path/to/file.js:100:5)",
     x: 0,
     y: 15,
     width: 50,
