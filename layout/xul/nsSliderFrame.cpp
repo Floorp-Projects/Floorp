@@ -479,7 +479,7 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
   {
     switch (aEvent->mMessage) {
     case NS_TOUCH_MOVE:
-    case NS_MOUSE_MOVE: {
+    case eMouseMove: {
       nsPoint eventPoint;
       if (!GetEventPoint(aEvent, eventPoint)) {
         break;

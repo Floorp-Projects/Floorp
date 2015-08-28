@@ -2466,7 +2466,7 @@ nsGenericHTMLFormElement::IsElementDisabledForEvents(EventMessage aMessage,
       uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED;
 
   }
-  return disabled && aMessage != NS_MOUSE_MOVE;
+  return disabled && aMessage != eMouseMove;
 }
 
 void

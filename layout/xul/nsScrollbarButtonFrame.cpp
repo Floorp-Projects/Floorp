@@ -66,7 +66,7 @@ nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
     case NS_MOUSE_OUT:
       mCursorOnThis = false;
       break;
-    case NS_MOUSE_MOVE: {
+    case eMouseMove: {
       nsPoint cursor =
         nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
       nsRect frameRect(nsPoint(0, 0), GetSize());

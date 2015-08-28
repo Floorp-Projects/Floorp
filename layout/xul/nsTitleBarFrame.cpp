@@ -107,7 +107,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
      }
      break;
 
-   case NS_MOUSE_MOVE: {
+   case eMouseMove: {
        if(mTrackingMouseMove)
        {
          LayoutDeviceIntPoint nsMoveBy = aEvent->refPoint - mLastPoint;

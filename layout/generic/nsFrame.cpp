@@ -2558,7 +2558,7 @@ nsFrame::HandleEvent(nsPresContext* aPresContext,
                      nsEventStatus* aEventStatus)
 {
 
-  if (aEvent->mMessage == NS_MOUSE_MOVE) {
+  if (aEvent->mMessage == eMouseMove) {
     // XXX If the second argument of HandleDrag() is WidgetMouseEvent,
     //     the implementation becomes simpler.
     return HandleDrag(aPresContext, aEvent, aEventStatus);
@@ -2604,7 +2604,7 @@ nsFrame::GetDataForTableSelection(const nsFrameSelection* aFrameSelection,
   //  (Mouse down does normal selection unless Ctrl/Cmd is pressed)
   bool doTableSelection =
      displaySelection == nsISelectionDisplay::DISPLAY_ALL && selectingTableCells &&
-     (aMouseEvent->mMessage == NS_MOUSE_MOVE ||
+     (aMouseEvent->mMessage == eMouseMove ||
       (aMouseEvent->mMessage == NS_MOUSE_BUTTON_UP &&
        aMouseEvent->button == WidgetMouseEvent::eLeftButton) ||
       aMouseEvent->IsShift());

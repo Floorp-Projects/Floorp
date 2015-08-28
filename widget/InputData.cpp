@@ -128,7 +128,7 @@ MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
       mouseEventMessage = NS_MOUSE_BUTTON_DOWN;
       break;
     case MultiTouchInput::MULTITOUCH_MOVE:
-      mouseEventMessage = NS_MOUSE_MOVE;
+      mouseEventMessage = eMouseMove;
       break;
     case MultiTouchInput::MULTITOUCH_CANCEL:
     case MultiTouchInput::MULTITOUCH_END:
@@ -151,7 +151,7 @@ MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
   event.modifiers = modifiers;
 
-  if (mouseEventMessage != NS_MOUSE_MOVE) {
+  if (mouseEventMessage != eMouseMove) {
     event.clickCount = 1;
   }
 
@@ -185,7 +185,7 @@ MultiTouchInput::MultiTouchInput(const WidgetMouseEvent& aMouseEvent)
   case NS_MOUSE_BUTTON_DOWN:
     mType = MULTITOUCH_START;
     break;
-  case NS_MOUSE_MOVE:
+  case eMouseMove:
     mType = MULTITOUCH_MOVE;
     break;
   case NS_MOUSE_BUTTON_UP:

@@ -834,7 +834,7 @@ AndroidGeckoEvent::MakeMouseEvent(nsIWidget* widget)
     if (Points().Length() > 0) {
         switch (Action()) {
             case AndroidMotionEvent::ACTION_HOVER_MOVE:
-                msg = NS_MOUSE_MOVE;
+                msg = eMouseMove;
                 break;
             case AndroidMotionEvent::ACTION_HOVER_ENTER:
                 msg = NS_MOUSE_ENTER_WIDGET;
@@ -857,7 +857,7 @@ AndroidGeckoEvent::MakeMouseEvent(nsIWidget* widget)
 
     // XXX can we synthesize different buttons?
     event.button = WidgetMouseEvent::eLeftButton;
-    if (msg != NS_MOUSE_MOVE) {
+    if (msg != eMouseMove) {
         event.clickCount = 1;
     }
     event.modifiers = DOMModifiers();
