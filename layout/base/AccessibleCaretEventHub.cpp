@@ -501,10 +501,10 @@ AccessibleCaretEventHub::HandleMouseEvent(WidgetMouseEvent* aEvent)
   nsPoint point = GetMouseEventPosition(aEvent);
 
   switch (aEvent->mMessage) {
-  case NS_MOUSE_BUTTON_DOWN:
-    AC_LOGV("Before NS_MOUSE_BUTTON_DOWN, state: %s", mState->Name());
+  case eMouseDown:
+    AC_LOGV("Before eMouseDown, state: %s", mState->Name());
     rv = mState->OnPress(this, point, id);
-    AC_LOGV("After NS_MOUSE_BUTTON_DOWN, state: %s, consume: %d",
+    AC_LOGV("After eMouseDown, state: %s, consume: %d",
             mState->Name(), rv);
     break;
 

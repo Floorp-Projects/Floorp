@@ -413,7 +413,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
     }
 #endif
   }
-  else if (aEvent->mMessage == NS_MOUSE_BUTTON_DOWN &&
+  else if (aEvent->mMessage == eMouseDown &&
            aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton &&
            !IsDisabled() && IsMenu()) {
     // The menu item was selected. Bring up the menu.
