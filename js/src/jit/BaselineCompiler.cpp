@@ -808,7 +808,7 @@ BaselineCompiler::emitDebugTrap()
 void
 BaselineCompiler::emitCoverage(jsbytecode* pc)
 {
-    PCCounts* counts = script->getPCCounts(pc);
+    PCCounts* counts = script->maybeGetPCCounts(pc);
     if (!counts)
         return;
 
