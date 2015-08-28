@@ -155,7 +155,7 @@ KeyboardEvent::CharCode()
   switch (mEvent->mMessage) {
   case eBeforeKeyDown:
   case eKeyDown:
-  case NS_KEY_AFTER_DOWN:
+  case eAfterKeyDown:
   case NS_KEY_BEFORE_UP:
   case eKeyUp:
   case NS_KEY_AFTER_UP:
@@ -201,7 +201,7 @@ KeyboardEvent::Which()
   switch (mEvent->mMessage) {
     case eBeforeKeyDown:
     case eKeyDown:
-    case NS_KEY_AFTER_DOWN:
+    case eAfterKeyDown:
     case NS_KEY_BEFORE_UP:
     case eKeyUp:
     case NS_KEY_AFTER_UP:

@@ -6881,7 +6881,7 @@ PresShell::DispatchAfterKeyboardEventInternal(const nsTArray<nsCOMPtr<Element> >
   }
 
   EventMessage message =
-    (aEvent.mMessage == eKeyDown) ? NS_KEY_AFTER_DOWN : NS_KEY_AFTER_UP;
+    (aEvent.mMessage == eKeyDown) ? eAfterKeyDown : NS_KEY_AFTER_UP;
   bool embeddedCancelled = aEmbeddedCancelled;
   nsCOMPtr<EventTarget> eventTarget;
   // Dispatch after events from the innermost element.
