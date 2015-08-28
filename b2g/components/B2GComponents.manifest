@@ -121,3 +121,7 @@ contract @mozilla.org/presentation-device/prompt;1 {4a300c26-e99b-4018-ab9b-c48c
 # PresentationRequestUIGlue.js
 component {ccc8a839-0b64-422b-8a60-fb2af0e376d0} PresentationRequestUIGlue.js
 contract @mozilla.org/presentation/requestuiglue;1 {ccc8a839-0b64-422b-8a60-fb2af0e376d0}
+
+# KillSwitch.js
+component {b6eae5c6-971c-4772-89e5-5df626bf3f09} KillSwitch.js
+contract @mozilla.org/moz-kill-switch;1 {b6eae5c6-971c-4772-89e5-5df626bf3f09}

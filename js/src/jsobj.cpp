@@ -3625,7 +3625,7 @@ JSObject::sizeOfIncludingThisInNursery() const
     return size;
 }
 
-size_t
+JS::ubi::Node::Size
 JS::ubi::Concrete<JSObject>::size(mozilla::MallocSizeOf mallocSizeOf) const
 {
     JSObject& obj = get();

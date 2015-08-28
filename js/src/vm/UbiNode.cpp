@@ -281,7 +281,7 @@ Concrete<void>::edges(JSContext*, bool) const {
     MOZ_CRASH("null ubi::Node");
 }
 
-size_t
+Node::Size
 Concrete<void>::size(mozilla::MallocSizeOf mallocSizeof) const
 {
     MOZ_CRASH("null ubi::Node");
