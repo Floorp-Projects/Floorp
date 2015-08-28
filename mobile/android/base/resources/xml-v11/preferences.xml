@@ -26,7 +26,8 @@
 
     <PreferenceScreen android:title="@string/pref_category_display"
                       android:summary="@string/pref_category_display_summary"
-                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
+                      android:key="android.not_a_preference.display.enabled" >
         <extra android:name="resource"
                android:value="preferences_display" />
     </PreferenceScreen>
