@@ -285,7 +285,7 @@ private:
  * Event mMessage: eBeforeKeyDown
  *                 eBeforeKeyUp
  *                 eAfterKeyDown
- *                 NS_KEY_AFTER_UP
+ *                 eAfterKeyUp
  ******************************************************************************/
 class InternalBeforeAfterKeyboardEvent : public WidgetKeyboardEvent
 {
