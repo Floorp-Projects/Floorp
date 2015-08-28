@@ -123,7 +123,7 @@ WidgetEvent::HasKeyEventMessage() const
     case eKeyPress:
     case eKeyUp:
     case eBeforeKeyDown:
-    case NS_KEY_BEFORE_UP:
+    case eBeforeKeyUp:
     case eAfterKeyDown:
     case NS_KEY_AFTER_UP:
       return true;
