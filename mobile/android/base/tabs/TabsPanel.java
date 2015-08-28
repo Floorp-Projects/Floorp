@@ -26,7 +26,6 @@ import org.mozilla.gecko.widget.IconTabWidget;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -39,7 +38,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import org.mozilla.gecko.widget.ThemedImageButton;
+import org.mozilla.gecko.widget.themed.ThemedImageButton;
 
 public class TabsPanel extends LinearLayout
                        implements GeckoPopupMenu.OnMenuItemClickListener,

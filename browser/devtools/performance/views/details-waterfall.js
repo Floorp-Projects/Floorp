@@ -142,22 +142,26 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
     let recording = PerformanceController.getCurrentRecording();
     let markers = recording.getMarkers();
 
-    let mostRecentGC = null;
-
+    let lastGCMarkerFromPreviousCycle = null;
+    let lastGCMarker = null;
     // Iterate over markers looking for the most recent GC marker
-    // before the one who's start time is `endTime`.
+    // from the cycle before the marker's whose allocations we're interested in.
     for (let marker of markers) {
       // We found the marker whose allocations we're tracking; abort
       if (marker.start === endTime) {
         break;
       }
+
       if (marker.name === "GarbageCollection") {
-        mostRecentGC = marker;
+        if (lastGCMarker && lastGCMarker.cycle !== marker.cycle) {
+          lastGCMarkerFromPreviousCycle = lastGCMarker;
+        }
+        lastGCMarker = marker;
       }
     }
 
-    if (mostRecentGC) {
-      startTime = mostRecentGC.end;
+    if (lastGCMarkerFromPreviousCycle) {
+      startTime = lastGCMarkerFromPreviousCycle.end;
     }
 
     // Adjust times so we don't include the range of these markers themselves.

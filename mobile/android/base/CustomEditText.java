@@ -6,7 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.util.ColorUtils;
-import org.mozilla.gecko.widget.ThemedEditText;
+import org.mozilla.gecko.widget.themed.ThemedEditText;
 
 import android.content.Context;
 import android.util.AttributeSet;

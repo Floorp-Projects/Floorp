@@ -253,11 +253,14 @@ body {
   top: unset;
 }
 
-.animation-timeline .animation .animation-title {
-  height: 1.5em;
+.animation-timeline .animation .name {
+  height: 100%;
   width: 100%;
-  box-sizing: border-box;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 150%;
+  padding: 0 2px;
 }
 
 .animation-timeline .animation .delay {
@@ -282,13 +285,6 @@ body {
   top: 50%;
   margin-top: -4px;
   background: var(--theme-highlight-lightorange);
-}
-
-.animation-timeline .animation .name {
-  position: absolute;
-  z-index: 1;
-  padding: 2px;
-  white-space: nowrap;
 }
 
 /* Animation target node gutter, contains a preview of the dom node */
