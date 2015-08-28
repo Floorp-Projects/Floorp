@@ -15,11 +15,14 @@ function test() {
     let gController = gDebugger.DebuggerController
     let gEvents = gView.EventListeners;
     let gBreakpoints = gController.Breakpoints;
+    let gDispatcher = gDebugger.dispatcher;
+    let getState = gDispatcher.getState;
+    let constants = gDebugger.require('./content/constants');
 
     Task.spawn(function*() {
       yield waitForSourceShown(aPanel, ".html");
 
-      let fetched = waitForDebuggerEvents(aPanel, gDebugger.EVENTS.EVENT_LISTENERS_FETCHED);
+      let fetched = afterDispatch(gDispatcher, constants.FETCH_EVENT_LISTENERS);
       gView.toggleInstrumentsPane({ visible: true, animated: false }, 1);
       yield fetched;
 
@@ -32,7 +35,7 @@ function test() {
       testEventGroup("mouseEvents", false);
       testEventArrays("change,click,keydown,keyup", "");
 
-      let updated = waitForDebuggerEvents(aPanel, gDebugger.EVENTS.EVENT_BREAKPOINTS_UPDATED);
+      let updated = afterDispatch(gDispatcher, constants.UPDATE_EVENT_BREAKPOINTS);
       EventUtils.sendMouseEvent({ type: "click" }, getItemCheckboxNode(0), gDebugger);
       EventUtils.sendMouseEvent({ type: "click" }, getItemCheckboxNode(1), gDebugger);
       EventUtils.sendMouseEvent({ type: "click" }, getItemCheckboxNode(2), gDebugger);
@@ -47,7 +50,8 @@ function test() {
       testEventGroup("mouseEvents", false);
       testEventArrays("change,click,keydown,keyup", "change,click,keydown");
 
-      yield reloadActiveTab(aPanel, gDebugger.EVENTS.EVENT_LISTENERS_FETCHED);
+      reload(aPanel);
+      yield afterDispatch(gDispatcher, constants.FETCH_EVENT_LISTENERS);
 
       testEventItem(0, true);
       testEventItem(1, true);
@@ -58,7 +62,7 @@ function test() {
       testEventGroup("mouseEvents", false);
       testEventArrays("change,click,keydown,keyup", "change,click,keydown");
 
-      updated = waitForDebuggerEvents(aPanel, gDebugger.EVENTS.EVENT_BREAKPOINTS_UPDATED);
+      updated = afterDispatch(gDispatcher, constants.UPDATE_EVENT_BREAKPOINTS);
       EventUtils.sendMouseEvent({ type: "click" }, getItemCheckboxNode(0), gDebugger);
       EventUtils.sendMouseEvent({ type: "click" }, getItemCheckboxNode(1), gDebugger);
       EventUtils.sendMouseEvent({ type: "click" }, getItemCheckboxNode(2), gDebugger);
@@ -73,7 +77,8 @@ function test() {
       testEventGroup("mouseEvents", false);
       testEventArrays("change,click,keydown,keyup", "");
 
-      yield reloadActiveTab(aPanel, gDebugger.EVENTS.EVENT_LISTENERS_FETCHED);
+      reload(aPanel);
+      yield afterDispatch(gDispatcher, constants.FETCH_EVENT_LISTENERS);
 
       testEventItem(0, false);
       testEventItem(1, false);
@@ -84,7 +89,7 @@ function test() {
       testEventGroup("mouseEvents", false);
       testEventArrays("change,click,keydown,keyup", "");
 
-      yield ensureThreadClientState(aPanel, "resumed");
+      yield ensureThreadClientState(aPanel, "attached");
       yield closeDebuggerAndFinish(aPanel);
     });
 
@@ -115,9 +120,9 @@ function test() {
       is(gEvents.getAllEvents().toString(), all,
         "The getAllEvents() method returns the correct stuff.");
       is(gEvents.getCheckedEvents().toString(), checked,
-        "The getCheckedEvents() method returns the correct stuff.");
-      is(gBreakpoints.DOM.activeEventNames.toString(), checked,
-        "The correct event names are listed as being active breakpoints.");
+         "The getCheckedEvents() method returns the correct stuff.");
+      is(getState().eventListeners.activeEventNames.toString(), checked,
+         "The correct event names are listed as being active breakpoints.");
     }
   });
 }

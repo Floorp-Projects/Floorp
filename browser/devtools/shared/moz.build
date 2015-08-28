@@ -31,6 +31,8 @@ EXTRA_JS_MODULES.devtools += [
 
 EXTRA_JS_MODULES.devtools.shared += [
     'autocomplete-popup.js',
+    'browser-loader.js',
+    'create-dispatcher.js',
     'devices.js',
     'doorhanger.js',
     'frame-script-utils.js',
@@ -72,3 +74,5 @@ EXTRA_JS_MODULES.devtools.shared.widgets += [
     'widgets/Tooltip.js',
     'widgets/TreeWidget.js',
 ]
+
+DIRS += ['fluxify']
