@@ -496,7 +496,7 @@ WINDOW_EVENT(message,
              EventNameType_None,
              eBasicEventClass)
 WINDOW_EVENT(offline,
-             NS_OFFLINE,
+             eOffline,
              EventNameType_XUL | EventNameType_HTMLBodyOrFramesetOnly,
              eBasicEventClass)
 WINDOW_EVENT(online,
