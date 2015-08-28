@@ -3076,7 +3076,7 @@ nsGlobalWindow::PreHandleEvent(EventChainPreVisitor& aVisitor)
       gEntropyCollector->RandomUpdate((void*)&(aVisitor.mEvent->time),
                                       sizeof(uint32_t));
     }
-  } else if (msg == NS_RESIZE_EVENT && aVisitor.mEvent->mFlags.mIsTrusted) {
+  } else if (msg == eResize && aVisitor.mEvent->mFlags.mIsTrusted) {
     // QIing to window so that we can keep the old behavior also in case
     // a child window is handling resize.
     nsCOMPtr<nsPIDOMWindow> window =
@@ -3266,7 +3266,7 @@ nsGlobalWindow::PostHandleEvent(EventChainPostVisitor& aVisitor)
 
   // Return early if there is nothing to do.
   switch (aVisitor.mEvent->mMessage) {
-    case NS_RESIZE_EVENT:
+    case eResize:
     case NS_PAGE_UNLOAD:
     case NS_LOAD:
       break;
@@ -3280,7 +3280,7 @@ nsGlobalWindow::PostHandleEvent(EventChainPostVisitor& aVisitor)
   nsCOMPtr<nsIDOMEventTarget> kungFuDeathGrip1(mChromeEventHandler);
   nsCOMPtr<nsIScriptContext> kungFuDeathGrip2(GetContextInternal());
 
-  if (aVisitor.mEvent->mMessage == NS_RESIZE_EVENT) {
+  if (aVisitor.mEvent->mMessage == eResize) {
     mIsHandlingResizeEvent = false;
   } else if (aVisitor.mEvent->mMessage == NS_PAGE_UNLOAD &&
              aVisitor.mEvent->mFlags.mIsTrusted) {
