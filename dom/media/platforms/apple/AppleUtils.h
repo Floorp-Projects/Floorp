@@ -43,56 +43,6 @@ private:
   T mRef;
 };
 
-// CFRefPtr: A CoreFoundation smart pointer.
-template <class T>
-class CFRefPtr {
-public:
-  explicit CFRefPtr(T aRef)
-    : mRef(aRef)
-  {
-    if (mRef) {
-      CFRetain(mRef);
-    }
-  }
-  // Copy constructor.
-  CFRefPtr(const CFRefPtr<T>& aCFRefPtr)
-    : mRef(aCFRefPtr.mRef)
-  {
-    if (mRef) {
-      CFRetain(mRef);
-    }
-  }
-  // Copy operator
-  CFRefPtr<T>& operator=(const CFRefPtr<T>& aCFRefPtr)
-  {
-    if (mRef == aCFRefPtr.mRef) {
-      return;
-    }
-    if (mRef) {
-      CFRelease(mRef);
-    }
-    mRef = aCFRefPtr.mRef;
-    if (mRef) {
-      CFRetain(mRef);
-    }
-    return *this;
-  }
-  ~CFRefPtr()
-  {
-    if (mRef) {
-      CFRelease(mRef);
-    }
-  }
-  // Return the wrapped ref so it can be used as an in parameter.
-  operator T()
-  {
-    return mRef;
-  }
-
-private:
-  T mRef;
-};
-
 } // namespace mozilla
 
 #endif // mozilla_AppleUtils_h

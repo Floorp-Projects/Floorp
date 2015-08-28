@@ -6,7 +6,6 @@
 
 #include "VorbisDecoder.h"
 #include "VorbisUtils.h"
-#include "XiphExtradata.h"
 
 #include "mozilla/PodOperations.h"
 #include "nsAutoPtr.h"
@@ -72,17 +71,23 @@ VorbisDataDecoder::Init()
   PodZero(&mVorbisDsp);
   PodZero(&mVorbisBlock);
 
-  nsAutoTArray<unsigned char*,4> headers;
-  nsAutoTArray<size_t,4> headerLens;
-  if (!XiphExtradataToHeaders(headers, headerLens,
-                              mInfo.mCodecSpecificConfig->Elements(),
-                              mInfo.mCodecSpecificConfig->Length())) {
-    return NS_ERROR_FAILURE;
-  }
-  for (size_t i = 0; i < headers.Length(); i++) {
-    if (NS_FAILED(DecodeHeader(headers[i], headerLens[i]))) {
+  size_t available = mInfo.mCodecSpecificConfig->Length();
+  uint8_t *p = mInfo.mCodecSpecificConfig->Elements();
+  for(int i = 0; i < 3; i++) {
+    if (available < 2) {
       return NS_ERROR_FAILURE;
     }
+    available -= 2;
+    size_t length = BigEndian::readUint16(p);
+    p += 2;
+    if (available < length) {
+      return NS_ERROR_FAILURE;
+    }
+    available -= length;
+    if (NS_FAILED(DecodeHeader((const unsigned char*)p, length))) {
+        return NS_ERROR_FAILURE;
+    }
+    p += length;
   }
 
   MOZ_ASSERT(mPacketCount == 3);

@@ -17,14 +17,8 @@ namespace mozilla {
 // that offset.
 struct WebMTimeDataOffset
 {
-  WebMTimeDataOffset(int64_t aEndOffset, uint64_t aTimecode,
-                     int64_t aInitOffset, int64_t aSyncOffset,
-                     int64_t aClusterEndOffset)
-    : mEndOffset(aEndOffset)
-    , mInitOffset(aInitOffset)
-    , mSyncOffset(aSyncOffset)
-    , mClusterEndOffset(aClusterEndOffset)
-    , mTimecode(aTimecode)
+  WebMTimeDataOffset(int64_t aEndOffset, uint64_t aTimecode, int64_t aSyncOffset)
+    : mEndOffset(aEndOffset), mSyncOffset(aSyncOffset), mTimecode(aTimecode)
   {}
 
   bool operator==(int64_t aEndOffset) const {
@@ -40,9 +34,7 @@ struct WebMTimeDataOffset
   }
 
   int64_t mEndOffset;
-  int64_t mInitOffset;
   int64_t mSyncOffset;
-  int64_t mClusterEndOffset;
   uint64_t mTimecode;
 };
 
@@ -55,17 +47,9 @@ struct WebMTimeDataOffset
 struct WebMBufferedParser
 {
   explicit WebMBufferedParser(int64_t aOffset)
-    : mStartOffset(aOffset)
-    , mCurrentOffset(aOffset)
-    , mInitEndOffset(-1)
-    , mBlockEndOffset(-1)
-    , mState(READ_ELEMENT_ID)
-    , mVIntRaw(false)
-    , mLastInitStartOffset(-1)
-    , mClusterSyncPos(0)
-    , mClusterEndOffset(-1)
-    , mTimecodeScale(1000000)
-    , mGotTimecodeScale(false)
+    : mStartOffset(aOffset), mCurrentOffset(aOffset), mInitEndOffset(-1),
+      mState(READ_ELEMENT_ID), mVIntRaw(false), mClusterSyncPos(0),
+      mTimecodeScale(1000000), mGotTimecodeScale(false)
   {
     if (mStartOffset != 0) {
       mState = FIND_CLUSTER_SYNC;
@@ -99,27 +83,18 @@ struct WebMBufferedParser
     return mCurrentOffset < aOffset;
   }
 
-  // Returns the start offset of the init (EBML) or media segment (Cluster)
-  // following the aOffset position. If none were found, returns mBlockEndOffset.
-  // This allows to determine the end of the interval containg aOffset.
-  int64_t EndSegmentOffset(int64_t aOffset);
-
   // The offset at which this parser started parsing.  Used to merge
   // adjacent parsers, in which case the later parser adopts the earlier
   // parser's mStartOffset.
   int64_t mStartOffset;
 
-  // Current offset within the stream.  Updated in chunks as Append() consumes
+  // Current offset with the stream.  Updated in chunks as Append() consumes
   // data.
   int64_t mCurrentOffset;
 
-  // Tracks element's end offset. This indicates the end of the first init
-  // segment. Will only be set if a Segment Information has been found.
+  // Tracks element's end offset. This indicates the end of the init segment.
+  // Will only be set if a Segment Information has been found.
   int64_t mInitEndOffset;
-
-  // End offset of the last block parsed.
-  // Will only be set if a complete block has been parsed.
-  int64_t mBlockEndOffset;
 
 private:
   enum State {
@@ -200,10 +175,6 @@ private:
 
   bool mVIntRaw;
 
-  // EBML start offset. This indicates the start of the last init segment
-  // parsed. Will only be set if an EBML element has been found.
-  int64_t mLastInitStartOffset;
-
   // Current match position within CLUSTER_SYNC_ID.  Used to find sync
   // within arbitrary data.
   uint32_t mClusterSyncPos;
@@ -223,9 +194,6 @@ private:
   // point offset for the offset-to-time mapping as each block timecode is
   // been parsed.
   int64_t mClusterOffset;
-
-  // End offset of the cluster currently being parsed. -1 if unknown.
-  int64_t mClusterEndOffset;
 
   // Start offset of the block currently being parsed.  Used as the byte
   // offset for the offset-to-time mapping once the block timecode has been
@@ -257,10 +225,7 @@ class WebMBufferedState final
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebMBufferedState)
 
 public:
-  WebMBufferedState()
-    : mReentrantMonitor("WebMBufferedState")
-    , mLastBlockOffset(-1)
-  {
+  WebMBufferedState() : mReentrantMonitor("WebMBufferedState") {
     MOZ_COUNT_CTOR(WebMBufferedState);
   }
 
@@ -277,8 +242,6 @@ public:
 
   // Returns end offset of init segment or -1 if none found.
   int64_t GetInitEndOffset();
-  // Returns the end offset of the last complete block or -1 if none found.
-  int64_t GetLastBlockOffset();
 
   // Returns start time
   bool GetStartTime(uint64_t *aTime);
@@ -292,14 +255,12 @@ private:
     MOZ_COUNT_DTOR(WebMBufferedState);
   }
 
-  // Synchronizes access to the mTimeMapping array and mLastBlockOffset.
+  // Synchronizes access to the mTimeMapping array.
   ReentrantMonitor mReentrantMonitor;
 
   // Sorted (by offset) map of data offsets to timecodes.  Populated
   // on the main thread as data is received and parsed by WebMBufferedParsers.
   nsTArray<WebMTimeDataOffset> mTimeMapping;
-  // The last complete block parsed. -1 if not set.
-  int64_t mLastBlockOffset;
 
   // Sorted (by offset) live parser instances.  Main thread only.
   nsTArray<WebMBufferedParser> mRangeParsers;
