@@ -18,21 +18,19 @@ add_task(function*() {
   let timeHeaderEl = timeline.timeHeaderEl;
   let scrubberEl = timeline.scrubberEl;
 
-  let defaultPos = scrubberEl.getBoundingClientRect().left;
-
   info("Mousedown in the header to move the scrubber");
   EventUtils.synthesizeMouse(timeHeaderEl, 50, 1, {type: "mousedown"}, win);
-  let newPos = scrubberEl.getBoundingClientRect().left;
-  is(newPos - defaultPos, 50, "The scrubber moved on mousedown");
+  let newPos = parseInt(scrubberEl.style.left);
+  is(newPos, 50, "The scrubber moved on mousedown");
 
   info("Continue moving the mouse and verify that the scrubber tracks it");
   EventUtils.synthesizeMouse(timeHeaderEl, 100, 1, {type: "mousemove"}, win);
-  newPos = scrubberEl.getBoundingClientRect().left;
-  is(newPos - defaultPos, 100, "The scrubber followed the mouse");
+  newPos = parseInt(scrubberEl.style.left);
+  is(newPos, 100, "The scrubber followed the mouse");
 
   info("Release the mouse and move again and verify that the scrubber stays");
   EventUtils.synthesizeMouse(timeHeaderEl, 100, 1, {type: "mouseup"}, win);
   EventUtils.synthesizeMouse(timeHeaderEl, 200, 1, {type: "mousemove"}, win);
-  newPos = scrubberEl.getBoundingClientRect().left;
-  is(newPos - defaultPos, 100, "The scrubber stopped following the mouse");
+  newPos = parseInt(scrubberEl.style.left);
+  is(newPos, 100, "The scrubber stopped following the mouse");
 });

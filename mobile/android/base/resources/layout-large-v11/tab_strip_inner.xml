@@ -14,7 +14,7 @@
 
     <!-- The right margin creates a "dead area" on the right side of the button
          which we compensate for with a touch delegate. See TabStrip -->
-    <org.mozilla.gecko.widget.ThemedImageButton
+    <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/add_tab"
         style="@style/UrlBar.ImageButton"
         android:layout_width="@dimen/tablet_tab_strip_height"

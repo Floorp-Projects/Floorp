@@ -25,8 +25,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         'mobile/sutagent/android/watcher',
         'mobile/sutagent/android/ffxcp',
         'mobile/sutagent/android/fencp',
-        'mobile/robocop',
     ]
+    if not CONFIG['MOZ_B2GDROID']:
+        TEST_DIRS += [
+            'mobile/robocop',
+        ]
 
 for var in ('GRE_MILESTONE', 'MOZ_APP_VERSION', 'MOZ_APP_BASENAME',
             'MOZ_APP_VENDOR', 'MOZ_APP_ID', 'MAR_CHANNEL_ID',
