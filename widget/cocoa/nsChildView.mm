@@ -2712,14 +2712,6 @@ nsChildView::UpdateWindowDraggingRegion(const nsIntRegion& aRegion)
   }
 }
 
-static bool
-IsPotentialSwipeStartEventOverscrollingViewport(const WidgetWheelEvent& aEvent)
-{
-  // We should only track scroll events as swipe if the viewport is being
-  // overscrolled.
-  return aEvent.mViewPortIsOverscrolled && aEvent.overflowDeltaX != 0.0;
-}
-
 void
 nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe)
 {
@@ -2771,9 +2763,9 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
       event = panInput.ToWidgetWheelEvent(this);
       if (aCanTriggerSwipe) {
         SwipeInfo swipeInfo = SendMayStartSwipe(panInput);
+        event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
         DispatchEvent(&event, status);
-        if (swipeInfo.wantsSwipe &&
-            IsPotentialSwipeStartEventOverscrollingViewport(event)) {
+        if (event.TriggersSwipe()) {
           TrackScrollEventAsSwipe(panInput, swipeInfo.allowedDirections);
         }
         return;
