@@ -1700,20 +1700,6 @@ AppendJSONProperty(StringBuffer& buf, const char* name, MaybeComma comma = COMMA
     buf.append("\":", 2);
 }
 
-static void
-AppendArrayJSONProperties(JSContext* cx, StringBuffer& buf,
-                          double* values, const char * const* names, unsigned count,
-                          MaybeComma& comma)
-{
-    for (unsigned i = 0; i < count; i++) {
-        if (values[i]) {
-            AppendJSONProperty(buf, names[i], comma);
-            comma = COMMA;
-            NumberValueToStringBuffer(cx, DoubleValue(values[i]), buf);
-        }
-    }
-}
-
 JS_FRIEND_API(JSString*)
 js::GetPCCountScriptSummary(JSContext* cx, size_t index)
 {
@@ -1767,9 +1753,8 @@ js::GetPCCountScriptSummary(JSContext* cx, size_t index)
     AppendJSONProperty(buf, "totals");
     buf.append('{');
 
-    MaybeComma comma = NO_COMMA;
-
-    AppendArrayJSONProperties(cx, buf, &total, &PCCounts::numExecName, 1, comma);
+    AppendJSONProperty(buf, PCCounts::numExecName, NO_COMMA);
+    NumberValueToStringBuffer(cx, DoubleValue(total), buf);
 
     uint64_t ionActivity = 0;
     jit::IonScriptCounts* ionCounts = sac.getIonCounts();
@@ -1779,7 +1764,7 @@ js::GetPCCountScriptSummary(JSContext* cx, size_t index)
         ionCounts = ionCounts->previous();
     }
     if (ionActivity) {
-        AppendJSONProperty(buf, "ion", comma);
+        AppendJSONProperty(buf, "ion", COMMA);
         NumberValueToStringBuffer(cx, DoubleValue(ionActivity), buf);
     }
 
