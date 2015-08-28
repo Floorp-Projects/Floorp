@@ -312,7 +312,9 @@ nsStyleContext::MoveTo(nsStyleContext* aNewParent)
   // Assertions checking for visited style are just to avoid some tricky
   // cases we can't be bothered handling at the moment.
   MOZ_ASSERT(!IsStyleIfVisited());
+  MOZ_ASSERT(!mParent->IsStyleIfVisited());
   MOZ_ASSERT(!aNewParent->IsStyleIfVisited());
+  MOZ_ASSERT(!mStyleIfVisited || mStyleIfVisited->mParent == mParent);
 
   nsStyleContext* oldParent = mParent;
 
@@ -321,13 +323,19 @@ nsStyleContext::MoveTo(nsStyleContext* aNewParent)
   }
 
   aNewParent->AddRef();
-
   mParent->RemoveChild(this);
-
   mParent = aNewParent;
   mParent->AddChild(this);
-
   oldParent->Release();
+
+  if (mStyleIfVisited) {
+    oldParent = mStyleIfVisited->mParent;
+    aNewParent->AddRef();
+    mStyleIfVisited->mParent->RemoveChild(mStyleIfVisited);
+    mStyleIfVisited->mParent = aNewParent;
+    mStyleIfVisited->mParent->AddChild(mStyleIfVisited);
+    oldParent->Release();
+  }
 }
 
 already_AddRefed<nsStyleContext>
