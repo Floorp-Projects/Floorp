@@ -6,8 +6,10 @@
 "use strict";
 
 const TEST_URI = "http://example.com/";
+const FILTER_PREF_DOMAIN = "devtools.webconsole.filter.";
 
 let hud, hudId, hudBox;
+let prefs = {};
 
 let test = asyncTest(function* () {
   yield loadTab(TEST_URI);
@@ -16,10 +18,29 @@ let test = asyncTest(function* () {
   hudId = hud.hudId;
   hudBox = hud.ui.rootElement;
 
+  savePrefs();
+
   testFilterButtons();
+
+  restorePrefs();
 
   hud = hudId = hudBox = null;
 });
+
+function savePrefs() {
+  let branch = Services.prefs.getBranch(FILTER_PREF_DOMAIN);
+  let children = branch.getChildList("");
+  for (let child of children) {
+    prefs[child] = branch.getBoolPref(child);
+  }
+}
+
+function restorePrefs() {
+  let branch = Services.prefs.getBranch(FILTER_PREF_DOMAIN);
+  for (let p in prefs) {
+    branch.setBoolPref(p, prefs[p]);
+  }
+}
 
 function testFilterButtons() {
   testMenuFilterButton("net");

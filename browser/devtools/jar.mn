@@ -72,7 +72,6 @@ browser.jar:
     content/browser/devtools/debugger/sources-view.js                  (debugger/views/sources-view.js)
     content/browser/devtools/debugger/variable-bubble-view.js          (debugger/views/variable-bubble-view.js)
     content/browser/devtools/debugger/watch-expressions-view.js        (debugger/views/watch-expressions-view.js)
-    content/browser/devtools/debugger/event-listeners-view.js          (debugger/views/event-listeners-view.js)
     content/browser/devtools/debugger/global-search-view.js            (debugger/views/global-search-view.js)
     content/browser/devtools/debugger/toolbar-view.js                  (debugger/views/toolbar-view.js)
     content/browser/devtools/debugger/options-view.js                  (debugger/views/options-view.js)

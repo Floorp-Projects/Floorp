@@ -13,25 +13,28 @@ function test() {
     let gDebugger = aPanel.panelWin;
     let gView = gDebugger.DebuggerView;
     let gEvents = gView.EventListeners;
+    let gDispatcher = gDebugger.dispatcher;
+    let getState = gDispatcher.getState;
+    let constants = gDebugger.require('./content/constants');
 
     Task.spawn(function*() {
       yield waitForSourceShown(aPanel, ".html");
       yield callInTab(gTab, "addBodyClickEventListener");
 
-      let fetched = waitForDebuggerEvents(aPanel, gDebugger.EVENTS.EVENT_LISTENERS_FETCHED);
+      let fetched = afterDispatch(gDispatcher, constants.FETCH_EVENT_LISTENERS);
       gView.toggleInstrumentsPane({ visible: true, animated: false }, 1);
       yield fetched;
-      yield ensureThreadClientState(aPanel, "resumed");
+      yield ensureThreadClientState(aPanel, "attached");
 
       is(gView.instrumentsPaneHidden, false,
         "The instruments pane should be visible.");
       is(gView.instrumentsPaneTab, "events-tab",
         "The events tab should be selected.");
 
-      let updated = waitForDebuggerEvents(aPanel, gDebugger.EVENTS.EVENT_BREAKPOINTS_UPDATED);
+      let updated = afterDispatch(gDispatcher, constants.UPDATE_EVENT_BREAKPOINTS);
       EventUtils.sendMouseEvent({ type: "click" }, getItemCheckboxNode(1), gDebugger);
       yield updated;
-      yield ensureThreadClientState(aPanel, "resumed");
+      yield ensureThreadClientState(aPanel, "attached");
 
       let paused = waitForCaretAndScopes(aPanel, 48);
       generateMouseClickInTab(gTab, "content.document.body");

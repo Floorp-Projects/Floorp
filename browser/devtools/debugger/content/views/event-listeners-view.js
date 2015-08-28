@@ -3,13 +3,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const actions = require('../stores/event-listeners').actions;
+const bindActionCreators = require('devtools/shared/fluxify/bindActionCreators');
+
 /**
  * Functions handling the event listeners UI.
  */
-function EventListenersView(DebuggerController) {
+function EventListenersView(dispatcher, DebuggerController) {
   dumpn("EventListenersView was instantiated");
 
+  this.actions = bindActionCreators(actions, dispatcher.dispatch);
+  this.getState = () => dispatcher.getState().eventListeners;
+
   this.Breakpoints = DebuggerController.Breakpoints;
+
+  dispatcher.onChange({
+    "eventListeners": { "listeners": this.renderListeners }
+  }, this);
 
   this._onCheck = this._onCheck.bind(this);
   this._onClick = this._onClick.bind(this);
@@ -45,6 +55,15 @@ EventListenersView.prototype = Heritage.extend(WidgetMethods, {
 
     this.widget.removeEventListener("check", this._onCheck, false);
     this.widget.removeEventListener("click", this._onClick, false);
+  },
+
+  renderListeners: function(listeners) {
+    listeners.forEach(listener => {
+      this.addListener(listener, { staged: true });
+    });
+
+    // Flushes all the prepared events into the event listeners container.
+    this.commit();
   },
 
   /**
@@ -142,12 +161,12 @@ EventListenersView.prototype = Heritage.extend(WidgetMethods, {
     }
 
     // Create the element node for the event listener item.
-    let itemView = this._createItemView(type, selector, url);
+    const itemView = this._createItemView(type, selector, url);
 
     // Event breakpoints survive target navigations. Make sure the newly
     // inserted event item is correctly checked.
-    let checkboxState =
-      this.Breakpoints.DOM.activeEventNames.indexOf(type) != -1;
+    const activeEventNames = this.getState().activeEventNames;
+    const checkboxState = activeEventNames.indexOf(type) != -1;
 
     // Append an event listener item to this container.
     this.push([itemView.container], {
@@ -241,7 +260,8 @@ EventListenersView.prototype = Heritage.extend(WidgetMethods, {
   _onCheck: function({ detail: { description, checked }, target }) {
     if (description == "item") {
       this.getItemForElement(target).attachment.checkboxState = checked;
-      this.Breakpoints.DOM.scheduleEventBreakpointsUpdate();
+
+      this.actions.updateEventBreakpoints(this.getCheckedEvents());
       return;
     }
 
@@ -271,4 +291,4 @@ EventListenersView.prototype = Heritage.extend(WidgetMethods, {
   _inNativeCodeString: ""
 });
 
-DebuggerView.EventListeners = new EventListenersView(DebuggerController);
+module.exports = EventListenersView;

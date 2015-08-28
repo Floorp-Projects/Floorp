@@ -5,7 +5,7 @@
  * Check extension-added global actor API.
  */
 
-const CHROME_URL = "chrome://mochitests/content/browser/browser/devtools/debugger/test/"
+const CHROME_URL = "chrome://mochitests/content/browser/browser/devtools/debugger/test/mochitest/"
 const ACTORS_URL = CHROME_URL + "testactors.js";
 
 function test() {

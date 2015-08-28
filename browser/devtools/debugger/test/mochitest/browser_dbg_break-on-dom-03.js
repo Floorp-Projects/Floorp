@@ -12,11 +12,13 @@ function test() {
     let gDebugger = aPanel.panelWin;
     let gView = gDebugger.DebuggerView;
     let gEvents = gView.EventListeners;
+    let gDispatcher = gDebugger.dispatcher;
+    let constants = gDebugger.require('./content/constants');
 
     Task.spawn(function*() {
       yield waitForSourceShown(aPanel, ".html");
 
-      let fetched = waitForDebuggerEvents(aPanel, gDebugger.EVENTS.EVENT_LISTENERS_FETCHED);
+      let fetched = afterDispatch(gDispatcher, constants.FETCH_EVENT_LISTENERS);
       gView.toggleInstrumentsPane({ visible: true, animated: false }, 1);
       yield fetched;
 
@@ -44,7 +46,7 @@ function test() {
       is(gEvents.getCheckedEvents().toString(), "",
         "The getCheckedEvents() method returns the correct stuff.");
 
-      yield ensureThreadClientState(aPanel, "resumed");
+      yield ensureThreadClientState(aPanel, "attached");
       yield closeDebuggerAndFinish(aPanel);
     });
 
