@@ -165,6 +165,9 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
                         layerView.dispatchTouchEvent(actionDownEvent);
                         actionDownEvent.recycle();
                         PointF convertedPosition = getUnzoomedPositionFromPointInZoomedView(event.getX(), event.getY());
+                        // the LayerView expects the coordinates relative to the window, not the surface, so we need
+                        // to adjust that here.
+                        convertedPosition.y += layerView.getSurfaceTranslation();
                         MotionEvent e = MotionEvent.obtain(event.getDownTime(), event.getEventTime(),
                                 MotionEvent.ACTION_UP, convertedPosition.x, convertedPosition.y,
                                 event.getMetaState());
@@ -179,6 +182,9 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
                 originRawX = event.getRawX();
                 originRawY = event.getRawY();
                 PointF convertedPosition = getUnzoomedPositionFromPointInZoomedView(event.getX(), event.getY());
+                // the LayerView expects the coordinates relative to the window, not the surface, so we need
+                // to adjust that here.
+                convertedPosition.y += layerView.getSurfaceTranslation();
                 actionDownEvent = MotionEvent.obtain(event.getDownTime(), event.getEventTime(),
                         MotionEvent.ACTION_DOWN, convertedPosition.x, convertedPosition.y,
                         event.getMetaState());
