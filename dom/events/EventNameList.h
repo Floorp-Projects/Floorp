@@ -271,7 +271,7 @@ EVENT(mousedown,
       EventNameType_All,
       eMouseEventClass)
 EVENT(mouseenter,
-      NS_MOUSEENTER,
+      eMouseEnter,
       EventNameType_All,
       eMouseEventClass)
 EVENT(mouseleave,
