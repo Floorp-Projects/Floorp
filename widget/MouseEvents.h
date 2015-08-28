@@ -155,7 +155,7 @@ public:
    */
   bool IsLeftClickEvent() const
   {
-    return mMessage == NS_MOUSE_CLICK && button == eLeftButton;
+    return mMessage == eMouseClick && button == eLeftButton;
   }
 };
 

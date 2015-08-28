@@ -2651,7 +2651,7 @@ case _value: eventName.AssignLiteral(_name) ; break
     _ASSIGN_eventName(eMouseExitFromWidget,"eMouseExitFromWidget");
     _ASSIGN_eventName(eMouseDown,"eMouseDown");
     _ASSIGN_eventName(eMouseUp,"eMouseUp");
-    _ASSIGN_eventName(NS_MOUSE_CLICK,"NS_MOUSE_CLICK");
+    _ASSIGN_eventName(eMouseClick,"eMouseClick");
     _ASSIGN_eventName(eMouseDoubleClick,"eMouseDoubleClick");
     _ASSIGN_eventName(eMouseMove,"eMouseMove");
     _ASSIGN_eventName(NS_LOAD,"NS_LOAD");

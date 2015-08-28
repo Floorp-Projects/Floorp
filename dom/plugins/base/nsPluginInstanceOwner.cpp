@@ -2165,9 +2165,8 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
   switch(anEvent.mClass) {
     case eMouseEventClass:
       {
-        switch (anEvent.mMessage)
-          {
-          case NS_MOUSE_CLICK:
+        switch (anEvent.mMessage) {
+          case eMouseClick:
           case eMouseDoubleClick:
             // Button up/down events sent instead.
             return rv;
@@ -2372,9 +2371,8 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
   switch(anEvent.mClass) {
     case eMouseEventClass:
       {
-        switch (anEvent.mMessage)
-          {
-          case NS_MOUSE_CLICK:
+        switch (anEvent.mMessage) {
+          case eMouseClick:
           case eMouseDoubleClick:
             // Button up/down events sent instead.
             return rv;
