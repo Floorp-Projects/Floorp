@@ -3327,7 +3327,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     break;
 
 #ifdef XP_MACOSX
-  case NS_MOUSE_ACTIVATE:
+  case eMouseActivate:
     if (mCurrentTarget) {
       nsCOMPtr<nsIContent> targetContent;
       mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(targetContent));
