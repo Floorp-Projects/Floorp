@@ -24,18 +24,10 @@ class nsIPrincipal;
 class nsINetworkInterceptController;
 class nsICorsPreflightCallback;
 
-nsresult
-NS_StartCORSPreflight(nsIChannel* aRequestChannel,
-                      nsIStreamListener* aListener,
-                      nsIPrincipal* aPrincipal,
-                      nsICorsPreflightCallback* aCallback,
-                      bool aWithCredentials,
-                      nsTArray<nsCString>& aACUnsafeHeaders,
-                      nsIChannel** aPreflightChannel);
-
 namespace mozilla {
 namespace net {
 class HttpChannelParent;
+class nsHttpChannel;
 }
 }
 
@@ -55,11 +47,6 @@ public:
   nsCORSListenerProxy(nsIStreamListener* aOuter,
                       nsIPrincipal* aRequestingPrincipal,
                       bool aWithCredentials);
-  nsCORSListenerProxy(nsIStreamListener* aOuter,
-                      nsIPrincipal* aRequestingPrincipal,
-                      bool aWithCredentials,
-                      const nsCString& aPreflightMethod,
-                      const nsTArray<nsCString>& aPreflightHeaders);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
@@ -81,9 +68,25 @@ public:
 private:
   // Only HttpChannelParent can call RemoveFromCorsPreflightCache
   friend class mozilla::net::HttpChannelParent;
+  // Only nsHttpChannel can invoke CORS preflights
+  friend class mozilla::net::nsHttpChannel;
 
   static void RemoveFromCorsPreflightCache(nsIURI* aURI,
                                            nsIPrincipal* aRequestingPrincipal);
+
+  nsCORSListenerProxy(nsIStreamListener* aOuter,
+                      nsIPrincipal* aRequestingPrincipal,
+                      bool aWithCredentials,
+                      const nsCString& aPreflightMethod,
+                      const nsTArray<nsCString>& aPreflightHeaders);
+
+  static nsresult StartCORSPreflight(nsIChannel* aRequestChannel,
+                                     nsIStreamListener* aListener,
+                                     nsIPrincipal* aPrincipal,
+                                     nsICorsPreflightCallback* aCallback,
+                                     bool aWithCredentials,
+                                     nsTArray<nsCString>& aACUnsafeHeaders,
+                                     nsIChannel** aPreflightChannel);
 
   ~nsCORSListenerProxy();
 
