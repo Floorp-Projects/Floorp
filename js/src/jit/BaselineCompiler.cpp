@@ -808,7 +808,11 @@ BaselineCompiler::emitDebugTrap()
 void
 BaselineCompiler::emitCoverage(jsbytecode* pc)
 {
-    uint64_t* counterAddr = &script->getPCCounts(pc).numExec();
+    PCCounts* counts = script->getPCCounts(pc);
+    if (!counts)
+        return;
+
+    uint64_t* counterAddr = &counts->numExec();
     masm.inc64(AbsoluteAddress(counterAddr));
 }
 

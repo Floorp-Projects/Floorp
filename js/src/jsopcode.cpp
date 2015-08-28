@@ -170,7 +170,8 @@ js::DumpPCCounts(JSContext* cx, HandleScript script, Sprinter* sp)
             return;
 
         Sprint(sp, "                  {");
-        double val = script->getPCCounts(pc).numExec();
+        PCCounts* counts = script->getPCCounts(pc);
+        double val = counts ? counts->numExec() : 0.0;
         if (val)
             Sprint(sp, "\"%s\": %.0f", PCCounts::numExecName, val);
         Sprint(sp, "}\n");
@@ -1745,8 +1746,10 @@ js::GetPCCountScriptSummary(JSContext* cx, size_t index)
 
     jsbytecode* codeEnd = script->codeEnd();
     for (jsbytecode* pc = script->code(); pc < codeEnd; pc = GetNextPc(pc)) {
-        PCCounts& counts = sac.getPCCounts(pc);
-        total += counts.numExec();
+        const PCCounts* counts = sac.getPCCounts(pc);
+        if (!counts)
+            continue;
+        total += counts->numExec();
     }
 
     AppendJSONProperty(buf, "totals");
@@ -1843,12 +1846,12 @@ GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac, StringBuffer& buf)
             buf.append(str);
         }
 
-        PCCounts& counts = sac.getPCCounts(pc);
+        const PCCounts* counts = sac.getPCCounts(pc);
 
         AppendJSONProperty(buf, "counts");
         buf.append('{');
 
-        double value = counts.numExec();
+        double value = counts ? counts->numExec() : 0.0;
         if (value > 0) {
             AppendJSONProperty(buf, PCCounts::numExecName, NO_COMMA);
             NumberValueToStringBuffer(cx, DoubleValue(value), buf);
