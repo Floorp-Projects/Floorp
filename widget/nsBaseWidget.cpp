@@ -2653,7 +2653,7 @@ case _value: eventName.AssignLiteral(_name) ; break
     _ASSIGN_eventName(NS_MOUSE_BUTTON_UP,"NS_MOUSE_BUTTON_UP");
     _ASSIGN_eventName(NS_MOUSE_CLICK,"NS_MOUSE_CLICK");
     _ASSIGN_eventName(NS_MOUSE_DOUBLECLICK,"NS_MOUSE_DBLCLICK");
-    _ASSIGN_eventName(NS_MOUSE_MOVE,"NS_MOUSE_MOVE");
+    _ASSIGN_eventName(eMouseMove,"eMouseMove");
     _ASSIGN_eventName(NS_LOAD,"NS_LOAD");
     _ASSIGN_eventName(NS_POPSTATE,"NS_POPSTATE");
     _ASSIGN_eventName(NS_BEFORE_SCRIPT_EXECUTE,"NS_BEFORE_SCRIPT_EXECUTE");
@@ -2802,7 +2802,7 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
                               const nsAutoCString & aWidgetName,
                               int32_t               aWindowID)
 {
-  if (aGuiEvent->mMessage == NS_MOUSE_MOVE) {
+  if (aGuiEvent->mMessage == eMouseMove) {
     if (!debug_GetCachedBoolPref("nglayout.debug.motion_event_dumping"))
       return;
   }

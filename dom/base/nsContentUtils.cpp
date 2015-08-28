@@ -7842,7 +7842,7 @@ nsContentUtils::SendMouseEvent(nsCOMPtr<nsIPresShell> aPresShell,
   else if (aType.EqualsLiteral("mouseup"))
     msg = NS_MOUSE_BUTTON_UP;
   else if (aType.EqualsLiteral("mousemove"))
-    msg = NS_MOUSE_MOVE;
+    msg = eMouseMove;
   else if (aType.EqualsLiteral("mouseover"))
     msg = NS_MOUSE_ENTER_WIDGET;
   else if (aType.EqualsLiteral("mouseout"))

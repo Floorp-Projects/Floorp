@@ -479,7 +479,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
       }
     }
   }
-  else if (aEvent->mMessage == NS_MOUSE_MOVE &&
+  else if (aEvent->mMessage == eMouseMove &&
            (onmenu || (menuParent && menuParent->IsMenuBar()))) {
     if (gEatMouseMove) {
       gEatMouseMove = false;

@@ -46,7 +46,7 @@ NS_EVENT_MESSAGE(eOnline,               eWindowEventFirst + 65)
 NS_EVENT_MESSAGE(eLanguageChange,       eWindowEventFirst + 70)
 
 NS_EVENT_MESSAGE(eMouseEventFirst,      300)
-NS_EVENT_MESSAGE(NS_MOUSE_MOVE,         eMouseEventFirst)
+NS_EVENT_MESSAGE(eMouseMove,            eMouseEventFirst)
 NS_EVENT_MESSAGE(NS_MOUSE_BUTTON_UP,    eMouseEventFirst + 1)
 NS_EVENT_MESSAGE(NS_MOUSE_BUTTON_DOWN,  eMouseEventFirst + 2)
 NS_EVENT_MESSAGE(NS_MOUSE_ENTER_WIDGET, eMouseEventFirst + 22)

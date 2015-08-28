@@ -652,7 +652,7 @@ nsresult nsHTMLFramesetFrame::HandleEvent(nsPresContext* aPresContext,
   if (mDragger) {
     // the nsFramesetBorderFrame has captured NS_MOUSE_DOWN
     switch (aEvent->mMessage) {
-      case NS_MOUSE_MOVE:
+      case eMouseMove:
         MouseDrag(aPresContext, aEvent);
 	      break;
       case NS_MOUSE_BUTTON_UP:

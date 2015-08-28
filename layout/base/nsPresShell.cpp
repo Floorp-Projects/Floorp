@@ -5588,7 +5588,7 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
     refpoint += view->ViewToWidgetOffset();
   }
   NS_ASSERTION(view->GetWidget(), "view should have a widget here");
-  WidgetMouseEvent event(true, NS_MOUSE_MOVE, view->GetWidget(),
+  WidgetMouseEvent event(true, eMouseMove, view->GetWidget(),
                          WidgetMouseEvent::eSynthesized);
   event.refPoint = LayoutDeviceIntPoint::FromAppUnitsToNearest(refpoint, viewAPD);
   event.time = PR_IntervalNow();
@@ -6567,7 +6567,7 @@ PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent)
     return;
   }
 
-  if ((aEvent->mMessage == NS_MOUSE_MOVE &&
+  if ((aEvent->mMessage == eMouseMove &&
        aEvent->AsMouseEvent()->reason == WidgetMouseEvent::eReal) ||
       aEvent->mMessage == NS_MOUSE_ENTER_WIDGET ||
       aEvent->mMessage == NS_MOUSE_BUTTON_DOWN ||
@@ -6670,7 +6670,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
     }
     int16_t button = mouseEvent->button;
     switch (mouseEvent->mMessage) {
-    case NS_MOUSE_MOVE:
+    case eMouseMove:
       if (mouseEvent->buttons == 0) {
         button = -1;
       }
@@ -7931,7 +7931,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
     AutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,
                                                         aEvent, mDocument);
 
-    if (aEvent->mFlags.mIsTrusted && aEvent->mMessage == NS_MOUSE_MOVE) {
+    if (aEvent->mFlags.mIsTrusted && aEvent->mMessage == eMouseMove) {
       nsIPresShell::AllowMouseCapture(
         EventStateManager::GetActiveEventStateManager() == manager);
     }
@@ -7997,7 +7997,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
       // reset the capturing content now that the mouse button is up
       SetCapturingContent(nullptr, 0);
       break;
-    case NS_MOUSE_MOVE:
+    case eMouseMove:
       nsIPresShell::AllowMouseCapture(false);
       break;
     default:

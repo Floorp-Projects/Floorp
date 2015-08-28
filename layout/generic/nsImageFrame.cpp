@@ -2012,7 +2012,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
 
   if ((aEvent->mMessage == NS_MOUSE_BUTTON_UP && 
        aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) ||
-      aEvent->mMessage == NS_MOUSE_MOVE) {
+      aEvent->mMessage == eMouseMove) {
     nsImageMap* map = GetImageMap();
     bool isServerMap = IsServerImageMap();
     if ((nullptr != map) || isServerMap) {

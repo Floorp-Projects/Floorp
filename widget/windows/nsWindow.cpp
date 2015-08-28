@@ -4029,10 +4029,11 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
       CaptureMouse(true);
       break;
 
-    // NS_MOUSE_MOVE and NS_MOUSE_EXIT_WIDGET are here because we need to make sure capture flag
-    // isn't left on after a drag where we wouldn't see a button up message (see bug 324131).
+    // eMouseMove and NS_MOUSE_EXIT_WIDGET are here because we need to make
+    // sure capture flag isn't left on after a drag where we wouldn't see a
+    // button up message (see bug 324131).
     case NS_MOUSE_BUTTON_UP:
-    case NS_MOUSE_MOVE:
+    case eMouseMove:
     case NS_MOUSE_EXIT_WIDGET:
       if (!(wParam & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON)) && sIsInMouseCapture)
         CaptureMouse(false);
@@ -4068,7 +4069,7 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
   nsIntPoint mpScreen = eventPoint + WidgetToScreenOffsetUntyped();
 
   // Suppress mouse moves caused by widget creation
-  if (aEventMessage == NS_MOUSE_MOVE) {
+  if (aEventMessage == eMouseMove) {
     if ((sLastMouseMovePoint.x == mpScreen.x) && (sLastMouseMovePoint.y == mpScreen.y))
       return result;
     sLastMouseMovePoint.x = mpScreen.x;
@@ -4124,7 +4125,7 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
       // Set last Click time on MouseDown only
       sLastMouseDownTime = curMsgTime;
       break;
-    case NS_MOUSE_MOVE:
+    case eMouseMove:
       if (!insideMovementThreshold) {
         sLastClickCount = 0;
       }
@@ -4191,7 +4192,7 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
           break;
       }
       break;
-    case NS_MOUSE_MOVE:
+    case eMouseMove:
       pluginEvent.event = WM_MOUSEMOVE;
       break;
     case NS_MOUSE_EXIT_WIDGET:
@@ -4211,7 +4212,7 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
   if (mWidgetListener) {
     if (nsToolkit::gMouseTrailer)
       nsToolkit::gMouseTrailer->Disable();
-    if (aEventMessage == NS_MOUSE_MOVE) {
+    if (aEventMessage == eMouseMove) {
       if (nsToolkit::gMouseTrailer && !sIsInMouseCapture) {
         nsToolkit::gMouseTrailer->SetMouseTrailerWindow(mWnd);
       }
@@ -5123,7 +5124,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         userMovedMouse = true;
       }
 
-      result = DispatchMouseEvent(NS_MOUSE_MOVE, wParam, lParam,
+      result = DispatchMouseEvent(eMouseMove, wParam, lParam,
                                   false, WidgetMouseEvent::eLeftButton,
                                   MOUSE_INPUT_SOURCE());
       if (userMovedMouse) {

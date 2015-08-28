@@ -144,7 +144,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
   break;
 
   case NS_TOUCH_MOVE:
-  case NS_MOUSE_MOVE: {
+  case eMouseMove: {
     if (mTrackingMouseMove)
     {
       nsCOMPtr<nsIBaseWindow> window;
