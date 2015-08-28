@@ -1767,7 +1767,7 @@ nsPluginFrame::HandleEvent(nsPresContext* aPresContext,
     if (fm && elem)
       return fm->SetFocus(elem, 0);
   }
-  else if (anEvent->mMessage == NS_PLUGIN_FOCUS) {
+  else if (anEvent->mMessage == ePluginFocus) {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm)
       return fm->FocusPlugin(GetContent());
