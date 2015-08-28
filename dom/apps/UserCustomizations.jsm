@@ -12,6 +12,7 @@ this.EXPORTED_SYMBOLS = ["UserCustomizations"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/Extension.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ValueExtractor",
@@ -47,7 +48,7 @@ this.UserCustomizations = {
     debug("Starting customization registration for " + aApp.manifestURL + "\n");
 
     let extension = new Extension({
-      id: aApp.manifestURL,
+      id: AppsUtils.computeHash(aApp.manifestURL),
       resourceURI: Services.io.newURI(aApp.origin + "/", null, null)
     });
 
@@ -150,6 +151,9 @@ this.UserCustomizations = {
   },
 
   init: function() {
+    // XXX : For testing purposes. Will not commit.
+    AppsUtils.allowUnsignedAddons = true;
+
     this._enabled = false;
     try {
       this._enabled = Services.prefs.getBoolPref("dom.apps.customization.enabled");

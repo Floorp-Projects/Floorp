@@ -40,8 +40,8 @@ DEF_TEST(DeserializedNodeUbiNodes, {
     const char16_t* typeName = MOZ_UTF16("TestTypeName");
     const char* className = "MyObjectClassName";
 
-    NodeId id = 1L << 33;
-    uint64_t size = 1L << 60;
+    NodeId id = uint64_t(1) << 33;
+    uint64_t size = uint64_t(1) << 60;
     MockDeserializedNode mocked(id, typeName, size);
     mocked.jsObjectClassName = mozilla::UniquePtr<char[]>(strdup(className));
     ASSERT_TRUE(!!mocked.jsObjectClassName);

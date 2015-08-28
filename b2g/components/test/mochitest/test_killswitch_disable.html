@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Disabling of killswitch feature</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <script type="application/javascript" src="killswitch.js"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+  <script type="application/javascript">
+
+  "use strict";
+
+  var initialSettingsValues = {
+    "lockscreen.locked": true,
+    "lockscreen.lock-immediately": true
+  };
+
+  var initialPrefsValues = {
+    "b2g.killswitch.test": true
+  };
+
+  var disabledSettingsExpected = {
+    "lockscreen.locked": false,
+    "lockscreen.lock-immediately": false
+  };
+
+  var disabledPrefsExpected = {
+    "b2g.killswitch.test": false
+  };
+
+  function testDoAction() {
+    return navigator.mozKillSwitch.disable();
+  }
+
+  function startTests() {
+    setupSettings(disabledSettingsExpected);
+    setupPrefs(initialPrefsValues);
+    testSettingsInitial(() => {
+      testPrefsInitial();
+      testDoAction().then(() => {
+        testSettingsExpected(disabledSettingsExpected, () => {
+          testPrefsExpected(disabledPrefsExpected);
+          finish();
+        });
+      }).catch(() => {
+        ok(false, "KillSwitch promise failed");
+        finish();
+      });
+    });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  loadSettings();
+  addPrefs();
+  </script>
+</pre>
+</body>
+</html>

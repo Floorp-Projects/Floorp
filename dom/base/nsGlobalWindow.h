@@ -498,6 +498,8 @@ public:
     FullscreenReason aReason, bool aIsFullscreen,
     mozilla::gfx::VRHMDInfo *aHMD = nullptr) override final;
   virtual void FinishFullscreenChange(bool aIsFullscreen) override final;
+  void SetWidgetFullscreen(FullscreenReason aReason, bool aIsFullscreen,
+                           nsIWidget* aWidget, nsIScreen* aScreen);
   bool FullScreen() const;
 
   // Inner windows only.
@@ -1631,13 +1633,6 @@ private:
   void DisconnectEventTargetObjects();
 
 protected:
-  // When adding new member variables, be careful not to create cycles
-  // through JavaScript.  If there is any chance that a member variable
-  // could own objects that are implemented in JavaScript, then those
-  // objects will keep the global object (this object) alive.  To prevent
-  // these cycles, ownership of such members must be released in
-  // |CleanUp| and |DetachFromDocShell|.
-
   // This member is also used on both inner and outer windows, but
   // for slightly different purposes. On inner windows it means the
   // inner window is held onto by session history and should not

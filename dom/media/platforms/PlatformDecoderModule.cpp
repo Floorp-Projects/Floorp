@@ -33,6 +33,7 @@
 #include "mozilla/SharedThreadPool.h"
 
 #include "MediaInfo.h"
+#include "FuzzingWrapper.h"
 #include "H264Converter.h"
 
 #include "OpusDecoder.h"
@@ -50,6 +51,9 @@ bool PlatformDecoderModule::sGonkDecoderEnabled = false;
 bool PlatformDecoderModule::sAndroidMCDecoderEnabled = false;
 bool PlatformDecoderModule::sAndroidMCDecoderPreferred = false;
 bool PlatformDecoderModule::sGMPDecoderEnabled = false;
+bool PlatformDecoderModule::sEnableFuzzingWrapper = false;
+uint32_t PlatformDecoderModule::sVideoOutputMinimumInterval_ms = 0;
+bool PlatformDecoderModule::sDontDelayInputExhausted = false;
 
 /* static */
 void
@@ -80,6 +84,13 @@ PlatformDecoderModule::Init()
 
   Preferences::AddBoolVarCache(&sGMPDecoderEnabled,
                                "media.fragmented-mp4.gmp.enabled", false);
+
+  Preferences::AddBoolVarCache(&sEnableFuzzingWrapper,
+                               "media.decoder.fuzzing.enabled", false);
+  Preferences::AddUintVarCache(&sVideoOutputMinimumInterval_ms,
+                               "media.decoder.fuzzing.video-output-minimum-interval-ms", 0);
+  Preferences::AddBoolVarCache(&sDontDelayInputExhausted,
+                               "media.decoder.fuzzing.dont-delay-inputexhausted", false);
 
 #ifdef XP_WIN
   WMFDecoderModule::Init();
@@ -212,25 +223,40 @@ PlatformDecoderModule::CreateDecoder(const TrackInfo& aConfig,
     return nullptr;
   }
 
+  MediaDataDecoderCallback* callback = aCallback;
+  nsRefPtr<DecoderCallbackFuzzingWrapper> callbackWrapper;
+  if (sEnableFuzzingWrapper) {
+    callbackWrapper = new DecoderCallbackFuzzingWrapper(aCallback);
+    callbackWrapper->SetVideoOutputMinimumInterval(
+      TimeDuration::FromMilliseconds(sVideoOutputMinimumInterval_ms));
+    callbackWrapper->SetDontDelayInputExhausted(sDontDelayInputExhausted);
+    callback = callbackWrapper.get();
+  }
+
   if (H264Converter::IsH264(aConfig)) {
     m = new H264Converter(this,
                           *aConfig.GetAsVideoInfo(),
                           aLayersBackend,
                           aImageContainer,
                           aTaskQueue,
-                          aCallback);
+                          callback);
   } else if (!hasPlatformDecoder && VPXDecoder::IsVPX(aConfig.mMimeType)) {
     m = new VPXDecoder(*aConfig.GetAsVideoInfo(),
                        aImageContainer,
                        aTaskQueue,
-                       aCallback);
+                       callback);
   } else {
     m = CreateVideoDecoder(*aConfig.GetAsVideoInfo(),
                            aLayersBackend,
                            aImageContainer,
                            aTaskQueue,
-                           aCallback);
+                           callback);
   }
+
+  if (callbackWrapper && m) {
+    m = new DecoderFuzzingWrapper(m.forget(), callbackWrapper.forget());
+  }
+
   return m.forget();
 }
 

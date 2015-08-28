@@ -21,7 +21,7 @@ struct MockDeserializedStackFrame : public DeserializedStackFrame
 };
 
 DEF_TEST(DeserializedStackFrameUbiStackFrames, {
-    StackFrameId id = 1L << 42;
+    StackFrameId id = uint64_t(1) << 42;
     uint32_t line = 1337;
     uint32_t column = 9; // 3 space tabs!?
     const char16_t* source = MOZ_UTF16("my-javascript-file.js");

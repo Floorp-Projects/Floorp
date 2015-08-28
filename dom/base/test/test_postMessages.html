@@ -278,6 +278,51 @@ function test_windowToIframeURL(url) {
   document.body.appendChild(ifr);
 }
 
+// PostMessage for Workers
+function test_workers() {
+  info("Testing Workers");
+
+  var resolve;
+
+  var w = new Worker('worker_postMessages.js');
+  w.postMessage('workers');
+  w.onmessage = function(e) {
+    is(e.data, 'ok', "Worker ready!");
+
+    w.onmessage = function(e) {
+      if (!resolve) {
+        ok(false, "Unexpected message!");
+        return;
+      }
+
+      let tmp = resolve;
+      resolve = null;
+      tmp({ data: e.data, ports: e.ports });
+    }
+
+    runTests({
+      clonableObjects: true,
+      transferableObjects: true,
+      send: function(what, ports) {
+        return new Promise(function(r, rr) {
+          resolve = r;
+          try {
+            w.postMessage(what, ports);
+          } catch(e) {
+            resolve = null;
+            rr();
+          }
+        });
+      },
+
+      finished: function() {
+        onmessage = null;
+        next();
+      }
+    });
+  }
+}
+
 // PostMessage for BroadcastChannel
 function test_broadcastChannel() {
   info("Testing broadcastChannel");
@@ -320,6 +365,52 @@ function test_broadcastChannel() {
   });
 }
 
+// PostMessage for BroadcastChannel in workers
+function test_broadcastChannel_inWorkers() {
+  info("Testing broadcastChannel in Workers");
+
+  var bc = new BroadcastChannel('postMessagesTest_inWorkers');
+  var resolve;
+
+  var w = new Worker('worker_postMessages.js');
+  w.postMessage('broadcastChannel');
+  w.onmessage = function(e) {
+    is(e.data, 'ok', "Worker ready!");
+
+    w.onmessage = function(e) {
+      if (!resolve) {
+        ok(false, "Unexpected message!");
+        return;
+      }
+
+      let tmp = resolve;
+      resolve = null;
+      tmp({ data: e.data, ports: e.ports });
+    }
+
+    runTests({
+      clonableObjects: true,
+      transferableObjects: false,
+      send: function(what, ports) {
+        return new Promise(function(r, rr) {
+          if (ports.length) {
+            rr();
+            return;
+          }
+
+          resolve = r;
+          bc.postMessage(what);
+        });
+      },
+
+      finished: function() {
+        onmessage = null;
+        next();
+      }
+    });
+  }
+}
+
 // PostMessage for MessagePort
 function test_messagePort() {
   info("Testing messagePort");
@@ -360,6 +451,52 @@ function test_messagePort() {
   });
 }
 
+// PostMessage for MessagePort in Workers
+function test_messagePort_inWorkers() {
+  info("Testing messagePort in workers");
+
+  var mc = new MessageChannel();
+  var resolve;
+
+  var w = new Worker('worker_postMessages.js');
+  w.postMessage('messagePort', [ mc.port2 ]);
+  w.onmessage = function(e) {
+    is(e.data, 'ok', "Worker ready!");
+
+    w.onmessage = function(e) {
+      if (!resolve) {
+        ok(false, "Unexpected message!");
+        return;
+      }
+
+      let tmp = resolve;
+      resolve = null;
+      tmp({ data: e.data, ports: e.ports });
+    }
+
+    runTests({
+      clonableObjects: true,
+      transferableObjects: true,
+      send: function(what, ports) {
+        return new Promise(function(r, rr) {
+          resolve = r;
+          try {
+            mc.port1.postMessage(what, ports);
+          } catch(e) {
+            resolve = null;
+            rr();
+          }
+        });
+      },
+
+      finished: function() {
+        onmessage = null;
+        next();
+      }
+    });
+  }
+}
+
 var tests = [
   create_fileList,
 
@@ -367,11 +504,13 @@ var tests = [
   test_windowToIframe,
   test_windowToCrossOriginIframe,
 
+  test_workers,
+
   test_broadcastChannel,
-  // TODO BroadcastChannel in worker
+  test_broadcastChannel_inWorkers,
 
   test_messagePort,
-  // TODO MessagePort in worker
+  test_messagePort_inWorkers,
 ];
 
 function next() {
