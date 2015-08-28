@@ -1319,37 +1319,33 @@ JSScript::initScriptCounts(JSContext* cx)
     jumpTargets.erase(last, jumpTargets.end());
 
     // Initialize all PCCounts counters to 0.
-    PCCounts* base = zone()->pod_malloc<PCCounts>(jumpTargets.length());
-    if (!base)
+    ScriptCounts::PCCountsVector base;
+    if (!base.reserve(jumpTargets.length()))
         return false;
 
     for (size_t i = 0; i < jumpTargets.length(); i++)
-        new (base + i) PCCounts(pcToOffset(jumpTargets[i]));
+        MOZ_ALWAYS_TRUE(base.emplaceBack(pcToOffset(jumpTargets[i])));
 
     // Create compartment's scriptCountsMap if necessary.
     ScriptCountsMap* map = compartment()->scriptCountsMap;
     if (!map) {
         map = cx->new_<ScriptCountsMap>();
         if (!map || !map->init()) {
-            js_free(base);
             js_delete(map);
             return false;
         }
         compartment()->scriptCountsMap = map;
     }
 
-    ScriptCounts scriptCounts;
-    scriptCounts.pcCountsVector = (PCCounts*) base;
-    scriptCounts.pcCountsSize = jumpTargets.length();
-
     // Register the current ScriptCount in the compartment's map.
-    if (!map->putNew(this, scriptCounts)) {
-        js_free(base);
+    if (!map->putNew(this, Move(base)))
         return false;
-    }
-    hasScriptCounts_ = true; // safe to set this;  we can't fail after this point
 
-    /* Enable interrupts in any interpreter frames running on this script. */
+    // safe to set this;  we can't fail after this point.
+    hasScriptCounts_ = true;
+
+    // Enable interrupts in any interpreter frames running on this script. This
+    // is used to let the interpreter increment the PCCounts, if present.
     for (ActivationIterator iter(cx->runtime()); !iter.done(); ++iter) {
         if (iter->isInterpreter())
             iter->asInterpreter()->enableInterruptsIfRunning(this);
@@ -1370,10 +1366,8 @@ static inline ScriptCountsMap::Ptr GetScriptCountsMapEntry(JSScript* script)
 js::PCCounts*
 ScriptCounts::maybeGetPCCounts(size_t offset) {
     PCCounts searched = PCCounts(offset);
-    PCCounts* begin = pcCountsVector;
-    PCCounts* end = begin + pcCountsSize;
-    PCCounts* elem = std::lower_bound(begin, end, searched);
-    if (elem == end || elem->pcOffset() != offset)
+    PCCounts* elem = std::lower_bound(pcCounts_.begin(), pcCounts_.end(), searched);
+    if (elem == pcCounts_.end() || elem->pcOffset() != offset)
         return nullptr;
     return elem;
 }
@@ -1381,21 +1375,17 @@ ScriptCounts::maybeGetPCCounts(size_t offset) {
 const js::PCCounts*
 ScriptCounts::maybeGetPCCounts(size_t offset) const {
     PCCounts searched = PCCounts(offset);
-    PCCounts* begin = pcCountsVector;
-    PCCounts* end = begin + pcCountsSize;
-    PCCounts* elem = std::lower_bound(begin, end, searched);
-    if (elem == end || elem->pcOffset() != offset)
+    const PCCounts* elem = std::lower_bound(pcCounts_.begin(), pcCounts_.end(), searched);
+    if (elem == pcCounts_.end() || elem->pcOffset() != offset)
         return nullptr;
     return elem;
 }
 
-js::PCCounts*
+const js::PCCounts*
 ScriptCounts::maybeGetThrowCounts(size_t offset) const {
     PCCounts searched = PCCounts(offset);
-    PCCounts* begin = throwCountsVector;
-    PCCounts* end = throwCountsVector + throwCountsSize;
-    PCCounts* elem = std::lower_bound(begin, end, searched);
-    if (elem == end || elem->pcOffset() != offset)
+    const PCCounts* elem = std::lower_bound(throwCounts_.begin(), throwCounts_.end(), searched);
+    if (elem == throwCounts_.end() || elem->pcOffset() != offset)
         return nullptr;
     return elem;
 }
@@ -1403,32 +1393,10 @@ ScriptCounts::maybeGetThrowCounts(size_t offset) const {
 js::PCCounts*
 ScriptCounts::getThrowCounts(size_t offset) {
     PCCounts searched = PCCounts(offset);
-    PCCounts* begin = throwCountsVector;
-    PCCounts* end = throwCountsVector + throwCountsSize;
-    PCCounts* elem = std::lower_bound(begin, end, searched);
-    if (elem == end || elem->pcOffset() != offset) {
-        size_t index = elem - begin;
-
-        size_t numBytes = (1 + throwCountsSize) * sizeof(PCCounts);
-        PCCounts* vec = (PCCounts*) js_realloc(throwCountsVector, numBytes);
-        if (!vec)
-            return nullptr;
-        throwCountsVector = vec;
-        throwCountsSize += 1;
-
-        elem = throwCountsVector + index;
-        end = throwCountsVector + throwCountsSize;
-        std::copy_backward(elem, end - 1, end);
-        *elem = searched;
-    }
+    PCCounts* elem = std::lower_bound(throwCounts_.begin(), throwCounts_.end(), searched);
+    if (elem == throwCounts_.end() || elem->pcOffset() != offset)
+        elem = throwCounts_.insert(elem, searched);
     return elem;
-}
-
-js::PCCounts*
-JSScript::maybeGetPCCounts(jsbytecode* pc) {
-    MOZ_ASSERT(containsPC(pc));
-    ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
-    return p->value().maybeGetPCCounts(pcToOffset(pc));
 }
 
 void
@@ -1450,6 +1418,12 @@ JSScript::getScriptCounts()
 }
 
 js::PCCounts*
+JSScript::maybeGetPCCounts(jsbytecode* pc) {
+    MOZ_ASSERT(containsPC(pc));
+    return getScriptCounts().maybeGetPCCounts(pcToOffset(pc));
+}
+
+const js::PCCounts*
 JSScript::maybeGetThrowCounts(jsbytecode* pc) {
     MOZ_ASSERT(containsPC(pc));
     return getScriptCounts().maybeGetThrowCounts(pcToOffset(pc));
@@ -1464,35 +1438,33 @@ JSScript::getThrowCounts(jsbytecode* pc) {
 void
 JSScript::addIonCounts(jit::IonScriptCounts* ionCounts)
 {
-    ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
-    if (p->value().ionCounts)
-        ionCounts->setPrevious(p->value().ionCounts);
-    p->value().ionCounts = ionCounts;
+    ScriptCounts& sc = getScriptCounts();
+    if (sc.ionCounts_)
+        ionCounts->setPrevious(sc.ionCounts_);
+    sc.ionCounts_ = ionCounts;
 }
 
 jit::IonScriptCounts*
 JSScript::getIonCounts()
 {
-    ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
-    return p->value().ionCounts;
+    return getScriptCounts().ionCounts_;
 }
 
-ScriptCounts
-JSScript::releaseScriptCounts()
+void
+JSScript::releaseScriptCounts(ScriptCounts* counts)
 {
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
-    ScriptCounts counts = p->value();
+    *counts = Move(p->value());
     compartment()->scriptCountsMap->remove(p);
     hasScriptCounts_ = false;
-    return counts;
 }
 
 void
 JSScript::destroyScriptCounts(FreeOp* fop)
 {
     if (hasScriptCounts()) {
-        ScriptCounts scriptCounts = releaseScriptCounts();
-        scriptCounts.destroy(fop);
+        ScriptCounts scriptCounts;
+        releaseScriptCounts(&scriptCounts);
     }
 }
 

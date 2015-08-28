@@ -795,7 +795,7 @@ class PCCounts
     }
 
     // Used for sorting and searching.
-    bool operator<(const PCCounts& rhs) {
+    bool operator<(const PCCounts& rhs) const {
         return pcOffset_ < rhs.pcOffset_;
     }
 
