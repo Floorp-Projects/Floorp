@@ -2860,6 +2860,22 @@ ElementRestyler::AddPendingRestylesForDescendantsMatchingSelectors(
   }
 }
 
+bool
+ElementRestyler::MustCheckUndisplayedContent(nsIContent*& aUndisplayedParent)
+{
+  // When the root element is display:none, we still construct *some*
+  // frames that have the root element as their mContent, down to the
+  // DocElementContainingBlock.
+  if (mFrame->StyleContext()->GetPseudo()) {
+    aUndisplayedParent = nullptr;
+    return mFrame == mPresContext->FrameConstructor()->
+                       GetDocElementContainingBlock();
+  }
+
+  aUndisplayedParent = mFrame->GetContent();
+  return !!aUndisplayedParent;
+}
+
 /**
  * Recompute style for mFrame (which should not have a prev continuation
  * with the same style), all of its next continuations with the same
@@ -3941,20 +3957,8 @@ ElementRestyler::ComputeStyleChangeFor(nsIFrame*          aFrame,
 void
 ElementRestyler::RestyleUndisplayedDescendants(nsRestyleHint aChildRestyleHint)
 {
-  // When the root element is display:none, we still construct *some*
-  // frames that have the root element as their mContent, down to the
-  // DocElementContainingBlock.
-  bool checkUndisplayed;
   nsIContent* undisplayedParent;
-  if (mFrame->StyleContext()->GetPseudo()) {
-    checkUndisplayed = mFrame == mPresContext->FrameConstructor()->
-                                   GetDocElementContainingBlock();
-    undisplayedParent = nullptr;
-  } else {
-    checkUndisplayed = !!mFrame->GetContent();
-    undisplayedParent = mFrame->GetContent();
-  }
-  if (checkUndisplayed) {
+  if (MustCheckUndisplayedContent(undisplayedParent)) {
     DoRestyleUndisplayedDescendants(aChildRestyleHint, undisplayedParent,
                                     mFrame->StyleContext());
   }
