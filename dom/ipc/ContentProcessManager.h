@@ -111,6 +111,13 @@ public:
                                  /*out*/ TabId* aOpenerTabId);
 
   /**
+   * Get all TabParents' Ids managed by the givent content process.
+   * Return empty array when TabParent couldn't be found via aChildCpId
+   */
+  nsTArray<TabId>
+  GetTabParentsByProcessId(const ContentParentId& aChildCpId);
+
+  /**
    * Get the TabParent by the given content process and tab id.
    * Return nullptr when TabParent couldn't be found via aChildCpId
    * and aChildTabId.
@@ -134,6 +141,15 @@ public:
   already_AddRefed<TabParent>
   GetTopLevelTabParentByProcessAndTabId(const ContentParentId& aChildCpId,
                                         const TabId& aChildTabId);
+
+  /**
+   * Return appId by given TabId and ContentParentId.
+   * It will return nsIScriptSecurityManager::NO_APP_ID
+   * if the given tab is not an app.
+   */
+  uint32_t
+  GetAppIdByProcessAndTabId(const ContentParentId& aChildCpId,
+                            const TabId& aChildTabId);
 
 private:
   static StaticAutoPtr<ContentProcessManager> sSingleton;

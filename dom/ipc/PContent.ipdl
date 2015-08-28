@@ -991,8 +991,15 @@ parent:
      */
     sync AllocateTabId(TabId openerTabId, IPCTabContext context, ContentParentId cpId)
         returns (TabId tabId);
-    async DeallocateTabId(TabId tabId);
+    async DeallocateTabId(TabId tabId,
+                          ContentParentId cpId,
+                          bool aMarkedDestroying);
 
+    /**
+     * Tell the chrome process there is a destruction of PBrowser(Tab)
+     */
+    async NotifyTabDestroying(TabId tabId,
+                              ContentParentId cpId);
     /**
      * Starts an offline application cache update.
      * @param manifestURI
