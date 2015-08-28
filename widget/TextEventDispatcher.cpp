@@ -320,14 +320,14 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
                        uint32_t aIndexOfKeypress)
 {
   MOZ_ASSERT(aMessage == NS_KEY_DOWN || aMessage == NS_KEY_UP ||
-             aMessage == NS_KEY_PRESS, "Invalid aMessage value");
+             aMessage == eKeyPress, "Invalid aMessage value");
   nsresult rv = GetState();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
 
   // If the key shouldn't cause keypress events, don't this patch them.
-  if (aMessage == NS_KEY_PRESS && !aKeyboardEvent.ShouldCauseKeypressEvents()) {
+  if (aMessage == eKeyPress && !aKeyboardEvent.ShouldCauseKeypressEvents()) {
     return false;
   }
 
@@ -336,7 +336,7 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
     // However, if we need to behave like other browsers, we need the keydown
     // and keyup events.  Note that this behavior is also allowed by D3E spec.
     // FYI: keypress events must not be fired during composition.
-    if (!sDispatchKeyEventsDuringComposition || aMessage == NS_KEY_PRESS) {
+    if (!sDispatchKeyEventsDuringComposition || aMessage == eKeyPress) {
       return false;
     }
     // XXX If there was mOnlyContentDispatch for this case, it might be useful
@@ -363,7 +363,7 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
     keyEvent.charCode = 0;
   } else if (keyEvent.mKeyNameIndex != KEY_NAME_INDEX_USE_STRING) {
     MOZ_ASSERT(!aIndexOfKeypress,
-      "aIndexOfKeypress must be 0 for NS_KEY_PRESS of non-printable key");
+      "aIndexOfKeypress must be 0 for eKeyPress of non-printable key");
     // If keypress event isn't caused by printable key, its charCode should
     // be 0.
     keyEvent.charCode = 0;
@@ -422,7 +422,7 @@ TextEventDispatcher::MaybeDispatchKeypressEvents(
   bool consumed = false;
   for (size_t i = 0; i < keypressCount; i++) {
     aStatus = nsEventStatus_eIgnore;
-    if (!DispatchKeyboardEventInternal(NS_KEY_PRESS, aKeyboardEvent,
+    if (!DispatchKeyboardEventInternal(eKeyPress, aKeyboardEvent,
                                        aStatus, aDispatchTo, i)) {
       // The widget must have been gone.
       break;

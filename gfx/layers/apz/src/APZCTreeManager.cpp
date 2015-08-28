@@ -886,7 +886,7 @@ APZCTreeManager::UpdateWheelTransaction(WidgetInputEvent& aEvent)
      txn->OnMouseMove(point);
      return;
    }
-   case NS_KEY_PRESS:
+   case eKeyPress:
    case NS_KEY_UP:
    case NS_KEY_DOWN:
    case NS_MOUSE_BUTTON_UP:
