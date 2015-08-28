@@ -12,6 +12,7 @@
 #include "BluetoothUuid.h"
 #include "ObexBase.h"
 
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
