@@ -523,6 +523,7 @@ SandboxEarlyInit(GeckoProcessType aType, bool aIsNuwa)
   }
 
   MOZ_RELEASE_ASSERT(IsSingleThreaded());
+  const SandboxInfo info = SandboxInfo::Get();
 
   // Which kinds of resource isolation (of those that need to be set
   // up at this point) can be used by this process?
@@ -536,9 +537,13 @@ SandboxEarlyInit(GeckoProcessType aType, bool aIsNuwa)
     return;
 #ifdef MOZ_GMP_SANDBOX
   case GeckoProcessType_GMPlugin:
+    if (!info.Test(SandboxInfo::kEnabledForMedia)) {
+      break;
+    }
     canUnshareNet = true;
     canUnshareIPC = true;
-    canChroot = true;
+    // Need seccomp-bpf to intercept open().
+    canChroot = info.Test(SandboxInfo::kHasSeccompBPF);
     break;
 #endif
     // In the future, content processes will be able to use some of
@@ -554,7 +559,6 @@ SandboxEarlyInit(GeckoProcessType aType, bool aIsNuwa)
   }
 
   // If capabilities can't be gained, then nothing can be done.
-  const SandboxInfo info = SandboxInfo::Get();
   if (!info.Test(SandboxInfo::kHasUserNamespaces)) {
     return;
   }
