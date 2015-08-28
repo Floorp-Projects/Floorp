@@ -175,7 +175,7 @@ EVENT(contextmenu,
 // Not supported yet
 // EVENT(cuechange)
 EVENT(dblclick,
-      NS_MOUSE_DOUBLECLICK,
+      eMouseDoubleClick,
       EventNameType_HTMLXUL,
       eMouseEventClass)
 EVENT(drag,
