@@ -39,7 +39,7 @@ NS_EVENT_MESSAGE(ePluginActivate,       eWindowEventFirst + 62)
 NS_EVENT_MESSAGE(ePluginFocus,          eWindowEventFirst + 63)
 
 NS_EVENT_MESSAGE(eOffline,              eWindowEventFirst + 64)
-NS_EVENT_MESSAGE(NS_ONLINE,             eWindowEventFirst + 65)
+NS_EVENT_MESSAGE(eOnline,               eWindowEventFirst + 65)
 
 // NS_BEFORERESIZE_EVENT used to be here (eWindowEventFirst + 66)
 
