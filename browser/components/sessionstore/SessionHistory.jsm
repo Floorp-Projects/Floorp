@@ -123,6 +123,8 @@ let SessionHistoryInternal = {
       entry.subframe = true;
     }
 
+    entry.charset = shEntry.URI.originCharset;
+
     let cacheKey = shEntry.cacheKey;
     if (cacheKey && cacheKey instanceof Ci.nsISupportsPRUint32 &&
         cacheKey.data != 0) {
@@ -289,7 +291,7 @@ let SessionHistoryInternal = {
     var shEntry = Cc["@mozilla.org/browser/session-history-entry;1"].
                   createInstance(Ci.nsISHEntry);
 
-    shEntry.setURI(Utils.makeURI(entry.url));
+    shEntry.setURI(Utils.makeURI(entry.url, entry.charset));
     shEntry.setTitle(entry.title || entry.url);
     if (entry.subframe)
       shEntry.setIsSubFrame(entry.subframe || false);
