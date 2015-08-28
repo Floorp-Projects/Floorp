@@ -431,7 +431,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
   }
   else if (
 #ifndef NSCONTEXTMENUISMOUSEUP
-           (aEvent->mMessage == NS_MOUSE_BUTTON_UP &&
+           (aEvent->mMessage == eMouseUp &&
             aEvent->AsMouseEvent()->button == WidgetMouseEvent::eRightButton) &&
 #else
            aEvent->mMessage == NS_CONTEXTMENU &&
@@ -452,7 +452,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
       Execute(aEvent);
     }
   }
-  else if (aEvent->mMessage == NS_MOUSE_BUTTON_UP &&
+  else if (aEvent->mMessage == eMouseUp &&
            aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton &&
            !IsMenu() && !IsDisabled()) {
     // Execute the execute event handler.

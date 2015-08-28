@@ -92,7 +92,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
      break;
 
 
-   case NS_MOUSE_BUTTON_UP: {
+   case eMouseUp: {
        if (mTrackingMouseMove &&
            aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
          // we're done tracking.

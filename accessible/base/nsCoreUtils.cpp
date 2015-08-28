@@ -113,7 +113,7 @@ nsCoreUtils::DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
   DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, cnvdX, cnvdY,
                      tcContent, tcFrame, presShell, rootWidget);
 
-  DispatchMouseEvent(NS_MOUSE_BUTTON_UP, cnvdX, cnvdY,
+  DispatchMouseEvent(eMouseUp, cnvdX, cnvdY,
                      tcContent, tcFrame, presShell, rootWidget);
 }
 

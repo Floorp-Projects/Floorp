@@ -2627,7 +2627,7 @@ nsWindow::DispatchMissedButtonReleases(GdkEventCrossing *aGdkEvent)
             // change in state.  This event is marked as synthesized so that
             // it is not dispatched as a DOM event, because we don't know the
             // position, widget, modifiers, or time/order.
-            WidgetMouseEvent synthEvent(true, NS_MOUSE_BUTTON_UP, this,
+            WidgetMouseEvent synthEvent(true, eMouseUp, this,
                                         WidgetMouseEvent::eSynthesized);
             synthEvent.button = buttonType;
             DispatchInputEvent(&synthEvent);
@@ -2652,7 +2652,7 @@ nsWindow::InitButtonEvent(WidgetMouseEvent& aEvent,
     guint modifierState = aGdkEvent->state;
     // aEvent's state doesn't include this event's information.  Therefore,
     // if aEvent is mouse button down event, we need to set it manually.
-    // Note that we cannot do same thing for NS_MOUSE_BUTTON_UP because
+    // Note that we cannot do same thing for eMouseUp because
     // system may have two or more mice and same button of another mouse
     // may be still pressed.
     if (aGdkEvent->type != GDK_BUTTON_RELEASE) {
@@ -2794,7 +2794,7 @@ nsWindow::OnButtonReleaseEvent(GdkEventButton *aEvent)
 
     gButtonState &= ~ButtonMaskFromGDKButton(aEvent->button);
 
-    WidgetMouseEvent event(true, NS_MOUSE_BUTTON_UP, this,
+    WidgetMouseEvent event(true, eMouseUp, this,
                            WidgetMouseEvent::eReal);
     event.button = domButton;
     InitButtonEvent(event, aEvent);

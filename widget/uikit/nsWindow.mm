@@ -160,7 +160,7 @@ private:
         LayoutDeviceIntPoint lp = UIKitPointsToDevPixels([sender locationInView:self], [self contentScaleFactor]);
         [self sendMouseEvent:eMouseMove point:lp widget:mGeckoChild];
         [self sendMouseEvent:NS_MOUSE_BUTTON_DOWN point:lp widget:mGeckoChild];
-        [self sendMouseEvent:NS_MOUSE_BUTTON_UP point:lp widget:mGeckoChild];
+        [self sendMouseEvent:eMouseUp point:lp widget:mGeckoChild];
     }
 }
 

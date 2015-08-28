@@ -1025,8 +1025,7 @@ nsWindow::mouseReleaseEvent(QMouseEvent* aEvent)
     if (!IsAcceptedButton(aEvent->button()))
         return nsEventStatus_eIgnore;
 
-    WidgetMouseEvent event(true, NS_MOUSE_BUTTON_UP, this,
-                           WidgetMouseEvent::eReal);
+    WidgetMouseEvent event(true, eMouseUp, this, WidgetMouseEvent::eReal);
     InitMouseEvent(event, aEvent, 1);
     return DispatchEvent(&event);
 }

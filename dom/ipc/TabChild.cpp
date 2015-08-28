@@ -2059,7 +2059,7 @@ TabChild::UpdateTapState(const WidgetTouchEvent& aEvent, nsEventStatus aStatus)
       APZCCallbackHelper::DispatchSynthesizedMouseEvent(
         NS_MOUSE_BUTTON_DOWN, time, currentPoint, 0, mPuppetWidget);
       APZCCallbackHelper::DispatchSynthesizedMouseEvent(
-        NS_MOUSE_BUTTON_UP, time, currentPoint, 0, mPuppetWidget);
+        eMouseUp, time, currentPoint, 0, mPuppetWidget);
     }
     // fall through
   case NS_TOUCH_CANCEL:
