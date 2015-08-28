@@ -310,6 +310,7 @@ describe("loop.store.ActiveRoomStore", function () {
         decryptedContext: {
           roomName: "Monkeys"
         },
+        participants: [],
         roomUrl: "http://invalid"
       };
 
@@ -350,6 +351,7 @@ describe("loop.store.ActiveRoomStore", function () {
           new sharedActions.SetupRoomInfo({
             roomContextUrls: undefined,
             roomDescription: undefined,
+            participants: [],
             roomToken: fakeToken,
             roomName: fakeRoomData.decryptedContext.roomName,
             roomUrl: fakeRoomData.roomUrl,
@@ -1277,6 +1279,30 @@ describe("loop.store.ActiveRoomStore", function () {
 
       expect(store.getStoreState().remoteSrcVideoObject).eql(null);
     });
+
+    it("should remove non-owner participants", function() {
+      store.setStoreState({
+        participants: [{owner: true}, {}]
+      });
+
+      store.remotePeerDisconnected();
+
+      var participants = store.getStoreState().participants;
+      expect(participants).to.have.length.of(1);
+      expect(participants[0].owner).eql(true);
+    });
+
+    it("should keep the owner participant", function() {
+      store.setStoreState({
+        participants: [{owner: true}]
+      });
+
+      store.remotePeerDisconnected();
+
+      var participants = store.getStoreState().participants;
+      expect(participants).to.have.length.of(1);
+      expect(participants[0].owner).eql(true);
+    });
   });
 
   describe("#connectionStatus", function() {
@@ -1518,6 +1544,7 @@ describe("loop.store.ActiveRoomStore", function () {
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.UpdateRoomInfo({
             description: "fakeDescription",
+            participants: undefined,
             roomName: fakeRoomData.decryptedContext.roomName,
             roomUrl: fakeRoomData.roomUrl,
             urls: {
