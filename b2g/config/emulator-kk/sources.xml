@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="e935894ef5f27e2f04b9e929a45a958e6288a223">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="d784c81961d82cbe9e111405468c590a8345856c"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="b69c16798ddd7154207f56d983721a327522f5d1"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="62cfa11ae7d77f6330de019a5aa79607e35be7d1"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -23,7 +23,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="6641107c83e718d9896f90a9529ad0c252ddc271"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="b4f6fd4afd03161f53c7d2a663750f94762bd238"/>
   <!-- Stock Android things -->
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="f92a936f2aa97526d4593386754bdbf02db07a12"/>
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="6e47ff2790f5656b5b074407829ceecf3e6188c4"/>
@@ -74,7 +74,7 @@
   <project name="platform/external/libselinux" path="external/libselinux" revision="f2a93748f1974a76f1676f66049b3a29f1b4e532"/>
   <project name="platform/external/libsepol" path="external/libsepol" revision="cf9b75ee1949969c6620fcbec854e67a305dbbc7"/>
   <project name="platform/external/libvpx" path="external/libvpx" revision="11e4fb71a745e7d0f76099f8861d7e6083c104fa"/>
-  <project name="platform/external/mdnsresponder" path="external/mdnsresponder" revision="dcea77d81cd32b7874b1e26a6474e34917326472"/>
+  <project name="platform/external/mdnsresponder" path="external/mdnsresponder" remote="caf" revision="dd17df3f6775c4366a5c1d21865370d60a3b1295"/>
   <project name="platform/external/mksh" path="external/mksh" revision="221fb0e62a39d4cedd6469a048cadb28fbf01a96"/>
   <project name="platform/external/netcat" path="external/netcat" revision="0c2bf20f00ca9d74080a75eda76d0a5550702eaa"/>
   <project name="platform/external/openssl" path="external/openssl" revision="aa09f63881e72abb398d301c8c19c56583790c84"/>
