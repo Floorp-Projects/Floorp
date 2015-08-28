@@ -1,0 +1,26 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+
+<html>
+<meta charset="UTF-8">
+<head>
+<title>Marionette Test</title>
+</head>
+<body>
+  <div id="host"></div>
+  <div id="empty-host"></div>
+  <script>
+    'use strict';
+    var host = document.getElementById('host');
+    var root = host.createShadowRoot();
+    root.innerHTML = '<button id="button">Foo</button>' +
+      '<div id="inner-host"></div>';
+    var innerHost = host.shadowRoot.getElementById('inner-host');
+    var innerRoot = innerHost.createShadowRoot();
+    innerRoot.innerHTML = '<button id="inner-button">Bar</button>';
+  </script>
+</body>
+</html>
