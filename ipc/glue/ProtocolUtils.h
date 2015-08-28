@@ -235,6 +235,8 @@ public:
 
     void GetOpenedActors(nsTArray<IToplevelProtocol*>& aActors);
 
+    virtual MessageChannel* GetIPCChannel() = 0;
+
     // This Unsafe version should only be used when all other threads are
     // frozen, since it performs no locking. It also takes a stack-allocated
     // array and its size (number of elements) rather than an nsTArray. The Nuwa
