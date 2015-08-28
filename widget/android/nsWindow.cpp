@@ -1473,13 +1473,13 @@ nsWindow::InitKeyEvent(WidgetKeyboardEvent& event, AndroidGeckoEvent& key,
         event.mPluginEvent.Clear();
     } else {
 #ifdef DEBUG
-        if (event.mMessage != NS_KEY_DOWN && event.mMessage != eKeyUp) {
+        if (event.mMessage != eKeyDown && event.mMessage != eKeyUp) {
             ALOG("InitKeyEvent: unexpected event.mMessage %d", event.mMessage);
         }
 #endif // DEBUG
 
         // Flash will want a pluginEvent for keydown and keyup events.
-        ANPKeyActions action = event.mMessage == NS_KEY_DOWN
+        ANPKeyActions action = event.mMessage == eKeyDown
                              ? kDown_ANPKeyAction
                              : kUp_ANPKeyAction;
         InitPluginEvent(pluginEvent, action, key);
@@ -1506,7 +1506,7 @@ nsWindow::InitKeyEvent(WidgetKeyboardEvent& event, AndroidGeckoEvent& key,
     }
 
     event.mIsRepeat =
-        (event.mMessage == NS_KEY_DOWN || event.mMessage == eKeyPress) &&
+        (event.mMessage == eKeyDown || event.mMessage == eKeyPress) &&
         (!!(key.Flags() & AKEY_EVENT_FLAG_LONG_PRESS) || !!key.RepeatCount());
     event.location =
         WidgetKeyboardEvent::ComputeLocationFromCodeValue(event.mCodeNameIndex);
@@ -1580,7 +1580,7 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
     EventMessage msg;
     switch (ae->Action()) {
     case AKEY_EVENT_ACTION_DOWN:
-        msg = NS_KEY_DOWN;
+        msg = eKeyDown;
         break;
     case AKEY_EVENT_ACTION_UP:
         msg = eKeyUp;
@@ -1697,7 +1697,7 @@ nsWindow::RemoveIMEComposition()
 void
 nsWindow::SendIMEDummyKeyEvents()
 {
-    WidgetKeyboardEvent downEvent(true, NS_KEY_DOWN, this);
+    WidgetKeyboardEvent downEvent(true, eKeyDown, this);
     MOZ_ASSERT(downEvent.keyCode == 0);
     DispatchEvent(&downEvent);
 

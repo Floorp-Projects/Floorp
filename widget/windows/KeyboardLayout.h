@@ -643,7 +643,7 @@ public:
   /*
    * If a window receives WM_KEYDOWN message or WM_SYSKEYDOWM message which is
    * a redirected message, NativeKey::DispatchKeyDownAndKeyPressEvent()
-   * prevents to dispatch NS_KEY_DOWN event because it has been dispatched
+   * prevents to dispatch eKeyDown event because it has been dispatched
    * before the message was redirected.  However, in some cases, WM_*KEYDOWN
    * message handler may not handle actually.  Then, the message handler needs
    * to forget the redirected message and remove WM_CHAR message or WM_SYSCHAR

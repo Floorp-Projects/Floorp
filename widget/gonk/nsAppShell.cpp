@@ -341,7 +341,7 @@ KeyEventDispatcher::Dispatch()
 void
 KeyEventDispatcher::DispatchKeyDownEvent()
 {
-    nsEventStatus status = DispatchKeyEventInternal(NS_KEY_DOWN);
+    nsEventStatus status = DispatchKeyEventInternal(eKeyDown);
     if (status != nsEventStatus_eConsumeNoDefault) {
         DispatchKeyEventInternal(eKeyPress);
     }

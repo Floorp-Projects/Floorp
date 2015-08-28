@@ -1100,7 +1100,7 @@ InitKeyEvent(WidgetKeyboardEvent& aEvent, QKeyEvent* aQEvent)
                               aQEvent->modifiers() & Qt::MetaModifier);
 
     aEvent.mIsRepeat =
-        (aEvent.mMessage == NS_KEY_DOWN || aEvent.mMessage == eKeyPress) &&
+        (aEvent.mMessage == eKeyDown || aEvent.mMessage == eKeyPress) &&
         aQEvent->isAutoRepeat();
     aEvent.time = 0;
 
@@ -1156,7 +1156,7 @@ nsWindow::keyPressEvent(QKeyEvent* aEvent)
     if (!aEvent->isAutoRepeat() && !IsKeyDown(domKeyCode)) {
         SetKeyDownFlag(domKeyCode);
 
-        WidgetKeyboardEvent downEvent(true, NS_KEY_DOWN, this);
+        WidgetKeyboardEvent downEvent(true, eKeyDown, this);
         InitKeyEvent(downEvent, aEvent);
 
         nsEventStatus status = DispatchEvent(&downEvent);
