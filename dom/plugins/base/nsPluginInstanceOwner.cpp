@@ -2290,11 +2290,11 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
             {
             case NS_KEY_DOWN:
               // Handle NS_KEY_DOWN for modifier key presses
-              // For non-modifiers we get NS_KEY_PRESS
+              // For non-modifiers we get eKeyPress
               if (gdkEvent->is_modifier)
                 event.type = XKeyPress;
               break;
-            case NS_KEY_PRESS:
+            case eKeyPress:
               event.type = XKeyPress;
               break;
             case NS_KEY_UP:

@@ -228,7 +228,7 @@ GetGeckoKeyEventType(const WidgetEvent& aEvent)
   switch (aEvent.mMessage) {
     case NS_KEY_DOWN:    return "NS_KEY_DOWN";
     case NS_KEY_UP:      return "NS_KEY_UP";
-    case NS_KEY_PRESS:   return "NS_KEY_PRESS";
+    case eKeyPress:      return "eKeyPress";
     default:             return "not key event";
   }
 }
@@ -948,7 +948,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
      this, OnOrOff(aKeyEvent.IsShift()), OnOrOff(aKeyEvent.IsControl()),
      OnOrOff(aKeyEvent.IsAlt()), OnOrOff(aKeyEvent.IsMeta())));
 
-  if (aKeyEvent.mMessage == NS_KEY_PRESS &&
+  if (aKeyEvent.mMessage == eKeyPress &&
       (isPrintableKey || !insertString.IsEmpty())) {
     InitKeyPressEvent(aNativeKeyEvent,
                       insertString.IsEmpty() ? 0 : insertString[0],
@@ -1038,8 +1038,8 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NS_ASSERTION(aKeyEvent.mMessage == NS_KEY_PRESS,
-               "aKeyEvent must be NS_KEY_PRESS event");
+  NS_ASSERTION(aKeyEvent.mMessage == eKeyPress,
+               "aKeyEvent must be eKeyPress event");
 
   if (MOZ_LOG_TEST(gLog, LogLevel::Info)) {
     nsAutoString chars;
@@ -1597,7 +1597,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
 
   if (currentKeyEvent->CanDispatchKeyPressEvent() &&
       !wasComposing && !IsIMEComposing()) {
-    WidgetKeyboardEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
+    WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
     InitKeyEvent(aNativeEvent, keypressEvent);
 
     // If we called interpretKeyEvents and this isn't normal character input
@@ -2130,7 +2130,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
   }
 
   // Dispatch keypress event with char instead of compositionchange event
-  WidgetKeyboardEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
+  WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
   keypressEvent.isChar = IsPrintableChar(str.CharAt(0));
 
   // Don't set other modifiers from the current event, because here in
@@ -2193,7 +2193,7 @@ TextInputHandler::DoCommandBySelector(const char* aSelector)
        TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents) : "N/A"));
 
   if (currentKeyEvent && currentKeyEvent->CanDispatchKeyPressEvent()) {
-    WidgetKeyboardEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
+    WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
     InitKeyEvent(currentKeyEvent->mKeyEvent, keypressEvent);
     currentKeyEvent->mKeyPressHandled = DispatchEvent(keypressEvent);
     currentKeyEvent->mKeyPressDispatched = true;
@@ -3777,7 +3777,7 @@ TextInputHandlerBase::OnDestroyWidget(nsChildView* aDestroyingWidget)
 bool
 TextInputHandlerBase::DispatchEvent(WidgetGUIEvent& aEvent)
 {
-  if (aEvent.mMessage == NS_KEY_PRESS) {
+  if (aEvent.mMessage == eKeyPress) {
     WidgetInputEvent& inputEvent = *aEvent.AsInputEvent();
     if (!inputEvent.IsMeta()) {
       MOZ_LOG(gLog, LogLevel::Info,

@@ -612,7 +612,7 @@ AccessibleCaretEventHub::HandleKeyboardEvent(WidgetKeyboardEvent* aEvent)
   switch (aEvent->mMessage) {
   case NS_KEY_UP:
   case NS_KEY_DOWN:
-  case NS_KEY_PRESS:
+  case eKeyPress:
     mManager->OnKeyboardEvent();
     break;
 

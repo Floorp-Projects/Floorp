@@ -2645,7 +2645,7 @@ case _value: eventName.AssignLiteral(_name) ; break
     _ASSIGN_eventName(NS_IMAGE_ABORT,"NS_IMAGE_ABORT");
     _ASSIGN_eventName(NS_LOAD_ERROR,"NS_LOAD_ERROR");
     _ASSIGN_eventName(NS_KEY_DOWN,"NS_KEY_DOWN");
-    _ASSIGN_eventName(NS_KEY_PRESS,"NS_KEY_PRESS");
+    _ASSIGN_eventName(eKeyPress,"eKeyPress");
     _ASSIGN_eventName(NS_KEY_UP,"NS_KEY_UP");
     _ASSIGN_eventName(NS_MOUSE_ENTER_WIDGET,"NS_MOUSE_ENTER_WIDGET");
     _ASSIGN_eventName(NS_MOUSE_EXIT_WIDGET,"NS_MOUSE_EXIT_WIDGET");

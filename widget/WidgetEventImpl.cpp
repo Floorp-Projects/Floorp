@@ -120,7 +120,7 @@ WidgetEvent::HasKeyEventMessage() const
 {
   switch (mMessage) {
     case NS_KEY_DOWN:
-    case NS_KEY_PRESS:
+    case eKeyPress:
     case NS_KEY_UP:
     case NS_KEY_BEFORE_DOWN:
     case NS_KEY_BEFORE_UP:

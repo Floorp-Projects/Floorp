@@ -160,7 +160,7 @@ KeyboardEvent::CharCode()
   case NS_KEY_UP:
   case NS_KEY_AFTER_UP:
     return 0;
-  case NS_KEY_PRESS:
+  case eKeyPress:
     return mEvent->AsKeyboardEvent()->charCode;
   default:
     break;
@@ -206,7 +206,7 @@ KeyboardEvent::Which()
     case NS_KEY_UP:
     case NS_KEY_AFTER_UP:
       return KeyCode();
-    case NS_KEY_PRESS:
+    case eKeyPress:
       //Special case for 4xp bug 62878.  Try to make value of which
       //more closely mirror the values that 4.x gave for RETURN and BACKSPACE
       {

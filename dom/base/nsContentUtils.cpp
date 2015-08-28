@@ -7728,14 +7728,14 @@ nsContentUtils::SendKeyEvent(nsIWidget* aWidget,
   else if (aType.EqualsLiteral("keyup"))
     msg = NS_KEY_UP;
   else if (aType.EqualsLiteral("keypress"))
-    msg = NS_KEY_PRESS;
+    msg = eKeyPress;
   else
     return NS_ERROR_FAILURE;
 
   WidgetKeyboardEvent event(true, msg, aWidget);
   event.modifiers = GetWidgetModifiers(aModifiers);
 
-  if (msg == NS_KEY_PRESS) {
+  if (msg == eKeyPress) {
     event.keyCode = aCharCode ? 0 : aKeyCode;
     event.charCode = aCharCode;
   } else {

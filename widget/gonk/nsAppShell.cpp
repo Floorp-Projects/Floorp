@@ -297,7 +297,7 @@ nsEventStatus
 KeyEventDispatcher::DispatchKeyEventInternal(EventMessage aEventMessage)
 {
     WidgetKeyboardEvent event(true, aEventMessage, nullptr);
-    if (aEventMessage == NS_KEY_PRESS) {
+    if (aEventMessage == eKeyPress) {
         // XXX If the charCode is not a printable character, the charCode
         //     should be computed without Ctrl/Alt/Meta modifiers.
         event.charCode = static_cast<uint32_t>(mChar);
@@ -343,7 +343,7 @@ KeyEventDispatcher::DispatchKeyDownEvent()
 {
     nsEventStatus status = DispatchKeyEventInternal(NS_KEY_DOWN);
     if (status != nsEventStatus_eConsumeNoDefault) {
-        DispatchKeyEventInternal(NS_KEY_PRESS);
+        DispatchKeyEventInternal(eKeyPress);
     }
 }
 
