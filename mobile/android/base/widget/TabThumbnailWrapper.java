@@ -3,6 +3,7 @@ package org.mozilla.gecko.widget;
 import android.content.Context;
 import android.util.AttributeSet;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.widget.themed.ThemedRelativeLayout;
 
 
 public class TabThumbnailWrapper extends ThemedRelativeLayout {

@@ -32,7 +32,7 @@ EXTRA_COMPONENTS += [
     'WebappsUpdateTimer.js',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     EXTRA_COMPONENTS += [
       'CommandLine.js',
       'OopCommandLine.js',
@@ -41,9 +41,13 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
 
 EXTRA_PP_COMPONENTS += [
     'B2GComponents.manifest',
-    'DirectoryProvider.js',
-    'RecoveryService.js',
 ]
+
+if CONFIG['MOZ_B2G'] and not CONFIG['MOZ_B2GDROID']:
+    EXTRA_PP_COMPONENTS += [
+        'DirectoryProvider.js',
+        'RecoveryService.js',
+    ]
 
 if CONFIG['MOZ_UPDATER']:
     EXTRA_PP_COMPONENTS += [

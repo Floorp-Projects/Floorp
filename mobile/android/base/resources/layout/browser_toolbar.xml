@@ -43,7 +43,7 @@
                                             android:background="@drawable/shaped_button"
                                             android:visibility="gone"/>
 
-    <org.mozilla.gecko.widget.ThemedImageView android:id="@+id/menu_icon"
+    <org.mozilla.gecko.widget.themed.ThemedImageView android:id="@+id/menu_icon"
                                               style="@style/UrlBar.ImageButton"
                                               android:layout_alignLeft="@id/menu"
                                               android:layout_alignRight="@id/menu"
@@ -74,7 +74,7 @@
 
     <!-- Note that the edit components are invisible so that the views
          depending on their location can properly layout. -->
-    <org.mozilla.gecko.widget.ThemedImageView
+    <org.mozilla.gecko.widget.themed.ThemedImageView
             android:id="@+id/edit_cancel"
             style="@style/UrlBar.ImageButton"
             android:layout_alignParentRight="true"

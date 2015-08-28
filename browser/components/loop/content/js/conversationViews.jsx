@@ -192,7 +192,8 @@ loop.conversationViews = (function(mozL10n) {
 
       /* Prevent event propagation
        * stop the click from reaching parent element */
-      return false;
+       e.stopPropagation();
+       e.preventDefault();
     },
 
     /*

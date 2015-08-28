@@ -186,6 +186,16 @@ MFBT_API bool IsNuwaProcess();
  * @return If the Nuwa process is ready for spawning new processes.
  */
 MFBT_API bool IsNuwaReady();
+
+#if defined(DEBUG) || defined(ENABLE_TESTS)
+/**
+ * Asserts that aThread is not frozen.
+ */
+MFBT_API void NuwaAssertNotFrozen(unsigned int aThread,
+                                  const char* aThreadName);
+#else
+#define NuwaAssertNotFrozen(aThread, aThreadName) do {} while(0);
+#endif
 };
 
 #endif /* __NUWA_H_ */

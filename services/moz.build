@@ -9,9 +9,10 @@ DIRS += [
     'crypto',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android' or CONFIG['MOZ_B2GDROID']:
     DIRS += ['fxaccounts']
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     # MOZ_SERVICES_HEALTHREPORT and therefore MOZ_DATA_REPORTING are
     # defined on Android, but these features are implemented using Java.
     if CONFIG['MOZ_SERVICES_HEALTHREPORT']:
@@ -26,7 +27,7 @@ if CONFIG['MOZ_SERVICES_METRICS']:
 if CONFIG['MOZ_SERVICES_SYNC']:
     DIRS += ['sync']
 
-if CONFIG['MOZ_B2G']:
+if CONFIG['MOZ_B2G'] or CONFIG['MOZ_B2GDROID']:
     DIRS += ['mobileid']
 
 if CONFIG['MOZ_SERVICES_CLOUDSYNC']:
