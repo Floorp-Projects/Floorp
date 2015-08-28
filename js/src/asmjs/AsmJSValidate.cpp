@@ -10305,7 +10305,6 @@ EmitMIR(ModuleCompiler& m, const AsmFunction& function, LifoAlloc& lifo,
     }
 
     MIRGenerator *mir = f.extractMIR();
-    mir->initMinAsmJSHeapLength(f.m().minHeapLength());
 
     jit::SpewBeginFunction(mir, nullptr);
 
