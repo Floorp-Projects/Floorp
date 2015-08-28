@@ -586,7 +586,7 @@ DOCUMENT_ONLY_EVENT(readystatechange,
                     eBasicEventClass)
 
 NON_IDL_EVENT(MozMouseHittest,
-              NS_MOUSE_MOZHITTEST,
+              eMouseHitTest,
               EventNameType_None,
               eMouseEventClass)
 
