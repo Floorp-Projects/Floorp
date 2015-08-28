@@ -2806,8 +2806,7 @@ HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext)
     NS_ASSERTION(submitContent, "Form control not implementing nsIContent?!");
     // Fire the button's onclick handler and let the button handle
     // submitting the form.
-    WidgetMouseEvent event(true, NS_MOUSE_CLICK, nullptr,
-                           WidgetMouseEvent::eReal);
+    WidgetMouseEvent event(true, eMouseClick, nullptr, WidgetMouseEvent::eReal);
     nsEventStatus status = nsEventStatus_eIgnore;
     shell->HandleDOMEventWithTarget(submitContent, &event, &status);
   } else if (!mForm->ImplicitSubmissionIsDisabled() &&
@@ -3153,7 +3152,7 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
     aVisitor.mItemFlags |= NS_NO_CONTENT_DISPATCH;
   }
   if (IsSingleLineTextControl(false) &&
-      aVisitor.mEvent->mMessage == NS_MOUSE_CLICK &&
+      aVisitor.mEvent->mMessage == eMouseClick &&
       aVisitor.mEvent->AsMouseEvent()->button ==
         WidgetMouseEvent::eMiddleButton) {
     aVisitor.mEvent->mFlags.mNoContentDispatch = false;
@@ -3803,7 +3802,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
               case NS_FORM_INPUT_COLOR:
               {
                 WidgetMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
-                                       NS_MOUSE_CLICK, nullptr,
+                                       eMouseClick, nullptr,
                                        WidgetMouseEvent::eReal);
                 event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
                 nsEventStatus status = nsEventStatus_eIgnore;
@@ -3839,7 +3838,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
                   if (NS_SUCCEEDED(rv)) {
                     nsEventStatus status = nsEventStatus_eIgnore;
                     WidgetMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
-                                           NS_MOUSE_CLICK, nullptr,
+                                           eMouseClick, nullptr,
                                            WidgetMouseEvent::eReal);
                     event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
                     rv =

@@ -295,7 +295,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
             nsEventStatus status = nsEventStatus_eIgnore;
 
             WidgetMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
-                                   NS_MOUSE_CLICK, nullptr,
+                                   eMouseClick, nullptr,
                                    WidgetMouseEvent::eReal);
             event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
             EventDispatcher::Dispatch(static_cast<nsIContent*>(this),

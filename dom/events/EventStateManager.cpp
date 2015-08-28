@@ -4516,7 +4516,7 @@ EventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
      (aEvent->button == WidgetMouseEvent::eMiddleButton ||
       aEvent->button == WidgetMouseEvent::eRightButton);
 
-    WidgetMouseEvent event(aEvent->mFlags.mIsTrusted, NS_MOUSE_CLICK,
+    WidgetMouseEvent event(aEvent->mFlags.mIsTrusted, eMouseClick,
                            aEvent->widget, WidgetMouseEvent::eReal);
     event.refPoint = aEvent->refPoint;
     event.clickCount = aEvent->clickCount;

@@ -103,7 +103,7 @@ nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
       mTrustedEvent = false;
       break;
 
-    case NS_MOUSE_CLICK: {
+    case eMouseClick: {
       WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
       if (mouseEvent->IsLeftClickEvent()) {
         // skip button frame handling to prevent click handling
