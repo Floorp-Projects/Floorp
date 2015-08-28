@@ -704,15 +704,21 @@ private:
                                nsStyleContext*  aParentStyleContext,
                                const uint8_t    aDisplay);
   void MaybeReframeForBeforePseudo();
-  void MaybeReframeForBeforePseudo(nsIFrame* aGenConParentFrame,
-                                   nsIFrame* aFrame,
-                                   nsIContent* aContent,
-                                   nsStyleContext* aStyleContext);
   void MaybeReframeForAfterPseudo(nsIFrame* aFrame);
-  void MaybeReframeForAfterPseudo(nsIFrame* aGenConParentFrame,
-                                  nsIFrame* aFrame,
-                                  nsIContent* aContent,
-                                  nsStyleContext* aStyleContext);
+  void MaybeReframeForPseudo(nsCSSPseudoElements::Type aPseudoType,
+                             nsIFrame* aGenConParentFrame,
+                             nsIFrame* aFrame,
+                             nsIContent* aContent,
+                             nsStyleContext* aStyleContext);
+#ifdef DEBUG
+  bool MustReframeForBeforePseudo();
+  bool MustReframeForAfterPseudo(nsIFrame* aFrame);
+#endif
+  bool MustReframeForPseudo(nsCSSPseudoElements::Type aPseudoType,
+                            nsIFrame* aGenConParentFrame,
+                            nsIFrame* aFrame,
+                            nsIContent* aContent,
+                            nsStyleContext* aStyleContext);
   void RestyleContentChildren(nsIFrame* aParent,
                               nsRestyleHint aChildRestyleHint);
   void InitializeAccessibilityNotifications(nsStyleContext* aNewContext);
