@@ -2738,7 +2738,13 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
 
     switch(aEvent.mInputType) {
       case PANGESTURE_INPUT: {
-        event = aEvent.AsPanGestureInput().ToWidgetWheelEvent(this);
+        PanGestureInput& panInput = aEvent.AsPanGestureInput();
+
+        event = panInput.ToWidgetWheelEvent(this);
+        if (aCanTriggerSwipe) {
+          SwipeInfo swipeInfo = SendMayStartSwipe(panInput);
+          event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
+        }
         break;
       }
       case SCROLLWHEEL_INPUT: {
