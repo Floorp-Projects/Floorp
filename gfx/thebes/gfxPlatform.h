@@ -497,6 +497,11 @@ public:
     static void DisableBufferRotation();
 
     /**
+     * Check to see if we should use double buffered content client
+     */
+    bool CanUseDoubleBufferedContent(mozilla::layers::LayersBackend aBackend) const;
+
+    /**
      * Are we going to try color management?
      */
     static eCMSMode GetCMSMode();
