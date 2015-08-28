@@ -680,7 +680,8 @@ private:
   void CaptureChange(nsStyleContext* aOldContext,
                      nsStyleContext* aNewContext,
                      nsChangeHint aChangeToAssume,
-                     uint32_t* aEqualStructs);
+                     uint32_t* aEqualStructs,
+                     uint32_t* aSamePointerStructs);
   RestyleResult ComputeRestyleResultFromFrame(nsIFrame* aSelf);
   RestyleResult ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
                                                    nsStyleContext* aNewContext);

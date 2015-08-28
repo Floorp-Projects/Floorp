@@ -363,7 +363,8 @@ public:
    */
   nsChangeHint CalcStyleDifference(nsStyleContext* aOther,
                                    nsChangeHint aParentHintsNotHandledForDescendants,
-                                   uint32_t* aEqualStructs);
+                                   uint32_t* aEqualStructs,
+                                   uint32_t* aSamePointerStructs);
 
   /**
    * Get a color that depends on link-visitedness using this and
