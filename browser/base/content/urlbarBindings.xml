@@ -68,7 +68,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this._mayTrimURLs = this._prefs.getBoolPref("trimURLs");
         this._userMadeSearchSuggestionsChoice =
           this._prefs.getBoolPref("userMadeSearchSuggestionsChoice");
-        this._ignoreNextSelect = false;
 
         this.inputField.controllers.insertControllerAt(0, this._copyCutController);
         this.inputField.addEventListener("paste", this, false);
@@ -854,15 +853,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
-      <method name="selectTextRange">
-        <parameter name="aStartIndex"/>
-        <parameter name="aEndIndex"/>
-        <body><![CDATA[
-          this._ignoreNextSelect = true;
-          this.inputField.setSelectionRange(aStartIndex, aEndIndex);
-        ]]></body>
-      </method>
-
       <method name="onInput">
         <parameter name="aEvent"/>
         <body><![CDATA[
@@ -1015,15 +1005,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <handler event="dragover" phase="capturing" action="this.onDragOver(event, this);"/>
       <handler event="drop" phase="capturing" action="this.onDrop(event, this);"/>
       <handler event="select"><![CDATA[
-        if (this._ignoreNextSelect) {
-          // If this select event is coming from autocomplete's selectTextRange,
-          // then we don't need to adjust what's on the selection keyboard here,
-          // but make sure to reset the flag since this should be a one-time
-          // suppression.
-          this._ignoreNextSelect = false;
-          return;
-        }
-
         if (!Cc["@mozilla.org/widget/clipboard;1"]
                .getService(Ci.nsIClipboard)
                .supportsSelectionClipboard())
