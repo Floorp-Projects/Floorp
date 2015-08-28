@@ -2057,6 +2057,14 @@ LcovWriteScript(JSContext* cx, LcovSourceFile& lsf, JSScript* script)
             }
         }
 
+        // If the current instruction has thrown, then decrement the hit counts
+        // with the number of throws.
+        if (sc) {
+            const PCCounts* counts = sc->maybeGetThrowCounts(script->pcToOffset(pc));
+            if (counts)
+                hits -= counts->numExec();
+        }
+
         // If the current pc corresponds to a conditional jump instruction, then reports
         // branch hits.
         if (jump && fallsthrough) {
