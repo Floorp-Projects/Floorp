@@ -153,7 +153,7 @@ private:
   Atomic<bool> mBufferFull;
   bool mFirstInitializationSegmentReceived;
   // Set to true once a new segment is started.
-  bool mNewSegmentStarted;
+  bool mNewMediaSegmentStarted;
   bool mActiveTrack;
   Maybe<media::TimeUnit> mGroupStartTimestamp;
   media::TimeUnit mGroupEndTimestamp;
@@ -170,6 +170,11 @@ private:
   // Demuxer objects and methods.
   void AppendDataToCurrentInputBuffer(MediaByteBuffer* aData);
   nsRefPtr<MediaByteBuffer> mInitData;
+  // Temporary input buffer to handle partial media segment header.
+  // We store the current input buffer content into it should we need to
+  // reinitialize the demuxer once we have some samples and a discontinuity is
+  // detected.
+  nsRefPtr<MediaByteBuffer> mPendingInputBuffer;
   nsRefPtr<SourceBufferResource> mCurrentInputBuffer;
   nsRefPtr<MediaDataDemuxer> mInputDemuxer;
   // Length already processed in current media segment.
