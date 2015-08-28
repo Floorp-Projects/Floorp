@@ -14,6 +14,7 @@ const BREAKPOINT_LINE_TOOLTIP_MAX_LENGTH = 1000; // chars
 const BREAKPOINT_CONDITIONAL_POPUP_POSITION = "before_start";
 const BREAKPOINT_CONDITIONAL_POPUP_OFFSET_X = 7; // px
 const BREAKPOINT_CONDITIONAL_POPUP_OFFSET_Y = -3; // px
+const BREAKPOINT_SMALL_WINDOW_WIDTH = 850; // px
 const RESULTS_PANEL_POPUP_POSITION = "before_end";
 const RESULTS_PANEL_MAX_RESULTS = 10;
 const FILE_SEARCH_ACTION_MAX_DELAY = 300; // ms
@@ -30,6 +31,7 @@ const SEARCH_AUTOFILL = [SEARCH_GLOBAL_FLAG, SEARCH_FUNCTION_FLAG, SEARCH_TOKEN_
 const EDITOR_VARIABLE_HOVER_DELAY = 750; // ms
 const EDITOR_VARIABLE_POPUP_POSITION = "topcenter bottomleft";
 const TOOLBAR_ORDER_POPUP_POSITION = "topcenter bottomleft";
+const RESIZE_REFRESH_RATE = 50; // ms
 const PROMISE_DEBUGGER_URL =
   "chrome://browser/content/devtools/promisedebugger/promise-debugger.xhtml";
 
@@ -93,6 +95,8 @@ let DebuggerView = {
       return this._shutdown;
     }
 
+    window.removeEventListener("resize", this._onResize, false);
+
     let deferred = promise.defer();
     this._shutdown = deferred.promise;
 
@@ -141,10 +145,10 @@ let DebuggerView = {
     this._instrumentsPane.setAttribute("width", Prefs.instrumentsWidth);
     this.toggleInstrumentsPane({ visible: Prefs.panesVisibleOnStartup });
 
-    // Side hosts requires a different arrangement of the debugger widgets.
-    if (gHostType == "side") {
-      this.handleHostChanged(gHostType);
-    }
+    this.updateLayoutMode();
+
+    this._onResize = this._onResize.bind(this);
+    window.addEventListener("resize", this._onResize, false);
   },
 
   /**
@@ -619,24 +623,64 @@ let DebuggerView = {
    * @param string aType
    *        The host type, either "bottom", "side" or "window".
    */
-  handleHostChanged: function(aType) {
-    let newLayout = "";
-
-    if (aType == "side") {
-      newLayout = "vertical";
-      this._enterVerticalLayout();
-    } else {
-      newLayout = "horizontal";
-      this._enterHorizontalLayout();
-    }
-
-    this._hostType = aType;
-    this._body.setAttribute("layout", newLayout);
-    window.emit(EVENTS.LAYOUT_CHANGED, newLayout);
+  handleHostChanged: function(hostType) {
+    this._hostType = hostType;
+    this.updateLayoutMode();
   },
 
   /**
-   * Switches the debugger widgets to a horizontal layout.
+   * Resize handler for this container's window.
+   */
+  _onResize: function (evt) {
+    // Allow requests to settle down first.
+    setNamedTimeout(
+      "resize-events", RESIZE_REFRESH_RATE, () => this.updateLayoutMode());
+  },
+
+  /**
+   * Set the layout to "vertical" or "horizontal" depending on the host type.
+   */
+  updateLayoutMode: function() {
+    if (this._isSmallWindowHost() || this._hostType == "side") {
+      this._setLayoutMode("vertical");
+    } else {
+      this._setLayoutMode("horizontal");
+    }
+  },
+
+  /**
+   * Check if the current host is in window mode and is
+   * too small for horizontal layout
+   */
+  _isSmallWindowHost: function() {
+    if (this._hostType != "window") {
+      return false;
+    }
+
+    return window.outerWidth <= BREAKPOINT_SMALL_WINDOW_WIDTH;
+  },
+
+  /**
+   * Enter the provided layoutMode. Do nothing if the layout is the same as the current one.
+   * @param {String} layoutMode new layout ("vertical" or "horizontal")
+   */
+  _setLayoutMode: function(layoutMode) {
+    if (this._body.getAttribute("layout") == layoutMode) {
+      return;
+    }
+
+    if (layoutMode == "vertical") {
+      this._enterVerticalLayout();
+    } else {
+      this._enterHorizontalLayout();
+    }
+
+    this._body.setAttribute("layout", layoutMode);
+    window.emit(EVENTS.LAYOUT_CHANGED, layoutMode);
+  },
+
+  /**
+   * Switches the debugger widgets to a vertical layout.
    */
   _enterVerticalLayout: function() {
     let vertContainer = document.getElementById("vertical-layout-panes-container");
@@ -653,7 +697,7 @@ let DebuggerView = {
   },
 
   /**
-   * Switches the debugger widgets to a vertical layout.
+   * Switches the debugger widgets to a horizontal layout.
    */
   _enterHorizontalLayout: function() {
     let normContainer = document.getElementById("debugger-widgets");
