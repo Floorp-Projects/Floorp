@@ -671,7 +671,7 @@ Rule.prototype = {
 
       this.elementStyle.markOverriddenAll();
 
-      if (promise === this._applyingModifications) {
+      if (modificationsPromise === this._applyingModifications) {
         this._applyingModifications = null;
       }
 
