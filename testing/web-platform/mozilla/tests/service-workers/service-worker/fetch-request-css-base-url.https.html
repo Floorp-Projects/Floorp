@@ -25,7 +25,7 @@ async_test(function(t) {
                   return;
                 }
                 var result = msg.data;
-                var base = get_host_info()['HTTP_ORIGIN'] + base_path();
+                var base = get_host_info()['HTTPS_ORIGIN'] + base_path();
                 assert_equals(
                   result.url,
                   base + 'resources/dummy.png',
