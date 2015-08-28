@@ -76,7 +76,7 @@ static MOZ_CONSTEXPR_VAR Register ScratchReg = r11;
 // of code thinks it has exclusive ownership of the scratch register.
 struct ScratchRegisterScope : public AutoRegisterScope
 {
-    ScratchRegisterScope(MacroAssembler& masm)
+    explicit ScratchRegisterScope(MacroAssembler& masm)
       : AutoRegisterScope(masm, ScratchReg)
     { }
 };
