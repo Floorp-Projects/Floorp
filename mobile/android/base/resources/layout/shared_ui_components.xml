@@ -12,7 +12,8 @@
     <org.mozilla.gecko.GeckoView android:id="@+id/layer_view"
                                  gecko:doinit="false"
                                  android:layout_width="match_parent"
-                                 android:layout_height="match_parent"/>
+                                 android:layout_height="match_parent"
+                                 android:scrollbars="none"/>
 
     <AbsoluteLayout android:id="@+id/plugin_container"
                     android:background="@android:color/transparent"
