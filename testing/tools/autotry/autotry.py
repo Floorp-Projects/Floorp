@@ -38,7 +38,7 @@ class AutoTry(object):
             self._use_git = True
 
     def resolve_manifests(self, paths=None, tags=None):
-        if not paths or tags:
+        if not (paths or tags):
             return {}
 
         tests = list(self.resolver.resolve_tests(tags=tags,
