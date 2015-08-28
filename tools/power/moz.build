@@ -18,7 +18,6 @@ if do_rapl:
         'rapl',
     ])
 
-if CONFIG['GNU_CXX']:
-    FAIL_ON_WARNINGS = True
+FAIL_ON_WARNINGS = True
 
 DISABLE_STL_WRAPPING = True
