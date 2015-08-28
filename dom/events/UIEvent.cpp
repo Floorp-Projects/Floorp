@@ -29,7 +29,7 @@ UIEvent::UIEvent(EventTarget* aOwner,
                  nsPresContext* aPresContext,
                  WidgetGUIEvent* aEvent)
   : Event(aOwner, aPresContext,
-          aEvent ? aEvent : new InternalUIEvent(false, NS_EVENT_NULL, nullptr))
+          aEvent ? aEvent : new InternalUIEvent(false, eVoidEvent, nullptr))
   , mClientPoint(0, 0)
   , mLayerPoint(0, 0)
   , mPagePoint(0, 0)

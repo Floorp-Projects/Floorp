@@ -226,7 +226,7 @@ EventListenerService::GetEventTargetChainFor(nsIDOMEventTarget* aEventTarget,
   *aCount = 0;
   *aOutArray = nullptr;
   NS_ENSURE_ARG(aEventTarget);
-  WidgetEvent event(true, NS_EVENT_NULL);
+  WidgetEvent event(true, eVoidEvent);
   nsTArray<EventTarget*> targets;
   nsresult rv = EventDispatcher::Dispatch(aEventTarget, nullptr, &event,
                                           nullptr, nullptr, nullptr, &targets);

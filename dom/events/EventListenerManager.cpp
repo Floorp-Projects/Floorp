@@ -95,7 +95,7 @@ MutationBitForEventType(EventMessage aEventType)
 uint32_t EventListenerManager::sMainThreadCreatedCount = 0;
 
 EventListenerManagerBase::EventListenerManagerBase()
-  : mNoListenerForEvent(NS_EVENT_NULL)
+  : mNoListenerForEvent(eVoidEvent)
   , mMayHavePaintEventListener(false)
   , mMayHaveMutationListeners(false)
   , mMayHaveCapturingListeners(false)
@@ -257,7 +257,7 @@ EventListenerManager::AddEventListenerInternal(
     }
   }
 
-  mNoListenerForEvent = NS_EVENT_NULL;
+  mNoListenerForEvent = eVoidEvent;
   mNoListenerForEventAtom = nullptr;
 
   listener = aAllEvents ? mListeners.InsertElementAt(0) :
@@ -524,7 +524,7 @@ EventListenerManager::RemoveEventListenerInternal(
         nsRefPtr<EventListenerManager> kungFuDeathGrip(this);
         mListeners.RemoveElementAt(i);
         --count;
-        mNoListenerForEvent = NS_EVENT_NULL;
+        mNoListenerForEvent = eVoidEvent;
         mNoListenerForEventAtom = nullptr;
         if (mTarget && aUserType) {
           mTarget->EventListenerRemoved(aUserType);
@@ -791,7 +791,7 @@ EventListenerManager::RemoveEventHandler(nsIAtom* aName,
 
   if (listener) {
     mListeners.RemoveElementAt(uint32_t(listener - &mListeners.ElementAt(0)));
-    mNoListenerForEvent = NS_EVENT_NULL;
+    mNoListenerForEvent = eVoidEvent;
     mNoListenerForEventAtom = nullptr;
     if (mTarget && aName) {
       mTarget->EventListenerRemoved(aName);

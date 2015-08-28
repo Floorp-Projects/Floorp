@@ -1323,7 +1323,7 @@ NativeKey::HandleAppCommandMessage() const
   // supported.
   if (!consumed) {
     uint32_t appCommand = GET_APPCOMMAND_LPARAM(mMsg.lParam);
-    EventMessage contentCommandMessage = NS_EVENT_NULL;
+    EventMessage contentCommandMessage = eVoidEvent;
     switch (appCommand) {
       case APPCOMMAND_BROWSER_BACKWARD:
       case APPCOMMAND_BROWSER_FORWARD:
