@@ -21,8 +21,6 @@ if CONFIG['MOZ_NFC']:
         '/dom/nfc'
     ]
 
-FAIL_ON_WARNINGS = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [

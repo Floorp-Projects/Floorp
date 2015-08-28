@@ -18,8 +18,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 if CONFIG['DEHYDRA_PATH']:
     TEST_DIRS += ['static-checker']
 
-FAIL_ON_WARNINGS = True
-
 EXPORTS.testing += [
     'TestHarness.h',
 ]

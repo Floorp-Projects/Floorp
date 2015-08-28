@@ -42,5 +42,8 @@ LOCAL_INCLUDES += [
     '/memory/build',
 ]
 
+# XXX: We should fix these warnings.
+ALLOW_COMPILER_WARNINGS = True
+
 if CONFIG['GNU_CC']:
     CFLAGS += ['-Wshadow']

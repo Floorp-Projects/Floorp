@@ -24,8 +24,6 @@ if CONFIG['MOZ_ENABLE_GIO']:
 
 XPCOMBinaryComponent('mozgnome')
 
-FAIL_ON_WARNINGS = True
-
 LOCAL_INCLUDES += [
     '/toolkit/components/build/',
 ]

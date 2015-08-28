@@ -95,8 +95,6 @@ EXTRA_COMPONENTS += [
     'nsINIProcessor.manifest',
 ]
 
-FAIL_ON_WARNINGS = True
-
 LOCAL_INCLUDES += [
     '../io',
 ]

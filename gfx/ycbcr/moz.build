@@ -64,5 +64,3 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['HAVE_ARM_NEON']:
     ]
 
 FINAL_LIBRARY = 'xul'
-
-FAIL_ON_WARNINGS = True

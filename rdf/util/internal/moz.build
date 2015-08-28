@@ -9,5 +9,3 @@ include('../objs.mozbuild')
 SOURCES += rdf_util_src_cppsrcs
 
 FINAL_LIBRARY = 'xul'
-
-FAIL_ON_WARNINGS = True

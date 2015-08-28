@@ -93,8 +93,6 @@ IPDL_SOURCES += [
     'ServiceWorkerRegistrarTypes.ipdlh',
 ]
 
-FAIL_ON_WARNINGS = True
-
 LOCAL_INCLUDES += [
     '../base',
     '../system',

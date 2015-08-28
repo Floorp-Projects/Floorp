@@ -11,6 +11,8 @@ UNIFIED_SOURCES += [
     'minidump_generator.cc',
 ]
 
+ALLOW_COMPILER_WARNINGS = True
+
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [

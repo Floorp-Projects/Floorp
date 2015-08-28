@@ -14,5 +14,3 @@ if CONFIG['MOZ_NFC']:
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
-
-FAIL_ON_WARNINGS = True

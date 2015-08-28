@@ -18,5 +18,3 @@ LOCAL_INCLUDES += [
     '/rdf/base',
     '/rdf/datasource',
 ]
-
-FAIL_ON_WARNINGS = True

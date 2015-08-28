@@ -33,5 +33,3 @@ if CONFIG['OS_ARCH'] == 'WINNT':
             '-wd4717', # recursive on all control paths, function will cause runtime stack overflow
             '-wd4996', # 'GetVersionExW': was declared deprecated
         ]
-
-FAIL_ON_WARNINGS = True

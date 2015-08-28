@@ -31,5 +31,5 @@ LOCAL_INCLUDES += [
     '/dom/media/webaudio',
 ]
 
-if CONFIG['GNU_CXX']:
-    FAIL_ON_WARNINGS = True
+if not CONFIG['GNU_CXX']:
+    ALLOW_COMPILER_WARNINGS = True

@@ -40,6 +40,7 @@ GYP_DIRS += ['trunk']
 
 GYP_DIRS['trunk'].input = 'trunk/peerconnection.gyp'
 GYP_DIRS['trunk'].variables = gyp_vars
+GYP_DIRS['trunk'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
 GYP_DIRS['trunk'].sandbox_vars['FINAL_LIBRARY'] = 'webrtc'
 GYP_DIRS['trunk'].non_unified_sources += webrtc_non_unified_sources
 
@@ -52,7 +53,6 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
         build_for_standalone=0
     )
     GYP_DIRS['signaling'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
-    GYP_DIRS['signaling'].sandbox_vars['FAIL_ON_WARNINGS'] = True
     # Excluded for various symbol conflicts
     signaling_non_unified_sources = [
         'signaling/src/common/browser_logging/CSFLog.cpp',
@@ -89,6 +89,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     GYP_DIRS += ['trunk/testing']
     GYP_DIRS['trunk/testing'].input = 'trunk/testing/gtest.gyp'
     GYP_DIRS['trunk/testing'].variables = gyp_vars
+    GYP_DIRS['trunk/testing'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
     GYP_DIRS['trunk/testing'].non_unified_sources += webrtc_non_unified_sources
 
     if CONFIG['MOZ_WEBRTC_SIGNALING']:
@@ -101,7 +102,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
             build_for_standalone=0
         )
         GYP_DIRS['signalingtest'].non_unified_sources += signaling_non_unified_sources
-        GYP_DIRS['signalingtest'].sandbox_vars['FAIL_ON_WARNINGS'] = True
 
         GYP_DIRS += ['signalingstandalone']
         GYP_DIRS['signalingstandalone'].input = 'signaling/signaling.gyp'
@@ -111,4 +111,3 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
             build_for_standalone=1
         )
         GYP_DIRS['signalingstandalone'].non_unified_sources += signaling_non_unified_sources
-        GYP_DIRS['signalingstandalone'].sandbox_vars['FAIL_ON_WARNINGS'] = True

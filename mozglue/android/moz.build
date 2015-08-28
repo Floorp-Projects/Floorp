@@ -17,8 +17,6 @@ SOURCES += [
     'SQLiteBridge.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
-
 FINAL_LIBRARY = 'mozglue'
 
 for var in ('ANDROID_PACKAGE_NAME',

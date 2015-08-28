@@ -22,7 +22,5 @@ if CONFIG['GNU_CC']:
     CFLAGS += ['-Wshadow']
     CXXFLAGS += ['-Wshadow']
 
-FAIL_ON_WARNINGS = True
-
 with Files('**'):
     BUG_COMPONENT = ('Core', 'Video/Audio')

@@ -149,5 +149,7 @@ ASFLAGS += ['-I%s/media/libjpeg/simd/' % TOPSRCDIR]
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 
+ALLOW_COMPILER_WARNINGS = True
+
 FINAL_LIBRARY = 'gkmedias'
 

@@ -8,8 +8,6 @@ SOURCES += [
     'nsIconChannel.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'
 
 if CONFIG['MOZ_ENABLE_GNOMEUI']:

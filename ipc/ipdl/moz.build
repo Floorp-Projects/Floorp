@@ -7,8 +7,6 @@
 if CONFIG['MOZ_IPDL_TESTS']:
     DIRS += ['test']
 
-FAIL_ON_WARNINGS = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

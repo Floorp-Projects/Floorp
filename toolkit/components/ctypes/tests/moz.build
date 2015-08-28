@@ -20,5 +20,3 @@ SharedLibrary('jsctypes-test')
 LOCAL_INCLUDES += [
     '/js/src/ctypes',
 ]
-
-FAIL_ON_WARNINGS = True

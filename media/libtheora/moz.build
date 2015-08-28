@@ -13,6 +13,8 @@ EXPORTS.theora += [
     'include/theora/theoraenc.h',
 ]
 
+ALLOW_COMPILER_WARNINGS = True
+
 FINAL_LIBRARY = 'gkmedias'
 
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:

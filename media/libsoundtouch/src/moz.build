@@ -42,6 +42,8 @@ else:
     # Windows need alloca renamed to _alloca
     DEFINES['alloca'] = '_alloca'
 
+ALLOW_COMPILER_WARNINGS = True
+
 FINAL_LIBRARY = 'lgpllibs'
 
 # Use abort() instead of exception in SoundTouch.

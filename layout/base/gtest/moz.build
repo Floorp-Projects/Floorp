@@ -23,5 +23,3 @@ if CONFIG['CLANG_CXX']:
     CXXFLAGS += ['-Wno-null-dereference']
 
 FINAL_LIBRARY = 'xul-gtest'
-
-FAIL_ON_WARNINGS = True
