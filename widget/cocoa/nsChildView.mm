@@ -2704,9 +2704,27 @@ nsChildView::UpdateWindowDraggingRegion(const nsIntRegion& aRegion)
   }
 }
 
-WidgetWheelEvent
-nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent)
+static bool
+IsPotentialSwipeStartEventOverscrollingViewport(const WidgetWheelEvent& aEvent)
 {
+  // We should only track scroll events as swipe if the viewport is being
+  // overscrolled.
+  return aEvent.mViewPortIsOverscrolled && aEvent.overflowDeltaX != 0.0;
+}
+
+void
+nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe)
+{
+  if (mSwipeTracker && aEvent.mInputType == PANGESTURE_INPUT) {
+    // Give the swipe tracker a first pass at the event. If a new pan gesture
+    // has been started since the beginning of the swipe, the swipe tracker
+    // will know to ignore the event.
+    nsEventStatus status = mSwipeTracker->ProcessEvent(aEvent.AsPanGestureInput());
+    if (status == nsEventStatus_eConsumeNoDefault) {
+      return;
+    }
+  }
+
   WidgetWheelEvent event(true, NS_WHEEL_WHEEL, this);
 
   if (mAPZC) {
@@ -2715,7 +2733,7 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent)
 
     nsEventStatus result = mAPZC->ReceiveInputEvent(aEvent, &guid, &inputBlockId);
     if (result == nsEventStatus_eConsumeNoDefault) {
-      return event;
+      return;
     }
 
     switch(aEvent.mInputType) {
@@ -2729,19 +2747,27 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent)
       };
       default:
         MOZ_CRASH("unsupported event type");
-        return event;
+        return;
     }
     if (event.mMessage == NS_WHEEL_WHEEL &&
         (event.deltaX != 0 || event.deltaY != 0)) {
       ProcessUntransformedAPZEvent(&event, guid, inputBlockId, result);
     }
-    return event;
+    return;
   }
 
   nsEventStatus status;
   switch(aEvent.mInputType) {
     case PANGESTURE_INPUT: {
-      event = aEvent.AsPanGestureInput().ToWidgetWheelEvent(this);
+      PanGestureInput panInput = aEvent.AsPanGestureInput();
+      event = panInput.ToWidgetWheelEvent(this);
+      if (aCanTriggerSwipe) {
+        DispatchEvent(&event, status);
+        if (IsPotentialSwipeStartEventOverscrollingViewport(event)) {
+          MaybeTrackScrollEventAsSwipe(panInput);
+        }
+        return;
+      }
       break;
     }
     case SCROLLWHEEL_INPUT: {
@@ -2750,13 +2776,12 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent)
     }
     default:
       MOZ_CRASH("unexpected event type");
-      return event;
+      return;
   }
   if (event.mMessage == NS_WHEEL_WHEEL &&
       (event.deltaX != 0 || event.deltaY != 0)) {
     DispatchEvent(&event, status);
   }
-  return event;
 }
 
 #ifdef ACCESSIBILITY
@@ -4775,14 +4800,6 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   }
 }
 
-static bool
-IsPotentialSwipeStartEventOverscrollingViewport(const WidgetWheelEvent& aEvent)
-{
-  // We should only track scroll events as swipe if the viewport is being
-  // overscrolled.
-  return aEvent.mViewPortIsOverscrolled && aEvent.overflowDeltaX != 0.0;
-}
-
 - (void)scrollWheel:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -4827,8 +4844,6 @@ IsPotentialSwipeStartEventOverscrollingViewport(const WidgetWheelEvent& aEvent)
 
   Modifiers modifiers = nsCocoaUtils::ModifiersForEvent(theEvent);
 
-  WidgetWheelEvent widgetWheelEvent(true, NS_WHEEL_WHEEL, mGeckoChild);
-
   NSTimeInterval beforeNow = [[NSProcessInfo processInfo] systemUptime] - [theEvent timestamp];
   PRIntervalTime eventIntervalTime = PR_IntervalNow() - PR_MillisecondsToInterval(beforeNow * 1000);
   TimeStamp eventTimeStamp = TimeStamp::Now() - TimeDuration::FromSeconds(beforeNow);
@@ -4848,23 +4863,8 @@ IsPotentialSwipeStartEventOverscrollingViewport(const WidgetWheelEvent& aEvent)
     panEvent.mLineOrPageDeltaX = lineOrPageDeltaX;
     panEvent.mLineOrPageDeltaY = lineOrPageDeltaY;
 
-    if (SwipeTracker* swipeTracker = mGeckoChild->GetSwipeTracker()) {
-      nsEventStatus status = swipeTracker->ProcessEvent(panEvent);
-      if (status == nsEventStatus_eConsumeNoDefault) {
-        return;
-      }
-    }
-
-    widgetWheelEvent = mGeckoChild->DispatchAPZWheelInputEvent(panEvent);
-
-    if (!mGeckoChild) {
-      return;
-    }
-
     bool canTriggerSwipe = [self shouldConsiderStartingSwipeFromEvent:theEvent];
-    if (canTriggerSwipe && IsPotentialSwipeStartEventOverscrollingViewport(widgetWheelEvent)) {
-      mGeckoChild->MaybeTrackScrollEventAsSwipe(panEvent);
-    }
+    mGeckoChild->DispatchAPZWheelInputEvent(panEvent, canTriggerSwipe);
   } else if (usePreciseDeltas) {
     // This is on 10.6 or old touchpads that don't have any phase information.
     ScrollWheelInput wheelEvent(eventIntervalTime, eventTimeStamp, modifiers,
@@ -4876,7 +4876,7 @@ IsPotentialSwipeStartEventOverscrollingViewport(const WidgetWheelEvent& aEvent)
     wheelEvent.mLineOrPageDeltaX = lineOrPageDeltaX;
     wheelEvent.mLineOrPageDeltaY = lineOrPageDeltaY;
     wheelEvent.mIsMomentum = nsCocoaUtils::IsMomentumScrollEvent(theEvent);
-    widgetWheelEvent = mGeckoChild->DispatchAPZWheelInputEvent(wheelEvent);
+    mGeckoChild->DispatchAPZWheelInputEvent(wheelEvent, false);
   } else {
     ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
     if (gfxPrefs::SmoothScrollEnabled() && gfxPrefs::WheelSmoothScrollEnabled()) {
@@ -4890,7 +4890,7 @@ IsPotentialSwipeStartEventOverscrollingViewport(const WidgetWheelEvent& aEvent)
                                 lineOrPageDeltaY);
     wheelEvent.mLineOrPageDeltaX = lineOrPageDeltaX;
     wheelEvent.mLineOrPageDeltaY = lineOrPageDeltaY;
-    widgetWheelEvent = mGeckoChild->DispatchAPZWheelInputEvent(wheelEvent);
+    mGeckoChild->DispatchAPZWheelInputEvent(wheelEvent, false);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
