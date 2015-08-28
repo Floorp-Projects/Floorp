@@ -494,12 +494,12 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   mCurrentTarget = aTargetFrame;
   mCurrentTargetContent = nullptr;
 
-  // Do not take account NS_MOUSE_ENTER_WIDGET/EXIT_WIDGET so that loading a page
-  // when user is not active doesn't change the state to active.
+  // Do not take account eMouseEnterIntoWidget/ExitFromWidget so that loading
+  // a page when user is not active doesn't change the state to active.
   WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
   if (aEvent->mFlags.mIsTrusted &&
       ((mouseEvent && mouseEvent->IsReal() &&
-        mouseEvent->mMessage != NS_MOUSE_ENTER_WIDGET &&
+        mouseEvent->mMessage != eMouseEnterIntoWidget &&
         mouseEvent->mMessage != NS_MOUSE_EXIT_WIDGET) ||
        aEvent->mClass == eWheelEventClass ||
        aEvent->mClass == eKeyboardEventClass)) {
@@ -583,8 +583,8 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
   }
-  case NS_MOUSE_ENTER_WIDGET:
-    // In some cases on e10s NS_MOUSE_ENTER_WIDGET
+  case eMouseEnterIntoWidget:
+    // In some cases on e10s eMouseEnterIntoWidget
     // event was sent twice into child process of content.
     // (From specific widget code (sending is not permanent) and
     // from ESM::DispatchMouseOrPointerEvent (sending is permanent)).
@@ -605,7 +605,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
 
     // Flag helps to suppress double event sending into process of content.
-    // For more information see comment above, at NS_MOUSE_ENTER_WIDGET case.
+    // For more information see comment above, at eMouseEnterIntoWidget case.
     aEvent->mFlags.mNoCrossProcessBoundaryForwarding = true;
 
     // If the event is not a top-level window exit, then it's not
@@ -1174,7 +1174,7 @@ CrossProcessSafeEvent(const WidgetEvent& aEvent)
     case eMouseUp:
     case eMouseMove:
     case NS_CONTEXTMENU:
-    case NS_MOUSE_ENTER_WIDGET:
+    case eMouseEnterIntoWidget:
     case NS_MOUSE_EXIT_WIDGET:
       return true;
     default:
@@ -3317,7 +3317,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     }
     break;
 
-  case NS_MOUSE_ENTER_WIDGET:
+  case eMouseEnterIntoWidget:
     if (mCurrentTarget) {
       nsCOMPtr<nsIContent> targetContent;
       mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(targetContent));
@@ -3803,7 +3803,7 @@ EventStateManager::DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
         HandleCrossProcessEvent(remoteEvent, &status);
       } else if (aMessage == NS_MOUSE_OVER) {
         nsAutoPtr<WidgetMouseEvent> remoteEvent;
-        CreateMouseOrPointerWidgetEvent(aMouseEvent, NS_MOUSE_ENTER_WIDGET,
+        CreateMouseOrPointerWidgetEvent(aMouseEvent, eMouseEnterIntoWidget,
                                         aRelatedContent, remoteEvent);
         HandleCrossProcessEvent(remoteEvent, &status);
       }

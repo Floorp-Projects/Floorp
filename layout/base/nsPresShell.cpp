@@ -6346,7 +6346,7 @@ void
 PresShell::UpdateActivePointerState(WidgetGUIEvent* aEvent)
 {
   switch (aEvent->mMessage) {
-  case NS_MOUSE_ENTER_WIDGET:
+  case eMouseEnterIntoWidget:
     // In this case we have to know information about available mouse pointers
     if (WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
       gActivePointersIds->Put(mouseEvent->pointerId,
@@ -6569,7 +6569,7 @@ PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent)
 
   if ((aEvent->mMessage == eMouseMove &&
        aEvent->AsMouseEvent()->reason == WidgetMouseEvent::eReal) ||
-      aEvent->mMessage == NS_MOUSE_ENTER_WIDGET ||
+      aEvent->mMessage == eMouseEnterIntoWidget ||
       aEvent->mMessage == eMouseDown ||
       aEvent->mMessage == eMouseUp) {
     nsIFrame* rootFrame = GetRootFrame();
@@ -6582,14 +6582,14 @@ PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent)
         nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, rootFrame);
     }
 #ifdef DEBUG_MOUSE_LOCATION
-    if (aEvent->mMessage == NS_MOUSE_ENTER_WIDGET) {
+    if (aEvent->mMessage == eMouseEnterIntoWidget) {
       printf("[ps=%p]got mouse enter for %p\n",
              this, aEvent->widget);
     }
     printf("[ps=%p]setting mouse location to (%d,%d)\n",
            this, mMouseLocation.x, mMouseLocation.y);
 #endif
-    if (aEvent->mMessage == NS_MOUSE_ENTER_WIDGET) {
+    if (aEvent->mMessage == eMouseEnterIntoWidget) {
       SynthesizeMouseMove(false);
     }
   } else if (aEvent->mMessage == NS_MOUSE_EXIT_WIDGET) {
