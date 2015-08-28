@@ -770,6 +770,8 @@ private:
   // stay alive until the end of the restyle.  (See comment in
   // ElementRestyler::Restyle.)
   nsTArray<nsRefPtr<nsStyleContext>>& mSwappedStructOwners;
+  // Whether this is the root of the restyle.
+  bool mIsRootOfRestyle;
 
 #ifdef ACCESSIBILITY
   const DesiredA11yNotifications mDesiredA11yNotifications;

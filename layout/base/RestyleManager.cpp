@@ -2520,6 +2520,7 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
   , mResolvedChild(nullptr)
   , mContextsToClear(aContextsToClear)
   , mSwappedStructOwners(aSwappedStructOwners)
+  , mIsRootOfRestyle(true)
 #ifdef ACCESSIBILITY
   , mDesiredA11yNotifications(eSendAllNotifications)
   , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
@@ -2553,6 +2554,7 @@ ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler,
   , mResolvedChild(nullptr)
   , mContextsToClear(aParentRestyler.mContextsToClear)
   , mSwappedStructOwners(aParentRestyler.mSwappedStructOwners)
+  , mIsRootOfRestyle(false)
 #ifdef ACCESSIBILITY
   , mDesiredA11yNotifications(aParentRestyler.mKidsDesiredA11yNotifications)
   , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
@@ -2600,6 +2602,7 @@ ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
   , mResolvedChild(nullptr)
   , mContextsToClear(aParentRestyler.mContextsToClear)
   , mSwappedStructOwners(aParentRestyler.mSwappedStructOwners)
+  , mIsRootOfRestyle(false)
 #ifdef ACCESSIBILITY
   , mDesiredA11yNotifications(aParentRestyler.mDesiredA11yNotifications)
   , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
@@ -2639,6 +2642,7 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
   , mResolvedChild(nullptr)
   , mContextsToClear(aContextsToClear)
   , mSwappedStructOwners(aSwappedStructOwners)
+  , mIsRootOfRestyle(true)
 #ifdef ACCESSIBILITY
   , mDesiredA11yNotifications(eSendAllNotifications)
   , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
