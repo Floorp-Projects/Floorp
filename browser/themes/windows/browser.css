@@ -2084,26 +2084,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   }
 }
 
-/* Use solid tab separators for Windows 8+ */
-@media not all and (-moz-os-version: windows-xp) {
-  @media not all and (-moz-os-version: windows-vista) {
-    @media not all and (-moz-os-version: windows-win7) {
-      #TabsToolbar:not([brighttext]) {
-        --tab-separator-image: linear-gradient(transparent 0%, transparent 15%, currentColor 15%, currentColor 90%, transparent 90%);
-        --tab-separator-size: 1px 100%;
-        --tab-separator-opacity: 0.2;
-      }
-    }
-  }
-}
-
-/* Use lighter colors of buttons and text in the titlebar on luna-blue */
-@media (-moz-windows-theme: luna-blue) {
-  #TabsToolbar:not([brighttext]) {
-    --tab-separator-image: url("chrome://browser/skin/tabbrowser/tab-separator-luna-blue.png");
-  }
-}
-
 /* Invert the unhovered close tab icons on bright-text tabs */
 @media not all and (min-resolution: 1.1dppx) {
   #TabsToolbar[brighttext] .tab-close-button:not([visuallyselected="true"]) {
