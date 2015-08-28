@@ -6,6 +6,7 @@
 
 TESTING_JS_MODULES.extensions.content_script += [
     'background.js',
+    'content_script.js',
     'content_script_end.js',
     'content_script_idle.js',
     'content_script_start.js',
