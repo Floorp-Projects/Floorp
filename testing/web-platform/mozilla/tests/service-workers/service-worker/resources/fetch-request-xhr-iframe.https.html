@@ -56,7 +56,7 @@ function xhr_send(url_base, method, data, with_credentials) {
 }
 
 function string_test() {
-  return xhr_send(host_info['HTTP_ORIGIN'], 'POST', 'test string', false)
+  return xhr_send(host_info['HTTPS_ORIGIN'], 'POST', 'test string', false)
     .then(function(response) {
         assert_equals(response.context, 'xmlhttprequest');
         assert_equals(response.method, 'POST');
@@ -65,7 +65,7 @@ function string_test() {
 }
 
 function blob_test() {
-  return xhr_send(host_info['HTTP_ORIGIN'], 'POST', new Blob(['test blob']),
+  return xhr_send(host_info['HTTPS_ORIGIN'], 'POST', new Blob(['test blob']),
                   false)
     .then(function(response) {
         assert_equals(response.context, 'xmlhttprequest');
@@ -75,7 +75,7 @@ function blob_test() {
 }
 
 function custom_method_test() {
-  return xhr_send(host_info['HTTP_ORIGIN'], 'XXX', 'test string xxx', false)
+  return xhr_send(host_info['HTTPS_ORIGIN'], 'XXX', 'test string xxx', false)
     .then(function(response) {
         assert_equals(response.method, 'XXX');
         assert_equals(response.body, 'test string xxx');
@@ -83,7 +83,7 @@ function custom_method_test() {
 }
 
 function options_method_test() {
-  return xhr_send(host_info['HTTP_ORIGIN'], 'OPTIONS', 'test string xxx', false)
+  return xhr_send(host_info['HTTPS_ORIGIN'], 'OPTIONS', 'test string xxx', false)
     .then(function(response) {
         assert_equals(response.method, 'OPTIONS');
         assert_equals(response.body, 'test string xxx');
@@ -98,7 +98,7 @@ function form_data_test() {
         formData.append('sample blob', new Blob(['blob content']));
         formData.append('sample file', new File(['file content'], 'file.dat'));
         formData.append('sample fs file', file_system_file);
-        return xhr_send(host_info['HTTP_ORIGIN'], 'POST', formData, false);
+        return xhr_send(host_info['HTTPS_ORIGIN'], 'POST', formData, false);
       })
     .then(function(response) {
         assert_equals(response.method, 'POST');
@@ -132,21 +132,21 @@ function form_data_test() {
 }
 
 function mode_credentials_test() {
-  return xhr_send(host_info['HTTP_ORIGIN'], 'GET', '', false)
+  return xhr_send(host_info['HTTPS_ORIGIN'], 'GET', '', false)
     .then(function(response){
         assert_equals(response.mode, 'cors');
         assert_equals(response.credentials, 'same-origin');
-        return xhr_send(host_info['HTTP_ORIGIN'], 'GET', '', true);
+        return xhr_send(host_info['HTTPS_ORIGIN'], 'GET', '', true);
       })
     .then(function(response){
         assert_equals(response.mode, 'cors');
         assert_equals(response.credentials, 'include');
-        return xhr_send(host_info['HTTP_REMOTE_ORIGIN'], 'GET', '', false);
+        return xhr_send(host_info['HTTPS_REMOTE_ORIGIN'], 'GET', '', false);
       })
     .then(function(response){
         assert_equals(response.mode, 'cors');
         assert_equals(response.credentials, 'same-origin');
-        return xhr_send(host_info['HTTP_REMOTE_ORIGIN'], 'GET', '', true);
+        return xhr_send(host_info['HTTPS_REMOTE_ORIGIN'], 'GET', '', true);
       })
     .then(function(response){
         assert_equals(response.mode, 'cors');

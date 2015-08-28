@@ -8,7 +8,7 @@ var port = undefined;
 
 var meta = document.createElement('meta');
 meta.setAttribute('http-equiv', 'Content-Security-Policy');
-meta.setAttribute('content', 'img-src ' + host_info['HTTP_ORIGIN'] +
+meta.setAttribute('content', 'img-src ' + host_info['HTTPS_ORIGIN'] +
                   '; script-src \'unsafe-inline\'');
 document.head.appendChild(meta);
 
@@ -22,7 +22,7 @@ function test1() {
     results += 'FAIL(1)';
     test2();
   };
-  img.src = host_info['HTTP_ORIGIN'] + image_path;
+  img.src = host_info['HTTPS_ORIGIN'] + image_path;
 }
 
 function test2() {
@@ -35,7 +35,7 @@ function test2() {
   img.onerror = function() {
     test3();
   };
-  img.src = host_info['HTTP_REMOTE_ORIGIN'] + image_path;
+  img.src = host_info['HTTPS_REMOTE_ORIGIN'] + image_path;
 }
 
 function test3() {
@@ -49,7 +49,7 @@ function test3() {
     test4();
   };
   img.src = './dummy?url=' +
-            encodeURIComponent(host_info['HTTP_ORIGIN'] + image_path);
+            encodeURIComponent(host_info['HTTPS_ORIGIN'] + image_path);
 }
 
 function test4() {
@@ -63,7 +63,7 @@ function test4() {
     finish();
   };
   img.src = './dummy?mode=no-cors&url=' +
-            encodeURIComponent(host_info['HTTP_REMOTE_ORIGIN'] + image_path);
+            encodeURIComponent(host_info['HTTPS_REMOTE_ORIGIN'] + image_path);
 }
 
 function finish() {
