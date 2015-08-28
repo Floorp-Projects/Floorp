@@ -66,6 +66,9 @@
 #include "nsIWidget.h"
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
+#ifndef XP_WIN
+#include "nsJARProtocolHandler.h"
+#endif
 #include "nsOpenURIInFrameParams.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowWatcher.h"
@@ -898,9 +901,21 @@ TabParent::LoadURL(nsIURI* aURI)
                 rv = packageFile->GetPath(path);
                 NS_ENSURE_SUCCESS_VOID(rv);
 
-                nsRefPtr<OpenFileAndSendFDRunnable> openFileRunnable =
-                    new OpenFileAndSendFDRunnable(path, this);
-                openFileRunnable->Dispatch();
+#ifndef XP_WIN
+                PRFileDesc* cachedFd = nullptr;
+                gJarHandler->JarCache()->GetFd(packageFile, &cachedFd);
+
+                if (cachedFd) {
+                    FileDescriptor::PlatformHandleType handle =
+                        FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(cachedFd));
+                    unused << SendCacheFileDescriptor(path, FileDescriptor(handle));
+                } else
+#endif
+                {
+                    nsRefPtr<OpenFileAndSendFDRunnable> openFileRunnable =
+                        new OpenFileAndSendFDRunnable(path, this);
+                    openFileRunnable->Dispatch();
+                }
             }
         }
     }

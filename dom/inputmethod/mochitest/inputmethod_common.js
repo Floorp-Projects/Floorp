@@ -8,7 +8,7 @@ function inputmethod_setup(callback) {
   }
 
   let permissions = [];
-  ['input-manage', 'browser'].forEach(function(name) {
+  ['input', 'input-manage', 'browser'].forEach(function(name) {
     permissions.push({
       type: name,
       allow: true,
@@ -20,9 +20,7 @@ function inputmethod_setup(callback) {
     let prefs = [
       ['dom.mozBrowserFramesEnabled', true],
       // Enable navigator.mozInputMethod.
-      ['dom.mozInputMethod.enabled', true],
-      // Bypass the permission check for mozInputMethod API.
-      ['dom.mozInputMethod.testing', true]
+      ['dom.mozInputMethod.enabled', true]
     ];
     SpecialPowers.pushPrefEnv({set: prefs}, function() {
       SimpleTest.waitForFocus(callback);
