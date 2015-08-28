@@ -353,8 +353,6 @@ browser.jar:
   skin/classic/browser/tabbrowser/tab-stroke-start@2x.png                (tabbrowser/tab-stroke-start@2x.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png                   (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/tabbrowser/tabDragIndicator@2x.png                (tabbrowser/tabDragIndicator@2x.png)
-  skin/classic/browser/tabbrowser/tab-separator.png                      (tabbrowser/tab-separator.png)
-  skin/classic/browser/tabbrowser/tab-separator@2x.png                   (tabbrowser/tab-separator@2x.png)
   skin/classic/browser/tabview/close.png                    (tabview/close.png)
   skin/classic/browser/tabview/edit-light.png               (tabview/edit-light.png)
   skin/classic/browser/tabview/search.png                   (tabview/search.png)
