@@ -686,10 +686,10 @@ private:
   RestyleResult ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
                                                    nsStyleContext* aNewContext);
 
-  /**
-   * Helpers for RestyleChildren().
-   */
+  // Helpers for RestyleChildren().
   void RestyleUndisplayedDescendants(nsRestyleHint aChildRestyleHint);
+  bool MustCheckUndisplayedContent(nsIContent*& aUndisplayedParent);
+
   /**
    * In the following two methods, aParentStyleContext is either
    * mFrame->StyleContext() if we have a frame, or a display:contents
