@@ -26,7 +26,7 @@ const { promiseInvoke } = require("devtools/async-utils");
 let { TargetFactory } = require("devtools/framework/target");
 let { Toolbox } = require("devtools/framework/toolbox")
 
-const EXAMPLE_URL = "http://example.com/browser/browser/devtools/debugger/test/";
+const EXAMPLE_URL = "http://example.com/browser/browser/devtools/debugger/test/mochitest/";
 const FRAME_SCRIPT_URL = getRootDirectory(gTestPath) + "code_frame-script.js";
 
 DevToolsUtils.testing = true;
@@ -62,7 +62,7 @@ registerCleanupFunction(function* () {
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 testDir = testDir.replace(/\/\//g, '/');
 testDir = testDir.replace("chrome:/mochitest", "chrome://mochitest");
-let helpersjs = testDir + "/../../commandline/test/helpers.js";
+let helpersjs = testDir + "/../../../commandline/test/helpers.js";
 Services.scriptloader.loadSubScript(helpersjs, this);
 
 // Redeclare dbg_assert with a fatal behavior.
@@ -965,9 +965,8 @@ function jsonrpc(tab, method, params) {
       params: params,
       id: currentId
     });
-    messageManager.addMessageListener("jsonrpc", function listener({
-      data: { result, error, id }
-    }) {
+    messageManager.addMessageListener("jsonrpc", function listener(res) {
+      const { data: { result, error, id } } = res;
       if (id !== currentId) {
         return;
       }
@@ -1187,4 +1186,18 @@ function setBreakpoint(sourceClient, location) {
 function source(sourceClient) {
   info("Getting source.\n");
   return rdpInvoke(sourceClient, sourceClient.source);
+}
+
+function afterDispatch(dispatcher, type) {
+  info("Waiting on dispatch: " + type);
+  return new Promise(resolve => {
+    dispatcher.dispatch({
+      // Normally we would use `services.WAIT_UNTIL`, but use the
+      // internal name here so tests aren't forced to always pass it
+      // in
+      type: "@@service/waitUntil",
+      predicate: action => action.type === type,
+      run: resolve
+    });
+  });
 }
