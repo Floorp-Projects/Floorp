@@ -28,7 +28,6 @@ android {
     sourceSets {
         main {
             java {
-                exclude 'org/mozilla/gecko/tests/**'
                 exclude 'org/mozilla/gecko/resources/**'
 
                 if (!mozconfig.substs.MOZ_CRASHREPORTER) {
@@ -57,6 +56,16 @@ android {
                 }
             }
         }
+
+        test {
+            java {
+                srcDir "src/background_junit4"
+            }
+
+            resources {
+                srcDir "resources/background_junit4"
+            }
+        }
     }
 }
 
@@ -75,6 +84,9 @@ dependencies {
     compile project(':preprocessed_code')
     compile project(':preprocessed_resources')
     compile project(':thirdparty')
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.robolectric:robolectric:3.0'
 }
 
 apply plugin: 'idea'
@@ -82,6 +94,5 @@ apply plugin: 'idea'
 idea {
     module {
         excludeDirs += file('org/mozilla/gecko/resources')
-        excludeDirs += file('org/mozilla/gecko/tests')
     }
 }
