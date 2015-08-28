@@ -3938,7 +3938,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 
         } break; // eKeyPress || eKeyUp
 
-        case NS_MOUSE_BUTTON_DOWN:
+        case eMouseDown:
         case eMouseUp:
         case NS_MOUSE_DOUBLECLICK:
         {
@@ -3967,7 +3967,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
               nsNumberControlFrame* numberControlFrame =
                 do_QueryFrame(GetPrimaryFrame());
               if (numberControlFrame) {
-                if (aVisitor.mEvent->mMessage == NS_MOUSE_BUTTON_DOWN && 
+                if (aVisitor.mEvent->mMessage == eMouseDown && 
                     IsMutable()) {
                   switch (numberControlFrame->GetSpinButtonForPointerEvent(
                             aVisitor.mEvent->AsMouseEvent())) {
@@ -4086,7 +4086,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor)
 
   switch (aVisitor.mEvent->mMessage)
   {
-    case NS_MOUSE_BUTTON_DOWN:
+    case eMouseDown:
     case NS_TOUCH_START: {
       if (mIsDraggingRange) {
         break;
@@ -4101,7 +4101,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor)
           inputEvent->IsOS()) {
         break; // ignore
       }
-      if (aVisitor.mEvent->mMessage == NS_MOUSE_BUTTON_DOWN) {
+      if (aVisitor.mEvent->mMessage == eMouseDown) {
         if (aVisitor.mEvent->AsMouseEvent()->buttons ==
               WidgetMouseEvent::eLeftButtonFlag) {
           StartRangeThumbDrag(inputEvent);

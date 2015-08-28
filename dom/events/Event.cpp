@@ -823,7 +823,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
           abuse = openControlled;
         }
         break;
-      case NS_MOUSE_BUTTON_DOWN :
+      case eMouseDown:
         if (PopupAllowedForEvent("mousedown")) {
           abuse = openControlled;
         }

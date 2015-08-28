@@ -267,7 +267,7 @@ EVENT(loadstart,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(mousedown,
-      NS_MOUSE_BUTTON_DOWN,
+      eMouseDown,
       EventNameType_All,
       eMouseEventClass)
 EVENT(mouseenter,

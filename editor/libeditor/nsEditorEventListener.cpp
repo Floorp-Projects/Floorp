@@ -408,7 +408,7 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       return KeyPress(keyEvent);
     }
     // mousedown
-    case NS_MOUSE_BUTTON_DOWN: {
+    case eMouseDown: {
       nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
       NS_ENSURE_TRUE(mouseEvent, NS_OK);
       // nsEditorEventListener may receive (1) all mousedown, mouseup and click
@@ -425,7 +425,7 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
     case eMouseUp: {
       nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
       NS_ENSURE_TRUE(mouseEvent, NS_OK);
-      // See above comment in the NS_MOUSE_BUTTON_DOWN case, first.
+      // See above comment in the eMouseDown case, first.
       // This code assumes that case #1 is occuring.  However, if case #3 may
       // occurs after case #2 and the mousedown is consumed,
       // mMouseDownOrUpConsumedByIME is true even though nsEditorEventListener
@@ -434,7 +434,7 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       // this is not a matter because mMouseDownOrUpConsumedByIME is referred
       // only by NS_MOUSE_CLICK case but click event is fired only in case #1.
       // So, before a click event is fired, mMouseDownOrUpConsumedByIME is
-      // always initialized in the NS_MOUSE_BUTTON_DOWN case if it's referred.
+      // always initialized in the eMouseDown case if it's referred.
       if (NotifyIMEOfMouseButtonEvent(mouseEvent)) {
         mMouseDownOrUpConsumedByIME = true;
       }

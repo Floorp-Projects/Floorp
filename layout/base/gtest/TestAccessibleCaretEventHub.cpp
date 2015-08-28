@@ -126,7 +126,7 @@ public:
 
   static UniquePtr<WidgetEvent> CreateMousePressEvent(nscoord aX, nscoord aY)
   {
-    return CreateMouseEvent(NS_MOUSE_BUTTON_DOWN, aX, aY);
+    return CreateMouseEvent(eMouseDown, aX, aY);
   }
 
   static UniquePtr<WidgetEvent> CreateMouseMoveEvent(nscoord aX, nscoord aY)
