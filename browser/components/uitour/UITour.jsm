@@ -1113,8 +1113,16 @@ this.UITour = {
    *        will be shown if this is an invalid URL.
    * @param {String} [aOptions.privateWindowsOnly=false]
    *        Whether the heartbeat UI should only be targeted at a private window (if one exists).
+   *        No notifications should be fired when this is true.
    */
   showHeartbeat(aChromeWindow, aOptions) {
+    let maybeNotifyHeartbeat = (...aParams) => {
+      if (aOptions.privateWindowsOnly) {
+        return;
+      }
+      this.notify(...aParams);
+    };
+
     let nb = aChromeWindow.document.getElementById("high-priority-global-notificationbox");
     let buttons = null;
 
@@ -1123,12 +1131,16 @@ this.UITour = {
         label: aOptions.engagementButtonLabel,
         callback: () => {
           // Let the consumer know user engaged.
-          this.notify("Heartbeat:Engaged", { flowId: aOptions.flowId, timestamp: Date.now() });
+          maybeNotifyHeartbeat("Heartbeat:Engaged", { flowId: aOptions.flowId, timestamp: Date.now() });
 
           userEngaged(new Map([
             ["type", "button"],
             ["flowid", aOptions.flowId]
           ]));
+
+          // Return true so that the notification bar doesn't close itself since
+          // we have a thank you message to show.
+          return true;
         },
       }];
     }
@@ -1137,7 +1149,7 @@ this.UITour = {
       "chrome://browser/skin/heartbeat-icon.svg", nb.PRIORITY_INFO_HIGH, buttons, function() {
         // Let the consumer know the notification bar was closed. This also happens
         // after voting.
-        this.notify("Heartbeat:NotificationClosed", { flowId: aOptions.flowId, timestamp: Date.now() });
+        maybeNotifyHeartbeat("Heartbeat:NotificationClosed", { flowId: aOptions.flowId, timestamp: Date.now() });
     }.bind(this));
 
     // Get the elements we need to style.
@@ -1209,7 +1221,11 @@ this.UITour = {
         let rating = Number(evt.target.getAttribute("data-score"), 10);
 
         // Let the consumer know user voted.
-        this.notify("Heartbeat:Voted", { flowId: aOptions.flowId, score: rating, timestamp: Date.now() });
+        maybeNotifyHeartbeat("Heartbeat:Voted", {
+          flowId: aOptions.flowId,
+          score: rating,
+          timestamp: Date.now(),
+        });
 
         // Append the score data to the engagement URL.
         userEngaged(new Map([
@@ -1248,7 +1264,7 @@ this.UITour = {
       learnMore.className = "text-link";
       learnMore.href = learnMoreURL.toString();
       learnMore.setAttribute("value", aOptions.learnMoreLabel);
-      learnMore.addEventListener("click", () => this.notify("Heartbeat:LearnMore",
+      learnMore.addEventListener("click", () => maybeNotifyHeartbeat("Heartbeat:LearnMore",
         { flowId: aOptions.flowId, timestamp: Date.now() }));
       frag.appendChild(learnMore);
     }
@@ -1260,7 +1276,10 @@ this.UITour = {
     messageText.classList.add("heartbeat");
 
     // Let the consumer know the notification was shown.
-    this.notify("Heartbeat:NotificationOffered", { flowId: aOptions.flowId, timestamp: Date.now() });
+    maybeNotifyHeartbeat("Heartbeat:NotificationOffered", {
+      flowId: aOptions.flowId,
+      timestamp: Date.now(),
+    });
   },
 
   /**
