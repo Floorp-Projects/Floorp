@@ -1266,7 +1266,7 @@ nsXULElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
     if (IsRootOfNativeAnonymousSubtree() &&
         (IsAnyOfXULElements(nsGkAtoms::scrollbar, nsGkAtoms::scrollcorner)) &&
         (aVisitor.mEvent->mMessage == NS_MOUSE_CLICK ||
-         aVisitor.mEvent->mMessage == NS_MOUSE_DOUBLECLICK ||
+         aVisitor.mEvent->mMessage == eMouseDoubleClick ||
          aVisitor.mEvent->mMessage == NS_XUL_COMMAND ||
          aVisitor.mEvent->mMessage == NS_CONTEXTMENU ||
          aVisitor.mEvent->mMessage == NS_DRAGDROP_START ||
