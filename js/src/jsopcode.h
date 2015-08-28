@@ -772,22 +772,19 @@ GetBytecodeInteger(jsbytecode* pc)
  */
 class PCCounts
 {
-    double numExec_;
+    uint64_t numExec_;
 
  public:
 
-    double& numExec() {
+    uint64_t& numExec() {
         return numExec_;
     }
-    double numExec() const {
+    uint64_t numExec() const {
         return numExec_;
     }
 
     static const char* numExecName;
 };
-
-/* Necessary for alignment with the script. */
-JS_STATIC_ASSERT(sizeof(PCCounts) % sizeof(Value) == 0);
 
 static inline jsbytecode*
 GetNextPc(jsbytecode* pc)
