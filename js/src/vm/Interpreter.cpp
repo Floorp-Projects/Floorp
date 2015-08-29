@@ -3608,7 +3608,8 @@ END_CASE(JSOP_NEWINIT)
 CASE(JSOP_NEWARRAY)
 CASE(JSOP_SPREADCALLARRAY)
 {
-    JSObject* obj = NewArrayOperation(cx, script, REGS.pc, GET_UINT24(REGS.pc));
+    uint32_t length = GET_UINT32(REGS.pc);
+    JSObject* obj = NewArrayOperation(cx, script, REGS.pc, length);
     if (!obj)
         goto error;
     PUSH_OBJECT(*obj);
@@ -3704,7 +3705,7 @@ CASE(JSOP_INITELEM_ARRAY)
 
     ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-2].toObject());
 
-    uint32_t index = GET_UINT24(REGS.pc);
+    uint32_t index = GET_UINT32(REGS.pc);
     if (!InitArrayElemOperation(cx, REGS.pc, obj, index, val))
         goto error;
 
