@@ -15,9 +15,10 @@ const { getInnerId } = require('../window/utils');
 const { EventTarget } = require('../event/target');
 const { isPrivate } = require('../private-browsing/utils');
 const { getTabForBrowser, getTabForContentWindow, getBrowserForTab } = require('../tabs/utils');
-const { attach, connect, detach, destroy, makeChildOptions } = require('./utils');
+const { attach, connect, detach, destroy } = require('./utils');
 const { ensure } = require('../system/unload');
 const { on: observe } = require('../system/events');
+const { uuid } = require('../util/uuid');
 const { Ci } = require('chrome');
 const { modelFor: tabFor } = require('sdk/model/core');
 const { remoteRequire, processes, frames } = require('../remote/parent');
@@ -127,12 +128,26 @@ attach.define(Worker, function(worker, window) {
   if (tab)
     frame = frames.getFrameForBrowser(getBrowserForTab(tab));
 
-  let childOptions = makeChildOptions(model.options);
-  childOptions.windowId = getInnerId(window);
+  function makeStringArray(arrayOrValue) {
+    if (!arrayOrValue)
+      return [];
+    return [String(v) for (v of [].concat(arrayOrValue))];
+  }
+
+  let id = String(uuid());
+  let childOptions = {
+    id,
+    windowId: getInnerId(window),
+    contentScript: makeStringArray(model.options.contentScript),
+    contentScriptFile: makeStringArray(model.options.contentScriptFile),
+    contentScriptOptions: model.options.contentScriptOptions ?
+                          JSON.stringify(model.options.contentScriptOptions) :
+                          null,
+  }
 
   processes.port.emit('sdk/worker/create', childOptions);
 
-  connect(worker, frame, { id: childOptions.id, url: String(window.location) });
+  connect(worker, frame, { id, url: String(window.location) });
 })
 
 connect.define(Worker, function(worker, frame, { id, url }) {
