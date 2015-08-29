@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PAsmJSCacheEntry;
 include protocol PBackgroundIDBFactory;
 include protocol PBackgroundTest;
 include protocol PBlob;
@@ -20,14 +21,23 @@ include DOMTypes;
 include PBackgroundSharedTypes;
 include PBackgroundIDBSharedTypes;
 
-using mozilla::dom::cache::Namespace from "mozilla/dom/cache/Types.h";
 include "mozilla/dom/cache/IPCUtils.h";
+
+using mozilla::dom::cache::Namespace
+  from "mozilla/dom/cache/Types.h";
+
+using mozilla::dom::asmjscache::OpenMode
+  from "mozilla/dom/asmjscache/AsmJSCache.h";
+
+using mozilla::dom::asmjscache::WriteParams
+  from "mozilla/dom/asmjscache/AsmJSCache.h";
 
 namespace mozilla {
 namespace ipc {
 
 sync protocol PBackground
 {
+  manages PAsmJSCacheEntry;
   manages PBackgroundIDBFactory;
   manages PBackgroundTest;
   manages PBlob;
@@ -65,6 +75,10 @@ parent:
   PNuwa();
 
   MessagePortForceClose(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
+
+  PAsmJSCacheEntry(OpenMode openMode,
+                   WriteParams write,
+                   PrincipalInfo principalInfo);
 
 child:
   PCache();
