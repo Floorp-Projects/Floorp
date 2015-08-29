@@ -1749,13 +1749,13 @@ CloneString(JSContext* cx, JSFlatString* selfHostedString)
 static JSObject*
 CloneObject(JSContext* cx, HandleNativeObject selfHostedObject)
 {
+#ifdef DEBUG
     AutoCycleDetector detect(cx, selfHostedObject);
     if (!detect.init())
         return nullptr;
-    if (detect.foundCycle()) {
-        JS_ReportError(cx, "SelfHosted cloning cannot handle cyclic object graphs.");
-        return nullptr;
-    }
+    if (detect.foundCycle())
+        MOZ_CRASH("SelfHosted cloning cannot handle cyclic object graphs.");
+#endif
 
     RootedObject clone(cx);
     if (selfHostedObject->is<JSFunction>()) {
