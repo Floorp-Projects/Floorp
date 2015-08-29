@@ -712,9 +712,6 @@ TrackBuffersManager::SegmentParserLoop()
             mPendingInputBuffer = nullptr;
           }
           mNewMediaSegmentStarted = false;
-          if (newData) {
-            mLastParsedEndTime = Some(TimeUnit::FromMicroseconds(end));
-          }
         } else {
           // We don't have any data to demux yet, stash aside the data.
           // This also handles the case:
@@ -871,8 +868,6 @@ TrackBuffersManager::OnDemuxerResetDone(nsresult)
     mParser->ParseStartAndEndTimestamps(mPendingInputBuffer, start, end);
     mProcessedInput += mPendingInputBuffer->Length();
   }
-
-  mLastParsedEndTime.reset();
 
   SegmentParserLoop();
 }
@@ -1318,6 +1313,9 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
     return;
   }
 
+  mLastParsedEndTime = Some(std::max(mAudioTracks.mLastParsedEndTime,
+                                     mVideoTracks.mLastParsedEndTime));
+
   // 6. Remove the media segment bytes from the beginning of the input buffer.
   // Clear our demuxer from any already processed data.
   // As we have handled a complete media segment, it is safe to evict all data
@@ -1397,6 +1395,10 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
   // a frame be ignored due to the target window.
   bool needDiscontinuityCheck = true;
 
+  if (aSamples.Length()) {
+    aTrackData.mLastParsedEndTime = TimeUnit();
+  }
+
   for (auto& sample : aSamples) {
     SAMPLE_DEBUG("Processing %s frame(pts:%lld end:%lld, dts:%lld, duration:%lld, "
                "kf:%d)",
@@ -1406,6 +1408,12 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
                sample->mTimecode,
                sample->mDuration,
                sample->mKeyframe);
+
+    const TimeUnit sampleEndTime =
+      TimeUnit::FromMicroseconds(sample->GetEndTime());
+    if (sampleEndTime > aTrackData.mLastParsedEndTime) {
+      aTrackData.mLastParsedEndTime = sampleEndTime;
+    }
 
     // We perform step 10 right away as we can't do anything should a keyframe
     // be needed until we have one.
