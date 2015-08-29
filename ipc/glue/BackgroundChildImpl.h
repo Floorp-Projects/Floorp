@@ -128,6 +128,14 @@ protected:
 
   virtual bool
   DeallocPNuwaChild(PNuwaChild* aActor) override;
+
+  virtual PAsmJSCacheEntryChild*
+  AllocPAsmJSCacheEntryChild(const dom::asmjscache::OpenMode& aOpenMode,
+                             const dom::asmjscache::WriteParams& aWriteParams,
+                             const PrincipalInfo& aPrincipalInfo) override;
+
+  virtual bool
+  DeallocPAsmJSCacheEntryChild(PAsmJSCacheEntryChild* aActor) override;
 };
 
 class BackgroundChildImpl::ThreadLocal final

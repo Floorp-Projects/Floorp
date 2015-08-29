@@ -21,9 +21,14 @@
 #include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/dom/quota/UsageInfo.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/unused.h"
 #include "nsIAtom.h"
 #include "nsIFile.h"
+#include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsIRunnable.h"
@@ -41,10 +46,15 @@
 #define ASMJSCACHE_ENTRY_FILE_NAME_BASE "module"
 
 using mozilla::dom::quota::AssertIsOnIOThread;
+using mozilla::dom::quota::DirectoryLock;
 using mozilla::dom::quota::PersistenceType;
 using mozilla::dom::quota::QuotaManager;
 using mozilla::dom::quota::QuotaObject;
 using mozilla::dom::quota::UsageInfo;
+using mozilla::ipc::AssertIsOnBackgroundThread;
+using mozilla::ipc::BackgroundChild;
+using mozilla::ipc::PBackgroundChild;
+using mozilla::ipc::PrincipalInfo;
 using mozilla::unused;
 using mozilla::HashString;
 
@@ -225,12 +235,10 @@ EvictEntries(nsIFile* aDirectory, const nsACString& aGroup,
 }
 
 // FileDescriptorHolder owns a file descriptor and its memory mapping.
-// FileDescriptorHolder is derived by all three runnable classes (that is,
-// (Single|Parent|Child)ProcessRunnable. To avoid awkward workarouds,
-// FileDescriptorHolder is derived virtually by File and MainProcessRunnable for
-// the benefit of SingleProcessRunnable, which derives both. Since File and
-// MainProcessRunnable both need to be runnables, FileDescriptorHolder also
-// derives nsRunnable.
+// FileDescriptorHolder is derived by two runnable classes (that is,
+// (Parent|Child)ProcessRunnable. FileDescriptorHolder is derived by File and
+// MainProcessRunnable. Since File and MainProcessRunnable both need to be
+// runnables, FileDescriptorHolder also derives nsRunnable.
 class FileDescriptorHolder : public nsRunnable
 {
 public:
@@ -322,11 +330,9 @@ protected:
   void* mMappedMemory;
 };
 
-// File is a base class shared by (Single|Client)ProcessEntryRunnable that
-// presents a single interface to the AsmJSCache ops which need to wait until
-// the file is open, regardless of whether we are executing in the main process
-// or not.
-class File : public virtual FileDescriptorHolder
+// File is a base class derived by ChildProcessRunnable that presents a single
+// interface to the AsmJSCache ops which need to wait until the file is open.
+class File : public FileDescriptorHolder
 {
 public:
   class AutoClose
@@ -471,25 +477,50 @@ private:
   JS::AsmJSCacheResult mResult;
 };
 
-// MainProcessRunnable is a base class shared by (Single|Parent)ProcessRunnable
+class UnlockDirectoryRunnable final
+  : public nsRunnable
+{
+  nsRefPtr<DirectoryLock> mDirectoryLock;
+
+public:
+  explicit
+  UnlockDirectoryRunnable(already_AddRefed<DirectoryLock> aDirectoryLock)
+    : mDirectoryLock(Move(aDirectoryLock))
+  { }
+
+private:
+  ~UnlockDirectoryRunnable()
+  {
+    MOZ_ASSERT(!mDirectoryLock);
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mDirectoryLock);
+
+    mDirectoryLock = nullptr;
+
+    return NS_OK;
+  }
+};
+
+// MainProcessRunnable is a base class derived by ParentProcessRunnable
 // that factors out the runnable state machine required to open a cache entry
 // that runs in the main process.
 class MainProcessRunnable
-  : public virtual FileDescriptorHolder
+  : public FileDescriptorHolder
   , public quota::OpenDirectoryListener
 {
-  typedef mozilla::dom::quota::DirectoryLock DirectoryLock;
-
 public:
   NS_DECL_NSIRUNNABLE
 
-  // MainProcessRunnable runnable assumes that the derived class ensures
-  // (through ref-counting or preconditions) that aPrincipal is kept alive for
-  // the lifetime of the MainProcessRunnable.
-  MainProcessRunnable(nsIPrincipal* aPrincipal,
+  MainProcessRunnable(const PrincipalInfo& aPrincipalInfo,
                       OpenMode aOpenMode,
                       WriteParams aWriteParams)
-  : mPrincipal(aPrincipal),
+  : mOwningThread(NS_GetCurrentThread()),
+    mPrincipalInfo(aPrincipalInfo),
     mOpenMode(aOpenMode),
     mWriteParams(aWriteParams),
     mPersistence(quota::PERSISTENCE_TYPE_INVALID),
@@ -499,6 +530,7 @@ public:
     mEnforcingQuota(true)
   {
     MOZ_ASSERT(XRE_IsParentProcess());
+    AssertIsOnOwningThread();
   }
 
   virtual ~MainProcessRunnable()
@@ -508,18 +540,28 @@ public:
   }
 
 protected:
+  void
+  AssertIsOnOwningThread() const
+  {
+    AssertIsOnBackgroundThread();
+    MOZ_ASSERT(mOwningThread);
+    DebugOnly<bool> current;
+    MOZ_ASSERT(NS_SUCCEEDED(mOwningThread->IsOnCurrentThread(&current)));
+    MOZ_ASSERT(current);
+  }
+
   // This method is called by the derived class on the main thread when a
   // cache entry has been selected to open.
   void
   OpenForRead(unsigned aModuleIndex)
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnOwningThread();
     MOZ_ASSERT(mState == eWaitingToOpenCacheFileForRead);
     MOZ_ASSERT(mOpenMode == eOpenForRead);
 
     mModuleIndex = aModuleIndex;
-    mState = eReadyToOpenCacheFileForRead;
-    DispatchToIOThread();
+    mState = eDispatchToMainThread;
+    NS_DispatchToMainThread(this);
   }
 
   // This method is called by the derived class on the main thread when no cache
@@ -529,7 +571,7 @@ protected:
   void
   CacheMiss()
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnOwningThread();
     MOZ_ASSERT(mState == eFailedToReadMetadata ||
                mState == eWaitingToOpenCacheFileForRead);
     MOZ_ASSERT(mOpenMode == eOpenForRead);
@@ -542,7 +584,7 @@ protected:
     // Try again with a clean slate. InitOnMainThread will see that mPersistence
     // is initialized and switch to temporary storage.
     MOZ_ASSERT(mPersistence == quota::PERSISTENCE_TYPE_PERSISTENT);
-    FinishOnMainThread();
+    FinishOnOwningThread();
     mState = eInitial;
     NS_DispatchToMainThread(this);
   }
@@ -555,7 +597,8 @@ protected:
   {
     MOZ_ASSERT(mState == eOpened);
     mState = eClosing;
-    NS_DispatchToMainThread(this);
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
+                                                         NS_DISPATCH_NORMAL)));
   }
 
   // This method is called both internally and by derived classes upon any
@@ -569,7 +612,8 @@ protected:
                mState != eFinished);
 
     mState = eFailing;
-    NS_DispatchToMainThread(this);
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
+                                                         NS_DISPATCH_NORMAL)));
   }
 
   // Called by MainProcessRunnable on the main thread after metadata is open:
@@ -585,7 +629,7 @@ protected:
   virtual void
   OnFailure(JS::AsmJSCacheResult aResult)
   {
-    FinishOnMainThread();
+    FinishOnOwningThread();
   }
 
   // This method may be overridden, but it must be called from the overrider.
@@ -593,7 +637,7 @@ protected:
   virtual void
   OnClose()
   {
-    FinishOnMainThread();
+    FinishOnOwningThread();
   }
 
 private:
@@ -613,11 +657,13 @@ private:
   OpenCacheFileForRead();
 
   void
-  FinishOnMainThread();
+  FinishOnOwningThread();
 
   void
   DispatchToIOThread()
   {
+    MOZ_ASSERT(NS_IsMainThread());
+
     // If shutdown just started, the QuotaManager may have been deleted.
     QuotaManager* qm = QuotaManager::Get();
     if (!qm) {
@@ -639,7 +685,8 @@ private:
   virtual void
   DirectoryLockFailed() override;
 
-  nsIPrincipal* const mPrincipal;
+  nsCOMPtr<nsIEventTarget> mOwningThread;
+  const PrincipalInfo mPrincipalInfo;
   const OpenMode mOpenMode;
   const WriteParams mWriteParams;
 
@@ -659,16 +706,17 @@ private:
 
   enum State {
     eInitial, // Just created, waiting to be dispatched to main thread
-    eWaitingToOpenMetadata, // Waiting to be called back from WaitForOpenAllowed
+    eWaitingToOpenMetadata, // Waiting to be called back from OpenDirectory
     eReadyToReadMetadata, // Waiting to read the metadata file on the IO thread
-    eFailedToReadMetadata, // Waiting to be dispatched to main thread after fail
+    eFailedToReadMetadata, // Waiting to be dispatched to owning thread after fail
     eSendingMetadataForRead, // Waiting to send OnOpenMetadataForRead
     eWaitingToOpenCacheFileForRead, // Waiting to hear back from child
+    eDispatchToMainThread, // IO thread dispatch allowed from main thread only
     eReadyToOpenCacheFileForRead, // Waiting to open cache file for read
-    eSendingCacheFile, // Waiting to send OnOpenCacheFile on the main thread
-    eOpened, // Finished calling OnOpen, waiting to be closed
-    eClosing, // Waiting to be dispatched to main thread again
-    eFailing, // Just failed, waiting to be dispatched to the main thread
+    eSendingCacheFile, // Waiting to send OnOpenCacheFile on the owning thread
+    eOpened, // Finished calling OnOpenCacheFile, waiting to be closed
+    eClosing, // Waiting to be dispatched to owning thread again
+    eFailing, // Just failed, waiting to be dispatched to the owning thread
     eFinished, // Terminal state
   };
   State mState;
@@ -729,12 +777,20 @@ MainProcessRunnable::InitOnMainThread()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState == eInitial);
+  MOZ_ASSERT(mPrincipalInfo.type() != PrincipalInfo::TNullPrincipalInfo);
+
+  nsresult rv;
+  nsCOMPtr<nsIPrincipal> principal =
+    PrincipalInfoToPrincipal(mPrincipalInfo, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   QuotaManager* qm = QuotaManager::GetOrCreate();
   NS_ENSURE_STATE(qm);
 
-  nsresult rv =
-    QuotaManager::GetInfoFromPrincipal(mPrincipal, &mGroup, &mOrigin, &mIsApp);
+  rv = QuotaManager::GetInfoFromPrincipal(principal, &mGroup, &mOrigin,
+                                          &mIsApp);
   NS_ENSURE_SUCCESS(rv, rv);
 
   InitPersistenceType();
@@ -914,15 +970,20 @@ MainProcessRunnable::OpenCacheFileForRead()
 }
 
 void
-MainProcessRunnable::FinishOnMainThread()
+MainProcessRunnable::FinishOnOwningThread()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
 
   // Per FileDescriptorHolder::Finish()'s comment, call before
   // releasing the directory lock.
   FileDescriptorHolder::Finish();
 
-  mDirectoryLock = nullptr;
+  if (mDirectoryLock) {
+    nsRefPtr<UnlockDirectoryRunnable> runnable =
+      new UnlockDirectoryRunnable(mDirectoryLock.forget());
+
+    NS_DispatchToMainThread(runnable);
+  }
 }
 
 NS_IMETHODIMP
@@ -962,13 +1023,16 @@ MainProcessRunnable::Run()
       rv = ReadMetadata();
       if (NS_FAILED(rv)) {
         mState = eFailedToReadMetadata;
-        NS_DispatchToMainThread(this);
+        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+          mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL)));
         return NS_OK;
       }
 
       if (mOpenMode == eOpenForRead) {
         mState = eSendingMetadataForRead;
-        NS_DispatchToMainThread(this);
+        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+          mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL)));
+
         return NS_OK;
       }
 
@@ -979,12 +1043,13 @@ MainProcessRunnable::Run()
       }
 
       mState = eSendingCacheFile;
-      NS_DispatchToMainThread(this);
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+        mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL)));
       return NS_OK;
     }
 
     case eFailedToReadMetadata: {
-      MOZ_ASSERT(NS_IsMainThread());
+      AssertIsOnOwningThread();
 
       if (mOpenMode == eOpenForRead) {
         CacheMiss();
@@ -996,11 +1061,19 @@ MainProcessRunnable::Run()
     }
 
     case eSendingMetadataForRead: {
-      MOZ_ASSERT(NS_IsMainThread());
+      AssertIsOnOwningThread();
       MOZ_ASSERT(mOpenMode == eOpenForRead);
 
       mState = eWaitingToOpenCacheFileForRead;
       OnOpenMetadataForRead(mMetadata);
+      return NS_OK;
+    }
+
+    case eDispatchToMainThread: {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      mState = eReadyToOpenCacheFileForRead;
+      DispatchToIOThread();
       return NS_OK;
     }
 
@@ -1015,12 +1088,13 @@ MainProcessRunnable::Run()
       }
 
       mState = eSendingCacheFile;
-      NS_DispatchToMainThread(this);
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+        mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL)));
       return NS_OK;
     }
 
     case eSendingCacheFile: {
-      MOZ_ASSERT(NS_IsMainThread());
+      AssertIsOnOwningThread();
 
       mState = eOpened;
       OnOpenCacheFile();
@@ -1028,7 +1102,7 @@ MainProcessRunnable::Run()
     }
 
     case eFailing: {
-      MOZ_ASSERT(NS_IsMainThread());
+      AssertIsOnOwningThread();
 
       mState = eFinished;
       OnFailure(mResult);
@@ -1036,7 +1110,7 @@ MainProcessRunnable::Run()
     }
 
     case eClosing: {
-      MOZ_ASSERT(NS_IsMainThread());
+      AssertIsOnOwningThread();
 
       mState = eFinished;
       OnClose();
@@ -1122,86 +1196,6 @@ FindHashMatch(const Metadata& aMetadata, const ReadParams& aReadParams,
   return false;
 }
 
-// A runnable that executes for a cache access originating in the main process.
-class SingleProcessRunnable final : public File,
-                                    private MainProcessRunnable
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // In the single-process case, the calling JS compilation thread holds the
-  // nsIPrincipal alive indirectly (via the global object -> compartment ->
-  // principal) so we don't have to ref-count it here. This is fortunate since
-  // we are off the main thread and nsIPrincipals can only be ref-counted on
-  // the main thread.
-  SingleProcessRunnable(nsIPrincipal* aPrincipal,
-                        OpenMode aOpenMode,
-                        WriteParams aWriteParams,
-                        ReadParams aReadParams)
-  : MainProcessRunnable(aPrincipal, aOpenMode, aWriteParams),
-    mReadParams(aReadParams)
-  {
-    MOZ_ASSERT(XRE_IsParentProcess());
-    MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_COUNT_CTOR(SingleProcessRunnable);
-  }
-
-protected:
-  ~SingleProcessRunnable()
-  {
-    MOZ_COUNT_DTOR(SingleProcessRunnable);
-  }
-
-private:
-  void
-  OnOpenMetadataForRead(const Metadata& aMetadata) override
-  {
-    uint32_t moduleIndex;
-    if (FindHashMatch(aMetadata, mReadParams, &moduleIndex)) {
-      MainProcessRunnable::OpenForRead(moduleIndex);
-    } else {
-      MainProcessRunnable::CacheMiss();
-    }
-  }
-
-  void
-  OnOpenCacheFile() override
-  {
-    File::OnOpen();
-  }
-
-  void
-  Close() override final
-  {
-    MainProcessRunnable::Close();
-  }
-
-  void
-  OnFailure(JS::AsmJSCacheResult aResult) override
-  {
-    MainProcessRunnable::OnFailure(aResult);
-    File::OnFailure(aResult);
-  }
-
-  void
-  OnClose() override final
-  {
-    MainProcessRunnable::OnClose();
-    File::OnClose();
-  }
-
-  // Avoid MSVC 'dominance' warning by having clear Run() override.
-  NS_IMETHODIMP
-  Run() override
-  {
-    return MainProcessRunnable::Run();
-  }
-
-  ReadParams mReadParams;
-};
-
-NS_IMPL_ISUPPORTS_INHERITED0(SingleProcessRunnable, File)
-
 // A runnable that executes in a parent process for a cache access originating
 // in the content process. This runnable gets registered as an IPDL subprotocol
 // actor so that it can communicate with the corresponding ChildProcessRunnable.
@@ -1211,27 +1205,22 @@ class ParentProcessRunnable final : public PAsmJSCacheEntryParent,
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  // The given principal comes from an IPC::Principal which will be dec-refed
-  // at the end of the message, so we must ref-count it here. Fortunately, we
-  // are on the main thread (where PContent messages are delivered).
-  ParentProcessRunnable(nsIPrincipal* aPrincipal,
+  ParentProcessRunnable(const PrincipalInfo& aPrincipalInfo,
                         OpenMode aOpenMode,
                         WriteParams aWriteParams)
-  : MainProcessRunnable(aPrincipal, aOpenMode, aWriteParams),
-    mPrincipalHolder(aPrincipal),
+  : MainProcessRunnable(aPrincipalInfo, aOpenMode, aWriteParams),
     mActorDestroyed(false),
     mOpened(false),
     mFinished(false)
   {
     MOZ_ASSERT(XRE_IsParentProcess());
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnOwningThread();
     MOZ_COUNT_CTOR(ParentProcessRunnable);
   }
 
 private:
   ~ParentProcessRunnable()
   {
-    MOZ_ASSERT(!mPrincipalHolder, "Should have already been released");
     MOZ_ASSERT(mActorDestroyed);
     MOZ_ASSERT(mFinished);
     MOZ_COUNT_DTOR(ParentProcessRunnable);
@@ -1277,7 +1266,7 @@ private:
   void
   OnOpenMetadataForRead(const Metadata& aMetadata) override
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnOwningThread();
 
     if (!SendOnOpenMetadataForRead(aMetadata)) {
       unused << Send__delete__(this, JS::AsmJSCache_InternalError);
@@ -1301,7 +1290,7 @@ private:
   void
   OnOpenCacheFile() override
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnOwningThread();
 
     MOZ_ASSERT(!mOpened);
     mOpened = true;
@@ -1316,7 +1305,7 @@ private:
   void
   OnClose() override final
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnOwningThread();
     MOZ_ASSERT(mOpened);
 
     mFinished = true;
@@ -1324,14 +1313,12 @@ private:
     MainProcessRunnable::OnClose();
 
     MOZ_ASSERT(mActorDestroyed);
-
-    mPrincipalHolder = nullptr;
   }
 
   void
   OnFailure(JS::AsmJSCacheResult aResult) override
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnOwningThread();
     MOZ_ASSERT(!mOpened);
 
     mFinished = true;
@@ -1341,11 +1328,8 @@ private:
     if (!mActorDestroyed) {
       unused << Send__delete__(this, aResult);
     }
-
-    mPrincipalHolder = nullptr;
   }
 
-  nsCOMPtr<nsIPrincipal> mPrincipalHolder;
   bool mActorDestroyed;
   bool mOpened;
   bool mFinished;
@@ -1358,10 +1342,17 @@ NS_IMPL_ISUPPORTS_INHERITED0(ParentProcessRunnable, FileDescriptorHolder)
 PAsmJSCacheEntryParent*
 AllocEntryParent(OpenMode aOpenMode,
                  WriteParams aWriteParams,
-                 nsIPrincipal* aPrincipal)
+                 const PrincipalInfo& aPrincipalInfo)
 {
+  AssertIsOnBackgroundThread();
+
+  if (NS_WARN_IF(aPrincipalInfo.type() == PrincipalInfo::TNullPrincipalInfo)) {
+    MOZ_ASSERT(false);
+    return nullptr;
+  }
+
   nsRefPtr<ParentProcessRunnable> runnable =
-    new ParentProcessRunnable(aPrincipal, aOpenMode, aWriteParams);
+    new ParentProcessRunnable(aPrincipalInfo, aOpenMode, aWriteParams);
 
   nsresult rv = NS_DispatchToMainThread(runnable);
   NS_ENSURE_SUCCESS(rv, nullptr);
@@ -1381,16 +1372,16 @@ DeallocEntryParent(PAsmJSCacheEntryParent* aActor)
 namespace {
 
 class ChildProcessRunnable final : public File,
-                                   public PAsmJSCacheEntryChild
+                                   public PAsmJSCacheEntryChild,
+                                   public nsIIPCBackgroundChildCreateCallback
 {
-public:
-  NS_DECL_NSIRUNNABLE
+  typedef mozilla::ipc::PBackgroundChild PBackgroundChild;
 
-  // In the single-process case, the calling JS compilation thread holds the
-  // nsIPrincipal alive indirectly (via the global object -> compartment ->
-  // principal) so we don't have to ref-count it here. This is fortunate since
-  // we are off the main thread and nsIPrincipals can only be ref-counted on
-  // the main thread.
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIRUNNABLE
+  NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
+
   ChildProcessRunnable(nsIPrincipal* aPrincipal,
                        OpenMode aOpenMode,
                        WriteParams aWriteParams,
@@ -1402,7 +1393,6 @@ public:
     mActorDestroyed(false),
     mState(eInitial)
   {
-    MOZ_ASSERT(!XRE_IsParentProcess());
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_COUNT_CTOR(ChildProcessRunnable);
   }
@@ -1487,13 +1477,15 @@ private:
   }
 
   nsIPrincipal* const mPrincipal;
+  nsAutoPtr<PrincipalInfo> mPrincipalInfo;
   const OpenMode mOpenMode;
   WriteParams mWriteParams;
   ReadParams mReadParams;
   bool mActorDestroyed;
 
   enum State {
-    eInitial, // Just created, waiting to dispatched to the main thread
+    eInitial, // Just created, waiting to be dispatched to the main thread
+    eBackgroundChildPending, // Waiting for the background child to be created
     eOpening, // Waiting for the parent process to respond
     eOpened, // Parent process opened the entry and sent it back
     eClosing, // Waiting to be dispatched to the main thread to Send__delete__
@@ -1509,24 +1501,40 @@ ChildProcessRunnable::Run()
     case eInitial: {
       MOZ_ASSERT(NS_IsMainThread());
 
-      // AddRef to keep this runnable alive until IPDL deallocates the
-      // subprotocol (DeallocEntryChild).
-      AddRef();
-
-      if (!ContentChild::GetSingleton()->SendPAsmJSCacheEntryConstructor(
-        this, mOpenMode, mWriteParams, IPC::Principal(mPrincipal)))
-      {
-        // On failure, undo the AddRef (since DeallocEntryChild will not be
-        // called) and unblock the parsing thread with a failure. The main
-        // thread event loop still holds an outstanding ref which will keep
-        // 'this' alive until returning to the event loop.
-        Release();
-
+      bool nullPrincipal;
+      nsresult rv = mPrincipal->GetIsNullPrincipal(&nullPrincipal);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
         Fail(JS::AsmJSCache_InternalError);
         return NS_OK;
       }
 
-      mState = eOpening;
+      if (nullPrincipal) {
+        NS_WARNING("AsmsJSCache not supported on null principal.");
+        Fail(JS::AsmJSCache_InternalError);
+        return NS_OK;
+      }
+
+      nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo());
+      rv = PrincipalToPrincipalInfo(mPrincipal, principalInfo);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        Fail(JS::AsmJSCache_InternalError);
+        return NS_OK;
+      }
+
+      mPrincipalInfo = Move(principalInfo);
+
+      PBackgroundChild* actor = BackgroundChild::GetForCurrentThread();
+      if (actor) {
+        ActorCreated(actor);
+        return NS_OK;
+      }
+
+      if (NS_WARN_IF(!BackgroundChild::GetOrCreateForCurrentThread(this))) {
+        Fail(JS::AsmJSCache_InternalError);
+        return NS_OK;
+      }
+
+      mState = eBackgroundChildPending;
       return NS_OK;
     }
 
@@ -1546,6 +1554,7 @@ ChildProcessRunnable::Run()
       return NS_OK;
     }
 
+    case eBackgroundChildPending:
     case eOpening:
     case eOpened:
     case eFinished: {
@@ -1556,6 +1565,40 @@ ChildProcessRunnable::Run()
   MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Corrupt state");
   return NS_OK;
 }
+
+void
+ChildProcessRunnable::ActorCreated(PBackgroundChild* aActor)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!aActor->SendPAsmJSCacheEntryConstructor(this, mOpenMode, mWriteParams,
+                                               *mPrincipalInfo)) {
+    // Unblock the parsing thread with a failure.
+
+    Fail(JS::AsmJSCache_InternalError);
+
+    return;
+  }
+
+  // AddRef to keep this runnable alive until IPDL deallocates the
+  // subprotocol (DeallocEntryChild).
+  AddRef();
+
+  mState = eOpening;
+}
+
+void
+ChildProcessRunnable::ActorFailed()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mState == eBackgroundChildPending);
+
+  Fail(JS::AsmJSCache_InternalError);
+}
+
+NS_IMPL_ISUPPORTS_INHERITED(ChildProcessRunnable,
+                            FileDescriptorHolder,
+                            nsIIPCBackgroundChildCreateCallback)
 
 } // unnamed namespace
 
@@ -1597,14 +1640,8 @@ OpenFile(nsIPrincipal* aPrincipal,
   // If we are in a child process, we need to synchronously call into the
   // parent process to open the file and interact with the QuotaManager. The
   // child can then map the file into its address space to perform I/O.
-  nsRefPtr<File> file;
-  if (XRE_IsParentProcess()) {
-    file = new SingleProcessRunnable(aPrincipal, aOpenMode, aWriteParams,
-                                     aReadParams);
-  } else {
-    file = new ChildProcessRunnable(aPrincipal, aOpenMode, aWriteParams,
-                                    aReadParams);
-  }
+  nsRefPtr<File> file =
+    new ChildProcessRunnable(aPrincipal, aOpenMode, aWriteParams, aReadParams);
 
   JS::AsmJSCacheResult openResult = file->BlockUntilOpen(aFile);
   if (openResult != JS::AsmJSCache_Success) {
