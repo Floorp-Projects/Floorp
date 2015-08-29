@@ -536,7 +536,7 @@ class JSObject : public js::gc::Cell
      *
      * Note that X represents a low-level representation and does not query the
      * [[Class]] property of object defined by the spec (for this, see
-     * js::ObjectClassIs).
+     * js::GetBuiltinClass).
      */
 
     template <class T>

@@ -319,9 +319,11 @@ BaseProxyHandler::hasInstance(JSContext* cx, HandleObject proxy, MutableHandleVa
 }
 
 bool
-BaseProxyHandler::objectClassIs(HandleObject proxy, ESClassValue classValue, JSContext* cx) const
+BaseProxyHandler::getBuiltinClass(JSContext* cx, HandleObject proxy,
+                                  ESClassValue* classValue) const
 {
-    return false;
+    *classValue = ESClass_Other;
+    return true;
 }
 
 bool

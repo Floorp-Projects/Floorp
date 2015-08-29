@@ -265,17 +265,22 @@ PreprocessValue(JSContext* cx, HandleObject holder, KeyType key, MutableHandleVa
     /* Step 4. */
     if (vp.get().isObject()) {
         RootedObject obj(cx, &vp.get().toObject());
-        if (ObjectClassIs(obj, ESClass_Number, cx)) {
+
+        ESClassValue cls;
+        if (!GetBuiltinClass(cx, obj, &cls))
+            return false;
+
+        if (cls == ESClass_Number) {
             double d;
             if (!ToNumber(cx, vp, &d))
                 return false;
             vp.setNumber(d);
-        } else if (ObjectClassIs(obj, ESClass_String, cx)) {
+        } else if (cls == ESClass_String) {
             JSString* str = ToStringSlow<CanGC>(cx, vp);
             if (!str)
                 return false;
             vp.setString(str);
-        } else if (ObjectClassIs(obj, ESClass_Boolean, cx)) {
+        } else if (cls == ESClass_Boolean) {
             if (!Unbox(cx, obj, vp))
                 return false;
         }
@@ -625,15 +630,22 @@ js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_, Value s
                         if (!ValueToId<CanGC>(cx, v, &id))
                             return false;
                     }
-                } else if (v.isString() ||
-                           IsObjectWithClass(v, ESClass_String, cx) ||
-                           IsObjectWithClass(v, ESClass_Number, cx))
-                {
-                    /* Step 4b(iv)(3), 4b(iv)(5). */
-                    if (!ValueToId<CanGC>(cx, v, &id))
-                        return false;
                 } else {
-                    continue;
+                    bool shouldAdd = v.isString();
+                    if (!shouldAdd) {
+                        ESClassValue cls;
+                        if (!GetClassOfValue(cx, v, &cls))
+                            return false;
+                        shouldAdd = cls == ESClass_String || cls == ESClass_Number;
+                    }
+
+                    if (shouldAdd) {
+                        /* Step 4b(iv)(3), 4b(iv)(5). */
+                        if (!ValueToId<CanGC>(cx, v, &id))
+                            return false;
+                    } else {
+                        continue;
+                    }
                 }
 
                 /* Step 4b(iv)(6). */
@@ -652,12 +664,17 @@ js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_, Value s
     /* Step 5. */
     if (space.isObject()) {
         RootedObject spaceObj(cx, &space.toObject());
-        if (ObjectClassIs(spaceObj, ESClass_Number, cx)) {
+
+        ESClassValue cls;
+        if (!GetBuiltinClass(cx, spaceObj, &cls))
+            return false;
+
+        if (cls == ESClass_Number) {
             double d;
             if (!ToNumber(cx, space, &d))
                 return false;
             space = NumberValue(d);
-        } else if (ObjectClassIs(spaceObj, ESClass_String, cx)) {
+        } else if (cls == ESClass_String) {
             JSString* str = ToStringSlow<CanGC>(cx, space);
             if (!str)
                 return false;

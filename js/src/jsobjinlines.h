@@ -11,6 +11,7 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jsfriendapi.h"
 #include "jsfun.h"
 
 #include "builtin/MapObject.h"
@@ -810,36 +811,19 @@ GuessArrayGCKind(size_t numSlots)
     return gc::AllocKind::OBJECT8;
 }
 
+// Returns ESClass_Other if the value isn't an object, or if the object
+// isn't of one of the enumerated classes.  Otherwise returns the appropriate
+// class.
 inline bool
-ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext* cx)
+GetClassOfValue(JSContext* cx, HandleValue v, ESClassValue* classValue)
 {
-    if (MOZ_UNLIKELY(obj->is<ProxyObject>()))
-        return Proxy::objectClassIs(obj, classValue, cx);
-
-    switch (classValue) {
-      case ESClass_Object: return obj->is<PlainObject>() || obj->is<UnboxedPlainObject>();
-      case ESClass_Array:
-        return obj->is<ArrayObject>() || obj->is<UnboxedArrayObject>();
-      case ESClass_Number: return obj->is<NumberObject>();
-      case ESClass_String: return obj->is<StringObject>();
-      case ESClass_Boolean: return obj->is<BooleanObject>();
-      case ESClass_RegExp: return obj->is<RegExpObject>();
-      case ESClass_ArrayBuffer: return obj->is<ArrayBufferObject>();
-      case ESClass_SharedArrayBuffer: return obj->is<SharedArrayBufferObject>();
-      case ESClass_Date: return obj->is<DateObject>();
-      case ESClass_Set: return obj->is<SetObject>();
-      case ESClass_Map: return obj->is<MapObject>();
+    if (!v.isObject()) {
+        *classValue = ESClass_Other;
+        return true;
     }
-    MOZ_CRASH("bad classValue");
-}
 
-inline bool
-IsObjectWithClass(const Value& v, ESClassValue classValue, JSContext* cx)
-{
-    if (!v.isObject())
-        return false;
     RootedObject obj(cx, &v.toObject());
-    return ObjectClassIs(obj, classValue, cx);
+    return GetBuiltinClass(cx, obj, classValue);
 }
 
 inline bool

@@ -2879,17 +2879,19 @@ date_toString(JSContext* cx, unsigned argc, Value* vp)
     if (args.thisv().isObject()) {
         // Step 1.
         RootedObject obj(cx, &args.thisv().toObject());
+
         // Step 2.
-        if (ObjectClassIs(obj, ESClass_Date, cx)) {
+        ESClassValue cls;
+        if (!GetBuiltinClass(cx, obj, &cls))
+            return false;
+
+        if (cls == ESClass_Date) {
             // Step 3.a.
             RootedValue unboxed(cx);
             if (!Unbox(cx, obj, &unboxed))
                 return false;
             tv = unboxed.toNumber();
         }
-        // ObjectClassIs can throw for objects from other compartments.
-        if (cx->isExceptionPending())
-            return false;
     }
     // Step 4.
     return date_format(cx, tv, FORMATSPEC_FULL, args.rval());
@@ -3229,37 +3231,41 @@ js::NewDateObject(JSContext* cx, int year, int mon, int mday,
 }
 
 JS_FRIEND_API(bool)
-js::DateIsValid(JSContext* cx, JSObject* objArg)
+js::DateIsValid(JSContext* cx, HandleObject obj, bool* isValid)
 {
-    RootedObject obj(cx, objArg);
-    if (!ObjectClassIs(obj, ESClass_Date, cx))
+    ESClassValue cls;
+    if (!GetBuiltinClass(cx, obj, &cls))
         return false;
 
-    RootedValue unboxed(cx);
-    if (!Unbox(cx, obj, &unboxed)) {
-        // This can't actually happen, so we don't force consumers to deal with
-        // a clunky out-param API. Do something sane-ish if it does happen.
-        cx->clearPendingException();
-        return false;
+    if (cls != ESClass_Date) {
+        *isValid = false;
+        return true;
     }
 
-    return !IsNaN(unboxed.toNumber());
+    RootedValue unboxed(cx);
+    if (!Unbox(cx, obj, &unboxed))
+        return false;
+
+    *isValid = !IsNaN(unboxed.toNumber());
+    return true;
 }
 
-JS_FRIEND_API(double)
-js::DateGetMsecSinceEpoch(JSContext* cx, JSObject* objArg)
+JS_FRIEND_API(bool)
+js::DateGetMsecSinceEpoch(JSContext* cx, HandleObject obj, double* msecsSinceEpoch)
 {
-    RootedObject obj(cx, objArg);
-    if (!ObjectClassIs(obj, ESClass_Date, cx))
-        return 0;
+    ESClassValue cls;
+    if (!GetBuiltinClass(cx, obj, &cls))
+        return false;
 
-    RootedValue unboxed(cx);
-    if (!Unbox(cx, obj, &unboxed)) {
-        // This can't actually happen, so we don't force consumers to deal with
-        // a clunky out-param API. Do something sane-ish if it does happen.
-        cx->clearPendingException();
-        return 0;
+    if (cls != ESClass_Date) {
+        *msecsSinceEpoch = 0;
+        return true;
     }
 
-    return unboxed.toNumber();
+    RootedValue unboxed(cx);
+    if (!Unbox(cx, obj, &unboxed))
+        return false;
+
+    *msecsSinceEpoch = unboxed.toNumber();
+    return true;
 }

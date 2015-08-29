@@ -500,9 +500,11 @@ WrapperAnswer::RecvHasInstance(const ObjectId& objId, const JSVariant& vVar, Ret
 }
 
 bool
-WrapperAnswer::RecvObjectClassIs(const ObjectId& objId, const uint32_t& classValue,
-                                 bool* result)
+WrapperAnswer::RecvGetBuiltinClass(const ObjectId& objId, ReturnStatus* rs,
+                                   uint32_t* classValue)
 {
+    *classValue = js::ESClass_Other;
+
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
@@ -510,16 +512,17 @@ WrapperAnswer::RecvObjectClassIs(const ObjectId& objId, const uint32_t& classVal
     JSContext* cx = jsapi.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
-    if (!obj) {
-        // This is very unfortunate, but we have no choice.
-        *result = false;
-        return true;
-    }
+    if (!obj)
+        return fail(jsapi, rs);
 
-    LOG("%s.objectClassIs()", ReceiverObj(objId));
+    LOG("%s.getBuiltinClass()", ReceiverObj(objId));
 
-    *result = js::ObjectClassIs(cx, obj, (js::ESClassValue)classValue);
-    return true;
+    js::ESClassValue cls;
+    if (!js::GetBuiltinClass(cx, obj, &cls))
+        return fail(jsapi, rs);
+
+    *classValue = cls;
+    return ok(rs);
 }
 
 bool
@@ -610,7 +613,6 @@ WrapperAnswer::RecvRegExpToShared(const ObjectId& objId, ReturnStatus* rs,
     if (!obj)
         return fail(jsapi, rs);
 
-    MOZ_RELEASE_ASSERT(JS_ObjectIsRegExp(cx, obj));
     RootedString sourceJSStr(cx, JS_GetRegExpSource(cx, obj));
     if (!sourceJSStr)
         return fail(jsapi, rs);

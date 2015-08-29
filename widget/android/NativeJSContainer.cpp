@@ -431,8 +431,10 @@ class NativeJSContainerImpl final
             return false;
         }
         JS::RootedObject obj(mJSContext, &val.toObject());
+        bool isArray;
         uint32_t length = 0;
-        if (!JS_IsArrayObject(mJSContext, obj) ||
+        if (!JS_IsArrayObject(mJSContext, obj, &isArray) ||
+            !isArray ||
             !JS_GetArrayLength(mJSContext, obj, &length)) {
             return false;
         }

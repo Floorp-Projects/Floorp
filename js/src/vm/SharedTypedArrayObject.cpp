@@ -411,7 +411,10 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
     fromBufferWithProto(JSContext* cx, HandleObject bufobj, uint32_t byteOffset, uint32_t length,
                         HandleObject proto)
     {
-        if (!ObjectClassIs(bufobj, ESClass_SharedArrayBuffer, cx)) {
+        ESClassValue cls;
+        if (!GetBuiltinClass(cx, bufobj, &cls))
+            return nullptr;
+        if (cls != ESClass_SharedArrayBuffer) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SHARED_TYPED_ARRAY_BAD_OBJECT);
             return nullptr; // must be SharedArrayBuffer
         }

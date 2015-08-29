@@ -20,10 +20,15 @@ bool
 Date::SetTimeStamp(JSContext* aCx, JSObject* aObject)
 {
   JS::Rooted<JSObject*> obj(aCx, aObject);
-  MOZ_ASSERT(JS_ObjectIsDate(aCx, obj));
-  double msecs = js::DateGetMsecSinceEpoch(aCx, obj);
+
+  double msecs;
+  if (!js::DateGetMsecSinceEpoch(aCx, obj, &msecs)) {
+    return false;
+  }
+
   JS::ClippedTime time = JS::TimeClip(msecs);
   MOZ_ASSERT(NumbersAreIdentical(msecs, time.toDouble()));
+
   mMsecSinceEpoch = time;
   return true;
 }
