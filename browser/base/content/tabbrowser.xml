@@ -3945,16 +3945,23 @@
             event.preventDefault();
             return;
           }
+
+          let stringWithShortcut = (stringId, keyElemId) => {
+            let keyElem = document.getElementById(keyElemId);
+            let shortcut = ShortcutUtils.prettifyShortcut(keyElem);
+            return this.mStringBundle.getFormattedString(stringId, [shortcut]);
+          };
+
           var label;
           if (tab.mOverCloseButton) {
-            label = this.mStringBundle.getString("tabs.closeTab.tooltip");
+            label = tab.selected ?
+                    stringWithShortcut("tabs.closeSelectedTab.tooltip", "key_close") :
+                    this.mStringBundle.getString("tabs.closeTab.tooltip");
           } else if (tab._overPlayingIcon) {
-            var stringID = tab.linkedBrowser.audioMuted ?
+            let stringID = tab.linkedBrowser.audioMuted ?
               "tabs.unmuteAudio.tooltip" :
               "tabs.muteAudio.tooltip";
-            var key = document.getElementById("key_toggleMute");
-            var shortcut = ShortcutUtils.prettifyShortcut(key);
-            label = this.mStringBundle.getFormattedString(stringID, [shortcut]);
+            label = stringWithShortcut(stringID, "key_toggleMute");
           } else {
             label = tab.getAttribute("label") +
                       (this.AppConstants.E10S_TESTING_ONLY && tab.linkedBrowser && tab.linkedBrowser.isRemoteBrowser ? " - e10s" : "");
