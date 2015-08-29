@@ -18,7 +18,6 @@
 
 #if defined(XP_WIN)
 #include "nsIEHistoryEnumerator.h"
-#include "nsEdgeReadingListExtractor.h"
 #endif
 
 #include "rdf.h"
@@ -43,7 +42,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGNOMEShellService, Init)
 
 #if defined(XP_WIN)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIEHistoryEnumerator)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsEdgeReadingListExtractor)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFeedSniffer)
@@ -58,7 +56,6 @@ NS_DEFINE_NAMED_CID(NS_FEEDSNIFFER_CID);
 NS_DEFINE_NAMED_CID(NS_BROWSER_ABOUT_REDIRECTOR_CID);
 #if defined(XP_WIN)
 NS_DEFINE_NAMED_CID(NS_WINIEHISTORYENUMERATOR_CID);
-NS_DEFINE_NAMED_CID(NS_EDGEREADINGLISTEXTRACTOR_CID);
 #elif defined(XP_MACOSX)
 NS_DEFINE_NAMED_CID(NS_SHELLSERVICE_CID);
 #endif
@@ -74,7 +71,6 @@ static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
     { &kNS_BROWSER_ABOUT_REDIRECTOR_CID, false, nullptr, AboutRedirector::Create },
 #if defined(XP_WIN)
     { &kNS_WINIEHISTORYENUMERATOR_CID, false, nullptr, nsIEHistoryEnumeratorConstructor },
-    { &kNS_EDGEREADINGLISTEXTRACTOR_CID, false, nullptr, nsEdgeReadingListExtractorConstructor },
 #elif defined(XP_MACOSX)
     { &kNS_SHELLSERVICE_CID, false, nullptr, nsMacShellServiceConstructor },
 #endif
@@ -123,7 +119,6 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "pocket-signup", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
 #if defined(XP_WIN)
     { NS_IEHISTORYENUMERATOR_CONTRACTID, &kNS_WINIEHISTORYENUMERATOR_CID },
-    { NS_EDGEREADINGLISTEXTRACTOR_CONTRACTID, &kNS_EDGEREADINGLISTEXTRACTOR_CID },
 #elif defined(XP_MACOSX)
     { NS_SHELLSERVICE_CONTRACTID, &kNS_SHELLSERVICE_CID },
 #endif
