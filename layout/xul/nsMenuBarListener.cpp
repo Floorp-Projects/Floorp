@@ -408,6 +408,11 @@ nsMenuBarListener::MouseDown(nsIDOMEvent* aMouseEvent)
 nsresult
 nsMenuBarListener::HandleEvent(nsIDOMEvent* aEvent)
 {
+  // If the menu bar is collapsed, don't do anything.
+  if (!mMenuBarFrame->StyleVisibility()->IsVisible()) {
+    return NS_OK;
+  }
+
   nsAutoString eventType;
   aEvent->GetType(eventType);
   
