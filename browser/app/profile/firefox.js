@@ -1420,6 +1420,9 @@ pref("devtools.debugger.ui.variables-sorting-enabled", true);
 pref("devtools.debugger.ui.variables-only-enum-visible", false);
 pref("devtools.debugger.ui.variables-searchbox-visible", false);
 
+// Enable the Memory tools
+pref("devtools.memory.enabled", false);
+
 // Enable the Performance tools
 pref("devtools.performance.enabled", true);
 
