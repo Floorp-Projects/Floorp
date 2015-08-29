@@ -667,13 +667,6 @@ private:
     virtual bool DeallocPPresentationParent(PPresentationParent* aActor) override;
     virtual bool RecvPPresentationConstructor(PPresentationParent* aActor) override;
 
-    virtual PAsmJSCacheEntryParent* AllocPAsmJSCacheEntryParent(
-                                 const asmjscache::OpenMode& aOpenMode,
-                                 const asmjscache::WriteParams& aWriteParams,
-                                 const IPC::Principal& aPrincipal) override;
-    virtual bool DeallocPAsmJSCacheEntryParent(
-                                   PAsmJSCacheEntryParent* aActor) override;
-
     virtual PSpeechSynthesisParent* AllocPSpeechSynthesisParent() override;
     virtual bool DeallocPSpeechSynthesisParent(PSpeechSynthesisParent* aActor) override;
     virtual bool RecvPSpeechSynthesisConstructor(PSpeechSynthesisParent* aActor) override;

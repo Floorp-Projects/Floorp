@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PContent;
+include protocol PBackground;
 
 using mozilla::dom::asmjscache::Metadata from "mozilla/dom/asmjscache/AsmJSCache.h";
 using JS::AsmJSCacheResult from "mozilla/dom/asmjscache/AsmJSCache.h";
@@ -13,7 +13,7 @@ namespace asmjscache {
 
 protocol PAsmJSCacheEntry
 {
-  manager PContent;
+  manager PBackground;
 
   // When the cache is opened to read, the parent process sends over the
   // origin's Metadata so the child process can select the cache entry to open
