@@ -126,7 +126,7 @@ public:
                                    nsIWidget                  *aWidget,
                                    bool                        aActivate) override;
     void               SetZIndex(int32_t aZIndex) override;
-    NS_IMETHOD         SetSizeMode(int32_t aMode) override;
+    NS_IMETHOD         SetSizeMode(nsSizeMode aMode) override;
     NS_IMETHOD         Enable(bool aState) override;
     NS_IMETHOD         SetFocus(bool aRaise = false) override;
     NS_IMETHOD         GetScreenBounds(nsIntRect &aRect) override;
