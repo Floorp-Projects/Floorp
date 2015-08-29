@@ -6,8 +6,7 @@
 
 #include "MmsMessage.h"
 #include "nsIDOMClassInfo.h"
-#include "jsapi.h" // For OBJECT_TO_JSVAL and JS_NewDateObjectMsec
-#include "jsfriendapi.h" // For js_DateGetMsecSinceEpoch
+#include "jsapi.h" // For JS_IsArrayObject, JS_GetElement, etc.
 #include "nsJSUtils.h"
 #include "nsContentUtils.h"
 #include "nsTArrayHelpers.h"
@@ -213,7 +212,11 @@ MmsMessage::Create(int32_t aId,
     return NS_ERROR_INVALID_ARG;
   }
   JS::Rooted<JSObject*> deliveryInfoObj(aCx, &aDeliveryInfo.toObject());
-  if (!JS_IsArrayObject(aCx, deliveryInfoObj)) {
+  bool isArray;
+  if (!JS_IsArrayObject(aCx, deliveryInfoObj, &isArray)) {
+    return NS_ERROR_FAILURE;
+  }
+  if (!isArray) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -241,7 +244,10 @@ MmsMessage::Create(int32_t aId,
     return NS_ERROR_INVALID_ARG;
   }
   JS::Rooted<JSObject*> receiversObj(aCx, &aReceivers.toObject());
-  if (!JS_IsArrayObject(aCx, receiversObj)) {
+  if (!JS_IsArrayObject(aCx, receiversObj, &isArray)) {
+    return NS_ERROR_FAILURE;
+  }
+  if (!isArray) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -268,7 +274,10 @@ MmsMessage::Create(int32_t aId,
     return NS_ERROR_INVALID_ARG;
   }
   JS::Rooted<JSObject*> attachmentsObj(aCx, &aAttachments.toObject());
-  if (!JS_IsArrayObject(aCx, attachmentsObj)) {
+  if (!JS_IsArrayObject(aCx, attachmentsObj, &isArray)) {
+    return NS_ERROR_FAILURE;
+  }
+  if (!isArray) {
     return NS_ERROR_INVALID_ARG;
   }
 

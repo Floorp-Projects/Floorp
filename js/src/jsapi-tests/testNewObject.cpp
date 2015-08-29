@@ -62,11 +62,14 @@ BEGIN_TEST(testNewObject_1)
     EVAL("Array", &v);
     JS::RootedObject Array(cx, v.toObjectOrNull());
 
+    bool isArray;
+
     // With no arguments.
     JS::RootedObject obj(cx, JS_New(cx, Array, JS::HandleValueArray::empty()));
     CHECK(obj);
     JS::RootedValue rt(cx, JS::ObjectValue(*obj));
-    CHECK(JS_IsArrayObject(cx, obj));
+    CHECK(JS_IsArrayObject(cx, obj, &isArray));
+    CHECK(isArray);
     uint32_t len;
     CHECK(JS_GetArrayLength(cx, obj, &len));
     CHECK_EQUAL(len, 0u);
@@ -76,7 +79,8 @@ BEGIN_TEST(testNewObject_1)
     obj = JS_New(cx, Array, JS::HandleValueArray::subarray(argv, 0, 1));
     CHECK(obj);
     rt = JS::ObjectValue(*obj);
-    CHECK(JS_IsArrayObject(cx, obj));
+    CHECK(JS_IsArrayObject(cx, obj, &isArray));
+    CHECK(isArray);
     CHECK(JS_GetArrayLength(cx, obj, &len));
     CHECK_EQUAL(len, 4u);
 
@@ -86,7 +90,8 @@ BEGIN_TEST(testNewObject_1)
     obj = JS_New(cx, Array, JS::HandleValueArray::subarray(argv, 0, N));
     CHECK(obj);
     rt = JS::ObjectValue(*obj);
-    CHECK(JS_IsArrayObject(cx, obj));
+    CHECK(JS_IsArrayObject(cx, obj, &isArray));
+    CHECK(isArray);
     CHECK(JS_GetArrayLength(cx, obj, &len));
     CHECK_EQUAL(len, N);
     CHECK(JS_GetElement(cx, obj, N - 1, &v));

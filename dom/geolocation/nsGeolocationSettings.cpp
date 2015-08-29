@@ -322,7 +322,8 @@ nsGeolocationSettings::HandleGeolocationAlwaysPreciseChange(const JS::Value& aVa
   aes.TakeOwnershipOfErrorReporting();
   JSContext *cx = aes.cx();
 
-  if (!JS_IsArrayObject(cx, obj)) {
+  bool isArray;
+  if (!JS_IsArrayObject(cx, obj, &isArray) || !isArray) {
     return;
   }
 

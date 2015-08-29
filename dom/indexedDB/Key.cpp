@@ -231,7 +231,13 @@ Key::EncodeJSValInternal(JSContext* aCx, JS::Handle<JS::Value> aVal,
 
   if (aVal.isObject()) {
     JS::Rooted<JSObject*> obj(aCx, &aVal.toObject());
-    if (JS_IsArrayObject(aCx, obj)) {
+
+    js::ESClassValue cls;
+    if (!js::GetBuiltinClass(aCx, obj, &cls)) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+    if (cls == js::ESClass_Array) {
       aTypeOffset += eMaxType;
 
       if (aTypeOffset == eMaxType * kMaxArrayCollapse) {
@@ -269,11 +275,21 @@ Key::EncodeJSValInternal(JSContext* aCx, JS::Handle<JS::Value> aVal,
       return NS_OK;
     }
 
-    if (JS_ObjectIsDate(aCx, obj)) {
-      if (!js::DateIsValid(aCx, obj))  {
+    if (cls == js::ESClass_Date) {
+      bool valid;
+      if (!js::DateIsValid(aCx, obj, &valid)) {
+        IDB_REPORT_INTERNAL_ERR();
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      }
+      if (!valid)  {
         return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
       }
-      EncodeNumber(js::DateGetMsecSinceEpoch(aCx, obj), eDate + aTypeOffset);
+      double t;
+      if (!js::DateGetMsecSinceEpoch(aCx, obj, &t)) {
+        IDB_REPORT_INTERNAL_ERR();
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      }
+      EncodeNumber(t, eDate + aTypeOffset);
       return NS_OK;
     }
   }

@@ -1001,7 +1001,12 @@ IDBObjectStore::AppendIndexUpdateInfo(
     return NS_OK;
   }
 
-  if (JS_IsArrayObject(aCx, val)) {
+  bool isArray;
+  if (!JS_IsArrayObject(aCx, val, &isArray)) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+  if (isArray) {
     JS::Rooted<JSObject*> array(aCx, &val.toObject());
     uint32_t arrayLength;
     if (NS_WARN_IF(!JS_GetArrayLength(aCx, array, &arrayLength))) {

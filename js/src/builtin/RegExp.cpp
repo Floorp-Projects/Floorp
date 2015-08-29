@@ -225,7 +225,10 @@ CompileRegExpObject(JSContext* cx, RegExpObjectBuilder& builder, const CallArgs&
      * 21.2.3.1 step 5
      * B.2.5.1 step 3.
      */
-    if (IsObjectWithClass(patternValue, ESClass_RegExp, cx)) {
+    ESClassValue cls;
+    if (!GetClassOfValue(cx, patternValue, &cls))
+        return false;
+    if (cls == ESClass_RegExp) {
         /*
          * B.2.5.1 step 3.a.
          */
@@ -355,7 +358,11 @@ js::IsRegExp(JSContext* cx, HandleValue value, bool* result)
     }
 
     /* Steps 5-6. */
-    *result = IsObjectWithClass(value, ESClass_RegExp, cx);
+    ESClassValue cls;
+    if (!GetClassOfValue(cx, value, &cls))
+        return false;
+
+    *result = cls == ESClass_RegExp;
     return true;
 }
 
