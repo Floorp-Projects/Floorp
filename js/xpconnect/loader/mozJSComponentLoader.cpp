@@ -1185,7 +1185,11 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
                                   PromiseFlatCString(aLocation).get());
         }
 
-        if (!JS_IsArrayObject(cx, symbols)) {
+        bool isArray;
+        if (!JS_IsArrayObject(cx, symbols, &isArray)) {
+            return NS_ERROR_FAILURE;
+        }
+        if (!isArray) {
             return ReportOnCaller(cxhelper, ERROR_NOT_AN_ARRAY,
                                   PromiseFlatCString(aLocation).get());
         }

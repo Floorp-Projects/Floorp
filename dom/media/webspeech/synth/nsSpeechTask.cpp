@@ -246,8 +246,14 @@ nsSpeechTask::SendAudio(JS::Handle<JS::Value> aData, JS::Handle<JS::Value> aLand
   // Allow either Int16Array or plain JS Array
   if (JS_IsInt16Array(darray)) {
     tsrc = darray;
-  } else if (JS_IsArrayObject(aCx, darray)) {
-    tsrc = JS_NewInt16ArrayFromArray(aCx, darray);
+  } else {
+    bool isArray;
+    if (!JS_IsArrayObject(aCx, darray, &isArray)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    if (isArray) {
+      tsrc = JS_NewInt16ArrayFromArray(aCx, darray);
+    }
   }
 
   if (!tsrc) {

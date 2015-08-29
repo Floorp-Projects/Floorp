@@ -487,13 +487,13 @@ str_replace_regexp_raw(JSContext* cx, HandleString string, Handle<RegExpObject*>
 bool
 ParseRegExpFlags(JSContext* cx, JSString* flagStr, RegExpFlag* flagsOut);
 
-/* Assuming ObjectClassIs(obj, ESClass_RegExp), return a RegExpShared for obj. */
+/* Assuming GetBuiltinClass(obj) is ESClass_RegExp, return a RegExpShared for obj. */
 inline bool
 RegExpToShared(JSContext* cx, HandleObject obj, RegExpGuard* g)
 {
     if (obj->is<RegExpObject>())
         return obj->as<RegExpObject>().getShared(cx, g);
-    MOZ_ASSERT(Proxy::objectClassIs(obj, ESClass_RegExp, cx));
+
     return Proxy::regexp_toShared(cx, obj, g);
 }
 

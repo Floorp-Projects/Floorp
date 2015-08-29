@@ -6,8 +6,6 @@
 
 #include "SmsMessage.h"
 #include "nsIDOMClassInfo.h"
-#include "jsapi.h" // For OBJECT_TO_JSVAL and JS_NewDateObjectMsec
-#include "jsfriendapi.h" // For js_DateGetMsecSinceEpoch
 #include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
 
 using namespace mozilla::dom::mobilemessage;

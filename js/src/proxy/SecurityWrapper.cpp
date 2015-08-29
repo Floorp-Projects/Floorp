@@ -87,9 +87,11 @@ SecurityWrapper<Base>::defaultValue(JSContext* cx, HandleObject wrapper,
 
 template <class Base>
 bool
-SecurityWrapper<Base>::objectClassIs(HandleObject obj, ESClassValue classValue, JSContext* cx) const
+SecurityWrapper<Base>::getBuiltinClass(JSContext* cx, HandleObject wrapper,
+                                       ESClassValue* classValue) const
 {
-    return false;
+    *classValue = ESClass_Other;
+    return true;
 }
 
 template <class Base>

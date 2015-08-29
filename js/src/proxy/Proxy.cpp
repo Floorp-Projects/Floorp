@@ -455,10 +455,10 @@ Proxy::hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue v, bool
 }
 
 bool
-Proxy::objectClassIs(HandleObject proxy, ESClassValue classValue, JSContext* cx)
+Proxy::getBuiltinClass(JSContext* cx, HandleObject proxy, ESClassValue* classValue)
 {
     JS_CHECK_RECURSION(cx, return false);
-    return proxy->as<ProxyObject>().handler()->objectClassIs(proxy, classValue, cx);
+    return proxy->as<ProxyObject>().handler()->getBuiltinClass(cx, proxy, classValue);
 }
 
 bool
