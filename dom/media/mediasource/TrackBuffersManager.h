@@ -240,6 +240,9 @@ private:
     bool mNeedRandomAccessPoint;
     nsRefPtr<MediaTrackDemuxer> mDemuxer;
     MozPromiseRequestHolder<MediaTrackDemuxer::SamplesPromise> mDemuxRequest;
+    // Highest end timestamp of the last media segment demuxed.
+    media::TimeUnit mLastParsedEndTime;
+
     // If set, position where the next contiguous frame will be inserted.
     // If a discontinuity is detected, it will be unset and recalculated upon
     // the next insertion.
