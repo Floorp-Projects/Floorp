@@ -530,6 +530,7 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
             MakeFullScreen(true);
             break;
         default:
+            break;
     }
     return NS_OK;
 }
