@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for XMLHttpRequest.GetResponseHeader(foo) byte-inflates the output</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta charset="utf-8">
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+  "use strict";
+
+  add_task(function*() {
+    yield new Promise((r) => {
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', 'file_explicit_user_agent.sjs', true);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+          is(xhr.getResponseHeader("Result-User-Agent"), navigator.userAgent,
+             "The resulting user-agent is the navigator's UA");
+          r();
+        }
+      }
+      xhr.send(null);
+    });
+
+    yield new Promise((r) => {
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', 'file_explicit_user_agent.sjs', true);
+      xhr.setRequestHeader('User-Agent', 'custom-ua/10.0');
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+          is(xhr.getResponseHeader("Result-User-Agent"), 'custom-ua/10.0',
+             "The resulting user-agent is the custom UA");
+          r();
+        }
+      }
+      xhr.send(null);
+    });
+
+    var response = yield fetch('file_explicit_user_agent.sjs', {
+      method: 'GET'
+    });
+    is(response.headers.get("Result-User-Agent"), navigator.userAgent,
+       "The user-agent is the navigator's UA");
+
+    var headers = new Headers();
+    headers.set('User-Agent', 'custom-ua/20.0');
+    var response2 = yield fetch('file_explicit_user_agent.sjs', {
+      method: 'GET',
+      headers: headers,
+    });
+    is(response2.headers.get("Result-User-Agent"), 'custom-ua/20.0',
+       "The user-agent is the custom UA");
+  });
+</script>
+</pre>
+</body>
+</html>
