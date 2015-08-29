@@ -264,6 +264,15 @@ function testModeCors() {
                  headers: { "myheader": "" },
                  allowMethods: "myheader",
                },
+               { pass: 1,
+                 method: "GET",
+                 headers: { "User-Agent": "myValue" },
+                 allowHeaders: "User-Agent",
+               },
+               { pass: 0,
+                 method: "GET",
+                 headers: { "User-Agent": "myValue" },
+               },
 
                // Multiple custom headers
                { pass: 1,
