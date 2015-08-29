@@ -67,6 +67,7 @@ using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
 using struct mozilla::OwningSerializedStructuredCloneBuffer from "ipc/IPCMessageUtils.h";
 using mozilla::EventMessage from "mozilla/EventForwards.h";
 using nsEventStatus from "mozilla/EventForwards.h";
+using nsSizeMode from "nsIWidgetListener.h";
 
 namespace mozilla {
 namespace dom {
@@ -579,7 +580,7 @@ child:
 
     CacheFileDescriptor(nsString path, FileDescriptor fd);
 
-    UpdateDimensions(CSSRect rect, CSSSize size,
+    UpdateDimensions(CSSRect rect, CSSSize size, nsSizeMode sizeMode,
                      ScreenOrientationInternal orientation,
                      LayoutDeviceIntPoint chromeDisp) compressall;
 

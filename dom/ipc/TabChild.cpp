@@ -1724,6 +1724,7 @@ TabChild::RecvShow(const ScreenIntSize& aSize,
 
 bool
 TabChild::RecvUpdateDimensions(const CSSRect& rect, const CSSSize& size,
+                               const nsSizeMode& sizeMode,
                                const ScreenOrientationInternal& orientation,
                                const LayoutDeviceIntPoint& chromeDisp)
 {
@@ -1750,6 +1751,7 @@ TabChild::RecvUpdateDimensions(const CSSRect& rect, const CSSSize& size,
     baseWin->SetPositionAndSize(0, 0, screenSize.width, screenSize.height,
                                 true);
 
+    mPuppetWidget->SetSizeMode(sizeMode);
     mPuppetWidget->Resize(screenRect.x + chromeDisp.x,
                           screenRect.y + chromeDisp.y,
                           screenSize.width, screenSize.height, true);

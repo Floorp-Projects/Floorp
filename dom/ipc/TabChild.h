@@ -303,6 +303,7 @@ public:
                           const bool& aParentIsActive) override;
     virtual bool RecvUpdateDimensions(const CSSRect& rect,
                                       const CSSSize& size,
+                                      const nsSizeMode& sizeMode,
                                       const ScreenOrientationInternal& orientation,
                                       const LayoutDeviceIntPoint& chromeDisp) override;
     virtual bool RecvUpdateFrame(const layers::FrameMetrics& aFrameMetrics) override;
