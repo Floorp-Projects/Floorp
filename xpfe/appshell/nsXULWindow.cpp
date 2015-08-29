@@ -214,7 +214,7 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(uint32_t aLevel)
   /* refuse to raise a maximized window above the normal browser level,
      for fear it could hide newly opened browser windows */
   if (aLevel > nsIXULWindow::normalZ && mWindow) {
-    int32_t sizeMode = mWindow->SizeMode();
+    nsSizeMode sizeMode = mWindow->SizeMode();
     if (sizeMode == nsSizeMode_Maximized || sizeMode == nsSizeMode_Fullscreen) {
       return NS_ERROR_FAILURE;
     }
@@ -1195,7 +1195,7 @@ bool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
 
   // sizemode
   windowElement->GetAttribute(MODE_ATTRIBUTE, stateString);
-  int32_t sizeMode = nsSizeMode_Normal;
+  nsSizeMode sizeMode = nsSizeMode_Normal;
   /* ignore request to minimize, to not confuse novices
   if (stateString.Equals(SIZEMODE_MINIMIZED))
     sizeMode = nsSizeMode_Minimized;
@@ -1511,7 +1511,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   }
 
   if (mPersistentAttributesDirty & PAD_MISC) {
-    int32_t sizeMode = mWindow->SizeMode();
+    nsSizeMode sizeMode = mWindow->SizeMode();
 
     if (sizeMode != nsSizeMode_Minimized) {
       if (sizeMode == nsSizeMode_Maximized)

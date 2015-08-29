@@ -682,7 +682,7 @@ nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
 }
 
 NS_IMETHODIMP
-nsWindow::SetSizeMode(int32_t aMode)
+nsWindow::SetSizeMode(nsSizeMode aMode)
 {
     if (aMode == static_cast<int32_t>(mSizeMode)) {
         return NS_OK;
@@ -749,7 +749,7 @@ void nsWindow::ReportMoveEvent()
     NotifyWindowMoved(mBounds.x, mBounds.y);
 }
 
-void nsWindow::ReportSizeModeEvent(int32_t aMode)
+void nsWindow::ReportSizeModeEvent(nsSizeMode aMode)
 {
     if (mWidgetListener) {
         // This is terrible.

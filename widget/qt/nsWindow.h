@@ -201,7 +201,7 @@ public:
     NS_IMETHOD         PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
                                    nsIWidget                  *aWidget,
                                    bool                        aActivate);
-    NS_IMETHOD         SetSizeMode(int32_t aMode);
+    NS_IMETHOD         SetSizeMode(nsSizeMode aMode);
     NS_IMETHOD         GetScreenBounds(nsIntRect &aRect);
     NS_IMETHOD         SetHasTransparentBackground(bool aTransparent);
     NS_IMETHOD         GetHasTransparentBackground(bool& aTransparent);
