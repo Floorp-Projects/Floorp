@@ -367,7 +367,7 @@ this.Extension = function(addonData)
  * To make things easier, the value of "background" and "files"[] can
  * be a function, which is converted to source that is run.
  */
-this.Extension.generate = function(data)
+this.Extension.generate = function(id, data)
 {
   let manifest = data.manifest;
   if (!manifest) {
@@ -392,9 +392,7 @@ this.Extension.generate = function(data)
     }
   }
 
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-  let uuid = uuidGenerator.generateUUID().number;
-  provide(manifest, ["applications", "gecko", "id"], uuid);
+  provide(manifest, ["applications", "gecko", "id"], id);
 
   provide(manifest, ["name"], "Generated extension");
   provide(manifest, ["manifest_version"], 2);
@@ -458,7 +456,7 @@ this.Extension.generate = function(data)
   let jarURI = Services.io.newURI("jar:" + fileURI.spec + "!/", null, null);
 
   return new Extension({
-    id: uuid,
+    id,
     resourceURI: jarURI,
     cleanupFile: file
   });
