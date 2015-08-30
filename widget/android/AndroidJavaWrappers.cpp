@@ -689,7 +689,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
         return mApzInput.ToWidgetTouchEvent(widget);
     }
 
-    EventMessage type = NS_EVENT_NULL;
+    EventMessage type = eVoidEvent;
     int startIndex = 0;
     int endIndex = Count();
 
@@ -735,7 +735,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
     }
 
     WidgetTouchEvent event(true, type, widget);
-    if (type == NS_EVENT_NULL) {
+    if (type == eVoidEvent) {
         // An event we don't know about
         return event;
     }
@@ -830,17 +830,17 @@ AndroidGeckoEvent::MakeMultiTouchInput(nsIWidget* widget)
 WidgetMouseEvent
 AndroidGeckoEvent::MakeMouseEvent(nsIWidget* widget)
 {
-    EventMessage msg = NS_EVENT_NULL;
+    EventMessage msg = eVoidEvent;
     if (Points().Length() > 0) {
         switch (Action()) {
             case AndroidMotionEvent::ACTION_HOVER_MOVE:
-                msg = NS_MOUSE_MOVE;
+                msg = eMouseMove;
                 break;
             case AndroidMotionEvent::ACTION_HOVER_ENTER:
-                msg = NS_MOUSE_ENTER_WIDGET;
+                msg = eMouseEnterIntoWidget;
                 break;
             case AndroidMotionEvent::ACTION_HOVER_EXIT:
-                msg = NS_MOUSE_EXIT_WIDGET;
+                msg = eMouseExitFromWidget;
                 break;
             default:
                 break;
@@ -850,14 +850,14 @@ AndroidGeckoEvent::MakeMouseEvent(nsIWidget* widget)
     WidgetMouseEvent event(true, msg, widget,
                            WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
 
-    if (msg == NS_EVENT_NULL) {
+    if (msg == eVoidEvent) {
         // unknown type, or no point data. abort
         return event;
     }
 
     // XXX can we synthesize different buttons?
     event.button = WidgetMouseEvent::eLeftButton;
-    if (msg != NS_MOUSE_MOVE) {
+    if (msg != eMouseMove) {
         event.clickCount = 1;
     }
     event.modifiers = DOMModifiers();

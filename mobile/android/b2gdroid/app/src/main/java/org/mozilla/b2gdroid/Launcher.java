@@ -31,6 +31,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import org.mozilla.gecko.BaseGeckoInterface;
+import org.mozilla.gecko.ContactService;
 import org.mozilla.gecko.ContextGetter;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
@@ -43,6 +44,8 @@ import org.mozilla.gecko.util.GeckoEventListener;
 public class Launcher extends Activity
                       implements GeckoEventListener, ContextGetter {
     private static final String LOGTAG = "B2G";
+
+    private ContactService mContactService;
 
     /** ContextGetter */
     public Context getContext() {
@@ -58,6 +61,7 @@ public class Launcher extends Activity
         GeckoAppShell.setContextGetter(this);
 
         GeckoBatteryManager.getInstance().start(this);
+        mContactService = new ContactService(EventDispatcher.getInstance(), this);
     }
 
     private void hideSplashScreen() {
@@ -108,6 +112,8 @@ public class Launcher extends Activity
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
             "Launcher:Ready");
+
+        mContactService.destroy();
     }
 
     @Override

@@ -110,10 +110,10 @@ nsCoreUtils::DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
     presContext->AppUnitsToDevPixels(offset.y);
 
   // XUL is just desktop, so there is no real reason for senfing touch events.
-  DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, cnvdX, cnvdY,
+  DispatchMouseEvent(eMouseDown, cnvdX, cnvdY,
                      tcContent, tcFrame, presShell, rootWidget);
 
-  DispatchMouseEvent(NS_MOUSE_BUTTON_UP, cnvdX, cnvdY,
+  DispatchMouseEvent(eMouseUp, cnvdX, cnvdY,
                      tcContent, tcFrame, presShell, rootWidget);
 }
 

@@ -22,6 +22,6 @@ You can download nightly development builds from the Mozilla FTP server.
 Keep in mind that nightly builds, which are used by Mozilla developers for
 testing, may be buggy. Firefox nightlies, for example, can be found at:
 
-    ftp://ftp.mozilla.org/pub/firefox/nightly/latest-trunk/
+    https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central/
             - or -
     http://nightly.mozilla.org/

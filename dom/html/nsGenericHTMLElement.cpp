@@ -2466,7 +2466,7 @@ nsGenericHTMLFormElement::IsElementDisabledForEvents(EventMessage aMessage,
       uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED;
 
   }
-  return disabled && aMessage != NS_MOUSE_MOVE;
+  return disabled && aMessage != eMouseMove;
 }
 
 void
@@ -2655,7 +2655,7 @@ nsGenericHTMLElement::Click()
   // called from chrome JS. Mark this event trusted if Click()
   // is called from chrome code.
   WidgetMouseEvent event(nsContentUtils::IsCallerChrome(),
-                         NS_MOUSE_CLICK, nullptr, WidgetMouseEvent::eReal);
+                         eMouseClick, nullptr, WidgetMouseEvent::eReal);
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
 
   EventDispatcher::Dispatch(static_cast<nsIContent*>(this), context, &event);
@@ -2757,7 +2757,7 @@ nsGenericHTMLElement::PerformAccesskey(bool aKeyCausesActivation,
 
   if (aKeyCausesActivation) {
     // Click on it if the users prefs indicate to do so.
-    WidgetMouseEvent event(aIsTrustedEvent, NS_MOUSE_CLICK, nullptr,
+    WidgetMouseEvent event(aIsTrustedEvent, eMouseClick, nullptr,
                            WidgetMouseEvent::eReal);
     event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
 

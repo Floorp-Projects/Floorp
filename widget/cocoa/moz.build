@@ -31,7 +31,6 @@ UNIFIED_SOURCES += [
     'nsColorPicker.mm',
     'nsCursorManager.mm',
     'nsDeviceContextSpecX.mm',
-    'nsDragService.mm',
     'nsFilePicker.mm',
     'nsIdleServiceX.mm',
     'nsLookAndFeel.mm',
@@ -44,7 +43,6 @@ UNIFIED_SOURCES += [
     'nsMenuItemX.mm',
     'nsMenuUtilsX.mm',
     'nsMenuX.mm',
-    'nsNativeThemeCocoa.mm',
     'nsPrintDialogX.mm',
     'nsPrintOptionsX.mm',
     'nsPrintSettingsX.mm',
@@ -57,6 +55,7 @@ UNIFIED_SOURCES += [
     'nsWidgetFactory.mm',
     'nsWindowMap.mm',
     'OSXNotificationCenter.mm',
+    'SwipeTracker.mm',
     'TextInputHandler.mm',
     'VibrancyManager.mm',
     'WidgetTraceEvent.mm',
@@ -67,6 +66,8 @@ SOURCES += [
     'nsChildView.mm',
     'nsClipboard.mm',
     'nsCocoaDebugUtils.mm',
+    'nsDragService.mm',
+    'nsNativeThemeCocoa.mm',
 ]
 
 if not CONFIG['RELEASE_BUILD'] or CONFIG['DEBUG']:

@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1175585
+-->
+<head>
+  <title>Test for Bug 1175585</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  #outer-frame {
+      height: 500px;
+      overflow: scroll;
+      background: repeating-linear-gradient(#CCC, #CCC 100px, #BBB 100px, #BBB 200px);
+  }
+  #inner-frame {
+      margin-top: 25%;
+      height: 200%;
+      width: 75%;
+      overflow: scroll;
+  }
+  #inner-content {
+      height: 200%;
+      width: 200%;
+      background: repeating-linear-gradient(#EEE, #EEE 100px, #DDD 100px, #DDD 200px);
+  }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1175585">APZ wheel transactions test</a>
+<p id="display"></p>
+<div id="outer-frame">
+    <div id="inner-frame">
+        <div id="inner-content"></div>
+    </div>
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+function scrollWheelOver(element, deltaY) {
+  synthesizeNativeWheelAndWaitForScrollEvent(element, 10, 10, 0, deltaY, driveTest);
+}
+
+function* runTest() {
+  var outer = document.getElementById('outer-frame');
+  var inner = document.getElementById('inner-frame');
+  var innerContent = document.getElementById('inner-content');
+
+  // Register a wheel event listener that records the target of
+  // the last wheel event, so that we can make assertions about it.
+  var lastWheelTarget;
+  var wheelTargetRecorder = function(e) { lastWheelTarget = e.target; };
+  window.addEventListener("wheel", wheelTargetRecorder);
+
+  // Scroll |outer| to the bottom.
+  while (outer.scrollTop < outer.scrollTopMax) {
+    yield scrollWheelOver(outer, -10);
+  }
+
+  // Verify that this has brought |inner| under the wheel.
+  is(lastWheelTarget, innerContent, "'inner-content' should have been brought under the wheel");
+  window.removeEventListener("wheel", wheelTargetRecorder);
+
+  // Immediately after, scroll it back up a bit.
+  yield scrollWheelOver(outer, 10);
+
+  // Check that it was |outer| that scrolled back, and |inner| didn't
+  // scroll at all, as all the above scrolls should be in the same
+  // transaction.
+  ok(outer.scrollTop < outer.scrollTopMax, "'outer' should have scrolled back a bit");
+  is(inner.scrollTop, 0, "'inner' should not have scrolled");
+
+  // The next part of the test is related to the transaction timeout.
+  // Turn it down a bit so waiting for the timeout to elapse doesn't
+  // slow down the test harness too much.
+  var timeout = 5;
+  yield SpecialPowers.pushPrefEnv({"set": [["mousewheel.transaction.timeout", timeout]]}, driveTest);
+  SimpleTest.requestFlakyTimeout("we are testing code that measures actual elapsed time between two events");
+
+  // Scroll up a bit more. It's still |outer| scrolling because
+  // |inner| is still scrolled all the way to the top.
+  yield scrollWheelOver(outer, 10);
+
+  // Wait for the transaction timeout to elapse.
+  yield window.setTimeout(driveTest, timeout);
+
+  // Now scroll down. The transaction having timed out, the event
+  // should pick up a new target, and that should be |inner|.
+  yield scrollWheelOver(outer, -10);
+  ok(inner.scrollTop > 0, "'inner' should have been scrolled");
+
+  // Finally, test scroll handoff after a timeout.
+
+  // Continue scrolling |inner| down to the bottom.
+  var prevScrollTop = inner.scrollTop;
+  while (inner.scrollTop < inner.scrollTopMax) {
+    yield scrollWheelOver(outer, -10);
+    // Avoid a failure getting us into an infinite loop.
+    ok(inner.scrollTop > prevScrollTop, "scrolling down should increase scrollTop");
+    prevScrollTop = inner.scrollTop;
+  }
+
+  // Wait for the transaction timeout to elapse.
+  yield window.setTimeout(driveTest, timeout);
+
+  // Continued downward scrolling should scroll |outer| to the bottom.
+  prevScrollTop = outer.scrollTop;
+  while (outer.scrollTop < outer.scrollTopMax) {
+    yield scrollWheelOver(outer, -10);
+    // Avoid a failure getting us into an infinite loop.
+    ok(outer.scrollTop > prevScrollTop, "scrolling down should increase scrollTop");
+    prevScrollTop = outer.scrollTop;
+  }
+}
+
+var gTestContinuation = null;
+function driveTest() {
+  if (!gTestContinuation) {
+    gTestContinuation = runTest();
+  }
+  var ret = gTestContinuation.next();
+  if (ret.done) {
+    SimpleTest.finish();
+  }
+}
+
+function startTest() {
+  // Disable smooth scrolling because it makes the test flaky (we don't have a good
+  // way of detecting when the scrolling is finished).
+  SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]}, driveTest);
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(startTest, window);
+
+</script>
+</pre>
+
+</body>
+</html>

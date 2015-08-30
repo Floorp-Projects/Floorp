@@ -394,7 +394,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
 
   bool onmenu = IsOnMenu();
 
-  if (aEvent->mMessage == NS_KEY_PRESS && !IsDisabled()) {
+  if (aEvent->mMessage == eKeyPress && !IsDisabled()) {
     WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
     uint32_t keyCode = keyEvent->keyCode;
 #ifdef XP_MACOSX
@@ -413,7 +413,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
     }
 #endif
   }
-  else if (aEvent->mMessage == NS_MOUSE_BUTTON_DOWN &&
+  else if (aEvent->mMessage == eMouseDown &&
            aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton &&
            !IsDisabled() && IsMenu()) {
     // The menu item was selected. Bring up the menu.
@@ -431,7 +431,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
   }
   else if (
 #ifndef NSCONTEXTMENUISMOUSEUP
-           (aEvent->mMessage == NS_MOUSE_BUTTON_UP &&
+           (aEvent->mMessage == eMouseUp &&
             aEvent->AsMouseEvent()->button == WidgetMouseEvent::eRightButton) &&
 #else
            aEvent->mMessage == NS_CONTEXTMENU &&
@@ -452,14 +452,14 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
       Execute(aEvent);
     }
   }
-  else if (aEvent->mMessage == NS_MOUSE_BUTTON_UP &&
+  else if (aEvent->mMessage == eMouseUp &&
            aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton &&
            !IsMenu() && !IsDisabled()) {
     // Execute the execute event handler.
     *aEventStatus = nsEventStatus_eConsumeNoDefault;
     Execute(aEvent);
   }
-  else if (aEvent->mMessage == NS_MOUSE_OUT) {
+  else if (aEvent->mMessage == eMouseOut) {
     // Kill our timer if one is active.
     if (mOpenTimer) {
       mOpenTimer->Cancel();
@@ -479,7 +479,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
       }
     }
   }
-  else if (aEvent->mMessage == NS_MOUSE_MOVE &&
+  else if (aEvent->mMessage == eMouseMove &&
            (onmenu || (menuParent && menuParent->IsMenuBar()))) {
     if (gEatMouseMove) {
       gEatMouseMove = false;

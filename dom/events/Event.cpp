@@ -106,7 +106,7 @@ Event::ConstructorInit(EventTarget* aOwner,
           ...
         }
      */
-    mEvent = new WidgetEvent(false, NS_EVENT_NULL);
+    mEvent = new WidgetEvent(false, eVoidEvent);
     mEvent->time = PR_Now();
   }
 
@@ -770,23 +770,23 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
     if (aEvent->mFlags.mIsTrusted) {
       uint32_t key = aEvent->AsKeyboardEvent()->keyCode;
       switch(aEvent->mMessage) {
-      case NS_KEY_PRESS :
-        // return key on focused button. see note at NS_MOUSE_CLICK.
+      case eKeyPress:
+        // return key on focused button. see note at eMouseClick.
         if (key == nsIDOMKeyEvent::DOM_VK_RETURN) {
           abuse = openAllowed;
         } else if (PopupAllowedForEvent("keypress")) {
           abuse = openControlled;
         }
         break;
-      case NS_KEY_UP :
-        // space key on focused button. see note at NS_MOUSE_CLICK.
+      case eKeyUp:
+        // space key on focused button. see note at eMouseClick.
         if (key == nsIDOMKeyEvent::DOM_VK_SPACE) {
           abuse = openAllowed;
         } else if (PopupAllowedForEvent("keyup")) {
           abuse = openControlled;
         }
         break;
-      case NS_KEY_DOWN :
+      case eKeyDown:
         if (PopupAllowedForEvent("keydown")) {
           abuse = openControlled;
         }
@@ -818,17 +818,17 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
     if (aEvent->mFlags.mIsTrusted &&
         aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
       switch(aEvent->mMessage) {
-      case NS_MOUSE_BUTTON_UP :
+      case eMouseUp:
         if (PopupAllowedForEvent("mouseup")) {
           abuse = openControlled;
         }
         break;
-      case NS_MOUSE_BUTTON_DOWN :
+      case eMouseDown:
         if (PopupAllowedForEvent("mousedown")) {
           abuse = openControlled;
         }
         break;
-      case NS_MOUSE_CLICK :
+      case eMouseClick:
         /* Click events get special treatment because of their
            historical status as a more legitimate event handler. If
            click popups are enabled in the prefs, clear the popup
@@ -837,7 +837,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
           abuse = openAllowed;
         }
         break;
-      case NS_MOUSE_DOUBLECLICK :
+      case eMouseDoubleClick:
         if (PopupAllowedForEvent("dblclick")) {
           abuse = openControlled;
         }

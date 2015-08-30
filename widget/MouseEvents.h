@@ -155,7 +155,7 @@ public:
    */
   bool IsLeftClickEvent() const
   {
-    return mMessage == NS_MOUSE_CLICK && button == eLeftButton;
+    return mMessage == eMouseClick && button == eLeftButton;
   }
 };
 
@@ -204,8 +204,8 @@ protected:
     , clickCount(0)
   {
     switch (aMessage) {
-      case NS_MOUSEENTER:
-      case NS_MOUSELEAVE:
+      case eMouseEnter:
+      case eMouseLeave:
         mFlags.mBubbles = false;
         mFlags.mCancelable = false;
         break;
@@ -224,8 +224,8 @@ public:
     reason(aReason), context(aContext), exit(eChild), clickCount(0)
   {
     switch (aMessage) {
-      case NS_MOUSEENTER:
-      case NS_MOUSELEAVE:
+      case eMouseEnter:
+      case eMouseLeave:
         mFlags.mBubbles = false;
         mFlags.mCancelable = false;
         break;
@@ -454,6 +454,7 @@ public:
     , overflowDeltaX(0.0)
     , overflowDeltaY(0.0)
     , mViewPortIsOverscrolled(false)
+    , mCanTriggerSwipe(false)
   {
   }
 
@@ -466,6 +467,16 @@ public:
     result->AssignWheelEventData(*this, true);
     result->mFlags = mFlags;
     return result;
+  }
+
+  // On OS X, scroll gestures that start at the edge of the scrollable range
+  // can result in a swipe gesture. For the first wheel event of such a
+  // gesture, call TriggersSwipe() after the event has been processed
+  // in order to find out whether a swipe should be started.
+  bool TriggersSwipe() const
+  {
+    return mCanTriggerSwipe && mViewPortIsOverscrolled &&
+           this->overflowDeltaX != 0.0;
   }
 
   // NOTE: deltaX, deltaY and deltaZ may be customized by
@@ -551,6 +562,10 @@ public:
   // overscrolled.
   bool mViewPortIsOverscrolled;
 
+  // The wheel event can trigger a swipe to start if it's overscrolling the
+  // viewport.
+  bool mCanTriggerSwipe;
+
   void AssignWheelEventData(const WidgetWheelEvent& aEvent, bool aCopyTargets)
   {
     AssignMouseEventBaseData(aEvent, aCopyTargets);
@@ -568,6 +583,7 @@ public:
     overflowDeltaX = aEvent.overflowDeltaX;
     overflowDeltaY = aEvent.overflowDeltaY;
     mViewPortIsOverscrolled = aEvent.mViewPortIsOverscrolled;
+    mCanTriggerSwipe = aEvent.mCanTriggerSwipe;
   }
 };
 

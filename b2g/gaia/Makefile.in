@@ -5,11 +5,15 @@
 # For b2gdroid, gaia ends up in the assets/gaia folder in the APK.
 GAIA_PATH := $(if MOZ_B2GDROID,gaia/assets/gaia,gaia/profile)
 
+# For b2gdroid, we disable the screen timeout since this is managed by android.
+# We also limit the app set to the production ones.
+GAIA_OPTIONS := $(if MOZ_B2GDROID,SCREEN_TIMEOUT=0 PRODUCTION=1,)
+
 GENERATED_DIRS += $(DIST)/bin/$(GAIA_PATH)
 
 include $(topsrcdir)/config/rules.mk
 
 libs::
 	+$(MAKE) -j1 -C $(GAIADIR) clean
-	+$(MAKE) -j1 -C $(GAIADIR) profile
+	+$(GAIA_OPTIONS) $(MAKE) -j1 -C $(GAIADIR) profile
 	(cd $(GAIADIR)/profile && tar $(TAR_CREATE_FLAGS) - .) | (cd $(abspath $(DIST))/bin/$(GAIA_PATH) && tar -xf -)

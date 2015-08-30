@@ -39,7 +39,8 @@ var gTestWindows = [
   "file_fullscreen-plugins.html",
   "file_fullscreen-hidden.html",
   "file_fullscreen-svg-element.html",
-  "file_fullscreen-navigation.html"
+  "file_fullscreen-navigation.html",
+  "file_fullscreen-selector.html"
 ];
 
 var testWindow = null;
@@ -53,7 +54,7 @@ function nextTest() {
   if (testWindow) {
     testWindow.close();
   }
-  runNextTest();
+  SimpleTest.executeSoon(runNextTest);
 }
 
 function runNextTest() {

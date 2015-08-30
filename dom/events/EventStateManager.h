@@ -958,7 +958,7 @@ private:
 // has no frame. This is required for Web compatibility.
 #define NS_EVENT_NEEDS_FRAME(event) \
     (!(event)->HasPluginActivationEventMessage() && \
-     (event)->mMessage != NS_MOUSE_CLICK && \
-     (event)->mMessage != NS_MOUSE_DOUBLECLICK)
+     (event)->mMessage != eMouseClick && \
+     (event)->mMessage != eMouseDoubleClick)
 
 #endif // mozilla_EventStateManager_h_

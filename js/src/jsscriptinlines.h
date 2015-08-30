@@ -30,11 +30,54 @@ AliasedFormalIter::AliasedFormalIter(JSScript* script)
     settle();
 }
 
-inline void
-ScriptCounts::destroy(FreeOp* fop)
+ScriptCounts::ScriptCounts()
+  : pcCounts_(),
+    throwCounts_(),
+    ionCounts_(nullptr)
 {
-    fop->free_(pcCountsVector);
-    fop->delete_(ionCounts);
+}
+
+ScriptCounts::ScriptCounts(PCCountsVector&& jumpTargets)
+  : pcCounts_(Move(jumpTargets)),
+    throwCounts_(),
+    ionCounts_(nullptr)
+{
+}
+
+ScriptCounts::ScriptCounts(ScriptCounts&& src)
+  : pcCounts_(Move(src.pcCounts_)),
+    throwCounts_(Move(src.throwCounts_)),
+    ionCounts_(Move(src.ionCounts_))
+{
+    src.ionCounts_ = nullptr;
+}
+
+ScriptCounts&
+ScriptCounts::operator=(ScriptCounts&& src)
+{
+    pcCounts_ = Move(src.pcCounts_);
+    throwCounts_ = Move(src.throwCounts_);
+    ionCounts_ = Move(src.ionCounts_);
+    src.ionCounts_ = nullptr;
+    return *this;
+}
+
+ScriptCounts::~ScriptCounts()
+{
+    js_delete(ionCounts_);
+}
+
+ScriptAndCounts::ScriptAndCounts(JSScript* script)
+  : script(script),
+    scriptCounts()
+{
+    script->releaseScriptCounts(&scriptCounts);
+}
+
+ScriptAndCounts::ScriptAndCounts(ScriptAndCounts&& sac)
+  : script(Move(sac.script)),
+    scriptCounts(Move(sac.scriptCounts))
+{
 }
 
 void

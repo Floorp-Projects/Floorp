@@ -16,8 +16,7 @@ MouseScrollEvent::MouseScrollEvent(EventTarget* aOwner,
                                    WidgetMouseScrollEvent* aEvent)
   : MouseEvent(aOwner, aPresContext,
                aEvent ? aEvent :
-                        new WidgetMouseScrollEvent(false, NS_EVENT_NULL,
-                                                   nullptr))
+                        new WidgetMouseScrollEvent(false, eVoidEvent, nullptr))
 {
   if (aEvent) {
     mEventIsInternal = false;
