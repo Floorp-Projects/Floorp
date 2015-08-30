@@ -13,6 +13,8 @@ Cu.import("resource://gre/modules/Messaging.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 let log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.d.bind(null, "MulticastDNS");
 
+const FAILURE_INTERNAL_ERROR = -65537;
+
 // Helper function for sending commands to Java.
 function send(type, data, callback) {
   let msg = {
@@ -27,7 +29,8 @@ function send(type, data, callback) {
   }
 
   Messaging.sendRequestForResult(msg)
-    .then(result => callback(result, null), err => callback(null, err));
+    .then(result => callback(result, null),
+          err => callback(null, typeof err === "number" ? err : FAILURE_INTERNAL_ERROR));
 }
 
 // Receives service found/lost event from NsdManager
@@ -149,7 +152,7 @@ MulticastDNS.prototype = {
     send("NsdManager:DiscoverServices", { serviceType: aServiceType }, (result, err) => {
       if (err) {
         log("onStartDiscoveryFailed: " + aServiceType + " (" + err + ")");
-        this.unregisterEvent();
+        this.serviceManager.removeListener(aServiceType, aListener);
         aListener.onStartDiscoveryFailed(aServiceType, err);
       } else {
         aListener.onDiscoveryStarted(result);
