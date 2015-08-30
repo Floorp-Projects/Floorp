@@ -3375,11 +3375,9 @@ IsFunctionCloneable(HandleFunction fun, HandleObject dynamicScope)
 
         // If the script is an indirect eval that is immediately scoped under
         // the global, we can clone it.
-        if (scope->is<StaticEvalObject>() &&
-            !scope->as<StaticEvalObject>().isDirect() &&
-            !scope->as<StaticEvalObject>().isStrict())
-        {
-            return true;
+        if (scope->is<StaticBlockObject>()) {
+            if (StaticEvalObject* staticEval = scope->as<StaticBlockObject>().maybeEnclosingEval())
+                return !staticEval->isDirect();
         }
 
         // Any other enclosing static scope (e.g., function, block) cannot be
