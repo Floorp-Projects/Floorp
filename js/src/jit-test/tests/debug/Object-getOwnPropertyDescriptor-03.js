@@ -1,8 +1,8 @@
 // obj.getOwnPropertyDescriptor works on global objects.
 
 var g = newGlobal();
-g.eval("var v; const k = 42;");
-this.eval("var v; const k = 42;");
+g.eval("var v;");
+this.eval("var v;");
 
 var dbg = Debugger();
 var obj = dbg.addDebuggee(g);
@@ -20,4 +20,3 @@ function test(name) {
 
 test("Infinity");
 test("v");
-test("k");
