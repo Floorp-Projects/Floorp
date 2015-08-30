@@ -18,7 +18,7 @@ function test() {
     is(workers.length, 0);
 
     executeSoon(() => {
-      evalInTab(tab, "let worker1 = new Worker('" + WORKER1_URL + "');");
+      evalInTab(tab, "var worker1 = new Worker('" + WORKER1_URL + "');");
     });
     yield waitForWorkerListChanged(tabClient);
 
@@ -27,7 +27,7 @@ function test() {
     is(workers[0].url, WORKER1_URL);
 
     executeSoon(() => {
-      evalInTab(tab, "let worker2 = new Worker('" + WORKER2_URL + "');");
+      evalInTab(tab, "var worker2 = new Worker('" + WORKER2_URL + "');");
     });
     yield waitForWorkerListChanged(tabClient);
 
