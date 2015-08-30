@@ -106,22 +106,20 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
 }
 
 /* ::::: toolbarbutton badged ::::: */
-.toolbarbutton-badge-stack > .toolbarbutton-icon[label]:not([label=""]) {
-  -moz-margin-end: 0;
-}
 
 .toolbarbutton-badge {
   background-color: #d90000;
   font-size: 10px;
-  padding: 0 2px 1px;
+  font-weight: bold;
+  padding: 1px 2px;
   color: #fff;
   border-radius: 2px;
   box-shadow: 0 1px 0 hsla(0, 100%, 100%, .2) inset,
               0 -1px 0 hsla(0, 0%, 0%, .1) inset,
               0 1px 0 hsla(206, 50%, 10%, .2);
-  margin: -6px 0 0 !important;
-  -moz-margin-end: -8px !important;
-  min-width: 14px;
+  margin: -4px 0 0 !important;
+  -moz-margin-end: -2px !important;
+  min-width: 10px;
   line-height: 10px;
   text-align: center;
   -moz-stack-sizing: ignore;
