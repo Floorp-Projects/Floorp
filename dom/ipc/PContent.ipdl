@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PAsmJSCacheEntry;
 include protocol PBackground;
 include protocol PBlob;
 include protocol PBluetooth;
@@ -81,8 +80,6 @@ using struct IPC::Permission from "mozilla/net/NeckoMessageUtils.h";
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
-using mozilla::dom::asmjscache::OpenMode from "mozilla/dom/asmjscache/AsmJSCache.h";
-using mozilla::dom::asmjscache::WriteParams from "mozilla/dom/asmjscache/AsmJSCache.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 using mozilla::dom::quota::PersistenceType from "mozilla/dom/quota/PersistenceType.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
@@ -421,7 +418,6 @@ prio(normal upto urgent) sync protocol PContent
     parent opens PGMPService;
     child opens PBackground;
 
-    manages PAsmJSCacheEntry;
     manages PBlob;
     manages PBluetooth;
     manages PBrowser;
@@ -782,8 +778,6 @@ parent:
     PBluetooth();
 
     PFMRadio();
-
-    PAsmJSCacheEntry(OpenMode openMode, WriteParams write, Principal principal);
 
     PWebrtcGlobal();
     

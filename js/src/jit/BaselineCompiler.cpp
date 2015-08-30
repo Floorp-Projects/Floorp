@@ -808,17 +808,12 @@ BaselineCompiler::emitDebugTrap()
 void
 BaselineCompiler::emitCoverage(jsbytecode* pc)
 {
-    double* counterAddr = &script->getPCCounts(pc).numExec();
-    AllocatableRegisterSet regs(RegisterSet::Volatile());
-    Register counterAddrReg = R2.scratchReg();
-    FloatRegister counter = regs.takeAnyFloat();
-    FloatRegister one = regs.takeAnyFloat();
+    PCCounts* counts = script->maybeGetPCCounts(pc);
+    if (!counts)
+        return;
 
-    masm.movePtr(ImmPtr(counterAddr), counterAddrReg);
-    masm.loadDouble(Address(counterAddrReg, 0), counter);
-    masm.loadConstantDouble(1.0, one);
-    masm.addDouble(one, counter);
-    masm.storeDouble(counter, Address(counterAddrReg, 0));
+    uint64_t* counterAddr = &counts->numExec();
+    masm.inc64(AbsoluteAddress(counterAddr));
 }
 
 #ifdef JS_TRACE_LOGGING

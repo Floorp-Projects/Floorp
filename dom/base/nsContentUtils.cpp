@@ -7724,18 +7724,18 @@ nsContentUtils::SendKeyEvent(nsIWidget* aWidget,
 
   EventMessage msg;
   if (aType.EqualsLiteral("keydown"))
-    msg = NS_KEY_DOWN;
+    msg = eKeyDown;
   else if (aType.EqualsLiteral("keyup"))
-    msg = NS_KEY_UP;
+    msg = eKeyUp;
   else if (aType.EqualsLiteral("keypress"))
-    msg = NS_KEY_PRESS;
+    msg = eKeyPress;
   else
     return NS_ERROR_FAILURE;
 
   WidgetKeyboardEvent event(true, msg, aWidget);
   event.modifiers = GetWidgetModifiers(aModifiers);
 
-  if (msg == NS_KEY_PRESS) {
+  if (msg == eKeyPress) {
     event.keyCode = aCharCode ? 0 : aKeyCode;
     event.charCode = aCharCode;
   } else {
@@ -7838,20 +7838,20 @@ nsContentUtils::SendMouseEvent(nsCOMPtr<nsIPresShell> aPresShell,
   EventMessage msg;
   bool contextMenuKey = false;
   if (aType.EqualsLiteral("mousedown"))
-    msg = NS_MOUSE_BUTTON_DOWN;
+    msg = eMouseDown;
   else if (aType.EqualsLiteral("mouseup"))
-    msg = NS_MOUSE_BUTTON_UP;
+    msg = eMouseUp;
   else if (aType.EqualsLiteral("mousemove"))
-    msg = NS_MOUSE_MOVE;
+    msg = eMouseMove;
   else if (aType.EqualsLiteral("mouseover"))
-    msg = NS_MOUSE_ENTER_WIDGET;
+    msg = eMouseEnterIntoWidget;
   else if (aType.EqualsLiteral("mouseout"))
-    msg = NS_MOUSE_EXIT_WIDGET;
+    msg = eMouseExitFromWidget;
   else if (aType.EqualsLiteral("contextmenu")) {
     msg = NS_CONTEXTMENU;
     contextMenuKey = (aButton == 0);
   } else if (aType.EqualsLiteral("MozMouseHittest"))
-    msg = NS_MOUSE_MOZHITTEST;
+    msg = eMouseHitTest;
   else
     return NS_ERROR_FAILURE;
 

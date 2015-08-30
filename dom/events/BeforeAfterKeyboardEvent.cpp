@@ -18,7 +18,7 @@ BeforeAfterKeyboardEvent::BeforeAfterKeyboardEvent(
   : KeyboardEvent(aOwner, aPresContext,
                   aEvent ? aEvent :
                            new InternalBeforeAfterKeyboardEvent(false,
-                                                                NS_EVENT_NULL,
+                                                                eVoidEvent,
                                                                 nullptr))
 {
   MOZ_ASSERT(mEvent->mClass == eBeforeAfterKeyboardEventClass,

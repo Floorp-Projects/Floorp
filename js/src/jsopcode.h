@@ -772,22 +772,42 @@ GetBytecodeInteger(jsbytecode* pc)
  */
 class PCCounts
 {
-    double numExec_;
+    /*
+     * Offset of the pc inside the script. This fields is used to lookup opcode
+     * which have annotations.
+     */
+    size_t pcOffset_;
+
+    /*
+     * Record the number of execution of one instruction, or the number of
+     * throws executed.
+     */
+    uint64_t numExec_;
 
  public:
+    explicit PCCounts(size_t off)
+      : pcOffset_(off),
+        numExec_(0)
+    {}
 
-    double& numExec() {
+    size_t pcOffset() const {
+        return pcOffset_;
+    }
+
+    // Used for sorting and searching.
+    bool operator<(const PCCounts& rhs) const {
+        return pcOffset_ < rhs.pcOffset_;
+    }
+
+    uint64_t& numExec() {
         return numExec_;
     }
-    double numExec() const {
+    uint64_t numExec() const {
         return numExec_;
     }
 
     static const char* numExecName;
 };
-
-/* Necessary for alignment with the script. */
-JS_STATIC_ASSERT(sizeof(PCCounts) % sizeof(Value) == 0);
 
 static inline jsbytecode*
 GetNextPc(jsbytecode* pc)

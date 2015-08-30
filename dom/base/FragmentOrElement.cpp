@@ -677,8 +677,8 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
   // Don't propagate mouseover and mouseout events when mouse is moving
   // inside chrome access only content.
   bool isAnonForEvents = IsRootOfChromeAccessOnlySubtree();
-  if ((aVisitor.mEvent->mMessage == NS_MOUSE_OVER ||
-       aVisitor.mEvent->mMessage == NS_MOUSE_OUT ||
+  if ((aVisitor.mEvent->mMessage == eMouseOver ||
+       aVisitor.mEvent->mMessage == eMouseOut ||
        aVisitor.mEvent->mMessage == NS_POINTER_OVER ||
        aVisitor.mEvent->mMessage == NS_POINTER_OUT) &&
       // Check if we should stop event propagation when event has just been
@@ -739,7 +739,7 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
               printf("Stopping %s propagation:"
                      "\n\toriginalTarget=%s \n\tcurrentTarget=%s %s"
                      "\n\trelatedTarget=%s %s \n%s",
-                     (aVisitor.mEvent->mMessage == NS_MOUSE_OVER)
+                     (aVisitor.mEvent->mMessage == eMouseOver)
                        ? "mouseover" : "mouseout",
                      NS_ConvertUTF16toUTF8(ot).get(),
                      NS_ConvertUTF16toUTF8(ct).get(),
@@ -812,8 +812,8 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
       case NS_FORM_CHANGE:
       case NS_LOAD:
       case NS_FORM_RESET:
-      case NS_RESIZE_EVENT:
-      case NS_SCROLL_EVENT:
+      case eResize:
+      case eScroll:
         stopEvent = true;
         break;
       case NS_USER_DEFINED_EVENT:

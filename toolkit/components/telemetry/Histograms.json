@@ -8423,7 +8423,7 @@
     "expires_in_version": "55",
     "kind": "enumerated",
     "n_values": 8,
-    "description": "The safety of a page where we see a password field. (0=unsafe, 1=safe)"
+    "description": "The safety of a page where we see a password field. (0: safe page & safe submit; 1: safe page & unsafe submit; 2: safe page & unknown submit; 3: unsafe page & safe submit; 4: unsafe page & unsafe submit; 5: unsafe page & unknown submit)"
   },
   "PWMGR_MANAGE_COPIED_PASSWORD": {
     "expires_in_version": "never",

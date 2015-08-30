@@ -68,7 +68,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
 
   switch (aEvent->mMessage) {
 
-   case NS_MOUSE_BUTTON_DOWN:  {
+   case eMouseDown: {
        if (aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
          // titlebar has no effect in non-chrome shells
          nsCOMPtr<nsIDocShellTreeItem> dsti = aPresContext->GetDocShell();
@@ -92,7 +92,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
      break;
 
 
-   case NS_MOUSE_BUTTON_UP: {
+   case eMouseUp: {
        if (mTrackingMouseMove &&
            aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
          // we're done tracking.
@@ -107,7 +107,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
      }
      break;
 
-   case NS_MOUSE_MOVE: {
+   case eMouseMove: {
        if(mTrackingMouseMove)
        {
          LayoutDeviceIntPoint nsMoveBy = aEvent->refPoint - mLastPoint;
@@ -147,7 +147,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
      }
      break;
 
-    case NS_MOUSE_CLICK: {
+    case eMouseClick: {
       WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
       if (mouseEvent->IsLeftClickEvent()) {
         MouseClicked(aPresContext, mouseEvent);

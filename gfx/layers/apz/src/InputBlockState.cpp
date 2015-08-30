@@ -426,6 +426,7 @@ PanGestureBlockState::PanGestureBlockState(const nsRefPtr<AsyncPanZoomController
                                            const PanGestureInput& aInitialEvent)
   : CancelableBlockState(aTargetApzc, aTargetConfirmed)
   , mInterrupted(false)
+  , mWaitingForContentResponse(false)
 {
   if (aTargetConfirmed) {
     // Find the nearest APZC in the overscroll handoff chain that is scrollable.
@@ -509,13 +510,34 @@ PanGestureBlockState::SetContentResponse(bool aPreventDefault)
   if (aPreventDefault) {
     mInterrupted = true;
   }
-  return CancelableBlockState::SetContentResponse(aPreventDefault);
+  bool stateChanged = CancelableBlockState::SetContentResponse(aPreventDefault);
+  if (mWaitingForContentResponse) {
+    mWaitingForContentResponse = false;
+    stateChanged = true;
+  }
+  return stateChanged;
+}
+
+bool
+PanGestureBlockState::IsReadyForHandling() const
+{
+  if (!CancelableBlockState::IsReadyForHandling()) {
+    return false;
+  }
+  return !mWaitingForContentResponse ||
+         IsContentResponseTimerExpired();
 }
 
 bool
 PanGestureBlockState::AllowScrollHandoff() const
 {
   return false;
+}
+
+void
+PanGestureBlockState::SetNeedsToWaitForContentResponse(bool aWaitForContentResponse)
+{
+  mWaitingForContentResponse = aWaitForContentResponse;
 }
 
 TouchBlockState::TouchBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,

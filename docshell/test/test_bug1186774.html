@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1186774
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1186774</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1186774 **/
+
+var child;
+
+function runTest() {
+  child = window.open("data:text/html,<div style='height: 9000px;'></div>", "", "width=100,height=100");
+  child.onload = function() {
+    setTimeout(function() {
+      child.scrollTo(0, 0);
+      child.history.pushState({}, "initial");
+      child.scrollTo(0, 3000);
+      child.history.pushState({}, "scrolled");
+      child.scrollTo(0, 6000);
+      child.history.back();
+    });
+  }
+
+  child.onpopstate = function() {
+    is(child.scrollY,  6000, "Shouldn't have scrolled before popstate");
+    child.close();
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1186774">Mozilla Bug 1186774</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

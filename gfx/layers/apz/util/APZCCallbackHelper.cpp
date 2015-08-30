@@ -496,8 +496,8 @@ APZCCallbackHelper::DispatchSynthesizedMouseEvent(EventMessage aMsg,
                                                   Modifiers aModifiers,
                                                   nsIWidget* aWidget)
 {
-  MOZ_ASSERT(aMsg == NS_MOUSE_MOVE || aMsg == NS_MOUSE_BUTTON_DOWN ||
-             aMsg == NS_MOUSE_BUTTON_UP || aMsg == NS_MOUSE_MOZLONGTAP);
+  MOZ_ASSERT(aMsg == eMouseMove || aMsg == eMouseDown ||
+             aMsg == eMouseUp || aMsg == eMouseLongTap);
 
   WidgetMouseEvent event(true, aMsg, nullptr,
                          WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
@@ -506,7 +506,7 @@ APZCCallbackHelper::DispatchSynthesizedMouseEvent(EventMessage aMsg,
   event.button = WidgetMouseEvent::eLeftButton;
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
   event.ignoreRootScrollFrame = true;
-  if (aMsg != NS_MOUSE_MOVE) {
+  if (aMsg != eMouseMove) {
     event.clickCount = 1;
   }
   event.modifiers = aModifiers;
@@ -546,9 +546,9 @@ APZCCallbackHelper::FireSingleTapEvent(const LayoutDevicePoint& aPoint,
   APZCCH_LOG("Dispatching single-tap component events to %s\n",
     Stringify(aPoint).c_str());
   int time = 0;
-  DispatchSynthesizedMouseEvent(NS_MOUSE_MOVE, time, aPoint, aModifiers, aWidget);
-  DispatchSynthesizedMouseEvent(NS_MOUSE_BUTTON_DOWN, time, aPoint, aModifiers, aWidget);
-  DispatchSynthesizedMouseEvent(NS_MOUSE_BUTTON_UP, time, aPoint, aModifiers, aWidget);
+  DispatchSynthesizedMouseEvent(eMouseMove, time, aPoint, aModifiers, aWidget);
+  DispatchSynthesizedMouseEvent(eMouseDown, time, aPoint, aModifiers, aWidget);
+  DispatchSynthesizedMouseEvent(eMouseUp, time, aPoint, aModifiers, aWidget);
 }
 
 static nsIScrollableFrame*

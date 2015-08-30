@@ -203,9 +203,9 @@ public:
   /**
    * DispatchKeyboardEvent() maybe dispatches aKeyboardEvent.
    *
-   * @param aMessage        Must be NS_KEY_DOWN or NS_KEY_UP.
+   * @param aMessage        Must be eKeyDown or eKeyUp.
    *                        Use MaybeDispatchKeypressEvents() for dispatching
-   *                        NS_KEY_PRESS.
+   *                        eKeyPress.
    * @param aKeyboardEvent  A keyboard event.
    * @param aStatus         If dispatching event should be marked as consumed,
    *                        set nsEventStatus_eConsumeNoDefault.  Otherwise,
@@ -335,8 +335,8 @@ private:
   /**
    * DispatchKeyboardEventInternal() maybe dispatches aKeyboardEvent.
    *
-   * @param aMessage        Must be NS_KEY_DOWN, NS_KEY_UP or NS_KEY_PRESS.
-   * @param aKeyboardEvent  A keyboard event.  If aMessage is NS_KEY_PRESS and
+   * @param aMessage        Must be eKeyDown, eKeyUp or eKeyPress.
+   * @param aKeyboardEvent  A keyboard event.  If aMessage is eKeyPress and
    *                        the event is for second or later character, its
    *                        mKeyValue should be empty string.
    * @param aStatus         If dispatching event should be marked as consumed,
@@ -345,10 +345,10 @@ private:
    *                        a event and it's consumed this returns
    *                        nsEventStatus_eConsumeNoDefault.
    * @param aDispatchTo     See comments of DispatchTo.
-   * @param aIndexOfKeypress    This must be 0 if aMessage isn't NS_KEY_PRESS or
+   * @param aIndexOfKeypress    This must be 0 if aMessage isn't eKeyPress or
    *                            aKeyboard.mKeyNameIndex isn't
    *                            KEY_NAME_INDEX_USE_STRING.  Otherwise, i.e.,
-   *                            when an NS_KEY_PRESS event causes inputting
+   *                            when an eKeyPress event causes inputting
    *                            text, this must be between 0 and
    *                            mKeyValue.Length() - 1 since keypress events
    *                            sending only one character per event.

@@ -374,6 +374,9 @@ class TypedRegisterSet
     bool empty() const {
         return !bits_;
     }
+    void clear() {
+        bits_ = 0;
+    }
 
     bool hasRegisterIndex(T reg) const {
         return !!(bits_ & (SetType(1) << reg.code()));
@@ -475,6 +478,10 @@ class RegisterSet {
 
     bool empty() const {
         return fpu_.empty() && gpr_.empty();
+    }
+    void clear() {
+        fpu_.clear();
+        gpr_.clear();
     }
     bool emptyGeneral() const {
         return gpr_.empty();
@@ -936,6 +943,9 @@ class CommonRegSet : public SpecializedRegSet<Accessors, Set>
 
     bool empty() const {
         return this->Parent::set_.empty();
+    }
+    void clear() {
+        this->Parent::set_.clear();
     }
 
     using Parent::add;

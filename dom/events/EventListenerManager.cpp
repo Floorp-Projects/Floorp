@@ -95,7 +95,7 @@ MutationBitForEventType(EventMessage aEventType)
 uint32_t EventListenerManager::sMainThreadCreatedCount = 0;
 
 EventListenerManagerBase::EventListenerManagerBase()
-  : mNoListenerForEvent(NS_EVENT_NULL)
+  : mNoListenerForEvent(eVoidEvent)
   , mMayHavePaintEventListener(false)
   , mMayHaveMutationListeners(false)
   , mMayHaveCapturingListeners(false)
@@ -257,7 +257,7 @@ EventListenerManager::AddEventListenerInternal(
     }
   }
 
-  mNoListenerForEvent = NS_EVENT_NULL;
+  mNoListenerForEvent = eVoidEvent;
   mNoListenerForEventAtom = nullptr;
 
   listener = aAllEvents ? mListeners.InsertElementAt(0) :
@@ -524,7 +524,7 @@ EventListenerManager::RemoveEventListenerInternal(
         nsRefPtr<EventListenerManager> kungFuDeathGrip(this);
         mListeners.RemoveElementAt(i);
         --count;
-        mNoListenerForEvent = NS_EVENT_NULL;
+        mNoListenerForEvent = eVoidEvent;
         mNoListenerForEventAtom = nullptr;
         if (mTarget && aUserType) {
           mTarget->EventListenerRemoved(aUserType);
@@ -791,7 +791,7 @@ EventListenerManager::RemoveEventHandler(nsIAtom* aName,
 
   if (listener) {
     mListeners.RemoveElementAt(uint32_t(listener - &mListeners.ElementAt(0)));
-    mNoListenerForEvent = NS_EVENT_NULL;
+    mNoListenerForEvent = eVoidEvent;
     mNoListenerForEventAtom = nullptr;
     if (mTarget && aName) {
       mTarget->EventListenerRemoved(aName);
@@ -1224,7 +1224,7 @@ EventListenerManager::AddListenerForAllEvents(nsIDOMEventListener* aDOMListener,
   flags.mAllowUntrustedEvents = aWantsUntrusted;
   flags.mInSystemGroup = aSystemEventGroup;
   EventListenerHolder listenerHolder(aDOMListener);
-  AddEventListenerInternal(listenerHolder, NS_EVENT_ALL, nullptr, EmptyString(),
+  AddEventListenerInternal(listenerHolder, eAllEvents, nullptr, EmptyString(),
                            flags, false, true);
 }
 
@@ -1238,7 +1238,7 @@ EventListenerManager::RemoveListenerForAllEvents(
   flags.mCapture = aUseCapture;
   flags.mInSystemGroup = aSystemEventGroup;
   EventListenerHolder listenerHolder(aDOMListener);
-  RemoveEventListenerInternal(listenerHolder, NS_EVENT_ALL, nullptr,
+  RemoveEventListenerInternal(listenerHolder, eAllEvents, nullptr,
                               EmptyString(), flags, true);
 }
 

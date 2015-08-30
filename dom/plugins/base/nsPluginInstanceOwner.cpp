@@ -1683,7 +1683,7 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent,
         aMouseEvent->StopPropagation();
       }
     }
-    if (mouseEvent->mMessage == NS_MOUSE_BUTTON_UP) {
+    if (mouseEvent->mMessage == eMouseUp) {
       mLastMouseDownButtonType = -1;
     }
   }
@@ -1808,12 +1808,11 @@ CocoaEventTypeForEvent(const WidgetGUIEvent& anEvent, nsIFrame* aObjectFrame)
   }
 
   switch (anEvent.mMessage) {
-    case NS_MOUSE_OVER:
+    case eMouseOver:
       return NPCocoaEventMouseEntered;
-    case NS_MOUSE_OUT:
+    case eMouseOut:
       return NPCocoaEventMouseExited;
-    case NS_MOUSE_MOVE:
-    {
+    case eMouseMove: {
       // We don't know via information on events from the widget code whether or not
       // we're dragging. The widget code just generates mouse move events from native
       // drag events. If anybody is capturing, this is a drag event.
@@ -1823,13 +1822,13 @@ CocoaEventTypeForEvent(const WidgetGUIEvent& anEvent, nsIFrame* aObjectFrame)
 
       return NPCocoaEventMouseMoved;
     }
-    case NS_MOUSE_BUTTON_DOWN:
+    case eMouseDown:
       return NPCocoaEventMouseDown;
-    case NS_MOUSE_BUTTON_UP:
+    case eMouseUp:
       return NPCocoaEventMouseUp;
-    case NS_KEY_DOWN:
+    case eKeyDown:
       return NPCocoaEventKeyDown;
-    case NS_KEY_UP:
+    case eKeyUp:
       return NPCocoaEventKeyUp;
     case NS_FOCUS_CONTENT:
     case NS_BLUR_CONTENT:
@@ -1848,12 +1847,12 @@ TranslateToNPCocoaEvent(WidgetGUIEvent* anEvent, nsIFrame* aObjectFrame)
   InitializeNPCocoaEvent(&cocoaEvent);
   cocoaEvent.type = CocoaEventTypeForEvent(*anEvent, aObjectFrame);
 
-  if (anEvent->mMessage == NS_MOUSE_MOVE ||
-      anEvent->mMessage == NS_MOUSE_BUTTON_DOWN ||
-      anEvent->mMessage == NS_MOUSE_BUTTON_UP ||
+  if (anEvent->mMessage == eMouseMove ||
+      anEvent->mMessage == eMouseDown ||
+      anEvent->mMessage == eMouseUp ||
       anEvent->mMessage == NS_MOUSE_SCROLL ||
-      anEvent->mMessage == NS_MOUSE_OVER ||
-      anEvent->mMessage == NS_MOUSE_OUT)
+      anEvent->mMessage == eMouseOver ||
+      anEvent->mMessage == eMouseOut)
   {
     nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(anEvent, aObjectFrame) -
                  aObjectFrame->GetContentRectRelativeToSelf().TopLeft();
@@ -1870,9 +1869,8 @@ TranslateToNPCocoaEvent(WidgetGUIEvent* anEvent, nsIFrame* aObjectFrame)
   }
 
   switch (anEvent->mMessage) {
-    case NS_MOUSE_BUTTON_DOWN:
-    case NS_MOUSE_BUTTON_UP:
-    {
+    case eMouseDown:
+    case eMouseUp: {
       WidgetMouseEvent* mouseEvent = anEvent->AsMouseEvent();
       if (mouseEvent) {
         switch (mouseEvent->button) {
@@ -1890,7 +1888,7 @@ TranslateToNPCocoaEvent(WidgetGUIEvent* anEvent, nsIFrame* aObjectFrame)
         }
         cocoaEvent.data.mouse.clickCount = mouseEvent->clickCount;
       } else {
-        NS_WARNING("NS_MOUSE_BUTTON_UP/DOWN is not a WidgetMouseEvent?");
+        NS_WARNING("eMouseUp/DOWN is not a WidgetMouseEvent?");
       }
       break;
     }
@@ -1905,14 +1903,14 @@ TranslateToNPCocoaEvent(WidgetGUIEvent* anEvent, nsIFrame* aObjectFrame)
       }
       break;
     }
-    case NS_KEY_DOWN:
-    case NS_KEY_UP:
+    case eKeyDown:
+    case eKeyUp:
     {
       WidgetKeyboardEvent* keyEvent = anEvent->AsKeyboardEvent();
 
       // That keyEvent->mPluginTextEventString is non-empty is a signal that we should
       // create a text event for the plugin, instead of a key event.
-      if (anEvent->mMessage == NS_KEY_DOWN &&
+      if (anEvent->mMessage == eKeyDown &&
           !keyEvent->mPluginTextEventString.IsEmpty()) {
         cocoaEvent.type = NPCocoaEventTextInput;
         const char16_t* pluginTextEventString = keyEvent->mPluginTextEventString.get();
@@ -2042,7 +2040,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
   }
 
   bool handled = (response == kNPEventHandled || response == kNPEventStartIME);
-  bool leftMouseButtonDown = (anEvent.mMessage == NS_MOUSE_BUTTON_DOWN) &&
+  bool leftMouseButtonDown = (anEvent.mMessage == eMouseDown) &&
                              (anEvent.AsMouseEvent()->button == WidgetMouseEvent::eLeftButton);
   if (handled && !(leftMouseButtonDown && !mContentFocused)) {
     rv = nsEventStatus_eConsumeNoDefault;
@@ -2062,10 +2060,10 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
       pluginEvent.event = 0;
       const WidgetMouseEvent* mouseEvent = anEvent.AsMouseEvent();
       switch (anEvent.mMessage) {
-      case NS_MOUSE_MOVE:
+      case eMouseMove:
         pluginEvent.event = WM_MOUSEMOVE;
         break;
-      case NS_MOUSE_BUTTON_DOWN: {
+      case eMouseDown: {
         static const int downMsgs[] =
           { WM_LBUTTONDOWN, WM_MBUTTONDOWN, WM_RBUTTONDOWN };
         static const int dblClickMsgs[] =
@@ -2077,13 +2075,13 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
         }
         break;
       }
-      case NS_MOUSE_BUTTON_UP: {
+      case eMouseUp: {
         static const int upMsgs[] =
           { WM_LBUTTONUP, WM_MBUTTONUP, WM_RBUTTONUP };
         pluginEvent.event = upMsgs[mouseEvent->button];
         break;
       }
-      // don't synthesize anything for NS_MOUSE_DOUBLECLICK, since that
+      // don't synthesize anything for eMouseDoubleClick, since that
       // is a synthetic event generated on mouse-up, and Windows WM_*DBLCLK
       // messages are sent on mouse-down
       default:
@@ -2106,12 +2104,12 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
       // not the widget they were received on.
       // See use of NPEvent in widget/windows/nsWindow.cpp
       // for why this assert should be safe
-      NS_ASSERTION(anEvent.mMessage == NS_MOUSE_BUTTON_DOWN ||
-                   anEvent.mMessage == NS_MOUSE_BUTTON_UP ||
-                   anEvent.mMessage == NS_MOUSE_DOUBLECLICK ||
-                   anEvent.mMessage == NS_MOUSE_OVER ||
-                   anEvent.mMessage == NS_MOUSE_OUT ||
-                   anEvent.mMessage == NS_MOUSE_MOVE,
+      NS_ASSERTION(anEvent.mMessage == eMouseDown ||
+                   anEvent.mMessage == eMouseUp ||
+                   anEvent.mMessage == eMouseDoubleClick ||
+                   anEvent.mMessage == eMouseOver ||
+                   anEvent.mMessage == eMouseOut ||
+                   anEvent.mMessage == eMouseMove,
                    "Incorrect event type for coordinate translation");
       nsPoint pt =
         nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mPluginFrame) -
@@ -2167,10 +2165,9 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
   switch(anEvent.mClass) {
     case eMouseEventClass:
       {
-        switch (anEvent.mMessage)
-          {
-          case NS_MOUSE_CLICK:
-          case NS_MOUSE_DOUBLECLICK:
+        switch (anEvent.mMessage) {
+          case eMouseClick:
+          case eMouseDoubleClick:
             // Button up/down events sent instead.
             return rv;
           default:
@@ -2197,13 +2194,12 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
         Window root = None; // Could XQueryTree, but this is not important.
 #endif
 
-        switch (anEvent.mMessage)
-          {
-          case NS_MOUSE_OVER:
-          case NS_MOUSE_OUT:
+        switch (anEvent.mMessage) {
+          case eMouseOver:
+          case eMouseOut:
             {
               XCrossingEvent& event = pluginEvent.xcrossing;
-              event.type = anEvent.mMessage == NS_MOUSE_OVER ?
+              event.type = anEvent.mMessage == eMouseOver ?
                 EnterNotify : LeaveNotify;
               event.root = root;
               event.time = anEvent.time;
@@ -2220,7 +2216,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
               event.focus = mContentFocused;
             }
             break;
-          case NS_MOUSE_MOVE:
+          case eMouseMove:
             {
               XMotionEvent& event = pluginEvent.xmotion;
               event.type = MotionNotify;
@@ -2237,11 +2233,11 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
               event.same_screen = True;
             }
             break;
-          case NS_MOUSE_BUTTON_DOWN:
-          case NS_MOUSE_BUTTON_UP:
+          case eMouseDown:
+          case eMouseUp:
             {
               XButtonEvent& event = pluginEvent.xbutton;
-              event.type = anEvent.mMessage == NS_MOUSE_BUTTON_DOWN ?
+              event.type = anEvent.mMessage == eMouseDown ?
                 ButtonPress : ButtonRelease;
               event.root = root;
               event.time = anEvent.time;
@@ -2288,16 +2284,16 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
           event.state = gdkEvent->state;
           switch (anEvent.mMessage)
             {
-            case NS_KEY_DOWN:
-              // Handle NS_KEY_DOWN for modifier key presses
-              // For non-modifiers we get NS_KEY_PRESS
+            case eKeyDown:
+              // Handle eKeyDown for modifier key presses
+              // For non-modifiers we get eKeyPress
               if (gdkEvent->is_modifier)
                 event.type = XKeyPress;
               break;
-            case NS_KEY_PRESS:
+            case eKeyPress:
               event.type = XKeyPress;
               break;
-            case NS_KEY_UP:
+            case eKeyUp:
               event.type = KeyRelease;
               break;
             default:
@@ -2374,10 +2370,9 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
   switch(anEvent.mClass) {
     case eMouseEventClass:
       {
-        switch (anEvent.mMessage)
-          {
-          case NS_MOUSE_CLICK:
-          case NS_MOUSE_DOUBLECLICK:
+        switch (anEvent.mMessage) {
+          case eMouseClick:
+          case eMouseDoubleClick:
             // Button up/down events sent instead.
             return rv;
           default:
@@ -2392,16 +2387,15 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
         nsIntPoint pluginPoint(presContext->AppUnitsToDevPixels(appPoint.x),
                                presContext->AppUnitsToDevPixels(appPoint.y));
 
-        switch (anEvent.mMessage)
-          {
-          case NS_MOUSE_MOVE:
+        switch (anEvent.mMessage) {
+          case eMouseMove:
             {
               // are these going to be touch events?
               // pluginPoint.x;
               // pluginPoint.y;
             }
             break;
-          case NS_MOUSE_BUTTON_DOWN:
+          case eMouseDown:
             {
               ANPEvent event;
               event.inSize = sizeof(ANPEvent);
@@ -2412,7 +2406,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
               mInstance->HandleEvent(&event, nullptr, NS_PLUGIN_CALL_SAFE_TO_REENTER_GECKO);
             }
             break;
-          case NS_MOUSE_BUTTON_UP:
+          case eMouseUp:
             {
               ANPEvent event;
               event.inSize = sizeof(ANPEvent);

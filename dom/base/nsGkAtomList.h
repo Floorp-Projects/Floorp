@@ -1863,6 +1863,7 @@ GK_ATOM(seconds, "seconds")
 GK_ATOM(secondsFromDateTime, "seconds-from-dateTime")
 
 // Simple gestures support
+GK_ATOM(onMozSwipeGestureMayStart, "onMozSwipeGestureMayStart")
 GK_ATOM(onMozSwipeGestureStart, "onMozSwipeGestureStart")
 GK_ATOM(onMozSwipeGestureUpdate, "onMozSwipeGestureUpdate")
 GK_ATOM(onMozSwipeGestureEnd, "onMozSwipeGestureEnd")
