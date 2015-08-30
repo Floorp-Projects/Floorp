@@ -1345,6 +1345,23 @@ BytecodeEmitter::emitVarIncDec(ParseNode* pn)
     return true;
 }
 
+bool
+BytecodeEmitter::atBodyLevel() const
+{
+    // 'eval' scripts are always under an invisible lexical scope, but
+    // since it is not syntactic, it should still be considered at body
+    // level.
+    if (sc->staticScope() && sc->staticScope()->is<StaticEvalObject>()) {
+        bool bl = !innermostStmt()->enclosing;
+        MOZ_ASSERT_IF(bl, innermostStmt()->type == StmtType::BLOCK);
+        MOZ_ASSERT_IF(bl, innermostStmt()->staticScope
+                                         ->as<StaticBlockObject>()
+                                         .maybeEnclosingEval() == sc->staticScope());
+        return bl;
+    }
+    return !innermostStmt() || sc->isModuleBox();
+}
+
 uint32_t
 BytecodeEmitter::computeHops(ParseNode* pn, BytecodeEmitter** bceOfDefOut)
 {
@@ -3023,6 +3040,16 @@ bool
 BytecodeEmitter::enterBlockScope(StmtInfoBCE* stmtInfo, ObjectBox* objbox, JSOp initialValueOp,
                                  unsigned alreadyPushed)
 {
+    // This is so terrible. The eval body-level lexical scope needs to be
+    // emitted in the prologue so DEFFUN can pick up the right scope chain.
+    bool isEvalBodyLexicalScope = sc->staticScope() &&
+                                  sc->staticScope()->is<StaticEvalObject>() &&
+                                  !innermostStmt();
+    if (isEvalBodyLexicalScope) {
+        MOZ_ASSERT(code().length() == 0);
+        switchToPrologue();
+    }
+
     // Initial values for block-scoped locals. Whether it is undefined or the
     // JS_UNINITIALIZED_LEXICAL magic value depends on the context. The
     // current way we emit for-in and for-of heads means its let bindings will
@@ -3036,6 +3063,9 @@ BytecodeEmitter::enterBlockScope(StmtInfoBCE* stmtInfo, ObjectBox* objbox, JSOp 
 
     if (!initializeBlockScopedLocalsFromStack(blockObj))
         return false;
+
+    if (isEvalBodyLexicalScope)
+        switchToMain();
 
     return true;
 }
@@ -5886,7 +5916,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
     if (sc->isGlobalContext()) {
         MOZ_ASSERT(pn->pn_scopecoord.isFree());
         MOZ_ASSERT(pn->getOp() == JSOP_NOP);
-        MOZ_ASSERT(!innermostStmt() || sc->isModuleBox());
+        MOZ_ASSERT(atBodyLevel());
         switchToPrologue();
         if (!emitIndex32(JSOP_DEFFUN, index))
             return false;
@@ -6365,16 +6395,10 @@ bool
 BytecodeEmitter::emitStatementList(ParseNode* pn, ptrdiff_t top)
 {
     MOZ_ASSERT(pn->isArity(PN_LIST));
-
-    StmtInfoBCE stmtInfo(cx);
-    pushStatement(&stmtInfo, StmtType::BLOCK, top);
-
     for (ParseNode* pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
         if (!emitTree(pn2))
             return false;
     }
-
-    popStatement();
     return true;
 }
 
