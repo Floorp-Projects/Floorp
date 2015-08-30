@@ -13,7 +13,7 @@ dbg.onDebuggerStatement = function handleDebugger(frame) {
 };
 g.eval("function g() { for (var i = 0; i < 10; i++) { debugger; yield i; } }");
 g.eval("var it = g();");
-assertEq(gw.evalInGlobal("it.next();"), null);
+assertEq(gw.executeInGlobal("it.next();"), null);
 
 dbg.enabled = false;
 assertEq(g.it.next(), 1);

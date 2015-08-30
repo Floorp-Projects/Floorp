@@ -2,6 +2,6 @@ var g = newGlobal();
 var dbg = new Debugger();
 var gw = dbg.addDebuggee(g);
 dbg.onDebuggerStatement = function (f) {
-	gw.evalInGlobal("eval('var x = \"A Brief History of Love\"');\n")
+	gw.executeInGlobal("eval('var x = \"A Brief History of Love\"');\n")
 };
 g.eval('debugger');

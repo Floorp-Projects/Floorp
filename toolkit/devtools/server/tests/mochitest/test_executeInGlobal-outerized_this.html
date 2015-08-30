@@ -3,7 +3,7 @@
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=837060
 
-When we use Debugger.Object.prototype.evalInGlobal, the 'this' value seen
+When we use Debugger.Object.prototype.executeInGlobal, the 'this' value seen
 by the evaluated code should be the WindowProxy, not the inner window
 object.
 -->
@@ -38,24 +38,24 @@ window.onload = function () {
       ok(page1DO.unsafeDereference() === page2DO.unsafeDereference(),
          "unwrapping page1DO and page2DO outerizes both, yielding the same outer window");
 
-      is(page1DO.evalInGlobal('me').return, 'page 1', "page1DO continues to refer to original page");
-      is(page2DO.evalInGlobal('me').return, 'page 2', "page2DO refers to current page");
+      is(page1DO.executeInGlobal('me').return, 'page 1', "page1DO continues to refer to original page");
+      is(page2DO.executeInGlobal('me').return, 'page 2', "page2DO refers to current page");
 
-      is(page1DO.evalInGlobal('this === window').return, true,
-         "page 1: Debugger.Object.prototype.evalInGlobal should outerize 'this'");
-      is(page1DO.evalInGlobalWithBindings('this === window', {x:2}).return, true,
-         "page 1: Debugger.Object.prototype.evalInGlobal should outerize 'this'");
+      is(page1DO.executeInGlobal('this === window').return, true,
+         "page 1: Debugger.Object.prototype.executeInGlobal should outerize 'this'");
+      is(page1DO.executeInGlobalWithBindings('this === window', {x:2}).return, true,
+         "page 1: Debugger.Object.prototype.executeInGlobal should outerize 'this'");
 
-      is(page2DO.evalInGlobal('this === window').return, true,
-         "page 2: Debugger.Object.prototype.evalInGlobal should outerize 'this'");
-      is(page2DO.evalInGlobalWithBindings('this === window', {x:2}).return, true,
-         "page 2: Debugger.Object.prototype.evalInGlobal should outerize 'this'");
+      is(page2DO.executeInGlobal('this === window').return, true,
+         "page 2: Debugger.Object.prototype.executeInGlobal should outerize 'this'");
+      is(page2DO.executeInGlobalWithBindings('this === window', {x:2}).return, true,
+         "page 2: Debugger.Object.prototype.executeInGlobal should outerize 'this'");
 
       // Debugger doesn't let one use outer windows as globals. You have to innerize.
       var outerDO = page1DO.makeDebuggeeValue(page1DO.unsafeDereference());
       ok(outerDO !== page1DO, "outer window gets its own D.O, distinct from page 1's global");
       ok(outerDO !== page2DO, "outer window gets its own D.O, distinct from page 2's global");
-      SimpleTest.doesThrow(function () { outerDO.evalInGlobal('me'); },
+      SimpleTest.doesThrow(function () { outerDO.executeInGlobal('me'); },
                            "outer window D.Os can't be used as globals");
 
       SimpleTest.finish();

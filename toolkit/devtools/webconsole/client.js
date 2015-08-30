@@ -224,7 +224,7 @@ WebConsoleClient.prototype = {
    *        you to bind |_self| to the D.O of the given OA, during string
    *        evaluation.
    *
-   *        See: Debugger.Object.evalInGlobalWithBindings() for information
+   *        See: Debugger.Object.executeInGlobalWithBindings() for information
    *        about bindings.
    *
    *        Use case: the variable view needs to update objects and it does so
