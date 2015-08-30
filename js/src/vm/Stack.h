@@ -283,8 +283,7 @@ enum ExecuteType {
     EXECUTE_MODULE         =        0x4, /* == InterpreterFrame::GLOBAL */
     EXECUTE_DIRECT_EVAL    =        0x8, /* == InterpreterFrame::EVAL */
     EXECUTE_INDIRECT_EVAL  =        0x9, /* == InterpreterFrame::GLOBAL | EVAL */
-    EXECUTE_DEBUG          =       0x18, /* == InterpreterFrame::EVAL | DEBUGGER */
-    EXECUTE_DEBUG_GLOBAL   =       0x19  /* == InterpreterFrame::EVAL | DEBUGGER | GLOBAL */
+    EXECUTE_DEBUG          =       0x18, /* == InterpreterFrame::EVAL | DEBUGGER_EVAL */
 };
 
 /*****************************************************************************/
