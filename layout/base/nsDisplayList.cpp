@@ -2360,15 +2360,14 @@ nsDisplayBackgroundImage::IsSingleFixedPositionImage(nsDisplayListBuilder* aBuil
 bool
 nsDisplayBackgroundImage::ShouldFixToViewport(LayerManager* aManager)
 {
-  // APZ doesn't (yet) know how to scroll the visible region for these type of
-  // items, so don't layerize them if it's enabled.
-  if (nsLayoutUtils::UsesAsyncScrolling(mFrame) ||
-      (aManager && aManager->ShouldAvoidComponentAlphaLayers())) {
+  // APZ needs background-attachment:fixed images layerized for correctness.
+  if (!nsLayoutUtils::UsesAsyncScrolling(mFrame) &&
+      aManager && aManager->ShouldAvoidComponentAlphaLayers()) {
     return false;
   }
 
   // Put background-attachment:fixed background images in their own
-  // compositing layer, unless we have APZ enabled
+  // compositing layer.
   return mBackgroundStyle->mLayers[mLayer].mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
          !mBackgroundStyle->mLayers[mLayer].mImage.IsEmpty();
 }

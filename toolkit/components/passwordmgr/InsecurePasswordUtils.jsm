@@ -140,11 +140,34 @@ this.InsecurePasswordUtils = {
       isSafePage = false;
     }
 
-    // The safety of a page where we see a password field (0=unsafe; 1=safe)
-    Services.telemetry.getHistogramById("PWMGR_LOGIN_PAGE_SAFETY").add(isSafePage);
-
+    let isFormSubmitHTTP = false, isFormSubmitHTTPS = false;
     if (aForm.action.match(/^http:\/\//)) {
       this._sendWebConsoleMessage("InsecureFormActionPasswordsPresent", domDoc);
+      isFormSubmitHTTP = true;
+    } else if (aForm.action.match(/^https:\/\//)) {
+      isFormSubmitHTTPS = true;
     }
+
+    // The safety of a password field determined by the form action and the page protocol
+    let passwordSafety;
+    if (isSafePage) {
+      if (isFormSubmitHTTPS) {
+        passwordSafety = 0;
+      } else if (isFormSubmitHTTP) {
+        passwordSafety = 1;
+      } else {
+        passwordSafety = 2;
+      }
+    } else {
+      if (isFormSubmitHTTPS) {
+        passwordSafety = 3;
+      } else if (isFormSubmitHTTP) {
+        passwordSafety = 4;
+      } else {
+        passwordSafety = 5;
+      }
+    }
+
+    Services.telemetry.getHistogramById("PWMGR_LOGIN_PAGE_SAFETY").add(passwordSafety);
   },
 };

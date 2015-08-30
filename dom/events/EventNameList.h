@@ -165,7 +165,7 @@ EVENT(change,
       EventNameType_HTMLXUL,
       eBasicEventClass)
 EVENT(click,
-      NS_MOUSE_CLICK,
+      eMouseClick,
       EventNameType_All,
       eMouseEventClass)
 EVENT(contextmenu,
@@ -175,7 +175,7 @@ EVENT(contextmenu,
 // Not supported yet
 // EVENT(cuechange)
 EVENT(dblclick,
-      NS_MOUSE_DOUBLECLICK,
+      eMouseDoubleClick,
       EventNameType_HTMLXUL,
       eMouseEventClass)
 EVENT(drag,
@@ -227,31 +227,31 @@ EVENT(invalid,
       EventNameType_HTMLXUL,
       eBasicEventClass)
 EVENT(keydown,
-      NS_KEY_DOWN,
+      eKeyDown,
       EventNameType_HTMLXUL,
       eKeyboardEventClass)
 EVENT(keypress,
-      NS_KEY_PRESS,
+      eKeyPress,
       EventNameType_HTMLXUL,
       eKeyboardEventClass)
 EVENT(keyup,
-      NS_KEY_UP,
+      eKeyUp,
       EventNameType_HTMLXUL,
       eKeyboardEventClass)
 NON_IDL_EVENT(mozbrowserbeforekeydown,
-              NS_KEY_BEFORE_DOWN,
+              eBeforeKeyDown,
               EventNameType_None,
               eBeforeAfterKeyboardEventClass)
 NON_IDL_EVENT(mozbrowserafterkeydown,
-              NS_KEY_AFTER_DOWN,
+              eAfterKeyDown,
               EventNameType_None,
               eBeforeAfterKeyboardEventClass)
 NON_IDL_EVENT(mozbrowserbeforekeyup,
-              NS_KEY_BEFORE_UP,
+              eBeforeKeyUp,
               EventNameType_None,
               eBeforeAfterKeyboardEventClass)
 NON_IDL_EVENT(mozbrowserafterkeyup,
-              NS_KEY_AFTER_UP,
+              eAfterKeyUp,
               EventNameType_None,
               eBeforeAfterKeyboardEventClass)
 EVENT(loadeddata,
@@ -267,31 +267,31 @@ EVENT(loadstart,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(mousedown,
-      NS_MOUSE_BUTTON_DOWN,
+      eMouseDown,
       EventNameType_All,
       eMouseEventClass)
 EVENT(mouseenter,
-      NS_MOUSEENTER,
+      eMouseEnter,
       EventNameType_All,
       eMouseEventClass)
 EVENT(mouseleave,
-      NS_MOUSELEAVE,
+      eMouseLeave,
       EventNameType_All,
       eMouseEventClass)
 EVENT(mousemove,
-      NS_MOUSE_MOVE,
+      eMouseMove,
       EventNameType_All,
       eMouseEventClass)
 EVENT(mouseout,
-      NS_MOUSE_OUT,
+      eMouseOut,
       EventNameType_All,
       eMouseEventClass)
 EVENT(mouseover,
-      NS_MOUSE_OVER,
+      eMouseOver,
       EventNameType_All,
       eMouseEventClass)
 EVENT(mouseup,
-      NS_MOUSE_BUTTON_UP,
+      eMouseUp,
       EventNameType_All,
       eMouseEventClass)
 EVENT(mozfullscreenchange,
@@ -460,11 +460,11 @@ FORWARDED_EVENT(load,
                 EventNameType_All,
                 eBasicEventClass)
 FORWARDED_EVENT(resize,
-                NS_RESIZE_EVENT,
+                eResize,
                 EventNameType_All,
                 eBasicEventClass)
 FORWARDED_EVENT(scroll,
-                NS_SCROLL_EVENT,
+                eScroll,
                 (EventNameType_HTMLXUL | EventNameType_SVGSVG),
                 eBasicEventClass)
 
@@ -485,7 +485,7 @@ WINDOW_EVENT(hashchange,
              EventNameType_XUL | EventNameType_HTMLBodyOrFramesetOnly,
              eBasicEventClass)
 WINDOW_EVENT(languagechange,
-             NS_LANGUAGECHANGE,
+             eLanguageChange,
              EventNameType_HTMLBodyOrFramesetOnly,
              eBasicEventClass)
 // XXXbz Should the onmessage attribute on <body> really not work?  If so, do we
@@ -496,11 +496,11 @@ WINDOW_EVENT(message,
              EventNameType_None,
              eBasicEventClass)
 WINDOW_EVENT(offline,
-             NS_OFFLINE,
+             eOffline,
              EventNameType_XUL | EventNameType_HTMLBodyOrFramesetOnly,
              eBasicEventClass)
 WINDOW_EVENT(online,
-             NS_ONLINE,
+             eOnline,
              EventNameType_XUL | EventNameType_HTMLBodyOrFramesetOnly,
              eBasicEventClass)
 WINDOW_EVENT(pagehide,
@@ -586,7 +586,7 @@ DOCUMENT_ONLY_EVENT(readystatechange,
                     eBasicEventClass)
 
 NON_IDL_EVENT(MozMouseHittest,
-              NS_MOUSE_MOZHITTEST,
+              eMouseHitTest,
               EventNameType_None,
               eMouseEventClass)
 
@@ -692,7 +692,7 @@ NON_IDL_EVENT(command,
               EventNameType_XUL,
               eInputEventClass)
 NON_IDL_EVENT(close,
-              NS_XUL_CLOSE,
+              eWindowClose,
               EventNameType_XUL,
               eBasicEventClass)
 NON_IDL_EVENT(popupshowing,
@@ -839,6 +839,10 @@ NON_IDL_EVENT(gamepaddisconnected,
 #endif
 
 // Simple gesture events
+NON_IDL_EVENT(MozSwipeGestureMayStart,
+              NS_SIMPLE_GESTURE_SWIPE_MAY_START,
+              EventNameType_None,
+              eSimpleGestureEventClass)
 NON_IDL_EVENT(MozSwipeGestureStart,
               NS_SIMPLE_GESTURE_SWIPE_START,
               EventNameType_None,

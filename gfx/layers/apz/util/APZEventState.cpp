@@ -237,7 +237,9 @@ APZEventState::ProcessLongTap(const nsCOMPtr<nsIPresShell>& aPresShell,
       * widget->GetDefaultScale();
     int time = 0;
     nsEventStatus status =
-        APZCCallbackHelper::DispatchSynthesizedMouseEvent(NS_MOUSE_MOZLONGTAP, time, currentPoint, aModifiers, widget);
+        APZCCallbackHelper::DispatchSynthesizedMouseEvent(eMouseLongTap, time,
+                                                          currentPoint,
+                                                          aModifiers, widget);
     eventHandled = (status == nsEventStatus_eConsumeNoDefault);
     APZES_LOG("MOZLONGTAP event handled: %d\n", eventHandled);
   }
@@ -322,7 +324,11 @@ APZEventState::ProcessWheelEvent(const WidgetWheelEvent& aEvent,
                                  const ScrollableLayerGuid& aGuid,
                                  uint64_t aInputBlockId)
 {
-  mContentReceivedInputBlockCallback->Run(aGuid, aInputBlockId, aEvent.mFlags.mDefaultPrevented);
+  // If this event starts a swipe, indicate that it shouldn't result in a
+  // scroll by setting defaultPrevented to true.
+  bool defaultPrevented =
+    aEvent.mFlags.mDefaultPrevented || aEvent.TriggersSwipe();
+  mContentReceivedInputBlockCallback->Run(aGuid, aInputBlockId, defaultPrevented);
 }
 
 void

@@ -127,13 +127,13 @@ MoveEmitterARM::breakCycle(const MoveOperand& from, const MoveOperand& to,
         break;
       case MoveOp::DOUBLE:
         if (to.isMemory()) {
-            FloatRegister temp = ScratchDoubleReg;
-            masm.ma_vldr(toAddress(to), temp);
-            masm.ma_vstr(temp, cycleSlot(slotId, 0));
+            ScratchDoubleScope scratch(masm);
+            masm.ma_vldr(toAddress(to), scratch);
+            masm.ma_vstr(scratch, cycleSlot(slotId, 0));
         } else if (to.isGeneralRegPair()) {
-            FloatRegister reg = ScratchDoubleReg;
-            masm.ma_vxfer(to.evenReg(), to.oddReg(), reg);
-            masm.ma_vstr(reg, cycleSlot(slotId, 0));
+            ScratchDoubleScope scratch(masm);
+            masm.ma_vxfer(to.evenReg(), to.oddReg(), scratch);
+            masm.ma_vstr(scratch, cycleSlot(slotId, 0));
         } else {
             masm.ma_vstr(to.floatReg().doubleOverlay(), cycleSlot(slotId, 0));
         }
@@ -172,17 +172,17 @@ MoveEmitterARM::completeCycle(const MoveOperand& from, const MoveOperand& to, Mo
       case MoveOp::FLOAT32:
       case MoveOp::DOUBLE:
         if (to.isMemory()) {
-            FloatRegister temp = ScratchDoubleReg;
-            masm.ma_vldr(cycleSlot(slotId, 0), temp);
-            masm.ma_vstr(temp, toAddress(to));
+            ScratchDoubleScope scratch(masm);
+            masm.ma_vldr(cycleSlot(slotId, 0), scratch);
+            masm.ma_vstr(scratch, toAddress(to));
         } else if (to.isGeneralReg()) {
             MOZ_ASSERT(type == MoveOp::FLOAT32);
             masm.ma_ldr(toAddress(from), to.reg());
         } else if (to.isGeneralRegPair()) {
             MOZ_ASSERT(type == MoveOp::DOUBLE);
-            FloatRegister reg = ScratchDoubleReg;
-            masm.ma_vldr(toAddress(from), reg);
-            masm.ma_vxfer(reg, to.evenReg(), to.oddReg());
+            ScratchDoubleScope scratch(masm);
+            masm.ma_vldr(toAddress(from), scratch);
+            masm.ma_vxfer(scratch, to.evenReg(), to.oddReg());
         } else {
             uint32_t offset = 0;
             if ((!from.isMemory()) && from.floatReg().numAlignedAliased() == 1)
@@ -332,9 +332,9 @@ MoveEmitterARM::emitDoubleMove(const MoveOperand& from, const MoveOperand& to)
     } else {
         // Memory to memory move.
         MOZ_ASSERT(from.isMemory());
-        FloatRegister reg = ScratchDoubleReg;
-        masm.ma_vldr(toAddress(from), reg);
-        masm.ma_vstr(reg, toAddress(to));
+        ScratchDoubleScope scratch(masm);
+        masm.ma_vldr(toAddress(from), scratch);
+        masm.ma_vstr(scratch, toAddress(to));
     }
 }
 

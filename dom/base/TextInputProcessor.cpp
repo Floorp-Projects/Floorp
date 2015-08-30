@@ -249,7 +249,7 @@ TextInputProcessor::IsValidEventTypeForComposition(
                       const WidgetKeyboardEvent& aKeyboardEvent) const
 {
   // The key event type of composition methods must be "" or "keydown".
-  if (aKeyboardEvent.mMessage == NS_KEY_DOWN) {
+  if (aKeyboardEvent.mMessage == eKeyDown) {
     return true;
   }
   if (aKeyboardEvent.mMessage == NS_USER_DEFINED_EVENT &&
@@ -310,9 +310,9 @@ TextInputProcessor::MaybeDispatchKeyupForComposition(
     return result;
   }
 
-  // If the mMessage is NS_KEY_DOWN, the caller doesn't want TIP to dispatch
+  // If the mMessage is eKeyDown, the caller doesn't want TIP to dispatch
   // keyup event.
-  if (aKeyboardEvent->mMessage == NS_KEY_DOWN) {
+  if (aKeyboardEvent->mMessage == eKeyDown) {
     return result;
   }
 
@@ -838,7 +838,7 @@ TextInputProcessor::KeydownInternal(const WidgetKeyboardEvent& aKeyboardEvent,
 
   nsEventStatus status = aConsumedFlags ? nsEventStatus_eConsumeNoDefault :
                                           nsEventStatus_eIgnore;
-  if (!mDispatcher->DispatchKeyboardEvent(NS_KEY_DOWN, keyEvent, status,
+  if (!mDispatcher->DispatchKeyboardEvent(eKeyDown, keyEvent, status,
                                           GetDispatchTo())) {
     // If keydown event isn't dispatched, we don't need to dispatch keypress
     // events.
@@ -920,8 +920,7 @@ TextInputProcessor::KeyupInternal(const WidgetKeyboardEvent& aKeyboardEvent,
 
   nsEventStatus status = aDoDefault ? nsEventStatus_eIgnore :
                                       nsEventStatus_eConsumeNoDefault;
-  mDispatcher->DispatchKeyboardEvent(NS_KEY_UP, keyEvent, status,
-                                     GetDispatchTo());
+  mDispatcher->DispatchKeyboardEvent(eKeyUp, keyEvent, status, GetDispatchTo());
   aDoDefault = (status != nsEventStatus_eConsumeNoDefault);
   return NS_OK;
 }
