@@ -111,7 +111,7 @@ function runTests()
   {
     method: "run",
     prepare: function() {
-      sp.editor.setText("var foobarBug636725cache = 'foo';" +
+      sp.editor.setText("window.foobarBug636725cache = 'foo';" +
                  "typeof foobarBug636725cache;");
     },
     then: function([, , result]) {
@@ -122,7 +122,7 @@ function runTests()
   {
     method: "run",
     prepare: function() {
-      sp.editor.setText("var foobarBug636725cache2 = 'foo';" +
+      sp.editor.setText("window.foobarBug636725cache2 = 'foo';" +
                  "typeof foobarBug636725cache2;");
     },
     then: function([, , result]) {
