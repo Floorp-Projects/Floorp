@@ -665,7 +665,6 @@ MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
 
   media::TimeUnit timeThreshold{media::TimeUnit::FromMicroseconds(aTimeThreshold)};
   if (ShouldSkip(aSkipToNextKeyframe, timeThreshold)) {
-    mVideo.mDecodingRequested = false;
     Flush(TrackInfo::kVideoTrack);
     nsRefPtr<VideoDataPromise> p = mVideo.mPromise.Ensure(__func__);
     SkipVideoDemuxToNextKeyFrame(timeThreshold);
@@ -1026,7 +1025,7 @@ MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
       decoder.mDecoder = nullptr;
       if (sample->mKeyframe) {
         decoder.mQueuedSamples.AppendElements(Move(samples));
-        ScheduleUpdate(aTrack);
+        NotifyDecodingRequested(aTrack);
       } else {
         MOZ_ASSERT(decoder.mTimeThreshold.isNothing());
         LOG("Stream change occurred on a non-keyframe. Seeking to:%lld",
@@ -1038,7 +1037,7 @@ MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
                           [self, aTrack] (media::TimeUnit aTime) {
                             auto& decoder = self->GetDecoderData(aTrack);
                             decoder.mSeekRequest.Complete();
-                            self->ScheduleUpdate(aTrack);
+                            self->NotifyDecodingRequested(aTrack);
                           },
                           [self, aTrack] (DemuxerFailureReason aResult) {
                             auto& decoder = self->GetDecoderData(aTrack);

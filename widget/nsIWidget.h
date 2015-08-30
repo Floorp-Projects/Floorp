@@ -27,6 +27,7 @@
 #include "mozilla/widget/IMEData.h"
 #include "nsDataHashtable.h"
 #include "nsIObserver.h"
+#include "nsIWidgetListener.h"
 #include "FrameMetrics.h"
 #include "Units.h"
 
@@ -35,7 +36,6 @@ class   nsIRollupListener;
 class   imgIContainer;
 class   nsIContent;
 class   ViewWrapper;
-class   nsIWidgetListener;
 class   nsIntRegion;
 class   nsIScreen;
 class   nsIRunnable;
@@ -122,8 +122,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x483BF75C, 0xF909, 0x45C3, \
-  { 0x95, 0xBE, 0x41, 0x89, 0xDB, 0xCE, 0x2E, 0x13 } };
+{ 0x7b736a0c, 0x2262, 0x4f37, \
+  { 0xbd, 0xed, 0xe5, 0x60, 0x88, 0x1c, 0x36, 0xdd } }
 
 /*
  * Window shadow styles
@@ -763,13 +763,13 @@ class nsIWidget : public nsISupports {
      * Minimize, maximize or normalize the window size.
      * Takes a value from nsSizeMode (see nsIWidgetListener.h)
      */
-    NS_IMETHOD SetSizeMode(int32_t aMode) = 0;
+    NS_IMETHOD SetSizeMode(nsSizeMode aMode) = 0;
 
     /**
      * Return size mode (minimized, maximized, normalized).
      * Returns a value from nsSizeMode (see nsIWidgetListener.h)
      */
-    virtual int32_t SizeMode() = 0;
+    virtual nsSizeMode SizeMode() = 0;
 
     /**
      * Enable or disable this Widget
@@ -1284,6 +1284,13 @@ class nsIWidget : public nsISupports {
      * Informs the widget about the region of the window that is draggable.
      */
     virtual void UpdateWindowDraggingRegion(const nsIntRegion& aRegion) {}
+
+    /**
+     * Tells the widget whether the given input block results in a swipe.
+     * Should be called in response to a WidgetWheelEvent that has
+     * mFlags.mCanTriggerSwipe set on it.
+     */
+    virtual void ReportSwipeStarted(uint64_t aInputBlockId, bool aStartSwipe) {}
 
     /**
      * Internal methods

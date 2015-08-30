@@ -501,30 +501,30 @@ AccessibleCaretEventHub::HandleMouseEvent(WidgetMouseEvent* aEvent)
   nsPoint point = GetMouseEventPosition(aEvent);
 
   switch (aEvent->mMessage) {
-  case NS_MOUSE_BUTTON_DOWN:
-    AC_LOGV("Before NS_MOUSE_BUTTON_DOWN, state: %s", mState->Name());
+  case eMouseDown:
+    AC_LOGV("Before eMouseDown, state: %s", mState->Name());
     rv = mState->OnPress(this, point, id);
-    AC_LOGV("After NS_MOUSE_BUTTON_DOWN, state: %s, consume: %d",
+    AC_LOGV("After eMouseDown, state: %s, consume: %d",
             mState->Name(), rv);
     break;
 
-  case NS_MOUSE_MOVE:
-    AC_LOGV("Before NS_MOUSE_MOVE, state: %s", mState->Name());
+  case eMouseMove:
+    AC_LOGV("Before eMouseMove, state: %s", mState->Name());
     rv = mState->OnMove(this, point);
-    AC_LOGV("After NS_MOUSE_MOVE, state: %s, consume: %d", mState->Name(), rv);
+    AC_LOGV("After eMouseMove, state: %s, consume: %d", mState->Name(), rv);
     break;
 
-  case NS_MOUSE_BUTTON_UP:
-    AC_LOGV("Before NS_MOUSE_BUTTON_UP, state: %s", mState->Name());
+  case eMouseUp:
+    AC_LOGV("Before eMouseUp, state: %s", mState->Name());
     rv = mState->OnRelease(this);
-    AC_LOGV("After NS_MOUSE_BUTTON_UP, state: %s, consume: %d", mState->Name(),
+    AC_LOGV("After eMouseUp, state: %s, consume: %d", mState->Name(),
             rv);
     break;
 
-  case NS_MOUSE_MOZLONGTAP:
-    AC_LOGV("Before NS_MOUSE_MOZLONGTAP, state: %s", mState->Name());
+  case eMouseLongTap:
+    AC_LOGV("Before eMouseLongTap, state: %s", mState->Name());
     rv = mState->OnLongTap(this, point);
-    AC_LOGV("After NS_MOUSE_MOZLONGTAP, state: %s, consume: %d", mState->Name(),
+    AC_LOGV("After eMouseLongTap, state: %s, consume: %d", mState->Name(),
             rv);
     break;
 
@@ -610,9 +610,9 @@ nsEventStatus
 AccessibleCaretEventHub::HandleKeyboardEvent(WidgetKeyboardEvent* aEvent)
 {
   switch (aEvent->mMessage) {
-  case NS_KEY_UP:
-  case NS_KEY_DOWN:
-  case NS_KEY_PRESS:
+  case eKeyUp:
+  case eKeyDown:
+  case eKeyPress:
     mManager->OnKeyboardEvent();
     break;
 

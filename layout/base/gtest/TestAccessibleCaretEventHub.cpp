@@ -126,22 +126,22 @@ public:
 
   static UniquePtr<WidgetEvent> CreateMousePressEvent(nscoord aX, nscoord aY)
   {
-    return CreateMouseEvent(NS_MOUSE_BUTTON_DOWN, aX, aY);
+    return CreateMouseEvent(eMouseDown, aX, aY);
   }
 
   static UniquePtr<WidgetEvent> CreateMouseMoveEvent(nscoord aX, nscoord aY)
   {
-    return CreateMouseEvent(NS_MOUSE_MOVE, aX, aY);
+    return CreateMouseEvent(eMouseMove, aX, aY);
   }
 
   static UniquePtr<WidgetEvent> CreateMouseReleaseEvent(nscoord aX, nscoord aY)
   {
-    return CreateMouseEvent(NS_MOUSE_BUTTON_UP, aX, aY);
+    return CreateMouseEvent(eMouseUp, aX, aY);
   }
 
   static UniquePtr<WidgetEvent> CreateLongTapEvent(nscoord aX, nscoord aY)
   {
-    return CreateMouseEvent(NS_MOUSE_MOZLONGTAP, aX, aY);
+    return CreateMouseEvent(eMouseLongTap, aX, aY);
   }
 
   static UniquePtr<WidgetEvent> CreateTouchEvent(EventMessage aMessage,

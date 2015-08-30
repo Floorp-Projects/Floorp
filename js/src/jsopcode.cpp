@@ -10,9 +10,13 @@
 
 #include "jsopcodeinlines.h"
 
+#define __STDC_FORMAT_MACROS
+
 #include "mozilla/SizePrintfMacros.h"
 
+#include <algorithm>
 #include <ctype.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -170,7 +174,8 @@ js::DumpPCCounts(JSContext* cx, HandleScript script, Sprinter* sp)
             return;
 
         Sprint(sp, "                  {");
-        double val = script->getPCCounts(pc).numExec();
+        PCCounts* counts = script->maybeGetPCCounts(pc);
+        double val = counts ? counts->numExec() : 0.0;
         if (val)
             Sprint(sp, "\"%s\": %.0f", PCCounts::numExecName, val);
         Sprint(sp, "}\n");
@@ -1606,11 +1611,6 @@ ReleaseScriptCounts(FreeOp* fop)
     JSRuntime* rt = fop->runtime();
     MOZ_ASSERT(rt->scriptAndCountsVector);
 
-    ScriptAndCountsVector& vec = rt->scriptAndCountsVector->get();
-
-    for (size_t i = 0; i < vec.length(); i++)
-        vec[i].scriptCounts.destroy(fop);
-
     fop->delete_(rt->scriptAndCountsVector);
     rt->scriptAndCountsVector = nullptr;
 }
@@ -1651,11 +1651,8 @@ js::StopPCCountProfiling(JSContext* cx)
         for (ZoneCellIter i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
             JSScript* script = i.get<JSScript>();
             if (script->hasScriptCounts() && script->types()) {
-                ScriptAndCounts sac;
-                sac.script = script;
-                sac.scriptCounts.set(script->releaseScriptCounts());
-                if (!vec->append(sac))
-                    sac.scriptCounts.destroy(rt->defaultFreeOp());
+                if (!vec->append(script))
+                    return;
             }
         }
     }
@@ -1700,20 +1697,6 @@ AppendJSONProperty(StringBuffer& buf, const char* name, MaybeComma comma = COMMA
     buf.append("\":", 2);
 }
 
-static void
-AppendArrayJSONProperties(JSContext* cx, StringBuffer& buf,
-                          double* values, const char * const* names, unsigned count,
-                          MaybeComma& comma)
-{
-    for (unsigned i = 0; i < count; i++) {
-        if (values[i]) {
-            AppendJSONProperty(buf, names[i], comma);
-            comma = COMMA;
-            NumberValueToStringBuffer(cx, DoubleValue(values[i]), buf);
-        }
-    }
-}
-
 JS_FRIEND_API(JSString*)
 js::GetPCCountScriptSummary(JSContext* cx, size_t index)
 {
@@ -1755,21 +1738,21 @@ js::GetPCCountScriptSummary(JSContext* cx, size_t index)
         }
     }
 
-    double total = 0.0;
+    uint64_t total = 0;
 
     jsbytecode* codeEnd = script->codeEnd();
     for (jsbytecode* pc = script->code(); pc < codeEnd; pc = GetNextPc(pc)) {
-        PCCounts& counts = sac.getPCCounts(pc);
-        double value = counts.numExec();
-        total += value;
+        const PCCounts* counts = sac.maybeGetPCCounts(pc);
+        if (!counts)
+            continue;
+        total += counts->numExec();
     }
 
     AppendJSONProperty(buf, "totals");
     buf.append('{');
 
-    MaybeComma comma = NO_COMMA;
-
-    AppendArrayJSONProperties(cx, buf, &total, &PCCounts::numExecName, 1, comma);
+    AppendJSONProperty(buf, PCCounts::numExecName, NO_COMMA);
+    NumberValueToStringBuffer(cx, DoubleValue(total), buf);
 
     uint64_t ionActivity = 0;
     jit::IonScriptCounts* ionCounts = sac.getIonCounts();
@@ -1779,7 +1762,7 @@ js::GetPCCountScriptSummary(JSContext* cx, size_t index)
         ionCounts = ionCounts->previous();
     }
     if (ionActivity) {
-        AppendJSONProperty(buf, "ion", comma);
+        AppendJSONProperty(buf, "ion", COMMA);
         NumberValueToStringBuffer(cx, DoubleValue(ionActivity), buf);
     }
 
@@ -1814,11 +1797,18 @@ GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac, StringBuffer& buf)
     bool comma = false;
 
     SrcNoteLineScanner scanner(script->notes(), script->lineno());
+    uint64_t hits = 0;
 
-    for (jsbytecode* pc = script->code(); pc < script->codeEnd(); pc += GetBytecodeLength(pc)) {
+    jsbytecode* end = script->codeEnd();
+    for (jsbytecode* pc = script->code(); pc < end; pc = GetNextPc(pc)) {
         size_t offset = script->pcToOffset(pc);
+        JSOp op = JSOp(*pc);
 
-        JSOp op = (JSOp) *pc;
+        // If the current instruction is a jump target,
+        // then update the number of hits.
+        const PCCounts* counts = sac.maybeGetPCCounts(pc);
+        if (counts)
+            hits = counts->numExec();
 
         if (comma)
             buf.append(',');
@@ -1859,19 +1849,22 @@ GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac, StringBuffer& buf)
             buf.append(str);
         }
 
-        PCCounts& counts = sac.getPCCounts(pc);
-
         AppendJSONProperty(buf, "counts");
         buf.append('{');
 
-        double value = counts.numExec();
-        if (value > 0) {
+        if (hits > 0) {
             AppendJSONProperty(buf, PCCounts::numExecName, NO_COMMA);
-            NumberValueToStringBuffer(cx, DoubleValue(value), buf);
+            NumberValueToStringBuffer(cx, DoubleValue(hits), buf);
         }
 
         buf.append('}');
         buf.append('}');
+
+        // If the current instruction has thrown,
+        // then decrement the hit counts with the number of throws.
+        counts = sac.maybeGetThrowCounts(pc);
+        if (counts)
+            hits -= counts->numExec();
     }
 
     buf.append(']');
@@ -1949,4 +1942,328 @@ js::GetPCCountScriptContents(JSContext* cx, size_t index)
     }
 
     return buf.finishString();
+}
+
+static bool
+LcovWriteScriptName(GenericPrinter& out, JSScript* script)
+{
+    JSFunction* fun = script->functionNonDelazifying();
+    if (fun && fun->displayAtom())
+        return EscapedStringPrinter(out, fun->displayAtom(), 0);
+    out.printf("top-level");
+    return true;
+}
+
+struct LcovSourceFile
+{
+    const char* filename;
+
+    LSprinter outFN;
+    LSprinter outFNDA;
+    size_t numFunctionsFound;
+    size_t numFunctionsHit;
+
+    LSprinter outBRDA;
+    size_t numBranchesFound;
+    size_t numBranchesHit;
+
+    LSprinter outDA;
+    size_t numLinesInstrumented;
+    size_t numLinesHit;
+
+    LcovSourceFile(LifoAlloc* alloc, JSScript *script)
+      : filename(script->filename()),
+        outFN(alloc),
+        outFNDA(alloc),
+        numFunctionsFound(0),
+        numFunctionsHit(0),
+        outBRDA(alloc),
+        numBranchesFound(0),
+        numBranchesHit(0),
+        outDA(alloc),
+        numLinesInstrumented(0),
+        numLinesHit(0)
+    { }
+};
+
+static bool
+LcovWriteScript(JSContext* cx, LcovSourceFile& lsf, JSScript* script)
+{
+    lsf.numFunctionsFound++;
+    lsf.outFN.printf("FN:%d,", script->lineno());
+    if (!LcovWriteScriptName(lsf.outFN, script))
+        return false;
+    lsf.outFN.put("\n", 1);
+
+    uint64_t hits = 0;
+    ScriptCounts* sc = nullptr;
+    if (script->hasScriptCounts()) {
+        sc = &script->getScriptCounts();
+        lsf.numFunctionsHit++;
+        const PCCounts* counts = sc->maybeGetPCCounts(script->pcToOffset(script->main()));
+        lsf.outFNDA.printf("FNDA:%" PRIu64 ",", counts->numExec());
+        if (!LcovWriteScriptName(lsf.outFNDA, script))
+            return false;
+        lsf.outFNDA.put("\n", 1);
+
+        // Set the hit count of the pre-main code to 1, if the function ever got
+        // visited.
+        hits = 1;
+    }
+
+    jsbytecode* snpc = script->code();
+    jssrcnote* sn = script->notes();
+    if (!SN_IS_TERMINATOR(sn))
+        snpc += SN_DELTA(sn);
+
+    size_t lineno = script->lineno();
+    jsbytecode* end = script->codeEnd();
+    size_t blockId = 0;
+    for (jsbytecode* pc = script->code(); pc != end; pc = GetNextPc(pc)) {
+        JSOp op = JSOp(*pc);
+        bool jump = IsJumpOpcode(op);
+        bool fallsthrough = BytecodeFallsThrough(op);
+
+        // If the current script & pc has a hit-count report, then update the
+        // current number of hits.
+        if (sc) {
+            const PCCounts* counts = sc->maybeGetPCCounts(script->pcToOffset(pc));
+            if (counts)
+                hits = counts->numExec();
+        }
+
+        // If we have additional source notes, walk all the source notes of the
+        // current pc.
+        if (snpc <= pc) {
+            size_t oldLine = lineno;
+            while (!SN_IS_TERMINATOR(sn) && snpc <= pc) {
+                SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
+                if (type == SRC_SETLINE)
+                    lineno = size_t(GetSrcNoteOffset(sn, 0));
+                else if (type == SRC_NEWLINE)
+                    lineno++;
+
+                sn = SN_NEXT(sn);
+                snpc += SN_DELTA(sn);
+            }
+
+            if (oldLine != lineno && fallsthrough) {
+                lsf.outDA.printf("DA:%d,%" PRIu64 "\n", lineno, hits);
+
+                // Count the number of lines instrumented & hit.
+                lsf.numLinesInstrumented++;
+                if (hits)
+                    lsf.numLinesHit++;
+            }
+        }
+
+        // If the current instruction has thrown, then decrement the hit counts
+        // with the number of throws.
+        if (sc) {
+            const PCCounts* counts = sc->maybeGetThrowCounts(script->pcToOffset(pc));
+            if (counts)
+                hits -= counts->numExec();
+        }
+
+        // If the current pc corresponds to a conditional jump instruction, then reports
+        // branch hits.
+        if (jump && fallsthrough) {
+            jsbytecode* target = pc + GET_JUMP_OFFSET(pc);
+            jsbytecode* fallthroughTarget = GetNextPc(pc);
+            uint64_t fallthroughHits = 0;
+            if (sc) {
+                const PCCounts* counts = sc->maybeGetPCCounts(script->pcToOffset(fallthroughTarget));
+                if (counts)
+                    fallthroughHits = counts->numExec();
+            }
+
+            size_t targetId = script->pcToOffset(target);
+            uint64_t taken = hits - fallthroughHits;
+            lsf.outBRDA.printf("BRDA:%d,%d,%d,", lineno, blockId, targetId);
+            if (hits)
+                lsf.outBRDA.printf("%d\n", taken);
+            else
+                lsf.outBRDA.put("-\n", 2);
+
+            // Count the number of branches, and the number of branches hit.
+            lsf.numBranchesFound++;
+            if (hits)
+                lsf.numBranchesHit++;
+
+            // Update the blockId when there is a discontinuity.
+            blockId = script->pcToOffset(fallthroughTarget);
+        }
+    }
+
+    return true;
+}
+
+static bool
+GenerateLcovInfo(JSContext* cx, JSCompartment* comp, GenericPrinter& out)
+{
+    JSRuntime* rt = cx->runtime();
+
+    // Collect the list of scripts which are part of the current compartment.
+    AutoScriptVector topScripts(cx);
+    for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
+        for (ZoneCellIter i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
+            JSScript* script = i.get<JSScript>();
+            if (script->compartment() != comp)
+                continue;
+
+            if (script->functionNonDelazifying())
+                continue;
+
+            if (!topScripts.append(script))
+                return false;
+        }
+    }
+
+    if (topScripts.length() == 0)
+        return true;
+
+    // Sort the information to avoid generating multiple file entries, and to
+    // generate functions in the right order.
+    auto lessFun = [](const JSScript* lhs, const JSScript* rhs) -> bool {
+        int d = strcmp(lhs->filename(), rhs->filename());
+        /*
+          This should not be necessary as we are supposed to have only the
+          top-level script.
+
+          d = (d != 0) ? d : lhs->lineno() - rhs->lineno();
+          d = (d != 0) ? d : lhs->column() - rhs->column();
+        */
+        return d < 0;
+    };
+    std::sort(topScripts.begin(), topScripts.end(), lessFun);
+
+    // lcov trace files are starting with an optional test case name, that we
+    // recycle to be a compartment name.
+    out.put("TN:");
+    if (rt->compartmentNameCallback) {
+        char name[1024];
+        (*rt->compartmentNameCallback)(rt, comp, name, sizeof(name));
+        for (char *s = name; s < name + sizeof(name) && *s; s++) {
+            if (('a' <= *s && *s <= 'z') ||
+                ('A' <= *s && *s <= 'Z') ||
+                ('0' <= *s && *s <= '9'))
+            {
+                out.put(s, 1);
+                continue;
+            }
+            out.printf("_%p", (void*) size_t(*s));
+        }
+        out.put("\n", 1);
+    } else {
+        out.printf("Compartment_%p%p\n", (void*) size_t('_'), comp);
+    }
+
+    // For each source file
+    LifoAlloc printerAlloc(4096);
+    for (JSScript* topLevel: topScripts) {
+        LifoAllocScope printerScope(&printerAlloc);
+        LcovSourceFile lsf(&printerAlloc, topLevel);
+
+        // We found the top-level script, visit all the functions reachable
+        // from the top-level function.
+        AutoScriptVector queue(cx);
+        if (!queue.append(topLevel))
+            return false;
+
+        RootedScript script(cx);
+        do {
+            script = queue.popCopy();
+
+            // Code the current script before pushing.
+            if (!LcovWriteScript(cx, lsf, script))
+                return false;
+
+            // Iterate from the last to the first object in order to have
+            // the functions them visited in the opposite order when popping
+            // elements from the stack of remaining scripts, such that the
+            // functions are more-less listed with increasing line numbers.
+            if (!script->hasObjects())
+                continue;
+            size_t idx = script->objects()->length;
+            while (idx--) {
+                JSObject* obj = script->getObject(idx);
+
+                // Only continue on JSFunction objects.
+                if (!obj->is<JSFunction>())
+                    continue;
+                JSFunction& fun = obj->as<JSFunction>();
+
+                // Let's skip asm.js for now.
+                if (!fun.isInterpreted())
+                    continue;
+
+                // Queue the script in the list of script associated to the
+                // current source.
+                if (!queue.append(fun.getOrCreateScript(cx)))
+                    return false;
+            }
+        } while (!queue.empty());
+
+        if (lsf.outFN.hadOutOfMemory() ||
+            lsf.outFNDA.hadOutOfMemory() ||
+            lsf.outBRDA.hadOutOfMemory() ||
+            lsf.outDA.hadOutOfMemory())
+        {
+            out.reportOutOfMemory();
+            return false;
+        }
+
+        out.printf("SF:%s\n", lsf.filename);
+
+        lsf.outFN.exportInto(out);
+        lsf.outFNDA.exportInto(out);
+        out.printf("FNF:%d\n", lsf.numFunctionsFound);
+        out.printf("FNH:%d\n", lsf.numFunctionsHit);
+
+        lsf.outBRDA.exportInto(out);
+        out.printf("BRF:%d\n", lsf.numBranchesFound);
+        out.printf("BRH:%d\n", lsf.numBranchesHit);
+
+        lsf.outDA.exportInto(out);
+        out.printf("LF:%d\n", lsf.numLinesInstrumented);
+        out.printf("LH:%d\n", lsf.numLinesHit);
+
+        out.put("end_of_record\n");
+    }
+
+    if (out.hadOutOfMemory())
+        return false;
+    return true;
+}
+
+JS_FRIEND_API(char*)
+js::GetCodeCoverageSummary(JSContext* cx, size_t* length)
+{
+    Sprinter out(cx);
+
+    if (!out.init())
+        return nullptr;
+
+    if (!GenerateLcovInfo(cx, cx->compartment(), out)) {
+        JS_ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
+    if (out.hadOutOfMemory()) {
+        JS_ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
+    ptrdiff_t len = out.stringEnd() - out.string();
+    char* res = cx->pod_malloc<char>(len + 1);
+    if (!res) {
+        JS_ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
+    js_memcpy(res, out.string(), len);
+    res[len] = 0;
+    if (length)
+        *length = len;
+    return res;
 }

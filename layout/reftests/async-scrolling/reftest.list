@@ -2,6 +2,7 @@ skip-if(!asyncPan) == bg-fixed-1.html bg-fixed-1-ref.html
 skip-if(!asyncPan) == bg-fixed-cover-1.html bg-fixed-cover-1-ref.html
 skip-if(!asyncPan) == bg-fixed-cover-2.html bg-fixed-cover-2-ref.html
 skip-if(!asyncPan) == bg-fixed-cover-3.html bg-fixed-cover-3-ref.html
+skip-if(!asyncPan) == bg-fixed-child.html bg-fixed-child-ref.html
 skip-if(!asyncPan) == element-1.html element-1-ref.html
 pref(layers.force-active,true) skip-if(!asyncPan) == iframe-1.html iframe-1-ref.html
 skip-if(!asyncPan) == nested-1.html nested-1-ref.html

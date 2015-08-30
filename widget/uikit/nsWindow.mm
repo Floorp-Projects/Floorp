@@ -158,9 +158,9 @@ private:
     if (sender.state == UIGestureRecognizerStateEnded) {
         ALOG("[ChildView[%p] handleTap]", self);
         LayoutDeviceIntPoint lp = UIKitPointsToDevPixels([sender locationInView:self], [self contentScaleFactor]);
-        [self sendMouseEvent:NS_MOUSE_MOVE point:lp widget:mGeckoChild];
-        [self sendMouseEvent:NS_MOUSE_BUTTON_DOWN point:lp widget:mGeckoChild];
-        [self sendMouseEvent:NS_MOUSE_BUTTON_UP point:lp widget:mGeckoChild];
+        [self sendMouseEvent:eMouseMove point:lp widget:mGeckoChild];
+        [self sendMouseEvent:eMouseDown point:lp widget:mGeckoChild];
+        [self sendMouseEvent:eMouseUp point:lp widget:mGeckoChild];
     }
 }
 
@@ -682,7 +682,7 @@ nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
 }
 
 NS_IMETHODIMP
-nsWindow::SetSizeMode(int32_t aMode)
+nsWindow::SetSizeMode(nsSizeMode aMode)
 {
     if (aMode == static_cast<int32_t>(mSizeMode)) {
         return NS_OK;
@@ -749,7 +749,7 @@ void nsWindow::ReportMoveEvent()
     NotifyWindowMoved(mBounds.x, mBounds.y);
 }
 
-void nsWindow::ReportSizeModeEvent(int32_t aMode)
+void nsWindow::ReportSizeModeEvent(nsSizeMode aMode)
 {
     if (mWidgetListener) {
         // This is terrible.

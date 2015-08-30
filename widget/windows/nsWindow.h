@@ -112,7 +112,7 @@ public:
                                           int32_t aHorizontal,
                                           int32_t aVertical);
   NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget *aWidget, bool aActivate);
-  NS_IMETHOD              SetSizeMode(int32_t aMode);
+  NS_IMETHOD              SetSizeMode(nsSizeMode aMode);
   NS_IMETHOD              Enable(bool aState);
   virtual bool            IsEnabled() const;
   NS_IMETHOD              SetFocus(bool aRaise);

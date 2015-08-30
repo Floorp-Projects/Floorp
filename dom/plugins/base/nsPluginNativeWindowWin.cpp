@@ -196,7 +196,7 @@ static LRESULT CALLBACK PluginWndProcInternal(HWND hWnd, UINT msg, WPARAM wParam
   if (!win)
     return TRUE;
 
-  // The DispatchEvent(NS_PLUGIN_ACTIVATE) below can trigger a reentrant focus
+  // The DispatchEvent(ePluginActivate) below can trigger a reentrant focus
   // event which might destroy us.  Hold a strong ref on the plugin instance
   // to prevent that, bug 374229.
   nsRefPtr<nsNPAPIPluginInstance> inst;
@@ -271,7 +271,7 @@ static LRESULT CALLBACK PluginWndProcInternal(HWND hWnd, UINT msg, WPARAM wParam
         nsCOMPtr<nsIWidget> widget;
         win->GetPluginWidget(getter_AddRefs(widget));
         if (widget) {
-          WidgetGUIEvent event(true, NS_PLUGIN_ACTIVATE, widget);
+          WidgetGUIEvent event(true, ePluginActivate, widget);
           nsEventStatus status;
           widget->DispatchEvent(&event, status);
         }

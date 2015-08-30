@@ -1177,7 +1177,7 @@ NS_METHOD nsCocoaWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
   return NS_OK;
 }
 
-NS_METHOD nsCocoaWindow::SetSizeMode(int32_t aMode)
+NS_METHOD nsCocoaWindow::SetSizeMode(nsSizeMode aMode)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1704,6 +1704,9 @@ nsCocoaWindow::BackingScaleFactorChanged()
   if (presShell) {
     presShell->BackingScaleFactorChanged();
   }
+  // When the backing scale factor changes, so does our size in device pixels
+  // (though not in display pixels).
+  ReportSizeEvent();
 }
 
 int32_t

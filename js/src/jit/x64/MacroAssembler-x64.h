@@ -159,20 +159,22 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             movl(reg, Operand(dest));
             movl(Imm32(Upper32Of(GetShiftedTag(type))), ToUpper32(Operand(dest)));
         } else {
-            boxValue(type, reg, ScratchReg);
-            movq(ScratchReg, Operand(dest));
+            ScratchRegisterScope scratch(asMasm());
+            boxValue(type, reg, scratch);
+            movq(scratch, Operand(dest));
         }
     }
     template <typename T>
     void storeValue(const Value& val, const T& dest) {
+        ScratchRegisterScope scratch(asMasm());
         jsval_layout jv = JSVAL_TO_IMPL(val);
         if (val.isMarkable()) {
-            movWithPatch(ImmWord(jv.asBits), ScratchReg);
+            movWithPatch(ImmWord(jv.asBits), scratch);
             writeDataRelocation(val);
         } else {
-            mov(ImmWord(jv.asBits), ScratchReg);
+            mov(ImmWord(jv.asBits), scratch);
         }
-        movq(ScratchReg, Operand(dest));
+        movq(scratch, Operand(dest));
     }
     void storeValue(ValueOperand val, BaseIndex dest) {
         storeValue(val, Operand(dest));
@@ -187,11 +189,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         loadValue(Operand(src), val);
     }
     void tagValue(JSValueType type, Register payload, ValueOperand dest) {
-        MOZ_ASSERT(dest.valueReg() != ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        MOZ_ASSERT(dest.valueReg() != scratch);
         if (payload != dest.valueReg())
             movq(payload, dest.valueReg());
-        mov(ImmShiftedTag(type), ScratchReg);
-        orq(ScratchReg, dest.valueReg());
+        mov(ImmShiftedTag(type), scratch);
+        orq(scratch, dest.valueReg());
     }
     void pushValue(ValueOperand val) {
         push(val.valueReg());
@@ -202,16 +205,18 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void pushValue(const Value& val) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
         if (val.isMarkable()) {
-            movWithPatch(ImmWord(jv.asBits), ScratchReg);
+            ScratchRegisterScope scratch(asMasm());
+            movWithPatch(ImmWord(jv.asBits), scratch);
             writeDataRelocation(val);
-            push(ScratchReg);
+            push(scratch);
         } else {
             push(ImmWord(jv.asBits));
         }
     }
     void pushValue(JSValueType type, Register reg) {
-        boxValue(type, reg, ScratchReg);
-        push(ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        boxValue(type, reg, scratch);
+        push(scratch);
     }
     void pushValue(const Address& addr) {
         push(Operand(addr));
@@ -312,140 +317,173 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     Condition testUndefined(Condition cond, const ValueOperand& src) {
-        splitTag(src, ScratchReg);
-        return testUndefined(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testUndefined(cond, scratch);
     }
     Condition testInt32(Condition cond, const ValueOperand& src) {
-        splitTag(src, ScratchReg);
-        return testInt32(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testInt32(cond, scratch);
     }
     Condition testBoolean(Condition cond, const ValueOperand& src) {
-        splitTag(src, ScratchReg);
-        return testBoolean(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testBoolean(cond, scratch);
     }
     Condition testDouble(Condition cond, const ValueOperand& src) {
-        splitTag(src, ScratchReg);
-        return testDouble(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testDouble(cond, scratch);
     }
     Condition testNumber(Condition cond, const ValueOperand& src) {
-        splitTag(src, ScratchReg);
-        return testNumber(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testNumber(cond, scratch);
     }
     Condition testNull(Condition cond, const ValueOperand& src) {
-        splitTag(src, ScratchReg);
-        return testNull(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testNull(cond, scratch);
     }
     Condition testString(Condition cond, const ValueOperand& src) {
-        splitTag(src, ScratchReg);
-        return testString(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testString(cond, scratch);
     }
     Condition testSymbol(Condition cond, const ValueOperand& src) {
-        splitTag(src, ScratchReg);
-        return testSymbol(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testSymbol(cond, scratch);
     }
     Condition testObject(Condition cond, const ValueOperand& src) {
-        splitTag(src, ScratchReg);
-        return testObject(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testObject(cond, scratch);
     }
     Condition testGCThing(Condition cond, const ValueOperand& src) {
-        splitTag(src, ScratchReg);
-        return testGCThing(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testGCThing(cond, scratch);
     }
     Condition testPrimitive(Condition cond, const ValueOperand& src) {
-        splitTag(src, ScratchReg);
-        return testPrimitive(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testPrimitive(cond, scratch);
     }
 
 
     Condition testUndefined(Condition cond, const Address& src) {
-        splitTag(src, ScratchReg);
-        return testUndefined(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testUndefined(cond, scratch);
     }
     Condition testInt32(Condition cond, const Address& src) {
-        splitTag(src, ScratchReg);
-        return testInt32(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testInt32(cond, scratch);
     }
     Condition testBoolean(Condition cond, const Address& src) {
-        splitTag(src, ScratchReg);
-        return testBoolean(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testBoolean(cond, scratch);
     }
     Condition testDouble(Condition cond, const Address& src) {
-        splitTag(src, ScratchReg);
-        return testDouble(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testDouble(cond, scratch);
     }
     Condition testNumber(Condition cond, const Address& src) {
-        splitTag(src, ScratchReg);
-        return testNumber(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testNumber(cond, scratch);
     }
     Condition testNull(Condition cond, const Address& src) {
-        splitTag(src, ScratchReg);
-        return testNull(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testNull(cond, scratch);
     }
     Condition testString(Condition cond, const Address& src) {
-        splitTag(src, ScratchReg);
-        return testString(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testString(cond, scratch);
     }
     Condition testSymbol(Condition cond, const Address& src) {
-        splitTag(src, ScratchReg);
-        return testSymbol(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testSymbol(cond, scratch);
     }
     Condition testObject(Condition cond, const Address& src) {
-        splitTag(src, ScratchReg);
-        return testObject(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testObject(cond, scratch);
     }
     Condition testPrimitive(Condition cond, const Address& src) {
-        splitTag(src, ScratchReg);
-        return testPrimitive(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testPrimitive(cond, scratch);
     }
     Condition testGCThing(Condition cond, const Address& src) {
-        splitTag(src, ScratchReg);
-        return testGCThing(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testGCThing(cond, scratch);
     }
     Condition testMagic(Condition cond, const Address& src) {
-        splitTag(src, ScratchReg);
-        return testMagic(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testMagic(cond, scratch);
     }
 
 
     Condition testUndefined(Condition cond, const BaseIndex& src) {
-        splitTag(src, ScratchReg);
-        return testUndefined(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testUndefined(cond, scratch);
     }
     Condition testNull(Condition cond, const BaseIndex& src) {
-        splitTag(src, ScratchReg);
-        return testNull(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testNull(cond, scratch);
     }
     Condition testBoolean(Condition cond, const BaseIndex& src) {
-        splitTag(src, ScratchReg);
-        return testBoolean(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testBoolean(cond, scratch);
     }
     Condition testString(Condition cond, const BaseIndex& src) {
-        splitTag(src, ScratchReg);
-        return testString(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testString(cond, scratch);
     }
     Condition testSymbol(Condition cond, const BaseIndex& src) {
-        splitTag(src, ScratchReg);
-        return testSymbol(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testSymbol(cond, scratch);
     }
     Condition testInt32(Condition cond, const BaseIndex& src) {
-        splitTag(src, ScratchReg);
-        return testInt32(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testInt32(cond, scratch);
     }
     Condition testObject(Condition cond, const BaseIndex& src) {
-        splitTag(src, ScratchReg);
-        return testObject(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testObject(cond, scratch);
     }
     Condition testDouble(Condition cond, const BaseIndex& src) {
-        splitTag(src, ScratchReg);
-        return testDouble(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testDouble(cond, scratch);
     }
     Condition testMagic(Condition cond, const BaseIndex& src) {
-        splitTag(src, ScratchReg);
-        return testMagic(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testMagic(cond, scratch);
     }
     Condition testGCThing(Condition cond, const BaseIndex& src) {
-        splitTag(src, ScratchReg);
-        return testGCThing(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testGCThing(cond, scratch);
     }
 
     Condition isMagic(Condition cond, const ValueOperand& src, JSWhyMagic why) {
@@ -455,36 +493,40 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     void cmpPtr(Register lhs, const ImmWord rhs) {
-        MOZ_ASSERT(lhs != ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        MOZ_ASSERT(lhs != scratch);
         if (intptr_t(rhs.value) <= INT32_MAX && intptr_t(rhs.value) >= INT32_MIN) {
             cmpPtr(lhs, Imm32(int32_t(rhs.value)));
         } else {
-            movePtr(rhs, ScratchReg);
-            cmpPtr(lhs, ScratchReg);
+            movePtr(rhs, scratch);
+            cmpPtr(lhs, scratch);
         }
     }
     void cmpPtr(Register lhs, const ImmPtr rhs) {
         cmpPtr(lhs, ImmWord(uintptr_t(rhs.value)));
     }
     void cmpPtr(Register lhs, const ImmGCPtr rhs) {
-        MOZ_ASSERT(lhs != ScratchReg);
-        movePtr(rhs, ScratchReg);
-        cmpPtr(lhs, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        MOZ_ASSERT(lhs != scratch);
+        movePtr(rhs, scratch);
+        cmpPtr(lhs, scratch);
     }
     void cmpPtr(Register lhs, const Imm32 rhs) {
         cmpq(rhs, lhs);
     }
     void cmpPtr(const Operand& lhs, const ImmGCPtr rhs) {
-        MOZ_ASSERT(!lhs.containsReg(ScratchReg));
-        movePtr(rhs, ScratchReg);
-        cmpPtr(lhs, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        MOZ_ASSERT(!lhs.containsReg(scratch));
+        movePtr(rhs, scratch);
+        cmpPtr(lhs, scratch);
     }
     void cmpPtr(const Operand& lhs, const ImmWord rhs) {
         if ((intptr_t)rhs.value <= INT32_MAX && (intptr_t)rhs.value >= INT32_MIN) {
             cmpPtr(lhs, Imm32((int32_t)rhs.value));
         } else {
-            movePtr(rhs, ScratchReg);
-            cmpPtr(lhs, ScratchReg);
+            ScratchRegisterScope scratch(asMasm());
+            movePtr(rhs, scratch);
+            cmpPtr(lhs, scratch);
         }
     }
     void cmpPtr(const Operand& lhs, const ImmPtr rhs) {
@@ -548,12 +590,13 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         addq(imm, dest);
     }
     void addPtr(ImmWord imm, Register dest) {
-        MOZ_ASSERT(dest != ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        MOZ_ASSERT(dest != scratch);
         if ((intptr_t)imm.value <= INT32_MAX && (intptr_t)imm.value >= INT32_MIN) {
             addq(Imm32((int32_t)imm.value), dest);
         } else {
-            mov(imm, ScratchReg);
-            addq(ScratchReg, dest);
+            mov(imm, scratch);
+            addq(scratch, dest);
         }
     }
     void addPtr(ImmPtr imm, Register dest) {
@@ -582,54 +625,61 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         if (X86Encoding::IsAddressImmediate(lhs.addr)) {
             branch32(cond, Operand(lhs), rhs, label);
         } else {
-            mov(ImmPtr(lhs.addr), ScratchReg);
-            branch32(cond, Address(ScratchReg, 0), rhs, label);
+            ScratchRegisterScope scratch(asMasm());
+            mov(ImmPtr(lhs.addr), scratch);
+            branch32(cond, Address(scratch, 0), rhs, label);
         }
     }
     void branch32(Condition cond, AsmJSAbsoluteAddress lhs, Imm32 rhs, Label* label) {
-        mov(AsmJSImmPtr(lhs.kind()), ScratchReg);
-        branch32(cond, Address(ScratchReg, 0), rhs, label);
+        ScratchRegisterScope scratch(asMasm());
+        mov(AsmJSImmPtr(lhs.kind()), scratch);
+        branch32(cond, Address(scratch, 0), rhs, label);
     }
     void branch32(Condition cond, AbsoluteAddress lhs, Register rhs, Label* label) {
         if (X86Encoding::IsAddressImmediate(lhs.addr)) {
             branch32(cond, Operand(lhs), rhs, label);
         } else {
-            mov(ImmPtr(lhs.addr), ScratchReg);
-            branch32(cond, Address(ScratchReg, 0), rhs, label);
+            ScratchRegisterScope scratch(asMasm());
+            mov(ImmPtr(lhs.addr), scratch);
+            branch32(cond, Address(scratch, 0), rhs, label);
         }
     }
     void branchTest32(Condition cond, AbsoluteAddress address, Imm32 imm, Label* label) {
         if (X86Encoding::IsAddressImmediate(address.addr)) {
             test32(Operand(address), imm);
         } else {
-            mov(ImmPtr(address.addr), ScratchReg);
-            test32(Operand(ScratchReg, 0), imm);
+            ScratchRegisterScope scratch(asMasm());
+            mov(ImmPtr(address.addr), scratch);
+            test32(Operand(scratch, 0), imm);
         }
         j(cond, label);
     }
 
     // Specialization for AbsoluteAddress.
     void branchPtr(Condition cond, AbsoluteAddress addr, Register ptr, Label* label) {
-        MOZ_ASSERT(ptr != ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        MOZ_ASSERT(ptr != scratch);
         if (X86Encoding::IsAddressImmediate(addr.addr)) {
             branchPtr(cond, Operand(addr), ptr, label);
         } else {
-            mov(ImmPtr(addr.addr), ScratchReg);
-            branchPtr(cond, Operand(ScratchReg, 0x0), ptr, label);
+            mov(ImmPtr(addr.addr), scratch);
+            branchPtr(cond, Operand(scratch, 0x0), ptr, label);
         }
     }
     void branchPtr(Condition cond, AbsoluteAddress addr, ImmWord ptr, Label* label) {
         if (X86Encoding::IsAddressImmediate(addr.addr)) {
             branchPtr(cond, Operand(addr), ptr, label);
         } else {
-            mov(ImmPtr(addr.addr), ScratchReg);
-            branchPtr(cond, Operand(ScratchReg, 0x0), ptr, label);
+            ScratchRegisterScope scratch(asMasm());
+            mov(ImmPtr(addr.addr), scratch);
+            branchPtr(cond, Operand(scratch, 0x0), ptr, label);
         }
     }
     void branchPtr(Condition cond, AsmJSAbsoluteAddress addr, Register ptr, Label* label) {
-        MOZ_ASSERT(ptr != ScratchReg);
-        mov(AsmJSImmPtr(addr.kind()), ScratchReg);
-        branchPtr(cond, Operand(ScratchReg, 0x0), ptr, label);
+        ScratchRegisterScope scratch(asMasm());
+        MOZ_ASSERT(ptr != scratch);
+        mov(AsmJSImmPtr(addr.kind()), scratch);
+        branchPtr(cond, Operand(scratch, 0x0), ptr, label);
     }
 
     void branchPrivatePtr(Condition cond, Address lhs, ImmPtr ptr, Label* label) {
@@ -637,14 +687,15 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     void branchPrivatePtr(Condition cond, Address lhs, Register ptr, Label* label) {
-        if (ptr != ScratchReg)
-            movePtr(ptr, ScratchReg);
-        rshiftPtr(Imm32(1), ScratchReg);
-        branchPtr(cond, lhs, ScratchReg, label);
+        ScratchRegisterScope scratch(asMasm());
+        if (ptr != scratch)
+            movePtr(ptr, scratch);
+        rshiftPtr(Imm32(1), scratch);
+        branchPtr(cond, lhs, scratch, label);
     }
 
     template <typename T, typename S>
-    void branchPtr(Condition cond, T lhs, S ptr, Label* label) {
+    void branchPtr(Condition cond, const T& lhs, const S& ptr, Label* label) {
         cmpPtr(Operand(lhs), ptr);
         j(cond, label);
     }
@@ -713,8 +764,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         if (X86Encoding::IsAddressImmediate(address.addr)) {
             movq(Operand(address), dest);
         } else {
-            mov(ImmPtr(address.addr), ScratchReg);
-            loadPtr(Address(ScratchReg, 0x0), dest);
+            ScratchRegisterScope scratch(asMasm());
+            mov(ImmPtr(address.addr), scratch);
+            loadPtr(Address(scratch, 0x0), dest);
         }
     }
     void loadPtr(const Address& address, Register dest) {
@@ -734,8 +786,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         if (X86Encoding::IsAddressImmediate(address.addr)) {
             movl(Operand(address), dest);
         } else {
-            mov(ImmPtr(address.addr), ScratchReg);
-            load32(Address(ScratchReg, 0x0), dest);
+            ScratchRegisterScope scratch(asMasm());
+            mov(ImmPtr(address.addr), scratch);
+            load32(Address(scratch, 0x0), dest);
         }
     }
     template <typename T>
@@ -743,8 +796,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         if ((intptr_t)imm.value <= INT32_MAX && (intptr_t)imm.value >= INT32_MIN) {
             movq(Imm32((int32_t)imm.value), Operand(address));
         } else {
-            mov(imm, ScratchReg);
-            movq(ScratchReg, Operand(address));
+            ScratchRegisterScope scratch(asMasm());
+            mov(imm, scratch);
+            movq(scratch, Operand(address));
         }
     }
     template <typename T>
@@ -753,8 +807,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     template <typename T>
     void storePtr(ImmGCPtr imm, T address) {
-        movq(imm, ScratchReg);
-        movq(ScratchReg, Operand(address));
+        ScratchRegisterScope scratch(asMasm());
+        movq(imm, scratch);
+        movq(scratch, Operand(address));
     }
     void storePtr(Register src, const Address& address) {
         movq(src, Operand(address));
@@ -769,16 +824,18 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         if (X86Encoding::IsAddressImmediate(address.addr)) {
             movq(src, Operand(address));
         } else {
-            mov(ImmPtr(address.addr), ScratchReg);
-            storePtr(src, Address(ScratchReg, 0x0));
+            ScratchRegisterScope scratch(asMasm());
+            mov(ImmPtr(address.addr), scratch);
+            storePtr(src, Address(scratch, 0x0));
         }
     }
     void store32(Register src, AbsoluteAddress address) {
         if (X86Encoding::IsAddressImmediate(address.addr)) {
             movl(src, Operand(address));
         } else {
-            mov(ImmPtr(address.addr), ScratchReg);
-            store32(src, Address(ScratchReg, 0x0));
+            ScratchRegisterScope scratch(asMasm());
+            mov(ImmPtr(address.addr), scratch);
+            store32(src, Address(scratch, 0x0));
         }
     }
     void rshiftPtr(Imm32 imm, Register dest) {
@@ -898,8 +955,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void branchTestDouble(Condition cond, const Operand& operand, Label* label) {
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        splitTag(operand, ScratchReg);
-        branchTestDouble(cond, ScratchReg, label);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(operand, scratch);
+        branchTestDouble(cond, scratch, label);
     }
     void branchTestDouble(Condition cond, const Address& address, Label* label) {
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
@@ -933,12 +991,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         j(cond, label);
     }
     void branchTestInt32(Condition cond, const ValueOperand& src, Label* label) {
-        splitTag(src, ScratchReg);
-        branchTestInt32(cond, ScratchReg, label);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        branchTestInt32(cond, scratch, label);
     }
     void branchTestBoolean(Condition cond, const ValueOperand& src, Label* label) {
-        splitTag(src, ScratchReg);
-        branchTestBoolean(cond, ScratchReg, label);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        branchTestBoolean(cond, scratch, label);
     }
     void branchTestDouble(Condition cond, const ValueOperand& src, Label* label) {
         cond = testDouble(cond, src);
@@ -972,12 +1032,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         j(cond, label);
     }
     void branchTestInt32(Condition cond, const BaseIndex& address, Label* label) {
-        splitTag(address, ScratchReg);
-        branchTestInt32(cond, ScratchReg, label);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(address, scratch);
+        branchTestInt32(cond, scratch, label);
     }
     void branchTestBoolean(Condition cond, const BaseIndex& address, Label* label) {
-        splitTag(address, ScratchReg);
-        branchTestBoolean(cond, ScratchReg, label);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(address, scratch);
+        branchTestBoolean(cond, scratch, label);
     }
     void branchTestDouble(Condition cond, const BaseIndex& address, Label* label) {
         cond = testDouble(cond, address);
@@ -1022,16 +1084,18 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         branchTestValue(cond, val, MagicValue(why), label);
     }
     Condition testMagic(Condition cond, const ValueOperand& src) {
-        splitTag(src, ScratchReg);
-        return testMagic(cond, ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        splitTag(src, scratch);
+        return testMagic(cond, scratch);
     }
     Condition testError(Condition cond, const ValueOperand& src) {
         return testMagic(cond, src);
     }
     void branchTestValue(Condition cond, const ValueOperand& value, const Value& v, Label* label) {
-        MOZ_ASSERT(value.valueReg() != ScratchReg);
-        moveValue(v, ScratchReg);
-        cmpPtr(value.valueReg(), ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        MOZ_ASSERT(value.valueReg() != scratch);
+        moveValue(v, scratch);
+        cmpPtr(value.valueReg(), scratch);
         j(cond, label);
     }
     void branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
@@ -1119,8 +1183,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // instead if the source type is known.
     void unboxNonDouble(const ValueOperand& src, Register dest) {
         if (src.valueReg() == dest) {
-            mov(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
-            andq(ScratchReg, dest);
+            ScratchRegisterScope scratch(asMasm());
+            mov(ImmWord(JSVAL_PAYLOAD_MASK), scratch);
+            andq(scratch, dest);
         } else {
             mov(ImmWord(JSVAL_PAYLOAD_MASK), dest);
             andq(src.valueReg(), dest);
@@ -1128,14 +1193,15 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void unboxNonDouble(const Operand& src, Register dest) {
         // Explicitly permits |dest| to be used in |src|.
-        MOZ_ASSERT(dest != ScratchReg);
+        ScratchRegisterScope scratch(asMasm());
+        MOZ_ASSERT(dest != scratch);
         if (src.containsReg(dest)) {
-            mov(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
+            mov(ImmWord(JSVAL_PAYLOAD_MASK), scratch);
             // If src is already a register, then src and dest are the same
             // thing and we don't need to move anything into dest.
             if (src.kind() != Operand::REG)
                 movq(src, dest);
-            andq(ScratchReg, dest);
+            andq(scratch, dest);
         } else {
             mov(ImmWord(JSVAL_PAYLOAD_MASK), dest);
             andq(src, dest);
@@ -1259,8 +1325,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         j(truthy ? NonZero : Zero, label);
     }
     Condition testStringTruthy(bool truthy, const ValueOperand& value) {
-        unboxString(value, ScratchReg);
-        cmp32(Operand(ScratchReg, JSString::offsetOfLength()), Imm32(0));
+        ScratchRegisterScope scratch(asMasm());
+        unboxString(value, scratch);
+        cmp32(Operand(scratch, JSString::offsetOfLength()), Imm32(0));
         return truthy ? Assembler::NotEqual : Assembler::Equal;
     }
     void branchTestStringTruthy(bool truthy, const ValueOperand& value, Label* label) {
@@ -1294,10 +1361,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     template <typename T>
     void storeUnboxedPayload(ValueOperand value, T address, size_t nbytes) {
         switch (nbytes) {
-          case 8:
-            unboxNonDouble(value, ScratchReg);
-            storePtr(ScratchReg, address);
+          case 8: {
+            ScratchRegisterScope scratch(asMasm());
+            unboxNonDouble(value, scratch);
+            storePtr(scratch, address);
             return;
+          }
           case 4:
             store32(value.valueReg(), address);
             return;
@@ -1324,8 +1393,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         if (X86Encoding::IsAddressImmediate(dest.addr)) {
             addPtr(Imm32(1), Operand(dest));
         } else {
-            mov(ImmPtr(dest.addr), ScratchReg);
-            addPtr(Imm32(1), Address(ScratchReg, 0));
+            ScratchRegisterScope scratch(asMasm());
+            mov(ImmPtr(dest.addr), scratch);
+            addPtr(Imm32(1), Address(scratch, 0));
         }
     }
 
@@ -1341,8 +1411,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         branchTestDouble(Assembler::Equal, tag, &isDouble);
         branchTestInt32(Assembler::NotEqual, tag, failure);
 
-        unboxInt32(source, ScratchReg);
-        convertInt32ToDouble(ScratchReg, dest);
+        ScratchRegisterScope scratch(asMasm());
+        unboxInt32(source, scratch);
+        convertInt32ToDouble(scratch, dest);
         jump(&done);
 
         bind(&isDouble);
@@ -1371,8 +1442,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         ((int32_t*)nextInsn)[-1] = target - nextInsn;
     }
     void memIntToValue(Address Source, Address Dest) {
-        load32(Source, ScratchReg);
-        storeValue(JSVAL_TYPE_INT32, ScratchReg, Dest);
+        ScratchRegisterScope scratch(asMasm());
+        load32(Source, scratch);
+        storeValue(JSVAL_TYPE_INT32, scratch, Dest);
     }
 
     void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label);

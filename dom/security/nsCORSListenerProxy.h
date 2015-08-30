@@ -16,6 +16,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIChannelEventSink.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
+#include "nsIThreadRetargetableStreamListener.h"
 #include "mozilla/Attributes.h"
 
 class nsIURI;
@@ -39,7 +40,8 @@ enum class DataURIHandling
 class nsCORSListenerProxy final : public nsIStreamListener,
                                   public nsIInterfaceRequestor,
                                   public nsIChannelEventSink,
-                                  public nsIAsyncVerifyRedirectCallback
+                                  public nsIAsyncVerifyRedirectCallback,
+                                  public nsIThreadRetargetableStreamListener
 {
 public:
   nsCORSListenerProxy(nsIStreamListener* aOuter,
@@ -57,6 +59,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
+  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
   // Must be called at startup.
   static void Startup();

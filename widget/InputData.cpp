@@ -81,7 +81,7 @@ MultiTouchInput::ToWidgetTouchEvent(nsIWidget* aWidget) const
   MOZ_ASSERT(NS_IsMainThread(),
              "Can only convert To WidgetTouchEvent on main thread");
 
-  EventMessage touchEventMessage = NS_EVENT_NULL;
+  EventMessage touchEventMessage = eVoidEvent;
   switch (mType) {
   case MULTITOUCH_START:
     touchEventMessage = NS_TOUCH_START;
@@ -101,7 +101,7 @@ MultiTouchInput::ToWidgetTouchEvent(nsIWidget* aWidget) const
   }
 
   WidgetTouchEvent event(true, touchEventMessage, aWidget);
-  if (touchEventMessage == NS_EVENT_NULL) {
+  if (touchEventMessage == eVoidEvent) {
     return event;
   }
 
@@ -122,17 +122,17 @@ MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
   MOZ_ASSERT(NS_IsMainThread(),
              "Can only convert To WidgetMouseEvent on main thread");
 
-  EventMessage mouseEventMessage = NS_EVENT_NULL;
+  EventMessage mouseEventMessage = eVoidEvent;
   switch (mType) {
     case MultiTouchInput::MULTITOUCH_START:
-      mouseEventMessage = NS_MOUSE_BUTTON_DOWN;
+      mouseEventMessage = eMouseDown;
       break;
     case MultiTouchInput::MULTITOUCH_MOVE:
-      mouseEventMessage = NS_MOUSE_MOVE;
+      mouseEventMessage = eMouseMove;
       break;
     case MultiTouchInput::MULTITOUCH_CANCEL:
     case MultiTouchInput::MULTITOUCH_END:
-      mouseEventMessage = NS_MOUSE_BUTTON_UP;
+      mouseEventMessage = eMouseUp;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Did not assign a type to WidgetMouseEvent");
@@ -151,7 +151,7 @@ MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
   event.modifiers = modifiers;
 
-  if (mouseEventMessage != NS_MOUSE_MOVE) {
+  if (mouseEventMessage != eMouseMove) {
     event.clickCount = 1;
   }
 
@@ -182,20 +182,20 @@ MultiTouchInput::MultiTouchInput(const WidgetMouseEvent& aMouseEvent)
   MOZ_ASSERT(NS_IsMainThread(),
              "Can only copy from WidgetMouseEvent on main thread");
   switch (aMouseEvent.mMessage) {
-  case NS_MOUSE_BUTTON_DOWN:
+  case eMouseDown:
     mType = MULTITOUCH_START;
     break;
-  case NS_MOUSE_MOVE:
+  case eMouseMove:
     mType = MULTITOUCH_MOVE;
     break;
-  case NS_MOUSE_BUTTON_UP:
+  case eMouseUp:
     mType = MULTITOUCH_END;
     break;
   // The mouse pointer has been interrupted in an implementation-specific
   // manner, such as a synchronous event or action cancelling the touch, or a
   // touch point leaving the document window and going into a non-document
   // area capable of handling user interactions.
-  case NS_MOUSE_EXIT_WIDGET:
+  case eMouseExitFromWidget:
     mType = MULTITOUCH_CANCEL;
     break;
   default:
