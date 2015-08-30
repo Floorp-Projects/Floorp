@@ -3,13 +3,13 @@
 var g = newGlobal();
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
-var arrw = gw.evalInGlobal("var arr = []; arr;").return;
-var pushw = gw.evalInGlobal("var push = arr.push.bind(arr); push;").return;
+var arrw = gw.executeInGlobal("var arr = []; arr;").return;
+var pushw = gw.executeInGlobal("var push = arr.push.bind(arr); push;").return;
 assertEq(pushw.isBoundFunction, true);
 assertEq(pushw.boundThis, arrw);
 assertEq(pushw.boundArguments.length, 0);
 
-var arr2 = gw.evalInGlobal("var arr2 = []; arr2").return;
+var arr2 = gw.executeInGlobal("var arr2 = []; arr2").return;
 assertEq(pushw.call(arr2, "tuesday").return, 1);
 g.eval("assertEq(arr.length, 1);");
 g.eval("assertEq(arr[0], 'tuesday');");

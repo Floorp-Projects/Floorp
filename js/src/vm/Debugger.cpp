@@ -7434,29 +7434,30 @@ RequireGlobalObject(JSContext* cx, HandleValue dbgobj, HandleObject referent)
 }
 
 static bool
-DebuggerObject_evalInGlobal(JSContext* cx, unsigned argc, Value* vp)
+DebuggerObject_executeInGlobal(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "evalInGlobal", args, dbg, referent);
-    if (!args.requireAtLeast(cx, "Debugger.Object.prototype.evalInGlobal", 1))
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "executeInGlobal", args, dbg, referent);
+    if (!args.requireAtLeast(cx, "Debugger.Object.prototype.executeInGlobal", 1))
         return false;
     if (!RequireGlobalObject(cx, args.thisv(), referent))
         return false;
 
-    return DebuggerGenericEval(cx, "Debugger.Object.prototype.evalInGlobal",
+    return DebuggerGenericEval(cx, "Debugger.Object.prototype.executeInGlobal",
                                args[0], EvalWithDefaultBindings, JS::UndefinedHandleValue,
                                args.get(1), args.rval(), dbg, referent, nullptr);
 }
 
 static bool
-DebuggerObject_evalInGlobalWithBindings(JSContext* cx, unsigned argc, Value* vp)
+DebuggerObject_executeInGlobalWithBindings(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "evalInGlobalWithBindings", args, dbg, referent);
-    if (!args.requireAtLeast(cx, "Debugger.Object.prototype.evalInGlobalWithBindings", 2))
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "executeInGlobalWithBindings", args, dbg,
+                                    referent);
+    if (!args.requireAtLeast(cx, "Debugger.Object.prototype.executeInGlobalWithBindings", 2))
         return false;
     if (!RequireGlobalObject(cx, args.thisv(), referent))
         return false;
 
-    return DebuggerGenericEval(cx, "Debugger.Object.prototype.evalInGlobalWithBindings",
+    return DebuggerGenericEval(cx, "Debugger.Object.prototype.executeInGlobalWithBindings",
                                args[0], EvalHasExtraBindings, args[1], args.get(2),
                                args.rval(), dbg, referent, nullptr);
 }
@@ -7536,8 +7537,8 @@ static const JSFunctionSpec DebuggerObject_methods[] = {
     JS_FN("apply", DebuggerObject_apply, 0, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
     JS_FN("makeDebuggeeValue", DebuggerObject_makeDebuggeeValue, 1, 0),
-    JS_FN("evalInGlobal", DebuggerObject_evalInGlobal, 1, 0),
-    JS_FN("evalInGlobalWithBindings", DebuggerObject_evalInGlobalWithBindings, 2, 0),
+    JS_FN("executeInGlobal", DebuggerObject_executeInGlobal, 1, 0),
+    JS_FN("executeInGlobalWithBindings", DebuggerObject_executeInGlobalWithBindings, 2, 0),
     JS_FN("unwrap", DebuggerObject_unwrap, 0, 0),
     JS_FN("unsafeDereference", DebuggerObject_unsafeDereference, 0, 0),
     JS_FS_END

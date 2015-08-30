@@ -7,7 +7,7 @@ var hits = 0;
 
 function checkIsArrow(shouldBe, expr) {
   print(expr);
-  assertEq(gDO.evalInGlobal(expr).return.isArrowFunction, shouldBe);
+  assertEq(gDO.executeInGlobal(expr).return.isArrowFunction, shouldBe);
 }
 
 checkIsArrow(true, '() => { }');
