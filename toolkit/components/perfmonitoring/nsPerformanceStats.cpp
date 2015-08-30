@@ -444,7 +444,7 @@ NS_IMETHODIMP nsPerformanceSnapshot::GetProcessData(nsIPerformanceStats * *aProc
 }
 
 
-NS_IMPL_ISUPPORTS(nsPerformanceStatsService, nsIPerformanceStatsService, nsIObserver)
+NS_IMPL_ISUPPORTS(nsPerformanceStatsService, nsIPerformanceStatsService)
 
 nsPerformanceStatsService::nsPerformanceStatsService()
 #if defined(XP_WIN)
@@ -454,11 +454,8 @@ nsPerformanceStatsService::nsPerformanceStatsService()
 #endif
   , mProcessStayed(0)
   , mProcessMoved(0)
+  , mProcessUpdateCounter(0)
 {
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (obs) {
-    mozilla::unused << obs->AddObserver(this, "profile-before-change", false);
-  }
 }
 
 nsPerformanceStatsService::~nsPerformanceStatsService()
@@ -509,6 +506,27 @@ NS_IMETHODIMP nsPerformanceStatsService::SetIsMonitoringPerCompartment(JSContext
   return NS_OK;
 }
 
+nsresult nsPerformanceStatsService::UpdateTelemetry()
+{
+  // Promote everything to floating-point explicitly before dividing.
+  const double processStayed = mProcessStayed;
+  const double processMoved = mProcessMoved;
+
+  if (processStayed <= 0 || processMoved <= 0 || processStayed + processMoved <= 0) {
+    // Overflow/underflow/nothing to report
+    return NS_OK;
+  }
+
+  const double proportion = (100 * processStayed) / (processStayed + processMoved);
+  if (proportion < 0 || proportion > 100) {
+    // Overflow/underflow
+    return NS_OK;
+  }
+
+  mozilla::Telemetry::Accumulate(mozilla::Telemetry::PERF_MONITORING_TEST_CPU_RESCHEDULING_PROPORTION_MOVED, (uint32_t)proportion);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsPerformanceStatsService::GetSnapshot(JSContext* cx, nsIPerformanceSnapshot * *aSnapshot)
 {
   nsRefPtr<nsPerformanceSnapshot> snapshot = new nsPerformanceSnapshot();
@@ -518,27 +536,14 @@ NS_IMETHODIMP nsPerformanceStatsService::GetSnapshot(JSContext* cx, nsIPerforman
   }
 
   js::GetPerfMonitoringTestCpuRescheduling(JS_GetRuntime(cx), &mProcessStayed, &mProcessMoved);
+
+  if (++mProcessUpdateCounter % 10 == 0) {
+    mozilla::unused << UpdateTelemetry();
+  }
+
   snapshot.forget(aSnapshot);
 
   return NS_OK;
 }
 
 
-/* void observe (in nsISupports aSubject, in string aTopic, in wstring aData); */
-NS_IMETHODIMP nsPerformanceStatsService::Observe(nsISupports *, const char *, const char16_t *)
-{
-  // Upload telemetry
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (obs) {
-    mozilla::unused << obs->RemoveObserver(this, "profile-before-change");
-  }
-
-  if (mProcessStayed + mProcessMoved == 0) {
-    // Nothing to report.
-    return NS_OK;
-  }
-  const uint32_t proportion = ( 100 * mProcessStayed ) / ( mProcessStayed + mProcessMoved );
-  mozilla::Telemetry::Accumulate("PERF_MONITORING_TEST_CPU_RESCHEDULING_PROPORTION_MOVED", proportion);
-
-  return NS_OK;
-}
