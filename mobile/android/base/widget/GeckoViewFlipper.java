@@ -12,6 +12,7 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.ViewFlipper;
 
 /* This extends the normal ViewFlipper only to fix bug 956075 on < 3.0 devices.
@@ -33,7 +34,7 @@ public class GeckoViewFlipper extends ViewFlipper {
         if (Versions.preHC) {
             // Fix bug 956075. Don't allow touching this View if its hidden.
             getHitRect(mRect);
-            mRect.offset((int) ViewHelper.getTranslationX(this), (int) ViewHelper.getTranslationY(this));
+            mRect.offset((int) ViewHelper.getTranslationX((View)getParent()), (int) ViewHelper.getTranslationY((View)getParent()));
 
             if (!mRect.contains((int) ev.getX(), (int) ev.getY())) {
                 return false;

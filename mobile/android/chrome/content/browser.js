@@ -605,13 +605,6 @@ var BrowserApp = {
         InitLater(() => WebcompatReporter.init());
       }
 
-      InitLater(function () {
-        // title == 0 and url == 1. See:
-        //   https://mxr.mozilla.org/mozilla-central/source/mobile/android/base/resources/values/arrays.xml?rev=861e4bd9e7fe#153
-        const titleInTitlebarEnabled = Services.prefs.getIntPref("browser.chrome.titlebarMode") == 0;
-        Telemetry.addData("FENNEC_TITLE_IN_TITLEBAR_ENABLED", titleInTitlebarEnabled);
-      });
-
       InitLater(() => LightWeightThemeWebInstaller.init());
       InitLater(() => SpatialNavigation.init(BrowserApp.deck, null), window, "SpatialNavigation");
       InitLater(() => CastingApps.init(), window, "CastingApps");
