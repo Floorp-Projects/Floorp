@@ -10,7 +10,8 @@ function runTests() {
 
   // Focus count in new tab page.
   // 30 = 9 * 3 + 3 = 9 sites, each with link, pin and remove buttons; search
-  // bar; search button; and toggle button.
+  // bar; search button; and toggle button. Additionaly there may or may not be
+  // a scroll bar caused by fix to 1180387, which will eat an extra focus
   let FOCUS_COUNT = 30;
 
   // Create a new tab page.
@@ -42,7 +43,9 @@ function countFocus(aExpectedCount) {
     let focusedElement = document.commandDispatcher.focusedElement;
     if (focusedElement && focusedElement.classList.contains("urlbar-input")) {
       window.removeEventListener("focus", onFocus, true);
-      is(focusCount, aExpectedCount, "Validate focus count in the new tab page.");
+      // account for a potential presence of a scroll bar
+      ok(focusCount == aExpectedCount || focusCount == (aExpectedCount + 1),
+         "Validate focus count in the new tab page.");
       executeSoon(TestRunner.next);
     } else {
       if (focusedElement && focusedElement.ownerDocument == contentDoc &&
