@@ -1725,9 +1725,11 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     NS_ASSERTION(!loadInfo.mExecutionResult, "Should not have executed yet!");
 
     if (NS_FAILED(loadInfo.mLoadResult)) {
-      scriptloader::ReportLoadError(aCx, loadInfo.mURL, loadInfo.mLoadResult,
-                                    false);
-      aWorkerPrivate->MaybeDispatchLoadFailedRunnable();
+      scriptloader::ReportLoadError(aCx, loadInfo.mLoadResult);
+      // Top level scripts only!
+      if (mIsWorkerScript) {
+        aWorkerPrivate->MaybeDispatchLoadFailedRunnable();
+      }
       return true;
     }
 
@@ -1888,25 +1890,21 @@ ChannelFromScriptURLWorkerThread(JSContext* aCx,
   return getter->GetResult();
 }
 
-void ReportLoadError(JSContext* aCx, const nsAString& aURL,
-                     nsresult aLoadResult, bool aIsMainThread)
+void ReportLoadError(JSContext* aCx, nsresult aLoadResult)
 {
-  NS_LossyConvertUTF16toASCII url(aURL);
-
   switch (aLoadResult) {
     case NS_BINDING_ABORTED:
       // Canceled, don't set an exception.
       break;
 
-    case NS_ERROR_MALFORMED_URI:
-      JS_ReportError(aCx, "Malformed script URI: %s", url.get());
-      break;
-
     case NS_ERROR_FILE_NOT_FOUND:
     case NS_ERROR_NOT_AVAILABLE:
-      JS_ReportError(aCx, "Script file not found: %s", url.get());
+      Throw(aCx, NS_ERROR_DOM_NETWORK_ERR);
       break;
 
+    case NS_ERROR_MALFORMED_URI:
+      aLoadResult = NS_ERROR_DOM_SYNTAX_ERR;
+      // fall through
     case NS_ERROR_DOM_SECURITY_ERR:
     case NS_ERROR_DOM_SYNTAX_ERR:
       Throw(aCx, aLoadResult);

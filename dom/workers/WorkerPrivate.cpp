@@ -4153,7 +4153,8 @@ WorkerPrivate::Constructor(JSContext* aCx,
                               aIsChromeWorker, InheritLoadGroup,
                               aWorkerType, stackLoadInfo.ptr());
     if (NS_FAILED(rv)) {
-      scriptloader::ReportLoadError(aCx, aScriptURL, rv, !parent);
+      // XXXkhuey this is weird, why throw again after setting an exception?
+      scriptloader::ReportLoadError(aCx, rv);
       aRv.Throw(rv);
       return nullptr;
     }
