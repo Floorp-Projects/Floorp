@@ -11637,14 +11637,30 @@ public:
     return sList.getLast();
   }
 
+  enum IteratorOption
+  {
+    // When we are committing fullscreen changes or preparing for
+    // that, we generally want to iterate all requests in the same
+    // window with eDocumentsWithSameRoot option.
+    eDocumentsWithSameRoot,
+    // If we are removing a document from the tree, we would only
+    // want to remove the requests from the given document and its
+    // descendants. For that case, use eInclusiveDescendants.
+    eInclusiveDescendants
+  };
+
   class Iterator
   {
   public:
-    explicit Iterator(nsIDocument* aDoc)
+    explicit Iterator(nsIDocument* aDoc, IteratorOption aOption)
       : mCurrent(PendingFullscreenRequestList::sList.getFirst())
+      , mRootShellForIteration(aDoc->GetDocShell())
     {
       if (mCurrent) {
-        mRootShell = GetRootShell(aDoc);
+        if (mRootShellForIteration && aOption == eDocumentsWithSameRoot) {
+          mRootShellForIteration->
+            GetRootTreeItem(getter_AddRefs(mRootShellForIteration));
+        }
         SkipToNextMatch();
       }
     }
@@ -11658,16 +11674,6 @@ public:
     const FullscreenRequest& Get() const { return *mCurrent; }
 
   private:
-    already_AddRefed<nsIDocShellTreeItem> GetRootShell(nsIDocument* aDoc)
-    {
-      if (nsIDocShellTreeItem* shell = aDoc->GetDocShell()) {
-        nsCOMPtr<nsIDocShellTreeItem> rootShell;
-        shell->GetRootTreeItem(getter_AddRefs(rootShell));
-        return rootShell.forget();
-      }
-      return nullptr;
-    }
-
     void DeleteAndNextInternal()
     {
       FullscreenRequest* thisRequest = mCurrent;
@@ -11678,21 +11684,28 @@ public:
     {
       while (mCurrent) {
         nsCOMPtr<nsIDocShellTreeItem>
-          rootShell = GetRootShell(mCurrent->GetDocument());
-        if (!rootShell) {
+          docShell = mCurrent->GetDocument()->GetDocShell();
+        if (!docShell) {
           // Always automatically drop documents which has been
           // detached from the doc shell.
           DeleteAndNextInternal();
-        } else if (rootShell != mRootShell) {
-          mCurrent = mCurrent->getNext();
         } else {
-          break;
+          while (docShell && docShell != mRootShellForIteration) {
+            docShell->GetParent(getter_AddRefs(docShell));
+          }
+          if (!docShell) {
+            // We've gone over the root, but haven't find the target
+            // ancestor, so skip this item.
+            mCurrent = mCurrent->getNext();
+          } else {
+            break;
+          }
         }
       }
     }
 
     FullscreenRequest* mCurrent;
-    nsCOMPtr<nsIDocShellTreeItem> mRootShell;
+    nsCOMPtr<nsIDocShellTreeItem> mRootShellForIteration;
   };
 
 private:
@@ -11733,7 +11746,8 @@ nsDocument::RequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
   if ((static_cast<nsGlobalWindow*>(rootWin.get())->FullScreen() &&
        // The iterator being at end at the beginning indicates there is
        // no pending fullscreen request which relates to this document.
-       PendingFullscreenRequestList::Iterator(this).AtEnd()) ||
+       PendingFullscreenRequestList::Iterator(
+         this, PendingFullscreenRequestList::eDocumentsWithSameRoot).AtEnd()) ||
       nsContentUtils::GetRootDocument(this)->IsFullScreenDoc()) {
     ApplyFullscreen(*aRequest);
     return;
@@ -11766,7 +11780,8 @@ nsDocument::RequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
 nsIDocument::HandlePendingFullscreenRequests(nsIDocument* aDoc)
 {
   bool handled = false;
-  PendingFullscreenRequestList::Iterator iter(aDoc);
+  PendingFullscreenRequestList::Iterator iter(
+    aDoc, PendingFullscreenRequestList::eDocumentsWithSameRoot);
   while (!iter.AtEnd()) {
     const FullscreenRequest& request = iter.Get();
     if (request.GetDocument()->ApplyFullscreen(request)) {
@@ -11780,7 +11795,8 @@ nsIDocument::HandlePendingFullscreenRequests(nsIDocument* aDoc)
 static void
 ClearPendingFullscreenRequests(nsIDocument* aDoc)
 {
-  PendingFullscreenRequestList::Iterator iter(aDoc);
+  PendingFullscreenRequestList::Iterator iter(
+    aDoc, PendingFullscreenRequestList::eInclusiveDescendants);
   while (!iter.AtEnd()) {
     iter.DeleteAndNext();
   }
