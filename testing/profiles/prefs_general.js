@@ -271,8 +271,6 @@ user_pref("browser.translation.engine", "bing");
 // Make sure we don't try to load snippets from the network.
 user_pref("browser.aboutHomeSnippets.updateUrl", "nonexistent://test");
 
-// Enable debug logging in the mozApps implementation.
-user_pref("dom.mozApps.debug", true);
 // Enable apps customizations
 user_pref("dom.apps.customization.enabled", true);
 
