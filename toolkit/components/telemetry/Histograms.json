@@ -8729,12 +8729,6 @@
     "kind": "flag",
     "description": "An Attr node that's not namespace-aware and was created from an HTML document is set on a non-HTML element and has a name containing uppercase ASCII chars"
   },
-  "FENNEC_TITLE_IN_TITLEBAR_ENABLED": {
-    "alert_emails": ["michael.l.comella@gmail.com"],
-    "expires_in_version": "43",
-    "kind": "boolean",
-    "description": "Is the title shown in the url bar (as determined by the titlebar title or url preference)?"
-  },
   "DEVTOOLS_HUD_JANK": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -9061,7 +9055,7 @@
   },
   "PERF_MONITORING_TEST_CPU_RESCHEDULING_PROPORTION_MOVED": {
     "alert_emails": ["dteller@mozilla.com"],
-    "expires_in_version": "44",
+    "expires_in_version": "45",
     "kind": "linear",
     "high": "100",
     "n_buckets": "20",

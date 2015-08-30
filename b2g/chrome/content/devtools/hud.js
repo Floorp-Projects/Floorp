@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyGetter(this, 'MemoryFront', function() {
 
 Cu.import('resource://gre/modules/Frames.jsm');
 
-let _telemetryDebug = false;
+let _telemetryDebug = true;
 
 function telemetryDebug(...args) {
   if (_telemetryDebug) {
@@ -193,6 +193,7 @@ function Target(frame, actor) {
   this._frame = frame;
   this.actor = actor;
   this.metrics = new Map();
+  this._appName = null;
 }
 
 Target.prototype = {
@@ -206,6 +207,41 @@ Target.prototype = {
 
   get manifest() {
     return this._frame.appManifestURL;
+  },
+
+  get appName() {
+
+    if (this._appName) {
+      return this._appName;
+    }
+
+    let manifest = this.manifest;
+    if (!manifest) {
+      let msg = DEVELOPER_HUD_LOG_PREFIX + ': Unable to determine app for telemetry metric. src: ' +
+                this.frame.src;
+      console.error(msg);
+      return null;
+    }
+
+    // "communications" apps are a special case
+    if (manifest.indexOf('communications') === -1) {
+      let start = manifest.indexOf('/') + 2;
+      let end = manifest.indexOf('.', start);
+      this._appName = manifest.substring(start, end).toLowerCase();
+    } else {
+      let src = this.frame.src;
+      if (src) {
+        // e.g., `app://communications.gaiamobile.org/contacts/index.html`
+        let parts = src.split('/');
+        let APP = 3;
+        let EXPECTED_PARTS_LENGTH = 5;
+        if (parts.length === EXPECTED_PARTS_LENGTH) {
+          this._appName = parts[APP];
+        }
+      }
+    }
+
+    return this._appName;
   },
 
   /**
@@ -337,17 +373,10 @@ Target.prototype = {
       return;
     }
 
-    if (!this.appName) {
-      let manifest = this.manifest;
-      if (!manifest) {
-        return;
-      }
-      let start = manifest.indexOf('/') + 2;
-      let end = manifest.indexOf('.', start);
-      this.appName = manifest.substring(start, end).toLowerCase();
-    }
-
     metric.appName = this.appName;
+    if (!metric.appName) {
+      return;
+    }
 
     let metricName = metric.name.toUpperCase();
     let metricAppName = metric.appName.toUpperCase();
@@ -358,6 +387,7 @@ Target.prototype = {
         if (keyed) {
           keyed.add(metric.appName, parseInt(metric.value, 10));
           developerHUD._histograms.add(keyedMetricName);
+          telemetryDebug(keyedMetricName, metric.value, metric.appName);
         }
       } catch(err) {
         console.error('Histogram error is metricname added to histograms.json:'
@@ -370,6 +400,7 @@ Target.prototype = {
       if (typeof metric.value !== 'undefined') {
         Services.telemetry.getAddonHistogram(metricAppName,
           CUSTOM_HISTOGRAM_PREFIX + metricName).add(parseInt(metric.value, 10));
+        telemetryDebug(histogramName, metric.value);
         return;
       }
 

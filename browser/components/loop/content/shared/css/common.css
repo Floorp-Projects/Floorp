@@ -528,6 +528,11 @@ html[dir="rtl"] .checkbox {
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
+  text-align: left;
+}
+
+html[dir="rtl"] .checkbox-label.ellipsis {
+  text-align: right;
 }
 
 /* ContextUrlView classes */

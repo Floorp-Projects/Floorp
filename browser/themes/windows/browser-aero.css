@@ -286,16 +286,13 @@
     #appcontent {
       -moz-appearance: -moz-win-exclude-glass;
     }
+  }
 
+  @media (-moz-os-version: windows-win8) {
     /* Artificially draw window borders that are covered by lwtheme, see bug 591930.
-     * Not necessary on windows 10+ */
+     * Borders for vista/win7 are below, win10 doesn't need them. */
     #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
-      border-top: 2px solid;
-      -moz-border-top-colors: @glassActiveBorderColor@ rgba(255,255,255,.6);
-    }
-
-    #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme:-moz-window-inactive {
-      -moz-border-top-colors: @glassInactiveBorderColor@ rgba(255,255,255,.6);
+      border-top: 1px solid @toolbarShadowColor@;
     }
   }
 
@@ -385,6 +382,17 @@
          (-moz-os-version: windows-win7) {
     #main-menubar:not(:-moz-lwtheme):not(:-moz-window-inactive) {
       border-radius: 4px;
+    }
+
+    /* Artificially draw window borders that are covered by lwtheme, see bug 591930.
+     * We use a different border for win8, and this is not necessary on win10+ */
+    #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
+      border-top: 2px solid;
+      -moz-border-top-colors: @glassActiveBorderColor@ rgba(255,255,255,.6);
+    }
+
+    #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme:-moz-window-inactive {
+      -moz-border-top-colors: @glassInactiveBorderColor@ rgba(255,255,255,.6);
     }
   }
 
