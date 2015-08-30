@@ -85,7 +85,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=937317
       // The incumbent script override doesn't take effect if the callback is scripted.
       let d = Promise.defer();
       iwin.wrappedJSObject.timeoutFun2 = Cu.getIncumbentGlobal.bind(Cu, makeCallback(iwin, d, "cross-global setTimeout of scripted function"));
-      iwin.eval('let timeoutFun2Wrapper = function() { timeoutFun2(); }');
+      iwin.eval('var timeoutFun2Wrapper = function() { timeoutFun2(); }');
       setTimeout(iwin.wrappedJSObject.timeoutFun2Wrapper, 0);
       return d.promise;
     }).then(function() {
