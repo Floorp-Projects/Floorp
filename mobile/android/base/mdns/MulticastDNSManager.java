@@ -12,6 +12,7 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoRequest;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,6 +21,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
+import android.support.annotation.UiThread;
 import android.util.Log;
 
 import java.net.InetAddress;
@@ -51,28 +53,43 @@ public abstract class MulticastDNSManager {
     public abstract void tearDown();
 }
 
-class NsdMulticastDNSManager extends MulticastDNSManager implements NativeEventListener {
-    private final NsdManager nsdManager;
-    private DiscoveryListener mDiscoveryListener = null;
-    private RegistrationListener mRegistrationListener = null;
+/**
+ * Mix-in class for MulticastDNSManagers to call EventDispatcher.
+ */
+class MulticastDNSEventManager {
+    private NativeEventListener mListener = null;
+    private boolean mEventsRegistered = false;
 
-    @TargetApi(16)
-    public NsdMulticastDNSManager(final Context context) {
-        nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
+    MulticastDNSEventManager(NativeEventListener listener) {
+        mListener = listener;
     }
 
-    @Override
+    @UiThread
     public void init() {
+        ThreadUtils.assertOnUiThread();
+
+        if (mEventsRegistered || mListener == null) {
+            return;
+        }
+
         registerEvents();
+        mEventsRegistered = true;
     }
 
-    @Override
+    @UiThread
     public void tearDown() {
+        ThreadUtils.assertOnUiThread();
+
+        if (!mEventsRegistered || mListener == null) {
+            return;
+        }
+
         unregisterEvents();
+        mEventsRegistered = false;
     }
 
     private void registerEvents() {
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+        EventDispatcher.getInstance().registerGeckoThreadListener(mListener,
                 "NsdManager:DiscoverServices",
                 "NsdManager:StopServiceDiscovery",
                 "NsdManager:RegisterService",
@@ -81,12 +98,35 @@ class NsdMulticastDNSManager extends MulticastDNSManager implements NativeEventL
     }
 
     private void unregisterEvents() {
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(mListener,
                 "NsdManager:DiscoverServices",
                 "NsdManager:StopServiceDiscovery",
                 "NsdManager:RegisterService",
                 "NsdManager:UnregisterService",
                 "NsdManager:ResolveService");
+    }
+}
+
+class NsdMulticastDNSManager extends MulticastDNSManager implements NativeEventListener {
+    private final NsdManager nsdManager;
+    private final MulticastDNSEventManager mEventManager;
+    private DiscoveryListener mDiscoveryListener = null;
+    private RegistrationListener mRegistrationListener = null;
+
+    @TargetApi(16)
+    public NsdMulticastDNSManager(final Context context) {
+        nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
+        mEventManager = new MulticastDNSEventManager(this);
+    }
+
+    @Override
+    public void init() {
+        mEventManager.init();
+    }
+
+    @Override
+    public void tearDown() {
+        mEventManager.tearDown();
     }
 
     @Override
@@ -173,16 +213,28 @@ class NsdMulticastDNSManager extends MulticastDNSManager implements NativeEventL
     }
 }
 
-class DummyMulticastDNSManager extends MulticastDNSManager {
+class DummyMulticastDNSManager extends MulticastDNSManager implements NativeEventListener {
+    static final int FAILURE_UNSUPPORTED = -65544;
+    private final MulticastDNSEventManager mEventManager;
+
     public DummyMulticastDNSManager() {
+        mEventManager = new MulticastDNSEventManager(this);
     }
 
     @Override
     public void init() {
+        mEventManager.init();
     }
 
     @Override
     public void tearDown() {
+        mEventManager.tearDown();
+    }
+
+    @Override
+    public void handleMessage(final String event, final NativeJSObject message, final EventCallback callback) {
+        Log.v(LOGTAG, "handleMessage: " + event);
+        callback.sendError(FAILURE_UNSUPPORTED);
     }
 }
 
