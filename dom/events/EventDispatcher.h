@@ -247,7 +247,7 @@ public:
    *
    * If aTargets is non-null, event target chain will be created, but
    * event won't be handled. In this case aEvent->mMessage should be
-   * NS_EVENT_NULL.
+   * eVoidEvent.
    * @note Use this method when dispatching a WidgetEvent.
    */
   static nsresult Dispatch(nsISupports* aTarget,

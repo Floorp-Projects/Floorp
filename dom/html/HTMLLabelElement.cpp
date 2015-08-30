@@ -104,7 +104,7 @@ HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
   WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
   if (mHandlingEvent ||
       (!(mouseEvent && mouseEvent->IsLeftClickEvent()) &&
-       aVisitor.mEvent->mMessage != NS_MOUSE_BUTTON_DOWN) ||
+       aVisitor.mEvent->mMessage != eMouseDown) ||
       aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
       !aVisitor.mPresContext ||
       // Don't handle the event if it's already been handled by another label
@@ -123,10 +123,10 @@ HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
   if (content) {
     mHandlingEvent = true;
     switch (aVisitor.mEvent->mMessage) {
-      case NS_MOUSE_BUTTON_DOWN:
+      case eMouseDown:
         if (mouseEvent->button == WidgetMouseEvent::eLeftButton) {
           // We reset the mouse-down point on every event because there is
-          // no guarantee we will reach the NS_MOUSE_CLICK code below.
+          // no guarantee we will reach the eMouseClick code below.
           LayoutDeviceIntPoint* curPoint =
             new LayoutDeviceIntPoint(mouseEvent->refPoint);
           SetProperty(nsGkAtoms::labelMouseDownPtProperty,
@@ -135,7 +135,7 @@ HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
         }
         break;
 
-      case NS_MOUSE_CLICK:
+      case eMouseClick:
         if (mouseEvent->IsLeftClickEvent()) {
           LayoutDeviceIntPoint* mouseDownPoint =
             static_cast<LayoutDeviceIntPoint*>(
@@ -232,7 +232,7 @@ HTMLLabelElement::PerformAccesskey(bool aKeyCausesActivation,
       return;
 
     // Click on it if the users prefs indicate to do so.
-    WidgetMouseEvent event(aIsTrustedEvent, NS_MOUSE_CLICK,
+    WidgetMouseEvent event(aIsTrustedEvent, eMouseClick,
                            nullptr, WidgetMouseEvent::eReal);
     event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
 

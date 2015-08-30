@@ -107,6 +107,20 @@ nsAppShell::Init()
     if (PR_GetEnv("MOZ_DEBUG_PAINTS"))
         gdk_window_set_debug_updates(TRUE);
 
+    // Disable JasPer module in GDK-PixBuf. See bug 1197059.
+    GSList* pixbufFormats = gdk_pixbuf_get_formats();
+    for (GSList* iter = pixbufFormats; iter; iter = iter->next) {
+        GdkPixbufFormat* format = static_cast<GdkPixbufFormat*>(iter->data);
+        gchar* name = gdk_pixbuf_format_get_name(format);
+        bool isJasper = strcmp(name, "jpeg2000") == 0;
+        g_free(name);
+        if (isJasper) {
+            gdk_pixbuf_format_set_disabled(format, TRUE);
+            break;
+        }
+    }
+    g_slist_free(pixbufFormats);
+
     int err = pipe(mPipeFDs);
     if (err)
         return NS_ERROR_OUT_OF_MEMORY;

@@ -3061,7 +3061,7 @@ nsGlobalWindow::PreHandleEvent(EventChainPreVisitor& aVisitor)
 
   aVisitor.mCanHandle = true;
   aVisitor.mForceContentDispatch = true; //FIXME! Bug 329119
-  if ((msg == NS_MOUSE_MOVE) && gEntropyCollector) {
+  if (msg == eMouseMove && gEntropyCollector) {
     //Chances are this counter will overflow during the life of the
     //process, but that's OK for our case. Means we get a little
     //more entropy.
@@ -3076,7 +3076,7 @@ nsGlobalWindow::PreHandleEvent(EventChainPreVisitor& aVisitor)
       gEntropyCollector->RandomUpdate((void*)&(aVisitor.mEvent->time),
                                       sizeof(uint32_t));
     }
-  } else if (msg == NS_RESIZE_EVENT && aVisitor.mEvent->mFlags.mIsTrusted) {
+  } else if (msg == eResize && aVisitor.mEvent->mFlags.mIsTrusted) {
     // QIing to window so that we can keep the old behavior also in case
     // a child window is handling resize.
     nsCOMPtr<nsPIDOMWindow> window =
@@ -3084,11 +3084,9 @@ nsGlobalWindow::PreHandleEvent(EventChainPreVisitor& aVisitor)
     if (window) {
       mIsHandlingResizeEvent = true;
     }
-  } else if (msg == NS_MOUSE_BUTTON_DOWN &&
-             aVisitor.mEvent->mFlags.mIsTrusted) {
+  } else if (msg == eMouseDown && aVisitor.mEvent->mFlags.mIsTrusted) {
     gMouseDown = true;
-  } else if ((msg == NS_MOUSE_BUTTON_UP ||
-              msg == NS_DRAGDROP_END) &&
+  } else if ((msg == eMouseUp || msg == NS_DRAGDROP_END) &&
              aVisitor.mEvent->mFlags.mIsTrusted) {
     gMouseDown = false;
     if (gDragServiceDisabled) {
@@ -3266,7 +3264,7 @@ nsGlobalWindow::PostHandleEvent(EventChainPostVisitor& aVisitor)
 
   // Return early if there is nothing to do.
   switch (aVisitor.mEvent->mMessage) {
-    case NS_RESIZE_EVENT:
+    case eResize:
     case NS_PAGE_UNLOAD:
     case NS_LOAD:
       break;
@@ -3280,7 +3278,7 @@ nsGlobalWindow::PostHandleEvent(EventChainPostVisitor& aVisitor)
   nsCOMPtr<nsIDOMEventTarget> kungFuDeathGrip1(mChromeEventHandler);
   nsCOMPtr<nsIScriptContext> kungFuDeathGrip2(GetContextInternal());
 
-  if (aVisitor.mEvent->mMessage == NS_RESIZE_EVENT) {
+  if (aVisitor.mEvent->mMessage == eResize) {
     mIsHandlingResizeEvent = false;
   } else if (aVisitor.mEvent->mMessage == NS_PAGE_UNLOAD &&
              aVisitor.mEvent->mFlags.mIsTrusted) {
@@ -6227,7 +6225,7 @@ nsGlobalWindow::GetMainWidget()
 }
 
 nsIWidget*
-nsGlobalWindow::GetNearestWidget()
+nsGlobalWindow::GetNearestWidget() const
 {
   nsIDocShell* docShell = GetDocShell();
   NS_ENSURE_TRUE(docShell, nullptr);
@@ -6668,8 +6666,16 @@ nsGlobalWindow::FullScreen() const
   nsCOMPtr<nsIDocShellTreeItem> rootItem;
   mDocShell->GetRootTreeItem(getter_AddRefs(rootItem));
   if (rootItem == mDocShell) {
-    // We are the root window. Return our internal value.
-    return mFullScreen;
+    if (!XRE_IsContentProcess()) {
+      // We are the root window. Return our internal value.
+      return mFullScreen;
+    }
+    if (nsCOMPtr<nsIWidget> widget = GetNearestWidget()) {
+      // We are in content process, figure out the value from
+      // the sizemode of the puppet widget.
+      return widget->SizeMode() == nsSizeMode_Fullscreen;
+    }
+    return false;
   }
 
   nsCOMPtr<nsIDOMWindow> window = rootItem->GetWindow();

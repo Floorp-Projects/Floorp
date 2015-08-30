@@ -2806,8 +2806,7 @@ HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext)
     NS_ASSERTION(submitContent, "Form control not implementing nsIContent?!");
     // Fire the button's onclick handler and let the button handle
     // submitting the form.
-    WidgetMouseEvent event(true, NS_MOUSE_CLICK, nullptr,
-                           WidgetMouseEvent::eReal);
+    WidgetMouseEvent event(true, eMouseClick, nullptr, WidgetMouseEvent::eReal);
     nsEventStatus status = nsEventStatus_eIgnore;
     shell->HandleDOMEventWithTarget(submitContent, &event, &status);
   } else if (!mForm->ImplicitSubmissionIsDisabled() &&
@@ -3026,11 +3025,11 @@ HTMLInputElement::NeedToInitializeEditorForEvent(
   }
 
   switch (aVisitor.mEvent->mMessage) {
-  case NS_MOUSE_MOVE:
-  case NS_MOUSE_ENTER_WIDGET:
-  case NS_MOUSE_EXIT_WIDGET:
-  case NS_MOUSE_OVER:
-  case NS_MOUSE_OUT:
+  case eMouseMove:
+  case eMouseEnterIntoWidget:
+  case eMouseExitFromWidget:
+  case eMouseOver:
+  case eMouseOut:
   case NS_SCROLLPORT_UNDERFLOW:
   case NS_SCROLLPORT_OVERFLOW:
     return false;
@@ -3153,7 +3152,7 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
     aVisitor.mItemFlags |= NS_NO_CONTENT_DISPATCH;
   }
   if (IsSingleLineTextControl(false) &&
-      aVisitor.mEvent->mMessage == NS_MOUSE_CLICK &&
+      aVisitor.mEvent->mMessage == eMouseClick &&
       aVisitor.mEvent->AsMouseEvent()->button ==
         WidgetMouseEvent::eMiddleButton) {
     aVisitor.mEvent->mFlags.mNoContentDispatch = false;
@@ -3197,7 +3196,7 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
       // we want to end the spin. We do this here (rather than in
       // PostHandleEvent) because we don't want to let content preventDefault()
       // the end of the spin.
-      if (aVisitor.mEvent->mMessage == NS_MOUSE_MOVE) {
+      if (aVisitor.mEvent->mMessage == eMouseMove) {
         // Be aggressive about stopping the spin:
         bool stopSpin = true;
         nsNumberControlFrame* numberControlFrame =
@@ -3228,7 +3227,7 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
         if (stopSpin) {
           StopNumberControlSpinnerSpin();
         }
-      } else if (aVisitor.mEvent->mMessage == NS_MOUSE_BUTTON_UP) {
+      } else if (aVisitor.mEvent->mMessage == eMouseUp) {
         StopNumberControlSpinnerSpin();
       }
     }
@@ -3254,7 +3253,7 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
         // that).
         frame->InvalidateFrame();
       }
-    } else if (aVisitor.mEvent->mMessage == NS_KEY_UP) {
+    } else if (aVisitor.mEvent->mMessage == eKeyUp) {
       WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
       if ((keyEvent->keyCode == NS_VK_UP || keyEvent->keyCode == NS_VK_DOWN) &&
           !(keyEvent->IsShift() || keyEvent->IsControl() ||
@@ -3722,7 +3721,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
   if (NS_SUCCEEDED(rv)) {
     WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
     if (mType ==  NS_FORM_INPUT_NUMBER &&
-        keyEvent && keyEvent->mMessage == NS_KEY_PRESS &&
+        keyEvent && keyEvent->mMessage == eKeyPress &&
         aVisitor.mEvent->mFlags.mIsTrusted &&
         (keyEvent->keyCode == NS_VK_UP || keyEvent->keyCode == NS_VK_DOWN) &&
         !(keyEvent->IsShift() || keyEvent->IsControl() ||
@@ -3774,15 +3773,15 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
           break;
         }
 
-        case NS_KEY_PRESS:
-        case NS_KEY_UP:
+        case eKeyPress:
+        case eKeyUp:
         {
           // For backwards compat, trigger checks/radios/buttons with
           // space or enter (bug 25300)
           WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
-          if ((aVisitor.mEvent->mMessage == NS_KEY_PRESS &&
+          if ((aVisitor.mEvent->mMessage == eKeyPress &&
                keyEvent->keyCode == NS_VK_RETURN) ||
-              (aVisitor.mEvent->mMessage == NS_KEY_UP &&
+              (aVisitor.mEvent->mMessage == eKeyUp &&
                keyEvent->keyCode == NS_VK_SPACE)) {
             switch(mType) {
               case NS_FORM_INPUT_CHECKBOX:
@@ -3803,7 +3802,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
               case NS_FORM_INPUT_COLOR:
               {
                 WidgetMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
-                                       NS_MOUSE_CLICK, nullptr,
+                                       eMouseClick, nullptr,
                                        WidgetMouseEvent::eReal);
                 event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
                 nsEventStatus status = nsEventStatus_eIgnore;
@@ -3815,7 +3814,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
               } // case
             } // switch
           }
-          if (aVisitor.mEvent->mMessage == NS_KEY_PRESS &&
+          if (aVisitor.mEvent->mMessage == eKeyPress &&
               mType == NS_FORM_INPUT_RADIO && !keyEvent->IsAlt() &&
               !keyEvent->IsControl() && !keyEvent->IsMeta()) {
             bool isMovingBack = false;
@@ -3839,7 +3838,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
                   if (NS_SUCCEEDED(rv)) {
                     nsEventStatus status = nsEventStatus_eIgnore;
                     WidgetMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
-                                           NS_MOUSE_CLICK, nullptr,
+                                           eMouseClick, nullptr,
                                            WidgetMouseEvent::eReal);
                     event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
                     rv =
@@ -3867,7 +3866,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
            *     not submit, period.
            */
 
-          if (aVisitor.mEvent->mMessage == NS_KEY_PRESS &&
+          if (aVisitor.mEvent->mMessage == eKeyPress &&
               keyEvent->keyCode == NS_VK_RETURN &&
                (IsSingleLineTextControl(false, mType) ||
                 mType == NS_FORM_INPUT_NUMBER ||
@@ -3877,7 +3876,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
             NS_ENSURE_SUCCESS(rv, rv);
           }
 
-          if (aVisitor.mEvent->mMessage == NS_KEY_PRESS &&
+          if (aVisitor.mEvent->mMessage == eKeyPress &&
               mType == NS_FORM_INPUT_RANGE && !keyEvent->IsAlt() &&
               !keyEvent->IsControl() && !keyEvent->IsMeta() &&
               (keyEvent->keyCode == NS_VK_LEFT ||
@@ -3936,12 +3935,11 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
             }
           }
 
-        } break; // NS_KEY_PRESS || NS_KEY_UP
+        } break; // eKeyPress || eKeyUp
 
-        case NS_MOUSE_BUTTON_DOWN:
-        case NS_MOUSE_BUTTON_UP:
-        case NS_MOUSE_DOUBLECLICK:
-        {
+        case eMouseDown:
+        case eMouseUp:
+        case eMouseDoubleClick: {
           // cancel all of these events for buttons
           //XXXsmaug Why?
           WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
@@ -3967,7 +3965,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
               nsNumberControlFrame* numberControlFrame =
                 do_QueryFrame(GetPrimaryFrame());
               if (numberControlFrame) {
-                if (aVisitor.mEvent->mMessage == NS_MOUSE_BUTTON_DOWN && 
+                if (aVisitor.mEvent->mMessage == eMouseDown && 
                     IsMutable()) {
                   switch (numberControlFrame->GetSpinButtonForPointerEvent(
                             aVisitor.mEvent->AsMouseEvent())) {
@@ -4086,7 +4084,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor)
 
   switch (aVisitor.mEvent->mMessage)
   {
-    case NS_MOUSE_BUTTON_DOWN:
+    case eMouseDown:
     case NS_TOUCH_START: {
       if (mIsDraggingRange) {
         break;
@@ -4101,7 +4099,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor)
           inputEvent->IsOS()) {
         break; // ignore
       }
-      if (aVisitor.mEvent->mMessage == NS_MOUSE_BUTTON_DOWN) {
+      if (aVisitor.mEvent->mMessage == eMouseDown) {
         if (aVisitor.mEvent->AsMouseEvent()->buttons ==
               WidgetMouseEvent::eLeftButtonFlag) {
           StartRangeThumbDrag(inputEvent);
@@ -4118,7 +4116,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor)
       aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
     } break;
 
-    case NS_MOUSE_MOVE:
+    case eMouseMove:
     case NS_TOUCH_MOVE:
       if (!mIsDraggingRange) {
         break;
@@ -4133,7 +4131,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor)
       aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
       break;
 
-    case NS_MOUSE_BUTTON_UP:
+    case eMouseUp:
     case NS_TOUCH_END:
       if (!mIsDraggingRange) {
         break;
@@ -4146,7 +4144,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor)
       aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
       break;
 
-    case NS_KEY_PRESS:
+    case eKeyPress:
       if (mIsDraggingRange &&
           aVisitor.mEvent->AsKeyboardEvent()->keyCode == NS_VK_ESCAPE) {
         CancelRangeThumbDrag();

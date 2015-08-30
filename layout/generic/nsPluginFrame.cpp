@@ -1761,13 +1761,13 @@ nsPluginFrame::HandleEvent(nsPresContext* aPresContext,
 
   mInstanceOwner->ConsiderNewEventloopNestingLevel();
 
-  if (anEvent->mMessage == NS_PLUGIN_ACTIVATE) {
+  if (anEvent->mMessage == ePluginActivate) {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(GetContent());
     if (fm && elem)
       return fm->SetFocus(elem, 0);
   }
-  else if (anEvent->mMessage == NS_PLUGIN_FOCUS) {
+  else if (anEvent->mMessage == ePluginFocus) {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm)
       return fm->FocusPlugin(GetContent());
@@ -1788,7 +1788,7 @@ nsPluginFrame::HandleEvent(nsPresContext* aPresContext,
 
 #ifdef XP_MACOSX
   // we want to process some native mouse events in the cocoa event model
-  if ((anEvent->mMessage == NS_MOUSE_ENTER_WIDGET ||
+  if ((anEvent->mMessage == eMouseEnterIntoWidget ||
        anEvent->mMessage == NS_WHEEL_WHEEL) &&
       mInstanceOwner->GetEventModel() == NPEventModelCocoa) {
     *anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
@@ -1801,7 +1801,7 @@ nsPluginFrame::HandleEvent(nsPresContext* aPresContext,
   // and mouse-up) are needed to make the routing of mouse events while
   // dragging conform to standard OS X practice, and to the Cocoa NPAPI spec.
   // See bug 525078 and bug 909678.
-  if (anEvent->mMessage == NS_MOUSE_BUTTON_DOWN) {
+  if (anEvent->mMessage == eMouseDown) {
     nsIPresShell::SetCapturingContent(GetContent(), CAPTURE_IGNOREALLOWED);
   }
 #endif
@@ -1812,7 +1812,7 @@ nsPluginFrame::HandleEvent(nsPresContext* aPresContext,
   // nsPluginFrameSuper::HandleEvent() might have killed us.
 
 #ifdef XP_MACOSX
-  if (anEvent->mMessage == NS_MOUSE_BUTTON_UP) {
+  if (anEvent->mMessage == eMouseUp) {
     nsIPresShell::SetCapturingContent(nullptr, 0);
   }
 #endif

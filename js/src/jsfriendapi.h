@@ -1053,6 +1053,15 @@ GetPCCountScriptSummary(JSContext* cx, size_t script);
 JS_FRIEND_API(JSString*)
 GetPCCountScriptContents(JSContext* cx, size_t script);
 
+// Generate lcov trace file content for the current compartment, and allocate a
+// new buffer and return the content in it, the size of the newly allocated
+// content within the buffer would be set to the length out-param.
+//
+// In case of out-of-memory, this function returns nullptr and does not set any
+// value to the length out-param.
+JS_FRIEND_API(char*)
+GetCodeCoverageSummary(JSContext* cx, size_t* length);
+
 JS_FRIEND_API(bool)
 ContextHasOutstandingRequests(const JSContext* cx);
 

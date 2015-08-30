@@ -1265,8 +1265,8 @@ nsXULElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
     aVisitor.mForceContentDispatch = true; //FIXME! Bug 329119
     if (IsRootOfNativeAnonymousSubtree() &&
         (IsAnyOfXULElements(nsGkAtoms::scrollbar, nsGkAtoms::scrollcorner)) &&
-        (aVisitor.mEvent->mMessage == NS_MOUSE_CLICK ||
-         aVisitor.mEvent->mMessage == NS_MOUSE_DOUBLECLICK ||
+        (aVisitor.mEvent->mMessage == eMouseClick ||
+         aVisitor.mEvent->mMessage == eMouseDoubleClick ||
          aVisitor.mEvent->mMessage == NS_XUL_COMMAND ||
          aVisitor.mEvent->mMessage == NS_CONTEXTMENU ||
          aVisitor.mEvent->mMessage == NS_DRAGDROP_START ||
@@ -1740,11 +1740,11 @@ nsXULElement::ClickWithInputSource(uint16_t aInputSource)
 
             bool isCallerChrome = nsContentUtils::IsCallerChrome();
 
-            WidgetMouseEvent eventDown(isCallerChrome, NS_MOUSE_BUTTON_DOWN,
+            WidgetMouseEvent eventDown(isCallerChrome, eMouseDown,
                                        nullptr, WidgetMouseEvent::eReal);
-            WidgetMouseEvent eventUp(isCallerChrome, NS_MOUSE_BUTTON_UP,
+            WidgetMouseEvent eventUp(isCallerChrome, eMouseUp,
                                      nullptr, WidgetMouseEvent::eReal);
-            WidgetMouseEvent eventClick(isCallerChrome, NS_MOUSE_CLICK, nullptr,
+            WidgetMouseEvent eventClick(isCallerChrome, eMouseClick, nullptr,
                                         WidgetMouseEvent::eReal);
             eventDown.inputSource = eventUp.inputSource = eventClick.inputSource
                                   = aInputSource;

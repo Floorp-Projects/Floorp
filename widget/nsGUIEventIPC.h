@@ -173,6 +173,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
     WriteParam(aMsg, aParam.overflowDeltaX);
     WriteParam(aMsg, aParam.overflowDeltaY);
     WriteParam(aMsg, aParam.mViewPortIsOverscrolled);
+    WriteParam(aMsg, aParam.mCanTriggerSwipe);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -193,7 +194,8 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
       ReadParam(aMsg, aIter, &scrollType) &&
       ReadParam(aMsg, aIter, &aResult->overflowDeltaX) &&
       ReadParam(aMsg, aIter, &aResult->overflowDeltaY) &&
-      ReadParam(aMsg, aIter, &aResult->mViewPortIsOverscrolled);
+      ReadParam(aMsg, aIter, &aResult->mViewPortIsOverscrolled) &&
+      ReadParam(aMsg, aIter, &aResult->mCanTriggerSwipe);
     aResult->scrollType =
       static_cast<mozilla::WidgetWheelEvent::ScrollType>(scrollType);
     return rv;

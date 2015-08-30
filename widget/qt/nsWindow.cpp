@@ -999,8 +999,7 @@ nsWindow::mousePressEvent(QMouseEvent* aEvent)
         return nsEventStatus_eIgnore;
     }
 
-    WidgetMouseEvent event(true, NS_MOUSE_BUTTON_DOWN, this,
-                           WidgetMouseEvent::eReal);
+    WidgetMouseEvent event(true, eMouseDown, this, WidgetMouseEvent::eReal);
     InitMouseEvent(event, aEvent, 1);
     nsEventStatus status = DispatchEvent(&event);
 
@@ -1025,8 +1024,7 @@ nsWindow::mouseReleaseEvent(QMouseEvent* aEvent)
     if (!IsAcceptedButton(aEvent->button()))
         return nsEventStatus_eIgnore;
 
-    WidgetMouseEvent event(true, NS_MOUSE_BUTTON_UP, this,
-                           WidgetMouseEvent::eReal);
+    WidgetMouseEvent event(true, eMouseUp, this, WidgetMouseEvent::eReal);
     InitMouseEvent(event, aEvent, 1);
     return DispatchEvent(&event);
 }
@@ -1040,7 +1038,7 @@ nsWindow::mouseDoubleClickEvent(QMouseEvent* aEvent)
     if (!IsAcceptedButton(aEvent->button()))
         return nsEventStatus_eIgnore;
 
-    WidgetMouseEvent event(true, NS_MOUSE_DOUBLECLICK, this,
+    WidgetMouseEvent event(true, eMouseDoubleClick, this,
                            WidgetMouseEvent::eReal);
     InitMouseEvent(event, aEvent, 2);
     return DispatchEvent(&event);
@@ -1100,7 +1098,7 @@ InitKeyEvent(WidgetKeyboardEvent& aEvent, QKeyEvent* aQEvent)
                               aQEvent->modifiers() & Qt::MetaModifier);
 
     aEvent.mIsRepeat =
-        (aEvent.mMessage == NS_KEY_DOWN || aEvent.mMessage == NS_KEY_PRESS) &&
+        (aEvent.mMessage == eKeyDown || aEvent.mMessage == eKeyPress) &&
         aQEvent->isAutoRepeat();
     aEvent.time = 0;
 
@@ -1156,7 +1154,7 @@ nsWindow::keyPressEvent(QKeyEvent* aEvent)
     if (!aEvent->isAutoRepeat() && !IsKeyDown(domKeyCode)) {
         SetKeyDownFlag(domKeyCode);
 
-        WidgetKeyboardEvent downEvent(true, NS_KEY_DOWN, this);
+        WidgetKeyboardEvent downEvent(true, eKeyDown, this);
         InitKeyEvent(downEvent, aEvent);
 
         nsEventStatus status = DispatchEvent(&downEvent);
@@ -1173,8 +1171,8 @@ nsWindow::keyPressEvent(QKeyEvent* aEvent)
         }
     }
 
-    // Don't pass modifiers as NS_KEY_PRESS events.
-    // Instead of selectively excluding some keys from NS_KEY_PRESS events,
+    // Don't pass modifiers as eKeyPress events.
+    // Instead of selectively excluding some keys from eKeyPress events,
     // we instead selectively include (as per MSDN spec
     // ( http://msdn.microsoft.com/en-us/library/system.windows.forms.control.keypress%28VS.71%29.aspx );
     // no official spec covers KeyPress events).
@@ -1224,7 +1222,7 @@ nsWindow::keyPressEvent(QKeyEvent* aEvent)
         return DispatchContentCommandEvent(NS_CONTENT_COMMAND_UNDO);
     }
 
-    WidgetKeyboardEvent event(true, NS_KEY_PRESS, this);
+    WidgetKeyboardEvent event(true, eKeyPress, this);
     InitKeyEvent(event, aEvent);
     // Seend the key press event
     return DispatchEvent(&event);
@@ -1244,7 +1242,7 @@ nsWindow::keyReleaseEvent(QKeyEvent* aEvent)
     }
 
     // send the key event as a key up event
-    WidgetKeyboardEvent event(true, NS_KEY_UP, this);
+    WidgetKeyboardEvent event(true, eKeyUp, this);
     InitKeyEvent(event, aEvent);
 
     if (aEvent->key() == Qt::Key_AltGr) {
@@ -1429,7 +1427,7 @@ nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
 }
 
 NS_IMETHODIMP
-nsWindow::SetSizeMode(int32_t aMode)
+nsWindow::SetSizeMode(nsSizeMode aMode)
 {
     nsresult rv;
 
@@ -1964,8 +1962,7 @@ void
 nsWindow::ProcessMotionEvent()
 {
     if (mMoveEvent.needDispatch) {
-        WidgetMouseEvent event(true, NS_MOUSE_MOVE, this,
-                               WidgetMouseEvent::eReal);
+        WidgetMouseEvent event(true, eMouseMove, this, WidgetMouseEvent::eReal);
 
         event.refPoint.x = nscoord(mMoveEvent.pos.x());
         event.refPoint.y = nscoord(mMoveEvent.pos.y());

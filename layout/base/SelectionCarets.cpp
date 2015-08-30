@@ -205,7 +205,7 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
     nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, movePoint, rootFrame);
 
   if (aEvent->mMessage == NS_TOUCH_START ||
-      (aEvent->mMessage == NS_MOUSE_BUTTON_DOWN &&
+      (aEvent->mMessage == eMouseDown &&
        mouseEvent->button == WidgetMouseEvent::eLeftButton)) {
     // If having a active touch, ignore other touch down event
     if (aEvent->mMessage == NS_TOUCH_START && mActiveTouchId >= 0) {
@@ -233,7 +233,7 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
     }
   } else if (aEvent->mMessage == NS_TOUCH_END ||
              aEvent->mMessage == NS_TOUCH_CANCEL ||
-             aEvent->mMessage == NS_MOUSE_BUTTON_UP) {
+             aEvent->mMessage == eMouseUp) {
     CancelLongTapDetector();
     if (mDragMode != NONE) {
       // Only care about same id
@@ -245,7 +245,7 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
       return nsEventStatus_eConsumeNoDefault;
     }
   } else if (aEvent->mMessage == NS_TOUCH_MOVE ||
-             aEvent->mMessage == NS_MOUSE_MOVE) {
+             aEvent->mMessage == eMouseMove) {
     if (mDragMode == START_FRAME || mDragMode == END_FRAME) {
       if (mActiveTouchId == nowTouchId) {
         ptInRoot.y += mCaretCenterToDownPointOffsetY;
@@ -271,15 +271,15 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
       CancelLongTapDetector();
     }
 
-  } else if (aEvent->mMessage == NS_MOUSE_MOZLONGTAP) {
+  } else if (aEvent->mMessage == eMouseLongTap) {
     if (!mVisible || !sSelectionCaretDetectsLongTap) {
-      SELECTIONCARETS_LOG("SelectWord from NS_MOUSE_MOZLONGTAP");
+      SELECTIONCARETS_LOG("SelectWord from eMouseLongTap");
 
       mDownPoint = ptInRoot;
       nsresult wordSelected = SelectWord();
 
       if (NS_FAILED(wordSelected)) {
-        SELECTIONCARETS_LOG("SelectWord from NS_MOUSE_MOZLONGTAP failed!");
+        SELECTIONCARETS_LOG("SelectWord from eMouseLongTap failed!");
         return nsEventStatus_eIgnore;
       }
 

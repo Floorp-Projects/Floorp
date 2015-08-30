@@ -15,4 +15,3 @@ if CONFIG['GAIADIR']:
     DIRS += ['gaia']
 
 DIRS += ['app']
-

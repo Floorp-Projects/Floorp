@@ -58,6 +58,21 @@ static MOZ_CONSTEXPR_VAR Register ra = { Registers::ra };
 static MOZ_CONSTEXPR_VAR Register ScratchRegister = at;
 static MOZ_CONSTEXPR_VAR Register SecondScratchReg = t8;
 
+// Helper classes for ScratchRegister usage. Asserts that only one piece
+// of code thinks it has exclusive ownership of each scratch register.
+struct ScratchRegisterScope : public AutoRegisterScope
+{
+    explicit ScratchRegisterScope(MacroAssembler& masm)
+      : AutoRegisterScope(masm, ScratchRegister)
+    { }
+};
+struct SecondScratchRegisterScope : public AutoRegisterScope
+{
+    explicit SecondScratchRegisterScope(MacroAssembler& masm)
+      : AutoRegisterScope(masm, SecondScratchReg)
+    { }
+};
+
 // Use arg reg from EnterJIT function as OsrFrameReg.
 static MOZ_CONSTEXPR_VAR Register OsrFrameReg = a3;
 static MOZ_CONSTEXPR_VAR Register ArgumentsRectifierReg = s3;

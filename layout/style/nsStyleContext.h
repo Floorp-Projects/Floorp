@@ -173,6 +173,9 @@ public:
   bool HasPseudoElementData() const
     { return !!(mBits & NS_STYLE_HAS_PSEUDO_ELEMENT_DATA); }
 
+  bool HasChildThatUsesResetStyle() const
+    { return mBits & NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE; }
+
   // Is the only link whose visitedness is allowed to influence the
   // style of the node this style context is for (which is that element
   // or its nearest ancestor that is a link) visited?
@@ -272,12 +275,6 @@ public:
   #undef STYLE_STRUCT_INHERITED
 
   /**
-   * Returns whether this style context and aOther both have the same
-   * cached style struct pointer for a given style struct.
-   */
-  bool HasSameCachedStyleData(nsStyleContext* aOther, nsStyleStructID aSID);
-
-  /**
    * Returns whether this style context has cached, inherited style data for a
    * given style struct.
    */
@@ -360,7 +357,8 @@ public:
    */
   nsChangeHint CalcStyleDifference(nsStyleContext* aOther,
                                    nsChangeHint aParentHintsNotHandledForDescendants,
-                                   uint32_t* aEqualStructs);
+                                   uint32_t* aEqualStructs,
+                                   uint32_t* aSamePointerStructs);
 
   /**
    * Get a color that depends on link-visitedness using this and

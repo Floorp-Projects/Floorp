@@ -384,8 +384,8 @@ nsWindow::Show(bool aState)
         // XXX should we bring this to the front when it's shown,
         // if it's a toplevel widget?
 
-        // XXX we should synthesize a NS_MOUSE_EXIT_WIDGET (for old top
-        // window)/NS_MOUSE_ENTER_WIDGET (for new top window) since we need
+        // XXX we should synthesize a eMouseExitFromWidget (for old top
+        // window)/eMouseEnterIntoWidget (for new top window) since we need
         // to pretend that the top window always has focus.  Not sure
         // if Show() is the right place to do this, though.
 
@@ -520,7 +520,7 @@ nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
 }
 
 NS_IMETHODIMP
-nsWindow::SetSizeMode(int32_t aMode)
+nsWindow::SetSizeMode(nsSizeMode aMode)
 {
     switch (aMode) {
         case nsSizeMode_Minimized:
@@ -528,6 +528,8 @@ nsWindow::SetSizeMode(int32_t aMode)
             break;
         case nsSizeMode_Fullscreen:
             MakeFullScreen(true);
+            break;
+        default:
             break;
     }
     return NS_OK;
@@ -966,7 +968,7 @@ nsWindow::OnMouseEvent(AndroidGeckoEvent *ae)
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
     WidgetMouseEvent event = ae->MakeMouseEvent(this);
-    if (event.mMessage == NS_EVENT_NULL) {
+    if (event.mMessage == eVoidEvent) {
         // invalid event type, abort
         return;
     }
@@ -1021,7 +1023,7 @@ nsWindow::OnLongTapEvent(AndroidGeckoEvent *ae)
     }
 
     // Send the LongTap event to Gecko.
-    WidgetMouseEvent event(true, NS_MOUSE_MOZLONGTAP, this,
+    WidgetMouseEvent event(true, eMouseLongTap, this,
         WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
     event.button = WidgetMouseEvent::eLeftButton;
     event.refPoint =
@@ -1052,7 +1054,7 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
     bool isDownEvent = false;
 
     WidgetTouchEvent event = ae->MakeTouchEvent(this);
-    if (event.mMessage != NS_EVENT_NULL) {
+    if (event.mMessage != eVoidEvent) {
         nsEventStatus status;
         DispatchEvent(&event, status);
         // We check mMultipleActionsPrevented because that's what <input type=range>
@@ -1069,7 +1071,8 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
         // code on Fennec, we dispatch a dummy mouse event that *does* get
         // retargeted. The Fennec browser.js code can use this to activate the
         // highlight element in case the this touchstart is the start of a tap.
-        WidgetMouseEvent hittest(true, NS_MOUSE_MOZHITTEST, this, WidgetMouseEvent::eReal);
+        WidgetMouseEvent hittest(true, eMouseHitTest, this,
+                                 WidgetMouseEvent::eReal);
         hittest.refPoint = event.touches[0]->mRefPoint;
         hittest.ignoreRootScrollFrame = true;
         hittest.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
@@ -1118,7 +1121,7 @@ nsWindow::OnNativeGestureEvent(AndroidGeckoEvent *ae)
     LayoutDeviceIntPoint pt(ae->Points()[0].x,
                             ae->Points()[0].y);
     double delta = ae->X();
-    EventMessage msg = NS_EVENT_NULL;
+    EventMessage msg = eVoidEvent;
 
     switch (ae->Action()) {
         case AndroidMotionEvent::ACTION_MAGNIFY_START:
@@ -1461,7 +1464,7 @@ nsWindow::InitKeyEvent(WidgetKeyboardEvent& event, AndroidGeckoEvent& key,
     event.mCodeNameIndex = ConvertAndroidScanCodeToCodeNameIndex(key);
     uint32_t domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(key.KeyCode());
 
-    if (event.mMessage == NS_KEY_PRESS) {
+    if (event.mMessage == eKeyPress) {
         // Android gives us \n, so filter out some control characters.
         int charCode = key.UnicodeChar();
         if (!charCode) {
@@ -1473,13 +1476,13 @@ nsWindow::InitKeyEvent(WidgetKeyboardEvent& event, AndroidGeckoEvent& key,
         event.mPluginEvent.Clear();
     } else {
 #ifdef DEBUG
-        if (event.mMessage != NS_KEY_DOWN && event.mMessage != NS_KEY_UP) {
+        if (event.mMessage != eKeyDown && event.mMessage != eKeyUp) {
             ALOG("InitKeyEvent: unexpected event.mMessage %d", event.mMessage);
         }
 #endif // DEBUG
 
         // Flash will want a pluginEvent for keydown and keyup events.
-        ANPKeyActions action = event.mMessage == NS_KEY_DOWN
+        ANPKeyActions action = event.mMessage == eKeyDown
                              ? kDown_ANPKeyAction
                              : kUp_ANPKeyAction;
         InitPluginEvent(pluginEvent, action, key);
@@ -1500,13 +1503,13 @@ nsWindow::InitKeyEvent(WidgetKeyboardEvent& event, AndroidGeckoEvent& key,
     // Note that on Android 4.x, Alt modifier isn't set when the key input
     // causes text input even while right Alt key is pressed.  However, this
     // is necessary for Android 2.3 compatibility.
-    if (event.mMessage == NS_KEY_PRESS &&
+    if (event.mMessage == eKeyPress &&
         key.UnicodeChar() && key.UnicodeChar() != key.BaseUnicodeChar()) {
         event.modifiers &= ~(MODIFIER_ALT | MODIFIER_CONTROL | MODIFIER_META);
     }
 
     event.mIsRepeat =
-        (event.mMessage == NS_KEY_DOWN || event.mMessage == NS_KEY_PRESS) &&
+        (event.mMessage == eKeyDown || event.mMessage == eKeyPress) &&
         (!!(key.Flags() & AKEY_EVENT_FLAG_LONG_PRESS) || !!key.RepeatCount());
     event.location =
         WidgetKeyboardEvent::ComputeLocationFromCodeValue(event.mCodeNameIndex);
@@ -1543,7 +1546,7 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
         switch (keyCode) {
             case AKEYCODE_BACK: {
                 // XXX Where is the keydown event for this??
-                WidgetKeyboardEvent pressEvent(true, NS_KEY_PRESS, this);
+                WidgetKeyboardEvent pressEvent(true, eKeyPress, this);
                 ANPEvent pluginEvent;
                 InitKeyEvent(pressEvent, *ae, &pluginEvent);
                 DispatchEvent(&pressEvent);
@@ -1580,10 +1583,10 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
     EventMessage msg;
     switch (ae->Action()) {
     case AKEY_EVENT_ACTION_DOWN:
-        msg = NS_KEY_DOWN;
+        msg = eKeyDown;
         break;
     case AKEY_EVENT_ACTION_UP:
-        msg = NS_KEY_UP;
+        msg = eKeyUp;
         break;
     case AKEY_EVENT_ACTION_MULTIPLE:
         // Keys with multiple action are handled in Java,
@@ -1623,7 +1626,7 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
         return;
     }
 
-    WidgetKeyboardEvent pressEvent(true, NS_KEY_PRESS, this);
+    WidgetKeyboardEvent pressEvent(true, eKeyPress, this);
     InitKeyEvent(pressEvent, *ae, &pluginEvent);
 #ifdef DEBUG_ANDROID_WIDGET
     __android_log_print(ANDROID_LOG_INFO, "Gecko", "Dispatching key pressEvent with keyCode %d charCode %d shift %d alt %d sym/ctrl %d metamask %d", pressEvent.keyCode, pressEvent.charCode, pressEvent.IsShift(), pressEvent.IsAlt(), pressEvent.IsControl(), ae->MetaState());
@@ -1697,11 +1700,11 @@ nsWindow::RemoveIMEComposition()
 void
 nsWindow::SendIMEDummyKeyEvents()
 {
-    WidgetKeyboardEvent downEvent(true, NS_KEY_DOWN, this);
+    WidgetKeyboardEvent downEvent(true, eKeyDown, this);
     MOZ_ASSERT(downEvent.keyCode == 0);
     DispatchEvent(&downEvent);
 
-    WidgetKeyboardEvent upEvent(true, NS_KEY_UP, this);
+    WidgetKeyboardEvent upEvent(true, eKeyUp, this);
     MOZ_ASSERT(upEvent.keyCode == 0);
     DispatchEvent(&upEvent);
 }

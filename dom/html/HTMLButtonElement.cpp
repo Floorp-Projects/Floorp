@@ -282,20 +282,20 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 
   if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
     switch (aVisitor.mEvent->mMessage) {
-      case NS_KEY_PRESS:
-      case NS_KEY_UP:
+      case eKeyPress:
+      case eKeyUp:
         {
           // For backwards compat, trigger buttons with space or enter
           // (bug 25300)
           WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
           if ((keyEvent->keyCode == NS_VK_RETURN &&
-               NS_KEY_PRESS == aVisitor.mEvent->mMessage) ||
+               eKeyPress == aVisitor.mEvent->mMessage) ||
               (keyEvent->keyCode == NS_VK_SPACE &&
-               NS_KEY_UP == aVisitor.mEvent->mMessage)) {
+               eKeyUp == aVisitor.mEvent->mMessage)) {
             nsEventStatus status = nsEventStatus_eIgnore;
 
             WidgetMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
-                                   NS_MOUSE_CLICK, nullptr,
+                                   eMouseClick, nullptr,
                                    WidgetMouseEvent::eReal);
             event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
             EventDispatcher::Dispatch(static_cast<nsIContent*>(this),
@@ -304,9 +304,9 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
             aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
           }
         }
-        break;// NS_KEY_PRESS
+        break;
 
-      case NS_MOUSE_BUTTON_DOWN:
+      case eMouseDown:
         {
           WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
           if (mouseEvent->button == WidgetMouseEvent::eLeftButton) {
@@ -334,8 +334,8 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 
       // cancel all of these events for buttons
       //XXXsmaug What to do with these events? Why these should be cancelled?
-      case NS_MOUSE_BUTTON_UP:
-      case NS_MOUSE_DOUBLECLICK:
+      case eMouseUp:
+      case eMouseDoubleClick:
         {
           WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
           if (aVisitor.mDOMEvent &&
@@ -346,7 +346,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
         }
         break;
 
-      case NS_MOUSE_OVER:
+      case eMouseOver:
         {
           aVisitor.mPresContext->EventStateManager()->
             SetContentState(this, NS_EVENT_STATE_HOVER);
@@ -355,7 +355,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
         break;
 
         // XXX this doesn't seem to do anything yet
-      case NS_MOUSE_OUT:
+      case eMouseOut:
         {
           aVisitor.mPresContext->EventStateManager()->
             SetContentState(nullptr, NS_EVENT_STATE_HOVER);

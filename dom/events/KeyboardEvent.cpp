@@ -16,7 +16,7 @@ KeyboardEvent::KeyboardEvent(EventTarget* aOwner,
                              WidgetKeyboardEvent* aEvent)
   : UIEvent(aOwner, aPresContext,
             aEvent ? aEvent :
-                     new WidgetKeyboardEvent(false, NS_EVENT_NULL, nullptr))
+                     new WidgetKeyboardEvent(false, eVoidEvent, nullptr))
   , mInitializedByCtor(false)
   , mInitializedWhichValue(0)
 {
@@ -153,14 +153,14 @@ KeyboardEvent::CharCode()
   }
 
   switch (mEvent->mMessage) {
-  case NS_KEY_BEFORE_DOWN:
-  case NS_KEY_DOWN:
-  case NS_KEY_AFTER_DOWN:
-  case NS_KEY_BEFORE_UP:
-  case NS_KEY_UP:
-  case NS_KEY_AFTER_UP:
+  case eBeforeKeyDown:
+  case eKeyDown:
+  case eAfterKeyDown:
+  case eBeforeKeyUp:
+  case eKeyUp:
+  case eAfterKeyUp:
     return 0;
-  case NS_KEY_PRESS:
+  case eKeyPress:
     return mEvent->AsKeyboardEvent()->charCode;
   default:
     break;
@@ -199,14 +199,14 @@ KeyboardEvent::Which()
   }
 
   switch (mEvent->mMessage) {
-    case NS_KEY_BEFORE_DOWN:
-    case NS_KEY_DOWN:
-    case NS_KEY_AFTER_DOWN:
-    case NS_KEY_BEFORE_UP:
-    case NS_KEY_UP:
-    case NS_KEY_AFTER_UP:
+    case eBeforeKeyDown:
+    case eKeyDown:
+    case eAfterKeyDown:
+    case eBeforeKeyUp:
+    case eKeyUp:
+    case eAfterKeyUp:
       return KeyCode();
-    case NS_KEY_PRESS:
+    case eKeyPress:
       //Special case for 4xp bug 62878.  Try to make value of which
       //more closely mirror the values that 4.x gave for RETURN and BACKSPACE
       {
