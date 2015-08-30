@@ -36,7 +36,7 @@ function test_pause_frame()
       do_check_eq(aResponse.ownProperties.cos.value.class, "Function");
       do_check_true(!!aResponse.ownProperties.cos.value.actor);
 
-      let parentEnv = env.parent;
+      let parentEnv = env.parent.parent;
       do_check_neq(parentEnv, undefined);
 
       let parentClient = gThreadClient.pauseGrip(parentEnv.object);
