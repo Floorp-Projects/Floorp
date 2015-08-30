@@ -15,6 +15,27 @@
 namespace js {
 namespace jit {
 
+struct ScratchFloat32Scope : public AutoFloatRegisterScope
+{
+    explicit ScratchFloat32Scope(MacroAssembler& masm)
+      : AutoFloatRegisterScope(masm, ScratchFloat32Reg)
+    { }
+};
+
+struct ScratchDoubleScope : public AutoFloatRegisterScope
+{
+    explicit ScratchDoubleScope(MacroAssembler& masm)
+      : AutoFloatRegisterScope(masm, ScratchDoubleReg)
+    { }
+};
+
+struct ScratchSimdScope : public AutoFloatRegisterScope
+{
+    explicit ScratchSimdScope(MacroAssembler& masm)
+      : AutoFloatRegisterScope(masm, ScratchSimdReg)
+    { }
+};
+
 class Operand
 {
   public:
@@ -2191,6 +2212,7 @@ class AssemblerX86Shared : public AssemblerShared
     void vcmpps(uint8_t order, Operand src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         // :TODO: (Bug 1132894) See LIRGeneratorX86Shared::lowerForFPU
+        // FIXME: This logic belongs in the MacroAssembler.
         if (!HasAVX() && !src0.aliases(dest)) {
             if (src1.kind() == Operand::FPREG &&
                 dest.aliases(FloatRegister::FromCode(src1.fpu())))

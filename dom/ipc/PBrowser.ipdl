@@ -67,6 +67,7 @@ using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
 using struct mozilla::OwningSerializedStructuredCloneBuffer from "ipc/IPCMessageUtils.h";
 using mozilla::EventMessage from "mozilla/EventForwards.h";
 using nsEventStatus from "mozilla/EventForwards.h";
+using nsSizeMode from "nsIWidgetListener.h";
 
 namespace mozilla {
 namespace dom {
@@ -475,6 +476,13 @@ parent:
                           MaybeZoomConstraints aConstraints);
 
     /**
+     * Tells the containing widget whether the given input block results in a
+     * swipe. Should be called in response to a WidgetWheelEvent that has
+     * mFlags.mCanTriggerSwipe set on it.
+     */
+    RespondStartSwipeEvent(uint64_t aInputBlockId, bool aStartSwipe);
+
+    /**
      * Brings up the auth prompt dialog.
      * Called when this is the PBrowserParent for a nested remote iframe.
      * aCallbackId corresponds to an nsIAuthPromptCallback that lives in the
@@ -579,7 +587,7 @@ child:
 
     CacheFileDescriptor(nsString path, FileDescriptor fd);
 
-    UpdateDimensions(CSSRect rect, CSSSize size,
+    UpdateDimensions(CSSRect rect, CSSSize size, nsSizeMode sizeMode,
                      ScreenOrientationInternal orientation,
                      LayoutDeviceIntPoint chromeDisp) compressall;
 

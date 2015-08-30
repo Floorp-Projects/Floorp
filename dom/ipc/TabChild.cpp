@@ -1724,6 +1724,7 @@ TabChild::RecvShow(const ScreenIntSize& aSize,
 
 bool
 TabChild::RecvUpdateDimensions(const CSSRect& rect, const CSSSize& size,
+                               const nsSizeMode& sizeMode,
                                const ScreenOrientationInternal& orientation,
                                const LayoutDeviceIntPoint& chromeDisp)
 {
@@ -1750,6 +1751,7 @@ TabChild::RecvUpdateDimensions(const CSSRect& rect, const CSSSize& size,
     baseWin->SetPositionAndSize(0, 0, screenSize.width, screenSize.height,
                                 true);
 
+    mPuppetWidget->SetSizeMode(sizeMode);
     mPuppetWidget->Resize(screenRect.x + chromeDisp.x,
                           screenRect.y + chromeDisp.y,
                           screenSize.width, screenSize.height, true);
@@ -1956,6 +1958,9 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
   APZCCallbackHelper::DispatchWidgetEvent(event);
 
   if (aEvent.mFlags.mHandledByAPZ) {
+    if (event.mCanTriggerSwipe) {
+      SendRespondStartSwipeEvent(aInputBlockId, event.TriggersSwipe());
+    }
     mAPZEventState->ProcessWheelEvent(event, aGuid, aInputBlockId);
   }
   return true;
@@ -2055,11 +2060,11 @@ TabChild::UpdateTapState(const WidgetTouchEvent& aEvent, nsEventStatus aStatus)
   case NS_TOUCH_END:
     if (!TouchManager::gPreventMouseEvents) {
       APZCCallbackHelper::DispatchSynthesizedMouseEvent(
-        NS_MOUSE_MOVE, time, currentPoint, 0, mPuppetWidget);
+        eMouseMove, time, currentPoint, 0, mPuppetWidget);
       APZCCallbackHelper::DispatchSynthesizedMouseEvent(
-        NS_MOUSE_BUTTON_DOWN, time, currentPoint, 0, mPuppetWidget);
+        eMouseDown, time, currentPoint, 0, mPuppetWidget);
       APZCCallbackHelper::DispatchSynthesizedMouseEvent(
-        NS_MOUSE_BUTTON_UP, time, currentPoint, 0, mPuppetWidget);
+        eMouseUp, time, currentPoint, 0, mPuppetWidget);
     }
     // fall through
   case NS_TOUCH_CANCEL:
@@ -2231,7 +2236,7 @@ TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& event,
 {
   AutoCacheNativeKeyCommands autoCache(mPuppetWidget);
 
-  if (event.mMessage == NS_KEY_PRESS) {
+  if (event.mMessage == eKeyPress) {
     // If content code called preventDefault() on a keydown event, then we don't
     // want to process any following keypress events.
     if (mIgnoreKeyPressEvent) {
@@ -2251,7 +2256,7 @@ TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& event,
   localEvent.widget = mPuppetWidget;
   nsEventStatus status = APZCCallbackHelper::DispatchWidgetEvent(localEvent);
 
-  if (event.mMessage == NS_KEY_DOWN) {
+  if (event.mMessage == eKeyDown) {
     mIgnoreKeyPressEvent = status == nsEventStatus_eConsumeNoDefault;
   }
 

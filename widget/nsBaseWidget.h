@@ -124,8 +124,8 @@ public:
   NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                                       nsIWidget *aWidget, bool aActivate) override;
 
-  NS_IMETHOD              SetSizeMode(int32_t aMode) override;
-  virtual int32_t         SizeMode() override
+  NS_IMETHOD              SetSizeMode(nsSizeMode aMode) override;
+  virtual nsSizeMode      SizeMode() override
   {
     return mSizeMode;
   }

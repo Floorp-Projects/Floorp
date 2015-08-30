@@ -190,8 +190,9 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
             EmitReturnFromIC(masm);
 
             masm.bind(&toUint);
-            masm.convertUInt32ToDouble(scratchReg, ScratchDoubleReg);
-            masm.boxDouble(ScratchDoubleReg, R0);
+            ScratchDoubleScope scratchDouble(masm);
+            masm.convertUInt32ToDouble(scratchReg, scratchDouble);
+            masm.boxDouble(scratchDouble, R0);
         } else {
             masm.j(Assembler::LessThan, &failure);
             // Move result for return.

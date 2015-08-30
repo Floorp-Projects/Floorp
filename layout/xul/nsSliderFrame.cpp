@@ -479,7 +479,7 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
   {
     switch (aEvent->mMessage) {
     case NS_TOUCH_MOVE:
-    case NS_MOUSE_MOVE: {
+    case eMouseMove: {
       nsPoint eventPoint;
       if (!GetEventPoint(aEvent, eventPoint)) {
         break;
@@ -541,7 +541,7 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
     break;
 
     case NS_TOUCH_END:
-    case NS_MOUSE_BUTTON_UP:
+    case eMouseUp:
       if (ShouldScrollForEvent(aEvent)) {
         StopDrag();
         //we MUST call nsFrame HandleEvent for mouse ups to maintain the selection state and capture state.
@@ -599,9 +599,9 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
            aEvent->AsMouseEvent()->button == WidgetMouseEvent::eRightButton) {
     // HandlePress and HandleRelease are usually called via
     // nsFrame::HandleEvent, but only for the left mouse button.
-    if (aEvent->mMessage == NS_MOUSE_BUTTON_DOWN) {
+    if (aEvent->mMessage == eMouseDown) {
       HandlePress(aPresContext, aEvent, aEventStatus);
-    } else if (aEvent->mMessage == NS_MOUSE_BUTTON_UP) {
+    } else if (aEvent->mMessage == eMouseUp) {
       HandleRelease(aPresContext, aEvent, aEventStatus);
     }
 
@@ -610,13 +610,13 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 #endif
 
   // XXX hack until handle release is actually called in nsframe.
-  //  if (aEvent->mMessage == NS_MOUSE_OUT ||
+  //  if (aEvent->mMessage == eMouseOut ||
   //      aEvent->mMessage == NS_MOUSE_RIGHT_BUTTON_UP ||
   //      aEvent->mMessage == NS_MOUSE_LEFT_BUTTON_UP) {
   //    HandleRelease(aPresContext, aEvent, aEventStatus);
   //  }
 
-  if (aEvent->mMessage == NS_MOUSE_OUT && mChange)
+  if (aEvent->mMessage == eMouseOut && mChange)
      HandleRelease(aPresContext, aEvent, aEventStatus);
 
   return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
@@ -1052,8 +1052,8 @@ nsSliderFrame::ShouldScrollForEvent(WidgetGUIEvent* aEvent)
     case NS_TOUCH_START:
     case NS_TOUCH_END:
       return true;
-    case NS_MOUSE_BUTTON_DOWN:
-    case NS_MOUSE_BUTTON_UP: {
+    case eMouseDown:
+    case eMouseUp: {
       uint16_t button = aEvent->AsMouseEvent()->button;
 #ifdef MOZ_WIDGET_GTK
       return (button == WidgetMouseEvent::eLeftButton) ||
@@ -1080,7 +1080,7 @@ nsSliderFrame::ShouldScrollToClickForEvent(WidgetGUIEvent* aEvent)
     return GetScrollToClick();
   }
 
-  if (aEvent->mMessage != NS_MOUSE_BUTTON_DOWN) {
+  if (aEvent->mMessage != eMouseDown) {
     return false;
   }
 

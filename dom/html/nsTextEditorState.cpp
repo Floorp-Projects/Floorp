@@ -904,7 +904,7 @@ nsTextInputListener::HandleEvent(nsIDOMEvent* aEvent)
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (keyEvent->mMessage != NS_KEY_PRESS) {
+  if (keyEvent->mMessage != eKeyPress) {
     return NS_OK;
   }
 

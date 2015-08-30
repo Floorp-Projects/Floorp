@@ -262,6 +262,7 @@ public:
                        const PanGestureInput& aEvent);
 
   bool SetContentResponse(bool aPreventDefault) override;
+  bool IsReadyForHandling() const override;
   bool HasEvents() const override;
   void DropEvents() override;
   void HandleEvents() override;
@@ -282,9 +283,12 @@ public:
 
   bool WasInterrupted() const { return mInterrupted; }
 
+  void SetNeedsToWaitForContentResponse(bool aWaitForContentResponse);
+
 private:
   nsTArray<PanGestureInput> mEvents;
   bool mInterrupted;
+  bool mWaitingForContentResponse;
 };
 
 /**

@@ -87,23 +87,23 @@ nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
     // repeat mode may be "hover" for repeating while the mouse is hovering
     // over the element, otherwise repetition is done while the element is
     // active (pressed).
-    case NS_MOUSE_ENTER_WIDGET:
-    case NS_MOUSE_OVER:
+    case eMouseEnterIntoWidget:
+    case eMouseOver:
       if (IsActivatedOnHover()) {
         StartRepeat();
         mTrustedEvent = aEvent->mFlags.mIsTrusted;
       }
       break;
 
-    case NS_MOUSE_EXIT_WIDGET:
-    case NS_MOUSE_OUT:
+    case eMouseExitFromWidget:
+    case eMouseOut:
       // always stop on mouse exit
       StopRepeat();
       // Not really necessary but do this to be safe
       mTrustedEvent = false;
       break;
 
-    case NS_MOUSE_CLICK: {
+    case eMouseClick: {
       WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
       if (mouseEvent->IsLeftClickEvent()) {
         // skip button frame handling to prevent click handling

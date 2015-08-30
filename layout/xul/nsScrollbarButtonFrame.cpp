@@ -53,20 +53,20 @@ nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
   }
 
   switch (aEvent->mMessage) {
-    case NS_MOUSE_BUTTON_DOWN:
+    case eMouseDown:
       mCursorOnThis = true;
       // if we didn't handle the press ourselves, pass it on to the superclass
       if (HandleButtonPress(aPresContext, aEvent, aEventStatus)) {
         return NS_OK;
       }
       break;
-    case NS_MOUSE_BUTTON_UP:
+    case eMouseUp:
       HandleRelease(aPresContext, aEvent, aEventStatus);
       break;
-    case NS_MOUSE_OUT:
+    case eMouseOut:
       mCursorOnThis = false;
       break;
-    case NS_MOUSE_MOVE: {
+    case eMouseMove: {
       nsPoint cursor =
         nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
       nsRect frameRect(nsPoint(0, 0), GetSize());

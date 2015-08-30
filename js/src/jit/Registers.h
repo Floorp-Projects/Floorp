@@ -167,6 +167,34 @@ class MachineState
     }
 };
 
+class MacroAssembler;
+
+// Declares a register as owned within the scope of the object.
+// In debug mode, owned register state is tracked within the MacroAssembler,
+// and an assert will fire if ownership is conflicting.
+// In contrast to ARM64's UseScratchRegisterScope, this class has no overhead
+// in non-debug builds.
+template <class RegisterType>
+struct AutoGenericRegisterScope : public RegisterType
+{
+    // Prevent MacroAssembler templates from creating copies,
+    // which causes the destructor to fire more than once.
+    AutoGenericRegisterScope(const AutoGenericRegisterScope& other) = delete;
+
+#ifdef DEBUG
+    MacroAssembler& masm_;
+    explicit AutoGenericRegisterScope(MacroAssembler& masm, RegisterType reg);
+    ~AutoGenericRegisterScope();
+#else
+    MOZ_CONSTEXPR explicit AutoGenericRegisterScope(MacroAssembler& masm, RegisterType reg)
+      : RegisterType(reg)
+    { }
+#endif
+};
+
+typedef AutoGenericRegisterScope<Register> AutoRegisterScope;
+typedef AutoGenericRegisterScope<FloatRegister> AutoFloatRegisterScope;
+
 } // namespace jit
 } // namespace js
 

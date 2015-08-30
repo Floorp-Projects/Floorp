@@ -289,6 +289,7 @@ private:
       mReceivedNewData = false;
       mDiscontinuity = true;
       mQueuedSamples.Clear();
+      mDecodingRequested = false;
       mOutputRequested = false;
       mInputExhausted = false;
       mNeedDraining = false;
