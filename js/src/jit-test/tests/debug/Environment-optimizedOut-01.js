@@ -28,7 +28,7 @@ dbg.onEnterFrame = function (f) {
     assertEq(funenv.callee, f.older.callee);
     assertEq(funenv.names().indexOf("x") !== -1, true);
 
-    globalenv = funenv.parent;
+    globalenv = funenv.parent.parent;
     assertEq(globalenv.optimizedOut, false);
     assertEq(globalenv.inspectable, true);
     assertEq(globalenv.type, "object");
