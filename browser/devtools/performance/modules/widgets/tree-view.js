@@ -14,7 +14,7 @@ const { Heritage } = require("resource:///modules/devtools/ViewHelpers.jsm");
 const { AbstractTreeItem } = require("resource:///modules/devtools/AbstractTreeItem.jsm");
 
 const URL_LABEL_TOOLTIP = L10N.getStr("table.url.tooltiptext");
-const VIEW_OPTIMIZATIONS_TOOLTIP = L10N.getStr("table.view-optimizations.tooltiptext");
+const VIEW_OPTIMIZATIONS_TOOLTIP = L10N.getStr("table.view-optimizations.tooltiptext2");
 
 const CALL_TREE_INDENTATION = 16; // px
 
