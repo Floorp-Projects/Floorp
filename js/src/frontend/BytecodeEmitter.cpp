@@ -580,7 +580,7 @@ class NonLocalExitScope {
     }
     ~NonLocalExitScope() {
         for (uint32_t n = savedScopeIndex; n < bce->blockScopeList.length(); n++)
-            bce->blockScopeList.recordEnd(n, bce->offset());
+            bce->blockScopeList.recordEnd(n, bce->offset(), bce->inPrologue());
         bce->stackDepth = savedDepth;
     }
 
@@ -588,7 +588,7 @@ class NonLocalExitScope {
         uint32_t scopeObjectIndex = bce->blockScopeList.findEnclosingScope(blockScopeIndex);
         uint32_t parent = openScopeIndex;
 
-        if (!bce->blockScopeList.append(scopeObjectIndex, bce->offset(), parent))
+        if (!bce->blockScopeList.append(scopeObjectIndex, bce->offset(), bce->inPrologue(), parent))
             return false;
         openScopeIndex = bce->blockScopeList.length() - 1;
         return true;
@@ -924,7 +924,7 @@ BytecodeEmitter::enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType
         parent = stmt->blockScopeIndex;
 
     stmt->blockScopeIndex = blockScopeList.length();
-    if (!blockScopeList.append(scopeObjectIndex, offset(), parent))
+    if (!blockScopeList.append(scopeObjectIndex, offset(), inPrologue(), parent))
         return false;
 
     pushStatement(stmt, stmtType, offset());
@@ -980,7 +980,7 @@ BytecodeEmitter::leaveNestedScope(StmtInfoBCE* stmt)
             return false;
     }
 
-    blockScopeList.recordEnd(blockScopeIndex, offset());
+    blockScopeList.recordEnd(blockScopeIndex, offset(), inPrologue());
 
     return true;
 }
@@ -8427,14 +8427,16 @@ CGTryNoteList::finish(TryNoteArray* array)
 }
 
 bool
-CGBlockScopeList::append(uint32_t scopeObject, uint32_t offset, uint32_t parent)
+CGBlockScopeList::append(uint32_t scopeObject, uint32_t offset, bool inPrologue,
+                         uint32_t parent)
 {
-    BlockScopeNote note;
+    CGBlockScopeNote note;
     mozilla::PodZero(&note);
 
     note.index = scopeObject;
     note.start = offset;
     note.parent = parent;
+    note.startInPrologue = inPrologue;
 
     return list.append(note);
 }
@@ -8445,10 +8447,11 @@ CGBlockScopeList::findEnclosingScope(uint32_t index)
     MOZ_ASSERT(index < length());
     MOZ_ASSERT(list[index].index != BlockScopeNote::NoBlockScopeIndex);
 
+    DebugOnly<bool> inPrologue = list[index].startInPrologue;
     DebugOnly<uint32_t> pos = list[index].start;
     while (index--) {
-        MOZ_ASSERT(list[index].start <= pos);
-        if (list[index].length == 0) {
+        MOZ_ASSERT_IF(inPrologue == list[index].startInPrologue, list[index].start <= pos);
+        if (list[index].end == 0) {
             // We are looking for the nearest enclosing live scope.  If the
             // scope contains POS, it should still be open, so its length should
             // be zero.
@@ -8456,7 +8459,7 @@ CGBlockScopeList::findEnclosingScope(uint32_t index)
         } else {
             // Conversely, if the length is not zero, it should not contain
             // POS.
-            MOZ_ASSERT(list[index].start + list[index].length <= pos);
+            MOZ_ASSERT_IF(inPrologue == list[index].endInPrologue, list[index].end <= pos);
         }
     }
 
@@ -8464,22 +8467,28 @@ CGBlockScopeList::findEnclosingScope(uint32_t index)
 }
 
 void
-CGBlockScopeList::recordEnd(uint32_t index, uint32_t offset)
+CGBlockScopeList::recordEnd(uint32_t index, uint32_t offset, bool inPrologue)
 {
     MOZ_ASSERT(index < length());
     MOZ_ASSERT(offset >= list[index].start);
     MOZ_ASSERT(list[index].length == 0);
-
-    list[index].length = offset - list[index].start;
+    list[index].end = offset;
+    list[index].endInPrologue = inPrologue;
 }
 
 void
-CGBlockScopeList::finish(BlockScopeArray* array)
+CGBlockScopeList::finish(BlockScopeArray* array, uint32_t prologueLength)
 {
     MOZ_ASSERT(length() == array->length);
 
-    for (unsigned i = 0; i < length(); i++)
+    for (unsigned i = 0; i < length(); i++) {
+        if (!list[i].startInPrologue)
+            list[i].start += prologueLength;
+        if (!list[i].endInPrologue)
+            list[i].end += prologueLength;
+        list[i].length = list[i].end - list[i].start;
         array->vector[i] = list[i];
+    }
 }
 
 void
