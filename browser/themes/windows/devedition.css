@@ -110,6 +110,7 @@
   -moz-margin-start: 2px;
 }
 
+:root[devtoolstheme="dark"] .findbar-closebutton,
 /* Tab styling - make sure to use an inverted icon for the selected tab
    (brighttext only covers the unselected tabs) */
 .tab-close-button[visuallyselected=true] {
@@ -117,6 +118,7 @@
 }
 
 @media (min-resolution: 1.1dppx) {
+  :root[devtoolstheme="dark"] .findbar-closebutton,
   .tab-close-button[visuallyselected=true] {
     list-style-image: url("chrome://global/skin/icons/close-inverted@2x.png");
   }

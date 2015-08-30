@@ -35,6 +35,7 @@ body {
   margin-bottom: -1px;
   overflow-y: hidden;
   max-height: 24px;
+  outline: 0 !important;
   transition-property: max-height;
   transition-duration: 150ms;
   transition-timing-function: ease;

@@ -1247,7 +1247,7 @@ public class BrowserApp extends GeckoApp
                 ViewHelper.setTranslationY(mBrowserChrome, 0);
             }
             if (mLayerView != null) {
-                ViewHelper.setTranslationY(mLayerView, 0);
+                mLayerView.setSurfaceTranslation(0);
             }
         }
 
@@ -1559,11 +1559,10 @@ public class BrowserApp extends GeckoApp
         }
 
         final View browserChrome = mBrowserChrome;
-        final View layerView = mLayerView;
         final ToolbarProgressView progressView = mProgressView;
 
         ViewHelper.setTranslationY(browserChrome, -aToolbarTranslation);
-        ViewHelper.setTranslationY(layerView, mToolbarHeight - aLayerViewTranslation);
+        mLayerView.setSurfaceTranslation(mToolbarHeight - aLayerViewTranslation);
 
         // Stop the progressView from moving all the way up so that we can still see a good chunk of it
         // when the chrome is offscreen.
@@ -1637,7 +1636,7 @@ public class BrowserApp extends GeckoApp
 
         if (mLayerView != null && height != mToolbarHeight) {
             mToolbarHeight = height;
-            mLayerView.getDynamicToolbarAnimator().setMaxTranslation(height);
+            mLayerView.setMaxTranslation(height);
             mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
         }
     }
