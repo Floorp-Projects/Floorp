@@ -1,4 +1,4 @@
-skip-if(B2G||Mulet) == mq_print_height.xhtml mq_print-ref.xhtml # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(Android,8,454) skip-if(B2G||Mulet) == mq_print_height.xhtml mq_print-ref.xhtml # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop, bug 1178697
 skip-if(B2G||Mulet) == mq_print_deviceheight.xhtml mq_print-ref.xhtml # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == mq_print_width.xhtml mq_print-ref.xhtml # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == mq_print_minwidth.xhtml mq_print-ref.xhtml # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
