@@ -5,7 +5,7 @@ var gw = dbg.addDebuggee(g);
 var hits = 0;
 dbg.onDebuggerStatement = function (frame) {
     hits++;
-    assertEq(frame.environment.parent.getVariable('y'), true);
+    assertEq(frame.environment.parent.parent.getVariable('y'), true);
 };
 
 g.eval("var g;" +
