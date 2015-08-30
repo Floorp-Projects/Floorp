@@ -1,4 +1,4 @@
-// |reftest| fails-if(Function("try{Function('let\x20x=5;');return(1,eval)('let\x20x=3;\\'x\\'\x20in\x20this');}catch(e){return(true);}")()) -- needs bug 589199 fix (top-level let not same as var); please convert AssertEq to assertEq when removing this fails-if, too
+// |reftest| fails-if(Function("try{Function('let\x20x=5;');return(evaluate)('let\x20x=3;\\'x\\'\x20in\x20this');}catch(e){return(true);}")()) -- needs bug 589199 fix (top-level let not same as var); please convert AssertEq to assertEq when removing this fails-if, too
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 

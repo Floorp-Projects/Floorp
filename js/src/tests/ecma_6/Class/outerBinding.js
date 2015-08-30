@@ -1,3 +1,8 @@
+// |reftest| skip-if(!xulRuntime.shell)
+//
+// The above skip-if is because global lexicals aren't yet implemented. Remove
+// that and the |evaluate| call below once they are.
+//
 // A class statement creates a mutable lexical outer binding.
 
 var test = `
@@ -13,8 +18,6 @@ assertEq(Foo, 5);
     assertEq(foo, 4);
 }
 
-var ieval = eval;
-
 {
     class PermanentBinding { constructor() { } }
     delete PermanentBinding;
@@ -24,10 +27,10 @@ var ieval = eval;
 
 {
     try {
-        ieval(\`class x { constructor () { } }
-                throw new Error("FAIL");
-                class y { constructor () { } }
-              \`);
+        evaluate(\`class x { constructor () { } }
+                   throw new Error("FAIL");
+                   class y { constructor () { } }
+                 \`);
     } catch (e if e instanceof Error) { }
     assertEq(typeof x, "function");
     assertEq(y, undefined, "Congrats, you fixed top-level lexical scoping! " +
