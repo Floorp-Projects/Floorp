@@ -1,8 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const PREF_NEWTAB_ROWS = "browser.newtabpage.rows";
+
 function runTests() {
+  // set max rows to 1, to avoid scroll events by clicking middle button
+  Services.prefs.setIntPref(PREF_NEWTAB_ROWS, 1);
   yield setLinks("0");
+  yield addNewTabPageTab();
+  // we need a second newtab to honor max rows
   yield addNewTabPageTab();
 
   // Remember if the click handler was triggered
@@ -22,4 +28,5 @@ function runTests() {
 
   // Make sure the cell didn't actually get blocked
   checkGrid("0");
+  Services.prefs.clearUserPref(PREF_NEWTAB_ROWS);
 }
