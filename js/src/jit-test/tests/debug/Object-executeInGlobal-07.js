@@ -1,4 +1,4 @@
-// evalInGlobal correctly handles optional custom url option
+// executeInGlobal correctly handles optional custom url option
 var g = newGlobal();
 var dbg = new Debugger(g);
 var debuggee = dbg.getDebuggees()[0];
@@ -11,7 +11,7 @@ function testUrl (options, expected) {
         assertEq(script.url, expected);
         count--;
     };
-    debuggee.evalInGlobal("", options);
+    debuggee.executeInGlobal("", options);
 }
 
 
