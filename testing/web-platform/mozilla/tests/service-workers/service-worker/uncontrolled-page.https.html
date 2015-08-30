@@ -26,7 +26,7 @@ async_test(function(t) {
           return wait_for_state(t, reg.installing, 'activated');
         })
       .then(function() {
-          return fetch_url('/service-worker/resources/simple.txt');
+          return fetch_url('resources/simple.txt');
         })
       .then(function(text) {
           assert_equals(text, 'a simple text file\n');
