@@ -125,28 +125,24 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
     }
 
     private void move(float newX, float newY) {
+        LayerView layerView = GeckoAppShell.getLayerView();
+
         // newX and newY are in screen coordinates, but mLeft/mTop are relative
         // to the ancestor (which is what LayerView is relative to also). So,
-        // we need to adjust them newX/newY. The |ancestorOrigin| variable computed
+        // we need to adjust newX/newY. The |ancestorOrigin| variable computed
         // below is the origin of the ancestor relative to the screen coordinates,
         // so subtracting that from newY puts newY into the desired coordinate
         // space. We also need to include the offset amount of the touch location
         // relative to the top left of the handle (mTouchStart).
-        float layerViewTranslation = ViewHelper.getTranslationY(GeckoAppShell.getLayerView());
         int[] layerViewPosition = new int[2];
-        GeckoAppShell.getLayerView().getLocationOnScreen(layerViewPosition);
-        float ancestorOrigin = layerViewPosition[1] - layerViewTranslation;
+        layerView.getLocationOnScreen(layerViewPosition);
+        float ancestorOrigin = layerViewPosition[1];
 
         mLeft = newX - mTouchStart.x;
         mTop = newY - mTouchStart.y - ancestorOrigin;
 
-        LayerView layerView = GeckoAppShell.getLayerView();
-        if (layerView == null) {
-            Log.e(LOGTAG, "Can't move selection because layerView is null");
-            return;
-        }
-
         // Send x coordinate on the right side of the start handle, left side of the end handle.
+        float layerViewTranslation = layerView.getSurfaceTranslation();
         PointF geckoPoint = new PointF(mLeft + adjustLeftForHandle(),
                                        mTop - layerViewTranslation);
         geckoPoint = layerView.convertViewPointToLayerPoint(geckoPoint);
@@ -191,7 +187,7 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
         PointF viewPoint = new PointF((mGeckoPoint.x * zoom) - x,
                                       (mGeckoPoint.y * zoom) - y);
         mLeft = viewPoint.x - adjustLeftForHandle();
-        mTop = viewPoint.y + ViewHelper.getTranslationY(GeckoAppShell.getLayerView());
+        mTop = viewPoint.y + GeckoAppShell.getLayerView().getSurfaceTranslation();
 
         setLayoutPosition();
     }

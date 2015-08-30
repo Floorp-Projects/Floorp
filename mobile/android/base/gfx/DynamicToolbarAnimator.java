@@ -148,6 +148,10 @@ public class DynamicToolbarAnimator {
         }
     }
 
+    public float getMaxTranslation() {
+        return mMaxTranslation;
+    }
+
     public float getToolbarTranslation() {
         return mToolbarTranslation;
     }

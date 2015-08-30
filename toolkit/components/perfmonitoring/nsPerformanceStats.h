@@ -10,21 +10,22 @@
 
 #include "nsIPerformanceStats.h"
 
-class nsPerformanceStatsService : public nsIPerformanceStatsService, nsIObserver
+class nsPerformanceStatsService : public nsIPerformanceStatsService
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPERFORMANCESTATSSERVICE
-  NS_DECL_NSIOBSERVER
 
   nsPerformanceStatsService();
 
 private:
+  nsresult UpdateTelemetry();
   virtual ~nsPerformanceStatsService();
 
   const uint64_t mProcessId;
   uint64_t mProcessStayed;
   uint64_t mProcessMoved;
+  uint32_t mProcessUpdateCounter;
 protected:
 };
 
