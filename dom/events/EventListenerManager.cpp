@@ -24,6 +24,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/TimelineConsumers.h"
+#include "mozilla/EventTimelineMarker.h"
 
 #include "EventListenerService.h"
 #include "nsCOMArray.h"
@@ -1056,29 +1057,6 @@ EventListenerManager::GetDocShellForTarget()
   return docShell;
 }
 
-class EventTimelineMarker : public TimelineMarker
-{
-public:
-  EventTimelineMarker(nsDocShell* aDocShell, TracingMetadata aMetaData,
-                      uint16_t aPhase, const nsAString& aCause)
-    : TimelineMarker(aDocShell, "DOMEvent", aMetaData, aCause)
-    , mPhase(aPhase)
-  {
-  }
-
-  virtual void AddDetails(JSContext* aCx,
-                          mozilla::dom::ProfileTimelineMarker& aMarker) override
-  {
-    if (GetMetaData() == TRACING_INTERVAL_START) {
-      aMarker.mType.Construct(GetCause());
-      aMarker.mEventPhase.Construct(mPhase);
-    }
-  }
-
-private:
-  uint16_t mPhase;
-};
-
 /**
 * Causes a check for event listeners and processing by them if they exist.
 * @param an event listener
@@ -1149,9 +1127,8 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               (*aDOMEvent)->GetType(typeStr);
               uint16_t phase;
               (*aDOMEvent)->GetEventPhase(&phase);
-              mozilla::UniquePtr<TimelineMarker> marker =
-                MakeUnique<EventTimelineMarker>(ds, TRACING_INTERVAL_START,
-                                                phase, typeStr);
+              UniquePtr<TimelineMarker> marker = MakeUnique<EventTimelineMarker>(
+                typeStr, phase, MarkerTracingType::START);
               TimelineConsumers::AddMarkerForDocShell(ds, Move(marker));
             }
           }
@@ -1163,7 +1140,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
 
           if (isTimelineRecording) {
             nsDocShell* ds = static_cast<nsDocShell*>(docShell.get());
-            TimelineConsumers::AddMarkerForDocShell(ds, "DOMEvent", TRACING_INTERVAL_END);
+            TimelineConsumers::AddMarkerForDocShell(ds, "DOMEvent", MarkerTracingType::END);
           }
         }
       }

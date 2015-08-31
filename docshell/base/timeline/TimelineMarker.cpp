@@ -4,50 +4,61 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDocShell.h"
 #include "TimelineMarker.h"
 
-TimelineMarker::TimelineMarker(nsDocShell* aDocShell, const char* aName,
-                               TracingMetadata aMetaData)
+namespace mozilla {
+
+TimelineMarker::TimelineMarker(const char* aName,
+                               MarkerTracingType aTracingType,
+                               MarkerStackRequest aStackRequest)
   : mName(aName)
-  , mMetaData(aMetaData)
+  , mTracingType(aTracingType)
 {
   MOZ_COUNT_CTOR(TimelineMarker);
-  MOZ_ASSERT(aName);
-  aDocShell->Now(&mTime);
-  if (aMetaData == TRACING_INTERVAL_START || aMetaData == TRACING_TIMESTAMP) {
-    CaptureStack();
-  }
+  SetCurrentTime();
+  CaptureStackIfNecessary(aTracingType, aStackRequest);
 }
 
-TimelineMarker::TimelineMarker(nsDocShell* aDocShell, const char* aName,
-                               const mozilla::TimeStamp& aTime,
-                               TracingMetadata aMetaData)
-  : TimelineMarker(aDocShell, aName, aMetaData)
-{
-  bool isInconsistent = false;
-  mTime = (aTime - mozilla::TimeStamp::ProcessCreation(isInconsistent)).ToMilliseconds();
-}
-
-TimelineMarker::TimelineMarker(nsDocShell* aDocShell, const char* aName,
-                               TracingMetadata aMetaData,
-                               const nsAString& aCause,
-                               TimelineStackRequest aStackRequest)
+TimelineMarker::TimelineMarker(const char* aName,
+                               const TimeStamp& aTime,
+                               MarkerTracingType aTracingType,
+                               MarkerStackRequest aStackRequest)
   : mName(aName)
-  , mMetaData(aMetaData)
-  , mCause(aCause)
+  , mTracingType(aTracingType)
 {
   MOZ_COUNT_CTOR(TimelineMarker);
-  MOZ_ASSERT(aName);
-  aDocShell->Now(&mTime);
-  if ((aMetaData == TRACING_INTERVAL_START ||
-      aMetaData == TRACING_TIMESTAMP) &&
-      aStackRequest != NO_STACK) {
-    CaptureStack();
-  }
+  SetCustomTime(aTime);
+  CaptureStackIfNecessary(aTracingType, aStackRequest);
 }
 
 TimelineMarker::~TimelineMarker()
 {
   MOZ_COUNT_DTOR(TimelineMarker);
 }
+
+void
+TimelineMarker::SetCurrentTime()
+{
+ TimeStamp now = TimeStamp::Now();
+ SetCustomTime(now);
+}
+
+void
+TimelineMarker::SetCustomTime(const TimeStamp& aTime)
+{
+  bool isInconsistent = false;
+  mTime = (aTime - TimeStamp::ProcessCreation(isInconsistent)).ToMilliseconds();
+}
+
+void
+TimelineMarker::CaptureStackIfNecessary(MarkerTracingType aTracingType,
+                                        MarkerStackRequest aStackRequest)
+{
+  if ((aTracingType == MarkerTracingType::START ||
+      aTracingType == MarkerTracingType::TIMESTAMP) &&
+      aStackRequest != MarkerStackRequest::NO_STACK) {
+    CaptureStack();
+  }
+}
+
+} // namespace mozilla
