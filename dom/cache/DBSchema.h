@@ -116,8 +116,9 @@ StorageGetKeys(mozIStorageConnection* aConn, Namespace aNamespace,
 nsresult
 IncrementalVacuum(mozIStorageConnection* aConn);
 
-// We will wipe out databases with a schema versions less than this.
-extern const int32_t kMaxWipeSchemaVersion;
+// We will wipe out databases with a schema versions less than this.  Newer
+// versions will be migrated on open to the latest schema version.
+extern const int32_t kFirstShippedSchemaVersion;
 
 } // namespace db
 } // namespace cache
