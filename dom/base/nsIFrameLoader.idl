@@ -16,7 +16,7 @@ interface nsIDOMElement;
 interface nsITabParent;
 interface nsILoadContext;
 
-[scriptable, builtinclass, uuid(d24f9330-ae4e-11e4-ab27-0800200c9a66)]
+[scriptable, builtinclass, uuid(c6e00815-b7a1-4544-b309-a85b86cb1747)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -48,6 +48,14 @@ interface nsIFrameLoader : nsISupports
    * except that this method allows specifying the URI to load.
    */
   void loadURI(in nsIURI aURI);
+
+  /**
+   * Loads the specified URI in this frame but using a different process.
+   * Behaves identically to loadURI, except that this method only works
+   * with remote frame.
+   * Throws an exception with non-remote frames.
+   */
+  void switchProcessAndLoadURI(in nsIURI aURI);
 
   /**
    * Puts the frameloader in prerendering mode.

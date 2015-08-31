@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test frameLoader SwitchProcessAndLoadURI</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<script type="application/javascript;version=1.7">
+  SimpleTest.waitForExplicitFinish();
+
+  var Ci = SpecialPowers.Ci;
+  var Cc = SpecialPowers.Cc;
+
+  function expectProcessCreated() {
+    return new Promise((resolve, reject) => {
+      var topic = "process-priority-manager:TEST-ONLY:process-created";
+      function observer() {
+        SpecialPowers.removeObserver(observer, topic);
+        ok(true, "Expect process created");
+        resolve();
+      }
+      SpecialPowers.addObserver(observer, topic, /* weak = */ false);
+    });
+  }
+
+  function switchProcessAndLoadURI(iframe, url) {
+    var fl = SpecialPowers.wrap(iframe)
+                          .QueryInterface(Ci.nsIFrameLoaderOwner)
+                          .frameLoader;
+    var uri = SpecialPowers.Services.io.newURI(url, null, null);
+    fl.switchProcessAndLoadURI(uri);
+  }
+
+  var messageManager;
+
+  function runTest() {
+    ok(true, "Run Test");
+    var iframe = document.createElement("iframe");
+    iframe.setAttribute("mozbrowser", "true");
+    iframe.setAttribute("remote", "true");
+    iframe.setAttribute("src", "http://example.org");
+
+    expectProcessCreated()
+    .then(() => new Promise(next => {
+      iframe.addEventListener("mozbrowserloadend", function loadend(e) {
+        iframe.removeEventListener("mozbrowserloadend", loadend);
+        ok(true, "Got mozbrowserloadend");
+        mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+        expectProcessCreated().then(next);
+        switchProcessAndLoadURI(iframe, "data:text/html,%3Cscript%3Ealert(true)%3C/script%3E");
+      });
+    }))
+    .then(() => new Promise(next => {
+      var newMessageManager = SpecialPowers.getBrowserFrameMessageManager(iframe);
+      isnot(messageManager, newMessageManager, "Got a new message manager");
+      messageManager = newMessageManager;
+      iframe.addEventListener("mozbrowsershowmodalprompt", function prompt(e) {
+        iframe.removeEventListener("mozbrowsershowmodalprompt", prompt);
+        ok(true, "Browser API still works after process switch");
+        next();
+      });
+    }))
+    .then(SimpleTest.finish);
+
+    document.body.appendChild(iframe);
+  }
+
+  SpecialPowers.pushPrefEnv(
+    { "set": [["dom.ipc.processPriorityManager.enabled", true],
+              ["dom.ipc.processPriorityManager.testMode", true],
+              ["dom.ipc.tabs.disabled", false],
+              ["dom.ipc.processCount", 3],
+              ["dom.mozBrowserFramesEnabled", true]] },
+    () => SpecialPowers.pushPermissions([
+      { "type": "browser", "allow": 1, "context": document }
+    ], runTest));
+</script>
+</body>
+</html>

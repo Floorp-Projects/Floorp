@@ -54,6 +54,10 @@ nsBrowserElement::IsNotWidgetOrThrow(ErrorResult& aRv)
 void
 nsBrowserElement::InitBrowserElementAPI()
 {
+  if (mBrowserElementAPI) {
+    return;
+  }
+
   bool isBrowserOrApp;
   nsCOMPtr<nsIFrameLoader> frameLoader = GetFrameLoader();
   NS_ENSURE_TRUE_VOID(frameLoader);
