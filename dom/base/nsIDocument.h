@@ -1736,14 +1736,15 @@ public:
    */
   void SetDisplayDocument(nsIDocument* aDisplayDocument)
   {
-    NS_PRECONDITION(!GetShell() &&
-                    !GetContainer() &&
-                    !GetWindow(),
-                    "Shouldn't set mDisplayDocument on documents that already "
-                    "have a presentation or a docshell or a window");
-    NS_PRECONDITION(aDisplayDocument != this, "Should be different document");
-    NS_PRECONDITION(!aDisplayDocument->GetDisplayDocument(),
-                    "Display documents should not nest");
+    MOZ_ASSERT(!GetShell() &&
+               !GetContainer() &&
+               !GetWindow(),
+               "Shouldn't set mDisplayDocument on documents that already "
+               "have a presentation or a docshell or a window");
+    MOZ_ASSERT(aDisplayDocument, "Must not be null");
+    MOZ_ASSERT(aDisplayDocument != this, "Should be different document");
+    MOZ_ASSERT(!aDisplayDocument->GetDisplayDocument(),
+               "Display documents should not nest");
     mDisplayDocument = aDisplayDocument;
     mHasDisplayDocument = !!aDisplayDocument;
   }
@@ -1764,7 +1765,7 @@ public:
     virtual ~ExternalResourceLoad() {}
 
     void AddObserver(nsIObserver* aObserver) {
-      NS_PRECONDITION(aObserver, "Must have observer");
+      MOZ_ASSERT(aObserver, "Must have observer");
       mObservers.AppendElement(aObserver);
     }
 
