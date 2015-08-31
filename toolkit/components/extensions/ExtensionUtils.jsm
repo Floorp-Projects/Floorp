@@ -517,7 +517,7 @@ Messenger.prototype = {
   },
 
   onMessage(name) {
-    return new EventManager(this.context, name, fire => {
+    return new SingletonEventManager(this.context, name, callback => {
       let listener = (type, target, message, sender, recipient) => {
         message = Cu.cloneInto(message, this.context.cloneScope);
         if (this.delegate) {
@@ -538,12 +538,12 @@ Messenger.prototype = {
         };
         sendResponse = Cu.exportFunction(sendResponse, this.context.cloneScope);
 
-        let result = fire.withoutClone(message, sender, sendResponse);
+        let result = runSafeSyncWithoutClone(callback, message, sender, sendResponse);
         if (result !== true) {
           valid = false;
-        }
-        if (!sent) {
-          mm.sendAsyncMessage(replyName, {gotData: false});
+          if (!sent) {
+            mm.sendAsyncMessage(replyName, {gotData: false});
+          }
         }
       };
 
