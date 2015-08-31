@@ -655,11 +655,8 @@ loop.contacts = (function(_, mozL10n) {
           this.state.filter) {
         return (
           React.createElement("div", {className: "contact-search-list-empty"}, 
-            React.createElement("p", {className: "panel-text-large"}, 
-              mozL10n.get("no_search_results_message_heading")
-            ), 
             React.createElement("p", {className: "panel-text-medium"}, 
-              mozL10n.get("no_search_results_message_subheading")
+              mozL10n.get("contacts_no_search_results")
             )
           )
         );
@@ -670,7 +667,7 @@ loop.contacts = (function(_, mozL10n) {
           !this.state.filter) {
         return (
           React.createElement("div", {className: "contact-list-empty"}, 
-            React.createElement("p", {className: "panel-text-large"}, 
+            React.createElement("p", {className: "panel-text-medium"}, 
               mozL10n.get("no_contacts_message_heading2")
             ), 
             React.createElement("p", {className: "panel-text-medium"}, 
@@ -685,6 +682,7 @@ loop.contacts = (function(_, mozL10n) {
           !this.state.filter ? React.createElement("div", {className: "contact-list-title"}, 
                                   mozL10n.get("contact_list_title")
                                 ) : null, 
+          this._renderGravatarPromoMessage(), 
           React.createElement("ul", {className: "contact-list"}, 
             shownContacts.available ?
               shownContacts.available.sort(this.sortContacts).map(viewForItem) :
@@ -739,7 +737,6 @@ loop.contacts = (function(_, mozL10n) {
       return (
         React.createElement("div", null, 
           this._renderContactsFilter(), 
-          this._renderGravatarPromoMessage(), 
           this._renderContactsList(), 
           this._renderAddContactButtons()
         )
