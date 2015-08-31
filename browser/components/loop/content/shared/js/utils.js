@@ -754,6 +754,31 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     return str;
   }
 
+  /**
+   * Look up the DOM hierarchy for a node matching `selector`.
+   * If it is not found return the parent node, this is a sane default so
+   * that subsequent queries on the result do no fail.
+   * Better choice than the alternative `document.querySelector(selector)`
+   * because we ensure it works in the UI showcase as well.
+   *
+   * @param {HTMLElement} node Child element of the node we are looking for.
+   * @param {String} selector  CSS class value of element we are looking for.
+   * @return {HTMLElement}     Parent of node that matches selector query.
+   */
+  function findParentNode(node, selector) {
+    var parentNode = node.parentNode;
+
+    while (parentNode) {
+      if (parentNode.classList.contains(selector)) {
+        return parentNode;
+      }
+
+      parentNode = parentNode.parentNode;
+    }
+
+    return node;
+  }
+
   this.utils = {
     CALL_TYPES: CALL_TYPES,
     FAILURE_DETAILS: FAILURE_DETAILS,
@@ -764,6 +789,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     ROOM_INFO_FAILURES: ROOM_INFO_FAILURES,
     setRootObjects: setRootObjects,
     composeCallUrlEmail: composeCallUrlEmail,
+    findParentNode: findParentNode,
     formatDate: formatDate,
     formatURL: formatURL,
     getBoolPreference: getBoolPreference,
