@@ -1344,7 +1344,7 @@ class MOZ_STACK_CLASS ModuleCompiler
             return hn;
         }
         static bool match(const ExitDescriptor& lhs, const ExitDescriptor& rhs) {
-            return lhs.name_ == rhs.name_ && lhs.sig_ == rhs.sig_;
+            return lhs.name_ == rhs.name_ && *lhs.sig_ == *rhs.sig_;
         }
     };
 
