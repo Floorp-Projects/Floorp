@@ -12,7 +12,6 @@
 
 class nsIChannel;
 class nsIDocument;
-class nsIGlobalObject;
 class nsIURI;
 
 namespace mozilla {
@@ -70,7 +69,6 @@ public:
 
   void InitFromDocument(nsIDocument* aDoc);
   void InitFromChannel(nsIChannel* aChannel);
-  void InitFromChromeGlobal(nsIGlobalObject* aGlobal);
   void InitFromIPCChannelInfo(const IPCChannelInfo& aChannelInfo);
 
   // This restores every possible information stored from a previous channel

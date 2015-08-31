@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/ChannelInfo.h"
 #include "nsCOMPtr.h"
-#include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsIDocument.h"
 #include "nsIHttpChannel.h"
@@ -66,20 +65,6 @@ ChannelInfo::InitFromChannel(nsIChannel* aChannel)
     }
   }
 
-  mInited = true;
-}
-
-void
-ChannelInfo::InitFromChromeGlobal(nsIGlobalObject* aGlobal)
-{
-  MOZ_ASSERT(!mInited, "Cannot initialize the object twice");
-  MOZ_ASSERT(aGlobal);
-
-  MOZ_RELEASE_ASSERT(
-    nsContentUtils::IsSystemPrincipal(aGlobal->PrincipalOrNull()));
-
-  mSecurityInfo.Truncate();
-  mRedirected = false;
   mInited = true;
 }
 
