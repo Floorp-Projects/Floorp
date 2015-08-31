@@ -90,7 +90,7 @@ private:
   static TrialCreateState GetCreateTrialState(const nsAString& aKeySystem);
 
   struct TrialCreateData {
-    TrialCreateData(const nsAString& aKeySystem)
+    explicit TrialCreateData(const nsAString& aKeySystem)
       : mKeySystem(aKeySystem)
       , mStatus(GetCreateTrialState(aKeySystem))
     {}
@@ -141,7 +141,7 @@ public:
   class Callback : public GetGMPVideoDecoderCallback
   {
   public:
-    Callback(TestGMPVideoDecoder* aInstance)
+    explicit Callback(TestGMPVideoDecoder* aInstance)
       : mInstance(aInstance)
     {}
     ~Callback() {}
