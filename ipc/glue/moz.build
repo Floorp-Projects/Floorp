@@ -140,6 +140,7 @@ LOCAL_INCLUDES += [
     '/dom/broadcastchannel',
     '/dom/indexedDB',
     '/dom/workers',
+    '/media/webrtc/trunk',
     '/xpcom/build',
 ]
 
