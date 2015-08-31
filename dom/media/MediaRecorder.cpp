@@ -541,7 +541,7 @@ private:
 
     // Bind this Track Union Stream with Source Media.
     mInputPort = mTrackUnionStream->AllocateInputPort(mRecorder->GetSourceMediaStream(),
-                                                      MediaInputPort::FLAG_BLOCK_OUTPUT);
+                                                      0);
 
     DOMMediaStream* domStream = mRecorder->Stream();
     if (domStream) {
