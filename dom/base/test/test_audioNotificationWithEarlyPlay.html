@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for audio controller in windows</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<pre id="test">
+</pre>
+
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var expectedNotification = null;
+
+var observer = {
+  observe: function(subject, topic, data) {
+    is(topic, "audio-playback", "audio-playback received");
+    is(data, expectedNotification, "This is the right notification");
+    runTest();
+  }
+};
+
+var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                                   .getService(SpecialPowers.Ci.nsIObserverService);
+
+var audio = new Audio();
+audio.loop = true;
+audio.preload = "metadata";
+
+var tests = [
+  function() {
+    observerService.addObserver(observer, "audio-playback", false);
+    ok(true, "Observer set");
+    runTest();
+  },
+
+  function() {
+    expectedNotification = 'active';
+    audio.src = "audio.ogg";
+    audio.play();
+  },
+
+  function() {
+    expectedNotification = 'inactive';
+    audio.pause();
+  },
+
+  function() {
+    observerService.removeObserver(observer, "audio-playback");
+    ok(true, "Observer removed");
+    runTest();
+  }
+];
+
+function runTest() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+runTest();
+
+</script>
+</body>
+</html>
+
