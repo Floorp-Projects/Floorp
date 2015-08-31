@@ -1668,6 +1668,20 @@ HttpChannelChild::ContinueAsyncOpen()
     optionalFDs = fdSet;
   }
 
+  OptionalCorsPreflightArgs optionalCorsPreflightArgs;
+  if (mRequireCORSPreflight) {
+    CorsPreflightArgs args;
+    args.withCredentials() = mWithCredentials;
+    args.unsafeHeaders() = mUnsafeHeaders;
+    nsresult rv = PrincipalToPrincipalInfo(mPreflightPrincipal, &args.preflightPrincipal());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    optionalCorsPreflightArgs = args;
+  } else {
+    optionalCorsPreflightArgs = mozilla::void_t();
+  }
+
   nsCOMPtr<mozIThirdPartyUtil> util(do_GetService(THIRDPARTYUTIL_CONTRACTID));
   if (util) {
     bool thirdParty;
@@ -1688,6 +1702,8 @@ HttpChannelChild::ContinueAsyncOpen()
   SerializeURI(mTopWindowURI, openArgs.topWindowURI());
 
   openArgs.fds() = optionalFDs;
+
+  openArgs.preflightArgs() = optionalCorsPreflightArgs;
 
   openArgs.uploadStreamHasHeaders() = mUploadStreamHasHeaders;
   openArgs.priority() = mPriority;
