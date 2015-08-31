@@ -240,7 +240,7 @@ class BaseFloatRegisters
         f31,
         invalid_freg
     };
-    typedef uint32_t Code;
+    typedef FPRegisterID Code;
     typedef FPRegisterID Encoding;
 
     // Content spilled during bailouts.
@@ -248,7 +248,7 @@ class BaseFloatRegisters
         double d;
     };
 
-    static const char* GetName(Encoding code) {
+    static const char* GetName(Code code) {
         static const char * const Names[] = { "f0", "f1", "f2", "f3",  "f4", "f5",  "f6", "f7",
                                               "f8", "f9",  "f10", "f11", "f12", "f13",
                                               "f14", "f15", "f16", "f17", "f18", "f19",
@@ -257,7 +257,7 @@ class BaseFloatRegisters
         return Names[code];
     }
 
-    static const Encoding Invalid = invalid_freg;
+    static const Code Invalid = invalid_freg;
 
     typedef uint64_t SetType;
 };
