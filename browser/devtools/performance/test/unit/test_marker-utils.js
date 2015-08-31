@@ -19,6 +19,8 @@ add_task(function () {
     "getMarkerLabel() returns a simple label");
   equal(Utils.getMarkerLabel({ name: "Javascript", causeName: "setTimeout handler" }), "setTimeout",
     "getMarkerLabel() returns a label defined via function");
+  equal(Utils.getMarkerLabel({ name: "GarbageCollection", causeName: "ALLOC_TRIGGER" }), "Incremental GC",
+    "getMarkerLabel() returns a label for a function that is generalizable");
 
   ok(Utils.getMarkerFields({ name: "Paint" }).length === 0,
     "getMarkerFields() returns an empty array when no fields defined");
@@ -53,7 +55,7 @@ add_task(function () {
 
   equal(Utils.getMarkerClassName("Javascript"), "Function Call",
     "getMarkerClassName() returns correct string when defined via function");
-  equal(Utils.getMarkerClassName("GarbageCollection"), "Incremental GC",
+  equal(Utils.getMarkerClassName("GarbageCollection"), "Garbage Collection",
     "getMarkerClassName() returns correct string when defined via function");
   equal(Utils.getMarkerClassName("Reflow"), "Layout",
     "getMarkerClassName() returns correct string when defined via string");
