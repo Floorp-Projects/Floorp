@@ -156,11 +156,10 @@ private:
   // Nanoseconds to discard after seeking.
   uint64_t mSeekPreroll;
 
-  int64_t mLastAudioFrameTime;
-
   // Calculate the frame duration from the last decodeable frame using the
   // previous frame's timestamp.  In NS.
-  int64_t mLastVideoFrameTime;
+  Maybe<int64_t> mLastAudioFrameTime;
+  Maybe<int64_t> mLastVideoFrameTime;
 
   // Codec ID of audio track
   int mAudioCodec;
