@@ -360,7 +360,6 @@ let OptimizationsListView = {
   },
 
   toString: () => "[object OptimizationsListView]"
-
 };
 
 EventEmitter.decorate(OptimizationsListView);

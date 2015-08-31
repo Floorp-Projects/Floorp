@@ -5,6 +5,7 @@
   <title>Test for Widget</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="file_test_widget.js"></script>
+  <script type="application/javascript" src="common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -12,7 +13,7 @@
   <script type="application/javascript;version=1.7">
   SimpleTest.waitForExplicitFinish();
   gHasBrowserPermission = false;
-  runTest();
+  prepareEnv(runTest);
   </script>
 </body>
 </html>

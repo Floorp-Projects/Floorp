@@ -213,6 +213,9 @@ function checkAppState(aApp,
 
 var steps = [
   function() {
+    prepareEnv(next);
+  },
+  function() {
     setupDataDirs(next);
     ok(true, "Data directory set up to " + singlevariantDir);
   },
