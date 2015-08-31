@@ -31,8 +31,6 @@ include('../common.build')
 # nr_socket_short_term_violation_time.
 SOURCES += mtransport_cppsrcs
 
-FAIL_ON_WARNINGS = True
-
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 

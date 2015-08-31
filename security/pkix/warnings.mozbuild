@@ -1,5 +1,3 @@
-FAIL_ON_WARNINGS = True
-
 if CONFIG['CLANG_CXX']:
   CXXFLAGS += [
     '-Weverything',

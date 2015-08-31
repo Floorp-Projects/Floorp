@@ -55,6 +55,8 @@ if 'vp8/encoder/arm/armv5te/boolhuff_armv5te.asm' not in arm_asm_files:
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 
+ALLOW_COMPILER_WARNINGS = True
+
 FINAL_LIBRARY = 'gkmedias'
 
 DEFINES['HAVE_CONFIG_H'] = 'vpx_config.h'

@@ -29,10 +29,41 @@
 class nsIDOMWindow;
 
 namespace mozilla {
-   class MediaStreamGraph;
    class MediaStreamGraphImpl;
    class MediaSegment;
 };
+
+
+namespace mozilla {
+
+class MediaStreamGraph;
+
+static MediaStreamGraph* gGraph;
+
+struct AudioChannel {
+  enum {
+    Normal
+  };
+};
+
+class MediaStreamGraph {
+public:
+  // Keep this in sync with the enum in MediaStreamGraph.h
+  enum GraphDriverType {
+    AUDIO_THREAD_DRIVER,
+    SYSTEM_THREAD_DRIVER,
+    OFFLINE_THREAD_DRIVER
+  };
+  static MediaStreamGraph* GetInstance(GraphDriverType aDriverType,
+                                       uint32_t aType) {
+    if (gGraph) {
+      return gGraph;
+    }
+    gGraph = new MediaStreamGraph();
+    return gGraph;
+  }
+};
+}
 
 class Fake_VideoSink {
 public:
@@ -318,7 +349,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   static already_AddRefed<Fake_DOMMediaStream>
-  CreateSourceStream(nsIDOMWindow* aWindow, uint32_t aHintContents = 0) {
+  CreateSourceStream(nsIDOMWindow* aWindow, mozilla::MediaStreamGraph* aGraph, uint32_t aHintContents = 0) {
     Fake_SourceMediaStream *source = new Fake_SourceMediaStream();
 
     nsRefPtr<Fake_DOMMediaStream> ds = new Fake_DOMMediaStream(source);

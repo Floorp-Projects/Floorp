@@ -33,6 +33,4 @@ EXTRA_PP_JS_MODULES.identity += [
     'FirefoxAccounts.jsm',
 ]
 
-FAIL_ON_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'

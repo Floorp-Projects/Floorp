@@ -6,8 +6,6 @@
 
 Library('imagetest')
 
-FAIL_ON_WARNINGS = True
-
 UNIFIED_SOURCES = [
     'Common.cpp',
     'TestCopyOnWrite.cpp',

@@ -27,8 +27,6 @@ IPDL_SOURCES += [
     'ipc/PFMRadioRequest.ipdl',
 ]
 
-FAIL_ON_WARNINGS = True
-
 LOCAL_INCLUDES += [
     '../base',
     '../system/gonk',

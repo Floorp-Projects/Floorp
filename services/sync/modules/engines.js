@@ -307,7 +307,7 @@ Store.prototype = {
         // originating exception.
         // ex.cause will carry its stack with it when rethrown.
         throw ex.cause;
-      } catch (ex) {
+      } catch (ex if !Async.isShutdownException(ex)) {
         this._log.warn("Failed to apply incoming record " + record.id);
         this._log.warn("Encountered exception: " + Utils.exceptionStr(ex));
         failed.push(record.id);
@@ -992,7 +992,7 @@ SyncEngine.prototype = {
       this._tracker.ignoreAll = true;
       try {
         failed = failed.concat(this._store.applyIncomingBatch(applyBatch));
-      } catch (ex) {
+      } catch (ex if !Async.isShutdownException(ex)) {
         // Catch any error that escapes from applyIncomingBatch. At present
         // those will all be abort events.
         this._log.warn("Got exception " + Utils.exceptionStr(ex) +
@@ -1086,7 +1086,7 @@ SyncEngine.prototype = {
         self._log.warn("Reconciliation failed: aborting incoming processing.");
         failed.push(item.id);
         aborting = ex.cause;
-      } catch (ex) {
+      } catch (ex if !Async.isShutdownException(ex)) {
         self._log.warn("Failed to reconcile incoming record " + item.id);
         self._log.warn("Encountered exception: " + Utils.exceptionStr(ex));
         failed.push(item.id);
@@ -1458,8 +1458,7 @@ SyncEngine.prototype = {
 
           out.encrypt(this.service.collectionKeys.keyForCollection(this.name));
           up.pushData(out);
-        }
-        catch(ex) {
+        } catch (ex if !Async.isShutdownException(ex)) {
           this._log.warn("Error creating record: " + Utils.exceptionStr(ex));
         }
 
@@ -1550,8 +1549,7 @@ SyncEngine.prototype = {
     try {
       this._log.trace("Trying to decrypt a record from the server..");
       test.get();
-    }
-    catch(ex) {
+    } catch (ex if !Async.isShutdownException(ex)) {
       this._log.debug("Failed test decrypt: " + Utils.exceptionStr(ex));
     }
 

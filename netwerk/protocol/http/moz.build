@@ -101,8 +101,6 @@ EXTRA_JS_MODULES += [
     'UserAgentUpdates.jsm',
 ]
 
-FAIL_ON_WARNINGS = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

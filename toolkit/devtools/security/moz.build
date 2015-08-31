@@ -16,8 +16,6 @@ UNIFIED_SOURCES += [
     'LocalCertService.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'
 
 EXTRA_JS_MODULES.devtools.security += [

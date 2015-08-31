@@ -2,6 +2,8 @@
 
 set -x -e
 
+echo "running as" $(id)
+
 ####
 # Taskcluster friendly wrapper for performing fx desktop builds via mozharness.
 ####

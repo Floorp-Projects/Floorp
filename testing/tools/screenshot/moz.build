@@ -23,5 +23,3 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     OS_LIBS += [
         'gdiplus',
     ]
-
-FAIL_ON_WARNINGS = True

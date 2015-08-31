@@ -15,5 +15,3 @@ SOURCES += [
 ]
 
 FINAL_LIBRARY = 'xul'
-
-FAIL_ON_WARNINGS = True

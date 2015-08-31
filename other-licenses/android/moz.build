@@ -27,4 +27,6 @@ SOURCES += [
     'res_state.c',
 ]
 
+ALLOW_COMPILER_WARNINGS = True
+
 FINAL_LIBRARY = 'mozglue'

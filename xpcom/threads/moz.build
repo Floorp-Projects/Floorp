@@ -75,8 +75,6 @@ LOCAL_INCLUDES += [
 if CONFIG['MOZ_UPDATE_CHANNEL'] not in ('release') and not CONFIG['MOZ_DEBUG'] and not CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     DEFINES['MOZ_ENABLE_BACKGROUND_HANG_MONITOR'] = 1
 
-FAIL_ON_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'
 
 include('/ipc/chromium/chromium-config.mozbuild')

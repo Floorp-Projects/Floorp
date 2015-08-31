@@ -161,10 +161,10 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIsInstance(objs[0], VariablePassthru)
 
         wanted = {
+            'ALLOW_COMPILER_WARNINGS': True,
             'DISABLE_STL_WRAPPING': True,
             'EXTRA_COMPONENTS': ['dummy.manifest', 'fans.js', 'tans.js'],
             'EXTRA_PP_COMPONENTS': ['fans.pp.js', 'tans.pp.js'],
-            'FAIL_ON_WARNINGS': True,
             'NO_DIST_INSTALL': True,
             'VISIBILITY_FLAGS': '',
             'RCFILE': 'foo.rc',

@@ -112,7 +112,12 @@ SOURCES += mfbt_nonunified_src_cppsrcs
 
 DISABLE_STL_WRAPPING = True
 
-# Suppress warnings in third-party code.
+# Suppress warnings in third-party LZ4 code.
+# TODO: Remove these suppressions after bug 993267 is fixed.
+
 if CONFIG['GNU_CXX']:
-    # TODO: Remove this LZ4 warning suppression after bug 993267 is fixed.
     SOURCES['/mfbt/Compression.cpp'].flags += ['-Wno-unused-function']
+
+if CONFIG['_MSC_VER']:
+    # Error 4804 is "'>' : unsafe use of type 'bool' in operation"
+    SOURCES['/mfbt/Compression.cpp'].flags += ['-wd4804']

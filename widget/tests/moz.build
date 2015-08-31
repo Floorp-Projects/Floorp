@@ -8,8 +8,6 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 MOCHITEST_MANIFESTS += ['mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
 
-FAIL_ON_WARNINGS = True
-
 # if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 #     if CONFIG['NS_ENABLE_TSF']:
 #         Test disabled because it uses the internal string APIs incorrectly

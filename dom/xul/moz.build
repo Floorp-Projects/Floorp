@@ -40,8 +40,6 @@ UNIFIED_SOURCES += [
     'nsXULControllers.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
-
 LOCAL_INCLUDES += [
     '/docshell/base',
     '/dom/base',

@@ -8,8 +8,6 @@ GeckoCppUnitTests([
     'test_IHistory',
 ])
 
-FAIL_ON_WARNINGS = True
-
 if CONFIG['JS_SHARED_LIBRARY']:
     USE_LIBS += [
         'js',
