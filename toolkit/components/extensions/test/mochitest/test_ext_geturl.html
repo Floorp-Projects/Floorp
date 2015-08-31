@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+
+function backgroundScript() {
+  browser.runtime.onMessage.addListener(([url1, url2]) => {
+    var url3 = browser.runtime.getURL("test_file.html");
+    var url4 = browser.extension.getURL("test_file.html");
+
+    browser.test.assertTrue(url1 !== undefined, "url1 defined");
+
+    browser.test.assertTrue(url1.startsWith("moz-extension://"), "url1 has correct scheme");
+    browser.test.assertTrue(url1.endsWith("test_file.html"), "url1 has correct leaf name");
+
+    browser.test.assertEq(url1, url2, "url2 matches");
+    browser.test.assertEq(url1, url3, "url3 matches");
+    browser.test.assertEq(url1, url4, "url4 matches");
+
+    browser.test.notifyPass("geturl");
+  });
+}
+
+function contentScript() {
+  var url1 = browser.runtime.getURL("test_file.html");
+  var url2 = browser.extension.getURL("test_file.html");
+  browser.runtime.sendMessage([url1, url2]);
+}
+
+let extensionData = {
+  background: "(" + backgroundScript.toString() + ")()",
+  manifest: {
+    "content_scripts": [{
+      "matches": ["http://mochi.test/tests/toolkit/components/extensions/test/mochitest/file_contentscript_*.html"],
+      "js": ["content_script.js"],
+      "run_at": "document_start"
+    }]
+  },
+
+  files: {
+    "content_script.js": "(" + contentScript.toString() + ")()",
+  },
+};
+
+add_task(function* test_contentscript() {
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  info("extension loaded");
+
+  yield new Promise(resolve => { setTimeout(resolve, 0); });
+
+  let win = window.open();
+
+  win.location = "file_contentscript_page1.html";
+
+  yield Promise.all([waitForLoad(win), extension.awaitFinish("geturl")]);
+
+  win.close();
+
+  yield extension.unload();
+  info("extension unloaded");
+});
+
+</script>
+
+</body>
+</html>
