@@ -5500,8 +5500,8 @@ static void DrawForcedBackgroundColor(DrawTarget& aDrawTarget,
 class LayerTimelineMarker : public TimelineMarker
 {
 public:
-  LayerTimelineMarker(nsDocShell* aDocShell, const nsIntRegion& aRegion)
-    : TimelineMarker(aDocShell, "Layer", TRACING_EVENT)
+  explicit LayerTimelineMarker(const nsIntRegion& aRegion)
+    : TimelineMarker("Layer", TRACING_EVENT)
     , mRegion(aRegion)
   {
   }
@@ -5688,7 +5688,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
     docShell->GetRecordProfileTimelineMarkers(&isRecording);
     if (isRecording) {
       mozilla::UniquePtr<TimelineMarker> marker =
-        MakeUnique<LayerTimelineMarker>(docShell, aRegionToDraw);
+        MakeUnique<LayerTimelineMarker>(aRegionToDraw);
       TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
     }
   }
