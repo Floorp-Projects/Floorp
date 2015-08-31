@@ -374,7 +374,7 @@ CommonAnimationManager::FlushAnimations(FlushFlags aFlags)
       collection->RequestRestyle(AnimationCollection::RestyleType::Standard);
     }
 
-    nsAutoAnimationMutationBatch mb(collection->mElement);
+    nsAutoAnimationMutationBatch mb(collection->mElement->OwnerDoc());
     collection->Tick();
   }
 
@@ -787,7 +787,7 @@ AnimationCollection::PropertyDtor(void *aObject, nsIAtom *aPropertyName,
   collection->mCalledPropertyDtor = true;
 #endif
   {
-    nsAutoAnimationMutationBatch mb(collection->mElement);
+    nsAutoAnimationMutationBatch mb(collection->mElement->OwnerDoc());
 
     for (size_t animIdx = collection->mAnimations.Length(); animIdx-- != 0; ) {
       collection->mAnimations[animIdx]->CancelFromStyle();
