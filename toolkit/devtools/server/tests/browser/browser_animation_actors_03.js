@@ -40,6 +40,7 @@ function* playerHasAnInitialState(walker, front) {
   ok("delay" in player.initialState, "Player's state has delay");
   ok("iterationCount" in player.initialState, "Player's state has iterationCount");
   ok("isRunningOnCompositor" in player.initialState, "Player's state has isRunningOnCompositor");
+  ok("type" in player.initialState, "Player's state has type");
 }
 
 function* playerStateIsCorrect(walker, front) {
@@ -52,6 +53,7 @@ function* playerStateIsCorrect(walker, front) {
   is(state.iterationCount, null, "Iteration count is correct");
   is(state.playState, "running", "PlayState is correct");
   is(state.playbackRate, 1, "PlaybackRate is correct");
+  is(state.type, "cssanimation", "Type is correct");
 
   info("Checking the state of the transition");
 
@@ -62,6 +64,7 @@ function* playerStateIsCorrect(walker, front) {
   is(state.iterationCount, 1, "Transition iteration count is correct");
   is(state.playState, "running", "Transition playState is correct");
   is(state.playbackRate, 1, "Transition playbackRate is correct");
+  is(state.type, "csstransition", "Transition type is correct");
 
   info("Checking the state of one of multiple animations on a node");
 
