@@ -81,7 +81,7 @@ Presentation::Init()
   // session instance is ready at beginning because the web content may access
   // it right away; whereas the sender doesn't until |startSession| succeeds.
   nsAutoString sessionId;
-  rv = service->GetExistentSessionIdAtLaunch(sessionId);
+  rv = service->GetExistentSessionIdAtLaunch(GetOwner()->WindowID(), sessionId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
