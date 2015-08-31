@@ -16,7 +16,7 @@ class TimestampTimelineMarker : public TimelineMarker
 {
 public:
   explicit TimestampTimelineMarker(const nsAString& aCause)
-    : TimelineMarker("TimeStamp", TRACING_TIMESTAMP)
+    : TimelineMarker("TimeStamp", MarkerTracingType::TIMESTAMP)
     , mCause(aCause)
   {}
 

@@ -9,30 +9,26 @@
 namespace mozilla {
 
 TimelineMarker::TimelineMarker(const char* aName,
-                               TracingMetadata aMetaData,
-                               TimelineStackRequest aStackRequest)
+                               MarkerTracingType aTracingType,
+                               MarkerStackRequest aStackRequest)
   : mName(aName)
-  , mMetaData(aMetaData)
+  , mTracingType(aTracingType)
 {
   MOZ_COUNT_CTOR(TimelineMarker);
-  MOZ_ASSERT(aName);
-
   SetCurrentTime();
-  CaptureStackIfNecessary(aMetaData, aStackRequest);
+  CaptureStackIfNecessary(aTracingType, aStackRequest);
 }
 
 TimelineMarker::TimelineMarker(const char* aName,
                                const TimeStamp& aTime,
-                               TracingMetadata aMetaData,
-                               TimelineStackRequest aStackRequest)
+                               MarkerTracingType aTracingType,
+                               MarkerStackRequest aStackRequest)
   : mName(aName)
-  , mMetaData(aMetaData)
+  , mTracingType(aTracingType)
 {
   MOZ_COUNT_CTOR(TimelineMarker);
-  MOZ_ASSERT(aName);
-
   SetCustomTime(aTime);
-  CaptureStackIfNecessary(aMetaData, aStackRequest);
+  CaptureStackIfNecessary(aTracingType, aStackRequest);
 }
 
 TimelineMarker::~TimelineMarker()
@@ -43,8 +39,8 @@ TimelineMarker::~TimelineMarker()
 void
 TimelineMarker::SetCurrentTime()
 {
-  TimeStamp now = TimeStamp::Now();
-  SetCustomTime(now);
+ TimeStamp now = TimeStamp::Now();
+ SetCustomTime(now);
 }
 
 void
@@ -55,12 +51,12 @@ TimelineMarker::SetCustomTime(const TimeStamp& aTime)
 }
 
 void
-TimelineMarker::CaptureStackIfNecessary(TracingMetadata aMetaData,
-                                        TimelineStackRequest aStackRequest)
+TimelineMarker::CaptureStackIfNecessary(MarkerTracingType aTracingType,
+                                        MarkerStackRequest aStackRequest)
 {
-  if ((aMetaData == TRACING_INTERVAL_START ||
-      aMetaData == TRACING_TIMESTAMP) &&
-      aStackRequest != NO_STACK) {
+  if ((aTracingType == MarkerTracingType::START ||
+      aTracingType == MarkerTracingType::TIMESTAMP) &&
+      aStackRequest != MarkerStackRequest::NO_STACK) {
     CaptureStack();
   }
 }
