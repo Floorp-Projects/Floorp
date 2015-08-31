@@ -204,8 +204,7 @@ var tests = {
           // chat to appear, and thus become selected.
           chatbar.selectedChat.close();
           is(chatbar.selectedChat, second, "second chat is selected");
-          closeAllChats();
-          next();
+          Task.spawn(closeAllChats).then(next);
         });
       });
     });
@@ -219,8 +218,7 @@ var tests = {
       chatbar.showChat(first);
       ok(!first.collapsed, "first should no longer be collapsed");
       is(second.collapsed ||  third.collapsed, true, "one of the others should be collapsed");
-      closeAllChats();
-      next();
+      Task.spawn(closeAllChats).then(next);
     });
   },
 
@@ -262,13 +260,7 @@ var tests = {
               port2.postMessage({topic: "test-logout"});
               waitForCondition(function() chats.children.length == Social.providers.length - 1,
                 function() {
-                  closeAllChats();
-                  waitForCondition(function() chats.children.length == 0,
-                                   function() {
-                                    ok(!chats.selectedChat, "multiprovider chats are all closed");
-                                    next();
-                                   },
-                                   "chat windows didn't close");
+                  Task.spawn(closeAllChats).then(next);
                 },
                 "chat window didn't close");
             }, "chat windows did not open");
