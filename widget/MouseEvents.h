@@ -630,7 +630,7 @@ public:
         mFlags.mBubbles = false;
         mFlags.mCancelable = false;
         break;
-      case NS_POINTER_CANCEL:
+      case ePointerCancel:
       case ePointerGotCapture:
       case ePointerLostCapture:
         mFlags.mCancelable = false;
