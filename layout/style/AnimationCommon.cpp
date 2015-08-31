@@ -361,7 +361,7 @@ CommonAnimationManager::GetAnimations(dom::Element *aElement,
 }
 
 void
-CommonAnimationManager::FlushAnimations(FlushFlags aFlags)
+CommonAnimationManager::FlushAnimations()
 {
   TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
   for (AnimationCollection* collection = mElementCollections.getFirst();
@@ -370,15 +370,8 @@ CommonAnimationManager::FlushAnimations(FlushFlags aFlags)
       continue;
     }
 
-    if (aFlags == Cannot_Throttle) {
-      collection->RequestRestyle(AnimationCollection::RestyleType::Standard);
-    }
-
-    nsAutoAnimationMutationBatch mb(collection->mElement->OwnerDoc());
-    collection->Tick();
+    collection->RequestRestyle(AnimationCollection::RestyleType::Standard);
   }
-
-  MaybeStartOrStopObservingRefreshDriver();
 }
 
 nsIStyleRule*
