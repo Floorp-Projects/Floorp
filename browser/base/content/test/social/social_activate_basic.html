@@ -1,0 +1,40 @@
+<html>
+<head>
+	<title>Activation test</title>
+</head>
+<script>
+// icons from http://findicons.com/icon/158311/firefox?id=356182 by ipapun
+var data = {
+  // currently required
+  "name": "Demo Social Service",
+  "iconURL": "chrome://branding/content/icon16.png",
+  "icon32URL": "chrome://branding/content/favicon32.png",
+  "icon64URL": "chrome://branding/content/icon64.png",
+
+  // at least one of these must be defined
+  "sidebarURL": "/browser/browser/base/content/test/social/social_sidebar_empty.html",
+  "postActivationURL": "/browser/browser/base/content/test/social/social_postActivation.html",
+
+  // should be available for display purposes
+  "description": "A short paragraph about this provider",
+  "author": "Shane Caraveo, Mozilla",
+
+  // optional
+  "version": 1
+}
+
+function activate(node) {
+  node.setAttribute("data-service", JSON.stringify(data));
+  var event = new CustomEvent("ActivateSocialFeature");
+  node.dispatchEvent(event);
+}
+
+</script>
+<body>
+
+nothing to see here
+
+<button id="activation" onclick="activate(this)">Activate The Demo Provider</button>
+
+</body>
+</html>
