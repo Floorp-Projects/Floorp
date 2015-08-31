@@ -109,4 +109,14 @@ ParseKeySystem(const nsAString& aInputKeySystem,
   return false;
 }
 
+void
+ConstructKeySystem(const nsAString& aKeySystem,
+                   const nsAString& aCDMVersion,
+                   nsAString& aOutKeySystem)
+{
+  aOutKeySystem.Append(aKeySystem);
+  aOutKeySystem.AppendLiteral(".");
+  aOutKeySystem.Append(aCDMVersion);
+}
+
 } // namespace mozilla
