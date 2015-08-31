@@ -264,7 +264,6 @@ endif #Create an RPM file
 
 ifeq ($(MOZ_PKG_FORMAT),APK)
 
-JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 include $(MOZILLA_DIR)/config/android-common.mk
 
 DIST_FILES =

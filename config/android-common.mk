@@ -30,11 +30,6 @@ RELEASE_SIGN_ANDROID_APK = \
   $(ZIPALIGN) -f -v 4 $(2)-unaligned.apk $(2) && \
   $(RM) $(2)-unaligned.apk
 
-# For Android, this defaults to $(ANDROID_SDK)/android.jar
-ifndef JAVA_BOOTCLASSPATH
-  JAVA_BOOTCLASSPATH = $(ANDROID_SDK)/android.jar
-endif
-
 # For Android, we default to 1.7
 ifndef JAVA_VERSION
   JAVA_VERSION = 1.7
@@ -43,8 +38,6 @@ endif
 JAVAC_FLAGS = \
   -target $(JAVA_VERSION) \
   -source $(JAVA_VERSION) \
-  $(if $(JAVA_CLASSPATH),-classpath $(JAVA_CLASSPATH),) \
-  -bootclasspath $(JAVA_BOOTCLASSPATH) \
   -encoding UTF8 \
   -g:source,lines \
   -Werror \
