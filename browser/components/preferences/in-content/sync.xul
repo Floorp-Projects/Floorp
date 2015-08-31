@@ -38,26 +38,29 @@
   <label class="header-name">&paneSync.title;</label>
 </hbox>
 
-<hbox id="syncStatusMessage"
-      data-category="paneSync">
-  <vbox id="syncStatusMessageWrapper">
-    <label id="syncStatusMessageTitle"></label>
-    <description id="syncStatusMessageDescription"></description>
-    <deck id="sync-migration-buttons-deck">
+<hbox id="sync-migration-container"
+       data-category="paneSync"
+       hidden="true">
+
+  <vbox id="sync-migration" flex="1" hidden="true">
+
+    <deck id="sync-migration-deck">
       <!-- When we are in the "need FxA user" state -->
-      <hbox>
+      <hbox align="center">
+        <description id="sync-migrate-upgrade-description" flex="1"/>
+        <spacer flex="1"/>
         <button id="sync-migrate-unlink"/>
         <button id="sync-migrate-upgrade"/>
       </hbox>
+
       <!-- When we are in the "need the user to be verified" state -->
-      <hbox>
+      <hbox align="center">
+        <label id="sync-migrate-verify-label"/>
+        <spacer flex="1"/>
         <button id="sync-migrate-forget"/>
         <button id="sync-migrate-resend"/>
       </hbox>
     </deck>
-  </vbox>
-  <vbox>
-    <button id="syncStatusMessageClose" class="close-icon"/>
   </vbox>
 </hbox>
 
