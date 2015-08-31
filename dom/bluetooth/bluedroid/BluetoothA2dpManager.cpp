@@ -926,9 +926,9 @@ BluetoothA2dpManager::UpdateRegisterNotification(BluetoothAvrcpEvent aEvent,
       // needs to convert to network big endian format since track stores
       // as uint8[8]. 56 = 8 * (BTRC_UID_SIZE -1).
       for (int index = 0; index < AVRCP_UID_SIZE; ++index) {
-        // We cannot easily check if a track is selected, so whenever A2DP is
-        // streaming, we assume a track is selected.
-        if (mSinkState == BluetoothA2dpManager::SinkState::SINK_PLAYING) {
+        // We cannot easily check if a track is selected, so whenever we're
+        // playing, we assume a track is selected.
+        if (mPlayStatus == ControlPlayStatus::PLAYSTATUS_PLAYING) {
           param.mTrack[index] = 0x0;
         } else {
           param.mTrack[index] = 0xFF;
@@ -938,7 +938,7 @@ BluetoothA2dpManager::UpdateRegisterNotification(BluetoothAvrcpEvent aEvent,
     case AVRCP_EVENT_PLAY_POS_CHANGED:
       // If no track is selected, return 0xFFFFFFFF in the INTERIM response
       mPlayPosChangedNotifyType = AVRCP_NTF_INTERIM;
-      if (mSinkState == BluetoothA2dpManager::SinkState::SINK_PLAYING) {
+      if (mPlayStatus == ControlPlayStatus::PLAYSTATUS_PLAYING) {
         param.mSongPos = mPosition;
       } else {
         param.mSongPos = 0xFFFFFFFF;
