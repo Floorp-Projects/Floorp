@@ -343,7 +343,7 @@ EVENT(pointerleave,
       EventNameType_All,
       ePointerEventClass)
 EVENT(gotpointercapture,
-      NS_POINTER_GOT_CAPTURE,
+      ePointerGotCapture,
       EventNameType_All,
       ePointerEventClass)
 EVENT(lostpointercapture,
