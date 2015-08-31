@@ -77,7 +77,7 @@ NS_EVENT_MESSAGE(ePointerLostCapture,   ePointerEventFirst + 28)
 NS_EVENT_MESSAGE(ePointerEventLast,     ePointerLostCapture)
 
 NS_EVENT_MESSAGE(eContextMenuFirst,     500)
-NS_EVENT_MESSAGE(NS_CONTEXTMENU,        eContextMenuFirst)
+NS_EVENT_MESSAGE(eContextMenu,          eContextMenuFirst)
 
 NS_EVENT_MESSAGE(NS_STREAM_EVENT_START, 1100)
 NS_EVENT_MESSAGE(NS_LOAD,               NS_STREAM_EVENT_START)

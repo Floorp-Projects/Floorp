@@ -7848,7 +7848,7 @@ nsContentUtils::SendMouseEvent(nsCOMPtr<nsIPresShell> aPresShell,
   else if (aType.EqualsLiteral("mouseout"))
     msg = eMouseExitFromWidget;
   else if (aType.EqualsLiteral("contextmenu")) {
-    msg = NS_CONTEXTMENU;
+    msg = eContextMenu;
     contextMenuKey = (aButton == 0);
   } else if (aType.EqualsLiteral("MozMouseHittest"))
     msg = eMouseHitTest;
