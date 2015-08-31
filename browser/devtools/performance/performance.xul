@@ -77,7 +77,7 @@
     </menupopup>
   </popupset>
 
-  <hbox class="theme-body" flex="1">
+  <hbox id="body" class="theme-body" flex="1">
 
     <!-- Sidebar: controls and recording list -->
     <vbox id="recordings-pane">
@@ -304,6 +304,7 @@
                       <span class="header-line opt-line" />
                     </hbox>
                   </toolbar>
+                  <hbox id="optimizations-graph"></hbox>
                   <vbox id="jit-optimizations-raw-view"></vbox>
                 </vbox>
               </hbox>
@@ -364,8 +365,7 @@
               </vbox>
 
               <!-- Memory FlameChart -->
-              <hbox id="memory-flamegraph-view" flex="1">
-              </hbox>
+              <hbox id="memory-flamegraph-view" flex="1"></hbox>
             </deck>
           </deck>
         </vbox>

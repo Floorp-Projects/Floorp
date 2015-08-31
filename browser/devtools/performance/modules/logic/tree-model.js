@@ -36,6 +36,8 @@ function ThreadNode(thread, options = {}) {
   this.calls = [];
   this.duration = options.endTime - options.startTime;
   this.nodeType = "Thread";
+  this.inverted = options.invertTree;
+
   // Total bytesize of all allocations if enabled
   this.byteSize = 0;
   this.youngestFrameByteSize = 0;
@@ -232,10 +234,8 @@ ThreadNode.prototype = {
                                           leafTable);
         if (isLeaf) {
           frameNode.youngestFrameSamples++;
-          if (inflatedFrame.optimizations) {
-            frameNode._addOptimizations(inflatedFrame.optimizations, inflatedFrame.implementation,
-                                        sampleTime, stringTable);
-          }
+          frameNode._addOptimizations(inflatedFrame.optimizations, inflatedFrame.implementation,
+                                      sampleTime, stringTable);
 
           if (byteSize) {
             frameNode.youngestFrameByteSize += byteSize;
@@ -410,7 +410,7 @@ function FrameNode(frameKey, { location, line, category, isContent }, isMetaCate
   this.calls = [];
   this.isContent = !!isContent;
   this._optimizations = null;
-  this._tierData = null;
+  this._tierData = [];
   this._stringTable = null;
   this.isMetaCategory = !!isMetaCategory;
   this.category = category;
@@ -427,8 +427,8 @@ FrameNode.prototype = {
    *               Any JIT optimization information attached to the current
    *               sample. Lazily inflated via stringTable.
    * @param number implementation
-   *               JIT implementation used for this observed frame (interpreter,
-   *               baseline, ion);
+   *               JIT implementation used for this observed frame (baseline, ion);
+   *               can be null indicating "interpreter"
    * @param number time
    *               The time this optimization occurred.
    * @param object stringTable
@@ -441,16 +441,16 @@ FrameNode.prototype = {
       let opts = this._optimizations;
       if (opts === null) {
         opts = this._optimizations = [];
-        this._stringTable = stringTable;
       }
       opts.push(site);
-
-      if (this._tierData === null) {
-        this._tierData = [];
-      }
-      // Record type of implementation used and the sample time
-      this._tierData.push({ implementation, time });
     }
+
+    if (!this._stringTable) {
+      this._stringTable = stringTable;
+    }
+
+    // Record type of implementation used and the sample time
+    this._tierData.push({ implementation, time });
   },
 
   _clone: function (samples, size) {
@@ -474,16 +474,28 @@ FrameNode.prototype = {
       this.youngestFrameByteSize += otherNode.youngestFrameByteSize;
     }
 
+    if (this._stringTable === null) {
+      this._stringTable = otherNode._stringTable;
+    }
+
     if (otherNode._optimizations) {
-      let opts = this._optimizations;
-      if (opts === null) {
-        opts = this._optimizations = [];
-        this._stringTable = otherNode._stringTable;
+      if (!this._optimizations) {
+        this._optimizations = [];
       }
+      let opts = this._optimizations;
       let otherOpts = otherNode._optimizations;
       for (let i = 0; i < otherOpts.length; i++) {
-        opts.push(otherOpts[i]);
+       opts.push(otherOpts[i]);
       }
+    }
+
+    if (otherNode._tierData.length) {
+      let tierData = this._tierData;
+      let otherTierData = otherNode._tierData;
+      for (let i = 0; i < otherTierData.length; i++) {
+        tierData.push(otherTierData[i]);
+      }
+      tierData.sort((a, b) => a.time - b.time);
     }
   },
 
@@ -529,14 +541,11 @@ FrameNode.prototype = {
   },
 
   /**
-   * Returns the optimization tiers used overtime.
+   * Returns the tiers used overtime.
    *
-   * @return {?Array<object>}
+   * @return {Array<object>}
    */
-  getOptimizationTierData: function () {
-    if (!this._tierData) {
-      return null;
-    }
+  getTierData: function () {
     return this._tierData;
   }
 };

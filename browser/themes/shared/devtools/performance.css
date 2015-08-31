@@ -589,6 +589,14 @@ menuitem.marker-color-graphs-grey:before,
   min-width: 200px;
 }
 
+#optimizations-graph {
+  height: 30px;
+}
+
+#jit-optimizations-view.empty #optimizations-graph {
+  display: none !important;
+}
+
 /* override default styles for tree widget */
 #jit-optimizations-view .tree-widget-empty-text {
   font-size: inherit;

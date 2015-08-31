@@ -36,6 +36,7 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
   destroy: function () {
     OptimizationsListView.destroy();
     this.container = null;
+    this.threadNode = null;
     DetailsSubview.destroy.call(this);
   },
 
@@ -56,7 +57,7 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
       flattenRecursion: PerformanceController.getOption("flatten-tree-recursion"),
       showOptimizationHint: optimizations
     };
-    let threadNode = this._prepareCallTree(profile, interval, options);
+    let threadNode = this.threadNode = this._prepareCallTree(profile, interval, options);
     this._populateCallTree(threadNode, options);
 
     if (optimizations) {
@@ -79,7 +80,7 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
 
   _onFocus: function (_, treeItem) {
     if (PerformanceController.getCurrentRecording().getConfiguration().withJITOptimizations) {
-      OptimizationsListView.setCurrentFrame(treeItem.frame);
+      OptimizationsListView.setCurrentFrame(this.threadNode, treeItem.frame);
       OptimizationsListView.render();
     }
 
