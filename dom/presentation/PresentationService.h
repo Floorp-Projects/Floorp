@@ -38,15 +38,8 @@ public:
            info.forget() : nullptr;
   }
 
-  void
-  RemoveSessionInfo(const nsAString& aSessionId)
-  {
-    if (mRespondingSessionId.Equals(aSessionId)) {
-      mRespondingSessionId.Truncate();
-    }
-
-    mSessionInfo.Remove(aSessionId);
-  }
+  bool IsSessionAccessible(const nsAString& aSessionId,
+                           base::ProcessId aProcessId);
 
 private:
   ~PresentationService();
@@ -57,9 +50,16 @@ private:
   bool IsAppInstalled(nsIURI* aUri);
 
   bool mIsAvailable;
-  nsString mRespondingSessionId;
   nsRefPtrHashtable<nsStringHashKey, PresentationSessionInfo> mSessionInfo;
   nsTObserverArray<nsCOMPtr<nsIPresentationListener>> mListeners;
+
+  // Store the mapping between the window ID of the in-process page and the ID
+  // of the responding session. It's used for an in-process receiver page to
+  // retrieve the correspondent session ID. Besides, also keep the mapping
+  // between the responding session ID and the window ID to help look up the
+  // window ID.
+  nsClassHashtable<nsUint64HashKey, nsString> mRespondingSessionIds;
+  nsDataHashtable<nsStringHashKey, uint64_t> mRespondingWindowIds;
 };
 
 } // namespace dom
