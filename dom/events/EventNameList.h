@@ -169,7 +169,7 @@ EVENT(click,
       EventNameType_All,
       eMouseEventClass)
 EVENT(contextmenu,
-      NS_CONTEXTMENU,
+      eContextMenu,
       EventNameType_HTMLXUL,
       eMouseEventClass)
 // Not supported yet
