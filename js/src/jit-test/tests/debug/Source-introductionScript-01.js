@@ -87,7 +87,7 @@ dbg.onDebuggerStatement = function (frame) {
   introducer = frame.script;
 };
 log = '';
-var fDO = gDO.evalInGlobal('debugger; Function("origami;")', { lineNumber: 1685 }).return;
+var fDO = gDO.executeInGlobal('debugger; Function("origami;")', { lineNumber: 1685 }).return;
 var source = fDO.script.source;
 assertEq(log, 'F2');
 assertEq(source.introductionScript, introducer);

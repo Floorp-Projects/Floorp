@@ -45,7 +45,7 @@ var frames = [];
 
 // We start off the test via Debugger.Frame.prototype.eval, so if we end
 // with a termination, we still catch it, instead of aborting the whole
-// test. (Debugger.Object.prototype.evalInGlobal would simplify this...)
+// test. (Debugger.Object.prototype.executeInGlobal would simplify this...)
 var dbg0 = new Debugger(g);
 dbg0.onEnterFrame = function handleOriginalEnter(frame) {
     dbg0.log += '(';

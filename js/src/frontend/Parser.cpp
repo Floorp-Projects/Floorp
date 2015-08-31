@@ -887,6 +887,39 @@ Parser<SyntaxParseHandler>::standaloneModule(HandleModuleObject module)
 
 template <>
 ParseNode*
+Parser<FullParseHandler>::evalBody()
+{
+    AutoPushStmtInfoPC stmtInfo(*this, StmtType::BLOCK);
+    ParseNode* block = pushLexicalScope(stmtInfo);
+    if (!block)
+        return nullptr;
+
+    // For parsing declarations and directives, eval scripts must be
+    // considered body level despite having a lexical scope.
+    MOZ_ASSERT(pc->atBodyLevel());
+
+    ParseNode* body = statements(YieldIsName);
+    if (!body)
+        return nullptr;
+
+    // The statements() call above breaks on TOK_RC, so make sure we've
+    // reached EOF here.
+    TokenKind tt;
+    if (!tokenStream.peekToken(&tt, TokenStream::Operand))
+        return nullptr;
+    if (tt != TOK_EOF) {
+        report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
+               "expression", TokenKindToDesc(tt));
+        return nullptr;
+    }
+
+    block->pn_expr = body;
+    block->pn_pos = body->pn_pos;
+    return block;
+}
+
+template <>
+ParseNode*
 Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun,
                                                  Handle<PropertyNameVector> formals,
                                                  GeneratorKind generatorKind,
@@ -4296,7 +4329,7 @@ Parser<FullParseHandler>::checkAndPrepareLexical(bool isConst, const TokenPos& e
 static StaticBlockObject*
 CurrentLexicalStaticBlock(ParseContext<FullParseHandler>* pc)
 {
-    return pc->atBodyLevel() ? nullptr :
+    return !pc->innermostStmt() ? nullptr :
            &pc->innermostStmt()->staticScope->as<StaticBlockObject>();
 }
 
