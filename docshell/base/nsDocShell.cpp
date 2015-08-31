@@ -96,6 +96,7 @@
 #include "nsSHistory.h"
 #include "nsDocShellEditorData.h"
 #include "GeckoProfiler.h"
+#include "timeline/JavascriptTimelineMarker.h"
 
 // Helper Classes
 #include "nsError.h"
@@ -13763,50 +13764,6 @@ nsDocShell::GetOpener()
   return opener;
 }
 
-class JavascriptTimelineMarker : public TimelineMarker
-{
-public:
-  explicit JavascriptTimelineMarker(const char* aName,
-                                    const char* aReason,
-                                    const char16_t* aFunctionName,
-                                    const char16_t* aFileName,
-                                    uint32_t aLineNumber)
-    : TimelineMarker(aName, NS_ConvertUTF8toUTF16(aReason),
-                     TRACING_INTERVAL_START, NO_STACK)
-    , mFunctionName(aFunctionName)
-    , mFileName(aFileName)
-    , mLineNumber(aLineNumber)
-  {
-  }
-
-  void AddDetails(JSContext* aCx, mozilla::dom::ProfileTimelineMarker& aMarker)
-    override
-  {
-    aMarker.mCauseName.Construct(GetCause());
-
-    if (!mFunctionName.IsEmpty() || !mFileName.IsEmpty()) {
-      RootedDictionary<ProfileTimelineStackFrame> stackFrame(aCx);
-      stackFrame.mLine.Construct(mLineNumber);
-      stackFrame.mSource.Construct(mFileName);
-      stackFrame.mFunctionDisplayName.Construct(mFunctionName);
-
-      JS::Rooted<JS::Value> newStack(aCx);
-      if (ToJSValue(aCx, stackFrame, &newStack)) {
-        if (newStack.isObject()) {
-          aMarker.mStack = &newStack.toObject();
-        }
-      } else {
-        JS_ClearPendingException(aCx);
-      }
-    }
-  }
-
-private:
-  nsString mFunctionName;
-  nsString mFileName;
-  uint32_t mLineNumber;
-};
-
 void
 nsDocShell::NotifyJSRunToCompletionStart(const char* aReason,
                                          const char16_t* aFunctionName,
@@ -13817,10 +13774,8 @@ nsDocShell::NotifyJSRunToCompletionStart(const char* aReason,
 
   // If first start, mark interval start.
   if (timelineOn && mJSRunToCompletionDepth == 0) {
-    mozilla::UniquePtr<TimelineMarker> marker =
-      MakeUnique<JavascriptTimelineMarker>("Javascript", aReason,
-                                           aFunctionName, aFilename,
-                                           aLineNumber);
+    UniquePtr<TimelineMarker> marker = MakeUnique<JavascriptTimelineMarker>(
+      aReason, aFunctionName, aFilename, aLineNumber, TRACING_INTERVAL_START);
     TimelineConsumers::AddMarkerForDocShell(this, Move(marker));
   }
   mJSRunToCompletionDepth++;

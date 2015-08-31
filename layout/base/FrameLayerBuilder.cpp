@@ -30,6 +30,7 @@
 #include "nsPrintfCString.h"
 #include "nsRenderingContext.h"
 #include "nsSVGIntegrationUtils.h"
+#include "mozilla/LayerTimelineMarker.h"
 
 #include "mozilla/Move.h"
 #include "mozilla/ReverseIterator.h"
@@ -5497,36 +5498,6 @@ static void DrawForcedBackgroundColor(DrawTarget& aDrawTarget,
   }
 }
 
-class LayerTimelineMarker : public TimelineMarker
-{
-public:
-  explicit LayerTimelineMarker(const nsIntRegion& aRegion)
-    : TimelineMarker("Layer", TRACING_EVENT)
-    , mRegion(aRegion)
-  {
-  }
-
-  ~LayerTimelineMarker()
-  {
-  }
-
-  virtual void AddLayerRectangles(mozilla::dom::Sequence<mozilla::dom::ProfileTimelineLayerRect>& aRectangles) override
-  {
-    nsIntRegionRectIterator it(mRegion);
-    while (const nsIntRect* iterRect = it.Next()) {
-      mozilla::dom::ProfileTimelineLayerRect rect;
-      rect.mX = iterRect->X();
-      rect.mY = iterRect->Y();
-      rect.mWidth = iterRect->Width();
-      rect.mHeight = iterRect->Height();
-      aRectangles.AppendElement(rect, fallible);
-    }
-  }
-
-private:
-  nsIntRegion mRegion;
-};
-
 /*
  * A note on residual transforms:
  *
@@ -5687,8 +5658,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
     bool isRecording;
     docShell->GetRecordProfileTimelineMarkers(&isRecording);
     if (isRecording) {
-      mozilla::UniquePtr<TimelineMarker> marker =
-        MakeUnique<LayerTimelineMarker>(aRegionToDraw);
+      UniquePtr<TimelineMarker> marker = MakeUnique<LayerTimelineMarker>(aRegionToDraw);
       TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
     }
   }

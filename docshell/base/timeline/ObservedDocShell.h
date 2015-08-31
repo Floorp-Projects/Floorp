@@ -11,9 +11,10 @@
 #include "mozilla/nsRefPtr.h"
 
 class nsDocShell;
-class TimelineMarker;
 
 namespace mozilla {
+class TimelineMarker;
+
 namespace dom {
 struct ProfileTimelineMarker;
 }
