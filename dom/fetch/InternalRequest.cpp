@@ -42,6 +42,7 @@ InternalRequest::GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult
   copy->mMode = mMode;
   copy->mCredentialsMode = mCredentialsMode;
   copy->mCacheMode = mCacheMode;
+  copy->mRedirectMode = mRedirectMode;
   copy->mCreatedByFetchEvent = mCreatedByFetchEvent;
   return copy.forget();
 }
@@ -80,6 +81,7 @@ InternalRequest::InternalRequest(const InternalRequest& aOther)
   , mCredentialsMode(aOther.mCredentialsMode)
   , mResponseTainting(aOther.mResponseTainting)
   , mCacheMode(aOther.mCacheMode)
+  , mRedirectMode(aOther.mRedirectMode)
   , mAuthenticationFlag(aOther.mAuthenticationFlag)
   , mForceOriginHeader(aOther.mForceOriginHeader)
   , mPreserveContentCodings(aOther.mPreserveContentCodings)
