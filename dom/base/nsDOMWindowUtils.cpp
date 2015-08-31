@@ -710,7 +710,7 @@ nsDOMWindowUtils::SendPointerEventCommon(const nsAString& aType,
   } else if (aType.EqualsLiteral("pointerover")) {
     msg = NS_POINTER_OVER;
   } else if (aType.EqualsLiteral("pointerout")) {
-    msg = NS_POINTER_OUT;
+    msg = ePointerOut;
   } else {
     return NS_ERROR_FAILURE;
   }
