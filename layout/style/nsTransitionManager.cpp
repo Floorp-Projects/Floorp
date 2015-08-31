@@ -141,6 +141,17 @@ CSSTransition::QueueEvents()
                         owningPseudoType));
 }
 
+bool
+CSSTransition::HasEndEventToQueue() const
+{
+  if (!mEffect) {
+    return false;
+  }
+
+  return !mWasFinishedOnLastTick &&
+         PlayState() == AnimationPlayState::Finished;
+}
+
 void
 CSSTransition::Tick()
 {
@@ -329,7 +340,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     afterChangeStyle = newStyleContext;
   }
 
-  nsAutoAnimationMutationBatch mb(aElement);
+  nsAutoAnimationMutationBatch mb(aElement->OwnerDoc());
 
   // Per http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html
   // I'll consider only the transitions from the number of items in

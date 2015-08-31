@@ -26,5 +26,3 @@ LOCAL_INCLUDES += [
 EXPORTS.mozilla += [
      'mozSpellChecker.h',
 ]
-
-FAIL_ON_WARNINGS = True

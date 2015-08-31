@@ -260,7 +260,8 @@ if CONFIG['ENABLE_INTL_API']:
         'icu',
     ]
 
-FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']
+if CONFIG['_MSC_VER']:
+    ALLOW_COMPILER_WARNINGS = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

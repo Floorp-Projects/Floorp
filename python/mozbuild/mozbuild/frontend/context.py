@@ -681,6 +681,15 @@ SUBCONTEXTS = {cls.__name__: cls for cls in SUBCONTEXTS}
 # A value of None means the variable has no direct effect on any tier.
 
 VARIABLES = {
+    'ALLOW_COMPILER_WARNINGS': (bool, bool,
+        """Whether to allow compiler warnings (i.e. *not* treat them as
+        errors).
+
+        This is commonplace (almost mandatory, in fact) in directories
+        containing third-party code that we regularly update from upstream and
+        thus do not control, but is otherwise discouraged.
+        """, None),
+
     # Variables controlling reading of other frontend files.
     'ANDROID_GENERATED_RESFILES': (StrictOrderingOnAppendList, list,
         """Android resource files generated as part of the build.
@@ -945,10 +954,6 @@ VARIABLES = {
         If the configuration token ``BIN_SUFFIX`` is set, its value will be
         automatically appended to each name. If a name already ends with
         ``BIN_SUFFIX``, the name will remain unchanged.
-        """, None),
-
-    'FAIL_ON_WARNINGS': (bool, bool,
-        """Whether to treat warnings as errors.
         """, None),
 
     'FORCE_SHARED_LIB': (bool, bool,

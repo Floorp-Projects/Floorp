@@ -38,5 +38,3 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     ]
 
 FINAL_LIBRARY = 'xul'
-
-FAIL_ON_WARNINGS = True

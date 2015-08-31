@@ -8,8 +8,6 @@ SOURCES += [
     'nsICOEncoder.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
-
 # Decoders need RasterImage.h
 LOCAL_INCLUDES += [
     '/image',

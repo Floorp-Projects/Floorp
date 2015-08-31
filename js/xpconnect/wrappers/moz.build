@@ -28,8 +28,6 @@ if CONFIG['_MSC_VER']:
         '-wd4661', # no suitable definition provided for explicit template instantiation request
     ]
 
-FAIL_ON_WARNINGS = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

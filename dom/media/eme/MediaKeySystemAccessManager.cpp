@@ -13,6 +13,9 @@
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
 #endif
+#ifdef XP_MACOSX
+#include "nsCocoaFeatures.h"
+#endif
 #include "nsPrintfCString.h"
 
 namespace mozilla {
@@ -74,6 +77,23 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
   Request(aPromise, aKeySystem, options, RequestType::Initial);
 }
 
+static bool
+ShouldTrialCreateGMP(const nsAString& aKeySystem)
+{
+  // Trial create where the CDM has a decoder;
+  // * ClearKey and Primetime on Windows Vista and later.
+  // * Primetime on MacOSX Lion and later.
+  return
+#ifdef XP_WIN
+    IsVistaOrLater();
+#elif defined(XP_MACOSX)
+    aKeySystem.EqualsLiteral("com.adobe.primetime") &&
+    nsCocoaFeatures::OnLionOrLater();
+#else
+    false;
+#endif
+}
+
 void
 MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
                                      const nsAString& aKeySystem,
@@ -107,14 +127,16 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
   }
 
   nsAutoCString message;
+  nsAutoCString cdmVersion;
   MediaKeySystemStatus status =
-    MediaKeySystemAccess::GetKeySystemStatus(keySystem, minCdmVersion, message);
+    MediaKeySystemAccess::GetKeySystemStatus(keySystem, minCdmVersion, message, cdmVersion);
 
   nsPrintfCString msg("MediaKeySystemAccess::GetKeySystemStatus(%s, minVer=%d) "
-                      "result=%s msg='%s'",
+                      "result=%s version='%s' msg='%s'",
                       NS_ConvertUTF16toUTF8(keySystem).get(),
                       minCdmVersion,
                       MediaKeySystemStatusValues::strings[(size_t)status].value,
+                      cdmVersion.get(),
                       message.get());
   LogToBrowserConsole(NS_ConvertUTF8toUTF16(msg));
 
@@ -160,17 +182,15 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
 
   if (aOptions.IsEmpty() ||
       MediaKeySystemAccess::IsSupported(keySystem, aOptions)) {
-    nsRefPtr<MediaKeySystemAccess> access(new MediaKeySystemAccess(mWindow, keySystem));
-#ifdef XP_WIN
-    if (IsVistaOrLater()) {
-      // On Windows, ensure we have tried creating a GMPVideoDecoder for this
+    nsRefPtr<MediaKeySystemAccess> access(
+      new MediaKeySystemAccess(mWindow, keySystem, NS_ConvertUTF8toUTF16(cdmVersion)));
+   if (ShouldTrialCreateGMP(keySystem)) {
+      // Ensure we have tried creating a GMPVideoDecoder for this
       // keySystem, and that we can use it to decode. This ensures that we only
-      // report that we support this keySystem when the CDM us usable (i.e.
-      // all system libraries required are installed).
+      // report that we support this keySystem when the CDM us usable.
       mTrialCreator->MaybeAwaitTrialCreate(keySystem, access, aPromise, mWindow);
       return;
     }
-#endif
     aPromise->MaybeResolve(access);
     return;
   }

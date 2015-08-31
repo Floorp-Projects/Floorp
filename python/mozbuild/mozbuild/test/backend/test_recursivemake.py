@@ -260,6 +260,9 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = {
+            'ALLOW_COMPILER_WARNINGS': [
+                'ALLOW_COMPILER_WARNINGS := 1',
+            ],
             'DISABLE_STL_WRAPPING': [
                 'DISABLE_STL_WRAPPING := 1',
             ],
@@ -271,9 +274,6 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXTRA_PP_COMPONENTS': [
                 'EXTRA_PP_COMPONENTS += bar.pp.js',
                 'EXTRA_PP_COMPONENTS += foo.pp.js',
-            ],
-            'FAIL_ON_WARNINGS': [
-                'FAIL_ON_WARNINGS := 1',
             ],
             'VISIBILITY_FLAGS': [
                 'VISIBILITY_FLAGS :=',
