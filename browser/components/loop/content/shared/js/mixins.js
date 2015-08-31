@@ -100,13 +100,30 @@ loop.shared.mixins = (function() {
         };
       },
 
+      /*
+       * Event listener callback in charge of closing panels when the users
+       * clicks on something that is not a dropdown trigger button or menu item.
+       */
       _onBodyClick: function(event) {
         var menuButton = this.refs["menu-button"] && this.refs["menu-button"].getDOMNode();
+
         if (this.refs.anchor) {
           menuButton = this.refs.anchor.getDOMNode();
         }
-        // If a menu button/ anchor is defined and clicked on, it will be in charge
-        // of hiding or showing the popup.
+
+        /*
+         * XXX Because the mixin is inherited by multiple components there are
+         * multiple such listeners at one time. This means that this.refs is not
+         * relevant when you click inside component A but the listener that is
+         * running is in component B and does not recognise event.target. This
+         * should be refactored to only be attached once to the document and use
+         * classList instead of refs.
+         */
+        if (event.target.classList.contains("dropdown-menu-item") ||
+            event.target.classList.contains("dropdown-menu-button")) {
+          return;
+        }
+
         if (event.target !== menuButton) {
           this.setState({ showMenu: false });
         }

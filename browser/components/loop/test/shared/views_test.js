@@ -609,6 +609,23 @@ describe("loop.shared.views", function() {
         sinon.assert.calledOnce(model.startSession);
       });
 
+      // Test loop.shared.utils.findParentNode.
+      // Added here to take advantage of having markup.
+      it("should find '.video-layout-wrapper'", function() {
+        var view = mountTestComponent({
+          initiate: false,
+          sdk: fakeSDK,
+          model: model,
+          video: {enabled: true}
+        });
+        var menu = view.getDOMNode().querySelector(".btn-hangup-entry");
+
+        var result = loop.shared.utils.findParentNode(menu,
+                                                      "video-layout-wrapper");
+
+        expect(result.classList.contains("video-layout-wrapper")).to.eql(true);
+      });
+
       it("shouldn't start a session if initiate is false", function() {
         sandbox.stub(model, "startSession");
 
