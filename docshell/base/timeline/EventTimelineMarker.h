@@ -15,22 +15,24 @@ namespace mozilla {
 class EventTimelineMarker : public TimelineMarker
 {
 public:
-  explicit EventTimelineMarker(const nsAString& aCause,
+  explicit EventTimelineMarker(const nsAString& aType,
                                uint16_t aPhase,
                                TracingMetadata aMetaData)
-    : TimelineMarker("DOMEvent", aCause, aMetaData)
+    : TimelineMarker("DOMEvent", aMetaData)
+    , mType(aType)
     , mPhase(aPhase)
   {}
 
   virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) override
   {
     if (GetMetaData() == TRACING_INTERVAL_START) {
-      aMarker.mType.Construct(GetCause());
+      aMarker.mType.Construct(mType);
       aMarker.mEventPhase.Construct(mPhase);
     }
   }
 
 private:
+  nsString mType;
   uint16_t mPhase;
 };
 

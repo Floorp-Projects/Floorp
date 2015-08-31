@@ -35,17 +35,6 @@ public:
                  TracingMetadata aMetaData,
                  TimelineStackRequest aStackRequest = STACK);
 
-  TimelineMarker(const char* aName,
-                 const nsAString& aCause,
-                 TracingMetadata aMetaData,
-                 TimelineStackRequest aStackRequest = STACK);
-
-  TimelineMarker(const char* aName,
-                 const nsAString& aCause,
-                 const TimeStamp& aTime,
-                 TracingMetadata aMetaData,
-                 TimelineStackRequest aStackRequest = STACK);
-
   virtual ~TimelineMarker();
 
   // Check whether two markers should be considered the same, for the purpose
@@ -63,7 +52,6 @@ public:
   {}
 
   const char* GetName() const { return mName; }
-  const nsString& GetCause() const { return mCause; }
   DOMHighResTimeStamp GetTime() const { return mTime; }
   TracingMetadata GetMetaData() const { return mMetaData; }
 
@@ -91,7 +79,6 @@ protected:
 
 private:
   const char* mName;
-  nsString mCause;
   DOMHighResTimeStamp mTime;
   TracingMetadata mMetaData;
 
