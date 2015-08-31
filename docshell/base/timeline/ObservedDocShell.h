@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ObservedDocShell_h_
-#define ObservedDocShell_h_
+#ifndef mozilla_ObservedDocShell_h_
+#define mozilla_ObservedDocShell_h_
 
 #include "nsTArray.h"
 #include "mozilla/nsRefPtr.h"
@@ -39,4 +39,4 @@ public:
 
 } // namespace mozilla
 
-#endif /* ObservedDocShell_h_ */
+#endif /* mozilla_ObservedDocShell_h_ */

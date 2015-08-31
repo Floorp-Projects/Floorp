@@ -71,7 +71,7 @@ TimelineConsumers::AddMarkerForDocShell(nsDocShell* aDocShell,
                                         TracingMetadata aMetaData)
 {
   if (aDocShell->IsObserved()) {
-    aDocShell->mObserved->AddMarker(Move(MakeUnique<TimelineMarker>(aDocShell, aName, aMetaData)));
+    aDocShell->mObserved->AddMarker(Move(MakeUnique<TimelineMarker>(aName, aMetaData)));
   }
 }
 
@@ -82,7 +82,7 @@ TimelineConsumers::AddMarkerForDocShell(nsDocShell* aDocShell,
                                         TracingMetadata aMetaData)
 {
   if (aDocShell->IsObserved()) {
-    aDocShell->mObserved->AddMarker(Move(MakeUnique<TimelineMarker>(aDocShell, aName, aTime, aMetaData)));
+    aDocShell->mObserved->AddMarker(Move(MakeUnique<TimelineMarker>(aName, aTime, aMetaData)));
   }
 }
 
