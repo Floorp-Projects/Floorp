@@ -77,6 +77,8 @@ function BrowserElementParent() {
   Services.obs.addObserver(this, 'oop-frameloader-crashed', /* ownsWeak = */ true);
   Services.obs.addObserver(this, 'copypaste-docommand', /* ownsWeak = */ true);
   Services.obs.addObserver(this, 'ask-children-to-execute-copypaste-command', /* ownsWeak = */ true);
+  Services.obs.addObserver(this, 'frameloader-message-manager-will-change', /* ownsWeak = */ true);
+  Services.obs.addObserver(this, 'frameloader-message-manager-changed', /* ownsWeak = */ true);
 }
 
 BrowserElementParent.prototype = {
@@ -161,10 +163,17 @@ BrowserElementParent.prototype = {
 
   _setupMessageListener: function() {
     this._mm = this._frameLoader.messageManager;
-    let self = this;
-    let isWidget = this._frameLoader
-                       .QueryInterface(Ci.nsIFrameLoader)
-                       .ownerIsWidget;
+    this._isWidget = this._frameLoader
+                         .QueryInterface(Ci.nsIFrameLoader)
+                         .ownerIsWidget;
+    this._mm.addMessageListener('browser-element-api:call', this);
+    this._mm.loadFrameScript("chrome://global/content/extensions.js", true);
+  },
+
+  receiveMessage: function(aMsg) {
+    if (!this._isAlive()) {
+      return;
+    }
 
     // Messages we receive are handed to functions which take a (data) argument,
     // where |data| is the message manager's data object.
@@ -222,20 +231,15 @@ BrowserElementParent.prototype = {
       "opentab": this._fireEventFromMsg
     };
 
-    this._mm.addMessageListener('browser-element-api:call', function(aMsg) {
-      if (!self._isAlive()) {
-        return;
-      }
+    if (aMsg.data.msg_name in mmCalls) {
+      mmCalls[aMsg.data.msg_name].apply(this, arguments);
+    } else if (!this._isWidget && aMsg.data.msg_name in mmSecuritySensitiveCalls) {
+      mmSecuritySensitiveCalls[aMsg.data.msg_name].apply(this, arguments);
+    }
+  },
 
-      if (aMsg.data.msg_name in mmCalls) {
-        return mmCalls[aMsg.data.msg_name].apply(self, arguments);
-      } else if (!isWidget && aMsg.data.msg_name in mmSecuritySensitiveCalls) {
-        return mmSecuritySensitiveCalls[aMsg.data.msg_name]
-                 .apply(self, arguments);
-      }
-    });
-
-    this._mm.loadFrameScript("chrome://global/content/extensions.js", true);
+  _removeMessageListener: function() {
+    this._mm.removeMessageListener('browser-element-api:call', this);
   },
 
   /**
@@ -1103,6 +1107,16 @@ BrowserElementParent.prototype = {
     case 'ask-children-to-execute-copypaste-command':
       if (this._isAlive() && this._frameElement == subject.wrappedJSObject) {
         this._sendAsyncMsg('copypaste-do-command', { command: data });
+      }
+      break;
+    case 'frameloader-message-manager-will-change':
+      if (this._isAlive() && subject == this._frameLoader) {
+        this._removeMessageListener();
+      }
+      break;
+    case 'frameloader-message-manager-changed':
+      if (this._isAlive() && subject == this._frameLoader) {
+        this._setupMessageListener();
       }
       break;
     default:
