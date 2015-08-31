@@ -24,9 +24,15 @@ function* spawnTest() {
     "duration": false,
     "percentage": false,
     "count": true,
+    "count-percentage": true,
+    "size": true,
+    "size-percentage": true,
     "self-duration": false,
     "self-percentage": false,
     "self-count": true,
+    "self-count-percentage": true,
+    "self-size": true,
+    "self-size-percentage": true,
     "samples": false,
     "function": true
   });

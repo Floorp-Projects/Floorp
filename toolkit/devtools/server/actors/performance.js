@@ -211,7 +211,12 @@ const PerformanceFront = exports.PerformanceFront = protocol.FrontClass(Performa
 
     let normalizedCurrent = (totalSize * (currentGeneration - origGeneration)) + currentPosition;
     let percent = (normalizedCurrent - origPosition) / totalSize;
-    return percent > 1 ? 1 : percent;
+
+    // Clamp between 0 and 1; can get negative percentage values when a new
+    // recording starts and the currentBufferStatus has not yet been updated. Rather
+    // than fetching another status update, just clamp to 0, and this will be updated
+    // on the next profiler-status event.
+    return percent > 1 ? 1 : percent < 0 ? 0 : percent;
   },
 
   /**

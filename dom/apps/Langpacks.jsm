@@ -18,11 +18,16 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
 
 this.EXPORTED_SYMBOLS = ["Langpacks"];
 
-let debug = Services.prefs.getBoolPref("dom.mozApps.debug")
-  ? (aMsg) => {
-      dump("-*-*- Langpacks: " + aMsg + "\n");
-    }
-  : (aMsg) => {};
+let debug;
+function debugPrefObserver() {
+  debug = Services.prefs.getBoolPref("dom.mozApps.debug")
+            ? (aMsg) => {
+                dump("-*-*- Langpacks: " + aMsg + "\n");
+              }
+            : (aMsg) => {};
+}
+debugPrefObserver();
+Services.prefs.addObserver("dom.mozApps.debug", debugPrefObserver, false);
 
 /**
   * Langpack support

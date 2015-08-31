@@ -37,11 +37,6 @@ let DetailsView = {
       features: ["withAllocations"],
       prefs: ["enable-memory-flame"],
     },
-    "optimizations": {
-      id: "optimizations-view",
-      view: OptimizationsView,
-      features: ["withJITOptimizations"],
-    }
   },
 
   /**

@@ -7,37 +7,13 @@
 #include <urlhist.h>
 #include <shlguid.h>
 
-#include "nsStringAPI.h"
-#include "nsNetUtil.h"
-#include "prtime.h"
-#include "nsIVariant.h"
-#include "nsCOMArray.h"
 #include "nsArrayEnumerator.h"
-
-namespace {
-
-  PRTime FileTimeToPRTime(FILETIME* filetime)
-  {
-    SYSTEMTIME st;
-    ::FileTimeToSystemTime(filetime, &st);
-    PRExplodedTime prt;
-    prt.tm_year = st.wYear;
-    // SYSTEMTIME's day-of-month parameter is 1-based,
-    // PRExplodedTime's is 0-based.
-    prt.tm_month = st.wMonth - 1;
-    prt.tm_mday = st.wDay;
-    prt.tm_hour = st.wHour;
-    prt.tm_min = st.wMinute;
-    prt.tm_sec = st.wSecond;
-    prt.tm_usec = st.wMilliseconds * 1000;
-    prt.tm_wday = 0;
-    prt.tm_yday = 0;
-    prt.tm_params.tp_gmt_offset = 0;
-    prt.tm_params.tp_dst_offset = 0;
-    return PR_ImplodeTime(&prt);
-  }
-
-} // namespace
+#include "nsCOMArray.h"
+#include "nsIVariant.h"
+#include "nsNetUtil.h"
+#include "nsStringAPI.h"
+#include "nsWindowsMigrationUtils.h"
+#include "prtime.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIEHistoryEnumerator
@@ -106,14 +82,17 @@ nsIEHistoryEnumerator::HasMoreElements(bool* _retval)
 
   nsDependentString title(statURL.pwcsTitle);
 
-  PRTime lastVisited = FileTimeToPRTime(&(statURL.ftLastVisited));
+  bool lastVisitTimeIsValid;
+  PRTime lastVisited = WinMigrationFileTimeToPRTime(&(statURL.ftLastVisited), &lastVisitTimeIsValid);
 
   mCachedNextEntry = do_CreateInstance("@mozilla.org/hash-property-bag;1");
   MOZ_ASSERT(mCachedNextEntry, "Should have instanced a new property bag");
   if (mCachedNextEntry) {
     mCachedNextEntry->SetPropertyAsInterface(NS_LITERAL_STRING("uri"), uri);
     mCachedNextEntry->SetPropertyAsAString(NS_LITERAL_STRING("title"), title);
-    mCachedNextEntry->SetPropertyAsInt64(NS_LITERAL_STRING("time"), lastVisited);
+    if (lastVisitTimeIsValid) {
+      mCachedNextEntry->SetPropertyAsInt64(NS_LITERAL_STRING("time"), lastVisited);
+    }
 
     *_retval = true;
   }
