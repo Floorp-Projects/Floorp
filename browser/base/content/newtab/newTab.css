@@ -340,7 +340,6 @@ input[type=button] {
   display: -moz-box;
   position: relative;
   -moz-box-pack: center;
-  margin: 40px 0 15px;
 }
 
 #newtab-search-container[page-disabled] {
