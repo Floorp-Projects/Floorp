@@ -40,9 +40,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaKeySystemAccess)
 NS_INTERFACE_MAP_END
 
 MediaKeySystemAccess::MediaKeySystemAccess(nsPIDOMWindow* aParent,
-                                           const nsAString& aKeySystem)
+                                           const nsAString& aKeySystem,
+                                           const nsAString& aCDMVersion)
   : mParent(aParent)
   , mKeySystem(aKeySystem)
+  , mCDMVersion(aCDMVersion)
 {
 }
 
@@ -63,15 +65,15 @@ MediaKeySystemAccess::GetParentObject() const
 }
 
 void
-MediaKeySystemAccess::GetKeySystem(nsString& aRetVal) const
+MediaKeySystemAccess::GetKeySystem(nsString& aOutKeySystem) const
 {
-  aRetVal = mKeySystem;
+  ConstructKeySystem(mKeySystem, mCDMVersion, aOutKeySystem);
 }
 
 already_AddRefed<Promise>
 MediaKeySystemAccess::CreateMediaKeys(ErrorResult& aRv)
 {
-  nsRefPtr<MediaKeys> keys(new MediaKeys(mParent, mKeySystem));
+  nsRefPtr<MediaKeys> keys(new MediaKeys(mParent, mKeySystem, mCDMVersion));
   return keys->Init(aRv);
 }
 
@@ -142,7 +144,8 @@ static MediaKeySystemStatus
 EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
                     const nsAString& aKeySystem,
                     int32_t aMinCdmVersion,
-                    nsACString& aOutMessage)
+                    nsACString& aOutMessage,
+                    nsACString& aOutCdmVersion)
 {
   nsTArray<nsCString> tags;
   tags.AppendElement(NS_ConvertUTF16toUTF8(aKeySystem));
@@ -155,6 +158,8 @@ EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
     aOutMessage = NS_LITERAL_CSTRING("GetPluginVersionForAPI failed");
     return MediaKeySystemStatus::Error;
   }
+
+  aOutCdmVersion = versionStr;
 
   if (!hasPlugin) {
     aOutMessage = NS_LITERAL_CSTRING("CDM is not installed");
@@ -201,7 +206,8 @@ EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
 MediaKeySystemStatus
 MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
                                          int32_t aMinCdmVersion,
-                                         nsACString& aOutMessage)
+                                         nsACString& aOutMessage,
+                                         nsACString& aOutCdmVersion)
 {
   MOZ_ASSERT(Preferences::GetBool("media.eme.enabled", false));
   nsCOMPtr<mozIGeckoMediaPluginService> mps =
@@ -216,7 +222,7 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
       aOutMessage = NS_LITERAL_CSTRING("ClearKey was disabled");
       return MediaKeySystemStatus::Cdm_disabled;
     }
-    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage);
+    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
   }
 
 #ifdef XP_WIN
@@ -238,7 +244,7 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
       aOutMessage = NS_LITERAL_CSTRING("Plugin-container voucher not present");
       return MediaKeySystemStatus::Cdm_not_supported;
     }
-    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage);
+    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
   }
 #endif
 
