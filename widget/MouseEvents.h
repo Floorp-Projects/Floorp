@@ -625,7 +625,7 @@ public:
   void UpdateFlags()
   {
     switch (mMessage) {
-      case NS_POINTER_ENTER:
+      case ePointerEnter:
       case ePointerLeave:
         mFlags.mBubbles = false;
         mFlags.mCancelable = false;
