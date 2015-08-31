@@ -25,14 +25,14 @@
 <!ENTITY aboutPrivateBrowsing.subtitle         "In this window, &brandShortName; will not remember any history.">
 
 <!ENTITY aboutPrivateBrowsing.forgotten        "In this window, &brandShortName; will not remember:">
-<!ENTITY aboutPrivateBrowsing.info.forgotten   "Forgotten">
+<!ENTITY aboutPrivateBrowsing.info.forgotten   "Not Saved">
 <!ENTITY aboutPrivateBrowsing.info.history     "History">
 <!ENTITY aboutPrivateBrowsing.info.searches    "Searches">
 <!ENTITY aboutPrivateBrowsing.info.cookies     "Cookies">
 <!ENTITY aboutPrivateBrowsing.info.temporaryFiles "Temporary Files">
 
 <!ENTITY aboutPrivateBrowsing.kept             "&brandShortName; will keep:">
-<!ENTITY aboutPrivateBrowsing.info.kept        "Kept">
+<!ENTITY aboutPrivateBrowsing.info.kept        "Saved">
 <!ENTITY aboutPrivateBrowsing.info.downloads   "Downloads">
 <!ENTITY aboutPrivateBrowsing.info.bookmarks   "Bookmarks">
 
