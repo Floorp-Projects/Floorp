@@ -562,9 +562,9 @@ let consoleWatcher = {
             this.handleTelemetryMessage(target, packet);
 
             // Currently, informational log entries are tracked only by
-            // advanced telemetry. Nonetheless, for consistency, we
-            // continue here and let the function return normally, when it
-            // concludes 'info' entries are not being watched.
+            // telemetry. Nonetheless, for consistency, we continue here
+            // and let the function return normally, when it concludes 'info'
+            // entries are not being watched.
             metric.name = 'info';
             break;
 
@@ -593,6 +593,25 @@ let consoleWatcher = {
 
       default:
         return;
+    }
+
+    if (developerHUD._telemetry) {
+      // Always record telemetry for these metrics.
+      if (metric.name === 'errors' || metric.name === 'warnings' || metric.name === 'reflows') {
+        let value = target.metrics.get(metric.name);
+        metric.value = (value || 0) + 1;
+        target._logHistogram(metric);
+
+        // Telemetry has already been recorded.
+        metric.skipTelemetry = true;
+
+        // If the metric is not being watched, persist the incremented value.
+        // If the metric is being watched, `target.bump` will increment the value
+        // of the metric and will persist the incremented value.
+        if (!this._watching[metric.name]) {
+          target.metrics.set(metric.name, metric.value);
+        }
+      }
     }
 
     if (!this._watching[metric.name]) {
