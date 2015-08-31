@@ -40,6 +40,13 @@ const events = require("sdk/event/core");
 // animationPlayer.
 const PLAYER_DEFAULT_AUTO_REFRESH_TIMEOUT = 500;
 
+// Types of animations.
+const ANIMATION_TYPES = {
+  CSS_ANIMATION: "cssanimation",
+  CSS_TRANSITION: "csstransition",
+  UNKNOWN: "unknown"
+};
+
 /**
  * The AnimationPlayerActor provides information about a given animation: its
  * startTime, currentTime, current state, etc.
@@ -121,6 +128,16 @@ let AnimationPlayerActor = ActorClass({
     return player instanceof this.tabActor.window.CSSTransition;
   },
 
+  getType: function() {
+    if (this.isAnimation()) {
+      return ANIMATION_TYPES.CSS_ANIMATION;
+    } else if (this.isTransition()) {
+      return ANIMATION_TYPES.CSS_TRANSITION;
+    }
+
+    return ANIMATION_TYPES.UNKNOWN;
+  },
+
   /**
    * Some of the player's properties are retrieved from the node's
    * computed-styles because the Web Animations API does not provide them yet.
@@ -168,9 +185,9 @@ let AnimationPlayerActor = ActorClass({
       return this.player.animationName;
     } else if (this.isTransition()) {
       return this.player.transitionProperty;
-    } else {
-      return  "";
     }
+
+    return "";
   },
 
   /**
@@ -254,6 +271,7 @@ let AnimationPlayerActor = ActorClass({
     // add the corresponding property in the AnimationPlayerFront' initialState
     // getter.
     let newState = {
+      type: this.getType(),
       // startTime is null whenever the animation is paused or waiting to start.
       startTime: this.player.startTime,
       currentTime: this.player.currentTime,
@@ -416,6 +434,7 @@ let AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
    */
   get initialState() {
     return {
+      type: this._form.type,
       startTime: this._form.startTime,
       currentTime: this._form.currentTime,
       playState: this._form.playState,
