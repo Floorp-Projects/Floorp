@@ -45,7 +45,7 @@ function WebNavigationEventManager(context, eventName)
         return;
       }
 
-      return runSafe(context, callback, data2);
+      runSafe(context, callback, data2);
     };
 
     WebNavigation[eventName].addListener(listener);
