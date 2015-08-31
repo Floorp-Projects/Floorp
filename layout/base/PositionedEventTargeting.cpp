@@ -78,6 +78,7 @@ struct EventRadiusPrefs
   bool mRepositionEventCoords;
   bool mTouchClusterDetectionEnabled;
   uint32_t mLimitReadableSize;
+  uint32_t mKeepLimitSizeForCluster;
 };
 
 static EventRadiusPrefs sMouseEventRadiusPrefs;
@@ -130,6 +131,9 @@ GetPrefsFor(EventClassID aEventClassID)
 
     nsPrintfCString limitReadableSizePref("ui.zoomedview.limitReadableSize", prefBranch);
     Preferences::AddUintVarCache(&prefs->mLimitReadableSize, limitReadableSizePref.get(), 8);
+
+    nsPrintfCString keepLimitSize("ui.zoomedview.keepLimitSize", prefBranch);
+    Preferences::AddUintVarCache(&prefs->mKeepLimitSizeForCluster, keepLimitSize.get(), 16);
   }
 
   return prefs;
@@ -356,6 +360,21 @@ static bool IsElementPresent(nsTArray<nsIFrame*>& aCandidates, const nsAutoStrin
   return false;
 }
 
+static bool
+IsLargeElement(nsIFrame* aFrame, const EventRadiusPrefs* aPrefs)
+{
+  uint32_t keepLimitSizeForCluster = aPrefs->mKeepLimitSizeForCluster;
+  nsSize frameSize = aFrame->GetSize();
+  nsPresContext* pc = aFrame->PresContext();
+  nsIPresShell* presShell = pc->PresShell();
+  float cumulativeResolution = presShell->GetCumulativeResolution();
+  if ((pc->AppUnitsToGfxUnits(frameSize.height) * cumulativeResolution) > keepLimitSizeForCluster &&
+      (pc->AppUnitsToGfxUnits(frameSize.width) * cumulativeResolution) > keepLimitSizeForCluster) {
+    return true;
+  }
+  return false;
+}
+
 static nsIFrame*
 GetClosest(nsIFrame* aRoot, const nsPoint& aPointRelativeToRootFrame,
            const nsRect& aTargetRect, const EventRadiusPrefs* aPrefs,
@@ -413,7 +432,8 @@ GetClosest(nsIFrame* aRoot, const nsPoint& aPointRelativeToRootFrame,
     // and "for" attribute is present in label element, search the frame list for the "for" element
     // If this element is present in the current list, do not count the frame in
     // the cluster elements counter
-    if (labelTargetId.IsEmpty() || !IsElementPresent(aCandidates, labelTargetId)) {
+    if ((labelTargetId.IsEmpty() || !IsElementPresent(aCandidates, labelTargetId)) &&
+        !IsLargeElement(f, aPrefs)) {
       if (std::find(mContentsInCluster.begin(), mContentsInCluster.end(), clickableContent) == mContentsInCluster.end()) {
         mContentsInCluster.push_back(clickableContent);
       }
