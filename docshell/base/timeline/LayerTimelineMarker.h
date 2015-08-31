@@ -16,7 +16,7 @@ class LayerTimelineMarker : public TimelineMarker
 {
 public:
   explicit LayerTimelineMarker(const nsIntRegion& aRegion)
-    : TimelineMarker("Layer", TRACING_EVENT)
+    : TimelineMarker("Layer", MarkerTracingType::HELPER_EVENT)
     , mRegion(aRegion)
   {}
 

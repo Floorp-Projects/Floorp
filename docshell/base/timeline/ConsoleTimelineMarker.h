@@ -16,13 +16,13 @@ class ConsoleTimelineMarker : public TimelineMarker
 {
 public:
   explicit ConsoleTimelineMarker(const nsAString& aCause,
-                                 TracingMetadata aMetaData)
-    : TimelineMarker("ConsoleTime", aMetaData)
+                                 MarkerTracingType aTracingType)
+    : TimelineMarker("ConsoleTime", aTracingType)
     , mCause(aCause)
   {
     // Stack is captured by default on the "start" marker. Explicitly also
     // capture stack on the "end" marker.
-    if (aMetaData == TRACING_INTERVAL_END) {
+    if (aTracingType == MarkerTracingType::END) {
       CaptureStack();
     }
   }
@@ -40,7 +40,7 @@ public:
 
   virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) override
   {
-    if (GetMetaData() == TRACING_INTERVAL_START) {
+    if (GetTracingType() == MarkerTracingType::START) {
       aMarker.mCauseName.Construct(mCause);
     } else {
       aMarker.mEndStack = GetStack();

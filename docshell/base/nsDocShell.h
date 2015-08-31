@@ -275,14 +275,14 @@ private:
   // be very fast, so instead of using a Map or having to search for some
   // docshell-specific markers storage, a pointer to an `ObservedDocShell` is
   // is stored on docshells directly.
-  friend void mozilla::TimelineConsumers::AddConsumer(nsDocShell* aDocShell);
-  friend void mozilla::TimelineConsumers::RemoveConsumer(nsDocShell* aDocShell);
+  friend void mozilla::TimelineConsumers::AddConsumer(nsDocShell*);
+  friend void mozilla::TimelineConsumers::RemoveConsumer(nsDocShell*);
   friend void mozilla::TimelineConsumers::AddMarkerForDocShell(
-    nsDocShell* aDocShell, const char* aName, TracingMetadata aMetaData);
+    nsDocShell*, const char*, MarkerTracingType);
   friend void mozilla::TimelineConsumers::AddMarkerForDocShell(
-    nsDocShell* aDocShell, const char* aName, const TimeStamp& aTime, TracingMetadata aMetaData);
+    nsDocShell*, const char*, const TimeStamp&, MarkerTracingType);
   friend void mozilla::TimelineConsumers::AddMarkerForDocShell(
-    nsDocShell* aDocShell, UniquePtr<TimelineMarker>&& aMarker);
+    nsDocShell*, UniquePtr<TimelineMarker>&&);
 
 public:
   // Tell the favicon service that aNewURI has the same favicon as aOldURI.

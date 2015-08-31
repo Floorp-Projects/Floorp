@@ -21,8 +21,8 @@ public:
                                     const char16_t* aFunctionName,
                                     const char16_t* aFileName,
                                     uint32_t aLineNumber,
-                                    TracingMetadata aMetaData)
-    : TimelineMarker("Javascript", aMetaData, NO_STACK)
+                                    MarkerTracingType aTracingType)
+    : TimelineMarker("Javascript", aTracingType, MarkerStackRequest::NO_STACK)
     , mCause(NS_ConvertUTF8toUTF16(aReason))
     , mFunctionName(aFunctionName)
     , mFileName(aFileName)

@@ -1104,8 +1104,8 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
           nsAutoJSString key;
           if (key.init(aCx, jsString)) {
             UniquePtr<TimelineMarker> marker = MakeUnique<ConsoleTimelineMarker>(
-              key, aMethodName == MethodTime ? TRACING_INTERVAL_START
-                                             : TRACING_INTERVAL_END);
+              key, aMethodName == MethodTime ? MarkerTracingType::START
+                                             : MarkerTracingType::END);
             TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
           }
         }

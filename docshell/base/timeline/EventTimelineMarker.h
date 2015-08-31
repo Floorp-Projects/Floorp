@@ -17,15 +17,15 @@ class EventTimelineMarker : public TimelineMarker
 public:
   explicit EventTimelineMarker(const nsAString& aType,
                                uint16_t aPhase,
-                               TracingMetadata aMetaData)
-    : TimelineMarker("DOMEvent", aMetaData)
+                               MarkerTracingType aTracingType)
+    : TimelineMarker("DOMEvent", aTracingType)
     , mType(aType)
     , mPhase(aPhase)
   {}
 
   virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) override
   {
-    if (GetMetaData() == TRACING_INTERVAL_START) {
+    if (GetTracingType() == MarkerTracingType::START) {
       aMarker.mType.Construct(mType);
       aMarker.mEventPhase.Construct(mPhase);
     }
