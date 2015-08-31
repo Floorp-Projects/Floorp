@@ -335,7 +335,7 @@ EVENT(pointerout,
       EventNameType_All,
       ePointerEventClass)
 EVENT(pointerenter,
-      NS_POINTER_ENTER,
+      ePointerEnter,
       EventNameType_All,
       ePointerEventClass)
 EVENT(pointerleave,
