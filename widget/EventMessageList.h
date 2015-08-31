@@ -72,7 +72,7 @@ NS_EVENT_MESSAGE(NS_POINTER_OUT,          ePointerEventFirst + 23)
 NS_EVENT_MESSAGE(NS_POINTER_ENTER,        ePointerEventFirst + 24)
 NS_EVENT_MESSAGE(NS_POINTER_LEAVE,        ePointerEventFirst + 25)
 NS_EVENT_MESSAGE(NS_POINTER_CANCEL,       ePointerEventFirst + 26)
-NS_EVENT_MESSAGE(NS_POINTER_GOT_CAPTURE,  ePointerEventFirst + 27)
+NS_EVENT_MESSAGE(ePointerGotCapture,    ePointerEventFirst + 27)
 NS_EVENT_MESSAGE(ePointerLostCapture,   ePointerEventFirst + 28)
 NS_EVENT_MESSAGE(ePointerEventLast,     ePointerLostCapture)
 
