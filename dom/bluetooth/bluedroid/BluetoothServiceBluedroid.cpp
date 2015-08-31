@@ -19,6 +19,7 @@
 #include "BluetoothServiceBluedroid.h"
 
 #include "BluetoothA2dpManager.h"
+#include "BluetoothAvrcpManager.h"
 #include "BluetoothGattManager.h"
 #include "BluetoothHfpManager.h"
 #include "BluetoothHidManager.h"
@@ -154,6 +155,7 @@ public:
     static void (* const sInitManager[])(BluetoothProfileResultHandler*) = {
       BluetoothHfpManager::InitHfpInterface,
       BluetoothA2dpManager::InitA2dpInterface,
+      BluetoothAvrcpManager::InitAvrcpInterface,
       BluetoothGattManager::InitGattInterface
     };
 
@@ -295,6 +297,7 @@ BluetoothServiceBluedroid::StopInternal(BluetoothReplyRunnable* aRunnable)
 
   static BluetoothProfileManagerBase* sProfiles[] = {
     BluetoothHfpManager::Get(),
+    BluetoothAvrcpManager::Get(),
     BluetoothA2dpManager::Get(),
     BluetoothOppManager::Get(),
     BluetoothPbapManager::Get(),
@@ -1282,10 +1285,10 @@ BluetoothServiceBluedroid::SendMetaData(const nsAString& aTitle,
                                         int64_t aDuration,
                                         BluetoothReplyRunnable* aRunnable)
 {
-  BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
-  if (a2dp) {
-    a2dp->UpdateMetaData(aTitle, aArtist, aAlbum, aMediaNumber,
-                         aTotalMediaCount, aDuration);
+  BluetoothAvrcpManager* avrcp = BluetoothAvrcpManager::Get();
+  if (avrcp) {
+    avrcp->UpdateMetaData(aTitle, aArtist, aAlbum, aMediaNumber,
+                          aTotalMediaCount, aDuration);
   }
   DispatchReplySuccess(aRunnable);
 }
@@ -1296,11 +1299,11 @@ BluetoothServiceBluedroid::SendPlayStatus(
   const nsAString& aPlayStatus,
   BluetoothReplyRunnable* aRunnable)
 {
-  BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
-  if (a2dp) {
+  BluetoothAvrcpManager* avrcp = BluetoothAvrcpManager::Get();
+  if (avrcp) {
     ControlPlayStatus playStatus =
       PlayStatusStringToControlPlayStatus(aPlayStatus);
-    a2dp->UpdatePlayStatus(aDuration, aPosition, playStatus);
+    avrcp->UpdatePlayStatus(aDuration, aPosition, playStatus);
   }
   DispatchReplySuccess(aRunnable);
 }

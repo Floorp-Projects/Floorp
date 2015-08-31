@@ -25,7 +25,7 @@ AutoTimelineMarker::AutoTimelineMarker(nsIDocShell* aDocShell, const char* aName
   }
 
   mDocShell = static_cast<nsDocShell*>(aDocShell);
-  TimelineConsumers::AddMarkerForDocShell(mDocShell, mName, TRACING_INTERVAL_START);
+  TimelineConsumers::AddMarkerForDocShell(mDocShell, mName, MarkerTracingType::START);
 }
 
 AutoTimelineMarker::~AutoTimelineMarker()
@@ -34,7 +34,7 @@ AutoTimelineMarker::~AutoTimelineMarker()
     return;
   }
 
-  TimelineConsumers::AddMarkerForDocShell(mDocShell, mName, TRACING_INTERVAL_END);
+  TimelineConsumers::AddMarkerForDocShell(mDocShell, mName, MarkerTracingType::END);
 }
 
 } // namespace mozilla

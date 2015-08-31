@@ -120,6 +120,14 @@ PresentationParent::RecvUnregisterHandler()
 PresentationParent::RecvRegisterSessionHandler(const nsString& aSessionId)
 {
   MOZ_ASSERT(mService);
+
+  // Validate the accessibility (primarily for receiver side) so that a
+  // compromised child process can't fake the ID.
+  if (NS_WARN_IF(!static_cast<PresentationService*>(mService.get())->
+                  IsSessionAccessible(aSessionId, OtherPid()))) {
+    return true;
+  }
+
   mSessionIds.AppendElement(aSessionId);
   NS_WARN_IF(NS_FAILED(mService->RegisterSessionListener(aSessionId, this)));
   return true;
@@ -148,7 +156,7 @@ PresentationParent::NotifyStateChange(const nsAString& aSessionId,
                                       uint16_t aState)
 {
   if (NS_WARN_IF(mActorDestroyed ||
-                 !SendNotifySessionStateChange(nsString(aSessionId), aState))) {
+                 !SendNotifySessionStateChange(nsAutoString(aSessionId), aState))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -159,25 +167,17 @@ PresentationParent::NotifyMessage(const nsAString& aSessionId,
                                   const nsACString& aData)
 {
   if (NS_WARN_IF(mActorDestroyed ||
-                 !SendNotifyMessage(nsString(aSessionId), nsCString(aData)))) {
+                 !SendNotifyMessage(nsAutoString(aSessionId), nsAutoCString(aData)))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
 
 bool
-PresentationParent::RecvGetExistentSessionIdAtLaunch(nsString* aSessionId)
-{
-  MOZ_ASSERT(mService);
-  NS_WARN_IF(NS_FAILED(mService->GetExistentSessionIdAtLaunch(*aSessionId)));
-  return true;
-}
-
-bool
 PresentationParent::RecvNotifyReceiverReady(const nsString& aSessionId)
 {
   MOZ_ASSERT(mService);
-  NS_WARN_IF(NS_FAILED(mService->NotifyReceiverReady(aSessionId)));
+  NS_WARN_IF(NS_FAILED(mService->NotifyReceiverReady(aSessionId, 0)));
   return true;
 }
 
@@ -218,6 +218,14 @@ nsresult
 PresentationRequestParent::DoRequest(const SendSessionMessageRequest& aRequest)
 {
   MOZ_ASSERT(mService);
+
+  // Validate the accessibility (primarily for receiver side) so that a
+  // compromised child process can't fake the ID.
+  if (NS_WARN_IF(!static_cast<PresentationService*>(mService.get())->
+                  IsSessionAccessible(aRequest.sessionId(), OtherPid()))) {
+    return NotifyError(NS_ERROR_DOM_SECURITY_ERR);
+  }
+
   nsTArray<mozilla::ipc::FileDescriptor> fds;
   nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(aRequest.data(), fds);
   if(NS_WARN_IF(!stream)) {
@@ -235,6 +243,14 @@ nsresult
 PresentationRequestParent::DoRequest(const TerminateRequest& aRequest)
 {
   MOZ_ASSERT(mService);
+
+  // Validate the accessibility (primarily for receiver side) so that a
+  // compromised child process can't fake the ID.
+  if (NS_WARN_IF(!static_cast<PresentationService*>(mService.get())->
+                  IsSessionAccessible(aRequest.sessionId(), OtherPid()))) {
+    return NotifyError(NS_ERROR_DOM_SECURITY_ERR);
+  }
+
   nsresult rv = mService->Terminate(aRequest.sessionId());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NotifyError(rv);

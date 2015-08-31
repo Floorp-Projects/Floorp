@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for B2G Presentation Session API on a non-receiver page at receiver side (OOP)</title>
+</head>
+<body>
+<div id="content"></div>
+<script type="application/javascript;version=1.7">
+
+"use strict";
+
+function is(a, b, msg) {
+  alert((a === b ? 'OK ' : 'KO ') + msg);
+}
+
+function ok(a, msg) {
+  alert((a ? 'OK ' : 'KO ') + msg);
+}
+
+function info(msg) {
+  alert('INFO ' + msg);
+}
+
+function finish() {
+  alert('DONE');
+}
+
+function testSessionAvailable() {
+  return new Promise(function(aResolve, aReject) {
+    ok(navigator.presentation, "navigator.presentation should be available in OOP pages.");
+    ok(!navigator.presentation.session, "Non-receiving OOP pages shouldn't get a predefined presentation session instance.");
+    aResolve();
+  });
+}
+
+testSessionAvailable().
+then(finish);
+
+</script>
+</body>
+</html>

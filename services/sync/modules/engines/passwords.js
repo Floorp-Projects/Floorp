@@ -10,6 +10,7 @@ Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-common/async.js");
 
 this.LoginRec = function LoginRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
@@ -67,7 +68,7 @@ PasswordEngine.prototype = {
         // record success.
         Svc.Prefs.set("deletePwdFxA", true);
         Svc.Prefs.reset("deletePwd"); // The old prefname we previously used.
-      } catch (ex) {
+      } catch (ex if !Async.isShutdownException(ex)) {
         this._log.debug("Password deletes failed: " + Utils.exceptionStr(ex));
       }
     }

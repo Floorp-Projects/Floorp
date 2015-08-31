@@ -58,9 +58,6 @@ parent:
 
   PPresentationRequest(PresentationRequest aRequest);
 
-  sync GetExistentSessionIdAtLaunch()
-    returns (nsString aSessionId);
-
   NotifyReceiverReady(nsString aSessionId);
 };
 

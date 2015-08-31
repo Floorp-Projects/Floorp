@@ -338,7 +338,7 @@ let PerformanceController = {
    */
   exportRecording: Task.async(function*(_, recording, file) {
     yield recording.exportRecording(file);
-    this.emit(EVENTS.RECORDING_EXPORTED, recording);
+    this.emit(EVENTS.RECORDING_EXPORTED, recording, file);
   }),
 
   /**
