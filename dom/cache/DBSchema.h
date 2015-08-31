@@ -29,8 +29,9 @@ struct SavedResponse;
 
 namespace db {
 
+// Note, this cannot be executed within a transaction.
 nsresult
-CreateSchema(mozIStorageConnection* aConn);
+CreateOrMigrateSchema(mozIStorageConnection* aConn);
 
 // Note, this cannot be executed within a transaction.
 nsresult
