@@ -39,19 +39,24 @@ function isWithinEps(a, b, msg) {
      "Got " + a + ", expected " + b + "; " + msg);
 }
 
+function isGreaterThanOrEqualEps(a, b, msg) {
+  ok(a >= b - 0.01,
+     "Got " + a + ", expected at least " + b + "; " + msg);
+}
+
 function startTest(test) {
   var seekTime = test.duration/2;
 
   function endedAfterReplay() {
-    isWithinEps(v.currentTime, test.duration, "checking v.currentTime at third 'ended' event");
-    isWithinEps(vout.currentTime, (test.duration - seekTime) + test.duration*2,
+    isGreaterThanOrEqualEps(v.currentTime, test.duration, "checking v.currentTime at third 'ended' event");
+    isGreaterThanOrEqualEps(vout.currentTime, (test.duration - seekTime) + test.duration*2,
 	            "checking vout.currentTime after seeking, playing through and reloading");
     SimpleTest.finish();
   };
 
   function endedAfterSeek() {
-    isWithinEps(v.currentTime, test.duration, "checking v.currentTime at second 'ended' event");
-    isWithinEps(vout.currentTime, (test.duration - seekTime) + test.duration,
+    isGreaterThanOrEqualEps(v.currentTime, test.duration, "checking v.currentTime at second 'ended' event");
+    isGreaterThanOrEqualEps(vout.currentTime, (test.duration - seekTime) + test.duration,
                 "checking vout.currentTime after seeking and playing through again");
     v.removeEventListener("ended", endedAfterSeek, false);
     v.addEventListener("ended", endedAfterReplay, false);
@@ -60,8 +65,8 @@ function startTest(test) {
   };
 
   function seeked() {
-    isWithinEps(v.currentTime, seekTime, "Finished seeking");
-    isWithinEps(vout.currentTime, test.duration,
+    isGreaterThanOrEqualEps(v.currentTime, seekTime, "Finished seeking");
+    isGreaterThanOrEqualEps(vout.currentTime, test.duration,
                 "checking vout.currentTime has not changed after seeking");
     v.removeEventListener("seeked", seeked, false);
     function dontPlayAgain() {
@@ -80,8 +85,8 @@ function startTest(test) {
       return;
     }
 
-    isWithinEps(vout.currentTime, test.duration, "checking vout.currentTime at first 'ended' event");
-    isWithinEps(v.currentTime, test.duration, "checking v.currentTime at first 'ended' event");
+    isGreaterThanOrEqualEps(vout.currentTime, test.duration, "checking vout.currentTime at first 'ended' event");
+    isGreaterThanOrEqualEps(v.currentTime, test.duration, "checking v.currentTime at first 'ended' event");
     is(vout.ended, false, "checking vout has not ended");
     is(vout_untilended.ended, true, "checking vout_untilended has actually ended");
 
