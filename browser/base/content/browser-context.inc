@@ -420,7 +420,6 @@
       <menuseparator id="fill-login-separator" hidden="true"/>
       <menu id="fill-login"
             label="&fillPasswordMenu.label;"
-            class="menu-iconic"
             accesskey="&fillPasswordMenu.accesskey;"
             hidden="true">
         <menupopup id="fill-login-popup">
