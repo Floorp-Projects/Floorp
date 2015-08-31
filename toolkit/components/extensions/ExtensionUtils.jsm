@@ -15,14 +15,39 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 // Run a function and report exceptions.
-function runSafeWithoutClone(f, ...args)
+function runSafeSyncWithoutClone(f, ...args)
 {
   try {
     return f(...args);
   } catch (e) {
-    dump(`Extension error: ${e} ${e.fileName} ${e.lineNumber}\n${e.stack}\n${Error().stack}`);
+    dump(`Extension error: ${e} ${e.fileName} ${e.lineNumber}\n[[Exception stack\n${e.stack}Current stack\n${Error().stack}]]\n`);
     Cu.reportError(e);
   }
+}
+
+// Run a function and report exceptions.
+function runSafeWithoutClone(f, ...args)
+{
+  if (typeof(f) != "function") {
+    dump(`Extension error: expected function\n${Error().stack}`);
+    return;
+  }
+
+  Services.tm.currentThread.dispatch(function() {
+    runSafeSyncWithoutClone(f, ...args);
+  }, Ci.nsIEventTarget.DISPATCH_NORMAL);
+}
+
+// Run a function, cloning arguments into context.cloneScope, and
+// report exceptions. |f| is expected to be in context.cloneScope.
+function runSafeSync(context, f, ...args)
+{
+  try {
+    args = Cu.cloneInto(args, context.cloneScope);
+  } catch (e) {
+    dump(`runSafe failure\n${context.cloneScope}\n${Error().stack}`);
+  }
+  return runSafeSyncWithoutClone(f, ...args);
 }
 
 // Run a function, cloning arguments into context.cloneScope, and
@@ -96,6 +121,11 @@ function EventManager(context, name, register)
 
 EventManager.prototype = {
   addListener(callback) {
+    if (typeof(callback) != "function") {
+      dump(`Expected function\n${Error().stack}`);
+      return;
+    }
+
     if (!this.registered) {
       this.context.callOnClose(this);
 
@@ -132,7 +162,7 @@ EventManager.prototype = {
 
   fireWithoutClone(...args) {
     for (let callback of this.callbacks) {
-      runSafeWithoutClone(callback, ...args);
+      runSafeSyncWithoutClone(callback, ...args);
     }
   },
 
@@ -534,7 +564,9 @@ function flushJarCache(jarFile)
 
 this.ExtensionUtils = {
   runSafeWithoutClone,
+  runSafeSyncWithoutClone,
   runSafe,
+  runSafeSync,
   DefaultWeakMap,
   EventManager,
   SingletonEventManager,
