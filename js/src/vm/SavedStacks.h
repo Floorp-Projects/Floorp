@@ -168,6 +168,7 @@ class SavedStacks {
     uint32_t count();
     void     clear();
     void     setRNGState(uint64_t state) { rngState = state; }
+    void     chooseSamplingProbability(JSCompartment*);
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
@@ -206,7 +207,6 @@ class SavedStacks {
                                 unsigned maxFrameCount);
     SavedFrame* getOrCreateSavedFrame(JSContext* cx, SavedFrame::HandleLookup lookup);
     SavedFrame* createFrameFromLookup(JSContext* cx, SavedFrame::HandleLookup lookup);
-    void        chooseSamplingProbability(JSContext* cx);
 
     // Cache for memoizing PCToLineNumber lookups.
 
