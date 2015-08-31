@@ -186,17 +186,6 @@ let gSyncPane = {
     }
   },
 
-  _closeSyncStatusMessageBox: function() {
-    document.getElementById("syncStatusMessage").removeAttribute("message-type");
-    document.getElementById("syncStatusMessageTitle").textContent = "";
-    document.getElementById("syncStatusMessageDescription").textContent = "";
-    let learnMoreLink = document.getElementById("learnMoreLink");
-    if (learnMoreLink) {
-      learnMoreLink.parentNode.removeChild(learnMoreLink);
-    }
-    document.getElementById("sync-migration-buttons-deck").hidden = true;
-  },
-
   _setupEventListeners: function() {
     function setEventListener(aId, aEventType, aCallback)
     {
@@ -204,9 +193,6 @@ let gSyncPane = {
               .addEventListener(aEventType, aCallback.bind(gSyncPane));
     }
 
-    setEventListener("syncStatusMessageClose", "command", function () {
-      gSyncPane._closeSyncStatusMessageBox();
-    });
     setEventListener("noAccountSetup", "click", function (aEvent) {
       aEvent.stopPropagation();
       gSyncPane.openSetup(null);
@@ -445,17 +431,16 @@ let gSyncPane = {
   },
 
   updateMigrationState: function(subject, state) {
-    this._closeSyncStatusMessageBox();
     let selIndex;
-    let sb = this._accountsStringBundle;
     switch (state) {
       case fxaMigrator.STATE_USER_FXA: {
+        let sb = this._accountsStringBundle;
         // There are 2 cases here - no email address means it is an offer on
         // the first device (so the user is prompted to create an account).
         // If there is an email address it is the "join the party" flow, so the
         // user is prompted to sign in with the address they previously used.
         let email = subject ? subject.QueryInterface(Components.interfaces.nsISupportsString).data : null;
-        let elt = document.getElementById("syncStatusMessageDescription");
+        let elt = document.getElementById("sync-migrate-upgrade-description");
         elt.textContent = email ?
                           sb.formatStringFromName("signInAfterUpgradeOnOtherDevice.description",
                                                   [email], 1) :
@@ -464,12 +449,11 @@ let gSyncPane = {
         // The "Learn more" link.
         if (!email) {
           let learnMoreLink = document.createElement("label");
-          learnMoreLink.id = "learnMoreLink";
           learnMoreLink.className = "text-link";
           let { text, href } = fxaMigrator.learnMoreLink;
           learnMoreLink.setAttribute("value", text);
           learnMoreLink.href = href;
-          elt.parentNode.insertBefore(learnMoreLink, elt.nextSibling);
+          elt.appendChild(learnMoreLink);
         }
 
         // The "upgrade" button.
@@ -497,7 +481,7 @@ let gSyncPane = {
         let sb = this._accountsStringBundle;
         let email = subject.QueryInterface(Components.interfaces.nsISupportsString).data;
         let label = sb.formatStringFromName("needVerifiedUserLong", [email], 1);
-        let elt = document.getElementById("syncStatusMessageDescription");
+        let elt = document.getElementById("sync-migrate-verify-label");
         elt.setAttribute("value", label);
         // The "resend" button.
         let button = document.getElementById("sync-migrate-resend");
@@ -517,8 +501,8 @@ let gSyncPane = {
         document.getElementById("sync-migration").hidden = true;
         return;
     }
-    document.getElementById("sync-migration-buttons-deck").selectedIndex = selIndex;
-    document.getElementById("syncStatusMessage").setAttribute("message-type", "migration");
+    document.getElementById("sync-migration").hidden = false;
+    document.getElementById("sync-migration-deck").selectedIndex = selIndex;
   },
 
   // Called whenever one of the sync engine preferences is changed.
@@ -694,39 +678,23 @@ let gSyncPane = {
   },
 
   verifyFirefoxAccount: function() {
-    this._closeSyncStatusMessageBox();
-    let changesyncStatusMessage = (data) => {
-      let isError = !data;
-      let syncStatusMessage = document.getElementById("syncStatusMessage");
-      let syncStatusMessageTitle = document.getElementById("syncStatusMessageTitle");
-      let syncStatusMessageDescription = document.getElementById("syncStatusMessageDescription");
-      let maybeNot = isError ? "Not" : "";
-      let sb = this._accountsStringBundle;
-      let title = sb.GetStringFromName("verification" + maybeNot + "SentTitle");
-      let email = !isError && data ? data.email : "";
-      let description = sb.formatStringFromName("verification" + maybeNot + "SentFull", [email], 1)
+    fxAccounts.resendVerificationEmail().then(() => {
+      fxAccounts.getSignedInUser().then(data => {
+        let sb = this._accountsStringBundle;
+        let title = sb.GetStringFromName("verificationSentTitle");
+        let heading = sb.formatStringFromName("verificationSentHeading",
+                                              [data.email], 1);
+        let description = sb.GetStringFromName("verificationSentDescription");
 
-      syncStatusMessageTitle.textContent = title;
-      syncStatusMessageDescription.textContent = description;
-      let messageType = isError ? "verify-error" : "verify-success";
-      syncStatusMessage.setAttribute("message-type", messageType);
-    }
+        let factory = Cc["@mozilla.org/prompter;1"]
+                        .getService(Ci.nsIPromptFactory);
+        let prompt = factory.getPrompt(window, Ci.nsIPrompt);
+        let bag = prompt.QueryInterface(Ci.nsIWritablePropertyBag2);
+        bag.setPropertyAsBool("allowTabModal", true);
 
-    let onError = () => {
-      changesyncStatusMessage();
-    };
-
-    let onSuccess = data => {
-      if (data) {
-        changesyncStatusMessage(data);
-      } else {
-        onError();
-      }
-    };
-
-    fxAccounts.resendVerificationEmail()
-      .then(fxAccounts.getSignedInUser, onError)
-      .then(onSuccess, onError);
+        prompt.alert(title, heading + "\n\n" + description);
+      });
+    });
   },
 
   openOldSyncSupportPage: function() {
