@@ -127,14 +127,16 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
   }
 
   nsAutoCString message;
+  nsAutoCString cdmVersion;
   MediaKeySystemStatus status =
-    MediaKeySystemAccess::GetKeySystemStatus(keySystem, minCdmVersion, message);
+    MediaKeySystemAccess::GetKeySystemStatus(keySystem, minCdmVersion, message, cdmVersion);
 
   nsPrintfCString msg("MediaKeySystemAccess::GetKeySystemStatus(%s, minVer=%d) "
-                      "result=%s msg='%s'",
+                      "result=%s version='%s' msg='%s'",
                       NS_ConvertUTF16toUTF8(keySystem).get(),
                       minCdmVersion,
                       MediaKeySystemStatusValues::strings[(size_t)status].value,
+                      cdmVersion.get(),
                       message.get());
   LogToBrowserConsole(NS_ConvertUTF8toUTF16(msg));
 
@@ -180,7 +182,8 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
 
   if (aOptions.IsEmpty() ||
       MediaKeySystemAccess::IsSupported(keySystem, aOptions)) {
-    nsRefPtr<MediaKeySystemAccess> access(new MediaKeySystemAccess(mWindow, keySystem));
+    nsRefPtr<MediaKeySystemAccess> access(
+      new MediaKeySystemAccess(mWindow, keySystem, NS_ConvertUTF8toUTF16(cdmVersion)));
    if (ShouldTrialCreateGMP(keySystem)) {
       // Ensure we have tried creating a GMPVideoDecoder for this
       // keySystem, and that we can use it to decode. This ensures that we only
