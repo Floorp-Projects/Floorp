@@ -27,6 +27,7 @@ config = {
     "exes": {
         'python': PYTHON,
         'virtualenv': [PYTHON, '/tools/misc-python/virtualenv.py'],
+        'tooltool.py': "/tools/tooltool.py",
     },
     "title": os.uname()[1].lower().split('.')[0],
     "default_actions": [
@@ -52,4 +53,8 @@ config = {
         "https://blobupload.elasticbeanstalk.com",
     ],
     "blob_uploader_auth_file": os.path.join(os.getcwd(), "oauth.txt"),
+    "download_minidump_stackwalk": True,
+    "minidump_stackwalk_path": "macosx64-minidump_stackwalk",
+    "minidump_tooltool_manifest_path": "config/tooltool-manifests/macosx64/releng.manifest",
+    "tooltool_cache": "/builds/tooltool_cache",
 }

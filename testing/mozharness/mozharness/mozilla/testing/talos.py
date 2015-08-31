@@ -167,6 +167,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
 
         self.workdir = self.query_abs_dirs()['abs_work_dir']  # convenience
 
+        self.run_local = self.config.get('run_local')
         self.installer_url = self.config.get("installer_url")
         self.talos_json_url = self.config.get("talos_json_url")
         self.talos_json = self.config.get("talos_json")
@@ -567,6 +568,8 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
                                    error_list=TalosErrorList)
         env = {}
         env['MOZ_UPLOAD_DIR'] = self.query_abs_dirs()['abs_blob_upload_dir']
+        if not self.run_local:
+            env['MINIDUMP_STACKWALK'] = self.query_minidump_stackwalk()
         env['MINIDUMP_SAVE_PATH'] = self.query_abs_dirs()['abs_blob_upload_dir']
         if not os.path.isdir(env['MOZ_UPLOAD_DIR']):
             self.mkdir_p(env['MOZ_UPLOAD_DIR'])
