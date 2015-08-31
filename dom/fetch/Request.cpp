@@ -291,6 +291,10 @@ Request::Constructor(const GlobalObject& aGlobal,
     request->SetCacheMode(cache);
   }
 
+  if (aInit.mRedirect.WasPassed()) {
+    request->SetRedirectMode(aInit.mRedirect.Value());
+  }
+
   // Request constructor step 14.
   if (aInit.mMethod.WasPassed()) {
     nsAutoCString method(aInit.mMethod.Value());
