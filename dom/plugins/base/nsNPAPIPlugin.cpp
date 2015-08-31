@@ -405,7 +405,7 @@ GetNewPluginLibrary(nsPluginTag *aPluginTag)
   }
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    return PluginModuleContentParent::LoadModule(aPluginTag->mId);
+    return PluginModuleContentParent::LoadModule(aPluginTag->mId, aPluginTag);
   }
 
   if (nsNPAPIPlugin::RunPluginOOP(aPluginTag)) {

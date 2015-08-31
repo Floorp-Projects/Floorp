@@ -103,6 +103,7 @@ public:
   nsRefPtr<nsNPAPIPlugin> mPlugin;
   bool          mIsJavaPlugin;
   bool          mIsFlashPlugin;
+  bool          mSupportsAsyncInit;
   nsCString     mFileName; // UTF-8
   nsCString     mFullPath; // UTF-8
   nsCString     mVersion;  // UTF-8
