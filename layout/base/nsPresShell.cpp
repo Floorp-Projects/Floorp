@@ -4078,12 +4078,10 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
       if (aFlush.mFlushAnimations &&
           !mPresContext->StyleUpdateForAllAnimationsIsUpToDate()) {
         if (mPresContext->AnimationManager()) {
-          mPresContext->AnimationManager()->
-            FlushAnimations(CommonAnimationManager::Cannot_Throttle);
+          mPresContext->AnimationManager()->FlushAnimations();
         }
         if (mPresContext->TransitionManager()) {
-          mPresContext->TransitionManager()->
-            FlushAnimations(CommonAnimationManager::Cannot_Throttle);
+          mPresContext->TransitionManager()->FlushAnimations();
         }
         mPresContext->TickLastStyleUpdateForAllAnimations();
       }
