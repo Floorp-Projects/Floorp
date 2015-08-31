@@ -422,17 +422,7 @@ public:
    * Add the given hit regions to the hit regions to the hit retions for this
    * PaintedLayer.
    */
-  void AccumulateEventRegions(nsDisplayLayerEventRegions* aEventRegions)
-  {
-    FLB_LOG_PAINTED_LAYER_DECISION(this, "Accumulating event regions %p against pld=%p\n", aEventRegions, this);
-
-    mHitRegion.Or(mHitRegion, aEventRegions->HitRegion());
-    mMaybeHitRegion.Or(mMaybeHitRegion, aEventRegions->MaybeHitRegion());
-    mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, aEventRegions->DispatchToContentHitRegion());
-    mNoActionRegion.Or(mNoActionRegion, aEventRegions->NoActionRegion());
-    mHorizontalPanRegion.Or(mHorizontalPanRegion, aEventRegions->HorizontalPanRegion());
-    mVerticalPanRegion.Or(mVerticalPanRegion, aEventRegions->VerticalPanRegion());
-  }
+  void AccumulateEventRegions(nsDisplayLayerEventRegions* aEventRegions);
 
   /**
    * If this represents only a nsDisplayImage, and the image type supports being
@@ -3437,6 +3427,19 @@ PaintedLayerData::Accumulate(ContainerState* aState,
          !aItem->GetComponentAlphaBounds(aState->mBuilder).IsEmpty())) {
     mDisableFlattening = true;
   }
+}
+
+void
+PaintedLayerData::AccumulateEventRegions(nsDisplayLayerEventRegions* aEventRegions)
+{
+  FLB_LOG_PAINTED_LAYER_DECISION(this, "Accumulating event regions %p against pld=%p\n", aEventRegions, this);
+
+  mHitRegion.Or(mHitRegion, aEventRegions->HitRegion());
+  mMaybeHitRegion.Or(mMaybeHitRegion, aEventRegions->MaybeHitRegion());
+  mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, aEventRegions->DispatchToContentHitRegion());
+  mNoActionRegion.Or(mNoActionRegion, aEventRegions->NoActionRegion());
+  mHorizontalPanRegion.Or(mHorizontalPanRegion, aEventRegions->HorizontalPanRegion());
+  mVerticalPanRegion.Or(mVerticalPanRegion, aEventRegions->VerticalPanRegion());
 }
 
 PaintedLayerData
