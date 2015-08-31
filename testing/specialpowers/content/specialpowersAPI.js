@@ -2099,6 +2099,10 @@ SpecialPowersAPI.prototype = {
     this._addMessageListener("SPExtensionMessage", listener);
     return extension;
   },
+
+  invalidateExtensionStorageCache: function() {
+    this.notifyObserversInParentProcess(null, "extension-invalidate-storage-cache", "");
+  },
 };
 
 this.SpecialPowersAPI = SpecialPowersAPI;
