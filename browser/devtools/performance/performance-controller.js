@@ -33,6 +33,8 @@ loader.lazyRequireGetter(this, "RecordingUtils",
   "devtools/toolkit/performance/utils");
 loader.lazyRequireGetter(this, "GraphsController",
   "devtools/performance/graphs", true);
+loader.lazyRequireGetter(this, "OptimizationsGraph",
+  "devtools/performance/graphs", true);
 loader.lazyRequireGetter(this, "WaterfallHeader",
   "devtools/performance/waterfall-ticks", true);
 loader.lazyRequireGetter(this, "MarkerView",
@@ -43,6 +45,8 @@ loader.lazyRequireGetter(this, "MarkerUtils",
   "devtools/performance/marker-utils");
 loader.lazyRequireGetter(this, "WaterfallUtils",
   "devtools/performance/waterfall-utils");
+loader.lazyRequireGetter(this, "FrameUtils",
+  "devtools/performance/frame-utils");
 loader.lazyRequireGetter(this, "CallView",
   "devtools/performance/tree-view", true);
 loader.lazyRequireGetter(this, "ThreadNode",
