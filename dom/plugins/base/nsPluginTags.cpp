@@ -267,6 +267,7 @@ nsPluginTag::nsPluginTag(const char* aName,
     mLibrary(nullptr),
     mIsJavaPlugin(false),
     mIsFlashPlugin(false),
+    mSupportsAsyncInit(false),
     mFullPath(aFullPath),
     mLastModifiedTime(aLastModifiedTime),
     mCachedBlocklistState(nsIBlocklistService::STATE_NOT_BLOCKED),
@@ -343,12 +344,22 @@ void nsPluginTag::InitMime(const char* const* aMimeTypes,
     switch (nsPluginHost::GetSpecialType(mimeType)) {
       case nsPluginHost::eSpecialType_Java:
         mIsJavaPlugin = true;
+        mSupportsAsyncInit = true;
         break;
       case nsPluginHost::eSpecialType_Flash:
         mIsFlashPlugin = true;
+        mSupportsAsyncInit = true;
+        break;
+      case nsPluginHost::eSpecialType_Silverlight:
+      case nsPluginHost::eSpecialType_Unity:
+        mSupportsAsyncInit = true;
         break;
       case nsPluginHost::eSpecialType_None:
       default:
+#ifndef RELEASE_BUILD
+        // Allow async init for all plugins on Nightly and Aurora
+        mSupportsAsyncInit = true;
+#endif
         break;
     }
 
