@@ -124,4 +124,14 @@ LogToBrowserConsole(const nsAString& aMsg)
   console->LogStringMessage(msg.get());
 }
 
+void
+ConstructKeySystem(const nsAString& aKeySystem,
+                   const nsAString& aCDMVersion,
+                   nsAString& aOutKeySystem)
+{
+  aOutKeySystem.Append(aKeySystem);
+  aOutKeySystem.AppendLiteral(".");
+  aOutKeySystem.Append(aCDMVersion);
+}
+
 } // namespace mozilla

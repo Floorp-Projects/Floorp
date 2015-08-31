@@ -47,9 +47,12 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaKeys)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-MediaKeys::MediaKeys(nsPIDOMWindow* aParent, const nsAString& aKeySystem)
+MediaKeys::MediaKeys(nsPIDOMWindow* aParent,
+                     const nsAString& aKeySystem,
+                     const nsAString& aCDMVersion)
   : mParent(aParent)
   , mKeySystem(aKeySystem)
+  , mCDMVersion(aCDMVersion)
   , mCreatePromiseId(0)
 {
   EME_LOG("MediaKeys[%p] constructed keySystem=%s",
@@ -139,9 +142,9 @@ MediaKeys::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 void
-MediaKeys::GetKeySystem(nsString& retval) const
+MediaKeys::GetKeySystem(nsString& aOutKeySystem) const
 {
-  retval = mKeySystem;
+  ConstructKeySystem(mKeySystem, mCDMVersion, aOutKeySystem);
 }
 
 already_AddRefed<DetailedPromise>
@@ -433,6 +436,7 @@ MediaKeys::CreateSession(JSContext* aCx,
                                                           GetParentObject(),
                                                           this,
                                                           mKeySystem,
+                                                          mCDMVersion,
                                                           aSessionType,
                                                           aRv);
 
