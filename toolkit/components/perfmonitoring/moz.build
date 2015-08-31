@@ -6,8 +6,6 @@
 
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 
-FAIL_ON_WARNINGS = True
-
 XPIDL_MODULE = 'toolkit_perfmonitoring'
 
 EXTRA_JS_MODULES += [

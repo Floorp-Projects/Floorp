@@ -15,6 +15,9 @@
 #include "mozilla/WindowsVersion.h"
 #include "WMFDecoderModule.h"
 #endif
+#ifdef XP_MACOSX
+#include "nsCocoaFeatures.h"
+#endif
 #include "nsContentCID.h"
 #include "nsServiceManagerUtils.h"
 #include "mozIGeckoMediaPluginService.h"
@@ -27,6 +30,10 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsXULAppAPI.h"
+
+#if defined(XP_WIN) || defined(XP_MACOSX)
+#define PRIMETIME_EME_SUPPORTED 1
+#endif
 
 namespace mozilla {
 namespace dom {
@@ -41,9 +48,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaKeySystemAccess)
 NS_INTERFACE_MAP_END
 
 MediaKeySystemAccess::MediaKeySystemAccess(nsPIDOMWindow* aParent,
-                                           const nsAString& aKeySystem)
+                                           const nsAString& aKeySystem,
+                                           const nsAString& aCDMVersion)
   : mParent(aParent)
   , mKeySystem(aKeySystem)
+  , mCDMVersion(aCDMVersion)
 {
 }
 
@@ -64,15 +73,15 @@ MediaKeySystemAccess::GetParentObject() const
 }
 
 void
-MediaKeySystemAccess::GetKeySystem(nsString& aRetVal) const
+MediaKeySystemAccess::GetKeySystem(nsString& aOutKeySystem) const
 {
-  aRetVal = mKeySystem;
+  ConstructKeySystem(mKeySystem, mCDMVersion, aOutKeySystem);
 }
 
 already_AddRefed<Promise>
 MediaKeySystemAccess::CreateMediaKeys(ErrorResult& aRv)
 {
-  nsRefPtr<MediaKeys> keys(new MediaKeys(mParent, mKeySystem));
+  nsRefPtr<MediaKeys> keys(new MediaKeys(mParent, mKeySystem, mCDMVersion));
   return keys->Init(aRv);
 }
 
@@ -148,7 +157,8 @@ static MediaKeySystemStatus
 EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
                     const nsAString& aKeySystem,
                     int32_t aMinCdmVersion,
-                    nsACString& aOutMessage)
+                    nsACString& aOutMessage,
+                    nsACString& aOutCdmVersion)
 {
   nsTArray<nsCString> tags;
   tags.AppendElement(NS_ConvertUTF16toUTF8(aKeySystem));
@@ -162,14 +172,15 @@ EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
     return MediaKeySystemStatus::Error;
   }
 
+  aOutCdmVersion = versionStr;
+
   if (!hasPlugin) {
     aOutMessage = NS_LITERAL_CSTRING("CDM is not installed");
     return MediaKeySystemStatus::Cdm_not_installed;
   }
 
 #ifdef XP_WIN
-  if (aKeySystem.EqualsLiteral("com.adobe.access") ||
-      aKeySystem.EqualsLiteral("com.adobe.primetime")) {
+  if (aKeySystem.EqualsLiteral("com.adobe.primetime")) {
     // Verify that anti-virus hasn't "helpfully" deleted the Adobe GMP DLL,
     // as we suspect may happen (Bug 1160382).
     bool somethingMissing = false;
@@ -207,7 +218,8 @@ EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
 MediaKeySystemStatus
 MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
                                          int32_t aMinCdmVersion,
-                                         nsACString& aOutMessage)
+                                         nsACString& aOutMessage,
+                                         nsACString& aOutCdmVersion)
 {
   MOZ_ASSERT(Preferences::GetBool("media.eme.enabled", false));
   nsCOMPtr<mozIGeckoMediaPluginService> mps =
@@ -222,29 +234,35 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
       aOutMessage = NS_LITERAL_CSTRING("ClearKey was disabled");
       return MediaKeySystemStatus::Cdm_disabled;
     }
-    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage);
+    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
   }
 
+#ifdef PRIMETIME_EME_SUPPORTED
+  if (aKeySystem.EqualsLiteral("com.adobe.primetime")) {
+    if (!Preferences::GetBool("media.gmp-eme-adobe.enabled", false)) {
+      aOutMessage = NS_LITERAL_CSTRING("Adobe EME disabled");
+      return MediaKeySystemStatus::Cdm_disabled;
+    }
 #ifdef XP_WIN
-  if ((aKeySystem.EqualsLiteral("com.adobe.access") ||
-       aKeySystem.EqualsLiteral("com.adobe.primetime"))) {
     // Win Vista and later only.
     if (!IsVistaOrLater()) {
       aOutMessage = NS_LITERAL_CSTRING("Minimum Windows version not met for Adobe EME");
       return MediaKeySystemStatus::Cdm_not_supported;
     }
-    if (!Preferences::GetBool("media.gmp-eme-adobe.enabled", false)) {
-      aOutMessage = NS_LITERAL_CSTRING("Adobe EME disabled");
-      return MediaKeySystemStatus::Cdm_disabled;
+#endif
+#ifdef XP_MACOSX
+    if (!nsCocoaFeatures::OnLionOrLater()) {
+      aOutMessage = NS_LITERAL_CSTRING("Minimum MacOSX version not met for Adobe EME");
+      return MediaKeySystemStatus::Cdm_not_supported;
     }
+#endif
     if (!EMEVoucherFileExists()) {
-      // The system doesn't have the codecs that Adobe EME relies
-      // on installed, or doesn't have a voucher for the plugin-container.
+      // Gecko doesn't have a voucher file for the plugin-container.
       // Adobe EME isn't going to work, so don't advertise that it will.
       aOutMessage = NS_LITERAL_CSTRING("Plugin-container voucher not present");
       return MediaKeySystemStatus::Cdm_not_supported;
     }
-    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage);
+    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
   }
 #endif
 

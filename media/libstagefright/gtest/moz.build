@@ -17,5 +17,3 @@ if CONFIG['MOZ_RUST']:
     ]
 
 FINAL_LIBRARY = 'xul-gtest'
-
-FAIL_ON_WARNINGS = True

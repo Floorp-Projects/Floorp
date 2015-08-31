@@ -29,5 +29,3 @@ else:
 FINAL_LIBRARY = 'xul'
 
 TEST_DIRS += ['tests']
-
-FAIL_ON_WARNINGS = True

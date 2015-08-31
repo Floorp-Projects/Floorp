@@ -100,11 +100,9 @@ public:
     return false;
   }
 
-  enum FlushFlags {
-    Can_Throttle,
-    Cannot_Throttle
-  };
-  void FlushAnimations(FlushFlags aFlags);
+  // Requests a standard restyle on each managed AnimationCollection that has
+  // an out-of-date mStyleRuleRefreshTime.
+  void FlushAnimations();
 
   nsIStyleRule* GetAnimationRule(dom::Element* aElement,
                                  nsCSSPseudoElements::Type aPseudoType);

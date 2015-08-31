@@ -67,6 +67,8 @@ else:
     # thebes
     DEFINES['GRAPHITE2_STATIC'] = True
 
+ALLOW_COMPILER_WARNINGS = True
+
 FINAL_LIBRARY = 'gkmedias'
 
 DEFINES['PACKAGE_VERSION'] = '"moz"'

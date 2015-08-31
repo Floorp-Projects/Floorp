@@ -9,6 +9,8 @@ UNIFIED_SOURCES += [
     'crash_generation_server.cc',
 ]
 
+ALLOW_COMPILER_WARNINGS = True
+
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [

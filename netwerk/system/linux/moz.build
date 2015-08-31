@@ -9,6 +9,4 @@ if CONFIG['OS_ARCH'] == 'Linux':
         'nsNotifyAddrListener_Linux.cpp',
     ]
 
-FAIL_ON_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'
