@@ -11,7 +11,7 @@ RUN           bash /tmp/system-setup.sh
 # configure git and install tc-vcs
 RUN git config --global user.email "nobody@mozilla.com" && \
     git config --global user.name "mozilla"
-RUN npm install -g taskcluster-vcs@2.3.8
+RUN npm install -g taskcluster-vcs@2.3.9
 
 # Ensure that build specific dependencies live in a single layer
 ADD           build-setup.sh   /tmp/build-setup.sh

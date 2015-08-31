@@ -1409,6 +1409,18 @@ ContentChild::RecvNotifyPresentationReceiverLaunched(PBrowserChild* aIframe,
     return true;
 }
 
+bool
+ContentChild::RecvNotifyPresentationReceiverCleanUp(const nsString& aSessionId)
+{
+  nsCOMPtr<nsIPresentationService> service =
+      do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  NS_WARN_IF(!service);
+
+  NS_WARN_IF(NS_FAILED(service->UntrackSessionInfo(aSessionId)));
+
+  return true;
+}
+
 PCrashReporterChild*
 ContentChild::AllocPCrashReporterChild(const mozilla::dom::NativeThreadId& id,
                                        const uint32_t& processType)

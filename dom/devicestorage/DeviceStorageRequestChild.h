@@ -10,12 +10,11 @@
 #include "mozilla/dom/devicestorage/PDeviceStorageRequestChild.h"
 
 class DeviceStorageFile;
+class DeviceStorageRequest;
 struct DeviceStorageFileDescriptor;
 
 namespace mozilla {
 namespace dom {
-
-class DOMRequest;
 
 namespace devicestorage {
 
@@ -29,21 +28,13 @@ class DeviceStorageRequestChild : public PDeviceStorageRequestChild
 {
 public:
   DeviceStorageRequestChild();
-  DeviceStorageRequestChild(DOMRequest* aRequest, DeviceStorageFile* aFile);
-  DeviceStorageRequestChild(DOMRequest* aRequest, DeviceStorageFile* aFile,
-                            DeviceStorageFileDescriptor* aFileDescrptor);
+  explicit DeviceStorageRequestChild(DeviceStorageRequest* aRequest);
   ~DeviceStorageRequestChild();
-
-  void SetCallback(class DeviceStorageRequestChildCallback *aCallback);
 
   virtual bool Recv__delete__(const DeviceStorageResponseValue& value);
 
 private:
-  nsRefPtr<DOMRequest> mRequest;
-  nsRefPtr<DeviceStorageFile> mDSFile;
-  nsRefPtr<DeviceStorageFileDescriptor> mDSFileDescriptor;
-
-  DeviceStorageRequestChildCallback* mCallback;
+  nsRefPtr<DeviceStorageRequest> mRequest;
 };
 
 } // namespace devicestorage

@@ -19,6 +19,10 @@
 
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
 var receiverUrl = SimpleTest.getTestFileURL('file_presentation_receiver_oop.html');
+var nonReceiverUrl = SimpleTest.getTestFileURL('file_presentation_non_receiver_oop.html');
+
+var isReceiverFinished = false;
+var isNonReceiverFinished = false;
 
 var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
           .getService(SpecialPowers.Ci.nsIObserverService);
@@ -27,17 +31,17 @@ function setup() {
   return new Promise(function(aResolve, aReject) {
     gScript.sendAsyncMessage('trigger-device-add');
 
+    // Create a receiver OOP iframe.
     SpecialPowers.addPermission('presentation', true, { url: receiverUrl,
                                                         appId: SpecialPowers.Ci.nsIScriptSecurityManager.NO_APP_ID,
                                                         isInBrowserElement: true });
-
-    var iframe = document.createElement('iframe');
-    iframe.setAttribute('remote', 'true');
-    iframe.setAttribute('mozbrowser', 'true');
-    iframe.setAttribute('src', receiverUrl);
+    var receiverIframe = document.createElement('iframe');
+    receiverIframe.setAttribute('remote', 'true');
+    receiverIframe.setAttribute('mozbrowser', 'true');
+    receiverIframe.setAttribute('src', receiverUrl);
 
     // This event is triggered when the iframe calls "alert".
-    iframe.addEventListener('mozbrowsershowmodalprompt', function listener(aEvent) {
+    receiverIframe.addEventListener('mozbrowsershowmodalprompt', function receiverListener(aEvent) {
       var message = aEvent.detail.message;
       if (/^OK /.exec(message)) {
         ok(true, "Message from iframe: " + message);
@@ -50,18 +54,57 @@ function setup() {
         gScript.sendAsyncMessage(command.name, command.data);
       } else if (/^DONE$/.exec(message)) {
         ok(true, "Messaging from iframe complete.");
-        iframe.removeEventListener('mozbrowsershowmodalprompt', listener);
+        receiverIframe.removeEventListener('mozbrowsershowmodalprompt', receiverListener);
 
-        teardown();
+        isReceiverFinished = true;
+
+        if (isNonReceiverFinished) {
+          teardown();
+        }
       }
     }, false);
 
     var promise = new Promise(function(aResolve, aReject) {
-      document.body.appendChild(iframe);
+      document.body.appendChild(receiverIframe);
 
-      aResolve(iframe);
+      aResolve(receiverIframe);
     });
     obs.notifyObservers(promise, 'setup-request-promise', null);
+
+    // Create a non-receiver OOP iframe.
+    SpecialPowers.addPermission('presentation', true, { url: nonReceiverUrl,
+                                                        appId: SpecialPowers.Ci.nsIScriptSecurityManager.NO_APP_ID,
+                                                        isInBrowserElement: true });
+    var nonReceiverIframe = document.createElement('iframe');
+    nonReceiverIframe.setAttribute('remote', 'true');
+    nonReceiverIframe.setAttribute('mozbrowser', 'true');
+    nonReceiverIframe.setAttribute('src', nonReceiverUrl);
+
+    // This event is triggered when the iframe calls "alert".
+    nonReceiverIframe.addEventListener('mozbrowsershowmodalprompt', function nonReceiverListener(aEvent) {
+      var message = aEvent.detail.message;
+      if (/^OK /.exec(message)) {
+        ok(true, "Message from iframe: " + message);
+      } else if (/^KO /.exec(message)) {
+        ok(false, "Message from iframe: " + message);
+      } else if (/^INFO /.exec(message)) {
+        info("Message from iframe: " + message);
+      } else if (/^COMMAND /.exec(message)) {
+        var command = JSON.parse(message.replace(/^COMMAND /, ''));
+        gScript.sendAsyncMessage(command.name, command.data);
+      } else if (/^DONE$/.exec(message)) {
+        ok(true, "Messaging from iframe complete.");
+        nonReceiverIframe.removeEventListener('mozbrowsershowmodalprompt', nonReceiverListener);
+
+        isNonReceiverFinished = true;
+
+        if (isReceiverFinished) {
+          teardown();
+        }
+      }
+    }, false);
+
+    document.body.appendChild(nonReceiverIframe);
 
     gScript.addMessageListener('offer-received', function offerReceivedHandler() {
       gScript.removeMessageListener('offer-received', offerReceivedHandler);

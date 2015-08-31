@@ -82,6 +82,9 @@ function testIncomingSessionRequest() {
       gScript.removeMessageListener('receiver-launching', launchReceiverHandler);
       info("Trying to launch receiver page.");
 
+      ok(navigator.presentation, "navigator.presentation should be available in in-process pages.");
+      ok(!navigator.presentation.session, "Non-receiving in-process pages shouldn't get a predefined presentation session instance.");
+
       aResolve();
     });
 

@@ -18,12 +18,14 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
     this._onNewRecording = this._onNewRecording.bind(this);
     this._onSaveButtonClick = this._onSaveButtonClick.bind(this);
     this._onRecordingsCleared = this._onRecordingsCleared.bind(this);
+    this._onRecordingExported = this._onRecordingExported.bind(this);
 
     this.emptyText = L10N.getStr("noRecordingsText");
 
     PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
     PerformanceController.on(EVENTS.NEW_RECORDING, this._onNewRecording);
     PerformanceController.on(EVENTS.RECORDINGS_CLEARED, this._onRecordingsCleared);
+    PerformanceController.on(EVENTS.RECORDING_EXPORTED, this._onRecordingExported);
     this.widget.addEventListener("select", this._onSelect, false);
   },
 
@@ -34,6 +36,7 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
     PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
     PerformanceController.off(EVENTS.NEW_RECORDING, this._onNewRecording);
     PerformanceController.off(EVENTS.RECORDINGS_CLEARED, this._onRecordingsCleared);
+    PerformanceController.off(EVENTS.RECORDING_EXPORTED, this._onRecordingExported);
     this.widget.removeEventListener("select", this._onSelect, false);
   },
 
@@ -195,6 +198,15 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
       let recordingItem = this.getItemForElement(e.target);
       this.emit(EVENTS.UI_EXPORT_RECORDING, recordingItem.attachment, fp.file);
     }});
+  },
+
+  _onRecordingExported: function (_, recording, file) {
+    if (recording.isConsole()) {
+      return;
+    }
+    let recordingItem = this.getItemForPredicate(e => e.attachment === recording);
+    let titleNode = $(".recording-item-title", recordingItem.target);
+    titleNode.setAttribute("value", file.leafName.replace(/\..+$/, ""));
   },
 
   toString: () => "[object RecordingsView]"
