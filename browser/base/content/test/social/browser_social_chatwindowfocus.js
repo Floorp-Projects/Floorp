@@ -110,8 +110,7 @@ function test() {
       waitForCondition(function() isTabFocused(), cb, "tab should have focus");
     }
     let postSubTest = function(cb) {
-      closeAllChats();
-      cb();
+      Task.spawn(closeAllChats).then(cb);
     }
     // and run the tests.
     runSocialTestWithProvider(manifest, function (finishcb) {
