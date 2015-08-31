@@ -626,7 +626,7 @@ public:
   {
     switch (mMessage) {
       case NS_POINTER_ENTER:
-      case NS_POINTER_LEAVE:
+      case ePointerLeave:
         mFlags.mBubbles = false;
         mFlags.mCancelable = false;
         break;
