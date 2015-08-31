@@ -1285,6 +1285,7 @@ protected:
 #endif
 
   nsRefPtr<FileList>  mFileList;
+  nsRefPtr<Promise> mFilesAndDirectoriesPromise;
 
   nsString mStaticDocFileList;
   
