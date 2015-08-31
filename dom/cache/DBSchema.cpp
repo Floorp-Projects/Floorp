@@ -31,7 +31,7 @@ namespace dom {
 namespace cache {
 namespace db {
 
-const int32_t kMaxWipeSchemaVersion = 15;
+const int32_t kFirstShippedSchemaVersion = 15;
 
 namespace {
 
