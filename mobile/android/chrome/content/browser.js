@@ -3080,7 +3080,10 @@ var LightWeightThemeWebInstaller = {
     BrowserApp.deck.addEventListener("PreviewBrowserTheme", this, false, true);
     BrowserApp.deck.addEventListener("ResetBrowserThemePreview", this, false, true);
 
-    if (ParentalControls.parentalControlsEnabled && !this._manager.currentTheme) {
+    if (ParentalControls.parentalControlsEnabled &&
+        !this._manager.currentTheme &&
+        !ParentalControls.isAllowed(ParentalControls.DEFAULT_THEME)) {
+      // We are using the DEFAULT_THEME restriction to differentiate between restricted profiles & guest mode - Bug 1199596
       this._installParentalControlsTheme();
     }
   },
