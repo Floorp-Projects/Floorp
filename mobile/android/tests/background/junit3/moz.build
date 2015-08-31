@@ -13,6 +13,21 @@ include('background_junit3_sources.mozbuild')
 
 jar = add_java_jar('background-junit3')
 jar.sources += background_junit3_sources
-jar.extra_jars += [CONFIG['ANDROID_COMPAT_LIB']]
+jar.extra_jars += [
+    CONFIG['ANDROID_COMPAT_LIB'],
+    CONFIG['ANDROID_RECYCLERVIEW_LIB'],
+    TOPOBJDIR + '/mobile/android/base/constants.jar',
+    TOPOBJDIR + '/mobile/android/base/gecko-R.jar',
+    TOPOBJDIR + '/mobile/android/base/gecko-browser.jar',
+    TOPOBJDIR + '/mobile/android/base/gecko-mozglue.jar',
+    TOPOBJDIR + '/mobile/android/base/gecko-thirdparty.jar',
+    TOPOBJDIR + '/mobile/android/base/gecko-util.jar',
+    TOPOBJDIR + '/mobile/android/base/sync-thirdparty.jar',
+]
+
+if CONFIG['MOZ_ANDROID_MLS_STUMBLER']:
+    jar.extra_jars += [
+        TOPOBJDIR + '/mobile/android/stumbler/stumbler.jar',
+    ]
 
 ANDROID_INSTRUMENTATION_MANIFESTS += ['instrumentation.ini']
