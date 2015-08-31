@@ -198,6 +198,8 @@ function ExtensionContext(extensionId, contentWindow)
   this.extensionId = extensionId;
   this.contentWindow = contentWindow;
 
+  this.onClose = new Set();
+
   let utils = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
   let outerWindowId = utils.outerWindowID;
@@ -232,8 +234,6 @@ function ExtensionContext(extensionId, contentWindow)
   // reason. However, we waive here anyway in case that changes.
   Cu.waiveXrays(this.sandbox).chrome = Cu.waiveXrays(this.sandbox).browser;
   injectAPI(api(this), chromeObj);
-
-  this.onClose = new Set();
 }
 
 ExtensionContext.prototype = {
