@@ -742,20 +742,21 @@ class nsAutoAnimationMutationBatch
   struct Entry;
 
 public:
-  explicit nsAutoAnimationMutationBatch(nsINode* aTarget)
-    : mBatchTarget(nullptr)
+  explicit nsAutoAnimationMutationBatch(nsIDocument* aDocument)
   {
-    Init(aTarget);
+    Init(aDocument);
   }
 
-  void Init(nsINode* aTarget)
+  void Init(nsIDocument* aDocument)
   {
-    if (aTarget && aTarget->OwnerDoc()->MayHaveDOMMutationObservers()) {
-      mBatchTarget = aTarget;
-      mPreviousBatch = sCurrentBatch;
-      sCurrentBatch = this;
-      nsDOMMutationObserver::EnterMutationHandling();
+    if (!aDocument ||
+        !aDocument->MayHaveDOMMutationObservers() ||
+        sCurrentBatch) {
+      return;
     }
+
+    sCurrentBatch = this;
+    nsDOMMutationObserver::EnterMutationHandling();
   }
 
   ~nsAutoAnimationMutationBatch()
@@ -783,18 +784,14 @@ public:
     sCurrentBatch->mObservers.AppendElement(aObserver);
   }
 
-  static nsINode* GetBatchTarget()
-  {
-    return sCurrentBatch->mBatchTarget;
-  }
-
-  static void AnimationAdded(mozilla::dom::Animation* aAnimation)
+  static void AnimationAdded(mozilla::dom::Animation* aAnimation,
+                             nsINode* aTarget)
   {
     if (!IsBatching()) {
       return;
     }
 
-    Entry* entry = sCurrentBatch->FindEntry(aAnimation);
+    Entry* entry = sCurrentBatch->FindEntry(aAnimation, aTarget);
     if (entry) {
       switch (entry->mState) {
         case eState_RemainedAbsent:
@@ -808,16 +805,16 @@ public:
                         "twice");
       }
     } else {
-      entry = sCurrentBatch->mEntries.AppendElement();
-      entry->mAnimation = aAnimation;
+      entry = sCurrentBatch->AddEntry(aAnimation, aTarget);
       entry->mState = eState_Added;
       entry->mChanged = false;
     }
   }
 
-  static void AnimationChanged(mozilla::dom::Animation* aAnimation)
+  static void AnimationChanged(mozilla::dom::Animation* aAnimation,
+                               nsINode* aTarget)
   {
-    Entry* entry = sCurrentBatch->FindEntry(aAnimation);
+    Entry* entry = sCurrentBatch->FindEntry(aAnimation, aTarget);
     if (entry) {
       NS_ASSERTION(entry->mState == eState_RemainedPresent ||
                    entry->mState == eState_Added,
@@ -825,16 +822,16 @@ public:
                    "being removed");
       entry->mChanged = true;
     } else {
-      entry = sCurrentBatch->mEntries.AppendElement();
-      entry->mAnimation = aAnimation;
+      entry = sCurrentBatch->AddEntry(aAnimation, aTarget);
       entry->mState = eState_RemainedPresent;
       entry->mChanged = true;
     }
   }
 
-  static void AnimationRemoved(mozilla::dom::Animation* aAnimation)
+  static void AnimationRemoved(mozilla::dom::Animation* aAnimation,
+                               nsINode* aTarget)
   {
-    Entry* entry = sCurrentBatch->FindEntry(aAnimation);
+    Entry* entry = sCurrentBatch->FindEntry(aAnimation, aTarget);
     if (entry) {
       switch (entry->mState) {
         case eState_RemainedPresent:
@@ -848,22 +845,37 @@ public:
                         "twice");
       }
     } else {
-      entry = sCurrentBatch->mEntries.AppendElement();
-      entry->mAnimation = aAnimation;
+      entry = sCurrentBatch->AddEntry(aAnimation, aTarget);
       entry->mState = eState_Removed;
       entry->mChanged = false;
     }
   }
 
 private:
-  Entry* FindEntry(mozilla::dom::Animation* aAnimation)
+  Entry* FindEntry(mozilla::dom::Animation* aAnimation, nsINode* aTarget)
   {
-    for (Entry& e : mEntries) {
+    EntryArray* entries = mEntryTable.Get(aTarget);
+    if (!entries) {
+      return nullptr;
+    }
+
+    for (Entry& e : *entries) {
       if (e.mAnimation == aAnimation) {
         return &e;
       }
     }
     return nullptr;
+  }
+
+  Entry* AddEntry(mozilla::dom::Animation* aAnimation, nsINode* aTarget)
+  {
+    EntryArray* entries = sCurrentBatch->mEntryTable.LookupOrAdd(aTarget);
+    if (entries->IsEmpty()) {
+      sCurrentBatch->mBatchTargets.AppendElement(aTarget);
+    }
+    Entry* entry = entries->AppendElement();
+    entry->mAnimation = aAnimation;
+    return entry;
   }
 
   enum State {
@@ -881,10 +893,11 @@ private:
   };
 
   static nsAutoAnimationMutationBatch* sCurrentBatch;
-  nsAutoAnimationMutationBatch* mPreviousBatch;
   nsAutoTArray<nsDOMMutationObserver*, 2> mObservers;
-  nsTArray<Entry> mEntries;
-  nsINode* mBatchTarget;
+  typedef nsTArray<Entry> EntryArray;
+  nsClassHashtable<nsPtrHashKey<nsINode>, EntryArray> mEntryTable;
+  // List of nodes referred to by mEntryTable so we can sort them
+  nsTArray<nsINode*> mBatchTargets;
 };
 
 inline

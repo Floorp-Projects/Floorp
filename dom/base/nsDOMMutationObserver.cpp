@@ -366,19 +366,18 @@ nsAnimationReceiver::RecordAnimationMutation(Animation* aAnimation,
   }
 
   if (nsAutoAnimationMutationBatch::IsBatching()) {
-    if (nsAutoAnimationMutationBatch::GetBatchTarget() != animationTarget) {
-      return;
-    }
-
     switch (aMutationType) {
       case eAnimationMutation_Added:
-        nsAutoAnimationMutationBatch::AnimationAdded(aAnimation);
+        nsAutoAnimationMutationBatch::AnimationAdded(aAnimation,
+                                                     animationTarget);
         break;
       case eAnimationMutation_Changed:
-        nsAutoAnimationMutationBatch::AnimationChanged(aAnimation);
+        nsAutoAnimationMutationBatch::AnimationChanged(aAnimation,
+                                                       animationTarget);
         break;
       case eAnimationMutation_Removed:
-        nsAutoAnimationMutationBatch::AnimationRemoved(aAnimation);
+        nsAutoAnimationMutationBatch::AnimationRemoved(aAnimation,
+                                                       animationTarget);
         break;
     }
 
@@ -1059,32 +1058,46 @@ nsAutoAnimationMutationBatch::Done()
     return;
   }
 
-  sCurrentBatch = mPreviousBatch;
+  sCurrentBatch = nullptr;
   if (mObservers.IsEmpty()) {
     nsDOMMutationObserver::LeaveMutationHandling();
     // Nothing to do.
     return;
   }
 
-  for (nsDOMMutationObserver* ob : mObservers) {
-    nsRefPtr<nsDOMMutationRecord> m =
-      new nsDOMMutationRecord(nsGkAtoms::animations, ob->GetParentObject());
-    m->mTarget = mBatchTarget;
+  mBatchTargets.Sort(TreeOrderComparator());
 
-    for (const Entry& e : mEntries) {
-      if (e.mState == eState_Added) {
-        m->mAddedAnimations.AppendElement(e.mAnimation);
-      } else if (e.mState == eState_Removed) {
-        m->mRemovedAnimations.AppendElement(e.mAnimation);
-      } else if (e.mState == eState_RemainedPresent && e.mChanged) {
-        m->mChangedAnimations.AppendElement(e.mAnimation);
+  for (nsDOMMutationObserver* ob : mObservers) {
+    bool didAddRecords = false;
+
+    for (nsINode* target : mBatchTargets) {
+      EntryArray* entries = mEntryTable.Get(target);
+      MOZ_ASSERT(entries,
+        "Targets in entry table and targets list should match");
+
+      nsRefPtr<nsDOMMutationRecord> m =
+        new nsDOMMutationRecord(nsGkAtoms::animations, ob->GetParentObject());
+      m->mTarget = target;
+
+      for (const Entry& e : *entries) {
+        if (e.mState == eState_Added) {
+          m->mAddedAnimations.AppendElement(e.mAnimation);
+        } else if (e.mState == eState_Removed) {
+          m->mRemovedAnimations.AppendElement(e.mAnimation);
+        } else if (e.mState == eState_RemainedPresent && e.mChanged) {
+          m->mChangedAnimations.AppendElement(e.mAnimation);
+        }
+      }
+
+      if (!m->mAddedAnimations.IsEmpty() ||
+          !m->mChangedAnimations.IsEmpty() ||
+          !m->mRemovedAnimations.IsEmpty()) {
+        ob->AppendMutationRecord(m.forget());
+        didAddRecords = true;
       }
     }
 
-    if (!m->mAddedAnimations.IsEmpty() ||
-        !m->mChangedAnimations.IsEmpty() ||
-        !m->mRemovedAnimations.IsEmpty()) {
-      ob->AppendMutationRecord(m.forget());
+    if (didAddRecords) {
       ob->ScheduleForRun();
     }
   }
