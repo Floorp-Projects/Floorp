@@ -107,10 +107,14 @@ let debug = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
               .AndroidLog.d.bind(null, "Webapps");
 #else
 // Elsewhere, report debug messages only if dom.mozApps.debug is set to true.
-// The pref is only checked once, on startup, so restart after changing it.
-let debug = Services.prefs.getBoolPref("dom.mozApps.debug")
-              ? (aMsg) => dump("-*- Webapps.jsm : " + aMsg + "\n")
-              : (aMsg) => {};
+let debug;
+function debugPrefObserver() {
+  debug = Services.prefs.getBoolPref("dom.mozApps.debug")
+            ? (aMsg) => dump("-*- Webapps.jsm : " + aMsg + "\n")
+            : (aMsg) => {};
+}
+debugPrefObserver();
+Services.prefs.addObserver("dom.mozApps.debug", debugPrefObserver, false);
 #endif
 
 function getNSPRErrorCode(err) {

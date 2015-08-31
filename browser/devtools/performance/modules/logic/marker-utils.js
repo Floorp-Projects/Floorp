@@ -354,13 +354,16 @@ const Formatters = {
     return marker.name || L10N.getStr("marker.label.unknown");
   },
 
-  GCLabel: function (marker={}) {
+  GCLabel: function (marker) {
+    if (!marker) {
+      return L10N.getStr("marker.label.garbageCollection2");
+    }
     // Only if a `nonincrementalReason` exists, do we want to label
     // this as a non incremental GC event.
     if ("nonincrementalReason" in marker) {
       return L10N.getStr("marker.label.garbageCollection.nonIncremental");
     }
-    return L10N.getStr("marker.label.garbageCollection");
+    return L10N.getStr("marker.label.garbageCollection.incremental");
   },
 
   JSLabel: function (marker={}) {

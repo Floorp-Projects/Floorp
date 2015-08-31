@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830258
   <title>Test for Bug 830258</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="common.js"></script>
   <script type="application/javascript;version=1.7">
 
   /** Test for Bug 830258 **/
@@ -96,7 +97,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830258
   }
   </script>
 </head>
-<body onload="go()">
+<body onload="prepareEnv(go)">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=830258">Mozilla Bug 830258</a>
 <p id="display"></p>
 <div id="content" style="display: none">

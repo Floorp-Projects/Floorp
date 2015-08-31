@@ -147,10 +147,10 @@ let runTest = Task.async(function*() {
   SimpleTest.finish();
 });
 
-runTest().catch((e) => {
+prepareEnv(() => runTest().catch((e) => {
   ok(false, "Error during test: " + e);
   SimpleTest.finish();
-});
+}));
 
 ]]>
 </script>
