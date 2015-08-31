@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+"use strict";
+
+function backgroundScript() {
+  // Add two listeners that both send replies. We're supposed to ignore all but one
+  // of them. Which one is chosen is non-deterministic.
+
+  browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
+    browser.test.assertTrue(sender.tab.url.endsWith("file_sample.html"), "sender url correct");
+
+    if (msg == "getreply") {
+      sendReply("reply1");
+    }
+  });
+
+  browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
+    browser.test.assertTrue(sender.tab.url.endsWith("file_sample.html"), "sender url correct");
+
+    if (msg == "getreply") {
+      sendReply("reply2");
+    }
+  });
+
+  function sleep(callback, n = 10) {
+    if (n == 0) {
+      callback();
+    } else {
+      setTimeout(function() { sleep(callback, n - 1); }, 0);
+    }
+  }
+
+  var done_count = 0;
+  browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
+    browser.test.assertTrue(sender.tab.url.endsWith("file_sample.html"), "sender url correct");
+
+    if (msg == "done") {
+      done_count++;
+      browser.test.assertEq(done_count, 1, "got exactly one reply");
+
+      // Go through the event loop a few times to make sure we don't get multiple replies.
+      sleep(function() {
+        browser.test.notifyPass("sendmessage_doublereply");
+      });
+    }
+  });
+}
+
+function contentScript() {
+  browser.runtime.sendMessage("getreply", function(resp) {
+    if (resp != "reply1" && resp != "reply2") {
+      return; // test failed
+    }
+    browser.runtime.sendMessage("done");
+  });
+}
+
+let extensionData = {
+  background: "(" + backgroundScript.toString() + ")()",
+  manifest: {
+    "permissions": ["tabs"],
+    "content_scripts": [{
+      "matches": ["http://mochi.test/*/file_sample.html"],
+      "js": ["content_script.js"],
+      "run_at": "document_start"
+    }]
+  },
+
+  files: {
+    "content_script.js": "(" + contentScript.toString() + ")()",
+  },
+};
+
+add_task(function* test_contentscript() {
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  info("extension loaded");
+
+  let win = window.open("file_sample.html");
+
+  yield Promise.all([waitForLoad(win), extension.awaitFinish("sendmessage_doublereply")]);
+
+  win.close();
+
+  yield extension.unload();
+  info("extension unloaded");
+});
+</script>
+
+</body>
+</html>
