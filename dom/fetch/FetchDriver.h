@@ -77,6 +77,7 @@ private:
   nsCOMPtr<nsIChannel> mNewRedirectChannel;
   nsCOMPtr<nsIDocument> mDocument;
   uint32_t mFetchRecursionCount;
+  bool mCORSFlagEverSet;
 
   DebugOnly<bool> mResponseAvailableCalled;
 
@@ -85,7 +86,29 @@ private:
   FetchDriver& operator=(const FetchDriver&) = delete;
   ~FetchDriver();
 
+  enum MainFetchOpType
+  {
+    NETWORK_ERROR,
+    BASIC_FETCH,
+    HTTP_FETCH,
+    NUM_MAIN_FETCH_OPS
+  };
+
+  struct MainFetchOp
+  {
+    explicit MainFetchOp(MainFetchOpType aType, bool aCORSFlag = false,
+                         bool aCORSPreflightFlag = false)
+      : mType(aType), mCORSFlag(aCORSFlag),
+        mCORSPreflightFlag(aCORSPreflightFlag)
+    { }
+
+    MainFetchOpType mType;
+    bool mCORSFlag;
+    bool mCORSPreflightFlag;
+  };
+
   nsresult Fetch(bool aCORSFlag);
+  MainFetchOp SetTaintingAndGetNextOp(bool aCORSFlag);
   nsresult ContinueFetch(bool aCORSFlag);
   nsresult BasicFetch();
   nsresult HttpFetch(bool aCORSFlag = false, bool aCORSPreflightFlag = false, bool aAuthenticationFlag = false);
