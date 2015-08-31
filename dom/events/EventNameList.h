@@ -315,7 +315,7 @@ EVENT(pointerdown,
       EventNameType_All,
       ePointerEventClass)
 EVENT(pointermove,
-      NS_POINTER_MOVE,
+      ePointerMove,
       EventNameType_All,
       ePointerEventClass)
 EVENT(pointerup,
