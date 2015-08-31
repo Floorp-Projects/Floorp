@@ -10,6 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=997886
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/chrome-harness.js"></script>
+  <script type="application/javascript" src="common.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
   <script type="application/javascript;version=1.7">
 
@@ -229,7 +230,7 @@ function runTest() {
 
   </script>
 </head>
-<body onload="go()">
+<body onload="prepareEnv(go)">
 <p id="display"></p>
 <div id="content" style="display: none">
 </div>

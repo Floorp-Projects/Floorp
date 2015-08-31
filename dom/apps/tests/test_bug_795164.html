@@ -7,6 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795164
   <meta charset="utf-8">
   <title>Test for Bug 795164</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript;version=1.7">
 
@@ -96,7 +97,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795164
   }
   </script>
 </head>
-<body onload="go()">
+<body onload="prepareEnv(go)">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=795164">Mozilla Bug 795164</a>
 <p id="display"></p>
 <div id="content" style="display: none">
