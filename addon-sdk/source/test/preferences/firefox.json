@@ -5,8 +5,6 @@
   "devtools.errorconsole.enabled": true,
   "devtools.chrome.enabled": true,
   "urlclassifier.updateinterval": 172800,
-  "browser.safebrowsing.provider.google.gethashURL": "http://localhost/safebrowsing-dummy/gethash",
-  "browser.safebrowsing.provider.google.updateURL": "http://localhost/safebrowsing-dummy/update"
-  "browser.safebrowsing.provider.mozilla.gethashURL": "http://localhost/safebrowsing-dummy/gethash",
-  "browser.safebrowsing.provider.mozilla.updateURL": "http://localhost/safebrowsing-dummy/update"
+  "browser.safebrowsing.provider.0.gethashURL": "http://localhost/safebrowsing-dummy/gethash",
+  "browser.safebrowsing.provider.0.updateURL": "http://localhost/safebrowsing-dummy/update"
 }
