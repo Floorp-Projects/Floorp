@@ -38,6 +38,8 @@ PresentationIPCService::~PresentationIPCService()
 {
   mListeners.Clear();
   mSessionListeners.Clear();
+  mRespondingSessionIds.Clear();
+  mRespondingWindowIds.Clear();
   sPresentationChild = nullptr;
 }
 
@@ -130,6 +132,8 @@ PresentationIPCService::UnregisterSessionListener(const nsAString& aSessionId)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  UntrackSessionInfo(aSessionId);
+
   mSessionListeners.Remove(aSessionId);
   if (sPresentationChild) {
     NS_WARN_IF(!sPresentationChild->SendUnregisterSessionHandler(nsAutoString(aSessionId)));
@@ -174,23 +178,50 @@ PresentationIPCService::NotifyAvailableChange(bool aAvailable)
 }
 
 NS_IMETHODIMP
-PresentationIPCService::GetExistentSessionIdAtLaunch(nsAString& aSessionId)
+PresentationIPCService::GetExistentSessionIdAtLaunch(uint64_t aWindowId,
+                                                     nsAString& aSessionId)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoString sessionId(aSessionId);
-  NS_WARN_IF(!sPresentationChild->SendGetExistentSessionIdAtLaunch(&sessionId));
-  aSessionId = sessionId;
-
+  nsString* sessionId = mRespondingSessionIds.Get(aWindowId);
+  if (sessionId) {
+    aSessionId.Assign(*sessionId);
+  } else {
+    aSessionId.Truncate();
+  }
   return NS_OK;
 }
 
-nsresult
-PresentationIPCService::NotifyReceiverReady(const nsAString& aSessionId)
+NS_IMETHODIMP
+PresentationIPCService::NotifyReceiverReady(const nsAString& aSessionId,
+                                            uint64_t aWindowId)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // No actual window uses 0 as its ID.
+  if (NS_WARN_IF(aWindowId == 0)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // Track the responding info for an OOP receiver page.
+  mRespondingSessionIds.Put(aWindowId, new nsAutoString(aSessionId));
+  mRespondingWindowIds.Put(aSessionId, aWindowId);
+
+  mCallback = nullptr;
   NS_WARN_IF(!sPresentationChild->SendNotifyReceiverReady(nsAutoString(aSessionId)));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresentationIPCService::UntrackSessionInfo(const nsAString& aSessionId)
+{
+  // Remove the OOP responding info (if it has never been used).
+  uint64_t windowId = 0;
+  if(mRespondingWindowIds.Get(aSessionId, &windowId)) {
+    mRespondingWindowIds.Remove(aSessionId);
+    mRespondingSessionIds.Remove(windowId);
+  }
+
   return NS_OK;
 }
 
@@ -204,6 +235,8 @@ nsresult
 PresentationIPCService::MonitorResponderLoading(const nsAString& aSessionId,
                                                 nsIDocShell* aDocShell)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   mCallback = new PresentationResponderLoadingCallback(aSessionId);
   return mCallback->Init(aDocShell);
 }

@@ -116,13 +116,19 @@ PresentationResponderLoadingCallback::Init(nsIDocShell* aDocShell)
 nsresult
 PresentationResponderLoadingCallback::NotifyReceiverReady()
 {
+  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mProgress);
+  if (NS_WARN_IF(!window || !window->GetCurrentInnerWindow())) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  uint64_t windowId = window->GetCurrentInnerWindow()->WindowID();
+
   nsCOMPtr<nsIPresentationService> service =
     do_GetService(PRESENTATION_SERVICE_CONTRACTID);
   if (NS_WARN_IF(!service)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return service->NotifyReceiverReady(mSessionId);
+  return service->NotifyReceiverReady(mSessionId, windowId);
 }
 
 // nsIWebProgressListener

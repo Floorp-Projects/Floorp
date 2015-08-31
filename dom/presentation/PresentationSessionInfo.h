@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_PresentationSessionInfo_h
 #define mozilla_dom_PresentationSessionInfo_h
 
+#include "base/process.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/nsRefPtr.h"
@@ -92,6 +93,8 @@ public:
 
   nsresult ReplyError(nsresult aReason);
 
+  virtual bool IsAccessible(base::ProcessId aProcessId);
+
 protected:
   virtual ~PresentationSessionInfo()
   {
@@ -106,6 +109,8 @@ protected:
   {
     return mIsResponderReady && mIsTransportReady;
   }
+
+  virtual nsresult UntrackFromService();
 
   nsString mUrl;
   nsString mSessionId;
@@ -184,6 +189,8 @@ public:
     mPromise->AppendNativeHandler(this);
   }
 
+  bool IsAccessible(base::ProcessId aProcessId) override;
+
 private:
   ~PresentationResponderInfo()
   {
@@ -194,10 +201,16 @@ private:
 
   nsresult InitTransportAndSendAnswer();
 
+  nsresult UntrackFromService() override;
+
   nsRefPtr<PresentationResponderLoadingCallback> mLoadingCallback;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsIPresentationChannelDescription> mRequesterDescription;
   nsRefPtr<Promise> mPromise;
+
+  // The content parent communicating with the content process which the OOP
+  // receiver page belongs to.
+  nsCOMPtr<nsIContentParent> mContentParent;
 };
 
 } // namespace dom

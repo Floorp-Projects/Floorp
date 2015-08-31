@@ -659,6 +659,12 @@ child:
      */
     async NotifyPresentationReceiverLaunched(PBrowser aIframe, nsString aSessionId);
 
+    /**
+     * Notify the child that the info about a presentation receiver needs to be
+     * cleaned up.
+     */
+    async NotifyPresentationReceiverCleanUp(nsString aSessionId);
+
 parent:
     /**
      * Tell the content process some attributes of itself.  This is

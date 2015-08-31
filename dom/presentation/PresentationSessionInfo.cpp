@@ -192,10 +192,17 @@ PresentationSessionInfo::Close(nsresult aReason)
 {
   // The session is disconnected and it's a normal close. Simply change the
   // state to TERMINATED.
-  if (!IsSessionReady() && NS_SUCCEEDED(aReason) && mListener) {
-    nsresult rv = mListener->NotifyStateChange(mSessionId,
-                                               nsIPresentationSessionListener::STATE_TERMINATED);
-    NS_WARN_IF(NS_FAILED(rv));
+  if (!IsSessionReady() && NS_SUCCEEDED(aReason)) {
+    if (mListener) {
+      // Notify the listener and the service will untrack the session info after
+      // the listener calls |UnregisterSessionListener|.
+      nsresult rv = mListener->NotifyStateChange(mSessionId,
+                                                 nsIPresentationSessionListener::STATE_TERMINATED);
+      NS_WARN_IF(NS_FAILED(rv));
+    } else {
+      // Directly untrack the session info from the service.
+      NS_WARN_IF(NS_FAILED(UntrackFromService()));
+    }
   }
 
   Shutdown(aReason);
@@ -231,14 +238,27 @@ PresentationSessionInfo::ReplyError(nsresult aError)
   }
 
   // Remove itself since it never succeeds.
+  return UntrackFromService();
+}
+
+/* virtual */ nsresult
+PresentationSessionInfo::UntrackFromService()
+{
   nsCOMPtr<nsIPresentationService> service =
     do_GetService(PRESENTATION_SERVICE_CONTRACTID);
   if (NS_WARN_IF(!service)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  static_cast<PresentationService*>(service.get())->RemoveSessionInfo(mSessionId);
+  static_cast<PresentationService*>(service.get())->UntrackSessionInfo(mSessionId);
 
   return NS_OK;
+}
+
+/* virtual */ bool
+PresentationSessionInfo::IsAccessible(base::ProcessId aProcessId)
+{
+  // No restriction by default.
+  return true;
 }
 
 // nsIPresentationSessionTransportCallback
@@ -280,12 +300,17 @@ PresentationSessionInfo::NotifyTransportClosed(nsresult aReason)
 
   Shutdown(aReason);
 
+  uint16_t state = (NS_WARN_IF(NS_FAILED(aReason))) ?
+                   nsIPresentationSessionListener::STATE_DISCONNECTED :
+                   nsIPresentationSessionListener::STATE_TERMINATED;
   if (mListener) {
     // It happens after the session is ready. Notify session state change.
-    uint16_t state = (NS_WARN_IF(NS_FAILED(aReason))) ?
-                     nsIPresentationSessionListener::STATE_DISCONNECTED :
-                     nsIPresentationSessionListener::STATE_TERMINATED;
+    // If the new state is TERMINATED. the service will untrack the session info
+    // after the listener calls |UnregisterSessionListener|.
     return mListener->NotifyStateChange(mSessionId, state);
+  } else if (state == nsIPresentationSessionListener::STATE_TERMINATED) {
+    // Directly untrack the session info from the service.
+    return UntrackFromService();
   }
 
   return NS_OK;
@@ -640,6 +665,34 @@ PresentationResponderInfo::InitTransportAndSendAnswer()
  }
 
 nsresult
+PresentationResponderInfo::UntrackFromService()
+{
+  // Remove the OOP responding info (if it has never been used).
+  if (mContentParent) {
+    NS_WARN_IF(!static_cast<ContentParent*>(mContentParent.get())->SendNotifyPresentationReceiverCleanUp(mSessionId));
+  }
+
+  // Remove the session info (and the in-process responding info if there's any).
+  nsCOMPtr<nsIPresentationService> service =
+    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!service)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  static_cast<PresentationService*>(service.get())->UntrackSessionInfo(mSessionId);
+
+  return NS_OK;
+}
+
+bool
+PresentationResponderInfo::IsAccessible(base::ProcessId aProcessId)
+{
+  // Only the specific content process should access the responder info.
+  return (mContentParent) ?
+          aProcessId == static_cast<ContentParent*>(mContentParent.get())->OtherPid() :
+          false;
+}
+
+nsresult
 PresentationResponderInfo::NotifyResponderReady()
 {
   if (mTimer) {
@@ -774,8 +827,10 @@ PresentationResponderInfo::ResolvedCallback(JSContext* aCx,
   nsRefPtr<TabParent> tabParent = TabParent::GetFrom(frameLoader);
   if (tabParent) {
     // OOP frame
-    nsCOMPtr<nsIContentParent> cp = tabParent->Manager();
-    NS_WARN_IF(!static_cast<ContentParent*>(cp.get())->SendNotifyPresentationReceiverLaunched(tabParent, mSessionId));
+    // Notify the content process that a receiver page has launched, so it can
+    // start monitoring the loading progress.
+    mContentParent = tabParent->Manager();
+    NS_WARN_IF(!static_cast<ContentParent*>(mContentParent.get())->SendNotifyPresentationReceiverLaunched(tabParent, mSessionId));
   } else {
     // In-process frame
     nsCOMPtr<nsIDocShell> docShell;
@@ -785,6 +840,7 @@ PresentationResponderInfo::ResolvedCallback(JSContext* aCx,
       return;
     }
 
+    // Keep an eye on the loading progress of the receiver page.
     mLoadingCallback = new PresentationResponderLoadingCallback(mSessionId);
     rv = mLoadingCallback->Init(docShell);
     if (NS_WARN_IF(NS_FAILED(rv))) {
