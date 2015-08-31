@@ -267,7 +267,7 @@ GetNewPluginLibrary(nsPluginTag *aPluginTag)
   }
 
   if (XRE_IsContentProcess()) {
-    return PluginModuleContentParent::LoadModule(aPluginTag->mId);
+    return PluginModuleContentParent::LoadModule(aPluginTag->mId, aPluginTag);
   }
 
   if (nsNPAPIPlugin::RunPluginOOP(aPluginTag)) {
