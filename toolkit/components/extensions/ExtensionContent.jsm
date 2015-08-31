@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
-  runSafeWithoutClone,
+  runSafeSyncWithoutClone,
   MessageBroker,
   Messenger,
   ignoreEvent,
@@ -137,12 +137,12 @@ Script.prototype = {
 
       for (let url of this.css) {
         url = extension.baseURI.resolve(url);
-        runSafeWithoutClone(winUtils.loadSheetUsingURIString, url, winUtils.AUTHOR_SHEET);
+        runSafeSyncWithoutClone(winUtils.loadSheetUsingURIString, url, winUtils.AUTHOR_SHEET);
       }
 
       if (this.options.cssCode) {
         let url = "data:text/css;charset=utf-8," + encodeURIComponent(this.options.cssCode);
-        runSafeWithoutClone(winUtils.loadSheetUsingURIString, url, winUtils.AUTHOR_SHEET);
+        runSafeSyncWithoutClone(winUtils.loadSheetUsingURIString, url, winUtils.AUTHOR_SHEET);
       }
     }
 
@@ -162,7 +162,7 @@ Script.prototype = {
           charset: "UTF-8",
           async: AppConstants.platform == "gonk"
         }
-        Services.scriptloader.loadSubScriptWithOptions(url, options);
+        runSafeSyncWithoutClone(Services.scriptloader.loadSubScriptWithOptions, url, options);
       }
 
       if (this.options.jsCode) {
