@@ -706,7 +706,7 @@ OnSharedPreferenceChangeListener
                     }
                 }
                 if (PREFS_DEVTOOLS.equals(key) &&
-                    RestrictedProfiles.isUserRestricted(this)) {
+                    !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DEVELOPER_TOOLS)) {
                     preferences.removePreference(pref);
                     i--;
                     continue;
