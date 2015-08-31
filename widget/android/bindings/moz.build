@@ -28,7 +28,6 @@ GENERATED_FILES += [stem + '.h' for stem in generated]
 # resolution works as expected.
 GENERATED_FILES += [f[1:] for f in SOURCES]
 
-FAIL_ON_WARNINGS = True
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [

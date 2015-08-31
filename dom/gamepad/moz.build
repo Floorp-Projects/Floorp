@@ -43,8 +43,6 @@ elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'android':
         'android/AndroidGamepad.cpp'
     ]
 
-FAIL_ON_WARNINGS = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

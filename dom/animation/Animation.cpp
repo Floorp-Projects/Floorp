@@ -574,7 +574,8 @@ Animation::ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
 
   AnimationPlayState playState = PlayState();
   if (playState == AnimationPlayState::Running ||
-      playState == AnimationPlayState::Pending) {
+      playState == AnimationPlayState::Pending ||
+      HasEndEventToQueue()) {
     aNeedsRefreshes = true;
   }
 

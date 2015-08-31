@@ -50,6 +50,9 @@ FORCE_STATIC_LIB = True
 
 DEFINES['XPCOM_GLUE'] = True
 
+# XXX: We should fix these warnings.
+ALLOW_COMPILER_WARNINGS = True
+
 DISABLE_STL_WRAPPING = True
 
 CXXFLAGS += [

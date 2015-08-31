@@ -149,8 +149,19 @@ fetchXHR('http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_serv
   finish();
 });
 
-// Test that CORS preflight requests cannot be intercepted
+// Test that CORS preflight requests cannot be intercepted. Performs a
+// cross-origin XHR that the SW chooses not to intercept. This requires a
+// preflight request, which the SW must not be allowed to intercept.
 fetchXHR('http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200&allowOrigin=*', null, function(xhr) {
+  my_ok(xhr.status == 0, "cross origin load with incorrect headers should be a failure");
+  finish();
+}, [["X-Unsafe", "unsafe"]]);
+
+// Test that CORS preflight requests cannot be intercepted. Performs a
+// cross-origin XHR that the SW chooses to intercept and respond with a
+// cross-origin fetch. This requires a preflight request, which the SW must not
+// be allowed to intercept.
+fetchXHR('http://example.org/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200&allowOrigin=*', null, function(xhr) {
   my_ok(xhr.status == 0, "cross origin load with incorrect headers should be a failure");
   finish();
 }, [["X-Unsafe", "unsafe"]]);

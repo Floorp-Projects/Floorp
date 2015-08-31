@@ -1830,6 +1830,14 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
     return nullptr;
   }
 #endif
+
+  if (!aGraph) {
+    MediaStreamGraph::GraphDriverType graphDriverType =
+      HasAudio() ? MediaStreamGraph::AUDIO_THREAD_DRIVER
+                 : MediaStreamGraph::SYSTEM_THREAD_DRIVER;
+    aGraph = MediaStreamGraph::GetInstance(graphDriverType, mAudioChannel);
+  }
+
   OutputMediaStream* out = mOutputStreams.AppendElement();
   out->mStream = DOMMediaStream::CreateTrackUnionStream(window, aGraph);
   nsRefPtr<nsIPrincipal> principal = GetCurrentPrincipal();
@@ -3051,7 +3059,8 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
     // version |mPlaybackStream|. If two media elements are playing the
     // same realtime DOMMediaStream, this allows them to pause playback
     // independently of each other.
-    mPlaybackStream = DOMMediaStream::CreateTrackUnionStream(window);
+    MediaStreamGraph* graph = mSrcStream->GetStream()->Graph();
+    mPlaybackStream = DOMMediaStream::CreateTrackUnionStream(window, graph);
     mPlaybackStreamInputPort = mPlaybackStream->GetStream()->AsProcessedStream()->
       AllocateInputPort(mSrcStream->GetStream(), MediaInputPort::FLAG_BLOCK_OUTPUT);
 
@@ -4709,7 +4718,9 @@ NS_IMETHODIMP HTMLMediaElement::WindowAudioCaptureChanged()
       nsCOMPtr<nsPIDOMWindow> window =
         do_QueryInterface(OwnerDoc()->GetParentObject());
       uint64_t id = window->WindowID();
-      MediaStreamGraph* msg = MediaStreamGraph::GetInstance();
+      MediaStreamGraph* msg =
+        MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
+                                      AudioChannel::Normal);
 
       if (!mPlaybackStream) {
         nsRefPtr<DOMMediaStream> stream = CaptureStreamInternal(false, msg);

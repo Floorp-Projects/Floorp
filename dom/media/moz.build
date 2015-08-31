@@ -278,8 +278,6 @@ EXTRA_JS_MODULES.media += [
     'RTCStatsReport.jsm',
 ]
 
-FAIL_ON_WARNINGS = True
-
 LOCAL_INCLUDES += [
     '/caps',
     '/dom/base',

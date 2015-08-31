@@ -154,8 +154,6 @@ IPDL_SOURCES += [
     'ipc/PBluetoothRequest.ipdl'
 ]
 
-FAIL_ON_WARNINGS = True
-
 LOCAL_INCLUDES += [
     '../base',
     '../network',

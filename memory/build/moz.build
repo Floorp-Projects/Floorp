@@ -65,5 +65,3 @@ if CONFIG['MOZ_REPLACE_MALLOC'] and CONFIG['OS_TARGET'] == 'Darwin':
 
 if CONFIG['GNU_CC']:
     CFLAGS += ['-Wshadow']
-
-FAIL_ON_WARNINGS = True

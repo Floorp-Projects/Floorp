@@ -45,4 +45,3 @@ MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
-FAIL_ON_WARNINGS = True

@@ -28,5 +28,3 @@ if CONFIG['MOZ_SANDBOX']:
 	LDFLAGS += ['--param lto-partitions=1']
 
 LDFLAGS += ['-pie']
-
-FAIL_ON_WARNINGS = True

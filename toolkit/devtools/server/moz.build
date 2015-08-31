@@ -109,5 +109,3 @@ EXTRA_JS_MODULES.devtools.server.actors.utils += [
     'actors/utils/stack.js',
     'actors/utils/TabSources.js'
 ]
-
-FAIL_ON_WARNINGS = True
