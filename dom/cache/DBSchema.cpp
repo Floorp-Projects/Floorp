@@ -14,6 +14,7 @@
 #include "mozilla/dom/cache/TypeUtils.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
+#include "mozStorageHelper.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsCRT.h"
@@ -39,8 +40,8 @@ const int32_t kLatestSchemaVersion = 15;
 
 // ---------
 // The following constants define the SQL schema.  These are defined in the
-// same order the SQL should be executed in CreateSchema().  They are broken
-// out as constants for convenient use in validation and migration.
+// same order the SQL should be executed in CreateOrMigrateSchema().  They are
+// broken out as constants for convenient use in validation and migration.
 // ---------
 
 // The caches table is the single source of truth about what Cache
@@ -326,10 +327,11 @@ static nsresult CreateAndBindKeyStatement(mozIStorageConnection* aConn,
 static nsresult HashCString(nsICryptoHash* aCrypto, const nsACString& aIn,
                             nsACString& aOut);
 nsresult Validate(mozIStorageConnection* aConn);
+nsresult Migrate(mozIStorageConnection* aConn);
 } // namespace
 
 nsresult
-CreateSchema(mozIStorageConnection* aConn)
+CreateOrMigrateSchema(mozIStorageConnection* aConn)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -347,7 +349,22 @@ CreateSchema(mozIStorageConnection* aConn)
     return rv;
   }
 
-  if (!schemaVersion) {
+  mozStorageTransaction trans(aConn, false,
+                              mozIStorageConnection::TRANSACTION_IMMEDIATE);
+  bool needVacuum = false;
+
+  if (schemaVersion) {
+    // A schema exists, but its not the current version.  Attempt to
+    // migrate it to our new schema.
+    rv = Migrate(aConn);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+    // Migrations happen infrequently and reflect a chance in DB structure.
+    // This is a good time to rebuild the database.
+    needVacuum = true;
+
+  } else {
+    // There is no schema installed.  Create the database from scratch.
     rv = aConn->ExecuteSimpleSQL(nsDependentCString(kTableCaches));
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
@@ -384,6 +401,15 @@ CreateSchema(mozIStorageConnection* aConn)
 
   rv = Validate(aConn);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = trans.Commit();
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  if (needVacuum) {
+    // Unfortunately, this must be performed outside of the transaction.
+    aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM"));
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+  }
 
   return rv;
 }
@@ -2313,6 +2339,65 @@ Validate(mozIStorageConnection* aConn)
     }
   }
 #endif
+
+  return rv;
+}
+
+// -----
+// Schema migration code
+// -----
+
+typedef nsresult (*MigrationFunc)(mozIStorageConnection*);
+struct Migration
+{
+  Migration(int32_t aFromVersion, MigrationFunc aFunc)
+    : mFromVersion(aFromVersion)
+    , mFunc(aFunc)
+  { }
+  int32_t mFromVersion;
+  MigrationFunc mFunc;
+};
+
+// Declare migration functions here.  Each function should upgrade
+// the version by a single increment.  Don't skip versions.
+
+// Configure migration functions to run for the given starting version.
+Migration sMigrationList[] = {
+};
+
+uint32_t sMigrationListLength = sizeof(sMigrationList) / sizeof(Migration);
+
+nsresult
+Migrate(mozIStorageConnection* aConn)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(aConn);
+
+  int32_t currentVersion = 0;
+  nsresult rv = aConn->GetSchemaVersion(&currentVersion);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  while (currentVersion < kLatestSchemaVersion) {
+    // Wiping old databases is handled in DBAction because it requires
+    // making a whole new mozIStorageConnection.  Make sure we don't
+    // accidentally get here for one of those old databases.
+    MOZ_ASSERT(currentVersion >= kFirstShippedSchemaVersion);
+
+    for (uint32_t i = 0; i < sMigrationListLength; ++i) {
+      if (sMigrationList[i].mFromVersion == currentVersion) {
+        rv = sMigrationList[i].mFunc(aConn);
+        if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+        break;
+      }
+    }
+
+    DebugOnly<int32_t> lastVersion = currentVersion;
+    rv = aConn->GetSchemaVersion(&currentVersion);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    MOZ_ASSERT(currentVersion > lastVersion);
+  }
+
+  MOZ_ASSERT(currentVersion == kLatestSchemaVersion);
 
   return rv;
 }
