@@ -256,7 +256,7 @@ BookmarksEngine.prototype = {
       stmt.params.id = id;
       let rows = Async.querySpinningly(stmt, ["url"]);
       url = rows.length == 0 ? "<not found>" : rows[0].url;
-    } catch (ex) {
+    } catch (ex if !Async.isShutdownException(ex)) {
       if (ex instanceof Ci.mozIStorageError) {
         url = `<failed: Storage error: ${ex.message} (${ex.result})>`;
       } else {
@@ -441,7 +441,7 @@ BookmarksEngine.prototype = {
       let guidMap;
       try {
         guidMap = this._buildGUIDMap();
-      } catch (ex) {
+      } catch (ex if !Async.isShutdownException(ex)) {
         this._log.warn("Got exception \"" + Utils.exceptionStr(ex) +
                        "\" building GUID map." +
                        " Skipping all other incoming items.");
