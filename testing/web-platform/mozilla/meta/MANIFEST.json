@@ -142,6 +142,12 @@
             "url": "/_mozilla/service-workers/service-worker/fetch-event-network-error.https.html"
           }
         ],
+        "service-workers/service-worker/fetch-event-redirect.https.html": [
+          {
+            "path": "service-workers/service-worker/fetch-event-redirect.https.html",
+            "url": "/_mozilla/service-workers/service-worker/fetch-event-redirect.https.html"
+          }
+        ],
         "service-workers/service-worker/fetch-event-respond-with-stops-propagation.https.html": [
           {
             "path": "service-workers/service-worker/fetch-event-respond-with-stops-propagation.https.html",
