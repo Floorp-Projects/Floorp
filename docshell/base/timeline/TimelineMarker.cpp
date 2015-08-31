@@ -6,7 +6,7 @@
 
 #include "TimelineMarker.h"
 
-using mozilla::TimeStamp;
+namespace mozilla {
 
 TimelineMarker::TimelineMarker(const char* aName,
                                TracingMetadata aMetaData,
@@ -95,3 +95,5 @@ TimelineMarker::CaptureStackIfNecessary(TracingMetadata aMetaData,
     CaptureStack();
   }
 }
+
+} // namespace mozilla
