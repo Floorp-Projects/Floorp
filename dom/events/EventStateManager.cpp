@@ -3008,7 +3008,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     // This break was commented specially
     // break;
   }
-  case NS_POINTER_UP: {
+  case ePointerUp: {
     WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
     // After UP/Cancel Touch pointers become invalid so we can remove relevant helper from Table
     // Mouse/Pen pointers are valid all the time (not only between down/up)
@@ -4164,7 +4164,7 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
       }
     }
     break;
-  case NS_POINTER_UP:
+  case ePointerUp:
     {
       // Get the target content target (mousemove target == mouseover target)
       nsCOMPtr<nsIContent> targetElement = GetEventTargetContent(aMouseEvent);

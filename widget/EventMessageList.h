@@ -65,7 +65,7 @@ NS_EVENT_MESSAGE(eMouseLongTap,         eMouseEventFirst + 36)
 // Pointer spec events
 NS_EVENT_MESSAGE(ePointerEventFirst,    4400)
 NS_EVENT_MESSAGE(NS_POINTER_MOVE,         ePointerEventFirst)
-NS_EVENT_MESSAGE(NS_POINTER_UP,           ePointerEventFirst + 1)
+NS_EVENT_MESSAGE(ePointerUp,            ePointerEventFirst + 1)
 NS_EVENT_MESSAGE(ePointerDown,          ePointerEventFirst + 2)
 NS_EVENT_MESSAGE(ePointerOver,          ePointerEventFirst + 22)
 NS_EVENT_MESSAGE(ePointerOut,           ePointerEventFirst + 23)

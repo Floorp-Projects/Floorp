@@ -319,7 +319,7 @@ EVENT(pointermove,
       EventNameType_All,
       ePointerEventClass)
 EVENT(pointerup,
-      NS_POINTER_UP,
+      ePointerUp,
       EventNameType_All,
       ePointerEventClass)
 EVENT(pointercancel,
