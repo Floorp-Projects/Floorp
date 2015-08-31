@@ -239,6 +239,41 @@ CacheStorage::CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
   return ref.forget();
 }
 
+// static
+bool
+CacheStorage::DefineCaches(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL,
+             "Passed object is not a global object!");
+
+  if (NS_WARN_IF(!CacheStorageBinding::GetConstructorObject(aCx, aGlobal) ||
+                 !CacheBinding::GetConstructorObject(aCx, aGlobal))) {
+    return false;
+  }
+
+  nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(aGlobal);
+  MOZ_ASSERT(principal);
+
+  ErrorResult rv;
+  nsRefPtr<CacheStorage> storage =
+    CreateOnMainThread(DEFAULT_NAMESPACE, xpc::NativeGlobal(aGlobal), principal,
+                       false, /* private browsing */
+                       true,  /* force trusted */
+                       rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return ThrowMethodFailed(aCx, rv);
+  }
+
+  JS::Rooted<JS::Value> caches(aCx);
+  js::AssertSameCompartment(aCx, aGlobal);
+  if (NS_WARN_IF(!ToJSValue(aCx, storage, &caches))) {
+    return false;
+  }
+
+  return JS_DefineProperty(aCx, aGlobal, "caches", caches, JSPROP_ENUMERATE);
+}
+
 CacheStorage::CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
                            const PrincipalInfo& aPrincipalInfo, Feature* aFeature)
   : mNamespace(aNamespace)
