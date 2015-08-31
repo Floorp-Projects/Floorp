@@ -10,6 +10,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ContentBridgeParent.h"
 #include "mozilla/dom/PTabContext.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/StructuredCloneUtils.h"
@@ -44,6 +45,13 @@ nsIContentParent::AsContentParent()
 {
   MOZ_ASSERT(IsContentParent());
   return static_cast<ContentParent*>(this);
+}
+
+ContentBridgeParent*
+nsIContentParent::AsContentBridgeParent()
+{
+  MOZ_ASSERT(IsContentBridgeParent());
+  return static_cast<ContentBridgeParent*>(this);
 }
 
 PJavaScriptParent*
