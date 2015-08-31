@@ -3184,10 +3184,46 @@ void HTMLMediaElement::ProcessMediaFragmentURI()
   }
 }
 
+class MOZ_STACK_CLASS AutoNotifyAudioChannelAgent
+{
+  nsRefPtr<HTMLMediaElement> mElement;
+  bool mShouldNotify;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
+public:
+  AutoNotifyAudioChannelAgent(HTMLMediaElement* aElement,
+                              bool aNotify
+                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mElement(aElement)
+    , mShouldNotify(aNotify)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    if (mShouldNotify) {
+      mElement->NotifyAudioChannelAgent(false);
+    }
+  }
+  ~AutoNotifyAudioChannelAgent()
+  {
+    if (mShouldNotify) {
+      // The audio channel agent is destroyed at this point.
+      if (mElement->MaybeCreateAudioChannelAgent()) {
+        mElement->NotifyAudioChannelAgent(true);
+      }
+    }
+  }
+};
+
 void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
                                       nsAutoPtr<const MetadataTags> aTags)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  // If the element is gaining or losing an audio track, we need to notify
+  // the audio channel agent so that the correct audio-playback events will
+  // get dispatched.
+  bool audioTrackChanging = mMediaInfo.HasAudio() != aInfo->HasAudio();
+  AutoNotifyAudioChannelAgent autoNotify(this,
+                                         audioTrackChanging &&
+                                         mPlayingThroughTheAudioChannel);
 
   mMediaInfo = *aInfo;
   mIsEncrypted = aInfo->IsEncrypted()
@@ -4488,7 +4524,25 @@ nsresult HTMLMediaElement::UpdateChannelMuteState(float aVolume, bool aMuted)
   return NS_OK;
 }
 
-void HTMLMediaElement::UpdateAudioChannelPlayingState()
+bool
+HTMLMediaElement::MaybeCreateAudioChannelAgent()
+{
+  if (!mAudioChannelAgent) {
+    nsresult rv;
+    mAudioChannelAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1", &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
+    MOZ_ASSERT(mAudioChannelAgent);
+    mAudioChannelAgent->InitWithWeakCallback(OwnerDoc()->GetInnerWindow(),
+                                             static_cast<int32_t>(mAudioChannel),
+                                             this);
+  }
+  return true;
+}
+
+void
+HTMLMediaElement::UpdateAudioChannelPlayingState()
 {
   bool playingThroughTheAudioChannel =
      (!mPaused &&
@@ -4506,18 +4560,9 @@ void HTMLMediaElement::UpdateAudioChannelPlayingState()
        return;
     }
 
-    if (!mAudioChannelAgent) {
-      nsresult rv;
-      mAudioChannelAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1", &rv);
-      if (!mAudioChannelAgent) {
-        return;
-      }
-      mAudioChannelAgent->InitWithWeakCallback(OwnerDoc()->GetInnerWindow(),
-                                               static_cast<int32_t>(mAudioChannel),
-                                               this);
+    if (MaybeCreateAudioChannelAgent()) {
+      NotifyAudioChannelAgent(mPlayingThroughTheAudioChannel);
     }
-
-    NotifyAudioChannelAgent(mPlayingThroughTheAudioChannel);
   }
 }
 
