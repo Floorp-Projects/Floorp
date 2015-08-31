@@ -6707,7 +6707,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
       pointerMessage = NS_POINTER_DOWN;
       break;
     case NS_TOUCH_CANCEL:
-      pointerMessage = NS_POINTER_CANCEL;
+      pointerMessage = ePointerCancel;
       break;
     default:
       return NS_OK;
@@ -7466,9 +7466,10 @@ PresShell::HandleEvent(nsIFrame* aFrame,
           }
 
           if (pointerEvent->mMessage == NS_POINTER_UP ||
-              pointerEvent->mMessage == NS_POINTER_CANCEL) {
+              pointerEvent->mMessage == ePointerCancel) {
             // Implicitly releasing capture for given pointer.
-            // LOST_POINTER_CAPTURE should be send after NS_POINTER_UP or NS_POINTER_CANCEL.
+            // ePointerLostCapture should be send after NS_POINTER_UP or
+            // ePointerCancel.
             releasePointerCaptureCaller.SetTarget(pointerId, pointerCapturingContent);
           }
         }
