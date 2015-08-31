@@ -9,7 +9,7 @@
 
 #include "nsString.h"
 #include "nsContentUtils.h"
-#include "GeckoProfiler.h"
+#include "TimelineMarkerEnums.h"
 
 class nsDocShell;
 
@@ -24,16 +24,14 @@ struct ProfileTimelineMarker;
 class TimelineMarker
 {
 public:
-  enum TimelineStackRequest { STACK, NO_STACK };
-
   TimelineMarker(const char* aName,
-                 TracingMetadata aMetaData,
-                 TimelineStackRequest aStackRequest = STACK);
+                 MarkerTracingType aTracingType,
+                 MarkerStackRequest aStackRequest = MarkerStackRequest::STACK);
 
   TimelineMarker(const char* aName,
                  const TimeStamp& aTime,
-                 TracingMetadata aMetaData,
-                 TimelineStackRequest aStackRequest = STACK);
+                 MarkerTracingType aTracingType,
+                 MarkerStackRequest aStackRequest = MarkerStackRequest::STACK);
 
   virtual ~TimelineMarker();
 
@@ -53,7 +51,7 @@ public:
 
   const char* GetName() const { return mName; }
   DOMHighResTimeStamp GetTime() const { return mTime; }
-  TracingMetadata GetMetaData() const { return mMetaData; }
+  MarkerTracingType GetTracingType() const { return mTracingType; }
 
   JSObject* GetStack()
   {
@@ -80,7 +78,7 @@ protected:
 private:
   const char* mName;
   DOMHighResTimeStamp mTime;
-  TracingMetadata mMetaData;
+  MarkerTracingType mTracingType;
 
   // While normally it is not a good idea to make a persistent root,
   // in this case changing nsDocShell to participate in cycle
@@ -90,8 +88,8 @@ private:
 
   void SetCurrentTime();
   void SetCustomTime(const TimeStamp& aTime);
-  void CaptureStackIfNecessary(TracingMetadata aMetaData,
-                               TimelineStackRequest aStackRequest);
+  void CaptureStackIfNecessary(MarkerTracingType aTracingType,
+                               MarkerStackRequest aStackRequest);
 };
 
 } // namespace mozilla

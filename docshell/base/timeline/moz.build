@@ -15,6 +15,7 @@ EXPORTS.mozilla += [
     'RestyleTimelineMarker.h',
     'TimelineConsumers.h',
     'TimelineMarker.h',
+    'TimelineMarkerEnums.h',
     'TimestampTimelineMarker.h',
 ]
 

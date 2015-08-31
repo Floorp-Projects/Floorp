@@ -16,8 +16,8 @@ class RestyleTimelineMarker : public TimelineMarker
 {
 public:
   explicit RestyleTimelineMarker(nsRestyleHint aRestyleHint,
-                                 TracingMetadata aMetaData)
-    : TimelineMarker("Styles", aMetaData)
+                                 MarkerTracingType aTracingType)
+    : TimelineMarker("Styles", aTracingType)
   {
     if (aRestyleHint) {
       mRestyleHint.AssignWithConversion(RestyleManager::RestyleHintToString(aRestyleHint));
@@ -26,7 +26,7 @@ public:
 
   virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) override
   {
-    if (GetMetaData() == TRACING_INTERVAL_START) {
+    if (GetTracingType() == MarkerTracingType::START) {
       aMarker.mRestyleHint.Construct(mRestyleHint);
     }
   }
