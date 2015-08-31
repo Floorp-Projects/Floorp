@@ -13,5 +13,3 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         DEFINES[var] = True
     if CONFIG['GNU_CC']:
         WIN32_EXE_LDFLAGS += ['-municode']
-
-FAIL_ON_WARNINGS = True

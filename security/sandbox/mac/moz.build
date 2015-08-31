@@ -13,5 +13,3 @@ SOURCES += [
 ]
 
 Library('mozsandbox');
-
-FAIL_ON_WARNINGS = True

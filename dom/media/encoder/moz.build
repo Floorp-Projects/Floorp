@@ -38,8 +38,6 @@ if CONFIG['MOZ_WEBM_ENCODER']:
     ]
     LOCAL_INCLUDES += ['/media/libyuv/include']
 
-FAIL_ON_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'
 
 # These includes are from Android JB, for use of MediaCodec.

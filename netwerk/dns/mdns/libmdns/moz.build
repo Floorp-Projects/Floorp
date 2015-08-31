@@ -32,7 +32,5 @@ UNIFIED_SOURCES += [
     'nsMulticastDNSModule.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'

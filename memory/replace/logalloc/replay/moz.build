@@ -21,3 +21,6 @@ USE_LIBS += [
 ]
 
 DISABLE_STL_WRAPPING = True
+
+# XXX: We should fix these warnings
+ALLOW_COMPILER_WARNINGS = True

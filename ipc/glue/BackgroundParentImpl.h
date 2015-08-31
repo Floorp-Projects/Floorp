@@ -101,6 +101,12 @@ protected:
   virtual bool
   DeallocPServiceWorkerManagerParent(PServiceWorkerManagerParent* aActor) override;
 
+  virtual PCamerasParent*
+  AllocPCamerasParent() override;
+
+  virtual bool
+  DeallocPCamerasParent(PCamerasParent* aActor) override;
+
   virtual bool
   RecvShutdownServiceWorkerRegistrar() override;
 

@@ -106,6 +106,8 @@ SOURCES += [
     'src/google/protobuf/wire_format.cc',
 ]
 
+ALLOW_COMPILER_WARNINGS = True
+
 FINAL_LIBRARY = 'xul'
 
 DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True

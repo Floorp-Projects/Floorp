@@ -20,8 +20,6 @@ UNIFIED_SOURCES += [
     'nsPrintPreviewListener.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../base',

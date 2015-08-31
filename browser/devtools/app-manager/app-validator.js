@@ -48,7 +48,7 @@ AppValidator.prototype._getPackagedManifestFile = function () {
   let hasJsonManifest = jsonManifestFile.exists() && jsonManifestFile.isFile();
 
   if (!hasAppManifest && !hasJsonManifest) {
-    this.error(strings.GetStringFromName("validator.wrongManifestFileName"));
+    this.error(strings.GetStringFromName("validator.noManifestFile"));
     return null;
   }
 

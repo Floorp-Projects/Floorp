@@ -39,9 +39,10 @@ LOCAL_INCLUDES += [
     '/extensions/spellcheck/src',
 ]
 
-# Suppress warnings in third-party code.
-if CONFIG['CLANG_CXX']:
-    CXXFLAGS += ['-Wno-unused-private-field']
+# XXX: This directory is a mix of Mozilla code and third-party code. We should
+# put the Mozilla code in a separate directory and disallow compiler warnings
+# there (bug 1200065). Until then, allow warnings for all of the code.
+ALLOW_COMPILER_WARNINGS = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

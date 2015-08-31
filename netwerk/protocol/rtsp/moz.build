@@ -42,8 +42,6 @@ SOURCES += [
     'rtsp/RTSPSource.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 # Suppress some GCC warnings being treated as errors:
