@@ -1,4 +1,4 @@
-// evalInGlobal correctly handles optional lineNumber option
+// executeInGlobal correctly handles optional lineNumber option
 var g = newGlobal();
 var dbg = new Debugger(g);
 var debuggee = dbg.getDebuggees()[0];
@@ -11,7 +11,7 @@ function testLineNumber (options, expected) {
         assertEq(script.startLine, expected);
         count--;
     };
-    debuggee.evalInGlobal("", options);
+    debuggee.executeInGlobal("", options);
 }
 
 

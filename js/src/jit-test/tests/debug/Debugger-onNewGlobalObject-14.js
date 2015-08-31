@@ -7,9 +7,9 @@ dbg.onNewGlobalObject = function (global) {
   var gw = dbg.addDebuggee(global);
   gw.defineProperty('x', { value: -1 });
   // Check that the global's magic lazy properties are working.
-  assertEq(gw.evalInGlobalWithBindings('Math.atan2(y,x)', { y: 0 }).return, Math.PI);
+  assertEq(gw.executeInGlobalWithBindings('Math.atan2(y,x)', { y: 0 }).return, Math.PI);
   // Check that the global's prototype is hooked up.
-  assertEq(gw.evalInGlobalWithBindings('x.toString()', { x: gw }).return, "[object global]");
+  assertEq(gw.executeInGlobalWithBindings('x.toString()', { x: gw }).return, "[object global]");
 };
 
 newGlobal();

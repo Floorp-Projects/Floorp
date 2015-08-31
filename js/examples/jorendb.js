@@ -142,7 +142,7 @@ function printCommand(rest) {
     // This is the real deal.
     var cv = saveExcursion(
         () => focusedFrame == null
-              ? debuggeeGlobalWrapper.evalInGlobalWithBindings(rest, debuggeeValues)
+              ? debuggeeGlobalWrapper.executeInGlobalWithBindings(rest, debuggeeValues)
               : focusedFrame.evalWithBindings(rest, debuggeeValues));
     if (cv === null) {
         if (!dbg.enabled)

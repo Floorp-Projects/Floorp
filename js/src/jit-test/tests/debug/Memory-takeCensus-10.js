@@ -6,7 +6,7 @@ let dbg = new Debugger(g);
 let sizeOfAM = byteSize(allocationMarker());
 
 // Allocate a single allocation marker, and check that we can find it.
-g.eval('let hold = allocationMarker();');
+g.eval('var hold = allocationMarker();');
 let census = dbg.memory.takeCensus({ breakdown: { by: 'objectClass' } });
 assertEq(census.AllocationMarker.count, 1);
 assertEq(census.AllocationMarker.bytes, sizeOfAM);

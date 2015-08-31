@@ -1060,7 +1060,7 @@ WebConsoleActor.prototype =
    * provide the "bindObjectActor" mechanism: the Web Console tells the
    * ObjectActor ID for which it desires to evaluate an expression. The
    * Debugger.Object pointed at by the actor ID is bound such that it is
-   * available during expression evaluation (evalInGlobalWithBindings()).
+   * available during expression evaluation (executeInGlobalWithBindings()).
    *
    * Example:
    *   _self['foobar'] = 'test'
@@ -1218,7 +1218,7 @@ WebConsoleActor.prototype =
       result = frame.evalWithBindings(aString, bindings, evalOptions);
     }
     else {
-      result = dbgWindow.evalInGlobalWithBindings(aString, bindings, evalOptions);
+      result = dbgWindow.executeInGlobalWithBindings(aString, bindings, evalOptions);
     }
 
     let helperResult = helpers.helperResult;
