@@ -94,6 +94,15 @@ static_assert(nsIHttpChannelInternal::CORS_MODE_CORS == static_cast<uint32_t>(Re
 static_assert(nsIHttpChannelInternal::CORS_MODE_CORS_WITH_FORCED_PREFLIGHT == static_cast<uint32_t>(RequestMode::Cors_with_forced_preflight),
               "RequestMode enumeration value should match Necko CORS mode value.");
 
+static_assert(nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW == static_cast<uint32_t>(RequestRedirect::Follow),
+              "RequestRedirect enumeration value should make Necko Redirect mode value.");
+static_assert(nsIHttpChannelInternal::REDIRECT_MODE_ERROR == static_cast<uint32_t>(RequestRedirect::Error),
+              "RequestRedirect enumeration value should make Necko Redirect mode value.");
+static_assert(nsIHttpChannelInternal::REDIRECT_MODE_MANUAL == static_cast<uint32_t>(RequestRedirect::Manual),
+              "RequestRedirect enumeration value should make Necko Redirect mode value.");
+static_assert(3 == static_cast<uint32_t>(RequestRedirect::EndGuard_),
+              "RequestRedirect enumeration value should make Necko Redirect mode value.");
+
 static StaticRefPtr<ServiceWorkerManager> gInstance;
 
 // Tracks the "dom.disable_open_click_delay" preference.  Modified on main
@@ -3616,7 +3625,9 @@ class FetchEventRunnable : public WorkerRunnable
   nsCString mSpec;
   nsCString mMethod;
   bool mIsReload;
+  DebugOnly<bool> mIsHttpChannel;
   RequestMode mRequestMode;
+  RequestRedirect mRequestRedirect;
   RequestCredentials mRequestCredentials;
   nsContentPolicyType mContentPolicyType;
   nsCOMPtr<nsIInputStream> mUploadStream;
@@ -3632,7 +3643,9 @@ public:
     , mServiceWorker(aServiceWorker)
     , mClientInfo(aClientInfo)
     , mIsReload(aIsReload)
+    , mIsHttpChannel(false)
     , mRequestMode(RequestMode::No_cors)
+    , mRequestRedirect(RequestRedirect::Follow)
     // By default we set it to same-origin since normal HTTP fetches always
     // send credentials to same-origin websites unless explicitly forbidden.
     , mRequestCredentials(RequestCredentials::Same_origin)
@@ -3688,15 +3701,17 @@ public:
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
     if (httpChannel) {
+      mIsHttpChannel = true;
+
       rv = httpChannel->GetRequestMethod(mMethod);
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(httpChannel);
       NS_ENSURE_TRUE(internalChannel, NS_ERROR_NOT_AVAILABLE);
 
-      uint32_t mode;
-      internalChannel->GetCorsMode(&mode);
-      switch (mode) {
+      uint32_t corsMode;
+      internalChannel->GetCorsMode(&corsMode);
+      switch (corsMode) {
         case nsIHttpChannelInternal::CORS_MODE_SAME_ORIGIN:
           mRequestMode = RequestMode::Same_origin;
           break;
@@ -3710,6 +3725,11 @@ public:
         default:
           MOZ_CRASH("Unexpected CORS mode");
       }
+
+      // This is safe due to static_asserts at top of file.
+      uint32_t redirectMode;
+      internalChannel->GetRedirectMode(&redirectMode);
+      mRequestRedirect = static_cast<RequestRedirect>(redirectMode);
 
       if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
         mRequestCredentials = RequestCredentials::Omit;
@@ -3803,6 +3823,7 @@ private:
     reqInit.mHeaders.Value().SetAsHeaders() = headers;
 
     reqInit.mMode.Construct(mRequestMode);
+    reqInit.mRedirect.Construct(mRequestRedirect);
     reqInit.mCredentials.Construct(mRequestCredentials);
 
     ErrorResult result;
@@ -3820,6 +3841,11 @@ private:
     internalReq->SetReferrer(NS_ConvertUTF8toUTF16(mReferrer));
 
     request->SetContentPolicyType(mContentPolicyType);
+
+    // TODO: remove conditional on http here once app protocol support is
+    //       removed from service worker interception
+    MOZ_ASSERT_IF(mIsHttpChannel && internalReq->IsNavigationRequest(),
+                  request->Redirect() == RequestRedirect::Manual);
 
     RootedDictionary<FetchEventInit> init(aCx);
     init.mRequest.Construct();
