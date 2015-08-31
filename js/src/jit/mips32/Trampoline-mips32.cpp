@@ -314,7 +314,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     // Pop arguments off the stack.
     // s0 <- 8*argc (size of all arguments we pushed on the stack)
     masm.pop(s0);
-    masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), s0);
+    masm.rshiftPtr(Imm32(4), s0);
     masm.addPtr(s0, StackPointer);
 
     // Store the returned value into the slotVp
