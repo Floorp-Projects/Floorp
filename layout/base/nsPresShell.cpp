@@ -6672,7 +6672,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
       if (mouseEvent->buttons == 0) {
         button = -1;
       }
-      pointerMessage = NS_POINTER_MOVE;
+      pointerMessage = ePointerMove;
       break;
     case eMouseUp:
       pointerMessage = ePointerUp;
@@ -6698,7 +6698,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
     // copy the event
     switch (touchEvent->mMessage) {
     case NS_TOUCH_MOVE:
-      pointerMessage = NS_POINTER_MOVE;
+      pointerMessage = ePointerMove;
       break;
     case NS_TOUCH_END:
       pointerMessage = ePointerUp;
