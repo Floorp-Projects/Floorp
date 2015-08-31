@@ -51,7 +51,6 @@ AudioCallbackAdapter::Decoded(const nsTArray<int16_t>& aPCM, uint64_t aTimeStamp
       return;
     }
     mAudioFrameOffset = timestamp.value();
-    MOZ_ASSERT(mAudioFrameOffset >= 0);
     mMustRecaptureAudioPosition = false;
   }
 

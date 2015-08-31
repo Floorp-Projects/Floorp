@@ -54,6 +54,11 @@ bool ParseKeySystem(const nsAString& aKeySystem,
 void
 LogToBrowserConsole(const nsAString& aMsg);
 
+void
+ConstructKeySystem(const nsAString& aKeySystem,
+                   const nsAString& aCDMVersion,
+                   nsAString& aOutKeySystem);
+
 } // namespace mozilla
 
 #endif // EME_LOG_H_

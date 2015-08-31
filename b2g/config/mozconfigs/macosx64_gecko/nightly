@@ -19,7 +19,7 @@ export MOZ_TELEMETRY_REPORTING=1
 
 #ac_add_options --with-macbundlename-prefix=Firefox
 
-# Treat warnings as errors in directories with FAIL_ON_WARNINGS.
+# Treat warnings as errors (modulo ALLOW_COMPILER_WARNINGS).
 ac_add_options --enable-warnings-as-errors
 
 # B2G Stuff

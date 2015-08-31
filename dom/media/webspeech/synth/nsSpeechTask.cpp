@@ -143,7 +143,7 @@ void
 nsSpeechTask::Init(ProcessedMediaStream* aStream)
 {
   if (aStream) {
-    mStream = MediaStreamGraph::GetInstance()->CreateSourceStream(nullptr);
+    mStream = aStream->Graph()->CreateSourceStream(nullptr);
     mPort = aStream->AllocateInputPort(mStream, 0);
     mIndirectAudio = false;
   } else {

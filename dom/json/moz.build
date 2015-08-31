@@ -12,8 +12,6 @@ UNIFIED_SOURCES += [
     'nsJSON.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
-
 LOCAL_INCLUDES += [
     '/dom/base',
 ]

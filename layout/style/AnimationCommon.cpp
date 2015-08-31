@@ -361,7 +361,7 @@ CommonAnimationManager::GetAnimations(dom::Element *aElement,
 }
 
 void
-CommonAnimationManager::FlushAnimations(FlushFlags aFlags)
+CommonAnimationManager::FlushAnimations()
 {
   TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
   for (AnimationCollection* collection = mElementCollections.getFirst();
@@ -370,15 +370,8 @@ CommonAnimationManager::FlushAnimations(FlushFlags aFlags)
       continue;
     }
 
-    if (aFlags == Cannot_Throttle) {
-      collection->RequestRestyle(AnimationCollection::RestyleType::Standard);
-    }
-
-    nsAutoAnimationMutationBatch mb(collection->mElement);
-    collection->Tick();
+    collection->RequestRestyle(AnimationCollection::RestyleType::Standard);
   }
-
-  MaybeStartOrStopObservingRefreshDriver();
 }
 
 nsIStyleRule*
@@ -452,7 +445,14 @@ CommonAnimationManager::WillRefresh(TimeStamp aTime)
     return;
   }
 
-  FlushAnimations(Can_Throttle);
+  nsAutoAnimationMutationBatch mb(mPresContext->Document());
+
+  for (AnimationCollection* collection = mElementCollections.getFirst();
+       collection; collection = collection->getNext()) {
+    collection->Tick();
+  }
+
+  MaybeStartOrStopObservingRefreshDriver();
 }
 
 #ifdef DEBUG
@@ -787,7 +787,7 @@ AnimationCollection::PropertyDtor(void *aObject, nsIAtom *aPropertyName,
   collection->mCalledPropertyDtor = true;
 #endif
   {
-    nsAutoAnimationMutationBatch mb(collection->mElement);
+    nsAutoAnimationMutationBatch mb(collection->mElement->OwnerDoc());
 
     for (size_t animIdx = collection->mAnimations.Length(); animIdx-- != 0; ) {
       collection->mAnimations[animIdx]->CancelFromStyle();

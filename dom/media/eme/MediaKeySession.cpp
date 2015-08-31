@@ -43,11 +43,13 @@ MediaKeySession::MediaKeySession(JSContext* aCx,
                                  nsPIDOMWindow* aParent,
                                  MediaKeys* aKeys,
                                  const nsAString& aKeySystem,
+                                 const nsAString& aCDMVersion,
                                  SessionType aSessionType,
                                  ErrorResult& aRv)
   : DOMEventTargetHelper(aParent)
   , mKeys(aKeys)
   , mKeySystem(aKeySystem)
+  , mCDMVersion(aCDMVersion)
   , mSessionType(aSessionType)
   , mToken(sMediaKeySessionNum++)
   , mIsClosed(false)
@@ -86,9 +88,9 @@ MediaKeySession::GetError() const
 }
 
 void
-MediaKeySession::GetKeySystem(nsString& aKeySystem) const
+MediaKeySession::GetKeySystem(nsString& aOutKeySystem) const
 {
-  aKeySystem = mKeySystem;
+  ConstructKeySystem(mKeySystem, mCDMVersion, aOutKeySystem);
 }
 
 void

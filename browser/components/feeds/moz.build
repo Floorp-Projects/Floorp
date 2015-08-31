@@ -40,7 +40,5 @@ LOCAL_INCLUDES += [
     '../build',
 ]
 
-FAIL_ON_WARNINGS = True
-
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'RSS Discovery and Preview')

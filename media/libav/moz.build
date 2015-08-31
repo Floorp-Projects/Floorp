@@ -63,4 +63,6 @@ if CONFIG['_MSC_VER']:
 if CONFIG['OS_ARCH'] != 'WINNT':
     SOURCES['libavcodec/avfft.c'].flags += ['-include', 'avfft_perms.h']
 
+ALLOW_COMPILER_WARNINGS = True
+
 include("libavcommon.mozbuild")

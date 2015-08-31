@@ -86,5 +86,3 @@ JAR_MANIFESTS += ['jar.mn']
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wshadow']
-
-FAIL_ON_WARNINGS = True

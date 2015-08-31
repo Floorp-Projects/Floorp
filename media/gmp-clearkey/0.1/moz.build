@@ -71,5 +71,3 @@ elif CONFIG['_MSC_VER']:
         '-FI stdio.h',              # for sprintf() prototype
         '-wd4090',                  # '=' : different 'const' qualifiers
     ]
-
-FAIL_ON_WARNINGS = True

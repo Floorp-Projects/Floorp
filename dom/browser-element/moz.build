@@ -32,8 +32,6 @@ EXTRA_JS_MODULES += [
     'BrowserElementPromptService.jsm',
 ]
 
-FAIL_ON_WARNINGS = True
-
 LOCAL_INCLUDES += [
     '../bluetooth',
     '/dom/html',

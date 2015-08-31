@@ -10,6 +10,7 @@
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/LocalMediaStreamBinding.h"
 #include "mozilla/dom/AudioNode.h"
+#include "AudioChannelAgent.h"
 #include "mozilla/dom/AudioTrack.h"
 #include "mozilla/dom/AudioTrackList.h"
 #include "mozilla/dom/VideoTrack.h"
@@ -283,9 +284,6 @@ DOMMediaStream::InitSourceStream(nsIDOMWindow* aWindow,
                                  MediaStreamGraph* aGraph)
 {
   mWindow = aWindow;
-  if (!aGraph) {
-    aGraph = MediaStreamGraph::GetInstance();
-  }
   InitStreamCommon(aGraph->CreateSourceStream(this));
 }
 
@@ -295,9 +293,6 @@ DOMMediaStream::InitTrackUnionStream(nsIDOMWindow* aWindow,
 {
   mWindow = aWindow;
 
-  if (!aGraph) {
-    aGraph = MediaStreamGraph::GetInstance();
-  }
   InitStreamCommon(aGraph->CreateTrackUnionStream(this));
 }
 
@@ -307,9 +302,6 @@ DOMMediaStream::InitAudioCaptureStream(nsIDOMWindow* aWindow,
 {
   mWindow = aWindow;
 
-  if (!aGraph) {
-    aGraph = MediaStreamGraph::GetInstance();
-  }
   InitStreamCommon(aGraph->CreateAudioCaptureStream(this));
 }
 
@@ -722,7 +714,11 @@ already_AddRefed<DOMHwMediaStream>
 DOMHwMediaStream::CreateHwStream(nsIDOMWindow* aWindow)
 {
   nsRefPtr<DOMHwMediaStream> stream = new DOMHwMediaStream();
-  stream->InitSourceStream(aWindow);
+
+  MediaStreamGraph* graph =
+    MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER,
+                                  AudioChannel::Normal);
+  stream->InitSourceStream(aWindow, graph);
   stream->Init(stream->GetStream());
 
   return stream.forget();

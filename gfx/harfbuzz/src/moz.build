@@ -59,6 +59,8 @@ UNIFIED_SOURCES += [
     'hb-warning.cc',
 ]
 
+ALLOW_COMPILER_WARNINGS = True
+
 FINAL_LIBRARY = 'gkmedias'
 
 DEFINES['PACKAGE_VERSION'] = '"moz"'

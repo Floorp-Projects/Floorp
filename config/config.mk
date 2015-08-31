@@ -359,25 +359,27 @@ endif # CROSS_COMPILE
 CFLAGS += $(MOZ_FRAMEPTR_FLAGS)
 CXXFLAGS += $(MOZ_FRAMEPTR_FLAGS)
 
-# Check for FAIL_ON_WARNINGS (Shorthand for Makefiles to request that we use
-# the 'warnings as errors' compile flags)
+# Check for ALLOW_COMPILER_WARNINGS (shorthand for Makefiles to request that we
+# *don't* use the warnings-as-errors compile flags)
 
-# NOTE: First, we clear FAIL_ON_WARNINGS[_DEBUG] if we're doing a Windows PGO
-# build, since WARNINGS_AS_ERRORS has been suspected of causing isuses in that
-# situation. (See bug 437002.)
+# Don't use warnings-as-errors in Windows PGO builds because it is suspected of
+# causing problems in that situation. (See bug 437002.)
 ifeq (WINNT_1,$(OS_ARCH)_$(MOZ_PROFILE_GENERATE)$(MOZ_PROFILE_USE))
-FAIL_ON_WARNINGS=
+ALLOW_COMPILER_WARNINGS=1
 endif # WINNT && (MOS_PROFILE_GENERATE ^ MOZ_PROFILE_USE)
 
-# Check for normal version of flag, and add WARNINGS_AS_ERRORS if it's set to 1.
-ifdef FAIL_ON_WARNINGS
-# Never treat warnings as errors in clang-cl, because it warns about many more
+# Don't use warnings-as-errors in clang-cl because it warns about many more
 # things than MSVC does.
-ifndef CLANG_CL
+ifdef CLANG_CL
+ALLOW_COMPILER_WARNINGS=1
+endif # CLANG_CL
+
+# Use warnings-as-errors if ALLOW_COMPILER_WARNINGS is not set to 1 (which
+# includes the case where it's undefined).
+ifneq (1,$(ALLOW_COMPILER_WARNINGS))
 CXXFLAGS += $(WARNINGS_AS_ERRORS)
 CFLAGS   += $(WARNINGS_AS_ERRORS)
-endif # CLANG_CL
-endif # FAIL_ON_WARNINGS
+endif # ALLOW_COMPILER_WARNINGS
 
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 #// Currently, unless USE_STATIC_LIBS is defined, the multithreaded

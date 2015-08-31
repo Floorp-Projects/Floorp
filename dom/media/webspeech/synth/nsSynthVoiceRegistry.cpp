@@ -778,7 +778,9 @@ nsSynthVoiceRegistry::SpeakImpl(VoiceData* aVoice,
     aTask->Init(nullptr);
   } else {
     if (!mStream) {
-      mStream = MediaStreamGraph::GetInstance()->CreateTrackUnionStream(nullptr);
+      mStream =
+        MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
+                                      AudioChannel::Normal)->CreateTrackUnionStream(nullptr);
     }
     aTask->Init(mStream);
   }

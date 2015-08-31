@@ -453,8 +453,9 @@ nsMathMLmoFrame::ProcessOperatorData()
   mEmbellishData.trailingSpace = trailingSpace;
 
   // Now see if there are user-defined attributes that override the dictionary.
-  // XXX If an attribute can be forced to be true when it is false in the
-  // dictionary, then the following code has to change...
+  // XXX Bug 1197771 - forcing an attribute to true when it is false in the
+  // dictionary can cause conflicts in the rest of the stretching algorithms
+  // (e.g. all largeops are assumed to have a vertical direction)
 
   // For each attribute overriden by the user, turn off its bit flag.
   // symmetric|movablelimits|separator|largeop|accent|fence|stretchy|form

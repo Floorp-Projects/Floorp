@@ -140,6 +140,7 @@ LOCAL_INCLUDES += [
     '/dom/broadcastchannel',
     '/dom/indexedDB',
     '/dom/workers',
+    '/media/webrtc/trunk',
     '/xpcom/build',
 ]
 
@@ -178,5 +179,3 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
         '/security/sandbox/chromium-shim',
         '/security/sandbox/win/src/sandboxbroker',
     ]
-
-FAIL_ON_WARNINGS = True
