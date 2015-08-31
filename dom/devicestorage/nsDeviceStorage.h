@@ -8,6 +8,7 @@
 #define nsDeviceStorage_h
 
 class nsPIDOMWindow;
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Logging.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
@@ -18,7 +19,6 @@ class nsPIDOMWindow;
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIClassInfo.h"
-#include "nsIContentPermissionPrompt.h"
 #include "nsIDOMWindow.h"
 #include "nsIURI.h"
 #include "nsIPrincipal.h"
@@ -36,13 +36,18 @@ namespace mozilla {
 class ErrorResult;
 
 namespace dom {
-class Blob;
+class BlobImpl;
+class DeviceStorageParams;
 } // namespace dom
 } // namespace mozilla
+
+class nsDOMDeviceStorage;
+class DeviceStorageCursorRequest;
 
 //#define DS_LOGGING 1
 
 #ifdef DS_LOGGING
+// FIXME -- use MOZ_LOG and set to warn by default
 #define DS_LOG_DEBUG(msg, ...)  printf_stderr("[%s:%d] " msg "\n", __func__, __LINE__, ##__VA_ARGS__)
 #define DS_LOG_INFO DS_LOG_DEBUG
 #define DS_LOG_WARN DS_LOG_DEBUG
@@ -62,20 +67,29 @@ class Blob;
 #define POST_ERROR_EVENT_UNKNOWN                     "Unknown"
 
 enum DeviceStorageRequestType {
-    DEVICE_STORAGE_REQUEST_READ,
-    DEVICE_STORAGE_REQUEST_WRITE,
-    DEVICE_STORAGE_REQUEST_APPEND,
-    DEVICE_STORAGE_REQUEST_CREATE,
-    DEVICE_STORAGE_REQUEST_DELETE,
-    DEVICE_STORAGE_REQUEST_WATCH,
-    DEVICE_STORAGE_REQUEST_FREE_SPACE,
-    DEVICE_STORAGE_REQUEST_USED_SPACE,
-    DEVICE_STORAGE_REQUEST_AVAILABLE,
-    DEVICE_STORAGE_REQUEST_STATUS,
-    DEVICE_STORAGE_REQUEST_FORMAT,
-    DEVICE_STORAGE_REQUEST_MOUNT,
-    DEVICE_STORAGE_REQUEST_UNMOUNT,
-    DEVICE_STORAGE_REQUEST_CREATEFD
+  DEVICE_STORAGE_REQUEST_READ,
+  DEVICE_STORAGE_REQUEST_WRITE,
+  DEVICE_STORAGE_REQUEST_APPEND,
+  DEVICE_STORAGE_REQUEST_CREATE,
+  DEVICE_STORAGE_REQUEST_DELETE,
+  DEVICE_STORAGE_REQUEST_WATCH,
+  DEVICE_STORAGE_REQUEST_FREE_SPACE,
+  DEVICE_STORAGE_REQUEST_USED_SPACE,
+  DEVICE_STORAGE_REQUEST_AVAILABLE,
+  DEVICE_STORAGE_REQUEST_STATUS,
+  DEVICE_STORAGE_REQUEST_FORMAT,
+  DEVICE_STORAGE_REQUEST_MOUNT,
+  DEVICE_STORAGE_REQUEST_UNMOUNT,
+  DEVICE_STORAGE_REQUEST_CREATEFD,
+  DEVICE_STORAGE_REQUEST_CURSOR
+};
+
+enum DeviceStorageAccessType {
+  DEVICE_STORAGE_ACCESS_READ,
+  DEVICE_STORAGE_ACCESS_WRITE,
+  DEVICE_STORAGE_ACCESS_CREATE,
+  DEVICE_STORAGE_ACCESS_UNDEFINED,
+  DEVICE_STORAGE_ACCESS_COUNT
 };
 
 class DeviceStorageUsedSpaceCache final
@@ -176,14 +190,17 @@ public:
 
   void InitFromBundle(nsIStringBundle* aBundle);
 
-  bool Check(const nsAString& aType, mozilla::dom::Blob* aBlob);
+  bool Check(const nsAString& aType, mozilla::dom::BlobImpl* aBlob);
   bool Check(const nsAString& aType, nsIFile* aFile);
   bool Check(const nsAString& aType, const nsString& aPath);
   void GetTypeFromFile(nsIFile* aFile, nsAString& aType);
   void GetTypeFromFileName(const nsAString& aFileName, nsAString& aType);
-
-  static nsresult GetPermissionForType(const nsAString& aType, nsACString& aPermissionResult);
-  static nsresult GetAccessForRequest(const DeviceStorageRequestType aRequestType, nsACString& aAccessResult);
+  static nsresult GetPermissionForType(const nsAString& aType,
+                                       nsACString& aPermissionResult);
+  static nsresult GetAccessForRequest(const DeviceStorageRequestType aRequestType,
+                                      nsACString& aAccessResult);
+  static nsresult GetAccessForIndex(size_t aAccessIndex, nsACString& aAccessResult);
+  static size_t GetAccessIndexForRequest(const DeviceStorageRequestType aRequestType);
   static bool IsVolumeBased(const nsAString& aType);
   static bool IsSharedMediaRoot(const nsAString& aType);
 
@@ -195,65 +212,224 @@ private:
   static mozilla::StaticAutoPtr<DeviceStorageTypeChecker> sDeviceStorageTypeChecker;
 };
 
-class ContinueCursorEvent final : public nsRunnable
-{
-public:
-  explicit ContinueCursorEvent(already_AddRefed<mozilla::dom::DOMRequest> aRequest);
-  explicit ContinueCursorEvent(mozilla::dom::DOMRequest* aRequest);
-  ~ContinueCursorEvent();
-  void Continue();
-
-  NS_IMETHOD Run() override;
-private:
-  already_AddRefed<DeviceStorageFile> GetNextFile();
-  nsRefPtr<mozilla::dom::DOMRequest> mRequest;
-};
-
 class nsDOMDeviceStorageCursor final
   : public mozilla::dom::DOMCursor
-  , public nsIContentPermissionRequest
-  , public mozilla::dom::devicestorage::DeviceStorageRequestChildCallback
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSICONTENTPERMISSIONREQUEST
   NS_FORWARD_NSIDOMDOMCURSOR(mozilla::dom::DOMCursor::)
 
   // DOMCursor
   virtual void Continue(mozilla::ErrorResult& aRv) override;
 
-  nsDOMDeviceStorageCursor(nsPIDOMWindow* aWindow,
-                           nsIPrincipal* aPrincipal,
-                           DeviceStorageFile* aFile,
-                           PRTime aSince);
+  nsDOMDeviceStorageCursor(nsIGlobalObject* aGlobal,
+                           DeviceStorageCursorRequest* aRequest);
 
-
-  nsTArray<nsRefPtr<DeviceStorageFile> > mFiles;
-  bool mOkToCallContinue;
-  PRTime mSince;
-  size_t mIndex;
-
-  void GetStorageType(nsAString & aType);
-
-  void RequestComplete() override;
+  void FireSuccess(JS::Handle<JS::Value> aResult);
+  void FireError(const nsString& aReason);
+  void FireDone();
 
 private:
-  ~nsDOMDeviceStorageCursor();
+  virtual ~nsDOMDeviceStorageCursor();
 
-  nsRefPtr<DeviceStorageFile> mFile;
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCOMPtr<nsIContentPermissionRequester> mRequester;
+  bool mOkToCallContinue;
+  nsRefPtr<DeviceStorageCursorRequest> mRequest;
 };
 
-//helpers
-bool
-StringToJsval(nsPIDOMWindow* aWindow, nsAString& aString,
-              JS::MutableHandle<JS::Value> result);
+class DeviceStorageRequestManager final
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DeviceStorageRequestManager)
 
-JS::Value
-nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile);
+  static const uint32_t INVALID_ID = 0;
 
-JS::Value
-InterfaceToJsval(nsPIDOMWindow* aWindow, nsISupports* aObject, const nsIID* aIID);
+  DeviceStorageRequestManager();
+
+  bool IsOwningThread();
+  nsresult DispatchToOwningThread(nsIRunnable* aRunnable);
+
+  void StorePermission(size_t aAccess, bool aAllow);
+  uint32_t CheckPermission(size_t aAccess);
+
+  /* These must be called on the owning thread context of the device
+     storage object. It will hold onto a device storage reference until
+     all of the pending requests are completed or shutdown is called. */
+  uint32_t Create(nsDOMDeviceStorage* aDeviceStorage,
+                  mozilla::dom::DOMRequest** aRequest);
+  uint32_t Create(nsDOMDeviceStorage* aDeviceStorage,
+                  DeviceStorageCursorRequest* aRequest,
+                  nsDOMDeviceStorageCursor** aCursor);
+
+  /* These may be called from any thread context and post a request
+     to the owning thread to resolve the underlying DOMRequest or
+     DOMCursor. In order to trigger FireDone for a DOMCursor, one
+     should call Resolve with only the request ID. */
+  nsresult Resolve(uint32_t aId, bool aForceDispatch);
+  nsresult Resolve(uint32_t aId, const nsString& aValue, bool aForceDispatch);
+  nsresult Resolve(uint32_t aId, uint64_t aValue, bool aForceDispatch);
+  nsresult Resolve(uint32_t aId, DeviceStorageFile* aValue, bool aForceDispatch);
+  nsresult Resolve(uint32_t aId, mozilla::dom::BlobImpl* aValue, bool aForceDispatch);
+  nsresult Reject(uint32_t aId, const nsString& aReason);
+  nsresult Reject(uint32_t aId, const char* aReason);
+
+  void Shutdown();
+
+private:
+  DeviceStorageRequestManager(const DeviceStorageRequestManager&) = delete;
+  DeviceStorageRequestManager& operator=(const DeviceStorageRequestManager&) = delete;
+
+  struct ListEntry {
+    nsRefPtr<mozilla::dom::DOMRequest> mRequest;
+    uint32_t mId;
+    bool mCursor;
+  };
+
+  typedef nsTArray<ListEntry> ListType;
+  typedef ListType::index_type ListIndex;
+
+  virtual ~DeviceStorageRequestManager();
+  uint32_t CreateInternal(mozilla::dom::DOMRequest* aRequest, bool aCursor);
+  nsresult ResolveInternal(ListIndex aIndex, JS::HandleValue aResult);
+  nsresult RejectInternal(ListIndex aIndex, const nsString& aReason);
+  nsresult DispatchOrAbandon(uint32_t aId, nsIRunnable* aRunnable);
+  ListType::index_type Find(uint32_t aId);
+
+  nsCOMPtr<nsIThread> mOwningThread;
+  ListType mPending; // owning thread or destructor only
+
+  mozilla::Mutex mMutex;
+  uint32_t mPermissionCache[DEVICE_STORAGE_ACCESS_COUNT];
+  bool mShutdown;
+
+  static mozilla::Atomic<uint32_t> sLastRequestId;
+};
+
+class DeviceStorageRequest
+  : public nsRunnable
+{
+protected:
+  DeviceStorageRequest();
+
+public:
+  virtual void Initialize(DeviceStorageRequestManager* aManager,
+                          DeviceStorageFile* aFile,
+                          uint32_t aRequest);
+
+  virtual void Initialize(DeviceStorageRequestManager* aManager,
+                          DeviceStorageFile* aFile,
+                          uint32_t aRequest,
+                          mozilla::dom::BlobImpl* aBlob);
+
+  virtual void Initialize(DeviceStorageRequestManager* aManager,
+                          DeviceStorageFile* aFile,
+                          uint32_t aRequest,
+                          DeviceStorageFileDescriptor* aDSFileDescriptor);
+
+  DeviceStorageAccessType GetAccess() const;
+  void GetStorageType(nsAString& aType) const;
+  DeviceStorageFile* GetFile() const;
+  DeviceStorageFileDescriptor* GetFileDescriptor() const;
+  DeviceStorageRequestManager* GetManager() const;
+
+  uint32_t GetId() const
+  {
+    return mId;
+  }
+
+  void PermissionCacheMissed()
+  {
+    mPermissionCached = false;
+  }
+
+  nsresult Cancel();
+  nsresult Allow();
+
+  nsresult Resolve()
+  {
+    /* Always dispatch an empty resolve because that signals a cursor end
+       and should not be executed directly from the caller's context due
+       to the object potentially getting freed before we return. */
+    uint32_t id = mId;
+    mId = DeviceStorageRequestManager::INVALID_ID;
+    return mManager->Resolve(id, true);
+  }
+
+  template<class T>
+  nsresult Resolve(T aValue)
+  {
+    uint32_t id = mId;
+    if (!mMultipleResolve) {
+      mId = DeviceStorageRequestManager::INVALID_ID;
+    }
+    return mManager->Resolve(id, aValue, ForceDispatch());
+  }
+
+  template<class T>
+  nsresult Reject(T aReason)
+  {
+    uint32_t id = mId;
+    mId = DeviceStorageRequestManager::INVALID_ID;
+    return mManager->Reject(id, aReason);
+  }
+
+protected:
+  bool ForceDispatch() const
+  {
+    return !mSendToParent && mPermissionCached;
+  }
+
+  virtual ~DeviceStorageRequest();
+  virtual void Prepare();
+  virtual nsresult CreateSendParams(mozilla::dom::DeviceStorageParams& aParams);
+  nsresult AllowInternal();
+  nsresult SendToParentProcess();
+
+  nsRefPtr<DeviceStorageRequestManager> mManager;
+  nsRefPtr<DeviceStorageFile> mFile;
+  uint32_t mId;
+  nsRefPtr<mozilla::dom::BlobImpl> mBlob;
+  nsRefPtr<DeviceStorageFileDescriptor> mDSFileDescriptor;
+  DeviceStorageAccessType mAccess;
+  bool mSendToParent;
+  bool mUseStreamTransport;
+  bool mCheckFile;
+  bool mCheckBlob;
+  bool mMultipleResolve;
+  bool mPermissionCached;
+
+private:
+  DeviceStorageRequest(const DeviceStorageRequest&) = delete;
+  DeviceStorageRequest& operator=(const DeviceStorageRequest&) = delete;
+};
+
+class DeviceStorageCursorRequest final
+  : public DeviceStorageRequest
+{
+public:
+  DeviceStorageCursorRequest();
+
+  using DeviceStorageRequest::Initialize;
+
+  virtual void Initialize(DeviceStorageRequestManager* aManager,
+                          DeviceStorageFile* aFile,
+                          uint32_t aRequest,
+                          PRTime aSince);
+
+  void AddFiles(size_t aSize);
+  void AddFile(already_AddRefed<DeviceStorageFile> aFile);
+  nsresult Continue();
+  NS_IMETHOD Run() override;
+
+protected:
+  virtual ~DeviceStorageCursorRequest()
+  { };
+
+  nsresult SendContinueToParentProcess();
+  nsresult CreateSendParams(mozilla::dom::DeviceStorageParams& aParams) override;
+
+  size_t mIndex;
+  PRTime mSince;
+  nsString mStorageType;
+  nsTArray<nsRefPtr<DeviceStorageFile> > mFiles;
+};
 
 #endif

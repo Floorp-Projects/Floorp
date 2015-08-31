@@ -1708,7 +1708,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     for (nsDocShell* docShell : profilingDocShells) {
       // For the sake of the profile timeline's simplicity, this is flagged as
       // paint even if it includes creating display lists
-      TimelineConsumers::AddMarkerForDocShell(docShell, "Paint", TRACING_INTERVAL_START);
+      TimelineConsumers::AddMarkerForDocShell(docShell, "Paint",  MarkerTracingType::START);
     }
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
@@ -1725,7 +1725,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     }
 #endif
     for (nsDocShell* docShell : profilingDocShells) {
-      TimelineConsumers::AddMarkerForDocShell(docShell, "Paint", TRACING_INTERVAL_END);
+      TimelineConsumers::AddMarkerForDocShell(docShell, "Paint",  MarkerTracingType::END);
     }
 
     if (nsContentUtils::XPConnect()) {

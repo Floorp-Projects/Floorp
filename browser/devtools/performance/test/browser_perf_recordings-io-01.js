@@ -7,7 +7,7 @@
 
 let test = Task.async(function*() {
   var { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
-  var { EVENTS, PerformanceController, PerformanceView, DetailsView, DetailsSubview } = panel.panelWin;
+  var { $, EVENTS, PerformanceController, PerformanceView, DetailsView, DetailsSubview } = panel.panelWin;
 
   // Enable allocations to test the memory-calltree and memory-flamegraph.
   Services.prefs.setBoolPref(ALLOCATIONS_PREF, true);
@@ -44,6 +44,13 @@ let test = Task.async(function*() {
 
   yield exported;
   ok(true, "The recording data appears to have been successfully saved.");
+
+ //  Check if the imported file name has tmpprofile in it as the file
+ //  names also has different suffix to avoid conflict
+
+  let displayedName = $(".recording-item-title").getAttribute("value");
+  ok(/^tmpprofile/.test(displayedName), "File has expected display name after import");
+  ok(!/\.json$/.test(displayedName), "Display name does not have .json in it");
 
   // Import recording.
 

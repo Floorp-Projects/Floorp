@@ -32,7 +32,7 @@ interface nsIPresentationServiceCallback : nsISupports
   void notifyError(in nsresult error);
 };
 
-[scriptable, uuid(5801efd9-9dba-4af7-8be9-8fc97c2d54a6)]
+[scriptable, uuid(731af98a-2760-4e7f-bb59-c7cf6665f26f)]
 interface nsIPresentationService : nsISupports
 {
   /*
@@ -99,14 +99,29 @@ interface nsIPresentationService : nsISupports
 
   /*
    * Check if the presentation instance has an existent session ID at launch.
-   * An empty string is returned at sender side; non-empty at receiver side.
+   * An empty string is always returned at sender side. Whereas at receiver side
+   * the associated session ID is returned if the window ID and URI are matched;
+   * otherwise an empty string is returned.
+   *
+   * @param windowId: The inner window ID used to look up the session ID.
    */
-  DOMString getExistentSessionIdAtLaunch();
+  DOMString getExistentSessionIdAtLaunch(in uint64_t windowId);
 
   /*
    * Notify the receiver page is ready for presentation use.
    *
    * @param sessionId: An ID to identify presentation session.
+   * @param windowId: The inner window ID associated with the presentation
+   *                  session. (0 implies no window ID since no actual window
+   *                  uses 0 as its ID.)
    */
-  void notifyReceiverReady(in DOMString sessionId);
+  void notifyReceiverReady(in DOMString sessionId,
+                           [optional] in uint64_t windowId);
+
+  /*
+   * Untrack the relevant info about the presentation session if there's any.
+   *
+   * @param sessionId: An ID to identify presentation session.
+   */
+  void untrackSessionInfo(in DOMString sessionId);
 };

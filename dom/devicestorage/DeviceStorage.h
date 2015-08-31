@@ -41,8 +41,14 @@ class DeviceStorageFileSystem;
 } // namespace dom
 namespace ipc {
 class FileDescriptor;
+class PrincipalInfo;
 } // namespace ipc
 } // namespace mozilla
+
+class DeviceStorageRequest;
+class DeviceStorageCursorRequest;
+class DeviceStorageRequestManager;
+class nsDOMDeviceStorageCursor;
 
 class DeviceStorageFile final
   : public nsISupports {
@@ -198,10 +204,6 @@ public:
               ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
-  AddOrAppendNamed(mozilla::dom::Blob* aBlob, const nsAString& aPath,
-                   const int32_t aRequestType, ErrorResult& aRv);
-
-  already_AddRefed<DOMRequest>
   Get(const nsAString& aPath, ErrorResult& aRv)
   {
     return GetInternal(aPath, false, aRv);
@@ -290,15 +292,31 @@ public:
   void OnVolumeStateChanged(nsIVolume* aVolume);
 #endif
 
+  uint32_t CreateDOMRequest(DOMRequest** aRequest, ErrorResult& aRv);
+  uint32_t CreateDOMCursor(DeviceStorageCursorRequest* aRequest,
+                           nsDOMDeviceStorageCursor** aCursor,
+                           ErrorResult& aRv);
+  already_AddRefed<DOMRequest> CreateAndRejectDOMRequest(const char *aReason,
+                                                         ErrorResult& aRv);
+
+  nsresult CheckPermission(DeviceStorageRequest* aRequest);
+  void StorePermission(DeviceStorageRequest* aRequest, bool aAllow);
+
+  bool IsOwningThread();
+  nsresult DispatchToOwningThread(nsIRunnable* aRunnable);
+
 private:
   ~nsDOMDeviceStorage();
 
+  static nsresult CheckPrincipal(nsPIDOMWindow* aWindow, bool aIsAppsStorage,
+                                 nsIPrincipal** aPrincipal);
+
+  already_AddRefed<DOMRequest>
+  AddOrAppendNamed(mozilla::dom::Blob* aBlob, const nsAString& aPath,
+                   bool aCreate, ErrorResult& aRv);
+
   already_AddRefed<DOMRequest>
   GetInternal(const nsAString& aPath, bool aEditable, ErrorResult& aRv);
-
-  void
-  GetInternal(nsPIDOMWindow* aWin, const nsAString& aPath, DOMRequest* aRequest,
-              bool aEditable);
 
   void
   DeleteInternal(nsPIDOMWindow* aWin, const nsAString& aPath,
@@ -327,10 +345,6 @@ private:
                             const nsAString& aStorageName,
                             const nsAString& aType);
 
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-
-  bool mIsWatchingFile;
-  bool mAllowedToWatchFile;
   bool mIsDefaultLocation;
 
   nsresult Notify(const char* aReason, class DeviceStorageFile* aFile);
@@ -347,7 +361,11 @@ private:
   void DispatchStorageStatusChangeEvent(nsAString& aStorageStatus);
 #endif
 
+  uint64_t mInnerWindowID;
   nsRefPtr<DeviceStorageFileSystem> mFileSystem;
+  nsRefPtr<DeviceStorageRequestManager> mManager;
+  nsAutoPtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
+  nsCOMPtr<nsIThread> mOwningThread;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMDeviceStorage, NS_DOM_DEVICE_STORAGE_CID)

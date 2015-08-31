@@ -1091,9 +1091,9 @@ nsView::DidCompositeWindow(const TimeStamp& aCompositeStart,
     nsIDocShell* docShell = context->GetDocShell();
 
     TimelineConsumers::AddMarkerForDocShell(docShell,
-      "Composite", aCompositeStart, TRACING_INTERVAL_START);
+      "Composite", aCompositeStart, MarkerTracingType::START);
     TimelineConsumers::AddMarkerForDocShell(docShell,
-      "Composite", aCompositeEnd, TRACING_INTERVAL_END);
+      "Composite", aCompositeEnd, MarkerTracingType::END);
   }
 }
 

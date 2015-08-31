@@ -222,7 +222,7 @@ HistoryStore.prototype = {
         } else {
           shouldApply = this._recordToPlaceInfo(record);
         }
-      } catch(ex) {
+      } catch (ex if !Async.isShutdownException(ex)) {
         failed.push(record.id);
         shouldApply = false;
       }
