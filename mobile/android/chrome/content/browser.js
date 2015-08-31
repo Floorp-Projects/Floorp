@@ -153,6 +153,7 @@ let lazilyLoadedObserverScripts = [
   ["SelectionHandler", ["TextSelection:Get"], "chrome://browser/content/SelectionHandler.js"],
   ["EmbedRT", ["GeckoView:ImportScript"], "chrome://browser/content/EmbedRT.js"],
   ["Reader", ["Reader:FetchContent", "Reader:Added", "Reader:Removed"], "chrome://browser/content/Reader.js"],
+  ["PrintHelper", ["Print:PDF"], "chrome://browser/content/PrintHelper.js"],
 ];
 if (AppConstants.NIGHTLY_BUILD) {
   lazilyLoadedObserverScripts.push(
