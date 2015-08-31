@@ -667,7 +667,7 @@ this.BrowserIDManager.prototype = {
     this._ensureValidToken().then(cb, cb);
     try {
       cb.wait();
-    } catch (ex) {
+    } catch (ex if !Async.isShutdownException(ex)) {
       this._log.error("Failed to fetch a token for authentication", ex);
       return null;
     }
