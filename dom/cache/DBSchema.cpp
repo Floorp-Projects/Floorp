@@ -36,7 +36,8 @@ const int32_t kFirstShippedSchemaVersion = 15;
 
 namespace {
 
-const int32_t kLatestSchemaVersion = 15;
+// Update this whenever the DB schema is changed.
+const int32_t kLatestSchemaVersion = 16;
 
 // ---------
 // The following constants define the SQL schema.  These are defined in the
@@ -105,7 +106,11 @@ const char* const kTableEntries =
     // Note that response_redirected_url is either going to be empty, or
     // it's going to be a URL different than response_url.
     "response_redirected_url TEXT NOT NULL, "
-    "cache_id INTEGER NOT NULL REFERENCES caches(id) ON DELETE CASCADE"
+    "cache_id INTEGER NOT NULL REFERENCES caches(id) ON DELETE CASCADE, "
+
+    // New columns must be added at the end of table to migrate and
+    // validate properly.
+    "request_redirect INTEGER NOT NULL"
   ")";
 
 // Create an index to support the QueryCache() matching algorithm.  This
@@ -207,12 +212,18 @@ static_assert(int(RequestCache::Default) == 0 &&
               int(RequestCache::Only_if_cached) == 5 &&
               int(RequestCache::EndGuard_) == 6,
               "RequestCache values are as expected");
+static_assert(int(RequestRedirect::Follow) == 0 &&
+              int(RequestRedirect::Error) == 1 &&
+              int(RequestRedirect::Manual) == 2 &&
+              int(RequestRedirect::EndGuard_) == 3,
+              "RequestRedirect values are as expected");
 static_assert(int(ResponseType::Basic) == 0 &&
               int(ResponseType::Cors) == 1 &&
               int(ResponseType::Default) == 2 &&
               int(ResponseType::Error) == 3 &&
               int(ResponseType::Opaque) == 4 &&
-              int(ResponseType::EndGuard_) == 5,
+              int(ResponseType::Opaqueredirect) == 5 &&
+              int(ResponseType::EndGuard_) == 6,
               "ResponseType values are as expected");
 
 // If the static_asserts below fails, it means that you have changed the
@@ -360,7 +371,8 @@ CreateOrMigrateSchema(mozIStorageConnection* aConn)
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     // Migrations happen infrequently and reflect a chance in DB structure.
-    // This is a good time to rebuild the database.
+    // This is a good time to rebuild the database.  It also helps catch
+    // if a new migration is incorrect by fast failing on the corruption.
     needVacuum = true;
 
   } else {
@@ -1580,6 +1592,7 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
       "request_credentials, "
       "request_contentpolicytype, "
       "request_cache, "
+      "request_redirect, "
       "request_body_id, "
       "response_type, "
       "response_url, "
@@ -1604,6 +1617,7 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
       ":request_credentials, "
       ":request_contentpolicytype, "
       ":request_cache, "
+      ":request_redirect, "
       ":request_body_id, "
       ":response_type, "
       ":response_url, "
@@ -1671,6 +1685,9 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
   rv = state->BindInt32ByName(NS_LITERAL_CSTRING("request_cache"),
     static_cast<int32_t>(aRequest.requestCache()));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("request_redirect"),
+    static_cast<int32_t>(aRequest.requestRedirect()));
 
   rv = BindId(state, NS_LITERAL_CSTRING("request_body_id"), aRequestBodyId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -1951,6 +1968,7 @@ ReadRequest(mozIStorageConnection* aConn, EntryId aEntryId,
       "request_credentials, "
       "request_contentpolicytype, "
       "request_cache, "
+      "request_redirect, "
       "request_body_id "
     "FROM entries "
     "WHERE id=:id;"
@@ -2005,13 +2023,19 @@ ReadRequest(mozIStorageConnection* aConn, EntryId aEntryId,
   aSavedRequestOut->mValue.requestCache() =
     static_cast<RequestCache>(requestCache);
 
+  int32_t requestRedirect;
+  rv = state->GetInt32(9, &requestRedirect);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+  aSavedRequestOut->mValue.requestRedirect() =
+    static_cast<RequestRedirect>(requestRedirect);
+
   bool nullBody = false;
-  rv = state->GetIsNull(9, &nullBody);
+  rv = state->GetIsNull(10, &nullBody);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedRequestOut->mHasBodyId = !nullBody;
 
   if (aSavedRequestOut->mHasBodyId) {
-    rv = ExtractId(state, 9, &aSavedRequestOut->mBodyId);
+    rv = ExtractId(state, 10, &aSavedRequestOut->mBodyId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   }
 
@@ -2360,9 +2384,11 @@ struct Migration
 
 // Declare migration functions here.  Each function should upgrade
 // the version by a single increment.  Don't skip versions.
+nsresult MigrateFrom15To16(mozIStorageConnection* aConn);
 
 // Configure migration functions to run for the given starting version.
 Migration sMigrationList[] = {
+  Migration(15, MigrateFrom15To16),
 };
 
 uint32_t sMigrationListLength = sizeof(sMigrationList) / sizeof(Migration);
@@ -2398,6 +2424,54 @@ Migrate(mozIStorageConnection* aConn)
   }
 
   MOZ_ASSERT(currentVersion == kLatestSchemaVersion);
+
+  return rv;
+}
+
+nsresult MigrateFrom15To16(mozIStorageConnection* aConn)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(aConn);
+
+  // Add the request_redirect column with a default value of "follow".  Note,
+  // we only use a default value here because its required by ALTER TABLE and
+  // we need to apply the default "follow" to existing records in the table.
+  // We don't actually want to keep the default in the schema for future
+  // INSERTs.
+  nsresult rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "ALTER TABLE entries "
+    "ADD COLUMN request_redirect INTEGER NOT NULL DEFAULT 0"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  // Now overwrite the master SQL for the entries table to remove the column
+  // default value.  This is also necessary for our Validate() method to
+  // pass on this database.
+  rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "PRAGMA writable_schema = ON"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  nsCOMPtr<mozIStorageStatement> state;
+  rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE sqlite_master SET sql=:sql WHERE name='entries'"
+  ), getter_AddRefs(state));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("sql"),
+                                   nsDependentCString(kTableEntries));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = state->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = aConn->SetSchemaVersion(16);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "PRAGMA writable_schema = OFF"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   return rv;
 }
