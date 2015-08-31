@@ -325,6 +325,7 @@ static nsresult CreateAndBindKeyStatement(mozIStorageConnection* aConn,
                                           mozIStorageStatement** aStateOut);
 static nsresult HashCString(nsICryptoHash* aCrypto, const nsACString& aIn,
                             nsACString& aOut);
+nsresult Validate(mozIStorageConnection* aConn);
 } // namespace
 
 nsresult
@@ -338,7 +339,11 @@ CreateSchema(mozIStorageConnection* aConn)
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   if (schemaVersion == kLatestSchemaVersion) {
-    // We already have the correct schema, so just get started.
+    // We already have the correct schema version.  Validate it matches
+    // our expected schema and then proceed.
+    rv = Validate(aConn);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
     return rv;
   }
 
@@ -377,9 +382,8 @@ CreateSchema(mozIStorageConnection* aConn)
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   }
 
-  if (schemaVersion != kLatestSchemaVersion) {
-    return NS_ERROR_FAILURE;
-  }
+  rv = Validate(aConn);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   return rv;
 }
@@ -2204,6 +2208,116 @@ IncrementalVacuum(mozIStorageConnection* aConn)
 
   return NS_OK;
 }
+
+namespace {
+
+#ifdef DEBUG
+struct Expect
+{
+  // Expect exact SQL
+  Expect(const char* aName, const char* aType, const char* aSql)
+    : mName(aName)
+    , mType(aType)
+    , mSql(aSql)
+    , mIgnoreSql(false)
+  { }
+
+  // Ignore SQL
+  Expect(const char* aName, const char* aType)
+    : mName(aName)
+    , mType(aType)
+    , mIgnoreSql(true)
+  { }
+
+  const nsCString mName;
+  const nsCString mType;
+  const nsCString mSql;
+  const bool mIgnoreSql;
+};
+#endif
+
+nsresult
+Validate(mozIStorageConnection* aConn)
+{
+  int32_t schemaVersion;
+  nsresult rv = aConn->GetSchemaVersion(&schemaVersion);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  if (NS_WARN_IF(schemaVersion != kLatestSchemaVersion)) {
+    return NS_ERROR_FAILURE;
+  }
+
+#ifdef DEBUG
+  // This is the schema we expect the database at the latest version to
+  // contain.  Update this list if you add a new table or index.
+  Expect expect[] = {
+    Expect("caches", "table", kTableCaches),
+    Expect("sqlite_sequence", "table"), // auto-gen by sqlite
+    Expect("security_info", "table", kTableSecurityInfo),
+    Expect("security_info_hash_index", "index", kIndexSecurityInfoHash),
+    Expect("entries", "table", kTableEntries),
+    Expect("entries_request_match_index", "index", kIndexEntriesRequest),
+    Expect("request_headers", "table", kTableRequestHeaders),
+    Expect("response_headers", "table", kTableResponseHeaders),
+    Expect("response_headers_name_index", "index", kIndexResponseHeadersName),
+    Expect("storage", "table", kTableStorage),
+    Expect("sqlite_autoindex_storage_1", "index"), // auto-gen by sqlite
+  };
+  const uint32_t expectLength = sizeof(expect) / sizeof(Expect);
+
+  // Read the schema from the sqlite_master table and compare.
+  nsCOMPtr<mozIStorageStatement> state;
+  rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT name, type, sql FROM sqlite_master;"
+  ), getter_AddRefs(state));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  bool hasMoreData = false;
+  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
+    nsAutoCString name;
+    rv = state->GetUTF8String(0, name);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+    nsAutoCString type;
+    rv = state->GetUTF8String(1, type);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+    nsAutoCString sql;
+    rv = state->GetUTF8String(2, sql);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+    bool foundMatch = false;
+    for (uint32_t i = 0; i < expectLength; ++i) {
+      if (name == expect[i].mName) {
+        if (type != expect[i].mType) {
+          NS_WARNING(nsPrintfCString("Unexpected type for Cache schema entry %s",
+                     name.get()).get());
+          return NS_ERROR_FAILURE;
+        }
+
+        if (!expect[i].mIgnoreSql && sql != expect[i].mSql) {
+          NS_WARNING(nsPrintfCString("Unexpected SQL for Cache schema entry %s",
+                     name.get()).get());
+          return NS_ERROR_FAILURE;
+        }
+
+        foundMatch = true;
+        break;
+      }
+    }
+
+    if (NS_WARN_IF(!foundMatch)) {
+      NS_WARNING(nsPrintfCString("Unexpected schema entry %s in Cache database",
+                 name.get()).get());
+      return NS_ERROR_FAILURE;
+    }
+  }
+#endif
+
+  return rv;
+}
+
+} // anonymous namespace
 
 } // namespace db
 } // namespace cache
