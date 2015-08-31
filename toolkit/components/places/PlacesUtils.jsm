@@ -2415,15 +2415,17 @@ let GuidHelper = {
     if (cached !== undefined)
       return cached;
 
-    let conn = yield PlacesUtils.promiseDBConnection();
+    let itemId = yield PlacesUtils.withConnectionWrapper("GuidHelper.getItemId",
+                                                         Task.async(function* (db) {
+      let rows = yield db.executeCached(
+        "SELECT b.id, b.guid from moz_bookmarks b WHERE b.guid = :guid LIMIT 1",
+        { guid: aGuid });
+      if (rows.length == 0)
+        throw new Error("no item found for the given GUID");
 
-    let rows = yield conn.executeCached(
-      "SELECT b.id, b.guid from moz_bookmarks b WHERE b.guid = :guid LIMIT 1",
-      { guid: aGuid });
-    if (rows.length == 0)
-      throw new Error("no item found for the given GUID");
+      return rows[0].getResultByName("id");
+    }));
 
-    let itemId = rows[0].getResultByName("id");
     this.updateCache(itemId, aGuid);
     return itemId;
   }),
@@ -2433,15 +2435,18 @@ let GuidHelper = {
     if (cached !== undefined)
       return cached;
 
-    let conn = yield PlacesUtils.promiseDBConnection();
+    let guid = yield PlacesUtils.withConnectionWrapper("GuidHelper.getItemGuid",
+                                                       Task.async(function* (db) {
 
-    let rows = yield conn.executeCached(
-      "SELECT b.id, b.guid from moz_bookmarks b WHERE b.id = :id LIMIT 1",
-      { id: aItemId });
-    if (rows.length == 0)
-      throw new Error("no item found for the given itemId");
+      let rows = yield db.executeCached(
+        "SELECT b.id, b.guid from moz_bookmarks b WHERE b.id = :id LIMIT 1",
+        { id: aItemId });
+      if (rows.length == 0)
+        throw new Error("no item found for the given itemId");
 
-    let guid = rows[0].getResultByName("guid");
+      return rows[0].getResultByName("guid");
+    }));
+
     this.updateCache(aItemId, guid);
     return guid;
   }),
