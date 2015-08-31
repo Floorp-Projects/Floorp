@@ -2,17 +2,18 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that the JIT Optimizations view does not display information
+ * Tests that the OptimizationsListView does not display information
  * for meta nodes when viewing "content only".
  */
 
 Services.prefs.setBoolPref(INVERT_PREF, false);
 Services.prefs.setBoolPref(PLATFORM_DATA_PREF, false);
+let { CATEGORY_MASK } = require("devtools/performance/global");
 
 function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, $, $$, window, PerformanceController } = panel.panelWin;
-  let { OverviewView, DetailsView, JITOptimizationsView, JsCallTreeView, RecordingsView } = panel.panelWin;
+  let { OverviewView, DetailsView, OptimizationsListView, JsCallTreeView, RecordingsView } = panel.panelWin;
 
   let profilerData = { threads: [gThread] };
 
@@ -31,14 +32,14 @@ function* spawnTest() {
   yield injectAndRenderProfilerData();
 
   // Click the frame
-  let rendered = once(JITOptimizationsView, EVENTS.OPTIMIZATIONS_RENDERED);
+  let rendered = once(OptimizationsListView, EVENTS.OPTIMIZATIONS_RENDERED);
   mousedown(window, $$(".call-tree-item")[2]);
   yield rendered;
 
   ok($("#jit-optimizations-view").classList.contains("empty"),
     "platform meta frame shows as empty");
 
-  let { $headerName, $headerLine, $headerFile } = JITOptimizationsView;
+  let { $headerName, $headerLine, $headerFile } = OptimizationsListView;
   ok(!$headerName.hidden, "header function name should be shown");
   ok($headerLine.hidden, "header line should be hidden");
   ok($headerFile.hidden, "header file should be hidden");

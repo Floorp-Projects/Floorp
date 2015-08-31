@@ -116,7 +116,7 @@ const EVENTS = {
   // When the PerformanceView updates the display of the buffer status
   UI_BUFFER_STATUS_UPDATED: "Performance:UI:BufferUpdated",
 
-  // Emitted by the JITOptimizationsView when it renders new optimization
+  // Emitted by the OptimizationsListView when it renders new optimization
   // data and clears the optimization data
   OPTIMIZATIONS_RESET: "Performance:UI:OptimizationsReset",
   OPTIMIZATIONS_RENDERED: "Performance:UI:OptimizationsRendered",
