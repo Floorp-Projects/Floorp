@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # XXX Bug 1181261 - Please update config in testing/mozharness/config
-# instead. This file is still needed for mulet mochitests, but should
-# be removed once bug 1188330 is finished.
+# instead. This file is still needed for taskcluster emulator tests,
+# but should be removed once bug 1188330 is finished.
 
 config = {
     "suite_definitions": {
