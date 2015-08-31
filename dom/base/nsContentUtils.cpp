@@ -3458,6 +3458,8 @@ nsContentUtils::MaybeReportInterceptionErrorToConsole(nsIDocument* aDocument,
     messageName = "InterceptedUsedResponse";
   } else if (aError == NS_ERROR_CLIENT_REQUEST_OPAQUE_INTERCEPTION) {
     messageName = "ClientRequestOpaqueInterception";
+  } else if (aError == NS_ERROR_BAD_OPAQUE_REDIRECT_INTERCEPTION) {
+    messageName = "BadOpaqueRedirectInterception";
   }
 
   if (messageName) {
