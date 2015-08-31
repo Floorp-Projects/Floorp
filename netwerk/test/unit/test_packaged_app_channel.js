@@ -123,14 +123,20 @@ function run_test()
   do_register_cleanup(reset_pref);
 
   add_test(test_channel);
+  add_test(test_channel_no_notificationCallbacks);
   add_test(test_channel_uris);
 
   // run tests
   run_next_test();
 }
 
-function test_channel() {
+function test_channel(aNullNotificationCallbacks) {
   var channel = make_channel(uri+"/package!//index.html");
+
+  if (!aNullNotificationCallbacks) {
+    channel.notificationCallbacks = new LoadContextCallback(1024, false, false, false);
+  }
+
   channel.asyncOpen(new Listener(function(l) {
     // XXX: no content length available for this resource
     //do_check_true(channel.contentLength > 0);
@@ -138,6 +144,10 @@ function test_channel() {
     do_check_true(l.gotStopRequest);
     run_next_test();
   }), null);
+}
+
+function test_channel_no_notificationCallbacks() {
+  test_channel(true);
 }
 
 function test_channel_uris() {
