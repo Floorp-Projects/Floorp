@@ -179,6 +179,7 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
   aOut.credentials() = aIn->GetCredentialsMode();
   aOut.contentPolicyType() = aIn->ContentPolicyType();
   aOut.requestCache() = aIn->GetCacheMode();
+  aOut.requestRedirect() = aIn->GetRedirectMode();
 
   if (aBodyAction == IgnoreBody) {
     aOut.body() = void_t();
@@ -212,8 +213,8 @@ TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
     }
   }
 
-  aOut.status() = aIn.GetStatus();
-  aOut.statusText() = aIn.GetStatusText();
+  aOut.status() = aIn.GetUnfilteredStatus();
+  aOut.statusText() = aIn.GetUnfilteredStatusText();
   nsRefPtr<InternalHeaders> headers = aIn.UnfilteredHeaders();
   MOZ_ASSERT(headers);
   if (HasVaryStar(headers)) {
@@ -245,7 +246,7 @@ TypeUtils::ToCacheResponse(CacheResponse& aOut, Response& aIn, ErrorResult& aRv)
   }
 
   nsCOMPtr<nsIInputStream> stream;
-  ir->GetInternalBody(getter_AddRefs(stream));
+  ir->GetUnfilteredBody(getter_AddRefs(stream));
   if (stream) {
     aIn.SetBodyUsed();
   }
@@ -304,16 +305,19 @@ TypeUtils::ToResponse(const CacheResponse& aIn)
 
   switch (aIn.type())
   {
-    case ResponseType::Default:
-      break;
-    case ResponseType::Opaque:
-      ir = ir->OpaqueResponse();
-      break;
     case ResponseType::Basic:
       ir = ir->BasicResponse();
       break;
     case ResponseType::Cors:
       ir = ir->CORSResponse();
+      break;
+    case ResponseType::Default:
+      break;
+    case ResponseType::Opaque:
+      ir = ir->OpaqueResponse();
+      break;
+    case ResponseType::Opaqueredirect:
+      ir = ir->OpaqueRedirectResponse();
       break;
     default:
       MOZ_CRASH("Unexpected ResponseType!");
@@ -340,6 +344,7 @@ TypeUtils::ToInternalRequest(const CacheRequest& aIn)
   internalRequest->SetCredentialsMode(aIn.credentials());
   internalRequest->SetContentPolicyType(aIn.contentPolicyType());
   internalRequest->SetCacheMode(aIn.requestCache());
+  internalRequest->SetRedirectMode(aIn.requestRedirect());
 
   nsRefPtr<InternalHeaders> internalHeaders =
     ToInternalHeaders(aIn.headers(), aIn.headersGuard());
