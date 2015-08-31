@@ -170,6 +170,7 @@ protected:
   virtual CommonAnimationManager* GetAnimationManager() const override;
 
   void QueueEvents();
+  bool HasEndEventToQueue() const override;
 
   // The (pseudo-)element whose computed transition-property refers to this
   // transition (if any).
