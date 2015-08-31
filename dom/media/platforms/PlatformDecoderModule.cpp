@@ -147,6 +147,10 @@ PlatformDecoderModule::Create()
 already_AddRefed<PlatformDecoderModule>
 PlatformDecoderModule::CreatePDM()
 {
+  if (sGMPDecoderEnabled) {
+    nsRefPtr<PlatformDecoderModule> m(new GMPDecoderModule());
+    return m.forget();
+  }
 #ifdef MOZ_WIDGET_ANDROID
   if(sAndroidMCDecoderPreferred && sAndroidMCDecoderEnabled){
     nsRefPtr<PlatformDecoderModule> m(new AndroidDecoderModule());
@@ -184,10 +188,6 @@ PlatformDecoderModule::CreatePDM()
     return m.forget();
   }
 #endif
-  if (sGMPDecoderEnabled) {
-    nsRefPtr<PlatformDecoderModule> m(new GMPDecoderModule());
-    return m.forget();
-  }
   return nullptr;
 }
 
