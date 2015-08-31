@@ -35,6 +35,10 @@
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
 
+class nsIChannel;
+class nsIHttpChannel;
+class nsILoadGroup;
+
 typedef uint16_t nsMediaNetworkState;
 typedef uint16_t nsMediaReadyState;
 
@@ -52,13 +56,9 @@ class MediaTrack;
 } // namespace dom
 } // namespace mozilla
 
-class AutoNotifyAudioChannelAgent;
-class nsIChannel;
-class nsIHttpChannel;
-class nsILoadGroup;
-class nsIRunnable;
 class nsITimer;
 class nsRange;
+class nsIRunnable;
 
 namespace mozilla {
 namespace dom {
@@ -78,8 +78,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
                          public MediaDecoderOwner,
                          public nsIAudioChannelAgentCallback
 {
-  friend class AutoNotifyAudioChannelAgent;
-
 public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::layers::ImageContainer ImageContainer;
@@ -1051,10 +1049,6 @@ protected:
 
   // Notifies the audio channel agent when the element starts or stops playing.
   void NotifyAudioChannelAgent(bool aPlaying);
-
-  // Creates the audio channel agent if needed.  Returns true if the audio
-  // channel agent is ready to be used.
-  bool MaybeCreateAudioChannelAgent();
 
   class nsAsyncEventRunner;
   using nsGenericHTMLElement::DispatchEvent;
