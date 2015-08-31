@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+    'GMPVideoDecoderTrialCreator.h',
     'MediaEncryptedEvent.h',
     'MediaKeyError.h',
     'MediaKeyMessageEvent.h',
@@ -29,6 +30,7 @@ UNIFIED_SOURCES += [
     'CDMProxy.cpp',
     'DetailedPromise.cpp',
     'EMEUtils.cpp',
+    'GMPVideoDecoderTrialCreator.cpp',
     'MediaEncryptedEvent.cpp',
     'MediaKeyError.cpp',
     'MediaKeyMessageEvent.cpp',
@@ -38,14 +40,6 @@ UNIFIED_SOURCES += [
     'MediaKeySystemAccess.cpp',
     'MediaKeySystemAccessManager.cpp',
 ]
-
-if CONFIG['OS_ARCH'] == 'WINNT':
-    UNIFIED_SOURCES += [
-        'GMPVideoDecoderTrialCreator.cpp',
-    ]
-    EXPORTS.mozilla.dom += [
-        'GMPVideoDecoderTrialCreator.h',
-    ]
 
 FINAL_LIBRARY = 'xul'
 

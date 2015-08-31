@@ -13,6 +13,9 @@
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
 #endif
+#ifdef XP_MACOSX
+#include "nsCocoaFeatures.h"
+#endif
 #include "nsPrintfCString.h"
 
 namespace mozilla {
@@ -72,6 +75,23 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
   Sequence<MediaKeySystemOptions> optionsNotPassed;
   const auto& options = aOptions.WasPassed() ? aOptions.Value() : optionsNotPassed;
   Request(aPromise, aKeySystem, options, RequestType::Initial);
+}
+
+static bool
+ShouldTrialCreateGMP(const nsAString& aKeySystem)
+{
+  // Trial create where the CDM has a decoder;
+  // * ClearKey and Primetime on Windows Vista and later.
+  // * Primetime on MacOSX Lion and later.
+  return
+#ifdef XP_WIN
+    IsVistaOrLater();
+#elif defined(XP_MACOSX)
+    aKeySystem.EqualsLiteral("com.adobe.primetime") &&
+    nsCocoaFeatures::OnLionOrLater();
+#else
+    false;
+#endif
 }
 
 void
@@ -164,16 +184,14 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
       MediaKeySystemAccess::IsSupported(keySystem, aOptions)) {
     nsRefPtr<MediaKeySystemAccess> access(
       new MediaKeySystemAccess(mWindow, keySystem, NS_ConvertUTF8toUTF16(cdmVersion)));
-#ifdef XP_WIN
-    if (IsVistaOrLater()) {
-      // On Windows, ensure we have tried creating a GMPVideoDecoder for this
+   if (ShouldTrialCreateGMP(keySystem)) {
+      // Ensure we have tried creating a GMPVideoDecoder for this
       // keySystem, and that we can use it to decode. This ensures that we only
       // report that we support this keySystem when the CDM us usable (i.e.
-      // all system libraries required are installed).
+      // report that we support this keySystem when the CDM us usable.
       mTrialCreator->MaybeAwaitTrialCreate(keySystem, access, aPromise, mWindow);
       return;
     }
-#endif
     aPromise->MaybeResolve(access);
     return;
   }
