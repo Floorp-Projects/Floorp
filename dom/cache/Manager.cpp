@@ -400,7 +400,7 @@ private:
       while (iter.HasMore()) {
         nsRefPtr<Manager> manager = iter.GetNext();
         if (aOrigin.IsVoid() ||
-            manager->mManagerId->ExtendedOrigin() == aOrigin) {
+            manager->mManagerId->QuotaOrigin() == aOrigin) {
           manager->Abort();
         }
       }
