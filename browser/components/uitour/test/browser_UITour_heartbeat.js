@@ -6,7 +6,6 @@
 let gTestTab;
 let gContentAPI;
 let gContentWindow;
-let notificationBox = document.getElementById("high-priority-global-notificationbox");
 
 Components.utils.import("resource:///modules/UITour.jsm");
 
@@ -14,7 +13,8 @@ function test() {
   UITourTest();
 }
 
-function getHeartbeatNotification(aId) {
+function getHeartbeatNotification(aId, aChromeWindow = window) {
+  let notificationBox = aChromeWindow.document.getElementById("high-priority-global-notificationbox");
   // UITour.jsm prefixes the notification box ID with "heartbeat-" to prevent collisions.
   return notificationBox.getNotificationWithValue("heartbeat-" + aId);
 }
@@ -59,10 +59,12 @@ function clickLearnMore(aId) {
  *
  * @param aId
  *        The id of the notification box to remove.
+ * @param [aChromeWindow=window]
+ *        The chrome window the notification box is in.
  */
-function cleanUpNotification(aId) {
-  let notification = notificationBox.getNotificationWithValue("heartbeat-" + aId);
-  notificationBox.removeNotification(notification);
+function cleanUpNotification(aId, aChromeWindow = window) {
+  let notification = getHeartbeatNotification(aId, aChromeWindow);
+  notification.close();
 }
 
 let tests = [
@@ -286,7 +288,7 @@ let tests = [
           ok(Number.isFinite(aData.timestamp), "Timestamp must be a number.");
           is(gBrowser.tabs.length, expectedTabCount, "Engagement URL should open in a new tab.");
           gBrowser.removeCurrentTab();
-          done();
+          executeSoon(done);
           break;
         }
         default: {
@@ -344,21 +346,108 @@ let tests = [
                               "What is this?", dummyURL);
   },
 
-  function test_invalidEngagementButtonLabel(done) {
+  taskify(function test_invalidEngagementButtonLabel(done) {
     let engagementURL = "http://example.com";
     let flowId = "ui-engagewithfirefox-" + Math.random();
 
-    Services.mm.addMessageListener("UITour:onPageEvent", function onPageEvent(aMessage) {
-      Services.mm.removeMessageListener("UITour:onPageEvent", onPageEvent);
-      SimpleTest.executeSoon(() => {
-        ok(!(UITour.tourBrowsersByWindow.get(window) &&
-             UITour.tourBrowsersByWindow.get(window).has(gBrowser.selectedBrowser)),
-           "Invalid engagementButtonLabel should prevent init");
-      });
-      done();
-    });
-    gContentAPI.showHeartbeat("Do you want to engage with us?", "Thank you!", flowId, engagementURL, null, null, {
-      engagementButtonLabel: 42,
-    });
-  },
+    let eventPromise = promisePageEvent();
+
+    gContentAPI.showHeartbeat("Do you want to engage with us?", "Thank you!", flowId, engagementURL,
+                              null, null, {
+                                engagementButtonLabel: 42,
+                              });
+
+    yield eventPromise;
+    ok(!isTourBrowser(gBrowser.selectedBrowser),
+       "Invalid engagementButtonLabel should prevent init");
+
+  }),
+
+  taskify(function test_privateWindowsOnly_noneOpen(done) {
+    let engagementURL = "http://example.com";
+    let flowId = "ui-engagewithfirefox-" + Math.random();
+
+    let eventPromise = promisePageEvent();
+
+    gContentAPI.showHeartbeat("Do you want to engage with us?", "Thank you!", flowId, engagementURL,
+                              null, null, {
+                                engagementButtonLabel: "Yes!",
+                                privateWindowsOnly: true,
+                              });
+
+    yield eventPromise;
+    ok(!isTourBrowser(gBrowser.selectedBrowser),
+       "If there are no private windows opened, tour init should be prevented");
+  }),
+
+  taskify(function test_privateWindowsOnly_notMostRecent(done) {
+    let engagementURL = "http://example.com";
+    let flowId = "ui-engagewithfirefox-" + Math.random();
+
+    let privateWin = yield BrowserTestUtils.openNewBrowserWindow({ private: true });
+    let mostRecentWin = yield BrowserTestUtils.openNewBrowserWindow();
+
+    let eventPromise = promisePageEvent();
+
+    gContentAPI.showHeartbeat("Do you want to engage with us?", "Thank you!", flowId, engagementURL,
+                              null, null, {
+                                engagementButtonLabel: "Yes!",
+                                privateWindowsOnly: true,
+                              });
+
+    yield eventPromise;
+    is(getHeartbeatNotification(flowId, window), null,
+       "Heartbeat shouldn't appear in the default window");
+    is(!!getHeartbeatNotification(flowId, privateWin), true,
+       "Heartbeat should appear in the most recent private window");
+    is(getHeartbeatNotification(flowId, mostRecentWin), null,
+       "Heartbeat shouldn't appear in the most recent non-private window");
+
+    yield BrowserTestUtils.closeWindow(mostRecentWin);
+    yield BrowserTestUtils.closeWindow(privateWin);
+  }),
+
+  taskify(function test_privateWindowsOnly() {
+    let engagementURL = "http://example.com";
+    let learnMoreURL = "http://example.org/learnmore/";
+    let flowId = "ui-engagewithfirefox-" + Math.random();
+
+    let privateWin = yield BrowserTestUtils.openNewBrowserWindow({ private: true });
+
+    gContentAPI.showHeartbeat("Do you want to engage with us?", "Thank you!", flowId, engagementURL,
+                              "Learn More", learnMoreURL, {
+                                engagementButtonLabel: "Yes!",
+                                privateWindowsOnly: true,
+                              });
+
+    yield promisePageEvent();
+
+    ok(isTourBrowser(gBrowser.selectedBrowser), "UITour should have been init for the browser");
+
+    let notification = getHeartbeatNotification(flowId, privateWin);
+
+    is(notification.querySelectorAll(".star-x").length, 0, "No stars should be present");
+
+    info("Test the learn more link.");
+    let learnMoreLink = notification.querySelector(".text-link");
+    is(learnMoreLink.value, "Learn More", "Check learn more label");
+    let learnMoreTabPromise = BrowserTestUtils.waitForNewTab(privateWin.gBrowser, null);
+    learnMoreLink.click();
+    let learnMoreTab = yield learnMoreTabPromise;
+    is(learnMoreTab.linkedBrowser.currentURI.host, "example.org", "Check learn more site opened");
+    ok(PrivateBrowsingUtils.isBrowserPrivate(learnMoreTab.linkedBrowser), "Ensure the learn more tab is private");
+    yield BrowserTestUtils.removeTab(learnMoreTab);
+
+    info("Test the engagement button's new tab.");
+    let engagementButton = notification.querySelector(".notification-button");
+    is(engagementButton.label, "Yes!", "Check engagement button text");
+    let engagementTabPromise = BrowserTestUtils.waitForNewTab(privateWin.gBrowser, null);
+    engagementButton.doCommand();
+    let engagementTab = yield engagementTabPromise;
+    is(engagementTab.linkedBrowser.currentURI.host, "example.com", "Check enagement site opened");
+    ok(PrivateBrowsingUtils.isBrowserPrivate(engagementTab.linkedBrowser), "Ensure the engagement tab is private");
+    yield BrowserTestUtils.removeTab(engagementTab);
+
+    yield BrowserTestUtils.closeWindow(privateWin);
+  }),
 ];
