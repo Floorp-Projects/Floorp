@@ -1,0 +1,60 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PBackground;
+
+namespace mozilla {
+namespace camera {
+
+struct CaptureCapability
+{
+  int width;
+  int height;
+  int maxFPS;
+  int expectedCaptureDelay;
+  int rawType;
+  int codecType;
+  bool interlaced;
+};
+
+async protocol PCameras
+{
+  manager PBackground;
+
+child:
+  async FrameSizeChange(int capEngine, int cap_id, int w, int h);
+  // transfers ownership of |buffer| from parent to child
+  async DeliverFrame(int capEngine, int cap_id,
+                     Shmem buffer, int size, uint32_t time_stamp,
+                     int64_t ntp_time, int64_t render_time);
+  async ReplyNumberOfCaptureDevices(int numdev);
+  async ReplyNumberOfCapabilities(int numdev);
+  async ReplyAllocateCaptureDevice(int numdev);
+  async ReplyGetCaptureCapability(CaptureCapability cap);
+  async ReplyGetCaptureDevice(nsCString device_name, nsCString device_id);
+  async ReplyFailure();
+  async ReplySuccess();
+  async __delete__();
+
+parent:
+  async NumberOfCaptureDevices(int engine);
+  async NumberOfCapabilities(int engine, nsCString deviceUniqueIdUTF8);
+
+  async GetCaptureCapability(int engine, nsCString unique_idUTF8, int capability_number);
+  async GetCaptureDevice(int engine, int num);
+
+  async AllocateCaptureDevice(int engine, nsCString unique_idUTF8);
+  async ReleaseCaptureDevice(int engine, int numdev);
+  async StartCapture(int engine, int numdev, CaptureCapability capability);
+  async StopCapture(int engine, int numdev);
+  // transfers frame back
+  async ReleaseFrame(Shmem s);
+
+  // Ask parent to delete us
+  async AllDone();
+};
+
+} // namespace camera
+} // namespace mozilla
