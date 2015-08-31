@@ -25,7 +25,8 @@ public class GuestProfileConfiguration implements RestrictionConfiguration {
             Restriction.DISALLOW_SET_IMAGE,
             Restriction.DISALLOW_MODIFY_ACCOUNTS,
             Restriction.DISALLOW_REMOTE_DEBUGGING,
-            Restriction.DISALLOW_IMPORT_SETTINGS
+            Restriction.DISALLOW_IMPORT_SETTINGS,
+            Restriction.DISALLOW_DEVELOPER_TOOLS
     );
 
     @SuppressWarnings("serial")
