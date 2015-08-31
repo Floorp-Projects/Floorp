@@ -988,10 +988,9 @@ ReifyStack(nsIStackFrame* aStack, nsTArray<ConsoleStackEntry>& aRefiedStack)
 class ConsoleTimelineMarker : public TimelineMarker
 {
 public:
-  ConsoleTimelineMarker(nsDocShell* aDocShell,
-                        TracingMetadata aMetaData,
-                        const nsAString& aCause)
-    : TimelineMarker(aDocShell, "ConsoleTime", aMetaData, aCause)
+  explicit ConsoleTimelineMarker(const nsAString& aCause,
+                                 TracingMetadata aMetaData)
+    : TimelineMarker("ConsoleTime", aCause, aMetaData)
   {
     if (aMetaData == TRACING_INTERVAL_END) {
       CaptureStack();
@@ -1021,12 +1020,9 @@ public:
 class TimestampTimelineMarker : public TimelineMarker
 {
 public:
-  TimestampTimelineMarker(nsDocShell* aDocShell,
-                          TracingMetadata aMetaData,
-                          const nsAString& aCause)
-    : TimelineMarker(aDocShell, "TimeStamp", aMetaData, aCause)
+  explicit TimestampTimelineMarker(const nsAString& aCause)
+    : TimelineMarker("TimeStamp", aCause, TRACING_TIMESTAMP)
   {
-    MOZ_ASSERT(aMetaData == TRACING_TIMESTAMP);
   }
 
   virtual void AddDetails(JSContext* aCx,
@@ -1145,7 +1141,7 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
         }
 
         mozilla::UniquePtr<TimelineMarker> marker =
-          MakeUnique<TimestampTimelineMarker>(docShell, TRACING_TIMESTAMP, key);
+          MakeUnique<TimestampTimelineMarker>(key);
         TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
       }
       // For `console.time(foo)` and `console.timeEnd(foo)`
@@ -1156,9 +1152,8 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
           nsAutoJSString key;
           if (key.init(aCx, jsString)) {
             mozilla::UniquePtr<TimelineMarker> marker =
-              MakeUnique<ConsoleTimelineMarker>(docShell,
-                                                aMethodName == MethodTime ? TRACING_INTERVAL_START : TRACING_INTERVAL_END,
-                                                key);
+              MakeUnique<ConsoleTimelineMarker>(key,
+                aMethodName == MethodTime ? TRACING_INTERVAL_START : TRACING_INTERVAL_END);
             TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
           }
         }

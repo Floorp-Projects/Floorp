@@ -1601,7 +1601,7 @@ nsDocShell::LoadStream(nsIInputStream* aStream, nsIURI* aURI,
     (void)aLoadInfo->GetLoadType(&lt);
     // Get the appropriate LoadType from nsIDocShellLoadInfo type
     loadType = ConvertDocShellLoadInfoToLoadType(lt);
-  
+
     nsCOMPtr<nsISupports> owner;
     aLoadInfo->GetOwner(getter_AddRefs(owner));
     requestingPrincipal = do_QueryInterface(owner);
@@ -13766,14 +13766,13 @@ nsDocShell::GetOpener()
 class JavascriptTimelineMarker : public TimelineMarker
 {
 public:
-  JavascriptTimelineMarker(nsDocShell* aDocShell, const char* aName,
-                           const char* aReason,
-                           const char16_t* aFunctionName,
-                           const char16_t* aFileName,
-                           uint32_t aLineNumber)
-    : TimelineMarker(aDocShell, aName, TRACING_INTERVAL_START,
-                     NS_ConvertUTF8toUTF16(aReason),
-                     NO_STACK)
+  explicit JavascriptTimelineMarker(const char* aName,
+                                    const char* aReason,
+                                    const char16_t* aFunctionName,
+                                    const char16_t* aFileName,
+                                    uint32_t aLineNumber)
+    : TimelineMarker(aName, NS_ConvertUTF8toUTF16(aReason),
+                     TRACING_INTERVAL_START, NO_STACK)
     , mFunctionName(aFunctionName)
     , mFileName(aFileName)
     , mLineNumber(aLineNumber)
@@ -13819,7 +13818,7 @@ nsDocShell::NotifyJSRunToCompletionStart(const char* aReason,
   // If first start, mark interval start.
   if (timelineOn && mJSRunToCompletionDepth == 0) {
     mozilla::UniquePtr<TimelineMarker> marker =
-      MakeUnique<JavascriptTimelineMarker>(this, "Javascript", aReason,
+      MakeUnique<JavascriptTimelineMarker>("Javascript", aReason,
                                            aFunctionName, aFilename,
                                            aLineNumber);
     TimelineConsumers::AddMarkerForDocShell(this, Move(marker));
