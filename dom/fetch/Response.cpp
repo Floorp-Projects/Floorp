@@ -162,15 +162,12 @@ Response::Constructor(const GlobalObject& aGlobal,
   // Grab a valid channel info from the global so this response is 'valid' for
   // interception.
   if (NS_IsMainThread()) {
-    ChannelInfo info;
     nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global);
-    if (window) {
-      nsIDocument* doc = window->GetExtantDoc();
-      MOZ_ASSERT(doc);
-      info.InitFromDocument(doc);
-    } else {
-      info.InitFromChromeGlobal(global);
-    }
+    MOZ_ASSERT(window);
+    nsIDocument* doc = window->GetExtantDoc();
+    MOZ_ASSERT(doc);
+    ChannelInfo info;
+    info.InitFromDocument(doc);
     internalResponse->InitChannelInfo(info);
   } else {
     workers::WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
