@@ -52,8 +52,9 @@ BluetoothA2dpManager::BluetoothA2dpManager()
 void
 BluetoothA2dpManager::Reset()
 {
-  ResetA2dp();
-  ResetAvrcp();
+  mA2dpConnected = false;
+  mSinkState = SinkState::SINK_DISCONNECTED;
+  mController = nullptr;
 }
 
 bool
@@ -78,25 +79,6 @@ BluetoothA2dpManager::~BluetoothA2dpManager()
   if (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
     BT_WARNING("Failed to remove shutdown observer!");
   }
-}
-
-void
-BluetoothA2dpManager::ResetA2dp()
-{
-  mA2dpConnected = false;
-  mSinkState = SinkState::SINK_DISCONNECTED;
-  mController = nullptr;
-}
-
-void
-BluetoothA2dpManager::ResetAvrcp()
-{
-  mAvrcpConnected = false;
-  mDuration = 0;
-  mMediaNumber = 0;
-  mTotalMediaCount = 0;
-  mPosition = 0;
-  mPlayStatus = ControlPlayStatus::PLAYSTATUS_UNKNOWN;
 }
 
 static BluetoothA2dpManager::SinkState
@@ -399,82 +381,4 @@ BluetoothA2dpManager::IsConnected()
   return mA2dpConnected;
 }
 
-void
-BluetoothA2dpManager::SetAvrcpConnected(bool aConnected)
-{
-  mAvrcpConnected = aConnected;
-  if (!aConnected) {
-    ResetAvrcp();
-  }
-}
-
-bool
-BluetoothA2dpManager::IsAvrcpConnected()
-{
-  return mAvrcpConnected;
-}
-
-void
-BluetoothA2dpManager::UpdateMetaData(const nsAString& aTitle,
-                                     const nsAString& aArtist,
-                                     const nsAString& aAlbum,
-                                     uint64_t aMediaNumber,
-                                     uint64_t aTotalMediaCount,
-                                     uint32_t aDuration)
-{
-  mTitle.Assign(aTitle);
-  mArtist.Assign(aArtist);
-  mAlbum.Assign(aAlbum);
-  mMediaNumber = aMediaNumber;
-  mTotalMediaCount = aTotalMediaCount;
-  mDuration = aDuration;
-}
-
-void
-BluetoothA2dpManager::UpdatePlayStatus(uint32_t aDuration,
-                                       uint32_t aPosition,
-                                       ControlPlayStatus aPlayStatus)
-{
-  mDuration = aDuration;
-  mPosition = aPosition;
-  mPlayStatus = aPlayStatus;
-}
-
-void
-BluetoothA2dpManager::GetAlbum(nsAString& aAlbum)
-{
-    aAlbum.Assign(mAlbum);
-}
-
-uint32_t
-BluetoothA2dpManager::GetDuration()
-{
-  return mDuration;
-}
-
-ControlPlayStatus
-BluetoothA2dpManager::GetPlayStatus()
-{
-  return mPlayStatus;
-}
-
-uint32_t
-BluetoothA2dpManager::GetPosition()
-{
-  return mPosition;
-}
-
-uint64_t
-BluetoothA2dpManager::GetMediaNumber()
-{
-  return mMediaNumber;
-}
-
-void
-BluetoothA2dpManager::GetTitle(nsAString& aTitle)
-{
-  aTitle.Assign(mTitle);
-}
-
 NS_IMPL_ISUPPORTS(BluetoothA2dpManager, nsIObserver)
-
