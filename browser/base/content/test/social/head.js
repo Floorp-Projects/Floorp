@@ -474,7 +474,9 @@ function get3ChatsForCollapsing(mode, cb) {
           let second = chatbar.childNodes[2];
           let first = chatbar.childNodes[1];
           let third = chatbar.childNodes[0];
-          ok(first.collapsed && !second.collapsed && !third.collapsed, "collapsed state as promised");
+          is(first.collapsed, true, "first collapsed state as promised");
+          is(second.collapsed, false, "second collapsed state as promised");
+          is(third.collapsed, false, "third collapsed state as promised");
           is(chatbar.selectedChat, third, "third is selected as promised")
           info("have 3 chats for collapse testing - starting actual test...");
           cb(first, second, third);
@@ -618,10 +620,31 @@ function getPopupWidth() {
   return popup.parentNode.getBoundingClientRect().width + margins;
 }
 
+function promiseCloseChat(chat) {
+  let deferred = Promise.defer();
+  let parent = chat.parentNode;
+
+  let observer = new MutationObserver(function onMutatations(mutations) {
+    for (let mutation of mutations) {
+      for (let i = 0; i < mutation.removedNodes.length; i++) {
+        let node = mutation.removedNodes.item(i);
+        if (node != chat) {
+          continue;
+        }
+        observer.disconnect();
+        deferred.resolve();
+      }
+    }
+  });
+  observer.observe(parent, {childList: true});
+  chat.close();
+  return deferred.promise;
+}
+
 function closeAllChats() {
   let chatbar = getChatBar();
   while (chatbar.selectedChat) {
-    chatbar.selectedChat.close();
+    yield promiseCloseChat(chatbar.selectedChat);
   }
 }
 
