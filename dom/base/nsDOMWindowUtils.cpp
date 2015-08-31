@@ -704,7 +704,7 @@ nsDOMWindowUtils::SendPointerEventCommon(const nsAString& aType,
   if (aType.EqualsLiteral("pointerdown")) {
     msg = ePointerDown;
   } else if (aType.EqualsLiteral("pointerup")) {
-    msg = NS_POINTER_UP;
+    msg = ePointerUp;
   } else if (aType.EqualsLiteral("pointermove")) {
     msg = NS_POINTER_MOVE;
   } else if (aType.EqualsLiteral("pointerover")) {
