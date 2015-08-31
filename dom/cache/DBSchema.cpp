@@ -36,6 +36,125 @@ const int32_t kMaxWipeSchemaVersion = 15;
 namespace {
 
 const int32_t kLatestSchemaVersion = 15;
+
+// ---------
+// The following constants define the SQL schema.  These are defined in the
+// same order the SQL should be executed in CreateSchema().  They are broken
+// out as constants for convenient use in validation and migration.
+// ---------
+
+// The caches table is the single source of truth about what Cache
+// objects exist for the origin.  The contents of the Cache are stored
+// in the entries table that references back to caches.
+//
+// The caches table is also referenced from storage.  Rows in storage
+// represent named Cache objects.  There are cases, however, where
+// a Cache can still exist, but not be in a named Storage.  For example,
+// when content is still using the Cache after CacheStorage::Delete()
+// has been run.
+//
+// For now, the caches table mainly exists for data integrity with
+// foreign keys, but could be expanded to contain additional cache object
+// information.
+//
+// AUTOINCREMENT is necessary to prevent CacheId values from being reused.
+const char* const kTableCaches =
+  "CREATE TABLE caches ("
+    "id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT "
+  ")";
+
+// Security blobs are quite large and duplicated for every Response from
+// the same https origin.  This table is used to de-duplicate this data.
+const char* const kTableSecurityInfo =
+  "CREATE TABLE security_info ("
+    "id INTEGER NOT NULL PRIMARY KEY, "
+    "hash BLOB NOT NULL, "  // first 8-bytes of the sha1 hash of data column
+    "data BLOB NOT NULL, "  // full security info data, usually a few KB
+    "refcount INTEGER NOT NULL"
+  ")";
+
+// Index the smaller hash value instead of the large security data blob.
+const char* const kIndexSecurityInfoHash =
+  "CREATE INDEX security_info_hash_index ON security_info (hash)";
+
+const char* const kTableEntries =
+  "CREATE TABLE entries ("
+    "id INTEGER NOT NULL PRIMARY KEY, "
+    "request_method TEXT NOT NULL, "
+    "request_url_no_query TEXT NOT NULL, "
+    "request_url_no_query_hash BLOB NOT NULL, " // first 8-bytes of sha1 hash
+    "request_url_query TEXT NOT NULL, "
+    "request_url_query_hash BLOB NOT NULL, "    // first 8-bytes of sha1 hash
+    "request_referrer TEXT NOT NULL, "
+    "request_headers_guard INTEGER NOT NULL, "
+    "request_mode INTEGER NOT NULL, "
+    "request_credentials INTEGER NOT NULL, "
+    "request_contentpolicytype INTEGER NOT NULL, "
+    "request_cache INTEGER NOT NULL, "
+    "request_body_id TEXT NULL, "
+    "response_type INTEGER NOT NULL, "
+    "response_url TEXT NOT NULL, "
+    "response_status INTEGER NOT NULL, "
+    "response_status_text TEXT NOT NULL, "
+    "response_headers_guard INTEGER NOT NULL, "
+    "response_body_id TEXT NULL, "
+    "response_security_info_id INTEGER NULL REFERENCES security_info(id), "
+    "response_principal_info TEXT NOT NULL, "
+    "response_redirected INTEGER NOT NULL, "
+    // Note that response_redirected_url is either going to be empty, or
+    // it's going to be a URL different than response_url.
+    "response_redirected_url TEXT NOT NULL, "
+    "cache_id INTEGER NOT NULL REFERENCES caches(id) ON DELETE CASCADE"
+  ")";
+
+// Create an index to support the QueryCache() matching algorithm.  This
+// needs to quickly find entries in a given Cache that match the request
+// URL.  The url query is separated in order to support the ignoreSearch
+// option.  Finally, we index hashes of the URL values instead of the
+// actual strings to avoid excessive disk bloat.  The index will duplicate
+// the contents of the columsn in the index.  The hash index will prune
+// the vast majority of values from the query result so that normal
+// scanning only has to be done on a few values to find an exact URL match.
+const char* const kIndexEntriesRequest =
+  "CREATE INDEX entries_request_match_index "
+            "ON entries (cache_id, request_url_no_query_hash, "
+                        "request_url_query_hash)";
+
+const char* const kTableRequestHeaders =
+  "CREATE TABLE request_headers ("
+    "name TEXT NOT NULL, "
+    "value TEXT NOT NULL, "
+    "entry_id INTEGER NOT NULL REFERENCES entries(id) ON DELETE CASCADE"
+  ")";
+
+const char* const kTableResponseHeaders =
+  "CREATE TABLE response_headers ("
+    "name TEXT NOT NULL, "
+    "value TEXT NOT NULL, "
+    "entry_id INTEGER NOT NULL REFERENCES entries(id) ON DELETE CASCADE"
+  ")";
+
+// We need an index on response_headers, but not on request_headers,
+// because we quickly need to determine if a VARY header is present.
+const char* const kIndexResponseHeadersName =
+  "CREATE INDEX response_headers_name_index "
+            "ON response_headers (name)";
+
+// NOTE: key allows NULL below since that is how "" is represented
+//       in a BLOB column.  We use BLOB to avoid encoding issues
+//       with storing DOMStrings.
+const char* const kTableStorage =
+  "CREATE TABLE storage ("
+    "namespace INTEGER NOT NULL, "
+    "key BLOB NULL, "
+    "cache_id INTEGER NOT NULL REFERENCES caches(id), "
+    "PRIMARY KEY(namespace, key) "
+  ")";
+
+// ---------
+// End schema definition
+// ---------
+
 const int32_t kMaxEntriesPerStatement = 255;
 
 const uint32_t kPageSize = 4 * 1024;
@@ -224,130 +343,31 @@ CreateSchema(mozIStorageConnection* aConn)
   }
 
   if (!schemaVersion) {
-    // The caches table is the single source of truth about what Cache
-    // objects exist for the origin.  The contents of the Cache are stored
-    // in the entries table that references back to caches.
-    //
-    // The caches table is also referenced from storage.  Rows in storage
-    // represent named Cache objects.  There are cases, however, where
-    // a Cache can still exist, but not be in a named Storage.  For example,
-    // when content is still using the Cache after CacheStorage::Delete()
-    // has been run.
-    //
-    // For now, the caches table mainly exists for data integrity with
-    // foreign keys, but could be expanded to contain additional cache object
-    // information.
-    //
-    // AUTOINCREMENT is necessary to prevent CacheId values from being reused.
-    rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE TABLE caches ("
-        "id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT "
-      ");"
-    ));
+    rv = aConn->ExecuteSimpleSQL(nsDependentCString(kTableCaches));
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    // Security blobs are quite large and duplicated for every Response from
-    // the same https origin.  This table is used to de-duplicate this data.
-    rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE TABLE security_info ("
-        "id INTEGER NOT NULL PRIMARY KEY, "
-        "hash BLOB NOT NULL, "  // first 8-bytes of the sha1 hash of data column
-        "data BLOB NOT NULL, "  // full security info data, usually a few KB
-        "refcount INTEGER NOT NULL"
-      ");"
-    ));
+    rv = aConn->ExecuteSimpleSQL(nsDependentCString(kTableSecurityInfo));
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    // Index the smaller hash value instead of the large security data blob.
-    rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE INDEX security_info_hash_index ON security_info (hash);"
-    ));
+    rv = aConn->ExecuteSimpleSQL(nsDependentCString(kIndexSecurityInfoHash));
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE TABLE entries ("
-        "id INTEGER NOT NULL PRIMARY KEY, "
-        "request_method TEXT NOT NULL, "
-        "request_url_no_query TEXT NOT NULL, "
-        "request_url_no_query_hash BLOB NOT NULL, " // first 8-bytes of sha1 hash
-        "request_url_query TEXT NOT NULL, "
-        "request_url_query_hash BLOB NOT NULL, "    // first 8-bytes of sha1 hash
-        "request_referrer TEXT NOT NULL, "
-        "request_headers_guard INTEGER NOT NULL, "
-        "request_mode INTEGER NOT NULL, "
-        "request_credentials INTEGER NOT NULL, "
-        "request_contentpolicytype INTEGER NOT NULL, "
-        "request_cache INTEGER NOT NULL, "
-        "request_body_id TEXT NULL, "
-        "response_type INTEGER NOT NULL, "
-        "response_url TEXT NOT NULL, "
-        "response_status INTEGER NOT NULL, "
-        "response_status_text TEXT NOT NULL, "
-        "response_headers_guard INTEGER NOT NULL, "
-        "response_body_id TEXT NULL, "
-        "response_security_info_id INTEGER NULL REFERENCES security_info(id), "
-        "response_principal_info TEXT NOT NULL, "
-        "response_redirected INTEGER NOT NULL, "
-        // Note that response_redirected_url is either going to be empty, or
-        // it's going to be a URL different than response_url.
-        "response_redirected_url TEXT NOT NULL, "
-        "cache_id INTEGER NOT NULL REFERENCES caches(id) ON DELETE CASCADE"
-      ");"
-    ));
+    rv = aConn->ExecuteSimpleSQL(nsDependentCString(kTableEntries));
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    // Create an index to support the QueryCache() matching algorithm.  This
-    // needs to quickly find entries in a given Cache that match the request
-    // URL.  The url query is separated in order to support the ignoreSearch
-    // option.  Finally, we index hashes of the URL values instead of the
-    // actual strings to avoid excessive disk bloat.  The index will duplicate
-    // the contents of the columsn in the index.  The hash index will prune
-    // the vast majority of values from the query result so that normal
-    // scanning only has to be done on a few values to find an exact URL match.
-    rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE INDEX entries_request_match_index "
-                "ON entries (cache_id, request_url_no_query_hash, "
-                            "request_url_query_hash);"
-    ));
+    rv = aConn->ExecuteSimpleSQL(nsDependentCString(kIndexEntriesRequest));
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE TABLE request_headers ("
-        "name TEXT NOT NULL, "
-        "value TEXT NOT NULL, "
-        "entry_id INTEGER NOT NULL REFERENCES entries(id) ON DELETE CASCADE"
-      ");"
-    ));
+    rv = aConn->ExecuteSimpleSQL(nsDependentCString(kTableRequestHeaders));
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE TABLE response_headers ("
-        "name TEXT NOT NULL, "
-        "value TEXT NOT NULL, "
-        "entry_id INTEGER NOT NULL REFERENCES entries(id) ON DELETE CASCADE"
-      ");"
-    ));
+    rv = aConn->ExecuteSimpleSQL(nsDependentCString(kTableResponseHeaders));
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    // We need an index on response_headers, but not on request_headers,
-    // because we quickly need to determine if a VARY header is present.
-    rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE INDEX response_headers_name_index "
-                "ON response_headers (name);"
-    ));
+    rv = aConn->ExecuteSimpleSQL(nsDependentCString(kIndexResponseHeadersName));
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    // NOTE: key allows NULL below since that is how "" is represented
-    //       in a BLOB column.  We use BLOB to avoid encoding issues
-    //       with storing DOMStrings.
-    rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE TABLE storage ("
-        "namespace INTEGER NOT NULL, "
-        "key BLOB NULL, "
-        "cache_id INTEGER NOT NULL REFERENCES caches(id), "
-        "PRIMARY KEY(namespace, key) "
-      ");"
-    ));
+    rv = aConn->ExecuteSimpleSQL(nsDependentCString(kTableStorage));
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     rv = aConn->SetSchemaVersion(kLatestSchemaVersion);
