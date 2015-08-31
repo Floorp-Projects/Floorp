@@ -57,6 +57,7 @@ if CONFIG['MOZ_B2G_BT']:
             CXXFLAGS += CONFIG['MOZ_DBUS_CFLAGS']
             SOURCES += [
                 'bluez/BluetoothA2dpManager.cpp',
+                'bluez/BluetoothAvrcpManager.cpp',
                 'bluez/BluetoothDBusService.cpp',
                 'bluez/BluetoothHfpManager.cpp',
                 'bluez/BluetoothOppManager.cpp',
@@ -70,6 +71,7 @@ if CONFIG['MOZ_B2G_BT']:
         elif CONFIG['MOZ_B2G_BT_DAEMON']:
             SOURCES += [
                 'bluedroid/BluetoothA2dpManager.cpp',
+                'bluedroid/BluetoothAvrcpManager.cpp',
                 'bluedroid/BluetoothDaemonA2dpInterface.cpp',
                 'bluedroid/BluetoothDaemonAvrcpInterface.cpp',
                 'bluedroid/BluetoothDaemonGattInterface.cpp',
