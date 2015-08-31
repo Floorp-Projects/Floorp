@@ -3265,6 +3265,26 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
   // nsIChannelEventSink in this object in order to deal with redirects
   localChannel->SetNotificationCallbacks(this);
 
+  class MOZ_STACK_CLASS CleanUpOnFailure
+  {
+  public:
+    explicit CleanUpOnFailure(WebSocketChannel* aWebSocketChannel)
+      : mWebSocketChannel(aWebSocketChannel)
+    {}
+
+    ~CleanUpOnFailure()
+    {
+      if (!mWebSocketChannel->mWasOpened) {
+        mWebSocketChannel->mChannel = nullptr;
+        mWebSocketChannel->mHttpChannel = nullptr;
+      }
+    }
+
+    WebSocketChannel *mWebSocketChannel;
+  };
+
+  CleanUpOnFailure cuof(this);
+
   mChannel = do_QueryInterface(localChannel, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
