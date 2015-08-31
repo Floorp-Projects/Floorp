@@ -11,6 +11,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource:///modules/RecentWindow.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/TelemetryController.jsm");
 
@@ -390,7 +391,6 @@ this.UITour = {
       window = Services.wm.getMostRecentWindow("navigator:browser");
     }
 
-    let tab = window.gBrowser.getTabForBrowser(browser);
     let messageManager = browser.messageManager;
 
     log.debug("onPageEvent:", aEvent.detail, aMessage);
@@ -473,8 +473,17 @@ this.UITour = {
           return false;
         }
 
+        let heartbeatWindow = window;
+        if (data.privateWindowsOnly && !PrivateBrowsingUtils.isWindowPrivate(heartbeatWindow)) {
+          heartbeatWindow = RecentWindow.getMostRecentBrowserWindow({ private: true });
+          if (!heartbeatWindow) {
+            log.debug("showHeartbeat: No private window found");
+            return false;
+          }
+        }
+
         // Finally show the Heartbeat UI.
-        this.showHeartbeat(window, data);
+        this.showHeartbeat(heartbeatWindow, data);
         break;
       }
 
@@ -1102,6 +1111,8 @@ this.UITour = {
    * @param {String} [aOptions.learnMoreURL=null]
    *        The learn more URL to open when clicking on the learn more link. No learn more
    *        will be shown if this is an invalid URL.
+   * @param {String} [aOptions.privateWindowsOnly=false]
+   *        Whether the heartbeat UI should only be targeted at a private window (if one exists).
    */
   showHeartbeat(aChromeWindow, aOptions) {
     let nb = aChromeWindow.document.getElementById("high-priority-global-notificationbox");
