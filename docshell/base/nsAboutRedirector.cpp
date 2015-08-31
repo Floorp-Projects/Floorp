@@ -36,31 +36,35 @@ static RedirEntry kRedirMap[] = {
   },
   { "about", "chrome://global/content/aboutAbout.xhtml", 0 },
   {
-    "credits", "http://www.mozilla.org/credits/",
-    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT
+    "addons", "chrome://mozapps/content/extensions/extensions.xul",
+    nsIAboutModule::ALLOW_SCRIPT
   },
   {
-    "mozilla", "chrome://global/content/mozilla.xhtml",
+    "buildconfig", "chrome://global/content/buildconfig.html",
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT
-  },
-  {
-    "plugins", "chrome://global/content/plugins.html",
-    nsIAboutModule::URI_MUST_LOAD_IN_CHILD
   },
   { "config", "chrome://global/content/config.xul", 0 },
 #ifdef MOZ_CRASHREPORTER
   { "crashes", "chrome://global/content/crashes.xhtml", 0 },
 #endif
   {
-    "logo", "chrome://branding/content/about.png",
-    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT
-  },
-  {
-    "buildconfig", "chrome://global/content/buildconfig.html",
+    "credits", "http://www.mozilla.org/credits/",
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT
   },
   {
     "license", "chrome://global/content/license.html",
+    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT
+  },
+  {
+    "logo", "chrome://branding/content/about.png",
+    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT
+  },
+  {
+    "memory", "chrome://global/content/aboutMemory.xhtml",
+    nsIAboutModule::ALLOW_SCRIPT
+  },
+  {
+    "mozilla", "chrome://global/content/mozilla.xhtml",
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT
   },
   {
@@ -71,8 +75,13 @@ static RedirEntry kRedirMap[] = {
       nsIAboutModule::HIDE_FROM_ABOUTABOUT
   },
   {
-    "memory", "chrome://global/content/aboutMemory.xhtml",
+    "networking", "chrome://global/content/aboutNetworking.xhtml",
     nsIAboutModule::ALLOW_SCRIPT
+  },
+  {
+    "newaddon", "chrome://mozapps/content/extensions/newaddon.xul",
+    nsIAboutModule::ALLOW_SCRIPT |
+      nsIAboutModule::HIDE_FROM_ABOUTABOUT
   },
 #ifdef NIGHTLY_BUILD
   {
@@ -81,29 +90,8 @@ static RedirEntry kRedirMap[] = {
   },
 #endif
   {
-    "addons", "chrome://mozapps/content/extensions/extensions.xul",
-    nsIAboutModule::ALLOW_SCRIPT
-  },
-  {
-    "newaddon", "chrome://mozapps/content/extensions/newaddon.xul",
-    nsIAboutModule::ALLOW_SCRIPT |
-      nsIAboutModule::HIDE_FROM_ABOUTABOUT
-  },
-  {
-    "support", "chrome://global/content/aboutSupport.xhtml",
-    nsIAboutModule::ALLOW_SCRIPT
-  },
-  {
-    "telemetry", "chrome://global/content/aboutTelemetry.xhtml",
-    nsIAboutModule::ALLOW_SCRIPT
-  },
-  {
-    "networking", "chrome://global/content/aboutNetworking.xhtml",
-    nsIAboutModule::ALLOW_SCRIPT
-  },
-  {
-    "webrtc", "chrome://global/content/aboutwebrtc/aboutWebrtc.xhtml",
-    nsIAboutModule::ALLOW_SCRIPT
+    "plugins", "chrome://global/content/plugins.html",
+    nsIAboutModule::URI_MUST_LOAD_IN_CHILD
   },
   {
     "serviceworkers", "chrome://global/content/aboutServiceWorkers.xhtml",
@@ -117,6 +105,18 @@ static RedirEntry kRedirMap[] = {
     "srcdoc", "about:blank",
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
       nsIAboutModule::HIDE_FROM_ABOUTABOUT
+  },
+  {
+    "support", "chrome://global/content/aboutSupport.xhtml",
+    nsIAboutModule::ALLOW_SCRIPT
+  },
+  {
+    "telemetry", "chrome://global/content/aboutTelemetry.xhtml",
+    nsIAboutModule::ALLOW_SCRIPT
+  },
+  {
+    "webrtc", "chrome://global/content/aboutwebrtc/aboutWebrtc.xhtml",
+    nsIAboutModule::ALLOW_SCRIPT
   }
 };
 static const int kRedirTotal = mozilla::ArrayLength(kRedirMap);
