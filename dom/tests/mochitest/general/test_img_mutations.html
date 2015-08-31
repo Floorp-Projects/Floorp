@@ -33,8 +33,9 @@
       if (expectingLoads > 0) {
         expectingLoads--;
       }
-      if (!expectingLoads && !expectingErrors) {
+      if (!expectingLoads && !expectingErrors && afterExpectCallback) {
         setTimeout(afterExpectCallback, 0);
+        afterExpectCallback = null;
       }
     }
     function onImgError() {
@@ -42,8 +43,9 @@
       if (expectingErrors > 0) {
         expectingErrors--;
       }
-      if (!expectingLoads && !expectingErrors) {
+      if (!expectingLoads && !expectingErrors && afterExpectCallback) {
         setTimeout(afterExpectCallback, 0);
+        afterExpectCallback = null;
       }
     }
     function expectEvents(loads, errors, callback) {
@@ -150,7 +152,7 @@
       expectEvents(0, 0, nextTest);
     });
 
-    // Re-binding image to document should be a no-op
+    // re-binding the image to the document should be a no-op
     tests.push(function () {
       info("test 8");
       document.body.appendChild(img);
@@ -167,19 +169,20 @@
 
       expectEvents(1, 0, function() {
         is(img.currentSrc, testPNG50, "Should now have testPNG50 as current request");
-        SpecialPowers.pushPrefEnv({'set': [ ["layout.css.devPixelsPerPx", "2.0"] ] },
-                                  function() {
-          // We don't currently dynamically switch, but doing so is
-          // up to the UA so we may in the future. In which case
-          // this test needs to be changed.
-          is(img.currentSrc, testPNG50, "Should now have testPNG50 as current request");
+
+        // The preference change will trigger a load, as the image will change
+        SpecialPowers.pushPrefEnv({'set': [ ["layout.css.devPixelsPerPx", "2.0"] ] });
+        expectEvents(1, 0, function() {
+          is(img.currentSrc, testPNG200, "Should now have testPNG200 as current request");
           img.src = img.src;
-          is(img.currentSrc, testPNG50, "Should still have testPNG50 as current request");
+          is(img.currentSrc, testPNG200, "Should still have testPNG200 as current request");
+          // img.src = img.src is special-cased by the spec. It should always
+          // trigger an load event
           expectEvents(1, 0, function() {
-            is(img.currentSrc, testPNG200, "Should now have testPNG200 as current request");
-            nextTest();
+            is(img.currentSrc, testPNG200, "Should still have testPNG200 as current request");
+            expectEvents(0, 0, nextTest);
           });
-        });
+        })
       });
     });
 
@@ -206,6 +209,10 @@
           (tests.shift())();
         }, 0);
       } else {
+        // Remove the event listeners to prevent the prefenv being popped from
+        // causing test failures.
+        img.removeEventListener("load", onImgLoad);
+        img.removeEventListener("error", onImgError);
         SimpleTest.finish();
       }
     }
