@@ -16,15 +16,19 @@ class TimestampTimelineMarker : public TimelineMarker
 {
 public:
   explicit TimestampTimelineMarker(const nsAString& aCause)
-    : TimelineMarker("TimeStamp", aCause, TRACING_TIMESTAMP)
+    : TimelineMarker("TimeStamp", TRACING_TIMESTAMP)
+    , mCause(aCause)
   {}
 
   virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) override
   {
-    if (!GetCause().IsEmpty()) {
-      aMarker.mCauseName.Construct(GetCause());
+    if (!mCause.IsEmpty()) {
+      aMarker.mCauseName.Construct(mCause);
     }
   }
+
+private:
+  nsString mCause;
 };
 
 } // namespace mozilla
