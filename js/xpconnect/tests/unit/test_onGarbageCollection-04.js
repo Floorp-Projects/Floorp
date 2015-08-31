@@ -31,8 +31,8 @@ function run_test() {
 
   debuggeree.eval(
     `
-    const dbg = new Debugger(this.debuggee);
-    let fired = 0;
+    var dbg = new Debugger(this.debuggee);
+    var fired = 0;
     dbg.memory.onGarbageCollection = _ => {
       fired++;
       gc(this);

@@ -361,7 +361,7 @@ jit::CanEnterBaselineMethod(JSContext* cx, RunState& state)
     } else {
         MOZ_ASSERT(state.isExecute());
         ExecuteType type = state.asExecute()->type();
-        if (type == EXECUTE_DEBUG || type == EXECUTE_DEBUG_GLOBAL) {
+        if (type == EXECUTE_DEBUG) {
             JitSpew(JitSpew_BaselineAbort, "debugger frame");
             return Method_CantCompile;
         }

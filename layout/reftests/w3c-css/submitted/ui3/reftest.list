@@ -7,4 +7,4 @@
 == box-sizing-content-box-003.xht box-sizing-content-box-003-ref.xht
 random-if(Android) skip-if((B2G&&browserIsRemote)||Mulet)  == box-sizing-replaced-001.xht box-sizing-replaced-001-ref.xht #bug 982547 # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy-if(Android,27,874) random-if((B2G&&browserIsRemote)||Mulet) == box-sizing-replaced-002.xht box-sizing-replaced-002-ref.xht # Bug 1128229 # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(Android,27,869) random-if((B2G&&browserIsRemote)||Mulet) == box-sizing-replaced-003.xht box-sizing-replaced-003-ref.xht # Bug 1128229 # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(Android,27,925) random-if((B2G&&browserIsRemote)||Mulet) == box-sizing-replaced-003.xht box-sizing-replaced-003-ref.xht # Bug 1128229 # Initial mulet triage: parity with B2G/B2G Desktop

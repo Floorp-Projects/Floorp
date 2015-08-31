@@ -2842,7 +2842,7 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
     if (bce->tryNoteList.length() != 0)
         bce->tryNoteList.finish(script->trynotes());
     if (bce->blockScopeList.length() != 0)
-        bce->blockScopeList.finish(script->blockScopes());
+        bce->blockScopeList.finish(script->blockScopes(), prologueLength);
     script->strict_ = bce->sc->strict();
     script->explicitUseStrict_ = bce->sc->hasExplicitUseStrict();
     script->bindingsAccessedDynamically_ = bce->sc->bindingsAccessedDynamically();
@@ -3772,10 +3772,7 @@ JSScript::getStaticBlockScope(jsbytecode* pc)
     if (!hasBlockScopes())
         return nullptr;
 
-    if (pc < main())
-        return nullptr;
-
-    size_t offset = pc - main();
+    size_t offset = pc - code();
 
     BlockScopeArray* scopes = blockScopes();
     NestedScopeObject* blockChain = nullptr;

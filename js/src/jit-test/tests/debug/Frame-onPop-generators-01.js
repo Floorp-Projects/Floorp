@@ -14,7 +14,7 @@ dbg.onDebuggerStatement = function handleDebugger(frame) {
 };
 g.eval("function g() { for (var i = 0; i < 10; i++) { debugger; yield i; } }");
 g.eval("var it = g();");
-var rv = gw.evalInGlobal("it.next();");
+var rv = gw.executeInGlobal("it.next();");
 assertEq(rv.throw, "fit");
 
 dbg.enabled = false;

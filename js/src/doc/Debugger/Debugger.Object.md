@@ -382,7 +382,7 @@ code), the call throws a [`Debugger.DebuggeeWouldRun`][wouldrun] exception.
     the referent is not callable, throw a `TypeError`. This function
     follows the [invocation function conventions][inv fr].
 
-<code>evalInGlobal(<i>code</i>, [<i>options</i>])</code>
+<code>executeInGlobal(<i>code</i>, [<i>options</i>])</code>
 :   If the referent is a global object, evaluate <i>code</i> in that global
     environment, and return a [completion value][cv] describing how it completed.
     <i>Code</i> is a string. All extant handler methods, breakpoints,
@@ -393,15 +393,15 @@ code), the call throws a [`Debugger.DebuggeeWouldRun`][wouldrun] exception.
     <i>Code</i> is interpreted as strict mode code when it contains a Use
     Strict Directive.
 
-    If <i>code</i> is not strict mode code, then variable declarations in
-    <i>code</i> affect the referent global object. (In the terms used by the
-    ECMAScript specification, the `VariableEnvironment` of the execution
-    context for the eval code is the referent.)
+    This evaluation is semantically equivalent to executing statements at the
+    global level, not an indirect eval. Regardless of <i>code</i> being strict
+    mode code, variable declarations in <i>code</i> affect the referent global
+    object.
 
     The <i>options</i> argument is as for [`Debugger.Frame.prototype.eval`][fr eval].
 
-<code>evalInGlobalWithBindings(<i>code</i>, <i>bindings</i>, [<i>options</i>])</code>
-:   Like `evalInGlobal`, but evaluate <i>code</i> using the referent as the
+<code>executeInGlobalWithBindings(<i>code</i>, <i>bindings</i>, [<i>options</i>])</code>
+:   Like `executeInGlobal`, but evaluate <i>code</i> using the referent as the
     variable object, but with a lexical environment extended with bindings
     from the object <i>bindings</i>. For each own enumerable property of
     <i>bindings</i> named <i>name</i> whose value is <i>value</i>, include a
@@ -416,14 +416,12 @@ code), the call throws a [`Debugger.DebuggeeWouldRun`][wouldrun] exception.
     debuggee values, and do so without mutating any existing debuggee
     environment.
 
-    Note that, like `evalInGlobal`, if the code passed to
-    `evalInGlobalWithBindings` is not strict mode code, then any
-    declarations it contains affect the referent global object, even as
-    <i>code</i> is evaluated in an environment extended according to
-    <i>bindings</i>. (In the terms used by the ECMAScript specification, the
-    `VariableEnvironment` of the execution context for non-strict eval code
-    is the referent, and the <i>bindings</i> appear in a new declarative
-    environment, which is the eval code's `LexicalEnvironment`.)
+    Note that, like `executeInGlobal`, any declarations it contains affect the
+    referent global object, even as <i>code</i> is evaluated in an environment
+    extended according to <i>bindings</i>. (In the terms used by the ECMAScript
+    specification, the `VariableEnvironment` of the execution context for
+    <i>code</i> is the referent, and the <i>bindings</i> appear in a new
+    declarative environment, which is the eval code's `LexicalEnvironment`.)
 
     The <i>options</i> argument is as for [`Debugger.Frame.prototype.eval`][fr eval].
 

@@ -9,7 +9,7 @@ function test(code, expected) {
     assertEq(actual, expected);
 }
 
-test("h();", 'object');
+test("h();", 'declarative');
 test("(function (s) { eval(s); })('var v = h();')", 'declarative');
 test("(function (s) { h(); })();", 'declarative');
 test("{let x = 1, y = 2; h();}", 'declarative');
@@ -17,7 +17,7 @@ test("with({x: 1, y: 2}) h();", 'with');
 test("(function (s) { with ({x: 1, y: 2}) h(); })();", 'with');
 test("let (x = 1) { h(); }", 'declarative');
 test("for (let x = 0; x < 1; x++) h();", 'declarative');
-test("for (let x in h()) ;", 'object');
+test("for (let x in h()) ;", 'declarative');
 test("for (let x in {a:1}) h();", 'declarative');
 test("try { throw new Error; } catch (x) { h(x) }", 'declarative');
 test("'use strict'; eval('var z = 1; h();');", 'declarative');
@@ -33,5 +33,5 @@ test("for (var x in (0 for (m in h()))) ;", 'declarative');
 dbg.onDebuggerStatement = function (frame) {
     assertEq(frame.eval("h(), 2 + 2;").return, 4);
 }
-test("debugger;", 'object');
+test("debugger;", 'declarative');
 test("(function f() { debugger; })();", 'declarative');
