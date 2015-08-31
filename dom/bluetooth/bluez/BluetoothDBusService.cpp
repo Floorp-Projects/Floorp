@@ -19,6 +19,7 @@
 #include "base/basictypes.h"
 #include "BluetoothDBusService.h"
 #include "BluetoothA2dpManager.h"
+#include "BluetoothAvrcpManager.h"
 #include "BluetoothHfpManager.h"
 #include "BluetoothHidManager.h"
 #include "BluetoothOppManager.h"
@@ -538,9 +539,9 @@ public:
     MOZ_ASSERT(arr[0].value().type() == BluetoothValue::Tbool);
     bool connected = arr[0].value().get_bool();
 
-    BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
-    NS_ENSURE_TRUE(a2dp, NS_ERROR_FAILURE);
-    a2dp->SetAvrcpConnected(connected);
+    BluetoothAvrcpManager* avrcp = BluetoothAvrcpManager::Get();
+    NS_ENSURE_TRUE(avrcp, NS_ERROR_FAILURE);
+    avrcp->SetConnected(connected);
     return NS_OK;
   }
 
@@ -3957,32 +3958,28 @@ BluetoothDBusService::SendMetaData(const nsAString& aTitle,
     return;
   }
 
-  BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
-  NS_ENSURE_TRUE_VOID(a2dp);
+  BluetoothAvrcpManager* avrcp = BluetoothAvrcpManager::Get();
+  NS_ENSURE_TRUE_VOID(avrcp);
 
-  if (!a2dp->IsConnected()) {
-    DispatchBluetoothReply(aRunnable, BluetoothValue(),
-                           NS_LITERAL_STRING(ERR_A2DP_IS_DISCONNECTED));
-    return;
-  } else if (!a2dp->IsAvrcpConnected()) {
+  if (!avrcp->IsConnected()) {
     DispatchBluetoothReply(aRunnable, BluetoothValue(),
                            NS_LITERAL_STRING(ERR_AVRCP_IS_DISCONNECTED));
     return;
   }
 
   nsAutoString prevTitle, prevAlbum;
-  a2dp->GetTitle(prevTitle);
-  a2dp->GetAlbum(prevAlbum);
+  avrcp->GetTitle(prevTitle);
+  avrcp->GetAlbum(prevAlbum);
 
   uint64_t mediaNumber = static_cast<uint64_t>(aMediaNumber);
-  if (mediaNumber != a2dp->GetMediaNumber() ||
+  if (mediaNumber != avrcp->GetMediaNumber() ||
       !aTitle.Equals(prevTitle) ||
       !aAlbum.Equals(prevAlbum)) {
     UpdateNotification(ControlEventId::EVENT_TRACK_CHANGED, aMediaNumber);
   }
 
   nsAutoString deviceAddress;
-  a2dp->GetAddress(deviceAddress);
+  avrcp->GetAddress(deviceAddress);
 
   Task* task = new SendMetadataTask(
     deviceAddress,
@@ -3995,8 +3992,8 @@ BluetoothDBusService::SendMetaData(const nsAString& aTitle,
     aRunnable);
   DispatchToDBusThread(task);
 
-  a2dp->UpdateMetaData(aTitle, aArtist, aAlbum,
-                       aMediaNumber, aTotalMediaCount, aDuration);
+  avrcp->UpdateMetaData(aTitle, aArtist, aAlbum,
+                        aMediaNumber, aTotalMediaCount, aDuration);
 }
 
 static ControlPlayStatus
@@ -4101,28 +4098,24 @@ BluetoothDBusService::SendPlayStatus(int64_t aDuration,
     return;
   }
 
-  BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
-  NS_ENSURE_TRUE_VOID(a2dp);
+  BluetoothAvrcpManager* avrcp = BluetoothAvrcpManager::Get();
+  NS_ENSURE_TRUE_VOID(avrcp);
 
-  if (!a2dp->IsConnected()) {
-    DispatchBluetoothReply(aRunnable, BluetoothValue(),
-                           NS_LITERAL_STRING(ERR_A2DP_IS_DISCONNECTED));
-    return;
-  } else if (!a2dp->IsAvrcpConnected()) {
+  if (!avrcp->IsConnected()) {
     DispatchBluetoothReply(aRunnable, BluetoothValue(),
                            NS_LITERAL_STRING(ERR_AVRCP_IS_DISCONNECTED));
     return;
   }
 
-  if (playStatus != a2dp->GetPlayStatus()) {
+  if (playStatus != avrcp->GetPlayStatus()) {
     UpdateNotification(ControlEventId::EVENT_PLAYBACK_STATUS_CHANGED,
                        playStatus);
-  } else if (aPosition != a2dp->GetPosition()) {
+  } else if (aPosition != avrcp->GetPosition()) {
     UpdateNotification(ControlEventId::EVENT_PLAYBACK_POS_CHANGED, aPosition);
   }
 
   nsAutoString deviceAddress;
-  a2dp->GetAddress(deviceAddress);
+  avrcp->GetAddress(deviceAddress);
 
   Task* task = new SendPlayStatusTask(deviceAddress,
                                       aDuration,
@@ -4131,7 +4124,7 @@ BluetoothDBusService::SendPlayStatus(int64_t aDuration,
                                       aRunnable);
   DispatchToDBusThread(task);
 
-  a2dp->UpdatePlayStatus(aDuration, aPosition, playStatus);
+  avrcp->UpdatePlayStatus(aDuration, aPosition, playStatus);
 }
 
 static void
@@ -4200,14 +4193,13 @@ BluetoothDBusService::UpdatePlayStatus(uint32_t aDuration,
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE_VOID(this->IsReady());
 
-  BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
-  NS_ENSURE_TRUE_VOID(a2dp);
-  MOZ_ASSERT(a2dp->IsConnected());
-  MOZ_ASSERT(a2dp->IsAvrcpConnected());
+  BluetoothAvrcpManager* avrcp = BluetoothAvrcpManager::Get();
+  NS_ENSURE_TRUE_VOID(avrcp);
+  MOZ_ASSERT(avrcp->IsConnected());
   MOZ_ASSERT(!sAdapterPath.IsEmpty());
 
   nsAutoString deviceAddress;
-  a2dp->GetAddress(deviceAddress);
+  avrcp->GetAddress(deviceAddress);
 
   Task* task = new UpdatePlayStatusTask(deviceAddress,
                                         aDuration,
@@ -4264,14 +4256,13 @@ BluetoothDBusService::UpdateNotification(ControlEventId aEventId,
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE_VOID(this->IsReady());
 
-  BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
-  NS_ENSURE_TRUE_VOID(a2dp);
-  MOZ_ASSERT(a2dp->IsConnected());
-  MOZ_ASSERT(a2dp->IsAvrcpConnected());
+  BluetoothAvrcpManager* avrcp = BluetoothAvrcpManager::Get();
+  NS_ENSURE_TRUE_VOID(avrcp);
+  MOZ_ASSERT(avrcp->IsConnected());
   MOZ_ASSERT(!sAdapterPath.IsEmpty());
 
   nsAutoString deviceAddress;
-  a2dp->GetAddress(deviceAddress);
+  avrcp->GetAddress(deviceAddress);
 
   Task* task = new UpdateNotificationTask(deviceAddress, aEventId, aData);
   DispatchToDBusThread(task);

@@ -24,15 +24,18 @@ class BluetoothProfileManagerBase;
  */
 enum BluetoothServiceClass
 {
-  A2DP          = 0x110D,
-  A2DP_SINK     = 0x110B,
-  HANDSFREE     = 0x111E,
-  HANDSFREE_AG  = 0x111F,
-  HEADSET       = 0x1108,
-  HEADSET_AG    = 0x1112,
-  HID           = 0x1124,
-  OBJECT_PUSH   = 0x1105,
-  UNKNOWN       = 0x0000
+  A2DP             = 0x110D,
+  A2DP_SINK        = 0x110B,
+  AVRCP            = 0x110E,
+  AVRCP_TARGET     = 0x110C,
+  AVRCP_CONTROLLER = 0x110F,
+  HANDSFREE        = 0x111E,
+  HANDSFREE_AG     = 0x111F,
+  HEADSET          = 0x1108,
+  HEADSET_AG       = 0x1112,
+  HID              = 0x1124,
+  OBJECT_PUSH      = 0x1105,
+  UNKNOWN          = 0x0000
 };
 
 class BluetoothUuidHelper
