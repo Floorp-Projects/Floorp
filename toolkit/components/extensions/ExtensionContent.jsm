@@ -60,7 +60,7 @@ var api = context => { return {
       return context.extension.getManifest();
     },
 
-    getURL: function(path) {
+    getURL: function(url) {
       return context.extension.baseURI.resolve(url);
     },
 
@@ -84,7 +84,7 @@ var api = context => { return {
   },
 
   extension: {
-    getURL: function(path) {
+    getURL: function(url) {
       return context.extension.baseURI.resolve(url);
     },
 
