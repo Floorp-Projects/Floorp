@@ -35,37 +35,6 @@ TimelineMarker::TimelineMarker(const char* aName,
   CaptureStackIfNecessary(aMetaData, aStackRequest);
 }
 
-TimelineMarker::TimelineMarker(const char* aName,
-                               const nsAString& aCause,
-                               TracingMetadata aMetaData,
-                               TimelineStackRequest aStackRequest)
-  : mName(aName)
-  , mCause(aCause)
-  , mMetaData(aMetaData)
-{
-  MOZ_COUNT_CTOR(TimelineMarker);
-  MOZ_ASSERT(aName);
-
-  SetCurrentTime();
-  CaptureStackIfNecessary(aMetaData, aStackRequest);
-}
-
-TimelineMarker::TimelineMarker(const char* aName,
-                               const nsAString& aCause,
-                               const TimeStamp& aTime,
-                               TracingMetadata aMetaData,
-                               TimelineStackRequest aStackRequest)
-  : mName(aName)
-  , mCause(aCause)
-  , mMetaData(aMetaData)
-{
-  MOZ_COUNT_CTOR(TimelineMarker);
-  MOZ_ASSERT(aName);
-
-  SetCustomTime(aTime);
-  CaptureStackIfNecessary(aMetaData, aStackRequest);
-}
-
 TimelineMarker::~TimelineMarker()
 {
   MOZ_COUNT_DTOR(TimelineMarker);

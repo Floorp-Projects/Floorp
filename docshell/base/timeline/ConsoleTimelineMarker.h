@@ -17,7 +17,8 @@ class ConsoleTimelineMarker : public TimelineMarker
 public:
   explicit ConsoleTimelineMarker(const nsAString& aCause,
                                  TracingMetadata aMetaData)
-    : TimelineMarker("ConsoleTime", aCause, aMetaData)
+    : TimelineMarker("ConsoleTime", aMetaData)
+    , mCause(aCause)
   {
     // Stack is captured by default on the "start" marker. Explicitly also
     // capture stack on the "end" marker.
@@ -31,18 +32,23 @@ public:
     if (!TimelineMarker::Equals(aOther)) {
       return false;
     }
-    // Console markers must have matching causes as well.
-    return GetCause() == aOther.GetCause();
+    // Console markers must have matching causes as well. It is safe to perform
+    // a static_cast here as the previous equality check ensures that this is
+    // a console marker instance.
+    return mCause == static_cast<const ConsoleTimelineMarker*>(&aOther)->mCause;
   }
 
   virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) override
   {
     if (GetMetaData() == TRACING_INTERVAL_START) {
-      aMarker.mCauseName.Construct(GetCause());
+      aMarker.mCauseName.Construct(mCause);
     } else {
       aMarker.mEndStack = GetStack();
     }
   }
+
+private:
+  nsString mCause;
 };
 
 } // namespace mozilla
