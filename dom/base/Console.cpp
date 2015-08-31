@@ -26,6 +26,8 @@
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsProxyRelease.h"
+#include "mozilla/ConsoleTimelineMarker.h"
+#include "mozilla/TimestampTimelineMarker.h"
 
 #include "nsIConsoleAPIStorage.h"
 #include "nsIDOMWindowUtils.h"
@@ -985,55 +987,6 @@ ReifyStack(nsIStackFrame* aStack, nsTArray<ConsoleStackEntry>& aRefiedStack)
   return NS_OK;
 }
 
-class ConsoleTimelineMarker : public TimelineMarker
-{
-public:
-  explicit ConsoleTimelineMarker(const nsAString& aCause,
-                                 TracingMetadata aMetaData)
-    : TimelineMarker("ConsoleTime", aCause, aMetaData)
-  {
-    if (aMetaData == TRACING_INTERVAL_END) {
-      CaptureStack();
-    }
-  }
-
-  virtual bool Equals(const TimelineMarker& aOther) override
-  {
-    if (!TimelineMarker::Equals(aOther)) {
-      return false;
-    }
-    // Console markers must have matching causes as well.
-    return GetCause() == aOther.GetCause();
-  }
-
-  virtual void AddDetails(JSContext* aCx,
-                          mozilla::dom::ProfileTimelineMarker& aMarker) override
-  {
-    if (GetMetaData() == TRACING_INTERVAL_START) {
-      aMarker.mCauseName.Construct(GetCause());
-    } else {
-      aMarker.mEndStack = GetStack();
-    }
-  }
-};
-
-class TimestampTimelineMarker : public TimelineMarker
-{
-public:
-  explicit TimestampTimelineMarker(const nsAString& aCause)
-    : TimelineMarker("TimeStamp", aCause, TRACING_TIMESTAMP)
-  {
-  }
-
-  virtual void AddDetails(JSContext* aCx,
-                          mozilla::dom::ProfileTimelineMarker& aMarker) override
-  {
-    if (!GetCause().IsEmpty()) {
-      aMarker.mCauseName.Construct(GetCause());
-    }
-  }
-};
-
 // Queue a call to a console method. See the CALL_DELAY constant.
 void
 Console::Method(JSContext* aCx, MethodName aMethodName,
@@ -1140,8 +1093,7 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
           key.init(aCx, jsString);
         }
 
-        mozilla::UniquePtr<TimelineMarker> marker =
-          MakeUnique<TimestampTimelineMarker>(key);
+        UniquePtr<TimelineMarker> marker = MakeUnique<TimestampTimelineMarker>(key);
         TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
       }
       // For `console.time(foo)` and `console.timeEnd(foo)`
@@ -1151,9 +1103,9 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
         if (jsString) {
           nsAutoJSString key;
           if (key.init(aCx, jsString)) {
-            mozilla::UniquePtr<TimelineMarker> marker =
-              MakeUnique<ConsoleTimelineMarker>(key,
-                aMethodName == MethodTime ? TRACING_INTERVAL_START : TRACING_INTERVAL_END);
+            UniquePtr<TimelineMarker> marker = MakeUnique<ConsoleTimelineMarker>(
+              key, aMethodName == MethodTime ? TRACING_INTERVAL_START
+                                             : TRACING_INTERVAL_END);
             TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
           }
         }

@@ -7,6 +7,7 @@
 #include "ObservedDocShell.h"
 
 #include "TimelineMarker.h"
+#include "LayerTimelineMarker.h"
 #include "mozilla/Move.h"
 
 namespace mozilla {
@@ -80,8 +81,9 @@ ObservedDocShell::PopMarkers(JSContext* aCx,
 
         // Look for "Layer" markers to stream out "Paint" markers.
         if (startIsPaintType && endIsLayerType) {
+          LayerTimelineMarker* layerPayload = static_cast<LayerTimelineMarker*>(endPayload.get());
+          layerPayload->AddLayerRectangles(layerRectangles);
           hasSeenLayerType = true;
-          endPayload->AddLayerRectangles(layerRectangles);
         }
         if (!startPayload->Equals(*endPayload)) {
           continue;

@@ -7,9 +7,15 @@
 EXPORTS.mozilla += [
     'AutoGlobalTimelineMarker.h',
     'AutoTimelineMarker.h',
+    'ConsoleTimelineMarker.h',
+    'EventTimelineMarker.h',
+    'JavascriptTimelineMarker.h',
+    'LayerTimelineMarker.h',
     'ObservedDocShell.h',
+    'RestyleTimelineMarker.h',
     'TimelineConsumers.h',
     'TimelineMarker.h',
+    'TimestampTimelineMarker.h',
 ]
 
 UNIFIED_SOURCES += [
