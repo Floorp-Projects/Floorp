@@ -297,6 +297,11 @@ OutputMixer::GetOutputVolumePan(float& left, float& right)
     return 0;
 }
 
+int OutputMixer::GetOutputChannelCount()
+{
+  return _audioFrame.num_channels_;
+}
+
 int OutputMixer::StartRecordingPlayout(const char* fileName,
                                        const CodecInst* codecInst)
 {
