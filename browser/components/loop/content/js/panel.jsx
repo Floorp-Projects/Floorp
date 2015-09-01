@@ -517,63 +517,49 @@ loop.panel = (function(_, mozL10n) {
       room: React.PropTypes.instanceOf(loop.store.Room).isRequired
     },
 
-    mixins: [loop.shared.mixins.WindowCloseMixin],
+    mixins: [
+      loop.shared.mixins.WindowCloseMixin,
+      sharedMixins.DropdownMenuMixin()
+    ],
 
     getInitialState: function() {
-      return { urlCopied: false };
+      return {
+        eventPosY: 0
+      };
     },
 
-    shouldComponentUpdate: function(nextProps, nextState) {
-      return (nextProps.room.ctime > this.props.room.ctime) ||
-        (nextState.urlCopied !== this.state.urlCopied);
+    _isActive: function() {
+      return this.props.room.participants.length > 0;
     },
 
     handleClickEntry: function(event) {
       event.preventDefault();
+
       this.props.dispatcher.dispatch(new sharedActions.OpenRoom({
         roomToken: this.props.room.roomToken
       }));
       this.closeWindow();
     },
 
-    handleCopyButtonClick: function(event) {
-      event.stopPropagation();
-      event.preventDefault();
-      this.props.dispatcher.dispatch(new sharedActions.CopyRoomUrl({
-        roomUrl: this.props.room.roomUrl,
-        from: "panel"
-      }));
-      this.setState({urlCopied: true});
+    handleContextChevronClick: function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      this.setState({
+        eventPosY: e.pageY
+      });
+
+      this.toggleDropdownMenu();
     },
 
-    handleDeleteButtonClick: function(event) {
-      event.stopPropagation();
-      event.preventDefault();
-      this.props.mozLoop.confirm({
-        message: mozL10n.get("rooms_list_deleteConfirmation_label"),
-        okButton: null,
-        cancelButton: null
-      }, function(err, result) {
-        if (err) {
-          throw err;
-        }
-
-        if (!result) {
-          return;
-        }
-
-        this.props.dispatcher.dispatch(new sharedActions.DeleteRoom({
-          roomToken: this.props.room.roomToken
-        }));
-      }.bind(this));
-    },
-
-    handleMouseLeave: function(event) {
-      this.setState({urlCopied: false});
-    },
-
-    _isActive: function() {
-      return this.props.room.participants.length > 0;
+    /**
+     * Callback called when moving cursor away from the conversation entry.
+     * Will close the dropdown menu.
+     */
+    _handleMouseOut: function() {
+      if (this.state.showMenu) {
+        this.toggleDropdownMenu();
+      }
     },
 
     render: function() {
@@ -581,31 +567,188 @@ loop.panel = (function(_, mozL10n) {
         "room-entry": true,
         "room-active": this._isActive()
       });
-      var copyButtonClasses = React.addons.classSet({
-        "copy-link": true,
-        "checked": this.state.urlCopied
-      });
 
       return (
-        <div className={roomClasses} onClick={this.handleClickEntry}
-             onMouseLeave={this.handleMouseLeave}>
+        <div className={roomClasses}
+          onClick={this.handleClickEntry}
+          onMouseLeave={this._handleMouseOut}
+          ref="roomEntry">
           <h2>
             {this.props.room.decryptedContext.roomName}
-            <button className={copyButtonClasses}
-              onClick={this.handleCopyButtonClick}
-              title={mozL10n.get("rooms_list_copy_url_tooltip")} />
-            <button className="delete-link"
-              onClick={this.handleDeleteButtonClick}
-              title={mozL10n.get("rooms_list_delete_tooltip")} />
           </h2>
-          <RoomEntryContextItem mozLoop={this.props.mozLoop}
-                                roomUrls={this.props.room.decryptedContext.urls} />
+          <RoomEntryContextItem
+            mozLoop={this.props.mozLoop}
+            roomUrls={this.props.room.decryptedContext.urls} />
+          <RoomEntryContextButtons
+            dispatcher={this.props.dispatcher}
+            eventPosY={this.state.eventPosY}
+            handleClickEntry={this.handleClickEntry}
+            handleContextChevronClick={this.handleContextChevronClick}
+            ref="contextActions"
+            room={this.props.room}
+            showMenu={this.state.showMenu}
+            toggleDropdownMenu={this.toggleDropdownMenu} />
         </div>
       );
     }
   });
 
-  /*
+  /**
+   * Buttons corresponding to each conversation entry.
+   * This component renders the video icon call button and chevron button for
+   * displaying contextual dropdown menu for conversation entries.
+   * It also holds the dropdown menu.
+   */
+  var RoomEntryContextButtons = React.createClass({
+    propTypes: {
+      dispatcher: React.PropTypes.object.isRequired,
+      eventPosY: React.PropTypes.number.isRequired,
+      handleClickEntry: React.PropTypes.func.isRequired,
+      handleContextChevronClick: React.PropTypes.func.isRequired,
+      room: React.PropTypes.object.isRequired,
+      showMenu: React.PropTypes.bool.isRequired,
+      toggleDropdownMenu: React.PropTypes.func.isRequired
+    },
+
+    handleEmailButtonClick: function(event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      this.props.dispatcher.dispatch(
+        new sharedActions.EmailRoomUrl({
+          roomUrl: this.props.room.roomUrl,
+          from: "panel"
+        })
+      );
+
+      this.props.toggleDropdownMenu();
+    },
+
+    handleCopyButtonClick: function(event) {
+      event.stopPropagation();
+      event.preventDefault();
+
+      this.props.dispatcher.dispatch(new sharedActions.CopyRoomUrl({
+        roomUrl: this.props.room.roomUrl,
+        from: "panel"
+      }));
+
+      this.props.toggleDropdownMenu();
+    },
+
+    handleDeleteButtonClick: function(event) {
+      event.stopPropagation();
+      event.preventDefault();
+
+      this.props.dispatcher.dispatch(new sharedActions.DeleteRoom({
+        roomToken: this.props.room.roomToken
+      }));
+
+      this.props.toggleDropdownMenu();
+    },
+
+    render: function() {
+      return (
+        <div className="room-entry-context-actions">
+          <button
+            className="btn room-entry-call-btn"
+            onClick={this.props.handleClickEntry}
+            ref="callButton" />
+          <div
+            className="room-entry-context-menu-chevron dropdown-menu-button"
+            onClick={this.props.handleContextChevronClick}
+            ref="menu-button" />
+          {this.props.showMenu ?
+            <ConversationDropdown
+              eventPosY={this.props.eventPosY}
+              handleCopyButtonClick={this.handleCopyButtonClick}
+              handleDeleteButtonClick={this.handleDeleteButtonClick}
+              handleEmailButtonClick={this.handleEmailButtonClick}
+              ref="menu" /> :
+            null}
+        </div>
+      );
+    }
+  });
+
+  /**
+   * Dropdown menu for each conversation entry.
+   * Because the container element has overflow we need to position the menu
+   * absolutely and have a different element as offset parent for it. We need
+   * eventPosY to make sure the position on the Y Axis is correct while for the
+   * X axis there can be only 2 different positions based on being RTL or not.
+   */
+  var ConversationDropdown = React.createClass({
+    propTypes: {
+      eventPosY: React.PropTypes.number.isRequired,
+      handleCopyButtonClick: React.PropTypes.func.isRequired,
+      handleDeleteButtonClick: React.PropTypes.func.isRequired,
+      handleEmailButtonClick: React.PropTypes.func.isRequired
+    },
+
+    getInitialState: function() {
+      return {
+        openDirUp: false
+      };
+    },
+
+    componentDidMount: function() {
+      var menuNode = this.getDOMNode();
+      var menuNodeRect = menuNode.getBoundingClientRect();
+
+      // Get the parent element and make sure the menu does not overlow its
+      // container.
+      var listNode = loop.shared.utils.findParentNode(this.getDOMNode(),
+                                                      ".rooms");
+      var listNodeRect = listNode.getBoundingClientRect();
+
+      // Click offset to not display the menu right next to the area clicked.
+      var offset = 10;
+
+      if (this.props.eventPosY + menuNodeRect.height >=
+          listNodeRect.top + listNodeRect.height) {
+        // Position above click area.
+        menuNode.style.top = this.props.eventPosY - menuNodeRect.height -
+                             listNodeRect.top - offset + "px";
+      } else {
+        // Position below click area.
+        menuNode.style.top = this.props.eventPosY - listNodeRect.top +
+                             offset + "px";
+      }
+    },
+
+    render: function() {
+      var dropdownClasses = React.addons.classSet({
+        "dropdown-menu": true,
+        "dropdown-menu-up": this.state.openDirUp
+      });
+
+      return (
+        <ul className={dropdownClasses}>
+          <li
+            className="dropdown-menu-item"
+            onClick={this.props.handleCopyButtonClick}
+            ref="copyButton">
+            {mozL10n.get("copy_url_button2")}
+          </li>
+          <li
+            className="dropdown-menu-item"
+            onClick={this.props.handleEmailButtonClick}
+            ref="emailButton">
+            {mozL10n.get("email_link_button")}
+          </li>
+          <li
+            className="dropdown-menu-item"
+            onClick={this.props.handleDeleteButtonClick}
+            ref="deleteButton">
+            {mozL10n.get("rooms_list_delete_tooltip")}
+          </li>
+        </ul>
+      );
+    }
+  });
+
+  /**
    * User profile prop can be either an object or null as per mozLoopAPI
    * and there is no way to express this with React 0.12.2
    */
@@ -1037,11 +1180,13 @@ loop.panel = (function(_, mozL10n) {
   return {
     AccountLink: AccountLink,
     AvailabilityDropdown: AvailabilityDropdown,
+    ConversationDropdown: ConversationDropdown,
     GettingStartedView: GettingStartedView,
     init: init,
     NewRoomView: NewRoomView,
     PanelView: PanelView,
     RoomEntry: RoomEntry,
+    RoomEntryContextButtons: RoomEntryContextButtons,
     RoomList: RoomList,
     SettingsDropdown: SettingsDropdown,
     SignInRequestView: SignInRequestView,
