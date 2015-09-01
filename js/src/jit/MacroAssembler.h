@@ -172,6 +172,9 @@
 namespace js {
 namespace jit {
 
+// Defined in JitFrames.h
+enum ExitFrameTokenValues;
+
 // The public entrypoint for emitting assembly. Note that a MacroAssembler can
 // use cx->lifoAlloc, so take care not to interleave masm use with other
 // lifoAlloc use if one will be destroyed before the other.
@@ -599,6 +602,50 @@ class MacroAssembler : public MacroAssemblerSpecific
     // any execution, and can even be an invalid pointer into the instruction
     // stream, as long as it does not alias any other.
     uint32_t pushFakeReturnAddress(Register scratch) PER_SHARED_ARCH;
+
+  public:
+    // ===============================================================
+    // Exit frame footer.
+    //
+    // When calling outside the Jit we push an exit frame. To mark the stack
+    // correctly, we have to push additional information, called the Exit frame
+    // footer, which is used to identify how the stack is marked.
+    //
+    // See JitFrames.h, and MarkJitExitFrame in JitFrames.cpp.
+
+    // If the current piece of code might be garbage collected, then the exit
+    // frame footer must contain a pointer to the current JitCode, such that the
+    // garbage collector can keep the code alive as long this code is on the
+    // stack. This function pushes a placeholder which is replaced when the code
+    // is linked.
+    inline void PushStubCode();
+
+    // Return true if the code contains a self-reference which needs to be
+    // patched when the code is linked.
+    inline bool hasSelfReference() const;
+
+    // Push stub code and the VMFunction pointer.
+    inline void enterExitFrame(const VMFunction* f = nullptr);
+
+    // Push an exit frame token to identify which fake exit frame this footer
+    // corresponds to.
+    inline void enterFakeExitFrame(enum ExitFrameTokenValues token);
+
+    // Pop ExitFrame footer in addition to the extra frame.
+    inline void leaveExitFrame(size_t extraFrame = 0);
+
+  private:
+    // Save the top of the stack into PerThreadData::jitTop of the main thread,
+    // which should be the location of the latest exit frame.
+    void linkExitFrame();
+
+    // Patch the value of PushStubCode with the pointer to the finalized code.
+    void linkSelfReference(JitCode* code);
+
+    // If the JitCode that created this assembler needs to transition into the VM,
+    // we want to store the JitCode on the stack in order to mark it during a GC.
+    // This is a reference to a patch location where the JitCode* will be written.
+    CodeOffsetLabel selfReferencePatch_;
 
     //}}} check_macroassembler_style
   public:
@@ -1095,30 +1142,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void compareStrings(JSOp op, Register left, Register right, Register result,
                         Label* fail);
 
-    // If the JitCode that created this assembler needs to transition into the VM,
-    // we want to store the JitCode on the stack in order to mark it during a GC.
-    // This is a reference to a patch location where the JitCode* will be written.
-  private:
-    CodeOffsetLabel exitCodePatch_;
-
-  private:
-    void linkExitFrame();
-
   public:
-    inline void PushStubCode();
-
-    // Push stub code, and the VMFunction pointer.
-    inline void enterExitFrame(const VMFunction* f = nullptr);
-
-    // The JitCode * argument here is one of the tokens defined in the various
-    // exit frame layout classes, e.g. NativeExitFrameLayout::Token().
-    inline void enterFakeExitFrame(JitCode* codeVal);
-
-    // Pop ExitFrame footer in addition to the extra frame.
-    inline void leaveExitFrame(size_t extraFrame = 0);
-
-    inline bool hasEnteredExitFrame() const;
-
     // Generates code used to complete a bailout.
     void generateBailoutTail(Register scratch, Register bailoutInfo);
 

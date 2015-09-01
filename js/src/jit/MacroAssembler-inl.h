@@ -199,30 +199,32 @@ MacroAssembler::buildFakeExitFrame(Register scratch)
     return retAddr;
 }
 
-//}}} check_macroassembler_style
 // ===============================================================
+// Exit frame footer.
 
 void
 MacroAssembler::PushStubCode()
 {
-    exitCodePatch_ = PushWithPatch(ImmWord(-1));
+    // Make sure that we do not erase an existing self-reference.
+    MOZ_ASSERT(!hasSelfReference());
+    selfReferencePatch_ = PushWithPatch(ImmWord(-1));
 }
 
 void
 MacroAssembler::enterExitFrame(const VMFunction* f)
 {
     linkExitFrame();
-    // Push the ioncode. (Bailout or VM wrapper)
+    // Push the JitCode pointer. (Keep the code alive, when on the stack)
     PushStubCode();
     // Push VMFunction pointer, to mark arguments.
     Push(ImmPtr(f));
 }
 
 void
-MacroAssembler::enterFakeExitFrame(JitCode* codeVal)
+MacroAssembler::enterFakeExitFrame(enum ExitFrameTokenValues token)
 {
     linkExitFrame();
-    Push(ImmPtr(codeVal));
+    Push(Imm32(token));
     Push(ImmPtr(nullptr));
 }
 
@@ -233,10 +235,13 @@ MacroAssembler::leaveExitFrame(size_t extraFrame)
 }
 
 bool
-MacroAssembler::hasEnteredExitFrame() const
+MacroAssembler::hasSelfReference() const
 {
-    return exitCodePatch_.offset() != 0;
+    return selfReferencePatch_.offset() != 0;
 }
+
+//}}} check_macroassembler_style
+// ===============================================================
 
 } // namespace jit
 } // namespace js
