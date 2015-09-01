@@ -9,7 +9,9 @@
 #include "mozilla/Logging.h"
 #include "GMPParent.h"
 #include "GMPVideoDecoderParent.h"
+#ifdef MOZ_EME
 #include "mozilla/dom/GMPVideoDecoderTrialCreator.h"
+#endif
 #include "nsIObserverService.h"
 #include "GeckoChildProcessHost.h"
 #include "mozilla/Preferences.h"
@@ -1207,12 +1209,16 @@ NS_IMETHODIMP
 GeckoMediaPluginServiceParent::UpdateTrialCreateState(const nsAString& aKeySystem,
                                                       uint32_t aState)
 {
+#ifdef MOZ_EME
   nsString keySystem(aKeySystem);
   NS_DispatchToMainThread(NS_NewRunnableFunction([keySystem, aState] {
     mozilla::dom::GMPVideoDecoderTrialCreator::UpdateTrialCreateState(keySystem, aState);
   }));
 
   return NS_OK;
+#else
+  return NS_ERROR_FAILURE;
+#endif
 }
 
 static bool
