@@ -953,6 +953,8 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
   // channels (since the WebRTC.org code below makes the assumption that the
   // input audio is either mono or stereo).
   uint32_t outputChannels = chunk.ChannelCount() == 1 ? 1 : 2;
+  // XXX[padenot] We could remove this allocation for the common case, or stick
+  // it on the object so it only happens once.
   nsAutoArrayPtr<int16_t> convertedSamples(
       new int16_t[chunk.mDuration * outputChannels]);
 
@@ -998,8 +1000,16 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
   while (packetizer_->PacketsAvailable()) {
     uint32_t samplesPerPacket = packetizer_->PacketSize() *
                                 packetizer_->Channels();
-    conduit->SendAudioFrame(packetizer_->Output(),
-                            samplesPerPacket ,
+
+    // We know that webrtc.org's code going to copy the samples down the line,
+    // so we can just use a stack buffer here instead of malloc-ing.
+    // Max size given stereo is 480*2*2 = 1920 (48KHz)
+    const size_t AUDIO_SAMPLE_BUFFER_MAX = 1920;
+    int16_t packet[AUDIO_SAMPLE_BUFFER_MAX];
+
+    packetizer_->Output(packet);
+    conduit->SendAudioFrame(packet,
+                            samplesPerPacket,
                             rate, 0);
   }
 }
@@ -1329,7 +1339,6 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
   // This comparison is done in total time to avoid accumulated roundoff errors.
   while (source_->TicksToTimeRoundDown(track_rate_, played_ticks_) <
          desired_time) {
-    // TODO(ekr@rtfm.com): Is there a way to avoid mallocating here?  Or reduce the size?
     // Max size given stereo is 480*2*2 = 1920 (48KHz)
     const size_t AUDIO_SAMPLE_BUFFER_MAX = 1920;
     MOZ_ASSERT((track_rate_/100)*sizeof(uint16_t) * 2 <= AUDIO_SAMPLE_BUFFER_MAX);
