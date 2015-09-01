@@ -39,6 +39,8 @@ public:
     MaybeAwaitTrialCreate(aKeySystem, p, aParent);
   }
 
+  static void UpdateTrialCreateState(const nsAString& aKeySystem, uint32_t aState);
+
 private:
 
   class AbstractPromiseLike {
@@ -88,6 +90,8 @@ private:
   };
 
   static TrialCreateState GetCreateTrialState(const nsAString& aKeySystem);
+  static void UpdateTrialCreateState(const nsAString& aKeySystem,
+                                     TrialCreateState aState);
 
   struct TrialCreateData {
     explicit TrialCreateData(const nsAString& aKeySystem)

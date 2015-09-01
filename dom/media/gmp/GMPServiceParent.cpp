@@ -9,6 +9,7 @@
 #include "mozilla/Logging.h"
 #include "GMPParent.h"
 #include "GMPVideoDecoderParent.h"
+#include "mozilla/dom/GMPVideoDecoderTrialCreator.h"
 #include "nsIObserverService.h"
 #include "GeckoChildProcessHost.h"
 #include "mozilla/Preferences.h"
@@ -1202,6 +1203,18 @@ GeckoMediaPluginServiceParent::GetNodeId(const nsAString& aOrigin,
   return rv;
 }
 
+NS_IMETHODIMP
+GeckoMediaPluginServiceParent::UpdateTrialCreateState(const nsAString& aKeySystem,
+                                                      uint32_t aState)
+{
+  nsString keySystem(aKeySystem);
+  NS_DispatchToMainThread(NS_NewRunnableFunction([keySystem, aState] {
+    mozilla::dom::GMPVideoDecoderTrialCreator::UpdateTrialCreateState(keySystem, aState);
+  }));
+
+  return NS_OK;
+}
+
 static bool
 ExtractHostName(const nsACString& aOrigin, nsACString& aOutData)
 {
@@ -1569,6 +1582,14 @@ GMPServiceParent::RecvGetGMPNodeId(const nsString& aOrigin,
   nsresult rv = mService->GetNodeId(aOrigin, aTopLevelOrigin,
                                     aInPrivateBrowsing, *aID);
   return NS_SUCCEEDED(rv);
+}
+
+bool
+GMPServiceParent::RecvUpdateGMPTrialCreateState(const nsString& aKeySystem,
+                                                const uint32_t& aState)
+{
+  mService->UpdateTrialCreateState(aKeySystem, aState);
+  return true;
 }
 
 /* static */
