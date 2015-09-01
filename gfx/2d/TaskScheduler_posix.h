@@ -16,6 +16,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/gfx/CriticalSection.h"
 
 namespace mozilla {
 namespace gfx {
@@ -24,32 +25,8 @@ class Task;
 class PosixCondVar;
 class WorkerThread;
 
-class Mutex {
-public:
-  Mutex() {
-    DebugOnly<int> err = pthread_mutex_init(&mMutex, nullptr);
-    MOZ_ASSERT(!err);
-  }
-
-  ~Mutex() {
-    DebugOnly<int> err = pthread_mutex_destroy(&mMutex);
-    MOZ_ASSERT(!err);
-  }
-
-  void Lock() {
-    DebugOnly<int> err = pthread_mutex_lock(&mMutex);
-    MOZ_ASSERT(!err);
-  }
-
-  void Unlock() {
-    DebugOnly<int> err = pthread_mutex_unlock(&mMutex);
-    MOZ_ASSERT(!err);
-  }
-
-protected:
-  pthread_mutex_t mMutex;
-  friend class PosixCondVar;
-};
+typedef mozilla::gfx::CriticalSection Mutex;
+typedef mozilla::gfx::CriticalSectionAutoEnter MutexAutoLock;
 
 // posix platforms only!
 class PosixCondVar {

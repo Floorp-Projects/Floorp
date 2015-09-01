@@ -196,21 +196,13 @@ private:
 #endif
 
   std::vector<Task*> mWaitingTasks;
-  Mutex mMutex; // for concurrent access to mWaintingTasks
+  CriticalSection mWaitingTasksSection; // for concurrent access to mWaintingTasks
   Atomic<uint32_t> mSignals;
 
   friend class Task;
   friend class TaskScheduler;
 };
 
-
-/// RAII helper.
-struct MutexAutoLock {
-    MutexAutoLock(Mutex* aMutex) : mMutex(aMutex) { mMutex->Lock(); }
-    ~MutexAutoLock() { mMutex->Unlock(); }
-protected:
-    Mutex* mMutex;
-};
 
 /// Base class for worker threads.
 class WorkerThread
