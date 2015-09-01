@@ -59,7 +59,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     enterCompartmentDepth(0),
     performanceMonitoring(runtime_),
     data(nullptr),
-    objectMetadataCallback(nullptr),
+    allocationMetadataBuilder(nullptr),
     lastAnimationTime(0),
     regExps(runtime_),
     globalWriteBarriered(false),
@@ -873,13 +873,13 @@ JSCompartment::clearTables()
 }
 
 void
-JSCompartment::setObjectMetadataCallback(js::ObjectMetadataCallback callback)
+JSCompartment::setAllocationMetadataBuilder(js::AllocationMetadataBuilder callback)
 {
     // Clear any jitcode in the runtime, which behaves differently depending on
     // whether there is a creation callback.
     ReleaseAllJITCode(runtime_->defaultFreeOp());
 
-    objectMetadataCallback = callback;
+    allocationMetadataBuilder = callback;
 }
 
 void
@@ -894,7 +894,7 @@ JSCompartment::setNewObjectMetadata(JSContext* cx, HandleObject obj)
 {
     assertSameCompartment(cx, this, obj);
 
-    if (JSObject* metadata = objectMetadataCallback(cx, obj)) {
+    if (JSObject* metadata = allocationMetadataBuilder(cx, obj)) {
         AutoEnterOOMUnsafeRegion oomUnsafe;
         assertSameCompartment(cx, metadata);
         if (!objectMetadataTable) {
