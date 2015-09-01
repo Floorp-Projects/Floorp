@@ -15,8 +15,72 @@ loader.lazyRequireGetter(this, "PerformanceIO",
   "devtools/toolkit/performance/io");
 loader.lazyRequireGetter(this, "RecordingUtils",
   "devtools/toolkit/performance/utils");
-loader.lazyRequireGetter(this, "PerformanceRecordingCommon",
-  "devtools/toolkit/performance/recording-common", true);
+
+/**
+ * A set of functions used by both the front and actor to access
+ * internal properties.
+ */
+const PerformanceRecordingCommon = {
+  // Private fields, only needed when a recording is started or stopped.
+  _console: false,
+  _imported: false,
+  _recording: false,
+  _completed: false,
+  _configuration: {},
+  _startingBufferStatus: null,
+  _localStartTime: null,
+
+  // Serializable fields, necessary and sufficient for import and export.
+  _label: "",
+  _duration: 0,
+  _markers: null,
+  _frames: null,
+  _memory: null,
+  _ticks: null,
+  _allocations: null,
+  _profile: null,
+
+  /**
+   * Helper methods for returning the status of the recording.
+   * These methods should be consistent on both the front and actor.
+   */
+  isRecording: function () { return this._recording; },
+  isCompleted: function () { return this._completed || this.isImported(); },
+  isFinalizing: function () { return !this.isRecording() && !this.isCompleted(); },
+  isConsole: function () { return this._console; },
+  isImported: function () { return this._imported; },
+
+  /**
+   * Helper methods for returning configuration for the recording.
+   * These methods should be consistent on both the front and actor.
+   */
+  getConfiguration: function () { return this._configuration; },
+  getLabel: function () { return this._label; },
+
+  /**
+   * Helper methods for returning recording data.
+   * These methods should be consistent on both the front and actor.
+   */
+  getMarkers: function() { return this._markers; },
+  getFrames: function() { return this._frames; },
+  getMemory: function() { return this._memory; },
+  getTicks: function() { return this._ticks; },
+  getAllocations: function() { return this._allocations; },
+  getProfile: function() { return this._profile; },
+
+  getAllData: function () {
+    let label = this.getLabel();
+    let duration = this.getDuration();
+    let markers = this.getMarkers();
+    let frames = this.getFrames();
+    let memory = this.getMemory();
+    let ticks = this.getTicks();
+    let allocations = this.getAllocations();
+    let profile = this.getProfile();
+    let configuration = this.getConfiguration();
+    return { label, duration, markers, frames, memory, ticks, allocations, profile, configuration };
+  },
+};
 
 /**
  * This actor wraps the Performance module at toolkit/devtools/shared/performance.js
@@ -47,12 +111,9 @@ let PerformanceRecordingActor = exports.PerformanceRecordingActor = protocol.Act
 
     // Only send profiler data once it exists and it has
     // not yet been sent
-    if (this._profile && !this._sentFinalizedData) {
-      form.finalizedData = true;
-      form.profile = this.getProfile();
-      form.systemHost = this.getHostSystemInfo();
-      form.systemClient = this.getClientSystemInfo();
-      this._sentFinalizedData = true;
+    if (this._profile && !this._sentProfilerData) {
+      form.profile = this._profile;
+      this._sentProfilerData = true;
     }
 
     return form;
@@ -103,9 +164,6 @@ let PerformanceRecordingActor = exports.PerformanceRecordingActor = protocol.Act
       this._memory = [];
       this._ticks = [];
       this._allocations = { sites: [], timestamps: [], frames: [], sizes: [] };
-
-      this._systemHost = meta.systemHost || {};
-      this._systemClient = meta.systemClient || {};
     }
   },
 
@@ -175,10 +233,8 @@ let PerformanceRecordingFront = exports.PerformanceRecordingFront = protocol.Fro
     this._completed = form.completed;
     this._duration = form.duration;
 
-    if (form.finalizedData) {
+    if (form.profile) {
       this._profile = form.profile;
-      this._systemHost = form.systemHost;
-      this._systemClient = form.systemClient;
     }
 
     // Sort again on the client side if we're using realtime markers and the recording
@@ -212,6 +268,33 @@ let PerformanceRecordingFront = exports.PerformanceRecordingFront = protocol.Fro
   exportRecording: function (file) {
     let recordingData = this.getAllData();
     return PerformanceIO.saveRecordingToFile(recordingData, file);
+  },
+
+  /**
+   * Returns the position, generation, and totalSize of the profiler
+   * when this recording was started.
+   *
+   * @return {object}
+   */
+  getStartingBufferStatus: function () {
+    return this._form.startingBufferStatus;
+  },
+
+  /**
+   * Gets duration of this recording, in milliseconds.
+   * @return number
+   */
+  getDuration: function () {
+    // Compute an approximate ending time for the current recording if it is
+    // still in progress. This is needed to ensure that the view updates even
+    // when new data is not being generated. If recording is completed, use
+    // the duration from the profiler; if between recording and being finalized,
+    // use the last estimated duration.
+    if (this.isRecording()) {
+      return this._estimatedDuration = Date.now() - this._localStartTime;
+    } else {
+      return this._duration || this._estimatedDuration || 0;
+    }
   },
 
   /**
