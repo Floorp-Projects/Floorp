@@ -193,8 +193,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             case KeyEvent.DOM_VK_LEFT:
             case KeyEvent.DOM_VK_RIGHT:
             case KeyEvent.DOM_VK_HOME:
-              this.popup.hidePopup();
-              return;
+              // Reset the selected index so that nsAutoCompleteController
+              // simply closes the popup without trying to fill anything.
+              this.popup.selectedIndex = -1;
               break;
           }
 
