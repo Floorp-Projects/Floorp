@@ -265,3 +265,73 @@ class PackageFrontend(MachCommandBase):
         artifacts = self._make_artifacts(tree=tree, job=job)
         artifacts.clear_cache()
         return 0
+
+@CommandProvider
+class AndroidEmulatorCommands(MachCommandBase):
+    """
+       Run the Android emulator with one of the AVDs used in the Mozilla
+       automated test environment. If necessary, the AVD is fetched from
+       the tooltool server and installed.
+    """
+    @Command('android-emulator', category='devenv',
+        conditions=[],
+        description='Run the Android emulator with an AVD from test automation.')
+    @CommandArgument('--version', metavar='VERSION', choices=['2.3', '4.3', 'x86'],
+        help='Specify Android version to run in emulator. One of "2.3", "4.3", or "x86".',
+        default='4.3')
+    @CommandArgument('--wait', action='store_true',
+        help='Wait for emulator to be closed.')
+    @CommandArgument('--force-update', action='store_true',
+        help='Update AVD definition even when AVD is already installed.')
+    @CommandArgument('--verbose', action='store_true',
+        help='Log informative status messages.')
+    def emulator(self, version, wait=False, force_update=False, verbose=False):
+        from mozrunner.devices.android_device import AndroidEmulator
+
+        emulator = AndroidEmulator(version, verbose, substs=self.substs)
+        if emulator.is_running():
+            # It is possible to run multiple emulators simultaneously, but:
+            #  - if more than one emulator is using the same avd, errors may
+            #    occur due to locked resources;
+            #  - additional parameters must be specified when running tests,
+            #    to select a specific device.
+            # To avoid these complications, allow just one emulator at a time.
+            self.log(logging.ERROR, "emulator", {},
+                     "An Android emulator is already running.\n"
+                     "Close the existing emulator and re-run this command.")
+            return 1
+
+        if not emulator.is_available():
+            self.log(logging.WARN, "emulator", {},
+                     "Emulator binary not found.\n"
+                     "Install the Android SDK and make sure 'emulator' is in your PATH.")
+            return 2
+
+        if not emulator.check_avd(force_update):
+            self.log(logging.INFO, "emulator", {},
+                     "Fetching and installing AVD. This may take a few minutes...")
+            emulator.update_avd(force_update)
+
+        self.log(logging.INFO, "emulator", {},
+                 "Starting Android emulator running %s..." %
+                 emulator.get_avd_description())
+        emulator.start()
+        if emulator.wait_for_start():
+            self.log(logging.INFO, "emulator", {},
+                     "Android emulator is running.")
+        else:
+            # This is unusual but the emulator may still function.
+            self.log(logging.WARN, "emulator", {},
+                     "Unable to verify that emulator is running.")
+
+        if wait:
+            self.log(logging.INFO, "emulator", {},
+                     "Waiting for Android emulator to close...")
+            rc = emulator.wait()
+            if rc is not None:
+                self.log(logging.INFO, "emulator", {},
+                         "Android emulator completed with return code %d." % rc)
+            else:
+                self.log(logging.WARN, "emulator", {},
+                         "Unable to retrieve Android emulator return code.")
+        return 0
