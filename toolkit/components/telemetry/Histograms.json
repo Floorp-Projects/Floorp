@@ -9061,4 +9061,28 @@
     "n_buckets": "20",
     "description": "Proportion (%) of reschedulings of the main process to another CPU during the execution of code inside a JS compartment. Updated while we are measuring jank."
   }
+  "VIDEO_EME_ADOBE_INSTALL_FAILED_REASON": {
+    "alert_emails": ["edwin@mozilla.com"],
+    "expires_in_version": "50",
+    "kind": "enumerated",
+    "n_values": 10,
+    "releaseChannelCollection": "opt-out",
+    "description": "Reason for Adobe CDM failing to update. (1 = GMP_INVALID; 2 = GMP_HIDDEN; 3 = GMP_DISABLED; 4 = GMP_UPDATE_DISABLED)"
+  },
+  "VIDEO_EME_ADOBE_HIDDEN_REASON": {
+    "alert_emails": ["edwin@mozilla.com"],
+    "expires_in_version": "50",
+    "kind": "enumerated",
+    "n_values": 10,
+    "releaseChannelCollection": "opt-out",
+    "description": "Reason for Adobe CDM being hidden. (1 = UNSUPPORTED; 2 = EME_DISABLED)"
+  },
+  "VIDEO_EME_ADOBE_UNSUPPORTED_REASON": {
+    "alert_emails": ["edwin@mozilla.com"],
+    "expires_in_version": "50",
+    "kind": "enumerated",
+    "n_values": 10,
+    "releaseChannelCollection": "opt-out",
+    "description": "Reason for reporting the Adobe CDM to be unsupported. (1 = NOT_WINDOWS; 2 = WINDOWS_VERSION)"
+  },
 }

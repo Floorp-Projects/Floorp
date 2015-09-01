@@ -15,6 +15,13 @@ const DOWNLOAD_INTERVAL  = 0;
 // 1 day default
 const DEFAULT_SECONDS_BETWEEN_CHECKS = 60 * 60 * 24;
 
+let GMPInstallFailureReason = {
+  GMP_INVALID: 1,
+  GMP_HIDDEN: 2,
+  GMP_DISABLED: 3,
+  GMP_UPDATE_DISABLED: 4,
+};
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
@@ -345,8 +352,11 @@ GMPInstallManager.prototype = {
   get _isEMEEnabled() {
     return GMPPrefs.get(GMPPrefs.KEY_EME_ENABLED, true);
   },
+  _isAddonEnabled: function(aAddon) {
+    return GMPPrefs.get(GMPPrefs.KEY_PLUGIN_ENABLED, true, aAddon);
+  },
   _isAddonUpdateEnabled: function(aAddon) {
-    return GMPPrefs.get(GMPPrefs.KEY_PLUGIN_ENABLED, true, aAddon) &&
+    return this._isAddonEnabled(aAddon) &&
            GMPPrefs.get(GMPPrefs.KEY_PLUGIN_AUTOUPDATE, true, aAddon);
   },
   _updateLastCheck: function() {
@@ -405,18 +415,42 @@ GMPInstallManager.prototype = {
       let addonsToInstall = gmpAddons.filter(function(gmpAddon) {
         log.info("Found addon: " + gmpAddon.toString());
 
-        if (!gmpAddon.isValid || GMPUtils.isPluginHidden(gmpAddon) ||
-            gmpAddon.isInstalled) {
-          log.info("Addon invalid, hidden or already installed.");
+        if (!gmpAddon.isValid) {
+          GMPUtils.maybeReportTelemetry(gmpAddon.id,
+                                        "VIDEO_EME_ADOBE_INSTALL_FAILED_REASON",
+                                        GMPInstallFailureReason.GMP_INVALID);
+          log.info("Addon |" + gmpAddon.id + "| is invalid.");
+          return false;
+        }
+
+        if (GMPUtils.isPluginHidden(gmpAddon)) {
+          GMPUtils.maybeReportTelemetry(gmpAddon.id,
+                                        "VIDEO_EME_ADOBE_INSTALL_FAILED_REASON",
+                                        GMPInstallFailureReason.GMP_HIDDEN);
+          log.info("Addon |" + gmpAddon.id + "| has been hidden.");
+          return false;
+        }
+
+        if (gmpAddon.isInstalled) {
+          log.info("Addon |" + gmpAddon.id + "| already installed.");
           return false;
         }
 
         let addonUpdateEnabled = false;
         if (GMP_PLUGIN_IDS.indexOf(gmpAddon.id) >= 0) {
-          addonUpdateEnabled = this._isAddonUpdateEnabled(gmpAddon.id);
-          if (!addonUpdateEnabled) {
+          if (!this._isAddonEnabled(gmpAddon.id)) {
+            GMPUtils.maybeReportTelemetry(gmpAddon.id,
+                                          "VIDEO_EME_ADOBE_INSTALL_FAILED_REASON",
+                                          GMPInstallFailureReason.GMP_DISABLED);
+            log.info("GMP |" + gmpAddon.id + "| has been disabled; skipping check.");
+          } else if (!this._isAddonUpdateEnabled(gmpAddon.id)) {
+            GMPUtils.maybeReportTelemetry(gmpAddon.id,
+                                          "VIDEO_EME_ADOBE_INSTALL_FAILED_REASON",
+                                          GMPInstallFailureReason.GMP_UPDATE_DISABLED);
             log.info("Auto-update is off for " + gmpAddon.id +
                      ", skipping check.");
+          } else {
+            addonUpdateEnabled = true;
           }
         } else {
           // Currently, we only support installs of OpenH264 and EME plugins.
