@@ -563,6 +563,24 @@ class MacroAssembler : public MacroAssemblerSpecific
     uint32_t signature_;
 #endif
 
+  public:
+    // ===============================================================
+    // Jit Frames.
+    //
+    // These functions are used to build the content of the Jit frames.  See
+    // CommonFrameLayout class, and all its derivatives. The content should be
+    // pushed in the opposite order as the fields of the structures, such that
+    // the structures can be used to interpret the content of the stack.
+
+    // Call the Jit function, and push the return address (or let the callee
+    // push the return address).
+    //
+    // These functions return the offset of the return address, in order to use
+    // the return address to index the safepoints, which are used to list all
+    // live registers.
+    uint32_t callJitNoProfiler(Register callee) PER_SHARED_ARCH;
+    inline uint32_t callJit(Register callee);
+
     //}}} check_macroassembler_style
   public:
 
@@ -1091,15 +1109,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     // instrumentation is enabled. For the functions that return a uint32_t,
     // they are returning the offset of the assembler just after the call has
     // been made so that a safepoint can be made at that location.
-
-    // see above comment for what is returned
-    uint32_t callJit(Register callee) {
-        profilerPreCall();
-        MacroAssemblerSpecific::callJit(callee);
-        uint32_t ret = currentOffset();
-        profilerPostReturn();
-        return ret;
-    }
 
     // see above comment for what is returned
     uint32_t callWithExitFrame(Label* target) {

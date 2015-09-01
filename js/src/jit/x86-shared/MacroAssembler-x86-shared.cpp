@@ -169,18 +169,6 @@ MacroAssemblerX86Shared::branchNegativeZeroFloat32(FloatRegister reg,
 }
 
 void
-MacroAssemblerX86Shared::callJit(Register callee)
-{
-    call(callee);
-}
-
-void
-MacroAssemblerX86Shared::callJitFromAsmJS(Register callee)
-{
-    call(callee);
-}
-
-void
 MacroAssemblerX86Shared::callAndPushReturnAddress(Label* label)
 {
     call(label);
@@ -418,6 +406,16 @@ void
 MacroAssembler::call(JitCode* target)
 {
     Assembler::call(target);
+}
+
+// ===============================================================
+// Jit Frames.
+
+uint32_t
+MacroAssembler::callJitNoProfiler(Register callee)
+{
+    call(callee);
+    return currentOffset();
 }
 
 //}}} check_macroassembler_style

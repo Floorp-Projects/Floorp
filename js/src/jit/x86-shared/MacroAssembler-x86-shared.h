@@ -1479,8 +1479,6 @@ class MacroAssemblerX86Shared : public Assembler
     void callWithExitFrame(Label* target);
     void callWithExitFrame(JitCode* target);
 
-    void callJit(Register callee);
-    void callJitFromAsmJS(Register callee);
     void callAndPushReturnAddress(Label* label);
 
     void checkStackAlignment() {
