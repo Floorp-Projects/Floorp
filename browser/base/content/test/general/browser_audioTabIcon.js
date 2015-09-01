@@ -10,6 +10,26 @@ function* wait_for_tab_playing_event(tab, expectPlaying) {
   });
 }
 
+function* play(tab) {
+  let browser = tab.linkedBrowser;
+  yield ContentTask.spawn(browser, {}, function* () {
+    let audio = content.document.querySelector("audio");
+    audio.play();
+  });
+
+  yield wait_for_tab_playing_event(tab, true);
+}
+
+function* pause(tab) {
+  let browser = tab.linkedBrowser;
+  yield ContentTask.spawn(browser, {}, function* () {
+    let audio = content.document.querySelector("audio");
+    audio.pause();
+  });
+
+  yield wait_for_tab_playing_event(tab, false);
+}
+
 function disable_non_test_mouse(disable) {
   let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIDOMWindowUtils);
@@ -80,12 +100,7 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
   let icon = document.getAnonymousElementByAttribute(tab, "anonid",
                                                      isPinned ? "overlay-icon" : "soundplaying-icon");
 
-  yield ContentTask.spawn(browser, {}, function* () {
-    let audio = content.document.querySelector("audio");
-    audio.play();
-  });
-
-  yield wait_for_tab_playing_event(tab, true);
+  yield play(tab);
 
   yield test_tooltip(icon, "Mute tab");
 
@@ -105,11 +120,7 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
 
   yield test_mute_tab(tab, icon, true);
 
-  yield ContentTask.spawn(browser, {}, function* () {
-    let audio = content.document.querySelector("audio");
-    audio.pause();
-  });
-  yield wait_for_tab_playing_event(tab, false);
+  yield pause(tab);
 
   ok(tab.hasAttribute("muted") &&
      !tab.hasAttribute("soundplaying"), "Tab should still be muted but not playing");
@@ -157,11 +168,7 @@ function* test_swapped_browser(oldTab, newBrowser, isPlaying) {
 
 function* test_browser_swapping(tab, browser) {
   // First, test swapping with a playing but muted tab.
-  yield ContentTask.spawn(browser, {}, function* () {
-    let audio = content.document.querySelector("audio");
-    audio.play();
-  });
-  yield wait_for_tab_playing_event(tab, true);
+  yield play(tab);
 
   let icon = document.getAnonymousElementByAttribute(tab, "anonid",
                                                      "soundplaying-icon");
@@ -179,10 +186,7 @@ function* test_browser_swapping(tab, browser) {
     // Now, test swapping with a muted but not playing tab.
     // Note that the tab remains muted, so we only need to pause playback.
     tab = gBrowser.getTabForBrowser(newBrowser);
-    yield ContentTask.spawn(newBrowser, {}, function* () {
-      let audio = content.document.querySelector("audio");
-      audio.pause();
-    });
+    yield pause(tab);
 
     yield BrowserTestUtils.withNewTab({
       gBrowser,
@@ -202,24 +206,15 @@ function* test_click_on_pinned_tab_after_mute() {
     //   Pin the tab.
     gBrowser.pinTab(tab);
 
-    //   Start playbak.
-    yield ContentTask.spawn(browser, {}, function* () {
-      let audio = content.document.querySelector("audio");
-      audio.play();
-    });
-
-    //   Wait for playback to start.
-    yield wait_for_tab_playing_event(tab, true);
+    //   Start playback and wait for it to finish.
+    yield play(tab);
 
     //   Mute the tab.
     let icon = document.getAnonymousElementByAttribute(tab, "anonid", "overlay-icon");
     yield test_mute_tab(tab, icon, true);
 
-    //   Stop playback
-    yield ContentTask.spawn(browser, {}, function* () {
-      let audio = content.document.querySelector("audio");
-      audio.pause();
-    });
+    // Pause playback and wait for it to finish.
+    yield pause(tab);
 
     // Unmute tab.
     yield test_mute_tab(tab, icon, false);
@@ -258,23 +253,14 @@ function* test_mute_keybinding() {
     // Make sure it's possible to mute before the tab is playing.
     yield test_muting_using_keyboard(tab);
 
-    // Start playback.
-    yield ContentTask.spawn(browser, {}, function* () {
-      let audio = content.document.querySelector("audio");
-      audio.play();
-    });
-
-    // Wait for playback to start.
-    yield wait_for_tab_playing_event(tab, true);
+    //   Start playback and wait for it to finish.
+    yield play(tab);
 
     // Make sure it's possible to mute after the tab is playing.
     yield test_muting_using_keyboard(tab);
 
-    // Start playback.
-    yield ContentTask.spawn(browser, {}, function* () {
-      let audio = content.document.querySelector("audio");
-      audio.pause();
-    });
+    // Pause playback and wait for it to finish.
+    yield pause(tab);
 
     // Make sure things work if the tab is pinned.
     gBrowser.pinTab(tab);
@@ -282,14 +268,8 @@ function* test_mute_keybinding() {
     // Make sure it's possible to mute before the tab is playing.
     yield test_muting_using_keyboard(tab);
 
-    // Start playback.
-    yield ContentTask.spawn(browser, {}, function* () {
-      let audio = content.document.querySelector("audio");
-      audio.play();
-    });
-
-    // Wait for playback to start.
-    yield wait_for_tab_playing_event(tab, true);
+    //   Start playback and wait for it to finish.
+    yield play(tab);
 
     // Make sure it's possible to mute after the tab is playing.
     yield test_muting_using_keyboard(tab);
