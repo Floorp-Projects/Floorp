@@ -71,6 +71,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'SourceSurfaceD2D.cpp',
         'SourceSurfaceD2D1.cpp',
         'SourceSurfaceD2DTarget.cpp',
+        'TaskScheduler_win32.cpp',
     ]
     DEFINES['WIN32'] = True
 
