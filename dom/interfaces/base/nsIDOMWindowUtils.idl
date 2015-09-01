@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(6ddc9a79-18cd-4dbc-9975-68928e6c9857)]
+[scriptable, uuid(a30a95ac-3b95-4251-88dc-8efa89ba9f9c)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -105,15 +105,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * Force a synchronous layer transaction for this window if necessary.
    */
   void updateLayerTree();
-
-  /**
-   * Set the CSS viewport to be |widthPx| x |heightPx| in units of CSS
-   * pixels, regardless of the size of the enclosing widget/view.
-   * This will trigger reflow.
-   *
-   * The caller of this method must have chrome privileges.
-   */
-  void setCSSViewport(in float aWidthPx, in float aHeightPx);
 
   /**
    * Information retrieved from the <meta name="viewport"> tag.
