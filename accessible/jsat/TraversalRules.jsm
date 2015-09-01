@@ -29,21 +29,23 @@ let gSkipEmptyImages = new PrefCache('accessibility.accessfu.skip_empty_images')
 function BaseTraversalRule(aRoles, aMatchFunc, aPreFilter) {
   this._explicitMatchRoles = new Set(aRoles);
   this._matchRoles = aRoles;
-  if (aRoles.indexOf(Roles.LABEL) < 0) {
-    this._matchRoles.push(Roles.LABEL);
-  }
-  if (aRoles.indexOf(Roles.INTERNAL_FRAME) < 0) {
-    // Used for traversing in to child OOP frames.
-    this._matchRoles.push(Roles.INTERNAL_FRAME);
+  if (aRoles.length) {
+    if (aRoles.indexOf(Roles.LABEL) < 0) {
+      this._matchRoles.push(Roles.LABEL);
+    }
+    if (aRoles.indexOf(Roles.INTERNAL_FRAME) < 0) {
+      // Used for traversing in to child OOP frames.
+      this._matchRoles.push(Roles.INTERNAL_FRAME);
+    }
   }
   this._matchFunc = aMatchFunc || function() { return Filters.MATCH; };
   this.preFilter = aPreFilter || gSimplePreFilter;
 }
 
 BaseTraversalRule.prototype = {
-    getMatchRoles: function BaseTraversalRule_getmatchRoles(aRules) {
-      aRules.value = this._matchRoles;
-      return aRules.value.length;
+    getMatchRoles: function BaseTraversalRule_getmatchRoles(aRoles) {
+      aRoles.value = this._matchRoles;
+      return aRoles.value.length;
     },
 
     match: function BaseTraversalRule_match(aAccessible)
@@ -54,8 +56,9 @@ BaseTraversalRule.prototype = {
           Filters.MATCH  | Filters.IGNORE_SUBTREE : Filters.IGNORE;
       }
 
-      let matchResult = this._explicitMatchRoles.has(role) ?
-          this._matchFunc(aAccessible) : Filters.IGNORE;
+      let matchResult =
+        (this._explicitMatchRoles.has(role) || !this._explicitMatchRoles.size) ?
+        this._matchFunc(aAccessible) : Filters.IGNORE;
 
       // If we are on a label that nests a checkbox/radio we should land on it.
       // It is a bigger touch target, and it reduces clutter.

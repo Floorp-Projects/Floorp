@@ -79,8 +79,7 @@ var tests = {
         [chatWidth*3+popupWidth+2, 3, "now a large jump to make all 3 visible (ie, affects 2)"],
         [chatWidth*1.5, 1, "and a large jump back down to 1 visible (ie, affects 2)"],
       ], function() {
-        closeAllChats();
-        next();
+        Task.spawn(closeAllChats).then(next);
       });
     });
   },

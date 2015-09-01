@@ -169,7 +169,7 @@ EVENT(click,
       EventNameType_All,
       eMouseEventClass)
 EVENT(contextmenu,
-      NS_CONTEXTMENU,
+      eContextMenu,
       EventNameType_HTMLXUL,
       eMouseEventClass)
 // Not supported yet
@@ -311,43 +311,43 @@ EVENT(mozpointerlockerror,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(pointerdown,
-      NS_POINTER_DOWN,
+      ePointerDown,
       EventNameType_All,
       ePointerEventClass)
 EVENT(pointermove,
-      NS_POINTER_MOVE,
+      ePointerMove,
       EventNameType_All,
       ePointerEventClass)
 EVENT(pointerup,
-      NS_POINTER_UP,
+      ePointerUp,
       EventNameType_All,
       ePointerEventClass)
 EVENT(pointercancel,
-      NS_POINTER_CANCEL,
+      ePointerCancel,
       EventNameType_All,
       ePointerEventClass)
 EVENT(pointerover,
-      NS_POINTER_OVER,
+      ePointerOver,
       EventNameType_All,
       ePointerEventClass)
 EVENT(pointerout,
-      NS_POINTER_OUT,
+      ePointerOut,
       EventNameType_All,
       ePointerEventClass)
 EVENT(pointerenter,
-      NS_POINTER_ENTER,
+      ePointerEnter,
       EventNameType_All,
       ePointerEventClass)
 EVENT(pointerleave,
-      NS_POINTER_LEAVE,
+      ePointerLeave,
       EventNameType_All,
       ePointerEventClass)
 EVENT(gotpointercapture,
-      NS_POINTER_GOT_CAPTURE,
+      ePointerGotCapture,
       EventNameType_All,
       ePointerEventClass)
 EVENT(lostpointercapture,
-      NS_POINTER_LOST_CAPTURE,
+      ePointerLostCapture,
       EventNameType_All,
       ePointerEventClass)
 

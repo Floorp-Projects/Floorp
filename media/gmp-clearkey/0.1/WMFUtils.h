@@ -259,6 +259,10 @@ enum CodecType {
 // the given windows version we're running on.
 const char* WMFDecoderDllNameFor(CodecType aCodec);
 
+// Returns the maximum number of threads we want WMF to use for decoding
+// given the number of logical processors available.
+int32_t GetNumThreads(int32_t aCoreCount);
+
 } // namespace wmf
 
 #endif // __WMFUtils_h__

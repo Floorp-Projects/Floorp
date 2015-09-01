@@ -127,6 +127,9 @@
                               'switch-1', 'This is a MathML formula ', 'math-1',
                               'with some text after.']);
 
+      queueTraversalSequence(gQueue, docAcc, TraversalRules.Landmark, null,
+                             ['header-1', 'main-1', 'footer-1']);
+
       gQueue.invoke();
     }
 

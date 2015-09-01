@@ -6351,14 +6351,14 @@ PresShell::UpdateActivePointerState(WidgetGUIEvent* aEvent)
                               new PointerInfo(false, mouseEvent->inputSource, true));
     }
     break;
-  case NS_POINTER_DOWN:
+  case ePointerDown:
     // In this case we switch pointer to active state
     if (WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent()) {
       gActivePointersIds->Put(pointerEvent->pointerId,
                               new PointerInfo(true, pointerEvent->inputSource, pointerEvent->isPrimary));
     }
     break;
-  case NS_POINTER_UP:
+  case ePointerUp:
     // In this case we remove information about pointer or turn off active state
     if (WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent()) {
       if(pointerEvent->inputSource != nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
@@ -6672,13 +6672,13 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
       if (mouseEvent->buttons == 0) {
         button = -1;
       }
-      pointerMessage = NS_POINTER_MOVE;
+      pointerMessage = ePointerMove;
       break;
     case eMouseUp:
-      pointerMessage = NS_POINTER_UP;
+      pointerMessage = ePointerUp;
       break;
     case eMouseDown:
-      pointerMessage = NS_POINTER_DOWN;
+      pointerMessage = ePointerDown;
       break;
     default:
       return NS_OK;
@@ -6698,16 +6698,16 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
     // copy the event
     switch (touchEvent->mMessage) {
     case NS_TOUCH_MOVE:
-      pointerMessage = NS_POINTER_MOVE;
+      pointerMessage = ePointerMove;
       break;
     case NS_TOUCH_END:
-      pointerMessage = NS_POINTER_UP;
+      pointerMessage = ePointerUp;
       break;
     case NS_TOUCH_START:
-      pointerMessage = NS_POINTER_DOWN;
+      pointerMessage = ePointerDown;
       break;
     case NS_TOUCH_CANCEL:
-      pointerMessage = NS_POINTER_CANCEL;
+      pointerMessage = ePointerCancel;
       break;
     default:
       return NS_OK;
@@ -7450,7 +7450,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     }
 
     if (aEvent->mClass == ePointerEventClass &&
-        aEvent->mMessage != NS_POINTER_DOWN) {
+        aEvent->mMessage != ePointerDown) {
       if (WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent()) {
         uint32_t pointerId = pointerEvent->pointerId;
         nsIContent* pointerCapturingContent = GetPointerCapturingContent(pointerId);
@@ -7465,10 +7465,11 @@ PresShell::HandleEvent(nsIFrame* aFrame,
             frame = capturingFrame;
           }
 
-          if (pointerEvent->mMessage == NS_POINTER_UP ||
-              pointerEvent->mMessage == NS_POINTER_CANCEL) {
+          if (pointerEvent->mMessage == ePointerUp ||
+              pointerEvent->mMessage == ePointerCancel) {
             // Implicitly releasing capture for given pointer.
-            // LOST_POINTER_CAPTURE should be send after NS_POINTER_UP or NS_POINTER_CANCEL.
+            // ePointerLostCapture should be send after ePointerUp or
+            // ePointerCancel.
             releasePointerCaptureCaller.SetTarget(pointerId, pointerCapturingContent);
           }
         }
@@ -7913,7 +7914,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
       }
     }
 
-    if (aEvent->mMessage == NS_CONTEXTMENU) {
+    if (aEvent->mMessage == eContextMenu) {
       WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
       if (mouseEvent->context == WidgetMouseEvent::eContextMenuKey &&
           !AdjustContextMenuKeyEvent(mouseEvent)) {
