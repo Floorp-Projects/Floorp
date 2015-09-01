@@ -111,6 +111,11 @@ function setup() {
       info("An offer is received.");
     });
 
+    gScript.addMessageListener('answer-sent', function answerSentHandler(aIsValid) {
+      gScript.removeMessageListener('answer-sent', answerSentHandler);
+      ok(aIsValid, "A valid answer is sent.");
+    });
+
     gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
       gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
       is(aReason, SpecialPowers.Cr.NS_OK, "The control channel is closed normally.");
