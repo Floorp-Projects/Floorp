@@ -917,7 +917,7 @@ private:
       if (msection.GetMediaType() == SdpMediaSection::kApplication) {
         ASSERT_EQ(SdpMediaSection::kDtlsSctp, msection.GetProtocol());
       } else {
-        ASSERT_EQ(SdpMediaSection::kRtpSavpf, msection.GetProtocol());
+        ASSERT_EQ(SdpMediaSection::kUdpTlsRtpSavpf, msection.GetProtocol());
       }
 
       if (msection.GetPort() == 0) {
@@ -3757,6 +3757,53 @@ TEST_P(JsepSessionTest, TestMaxBundle)
   CheckPairs(mSessionAns, "Answerer pairs");
   EXPECT_EQ(1U, GetActiveTransportCount(mSessionOff));
   EXPECT_EQ(1U, GetActiveTransportCount(mSessionAns));
+}
+
+TEST_F(JsepSessionTest, TestNonDefaultProtocol)
+{
+  AddTracks(mSessionOff, "audio,video,datachannel");
+  AddTracks(mSessionAns, "audio,video,datachannel");
+
+  std::string offer;
+  ASSERT_EQ(NS_OK, mSessionOff.CreateOffer(JsepOfferOptions(), &offer));
+  offer.replace(offer.find("UDP/TLS/RTP/SAVPF"),
+                strlen("UDP/TLS/RTP/SAVPF"),
+                "RTP/SAVPF");
+  offer.replace(offer.find("UDP/TLS/RTP/SAVPF"),
+                strlen("UDP/TLS/RTP/SAVPF"),
+                "RTP/SAVPF");
+  mSessionOff.SetLocalDescription(kJsepSdpOffer, offer);
+  mSessionAns.SetRemoteDescription(kJsepSdpOffer, offer);
+
+  std::string answer;
+  mSessionAns.CreateAnswer(JsepAnswerOptions(), &answer);
+  UniquePtr<Sdp> parsedAnswer = Parse(answer);
+  ASSERT_EQ(3U, parsedAnswer->GetMediaSectionCount());
+  ASSERT_EQ(SdpMediaSection::kRtpSavpf,
+            parsedAnswer->GetMediaSection(0).GetProtocol());
+  ASSERT_EQ(SdpMediaSection::kRtpSavpf,
+            parsedAnswer->GetMediaSection(1).GetProtocol());
+
+  mSessionAns.SetLocalDescription(kJsepSdpAnswer, answer);
+  mSessionOff.SetRemoteDescription(kJsepSdpAnswer, answer);
+
+  // Make sure reoffer uses the same protocol as before
+  mSessionOff.CreateOffer(JsepOfferOptions(), &offer);
+  UniquePtr<Sdp> parsedOffer = Parse(offer);
+  ASSERT_EQ(3U, parsedOffer->GetMediaSectionCount());
+  ASSERT_EQ(SdpMediaSection::kRtpSavpf,
+            parsedOffer->GetMediaSection(0).GetProtocol());
+  ASSERT_EQ(SdpMediaSection::kRtpSavpf,
+            parsedOffer->GetMediaSection(1).GetProtocol());
+
+  // Make sure reoffer from other side uses the same protocol as before
+  mSessionAns.CreateOffer(JsepOfferOptions(), &offer);
+  parsedOffer = Parse(offer);
+  ASSERT_EQ(3U, parsedOffer->GetMediaSectionCount());
+  ASSERT_EQ(SdpMediaSection::kRtpSavpf,
+            parsedOffer->GetMediaSection(0).GetProtocol());
+  ASSERT_EQ(SdpMediaSection::kRtpSavpf,
+            parsedOffer->GetMediaSection(1).GetProtocol());
 }
 
 } // namespace mozilla

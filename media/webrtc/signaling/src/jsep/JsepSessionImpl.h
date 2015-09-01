@@ -256,6 +256,7 @@ private:
                         std::string* streamId,
                         std::string* trackId);
   nsresult CreateOfferMSection(SdpMediaSection::MediaType type,
+                               SdpMediaSection::Protocol proto,
                                SdpDirectionAttribute::Direction direction,
                                Sdp* sdp);
   nsresult GetFreeMsectionForSend(SdpMediaSection::MediaType type,
