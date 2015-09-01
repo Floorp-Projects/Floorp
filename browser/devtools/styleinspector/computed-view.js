@@ -955,6 +955,7 @@ PropertyView.prototype = {
       let keyEvent = Ci.nsIDOMKeyEvent;
       if (event.keyCode === keyEvent.DOM_VK_F1) {
         this.mdnLinkClick();
+        event.preventDefault();
       }
       if (event.keyCode === keyEvent.DOM_VK_RETURN ||
         event.keyCode === keyEvent.DOM_VK_SPACE) {
