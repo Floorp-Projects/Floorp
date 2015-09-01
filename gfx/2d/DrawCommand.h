@@ -44,9 +44,9 @@ class DrawingCommand
 public:
   virtual ~DrawingCommand() {}
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aTransform = nullptr) = 0;
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aTransform = nullptr) const = 0;
 
-  virtual bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) { return false; }
+  virtual bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const { return false; }
 
 protected:
   explicit DrawingCommand(CommandType aType)
@@ -137,7 +137,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->DrawSurface(mSurface, mDest, mSource, mSurfOptions, mOptions);
   }
@@ -161,7 +161,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->DrawFilter(mFilter, mSourceRect, mDestPoint, mOptions);
   }
@@ -182,7 +182,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->ClearRect(mRect);
   }
@@ -204,7 +204,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aTransform)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aTransform) const
   {
     MOZ_ASSERT(!aTransform || !aTransform->HasNonIntegerTranslation());
     Point dest(Float(mDestination.x), Float(mDestination.y));
@@ -233,12 +233,12 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->FillRect(mRect, mPattern, mOptions);
   }
 
-  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform)
+  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const
   {
     aDeviceRect = aTransform.TransformBounds(mRect);
     return true;
@@ -270,7 +270,7 @@ public:
     }
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->StrokeRect(mRect, mPattern, mStrokeOptions, mOptions);
   }
@@ -300,7 +300,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->StrokeLine(mStart, mEnd, mPattern, mStrokeOptions, mOptions);
   }
@@ -326,12 +326,12 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->Fill(mPath, mPattern, mOptions);
   }
 
-  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform)
+  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const
   {
     aDeviceRect = mPath->GetBounds(aTransform);
     return true;
@@ -398,12 +398,12 @@ public:
     }
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->Stroke(mPath, mPattern, mStrokeOptions, mOptions);
   }
 
-  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform)
+  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const
   {
     aDeviceRect = PathExtentsToMaxStrokeExtents(mStrokeOptions, mPath->GetBounds(aTransform), aTransform);
     return true;
@@ -435,7 +435,7 @@ public:
     memcpy(&mGlyphs.front(), aBuffer.mGlyphs, sizeof(Glyph) * aBuffer.mNumGlyphs);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     GlyphBuffer buf;
     buf.mNumGlyphs = mGlyphs.size();
@@ -464,7 +464,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->Mask(mSource, mMask, mOptions);
   }
@@ -490,7 +490,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->MaskSurface(mSource, mMask, mOffset, mOptions);
   }
@@ -511,7 +511,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->PushClip(mPath);
   }
@@ -529,7 +529,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->PushClipRect(mRect);
   }
@@ -546,7 +546,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->PopClip();
   }
@@ -561,7 +561,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aMatrix)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aMatrix) const
   {
     if (aMatrix) {
       aDT->SetTransform(mTransform * (*aMatrix));
@@ -582,7 +582,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->Flush();
   }
