@@ -11,6 +11,7 @@
 
 #include "nsAttrAndChildArray.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 
@@ -22,6 +23,8 @@
 #include "nsUnicharUtils.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h" // nsAutoScriptBlocker
+
+using mozilla::CheckedUint32;
 
 /*
 CACHE_POINTER_SHIFT indicates how many steps to downshift the |this| pointer.
