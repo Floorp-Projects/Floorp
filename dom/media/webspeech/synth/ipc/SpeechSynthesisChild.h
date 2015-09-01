@@ -92,7 +92,7 @@ public:
 
   virtual void ForceEnd() override;
 
-  virtual void SetAudioOutputVolume(uint32_t aVolume) override;
+  virtual void SetAudioOutputVolume(float aVolume) override;
 
 private:
   SpeechSynthesisRequestChild* mActor;
