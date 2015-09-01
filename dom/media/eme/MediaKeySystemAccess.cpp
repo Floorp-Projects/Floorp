@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/MediaKeySystemAccess.h"
 #include "mozilla/dom/MediaKeySystemAccessBinding.h"
 #include "mozilla/Preferences.h"
@@ -110,10 +111,7 @@ static bool
 AdobePluginFileExists(const nsACString& aVersionStr,
                       const nsAString& aFilename)
 {
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
-    NS_WARNING("AdobePluginFileExists() lying because it doesn't work with e10s");
-    return true;
-  }
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 
   nsCOMPtr<nsIFile> path;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(path));
@@ -153,6 +151,61 @@ AdobePluginVoucherExists(const nsACString& aVersionStr)
 }
 #endif
 
+/* static */ bool
+MediaKeySystemAccess::IsGMPPresentOnDisk(const nsAString& aKeySystem,
+                                         const nsACString& aVersion,
+                                         nsACString& aOutMessage)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    // We need to be able to access the filesystem, so call this in the
+    // main process via ContentChild.
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    if (NS_WARN_IF(!contentChild)) {
+      return false;
+    }
+
+    nsCString message;
+    bool result = false;
+    bool ok = contentChild->SendIsGMPPresentOnDisk(nsString(aKeySystem), nsCString(aVersion),
+                                                   &result, &message);
+    aOutMessage = message;
+    return ok && result;
+  }
+
+  bool isPresent = true;
+
+#if XP_WIN
+  if (aKeySystem.EqualsLiteral("com.adobe.primetime")) {
+    if (!AdobePluginDLLExists(aVersion)) {
+      NS_WARNING("Adobe EME plugin disappeared from disk!");
+      aOutMessage = NS_LITERAL_CSTRING("Adobe DLL was expected to be on disk but was not");
+      isPresent = false;
+    }
+    if (!AdobePluginVoucherExists(aVersion)) {
+      NS_WARNING("Adobe EME voucher disappeared from disk!");
+      aOutMessage = NS_LITERAL_CSTRING("Adobe plugin voucher was expected to be on disk but was not");
+      isPresent = false;
+    }
+
+    if (!isPresent) {
+      // Reset the prefs that Firefox's GMP downloader sets, so that
+      // Firefox will try to download the plugin next time the updater runs.
+      Preferences::ClearUser("media.gmp-eme-adobe.lastUpdate");
+      Preferences::ClearUser("media.gmp-eme-adobe.version");
+    } else if (!EMEVoucherFileExists()) {
+      // Gecko doesn't have a voucher file for the plugin-container.
+      // Adobe EME isn't going to work, so don't advertise that it will.
+      aOutMessage = NS_LITERAL_CSTRING("Plugin-container voucher not present");
+      isPresent = false;
+    }
+  }
+#endif
+
+  return isPresent;
+}
+
 static MediaKeySystemStatus
 EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
                     const nsAString& aKeySystem,
@@ -179,29 +232,9 @@ EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
     return MediaKeySystemStatus::Cdm_not_installed;
   }
 
-#ifdef XP_WIN
-  if (aKeySystem.EqualsLiteral("com.adobe.primetime")) {
-    // Verify that anti-virus hasn't "helpfully" deleted the Adobe GMP DLL,
-    // as we suspect may happen (Bug 1160382).
-    bool somethingMissing = false;
-    if (!AdobePluginDLLExists(versionStr)) {
-      aOutMessage = NS_LITERAL_CSTRING("Adobe DLL was expected to be on disk but was not");
-      somethingMissing = true;
-    }
-    if (!AdobePluginVoucherExists(versionStr)) {
-      aOutMessage = NS_LITERAL_CSTRING("Adobe plugin voucher was expected to be on disk but was not");
-      somethingMissing = true;
-    }
-    if (somethingMissing) {
-      NS_WARNING("Adobe EME plugin or voucher disappeared from disk!");
-      // Reset the prefs that Firefox's GMP downloader sets, so that
-      // Firefox will try to download the plugin next time the updater runs.
-      Preferences::ClearUser("media.gmp-eme-adobe.lastUpdate");
-      Preferences::ClearUser("media.gmp-eme-adobe.version");
-      return MediaKeySystemStatus::Cdm_not_installed;
-    }
+  if (!MediaKeySystemAccess::IsGMPPresentOnDisk(aKeySystem, versionStr, aOutMessage)) {
+    return MediaKeySystemStatus::Cdm_not_installed;
   }
-#endif
 
   nsresult rv;
   int32_t version = versionStr.ToInteger(&rv);
@@ -256,12 +289,6 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
       return MediaKeySystemStatus::Cdm_not_supported;
     }
 #endif
-    if (!EMEVoucherFileExists()) {
-      // Gecko doesn't have a voucher file for the plugin-container.
-      // Adobe EME isn't going to work, so don't advertise that it will.
-      aOutMessage = NS_LITERAL_CSTRING("Plugin-container voucher not present");
-      return MediaKeySystemStatus::Cdm_not_supported;
-    }
     return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
   }
 #endif

@@ -434,7 +434,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
            (aEvent->mMessage == eMouseUp &&
             aEvent->AsMouseEvent()->button == WidgetMouseEvent::eRightButton) &&
 #else
-           aEvent->mMessage == NS_CONTEXTMENU &&
+           aEvent->mMessage == eContextMenu &&
 #endif
            onmenu && !IsMenu() && !IsDisabled()) {
     // if this menu is a context menu it accepts right-clicks...fire away!

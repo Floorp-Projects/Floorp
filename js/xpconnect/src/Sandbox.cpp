@@ -29,6 +29,7 @@
 #include "Crypto.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/dom/CSSBinding.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "mozilla/dom/Fetch.h"
@@ -907,6 +908,8 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
 #endif
         } else if (!strcmp(name.ptr(), "fetch")) {
             fetch = true;
+        } else if (!strcmp(name.ptr(), "caches")) {
+            caches = true;
         } else {
             JS_ReportError(cx, "Unknown property name: %s", name.ptr());
             return false;
@@ -970,6 +973,9 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
 #endif
 
     if (fetch && !SandboxCreateFetch(cx, obj))
+        return false;
+
+    if (caches && !dom::cache::CacheStorage::DefineCaches(cx, obj))
         return false;
 
     return true;

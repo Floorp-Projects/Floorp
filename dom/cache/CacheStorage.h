@@ -56,6 +56,9 @@ public:
   CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
                  workers::WorkerPrivate* aWorkerPrivate, ErrorResult& aRv);
 
+  static bool
+  DefineCaches(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
+
   // webidl interface methods
   already_AddRefed<Promise> Match(const RequestOrUSVString& aRequest,
                                   const CacheQueryOptions& aOptions,
