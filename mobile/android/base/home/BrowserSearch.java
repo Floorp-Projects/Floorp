@@ -911,7 +911,7 @@ public class BrowserSearch extends HomeFragment
 
                 final SearchEngine engine = mSearchEngines.get(position);
                 final boolean animate = (mAnimateSuggestions && engine.hasSuggestions());
-                row.updateFromSearchEngine(engine, animate);
+                row.updateSuggestions(mSuggestionsEnabled, engine, mSearchTerm, animate);
                 if (animate) {
                     // Only animate suggestions the first time they are shown
                     mAnimateSuggestions = false;
