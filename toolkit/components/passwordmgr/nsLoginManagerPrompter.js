@@ -942,6 +942,10 @@ LoginManagerPrompter.prototype = {
           switch (topic) {
             case "showing":
               currentNotification = this;
+              chromeDoc.getElementById("password-notification-password")
+                       .removeAttribute("focused");
+              chromeDoc.getElementById("password-notification-username")
+                       .removeAttribute("focused");
               chromeDoc.getElementById("password-notification-username")
                        .addEventListener("input", onInput);
               chromeDoc.getElementById("password-notification-password")
