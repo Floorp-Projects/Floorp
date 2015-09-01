@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -16,6 +17,8 @@ import org.mozilla.gecko.widget.AnimatedHeightLayout;
 import org.mozilla.gecko.widget.FaviconView;
 import org.mozilla.gecko.widget.FlowLayout;
 
+import android.database.Cursor;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
@@ -133,7 +136,10 @@ class SearchEngineRow extends AnimatedHeightLayout {
         return suggestionText.getText().toString();
     }
 
-    private void setSuggestionOnView(View v, String suggestion) {
+    private void setSuggestionOnView(View v, String suggestion, boolean isUserSavedSearch) {
+        final ImageView historyIcon = (ImageView) v.findViewById(R.id.suggestion_item_icon);
+        historyIcon.setVisibility(isUserSavedSearch ? View.VISIBLE: View.GONE);
+
         final TextView suggestionText = (TextView) v.findViewById(R.id.suggestion_text);
         suggestionText.setText(suggestion);
         setDescriptionOnSuggestion(suggestionText, suggestion);
@@ -172,7 +178,76 @@ class SearchEngineRow extends AnimatedHeightLayout {
         mEditSuggestionListener = listener;
     }
 
-    public void updateFromSearchEngine(SearchEngine searchEngine, boolean animate) {
+    private void bindSuggestionView(String suggestion, boolean animate, int recycledSuggestionCount, Integer previousSuggestionChildIndex, boolean isUserSavedSearch){
+        final View suggestionItem;
+
+        // Reuse suggestion views from recycled view, if possible.
+        if (previousSuggestionChildIndex + 1 < recycledSuggestionCount) {
+            suggestionItem = mSuggestionView.getChildAt(previousSuggestionChildIndex + 1);
+            suggestionItem.setVisibility(View.VISIBLE);
+        } else {
+            suggestionItem = mInflater.inflate(R.layout.suggestion_item, null);
+
+            suggestionItem.setOnClickListener(mClickListener);
+            suggestionItem.setOnLongClickListener(mLongClickListener);
+
+            // Store the position of the suggestion for telemetry.
+            suggestionItem.setTag(String.valueOf(previousSuggestionChildIndex));
+
+            mSuggestionView.addView(suggestionItem);
+        }
+
+        setSuggestionOnView(suggestionItem, suggestion, isUserSavedSearch);
+
+        if (animate) {
+            AlphaAnimation anim = new AlphaAnimation(0, 1);
+            anim.setDuration(ANIMATION_DURATION);
+            anim.setStartOffset(previousSuggestionChildIndex * ANIMATION_DURATION);
+            suggestionItem.startAnimation(anim);
+        }
+    }
+
+    private void hideRecycledSuggestions(int lastVisibleChildIndex, int recycledSuggestionCount) {
+        // Hide extra suggestions that have been recycled.
+        for (int i = lastVisibleChildIndex + 1; i < recycledSuggestionCount; ++i) {
+            mSuggestionView.getChildAt(i).setVisibility(View.GONE);
+        }
+    }
+
+    private void updateFromSavedSearches(String searchTerm, boolean animate, int suggestionCounter, int recycledSuggestionCount) {
+        final ContentResolver cr = getContext().getContentResolver();
+
+        String[] columns = new String[] { SearchHistory.QUERY };
+        String sortOrderAndLimit = SearchHistory.DATE + " DESC";
+
+        final Cursor c = cr.query(SearchHistory.CONTENT_URI, columns, null, null, sortOrderAndLimit);
+        if (c == null) {
+            return;
+        }
+        try {
+            if (c.moveToFirst()) {
+                int counter = 0;
+                final int searchColumn = c.getColumnIndexOrThrow(SearchHistory.QUERY);
+                do {
+                    final String savedSearch = c.getString(searchColumn);
+                    if (counter == 4) {
+                        break;
+                    }
+                    // Bug 1200371 will move the filtering/matching and limit into the sql query
+                    if (savedSearch.startsWith(searchTerm)) {
+                        bindSuggestionView(savedSearch, animate, recycledSuggestionCount, suggestionCounter, true);
+                        ++suggestionCounter;
+                        ++counter;
+                    }
+                } while (c.moveToNext());
+            }
+        } finally {
+            c.close();
+        }
+        hideRecycledSuggestions(suggestionCounter, recycledSuggestionCount);
+    }
+
+    private int updateFromSearchEngine(SearchEngine searchEngine, boolean animate, int recycledSuggestionCount) {
         // Update search engine reference.
         mSearchEngine = searchEngine;
 
@@ -182,53 +257,29 @@ class SearchEngineRow extends AnimatedHeightLayout {
         // Set the initial content description.
         setDescriptionOnSuggestion(mUserEnteredTextView, mUserEnteredTextView.getText().toString());
 
-        // Add additional suggestions given by this engine.
-        final int recycledSuggestionCount = mSuggestionView.getChildCount();
-
         int suggestionCounter = 0;
+        // Apply Search Engine's suggestions
         for (String suggestion : mSearchEngine.getSuggestions()) {
-            final View suggestionItem;
-
-            // Reuse suggestion views from recycled view, if possible.
-            if (suggestionCounter + 1 < recycledSuggestionCount) {
-                suggestionItem = mSuggestionView.getChildAt(suggestionCounter + 1);
-                suggestionItem.setVisibility(View.VISIBLE);
-            } else {
-                suggestionItem = mInflater.inflate(R.layout.suggestion_item, null);
-
-                suggestionItem.setOnClickListener(mClickListener);
-                suggestionItem.setOnLongClickListener(mLongClickListener);
-
-                // Store the position of the suggestion for telemetry.
-                suggestionItem.setTag(String.valueOf(suggestionCounter));
-
-                final ImageView magnifier =
-                        (ImageView) suggestionItem.findViewById(R.id.suggestion_magnifier);
-                magnifier.setVisibility(View.GONE);
-
-                mSuggestionView.addView(suggestionItem);
-            }
-
-            setSuggestionOnView(suggestionItem, suggestion);
-
-            if (animate) {
-                AlphaAnimation anim = new AlphaAnimation(0, 1);
-                anim.setDuration(ANIMATION_DURATION);
-                anim.setStartOffset(suggestionCounter * ANIMATION_DURATION);
-                suggestionItem.startAnimation(anim);
-            }
-
+            bindSuggestionView(suggestion, animate, recycledSuggestionCount, suggestionCounter, false);
             ++suggestionCounter;
         }
 
-        // Hide extra suggestions that have been recycled.
-        for (int i = suggestionCounter + 1; i < recycledSuggestionCount; ++i) {
-            mSuggestionView.getChildAt(i).setVisibility(View.GONE);
-        }
+        hideRecycledSuggestions(suggestionCounter, recycledSuggestionCount);
 
         // Make sure mSelectedView is still valid.
         if (mSelectedView >= mSuggestionView.getChildCount()) {
             mSelectedView = mSuggestionView.getChildCount() - 1;
+        }
+
+        return suggestionCounter;
+    }
+
+    public void updateSuggestions(boolean suggestionsEnabled, SearchEngine searchEngine, String searchTerm, boolean animate) {
+        // This can be called before the opt-in permission prompt is shown or set. Check first.
+        if (suggestionsEnabled) {
+            final int recycledSuggestionCount = mSuggestionView.getChildCount();
+            final int suggestionViewCount = updateFromSearchEngine(searchEngine, animate, recycledSuggestionCount);
+            updateFromSavedSearches(searchTerm, animate, suggestionViewCount, recycledSuggestionCount);
         }
     }
 
