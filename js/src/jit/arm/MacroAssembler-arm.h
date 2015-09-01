@@ -532,8 +532,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         MOZ_CRASH("NYI-IC");
     }
 
-    void callAndPushReturnAddress(Label* label);
-
     void branch(JitCode* c) {
         BufferOffset bo = m_buffer.nextOffset();
         addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
@@ -1800,10 +1798,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadAsmJSHeapRegisterFromGlobalData() {
         loadPtr(Address(GlobalReg, AsmJSHeapGlobalDataOffset - AsmJSGlobalRegBias), HeapReg);
     }
-    void pushReturnAddress() {
-        push(lr);
-    }
-
     // Instrumentation for entering and leaving the profiler.
     void profilerEnterFrame(Register framePtr, Register scratch);
     void profilerExitFrame();

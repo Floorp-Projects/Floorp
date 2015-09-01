@@ -3463,6 +3463,24 @@ MacroAssembler::call(JitCode* c)
     ma_callJitHalfPush(ScratchRegister);
 }
 
+void
+MacroAssembler::callAndPushReturnAddress(Register callee)
+{
+    // Push return address during jalr delay slot.
+    as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
+    as_jalr(callee);
+    as_sw(ra, StackPointer, 0);
+}
+
+void
+MacroAssembler::callAndPushReturnAddress(Label* label)
+{
+    // Push return address during jalr delay slot.
+    as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
+    as_jalr(label);
+    as_sw(ra, StackPointer, 0);
+}
+
 // ===============================================================
 // ABI function calls.
 
@@ -3566,16 +3584,6 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
 
 // ===============================================================
 // Jit Frames.
-
-uint32_t
-MacroAssembler::callJitNoProfiler(Register callee)
-{
-    // This is a MIPS hack to push return address during jalr delay slot.
-    as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
-    as_jalr(callee);
-    as_sw(ra, StackPointer, 0);
-    return currentOffset();
-}
 
 uint32_t
 MacroAssembler::pushFakeReturnAddress(Register scratch)

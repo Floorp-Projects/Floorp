@@ -193,10 +193,6 @@ class MacroAssemblerNone : public Assembler
     uint32_t labelOffsetToPatchOffset(uint32_t) { MOZ_CRASH(); }
     CodeOffsetLabel labelForPatch() { MOZ_CRASH(); }
 
-    template <typename T> void call(T) { MOZ_CRASH(); }
-    template <typename T, typename S> void call(T, S) { MOZ_CRASH(); }
-    void callAndPushReturnAddress(Label* label) { MOZ_CRASH(); }
-
     void nop() { MOZ_CRASH(); }
     void breakpoint() { MOZ_CRASH(); }
     void abiret() { MOZ_CRASH(); }

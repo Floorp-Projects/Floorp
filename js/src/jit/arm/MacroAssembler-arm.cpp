@@ -4886,14 +4886,6 @@ MacroAssemblerARMCompat::profilerExitFrame()
     branch(GetJitContext()->runtime->jitRuntime()->getProfilerExitFrameTail());
 }
 
-void
-MacroAssemblerARMCompat::callAndPushReturnAddress(Label* label)
-{
-    AutoForbidPools afp(this, 2);
-    ma_push(pc);
-    asMasm().call(label);
-}
-
 MacroAssembler&
 MacroAssemblerARM::asMasm()
 {
@@ -5111,6 +5103,11 @@ MacroAssembler::call(JitCode* c)
     ma_callJitHalfPush(scratch);
 }
 
+void
+MacroAssembler::pushReturnAddress()
+{
+    push(lr);
+}
 
 // ===============================================================
 // ABI function calls.
@@ -5231,15 +5228,6 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
 
 // ===============================================================
 // Jit Frames.
-
-uint32_t
-MacroAssembler::callJitNoProfiler(Register callee)
-{
-    // The return address is pushed by callee, which pushes the link register
-    // first.
-    call(callee);
-    return currentOffset();
-}
 
 uint32_t
 MacroAssembler::pushFakeReturnAddress(Register scratch)
