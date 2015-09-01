@@ -8267,17 +8267,6 @@ nsLayoutUtils::SetScrollPositionClampingScrollPortSize(nsIPresShell* aPresShell,
   MaybeReflowForInflationScreenSizeChange(presContext);
 }
 
-/* static */ void
-nsLayoutUtils::SetCSSViewport(nsIPresShell* aPresShell, CSSSize aSize)
-{
-  MOZ_ASSERT(aSize.width >= 0.0 && aSize.height >= 0.0);
-
-  nscoord width = nsPresContext::CSSPixelsToAppUnits(aSize.width);
-  nscoord height = nsPresContext::CSSPixelsToAppUnits(aSize.height);
-
-  aPresShell->ResizeReflowOverride(width, height);
-}
-
 /* static */ FrameMetrics
 nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
                                    nsIFrame* aScrollFrame,

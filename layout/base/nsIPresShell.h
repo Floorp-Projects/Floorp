@@ -139,10 +139,10 @@ typedef struct CapturingContentInfo {
   mozilla::StaticRefPtr<nsIContent> mContent;
 } CapturingContentInfo;
 
-// 4f512d0b-c58c-4fc9-ae42-8aa6d992e7ae
+// b07c5323-3061-4ca9-95ed-84cccbffadac
 #define NS_IPRESSHELL_IID \
-{ 0x4f512d0b, 0xc58c, 0x4fc9, \
-  { 0xae, 0x42, 0x8a, 0xa6, 0xd9, 0x92, 0xe7, 0xae } }
+{ 0xb07c5323, 0x3061, 0x4ca9, \
+  { 0x95, 0xed, 0x84, 0xcc, 0xcb, 0xff, 0xad, 0xac } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -404,12 +404,6 @@ public:
    * coordinates for aWidth and aHeight must be in standard nscoord's.
    */
   virtual nsresult ResizeReflow(nscoord aWidth, nscoord aHeight) = 0;
-  /**
-   * Reflow, and also change presshell state so as to only permit
-   * reflowing off calls to ResizeReflowOverride() in the future.
-   * ResizeReflow() calls are ignored after ResizeReflowOverride().
-   */
-  virtual nsresult ResizeReflowOverride(nscoord aWidth, nscoord aHeight) = 0;
   /**
    * Do the same thing as ResizeReflow but even if ResizeReflowOverride was
    * called previously.
