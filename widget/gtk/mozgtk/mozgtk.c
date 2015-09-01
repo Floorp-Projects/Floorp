@@ -562,6 +562,12 @@ STUB(gtk_app_chooser_get_type)
 STUB(gtk_app_chooser_get_app_info)
 STUB(gtk_app_chooser_dialog_get_type)
 STUB(gtk_app_chooser_dialog_set_heading)
+STUB(gtk_color_chooser_dialog_new)
+STUB(gtk_color_chooser_dialog_get_type)
+STUB(gtk_color_chooser_get_type)
+STUB(gtk_color_chooser_set_rgba)
+STUB(gtk_color_chooser_get_rgba)
+STUB(gtk_color_chooser_set_use_alpha)
 #endif
 
 #ifdef GTK2_SYMBOLS
