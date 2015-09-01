@@ -452,6 +452,11 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                 continue
             cmd.append(arg)
 
+        if "tests" in self.suite_definitions[suite_name]:
+            cmd.extend(self.suite_definitions[suite_name]["tests"])
+        elif "tests" in self.tree_config["suite_definitions"][suite_category]:
+            cmd.extend(self.tree_config["suite_definitions"][suite_category]["tests"])
+
         return cmd
 
     def preflight_run_tests(self):

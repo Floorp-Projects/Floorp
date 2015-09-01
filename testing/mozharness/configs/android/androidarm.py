@@ -140,8 +140,9 @@ config = {
                 "%(modules_dir)s",
                 "--symbols-path=%(symbols_path)s",
                 "--total-chunks=16",
-                "tests/layout/reftests/reftest.list",
+                "--suite=reftest",
             ],
+            "tests": ["tests/layout/reftests/reftest.list"],
         },
         "crashtest": {
             "run_filename": "remotereftest.py",
@@ -161,8 +162,9 @@ config = {
                 "%(modules_dir)s",
                 "--symbols-path=%(symbols_path)s",
                 "--total-chunks=2",
-                "tests/testing/crashtest/crashtests.list",
+                "--suite=crashtest",
             ],
+            "tests": ["tests/testing/crashtest/crashtests.list"],
         },
         "jsreftest": {
             "run_filename": "remotereftest.py",
@@ -181,10 +183,11 @@ config = {
                 "--httpd-path",
                 "%(modules_dir)s",
                 "--symbols-path=%(symbols_path)s",
-                "../jsreftest/tests/jstests.list",
                 "--total-chunks=6",
                 "--extra-profile-file=jsreftest/tests/user.js",
+                "--suite=jstestbrowser",
             ],
+            "tests": ["../jsreftest/tests/jstests.list"],
         },
         "xpcshell": {
             "run_filename": "remotexpcshelltests.py",
@@ -315,83 +318,67 @@ config = {
         },
         "reftest-1": {
             "category": "reftest",
-            "extra_args": ["--total-chunks=16", "--this-chunk=1",
-                "tests/layout/reftests/reftest.list"]
+            "extra_args": ["--total-chunks=16", "--this-chunk=1"],
         },
         "reftest-2": {
             "category": "reftest",
-            "extra_args": ["--total-chunks=16", "--this-chunk=2",
-                "tests/layout/reftests/reftest.list"]
+            "extra_args": ["--total-chunks=16", "--this-chunk=2"],
         },
         "reftest-3": {
             "category": "reftest",
-            "extra_args": ["--total-chunks=16", "--this-chunk=3",
-                "tests/layout/reftests/reftest.list"]
+            "extra_args": ["--total-chunks=16", "--this-chunk=3"],
         },
         "reftest-4": {
             "category": "reftest",
-            "extra_args": ["--total-chunks=16", "--this-chunk=4",
-                "tests/layout/reftests/reftest.list"]
+            "extra_args": ["--total-chunks=16", "--this-chunk=4"],
         },
         "reftest-5": {
             "category": "reftest",
-            "extra_args": ["--total-chunks=16", "--this-chunk=5",
-                "tests/layout/reftests/reftest.list"]
+            "extra_args": ["--total-chunks=16", "--this-chunk=5"],
         },
         "reftest-6": {
             "category": "reftest",
-            "extra_args": ["--total-chunks=16", "--this-chunk=6",
-                "tests/layout/reftests/reftest.list"]
+            "extra_args": ["--total-chunks=16", "--this-chunk=6"],
         },
         "reftest-7": {
             "category": "reftest",
-            "extra_args": ["--total-chunks=16", "--this-chunk=7",
-                "tests/layout/reftests/reftest.list"]
+            "extra_args": ["--total-chunks=16", "--this-chunk=7"],
         },
         "reftest-8": {
             "category": "reftest",
-            "extra_args": ["--total-chunks=16", "--this-chunk=8",
-                "tests/layout/reftests/reftest.list"]
+            "extra_args": ["--total-chunks=16", "--this-chunk=8"],
         },
         "reftest-9": {
             "category": "reftest",
-            "extra_args": ["--total-chunks=16", "--this-chunk=9",
-                "tests/layout/reftests/reftest.list"]
+            "extra_args": ["--total-chunks=16", "--this-chunk=9"],
         },
         "reftest-10": {
             "category": "reftest",
-            "extra_args": ["--total-chunks=16", "--this-chunk=10",
-                "tests/layout/reftests/reftest.list"]
+            "extra_args": ["--total-chunks=16", "--this-chunk=10"],
         },
         "reftest-11": {
             "category": "reftest",
-            "extra_args": ["--total-chunks=16", "--this-chunk=11",
-                "tests/layout/reftests/reftest.list"]
+            "extra_args": ["--total-chunks=16", "--this-chunk=11"],
         },
         "reftest-12": {
             "category": "reftest",
-            "extra_args": ["--total-chunks=16", "--this-chunk=12",
-                "tests/layout/reftests/reftest.list"]
+            "extra_args": ["--total-chunks=16", "--this-chunk=12"],
         },
         "reftest-13": {
             "category": "reftest",
-            "extra_args": ["--total-chunks=16", "--this-chunk=13",
-                "tests/layout/reftests/reftest.list"]
+            "extra_args": ["--total-chunks=16", "--this-chunk=13"],
         },
         "reftest-14": {
             "category": "reftest",
-            "extra_args": ["--total-chunks=16", "--this-chunk=14",
-                "tests/layout/reftests/reftest.list"]
+            "extra_args": ["--total-chunks=16", "--this-chunk=14"],
         },
         "reftest-15": {
             "category": "reftest",
-            "extra_args": ["--total-chunks=16", "--this-chunk=15",
-                "tests/layout/reftests/reftest.list"]
+            "extra_args": ["--total-chunks=16", "--this-chunk=15"],
         },
         "reftest-16": {
             "category": "reftest",
-            "extra_args": ["--total-chunks=16", "--this-chunk=16",
-                "tests/layout/reftests/reftest.list"]
+            "extra_args": ["--total-chunks=16", "--this-chunk=16"],
         },
         "crashtest-1": {
             "category": "crashtest",
