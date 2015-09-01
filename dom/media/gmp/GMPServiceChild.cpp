@@ -182,6 +182,40 @@ GeckoMediaPluginServiceChild::GetNodeId(const nsAString& aOrigin,
 }
 
 NS_IMETHODIMP
+GeckoMediaPluginServiceChild::UpdateTrialCreateState(const nsAString& aKeySystem,
+                                                     uint32_t aState)
+{
+  if (NS_GetCurrentThread() != mGMPThread) {
+    mGMPThread->Dispatch(NS_NewRunnableMethodWithArgs<nsString, uint32_t>(
+      this, &GeckoMediaPluginServiceChild::UpdateTrialCreateState,
+      aKeySystem, aState), NS_DISPATCH_NORMAL);
+    return NS_OK;
+  }
+
+  class Callback : public GetServiceChildCallback
+  {
+  public:
+    Callback(const nsAString& aKeySystem, uint32_t aState)
+      : mKeySystem(aKeySystem)
+      , mState(aState)
+    { }
+
+    virtual void Done(GMPServiceChild* aService) override
+    {
+      aService->SendUpdateGMPTrialCreateState(mKeySystem, mState);
+    }
+
+  private:
+    nsString mKeySystem;
+    uint32_t mState;
+  };
+
+  UniquePtr<GetServiceChildCallback> callback(new Callback(aKeySystem, aState));
+  GetServiceChild(Move(callback));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 GeckoMediaPluginServiceChild::Observe(nsISupports* aSubject,
                                       const char* aTopic,
                                       const char16_t* aSomeData)

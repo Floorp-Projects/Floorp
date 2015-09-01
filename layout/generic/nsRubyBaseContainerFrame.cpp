@@ -13,7 +13,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/WritingModes.h"
-#include "nsContentUtils.h"
+#include "nsLayoutUtils.h"
 #include "nsLineLayout.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
@@ -609,8 +609,7 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
 
   nsAutoString baseText;
   if (aColumn.mBaseFrame) {
-    nsContentUtils::GetNodeTextContent(aColumn.mBaseFrame->GetContent(),
-                                       true, baseText);
+    nsLayoutUtils::GetFrameTextContent(aColumn.mBaseFrame, baseText);
   }
 
   // Reflow text frames
@@ -618,8 +617,7 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
     nsRubyTextFrame* textFrame = aColumn.mTextFrames[i];
     if (textFrame) {
       nsAutoString annotationText;
-      nsContentUtils::GetNodeTextContent(textFrame->GetContent(),
-                                         true, annotationText);
+      nsLayoutUtils::GetFrameTextContent(textFrame, annotationText);
 
       // Per CSS Ruby spec, the content comparison for auto-hiding
       // takes place prior to white spaces collapsing (white-space)

@@ -353,8 +353,8 @@ EventListenerManager::AddEventListenerInternal(
     if (window && !aFlags.mInSystemGroup) {
       window->SetHasTouchEventListeners();
     }
-  } else if (aEventMessage >= NS_POINTER_EVENT_START &&
-             aEventMessage <= NS_POINTER_LOST_CAPTURE) {
+  } else if (aEventMessage >= ePointerEventFirst &&
+             aEventMessage <= ePointerEventLast) {
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (aTypeAtom == nsGkAtoms::onpointerenter ||
         aTypeAtom == nsGkAtoms::onpointerleave) {

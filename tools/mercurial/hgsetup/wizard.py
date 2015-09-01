@@ -444,18 +444,19 @@ class MercurialSetupWizard(object):
                 c.write(sys.stdout)
                 return 1
 
-        # Config file may contain sensitive content, such as passwords.
-        # Prompt to remove global permissions.
-        mode = os.stat(config_path).st_mode
-        if mode & (stat.S_IRWXG | stat.S_IRWXO):
-            print(FILE_PERMISSIONS_WARNING)
-            if self._prompt_yn('Remove permissions for others to read '
-                               'your hgrc file'):
-                # We don't care about sticky and set UID bits because this is
-                # a regular file.
-                mode = mode & stat.S_IRWXU
-                print('Changing permissions of %s' % config_path)
-                os.chmod(config_path, mode)
+        if sys.platform != 'win32':
+            # Config file may contain sensitive content, such as passwords.
+            # Prompt to remove global permissions.
+            mode = os.stat(config_path).st_mode
+            if mode & (stat.S_IRWXG | stat.S_IRWXO):
+                print(FILE_PERMISSIONS_WARNING)
+                if self._prompt_yn('Remove permissions for others to '
+                                   'read your hgrc file'):
+                    # We don't care about sticky and set UID bits because
+                    # this is a regular file.
+                    mode = mode & stat.S_IRWXU
+                    print('Changing permissions of %s' % config_path)
+                    os.chmod(config_path, mode)
 
         print(FINISHED)
         return 0

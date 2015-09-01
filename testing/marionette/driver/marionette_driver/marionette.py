@@ -1271,6 +1271,21 @@ class Marionette(object):
             body["id"] = frame
         self._send_message("switchToFrame", body)
 
+    def switch_to_shadow_root(self, host=None):
+        """Switch the current context to the specified host's Shadow DOM.
+        Subsequent commands will operate in the context of the specified Shadow
+        DOM, if applicable.
+
+        :param host: A reference to the host element containing Shadow DOM.
+            This can be an ``HTMLElement``. If you call
+            ``switch_to_shadow_root`` without an argument, it will switch to the
+            parent Shadow DOM or the top-level frame.
+        """
+        body = {}
+        if isinstance(host, HTMLElement):
+            body["id"] = host.id
+        return self._send_message("switchToShadowRoot", body)
+
     def get_url(self):
         """Get a string representing the current URL.
 

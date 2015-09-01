@@ -394,6 +394,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   if (aSynthesizedResponseHead.type() == OptionalHttpResponseHead::TnsHttpResponseHead) {
     mSynthesizedResponseHead = new nsHttpResponseHead(aSynthesizedResponseHead.get_nsHttpResponseHead());
     mShouldIntercept = true;
+    mChannel->SetCouldBeSynthesized();
 
     if (!aSecurityInfoSerialization.IsEmpty()) {
       nsCOMPtr<nsISupports> secInfo;
@@ -836,14 +837,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   chan->GetStatus(&channelStatus);
 
   nsCString secInfoSerialization;
-  nsCOMPtr<nsISupports> secInfoSupp;
-  chan->GetSecurityInfo(getter_AddRefs(secInfoSupp));
-  if (secInfoSupp) {
-    mAssociatedContentSecurity = do_QueryInterface(secInfoSupp);
-    nsCOMPtr<nsISerializable> secInfoSer = do_QueryInterface(secInfoSupp);
-    if (secInfoSer)
-      NS_SerializeToString(secInfoSer, secInfoSerialization);
-  }
+  UpdateAndSerializeSecurityInfo(secInfoSerialization);
 
   uint16_t redirectCount = 0;
   mChannel->GetRedirectCount(&redirectCount);
@@ -1048,10 +1042,14 @@ HttpChannelParent::StartRedirect(uint32_t newChannelId,
   URIParams uriParams;
   SerializeURI(newURI, uriParams);
 
+  nsCString secInfoSerialization;
+  UpdateAndSerializeSecurityInfo(secInfoSerialization);
+
   nsHttpResponseHead *responseHead = mChannel->GetResponseHead();
   bool result = SendRedirect1Begin(newChannelId, uriParams, redirectFlags,
                                    responseHead ? *responseHead
-                                                : nsHttpResponseHead());
+                                                : nsHttpResponseHead(),
+                                   secInfoSerialization);
   if (!result) {
     // Bug 621446 investigation
     mSentRedirect1BeginFailed = true;
@@ -1324,6 +1322,20 @@ HttpChannelParent::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
     new NeckoParent::NestedFrameAuthPrompt(Manager(), mNestedFrameId);
   prompt.forget(aResult);
   return NS_OK;
+}
+
+void
+HttpChannelParent::UpdateAndSerializeSecurityInfo(nsACString& aSerializedSecurityInfoOut)
+{
+  nsCOMPtr<nsISupports> secInfoSupp;
+  mChannel->GetSecurityInfo(getter_AddRefs(secInfoSupp));
+  if (secInfoSupp) {
+    mAssociatedContentSecurity = do_QueryInterface(secInfoSupp);
+    nsCOMPtr<nsISerializable> secInfoSer = do_QueryInterface(secInfoSupp);
+    if (secInfoSer) {
+      NS_SerializeToString(secInfoSer, aSerializedSecurityInfoOut);
+    }
+  }
 }
 
 //-----------------------------------------------------------------------------
