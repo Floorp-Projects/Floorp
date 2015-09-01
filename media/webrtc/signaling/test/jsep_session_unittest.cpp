@@ -609,10 +609,12 @@ protected:
           std::ostringstream candidate;
           candidate << "0 " << static_cast<uint16_t>(component)
                     << " UDP 9999 192.168.0.1 " << port << " typ host";
+          std::string mid;
           bool skipped;
           session.AddLocalIceCandidate(kAEqualsCandidate + candidate.str(),
-                                       "", level, &skipped);
+                                       level, &mid, &skipped);
           if (!skipped) {
+            // TODO (bug 1095793): Need to add mid to mCandidatesToTrickle
             mCandidatesToTrickle.push_back(
                 std::pair<uint16_t, std::string>(
                   level, kAEqualsCandidate + candidate.str()));
