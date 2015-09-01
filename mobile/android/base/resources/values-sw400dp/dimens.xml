@@ -4,8 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <resources>
-
-    <dimen name="panel_grid_view_column_width">250dp</dimen>
-    <dimen name="tab_panel_grid_padding">48dp</dimen>
-
+    <dimen name="tab_panel_column_width">174dip</dimen>
+    <dimen name="tab_thumbnail_height">120dip</dimen>
+    <dimen name="tab_thumbnail_width">168dip</dimen>
 </resources>
