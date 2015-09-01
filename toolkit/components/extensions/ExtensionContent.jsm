@@ -51,6 +51,10 @@ function isWhenBeforeOrSame(when1, when2)
 var api = context => { return {
   runtime: {
     connect: function(extensionId, connectInfo) {
+      if (!connectInfo) {
+        connectInfo = extensionId;
+        extensionId = null;
+      }
       let name = connectInfo && connectInfo.name || "";
       let recipient = extensionId ? {extensionId} : {extensionId: context.extensionId};
       return context.messenger.connect(context.messageManager, name, recipient);
