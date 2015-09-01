@@ -8,7 +8,6 @@ UNIFIED_SOURCES += [
     'gfxSurfaceRefCountTest.cpp',
     # Disabled on suspicion of causing bug 904227
     #'gfxWordCacheTest.cpp',
-    'TestArena.cpp',
     'TestAsyncPanZoomController.cpp',
     'TestBufferRotation.cpp',
     'TestColorNames.cpp',
@@ -21,7 +20,6 @@ UNIFIED_SOURCES += [
     'TestRect.cpp',
     'TestRegion.cpp',
     'TestSkipChars.cpp',
-    'TestTaskScheduler.cpp',
     # Hangs on linux in ApplyGdkScreenFontOptions
     #'gfxFontSelectionTest.cpp',
     'TestTextures.cpp',
