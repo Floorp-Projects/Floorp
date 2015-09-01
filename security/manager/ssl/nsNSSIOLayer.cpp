@@ -1723,6 +1723,7 @@ private:
 
 static const char* const kFallbackWildcardList[] =
 {
+  ".eur.xerox.com", // bug 1187215
   ".kuronekoyamato.co.jp", // bug 1128366
   ".wildcard.test",
 };
