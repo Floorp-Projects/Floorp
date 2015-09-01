@@ -483,6 +483,8 @@ class MachCommands(MachCommandBase):
                                                              {"verbose": True})
 
         if conditions.is_android(self):
+            from mozrunner.devices.android_device import verify_android_device
+            verify_android_device(self)
             xpcshell = self._spawn(AndroidXPCShellRunner)
         elif conditions.is_b2g(self):
             xpcshell = self._spawn(B2GXPCShellRunner)
