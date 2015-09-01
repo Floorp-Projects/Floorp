@@ -97,6 +97,7 @@
 // represented by a "rope", a structure that points to the two original
 // strings.
 //
+//
 // We intend to use ubi::Node to write tools that report memory usage, so it's
 // important that ubi::Node accurately portray how much memory nodes consume.
 // Thus, for example, when data that apparently belongs to multiple nodes is
@@ -141,25 +142,6 @@
 // If this restriction prevents us from implementing interesting tools, we may
 // teach the GC how to root ubi::Nodes, fix up hash tables that use them as
 // keys, etc.
-//
-//
-// Hostile Graph Structure
-//
-// Analyses consuming ubi::Node graphs must be robust when presented with graphs
-// that are deliberately constructed to exploit their weaknesses. When operating
-// on live graphs, web content has control over the object graph, and less
-// direct control over shape and string structure, and analyses should be
-// prepared to handle extreme cases gracefully. For example, if an analysis were
-// to use the C++ stack in a depth-first traversal, carefully constructed
-// content could cause the analysis to overflow the stack.
-//
-// When ubi::Nodes refer to nodes deserialized from a heap snapshot, analyses
-// must be even more careful: since snapshots often come from potentially
-// compromised e10s content processes, even properties normally guaranteed by
-// the platform (the proper linking of DOM nodes, for example) might be
-// corrupted. While it is the deserializer's responsibility to check the basic
-// structure of the snapshot file, the analyses should be prepared for ubi::Node
-// graphs constructed from snapshots to be even more bizarre.
 
 class JSAtom;
 
