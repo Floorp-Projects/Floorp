@@ -457,10 +457,11 @@ Toolbox.prototype = {
   },
 
   _buildOptions: function() {
+    let selectOptions = () => { this.selectTool("options"); };
     let key = this.doc.getElementById("toolbox-options-key");
-    key.addEventListener("command", () => {
-      this.selectTool("options");
-    }, true);
+    key.addEventListener("command", selectOptions, true);
+    let key2 = this.doc.getElementById("toolbox-options-key2");
+    key2.addEventListener("command", selectOptions, true);
   },
 
   _splitConsoleOnKeypress: function(e) {
