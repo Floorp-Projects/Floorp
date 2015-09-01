@@ -11,8 +11,17 @@ const TEST_URL = TEST_URL_ROOT + "doc_markup_toggle.html";
 add_task(function*() {
   let {inspector} = yield addTab(TEST_URL).then(openInspector);
 
+  info("Getting the container for the html element");
+  let container = yield getContainerForSelector("html", inspector);
+  ok(container.mustExpand, "HTML element mustExpand");
+  ok(container.canExpand, "HTML element canExpand");
+  is(container.expander.style.visibility, "hidden", "HTML twisty is hidden");
+
   info("Getting the container for the UL parent element");
-  let container = yield getContainerForSelector("ul", inspector);
+  container = yield getContainerForSelector("ul", inspector);
+  ok(!container.mustExpand, "UL element !mustExpand");
+  ok(container.canExpand, "UL element canExpand");
+  is(container.expander.style.visibility, "visible", "HTML twisty is visible");
 
   info("Clicking on the UL parent expander, and waiting for children");
   let onChildren = waitForChildrenUpdated(inspector);
