@@ -152,10 +152,6 @@ AsmJSModule::trace(JSTracer* trc)
     for (unsigned i = 0; i < profiledFunctions_.length(); i++)
         profiledFunctions_[i].trace(trc);
 #endif
-#if defined(JS_ION_PERF)
-    for (unsigned i = 0; i < perfProfiledBlocksFunctions_.length(); i++)
-        perfProfiledBlocksFunctions_[i].trace(trc);
-#endif
     if (globalArgumentName_)
         TraceManuallyBarrieredEdge(trc, &globalArgumentName_, "asm.js global argument name");
     if (importArgumentName_)
@@ -184,9 +180,6 @@ AsmJSModule::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* asmJSModu
                         functionCounts_.sizeOfExcludingThis(mallocSizeOf) +
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
                         profiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
-#endif
-#if defined(JS_ION_PERF)
-                        perfProfiledBlocksFunctions_.sizeOfExcludingThis(mallocSizeOf) +
 #endif
                         staticLinkData_.sizeOfExcludingThis(mallocSizeOf);
 }
@@ -433,20 +426,6 @@ AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembl
         ProfiledFunction& pf = profiledFunctions_[i];
         pf.pod.startCodeOffset = masm.actualOffset(pf.pod.startCodeOffset);
         pf.pod.endCodeOffset = masm.actualOffset(pf.pod.endCodeOffset);
-    }
-#endif
-#ifdef JS_ION_PERF
-    for (size_t i = 0; i < perfProfiledBlocksFunctions_.length(); i++) {
-        ProfiledBlocksFunction& pbf = perfProfiledBlocksFunctions_[i];
-        pbf.pod.startCodeOffset = masm.actualOffset(pbf.pod.startCodeOffset);
-        pbf.endInlineCodeOffset = masm.actualOffset(pbf.endInlineCodeOffset);
-        pbf.pod.endCodeOffset = masm.actualOffset(pbf.pod.endCodeOffset);
-        BasicBlocksVector& basicBlocks = pbf.blocks;
-        for (uint32_t i = 0; i < basicBlocks.length(); i++) {
-            Record& r = basicBlocks[i];
-            r.startOffset = masm.actualOffset(r.startOffset);
-            r.endOffset = masm.actualOffset(r.endOffset);
-        }
     }
 #endif
 
