@@ -306,8 +306,8 @@ nsPluginFrame::PrepForDrawing(nsIWidget *aWidget)
     viewMan->InsertChild(view, mInnerView, nullptr, true);
 
     mWidget->SetParent(parentWidget);
-    mWidget->Show(true);
     mWidget->Enable(true);
+    mWidget->Show(true);
 
     // Set the plugin window to have an empty clip region until we know
     // what our true position, size and clip region are. These
