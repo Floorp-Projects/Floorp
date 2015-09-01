@@ -24,9 +24,12 @@ namespace mozilla {
  * Input and output, as well as length units in the public interface are
  * interleaved frames.
  *
- * Allocations of output buffer are performed by this class.  Buffers can simply
- * be delete-d.  This is because packets are intended to be sent off to
+ * Allocations of output buffer can be performed by this class.  Buffers can
+ * simply be delete-d.  This is because packets are intended to be sent off to
  * non-gecko code using normal pointers/length pairs
+ *
+ * Alternatively, consumers can pass in a buffer in which the output is copied.
+ * The buffer needs to be large enough to store a packet worth of audio.
  *
  * The implementation uses a circular buffer using absolute virtual indices.
  */
@@ -98,6 +101,15 @@ public:
     uint32_t samplesNeeded = mPacketSize * mChannels;
     OutputType* out = new OutputType[samplesNeeded];
 
+    Output(out);
+
+    return out;
+  }
+
+  void Output(OutputType* aOutputBuffer)
+  {
+    uint32_t samplesNeeded = mPacketSize * mChannels;
+
     // Under-run. Pad the end of the buffer with silence.
     if (AvailableSamples() < samplesNeeded) {
 #ifdef LOG_PACKETIZER_UNDERRUN
@@ -108,26 +120,24 @@ public:
       NS_WARNING(buf);
 #endif
       uint32_t zeros = samplesNeeded - AvailableSamples();
-      PodZero(out + AvailableSamples(), zeros);
+      PodZero(aOutputBuffer + AvailableSamples(), zeros);
       samplesNeeded -= zeros;
     }
     if (ReadIndex() + samplesNeeded <= mLength) {
       ConvertAudioSamples<InputType,OutputType>(mStorage.get() + ReadIndex(),
-                                                out,
+                                                aOutputBuffer,
                                                 samplesNeeded);
     } else {
       uint32_t firstPartLength = mLength - ReadIndex();
       uint32_t secondPartLength = samplesNeeded - firstPartLength;
       ConvertAudioSamples<InputType, OutputType>(mStorage.get() + ReadIndex(),
-                                                 out,
+                                                 aOutputBuffer,
                                                  firstPartLength);
       ConvertAudioSamples<InputType, OutputType>(mStorage.get(),
-                                                 out + firstPartLength,
+                                                 aOutputBuffer + firstPartLength,
                                                  secondPartLength);
     }
     mReadIndex += samplesNeeded;
-
-    return out;
   }
 
   uint32_t PacketsAvailable() const {
