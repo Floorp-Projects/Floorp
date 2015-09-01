@@ -42,6 +42,7 @@
 #include "mozilla/dom/ExternalHelperAppParent.h"
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/GeolocationBinding.h"
+#include "mozilla/dom/MediaKeySystemAccess.h"
 #include "mozilla/dom/NuwaParent.h"
 #include "mozilla/dom/PContentBridgeParent.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
@@ -1096,6 +1097,19 @@ ContentParent::RecvGetGMPPluginVersionForAPI(const nsCString& aAPI,
     return GMPServiceParent::RecvGetGMPPluginVersionForAPI(aAPI, Move(aTags),
                                                            aHasVersion,
                                                            aVersion);
+}
+
+bool
+ContentParent::RecvIsGMPPresentOnDisk(const nsString& aKeySystem,
+                                      const nsCString& aVersion,
+                                      bool* aIsPresent,
+                                      nsCString* aMessage)
+{
+    *aIsPresent = MediaKeySystemAccess::IsGMPPresentOnDisk(aKeySystem,
+                                                           aVersion,
+                                                           *aMessage);
+
+    return true;
 }
 
 bool
