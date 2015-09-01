@@ -679,8 +679,8 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
   bool isAnonForEvents = IsRootOfChromeAccessOnlySubtree();
   if ((aVisitor.mEvent->mMessage == eMouseOver ||
        aVisitor.mEvent->mMessage == eMouseOut ||
-       aVisitor.mEvent->mMessage == NS_POINTER_OVER ||
-       aVisitor.mEvent->mMessage == NS_POINTER_OUT) &&
+       aVisitor.mEvent->mMessage == ePointerOver ||
+       aVisitor.mEvent->mMessage == ePointerOut) &&
       // Check if we should stop event propagation when event has just been
       // dispatched or when we're about to propagate from
       // chrome access only subtree or if we are about to propagate out of

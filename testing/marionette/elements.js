@@ -244,13 +244,13 @@ ElementManager.prototype = {
    *
    * @param String id
    *        The DOM reference ID
-   * @param nsIDOMWindow win
-   *        The window that contains the element
+   * @param nsIDOMWindow, ShadowRoot container
+   *        The window and an optional shadow root that contains the element
    *
    * @returns nsIDOMElement
    *        Returns the element or throws Exception if not found
    */
-  getKnownElement: function EM_getKnownElement(id, win) {
+  getKnownElement: function EM_getKnownElement(id, container) {
     let el = this.seenItems[id];
     if (!el) {
       throw new JavaScriptError("Element has not been seen before. Id given was " + id);
@@ -263,16 +263,51 @@ ElementManager.prototype = {
       delete this.seenItems[id];
     }
     // use XPCNativeWrapper to compare elements; see bug 834266
-    let wrappedWin = XPCNativeWrapper(win);
+    let wrappedFrame = XPCNativeWrapper(container.frame);
+    let wrappedShadowRoot;
+    if (container.shadowRoot) {
+      wrappedShadowRoot = XPCNativeWrapper(container.shadowRoot);
+    }
+
     if (!el ||
-        !(XPCNativeWrapper(el).ownerDocument == wrappedWin.document) ||
-        (XPCNativeWrapper(el).compareDocumentPosition(wrappedWin.document.documentElement) &
-         DOCUMENT_POSITION_DISCONNECTED)) {
+        !(XPCNativeWrapper(el).ownerDocument == wrappedFrame.document) ||
+        this.isDisconnected(XPCNativeWrapper(el), wrappedShadowRoot,
+          wrappedFrame)) {
       throw new StaleElementReferenceError(
           "The element reference is stale. Either the element " +
           "is no longer attached to the DOM or the page has been refreshed.");
     }
     return el;
+  },
+
+  /**
+   * Check if the element is detached from the current frame as well as the
+   * optional shadow root (when inside a Shadow DOM context).
+   * @param nsIDOMElement el
+   *        element to be checked
+   * @param ShadowRoot shadowRoot
+   *        an optional shadow root containing an element
+   * @param nsIDOMWindow frame
+   *        window that contains the element or the current host of the shadow
+   *        root.
+   * @return {Boolean} a flag indicating that the element is disconnected
+   */
+  isDisconnected: function EM_isDisconnected(el, shadowRoot, frame) {
+    if (shadowRoot && frame.ShadowRoot) {
+      if (el.compareDocumentPosition(shadowRoot) &
+        DOCUMENT_POSITION_DISCONNECTED) {
+        return true;
+      }
+      // Looking for next possible ShadowRoot ancestor
+      let parent = shadowRoot.host;
+      while (parent && !(parent instanceof frame.ShadowRoot)) {
+        parent = parent.parentNode;
+      }
+      return this.isDisconnected(shadowRoot.host, parent, frame);
+    } else {
+      return el.compareDocumentPosition(frame.document.documentElement) &
+        DOCUMENT_POSITION_DISCONNECTED;
+    }
   },
 
   /**
@@ -338,14 +373,14 @@ ElementManager.prototype = {
    *
    * @param object args
    *        Arguments passed in by client
-   * @param nsIDOMWindow win
-   *        The window that contains the elements
+   * @param nsIDOMWindow, ShadowRoot container
+   *        The window and an optional shadow root that contains the element
    *
    * @returns object
    *        Returns the objects passed in by the client, with the
    *        reference IDs replaced by the actual elements.
    */
-  convertWrappedArguments: function EM_convertWrappedArguments(args, win) {
+  convertWrappedArguments: function EM_convertWrappedArguments(args, container) {
     let converted;
     switch (typeof(args)) {
       case 'number':
@@ -360,14 +395,14 @@ ElementManager.prototype = {
         else if (Object.prototype.toString.call(args) == '[object Array]') {
           converted = [];
           for (let i in args) {
-            converted.push(this.convertWrappedArguments(args[i], win));
+            converted.push(this.convertWrappedArguments(args[i], container));
           }
         }
         else if (((typeof(args[this.elementKey]) === 'string') && args.hasOwnProperty(this.elementKey)) ||
                  ((typeof(args[this.w3cElementKey]) === 'string') &&
                      args.hasOwnProperty(this.w3cElementKey))) {
           let elementUniqueIdentifier = args[this.w3cElementKey] ? args[this.w3cElementKey] : args[this.elementKey];
-          converted = this.getKnownElement(elementUniqueIdentifier,  win);
+          converted = this.getKnownElement(elementUniqueIdentifier, container);
           if (converted == null) {
             throw new WebDriverError(`Unknown element: ${elementUniqueIdentifier}`);
           }
@@ -375,7 +410,7 @@ ElementManager.prototype = {
         else {
           converted = {};
           for (let prop in args) {
-            converted[prop] = this.convertWrappedArguments(args[prop], win);
+            converted[prop] = this.convertWrappedArguments(args[prop], container);
           }
         }
         break;
@@ -417,8 +452,8 @@ ElementManager.prototype = {
    * given node, using the given search strategy. Search
    * will continue until the search timelimit has been reached.
    *
-   * @param nsIDOMWindow win
-   *        The window to search in
+   * @param nsIDOMWindow, ShadowRoot container
+   *        The window and an optional shadow root that contains the element
    * @param object values
    *        The 'using' member of values will tell us which search
    *        method to use. The 'value' member tells us the value we
@@ -438,15 +473,16 @@ ElementManager.prototype = {
    * @return nsIDOMElement or list of nsIDOMElements
    *        Returns the element(s) by calling the on_success function.
    */
-  find: function EM_find(win, values, searchTimeout, all, on_success, on_error, command_id) {
+  find: function EM_find(container, values, searchTimeout, all, on_success, on_error, command_id) {
     let startTime = values.time ? values.time : new Date().getTime();
+    let rootNode = container.shadowRoot || container.frame.document;
     let startNode = (values.element != undefined) ?
-                    this.getKnownElement(values.element, win) : win.document;
+                    this.getKnownElement(values.element, container) : rootNode;
     if (this.elementStrategies.indexOf(values.using) < 0) {
       throw new InvalidSelectorError("No such strategy: " + values.using);
     }
-    let found = all ? this.findElements(values.using, values.value, win.document, startNode) :
-                      this.findElement(values.using, values.value, win.document, startNode);
+    let found = all ? this.findElements(values.using, values.value, rootNode, startNode) :
+                      this.findElement(values.using, values.value, rootNode, startNode);
     let type = Object.prototype.toString.call(found);
     let isArrayLike = ((type == '[object Array]') || (type == '[object HTMLCollection]') || (type == '[object NodeList]'));
     if (found == null || (isArrayLike && found.length <= 0)) {
@@ -465,7 +501,7 @@ ElementManager.prototype = {
         }
       } else {
         values.time = startTime;
-        this.timer.initWithCallback(this.find.bind(this, win, values,
+        this.timer.initWithCallback(this.find.bind(this, container, values,
                                                    searchTimeout, all,
                                                    on_success, on_error,
                                                    command_id),

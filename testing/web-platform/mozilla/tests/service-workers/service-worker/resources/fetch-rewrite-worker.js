@@ -12,23 +12,18 @@ function get_query_params(url) {
   return ret;
 }
 
-function get_request_init(params) {
+function get_request_init(base, params) {
   var init = {};
-  if (params['method']) {
-    init['method'] = params['method'];
-  }
-  if (params['mode']) {
-    init['mode'] = params['mode'];
-  }
-  if (params['credentials']) {
-    init['credentials'] = params['credentials'];
-  }
+  init['method'] = params['method'] || base['method'];
+  init['mode'] = params['mode'] || base['mode'];
+  init['credentials'] = params['credentials'] || base['credentials'];
+  init['redirect'] = params['redirect'] || base['redirect'];
   return init;
 }
 
 self.addEventListener('fetch', function(event) {
     var params = get_query_params(event.request.url);
-    var init = get_request_init(params);
+    var init = get_request_init(event.request, params);
     var url = params['url'];
     if (params['ignore']) {
       return;
@@ -62,6 +57,19 @@ self.addEventListener('fetch', function(event) {
         if (url) {
           request = new Request(url, init);
         }
-        fetch(request).then(resolve, reject);
+        fetch(request).then(function(response) {
+          var expectedType = params['expected_type'];
+          if (expectedType && response.type !== expectedType) {
+            // Resolve a JSON object with a failure instead of rejecting
+            // in order to distinguish this from a NetworkError, which
+            // may be expected even if the type is correct.
+            resolve(new Response(JSON.stringify({
+              result: 'failure',
+              detail: 'got ' + response.type + ' Response.type instead of ' +
+                      expectedType
+            })));
+          }
+          resolve(response);
+        }, reject)
       }));
   });

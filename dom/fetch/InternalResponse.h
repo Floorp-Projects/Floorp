@@ -49,6 +49,9 @@ public:
   OpaqueResponse();
 
   already_AddRefed<InternalResponse>
+  OpaqueRedirectResponse();
+
+  already_AddRefed<InternalResponse>
   BasicResponse();
 
   already_AddRefed<InternalResponse>
@@ -62,6 +65,7 @@ public:
     MOZ_ASSERT_IF(mType == ResponseType::Basic, mWrappedResponse);
     MOZ_ASSERT_IF(mType == ResponseType::Cors, mWrappedResponse);
     MOZ_ASSERT_IF(mType == ResponseType::Opaque, mWrappedResponse);
+    MOZ_ASSERT_IF(mType == ResponseType::Opaqueredirect, mWrappedResponse);
     return mType;
   }
 
@@ -91,10 +95,30 @@ public:
     return mStatus;
   }
 
+  uint16_t
+  GetUnfilteredStatus() const
+  {
+    if (mWrappedResponse) {
+      return mWrappedResponse->GetStatus();
+    }
+
+    return GetStatus();
+  }
+
   const nsCString&
   GetStatusText() const
   {
     return mStatusText;
+  }
+
+  const nsCString&
+  GetUnfilteredStatusText() const
+  {
+    if (mWrappedResponse) {
+      return mWrappedResponse->GetStatusText();
+    }
+
+    return GetStatusText();
   }
 
   InternalHeaders*
@@ -114,7 +138,7 @@ public:
   }
 
   void
-  GetInternalBody(nsIInputStream** aStream)
+  GetUnfilteredBody(nsIInputStream** aStream)
   {
     if (mWrappedResponse) {
       MOZ_ASSERT(!mBody);
@@ -127,12 +151,13 @@ public:
   void
   GetBody(nsIInputStream** aStream)
   {
-    if (Type() == ResponseType::Opaque) {
+    if (Type() == ResponseType::Opaque ||
+        Type() == ResponseType::Opaqueredirect) {
       *aStream = nullptr;
       return;
     }
 
-    return GetInternalBody(aStream);
+    return GetUnfilteredBody(aStream);
   }
 
   void

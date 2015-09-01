@@ -2360,8 +2360,8 @@ WebSocketChannel::AbortSession(nsresult reason)
     return;
   mStopped = 1;
 
-  if (mTransport && reason != NS_BASE_STREAM_CLOSED &&
-      !mRequestedClose && !mClientClosed && !mServerClosed) {
+  if (mTransport && reason != NS_BASE_STREAM_CLOSED && !mRequestedClose &&
+      !mClientClosed && !mServerClosed && mConnecting == NOT_CONNECTING) {
     mRequestedClose = 1;
     mStopOnClose = reason;
     mSocketThread->Dispatch(
@@ -3121,7 +3121,11 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
 {
   LOG(("WebSocketChannel::AsyncOpen() %p\n", this));
 
-  MOZ_ASSERT(NS_IsMainThread(), "not main thread");
+  if (!NS_IsMainThread()) {
+    MOZ_ASSERT(false, "not main thread");
+    LOG(("WebSocketChannel::AsyncOpen() called off the main thread"));
+    return NS_ERROR_UNEXPECTED;
+  }
 
   if (!aURI || !aListener) {
     LOG(("WebSocketChannel::AsyncOpen() Uri or Listener null"));
@@ -3265,6 +3269,26 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
   // nsIChannelEventSink in this object in order to deal with redirects
   localChannel->SetNotificationCallbacks(this);
 
+  class MOZ_STACK_CLASS CleanUpOnFailure
+  {
+  public:
+    explicit CleanUpOnFailure(WebSocketChannel* aWebSocketChannel)
+      : mWebSocketChannel(aWebSocketChannel)
+    {}
+
+    ~CleanUpOnFailure()
+    {
+      if (!mWebSocketChannel->mWasOpened) {
+        mWebSocketChannel->mChannel = nullptr;
+        mWebSocketChannel->mHttpChannel = nullptr;
+      }
+    }
+
+    WebSocketChannel *mWebSocketChannel;
+  };
+
+  CleanUpOnFailure cuof(this);
+
   mChannel = do_QueryInterface(localChannel, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3329,7 +3353,7 @@ WebSocketChannel::Close(uint16_t code, const nsACString & reason)
   mScriptCloseReason = reason;
   mScriptCloseCode = code;
 
-  if (!mTransport) {
+  if (!mTransport || mConnecting != NOT_CONNECTING) {
     nsresult rv;
     if (code == CLOSE_GOING_AWAY) {
       // Not an error: for example, tab has closed or navigated away
@@ -3376,6 +3400,11 @@ WebSocketChannel::SendMsgCommon(const nsACString *aMsg, bool aIsBinary,
                                 uint32_t aLength, nsIInputStream *aStream)
 {
   MOZ_ASSERT(IsOnTargetThread(), "not target thread");
+
+  if (!mDataStarted) {
+    LOG(("WebSocketChannel:: Error: data not started yet\n"));
+    return NS_ERROR_UNEXPECTED;
+  }
 
   if (mRequestedClose) {
     LOG(("WebSocketChannel:: Error: send when closed\n"));

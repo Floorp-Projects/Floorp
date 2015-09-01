@@ -76,6 +76,12 @@ public:
     return mRequest->GetCacheMode();
   }
 
+  RequestRedirect
+  Redirect() const
+  {
+    return mRequest->GetRedirectMode();
+  }
+
   RequestContext
   Context() const
   {

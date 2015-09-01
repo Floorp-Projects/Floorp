@@ -1312,6 +1312,8 @@ public:
    * are not converted into newlines. Only textnodes and cdata nodes are
    * added to the result.
    *
+   * @see nsLayoutUtils::GetFrameTextContent
+   *
    * @param aNode Node to get textual contents of.
    * @param aDeep If true child elements of aNode are recursivly descended
    *              into to find text children.
