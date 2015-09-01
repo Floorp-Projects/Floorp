@@ -73,6 +73,9 @@
             <item android:id="@+id/save_as_pdf"
                   android:title="@string/save_as_pdf"/>
 
+            <item android:id="@+id/print"
+                  android:title="@string/print"/>
+
             <item android:id="@+id/add_search_engine"
                   android:title="@string/contextmenu_add_search_engine"/>
 

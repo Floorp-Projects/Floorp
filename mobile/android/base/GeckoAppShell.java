@@ -6,7 +6,6 @@
 package org.mozilla.gecko;
 
 import java.io.BufferedReader;
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -47,6 +46,7 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoRequest;
 import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSContainer;
 import org.mozilla.gecko.util.NativeJSObject;
@@ -1002,13 +1002,6 @@ public class GeckoAppShell
         if (subType == null)
             subType = "*";
         return type + "/" + subType;
-    }
-
-    static void safeStreamClose(Closeable stream) {
-        try {
-            if (stream != null)
-                stream.close();
-        } catch (IOException e) {}
     }
 
     static boolean isUriSafeForScheme(Uri aUri) {
@@ -2576,13 +2569,13 @@ public class GeckoAppShell
                     // Only alter the intent when we're sure everything has worked
                     intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(imageFile));
                 } finally {
-                    safeStreamClose(is);
+                    IOUtils.safeStreamClose(is);
                 }
             }
         } catch(IOException ex) {
             // If something went wrong, we'll just leave the intent un-changed
         } finally {
-            safeStreamClose(os);
+            IOUtils.safeStreamClose(os);
         }
     }
 

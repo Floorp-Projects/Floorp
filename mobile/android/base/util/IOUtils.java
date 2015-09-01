@@ -7,6 +7,7 @@ package org.mozilla.gecko.util;
 
 import android.util.Log;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -107,5 +108,12 @@ public class IOUtils {
         System.arraycopy(bytes, 0, newBytes, 0, length);
 
         return newBytes;
+    }
+
+    public static void safeStreamClose(Closeable stream) {
+        try {
+            if (stream != null)
+                stream.close();
+        } catch (IOException e) {}
     }
 }

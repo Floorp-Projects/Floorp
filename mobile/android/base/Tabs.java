@@ -19,9 +19,7 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
-import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -65,7 +63,7 @@ public class Tabs implements GeckoEventListener {
     public static final int LOADURL_BACKGROUND   = 1 << 6;
     public static final int LOADURL_EXTERNAL     = 1 << 7;
 
-    private static final long PERSIST_TABS_AFTER_MILLISECONDS = 1000 * 5;
+    private static final long PERSIST_TABS_AFTER_MILLISECONDS = 1000 * 2;
 
     public static final int INVALID_TAB_ID = -1;
 
@@ -90,13 +88,7 @@ public class Tabs implements GeckoEventListener {
 
         @Override
         public void run() {
-            try {
-                boolean syncIsSetup = SyncAccounts.syncAccountsExist(context) ||
-                                      FirefoxAccounts.firefoxAccountsExist(context);
-                if (syncIsSetup) {
-                    db.getTabsAccessor().persistLocalTabs(context.getContentResolver(), tabs);
-                }
-            } catch (SecurityException se) {} // will fail without android.permission.GET_ACCOUNTS
+            db.getTabsAccessor().persistLocalTabs(context.getContentResolver(), tabs);
         }
     };
 
@@ -140,7 +132,7 @@ public class Tabs implements GeckoEventListener {
         mAccountListener = new OnAccountsUpdateListener() {
             @Override
             public void onAccountsUpdated(Account[] accounts) {
-                persistAllTabs();
+                queuePersistAllTabs();
             }
         };
 
@@ -696,14 +688,6 @@ public class Tabs implements GeckoEventListener {
             default:
                 break;
         }
-    }
-
-    // This method persists the current ordered list of tabs in our tabs content provider.
-    public void persistAllTabs() {
-        // If there is already a mPersistTabsRunnable in progress, the backgroundThread will hold onto
-        // it and ensure these still happen in the correct order.
-        mPersistTabsRunnable = new PersistTabsRunnable(mAppContext, getTabsInOrder());
-        ThreadUtils.postToBackgroundThread(mPersistTabsRunnable);
     }
 
     /**
