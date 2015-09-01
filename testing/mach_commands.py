@@ -8,6 +8,8 @@ import json
 import os
 import sys
 import tempfile
+import subprocess
+import shutil
 
 from mach.decorators import (
     CommandArgument,
@@ -550,8 +552,29 @@ def get_parser(argv=None):
                         help='Find test on chunk with electrolysis preferences enabled.',
                         default=False)
 
+    parser.add_argument('--debug',
+                        action='store_true',
+                        dest='debug',
+                        help="Find the test on chunk in a debug build.",
+                        default=False)
+
     return parser
 
+
+def download_mozinfo(debug_build=False):
+    temp_dir = tempfile.mkdtemp()
+    temp_path = os.path.join(temp_dir, "mozinfo.json")
+    args = [
+        'mozdownload',
+        '-t', 'tinderbox',
+        '--ext', 'mozinfo.json',
+        '-d', temp_path,
+    ]
+    if debug_build:
+        args.extend(['--debug-build'])
+
+    subprocess.call(args)
+    return temp_dir, temp_path
 
 @CommandProvider
 class ChunkFinder(MachCommandBase):
@@ -571,6 +594,13 @@ class ChunkFinder(MachCommandBase):
             'chunkByRuntime': kwargs['chunk_by_runtime'],
             'e10s': kwargs['e10s'],
         }
+
+        temp_dir = None
+        if kwargs['debug']:
+            self._activate_virtualenv()
+            self.virtualenv_manager.install_pip_package('mozdownload==1.17')
+            temp_dir, temp_path = download_mozinfo(kwargs['debug'])
+            args['extra_mozinfo_json'] = temp_path
 
         found = False
         for this_chunk in range(1, total_chunks+1):
@@ -600,3 +630,5 @@ class ChunkFinder(MachCommandBase):
             raise Exception("Test %s not found." % test_path)
         # Clean up the file
         os.remove(dump_tests)
+        if temp_dir:
+            shutil.rmtree(temp_dir)
