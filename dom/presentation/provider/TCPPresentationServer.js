@@ -264,8 +264,8 @@ function ChannelDescription(aInit) {
       this._tcpAddresses = Cc["@mozilla.org/array;1"]
                            .createInstance(Ci.nsIMutableArray);
       for (let address of aInit.tcpAddress) {
-        let wrapper = Cc["@mozilla.org/supports-string;1"]
-                      .createInstance(Ci.nsISupportsString);
+        let wrapper = Cc["@mozilla.org/supports-cstring;1"]
+                      .createInstance(Ci.nsISupportsCString);
         wrapper.data = address;
         this._tcpAddresses.appendElement(wrapper, false);
       }
@@ -313,7 +313,7 @@ function discriptionAsJson(aDescription) {
       let addresses = aDescription.tcpAddress.QueryInterface(Ci.nsIArray);
       json.tcpAddress = [];
       for (let idx = 0; idx < addresses.length; idx++) {
-        let address = addresses.queryElementAt(idx, Ci.nsISupportsString);
+        let address = addresses.queryElementAt(idx, Ci.nsISupportsCString);
         json.tcpAddress.push(address.data);
       }
       json.tcpPort = aDescription.tcpPort;
@@ -541,11 +541,11 @@ TCPControlChannel.prototype = {
         break;
       }
       case "requestSession:Offer": {
-        this._listener.onOffer(new ChannelDescription(aMsg.offer));
+        this._onOffer(aMsg.offer);
         break;
       }
       case "requestSession:Answer": {
-        this._listener.onAnswer(new ChannelDescription(aMsg.answer));
+        this._onAnswer(aMsg.answer);
         break;
       }
     }
