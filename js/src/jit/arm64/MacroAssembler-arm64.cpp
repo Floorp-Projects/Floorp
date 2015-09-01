@@ -77,8 +77,8 @@ void
 MacroAssemblerCompat::callWithExitFrame(JitCode* target, Register dynStack)
 {
     add32(Imm32(framePushed()), dynStack);
-    makeFrameDescriptor(dynStack, JitFrame_IonJS);
-    Push(dynStack); // descriptor
+    asMasm().makeFrameDescriptor(dynStack, JitFrame_IonJS);
+    asMasm().Push(dynStack); // descriptor
     asMasm().call(target);
 }
 

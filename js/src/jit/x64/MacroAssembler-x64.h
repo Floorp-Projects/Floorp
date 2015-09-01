@@ -1425,11 +1425,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
   public:
     void handleFailureWithHandlerTail(void* handler);
 
-    void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
-        shlq(Imm32(FRAMESIZE_SHIFT), frameSizeReg);
-        orq(Imm32(type), frameSizeReg);
-    }
-
     void callWithExitFrame(JitCode* target, Register dynStack);
 
     // See CodeGeneratorX64 calls to noteAsmJSGlobalAccess.

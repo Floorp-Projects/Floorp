@@ -890,11 +890,6 @@ public:
     void storeTypeTag(ImmTag tag, Address dest);
     void storeTypeTag(ImmTag tag, const BaseIndex& dest);
 
-    void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
-        ma_sll(frameSizeReg, frameSizeReg, Imm32(FRAMESIZE_SHIFT));
-        ma_or(frameSizeReg, frameSizeReg, Imm32(type));
-    }
-
     void handleFailureWithHandlerTail(void* handler);
 
     /////////////////////////////////////////////////////////////////
