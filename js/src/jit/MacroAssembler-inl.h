@@ -180,6 +180,25 @@ MacroAssembler::makeFrameDescriptor(Register frameSizeReg, FrameType type)
     orPtr(Imm32(type), frameSizeReg);
 }
 
+void
+MacroAssembler::pushStaticFrameDescriptor(FrameType type)
+{
+    uint32_t descriptor = MakeFrameDescriptor(framePushed(), type);
+    Push(Imm32(descriptor));
+}
+
+uint32_t
+MacroAssembler::buildFakeExitFrame(Register scratch)
+{
+    mozilla::DebugOnly<uint32_t> initialDepth = framePushed();
+
+    pushStaticFrameDescriptor(JitFrame_IonJS);
+    uint32_t retAddr = pushFakeReturnAddress(scratch);
+
+    MOZ_ASSERT(framePushed() == initialDepth + ExitFrameLayout::Size());
+    return retAddr;
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
