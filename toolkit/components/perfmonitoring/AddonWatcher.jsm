@@ -165,8 +165,11 @@ let AddonWatcher = {
             // by the user. Don't waste time with it.
             continue;
           }
-          let previous = this._previousPerformanceIndicators[addonId];
-          this._previousPerformanceIndicators[addonId] = item;
+
+          // Store the activity for the group – not the entire add-on, as we
+          // can have one group per process for each add-on.
+          let previous = this._previousPerformanceIndicators[item.groupId];
+          this._previousPerformanceIndicators[item.groupId] = item;
 
           if (!previous) {
             // This is the first time we see the addon, so we are probably

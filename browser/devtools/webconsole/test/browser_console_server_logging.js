@@ -7,17 +7,17 @@
 
 // Check that server log appears in the console panel - bug 1168872
 let test = asyncTest(function* () {
-  const PREF = "devtools.webconsole.filter.serverlog";
   const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console-server-logging.sjs";
-
-  Services.prefs.setBoolPref(PREF, true);
-  registerCleanupFunction(() => Services.prefs.clearUserPref(PREF));
 
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();
 
-  BrowserReload();
+  // Set logging filter and wait till it's set on the backend
+  hud.setFilterState("serverlog", true);
+  yield updateServerLoggingListener(hud);
+
+  BrowserReloadSkipCache();
 
   // Note that the test is also checking out the (printf like)
   // formatters and encoding of UTF8 characters (see the one at the end).
@@ -31,4 +31,16 @@ let test = asyncTest(function* () {
       severity: SEVERITY_LOG,
     }],
   })
+
+  // Clean up filter
+  hud.setFilterState("serverlog", false);
+  yield updateServerLoggingListener(hud);
 });
+
+function updateServerLoggingListener(hud) {
+  let deferred = promise.defer();
+  hud.ui._updateServerLoggingListener(response => {
+    deferred.resolve(response);
+  });
+  return deferred.promise;
+}

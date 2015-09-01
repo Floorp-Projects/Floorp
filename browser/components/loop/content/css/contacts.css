@@ -79,6 +79,7 @@ html[dir="rtl"] .contact-filter {
   color: #666;
   font-weight: 500;
   font-size: .9em;
+  margin-top: 1rem;
 }
 
 .contact,
@@ -214,8 +215,9 @@ html[dir="rtl"] .contact-filter {
   background-image: url("../shared/img/empty_contacts.svg");
   background-repeat: no-repeat;
   background-position: top center;
+  background-size: 128px;
   margin-top: 4rem;
-  padding-top: 10rem;
+  padding-top: 12rem;
   padding-bottom: 5rem;
   text-align: center;
   color: #4a4a4a;

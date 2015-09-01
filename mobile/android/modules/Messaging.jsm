@@ -112,6 +112,43 @@ let Messaging = {
       this.sendRequest(aMessage);
     });
   },
+
+  /**
+   * Handles a request from Java, using the given listener method.
+   * This is mainly an internal method used by the RequestHandler object, but can be
+   * used in nsIObserver.observe implmentations that fall outside the normal usage
+   * patterns.
+   *
+   * @param aTopic    The string name of the message
+   * @param aData     The data sent to the observe method from Java
+   * @param aListener A function that takes a JSON data argument and returns a
+   *                  response which is sent to Java.
+   */
+  handleRequest: Task.async(function* (aTopic, aData, aListener) {
+    let wrapper = JSON.parse(aData);
+
+    try {
+      let response = yield aListener(wrapper.data);
+      if (typeof response !== "object" || response === null) {
+        throw new Error("Gecko request listener did not return an object");
+      }
+
+      Messaging.sendRequest({
+        type: "Gecko:Request" + wrapper.id,
+        response: response
+      });
+    } catch (e) {
+      Cu.reportError("Error in Messaging handler for " + aTopic + ": " + e);
+
+      Messaging.sendRequest({
+        type: "Gecko:Request" + wrapper.id,
+        error: {
+          message: e.message || (e && e.toString()),
+          stack: e.stack || Components.stack.formattedStack,
+        }
+      });
+    }
+  })
 };
 
 let requestHandler = {
@@ -139,30 +176,8 @@ let requestHandler = {
     Services.obs.removeObserver(this, aMessage);
   },
 
-  observe: Task.async(function* (aSubject, aTopic, aData) {
-    let wrapper = JSON.parse(aData);
+  observe: function(aSubject, aTopic, aData) {
     let listener = this._listeners[aTopic];
-
-    try {
-      let response = yield listener(wrapper.data);
-      if (typeof response !== "object" || response === null) {
-        throw new Error("Gecko request listener did not return an object");
-      }
-
-      Messaging.sendRequest({
-        type: "Gecko:Request" + wrapper.id,
-        response: response
-      });
-    } catch (e) {
-      Cu.reportError("Error in Messaging handler for " + aTopic + ": " + e);
-
-      Messaging.sendRequest({
-        type: "Gecko:Request" + wrapper.id,
-        error: {
-          message: e.message || (e && e.toString()),
-          stack: e.stack || Components.stack.formattedStack,
-        }
-      });
-    }
-  })
+    Messaging.handleRequest(aTopic, aData, listener);
+  }
 };

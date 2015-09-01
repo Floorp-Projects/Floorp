@@ -16,6 +16,7 @@ import org.mozilla.gecko.db.BrowserContract.FaviconColumns;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Schema;
+import org.mozilla.gecko.db.BrowserContract.Tabs;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.sync.Utils;
 
@@ -57,6 +58,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final String TABLE_HISTORY = History.TABLE_NAME;
     static final String TABLE_FAVICONS = Favicons.TABLE_NAME;
     static final String TABLE_THUMBNAILS = Thumbnails.TABLE_NAME;
+    static final String TABLE_TABS = Tabs.TABLE_NAME;
 
     static final String VIEW_COMBINED = Combined.VIEW_NAME;
     static final String VIEW_BOOKMARKS_WITH_FAVICONS = Bookmarks.VIEW_WITH_FAVICONS;
@@ -313,6 +315,9 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                              " SELECT " + Bookmarks.URL +
                              " FROM " + TABLE_BOOKMARKS +
                              " WHERE " + Bookmarks.PARENT + " = " + Bookmarks.FIXED_PINNED_LIST_ID +
+                           ") AND " + Thumbnails.URL + " NOT IN ( " +
+                             " SELECT " + Tabs.URL +
+                             " FROM " + TABLE_TABS +
                            ")";
         trace("Clear thumbs using query: " + sql);
         db.execSQL(sql);

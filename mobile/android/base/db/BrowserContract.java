@@ -268,8 +268,11 @@ public class BrowserContract {
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/deleted-formhistory";
     }
 
+    @RobocopTarget
     public static final class Tabs implements CommonColumns {
         private Tabs() {}
+        public static final String TABLE_NAME = "tabs";
+
         public static final Uri CONTENT_URI = Uri.withAppendedPath(TABS_AUTHORITY_URI, "tabs");
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/tab";
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/tab";

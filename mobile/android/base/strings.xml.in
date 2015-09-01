@@ -95,6 +95,7 @@
   <string name="share_title">&share_title;</string>
   <string name="share_image_failed">&share_image_failed;</string>
   <string name="save_as_pdf">&save_as_pdf;</string>
+  <string name="print">&print;</string>
   <string name="find_in_page">&find_in_page;</string>
   <string name="find_matchcase">&find_matchcase;</string>
   <string name="desktop_mode">&desktop_mode;</string>
