@@ -46,7 +46,7 @@ public:
   const DrawingCommand* GetDrawingCommand(ptrdiff_t aId);
 
 protected:
-  CommandBuffer(size_t aSize = 256)
+  explicit CommandBuffer(size_t aSize = 256)
   : mStorage(IterableArena::GROWABLE, aSize)
   {}
 
