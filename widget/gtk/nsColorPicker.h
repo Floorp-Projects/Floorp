@@ -25,23 +25,38 @@ public:
 private:
   ~nsColorPicker() {};
 
-  static void OnColorChanged(GtkColorSelection* colorselection,
-                             gpointer user_data);
+  static nsString ToHexString(int n);
+  
   static void OnResponse(GtkWidget* dialog, gint response_id,
                          gpointer user_data);
   static void OnDestroy(GtkWidget* dialog, gpointer user_data);
+  
+#if GTK_CHECK_VERSION(3,4,0)
+  static void OnColorChanged(GtkColorChooser* color_chooser, GdkRGBA* color,
+                             gpointer user_data);
+                             
+  static int convertGdkRgbaComponent(gdouble color_component);
+  static gdouble convertToGdkRgbaComponent(int color_component);
+  static GdkRGBA convertToRgbaColor(nscolor color);
+  
+  void Update(GdkRGBA* color);
+  void SetColor(const GdkRGBA* color);
+#else
+  static void OnColorChanged(GtkColorSelection* colorselection,
+                             gpointer user_data);
 
   // Conversion functions for color
   static int convertGdkColorComponent(guint16 color_component);
   static guint16 convertToGdkColorComponent(int color_component);
-  static GdkColor convertToGdkColor(nscolor color);
-  static nsString ToHexString(int n);
+  static GdkColor convertToGdkColor(nscolor color);  
 
   static GtkColorSelection* WidgetGetColorSelection(GtkWidget* widget);
-
-  void Done(GtkWidget* dialog, gint response_id);
+  
   void Update(GtkColorSelection* colorselection);
   void ReadValueFromColorSelection(GtkColorSelection* colorselection);
+#endif
+
+  void Done(GtkWidget* dialog, gint response_id);
 
   nsCOMPtr<nsIWidget> mParentWidget;
   nsCOMPtr<nsIColorPickerShownCallback> mCallback;
