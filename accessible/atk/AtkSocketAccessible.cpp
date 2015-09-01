@@ -21,35 +21,6 @@ const char* AtkSocketAccessible::sATKSocketGetTypeSymbol = "atk_socket_get_type"
 bool AtkSocketAccessible::gCanEmbed = FALSE;
 
 extern "C" void mai_atk_component_iface_init(AtkComponentIface* aIface);
-extern "C" GType mai_atk_socket_get_type(void);
-
-/* MaiAtkSocket */
-
-#define MAI_TYPE_ATK_SOCKET              (mai_atk_socket_get_type ())
-#define MAI_ATK_SOCKET(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj),\
-                                          MAI_TYPE_ATK_SOCKET, MaiAtkSocket))
-#define MAI_IS_ATK_SOCKET(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj),\
-                                          MAI_TYPE_ATK_SOCKET))
-#define MAI_ATK_SOCKET_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass),\
-                                          MAI_TYPE_ATK_SOCKET,\
-                                          MaiAtkSocketClass))
-#define MAI_IS_ATK_SOCKET_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass),\
-                                          MAI_TYPE_ATK_SOCKET))
-#define MAI_ATK_SOCKET_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj),\
-                                          MAI_TYPE_ATK_SOCKET,\
-                                          MaiAtkSocketClass))
-
-typedef struct _MaiAtkSocket
-{
-  AtkSocket parent;
-
-  AccessibleWrap* accWrap;
-} MaiAtkSocket;
-
-typedef struct _MaiAtkSocketClass
-{
-  AtkSocketClass parent_class;
-} MaiAtkSocketClass;
 
 G_DEFINE_TYPE_EXTENDED(MaiAtkSocket, mai_atk_socket,
                        AtkSocketAccessible::g_atk_socket_type, 0,
@@ -86,7 +57,7 @@ RefAccessibleAtPoint(AtkComponent* aComponent, gint aX, gint aY,
 {
   NS_ENSURE_TRUE(MAI_IS_ATK_SOCKET(aComponent), nullptr);
 
-  return refAccessibleAtPointHelper(MAI_ATK_SOCKET(aComponent)->accWrap,
+  return refAccessibleAtPointHelper(ATK_OBJECT(MAI_ATK_SOCKET(aComponent)),
                                     aX, aY, aCoordType);
 }
 
@@ -99,7 +70,7 @@ GetExtents(AtkComponent* aComponent, gint* aX, gint* aY, gint* aWidth,
   if (!MAI_IS_ATK_SOCKET(aComponent))
     return;
 
-  getExtentsHelper(MAI_ATK_SOCKET(aComponent)->accWrap,
+  getExtentsHelper(ATK_OBJECT(MAI_ATK_SOCKET(aComponent)),
                    aX, aY, aWidth, aHeight, aCoordType);
 }
 }
