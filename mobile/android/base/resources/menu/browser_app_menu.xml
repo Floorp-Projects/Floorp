@@ -39,6 +39,10 @@
     <item android:id="@+id/save_as_pdf"
           android:title="@string/save_as_pdf" />
 
+    <item android:id="@+id/print"
+          android:visible="false"
+          android:title="@string/print" />
+
     <item android:id="@+id/find_in_page"
           android:title="@string/find_in_page" />
 
