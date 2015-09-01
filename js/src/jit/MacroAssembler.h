@@ -571,6 +571,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // live registers.
     uint32_t callJitNoProfiler(Register callee) PER_SHARED_ARCH;
     inline uint32_t callJit(Register callee);
+    inline uint32_t callJit(JitCode* code);
 
     // The frame descriptor is the second field of all Jit frames, pushed before
     // calling the Jit function.  It is a composite value defined in JitFrames.h
@@ -1098,37 +1099,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Generates code used to complete a bailout.
     void generateBailoutTail(Register scratch, Register bailoutInfo);
 
-    // These functions exist as small wrappers around sites where execution can
-    // leave the currently running stream of instructions. They exist so that
-    // instrumentation may be put in place around them if necessary and the
-    // instrumentation is enabled. For the functions that return a uint32_t,
-    // they are returning the offset of the assembler just after the call has
-    // been made so that a safepoint can be made at that location.
-
-    // see above comment for what is returned
-    uint32_t callWithExitFrame(Label* target) {
-        AutoProfilerCallInstrumentation profiler(*this);
-        MacroAssemblerSpecific::callWithExitFrame(target);
-        uint32_t ret = currentOffset();
-        return ret;
-    }
-
-    // see above comment for what is returned
-    uint32_t callWithExitFrame(JitCode* target) {
-        AutoProfilerCallInstrumentation profiler(*this);
-        MacroAssemblerSpecific::callWithExitFrame(target);
-        uint32_t ret = currentOffset();
-        return ret;
-    }
-
-    // see above comment for what is returned
-    uint32_t callWithExitFrame(JitCode* target, Register dynStack) {
-        AutoProfilerCallInstrumentation profiler(*this);
-        MacroAssemblerSpecific::callWithExitFrame(target, dynStack);
-        uint32_t ret = currentOffset();
-        return ret;
-    }
-
     void branchTestObjectTruthy(bool truthy, Register objReg, Register scratch,
                                 Label* slowCheck, Label* checked)
     {
@@ -1226,8 +1196,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
   private:
     // This class is used to surround call sites throughout the assembler. This
-    // is used by callWithABI, callJit, and callWithExitFrame functions, except
-    // if suffixed by NoProfiler.
+    // is used by callWithABI, and callJit functions, except if suffixed by
+    // NoProfiler.
     class AutoProfilerCallInstrumentation {
         MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 

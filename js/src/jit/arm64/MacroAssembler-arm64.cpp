@@ -58,31 +58,6 @@ MacroAssemblerCompat::buildFakeExitFrame(Register scratch, uint32_t* offset)
 }
 
 void
-MacroAssemblerCompat::callWithExitFrame(Label* target)
-{
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
-    Push(Imm32(descriptor)); // descriptor
-    asMasm().call(target);
-}
-
-void
-MacroAssemblerCompat::callWithExitFrame(JitCode* target)
-{
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor));
-    asMasm().call(target);
-}
-
-void
-MacroAssemblerCompat::callWithExitFrame(JitCode* target, Register dynStack)
-{
-    add32(Imm32(framePushed()), dynStack);
-    asMasm().makeFrameDescriptor(dynStack, JitFrame_IonJS);
-    asMasm().Push(dynStack); // descriptor
-    asMasm().call(target);
-}
-
-void
 MacroAssembler::alignFrameForICArguments(MacroAssembler::AfterICSaveLive& aic)
 {
     // Exists for MIPS compatibility.

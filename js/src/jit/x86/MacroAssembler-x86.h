@@ -83,7 +83,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void setupABICall(uint32_t args);
 
   public:
-    using MacroAssemblerX86Shared::callWithExitFrame;
     using MacroAssemblerX86Shared::branch32;
     using MacroAssemblerX86Shared::branchTest32;
     using MacroAssemblerX86Shared::load32;
@@ -1137,8 +1136,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
   public:
     // Used from within an Exit frame to handle a pending exception.
     void handleFailureWithHandlerTail(void* handler);
-
-    void callWithExitFrame(JitCode* target, Register dynStack);
 
     void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label);
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label);

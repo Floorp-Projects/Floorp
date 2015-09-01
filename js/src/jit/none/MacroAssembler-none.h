@@ -197,10 +197,6 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void call(T, S) { MOZ_CRASH(); }
     void callAndPushReturnAddress(Label* label) { MOZ_CRASH(); }
 
-    void callWithExitFrame(Label*) { MOZ_CRASH(); }
-    void callWithExitFrame(JitCode*) { MOZ_CRASH(); }
-    void callWithExitFrame(JitCode*, Register) { MOZ_CRASH(); }
-
     void nop() { MOZ_CRASH(); }
     void breakpoint() { MOZ_CRASH(); }
     void abiret() { MOZ_CRASH(); }

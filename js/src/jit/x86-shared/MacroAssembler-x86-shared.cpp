@@ -85,22 +85,6 @@ MacroAssemblerX86Shared::buildFakeExitFrame(Register scratch, uint32_t* offset)
 }
 
 void
-MacroAssemblerX86Shared::callWithExitFrame(Label* target)
-{
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor));
-    call(target);
-}
-
-void
-MacroAssemblerX86Shared::callWithExitFrame(JitCode* target)
-{
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor));
-    call(target);
-}
-
-void
 MacroAssembler::alignFrameForICArguments(AfterICSaveLive& aic)
 {
     // Exists for MIPS compatibility.
