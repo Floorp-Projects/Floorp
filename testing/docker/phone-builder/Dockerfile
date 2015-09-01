@@ -1,4 +1,4 @@
-FROM          taskcluster/builder:0.5.7
+FROM          taskcluster/builder:0.5.8
 MAINTAINER    Wander Lairson Costa <wcosta@mozilla.com>
 
 ENV           SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE /home/worker/socorro.token
