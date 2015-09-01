@@ -141,6 +141,8 @@ protected:
                                          const uint32_t& count) override;
   virtual bool RecvDivertOnStopRequest(const nsresult& statusCode) override;
   virtual bool RecvDivertComplete() override;
+  virtual bool RecvRemoveCorsPreflightCacheEntry(const URIParams& uri,
+                                                 const mozilla::ipc::PrincipalInfo& requestingPrincipal) override;
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   // Supporting function for ADivertableParentChannel.
