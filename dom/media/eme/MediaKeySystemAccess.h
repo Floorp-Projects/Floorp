@@ -59,6 +59,10 @@ public:
                               const nsAString& aKeySystem,
                               MediaKeySystemStatus aStatus);
 
+  static bool IsGMPPresentOnDisk(const nsAString& aKeySystem,
+                                 const nsACString& aVersion,
+                                 nsACString& aOutMessage);
+
 private:
   nsCOMPtr<nsPIDOMWindow> mParent;
   const nsString mKeySystem;
