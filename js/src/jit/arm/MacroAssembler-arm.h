@@ -1188,11 +1188,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void storeTypeTag(ImmTag tag, const Address& dest);
     void storeTypeTag(ImmTag tag, const BaseIndex& dest);
 
-    void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
-        ma_lsl(Imm32(FRAMESIZE_SHIFT), frameSizeReg, frameSizeReg);
-        ma_orr(Imm32(type), frameSizeReg);
-    }
-
     void handleFailureWithHandlerTail(void* handler);
 
     /////////////////////////////////////////////////////////////////

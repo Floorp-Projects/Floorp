@@ -164,6 +164,17 @@ MacroAssembler::callJit(Register callee)
     return ret;
 }
 
+void
+MacroAssembler::makeFrameDescriptor(Register frameSizeReg, FrameType type)
+{
+    // See JitFrames.h for a description of the frame descriptor format.
+
+    lshiftPtr(Imm32(FRAMESIZE_SHIFT), frameSizeReg);
+    // The saved-frame bit is zero for new frames. See js::SavedStacks.
+    orPtr(Imm32(type), frameSizeReg);
+}
+
+
 //}}} check_macroassembler_style
 // ===============================================================
 

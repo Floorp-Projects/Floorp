@@ -1933,7 +1933,7 @@ void
 MacroAssemblerARMCompat::callWithExitFrame(JitCode* target, Register dynStack)
 {
     ma_add(Imm32(asMasm().framePushed()), dynStack);
-    makeFrameDescriptor(dynStack, JitFrame_IonJS);
+    asMasm().makeFrameDescriptor(dynStack, JitFrame_IonJS);
     asMasm().Push(dynStack); // descriptor
 
     addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
