@@ -497,9 +497,7 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     masm.andPtr(Imm32(CalleeTokenMask), calleeTokenReg);
     masm.loadPtr(Address(calleeTokenReg, JSFunction::offsetOfNativeOrScript()), t1);
     masm.loadBaselineOrIonRaw(t1, t1, nullptr);
-    masm.ma_callJitHalfPush(t1);
-
-    uint32_t returnOffset = masm.currentOffset();
+    uint32_t returnOffset = masm.callJitNoProfiler(t1);
 
     // arg1
     //  ...
