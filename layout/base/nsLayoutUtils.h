@@ -2680,12 +2680,6 @@ public:
   static void SetScrollPositionClampingScrollPortSize(nsIPresShell* aPresShell,
                                                       CSSSize aSize);
 
-  /**
-   * Set the CSS viewport to the given size
-   * (see nsIDOMWindowUtils.setCSSViewport).
-   */
-  static void SetCSSViewport(nsIPresShell* aPresShell, CSSSize aSize);
-
   static FrameMetrics ComputeFrameMetrics(nsIFrame* aForFrame,
                                           nsIFrame* aScrollFrame,
                                           nsIContent* aContent,
