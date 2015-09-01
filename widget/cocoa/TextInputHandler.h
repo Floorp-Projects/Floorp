@@ -847,12 +847,6 @@ public:
    */
   bool IsFocused();
 
-  /**
-   * True if our view has keyboard focus (and our window is key), or if
-   * it would have keyboard focus if our window were key.
-   */
-  bool IsOrWouldBeFocused();
-
   static CFArrayRef CreateAllIMEModeList();
   static void DebugPrintAllIMEModes();
 
