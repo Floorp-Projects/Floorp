@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.b2gdroid;
 
 import java.io.ByteArrayOutputStream;
@@ -7,7 +11,6 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.KeyguardManager;
 import android.app.KeyguardManager.KeyguardLock;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -41,11 +44,14 @@ import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.util.GeckoEventListener;
 
+import org.mozilla.b2gdroid.ScreenStateObserver;
+
 public class Launcher extends Activity
                       implements GeckoEventListener, ContextGetter {
     private static final String LOGTAG = "B2G";
 
-    private ContactService mContactService;
+    private ContactService      mContactService;
+    private ScreenStateObserver mScreenStateObserver;
 
     /** ContextGetter */
     public Context getContext() {
@@ -80,6 +86,7 @@ public class Launcher extends Activity
         super.onCreate(savedInstanceState);
 
         IntentHelper.init(this);
+        mScreenStateObserver = new ScreenStateObserver(this);
 
         // Disable the default lockscreen.
         KeyguardManager keyguardManager = (KeyguardManager)getSystemService(KEYGUARD_SERVICE);
@@ -109,6 +116,7 @@ public class Launcher extends Activity
         Log.w(LOGTAG, "onDestroy");
         super.onDestroy();
         IntentHelper.destroy();
+        mScreenStateObserver = null;
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
             "Launcher:Ready");
