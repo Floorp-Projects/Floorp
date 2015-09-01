@@ -1865,31 +1865,6 @@ MacroAssemblerARM::ma_vstr(VFPRegister src, Register base, Register index, int32
     return ma_vstr(src, Address(scratch, offset), cc);
 }
 
-void
-MacroAssemblerARMCompat::buildFakeExitFrame(Register scratch, uint32_t* offset)
-{
-    DebugOnly<uint32_t> initialDepth = asMasm().framePushed();
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-
-    asMasm().Push(Imm32(descriptor)); // descriptor_
-
-    enterNoPool(2);
-    DebugOnly<uint32_t> offsetBeforePush = currentOffset();
-    asMasm().Push(pc); // actually pushes $pc + 8.
-
-    // Consume an additional 4 bytes. The start of the next instruction will
-    // then be 8 bytes after the instruction for Push(pc); this offset can
-    // therefore be fed to the safepoint.
-    ma_nop();
-    uint32_t pseudoReturnOffset = currentOffset();
-    leaveNoPool();
-
-    MOZ_ASSERT(asMasm().framePushed() == initialDepth + ExitFrameLayout::Size());
-    MOZ_ASSERT(pseudoReturnOffset - offsetBeforePush == 8);
-
-    *offset = pseudoReturnOffset;
-}
-
 bool
 MacroAssemblerARMCompat::buildOOLFakeExitFrame(void* fakeReturnAddr)
 {
@@ -5264,6 +5239,27 @@ MacroAssembler::callJitNoProfiler(Register callee)
     // first.
     call(callee);
     return currentOffset();
+}
+
+uint32_t
+MacroAssembler::pushFakeReturnAddress(Register scratch)
+{
+    // On ARM any references to the pc, adds an additional 8 to it, which
+    // correspond to 2 instructions of 4 bytes.  Thus we use an additional nop
+    // to pad until we reach the pushed pc.
+    //
+    // Note: In practice this should not be necessary, as this fake return
+    // address is never used for resuming any execution. Thus theoriticaly we
+    // could just do a Push(pc), and ignore the nop as well as the pool.
+    enterNoPool(2);
+    DebugOnly<uint32_t> offsetBeforePush = currentOffset();
+    Push(pc); // actually pushes $pc + 8.
+    ma_nop();
+    uint32_t pseudoReturnOffset = currentOffset();
+    leaveNoPool();
+
+    MOZ_ASSERT(pseudoReturnOffset - offsetBeforePush == 8);
+    return pseudoReturnOffset;
 }
 
 //}}} check_macroassembler_style

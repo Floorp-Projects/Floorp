@@ -63,27 +63,6 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
     bind(&done);
 }
 
-// Builds an exit frame on the stack, with a return address to an internal
-// non-function. Returns offset to be passed to markSafepointAt().
-void
-MacroAssemblerX86Shared::buildFakeExitFrame(Register scratch, uint32_t* offset)
-{
-    mozilla::DebugOnly<uint32_t> initialDepth = asMasm().framePushed();
-
-    CodeLabel cl;
-    mov(cl.dest(), scratch);
-
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor));
-    asMasm().Push(scratch);
-
-    bind(cl.src());
-    *offset = currentOffset();
-
-    MOZ_ASSERT(asMasm().framePushed() == initialDepth + ExitFrameLayout::Size());
-    addCodeLabel(cl);
-}
-
 void
 MacroAssembler::alignFrameForICArguments(AfterICSaveLive& aic)
 {
@@ -400,6 +379,20 @@ MacroAssembler::callJitNoProfiler(Register callee)
 {
     call(callee);
     return currentOffset();
+}
+
+uint32_t
+MacroAssembler::pushFakeReturnAddress(Register scratch)
+{
+    CodeLabel cl;
+
+    mov(cl.dest(), scratch);
+    Push(scratch);
+    bind(cl.src());
+    uint32_t retAddr = currentOffset();
+
+    addCodeLabel(cl);
+    return retAddr;
 }
 
 //}}} check_macroassembler_style

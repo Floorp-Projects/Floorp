@@ -2659,10 +2659,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label);
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label);
 
-    // Builds an exit frame on the stack, with a return address to an internal
-    // non-function. Returns offset to be passed to markSafepointAt().
-    void buildFakeExitFrame(Register scratch, uint32_t* offset);
-
     void appendCallSite(const CallSiteDesc& desc) {
         MOZ_CRASH("appendCallSite");
     }

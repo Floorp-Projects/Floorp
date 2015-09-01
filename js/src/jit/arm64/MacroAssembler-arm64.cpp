@@ -37,27 +37,6 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 }
 
 void
-MacroAssemblerCompat::buildFakeExitFrame(Register scratch, uint32_t* offset)
-{
-    mozilla::DebugOnly<uint32_t> initialDepth = framePushed();
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
-
-    asMasm().Push(Imm32(descriptor)); // descriptor_
-
-    enterNoPool(3);
-    Label fakeCallsite;
-    Adr(ARMRegister(scratch, 64), &fakeCallsite);
-    asMasm().Push(scratch);
-    bind(&fakeCallsite);
-    uint32_t pseudoReturnOffset = currentOffset();
-    leaveNoPool();
-
-    MOZ_ASSERT(framePushed() == initialDepth + ExitFrameLayout::Size());
-
-    *offset = pseudoReturnOffset;
-}
-
-void
 MacroAssembler::alignFrameForICArguments(MacroAssembler::AfterICSaveLive& aic)
 {
     // Exists for MIPS compatibility.
@@ -610,6 +589,21 @@ MacroAssembler::callJitNoProfiler(Register callee)
     // first.
     call(callee);
     return currentOffset();
+}
+
+uint32_t
+MacroAssembler::pushFakeReturnAddress(Register scratch)
+{
+    enterNoPool(3);
+    Label fakeCallsite;
+
+    Adr(ARMRegister(scratch, 64), &fakeCallsite);
+    Push(scratch);
+    bind(&fakeCallsite);
+    uint32_t pseudoReturnOffset = currentOffset();
+
+    leaveNoPool();
+    return = pseudoReturnOffset;
 }
 
 //}}} check_macroassembler_style
