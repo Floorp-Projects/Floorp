@@ -7,7 +7,10 @@
 
 [ptr] native RequestHeaderTuples(mozilla::net::RequestHeaderTuples);
 
-[uuid(3842c5e9-b5b1-400c-8eb7-936a3316ff21)]
+interface nsIPrincipal;
+interface nsIURI;
+
+[uuid(81acb360-edd2-428e-935f-300a32efb649)]
 interface nsIHttpChannelChild : nsISupports
 {
   void addCookiesToRequest();
@@ -18,4 +21,8 @@ interface nsIHttpChannelChild : nsISupports
 
   // Headers that the channel client has set via SetRequestHeader.
   readonly attribute RequestHeaderTuples clientSetRequestHeaders;
+
+  // This method is called by nsCORSListenerProxy if we need to remove
+  // an entry from the CORS preflight cache in the parent process.
+  void removeCorsPreflightCacheEntry(in nsIURI aURI, in nsIPrincipal aRequestingPrincipal);
 };

@@ -34,6 +34,7 @@
 #include "nsIHttpHeaderVisitor.h"
 #include "nsQueryObject.h"
 #include "mozilla/BasePrincipal.h"
+#include "nsCORSListenerProxy.h"
 
 using mozilla::BasePrincipal;
 using mozilla::OriginAttributes;
@@ -937,6 +938,24 @@ HttpChannelParent::DivertComplete()
   }
 
   mParentListener = nullptr;
+}
+
+bool
+HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(const URIParams& uri,
+  const mozilla::ipc::PrincipalInfo& requestingPrincipal)
+{
+  nsCOMPtr<nsIURI> deserializedURI = DeserializeURI(uri);
+  if (!deserializedURI) {
+    return false;
+  }
+  nsCOMPtr<nsIPrincipal> principal =
+    PrincipalInfoToPrincipal(requestingPrincipal);
+  if (!principal) {
+    return false;
+  }
+  nsCORSListenerProxy::RemoveFromCorsPreflightCache(deserializedURI,
+                                                    principal);
+  return true;
 }
 
 //-----------------------------------------------------------------------------

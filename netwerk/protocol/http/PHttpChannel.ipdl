@@ -8,6 +8,7 @@
 include protocol PNecko;
 include InputStreamParams;
 include URIParams;
+include PBackgroundSharedTypes;
 
 include protocol PBlob; //FIXME: bug #792908
 
@@ -78,6 +79,11 @@ parent:
 
   // Child has no more events/messages to divert to the parent.
   DivertComplete();
+
+  // Child has detected a CORS check failure, so needs to tell the parent
+  // to remove any matching entry from the CORS preflight cache.
+  RemoveCorsPreflightCacheEntry(URIParams uri,
+                                PrincipalInfo requestingPrincipal);
 
   __delete__();
 

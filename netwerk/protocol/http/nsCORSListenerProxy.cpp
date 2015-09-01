@@ -10,6 +10,7 @@
 #include "nsCORSListenerProxy.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelChild.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsError.h"
 #include "nsContentUtils.h"
@@ -501,15 +502,24 @@ nsCORSListenerProxy::OnStartRequest(nsIRequest* aRequest,
   nsresult rv = CheckRequestApproved(aRequest);
   mRequestApproved = NS_SUCCEEDED(rv);
   if (!mRequestApproved) {
-    if (sPreflightCache) {
-      nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-      if (channel) {
-        nsCOMPtr<nsIURI> uri;
-        NS_GetFinalChannelURI(channel, getter_AddRefs(uri));
-        if (uri) {
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+    if (channel) {
+      nsCOMPtr<nsIURI> uri;
+      NS_GetFinalChannelURI(channel, getter_AddRefs(uri));
+      if (uri) {
+        if (sPreflightCache) {
           // OK to use mRequestingPrincipal since preflights never get
           // redirected.
           sPreflightCache->RemoveEntries(uri, mRequestingPrincipal);
+        } else {
+          nsCOMPtr<nsIHttpChannelChild> httpChannelChild =
+            do_QueryInterface(channel);
+          if (httpChannelChild) {
+            rv = httpChannelChild->RemoveCorsPreflightCacheEntry(uri, mRequestingPrincipal);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
+          }
         }
       }
     }
@@ -732,13 +742,22 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
       !NS_IsHSTSUpgradeRedirect(aOldChannel, aNewChannel, aFlags)) {
     rv = CheckRequestApproved(aOldChannel);
     if (NS_FAILED(rv)) {
-      if (sPreflightCache) {
-        nsCOMPtr<nsIURI> oldURI;
-        NS_GetFinalChannelURI(aOldChannel, getter_AddRefs(oldURI));
-        if (oldURI) {
+      nsCOMPtr<nsIURI> oldURI;
+      NS_GetFinalChannelURI(aOldChannel, getter_AddRefs(oldURI));
+      if (oldURI) {
+        if (sPreflightCache) {
           // OK to use mRequestingPrincipal since preflights never get
           // redirected.
           sPreflightCache->RemoveEntries(oldURI, mRequestingPrincipal);
+        } else {
+          nsCOMPtr<nsIHttpChannelChild> httpChannelChild =
+            do_QueryInterface(aOldChannel);
+          if (httpChannelChild) {
+            rv = httpChannelChild->RemoveCorsPreflightCacheEntry(oldURI, mRequestingPrincipal);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
+          }
         }
       }
       aOldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
@@ -1258,6 +1277,16 @@ NS_IMETHODIMP
 nsCORSPreflightListener::GetInterface(const nsIID & aIID, void **aResult)
 {
   return QueryInterface(aIID, aResult);
+}
+
+void
+nsCORSListenerProxy::RemoveFromCorsPreflightCache(nsIURI* aURI,
+                                                  nsIPrincipal* aRequestingPrincipal)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (sPreflightCache) {
+    sPreflightCache->RemoveEntries(aURI, aRequestingPrincipal);
+  }
 }
 
 nsresult
