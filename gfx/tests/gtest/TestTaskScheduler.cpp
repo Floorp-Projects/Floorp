@@ -37,7 +37,7 @@ struct SanityChecker {
   std::vector<uint64_t> mAdvancements;
   mozilla::gfx::CriticalSection mSection;
 
-  SanityChecker(uint64_t aNumCmdBuffers)
+  explicit SanityChecker(uint64_t aNumCmdBuffers)
   {
     for (uint32_t i = 0; i < aNumCmdBuffers; ++i) {
       mAdvancements.push_back(0);
@@ -57,7 +57,7 @@ struct SanityChecker {
 struct JoinTestSanityCheck : public SanityChecker {
   bool mSpecialTaskHasRun;
 
-  JoinTestSanityCheck(uint64_t aNumCmdBuffers)
+  explicit JoinTestSanityCheck(uint64_t aNumCmdBuffers)
   : SanityChecker(aNumCmdBuffers)
   , mSpecialTaskHasRun(false)
   {}

@@ -40,7 +40,7 @@ class A : public Base {
 public:
   virtual A* AsA() override { return this; }
 
-  A(uint64_t val) : mVal(val) {}
+  explicit A(uint64_t val) : mVal(val) {}
   ~A() { ++sDtorItemA; }
 
   uint64_t mVal;
@@ -50,7 +50,7 @@ class B : public Base {
 public:
   virtual B* AsB() override { return this; }
 
-  B(const string& str) : mVal(str) {}
+  explicit B(const string& str) : mVal(str) {}
   ~B() { ++sDtorItemB; }
 
   std::string mVal;
@@ -60,7 +60,7 @@ struct BigStruct {
   uint64_t mVal;
   uint8_t data[120];
 
-  BigStruct(uint64_t val) : mVal(val) {}
+  explicit BigStruct(uint64_t val) : mVal(val) {}
 };
 
 void TestArenaAlloc(IterableArena::ArenaType aType)
