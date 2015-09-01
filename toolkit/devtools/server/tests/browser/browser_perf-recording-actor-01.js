@@ -66,6 +66,7 @@ add_task(function*() {
   checkSystemInfo(importedModel, "Host");
   checkSystemInfo(importedModel, "Client");
 
+  yield front.destroy();
   yield closeDebuggerClient(client);
   gBrowser.removeCurrentTab();
 });
