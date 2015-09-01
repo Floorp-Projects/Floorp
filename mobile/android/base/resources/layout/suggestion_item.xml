@@ -12,11 +12,12 @@
               android:clickable="true"
               android:padding="7dp">
 
-    <ImageView android:id="@+id/suggestion_magnifier"
-               android:src="@drawable/search_icon_inactive"
+    <ImageView android:id="@+id/suggestion_item_icon"
+               android:src="@drawable/icon_most_recent_empty"
                android:layout_marginRight="3dip"
-               android:layout_width="16dip"
-               android:layout_height="16dip"/>
+               android:layout_width="18dip"
+               android:layout_height="18dip"
+               android:visibility="gone"/>
 
     <TextView android:id="@+id/suggestion_text"
               android:layout_width="wrap_content"
