@@ -20,6 +20,7 @@ EXPORTS.mozilla.gfx += [
     'Blur.h',
     'BorrowedContext.h',
     'Coord.h',
+    'CriticalSection.h',
     'DataSurfaceHelpers.h',
     'DrawTargetTiled.h',
     'Filters.h',

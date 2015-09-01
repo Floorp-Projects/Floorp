@@ -50,7 +50,7 @@ MultiThreadedTaskQueue::PopTask(Task*& aOutTask, AccessType aAccess)
   for (;;) {
     while (aAccess == BLOCKING && mTasks.empty()) {
       {
-        MutexAutoLock lock(&mMutex);
+        CriticalSectionAutoEnter lock(&mSection);
         if (mShuttingDown) {
           return false;
         }
@@ -60,7 +60,7 @@ MultiThreadedTaskQueue::PopTask(Task*& aOutTask, AccessType aAccess)
       ::WaitForMultipleObjects(2, handles, FALSE, INFINITE);
     }
 
-    MutexAutoLock lock(&mMutex);
+    CriticalSectionAutoEnter lock(&mSection);
 
     if (mShuttingDown) {
       return false;
@@ -92,7 +92,7 @@ MultiThreadedTaskQueue::SubmitTask(Task* aTask)
 {
   MOZ_ASSERT(aTask);
   MOZ_ASSERT(aTask->GetTaskQueue() == this);
-  MutexAutoLock lock(&mMutex);
+  CriticalSectionAutoEnter lock(&mSection);
   mTasks.push_back(aTask);
   ::SetEvent(mAvailableEvent);
 }
@@ -101,7 +101,7 @@ void
 MultiThreadedTaskQueue::ShutDown()
 {
   {
-    MutexAutoLock lock(&mMutex);
+    CriticalSectionAutoEnter lock(&mSection);
     mShuttingDown = true;
   }
   while (mThreadsCount) {
@@ -113,14 +113,14 @@ MultiThreadedTaskQueue::ShutDown()
 size_t
 MultiThreadedTaskQueue::NumTasks()
 {
-  MutexAutoLock lock(&mMutex);
+  CriticalSectionAutoEnter lock(&mSection);
   return mTasks.size();
 }
 
 bool
 MultiThreadedTaskQueue::IsEmpty()
 {
-  MutexAutoLock lock(&mMutex);
+  CriticalSectionAutoEnter lock(&mSection);
   return mTasks.empty();
 }
 
@@ -133,7 +133,7 @@ MultiThreadedTaskQueue::RegisterThread()
 void
 MultiThreadedTaskQueue::UnregisterThread()
 {
-  MutexAutoLock lock(&mMutex);
+  CriticalSectionAutoEnter lock(&mSection);
   mThreadsCount -= 1;
   if (mThreadsCount == 0) {
     ::SetEvent(mShutdownEvent);
