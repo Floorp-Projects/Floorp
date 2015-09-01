@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+"use strict";
+
+function backgroundScript() {
+  browser.runtime.onConnect.addListener(port => {
+    browser.test.assertEq(port.name, "ernie", "port name correct");
+    port.onDisconnect.addListener(() => {
+      browser.test.sendMessage("disconnected");
+    });
+    browser.test.sendMessage("connected");
+  });
+}
+
+function contentScript() {
+  browser.runtime.connect({name: "ernie"});
+}
+
+let extensionData = {
+  background: "(" + backgroundScript.toString() + ")()",
+  manifest: {
+    "permissions": ["tabs"],
+    "content_scripts": [{
+      "matches": ["http://mochi.test/*/file_sample.html"],
+      "js": ["content_script.js"],
+      "run_at": "document_start"
+    }]
+  },
+
+  files: {
+    "content_script.js": "(" + contentScript.toString() + ")()",
+  },
+};
+
+add_task(function* test_contentscript() {
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  info("extension loaded");
+
+  let win = window.open("file_sample.html");
+  yield Promise.all([waitForLoad(win), extension.awaitMessage("connected")]);
+  win.close();
+  yield extension.awaitMessage("disconnected");
+
+  info("win.close() succeeded");
+
+  win = window.open("file_sample.html");
+  yield Promise.all([waitForLoad(win), extension.awaitMessage("connected")]);
+
+  // Add an "unload" listener so that we don't put the window in the
+  // bfcache. This way it gets destroyed immediately upon navigation.
+  win.addEventListener("unload", function() {});
+
+  win.location = "http://example.com";
+  yield extension.awaitMessage("disconnected");
+  win.close();
+
+  yield extension.unload();
+  info("extension unloaded");
+});
+</script>
+
+</body>
+</html>

@@ -370,6 +370,9 @@ function Port(context, messageManager, name, id, sender)
   this.disconnectName = `Extension:Disconnect-${this.id}`;
   this.sender = sender;
   this.disconnected = false;
+
+  this.messageManager.addMessageListener(this.disconnectName, this, true);
+  this.disconnectListeners = new Set();
 }
 
 Port.prototype = {
@@ -397,9 +400,9 @@ Port.prototype = {
           }
         };
 
-        this.messageManager.addMessageListener(this.disconnectName, listener, true);
+        this.disconnectListeners.add(listener);
         return () => {
-          this.messageManager.removeMessageListener(this.disconnectName, listener);
+          this.disconnectListeners.delete(listener);
         };
       }).api(),
       onMessage: new EventManager(this.context, "Port.onMessage", fire => {
@@ -424,9 +427,31 @@ Port.prototype = {
     return portObj;
   },
 
-  disconnect() {
+  handleDisconnection() {
+    this.messageManager.removeMessageListener(this.disconnectName, this);
     this.context.forgetOnClose(this);
-    this.disconnect = true;
+    this.disconnected = true;
+  },
+
+  receiveMessage(msg) {
+    if (msg.name == this.disconnectName) {
+      if (this.disconnected) {
+        return;
+      }
+
+      for (let listener of this.disconnectListeners) {
+        listener();
+      }
+
+      this.handleDisconnection();
+    }
+  },
+
+  disconnect() {
+    if (this.disconnected) {
+      throw "Attempt to disconnect() a disconnected port";
+    }
+    this.handleDisconnection();
     this.messageManager.sendAsyncMessage(this.disconnectName);
   },
 
