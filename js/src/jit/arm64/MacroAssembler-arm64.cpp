@@ -625,6 +625,18 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
     callWithABIPost(stackAdjust, result);
 }
 
+// ===============================================================
+// Jit Frames.
+
+uint32_t
+MacroAssembler::callJitNoProfiler(Register callee)
+{
+    // The return address is pushed by callee, which pushes the link register
+    // first.
+    call(callee);
+    return currentOffset();
+}
+
 //}}} check_macroassembler_style
 
 } // namespace jit

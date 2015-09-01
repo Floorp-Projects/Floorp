@@ -11453,7 +11453,7 @@ GenerateFFIIonExit(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& exit
     }
 
     AssertStackAlignment(masm, JitStackAlignment, sizeOfRetAddr);
-    masm.callJitFromAsmJS(callee);
+    masm.callJitNoProfiler(callee);
     AssertStackAlignment(masm, JitStackAlignment, sizeOfRetAddr);
 
     {

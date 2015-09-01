@@ -303,7 +303,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     masm.assertStackAlignment(JitStackAlignment, sizeof(uintptr_t));
 
     // Call the function with pushing return address to stack.
-    masm.ma_callJitHalfPush(reg_code);
+    masm.callJitNoProfiler(reg_code);
 
     if (type == EnterJitBaseline) {
         // Baseline OSR will return here.

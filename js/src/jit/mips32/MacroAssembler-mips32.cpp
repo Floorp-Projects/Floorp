@@ -1561,13 +1561,6 @@ MacroAssemblerMIPSCompat::callWithExitFrame(JitCode* target, Register dynStack)
 }
 
 void
-MacroAssemblerMIPSCompat::callJit(Register callee)
-{
-    MOZ_ASSERT((asMasm().framePushed() & 7) == 4);
-    ma_callJitHalfPush(callee);
-}
-
-void
 MacroAssemblerMIPSCompat::add32(Register src, Register dest)
 {
     as_addu(dest, dest, src);
@@ -3620,6 +3613,19 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
     callWithABIPre(&stackAdjust);
     call(t9);
     callWithABIPost(stackAdjust, result);
+}
+
+// ===============================================================
+// Jit Frames.
+
+uint32_t
+MacroAssembler::callJitNoProfiler(Register callee)
+{
+    // This is a MIPS hack to push return address during jalr delay slot.
+    as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
+    as_jalr(callee);
+    as_sw(ra, StackPointer, 0);
+    return currentOffset();
 }
 
 //}}} check_macroassembler_style

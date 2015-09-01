@@ -152,6 +152,18 @@ MacroAssembler::signature() const
 #endif
 }
 
+// ===============================================================
+// Jit Frames.
+
+uint32_t
+MacroAssembler::callJit(Register callee)
+{
+    profilerPreCall();
+    uint32_t ret = callJitNoProfiler(callee);
+    profilerPostReturn();
+    return ret;
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

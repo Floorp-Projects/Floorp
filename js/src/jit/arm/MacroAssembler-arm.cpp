@@ -1949,13 +1949,6 @@ MacroAssemblerARMCompat::callWithExitFrame(JitCode* target, Register dynStack)
 }
 
 void
-MacroAssemblerARMCompat::callJit(Register callee)
-{
-    MOZ_ASSERT((asMasm().framePushed() & 7) == 4);
-    ma_callJitHalfPush(callee);
-}
-
-void
 MacroAssembler::alignFrameForICArguments(AfterICSaveLive& aic)
 {
     // Exists for MIPS compatibility.
@@ -5305,6 +5298,18 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
     callWithABIPre(&stackAdjust);
     call(r12);
     callWithABIPost(stackAdjust, result);
+}
+
+// ===============================================================
+// Jit Frames.
+
+uint32_t
+MacroAssembler::callJitNoProfiler(Register callee)
+{
+    // The return address is pushed by callee, which pushes the link register
+    // first.
+    call(callee);
+    return currentOffset();
 }
 
 //}}} check_macroassembler_style
