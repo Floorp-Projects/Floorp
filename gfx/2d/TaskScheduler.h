@@ -15,11 +15,14 @@
 #include "mozilla/gfx/TaskScheduler_posix.h"
 #endif
 
+#include <vector>
+
 namespace mozilla {
 namespace gfx {
 
 class MultiThreadedTaskQueue;
 class SyncObject;
+class WorkerThread;
 
 class TaskScheduler {
 public:
@@ -209,6 +212,20 @@ protected:
     Mutex* mMutex;
 };
 
+/// Base class for worker threads.
+class WorkerThread
+{
+public:
+  static WorkerThread* Create(MultiThreadedTaskQueue* aTaskQueue);
+
+  virtual ~WorkerThread() {}
+
+  void Run();
+protected:
+  WorkerThread(MultiThreadedTaskQueue* aTaskQueue);
+
+  MultiThreadedTaskQueue* mQueue;
+};
 
 } // namespace
 } // namespace
