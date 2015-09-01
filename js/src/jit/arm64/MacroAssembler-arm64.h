@@ -207,9 +207,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         vixl::MacroAssembler::Pop(r0, r1, r2, r3);
     }
 
-    void pushReturnAddress() {
-        push(lr);
-    }
     void pop(const ValueOperand& v) {
         pop(v.valueReg());
     }
@@ -2666,8 +2663,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void callExit(AsmJSImmPtr imm, uint32_t stackArgBytes) {
         MOZ_CRASH("callExit");
     }
-
-    void callAndPushReturnAddress(Label* label);
 
     void profilerEnterFrame(Register framePtr, Register scratch) {
         AbsoluteAddress activation(GetJitContext()->runtime->addressOfProfilingActivation());

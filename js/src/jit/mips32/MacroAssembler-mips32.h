@@ -375,10 +375,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         MOZ_CRASH("NYI-IC");
     }
 
-    void callAndPushReturnAddress(Label* label) {
-        ma_callJitHalfPush(label);
-    }
-
     void branch(JitCode* c) {
         BufferOffset bo = m_buffer.nextOffset();
         addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);

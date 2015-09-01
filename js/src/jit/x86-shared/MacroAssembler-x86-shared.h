@@ -1473,8 +1473,6 @@ class MacroAssemblerX86Shared : public Assembler
         lea(Operand(address), dest);
     }
 
-    void callAndPushReturnAddress(Label* label);
-
     void checkStackAlignment() {
         // Exists for ARM compatibility.
     }

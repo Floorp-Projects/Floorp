@@ -242,25 +242,6 @@ MacroAssemblerCompat::branchValueIsNurseryObject(Condition cond, ValueOperand va
 }
 
 void
-MacroAssemblerCompat::callAndPushReturnAddress(Label* label)
-{
-    // FIXME: Jandem said he would refactor the code to avoid making
-    // this instruction required, but probably forgot about it.
-    // Instead of implementing this function, we should make it unnecessary.
-    Label ret;
-    {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratch64 = temps.AcquireX();
-
-        Adr(scratch64, &ret);
-        asMasm().Push(scratch64.asUnsized());
-    }
-
-    Bl(label);
-    bind(&ret);
-}
-
-void
 MacroAssemblerCompat::breakpoint()
 {
     static int code = 0xA77;
@@ -469,6 +450,12 @@ MacroAssembler::call(JitCode* c)
     blr(scratch64);
 }
 
+void
+MacroAssembler::pushReturnAddress()
+{
+    push(lr);
+}
+
 // ===============================================================
 // ABI function calls.
 
@@ -581,15 +568,6 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
 
 // ===============================================================
 // Jit Frames.
-
-uint32_t
-MacroAssembler::callJitNoProfiler(Register callee)
-{
-    // The return address is pushed by callee, which pushes the link register
-    // first.
-    call(callee);
-    return currentOffset();
-}
 
 uint32_t
 MacroAssembler::pushFakeReturnAddress(Register scratch)
