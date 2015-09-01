@@ -63,6 +63,8 @@ class SVGContentUtils
 {
 public:
   typedef mozilla::gfx::Float Float;
+  typedef mozilla::gfx::Matrix Matrix;
+  typedef mozilla::gfx::Rect Rect;
   typedef mozilla::gfx::StrokeOptions StrokeOptions;
   typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
   typedef mozilla::SVGPreserveAspectRatio SVGPreserveAspectRatio;
@@ -180,7 +182,23 @@ public:
                                   const char16_t **aParams,
                                   uint32_t aParamsLength);
 
-  static mozilla::gfx::Matrix GetCTM(nsSVGElement *aElement, bool aScreenCTM);
+  static Matrix GetCTM(nsSVGElement *aElement, bool aScreenCTM);
+
+  /**
+   * Gets the tight bounds-space stroke bounds of the non-scaling-stroked rect
+   * aRect.
+   * @param aToBoundsSpace transforms from source space to the space aBounds
+   *        should be computed in.  Must be rectilinear.
+   * @param aToNonScalingStrokeSpace transforms from source
+   *        space to the space in which non-scaling stroke should be applied.
+   *        Must be rectilinear.
+   */
+  static void
+  RectilinearGetStrokeBounds(const Rect& aRect,
+                             const Matrix& aToBoundsSpace,
+                             const Matrix& aToNonScalingStrokeSpace,
+                             float aStrokeWidth,
+                             Rect* aBounds);
 
   /**
    * Check if this is one of the SVG elements that SVG 1.1 Full says
@@ -205,13 +223,13 @@ public:
 
   /* Generate a viewbox to viewport tranformation matrix */
 
-  static mozilla::gfx::Matrix
+  static Matrix
   GetViewBoxTransform(float aViewportWidth, float aViewportHeight,
                       float aViewboxX, float aViewboxY,
                       float aViewboxWidth, float aViewboxHeight,
                       const SVGAnimatedPreserveAspectRatio &aPreserveAspectRatio);
 
-  static mozilla::gfx::Matrix
+  static Matrix
   GetViewBoxTransform(float aViewportWidth, float aViewportHeight,
                       float aViewboxX, float aViewboxY,
                       float aViewboxWidth, float aViewboxHeight,
