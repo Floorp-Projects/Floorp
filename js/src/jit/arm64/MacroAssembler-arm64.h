@@ -2640,12 +2640,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     void handleFailureWithHandlerTail(void* handler);
 
-    // FIXME: This is the same on all platforms. Can be common code?
-    void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
-        lshiftPtr(Imm32(FRAMESIZE_SHIFT), frameSizeReg);
-        orPtr(Imm32(type), frameSizeReg);
-    }
-
     // FIXME: See CodeGeneratorX64 calls to noteAsmJSGlobalAccess.
     void patchAsmJSGlobalAccess(CodeOffsetLabel patchAt, uint8_t* code,
                                 uint8_t* globalData, unsigned globalDataOffset)

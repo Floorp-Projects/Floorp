@@ -311,7 +311,7 @@ void
 MacroAssemblerX64::callWithExitFrame(JitCode* target, Register dynStack)
 {
     addPtr(Imm32(asMasm().framePushed()), dynStack);
-    makeFrameDescriptor(dynStack, JitFrame_IonJS);
+    asMasm().makeFrameDescriptor(dynStack, JitFrame_IonJS);
     asMasm().Push(dynStack);
     asMasm().call(target);
 }

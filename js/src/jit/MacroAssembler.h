@@ -581,6 +581,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     uint32_t callJitNoProfiler(Register callee) PER_SHARED_ARCH;
     inline uint32_t callJit(Register callee);
 
+    // The frame descriptor is the second field of all Jit frames, pushed before
+    // calling the Jit function.  It is a composite value defined in JitFrames.h
+    inline void makeFrameDescriptor(Register frameSizeReg, FrameType type);
+
     //}}} check_macroassembler_style
   public:
 
