@@ -9060,7 +9060,7 @@
     "high": "100",
     "n_buckets": "20",
     "description": "Proportion (%) of reschedulings of the main process to another CPU during the execution of code inside a JS compartment. Updated while we are measuring jank."
-  }
+  },
   "VIDEO_EME_ADOBE_INSTALL_FAILED_REASON": {
     "alert_emails": ["edwin@mozilla.com"],
     "expires_in_version": "50",
@@ -9084,5 +9084,5 @@
     "n_values": 10,
     "releaseChannelCollection": "opt-out",
     "description": "Reason for reporting the Adobe CDM to be unsupported. (1 = NOT_WINDOWS; 2 = WINDOWS_VERSION)"
-  },
+  }
 }
