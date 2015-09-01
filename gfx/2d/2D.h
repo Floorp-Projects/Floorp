@@ -19,8 +19,6 @@
 // to be able to hold on to a GLContext.
 #include "mozilla/GenericRefCounted.h"
 
-#include "mozilla/Atomics.h"
-
 // This RefPtr class isn't ideal for usage in Azure, as it doesn't allow T**
 // outparams using the &-operator. But it will have to do as there's no easy
 // solution.
@@ -375,15 +373,14 @@ class DataSourceSurface : public SourceSurface
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurface, override)
   DataSourceSurface()
-    : mMapCount(0)
-    , mIsReadMap(false)
+    : mIsMapped(false)
   {
   }
 
 #ifdef DEBUG
   virtual ~DataSourceSurface()
   {
-    MOZ_ASSERT(mMapCount == 0, "Someone forgot to call Unmap()");
+    MOZ_ASSERT(!mIsMapped, "Someone forgot to call Unmap()");
   }
 #endif
 
@@ -461,22 +458,18 @@ public:
   /**
    * The caller is responsible for ensuring aMappedSurface is not null.
    */
-  virtual bool Map(MapType aMapType, MappedSurface *aMappedSurface)
+  virtual bool Map(MapType, MappedSurface *aMappedSurface)
   {
     aMappedSurface->mData = GetData();
     aMappedSurface->mStride = Stride();
-    if (!aMappedSurface->mData) {
-      return false;
-    }
-    mMapCount++;
-    mIsReadMap = aMapType == MapType::READ;
-    return true;
+    mIsMapped = !!aMappedSurface->mData;
+    return mIsMapped;
   }
 
   virtual void Unmap()
   {
-    MOZ_ASSERT(mMapCount > 0);
-    mMapCount--;
+    MOZ_ASSERT(mIsMapped);
+    mIsMapped = false;
   }
 
   /**
@@ -486,8 +479,7 @@ public:
   virtual already_AddRefed<DataSourceSurface> GetDataSurface() override;
 
 protected:
-  Atomic<int32_t> mMapCount;
-  DebugOnly<bool> mIsReadMap;
+  bool mIsMapped;
 };
 
 /** This is an abstract object that accepts path segments. */

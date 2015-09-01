@@ -255,8 +255,7 @@ DataSourceSurfaceD2DTarget::Map(MapType aMapType, MappedSurface *aMappedSurface)
 {
   // DataSourceSurfaces used with the new Map API should not be used with GetData!!
   MOZ_ASSERT(!mMapped);
-  // XXX - Add support for multiple readmaps here!
-  MOZ_ASSERT(mMapCount == 0);
+  MOZ_ASSERT(!mIsMapped);
 
   if (!mTexture) {
     return false;
@@ -281,25 +280,19 @@ DataSourceSurfaceD2DTarget::Map(MapType aMapType, MappedSurface *aMappedSurface)
     return false;
   }
 
-  if (!aMappedSurface->mData) {
-    return false;
-  }
-
   aMappedSurface->mData = (uint8_t*)map.pData;
   aMappedSurface->mStride = map.RowPitch;
+  mIsMapped = !!aMappedSurface->mData;
 
-  mMapCount++;
-  mIsReadMap = aMapType == MapType::READ;
-
-  return true;
+  return mIsMapped;
 }
 
 void
 DataSourceSurfaceD2DTarget::Unmap()
 {
-  MOZ_ASSERT(mMapCount > 0);
+  MOZ_ASSERT(mIsMapped);
 
-  mMapCount--;
+  mIsMapped = false;
   mTexture->Unmap(0);
 }
 
@@ -307,7 +300,7 @@ void
 DataSourceSurfaceD2DTarget::EnsureMapped()
 {
   // Do not use GetData() after having used Map!
-  MOZ_ASSERT(mMapCount == 0);
+  MOZ_ASSERT(!mIsMapped);
   if (!mMapped) {
     HRESULT hr = mTexture->Map(0, D3D10_MAP_READ, 0, &mMap);
     if (FAILED(hr)) {

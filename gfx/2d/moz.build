@@ -20,13 +20,11 @@ EXPORTS.mozilla.gfx += [
     'Blur.h',
     'BorrowedContext.h',
     'Coord.h',
-    'CriticalSection.h',
     'DataSurfaceHelpers.h',
     'DrawTargetTiled.h',
     'Filters.h',
     'Helpers.h',
     'HelpersCairo.h',
-    'IterableArena.h',
     'Logging.h',
     'Matrix.h',
     'NumericTools.h',
@@ -40,9 +38,6 @@ EXPORTS.mozilla.gfx += [
     'ScaleFactors2D.h',
     'SourceSurfaceCairo.h',
     'StackArray.h',
-    'TaskScheduler.h',
-    'TaskScheduler_posix.h',
-    'TaskScheduler_win32.h',
     'Tools.h',
     'Types.h',
     'UserData.h',
@@ -72,14 +67,8 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'SourceSurfaceD2D.cpp',
         'SourceSurfaceD2D1.cpp',
         'SourceSurfaceD2DTarget.cpp',
-        'TaskScheduler_win32.cpp',
     ]
     DEFINES['WIN32'] = True
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'windows':
-    SOURCES += [
-        'TaskScheduler_posix.cpp',
-    ]
 
 if CONFIG['MOZ_ENABLE_SKIA']:
     UNIFIED_SOURCES += [
@@ -129,7 +118,6 @@ UNIFIED_SOURCES += [
     'DataSourceSurface.cpp',
     'DataSurfaceHelpers.cpp',
     'DrawEventRecorder.cpp',
-    'DrawingTask.cpp',
     'DrawTarget.cpp',
     'DrawTargetCairo.cpp',
     'DrawTargetCapture.cpp',
@@ -152,7 +140,6 @@ UNIFIED_SOURCES += [
     'ScaledFontCairo.cpp',
     'SourceSurfaceCairo.cpp',
     'SourceSurfaceRawData.cpp',
-    'TaskScheduler.cpp',
 ]
 
 SOURCES += [
