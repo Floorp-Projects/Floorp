@@ -1125,11 +1125,6 @@ public:
     void callWithExitFrame(JitCode* target);
     void callWithExitFrame(JitCode* target, Register dynStack);
 
-    // Makes a call using the only two methods that it is sane for indep code
-    // to make a call.
-    void callJit(Register callee);
-    void callJitFromAsmJS(Register callee) { callJit(callee); }
-
     void add32(Register src, Register dest);
     void add32(Imm32 imm, Register dest);
     void add32(Imm32 imm, const Address& dest);

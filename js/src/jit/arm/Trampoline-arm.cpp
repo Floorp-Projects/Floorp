@@ -348,7 +348,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     masm.assertStackAlignment(JitStackAlignment, sizeof(uintptr_t));
 
     // Call the function.
-    masm.ma_callJitHalfPush(r0);
+    masm.callJitNoProfiler(r0);
 
     if (type == EnterJitBaseline) {
         // Baseline OSR will return here.

@@ -2673,22 +2673,12 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void callWithExitFrame(JitCode* target);
     void callWithExitFrame(JitCode* target, Register dynStack);
 
-    void callJit(Register callee) {
-        // AArch64 cannot read from the PC, so pushing must be handled callee-side.
-        syncStackPtr();
-        Blr(ARMRegister(callee, 64));
-    }
-
     void appendCallSite(const CallSiteDesc& desc) {
         MOZ_CRASH("appendCallSite");
     }
 
     void callExit(AsmJSImmPtr imm, uint32_t stackArgBytes) {
         MOZ_CRASH("callExit");
-    }
-
-    void callJitFromAsmJS(Register reg) {
-        Blr(ARMRegister(reg, 64));
     }
 
     void callAndPushReturnAddress(Label* label);
