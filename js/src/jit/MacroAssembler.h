@@ -577,6 +577,29 @@ class MacroAssembler : public MacroAssemblerSpecific
     // calling the Jit function.  It is a composite value defined in JitFrames.h
     inline void makeFrameDescriptor(Register frameSizeReg, FrameType type);
 
+    // Push the frame descriptor, based on the statically known framePushed.
+    inline void pushStaticFrameDescriptor(FrameType type);
+
+    // This function emulates a call by pushing an exit frame on the stack,
+    // except that the fake-function is inlined within the body of the caller.
+    //
+    // This function assumes that the current frame is an IonJS frame.
+    //
+    // This function returns the offset of the /fake/ return address, in order to use
+    // the return address to index the safepoints, which are used to list all
+    // live registers.
+    //
+    // This function should be balanced with a call to adjustStack, to pop the
+    // exit frame and emulate the return statement of the inlined function.
+    inline uint32_t buildFakeExitFrame(Register scratch);
+
+  private:
+    // This function is used by buildFakeExitFrame to push a fake return address
+    // on the stack. This fake return address should never be used for resuming
+    // any execution, and can even be an invalid pointer into the instruction
+    // stream, as long as it does not alias any other.
+    uint32_t pushFakeReturnAddress(Register scratch) PER_SHARED_ARCH;
+
     //}}} check_macroassembler_style
   public:
 
