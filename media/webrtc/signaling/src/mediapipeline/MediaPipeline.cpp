@@ -953,38 +953,47 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
   // channels (since the WebRTC.org code below makes the assumption that the
   // input audio is either mono or stereo).
   uint32_t outputChannels = chunk.ChannelCount() == 1 ? 1 : 2;
-  // XXX[padenot] We could remove this allocation for the common case, or stick
-  // it on the object so it only happens once.
-  nsAutoArrayPtr<int16_t> convertedSamples(
-      new int16_t[chunk.mDuration * outputChannels]);
+  const int16_t* samples = nullptr;
+  nsAutoArrayPtr<int16_t> convertedSamples;
 
   // If this track is not enabled, simply ignore the data in the chunk.
   if (!enabled_) {
     chunk.mBufferFormat = AUDIO_FORMAT_SILENCE;
   }
 
-  switch (chunk.mBufferFormat) {
-      case AUDIO_FORMAT_FLOAT32:
-        DownmixAndInterleave(chunk.ChannelData<float>(),
-                             chunk.mDuration, chunk.mVolume, outputChannels,
-                             convertedSamples.get());
-        break;
-      case AUDIO_FORMAT_S16:
-        DownmixAndInterleave(chunk.ChannelData<int16_t>(),
-                             chunk.mDuration, chunk.mVolume, outputChannels,
-                             convertedSamples.get());
-        break;
-      case AUDIO_FORMAT_SILENCE:
-        PodZero(convertedSamples.get(), chunk.mDuration * outputChannels);
-        break;
+  // We take advantage of the fact that the common case (microphone directly to
+  // PeerConnection, that is, a normal call), the samples are already 16-bits
+  // mono, so the representation in interleaved and planar is the same, and we
+  // can just use that.
+  if (outputChannels == 1 && chunk.mBufferFormat == AUDIO_FORMAT_S16) {
+    samples = chunk.ChannelData<int16_t>().Elements()[0];
+  } else {
+    convertedSamples = new int16_t[chunk.mDuration * outputChannels];
+
+    switch (chunk.mBufferFormat) {
+        case AUDIO_FORMAT_FLOAT32:
+          DownmixAndInterleave(chunk.ChannelData<float>(),
+                               chunk.mDuration, chunk.mVolume, outputChannels,
+                               convertedSamples.get());
+          break;
+        case AUDIO_FORMAT_S16:
+          DownmixAndInterleave(chunk.ChannelData<int16_t>(),
+                               chunk.mDuration, chunk.mVolume, outputChannels,
+                               convertedSamples.get());
+          break;
+        case AUDIO_FORMAT_SILENCE:
+          PodZero(convertedSamples.get(), chunk.mDuration * outputChannels);
+          break;
+    }
+    samples = convertedSamples.get();
   }
 
   MOZ_ASSERT(!(rate%100)); // rate should be a multiple of 100
 
   // Check if the rate or the number of channels has changed since the last time
-  // we came through I realize it may be overkill to check if the rate has
+  // we came through. I realize it may be overkill to check if the rate has
   // changed, but I believe it is possible (e.g. if we change sources) and it
-  // costs us very little to handle this case
+  // costs us very little to handle this case.
 
   uint32_t audio_10ms = rate / 100;
 
@@ -995,7 +1004,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
     packetizer_ = new AudioPacketizer<int16_t, int16_t>(audio_10ms, outputChannels);
    }
 
-  packetizer_->Input(convertedSamples, chunk.mDuration);
+  packetizer_->Input(samples, chunk.mDuration);
 
   while (packetizer_->PacketsAvailable()) {
     uint32_t samplesPerPacket = packetizer_->PacketSize() *
@@ -1003,7 +1012,8 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
 
     // We know that webrtc.org's code going to copy the samples down the line,
     // so we can just use a stack buffer here instead of malloc-ing.
-    // Max size given stereo is 480*2*2 = 1920 (48KHz)
+    // Max size given stereo is 480*2*2 = 1920 (10ms of 16-bits stereo audio at
+    // 48KHz)
     const size_t AUDIO_SAMPLE_BUFFER_MAX = 1920;
     int16_t packet[AUDIO_SAMPLE_BUFFER_MAX];
 
