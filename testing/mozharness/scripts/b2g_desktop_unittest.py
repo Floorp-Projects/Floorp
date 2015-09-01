@@ -154,7 +154,7 @@ class B2GDesktopTest(BlobUploadMixin, TestingMixin, MercurialScript):
         }
 
         if suite not in self.config["suite_definitions"]:
-            self.fatal("'%s' not defined in the config!" % suite),
+            self.fatal("'%s' not defined in the config!" % suite)
 
         options = self.config["suite_definitions"][suite]["options"]
         if options:
@@ -162,6 +162,11 @@ class B2GDesktopTest(BlobUploadMixin, TestingMixin, MercurialScript):
                 option = option % str_format_values
                 if not option.endswith('None'):
                     cmd.append(option)
+
+        tests = self.config["suite_definitions"][suite].get("tests")
+        if tests:
+            cmd.extend(tests)
+
         return cmd
 
     def download_and_extract(self):
