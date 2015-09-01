@@ -478,7 +478,7 @@ void ImageBridgeChild::FlushAllImages(ImageClient* aClient,
   waiter->WaitComplete();
 }
 
-static void FlushAllImagesAsync(ImageClient* aClient)
+static void FlushAllImagesAsyncInternal(ImageClient* aClient)
 {
   MOZ_ASSERT(aClient);
   sImageBridgeChildSingleton->BeginTransaction();
@@ -502,7 +502,7 @@ void ImageBridgeChild::FlushAllImagesAsync(ImageClient* aClient)
 
   sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
     FROM_HERE,
-    NewRunnableFunction(&FlushAllImagesAsync, aClient));
+    NewRunnableFunction(&FlushAllImagesAsyncInternal, aClient));
 }
 
 void
