@@ -112,8 +112,10 @@ SVGRectElement::GetLengthInfo()
 // nsSVGPathGeometryElement methods
 
 bool
-SVGRectElement::GetGeometryBounds(
-  Rect* aBounds, const StrokeOptions& aStrokeOptions, const Matrix& aTransform)
+SVGRectElement::GetGeometryBounds(Rect* aBounds,
+                                  const StrokeOptions& aStrokeOptions,
+                                  const Matrix& aToBoundsSpace,
+                                  const Matrix* aToNonScalingStrokeSpace)
 {
   Rect rect;
   Float rx, ry;
@@ -124,11 +126,11 @@ SVGRectElement::GetGeometryBounds(
     // Rendering of the element disabled
     rect.SetEmpty(); // Make sure width/height are zero and not negative
     // We still want the x/y position from 'rect'
-    *aBounds = aTransform.TransformBounds(rect);
+    *aBounds = aToBoundsSpace.TransformBounds(rect);
     return true;
   }
 
-  if (!aTransform.IsRectilinear()) {
+  if (!aToBoundsSpace.IsRectilinear()) {
     // We can't ignore the radii in this case if we want tight bounds
     rx = std::max(rx, 0.0f);
     ry = std::max(ry, 0.0f);
@@ -139,10 +141,28 @@ SVGRectElement::GetGeometryBounds(
   }
 
   if (aStrokeOptions.mLineWidth > 0.f) {
+    if (aToNonScalingStrokeSpace) {
+      if (aToNonScalingStrokeSpace->IsRectilinear()) {
+        rect = aToNonScalingStrokeSpace->TransformBounds(rect);
+        // Note that, in principle, an author could cause the corners of the
+        // rect to be beveled by specifying stroke-linejoin or setting
+        // stroke-miterlimit to be less than sqrt(2). In that very unlikely
+        // event the bounds that we calculate here may be too big if
+        // aToBoundsSpace is non-rectilinear. This is likely to be so rare it's
+        // not worth handling though.
+        rect.Inflate(aStrokeOptions.mLineWidth / 2.f);
+        Matrix nonScalingToBounds =
+          aToNonScalingStrokeSpace->Inverse() * aToBoundsSpace;
+        *aBounds = nonScalingToBounds.TransformBounds(rect);
+        return true;
+      }
+      return false;
+    }
+    // The "beveled" comment above applies here too
     rect.Inflate(aStrokeOptions.mLineWidth / 2.f);
   }
 
-  *aBounds = aTransform.TransformBounds(rect);
+  *aBounds = aToBoundsSpace.TransformBounds(rect);
   return true;
 }
 
