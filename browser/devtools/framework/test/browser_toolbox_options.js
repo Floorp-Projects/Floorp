@@ -54,9 +54,15 @@ function* testOptionsShortcut() {
   is(toolbox.currentToolId, "webconsole", "webconsole is selected");
   synthesizeKeyFromKeyTag("toolbox-options-key", doc);
   is(toolbox.currentToolId, "options", "Toolbox selected via shortcut key (1)");
+  synthesizeKeyFromKeyTag("toolbox-options-key", doc);
+  is(toolbox.currentToolId, "webconsole", "webconsole is selected (1)");
 
   yield toolbox.selectTool("webconsole");
   is(toolbox.currentToolId, "webconsole", "webconsole is selected");
+  synthesizeKeyFromKeyTag("toolbox-options-key2", doc);
+  is(toolbox.currentToolId, "options", "Toolbox selected via shortcut key (2)");
+  synthesizeKeyFromKeyTag("toolbox-options-key", doc);
+  is(toolbox.currentToolId, "webconsole", "webconsole is reselected (2)");
   synthesizeKeyFromKeyTag("toolbox-options-key2", doc);
   is(toolbox.currentToolId, "options", "Toolbox selected via shortcut key (2)");
 }
