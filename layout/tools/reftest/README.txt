@@ -512,13 +512,6 @@ are 800/zoom and 1000/zoom. For best results therefore, choose zoom factors
 that do not require rounding when we calculate the number of appunits per
 device pixel; i.e. the zoom factor should divide 60, so 60/zoom is an integer.
 
-Setting Viewport Size: reftest-viewport-w/h="<int>"
-===================================================
-
-If either of the "reftest-viewport-w" and "reftest-viewport-h" attributes on
-the root element are non-zero, sets the CSS viewport to the given size in
-CSS pixels. This does not affect the size of the snapshot that is taken.
-
 Setting Scrollport Size: reftest-scrollport-w/h="<int>"
 =======================================================
 
