@@ -33,6 +33,12 @@ NS_StartCORSPreflight(nsIChannel* aRequestChannel,
                       nsTArray<nsCString>& aACUnsafeHeaders,
                       nsIChannel** aPreflightChannel);
 
+namespace mozilla {
+namespace net {
+class HttpChannelParent;
+}
+}
+
 enum class DataURIHandling
 {
   Allow,
@@ -73,6 +79,12 @@ public:
   void SetInterceptController(nsINetworkInterceptController* aInterceptController);
 
 private:
+  // Only HttpChannelParent can call RemoveFromCorsPreflightCache
+  friend class mozilla::net::HttpChannelParent;
+
+  static void RemoveFromCorsPreflightCache(nsIURI* aURI,
+                                           nsIPrincipal* aRequestingPrincipal);
+
   ~nsCORSListenerProxy();
 
   nsresult UpdateChannel(nsIChannel* aChannel, DataURIHandling aAllowDataURI);
