@@ -498,12 +498,6 @@ GMPVideoDecoderTrialCreator::MaybeAwaitTrialCreate(const nsAString& aKeySystem,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    // Currently broken with e10s...
-    aPromisey->Resolve();
-    return;
-  }
-
   if (!mTestCreate.Contains(aKeySystem)) {
     mTestCreate.Put(aKeySystem, new TrialCreateData(aKeySystem));
   }
