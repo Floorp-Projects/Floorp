@@ -21,26 +21,16 @@ ManagerId::Create(nsIPrincipal* aPrincipal, ManagerId** aManagerIdOut)
   MOZ_ASSERT(NS_IsMainThread());
 
   // The QuotaManager::GetInfoFromPrincipal() has special logic for system
-  // and about: principals.  We currently don't need the system principal logic
-  // because ManagerId only uses the origin for in memory comparisons.  We
-  // also don't do any special logic to host the same Cache for different about:
-  // pages, so we don't need those checks either.
-  //
-  // But, if we get the same QuotaManager directory for different about:
-  // origins, we probably only want one Manager instance.  So, we might
-  // want to start using the QM's concept of origin uniqueness here.
-  //
-  // TODO: consider using QuotaManager's modified origin here (bug 1112071)
-
-  nsCString origin;
-  nsresult rv = aPrincipal->GetOriginNoSuffix(origin);
+  // and about: principals.  We need to use the same modified origin in
+  // order to interpret calls from QM correctly.
+  nsCString quotaOrigin;
+  nsresult rv = QuotaManager::GetInfoFromPrincipal(aPrincipal,
+                                                   nullptr,   //group
+                                                   &quotaOrigin,
+                                                   nullptr);  // is app
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  nsCString jarPrefix;
-  rv = aPrincipal->GetJarPrefix(jarPrefix);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
-  nsRefPtr<ManagerId> ref = new ManagerId(aPrincipal, origin, jarPrefix);
+  nsRefPtr<ManagerId> ref = new ManagerId(aPrincipal, quotaOrigin);
   ref.forget(aManagerIdOut);
 
   return NS_OK;
@@ -54,10 +44,9 @@ ManagerId::Principal() const
   return ref.forget();
 }
 
-ManagerId::ManagerId(nsIPrincipal* aPrincipal, const nsACString& aOrigin,
-                     const nsACString& aJarPrefix)
+ManagerId::ManagerId(nsIPrincipal* aPrincipal, const nsACString& aQuotaOrigin)
     : mPrincipal(aPrincipal)
-    , mExtendedOrigin(aJarPrefix + aOrigin)
+    , mQuotaOrigin(aQuotaOrigin)
 {
   MOZ_ASSERT(mPrincipal);
 }

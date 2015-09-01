@@ -271,7 +271,6 @@ public:
       mCompleteMediaHeaderRange = MediaByteRange(mapping[0].mSyncOffset,
                                                  mapping[0].mEndOffset);
     }
-    mLastMapping = Some(mapping[completeIdx]);
 
     if (foundNewCluster && mOffset >= mapping[endIdx].mEndOffset) {
       // We now have all information required to delimit a complete cluster.
@@ -288,12 +287,24 @@ public:
                                                   mParser.EndSegmentOffset(mapping[endIdx].mClusterEndOffset));
     }
 
-    if (!completeIdx) {
+    Maybe<WebMTimeDataOffset> previousMapping;
+    if (completeIdx) {
+      previousMapping = Some(mapping[completeIdx - 1]);
+    } else {
+      previousMapping = mLastMapping;
+    }
+
+    mLastMapping = Some(mapping[completeIdx]);
+
+    if (!previousMapping && completeIdx + 1u >= mapping.Length()) {
+      // We have no previous nor next block available,
+      // so we can't estimate this block's duration.
       return false;
     }
 
-    uint64_t frameDuration =
-      mapping[completeIdx].mTimecode - mapping[completeIdx - 1].mTimecode;
+    uint64_t frameDuration = (completeIdx + 1u < mapping.Length())
+      ? mapping[completeIdx + 1].mTimecode - mapping[completeIdx].mTimecode
+      : mapping[completeIdx].mTimecode - previousMapping.ref().mTimecode;
     aStart = mapping[0].mTimecode / NS_PER_USEC;
     aEnd = (mapping[completeIdx].mTimecode + frameDuration) / NS_PER_USEC;
 

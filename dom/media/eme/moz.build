@@ -41,4 +41,6 @@ UNIFIED_SOURCES += [
     'MediaKeySystemAccessManager.cpp',
 ]
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
 FINAL_LIBRARY = 'xul'

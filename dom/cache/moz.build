@@ -100,3 +100,7 @@ MOCHITEST_CHROME_MANIFESTS += [
 BROWSER_CHROME_MANIFESTS += [
     'test/mochitest/browser.ini',
 ]
+
+XPCSHELL_TESTS_MANIFESTS += [
+    'test/xpcshell/xpcshell.ini',
+]

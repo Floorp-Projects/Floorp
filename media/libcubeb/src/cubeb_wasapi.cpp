@@ -701,6 +701,13 @@ current_stream_delay(cubeb_stream * stm)
 {
   stm->stream_reset_lock->assert_current_thread_owns();
 
+  /* If the default audio endpoint went away during playback and we weren't
+     able to configure a new one, it's possible the caller may call this
+     before the error callback has propogated back. */
+  if (!stm->audio_clock) {
+    return 0;
+  }
+
   UINT64 freq;
   HRESULT hr = stm->audio_clock->GetFrequency(&freq);
   if (FAILED(hr)) {
@@ -727,6 +734,10 @@ int
 stream_set_volume(cubeb_stream * stm, float volume)
 {
   stm->stream_reset_lock->assert_current_thread_owns();
+
+  if (!stm->audio_stream_volume) {
+    return CUBEB_ERROR;
+  }
 
   uint32_t channels;
   HRESULT hr = stm->audio_stream_volume->GetChannelCount(&channels);
@@ -1288,6 +1299,10 @@ int wasapi_stream_start(cubeb_stream * stm)
   auto_lock lock(stm->stream_reset_lock);
 
   XASSERT(stm && !stm->thread && !stm->shutdown_event);
+
+  if (!stm->client) {
+    return CUBEB_ERROR;
+  }
 
   HRESULT hr = stm->client->Start();
   if (hr == AUDCLNT_E_DEVICE_INVALIDATED) {

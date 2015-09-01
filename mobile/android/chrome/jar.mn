@@ -41,6 +41,7 @@ chrome.jar:
   content/MemoryObserver.js            (content/MemoryObserver.js)
   content/ConsoleAPI.js                (content/ConsoleAPI.js)
   content/PluginHelper.js              (content/PluginHelper.js)
+  content/PrintHelper.js               (content/PrintHelper.js)
   content/OfflineApps.js               (content/OfflineApps.js)
   content/MasterPassword.js            (content/MasterPassword.js)
   content/FindHelper.js                (content/FindHelper.js)

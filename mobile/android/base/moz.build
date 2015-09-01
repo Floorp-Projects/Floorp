@@ -419,6 +419,7 @@ gbjar.sources += [
     'preferences/SearchPreferenceCategory.java',
     'preferences/SyncPreference.java',
     'PrefsHelper.java',
+    'PrintHelper.java',
     'PrivateTab.java',
     'prompts/ColorPickerInput.java',
     'prompts/IconGridInput.java',
