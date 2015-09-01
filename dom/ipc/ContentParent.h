@@ -176,6 +176,10 @@ public:
                                                nsTArray<nsCString>&& aTags,
                                                bool* aHasPlugin,
                                                nsCString* aVersion) override;
+    virtual bool RecvIsGMPPresentOnDisk(const nsString& aKeySystem,
+                                        const nsCString& aVersion,
+                                        bool* aIsPresent,
+                                        nsCString* aMessage) override;
 
     virtual bool RecvLoadPlugin(const uint32_t& aPluginId, nsresult* aRv, uint32_t* aRunID) override;
     virtual bool RecvConnectPluginBridge(const uint32_t& aPluginId, nsresult* aRv) override;
