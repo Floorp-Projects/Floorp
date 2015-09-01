@@ -2971,6 +2971,8 @@ this.AddonManager = {
 
   // Constants for Addon.signedState. Any states that should cause an add-on
   // to be unusable in builds that require signing should have negative values.
+  // Add-on signing is not required, e.g. because the pref is disabled.
+  SIGNEDSTATE_NOT_REQUIRED: undefined,
   // Add-on is signed but signature verification has failed.
   SIGNEDSTATE_BROKEN: -2,
   // Add-on may be signed but by an certificate that doesn't chain to our
