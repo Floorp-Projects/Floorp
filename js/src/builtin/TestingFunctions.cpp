@@ -1144,14 +1144,14 @@ CallFunctionWithAsyncStack(JSContext* cx, unsigned argc, Value* vp)
 static bool
 EnableTrackAllocations(JSContext* cx, unsigned argc, Value* vp)
 {
-    SetObjectMetadataCallback(cx, SavedStacksMetadataCallback);
+    SetAllocationMetadataBuilder(cx, SavedStacksMetadataBuilder);
     return true;
 }
 
 static bool
 DisableTrackAllocations(JSContext* cx, unsigned argc, Value* vp)
 {
-    SetObjectMetadataCallback(cx, nullptr);
+    SetAllocationMetadataBuilder(cx, nullptr);
     return true;
 }
 
@@ -1690,17 +1690,17 @@ DisplayName(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static JSObject*
-ShellObjectMetadataCallback(JSContext* cx, HandleObject)
+ShellAllocationMetadataBuilder(JSContext* cx, HandleObject)
 {
     AutoEnterOOMUnsafeRegion oomUnsafe;
 
     RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!obj)
-        oomUnsafe.crash("ShellObjectMetadataCallback");
+        oomUnsafe.crash("ShellAllocationMetadataBuilder");
 
     RootedObject stack(cx, NewDenseEmptyArray(cx));
     if (!stack)
-        oomUnsafe.crash("ShellObjectMetadataCallback");
+        oomUnsafe.crash("ShellAllocationMetadataBuilder");
 
     static int createdIndex = 0;
     createdIndex++;
@@ -1708,13 +1708,13 @@ ShellObjectMetadataCallback(JSContext* cx, HandleObject)
     if (!JS_DefineProperty(cx, obj, "index", createdIndex, 0,
                            JS_STUBGETTER, JS_STUBSETTER))
     {
-        oomUnsafe.crash("ShellObjectMetadataCallback");
+        oomUnsafe.crash("ShellAllocationMetadataBuilder");
     }
 
     if (!JS_DefineProperty(cx, obj, "stack", stack, 0,
                            JS_STUBGETTER, JS_STUBSETTER))
     {
-        oomUnsafe.crash("ShellObjectMetadataCallback");
+        oomUnsafe.crash("ShellAllocationMetadataBuilder");
     }
 
     int stackIndex = 0;
@@ -1727,7 +1727,7 @@ ShellObjectMetadataCallback(JSContext* cx, HandleObject)
             if (!JS_DefinePropertyById(cx, stack, id, callee, 0,
                                        JS_STUBGETTER, JS_STUBSETTER))
             {
-                oomUnsafe.crash("ShellObjectMetadataCallback");
+                oomUnsafe.crash("ShellAllocationMetadataBuilder");
             }
             stackIndex++;
         }
@@ -1737,18 +1737,18 @@ ShellObjectMetadataCallback(JSContext* cx, HandleObject)
 }
 
 static bool
-EnableShellObjectMetadataCallback(JSContext* cx, unsigned argc, Value* vp)
+EnableShellAllocationMetadataBuilder(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    SetObjectMetadataCallback(cx, ShellObjectMetadataCallback);
+    SetAllocationMetadataBuilder(cx, ShellAllocationMetadataBuilder);
 
     args.rval().setUndefined();
     return true;
 }
 
 static bool
-GetObjectMetadata(JSContext* cx, unsigned argc, Value* vp)
+GetAllocationMetadata(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() != 1 || !args[0].isObject()) {
@@ -1756,7 +1756,7 @@ GetObjectMetadata(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    args.rval().setObjectOrNull(GetObjectMetadata(&args[0].toObject()));
+    args.rval().setObjectOrNull(GetAllocationMetadata(&args[0].toObject()));
     return true;
 }
 
@@ -3772,12 +3772,12 @@ gc::ZealModeHelpText),
 "isRelazifiableFunction(fun)",
 "  Ture if fun is a JSFunction with a relazifiable JSScript."),
 
-    JS_FN_HELP("enableShellObjectMetadataCallback", EnableShellObjectMetadataCallback, 0, 0,
-"enableShellObjectMetadataCallback()",
-"  Use ShellObjectMetadataCallback to supply metadata for all newly created objects."),
+    JS_FN_HELP("enableShellAllocationMetadataBuilder", EnableShellAllocationMetadataBuilder, 0, 0,
+"enableShellAllocationMetadataBuilder()",
+"  Use ShellAllocationMetadataBuilder to supply metadata for all newly created objects."),
 
-    JS_FN_HELP("getObjectMetadata", GetObjectMetadata, 1, 0,
-"getObjectMetadata(obj)",
+    JS_FN_HELP("getAllocationMetadata", GetAllocationMetadata, 1, 0,
+"getAllocationMetadata(obj)",
 "  Get the metadata for an object."),
 
     JS_INLINABLE_FN_HELP("bailout", testingFunc_bailout, 0, 0, TestBailout,

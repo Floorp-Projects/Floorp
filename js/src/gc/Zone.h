@@ -287,7 +287,7 @@ struct Zone : public JS::shadow::Zone,
      *   is silly
      * And so on.
      */
-    bool suppressObjectMetadataCallback;
+    bool suppressAllocationMetadataBuilder;
 
     js::gc::ArenaLists arenas;
 

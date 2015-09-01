@@ -98,7 +98,7 @@ const Class ArrayBufferObject::protoClass = {
 
 const Class ArrayBufferObject::class_ = {
     "ArrayBuffer",
-    JSCLASS_DELAY_METADATA_CALLBACK |
+    JSCLASS_DELAY_METADATA_BUILDER |
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer) |
     JSCLASS_BACKGROUND_FINALIZE,

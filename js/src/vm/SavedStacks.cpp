@@ -487,7 +487,7 @@ SavedFrame::create(JSContext* cx)
     assertSameCompartment(cx, global);
 
     // Ensure that we don't try to capture the stack again in the
-    // `SavedStacksMetadataCallback` for this new SavedFrame object, and
+    // `SavedStacksMetadataBuilder` for this new SavedFrame object, and
     // accidentally cause O(n^2) behavior.
     SavedStacks::AutoReentrancyGuard guard(cx->compartment()->savedStacks());
 
@@ -1475,7 +1475,7 @@ SavedStacks::chooseSamplingProbability(JSCompartment* compartment)
 }
 
 JSObject*
-SavedStacksMetadataCallback(JSContext* cx, HandleObject target)
+SavedStacksMetadataBuilder(JSContext* cx, HandleObject target)
 {
     RootedObject obj(cx, target);
 
@@ -1486,10 +1486,10 @@ SavedStacksMetadataCallback(JSContext* cx, HandleObject target)
     AutoEnterOOMUnsafeRegion oomUnsafe;
     RootedSavedFrame frame(cx);
     if (!stacks.saveCurrentStack(cx, &frame))
-        oomUnsafe.crash("SavedStacksMetadataCallback");
+        oomUnsafe.crash("SavedStacksMetadataBuilder");
 
     if (!Debugger::onLogAllocationSite(cx, obj, frame, JS_GetCurrentEmbedderTime()))
-        oomUnsafe.crash("SavedStacksMetadataCallback");
+        oomUnsafe.crash("SavedStacksMetadataBuilder");
 
     MOZ_ASSERT_IF(frame, !frame->is<WrapperObject>());
     return frame;
