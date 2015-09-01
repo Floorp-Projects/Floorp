@@ -75,13 +75,18 @@ Structure::
       },
       system: {
         memoryMB: <number>,
+        virtualMaxMB: <number>, // windows-only
         isWow64: <bool>, // windows-only
         cpu: {
-            count: <number>,  // e.g. 8, or null on failure
-            vendor: <string>, // e.g. "GenuineIntel", or null on failure
-            family: <string>, // null on failure
-            model: <string>, // null on failure
-            stepping: <string>, // null on failure
+            count: <number>,  // e.g. 8, or null on failure - logical cpus
+            cores: <number>, // e.g., 4, or null on failure - physical cores, only on windows & mac
+            vendor: <string>, // e.g. "GenuineIntel", or null on failure, only on mac
+            family: <string>, // null on failure, only on windows & mac
+            model: <string>, // null on failure, only on windows & mac
+            stepping: <string>, // null on failure, only on windows & mac
+            l2cacheKB: <number>, // L2 cache size in KB, only on windows & mac
+            l3cacheKB: <number>, // L3 cache size in KB, only on windows & mac
+            speedMHz: <number>, // cpu clock speed in MHz, only on windows & mac
             extensions: [
               <string>,
               ...
