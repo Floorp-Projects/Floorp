@@ -6,6 +6,7 @@ ANDROID_MANIFEST_FILE := src/main/AndroidManifest.xml
 
 JAVAFILES := \
   src/main/java/org/mozilla/b2gdroid/Launcher.java \
+  src/main/java/org/mozilla/b2gdroid/ScreenStateObserver.java \
   $(NULL)
 
 # The GeckoView consuming APK depends on the GeckoView JAR files.  There are two
