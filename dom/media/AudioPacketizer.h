@@ -50,7 +50,7 @@ public:
        "The packet size and the number of channel should be strictly positive");
   }
 
-  void Input(InputType* aFrames, uint32_t aFrameCount)
+  void Input(const InputType* aFrames, uint32_t aFrameCount)
   {
     uint32_t inputSamples = aFrameCount * mChannels;
     // Need to grow the storage. This should rarely happen, if at all, once the
