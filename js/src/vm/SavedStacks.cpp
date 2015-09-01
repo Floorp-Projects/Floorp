@@ -1312,6 +1312,7 @@ SavedStacks::chooseSamplingProbability(JSContext* cx)
         return;
 
     mozilla::DebugOnly<Debugger**> begin = dbgs->begin();
+    mozilla::DebugOnly<bool> foundAnyDebuggers = false;
 
     allocationSamplingProbability = 0;
     for (Debugger** dbgp = dbgs->begin(); dbgp < dbgs->end(); dbgp++) {
@@ -1320,10 +1321,12 @@ SavedStacks::chooseSamplingProbability(JSContext* cx)
         MOZ_ASSERT(dbgs->begin() == begin);
 
         if ((*dbgp)->trackingAllocationSites && (*dbgp)->enabled) {
+            foundAnyDebuggers = true;
             allocationSamplingProbability = std::max((*dbgp)->allocationSamplingProbability,
                                                      allocationSamplingProbability);
         }
     }
+    MOZ_ASSERT(foundAnyDebuggers);
 }
 
 JSObject*
