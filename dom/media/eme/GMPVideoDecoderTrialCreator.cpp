@@ -484,9 +484,9 @@ TestGMPVideoDecoder::CreateGMPVideoDecoder()
   tags.AppendElement(NS_ConvertUTF16toUTF8(mKeySystem));
 
   UniquePtr<GetGMPVideoDecoderCallback> callback(new Callback(this));
-  nsCString fakeNodeId;
-  if (NS_FAILED(GenerateRandomName(fakeNodeId, 32)) ||
-      NS_FAILED(mGMPService->GetGMPVideoDecoder(&tags, fakeNodeId, Move(callback)))) {
+  if (NS_FAILED(mGMPService->GetGMPVideoDecoder(&tags,
+                                                NS_LITERAL_CSTRING("fakeNodeId1234567890fakeNodeId12"),
+                                                Move(callback)))) {
     ReportFailure(NS_LITERAL_CSTRING("TestGMPVideoDecoder GMPService GetGMPVideoDecoder returned failure"));
   }
 }
