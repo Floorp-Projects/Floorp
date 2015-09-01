@@ -3274,7 +3274,7 @@ static const ClassSpec ArrayObjectClassSpec = {
 
 const Class ArrayObject::class_ = {
     "Array",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Array) | JSCLASS_DELAY_METADATA_CALLBACK,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Array) | JSCLASS_DELAY_METADATA_BUILDER,
     array_addProperty,
     nullptr, /* delProperty */
     nullptr, /* getProperty */
