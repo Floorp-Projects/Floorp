@@ -1793,42 +1793,6 @@ DocAccessibleChild::RecvFocusedChild(const uint64_t& aID,
 }
 
 bool
-DocAccessibleChild::RecvChildAtPoint(const uint64_t& aID,
-                                     const int32_t& aX,
-                                     const int32_t& aY,
-                                     const uint32_t& aWhich,
-                                     uint64_t* aChild,
-                                     bool* aOk)
-{
-  *aChild = 0;
-  *aOk = false;
-  Accessible* acc = IdToAccessible(aID);
-  if (acc && !acc->IsDefunct() && !nsAccUtils::MustPrune(acc)) {
-    Accessible* child =
-      acc->ChildAtPoint(aX, aY,
-                        static_cast<Accessible::EWhichChildAtPoint>(aWhich));
-    if (child) {
-      *aChild = reinterpret_cast<uint64_t>(child->UniqueID());
-      *aOk = true;
-    }
-  }
-
-  return true;
-}
-
-bool
-DocAccessibleChild::RecvBounds(const uint64_t& aID,
-                               nsIntRect* aRect)
-{
-  Accessible* acc = IdToAccessible(aID);
-  if (acc && !acc->IsDefunct()) {
-    *aRect = acc->Bounds();
-  }
-
-  return false;
-}
-
-bool
 DocAccessibleChild::RecvLanguage(const uint64_t& aID,
                                  nsString* aLocale)
 {
@@ -1903,6 +1867,72 @@ DocAccessibleChild::RecvURLDocTypeMimeType(const uint64_t& aID,
     doc->MimeType(*aMimeType);
   }
 
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAccessibleAtPoint(const uint64_t& aID,
+                                          const int32_t& aX,
+                                          const int32_t& aY,
+                                          const bool& aNeedsScreenCoords,
+                                          const uint32_t& aWhich,
+                                          uint64_t* aResult,
+                                          bool* aOk)
+{
+  *aResult = 0;
+  *aOk = false;
+  Accessible* acc = IdToAccessible(aID);
+  if (acc && !acc->IsDefunct() && !nsAccUtils::MustPrune(acc)) {
+    int32_t x = aX;
+    int32_t y = aY;
+    if (aNeedsScreenCoords) {
+      nsIntPoint winCoords =
+        nsCoreUtils::GetScreenCoordsForWindow(acc->GetNode());
+      x += winCoords.x;
+      y += winCoords.y;
+    }
+
+    Accessible* result =
+      acc->ChildAtPoint(x, y,
+                        static_cast<Accessible::EWhichChildAtPoint>(aWhich));
+    if (result) {
+      *aResult = reinterpret_cast<uint64_t>(result->UniqueID());
+      *aOk = true;
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvExtents(const uint64_t& aID,
+                                const bool& aNeedsScreenCoords,
+                                int32_t* aX,
+                                int32_t* aY,
+                                int32_t* aWidth,
+                                int32_t* aHeight)
+{
+  *aX = 0;
+  *aY = 0;
+  *aWidth = 0;
+  *aHeight = 0;
+  Accessible* acc = IdToAccessible(aID);
+  if (acc && !acc->IsDefunct() && !nsAccUtils::MustPrune(acc)) {
+    nsIntRect screenRect = acc->Bounds();
+    if (!screenRect.IsEmpty()) {
+      if (aNeedsScreenCoords) {
+        nsIntPoint winCoords =
+          nsCoreUtils::GetScreenCoordsForWindow(acc->GetNode());
+        screenRect.x -= winCoords.x;
+        screenRect.y -= winCoords.y;
+      }
+
+      *aX = screenRect.x;
+      *aY = screenRect.y;
+      *aWidth = screenRect.width;
+      *aHeight = screenRect.height;
+    }
+  }
   return true;
 }
 

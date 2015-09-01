@@ -233,9 +233,6 @@ child:
     returns(uint64_t aChild);
   prio(high) sync FocusedChild(uint64_t aID)
     returns(uint64_t aChild, bool aOk);
-  prio(high) sync ChildAtPoint(uint64_t aID, int32_t aX, int32_t aY, uint32_t aWhich)
-    returns(uint64_t aChild, bool aOk);
-  prio(high) sync Bounds(uint64_t aID) returns(nsIntRect aRect);
 
   prio(high) sync Language(uint64_t aID) returns(nsString aLocale);
   prio(high) sync DocType(uint64_t aID) returns(nsString aType);
@@ -243,6 +240,12 @@ child:
   prio(high) sync URL(uint64_t aID) returns(nsString aURL);
   prio(high) sync MimeType(uint64_t aID) returns(nsString aMime);
   prio(high) sync URLDocTypeMimeType(uint64_t aID) returns(nsString aURL, nsString aDocType, nsString aMimeType);
+
+  prio(high) sync AccessibleAtPoint(uint64_t aID, int32_t aX, int32_t aY, bool aNeedsScreenCoords, uint32_t aWhich)
+    returns(uint64_t aResult, bool aOk);
+
+  prio(high) sync Extents(uint64_t aID, bool aNeedsScreenCoords)
+    returns(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight);
 };
 
 }
