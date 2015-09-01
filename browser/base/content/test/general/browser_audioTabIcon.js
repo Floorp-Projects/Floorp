@@ -36,11 +36,19 @@ function leave_icon(icon) {
   disable_non_test_mouse(false);
 }
 
-function* test_tooltip(icon, expectedTooltip) {
+function* test_tooltip(icon, expectedTooltip, isActiveTab) {
   let tooltip = document.getElementById("tabbrowser-tab-tooltip");
 
   yield hover_icon(icon, tooltip);
-  is(tooltip.getAttribute("label").indexOf(expectedTooltip), 0, "Correct tooltip expected");
+  if (isActiveTab) {
+    // The active tab should have the keybinding shortcut in the tooltip.
+    // We check this by ensuring that the strings are not equal but the expected
+    // message appears in the beginning.
+    isnot(tooltip.getAttribute("label"), expectedTooltip, "Tooltips should not be equal");
+    is(tooltip.getAttribute("label").indexOf(expectedTooltip), 0, "Correct tooltip expected");
+  } else {
+    is(tooltip.getAttribute("label"), expectedTooltip, "Tooltips should not be equal");
+  }
   leave_icon(icon);
 }
 
@@ -100,6 +108,7 @@ function* test_muting_using_menu(tab, expectMuted) {
 function* test_playing_icon_on_tab(tab, browser, isPinned) {
   let icon = document.getAnonymousElementByAttribute(tab, "anonid",
                                                      isPinned ? "overlay-icon" : "soundplaying-icon");
+  let isActiveTab = tab === gBrowser.selectedTab;
 
   yield ContentTask.spawn(browser, {}, function* () {
     let audio = content.document.querySelector("audio");
@@ -108,7 +117,7 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
 
   yield wait_for_tab_playing_event(tab, true);
 
-  yield test_tooltip(icon, "Mute tab");
+  yield test_tooltip(icon, "Mute tab", isActiveTab);
 
   ok(!("muted" in get_tab_attributes(tab)), "No muted attribute should be persisted");
 
@@ -116,13 +125,13 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
 
   ok("muted" in get_tab_attributes(tab), "Muted attribute should be persisted");
 
-  yield test_tooltip(icon, "Unmute tab");
+  yield test_tooltip(icon, "Unmute tab", isActiveTab);
 
   yield test_mute_tab(tab, icon, false);
 
   ok(!("muted" in get_tab_attributes(tab)), "No muted attribute should be persisted");
 
-  yield test_tooltip(icon, "Mute tab");
+  yield test_tooltip(icon, "Mute tab", isActiveTab);
 
   yield test_mute_tab(tab, icon, true);
 
@@ -135,7 +144,7 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
   ok(tab.hasAttribute("muted") &&
      !tab.hasAttribute("soundplaying"), "Tab should still be muted but not playing");
 
-  yield test_tooltip(icon, "Unmute tab");
+  yield test_tooltip(icon, "Unmute tab", isActiveTab);
 
   yield test_mute_tab(tab, icon, false);
 
