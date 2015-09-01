@@ -116,58 +116,18 @@ function watchLinksChangeOnce() {
 
 /**
  * Provide the default test function to start our test runner.
- *
- * We need different code paths for tests that are still wired for
- * `TestRunner` and tests that have been ported to `add_task` as
- * we cannot have both in the same file.
  */
-function isTestPortedToAddTask() {
-  return gTestPath.endsWith("browser_newtab_bug722273.js");
-}
-if (!isTestPortedToAddTask()) {
-  this.test = function() {
-    waitForExplicitFinish();
-    // start TestRunner.run() after directory links is downloaded and written to disk
-    watchLinksChangeOnce().then(() => {
-      // Wait for hidden page to update with the desired links
-      whenPagesUpdated(() => TestRunner.run(), true);
-    });
-
-    // Save the original directory source (which is set globally for tests)
-    gOrigDirectorySource = Services.prefs.getCharPref(PREF_NEWTAB_DIRECTORYSOURCE);
-    Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, gDirectorySource);
-  }
-} else {
-  add_task(function* setup() {
-    registerCleanupFunction(function() {
-      return new Promise(resolve => {
-        function cleanupAndFinish() {
-          PlacesTestUtils.clearHistory().then(() => {
-            whenPagesUpdated(resolve);
-            NewTabUtils.restore();
-          });
-        }
-
-        let callbacks = NewTabUtils.links._populateCallbacks;
-        let numCallbacks = callbacks.length;
-
-        if (numCallbacks)
-          callbacks.splice(0, numCallbacks, cleanupAndFinish);
-        else
-          cleanupAndFinish();
-      });
-    });
-
-    let promiseReady = Task.spawn(function*() {
-      yield watchLinksChangeOnce();
-      yield new Promise(resolve => whenPagesUpdated(resolve, true));
-    });
-
-    // Save the original directory source (which is set globally for tests)
-    gOrigDirectorySource = Services.prefs.getCharPref(PREF_NEWTAB_DIRECTORYSOURCE);
-    Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, gDirectorySource);
-    yield promiseReady;
+function test() {
+  waitForExplicitFinish();
+  // start TestRunner.run() after directory links is downloaded and written to disk
+  watchLinksChangeOnce().then(() => {
+    // Wait for hidden page to update with the desired links
+    whenPagesUpdated(() => TestRunner.run(), true);
   });
+
+  // Save the original directory source (which is set globally for tests)
+  gOrigDirectorySource = Services.prefs.getCharPref(PREF_NEWTAB_DIRECTORYSOURCE);
+  Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, gDirectorySource);
 }
 
 /**

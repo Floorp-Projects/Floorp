@@ -11,27 +11,20 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"]
 
 let {Sanitizer} = tmp;
 
-add_task(function*() {
-  yield promiseSanitizeHistory();
-  yield promiseAddFakeVisits();
-  yield addNewTabPageTabPromise();
+function runTests() {
+  sanitizeHistory();
+  yield addFakeVisits();
+  yield addNewTabPageTab();
+
   is(getCell(0).site.url, URL, "first site is our fake site");
 
-  whenPagesUpdated(() => {});
-  yield promiseSanitizeHistory();
+  whenPagesUpdated();
+  yield sanitizeHistory();
 
-  // Now wait until the grid is updated
-  while (true) {
-    if (!getCell(0).site) {
-      break;
-    }
-    info("the fake site is still present");
-    yield new Promise(resolve => setTimeout(resolve, 1000));
-  }
-  ok(!getCell(0).site, "fake site is gone");
-});
+  ok(!getCell(0).site, "the fake site is gone");
+}
 
-function promiseAddFakeVisits() {
+function addFakeVisits() {
   let visits = [];
   for (let i = 59; i > 0; i--) {
     visits.push({
@@ -44,21 +37,19 @@ function promiseAddFakeVisits() {
     title: "fake site",
     visits: visits
   };
-  return new Promise((resolve, reject) => {
-    PlacesUtils.asyncHistory.updatePlaces(place, {
-      handleError: function () reject(new Error("Couldn't add visit")),
-      handleResult: function () {},
-      handleCompletion: function () {
-        NewTabUtils.links.populateCache(function () {
-          NewTabUtils.allPages.update();
-          resolve();
-        }, true);
-      }
-    });
+  PlacesUtils.asyncHistory.updatePlaces(place, {
+    handleError: function () ok(false, "couldn't add visit"),
+    handleResult: function () {},
+    handleCompletion: function () {
+      NewTabUtils.links.populateCache(function () {
+        NewTabUtils.allPages.update();
+        TestRunner.next();
+      }, true);
+    }
   });
 }
 
-function promiseSanitizeHistory() {
+function sanitizeHistory() {
   let s = new Sanitizer();
   s.prefDomain = "privacy.cpd.";
 
@@ -73,5 +64,5 @@ function promiseSanitizeHistory() {
   prefs.setBoolPref("sessions", false);
   prefs.setBoolPref("siteSettings", false);
 
-  return s.sanitize();
+  s.sanitize();
 }
