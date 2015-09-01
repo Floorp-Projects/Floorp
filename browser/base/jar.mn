@@ -138,7 +138,7 @@ browser.jar:
         content/browser/safeMode.css                  (content/safeMode.css)
         content/browser/safeMode.js                   (content/safeMode.js)
         content/browser/safeMode.xul                  (content/safeMode.xul)
-        content/browser/sanitize.js                   (content/sanitize.js)
+*       content/browser/sanitize.js                   (content/sanitize.js)
 *       content/browser/sanitize.xul                  (content/sanitize.xul)
 *       content/browser/sanitizeDialog.js             (content/sanitizeDialog.js)
         content/browser/sanitizeDialog.css            (content/sanitizeDialog.css)

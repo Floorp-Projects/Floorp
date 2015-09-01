@@ -5,9 +5,6 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-const Cu = Components.utils;
-
-let {Sanitizer} = Cu.import("resource:///modules/Sanitizer.jsm", {});
 
 var gSanitizePromptDialog = {
 
@@ -46,20 +43,17 @@ var gSanitizePromptDialog = {
     var s = new Sanitizer();
     s.prefDomain = "privacy.cpd.";
 
-    let tasks = [];
     let sanitizeItemList = document.querySelectorAll("#itemList > [preference]");
     for (let i = 0; i < sanitizeItemList.length; i++) {
       let prefItem = sanitizeItemList[i];
       let name = s.getNameFromPreference(prefItem.getAttribute("preference"));
-      let promise = s.promiseCanClearItem(name).then(canClear => {
-        if (canClear) {
-          return;
+      s.canClearItem(name, function canClearCallback(aItem, aCanClear, aPrefItem) {
+        if (!aCanClear) {
+          aPrefItem.preference = null;
+          aPrefItem.checked = false;
+          aPrefItem.disabled = true;
         }
-        prefItem.preference = null;
-        prefItem.checked = false;
-        prefItem.disabled = true;
-      });
-      tasks.push(promise);
+      }, prefItem);
     }
 
     document.documentElement.getButton("accept").label =
@@ -73,10 +67,6 @@ var gSanitizePromptDialog = {
     }
     else
       this.warningBox.hidden = true;
-
-    Promise.all(tasks).then(() => {
-      Services.obs.notifyObservers(null, "sanitize-dialog-setup-complete", "");
-    });
   },
 
   selectByTimespan: function ()
@@ -129,7 +119,6 @@ var gSanitizePromptDialog = {
     acceptButton.setAttribute("label",
                               this.bundleBrowser.getString("sanitizeButtonClearing"));
     docElt.getButton("cancel").disabled = true;
-
     try {
       s.sanitize().then(null, Components.utils.reportError)
                   .then(() => window.close())
@@ -138,6 +127,7 @@ var gSanitizePromptDialog = {
       Components.utils.reportError("Exception during sanitize: " + er);
       return true; // We *do* want to close immediately on error.
     }
+    return false;
   },
 
   /**
@@ -515,7 +505,7 @@ var gSanitizePromptDialog = {
     }
 
     try {
-      s.sanitize(); // We ignore the resulting Promise
+      s.sanitize();
     } catch (er) {
       Components.utils.reportError("Exception during sanitize: " + er);
     }
