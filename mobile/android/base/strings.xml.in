@@ -19,7 +19,6 @@
 <!ENTITY formatD "&#037;d">
 ]>
 
-#includesubst @BOOKMARKSPATH@
 <resources>
   <string name="moz_app_displayname">@MOZ_APP_DISPLAYNAME@</string>
   <string name="android_package_name">@ANDROID_PACKAGE_NAME@</string>
@@ -453,25 +452,25 @@
 
   <!-- Default bookmarks. We used to use bookmark titles shared with XUL from mobile's
        profile/bookmarks.inc (see bug 964946). Don't expose the URLs to L10N. -->
-  <string name="bookmarkdefaults_title_aboutfirefox">@bookmarks_aboutBrowser@</string>
+  <string name="bookmarkdefaults_title_aboutfirefox">&bookmarks_about_browser;</string>
   <string name="bookmarkdefaults_url_aboutfirefox">about:firefox</string>
 
   <!-- Icon is automatically generated from R.drawable.bookmarkdefaults_favicon_addons -->
-  <string name="bookmarkdefaults_title_addons">@bookmarks_addons@</string>
+  <string name="bookmarkdefaults_title_addons">&bookmarks_addons;</string>
   <string name="bookmarkdefaults_url_addons">https://addons.mozilla.org/android/</string>
 
   <!-- Icon is automatically generated from R.drawable.bookmarkdefaults_favicon_support -->
-  <string name="bookmarkdefaults_title_support">@bookmarks_support@</string>
+  <string name="bookmarkdefaults_title_support">&bookmarks_support;</string>
   <string name="bookmarkdefaults_url_support">https://support.mozilla.org/products/mobile</string>
 
   <!-- Icon is automatically generated from R.drawable.bookmarkdefaults_favicon_marketplace -->
-  <string name="bookmarkdefaults_title_marketplace">@bookmarks_marketplace@</string>
+  <string name="bookmarkdefaults_title_marketplace">&bookmarks_marketplace;</string>
   <string name="bookmarkdefaults_url_marketplace">https://marketplace.firefox.com/</string>
 
-  <string name="bookmarkdefaults_title_restricted_webmaker">@bookmarks_restricted_webmaker@</string>
+  <string name="bookmarkdefaults_title_restricted_webmaker">&bookmarks_restricted_webmaker;</string>
   <string name="bookmarkdefaults_url_restricted_webmaker">https://webmaker.org/</string>
 
-  <string name="bookmarkdefaults_title_restricted_support">@bookmarks_restricted_support@</string>
+  <string name="bookmarkdefaults_title_restricted_support">&bookmarks_restricted_support;</string>
   <string name="bookmarkdefaults_url_restricted_support">https://support.mozilla.org/kb/kids</string>
 
   <!-- Site identity popup -->

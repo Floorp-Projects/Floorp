@@ -1,8 +1,0 @@
-#filter substitution
-{"type":"text/x-moz-place-container","root":"placesRoot","children":
-  [{"type":"text/x-moz-place-container","title":"@bookmarks_title@","annos":[{"name":"mobile/bookmarksRoot","expires":4,"type":1,"value":1}],
-# Bug 921433: this is empty, because bookmarks are now added via resource 
-# strings: see LocalBrowserDB.addDefaultBookmarks.
-    "children": []
-  }]
-}
