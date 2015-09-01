@@ -311,7 +311,7 @@ Site.prototype = {
       explain.className = explanationTextClass.slice(1); // Slice off the first character, '.'
       this.node.appendChild(explain);
 
-      let link = '<a href="' + TILES_EXPLAIN_LINK + '" target="_blank">' +
+      let link = '<a href="' + TILES_EXPLAIN_LINK + '">' +
                  newTabString("learn.link") + "</a>";
       let type = (this.node.getAttribute("suggested") && this.node.getAttribute("type") == "affiliate") ?
                   "suggested" : this.node.getAttribute("type");
