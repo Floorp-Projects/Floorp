@@ -38,7 +38,6 @@ EXTRA_JS_MODULES += [
     'ReaderParent.jsm',
     'RecentWindow.jsm',
     'RemotePrompt.jsm',
-    'Sanitizer.jsm',
     'SelfSupportBackend.jsm',
     'SitePermissions.jsm',
     'Social.jsm',
