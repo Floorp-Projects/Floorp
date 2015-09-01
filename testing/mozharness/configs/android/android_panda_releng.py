@@ -97,8 +97,9 @@ config = {
                 "--http-port=%(http_port)s",
                 "--ssl-port=%(ssl_port)s",
                 "--symbols-path=%(symbols_path)s",
-                "reftest/tests/testing/crashtest/crashtests.list"
+                "--suite=crashtest",
             ],
+            "tests": ["reftest/tests/testing/crashtest/crashtests.list",],
             "run_filename": "remotereftest.py",
             "testsdir": "reftest"
         },
@@ -128,11 +129,12 @@ config = {
                 "--ignore-window-size",
                 "--bootstrap",
                 "--extra-profile-file=jsreftest/tests/user.js",
-                "jsreftest/tests/jstests.list",
                 "--http-port=%(http_port)s",
                 "--ssl-port=%(ssl_port)s",
-                "--symbols-path=%(symbols_path)s"
+                "--symbols-path=%(symbols_path)s",
+                "--suite=jstestbrowser",
             ],
+            "tests": ["jsreftest/tests/jstests.list",],
             "run_filename": "remotereftest.py",
             "testsdir": "reftest"
         },
@@ -166,8 +168,9 @@ config = {
                 "--http-port=%(http_port)s",
                 "--ssl-port=%(ssl_port)s",
                 "--symbols-path=%(symbols_path)s",
-                "reftest/tests/layout/reftests/reftest.list"
+                "--suite=reftest",
             ],
+            "tests": ["reftest/tests/layout/reftests/reftest.list"],
             "run_filename": "remotereftest.py",
             "testsdir": "reftest"
         },

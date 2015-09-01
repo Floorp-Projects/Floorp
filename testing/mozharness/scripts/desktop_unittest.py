@@ -588,8 +588,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 options_list = []
                 env = {}
                 if isinstance(suites[suite], dict):
-                    options_list = suites[suite]['options']
-                    env = copy.deepcopy(suites[suite]['env'])
+                    options_list = suites[suite]['options'] + suites[suite].get("tests", [])
+                    env = copy.deepcopy(suites[suite].get('env', {}))
                 else:
                     options_list = suites[suite]
 
