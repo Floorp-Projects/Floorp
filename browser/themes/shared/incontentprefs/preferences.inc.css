@@ -468,13 +468,18 @@ description > html|a {
   margin-top: 11px;
 }
 
-.fxaAccountBoxButtons button {
+.fxaAccountBoxButtons > * {
+  -moz-box-flex: 1;
+}
+
+.fxaAccountBoxButtons > button {
   padding-left: 11px;
   padding-right: 11px;
   margin: 0;
+  min-width: 0;
 }
 
-.fxaAccountBoxButtons button:first-child {
+.fxaAccountBoxButtons > button:first-child {
   margin-right: 14px !important;
 }
 
