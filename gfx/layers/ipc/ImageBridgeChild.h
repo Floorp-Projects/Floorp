@@ -221,6 +221,8 @@ public:
    */
   static void FlushAllImages(ImageClient* aClient, ImageContainer* aContainer);
 
+  static void FlushAllImagesAsync(ImageClient* aClient);
+
   // CompositableForwarder
 
   virtual void Connect(CompositableClient* aCompositable,
