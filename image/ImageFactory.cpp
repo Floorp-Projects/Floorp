@@ -35,9 +35,8 @@ ImageFactory::Initialize()
 static bool
 ShouldDownscaleDuringDecode(const nsCString& aMimeType)
 {
-  return aMimeType.EqualsLiteral(IMAGE_JPEG) ||
-         aMimeType.EqualsLiteral(IMAGE_JPG) ||
-         aMimeType.EqualsLiteral(IMAGE_PJPEG);
+  DecoderType type = DecoderFactory::GetDecoderType(aMimeType.get());
+  return type == DecoderType::JPEG || type == DecoderType::PNG;
 }
 
 static uint32_t

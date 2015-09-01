@@ -141,6 +141,20 @@ nsPNGDecoder::~nsPNGDecoder()
   }
 }
 
+nsresult
+nsPNGDecoder::SetTargetSize(const nsIntSize& aSize)
+{
+  // Make sure the size is reasonable.
+  if (MOZ_UNLIKELY(aSize.width <= 0 || aSize.height <= 0)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Create a downscaler that we'll filter our output through.
+  mDownscaler.emplace(aSize);
+
+  return NS_OK;
+}
+
 void
 nsPNGDecoder::CheckForTransparency(SurfaceFormat aFormat,
                                    const IntRect& aFrameRect)
@@ -174,7 +188,16 @@ nsPNGDecoder::CreateFrame(png_uint_32 aXOffset, png_uint_32 aYOffset,
     format = gfx::SurfaceFormat::B8G8R8A8;
   }
 
-  nsresult rv = AllocateFrame(mNumFrames, GetSize(), frameRect, format);
+  // Make sure there's no animation or padding if we're downscaling.
+  MOZ_ASSERT_IF(mDownscaler, !GetImageMetadata().HasAnimation());
+  MOZ_ASSERT_IF(mDownscaler,
+                IntRect(IntPoint(), GetSize()).IsEqualEdges(frameRect));
+
+  IntSize targetSize = mDownscaler ? mDownscaler->TargetSize()
+                                   : GetSize();
+  IntRect targetFrameRect = mDownscaler ? IntRect(IntPoint(), targetSize)
+                                        : frameRect;
+  nsresult rv = AllocateFrame(mNumFrames, targetSize, targetFrameRect, format);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -197,6 +220,14 @@ nsPNGDecoder::CreateFrame(png_uint_32 aXOffset, png_uint_32 aYOffset,
     }
   }
 #endif
+
+  if (mDownscaler) {
+    bool hasAlpha = aFormat != SurfaceFormat::B8G8R8X8;
+    rv = mDownscaler->BeginFrame(frameRect.Size(), mImageData, hasAlpha);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
 
   return NS_OK;
 }
@@ -593,6 +624,12 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   bool isAnimated = png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL);
   if (isAnimated) {
     decoder->PostIsAnimated(GetNextFrameDelay(png_ptr, info_ptr));
+
+    if (decoder->mDownscaler && !decoder->IsFirstFrameDecode()) {
+      MOZ_ASSERT_UNREACHABLE("Doing downscale-during-decode "
+                             "for an animated image?");
+      decoder->mDownscaler.reset();
+    }
   }
 #endif
 
@@ -646,6 +683,33 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 }
 
 void
+nsPNGDecoder::PostPartialInvalidation(const IntRect& aInvalidRegion)
+{
+  if (!mDownscaler) {
+    PostInvalidation(aInvalidRegion);
+    return;
+  }
+
+  if (!mDownscaler->HasInvalidation()) {
+    return;
+  }
+
+  DownscalerInvalidRect invalidRect = mDownscaler->TakeInvalidRect();
+  PostInvalidation(invalidRect.mOriginalSizeRect,
+                   Some(invalidRect.mTargetSizeRect));
+}
+
+void
+nsPNGDecoder::PostFullInvalidation()
+{
+  PostInvalidation(mFrameRect);
+
+  if (mDownscaler) {
+    mDownscaler->ResetForNextProgressivePass();
+  }
+}
+
+void
 nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
                            png_uint_32 row_num, int pass)
 {
@@ -688,7 +752,12 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     return;
   }
 
-  if (new_row) {
+  // If |new_row| is null, that indicates that this is an interlaced image and
+  // |row_callback| is being called for a row that hasn't changed.  Ordinarily
+  // we don't need to do anything in this case, but if we're downscaling, the
+  // downscaler doesn't store the rows from previous passes, so we still need to
+  // process the row.
+  if (new_row || decoder->mDownscaler) {
     int32_t width = decoder->mFrameRect.width;
     uint32_t iwidth = decoder->mFrameRect.width;
 
@@ -699,7 +768,9 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     }
 
     uint32_t bpr = width * sizeof(uint32_t);
-    uint32_t* cptr32 = (uint32_t*)(decoder->mImageData + (row_num*bpr));
+    uint32_t* cptr32 = decoder->mDownscaler
+      ? reinterpret_cast<uint32_t*>(decoder->mDownscaler->RowBuffer())
+      : reinterpret_cast<uint32_t*>(decoder->mImageData + (row_num*bpr));
 
     if (decoder->mTransform) {
       if (decoder->mCMSLine) {
@@ -763,14 +834,17 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
         png_longjmp(decoder->mPNG, 1);
     }
 
+    if (decoder->mDownscaler) {
+      decoder->mDownscaler->CommitRow();
+    }
+
     if (!decoder->interlacebuf) {
-      // Do line-by-line partial invalidations for non-interlaced images
-      decoder->PostInvalidation(IntRect(0, row_num, width, 1));
+      // Do line-by-line partial invalidations for non-interlaced images.
+      decoder->PostPartialInvalidation(IntRect(0, row_num, width, 1));
     } else if (row_num ==
                static_cast<png_uint_32>(decoder->mFrameRect.height - 1)) {
-      // Do only one full image invalidation for each pass (Bug 1187569)
-      decoder->PostInvalidation(IntRect(0, 0, width,
-                                decoder->mFrameRect.height));
+      // Do only one full image invalidation for each pass. (Bug 1187569)
+      decoder->PostFullInvalidation();
     }
   }
 }
