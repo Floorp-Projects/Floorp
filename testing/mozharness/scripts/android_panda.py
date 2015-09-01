@@ -252,6 +252,9 @@ class PandaTest(TestingMixin, MercurialScript, BlobUploadMixin, MozpoolMixin, Bu
 
                 cmd = self.append_harness_extra_args(cmd)
 
+                tests = self.config["suite_definitions"][suite_category].get("tests", [])
+                abs_base_cmd += tests
+
                 tbpl_status, log_level = None, None
                 error_list = BaseErrorList + [{
                     'regex': re.compile(r"(?:TEST-UNEXPECTED-FAIL|PROCESS-CRASH) \| .* \| (application crashed|missing output line for total leaks!|negative leaks caught!|\d+ bytes leaked)"),
