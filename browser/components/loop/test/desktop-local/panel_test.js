@@ -11,7 +11,7 @@ describe("loop.panel", function() {
   var sharedUtils = loop.shared.utils;
 
   var sandbox, notifications;
-  var fakeXHR, fakeWindow, fakeMozLoop;
+  var fakeXHR, fakeWindow, fakeMozLoop, fakeEvent;
   var requests = [];
   var mozL10nGetSpy;
 
@@ -22,6 +22,12 @@ describe("loop.panel", function() {
     // https://github.com/cjohansen/Sinon.JS/issues/393
     fakeXHR.xhr.onCreate = function (xhr) {
       requests.push(xhr);
+    };
+
+    fakeEvent = {
+      preventDefault: sandbox.stub(),
+      stopPropagation: sandbox.stub(),
+      pageY: 42
     };
 
     fakeWindow = {
@@ -587,100 +593,86 @@ describe("loop.panel", function() {
         React.createElement(loop.panel.RoomEntry, props));
     }
 
-    describe("Copy button", function() {
-      var roomStore, roomEntry, copyButton;
+    describe("handleContextChevronClick", function() {
+      var view;
 
       beforeEach(function() {
-        roomStore = new loop.store.RoomStore(dispatcher, {
-          mozLoop: navigator.mozLoop
-        });
-        roomStore.setStoreState({
-          pendingCreation: false,
-          pendingInitialRetrieval: false,
-          rooms: [],
-          error: undefined
-        });
+        // Stub to prevent warnings due to stores not being set up to handle
+        // the actions we are triggering.
+        sandbox.stub(dispatcher, "dispatch");
+
+        view = mountRoomEntry({room: new loop.store.Room(roomData)});
+      });
+
+      // XXX Current version of React cannot use TestUtils.Simulate, please
+      // enable when we upgrade.
+      it.skip("should close the menu when you move out the cursor", function() {
+        expect(view.refs.contextActions.state.showMenu).to.eql(false);
+      });
+
+      it("should set eventPosY when handleContextChevronClick is called", function() {
+        view.handleContextChevronClick(fakeEvent);
+
+        expect(view.state.eventPosY).to.eql(fakeEvent.pageY);
+      });
+
+      it("toggle state.showMenu when handleContextChevronClick is called", function() {
+        var prevState = view.state.showMenu;
+        view.handleContextChevronClick(fakeEvent);
+
+        expect(view.state.showMenu).to.eql(!prevState);
+      });
+
+      it("should toggle the menu when the button is clicked", function() {
+        var prevState = view.state.showMenu;
+        var node = view.refs.contextActions.refs["menu-button"].getDOMNode();
+
+        TestUtils.Simulate.click(node, fakeEvent);
+
+        expect(view.state.showMenu).to.eql(!prevState);
+      });
+    });
+
+    describe("Copy button", function() {
+      var roomEntry;
+
+      beforeEach(function() {
+        // Stub to prevent warnings where no stores are set up to handle the
+        // actions we are testing.
+        sandbox.stub(dispatcher, "dispatch");
+
         roomEntry = mountRoomEntry({
           deleteRoom: sandbox.stub(),
           room: new loop.store.Room(roomData)
         });
-        copyButton = roomEntry.getDOMNode().querySelector("button.copy-link");
       });
 
-      it("should not display a copy button by default", function() {
-        expect(copyButton).to.not.equal(null);
+      it("should render context actions button", function() {
+        expect(roomEntry.refs.contextActions).to.not.eql(null);
       });
 
-      it("should copy the URL when the click event fires", function() {
-        sandbox.stub(dispatcher, "dispatch");
+      describe("OpenRoom", function() {
+        it("should dispatch an OpenRoom action when button is clicked", function() {
+          TestUtils.Simulate.click(roomEntry.refs.roomEntry.getDOMNode());
 
-        TestUtils.Simulate.click(copyButton);
-
-        sinon.assert.called(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch, new sharedActions.CopyRoomUrl({
-          roomUrl: roomData.roomUrl,
-          from: "panel"
-        }));
-      });
-
-      it("should set state.urlCopied when the click event fires", function() {
-        TestUtils.Simulate.click(copyButton);
-
-        expect(roomEntry.state.urlCopied).to.equal(true);
-      });
-
-      it("should switch to displaying a check icon when the URL has been copied",
-        function() {
-          TestUtils.Simulate.click(copyButton);
-
-          expect(copyButton.classList.contains("checked")).eql(true);
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.OpenRoom({roomToken: roomData.roomToken}));
         });
 
-      it("should not display a check icon after mouse leaves the entry",
-        function() {
-          var roomNode = roomEntry.getDOMNode();
-          TestUtils.Simulate.click(copyButton);
+        it("should dispatch an OpenRoom action when callback is called", function() {
+          roomEntry.handleClickEntry(fakeEvent);
 
-          TestUtils.SimulateNative.mouseOut(roomNode);
-
-          expect(copyButton.classList.contains("checked")).eql(false);
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.OpenRoom({roomToken: roomData.roomToken}));
         });
-    });
 
-    describe("Delete button click", function() {
-      var roomEntry, deleteButton;
+        it("should call window.close", function() {
+          roomEntry.handleClickEntry(fakeEvent);
 
-      beforeEach(function() {
-        roomEntry = mountRoomEntry({
-          room: new loop.store.Room(roomData)
+          sinon.assert.calledOnce(fakeWindow.close);
         });
-        deleteButton = roomEntry.getDOMNode().querySelector("button.delete-link");
-      });
-
-      it("should not display a delete button by default", function() {
-        expect(deleteButton).to.not.equal(null);
-      });
-
-      it("should dispatch a delete action when confirmation is granted", function() {
-        sandbox.stub(dispatcher, "dispatch");
-
-        navigator.mozLoop.confirm.callsArgWith(1, null, true);
-        TestUtils.Simulate.click(deleteButton);
-
-        sinon.assert.calledOnce(navigator.mozLoop.confirm);
-        sinon.assert.calledOnce(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.DeleteRoom({roomToken: roomData.roomToken}));
-      });
-
-      it("should not dispatch an action when the confirmation is cancelled", function() {
-        sandbox.stub(dispatcher, "dispatch");
-
-        navigator.mozLoop.confirm.callsArgWith(1, null, false);
-        TestUtils.Simulate.click(deleteButton);
-
-        sinon.assert.calledOnce(navigator.mozLoop.confirm);
-        sinon.assert.notCalled(dispatcher.dispatch);
       });
     });
 
@@ -754,19 +746,6 @@ describe("loop.panel", function() {
         roomEntryNode = roomEntry.getDOMNode();
       });
 
-      it("should dispatch an OpenRoom action", function() {
-        TestUtils.Simulate.click(roomEntryNode);
-
-        sinon.assert.calledOnce(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.OpenRoom({roomToken: roomData.roomToken}));
-      });
-
-      it("should call window.close", function() {
-        TestUtils.Simulate.click(roomEntryNode);
-
-        sinon.assert.calledOnce(fakeWindow.close);
-      });
     });
 
     describe("Room name updated", function() {
@@ -792,7 +771,7 @@ describe("loop.panel", function() {
   });
 
   describe("loop.panel.RoomList", function() {
-    var roomStore, dispatcher, fakeEmail, dispatch;
+    var roomStore, dispatcher, fakeEmail, dispatch, roomData;
 
     beforeEach(function() {
       fakeEmail = "fakeEmail@example.com";
@@ -806,7 +785,26 @@ describe("loop.panel", function() {
         rooms: [],
         error: undefined
       });
+
       dispatch = sandbox.stub(dispatcher, "dispatch");
+
+      roomData = {
+        roomToken: "QzBbvGmIZWU",
+        roomUrl: "http://sample/QzBbvGmIZWU",
+        decryptedContext: {
+          roomName: "Second Room Name"
+        },
+        maxSize: 2,
+        participants: [{
+          displayName: "Alexis",
+          account: "alexis@example.com",
+          roomConnectionId: "2a1787a6-4a73-43b5-ae3e-906ec1e763cb"
+        }, {
+          displayName: "Adam",
+          roomConnectionId: "781f012b-f1ea-4ce1-9105-7cfc36fb4ec7"
+        }],
+        ctime: 1405517418
+      };
     });
 
     function createTestComponent() {
@@ -1074,6 +1072,141 @@ describe("loop.panel", function() {
       TestUtils.Simulate.click(view.getDOMNode().querySelector("a"));
 
       sinon.assert.calledOnce(fakeMozLoop.logOutFromFxA);
+    });
+  });
+
+  describe("ConversationDropdown", function() {
+    var view;
+
+    function createTestComponent() {
+      return TestUtils.renderIntoDocument(
+        React.createElement(loop.panel.ConversationDropdown, {
+          handleCopyButtonClick: sandbox.stub(),
+          handleDeleteButtonClick: sandbox.stub(),
+          handleEmailButtonClick: sandbox.stub(),
+          eventPosY: 0
+        }));
+    }
+
+    beforeEach(function() {
+      view = createTestComponent();
+    });
+
+    it("should trigger handleCopyButtonClick when copy button is clicked",
+       function() {
+         TestUtils.Simulate.click(view.refs.copyButton.getDOMNode());
+
+         sinon.assert.calledOnce(view.props.handleCopyButtonClick);
+       });
+
+    it("should trigger handleEmailButtonClick when email button is clicked",
+       function() {
+         TestUtils.Simulate.click(view.refs.emailButton.getDOMNode());
+
+         sinon.assert.calledOnce(view.props.handleEmailButtonClick);
+       });
+
+    it("should trigger handleDeleteButtonClick when delete button is clicked",
+       function() {
+         TestUtils.Simulate.click(view.refs.deleteButton.getDOMNode());
+
+         sinon.assert.calledOnce(view.props.handleDeleteButtonClick);
+       });
+  });
+
+  describe("RoomEntryContextButtons", function() {
+    var view, dispatcher, roomData;
+
+    function createTestComponent(extraProps) {
+      var props = _.extend({
+        dispatcher: dispatcher,
+        eventPosY: 0,
+        handleClickEntry: sandbox.stub(),
+        showMenu: false,
+        room: roomData,
+        toggleDropdownMenu: sandbox.stub(),
+        handleContextChevronClick: sandbox.stub()
+      }, extraProps);
+      return TestUtils.renderIntoDocument(
+        React.createElement(loop.panel.RoomEntryContextButtons, props));
+    }
+
+    beforeEach(function() {
+      roomData = {
+        roomToken: "QzBbvGmIZWU",
+        roomUrl: "http://sample/QzBbvGmIZWU",
+        decryptedContext: {
+          roomName: "Second Room Name"
+        },
+        maxSize: 2,
+        participants: [{
+          displayName: "Alexis",
+          account: "alexis@example.com",
+          roomConnectionId: "2a1787a6-4a73-43b5-ae3e-906ec1e763cb"
+        }, {
+          displayName: "Adam",
+          roomConnectionId: "781f012b-f1ea-4ce1-9105-7cfc36fb4ec7"
+        }],
+        ctime: 1405517418
+      };
+
+      dispatcher = new loop.Dispatcher();
+      sandbox.stub(dispatcher, "dispatch");
+
+      view = createTestComponent();
+    });
+
+    it("should render ConversationDropdown if state.showMenu=true", function() {
+      view = createTestComponent({showMenu: true});
+
+      expect(view.refs.menu).to.not.eql(undefined);
+    });
+
+    it("should not render ConversationDropdown by default", function() {
+      view = createTestComponent({showMenu: false});
+
+      expect(view.refs.menu).to.eql(undefined);
+    });
+
+    it("should call toggleDropdownMenu after link is emailed", function() {
+      view.handleEmailButtonClick(fakeEvent);
+
+      sinon.assert.calledOnce(view.props.toggleDropdownMenu);
+    });
+
+    it("should call toggleDropdownMenu after conversation deleted", function() {
+      view.handleDeleteButtonClick(fakeEvent);
+
+      sinon.assert.calledOnce(view.props.toggleDropdownMenu);
+    });
+
+    it("should call toggleDropdownMenu after link is copied", function() {
+      view.handleCopyButtonClick(fakeEvent);
+
+      sinon.assert.calledOnce(view.props.toggleDropdownMenu);
+    });
+
+    it("should copy the URL when the callback is called", function() {
+      view.handleCopyButtonClick(fakeEvent);
+
+      sinon.assert.called(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch, new sharedActions.CopyRoomUrl({
+        roomUrl: roomData.roomUrl,
+        from: "panel"
+      }));
+    });
+
+    it("should dispatch a delete action when callback is called", function() {
+      view.handleDeleteButtonClick(fakeEvent);
+
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.DeleteRoom({roomToken: roomData.roomToken}));
+    });
+
+    it("should trigger handleClickEntry when button is clicked", function() {
+      TestUtils.Simulate.click(view.refs.callButton.getDOMNode());
+
+      sinon.assert.calledOnce(view.props.handleClickEntry);
     });
   });
 });

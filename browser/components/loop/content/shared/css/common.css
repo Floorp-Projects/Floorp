@@ -453,11 +453,11 @@ html[dir="rtl"] .dropdown-menu {
 }
 
 .dropdown-menu-item:first-child {
-  padding-top: .8rem;
+  padding-top: .5rem;
 }
 
 .dropdown-menu-item:last-child {
-  padding-bottom: .8rem;
+  padding-bottom: .5rem;
 }
 
 .dropdown-menu-item:first-child:hover {

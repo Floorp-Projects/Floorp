@@ -508,9 +508,7 @@ describe("loop.contacts", function() {
         });
 
         sinon.assert.calledWithExactly(mozL10nGetSpy,
-                                       "no_search_results_message_heading");
-        sinon.assert.calledWithExactly(mozL10nGetSpy,
-                                       "no_search_results_message_subheading");
+                                       "contacts_no_search_results");
       });
 
       it("should filter the user name correctly", function() {
