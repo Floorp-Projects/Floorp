@@ -320,21 +320,16 @@ class MacroAssembler : public MacroAssemblerSpecific
     mozilla::Maybe<AutoJitContextAlloc> alloc_;
 
   private:
-    // This field is used to manage profiling instrumentation output. If
-    // provided and enabled, then instrumentation will be emitted around call
-    // sites.
-    bool emitProfilingInstrumentation_;
-
     // Labels for handling exceptions and failures.
     NonAssertingLabel failureLabel_;
 
   public:
     MacroAssembler()
-      : emitProfilingInstrumentation_(false),
-        framePushed_(0)
+      : framePushed_(0),
 #ifdef DEBUG
-      , inCall_(false)
+        inCall_(false),
 #endif
+        emitProfilingInstrumentation_(false)
     {
         JitContext* jcx = GetJitContext();
         JSContext* cx = jcx->cx;
@@ -365,11 +360,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     // asm.js compilation handles its own JitContext-pushing
     struct AsmJSToken {};
     explicit MacroAssembler(AsmJSToken)
-      : emitProfilingInstrumentation_(false),
-        framePushed_(0)
+      : framePushed_(0),
 #ifdef DEBUG
-      , inCall_(false)
+        inCall_(false),
 #endif
+        emitProfilingInstrumentation_(false)
     {
 #if defined(JS_CODEGEN_ARM)
         initWithAllocator();
@@ -378,10 +373,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         initWithAllocator();
         armbuffer_.id = 0;
 #endif
-    }
-
-    void enableProfilingInstrumentation() {
-        emitProfilingInstrumentation_ = true;
     }
 
     void resetForNewCodeGenerator(TempAllocator& alloc);
@@ -1116,28 +1107,25 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // see above comment for what is returned
     uint32_t callWithExitFrame(Label* target) {
-        profilerPreCall();
+        AutoProfilerCallInstrumentation profiler(*this);
         MacroAssemblerSpecific::callWithExitFrame(target);
         uint32_t ret = currentOffset();
-        profilerPostReturn();
         return ret;
     }
 
     // see above comment for what is returned
     uint32_t callWithExitFrame(JitCode* target) {
-        profilerPreCall();
+        AutoProfilerCallInstrumentation profiler(*this);
         MacroAssemblerSpecific::callWithExitFrame(target);
         uint32_t ret = currentOffset();
-        profilerPostReturn();
         return ret;
     }
 
     // see above comment for what is returned
     uint32_t callWithExitFrame(JitCode* target, Register dynStack) {
-        profilerPreCall();
+        AutoProfilerCallInstrumentation profiler(*this);
         MacroAssemblerSpecific::callWithExitFrame(target, dynStack);
         uint32_t ret = currentOffset();
-        profilerPostReturn();
         return ret;
     }
 
@@ -1231,21 +1219,40 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 #endif // !JS_CODEGEN_ARM64
 
-  private:
-    // These two functions are helpers used around call sites throughout the
-    // assembler. They are called from the above call wrappers to emit the
-    // necessary instrumentation.
-    void profilerPreCall() {
-        if (!emitProfilingInstrumentation_)
-            return;
-        profilerPreCallImpl();
+  public:
+    void enableProfilingInstrumentation() {
+        emitProfilingInstrumentation_ = true;
     }
 
-    void profilerPostReturn() {
-        if (!emitProfilingInstrumentation_)
-            return;
-        profilerPostReturnImpl();
+  private:
+    // This class is used to surround call sites throughout the assembler. This
+    // is used by callWithABI, callJit, and callWithExitFrame functions, except
+    // if suffixed by NoProfiler.
+    class AutoProfilerCallInstrumentation {
+        MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
+
+      public:
+        explicit AutoProfilerCallInstrumentation(MacroAssembler& masm
+                                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+        ~AutoProfilerCallInstrumentation() {}
+    };
+    friend class AutoProfilerCallInstrumentation;
+
+    void appendProfilerCallSite(CodeOffsetLabel label) {
+        propagateOOM(profilerCallSites_.append(label));
     }
+
+    // Fix up the code pointers to be written for locations where profilerCallSite
+    // emitted moves of RIP to a register.
+    void linkProfilerCallSites(JitCode* code);
+
+    // This field is used to manage profiling instrumentation output. If
+    // provided and enabled, then instrumentation will be emitted around call
+    // sites.
+    bool emitProfilingInstrumentation_;
+
+    // Record locations of the call sites.
+    Vector<CodeOffsetLabel, 0, SystemAllocPolicy> profilerCallSites_;
 
   public:
     void loadBaselineOrIonRaw(Register script, Register dest, Label* failure);
@@ -1558,10 +1565,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&ok);
 #endif
     }
-
-    void profilerPreCallImpl();
-    void profilerPreCallImpl(Register reg, Register reg2);
-    void profilerPostReturnImpl() {}
 };
 
 static inline Assembler::DoubleCondition

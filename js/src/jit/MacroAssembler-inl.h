@@ -94,9 +94,8 @@ MacroAssembler::passABIArg(FloatRegister reg, MoveOp::Type type)
 template <typename T> void
 MacroAssembler::callWithABI(const T& fun, MoveOp::Type result)
 {
-    profilerPreCall();
+    AutoProfilerCallInstrumentation profiler(*this);
     callWithABINoProfiler(fun, result);
-    profilerPostReturn();
 }
 
 void
@@ -158,9 +157,8 @@ MacroAssembler::signature() const
 uint32_t
 MacroAssembler::callJit(Register callee)
 {
-    profilerPreCall();
+    AutoProfilerCallInstrumentation profiler(*this);
     uint32_t ret = callJitNoProfiler(callee);
-    profilerPostReturn();
     return ret;
 }
 
