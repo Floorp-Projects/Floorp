@@ -270,28 +270,11 @@ IMFYCbCrImage::GetTextureClient(CompositableClient* aClient)
                            mData.mCbCrStride, mData.mCbCrStride * mData.mCbCrSize.height);
   }
 
-  RefPtr<IDXGIResource> resource;
-
-  HANDLE shareHandleY;
-  textureY->QueryInterface((IDXGIResource**)byRef(resource));
-  hr = resource->GetSharedHandle(&shareHandleY);
-
-  HANDLE shareHandleCb;
-  textureCb->QueryInterface((IDXGIResource**)byRef(resource));
-  hr = resource->GetSharedHandle(&shareHandleCb);
-
-  HANDLE shareHandleCr;
-  textureCr->QueryInterface((IDXGIResource**)byRef(resource));
-  hr = resource->GetSharedHandle(&shareHandleCr);
-
   mTextureClient = DXGIYCbCrTextureClient::Create(aClient->GetForwarder(),
                                                   TextureFlags::DEFAULT,
                                                   textureY,
                                                   textureCb,
                                                   textureCr,
-                                                  shareHandleY,
-                                                  shareHandleCb,
-                                                  shareHandleCr,
                                                   GetSize(),
                                                   mData.mYSize,
                                                   mData.mCbCrSize);
