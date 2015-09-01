@@ -133,3 +133,41 @@
                 <data android:scheme="package"/>
             </intent-filter>
         </receiver>
+
+#ifndef MOZ_ANDROID_NATIVE_ACCOUNT_UI
+        <activity
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivityWeb">
+            <intent-filter>
+                <action android:name="@ANDROID_PACKAGE_NAME@.ACTION_FXA_GET_STARTED"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountUpdateCredentialsActivityWeb">
+            <intent-filter>
+                <action android:name="@ANDROID_PACKAGE_NAME@.ACTION_FXA_UPDATE_CREDENTIALS"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountFinishMigratingActivityWeb">
+            <intent-filter>
+                <action android:name="@ANDROID_PACKAGE_NAME@.ACTION_FXA_FINISH_MIGRATING"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountConfirmAccountActivityWeb">
+            <intent-filter>
+                <action android:name="@ANDROID_PACKAGE_NAME@.ACTION_FXA_CONFIRM_ACCOUNT"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+#endif
