@@ -315,10 +315,6 @@ class MacroAssemblerMIPS : public Assembler
                               FPConditionBit fcc = FCC0);
 
   public:
-    // calls an ion function, assuming that the stack is currently not 8 byte aligned
-    void ma_callJitHalfPush(const Register reg);
-    void ma_callJitHalfPush(Label* label);
-
     void ma_call(ImmPtr dest);
 
     void ma_jump(ImmPtr dest);

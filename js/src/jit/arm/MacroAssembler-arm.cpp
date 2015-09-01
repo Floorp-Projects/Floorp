@@ -3730,36 +3730,6 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, const BaseIndex& dest)
     ma_sub(base, Imm32(NUNBOX32_TYPE_OFFSET + dest.offset), base);
 }
 
-// ARM says that all reads of pc will return 8 higher than the address of the
-// currently executing instruction. This means we are correctly storing the
-// address of the instruction after the call in the register.
-//
-// Also ION is breaking the ARM EABI here (sort of). The ARM EABI says that a
-// function call should move the pc into the link register, then branch to the
-// function, and *sp is data that is owned by the caller, not the callee. The
-// ION ABI says *sp should be the address that we will return to when leaving
-// this function.
-void
-MacroAssemblerARM::ma_callJitHalfPush(const Register r)
-{
-    // The stack is unaligned by 4 bytes. We push the pc to the stack to align
-    // the stack before the call, when we return the pc is poped and the stack
-    // is restored to its unaligned state.
-    as_blx(r);
-}
-
-void
-MacroAssemblerARM::ma_callJitHalfPush(Label* label)
-{
-    // The stack is unaligned by 4 bytes. The callee will push the lr to the stack to align
-    // the stack after the call, when we return the pc is poped and the stack
-    // is restored to its unaligned state.
-
-    // leave the stack as-is so the callee-side can push when necessary.
-
-    as_bl(label, Always);
-}
-
 void
 MacroAssemblerARM::ma_call(ImmPtr dest)
 {
@@ -5100,7 +5070,7 @@ MacroAssembler::call(JitCode* c)
 
     ScratchRegisterScope scratch(*this);
     ma_movPatchable(ImmPtr(c->raw()), scratch, Always, rs);
-    ma_callJitHalfPush(scratch);
+    callJitNoProfiler(scratch);
 }
 
 void

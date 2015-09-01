@@ -405,8 +405,7 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     // Load the address of the code that is getting called.
     masm.Ldr(x3, MemOperand(x5, JSFunction::offsetOfNativeOrScript()));
     masm.loadBaselineOrIonRaw(r3, r3, nullptr);
-    masm.call(r3);
-    uint32_t returnOffset = masm.currentOffset();
+    uint32_t returnOffset = masm.callJitNoProfiler(r3);
 
     // Clean up!
     // Get the size of the stack frame, and clean up the later fixed frame.

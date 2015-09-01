@@ -3005,28 +3005,6 @@ MacroAssemblerMIPSCompat::storeTypeTag(ImmTag tag, const BaseIndex& dest)
     as_sw(ScratchRegister, SecondScratchReg, TAG_OFFSET);
 }
 
-// This macrosintruction calls the ion code and pushes the return address to
-// the stack in the case when stack is not alligned.
-void
-MacroAssemblerMIPS::ma_callJitHalfPush(const Register r)
-{
-    // This is a MIPS hack to push return address during jalr delay slot.
-    as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
-    as_jalr(r);
-    as_sw(ra, StackPointer, 0);
-}
-
-// This macrosintruction calls the ion code and pushes the return address to
-// the stack in the case when stack is not alligned.
-void
-MacroAssemblerMIPS::ma_callJitHalfPush(Label* label)
-{
-    // This is a MIPS hack to push return address during jalr delay slot.
-    as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
-    ma_bal(label, DontFillDelaySlot);
-    as_sw(ra, StackPointer, 0);
-}
-
 void
 MacroAssemblerMIPS::ma_call(ImmPtr dest)
 {
@@ -3460,7 +3438,7 @@ MacroAssembler::call(JitCode* c)
     BufferOffset bo = m_buffer.nextOffset();
     addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
     ma_liPatchable(ScratchRegister, Imm32((uint32_t)c->raw()));
-    ma_callJitHalfPush(ScratchRegister);
+    callJitNoProfiler(ScratchRegister);
 }
 
 void
