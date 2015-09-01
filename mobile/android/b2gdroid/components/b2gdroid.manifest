@@ -1,4 +1,4 @@
 # Setup.js
-component {8bc88ef2-3aab-4e94-a40c-e2c80added2c} Setup.js
-contract @mozilla.org/b2g/b2gdroid-setup;1 {8bc88ef2-3aab-4e94-a40c-e2c80added2c}
-category profile-after-change B2GDroidSetup @mozilla.org/b2g/b2gdroid-setup;1
+component {8bc88ef2-3aab-4e94-a40c-e2c80added2c} Setup.js process=main
+contract @mozilla.org/b2g/b2gdroid-setup;1 {8bc88ef2-3aab-4e94-a40c-e2c80added2c} process=main
+category profile-after-change B2GDroidSetup @mozilla.org/b2g/b2gdroid-setup;1 process=main
