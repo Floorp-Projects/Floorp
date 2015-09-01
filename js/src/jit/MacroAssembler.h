@@ -484,6 +484,14 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void call(const CallSiteDesc& desc, const Register reg);
     inline void call(const CallSiteDesc& desc, Label* label);
 
+    // Push the return address and make a call. On platforms where this function
+    // is not defined, push the link register (pushReturnAddress) at the entry
+    // point of the callee.
+    void callAndPushReturnAddress(Register reg) DEFINED_ON(mips32, x86_shared);
+    void callAndPushReturnAddress(Label* label) DEFINED_ON(mips32, x86_shared);
+
+    void pushReturnAddress() DEFINED_ON(arm, arm64);
+
   public:
     // ===============================================================
     // ABI function calls.
@@ -572,7 +580,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // These functions return the offset of the return address, in order to use
     // the return address to index the safepoints, which are used to list all
     // live registers.
-    uint32_t callJitNoProfiler(Register callee) PER_SHARED_ARCH;
+    inline uint32_t callJitNoProfiler(Register callee);
     inline uint32_t callJit(Register callee);
     inline uint32_t callJit(JitCode* code);
 
