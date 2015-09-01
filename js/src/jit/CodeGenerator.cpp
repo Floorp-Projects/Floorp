@@ -2873,7 +2873,7 @@ CodeGenerator::visitCallNative(LCallNative* call)
 
     // Construct native exit frame.
     uint32_t safepointOffset = masm.buildFakeExitFrame(tempReg);
-    masm.enterFakeExitFrame(NativeExitFrameLayout::Token());
+    masm.enterFakeExitFrame(NativeExitFrameLayoutToken);
 
     markSafepointAt(safepointOffset, call);
 
@@ -2991,7 +2991,7 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative* call)
 
     // Construct native exit frame.
     uint32_t safepointOffset = masm.buildFakeExitFrame(argJSContext);
-    masm.enterFakeExitFrame(IonDOMMethodExitFrameLayout::Token());
+    masm.enterFakeExitFrame(IonDOMMethodExitFrameLayoutToken);
 
     markSafepointAt(safepointOffset, call);
 
@@ -6311,7 +6311,7 @@ JitRuntime::generateLazyLinkStub(JSContext* cx)
     size_t convertToExitFrame = JitFrameLayout::Size() - ExitFrameLayout::Size();
     masm.addPtr(Imm32(convertToExitFrame << FRAMESIZE_SHIFT), descriptor);
 
-    masm.enterFakeExitFrame(LazyLinkExitFrameLayout::Token());
+    masm.enterFakeExitFrame(LazyLinkExitFrameLayoutToken);
     masm.PushStubCode();
 
     masm.setupUnalignedABICall(temp0);
@@ -9734,7 +9734,7 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty* ins)
     masm.moveStackPtrTo(ObjectReg);
 
     uint32_t safepointOffset = masm.buildFakeExitFrame(JSContextReg);
-    masm.enterFakeExitFrame(IonDOMExitFrameLayout::GetterToken());
+    masm.enterFakeExitFrame(IonDOMExitFrameLayoutGetterToken);
 
     markSafepointAt(safepointOffset, ins);
 
@@ -9823,7 +9823,7 @@ CodeGenerator::visitSetDOMProperty(LSetDOMProperty* ins)
     masm.moveStackPtrTo(ObjectReg);
 
     uint32_t safepointOffset = masm.buildFakeExitFrame(JSContextReg);
-    masm.enterFakeExitFrame(IonDOMExitFrameLayout::SetterToken());
+    masm.enterFakeExitFrame(IonDOMExitFrameLayoutSetterToken);
 
     markSafepointAt(safepointOffset, ins);
 

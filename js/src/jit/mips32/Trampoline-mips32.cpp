@@ -241,7 +241,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
         masm.storePtr(zero, Address(StackPointer, 0)); // fake return address
 
         // No GC things to mark, push a bare token.
-        masm.enterFakeExitFrame(ExitFrameLayout::BareToken());
+        masm.enterFakeExitFrame(ExitFrameLayoutBareToken);
 
         masm.reserveStack(2 * sizeof(uintptr_t));
         masm.storePtr(framePtr, Address(StackPointer, sizeof(uintptr_t))); // BaselineFrame

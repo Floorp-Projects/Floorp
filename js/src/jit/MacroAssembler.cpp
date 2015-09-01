@@ -1588,15 +1588,6 @@ MacroAssembler::loadStringChar(Register str, Register index, Register output)
     bind(&done);
 }
 
-// Save an exit frame (which must be aligned to the stack pointer) to
-// PerThreadData::jitTop of the main thread.
-void
-MacroAssembler::linkExitFrame()
-{
-    AbsoluteAddress jitTop(GetJitContext()->runtime->addressOfJitTop());
-    storeStackPtr(jitTop);
-}
-
 static void
 BailoutReportOverRecursed(JSContext* cx)
 {
@@ -1667,7 +1658,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
         push(temp);
         push(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeAddr)));
         // No GC things to mark on the stack, push a bare token.
-        enterFakeExitFrame(ExitFrameLayout::BareToken());
+        enterFakeExitFrame(ExitFrameLayoutBareToken);
 
         // If monitorStub is non-null, handle resumeAddr appropriately.
         Label noMonitor;
@@ -2365,16 +2356,7 @@ void
 MacroAssembler::link(JitCode* code)
 {
     MOZ_ASSERT(!oom());
-    // If this code can transition to C++ code and witness a GC, then we need to store
-    // the JitCode onto the stack in order to GC it correctly.  exitCodePatch should
-    // be unset if the code never needed to push its JitCode*.
-    if (hasEnteredExitFrame()) {
-        exitCodePatch_.fixup(this);
-        PatchDataWithValueCheck(CodeLocationLabel(code, exitCodePatch_),
-                                ImmPtr(code),
-                                ImmPtr((void*)-1));
-    }
-
+    linkSelfReference(code);
     linkProfilerCallSites(code);
 }
 
@@ -2877,6 +2859,30 @@ MacroAssembler::callWithABINoProfiler(AsmJSImmPtr imm, MoveOp::Type result)
     callWithABIPre(&stackAdjust, /* callFromAsmJS = */ true);
     call(imm);
     callWithABIPost(stackAdjust, result);
+}
+
+// ===============================================================
+// Exit frame footer.
+
+void
+MacroAssembler::linkExitFrame()
+{
+    AbsoluteAddress jitTop(GetJitContext()->runtime->addressOfJitTop());
+    storeStackPtr(jitTop);
+}
+
+void
+MacroAssembler::linkSelfReference(JitCode* code)
+{
+    // If this code can transition to C++ code and witness a GC, then we need to store
+    // the JitCode onto the stack in order to GC it correctly.  exitCodePatch should
+    // be unset if the code never needed to push its JitCode*.
+    if (hasSelfReference()) {
+        selfReferencePatch_.fixup(this);
+        PatchDataWithValueCheck(CodeLocationLabel(code, selfReferencePatch_),
+                                ImmPtr(code),
+                                ImmPtr((void*)-1));
+    }
 }
 
 //}}} check_macroassembler_style
