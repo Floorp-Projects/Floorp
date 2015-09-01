@@ -42,7 +42,9 @@
 #include "mozilla/dom/ExternalHelperAppParent.h"
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/GeolocationBinding.h"
+#ifdef MOZ_EME
 #include "mozilla/dom/MediaKeySystemAccess.h"
+#endif
 #include "mozilla/dom/NuwaParent.h"
 #include "mozilla/dom/PContentBridgeParent.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
@@ -1105,9 +1107,13 @@ ContentParent::RecvIsGMPPresentOnDisk(const nsString& aKeySystem,
                                       bool* aIsPresent,
                                       nsCString* aMessage)
 {
+#ifdef MOZ_EME
     *aIsPresent = MediaKeySystemAccess::IsGMPPresentOnDisk(aKeySystem,
                                                            aVersion,
                                                            *aMessage);
+#else
+    *aIsPresent = false;
+#endif
 
     return true;
 }
