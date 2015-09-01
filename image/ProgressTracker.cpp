@@ -441,13 +441,14 @@ void
 ProgressTracker::AddObserver(IProgressObserver* aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  nsRefPtr<IProgressObserver> observer = aObserver;
 
   mObservers.Write([=](ObserverTable* aTable) {
-    MOZ_ASSERT(!aTable->Get(aObserver, nullptr),
+    MOZ_ASSERT(!aTable->Get(observer, nullptr),
                "Adding duplicate entry for image observer");
 
-    WeakPtr<IProgressObserver> weakPtr = aObserver;
-    aTable->Put(aObserver, weakPtr);
+    WeakPtr<IProgressObserver> weakPtr = observer.get();
+    aTable->Put(observer, weakPtr);
   });
 }
 
@@ -455,11 +456,12 @@ bool
 ProgressTracker::RemoveObserver(IProgressObserver* aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  nsRefPtr<IProgressObserver> observer = aObserver;
 
   // Remove the observer from the list.
   bool removed = mObservers.Write([=](ObserverTable* aTable) {
-    bool removed = aTable->Get(aObserver, nullptr);
-    aTable->Remove(aObserver);
+    bool removed = aTable->Get(observer, nullptr);
+    aTable->Remove(observer);
     return removed;
   });
 
