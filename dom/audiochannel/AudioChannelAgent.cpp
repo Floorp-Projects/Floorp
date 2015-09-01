@@ -103,23 +103,17 @@ AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_WARN_IF(!aWindow)) {
-    return NS_ERROR_FAILURE;
-  }
+  if (aWindow) {
+    nsCOMPtr<nsPIDOMWindow> pInnerWindow = do_QueryInterface(aWindow);
+    MOZ_ASSERT(pInnerWindow->IsInnerWindow());
+    mInnerWindowID = pInnerWindow->WindowID();
 
-  nsCOMPtr<nsPIDOMWindow> pInnerWindow = do_QueryInterface(aWindow);
-  MOZ_ASSERT(pInnerWindow->IsInnerWindow());
-  mInnerWindowID = pInnerWindow->WindowID();
-
-  nsCOMPtr<nsIDOMWindow> topWindow;
-  aWindow->GetScriptableTop(getter_AddRefs(topWindow));
-  mWindow = do_QueryInterface(topWindow);
-  if (mWindow) {
-    mWindow = mWindow->GetOuterWindow();
-  }
-
-  if (!mWindow) {
-    return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDOMWindow> topWindow;
+    aWindow->GetScriptableTop(getter_AddRefs(topWindow));
+    mWindow = do_QueryInterface(topWindow);
+    if (mWindow) {
+      mWindow = mWindow->GetOuterWindow();
+    }
   }
 
   mAudioChannelType = aChannelType;
@@ -139,13 +133,6 @@ NS_IMETHODIMP AudioChannelAgent::NotifyStartedPlaying(uint32_t aNotifyPlayback,
 {
   MOZ_ASSERT(aVolume);
   MOZ_ASSERT(aMuted);
-
-  // Window-less AudioChannelAgents are muted by default.
-  if (!mWindow) {
-    *aVolume = 0;
-    *aMuted = true;
-    return NS_OK;
-  }
 
   nsRefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (mAudioChannelType == AUDIO_AGENT_CHANNEL_ERROR ||
