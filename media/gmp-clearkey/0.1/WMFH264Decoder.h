@@ -26,7 +26,7 @@ public:
   WMFH264Decoder();
   ~WMFH264Decoder();
 
-  HRESULT Init();
+  HRESULT Init(int32_t aCoreCount);
 
   HRESULT Input(const uint8_t* aData,
                 uint32_t aDataSize,

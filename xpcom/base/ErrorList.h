@@ -333,6 +333,8 @@
   ERROR(NS_ERROR_INTERCEPTED_USED_RESPONSE,            FAILURE(104)),
   /* Service worker intercepted a client request with an opaque response */
   ERROR(NS_ERROR_CLIENT_REQUEST_OPAQUE_INTERCEPTION,   FAILURE(105)),
+  /* Service worker intercepted a non-navigation with an opaque redirect */
+  ERROR(NS_ERROR_BAD_OPAQUE_REDIRECT_INTERCEPTION,     FAILURE(106)),
 #undef MODULE
 
 
