@@ -74,8 +74,9 @@ config = {
                 "--busybox=%(busybox)s",
                 "--total-chunks=%(total_chunks)s",
                 "--this-chunk=%(this_chunk)s",
-                "tests/testing/crashtest/crashtests.list"
+                "--suite=crashtest",
             ],
+            "tests": ["tests/testing/crashtest/crashtests.list",],
             "run_filename": "runreftestb2g.py",
             "testsdir": "reftest"
         },
@@ -94,8 +95,8 @@ config = {
                 "--total-chunks=%(total_chunks)s",
                 "--this-chunk=%(this_chunk)s",
                 "--extra-profile-file=jsreftest/tests/user.js",
-                "jsreftest/tests/jstests.list"
             ],
+            "tests": ["jsreftest/tests/jstests.list",],
             "run_filename": "remotereftest.py",
             "testsdir": "reftest"
         },
@@ -161,8 +162,8 @@ config = {
                 "--total-chunks=%(total_chunks)s",
                 "--this-chunk=%(this_chunk)s",
                 "--enable-oop",
-                "tests/layout/reftests/reftest.list"
             ],
+            "tests": ["tests/layout/reftests/reftest.list",],
             "run_filename": "runreftestsb2g.py",
             "testsdir": "reftest"
         },
