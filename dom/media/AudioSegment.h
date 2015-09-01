@@ -57,19 +57,35 @@ const int GUESS_AUDIO_CHANNELS = 2;
 const uint32_t WEBAUDIO_BLOCK_SIZE_BITS = 7;
 const uint32_t WEBAUDIO_BLOCK_SIZE = 1 << WEBAUDIO_BLOCK_SIZE_BITS;
 
-template <class SrcT, class DestT>
+template <typename SrcT, typename DestT>
 static void
 InterleaveAndConvertBuffer(const SrcT* const* aSourceChannels,
-                           int32_t aLength, float aVolume,
-                           int32_t aChannels,
+                           uint32_t aLength, float aVolume,
+                           uint32_t aChannels,
                            DestT* aOutput)
 {
   DestT* output = aOutput;
-  for (int32_t i = 0; i < aLength; ++i) {
-    for (int32_t channel = 0; channel < aChannels; ++channel) {
+  for (size_t i = 0; i < aLength; ++i) {
+    for (size_t channel = 0; channel < aChannels; ++channel) {
       float v = AudioSampleToFloat(aSourceChannels[channel][i])*aVolume;
       *output = FloatToAudioSample<DestT>(v);
       ++output;
+    }
+  }
+}
+
+template <typename SrcT, typename DestT>
+static void
+DeinterleaveAndConvertBuffer(const SrcT* aSourceBuffer,
+                             uint32_t aFrames, uint32_t aChannels,
+                             DestT** aOutput)
+{
+  for (size_t i = 0; i < aChannels; i++) {
+    size_t interleavedIndex = i;
+    for (size_t j = 0; j < aFrames; j++) {
+      ConvertAudioSample(aSourceBuffer[interleavedIndex],
+                         aOutput[i][j]);
+      interleavedIndex += aChannels;
     }
   }
 }
