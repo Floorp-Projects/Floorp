@@ -442,10 +442,10 @@
             "url": "/_mozilla/service-workers/service-worker/service-worker-csp-script.https.html"
           }
         ],
-        "service-workers/service-worker/serviceworkerobject-scripturl.sub.html": [
+        "service-workers/service-worker/serviceworkerobject-scripturl.https.html": [
           {
-            "path": "service-workers/service-worker/serviceworkerobject-scripturl.sub.html",
-            "url": "/_mozilla/service-workers/service-worker/serviceworkerobject-scripturl.sub.html"
+            "path": "service-workers/service-worker/serviceworkerobject-scripturl.https.html",
+            "url": "/_mozilla/service-workers/service-worker/serviceworkerobject-scripturl.https.html"
           }
         ],
         "service-workers/service-worker/shared-worker-controlled.https.html": [
