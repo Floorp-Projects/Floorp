@@ -7,13 +7,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418986
 <window title="Mozilla Bug 418986"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"/>
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
   <style id="test-css" scoped="true"></style>
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=418986"
      target="_blank">Mozilla Bug 418986</a>
   <p id="display"></p>
-
+  <p id="pictures"></p>
   </body>
 
   <script type="text/javascript;version=1.7" src="bug418986-2.js"></script>
@@ -21,7 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418986
   <script type="text/javascript;version=1.7">
     // Run all tests now.
     window.onload = function () {
-      test(false);
+      add_task(function* () {
+        yield test(false);
+      });
     };
   </script>
 </window>
