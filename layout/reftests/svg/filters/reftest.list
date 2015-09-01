@@ -18,7 +18,7 @@ include svg-filter-chains/reftest.list
 == dynamic-filter-invalidation-01.svg pass.svg
 == dynamic-filter-invalidation-02.svg pass.svg
 
-fuzzy(1,40000) == feBlend-1.svg feBlend-1-ref.svg
+fuzzy(1,42500) == feBlend-1.svg feBlend-1-ref.svg
 == feBlend-2.svg feBlend-2-ref.svg
 
 fuzzy-if(d2d,1,6400) == feColorMatrix-1.svg feColorMatrix-1-ref.svg

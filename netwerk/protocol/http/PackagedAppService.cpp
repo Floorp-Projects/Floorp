@@ -16,6 +16,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/DebugOnly.h"
 #include "nsIHttpHeaderVisitor.h"
+#include "mozilla/LoadContext.h"
 
 namespace mozilla {
 namespace net {
@@ -810,6 +811,12 @@ PackagedAppService::GetResource(nsIChannel *aChannel,
 
   nsRefPtr<PackagedAppChannelListener> listener =
     new PackagedAppChannelListener(downloader, mimeConverter);
+
+  nsCOMPtr<nsIInterfaceRequestor> loadContext;
+  aChannel->GetNotificationCallbacks(getter_AddRefs(loadContext));
+  if (loadContext) {
+    channel->SetNotificationCallbacks(loadContext);
+  }
 
   if (loadInfo && loadInfo->GetEnforceSecurity()) {
     return channel->AsyncOpen2(listener);

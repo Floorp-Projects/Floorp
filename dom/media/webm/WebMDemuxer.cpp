@@ -131,8 +131,6 @@ WebMDemuxer::WebMDemuxer(MediaResource* aResource, bool aIsMediaSource)
   , mVideoTrack(0)
   , mAudioTrack(0)
   , mSeekPreroll(0)
-  , mLastAudioFrameTime(0)
-  , mLastVideoFrameTime(0)
   , mAudioCodec(-1)
   , mVideoCodec(-1)
   , mHasVideo(false)
@@ -507,27 +505,37 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
   // the timestamp of the next packet for this track.  If we've reached the
   // end of the resource, use the file's duration as the end time of this
   // video frame.
-  int64_t next_tstamp = 0;
+  int64_t next_tstamp = INT64_MIN;
   if (aType == TrackInfo::kAudioTrack) {
     nsRefPtr<NesteggPacketHolder> next_holder(NextPacket(aType));
     if (next_holder) {
       next_tstamp = next_holder->Timestamp();
       PushAudioPacket(next_holder);
-    } else {
+    } else if (!mIsMediaSource ||
+               (mIsMediaSource && mLastAudioFrameTime.isSome())) {
       next_tstamp = tstamp;
-      next_tstamp += tstamp - mLastAudioFrameTime;
+      next_tstamp += tstamp - mLastAudioFrameTime.refOr(0);
+    } else {
+      PushAudioPacket(holder);
     }
-    mLastAudioFrameTime = tstamp;
+    mLastAudioFrameTime = Some(tstamp);
   } else if (aType == TrackInfo::kVideoTrack) {
     nsRefPtr<NesteggPacketHolder> next_holder(NextPacket(aType));
     if (next_holder) {
       next_tstamp = next_holder->Timestamp();
       PushVideoPacket(next_holder);
-    } else {
+    } else if (!mIsMediaSource ||
+               (mIsMediaSource && mLastVideoFrameTime.isSome())) {
       next_tstamp = tstamp;
-      next_tstamp += tstamp - mLastVideoFrameTime;
+      next_tstamp += tstamp - mLastVideoFrameTime.refOr(0);
+    } else {
+      PushVideoPacket(holder);
     }
-    mLastVideoFrameTime = tstamp;
+    mLastVideoFrameTime = Some(tstamp);
+  }
+
+  if (mIsMediaSource && next_tstamp == INT64_MIN) {
+    return false;
   }
 
   int64_t discardPadding = 0;
@@ -657,7 +665,7 @@ WebMDemuxer::GetNextKeyframeTime()
   EnsureUpToDateIndex();
   uint64_t keyframeTime;
   uint64_t lastFrame =
-    media::TimeUnit::FromMicroseconds(mLastVideoFrameTime).ToNanoseconds();
+    media::TimeUnit::FromMicroseconds(mLastVideoFrameTime.refOr(0)).ToNanoseconds();
   if (!mBufferedState->GetNextKeyframeTime(lastFrame, &keyframeTime) ||
       keyframeTime <= lastFrame) {
     return -1;
@@ -725,8 +733,8 @@ WebMDemuxer::SeekInternal(const media::TimeUnit& aTarget)
     WEBM_DEBUG("got offset from buffered state: %" PRIu64 "", offset);
   }
 
-  mLastAudioFrameTime = 0;
-  mLastVideoFrameTime = 0;
+  mLastAudioFrameTime.reset();
+  mLastVideoFrameTime.reset();
 
   return NS_OK;
 }

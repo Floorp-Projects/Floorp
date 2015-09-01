@@ -754,7 +754,6 @@ bool intrinsic_ToString(JSContext* cx, unsigned argc, Value* vp);
 bool intrinsic_IsCallable(JSContext* cx, unsigned argc, Value* vp);
 bool intrinsic_ThrowRangeError(JSContext* cx, unsigned argc, Value* vp);
 bool intrinsic_ThrowTypeError(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_NewDenseArray(JSContext* cx, unsigned argc, Value* vp);
 bool intrinsic_IsConstructing(JSContext* cx, unsigned argc, Value* vp);
 bool intrinsic_SubstringKernel(JSContext* cx, unsigned argc, Value* vp);
 

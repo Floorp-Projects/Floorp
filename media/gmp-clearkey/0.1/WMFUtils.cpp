@@ -18,6 +18,7 @@
 #include "ClearKeyUtils.h"
 #include <versionhelpers.h>
 
+#include <algorithm>
 #include <stdio.h>
 
 #define INITGUID
@@ -251,6 +252,12 @@ CreateMFT(const CLSID& clsid,
   }
 
   return S_OK;
+}
+
+int32_t
+GetNumThreads(int32_t aCoreCount)
+{
+  return aCoreCount > 4 ? -1 : (std::max)(aCoreCount - 1, 1);
 }
 
 } // namespace

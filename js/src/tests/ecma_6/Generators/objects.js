@@ -15,6 +15,14 @@ function TestGeneratorObject() {
   assertEq(String(iter), "[object Generator]");
   assertDeepEq(Object.getOwnPropertyNames(iter), []);
   assertNotEq(g(), iter);
+
+  // g() is the same as new g().
+  iter = new g();
+  assertEq(Object.getPrototypeOf(iter), g.prototype);
+  assertTrue(iter instanceof g);
+  assertEq(String(iter), "[object Generator]");
+  assertDeepEq(Object.getOwnPropertyNames(iter), []);
+  assertNotEq(new g(), iter);
 }
 TestGeneratorObject();
 

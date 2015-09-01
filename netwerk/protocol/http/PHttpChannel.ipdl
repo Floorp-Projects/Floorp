@@ -121,7 +121,8 @@ child:
   Redirect1Begin(uint32_t           newChannelId,
                  URIParams          newUri,
                  uint32_t           redirectFlags,
-                 nsHttpResponseHead responseHead);
+                 nsHttpResponseHead responseHead,
+                 nsCString          securityInfoSerialization);
 
   // Called if redirect successful so that child can complete setup.
   Redirect3Complete();
