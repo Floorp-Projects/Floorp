@@ -91,6 +91,11 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD OnVolumeChanged(float aVolume) override
+  {
+    return NS_OK;
+  }
+
 private:
   virtual ~FakeSynthCallback() { }
 
