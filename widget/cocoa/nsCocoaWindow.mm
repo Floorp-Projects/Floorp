@@ -2280,11 +2280,6 @@ nsCocoaWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
 {
   switch (aIMENotification.mMessage) {
     case NOTIFY_IME_OF_FOCUS:
-      if (mInputContext.IsPasswordEditor()) {
-        TextInputHandler::EnableSecureEventInput();
-      } else {
-        TextInputHandler::EnsureSecureEventInputDisabled();
-      }
       return NS_OK;
     case NOTIFY_IME_OF_BLUR:
       return NS_OK;
@@ -2299,16 +2294,6 @@ nsCocoaWindow::SetInputContext(const InputContext& aContext,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (mWindow &&
-      [mWindow firstResponder] == mWindow &&
-      [mWindow isKeyWindow] &&
-      [[NSApplication sharedApplication] isActive]) {
-    if (aContext.IsPasswordEditor()) {
-      TextInputHandler::EnableSecureEventInput();
-    } else {
-      TextInputHandler::EnsureSecureEventInputDisabled();
-    }
-  }
   mInputContext = aContext;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -2544,6 +2529,16 @@ nsCocoaWindow::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
   NSWindow* window = [aNotification object];
   if ([window isSheet])
     [WindowDelegate paintMenubarForWindow:window];
+
+  nsChildView* mainChildView =
+    static_cast<nsChildView*>([[(BaseWindow*)window mainChildView] widget]);
+  if (mainChildView) {
+    if (mainChildView->GetInputContext().IsPasswordEditor()) {
+      TextInputHandler::EnableSecureEventInput();
+    } else {
+      TextInputHandler::EnsureSecureEventInputDisabled();
+    }
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
