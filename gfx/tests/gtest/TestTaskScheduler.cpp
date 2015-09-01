@@ -8,10 +8,10 @@
 
 #include "mozilla/gfx/TaskScheduler.h"
 
+// XXX - Investigate intermittent TaskScheduler_Join failure on win8 debug.
 #ifndef WIN32
 #include <pthread.h>
 #include <sched.h>
-#endif
 
 #include <stdlib.h>
 #include <time.h>
@@ -84,6 +84,9 @@ struct JoinTestSanityCheck : public SanityChecker {
   }
 };
 
+// A poor man's leak check.
+Atomic<int32_t> sTaskCount(0);
+
 class TestTask : public Task
 {
 public:
@@ -94,7 +97,14 @@ public:
   , mCmdId(aCmdId)
   , mCmdBufferId(aTaskId)
   , mSanityChecker(aChecker)
-  {}
+  {
+    ++sTaskCount;
+  }
+
+  ~TestTask()
+  {
+    --sTaskCount;
+  }
 
   TaskStatus Run()
   {
@@ -108,6 +118,21 @@ public:
   uint64_t mCmdBufferId;
   SanityChecker* mSanityChecker;
 };
+
+
+void Init()
+{
+  ASSERT_EQ(sTaskCount, 0);
+  sTaskCount = 0;
+}
+
+void ShutDown()
+{
+  // If this fails we probably leaked Task objects, or we shut the test down
+  // before completing all tasks.
+  ASSERT_EQ(sTaskCount, 0);
+  sTaskCount = 0;
+}
 
 /// This test creates aNumCmdBuffers task buffers with sync objects set up
 /// so that all tasks will join after command 5 before a task buffer runs
@@ -225,9 +250,11 @@ TEST(Moz2D, TaskScheduler_Join) {
   for (uint32_t threads = 1; threads < 16; ++threads) {
     for (uint32_t queues = 1; queues < threads; ++queues) {
       for (uint32_t buffers = 1; buffers < 100; buffers += 3) {
+        test_scheduler::Init();
         mozilla::gfx::TaskScheduler::Init(threads, queues);
         test_scheduler::TestSchedulerJoin(threads, buffers);
         mozilla::gfx::TaskScheduler::ShutDown();
+        test_scheduler::ShutDown();
       }
     }
   }
@@ -238,10 +265,14 @@ TEST(Moz2D, TaskScheduler_Chain) {
   for (uint32_t threads = 1; threads < 16; ++threads) {
     for (uint32_t queues = 1; queues < threads; ++queues) {
       for (uint32_t buffers = 1; buffers < 50; buffers += 3) {
+        test_scheduler::Init();
         mozilla::gfx::TaskScheduler::Init(threads, queues);
         test_scheduler::TestSchedulerChain(threads, buffers);
         mozilla::gfx::TaskScheduler::ShutDown();
+        test_scheduler::ShutDown();
       }
     }
   }
 }
+
+#endif
