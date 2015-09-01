@@ -18,12 +18,11 @@ var GeneratorFunctionPrototype = Object.getPrototypeOf(g);
 var GeneratorFunction = GeneratorFunctionPrototype.constructor;
 var GeneratorObjectPrototype = GeneratorFunctionPrototype.prototype;
 
+
 // A generator function should have the same set of properties as any
-// other function, minus a prototype.
+// other function.
 function TestGeneratorFunctionInstance() {
     var f_own_property_names = Object.getOwnPropertyNames(f);
-    f_own_property_names.splice(f_own_property_names.indexOf("prototype"), 1);
-
     var g_own_property_names = Object.getOwnPropertyNames(g);
 
     f_own_property_names.sort();
@@ -41,6 +40,7 @@ function TestGeneratorFunctionInstance() {
     }
 }
 TestGeneratorFunctionInstance();
+
 
 // Generators have an additional object interposed in the chain between
 // themselves and Function.prototype.
@@ -112,7 +112,15 @@ TestGeneratorFunction();
 
 
 function TestPerGeneratorPrototype() {
-    assertEq(g.hasOwnProperty("prototype"), false);
+    assertNotEq((function*(){}).prototype, (function*(){}).prototype);
+    assertNotEq((function*(){}).prototype, g.prototype);
+    assertEq(typeof GeneratorFunctionPrototype, "object");
+    assertEq(g.prototype.__proto__.constructor, GeneratorFunctionPrototype, "object");
+    assertEq(Object.getPrototypeOf(g.prototype), GeneratorObjectPrototype);
+    assertFalse(g.prototype instanceof Function);
+    assertEq(typeof (g.prototype), "object");
+
+    assertDeepEq(Object.getOwnPropertyNames(g.prototype), []);
 }
 TestPerGeneratorPrototype();
 

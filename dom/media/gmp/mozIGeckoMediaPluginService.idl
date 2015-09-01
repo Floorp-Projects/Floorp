@@ -52,7 +52,7 @@ native GetGMPVideoDecoderCallback(mozilla::UniquePtr<GetGMPVideoDecoderCallback>
 native GetGMPVideoEncoderCallback(mozilla::UniquePtr<GetGMPVideoEncoderCallback>&&);
 native GetNodeIdCallback(mozilla::UniquePtr<GetNodeIdCallback>&&);
 
-[scriptable, uuid(787cf744-eea8-48c8-b692-376e0485ef97)]
+[scriptable, uuid(661492d6-726b-4ba0-8e6e-14bfaf2b62e4)]
 interface mozIGeckoMediaPluginService : nsISupports
 {
 
@@ -147,4 +147,10 @@ interface mozIGeckoMediaPluginService : nsISupports
                  in AString topLevelOrigin,
                  in bool inPrivateBrowsingMode,
                  in GetNodeIdCallback callback);
+
+  /**
+   * Stores the result of trying to create a decoder for the given keysystem.
+   */
+  [noscript]
+  void updateTrialCreateState(in AString keySystem, in uint32_t status);
 };

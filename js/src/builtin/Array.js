@@ -253,7 +253,7 @@ function ArrayMap(callbackfn/*, thisArg*/) {
     var T = arguments.length > 1 ? arguments[1] : void 0;
 
     /* Step 6. */
-    var A = NewDenseArray(len);
+    var A = std_Array(len);
 
     /* Step 7-8. */
     /* Step a (implicit), and d. */
@@ -718,9 +718,7 @@ function ArrayIteratorNext() {
     }
 
     if (itemKind === ITEM_KIND_KEY_AND_VALUE) {
-        var pair = NewDenseArray(2);
-        pair[0] = index;
-        pair[1] = a[index];
+        var pair = [index, a[index]];
         result.value = pair;
         return result;
     }
@@ -807,7 +805,7 @@ function ArrayFrom(items, mapfn=undefined, thisArg=undefined) {
     var len = ToLength(arrayLike.length);
 
     // Steps 12-14.
-    var A = IsConstructor(C) ? new C(len) : NewDenseArray(len);
+    var A = IsConstructor(C) ? new C(len) : std_Array(len);
 
     // Steps 15-16.
     for (var k = 0; k < len; k++) {

@@ -56,7 +56,7 @@ private:
   bool GetUTF8LibPath(nsACString& aOutLibPath);
 
   virtual bool RecvSetNodeId(const nsCString& aNodeId) override;
-  virtual bool RecvStartPlugin() override;
+  virtual bool AnswerStartPlugin() override;
 
   virtual PCrashReporterChild* AllocPCrashReporterChild(const NativeThreadId& aThread) override;
   virtual bool DeallocPCrashReporterChild(PCrashReporterChild*) override;

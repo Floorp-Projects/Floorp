@@ -4,8 +4,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import json
 import os
 import sys
+import tempfile
 
 from mach.decorators import (
     CommandArgument,
@@ -14,6 +16,7 @@ from mach.decorators import (
 )
 
 from mozbuild.base import MachCommandBase
+from argparse import ArgumentParser
 
 
 UNKNOWN_TEST = '''
@@ -500,3 +503,90 @@ class PushToTry(MachCommandBase):
             at.push_to_try(msg, verbose)
 
         return
+
+
+def get_parser(argv=None):
+    parser = ArgumentParser()
+    parser.add_argument(dest="suite_name",
+                        nargs=1,
+                        choices=['mochitest'],
+                        type=str,
+                        help="The test for which chunk should be found. It corresponds "
+                             "to the mach test invoked (only 'mochitest' currently).")
+
+    parser.add_argument(dest="test_path",
+                        nargs=1,
+                        type=str,
+                        help="The test (any mochitest) for which chunk should be found.")
+
+    parser.add_argument('--total-chunks',
+                        type=int,
+                        dest='total_chunks',
+                        required=True,
+                        help='Total number of chunks to split tests into.',
+                        default=None
+                        )
+
+    parser.add_argument('-f', "--flavor",
+                        dest="flavor",
+                        type=str,
+                        help="Flavor to which the test belongs to.")
+
+    parser.add_argument('--chunk-by-runtime',
+                        action='store_true',
+                        dest='chunk_by_runtime',
+                        help='Group tests such that each chunk has roughly the same runtime.',
+                        default=False,
+                        )
+
+    parser.add_argument('--chunk-by-dir',
+                        type=int,
+                        dest='chunk_by_dir',
+                        help='Group tests together in the same chunk that are in the same top '
+                             'chunkByDir directories.',
+                        default=None,
+                        )
+
+    return parser
+
+
+@CommandProvider
+class ChunkFinder(MachCommandBase):
+    @Command('find-test-chunk', category='testing',
+             description='Find which chunk a test belongs to (works for mochitest).',
+             parser=get_parser)
+    def chunk_finder(self, **kwargs):
+        flavor = kwargs['flavor']
+        total_chunks = kwargs['total_chunks']
+        test_path = kwargs['test_path'][0]
+        suite_name = kwargs['suite_name'][0]
+        _, dump_tests = tempfile.mkstemp()
+        args = {
+            'totalChunks': total_chunks,
+            'dump_tests': dump_tests,
+            'chunkByDir': kwargs['chunk_by_dir'],
+            'chunkByRuntime': kwargs['chunk_by_runtime'],
+        }
+
+        found = False
+        for this_chunk in range(1, total_chunks+1):
+            args['thisChunk'] = this_chunk
+            try:
+                self._mach_context.commands.dispatch(suite_name, self._mach_context, flavor=flavor, resolve_tests=False, **args)
+            except SystemExit:
+                pass
+            except KeyboardInterrupt:
+                break
+
+            fp = open(os.path.expanduser(args['dump_tests']), 'r')
+            tests = json.loads(fp.read())['active_tests']
+            paths = [t['path'] for t in tests]
+            if test_path in paths:
+                print("The test %s is present in chunk number: %d (it may be skipped)." % (test_path, this_chunk))
+                found = True
+                break
+
+        if not found:
+            raise Exception("Test %s not found." % test_path)
+        # Clean up the file
+        os.remove(dump_tests)

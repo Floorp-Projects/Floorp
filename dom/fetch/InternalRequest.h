@@ -92,6 +92,7 @@ public:
     RESPONSETAINT_BASIC,
     RESPONSETAINT_CORS,
     RESPONSETAINT_OPAQUE,
+    RESPONSETAINT_OPAQUEREDIRECT,
   };
 
   explicit InternalRequest()
@@ -102,6 +103,7 @@ public:
     , mCredentialsMode(RequestCredentials::Omit)
     , mResponseTainting(RESPONSETAINT_BASIC)
     , mCacheMode(RequestCache::Default)
+    , mRedirectMode(RequestRedirect::Follow)
     , mAuthenticationFlag(false)
     , mForceOriginHeader(false)
     , mPreserveContentCodings(false)
@@ -264,6 +266,18 @@ public:
     mCacheMode = aCacheMode;
   }
 
+  RequestRedirect
+  GetRedirectMode() const
+  {
+    return mRedirectMode;
+  }
+
+  void
+  SetRedirectMode(RequestRedirect aRedirectMode)
+  {
+    mRedirectMode = aRedirectMode;
+  }
+
   nsContentPolicyType
   ContentPolicyType() const
   {
@@ -390,6 +404,7 @@ private:
   RequestCredentials mCredentialsMode;
   ResponseTainting mResponseTainting;
   RequestCache mCacheMode;
+  RequestRedirect mRedirectMode;
 
   bool mAuthenticationFlag;
   bool mForceOriginHeader;

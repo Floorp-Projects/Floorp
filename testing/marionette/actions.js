@@ -40,7 +40,7 @@ this.ActionChain = function(utils, checkForInterrupted) {
 ActionChain.prototype.dispatchActions = function(
     args,
     touchId,
-    frame,
+    container,
     elementManager,
     callbacks,
     touchProvider) {
@@ -51,16 +51,16 @@ ActionChain.prototype.dispatchActions = function(
   }
 
   this.elementManager = elementManager;
-  let commandArray = elementManager.convertWrappedArguments(args, frame);
+  let commandArray = elementManager.convertWrappedArguments(args, container);
   this.onSuccess = callbacks.onSuccess;
   this.onError = callbacks.onError;
-  this.frame = frame;
+  this.container = container;
 
   if (touchId == null) {
     touchId = this.nextTouchId++;
   }
 
-  if (!frame.document.createTouch) {
+  if (!container.frame.document.createTouch) {
     this.mouseEventsOnly = true;
   }
 
@@ -126,7 +126,7 @@ ActionChain.prototype.emitMouseEvent = function(
         type,
         elClientX,
         elClientY,
-        button || 0, 
+        button || 0,
         clickCount || 1,
         mods,
         false,
@@ -141,7 +141,7 @@ ActionChain.prototype.emitMouseEvent = function(
 ActionChain.prototype.resetValues = function() {
   this.onSuccess = null;
   this.onError = null;
-  this.frame = null;
+  this.container = null;
   this.elementManager = null;
   this.touchProvider = null;
   this.mouseEventsOnly = false;
@@ -177,17 +177,17 @@ ActionChain.prototype.actions = function(chain, touchId, i, keyModifiers) {
 
   switch(command) {
     case "keyDown":
-      this.utils.sendKeyDown(pack[1], keyModifiers, this.frame);
+      this.utils.sendKeyDown(pack[1], keyModifiers, this.container.frame);
       this.actions(chain, touchId, i, keyModifiers);
       break;
 
     case "keyUp":
-      this.utils.sendKeyUp(pack[1], keyModifiers, this.frame);
+      this.utils.sendKeyUp(pack[1], keyModifiers, this.container.frame);
       this.actions(chain, touchId, i, keyModifiers);
       break;
 
     case "click":
-      el = this.elementManager.getKnownElement(pack[1], this.frame);
+      el = this.elementManager.getKnownElement(pack[1], this.container);
       let button = pack[2];
       let clickCount = pack[3];
       c = this.coordinates(el, null, null);
@@ -217,7 +217,7 @@ ActionChain.prototype.actions = function(chain, touchId, i, keyModifiers) {
       if ((i != chain.length) && (chain[i][0].indexOf('move') !== -1)) {
         this.scrolling = true;
       }
-      el = this.elementManager.getKnownElement(pack[1], this.frame);
+      el = this.elementManager.getKnownElement(pack[1], this.container);
       c = this.coordinates(el, pack[2], pack[3]);
       touchId = this.generateEvents("press", c.x, c.y, null, el, keyModifiers);
       this.actions(chain, touchId, i, keyModifiers);
@@ -236,7 +236,7 @@ ActionChain.prototype.actions = function(chain, touchId, i, keyModifiers) {
       break;
 
     case "move":
-      el = this.elementManager.getKnownElement(pack[1], this.frame);
+      el = this.elementManager.getKnownElement(pack[1], this.container);
       c = this.coordinates(el);
       this.generateEvents("move", c.x, c.y, touchId, null, keyModifiers);
       this.actions(chain, touchId, i, keyModifiers);
@@ -274,7 +274,7 @@ ActionChain.prototype.actions = function(chain, touchId, i, keyModifiers) {
         this.actions(chain, touchId, i, keyModifiers);
       }
       break;
-  
+
     case "cancel":
       this.generateEvents(
           "cancel",
@@ -286,7 +286,7 @@ ActionChain.prototype.actions = function(chain, touchId, i, keyModifiers) {
       this.actions(chain, touchId, i, keyModifiers);
       this.scrolling = false;
       break;
-  
+
     case "longPress":
       this.generateEvents(
           "contextmenu",
@@ -355,7 +355,7 @@ ActionChain.prototype.getCoordinateInfo = function(el, corx, cory) {
 ActionChain.prototype.generateEvents = function(
     type, x, y, touchId, target, keyModifiers) {
   this.lastCoordinates = [x, y];
-  let doc = this.frame.document;
+  let doc = this.container.frame.document;
 
   switch (type) {
     case "tap":
@@ -450,7 +450,7 @@ ActionChain.prototype.generateEvents = function(
 
     case "contextmenu":
       this.isTap = false;
-      let event = this.frame.document.createEvent("MouseEvents");
+      let event = this.container.frame.document.createEvent("MouseEvents");
       if (this.mouseEventsOnly) {
         target = doc.elementFromPoint(this.lastCoordinates[0], this.lastCoordinates[1]);
       } else {
