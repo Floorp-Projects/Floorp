@@ -1529,38 +1529,6 @@ MacroAssemblerMIPSCompat::buildOOLFakeExitFrame(void* fakeReturnAddr)
 }
 
 void
-MacroAssemblerMIPSCompat::callWithExitFrame(Label* target)
-{
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor)); // descriptor
-
-    ma_callJitHalfPush(target);
-}
-
-void
-MacroAssemblerMIPSCompat::callWithExitFrame(JitCode* target)
-{
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor)); // descriptor
-
-    addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
-    ma_liPatchable(ScratchRegister, ImmPtr(target->raw()));
-    ma_callJitHalfPush(ScratchRegister);
-}
-
-void
-MacroAssemblerMIPSCompat::callWithExitFrame(JitCode* target, Register dynStack)
-{
-    ma_addu(dynStack, dynStack, Imm32(asMasm().framePushed()));
-    asMasm().makeFrameDescriptor(dynStack, JitFrame_IonJS);
-    asMasm().Push(dynStack); // descriptor
-
-    addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
-    ma_liPatchable(ScratchRegister, ImmPtr(target->raw()));
-    ma_callJitHalfPush(ScratchRegister);
-}
-
-void
 MacroAssemblerMIPSCompat::add32(Register src, Register dest)
 {
     as_addu(dest, dest, src);

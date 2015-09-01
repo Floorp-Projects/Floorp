@@ -1903,52 +1903,6 @@ MacroAssemblerARMCompat::buildOOLFakeExitFrame(void* fakeReturnAddr)
 }
 
 void
-MacroAssemblerARMCompat::callWithExitFrame(Label* target)
-{
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor)); // descriptor
-
-    ma_callJitHalfPush(target);
-}
-
-void
-MacroAssemblerARMCompat::callWithExitFrame(JitCode* target)
-{
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor)); // descriptor
-
-    addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
-    RelocStyle rs;
-    if (HasMOVWT())
-        rs = L_MOVWT;
-    else
-        rs = L_LDR;
-
-    ScratchRegisterScope scratch(asMasm());
-    ma_movPatchable(ImmPtr(target->raw()), scratch, Always, rs);
-    ma_callJitHalfPush(scratch);
-}
-
-void
-MacroAssemblerARMCompat::callWithExitFrame(JitCode* target, Register dynStack)
-{
-    ma_add(Imm32(asMasm().framePushed()), dynStack);
-    asMasm().makeFrameDescriptor(dynStack, JitFrame_IonJS);
-    asMasm().Push(dynStack); // descriptor
-
-    addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
-    RelocStyle rs;
-    if (HasMOVWT())
-        rs = L_MOVWT;
-    else
-        rs = L_LDR;
-
-    ScratchRegisterScope scratch(asMasm());
-    ma_movPatchable(ImmPtr(target->raw()), scratch, Always, rs);
-    ma_callJitHalfPush(scratch);
-}
-
-void
 MacroAssembler::alignFrameForICArguments(AfterICSaveLive& aic)
 {
     // Exists for MIPS compatibility.

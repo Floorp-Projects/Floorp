@@ -1116,10 +1116,6 @@ public:
     // non-function. Returns offset to be passed to markSafepointAt().
     void buildFakeExitFrame(Register scratch, uint32_t* offset);
 
-    void callWithExitFrame(Label* target);
-    void callWithExitFrame(JitCode* target);
-    void callWithExitFrame(JitCode* target, Register dynStack);
-
     void add32(Register src, Register dest);
     void add32(Imm32 imm, Register dest);
     void add32(Imm32 imm, const Address& dest);

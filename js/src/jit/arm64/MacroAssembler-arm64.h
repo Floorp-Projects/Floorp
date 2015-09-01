@@ -2663,10 +2663,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     // non-function. Returns offset to be passed to markSafepointAt().
     void buildFakeExitFrame(Register scratch, uint32_t* offset);
 
-    void callWithExitFrame(Label* target);
-    void callWithExitFrame(JitCode* target);
-    void callWithExitFrame(JitCode* target, Register dynStack);
-
     void appendCallSite(const CallSiteDesc& desc) {
         MOZ_CRASH("appendCallSite");
     }
