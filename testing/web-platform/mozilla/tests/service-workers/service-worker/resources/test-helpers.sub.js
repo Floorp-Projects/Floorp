@@ -13,10 +13,13 @@ function service_worker_unregister_and_register(test, url, scope) {
                                'unregister and register should not fail'));
 }
 
-function service_worker_unregister(test, documentUrl) {
-  return navigator.serviceWorker.getRegistration(documentUrl)
+// This unregisters the registration that precisely matches scope. Use this
+// when unregistering by scope. If no registration is found, it just resolves.
+function service_worker_unregister(test, scope) {
+  var absoluteScope = (new URL(scope, window.location).href);
+  return navigator.serviceWorker.getRegistration(scope)
     .then(function(registration) {
-        if (registration)
+        if (registration && registration.scope === absoluteScope)
           return registration.unregister();
       })
     .catch(unreached_rejection(test, 'unregister should not fail'));
