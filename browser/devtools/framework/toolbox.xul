@@ -9,9 +9,11 @@
 
 <!DOCTYPE window [
 <!ENTITY % toolboxDTD SYSTEM "chrome://browser/locale/devtools/toolbox.dtd" >
- %toolboxDTD;
+%toolboxDTD;
 <!ENTITY % editMenuStrings SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
 %editMenuStrings;
+<!ENTITY % globalKeysDTD SYSTEM "chrome://global/locale/globalKeys.dtd">
+%globalKeysDTD;
 ]>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -30,6 +32,9 @@
          key="&toolboxOptionsButton.key;"
          oncommand="void(0);"
          modifiers="shift, accel"/>
+    <key id="toolbox-options-key2"
+         keycode="&openHelp.commandkey;"
+         oncommand="void(0);"/>
     <key id="toolbox-next-tool-key"
          key="&toolboxNextTool.key;"
          oncommand="void(0);"
