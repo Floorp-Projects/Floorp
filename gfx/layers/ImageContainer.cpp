@@ -170,6 +170,7 @@ ImageContainer::ImageContainer(Mode flag)
 : mReentrantMonitor("ImageContainer.mReentrantMonitor"),
   mGenerationCounter(++sGenerationCounter),
   mPaintCount(0),
+  mAttachCount(0),
   mDroppedImageCount(0),
   mImageFactory(new ImageFactory()),
   mRecycleBin(new BufferRecycleBin()),
@@ -232,6 +233,28 @@ ImageContainer::CreateImage(ImageFormat aFormat)
     }
   }
   return mImageFactory->CreateImage(aFormat, mScaleHint, mRecycleBin);
+}
+
+void
+ImageContainer::NotifyAttached()
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  if (!mAttachCount++) {
+    if (IsAsync()) {
+      ImageBridgeChild::DispatchImageClientUpdate(mImageClient, this);
+    }
+  }
+}
+
+void
+ImageContainer::NotifyDetached()
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  if (!--mAttachCount) {
+    if (IsAsync()) {
+      ImageBridgeChild::FlushAllImagesAsync(mImageClient);
+    }
+  }
 }
 
 void
