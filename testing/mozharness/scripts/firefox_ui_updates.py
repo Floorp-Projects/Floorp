@@ -310,6 +310,8 @@ class FirefoxUIUpdates(FirefoxUITests):
             # Log to stdout until tests are stable.
             '--gecko-log=-',
             '--address=localhost:%s' % marionette_port,
+            # Use the work dir to get temporary data stored
+            '--workspace=%s' % dirs['abs_work_dir'],
         ]
 
         if symbols_url:

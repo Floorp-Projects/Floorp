@@ -791,7 +791,8 @@ GeckoDriver.prototype.createExecuteSandbox = function(win, mn, sandboxName) {
  * execution sandbox.
  */
 GeckoDriver.prototype.applyArgumentsToSandbox = function(win, sb, args) {
-  sb.__marionetteParams = this.curBrowser.elementManager.convertWrappedArguments(args, win);
+  sb.__marionetteParams = this.curBrowser.elementManager.convertWrappedArguments(args,
+    { frame: win });
   sb.__namedArgs = this.curBrowser.elementManager.applyNamedArgs(args);
 };
 
@@ -1656,7 +1657,7 @@ GeckoDriver.prototype.switchToFrame = function(cmd, resp) {
       if (this.curBrowser.elementManager.seenItems[cmd.parameters.element]) {
         // HTMLIFrameElement
         let wantedFrame = this.curBrowser.elementManager
-            .getKnownElement(cmd.parameters.element, curWindow);
+            .getKnownElement(cmd.parameters.element, { frame: curWindow });
         // Deal with an embedded xul:browser case
         if (wantedFrame.tagName == "xul:browser" || wantedFrame.tagName == "browser") {
           curWindow = wantedFrame.contentWindow;
@@ -1837,7 +1838,7 @@ GeckoDriver.prototype.actionChain = function(cmd, resp) {
 
       let win = this.getCurrentWindow();
       let elm = this.curBrowser.elementManager;
-      this.actions.dispatchActions(chain, nextId, win, elm, cbs);
+      this.actions.dispatchActions(chain, nextId, { frame: win }, elm, cbs);
       break;
 
     case Context.CONTENT:
@@ -1882,7 +1883,7 @@ GeckoDriver.prototype.findElement = function(cmd, resp) {
       resp.value = yield new Promise((resolve, reject) => {
         let win = this.getCurrentWindow();
         this.curBrowser.elementManager.find(
-            win,
+            { frame: win },
             cmd.parameters,
             this.searchTimeout,
             false /* all */,
@@ -1934,7 +1935,7 @@ GeckoDriver.prototype.findElements = function(cmd, resp) {
       resp.value = yield new Promise((resolve, reject) => {
         let win = this.getCurrentWindow();
         this.curBrowser.elementManager.find(
-            win,
+            { frame: win },
             cmd.parameters,
             this.searchTimeout,
             true /* all */,
@@ -1990,7 +1991,7 @@ GeckoDriver.prototype.clickElement = function(cmd, resp) {
     case Context.CHROME:
       // click atom fails, fall back to click() action
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, win);
+      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
       el.click();
       break;
 
@@ -2019,7 +2020,7 @@ GeckoDriver.prototype.getElementAttribute = function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, win);
+      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
       resp.value = utils.getElementAttribute(el, name);
       break;
 
@@ -2043,7 +2044,7 @@ GeckoDriver.prototype.getElementText = function(cmd, resp) {
     case Context.CHROME:
       // for chrome, we look at text nodes, and any node with a "label" field
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, win);
+      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
       let lines = [];
       this.getVisibleText(el, lines);
       resp.value = lines.join("\n");
@@ -2067,7 +2068,7 @@ GeckoDriver.prototype.getElementTagName = function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, win);
+      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
       resp.value = el.tagName.toLowerCase();
       break;
 
@@ -2089,7 +2090,7 @@ GeckoDriver.prototype.isElementDisplayed = function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, win);
+      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
       resp.value = utils.isElementDisplayed(el);
       break;
 
@@ -2113,7 +2114,7 @@ GeckoDriver.prototype.getElementValueOfCssProperty = function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, win);
+      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
       let sty = win.document.defaultView.getComputedStyle(el, null);
       resp.value = sty.getPropertyValue(prop);
       break;
@@ -2137,7 +2138,7 @@ GeckoDriver.prototype.isElementEnabled = function(cmd, resp) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, win);
+      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
       resp.value = !(!!el.disabled);
       break;
 
@@ -2160,7 +2161,7 @@ GeckoDriver.prototype.isElementSelected = function(cmd, resp) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, win);
+      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
       if (typeof el.checked != "undefined") {
         resp.value = !!el.checked;
       } else if (typeof el.selected != "undefined") {
@@ -2182,7 +2183,7 @@ GeckoDriver.prototype.getElementSize = function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, win);
+      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
       let rect = el.getBoundingClientRect();
       resp.value = {width: rect.width, height: rect.height};
       break;
@@ -2199,7 +2200,7 @@ GeckoDriver.prototype.getElementRect = function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, win);
+      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
       let rect = el.getBoundingClientRect();
       resp.value = {
         x: rect.x + win.pageXOffset,
@@ -2233,7 +2234,7 @@ GeckoDriver.prototype.sendKeysToElement = function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, win);
+      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
       utils.sendKeysToElement(
           win,
           el,
@@ -2299,7 +2300,7 @@ GeckoDriver.prototype.clearElement = function(cmd, resp) {
     case Context.CHROME:
       // the selenium atom doesn't work here
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, win);
+      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
       if (el.nodeName == "textbox") {
         el.value = "";
       } else if (el.nodeName == "checkbox") {
@@ -2325,6 +2326,17 @@ GeckoDriver.prototype.clearElement = function(cmd, resp) {
  */
 GeckoDriver.prototype.getElementLocation = function(cmd, resp) {
   return this.listener.getElementLocation(cmd.parameters.id);
+};
+
+/**
+ * Switch to shadow root of the given host element.
+ *
+ * @param {string} id element id.
+ */
+GeckoDriver.prototype.switchToShadowRoot = function(cmd, resp) {
+  let id;
+  if (cmd.parameters) { id = cmd.parameters.id; }
+  yield this.listener.switchToShadowRoot(id);
 };
 
 /** Add a cookie to the document. */
@@ -3019,6 +3031,7 @@ GeckoDriver.prototype.commands = {
   "getActiveFrame": GeckoDriver.prototype.getActiveFrame,
   "switchToFrame": GeckoDriver.prototype.switchToFrame,
   "switchToWindow": GeckoDriver.prototype.switchToWindow,
+  "switchToShadowRoot": GeckoDriver.prototype.switchToShadowRoot,
   "deleteSession": GeckoDriver.prototype.deleteSession,
   "importScript": GeckoDriver.prototype.importScript,
   "clearImportedScripts": GeckoDriver.prototype.clearImportedScripts,

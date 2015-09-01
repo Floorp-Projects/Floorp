@@ -5091,7 +5091,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
       return nil;
   }
 
-  WidgetMouseEvent geckoEvent(true, NS_CONTEXTMENU, mGeckoChild,
+  WidgetMouseEvent geckoEvent(true, eContextMenu, mGeckoChild,
                               WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = WidgetMouseEvent::eRightButton;

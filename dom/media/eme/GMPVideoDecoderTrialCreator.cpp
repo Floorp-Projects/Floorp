@@ -77,6 +77,36 @@ GMPVideoDecoderTrialCreator::GetCreateTrialState(const nsAString& aKeySystem)
   }
 }
 
+/* static */ void
+GMPVideoDecoderTrialCreator::UpdateTrialCreateState(const nsAString& aKeySystem,
+                                                    uint32_t aState)
+{
+  UpdateTrialCreateState(aKeySystem, (TrialCreateState)aState);
+}
+
+/* static */ void
+GMPVideoDecoderTrialCreator::UpdateTrialCreateState(const nsAString& aKeySystem,
+                                                    TrialCreateState aState)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    // Pref has to be set from the chrome process. Dispatch to chrome via
+    // GMPService.
+    nsCOMPtr<mozIGeckoMediaPluginService> service =
+      do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+    NS_ENSURE_TRUE_VOID(service);
+
+    service->UpdateTrialCreateState(aKeySystem, (uint32_t)aState);
+    return;
+  }
+
+  const char* pref = TrialCreatePrefName(aKeySystem);
+  if (pref) {
+    Preferences::SetInt(pref, (int)aState);
+  }
+}
+
 void
 GMPVideoDecoderTrialCreator::TrialCreateGMPVideoDecoderFailed(const nsAString& aKeySystem,
                                                               const nsACString& aReason)
@@ -91,10 +121,8 @@ GMPVideoDecoderTrialCreator::TrialCreateGMPVideoDecoderFailed(const nsAString& a
     return;
   }
   data->mStatus = Failed;
-  const char* pref = TrialCreatePrefName(aKeySystem);
-  if (pref) {
-    Preferences::SetInt(pref, (int)Failed);
-  }
+  UpdateTrialCreateState(aKeySystem, Failed);
+
   for (nsRefPtr<AbstractPromiseLike>& promise: data->mPending) {
     promise->Reject(NS_ERROR_DOM_NOT_SUPPORTED_ERR, aReason);
   }
@@ -115,10 +143,8 @@ GMPVideoDecoderTrialCreator::TrialCreateGMPVideoDecoderSucceeded(const nsAString
     return;
   }
   data->mStatus = Succeeded;
-  const char* pref = TrialCreatePrefName(aKeySystem);
-  if (pref) {
-    Preferences::SetInt(pref, (int)Succeeded);
-  }
+  UpdateTrialCreateState(aKeySystem, Succeeded);
+
   for (nsRefPtr<AbstractPromiseLike>& promise : data->mPending) {
     promise->Resolve();
   }
@@ -484,9 +510,9 @@ TestGMPVideoDecoder::CreateGMPVideoDecoder()
   tags.AppendElement(NS_ConvertUTF16toUTF8(mKeySystem));
 
   UniquePtr<GetGMPVideoDecoderCallback> callback(new Callback(this));
-  nsCString fakeNodeId;
-  if (NS_FAILED(GenerateRandomName(fakeNodeId, 32)) ||
-      NS_FAILED(mGMPService->GetGMPVideoDecoder(&tags, fakeNodeId, Move(callback)))) {
+  if (NS_FAILED(mGMPService->GetGMPVideoDecoder(&tags,
+                                                NS_LITERAL_CSTRING("fakeNodeId1234567890fakeNodeId12"),
+                                                Move(callback)))) {
     ReportFailure(NS_LITERAL_CSTRING("TestGMPVideoDecoder GMPService GetGMPVideoDecoder returned failure"));
   }
 }
@@ -497,12 +523,6 @@ GMPVideoDecoderTrialCreator::MaybeAwaitTrialCreate(const nsAString& aKeySystem,
                                                    nsPIDOMWindow* aParent)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    // Currently broken with e10s...
-    aPromisey->Resolve();
-    return;
-  }
 
   if (!mTestCreate.Contains(aKeySystem)) {
     mTestCreate.Put(aKeySystem, new TrialCreateData(aKeySystem));

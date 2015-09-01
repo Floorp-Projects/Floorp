@@ -90,7 +90,7 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
 
   // Detect only "context menu" click
   // XXX This should be easier to do!
-  // But eDOMEvents_contextmenu and NS_CONTEXTMENU is not exposed in any event
+  // But eDOMEvents_contextmenu and eContextMenu is not exposed in any event
   // interface :-(
   int16_t buttonNumber;
   nsresult rv = aMouseEvent->GetButton(&buttonNumber);

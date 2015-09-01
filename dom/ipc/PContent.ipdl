@@ -696,6 +696,8 @@ parent:
     async CreateGMPService();
     sync GetGMPPluginVersionForAPI(nsCString api, nsCString[] tags)
         returns (bool hasPlugin, nsCString version);
+    sync IsGMPPresentOnDisk(nsString keySystem, nsCString version)
+        returns (bool isPresent, nsCString message);
 
     /**
      * This call connects the content process to a plugin process. While this
