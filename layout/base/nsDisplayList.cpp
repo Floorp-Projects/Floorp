@@ -2350,6 +2350,13 @@ nsDisplayBackgroundImage::IsSingleFixedPositionImage(nsDisplayListBuilder* aBuil
 }
 
 bool
+nsDisplayBackgroundImage::IsNonEmptyFixedImage() const
+{
+  return mBackgroundStyle->mLayers[mLayer].mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
+         !mBackgroundStyle->mLayers[mLayer].mImage.IsEmpty();
+}
+
+bool
 nsDisplayBackgroundImage::ShouldFixToViewport(LayerManager* aManager)
 {
   // APZ needs background-attachment:fixed images layerized for correctness.
@@ -2360,8 +2367,7 @@ nsDisplayBackgroundImage::ShouldFixToViewport(LayerManager* aManager)
 
   // Put background-attachment:fixed background images in their own
   // compositing layer.
-  return mBackgroundStyle->mLayers[mLayer].mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
-         !mBackgroundStyle->mLayers[mLayer].mImage.IsEmpty();
+  return IsNonEmptyFixedImage();
 }
 
 bool
@@ -2777,6 +2783,15 @@ nsDisplayBackgroundImage::GetBoundsInternal(nsDisplayListBuilder* aBuilder) {
   if (mFrame->GetType() == nsGkAtoms::canvasFrame) {
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
     clipRect = frame->CanvasArea() + ToReferenceFrame();
+  } else if (nsLayoutUtils::UsesAsyncScrolling(mFrame) && IsNonEmptyFixedImage()) {
+    // If this is a background-attachment:fixed image, and APZ is enabled,
+    // async scrolling could reveal additional areas of the image, so don't
+    // clip it beyond clipping to the document's viewport.
+    nsIFrame* rootFrame = presContext->PresShell()->GetRootFrame();
+    nsRect rootRect = rootFrame->GetRectRelativeToSelf();
+    if (nsLayoutUtils::TransformRect(rootFrame, mFrame, rootRect) == nsLayoutUtils::TRANSFORM_SUCCEEDED) {
+      clipRect = rootRect + aBuilder->ToReferenceFrame(mFrame);
+    }
   }
   const nsStyleBackground::Layer& layer = mBackgroundStyle->mLayers[mLayer];
   return nsCSSRendering::GetBackgroundLayerRect(presContext, mFrame,
