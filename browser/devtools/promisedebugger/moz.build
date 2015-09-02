@@ -7,5 +7,4 @@
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 EXTRA_JS_MODULES.devtools.promisedebugger += [
-    'promise-debugger.js'
 ]
