@@ -524,8 +524,7 @@ def get_parser(argv=None):
                         dest='total_chunks',
                         required=True,
                         help='Total number of chunks to split tests into.',
-                        default=None
-                        )
+                        default=None)
 
     parser.add_argument('-f', "--flavor",
                         dest="flavor",
@@ -536,16 +535,20 @@ def get_parser(argv=None):
                         action='store_true',
                         dest='chunk_by_runtime',
                         help='Group tests such that each chunk has roughly the same runtime.',
-                        default=False,
-                        )
+                        default=False)
 
     parser.add_argument('--chunk-by-dir',
                         type=int,
                         dest='chunk_by_dir',
                         help='Group tests together in the same chunk that are in the same top '
                              'chunkByDir directories.',
-                        default=None,
-                        )
+                        default=None)
+
+    parser.add_argument('--e10s',
+                        action='store_true',
+                        dest='e10s',
+                        help='Find test on chunk with electrolysis preferences enabled.',
+                        default=False)
 
     return parser
 
@@ -566,6 +569,7 @@ class ChunkFinder(MachCommandBase):
             'dump_tests': dump_tests,
             'chunkByDir': kwargs['chunk_by_dir'],
             'chunkByRuntime': kwargs['chunk_by_runtime'],
+            'e10s': kwargs['e10s'],
         }
 
         found = False
