@@ -5112,9 +5112,9 @@ ContentParent::MaybeInvokeDragSession(TabParent* aParent)
       session->GetDataTransfer(getter_AddRefs(domTransfer));
       nsCOMPtr<DataTransfer> transfer = do_QueryInterface(domTransfer);
       if (!transfer) {
-        // Pass NS_DRAGDROP_DROP to get DataTransfer with external
+        // Pass eDrop to get DataTransfer with external
         // drag formats cached.
-        transfer = new DataTransfer(nullptr, NS_DRAGDROP_DROP, true, -1);
+        transfer = new DataTransfer(nullptr, eDrop, true, -1);
         session->SetDataTransfer(transfer);
       }
       // Note, even though this fills the DataTransfer object with

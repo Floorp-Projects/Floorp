@@ -386,7 +386,7 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       return DragExit(dragEvent);
     }
     // drop
-    case NS_DRAGDROP_DROP: {
+    case eDrop: {
       nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
       return Drop(dragEvent);
     }

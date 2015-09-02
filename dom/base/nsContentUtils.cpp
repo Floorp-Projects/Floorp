@@ -5492,7 +5492,7 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
   }
 
   bool isCrossDomainSubFrameDrop = false;
-  if (aDragEvent->mMessage == NS_DRAGDROP_DROP ||
+  if (aDragEvent->mMessage == eDrop ||
       aDragEvent->mMessage == NS_DRAGDROP_DRAGDROP) {
     isCrossDomainSubFrameDrop = CheckForSubFrameDrop(dragSession, aDragEvent);
   }
@@ -5514,7 +5514,7 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
     aDragEvent->dataTransfer->GetEffectAllowedInt(&effectAllowed);
     aDragEvent->dataTransfer->SetDropEffectInt(FilterDropEffect(action, effectAllowed));
   }
-  else if (aDragEvent->mMessage == NS_DRAGDROP_DROP ||
+  else if (aDragEvent->mMessage == eDrop ||
            aDragEvent->mMessage == NS_DRAGDROP_DRAGDROP ||
            aDragEvent->mMessage == NS_DRAGDROP_END) {
     // For the drop and dragend events, set the drop effect based on the
