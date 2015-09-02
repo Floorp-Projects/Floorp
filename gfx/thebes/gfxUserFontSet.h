@@ -140,7 +140,9 @@ public:
         nsRefPtr<gfxFontEntry> fe = aFontEntry;
         // remove existing entry, if already present
         mAvailableFonts.RemoveElement(aFontEntry);
-        mAvailableFonts.AppendElement(aFontEntry);
+        // insert at the beginning so that the last-defined font is the first
+        // one in the fontlist used for matching, as per CSS Fonts spec
+        mAvailableFonts.InsertElementAt(0, aFontEntry);
 
         if (aFontEntry->mFamilyName.IsEmpty()) {
             aFontEntry->mFamilyName = Name();
