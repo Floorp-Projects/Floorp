@@ -1862,7 +1862,7 @@ GeckoDriver.prototype.actionChain = function(cmd, resp) {
 
     case Context.CONTENT:
       this.addFrameCloseListener("action chain");
-      resp.body.value = yield this.listener.actionChain({chain: chain, nextId: nextId});
+      resp.body.value = yield this.listener.actionChain(chain, nextId);
       break;
   }
 };
