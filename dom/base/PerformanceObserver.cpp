@@ -107,7 +107,22 @@ PerformanceObserver::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 }
 
 void
-PerformanceObserver::Notify(PerformanceEntry* aEntry)
+PerformanceObserver::Notify()
+{
+  if (mQueuedEntries.IsEmpty()) {
+    return;
+  }
+  nsRefPtr<PerformanceObserverEntryList> list =
+    new PerformanceObserverEntryList(this, mQueuedEntries);
+
+  ErrorResult rv;
+  mCallback->Call(this, *list, *this, rv);
+  NS_WARN_IF(rv.Failed());
+  mQueuedEntries.Clear();
+}
+
+void
+PerformanceObserver::QueueEntry(PerformanceEntry* aEntry)
 {
   MOZ_ASSERT(aEntry);
 
@@ -117,12 +132,7 @@ PerformanceObserver::Notify(PerformanceEntry* aEntry)
     return;
   }
 
-  nsRefPtr<PerformanceObserverEntryList> list = new PerformanceObserverEntryList(this);
-  list->AppendEntry(aEntry);
-
-  ErrorResult rv;
-  mCallback->Call(this, *list, *this, rv);
-  NS_WARN_IF(rv.Failed());
+  mQueuedEntries.AppendElement(aEntry);
 }
 
 static nsString sValidTypeNames[7] = {

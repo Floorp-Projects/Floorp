@@ -94,10 +94,3 @@ PerformanceObserverEntryList::GetEntriesByName(
     }
   }
 }
-
-void
-PerformanceObserverEntryList::AppendEntry(PerformanceEntry* aEntry)
-{
-  mEntries.AppendElement(aEntry);
-}
-
