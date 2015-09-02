@@ -280,7 +280,7 @@ protected:
   /**
    * Fires a focus or blur event at aTarget.
    *
-   * aEventMessage should be either NS_FOCUS_CONTENT or NS_BLUR_CONTENT.
+   * aEventMessage should be either eFocus or NS_BLUR_CONTENT.
    * For blur events, aFocusMethod should normally be non-zero.
    *
    * aWindowRaised should only be true if called from WindowRaised.
