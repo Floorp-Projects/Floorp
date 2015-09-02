@@ -1431,10 +1431,12 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
         allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
       case Getter:
+      case GetterNoExpressionClosure:
         flags = JSFunction::INTERPRETED_GETTER;
         allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
       case Setter:
+      case SetterNoExpressionClosure:
         flags = JSFunction::INTERPRETED_SETTER;
         allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
@@ -1860,7 +1862,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
         Node duplicatedArg = null();
         bool disallowDuplicateArgs = kind == Arrow || kind == Method || kind == ClassConstructor;
 
-        if (kind == Getter) {
+        if (IsGetterKind(kind)) {
             report(ParseError, false, null(), JSMSG_ACCESSOR_WRONG_ARGS, "getter", "no", "s");
             return false;
         }
@@ -1926,7 +1928,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
 
               case TOK_TRIPLEDOT:
               {
-                if (kind == Setter) {
+                if (IsSetterKind(kind)) {
                     report(ParseError, false, null(),
                            JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
                     return false;
@@ -2003,7 +2005,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                     return false;
             }
 
-            if (parenFreeArrow || kind == Setter)
+            if (parenFreeArrow || IsSetterKind(kind))
                 break;
 
             if (!tokenStream.matchToken(&matched, TOK_COMMA))
@@ -2017,7 +2019,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
             if (!tokenStream.getToken(&tt))
                 return false;
             if (tt != TOK_RP) {
-                if (kind == Setter) {
+                if (IsSetterKind(kind)) {
                     report(ParseError, false, null(),
                            JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
                     return false;
@@ -2030,7 +2032,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
 
         if (!hasDefaults)
             funbox->length = pc->numArgs() - *hasRest;
-    } else if (kind == Setter) {
+    } else if (IsSetterKind(kind)) {
         report(ParseError, false, null(), JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
         return false;
     }
@@ -2781,7 +2783,9 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(InHandling inHandling,
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return false;
     if (tt != TOK_LC) {
-        if (funbox->isStarGenerator() || kind == Method || IsConstructorKind(kind)) {
+        if (funbox->isStarGenerator() || kind == Method ||
+            kind == GetterNoExpressionClosure || kind == SetterNoExpressionClosure ||
+            IsConstructorKind(kind)) {
             report(ParseError, false, null(), JSMSG_CURLY_BEFORE_BODY);
             return false;
         }
@@ -6319,8 +6323,10 @@ JSOpFromPropertyType(PropertyType propType)
 {
     switch (propType) {
       case PropertyType::Getter:
+      case PropertyType::GetterNoExpressionClosure:
         return JSOP_INITPROP_GETTER;
       case PropertyType::Setter:
+      case PropertyType::SetterNoExpressionClosure:
         return JSOP_INITPROP_SETTER;
       case PropertyType::Normal:
       case PropertyType::Method:
@@ -6339,8 +6345,12 @@ FunctionSyntaxKindFromPropertyType(PropertyType propType)
     switch (propType) {
       case PropertyType::Getter:
         return Getter;
+      case PropertyType::GetterNoExpressionClosure:
+        return GetterNoExpressionClosure;
       case PropertyType::Setter:
         return Setter;
+      case PropertyType::SetterNoExpressionClosure:
+        return SetterNoExpressionClosure;
       case PropertyType::Method:
         return Method;
       case PropertyType::GeneratorMethod:
@@ -6474,6 +6484,10 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
             return null();
         }
 
+        if (propType == PropertyType::Getter)
+            propType = PropertyType::GetterNoExpressionClosure;
+        if (propType == PropertyType::Setter)
+            propType = PropertyType::SetterNoExpressionClosure;
         if (!isStatic && propAtom == context->names().constructor) {
             if (propType != PropertyType::Method) {
                 report(ParseError, false, propName, JSMSG_BAD_METHOD_DEF);
@@ -6494,8 +6508,8 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
         // (bug 883377).
         RootedPropertyName funName(context);
         switch (propType) {
-          case PropertyType::Getter:
-          case PropertyType::Setter:
+          case PropertyType::GetterNoExpressionClosure:
+          case PropertyType::SetterNoExpressionClosure:
             funName = nullptr;
             break;
           case PropertyType::Constructor:
