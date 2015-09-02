@@ -8,8 +8,6 @@ import os
 import sys
 import argparse
 
-from mozlog.structured import commandline
-
 from mozbuild.base import (
     MachCommandBase,
     MachCommandConditions as conditions,
@@ -30,12 +28,13 @@ this by ommitting the VARIANT variable when building, or using:
 VARIANT=eng ./build.sh
 '''
 
-# A parser that will accept structured logging commandline arguments.
-_parser = argparse.ArgumentParser()
-commandline.add_logging_group(_parser)
+def setup_argument_parser():
+    from marionette.runner.base import BaseMarionetteArguments
+    return BaseMarionetteArguments()
 
 def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
     address=None, binary=None, topsrcdir=None, **kwargs):
+    from mozlog.structured import commandline
 
     from marionette.runtests import (
         MarionetteTestRunner,
@@ -114,30 +113,8 @@ class MachCommands(MachCommandBase):
     @Command('marionette-test', category='testing',
         description='Run a Marionette test (Check UI or the internal JavaScript using marionette).',
         conditions=[conditions.is_firefox],
-        parser=_parser,
+        parser=setup_argument_parser,
     )
-    @CommandArgument('--address',
-        help='host:port of running Gecko instance to connect to.')
-    @CommandArgument('--type',
-        default='browser',
-        help='Test type, usually one of: browser, b2g, b2g-qemu.')
-    @CommandArgument('--profile',
-        help='Path to gecko profile to use.')
-    @CommandArgument('--gecko-log',
-        help='Path to gecko log file, or "-" for stdout.')
-    @CommandArgument('--jsdebugger', action='store_true',
-        help='Enable the jsdebugger for marionette javascript.')
-    @CommandArgument('--pydebugger',
-        help='Enable python post-mortem debugger when a test fails.'
-             ' Pass in the debugger you want to use, eg pdb or ipdb.')
-    @CommandArgument('--e10s', action='store_true',
-        help='Enable electrolysis for marionette tests (desktop only).')
-    @CommandArgument('--tag', action='append', dest='test_tags',
-        help='Filter out tests that don\'t have the given tag. Can be used '
-             'multiple times in which case the test must contain at least one '
-             'of the given tags.')
-    @CommandArgument('tests', nargs='*', metavar='TESTS',
-        help='Path to test(s) to run.')
     def run_marionette_test(self, tests, **kwargs):
-        binary = self.get_binary_path('app')
-        return run_marionette(tests, binary=binary, topsrcdir=self.topsrcdir, **kwargs)
+        kwargs['binary'] = self.get_binary_path('app')
+        return run_marionette(tests, topsrcdir=self.topsrcdir, **kwargs)
