@@ -79,6 +79,13 @@ ReportBadArrayType(JSContext* cx)
 }
 
 static bool
+ReportOutOfRange(JSContext* cx)
+{
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_ATOMICS_BAD_INDEX);
+    return false;
+}
+
+static bool
 GetSharedTypedArray(JSContext* cx, HandleValue v,
                     MutableHandle<SharedTypedArrayObject*> viewp)
 {
@@ -90,36 +97,17 @@ GetSharedTypedArray(JSContext* cx, HandleValue v,
     return true;
 }
 
-// Returns true so long as the conversion succeeds, and then *inRange
-// is set to false if the index is not in range.
 static bool
 GetSharedTypedArrayIndex(JSContext* cx, HandleValue v, Handle<SharedTypedArrayObject*> view,
-                         uint32_t* offset, bool* inRange)
+                         uint32_t* offset)
 {
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, v, &id))
         return false;
     uint64_t index;
-    if (!IsTypedArrayIndex(id, &index) || index >= view->length()) {
-        *inRange = false;
-    } else {
-        *offset = (uint32_t)index;
-        *inRange = true;
-    }
-    return true;
-}
-
-void
-js::atomics_fullMemoryBarrier()
-{
-    jit::AtomicOperations::fenceSeqCst();
-}
-
-static bool
-AtomicsFence(JSContext* cx, MutableHandleValue r)
-{
-    atomics_fullMemoryBarrier();
-    r.setUndefined();
+    if (!IsTypedArrayIndex(id, &index) || index >= view->length())
+        return ReportOutOfRange(cx);
+    *offset = (uint32_t)index;
     return true;
 }
 
@@ -127,7 +115,9 @@ bool
 js::atomics_fence(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return AtomicsFence(cx, args.rval());
+    jit::AtomicOperations::fenceSeqCst();
+    args.rval().setUndefined();
+    return true;
 }
 
 static int32_t
@@ -198,8 +188,7 @@ js::atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp)
     if (!GetSharedTypedArray(cx, objv, &view))
         return false;
     uint32_t offset;
-    bool inRange;
-    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset, &inRange))
+    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset))
         return false;
     int32_t oldCandidate;
     if (!ToInt32(cx, oldv, &oldCandidate))
@@ -207,9 +196,6 @@ js::atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp)
     int32_t newCandidate;
     if (!ToInt32(cx, newv, &newCandidate))
         return false;
-
-    if (!inRange)
-        return AtomicsFence(cx, r);
 
     bool badType = false;
     int32_t result = CompareExchange(view->type(), oldCandidate, newCandidate, view->viewData(), offset, &badType);
@@ -236,12 +222,8 @@ js::atomics_load(JSContext* cx, unsigned argc, Value* vp)
     if (!GetSharedTypedArray(cx, objv, &view))
         return false;
     uint32_t offset;
-    bool inRange;
-    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset, &inRange))
+    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset))
         return false;
-
-    if (!inRange)
-        return AtomicsFence(cx, r);
 
     switch (view->type()) {
       case Scalar::Uint8:
@@ -356,18 +338,11 @@ ExchangeOrStore(JSContext* cx, unsigned argc, Value* vp)
     if (!GetSharedTypedArray(cx, objv, &view))
         return false;
     uint32_t offset;
-    bool inRange;
-    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset, &inRange))
+    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset))
         return false;
     int32_t numberValue;
     if (!ToInt32(cx, valv, &numberValue))
         return false;
-
-    if (!inRange) {
-        atomics_fullMemoryBarrier();
-        r.set(valv);
-        return true;
-    }
 
     bool badType = false;
     int32_t result = ExchangeOrStore<op>(view->type(), numberValue, view->viewData(), offset, &badType);
@@ -403,15 +378,11 @@ AtomicsBinop(JSContext* cx, HandleValue objv, HandleValue idxv, HandleValue valv
     if (!GetSharedTypedArray(cx, objv, &view))
         return false;
     uint32_t offset;
-    bool inRange;
-    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset, &inRange))
+    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset))
         return false;
     int32_t numberValue;
     if (!ToInt32(cx, valv, &numberValue))
         return false;
-
-    if (!inRange)
-        return AtomicsFence(cx, r);
 
     switch (view->type()) {
       case Scalar::Int8: {
@@ -804,8 +775,7 @@ js::atomics_futexWait(JSContext* cx, unsigned argc, Value* vp)
     if (view->type() != Scalar::Int32)
         return ReportBadArrayType(cx);
     uint32_t offset;
-    bool inRange;
-    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset, &inRange))
+    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset))
         return false;
     int32_t value;
     if (!ToInt32(cx, valv, &value))
@@ -820,12 +790,6 @@ js::atomics_futexWait(JSContext* cx, unsigned argc, Value* vp)
             timeout_ms = mozilla::PositiveInfinity<double>();
         else if (timeout_ms < 0)
             timeout_ms = 0;
-    }
-
-    if (!inRange) {
-        atomics_fullMemoryBarrier();
-        r.setUndefined();
-        return true;
     }
 
     // This lock also protects the "waiters" field on SharedArrayRawBuffer,
@@ -883,14 +847,8 @@ js::atomics_futexWake(JSContext* cx, unsigned argc, Value* vp)
     if (view->type() != Scalar::Int32)
         return ReportBadArrayType(cx);
     uint32_t offset;
-    bool inRange;
-    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset, &inRange))
+    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset))
         return false;
-    if (!inRange) {
-        atomics_fullMemoryBarrier();
-        r.setUndefined();
-        return true;
-    }
     double count;
     if (!ToInteger(cx, countv, &count))
         return false;
@@ -938,8 +896,7 @@ js::atomics_futexWakeOrRequeue(JSContext* cx, unsigned argc, Value* vp)
     if (view->type() != Scalar::Int32)
         return ReportBadArrayType(cx);
     uint32_t offset1;
-    bool inRange1;
-    if (!GetSharedTypedArrayIndex(cx, idx1v, view, &offset1, &inRange1))
+    if (!GetSharedTypedArrayIndex(cx, idx1v, view, &offset1))
         return false;
     double count;
     if (!ToInteger(cx, countv, &count))
@@ -950,14 +907,8 @@ js::atomics_futexWakeOrRequeue(JSContext* cx, unsigned argc, Value* vp)
     if (!ToInt32(cx, valv, &value))
         return false;
     uint32_t offset2;
-    bool inRange2;
-    if (!GetSharedTypedArrayIndex(cx, idx2v, view, &offset2, &inRange2))
+    if (!GetSharedTypedArrayIndex(cx, idx2v, view, &offset2))
         return false;
-    if (!(inRange1 && inRange2)) {
-        atomics_fullMemoryBarrier();
-        r.setUndefined();
-        return true;
-    }
 
     AutoLockFutexAPI lock;
 
