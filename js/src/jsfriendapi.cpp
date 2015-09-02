@@ -24,7 +24,6 @@
 #include "proxy/DeadObjectProxy.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Time.h"
-#include "vm/WeakMapObject.h"
 #include "vm/WrapperObject.h"
 
 #include "jsobjinlines.h"

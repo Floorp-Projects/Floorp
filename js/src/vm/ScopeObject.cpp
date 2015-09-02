@@ -18,7 +18,6 @@
 #include "vm/GlobalObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
-#include "vm/WeakMapObject.h"
 #include "vm/Xdr.h"
 
 #include "jsatominlines.h"
