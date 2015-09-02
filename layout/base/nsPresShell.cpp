@@ -784,7 +784,6 @@ PresShell::PresShell()
 #endif
   mRenderFlags = 0;
   mResolution = 1.0;
-  mViewportOverridden = false;
 
   mScrollPositionClampingScrollPortSizeSet = false;
 
@@ -1767,34 +1766,8 @@ PresShell::AsyncResizeEventCallback(nsITimer* aTimer, void* aPresShell)
 }
 
 nsresult
-PresShell::ResizeReflowOverride(nscoord aWidth, nscoord aHeight)
-{
-  mViewportOverridden = true;
-
-  if (mMobileViewportManager) {
-    // Once the viewport is explicitly overridden, we don't need the
-    // MobileViewportManager any more (in this presShell at least). Destroying
-    // it simplifies things because then it can maintain an invariant that any
-    // time it gets a meta-viewport change (for example) it knows it must
-    // recompute the CSS viewport and do a reflow. If we didn't destroy it here
-    // then there would be times where a meta-viewport change would have no
-    // effect.
-    mMobileViewportManager->Destroy();
-    mMobileViewportManager = nullptr;
-  }
-
-  return ResizeReflowIgnoreOverride(aWidth, aHeight);
-}
-
-nsresult
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
-  if (mViewportOverridden) {
-    // The viewport has been overridden, and this reflow request
-    // didn't ask to ignore the override.  Pretend it didn't happen.
-    return NS_OK;
-  }
-
   if (mZoomConstraintsClient) {
     // If we have a ZoomConstraintsClient and the available screen area
     // changed, then we might need to disable double-tap-to-zoom, so notify
@@ -7891,7 +7864,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
         isHandlingUserInput = true;
         break;
 
-      case NS_DRAGDROP_DROP: {
+      case eDrop: {
         nsCOMPtr<nsIDragSession> session = nsContentUtils::GetDragSession();
         if (session) {
           bool onlyChromeDrop = false;

@@ -222,7 +222,7 @@ HTMLButtonElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
   WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
   bool outerActivateEvent =
     ((mouseEvent && mouseEvent->IsLeftClickEvent()) ||
-     (aVisitor.mEvent->mMessage == NS_UI_ACTIVATE &&
+     (aVisitor.mEvent->mMessage == eLegacyDOMActivate &&
       !mInInternalActivate));
 
   if (outerActivateEvent) {
@@ -252,7 +252,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
     if (mouseEvent && mouseEvent->IsLeftClickEvent()) {
       // DOMActive event should be trusted since the activation is actually
       // occurred even if the cause is an untrusted click event.
-      InternalUIEvent actEvent(true, NS_UI_ACTIVATE, mouseEvent);
+      InternalUIEvent actEvent(true, eLegacyDOMActivate, mouseEvent);
       actEvent.detail = 1;
 
       nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
@@ -370,7 +370,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
       if (mForm && (mType == NS_FORM_BUTTON_SUBMIT ||
                     mType == NS_FORM_BUTTON_RESET)) {
         InternalFormEvent event(true,
-          (mType == NS_FORM_BUTTON_RESET) ? NS_FORM_RESET : NS_FORM_SUBMIT);
+          (mType == NS_FORM_BUTTON_RESET) ? eFormReset : eFormSubmit);
         event.originator     = this;
         nsEventStatus status = nsEventStatus_eIgnore;
 
@@ -382,7 +382,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
         //
         // Using presShell to dispatch the event. It makes sure that
         // event is not handled if the window is being destroyed.
-        if (presShell && (event.mMessage != NS_FORM_SUBMIT ||
+        if (presShell && (event.mMessage != eFormSubmit ||
                           mForm->HasAttr(kNameSpaceID_None, nsGkAtoms::novalidate) ||
                           // We know the element is a submit control, if this check is moved,
                           // make sure formnovalidate is used only if it's a submit control.

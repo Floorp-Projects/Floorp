@@ -2631,20 +2631,20 @@ case _value: eventName.AssignLiteral(_name) ; break
 
   switch(aGuiEvent->mMessage)
   {
-    _ASSIGN_eventName(NS_BLUR_CONTENT,"NS_BLUR_CONTENT");
-    _ASSIGN_eventName(NS_DRAGDROP_GESTURE,"NS_DND_GESTURE");
-    _ASSIGN_eventName(NS_DRAGDROP_DROP,"NS_DND_DROP");
-    _ASSIGN_eventName(NS_DRAGDROP_ENTER,"NS_DND_ENTER");
-    _ASSIGN_eventName(NS_DRAGDROP_EXIT,"NS_DND_EXIT");
-    _ASSIGN_eventName(NS_DRAGDROP_OVER,"NS_DND_OVER");
+    _ASSIGN_eventName(eBlur,"eBlur");
+    _ASSIGN_eventName(eLegacyDragGesture,"eLegacyDragGesture");
+    _ASSIGN_eventName(eDrop,"eDrop");
+    _ASSIGN_eventName(eDragEnter,"eDragEnter");
+    _ASSIGN_eventName(eDragExit,"eDragExit");
+    _ASSIGN_eventName(eDragOver,"eDragOver");
     _ASSIGN_eventName(NS_EDITOR_INPUT,"NS_EDITOR_INPUT");
-    _ASSIGN_eventName(NS_FOCUS_CONTENT,"NS_FOCUS_CONTENT");
-    _ASSIGN_eventName(NS_FORM_SELECTED,"NS_FORM_SELECTED");
-    _ASSIGN_eventName(NS_FORM_CHANGE,"NS_FORM_CHANGE");
-    _ASSIGN_eventName(NS_FORM_RESET,"NS_FORM_RESET");
-    _ASSIGN_eventName(NS_FORM_SUBMIT,"NS_FORM_SUBMIT");
-    _ASSIGN_eventName(NS_IMAGE_ABORT,"NS_IMAGE_ABORT");
-    _ASSIGN_eventName(NS_LOAD_ERROR,"NS_LOAD_ERROR");
+    _ASSIGN_eventName(eFocus,"eFocus");
+    _ASSIGN_eventName(eFormSelect,"eFormSelect");
+    _ASSIGN_eventName(eFormChange,"eFormChange");
+    _ASSIGN_eventName(eFormReset,"eFormReset");
+    _ASSIGN_eventName(eFormSubmit,"eFormSubmit");
+    _ASSIGN_eventName(eImageAbort,"eImageAbort");
+    _ASSIGN_eventName(eLoadError,"eLoadError");
     _ASSIGN_eventName(eKeyDown,"eKeyDown");
     _ASSIGN_eventName(eKeyPress,"eKeyPress");
     _ASSIGN_eventName(eKeyUp,"eKeyUp");
@@ -2655,13 +2655,13 @@ case _value: eventName.AssignLiteral(_name) ; break
     _ASSIGN_eventName(eMouseClick,"eMouseClick");
     _ASSIGN_eventName(eMouseDoubleClick,"eMouseDoubleClick");
     _ASSIGN_eventName(eMouseMove,"eMouseMove");
-    _ASSIGN_eventName(NS_LOAD,"NS_LOAD");
-    _ASSIGN_eventName(NS_POPSTATE,"NS_POPSTATE");
+    _ASSIGN_eventName(eLoad,"eLoad");
+    _ASSIGN_eventName(ePopState,"ePopState");
     _ASSIGN_eventName(NS_BEFORE_SCRIPT_EXECUTE,"NS_BEFORE_SCRIPT_EXECUTE");
     _ASSIGN_eventName(NS_AFTER_SCRIPT_EXECUTE,"NS_AFTER_SCRIPT_EXECUTE");
-    _ASSIGN_eventName(NS_PAGE_UNLOAD,"NS_PAGE_UNLOAD");
-    _ASSIGN_eventName(NS_HASHCHANGE,"NS_HASHCHANGE");
-    _ASSIGN_eventName(NS_READYSTATECHANGE,"NS_READYSTATECHANGE");
+    _ASSIGN_eventName(eUnload,"eUnload");
+    _ASSIGN_eventName(eHashChange,"eHashChange");
+    _ASSIGN_eventName(eReadyStateChange,"eReadyStateChange");
     _ASSIGN_eventName(NS_XUL_BROADCAST, "NS_XUL_BROADCAST");
     _ASSIGN_eventName(NS_XUL_COMMAND_UPDATE, "NS_XUL_COMMAND_UPDATE");
 

@@ -187,6 +187,7 @@ class IDBDatabase::LogWarningRunnable final
   nsCString mMessageName;
   nsString mFilename;
   uint32_t mLineNumber;
+  uint32_t mColumnNumber;
   uint64_t mInnerWindowID;
   bool mIsChrome;
 
@@ -194,11 +195,13 @@ public:
   LogWarningRunnable(const char* aMessageName,
                      const nsAString& aFilename,
                      uint32_t aLineNumber,
+                     uint32_t aColumnNumber,
                      bool aIsChrome,
                      uint64_t aInnerWindowID)
     : mMessageName(aMessageName)
     , mFilename(aFilename)
     , mLineNumber(aLineNumber)
+    , mColumnNumber(aColumnNumber)
     , mInnerWindowID(aInnerWindowID)
     , mIsChrome(aIsChrome)
   {
@@ -209,6 +212,7 @@ public:
   LogWarning(const char* aMessageName,
              const nsAString& aFilename,
              uint32_t aLineNumber,
+             uint32_t aColumnNumber,
              bool aIsChrome,
              uint64_t aInnerWindowID);
 
@@ -959,10 +963,10 @@ IDBDatabase::AbortTransactions(bool aShouldWarn)
         MOZ_ASSERT(transaction);
 
         nsString filename;
-        uint32_t lineNo;
-        transaction->GetCallerLocation(filename, &lineNo);
+        uint32_t lineNo, column;
+        transaction->GetCallerLocation(filename, &lineNo, &column);
 
-        aDatabase->LogWarning(kWarningMessage, filename, lineNo);
+        aDatabase->LogWarning(kWarningMessage, filename, lineNo, column);
       }
     }
   };
@@ -1337,7 +1341,8 @@ IDBDatabase::Invalidate()
 void
 IDBDatabase::LogWarning(const char* aMessageName,
                         const nsAString& aFilename,
-                        uint32_t aLineNumber)
+                        uint32_t aLineNumber,
+                        uint32_t aColumnNumber)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aMessageName);
@@ -1346,6 +1351,7 @@ IDBDatabase::LogWarning(const char* aMessageName,
     LogWarningRunnable::LogWarning(aMessageName,
                                    aFilename,
                                    aLineNumber,
+                                   aColumnNumber,
                                    mFactory->IsChrome(),
                                    mFactory->InnerWindowID());
   } else {
@@ -1353,6 +1359,7 @@ IDBDatabase::LogWarning(const char* aMessageName,
       new LogWarningRunnable(aMessageName,
                              aFilename,
                              aLineNumber,
+                             aColumnNumber,
                              mFactory->IsChrome(),
                              mFactory->InnerWindowID());
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
@@ -1628,6 +1635,7 @@ IDBDatabase::
 LogWarningRunnable::LogWarning(const char* aMessageName,
                                const nsAString& aFilename,
                                uint32_t aLineNumber,
+                               uint32_t aColumnNumber,
                                bool aIsChrome,
                                uint64_t aInnerWindowID)
 {
@@ -1664,7 +1672,7 @@ LogWarningRunnable::LogWarning(const char* aMessageName,
                                     aFilename,
                                     /* aSourceLine */ EmptyString(),
                                     aLineNumber,
-                                    /* aColumnNumber */ 0,
+                                    aColumnNumber,
                                     nsIScriptError::warningFlag,
                                     category,
                                     aInnerWindowID)));
@@ -1674,7 +1682,7 @@ LogWarningRunnable::LogWarning(const char* aMessageName,
                         aFilename,
                         /* aSourceLine */ EmptyString(),
                         aLineNumber,
-                        /* aColumnNumber */ 0,
+                        aColumnNumber,
                         nsIScriptError::warningFlag,
                         category.get())));
   }
@@ -1693,6 +1701,7 @@ LogWarningRunnable::Run()
   LogWarning(mMessageName.get(),
              mFilename,
              mLineNumber,
+             mColumnNumber,
              mIsChrome,
              mInnerWindowID);
 

@@ -92,6 +92,7 @@ IDBRequest::InitMembers()
   mLoggingSerialNumber = NextSerialNumber();
   mErrorCode = NS_OK;
   mLineNo = 0;
+  mColumn = 0;
   mHaveResultOrErrorCode = false;
 }
 
@@ -104,7 +105,7 @@ IDBRequest::Create(IDBDatabase* aDatabase,
   aDatabase->AssertIsOnOwningThread();
 
   nsRefPtr<IDBRequest> request = new IDBRequest(aDatabase);
-  CaptureCaller(request->mFilename, &request->mLineNo);
+  CaptureCaller(request->mFilename, &request->mLineNo, &request->mColumn);
 
   request->mTransaction = aTransaction;
   request->SetScriptOwner(aDatabase->GetScriptOwner());
@@ -168,13 +169,15 @@ IDBRequest::SetLoggingSerialNumber(uint64_t aLoggingSerialNumber)
 }
 
 void
-IDBRequest::CaptureCaller(nsAString& aFilename, uint32_t* aLineNo)
+IDBRequest::CaptureCaller(nsAString& aFilename, uint32_t* aLineNo,
+                          uint32_t* aColumn)
 {
   MOZ_ASSERT(aFilename.IsEmpty());
   MOZ_ASSERT(aLineNo);
+  MOZ_ASSERT(aColumn);
 
   ThreadsafeAutoJSContext cx;
-  nsJSUtils::GetCallingLocation(cx, aFilename, aLineNo);
+  nsJSUtils::GetCallingLocation(cx, aFilename, aLineNo, aColumn);
 }
 
 void
@@ -271,13 +274,16 @@ IDBRequest::GetErrorAfterResult() const
 #endif // DEBUG
 
 void
-IDBRequest::GetCallerLocation(nsAString& aFilename, uint32_t* aLineNo) const
+IDBRequest::GetCallerLocation(nsAString& aFilename, uint32_t* aLineNo,
+                              uint32_t* aColumn) const
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aLineNo);
+  MOZ_ASSERT(aColumn);
 
   aFilename = mFilename;
   *aLineNo = mLineNo;
+  *aColumn = mColumn;
 }
 
 IDBRequestReadyState
@@ -516,7 +522,7 @@ IDBOpenDBRequest::CreateForWindow(IDBFactory* aFactory,
   MOZ_ASSERT(aScriptOwner);
 
   nsRefPtr<IDBOpenDBRequest> request = new IDBOpenDBRequest(aFactory, aOwner);
-  CaptureCaller(request->mFilename, &request->mLineNo);
+  CaptureCaller(request->mFilename, &request->mLineNo, &request->mColumn);
 
   request->SetScriptOwner(aScriptOwner);
 
@@ -533,7 +539,7 @@ IDBOpenDBRequest::CreateForJS(IDBFactory* aFactory,
   MOZ_ASSERT(aScriptOwner);
 
   nsRefPtr<IDBOpenDBRequest> request = new IDBOpenDBRequest(aFactory, nullptr);
-  CaptureCaller(request->mFilename, &request->mLineNo);
+  CaptureCaller(request->mFilename, &request->mLineNo, &request->mColumn);
 
   request->SetScriptOwner(aScriptOwner);
 

@@ -1019,7 +1019,33 @@ js::GCMarker::eagerlyMarkChildren(JSRope* rope)
     // types.
     ptrdiff_t savedPos = stack.position();
     JS_DIAGNOSTICS_ASSERT(rope->getTraceKind() == JS::TraceKind::String);
+#ifdef JS_DEBUG
+    static const size_t DEEP_ROPE_THRESHOLD = 100000;
+    static const size_t ROPE_CYCLE_HISTORY = 100;
+    DebugOnly<size_t> ropeDepth = 0;
+    JSRope* history[ROPE_CYCLE_HISTORY];
+#endif
     while (true) {
+#ifdef JS_DEBUG
+        if (++ropeDepth >= DEEP_ROPE_THRESHOLD) {
+            // Bug 1011786 comment 294 - detect cyclic ropes. There are some
+            // legitimate deep ropes, at least in tests. So if we hit a deep
+            // rope, start recording the nodes we visit and check whether we
+            // repeat. But do it on a finite window size W so that we're not
+            // scanning the full history for every node. And only check every
+            // Wth push, to add only constant overhead per node. This will only
+            // catch cycles of size up to W (but it seems most likely that any
+            // cycles will be size 1 or maybe 2.)
+            if ((ropeDepth > DEEP_ROPE_THRESHOLD + ROPE_CYCLE_HISTORY) &&
+                (ropeDepth % ROPE_CYCLE_HISTORY) == 0)
+            {
+                for (size_t i = 0; i < ROPE_CYCLE_HISTORY; i++)
+                    MOZ_ASSERT(history[i] != rope, "cycle detected in rope");
+            }
+            history[ropeDepth % ROPE_CYCLE_HISTORY] = rope;
+        }
+#endif
+
         JS_DIAGNOSTICS_ASSERT(rope->getTraceKind() == JS::TraceKind::String);
         JS_DIAGNOSTICS_ASSERT(rope->JSString::isRope());
         AssertZoneIsMarking(rope);

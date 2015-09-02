@@ -1339,8 +1339,8 @@ EventListenerManager::HasUnloadListeners()
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {
     Listener* listener = &mListeners.ElementAt(i);
-    if (listener->mEventMessage == NS_PAGE_UNLOAD ||
-        listener->mEventMessage == NS_BEFORE_PAGE_UNLOAD) {
+    if (listener->mEventMessage == eUnload ||
+        listener->mEventMessage == eBeforeUnload) {
       return true;
     }
   }

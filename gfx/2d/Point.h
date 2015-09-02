@@ -64,37 +64,38 @@ struct IntPointTyped :
 };
 typedef IntPointTyped<UnknownUnits> IntPoint;
 
-template<class units>
+template<class units, class F = Float>
 struct PointTyped :
-  public BasePoint< Float, PointTyped<units>, CoordTyped<units> >,
+  public BasePoint< F, PointTyped<units, F>, CoordTyped<units, F> >,
   public units {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
-  typedef CoordTyped<units> Coord;
-  typedef BasePoint< Float, PointTyped<units>, CoordTyped<units> > Super;
+  typedef CoordTyped<units, F> Coord;
+  typedef BasePoint< F, PointTyped<units, F>, CoordTyped<units, F> > Super;
 
   MOZ_CONSTEXPR PointTyped() : Super() {}
-  MOZ_CONSTEXPR PointTyped(Float aX, Float aY) : Super(Coord(aX), Coord(aY)) {}
+  MOZ_CONSTEXPR PointTyped(F aX, F aY) : Super(Coord(aX), Coord(aY)) {}
   // The mixed-type constructors (Float, Coord) and (Coord, Float) are needed to
   // avoid ambiguities because Coord is implicitly convertible to Float.
-  MOZ_CONSTEXPR PointTyped(Float aX, Coord aY) : Super(Coord(aX), aY) {}
-  MOZ_CONSTEXPR PointTyped(Coord aX, Float aY) : Super(aX, Coord(aY)) {}
+  MOZ_CONSTEXPR PointTyped(F aX, Coord aY) : Super(Coord(aX), aY) {}
+  MOZ_CONSTEXPR PointTyped(Coord aX, F aY) : Super(aX, Coord(aY)) {}
   MOZ_CONSTEXPR PointTyped(Coord aX, Coord aY) : Super(aX.value, aY.value) {}
-  MOZ_CONSTEXPR MOZ_IMPLICIT PointTyped(const IntPointTyped<units>& point) : Super(float(point.x), float(point.y)) {}
+  MOZ_CONSTEXPR MOZ_IMPLICIT PointTyped(const IntPointTyped<units>& point) : Super(F(point.x), F(point.y)) {}
 
   // XXX When all of the code is ported, the following functions to convert to and from
   // unknown types should be removed.
 
-  static PointTyped<units> FromUnknownPoint(const PointTyped<UnknownUnits>& aPoint) {
-    return PointTyped<units>(aPoint.x, aPoint.y);
+  static PointTyped<units, F> FromUnknownPoint(const PointTyped<UnknownUnits, F>& aPoint) {
+    return PointTyped<units, F>(aPoint.x, aPoint.y);
   }
 
-  PointTyped<UnknownUnits> ToUnknownPoint() const {
-    return PointTyped<UnknownUnits>(this->x, this->y);
+  PointTyped<UnknownUnits, F> ToUnknownPoint() const {
+    return PointTyped<UnknownUnits, F>(this->x, this->y);
   }
 };
 typedef PointTyped<UnknownUnits> Point;
+typedef PointTyped<UnknownUnits, double> PointDouble;
 
 template<class units>
 IntPointTyped<units> RoundedToInt(const PointTyped<units>& aPoint) {
@@ -108,57 +109,59 @@ IntPointTyped<units> TruncatedToInt(const PointTyped<units>& aPoint) {
                               int32_t(aPoint.y));
 }
 
-template<class units>
+template<class units, class F = Float>
 struct Point3DTyped :
-  public BasePoint3D< Float, Point3DTyped<units> > {
+  public BasePoint3D< F, Point3DTyped<units, F> > {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
-  typedef BasePoint3D< Float, Point3DTyped<units> > Super;
+  typedef BasePoint3D< F, Point3DTyped<units, F> > Super;
 
   Point3DTyped() : Super() {}
-  Point3DTyped(Float aX, Float aY, Float aZ) : Super(aX, aY, aZ) {}
+  Point3DTyped(F aX, F aY, F aZ) : Super(aX, aY, aZ) {}
 
   // XXX When all of the code is ported, the following functions to convert to and from
   // unknown types should be removed.
 
-  static Point3DTyped<units> FromUnknownPoint(const Point3DTyped<UnknownUnits>& aPoint) {
-    return Point3DTyped<units>(aPoint.x, aPoint.y, aPoint.z);
+  static Point3DTyped<units, F> FromUnknownPoint(const Point3DTyped<UnknownUnits, F>& aPoint) {
+    return Point3DTyped<units, F>(aPoint.x, aPoint.y, aPoint.z);
   }
 
-  Point3DTyped<UnknownUnits> ToUnknownPoint() const {
-    return Point3DTyped<UnknownUnits>(this->x, this->y, this->z);
+  Point3DTyped<UnknownUnits, F> ToUnknownPoint() const {
+    return Point3DTyped<UnknownUnits, F>(this->x, this->y, this->z);
   }
 };
 typedef Point3DTyped<UnknownUnits> Point3D;
+typedef Point3DTyped<UnknownUnits, double> PointDouble3D;
 
-template<class units>
+template<class units, class F = Float>
 struct Point4DTyped :
-  public BasePoint4D< Float, Point4DTyped<units> > {
+  public BasePoint4D< F, Point4DTyped<units, F> > {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
-  typedef BasePoint4D< Float, Point4DTyped<units> > Super;
+  typedef BasePoint4D< F, Point4DTyped<units, F> > Super;
 
   Point4DTyped() : Super() {}
-  Point4DTyped(Float aX, Float aY, Float aZ, Float aW) : Super(aX, aY, aZ, aW) {}
+  Point4DTyped(F aX, F aY, F aZ, F aW) : Super(aX, aY, aZ, aW) {}
 
   // XXX When all of the code is ported, the following functions to convert to and from
   // unknown types should be removed.
 
-  static Point4DTyped<units> FromUnknownPoint(const Point4DTyped<UnknownUnits>& aPoint) {
-    return Point4DTyped<units>(aPoint.x, aPoint.y, aPoint.z, aPoint.w);
+  static Point4DTyped<units, F> FromUnknownPoint(const Point4DTyped<UnknownUnits, F>& aPoint) {
+    return Point4DTyped<units, F>(aPoint.x, aPoint.y, aPoint.z, aPoint.w);
   }
 
-  Point4DTyped<UnknownUnits> ToUnknownPoint() const {
-    return Point4DTyped<UnknownUnits>(this->x, this->y, this->z, this->w);
+  Point4DTyped<UnknownUnits, F> ToUnknownPoint() const {
+    return Point4DTyped<UnknownUnits, F>(this->x, this->y, this->z, this->w);
   }
 
-  PointTyped<units> As2DPoint() {
-    return PointTyped<units>(this->x / this->w, this->y / this->w);
+  PointTyped<units, F> As2DPoint() {
+    return PointTyped<units, F>(this->x / this->w, this->y / this->w);
   }
 };
 typedef Point4DTyped<UnknownUnits> Point4D;
+typedef Point4DTyped<UnknownUnits, double> PointDouble4D;
 
 template<class units>
 struct IntSizeTyped :
@@ -185,32 +188,33 @@ struct IntSizeTyped :
 };
 typedef IntSizeTyped<UnknownUnits> IntSize;
 
-template<class units>
+template<class units, class F = Float>
 struct SizeTyped :
-  public BaseSize< Float, SizeTyped<units> >,
+  public BaseSize< F, SizeTyped<units> >,
   public units {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
-  typedef BaseSize< Float, SizeTyped<units> > Super;
+  typedef BaseSize< F, SizeTyped<units, F> > Super;
 
   MOZ_CONSTEXPR SizeTyped() : Super() {}
-  MOZ_CONSTEXPR SizeTyped(Float aWidth, Float aHeight) : Super(aWidth, aHeight) {}
+  MOZ_CONSTEXPR SizeTyped(F aWidth, F aHeight) : Super(aWidth, aHeight) {}
   explicit SizeTyped(const IntSizeTyped<units>& size) :
-    Super(float(size.width), float(size.height)) {}
+    Super(F(size.width), F(size.height)) {}
 
   // XXX When all of the code is ported, the following functions to convert to and from
   // unknown types should be removed.
 
-  static SizeTyped<units> FromUnknownSize(const SizeTyped<UnknownUnits>& aSize) {
-    return SizeTyped<units>(aSize.width, aSize.height);
+  static SizeTyped<units, F> FromUnknownSize(const SizeTyped<UnknownUnits, F>& aSize) {
+    return SizeTyped<units, F>(aSize.width, aSize.height);
   }
 
-  SizeTyped<UnknownUnits> ToUnknownSize() const {
-    return SizeTyped<UnknownUnits>(this->width, this->height);
+  SizeTyped<UnknownUnits, F> ToUnknownSize() const {
+    return SizeTyped<UnknownUnits, F>(this->width, this->height);
   }
 };
 typedef SizeTyped<UnknownUnits> Size;
+typedef SizeTyped<UnknownUnits, double> SizeDouble;
 
 template<class units>
 IntSizeTyped<units> RoundedToInt(const SizeTyped<units>& aSize) {

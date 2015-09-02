@@ -2809,7 +2809,7 @@ ContentChild::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
     if (session) {
       session->SetDragAction(aAction);
       nsCOMPtr<DataTransfer> dataTransfer =
-        new DataTransfer(nullptr, NS_DRAGDROP_START, false, -1);
+        new DataTransfer(nullptr, eDragStart, false, -1);
       for (uint32_t i = 0; i < aTransfers.Length(); ++i) {
         auto& items = aTransfers[i].items();
         for (uint32_t j = 0; j < items.Length(); ++j) {
