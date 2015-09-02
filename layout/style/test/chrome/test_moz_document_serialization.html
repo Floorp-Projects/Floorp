@@ -1,0 +1,50 @@
+<!doctype html><html><head><meta charset="utf-8">
+<title>Test for reserialization of @-moz-document rules</title>
+<!-- This is a chrome test because @-moz-document can only be used
+     from user style sheets.  See bug 1035091. -->
+
+<script type="application/javascript" src="/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/content/tests/SimpleTest/test.css"/>
+
+</head><body>
+<script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    var windowUtils =
+        window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+              .getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+    var sheetURI =
+        Components.classes["@mozilla.org/network/io-service;1"]
+        .getService(Components.interfaces.nsIIOService)
+        .newURI("moz_document_serialization.css", null, document.baseURIObject);
+
+    var sheet =
+        Components.classes["@mozilla.org/content/style-sheet-service;1"]
+        .getService(Components.interfaces.nsIStyleSheetService)
+        .preloadSheet(sheetURI, Components.interfaces.nsIStyleSheetService.USER_SHEET);
+
+    windowUtils.addSheet(sheet, windowUtils.USER_SHEET);
+
+    var rules = [
+        '@-moz-document url("http://www.example.com/") {\n}',
+        '@-moz-document url("http://www.example.com/") {\n}',
+        '@-moz-document url("http://www.example.com/") {\n}',
+        '@-moz-document url-prefix("http://www.example.com/") {\n}',
+        '@-moz-document url-prefix("http://www.example.com/") {\n}',
+        '@-moz-document domain("example.com") {\n}',
+        '@-moz-document domain("example.com") {\n}',
+        '@-moz-document regexp("http://www.w3.org/TR/\\\\d{4}/[^/]*-CSS2-\\\\d{8}/") {\n}',
+        '@-moz-document regexp("http://www.w3.org/TR/\\\\d{4}/[^/]*-CSS2-\\\\d{8}/") {\n}',
+    ];
+
+    addLoadEvent(function () {
+        is(sheet.cssRules.length, rules.length, "number of rules");
+        for (var i = 0; i < rules.length; i++) {
+            is(sheet.cssRules[i].cssText, rules[i], "serialization for rule " + i);
+        }
+        SimpleTest.finish();
+    });
+</script>
+</body>
+</html>

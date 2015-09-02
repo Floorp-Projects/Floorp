@@ -2999,8 +2999,14 @@ CSSParserImpl::ParseAtRule(RuleAppendFunc aAppendFunc,
     newSection = eCSSSection_General;
 
   } else if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-document")) {
-    parseFunc = &CSSParserImpl::ParseMozDocumentRule;
-    newSection = eCSSSection_General;
+    if (UserRulesEnabled()) {
+      parseFunc = &CSSParserImpl::ParseMozDocumentRule;
+      newSection = eCSSSection_General;
+    } else {
+      REPORT_UNEXPECTED_TOKEN(PEMozDocumentRuleNotAllowed);
+      OUTPUT_ERROR();
+      return SkipAtRule(aInAtRule);
+    }
 
   } else if (mToken.mIdent.LowerCaseEqualsLiteral("font-face")) {
     parseFunc = &CSSParserImpl::ParseFontFaceRule;
