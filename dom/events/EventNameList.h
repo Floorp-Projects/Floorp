@@ -444,7 +444,7 @@ EVENT(afterscriptexecute,
       eBasicEventClass)
 
 FORWARDED_EVENT(blur,
-                NS_BLUR_CONTENT,
+                eBlur,
                 EventNameType_HTMLXUL,
                 eFocusEventClass)
 ERROR_EVENT(error,

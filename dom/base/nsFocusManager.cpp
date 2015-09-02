@@ -966,7 +966,7 @@ nsFocusManager::WindowHidden(nsIDOMWindow* aWindow)
     window->UpdateCommands(NS_LITERAL_STRING("focus"), nullptr, 0);
 
     if (presShell) {
-      SendFocusOrBlurEvent(NS_BLUR_CONTENT, presShell,
+      SendFocusOrBlurEvent(eBlur, presShell,
                            oldFocusedContent->GetComposedDoc(),
                            oldFocusedContent, 1, false);
     }
@@ -1682,7 +1682,7 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
     if (mActiveWindow)
       window->UpdateCommands(NS_LITERAL_STRING("focus"), nullptr, 0);
 
-    SendFocusOrBlurEvent(NS_BLUR_CONTENT, presShell,
+    SendFocusOrBlurEvent(eBlur, presShell,
                          content->GetComposedDoc(), content, 1, false);
   }
 
@@ -1729,9 +1729,9 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
     // the document isn't null in case someone closed it during the blur above
     nsIDocument* doc = window->GetExtantDoc();
     if (doc)
-      SendFocusOrBlurEvent(NS_BLUR_CONTENT, presShell, doc, doc, 1, false);
+      SendFocusOrBlurEvent(eBlur, presShell, doc, doc, 1, false);
     if (mFocusedWindow == nullptr)
-      SendFocusOrBlurEvent(NS_BLUR_CONTENT, presShell, doc, window, 1, false);
+      SendFocusOrBlurEvent(eBlur, presShell, doc, window, 1, false);
 
     // check if a different window was focused
     result = (mFocusedWindow == nullptr && mActiveWindow);
@@ -2001,8 +2001,7 @@ nsFocusManager::SendFocusOrBlurEvent(EventMessage aEventMessage,
                                      bool aWindowRaised,
                                      bool aIsRefocus)
 {
-  NS_ASSERTION(aEventMessage == eFocus ||
-               aEventMessage == NS_BLUR_CONTENT,
+  NS_ASSERTION(aEventMessage == eFocus || aEventMessage == eBlur,
                "Wrong event type for SendFocusOrBlurEvent");
 
   nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aTarget);

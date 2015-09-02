@@ -506,7 +506,7 @@ HTMLTextAreaElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
   }
 
   // Fire onchange (if necessary), before we do the blur, bug 370521.
-  if (aVisitor.mEvent->mMessage == NS_BLUR_CONTENT) {
+  if (aVisitor.mEvent->mMessage == eBlur) {
     FireChangeEventIfNeeded();
   }
 
@@ -539,7 +539,7 @@ HTMLTextAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
   }
 
   if (aVisitor.mEvent->mMessage == eFocus ||
-      aVisitor.mEvent->mMessage == NS_BLUR_CONTENT) {
+      aVisitor.mEvent->mMessage == eBlur) {
     if (aVisitor.mEvent->mMessage == eFocus) {
       // If the invalid UI is shown, we should show it while focusing (and
       // update). Otherwise, we should not.
@@ -549,7 +549,7 @@ HTMLTextAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
       // If neither invalid UI nor valid UI is shown, we shouldn't show the valid
       // UI while typing.
       mCanShowValidUI = ShouldShowValidityUI();
-    } else { // NS_BLUR_CONTENT
+    } else { // eBlur
       mCanShowInvalidUI = true;
       mCanShowValidUI = true;
     }
