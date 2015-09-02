@@ -341,6 +341,7 @@ function createMessageCursor(aMmdb, aStartDate = null, aEndDate = null,
                           aDelivery || null,
                           aRead !== null,
                           aRead || false,
+                          aThreadId !== null,
                           aThreadId || 0,
                           aReverse || false);
 }
