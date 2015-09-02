@@ -315,10 +315,6 @@ class MacroAssemblerMIPS : public Assembler
                               FPConditionBit fcc = FCC0);
 
   public:
-    // calls an ion function, assuming that the stack is currently not 8 byte aligned
-    void ma_callJitHalfPush(const Register reg);
-    void ma_callJitHalfPush(Label* label);
-
     void ma_call(ImmPtr dest);
 
     void ma_jump(ImmPtr dest);
@@ -373,10 +369,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     }
     void mov(Address src, Register dest) {
         MOZ_CRASH("NYI-IC");
-    }
-
-    void callAndPushReturnAddress(Label* label) {
-        ma_callJitHalfPush(label);
     }
 
     void branch(JitCode* c) {
@@ -890,11 +882,6 @@ public:
     void storeTypeTag(ImmTag tag, Address dest);
     void storeTypeTag(ImmTag tag, const BaseIndex& dest);
 
-    void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
-        ma_sll(frameSizeReg, frameSizeReg, Imm32(FRAMESIZE_SHIFT));
-        ma_or(frameSizeReg, frameSizeReg, Imm32(type));
-    }
-
     void handleFailureWithHandlerTail(void* handler);
 
     /////////////////////////////////////////////////////////////////
@@ -1116,19 +1103,6 @@ public:
     void atomicXor32(const T& value, const S& mem) {
         MOZ_CRASH("NYI");
     }
-
-    // Builds an exit frame on the stack, with a return address to an internal
-    // non-function. Returns offset to be passed to markSafepointAt().
-    void buildFakeExitFrame(Register scratch, uint32_t* offset);
-
-    void callWithExitFrame(Label* target);
-    void callWithExitFrame(JitCode* target);
-    void callWithExitFrame(JitCode* target, Register dynStack);
-
-    // Makes a call using the only two methods that it is sane for indep code
-    // to make a call.
-    void callJit(Register callee);
-    void callJitFromAsmJS(Register callee) { callJit(callee); }
 
     void add32(Register src, Register dest);
     void add32(Imm32 imm, Register dest);

@@ -1367,7 +1367,7 @@ class MOZ_STACK_CLASS ModuleCompiler
             return hn;
         }
         static bool match(const ExitDescriptor& lhs, const ExitDescriptor& rhs) {
-            return lhs.name_ == rhs.name_ && lhs.sig_ == rhs.sig_;
+            return lhs.name_ == rhs.name_ && *lhs.sig_ == *rhs.sig_;
         }
     };
 
@@ -11453,7 +11453,7 @@ GenerateFFIIonExit(ModuleCompiler& m, const ModuleCompiler::ExitDescriptor& exit
     }
 
     AssertStackAlignment(masm, JitStackAlignment, sizeOfRetAddr);
-    masm.callJitFromAsmJS(callee);
+    masm.callJitNoProfiler(callee);
     AssertStackAlignment(masm, JitStackAlignment, sizeOfRetAddr);
 
     {

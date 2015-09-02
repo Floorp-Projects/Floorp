@@ -189,7 +189,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
         masm.makeFrameDescriptor(r19, JitFrame_BaselineJS);
         masm.asVIXL().Push(x19, xzr); // Push xzr for a fake return address.
         // No GC things to mark: push a bare token.
-        masm.enterFakeExitFrame(ExitFrameLayout::BareToken());
+        masm.enterFakeExitFrame(ExitFrameLayoutBareToken);
 
         masm.push(BaselineFrameReg, reg_code);
 
@@ -225,7 +225,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
 
     // Call function.
     // Since AArch64 doesn't have the pc register available, the callee must push lr.
-    masm.call(reg_code);
+    masm.callJitNoProfiler(reg_code);
 
     // Baseline OSR will return here.
     if (type == EnterJitBaseline)
@@ -405,8 +405,7 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     // Load the address of the code that is getting called.
     masm.Ldr(x3, MemOperand(x5, JSFunction::offsetOfNativeOrScript()));
     masm.loadBaselineOrIonRaw(r3, r3, nullptr);
-    masm.call(r3);
-    uint32_t returnOffset = masm.currentOffset();
+    uint32_t returnOffset = masm.callJitNoProfiler(r3);
 
     // Clean up!
     // Get the size of the stack frame, and clean up the later fixed frame.

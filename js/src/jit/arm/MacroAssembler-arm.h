@@ -429,13 +429,6 @@ class MacroAssemblerARM : public Assembler
     BufferOffset ma_vstr(VFPRegister src, Register base, Register index, int32_t shift,
                          int32_t offset, Condition cc = Always);
 
-    // Calls an ion function, assuming that the stack is currently not 8 byte
-    // aligned.
-    void ma_callJitHalfPush(const Register reg);
-    // Calls an ion function, assuming that the stack is currently not 8 byte
-    // aligned.
-    void ma_callJitHalfPush(Label* label);
-
     void ma_call(ImmPtr dest);
 
     // Float registers can only be loaded/stored in continuous runs when using
@@ -531,8 +524,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void mov(Address src, Register dest) {
         MOZ_CRASH("NYI-IC");
     }
-
-    void callAndPushReturnAddress(Label* label);
 
     void branch(JitCode* c) {
         BufferOffset bo = m_buffer.nextOffset();
@@ -1188,30 +1179,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void storeTypeTag(ImmTag tag, const Address& dest);
     void storeTypeTag(ImmTag tag, const BaseIndex& dest);
 
-    void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
-        ma_lsl(Imm32(FRAMESIZE_SHIFT), frameSizeReg, frameSizeReg);
-        ma_orr(Imm32(type), frameSizeReg);
-    }
-
     void handleFailureWithHandlerTail(void* handler);
 
     /////////////////////////////////////////////////////////////////
     // Common interface.
     /////////////////////////////////////////////////////////////////
   public:
-    // Builds an exit frame on the stack, with a return address to an internal
-    // non-function. Returns offset to be passed to markSafepointAt().
-    void buildFakeExitFrame(Register scratch, uint32_t* offset);
-
-    void callWithExitFrame(Label* target);
-    void callWithExitFrame(JitCode* target);
-    void callWithExitFrame(JitCode* target, Register dynStack);
-
-    // Makes a call using the only two methods that it is sane for
-    // independent code to make a call.
-    void callJit(Register callee);
-    void callJitFromAsmJS(Register callee) { as_blx(callee); }
-
     void add32(Register src, Register dest);
     void add32(Imm32 imm, Register dest);
     void add32(Imm32 imm, const Address& dest);
@@ -1818,10 +1791,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadAsmJSHeapRegisterFromGlobalData() {
         loadPtr(Address(GlobalReg, AsmJSHeapGlobalDataOffset - AsmJSGlobalRegBias), HeapReg);
     }
-    void pushReturnAddress() {
-        push(lr);
-    }
-
     // Instrumentation for entering and leaving the profiler.
     void profilerEnterFrame(Register framePtr, Register scratch);
     void profilerExitFrame();

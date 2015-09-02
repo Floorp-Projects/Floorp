@@ -433,15 +433,16 @@ fun_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
          * isBuiltin() test covers this case because bound functions are native
          * (and thus built-in) functions by definition/construction.
          *
-         * In ES6 9.2.8 MakeConstructor the .prototype property is only assigned
-         * to constructors.
+         * ES6 9.2.8 MakeConstructor defines the .prototype property on constructors.
+         * Generators are not constructors, but they have a .prototype property anyway,
+         * according to errata to ES6. See bug 1191486.
          *
          * Thus all of the following don't get a .prototype property:
          * - Methods (that are not class-constructors or generators)
          * - Arrow functions
          * - Function.prototype
          */
-        if (fun->isBuiltin() || !fun->isConstructor())
+        if (fun->isBuiltin() || (!fun->isConstructor() && !fun->isGenerator()))
             return true;
 
         if (!ResolveInterpretedFunctionPrototype(cx, fun, id))

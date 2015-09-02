@@ -94,7 +94,7 @@ private:
   // Circular buffer for capturing delayed samples.
   FallibleTArray<AudioChunk> mChunks;
   // Cache upmixed channel arrays.
-  nsAutoTArray<const void*,GUESS_AUDIO_CHANNELS> mUpmixChannels;
+  nsAutoTArray<const float*,GUESS_AUDIO_CHANNELS> mUpmixChannels;
   double mSmoothingRate;
   // Current delay, in fractional ticks
   double mCurrentDelay;

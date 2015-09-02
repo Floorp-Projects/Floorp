@@ -75,7 +75,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     SimdMap simdMap_;
 
   public:
-    using MacroAssemblerX86Shared::callWithExitFrame;
     using MacroAssemblerX86Shared::branch32;
     using MacroAssemblerX86Shared::branchTest32;
     using MacroAssemblerX86Shared::load32;
@@ -1424,13 +1423,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
   public:
     void handleFailureWithHandlerTail(void* handler);
-
-    void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
-        shlq(Imm32(FRAMESIZE_SHIFT), frameSizeReg);
-        orq(Imm32(type), frameSizeReg);
-    }
-
-    void callWithExitFrame(JitCode* target, Register dynStack);
 
     // See CodeGeneratorX64 calls to noteAsmJSGlobalAccess.
     void patchAsmJSGlobalAccess(CodeOffsetLabel patchAt, uint8_t* code, uint8_t* globalData,
