@@ -528,11 +528,6 @@ def get_parser(argv=None):
                         help='Total number of chunks to split tests into.',
                         default=None)
 
-    parser.add_argument('-f', "--flavor",
-                        dest="flavor",
-                        type=str,
-                        help="Flavor to which the test belongs to.")
-
     parser.add_argument('--chunk-by-runtime',
                         action='store_true',
                         dest='chunk_by_runtime',
@@ -592,17 +587,28 @@ class ChunkFinder(MachCommandBase):
              description='Find which chunk a test belongs to (works for mochitest).',
              parser=get_parser)
     def chunk_finder(self, **kwargs):
-        flavor = kwargs['flavor']
         total_chunks = kwargs['total_chunks']
         test_path = kwargs['test_path'][0]
         suite_name = kwargs['suite_name'][0]
         _, dump_tests = tempfile.mkstemp()
+
+        from mozbuild.testing import TestResolver
+        resolver = self._spawn(TestResolver)
+        relpath = self._wrap_path_argument(test_path).relpath()
+        tests = list(resolver.resolve_tests(paths=[relpath]))
+        if len(tests) != 1:
+            print('No test found for test_path: %s' % test_path)
+            sys.exit(1)
+
+        flavor = tests[0]['flavor']
+        subsuite = tests[0]['subsuite']
         args = {
             'totalChunks': total_chunks,
             'dump_tests': dump_tests,
             'chunkByDir': kwargs['chunk_by_dir'],
             'chunkByRuntime': kwargs['chunk_by_runtime'],
             'e10s': kwargs['e10s'],
+            'subsuite': subsuite,
         }
 
         temp_dir = None
@@ -627,9 +633,9 @@ class ChunkFinder(MachCommandBase):
             for test in tests:
                 if test_path == test['path']:
                     if 'disabled' in test:
-                        print("The test %s is disabled on the given platform." % test_path)
+                        print('The test %s for flavor %s is disabled on the given platform' % (test_path, flavor))
                     else:
-                        print("The test %s is present in chunk number: %d." % (test_path, this_chunk))
+                        print('The test %s for flavor %s is present in chunk number: %d' % (test_path, flavor, this_chunk))
                     found = True
                     break
 
