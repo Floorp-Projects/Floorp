@@ -463,8 +463,9 @@ MobileMessageManager::GetMessages(const MobileMessageFilter& aFilter,
     read = aFilter.mRead.Value();
   }
 
+  bool hasThreadId = !aFilter.mThreadId.IsNull();
   uint64_t threadId = 0;
-  if (!aFilter.mThreadId.IsNull()) {
+  if (hasThreadId) {
     threadId = aFilter.mThreadId.Value();
   }
 
@@ -476,7 +477,7 @@ MobileMessageManager::GetMessages(const MobileMessageFilter& aFilter,
                                                ptrNumbers, numbersCount,
                                                delivery,
                                                hasRead, read,
-                                               threadId,
+                                               hasThreadId, threadId,
                                                aReverse, cursorCallback,
                                                getter_AddRefs(continueCallback));
   if (NS_FAILED(rv)) {

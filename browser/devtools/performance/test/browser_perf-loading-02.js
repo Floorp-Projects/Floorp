@@ -9,6 +9,9 @@
  */
 
 let test = Task.async(function*() {
+  // This test seems to take a long time to cleanup.
+  requestLongerTimeout(2);
+
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { PerformanceController, PerformanceView, RecordingsView,
         EVENTS, $ } = panel.panelWin;

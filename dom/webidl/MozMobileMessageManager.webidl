@@ -72,7 +72,7 @@ dictionary MobileMessageFilter
   boolean? read = null;
 
   // Filtering by a message's threadId attribute.
-  [EnforceRange] unsigned long long? threadId = 0;
+  [EnforceRange] unsigned long long? threadId = null;
 };
 
 /**
