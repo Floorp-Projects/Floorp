@@ -235,7 +235,7 @@ OnSourceGrabEventAfter(GtkWidget *widget, GdkEvent *event, gpointer user_data)
         sMotionEvent = gdk_event_copy(event);
 
         // Update the cursor position.  The last of these recorded gets used for
-        // the NS_DRAGDROP_END event.
+        // the eDragEnd event.
         nsDragService *dragService = static_cast<nsDragService*>(user_data);
         dragService->SetDragEndPoint(nsIntPoint(event->motion.x_root,
                                                 event->motion.y_root));

@@ -324,7 +324,7 @@ public:
     mFlags.mCancelable =
       (aMessage != NS_DRAGDROP_EXIT &&
        aMessage != eDragLeave &&
-       aMessage != NS_DRAGDROP_END);
+       aMessage != eDragEnd);
   }
 
   virtual WidgetEvent* Duplicate() const override
