@@ -1819,8 +1819,8 @@ NodeBuilder::classDefinition(bool expr, HandleValue name, HandleValue heritage, 
         return callback(cb, name, heritage, block, pos, dst);
 
     return newNode(type, pos,
-                   "name", name,
-                   "heritage", heritage,
+                   "id", name,
+                   "superClass", heritage,
                    "body", block,
                    dst);
 }
