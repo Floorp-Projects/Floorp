@@ -323,7 +323,7 @@ public:
   {
     mFlags.mCancelable =
       (aMessage != NS_DRAGDROP_EXIT &&
-       aMessage != NS_DRAGDROP_LEAVE &&
+       aMessage != eDragLeave &&
        aMessage != NS_DRAGDROP_END);
   }
 
