@@ -3265,7 +3265,7 @@ nsGlobalWindow::PostHandleEvent(EventChainPostVisitor& aVisitor)
   // Return early if there is nothing to do.
   switch (aVisitor.mEvent->mMessage) {
     case eResize:
-    case NS_PAGE_UNLOAD:
+    case eUnload:
     case NS_LOAD:
       break;
     default:
@@ -3280,7 +3280,7 @@ nsGlobalWindow::PostHandleEvent(EventChainPostVisitor& aVisitor)
 
   if (aVisitor.mEvent->mMessage == eResize) {
     mIsHandlingResizeEvent = false;
-  } else if (aVisitor.mEvent->mMessage == NS_PAGE_UNLOAD &&
+  } else if (aVisitor.mEvent->mMessage == eUnload &&
              aVisitor.mEvent->mFlags.mIsTrusted) {
     // Execute bindingdetached handlers before we tear ourselves
     // down.
