@@ -94,7 +94,7 @@ NS_EVENT_MESSAGE(eFormSubmit,           eFormEventFirst)
 NS_EVENT_MESSAGE(eFormReset,            eFormEventFirst + 1)
 NS_EVENT_MESSAGE(eFormChange,           eFormEventFirst + 2)
 NS_EVENT_MESSAGE(eFormSelect,           eFormEventFirst + 3)
-NS_EVENT_MESSAGE(NS_FORM_INVALID,       eFormEventFirst + 4)
+NS_EVENT_MESSAGE(eFormInvalid,          eFormEventFirst + 4)
 
 //Need separate focus/blur notifications for non-native widgets
 NS_EVENT_MESSAGE(NS_FOCUS_EVENT_START,  1300)
