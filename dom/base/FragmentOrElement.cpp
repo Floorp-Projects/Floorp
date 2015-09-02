@@ -807,7 +807,7 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
     bool stopEvent = false;
     switch (aVisitor.mEvent->mMessage) {
       case NS_IMAGE_ABORT:
-      case NS_LOAD_ERROR:
+      case eLoadError:
       case NS_FORM_SELECTED:
       case NS_FORM_CHANGE:
       case NS_LOAD:
