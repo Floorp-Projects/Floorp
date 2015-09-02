@@ -810,7 +810,7 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
       case eLoadError:
       case NS_FORM_SELECTED:
       case NS_FORM_CHANGE:
-      case NS_LOAD:
+      case eLoad:
       case NS_FORM_RESET:
       case eResize:
       case eScroll:
@@ -843,7 +843,7 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
       // The load event is special in that we don't ever propagate it
       // to chrome.
       nsCOMPtr<nsPIDOMWindow> win = OwnerDoc()->GetWindow();
-      EventTarget* parentTarget = win && aVisitor.mEvent->mMessage != NS_LOAD
+      EventTarget* parentTarget = win && aVisitor.mEvent->mMessage != eLoad
         ? win->GetParentTarget() : nullptr;
 
       aVisitor.mParentTarget = parentTarget;

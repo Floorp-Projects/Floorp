@@ -105,7 +105,7 @@ nsImageBoxFrameEvent::Run()
 void
 FireImageDOMEvent(nsIContent* aContent, EventMessage aMessage)
 {
-  NS_ASSERTION(aMessage == NS_LOAD || aMessage == eLoadError,
+  NS_ASSERTION(aMessage == eLoad || aMessage == eLoadError,
                "invalid message");
 
   nsCOMPtr<nsIRunnable> event = new nsImageBoxFrameEvent(aContent, aMessage);
@@ -780,7 +780,7 @@ nsImageBoxFrame::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
 {
   if (NS_SUCCEEDED(aStatus)) {
     // Fire an onload DOM event.
-    FireImageDOMEvent(mContent, NS_LOAD);
+    FireImageDOMEvent(mContent, eLoad);
   } else {
     // Fire an onerror DOM event.
     mIntrinsicSize.SizeTo(0, 0);
