@@ -74,21 +74,13 @@ add_task(function* test_dragging_e10s_windows() {
     null, nonRemoteWin, remoteWin);
   is(effect, "none", "Should not be able to drag a non-remote tab to an e10s window");
 
-  try {
-    remoteWin.gBrowser.swapBrowsersAndCloseOther(remoteTab, nonRemoteTab);
-    ok(false, "swapBrowsersAndCloseOther should have thrown");
-  } catch(e) {}
-
+  remoteWin.gBrowser.swapBrowsersAndCloseOther(remoteTab, nonRemoteTab);
   is(remoteWin.gBrowser.tabs.length, 2,
      "Prevent moving a normal tab to a private tabbrowser");
   is(nonRemoteWin.gBrowser.tabs.length, 2,
      "Prevent accepting a normal tab in a private tabbrowser");
 
-  try {
-    nonRemoteWin.gBrowser.swapBrowsersAndCloseOther(nonRemoteTab, remoteTab);
-    ok(false, "swapBrowsersAndCloseOther should have thrown");
-  } catch(e) {}
-
+  nonRemoteWin.gBrowser.swapBrowsersAndCloseOther(nonRemoteTab, remoteTab);
   is(nonRemoteWin.gBrowser.tabs.length, 2,
      "Prevent moving a private tab to a normal tabbrowser");
   is(remoteWin.gBrowser.tabs.length, 2,

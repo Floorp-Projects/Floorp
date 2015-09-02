@@ -810,6 +810,8 @@ MarkupView.prototype = {
         container.childrenDirty = true;
         // Update the children to take care of changes in the markup view DOM.
         this._updateChildren(container, {flash: true});
+      } else if (type === "pseudoClassLock") {
+        container.update();
       }
     }
 
@@ -1817,12 +1819,19 @@ MarkupContainer.prototype = {
     return this._hasChildren && !this.node.singleTextChild;
   },
 
+  /**
+   * True if this is the root <html> element and can't be collapsed
+   */
+  get mustExpand() {
+    return this.node._parent === this.markup.walker.rootNode;
+  },
+
   updateExpander: function() {
     if (!this.expander) {
       return;
     }
 
-    if (this.canExpand) {
+    if (this.canExpand && !this.mustExpand) {
       this.expander.style.visibility = "visible";
     } else {
       this.expander.style.visibility = "hidden";
@@ -1855,6 +1864,9 @@ MarkupContainer.prototype = {
 
     if (!this.canExpand) {
       aValue = false;
+    }
+    if (this.mustExpand) {
+      aValue = true;
     }
 
     if (aValue && this.elt.classList.contains("collapsed")) {
@@ -2087,6 +2099,12 @@ MarkupContainer.prototype = {
    * viewed node.
    */
   update: function() {
+    if (this.node.pseudoClassLocks.length) {
+      this.elt.classList.add("pseudoclass-locked");
+    } else {
+      this.elt.classList.remove("pseudoclass-locked");
+    }
+
     if (this.editor.update) {
       this.editor.update();
     }

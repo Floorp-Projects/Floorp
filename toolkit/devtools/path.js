@@ -29,7 +29,7 @@ exports.joinURI = (initialPath, ...paths) => {
   }
 
   for(let path of paths) {
-    if(path) {
+    if (path) {
       uri = Services.io.newURI(path, null, uri);
     }
   }

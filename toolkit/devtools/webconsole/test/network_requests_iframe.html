@@ -10,7 +10,7 @@
 
       function makeXhr(aMethod, aUrl, aRequestBody, aCallback) {
         // On the first call, allow all cookies and set cookies, then resume the actual test
-        if(!setAllowAllCookies)
+        if (!setAllowAllCookies)
           SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0]]}, function () {
             setAllowAllCookies = true;
             setCookies();
@@ -41,7 +41,7 @@
         var body = "Hello world! " + (new Array(50)).join("foobaz barr");
         makeXhr('post', 'data.json', body, aCallback);
       }
-      
+
       function setCookies() {
         document.cookie = "foobar=fooval";
         document.cookie = "omgfoo=bug768096";

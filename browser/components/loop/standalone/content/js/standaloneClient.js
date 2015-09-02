@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var loop = loop || {};
-loop.StandaloneClient = (function($) {
+loop.StandaloneClient = (function() {
   "use strict";
 
   // The expected properties to be returned from the POST /calls request.
@@ -27,8 +27,8 @@ loop.StandaloneClient = (function($) {
     /**
      * Validates a data object to confirm it has the specified properties.
      *
-     * @param  {Object} The data object to verify
-     * @param  {Array} The list of properties to verify within the object
+     * @param  {Object} data        The data object to verify
+     * @param  {Array}  properties  The list of properties to verify within the object
      * @return This returns either the specific property if only one
      *         property is specified, or it returns all properties
      */
@@ -55,13 +55,11 @@ loop.StandaloneClient = (function($) {
      * Generic handler for XHR failures.
      *
      * @param {Function} cb Callback(err)
-     * @param jqXHR See jQuery docs
-     * @param textStatus See jQuery docs
-     * @param errorThrown See jQuery docs
+     * @param xhrReq
      */
-    _failureHandler: function(cb, jqXHR, textStatus, errorThrown) {
-      var jsonErr = jqXHR && jqXHR.responseJSON || {};
-      var message = "HTTP " + jqXHR.status + " " + errorThrown;
+    _failureHandler: function(cb, xhrReq) {
+      var jsonErr = JSON.parse(xhrReq.responseText && xhrReq.responseText || "{}");
+      var message = "HTTP " + xhrReq.status + " " + xhrReq.statusText;
 
       // Logging the technical error to the console
       console.error("Server error", message, jsonErr);
@@ -73,13 +71,13 @@ loop.StandaloneClient = (function($) {
       cb(err);
     },
 
-   /**
-    * Makes a request for url creation date for standalone UI
-    *
-    * @param {String} loopToken The loopToken representing the call
-    * @param {Function} cb Callback(err, callUrlInfo)
-    *
-    **/
+    /**
+     * Makes a request for url creation date for standalone UI
+     *
+     * @param {String} loopToken The loopToken representing the call
+     * @param {Function} cb Callback(err, callUrlInfo)
+     *
+     **/
     requestCallUrlInfo: function(loopToken, cb) {
       if (!loopToken) {
         throw new Error("Missing required parameter loopToken");
@@ -88,10 +86,29 @@ loop.StandaloneClient = (function($) {
         throw new Error("Missing required callback function");
       }
 
-      $.get(this.settings.baseServerUrl + "/calls/" + loopToken)
-        .done(function(callUrlInfo) {
-          cb(null, callUrlInfo);
-        }).fail(this._failureHandler.bind(this, cb));
+      var url = this.settings.baseServerUrl + "/calls/" + loopToken;
+      var xhrReq = new XMLHttpRequest();
+
+      xhrReq.open("GET", url, true);
+      xhrReq.setRequestHeader("Content-type", "application/json");
+
+      xhrReq.onload = function() {
+        var request = xhrReq;
+        var responseJSON = JSON.parse(request.responseText || null);
+
+        if (request.readyState === 4 && request.status >= 200 && request.status < 300) {
+          try {
+            cb(null, responseJSON);
+          } catch (err) {
+            console.error("Error requesting call info", err.message);
+            cb(err);
+          }
+        } else {
+          this._failureHandler(cb, request);
+        }
+      }.bind(this, xhrReq);
+
+      xhrReq.send();
     },
 
     /**
@@ -108,26 +125,31 @@ loop.StandaloneClient = (function($) {
         throw new Error("missing required parameter loopToken");
       }
 
-      var req = $.ajax({
-        url: this.settings.baseServerUrl + "/calls/" + loopToken,
-        method: "POST",
-        contentType: "application/json",
-        dataType: "json",
-        data: JSON.stringify({callType: callType, channel: "standalone"})
-      });
+      var url = this.settings.baseServerUrl + "/calls/" + loopToken;
+      var xhrReq = new XMLHttpRequest();
 
-      req.done(function(sessionData) {
-        try {
-          cb(null, this._validate(sessionData, expectedCallsProperties));
-        } catch (err) {
-          console.error("Error requesting call info", err.message);
-          cb(err);
+      xhrReq.open("POST", url, true);
+      xhrReq.setRequestHeader("Content-type", "application/json");
+
+      xhrReq.onload = function() {
+        var request = xhrReq;
+        var responseJSON = JSON.parse(request.responseText || null);
+
+        if (request.readyState === 4 && request.status >= 200 && request.status < 300) {
+          try {
+            cb(null, this._validate(responseJSON, expectedCallsProperties));
+          } catch (err) {
+            console.error("Error requesting call info", err.message);
+            cb(err);
+          }
+        } else {
+          this._failureHandler(cb, request);
         }
-      }.bind(this));
+      }.bind(this, xhrReq);
 
-      req.fail(this._failureHandler.bind(this, cb));
+      xhrReq.send(JSON.stringify({callType: callType, channel: "standalone"}));
     }
   };
 
   return StandaloneClient;
-})(jQuery);
+})();

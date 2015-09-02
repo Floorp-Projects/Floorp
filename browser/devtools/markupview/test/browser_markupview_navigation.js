@@ -63,7 +63,7 @@ const TEST_DATA = [
   ["pageup", "*doctype*"],
   ["down", "html"],
   ["left", "html"],
-  ["down", "html"]
+  ["down", "head"]
 ];
 
 add_task(function*() {

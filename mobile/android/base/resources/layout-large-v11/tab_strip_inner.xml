@@ -3,7 +3,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<merge xmlns:android="http://schemas.android.com/apk/res/android">
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
     <org.mozilla.gecko.tabs.TabStripView
         android:id="@+id/tab_strip"
@@ -18,7 +19,8 @@
         android:id="@+id/add_tab"
         style="@style/UrlBar.ImageButton"
         android:layout_width="@dimen/tablet_tab_strip_height"
-        android:src="@drawable/tab_strip_add_tab"
+        android:src="@drawable/tab_new"
+        gecko:drawableTintList="@color/tab_new_tab_strip_colors"
         android:contentDescription="@string/new_tab"
         android:layout_marginRight="9dp"
         android:background="@drawable/tab_strip_button"/>
