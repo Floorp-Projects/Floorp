@@ -124,7 +124,7 @@ function letStmt(head, body) {
 }
 
 function superProp(id) {
-    return dotExpr(ident("super"), id);
+    return dotExpr(Pattern({ type: "Super" }), id);
 }
 function superElem(id) {
     return memExpr(ident("super"), id);
