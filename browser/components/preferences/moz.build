@@ -8,7 +8,6 @@ DIRS += ['in-content']
 
 BROWSER_CHROME_MANIFESTS += [
     'in-content/tests/browser.ini',
-    'tests/browser.ini',
 ]
 
 for var in ('MOZ_APP_NAME', 'MOZ_MACBUNDLE_NAME'):

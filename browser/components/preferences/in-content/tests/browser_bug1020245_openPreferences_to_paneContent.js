@@ -1,11 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Services.prefs.setBoolPref("browser.preferences.inContent", true);
 Services.prefs.setBoolPref("browser.preferences.instantApply", true);
 
 registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("browser.preferences.inContent");
   Services.prefs.clearUserPref("browser.preferences.instantApply");
 });
 

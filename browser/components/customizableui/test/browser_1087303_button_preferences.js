@@ -4,14 +4,10 @@
 
 "use strict";
 
-const PREF_INCONTENT = "browser.preferences.inContent";
-
 let newTab = null;
 
 add_task(function() {
   info("Check preferences button existence and functionality");
-
-  Services.prefs.setBoolPref(PREF_INCONTENT, true);
 
   yield PanelUI.show();
   info("Menu panel was opened");
@@ -33,9 +29,6 @@ add_task(function asyncCleanup() {
 
   gBrowser.removeTab(gBrowser.selectedTab);
   info("Tabs were restored");
-
-  // restore the browser.preferences.inContent preference
-  Services.prefs.clearUserPref(PREF_INCONTENT);
 });
 
 function waitForPageLoad(aTab) {
