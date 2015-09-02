@@ -249,6 +249,16 @@ nsNPAPIPlugin::PluginCrashed(const nsAString& pluginDumpID,
   host->PluginCrashed(this, pluginDumpID, browserDumpID);
 }
 
+bool
+nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
+{
+#ifdef MOZ_WIDGET_ANDROID
+  return false;
+#else
+  return true;
+#endif
+}
+
 inline PluginLibrary*
 GetNewPluginLibrary(nsPluginTag *aPluginTag)
 {
@@ -260,7 +270,10 @@ GetNewPluginLibrary(nsPluginTag *aPluginTag)
     return PluginModuleContentParent::LoadModule(aPluginTag->mId);
   }
 
-  return PluginModuleChromeParent::LoadModule(aPluginTag->mFullPath.get(), aPluginTag->mId, aPluginTag);
+  if (nsNPAPIPlugin::RunPluginOOP(aPluginTag)) {
+    return PluginModuleChromeParent::LoadModule(aPluginTag->mFullPath.get(), aPluginTag->mId, aPluginTag);
+  }
+  return new PluginPRLibrary(aPluginTag->mFullPath.get(), aPluginTag->mLibrary);
 }
 
 // Creates an nsNPAPIPlugin object. One nsNPAPIPlugin object exists per plugin (not instance).

@@ -94,9 +94,8 @@ MacroAssembler::passABIArg(FloatRegister reg, MoveOp::Type type)
 template <typename T> void
 MacroAssembler::callWithABI(const T& fun, MoveOp::Type result)
 {
-    profilerPreCall();
+    AutoProfilerCallInstrumentation profiler(*this);
     callWithABINoProfiler(fun, result);
-    profilerPostReturn();
 }
 
 void
@@ -152,30 +151,92 @@ MacroAssembler::signature() const
 #endif
 }
 
-//}}} check_macroassembler_style
 // ===============================================================
+// Jit Frames.
+
+uint32_t
+MacroAssembler::callJitNoProfiler(Register callee)
+{
+#ifdef JS_USE_LINK_REGISTER
+    // The return address is pushed by the callee.
+    call(callee);
+#else
+    callAndPushReturnAddress(callee);
+#endif
+    return currentOffset();
+}
+
+uint32_t
+MacroAssembler::callJit(Register callee)
+{
+    AutoProfilerCallInstrumentation profiler(*this);
+    uint32_t ret = callJitNoProfiler(callee);
+    return ret;
+}
+
+uint32_t
+MacroAssembler::callJit(JitCode* callee)
+{
+    AutoProfilerCallInstrumentation profiler(*this);
+    call(callee);
+    return currentOffset();
+}
+
+void
+MacroAssembler::makeFrameDescriptor(Register frameSizeReg, FrameType type)
+{
+    // See JitFrames.h for a description of the frame descriptor format.
+
+    lshiftPtr(Imm32(FRAMESIZE_SHIFT), frameSizeReg);
+    // The saved-frame bit is zero for new frames. See js::SavedStacks.
+    orPtr(Imm32(type), frameSizeReg);
+}
+
+void
+MacroAssembler::pushStaticFrameDescriptor(FrameType type)
+{
+    uint32_t descriptor = MakeFrameDescriptor(framePushed(), type);
+    Push(Imm32(descriptor));
+}
+
+uint32_t
+MacroAssembler::buildFakeExitFrame(Register scratch)
+{
+    mozilla::DebugOnly<uint32_t> initialDepth = framePushed();
+
+    pushStaticFrameDescriptor(JitFrame_IonJS);
+    uint32_t retAddr = pushFakeReturnAddress(scratch);
+
+    MOZ_ASSERT(framePushed() == initialDepth + ExitFrameLayout::Size());
+    return retAddr;
+}
+
+// ===============================================================
+// Exit frame footer.
 
 void
 MacroAssembler::PushStubCode()
 {
-    exitCodePatch_ = PushWithPatch(ImmWord(-1));
+    // Make sure that we do not erase an existing self-reference.
+    MOZ_ASSERT(!hasSelfReference());
+    selfReferencePatch_ = PushWithPatch(ImmWord(-1));
 }
 
 void
 MacroAssembler::enterExitFrame(const VMFunction* f)
 {
     linkExitFrame();
-    // Push the ioncode. (Bailout or VM wrapper)
+    // Push the JitCode pointer. (Keep the code alive, when on the stack)
     PushStubCode();
     // Push VMFunction pointer, to mark arguments.
     Push(ImmPtr(f));
 }
 
 void
-MacroAssembler::enterFakeExitFrame(JitCode* codeVal)
+MacroAssembler::enterFakeExitFrame(enum ExitFrameTokenValues token)
 {
     linkExitFrame();
-    Push(ImmPtr(codeVal));
+    Push(Imm32(token));
     Push(ImmPtr(nullptr));
 }
 
@@ -186,10 +247,13 @@ MacroAssembler::leaveExitFrame(size_t extraFrame)
 }
 
 bool
-MacroAssembler::hasEnteredExitFrame() const
+MacroAssembler::hasSelfReference() const
 {
-    return exitCodePatch_.offset() != 0;
+    return selfReferencePatch_.offset() != 0;
 }
+
+//}}} check_macroassembler_style
+// ===============================================================
 
 } // namespace jit
 } // namespace js

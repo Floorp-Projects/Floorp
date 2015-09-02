@@ -1473,16 +1473,6 @@ class MacroAssemblerX86Shared : public Assembler
         lea(Operand(address), dest);
     }
 
-    // Builds an exit frame on the stack, with a return address to an internal
-    // non-function. Returns offset to be passed to markSafepointAt().
-    void buildFakeExitFrame(Register scratch, uint32_t* offset);
-    void callWithExitFrame(Label* target);
-    void callWithExitFrame(JitCode* target);
-
-    void callJit(Register callee);
-    void callJitFromAsmJS(Register callee);
-    void callAndPushReturnAddress(Label* label);
-
     void checkStackAlignment() {
         // Exists for ARM compatibility.
     }

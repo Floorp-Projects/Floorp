@@ -103,6 +103,13 @@ SapiCallback::OnCancel()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SapiCallback::OnVolumeChanged(float aVolume)
+{
+  mSapiClient->SetVolume(static_cast<USHORT>(aVolume * 100));
+  return NS_OK;
+}
+
 void
 SapiCallback::OnSpeechEvent(const SPEVENT& speechEvent)
 {

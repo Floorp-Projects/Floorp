@@ -897,9 +897,7 @@ protected:
     // Resampler if the rate of the input track does not match the
     // MediaStreamGraph's.
     nsAutoRef<SpeexResamplerState> mResampler;
-#ifdef DEBUG
     int mResamplerChannelCount;
-#endif
     StreamTime mStart;
     // End-time of data already flushed to the track (excluding mData)
     StreamTime mEndOfFlushedData;

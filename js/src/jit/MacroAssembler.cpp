@@ -1588,15 +1588,6 @@ MacroAssembler::loadStringChar(Register str, Register index, Register output)
     bind(&done);
 }
 
-// Save an exit frame (which must be aligned to the stack pointer) to
-// PerThreadData::jitTop of the main thread.
-void
-MacroAssembler::linkExitFrame()
-{
-    AbsoluteAddress jitTop(GetJitContext()->runtime->addressOfJitTop());
-    storeStackPtr(jitTop);
-}
-
 static void
 BailoutReportOverRecursed(JSContext* cx)
 {
@@ -1667,7 +1658,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
         push(temp);
         push(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeAddr)));
         // No GC things to mark on the stack, push a bare token.
-        enterFakeExitFrame(ExitFrameLayout::BareToken());
+        enterFakeExitFrame(ExitFrameLayoutBareToken);
 
         // If monitorStub is non-null, handle resumeAddr appropriately.
         Label noMonitor;
@@ -2365,24 +2356,8 @@ void
 MacroAssembler::link(JitCode* code)
 {
     MOZ_ASSERT(!oom());
-    // If this code can transition to C++ code and witness a GC, then we need to store
-    // the JitCode onto the stack in order to GC it correctly.  exitCodePatch should
-    // be unset if the code never needed to push its JitCode*.
-    if (hasEnteredExitFrame()) {
-        exitCodePatch_.fixup(this);
-        PatchDataWithValueCheck(CodeLocationLabel(code, exitCodePatch_),
-                                ImmPtr(code),
-                                ImmPtr((void*)-1));
-    }
-
-    // Fix up the code pointers to be written for locations where profilerCallSite
-    // emitted moves of RIP to a register.
-    for (size_t i = 0; i < profilerCallSites_.length(); i++) {
-        CodeOffsetLabel offset = profilerCallSites_[i];
-        offset.fixup(this);
-        CodeLocationLabel location(code, offset);
-        PatchDataWithValueCheck(location, ImmPtr(location.raw()), ImmPtr((void*)-1));
-    }
+    linkSelfReference(code);
+    linkProfilerCallSites(code);
 }
 
 void
@@ -2436,29 +2411,41 @@ MacroAssembler::branchEqualTypeIfNeeded(MIRType type, MDefinition* maybeDef, Reg
     }
 }
 
-void
-MacroAssembler::profilerPreCallImpl()
+MacroAssembler::AutoProfilerCallInstrumentation::AutoProfilerCallInstrumentation(
+    MacroAssembler& masm
+    MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    if (!masm.emitProfilingInstrumentation_)
+        return;
+
     Register reg = CallTempReg0;
     Register reg2 = CallTempReg1;
-    push(reg);
-    push(reg2);
-    profilerPreCallImpl(reg, reg2);
-    pop(reg2);
-    pop(reg);
-}
+    masm.push(reg);
+    masm.push(reg2);
 
-void
-MacroAssembler::profilerPreCallImpl(Register reg, Register reg2)
-{
     JitContext* icx = GetJitContext();
     AbsoluteAddress profilingActivation(icx->runtime->addressOfProfilingActivation());
 
-    CodeOffsetLabel label = movWithPatch(ImmWord(uintptr_t(-1)), reg);
-    loadPtr(profilingActivation, reg2);
-    storePtr(reg, Address(reg2, JitActivation::offsetOfLastProfilingCallSite()));
+    CodeOffsetLabel label = masm.movWithPatch(ImmWord(uintptr_t(-1)), reg);
+    masm.loadPtr(profilingActivation, reg2);
+    masm.storePtr(reg, Address(reg2, JitActivation::offsetOfLastProfilingCallSite()));
 
-    appendProfilerCallSite(label);
+    masm.appendProfilerCallSite(label);
+
+    masm.pop(reg2);
+    masm.pop(reg);
+}
+
+void
+MacroAssembler::linkProfilerCallSites(JitCode* code)
+{
+    for (size_t i = 0; i < profilerCallSites_.length(); i++) {
+        CodeOffsetLabel offset = profilerCallSites_[i];
+        offset.fixup(this);
+        CodeLocationLabel location(code, offset);
+        PatchDataWithValueCheck(location, ImmPtr(location.raw()), ImmPtr((void*)-1));
+    }
 }
 
 void
@@ -2546,11 +2533,11 @@ MacroAssembler::alignJitStackBasedOnNArgs(uint32_t nargs)
 
 MacroAssembler::MacroAssembler(JSContext* cx, IonScript* ion,
                                JSScript* script, jsbytecode* pc)
-  : emitProfilingInstrumentation_(false),
-    framePushed_(0)
+  : framePushed_(0),
 #ifdef DEBUG
-  , inCall_(false)
+    inCall_(false),
 #endif
+    emitProfilingInstrumentation_(false)
 {
     constructRoot(cx);
     jitContext_.emplace(cx, (js::jit::TempAllocator*)nullptr);
@@ -2566,7 +2553,7 @@ MacroAssembler::MacroAssembler(JSContext* cx, IonScript* ion,
     if (ion) {
         setFramePushed(ion->frameSize());
         if (pc && cx->runtime()->spsProfiler.enabled())
-            emitProfilingInstrumentation_ = true;
+            enableProfilingInstrumentation();
     }
 }
 
@@ -2872,6 +2859,30 @@ MacroAssembler::callWithABINoProfiler(AsmJSImmPtr imm, MoveOp::Type result)
     callWithABIPre(&stackAdjust, /* callFromAsmJS = */ true);
     call(imm);
     callWithABIPost(stackAdjust, result);
+}
+
+// ===============================================================
+// Exit frame footer.
+
+void
+MacroAssembler::linkExitFrame()
+{
+    AbsoluteAddress jitTop(GetJitContext()->runtime->addressOfJitTop());
+    storeStackPtr(jitTop);
+}
+
+void
+MacroAssembler::linkSelfReference(JitCode* code)
+{
+    // If this code can transition to C++ code and witness a GC, then we need to store
+    // the JitCode onto the stack in order to GC it correctly.  exitCodePatch should
+    // be unset if the code never needed to push its JitCode*.
+    if (hasSelfReference()) {
+        selfReferencePatch_.fixup(this);
+        PatchDataWithValueCheck(CodeLocationLabel(code, selfReferencePatch_),
+                                ImmPtr(code),
+                                ImmPtr((void*)-1));
+    }
 }
 
 //}}} check_macroassembler_style

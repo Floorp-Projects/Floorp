@@ -1120,6 +1120,8 @@ nsStyleClipPath::ReleaseRef()
     NS_ASSERTION(mURL, "expected pointer");
     mURL->Release();
   }
+  // mBasicShap, mURL, etc. are all pointers in a union of pointers. Nulling
+  // one of them nulls all of them:
   mURL = nullptr;
 }
 
