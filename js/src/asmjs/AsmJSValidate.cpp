@@ -1094,11 +1094,11 @@ class AsmFunction
 
     unsigned funcIndex_;
     unsigned srcBegin_;
+    unsigned lineno_;
+    unsigned column_;
     unsigned compileTime_;
 
-
   public:
-
     explicit AsmFunction(LifoAlloc& alloc)
       : varInitializers_(alloc),
         bytecode_(alloc),
@@ -1107,6 +1107,8 @@ class AsmFunction
         name_(nullptr),
         funcIndex_(-1),
         srcBegin_(-1),
+        lineno_(-1),
+        column_(-1),
         compileTime_(-1)
     {}
 
@@ -1119,7 +1121,7 @@ class AsmFunction
     }
 
     bool finish(const VarTypeVector& args, PropertyName* name, unsigned funcIndex,
-                unsigned srcBegin, unsigned compileTime)
+                unsigned srcBegin, unsigned lineno, unsigned column, unsigned compileTime)
     {
         if (!argTypes_.initCapacity(args.length()))
             return false;
@@ -1134,6 +1136,12 @@ class AsmFunction
 
         MOZ_ASSERT(srcBegin_ == unsigned(-1));
         srcBegin_ = srcBegin;
+
+        MOZ_ASSERT(lineno_ == unsigned(-1));
+        lineno_ = lineno;
+
+        MOZ_ASSERT(column_ == unsigned(-1));
+        column_ = column;
 
         MOZ_ASSERT(compileTime_ == unsigned(-1));
         compileTime_ = compileTime;
@@ -1241,6 +1249,8 @@ class AsmFunction
     PropertyName* name() const { return name_; }
     unsigned funcIndex() const { return funcIndex_; }
     unsigned srcBegin() const { return srcBegin_; }
+    unsigned lineno() const { return lineno_; }
+    unsigned column() const { return column_; }
     unsigned compileTime() const { return compileTime_; }
 
     size_t size() const { return bytecode_.length(); }
@@ -1257,12 +1267,10 @@ class AsmFunction
 
 struct ModuleCompileInputs
 {
-    bool usesSignalHandlersForInterrupt;
     bool usesSignalHandlersForOOB;
 
-    ModuleCompileInputs(bool usesSignalHandlersForInterrupt, bool usesSignalHandlersForOOB)
-      : usesSignalHandlersForInterrupt(usesSignalHandlersForInterrupt),
-        usesSignalHandlersForOOB(usesSignalHandlersForOOB)
+    ModuleCompileInputs(bool usesSignalHandlersForOOB)
+      : usesSignalHandlersForOOB(usesSignalHandlersForOOB)
     {}
 };
 
@@ -2404,8 +2412,7 @@ class MOZ_STACK_CLASS ModuleValidator
     }
 
     ModuleCompileInputs compileInputs() const {
-        return ModuleCompileInputs(module().usesSignalHandlersForInterrupt(),
-                                   module().usesSignalHandlersForOOB());
+        return ModuleCompileInputs(module().usesSignalHandlersForOOB());
     }
 };
 
@@ -2465,15 +2472,13 @@ class MOZ_STACK_CLASS ModuleValidator
 class MOZ_STACK_CLASS ModuleCompiler
 {
     ExclusiveContext*                       cx_;
-    TokenStream&                            tokenStream_;
 
     ModuleCompileInputs                     compileInputs_;
     ScopedJSDeletePtr<ModuleCompileResults> compileResults_;
 
   public:
-    ModuleCompiler(ExclusiveContext* cx, TokenStream& ts, const ModuleCompileInputs& inputs)
+    ModuleCompiler(ExclusiveContext* cx, const ModuleCompileInputs& inputs)
       : cx_(cx),
-        tokenStream_(ts),
         compileInputs_(inputs),
         compileResults_(js_new<ModuleCompileResults>(cx))
     {}
@@ -2481,7 +2486,6 @@ class MOZ_STACK_CLASS ModuleCompiler
     /*************************************************** Read-only interface */
 
     ExclusiveContext* cx() const     { return cx_; }
-    TokenStream& tokenStream() const { return tokenStream_; }
 
     MacroAssembler& masm()          { return compileResults_->masm(); }
     Label& stackOverflowLabel()     { return compileResults_->stackOverflowLabel(); }
@@ -2491,9 +2495,6 @@ class MOZ_STACK_CLASS ModuleCompiler
     Label& onConversionErrorLabel() { return compileResults_->onConversionErrorLabel(); }
     int64_t usecBefore()            { return compileResults_->usecBefore(); }
 
-    bool usesSignalHandlersForInterrupt() const {
-        return compileInputs_.usesSignalHandlersForInterrupt;
-    }
     bool usesSignalHandlersForOOB() const {
         return compileInputs_.usesSignalHandlersForOOB;
     }
@@ -2509,9 +2510,8 @@ class MOZ_STACK_CLASS ModuleCompiler
                                   const AsmJSFunctionLabels& labels)
     {
         // Code range
-        uint32_t line, column;
-        tokenStream().srcCoords.lineNumAndColumnIndex(func.srcBegin(), &line, &column);
-
+        unsigned line = func.lineno();
+        unsigned column = func.column();
         PropertyName* funcName = func.name();
         if (!compileResults_->addCodeRange(AsmJSModule::FunctionCodeRange(funcName, line, labels)))
             return false;
@@ -2886,6 +2886,8 @@ enum class Stmt : uint8_t {
 
     Id,
     Noop,
+    InterruptCheckHead,
+    InterruptCheckLoop,
 
     DebugCheckPoint,
 
@@ -3358,6 +3360,10 @@ class FunctionBuilder
     size_t numLocals() const { return locals_.count(); }
 
     /************************************************* Packing interface */
+
+    bool startedPacking() const {
+        return func_.size() != 0;
+    }
 
     template<class T>
     size_t writeOp(T op) {
@@ -3947,17 +3953,11 @@ class FunctionCompiler
         curBlock_->add(MAsmJSStoreGlobalVar::New(alloc(), globalDataOffset, v));
     }
 
-    void maybeAddInterruptCheck(size_t pos)
+    void addInterruptCheck(unsigned lineno, unsigned column)
     {
         if (inDeadCode())
             return;
 
-        if (m().usesSignalHandlersForInterrupt())
-            return;
-
-        unsigned lineno = 0, column = 0;
-        unsigned offset = sourceOffsetFromBytecodePosition(pos);
-        m().tokenStream().srcCoords.lineNumAndColumnIndex(offset, &lineno, &column);
         CallSiteDesc callDesc(lineno, column, CallSiteDesc::Relative);
         curBlock_->add(MAsmJSInterruptCheck::New(alloc(), &m().syncInterruptLabel(), callDesc));
     }
@@ -4019,7 +4019,8 @@ class FunctionCompiler
 
     class Call
     {
-        uint32_t nodePosition_;
+        uint32_t lineno_;
+        uint32_t column_;
         ABIArgGenerator abi_;
         uint32_t prevMaxStackBytes_;
         uint32_t maxChildStackBytes_;
@@ -4031,8 +4032,9 @@ class FunctionCompiler
         friend class FunctionCompiler;
 
       public:
-        Call(FunctionCompiler& f, uint32_t callNodePosition)
-          : nodePosition_(callNodePosition),
+        Call(FunctionCompiler& f, uint32_t lineno, uint32_t column)
+          : lineno_(lineno),
+            column_(column),
             prevMaxStackBytes_(0),
             maxChildStackBytes_(0),
             spIncrement_(0),
@@ -4101,9 +4103,6 @@ class FunctionCompiler
             return true;
         }
 
-        uint32_t line, column;
-        m_.tokenStream().srcCoords.lineNumAndColumnIndex(call.nodePosition_, &line, &column);
-
         CallSiteDesc::Kind kind = CallSiteDesc::Kind(-1);  // initialize to silence GCC warning
         switch (callee.which()) {
           case MAsmJSCall::Callee::Internal: kind = CallSiteDesc::Relative; break;
@@ -4111,8 +4110,8 @@ class FunctionCompiler
           case MAsmJSCall::Callee::Builtin:  kind = CallSiteDesc::Register; break;
         }
 
-        MAsmJSCall* ins = MAsmJSCall::New(alloc(), CallSiteDesc(line, column, kind), callee,
-                                          call.regArgs_, returnType, call.spIncrement_);
+        MAsmJSCall* ins = MAsmJSCall::New(alloc(), CallSiteDesc(call.lineno_, call.column_, kind),
+                                          callee, call.regArgs_, returnType, call.spIncrement_);
         if (!ins)
             return false;
 
@@ -4307,7 +4306,6 @@ class FunctionCompiler
         (*loopEntry)->setLoopDepth(loopStack_.length());
         curBlock_->end(MGoto::New(alloc(), *loopEntry));
         curBlock_ = *loopEntry;
-        maybeAddInterruptCheck(pos);
         return true;
     }
 
@@ -4583,7 +4581,6 @@ class FunctionCompiler
             localVarTypes_.append(type);
         }
 
-        maybeAddInterruptCheck(/* pos = */ 0);
         return true;
     }
 
@@ -4610,7 +4607,7 @@ class FunctionCompiler
 #if defined(JS_ION_PERF) || defined(DEBUG)
         unsigned offset = sourceOffsetFromBytecodePosition(pos);
         unsigned line = 0U, column = 0U;
-        m().tokenStream().srcCoords.lineNumAndColumnIndex(offset, &line, &column);
+        //m().tokenStream().srcCoords.lineNumAndColumnIndex(offset, &line, &column);
         blk->setLineno(line);
         blk->setColumnIndex(column);
 #endif
@@ -6639,6 +6636,22 @@ CheckIsVarType(FunctionBuilder& f, ParseNode* argNode, Type type)
     return true;
 }
 
+static void
+WriteCallLineCol(FunctionBuilder& f, ParseNode* pn)
+{
+    uint32_t line, column;
+    f.m().tokenStream().srcCoords.lineNumAndColumnIndex(pn->pn_pos.begin, &line, &column);
+    f.writeU32(line);
+    f.writeU32(column);
+}
+
+static void
+ReadCallLineCol(FunctionCompiler& f, uint32_t* line, uint32_t* column)
+{
+    *line = f.readU32();
+    *column = f.readU32();
+}
+
 static bool
 CheckInternalCall(FunctionBuilder& f, ParseNode* callNode, PropertyName* calleeName,
                   RetType retType, Type* type)
@@ -6662,7 +6675,7 @@ CheckInternalCall(FunctionBuilder& f, ParseNode* callNode, PropertyName* calleeN
     // Function's signature in lifo
     size_t signatureAt = f.tempPtr();
     // Call node position (asm.js specific)
-    f.writeU32(callNode->pn_pos.begin);
+    WriteCallLineCol(f, callNode);
 
     Signature signature(f.m().lifo(), retType);
     if (!CheckCallArgs(f, callNode, CheckIsVarType, signature))
@@ -6691,9 +6704,10 @@ EmitInternalCall(FunctionCompiler& f, RetType retType, MDefinition** def)
 
     MOZ_ASSERT_IF(sig.retType() != RetType::Void, sig.retType() == retType);
 
-    uint32_t callNodePosition = f.readU32();
+    uint32_t lineno, column;
+    ReadCallLineCol(f, &lineno, &column);
 
-    FunctionCompiler::Call call(f, callNodePosition);
+    FunctionCompiler::Call call(f, lineno, column);
     if (!EmitCallArgs(f, sig, &call))
         return false;
 
@@ -6774,7 +6788,7 @@ CheckFuncPtrCall(FunctionBuilder& f, ParseNode* callNode, RetType retType, Type*
     // Signature
     size_t signatureAt = f.tempPtr();
     // Call node position (asm.js specific)
-    f.writeU32(callNode->pn_pos.begin);
+    WriteCallLineCol(f, callNode);
 
     Type indexType;
     if (!CheckExpr(f, indexNode, &indexType))
@@ -6807,13 +6821,14 @@ EmitFuncPtrCall(FunctionCompiler& f, RetType retType, MDefinition** def)
     const Signature& sig = *f.readSignature();
     MOZ_ASSERT_IF(sig.retType() != RetType::Void, sig.retType() == retType);
 
-    uint32_t callNodePosition = f.readU32();
+    uint32_t lineno, column;
+    ReadCallLineCol(f, &lineno, &column);
 
     MDefinition *index;
     if (!EmitI32Expr(f, &index))
         return false;
 
-    FunctionCompiler::Call call(f, callNodePosition);
+    FunctionCompiler::Call call(f, lineno, column);
     if (!EmitCallArgs(f, sig, &call))
         return false;
 
@@ -6858,7 +6873,7 @@ CheckFFICall(FunctionBuilder& f, ParseNode* callNode, unsigned ffiIndex, RetType
     // Pointer to the exit's signature in the module's lifo
     size_t sigAt = f.tempPtr();
     // Call node position (asm.js specific)
-    f.writeU32(callNode->pn_pos.begin);
+    WriteCallLineCol(f, callNode);
 
     Signature signature(f.m().lifo(), retType);
     if (!CheckCallArgs(f, callNode, CheckIsExternType, signature))
@@ -6886,8 +6901,10 @@ EmitFFICall(FunctionCompiler& f, RetType retType, MDefinition** def)
     const Signature& sig = *f.readSignature();
     MOZ_ASSERT_IF(sig.retType() != RetType::Void, sig.retType() == retType);
 
-    uint32_t callNodePosition = f.readU32();
-    FunctionCompiler::Call call(f, callNodePosition);
+    uint32_t lineno, column;
+    ReadCallLineCol(f, &lineno, &column);
+
+    FunctionCompiler::Call call(f, lineno, column);
     if (!EmitCallArgs(f, sig, &call))
         return false;
 
@@ -7011,7 +7028,7 @@ CheckMathBuiltinCall(FunctionBuilder& f, ParseNode* callNode, AsmJSMathBuiltinFu
 
     size_t opcodeAt = f.tempOp();
     // Call node position (asm.js specific)
-    f.writeU32(callNode->pn_pos.begin);
+    WriteCallLineCol(f, callNode);
 
     Type firstType;
     ParseNode* argNode = CallArgList(callNode);
@@ -7051,9 +7068,10 @@ EmitMathBuiltinCall(FunctionCompiler& f, F32 f32, MDefinition** def)
 {
     MOZ_ASSERT(f32 == F32::Ceil || f32 == F32::Floor);
 
-    uint32_t callNodePos = f.readU32();
+    uint32_t lineno, column;
+    ReadCallLineCol(f, &lineno, &column);
 
-    FunctionCompiler::Call call(f, callNodePos);
+    FunctionCompiler::Call call(f, lineno, column);
     f.startCallArgs(&call);
 
     MDefinition* firstArg;
@@ -7069,9 +7087,10 @@ EmitMathBuiltinCall(FunctionCompiler& f, F32 f32, MDefinition** def)
 static bool
 EmitMathBuiltinCall(FunctionCompiler& f, F64 f64, MDefinition** def)
 {
-    uint32_t callNodePos = f.readU32();
+    uint32_t lineno, column;
+    ReadCallLineCol(f, &lineno, &column);
 
-    FunctionCompiler::Call call(f, callNodePos);
+    FunctionCompiler::Call call(f, lineno, column);
     f.startCallArgs(&call);
 
     MDefinition* firstArg;
@@ -9161,6 +9180,45 @@ CheckExprStatement(FunctionBuilder& f, ParseNode* exprStmt)
     return CheckAsExprStatement(f, expr);
 }
 
+enum class InterruptCheckPosition {
+    Head,
+    Loop
+};
+
+static void
+MaybeAddInterruptCheck(FunctionBuilder& f, InterruptCheckPosition pos, ParseNode* pn)
+{
+    if (f.m().module().usesSignalHandlersForInterrupt())
+        return;
+
+    switch (pos) {
+      case InterruptCheckPosition::Head: f.writeOp(Stmt::InterruptCheckHead); break;
+      case InterruptCheckPosition::Loop: f.writeOp(Stmt::InterruptCheckLoop); break;
+    }
+
+    unsigned lineno = 0, column = 0;
+    f.m().tokenStream().srcCoords.lineNumAndColumnIndex(pn->pn_pos.begin, &lineno, &column);
+    f.writeU32(lineno);
+    f.writeU32(column);
+}
+
+static bool
+EmitInterruptCheck(FunctionCompiler& f)
+{
+    unsigned lineno = f.readU32();
+    unsigned column = f.readU32();
+    f.addInterruptCheck(lineno, column);
+    return true;
+}
+
+static bool
+EmitInterruptCheckLoop(FunctionCompiler& f)
+{
+    if (!EmitInterruptCheck(f))
+        return false;
+    return EmitStatement(f);
+}
+
 static bool
 CheckWhile(FunctionBuilder& f, ParseNode* whileStmt)
 {
@@ -9175,6 +9233,8 @@ CheckWhile(FunctionBuilder& f, ParseNode* whileStmt)
         return false;
     if (!condType.isInt())
         return f.failf(cond, "%s is not a subtype of int", condType.toChars());
+
+    MaybeAddInterruptCheck(f, InterruptCheckPosition::Loop, whileStmt);
 
     return CheckStatement(f, body);
 }
@@ -9222,7 +9282,7 @@ CheckFor(FunctionBuilder& f, ParseNode* forStmt)
     ParseNode* maybeInc = TernaryKid3(forHead);
 
     f.writeOp(maybeInit ? (maybeInc ? Stmt::ForInitInc   : Stmt::ForInitNoInc)
-                       : (maybeInc ? Stmt::ForNoInitInc : Stmt::ForNoInitNoInc));
+                        : (maybeInc ? Stmt::ForNoInitInc : Stmt::ForNoInitNoInc));
 
     if (maybeInit && !CheckAsExprStatement(f, maybeInit))
         return false;
@@ -9236,6 +9296,8 @@ CheckFor(FunctionBuilder& f, ParseNode* forStmt)
     } else {
         f.writeInt32Lit(1);
     }
+
+    MaybeAddInterruptCheck(f, InterruptCheckPosition::Loop, forStmt);
 
     if (!CheckStatement(f, body))
         return false;
@@ -9297,6 +9359,8 @@ CheckDoWhile(FunctionBuilder& f, ParseNode* whileStmt)
     ParseNode* cond = BinaryRight(whileStmt);
 
     f.writeOp(Stmt::DoWhile);
+
+    MaybeAddInterruptCheck(f, InterruptCheckPosition::Loop, cond);
 
     if (!CheckStatement(f, body))
         return false;
@@ -9849,33 +9913,35 @@ EmitStatement(FunctionCompiler& f, Stmt stmt, LabelVector* maybeLabels /*= nullp
 
     MDefinition* _;
     switch (stmt) {
-      case Stmt::Block:           return EmitBlock(f);
-      case Stmt::IfThen:          return EmitIfElse(f, HasElseBlock(false));
-      case Stmt::IfElse:          return EmitIfElse(f, HasElseBlock(true));
-      case Stmt::Switch:          return EmitSwitch(f);
-      case Stmt::While:           return EmitWhile(f, maybeLabels);
-      case Stmt::DoWhile:         return EmitDoWhile(f, maybeLabels);
+      case Stmt::Block:              return EmitBlock(f);
+      case Stmt::IfThen:             return EmitIfElse(f, HasElseBlock(false));
+      case Stmt::IfElse:             return EmitIfElse(f, HasElseBlock(true));
+      case Stmt::Switch:             return EmitSwitch(f);
+      case Stmt::While:              return EmitWhile(f, maybeLabels);
+      case Stmt::DoWhile:            return EmitDoWhile(f, maybeLabels);
       case Stmt::ForInitInc:
       case Stmt::ForInitNoInc:
       case Stmt::ForNoInitNoInc:
-      case Stmt::ForNoInitInc:    return EmitFor(f, stmt, maybeLabels);
-      case Stmt::Label:           return EmitLabel(f, maybeLabels);
-      case Stmt::Continue:        return EmitContinue(f, HasLabel(false));
-      case Stmt::ContinueLabel:   return EmitContinue(f, HasLabel(true));
-      case Stmt::Break:           return EmitBreak(f, HasLabel(false));
-      case Stmt::BreakLabel:      return EmitBreak(f, HasLabel(true));
-      case Stmt::Ret:             return EmitRet(f);
-      case Stmt::I32Expr:         return EmitI32Expr(f, &_);
-      case Stmt::F32Expr:         return EmitF32Expr(f, &_);
-      case Stmt::F64Expr:         return EmitF64Expr(f, &_);
-      case Stmt::I32X4Expr:       return EmitI32X4Expr(f, &_);
-      case Stmt::F32X4Expr:       return EmitF32X4Expr(f, &_);
-      case Stmt::CallInternal:    return EmitInternalCall(f, RetType::Void, &_);
-      case Stmt::CallIndirect:    return EmitFuncPtrCall(f, RetType::Void, &_);
-      case Stmt::CallImport:      return EmitFFICall(f, RetType::Void, &_);
-      case Stmt::AtomicsFence:    f.memoryBarrier(MembarFull); return true;
-      case Stmt::Noop:            return true;
-      case Stmt::Id:              return EmitStatement(f);
+      case Stmt::ForNoInitInc:       return EmitFor(f, stmt, maybeLabels);
+      case Stmt::Label:              return EmitLabel(f, maybeLabels);
+      case Stmt::Continue:           return EmitContinue(f, HasLabel(false));
+      case Stmt::ContinueLabel:      return EmitContinue(f, HasLabel(true));
+      case Stmt::Break:              return EmitBreak(f, HasLabel(false));
+      case Stmt::BreakLabel:         return EmitBreak(f, HasLabel(true));
+      case Stmt::Ret:                return EmitRet(f);
+      case Stmt::I32Expr:            return EmitI32Expr(f, &_);
+      case Stmt::F32Expr:            return EmitF32Expr(f, &_);
+      case Stmt::F64Expr:            return EmitF64Expr(f, &_);
+      case Stmt::I32X4Expr:          return EmitI32X4Expr(f, &_);
+      case Stmt::F32X4Expr:          return EmitF32X4Expr(f, &_);
+      case Stmt::CallInternal:       return EmitInternalCall(f, RetType::Void, &_);
+      case Stmt::CallIndirect:       return EmitFuncPtrCall(f, RetType::Void, &_);
+      case Stmt::CallImport:         return EmitFFICall(f, RetType::Void, &_);
+      case Stmt::AtomicsFence:       f.memoryBarrier(MembarFull); return true;
+      case Stmt::Noop:               return true;
+      case Stmt::Id:                 return EmitStatement(f);
+      case Stmt::InterruptCheckHead: return EmitInterruptCheck(f);
+      case Stmt::InterruptCheckLoop: return EmitInterruptCheckLoop(f);
       case Stmt::DebugCheckPoint:
       case Stmt::Bad:             break;
     }
@@ -10645,6 +10711,9 @@ CheckFunction(ModuleValidator& m, LifoAlloc& lifo, AsmFunction** funcOut)
     if (!CheckVariables(f, &stmtIter))
         return false;
 
+    MOZ_ASSERT(!f.startedPacking(), "No bytecode should be written at this point.");
+    MaybeAddInterruptCheck(f, InterruptCheckPosition::Head, fn);
+
     ParseNode* lastNonEmptyStmt = nullptr;
     for (; stmtIter; stmtIter = NextNode(stmtIter)) {
         if (!CheckStatement(f, stmtIter))
@@ -10668,8 +10737,10 @@ CheckFunction(ModuleValidator& m, LifoAlloc& lifo, AsmFunction** funcOut)
 
     func->accumulateCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
 
-    if (!asmFunc->finish(func->sig().args(), func->name(), func->funcIndex(), func->srcBegin(),
-                         func->compileTime()))
+    unsigned lineno, column;
+    m.tokenStream().srcCoords.lineNumAndColumnIndex(func->srcBegin(), &lineno, &column);
+    if (!asmFunc->finish(func->sig().args(), func->name(), func->funcIndex(),
+                         func->srcBegin(), lineno, column, func->compileTime()))
     {
         return false;
     }
@@ -10738,7 +10809,7 @@ CheckFunctionsSequential(ModuleValidator& m, ScopedJSDeletePtr<ModuleCompileResu
     // function by the LifoAllocScope inside the loop.
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
 
-    ModuleCompiler mc(m.cx(), m.parser().tokenStream, m.compileInputs());
+    ModuleCompiler mc(m.cx(), m.compileInputs());
 
     while (true) {
         TokenKind tk;
@@ -10909,7 +10980,7 @@ CheckFunctionsParallel(ModuleValidator& m, ParallelGroupState& group,
 #endif
     HelperThreadState().resetAsmJSFailureState();
 
-    ModuleCompiler mc(m.cx(), m.parser().tokenStream, m.compileInputs());
+    ModuleCompiler mc(m.cx(), m.compileInputs());
 
     AsmJSParallelTask* task = nullptr;
     for (unsigned i = 0;; i++) {
