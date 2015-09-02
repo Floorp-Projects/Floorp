@@ -90,7 +90,7 @@ NS_EVENT_MESSAGE(eBeforeUnload,         eStreamEventFirst + 6)
 NS_EVENT_MESSAGE(eReadyStateChange,     eStreamEventFirst + 8)
  
 NS_EVENT_MESSAGE(eFormEventFirst,       1200)
-NS_EVENT_MESSAGE(NS_FORM_SUBMIT,        eFormEventFirst)
+NS_EVENT_MESSAGE(eFormSubmit,           eFormEventFirst)
 NS_EVENT_MESSAGE(NS_FORM_RESET,         eFormEventFirst + 1)
 NS_EVENT_MESSAGE(NS_FORM_CHANGE,        eFormEventFirst + 2)
 NS_EVENT_MESSAGE(NS_FORM_SELECTED,      eFormEventFirst + 3)
