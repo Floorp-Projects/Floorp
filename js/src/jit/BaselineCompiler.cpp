@@ -2621,9 +2621,9 @@ BaselineCompiler::emit_JSOP_SETLOCAL()
 bool
 BaselineCompiler::emitFormalArgAccess(uint32_t arg, bool get)
 {
-    // Fast path: the script does not use |arguments|, or is strict. In strict
-    // mode, formals do not alias the arguments object.
-    if (!script->argumentsHasVarBinding() || script->strict()) {
+    // Fast path: the script does not use |arguments| or formals don't
+    // alias the arguments object.
+    if (!script->argumentsAliasesFormals()) {
         if (get) {
             frame.pushArg(arg);
         } else {

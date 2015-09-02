@@ -589,6 +589,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
         FunHasAnyAliasedFormal,
         ArgumentsHasVarBinding,
         NeedsArgsObj,
+        HasMappedArgsObj,
         IsGeneratorExp,
         IsLegacyGenerator,
         IsStarGenerator,
@@ -716,6 +717,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             scriptBits |= (1 << ArgumentsHasVarBinding);
         if (script->analyzedArgsUsage() && script->needsArgsObj())
             scriptBits |= (1 << NeedsArgsObj);
+        if (script->hasMappedArgsObj())
+            scriptBits |= (1 << HasMappedArgsObj);
         if (!enclosingScript || enclosingScript->scriptSource() != script->scriptSource())
             scriptBits |= (1 << OwnSource);
         if (script->isGeneratorExp())
@@ -856,6 +859,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             script->setArgumentsHasVarBinding();
         if (scriptBits & (1 << NeedsArgsObj))
             script->setNeedsArgsObj(true);
+        if (scriptBits & (1 << HasMappedArgsObj))
+            script->hasMappedArgsObj_ = true;
         if (scriptBits & (1 << IsGeneratorExp))
             script->isGeneratorExp_ = true;
         if (scriptBits & (1 << HasSingleton))
@@ -2728,6 +2733,7 @@ JSScript::linkToFunctionFromEmitter(js::ExclusiveContext* cx, JS::Handle<JSScrip
     } else {
         MOZ_ASSERT(!funbox->definitelyNeedsArgsObj());
     }
+    script->hasMappedArgsObj_ = funbox->hasMappedArgsObj();
 
     script->funLength_ = funbox->length;
 
@@ -2819,6 +2825,7 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
         MOZ_ASSERT(script->needsHomeObject_ == funbox->needsHomeObject());
         MOZ_ASSERT(script->isDerivedClassConstructor_ == funbox->isDerivedClassConstructor());
         MOZ_ASSERT(script->argumentsHasVarBinding() == funbox->argumentsHasLocalBinding());
+        MOZ_ASSERT(script->hasMappedArgsObj() == funbox->hasMappedArgsObj());
         MOZ_ASSERT(script->functionNonDelazifying() == funbox->function());
         MOZ_ASSERT(script->isGeneratorExp_ == funbox->inGenexpLambda);
         MOZ_ASSERT(script->generatorKind() == funbox->generatorKind());
@@ -2828,6 +2835,7 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
         MOZ_ASSERT(!script->needsHomeObject_);
         MOZ_ASSERT(!script->isDerivedClassConstructor_);
         MOZ_ASSERT(!script->argumentsHasVarBinding());
+        MOZ_ASSERT(!script->hasMappedArgsObj());
         MOZ_ASSERT(!script->isGeneratorExp_);
         MOZ_ASSERT(script->generatorKind() == NotGenerator);
     }
@@ -3342,6 +3350,7 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
         if (src->analyzedArgsUsage())
             dst->setNeedsArgsObj(src->needsArgsObj());
     }
+    dst->hasMappedArgsObj_ = src->hasMappedArgsObj();
     dst->cloneHasArray(src);
     dst->strict_ = src->strict();
     dst->explicitUseStrict_ = src->explicitUseStrict();

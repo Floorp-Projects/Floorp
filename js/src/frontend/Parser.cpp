@@ -1081,12 +1081,13 @@ Parser<FullParseHandler>::checkFunctionArguments()
 
         /*
          * Check whether any parameters have been assigned within this
-         * function. In strict mode parameters do not alias arguments[i], and
-         * to make the arguments object reflect initial parameter values prior
-         * to any mutation we create it eagerly whenever parameters are (or
-         * might, in the case of calls to eval) be assigned.
+         * function. If the arguments object is unmapped (strict mode or
+         * function with default/rest/destructing args), parameters do not alias
+         * arguments[i], and to make the arguments object reflect initial
+         * parameter values prior to any mutation we create it eagerly whenever
+         * parameters are (or might, in the case of calls to eval) assigned.
          */
-        if (pc->sc->needStrictChecks()) {
+        if (!funbox->hasMappedArgsObj()) {
             for (AtomDefnListMap::Range r = pc->decls().all(); !r.empty(); r.popFront()) {
                 DefinitionList& dlist = r.front().value();
                 for (DefinitionList::Range dr = dlist.all(); !dr.empty(); dr.popFront()) {

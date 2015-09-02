@@ -9,7 +9,7 @@ function restAndArgs(...rest) {
 
 var args = restAndArgs(1, 2, 3)();
 assertEq(args.length, 3);
-assertDeepEq(args[0], [1, 2, 3], "This is bogus, see bug 1175394");
+assertEq(args[0], 1);
 assertEq(args[1], 2);
 assertEq(args[2], 3);
 
