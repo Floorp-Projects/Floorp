@@ -123,6 +123,7 @@ class nsLayoutUtils
   typedef mozilla::gfx::Float Float;
   typedef mozilla::gfx::Point Point;
   typedef mozilla::gfx::Rect Rect;
+  typedef mozilla::gfx::RectDouble RectDouble;
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
   typedef mozilla::gfx::StrokeOptions StrokeOptions;
@@ -2679,12 +2680,6 @@ public:
    */
   static void SetScrollPositionClampingScrollPortSize(nsIPresShell* aPresShell,
                                                       CSSSize aSize);
-
-  /**
-   * Set the CSS viewport to the given size
-   * (see nsIDOMWindowUtils.setCSSViewport).
-   */
-  static void SetCSSViewport(nsIPresShell* aPresShell, CSSSize aSize);
 
   static FrameMetrics ComputeFrameMetrics(nsIFrame* aForFrame,
                                           nsIFrame* aScrollFrame,

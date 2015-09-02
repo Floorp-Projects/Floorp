@@ -6,11 +6,6 @@
   <script class="testbody" type="text/javascript">
   function runSubTest()
   {
-    // Firefox doesn't support the metaviewport tag on desktop, so we force
-    // css viewport here using nsIDomWindowUtils
-    var cwu = SpecialPowers.getDOMWindowUtils(window);
-    cwu.setCSSViewport(320, 320);
-
     var oldWidth = window.innerWidth;
     var oldHeight = window.innerHeight;
 

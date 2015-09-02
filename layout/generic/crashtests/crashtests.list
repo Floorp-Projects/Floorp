@@ -367,10 +367,10 @@ asserts-if(winWidget,0-3) load 499885-1.xhtml
 load 501535-1.html
 load 503961-1.xhtml
 load 503961-2.html
-asserts-if(gtkWidget&&browserIsRemote,1) load 505912-1.html # Bug 1195472
 load 508168-1.html
 load 508816-1.xul
 load 508908-1.html
+load 505912-1.html
 load 509749-1.html
 load 511482.html
 load 512724-1.html

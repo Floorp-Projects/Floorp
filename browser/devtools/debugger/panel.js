@@ -26,7 +26,7 @@ function DebuggerPanel(iframeWindow, toolbox) {
   this.unhighlightWhenResumed = this.unhighlightWhenResumed.bind(this);
 
   EventEmitter.decorate(this);
-};
+}
 
 exports.DebuggerPanel = DebuggerPanel;
 
