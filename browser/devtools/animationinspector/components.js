@@ -908,6 +908,23 @@ AnimationsTimeline.prototype = {
     }
   },
 
+  getAnimationTooltipText: function(state) {
+    let getTime = time => L10N.getFormatStr("player.timeLabel",
+                            L10N.numberWithDecimals(time / 1000, 2));
+
+    let title = L10N.getFormatStr("timeline." + state.type + ".nameLabel",
+                                  state.name);
+    let delay = L10N.getStr("player.animationDelayLabel") + " " +
+                getTime(state.delay);
+    let duration = L10N.getStr("player.animationDurationLabel") + " " +
+                   getTime(state.duration);
+    let iterations = L10N.getStr("player.animationIterationCountLabel") + " " +
+                     (state.iterationCount ||
+                      L10N.getStr("player.infiniteIterationCountText"));
+
+    return [title, duration, iterations, delay].join("\n");
+  },
+
   drawTimeBlock: function({state}, el) {
     let width = el.offsetWidth;
 
@@ -940,8 +957,7 @@ AnimationsTimeline.prototype = {
       parent: iterations,
       attributes: {
         "class": "name",
-        "title": L10N.getFormatStr("timeline." + state.type + ".nameLabel",
-                                   state.name)
+        "title": this.getAnimationTooltipText(state)
       },
       textContent: state.name
     });
