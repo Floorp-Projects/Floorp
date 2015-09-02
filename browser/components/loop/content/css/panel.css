@@ -293,6 +293,15 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
   font-size: 2.2rem;
 }
 
+.room-list-loading {
+  margin: 5rem 15px;
+  text-align: center;
+}
+
+.room-list-loading > img {
+  width: 66px;
+}
+
 
 /* Rooms */
 .rooms {
@@ -321,10 +330,10 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
 }
 
 .new-room-view > .context {
+  border-top: 1px solid #ebebeb;
   flex: 1;
-  border-radius: 3px 3px 0 0;
-  margin: 1rem 0 .5rem;
-  padding: 1rem 15px;
+  margin: .5rem 0;
+  padding: .5rem 15px 1rem;
 }
 
 .new-room-view > .context > .context-enabled {
