@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1">
+    <meta charset="utf-8">
+    <title>Testcase for bug 1149923</title>
+    <style>
+      #outer {
+        width: 64px;
+        height: 64px;
+        background-color: #00f;
+        opacity: 1.0;
+        transform: rotate(90deg);
+      }
+      #inner {
+        width: 100%;
+        height: 100%;
+        background-color: #f00;
+        will-change: transform;
+        border-top-left-radius: 10%;
+        border-bottom-left-radius: 10%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id='outer'><div id='inner'></div></div>
+  </body>
+</html>

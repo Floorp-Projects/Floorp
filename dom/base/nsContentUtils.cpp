@@ -3502,7 +3502,7 @@ nsContentUtils::ReportToConsoleNonLocalized(const nsAString& aErrorText,
   if (!aLineNumber) {
     JSContext *cx = GetCurrentJSContext();
     if (cx) {
-      nsJSUtils::GetCallingLocation(cx, spec, &aLineNumber);
+      nsJSUtils::GetCallingLocation(cx, spec, &aLineNumber, &aColumnNumber);
     }
   }
   if (spec.IsEmpty() && aURI)
@@ -5464,8 +5464,8 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
   // For draggesture and dragstart events, the data transfer object is
   // created before the event fires, so it should already be set. For other
   // drag events, get the object from the drag session.
-  NS_ASSERTION(aDragEvent->mMessage != NS_DRAGDROP_GESTURE &&
-               aDragEvent->mMessage != NS_DRAGDROP_START,
+  NS_ASSERTION(aDragEvent->mMessage != eLegacyDragGesture &&
+               aDragEvent->mMessage != eDragStart,
                "draggesture event created without a dataTransfer");
 
   nsCOMPtr<nsIDragSession> dragSession = GetDragSession();
@@ -5492,8 +5492,8 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
   }
 
   bool isCrossDomainSubFrameDrop = false;
-  if (aDragEvent->mMessage == NS_DRAGDROP_DROP ||
-      aDragEvent->mMessage == NS_DRAGDROP_DRAGDROP) {
+  if (aDragEvent->mMessage == eDrop ||
+      aDragEvent->mMessage == eLegacyDragDrop) {
     isCrossDomainSubFrameDrop = CheckForSubFrameDrop(dragSession, aDragEvent);
   }
 
@@ -5507,16 +5507,15 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
   // for the dragenter and dragover events, initialize the drop effect
   // from the drop action, which platform specific widget code sets before
   // the event is fired based on the keyboard state.
-  if (aDragEvent->mMessage == NS_DRAGDROP_ENTER ||
-      aDragEvent->mMessage == NS_DRAGDROP_OVER) {
+  if (aDragEvent->mMessage == eDragEnter || aDragEvent->mMessage == eDragOver) {
     uint32_t action, effectAllowed;
     dragSession->GetDragAction(&action);
     aDragEvent->dataTransfer->GetEffectAllowedInt(&effectAllowed);
     aDragEvent->dataTransfer->SetDropEffectInt(FilterDropEffect(action, effectAllowed));
   }
-  else if (aDragEvent->mMessage == NS_DRAGDROP_DROP ||
-           aDragEvent->mMessage == NS_DRAGDROP_DRAGDROP ||
-           aDragEvent->mMessage == NS_DRAGDROP_END) {
+  else if (aDragEvent->mMessage == eDrop ||
+           aDragEvent->mMessage == eLegacyDragDrop ||
+           aDragEvent->mMessage == eDragEnd) {
     // For the drop and dragend events, set the drop effect based on the
     // last value that the dropEffect had. This will have been set in
     // EventStateManager::PostHandleEvent for the last dragenter or

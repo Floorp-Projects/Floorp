@@ -63,6 +63,7 @@ protected:
   uint64_t mLoggingSerialNumber;
   nsresult mErrorCode;
   uint32_t mLineNo;
+  uint32_t mColumn;
   bool mHaveResultOrErrorCode;
 
 public:
@@ -82,7 +83,7 @@ public:
          IDBTransaction* aTransaction);
 
   static void
-  CaptureCaller(nsAString& aFilename, uint32_t* aLineNo);
+  CaptureCaller(nsAString& aFilename, uint32_t* aLineNo, uint32_t* aColumn);
 
   static uint64_t
   NextSerialNumber();
@@ -130,7 +131,8 @@ public:
   GetError(ErrorResult& aRv);
 
   void
-  GetCallerLocation(nsAString& aFilename, uint32_t* aLineNo) const;
+  GetCallerLocation(nsAString& aFilename, uint32_t* aLineNo,
+                    uint32_t* aColumn) const;
 
   bool
   IsPending() const

@@ -4,8 +4,6 @@
 /* jshint loopfunc:true */
 /* global window, screen, ok, SpecialPowers, matchMedia */
 
-SimpleTest.waitForExplicitFinish();
-
 // Expected values. Format: [name, pref_off_value, pref_on_value]
 // If pref_*_value is an array with two values, then we will match
 // any value in between those two values. If a value is null, then
@@ -166,19 +164,22 @@ let cssLine = function (query, clazz, id, color) {
          " { background-color: " + color + "; } }\n";
 };
 
+// __constructQuery(key, val)__.
+// Creates a CSS media query from key and val. If key is an array of
+// two elements, constructs a range query (using min- and max-).
+let constructQuery = function (key, val) {
+  return Array.isArray(val) ?
+    "(min-" + key + ": " + val[0] + ") and (max-" +  key + ": " + val[1] + ")" :
+    "(" + key + ": " + val + ")";
+};
+
 // __mediaQueryCSSLine(key, val, color)__.
 // Creates a line containing a CSS media query and a CSS expression.
 let mediaQueryCSSLine = function (key, val, color) {
   if (val === null) {
     return "";
   }
-  let query;
-  if (Array.isArray(val)) {
-    query = "(min-" + key + ": " + val[0] + ") and (max-" +  key + ": " + val[1] + ")";
-  } else {
-    query = "(" + key + ": " + val + ")";
-  }
-  return cssLine(query, "spoof", key, color);
+  return cssLine(constructQuery(key, val), "spoof", key, color);
 };
 
 // __suppressedMediaQueryCSSLine(key, color)__.
@@ -248,33 +249,67 @@ let testOSXFontSmoothing = function (resisting) {
                "-moz-osx-font-smoothing");
 };
 
-// An iterator yielding pref values for two consecutive tests.
-let prefVals = (for (prefVal of [false, true]) prefVal);
+// __sleep(timeoutMs)__.
+// Returns a promise that resolves after the given timeout.
+let sleep = function (timeoutMs) {
+  return new Promise(function(resolve, reject) {
+    window.setTimeout(resolve);
+  });
+};
+
+// __testMediaQueriesInPictureElements(resisting)__.
+// Test to see if media queries are properly spoofed in picture elements
+// when we are resisting fingerprinting. A generator function
+// to be used with SpawnTask.js.
+let testMediaQueriesInPictureElements = function* (resisting) {
+  let lines = "";
+  for (let [key, offVal, onVal] of expected_values) {
+    let expected = resisting ? onVal : offVal;
+    if (expected) {
+      let query = constructQuery(key, expected);
+      lines += "<picture>\n";
+      lines += " <source srcset='/tests/layout/style/test/chrome/match.png' media='" + query + "' />\n";
+      lines += " <img title='" + key + ":" + expected + "' class='testImage' src='/tests/layout/style/test/chrome/mismatch.png' alt='" + key + "' />\n";
+      lines += "</picture><br/>\n";
+    }
+  }
+  document.getElementById("pictures").innerHTML = lines;
+  var testImages = document.getElementsByClassName("testImage");
+  yield sleep(0);
+  for (let testImage of testImages) {
+    ok(testImage.currentSrc.endsWith("/match.png"), "Media query '" + testImage.title + "' in picture should match.");
+  }
+};
+
+// __pushPref(key, value)__.
+// Set a pref value asynchronously, returning a promise that resolves
+// when it succeeds.
+let pushPref = function (key, value) {
+  return new Promise(function(resolve, reject) {
+    SpecialPowers.pushPrefEnv({"set": [[key, value]]}, resolve);
+  });
+};
 
 // __test(isContent)__.
-// Run all tests.
-let test = function(isContent) {
-  let {value: prefValue, done} = prefVals.next();
-  if (done) {
-    SimpleTest.finish();
-    return;
+// Run all tests. A generator function to be used
+// with SpawnTask.js.
+let test = function* (isContent) {
+  for (prefValue of [false, true]) {
+    yield pushPref("privacy.resistFingerprinting", prefValue);
+    let resisting = prefValue && isContent;
+    expected_values.forEach(
+      function ([key, offVal, onVal]) {
+        testMatch(key, resisting ? onVal : offVal);
+      });
+    testToggles(resisting);
+    if (OS === "WINNT") {
+      testWindowsSpecific(resisting, "-moz-os-version", windows_versions);
+      testWindowsSpecific(resisting, "-moz-windows-theme", windows_themes);
+    }
+    testCSS(resisting);
+    if (OS === "Darwin") {
+      testOSXFontSmoothing(resisting);
+    }
+    yield testMediaQueriesInPictureElements(resisting);
   }
-  SpecialPowers.pushPrefEnv({set: [["privacy.resistFingerprinting", prefValue]]},
-    function () {
-      let resisting = prefValue && isContent;
-      expected_values.forEach(
-        function ([key, offVal, onVal]) {
-          testMatch(key, resisting ? onVal : offVal);
-        });
-      testToggles(resisting);
-      if (OS === "WINNT") {
-        testWindowsSpecific(resisting, "-moz-os-version", windows_versions);
-        testWindowsSpecific(resisting, "-moz-windows-theme", windows_themes);
-      }
-      testCSS(resisting);
-      if (OS === "Darwin") {
-        testOSXFontSmoothing(resisting);
-      }
-      test(isContent);
-    });
 };

@@ -17,7 +17,7 @@ FocusEvent::FocusEvent(EventTarget* aOwner,
                        nsPresContext* aPresContext,
                        InternalFocusEvent* aEvent)
   : UIEvent(aOwner, aPresContext,
-            aEvent ? aEvent : new InternalFocusEvent(false, NS_FOCUS_CONTENT))
+            aEvent ? aEvent : new InternalFocusEvent(false, eFocus))
 {
   if (aEvent) {
     mEventIsInternal = false;

@@ -5000,15 +5000,16 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(AutoFilename)
 };
 
 /*
- * Return the current filename and line number of the most currently running
- * frame. Returns true if a scripted frame was found, false otherwise.
+ * Return the current filename, line number and column number of the most
+ * currently running frame. Returns true if a scripted frame was found, false
+ * otherwise.
  *
  * If a the embedding has hidden the scripted caller for the topmost activation
  * record, this will also return false.
  */
 extern JS_PUBLIC_API(bool)
 DescribeScriptedCaller(JSContext* cx, AutoFilename* filename = nullptr,
-                       unsigned* lineno = nullptr);
+                       unsigned* lineno = nullptr, unsigned* column = nullptr);
 
 extern JS_PUBLIC_API(JSObject*)
 GetScriptedCallerGlobal(JSContext* cx);
