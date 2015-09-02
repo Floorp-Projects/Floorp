@@ -177,11 +177,6 @@ function test_multiple_windows() {
         ok(true, "Advanced preferences opened on info bar button press.");
         executeSoon(function soon() {
           prefWindowOpened = true;
-          // If the prefs are being displayed in a dialog we need to close it.
-          // If in a tab (ie, in-content prefs) it closes with the window.
-          if (!Services.prefs.getBoolPref("browser.preferences.inContent")) {
-            prefWin.close();
-          }
           maybeFinish();
         });
       }, "advanced-pane-loaded", false);

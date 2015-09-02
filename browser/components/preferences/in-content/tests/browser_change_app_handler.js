@@ -1,8 +1,6 @@
 let gMimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
 let gHandlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(Ci.nsIHandlerService);
 
-Services.prefs.setBoolPref("browser.preferences.inContent", true);
-
 SimpleTest.requestCompleteLog();
 
 function setupFakeHandler() {
@@ -96,6 +94,5 @@ add_task(function*() {
 registerCleanupFunction(function() {
   let infoToModify = gMimeSvc.getFromTypeAndExtension("text/x-test-handler", null);
   gHandlerSvc.remove(infoToModify);
-  Services.prefs.clearUserPref("browser.preferences.inContent");
 });
 
