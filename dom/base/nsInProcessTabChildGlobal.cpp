@@ -18,18 +18,14 @@
 #include "nsDOMClassInfoID.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/SameProcessMessageQueue.h"
-#include "mozilla/dom/StructuredCloneUtils.h"
-#include "js/StructuredClone.h"
 
-using mozilla::dom::StructuredCloneData;
-using mozilla::dom::StructuredCloneClosure;
 using namespace mozilla;
 using namespace mozilla::dom;
 
 bool
 nsInProcessTabChildGlobal::DoSendBlockingMessage(JSContext* aCx,
                                                  const nsAString& aMessage,
-                                                 const dom::StructuredCloneData& aData,
+                                                 StructuredCloneIPCHelper& aHelper,
                                                  JS::Handle<JSObject *> aCpows,
                                                  nsIPrincipal* aPrincipal,
                                                  nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal,
@@ -42,7 +38,7 @@ nsInProcessTabChildGlobal::DoSendBlockingMessage(JSContext* aCx,
     SameProcessCpowHolder cpows(js::GetRuntime(aCx), aCpows);
     nsRefPtr<nsFrameMessageManager> mm = mChromeMessageManager;
     nsCOMPtr<nsIFrameLoader> fl = GetFrameLoader();
-    mm->ReceiveMessage(mOwner, fl, aMessage, true, &aData, &cpows, aPrincipal,
+    mm->ReceiveMessage(mOwner, fl, aMessage, true, &aHelper, &cpows, aPrincipal,
                        aRetVal);
   }
   return true;
@@ -55,10 +51,10 @@ public:
   nsAsyncMessageToParent(JSContext* aCx,
                          nsInProcessTabChildGlobal* aTabChild,
                          const nsAString& aMessage,
-                         const StructuredCloneData& aData,
+                         StructuredCloneIPCHelper& aHelper,
                          JS::Handle<JSObject *> aCpows,
                          nsIPrincipal* aPrincipal)
-    : nsSameProcessAsyncMessageBase(aCx, aMessage, aData, aCpows, aPrincipal),
+    : nsSameProcessAsyncMessageBase(aCx, aMessage, aHelper, aCpows, aPrincipal),
       mTabChild(aTabChild)
   {
   }
@@ -75,13 +71,13 @@ public:
 bool
 nsInProcessTabChildGlobal::DoSendAsyncMessage(JSContext* aCx,
                                               const nsAString& aMessage,
-                                              const StructuredCloneData& aData,
+                                              StructuredCloneIPCHelper& aHelper,
                                               JS::Handle<JSObject *> aCpows,
                                               nsIPrincipal* aPrincipal)
 {
   SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
   nsRefPtr<nsAsyncMessageToParent> ev =
-    new nsAsyncMessageToParent(aCx, this, aMessage, aData, aCpows, aPrincipal);
+    new nsAsyncMessageToParent(aCx, this, aMessage, aHelper, aCpows, aPrincipal);
   queue->Push(ev);
   return true;
 }

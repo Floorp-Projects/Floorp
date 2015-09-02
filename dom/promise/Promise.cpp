@@ -21,6 +21,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 
 #include "jsfriendapi.h"
+#include "js/StructuredClone.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsIScriptObjectPrincipal.h"
