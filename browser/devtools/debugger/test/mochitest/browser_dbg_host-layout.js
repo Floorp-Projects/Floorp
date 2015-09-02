@@ -6,15 +6,22 @@
  * host changes.
  */
 
+"use strict";
+
 let gDefaultHostType = Services.prefs.getCharPref("devtools.toolbox.host");
 
 function test() {
+  // test is too slow on some platforms due to the number of test cases
+  requestLongerTimeout(2);
+
   Task.spawn(function*() {
-    yield testHosts(["bottom", "side", "window"], ["horizontal", "vertical", "horizontal"]);
+    yield testHosts(["bottom", "side", "window:big"], ["horizontal", "vertical", "horizontal"]);
     yield testHosts(["side", "bottom", "side"], ["vertical", "horizontal", "vertical"]);
     yield testHosts(["bottom", "side", "bottom"], ["horizontal", "vertical", "horizontal"]);
-    yield testHosts(["side", "window", "side"], ["vertical", "horizontal", "vertical"]);
-    yield testHosts(["window", "side", "window"], ["horizontal", "vertical", "horizontal"]);
+    yield testHosts(["side", "window:big", "side"], ["vertical", "horizontal", "vertical"]);
+    yield testHosts(["window:big", "side", "window:big"], ["horizontal", "vertical", "horizontal"]);
+    yield testHosts(["window:small", "bottom", "side"], ["vertical", "horizontal", "vertical"]);
+    yield testHosts(["window:small", "window:big", "window:small"], ["vertical", "horizontal", "vertical"]);
     finish();
   });
 }
@@ -23,11 +30,15 @@ function testHosts(aHostTypes, aLayoutTypes) {
   let [firstHost, secondHost, thirdHost] = aHostTypes;
   let [firstLayout, secondLayout, thirdLayout] = aLayoutTypes;
 
-  Services.prefs.setCharPref("devtools.toolbox.host", firstHost);
+  Services.prefs.setCharPref("devtools.toolbox.host", getHost(firstHost));
 
   return Task.spawn(function*() {
     let [tab, debuggee, panel] = yield initDebugger("about:blank");
-    yield testHost(tab, panel, firstHost, firstLayout);
+    if (getHost(firstHost) === "window") {
+      yield resizeToolboxWindow(panel, firstHost);
+    }
+
+    yield testHost(panel, getHost(firstHost), firstLayout);
     yield switchAndTestHost(tab, panel, secondHost, secondLayout);
     yield switchAndTestHost(tab, panel, thirdHost, thirdLayout);
     yield teardown(panel);
@@ -39,26 +50,63 @@ function switchAndTestHost(aTab, aPanel, aHostType, aLayoutType) {
   let gDebugger = aPanel.panelWin;
 
   return Task.spawn(function*() {
-    let layoutChanged = once(gDebugger, gDebugger.EVENTS.LAYOUT_CHANGED);
-    let hostChanged = gToolbox.switchHost(aHostType);
+    let layoutChanged = waitEventOnce(gDebugger, gDebugger.EVENTS.LAYOUT_CHANGED);
+    let hostChanged = gToolbox.switchHost(getHost(aHostType));
 
     yield hostChanged;
-    ok(true, "The toolbox's host has changed.");
+    info("The toolbox's host has changed.");
+
+    if (getHost(aHostType) === "window") {
+      yield resizeToolboxWindow(aPanel, aHostType);
+    }
 
     yield layoutChanged;
-    ok(true, "The debugger's layout has changed.");
+    info("The debugger's layout has changed.");
 
-    yield testHost(aTab, aPanel, aHostType, aLayoutType);
+    yield testHost(aPanel, getHost(aHostType), aLayoutType);
   });
+}
 
-  function once(aTarget, aEvent) {
-    let deferred = promise.defer();
-    aTarget.once(aEvent, deferred.resolve);
-    return deferred.promise;
+function waitEventOnce(aTarget, aEvent) {
+  let deferred = promise.defer();
+  aTarget.once(aEvent, deferred.resolve);
+  return deferred.promise;
+}
+
+function getHost(host) {
+  if (host.indexOf("window") == 0) {
+    return "window";
+  }
+  return host;
+}
+
+function resizeToolboxWindow(panel, host) {
+  let sizeOption = host.split(":")[1];
+  let win = panel._toolbox._host._window;
+
+  // should be the same value as BREAKPOINT_SMALL_WINDOW_WIDTH in debugger-view.js
+  let breakpoint = 850;
+
+  if (sizeOption == "big" && win.outerWidth <= breakpoint) {
+    yield resizeAndWaitForLayoutChange(panel, breakpoint + 300);
+  } else if (sizeOption == "small" && win.outerWidth >= breakpoint) {
+    yield resizeAndWaitForLayoutChange(panel, breakpoint - 300);
+  } else {
+    info("Window resize unnecessary for host " + host);
   }
 }
 
-function testHost(aTab, aPanel, aHostType, aLayoutType) {
+function resizeAndWaitForLayoutChange(panel, width) {
+    info("Updating toolbox window width to " + width);
+
+    let win = panel._toolbox._host._window;
+    let gDebugger = panel.panelWin;
+
+    win.resizeTo(width, window.screen.availHeight);
+    yield waitEventOnce(gDebugger, gDebugger.EVENTS.LAYOUT_CHANGED);
+}
+
+function testHost(aPanel, aHostType, aLayoutType) {
   let gDebugger = aPanel.panelWin;
   let gView = gDebugger.DebuggerView;
 
