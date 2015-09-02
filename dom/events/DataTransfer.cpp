@@ -269,7 +269,7 @@ DataTransfer::GetMozUserCancelled(bool* aUserCancelled)
 FileList*
 DataTransfer::GetFiles(ErrorResult& aRv)
 {
-  if (mEventMessage != NS_DRAGDROP_DROP &&
+  if (mEventMessage != eDrop &&
       mEventMessage != NS_DRAGDROP_DRAGDROP &&
       mEventMessage != NS_PASTE) {
     return nullptr;
@@ -603,7 +603,7 @@ DataTransfer::MozGetDataAt(const nsAString& aFormat, uint32_t aIndex,
   // only allow access to the data with the same principal.
   nsIPrincipal* principal = nullptr;
   if (mIsCrossDomainSubFrameDrop ||
-      (mEventMessage != NS_DRAGDROP_DROP &&
+      (mEventMessage != eDrop &&
        mEventMessage != NS_DRAGDROP_DRAGDROP &&
        mEventMessage != NS_PASTE &&
        !nsContentUtils::IsCallerChrome())) {

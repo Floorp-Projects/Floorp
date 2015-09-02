@@ -229,7 +229,7 @@ nsNativeDragTarget::ProcessDrag(EventMessage aEventMessage,
     *pdwEffect = DROPEFFECT_NONE;
   }
 
-  if (aEventMessage != NS_DRAGDROP_DROP) {
+  if (aEventMessage != eDrop) {
     // Get the cached drag effect from the drag service, the data member should
     // have been set by whoever handled the WidgetGUIEvent or nsIDOMEvent on
     // drags.
@@ -439,7 +439,7 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData,
   nsCOMPtr<nsIDragService> serv = mDragService;
 
   // Now process the native drag state and then dispatch the event
-  ProcessDrag(NS_DRAGDROP_DROP, grfKeyState, aPT, pdwEffect);
+  ProcessDrag(eDrop, grfKeyState, aPT, pdwEffect);
 
   nsCOMPtr<nsIDragSession> currentDragSession;
   serv->GetCurrentSession(getter_AddRefs(currentDragSession));
