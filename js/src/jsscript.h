@@ -1135,6 +1135,10 @@ class JSScript : public js::gc::TenuredCell
     bool needsArgsAnalysis_:1;
     bool needsArgsObj_:1;
 
+    // Whether the arguments object for this script, if it needs one, should be
+    // mapped (alias formal parameters).
+    bool hasMappedArgsObj_:1;
+
     // Generation for this script's TypeScript. If out of sync with the
     // TypeZone's generation, the TypeScript needs to be swept.
     //
@@ -1404,7 +1408,7 @@ class JSScript : public js::gc::TenuredCell
     jsbytecode* argumentsBytecode() const { MOZ_ASSERT(code()[0] == JSOP_ARGUMENTS); return code(); }
     void setArgumentsHasVarBinding();
     bool argumentsAliasesFormals() const {
-        return argumentsHasVarBinding() && !strict();
+        return argumentsHasVarBinding() && hasMappedArgsObj();
     }
 
     js::GeneratorKind generatorKind() const {
@@ -1450,17 +1454,20 @@ class JSScript : public js::gc::TenuredCell
     void setNeedsArgsObj(bool needsArgsObj);
     static bool argumentsOptimizationFailed(JSContext* cx, js::HandleScript script);
 
+    bool hasMappedArgsObj() const {
+        return hasMappedArgsObj_;
+    }
+
     /*
      * Arguments access (via JSOP_*ARG* opcodes) must access the canonical
-     * location for the argument. If an arguments object exists AND this is a
-     * non-strict function (where 'arguments' aliases formals), then all access
-     * must go through the arguments object. Otherwise, the local slot is the
-     * canonical location for the arguments. Note: if a formal is aliased
-     * through the scope chain, then script->formalIsAliased and JSOP_*ARG*
-     * opcodes won't be emitted at all.
+     * location for the argument. If an arguments object exists AND it's mapped
+     * ('arguments' aliases formals), then all access must go through the
+     * arguments object. Otherwise, the local slot is the canonical location for
+     * the arguments. Note: if a formal is aliased through the scope chain, then
+     * script->formalIsAliased and JSOP_*ARG* opcodes won't be emitted at all.
      */
     bool argsObjAliasesFormals() const {
-        return needsArgsObj() && !strict();
+        return needsArgsObj() && hasMappedArgsObj();
     }
 
     uint32_t typesGeneration() const {
