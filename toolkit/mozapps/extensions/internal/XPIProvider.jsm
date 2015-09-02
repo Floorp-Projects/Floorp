@@ -1481,7 +1481,7 @@ function getSignedStatus(aRv, aCert, aExpectedID) {
  */
 function verifyZipSignedState(aFile, aAddon) {
   if (!ADDON_SIGNING || !SIGNED_TYPES.has(aAddon.type))
-    return Promise.resolve(AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+    return Promise.resolve(undefined);
 
   let certDB = Cc["@mozilla.org/security/x509certdb;1"]
                .getService(Ci.nsIX509CertDB);
@@ -1511,7 +1511,7 @@ function verifyZipSignedState(aFile, aAddon) {
  */
 function verifyDirSignedState(aDir, aAddon) {
   if (!ADDON_SIGNING || !SIGNED_TYPES.has(aAddon.type))
-    return Promise.resolve(AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+    return Promise.resolve(undefined);
 
   let certDB = Cc["@mozilla.org/security/x509certdb;1"]
                .getService(Ci.nsIX509CertDB);
@@ -5609,7 +5609,7 @@ AddonInstall.prototype = {
       }
     }
     else if (this.addon.signedState == AddonManager.SIGNEDSTATE_UNKNOWN ||
-             this.addon.signedState == AddonManager.SIGNEDSTATE_NOT_REQUIRED) {
+             this.addon.signedState == undefined) {
       // Check object signing certificate, if any
       let x509 = zipreader.getSigningCert(null);
       if (x509) {
