@@ -5508,7 +5508,7 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
   // from the drop action, which platform specific widget code sets before
   // the event is fired based on the keyboard state.
   if (aDragEvent->mMessage == NS_DRAGDROP_ENTER ||
-      aDragEvent->mMessage == NS_DRAGDROP_OVER) {
+      aDragEvent->mMessage == eDragOver) {
     uint32_t action, effectAllowed;
     dragSession->GetDragAction(&action);
     aDragEvent->dataTransfer->GetEffectAllowedInt(&effectAllowed);

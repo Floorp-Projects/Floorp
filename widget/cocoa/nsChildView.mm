@@ -5741,7 +5741,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   nsCOMPtr<nsIDragSession> dragSession;
   mDragService->GetCurrentSession(getter_AddRefs(dragSession));
   if (dragSession) {
-    if (aMessage == NS_DRAGDROP_OVER) {
+    if (aMessage == eDragOver) {
       // fire the drag event at the source. Just ignore whether it was
       // cancelled or not as there isn't actually a means to stop the drag
       mDragService->FireDragEventAtSource(eDrag);
@@ -5793,8 +5793,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   if (dragSession) {
     switch (aMessage) {
       case NS_DRAGDROP_ENTER:
-      case NS_DRAGDROP_OVER:
-      {
+      case eDragOver: {
         uint32_t dragAction;
         dragSession->GetDragAction(&dragAction);
 
@@ -5857,7 +5856,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
 {
   MOZ_LOG(sCocoaLog, LogLevel::Info, ("ChildView draggingUpdated: entered\n"));
 
-  return [self doDragAction:NS_DRAGDROP_OVER sender:sender];
+  return [self doDragAction:eDragOver sender:sender];
 }
 
 - (void)draggingExited:(id <NSDraggingInfo>)sender
