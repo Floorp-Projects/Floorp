@@ -10365,7 +10365,7 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler& masm)
     EmitBaselineCreateStubFrameDescriptor(masm, scratch);
     masm.push(scratch);
     masm.push(ICTailCallReg);
-    masm.enterFakeExitFrame(NativeExitFrameLayout::Token());
+    masm.enterFakeExitFrame(NativeExitFrameLayoutToken);
 
     // Execute call.
     masm.setupUnalignedABICall(scratch);
@@ -10463,7 +10463,7 @@ ICCall_ClassHook::Compiler::generateStubCode(MacroAssembler& masm)
     EmitBaselineCreateStubFrameDescriptor(masm, scratch);
     masm.push(scratch);
     masm.push(ICTailCallReg);
-    masm.enterFakeExitFrame(NativeExitFrameLayout::Token());
+    masm.enterFakeExitFrame(NativeExitFrameLayoutToken);
 
     // Execute call.
     masm.setupUnalignedABICall(scratch);

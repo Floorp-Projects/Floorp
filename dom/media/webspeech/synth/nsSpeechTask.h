@@ -52,7 +52,7 @@ public:
 
   void SetChosenVoiceURI(const nsAString& aUri);
 
-  virtual void SetAudioOutputVolume(uint32_t aVolume);
+  virtual void SetAudioOutputVolume(float aVolume);
 
   bool IsPreCanceled()
   {

@@ -409,6 +409,12 @@ PicoCallbackRunnable::OnCancel()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PicoCallbackRunnable::OnVolumeChanged(float aVolume)
+{
+  return NS_OK;
+}
+
 NS_INTERFACE_MAP_BEGIN(nsPicoService)
   NS_INTERFACE_MAP_ENTRY(nsISpeechService)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)

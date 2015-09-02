@@ -172,6 +172,9 @@
 namespace js {
 namespace jit {
 
+// Defined in JitFrames.h
+enum ExitFrameTokenValues;
+
 // The public entrypoint for emitting assembly. Note that a MacroAssembler can
 // use cx->lifoAlloc, so take care not to interleave masm use with other
 // lifoAlloc use if one will be destroyed before the other.
@@ -320,21 +323,16 @@ class MacroAssembler : public MacroAssemblerSpecific
     mozilla::Maybe<AutoJitContextAlloc> alloc_;
 
   private:
-    // This field is used to manage profiling instrumentation output. If
-    // provided and enabled, then instrumentation will be emitted around call
-    // sites.
-    bool emitProfilingInstrumentation_;
-
     // Labels for handling exceptions and failures.
     NonAssertingLabel failureLabel_;
 
   public:
     MacroAssembler()
-      : emitProfilingInstrumentation_(false),
-        framePushed_(0)
+      : framePushed_(0),
 #ifdef DEBUG
-      , inCall_(false)
+        inCall_(false),
 #endif
+        emitProfilingInstrumentation_(false)
     {
         JitContext* jcx = GetJitContext();
         JSContext* cx = jcx->cx;
@@ -365,11 +363,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     // asm.js compilation handles its own JitContext-pushing
     struct AsmJSToken {};
     explicit MacroAssembler(AsmJSToken)
-      : emitProfilingInstrumentation_(false),
-        framePushed_(0)
+      : framePushed_(0),
 #ifdef DEBUG
-      , inCall_(false)
+        inCall_(false),
 #endif
+        emitProfilingInstrumentation_(false)
     {
 #if defined(JS_CODEGEN_ARM)
         initWithAllocator();
@@ -378,10 +376,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         initWithAllocator();
         armbuffer_.id = 0;
 #endif
-    }
-
-    void enableProfilingInstrumentation() {
-        emitProfilingInstrumentation_ = true;
     }
 
     void resetForNewCodeGenerator(TempAllocator& alloc);
@@ -490,6 +484,14 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void call(const CallSiteDesc& desc, const Register reg);
     inline void call(const CallSiteDesc& desc, Label* label);
 
+    // Push the return address and make a call. On platforms where this function
+    // is not defined, push the link register (pushReturnAddress) at the entry
+    // point of the callee.
+    void callAndPushReturnAddress(Register reg) DEFINED_ON(mips32, x86_shared);
+    void callAndPushReturnAddress(Label* label) DEFINED_ON(mips32, x86_shared);
+
+    void pushReturnAddress() DEFINED_ON(arm, arm64);
+
   public:
     // ===============================================================
     // ABI function calls.
@@ -562,6 +564,96 @@ class MacroAssembler : public MacroAssemblerSpecific
     // properly, and cast the function pointer to the right type.
     uint32_t signature_;
 #endif
+
+  public:
+    // ===============================================================
+    // Jit Frames.
+    //
+    // These functions are used to build the content of the Jit frames.  See
+    // CommonFrameLayout class, and all its derivatives. The content should be
+    // pushed in the opposite order as the fields of the structures, such that
+    // the structures can be used to interpret the content of the stack.
+
+    // Call the Jit function, and push the return address (or let the callee
+    // push the return address).
+    //
+    // These functions return the offset of the return address, in order to use
+    // the return address to index the safepoints, which are used to list all
+    // live registers.
+    inline uint32_t callJitNoProfiler(Register callee);
+    inline uint32_t callJit(Register callee);
+    inline uint32_t callJit(JitCode* code);
+
+    // The frame descriptor is the second field of all Jit frames, pushed before
+    // calling the Jit function.  It is a composite value defined in JitFrames.h
+    inline void makeFrameDescriptor(Register frameSizeReg, FrameType type);
+
+    // Push the frame descriptor, based on the statically known framePushed.
+    inline void pushStaticFrameDescriptor(FrameType type);
+
+    // This function emulates a call by pushing an exit frame on the stack,
+    // except that the fake-function is inlined within the body of the caller.
+    //
+    // This function assumes that the current frame is an IonJS frame.
+    //
+    // This function returns the offset of the /fake/ return address, in order to use
+    // the return address to index the safepoints, which are used to list all
+    // live registers.
+    //
+    // This function should be balanced with a call to adjustStack, to pop the
+    // exit frame and emulate the return statement of the inlined function.
+    inline uint32_t buildFakeExitFrame(Register scratch);
+
+  private:
+    // This function is used by buildFakeExitFrame to push a fake return address
+    // on the stack. This fake return address should never be used for resuming
+    // any execution, and can even be an invalid pointer into the instruction
+    // stream, as long as it does not alias any other.
+    uint32_t pushFakeReturnAddress(Register scratch) PER_SHARED_ARCH;
+
+  public:
+    // ===============================================================
+    // Exit frame footer.
+    //
+    // When calling outside the Jit we push an exit frame. To mark the stack
+    // correctly, we have to push additional information, called the Exit frame
+    // footer, which is used to identify how the stack is marked.
+    //
+    // See JitFrames.h, and MarkJitExitFrame in JitFrames.cpp.
+
+    // If the current piece of code might be garbage collected, then the exit
+    // frame footer must contain a pointer to the current JitCode, such that the
+    // garbage collector can keep the code alive as long this code is on the
+    // stack. This function pushes a placeholder which is replaced when the code
+    // is linked.
+    inline void PushStubCode();
+
+    // Return true if the code contains a self-reference which needs to be
+    // patched when the code is linked.
+    inline bool hasSelfReference() const;
+
+    // Push stub code and the VMFunction pointer.
+    inline void enterExitFrame(const VMFunction* f = nullptr);
+
+    // Push an exit frame token to identify which fake exit frame this footer
+    // corresponds to.
+    inline void enterFakeExitFrame(enum ExitFrameTokenValues token);
+
+    // Pop ExitFrame footer in addition to the extra frame.
+    inline void leaveExitFrame(size_t extraFrame = 0);
+
+  private:
+    // Save the top of the stack into PerThreadData::jitTop of the main thread,
+    // which should be the location of the latest exit frame.
+    void linkExitFrame();
+
+    // Patch the value of PushStubCode with the pointer to the finalized code.
+    void linkSelfReference(JitCode* code);
+
+    // If the JitCode that created this assembler needs to transition into the VM,
+    // we want to store the JitCode on the stack in order to mark it during a GC.
+    // This is a reference to a patch location where the JitCode* will be written.
+    CodeOffsetLabel selfReferencePatch_;
 
     //}}} check_macroassembler_style
   public:
@@ -1058,75 +1150,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     void compareStrings(JSOp op, Register left, Register right, Register result,
                         Label* fail);
 
-    // If the JitCode that created this assembler needs to transition into the VM,
-    // we want to store the JitCode on the stack in order to mark it during a GC.
-    // This is a reference to a patch location where the JitCode* will be written.
-  private:
-    CodeOffsetLabel exitCodePatch_;
-
-  private:
-    void linkExitFrame();
-
   public:
-    inline void PushStubCode();
-
-    // Push stub code, and the VMFunction pointer.
-    inline void enterExitFrame(const VMFunction* f = nullptr);
-
-    // The JitCode * argument here is one of the tokens defined in the various
-    // exit frame layout classes, e.g. NativeExitFrameLayout::Token().
-    inline void enterFakeExitFrame(JitCode* codeVal);
-
-    // Pop ExitFrame footer in addition to the extra frame.
-    inline void leaveExitFrame(size_t extraFrame = 0);
-
-    inline bool hasEnteredExitFrame() const;
-
     // Generates code used to complete a bailout.
     void generateBailoutTail(Register scratch, Register bailoutInfo);
-
-    // These functions exist as small wrappers around sites where execution can
-    // leave the currently running stream of instructions. They exist so that
-    // instrumentation may be put in place around them if necessary and the
-    // instrumentation is enabled. For the functions that return a uint32_t,
-    // they are returning the offset of the assembler just after the call has
-    // been made so that a safepoint can be made at that location.
-
-    // see above comment for what is returned
-    uint32_t callJit(Register callee) {
-        profilerPreCall();
-        MacroAssemblerSpecific::callJit(callee);
-        uint32_t ret = currentOffset();
-        profilerPostReturn();
-        return ret;
-    }
-
-    // see above comment for what is returned
-    uint32_t callWithExitFrame(Label* target) {
-        profilerPreCall();
-        MacroAssemblerSpecific::callWithExitFrame(target);
-        uint32_t ret = currentOffset();
-        profilerPostReturn();
-        return ret;
-    }
-
-    // see above comment for what is returned
-    uint32_t callWithExitFrame(JitCode* target) {
-        profilerPreCall();
-        MacroAssemblerSpecific::callWithExitFrame(target);
-        uint32_t ret = currentOffset();
-        profilerPostReturn();
-        return ret;
-    }
-
-    // see above comment for what is returned
-    uint32_t callWithExitFrame(JitCode* target, Register dynStack) {
-        profilerPreCall();
-        MacroAssemblerSpecific::callWithExitFrame(target, dynStack);
-        uint32_t ret = currentOffset();
-        profilerPostReturn();
-        return ret;
-    }
 
     void branchTestObjectTruthy(bool truthy, Register objReg, Register scratch,
                                 Label* slowCheck, Label* checked)
@@ -1218,21 +1244,40 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 #endif // !JS_CODEGEN_ARM64
 
-  private:
-    // These two functions are helpers used around call sites throughout the
-    // assembler. They are called from the above call wrappers to emit the
-    // necessary instrumentation.
-    void profilerPreCall() {
-        if (!emitProfilingInstrumentation_)
-            return;
-        profilerPreCallImpl();
+  public:
+    void enableProfilingInstrumentation() {
+        emitProfilingInstrumentation_ = true;
     }
 
-    void profilerPostReturn() {
-        if (!emitProfilingInstrumentation_)
-            return;
-        profilerPostReturnImpl();
+  private:
+    // This class is used to surround call sites throughout the assembler. This
+    // is used by callWithABI, and callJit functions, except if suffixed by
+    // NoProfiler.
+    class AutoProfilerCallInstrumentation {
+        MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
+
+      public:
+        explicit AutoProfilerCallInstrumentation(MacroAssembler& masm
+                                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+        ~AutoProfilerCallInstrumentation() {}
+    };
+    friend class AutoProfilerCallInstrumentation;
+
+    void appendProfilerCallSite(CodeOffsetLabel label) {
+        propagateOOM(profilerCallSites_.append(label));
     }
+
+    // Fix up the code pointers to be written for locations where profilerCallSite
+    // emitted moves of RIP to a register.
+    void linkProfilerCallSites(JitCode* code);
+
+    // This field is used to manage profiling instrumentation output. If
+    // provided and enabled, then instrumentation will be emitted around call
+    // sites.
+    bool emitProfilingInstrumentation_;
+
+    // Record locations of the call sites.
+    Vector<CodeOffsetLabel, 0, SystemAllocPolicy> profilerCallSites_;
 
   public:
     void loadBaselineOrIonRaw(Register script, Register dest, Label* failure);
@@ -1545,10 +1590,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&ok);
 #endif
     }
-
-    void profilerPreCallImpl();
-    void profilerPreCallImpl(Register reg, Register reg2);
-    void profilerPostReturnImpl() {}
 };
 
 static inline Assembler::DoubleCondition

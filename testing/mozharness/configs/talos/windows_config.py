@@ -26,6 +26,7 @@ config = {
         'mozinstall': ['%s/scripts/python' % VENV_PATH,
                        '%s/scripts/mozinstall-script.py' % VENV_PATH],
         'hg': 'c:/mozilla-build/hg/hg',
+        'tooltool.py': [PYTHON, 'C:/mozilla-build/tooltool.py'],
     },
     "title": socket.gethostname().split('.')[0],
     "default_actions": [
@@ -47,4 +48,7 @@ config = {
     ],
     "blob_uploader_auth_file": os.path.join(os.getcwd(), "oauth.txt"),
     "metro_harness_path_frmt": "%(metro_base_path)s/metro/metrotestharness.exe",
+    "download_minidump_stackwalk": True,
+    "minidump_stackwalk_path": "win32-minidump_stackwalk.exe",
+    "minidump_tooltool_manifest_path": "config/tooltool-manifests/win32/releng.manifest",
 }

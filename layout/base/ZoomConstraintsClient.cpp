@@ -25,6 +25,7 @@
 NS_IMPL_ISUPPORTS(ZoomConstraintsClient, nsIDOMEventListener, nsIObserver)
 
 static const nsLiteralString DOM_META_ADDED = NS_LITERAL_STRING("DOMMetaAdded");
+static const nsLiteralString DOM_META_CHANGED = NS_LITERAL_STRING("DOMMetaChanged");
 static const nsLiteralCString BEFORE_FIRST_PAINT = NS_LITERAL_CSTRING("before-first-paint");
 
 using namespace mozilla;
@@ -66,6 +67,7 @@ ZoomConstraintsClient::Destroy()
 
   if (mEventTarget) {
     mEventTarget->RemoveEventListener(DOM_META_ADDED, this, false);
+    mEventTarget->RemoveEventListener(DOM_META_CHANGED, this, false);
     mEventTarget = nullptr;
   }
 
@@ -102,6 +104,7 @@ ZoomConstraintsClient::Init(nsIPresShell* aPresShell, nsIDocument* aDocument)
   }
   if (mEventTarget) {
     mEventTarget->AddEventListener(DOM_META_ADDED, this, false);
+    mEventTarget->AddEventListener(DOM_META_CHANGED, this, false);
   }
 
   nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
@@ -119,7 +122,11 @@ ZoomConstraintsClient::HandleEvent(nsIDOMEvent* event)
   if (type.Equals(DOM_META_ADDED)) {
     ZCC_LOG("Got a dom-meta-added event in %p\n", this);
     RefreshZoomConstraints();
+  } else if (type.Equals(DOM_META_CHANGED)) {
+    ZCC_LOG("Got a dom-meta-changed event in %p\n", this);
+    RefreshZoomConstraints();
   }
+
   return NS_OK;
 }
 

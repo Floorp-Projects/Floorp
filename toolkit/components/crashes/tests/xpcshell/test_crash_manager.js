@@ -214,6 +214,10 @@ add_task(function* test_main_crash_event_file() {
   yield ac.promiseInit();
   let theEnvironment = TelemetryEnvironment.currentEnvironment;
 
+  // To test proper escaping, add data to the environment with an embedded
+  // double-quote
+  theEnvironment.testValue = "MyValue\"";
+
   let m = yield getManager();
   yield m.createEventsFile("1", "crash.main.2", DUMMY_DATE, "id1\nk1=v1\nk2=v2\nTelemetryEnvironment=" + JSON.stringify(theEnvironment));
   let count = yield m.aggregateEventsFiles();

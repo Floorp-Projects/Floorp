@@ -183,7 +183,7 @@ protected:
                             AudioChunk* aBlock,
                             nsTArray<float>* aDownmixBuffer);
   void UpMixDownMixChunk(const AudioChunk* aChunk, uint32_t aOutputChannelCount,
-                         nsTArray<const void*>& aOutputChannels,
+                         nsTArray<const float*>& aOutputChannels,
                          nsTArray<float>& aDownmixBuffer);
 
   uint32_t ComputedNumberOfChannels(uint32_t aInputChannelCount);

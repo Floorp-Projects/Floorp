@@ -3786,7 +3786,11 @@ BaselineCompiler::emit_JSOP_RESUME()
     // Push a fake return address on the stack. We will resume here when the
     // generator returns.
     Label genStart, returnTarget;
+#ifdef JS_USE_LINK_REGISTER
+    masm.call(&genStart);
+#else
     masm.callAndPushReturnAddress(&genStart);
+#endif
 
     // Add an IC entry so the return offset -> pc mapping works.
     if (!appendICEntry(ICEntry::Kind_Op, masm.currentOffset()))
@@ -3794,6 +3798,9 @@ BaselineCompiler::emit_JSOP_RESUME()
 
     masm.jump(&returnTarget);
     masm.bind(&genStart);
+#ifdef JS_USE_LINK_REGISTER
+    masm.pushReturnAddress();
+#endif
 
     // If profiler instrumentation is on, update lastProfilingFrame on
     // current JitActivation

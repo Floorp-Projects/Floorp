@@ -219,7 +219,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
         masm.push(scratch); // Fake return address.
         masm.push(Imm32(0));
         // No GC things to mark on the stack, push a bare token.
-        masm.enterFakeExitFrame(ExitFrameLayout::BareToken());
+        masm.enterFakeExitFrame(ExitFrameLayoutBareToken);
 
         masm.push(framePtr);
         masm.push(jitcode);
@@ -517,8 +517,7 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     masm.andl(Imm32(CalleeTokenMask), eax);
     masm.loadPtr(Address(eax, JSFunction::offsetOfNativeOrScript()), eax);
     masm.loadBaselineOrIonRaw(eax, eax, nullptr);
-    masm.call(eax);
-    uint32_t returnOffset = masm.currentOffset();
+    uint32_t returnOffset = masm.callJitNoProfiler(eax);
 
     // Remove the rectifier frame.
     masm.pop(ebx);            // ebx <- descriptor with FrameType.
