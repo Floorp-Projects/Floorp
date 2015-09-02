@@ -175,12 +175,15 @@ NS_EVENT_MESSAGE(NS_COMPOSITION_COMMIT_AS_IS, NS_COMPOSITION_EVENT_START + 4)
 // Its mRanges should be nullptr.
 NS_EVENT_MESSAGE(NS_COMPOSITION_COMMIT,       NS_COMPOSITION_EVENT_START + 5)
 
-// UI events
+// Following events are defined for deprecated DOM events which are using
+// InternalUIEvent class.
 NS_EVENT_MESSAGE(eLegacyUIEventFirst,   2500)
-// this is not to be confused with NS_ACTIVATE!
+// DOMActivate (mapped with the DOM event and used internally)
 NS_EVENT_MESSAGE(eLegacyDOMActivate,    eLegacyUIEventFirst)
+// DOMFocusIn (only mapped with the DOM event)
 NS_EVENT_MESSAGE(eLegacyDOMFocusIn,     eLegacyUIEventFirst + 1)
-NS_EVENT_MESSAGE(NS_UI_FOCUSOUT,        eLegacyUIEventFirst + 2)
+// DOMFocusOut (only mapped with the DOM event)
+NS_EVENT_MESSAGE(eLegacyDOMFocusOut,    eLegacyUIEventFirst + 2)
 
 // pagetransition events
 NS_EVENT_MESSAGE(NS_PAGETRANSITION_START, 2700)
