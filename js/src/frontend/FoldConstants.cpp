@@ -335,7 +335,6 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
       case PNK_DELETENAME:
       case PNK_DELETEPROP:
       case PNK_DELETEELEM:
-      case PNK_DELETESUPERELEM:
       case PNK_DELETEEXPR:
       case PNK_POS:
       case PNK_NEG:
@@ -413,7 +412,6 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
       case PNK_CLASSMETHOD:
       case PNK_CLASSMETHODLIST:
       case PNK_CLASSNAMES:
-      case PNK_SUPERELEM:
       case PNK_NEWTARGET:
       case PNK_POSHOLDER:
         MOZ_CRASH("ContainsHoistedDeclaration should have indicated false on "
@@ -631,9 +629,9 @@ static bool
 FoldDeleteElement(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
                   bool inGenexpLambda)
 {
-    MOZ_ASSERT(node->isKind(PNK_DELETEELEM) || node->isKind(PNK_DELETESUPERELEM));
+    MOZ_ASSERT(node->isKind(PNK_DELETEELEM));
     MOZ_ASSERT(node->isArity(PN_UNARY));
-    MOZ_ASSERT(node->pn_kid->isKind(PNK_ELEM) || node->pn_kid->isKind(PNK_SUPERELEM));
+    MOZ_ASSERT(node->pn_kid->isKind(PNK_ELEM));
 
     ParseNode*& expr = node->pn_kid;
     if (!Fold(cx, &expr, parser, inGenexpLambda))
@@ -645,11 +643,9 @@ FoldDeleteElement(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler
     //
     // In principle this also applies to |super["foo"] -> super.foo|,
     // but we don't constant-fold |super["foo"]| yet.
-    if (node->isKind(PNK_DELETEELEM)) {
-        MOZ_ASSERT(expr->isKind(PNK_ELEM) || expr->isKind(PNK_DOT));
-        if (expr->isKind(PNK_DOT))
-            node->setKind(PNK_DELETEPROP);
-    }
+    MOZ_ASSERT(expr->isKind(PNK_ELEM) || expr->isKind(PNK_DOT));
+    if (expr->isKind(PNK_DOT))
+        node->setKind(PNK_DELETEPROP);
 
     return true;
 }
@@ -1748,7 +1744,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         return FoldDeleteExpr(cx, pn, parser, inGenexpLambda);
 
       case PNK_DELETEELEM:
-      case PNK_DELETESUPERELEM:
         return FoldDeleteElement(cx, pn, parser, inGenexpLambda);
 
       case PNK_DELETEPROP:
@@ -1779,7 +1774,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_MUTATEPROTO:
       case PNK_COMPUTED_NAME:
       case PNK_SPREAD:
-      case PNK_SUPERELEM:
       case PNK_EXPORT:
       case PNK_EXPORT_DEFAULT:
       case PNK_VOID:
