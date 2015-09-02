@@ -5744,7 +5744,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
     if (aMessage == NS_DRAGDROP_OVER) {
       // fire the drag event at the source. Just ignore whether it was
       // cancelled or not as there isn't actually a means to stop the drag
-      mDragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
+      mDragService->FireDragEventAtSource(eDrag);
       dragSession->SetCanDrop(false);
     } else if (aMessage == eDrop) {
       // We make the assumption that the dragOver handlers have correctly set

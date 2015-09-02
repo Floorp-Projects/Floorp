@@ -2195,7 +2195,7 @@ TabChild::RecvRealDragEvent(const WidgetDragEvent& aEvent,
     if (dragService) {
       // This will dispatch 'drag' event at the source if the
       // drag transaction started in this process.
-      dragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
+      dragService->FireDragEventAtSource(eDrag);
     }
   }
 
