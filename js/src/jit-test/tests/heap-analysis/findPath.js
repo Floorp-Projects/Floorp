@@ -1,7 +1,7 @@
 load(libdir + "match.js")
 
 // At the moment, findPath just returns the names as provided by ubi::Node,
-// which just uses JS_TraceChildren for now. However, we have various plans
+// which just uses js::TraceChildren for now. However, we have various plans
 // to improve the quality of ubi::Node's metadata, to improve the precision
 // and clarity of the results here.
 

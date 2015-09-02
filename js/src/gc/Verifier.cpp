@@ -216,7 +216,7 @@ gc::GCRuntime::startVerifyPreBarriers()
             VerifyNode* child = MakeNode(trc, e.thing, e.kind);
             if (child) {
                 trc->curnode = child;
-                JS_TraceChildren(trc, e.thing, e.kind);
+                js::TraceChildren(trc, e.thing, e.kind);
             }
             if (trc->edgeptr == trc->term)
                 goto oom;
@@ -338,7 +338,7 @@ gc::GCRuntime::endVerifyPreBarriers()
         VerifyNode* node = NextNode(trc->root);
         while ((char*)node < trc->edgeptr) {
             cetrc.node = node;
-            JS_TraceChildren(&cetrc, node->thing, node->kind);
+            js::TraceChildren(&cetrc, node->thing, node->kind);
 
             if (node->count <= MAX_VERIFIER_EDGES) {
                 for (uint32_t i = 0; i < node->count; i++)
