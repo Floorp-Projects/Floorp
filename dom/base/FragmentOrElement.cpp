@@ -808,7 +808,7 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
     switch (aVisitor.mEvent->mMessage) {
       case eImageAbort:
       case eLoadError:
-      case NS_FORM_SELECTED:
+      case eFormSelect:
       case eFormChange:
       case eLoad:
       case eFormReset:

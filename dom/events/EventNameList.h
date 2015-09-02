@@ -386,7 +386,7 @@ EVENT(seeking,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(select,
-      NS_FORM_SELECTED,
+      eFormSelect,
       EventNameType_HTMLXUL,
       eBasicEventClass)
 EVENT(show,
