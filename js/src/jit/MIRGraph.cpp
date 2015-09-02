@@ -118,9 +118,10 @@ MIRGenerator::needsAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access) const
     // A heap access needs a bounds-check branch if we're not relying on signal
     // handlers to catch errors, and if it's not proven to be within bounds.
     // We use signal-handlers on x64, but on x86 there isn't enough address
-    // space for a guard region.
+    // space for a guard region.  Also, on x64 the atomic loads and stores
+    // can't (yet) use the signal handlers.
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-    if (usesSignalHandlersForAsmJSOOB_)
+    if (usesSignalHandlersForAsmJSOOB_ && !access->isAtomicAccess())
         return false;
 #endif
     return access->needsBoundsCheck();

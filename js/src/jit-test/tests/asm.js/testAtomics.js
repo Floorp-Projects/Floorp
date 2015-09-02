@@ -6,6 +6,7 @@ if (!this.SharedArrayBuffer || !this.SharedInt32Array || !this.Atomics)
 // flexibility that comes in handy several places.
 
 load(libdir + "asm.js");
+load(libdir + "asserts.js");
 
 var loadModule_int32_code =
     USE_ASM + `
@@ -318,14 +319,29 @@ function test_int32(heap) {
 
     var oob = (heap.byteLength * 2) & ~7;
 
-    assertEq(i32m.cas1_i(oob), 0);
-    assertEq(i32m.cas2_i(oob), 0);
+    assertErrorMessage(() => i32m.cas1_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.cas2_i(oob), RangeError, /out-of-range index/);
 
-    assertEq(i32m.or_i(oob), 0);
-    assertEq(i32m.xor_i(oob), 0);
-    assertEq(i32m.and_i(oob), 0);
-    assertEq(i32m.add_i(oob), 0);
-    assertEq(i32m.sub_i(oob), 0);
+    assertErrorMessage(() => i32m.or_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.xor_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.and_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.add_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.sub_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.load_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.store_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.xchg_i(oob), RangeError, /out-of-range index/);
+
+    // Edge cases
+    assertErrorMessage(() => i32m.load_i(i32a.length*4), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.store_i(i32a.length*4), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.add_i(i32a.length*4), RangeError, /out-of-range index/);
+
+    i32a[i32a.length-1] = 88;
+    assertEq(i32m.load_i((i32a.length-1)*4), 88);
+    assertEq(i32m.store_i((i32a.length-1)*4), 37);
+    assertEq(i32m.add_i((i32a.length-1)*4), 37);
+    assertEq(i32m.load_i((i32a.length-1)*4), 37+37);
+    i32a[i32a.length-1] = 0;
 }
 
 var loadModule_uint32_code =
@@ -584,14 +600,29 @@ function test_uint32(heap) {
 
     var oob = (heap.byteLength * 2) & ~7;
 
-    assertEq(i32m.cas1_i(oob), 0);
-    assertEq(i32m.cas2_i(oob), 0);
+    assertErrorMessage(() => i32m.cas1_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.cas2_i(oob), RangeError, /out-of-range index/);
 
-    assertEq(i32m.or_i(oob), 0);
-    assertEq(i32m.xor_i(oob), 0);
-    assertEq(i32m.and_i(oob), 0);
-    assertEq(i32m.add_i(oob), 0);
-    assertEq(i32m.sub_i(oob), 0);
+    assertErrorMessage(() => i32m.or_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.xor_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.and_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.add_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.sub_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.load_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.store_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.xchg_i(oob), RangeError, /out-of-range index/);
+
+    // Edge cases
+    assertErrorMessage(() => i32m.load_i(i32a.length*4), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.store_i(i32a.length*4), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i32m.add_i(i32a.length*4), RangeError, /out-of-range index/);
+
+    i32a[i32a.length-1] = 88;
+    assertEq(i32m.load_i((i32a.length-1)*4), 88);
+    assertEq(i32m.store_i((i32a.length-1)*4), 37);
+    assertEq(i32m.add_i((i32a.length-1)*4), 37);
+    assertEq(i32m.load_i((i32a.length-1)*4), 37+37);
+    i32a[i32a.length-1] = 0;
 }
 
 var loadModule_int16_code =
@@ -865,14 +896,29 @@ function test_int16(heap) {
 
     var oob = (heap.byteLength * 2) & ~7;
 
-    assertEq(i16m.cas1_i(oob), 0);
-    assertEq(i16m.cas2_i(oob), 0);
+    assertErrorMessage(() => i16m.cas1_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.cas2_i(oob), RangeError, /out-of-range index/);
 
-    assertEq(i16m.or_i(oob), 0);
-    assertEq(i16m.xor_i(oob), 0);
-    assertEq(i16m.and_i(oob), 0);
-    assertEq(i16m.add_i(oob), 0);
-    assertEq(i16m.sub_i(oob), 0);
+    assertErrorMessage(() => i16m.or_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.xor_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.and_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.add_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.sub_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.load_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.store_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.xchg_i(oob), RangeError, /out-of-range index/);
+
+    // Edge cases
+    assertErrorMessage(() => i16m.load_i(i16a.length*2), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.store_i(i16a.length*2), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.add_i(i16a.length*2), RangeError, /out-of-range index/);
+
+    i16a[i16a.length-1] = 88;
+    assertEq(i16m.load_i((i16a.length-1)*2), 88);
+    assertEq(i16m.store_i((i16a.length-1)*2), 37);
+    assertEq(i16m.add_i((i16a.length-1)*2), 37);
+    assertEq(i16m.load_i((i16a.length-1)*2), 37+37);
+    i16a[i16a.length-1] = 0;
 }
 
 var loadModule_uint16_code =
@@ -1138,14 +1184,29 @@ function test_uint16(heap) {
 
     var oob = (heap.byteLength * 2) & ~7;
 
-    assertEq(i16m.cas1_i(oob), 0);
-    assertEq(i16m.cas2_i(oob), 0);
+    assertErrorMessage(() => i16m.cas1_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.cas2_i(oob), RangeError, /out-of-range index/);
 
-    assertEq(i16m.or_i(oob), 0);
-    assertEq(i16m.xor_i(oob), 0);
-    assertEq(i16m.and_i(oob), 0);
-    assertEq(i16m.add_i(oob), 0);
-    assertEq(i16m.sub_i(oob), 0);
+    assertErrorMessage(() => i16m.or_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.xor_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.and_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.add_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.sub_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.load_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.store_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.xchg_i(oob), RangeError, /out-of-range index/);
+
+    // Edge cases
+    assertErrorMessage(() => i16m.load_i(i16a.length*2), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.store_i(i16a.length*2), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i16m.add_i(i16a.length*2), RangeError, /out-of-range index/);
+
+    i16a[i16a.length-1] = 88;
+    assertEq(i16m.load_i((i16a.length-1)*2), 88);
+    assertEq(i16m.store_i((i16a.length-1)*2), 37);
+    assertEq(i16m.add_i((i16a.length-1)*2), 37);
+    assertEq(i16m.load_i((i16a.length-1)*2), 37+37);
+    i16a[i16a.length-1] = 0;
 }
 
 var loadModule_int8_code =
@@ -1404,14 +1465,29 @@ function test_int8(heap) {
 
     var oob = (heap.byteLength * 2) & ~7;
 
-    assertEq(i8m.cas1_i(oob), 0);
-    assertEq(i8m.cas2_i(oob), 0);
+    assertErrorMessage(() => i8m.cas1_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.cas2_i(oob), RangeError, /out-of-range index/);
 
-    assertEq(i8m.or_i(oob), 0);
-    assertEq(i8m.xor_i(oob), 0);
-    assertEq(i8m.and_i(oob), 0);
-    assertEq(i8m.add_i(oob), 0);
-    assertEq(i8m.sub_i(oob), 0);
+    assertErrorMessage(() => i8m.or_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.xor_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.and_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.add_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.sub_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.load_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.store_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.xchg_i(oob), RangeError, /out-of-range index/);
+
+    // Edge cases
+    assertErrorMessage(() => i8m.load_i(i8a.length), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.store_i(i8a.length), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.add_i(i8a.length), RangeError, /out-of-range index/);
+
+    i8a[i8a.length-1] = 88;
+    assertEq(i8m.load_i(i8a.length-1), 88);
+    assertEq(i8m.store_i(i8a.length-1), 37);
+    assertEq(i8m.add_i(i8a.length-1), 37);
+    assertEq(i8m.load_i(i8a.length-1), 37+37);
+    i8a[i8a.length-1] = 0;
 }
 
 var loadModule_uint8_code =
@@ -1680,14 +1756,29 @@ function test_uint8(heap) {
 
     var oob = (heap.byteLength * 2) & ~7;
 
-    assertEq(i8m.cas1_i(oob), 0);
-    assertEq(i8m.cas2_i(oob), 0);
+    assertErrorMessage(() => i8m.cas1_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.cas2_i(oob), RangeError, /out-of-range index/);
 
-    assertEq(i8m.or_i(oob), 0);
-    assertEq(i8m.xor_i(oob), 0);
-    assertEq(i8m.and_i(oob), 0);
-    assertEq(i8m.add_i(oob), 0);
-    assertEq(i8m.sub_i(oob), 0);
+    assertErrorMessage(() => i8m.or_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.xor_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.and_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.add_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.sub_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.load_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.store_i(oob), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.xchg_i(oob), RangeError, /out-of-range index/);
+
+    // Edge cases
+    assertErrorMessage(() => i8m.load_i(i8a.length), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.store_i(i8a.length), RangeError, /out-of-range index/);
+    assertErrorMessage(() => i8m.add_i(i8a.length), RangeError, /out-of-range index/);
+
+    i8a[i8a.length-1] = 88;
+    assertEq(i8m.load_i(i8a.length-1), 88);
+    assertEq(i8m.store_i(i8a.length-1), 37);
+    assertEq(i8m.add_i(i8a.length-1), 37);
+    assertEq(i8m.load_i(i8a.length-1), 37+37);
+    i8a[i8a.length-1] = 0;
 }
 
 var loadModule_misc_code =
