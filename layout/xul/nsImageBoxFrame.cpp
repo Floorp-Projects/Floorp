@@ -105,7 +105,7 @@ nsImageBoxFrameEvent::Run()
 void
 FireImageDOMEvent(nsIContent* aContent, EventMessage aMessage)
 {
-  NS_ASSERTION(aMessage == NS_LOAD || aMessage == NS_LOAD_ERROR,
+  NS_ASSERTION(aMessage == NS_LOAD || aMessage == eLoadError,
                "invalid message");
 
   nsCOMPtr<nsIRunnable> event = new nsImageBoxFrameEvent(aContent, aMessage);
@@ -786,7 +786,7 @@ nsImageBoxFrame::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
     mIntrinsicSize.SizeTo(0, 0);
     PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
-    FireImageDOMEvent(mContent, NS_LOAD_ERROR);
+    FireImageDOMEvent(mContent, eLoadError);
   }
 
   return NS_OK;
