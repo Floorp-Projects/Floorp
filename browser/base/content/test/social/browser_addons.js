@@ -1,24 +1,25 @@
 let AddonManager = Cu.import("resource://gre/modules/AddonManager.jsm", {}).AddonManager;
 let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
-const ADDON_TYPE_SERVICE     = "service";
-const ID_SUFFIX              = "@services.mozilla.org";
-const STRING_TYPE_NAME       = "type.%ID%.name";
-const XPINSTALL_URL = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
-
 let manifest = {
   name: "provider 1",
   origin: "https://example.com",
-  sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",
-  workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
+  sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar_empty.html",
   iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
 };
 let manifest2 = { // used for testing install
   name: "provider 2",
   origin: "https://test1.example.com",
-  sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar.html",
-  workerURL: "https://test1.example.com/browser/browser/base/content/test/social/social_worker.js",
+  sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar_empty.html",
   iconURL: "https://test1.example.com/browser/browser/base/content/test/general/moz.png",
+  version: 1
+};
+let manifestUpgrade = { // used for testing install
+  name: "provider 3",
+  origin: "https://test2.example.com",
+  sidebarURL: "https://test2.example.com/browser/browser/base/content/test/social/social_sidebar.html",
+  workerURL: "https://test2.example.com/browser/browser/base/content/test/social/social_worker.js",
+  iconURL: "https://test2.example.com/browser/browser/base/content/test/general/moz.png",
   version: 1
 };
 
@@ -83,22 +84,17 @@ function installListener(next, aManifest) {
 
 var tests = {
   testHTTPInstallFailure: function(next) {
-    let activationURL = "http://example.com/browser/browser/base/content/test/social/social_activate.html"
-    addTab(activationURL, function(tab) {
-      let doc = tab.linkedBrowser.contentDocument;
-      let installFrom = doc.nodePrincipal.origin;
-      is(SocialService.getOriginActivationType(installFrom), "foreign", "testing foriegn install");
-      let data = {
-        origin: doc.nodePrincipal.origin,
-        url: doc.location.href,
-        manifest: manifest,
-        window: window
-      }
-      Social.installProvider(data, function(addonManifest) {
-        ok(!addonManifest, "unable to install provider over http");
-        gBrowser.removeTab(tab);
-        next();
-      });
+    let installFrom = "http://example.com";
+    is(SocialService.getOriginActivationType(installFrom), "foreign", "testing foriegn install");
+    let data = {
+      origin: installFrom,
+      url: installFrom+"/activate",
+      manifest: manifest,
+      window: window
+    }
+    Social.installProvider(data, function(addonManifest) {
+      ok(!addonManifest, "unable to install provider over http");
+      next();
     });
   },
   testAddonEnableToggle: function(next) {
@@ -136,7 +132,7 @@ var tests = {
     // for this provider and test enable/disable toggling
     setManifestPref(prefname, manifest);
     ok(Services.prefs.prefHasUserValue(prefname), "manifest is in user-prefs");
-    AddonManager.getAddonsByTypes([ADDON_TYPE_SERVICE], function(addons) {
+    AddonManager.getAddonsByTypes(["service"], function(addons) {
       for (let addon of addons) {
         if (addon.userDisabled) {
           expectEvent = "onEnabling";
@@ -191,77 +187,37 @@ var tests = {
       });
     });
   },
-  testForeignInstall: function(next) {
-    AddonManager.addAddonListener(installListener(next, manifest2));
-
-    // we expect the addon install dialog to appear, we need to accept the
-    // install from the dialog.
-    info("Waiting for install dialog");
-    let panel = document.getElementById("servicesInstall-notification");
-    PopupNotifications.panel.addEventListener("popupshown", function onpopupshown() {
-      PopupNotifications.panel.removeEventListener("popupshown", onpopupshown);
-      info("servicesInstall-notification panel opened");
-      panel.button.click();
-    })
-
-    let activationURL = manifest2.origin + "/browser/browser/base/content/test/social/social_activate.html"
-    addTab(activationURL, function(tab) {
-      let doc = tab.linkedBrowser.contentDocument;
-      let installFrom = doc.nodePrincipal.origin;
-      Services.prefs.setCharPref("social.whitelist", "");
-      is(SocialService.getOriginActivationType(installFrom), "foreign", "testing foriegn install");
-      let data = {
-        origin: doc.nodePrincipal.origin,
-        url: doc.location.href,
-        manifest: manifest2,
-        window: window
-      }
-      Social.installProvider(data, function(addonManifest) {
-        Services.prefs.clearUserPref("social.whitelist");
-        SocialService.enableProvider(addonManifest.origin, function(provider) {
-          Social.uninstallProvider(addonManifest.origin);
-          gBrowser.removeTab(tab);
-        });
-      });
-    });
-  },
   testDirectoryInstall: function(next) {
     AddonManager.addAddonListener(installListener(next, manifest2));
-    let panel = document.getElementById("servicesInstall-notification");
-    PopupNotifications.panel.addEventListener("popupshown", function onpopupshown() {
-      PopupNotifications.panel.removeEventListener("popupshown", onpopupshown);
+
+    ensureEventFired(PopupNotifications.panel, "popupshown").then(() => {
+      let panel = document.getElementById("servicesInstall-notification");
       info("servicesInstall-notification panel opened");
       panel.button.click();
     });
 
     let activationURL = manifest2.origin + "/browser/browser/base/content/test/social/social_activate.html"
-    addTab(activationURL, function(tab) {
-      let doc = tab.linkedBrowser.contentDocument;
-      let installFrom = doc.nodePrincipal.origin;
-      Services.prefs.setCharPref("social.directories", installFrom);
-      is(SocialService.getOriginActivationType(installFrom), "directory", "testing directory install");
-      let data = {
-        origin: installFrom,
-        url: doc.location.href,
-        manifest: manifest2,
-        window: window
-      }
-      Social.installProvider(data, function(addonManifest) {
-        Services.prefs.clearUserPref("social.directories");
-        SocialService.enableProvider(addonManifest.origin, function(provider) {
-          Social.uninstallProvider(addonManifest.origin);
-          gBrowser.removeTab(tab);
-        });
+    Services.prefs.setCharPref("social.directories", manifest2.origin);
+    is(SocialService.getOriginActivationType(manifest2.origin), "directory", "testing directory install");
+    let data = {
+      origin: manifest2.origin,
+      url: manifest2.origin + "/directory",
+      manifest: manifest2,
+      window: window
+    }
+    Social.installProvider(data, function(addonManifest) {
+      Services.prefs.clearUserPref("social.directories");
+      SocialService.enableProvider(addonManifest.origin, function(provider) {
+        Social.uninstallProvider(addonManifest.origin);
       });
     });
   },
   testUpgradeProviderFromWorker: function(next) {
     // add the provider, change the pref, add it again. The provider at that
     // point should be upgraded
-    let activationURL = manifest2.origin + "/browser/browser/base/content/test/social/social_activate.html"
-    let panel = document.getElementById("servicesInstall-notification");
-    PopupNotifications.panel.addEventListener("popupshown", function onpopupshown() {
-      PopupNotifications.panel.removeEventListener("popupshown", onpopupshown);
+    let activationURL = manifestUpgrade.origin + "/browser/browser/base/content/test/social/social_activate.html"
+    ensureEventFired(PopupNotifications.panel, "popupshown").then(() => {
+      let panel = document.getElementById("servicesInstall-notification");
       info("servicesInstall-notification panel opened");
       panel.button.click();
     });
@@ -273,7 +229,7 @@ var tests = {
       let data = {
         origin: installFrom,
         url: doc.location.href,
-        manifest: manifest2,
+        manifest: manifestUpgrade,
         window: window
       }
       Social.installProvider(data, function(addonManifest) {
@@ -306,8 +262,7 @@ var tests = {
                   port.close();
                   Social.uninstallProvider(origin, function() {
                     Services.prefs.clearUserPref("social.whitelist");
-                    gBrowser.removeTab(tab);
-                    next();
+                    ensureBrowserTabClosed(tab).then(next);
                   });
                   break;
               }
