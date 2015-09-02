@@ -956,7 +956,7 @@ DumpHeapVisitCell(JSRuntime* rt, void* data, void* thing,
     char cellDesc[1024 * 32];
     JS_GetTraceThingInfo(cellDesc, sizeof(cellDesc), dtrc, thing, traceKind, true);
     fprintf(dtrc->output, "%p %c %s\n", thing, MarkDescriptor(thing), cellDesc);
-    JS_TraceChildren(dtrc, thing, traceKind);
+    js::TraceChildren(dtrc, thing, traceKind);
 }
 
 void

@@ -1794,7 +1794,7 @@ GCMarker::markDelayedChildren(ArenaHeader* aheader)
             TenuredCell* t = i.getCell();
             if (always || t->isMarked()) {
                 t->markIfUnmarked();
-                JS_TraceChildren(this, t, MapAllocToTraceKind(aheader->getAllocKind()));
+                js::TraceChildren(this, t, MapAllocToTraceKind(aheader->getAllocKind()));
             }
         }
     } else {
