@@ -217,7 +217,7 @@ ScopeCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
  *     |   |   |   |
  *     |   |   |  StaticEvalObject  Placeholder so eval scopes may be iterated through
  *     |   |   |
- *     |   |  DeclEnvObject         Holds name of recursive/heavyweight named lambda
+ *     |   |  DeclEnvObject         Holds name of recursive/needsCallObject named lambda
  *     |   |
  *     |  CallObject                Scope of entire function or strict eval
  *     |   |

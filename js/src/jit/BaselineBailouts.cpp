@@ -685,7 +685,7 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
         Value v = iter.read();
         if (v.isObject()) {
             scopeChain = &v.toObject();
-            if (fun && fun->isHeavyweight())
+            if (fun && fun->needsCallObject())
                 flags |= BaselineFrame::HAS_CALL_OBJ;
         } else {
             MOZ_ASSERT(v.isUndefined() || v.isMagic(JS_OPTIMIZED_OUT));

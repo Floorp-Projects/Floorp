@@ -1808,7 +1808,7 @@ BytecodeEmitter::bindNameToSlotHelper(ParseNode* pn)
         MOZ_ASSERT(pn->pn_atom == fun->atom());
 
         /*
-         * Leave pn->isOp(JSOP_GETNAME) if this->fun is heavyweight to
+         * Leave pn->isOp(JSOP_GETNAME) if this->fun needs a CallObject to
          * address two cases: a new binding introduced by eval, and
          * assignment to the name in strict mode.
          *
@@ -1828,10 +1828,10 @@ BytecodeEmitter::bindNameToSlotHelper(ParseNode* pn)
          * has no effect.  But in strict mode, this attempt to mutate an
          * immutable binding must throw a TypeError.  We implement this by
          * not optimizing such assignments and by marking such functions as
-         * heavyweight, ensuring that the function name is represented in
+         * needsCallObject, ensuring that the function name is represented in
          * the scope chain so that assignment will throw a TypeError.
          */
-        if (!sc->asFunctionBox()->isHeavyweight()) {
+        if (!sc->asFunctionBox()->needsCallObject()) {
             op = JSOP_CALLEE;
             pn->pn_dflags |= PND_CONST;
         }
@@ -3599,7 +3599,7 @@ BytecodeEmitter::maybeEmitVarDecl(JSOp prologueOp, ParseNode* pn, jsatomid* resu
     }
 
     if (JOF_OPTYPE(pn->getOp()) == JOF_ATOM &&
-        (!sc->isFunctionBox() || sc->asFunctionBox()->isHeavyweight()))
+        (!sc->isFunctionBox() || sc->asFunctionBox()->needsCallObject()))
     {
         switchToPrologue();
         if (!updateSourceCoordNotes(pn->pn_pos.begin))

@@ -1858,7 +1858,7 @@ GetPropertyIC::tryAttachArgumentsLength(JSContext* cx, HandleScript outerScript,
     if (!(outputType == MIRType_Value || outputType == MIRType_Int32))
         return true;
 
-    if (hasArgumentsLengthStub(obj->is<StrictArgumentsObject>()))
+    if (hasArgumentsLengthStub(obj->is<MappedArgumentsObject>()))
         return true;
 
     *emitted = true;
@@ -1878,10 +1878,7 @@ GetPropertyIC::tryAttachArgumentsLength(JSContext* cx, HandleScript outerScript,
     }
     MOZ_ASSERT(object() != tmpReg);
 
-    const Class* clasp = obj->is<StrictArgumentsObject>() ? &StrictArgumentsObject::class_
-                                                          : &NormalArgumentsObject::class_;
-
-    masm.branchTestObjClass(Assembler::NotEqual, object(), tmpReg, clasp, &failures);
+    masm.branchTestObjClass(Assembler::NotEqual, object(), tmpReg, obj->getClass(), &failures);
 
     // Get initial ArgsObj length value, test if length has been overridden.
     masm.unboxInt32(Address(object(), ArgumentsObject::getInitialLengthSlotOffset()), tmpReg);
@@ -1901,16 +1898,16 @@ GetPropertyIC::tryAttachArgumentsLength(JSContext* cx, HandleScript outerScript,
     masm.bind(&failures);
     attacher.jumpNextStub(masm);
 
-    if (obj->is<StrictArgumentsObject>()) {
-        MOZ_ASSERT(!hasStrictArgumentsLengthStub_);
-        hasStrictArgumentsLengthStub_ = true;
-        return linkAndAttachStub(cx, masm, attacher, ion, "ArgsObj length (strict)",
+    if (obj->is<UnmappedArgumentsObject>()) {
+        MOZ_ASSERT(!hasUnmappedArgumentsLengthStub_);
+        hasUnmappedArgumentsLengthStub_ = true;
+        return linkAndAttachStub(cx, masm, attacher, ion, "ArgsObj length (unmapped)",
                                  JS::TrackedOutcome::ICGetPropStub_ArgumentsLength);
     }
 
-    MOZ_ASSERT(!hasNormalArgumentsLengthStub_);
-    hasNormalArgumentsLengthStub_ = true;
-    return linkAndAttachStub(cx, masm, attacher, ion, "ArgsObj length (normal)",
+    MOZ_ASSERT(!hasMappedArgumentsLengthStub_);
+    hasMappedArgumentsLengthStub_ = true;
+    return linkAndAttachStub(cx, masm, attacher, ion, "ArgsObj length (mapped)",
                                  JS::TrackedOutcome::ICGetPropStub_ArgumentsLength);
 }
 
@@ -2028,8 +2025,8 @@ GetPropertyIC::reset(ReprotectCode reprotect)
     IonCache::reset(reprotect);
     hasTypedArrayLengthStub_ = false;
     hasSharedTypedArrayLengthStub_ = false;
-    hasStrictArgumentsLengthStub_ = false;
-    hasNormalArgumentsLengthStub_ = false;
+    hasMappedArgumentsLengthStub_ = false;
+    hasUnmappedArgumentsLengthStub_ = false;
     hasGenericProxyStub_ = false;
 }
 
@@ -3931,10 +3928,7 @@ GetElementIC::attachArgumentsElement(JSContext* cx, HandleScript outerScript, Io
     Register tmpReg = output().scratchReg().gpr();
     MOZ_ASSERT(tmpReg != InvalidReg);
 
-    const Class* clasp = obj->is<StrictArgumentsObject>() ? &StrictArgumentsObject::class_
-                                                          : &NormalArgumentsObject::class_;
-
-    masm.branchTestObjClass(Assembler::NotEqual, object(), tmpReg, clasp, &failures);
+    masm.branchTestObjClass(Assembler::NotEqual, object(), tmpReg, obj->getClass(), &failures);
 
     // Get initial ArgsObj length value, test if length has been overridden.
     masm.unboxInt32(Address(object(), ArgumentsObject::getInitialLengthSlotOffset()), tmpReg);
@@ -4016,18 +4010,17 @@ GetElementIC::attachArgumentsElement(JSContext* cx, HandleScript outerScript, Io
     masm.bind(&failures);
     attacher.jumpNextStub(masm);
 
-
-    if (obj->is<StrictArgumentsObject>()) {
-        MOZ_ASSERT(!hasStrictArgumentsStub_);
-        hasStrictArgumentsStub_ = true;
-        return linkAndAttachStub(cx, masm, attacher, ion, "ArgsObj element (strict)",
-                                 JS::TrackedOutcome::ICGetElemStub_ArgsElementStrict);
+    if (obj->is<UnmappedArgumentsObject>()) {
+        MOZ_ASSERT(!hasUnmappedArgumentsStub_);
+        hasUnmappedArgumentsStub_ = true;
+        return linkAndAttachStub(cx, masm, attacher, ion, "ArgsObj element (unmapped)",
+                                 JS::TrackedOutcome::ICGetElemStub_ArgsElementUnmapped);
     }
 
-    MOZ_ASSERT(!hasNormalArgumentsStub_);
-    hasNormalArgumentsStub_ = true;
-    return linkAndAttachStub(cx, masm, attacher, ion, "ArgsObj element (normal)",
-                             JS::TrackedOutcome::ICGetElemStub_ArgsElement);
+    MOZ_ASSERT(!hasMappedArgumentsStub_);
+    hasMappedArgumentsStub_ = true;
+    return linkAndAttachStub(cx, masm, attacher, ion, "ArgsObj element (mapped)",
+                             JS::TrackedOutcome::ICGetElemStub_ArgsElementMapped);
 }
 
 bool
@@ -4058,7 +4051,7 @@ GetElementIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
     bool attachedStub = false;
     if (cache.canAttachStub()) {
         if (IsOptimizableArgumentsObjectForGetElem(obj, idval) &&
-            !cache.hasArgumentsStub(obj->is<StrictArgumentsObject>()) &&
+            !cache.hasArgumentsStub(obj->is<MappedArgumentsObject>()) &&
             (cache.index().hasValue() ||
              cache.index().type() == MIRType_Int32) &&
             (cache.output().hasValue() || !cache.output().typedReg().isFloat()))
@@ -4116,8 +4109,8 @@ GetElementIC::reset(ReprotectCode reprotect)
 {
     IonCache::reset(reprotect);
     hasDenseStub_ = false;
-    hasStrictArgumentsStub_ = false;
-    hasNormalArgumentsStub_ = false;
+    hasMappedArgumentsStub_ = false;
+    hasUnmappedArgumentsStub_ = false;
 }
 
 static bool

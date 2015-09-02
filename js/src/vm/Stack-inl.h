@@ -219,14 +219,14 @@ InterpreterFrame::replaceInnermostScope(ScopeObject& scope)
 bool
 InterpreterFrame::hasCallObj() const
 {
-    MOZ_ASSERT(isStrictEvalFrame() || fun()->isHeavyweight());
+    MOZ_ASSERT(isStrictEvalFrame() || fun()->needsCallObject());
     return flags_ & HAS_CALL_OBJ;
 }
 
 inline CallObject&
 InterpreterFrame::callObj() const
 {
-    MOZ_ASSERT(fun()->isHeavyweight());
+    MOZ_ASSERT(fun()->needsCallObject());
 
     JSObject* pobj = scopeChain();
     while (MOZ_UNLIKELY(!pobj->is<CallObject>()))

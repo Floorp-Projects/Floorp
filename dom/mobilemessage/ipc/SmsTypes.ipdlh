@@ -85,6 +85,7 @@ struct SmsFilterData
   nsString      delivery;
   bool          hasRead;
   bool          read;
+  bool          hasThreadId;
   uint64_t      threadId;
 };
 

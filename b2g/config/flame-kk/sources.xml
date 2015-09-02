@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="e935894ef5f27e2f04b9e929a45a958e6288a223">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="e2fab8f6ac345ecde10a1350e699be9ceb6987d6"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="29f363d6236bf7db8141d7a1f1185a1dcd809bf7"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="e9e2923fd6cab93cf88b4b9ada82225e44fe6635"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -23,7 +23,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="b4f6fd4afd03161f53c7d2a663750f94762bd238"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="e1a50a20b3383e3b0959e5b32ef429425fd6be5b"/>
   <!-- Stock Android things -->
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="95bb5b66b3ec5769c3de8d3f25d681787418e7d2"/>
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="ebdad82e61c16772f6cd47e9f11936bf6ebe9aa0"/>
@@ -109,7 +109,7 @@
   <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="6a1bb59af65b6485b1090522f66fac95c3f9e22c"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="69d524e80cdf3981006627c65ac85f3a871238a3"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="5a48c04c4bb5f079bc757e29864a42427378e051"/>
-  <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="b0f9410d2f7111d2fc9b30e2f7bb14dd89af0259"/>
+  <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="fd241573c00112ca6e456b8021fb68df0349f6dd"/>
   <project name="platform/system/extras" path="system/extras" revision="576f57b6510de59c08568b53c0fb60588be8689e"/>
   <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="34adfb400e031f3dd3353d92413572db5e3a7376"/>
   <project name="platform/system/netd" path="system/netd" revision="a6531f7befb49b1c81bc0de7e51c5482b308e1c5"/>

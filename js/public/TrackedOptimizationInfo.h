@@ -132,8 +132,8 @@ namespace JS {
     _(ICGetElemStub_Dense)                                              \
     _(ICGetElemStub_DenseHole)                                          \
     _(ICGetElemStub_TypedArray)                                         \
-    _(ICGetElemStub_ArgsElement)                                        \
-    _(ICGetElemStub_ArgsElementStrict)                                  \
+    _(ICGetElemStub_ArgsElementMapped)                                  \
+    _(ICGetElemStub_ArgsElementUnmapped)                                \
                                                                         \
     _(ICSetElemStub_Dense)                                              \
     _(ICSetElemStub_TypedArray)                                         \
@@ -150,7 +150,6 @@ namespace JS {
     _(CantInlineClassConstructor)                                       \
     _(CantInlineDisabledIon)                                            \
     _(CantInlineTooManyArgs)                                            \
-    _(CantInlineHeavyweight)                                            \
     _(CantInlineNeedsArgsObj)                                           \
     _(CantInlineDebuggee)                                               \
     _(CantInlineUnknownProps)                                           \

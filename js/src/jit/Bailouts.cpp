@@ -253,7 +253,7 @@ bool
 jit::EnsureHasScopeObjects(JSContext* cx, AbstractFramePtr fp)
 {
     if (fp.isFunctionFrame() &&
-        fp.fun()->isHeavyweight() &&
+        fp.fun()->needsCallObject() &&
         !fp.hasCallObj())
     {
         return fp.initFunctionScopeObjects(cx);

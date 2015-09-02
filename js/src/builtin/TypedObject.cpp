@@ -2247,7 +2247,7 @@ OutlineTransparentTypedObject::getOrCreateBuffer(JSContext* cx)
 #define DEFINE_TYPEDOBJ_CLASS(Name, Trace)        \
     const Class Name::class_ = {                         \
         # Name,                                          \
-        Class::NON_NATIVE | JSCLASS_IMPLEMENTS_BARRIERS, \
+        Class::NON_NATIVE, \
         nullptr,        /* addProperty */                \
         nullptr,        /* delProperty */                \
         nullptr,        /* getProperty */                \
