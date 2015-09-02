@@ -102,8 +102,29 @@
         }
       }
 
-      function handleError(e="Error") {
-        self.postMessage({ id, error: e.message || e });
+      function handleError(error="Error") {
+        try {
+          // First, try and structured clone the error across directly.
+          self.postMessage({ id, error });
+        } catch (_) {
+          // We could not clone whatever error value was given. Do our best to
+          // stringify it.
+          let errorString = `Error while performing task "${task}": `;
+
+          try {
+            errorString += error.toString();
+          } catch (_) {
+            errorString += "<could not stringify error>";
+          }
+
+          if ("stack" in error) {
+            try {
+              errorString += "\n" + error.stack;
+            } catch (_) { }
+          }
+
+          self.postMessage({ id, error: errorString });
+        }
       }
     };
   }
