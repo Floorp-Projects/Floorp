@@ -81,19 +81,20 @@
     </style>
 
     <style name="Widget.GeckoMenuListView" parent="Widget.ListView">
+        <item name="android:listSelector">@drawable/menu_item_action_bar_bg</item>
         <item name="android:divider">@color/divider_light</item>
     </style>
 
     <style name="Widget.MenuItemActionBar">
         <item name="android:padding">8dip</item>
-        <item name="android:background">@drawable/action_bar_button</item>
+        <item name="android:background">@drawable/menu_item_action_bar_bg</item>
         <item name="android:scaleType">fitCenter</item>
         <item name="drawableTintList">@color/action_bar_menu_item_colors</item>"
     </style>
 
     <style name="Widget.MenuItemSecondaryActionBar">
         <item name="android:padding">8dip</item>
-        <item name="android:background">@drawable/action_bar_button</item>
+        <item name="android:background">@drawable/menu_item_action_bar_bg</item>
         <item name="android:scaleType">centerInside</item>
         <item name="drawableTintList">@color/action_bar_secondary_menu_item_colors</item>
     </style>
@@ -103,7 +104,7 @@
     </style>
 
     <style name="Widget.MenuItemDefault">
-        <item name="android:paddingLeft">10dip</item>
+        <item name="android:paddingLeft">15dip</item>
         <item name="android:paddingRight">10dip</item>
         <item name="android:drawablePadding">6dip</item>
         <item name="android:gravity">center_vertical</item>
@@ -205,9 +206,9 @@
         <item name="android:scrollbarStyle">outsideOverlay</item>
         <item name="android:gravity">center</item>
         <item name="android:numColumns">auto_fit</item>
-        <item name="android:columnWidth">@dimen/tablet_tab_panel_column_width</item>
+        <item name="android:columnWidth">@dimen/tab_panel_column_width</item>
         <item name="android:horizontalSpacing">2dp</item>
-        <item name="android:verticalSpacing">@dimen/tablet_tab_panel_grid_vspacing</item>
+        <item name="android:verticalSpacing">@dimen/tab_panel_grid_vspacing</item>
         <item name="android:drawSelectorOnTop">true</item>
         <item name="android:clipToPadding">false</item>
     </style>

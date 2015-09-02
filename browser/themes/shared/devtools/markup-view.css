@@ -15,6 +15,18 @@
   border: 1px solid #CCC;
 }
 
+/* Draw a circle next to nodes that have a pseudo class lock.
+   Center vertically with the 1.4em line height on .tag-line */
+.child.pseudoclass-locked::before {
+  content: "";
+  background: var(--theme-highlight-lightorange);
+  border-radius: 50%;
+  width: .8em;
+  height: .8em;
+  margin-top: .3em;
+  left: 1px;
+  position: absolute;
+}
 
 /* Selected nodes in the tree should have light selected text.
    theme-selected doesn't work in this case since the text is a

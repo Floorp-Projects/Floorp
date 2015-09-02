@@ -360,7 +360,7 @@ function rgbToHsl([r,g,b]) {
   let s;
   let l = (max + min) / 2;
 
-  if(max == min){
+  if (max == min){
     h = s = 0;
   } else {
     let d = max - min;

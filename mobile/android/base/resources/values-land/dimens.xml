@@ -9,5 +9,5 @@
     <dimen name="home_remote_tabs_top_padding">16dp</dimen>
     <dimen name="page_group_height">64dp</dimen>
 
-    <dimen name="tablet_tab_panel_grid_padding">48dp</dimen>
+    <dimen name="tab_panel_grid_padding">48dp</dimen>
 </resources>

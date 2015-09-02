@@ -926,7 +926,7 @@ AnimationsTimeline.prototype = {
     let iterations = createNode({
       parent: el,
       attributes: {
-        "class": "iterations" + (count ? "" : " infinite"),
+        "class": state.type + " iterations" + (count ? "" : " infinite"),
         // Individual iterations are represented by setting the size of the
         // repeating linear-gradient.
         "style": `left:${x}px;
@@ -940,7 +940,8 @@ AnimationsTimeline.prototype = {
       parent: iterations,
       attributes: {
         "class": "name",
-        "title": state.name
+        "title": L10N.getFormatStr("timeline." + state.type + ".nameLabel",
+                                   state.name)
       },
       textContent: state.name
     });
