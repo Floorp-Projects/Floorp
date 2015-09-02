@@ -2902,7 +2902,7 @@ PlacesCreateLivemarkTransaction.prototype = {
 
   doTransaction: function CLTXN_doTransaction()
   {
-    PlacesUtils.livemarks.addLivemark(
+    this._promise = PlacesUtils.livemarks.addLivemark(
       { title: this.item.title
       , feedURI: this.item.feedURI
       , parentId: this.item.parentId
@@ -2921,7 +2921,7 @@ PlacesCreateLivemarkTransaction.prototype = {
   {
     // The getLivemark callback may fail, but it is used just to serialize,
     // so it doesn't matter.
-    PlacesUtils.livemarks.getLivemark({ id: this.item.id })
+    this._promise = PlacesUtils.livemarks.getLivemark({ id: this.item.id })
       .then(null, null).then( () => {
         PlacesUtils.bookmarks.removeItem(this.item.id);
       });
