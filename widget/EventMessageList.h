@@ -80,7 +80,7 @@ NS_EVENT_MESSAGE(eContextMenuFirst,     500)
 NS_EVENT_MESSAGE(eContextMenu,          eContextMenuFirst)
 
 NS_EVENT_MESSAGE(eStreamEventFirst,     1100)
-NS_EVENT_MESSAGE(NS_LOAD,               eStreamEventFirst)
+NS_EVENT_MESSAGE(eLoad,                 eStreamEventFirst)
 NS_EVENT_MESSAGE(eUnload,               eStreamEventFirst + 1)
 NS_EVENT_MESSAGE(eHashChange,           eStreamEventFirst + 2)
 NS_EVENT_MESSAGE(eImageAbort,           eStreamEventFirst + 3)
