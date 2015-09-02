@@ -23,7 +23,7 @@
 
         function PC_REMOTE_SETUP_ICE_HANDLER(test) {
           test.pcRemote.setupIceCandidateHandler(test);
-          if (test.steeplechase) {
+          if (test.testOptions.steeplechase) {
             test.pcRemote.endOfTrickleIce.then(() => {
               send_message({"type": "end_of_trickle_ice"});
             });

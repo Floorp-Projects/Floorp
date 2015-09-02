@@ -23,7 +23,8 @@
   }
 
   function startTest() {
-    SpecialPowers.pushPrefEnv({"set": [["dom.disable_window_move_resize", false]]}, runTest);
+    SpecialPowers.pushPrefEnv({"set": [["dom.disable_window_move_resize", false],
+                                       ["dom.meta-viewport.enabled",      true ]]}, runTest);
   }
   </script>
 </body>

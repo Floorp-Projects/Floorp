@@ -92,6 +92,7 @@ public:
   , mCloseEventWasClean(false)
   , mCloseEventCode(nsIWebSocketChannel::CLOSE_ABNORMAL)
   , mScriptLine(0)
+  , mScriptColumn(0)
   , mInnerWindowID(0)
   , mWorkerPrivate(nullptr)
 #ifdef DEBUG
@@ -121,6 +122,7 @@ public:
             nsTArray<nsString>& aProtocolArray,
             const nsACString& aScriptFile,
             uint32_t aScriptLine,
+            uint32_t aScriptColumn,
             ErrorResult& aRv,
             bool* aConnectionFailed);
 
@@ -197,12 +199,14 @@ public:
 
   // Web Socket owner information:
   // - the script file name, UTF8 encoded.
-  // - source code line number where the Web Socket object was constructed.
+  // - source code line number and column number where the Web Socket object
+  //   was constructed.
   // - the ID of the inner window where the script lives. Note that this may not
   //   be the same as the Web Socket owner window.
   // These attributes are used for error reporting.
   nsCString mScriptFile;
   uint32_t mScriptLine;
+  uint32_t mScriptColumn;
   uint64_t mInnerWindowID;
 
   WorkerPrivate* mWorkerPrivate;
@@ -370,13 +374,14 @@ WebSocketImpl::PrintErrorOnConsole(const char *aBundleURI,
   if (mInnerWindowID) {
     rv = errorObject->InitWithWindowID(message,
                                        NS_ConvertUTF8toUTF16(mScriptFile),
-                                       EmptyString(), mScriptLine, 0,
+                                       EmptyString(), mScriptLine,
+                                       mScriptColumn,
                                        nsIScriptError::errorFlag, "Web Socket",
                                        mInnerWindowID);
   } else {
     rv = errorObject->Init(message,
                            NS_ConvertUTF8toUTF16(mScriptFile),
-                           EmptyString(), mScriptLine, 0,
+                           EmptyString(), mScriptLine, mScriptColumn,
                            nsIScriptError::errorFlag, "Web Socket");
   }
 
@@ -1036,6 +1041,7 @@ public:
   InitRunnable(WebSocketImpl* aImpl, const nsAString& aURL,
                nsTArray<nsString>& aProtocolArray,
                const nsACString& aScriptFile, uint32_t aScriptLine,
+               uint32_t aScriptColumn,
                ErrorResult& aRv, bool* aConnectionFailed)
     : WebSocketMainThreadRunnable(aImpl->mWorkerPrivate)
     , mImpl(aImpl)
@@ -1043,6 +1049,7 @@ public:
     , mProtocolArray(aProtocolArray)
     , mScriptFile(aScriptFile)
     , mScriptLine(aScriptLine)
+    , mScriptColumn(aScriptColumn)
     , mRv(aRv)
     , mConnectionFailed(aConnectionFailed)
   {
@@ -1074,7 +1081,7 @@ protected:
     }
 
     mImpl->Init(jsapi.cx(), principal, mURL, mProtocolArray, mScriptFile,
-                mScriptLine, mRv, mConnectionFailed);
+                mScriptLine, mScriptColumn, mRv, mConnectionFailed);
     return true;
   }
 
@@ -1084,7 +1091,7 @@ protected:
     MOZ_ASSERT(aTopLevelWorkerPrivate && !aTopLevelWorkerPrivate->GetWindow());
 
     mImpl->Init(nullptr, aTopLevelWorkerPrivate->GetPrincipal(), mURL,
-                mProtocolArray, mScriptFile, mScriptLine, mRv,
+                mProtocolArray, mScriptFile, mScriptLine, mScriptColumn, mRv,
                 mConnectionFailed);
     return true;
   }
@@ -1096,6 +1103,7 @@ protected:
   nsTArray<nsString>& mProtocolArray;
   nsCString mScriptFile;
   uint32_t mScriptLine;
+  uint32_t mScriptColumn;
   ErrorResult& mRv;
   bool* mConnectionFailed;
 };
@@ -1217,7 +1225,7 @@ WebSocket::Constructor(const GlobalObject& aGlobal,
 
   if (NS_IsMainThread()) {
     webSocket->mImpl->Init(aGlobal.Context(), principal, aUrl, protocolArray,
-                           EmptyCString(), 0, aRv, &connectionFailed);
+                           EmptyCString(), 0, 0, aRv, &connectionFailed);
   } else {
     // In workers we have to keep the worker alive using a feature in order to
     // dispatch messages correctly.
@@ -1226,15 +1234,16 @@ WebSocket::Constructor(const GlobalObject& aGlobal,
       return nullptr;
     }
 
-    unsigned lineno;
+    unsigned lineno, column;
     JS::AutoFilename file;
-    if (!JS::DescribeScriptedCaller(aGlobal.Context(), &file, &lineno)) {
+    if (!JS::DescribeScriptedCaller(aGlobal.Context(), &file, &lineno,
+                                    &column)) {
       NS_WARNING("Failed to get line number and filename in workers.");
     }
 
     nsRefPtr<InitRunnable> runnable =
       new InitRunnable(webSocket->mImpl, aUrl, protocolArray,
-                       nsAutoCString(file.get()), lineno, aRv,
+                       nsAutoCString(file.get()), lineno, column, aRv,
                        &connectionFailed);
     runnable->Dispatch(aGlobal.Context());
   }
@@ -1395,6 +1404,7 @@ WebSocketImpl::Init(JSContext* aCx,
                     nsTArray<nsString>& aProtocolArray,
                     const nsACString& aScriptFile,
                     uint32_t aScriptLine,
+                    uint32_t aScriptColumn,
                     ErrorResult& aRv,
                     bool* aConnectionFailed)
 {
@@ -1434,14 +1444,16 @@ WebSocketImpl::Init(JSContext* aCx,
   if (mWorkerPrivate) {
     mScriptFile = aScriptFile;
     mScriptLine = aScriptLine;
+    mScriptColumn = aScriptColumn;
   } else {
     MOZ_ASSERT(aCx);
 
-    unsigned lineno;
+    unsigned lineno, column;
     JS::AutoFilename file;
-    if (JS::DescribeScriptedCaller(aCx, &file, &lineno)) {
+    if (JS::DescribeScriptedCaller(aCx, &file, &lineno, &column)) {
       mScriptFile = file.get();
       mScriptLine = lineno;
+      mScriptColumn = column;
     }
   }
 

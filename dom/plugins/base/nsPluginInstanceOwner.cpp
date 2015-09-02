@@ -1706,7 +1706,7 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
   }
   if (eventType.EqualsLiteral("MozPerformDelayedBlur")) {
     if (mShouldBlurOnActivate) {
-      WidgetGUIEvent blurEvent(true, NS_BLUR_CONTENT, nullptr);
+      WidgetGUIEvent blurEvent(true, eBlur, nullptr);
       ProcessEvent(blurEvent);
       mShouldBlurOnActivate = false;
     }
@@ -1749,8 +1749,7 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
   if (dragEvent && mInstance) {
     WidgetEvent* ievent = aEvent->GetInternalNSEvent();
     if (ievent && ievent->mFlags.mIsTrusted &&
-        ievent->mMessage != NS_DRAGDROP_ENTER &&
-        ievent->mMessage != NS_DRAGDROP_OVER) {
+        ievent->mMessage != eDragEnter && ievent->mMessage != eDragOver) {
       aEvent->PreventDefault();
     }
 
@@ -1830,8 +1829,8 @@ CocoaEventTypeForEvent(const WidgetGUIEvent& anEvent, nsIFrame* aObjectFrame)
       return NPCocoaEventKeyDown;
     case eKeyUp:
       return NPCocoaEventKeyUp;
-    case NS_FOCUS_CONTENT:
-    case NS_BLUR_CONTENT:
+    case eFocus:
+    case eBlur:
       return NPCocoaEventFocusChanged;
     case NS_MOUSE_SCROLL:
       return NPCocoaEventScrollWheel;
@@ -1935,9 +1934,9 @@ TranslateToNPCocoaEvent(WidgetGUIEvent* anEvent, nsIFrame* aObjectFrame)
       }
       break;
     }
-    case NS_FOCUS_CONTENT:
-    case NS_BLUR_CONTENT:
-      cocoaEvent.data.focus.hasFocus = (anEvent->mMessage == NS_FOCUS_CONTENT);
+    case eFocus:
+    case eBlur:
+      cocoaEvent.data.focus.hasFocus = (anEvent->mMessage == eFocus);
       break;
     default:
       break;
@@ -1975,8 +1974,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
   // focus unless it lost focus within the window. For example, ignore a blur
   // event if it's coming due to the plugin's window deactivating.
   nsCOMPtr<nsIContent> content = do_QueryReferent(mContent);
-  if (anEvent.mMessage == NS_BLUR_CONTENT &&
-      ContentIsFocusedWithinWindow(content)) {
+  if (anEvent.mMessage == eBlur && ContentIsFocusedWithinWindow(content)) {
     mShouldBlurOnActivate = true;
     return nsEventStatus_eIgnore;
   }
@@ -1985,8 +1983,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
   // it focus. This might happen if it has focus, its window is blurred, then the
   // window is made active again. The plugin never lost in-window focus, so it
   // shouldn't get a focus event again.
-  if (anEvent.mMessage == NS_FOCUS_CONTENT &&
-      mLastContentFocused == true) {
+  if (anEvent.mMessage == eFocus && mLastContentFocused == true) {
     mShouldBlurOnActivate = false;
     return nsEventStatus_eIgnore;
   }
@@ -1994,9 +1991,8 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
   // Now, if we're going to send a focus event, update mLastContentFocused and
   // tell any plugins in our window that we have taken focus, so they should
   // perform any delayed blurs.
-  if (anEvent.mMessage == NS_FOCUS_CONTENT ||
-      anEvent.mMessage == NS_BLUR_CONTENT) {
-    mLastContentFocused = (anEvent.mMessage == NS_FOCUS_CONTENT);
+  if (anEvent.mMessage == eFocus || anEvent.mMessage == eBlur) {
+    mLastContentFocused = (anEvent.mMessage == eFocus);
     mShouldBlurOnActivate = false;
     PerformDelayedBlurs();
   }
@@ -2123,13 +2119,13 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
   }
   else if (!pPluginEvent) {
     switch (anEvent.mMessage) {
-      case NS_FOCUS_CONTENT:
+      case eFocus:
         pluginEvent.event = WM_SETFOCUS;
         pluginEvent.wParam = 0;
         pluginEvent.lParam = 0;
         pPluginEvent = &pluginEvent;
         break;
-      case NS_BLUR_CONTENT:
+      case eBlur:
         pluginEvent.event = WM_KILLFOCUS;
         pluginEvent.wParam = 0;
         pluginEvent.lParam = 0;
@@ -2322,12 +2318,11 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
 
     default:
       switch (anEvent.mMessage) {
-        case NS_FOCUS_CONTENT:
-        case NS_BLUR_CONTENT:
+        case eFocus:
+        case eBlur:
           {
             XFocusChangeEvent &event = pluginEvent.xfocus;
-            event.type =
-              anEvent.mMessage == NS_FOCUS_CONTENT ? FocusIn : FocusOut;
+            event.type = anEvent.mMessage == eFocus ? FocusIn : FocusOut;
             // information lost:
             event.mode = -1;
             event.detail = NotifyDetailNone;
