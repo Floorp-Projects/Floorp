@@ -2852,7 +2852,7 @@ Element::CheckHandleEventForLinksPrecondition(EventChainVisitor& aVisitor,
       (!aVisitor.mEvent->mFlags.mIsTrusted &&
        (aVisitor.mEvent->mMessage != eMouseClick) &&
        (aVisitor.mEvent->mMessage != eKeyPress) &&
-       (aVisitor.mEvent->mMessage != NS_UI_ACTIVATE)) ||
+       (aVisitor.mEvent->mMessage != eLegacyDOMActivate)) ||
       !aVisitor.mPresContext ||
       aVisitor.mEvent->mFlags.mMultipleActionsPrevented) {
     return false;
@@ -2869,9 +2869,9 @@ Element::PreHandleEventForLinks(EventChainPreVisitor& aVisitor)
   // IMPORTANT: this switch and the switch below it must be kept in sync!
   switch (aVisitor.mEvent->mMessage) {
   case eMouseOver:
-  case NS_FOCUS_CONTENT:
+  case eFocus:
   case eMouseOut:
-  case NS_BLUR_CONTENT:
+  case eBlur:
     break;
   default:
     return NS_OK;
@@ -2892,7 +2892,7 @@ Element::PreHandleEventForLinks(EventChainPreVisitor& aVisitor)
   case eMouseOver:
     aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
     // FALL THROUGH
-  case NS_FOCUS_CONTENT: {
+  case eFocus: {
     InternalFocusEvent* focusEvent = aVisitor.mEvent->AsFocusEvent();
     if (!focusEvent || !focusEvent->isRefocus) {
       nsAutoString target;
@@ -2907,7 +2907,7 @@ Element::PreHandleEventForLinks(EventChainPreVisitor& aVisitor)
   case eMouseOut:
     aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
     // FALL THROUGH
-  case NS_BLUR_CONTENT:
+  case eBlur:
     rv = LeaveLink(aVisitor.mPresContext);
     if (NS_SUCCEEDED(rv)) {
       aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
@@ -2931,7 +2931,7 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
   switch (aVisitor.mEvent->mMessage) {
   case eMouseDown:
   case eMouseClick:
-  case NS_UI_ACTIVATE:
+  case eLegacyDOMActivate:
   case eKeyPress:
     break;
   default:
@@ -2985,7 +2985,7 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
         nsEventStatus status = nsEventStatus_eIgnore;
         // DOMActive event should be trusted since the activation is actually
         // occurred even if the cause is an untrusted click event.
-        InternalUIEvent actEvent(true, NS_UI_ACTIVATE, mouseEvent);
+        InternalUIEvent actEvent(true, eLegacyDOMActivate, mouseEvent);
         actEvent.detail = 1;
 
         rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
@@ -2996,7 +2996,7 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
     }
     break;
   }
-  case NS_UI_ACTIVATE:
+  case eLegacyDOMActivate:
     {
       if (aVisitor.mEvent->originalTarget == this) {
         nsAutoString target;

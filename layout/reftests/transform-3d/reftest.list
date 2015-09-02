@@ -57,6 +57,7 @@ pref(layout.css.will-change.enabled,true) != willchange-containing-block.html?wi
 fuzzy-if(winWidget&&!layersGPUAccelerated,1,606) == scroll-perspective-1.html scroll-perspective-1-ref.html
 # Bugs
 fails-if(!layersGPUAccelerated) == 1035611-1.html 1035611-1-ref.html # Bug 1072898 for !layersGPUAccelerated failures
+!= 1157984-1.html about:blank # Bug 1157984
 fuzzy(3,99) == animate-cube-radians.html animate-cube-radians-ref.html # subpixel AA
 fuzzy(3,99) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated,16,6) fuzzy-if(Mulet,16,9) == animate-cube-radians-zoom.html animate-cube-radians-zoom-ref.html
 != animate-cube-radians-ref.html animate-cube-radians-zoom-ref.html

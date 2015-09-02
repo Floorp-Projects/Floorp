@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>oop-test apps</title>
+  <script type="application/javascript">
+    "use strict";
+
+    var queryString = decodeURIComponent(window.location.hash.substring(1));
+
+    // test-target-app
+    var APP_URL = "http://example.org";
+    var APP_MANIFEST = "http://example.org/manifest.webapp";
+    var APP_IFRAME_ID = "test-target";
+
+    function removeAppFrame(){
+      var ifr = document.getElementById(APP_IFRAME_ID);
+      ifr.remove();
+    }
+
+    function allocateAppFrame(source, manifestURL, useRemote) {
+      var ifr = document.createElement('iframe');
+      ifr.setAttribute('id', APP_IFRAME_ID);
+      ifr.setAttribute('remote', useRemote? "true" : "false");
+      ifr.setAttribute('mozbrowser', 'true');
+      ifr.setAttribute('mozapp', manifestURL);
+      ifr.setAttribute('src', source);
+
+      ifr.addEventListener('mozbrowserloadend', function () {
+        if (queryString == "crash") {
+          // Send a crash request to parent-process
+          sendMessgeToParent('crash');
+        } else {
+          removeAppFrame();
+        }
+      });
+
+      document.body.appendChild(ifr);
+    }
+
+    function sendMessgeToParent(msg) {
+      window.alert(msg);
+    }
+  </script>
+</head>
+<body>
+  <script>
+    allocateAppFrame(APP_URL, APP_MANIFEST, true);
+  </script>
+</body>
+</html>

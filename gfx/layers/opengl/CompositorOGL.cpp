@@ -987,7 +987,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
 
   // XXX: This doesn't handle 3D transforms. It also doesn't handled rotated
   //      quads. Fix me.
-  Rect destRect = aTransform.TransformBounds(aRect);
+  Rect destRect = aTransform.TransformAndClipBounds(aRect, aClipRect);
   mPixelsFilled += destRect.width * destRect.height;
 
   IntPoint offset = mCurrentRenderTarget->GetOrigin();

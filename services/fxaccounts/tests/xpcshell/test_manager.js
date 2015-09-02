@@ -396,6 +396,7 @@ add_test(function() {
       do_throw("Unexpected success");
     },
     error => {
+      do_check_eq(error.error, ERROR_OFFLINE);
       FxAccountsManager._fxAccounts._reset();
       Services.io.offline = false;
       certExpired = false;

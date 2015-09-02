@@ -3332,7 +3332,7 @@ nsWindow::DispatchDragEvent(EventMessage aMsg, const nsIntPoint& aRefPoint,
 {
     WidgetDragEvent event(true, aMsg, this);
 
-    if (aMsg == NS_DRAGDROP_OVER) {
+    if (aMsg == eDragOver) {
         InitDragEvent(event);
     }
 
