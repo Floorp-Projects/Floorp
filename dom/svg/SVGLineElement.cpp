@@ -148,33 +148,27 @@ SVGLineElement::BuildPath(PathBuilder* aBuilder)
 }
 
 bool
-SVGLineElement::GetGeometryBounds(Rect* aBounds,
-                                  const StrokeOptions& aStrokeOptions,
-                                  const Matrix& aToBoundsSpace,
-                                  const Matrix* aToNonScalingStrokeSpace)
+SVGLineElement::GetGeometryBounds(
+  Rect* aBounds, const StrokeOptions& aStrokeOptions, const Matrix& aTransform)
 {
-  if (aToNonScalingStrokeSpace) {
-    return false;
-  }
-
   float x1, y1, x2, y2;
   GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nullptr);
 
   if (aStrokeOptions.mLineWidth <= 0) {
-    *aBounds = Rect(aToBoundsSpace * Point(x1, y1), Size());
-    aBounds->ExpandToEnclose(aToBoundsSpace * Point(x2, y2));
+    *aBounds = Rect(aTransform * Point(x1, y1), Size());
+    aBounds->ExpandToEnclose(aTransform * Point(x2, y2));
     return true;
   }
 
   if (aStrokeOptions.mLineCap == CapStyle::ROUND) {
-    if (!aToBoundsSpace.IsRectilinear()) {
+    if (!aTransform.IsRectilinear()) {
       // TODO: handle this case.
       return false;
     }
     Rect bounds(Point(x1, y1), Size());
     bounds.ExpandToEnclose(Point(x2, y2));
     bounds.Inflate(aStrokeOptions.mLineWidth / 2.f);
-    *aBounds = aToBoundsSpace.TransformBounds(bounds);
+    *aBounds = aTransform.TransformBounds(bounds);
     return true;
   }
 
@@ -207,9 +201,9 @@ SVGLineElement::GetGeometryBounds(Rect* aBounds,
   points[2] = Point(x2 + xDelta, y2 + yDelta);
   points[3] = Point(x2 - xDelta, y2 - yDelta);
 
-  *aBounds = Rect(aToBoundsSpace * points[0], Size());
+  *aBounds = Rect(aTransform * points[0], Size());
   for (uint32_t i = 1; i < 4; ++i) {
-    aBounds->ExpandToEnclose(aToBoundsSpace * points[i]);
+    aBounds->ExpandToEnclose(aTransform * points[i]);
   }
   return true;
 }

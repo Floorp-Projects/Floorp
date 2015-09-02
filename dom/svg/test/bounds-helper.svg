@@ -39,13 +39,5 @@ text { font: 20px monospace; }
     <rect x="100" y="100" width="50" height="50" fill="pink"/>
     <text x="200" y="200"/>
   </g>
-  <circle id="nonScalingStrokedCircle1" cx="0" cy="0" r="10"
-          transform="translate(45 130) scale(3 -2)"
-          fill="none" stroke="gray" stroke-width="10"
-          vector-effect="non-scaling-stroke"/>
-  <ellipse id="nonScalingStrokedEllipse1" cx="20" cy="-10" rx="5" ry="5"
-           transform="matrix(0 3 -2 0 0 0)"
-           fill="none" stroke="steelblue" stroke-width="10"
-           vector-effect="non-scaling-stroke" />
 </g>
 </svg>

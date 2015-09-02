@@ -470,36 +470,25 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
                    ((aFlags & nsSVGUtils::eBBoxIncludeStroke) &&
                     nsSVGUtils::HasStroke(this));
 
-  SVGContentUtils::AutoStrokeOptions strokeOptions;
-  if (getStroke) {
-    SVGContentUtils::GetStrokeOptions(&strokeOptions, element,
-                                      StyleContext(), nullptr,
-                                      SVGContentUtils::eIgnoreStrokeDashing);
-  } else {
-    // Override the default line width of 1.f so that when we call
-    // GetGeometryBounds below the result doesn't include stroke bounds.
-    strokeOptions.mLineWidth = 0.f;
-  }
-
-  Rect simpleBounds;
   bool gotSimpleBounds = false;
-  gfxMatrix userToOuterSVG;
-  if (getStroke &&
-      nsSVGUtils::GetNonScalingStrokeTransform(this, &userToOuterSVG)) {
-    Matrix moz2dUserToOuterSVG = ToMatrix(userToOuterSVG);
-    gotSimpleBounds = element->GetGeometryBounds(&simpleBounds,
-                                                 strokeOptions,
-                                                 aToBBoxUserspace,
-                                                 &moz2dUserToOuterSVG);
-  } else {
+  if (!StyleSVGReset()->HasNonScalingStroke()) {
+    SVGContentUtils::AutoStrokeOptions strokeOptions;
+    strokeOptions.mLineWidth = 0.f;
+    if (getStroke) {
+      SVGContentUtils::GetStrokeOptions(&strokeOptions, element,
+        StyleContext(), nullptr,
+        SVGContentUtils::eIgnoreStrokeDashing);
+    }
+    Rect simpleBounds;
     gotSimpleBounds = element->GetGeometryBounds(&simpleBounds,
                                                  strokeOptions,
                                                  aToBBoxUserspace);
+    if (gotSimpleBounds) {
+      bbox = simpleBounds;
+    }
   }
 
-  if (gotSimpleBounds) {
-    bbox = simpleBounds;
-  } else {
+  if (!gotSimpleBounds) {
     // Get the bounds using a Moz2D Path object (more expensive):
     RefPtr<DrawTarget> tmpDT;
 #ifdef XP_WIN
