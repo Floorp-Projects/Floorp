@@ -313,7 +313,8 @@ private:
   void
   LogWarning(const char* aMessageName,
              const nsAString& aFilename,
-             uint32_t aLineNumber);
+             uint32_t aLineNumber,
+             uint32_t aColumnNumber);
 };
 
 } // namespace indexedDB
