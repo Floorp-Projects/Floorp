@@ -67,7 +67,7 @@ class ClonedMessageData;
 class nsIContentParent;
 class Element;
 class DataTransfer;
-struct StructuredCloneData;
+class StructuredCloneIPCHelper;
 
 class TabParent final : public PBrowserParent
                       , public nsIDOMEventListener
@@ -443,7 +443,7 @@ public:
 protected:
     bool ReceiveMessage(const nsString& aMessage,
                         bool aSync,
-                        const StructuredCloneData* aCloneData,
+                        StructuredCloneIPCHelper* aHelper,
                         mozilla::jsipc::CpowHolder* aCpows,
                         nsIPrincipal* aPrincipal,
                         nsTArray<OwningSerializedStructuredCloneBuffer>* aJSONRetVal = nullptr);

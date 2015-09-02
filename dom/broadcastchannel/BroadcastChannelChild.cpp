@@ -88,7 +88,8 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
   JSContext* cx = jsapi.cx();
   const SerializedStructuredCloneBuffer& buffer = aData.data();
   StructuredCloneHelper cloneHelper(StructuredCloneHelper::CloningSupported,
-                                    StructuredCloneHelper::TransferringNotSupported);
+                                    StructuredCloneHelper::TransferringNotSupported,
+                                    StructuredCloneHelper::DifferentProcess);
 
   cloneHelper.BlobImpls().AppendElements(blobs);
 

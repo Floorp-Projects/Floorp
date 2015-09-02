@@ -31,7 +31,8 @@ NS_INTERFACE_MAP_BEGIN(nsStructuredCloneContainer)
 NS_INTERFACE_MAP_END
 
 nsStructuredCloneContainer::nsStructuredCloneContainer()
-  : StructuredCloneHelper(CloningSupported, TransferringNotSupported)
+  : StructuredCloneHelper(CloningSupported, TransferringNotSupported,
+                          DifferentProcess)
   , mState(eNotInitialized) , mData(nullptr), mSize(0), mVersion(0)
 {
 }
@@ -52,7 +53,7 @@ nsStructuredCloneContainer::InitFromJSVal(JS::Handle<JS::Value> aData,
   }
 
   ErrorResult rv;
-  Write(aCx, aData, true, rv);
+  Write(aCx, aData, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
