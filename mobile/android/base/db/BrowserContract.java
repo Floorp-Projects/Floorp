@@ -475,6 +475,7 @@ public class BrowserContract {
 
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/searchhistory";
         public static final String QUERY = "query";
+        public static final String DATE = "date";
         public static final String TABLE_NAME = "searchhistory";
 
         public static final Uri CONTENT_URI = Uri.withAppendedPath(SEARCH_HISTORY_AUTHORITY_URI, "searchhistory");

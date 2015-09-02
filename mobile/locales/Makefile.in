@@ -44,17 +44,6 @@ search-jar-default: search-jar
 
 
 ###########################################################################
-bookmarks     = bookmarks.json
-bookmarks-ts  = $(tgt-gendir)/$(bookmarks)
-src-bookmarks = $(srcdir)/generic/profile/$(bookmarks).in
-
-GARBAGE += $(bookmarks) $(bookmarks-ts)
-# ---------------------------------------------------------------------------
-# Note: Always symlink bookmarks.json to pickup the current build for a
-#       locale.  Phase 2 edits should remove the common/symlink file and
-#       provide a user function able to derive the path.
-###########################################################################
-
 ## Searchlist plugin config
 plugin-file-array = \
   $(wildcard $(LOCALE_SRCDIR)/searchplugins/list.txt) \
@@ -144,7 +133,6 @@ libs-%: $(libs-preqs)
 	$(display-deps)
 	@$(MAKE) -C $(DEPTH)/toolkit/locales libs-$*
 	@$(MAKE) -C $(DEPTH)/intl/locales AB_CD=$* XPI_NAME=locale-$*
-	@$(MAKE) -B $(bookmarks) AB_CD=$*
 	@$(MAKE) -B searchplugins AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
@@ -152,7 +140,6 @@ libs-%: $(libs-preqs)
 # Tailored target to just add the chrome processing for multi-locale builds
 chrome-%:
 	$(display-deps)
-	@$(MAKE) -B $(bookmarks) AB_CD=$*
 	@$(MAKE) -B searchplugins AB_CD=$*
 	@$(MAKE) chrome AB_CD=$*
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales chrome AB_CD=$*
@@ -160,37 +147,4 @@ chrome-%:
 NO_JA_JP_MAC_AB_CD := $(if $(filter ja-JP-mac, $(AB_CD)),ja,$(AB_CD))
 
 
-# emulate vpath to gather deps with a path
-has-mergedir = $(if $(strip $(LOCALE_MERGEDIR)),1)
-bookmarks-inc-array = \
-  $(wildcard \
-    $(if $(has_mergedir),$(LOCALE_MERGEDIR)/mobile/profile/bookmarks.inc) \
-    $(LOCALE_SRCDIR)/profile/bookmarks.inc \
-    $(if $(has-mergedir),$(srcdir)/en-US/profile/bookmarks.inc) \
-  )
-bookmarks-inc = $(firstword $(bookmarks-inc-array))
-
-bookmarks-preqs = \
-  $(bookmarks-inc) \
-  $(src-bookmarks) \
-  generic/profile/$(bookmarks).in \
-  $(if $(IS_LANGUAGE_REPACK),FORCE) \
-  $(GLOBAL_DEPS) \
-  $(NULL)
-
-$(bookmarks-ts): $(bookmarks-preqs)
-	$(display_deps)
-	$(call py_action,preprocessor, \
-      -I $< \
-      -DAB_CD=$(NO_JA_JP_MAC_AB_CD) \
-      $(src-bookmarks) \
-      -o $@)
-
-.PHONY: bookmarks $(bookmarks)
-bookmarks: $(bookmarks)
-$(bookmarks): $(bookmarks-ts)
-	@echo '\nGenerating: $@'
-	ln -fn $< .
-
-
-export:: searchplugins bookmarks
+export:: searchplugins
