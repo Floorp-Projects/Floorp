@@ -858,7 +858,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
           abuse = openControlled;
         }
         break;
-      case NS_FORM_RESET :
+      case eFormReset:
         if (PopupAllowedForEvent("reset")) {
           abuse = openControlled;
         }
