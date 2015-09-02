@@ -3709,22 +3709,7 @@ public:
       nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(httpChannel);
       NS_ENSURE_TRUE(internalChannel, NS_ERROR_NOT_AVAILABLE);
 
-      uint32_t corsMode;
-      internalChannel->GetCorsMode(&corsMode);
-      switch (corsMode) {
-        case nsIHttpChannelInternal::CORS_MODE_SAME_ORIGIN:
-          mRequestMode = RequestMode::Same_origin;
-          break;
-        case nsIHttpChannelInternal::CORS_MODE_NO_CORS:
-          mRequestMode = RequestMode::No_cors;
-          break;
-        case nsIHttpChannelInternal::CORS_MODE_CORS:
-        case nsIHttpChannelInternal::CORS_MODE_CORS_WITH_FORCED_PREFLIGHT:
-          mRequestMode = RequestMode::Cors;
-          break;
-        default:
-          MOZ_CRASH("Unexpected CORS mode");
-      }
+      mRequestMode = InternalRequest::MapChannelToRequestMode(channel);
 
       // This is safe due to static_asserts at top of file.
       uint32_t redirectMode;
@@ -3756,6 +3741,8 @@ public:
       NS_ENSURE_TRUE(jarChannel, NS_ERROR_NOT_AVAILABLE);
 
       mMethod = "GET";
+
+      mRequestMode = InternalRequest::MapChannelToRequestMode(channel);
 
       if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
         mRequestCredentials = RequestCredentials::Omit;

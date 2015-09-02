@@ -27,7 +27,8 @@ __wptrunner__ = {"product": "firefox",
                               "reftest": "MarionetteRefTestExecutor"},
                  "browser_kwargs": "browser_kwargs",
                  "executor_kwargs": "executor_kwargs",
-                 "env_options": "env_options"}
+                 "env_options": "env_options",
+                 "run_info_extras": "run_info_extras"}
 
 
 def check_args(**kwargs):
@@ -64,6 +65,8 @@ def env_options():
             "certificate_domain": "web-platform.test",
             "supports_debugger": True}
 
+def run_info_extras(**kwargs):
+    return {"e10s": kwargs["gecko_e10s"]}
 
 class FirefoxBrowser(Browser):
     used_ports = set()

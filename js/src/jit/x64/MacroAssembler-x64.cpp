@@ -308,15 +308,6 @@ MacroAssemblerX64::storeUnboxedValue(ConstantOrRegister value, MIRType valueType
                                      MIRType slotType);
 
 void
-MacroAssemblerX64::callWithExitFrame(JitCode* target, Register dynStack)
-{
-    addPtr(Imm32(asMasm().framePushed()), dynStack);
-    makeFrameDescriptor(dynStack, JitFrame_IonJS);
-    asMasm().Push(dynStack);
-    asMasm().call(target);
-}
-
-void
 MacroAssemblerX64::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label)
 {
     ScratchRegisterScope scratch(asMasm());

@@ -1865,31 +1865,6 @@ MacroAssemblerARM::ma_vstr(VFPRegister src, Register base, Register index, int32
     return ma_vstr(src, Address(scratch, offset), cc);
 }
 
-void
-MacroAssemblerARMCompat::buildFakeExitFrame(Register scratch, uint32_t* offset)
-{
-    DebugOnly<uint32_t> initialDepth = asMasm().framePushed();
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-
-    asMasm().Push(Imm32(descriptor)); // descriptor_
-
-    enterNoPool(2);
-    DebugOnly<uint32_t> offsetBeforePush = currentOffset();
-    asMasm().Push(pc); // actually pushes $pc + 8.
-
-    // Consume an additional 4 bytes. The start of the next instruction will
-    // then be 8 bytes after the instruction for Push(pc); this offset can
-    // therefore be fed to the safepoint.
-    ma_nop();
-    uint32_t pseudoReturnOffset = currentOffset();
-    leaveNoPool();
-
-    MOZ_ASSERT(asMasm().framePushed() == initialDepth + ExitFrameLayout::Size());
-    MOZ_ASSERT(pseudoReturnOffset - offsetBeforePush == 8);
-
-    *offset = pseudoReturnOffset;
-}
-
 bool
 MacroAssemblerARMCompat::buildOOLFakeExitFrame(void* fakeReturnAddr)
 {
@@ -1900,59 +1875,6 @@ MacroAssemblerARMCompat::buildOOLFakeExitFrame(void* fakeReturnAddr)
     asMasm().Push(ImmPtr(fakeReturnAddr));
 
     return true;
-}
-
-void
-MacroAssemblerARMCompat::callWithExitFrame(Label* target)
-{
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor)); // descriptor
-
-    ma_callJitHalfPush(target);
-}
-
-void
-MacroAssemblerARMCompat::callWithExitFrame(JitCode* target)
-{
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor)); // descriptor
-
-    addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
-    RelocStyle rs;
-    if (HasMOVWT())
-        rs = L_MOVWT;
-    else
-        rs = L_LDR;
-
-    ScratchRegisterScope scratch(asMasm());
-    ma_movPatchable(ImmPtr(target->raw()), scratch, Always, rs);
-    ma_callJitHalfPush(scratch);
-}
-
-void
-MacroAssemblerARMCompat::callWithExitFrame(JitCode* target, Register dynStack)
-{
-    ma_add(Imm32(asMasm().framePushed()), dynStack);
-    makeFrameDescriptor(dynStack, JitFrame_IonJS);
-    asMasm().Push(dynStack); // descriptor
-
-    addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
-    RelocStyle rs;
-    if (HasMOVWT())
-        rs = L_MOVWT;
-    else
-        rs = L_LDR;
-
-    ScratchRegisterScope scratch(asMasm());
-    ma_movPatchable(ImmPtr(target->raw()), scratch, Always, rs);
-    ma_callJitHalfPush(scratch);
-}
-
-void
-MacroAssemblerARMCompat::callJit(Register callee)
-{
-    MOZ_ASSERT((asMasm().framePushed() & 7) == 4);
-    ma_callJitHalfPush(callee);
 }
 
 void
@@ -3808,36 +3730,6 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, const BaseIndex& dest)
     ma_sub(base, Imm32(NUNBOX32_TYPE_OFFSET + dest.offset), base);
 }
 
-// ARM says that all reads of pc will return 8 higher than the address of the
-// currently executing instruction. This means we are correctly storing the
-// address of the instruction after the call in the register.
-//
-// Also ION is breaking the ARM EABI here (sort of). The ARM EABI says that a
-// function call should move the pc into the link register, then branch to the
-// function, and *sp is data that is owned by the caller, not the callee. The
-// ION ABI says *sp should be the address that we will return to when leaving
-// this function.
-void
-MacroAssemblerARM::ma_callJitHalfPush(const Register r)
-{
-    // The stack is unaligned by 4 bytes. We push the pc to the stack to align
-    // the stack before the call, when we return the pc is poped and the stack
-    // is restored to its unaligned state.
-    as_blx(r);
-}
-
-void
-MacroAssemblerARM::ma_callJitHalfPush(Label* label)
-{
-    // The stack is unaligned by 4 bytes. The callee will push the lr to the stack to align
-    // the stack after the call, when we return the pc is poped and the stack
-    // is restored to its unaligned state.
-
-    // leave the stack as-is so the callee-side can push when necessary.
-
-    as_bl(label, Always);
-}
-
 void
 MacroAssemblerARM::ma_call(ImmPtr dest)
 {
@@ -4964,14 +4856,6 @@ MacroAssemblerARMCompat::profilerExitFrame()
     branch(GetJitContext()->runtime->jitRuntime()->getProfilerExitFrameTail());
 }
 
-void
-MacroAssemblerARMCompat::callAndPushReturnAddress(Label* label)
-{
-    AutoForbidPools afp(this, 2);
-    ma_push(pc);
-    asMasm().call(label);
-}
-
 MacroAssembler&
 MacroAssemblerARM::asMasm()
 {
@@ -5186,9 +5070,14 @@ MacroAssembler::call(JitCode* c)
 
     ScratchRegisterScope scratch(*this);
     ma_movPatchable(ImmPtr(c->raw()), scratch, Always, rs);
-    ma_callJitHalfPush(scratch);
+    callJitNoProfiler(scratch);
 }
 
+void
+MacroAssembler::pushReturnAddress()
+{
+    push(lr);
+}
 
 // ===============================================================
 // ABI function calls.
@@ -5305,6 +5194,30 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
     callWithABIPre(&stackAdjust);
     call(r12);
     callWithABIPost(stackAdjust, result);
+}
+
+// ===============================================================
+// Jit Frames.
+
+uint32_t
+MacroAssembler::pushFakeReturnAddress(Register scratch)
+{
+    // On ARM any references to the pc, adds an additional 8 to it, which
+    // correspond to 2 instructions of 4 bytes.  Thus we use an additional nop
+    // to pad until we reach the pushed pc.
+    //
+    // Note: In practice this should not be necessary, as this fake return
+    // address is never used for resuming any execution. Thus theoriticaly we
+    // could just do a Push(pc), and ignore the nop as well as the pool.
+    enterNoPool(2);
+    DebugOnly<uint32_t> offsetBeforePush = currentOffset();
+    Push(pc); // actually pushes $pc + 8.
+    ma_nop();
+    uint32_t pseudoReturnOffset = currentOffset();
+    leaveNoPool();
+
+    MOZ_ASSERT(pseudoReturnOffset - offsetBeforePush == 8);
+    return pseudoReturnOffset;
 }
 
 //}}} check_macroassembler_style

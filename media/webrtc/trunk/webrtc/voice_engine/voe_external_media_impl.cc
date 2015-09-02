@@ -214,7 +214,10 @@ int VoEExternalMediaImpl::ExternalRecordingInsertData(
     }
 
     uint16_t blockSize = samplingFreqHz / 100;
-    uint32_t nBlocks = lengthSamples / blockSize;
+    // We know the number of samples for 10ms of audio, so we can derive the
+    // number of channels here:
+    uint32_t channels = lengthSamples * 100 / samplingFreqHz;
+    uint32_t nBlocks = lengthSamples / blockSize / channels;
     int16_t totalDelayMS = 0;
     uint16_t playoutDelayMS = 0;
 
@@ -242,7 +245,7 @@ int VoEExternalMediaImpl::ExternalRecordingInsertData(
         shared_->transmit_mixer()->PrepareDemux(
             (const int8_t*)(&speechData10ms[i*blockSize]),
             blockSize,
-            1,
+            channels,
             samplingFreqHz,
             totalDelayMS,
             0,
@@ -380,16 +383,23 @@ int VoEExternalMediaImpl::ExternalPlayoutGetData(
 
     AudioFrame audioFrame;
 
+    uint32_t channels = shared_->output_mixer()->GetOutputChannelCount();
+    // If we have not received any data yet, consider it's mono since it's the
+    // most common case.
+    if (channels == 0) {
+      channels = 1;
+    }
+
     // Retrieve mixed output at the specified rate
     shared_->output_mixer()->MixActiveChannels();
     shared_->output_mixer()->DoOperationsOnCombinedSignal(true);
-    shared_->output_mixer()->GetMixedAudio(samplingFreqHz, 1, &audioFrame);
+    shared_->output_mixer()->GetMixedAudio(samplingFreqHz, channels, &audioFrame);
 
     // Deliver audio (PCM) samples to the external sink
     memcpy(speechData10ms,
            audioFrame.data_,
-           sizeof(int16_t)*(audioFrame.samples_per_channel_));
-    lengthSamples = audioFrame.samples_per_channel_;
+           sizeof(int16_t)*audioFrame.samples_per_channel_*channels);
+    lengthSamples = audioFrame.samples_per_channel_ * channels;
 
     // Store current playout delay (to be used by ExternalRecordingInsertData).
     playout_delay_ms_ = current_delay_ms;

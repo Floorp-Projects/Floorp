@@ -60,6 +60,7 @@ class TalosRunner(MozbuildObject):
 
     def make_config(self):
         self.config = {
+            'run_local': True,
             'talos_json': self.talos_json,
             'binary_path': self.binary_path,
             'log_name': 'talos',

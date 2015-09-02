@@ -5454,23 +5454,30 @@
         // to get a full-resolution drag image for use on HiDPI displays.
         let windowUtils = window.getInterface(Ci.nsIDOMWindowUtils);
         let scale = windowUtils.screenPixelsPerCSSPixel / windowUtils.fullZoom;
-        let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+        let canvas = this._dndCanvas ? this._dndCanvas
+                                     : document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
         canvas.mozOpaque = true;
         canvas.width = 160 * scale;
         canvas.height = 90 * scale;
         let toDrag;
         if (gMultiProcessBrowser) {
+          var context = canvas.getContext('2d');
+          context.fillStyle = "white";
+          context.fillRect(0, 0, canvas.width, canvas.height);
           // Create a panel to use it in setDragImage
           // which will tell xul to render a panel that follows
           // the pointer while a dnd session is on.
-          var panel = document.createElement("panel");
-          panel.setAttribute("type", "drag");
-          panel.appendChild(canvas);
-          document.documentElement.appendChild(panel);
+          if (!this._dndPanel) {
+            this._dndCanvas = canvas;
+            this._dndPanel = document.createElement("panel");
+            this._dndPanel.setAttribute("type", "drag");
+            this._dndPanel.appendChild(canvas);
+            document.documentElement.appendChild(this._dndPanel);
+          }
           // PageThumb is async with e10s but that's fine
           // since we can update the panel during the dnd.
           PageThumbs.captureToCanvas(browser, canvas);
-          toDrag = panel;
+          toDrag = this._dndPanel;
         } else {
           // For the non e10s case we can just use PageThumbs
           // sync. No need for xul magic, the native dnd will

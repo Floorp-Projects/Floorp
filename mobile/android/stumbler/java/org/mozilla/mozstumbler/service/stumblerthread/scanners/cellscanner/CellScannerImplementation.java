@@ -85,7 +85,7 @@ public class CellScannerImplementation implements CellScanner.CellScannerImpl {
         mIsStarted = true;
 
         if (mTelephonyManager == null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            if (Build.VERSION.SDK_INT >= 18 /*Build.VERSION_CODES.JELLY_BEAN_MR2 */) {
                 mGetAllInfoCellScanner = new GetAllCellInfoScannerMr2();
             } else {
                 mGetAllInfoCellScanner = new GetAllCellInfoScannerDummy();
@@ -170,7 +170,8 @@ public class CellScannerImplementation implements CellScanner.CellScannerImpl {
     }
 
     private List<CellInfo> getNeighboringCells() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+        // For max fennec compatibility, avoid VERSION_CODES
+        if (Build.VERSION.SDK_INT >= 22 /* Build.VERSION_CODES.LOLLIPOP_MR1 */) {
             return Collections.emptyList();
         }
 

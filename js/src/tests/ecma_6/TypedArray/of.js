@@ -68,10 +68,12 @@ for (var constructor of constructors) {
         constructor.of.call(Object.getOwnPropertyDescriptor({get getter() {}}, "getter").get);
     }, TypeError);
 
-    // Generators are also legal constructors.
-    assertEq(constructor.of.call(function*(len) {
+    // Generators are not legal constructors.
+    assertThrowsInstanceOf(() => {
+      constructor.of.call(function*(len) {
         return len;
-    }, "a", "b", "c").next().value, 3);
+      }, "a")
+    }, TypeError);
 
     // An exception might be thrown in a strict assignment to the new object's indexed properties.
     assertThrowsInstanceOf(() => {

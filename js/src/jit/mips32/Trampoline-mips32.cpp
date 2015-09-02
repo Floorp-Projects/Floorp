@@ -241,7 +241,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
         masm.storePtr(zero, Address(StackPointer, 0)); // fake return address
 
         // No GC things to mark, push a bare token.
-        masm.enterFakeExitFrame(ExitFrameLayout::BareToken());
+        masm.enterFakeExitFrame(ExitFrameLayoutBareToken);
 
         masm.reserveStack(2 * sizeof(uintptr_t));
         masm.storePtr(framePtr, Address(StackPointer, sizeof(uintptr_t))); // BaselineFrame
@@ -303,7 +303,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     masm.assertStackAlignment(JitStackAlignment, sizeof(uintptr_t));
 
     // Call the function with pushing return address to stack.
-    masm.ma_callJitHalfPush(reg_code);
+    masm.callJitNoProfiler(reg_code);
 
     if (type == EnterJitBaseline) {
         // Baseline OSR will return here.
@@ -497,9 +497,7 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     masm.andPtr(Imm32(CalleeTokenMask), calleeTokenReg);
     masm.loadPtr(Address(calleeTokenReg, JSFunction::offsetOfNativeOrScript()), t1);
     masm.loadBaselineOrIonRaw(t1, t1, nullptr);
-    masm.ma_callJitHalfPush(t1);
-
-    uint32_t returnOffset = masm.currentOffset();
+    uint32_t returnOffset = masm.callJitNoProfiler(t1);
 
     // arg1
     //  ...

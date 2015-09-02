@@ -4358,25 +4358,38 @@ MaybeUnwrapElements(const MDefinition* elementsOrObj)
     return elementsOrObj->toElements();
 }
 
+static inline const MDefinition*
+GetElementsObject(const MDefinition* elementsOrObj)
+{
+    if (elementsOrObj->type() == MIRType_Object)
+        return elementsOrObj;
+
+    const MDefinition* elements = MaybeUnwrapElements(elementsOrObj);
+    if (elements)
+        return elements->toElements()->input();
+
+    return nullptr;
+}
+
 // Gets the MDefinition of the target Object for the given store operation.
 static inline const MDefinition*
 GetStoreObject(const MDefinition* store)
 {
     switch (store->op()) {
-      case MDefinition::Op_StoreElement: {
-        const MDefinition* elementsOrObj = store->toStoreElement()->elements();
-        if (elementsOrObj->type() == MIRType_Object)
-            return elementsOrObj;
-
-        const MDefinition* elements = MaybeUnwrapElements(elementsOrObj);
-        if (elements)
-            return elements->toElements()->input();
-
-        return nullptr;
-      }
+      case MDefinition::Op_StoreElement:
+        return GetElementsObject(store->toStoreElement()->elements());
 
       case MDefinition::Op_StoreElementHole:
         return store->toStoreElementHole()->object();
+
+      case MDefinition::Op_StoreUnboxedObjectOrNull:
+        return GetElementsObject(store->toStoreUnboxedObjectOrNull()->elements());
+
+      case MDefinition::Op_StoreUnboxedString:
+        return GetElementsObject(store->toStoreUnboxedString()->elements());
+
+      case MDefinition::Op_StoreUnboxedScalar:
+        return GetElementsObject(store->toStoreUnboxedScalar()->elements());
 
       default:
         return nullptr;
@@ -4436,6 +4449,30 @@ bool
 MInitializedLength::mightAlias(const MDefinition* store) const
 {
     return GenericLoadMightAlias(elements(), store);
+}
+
+bool
+MLoadUnboxedObjectOrNull::mightAlias(const MDefinition* store) const
+{
+    return GenericLoadMightAlias(elements(), store);
+}
+
+bool
+MLoadUnboxedString::mightAlias(const MDefinition* store) const
+{
+    return GenericLoadMightAlias(elements(), store);
+}
+
+bool
+MLoadUnboxedScalar::mightAlias(const MDefinition* store) const
+{
+    return GenericLoadMightAlias(elements(), store);
+}
+
+bool
+MUnboxedArrayInitializedLength::mightAlias(const MDefinition* store) const
+{
+    return GenericLoadMightAlias(object(), store);
 }
 
 bool
@@ -4988,15 +5025,46 @@ PropertyReadNeedsTypeBarrier(CompilerConstraintList* constraints,
     return BarrierKind::NoBarrier;
 }
 
+static bool
+ObjectSubsumes(TypeSet::ObjectKey* first, TypeSet::ObjectKey* second)
+{
+    if (first->isSingleton() ||
+        second->isSingleton() ||
+        first->clasp() != second->clasp() ||
+        first->unknownProperties() ||
+        second->unknownProperties())
+    {
+        return false;
+    }
+
+    if (first->clasp() == &ArrayObject::class_) {
+        HeapTypeSetKey firstElements = first->property(JSID_VOID);
+        HeapTypeSetKey secondElements = second->property(JSID_VOID);
+
+        return firstElements.maybeTypes() && secondElements.maybeTypes() &&
+               firstElements.maybeTypes()->equals(secondElements.maybeTypes());
+    }
+
+    if (first->clasp() == &UnboxedArrayObject::class_) {
+        return first->group()->unboxedLayout().elementType() ==
+               second->group()->unboxedLayout().elementType();
+    }
+
+    return false;
+}
+
 BarrierKind
 jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
                                   CompilerConstraintList* constraints,
                                   TypeSet::ObjectKey* key, PropertyName* name,
                                   TemporaryTypeSet* observed, bool updateObserved)
 {
+    if (!updateObserved)
+        return PropertyReadNeedsTypeBarrier(constraints, key, name, observed);
+
     // If this access has never executed, try to add types to the observed set
     // according to any property which exists on the object or its prototype.
-    if (updateObserved && observed->empty() && name) {
+    if (observed->empty() && name) {
         JSObject* obj;
         if (key->isSingleton())
             obj = key->singleton();
@@ -5026,6 +5094,30 @@ jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
             }
 
             obj = obj->getProto();
+        }
+    }
+
+    // If any objects which could be observed are similar to ones that have
+    // already been observed, add them to the observed type set.
+    if (!key->unknownProperties()) {
+        HeapTypeSetKey property = key->property(name ? NameToId(name) : JSID_VOID);
+
+        if (property.maybeTypes() && !property.maybeTypes()->unknownObject()) {
+            for (size_t i = 0; i < property.maybeTypes()->getObjectCount(); i++) {
+                TypeSet::ObjectKey* key = property.maybeTypes()->getObject(i);
+                if (!key || observed->unknownObject())
+                    continue;
+
+                for (size_t j = 0; j < observed->getObjectCount(); j++) {
+                    TypeSet::ObjectKey* observedKey = observed->getObject(j);
+                    if (observedKey && ObjectSubsumes(observedKey, key)) {
+                        // Note: the return value here is ignored.
+                        observed->addType(TypeSet::ObjectType(key),
+                                          GetJitContext()->temp->lifoAlloc());
+                        break;
+                    }
+                }
+            }
         }
     }
 
