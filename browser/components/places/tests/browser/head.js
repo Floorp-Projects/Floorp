@@ -297,7 +297,7 @@ let withBookmarksDialog = Task.async(function* (autoCancel, openFn, taskFn) {
         win.addEventListener("load", function load() {
           win.removeEventListener("load", load);
           ok(win.location.href.startsWith("chrome://browser/content/places/bookmarkProperties"),
-             "The bookmark properties dialog is ready");
+             "The bookmark properties dialog is open");
           // This is needed for the overlay.
           waitForFocus(() => {
             resolve(win);
@@ -318,7 +318,9 @@ let withBookmarksDialog = Task.async(function* (autoCancel, openFn, taskFn) {
   let dialogWin = yield dialogPromise;
 
   // Ensure overlay is loaded
-  ok(dialogWin.gEditItemOverlay.initialized, "EditItemOverlay is initialized");
+  info("waiting for the overlay to be loaded");
+  yield waitForCondition(() => dialogWin.gEditItemOverlay.initialized,
+                         "EditItemOverlay should be initialized");
 
   info("withBookmarksDialog: executing the task");
   try {

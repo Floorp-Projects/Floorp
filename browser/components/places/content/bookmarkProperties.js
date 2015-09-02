@@ -583,48 +583,44 @@ var BookmarkPropertiesPanel = {
                                              childItemsTransactions);
   },
 
-  /**
-   * Returns a transaction for creating a new live-bookmark item representing
-   * the various fields and opening arguments of the dialog.
-   */
-  _getCreateNewLivemarkTransaction:
-  function BPP__getCreateNewLivemarkTransaction(aContainer, aIndex) {
-    return new PlacesCreateLivemarkTransaction(this._feedURI, this._siteURI,
-                                               this._title,
-                                               aContainer, aIndex);
-  },
-
-  _createNewItem: function BPP__getCreateItemTransaction() {
-    var [container, index] = this._getInsertionPointDetails();
-    var txn;
-
+  _createNewItem: Task.async(function* () {
+    let [container, index] = this._getInsertionPointDetails();
+    let txn;
     switch (this._itemType) {
       case BOOKMARK_FOLDER:
         txn = this._getCreateNewFolderTransaction(container, index);
         break;
       case LIVEMARK_CONTAINER:
-        txn = this._getCreateNewLivemarkTransaction(container, index);
+        txn = new PlacesCreateLivemarkTransaction(this._feedURI, this._siteURI,
+                                                  this._title, container, index);
         break;
       default: // BOOKMARK_ITEM
         txn = this._getCreateNewBookmarkTransaction(container, index);
     }
 
     PlacesUtils.transactionManager.doTransaction(txn);
-    this._itemId = PlacesUtils.bookmarks.getIdForItemAt(container, index);
+    // This is a temporary hack until we use PlacesTransactions.jsm
+    if (txn._promise) {
+      yield txn._promise;
+    }
+
+    let folderGuid = yield PlacesUtils.promiseItemGuid(container);
+    let bm = yield PlacesUtils.bookmarks.fetch({
+      parentGuid: folderGuid,
+      index: PlacesUtils.bookmarks.DEFAULT_INDEX
+    });
+    this._itemId = yield PlacesUtils.promiseItemId(bm.guid);
 
     return Object.freeze({
       itemId: this._itemId,
-      get bookmarkGuid() {
-        throw new Error("Node-like bookmarkGuid getter called even though " +
-                        "async transactions are disabled");
-      },
+      bookmarkGuid: bm.guid,
       title: this._title,
       uri: this._uri ? this._uri.spec : "",
       type: this._itemType == BOOKMARK_ITEM ?
               Ci.nsINavHistoryResultNode.RESULT_TYPE_URI :
               Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
     });
-  },
+  }),
 
   _promiseNewItem: Task.async(function* () {
     if (!PlacesUIUtils.useAsyncTransactions)
