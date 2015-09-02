@@ -199,7 +199,7 @@ EVENT(dragover,
       EventNameType_HTMLXUL,
       eDragEventClass)
 EVENT(dragstart,
-      NS_DRAGDROP_START,
+      eDragStart,
       EventNameType_HTMLXUL,
       eDragEventClass)
 EVENT(drop,
