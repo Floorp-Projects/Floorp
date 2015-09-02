@@ -100,6 +100,7 @@ private:
 
   nsString mFilename;
   uint32_t mLineNo;
+  uint32_t mColumn;
 
   ReadyState mReadyState;
   Mode mMode;
@@ -205,7 +206,8 @@ public:
   }
 
   void
-  GetCallerLocation(nsAString& aFilename, uint32_t* aLineNo) const;
+  GetCallerLocation(nsAString& aFilename, uint32_t* aLineNo,
+                    uint32_t* aColumn) const;
 
   // 'Get' prefix is to avoid name collisions with the enum
   Mode
