@@ -913,7 +913,10 @@
           else
             this.removeAttribute("current");
 
-          this._fireEvent(val ? "DOMMenuItemActive" : "DOMMenuItemInactive");
+          let control = this.control;
+          if (!control || !control.suppressMenuItemEvent) {
+            this._fireEvent(val ? "DOMMenuItemActive" : "DOMMenuItemInactive");
+          }
 
           return val;
         ]]></setter>
