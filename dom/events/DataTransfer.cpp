@@ -88,7 +88,7 @@ DataTransfer::DataTransfer(nsISupports* aParent, EventMessage aEventMessage,
   // external usage, cache the data from the native clipboard or drag.
   if (aEventMessage == NS_CUT ||
       aEventMessage == NS_COPY ||
-      aEventMessage == NS_DRAGDROP_START ||
+      aEventMessage == eDragStart ||
       aEventMessage == NS_DRAGDROP_GESTURE) {
     mReadOnly = false;
   } else if (mIsExternal) {
@@ -135,7 +135,7 @@ DataTransfer::DataTransfer(nsISupports* aParent,
   // modifiable, but those events should have been using the first constructor
   // above.
   NS_ASSERTION(aEventMessage != NS_DRAGDROP_GESTURE &&
-               aEventMessage != NS_DRAGDROP_START,
+               aEventMessage != eDragStart,
                "invalid event type for DataTransfer constructor");
 }
 
