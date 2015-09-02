@@ -2840,7 +2840,8 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
   nsRefPtr<CSSStyleSheet> sheet;
   // Editor override style sheets may want to style Gecko anonymous boxes
   rv = ps->GetDocument()->CSSLoader()->
-    LoadSheetSync(uaURI, true, true, getter_AddRefs(sheet));
+    LoadSheetSync(uaURI, mozilla::css::eAgentSheetFeatures, true,
+                  getter_AddRefs(sheet));
 
   // Synchronous loads should ALWAYS return completed
   NS_ENSURE_TRUE(sheet, NS_ERROR_NULL_POINTER);
