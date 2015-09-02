@@ -2251,8 +2251,7 @@ nsGenericHTMLFormElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   if (aVisitor.mEvent->mFlags.mIsTrusted) {
     switch (aVisitor.mEvent->mMessage) {
-      case NS_FOCUS_CONTENT:
-      {
+      case eFocus: {
         // Check to see if focus has bubbled up from a form control's
         // child textfield or button.  If that's the case, don't focus
         // this parent file control -- leave focus on the child.

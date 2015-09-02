@@ -216,7 +216,7 @@ HTMLObjectElement::HandleFocusBlurPlugin(Element* aElement,
     return;
   }
   switch (aEvent->mMessage) {
-    case NS_FOCUS_CONTENT: {
+    case eFocus: {
       OnFocusBlurPlugin(aElement, true);
       break;
     }
