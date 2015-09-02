@@ -580,10 +580,16 @@ class ChunkFinder(MachCommandBase):
 
             fp = open(os.path.expanduser(args['dump_tests']), 'r')
             tests = json.loads(fp.read())['active_tests']
-            paths = [t['path'] for t in tests]
-            if test_path in paths:
-                print("The test %s is present in chunk number: %d (it may be skipped)." % (test_path, this_chunk))
-                found = True
+            for test in tests:
+                if test_path == test['path']:
+                    if 'disabled' in test:
+                        print("The test %s is disabled on the given platform." % test_path)
+                    else:
+                        print("The test %s is present in chunk number: %d." % (test_path, this_chunk))
+                    found = True
+                    break
+
+            if found:
                 break
 
         if not found:
