@@ -152,8 +152,6 @@ partial interface Document {
                 attribute EventHandler onbeforescriptexecute;
                 attribute EventHandler onafterscriptexecute;
 
-                [Pref="dom.select_events.enabled"]
-                attribute EventHandler onselectionchange;
   /**
    * True if this document is synthetic : stand alone image, video, audio file,
    * etc.
