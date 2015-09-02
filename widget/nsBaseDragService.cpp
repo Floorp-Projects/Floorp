@@ -356,8 +356,9 @@ nsBaseDragService::EndDragSession(bool aDoneDrag)
     return NS_ERROR_FAILURE;
   }
 
-  if (aDoneDrag && !mSuppressLevel)
-    FireDragEventAtSource(NS_DRAGDROP_END);
+  if (aDoneDrag && !mSuppressLevel) {
+    FireDragEventAtSource(eDragEnd);
+  }
 
   if (mDragPopup) {
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
@@ -405,7 +406,7 @@ nsBaseDragService::FireDragEventAtSource(uint32_t aMsg)
         nsEventStatus status = nsEventStatus_eIgnore;
         WidgetDragEvent event(true, static_cast<EventMessage>(aMsg), nullptr);
         event.inputSource = mInputSource;
-        if (aMsg == NS_DRAGDROP_END) {
+        if (aMsg == eDragEnd) {
           event.refPoint.x = mEndDragPoint.x;
           event.refPoint.y = mEndDragPoint.y;
           event.userCancelled = mUserCancelled;

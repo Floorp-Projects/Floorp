@@ -35,23 +35,24 @@ struct IntMarginTyped:
 };
 typedef IntMarginTyped<UnknownUnits> IntMargin;
 
-template<class units>
+template<class units, class F = Float>
 struct MarginTyped:
-    public BaseMargin<Float, MarginTyped<units> >,
+    public BaseMargin<F, MarginTyped<units> >,
     public units {
     static_assert(IsPixel<units>::value,
                   "'units' must be a coordinate system tag");
 
-    typedef BaseMargin<Float, MarginTyped<units> > Super;
+    typedef BaseMargin<F, MarginTyped<units, F> > Super;
 
     MarginTyped() : Super() {}
-    MarginTyped(Float aTop, Float aRight, Float aBottom, Float aLeft) :
+    MarginTyped(F aTop, F aRight, F aBottom, F aLeft) :
         Super(aTop, aRight, aBottom, aLeft) {}
     explicit MarginTyped(const IntMarginTyped<units>& aMargin) :
-        Super(float(aMargin.top), float(aMargin.right),
-              float(aMargin.bottom), float(aMargin.left)) {}
+        Super(F(aMargin.top), F(aMargin.right),
+              F(aMargin.bottom), F(aMargin.left)) {}
 };
 typedef MarginTyped<UnknownUnits> Margin;
+typedef MarginTyped<UnknownUnits, double> MarginDouble;
 
 template<class units>
 IntMarginTyped<units> RoundedToInt(const MarginTyped<units>& aMargin)
@@ -124,23 +125,39 @@ struct IntRectTyped :
 };
 typedef IntRectTyped<UnknownUnits> IntRect;
 
-template<class units>
+template<class units, class F = Float>
 struct RectTyped :
-    public BaseRect<Float, RectTyped<units>, PointTyped<units>, SizeTyped<units>, MarginTyped<units> >,
+    public BaseRect<F, RectTyped<units, F>, PointTyped<units, F>, SizeTyped<units, F>, MarginTyped<units, F> >,
     public units {
     static_assert(IsPixel<units>::value,
                   "'units' must be a coordinate system tag");
 
-    typedef BaseRect<Float, RectTyped<units>, PointTyped<units>, SizeTyped<units>, MarginTyped<units> > Super;
+    typedef BaseRect<F, RectTyped<units, F>, PointTyped<units, F>, SizeTyped<units, F>, MarginTyped<units, F> > Super;
 
     RectTyped() : Super() {}
-    RectTyped(const PointTyped<units>& aPos, const SizeTyped<units>& aSize) :
+    RectTyped(const PointTyped<units, F>& aPos, const SizeTyped<units, F>& aSize) :
         Super(aPos, aSize) {}
-    RectTyped(Float _x, Float _y, Float _width, Float _height) :
+    RectTyped(F _x, F _y, F _width, F _height) :
         Super(_x, _y, _width, _height) {}
     explicit RectTyped(const IntRectTyped<units>& rect) :
-        Super(float(rect.x), float(rect.y),
-              float(rect.width), float(rect.height)) {}
+        Super(F(rect.x), F(rect.y),
+              F(rect.width), F(rect.height)) {}
+
+    // Returns the largest rectangle that can be represented with 32-bit
+    // signed integers, centered around a point at 0,0.  As BaseRect's represent
+    // the dimensions as a top-left point with a width and height, the width
+    // and height will be the largest positive 32-bit value.  The top-left
+    // position coordinate is divided by two to center the rectangle around a
+    // point at 0,0.
+    static RectTyped<units, F> MaxIntRect()
+    {
+      return RectTyped<units, F>(
+        -std::numeric_limits<int32_t>::max() * 0.5,
+        -std::numeric_limits<int32_t>::max() * 0.5,
+        std::numeric_limits<int32_t>::max(),
+        std::numeric_limits<int32_t>::max()
+      );
+    };
 
     void NudgeToIntegers()
     {
@@ -154,29 +171,30 @@ struct RectTyped :
     {
       *aOut = IntRectTyped<units>(int32_t(this->X()), int32_t(this->Y()),
                                   int32_t(this->Width()), int32_t(this->Height()));
-      return RectTyped<units>(Float(aOut->x), Float(aOut->y), 
-                              Float(aOut->width), Float(aOut->height))
+      return RectTyped<units>(F(aOut->x), F(aOut->y),
+                              F(aOut->width), F(aOut->height))
              .IsEqualEdges(*this);
     }
 
     // XXX When all of the code is ported, the following functions to convert to and from
     // unknown types should be removed.
 
-    static RectTyped<units> FromUnknownRect(const RectTyped<UnknownUnits>& rect) {
-        return RectTyped<units>(rect.x, rect.y, rect.width, rect.height);
+    static RectTyped<units, F> FromUnknownRect(const RectTyped<UnknownUnits, F>& rect) {
+        return RectTyped<units, F>(rect.x, rect.y, rect.width, rect.height);
     }
 
-    RectTyped<UnknownUnits> ToUnknownRect() const {
-        return RectTyped<UnknownUnits>(this->x, this->y, this->width, this->height);
+    RectTyped<UnknownUnits, F> ToUnknownRect() const {
+        return RectTyped<UnknownUnits, F>(this->x, this->y, this->width, this->height);
     }
 
     // This is here only to keep IPDL-generated code happy. DO NOT USE.
-    bool operator==(const RectTyped<units>& aRect) const
+    bool operator==(const RectTyped<units, F>& aRect) const
     {
-      return RectTyped<units>::IsEqualEdges(aRect);
+      return RectTyped<units, F>::IsEqualEdges(aRect);
     }
 };
 typedef RectTyped<UnknownUnits> Rect;
+typedef RectTyped<UnknownUnits, double> RectDouble;
 
 template<class units>
 IntRectTyped<units> RoundedToInt(const RectTyped<units>& aRect)

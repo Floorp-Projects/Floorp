@@ -806,12 +806,12 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
     //   selectstart
     bool stopEvent = false;
     switch (aVisitor.mEvent->mMessage) {
-      case NS_IMAGE_ABORT:
-      case NS_LOAD_ERROR:
-      case NS_FORM_SELECTED:
-      case NS_FORM_CHANGE:
-      case NS_LOAD:
-      case NS_FORM_RESET:
+      case eImageAbort:
+      case eLoadError:
+      case eFormSelect:
+      case eFormChange:
+      case eLoad:
+      case eFormReset:
       case eResize:
       case eScroll:
         stopEvent = true;
@@ -843,7 +843,7 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
       // The load event is special in that we don't ever propagate it
       // to chrome.
       nsCOMPtr<nsPIDOMWindow> win = OwnerDoc()->GetWindow();
-      EventTarget* parentTarget = win && aVisitor.mEvent->mMessage != NS_LOAD
+      EventTarget* parentTarget = win && aVisitor.mEvent->mMessage != eLoad
         ? win->GetParentTarget() : nullptr;
 
       aVisitor.mParentTarget = parentTarget;

@@ -25,7 +25,21 @@ interface inIDOMUtils : nsISupports
                           [optional] out unsigned long aLength,
                           [array, size_is (aLength), retval] out nsISupports aSheets);
   nsISupportsArray getCSSStyleRules(in nsIDOMElement aElement, [optional] in DOMString aPseudo);
+
+  /**
+   * Get the line number of a rule.
+   *
+   * @param nsIDOMCSSRule aRule The rule.
+   * @return The rule's line number.  Line numbers are 1-based.
+   */
   unsigned long getRuleLine(in nsIDOMCSSRule aRule);
+
+  /**
+   * Get the column number of a rule.
+   *
+   * @param nsIDOMCSSRule aRule The rule.
+   * @return The rule's column number.  Column numbers are 1-based.
+   */
   unsigned long getRuleColumn(in nsIDOMCSSRule aRule);
 
   /**
