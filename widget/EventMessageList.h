@@ -103,7 +103,7 @@ NS_EVENT_MESSAGE(eBlur,                 eFocusEventFirst + 1)
 
 NS_EVENT_MESSAGE(eDragDropEventFirst,   1400)
 NS_EVENT_MESSAGE(NS_DRAGDROP_ENTER,     eDragDropEventFirst)
-NS_EVENT_MESSAGE(NS_DRAGDROP_OVER,      eDragDropEventFirst + 1)
+NS_EVENT_MESSAGE(eDragOver,             eDragDropEventFirst + 1)
 NS_EVENT_MESSAGE(NS_DRAGDROP_EXIT,      eDragDropEventFirst + 2)
 NS_EVENT_MESSAGE(NS_DRAGDROP_DRAGDROP,  eDragDropEventFirst + 3)
 NS_EVENT_MESSAGE(NS_DRAGDROP_GESTURE,   eDragDropEventFirst + 4)

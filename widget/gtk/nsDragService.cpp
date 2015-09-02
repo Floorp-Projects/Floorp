@@ -2038,8 +2038,8 @@ nsDragService::DispatchMotionEvents()
 
     FireDragEventAtSource(eDrag);
 
-    mTargetWindow->
-        DispatchDragEvent(NS_DRAGDROP_OVER, mTargetWindowPoint, mTargetTime);
+    mTargetWindow->DispatchDragEvent(eDragOver, mTargetWindowPoint,
+                                     mTargetTime);
 }
 
 // Returns true if the drop was successful

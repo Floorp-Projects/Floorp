@@ -342,7 +342,7 @@ nsNativeDragTarget::DragOver(DWORD   grfKeyState,
 
   mDragService->FireDragEventAtSource(eDrag);
   // Now process the native drag state and then dispatch the event
-  ProcessDrag(NS_DRAGDROP_OVER, grfKeyState, ptl, pdwEffect);
+  ProcessDrag(eDragOver, grfKeyState, ptl, pdwEffect);
 
   this->Release();
 
