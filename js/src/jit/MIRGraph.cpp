@@ -605,8 +605,9 @@ MBasicBlock::linkOsrValues(MStart* start)
             MOZ_ASSERT(def->isOsrValue() || def->isGetArgumentsObjectArg() || def->isConstant() ||
                        def->isParameter());
 
-            // A constant Undefined can show up here for an argument slot when the function uses
-            // a heavyweight argsobj, but the argument in question is stored on the scope chain.
+            // A constant Undefined can show up here for an argument slot when
+            // the function has an arguments object, but the argument in
+            // question is stored on the scope chain.
             MOZ_ASSERT_IF(def->isConstant(), def->toConstant()->value() == UndefinedValue());
 
             if (def->isOsrValue())
