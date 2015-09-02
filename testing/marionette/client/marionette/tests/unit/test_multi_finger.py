@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette import MarionetteTestCase
-from marionette.marionette import MultiActions, Actions
+from marionette_driver.marionette import MultiActions, Actions
 
 class testMultiFinger(MarionetteTestCase):
     def test_move_element(self):
