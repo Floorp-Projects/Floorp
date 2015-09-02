@@ -340,7 +340,7 @@ impl ToJson for WebDriverMessage {
     }
 }
 
-trait Parameters {
+trait Parameters: Sized {
     fn from_json(body: &Json) -> WebDriverResult<Self>;
 }
 
