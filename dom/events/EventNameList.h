@@ -512,7 +512,7 @@ WINDOW_EVENT(pageshow,
              EventNameType_HTMLBodyOrFramesetOnly,
              eBasicEventClass)
 WINDOW_EVENT(popstate,
-             NS_POPSTATE,
+             ePopState,
              EventNameType_XUL | EventNameType_HTMLBodyOrFramesetOnly,
              eBasicEventClass)
 // Not supported yet
