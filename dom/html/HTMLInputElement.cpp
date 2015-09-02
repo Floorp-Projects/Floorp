@@ -3162,7 +3162,7 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
   aVisitor.mItemFlags |= mType;
 
   // Fire onchange (if necessary), before we do the blur, bug 357684.
-  if (aVisitor.mEvent->mMessage == NS_BLUR_CONTENT) {
+  if (aVisitor.mEvent->mMessage == eBlur) {
     // Experimental mobile types rely on the system UI to prevent users to not
     // set invalid values but we have to be extra-careful. Especially if the
     // option has been enabled on desktop.
@@ -3178,7 +3178,7 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 
   if (mType == NS_FORM_INPUT_RANGE &&
       (aVisitor.mEvent->mMessage == eFocus ||
-       aVisitor.mEvent->mMessage == NS_BLUR_CONTENT)) {
+       aVisitor.mEvent->mMessage == eBlur)) {
     // Just as nsGenericHTMLFormElementWithState::PreHandleEvent calls
     // nsIFormControlFrame::SetFocus, we handle focus here.
     nsIFrame* frame = GetPrimaryFrame();
@@ -3232,7 +3232,7 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
       }
     }
     if (aVisitor.mEvent->mMessage == eFocus ||
-        aVisitor.mEvent->mMessage == NS_BLUR_CONTENT) {
+        aVisitor.mEvent->mMessage == eBlur) {
       if (aVisitor.mEvent->mMessage == eFocus) {
         // Tell our frame it's getting focus so that it can make sure focus
         // is moved to our anonymous text control.
@@ -3588,14 +3588,14 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
   }
 
   if (aVisitor.mEvent->mMessage == eFocus ||
-      aVisitor.mEvent->mMessage == NS_BLUR_CONTENT) {
+      aVisitor.mEvent->mMessage == eBlur) {
     if (aVisitor.mEvent->mMessage == eFocus &&
         MayFireChangeOnBlur() &&
         !mIsDraggingRange) { // StartRangeThumbDrag already set mFocusedValue
       GetValue(mFocusedValue);
     }
 
-    if (aVisitor.mEvent->mMessage == NS_BLUR_CONTENT) {
+    if (aVisitor.mEvent->mMessage == eBlur) {
       if (mIsDraggingRange) {
         FinishRangeThumbDrag();
       } else if (mNumberControlSpinnerIsSpinning) {

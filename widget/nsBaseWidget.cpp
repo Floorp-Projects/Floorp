@@ -2631,7 +2631,7 @@ case _value: eventName.AssignLiteral(_name) ; break
 
   switch(aGuiEvent->mMessage)
   {
-    _ASSIGN_eventName(NS_BLUR_CONTENT,"NS_BLUR_CONTENT");
+    _ASSIGN_eventName(eBlur,"eBlur");
     _ASSIGN_eventName(NS_DRAGDROP_GESTURE,"NS_DND_GESTURE");
     _ASSIGN_eventName(NS_DRAGDROP_DROP,"NS_DND_DROP");
     _ASSIGN_eventName(NS_DRAGDROP_ENTER,"NS_DND_ENTER");

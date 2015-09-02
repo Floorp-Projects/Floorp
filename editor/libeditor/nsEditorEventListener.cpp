@@ -457,7 +457,7 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
     case eFocus:
       return Focus(aEvent);
     // blur
-    case NS_BLUR_CONTENT:
+    case eBlur:
       return Blur(aEvent);
     // text
     case NS_COMPOSITION_CHANGE:
