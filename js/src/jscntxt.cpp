@@ -60,7 +60,7 @@ using mozilla::UniquePtr;
 bool
 js::AutoCycleDetector::init()
 {
-    AutoCycleDetector::Set& set = cx->cycleDetectorSet;
+    ObjectSet& set = cx->cycleDetectorSet;
     hashsetAddPointer = set.lookupForAdd(obj);
     if (!hashsetAddPointer) {
         if (!set.add(hashsetAddPointer, obj))
@@ -82,10 +82,14 @@ js::AutoCycleDetector::~AutoCycleDetector()
 }
 
 void
-js::TraceCycleDetectionSet(JSTracer* trc, AutoCycleDetector::Set& set)
+js::TraceCycleDetectionSet(JSTracer* trc, js::ObjectSet& set)
 {
-    for (AutoCycleDetector::Set::Enum e(set); !e.empty(); e.popFront())
-        TraceRoot(trc, &e.mutableFront(), "cycle detector table entry");
+    for (js::ObjectSet::Enum e(set); !e.empty(); e.popFront()) {
+        JSObject* key = e.front();
+        TraceRoot(trc, &key, "cycle detector table entry");
+        if (key != e.front())
+            e.rekeyFront(key);
+    }
 }
 
 JSContext*
