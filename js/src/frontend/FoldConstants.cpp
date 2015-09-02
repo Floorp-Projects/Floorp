@@ -417,6 +417,7 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
       case PNK_SUPERPROP:
       case PNK_SUPERELEM:
       case PNK_NEWTARGET:
+      case PNK_POSHOLDER:
         MOZ_CRASH("ContainsHoistedDeclaration should have indicated false on "
                   "some parent node without recurring to test this node");
 
@@ -1709,7 +1710,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
     ParseNode* pn = *pnp;
 
     switch (pn->getKind()) {
-      case PNK_NEWTARGET:
       case PNK_NOP:
       case PNK_REGEXP:
       case PNK_STRING:
@@ -1728,6 +1728,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_OBJECT_PROPERTY_NAME:
       case PNK_SUPERPROP:
       case PNK_FRESHENBLOCK:
+      case PNK_POSHOLDER:
         MOZ_ASSERT(pn->isArity(PN_NULLARY));
         return true;
 
@@ -1917,6 +1918,12 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         return Fold(cx, &pn->pn_left, parser, inGenexpLambda) &&
                Fold(cx, &pn->pn_right, parser, inGenexpLambda);
+
+      case PNK_NEWTARGET:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        MOZ_ASSERT(pn->pn_left->isKind(PNK_POSHOLDER));
+        MOZ_ASSERT(pn->pn_right->isKind(PNK_POSHOLDER));
+        return true;
 
       case PNK_CLASSNAMES:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
