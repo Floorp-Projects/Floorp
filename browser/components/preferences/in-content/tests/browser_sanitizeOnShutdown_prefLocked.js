@@ -22,9 +22,7 @@ function testPrefStateMatchesLockedState() {
 add_task(function setup() {
   registerCleanupFunction(function resetPreferences() {
     Services.prefs.unlockPref("privacy.sanitize.sanitizeOnShutdown");
-    Services.prefs.clearUserPref("browser.preferences.inContent");
   });
-  Services.prefs.setBoolPref("browser.preferences.inContent", true);
 });
 
 add_task(function test_preference_enabled_when_unlocked() {
