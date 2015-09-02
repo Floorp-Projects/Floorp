@@ -1494,7 +1494,7 @@ ScriptSourceObject::finalize(FreeOp* fop, JSObject* obj)
 const Class ScriptSourceObject::class_ = {
     "ScriptSource",
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
-    JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_IS_ANONYMOUS,
+    JSCLASS_IS_ANONYMOUS,
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */

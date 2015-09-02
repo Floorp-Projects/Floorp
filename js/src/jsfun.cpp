@@ -811,7 +811,6 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
 
 const Class JSFunction::class_ = {
     js_Function_str,
-    JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
     nullptr,                 /* addProperty */
     nullptr,                 /* delProperty */
