@@ -530,8 +530,8 @@ BrowserGlue.prototype = {
         action.type;
     }
     if (!actionType) {
-      let styles = controller.getStyleAt(idx).split(/\s+/);
-      let style = ["autofill", "tag", "bookmark"].find(s => styles.includes(s));
+      let styles = new Set(controller.getStyleAt(idx).split(/\s+/));
+      let style = ["autofill", "tag", "bookmark"].find(s => styles.has(s));
       actionType = style || "history";
     }
 
