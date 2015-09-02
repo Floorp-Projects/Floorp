@@ -1661,7 +1661,7 @@ ThreadClient.prototype = {
    * @param function aOnResponse
    *        Called with the response packet.
    */
-  breakOnNext: function (aOnResponse) {
+  resumeThenPause: function (aOnResponse) {
     this._doResume({ type: "break" }, aOnResponse);
   },
 
@@ -1696,13 +1696,34 @@ ThreadClient.prototype = {
   },
 
   /**
+   * Immediately interrupt a running thread.
+   *
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  interrupt: function(aOnResponse) {
+    this._doInterrupt(null, aOnResponse);
+  },
+
+  /**
+   * Pause execution right before the next JavaScript bytecode is executed.
+   *
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  breakOnNext: function(aOnResponse) {
+    this._doInterrupt("onNext", aOnResponse);
+  },
+
+  /**
    * Interrupt a running thread.
    *
    * @param function aOnResponse
    *        Called with the response packet.
    */
-  interrupt: DebuggerClient.requester({
-    type: "interrupt"
+  _doInterrupt: DebuggerClient.requester({
+    type: "interrupt",
+    when: args(0)
   }, {
     telemetry: "INTERRUPT"
   }),

@@ -883,13 +883,13 @@ let gDevToolsBrowser = {
         switch (threadClient.state) {
           case "paused":
             // When the debugger is already paused.
-            threadClient.breakOnNext();
+            threadClient.resumeThenPause();
             aCallback();
             break;
           case "attached":
             // When the debugger is already open.
             threadClient.interrupt(() => {
-              threadClient.breakOnNext();
+              threadClient.resumeThenPause();
               aCallback();
             });
             break;
@@ -897,7 +897,7 @@ let gDevToolsBrowser = {
             // The debugger is newly opened.
             threadClient.addOneTimeListener("resumed", () => {
               threadClient.interrupt(() => {
-                threadClient.breakOnNext();
+                threadClient.resumeThenPause();
                 aCallback();
               });
             });

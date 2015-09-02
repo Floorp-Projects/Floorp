@@ -55,13 +55,27 @@ function test() {
   function testResumeButton() {
     info ("Pressing the resume button, expecting a thread-paused");
 
+    ok (!gResumeButton.hasAttribute("disabled"), "Resume button is not disabled");
+    ok (!gResumeButton.hasAttribute("break-on-next"), "Resume button isn't waiting for next execution");
     ok (!gResumeButton.hasAttribute("checked"), "Resume button is not checked");
     let oncePaused = gTarget.once("thread-paused");
+
+    // Click the pause button to break on next execution
     EventUtils.sendMouseEvent({ type: "mousedown" }, gResumeButton, gDebugger);
+    ok (gResumeButton.hasAttribute("disabled"), "Resume button is disabled");
+    ok (gResumeButton.hasAttribute("break-on-next"), "Resume button is waiting for next execution");
+    ok (!gResumeButton.hasAttribute("checked"), "Resume button is not checked");
+
+    // Evaluate a script to fully pause the debugger
+    once(gDebugger.gClient, "willInterrupt").then(() => {
+      evalInTab(gTab, "1+1;");
+    });
 
     return oncePaused
       .then(() => {
+        ok (!gResumeButton.hasAttribute("break-on-next"), "Resume button isn't waiting for next execution");
         is (gResumeButton.getAttribute("checked"), "true", "Resume button is checked");
+        ok (!gResumeButton.hasAttribute("disabled"), "Resume button is not disabled");
       })
       .then(() => gThreadClient.resume())
       .then(() => ensureThreadClientState(gPanel, "resumed"))
@@ -71,13 +85,27 @@ function test() {
     let key = gResumeKey.getAttribute("keycode");
     info ("Triggering a pause with keyboard (" + key +  "), expecting a thread-paused");
 
+    ok (!gResumeButton.hasAttribute("disabled"), "Resume button is not disabled");
+    ok (!gResumeButton.hasAttribute("break-on-next"), "Resume button isn't waiting for next execution");
     ok (!gResumeButton.hasAttribute("checked"), "Resume button is not checked");
     let oncePaused = gTarget.once("thread-paused");
+
+    // Press the key to break on next execution
     EventUtils.synthesizeKey(key, { }, gDebugger);
+    ok (gResumeButton.hasAttribute("disabled"), "Resume button is disabled");
+    ok (gResumeButton.hasAttribute("break-on-next"), "Resume button is waiting for next execution");
+    ok (!gResumeButton.hasAttribute("checked"), "Resume button is not checked");
+
+    // Evaluate a script to fully pause the debugger
+    once(gDebugger.gClient, "willInterrupt").then(() => {
+      evalInTab(gTab, "1+1;");
+    });
 
     return oncePaused
       .then(() => {
+        ok (!gResumeButton.hasAttribute("break-on-next"), "Resume button isn't waiting for next execution");
         is (gResumeButton.getAttribute("checked"), "true", "Resume button is checked");
+        ok (!gResumeButton.hasAttribute("disabled"), "Resume button is not disabled");
       })
       .then(() => gThreadClient.resume())
       .then(() => ensureThreadClientState(gPanel, "resumed"))
