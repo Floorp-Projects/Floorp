@@ -137,7 +137,7 @@ HTMLTextAreaElement::Select()
   }
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetGUIEvent event(true, NS_FORM_SELECTED, nullptr);
+  WidgetGUIEvent event(true, eFormSelect, nullptr);
   // XXXbz HTMLInputElement guards against this reentering; shouldn't we?
   EventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
                             &event, nullptr, &status);
@@ -486,7 +486,7 @@ HTMLTextAreaElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 
   // Don't dispatch a second select event if we are already handling
   // one.
-  if (aVisitor.mEvent->mMessage == NS_FORM_SELECTED) {
+  if (aVisitor.mEvent->mMessage == eFormSelect) {
     if (mHandlingSelect) {
       return NS_OK;
     }
@@ -534,7 +534,7 @@ HTMLTextAreaElement::FireChangeEventIfNeeded()
 nsresult
 HTMLTextAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
-  if (aVisitor.mEvent->mMessage == NS_FORM_SELECTED) {
+  if (aVisitor.mEvent->mMessage == eFormSelect) {
     mHandlingSelect = false;
   }
 
