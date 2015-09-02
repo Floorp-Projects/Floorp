@@ -695,7 +695,10 @@ StackFrames.prototype = {
       // script dialog and internal events such as setting breakpoints, ignore
       // the event to avoid UI flicker.
       case "interrupted":
-        return;
+        if (!aPacket.why.onNext) {
+          return;
+        }
+        break;
     }
 
     this.activeThread.fillFrames(CALL_STACK_PAGE_SIZE);

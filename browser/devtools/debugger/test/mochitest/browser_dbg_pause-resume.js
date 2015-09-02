@@ -48,6 +48,15 @@ function testPause() {
   });
 
   EventUtils.sendMouseEvent({ type: "mousedown" }, gResumeButton, gDebugger);
+
+  is(gResumeButton.getAttribute("tooltiptext"),
+     gDebugger.L10N.getFormatStr("pausePendingButtonTooltip"),
+    "Button tooltip should be 'waiting for execution' when breaking on nex.");
+
+  // Evaluate a script to fully pause the debugger
+  once(gDebugger.gClient, "willInterrupt").then(() => {
+    evalInTab(gTab, "1+1;");
+  });
 }
 
 function testResume() {

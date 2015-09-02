@@ -1375,7 +1375,19 @@ ThreadActor.prototype = {
     }
 
     try {
-      // Put ourselves in the paused state.
+      // If execution should pause just before the next JavaScript bytecode is
+      // executed, just set an onEnterFrame handler.
+      if (aRequest.when == "onNext") {
+        let onEnterFrame = (aFrame) => {
+          return this._pauseAndRespond(aFrame, { type: "interrupted", onNext: true });
+        };
+        this.dbg.onEnterFrame = onEnterFrame;
+
+        return { type: "willInterrupt" };
+      }
+
+      // If execution should pause immediately, just put ourselves in the paused
+      // state.
       let packet = this._paused();
       if (!packet) {
         return { error: "notInterrupted" };
