@@ -31,6 +31,7 @@ function testVideoPlayPause() {
   var content = document.getElementById('content');
 
   var video = document.createElement('video');
+  ok(video.mozUseScreenWakeLock, "#1 Video element uses screen wake lock by default");
   video.src = "wakelock.ogv";
   content.appendChild(video);
 
@@ -83,6 +84,7 @@ function testVideoPlay() {
   var content = document.getElementById('content');
 
   var video = document.createElement('video');
+  ok(video.mozUseScreenWakeLock, "#2 Video element uses screen wake lock by default");
   video.src = "wakelock.ogv";
   content.appendChild(video);
 
@@ -124,7 +126,57 @@ function testVideoPlay() {
   video.play();
 }
 
-var tests = [ testVideoPlayPause, testVideoPlay ];
+function testVideoNoScreenWakeLock() {
+  info("#3 testVideoNoScreenWakeLock");
+
+  var lockState_cpu = true;
+  var lockState_screen = false;
+  var count_cpu = 0;
+
+  var content = document.getElementById('content');
+
+  var video = document.createElement('video');
+  video.mozUseScreenWakeLock = false;
+  video.src = "wakelock.ogv";
+  content.appendChild(video);
+
+  var startDate;
+  function testVideoNoScreenWakeLockListener(topic, state) {
+    info("#3 topic=" + topic + ", state=" + state);
+
+    var locked = state == "locked-foreground" ||
+                 state == "locked-background";
+
+    if (topic == "cpu") {
+      is(locked, lockState_cpu, "#3 Video element locked the cpu");
+      count_cpu++;
+    } else if (topic == "screen") {
+      is(locked, lockState_screen, "#3 Video element locked the screen");
+    }
+
+    if (count_cpu == 1) {
+      info("#3 Cpu is locked");
+      // The next step is to unlock the resource.
+      lockState_cpu = false;
+      video.pause();
+      startDate = new Date();
+    }
+
+    if (count_cpu == 2) {
+      var diffDate = (new Date() - startDate);
+      ok(diffDate > 200, "#3 There was at least 200 milliseconds between the stop and the wakelock release");
+
+      content.removeChild(video);
+      navigator.mozPower.removeWakeLockListener(testVideoNoScreenWakeLockListener);
+      runTests();
+    }
+  }
+
+  navigator.mozPower.addWakeLockListener(testVideoNoScreenWakeLockListener);
+  video.play();
+}
+
+var tests = [ testVideoPlayPause, testVideoPlay, testVideoNoScreenWakeLock ];
 function runTests() {
   if (!tests.length) {
     SimpleTest.finish();
@@ -138,7 +190,8 @@ function runTests() {
 SpecialPowers.pushPermissions(
   [{'type': 'power', 'allow': true, 'context': document}],
   function() {
-    SpecialPowers.pushPrefEnv({"set": [["media.wakelock_timeout", 500]]}, runTests);
+    SpecialPowers.pushPrefEnv({"set": [["media.wakelock_timeout", 500],
+                                       ["dom.wakelock.enabled", true]]}, runTests);
   });
 
 SimpleTest.waitForExplicitFinish();
