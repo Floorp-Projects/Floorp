@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=717433
+-->
+<head>
+  <title>Test for Bug 717433</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717433">Mozilla Bug 717433</a>
+<p id="display"></p>
+<iframe id="content"></iframe>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 717433 **/
+SimpleTest.waitForExplicitFinish();
+var content = document.getElementById('content');
+// Load a subframe containing an editor with language "en". At first
+// load, it will set the dictionary to en-GB or en-US. We set the other one.
+// At second load, it will return the current dictionary. We can check that the
+// dictionary is correctly remembered between loads.
+
+var firstLoad = true;
+var expected = "";
+var en_GB;
+var hunspell;
+
+var loadListener = function(evt) {
+  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
+
+  if (firstLoad) {
+    var dir = Components.classes["@mozilla.org/file/directory_service;1"]
+                        .getService(Components.interfaces.nsIProperties)
+                        .get("CurWorkD", Components.interfaces.nsIFile);
+    dir.append("tests");
+    dir.append("editor");
+    dir.append("composer");
+    dir.append("test");
+
+    hunspell = Components.classes["@mozilla.org/spellchecker/engine;1"]
+                         .getService(Components.interfaces.mozISpellCheckingEngine);
+
+    // Install en-GB dictionary.
+    en_GB = dir.clone();
+    en_GB.append("en-GB");
+    is(en_GB.exists(), true, "true expected (en-GB directory should exist)");
+    hunspell.addDirectory(en_GB);
+  }
+
+  var doc = evt.target.contentDocument;
+  var elem = doc.getElementById('textarea');
+  var editor = elem.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
+  editor.setSpellcheckUserOverride(true);
+  var inlineSpellChecker = editor.getInlineSpellChecker(true);
+
+  onSpellCheck(elem, function () {
+    var spellchecker = inlineSpellChecker.spellChecker;
+    try {
+      var currentDictonary = spellchecker.GetCurrentDictionary();
+    } catch(e) {}
+
+    if (firstLoad) {
+      firstLoad = false;
+
+      // First time around, we get a random dictionary based on the language "en".
+      if (currentDictonary == "en-GB") {
+        spellchecker.SetCurrentDictionary("en-US");
+        expected = "en-US";
+      } else if (currentDictonary == "en-US") {
+        spellchecker.SetCurrentDictionary("en-GB");
+        expected = "en-GB";
+      } else {
+        is(true, false, "Neither en-US nor en-GB are current");
+      }
+      content.src = 'http://mochi.test:8888/tests/editor/composer/test/bug717433_subframe.html?firstload=false';
+    } else {
+      is(currentDictonary, expected, expected + " expected");
+      content.removeEventListener('load', loadListener, false);
+
+      // Remove the fake en-GB dictionary again, since it's otherwise picked up by later tests.
+      hunspell.removeDirectory(en_GB);
+      SimpleTest.finish();
+    }
+  });
+}
+
+content.addEventListener('load', loadListener, false);
+
+content.src = 'http://mochi.test:8888/tests/editor/composer/test/bug717433_subframe.html?firstload=true';
+
+</script>
+</pre>
+</body>
+</html>
