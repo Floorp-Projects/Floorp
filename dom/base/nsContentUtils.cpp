@@ -5516,7 +5516,7 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
   }
   else if (aDragEvent->mMessage == eDrop ||
            aDragEvent->mMessage == NS_DRAGDROP_DRAGDROP ||
-           aDragEvent->mMessage == NS_DRAGDROP_END) {
+           aDragEvent->mMessage == eDragEnd) {
     // For the drop and dragend events, set the drop effect based on the
     // last value that the dropEffect had. This will have been set in
     // EventStateManager::PostHandleEvent for the last dragenter or
