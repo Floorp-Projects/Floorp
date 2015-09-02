@@ -1300,7 +1300,7 @@ exports.testDestroyWhileNonBrowserWindowIsOpen = function*(assert) {
     url: url
   });
 
-  let window = yield open('chrome://browser/content/preferences/preferences.xul');
+  let window = yield open('chrome://browser/content/aboutDialog.xul');
 
   yield sidebar.show();
   assert.equal(isSidebarShowing(getMostRecentBrowserWindow()), true, 'the sidebar is showing');

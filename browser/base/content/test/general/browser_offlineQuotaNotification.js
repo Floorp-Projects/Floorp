@@ -17,25 +17,6 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref("offline-apps.allow_by_default");
 });
 
-// Check that the "preferences" UI is opened and showing which websites have
-// offline storage permissions - currently this is the "network" tab in the
-// "advanced" pane.
-function checkPreferences(prefsWin) {
-  // We expect a 'paneload' event for the 'advanced' pane, then
-  // a 'select' event on the 'network' tab inside that pane.
-  prefsWin.addEventListener("paneload", function paneload(evt) {
-    prefsWin.removeEventListener("paneload", paneload);
-    is(evt.target.id, "paneAdvanced", "advanced pane loaded");
-    let tabPanels = evt.target.getElementsByTagName("tabpanels")[0];
-    tabPanels.addEventListener("select", function tabselect() {
-      tabPanels.removeEventListener("select", tabselect);
-      is(tabPanels.selectedPanel.id, "networkPanel", "networkPanel is selected");
-      // all good, we are done.
-      prefsWin.close();
-      finish();
-    });
-  });
-}
 // Same as the other one, but for in-content preferences
 function checkInContentPreferences(win) {
   let doc = win.document;
@@ -71,27 +52,15 @@ function test() {
         let notification = PopupNotifications.getNotification('offline-app-usage');
         ok(notification, "have offline-app-usage notification");
         // select the default action - this should cause the preferences
-        // window to open - which we track either via a window watcher (for
-        // the window-based prefs) or via an "Initialized" event (for
-        // in-content prefs.)
-        if (!Services.prefs.getBoolPref("browser.preferences.inContent")) {
-          Services.ww.registerNotification(function wwobserver(aSubject, aTopic, aData) {
-            if (aTopic != "domwindowopened")
-              return;
-            Services.ww.unregisterNotification(wwobserver);
-            checkPreferences(aSubject);
-          });
-        }
+        // tab to open - which we track via an "Initialized" event.
         PopupNotifications.panel.firstElementChild.button.click();
-        if (Services.prefs.getBoolPref("browser.preferences.inContent")) {
-          let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
-          newTabBrowser.addEventListener("Initialized", function PrefInit() {
-            newTabBrowser.removeEventListener("Initialized", PrefInit, true);
-            executeSoon(function() {
-              checkInContentPreferences(newTabBrowser.contentWindow);
-            })
-          }, true);
-        }
+        let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
+        newTabBrowser.addEventListener("Initialized", function PrefInit() {
+          newTabBrowser.removeEventListener("Initialized", PrefInit, true);
+          executeSoon(function() {
+            checkInContentPreferences(newTabBrowser.contentWindow);
+          })
+        }, true);
       });
     };
     Services.prefs.setIntPref("offline-apps.quota.warn", 1);

@@ -7,17 +7,11 @@ browser.jar:
     content/browser/preferences/aboutPermissions.js
     content/browser/preferences/aboutPermissions.css
     content/browser/preferences/aboutPermissions.xml
-*   content/browser/preferences/advanced.xul
-*   content/browser/preferences/advanced.js
-    content/browser/preferences/applications.xul
-*   content/browser/preferences/applications.js
     content/browser/preferences/applicationManager.xul
 *   content/browser/preferences/applicationManager.js
 *   content/browser/preferences/colors.xul
 *   content/browser/preferences/cookies.xul
 *   content/browser/preferences/cookies.js
-    content/browser/preferences/content.xul
-    content/browser/preferences/content.js
 *   content/browser/preferences/connection.xul
     content/browser/preferences/connection.js
 *   content/browser/preferences/fonts.xul
@@ -26,27 +20,11 @@ browser.jar:
     content/browser/preferences/handlers.css
 *   content/browser/preferences/languages.xul
     content/browser/preferences/languages.js
-*   content/browser/preferences/main.xul
-*   content/browser/preferences/main.js
     content/browser/preferences/permissions.xul
 *   content/browser/preferences/permissions.js
-*   content/browser/preferences/preferences.xul
-    content/browser/preferences/preferences.js
-    content/browser/preferences/privacy.xul
-*   content/browser/preferences/privacy.js
     content/browser/preferences/sanitize.xul
     content/browser/preferences/sanitize.js
-    content/browser/preferences/security.xul
-    content/browser/preferences/security.js
     content/browser/preferences/selectBookmark.xul
     content/browser/preferences/selectBookmark.js
-#ifdef MOZ_SERVICES_SYNC
-    content/browser/preferences/sync.xul
-    content/browser/preferences/sync.js
-#endif
-    content/browser/preferences/search.xul
-    content/browser/preferences/search.js
-*   content/browser/preferences/tabs.xul
-*   content/browser/preferences/tabs.js
     content/browser/preferences/translation.xul
     content/browser/preferences/translation.js

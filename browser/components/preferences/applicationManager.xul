@@ -22,7 +22,7 @@
   <script type="application/javascript"
           src="chrome://browser/content/preferences/applicationManager.js"/>
   <script type="application/javascript"
-          src="chrome://browser/content/preferences/applications.js"/>
+          src="chrome://browser/content/preferences/in-content/applications.js"/>
 
   <commandset id="appManagerCommandSet">
     <command id="cmd_remove"

@@ -6,8 +6,6 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 function test() {
   waitForExplicitFinish();
-  Services.prefs.setBoolPref("browser.preferences.inContent", true);
-  registerCleanupFunction(() => Services.prefs.clearUserPref("browser.preferences.inContent"));
 
   // Setup a phony handler to ensure the app pane will be populated.
   var handler = Cc["@mozilla.org/uriloader/web-handler-app;1"].
