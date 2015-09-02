@@ -1768,7 +1768,7 @@ class ICGetElem_Arguments : public ICMonitoredStub
 {
     friend class ICStubSpace;
   public:
-    enum Which { Normal, Strict, Magic };
+    enum Which { Mapped, Unmapped, Magic };
 
   private:
     ICGetElem_Arguments(JitCode* stubCode, ICStub* firstMonitorStub, Which which)
@@ -3519,7 +3519,7 @@ class ICGetProp_ArgumentsLength : public ICStub
 {
   friend class ICStubSpace;
   public:
-    enum Which { Normal, Strict, Magic };
+    enum Which { Mapped, Unmapped, Magic };
 
   protected:
     explicit ICGetProp_ArgumentsLength(JitCode* stubCode)

@@ -835,15 +835,15 @@ GeneratorThrowOrClose(JSContext* cx, BaselineFrame* frame, Handle<GeneratorObjec
 }
 
 bool
-StrictEvalPrologue(JSContext* cx, BaselineFrame* frame)
+InitStrictEvalScopeObjects(JSContext* cx, BaselineFrame* frame)
 {
-    return frame->strictEvalPrologue(cx);
+    return frame->initStrictEvalScopeObjects(cx);
 }
 
 bool
-HeavyweightFunPrologue(JSContext* cx, BaselineFrame* frame)
+InitFunctionScopeObjects(JSContext* cx, BaselineFrame* frame)
 {
-    return frame->heavyweightFunPrologue(cx);
+    return frame->initFunctionScopeObjects(cx);
 }
 
 bool

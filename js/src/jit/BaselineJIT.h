@@ -121,8 +121,9 @@ struct BaselineScript
     // Code pointer containing the actual method.
     RelocatablePtrJitCode method_;
 
-    // For heavyweight scripts, template objects to use for the call object and
-    // decl env object (linked via the call object's enclosing scope).
+    // For functions with a call object, template objects to use for the call
+    // object and decl env object (linked via the call object's enclosing
+    // scope).
     RelocatablePtrObject templateScope_;
 
     // Allocated space for fallback stubs.

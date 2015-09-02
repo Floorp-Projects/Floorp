@@ -2986,8 +2986,8 @@ js::array_slice_dense(JSContext* cx, HandleObject obj, int32_t begin, int32_t en
     return &argv[0].toObject();
 }
 
-static bool
-array_isArray(JSContext* cx, unsigned argc, Value* vp)
+bool
+js::array_isArray(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     bool isArray = false;

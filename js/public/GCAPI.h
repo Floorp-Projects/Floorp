@@ -213,9 +213,6 @@ GCForReason(JSRuntime* rt, JSGCInvocationKind gckind, gcreason::Reason reason);
  *    JS_GC().
  *  - The GC mode must have been set to JSGC_MODE_INCREMENTAL with
  *    JS_SetGCParameter().
- *  - All native objects that have their own trace hook must indicate that they
- *    implement read and write barriers with the JSCLASS_IMPLEMENTS_BARRIERS
- *    flag.
  *
  * Note: Even if incremental GC is enabled and working correctly,
  *       non-incremental collections can still happen when low on memory.

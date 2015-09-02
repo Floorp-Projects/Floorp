@@ -38,7 +38,6 @@ MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOpti
     performsCall_(false),
     usesSimd_(false),
     usesSimdCached_(false),
-    minAsmJSHeapLength_(0),
     modifiesFrameArguments_(false),
     instrumentedProfiling_(false),
     instrumentedProfilingIsCached_(false),
@@ -118,9 +117,10 @@ MIRGenerator::needsAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access) const
     // A heap access needs a bounds-check branch if we're not relying on signal
     // handlers to catch errors, and if it's not proven to be within bounds.
     // We use signal-handlers on x64, but on x86 there isn't enough address
-    // space for a guard region.
+    // space for a guard region.  Also, on x64 the atomic loads and stores
+    // can't (yet) use the signal handlers.
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-    if (usesSignalHandlersForAsmJSOOB_)
+    if (usesSignalHandlersForAsmJSOOB_ && !access->isAtomicAccess())
         return false;
 #endif
     return access->needsBoundsCheck();
@@ -605,8 +605,9 @@ MBasicBlock::linkOsrValues(MStart* start)
             MOZ_ASSERT(def->isOsrValue() || def->isGetArgumentsObjectArg() || def->isConstant() ||
                        def->isParameter());
 
-            // A constant Undefined can show up here for an argument slot when the function uses
-            // a heavyweight argsobj, but the argument in question is stored on the scope chain.
+            // A constant Undefined can show up here for an argument slot when
+            // the function has an arguments object, but the argument in
+            // question is stored on the scope chain.
             MOZ_ASSERT_IF(def->isConstant(), def->toConstant()->value() == UndefinedValue());
 
             if (def->isOsrValue())

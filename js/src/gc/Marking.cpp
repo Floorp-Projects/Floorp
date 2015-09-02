@@ -1182,13 +1182,6 @@ CallTraceHook(Functor f, JSTracer* trc, JSObject* obj, CheckGeneration check, Ar
     if (!clasp->trace)
         return &obj->as<NativeObject>();
 
-    // Global objects all have the same trace hook. That hook is safe without barriers
-    // if the global has no custom trace hook of its own, or has been moved to a different
-    // compartment, and so can't have one.
-    MOZ_ASSERT_IF(!(clasp->trace == JS_GlobalObjectTraceHook &&
-                    (!obj->compartment()->options().getTrace() || !obj->isOwnGlobal())),
-                  clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS);
-
     if (clasp->trace == InlineTypedObject::obj_trace) {
         Shape** pshape = obj->as<InlineTypedObject>().addressOfShapeFromGC();
         f(pshape, mozilla::Forward<Args>(args)...);

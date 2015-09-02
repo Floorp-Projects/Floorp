@@ -456,9 +456,15 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     OutOfLineLoadTypedArrayOutOfBounds* ool = nullptr;
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
     if (gen->needsAsmJSBoundsCheckBranch(mir)) {
-        ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out), accessType);
-        addOutOfLineCode(ool, mir);
-        maybeCmpOffset = emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ptr), ool->entry());
+        Label* jumpTo = nullptr;
+        if (mir->isAtomicAccess()) {
+            jumpTo = gen->outOfBoundsLabel();
+        } else {
+            ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out), accessType);
+            addOutOfLineCode(ool, mir);
+            jumpTo = ool->entry();
+        }
+        maybeCmpOffset = emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ptr), jumpTo);
     }
 
     uint32_t before = masm.size();
@@ -627,8 +633,12 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
     Label* rejoin = nullptr;
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
     if (gen->needsAsmJSBoundsCheckBranch(mir)) {
-        rejoin = alloc().lifoAlloc()->new_<Label>();
-        maybeCmpOffset = emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ptr), rejoin);
+        Label* jumpTo = nullptr;
+        if (mir->isAtomicAccess())
+            jumpTo = gen->outOfBoundsLabel();
+        else
+            rejoin = jumpTo = alloc().lifoAlloc()->new_<Label>();
+        maybeCmpOffset = emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ptr), jumpTo);
     }
 
     uint32_t before = masm.size();
@@ -647,36 +657,13 @@ CodeGeneratorX86::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
 {
     MAsmJSCompareExchangeHeap* mir = ins->mir();
     Scalar::Type accessType = mir->accessType();
-    const LAllocation* ptr = ins->ptr();
+    Register ptrReg = ToRegister(ins->ptr());
     Register oldval = ToRegister(ins->oldValue());
     Register newval = ToRegister(ins->newValue());
     Register addrTemp = ToRegister(ins->addrTemp());
 
-    MOZ_ASSERT(ptr->isRegister());
-    // Set up the offset within the heap in the pointer reg.
-    Register ptrReg = ToRegister(ptr);
-
-    Label rejoin;
-    uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
-
-    if (mir->needsBoundsCheck()) {
-        maybeCmpOffset = masm.cmp32WithPatch(ptrReg, Imm32(-mir->endOffset())).offset();
-        Label goahead;
-        masm.j(Assembler::BelowOrEqual, &goahead);
-        memoryBarrier(MembarFull);
-        Register out = ToRegister(ins->output());
-        masm.xorl(out,out);
-        masm.jmp(&rejoin);
-        masm.bind(&goahead);
-    }
-
-    // Add in the actual heap pointer explicitly, to avoid opening up
-    // the abstraction that is compareExchangeToTypedIntArray at this time.
-    masm.movl(ptrReg, addrTemp);
-    uint32_t before = masm.size();
-    masm.addlWithPatch(Imm32(mir->offset()), addrTemp);
-    uint32_t after = masm.size();
-    masm.append(AsmJSHeapAccess(before, after, maybeCmpOffset));
+    asmJSAtomicComputeAddress(addrTemp, ptrReg, mir->needsBoundsCheck(), mir->offset(),
+                              mir->endOffset());
 
     Address memAddr(addrTemp, mir->offset());
     masm.compareExchangeToTypedIntArray(accessType == Scalar::Uint32 ? Scalar::Int32 : accessType,
@@ -685,31 +672,21 @@ CodeGeneratorX86::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
                                         newval,
                                         InvalidReg,
                                         ToAnyRegister(ins->output()));
-    if (rejoin.used())
-        masm.bind(&rejoin);
 }
 
 // Perform bounds checking on the access if necessary; if it fails,
-// perform a barrier and clear out the result register (if valid)
-// before jumping to rejoin.  If the bounds check passes, set up the
-// heap address in addrTemp.
+// jump to out-of-line code that throws.  If the bounds check passes,
+// set up the heap address in addrTemp.
 
 void
 CodeGeneratorX86::asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg, bool boundsCheck,
-                                            int32_t offset, int32_t endOffset, Register out,
-                                            Label& rejoin)
+                                            int32_t offset, int32_t endOffset)
 {
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
 
     if (boundsCheck) {
         maybeCmpOffset = masm.cmp32WithPatch(ptrReg, Imm32(-endOffset)).offset();
-        Label goahead;
-        masm.j(Assembler::BelowOrEqual, &goahead);
-        memoryBarrier(MembarFull);
-        if (out != InvalidReg)
-            masm.xorl(out,out);
-        masm.jmp(&rejoin);
-        masm.bind(&goahead);
+        masm.j(Assembler::Above, gen->outOfBoundsLabel());
     }
 
     // Add in the actual heap pointer explicitly, to avoid opening up
@@ -726,14 +703,12 @@ CodeGeneratorX86::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins)
 {
     MAsmJSAtomicExchangeHeap* mir = ins->mir();
     Scalar::Type accessType = mir->accessType();
-    const LAllocation* ptr = ins->ptr();
-    Register ptrReg = ToRegister(ptr);
+    Register ptrReg = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
     Register addrTemp = ToRegister(ins->addrTemp());
-    Label rejoin;
 
     asmJSAtomicComputeAddress(addrTemp, ptrReg, mir->needsBoundsCheck(), mir->offset(),
-                              mir->endOffset(), ToRegister(ins->output()), rejoin);
+                              mir->endOffset());
 
     Address memAddr(addrTemp, mir->offset());
     masm.atomicExchangeToTypedIntArray(accessType == Scalar::Uint32 ? Scalar::Int32 : accessType,
@@ -741,9 +716,6 @@ CodeGeneratorX86::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins)
                                        value,
                                        InvalidReg,
                                        ToAnyRegister(ins->output()));
-
-    if (rejoin.used())
-        masm.bind(&rejoin);
 }
 
 void
@@ -756,10 +728,9 @@ CodeGeneratorX86::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
     Register addrTemp = ToRegister(ins->addrTemp());
     const LAllocation* value = ins->value();
     AtomicOp op = mir->operation();
-    Label rejoin;
 
     asmJSAtomicComputeAddress(addrTemp, ptrReg, mir->needsBoundsCheck(), mir->offset(),
-                              mir->endOffset(), ToRegister(ins->output()), rejoin);
+                              mir->endOffset());
 
     Address memAddr(addrTemp, mir->offset());
     if (value->isConstant()) {
@@ -777,8 +748,6 @@ CodeGeneratorX86::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
                                         InvalidReg,
                                         ToAnyRegister(ins->output()));
     }
-    if (rejoin.used())
-        masm.bind(&rejoin);
 }
 
 void
@@ -790,20 +759,17 @@ CodeGeneratorX86::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEff
     Register addrTemp = ToRegister(ins->addrTemp());
     const LAllocation* value = ins->value();
     AtomicOp op = mir->operation();
-    Label rejoin;
 
     MOZ_ASSERT(!mir->hasUses());
 
     asmJSAtomicComputeAddress(addrTemp, ptrReg, mir->needsBoundsCheck(), mir->offset(),
-                              mir->endOffset(), InvalidReg, rejoin);
+                              mir->endOffset());
 
     Address memAddr(addrTemp, mir->offset());
     if (value->isConstant())
         masm.atomicBinopToTypedIntArray(op, accessType, Imm32(ToInt32(value)), memAddr);
     else
         masm.atomicBinopToTypedIntArray(op, accessType, ToRegister(value), memAddr);
-    if (rejoin.used())
-        masm.bind(&rejoin);
 }
 
 void

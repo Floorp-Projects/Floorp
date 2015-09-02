@@ -524,11 +524,6 @@ IonBuilder::canInlineTarget(JSFunction* target, CallInfo& callInfo)
         return DontInline(inlineScript, "Common inlining path");
     }
 
-    if (target->isHeavyweight()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineHeavyweight);
-        return DontInline(inlineScript, "Heavyweight function");
-    }
-
     if (inlineScript->uninlineable()) {
         trackOptimizationOutcome(TrackedOutcome::CantInlineGeneric);
         return DontInline(inlineScript, "Uninlineable script");
@@ -1223,7 +1218,7 @@ IonBuilder::initScopeChain(MDefinition* callee)
         // This reproduce what is done in CallObject::createForFunction. Skip
         // this for analyses, as the script might not have a baseline script
         // with template objects yet.
-        if (fun->isHeavyweight() && !info().isAnalysis()) {
+        if (fun->needsCallObject() && !info().isAnalysis()) {
             if (fun->isNamedLambda()) {
                 scope = createDeclEnvObject(callee, scope);
                 if (!scope)
@@ -10633,7 +10628,7 @@ IonBuilder::getPropTryArgumentsCallee(bool* emitted, MDefinition* obj, PropertyN
     if (name != names().callee)
         return true;
 
-    MOZ_ASSERT(!script()->strict());
+    MOZ_ASSERT(script()->hasMappedArgsObj());
 
     obj->setImplicitlyUsedUnchecked();
     current->push(getCallee());

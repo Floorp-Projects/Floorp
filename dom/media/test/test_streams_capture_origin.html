@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 1189506</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1189506">Mozilla Bug 1189506</a>
+<p id="display"></p>
+<video id="vin"></video>
+<video id="vout" style="position:absolute; top:0; left:0"></video>
+<canvas id="c"></canvas>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1189506 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var resource = getPlayableVideo(gSmallTests).name;
+
+vin.src = "http://example.org:8000/tests/dom/media/test/" + resource;
+var stream = vin.mozCaptureStreamUntilEnded();
+vout.srcObject = stream;
+vin.play();
+vout.play();
+
+vout.onended = function() {
+  var ctx = SpecialPowers.wrap(c.getContext("2d"));
+  ctx.drawWindow(window, 0, 0, 10, 10, "rgb(255, 255, 0)", 0);
+  var data = ctx.getImageData(2, 2, 1, 1);
+  // Captured cross-origin video streams should render entirely black.
+  is(data.data.join(','), "0,0,0,255", "expected black");
+  vout.style.position = "";
+  SimpleTest.finish();
+};
+</script>
+</pre>
+</body>
+</html>

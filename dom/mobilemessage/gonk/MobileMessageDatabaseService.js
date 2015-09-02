@@ -110,11 +110,12 @@ MobileMessageDatabaseService.prototype = {
 
   createMessageCursor: function(aHasStartDate, aStartDate, aHasEndDate,
                                 aEndDate, aNumbers, aNumbersCount, aDelivery,
-                                aHasRead, aRead, aThreadId, aReverse, aCallback) {
+                                aHasRead, aRead, aHasThreadId, aThreadId,
+                                aReverse, aCallback) {
     return this.mmdb.createMessageCursor(aHasStartDate, aStartDate, aHasEndDate,
                                          aEndDate, aNumbers, aNumbersCount,
-                                         aDelivery, aHasRead, aRead, aThreadId,
-                                         aReverse, aCallback);
+                                         aDelivery, aHasRead, aRead, aHasThreadId,
+                                         aThreadId, aReverse, aCallback);
   },
 
   markMessageRead: function(aMessageId, aValue, aSendReadReport, aRequest) {

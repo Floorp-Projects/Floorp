@@ -392,8 +392,8 @@ class GetPropertyIC : public IonCache
     bool monitoredResult_ : 1;
     bool hasTypedArrayLengthStub_ : 1;
     bool hasSharedTypedArrayLengthStub_ : 1;
-    bool hasStrictArgumentsLengthStub_ : 1;
-    bool hasNormalArgumentsLengthStub_ : 1;
+    bool hasMappedArgumentsLengthStub_ : 1;
+    bool hasUnmappedArgumentsLengthStub_ : 1;
     bool hasGenericProxyStub_ : 1;
 
   public:
@@ -410,8 +410,8 @@ class GetPropertyIC : public IonCache
         monitoredResult_(monitoredResult),
         hasTypedArrayLengthStub_(false),
         hasSharedTypedArrayLengthStub_(false),
-        hasStrictArgumentsLengthStub_(false),
-        hasNormalArgumentsLengthStub_(false),
+        hasMappedArgumentsLengthStub_(false),
+        hasUnmappedArgumentsLengthStub_(false),
         hasGenericProxyStub_(false)
     {
     }
@@ -435,8 +435,8 @@ class GetPropertyIC : public IonCache
     bool hasAnyTypedArrayLengthStub(HandleObject obj) const {
         return obj->is<TypedArrayObject>() ? hasTypedArrayLengthStub_ : hasSharedTypedArrayLengthStub_;
     }
-    bool hasArgumentsLengthStub(bool strict) const {
-        return strict ? hasStrictArgumentsLengthStub_ : hasNormalArgumentsLengthStub_;
+    bool hasArgumentsLengthStub(bool mapped) const {
+        return mapped ? hasMappedArgumentsLengthStub_ : hasUnmappedArgumentsLengthStub_;
     }
     bool hasGenericProxyStub() const {
         return hasGenericProxyStub_;
@@ -622,8 +622,8 @@ class GetElementIC : public IonCache
     bool monitoredResult_ : 1;
     bool allowDoubleResult_ : 1;
     bool hasDenseStub_ : 1;
-    bool hasStrictArgumentsStub_ : 1;
-    bool hasNormalArgumentsStub_ : 1;
+    bool hasMappedArgumentsStub_ : 1;
+    bool hasUnmappedArgumentsStub_ : 1;
 
     size_t failedUpdates_;
 
@@ -639,8 +639,8 @@ class GetElementIC : public IonCache
         monitoredResult_(monitoredResult),
         allowDoubleResult_(allowDoubleResult),
         hasDenseStub_(false),
-        hasStrictArgumentsStub_(false),
-        hasNormalArgumentsStub_(false),
+        hasMappedArgumentsStub_(false),
+        hasUnmappedArgumentsStub_(false),
         failedUpdates_(0)
     {
     }
@@ -667,8 +667,8 @@ class GetElementIC : public IonCache
     bool hasDenseStub() const {
         return hasDenseStub_;
     }
-    bool hasArgumentsStub(bool strict) const {
-        return strict ? hasStrictArgumentsStub_ : hasNormalArgumentsStub_;
+    bool hasArgumentsStub(bool mapped) const {
+        return mapped ? hasMappedArgumentsStub_ : hasUnmappedArgumentsStub_;
     }
     void setHasDenseStub() {
         MOZ_ASSERT(!hasDenseStub());

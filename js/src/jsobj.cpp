@@ -692,11 +692,6 @@ NewObject(ExclusiveContext* cx, HandleObjectGroup group, gc::AllocKind kind,
         obj = nobj;
     }
 
-    bool globalWithoutCustomTrace = clasp->trace == JS_GlobalObjectTraceHook &&
-                                    !cx->compartment()->options().getTrace();
-    if (clasp->trace && !globalWithoutCustomTrace)
-        MOZ_RELEASE_ASSERT(clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS);
-
     probes::CreateObject(cx, obj);
     return obj;
 }

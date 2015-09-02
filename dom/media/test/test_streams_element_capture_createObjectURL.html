@@ -21,6 +21,11 @@ function checkDrawImage(vout) {
   is(imgData.data[3], 255, "Check video frame pixel has been drawn");
 }
 
+function isGreaterThanOrEqualEps(a, b, msg) {
+  ok(a >= b - 0.01,
+     "Got " + a + ", expected at least " + b + "; " + msg);
+}
+
 function startTest(test, token) {
   manager.started(token);
 
@@ -36,8 +41,8 @@ function startTest(test, token) {
   var checkEnded = function(test, vout, stream) { return function() {
     is(stream.currentTime, vout.currentTime, test.name + " stream final currentTime");
     if (test.duration) {
-      ok(Math.abs(vout.currentTime - test.duration) < 0.1,
-         test.name + " current time at end: " + vout.currentTime + " should be: " + test.duration);
+      isGreaterThanOrEqualEps(vout.currentTime, test.duration,
+         test.name + " current time at end");
     }
     is(vout.readyState, vout.HAVE_CURRENT_DATA, test.name + " checking readyState");
     ok(vout.ended, test.name + " checking playback has ended");
