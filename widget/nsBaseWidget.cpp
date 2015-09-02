@@ -2633,7 +2633,7 @@ case _value: eventName.AssignLiteral(_name) ; break
   {
     _ASSIGN_eventName(eBlur,"eBlur");
     _ASSIGN_eventName(NS_DRAGDROP_GESTURE,"NS_DND_GESTURE");
-    _ASSIGN_eventName(NS_DRAGDROP_DROP,"NS_DND_DROP");
+    _ASSIGN_eventName(eDrop,"eDrop");
     _ASSIGN_eventName(NS_DRAGDROP_ENTER,"NS_DND_ENTER");
     _ASSIGN_eventName(NS_DRAGDROP_EXIT,"NS_DND_EXIT");
     _ASSIGN_eventName(NS_DRAGDROP_OVER,"NS_DND_OVER");

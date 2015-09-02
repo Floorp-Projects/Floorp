@@ -2183,7 +2183,7 @@ TabChild::RecvRealDragEvent(const WidgetDragEvent& aEvent,
     }
   }
 
-  if (aEvent.mMessage == NS_DRAGDROP_DROP) {
+  if (aEvent.mMessage == eDrop) {
     bool canDrop = true;
     if (!dragSession || NS_FAILED(dragSession->GetCanDrop(&canDrop)) ||
         !canDrop) {

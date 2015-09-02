@@ -2052,7 +2052,7 @@ nsDragService::DispatchDropEvent()
     if (mTargetWindow->IsDestroyed())
         return FALSE;
 
-    EventMessage msg = mCanDrop ? NS_DRAGDROP_DROP : NS_DRAGDROP_EXIT;
+    EventMessage msg = mCanDrop ? eDrop : NS_DRAGDROP_EXIT;
 
     mTargetWindow->DispatchDragEvent(msg, mTargetWindowPoint, mTargetTime);
 
