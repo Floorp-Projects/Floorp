@@ -225,7 +225,7 @@ class TestNrSocketTest : public ::testing::Test {
                    NS_DISPATCH_SYNC);
 
     bool res;
-    WAIT_(wait_done_for_main_, 100, res);
+    WAIT_(wait_done_for_main_, 500, res);
     wait_done_for_main_ = false;
 
     if (!res) {
