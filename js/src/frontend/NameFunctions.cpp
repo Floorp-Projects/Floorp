@@ -377,7 +377,6 @@ class NameResolver
           case PNK_FRESHENBLOCK:
           case PNK_SUPERPROP:
           case PNK_OBJECT_PROPERTY_NAME:
-          case PNK_NEWTARGET:
             MOZ_ASSERT(cur->isArity(PN_NULLARY));
             break;
 
@@ -385,6 +384,12 @@ class NameResolver
             MOZ_ASSERT(cur->isArity(PN_UNARY));
             MOZ_ASSERT(cur->pn_kid->isKind(PNK_NAME));
             MOZ_ASSERT(!cur->pn_kid->maybeExpr());
+            break;
+
+          case PNK_NEWTARGET:
+            MOZ_ASSERT(cur->isArity(PN_BINARY));
+            MOZ_ASSERT(cur->pn_left->isKind(PNK_POSHOLDER));
+            MOZ_ASSERT(cur->pn_right->isKind(PNK_POSHOLDER));
             break;
 
           // Nodes with a single non-null child requiring name resolution.
@@ -779,6 +784,7 @@ class NameResolver
           case PNK_EXPORT_SPEC: // by PNK_EXPORT_SPEC_LIST
           case PNK_CALLSITEOBJ: // by PNK_TAGGED_TEMPLATE
           case PNK_CLASSNAMES:  // by PNK_CLASS
+          case PNK_POSHOLDER:   // by PNK_NEWTARGET
             MOZ_CRASH("should have been handled by a parent node");
 
           case PNK_LIMIT: // invalid sentinel value
