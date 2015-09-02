@@ -1860,7 +1860,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               if (styles.indexOf("heuristic") >= 0) {
                 // Don't handle this as a user-initiated action.
                 this._ignoreNextSelect = true;
+
+                // Don't fire DOMMenuItemActive so that screen readers still see
+                // the input as being focused.
+                this.richlistbox.suppressMenuItemEvent = true;
+
                 this.selectedIndex = 0;
+                this.richlistbox.suppressMenuItemEvent = false;
                 this._ignoreNextSelect = false;
               }
             }
