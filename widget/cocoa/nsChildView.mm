@@ -5735,8 +5735,9 @@ PanGestureTypeForEvent(NSEvent* aEvent)
       return NSDragOperationNone;
   }
 
-  if (aMessage == NS_DRAGDROP_ENTER)
+  if (aMessage == eDragEnter) {
     mDragService->StartDragSession();
+  }
 
   nsCOMPtr<nsIDragSession> dragSession;
   mDragService->GetCurrentSession(getter_AddRefs(dragSession));
@@ -5792,7 +5793,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
 
   if (dragSession) {
     switch (aMessage) {
-      case NS_DRAGDROP_ENTER:
+      case eDragEnter:
       case eDragOver: {
         uint32_t dragAction;
         dragSession->GetDragAction(&dragAction);
@@ -5847,7 +5848,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   globalDragPboard =
     [[NSPasteboardWrapper alloc] initWithPasteboard:[sender draggingPasteboard]];
 
-  return [self doDragAction:NS_DRAGDROP_ENTER sender:sender];
+  return [self doDragAction:eDragEnter sender:sender];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSDragOperationNone);
 }
