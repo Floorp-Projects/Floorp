@@ -2731,7 +2731,7 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
     mSlots->mDropOrient = -1;
     mSlots->mIsDragging = false;
     *aEventStatus = nsEventStatus_eConsumeNoDefault; // already handled the drop
-  } else if (aEvent->mMessage == NS_DRAGDROP_EXIT) {
+  } else if (aEvent->mMessage == eDragExit) {
     // this event was meant for another frame, so ignore it
     if (!mSlots)
       return NS_OK;

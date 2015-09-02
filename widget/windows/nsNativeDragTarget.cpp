@@ -362,7 +362,7 @@ nsNativeDragTarget::DragLeave()
   }
 
   // dispatch the event into Gecko
-  DispatchDragDropEvent(NS_DRAGDROP_EXIT, gDragLastPoint);
+  DispatchDragDropEvent(eDragExit, gDragLastPoint);
 
   nsCOMPtr<nsIDragSession> currentDragSession;
   mDragService->GetCurrentSession(getter_AddRefs(currentDragSession));

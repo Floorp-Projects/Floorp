@@ -1194,7 +1194,7 @@ CrossProcessSafeEvent(const WidgetEvent& aEvent)
   case eDragEventClass:
     switch (aEvent.mMessage) {
     case eDragOver:
-    case NS_DRAGDROP_EXIT:
+    case eDragExit:
     case eDrop:
       return true;
     default:
@@ -3319,9 +3319,9 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       ClearGlobalActiveContent(this);
       break;
     }
-  case NS_DRAGDROP_EXIT:
+  case eDragExit:
      // make sure to fire the enter and exit_synth events after the
-     // NS_DRAGDROP_EXIT event, otherwise we'll clean up too early
+     // eDragExit event, otherwise we'll clean up too early
     GenerateDragDropEnterExit(presContext, aEvent->AsDragEvent());
     break;
 
@@ -4316,7 +4316,7 @@ EventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
                                                  getter_AddRefs(lastContent));
 
           FireDragEnterOrExit(sLastDragOverFrame->PresContext(),
-                              aDragEvent, NS_DRAGDROP_EXIT,
+                              aDragEvent, eDragExit,
                               targetContent, lastContent, sLastDragOverFrame);
         }
 
@@ -4334,7 +4334,7 @@ EventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
     }
     break;
 
-  case NS_DRAGDROP_EXIT:
+  case eDragExit:
     {
       //This is actually the window mouse exit event.
       if (sLastDragOverFrame) {
@@ -4344,7 +4344,7 @@ EventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
 
         nsRefPtr<nsPresContext> lastDragOverFramePresContext = sLastDragOverFrame->PresContext();
         FireDragEnterOrExit(lastDragOverFramePresContext,
-                            aDragEvent, NS_DRAGDROP_EXIT,
+                            aDragEvent, eDragExit,
                             nullptr, lastContent, sLastDragOverFrame);
         FireDragEnterOrExit(lastDragOverFramePresContext,
                             aDragEvent, eDragLeave,
@@ -4393,15 +4393,14 @@ EventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
     }
 
     // adjust the drag hover if the dragenter event was cancelled or this is a drag exit
-    if (status == nsEventStatus_eConsumeNoDefault ||
-        aMessage == NS_DRAGDROP_EXIT) {
+    if (status == nsEventStatus_eConsumeNoDefault || aMessage == eDragExit) {
       SetContentState((aMessage == eDragEnter) ? aTargetContent : nullptr,
                       NS_EVENT_STATE_DRAGOVER);
     }
 
     // collect any changes to moz cursor settings stored in the event's
     // data transfer.
-    if (aMessage == eDragLeave || aMessage == NS_DRAGDROP_EXIT ||
+    if (aMessage == eDragLeave || aMessage == eDragExit ||
         aMessage == eDragEnter) {
       UpdateDragDataTransfer(&event);
     }
