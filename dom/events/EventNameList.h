@@ -161,7 +161,7 @@ EVENT(canplaythrough,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(change,
-      NS_FORM_CHANGE,
+      eFormChange,
       EventNameType_HTMLXUL,
       eBasicEventClass)
 EVENT(click,
