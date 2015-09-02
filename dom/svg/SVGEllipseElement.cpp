@@ -94,39 +94,27 @@ SVGEllipseElement::GetLengthInfo()
 // nsSVGPathGeometryElement methods
 
 bool
-SVGEllipseElement::GetGeometryBounds(Rect* aBounds,
-                                     const StrokeOptions& aStrokeOptions,
-                                     const Matrix& aToBoundsSpace,
-                                     const Matrix* aToNonScalingStrokeSpace)
+SVGEllipseElement::GetGeometryBounds(
+  Rect* aBounds, const StrokeOptions& aStrokeOptions, const Matrix& aTransform)
 {
   float x, y, rx, ry;
   GetAnimatedLengthValues(&x, &y, &rx, &ry, nullptr);
 
   if (rx <= 0.f || ry <= 0.f) {
     // Rendering of the element is disabled
-    *aBounds = Rect(aToBoundsSpace * Point(x, y), Size());
+    *aBounds = Rect(aTransform * Point(x, y), Size());
     return true;
   }
 
-  if (aToBoundsSpace.IsRectilinear()) {
+  if (aTransform.IsRectilinear()) {
     // Optimize the case where we can treat the ellipse as a rectangle and
     // still get tight bounds.
     if (aStrokeOptions.mLineWidth > 0.f) {
-      if (aToNonScalingStrokeSpace) {
-        if (aToNonScalingStrokeSpace->IsRectilinear()) {
-          Rect userBounds(x - rx, y - ry, 2 * rx, 2 * ry);
-          SVGContentUtils::RectilinearGetStrokeBounds(
-            userBounds, aToBoundsSpace, *aToNonScalingStrokeSpace,
-            aStrokeOptions.mLineWidth, aBounds);
-          return true;
-        }
-        return false;
-      }
       rx += aStrokeOptions.mLineWidth / 2.f;
       ry += aStrokeOptions.mLineWidth / 2.f;
     }
     Rect rect(x - rx, y - ry, 2 * rx, 2 * ry);
-    *aBounds = aToBoundsSpace.TransformBounds(rect);
+    *aBounds = aTransform.TransformBounds(rect);
     return true;
   }
 
