@@ -4965,7 +4965,6 @@ Parser<FullParseHandler>::isValidForStatementLHS(ParseNode* pn1, JSVersion versi
       case PNK_ARRAY:
       case PNK_CALL:
       case PNK_DOT:
-      case PNK_SUPERPROP:
       case PNK_ELEM:
       case PNK_SUPERELEM:
       case PNK_NAME:
@@ -8250,7 +8249,6 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TokenKind tt, bool
 
     JS_CHECK_RECURSION(context, return null());
 
-    bool isSuper = false;
     uint32_t superBegin = pos().begin;
 
     /* Check for new expression first. */
@@ -8287,13 +8285,16 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TokenKind tt, bool
             }
         }
     } else if (tt == TOK_SUPER) {
-        lhs = null();
-        isSuper = true;
+        lhs = handler.newSuperBase(pos(), context);
+        if (!lhs)
+            return null();
     } else {
         lhs = primaryExpr(yieldHandling, tt, invoked);
         if (!lhs)
             return null();
     }
+
+    MOZ_ASSERT_IF(handler.isSuperBase(lhs, context), tokenStream.isCurrentTokenType(TOK_SUPER));
 
     while (true) {
         if (!tokenStream.getToken(&tt))
@@ -8307,16 +8308,11 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TokenKind tt, bool
                 return null();
             if (tt == TOK_NAME) {
                 PropertyName* field = tokenStream.currentName();
-                if (isSuper) {
-                    isSuper = false;
-                    if (!checkAndMarkSuperScope()) {
-                        report(ParseError, false, null(), JSMSG_BAD_SUPERPROP, "property");
-                        return null();
-                    }
-                    nextMember = handler.newSuperProperty(field, TokenPos(superBegin, pos().end));
-                } else {
-                    nextMember = handler.newPropertyAccess(lhs, field, pos().end);
+                if (handler.isSuperBase(lhs, context) && !checkAndMarkSuperScope()) {
+                    report(ParseError, false, null(), JSMSG_BAD_SUPERPROP, "property");
+                    return null();
                 }
+                nextMember = handler.newPropertyAccess(lhs, field, pos().end);
                 if (!nextMember)
                     return null();
             } else {
@@ -8330,8 +8326,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TokenKind tt, bool
 
             MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_IN_INDEX);
 
-            if (isSuper) {
-                isSuper = false;
+            if (handler.isSuperBase(lhs, context)) {
                 if (!checkAndMarkSuperScope()) {
                     report(ParseError, false, null(), JSMSG_BAD_SUPERPROP, "member");
                     return null();
@@ -8346,7 +8341,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TokenKind tt, bool
                    tt == TOK_TEMPLATE_HEAD ||
                    tt == TOK_NO_SUBS_TEMPLATE)
         {
-            if (isSuper) {
+            if (handler.isSuperBase(lhs, context)) {
                 // For now...
                 report(ParseError, false, null(), JSMSG_BAD_SUPER);
                 return null();
@@ -8410,18 +8405,16 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TokenKind tt, bool
             }
             handler.setOp(nextMember, op);
         } else {
-            if (isSuper) {
-                report(ParseError, false, null(), JSMSG_BAD_SUPER);
-                return null();
-            }
             tokenStream.ungetToken();
+            if (handler.isSuperBase(lhs, context))
+                break;
             return lhs;
         }
 
         lhs = nextMember;
     }
 
-    if (isSuper) {
+    if (handler.isSuperBase(lhs, context)) {
         report(ParseError, false, null(), JSMSG_BAD_SUPER);
         return null();
     }
