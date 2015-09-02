@@ -213,6 +213,7 @@ let clearElementFn = dispatch(clearElement);
 let isElementDisplayedFn = dispatch(isElementDisplayed);
 let getElementValueOfCssPropertyFn = dispatch(getElementValueOfCssProperty);
 let switchToShadowRootFn = dispatch(switchToShadowRoot);
+let singleTapFn = dispatch(singleTap);
 
 /**
  * Start all message listeners
@@ -223,7 +224,7 @@ function startListeners() {
   addMessageListenerId("Marionette:executeScript", executeScript);
   addMessageListenerId("Marionette:executeAsyncScript", executeAsyncScript);
   addMessageListenerId("Marionette:executeJSScript", executeJSScript);
-  addMessageListenerId("Marionette:singleTap", singleTap);
+  addMessageListenerId("Marionette:singleTap", singleTapFn);
   addMessageListenerId("Marionette:actionChain", actionChain);
   addMessageListenerId("Marionette:multiAction", multiAction);
   addMessageListenerId("Marionette:get", get);
@@ -329,7 +330,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:executeScript", executeScript);
   removeMessageListenerId("Marionette:executeAsyncScript", executeAsyncScript);
   removeMessageListenerId("Marionette:executeJSScript", executeJSScript);
-  removeMessageListenerId("Marionette:singleTap", singleTap);
+  removeMessageListenerId("Marionette:singleTap", singleTapFn);
   removeMessageListenerId("Marionette:actionChain", actionChain);
   removeMessageListenerId("Marionette:multiAction", multiAction);
   removeMessageListenerId("Marionette:get", get);
@@ -918,34 +919,27 @@ function checkVisible(el, x, y) {
 /**
  * Function that perform a single tap
  */
-function singleTap(msg) {
-  let command_id = msg.json.command_id;
-  try {
-    let el = elementManager.getKnownElement(msg.json.id, curContainer);
-    let acc = accessibility.getAccessibleObject(el, true);
-    // after this block, the element will be scrolled into view
-    let visible = checkVisible(el, msg.json.corx, msg.json.cory);
-    checkVisibleAccessibility(acc, visible);
-    if (!visible) {
-      sendError(new ElementNotVisibleError("Element is not currently visible and may not be manipulated"), command_id);
-      return;
-    }
-    checkActionableAccessibility(acc);
-    if (!curContainer.frame.document.createTouch) {
-      actions.mouseEventsOnly = true;
-    }
-    let c = coordinates(el, msg.json.corx, msg.json.cory);
-    if (!actions.mouseEventsOnly) {
-      let touchId = actions.nextTouchId++;
-      let touch = createATouch(el, c.x, c.y, touchId);
-      emitTouchEvent('touchstart', touch);
-      emitTouchEvent('touchend', touch);
-    }
-    actions.mouseTap(el.ownerDocument, c.x, c.y);
-    sendOk(command_id);
-  } catch (e) {
-    sendError(e, command_id);
+function singleTap(id, x, y) {
+  let el = elementManager.getKnownElement(id, curContainer);
+  let acc = accessibility.getAccessibleObject(el, true);
+  // after this block, the element will be scrolled into view
+  let visible = checkVisible(el, x, y);
+  checkVisibleAccessibility(acc, visible);
+  if (!visible) {
+    throw new ElementNotVisibleError("Element is not currently visible and may not be manipulated");
   }
+  checkActionableAccessibility(acc);
+  if (!curContainer.frame.document.createTouch) {
+    actions.mouseEventsOnly = true;
+  }
+  let c = coordinates(el, x, y);
+  if (!actions.mouseEventsOnly) {
+    let touchId = actions.nextTouchId++;
+    let touch = createATouch(el, c.x, c.y, touchId);
+    emitTouchEvent("touchstart", touch);
+    emitTouchEvent("touchend", touch);
+  }
+  actions.mouseTap(el.ownerDocument, c.x, c.y);
 }
 
 /**
