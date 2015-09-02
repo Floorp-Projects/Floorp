@@ -3082,7 +3082,6 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
       case PNK_DELETENAME:
       case PNK_DELETEPROP:
       case PNK_DELETEELEM:
-      case PNK_DELETESUPERELEM:
       case PNK_DELETEEXPR:
       case PNK_TYPEOFNAME:
       case PNK_TYPEOFEXPR:
@@ -3165,20 +3164,17 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
 
         RootedValue left(cx), right(cx);
-        return expression(pn->pn_left, &left) &&
-               expression(pn->pn_right, &right) &&
+
+        if (pn->as<PropertyByValue>().isSuper()) {
+            if (!builder.super(&pn->pn_left->pn_pos, &left))
+                return false;
+        } else {
+            if (!expression(pn->pn_left, &left))
+                return false;
+        }
+
+        return expression(pn->pn_right, &right) &&
                builder.memberExpression(true, left, right, &pn->pn_pos, dst);
-      }
-
-      case PNK_SUPERELEM:
-      {
-        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
-
-        RootedValue superBase(cx), expr(cx);
-        RootedAtom superAtom(cx, cx->names().super);
-        return identifier(superAtom, nullptr, &superBase) &&
-               expression(pn->pn_kid, &expr) &&
-               builder.memberExpression(true, superBase, expr, &pn->pn_pos, dst);
       }
 
       case PNK_CALLSITEOBJ:

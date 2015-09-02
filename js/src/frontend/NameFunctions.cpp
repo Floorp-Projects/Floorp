@@ -400,7 +400,6 @@ class NameResolver
           case PNK_DELETENAME:
           case PNK_DELETEPROP:
           case PNK_DELETEELEM:
-          case PNK_DELETESUPERELEM:
           case PNK_DELETEEXPR:
           case PNK_NEG:
           case PNK_POS:
@@ -412,7 +411,6 @@ class NameResolver
           case PNK_ARRAYPUSH:
           case PNK_SPREAD:
           case PNK_MUTATEPROTO:
-          case PNK_SUPERELEM:
           case PNK_EXPORT:
           case PNK_EXPORT_DEFAULT:
             MOZ_ASSERT(cur->isArity(PN_UNARY));
@@ -443,7 +441,6 @@ class NameResolver
           case PNK_DIVASSIGN:
           case PNK_MODASSIGN:
           case PNK_POWASSIGN:
-          case PNK_ELEM:
           case PNK_COLON:
           case PNK_CASE:
           case PNK_SHORTHAND:
@@ -455,6 +452,14 @@ class NameResolver
           case PNK_CLASSMETHOD:
             MOZ_ASSERT(cur->isArity(PN_BINARY));
             if (!resolve(cur->pn_left, prefix))
+                return false;
+            if (!resolve(cur->pn_right, prefix))
+                return false;
+            break;
+
+          case PNK_ELEM:
+            MOZ_ASSERT(cur->isArity(PN_BINARY));
+            if (!cur->as<PropertyByValue>().isSuper() && !resolve(cur->pn_left, prefix))
                 return false;
             if (!resolve(cur->pn_right, prefix))
                 return false;

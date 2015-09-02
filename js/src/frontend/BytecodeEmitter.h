@@ -555,7 +555,6 @@ struct BytecodeEmitter
     bool emitDeleteName(ParseNode* pn);
     bool emitDeleteProperty(ParseNode* pn);
     bool emitDeleteElement(ParseNode* pn);
-    bool emitDeleteSuperElement(ParseNode* pn);
     bool emitDeleteExpression(ParseNode* pn);
 
     // |op| must be JSOP_TYPEOF or JSOP_TYPEOFEXPR.
@@ -613,7 +612,6 @@ struct BytecodeEmitter
     enum SuperElemOptions { SuperElem_Get, SuperElem_Set, SuperElem_Call, SuperElem_IncDec };
     bool emitSuperElemOperands(ParseNode* pn, SuperElemOptions opts = SuperElem_Get);
     bool emitSuperElemOp(ParseNode* pn, JSOp op, bool isCall = false);
-    bool emitSuperElemIncDec(ParseNode* pn);
 };
 
 } /* namespace frontend */
