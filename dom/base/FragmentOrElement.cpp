@@ -811,7 +811,7 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
       case NS_FORM_SELECTED:
       case NS_FORM_CHANGE:
       case eLoad:
-      case NS_FORM_RESET:
+      case eFormReset:
       case eResize:
       case eScroll:
         stopEvent = true;

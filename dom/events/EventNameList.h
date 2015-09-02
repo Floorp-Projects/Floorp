@@ -374,7 +374,7 @@ EVENT(ratechange,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(reset,
-      NS_FORM_RESET,
+      eFormReset,
       EventNameType_HTMLXUL,
       eBasicEventClass)
 EVENT(seeked,

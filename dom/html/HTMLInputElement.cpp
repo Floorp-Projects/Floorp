@@ -4015,7 +4015,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
         case NS_FORM_INPUT_IMAGE:
           if (mForm) {
             InternalFormEvent event(true,
-              (mType == NS_FORM_INPUT_RESET) ? NS_FORM_RESET : eFormSubmit);
+              (mType == NS_FORM_INPUT_RESET) ? eFormReset : eFormSubmit);
             event.originator      = this;
             nsEventStatus status  = nsEventStatus_eIgnore;
 
