@@ -151,14 +151,14 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         kwargs.setdefault('all_actions', ['clobber',
                                           'read-buildbot-config',
                                           'download-and-extract',
-                                          'clone-talos',
+                                          'populate-webroot',
                                           'create-virtualenv',
                                           'install',
                                           'run-tests',
                                           ])
         kwargs.setdefault('default_actions', ['clobber',
                                               'download-and-extract',
-                                              'clone-talos',
+                                              'populate-webroot',
                                               'create-virtualenv',
                                               'install',
                                               'run-tests',
@@ -173,8 +173,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         self.talos_json_url = self.config.get("talos_json_url")
         self.talos_json = self.config.get("talos_json")
         self.talos_json_config = self.config.get("talos_json_config")
-        self.talos_path = os.path.join(self.workdir, 'talos_repo')
-        self.has_cloned_talos = False
         self.tests = None
         self.pagesets_url = None
         self.pagesets_parent_dir_path = None
@@ -323,25 +321,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
             options += c['talos_extra_options']
         return options
 
-    def query_talos_repo(self):
-        """Where do we install the talos python package from?
-        This needs to be overrideable by the talos json.
-        """
-        default_repo = "https://hg.mozilla.org/build/talos"
-        if self.query_talos_json_config():
-            return self.talos_json_config.get('global', {}).get('talos_repo', default_repo)
-        else:
-            return self.config.get('talos_repo', default_repo)
-
-    def query_talos_revision(self):
-        """Which talos revision do we want to use?
-        This needs to be overrideable by the talos json.
-        """
-        if self.query_talos_json_config():
-            return self.talos_json_config['global']['talos_revision']
-        else:
-            return self.config.get('talos_revision')
-
     def query_pagesets_url(self):
         """Certain suites require external pagesets to be downloaded and
         extracted.
@@ -454,28 +433,21 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
             return conf
         return os.path.join(self.workdir, conf)
 
-    def _populate_webroot(self):
+    def populate_webroot(self):
         """Populate the production test slaves' webroots"""
         c = self.config
-        talos_repo = self.query_talos_repo()
-        talos_revision = self.query_talos_revision()
-        if not c.get('webroot') or not talos_repo:
-            self.fatal("Both webroot and talos_repo need to be set to populate_webroot!")
+        if not c.get('webroot'):
+            self.fatal("webroot need to be set to populate_webroot!")
         self.info("Populating webroot %s..." % c['webroot'])
         talos_webdir = os.path.join(c['webroot'], 'talos')
         self.mkdir_p(c['webroot'], error_level=FATAL)
         self.rmtree(talos_webdir, error_level=FATAL)
 
-        # clone talos' repo
-        repo = {
-            'repo': talos_repo,
-            'vcs': 'hg',
-            'dest': self.talos_path,
-            'revision': talos_revision,
-            'output_timeout': 1200,
-        }
-        self.vcs_checkout(**repo)
-        self.has_cloned_talos = True
+        self.talos_path = os.path.join(
+            self.query_abs_dirs()['abs_work_dir'], 'tests', 'talos'
+        )
+        if c.get('run_local'):
+            self.talos_path = os.path.dirname(self.talos_json)
 
         # the apache server needs the talos directory (talos/talos)
         # to be in the webroot
@@ -511,31 +483,27 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
     # Action methods. {{{1
     # clobber defined in BaseScript
     # read_buildbot_config defined in BuildbotMixin
-    # download_and_extract defined in TestingMixin
 
-    def clone_talos(self):
-        c = self.config
-        if not c.get('python_webserver', True) and c.get('populate_webroot'):
-            self._populate_webroot()
+    def download_and_extract(self, target_unzip_dirs=None, suite_categories=None):
+        return super(Talos, self).download_and_extract(
+            suite_categories=['common', 'talos']
+        )
 
     def create_virtualenv(self, **kwargs):
         """VirtualenvMixin.create_virtualenv() assuemes we're using
         self.config['virtualenv_modules']. Since we are installing
         talos from its source, we have to wrap that method here."""
         # XXX This method could likely be replaced with a PreScriptAction hook.
-        if self.has_cloned_talos:
-            # require pip >= 1.5 so pip will prefer .whl files to install
-            super(Talos, self).create_virtualenv(
-                modules=['mozinstall', 'pip>=1.5']
-            )
-            # talos in harness requires mozinstall and what is
-            # listed in talos requirements.txt file.
-            self.install_module(
-                requirements=[os.path.join(self.talos_path,
-                                           'requirements.txt')]
-            )
-        else:
-            super(Talos, self).create_virtualenv(**kwargs)
+        # require pip >= 1.5 so pip will prefer .whl files to install
+        super(Talos, self).create_virtualenv(
+            modules=['mozinstall', 'pip>=1.5']
+        )
+        # talos in harness requires mozinstall and what is
+        # listed in talos requirements.txt file.
+        self.install_module(
+            requirements=[os.path.join(self.talos_path,
+                                       'requirements.txt')]
+        )
 
     def postflight_create_virtualenv(self):
         """ This belongs in download_and_install() but requires the
@@ -544,8 +512,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         The real fix here may be a --tpmanifest option for PerfConfigurator.
         """
         c = self.config
-        if not c.get('python_webserver', True) and c.get('populate_webroot') \
-                and self.query_pagesets_url():
+        if not c.get('python_webserver', True) and self.query_pagesets_url():
             pagesets_path = self.query_pagesets_manifest_path()
             manifest_source = os.path.join(c['webroot'], pagesets_path)
             manifest_target = os.path.join(self.query_python_site_packages_path(), pagesets_path)
