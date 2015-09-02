@@ -226,10 +226,8 @@ SVGImageElement::IsAttributeMapped(const nsIAtom* name) const
 /* For the purposes of the update/invalidation logic pretend to
    be a rectangle. */
 bool
-SVGImageElement::GetGeometryBounds(Rect* aBounds,
-                                   const StrokeOptions& aStrokeOptions,
-                                   const Matrix& aToBoundsSpace,
-                                   const Matrix* aToNonScalingStrokeSpace)
+SVGImageElement::GetGeometryBounds(
+  Rect* aBounds, const StrokeOptions& aStrokeOptions, const Matrix& aTransform)
 {
   Rect rect;
   GetAnimatedLengthValues(&rect.x, &rect.y, &rect.width,
@@ -240,7 +238,7 @@ SVGImageElement::GetGeometryBounds(Rect* aBounds,
     rect.SetEmpty(); // Make sure width/height are zero and not negative
   }
 
-  *aBounds = aToBoundsSpace.TransformBounds(rect);
+  *aBounds = aTransform.TransformBounds(rect);
   return true;
 }
 
