@@ -72,7 +72,7 @@ class B2GContext(object):
 
     @property
     def update_tools(self):
-        if self._update_tools is None:
+        if self._update_tools is None and self.homedir is not None:
             self._update_tools = os.path.join(self.homedir, 'tools', 'update-tools')
         return self._update_tools
 
@@ -94,7 +94,9 @@ class B2GContext(object):
         if self._bindir is None and self.homedir is not None:
             # TODO get this via build configuration
             path = os.path.join(self.homedir, 'out', 'host', '*', 'bin')
-            self._bindir = glob.glob(path)[0]
+            paths = glob.glob(path)
+            if paths:
+                self._bindir = paths[0]
         return self._bindir
 
     @property
