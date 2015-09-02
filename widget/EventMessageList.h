@@ -89,12 +89,12 @@ NS_EVENT_MESSAGE(ePopState,             eStreamEventFirst + 5)
 NS_EVENT_MESSAGE(eBeforeUnload,         eStreamEventFirst + 6)
 NS_EVENT_MESSAGE(eReadyStateChange,     eStreamEventFirst + 8)
  
-NS_EVENT_MESSAGE(NS_FORM_EVENT_START,   1200)
-NS_EVENT_MESSAGE(NS_FORM_SUBMIT,        NS_FORM_EVENT_START)
-NS_EVENT_MESSAGE(NS_FORM_RESET,         NS_FORM_EVENT_START + 1)
-NS_EVENT_MESSAGE(NS_FORM_CHANGE,        NS_FORM_EVENT_START + 2)
-NS_EVENT_MESSAGE(NS_FORM_SELECTED,      NS_FORM_EVENT_START + 3)
-NS_EVENT_MESSAGE(NS_FORM_INVALID,       NS_FORM_EVENT_START + 4)
+NS_EVENT_MESSAGE(eFormEventFirst,       1200)
+NS_EVENT_MESSAGE(NS_FORM_SUBMIT,        eFormEventFirst)
+NS_EVENT_MESSAGE(NS_FORM_RESET,         eFormEventFirst + 1)
+NS_EVENT_MESSAGE(NS_FORM_CHANGE,        eFormEventFirst + 2)
+NS_EVENT_MESSAGE(NS_FORM_SELECTED,      eFormEventFirst + 3)
+NS_EVENT_MESSAGE(NS_FORM_INVALID,       eFormEventFirst + 4)
 
 //Need separate focus/blur notifications for non-native widgets
 NS_EVENT_MESSAGE(NS_FOCUS_EVENT_START,  1300)
