@@ -507,7 +507,6 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
     return nullptr;
   }
 
-#ifdef USE_INTERFACE_PRIORITIZER
   nr_interface_prioritizer *prioritizer = CreateInterfacePrioritizer();
   if (!prioritizer) {
     MOZ_MTLOG(LogLevel::Error, "Couldn't create interface prioritizer.");
@@ -519,7 +518,6 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
     MOZ_MTLOG(LogLevel::Error, "Couldn't set interface prioritizer.");
     return nullptr;
   }
-#endif  // USE_INTERFACE_PRIORITIZER
 
   if (ctx->generating_trickle()) {
     r = nr_ice_ctx_set_trickle_cb(ctx->ctx_, &NrIceCtx::trickle_cb, ctx);
