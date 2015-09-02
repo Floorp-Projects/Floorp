@@ -14,7 +14,6 @@
 #include "gc/Barrier.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ProxyObject.h"
-#include "vm/WeakMapObject.h"
 
 namespace js {
 

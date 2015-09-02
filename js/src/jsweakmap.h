@@ -397,6 +397,44 @@ WeakMap_clear(JSContext* cx, unsigned argc, Value* vp);
 extern JSObject*
 InitWeakMapClass(JSContext* cx, HandleObject obj);
 
+
+class ObjectValueMap : public WeakMap<PreBarrieredObject, RelocatableValue>
+{
+  public:
+    ObjectValueMap(JSContext* cx, JSObject* obj)
+      : WeakMap<PreBarrieredObject, RelocatableValue>(cx, obj) {}
+
+    virtual bool findZoneEdges();
+};
+
+
+// Generic weak map for mapping objects to other objects.
+class ObjectWeakMap
+{
+  private:
+    ObjectValueMap map;
+    typedef gc::HashKeyRef<ObjectValueMap, JSObject*> StoreBufferRef;
+
+  public:
+    explicit ObjectWeakMap(JSContext* cx);
+    bool init();
+    ~ObjectWeakMap();
+
+    JSObject* lookup(const JSObject* obj);
+    bool add(JSContext* cx, JSObject* obj, JSObject* target);
+    void clear();
+
+    void trace(JSTracer* trc);
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
+        return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
+    }
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+    void checkAfterMovingGC();
+#endif
+};
+
 } /* namespace js */
 
 #endif /* jsweakmap_h */
