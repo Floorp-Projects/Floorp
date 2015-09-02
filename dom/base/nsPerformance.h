@@ -325,6 +325,8 @@ public:
 
   void AddObserver(PerformanceObserver* aObserver);
   void RemoveObserver(PerformanceObserver* aObserver);
+  void NotifyObservers();
+  void CancelNotificationObservers();
 
 protected:
   virtual ~PerformanceBase();
@@ -358,6 +360,9 @@ protected:
   void LogEntry(PerformanceEntry* aEntry, const nsACString& aOwner) const;
   void TimingNotification(PerformanceEntry* aEntry, const nsACString& aOwner, uint64_t epoch);
 
+  void RunNotificationObserversTask();
+  void QueueEntry(PerformanceEntry* aEntry);
+
   nsTObserverArray<PerformanceObserver*> mObservers;
 
 private:
@@ -366,6 +371,7 @@ private:
 
   uint64_t mResourceTimingBufferSize;
   static const uint64_t kDefaultResourceTimingBufferSize = 150;
+  bool mPendingNotificationObserversTask;
 };
 
 // Script "performance" object
