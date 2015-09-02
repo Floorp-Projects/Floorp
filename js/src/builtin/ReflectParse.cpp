@@ -756,7 +756,7 @@ class NodeBuilder
     bool generatorExpression(HandleValue body, NodeVector& blocks, HandleValue filter,
                              bool isLegacy, TokenPos* pos, MutableHandleValue dst);
 
-    bool newTargetExpression(TokenPos* pos, MutableHandleValue dst);
+    bool metaProperty(HandleValue meta, HandleValue property, TokenPos* pos, MutableHandleValue dst);
 
     /*
      * declarations
@@ -1826,13 +1826,16 @@ NodeBuilder::classDefinition(bool expr, HandleValue name, HandleValue heritage, 
 }
 
 bool
-NodeBuilder::newTargetExpression(TokenPos* pos, MutableHandleValue dst)
+NodeBuilder::metaProperty(HandleValue meta, HandleValue property, TokenPos* pos, MutableHandleValue dst)
 {
-    RootedValue cb(cx, callbacks[AST_NEWTARGET_EXPR]);
+    RootedValue cb(cx, callbacks[AST_METAPROPERTY]);
     if (!cb.isNull())
-        return callback(cb, pos, dst);
+        return callback(cb, meta, property, pos, dst);
 
-    return newNode(AST_NEWTARGET_EXPR, pos, dst);
+    return newNode(AST_METAPROPERTY, pos,
+                   "meta", meta,
+                   "property", property,
+                   dst);
 }
 
 namespace {
@@ -3312,7 +3315,22 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
         return classDefinition(pn, true, dst);
 
       case PNK_NEWTARGET:
-        return builder.newTargetExpression(&pn->pn_pos, dst);
+      {
+        MOZ_ASSERT(pn->pn_left->isKind(PNK_POSHOLDER));
+        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
+        MOZ_ASSERT(pn->pn_right->isKind(PNK_POSHOLDER));
+        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
+
+        RootedValue newIdent(cx);
+        RootedValue targetIdent(cx);
+
+        RootedAtom newStr(cx, cx->names().new_);
+        RootedAtom targetStr(cx, cx->names().target);
+
+        return identifier(newStr, &pn->pn_left->pn_pos, &newIdent) &&
+               identifier(targetStr, &pn->pn_right->pn_pos, &targetIdent) &&
+               builder.metaProperty(newIdent, targetIdent, &pn->pn_pos, dst);
+      }
 
       default:
         LOCAL_NOT_REACHED("unexpected expression type");

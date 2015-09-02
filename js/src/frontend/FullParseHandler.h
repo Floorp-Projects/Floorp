@@ -352,8 +352,11 @@ class FullParseHandler
     ParseNode* newSuperElement(ParseNode* expr, const TokenPos& pos) {
         return new_<SuperElement>(expr, pos);
     }
-    ParseNode* newNewTarget(const TokenPos& pos) {
-        return new_<NullaryNode>(PNK_NEWTARGET, pos);
+    ParseNode* newNewTarget(ParseNode* newHolder, ParseNode* targetHolder) {
+        return new_<BinaryNode>(PNK_NEWTARGET, JSOP_NOP, newHolder, targetHolder);
+    }
+    ParseNode* newPosHolder(const TokenPos& pos) {
+        return new_<NullaryNode>(PNK_POSHOLDER, pos);
     }
 
     bool addPrototypeMutation(ParseNode* literal, uint32_t begin, ParseNode* expr) {
