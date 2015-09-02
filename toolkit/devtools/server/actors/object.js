@@ -1898,9 +1898,9 @@ function createValueGrip(value, pool, makeObjectGrip) {
       if (value === null) {
         return { type: "null" };
       }
-    else if(value.optimizedOut ||
-            value.uninitialized ||
-            value.missingArguments) {
+    else if (value.optimizedOut ||
+             value.uninitialized ||
+             value.missingArguments) {
         // The slot is optimized out, an uninitialized binding, or
         // arguments on a dead scope
         return {

@@ -60,6 +60,7 @@ add_task(function*() {
   ok(!importedModel.isRecording(), "All imported recordings should not be recording");
   ok(importedModel.isImported(), "All imported recordings should be considerd imported");
 
+  yield front.destroy();
   yield closeDebuggerClient(client);
   gBrowser.removeCurrentTab();
 });

@@ -48,7 +48,7 @@
 <!ENTITY trackingProtection.state.enabled      "ON">
 <!ENTITY trackingProtection.state.disabled     "OFF">
 
-<!ENTITY trackingProtection.description1       "Private Windows now block parts of the page that may track your browsing activity.">
+<!ENTITY trackingProtection.description1       "Private windows now block parts of the page that may track your browsing activity.">
 
 <!ENTITY trackingProtection.disable            "Turn Tracking Protection Off">
 <!ENTITY trackingProtection.enable             "Turn Tracking Protection On">

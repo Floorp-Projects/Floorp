@@ -31,6 +31,7 @@ add_task(function*() {
   ok(timestamps.every(time => time > 0 && typeof time === "number"), "all timestamps have numeric values");
   ok(sizes.every(n => n > 0 && typeof n === "number"), "all sizes are positive numbers");
 
+  yield front.destroy();
   yield closeDebuggerClient(client);
   gBrowser.removeCurrentTab();
 });
