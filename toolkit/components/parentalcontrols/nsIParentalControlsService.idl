@@ -11,7 +11,7 @@ interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIArray;
 
-[scriptable, uuid(ed14d186-e902-4d41-86cb-8949fd7b53d7)]
+[scriptable, uuid(f9962e65-5369-4346-8c44-84d5319abfc2)]
 interface nsIParentalControlsService : nsISupports
 {
   /**
@@ -36,6 +36,7 @@ interface nsIParentalControlsService : nsISupports
   const short CLEAR_HISTORY = 17; // Clear browsing history
   const short MASTER_PASSWORD = 18; // Setting master password for logins
   const short GUEST_BROWSING = 19; // Disallow usage of guest browsing
+  const short DEFAULT_THEME = 20; // Use default theme or a special parental controls theme
 
   /**
    * @returns true if the current user account has parental controls
