@@ -295,7 +295,7 @@ nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
   winDragService->SetIDataObject(pIDataSource);
 
   // Now process the native drag state and then dispatch the event
-  ProcessDrag(NS_DRAGDROP_ENTER, grfKeyState, ptl, pdwEffect);
+  ProcessDrag(eDragEnter, grfKeyState, ptl, pdwEffect);
 
   return S_OK;
 }

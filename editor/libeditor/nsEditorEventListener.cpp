@@ -371,7 +371,7 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
   //       you don't need to check if the QI succeeded before each call.
   switch (internalEvent->mMessage) {
     // dragenter
-    case NS_DRAGDROP_ENTER: {
+    case eDragEnter: {
       nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
       return DragEnter(dragEvent);
     }
