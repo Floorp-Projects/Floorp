@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1114507
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1114507</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=1114507">Mozilla Bug1114507</a>
+<p id="display"></p>
+<div id="container" style="display: none"></div>
+<script type="text/javascript" src="test_permission_helper.js"></script>
+<script type="application/javascript">
+// Put all the tests in order
+var tests = [
+  // Setup preferences and permissions
+  setupPrefsAndPermissions,
+
+  // +------------------------------------------+
+  // | Test 2: Open and close a test-target-app |
+  // |         on 2nd level child-process       |
+  // +------------------------------------------+
+  //
+  // level
+  //    1   chrome process
+  //              |
+  //    2   child process <-- app is here
+
+  // Add permission to app
+  function() {
+    addPermissionToApp(APP_URL, APP_MANIFEST);
+  },
+
+  test2,
+];
+
+runTests();
+</script>
+</body>
+</html>

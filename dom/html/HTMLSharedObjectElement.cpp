@@ -164,7 +164,7 @@ HTMLSharedObjectElement::UnbindFromTree(bool aDeep,
 {
 #ifdef XP_MACOSX
   // When a page is reloaded (when an nsIDocument's content is removed), the
-  // focused element isn't necessarily sent an NS_BLUR_CONTENT event. See
+  // focused element isn't necessarily sent an eBlur event. See
   // nsFocusManager::ContentRemoved(). This means that a widget may think it
   // still contains a focused plugin when it doesn't -- which in turn can
   // disable text input in the browser window. See bug 1137229.

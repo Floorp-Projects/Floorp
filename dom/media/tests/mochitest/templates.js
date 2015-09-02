@@ -137,7 +137,7 @@ var checkAllTrackStats = pc => {
 // renegotiation test.
 var commandsPeerConnectionInitial = [
   function PC_SETUP_SIGNALING_CLIENT(test) {
-    if (test.steeplechase) {
+    if (test.testOptions.steeplechase) {
       test.setupSignalingClient();
       test.registerSignalingCallback("ice_candidate", function (message) {
         var pc = test.pcRemote ? test.pcRemote : test.pcLocal;
@@ -215,21 +215,21 @@ var commandsPeerConnectionOfferAnswer = [
   },
 
   function PC_LOCAL_STEEPLECHASE_SIGNAL_EXPECTED_LOCAL_TRACKS(test) {
-    if (test.steeplechase) {
+    if (test.testOptions.steeplechase) {
       send_message({"type": "local_expected_tracks",
                     "expected_tracks": test.pcLocal.expectedLocalTrackInfoById});
     }
   },
 
   function PC_REMOTE_STEEPLECHASE_SIGNAL_EXPECTED_LOCAL_TRACKS(test) {
-    if (test.steeplechase) {
+    if (test.testOptions.steeplechase) {
       send_message({"type": "remote_expected_tracks",
                     "expected_tracks": test.pcRemote.expectedLocalTrackInfoById});
     }
   },
 
   function PC_LOCAL_GET_EXPECTED_REMOTE_TRACKS(test) {
-    if (test.steeplechase) {
+    if (test.testOptions.steeplechase) {
       return test.getSignalingMessage("remote_expected_tracks").then(
           message => {
             test.pcLocal.expectedRemoteTrackInfoById = message.expected_tracks;
@@ -242,7 +242,7 @@ var commandsPeerConnectionOfferAnswer = [
   },
 
   function PC_REMOTE_GET_EXPECTED_REMOTE_TRACKS(test) {
-    if (test.steeplechase) {
+    if (test.testOptions.steeplechase) {
       return test.getSignalingMessage("local_expected_tracks").then(
           message => {
             test.pcRemote.expectedRemoteTrackInfoById = message.expected_tracks;
@@ -262,7 +262,7 @@ var commandsPeerConnectionOfferAnswer = [
   },
 
   function PC_LOCAL_STEEPLECHASE_SIGNAL_OFFER(test) {
-    if (test.steeplechase) {
+    if (test.testOptions.steeplechase) {
       send_message({"type": "offer",
                     "offer": test.originalOffer,
                     "offer_constraints": test.pcLocal.constraints,
@@ -282,7 +282,7 @@ var commandsPeerConnectionOfferAnswer = [
   },
 
   function PC_REMOTE_GET_OFFER(test) {
-    if (!test.steeplechase) {
+    if (!test.testOptions.steeplechase) {
       test._local_offer = test.originalOffer;
       test._offer_constraints = test.pcLocal.constraints;
       test._offer_options = test.pcLocal.offerOptions;
@@ -324,7 +324,7 @@ var commandsPeerConnectionOfferAnswer = [
       .then(answer => {
         is(test.pcRemote.signalingState, HAVE_REMOTE_OFFER,
            "Remote createAnswer does not change signaling state");
-        if (test.steeplechase) {
+        if (test.testOptions.steeplechase) {
           send_message({"type": "answer",
                         "answer": test.originalAnswer,
                         "answer_constraints": test.pcRemote.constraints});
@@ -343,7 +343,7 @@ var commandsPeerConnectionOfferAnswer = [
   },
 
   function PC_LOCAL_GET_ANSWER(test) {
-    if (!test.steeplechase) {
+    if (!test.testOptions.steeplechase) {
       test._remote_answer = test.originalAnswer;
       test._answer_constraints = test.pcRemote.constraints;
       return Promise.resolve();
@@ -410,13 +410,13 @@ var commandsPeerConnectionOfferAnswer = [
 
   function PC_LOCAL_CHECK_STATS(test) {
     return test.pcLocal.getStats().then(stats => {
-      test.pcLocal.checkStats(stats, test.steeplechase);
+      test.pcLocal.checkStats(stats, test.testOptions.steeplechase);
     });
   },
 
   function PC_REMOTE_CHECK_STATS(test) {
     return test.pcRemote.getStats().then(stats => {
-      test.pcRemote.checkStats(stats, test.steeplechase);
+      test.pcRemote.checkStats(stats, test.testOptions.steeplechase);
     });
   },
 

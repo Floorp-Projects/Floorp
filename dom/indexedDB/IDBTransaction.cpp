@@ -82,6 +82,7 @@ IDBTransaction::IDBTransaction(IDBDatabase* aDatabase,
   , mAbortCode(NS_OK)
   , mPendingRequestCount(0)
   , mLineNo(0)
+  , mColumn(0)
   , mReadyState(IDBTransaction::INITIAL)
   , mMode(aMode)
   , mCreating(false)
@@ -186,7 +187,7 @@ IDBTransaction::CreateVersionChange(
                        emptyObjectStoreNames,
                        VERSION_CHANGE);
   aOpenRequest->GetCallerLocation(transaction->mFilename,
-                                  &transaction->mLineNo);
+                                  &transaction->mLineNo, &transaction->mColumn);
 
   transaction->SetScriptOwner(aDatabase->GetScriptOwner());
 
@@ -219,7 +220,8 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
 
   nsRefPtr<IDBTransaction> transaction =
     new IDBTransaction(aDatabase, aObjectStoreNames, aMode);
-  IDBRequest::CaptureCaller(transaction->mFilename, &transaction->mLineNo);
+  IDBRequest::CaptureCaller(transaction->mFilename, &transaction->mLineNo,
+                            &transaction->mColumn);
 
   transaction->SetScriptOwner(aDatabase->GetScriptOwner());
 
@@ -492,13 +494,16 @@ IDBTransaction::IsOpen() const
 }
 
 void
-IDBTransaction::GetCallerLocation(nsAString& aFilename, uint32_t* aLineNo) const
+IDBTransaction::GetCallerLocation(nsAString& aFilename, uint32_t* aLineNo,
+                                  uint32_t* aColumn) const
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aLineNo);
+  MOZ_ASSERT(aColumn);
 
   aFilename = mFilename;
   *aLineNo = mLineNo;
+  *aColumn = mColumn;
 }
 
 already_AddRefed<IDBObjectStore>

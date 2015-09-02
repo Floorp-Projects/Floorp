@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1114507
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1114507</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=1114507">Mozilla Bug1114507</a>
+<p id="display"></p>
+<div id="container" style="display: none"></div>
+<script type="text/javascript" src="test_permission_helper.js"></script>
+<script type="application/javascript">
+// Put all the tests in order
+var tests = [
+  // Setup preferences and permissions
+  setupPrefsAndPermissions,
+
+  // ****************************************************
+  // Setup the enviroment for testing nested-oop cases: *
+  // test 3,4,5                                         *
+  // ****************************************************
+
+  // Install the app
+  installApp,
+
+  // Allow permission for embedApp to open mozbrowser and mozapp
+  function() {
+    var appId = gAppsService.getAppLocalIdByManifestURL(embedAppHostedManifestURL);
+    var context = { url: embedApp.origin,
+                    appId: appId,
+                    isInBrowserElement: false };
+    setupOpenAppPermission(context, runTests);
+  },
+
+  // +---------------------------------------------------------+
+  // | Test 4: Open two test-target-app on 2nd and 3rd level   |
+  // |         child-processes then close the one on 3rd level |
+  // +---------------------------------------------------------+
+  //
+  // level
+  //    1           chrome process
+  //                /             \
+  //    2       child process   child process <-- app is here
+  //              /
+  //    3     child process <-- app is here
+
+  // Add permission to app
+  function() {
+    addPermissionToApp(APP_URL, APP_MANIFEST);
+  },
+
+  test4,
+
+  // Remove another test-target-app on 2nd level process
+  function() {
+    var afterShutdown = function() {
+      // We expect there is no permission for the test-target-app now
+      runNextIfAppHasPermission(4, false, APP_URL, APP_MANIFEST);
+    };
+    // Test permission after test-target-app
+    // on 2nd level process is killed
+    afterContentShutdown(1, afterShutdown);
+
+    removeAppFrame(APP_IFRAME_ID2);
+  },
+
+  // Remove the last child-process on 2nd level
+  function() {
+    var afterShutdown = function() {
+      runTests();
+    };
+    afterContentShutdown(1, afterShutdown);
+    removeAppFrame(APP_IFRAME_ID);
+  },
+
+  uninstallApp
+];
+
+runTests();
+</script>
+</body>
+</html>
