@@ -19,7 +19,7 @@ if CONFIG['MOZ_REPLACE_MALLOC']:
     ]
 
 SOURCES += [
-    'jemalloc_config.c',
+    'jemalloc_config.cpp',
     'mozmemory_wrap.c',
 ]
 
