@@ -38,7 +38,7 @@ functionDeclaration = (id, params, body) => Pattern({
 });
 classDeclaration = (name) => Pattern({
     type: "ClassStatement",
-    id: name
+    name: name
 });
 variableDeclaration = (decls) => Pattern({
     type: "VariableDeclaration",
