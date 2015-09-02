@@ -176,9 +176,9 @@ JS_CallTenuredObjectTracer(JSTracer* trc, JS::TenuredHeap<JSObject*>* objp, cons
 }
 
 JS_PUBLIC_API(void)
-JS_TraceChildren(JSTracer* trc, void* thing, JS::TraceKind kind)
+JS::TraceChildren(JSTracer* trc, GCCellPtr thing)
 {
-    js::TraceChildren(trc, thing, kind);
+    js::TraceChildren(trc, thing.asCell(), thing.kind());
 }
 
 struct TraceChildrenFunctor {
