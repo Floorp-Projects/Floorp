@@ -100,7 +100,7 @@ hardware (via AudioStream).
 namespace mozilla {
 
 namespace media {
-class AudioSink;
+class MediaSink;
 }
 
 class AudioSegment;
@@ -999,8 +999,8 @@ private:
   // Media Fragment end time in microseconds. Access controlled by decoder monitor.
   int64_t mFragmentEndTime;
 
-  // The audio sink resource.  Used on state machine and audio threads.
-  RefPtr<media::AudioSink> mAudioSink;
+  // The audio sink resource.  Used on the state machine thread.
+  nsRefPtr<media::MediaSink> mAudioSink;
 
   // The reader, don't call its methods with the decoder monitor held.
   // This is created in the state machine's constructor.
