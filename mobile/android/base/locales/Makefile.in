@@ -44,18 +44,6 @@ chrome-%::
 	  $(dir-res-raw)-$(AB_rCD)/browsersearch.json \
 	  AB_CD=$*
 
-# setup the path to bookmarks.inc. copied and tweaked version of MERGE_FILE from config/config.mk
-MOBILE_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(topsrcdir)/mobile/locales/en-US,$(or $(realpath $(L10NBASEDIR)),$(abspath $(L10NBASEDIR)))/$(AB_CD)/mobile)
-
-ifdef LOCALE_MERGEDIR
-BOOKMARKSPATH = $(firstword \
-  $(wildcard $(LOCALE_MERGEDIR)/mobile/profile/bookmarks.inc ) \
-  $(wildcard $(MOBILE_LOCALE_SRCDIR)/profile/bookmarks.inc ) \
-  $(topsrcdir)/mobile/locales/en-US/profile/bookmarks.inc )
-else
-BOOKMARKSPATH = $(abspath $(MOBILE_LOCALE_SRCDIR)/profile/bookmarks.inc)
-endif
-
 # Determine the ../res/values[-*]/ path
 strings-xml-bypath  = $(filter %/strings.xml,$(MAKECMDGOALS))
 ifeq (,$(strip $(strings-xml-bypath)))
@@ -69,7 +57,6 @@ strings-xml-preqs =\
   $(STRINGSPATH) \
   $(SEARCHSTRINGSPATH) \
   $(SYNCSTRINGSPATH) \
-  $(BOOKMARKSPATH) \
   $(if $(IS_LANGUAGE_REPACK),FORCE) \
   $(NULL)
 
@@ -80,7 +67,6 @@ $(dir-strings-xml)/strings.xml: $(strings-xml-preqs)
 	$(call py_action,preprocessor, \
       $(DEFINES) \
 	  -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
-	  -DBOOKMARKSPATH='$(BOOKMARKSPATH)' \
 	  -DBRANDPATH='$(BRANDPATH)' \
 	  -DMOZ_ANDROID_SHARED_ACCOUNT_TYPE=$(MOZ_ANDROID_SHARED_ACCOUNT_TYPE) \
 	  -DMOZ_ANDROID_SHARED_FXACCOUNT_TYPE=$(MOZ_ANDROID_SHARED_FXACCOUNT_TYPE) \

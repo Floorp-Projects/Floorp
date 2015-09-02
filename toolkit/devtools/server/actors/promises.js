@@ -241,5 +241,9 @@ exports.PromisesFront = protocol.FrontClass(PromisesActor, {
     protocol.Front.prototype.initialize.call(this, client, form);
     this.actorID = form.promisesActor;
     this.manage(this);
+  },
+
+  destroy: function() {
+    protocol.Front.prototype.destroy.call(this);
   }
 });
