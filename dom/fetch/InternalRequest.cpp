@@ -206,8 +206,9 @@ InternalRequest::MapContentPolicyTypeToRequestContext(nsContentPolicyType aConte
   return context;
 }
 
+// static
 bool
-InternalRequest::IsNavigationRequest() const
+InternalRequest::IsNavigationContentPolicy(nsContentPolicyType aContentPolicyType)
 {
   // https://fetch.spec.whatwg.org/#navigation-request-context
   //
@@ -215,17 +216,22 @@ InternalRequest::IsNavigationRequest() const
   // "iframe", "internal" (as long as context frame type is not "none"),
   // "location", "metarefresh", and "prerender".
   //
-  // TODO: include equivalent check for "form" context
-  // TODO: include equivalent check for "prerender" context
-  return mContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
-         mContentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT ||
-         mContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_FRAME ||
-         mContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_IFRAME ||
-         mContentPolicyType == nsIContentPolicy::TYPE_REFRESH;
+  // Note, all of these request types are effectively initiated by nsDocShell.
+  //
+  // The TYPE_REFRESH is used in some code paths for metarefresh, but will not
+  // be seen during the actual load.  Instead the new load gets a normal
+  // nsDocShell policy type.  We include it here in case this utility method
+  // is called before the load starts.
+  return aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
+         aContentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT ||
+         aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_FRAME ||
+         aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_IFRAME ||
+         aContentPolicyType == nsIContentPolicy::TYPE_REFRESH;
 }
 
+// static
 bool
-InternalRequest::IsWorkerRequest() const
+InternalRequest::IsWorkerContentPolicy(nsContentPolicyType aContentPolicyType)
 {
   // https://fetch.spec.whatwg.org/#worker-request-context
   //
@@ -235,14 +241,84 @@ InternalRequest::IsWorkerRequest() const
   // Note, service workers are not included here because currently there is
   // no way to generate a Request with a "serviceworker" RequestContext.
   // ServiceWorker scripts cannot be intercepted.
-  return mContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
-         mContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER;
+  return aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
+         aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER;
+}
+
+bool
+InternalRequest::IsNavigationRequest() const
+{
+  return IsNavigationContentPolicy(mContentPolicyType);
+}
+
+bool
+InternalRequest::IsWorkerRequest() const
+{
+  return IsWorkerContentPolicy(mContentPolicyType);
 }
 
 bool
 InternalRequest::IsClientRequest() const
 {
   return IsNavigationRequest() || IsWorkerRequest();
+}
+
+// static
+RequestMode
+InternalRequest::MapChannelToRequestMode(nsIChannel* aChannel)
+{
+  MOZ_ASSERT(aChannel);
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aChannel->GetLoadInfo(getter_AddRefs(loadInfo))));
+
+  // RequestMode deviates from our internal security mode for navigations.
+  // While navigations normally allow cross origin we must set a same-origin
+  // RequestMode to get the correct service worker interception restrictions
+  // in place.
+  // TODO: remove the worker override once securityMode is fully implemented (bug 1189945)
+  nsContentPolicyType contentPolicy = loadInfo->InternalContentPolicyType();
+  if (IsNavigationContentPolicy(contentPolicy) ||
+      IsWorkerContentPolicy(contentPolicy)) {
+    return RequestMode::Same_origin;
+  }
+
+  uint32_t securityMode;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(loadInfo->GetSecurityMode(&securityMode)));
+
+  switch(securityMode) {
+    case nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS:
+    case nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED:
+      return RequestMode::Same_origin;
+    case nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS:
+    case nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL:
+      return RequestMode::No_cors;
+    case nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS:
+      // TODO: Check additional flag force-preflight after bug 1199693 (bug 1189945)
+      return RequestMode::Cors;
+    default:
+      // TODO: assert never reached after CorsMode flag removed (bug 1189945)
+      MOZ_ASSERT(securityMode == nsILoadInfo::SEC_NORMAL);
+      break;
+  }
+
+  // TODO: remove following code once securityMode is fully implemented (bug 1189945)
+
+  // We only support app:// protocol interception in non-release builds.
+#ifndef RELEASE_BUILD
+  nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(aChannel);
+  if (jarChannel) {
+    return RequestMode::No_cors;
+  }
+#endif
+
+  nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
+
+  uint32_t corsMode;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(httpChannel->GetCorsMode(&corsMode)));
+
+  // This cast is valid due to static asserts in ServiceWorkerManager.cpp.
+  return static_cast<RequestMode>(corsMode);
 }
 
 } // namespace dom

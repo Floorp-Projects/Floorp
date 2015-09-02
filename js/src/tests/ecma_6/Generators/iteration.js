@@ -60,9 +60,9 @@ function TestGenerator(g, expected_values_for_next,
     testThrow(function*() { return yield* g(); });
 
     if (g instanceof GeneratorFunction) {
-        testNext(function() { return new g(); });
-        testSend(function() { return new g(); });
-        testThrow(function() { return new g(); });
+        testNext(function() { return g(); });
+        testSend(function() { return g(); });
+        testThrow(function() { return g(); });
     }
 }
 

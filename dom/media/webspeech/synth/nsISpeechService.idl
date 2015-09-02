@@ -12,7 +12,7 @@ typedef unsigned short SpeechServiceType;
  * required to implement these, although it could be helpful to use the
  * cancel method for shutting down the speech resources.
  */
-[scriptable, uuid(408251b0-1d7b-4876-888f-718859ce8c9d)]
+[scriptable, uuid(c576de0c-8a3d-4570-be7e-9876d3e5bed2)]
 interface nsISpeechTaskCallback : nsISupports
 {
   /**
@@ -29,6 +29,12 @@ interface nsISpeechTaskCallback : nsISupports
    * The user or application has canceled the speech.
    */
   void onCancel();
+
+  /**
+   * The user or application has changed the volume of this speech.
+   * This is only used on indirect audio service type.
+   */
+  void onVolumeChanged(in float aVolume);
 };
 
 

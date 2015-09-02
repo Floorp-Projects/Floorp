@@ -359,6 +359,7 @@ DecodedStream::DecodedStream(AbstractThread* aOwnerThread,
   , mShuttingDown(false)
   , mPlaying(false)
   , mVolume(1.0)
+  , mSameOrigin(false)
   , mAudioQueue(aAudioQueue)
   , mVideoQueue(aVideoQueue)
 {

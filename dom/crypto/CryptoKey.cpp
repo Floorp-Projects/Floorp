@@ -6,6 +6,7 @@
 
 #include "pk11pub.h"
 #include "cryptohi.h"
+#include "nsNSSComponent.h"
 #include "ScopedNSSTypes.h"
 #include "mozilla/dom/CryptoKey.h"
 #include "mozilla/dom/WebCryptoCommon.h"
@@ -1246,6 +1247,11 @@ CryptoKey::ReadStructuredClone(JSStructuredCloneReader* aReader)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
+    return false;
+  }
+
+  // Ensure that NSS is initialized.
+  if (!EnsureNSSInitializedChromeOrContent()) {
     return false;
   }
 

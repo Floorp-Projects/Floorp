@@ -19,11 +19,25 @@ ImageLayer::ImageLayer(LayerManager* aManager, void* aImplData)
 {}
 
 ImageLayer::~ImageLayer()
-{}
+{
+  if (mContainer) {
+    mContainer->NotifyDetached();
+  }
+}
 
 void ImageLayer::SetContainer(ImageContainer* aContainer) 
 {
+  if (aContainer == mContainer) {
+    return;
+  }
+
+  if (mContainer) {
+    mContainer->NotifyDetached();
+  }
   mContainer = aContainer;
+  if (mContainer) {
+    mContainer->NotifyAttached();
+  }
 }
 
 void ImageLayer::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)

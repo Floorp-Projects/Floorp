@@ -389,6 +389,18 @@ public:
   uint64_t GetAsyncContainerID() const;
 
   /**
+   * We track when ImageContainers are attached to layers so that we can
+   * avoid sending images through ImageBridge if they won't be displayed.
+   */
+  void NotifyAttached();
+  void NotifyDetached();
+
+  bool IsAttached() {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    return !!mAttachCount;
+  }
+
+  /**
    * Returns if the container currently has an image.
    * Can be called on any thread. This method takes mReentrantMonitor
    * when accessing thread-shared state.
@@ -518,6 +530,8 @@ private:
   // to the ImageContainer implementation to ensure accesses to this are
   // threadsafe.
   uint32_t mPaintCount;
+
+  int32_t mAttachCount;
 
   // See GetPaintDelay. Accessed only with mReentrantMonitor held.
   TimeDuration mPaintDelay;

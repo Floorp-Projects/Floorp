@@ -53,7 +53,7 @@ add_task(function*() {
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
   do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
+  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_MISSING : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   // Should persist through a restart
   yield promiseShutdownManager();
@@ -75,7 +75,7 @@ add_task(function*() {
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
   do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
+  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_MISSING : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   let file = getFileForAddon(profileDir, ID);
   do_check_true(file.exists());
@@ -122,7 +122,7 @@ add_task(function*() {
   do_check_false(addon.appDisabled);
   do_check_true(addon.isActive);
   do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
+  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_MISSING : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   let file = getFileForAddon(profileDir, ID);
   do_check_true(file.exists());

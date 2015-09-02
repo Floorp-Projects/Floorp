@@ -37,52 +37,6 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 }
 
 void
-MacroAssemblerCompat::buildFakeExitFrame(Register scratch, uint32_t* offset)
-{
-    mozilla::DebugOnly<uint32_t> initialDepth = framePushed();
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
-
-    asMasm().Push(Imm32(descriptor)); // descriptor_
-
-    enterNoPool(3);
-    Label fakeCallsite;
-    Adr(ARMRegister(scratch, 64), &fakeCallsite);
-    asMasm().Push(scratch);
-    bind(&fakeCallsite);
-    uint32_t pseudoReturnOffset = currentOffset();
-    leaveNoPool();
-
-    MOZ_ASSERT(framePushed() == initialDepth + ExitFrameLayout::Size());
-
-    *offset = pseudoReturnOffset;
-}
-
-void
-MacroAssemblerCompat::callWithExitFrame(Label* target)
-{
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
-    Push(Imm32(descriptor)); // descriptor
-    asMasm().call(target);
-}
-
-void
-MacroAssemblerCompat::callWithExitFrame(JitCode* target)
-{
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor));
-    asMasm().call(target);
-}
-
-void
-MacroAssemblerCompat::callWithExitFrame(JitCode* target, Register dynStack)
-{
-    add32(Imm32(framePushed()), dynStack);
-    makeFrameDescriptor(dynStack, JitFrame_IonJS);
-    Push(dynStack); // descriptor
-    asMasm().call(target);
-}
-
-void
 MacroAssembler::alignFrameForICArguments(MacroAssembler::AfterICSaveLive& aic)
 {
     // Exists for MIPS compatibility.
@@ -285,25 +239,6 @@ MacroAssemblerCompat::branchValueIsNurseryObject(Condition cond, ValueOperand va
     addPtr(value.valueReg(), temp);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               temp, ImmWord(nursery.nurserySize()), label);
-}
-
-void
-MacroAssemblerCompat::callAndPushReturnAddress(Label* label)
-{
-    // FIXME: Jandem said he would refactor the code to avoid making
-    // this instruction required, but probably forgot about it.
-    // Instead of implementing this function, we should make it unnecessary.
-    Label ret;
-    {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratch64 = temps.AcquireX();
-
-        Adr(scratch64, &ret);
-        asMasm().Push(scratch64.asUnsized());
-    }
-
-    Bl(label);
-    bind(&ret);
 }
 
 void
@@ -515,6 +450,12 @@ MacroAssembler::call(JitCode* c)
     blr(scratch64);
 }
 
+void
+MacroAssembler::pushReturnAddress()
+{
+    push(lr);
+}
+
 // ===============================================================
 // ABI function calls.
 
@@ -623,6 +564,24 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
     callWithABIPre(&stackAdjust);
     call(scratch);
     callWithABIPost(stackAdjust, result);
+}
+
+// ===============================================================
+// Jit Frames.
+
+uint32_t
+MacroAssembler::pushFakeReturnAddress(Register scratch)
+{
+    enterNoPool(3);
+    Label fakeCallsite;
+
+    Adr(ARMRegister(scratch, 64), &fakeCallsite);
+    Push(scratch);
+    bind(&fakeCallsite);
+    uint32_t pseudoReturnOffset = currentOffset();
+
+    leaveNoPool();
+    return = pseudoReturnOffset;
 }
 
 //}}} check_macroassembler_style

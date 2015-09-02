@@ -1498,25 +1498,6 @@ MacroAssemblerMIPS::ma_bc1d(FloatRegister lhs, FloatRegister rhs, Label* label,
     branchWithCode(getBranchCode(testKind, fcc), label, jumpKind);
 }
 
-void
-MacroAssemblerMIPSCompat::buildFakeExitFrame(Register scratch, uint32_t* offset)
-{
-    mozilla::DebugOnly<uint32_t> initialDepth = asMasm().framePushed();
-
-    CodeLabel cl;
-    ma_li(scratch, cl.dest());
-
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor));
-    asMasm().Push(scratch);
-
-    bind(cl.src());
-    *offset = currentOffset();
-
-    MOZ_ASSERT(asMasm().framePushed() == initialDepth + ExitFrameLayout::Size());
-    addCodeLabel(cl);
-}
-
 bool
 MacroAssemblerMIPSCompat::buildOOLFakeExitFrame(void* fakeReturnAddr)
 {
@@ -1526,45 +1507,6 @@ MacroAssemblerMIPSCompat::buildOOLFakeExitFrame(void* fakeReturnAddr)
     asMasm().Push(ImmPtr(fakeReturnAddr));
 
     return true;
-}
-
-void
-MacroAssemblerMIPSCompat::callWithExitFrame(Label* target)
-{
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor)); // descriptor
-
-    ma_callJitHalfPush(target);
-}
-
-void
-MacroAssemblerMIPSCompat::callWithExitFrame(JitCode* target)
-{
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor)); // descriptor
-
-    addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
-    ma_liPatchable(ScratchRegister, ImmPtr(target->raw()));
-    ma_callJitHalfPush(ScratchRegister);
-}
-
-void
-MacroAssemblerMIPSCompat::callWithExitFrame(JitCode* target, Register dynStack)
-{
-    ma_addu(dynStack, dynStack, Imm32(asMasm().framePushed()));
-    makeFrameDescriptor(dynStack, JitFrame_IonJS);
-    asMasm().Push(dynStack); // descriptor
-
-    addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
-    ma_liPatchable(ScratchRegister, ImmPtr(target->raw()));
-    ma_callJitHalfPush(ScratchRegister);
-}
-
-void
-MacroAssemblerMIPSCompat::callJit(Register callee)
-{
-    MOZ_ASSERT((asMasm().framePushed() & 7) == 4);
-    ma_callJitHalfPush(callee);
 }
 
 void
@@ -3063,28 +3005,6 @@ MacroAssemblerMIPSCompat::storeTypeTag(ImmTag tag, const BaseIndex& dest)
     as_sw(ScratchRegister, SecondScratchReg, TAG_OFFSET);
 }
 
-// This macrosintruction calls the ion code and pushes the return address to
-// the stack in the case when stack is not alligned.
-void
-MacroAssemblerMIPS::ma_callJitHalfPush(const Register r)
-{
-    // This is a MIPS hack to push return address during jalr delay slot.
-    as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
-    as_jalr(r);
-    as_sw(ra, StackPointer, 0);
-}
-
-// This macrosintruction calls the ion code and pushes the return address to
-// the stack in the case when stack is not alligned.
-void
-MacroAssemblerMIPS::ma_callJitHalfPush(Label* label)
-{
-    // This is a MIPS hack to push return address during jalr delay slot.
-    as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
-    ma_bal(label, DontFillDelaySlot);
-    as_sw(ra, StackPointer, 0);
-}
-
 void
 MacroAssemblerMIPS::ma_call(ImmPtr dest)
 {
@@ -3518,7 +3438,25 @@ MacroAssembler::call(JitCode* c)
     BufferOffset bo = m_buffer.nextOffset();
     addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
     ma_liPatchable(ScratchRegister, Imm32((uint32_t)c->raw()));
-    ma_callJitHalfPush(ScratchRegister);
+    callJitNoProfiler(ScratchRegister);
+}
+
+void
+MacroAssembler::callAndPushReturnAddress(Register callee)
+{
+    // Push return address during jalr delay slot.
+    as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
+    as_jalr(callee);
+    as_sw(ra, StackPointer, 0);
+}
+
+void
+MacroAssembler::callAndPushReturnAddress(Label* label)
+{
+    // Push return address during jalr delay slot.
+    as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
+    as_jalr(label);
+    as_sw(ra, StackPointer, 0);
 }
 
 // ===============================================================
@@ -3620,6 +3558,23 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
     callWithABIPre(&stackAdjust);
     call(t9);
     callWithABIPost(stackAdjust, result);
+}
+
+// ===============================================================
+// Jit Frames.
+
+uint32_t
+MacroAssembler::pushFakeReturnAddress(Register scratch)
+{
+    CodeLabel cl;
+
+    ma_li(scratch, cl.dest());
+    Push(scratch);
+    bind(cl.src());
+    uint32_t retAddr = currentOffset();
+
+    addCodeLabel(cl);
+    return retAddr;
 }
 
 //}}} check_macroassembler_style

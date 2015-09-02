@@ -4,8 +4,7 @@ self.addEventListener("install", function(event) {
   event.waitUntil(
     self.caches.open("origin-cache")
       .then(c => {
-        return c.add(new Request(prefix + 'index-https.sjs',
-                                 { redirect: 'manual' }));
+        return c.add(prefix + 'index-https.sjs');
       })
   );
 });

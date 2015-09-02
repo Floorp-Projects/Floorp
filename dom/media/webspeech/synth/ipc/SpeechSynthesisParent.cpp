@@ -128,7 +128,7 @@ SpeechSynthesisRequestParent::RecvForceEnd()
 }
 
 bool
-SpeechSynthesisRequestParent::RecvSetAudioOutputVolume(const uint32_t& aVolume)
+SpeechSynthesisRequestParent::RecvSetAudioOutputVolume(const float& aVolume)
 {
   MOZ_ASSERT(mTask);
   mTask->SetAudioOutputVolume(aVolume);

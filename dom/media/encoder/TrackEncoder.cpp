@@ -123,9 +123,6 @@ AudioTrackEncoder::AppendAudioSegment(const AudioSegment& aSegment)
   return NS_OK;
 }
 
-static const int AUDIO_PROCESSING_FRAMES = 640; /* > 10ms of 48KHz audio */
-static const uint8_t gZeroChannel[MAX_AUDIO_SAMPLE_SIZE*AUDIO_PROCESSING_FRAMES] = {0};
-
 /*static*/
 void
 AudioTrackEncoder::InterleaveTrackData(AudioChunk& aChunk,
@@ -133,19 +130,29 @@ AudioTrackEncoder::InterleaveTrackData(AudioChunk& aChunk,
                                        uint32_t aOutputChannels,
                                        AudioDataValue* aOutput)
 {
-  if (aChunk.mChannelData.Length() < aOutputChannels) {
-    // Up-mix. This might make the mChannelData have more than aChannels.
-    AudioChannelsUpMix(&aChunk.mChannelData, aOutputChannels, gZeroChannel);
-  }
-
-  if (aChunk.mChannelData.Length() > aOutputChannels) {
-    DownmixAndInterleave(aChunk.mChannelData, aChunk.mBufferFormat, aDuration,
-                         aChunk.mVolume, aOutputChannels, aOutput);
-  } else {
-    InterleaveAndConvertBuffer(aChunk.mChannelData.Elements(),
-                               aChunk.mBufferFormat, aDuration, aChunk.mVolume,
-                               aOutputChannels, aOutput);
-  }
+  switch(aChunk.mBufferFormat) {
+    case AUDIO_FORMAT_S16: {
+      nsAutoTArray<const int16_t*, 2> array;
+      array.SetLength(aOutputChannels);
+      for (uint32_t i = 0; i < array.Length(); i++) {
+        array[i] = static_cast<const int16_t*>(aChunk.mChannelData[i]);
+      }
+      InterleaveTrackData(array, aDuration, aOutputChannels, aOutput, aChunk.mVolume);
+      break;
+    }
+    case AUDIO_FORMAT_FLOAT32: {
+      nsAutoTArray<const float*, 2> array;
+      array.SetLength(aOutputChannels);
+      for (uint32_t i = 0; i < array.Length(); i++) {
+        array[i] = static_cast<const float*>(aChunk.mChannelData[i]);
+      }
+      InterleaveTrackData(array, aDuration, aOutputChannels, aOutput, aChunk.mVolume);
+      break;
+   }
+   case AUDIO_FORMAT_SILENCE: {
+      MOZ_ASSERT(false, "To implement.");
+    }
+  };
 }
 
 /*static*/
