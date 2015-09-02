@@ -222,7 +222,7 @@ HTMLButtonElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
   WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
   bool outerActivateEvent =
     ((mouseEvent && mouseEvent->IsLeftClickEvent()) ||
-     (aVisitor.mEvent->mMessage == NS_UI_ACTIVATE &&
+     (aVisitor.mEvent->mMessage == eLegacyDOMActivate &&
       !mInInternalActivate));
 
   if (outerActivateEvent) {
@@ -252,7 +252,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
     if (mouseEvent && mouseEvent->IsLeftClickEvent()) {
       // DOMActive event should be trusted since the activation is actually
       // occurred even if the cause is an untrusted click event.
-      InternalUIEvent actEvent(true, NS_UI_ACTIVATE, mouseEvent);
+      InternalUIEvent actEvent(true, eLegacyDOMActivate, mouseEvent);
       actEvent.detail = 1;
 
       nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
