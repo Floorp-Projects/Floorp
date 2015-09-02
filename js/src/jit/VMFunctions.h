@@ -657,8 +657,8 @@ bool DebugAfterYield(JSContext* cx, BaselineFrame* frame);
 bool GeneratorThrowOrClose(JSContext* cx, BaselineFrame* frame, Handle<GeneratorObject*> genObj,
                            HandleValue arg, uint32_t resumeKind);
 
-bool StrictEvalPrologue(JSContext* cx, BaselineFrame* frame);
-bool HeavyweightFunPrologue(JSContext* cx, BaselineFrame* frame);
+bool InitStrictEvalScopeObjects(JSContext* cx, BaselineFrame* frame);
+bool InitFunctionScopeObjects(JSContext* cx, BaselineFrame* frame);
 
 bool NewArgumentsObject(JSContext* cx, BaselineFrame* frame, MutableHandleValue res);
 

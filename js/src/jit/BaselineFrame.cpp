@@ -109,7 +109,7 @@ BaselineFrame::copyRawFrameSlots(AutoValueVector* vec) const
 }
 
 bool
-BaselineFrame::strictEvalPrologue(JSContext* cx)
+BaselineFrame::initStrictEvalScopeObjects(JSContext* cx)
 {
     MOZ_ASSERT(isStrictEvalFrame());
 
@@ -123,16 +123,10 @@ BaselineFrame::strictEvalPrologue(JSContext* cx)
 }
 
 bool
-BaselineFrame::heavyweightFunPrologue(JSContext* cx)
-{
-    return initFunctionScopeObjects(cx);
-}
-
-bool
 BaselineFrame::initFunctionScopeObjects(JSContext* cx)
 {
     MOZ_ASSERT(isNonEvalFunctionFrame());
-    MOZ_ASSERT(fun()->isHeavyweight());
+    MOZ_ASSERT(fun()->needsCallObject());
 
     CallObject* callobj = CallObject::createForFunction(cx, this);
     if (!callobj)

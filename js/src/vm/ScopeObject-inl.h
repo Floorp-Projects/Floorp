@@ -103,8 +103,8 @@ StaticScopeIter<allowGC>::hasSyntacticDynamicScopeObject() const
     if (obj->template is<JSFunction>()) {
         JSFunction& fun = obj->template as<JSFunction>();
         if (fun.isBeingParsed())
-            return fun.functionBox()->isHeavyweight();
-        return fun.isHeavyweight();
+            return fun.functionBox()->needsCallObject();
+        return fun.needsCallObject();
     }
     if (obj->template is<ModuleObject>())
         return true;

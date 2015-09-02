@@ -69,8 +69,7 @@ ImportEntryObject::class_ = {
     "ImportEntry",
     JSCLASS_HAS_RESERVED_SLOTS(ImportEntryObject::SlotCount) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_ImportEntry) |
-    JSCLASS_IS_ANONYMOUS |
-    JSCLASS_IMPLEMENTS_BARRIERS
+    JSCLASS_IS_ANONYMOUS
 };
 
 DEFINE_GETTER_FUNCTIONS(ImportEntryObject, moduleRequest, ModuleRequestSlot)
@@ -138,8 +137,7 @@ ExportEntryObject::class_ = {
     "ExportEntry",
     JSCLASS_HAS_RESERVED_SLOTS(ExportEntryObject::SlotCount) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_ExportEntry) |
-    JSCLASS_IS_ANONYMOUS |
-    JSCLASS_IMPLEMENTS_BARRIERS
+    JSCLASS_IS_ANONYMOUS
 };
 
 DEFINE_GETTER_FUNCTIONS(ExportEntryObject, exportName, ExportNameSlot)
@@ -218,8 +216,7 @@ ModuleObject::class_ = {
     "Module",
     JSCLASS_HAS_RESERVED_SLOTS(ModuleObject::SlotCount) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Module) |
-    JSCLASS_IS_ANONYMOUS |
-    JSCLASS_IMPLEMENTS_BARRIERS,
+    JSCLASS_IS_ANONYMOUS,
     nullptr,        /* addProperty */
     nullptr,        /* delProperty */
     nullptr,        /* getProperty */

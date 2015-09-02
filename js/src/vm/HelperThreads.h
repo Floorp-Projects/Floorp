@@ -443,7 +443,7 @@ struct AsmJSParallelTask
 {
     JSRuntime* runtime;     // Associated runtime.
     LifoAlloc lifo;         // Provider of all heap memory used for compilation.
-    void* func;             // Really, a ModuleCompiler::Func*
+    void* func;             // Really, an AsmFunction*
     jit::MIRGenerator* mir; // Passed from main thread to helper.
     jit::LIRGraph* lir;     // Passed from helper to main thread.
     unsigned compileTime;

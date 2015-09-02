@@ -143,15 +143,15 @@ class JSFunction : public js::NativeObject
 
   public:
 
-    /* Call objects must be created for each invocation of a heavyweight function. */
-    bool isHeavyweight() const {
+    /* Call objects must be created for each invocation of this function. */
+    bool needsCallObject() const {
         MOZ_ASSERT(!isInterpretedLazy());
         MOZ_ASSERT(!isBeingParsed());
 
         if (isNative())
             return false;
 
-        // Note: this should be kept in sync with FunctionBox::isHeavyweight().
+        // Note: this should be kept in sync with FunctionBox::needsCallObject().
         return nonLazyScript()->hasAnyAliasedBindings() ||
                nonLazyScript()->funHasExtensibleScope() ||
                nonLazyScript()->funNeedsDeclEnvObject() ||

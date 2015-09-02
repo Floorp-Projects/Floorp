@@ -179,7 +179,7 @@ extern bool
 array_concat_dense(JSContext* cx, HandleObject arr1, HandleObject arr2,
                    HandleObject result);
 
-bool
+extern bool
 array_join(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern JSString*
@@ -199,6 +199,9 @@ array_slice(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern JSObject*
 array_slice_dense(JSContext* cx, HandleObject obj, int32_t begin, int32_t end, HandleObject result);
+
+extern bool
+array_isArray(JSContext* cx, unsigned argc, js::Value* vp);
 
 /*
  * Append the given (non-hole) value to the end of an array.  The array must be
