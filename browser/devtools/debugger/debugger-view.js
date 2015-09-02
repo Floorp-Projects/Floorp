@@ -218,6 +218,17 @@ let DebuggerView = {
   _initializePromiseDebugger: function() {
     let iframe = this._promiseDebuggerIframe = document.createElement("iframe");
     iframe.setAttribute("flex", 1);
+
+    let onLoad = (event) => {
+      iframe.removeEventListener("load", onLoad, true);
+
+      let doc = event.target;
+      let win = doc.defaultView;
+
+      win.setPanel(DebuggerController._toolbox);
+    };
+
+    iframe.addEventListener("load", onLoad, true);
     iframe.setAttribute("src", PROMISE_DEBUGGER_URL);
     this._promisePane.appendChild(iframe);
   },
@@ -227,6 +238,8 @@ let DebuggerView = {
    */
   _destroyPromiseDebugger: function() {
     if (this._promiseDebuggerIframe) {
+      this._promiseDebuggerIframe.contentWindow.destroy();
+
       this._promiseDebuggerIframe.parentNode.removeChild(
         this._promiseDebuggerIframe);
 
