@@ -150,7 +150,6 @@ namespace JS {
     _(CantInlineClassConstructor)                                       \
     _(CantInlineDisabledIon)                                            \
     _(CantInlineTooManyArgs)                                            \
-    _(CantInlineHeavyweight)                                            \
     _(CantInlineNeedsArgsObj)                                           \
     _(CantInlineDebuggee)                                               \
     _(CantInlineUnknownProps)                                           \
