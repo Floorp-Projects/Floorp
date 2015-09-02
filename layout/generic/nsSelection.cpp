@@ -3725,8 +3725,14 @@ Selection::AddItem(nsRange* aItem, int32_t* aOutIndex, bool aNoStartSelect)
         // and the selection is becoming uncollapsed, and this is caused by a user
         // initiated event.
         bool defaultAction = true;
-        nsContentUtils::DispatchTrustedEvent(GetParentObject(),
-                                             aItem->GetStartParent(),
+
+        // Get the first element which isn't in a native anonymous subtree
+        nsCOMPtr<nsINode> target = aItem->GetStartParent();
+        while (target && target->IsInNativeAnonymousSubtree()) {
+          target = target->GetParent();
+        }
+
+        nsContentUtils::DispatchTrustedEvent(GetParentObject(), target,
                                              NS_LITERAL_STRING("selectstart"),
                                              true, true, &defaultAction);
 
@@ -6377,7 +6383,6 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SelectionChangeListener)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(SelectionChangeListener)
 
-
 NS_IMETHODIMP
 SelectionChangeListener::NotifySelectionChanged(nsIDOMDocument* aDoc,
                                                 nsISelection* aSel, int16_t aReason)
@@ -6387,7 +6392,8 @@ SelectionChangeListener::NotifySelectionChanged(nsIDOMDocument* aDoc,
   nsRefPtr<Selection> sel = static_cast<Selection*>(aSel);
 
   // Check if the ranges have actually changed
-  if (mOldRanges.Length() == sel->RangeCount()) {
+  // Don't bother checking this if we are hiding changes.
+  if (mOldRanges.Length() == sel->RangeCount() && !sel->IsBlockingSelectionChangeEvents()) {
     bool changed = false;
 
     for (size_t i = 0; i < mOldRanges.Length(); i++) {
@@ -6408,11 +6414,39 @@ SelectionChangeListener::NotifySelectionChanged(nsIDOMDocument* aDoc,
     mOldRanges.AppendElement(RawRangeData(sel->GetRangeAt(i)));
   }
 
-  // Actually fire off the event
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
-  if (doc) {
+  // If we are hiding changes, then don't do anything else. We do this after we
+  // update mOldRanges so that changes after the changes stop being hidden don't
+  // incorrectly trigger a change, even though they didn't change anything
+  if (sel->IsBlockingSelectionChangeEvents()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsINode> target;
+
+  // Check if we should be firing this event to a different node than the
+  // document. The limiter of the nsFrameSelection will be within the native
+  // anonymous subtree of the node we want to fire the event on. We need to
+  // climb up the parent chain to escape the native anonymous subtree, and then
+  // fire the event.
+  if (nsFrameSelection* fs = sel->GetFrameSelection()) {
+    if (nsCOMPtr<nsIContent> root = fs->GetLimiter()) {
+      while (root && root->IsInNativeAnonymousSubtree()) {
+        root = root->GetParent();
+      }
+
+      target = root.forget();
+    }
+  }
+
+  // If we didn't get a target before, we can instead fire the event at the document.
+  if (!target) {
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
+    target = doc.forget();
+  }
+
+  if (target) {
     nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(doc, NS_LITERAL_STRING("selectionchange"), false);
+      new AsyncEventDispatcher(target, NS_LITERAL_STRING("selectionchange"), false);
     asyncDispatcher->PostDOMEvent();
   }
 

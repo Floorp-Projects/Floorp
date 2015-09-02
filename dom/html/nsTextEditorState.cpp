@@ -93,6 +93,9 @@ public:
       return NS_OK;
     }
 
+    AutoHideSelectionChanges hideSelectionChanges
+      (mFrame->GetConstFrameSelection());
+
     if (mFrame) {
       // SetSelectionRange leads to Selection::AddRange which flushes Layout -
       // need to block script to avoid nested PrepareEditor calls (bug 642800).
@@ -1247,6 +1250,8 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
     // Do not initialize the editor multiple times.
     return NS_OK;
   }
+
+  AutoHideSelectionChanges hideSelectionChanges(GetConstFrameSelection());
 
   // Don't attempt to initialize recursively!
   InitializationGuard guard(*this);
