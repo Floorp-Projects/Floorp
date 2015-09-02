@@ -2871,7 +2871,7 @@ Element::PreHandleEventForLinks(EventChainPreVisitor& aVisitor)
   case eMouseOver:
   case eFocus:
   case eMouseOut:
-  case NS_BLUR_CONTENT:
+  case eBlur:
     break;
   default:
     return NS_OK;
@@ -2907,7 +2907,7 @@ Element::PreHandleEventForLinks(EventChainPreVisitor& aVisitor)
   case eMouseOut:
     aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
     // FALL THROUGH
-  case NS_BLUR_CONTENT:
+  case eBlur:
     rv = LeaveLink(aVisitor.mPresContext);
     if (NS_SUCCEEDED(rv)) {
       aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;

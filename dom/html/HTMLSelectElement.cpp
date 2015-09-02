@@ -1522,7 +1522,7 @@ HTMLSelectElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 
     // We don't have to update NS_EVENT_STATE_MOZ_UI_INVALID nor
     // NS_EVENT_STATE_MOZ_UI_VALID given that the states should not change.
-  } else if (aVisitor.mEvent->mMessage == NS_BLUR_CONTENT) {
+  } else if (aVisitor.mEvent->mMessage == eBlur) {
     mCanShowInvalidUI = true;
     mCanShowValidUI = true;
 

@@ -2261,8 +2261,7 @@ nsGenericHTMLFormElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
           formControlFrame->SetFocus(true, true);
         break;
       }
-      case NS_BLUR_CONTENT:
-      {
+      case eBlur: {
         nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
         if (formControlFrame)
           formControlFrame->SetFocus(false, false);
