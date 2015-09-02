@@ -178,7 +178,7 @@ NS_EVENT_MESSAGE(NS_COMPOSITION_COMMIT,       NS_COMPOSITION_EVENT_START + 5)
 // UI events
 NS_EVENT_MESSAGE(eLegacyUIEventFirst,   2500)
 // this is not to be confused with NS_ACTIVATE!
-NS_EVENT_MESSAGE(NS_UI_ACTIVATE,        eLegacyUIEventFirst)
+NS_EVENT_MESSAGE(eLegacyDOMActivate,    eLegacyUIEventFirst)
 NS_EVENT_MESSAGE(NS_UI_FOCUSIN,         eLegacyUIEventFirst + 1)
 NS_EVENT_MESSAGE(NS_UI_FOCUSOUT,        eLegacyUIEventFirst + 2)
 
