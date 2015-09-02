@@ -26,8 +26,11 @@ class PerformanceObserverEntryList final : public nsISupports,
   ~PerformanceObserverEntryList();
 
 public:
-  explicit PerformanceObserverEntryList(nsISupports* aOwner)
+  PerformanceObserverEntryList(nsISupports* aOwner,
+                               nsTArray<nsRefPtr<PerformanceEntry>>&
+                               aEntries)
     : mOwner(aOwner)
+    , mEntries(aEntries)
   {
   }
 
@@ -49,8 +52,6 @@ public:
   void GetEntriesByName(const nsAString& aName,
                         const Optional<nsAString>& aEntryType,
                         nsTArray<nsRefPtr<PerformanceEntry>>& aRetval);
-
-  void AppendEntry(PerformanceEntry* aEntry);
 
 private:
   nsCOMPtr<nsISupports> mOwner;

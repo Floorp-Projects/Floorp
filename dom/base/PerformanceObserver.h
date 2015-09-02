@@ -59,7 +59,8 @@ public:
 
   void Disconnect();
 
-  void Notify(PerformanceEntry* entry);
+  void Notify();
+  void QueueEntry(PerformanceEntry* aEntry);
 
 private:
   ~PerformanceObserver();
@@ -69,6 +70,7 @@ private:
   nsRefPtr<PerformanceBase> mPerformance;
   nsTArray<nsString> mEntryTypes;
   bool mConnected;
+  nsTArray<nsRefPtr<PerformanceEntry>> mQueuedEntries;
 };
 
 } // namespace dom

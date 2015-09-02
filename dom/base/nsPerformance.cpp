@@ -812,6 +812,7 @@ NS_IMPL_RELEASE_INHERITED(PerformanceBase, DOMEventTargetHelper)
 
 PerformanceBase::PerformanceBase()
   : mResourceTimingBufferSize(kDefaultResourceTimingBufferSize)
+  , mPendingNotificationObserversTask(false)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 }
@@ -819,6 +820,7 @@ PerformanceBase::PerformanceBase()
 PerformanceBase::PerformanceBase(nsPIDOMWindow* aWindow)
   : DOMEventTargetHelper(aWindow)
   , mResourceTimingBufferSize(kDefaultResourceTimingBufferSize)
+  , mPendingNotificationObserversTask(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
 }
@@ -1050,9 +1052,7 @@ PerformanceBase::InsertUserEntry(PerformanceEntry* aEntry)
   mUserEntries.InsertElementSorted(aEntry,
                                    PerformanceEntryComparator());
 
-  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers,
-                                           PerformanceObserver,
-                                           Notify, (aEntry));
+  QueueEntry(aEntry);
 }
 
 void
@@ -1076,9 +1076,7 @@ PerformanceBase::InsertResourceEntry(PerformanceEntry* aEntry)
     // call onresourcetimingbufferfull
     DispatchBufferFullEvent();
   }
-  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers,
-                                           PerformanceObserver,
-                                           Notify, (aEntry));
+  QueueEntry(aEntry);
 }
 
 void
@@ -1091,4 +1089,76 @@ void
 PerformanceBase::RemoveObserver(PerformanceObserver* aObserver)
 {
   mObservers.RemoveElement(aObserver);
+}
+
+void
+PerformanceBase::NotifyObservers()
+{
+  mPendingNotificationObserversTask = false;
+  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers,
+                                           PerformanceObserver,
+                                           Notify, ());
+}
+
+void
+PerformanceBase::CancelNotificationObservers()
+{
+  mPendingNotificationObserversTask = false;
+}
+
+class NotifyObserversTask final : public nsCancelableRunnable
+{
+public:
+  explicit NotifyObserversTask(PerformanceBase* aPerformance)
+    : mPerformance(aPerformance)
+  {
+    MOZ_ASSERT(mPerformance);
+  }
+
+  NS_IMETHOD Run() override
+  {
+    MOZ_ASSERT(mPerformance);
+    mPerformance->NotifyObservers();
+    return NS_OK;
+  }
+
+  NS_IMETHOD Cancel() override
+  {
+    mPerformance->CancelNotificationObservers();
+    mPerformance = nullptr;
+    return NS_OK;
+  }
+
+private:
+  ~NotifyObserversTask()
+  {
+  }
+
+  nsRefPtr<PerformanceBase> mPerformance;
+};
+
+void
+PerformanceBase::RunNotificationObserversTask()
+{
+  mPendingNotificationObserversTask = true;
+  nsCOMPtr<nsIRunnable> task = new NotifyObserversTask(this);
+  nsresult rv = NS_DispatchToCurrentThread(task);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mPendingNotificationObserversTask = false;
+  }
+}
+
+void
+PerformanceBase::QueueEntry(PerformanceEntry* aEntry)
+{
+  if (mObservers.IsEmpty()) {
+    return;
+  }
+  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers,
+                                           PerformanceObserver,
+                                           QueueEntry, (aEntry));
+
+  if (!mPendingNotificationObserversTask) {
+    RunNotificationObserversTask();
+  }
 }
