@@ -67,7 +67,7 @@ DevToolsWorker.prototype.performTask = function (task, data) {
   let id = ++MESSAGE_COUNTER;
   let payload = { task, id, data };
 
-  if(this._verbose && dumpn) {
+  if (this._verbose && dumpn) {
     dumpn("Sending message to worker" +
           (this._name ? (" (" + this._name + ")") : "" ) +
           ": " +
@@ -77,7 +77,7 @@ DevToolsWorker.prototype.performTask = function (task, data) {
 
   return new Promise((resolve, reject) => {
     let listener = ({ data }) => {
-      if(this._verbose && dumpn) {
+      if (this._verbose && dumpn) {
         dumpn("Received message from worker" +
               (this._name ? (" (" + this._name + ")") : "" ) +
               ": " +

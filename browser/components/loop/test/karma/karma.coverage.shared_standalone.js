@@ -11,7 +11,6 @@ module.exports = function(config) {
   // List of files / patterns to load in the browser.
   baseConfig.files = baseConfig.files.concat([
     "standalone/content/libs/l10n-gaia-02ca67948fe8.js",
-    "content/shared/libs/jquery-2.1.4.js",
     "content/shared/libs/lodash-3.9.3.js",
     "content/shared/libs/backbone-1.2.1.js",
     "content/shared/libs/react-0.12.2.js",

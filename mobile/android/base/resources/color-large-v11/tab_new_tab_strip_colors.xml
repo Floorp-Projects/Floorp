@@ -6,12 +6,9 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
-    <item gecko:state_private="true"
-          android:drawable="@drawable/tab_new_pb"/>
-
     <item gecko:state_light="true"
-          android:drawable="@drawable/tab_new_dark"/>
+          android:color="@color/toolbar_icon_grey"/>
 
-    <item android:drawable="@drawable/tab_new"/>
+    <item android:color="@color/tabs_tray_icon_grey"/>
 
 </selector>

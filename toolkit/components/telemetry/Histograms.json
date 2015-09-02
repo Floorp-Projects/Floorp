@@ -7264,7 +7264,43 @@
   "BROWSER_IS_USER_DEFAULT": {
     "expires_in_version": "never",
     "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
     "description": "The result of the startup default desktop browser check."
+  },
+  "BROWSER_IS_USER_DEFAULT_ERROR": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "True if the browser was unable to determine if the browser was set as default."
+  },
+  "BROWSER_SET_DEFAULT_DIALOG_PROMPT_RAWCOUNT": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "250",
+    "n_buckets": "15",
+    "releaseChannelCollection": "opt-out",
+    "description": "The number of times that a profile has seen the 'Set Default Browser' dialog."
+  },
+  "BROWSER_SET_DEFAULT_RESULT": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "4",
+    "releaseChannelCollection": "opt-out",
+    "description": "Result of the Set Default Browser dialog (0=Use Firefox + 'Always perform check' unchecked, 1=Use Firefox + 'Always perform check' checked, 2=Not Now + 'Always perform check' unchecked, 3=Not Now + 'Always perform check' checked)"
+  },
+  "BROWSER_SET_DEFAULT_ERROR": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "True if the browser was unable to set Firefox as the default browser"
+  },
+  "BROWSER_SET_DEFAULT_TIME_TO_COMPLETION_SECONDS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "500",
+    "n_buckets": "15",
+    "releaseChannelCollection": "opt-out",
+    "description": "Time to successfully set Firefox as the default browser after clicking 'Set Firefox as Default'. Should be near-instant in some environments, others require user interaction. Measured in seconds."
   },
   "BROWSER_IS_ASSIST_DEFAULT": {
     "expires_in_version": "never",

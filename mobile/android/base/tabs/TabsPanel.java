@@ -55,7 +55,6 @@ public class TabsPanel extends LinearLayout
         void setTabsPanel(TabsPanel panel);
         void show();
         void hide();
-        boolean shouldExpand();
     }
 
     public interface CloseAllPanelView extends PanelView {
@@ -64,14 +63,6 @@ public class TabsPanel extends LinearLayout
 
     public interface TabsLayout extends CloseAllPanelView {
         void setEmptyView(View view);
-    }
-
-    public static View createTabsLayout(final Context context, final AttributeSet attrs) {
-        if (HardwareUtils.isTablet()) {
-            return new TabsGridLayout(context, attrs);
-        } else {
-            return new TabsListLayout(context, attrs);
-        }
     }
 
     public interface TabsLayoutChangeListener {
@@ -89,7 +80,7 @@ public class TabsPanel extends LinearLayout
     private TabsLayoutChangeListener mLayoutChangeListener;
 
     private IconTabWidget mTabWidget;
-    private static ImageButton mMenuButton;
+    private static View mMenuButton;
     private static ImageButton mAddTab;
     private ImageButton mNavBackButton;
 
@@ -150,7 +141,7 @@ public class TabsPanel extends LinearLayout
 
         mTabWidget.setTabSelectionListener(this);
 
-        mMenuButton = (ImageButton) findViewById(R.id.menu);
+        mMenuButton = findViewById(R.id.menu);
         mMenuButton.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -381,7 +372,6 @@ public class TabsPanel extends LinearLayout
         mPanel.show();
 
         mAddTab.setVisibility(View.VISIBLE);
-        mAddTab.setImageLevel(index);
 
         if (!HardwareUtils.hasMenuButton()) {
             mMenuButton.setVisibility(View.VISIBLE);
@@ -430,10 +420,6 @@ public class TabsPanel extends LinearLayout
     @Override
     public boolean isShown() {
         return mVisible;
-    }
-
-    public Panel getCurrentPanel() {
-        return mCurrentPanel;
     }
 
     public void setHWLayerEnabled(boolean enabled) {

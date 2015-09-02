@@ -36,20 +36,25 @@
                android:src="@drawable/url_bar_translating_edge"
                android:scaleType="fitXY"/>
 
-    <org.mozilla.gecko.toolbar.ShapedButton android:id="@+id/menu"
-                                            style="@style/UrlBar.ImageButton"
-                                            android:layout_alignParentRight="true"
-                                            android:contentDescription="@string/menu"
-                                            android:background="@drawable/shaped_button"
-                                            android:visibility="gone"/>
+    <org.mozilla.gecko.widget.themed.ThemedFrameLayout
+            android:id="@+id/menu"
+            style="@style/UrlBar.ImageButton"
+            android:layout_alignParentRight="true"
+            android:contentDescription="@string/menu"
+            android:background="@drawable/shaped_button"
+            android:visibility="gone">
 
-    <org.mozilla.gecko.widget.themed.ThemedImageView android:id="@+id/menu_icon"
-                                              style="@style/UrlBar.ImageButton"
-                                              android:layout_alignLeft="@id/menu"
-                                              android:layout_alignRight="@id/menu"
-                                              android:gravity="center_vertical"
-                                              android:src="@drawable/menu"
-                                              android:visibility="gone"/>
+        <org.mozilla.gecko.widget.themed.ThemedImageView
+                android:id="@+id/menu_icon"
+                style="@style/UrlBar.ImageButton"
+                android:layout_height="@dimen/browser_toolbar_menu_icon_height"
+                android:layout_width="wrap_content"
+                android:scaleType="centerInside"
+                android:layout_gravity="center"
+                android:src="@drawable/menu"
+                android:tint="@color/tabs_tray_icon_grey"/>
+
+    </org.mozilla.gecko.widget.themed.ThemedFrameLayout>
 
     <org.mozilla.gecko.toolbar.PhoneTabsButton android:id="@+id/tabs"
                                                style="@style/UrlBar.ImageButton"

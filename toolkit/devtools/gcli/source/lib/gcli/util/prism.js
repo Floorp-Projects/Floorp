@@ -129,7 +129,7 @@ var Prism = exports.Prism = {
 
     var code = element.textContent;
 
-    if(!code) {
+    if (!code) {
       return;
     }
 
@@ -178,7 +178,7 @@ var Prism = exports.Prism = {
 
     tokenloop:
     for (token in grammar) {
-      if(!grammar.hasOwnProperty(token) || !grammar[token]) {
+      if (!grammar.hasOwnProperty(token) || !grammar[token]) {
         continue;
       }
 
@@ -207,7 +207,7 @@ var Prism = exports.Prism = {
         var match = pattern.exec(str);
 
         if (match) {
-          if(lookbehind) {
+          if (lookbehind) {
             lookbehindLength = match[1].length;
           }
 
