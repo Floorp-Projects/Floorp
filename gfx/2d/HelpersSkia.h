@@ -296,6 +296,22 @@ ExtendModeToTileMode(ExtendMode aMode)
   return SkShader::kClamp_TileMode;
 }
 
+static inline SkPaint::Hinting
+GfxHintingToSkiaHinting(FontHinting aHinting)
+{
+  switch (aHinting) {
+    case FontHinting::NONE:
+      return SkPaint::kNo_Hinting;
+    case FontHinting::LIGHT:
+      return SkPaint::kSlight_Hinting;
+    case FontHinting::NORMAL:
+      return SkPaint::kNormal_Hinting;
+    case FontHinting::FULL:
+      return SkPaint::kFull_Hinting;
+  }
+  return SkPaint::kNormal_Hinting;
+}
+
 } // namespace gfx
 } // namespace mozilla
 
