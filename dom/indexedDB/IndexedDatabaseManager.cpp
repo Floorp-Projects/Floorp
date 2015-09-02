@@ -480,7 +480,7 @@ IndexedDatabaseManager::CommonPostHandleEvent(EventChainPostVisitor& aVisitor,
 
   ThreadsafeAutoJSContext cx;
   RootedDictionary<ErrorEventInit> init(cx);
-  request->GetCallerLocation(init.mFilename, &init.mLineno);
+  request->GetCallerLocation(init.mFilename, &init.mLineno, &init.mColno);
 
   init.mMessage = errorName;
   init.mCancelable = true;
@@ -556,7 +556,7 @@ IndexedDatabaseManager::CommonPostHandleEvent(EventChainPostVisitor& aVisitor,
                                     init.mFilename,
                                     /* aSourceLine */ EmptyString(),
                                     init.mLineno,
-                                    /* aColumnNumber */ 0,
+                                    init.mColno,
                                     nsIScriptError::errorFlag,
                                     category,
                                     innerWindowID)));
@@ -566,7 +566,7 @@ IndexedDatabaseManager::CommonPostHandleEvent(EventChainPostVisitor& aVisitor,
                         init.mFilename,
                         /* aSourceLine */ EmptyString(),
                         init.mLineno,
-                        /* aColumnNumber */ 0,
+                        init.mColno,
                         nsIScriptError::errorFlag,
                         category.get())));
   }
