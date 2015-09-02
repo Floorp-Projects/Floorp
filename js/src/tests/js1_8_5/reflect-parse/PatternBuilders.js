@@ -124,7 +124,7 @@ function letStmt(head, body) {
 }
 
 function superProp(id) {
-    return dotExpr(Pattern({ type: "Super" }), id);
+    return dotExpr(ident("super"), id);
 }
 function superElem(id) {
     return memExpr(ident("super"), id);
@@ -132,14 +132,14 @@ function superElem(id) {
 
 function classStmt(id, heritage, body) {
     return Pattern({ type: "ClassStatement",
-                     id: id,
-                     superClass: heritage,
+                     name: id,
+                     heritage: heritage,
                      body: body});
 }
 function classExpr(id, heritage, body) {
     return Pattern({ type: "ClassExpression",
-                     id: id,
-                     superClass: heritage,
+                     name: id,
+                     heritage: heritage,
                      body: body});
 }
 function classMethod(id, body, kind, static) {
@@ -170,15 +170,9 @@ function arrowExpr(args, body) {
                      body: body });
 }
 
-function metaProperty(meta, property) {
-    return Pattern({ type: "MetaProperty",
-                     meta: meta,
-                     property: property });
-}
 function newTarget() {
-    return metaProperty(ident("new"), ident("target"));
+    return Pattern({ type: "NewTargetExpression" });
 }
-
 function unExpr(op, arg) {
     return Pattern({ type: "UnaryExpression", operator: op, argument: arg });
 }

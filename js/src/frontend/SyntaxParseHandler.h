@@ -47,6 +47,9 @@ class SyntaxParseHandler
         NodeThrow,
         NodeEmptyStatement,
 
+        NodeSuperProperty,
+        NodeSuperElement,
+
         // This is needed for proper assignment-target handling.  ES6 formally
         // requires function calls *not* pass IsValidSimpleAssignmentTarget,
         // but at last check there were still sites with |f() = 5| and similar
@@ -129,16 +132,13 @@ class SyntaxParseHandler
         // warnings, and parsing with that option disables syntax parsing.  But
         // it seems best to be consistent, and perhaps the syntax parser will
         // eventually enforce extraWarnings and will require this then.)
-        NodeUnparenthesizedAssignment,
-
-        // This node is necessary to determine if the LHS of a property access is
-        // super related.
-        NodeSuperBase
+        NodeUnparenthesizedAssignment
     };
     typedef Definition::Kind DefinitionNode;
 
     bool isPropertyAccess(Node node) {
-        return node == NodeDottedProperty || node == NodeElement;
+        return node == NodeDottedProperty || node == NodeElement ||
+               node == NodeSuperProperty || node == NodeSuperElement;
     }
 
     bool isFunctionCall(Node node) {
@@ -274,9 +274,14 @@ class SyntaxParseHandler
     Node newObjectLiteral(uint32_t begin) { return NodeUnparenthesizedObject; }
     Node newClassMethodList(uint32_t begin) { return NodeGeneric; }
 
-    Node newNewTarget(Node newHolder, Node targetHolder) { return NodeGeneric; }
-    Node newPosHolder(const TokenPos& pos) { return NodeGeneric; }
-    Node newSuperBase(const TokenPos& pos, ExclusiveContext* cx) { return NodeSuperBase; }
+    Node newSuperProperty(PropertyName* prop, const TokenPos& pos) {
+        return NodeSuperProperty;
+    }
+
+    Node newSuperElement(Node expr, const TokenPos& pos) {
+        return NodeSuperElement;
+    }
+    Node newNewTarget(const TokenPos& pos) { return NodeGeneric; }
 
     bool addPrototypeMutation(Node literal, uint32_t begin, Node expr) { return true; }
     bool addPropertyDefinition(Node literal, Node name, Node expr) { return true; }
@@ -429,12 +434,6 @@ class SyntaxParseHandler
     bool isStatementPermittedAfterReturnStatement(Node pn) {
         return pn == NodeHoistableDeclaration || pn == NodeBreak || pn == NodeThrow ||
                pn == NodeEmptyStatement;
-    }
-
-    bool isSuperBase(Node pn, ExclusiveContext* cx) {
-        // While NodePosHolder is used in other places than just as super-base,
-        // it is unique enough for our purposes.
-        return pn == NodeSuperBase;
     }
 
     void setOp(Node pn, JSOp op) {}
