@@ -654,8 +654,8 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
   case eDragOver:
-    // eDrop is fired before NS_DRAGDROP_DRAGDROP so send
-    // the enter/exit events before eDrop.
+    // eDrop is fired before eLegacyDragDrop so send the enter/exit events
+    // before eDrop.
     GenerateDragDropEnterExit(aPresContext, aEvent->AsDragEvent());
     break;
 
@@ -3296,7 +3296,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
         nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetNearestWidget();
         WidgetDragEvent event(aEvent->mFlags.mIsTrusted,
-                              NS_DRAGDROP_DRAGDROP, widget);
+                              eLegacyDragDrop, widget);
 
         WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
         event.refPoint = mouseEvent->refPoint;

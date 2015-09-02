@@ -270,7 +270,7 @@ FileList*
 DataTransfer::GetFiles(ErrorResult& aRv)
 {
   if (mEventMessage != eDrop &&
-      mEventMessage != NS_DRAGDROP_DRAGDROP &&
+      mEventMessage != eLegacyDragDrop &&
       mEventMessage != NS_PASTE) {
     return nullptr;
   }
@@ -603,8 +603,7 @@ DataTransfer::MozGetDataAt(const nsAString& aFormat, uint32_t aIndex,
   // only allow access to the data with the same principal.
   nsIPrincipal* principal = nullptr;
   if (mIsCrossDomainSubFrameDrop ||
-      (mEventMessage != eDrop &&
-       mEventMessage != NS_DRAGDROP_DRAGDROP &&
+      (mEventMessage != eDrop && mEventMessage != eLegacyDragDrop &&
        mEventMessage != NS_PASTE &&
        !nsContentUtils::IsCallerChrome())) {
     principal = nsContentUtils::SubjectPrincipal();
