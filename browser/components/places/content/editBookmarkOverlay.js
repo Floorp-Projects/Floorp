@@ -34,6 +34,12 @@ let gEditItemOverlay = {
     let isItem = itemId != -1;
     let isFolderShortcut = isItem &&
       node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT;
+    let isTag = node && PlacesUtils.nodeIsTagQuery(node);
+    if (isTag) {
+      itemId = PlacesUtils.getConcreteItemId(node);
+      // For now we don't have access to the item guid synchronously for tags,
+      // so we'll need to fetch it later.
+    }
     let isURI = node && PlacesUtils.nodeIsURI(node);
     let uri = isURI ? NetUtil.newURI(node.uri) : null;
     let title = node ? node.title : null;
@@ -55,7 +61,7 @@ let gEditItemOverlay = {
                               isURI, uri, title,
                               isBookmark, isFolderShortcut, isParentReadOnly,
                               bulkTagging, uris,
-                              visibleRows, postData };
+                              visibleRows, postData, isTag };
   },
 
   get initialized() {
@@ -89,12 +95,13 @@ let gEditItemOverlay = {
     // This pane is read-only if:
     //  * the panel is not initialized
     //  * the node is a folder shortcut
-    //  * the node is not bookmarked
-    //  * the node is child of a read-only container and is not a bookmarked URI
+    //  * the node is not bookmarked and not a tag container
+    //  * the node is child of a read-only container and is not a bookmarked
+    //    URI nor a tag container
     return !this.initialized ||
            this._paneInfo.isFolderShortcut ||
-           !this._paneInfo.isItem ||
-           (this._paneInfo.isParentReadOnly && !this._paneInfo.isBookmark);
+           (!this._paneInfo.isItem && !this._paneInfo.isTag) ||
+           (this._paneInfo.isParentReadOnly && !this._paneInfo.isBookmark && !this._paneInfo.isTag);
   },
 
   // the first field which was edited after this panel was initialized for
@@ -518,7 +525,7 @@ let gEditItemOverlay = {
   },
 
   onNamePickerChange() {
-    if (this.readOnly || !this._paneInfo.isItem)
+    if (this.readOnly || !(this._paneInfo.isItem || this._paneInfo.isTag))
       return;
 
     // Here we update either the item title or its cached static title
@@ -536,9 +543,13 @@ let gEditItemOverlay = {
         PlacesUtils.transactionManager.doTransaction(txn);
         return;
       }
-      let guid = this._paneInfo.itemGuid;
-      PlacesTransactions.EditTitle({ guid, title: newTitle })
-                        .transact().catch(Components.utils.reportError);
+      Task.spawn(function* () {
+        let guid = this._paneInfo.isTag
+                    ? (yield PlacesUtils.promiseItemGuid(this._paneInfo.itemId))
+                    : this._paneInfo.itemGuid;
+        PlacesTransactions.EditTitle({ guid, title: newTitle })
+                          .transact().catch(Components.utils.reportError);
+      }).catch(Cu.reportError);
     }
   },
 
