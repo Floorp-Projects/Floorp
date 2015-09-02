@@ -42,6 +42,9 @@ Tokenizer::Next(Token& aToken)
 
   mRollback = mCursor;
   mCursor = Parse(aToken);
+
+  aToken.AssignFragment(mRollback, mCursor);
+
   mPastEof = aToken.Type() == TOKEN_EOF;
   mHasFailed = false;
   return true;
@@ -63,7 +66,11 @@ Tokenizer::Check(const TokenType aTokenType, Token& aResult)
 
   mRollback = mCursor;
   mCursor = next;
+
+  aResult.AssignFragment(mRollback, mCursor);
+
   mPastEof = aResult.Type() == TOKEN_EOF;
+  mHasFailed = false;
   return true;
 }
 
@@ -85,6 +92,7 @@ Tokenizer::Check(const Token& aToken)
   mRollback = mCursor;
   mCursor = next;
   mPastEof = parsed.Type() == TOKEN_EOF;
+  mHasFailed = false;
   return true;
 }
 
@@ -148,6 +156,19 @@ Tokenizer::ReadChar(char* aValue)
 }
 
 bool
+Tokenizer::ReadChar(bool (*aClassifier)(const char aChar), char* aValue)
+{
+  MOZ_RELEASE_ASSERT(aValue);
+
+  if (!CheckChar(aClassifier)) {
+    return false;
+  }
+
+  *aValue = *mRollback;
+  return true;
+}
+
+bool
 Tokenizer::ReadWord(nsACString& aValue)
 {
   Token t;
@@ -197,6 +218,15 @@ Tokenizer::Claim(nsACString& aResult, ClaimInclusion aInclusion)
     ? mRollback
     : mCursor;
   aResult.Assign(Substring(mRecord, close));
+}
+
+void
+Tokenizer::Claim(nsDependentCSubstring& aResult, ClaimInclusion aInclusion)
+{
+  nsACString::const_char_iterator close = aInclusion == EXCLUDE_LAST
+    ? mRollback
+    : mCursor;
+  aResult.Rebind(mRecord, close - mRecord);
 }
 
 // protected
@@ -345,6 +375,13 @@ Tokenizer::Token::operator=(const Token& aOther)
   mWord.Rebind(aOther.mWord.BeginReading(), aOther.mWord.Length());
   mInteger = aOther.mInteger;
   return *this;
+}
+
+void
+Tokenizer::Token::AssignFragment(nsACString::const_char_iterator begin,
+                                 nsACString::const_char_iterator end)
+{
+  mFragment.Rebind(begin, end - begin);
 }
 
 // static
