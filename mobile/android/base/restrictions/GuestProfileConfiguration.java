@@ -25,7 +25,8 @@ public class GuestProfileConfiguration implements RestrictionConfiguration {
             Restriction.DISALLOW_SET_IMAGE,
             Restriction.DISALLOW_MODIFY_ACCOUNTS,
             Restriction.DISALLOW_REMOTE_DEBUGGING,
-            Restriction.DISALLOW_IMPORT_SETTINGS
+            Restriction.DISALLOW_IMPORT_SETTINGS,
+            Restriction.DISALLOW_DEVELOPER_TOOLS
     );
 
     @SuppressWarnings("serial")
@@ -38,7 +39,8 @@ public class GuestProfileConfiguration implements RestrictionConfiguration {
     );
 
     private static final List<String> BANNED_URLS = Arrays.asList(
-            "about:config"
+            "about:config",
+            "about:addons"
     );
 
     @Override
@@ -59,6 +61,7 @@ public class GuestProfileConfiguration implements RestrictionConfiguration {
             return false;
         }
 
+        url = url.toLowerCase();
         for (String banned : BANNED_URLS) {
             if (url.startsWith(banned)) {
                 return false;
