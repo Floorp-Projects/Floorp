@@ -624,7 +624,7 @@ NON_IDL_EVENT(DOMActivate,
               EventNameType_HTMLXUL,
               eUIEventClass)
 NON_IDL_EVENT(DOMFocusIn,
-              NS_UI_FOCUSIN,
+              eLegacyDOMFocusIn,
               EventNameType_HTMLXUL,
               eUIEventClass)
 NON_IDL_EVENT(DOMFocusOut,
