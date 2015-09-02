@@ -47,17 +47,5 @@ text { font: 20px monospace; }
            transform="matrix(0 3 -2 0 0 0)"
            fill="none" stroke="steelblue" stroke-width="10"
            vector-effect="non-scaling-stroke" />
-  <line id="nonScalingStrokedLine1" x1="120" y1="5" x2="120" y2="10"
-        transform="scale(2 3)"
-        stroke-width="10" stroke-linecap="round" stroke="orange"
-        vector-effect="non-scaling-stroke" />
-  <line id="nonScalingStrokedLine2" x1="130" y1="5" x2="140" y2="5"
-        transform="rotate(45 260 15) scale(2 3)"
-        stroke-width="10" stroke-linecap="square" stroke="crimson"
-        vector-effect="non-scaling-stroke" />
-  <line id="nonScalingStrokedLine3" x1="140" y1="5" x2="150" y2="5"
-        transform="rotate(45 280 15) scale(2 3)"
-        stroke-width="10" stroke-linecap="butt" stroke="indigo"
-        vector-effect="non-scaling-stroke" />
 </g>
 </svg>

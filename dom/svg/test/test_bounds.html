@@ -222,45 +222,6 @@ function runTest()
   isWithAbsTolerance(nonScalingStrokedEllipse1Bounds.height, 40, 0.15,
                      "nonScalingStrokedEllipse1.getBoundingClientRect().height");
 
-  var nonScalingStrokedLine1Bounds =
-    doc.getElementById("nonScalingStrokedLine1").getBoundingClientRect();
-  isWithAbsTolerance(nonScalingStrokedLine1Bounds.left, 235, 0.1,
-                     "nonScalingStrokedLine1.getBoundingClientRect().left");
-  isWithAbsTolerance(nonScalingStrokedLine1Bounds.top, 10, 0.1,
-                    "nonScalingStrokedLine1.getBoundingClientRect().top");
-  isWithAbsTolerance(nonScalingStrokedLine1Bounds.width, 10, 0.1,
-                     "nonScalingStrokedLine1.getBoundingClientRect().width");
-  isWithAbsTolerance(nonScalingStrokedLine1Bounds.height, 25, 0.1,
-                     "nonScalingStrokedLine1.getBoundingClientRect().height");
-
-  var nonScalingStrokedLine2Bounds =
-    doc.getElementById("nonScalingStrokedLine2").getBoundingClientRect();
-  var capDelta = 5/Math.SQRT2 + 5/Math.SQRT2;
-  rect = new Rect(260 - capDelta, 15 - capDelta, 20/Math.SQRT2 + 2 * capDelta,
-                  20/Math.SQRT2 + 2 * capDelta);
-  isWithAbsTolerance(nonScalingStrokedLine2Bounds.left, rect.left, 0.1,
-                     "nonScalingStrokedLine2.getBoundingClientRect().left");
-  isWithAbsTolerance(nonScalingStrokedLine2Bounds.top, rect.top, 0.1,
-                    "nonScalingStrokedLine2.getBoundingClientRect().top");
-  isWithAbsTolerance(nonScalingStrokedLine2Bounds.width, rect.width, 0.1,
-                     "nonScalingStrokedLine2.getBoundingClientRect().width");
-  isWithAbsTolerance(nonScalingStrokedLine2Bounds.height, rect.height, 0.1,
-                     "nonScalingStrokedLine2.getBoundingClientRect().height");
-
-  var nonScalingStrokedLine3Bounds =
-    doc.getElementById("nonScalingStrokedLine3").getBoundingClientRect();
-  var capDelta = 5/Math.SQRT2;
-  rect = new Rect(280 - capDelta, 15 - capDelta, 20/Math.SQRT2 + 2 * capDelta,
-                  20/Math.SQRT2 + 2 * capDelta);
-  isWithAbsTolerance(nonScalingStrokedLine3Bounds.left, rect.left, 0.1,
-                     "nonScalingStrokedLine3.getBoundingClientRect().left");
-  isWithAbsTolerance(nonScalingStrokedLine3Bounds.top, rect.top, 0.1,
-                    "nonScalingStrokedLine3.getBoundingClientRect().top");
-  isWithAbsTolerance(nonScalingStrokedLine3Bounds.width, rect.width, 0.1,
-                     "nonScalingStrokedLine3.getBoundingClientRect().width");
-  isWithAbsTolerance(nonScalingStrokedLine3Bounds.height, rect.height, 0.1,
-                     "nonScalingStrokedLine3.getBoundingClientRect().height");
-
   SimpleTest.finish();
 }
 
