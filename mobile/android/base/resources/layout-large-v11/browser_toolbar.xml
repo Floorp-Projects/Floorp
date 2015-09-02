@@ -134,7 +134,10 @@
          which is thus drawn on top, may be pressed. -->
     <org.mozilla.gecko.widget.themed.ThemedImageView
             android:id="@+id/edit_cancel"
-            style="@style/UrlBar.ImageButton.Icon"
+            style="@style/UrlBar.ImageButton"
+            android:layout_width="@dimen/browser_toolbar_icon_width"
+            android:layout_height="@dimen/browser_toolbar_height"
+            android:layout_weight="0.0"
             android:layout_alignParentRight="true"
             android:src="@drawable/close_edit_mode_selector"
             android:contentDescription="@string/edit_mode_cancel"
