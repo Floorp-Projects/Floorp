@@ -3502,7 +3502,7 @@ nsContentUtils::ReportToConsoleNonLocalized(const nsAString& aErrorText,
   if (!aLineNumber) {
     JSContext *cx = GetCurrentJSContext();
     if (cx) {
-      nsJSUtils::GetCallingLocation(cx, spec, &aLineNumber);
+      nsJSUtils::GetCallingLocation(cx, spec, &aLineNumber, &aColumnNumber);
     }
   }
   if (spec.IsEmpty() && aURI)
