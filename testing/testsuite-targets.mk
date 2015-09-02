@@ -369,8 +369,8 @@ pgo-profile-run:
 # Package up the tests and test harnesses
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
-ifndef UNIVERSAL_BINARY
 PKG_STAGE = $(DIST)/test-stage
+
 package-tests: \
   stage-config \
   stage-mach \
@@ -393,10 +393,6 @@ package-tests: \
 ifdef MOZ_WEBRTC
 package-tests: stage-steeplechase
 endif
-else
-# This staging area has been built for us by universal/flight.mk
-PKG_STAGE = $(DIST)/universal/test-stage
-endif
 
 TEST_PKGS := \
   cppunittest \
@@ -410,9 +406,7 @@ PKG_ARG = --$(1) '$(PKG_BASENAME).$(1).tests.zip'
 
 test-packages-manifest-tc:
 	@rm -f $(MOZ_TEST_PACKAGES_FILE_TC)
-ifndef UNIVERSAL_BINARY
 	$(NSINSTALL) -D $(dir $(MOZ_TEST_PACKAGES_FILE_TC))
-endif
 	$(PYTHON) $(topsrcdir)/build/gen_test_packages_manifest.py \
       --jsshell $(JSSHELL_NAME) \
       --dest-file $(MOZ_TEST_PACKAGES_FILE_TC) \
@@ -422,9 +416,7 @@ endif
 
 test-packages-manifest:
 	@rm -f $(MOZ_TEST_PACKAGES_FILE)
-ifndef UNIVERSAL_BINARY
 	$(NSINSTALL) -D $(dir $(MOZ_TEST_PACKAGES_FILE))
-endif
 	$(PYTHON) $(topsrcdir)/build/gen_test_packages_manifest.py \
       --jsshell $(JSSHELL_NAME) \
       --dest-file $(MOZ_TEST_PACKAGES_FILE) \
@@ -433,9 +425,7 @@ endif
 
 package-tests:
 	@rm -f '$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)'
-ifndef UNIVERSAL_BINARY
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
-endif
 # Exclude harness specific directories when generating the common zip.
 	$(MKDIR) -p $(abspath $(DIST))/$(PKG_PATH) && \
 	cd $(PKG_STAGE) && \
