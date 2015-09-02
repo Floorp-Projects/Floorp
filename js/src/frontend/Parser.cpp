@@ -8358,7 +8358,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TokenKind tt, bool
             JSOp op = JSOP_CALL;
             if (PropertyName* name = handler.maybeNameAnyParentheses(lhs)) {
                 if (tt == TOK_LP && name == context->names().eval) {
-                    /* Select JSOP_EVAL and flag pc as heavyweight. */
+                    /* Select JSOP_EVAL and flag pc as needsCallObject. */
                     op = pc->sc->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
                     pc->sc->setBindingsAccessedDynamically();
                     pc->sc->setHasDirectEval();

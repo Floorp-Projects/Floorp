@@ -362,9 +362,9 @@ class FunctionBox : public ObjectBox, public SharedContext
         startColumn = tokenStream.getColumn();
     }
 
-    bool isHeavyweight()
+    bool needsCallObject()
     {
-        // Note: this should be kept in sync with JSFunction::isHeavyweight().
+        // Note: this should be kept in sync with JSFunction::needsCallObject().
         return bindings.hasAnyAliasedBindings() ||
                hasExtensibleScope() ||
                needsDeclEnvObject() ||

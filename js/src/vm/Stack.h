@@ -322,7 +322,7 @@ class InterpreterFrame
         /* (0x80 is unused) */
 
         /* Function prologue state */
-        HAS_CALL_OBJ           =      0x100,  /* CallObject created for heavyweight fun */
+        HAS_CALL_OBJ           =      0x100,  /* CallObject created for needsCallObject function */
         HAS_ARGS_OBJ           =      0x200,  /* ArgumentsObject created for needsArgsObj script */
 
         /* Lazy frame initialization */
