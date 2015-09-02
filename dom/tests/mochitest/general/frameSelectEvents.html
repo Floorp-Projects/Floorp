@@ -15,6 +15,10 @@
       This is a random block of text
     </div>
 
+    <input type="text" id="input" value="XXXXXXXXXXXXXXXXXXX" width="200"> <br>
+
+    <textarea id="textarea" width="200">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</textarea>
+
     <script>
       // Call the testing methods from the parent window
       var is = parent.is;
@@ -36,6 +40,9 @@
 
         var selectstart = 0;
         var selectionchange = 0;
+        var inputSelectionchange = 0;
+        var textareaSelectionchange = 0;
+
         var cancel = false;
         var selectstartTarget = null;
 
@@ -60,34 +67,73 @@
         });
 
         function elt(aId) { return document.getElementById(aId); }
-        function reset() { selectstart = 0; selectionchange = 0; cancel = false; }
+        function reset() {
+          selectstart = 0;
+          selectionchange = 0;
+          inputSelectionchange = 0;
+          textareaSelectionchange = 0;
+          cancel = false;
+        }
 
-        function* mouseAction(aElement, aOffset, aType, aSelStart, aSelChng) {
+        elt("input").addEventListener('selectionchange', function(aEvent) {
+          is (aEvent.originalTarget, elt("input"),
+              "The original target of selectionchange should be the input");
+          console.log(inputSelectionchange);
+          inputSelectionchange++;
+        });
+        elt("textarea").addEventListener('selectionchange', function(aEvent) {
+          is (aEvent.originalTarget, elt("textarea"),
+              "The original target of selectionchange should be the textarea");
+          console.log(textareaSelectionchange);
+          textareaSelectionchange++;
+        });
+        function* mouseAction(aElement, aOffset, aType,
+                              aSelStart, aSelChng, aISelChng, aTSelChng,
+                              aYOffset)
+        {
           if (aType == "click") { // You can simulate a click event by sending undefined
             aType = undefined;
           }
-          synthesizeMouse(aElement, aOffset, 10, { type: aType });
+          if (!aYOffset) {
+            aYOffset = 10;
+          }
+          synthesizeMouse(aElement, aOffset, aYOffset, { type: aType });
           yield spin();
+
           is(selectstart, aSelStart,
              "SelStart Mouse Action (" + aOffset + " - " + aType + ")");
           is(selectionchange, aSelChng,
              "SelChng Mouse Action (" + aOffset + " - " + aType + ")");
+          is(inputSelectionchange, aISelChng || 0,
+             "ISelChng Mouse Action (" + aOffset + " - " + aType + ")");
+          is(textareaSelectionchange, aTSelChng || 0,
+             "TSelChng Mouse Action (" + aOffset + " - " + aType + ")");
           reset();
         }
 
-        function* keyAction(aKey, aShift, aAccel, aSelStart, aSelChng) {
+        function* keyAction(aKey, aShift, aAccel,
+                            aSelStart, aSelChng, aISelChng, aTSelChng)
+        {
           synthesizeKey(aKey, { shiftKey: aShift, accelKey: aAccel });
           yield spin();
           is(selectstart, aSelStart,
              "SelStart Key Action (" + aKey + " - " + aShift + " - " + aAccel + ")");
           is(selectionchange, aSelChng,
              "SelChng Key Action (" + aKey + " - " + aShift + " - " + aAccel + ")");
+          is(inputSelectionchange, aISelChng || 0,
+             "ISelChng Key Action (" + aKey + " - " + aShift + " - " + aAccel + ")");
+          is(textareaSelectionchange, aTSelChng || 0,
+             "TSelChng Key Action (" + aKey + " - " + aShift + " - " + aAccel + ")");
           reset();
         }
 
         var selection = document.getSelection();
-        function isCollapsed() { is(selection.isCollapsed, true, "Selection is collapsed"); }
-        function isNotCollapsed() { is(selection.isCollapsed, false, "Selection is not collapsed"); }
+        function isCollapsed() {
+          is(selection.isCollapsed, true, "Selection is collapsed");
+        }
+        function isNotCollapsed() {
+          is(selection.isCollapsed, false, "Selection is not collapsed");
+        }
 
         // Focus the contenteditable text
         yield* mouseAction(elt("ce"), 100, "click", 0, 1);
@@ -128,7 +174,7 @@
 
           // Wiggling the mouse a little such that it doesn't select any
           // characters shouldn't trigger a selection
-          yield* mouseAction(aElement, 49, "mousemove", 0, 0);
+          yield* mouseAction(aElement, 50, "mousemove", 0, 0, 0, 0, 11);
           isCollapsed();
 
           // Moving the mouse again from an empty selection should trigger a
@@ -229,6 +275,139 @@
         is(selectionchange, 1, "Synthesized range mutations should change selectionchange");
         reset();
         isNotCollapsed();
+
+        // Remove the range
+        s.removeAllRanges();
+        yield spin();
+        is(selectstart, 0, "Synthesized range removal");
+        is(selectionchange, 1, "Synthesized range removal");
+        reset();
+        isCollapsed();
+
+
+        /*
+           Selection events mouse move on input type=text
+        */
+
+        // Select a region
+
+        yield* mouseAction(elt("input"), 50, "mousedown", 0, 1, 1, 0);
+
+        selectstartTarget = elt("input");
+        yield* mouseAction(elt("input"), 100, "mousemove", 1, 0, 1, 0);
+
+        // Moving it more shouldn't trigger a start (move back to empty)
+        yield* mouseAction(elt("input"), 75, "mousemove", 0, 0, 1, 0);
+        yield* mouseAction(elt("input"), 50, "mousemove", 0, 0, 1, 0);
+
+        // Wiggling the mouse a little such that it doesn't select any
+        // characters shouldn't trigger a selection
+        yield* mouseAction(elt("input"), 50, "mousemove", 0, 0, 0, 0, 11);
+
+        // Moving the mouse again from an empty selection should trigger a
+        // selectstart
+        selectstartTarget = elt("input");
+        yield* mouseAction(elt("input"), 25, "mousemove", 1, 0, 1, 0);
+
+        // Releasing the mouse shouldn't do anything
+        yield* mouseAction(elt("input"), 25, "mouseup", 0, 0, 0, 0);
+
+        // And neither should moving your mouse around when the mouse
+        // button isn't pressed
+        yield* mouseAction(elt("input"), 50, "mousemove", 0, 0, 0, 0);
+
+        // Clicking in an random location should move the selection, but
+        // not perform a selectstart
+        yield* mouseAction(elt("input"), 50, "click", 0, 0, 1, 0);
+
+        // Clicking there again should do nothing
+        yield* mouseAction(elt("input"), 50, "click", 0, 0, 0, 0);
+
+        // Selecting a region, and canceling the selectstart should mean that the
+        // selection remains collapsed
+        yield* mouseAction(elt("input"), 75, "mousedown", 0, 0, 1, 0);
+        cancel = true;
+        selectstartTarget = elt("input");
+        yield* mouseAction(elt("input"), 100, "mousemove", 1, 0, 1, 0);
+        yield* mouseAction(elt("input"), 100, "mouseup", 0, 0, 0, 0);
+
+
+        // Select a region
+        // XXX For some reason we fire 2 selectchange events on the body
+        // when switching from the input to the text area.
+        yield* mouseAction(elt("textarea"), 50, "mousedown", 0, 2, 0, 1);
+
+        selectstartTarget = elt("textarea");
+        yield* mouseAction(elt("textarea"), 100, "mousemove", 1, 0, 0, 1);
+
+        // Moving it more shouldn't trigger a start (move back to empty)
+        yield* mouseAction(elt("textarea"), 75, "mousemove", 0, 0, 0, 1);
+        yield* mouseAction(elt("textarea"), 50, "mousemove", 0, 0, 0, 1);
+
+        // Wiggling the mouse a little such that it doesn't select any
+        // characters shouldn't trigger a selection
+        yield* mouseAction(elt("textarea"), 50, "mousemove", 0, 0, 0, 0, 11);
+
+        // Moving the mouse again from an empty selection should trigger a
+        // selectstart
+        selectstartTarget = elt("textarea");
+        yield* mouseAction(elt("textarea"), 25, "mousemove", 1, 0, 0, 1);
+
+        // Releasing the mouse shouldn't do anything
+        yield* mouseAction(elt("textarea"), 25, "mouseup", 0, 0, 0, 0);
+
+        // And neither should moving your mouse around when the mouse
+        // button isn't pressed
+        yield* mouseAction(elt("textarea"), 50, "mousemove", 0, 0, 0, 0);
+
+        // Clicking in an random location should move the selection, but not perform a
+        // selectstart
+        yield* mouseAction(elt("textarea"), 50, "click", 0, 0, 0, 1);
+
+        // Clicking there again should do nothing
+        yield* mouseAction(elt("textarea"), 50, "click", 0, 0, 0, 0);
+
+        // Selecting a region, and canceling the selectstart should mean that the
+        // selection remains collapsed
+        yield* mouseAction(elt("textarea"), 75, "mousedown", 0, 0, 0, 1);
+        cancel = true;
+        selectstartTarget = elt("textarea");
+        yield* mouseAction(elt("textarea"), 100, "mousemove", 1, 0, 0, 1);
+        yield* mouseAction(elt("textarea"), 100, "mouseup", 0, 0, 0, 0);
+
+        // Marking the input and textarea as display: none and then as visible again
+        // shouldn't trigger any changes, although the nodes will be re-framed
+        elt("input").setAttribute("style", "display: none;");
+        yield spin();
+        is(selectstart, 0, "idn - ss 1");
+        is(selectionchange, 0, "idn - sc 1");
+        is(inputSelectionchange, 0, "idn - isc 1");
+        is(textareaSelectionchange, 0, "idn - tsc 1");
+        reset();
+
+        elt("input").setAttribute("style", "");
+        yield spin();
+        is(selectstart, 0, "idn - ss 2");
+        is(selectionchange, 0, "idn - sc 2");
+        is(inputSelectionchange, 0, "idn - isc 2");
+        is(textareaSelectionchange, 0, "idn - tsc 2");
+        reset();
+
+        elt("textarea").setAttribute("style", "display: none;");
+        yield spin();
+        is(selectstart, 0, "tdn - ss 1");
+        is(selectionchange, 0, "tdn - sc 1");
+        is(inputSelectionchange, 0, "tdn - isc 1");
+        is(textareaSelectionchange, 0, "tdn - tsc 1");
+        reset();
+
+        elt("textarea").setAttribute("style", "");
+        yield spin();
+        is(selectstart, 0, "tdn - ss 2");
+        is(selectionchange, 0, "tdn - sc 2");
+        is(inputSelectionchange, 0, "tdn - isc 2");
+        is(textareaSelectionchange, 0, "tdn - tsc 2");
+        reset();
       });
     </script>
   </body>
