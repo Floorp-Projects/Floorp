@@ -35,7 +35,10 @@ let MockFxAccountsClient = function() {
   FxAccountsClient.apply(this);
 };
 MockFxAccountsClient.prototype = {
-  __proto__: FxAccountsClient.prototype
+  __proto__: FxAccountsClient.prototype,
+  accountStatus() {
+    return Promise.resolve(true);
+  }
 };
 
 function MockFxAccounts() {
@@ -82,6 +85,47 @@ add_task(function test_initialializeWithCurrentIdentity() {
     do_check_eq(browseridManager.account, identityConfig.fxaccount.user.email);
   }
 );
+
+add_task(function test_initialializeWithAuthErrorAndDeletedAccount() {
+    _("Verify sync unpair after initializeWithCurrentIdentity with auth error + account deleted");
+
+    browseridManager._fxaService.internal.initialize();
+
+    let fetchTokenForUserCalled = false;
+    let accountStatusCalled = false;
+
+    let MockFxAccountsClient = function() {
+      FxAccountsClient.apply(this);
+    };
+    MockFxAccountsClient.prototype = {
+      __proto__: FxAccountsClient.prototype,
+      accountStatus() {
+        accountStatusCalled = true;
+        return Promise.resolve(false);
+      }
+    };
+
+    let mockFxAClient = new MockFxAccountsClient();
+    browseridManager._fxaService.internal._fxAccountsClient = mockFxAClient;
+
+    let oldFetchTokenForUser = browseridManager._fetchTokenForUser;
+    browseridManager._fetchTokenForUser = function() {
+      fetchTokenForUserCalled = true;
+      return Promise.reject(false);
+    }
+
+    yield browseridManager.initializeWithCurrentIdentity();
+    yield Assert.rejects(browseridManager.whenReadyToAuthenticate.promise,
+                     "should reject due to an auth error");
+
+    do_check_true(fetchTokenForUserCalled);
+    do_check_true(accountStatusCalled);
+    do_check_false(browseridManager.account);
+    do_check_false(browseridManager._token);
+    do_check_false(browseridManager.hasValidToken());
+    do_check_false(browseridManager.account);
+    browseridManager._fetchTokenForUser = oldFetchTokenForUser;
+});
 
 add_task(function test_initialializeWithNoKeys() {
     _("Verify start after initializeWithCurrentIdentity without kA, kB or keyFetchToken");
@@ -646,7 +690,17 @@ function* initializeIdentityWithHAWKResponseFactory(config, cbGetResponse) {
       callback.call(this);
     },
     get: function(callback) {
-      this.response = cbGetResponse("get", null, this._uri, this._credentials, this._extra);
+      // Skip /status requests (browserid_identity checks if the account still
+      // exists after an auth error)
+      if (this._uri.startsWith("http://mockedserver:9999/account/status")) {
+        this.response = {
+          status: 200,
+          headers: {"content-type": "application/json"},
+          body: JSON.stringify({exists: true}),
+        };
+      } else {
+        this.response = cbGetResponse("get", null, this._uri, this._credentials, this._extra);
+      }
       callback.call(this);
     }
   }
