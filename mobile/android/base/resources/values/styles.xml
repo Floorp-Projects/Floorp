@@ -496,13 +496,6 @@
         <item name="android:layout_width">@dimen/browser_toolbar_height</item>
     </style>
 
-    <!-- URL bar - Image Button - Icon -->
-    <style name="UrlBar.ImageButton.Icon">
-         <item name="android:layout_width">@dimen/browser_toolbar_icon_width</item>
-         <item name="android:layout_height">@dimen/browser_toolbar_height</item>
-         <item name="android:layout_weight">0.0</item>
-    </style>
-
     <!-- TabsLayout -->
     <style name="TabsLayoutBase">
          <item name="android:background">@android:color/transparent</item>
