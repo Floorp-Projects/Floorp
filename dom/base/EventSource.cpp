@@ -69,6 +69,7 @@ EventSource::EventSource(nsPIDOMWindow* aOwnerWindow) :
   mLastConvertionResult(NS_OK),
   mReadyState(CONNECTING),
   mScriptLine(0),
+  mScriptColumn(0),
   mInnerWindowID(0)
 {
 }
@@ -205,7 +206,8 @@ EventSource::Init(nsISupports* aOwner,
 
   // The conditional here is historical and not necessarily sane.
   if (JSContext *cx = nsContentUtils::GetCurrentJSContext()) {
-    nsJSUtils::GetCallingLocation(cx, mScriptFile, &mScriptLine);
+    nsJSUtils::GetCallingLocation(cx, mScriptFile, &mScriptLine,
+                                  &mScriptColumn);
     mInnerWindowID = nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx);
   }
 
@@ -987,7 +989,7 @@ EventSource::PrintErrorOnConsole(const char *aBundleURI,
   rv = errObj->InitWithWindowID(message,
                                 mScriptFile,
                                 EmptyString(),
-                                mScriptLine, 0,
+                                mScriptLine, mScriptColumn,
                                 nsIScriptError::errorFlag,
                                 "Event Source", mInnerWindowID);
   NS_ENSURE_SUCCESS(rv, rv);

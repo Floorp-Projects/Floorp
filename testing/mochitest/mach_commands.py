@@ -420,6 +420,14 @@ def setup_argument_parser():
 
         from mochitest_options import MochitestArgumentParser
 
+    if conditions.is_android(build_obj):
+        # On Android, check for a connected device (and offer to start an
+        # emulator if appropriate) before running tests. This check must
+        # be done in this admittedly awkward place because
+        # MochitestArgumentParser initialization fails if no device is found.
+        from mozrunner.devices.android_device import verify_android_device
+        verify_android_device(build_obj, install=True)
+
     return MochitestArgumentParser()
 
 

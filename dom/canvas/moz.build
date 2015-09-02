@@ -139,7 +139,6 @@ UNIFIED_SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    '../..', # Support `#include "mfbt/RefPtr.h"`
     '/js/xpconnect/wrappers',
 ]
 

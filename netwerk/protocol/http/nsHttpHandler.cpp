@@ -174,7 +174,6 @@ nsHttpHandler::nsHttpHandler()
     , mProduct("Gecko")
     , mCompatFirefoxEnabled(false)
     , mUserAgentIsDirty(true)
-    , mUseCache(true)
     , mPromptTempRedirect(true)
     , mSendSecureXSiteReferrer(true)
     , mEnablePersistentHttpsCaching(false)
@@ -1152,13 +1151,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
                                   getter_Copies(acceptEncodings));
         if (NS_SUCCEEDED(rv))
             SetAcceptEncodings(acceptEncodings);
-    }
-
-    if (PREF_CHANGED(HTTP_PREF("use-cache"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("use-cache"), &cVar);
-        if (NS_SUCCEEDED(rv)) {
-            mUseCache = cVar;
-        }
     }
 
     if (PREF_CHANGED(HTTP_PREF("default-socket-type"))) {

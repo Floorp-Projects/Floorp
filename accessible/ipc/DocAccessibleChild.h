@@ -448,15 +448,6 @@ public:
                                 uint64_t* aChild,
                                 bool* aOk) override;
 
-  virtual bool RecvChildAtPoint(const uint64_t& aID,
-                                const int32_t& aX,
-                                const int32_t& aY,
-                                const uint32_t& aWhich,
-                                uint64_t* aChild,
-                                bool* aOk) override;
-
-  virtual bool RecvBounds(const uint64_t& aID, nsIntRect* aRect) override;
-
   virtual bool RecvLanguage(const uint64_t& aID, nsString* aLocale) override;
   virtual bool RecvDocType(const uint64_t& aID, nsString* aType) override;
   virtual bool RecvTitle(const uint64_t& aID, nsString* aTitle) override;
@@ -466,6 +457,21 @@ public:
                                       nsString* aURL,
                                       nsString* aDocType,
                                       nsString* aMimeType) override;
+
+  virtual bool RecvAccessibleAtPoint(const uint64_t& aID,
+                                     const int32_t& aX,
+                                     const int32_t& aY,
+                                     const bool& aNeedsScreenCoords,
+                                     const uint32_t& aWhich,
+                                     uint64_t* aResult,
+                                     bool* aOk) override;
+
+  virtual bool RecvExtents(const uint64_t& aID,
+                           const bool& aNeedsScreenCoords,
+                           int32_t* aX,
+                           int32_t* aY,
+                           int32_t* aWidth,
+                           int32_t* aHeight) override;
 private:
 
   Accessible* IdToAccessible(const uint64_t& aID) const;

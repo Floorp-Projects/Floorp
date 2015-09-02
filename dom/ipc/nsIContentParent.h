@@ -38,6 +38,7 @@ class BlobConstructorParams;
 class BlobImpl;
 class BlobParent;
 class ContentParent;
+class ContentBridgeParent;
 class IPCTabContext;
 class PBlobParent;
 class PBrowserParent;
@@ -77,6 +78,8 @@ public:
 
   virtual bool IsContentParent() { return false; }
   ContentParent* AsContentParent();
+  virtual bool IsContentBridgeParent() { return false; }
+  ContentBridgeParent* AsContentBridgeParent();
 
 protected: // methods
   bool CanOpenBrowser(const IPCTabContext& aContext);
