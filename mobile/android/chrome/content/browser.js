@@ -1294,6 +1294,8 @@ var BrowserApp = {
     if (aTab == this.selectedTab)
       return;
 
+    this.selectedBrowser.contentDocument.mozCancelFullScreen();
+
     let message = {
       type: "Tab:Select",
       tabID: aTab.id

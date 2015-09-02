@@ -43,6 +43,7 @@ add_task(function*() {
   ok(sampleCount > 0,
     "At least some samples have been iterated over, checking for root nodes.");
 
+  yield front.destroy();
   yield closeDebuggerClient(client);
   gBrowser.removeCurrentTab();
 });

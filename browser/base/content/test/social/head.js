@@ -489,7 +489,12 @@ function get3ChatsForCollapsing(mode, cb) {
 function makeChat(mode, uniqueid, cb) {
   info("making a chat window '" + uniqueid +"'");
   let provider = SocialSidebar.provider;
-  const chatUrl = provider.origin + "/browser/browser/base/content/test/social/social_chat.html";
+  let chatUrl = provider.origin + "/browser/browser/base/content/test/social/social_chat.html";
+  // chatURL is not a part of the provider class, but is added by tests if we
+  // want to use a specific url (different than above) for testing
+  if (provider.chatURL) {
+    chatUrl = provider.chatURL;
+  }
   // Note that we use promiseChatLoaded instead of the callback to ensure the
   // content has started loading.
   let chatbox = getChatBar().openChat(provider.origin, provider.name,

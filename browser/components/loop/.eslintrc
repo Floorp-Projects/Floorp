@@ -15,11 +15,9 @@
   "extends": "eslint:recommended",
   "globals": {
     "_": false,
-    "$": false,
     "Backbone": false,
     "chai": false,
     "console": false,
-    "jQuery": false,
     "loop": true,
     "MozActivity": false,
     "mozRTCSessionDescription": false,
