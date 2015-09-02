@@ -2642,7 +2642,7 @@ case _value: eventName.AssignLiteral(_name) ; break
     _ASSIGN_eventName(NS_FORM_SELECTED,"NS_FORM_SELECTED");
     _ASSIGN_eventName(NS_FORM_CHANGE,"NS_FORM_CHANGE");
     _ASSIGN_eventName(NS_FORM_RESET,"NS_FORM_RESET");
-    _ASSIGN_eventName(NS_FORM_SUBMIT,"NS_FORM_SUBMIT");
+    _ASSIGN_eventName(eFormSubmit,"eFormSubmit");
     _ASSIGN_eventName(eImageAbort,"eImageAbort");
     _ASSIGN_eventName(eLoadError,"eLoadError");
     _ASSIGN_eventName(eKeyDown,"eKeyDown");
