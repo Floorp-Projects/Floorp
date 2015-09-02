@@ -1805,7 +1805,7 @@ GeckoDriver.prototype.singleTap = function(cmd, resp) {
 
     case Context.CONTENT:
       this.addFrameCloseListener("tap");
-      yield this.listener.singleTap({id: id, corx: x, cory: y});
+      yield this.listener.singleTap(id, x, y);
       break;
   }
 };
