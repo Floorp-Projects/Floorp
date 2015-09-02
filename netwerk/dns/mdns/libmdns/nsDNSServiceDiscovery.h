@@ -36,7 +36,7 @@ public:
   nsresult UnregisterService(nsIDNSRegistrationListener* aListener);
 
 private:
-  virtual ~nsDNSServiceDiscovery() = default;
+  virtual ~nsDNSServiceDiscovery();
 
   nsRefPtrHashtable<nsISupportsHashKey, BrowseOperator> mDiscoveryMap;
   nsRefPtrHashtable<nsISupportsHashKey, RegisterOperator> mRegisterMap;

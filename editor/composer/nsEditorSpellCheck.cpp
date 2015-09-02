@@ -596,24 +596,18 @@ nsEditorSpellCheck::SetCurrentDictionary(const nsAString& aDictionary)
     // Ignore pending dictionary fetchers by increasing this number.
     mDictionaryFetcherGroup++;
 
-    nsDefaultStringComparator comparator;
-    nsAutoString langCode;
-    int32_t dashIdx = aDictionary.FindChar('-');
-    if (dashIdx != -1) {
-      langCode.Assign(Substring(aDictionary, 0, dashIdx));
-    } else {
-      langCode.Assign(aDictionary);
-    }
     uint32_t flags = 0;
     mEditor->GetFlags(&flags);
     if (!(flags & nsIPlaintextEditor::eEditorMailMask)) {
-      if (mPreferredLang.IsEmpty() ||
-          !nsStyleUtil::DashMatchCompare(mPreferredLang, langCode, comparator)) {
+      if (mPreferredLang.IsEmpty() || !mPreferredLang.Equals(aDictionary)) {
         // When user sets dictionary manually, we store this value associated
-        // with editor url.
+        // with editor url, if it doesn't match the document language exactly.
+        // For example on "en" sites, we need to store "en-GB", otherwise
+        // the language might jump back to en-US although the user explicitly
+        // chose otherwise.
         StoreCurrentDictionary(mEditor, aDictionary);
       } else {
-        // If user sets a dictionary matching (even partially), lang defined by
+        // If user sets a dictionary matching the language defined by
         // document, we consider content pref has been canceled, and we clear it.
         ClearCurrentDictionary(mEditor);
       }

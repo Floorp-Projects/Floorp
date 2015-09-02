@@ -240,7 +240,7 @@ class SharedContext
 
     inline bool allLocalsAliased();
 
-    bool strict() {
+    bool strict() const {
         return strictScript || localStrict;
     }
     bool setLocalStrictMode(bool strict) {
@@ -250,7 +250,7 @@ class SharedContext
     }
 
     // JSOPTION_EXTRA_WARNINGS warnings or strict mode errors.
-    bool needStrictChecks() {
+    bool needStrictChecks() const {
         return strict() || extraWarnings;
     }
 
@@ -347,6 +347,10 @@ class FunctionBox : public ObjectBox, public SharedContext
         return length != function()->nargs() - function()->hasRest();
     }
 
+    bool hasMappedArgsObj() const {
+        return !strict() && !function()->hasRest() && !hasDefaults() && !hasDestructuringArgs;
+    }
+
     // Return whether this or an enclosing function is being parsed and
     // validated as asm.js. Note: if asm.js validation fails, this will be false
     // while the function is being reparsed. This flag can be used to disable
@@ -362,9 +366,9 @@ class FunctionBox : public ObjectBox, public SharedContext
         startColumn = tokenStream.getColumn();
     }
 
-    bool isHeavyweight()
+    bool needsCallObject()
     {
-        // Note: this should be kept in sync with JSFunction::isHeavyweight().
+        // Note: this should be kept in sync with JSFunction::needsCallObject().
         return bindings.hasAnyAliasedBindings() ||
                hasExtensibleScope() ||
                needsDeclEnvObject() ||

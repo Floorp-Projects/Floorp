@@ -143,7 +143,7 @@ bool
 RematerializedFrame::initFunctionScopeObjects(JSContext* cx)
 {
     MOZ_ASSERT(isNonEvalFunctionFrame());
-    MOZ_ASSERT(fun()->isHeavyweight());
+    MOZ_ASSERT(fun()->needsCallObject());
     CallObject* callobj = CallObject::createForFunction(cx, this);
     if (!callobj)
         return false;

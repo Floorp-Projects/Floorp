@@ -283,7 +283,7 @@ CallObject::createForStrictEval(JSContext* cx, AbstractFramePtr frame)
 CallObject*
 CallObject::createHollowForDebug(JSContext* cx, HandleFunction callee)
 {
-    MOZ_ASSERT(!callee->isHeavyweight());
+    MOZ_ASSERT(!callee->needsCallObject());
 
     // This scope's parent link is never used: the DebugScopeObject that
     // refers to this scope carries its own parent link, which is what
@@ -315,7 +315,6 @@ const Class CallObject::class_ = {
 
 const Class ModuleEnvironmentObject::class_ = {
     "ModuleEnvironmentObject",
-    JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(ModuleEnvironmentObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS
 };
@@ -546,7 +545,6 @@ with_ThisObject(JSContext* cx, HandleObject obj)
 
 const Class StaticWithObject::class_ = {
     "WithTemplate",
-    JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(StaticWithObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS
 };
@@ -788,7 +786,6 @@ StaticBlockObject::addVar(ExclusiveContext* cx, Handle<StaticBlockObject*> block
 
 const Class BlockObject::class_ = {
     "Block",
-    JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(BlockObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS
 };
@@ -1111,10 +1108,10 @@ ScopeIter::incrementStaticScopeIter()
 void
 ScopeIter::settle()
 {
-    // Check for trying to iterate a heavyweight function frame before
-    // the prologue has created the CallObject, in which case we have to skip.
+    // Check for trying to iterate a function frame before the prologue has
+    // created the CallObject, in which case we have to skip.
     if (frame_ && frame_.isNonEvalFunctionFrame() &&
-        frame_.fun()->isHeavyweight() && !frame_.hasCallObj())
+        frame_.fun()->needsCallObject() && !frame_.hasCallObj())
     {
         MOZ_ASSERT(ssi_.type() == StaticScopeIter<CanGC>::Function);
         incrementStaticScopeIter();
@@ -1887,7 +1884,7 @@ DebugScopeObject::isOptimizedOut() const
 
     if (s.is<CallObject>()) {
         return !s.as<CallObject>().isForEval() &&
-               !s.as<CallObject>().callee().isHeavyweight() &&
+               !s.as<CallObject>().callee().needsCallObject() &&
                !maybeSnapshot();
     }
 
@@ -2133,7 +2130,7 @@ DebugScopes::onPopCall(AbstractFramePtr frame, JSContext* cx)
 
     Rooted<DebugScopeObject*> debugScope(cx, nullptr);
 
-    if (frame.fun()->isHeavyweight()) {
+    if (frame.fun()->needsCallObject()) {
         /*
          * The frame may be observed before the prologue has created the
          * CallObject. See ScopeIter::settle.
@@ -2849,7 +2846,7 @@ js::AnalyzeEntrainedVariables(JSContext* cx, HandleScript script)
             if (!innerScript)
                 return false;
 
-            if (script->functionDelazifying() && script->functionDelazifying()->isHeavyweight()) {
+            if (script->functionDelazifying() && script->functionDelazifying()->needsCallObject()) {
                 if (!AnalyzeEntrainedVariablesInScript(cx, script, innerScript))
                     return false;
             }
