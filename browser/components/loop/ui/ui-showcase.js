@@ -1685,25 +1685,50 @@
       // this alongside our other unit tests but use the same harness.
       var expectedWarningsCount = 10;
       var warningsMismatch = caughtWarnings.length !== expectedWarningsCount;
+      var resultsElement = document.querySelector("#results");
+      var divFailuresNode = document.createElement("div");
+      var pCompleteNode = document.createElement("p");
+      var emNode = document.createElement("em");
+
       if (uncaughtError || warningsMismatch) {
-        $("#results").append("<div class='failures'><em>" +
-          ((uncaughtError && warningsMismatch) ? 2 : 1) + "</em></div>");
+        var liTestFail = document.createElement("li");
+        var h2Node = document.createElement("h2");
+        var preErrorNode = document.createElement("pre");
+
+        divFailuresNode.className = "failures";
+        emNode.innerHTML = ((uncaughtError && warningsMismatch) ? 2 : 1).toString();
+        divFailuresNode.appendChild(emNode);
+        resultsElement.appendChild(divFailuresNode);
+
         if (warningsMismatch) {
-          $("#results").append("<li class='test fail'>" +
-            "<h2>Unexpected number of warnings detected in UI-Showcase</h2>" +
-            "<pre class='error'>Got: " + caughtWarnings.length + "\n" +
-            "Expected: " + expectedWarningsCount + "</pre></li>");
+          liTestFail.className = "test";
+          liTestFail.className = liTestFail.className + " fail";
+          h2Node.innerHTML = "Unexpected number of warnings detected in UI-Showcase";
+          preErrorNode.className = "error";
+          preErrorNode.innerHTML = "Got: " + caughtWarnings.length + "\n" + "Expected: " + expectedWarningsCount;
+          liTestFail.appendChild(h2Node);
+          liTestFail.appendChild(preErrorNode);
+          resultsElement.appendChild(liTestFail);
         }
         if (uncaughtError) {
-          $("#results").append("<li class='test fail'>" +
-            "<h2>Errors rendering UI-Showcase</h2>" +
-            "<pre class='error'>" + uncaughtError + "\n" + uncaughtError.stack + "</pre>" +
-            "</li>");
+          liTestFail.className = "test";
+          liTestFail.className = liTestFail.className + " fail";
+          h2Node.innerHTML = "Errors rendering UI-Showcase";
+          preErrorNode.className = "error";
+          preErrorNode.innerHTML = uncaughtError + "\n" + uncaughtError.stack;
+          liTestFail.appendChild(h2Node);
+          liTestFail.appendChild(preErrorNode);
+          resultsElement.appendChild(liTestFail);
         }
       } else {
-        $("#results").append("<div class='failures'><em>0</em></div>");
+        divFailuresNode.className = "failures";
+        emNode.innerHTML = "0";
+        divFailuresNode.appendChild(emNode);
+        resultsElement.appendChild(divFailuresNode);
       }
-      $("#results").append("<p id='complete'>Complete.</p>");
+      pCompleteNode.id = "complete";
+      pCompleteNode.innerHTML = "Completed";
+      resultsElement.appendChild(pCompleteNode);
     }, 1000);
   });
 

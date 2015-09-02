@@ -162,7 +162,9 @@ body {
   height: 20px;
   overflow: hidden;
   position: relative;
-  border-bottom: 1px solid var(--theme-splitter-color);
+  /* This is the same color as the time graduations in
+     browser/devtools/animationinspector/utils.js */
+  border-bottom: 1px solid rgba(128, 136, 144, .5);
   cursor: col-resize;
   -moz-user-select: none;
 }
@@ -216,19 +218,37 @@ body {
 .animation-timeline .animation .iterations {
   position: relative;
   height: 100%;
-  border: 1px solid var(--theme-highlight-lightorange);
   box-sizing: border-box;
-  background: var(--theme-contrast-background);
-  /* Iterations are displayed with a repeating linear-gradient which size is
-     dynamically changed from JS */
+
+  --timelime-border-color: var(--theme-body-color);
+  --timeline-background-color: var(--theme-splitter-color);
+
+  /* Iterations of the animation are displayed with a repeating linear-gradient
+     which size is dynamically changed from JS. The gradient only draws 1px
+     borders between each iteration. These borders must have the same color as
+     the border of this element */
   background-image:
     linear-gradient(to right,
-                    var(--theme-highlight-lightorange) 0,
-                    var(--theme-highlight-lightorange) 1px,
+                    var(--timelime-border-color) 0,
+                    var(--timelime-border-color) 1px,
                     transparent 1px,
                     transparent 2px);
   background-repeat: repeat-x;
   background-position: -1px 0;
+  border: 1px solid var(--timelime-border-color);
+
+  /* The background color is set independently */
+  background: var(--timeline-background-color);
+}
+
+.animation-timeline .animation .cssanimation {
+  --timelime-border-color: var(--theme-highlight-lightorange);
+  --timeline-background-color: var(--theme-contrast-background);
+}
+
+.animation-timeline .animation .csstransition {
+  --timelime-border-color: var(--theme-highlight-bluegrey);
+  --timeline-background-color: var(--theme-highlight-blue);
 }
 
 .animation-timeline .animation .iterations.infinite {
@@ -254,6 +274,7 @@ body {
 }
 
 .animation-timeline .animation .name {
+  color: var(--theme-selection-color);
   height: 100%;
   width: 100%;
   overflow: hidden;
@@ -270,8 +291,8 @@ body {
   background-image: linear-gradient(to bottom,
                                     transparent,
                                     transparent 9px,
-                                    var(--theme-highlight-lightorange) 9px,
-                                    var(--theme-highlight-lightorange) 11px,
+                                    var(--timelime-border-color) 9px,
+                                    var(--timelime-border-color) 11px,
                                     transparent 11px,
                                     transparent);
 }
@@ -284,7 +305,7 @@ body {
   height: 8px;
   top: 50%;
   margin-top: -4px;
-  background: var(--theme-highlight-lightorange);
+  background: var(--timelime-border-color);
 }
 
 /* Animation target node gutter, contains a preview of the dom node */
