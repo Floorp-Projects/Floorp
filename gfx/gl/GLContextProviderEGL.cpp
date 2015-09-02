@@ -137,19 +137,25 @@ CreateConfig(EGLConfig* aConfig, nsIWidget* aWidget);
 #define EGL_ATTRIBS_LIST_SAFE_TERMINATION_WORKING_AROUND_BUGS \
      LOCAL_EGL_NONE, 0, 0, 0
 
-static EGLint gTerminationAttribs[] = {
+static EGLint kTerminationAttribs[] = {
     EGL_ATTRIBS_LIST_SAFE_TERMINATION_WORKING_AROUND_BUGS
 };
 
-static EGLint gContextAttribs[] = {
+static EGLint kContextAttribs[] = {
     LOCAL_EGL_CONTEXT_CLIENT_VERSION, 2,
     EGL_ATTRIBS_LIST_SAFE_TERMINATION_WORKING_AROUND_BUGS
 };
 
-static EGLint gContextAttribsRobustness[] = {
+static EGLint kContextAttribsRobustness[] = {
     LOCAL_EGL_CONTEXT_CLIENT_VERSION, 2,
-    //LOCAL_EGL_CONTEXT_ROBUST_ACCESS_EXT, LOCAL_EGL_TRUE,
-    LOCAL_EGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_EXT, LOCAL_EGL_LOSE_CONTEXT_ON_RESET_EXT,
+    LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT, LOCAL_EGL_LOSE_CONTEXT_ON_RESET_EXT,
+    EGL_ATTRIBS_LIST_SAFE_TERMINATION_WORKING_AROUND_BUGS
+};
+
+static EGLint kContextAttribsRobustAccess[] = {
+    LOCAL_EGL_CONTEXT_CLIENT_VERSION, 2,
+    LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT, LOCAL_EGL_TRUE,
+    LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT, LOCAL_EGL_LOSE_CONTEXT_ON_RESET_EXT,
     EGL_ATTRIBS_LIST_SAFE_TERMINATION_WORKING_AROUND_BUGS
 };
 
@@ -501,6 +507,29 @@ GLContextEGL::DestroySurface(EGLSurface aSurface)
     }
 }
 
+static EGLContext
+CreateContextForShareContext(EGLDisplay display, EGLConfig config,
+                             EGLContext shareContext)
+{
+    EGLContext context = nullptr;
+
+    if (sEGLLibrary.HasRobustness()) {
+        context = sEGLLibrary.fCreateContext(EGL_DISPLAY(), config, shareContext,
+                                             kContextAttribsRobustAccess);
+        if (!context) {
+            context = sEGLLibrary.fCreateContext(EGL_DISPLAY(), config, shareContext,
+                                                 kContextAttribsRobustness);
+        }
+    }
+
+    if (!context) {
+        context = sEGLLibrary.fCreateContext(EGL_DISPLAY(), config, shareContext,
+                                             kContextAttribs);
+    }
+
+    return context;
+}
+
 already_AddRefed<GLContextEGL>
 GLContextEGL::CreateGLContext(const SurfaceCaps& caps,
                 GLContextEGL *shareContext,
@@ -513,34 +542,24 @@ GLContextEGL::CreateGLContext(const SurfaceCaps& caps,
         return nullptr;
     }
 
-    EGLContext eglShareContext = shareContext ? shareContext->mContext
-                                              : EGL_NO_CONTEXT;
-    EGLint* attribs = sEGLLibrary.HasRobustness() ? gContextAttribsRobustness
-                                                  : gContextAttribs;
-
-    EGLContext context = sEGLLibrary.fCreateContext(EGL_DISPLAY(),
-                                                    config,
-                                                    eglShareContext,
-                                                    attribs);
-    if (!context && shareContext) {
-        shareContext = nullptr;
-        context = sEGLLibrary.fCreateContext(EGL_DISPLAY(),
-                                              config,
-                                              EGL_NO_CONTEXT,
-                                              attribs);
+    EGLContext context = nullptr;
+    if (shareContext) {
+        context = CreateContextForShareContext(EGL_DISPLAY(), config,
+                                               shareContext->mContext);
     }
+
+    if (!context) {
+        shareContext = nullptr;
+        context = CreateContextForShareContext(EGL_DISPLAY(), config, nullptr);
+    }
+
     if (!context) {
         NS_WARNING("Failed to create EGLContext!");
         return nullptr;
     }
 
-    nsRefPtr<GLContextEGL> glContext = new GLContextEGL(caps,
-                                                        shareContext,
-                                                        isOffscreen,
-                                                        config,
-                                                        surface,
-                                                        context);
-
+    nsRefPtr<GLContextEGL> glContext = new GLContextEGL(caps, shareContext, isOffscreen,
+                                                        config, surface, context);
     if (!glContext->Init())
         return nullptr;
 
@@ -568,8 +587,8 @@ TRY_AGAIN_POWER_OF_TWO:
         pbattrs.AppendElement(bindToTextureFormat);
     }
 
-    for (size_t i = 0; i < MOZ_ARRAY_LENGTH(gTerminationAttribs); i++) {
-      pbattrs.AppendElement(gTerminationAttribs[i]);
+    for (size_t i = 0; i < MOZ_ARRAY_LENGTH(kTerminationAttribs); i++) {
+      pbattrs.AppendElement(kTerminationAttribs[i]);
     }
 
     surface = sEGLLibrary.fCreatePbufferSurface(EGL_DISPLAY(), config, &pbattrs[0]);
