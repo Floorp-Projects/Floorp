@@ -214,7 +214,8 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_EXPORT_BATCH_SPEC:
       case PNK_OBJECT_PROPERTY_NAME:
       case PNK_FRESHENBLOCK:
-      case PNK_POSHOLDER:
+      case PNK_SUPERPROP:
+      case PNK_NEWTARGET:
         MOZ_ASSERT(pn->isArity(PN_NULLARY));
         MOZ_ASSERT(!pn->isUsed(), "handle non-trivial cases separately");
         MOZ_ASSERT(!pn->isDefn(), "handle non-trivial cases separately");
@@ -229,7 +230,9 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_THROW:
       case PNK_DELETENAME:
       case PNK_DELETEPROP:
+      case PNK_DELETESUPERPROP:
       case PNK_DELETEELEM:
+      case PNK_DELETESUPERELEM:
       case PNK_DELETEEXPR:
       case PNK_POS:
       case PNK_NEG:
@@ -243,6 +246,7 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_MUTATEPROTO:
       case PNK_EXPORT:
       case PNK_EXPORT_DEFAULT:
+      case PNK_SUPERELEM:
         return PushUnaryNodeChild(pn, stack);
 
       // Nodes with a single nullable child.
@@ -281,7 +285,6 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_SWITCH:
       case PNK_LETBLOCK:
       case PNK_CLASSMETHOD:
-      case PNK_NEWTARGET:
       case PNK_FOR: {
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         stack->push(pn->pn_left);
@@ -1103,10 +1106,7 @@ NameNode::dump(int indent)
 
         if (isKind(PNK_DOT)) {
             fputc(' ', stderr);
-            if (as<PropertyAccess>().isSuper())
-                fprintf(stderr, "super");
-            else
-                DumpParseTree(expr(), indent + 2);
+            DumpParseTree(expr(), indent + 2);
             fputc(')', stderr);
         }
         return;
