@@ -150,7 +150,7 @@ class RespondWithHandler final : public PromiseNativeHandler
   nsMainThreadPtrHandle<nsIInterceptedChannel> mInterceptedChannel;
   nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
   const RequestMode mRequestMode;
-  const bool mIsClientRequest;
+  const DebugOnly<bool> mIsClientRequest;
   const bool mIsNavigationRequest;
 public:
   NS_DECL_ISUPPORTS
@@ -272,8 +272,6 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   //  If one of the following conditions is true, return a network error:
   //    * response's type is "error".
   //    * request's mode is not "no-cors" and response's type is "opaque".
-  //    * request is a client request and response's type is neither "basic"
-  //      nor "default".
   //    * request is not a navigation request and response's type is
   //      "opaqueredirect".
 
@@ -282,16 +280,10 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     return;
   }
 
+  MOZ_ASSERT_IF(mIsClientRequest, mRequestMode == RequestMode::Same_origin);
+
   if (response->Type() == ResponseType::Opaque && mRequestMode != RequestMode::No_cors) {
     autoCancel.SetCancelStatus(NS_ERROR_BAD_OPAQUE_INTERCEPTION_REQUEST_MODE);
-    return;
-  }
-
-  // TODO: remove this case as its no longer in the spec (bug 1184967)
-  if (mIsClientRequest && response->Type() != ResponseType::Basic &&
-      response->Type() != ResponseType::Default &&
-      response->Type() != ResponseType::Opaqueredirect) {
-    autoCancel.SetCancelStatus(NS_ERROR_CLIENT_REQUEST_OPAQUE_INTERCEPTION);
     return;
   }
 

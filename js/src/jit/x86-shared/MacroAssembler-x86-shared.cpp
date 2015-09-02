@@ -63,43 +63,6 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
     bind(&done);
 }
 
-// Builds an exit frame on the stack, with a return address to an internal
-// non-function. Returns offset to be passed to markSafepointAt().
-void
-MacroAssemblerX86Shared::buildFakeExitFrame(Register scratch, uint32_t* offset)
-{
-    mozilla::DebugOnly<uint32_t> initialDepth = asMasm().framePushed();
-
-    CodeLabel cl;
-    mov(cl.dest(), scratch);
-
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor));
-    asMasm().Push(scratch);
-
-    bind(cl.src());
-    *offset = currentOffset();
-
-    MOZ_ASSERT(asMasm().framePushed() == initialDepth + ExitFrameLayout::Size());
-    addCodeLabel(cl);
-}
-
-void
-MacroAssemblerX86Shared::callWithExitFrame(Label* target)
-{
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor));
-    call(target);
-}
-
-void
-MacroAssemblerX86Shared::callWithExitFrame(JitCode* target)
-{
-    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
-    asMasm().Push(Imm32(descriptor));
-    call(target);
-}
-
 void
 MacroAssembler::alignFrameForICArguments(AfterICSaveLive& aic)
 {
@@ -166,24 +129,6 @@ MacroAssemblerX86Shared::branchNegativeZeroFloat32(FloatRegister reg,
     vmovd(reg, scratch);
     cmp32(scratch, Imm32(1));
     j(Overflow, label);
-}
-
-void
-MacroAssemblerX86Shared::callJit(Register callee)
-{
-    call(callee);
-}
-
-void
-MacroAssemblerX86Shared::callJitFromAsmJS(Register callee)
-{
-    call(callee);
-}
-
-void
-MacroAssemblerX86Shared::callAndPushReturnAddress(Label* label)
-{
-    call(label);
 }
 
 MacroAssembler&
@@ -418,6 +363,35 @@ void
 MacroAssembler::call(JitCode* target)
 {
     Assembler::call(target);
+}
+
+void
+MacroAssembler::callAndPushReturnAddress(Register reg)
+{
+    call(reg);
+}
+
+void
+MacroAssembler::callAndPushReturnAddress(Label* label)
+{
+    call(label);
+}
+
+// ===============================================================
+// Jit Frames.
+
+uint32_t
+MacroAssembler::pushFakeReturnAddress(Register scratch)
+{
+    CodeLabel cl;
+
+    mov(cl.dest(), scratch);
+    Push(scratch);
+    bind(cl.src());
+    uint32_t retAddr = currentOffset();
+
+    addCodeLabel(cl);
+    return retAddr;
 }
 
 //}}} check_macroassembler_style

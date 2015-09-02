@@ -40,8 +40,8 @@ def startTestRunner(runner_class, args):
 
 def cli(runner_class=MarionetteTestRunner, parser_class=MarionetteArguments):
     parser = parser_class(
-        usage='%prog [options] test_file_or_dir <test_file_or_dir> ...',
-        version="%prog {version} (using marionette-driver: {driver_version}"
+        usage='%(prog)s [options] test_file_or_dir <test_file_or_dir> ...',
+        version="%(prog)s {version} (using marionette-driver: {driver_version}"
                 ", marionette-transport: {transport_version})".format(
                     version=__version__,
                     driver_version=driver_version,

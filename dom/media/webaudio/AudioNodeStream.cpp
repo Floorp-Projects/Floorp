@@ -430,7 +430,7 @@ AudioNodeStream::AccumulateInputChunk(uint32_t aInputIndex, const AudioChunk& aC
                                       AudioChunk* aBlock,
                                       nsTArray<float>* aDownmixBuffer)
 {
-  nsAutoTArray<const void*,GUESS_AUDIO_CHANNELS> channels;
+  nsAutoTArray<const float*,GUESS_AUDIO_CHANNELS> channels;
   UpMixDownMixChunk(&aChunk, aBlock->mChannelData.Length(), channels, *aDownmixBuffer);
 
   for (uint32_t c = 0; c < channels.Length(); ++c) {
@@ -453,15 +453,17 @@ AudioNodeStream::AccumulateInputChunk(uint32_t aInputIndex, const AudioChunk& aC
 void
 AudioNodeStream::UpMixDownMixChunk(const AudioChunk* aChunk,
                                    uint32_t aOutputChannelCount,
-                                   nsTArray<const void*>& aOutputChannels,
+                                   nsTArray<const float*>& aOutputChannels,
                                    nsTArray<float>& aDownmixBuffer)
 {
   static const float silenceChannel[WEBAUDIO_BLOCK_SIZE] = {0.f};
 
-  aOutputChannels.AppendElements(aChunk->mChannelData);
+  for (uint32_t i = 0; i < aChunk->mChannelData.Length(); i++) {
+    aOutputChannels.AppendElement(static_cast<const float*>(aChunk->mChannelData[i]));
+  }
   if (aOutputChannels.Length() < aOutputChannelCount) {
     if (mChannelInterpretation == ChannelInterpretation::Speakers) {
-      AudioChannelsUpMix(&aOutputChannels, aOutputChannelCount, nullptr);
+      AudioChannelsUpMix(&aOutputChannels, aOutputChannelCount, SilentChannel::ZeroChannel<float>());
       NS_ASSERTION(aOutputChannelCount == aOutputChannels.Length(),
                    "We called GetAudioChannelsSuperset to avoid this");
     } else {

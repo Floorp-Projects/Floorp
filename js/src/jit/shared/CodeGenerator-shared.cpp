@@ -1350,16 +1350,22 @@ CodeGeneratorShared::callVM(const VMFunction& fun, LInstruction* ins, const Regi
         StoreAllLiveRegs(masm, ins->safepoint()->liveRegs());
 #endif
 
+    // Push an exit frame descriptor. If |dynStack| is a valid pointer to a
+    // register, then its value is added to the value of the |framePushed()| to
+    // fill the frame descriptor.
+    if (dynStack) {
+        masm.addPtr(Imm32(masm.framePushed()), *dynStack);
+        masm.makeFrameDescriptor(*dynStack, JitFrame_IonJS);
+        masm.Push(*dynStack); // descriptor
+    } else {
+        masm.pushStaticFrameDescriptor(JitFrame_IonJS);
+    }
+
     // Call the wrapper function.  The wrapper is in charge to unwind the stack
     // when returning from the call.  Failures are handled with exceptions based
     // on the return value of the C functions.  To guard the outcome of the
     // returned value, use another LIR instruction.
-    uint32_t callOffset;
-    if (dynStack)
-        callOffset = masm.callWithExitFrame(wrapper, *dynStack);
-    else
-        callOffset = masm.callWithExitFrame(wrapper);
-
+    uint32_t callOffset = masm.callJit(wrapper);
     markSafepointAt(callOffset, ins);
 
     // Remove rest of the frame left on the stack. We remove the return address

@@ -192,7 +192,7 @@ SpeechTaskChild::ForceEnd()
 }
 
 void
-SpeechTaskChild::SetAudioOutputVolume(uint32_t aVolume)
+SpeechTaskChild::SetAudioOutputVolume(float aVolume)
 {
   if (mActor) {
     mActor->SendSetAudioOutputVolume(aVolume);

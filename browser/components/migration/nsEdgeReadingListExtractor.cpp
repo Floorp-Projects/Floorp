@@ -50,7 +50,7 @@ nsEdgeReadingListExtractor::Extract(const nsAString& aDBPath, nsIArray** aItems)
   // the right things
   bool instanceCreated, sessionCreated, dbOpened, tableOpened;
 
-  char16_t* dbPath = ToNewUnicode(aDBPath);
+  char16ptr_t dbPath = ToNewUnicode(aDBPath);
 
   // Check for the right page size and initialize with that
   unsigned long pageSize;

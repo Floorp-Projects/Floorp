@@ -377,6 +377,8 @@ public:
   bool
   IsClientRequest() const;
 
+  static RequestMode
+  MapChannelToRequestMode(nsIChannel* aChannel);
 
 private:
   // Does not copy mBodyStream.  Use fallible Clone() for complete copy.
@@ -386,6 +388,12 @@ private:
 
   static RequestContext
   MapContentPolicyTypeToRequestContext(nsContentPolicyType aContentPolicyType);
+
+  static bool
+  IsNavigationContentPolicy(nsContentPolicyType aContentPolicyType);
+
+  static bool
+  IsWorkerContentPolicy(nsContentPolicyType aContentPolicyType);
 
   nsCString mMethod;
   // mURL always stores the url with the ref stripped
