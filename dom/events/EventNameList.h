@@ -724,7 +724,7 @@ NON_IDL_EVENT(dragexit,
               EventNameType_XUL,
               eDragEventClass)
 NON_IDL_EVENT(dragdrop,
-              NS_DRAGDROP_DRAGDROP,
+              eLegacyDragDrop,
               EventNameType_XUL,
               eDragEventClass)
 NON_IDL_EVENT(draggesture,
