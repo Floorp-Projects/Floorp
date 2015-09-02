@@ -1749,8 +1749,7 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
   if (dragEvent && mInstance) {
     WidgetEvent* ievent = aEvent->GetInternalNSEvent();
     if (ievent && ievent->mFlags.mIsTrusted &&
-        ievent->mMessage != NS_DRAGDROP_ENTER &&
-        ievent->mMessage != eDragOver) {
+        ievent->mMessage != eDragEnter && ievent->mMessage != eDragOver) {
       aEvent->PreventDefault();
     }
 

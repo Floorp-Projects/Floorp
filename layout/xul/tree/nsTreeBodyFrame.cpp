@@ -2581,7 +2581,7 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
       InvalidateRow(mMouseOverRow);
       mMouseOverRow = -1;
     }
-  } else if (aEvent->mMessage == NS_DRAGDROP_ENTER) {
+  } else if (aEvent->mMessage == eDragEnter) {
     if (!mSlots)
       mSlots = new Slots();
 
