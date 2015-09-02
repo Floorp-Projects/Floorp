@@ -102,7 +102,7 @@ WidgetEvent::HasDragEventMessage() const
     case eDragEnter:
     case eDragOver:
     case eDragExit:
-    case NS_DRAGDROP_DRAGDROP:
+    case eLegacyDragDrop:
     case NS_DRAGDROP_GESTURE:
     case eDrag:
     case eDragEnd:
