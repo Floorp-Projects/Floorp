@@ -4887,6 +4887,11 @@ MakeOrReuseFileSystem(const nsAString& aNewLocalRootPath,
 already_AddRefed<Promise>
 HTMLInputElement::GetFilesAndDirectories(ErrorResult& aRv)
 {
+  if (mType != NS_FORM_INPUT_FILE) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
   if (mFilesAndDirectoriesPromise) {
     return nsRefPtr<Promise>(mFilesAndDirectoriesPromise).forget();
   }
