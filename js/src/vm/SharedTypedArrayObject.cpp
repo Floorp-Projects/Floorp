@@ -726,7 +726,7 @@ IMPL_SHARED_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
 {                                                                              \
     "Shared" #_typedArray,                                                     \
     JSCLASS_HAS_RESERVED_SLOTS(SharedTypedArrayObject::RESERVED_SLOTS) |       \
-    JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |                        \
+    JSCLASS_HAS_PRIVATE |                                                      \
     JSCLASS_HAS_CACHED_PROTO(JSProto_Shared##_typedArray),                     \
     nullptr,                 /* addProperty */                                 \
     nullptr,                 /* delProperty */                                 \

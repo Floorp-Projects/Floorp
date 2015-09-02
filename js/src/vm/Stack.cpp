@@ -225,7 +225,7 @@ InterpreterFrame::prologue(JSContext* cx)
     }
 
     MOZ_ASSERT(isNonEvalFunctionFrame());
-    if (fun()->isHeavyweight() && !initFunctionScopeObjects(cx))
+    if (fun()->needsCallObject() && !initFunctionScopeObjects(cx))
         return false;
 
     if (isConstructing() && functionThis().isPrimitive()) {
@@ -267,7 +267,7 @@ InterpreterFrame::epilogue(JSContext* cx)
 
     MOZ_ASSERT(isNonEvalFunctionFrame());
 
-    if (fun()->isHeavyweight()) {
+    if (fun()->needsCallObject()) {
         MOZ_ASSERT_IF(hasCallObj() && !fun()->isGenerator(),
                       scopeChain()->as<CallObject>().callee().nonLazyScript() == script);
     } else {
@@ -1187,7 +1187,7 @@ FrameIter::scopeChain(JSContext* cx) const
 CallObject&
 FrameIter::callObj(JSContext* cx) const
 {
-    MOZ_ASSERT(calleeTemplate()->isHeavyweight());
+    MOZ_ASSERT(calleeTemplate()->needsCallObject());
 
     JSObject* pobj = scopeChain(cx);
     while (!pobj->is<CallObject>())

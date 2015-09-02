@@ -1,8 +1,5 @@
 // 'arguments' is allowed with rest parameters.
 
-// FIXME: We should create an unmapped arguments object in this case,
-// see bug 1175394. This test is not correct until then.
-
 var args;
 
 function restWithArgs(a, b, ...rest) {
@@ -11,8 +8,7 @@ function restWithArgs(a, b, ...rest) {
 
 args = restWithArgs(1, 3, 6, 9);
 assertEq(args.length, 4);
-assertEq(JSON.stringify(args), '{"0":1,"1":3,"2":[6,9],"3":9}',
-	 "Did you just fix bug 1175394?");
+assertEq(JSON.stringify(args), '{"0":1,"1":3,"2":6,"3":9}');
 
 args = restWithArgs();
 assertEq(args.length, 0);
@@ -27,8 +23,7 @@ function restWithArgsEval(a, b, ...rest) {
 
 args = restWithArgsEval(1, 3, 6, 9);
 assertEq(args.length, 4);
-assertEq(JSON.stringify(args), '{"0":1,"1":3,"2":[6,9],"3":9}',
-	 "Did you just fix bug 1175394?");
+assertEq(JSON.stringify(args), '{"0":1,"1":3,"2":6,"3":9}');
 
 function g(...rest) {
     h();

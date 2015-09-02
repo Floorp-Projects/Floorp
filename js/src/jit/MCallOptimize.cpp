@@ -80,6 +80,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
     // Array natives.
     if (native == ArrayConstructor)
         return inlineArray(callInfo);
+    if (native == js::array_isArray)
+        return inlineArrayIsArray(callInfo);
     if (native == js::array_pop)
         return inlineArrayPopShift(callInfo, MArrayPopShift::Pop);
     if (native == js::array_shift)
@@ -615,6 +617,40 @@ IonBuilder::inlineArray(CallInfo& callInfo)
             return InliningStatus_Error;
     }
 
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineArrayIsArray(CallInfo& callInfo)
+{
+    if (callInfo.constructing() || callInfo.argc() != 1) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    if (getInlineReturnType() != MIRType_Boolean)
+        return InliningStatus_NotInlined;
+
+    MDefinition* arg = callInfo.getArg(0);
+
+    bool isArray;
+    if (!arg->mightBeType(MIRType_Object)) {
+        isArray = false;
+    } else {
+        if (arg->type() != MIRType_Object)
+            return InliningStatus_NotInlined;
+
+        TemporaryTypeSet* types = arg->resultTypeSet();
+        const Class* clasp = types ? types->getKnownClass(constraints()) : nullptr;
+        if (!clasp || clasp->isProxy())
+            return InliningStatus_NotInlined;
+
+        isArray = (clasp == &ArrayObject::class_ || clasp == &UnboxedArrayObject::class_);
+    }
+
+    pushConstant(BooleanValue(isArray));
+
+    callInfo.setImplicitlyUsedUnchecked();
     return InliningStatus_Inlined;
 }
 

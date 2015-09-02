@@ -461,6 +461,9 @@ public:
   }
   void RemoveVideoOutputImpl(VideoFrameContainer* aContainer)
   {
+    // Ensure that any frames currently queued for playback by the compositor
+    // are removed.
+    aContainer->ClearFutureFrames();
     mVideoOutputs.RemoveElement(aContainer);
   }
   void ChangeExplicitBlockerCountImpl(GraphTime aTime, int32_t aDelta)

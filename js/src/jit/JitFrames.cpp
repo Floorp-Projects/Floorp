@@ -2531,19 +2531,19 @@ InlineFrameIterator::computeScopeChain(Value scopeChainValue, MaybeReadFallback&
         if (hasCallObj) {
             if (fallback.canRecoverResults()) {
                 RootedObject obj(fallback.maybeCx, &scopeChainValue.toObject());
-                *hasCallObj = isFunctionFrame() && callee(fallback)->isHeavyweight();
+                *hasCallObj = isFunctionFrame() && callee(fallback)->needsCallObject();
                 return obj;
             } else {
                 JS::AutoSuppressGCAnalysis nogc; // If we cannot recover then we cannot GC.
-                *hasCallObj = isFunctionFrame() && callee(fallback)->isHeavyweight();
+                *hasCallObj = isFunctionFrame() && callee(fallback)->needsCallObject();
             }
         }
 
         return &scopeChainValue.toObject();
     }
 
-    // Note we can hit this case even for heavyweight functions, in case we
-    // are walking the frame during the function prologue, before the scope
+    // Note we can hit this case even for functions with a CallObject, in case
+    // we are walking the frame during the function prologue, before the scope
     // chain has been initialized.
     if (isFunctionFrame())
         return callee(fallback)->environment();

@@ -428,7 +428,7 @@ class CGDOMJSClass(CGThing):
             """,
             objectMoved=objectMovedHook)
         if self.descriptor.isGlobal():
-            classFlags += "JSCLASS_DOM_GLOBAL | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(DOM_GLOBAL_SLOTS) | JSCLASS_IMPLEMENTS_BARRIERS"
+            classFlags += "JSCLASS_DOM_GLOBAL | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(DOM_GLOBAL_SLOTS)"
             traceHook = "JS_GlobalObjectTraceHook"
             reservedSlots = "JSCLASS_GLOBAL_APPLICATION_SLOTS"
             if self.descriptor.interface.identifier.name == "Window":
