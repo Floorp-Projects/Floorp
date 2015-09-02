@@ -1096,7 +1096,9 @@ var BrowserApp = {
       return;
 
     aTab.setActive(true);
-    aTab.setResolution(aTab._zoom, true);
+    if (!AppConstants.MOZ_ANDROID_APZ) {
+      aTab.setResolution(aTab._zoom, true);
+    }
     this.contentDocumentChanged();
     this.deck.selectedPanel = aTab.browser;
     // Focus the browser so that things like selection will be styled correctly.
