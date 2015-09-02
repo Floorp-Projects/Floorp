@@ -463,7 +463,7 @@ function checkActiveAddon(data){
     hasBinaryComponents: "boolean",
     installDay: "number",
     updateDay: "number",
-    signedState: mozinfo.addon_signing ? "number" : "undefined",
+    signedState: "number",
   };
 
   for (let f in EXPECTED_ADDON_FIELDS_TYPES) {
@@ -880,7 +880,7 @@ add_task(function* test_addonsAndPlugins() {
     hasBinaryComponents: false,
     installDay: ADDON_INSTALL_DATE,
     updateDay: ADDON_INSTALL_DATE,
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_MISSING : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_MISSING,
   };
 
   const EXPECTED_PLUGIN_DATA = {
@@ -944,7 +944,7 @@ add_task(function* test_signedAddon() {
     hasBinaryComponents: false,
     installDay: ADDON_INSTALL_DATE,
     updateDay: ADDON_INSTALL_DATE,
-    signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+    signedState: AddonManager.SIGNEDSTATE_SIGNED,
   };
 
   // Set the clock in the future so our changes don't get throttled.
