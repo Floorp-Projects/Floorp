@@ -111,8 +111,8 @@ NS_EVENT_MESSAGE(NS_DRAGDROP_DRAG,      eDragDropEventFirst + 5)
 NS_EVENT_MESSAGE(NS_DRAGDROP_END,       eDragDropEventFirst + 6)
 NS_EVENT_MESSAGE(NS_DRAGDROP_START,     eDragDropEventFirst + 7)
 NS_EVENT_MESSAGE(NS_DRAGDROP_DROP,      eDragDropEventFirst + 8)
-NS_EVENT_MESSAGE(NS_DRAGDROP_LEAVE,     eDragDropEventFirst + 9)
-NS_EVENT_MESSAGE(eDragDropEventLast,    NS_DRAGDROP_LEAVE)
+NS_EVENT_MESSAGE(eDragLeave,            eDragDropEventFirst + 9)
+NS_EVENT_MESSAGE(eDragDropEventLast,    eDragLeave)
 
 // Events for popups
 NS_EVENT_MESSAGE(NS_XUL_EVENT_START,    1500)

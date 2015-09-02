@@ -191,7 +191,7 @@ EVENT(dragenter,
       EventNameType_HTMLXUL,
       eDragEventClass)
 EVENT(dragleave,
-      NS_DRAGDROP_LEAVE,
+      eDragLeave,
       EventNameType_HTMLXUL,
       eDragEventClass)
 EVENT(dragover,
