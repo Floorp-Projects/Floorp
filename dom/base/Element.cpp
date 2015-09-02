@@ -2869,7 +2869,7 @@ Element::PreHandleEventForLinks(EventChainPreVisitor& aVisitor)
   // IMPORTANT: this switch and the switch below it must be kept in sync!
   switch (aVisitor.mEvent->mMessage) {
   case eMouseOver:
-  case NS_FOCUS_CONTENT:
+  case eFocus:
   case eMouseOut:
   case NS_BLUR_CONTENT:
     break;
@@ -2892,7 +2892,7 @@ Element::PreHandleEventForLinks(EventChainPreVisitor& aVisitor)
   case eMouseOver:
     aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
     // FALL THROUGH
-  case NS_FOCUS_CONTENT: {
+  case eFocus: {
     InternalFocusEvent* focusEvent = aVisitor.mEvent->AsFocusEvent();
     if (!focusEvent || !focusEvent->isRefocus) {
       nsAutoString target;
