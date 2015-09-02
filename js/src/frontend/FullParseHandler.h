@@ -73,9 +73,7 @@ class FullParseHandler
     typedef Definition* DefinitionNode;
 
     bool isPropertyAccess(ParseNode* node) {
-        if (node->isKind(PNK_DOT) || node->isKind(PNK_ELEM))
-            return true;
-        return node->isKind(PNK_SUPERELEM);
+        return node->isKind(PNK_DOT) || node->isKind(PNK_ELEM);
     }
 
     bool isFunctionCall(ParseNode* node) {
@@ -228,8 +226,6 @@ class FullParseHandler
 
         if (expr->isKind(PNK_ELEM))
             return newUnary(PNK_DELETEELEM, JSOP_NOP, begin, expr);
-        if (expr->isKind(PNK_SUPERELEM))
-            return newUnary(PNK_DELETESUPERELEM, JSOP_NOP, begin, expr);
 
         return newUnary(PNK_DELETEEXPR, JSOP_NOP, begin, expr);
     }
@@ -343,9 +339,6 @@ class FullParseHandler
     }
     ParseNode* newClassNames(ParseNode* outer, ParseNode* inner, const TokenPos& pos) {
         return new_<ClassNames>(outer, inner, pos);
-    }
-    ParseNode* newSuperElement(ParseNode* expr, const TokenPos& pos) {
-        return new_<SuperElement>(expr, pos);
     }
     ParseNode* newNewTarget(ParseNode* newHolder, ParseNode* targetHolder) {
         return new_<BinaryNode>(PNK_NEWTARGET, JSOP_NOP, newHolder, targetHolder);

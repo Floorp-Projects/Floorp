@@ -127,7 +127,7 @@ function superProp(id) {
     return dotExpr(Pattern({ type: "Super" }), id);
 }
 function superElem(id) {
-    return memExpr(ident("super"), id);
+    return memExpr(Pattern({ type: "Super" }), id);
 }
 
 function classStmt(id, heritage, body) {
