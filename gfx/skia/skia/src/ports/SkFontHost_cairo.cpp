@@ -276,6 +276,10 @@ SkScalerContext_CairoFT::SkScalerContext_CairoFT(SkTypeface* typeface, const SkD
     // See http://code.google.com/p/skia/issues/detail?id=222.
     loadFlags |= FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH;
 
+#ifdef FT_LOAD_COLOR
+    loadFlags |= FT_LOAD_COLOR;
+#endif
+
     fLoadGlyphFlags = loadFlags;
 }
 
