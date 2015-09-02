@@ -4966,7 +4966,6 @@ Parser<FullParseHandler>::isValidForStatementLHS(ParseNode* pn1, JSVersion versi
       case PNK_CALL:
       case PNK_DOT:
       case PNK_ELEM:
-      case PNK_SUPERELEM:
       case PNK_NAME:
       case PNK_OBJECT:
         return true;
@@ -8249,8 +8248,6 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TokenKind tt, bool
 
     JS_CHECK_RECURSION(context, return null());
 
-    uint32_t superBegin = pos().begin;
-
     /* Check for new expression first. */
     if (tt == TOK_NEW) {
         uint32_t newBegin = pos().begin;
@@ -8326,15 +8323,11 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TokenKind tt, bool
 
             MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_IN_INDEX);
 
-            if (handler.isSuperBase(lhs, context)) {
-                if (!checkAndMarkSuperScope()) {
+            if (handler.isSuperBase(lhs, context) && !checkAndMarkSuperScope()) {
                     report(ParseError, false, null(), JSMSG_BAD_SUPERPROP, "member");
                     return null();
-                }
-                nextMember = handler.newSuperElement(propExpr, TokenPos(superBegin, pos().end));
-            } else {
-                nextMember = handler.newPropertyByValue(lhs, propExpr, pos().end);
             }
+            nextMember = handler.newPropertyByValue(lhs, propExpr, pos().end);
             if (!nextMember)
                 return null();
         } else if ((allowCallSyntax && tt == TOK_LP) ||
