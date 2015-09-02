@@ -244,12 +244,12 @@ XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
             nsPrintfCString errorMsg("Use of %s in content process is deprecated.", intfNameChars);
 
             nsAutoString filename;
-            uint32_t lineno = 0;
-            nsJSUtils::GetCallingLocation(cx, filename, &lineno);
+            uint32_t lineno = 0, column = 0;
+            nsJSUtils::GetCallingLocation(cx, filename, &lineno, &column);
             nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
             error->Init(NS_ConvertUTF8toUTF16(errorMsg),
                         filename, EmptyString(),
-                        lineno, 0, nsIScriptError::warningFlag, "chrome javascript");
+                        lineno, column, nsIScriptError::warningFlag, "chrome javascript");
             console->LogMessage(error);
         }
     }
