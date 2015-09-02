@@ -663,8 +663,8 @@ template<typename T>
 TypedArrayObjectTemplate<T>::fromArray(JSContext* cx, HandleObject other)
 {
     uint32_t len;
-    if (other->is<TypedArrayObject>()) {
-        len = other->as<TypedArrayObject>().length();
+    if (IsAnyTypedArray(other)) {
+        len = AnyTypedArrayLength(other);
     } else if (!GetLengthProperty(cx, other, &len)) {
         return nullptr;
     }
