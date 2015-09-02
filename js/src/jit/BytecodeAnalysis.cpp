@@ -46,9 +46,10 @@ BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
     if (!infos_.growByUninitialized(script_->length()))
         return false;
 
-    // We need a scope chain if the function is heavyweight.
+    // Initialize the scope chain slot if either the function needs a CallObject
+    // or the script uses the scope chain. The latter case is handled below.
     usesScopeChain_ = (script_->functionDelazifying() &&
-                       script_->functionDelazifying()->isHeavyweight());
+                       script_->functionDelazifying()->needsCallObject());
     MOZ_ASSERT_IF(script_->hasAnyAliasedBindings(), usesScopeChain_);
 
     jsbytecode* end = script_->codeEnd();
