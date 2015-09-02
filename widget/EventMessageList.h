@@ -86,7 +86,7 @@ NS_EVENT_MESSAGE(NS_HASHCHANGE,         eStreamEventFirst + 2)
 NS_EVENT_MESSAGE(NS_IMAGE_ABORT,        eStreamEventFirst + 3)
 NS_EVENT_MESSAGE(NS_LOAD_ERROR,         eStreamEventFirst + 4)
 NS_EVENT_MESSAGE(NS_POPSTATE,           eStreamEventFirst + 5)
-NS_EVENT_MESSAGE(NS_BEFORE_PAGE_UNLOAD, eStreamEventFirst + 6)
+NS_EVENT_MESSAGE(eBeforeUnload,         eStreamEventFirst + 6)
 NS_EVENT_MESSAGE(eReadyStateChange,     eStreamEventFirst + 8)
  
 NS_EVENT_MESSAGE(NS_FORM_EVENT_START,   1200)
