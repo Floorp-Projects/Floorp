@@ -5752,7 +5752,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
       // the |canDrop| property of the Drag Session.
       bool canDrop = false;
       if (!NS_SUCCEEDED(dragSession->GetCanDrop(&canDrop)) || !canDrop) {
-        [self doDragAction:NS_DRAGDROP_EXIT sender:aSender];
+        [self doDragAction:eDragExit sender:aSender];
 
         nsCOMPtr<nsIDOMNode> sourceNode;
         dragSession->GetSourceNode(getter_AddRefs(sourceNode));
@@ -5810,7 +5810,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
 
         return [self dragOperationFromDragAction:dragAction];
       }
-      case NS_DRAGDROP_EXIT:
+      case eDragExit:
       case eDrop: {
         nsCOMPtr<nsIDOMNode> sourceNode;
         dragSession->GetSourceNode(getter_AddRefs(sourceNode));
@@ -5865,7 +5865,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   MOZ_LOG(sCocoaLog, LogLevel::Info, ("ChildView draggingExited: entered\n"));
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  [self doDragAction:NS_DRAGDROP_EXIT sender:sender];
+  [self doDragAction:eDragExit sender:sender];
   NS_IF_RELEASE(mDragService);
 }
 

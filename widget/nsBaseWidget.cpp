@@ -2635,7 +2635,7 @@ case _value: eventName.AssignLiteral(_name) ; break
     _ASSIGN_eventName(NS_DRAGDROP_GESTURE,"NS_DND_GESTURE");
     _ASSIGN_eventName(eDrop,"eDrop");
     _ASSIGN_eventName(eDragEnter,"eDragEnter");
-    _ASSIGN_eventName(NS_DRAGDROP_EXIT,"NS_DND_EXIT");
+    _ASSIGN_eventName(eDragExit,"eDragExit");
     _ASSIGN_eventName(eDragOver,"eDragOver");
     _ASSIGN_eventName(NS_EDITOR_INPUT,"NS_EDITOR_INPUT");
     _ASSIGN_eventName(eFocus,"eFocus");
