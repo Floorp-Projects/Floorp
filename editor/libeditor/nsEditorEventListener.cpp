@@ -376,7 +376,7 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       return DragEnter(dragEvent);
     }
     // dragover
-    case NS_DRAGDROP_OVER: {
+    case eDragOver: {
       nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
       return DragOver(dragEvent);
     }

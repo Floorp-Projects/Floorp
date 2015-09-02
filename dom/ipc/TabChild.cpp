@@ -2189,7 +2189,7 @@ TabChild::RecvRealDragEvent(const WidgetDragEvent& aEvent,
         !canDrop) {
       localEvent.mMessage = NS_DRAGDROP_EXIT;
     }
-  } else if (aEvent.mMessage == NS_DRAGDROP_OVER) {
+  } else if (aEvent.mMessage == eDragOver) {
     nsCOMPtr<nsIDragService> dragService =
       do_GetService("@mozilla.org/widget/dragservice;1");
     if (dragService) {

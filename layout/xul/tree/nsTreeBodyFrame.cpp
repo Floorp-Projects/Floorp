@@ -2598,7 +2598,7 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
     mSlots->mDropRow = -1;
     mSlots->mDropOrient = -1;
     mSlots->mDragAction = GetDropEffect(aEvent);
-  } else if (aEvent->mMessage == NS_DRAGDROP_OVER) {
+  } else if (aEvent->mMessage == eDragOver) {
     // The mouse is hovering over this tree. If we determine things are
     // different from the last time, invalidate the drop feedback at the old
     // position, query the view to see if the current location is droppable,
