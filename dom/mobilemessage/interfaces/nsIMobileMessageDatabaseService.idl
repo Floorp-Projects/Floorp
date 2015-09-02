@@ -15,7 +15,7 @@ interface nsICursorContinueCallback;
 interface nsIMobileMessageCallback;
 interface nsIMobileMessageCursorCallback;
 
-[scriptable, uuid(ead626bc-f5b4-47e1-921c-0b956c9298e0)]
+[scriptable, uuid(18672be2-c185-4f9c-8af6-2e6ea004de73)]
 interface nsIMobileMessageDatabaseService : nsISupports
 {
   [binaryname(GetMessageMoz)]
@@ -35,6 +35,7 @@ interface nsIMobileMessageDatabaseService : nsISupports
                                                 [Null(Null), Undefined(Null)] in DOMString delivery,
                                                 in boolean hasRead,
                                                 in boolean read,
+                                                in boolean hasThreadId,
                                                 in unsigned long long threadId,
                                                 in boolean reverse,
                                                 in nsIMobileMessageCursorCallback callback);
