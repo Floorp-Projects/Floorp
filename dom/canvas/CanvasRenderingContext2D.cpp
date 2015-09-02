@@ -1204,6 +1204,9 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
     transform = mTarget->GetTransform();
   } else {
     MOZ_ASSERT(mBufferProvider);
+    // When mBufferProvider is true but we have no mTarget, our current state's
+    // transform is always valid. See ReturnTarget().
+    transform = CurrentState().transform;
     snapshot = mBufferProvider->GetSnapshot();
   }
   mTarget = nullptr;
