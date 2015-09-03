@@ -705,7 +705,7 @@ class BackgroundCursorChild final
   {
     CachedResponse();
 
-    explicit CachedResponse(CachedResponse&& aOther);
+    CachedResponse(CachedResponse&& aOther);
 
     Key mKey;
     Key mObjectKey;
