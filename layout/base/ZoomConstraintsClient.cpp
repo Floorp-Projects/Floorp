@@ -27,6 +27,7 @@ NS_IMPL_ISUPPORTS(ZoomConstraintsClient, nsIDOMEventListener, nsIObserver)
 static const nsLiteralString DOM_META_ADDED = NS_LITERAL_STRING("DOMMetaAdded");
 static const nsLiteralString DOM_META_CHANGED = NS_LITERAL_STRING("DOMMetaChanged");
 static const nsLiteralCString BEFORE_FIRST_PAINT = NS_LITERAL_CSTRING("before-first-paint");
+static const nsLiteralCString NS_PREF_CHANGED = NS_LITERAL_CSTRING("nsPref:changed");
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -76,6 +77,8 @@ ZoomConstraintsClient::Destroy()
     observerService->RemoveObserver(this, BEFORE_FIRST_PAINT.Data());
   }
 
+  Preferences::RemoveObserver(this, "browser.ui.zoom.force-user-scalable");
+
   if (mGuid) {
     if (nsIWidget* widget = GetWidget(mPresShell)) {
       ZCC_LOG("Sending null constraints in %p for { %u, %" PRIu64 " }\n",
@@ -111,6 +114,8 @@ ZoomConstraintsClient::Init(nsIPresShell* aPresShell, nsIDocument* aDocument)
   if (observerService) {
     observerService->AddObserver(this, BEFORE_FIRST_PAINT.Data(), false);
   }
+
+  Preferences::AddStrongObserver(this, "browser.ui.zoom.force-user-scalable");
 }
 
 NS_IMETHODIMP
@@ -136,6 +141,13 @@ ZoomConstraintsClient::Observe(nsISupports* aSubject, const char* aTopic, const 
   if (SameCOMIdentity(aSubject, mDocument) && BEFORE_FIRST_PAINT.EqualsASCII(aTopic)) {
     ZCC_LOG("Got a before-first-paint event in %p\n", this);
     RefreshZoomConstraints();
+  } else if (NS_PREF_CHANGED.EqualsASCII(aTopic)) {
+    ZCC_LOG("Got a pref-change event in %p\n", this);
+    // We need to run this later because all the pref change listeners need
+    // to execute before we can be guaranteed that gfxPrefs::ForceUserScalable()
+    // returns the updated value.
+    NS_DispatchToMainThread(NS_NewRunnableMethod(
+      this, &ZoomConstraintsClient::RefreshZoomConstraints));
   }
   return NS_OK;
 }
@@ -152,9 +164,14 @@ ComputeZoomConstraintsFromViewportInfo(const nsViewportInfo& aViewportInfo)
 {
   mozilla::layers::ZoomConstraints constraints;
   constraints.mAllowZoom = aViewportInfo.IsZoomAllowed() && gfxPrefs::APZAllowZooming();
-  constraints.mAllowDoubleTapZoom = aViewportInfo.IsDoubleTapZoomAllowed() && gfxPrefs::APZAllowZooming();
-  constraints.mMinZoom.scale = aViewportInfo.GetMinZoom().scale;
-  constraints.mMaxZoom.scale = aViewportInfo.GetMaxZoom().scale;
+  constraints.mAllowDoubleTapZoom = constraints.mAllowZoom;
+  if (constraints.mAllowZoom) {
+    constraints.mMinZoom.scale = aViewportInfo.GetMinZoom().scale;
+    constraints.mMaxZoom.scale = aViewportInfo.GetMaxZoom().scale;
+  } else {
+    constraints.mMinZoom.scale = aViewportInfo.GetDefaultZoom().scale;
+    constraints.mMaxZoom.scale = aViewportInfo.GetDefaultZoom().scale;
+  }
   return constraints;
 }
 

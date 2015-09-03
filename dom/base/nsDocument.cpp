@@ -7915,15 +7915,13 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     ScreenSize viewportSize(viewportWidth, viewportWidth * aspectRatio);
     return nsViewportInfo(RoundedToInt(viewportSize),
                           CSSToScreenScale(scaleToFit),
-                          /*allowZoom*/false,
-                          /*allowDoubleTapZoom*/ false);
+                          /*allowZoom*/ true);
   }
 
   if (!gfxPrefs::MetaViewportEnabled()) {
     return nsViewportInfo(aDisplaySize,
                           defaultScale,
-                          /*allowZoom*/ false,
-                          /*allowDoubleTapZoom*/ false);
+                          /*allowZoom*/ false);
   }
 
   // In cases where the width of the CSS viewport is less than or equal to the width
@@ -7934,13 +7932,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
   case DisplayWidthHeight:
     return nsViewportInfo(aDisplaySize,
                           defaultScale,
-                          /*allowZoom*/ true,
-                          /*allowDoubleTapZoom*/ true);
-  case DisplayWidthHeightNoZoom:
-    return nsViewportInfo(aDisplaySize,
-                          defaultScale,
-                          /*allowZoom*/ false,
-                          /*allowDoubleTapZoom*/ false);
+                          /*allowZoom*/ true);
   case Unknown:
   {
     nsAutoString viewport;
@@ -7962,8 +7954,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
             mViewportType = DisplayWidthHeight;
             return nsViewportInfo(aDisplaySize,
                                   defaultScale,
-                                  /*allowZoom*/true,
-                                  /*allowDoubleTapZoom*/false);
+                                  /*allowZoom*/true);
           }
         }
       }
@@ -7974,8 +7965,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
         mViewportType = DisplayWidthHeight;
         return nsViewportInfo(aDisplaySize,
                               defaultScale,
-                              /*allowZoom*/true,
-                              /*allowDoubleTapZoom*/false);
+                              /*allowZoom*/true);
       }
     }
 
@@ -8049,7 +8039,6 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
         (userScalable.EqualsLiteral("false"))) {
       mAllowZoom = false;
     }
-    mAllowDoubleTapZoom = mAllowZoom;
 
     mScaleStrEmpty = scaleStr.IsEmpty();
     mWidthStrEmpty = widthStr.IsEmpty();
@@ -8060,6 +8049,24 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
   }
   case Specified:
   default:
+    LayoutDeviceToScreenScale effectiveMinScale = mScaleMinFloat;
+    LayoutDeviceToScreenScale effectiveMaxScale = mScaleMaxFloat;
+    bool effectiveValidMaxScale = mValidMaxScale;
+    bool effectiveAllowZoom = mAllowZoom;
+    if (gfxPrefs::ForceUserScalable()) {
+      // If the pref to force user-scalable is enabled, we ignore the values
+      // from the meta-viewport tag for these properties and just assume they
+      // allow the page to be scalable. Note in particular that this code is
+      // in the "Specified" branch of the enclosing switch statement, so that
+      // calls to GetViewportInfo always use the latest value of the
+      // ForceUserScalable pref. Other codepaths that return nsViewportInfo
+      // instances are all consistent with ForceUserScalable() already.
+      effectiveMinScale = kViewportMinScale;
+      effectiveMaxScale = kViewportMaxScale;
+      effectiveValidMaxScale = true;
+      effectiveAllowZoom = true;
+    }
+
     CSSSize size = mViewportSize;
 
     if (!mValidWidth) {
@@ -8082,8 +8089,8 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     }
 
     CSSToScreenScale scaleFloat = mScaleFloat * layoutDeviceScale;
-    CSSToScreenScale scaleMinFloat = mScaleMinFloat * layoutDeviceScale;
-    CSSToScreenScale scaleMaxFloat = mScaleMaxFloat * layoutDeviceScale;
+    CSSToScreenScale scaleMinFloat = effectiveMinScale * layoutDeviceScale;
+    CSSToScreenScale scaleMaxFloat = effectiveMaxScale * layoutDeviceScale;
 
     if (mAutoSize) {
       // aDisplaySize is in screen pixels; convert them to CSS pixels for the viewport size.
@@ -8108,14 +8115,14 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
       CSSSize displaySize = ScreenSize(aDisplaySize) / scaleFloat;
       size.width = std::max(size.width, displaySize.width);
       size.height = std::max(size.height, displaySize.height);
-    } else if (mValidMaxScale) {
+    } else if (effectiveValidMaxScale) {
       CSSSize displaySize = ScreenSize(aDisplaySize) / scaleMaxFloat;
       size.width = std::max(size.width, displaySize.width);
       size.height = std::max(size.height, displaySize.height);
     }
 
     return nsViewportInfo(scaleFloat, scaleMinFloat, scaleMaxFloat, size,
-                          mAutoSize, mAllowZoom, mAllowDoubleTapZoom);
+                          mAutoSize, effectiveAllowZoom);
   }
 }
 

@@ -1234,7 +1234,7 @@ public:
 
 #if defined(USE_SKIA) && defined(MOZ_ENABLE_FREETYPE)
   static already_AddRefed<GlyphRenderingOptions>
-    CreateCairoGlyphRenderingOptions(FontHinting aHinting, bool aAutoHinting);
+    CreateCairoGlyphRenderingOptions(FontHinting aHinting, bool aAutoHinting, AntialiasMode aAntialiasMode = AntialiasMode::DEFAULT);
 #endif
   static already_AddRefed<DrawTarget>
     CreateDualDrawTarget(DrawTarget *targetA, DrawTarget *targetB);

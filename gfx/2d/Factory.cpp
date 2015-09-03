@@ -758,13 +758,14 @@ Factory::PurgeAllCaches()
 
 #ifdef USE_SKIA_FREETYPE
 already_AddRefed<GlyphRenderingOptions>
-Factory::CreateCairoGlyphRenderingOptions(FontHinting aHinting, bool aAutoHinting)
+Factory::CreateCairoGlyphRenderingOptions(FontHinting aHinting, bool aAutoHinting, AntialiasMode aAntialiasMode)
 {
   RefPtr<GlyphRenderingOptionsCairo> options =
     new GlyphRenderingOptionsCairo();
 
   options->SetHinting(aHinting);
   options->SetAutoHinting(aAutoHinting);
+  options->SetAntialiasMode(aAntialiasMode);
   return options.forget();
 }
 #endif

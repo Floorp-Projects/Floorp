@@ -38,32 +38,13 @@ leak:nr_reg_local_init
 leak:r_log_register
 leak:nr_reg_set
 
-# Additional WebRTC leak suppressions added for Mochitest 3.
-leak:mozilla::TransportLayerDtls::Setup
-
-# Bug 1187424 - DesktopApplication does not free any of its string members.
-leak:webrtc::DesktopApplication::
-
 # Bug 1187518 - SCTP leaks in child process while running WebRTC tests.
 leak:recv_function_udp
-
-# Bug 1074310 - Very large e10s vp8 leaks, maybe in WebRTC tests.
-leak:set_noise_sensitivity
-leak:vp8_alloc_compressor_data
-leak:vp8_change_config
-leak:vp8_lookahead_init
-leak:vpx_codec_enc_init_ver
 
 
 ###
 ### Many leaks only affect some test suites.  The suite annotations are not checked.
 ###
-
-# Bug 981195 - Small leak in the parser. m4
-leak:ObjectGroup::fixPlainObjectGroup
-
-# Bug 982111 - WebM is leaking. m1
-leak:nestegg_read_packet
 
 # Bug 987385 - Various plugin leaks. m3
 leak:mozilla::plugins::PPluginInstanceParent::CallNPP_HandleEvent
@@ -89,7 +70,7 @@ leak:_render_glyph_outline
 # Bug 1023548 - Small leak under SECITEM_AllocItem_Util. bc1, bc3
 leak:SECITEM_AllocItem_Util
 
-# This is a one-time leak, so it is probably okay to ignore. bc1, oth
+# This is a one-time leak, so it is probably okay to ignore. bc3, oth
 leak:GlobalPrinters::InitializeGlobalPrinters
 leak:nsPSPrinterList::GetPrinterList
 
