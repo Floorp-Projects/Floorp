@@ -75,7 +75,7 @@ class FullParseHandler
     bool isPropertyAccess(ParseNode* node) {
         if (node->isKind(PNK_DOT) || node->isKind(PNK_ELEM))
             return true;
-        return node->isKind(PNK_SUPERELEM);
+        return node->isKind(PNK_SUPERPROP) || node->isKind(PNK_SUPERELEM);
     }
 
     bool isFunctionCall(ParseNode* node) {
@@ -225,6 +225,8 @@ class FullParseHandler
 
         if (expr->isKind(PNK_DOT))
             return newUnary(PNK_DELETEPROP, JSOP_NOP, begin, expr);
+        if (expr->isKind(PNK_SUPERPROP))
+            return newUnary(PNK_DELETESUPERPROP, JSOP_NOP, begin, expr);
 
         if (expr->isKind(PNK_ELEM))
             return newUnary(PNK_DELETEELEM, JSOP_NOP, begin, expr);
@@ -344,6 +346,9 @@ class FullParseHandler
     ParseNode* newClassNames(ParseNode* outer, ParseNode* inner, const TokenPos& pos) {
         return new_<ClassNames>(outer, inner, pos);
     }
+    ParseNode* newSuperProperty(JSAtom* atom, const TokenPos& pos) {
+        return new_<SuperProperty>(atom, pos);
+    }
     ParseNode* newSuperElement(ParseNode* expr, const TokenPos& pos) {
         return new_<SuperElement>(expr, pos);
     }
@@ -352,15 +357,6 @@ class FullParseHandler
     }
     ParseNode* newPosHolder(const TokenPos& pos) {
         return new_<NullaryNode>(PNK_POSHOLDER, pos);
-    }
-    ParseNode* newSuperBase(const TokenPos& pos, ExclusiveContext* cx) {
-        ParseNode* node = newPosHolder(pos);
-#ifdef DEBUG
-        // Set the atom for assertion purposes
-        if (node)
-            node->pn_atom = cx->names().super;
-#endif
-        return node;
     }
 
     bool addPrototypeMutation(ParseNode* literal, uint32_t begin, ParseNode* expr) {
@@ -716,11 +712,6 @@ class FullParseHandler
         ParseNodeKind kind = node->getKind();
         return kind == PNK_FUNCTION || kind == PNK_VAR || kind == PNK_BREAK || kind == PNK_THROW ||
                (kind == PNK_SEMI && !node->pn_kid);
-    }
-
-    bool isSuperBase(ParseNode* node, ExclusiveContext* cx) {
-        MOZ_ASSERT_IF(node->isKind(PNK_POSHOLDER), node->pn_atom == cx->names().super);
-        return node->isKind(PNK_POSHOLDER);
     }
 
     inline bool finishInitializerAssignment(ParseNode* pn, ParseNode* init, JSOp op);
