@@ -6,6 +6,7 @@
 #include <AppKit/AppKit.h>
 #include <Cocoa/Cocoa.h>
 #include <unistd.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <map>
 
@@ -14,7 +15,6 @@ namespace webrtc {
 // Helper type to track the number of window instances for a given process
 typedef std::map<ProcessId, uint32_t> AppWindowCountMap;
 
-#define MULTI_MONITOR_NO_SUPPORT 1
 
 DesktopDeviceInfo * DesktopDeviceInfoImpl::Create() {
   DesktopDeviceInfoMac * pDesktopDeviceInfo = new DesktopDeviceInfoMac();
@@ -31,27 +31,50 @@ DesktopDeviceInfoMac::DesktopDeviceInfoMac() {
 DesktopDeviceInfoMac::~DesktopDeviceInfoMac() {
 }
 
-#if !defined(MULTI_MONITOR_SCREENSHARE)
 void DesktopDeviceInfoMac::MultiMonitorScreenshare()
 {
-  DesktopDisplayDevice *pDesktopDeviceInfo = new DesktopDisplayDevice;
-  if (pDesktopDeviceInfo) {
-    pDesktopDeviceInfo->setScreenId(CGMainDisplayID());
-    pDesktopDeviceInfo->setDeviceName("Primary Monitor");
+#if !defined(MULTI_MONITOR_SCREENSHARE)
+  DesktopDisplayDevice* desktop_device_info = new DesktopDisplayDevice;
+  if (desktop_device_info) {
+    desktop_device_info->setScreenId(CGMainDisplayID());
+    desktop_device_info->setDeviceName("Primary Monitor");
 
     char idStr[64];
-    snprintf(idStr, sizeof(idStr), "%ld", pDesktopDeviceInfo->getScreenId());
-    pDesktopDeviceInfo->setUniqueIdName(idStr);
-    desktop_display_list_[pDesktopDeviceInfo->getScreenId()] = pDesktopDeviceInfo;
+    snprintf(idStr, sizeof(idStr), "%" PRIdPTR, desktop_device_info->getScreenId());
+    desktop_device_info->setUniqueIdName(idStr);
+    desktop_display_list_[desktop_device_info->getScreenId()] = desktop_device_info;
   }
-}
+#else
+  const UInt32 kMaxScreens = 256;
+  CGDirectDisplayID screens[kMaxScreens];
+  CGDisplayCount num_of_screens;
+  CGGetActiveDisplayList(kMaxScreens, screens, &num_of_screens);
+
+  for (CFIndex i = 0; i < num_of_screens; ++i) {
+    DesktopDisplayDevice* desktop_device_info = new DesktopDisplayDevice;
+    if (desktop_device_info) {
+      desktop_device_info->setScreenId(screens[i]);
+      if (1 >= num_of_screens) {
+        desktop_device_info->setDeviceName("Primary Monitor");
+      } else {
+        char nameStr[64];
+        snprintf(nameStr, sizeof(nameStr), "Screen %" PRIdPTR, i + 1);
+        desktop_device_info->setDeviceName(nameStr);
+      }
+
+      char idStr[64];
+      snprintf(idStr, sizeof(idStr), "%" PRIdPTR, desktop_device_info->getScreenId());
+      desktop_device_info->setUniqueIdName(idStr);
+      desktop_display_list_[desktop_device_info->getScreenId()] = desktop_device_info;
+    }
+  }
 #endif
+}
 
 void DesktopDeviceInfoMac::InitializeScreenList() {
-#if !defined(MULTI_MONITOR_SCREENSHARE)
   MultiMonitorScreenshare();
-#endif
 }
+
 void DesktopDeviceInfoMac::InitializeApplicationList() {
   //List all running applications (excluding background processes).
 
