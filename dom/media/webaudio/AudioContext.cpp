@@ -957,8 +957,11 @@ AudioContext::UpdateNodeCount(int32_t aDelta)
   bool firstNode = mNodeCount == 0;
   mNodeCount += aDelta;
   MOZ_ASSERT(mNodeCount >= 0);
-  // mDestinationNode may be null when we're destroying nodes unlinked by CC
-  if (!firstNode && mDestination) {
+  // mDestinationNode may be null when we're destroying nodes unlinked by CC.
+  // Skipping unnecessary calls after shutdown avoids RunInStableState events
+  // getting stuck in CycleCollectedJSRuntime during final cycle collection
+  // (bug 1200514).
+  if (!firstNode && mDestination && !mIsShutDown) {
     mDestination->SetIsOnlyNodeForContext(mNodeCount == 1);
   }
 }
