@@ -20,6 +20,7 @@ MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 EXPORTS += [
     'AlignedTArray.h',
+    'AudioBlock.h',
     'AudioContext.h',
     'AudioEventTimeline.h',
     'AudioNodeEngine.h',
@@ -67,6 +68,7 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     'AnalyserNode.cpp',
+    'AudioBlock.cpp',
     'AudioBuffer.cpp',
     'AudioBufferSourceNode.cpp',
     'AudioContext.cpp',
