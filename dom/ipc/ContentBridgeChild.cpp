@@ -7,7 +7,6 @@
 #include "mozilla/dom/ContentBridgeChild.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/StructuredCloneUtils.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"

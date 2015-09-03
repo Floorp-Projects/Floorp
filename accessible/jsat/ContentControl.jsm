@@ -15,7 +15,9 @@ XPCOMUtils.defineLazyModuleGetter(this, 'Logger',
 XPCOMUtils.defineLazyModuleGetter(this, 'Roles',
   'resource://gre/modules/accessibility/Constants.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'TraversalRules',
-  'resource://gre/modules/accessibility/TraversalRules.jsm');
+  'resource://gre/modules/accessibility/Traversal.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'TraversalHelper',
+  'resource://gre/modules/accessibility/Traversal.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'Presentation',
   'resource://gre/modules/accessibility/Presentation.jsm');
 
@@ -27,7 +29,6 @@ const MOVEMENT_GRANULARITY_PARAGRAPH = 8;
 
 this.ContentControl = function ContentControl(aContentScope) {
   this._contentScope = Cu.getWeakReference(aContentScope);
-  this._vcCache = new WeakMap();
   this._childMessageSenders = new WeakMap();
 };
 
@@ -128,7 +129,7 @@ this.ContentControl.prototype = {
       return;
     }
 
-    let moved = vc[action](TraversalRules[aMessage.json.rule]);
+    let moved = TraversalHelper.move(vc, action, aMessage.json.rule);
 
     if (moved) {
       if (origin === 'child') {

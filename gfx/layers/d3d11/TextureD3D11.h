@@ -12,7 +12,6 @@
 #include "gfxWindowsPlatform.h"
 #include "mozilla/GfxMessageUtils.h"
 #include <d3d11.h>
-#include "d3d9.h"
 #include <vector>
 
 namespace mozilla {
@@ -110,23 +109,12 @@ public:
   static already_AddRefed<DXGIYCbCrTextureClient>
   Create(ISurfaceAllocator* aAllocator,
          TextureFlags aFlags,
-         IDirect3DTexture9* aTextureY,
-         IDirect3DTexture9* aTextureCb,
-         IDirect3DTexture9* aTextureCr,
+         IUnknown* aTextureY,
+         IUnknown* aTextureCb,
+         IUnknown* aTextureCr,
          HANDLE aHandleY,
          HANDLE aHandleCb,
          HANDLE aHandleCr,
-         const gfx::IntSize& aSize,
-         const gfx::IntSize& aSizeY,
-         const gfx::IntSize& aSizeCbCr);
-
-  // Creates a TextureClient and init width.
-  static already_AddRefed<DXGIYCbCrTextureClient>
-  Create(ISurfaceAllocator* aAllocator,
-         TextureFlags aFlags,
-         ID3D11Texture2D* aTextureY,
-         ID3D11Texture2D* aTextureCb,
-         ID3D11Texture2D* aTextureCr,
          const gfx::IntSize& aSize,
          const gfx::IntSize& aSizeY,
          const gfx::IntSize& aSizeCbCr);

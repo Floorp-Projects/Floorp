@@ -283,8 +283,6 @@ struct GCSizes
     macro(_, MallocHeap, storeBufferCells) \
     macro(_, MallocHeap, storeBufferSlots) \
     macro(_, MallocHeap, storeBufferWholeCells) \
-    macro(_, MallocHeap, storeBufferRelocVals) \
-    macro(_, MallocHeap, storeBufferRelocCells) \
     macro(_, MallocHeap, storeBufferGenerics)
 
     GCSizes()
@@ -586,7 +584,8 @@ struct ZoneStats
     macro(Other,   GCHeapUsed,  objectGroupsGCHeap) \
     macro(Other,   MallocHeap,  objectGroupsMallocHeap) \
     macro(Other,   MallocHeap,  typePool) \
-    macro(Other,   MallocHeap,  baselineStubsOptimized)
+    macro(Other,   MallocHeap,  baselineStubsOptimized) \
+    macro(Other,   MallocHeap,  uniqueIdMap)
 
     ZoneStats()
       : FOR_EACH_SIZE(ZERO_SIZE)
