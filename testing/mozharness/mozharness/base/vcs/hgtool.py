@@ -79,10 +79,10 @@ class HgtoolVCS(ScriptMixin, LogMixin, TransferMixin):
         if self._is_windows():
             # SYSTEMROOT is needed for 'import random'
             if 'SYSTEMROOT' not in env:
-                env['SYSTEMROOT'] = os.environ.get('SYSTEMROOT')
+                env['SYSTEMROOT'] = os.environ.get('SYSTEMROOT', '')
             # HOME is needed for the 'hg help share' check
             if 'HOME' not in env:
-                env['HOME'] = os.environ.get('HOME')
+                env['HOME'] = os.environ.get('HOME', '')
 
         cmd = self.hgtool[:]
 
