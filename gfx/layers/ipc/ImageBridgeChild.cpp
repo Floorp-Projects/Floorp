@@ -407,9 +407,6 @@ static void UpdateImageClientNow(ImageClient* aClient, ImageContainer* aContaine
 {
   MOZ_ASSERT(aClient);
   MOZ_ASSERT(aContainer);
-  if (!aContainer->IsAttached()) {
-    return;
-  }
   sImageBridgeChildSingleton->BeginTransaction();
   aClient->UpdateImage(aContainer, Layer::CONTENT_OPAQUE);
   sImageBridgeChildSingleton->EndTransaction();
@@ -476,33 +473,6 @@ void ImageBridgeChild::FlushAllImages(ImageClient* aClient,
     NewRunnableFunction(&FlushAllImagesSync, aClient, aContainer, waiter));
 
   waiter->WaitComplete();
-}
-
-static void FlushAllImagesAsync(ImageClient* aClient)
-{
-  MOZ_ASSERT(aClient);
-  sImageBridgeChildSingleton->BeginTransaction();
-  aClient->FlushAllImages(nullptr);
-  sImageBridgeChildSingleton->EndTransaction();
-}
-
-//static
-void ImageBridgeChild::FlushAllImagesAsync(ImageClient* aClient)
-{
-  if (!IsCreated()) {
-    return;
-  }
-  MOZ_ASSERT(aClient);
-  MOZ_ASSERT(!sImageBridgeChildSingleton->mShuttingDown);
-  MOZ_ASSERT(!InImageBridgeChildThread());
-  if (InImageBridgeChildThread()) {
-    NS_ERROR("ImageBridgeChild::FlushAllImages() is called on ImageBridge thread.");
-    return;
-  }
-
-  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-    FROM_HERE,
-    NewRunnableFunction(&FlushAllImagesAsync, aClient));
 }
 
 void
