@@ -654,6 +654,37 @@ gfxMacPlatformFontList::~gfxMacPlatformFontList()
     }
 }
 
+void
+gfxMacPlatformFontList::AddFamily(CFStringRef aFamily)
+{
+    NSString* family = (NSString*)aFamily;
+
+    // CTFontManager includes weird internal family names and
+    // LastResort, skip over those
+    if (!family || [family caseInsensitiveCompare:@"LastResort"] == NSOrderedSame) {
+        return;
+    }
+
+    bool hiddenSystemFont = [family hasPrefix:@"."];
+
+    FontFamilyTable& table =
+        hiddenSystemFont ? mSystemFontFamilies : mFontFamilies;
+
+    nsAutoString familyName;
+    nsCocoaUtils::GetStringForNSString(family, familyName);
+
+    nsAutoString key;
+    ToLowerCase(familyName, key);
+
+    gfxFontFamily* familyEntry = new gfxMacFontFamily(familyName);
+    table.Put(key, familyEntry);
+
+    // check the bad underline blacklist
+    if (mBadUnderlineFamilyNames.Contains(key)) {
+        familyEntry->SetBadUnderlineFamily();
+    }
+}
+
 nsresult
 gfxMacPlatformFontList::InitFontList()
 {
@@ -669,49 +700,8 @@ gfxMacPlatformFontList::InitFontList()
 
     CFArrayRef familyNames = CTFontManagerCopyAvailableFontFamilyNames();
 
-    // iterate over families
-    uint32_t i, numFamilies;
-
-    numFamilies = CFArrayGetCount(familyNames);
-    for (i = 0; i < numFamilies; i++) {
-        CFStringRef family = (CFStringRef)CFArrayGetValueAtIndex(familyNames, i);
-
-        // CTFontManager includes weird internal family names and
-        // LastResort, skip over those
-        if (!family ||
-            CFStringCompare(family, CFSTR("LastResort"),
-                            kCFCompareCaseInsensitive) == kCFCompareEqualTo) {
-            continue;
-        }
-
-        bool hiddenSystemFont = false;
-        if (::CFStringHasPrefix(family, CFSTR("."))) {
-            hiddenSystemFont = true;
-        }
-
-        nsAutoTArray<UniChar, 1024> buffer;
-        CFIndex len = ::CFStringGetLength(family);
-        buffer.SetLength(len+1);
-        ::CFStringGetCharacters(family, ::CFRangeMake(0, len),
-                                buffer.Elements());
-        buffer[len] = 0;
-        nsAutoString familyName(reinterpret_cast<char16_t*>(buffer.Elements()), len);
-
-        // create a family entry
-        gfxFontFamily *familyEntry = new gfxMacFontFamily(familyName);
-        if (!familyEntry) break;
-
-        // add the family entry to the hash table
-        ToLowerCase(familyName);
-        if (!hiddenSystemFont) {
-            mFontFamilies.Put(familyName, familyEntry);
-        } else {
-            mSystemFontFamilies.Put(familyName, familyEntry);
-        }
-
-        // check the bad underline blacklist
-        if (mBadUnderlineFamilyNames.Contains(familyName))
-            familyEntry->SetBadUnderlineFamily();
+    for (NSString* familyName in (NSArray*)familyNames) {
+        AddFamily((CFStringRef)familyName);
     }
 
     CFRelease(familyNames);

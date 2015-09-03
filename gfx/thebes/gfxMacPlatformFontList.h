@@ -123,6 +123,13 @@ private:
 
     virtual already_AddRefed<FontInfoData> CreateFontInfoData();
 
+    // Add the specified family to mSystemFontFamilies or mFontFamilies.
+    // Ideally we'd use NSString* instead of CFStringRef here, but this header
+    // file is included in .cpp files, so we can't use objective C classes here.
+    // But CFStringRef and NSString* are the same thing anyway (they're
+    // toll-free bridged).
+    void AddFamily(CFStringRef aFamily);
+
 #ifdef MOZ_BUNDLED_FONTS
     void ActivateBundledFonts();
 #endif
