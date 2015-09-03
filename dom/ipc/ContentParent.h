@@ -260,6 +260,15 @@ public:
     bool IsNuwaProcess();
 #endif
 
+    // A shorthand for checking if the Nuwa process is ready.
+    bool IsReadyNuwaProcess() {
+#ifdef MOZ_NUWA_PROCESS
+        return IsNuwaProcess() && IsNuwaReady();
+#else
+        return false;
+#endif
+    }
+
     GeckoChildProcessHost* Process() {
         return mSubprocess;
     }

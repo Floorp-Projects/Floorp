@@ -2309,14 +2309,11 @@ CSSStyleSheet::ParseSheet(const nsAString& aInput)
   mInner->mNameSpaceMap = nullptr;
 
   // allow unsafe rules if the style sheet's principal is the system principal
-  css::SheetParsingMode parsingMode =
-    nsContentUtils::IsSystemPrincipal(mInner->mPrincipal)
-      ? css::eAgentSheetFeatures
-      : css::eAuthorSheetFeatures;
+  bool allowUnsafeRules = nsContentUtils::IsSystemPrincipal(mInner->mPrincipal);
 
   nsCSSParser parser(loader, this);
   nsresult rv = parser.ParseSheet(aInput, mInner->mSheetURI, mInner->mBaseURI,
-                                  mInner->mPrincipal, 1, parsingMode);
+                                  mInner->mPrincipal, 1, allowUnsafeRules);
   DidDirty(); // we are always 'dirty' here since we always remove rules first
   NS_ENSURE_SUCCESS(rv, rv);
 
