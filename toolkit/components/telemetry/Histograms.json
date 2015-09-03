@@ -4112,6 +4112,11 @@
     "extended_statistics_ok": true,
     "description": "Session restore: Time spent blocking the main thread while restoring a window state (ms)"
   },
+  "FX_TABLET_MODE_USED_DURING_SESSION": {
+    "expires_in_version": "46",
+    "kind": "count",
+    "description": "Windows 10+ only: The number of times tablet-mode is used during a session"
+  },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "expires_in_version": "never",
     "kind": "boolean",
