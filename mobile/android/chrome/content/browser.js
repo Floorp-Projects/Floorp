@@ -4734,8 +4734,6 @@ Tab.prototype = {
 
     let scaleRatio = window.devicePixelRatio;
 
-    if (aMetadata.defaultZoom > 0)
-      aMetadata.defaultZoom *= scaleRatio;
     if (aMetadata.minZoom > 0)
       aMetadata.minZoom *= scaleRatio;
     if (aMetadata.maxZoom > 0)
@@ -4777,7 +4775,6 @@ Tab.prototype = {
       type: "Tab:ViewportMetadata",
       allowZoom: metadata.allowZoom,
       allowDoubleTapZoom: metadata.allowDoubleTapZoom,
-      defaultZoom: metadata.defaultZoom || window.devicePixelRatio,
       minZoom: metadata.minZoom || 0,
       maxZoom: metadata.maxZoom || 0,
       isRTL: metadata.isRTL,
@@ -4790,8 +4787,10 @@ Tab.prototype = {
     let zoom = ViewportHandler.clamp(aZoom, kViewportMinScale, kViewportMaxScale);
 
     let md = this.metadata;
-    if (!md.allowZoom)
-      return md.defaultZoom || zoom;
+    if (!md.allowZoom) {
+      // If zooming is not allowed, minZoom will be equal to maxZoom
+      return md.minZoom || zoom;
+    }
 
     if (md && md.minZoom)
       zoom = Math.max(zoom, md.minZoom);
@@ -6420,7 +6419,6 @@ var ViewportHandler = {
       let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
       if (handheldFriendly == "true") {
         return new ViewportMetadata({
-          defaultZoom: 1,
           allowZoom: true,
           allowDoubleTapZoom: false
         });
@@ -6429,7 +6427,6 @@ var ViewportHandler = {
       let doctype = aWindow.document.doctype;
       if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId)) {
         return new ViewportMetadata({
-          defaultZoom: 1,
           allowZoom: true,
           allowDoubleTapZoom: false
         });
@@ -6445,11 +6442,14 @@ var ViewportHandler = {
     scale = this.clamp(scale, kViewportMinScale, kViewportMaxScale);
     minScale = this.clamp(minScale, kViewportMinScale, kViewportMaxScale);
     maxScale = this.clamp(maxScale, (isNaN(minScale) ? kViewportMinScale : minScale), kViewportMaxScale);
+    if (!allowZoom) {
+      // If allowZoom is false, clamp the min/max zoom to the default zoom level.
+      minScale = maxScale = (scale || window.devicePixelRatio);
+    }
 
     let isRTL = aWindow.document.documentElement.dir == "rtl";
 
     return new ViewportMetadata({
-      defaultZoom: scale,
       minZoom: minScale,
       maxZoom: maxScale,
       allowZoom: allowZoom,
@@ -6501,7 +6501,6 @@ var ViewportHandler = {
  *   isSpecified (boolean): Whether the page viewport is specified or not.
  */
 function ViewportMetadata(aMetadata = {}) {
-  this.defaultZoom = ("defaultZoom" in aMetadata) ? aMetadata.defaultZoom : 0;
   this.minZoom = ("minZoom" in aMetadata) ? aMetadata.minZoom : 0;
   this.maxZoom = ("maxZoom" in aMetadata) ? aMetadata.maxZoom : 0;
   this.allowZoom = ("allowZoom" in aMetadata) ? aMetadata.allowZoom : true;
@@ -6512,7 +6511,6 @@ function ViewportMetadata(aMetadata = {}) {
 }
 
 ViewportMetadata.prototype = {
-  defaultZoom: null,
   minZoom: null,
   maxZoom: null,
   allowZoom: null,
@@ -6521,8 +6519,7 @@ ViewportMetadata.prototype = {
   isRTL: null,
 
   toString: function() {
-    return "; defaultZoom=" + this.defaultZoom
-         + "; minZoom=" + this.minZoom
+    return "; minZoom=" + this.minZoom
          + "; maxZoom=" + this.maxZoom
          + "; allowZoom=" + this.allowZoom
          + "; allowDoubleTapZoom=" + this.allowDoubleTapZoom
