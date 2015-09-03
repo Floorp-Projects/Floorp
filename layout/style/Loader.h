@@ -142,33 +142,6 @@ enum StyleSheetState {
   eSheetComplete
 };
 
-/**
- * Enum defining the mode in which a sheet is to be parsed.  This is
- * usually, but not always, the same as the cascade level at which the
- * sheet will apply (see nsStyleSet.h).  Most of the Loader APIs only
- * support loading of author sheets.
- *
- * Author sheets are the normal case: styles embedded in or linked
- * from HTML pages.  They are also the most restricted.
- *
- * User sheets can do anything author sheets can do, and also get
- * access to a few CSS extensions that are not yet suitable for
- * exposure on the public Web, but are very useful for expressing
- * user style overrides, such as @-moz-document rules.
- *
- * Agent sheets have access to all author- and user-sheet features
- * plus more extensions that are necessary for internal use but,
- * again, not yet suitable for exposure on the public Web.  Some of
- * these are outright unsafe to expose; in particular, incorrect
- * styling of anonymous box pseudo-elements can violate layout
- * invariants.
- */
-enum SheetParsingMode {
-  eAuthorSheetFeatures = 0,
-  eUserSheetFeatures,
-  eAgentSheetFeatures
-};
-
 class Loader final {
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
@@ -283,8 +256,13 @@ public:
    * method can be used to load sheets not associated with a document.
    *
    * @param aURL the URL of the sheet to load
-   * @param aParsingMode the mode in which to parse the sheet
-   *        (see comments at enum SheetParsingMode, above).
+   * @param aEnableUnsafeRules whether unsafe rules are enabled for this
+   * sheet load
+   * Unsafe rules are rules that can violate key Gecko invariants if misused.
+   * In particular, most anonymous box pseudoelements must be very carefully
+   * styled or we will have severe problems. Therefore unsafe rules should
+   * never be enabled for stylesheets controlled by untrusted sites; preferably
+   * unsafe rules should only be enabled for agent sheets.
    * @param aUseSystemPrincipal if true, give the resulting sheet the system
    * principal no matter where it's being loaded from.
    * @param [out] aSheet the loaded, complete sheet.
@@ -297,25 +275,22 @@ public:
    * whether the data could be parsed as CSS and doesn't indicate anything
    * about the status of child sheets of the returned sheet.
    */
-  nsresult LoadSheetSync(nsIURI* aURL,
-                         SheetParsingMode aParsingMode,
+  nsresult LoadSheetSync(nsIURI* aURL, bool aEnableUnsafeRules,
                          bool aUseSystemPrincipal,
                          CSSStyleSheet** aSheet);
 
   /**
-   * As above, but defaults aParsingMode to eAuthorSheetFeatures and
-   * aUseSystemPrincipal to false.
+   * As above, but aUseSystemPrincipal and aEnableUnsafeRules are assumed false.
    */
   nsresult LoadSheetSync(nsIURI* aURL, CSSStyleSheet** aSheet) {
-    return LoadSheetSync(aURL, eAuthorSheetFeatures, false, aSheet);
+    return LoadSheetSync(aURL, false, false, aSheet);
   }
 
   /**
    * Asynchronously load the stylesheet at aURL.  If a successful result is
    * returned, aObserver is guaranteed to be notified asynchronously once the
    * sheet is loaded and marked complete.  This method can be used to load
-   * sheets not associated with a document.  This method cannot be used to
-   * load user or agent sheets.
+   * sheets not associated with a document.
    *
    * @param aURL the URL of the sheet to load
    * @param aOriginPrincipal the principal to use for security checks.  This
@@ -471,7 +446,7 @@ private:
                             ImportRule* aParentRule);
 
   nsresult InternalLoadNonDocumentSheet(nsIURI* aURL,
-                                        SheetParsingMode aParsingMode,
+                                        bool aAllowUnsafeRules,
                                         bool aUseSystemPrincipal,
                                         nsIPrincipal* aOriginPrincipal,
                                         const nsCString& aCharset,
