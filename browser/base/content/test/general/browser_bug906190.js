@@ -70,6 +70,7 @@ registerCleanupFunction(function() {
   // Set preferences back to their original values
   Services.prefs.setBoolPref(PREF_ACTIVE, origBlockActive);
 });
+requestLongerTimeout(2);
 
 /*
  * Whenever we disable the Mixed Content Blocker of the page
