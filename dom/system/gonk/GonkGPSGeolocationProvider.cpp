@@ -15,6 +15,7 @@
  */
 
 #include "GonkGPSGeolocationProvider.h"
+#include "mozstumbler/MozStumbler.h"
 
 #include <pthread.h>
 #include <hardware/gps.h>
@@ -87,6 +88,72 @@ AGpsCallbacks GonkGPSGeolocationProvider::mAGPSCallbacks;
 AGpsRilCallbacks GonkGPSGeolocationProvider::mAGPSRILCallbacks;
 #endif // MOZ_B2G_RIL
 
+double CalculateDeltaInMeter(double aLat, double aLon, double aLastLat, double aLastLon)
+{
+  // Use spherical law of cosines to calculate difference
+  // Not quite as correct as the Haversine but simpler and cheaper
+  const double radsInDeg = M_PI / 180.0;
+  const double rNewLat = aLat * radsInDeg;
+  const double rNewLon = aLon * radsInDeg;
+  const double rOldLat = aLastLat * radsInDeg;
+  const double rOldLon = aLastLon * radsInDeg;
+  // WGS84 equatorial radius of earth = 6378137m
+  double cosDelta = (sin(rNewLat) * sin(rOldLat)) +
+                    (cos(rNewLat) * cos(rOldLat) * cos(rOldLon - rNewLon));
+  if (cosDelta > 1.0) {
+    cosDelta = 1.0;
+  } else if (cosDelta < -1.0) {
+    cosDelta = -1.0;
+  }
+  return acos(cosDelta) * 6378137;
+}
+
+class RequestCellInfoEvent : public nsRunnable {
+  public:
+    RequestCellInfoEvent(StumblerInfo *callback)
+      : mRequestCallback(callback)
+      {}
+
+    NS_IMETHOD Run() {
+      MOZ_ASSERT(NS_IsMainThread());
+      // Get Cell Info
+      nsCOMPtr<nsIMobileConnectionService> service =
+        do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
+
+      if (!service) {
+        nsContentUtils::LogMessageToConsole("Stumbler-can not get nsIMobileConnectionService \n");
+        return NS_OK;
+      }
+      nsCOMPtr<nsIMobileConnection> connection;
+      uint32_t numberOfRilServices = 1, cellInfoNum = 0;
+
+      service->GetNumItems(&numberOfRilServices);
+      for (uint32_t rilNum = 0; rilNum < numberOfRilServices; rilNum++) {
+        service->GetItemByServiceId(rilNum /* Client Id */, getter_AddRefs(connection));
+        if (!connection) {
+          nsContentUtils::LogMessageToConsole("Stumbler-can not get nsIMobileConnection by ServiceId %d \n", rilNum);
+        } else {
+          cellInfoNum++;
+          connection->GetCellInfoList(mRequestCallback);
+        }
+      }
+      mRequestCallback->SetCellInfoResponsesExpected(cellInfoNum);
+
+      // Get Wifi AP Info
+      nsCOMPtr<nsIInterfaceRequestor> ir = do_GetService("@mozilla.org/telephony/system-worker-manager;1");
+      nsCOMPtr<nsIWifi> wifi = do_GetInterface(ir);
+      if (!wifi) {
+        mRequestCallback->SetWifiInfoResponseReceived();
+        nsContentUtils::LogMessageToConsole("Stumbler-can not get nsIWifi interface\n");
+        return NS_OK;
+      }
+      wifi->GetWifiScanResults(mRequestCallback);
+      return NS_OK;
+    }
+  private:
+    nsRefPtr<StumblerInfo> mRequestCallback;
+};
+
 void
 GonkGPSGeolocationProvider::LocationCallback(GpsLocation* location)
 {
@@ -141,7 +208,38 @@ GonkGPSGeolocationProvider::LocationCallback(GpsLocation* location)
                                         location->accuracy);
   }
 
-  NS_DispatchToMainThread(new UpdateLocationEvent(somewhere));
+  nsRefPtr<UpdateLocationEvent> event = new UpdateLocationEvent(somewhere);
+  NS_DispatchToMainThread(event);
+
+  const double kMinChangeInMeters = 30;
+  static int64_t lastTime_ms = 0;
+  static double sLastLat = 0;
+  static double sLastLon = 0;
+  double delta = -1.0;
+  int64_t timediff = (PR_Now() / PR_USEC_PER_MSEC) - lastTime_ms;
+
+  if (0 != sLastLon || 0 != sLastLat) {
+    delta = CalculateDeltaInMeter(location->latitude, location->longitude, sLastLat, sLastLon);
+  }
+  if (gDebug_isLoggingEnabled) {
+    nsContentUtils::LogMessageToConsole("Stumbler-Location. [%f , %f] time_diff:%lld, delta : %f\n",
+      location->longitude, location->latitude, timediff, delta);
+  }
+
+  // Consecutive GPS locations must be 30 meters and 3 seconds apart
+  if (lastTime_ms == 0 || ((timediff >= STUMBLE_INTERVAL_MS) && (delta > kMinChangeInMeters))){
+    lastTime_ms = (PR_Now() / PR_USEC_PER_MSEC);
+    sLastLat = location->latitude;
+    sLastLon = location->longitude;
+    nsRefPtr<StumblerInfo> requestCallback = new StumblerInfo(somewhere);
+    nsRefPtr<RequestCellInfoEvent> runnable = new RequestCellInfoEvent(requestCallback);
+    NS_DispatchToMainThread(runnable);
+  } else {
+    if (gDebug_isLoggingEnabled) {
+      nsContentUtils::LogMessageToConsole(
+        "Stumbler-GPS locations less than 30 meters and 3 seconds. Ignore!\n");
+    }
+  }
 }
 
 void
@@ -886,23 +984,7 @@ GonkGPSGeolocationProvider::NetworkLocationUpdate::Update(nsIDOMGeoPosition *pos
   static double sLastMLSPosLon = 0;
 
   if (0 != sLastMLSPosLon || 0 != sLastMLSPosLat) {
-    // Use spherical law of cosines to calculate difference
-    // Not quite as correct as the Haversine but simpler and cheaper
-    // Should the following be a utility function? Others might need this calc.
-    const double radsInDeg = M_PI / 180.0;
-    const double rNewLat = lat * radsInDeg;
-    const double rNewLon = lon * radsInDeg;
-    const double rOldLat = sLastMLSPosLat * radsInDeg;
-    const double rOldLon = sLastMLSPosLon * radsInDeg;
-    // WGS84 equatorial radius of earth = 6378137m
-    double cosDelta = (sin(rNewLat) * sin(rOldLat)) +
-                      (cos(rNewLat) * cos(rOldLat) * cos(rOldLon - rNewLon));
-    if (cosDelta > 1.0) {
-      cosDelta = 1.0;
-    } else if (cosDelta < -1.0) {
-      cosDelta = -1.0;
-    }
-    delta = acos(cosDelta) * 6378137;
+    delta = CalculateDeltaInMeter(lat, lon, sLastMLSPosLat, sLastMLSPosLon);
   }
 
   sLastMLSPosLat = lat;
