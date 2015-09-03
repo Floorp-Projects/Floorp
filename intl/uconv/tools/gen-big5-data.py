@@ -5,12 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Adapted from
-# https://hg.mozilla.org/projects/htmlparser/file/3ac10f9e8612/generate-encoding-data.py
+# https://hg.mozilla.org/projects/htmlparser/file/0d906fb1ab90/generate-encoding-data.py
 
 # indexes.json comes from 
 # https://encoding.spec.whatwg.org/indexes.json
 # i.e.
-# https://github.com/whatwg/encoding/blob/a5215d07106e250dfef34908b99b3e4a576be2f6/indexes.json
+# https://github.com/whatwg/encoding/blob/ce4e83d0df5b5efec0697fc76e66699737e033a3/indexes.json
 
 import json
 
@@ -75,8 +75,8 @@ for codePoint in index:
 astralRanges = invertRanges(gaps, cap)
 
 
-includeFile = open("../ucvtw/nsBIG5DecoderData.h", "w")
-includeFile.write('''/* This Source Code Form is subject to the terms of the Mozilla Public
+classFile = open("../ucvtw/nsBIG5Data.cpp", "w")
+classFile.write('''/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -85,14 +85,16 @@ includeFile.write('''/* This Source Code Form is subject to the terms of the Moz
  * Instead, please regenerate using intl/uconv/tools/gen-big5-data.py
  */
 
+#include "nsBIG5Data.h"
+
 static const char16_t kBig5LowBitsTable[] = {
 ''')
 
 for (low, high) in ranges:
   for i in xrange(low, high):
-    includeFile.write('  0x%04X,\n' % (index[i] & 0xFFFF))
+    classFile.write('  0x%04X,\n' % (index[i] & 0xFFFF))
 
-includeFile.write('''};
+classFile.write('''};
 
 static const uint32_t kBig5AstralnessTable[] = {
 ''')
@@ -112,20 +114,20 @@ while i < len(bits):
   accu = 0
   for j in xrange(32):
     accu |= bits[i + j] << j
-  includeFile.write('  0x%08X,\n' % accu)
+  classFile.write('  0x%08X,\n' % accu)
   i += 32
 
-includeFile.write('''};
+classFile.write('''};
 
 // static
 char16_t
-nsBIG5ToUnicode::LowBits(size_t aPointer)
+nsBIG5Data::LowBits(size_t aPointer)
 {
 ''')
 
 base = 0
 for (low, high) in ranges:
-  includeFile.write('''  if (aPointer < %d) {
+  classFile.write('''  if (aPointer < %d) {
     return 0;
   }
   if (aPointer < %d) {
@@ -134,19 +136,19 @@ for (low, high) in ranges:
 ''' % (low, high, base, low))
   base += (high - low)
 
-includeFile.write('''  return 0;
+classFile.write('''  return 0;
 }
 
 // static
 bool
-nsBIG5ToUnicode::IsAstral(size_t aPointer)
+nsBIG5Data::IsAstral(size_t aPointer)
 {
 ''')
 
 base = 0
 for (low, high) in astralRanges:
   if high - low == 1:
-    includeFile.write('''  if (aPointer < %d) {
+    classFile.write('''  if (aPointer < %d) {
     return false;
   }
   if (aPointer == %d) {
@@ -154,7 +156,7 @@ for (low, high) in astralRanges:
   }
 ''' % (low, low))
   else:
-    includeFile.write('''  if (aPointer < %d) {
+    classFile.write('''  if (aPointer < %d) {
     return false;
   }
   if (aPointer < %d) {
@@ -164,7 +166,88 @@ for (low, high) in astralRanges:
 ''' % (low, high, base, low))
   base += (high - low)
 
-includeFile.write('''  return false;
+classFile.write('''  return false;
+}
+
+//static
+size_t
+nsBIG5Data::FindPointer(char16_t aLowBits, bool aIsAstral)
+{
+  if (!aIsAstral) {
+    switch (aLowBits) {
+''')
+
+hkscsBound = (0xA1 - 0x81) * 157
+
+preferLast = [
+  0x2550,
+  0x255E,
+  0x2561,
+  0x256A,
+  0x5341,
+  0x5345,
+]
+
+for codePoint in preferLast:
+  # Python lists don't have .rindex() :-(
+  for i in xrange(len(index) - 1, -1, -1):
+    candidate = index[i]
+    if candidate == codePoint:
+       classFile.write('''      case 0x%04X:
+        return %d;
+''' % (codePoint, i))
+       break
+
+classFile.write('''      default:
+        break;
+    }
+  }''')
+
+base = 0
+start = 0
+for (low, high) in ranges:
+  if low <= hkscsBound and hkscsBound < high:
+    # This is the first range we don't ignore and the
+    # range that contains the first non-HKSCS pointer.
+    # Avoid searching HKSCS.
+    start = base + hkscsBound - low
+    break
+  base += (high - low)
+
+classFile.write('''
+  for (size_t i = %d; i < MOZ_ARRAY_LENGTH(kBig5LowBitsTable); ++i) {
+    if (kBig5LowBitsTable[i] == aLowBits) {
+      size_t pointer;
+      ''' % start)
+
+base = 0
+prevLow = 0
+prevHigh = 0
+prevBase = 0
+writing = False
+for (low, high) in ranges:
+  if writing:
+    classFile.write('''if (i < %d) {
+        pointer = i + %d;
+      } else ''' % ((prevBase + prevHigh - prevLow), (prevLow - prevBase)))
+  prevLow = low
+  prevHigh = high
+  prevBase = base
+  if high > hkscsBound:
+    writing = True
+  base += (high - low)
+
+classFile.write('''{
+        pointer = i + %d;
+      }''' % (prevLow - prevBase))
+
+classFile.write('''
+      if (aIsAstral == IsAstral(pointer)) {
+        return pointer;
+      }
+    }
+  }
+  return 0;
 }
 ''')
-includeFile.close()
+classFile.close()
