@@ -29,7 +29,7 @@ navigator.serviceWorker.getRegistration(SCOPE)
     })
   .catch(function(reason) {
       window.parent.postMessage({results: 'FAILURE: ' + reason.message},
-                                host_info['HTTP_ORIGIN']);
+                                host_info['HTTPS_ORIGIN']);
      });
 
 function on_state_change(event) {
@@ -47,11 +47,11 @@ function on_message(e) {
           return registration.unregister();
       })
     .then(function() {
-      window.parent.postMessage(e.data, host_info['HTTP_ORIGIN']);
+      window.parent.postMessage(e.data, host_info['HTTPS_ORIGIN']);
     })
     .catch(function(reason) {
         window.parent.postMessage({results: 'FAILURE: ' + reason.message},
-                                  host_info['HTTP_ORIGIN']);
+                                  host_info['HTTPS_ORIGIN']);
      });
 }
 
