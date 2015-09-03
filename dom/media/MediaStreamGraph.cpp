@@ -395,6 +395,7 @@ MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime,
     if (stream->mFinished && !stream->mNotifiedFinished) {
       StreamReadyToFinish(stream);
     }
+
   }
 }
 
@@ -3163,16 +3164,33 @@ MediaStreamGraph::NotifyWhenGraphStarted(AudioNodeStream* aStream)
 }
 
 void
-MediaStreamGraphImpl::ResetVisitedStreamState()
+MediaStreamGraphImpl::IncrementSuspendCount(MediaStream* aStream)
 {
-  // Reset the visited/consumed/blocked state of the streams.
-  for (MediaStream* stream : AllStreams()) {
-    ProcessedMediaStream* ps = stream->AsProcessedStream();
+  if (!aStream->IsSuspended()) {
+    MOZ_ASSERT(mStreams.Contains(aStream));
+    mStreams.RemoveElement(aStream);
+    mSuspendedStreams.AppendElement(aStream);
+    SetStreamOrderDirty();
+  }
+  aStream->IncrementSuspendCount();
+}
+
+void
+MediaStreamGraphImpl::DecrementSuspendCount(MediaStream* aStream)
+{
+  bool wasSuspended = aStream->IsSuspended();
+  aStream->DecrementSuspendCount();
+  if (wasSuspended && !aStream->IsSuspended()) {
+    MOZ_ASSERT(mSuspendedStreams.Contains(aStream));
+    mSuspendedStreams.RemoveElement(aStream);
+    mStreams.AppendElement(aStream);
+    ProcessedMediaStream* ps = aStream->AsProcessedStream();
     if (ps) {
       ps->mCycleMarker = NOT_VISITED;
       ps->mIsConsumed = false;
       ps->mInBlockingSet = false;
     }
+    SetStreamOrderDirty();
   }
 }
 
@@ -3182,22 +3200,11 @@ MediaStreamGraphImpl::SuspendOrResumeStreams(AudioContextOperation aAudioContext
 {
   // For our purpose, Suspend and Close are equivalent: we want to remove the
   // streams from the set of streams that are going to be processed.
-  nsTArray<MediaStream*>& from =
-    aAudioContextOperation == AudioContextOperation::Resume ? mSuspendedStreams
-                                                            : mStreams;
-  nsTArray<MediaStream*>& to =
-    aAudioContextOperation == AudioContextOperation::Resume ? mStreams
-                                                            : mSuspendedStreams;
-
   for (MediaStream* stream : aStreamSet) {
-    auto i = from.IndexOf(stream);
-    MOZ_ASSERT(i != from.NoIndex);
-    from.RemoveElementAt(i);
-    to.AppendElement(stream);
     if (aAudioContextOperation == AudioContextOperation::Resume) {
-      stream->DecrementSuspendCount();
+      DecrementSuspendCount(stream);
     } else {
-      stream->IncrementSuspendCount();
+      IncrementSuspendCount(stream);
     }
   }
   STREAM_LOG(LogLevel::Debug, ("Moving streams between suspended and running"
@@ -3244,10 +3251,6 @@ MediaStreamGraphImpl::ApplyAudioContextOperationImpl(
     AudioContextOperation aOperation, void* aPromise)
 {
   MOZ_ASSERT(CurrentDriver()->OnThread());
-
-  SetStreamOrderDirty();
-
-  ResetVisitedStreamState();
 
   SuspendOrResumeStreams(aOperation, aStreams);
 

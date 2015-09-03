@@ -272,18 +272,23 @@ public:
                                       dom::AudioContextOperation aOperation,
                                       void* aPromise);
 
+  /**
+   * Increment suspend count on aStream and move it to mSuspendedStreams if
+   * necessary.
+   */
+  void IncrementSuspendCount(MediaStream* aStream);
+  /**
+   * Increment suspend count on aStream and move it to mStreams if
+   * necessary.
+   */
+  void DecrementSuspendCount(MediaStream* aStream);
+
   /*
    * Move streams from the mStreams to mSuspendedStream if suspending/closing an
    * AudioContext, or the inverse when resuming an AudioContext.
    */
   void SuspendOrResumeStreams(dom::AudioContextOperation aAudioContextOperation,
                               const nsTArray<MediaStream*>& aStreamSet);
-
-  /*
-   * Reset some state about the streams before suspending them, or resuming
-   * them.
-   */
-  void ResetVisitedStreamState();
 
   /**
    * Sort mStreams so that every stream not in a cycle is after any streams
