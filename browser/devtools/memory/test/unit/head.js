@@ -139,7 +139,5 @@ function saveHeapSnapshotAndTakeCensus(dbg=null, censusOptions=undefined,
 
 function compareCensusViewData (breakdown, report, expected, assertion) {
   let data = new CensusTreeNode(breakdown, report);
-  console.log(data);
-  console.log(expected);
   equal(JSON.stringify(data), JSON.stringify(expected), assertion);
 }
