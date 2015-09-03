@@ -3177,7 +3177,7 @@ bool AsmFunction::pcIsPatchable(size_t pc, unsigned size) const {
 // Encapsulates the building of an asm bytecode function from an asm.js function
 // source code, packing the asm.js code into the asm bytecode form that can
 // be decoded and compiled with a FunctionCompiler.
-class FunctionBuilder
+class FunctionValidator
 {
   public:
     struct Local
@@ -3204,7 +3204,7 @@ class FunctionBuilder
     bool                   hasAlreadyReturned_;
 
   public:
-    FunctionBuilder(ModuleValidator& m, AsmFunction& func, ParseNode* fn)
+    FunctionValidator(ModuleValidator& m, AsmFunction& func, ParseNode* fn)
       : m_(m),
         fn_(fn),
         func_(func),
@@ -5177,14 +5177,14 @@ CheckModuleGlobals(ModuleValidator& m)
 }
 
 static bool
-ArgFail(FunctionBuilder& f, PropertyName* argName, ParseNode* stmt)
+ArgFail(FunctionValidator& f, PropertyName* argName, ParseNode* stmt)
 {
     return f.failName(stmt, "expecting argument type declaration for '%s' of the "
                       "form 'arg = arg|0' or 'arg = +arg' or 'arg = fround(arg)'", argName);
 }
 
 static bool
-CheckArgumentType(FunctionBuilder& f, ParseNode* stmt, PropertyName* name, VarType* type)
+CheckArgumentType(FunctionValidator& f, ParseNode* stmt, PropertyName* name, VarType* type)
 {
     if (!stmt || !IsExpressionStatement(stmt))
         return ArgFail(f, name, stmt ? stmt : f.fn());
@@ -5224,7 +5224,7 @@ CheckProcessingDirectives(ModuleValidator& m, ParseNode** stmtIter)
 }
 
 static bool
-CheckArguments(FunctionBuilder& f, ParseNode** stmtIter, VarTypeVector* argTypes)
+CheckArguments(FunctionValidator& f, ParseNode** stmtIter, VarTypeVector* argTypes)
 {
     ParseNode* stmt = *stmtIter;
 
@@ -5252,7 +5252,7 @@ CheckArguments(FunctionBuilder& f, ParseNode** stmtIter, VarTypeVector* argTypes
 }
 
 static bool
-IsLiteralOrConst(FunctionBuilder& f, ParseNode* pn, AsmJSNumLit* lit)
+IsLiteralOrConst(FunctionValidator& f, ParseNode* pn, AsmJSNumLit* lit)
 {
     if (pn->isKind(PNK_NAME)) {
         const ModuleValidator::Global* global = f.lookupGlobal(pn->name());
@@ -5271,7 +5271,7 @@ IsLiteralOrConst(FunctionBuilder& f, ParseNode* pn, AsmJSNumLit* lit)
 }
 
 static bool
-CheckFinalReturn(FunctionBuilder& f, ParseNode* lastNonEmptyStmt)
+CheckFinalReturn(FunctionValidator& f, ParseNode* lastNonEmptyStmt)
 {
     if (!f.hasAlreadyReturned()) {
         f.setReturnedType(RetType::Void);
@@ -5291,7 +5291,7 @@ CheckFinalReturn(FunctionBuilder& f, ParseNode* lastNonEmptyStmt)
 }
 
 static bool
-CheckVariable(FunctionBuilder& f, ParseNode* var)
+CheckVariable(FunctionValidator& f, ParseNode* var)
 {
     if (!IsDefinition(var))
         return f.fail(var, "local variable names must not restate argument names");
@@ -5316,7 +5316,7 @@ CheckVariable(FunctionBuilder& f, ParseNode* var)
 }
 
 static bool
-CheckVariables(FunctionBuilder& f, ParseNode** stmtIter)
+CheckVariables(FunctionValidator& f, ParseNode** stmtIter)
 {
     ParseNode* stmt = *stmtIter;
 
@@ -5332,10 +5332,10 @@ CheckVariables(FunctionBuilder& f, ParseNode** stmtIter)
 }
 
 static bool
-CheckExpr(FunctionBuilder& f, ParseNode* expr, Type* type);
+CheckExpr(FunctionValidator& f, ParseNode* expr, Type* type);
 
 static bool
-CheckNumericLiteral(FunctionBuilder& f, ParseNode* num, Type* type)
+CheckNumericLiteral(FunctionValidator& f, ParseNode* num, Type* type)
 {
     AsmJSNumLit literal = ExtractNumericLiteral(f.m(), num);
     if (!literal.hasType())
@@ -5379,11 +5379,11 @@ EmitLiteral(FunctionCompiler& f, AsmType type, MDefinition**def)
 }
 
 static bool
-CheckVarRef(FunctionBuilder& f, ParseNode* varRef, Type* type)
+CheckVarRef(FunctionValidator& f, ParseNode* varRef, Type* type)
 {
     PropertyName* name = varRef->name();
 
-    if (const FunctionBuilder::Local* local = f.lookupLocal(name)) {
+    if (const FunctionValidator::Local* local = f.lookupLocal(name)) {
         switch (local->type.which()) {
           case VarType::Int:       f.writeOp(I32::GetLocal);   break;
           case VarType::Double:    f.writeOp(F64::GetLocal);   break;
@@ -5461,7 +5461,7 @@ EmitGetGlo(FunctionCompiler& f, MIRType type, MDefinition** def)
 }
 
 static inline bool
-IsLiteralOrConstInt(FunctionBuilder& f, ParseNode* pn, uint32_t* u32)
+IsLiteralOrConstInt(FunctionValidator& f, ParseNode* pn, uint32_t* u32)
 {
     AsmJSNumLit lit;
     if (!IsLiteralOrConst(f, pn, &lit))
@@ -5471,7 +5471,7 @@ IsLiteralOrConstInt(FunctionBuilder& f, ParseNode* pn, uint32_t* u32)
 }
 
 static bool
-FoldMaskedArrayIndex(FunctionBuilder& f, ParseNode** indexExpr, int32_t* mask,
+FoldMaskedArrayIndex(FunctionValidator& f, ParseNode** indexExpr, int32_t* mask,
                      NeedsBoundsCheck* needsBoundsCheck)
 {
     MOZ_ASSERT((*indexExpr)->isKind(PNK_BITAND));
@@ -5499,7 +5499,7 @@ FoldMaskedArrayIndex(FunctionBuilder& f, ParseNode** indexExpr, int32_t* mask,
 static const int32_t NoMask = -1;
 
 static bool
-CheckArrayAccess(FunctionBuilder& f, ParseNode* viewName, ParseNode* indexExpr,
+CheckArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode* indexExpr,
                  Scalar::Type* viewType, NeedsBoundsCheck* needsBoundsCheck, int32_t* mask)
 {
     *needsBoundsCheck = NEEDS_BOUNDS_CHECK;
@@ -5597,7 +5597,7 @@ CheckArrayAccess(FunctionBuilder& f, ParseNode* viewName, ParseNode* indexExpr,
 }
 
 static bool
-CheckAndPrepareArrayAccess(FunctionBuilder& f, ParseNode* viewName, ParseNode* indexExpr,
+CheckAndPrepareArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode* indexExpr,
                            Scalar::Type* viewType, NeedsBoundsCheck* needsBoundsCheck, int32_t* mask)
 {
     size_t prepareAt = f.tempOp();
@@ -5618,7 +5618,7 @@ CheckAndPrepareArrayAccess(FunctionBuilder& f, ParseNode* viewName, ParseNode* i
 }
 
 static bool
-CheckLoadArray(FunctionBuilder& f, ParseNode* elem, Type* type)
+CheckLoadArray(FunctionValidator& f, ParseNode* elem, Type* type)
 {
     Scalar::Type viewType;
     NeedsBoundsCheck needsBoundsCheck;
@@ -5667,7 +5667,7 @@ EmitLoadArray(FunctionCompiler& f, Scalar::Type scalarType, MDefinition** def)
 }
 
 static bool
-CheckDotAccess(FunctionBuilder& f, ParseNode* elem, Type* type)
+CheckDotAccess(FunctionValidator& f, ParseNode* elem, Type* type)
 {
     MOZ_ASSERT(elem->isKind(PNK_DOT));
 
@@ -5708,7 +5708,7 @@ EmitSignMask(FunctionCompiler& f, AsmType type, MDefinition** def)
 }
 
 static bool
-CheckStoreArray(FunctionBuilder& f, ParseNode* lhs, ParseNode* rhs, Type* type)
+CheckStoreArray(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type)
 {
     size_t opcodeAt = f.tempOp();
     size_t needsBoundsCheckAt = f.tempU8();
@@ -5845,7 +5845,7 @@ EmitStoreWithCoercion(FunctionCompiler& f, Scalar::Type rhsType, Scalar::Type vi
 }
 
 static bool
-CheckAssignName(FunctionBuilder& f, ParseNode* lhs, ParseNode* rhs, Type* type)
+CheckAssignName(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type)
 {
     RootedPropertyName name(f.cx(), lhs->name());
 
@@ -5856,7 +5856,7 @@ CheckAssignName(FunctionBuilder& f, ParseNode* lhs, ParseNode* rhs, Type* type)
     if (!CheckExpr(f, rhs, &rhsType))
         return false;
 
-    if (const FunctionBuilder::Local* lhsVar = f.lookupLocal(name)) {
+    if (const FunctionValidator::Local* lhsVar = f.lookupLocal(name)) {
         if (!(rhsType <= lhsVar->type)) {
             return f.failf(lhs, "%s is not a subtype of %s",
                            rhsType.toChars(), lhsVar->type.toType().toChars());
@@ -5931,7 +5931,7 @@ EmitSetGlo(FunctionCompiler& f, AsmType type, MDefinition**def)
 }
 
 static bool
-CheckAssign(FunctionBuilder& f, ParseNode* assign, Type* type)
+CheckAssign(FunctionValidator& f, ParseNode* assign, Type* type)
 {
     MOZ_ASSERT(assign->isKind(PNK_ASSIGN));
 
@@ -5948,7 +5948,7 @@ CheckAssign(FunctionBuilder& f, ParseNode* assign, Type* type)
 }
 
 static bool
-CheckMathIMul(FunctionBuilder& f, ParseNode* call, Type* type)
+CheckMathIMul(FunctionValidator& f, ParseNode* call, Type* type)
 {
     if (CallArgListLength(call) != 2)
         return f.fail(call, "Math.imul must be passed 2 arguments");
@@ -5976,7 +5976,7 @@ CheckMathIMul(FunctionBuilder& f, ParseNode* call, Type* type)
 }
 
 static bool
-CheckMathClz32(FunctionBuilder& f, ParseNode* call, Type* type)
+CheckMathClz32(FunctionValidator& f, ParseNode* call, Type* type)
 {
     if (CallArgListLength(call) != 1)
         return f.fail(call, "Math.clz32 must be passed 1 argument");
@@ -5997,7 +5997,7 @@ CheckMathClz32(FunctionBuilder& f, ParseNode* call, Type* type)
 }
 
 static bool
-CheckMathAbs(FunctionBuilder& f, ParseNode* call, Type* type)
+CheckMathAbs(FunctionValidator& f, ParseNode* call, Type* type)
 {
     if (CallArgListLength(call) != 1)
         return f.fail(call, "Math.abs must be passed 1 argument");
@@ -6032,7 +6032,7 @@ CheckMathAbs(FunctionBuilder& f, ParseNode* call, Type* type)
 }
 
 static bool
-CheckMathSqrt(FunctionBuilder& f, ParseNode* call, Type* type)
+CheckMathSqrt(FunctionValidator& f, ParseNode* call, Type* type)
 {
     if (CallArgListLength(call) != 1)
         return f.fail(call, "Math.sqrt must be passed 1 argument");
@@ -6061,7 +6061,7 @@ CheckMathSqrt(FunctionBuilder& f, ParseNode* call, Type* type)
 }
 
 static bool
-CheckMathMinMax(FunctionBuilder& f, ParseNode* callNode, bool isMax, Type* type)
+CheckMathMinMax(FunctionValidator& f, ParseNode* callNode, bool isMax, Type* type)
 {
     if (CallArgListLength(callNode) < 2)
         return f.fail(callNode, "Math.min/max must be passed at least 2 arguments");
@@ -6141,7 +6141,7 @@ EmitMathMinMax(FunctionCompiler& f, AsmType type, bool isMax, MDefinition** def)
 }
 
 static bool
-CheckSharedArrayAtomicAccess(FunctionBuilder& f, ParseNode* viewName, ParseNode* indexExpr,
+CheckSharedArrayAtomicAccess(FunctionValidator& f, ParseNode* viewName, ParseNode* indexExpr,
                              Scalar::Type* viewType, NeedsBoundsCheck* needsBoundsCheck,
                              int32_t* mask)
 {
@@ -6171,7 +6171,7 @@ CheckSharedArrayAtomicAccess(FunctionBuilder& f, ParseNode* viewName, ParseNode*
 }
 
 static bool
-CheckAtomicsFence(FunctionBuilder& f, ParseNode* call, Type* type)
+CheckAtomicsFence(FunctionValidator& f, ParseNode* call, Type* type)
 {
     if (CallArgListLength(call) != 0)
         return f.fail(call, "Atomics.fence must be passed 0 arguments");
@@ -6182,7 +6182,7 @@ CheckAtomicsFence(FunctionBuilder& f, ParseNode* call, Type* type)
 }
 
 static bool
-CheckAtomicsLoad(FunctionBuilder& f, ParseNode* call, Type* type)
+CheckAtomicsLoad(FunctionValidator& f, ParseNode* call, Type* type)
 {
     if (CallArgListLength(call) != 2)
         return f.fail(call, "Atomics.load must be passed 2 arguments");
@@ -6220,7 +6220,7 @@ EmitAtomicsLoad(FunctionCompiler& f, MDefinition** def)
 }
 
 static bool
-CheckAtomicsStore(FunctionBuilder& f, ParseNode* call, Type* type)
+CheckAtomicsStore(FunctionValidator& f, ParseNode* call, Type* type)
 {
     if (CallArgListLength(call) != 3)
         return f.fail(call, "Atomics.store must be passed 3 arguments");
@@ -6270,7 +6270,7 @@ EmitAtomicsStore(FunctionCompiler& f, MDefinition** def)
 }
 
 static bool
-CheckAtomicsBinop(FunctionBuilder& f, ParseNode* call, Type* type, js::jit::AtomicOp op)
+CheckAtomicsBinop(FunctionValidator& f, ParseNode* call, Type* type, js::jit::AtomicOp op)
 {
     if (CallArgListLength(call) != 3)
         return f.fail(call, "Atomics binary operator must be passed 3 arguments");
@@ -6321,7 +6321,7 @@ EmitAtomicsBinOp(FunctionCompiler& f, MDefinition** def)
 }
 
 static bool
-CheckAtomicsIsLockFree(FunctionBuilder& f, ParseNode* call, Type* type)
+CheckAtomicsIsLockFree(FunctionValidator& f, ParseNode* call, Type* type)
 {
     if (CallArgListLength(call) != 1)
         return f.fail(call, "Atomics.isLockFree must be passed 1 argument");
@@ -6338,7 +6338,7 @@ CheckAtomicsIsLockFree(FunctionBuilder& f, ParseNode* call, Type* type)
 }
 
 static bool
-CheckAtomicsCompareExchange(FunctionBuilder& f, ParseNode* call, Type* type)
+CheckAtomicsCompareExchange(FunctionValidator& f, ParseNode* call, Type* type)
 {
     if (CallArgListLength(call) != 4)
         return f.fail(call, "Atomics.compareExchange must be passed 4 arguments");
@@ -6398,7 +6398,7 @@ EmitAtomicsCompareExchange(FunctionCompiler& f, MDefinition** def)
 }
 
 static bool
-CheckAtomicsExchange(FunctionBuilder& f, ParseNode* call, Type* type)
+CheckAtomicsExchange(FunctionValidator& f, ParseNode* call, Type* type)
 {
     if (CallArgListLength(call) != 3)
         return f.fail(call, "Atomics.exchange must be passed 3 arguments");
@@ -6447,7 +6447,7 @@ EmitAtomicsExchange(FunctionCompiler& f, MDefinition** def)
 }
 
 static bool
-CheckAtomicsBuiltinCall(FunctionBuilder& f, ParseNode* callNode, AsmJSAtomicsBuiltinFunction func,
+CheckAtomicsBuiltinCall(FunctionValidator& f, ParseNode* callNode, AsmJSAtomicsBuiltinFunction func,
                         Type* resultType)
 {
     switch (func) {
@@ -6478,10 +6478,10 @@ CheckAtomicsBuiltinCall(FunctionBuilder& f, ParseNode* callNode, AsmJSAtomicsBui
     }
 }
 
-typedef bool (*CheckArgType)(FunctionBuilder& f, ParseNode* argNode, Type type);
+typedef bool (*CheckArgType)(FunctionValidator& f, ParseNode* argNode, Type type);
 
 static bool
-CheckCallArgs(FunctionBuilder& f, ParseNode* callNode, CheckArgType checkArg, Signature& signature)
+CheckCallArgs(FunctionValidator& f, ParseNode* callNode, CheckArgType checkArg, Signature& signature)
 {
     ParseNode* argNode = CallArgList(callNode);
     for (unsigned i = 0; i < CallArgListLength(callNode); i++, argNode = NextNode(argNode)) {
@@ -6563,7 +6563,7 @@ CheckFunctionSignature(ModuleValidator& m, ParseNode* usepn, Signature&& sig, Pr
 }
 
 static bool
-CheckIsVarType(FunctionBuilder& f, ParseNode* argNode, Type type)
+CheckIsVarType(FunctionValidator& f, ParseNode* argNode, Type type)
 {
     if (!type.isVarType())
         return f.failf(argNode, "%s is not a subtype of int, float or double", type.toChars());
@@ -6571,7 +6571,7 @@ CheckIsVarType(FunctionBuilder& f, ParseNode* argNode, Type type)
 }
 
 static void
-WriteCallLineCol(FunctionBuilder& f, ParseNode* pn)
+WriteCallLineCol(FunctionValidator& f, ParseNode* pn)
 {
     uint32_t line, column;
     f.m().tokenStream().srcCoords.lineNumAndColumnIndex(pn->pn_pos.begin, &line, &column);
@@ -6587,7 +6587,7 @@ ReadCallLineCol(FunctionCompiler& f, uint32_t* line, uint32_t* column)
 }
 
 static bool
-CheckInternalCall(FunctionBuilder& f, ParseNode* callNode, PropertyName* calleeName,
+CheckInternalCall(FunctionValidator& f, ParseNode* callNode, PropertyName* calleeName,
                   RetType retType, Type* type)
 {
     if (!f.canCall()) {
@@ -6675,7 +6675,7 @@ CheckFuncPtrTableAgainstExisting(ModuleValidator& m, ParseNode* usepn,
 }
 
 static bool
-CheckFuncPtrCall(FunctionBuilder& f, ParseNode* callNode, RetType retType, Type* type)
+CheckFuncPtrCall(FunctionValidator& f, ParseNode* callNode, RetType retType, Type* type)
 {
     if (!f.canCall()) {
         return f.fail(callNode, "function-pointer call expressions may not be nested inside heap "
@@ -6770,7 +6770,7 @@ EmitFuncPtrCall(FunctionCompiler& f, RetType retType, MDefinition** def)
 }
 
 static bool
-CheckIsExternType(FunctionBuilder& f, ParseNode* argNode, Type type)
+CheckIsExternType(FunctionValidator& f, ParseNode* argNode, Type type)
 {
     if (!type.isExtern())
         return f.failf(argNode, "%s is not a subtype of extern", type.toChars());
@@ -6778,7 +6778,7 @@ CheckIsExternType(FunctionBuilder& f, ParseNode* argNode, Type type)
 }
 
 static bool
-CheckFFICall(FunctionBuilder& f, ParseNode* callNode, unsigned ffiIndex, RetType retType,
+CheckFFICall(FunctionValidator& f, ParseNode* callNode, unsigned ffiIndex, RetType retType,
              Type* type)
 {
     if (!f.canCall()) {
@@ -6846,7 +6846,7 @@ EmitFFICall(FunctionCompiler& f, RetType retType, MDefinition** def)
 }
 
 static bool
-CheckFloatCoercionArg(FunctionBuilder& f, ParseNode* inputNode, Type inputType,
+CheckFloatCoercionArg(FunctionValidator& f, ParseNode* inputNode, Type inputType,
                       size_t opcodeAt)
 {
     if (inputType.isMaybeDouble()) {
@@ -6871,10 +6871,10 @@ CheckFloatCoercionArg(FunctionBuilder& f, ParseNode* inputNode, Type inputType,
 }
 
 static bool
-CheckCoercedCall(FunctionBuilder& f, ParseNode* call, RetType retType, Type* type);
+CheckCoercedCall(FunctionValidator& f, ParseNode* call, RetType retType, Type* type);
 
 static bool
-CheckCoercionArg(FunctionBuilder& f, ParseNode* arg, AsmJSCoercion expected, Type* type)
+CheckCoercionArg(FunctionValidator& f, ParseNode* arg, AsmJSCoercion expected, Type* type)
 {
     RetType retType(expected);
     if (arg->isKind(PNK_CALL))
@@ -6911,7 +6911,7 @@ CheckCoercionArg(FunctionBuilder& f, ParseNode* arg, AsmJSCoercion expected, Typ
 }
 
 static bool
-CheckMathFRound(FunctionBuilder& f, ParseNode* callNode, Type* type)
+CheckMathFRound(FunctionValidator& f, ParseNode* callNode, Type* type)
 {
     if (CallArgListLength(callNode) != 1)
         return f.fail(callNode, "Math.fround must be passed 1 argument");
@@ -6927,7 +6927,7 @@ CheckMathFRound(FunctionBuilder& f, ParseNode* callNode, Type* type)
 }
 
 static bool
-CheckMathBuiltinCall(FunctionBuilder& f, ParseNode* callNode, AsmJSMathBuiltinFunction func,
+CheckMathBuiltinCall(FunctionValidator& f, ParseNode* callNode, AsmJSMathBuiltinFunction func,
                      Type* type)
 {
     unsigned arity = 0;
@@ -7064,7 +7064,7 @@ namespace {
 
 template<class CheckArgOp>
 static bool
-CheckSimdCallArgs(FunctionBuilder& f, ParseNode* call, unsigned expectedArity,
+CheckSimdCallArgs(FunctionValidator& f, ParseNode* call, unsigned expectedArity,
                   const CheckArgOp& checkArg)
 {
     unsigned numArgs = CallArgListLength(call);
@@ -7086,7 +7086,7 @@ CheckSimdCallArgs(FunctionBuilder& f, ParseNode* call, unsigned expectedArity,
 
 template<class CheckArgOp>
 static bool
-CheckSimdCallArgsPatchable(FunctionBuilder& f, ParseNode* call, unsigned expectedArity,
+CheckSimdCallArgsPatchable(FunctionValidator& f, ParseNode* call, unsigned expectedArity,
                            const CheckArgOp& checkArg)
 {
     unsigned numArgs = CallArgListLength(call);
@@ -7115,7 +7115,7 @@ class CheckArgIsSubtypeOf
   public:
     explicit CheckArgIsSubtypeOf(AsmJSSimdType t) : formalType_(t) {}
 
-    bool operator()(FunctionBuilder& f, ParseNode* arg, unsigned argIndex, Type actualType) const
+    bool operator()(FunctionValidator& f, ParseNode* arg, unsigned argIndex, Type actualType) const
     {
         if (!(actualType <= formalType_)) {
             return f.failf(arg, "%s is not a subtype of %s", actualType.toChars(),
@@ -7147,7 +7147,7 @@ class CheckSimdScalarArgs
       : simdType_(simdType), formalType_(SimdToCoercedScalarType(simdType))
     {}
 
-    bool operator()(FunctionBuilder& f, ParseNode* arg, unsigned argIndex, Type actualType,
+    bool operator()(FunctionValidator& f, ParseNode* arg, unsigned argIndex, Type actualType,
                     size_t patchAt) const
     {
         if (!(actualType <= formalType_)) {
@@ -7184,7 +7184,7 @@ class CheckSimdSelectArgs
   public:
     explicit CheckSimdSelectArgs(AsmJSSimdType t) : formalType_(t) {}
 
-    bool operator()(FunctionBuilder& f, ParseNode* arg, unsigned argIndex, Type actualType) const
+    bool operator()(FunctionValidator& f, ParseNode* arg, unsigned argIndex, Type actualType) const
     {
         if (argIndex == 0) {
             // First argument of select is an int32x4 mask.
@@ -7208,7 +7208,7 @@ class CheckSimdVectorScalarArgs
   public:
     explicit CheckSimdVectorScalarArgs(AsmJSSimdType t) : formalSimdType_(t) {}
 
-    bool operator()(FunctionBuilder& f, ParseNode* arg, unsigned argIndex, Type actualType,
+    bool operator()(FunctionValidator& f, ParseNode* arg, unsigned argIndex, Type actualType,
                     size_t patchAt = -1) const
     {
         MOZ_ASSERT(argIndex < 2);
@@ -7242,7 +7242,7 @@ class CheckSimdExtractLaneArgs
   public:
     explicit CheckSimdExtractLaneArgs(AsmJSSimdType t) : formalSimdType_(t) {}
 
-    bool operator()(FunctionBuilder& f, ParseNode* arg, unsigned argIndex, Type actualType) const
+    bool operator()(FunctionValidator& f, ParseNode* arg, unsigned argIndex, Type actualType) const
     {
         MOZ_ASSERT(argIndex < 2);
         if (argIndex == 0) {
@@ -7271,7 +7271,7 @@ class CheckSimdReplaceLaneArgs
   public:
     explicit CheckSimdReplaceLaneArgs(AsmJSSimdType t) : formalSimdType_(t) {}
 
-    bool operator()(FunctionBuilder& f, ParseNode* arg, unsigned argIndex, Type actualType,
+    bool operator()(FunctionValidator& f, ParseNode* arg, unsigned argIndex, Type actualType,
                     size_t patchAt) const
     {
         MOZ_ASSERT(argIndex < 3);
@@ -7307,7 +7307,7 @@ class CheckSimdReplaceLaneArgs
 } // namespace
 
 static void
-SwitchPackOp(FunctionBuilder& f, AsmJSSimdType type, I32X4 i32x4, F32X4 f32x4)
+SwitchPackOp(FunctionValidator& f, AsmJSSimdType type, I32X4 i32x4, F32X4 f32x4)
 {
     switch (type) {
       case AsmJSSimdType_int32x4:   f.writeOp(i32x4); return;
@@ -7317,7 +7317,7 @@ SwitchPackOp(FunctionBuilder& f, AsmJSSimdType type, I32X4 i32x4, F32X4 f32x4)
 }
 
 static bool
-CheckSimdUnary(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType,
+CheckSimdUnary(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType,
                MSimdUnaryArith::Operation op, Type* type)
 {
     SwitchPackOp(f, opType, I32X4::Unary, F32X4::Unary);
@@ -7341,7 +7341,7 @@ EmitSimdUnary(FunctionCompiler& f, AsmType type, MDefinition** def)
 
 template<class OpKind>
 inline bool
-CheckSimdBinaryGuts(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType, OpKind op,
+CheckSimdBinaryGuts(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType, OpKind op,
                     Type* type)
 {
     f.writeU8(uint8_t(op));
@@ -7352,7 +7352,7 @@ CheckSimdBinaryGuts(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType, O
 }
 
 static bool
-CheckSimdBinary(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType,
+CheckSimdBinary(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType,
                 MSimdBinaryArith::Operation op, Type* type)
 {
     SwitchPackOp(f, opType, I32X4::Binary, F32X4::Binary);
@@ -7381,7 +7381,7 @@ EmitSimdBinaryArith(FunctionCompiler& f, AsmType type, MDefinition** def)
 }
 
 static bool
-CheckSimdBinary(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType,
+CheckSimdBinary(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType,
                 MSimdBinaryBitwise::Operation op, Type* type)
 {
     SwitchPackOp(f, opType, I32X4::BinaryBitwise, F32X4::BinaryBitwise);
@@ -7396,7 +7396,7 @@ EmitSimdBinaryBitwise(FunctionCompiler& f, AsmType type, MDefinition** def)
 }
 
 static bool
-CheckSimdBinary(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType,
+CheckSimdBinary(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType,
                 MSimdBinaryComp::Operation op, Type* type)
 {
     switch (opType) {
@@ -7425,7 +7425,7 @@ EmitSimdBinaryComp(FunctionCompiler& f, AsmType type, MDefinition** def)
 }
 
 static bool
-CheckSimdBinary(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType,
+CheckSimdBinary(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType,
                 MSimdShift::Operation op, Type* type)
 {
     f.writeOp(I32X4::BinaryShift);
@@ -7451,7 +7451,7 @@ EmitSimdBinaryShift(FunctionCompiler& f, MDefinition** def)
 }
 
 static bool
-CheckSimdExtractLane(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType, Type* type)
+CheckSimdExtractLane(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType, Type* type)
 {
     switch (opType) {
       case AsmJSSimdType_int32x4:
@@ -7505,7 +7505,7 @@ EmitExtractLane(FunctionCompiler& f, AsmType type, MDefinition** def)
 }
 
 static bool
-CheckSimdReplaceLane(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType, Type* type)
+CheckSimdReplaceLane(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType, Type* type)
 {
     SwitchPackOp(f, opType, I32X4::ReplaceLane, F32X4::ReplaceLane);
     if (!CheckSimdCallArgsPatchable(f, call, 3, CheckSimdReplaceLaneArgs(opType)))
@@ -7561,7 +7561,7 @@ namespace {
 // Include CheckSimdCast in unnamed namespace to avoid MSVC name lookup bug (due to the use of Type).
 
 static bool
-CheckSimdCast(FunctionBuilder& f, ParseNode* call, AsmJSSimdType fromType, AsmJSSimdType toType,
+CheckSimdCast(FunctionValidator& f, ParseNode* call, AsmJSSimdType fromType, AsmJSSimdType toType,
               bool bitcast, Type* type)
 {
     SwitchPackOp(f, toType,
@@ -7587,7 +7587,7 @@ EmitSimdCast(FunctionCompiler& f, AsmType fromType, AsmType toType, MDefinition*
 }
 
 static bool
-CheckSimdShuffleSelectors(FunctionBuilder& f, ParseNode* lane, int32_t lanes[4], uint32_t maxLane)
+CheckSimdShuffleSelectors(FunctionValidator& f, ParseNode* lane, int32_t lanes[4], uint32_t maxLane)
 {
     for (unsigned i = 0; i < 4; i++, lane = NextNode(lane)) {
         uint32_t u32;
@@ -7601,7 +7601,7 @@ CheckSimdShuffleSelectors(FunctionBuilder& f, ParseNode* lane, int32_t lanes[4],
 }
 
 static bool
-CheckSimdSwizzle(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType, Type* type)
+CheckSimdSwizzle(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType, Type* type)
 {
     unsigned numArgs = CallArgListLength(call);
     if (numArgs != 5)
@@ -7644,7 +7644,7 @@ EmitSimdSwizzle(FunctionCompiler& f, AsmType type, MDefinition** def)
 }
 
 static bool
-CheckSimdShuffle(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType, Type* type)
+CheckSimdShuffle(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType, Type* type)
 {
     unsigned numArgs = CallArgListLength(call);
     if (numArgs != 6)
@@ -7694,7 +7694,7 @@ EmitSimdShuffle(FunctionCompiler& f, AsmType type, MDefinition** def)
 }
 
 static bool
-CheckSimdLoadStoreArgs(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType,
+CheckSimdLoadStoreArgs(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType,
                        Scalar::Type* viewType, NeedsBoundsCheck* needsBoundsCheck)
 {
     ParseNode* view = CallArgList(call);
@@ -7747,7 +7747,7 @@ CheckSimdLoadStoreArgs(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType
 }
 
 static bool
-CheckSimdLoad(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType,
+CheckSimdLoad(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType,
               unsigned numElems, Type* type)
 {
     unsigned numArgs = CallArgListLength(call);
@@ -7787,7 +7787,7 @@ EmitSimdLoad(FunctionCompiler& f, AsmType type, MDefinition** def)
 }
 
 static bool
-CheckSimdStore(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType,
+CheckSimdStore(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType,
                unsigned numElems, Type* type)
 {
     unsigned numArgs = CallArgListLength(call);
@@ -7840,7 +7840,7 @@ EmitSimdStore(FunctionCompiler& f, AsmType type, MDefinition** def)
 }
 
 static bool
-CheckSimdSelect(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType, bool isElementWise,
+CheckSimdSelect(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType, bool isElementWise,
                 Type* type)
 {
     SwitchPackOp(f, opType,
@@ -7865,7 +7865,7 @@ EmitSimdSelect(FunctionCompiler& f, AsmType type, bool isElementWise, MDefinitio
 }
 
 static bool
-CheckSimdCheck(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType, Type* type)
+CheckSimdCheck(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType, Type* type)
 {
     AsmJSCoercion coercion;
     ParseNode* argNode;
@@ -7875,7 +7875,7 @@ CheckSimdCheck(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType, Type* 
 }
 
 static bool
-CheckSimdSplat(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType, Type* type)
+CheckSimdSplat(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType, Type* type)
 {
     SwitchPackOp(f, opType, I32X4::Splat, F32X4::Splat);
     if (!CheckSimdCallArgsPatchable(f, call, 1, CheckSimdScalarArgs(opType)))
@@ -7895,7 +7895,7 @@ EmitSimdSplat(FunctionCompiler& f, AsmType type, MDefinition** def)
 }
 
 static bool
-CheckSimdOperationCall(FunctionBuilder& f, ParseNode* call, const ModuleValidator::Global* global,
+CheckSimdOperationCall(FunctionValidator& f, ParseNode* call, const ModuleValidator::Global* global,
                        Type* type)
 {
     MOZ_ASSERT(global->isSimdOperation());
@@ -8001,7 +8001,7 @@ CheckSimdOperationCall(FunctionBuilder& f, ParseNode* call, const ModuleValidato
 }
 
 static bool
-CheckSimdCtorCall(FunctionBuilder& f, ParseNode* call, const ModuleValidator::Global* global,
+CheckSimdCtorCall(FunctionValidator& f, ParseNode* call, const ModuleValidator::Global* global,
                   Type* type)
 {
     MOZ_ASSERT(call->isKind(PNK_CALL));
@@ -8048,7 +8048,7 @@ EmitSimdCtor(FunctionCompiler& f, AsmType type, MDefinition** def)
 }
 
 static bool
-CheckUncoercedCall(FunctionBuilder& f, ParseNode* expr, Type* type)
+CheckUncoercedCall(FunctionValidator& f, ParseNode* expr, Type* type)
 {
     MOZ_ASSERT(expr->isKind(PNK_CALL));
 
@@ -8071,7 +8071,7 @@ CheckUncoercedCall(FunctionBuilder& f, ParseNode* expr, Type* type)
 }
 
 static bool
-CoerceResult(FunctionBuilder& f, ParseNode* expr, RetType expected, Type resultType,
+CoerceResult(FunctionValidator& f, ParseNode* expr, RetType expected, Type resultType,
              size_t patchAt, Type* type)
 {
     // At this point, the bytecode resembles this:
@@ -8154,7 +8154,7 @@ CoerceResult(FunctionBuilder& f, ParseNode* expr, RetType expected, Type resultT
 }
 
 static bool
-CheckCoercedMathBuiltinCall(FunctionBuilder& f, ParseNode* callNode, AsmJSMathBuiltinFunction func,
+CheckCoercedMathBuiltinCall(FunctionValidator& f, ParseNode* callNode, AsmJSMathBuiltinFunction func,
                             RetType retType, Type* type)
 {
     size_t opcodeAt = f.tempOp();
@@ -8165,7 +8165,7 @@ CheckCoercedMathBuiltinCall(FunctionBuilder& f, ParseNode* callNode, AsmJSMathBu
 }
 
 static bool
-CheckCoercedSimdCall(FunctionBuilder& f, ParseNode* call, const ModuleValidator::Global* global,
+CheckCoercedSimdCall(FunctionValidator& f, ParseNode* call, const ModuleValidator::Global* global,
                      RetType retType, Type* type)
 {
     size_t opcodeAt = f.tempOp();
@@ -8185,7 +8185,7 @@ CheckCoercedSimdCall(FunctionBuilder& f, ParseNode* call, const ModuleValidator:
 }
 
 static bool
-CheckCoercedAtomicsBuiltinCall(FunctionBuilder& f, ParseNode* callNode,
+CheckCoercedAtomicsBuiltinCall(FunctionValidator& f, ParseNode* callNode,
                                AsmJSAtomicsBuiltinFunction func, RetType retType,
                                Type* resultType)
 {
@@ -8197,7 +8197,7 @@ CheckCoercedAtomicsBuiltinCall(FunctionBuilder& f, ParseNode* callNode,
 }
 
 static bool
-CheckCoercedCall(FunctionBuilder& f, ParseNode* call, RetType retType, Type* type)
+CheckCoercedCall(FunctionValidator& f, ParseNode* call, RetType retType, Type* type)
 {
     JS_CHECK_RECURSION_DONT_REPORT(f.cx(), return f.m().failOverRecursed());
 
@@ -8247,7 +8247,7 @@ CheckCoercedCall(FunctionBuilder& f, ParseNode* call, RetType retType, Type* typ
 }
 
 static bool
-CheckPos(FunctionBuilder& f, ParseNode* pos, Type* type)
+CheckPos(FunctionValidator& f, ParseNode* pos, Type* type)
 {
     MOZ_ASSERT(pos->isKind(PNK_POS));
     ParseNode* operand = UnaryKid(pos);
@@ -8264,7 +8264,7 @@ CheckPos(FunctionBuilder& f, ParseNode* pos, Type* type)
 }
 
 static bool
-CheckNot(FunctionBuilder& f, ParseNode* expr, Type* type)
+CheckNot(FunctionValidator& f, ParseNode* expr, Type* type)
 {
     MOZ_ASSERT(expr->isKind(PNK_NOT));
     ParseNode* operand = UnaryKid(expr);
@@ -8283,7 +8283,7 @@ CheckNot(FunctionBuilder& f, ParseNode* expr, Type* type)
 }
 
 static bool
-CheckNeg(FunctionBuilder& f, ParseNode* expr, Type* type)
+CheckNeg(FunctionValidator& f, ParseNode* expr, Type* type)
 {
     MOZ_ASSERT(expr->isKind(PNK_NEG));
     ParseNode* operand = UnaryKid(expr);
@@ -8338,7 +8338,7 @@ EmitUnaryMir(FunctionCompiler& f, AsmType type, MDefinition** def)
 }
 
 static bool
-CheckCoerceToInt(FunctionBuilder& f, ParseNode* expr, Type* type)
+CheckCoerceToInt(FunctionValidator& f, ParseNode* expr, Type* type)
 {
     MOZ_ASSERT(expr->isKind(PNK_BITNOT));
     ParseNode* operand = UnaryKid(expr);
@@ -8364,7 +8364,7 @@ CheckCoerceToInt(FunctionBuilder& f, ParseNode* expr, Type* type)
 }
 
 static bool
-CheckBitNot(FunctionBuilder& f, ParseNode* neg, Type* type)
+CheckBitNot(FunctionValidator& f, ParseNode* neg, Type* type)
 {
     MOZ_ASSERT(neg->isKind(PNK_BITNOT));
     ParseNode* operand = UnaryKid(neg);
@@ -8386,10 +8386,10 @@ CheckBitNot(FunctionBuilder& f, ParseNode* neg, Type* type)
 }
 
 static bool
-CheckAsExprStatement(FunctionBuilder& f, ParseNode* exprStmt);
+CheckAsExprStatement(FunctionValidator& f, ParseNode* exprStmt);
 
 static bool
-CheckComma(FunctionBuilder& f, ParseNode* comma, Type* type)
+CheckComma(FunctionValidator& f, ParseNode* comma, Type* type)
 {
     MOZ_ASSERT(comma->isKind(PNK_COMMA));
     ParseNode* operands = ListHead(comma);
@@ -8436,7 +8436,7 @@ EmitComma(FunctionCompiler& f, AsmType type, MDefinition** def)
 }
 
 static bool
-CheckConditional(FunctionBuilder& f, ParseNode* ternary, Type* type)
+CheckConditional(FunctionValidator& f, ParseNode* ternary, Type* type)
 {
     MOZ_ASSERT(ternary->isKind(PNK_CONDITIONAL));
 
@@ -8548,7 +8548,7 @@ IsValidIntMultiplyConstant(ModuleValidator& m, ParseNode* expr)
 }
 
 static bool
-CheckMultiply(FunctionBuilder& f, ParseNode* star, Type* type)
+CheckMultiply(FunctionValidator& f, ParseNode* star, Type* type)
 {
     MOZ_ASSERT(star->isKind(PNK_STAR));
     ParseNode* lhs = MultiplyLeft(star);
@@ -8602,7 +8602,7 @@ EmitMultiply(FunctionCompiler& f, AsmType type, MDefinition** def)
 }
 
 static bool
-CheckAddOrSub(FunctionBuilder& f, ParseNode* expr, Type* type, unsigned* numAddOrSubOut = nullptr)
+CheckAddOrSub(FunctionValidator& f, ParseNode* expr, Type* type, unsigned* numAddOrSubOut = nullptr)
 {
     JS_CHECK_RECURSION_DONT_REPORT(f.cx(), return f.m().failOverRecursed());
 
@@ -8677,7 +8677,7 @@ EmitAddOrSub(FunctionCompiler& f, AsmType type, bool isAdd, MDefinition** def)
 }
 
 static bool
-CheckDivOrMod(FunctionBuilder& f, ParseNode* expr, Type* type)
+CheckDivOrMod(FunctionValidator& f, ParseNode* expr, Type* type)
 {
     MOZ_ASSERT(expr->isKind(PNK_DIV) || expr->isKind(PNK_MOD));
 
@@ -8749,7 +8749,7 @@ EmitDivOrMod(FunctionCompiler& f, AsmType type, bool isDiv, MDefinition** def)
 }
 
 static bool
-CheckComparison(FunctionBuilder& f, ParseNode* comp, Type* type)
+CheckComparison(FunctionValidator& f, ParseNode* comp, Type* type)
 {
     MOZ_ASSERT(comp->isKind(PNK_LT) || comp->isKind(PNK_LE) || comp->isKind(PNK_GT) ||
                comp->isKind(PNK_GE) || comp->isKind(PNK_EQ) || comp->isKind(PNK_NE));
@@ -8915,7 +8915,7 @@ EmitComparison(FunctionCompiler& f, I32 stmt, MDefinition** def)
 }
 
 static bool
-CheckBitwise(FunctionBuilder& f, ParseNode* bitwise, Type* type)
+CheckBitwise(FunctionValidator& f, ParseNode* bitwise, Type* type)
 {
     ParseNode* lhs = BitwiseLeft(bitwise);
     ParseNode* rhs = BitwiseRight(bitwise);
@@ -9006,7 +9006,7 @@ EmitBitwise<MBitNot>(FunctionCompiler& f, MDefinition** def)
 }
 
 static bool
-CheckExpr(FunctionBuilder& f, ParseNode* expr, Type* type)
+CheckExpr(FunctionValidator& f, ParseNode* expr, Type* type)
 {
     JS_CHECK_RECURSION_DONT_REPORT(f.cx(), return f.m().failOverRecursed());
 
@@ -9067,10 +9067,10 @@ EmitExpr(FunctionCompiler& f, AsmType type, MDefinition** def)
 }
 
 static bool
-CheckStatement(FunctionBuilder& f, ParseNode* stmt);
+CheckStatement(FunctionValidator& f, ParseNode* stmt);
 
 static bool
-CheckAsExprStatement(FunctionBuilder& f, ParseNode* expr)
+CheckAsExprStatement(FunctionValidator& f, ParseNode* expr)
 {
     Type type;
     if (expr->isKind(PNK_CALL))
@@ -9098,7 +9098,7 @@ CheckAsExprStatement(FunctionBuilder& f, ParseNode* expr)
 }
 
 static bool
-CheckExprStatement(FunctionBuilder& f, ParseNode* exprStmt)
+CheckExprStatement(FunctionValidator& f, ParseNode* exprStmt)
 {
     MOZ_ASSERT(exprStmt->isKind(PNK_SEMI));
     ParseNode* expr = UnaryKid(exprStmt);
@@ -9117,7 +9117,7 @@ enum class InterruptCheckPosition {
 };
 
 static void
-MaybeAddInterruptCheck(FunctionBuilder& f, InterruptCheckPosition pos, ParseNode* pn)
+MaybeAddInterruptCheck(FunctionValidator& f, InterruptCheckPosition pos, ParseNode* pn)
 {
     if (f.m().module().usesSignalHandlersForInterrupt())
         return;
@@ -9151,7 +9151,7 @@ EmitInterruptCheckLoop(FunctionCompiler& f)
 }
 
 static bool
-CheckWhile(FunctionBuilder& f, ParseNode* whileStmt)
+CheckWhile(FunctionValidator& f, ParseNode* whileStmt)
 {
     MOZ_ASSERT(whileStmt->isKind(PNK_WHILE));
     ParseNode* cond = BinaryLeft(whileStmt);
@@ -9197,7 +9197,7 @@ EmitWhile(FunctionCompiler& f, const LabelVector* maybeLabels)
 }
 
 static bool
-CheckFor(FunctionBuilder& f, ParseNode* forStmt)
+CheckFor(FunctionValidator& f, ParseNode* forStmt)
 {
     MOZ_ASSERT(forStmt->isKind(PNK_FOR));
     ParseNode* forHead = BinaryLeft(forStmt);
@@ -9279,7 +9279,7 @@ EmitFor(FunctionCompiler& f, Stmt stmt, const LabelVector* maybeLabels)
 }
 
 static bool
-CheckDoWhile(FunctionBuilder& f, ParseNode* whileStmt)
+CheckDoWhile(FunctionValidator& f, ParseNode* whileStmt)
 {
     MOZ_ASSERT(whileStmt->isKind(PNK_DOWHILE));
     ParseNode* body = BinaryLeft(whileStmt);
@@ -9324,7 +9324,7 @@ EmitDoWhile(FunctionCompiler& f, const LabelVector* maybeLabels)
 }
 
 static bool
-CheckLabel(FunctionBuilder& f, ParseNode* labeledStmt)
+CheckLabel(FunctionValidator& f, ParseNode* labeledStmt)
 {
     MOZ_ASSERT(labeledStmt->isKind(PNK_LABEL));
     PropertyName* label = LabeledStatementLabel(labeledStmt);
@@ -9369,7 +9369,7 @@ EmitLabel(FunctionCompiler& f, LabelVector* maybeLabels)
 static bool EmitStatement(FunctionCompiler& f, Stmt stmt, LabelVector* maybeLabels = nullptr);
 
 static bool
-CheckIf(FunctionBuilder& f, ParseNode* ifStmt)
+CheckIf(FunctionValidator& f, ParseNode* ifStmt)
 {
   recurse:
     size_t opcodeAt = f.tempOp();
@@ -9455,7 +9455,7 @@ EmitIfElse(FunctionCompiler& f, bool hasElse)
 }
 
 static bool
-CheckCaseExpr(FunctionBuilder& f, ParseNode* caseExpr, int32_t* value)
+CheckCaseExpr(FunctionValidator& f, ParseNode* caseExpr, int32_t* value)
 {
     if (!IsNumericLiteral(f.m(), caseExpr))
         return f.fail(caseExpr, "switch case expression must be an integer literal");
@@ -9480,7 +9480,7 @@ CheckCaseExpr(FunctionBuilder& f, ParseNode* caseExpr, int32_t* value)
 }
 
 static bool
-CheckDefaultAtEnd(FunctionBuilder& f, ParseNode* stmt)
+CheckDefaultAtEnd(FunctionValidator& f, ParseNode* stmt)
 {
     for (; stmt; stmt = NextNode(stmt)) {
         MOZ_ASSERT(stmt->isKind(PNK_CASE) || stmt->isKind(PNK_DEFAULT));
@@ -9492,7 +9492,7 @@ CheckDefaultAtEnd(FunctionBuilder& f, ParseNode* stmt)
 }
 
 static bool
-CheckSwitchRange(FunctionBuilder& f, ParseNode* stmt, int32_t* low, int32_t* high,
+CheckSwitchRange(FunctionValidator& f, ParseNode* stmt, int32_t* low, int32_t* high,
                  int32_t* tableLength)
 {
     if (stmt->isKind(PNK_DEFAULT)) {
@@ -9527,7 +9527,7 @@ CheckSwitchRange(FunctionBuilder& f, ParseNode* stmt, int32_t* low, int32_t* hig
 }
 
 void
-PatchSwitch(FunctionBuilder& f,
+PatchSwitch(FunctionValidator& f,
             size_t hasDefaultAt, bool hasDefault,
             size_t lowAt, int32_t low,
             size_t highAt, int32_t high,
@@ -9540,7 +9540,7 @@ PatchSwitch(FunctionBuilder& f,
 }
 
 static bool
-CheckSwitch(FunctionBuilder& f, ParseNode* switchStmt)
+CheckSwitch(FunctionValidator& f, ParseNode* switchStmt)
 {
     MOZ_ASSERT(switchStmt->isKind(PNK_SWITCH));
 
@@ -9656,7 +9656,7 @@ EmitSwitch(FunctionCompiler& f)
 }
 
 static bool
-CheckReturnType(FunctionBuilder& f, ParseNode* usepn, RetType retType)
+CheckReturnType(FunctionValidator& f, ParseNode* usepn, RetType retType)
 {
     if (!f.hasAlreadyReturned()) {
         f.setReturnedType(retType);
@@ -9672,7 +9672,7 @@ CheckReturnType(FunctionBuilder& f, ParseNode* usepn, RetType retType)
 }
 
 static bool
-CheckReturn(FunctionBuilder& f, ParseNode* returnStmt)
+CheckReturn(FunctionValidator& f, ParseNode* returnStmt)
 {
     ParseNode* expr = ReturnExpr(returnStmt);
 
@@ -9737,7 +9737,7 @@ EmitRet(FunctionCompiler& f)
 }
 
 static bool
-CheckStatementList(FunctionBuilder& f, ParseNode* stmtList)
+CheckStatementList(FunctionValidator& f, ParseNode* stmtList)
 {
     MOZ_ASSERT(stmtList->isKind(PNK_STATEMENTLIST));
 
@@ -9766,7 +9766,7 @@ EmitBlock(FunctionCompiler& f)
 }
 
 static bool
-CheckBreakOrContinue(FunctionBuilder& f, PropertyName* maybeLabel,
+CheckBreakOrContinue(FunctionValidator& f, PropertyName* maybeLabel,
                      Stmt withoutLabel, Stmt withLabel)
 {
     if (!maybeLabel) {
@@ -9804,7 +9804,7 @@ EmitBreak(FunctionCompiler& f, bool hasLabel)
 }
 
 static bool
-CheckStatement(FunctionBuilder& f, ParseNode* stmt)
+CheckStatement(FunctionValidator& f, ParseNode* stmt)
 {
     JS_CHECK_RECURSION_DONT_REPORT(f.cx(), return f.m().failOverRecursed());
 
@@ -10618,7 +10618,7 @@ CheckFunction(ModuleValidator& m, LifoAlloc& lifo, AsmFunction** funcOut)
     }
 
     AsmFunction* asmFunc = lifo.new_<AsmFunction>(lifo);
-    FunctionBuilder f(m, *asmFunc, fn);
+    FunctionValidator f(m, *asmFunc, fn);
     if (!f.init())
         return false;
 
