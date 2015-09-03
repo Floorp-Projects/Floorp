@@ -48,7 +48,6 @@
 == scoped-style-media.html scoped-style-media-ref.html
 == scoped-style-namespace.html scoped-style-namespace-ref.html
 == scoped-style-charset.html scoped-style-charset-ref.html
-== scoped-style-document.html scoped-style-document-ref.html
 HTTP(..) == scoped-style-font-face.html scoped-style-font-face-ref.html
 == scoped-style-keyframes.html scoped-style-keyframes-ref.html
 == scoped-style-supports.html scoped-style-supports-ref.html

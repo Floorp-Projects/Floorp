@@ -653,8 +653,6 @@ class HashMapEntry
     template <class> friend class detail::HashTableEntry;
     template <class, class, class, class> friend class HashMap;
 
-    Key & mutableKey() { return key_; }
-
   public:
     template<typename KeyInput, typename ValueInput>
     HashMapEntry(KeyInput&& k, ValueInput&& v)
@@ -670,9 +668,10 @@ class HashMapEntry
     typedef Key KeyType;
     typedef Value ValueType;
 
-    const Key & key() const { return key_; }
-    const Value & value() const { return value_; }
-    Value & value() { return value_; }
+    const Key& key() const { return key_; }
+    Key& mutableKey() { return key_; }
+    const Value& value() const { return value_; }
+    Value& value() { return value_; }
 
   private:
     HashMapEntry(const HashMapEntry&) = delete;
@@ -741,6 +740,7 @@ class HashTableEntry
     }
 
     T& get() { MOZ_ASSERT(isLive()); return *mem.addr(); }
+    NonConstT& getMutable() { MOZ_ASSERT(isLive()); return *mem.addr(); }
 
     bool isFree() const    { return keyHash == sFreeKey; }
     void clearLive()       { MOZ_ASSERT(isLive()); keyHash = sFreeKey; mem.addr()->~T(); }
@@ -978,6 +978,16 @@ class HashTable : private AllocPolicy
             this->validEntry = false;
             this->mutationCount = table_.mutationCount;
 #endif
+        }
+
+        NonConstT& mutableFront() {
+            MOZ_ASSERT(!this->empty());
+#ifdef JS_DEBUG
+            MOZ_ASSERT(this->validEntry);
+            MOZ_ASSERT(this->generation == this->Range::table_->generation());
+            MOZ_ASSERT(this->mutationCount == this->Range::table_->mutationCount);
+#endif
+            return this->cur->getMutable();
         }
 
         // Removes the |front()| element and re-inserts it into the table with
