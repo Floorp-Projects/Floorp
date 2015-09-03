@@ -2002,10 +2002,8 @@ UpdatePluginWindowState(uint64_t aId)
       // tree contained visible plugins and the new tree does not. All we need
       // to do here is hide the plugins for the old tree, so don't waste time
       // calculating clipping.
-      nsTArray<uintptr_t> aVisibleIdList;
       uintptr_t parentWidget = (uintptr_t)lts.mParent->GetWidget();
-      unused << lts.mParent->SendUpdatePluginVisibility(parentWidget,
-                                                        aVisibleIdList);
+      unused << lts.mParent->SendHideAllPlugins(parentWidget);
       lts.mUpdatedPluginDataAvailable = false;
       return;
     }
@@ -2030,18 +2028,10 @@ UpdatePluginWindowState(uint64_t aId)
     }
   }
 
-  // Hide all plugins, this remote layer tree is no longer active
+  // Hide all of our plugins, this remote layer tree is no longer active.
   if (shouldHidePlugin) {
-    // hide all the plugins
-    for (uint32_t pluginsIdx = 0; pluginsIdx < lts.mPluginData.Length();
-         pluginsIdx++) {
-      lts.mPluginData[pluginsIdx].visible() = false;
-    }
-    nsIntPoint offset;
-    nsIntRegion region;
-    unused << lts.mParent->SendUpdatePluginConfigurations(offset,
-                                                          region,
-                                                          lts.mPluginData);
+    uintptr_t parentWidget = (uintptr_t)lts.mParent->GetWidget();
+    unused << lts.mParent->SendHideAllPlugins(parentWidget);
     // Clear because there's no recovering from this until we receive
     // new shadow layer plugin data in ShadowLayersUpdated.
     lts.mPluginData.Clear();
