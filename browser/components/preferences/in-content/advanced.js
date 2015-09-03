@@ -6,6 +6,7 @@
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 Components.utils.import("resource://gre/modules/LoadContextInfo.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/BrowserUtils.jsm");
 
 var gAdvancedPane = {
   _inited: false,
@@ -590,7 +591,7 @@ var gAdvancedPane = {
     // get the permission
     var pm = Components.classes["@mozilla.org/permissionmanager;1"]
                        .getService(Components.interfaces.nsIPermissionManager);
-    var perm = pm.getPermissionObject(principal, "offline-app");
+    var perm = pm.getPermissionObject(principal, "offline-app", true);
 
     // clear offline cache entries
     try {
