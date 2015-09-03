@@ -132,7 +132,7 @@ nsEventQueueBase<MonitorType>::PutEvent(
   queueLocation = aRunnable.take();
   ++mOffsetTail;
   LOG(("EVENTQ(%p): notify\n", this));
-  aProofOfLock.NotifyAll();
+  aProofOfLock.Notify();
 }
 
 template void nsEventQueueBase<Monitor>::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable,
