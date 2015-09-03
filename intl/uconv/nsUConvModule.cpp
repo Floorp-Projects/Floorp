@@ -107,8 +107,6 @@
 #include "nsUnicodeToISO2022JP.h"
 
 // ucvtw
-#include "nsUCvTWCID.h"
-#include "nsUCvTWDll.h"
 #include "nsBIG5ToUnicode.h"
 #include "nsUnicodeToBIG5.h"
 
@@ -212,6 +210,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToISO2022JP)
 
 // ucvtw
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBIG5ToUnicode)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToBIG5)
 
 // ucvko
 
@@ -243,11 +242,6 @@ const uint16_t g_uf0208extMapping[] = {
 
 const uint16_t g_ASCIIMappingTable[] = {
   0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
-};
-
-// ucvtw
-const uint16_t g_ufBig5Mapping[] = {
-#include "big5.uf"
 };
 
 // ucvko

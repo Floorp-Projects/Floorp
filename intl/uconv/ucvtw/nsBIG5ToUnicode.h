@@ -32,9 +32,6 @@ public:
   NS_IMETHOD Reset();
 
 private:
-  static char16_t LowBits(size_t aPointer);
-  static bool     IsAstral(size_t aPointer);
-
   char16_t mPendingTrail;
   uint8_t  mBig5Lead;
 };
