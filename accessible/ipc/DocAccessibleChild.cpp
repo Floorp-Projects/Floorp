@@ -57,7 +57,8 @@ SerializeTree(Accessible* aRoot, nsTArray<AccessibleData>& aTree)
   // OuterDocAccessibles are special because we don't want to serialize the
   // child doc here, we'll call PDocAccessibleConstructor in
   // NotificationController.
-  if (childCount == 1 && aRoot->GetChildAt(0)->IsDoc())
+  MOZ_ASSERT(!aRoot->IsDoc(), "documents shouldn't be serialized");
+  if (aRoot->IsOuterDoc())
     childCount = 0;
 
   aTree.AppendElement(AccessibleData(id, role, childCount, interfaces));
