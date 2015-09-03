@@ -1915,6 +1915,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
 
     switch (pn->getKind()) {
       // Trivial cases with no side effects.
+      case PNK_NEWTARGET:
       case PNK_NOP:
       case PNK_STRING:
       case PNK_TEMPLATE_STRING:
@@ -1928,14 +1929,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_NUMBER:
       case PNK_OBJECT_PROPERTY_NAME:
         MOZ_ASSERT(pn->isArity(PN_NULLARY));
-        *answer = false;
-        return true;
-
-      // Trivial binary nodes with more token pos holders.
-      case PNK_NEWTARGET:
-        MOZ_ASSERT(pn->isArity(PN_BINARY));
-        MOZ_ASSERT(pn->pn_left->isKind(PNK_POSHOLDER));
-        MOZ_ASSERT(pn->pn_right->isKind(PNK_POSHOLDER));
         *answer = false;
         return true;
 
@@ -2327,7 +2320,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_EXPORT_SPEC_LIST: // by PNK_EXPORT
       case PNK_EXPORT_SPEC:      // by PNK_EXPORT
       case PNK_CALLSITEOBJ:      // by PNK_TAGGED_TEMPLATE
-      case PNK_POSHOLDER:        // by PNK_NEWTARGET
         MOZ_CRASH("handled by parent nodes");
 
       case PNK_LIMIT: // invalid sentinel value
@@ -8095,9 +8087,6 @@ BytecodeEmitter::emitTree(ParseNode* pn)
         if (!emit1(JSOP_NEWTARGET))
             return false;
         break;
-
-      case PNK_POSHOLDER:
-        MOZ_ASSERT_UNREACHABLE("Should never try to emit PNK_POSHOLDER");
 
       default:
         MOZ_ASSERT(0);
