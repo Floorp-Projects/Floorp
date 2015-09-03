@@ -88,10 +88,24 @@ GfxAntialiasToCairoAntialias(AntialiasMode antialias)
       return CAIRO_ANTIALIAS_GRAY;
     case AntialiasMode::SUBPIXEL:
       return CAIRO_ANTIALIAS_SUBPIXEL;
-    case AntialiasMode::DEFAULT:
+    default:
       return CAIRO_ANTIALIAS_DEFAULT;
   }
-  return CAIRO_ANTIALIAS_DEFAULT;
+}
+
+static inline AntialiasMode
+CairoAntialiasToGfxAntialias(cairo_antialias_t aAntialias)
+{
+  switch(aAntialias) {
+    case CAIRO_ANTIALIAS_NONE:
+      return AntialiasMode::NONE;
+    case CAIRO_ANTIALIAS_GRAY:
+      return AntialiasMode::GRAY;
+    case CAIRO_ANTIALIAS_SUBPIXEL:
+      return AntialiasMode::SUBPIXEL;
+    default:
+      return AntialiasMode::DEFAULT;
+  }
 }
 
 static inline cairo_filter_t
@@ -229,6 +243,23 @@ CairoFormatToGfxFormat(cairo_format_t format)
     default:
       gfxCriticalError() << "Unknown cairo format " << format;
       return SurfaceFormat::UNKNOWN;
+  }
+}
+
+static inline FontHinting
+CairoHintingToGfxHinting(cairo_hint_style_t aHintStyle)
+{
+  switch (aHintStyle) {
+    case CAIRO_HINT_STYLE_NONE:
+      return FontHinting::NONE;
+    case CAIRO_HINT_STYLE_SLIGHT:
+      return FontHinting::LIGHT;
+    case CAIRO_HINT_STYLE_MEDIUM:
+      return FontHinting::NORMAL;
+    case CAIRO_HINT_STYLE_FULL:
+      return FontHinting::FULL;
+    default:
+      return FontHinting::NORMAL;
   }
 }
 

@@ -15,7 +15,7 @@ task:
     - 'index.buildbot.revisions.{{head_rev}}.{{project}}.android-api-11'
 
   scopes:
-    - 'docker-worker:cache:build-android-api-11-workspace'
+    - 'docker-worker:cache:build-android-api-11-c6-workspace'
     - 'docker-worker:cache:tooltool-cache'
     - 'docker-worker:relengapi-proxy:tooltool.download.internal'
     - 'docker-worker:relengapi-proxy:tooltool.download.public'
@@ -23,7 +23,7 @@ task:
   payload:
     image: '{{#docker_image}}desktop-build{{/docker_image}}'
     cache:
-      build-android-api-11-workspace: '/home/worker/workspace'
+      build-android-api-11-c6-workspace: '/home/worker/workspace'
       tooltool-cache: '/home/worker/tooltool-cache'
 
     features:

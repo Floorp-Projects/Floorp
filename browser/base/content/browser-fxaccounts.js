@@ -263,6 +263,7 @@ let gFxAccounts = {
 
     let defaultLabel = this.panelUIStatus.getAttribute("defaultlabel");
     let errorLabel = this.panelUIStatus.getAttribute("errorlabel");
+    let unverifiedLabel = this.panelUIStatus.getAttribute("unverifiedlabel");
     let signedInTooltiptext = this.panelUIStatus.getAttribute("signedinTooltiptext");
 
     let updateWithUserData = (userData) => {
@@ -285,6 +286,13 @@ let gFxAccounts = {
           let tooltipDescription = this.strings.formatStringFromName("reconnectDescription", [userData.email], 1);
           this.panelUIFooter.setAttribute("fxastatus", "error");
           this.panelUILabel.setAttribute("label", errorLabel);
+          this.panelUIStatus.setAttribute("tooltiptext", tooltipDescription);
+          showErrorBadge = true;
+        } else if (!userData.verified) {
+          let tooltipDescription = this.strings.formatStringFromName("verifyDescription", [userData.email], 1);
+          this.panelUIFooter.setAttribute("fxastatus", "error");
+          this.panelUIFooter.setAttribute("unverified", "true");
+          this.panelUILabel.setAttribute("label", unverifiedLabel);
           this.panelUIStatus.setAttribute("tooltiptext", tooltipDescription);
           showErrorBadge = true;
         } else {
@@ -438,7 +446,11 @@ let gFxAccounts = {
       this.openPreferences();
       break;
     case "error":
-      this.openSignInAgainPage("menupanel");
+      if (this.panelUIFooter.getAttribute("unverified")) {
+        this.openPreferences();
+      } else {
+        this.openSignInAgainPage("menupanel");
+      }
       break;
     case "migrate-signup":
     case "migrate-verify":

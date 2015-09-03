@@ -807,7 +807,7 @@ JSCompartment::setNewObjectMetadata(JSContext* cx, JSObject* obj)
         assertSameCompartment(cx, metadata);
         if (!objectMetadataTable) {
             objectMetadataTable = cx->new_<ObjectWeakMap>(cx);
-            if (!objectMetadataTable)
+            if (!objectMetadataTable || !objectMetadataTable->init())
                 CrashAtUnhandlableOOM("setNewObjectMetadata");
         }
         if (!objectMetadataTable->add(cx, obj, metadata))

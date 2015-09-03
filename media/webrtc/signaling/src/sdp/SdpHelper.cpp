@@ -634,8 +634,7 @@ SdpHelper::GetProtocolForMediaType(SdpMediaSection::MediaType type)
     return SdpMediaSection::kDtlsSctp;
   }
 
-  // TODO(bug 1094447): Use kUdpTlsRtpSavpf once it interops well
-  return SdpMediaSection::kRtpSavpf;
+  return SdpMediaSection::kUdpTlsRtpSavpf;
 }
 
 void
