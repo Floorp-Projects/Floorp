@@ -283,6 +283,8 @@ struct GCSizes
     macro(_, MallocHeap, storeBufferCells) \
     macro(_, MallocHeap, storeBufferSlots) \
     macro(_, MallocHeap, storeBufferWholeCells) \
+    macro(_, MallocHeap, storeBufferRelocVals) \
+    macro(_, MallocHeap, storeBufferRelocCells) \
     macro(_, MallocHeap, storeBufferGenerics)
 
     GCSizes()
