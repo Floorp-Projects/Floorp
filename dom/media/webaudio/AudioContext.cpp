@@ -693,11 +693,6 @@ AudioContext::Shutdown()
   }
 }
 
-AudioContextState AudioContext::State() const
-{
-  return mAudioContextState;
-}
-
 StateChangeTask::StateChangeTask(AudioContext* aAudioContext,
                                  void* aPromise,
                                  AudioContextState aNewState)
