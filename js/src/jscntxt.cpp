@@ -565,8 +565,7 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                            ErrorArgumentsType argumentsType, va_list ap)
 {
     const JSErrorFormatString* efs;
-    int i;
-    int argCount;
+    uint16_t argCount;
     bool messageArgsPassed = !!reportp->messageArgs;
 
     *messagep = nullptr;
@@ -602,7 +601,7 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                 /* nullptr-terminate for easy copying. */
                 reportp->messageArgs[argCount] = nullptr;
             }
-            for (i = 0; i < argCount; i++) {
+            for (uint16_t i = 0; i < argCount; i++) {
                 if (messageArgsPassed) {
                     /* Do nothing. */
                 } else if (argumentsType == ArgumentsAreASCII) {
@@ -708,7 +707,7 @@ error:
     if (!messageArgsPassed && reportp->messageArgs) {
         /* free the arguments only if we allocated them */
         if (argumentsType == ArgumentsAreASCII) {
-            i = 0;
+            uint16_t i = 0;
             while (reportp->messageArgs[i])
                 js_free((void*)reportp->messageArgs[i++]);
         }
