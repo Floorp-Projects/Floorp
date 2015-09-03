@@ -90,8 +90,7 @@ public:
                                  nsTArray<PluginWindowData>&& aPlugins) override;
 
   virtual bool
-  RecvUpdatePluginVisibility(const uintptr_t& aOwnerWidget,
-                             nsTArray<uintptr_t>&& aWindowList) override;
+  RecvHideAllPlugins(const uintptr_t& aParentWidget) override;
 
   /**
    * Request that the parent tell us when graphics are ready on GPU.
