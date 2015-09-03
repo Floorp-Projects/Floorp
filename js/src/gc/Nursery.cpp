@@ -64,9 +64,6 @@ js::Nursery::init(uint32_t maxNurseryBytes)
     if (!mallocedBuffers.init())
         return false;
 
-    if (!cellsWithUid_.init())
-        return false;
-
     void* heap = MapAlignedPages(nurserySize(), Alignment);
     if (!heap)
         return false;
@@ -651,16 +648,6 @@ js::Nursery::waitBackgroundFreeEnd()
 void
 js::Nursery::sweep()
 {
-    /* Sweep unique id's in all in-use chunks. */
-    for (CellsWithUniqueIdSet::Enum e(cellsWithUid_); !e.empty(); e.popFront()) {
-        JSObject* obj = static_cast<JSObject*>(e.front());
-        if (!IsForwarded(obj))
-            obj->zone()->removeUniqueId(obj);
-        else
-            MOZ_ASSERT(Forwarded(obj)->zone()->hasUniqueId(Forwarded(obj)));
-    }
-    cellsWithUid_.clear();
-
 #ifdef JS_GC_ZEAL
     /* Poison the nursery contents so touching a freed object will crash. */
     JS_POISON((void*)start(), JS_SWEPT_NURSERY_PATTERN, nurserySize());
@@ -678,8 +665,10 @@ js::Nursery::sweep()
     {
 #ifdef JS_CRASH_DIAGNOSTICS
         JS_POISON((void*)start(), JS_SWEPT_NURSERY_PATTERN, allocationEnd() - start());
-        for (int i = 0; i < numActiveChunks_; ++i)
-            initChunk(i);
+        for (int i = 0; i < numActiveChunks_; ++i) {
+            chunk(i).trailer.location = gc::ChunkLocationBitNursery;
+            chunk(i).trailer.runtime = runtime();
+        }
 #endif
         setCurrentChunk(0);
     }
