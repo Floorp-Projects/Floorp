@@ -1,3 +1,13 @@
+HTTP/1.1 200 OK
+Content-Type: text/html
+Expires: Mon, 26 Jul 1997 05:00:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate
+Cache-Control: post-check=0, pre-check=0, false
+Pragma: no-cache
+Set-Cookie: combine-multiple-policies=d0140e7d-3800-4842-b66d-370840a4569a; Path=/content-security-policy/blink-contrib
+Content-Security-Policy: script-src 'self' 'unsafe-inline'; connect-src 'self'; style-src 'self'; report-uri /content-security-policy/support/report.py?op=put&reportID=d0140e7d-3800-4842-b66d-370840a4569a
+Content-Security-Policy: img-src 'none'
+
 <!DOCTYPE html>
 <html>
 
