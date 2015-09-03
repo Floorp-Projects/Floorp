@@ -64,7 +64,9 @@ public:
 Telephony::Telephony(nsPIDOMWindow* aOwner)
   : DOMEventTargetHelper(aOwner),
     mAudioAgentNotify(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY),
-    mIsAudioStartPlaying(false)
+    mIsAudioStartPlaying(false),
+    mHaveDispatchedInterruptBeginEvent(false),
+    mMuted(AudioChannelService::IsAudioChannelMutedByDefault())
 {
   MOZ_ASSERT(aOwner);
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aOwner);
@@ -688,6 +690,22 @@ Telephony::WindowVolumeChanged(float aVolume, bool aMuted)
   }
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
+  }
+
+  // These events will be triggered when the telephony is interrupted by other
+  // audio channel.
+  if (mMuted != aMuted) {
+    mMuted = aMuted;
+    // We should not dispatch "mozinterruptend" when the system app initializes
+    // the telephony audio from muted to unmuted at the first time. The event
+    // "mozinterruptend" must be dispatched after the "mozinterruptbegin".
+    if (!mHaveDispatchedInterruptBeginEvent && mMuted) {
+      DispatchTrustedEvent(NS_LITERAL_STRING("mozinterruptbegin"));
+      mHaveDispatchedInterruptBeginEvent = mMuted;
+    } else if (mHaveDispatchedInterruptBeginEvent && !mMuted) {
+      DispatchTrustedEvent(NS_LITERAL_STRING("mozinterruptend"));
+      mHaveDispatchedInterruptBeginEvent = mMuted;
+    }
   }
 
   return NS_OK;
