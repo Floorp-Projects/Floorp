@@ -1013,6 +1013,52 @@ CompositorParent::SetShadowProperties(Layer* aLayer)
   }
 }
 
+// handles firing of before and after composite events through
+// an raii type helper class.
+class AutoFireCompositorEvents {
+public:
+  explicit AutoFireCompositorEvents(CompositorParent* aTarget, bool aEnabled) :
+    mCompositor(aTarget),
+    mStart(TimeStamp::Now()),
+    mEnabled(aEnabled),
+    mWillSent(false),
+    mDidSent(false)
+  {
+  }
+
+  ~AutoFireCompositorEvents()
+  {
+    WillComposite();
+    DidComposite();
+  }
+
+  void WillComposite() {
+    if (mEnabled && mCompositor && !mWillSent) {
+      TimeStamp now = TimeStamp::Now();
+      mCompositor->CompositeEvent(WILL_COMPOSITE, mStart, now);
+    }
+    mWillSent = true;
+  }
+
+  void DidComposite() {
+    if (mEnabled && mCompositor && !mDidSent) {
+      TimeStamp now = TimeStamp::Now();
+      mCompositor->CompositeEvent(DID_COMPOSITE, mStart, now);
+    }
+    mDidSent = true;
+  }
+
+  void Cancel() {
+    mEnabled = false;
+  }
+
+  CompositorParent* mCompositor;
+  TimeStamp mStart;
+  bool mEnabled;
+  bool mWillSent;
+  bool mDidSent;
+};
+
 void
 CompositorParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
@@ -1033,9 +1079,10 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRect* aRe
   }
 #endif
 
+  // Takes care of fireing 'will' and 'did' composite events.
+  AutoFireCompositorEvents afce(this, !aTarget);
+
   if (!CanComposite()) {
-    TimeStamp end = TimeStamp::Now();
-    DidComposite(start, end);
     return;
   }
 
@@ -1054,9 +1101,12 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRect* aRe
       mForceCompositionTask->Cancel();
       mForceCompositionTask = nullptr;
     } else {
+      afce.Cancel();
       return;
     }
   }
+
+  afce.WillComposite();
 
   mCompositionManager->ComputeRotation();
 
@@ -1076,11 +1126,6 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRect* aRe
 #endif
   mLayerManager->SetDebugOverlayWantsNextFrame(false);
   mLayerManager->EndTransaction(time);
-
-  if (!aTarget) {
-    TimeStamp end = TimeStamp::Now();
-    DidComposite(start, end);
-  }
 
   // We're not really taking advantage of the stored composite-again-time here.
   // We might be able to skip the next few composites altogether. However,
@@ -1722,9 +1767,10 @@ public:
 
   virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aParent) override;
 
-  void DidComposite(uint64_t aId,
-                    TimeStamp& aCompositeStart,
-                    TimeStamp& aCompositeEnd);
+  void CompositeEvent(CallbackType aType,
+                      uint64_t aId,
+                      TimeStamp& aCompositeStart,
+                      TimeStamp& aCompositeEnd);
 
 private:
   // Private destructor, to discourage deletion outside of Release():
@@ -1745,18 +1791,21 @@ private:
 };
 
 void
-CompositorParent::DidComposite(TimeStamp& aCompositeStart,
-                               TimeStamp& aCompositeEnd)
+CompositorParent::CompositeEvent(CallbackType aType,
+                                 TimeStamp& aCompositeStart,
+                                 TimeStamp& aCompositeEnd)
 {
-  if (mPendingTransaction) {
-    unused << SendDidComposite(0, mPendingTransaction, aCompositeStart, aCompositeEnd);
-    mPendingTransaction = 0;
-  }
-  if (mLayerManager) {
-    nsTArray<ImageCompositeNotification> notifications;
-    mLayerManager->ExtractImageCompositeNotifications(&notifications);
-    if (!notifications.IsEmpty()) {
-      unused << ImageBridgeParent::NotifyImageComposites(notifications);
+  if (aType == DID_COMPOSITE) {
+    if (mPendingTransaction) {
+      unused << SendDidComposite(0, mPendingTransaction, aCompositeStart, aCompositeEnd);
+      mPendingTransaction = 0;
+    }
+    if (mLayerManager) {
+      nsTArray<ImageCompositeNotification> notifications;
+      mLayerManager->ExtractImageCompositeNotifications(&notifications);
+      if (!notifications.IsEmpty()) {
+        unused << ImageBridgeParent::NotifyImageComposites(notifications);
+      }
     }
   }
 
@@ -1765,8 +1814,8 @@ CompositorParent::DidComposite(TimeStamp& aCompositeStart,
        it != sIndirectLayerTrees.end(); it++) {
     LayerTreeState* lts = &it->second;
     if (lts->mParent == this && lts->mCrossProcessParent) {
-      static_cast<CrossProcessCompositorParent*>(lts->mCrossProcessParent)->DidComposite(
-        it->first, aCompositeStart, aCompositeEnd);
+      static_cast<CrossProcessCompositorParent*>(lts->mCrossProcessParent)->CompositeEvent(
+        aType, it->first, aCompositeStart, aCompositeEnd);
     }
   }
 }
@@ -2040,19 +2089,32 @@ UpdatePluginWindowState(uint64_t aId)
 #endif // #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 
 void
-CrossProcessCompositorParent::DidComposite(uint64_t aId,
-                                           TimeStamp& aCompositeStart,
-                                           TimeStamp& aCompositeEnd)
+CrossProcessCompositorParent::CompositeEvent(CallbackType aType,
+                                             uint64_t aId,
+                                             TimeStamp& aCompositeStart,
+                                             TimeStamp& aCompositeEnd)
 {
-  sIndirectLayerTreesLock->AssertCurrentThreadOwns();
-  LayerTransactionParent *layerTree = sIndirectLayerTrees[aId].mLayerTree;
-  if (layerTree && layerTree->GetPendingTransactionId()) {
-    unused << SendDidComposite(aId, layerTree->GetPendingTransactionId(), aCompositeStart, aCompositeEnd);
-    layerTree->SetPendingTransactionId(0);
-  }
+  switch (aType) {
+    case WILL_COMPOSITE: {
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-  UpdatePluginWindowState(aId);
+      UpdatePluginWindowState(aId);
 #endif
+      break;
+    }
+
+    case DID_COMPOSITE: {
+      sIndirectLayerTreesLock->AssertCurrentThreadOwns();
+      LayerTransactionParent *layerTree = sIndirectLayerTrees[aId].mLayerTree;
+      if (layerTree && layerTree->GetPendingTransactionId()) {
+        unused << SendDidComposite(aId, layerTree->GetPendingTransactionId(), aCompositeStart, aCompositeEnd);
+        layerTree->SetPendingTransactionId(0);
+      }
+      break;
+    }
+
+    default:
+      NS_RUNTIMEABORT("not reached");
+  }
 }
 
 void
