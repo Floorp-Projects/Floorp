@@ -4,7 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES.devtools.memory += [
+    'modules/census-view.js',
     'modules/census.js',
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']
