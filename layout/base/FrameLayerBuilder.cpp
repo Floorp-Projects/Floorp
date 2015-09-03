@@ -422,17 +422,7 @@ public:
    * Add the given hit regions to the hit regions to the hit retions for this
    * PaintedLayer.
    */
-  void AccumulateEventRegions(nsDisplayLayerEventRegions* aEventRegions)
-  {
-    FLB_LOG_PAINTED_LAYER_DECISION(this, "Accumulating event regions %p against pld=%p\n", aEventRegions, this);
-
-    mHitRegion.Or(mHitRegion, aEventRegions->HitRegion());
-    mMaybeHitRegion.Or(mMaybeHitRegion, aEventRegions->MaybeHitRegion());
-    mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, aEventRegions->DispatchToContentHitRegion());
-    mNoActionRegion.Or(mNoActionRegion, aEventRegions->NoActionRegion());
-    mHorizontalPanRegion.Or(mHorizontalPanRegion, aEventRegions->HorizontalPanRegion());
-    mVerticalPanRegion.Or(mVerticalPanRegion, aEventRegions->VerticalPanRegion());
-  }
+  void AccumulateEventRegions(ContainerState* aState, nsDisplayLayerEventRegions* aEventRegions);
 
   /**
    * If this represents only a nsDisplayImage, and the image type supports being
@@ -496,6 +486,14 @@ public:
    * mDispatchToContentHitRegion.
    */
   nsRegion mVerticalPanRegion;
+  /**
+   * Scaled versions of mHitRegion and mMaybeHitRegion.
+   * We store these because FindPaintedLayerFor() needs to consume them
+   * in this form, and it's a hot code path so we don't wnat to scale
+   * them inside that function.
+   */
+  nsIntRegion mScaledHitRegion;
+  nsIntRegion mScaledMaybeHitRegion;
   /**
    * The "active scrolled root" for all content in the layer. Must
    * be non-null; all content in a PaintedLayer must have the same
@@ -2599,8 +2597,8 @@ PaintedLayerDataNode::FindPaintedLayerFor(const nsIntRect& aVisibleRect,
         // will be hoisted out into their own layer.
         ContainerState& contState = mTree.ContState();
         if (!contState.IsInInactiveLayer()) {
-          visibleRegion.OrWith(contState.ScaleRegionToOutsidePixels(data.mHitRegion));
-          visibleRegion.OrWith(contState.ScaleRegionToOutsidePixels(data.mMaybeHitRegion));
+          visibleRegion.OrWith(data.mScaledHitRegion);
+          visibleRegion.OrWith(data.mScaledMaybeHitRegion);
         }
         if (visibleRegion.Intersects(aVisibleRect)) {
           break;
@@ -3439,6 +3437,29 @@ PaintedLayerData::Accumulate(ContainerState* aState,
   }
 }
 
+void
+PaintedLayerData::AccumulateEventRegions(ContainerState* aState, nsDisplayLayerEventRegions* aEventRegions)
+{
+  FLB_LOG_PAINTED_LAYER_DECISION(this, "Accumulating event regions %p against pld=%p\n", aEventRegions, this);
+
+  mHitRegion.Or(mHitRegion, aEventRegions->HitRegion());
+  mMaybeHitRegion.Or(mMaybeHitRegion, aEventRegions->MaybeHitRegion());
+  mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, aEventRegions->DispatchToContentHitRegion());
+  mNoActionRegion.Or(mNoActionRegion, aEventRegions->NoActionRegion());
+  mHorizontalPanRegion.Or(mHorizontalPanRegion, aEventRegions->HorizontalPanRegion());
+  mVerticalPanRegion.Or(mVerticalPanRegion, aEventRegions->VerticalPanRegion());
+
+  // Simplify the maybe-hit region because it can be a complex region
+  // and operations on it, such as the scaling below and the use of the
+  // result in hot code paths like FindPaintedLayerFor(), can be very expensive.
+  mMaybeHitRegion.SimplifyOutward(8);
+
+  // Calculate scaled versions of mHitRegion and mMaybeHitRegion for quick
+  // access in FindPaintedLayerFor().
+  mScaledHitRegion = aState->ScaleRegionToOutsidePixels(mHitRegion);
+  mScaledMaybeHitRegion = aState->ScaleRegionToOutsidePixels(mMaybeHitRegion);
+}
+
 PaintedLayerData
 ContainerState::NewPaintedLayerData(nsDisplayItem* aItem,
                                     const nsIntRect& aVisibleRect,
@@ -4013,7 +4034,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       if (itemType == nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
         nsDisplayLayerEventRegions* eventRegions =
             static_cast<nsDisplayLayerEventRegions*>(item);
-        paintedLayerData->AccumulateEventRegions(eventRegions);
+        paintedLayerData->AccumulateEventRegions(this, eventRegions);
       } else {
         // check to see if the new item has rounded rect clips in common with
         // other items in the layer
