@@ -31,16 +31,8 @@
                android:singleLine="true"
                android:duplicateParentState="true"
                gecko:fadeWidth="15dp"
-               android:paddingRight="5dp"/>
-
-          <ImageButton android:id="@+id/audio_playing"
-                       android:visibility="gone"
-                       android:layout_width="20dip"
-                       android:layout_height="20dip"
-                       android:background="@drawable/action_bar_button_inverse"
-                       android:scaleType="center"
-                       android:contentDescription="@string/tab_audio_playing"
-                       android:src="@drawable/tab_audio_playing"/>
+               android:paddingRight="5dp"
+               android:drawablePadding="6dp"/>
 
         <!-- Use of baselineAlignBottom only supported from API 11+ - if this needs to work on lower API versions
              we'll need to override getBaseLine() and return image height, but we assume this won't happen -->
