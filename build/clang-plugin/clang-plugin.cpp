@@ -284,6 +284,8 @@ static CustomTypeAnnotation NonHeapClass =
     CustomTypeAnnotation("moz_nonheap_class", "non-heap");
 static CustomTypeAnnotation HeapClass =
     CustomTypeAnnotation("moz_heap_class", "heap");
+static CustomTypeAnnotation NonTemporaryClass =
+    CustomTypeAnnotation("moz_non_temporary_class", "non-temporary");
 static CustomTypeAnnotation MustUse =
     CustomTypeAnnotation("moz_must_use", "must-use");
 static CustomTypeAnnotation NonMemMovable =
@@ -845,6 +847,7 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
   astMatcher.addMatcher(
       callExpr(callee(functionDecl(heapAllocator()))).bind("node"),
       &scopeChecker);
+  astMatcher.addMatcher(parmVarDecl().bind("parm_vardecl"), &scopeChecker);
 
   astMatcher.addMatcher(
       callExpr(allOf(hasDeclaration(noArithmeticExprInArgs()),
@@ -973,6 +976,12 @@ enum AllocationVariety {
   AV_Heap,
 };
 
+// XXX Currently the Decl* in the AutomaticTemporaryMap is unused, but it
+// probably will be used at some point in the future, in order to produce better
+// error messages.
+typedef DenseMap<const MaterializeTemporaryExpr *, const Decl *> AutomaticTemporaryMap;
+AutomaticTemporaryMap AutomaticTemporaries;
+
 void DiagnosticsMatcher::ScopeChecker::run(
     const MatchFinder::MatchResult &Result) {
   DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
@@ -981,6 +990,20 @@ void DiagnosticsMatcher::ScopeChecker::run(
   AllocationVariety Variety = AV_None;
   SourceLocation Loc;
   QualType T;
+
+  if (const ParmVarDecl *D = Result.Nodes.getNodeAs<ParmVarDecl>("parm_vardecl")) {
+    if (const Expr *Default = D->getDefaultArg()) {
+      if (const MaterializeTemporaryExpr *E = dyn_cast<MaterializeTemporaryExpr>(Default)) {
+        // We have just found a ParmVarDecl which has, as its default argument,
+        // a MaterializeTemporaryExpr. We mark that MaterializeTemporaryExpr as
+        // automatic, by adding it to the AutomaticTemporaryMap.
+        // Reporting on this type will occur when the MaterializeTemporaryExpr
+        // is matched against.
+        AutomaticTemporaries[E] = D;
+      }
+    }
+    return;
+  }
 
   // Determine the type of allocation which we detected
   if (const VarDecl *D = Result.Nodes.getNodeAs<VarDecl>("node")) {
@@ -1000,9 +1023,39 @@ void DiagnosticsMatcher::ScopeChecker::run(
       T = E->getAllocatedType();
       Loc = E->getLocStart();
     }
-  } else if (const Expr *E =
+  } else if (const MaterializeTemporaryExpr *E =
                  Result.Nodes.getNodeAs<MaterializeTemporaryExpr>("node")) {
-    Variety = AV_Temporary;
+    // Temporaries can actually have varying storage durations, due to temporary
+    // lifetime extension. We consider the allocation variety of this temporary
+    // to be the same as the allocation variety of its lifetime.
+
+    // XXX We maybe should mark these lifetimes as being due to a temporary
+    // which has had its lifetime extended, to improve the error messages.
+    switch (E->getStorageDuration()) {
+    case SD_FullExpression:
+      {
+        // Check if this temporary is allocated as a default argument!
+        // if it is, we want to pretend that it is automatic.
+        AutomaticTemporaryMap::iterator AutomaticTemporary = AutomaticTemporaries.find(E);
+        if (AutomaticTemporary != AutomaticTemporaries.end()) {
+          Variety = AV_Automatic;
+        } else {
+          Variety = AV_Temporary;
+        }
+      }
+      break;
+    case SD_Automatic:
+      Variety = AV_Automatic;
+      break;
+    case SD_Thread:
+    case SD_Static:
+      Variety = AV_Global;
+      break;
+    case SD_Dynamic:
+      assert(false && "I don't think that this ever should occur...");
+      Variety = AV_Heap;
+      break;
+    }
     T = E->getType().getUnqualifiedType();
     Loc = E->getLocStart();
   } else if (const CallExpr *E = Result.Nodes.getNodeAs<CallExpr>("node")) {
@@ -1024,6 +1077,8 @@ void DiagnosticsMatcher::ScopeChecker::run(
       DiagnosticIDs::Error, "variable of type %0 only valid on the heap");
   unsigned NonHeapID = Diag.getDiagnosticIDs()->getCustomDiagID(
       DiagnosticIDs::Error, "variable of type %0 is not valid on the heap");
+  unsigned NonTemporaryID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "variable of type %0 is not valid in a temporary");
 
   unsigned StackNoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
       DiagnosticIDs::Note,
@@ -1053,6 +1108,8 @@ void DiagnosticsMatcher::ScopeChecker::run(
   case AV_Temporary:
     GlobalClass.reportErrorIfPresent(Diag, T, Loc, GlobalID, TemporaryNoteID);
     HeapClass.reportErrorIfPresent(Diag, T, Loc, HeapID, TemporaryNoteID);
+    NonTemporaryClass.reportErrorIfPresent(Diag, T, Loc,
+                                           NonTemporaryID, TemporaryNoteID);
     break;
 
   case AV_Heap:
