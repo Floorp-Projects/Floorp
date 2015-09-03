@@ -2874,7 +2874,7 @@ RuleEditor.prototype = {
           ruleView.highlightedSelector);
       }
 
-      this._moveSelectorFocus(newRule, direction);
+      editor._moveSelectorFocus(direction);
     }).then(null, err => {
       this.isEditing = false;
       promiseWarn(err);
@@ -2882,22 +2882,19 @@ RuleEditor.prototype = {
   },
 
   /**
-   * Handle moving the focus change after pressing tab and return from the
-   * selector inplace editor. The focused element after a tab or return keypress
-   * is lost because the rule editor is replaced.
+   * Handle moving the focus change after a tab or return keypress in the
+   * selector inplace editor.
    *
-   * @param {Rule} rule
-   *        The Rule object.
    * @param {Number} direction
    *        The move focus direction number.
    */
-  _moveSelectorFocus: function(rule, direction) {
+  _moveSelectorFocus: function(direction) {
     if (!direction || direction === Ci.nsIFocusManager.MOVEFOCUS_BACKWARD) {
       return;
     }
 
-    if (rule.textProps.length > 0) {
-      rule.textProps[0].editor.nameSpan.click();
+    if (this.rule.textProps.length > 0) {
+      this.rule.textProps[0].editor.nameSpan.click();
     } else {
       this.propertyList.click();
     }
