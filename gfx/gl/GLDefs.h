@@ -52,6 +52,7 @@
 
 // Others
 #define LOCAL_EGL_PRESERVED_RESOURCES                   0x3030
+#define LOCAL_EGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_EXT 0x3138
 
 // ANGLE_platform_angle_d3d
 #define LOCAL_EGL_PLATFORM_ANGLE_ANGLE                  0x3201

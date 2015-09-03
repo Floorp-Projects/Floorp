@@ -119,7 +119,6 @@ enum class GLFeature {
     read_buffer,
     renderbuffer_color_float,
     renderbuffer_color_half_float,
-    robust_buffer_access_behavior,
     robustness,
     sRGB_framebuffer,
     sRGB_texture,
@@ -408,7 +407,6 @@ public:
         ARB_map_buffer_range,
         ARB_occlusion_query2,
         ARB_pixel_buffer_object,
-        ARB_robust_buffer_access_behavior,
         ARB_robustness,
         ARB_sampler_objects,
         ARB_sync,
@@ -460,7 +458,6 @@ public:
         IMG_texture_compression_pvrtc,
         IMG_texture_npot,
         KHR_debug,
-        KHR_robust_buffer_access_behavior,
         NV_draw_instanced,
         NV_fence,
         NV_framebuffer_blit,
@@ -529,8 +526,6 @@ private:
      * Init features regarding OpenGL extension and context version and profile
      */
     void InitFeatures();
-
-    void MarkSupported(GLFeature feature);
 
     /**
      * Mark the feature and associated extensions as unsupported
@@ -3619,10 +3614,6 @@ public:
     static bool ShouldSpew();
     static bool ShouldDumpExts();
     void Readback(SharedSurface* src, gfx::DataSourceSurface* dest);
-
-    virtual bool NeedsDrawElementsValidation() const {
-        return true;
-    }
 };
 
 bool DoesStringMatch(const char* aString, const char *aWantedString);
