@@ -22,5 +22,5 @@ cargo run [options] [--] [<args>...]
 For example, you can specify a binary path to Firefox and run the proxy:
 
 ```
-cargo run -b /Applications/FirefoxNightly.app/Contents/MacOS/firefox-bin
+cargo run -- -b /Applications/FirefoxNightly.app/Contents/MacOS/firefox-bin
 ```
