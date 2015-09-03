@@ -1686,7 +1686,7 @@ var BrowserApp = {
         shouldZoom = false;
       // ZoomHelper.zoomToElement will handle not sending any message if this input is already mostly filling the screen
       ZoomHelper.zoomToElement(focused, -1, false,
-          aAllowZoom && shouldZoom && !ViewportHandler.getViewportMetadata(aBrowser.contentWindow).isSpecified);
+          aAllowZoom && shouldZoom && !ViewportHandler.isViewportSpecified(aBrowser.contentWindow));
     }
   },
 
@@ -4717,29 +4717,8 @@ Tab.prototype = {
     // for now anyway.
   },
 
-  get metadata() {
-    return ViewportHandler.getMetadataForDocument(this.browser.contentDocument);
-  },
-
   viewportSizeUpdated: function viewportSizeUpdated() {
     this.sendViewportUpdate(); // recompute displayport
-  },
-
-  /** Takes a scale and restricts it based on this tab's zoom limits. */
-  clampZoom: function clampZoom(aZoom) {
-    let zoom = ViewportHandler.clamp(aZoom, kViewportMinScale, kViewportMaxScale);
-
-    let md = this.metadata;
-    if (!md.allowZoom) {
-      // If zooming is not allowed, minZoom will be equal to maxZoom
-      return md.minZoom || zoom;
-    }
-
-    if (md && md.minZoom)
-      zoom = Math.max(zoom, md.minZoom);
-    if (md && md.maxZoom)
-      zoom = Math.min(zoom, md.maxZoom);
-    return zoom;
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -5080,8 +5059,8 @@ var BrowserEventHandler = {
   },
 
   onDoubleTap: function(aData) {
-    let metadata = BrowserApp.selectedTab.metadata;
-    if (!metadata.allowDoubleTapZoom) {
+    let metadata = ViewportHandler.getMetadataForDocument(BrowserApp.selectedBrowser.contentDocument);
+    if (metadata && !metadata.allowDoubleTapZoom) {
       return;
     }
 
@@ -6295,9 +6274,9 @@ var ViewportHandler = {
   },
 
   /**
-   * Returns the ViewportMetadata object.
+   * Returns true if a viewport tag was specified
    */
-  getViewportMetadata: function getViewportMetadata(aWindow) {
+  isViewportSpecified: function isViewportSpecified(aWindow) {
     let tab = BrowserApp.getTabForWindow(aWindow);
     let readerMode = false;
     try {
@@ -6305,89 +6284,16 @@ var ViewportHandler = {
     } catch (e) {
     }
     if (tab.desktopMode && !readerMode) {
-      return new ViewportMetadata({
-        minZoom: kViewportMinScale,
-        maxZoom: kViewportMaxScale,
-        allowZoom: true,
-        allowDoubleTapZoom: true,
-        isSpecified: false
-      });
+      return false;
     }
 
     let windowUtils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-
-    // viewport details found here
-    // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html
-    // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariWebContent/UsingtheViewport/UsingtheViewport.html
-
-    // Note: These values will be NaN if parseFloat or parseInt doesn't find a number.
-    // Remember that NaN is contagious: Math.max(1, NaN) == Math.min(1, NaN) == NaN.
-    let hasMetaViewport = true;
-    let scale = parseFloat(windowUtils.getDocumentMetadata("viewport-initial-scale"));
-    let minScale = parseFloat(windowUtils.getDocumentMetadata("viewport-minimum-scale"));
-    let maxScale = parseFloat(windowUtils.getDocumentMetadata("viewport-maximum-scale"));
-
-    let widthStr = windowUtils.getDocumentMetadata("viewport-width");
-    let heightStr = windowUtils.getDocumentMetadata("viewport-height");
-
-    // Allow zoom unless explicity disabled or minScale and maxScale are equal.
-    // WebKit allows 0, "no", or "false" for viewport-user-scalable.
-    // Note: NaN != NaN. Therefore if minScale and maxScale are undefined the clause has no effect.
-    let allowZoomStr = windowUtils.getDocumentMetadata("viewport-user-scalable");
-    let allowZoom = !/^(0|no|false)$/.test(allowZoomStr) && (minScale != maxScale);
-
-    // Double-tap should always be disabled if allowZoom is disabled. So we initialize
-    // allowDoubleTapZoom to the same value as allowZoom and have additional conditions to
-    // disable it in updateViewportSize.
-    let allowDoubleTapZoom = allowZoom;
-
-    if (isNaN(scale) && isNaN(minScale) && isNaN(maxScale) && allowZoomStr == "" && widthStr == "" && heightStr == "") {
-      // Only check for HandheldFriendly if we don't have a viewport meta tag
-      let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
-      if (handheldFriendly == "true") {
-        return new ViewportMetadata({
-          allowZoom: true,
-          allowDoubleTapZoom: false
-        });
-      }
-
-      let doctype = aWindow.document.doctype;
-      if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId)) {
-        return new ViewportMetadata({
-          allowZoom: true,
-          allowDoubleTapZoom: false
-        });
-      }
-
-      hasMetaViewport = false;
-      let defaultZoom = Services.prefs.getIntPref("browser.viewport.defaultZoom");
-      if (defaultZoom >= 0) {
-        scale = defaultZoom / 1000;
-      }
-    }
-
-    scale = this.clamp(scale, kViewportMinScale, kViewportMaxScale);
-    minScale = this.clamp(minScale, kViewportMinScale, kViewportMaxScale);
-    maxScale = this.clamp(maxScale, (isNaN(minScale) ? kViewportMinScale : minScale), kViewportMaxScale);
-    if (!allowZoom) {
-      // If allowZoom is false, clamp the min/max zoom to the default zoom level.
-      minScale = maxScale = (scale || window.devicePixelRatio);
-    }
-
-    let isRTL = aWindow.document.documentElement.dir == "rtl";
-
-    return new ViewportMetadata({
-      minZoom: minScale,
-      maxZoom: maxScale,
-      allowZoom: allowZoom,
-      allowDoubleTapZoom: allowDoubleTapZoom,
-      isSpecified: hasMetaViewport,
-      isRTL: isRTL
-    });
-  },
-
-  clamp: function(num, min, max) {
-    return Math.max(min, Math.min(max, num));
+    return !isNaN(parseFloat(windowUtils.getDocumentMetadata("viewport-initial-scale")))
+        || !isNaN(parseFloat(windowUtils.getDocumentMetadata("viewport-minimum-scale")))
+        || !isNaN(parseFloat(windowUtils.getDocumentMetadata("viewport-maximum-scale")))
+        || ("" != windowUtils.getDocumentMetadata("viewport-user-scalable"))
+        || ("" != windowUtils.getDocumentMetadata("viewport-width"))
+        || ("" != windowUtils.getDocumentMetadata("viewport-height"));
   },
 
   get displayDPI() {
@@ -6397,15 +6303,11 @@ var ViewportHandler = {
   },
 
   /**
-   * Returns the viewport metadata for the given document, or the default metrics if no viewport
-   * metadata is available for that document.
+   * Returns the viewport metadata for the given document, or undefined if there
+   * isn't one.
    */
   getMetadataForDocument: function getMetadataForDocument(aDocument) {
-    let metadata = this._metadata.get(aDocument);
-    if (metadata === undefined) {
-      metadata = new ViewportMetadata();
-    }
-    return metadata;
+    return this._metadata.get(aDocument);
   },
 
   /** Updates the saved viewport metadata for the given content document. */
@@ -6415,46 +6317,7 @@ var ViewportHandler = {
     else
       this._metadata.set(aDocument, aMetadata);
   }
-
 };
-
-/**
- * An object which represents the page's preferred viewport properties:
- *   defaultZoom (float): The initial scale when the page is loaded.
- *   minZoom (float): The minimum zoom level.
- *   maxZoom (float): The maximum zoom level.
- *   allowZoom (boolean): Let the user zoom in or out.
- *   allowDoubleTapZoom (boolean): Allow double-tap to zoom in.
- *   isSpecified (boolean): Whether the page viewport is specified or not.
- */
-function ViewportMetadata(aMetadata = {}) {
-  this.minZoom = ("minZoom" in aMetadata) ? aMetadata.minZoom : 0;
-  this.maxZoom = ("maxZoom" in aMetadata) ? aMetadata.maxZoom : 0;
-  this.allowZoom = ("allowZoom" in aMetadata) ? aMetadata.allowZoom : true;
-  this.allowDoubleTapZoom = ("allowDoubleTapZoom" in aMetadata) ? aMetadata.allowDoubleTapZoom : true;
-  this.isSpecified = ("isSpecified" in aMetadata) ? aMetadata.isSpecified : false;
-  this.isRTL = ("isRTL" in aMetadata) ? aMetadata.isRTL : false;
-  Object.seal(this);
-}
-
-ViewportMetadata.prototype = {
-  minZoom: null,
-  maxZoom: null,
-  allowZoom: null,
-  allowDoubleTapZoom: null,
-  isSpecified: null,
-  isRTL: null,
-
-  toString: function() {
-    return "; minZoom=" + this.minZoom
-         + "; maxZoom=" + this.maxZoom
-         + "; allowZoom=" + this.allowZoom
-         + "; allowDoubleTapZoom=" + this.allowDoubleTapZoom
-         + "; isSpecified=" + this.isSpecified
-         + "; isRTL=" + this.isRTL;
-  }
-};
-
 
 /**
  * Handler for blocked popups, triggered by DOMUpdatePageReport events in browser.xml
