@@ -462,7 +462,7 @@ html|a:hover:active,
 
 /* Hide the actual checkbox */
 html|input[type="checkbox"] {
-  opacity: 0;
+  visibility: hidden;
   position: absolute;
 }
 
@@ -560,7 +560,7 @@ xul|*.radio-label-box {
 
 /* Category List */
 
-xul|*#categories {
+*|*#categories {
   -moz-appearance: none;
   background-color: var(--in-content-category-background);
   padding-top: 39px;
@@ -568,7 +568,7 @@ xul|*#categories {
   border-width: 0;
 }
 
-xul|*.category {
+*|*.category {
   -moz-appearance: none;
   color: var(--in-content-category-text);
   -moz-border-end-width: 0;
@@ -578,18 +578,18 @@ xul|*.category {
   transition: background-color 150ms;
 }
 
-xul|*.category:hover {
+*|*.category:hover {
   background-color: var(--in-content-category-background-hover);
 }
 
-xul|*.category[selected] {
+*|*.category[selected] {
   background-color: var(--in-content-category-background-active);
   color: var(--in-content-category-text-selected);
   -moz-padding-start: 11px; /* compensate the 4px border */
   -moz-border-start: solid 4px var(--in-content-border-highlight);
 }
 
-xul|*#categories[keyboard-navigation="true"]:-moz-focusring > xul|*.category[current] {
+*|*#categories[keyboard-navigation="true"]:-moz-focusring > *|*.category[current] {
   border-top: var(--in-content-category-border-focus);
   border-bottom: var(--in-content-category-border-focus);
 }

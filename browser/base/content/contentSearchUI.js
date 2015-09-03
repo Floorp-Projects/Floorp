@@ -602,6 +602,7 @@ ContentSearchUIController.prototype = {
     this._updateSearchWithHeader();
     document.getElementById("contentSearchSettingsButton").textContent =
       this._strings.searchSettings;
+    this.input.setAttribute("placeholder", this._strings.searchPlaceholder);
   },
 
   _updateDefaultEngineHeader: function () {
