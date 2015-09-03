@@ -68,6 +68,7 @@
 #include "FrameLayerBuilder.h"
 #include "mozilla/dom/RequestSyncWifiService.h"
 #include "AnimationCommon.h"
+#include "LayerAnimationInfo.h"
 
 #include "AudioChannelService.h"
 #include "mozilla/dom/DataStoreService.h"
@@ -311,7 +312,7 @@ nsLayoutStatics::Initialize()
 
 #ifdef DEBUG
   nsStyleContext::Initialize();
-  mozilla::CommonAnimationManager::Initialize();
+  mozilla::LayerAnimationInfo::Initialize();
 #endif
 
   MediaDecoder::InitStatics();
