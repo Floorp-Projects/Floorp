@@ -20,7 +20,8 @@ namespace net {
 nsresult
 nsHttpHeaderArray::SetHeader(nsHttpAtom header,
                              const nsACString &value,
-                             bool merge)
+                             bool merge,
+                             nsHttpHeaderArray::HeaderVariety variety)
 {
     nsEntry *entry = nullptr;
     int32_t index;
@@ -35,17 +36,21 @@ nsHttpHeaderArray::SetHeader(nsHttpAtom header,
         return NS_OK;
     }
 
+    MOZ_ASSERT(!entry || variety != eVarietyDefault,
+               "Cannot set default entry which overrides existing entry!");
     if (!entry) {
         entry = mHeaders.AppendElement(); // new nsEntry()
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
         entry->header = header;
         entry->value = value;
+        entry->variety = variety;
     } else if (merge && !IsSingletonHeader(header)) {
         MergeHeader(header, entry, value);
     } else {
         // Replace the existing string with the new value
         entry->value = value;
+        entry->variety = eVarietyOverride;
     }
 
     return NS_OK;
@@ -133,12 +138,15 @@ nsHttpHeaderArray::GetHeader(nsHttpAtom header, nsACString &result) const
 }
 
 nsresult
-nsHttpHeaderArray::VisitHeaders(nsIHttpHeaderVisitor *visitor)
+nsHttpHeaderArray::VisitHeaders(nsIHttpHeaderVisitor *visitor, nsHttpHeaderArray::VisitorFilter filter)
 {
     NS_ENSURE_ARG_POINTER(visitor);
     uint32_t i, count = mHeaders.Length();
     for (i = 0; i < count; ++i) {
         const nsEntry &entry = mHeaders[i];
+        if (filter == eFilterSkipDefault && entry.variety == eVarietyDefault) {
+            continue;
+        }
         if (NS_FAILED(visitor->VisitHeader(nsDependentCString(entry.header),
                                            entry.value)))
             break;
