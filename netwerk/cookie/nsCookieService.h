@@ -25,9 +25,14 @@
 #include "mozIStorageRow.h"
 #include "mozIStorageCompletionCallback.h"
 #include "mozIStorageStatementCallback.h"
+#include "mozIStorageFunction.h"
+#include "nsIVariant.h"
 #include "nsIFile.h"
+#include "mozilla/BasePrincipal.h"
 
 #include "mozilla/MemoryReporting.h"
+
+using mozilla::OriginAttributes;
 
 class nsICookiePermission;
 class nsIEffectiveTLDService;
@@ -60,22 +65,19 @@ public:
   nsCookieKey()
   {}
 
-  nsCookieKey(const nsCString &baseDomain, uint32_t appId, bool inBrowser)
+  nsCookieKey(const nsCString &baseDomain, const OriginAttributes &attrs)
     : mBaseDomain(baseDomain)
-    , mAppId(appId)
-    , mInBrowserElement(inBrowser)
+    , mOriginAttributes(attrs)
   {}
 
   explicit nsCookieKey(KeyTypePointer other)
     : mBaseDomain(other->mBaseDomain)
-    , mAppId(other->mAppId)
-    , mInBrowserElement(other->mInBrowserElement)
+    , mOriginAttributes(other->mOriginAttributes)
   {}
 
   nsCookieKey(KeyType other)
     : mBaseDomain(other.mBaseDomain)
-    , mAppId(other.mAppId)
-    , mInBrowserElement(other.mInBrowserElement)
+    , mOriginAttributes(other.mOriginAttributes)
   {}
 
   ~nsCookieKey()
@@ -84,8 +86,7 @@ public:
   bool KeyEquals(KeyTypePointer other) const
   {
     return mBaseDomain == other->mBaseDomain &&
-           mAppId == other->mAppId &&
-           mInBrowserElement == other->mInBrowserElement;
+           mOriginAttributes == other->mOriginAttributes;
   }
 
   static KeyTypePointer KeyToPointer(KeyType aKey)
@@ -98,9 +99,9 @@ public:
     // TODO: more efficient way to generate hash?
     nsAutoCString temp(aKey->mBaseDomain);
     temp.Append('#');
-    temp.Append(aKey->mAppId);
-    temp.Append('#');
-    temp.Append(aKey->mInBrowserElement ? 1 : 0);
+    nsAutoCString suffix;
+    aKey->mOriginAttributes.CreateSuffix(suffix);
+    temp.Append(suffix);
     return mozilla::HashString(temp);
   }
 
@@ -108,9 +109,8 @@ public:
 
   enum { ALLOW_MEMMOVE = true };
 
-  nsCString   mBaseDomain;
-  uint32_t    mAppId;
-  bool        mInBrowserElement;
+  nsCString        mBaseDomain;
+  OriginAttributes mOriginAttributes;
 };
 
 // Inherit from nsCookieKey so this can be stored in nsTHashTable
@@ -274,6 +274,7 @@ class nsCookieService final : public nsICookieService
     void                          InitDBStates();
     OpenDBResult                  TryInitDB(bool aDeleteExistingDB);
     nsresult                      CreateTable();
+    nsresult                      CreateTableForSchemaVersion5();
     void                          CloseDBStates();
     void                          CleanupCachedStatements();
     void                          CleanupDefaultDBConnection();
@@ -290,9 +291,9 @@ class nsCookieService final : public nsICookieService
     nsresult                      GetBaseDomain(nsIURI *aHostURI, nsCString &aBaseDomain, bool &aRequireHostMatch);
     nsresult                      GetBaseDomainFromHost(const nsACString &aHost, nsCString &aBaseDomain);
     nsresult                      GetCookieStringCommon(nsIURI *aHostURI, nsIChannel *aChannel, bool aHttpBound, char** aCookie);
-  void                            GetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, uint32_t aAppId, bool aInBrowserElement, bool aIsPrivate, nsCString &aCookie);
+  void                            GetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, const OriginAttributes aOriginAttrs, bool aIsPrivate, nsCString &aCookie);
     nsresult                      SetCookieStringCommon(nsIURI *aHostURI, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel, bool aFromHttp);
-  void                            SetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, nsDependentCString &aCookieHeader, const nsCString &aServerTime, bool aFromHttp, uint32_t aAppId, bool aInBrowserElement, bool aIsPrivate, nsIChannel* aChannel);
+  void                            SetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, nsDependentCString &aCookieHeader, const nsCString &aServerTime, bool aFromHttp, const OriginAttributes &aOriginAttrs, bool aIsPrivate, nsIChannel* aChannel);
     bool                          SetCookieInternal(nsIURI *aHostURI, const nsCookieKey& aKey, bool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, int64_t aServerTime, bool aFromHttp, nsIChannel* aChannel);
     void                          AddInternal(const nsCookieKey& aKey, nsCookie *aCookie, int64_t aCurrentTimeInUsec, nsIURI *aHostURI, const char *aCookieHeader, bool aFromHttp);
     void                          RemoveCookieFromList(const nsListIter &aIter, mozIStorageBindingParamsArray *aParamsArray = nullptr);
@@ -318,12 +319,12 @@ class nsCookieService final : public nsICookieService
 
     /**
      * This method is a helper that allows calling nsICookieManager::Remove()
-     * with appId/inBrowserElement parameters.
+     * with OriginAttributes parameter.
      * NOTE: this could be added to a public interface if we happen to need it.
      */
-    nsresult Remove(const nsACString& aHost, uint32_t aAppId,
-                    bool aInBrowserElement, const nsACString& aName,
-                    const nsACString& aPath, bool aBlocked);
+    nsresult Remove(const nsACString& aHost, const OriginAttributes& aAttrs,
+                    const nsACString& aName, const nsACString& aPath,
+                    bool aBlocked);
 
   protected:
     // cached members.

@@ -8,7 +8,7 @@
 interface nsICookie2;
 interface nsIFile;
 
-/** 
+/**
  * Additions to the frozen nsICookieManager
  */
 
