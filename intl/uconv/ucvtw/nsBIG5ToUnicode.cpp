@@ -6,8 +6,7 @@
 #include "nsBIG5ToUnicode.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/ArrayUtils.h"
-
-#include "nsBIG5DecoderData.h"
+#include "nsBIG5Data.h"
 
 nsBIG5ToUnicode::nsBIG5ToUnicode()
  : mPendingTrail(0)
@@ -90,7 +89,7 @@ nsBIG5ToUnicode::Convert(const char* aSrc,
           outTrail = 0x030C;
           break;
         default:
-          char16_t lowBits = LowBits(pointer);
+          char16_t lowBits = nsBIG5Data::LowBits(pointer);
           if (!lowBits) {
             if (b <= 0x7F) {
               // prepend byte to stream
@@ -107,7 +106,7 @@ nsBIG5ToUnicode::Convert(const char* aSrc,
             *out++ = 0xFFFD;
             continue;
           }
-          if (IsAstral(pointer)) {
+          if (nsBIG5Data::IsAstral(pointer)) {
             uint32_t codePoint = uint32_t(lowBits) | 0x20000;
             *out++ = char16_t(0xD7C0 + (codePoint >> 10));
             outTrail = char16_t(0xDC00 + (codePoint & 0x3FF));
