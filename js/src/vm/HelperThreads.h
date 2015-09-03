@@ -103,8 +103,9 @@ class GlobalHelperThreadState
 
     GlobalHelperThreadState();
 
-    void ensureInitialized();
+    bool ensureInitialized();
     void finish();
+    void finishThreads();
 
     void lock();
     void unlock();
@@ -351,7 +352,7 @@ void
 DestroyHelperThreadsState();
 
 // Initialize helper threads unless already initialized.
-void
+bool
 EnsureHelperThreadsInitialized();
 
 // This allows the JS shell to override GetCPUCount() when passed the
