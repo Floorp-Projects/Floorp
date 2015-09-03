@@ -21,7 +21,7 @@ task:
   payload:
     image: '{{#docker_image}}desktop-build{{/docker_image}}'
     cache:
-      build-macosx64-workspace: '/home/worker/workspace'
+      build-macosx64-c6-workspace: '/home/worker/workspace'
       tooltool-cache: '/home/worker/tooltool-cache'
     features:
       relengAPIProxy: true
