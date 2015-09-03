@@ -4,7 +4,7 @@ fuzzy-if(Android,16,244) skip-if(B2G||Mulet) HTTP(..) == marker-basic.html marke
 skip-if(B2G||Mulet) HTTP(..) == marker-string.html marker-string-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(Android||B2G) HTTP(..) == bidi-simple.html bidi-simple-ref.html # Fails on Android due to anti-aliasing
 skip-if(!gtkWidget) fuzzy-if(gtkWidget,2,289) HTTP(..) == bidi-simple-scrolled.html bidi-simple-scrolled-ref.html # Fails on Windows and OSX due to anti-aliasing
-skip-if(B2G||Mulet) fuzzy-if(Android&&AndroidVersion<15,9,2545) fuzzy-if(Android&&AndroidVersion>=15,24,4000) fuzzy-if(cocoaWidget,1,40) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,1770) HTTP(..) == scroll-rounding.html scroll-rounding-ref.html # bug 760264 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android&&AndroidVersion<15,206,41) fuzzy-if(Android&&AndroidVersion>=15,24,4000) fuzzy-if(cocoaWidget,1,40) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,1770) HTTP(..) == scroll-rounding.html scroll-rounding-ref.html # bug 760264 # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy-if(OSX==1008,1,1) HTTP(..) == anonymous-block.html anonymous-block-ref.html
 skip-if(B2G||Mulet) HTTP(..) == false-marker-overlap.html false-marker-overlap-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 HTTP(..) == visibility-hidden.html visibility-hidden-ref.html
