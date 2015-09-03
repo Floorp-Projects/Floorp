@@ -52,7 +52,7 @@ template<typename T, typename U>
 void ApplyStereoPanning(const AudioChunk& aInput, AudioChunk* aOutput,
                         T aGainL, T aGainR, U aOnLeft)
 {
-  if (aInput.mChannelData.Length() == 1) {
+  if (aInput.ChannelCount() == 1) {
     GainMonoToStereo(aInput, aOutput, aGainL, aGainR);
   } else {
     GainStereoToStereo(aInput, aOutput, aGainL, aGainR, aOnLeft);

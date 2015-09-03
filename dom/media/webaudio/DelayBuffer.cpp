@@ -29,7 +29,7 @@ void
 DelayBuffer::Write(const AudioChunk& aInputChunk)
 {
   // We must have a reference to the buffer if there are channels
-  MOZ_ASSERT(aInputChunk.IsNull() == !aInputChunk.mChannelData.Length());
+  MOZ_ASSERT(aInputChunk.IsNull() == !aInputChunk.ChannelCount());
 #ifdef DEBUG
   MOZ_ASSERT(!mHaveWrittenBlock);
   mHaveWrittenBlock = true;
@@ -116,7 +116,7 @@ DelayBuffer::ReadChannels(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
                           uint32_t aFirstChannel, uint32_t aNumChannelsToRead,
                           ChannelInterpretation aChannelInterpretation)
 {
-  uint32_t totalChannelCount = aOutputChunk->mChannelData.Length();
+  uint32_t totalChannelCount = aOutputChunk->ChannelCount();
   uint32_t readChannelsEnd = aFirstChannel + aNumChannelsToRead;
   MOZ_ASSERT(readChannelsEnd <= totalChannelCount);
 

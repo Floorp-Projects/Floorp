@@ -168,7 +168,7 @@ public:
 
       PodArrayZero(inputBuffer);
 
-    } else if(mBiquads.Length() != aInput.mChannelData.Length()){
+    } else if(mBiquads.Length() != aInput.ChannelCount()){
       if (mBiquads.IsEmpty()) {
         nsRefPtr<PlayingRefChangeHandler> refchanged =
           new PlayingRefChangeHandler(aStream, PlayingRefChangeHandler::ADDREF);
@@ -179,7 +179,7 @@ public:
       }
 
       // Adjust the number of biquads based on the number of channels
-      mBiquads.SetLength(aInput.mChannelData.Length());
+      mBiquads.SetLength(aInput.ChannelCount());
     }
 
     uint32_t numberOfChannels = mBiquads.Length();

@@ -131,7 +131,7 @@ public:
     } else {
       if (aInput.mVolume != 1.0f) {
         // Pre-multiply the input's volume
-        uint32_t numChannels = aInput.mChannelData.Length();
+        uint32_t numChannels = aInput.ChannelCount();
         AllocateAudioBlock(numChannels, &input);
         for (uint32_t i = 0; i < numChannels; ++i) {
           const float* src = static_cast<const float*>(aInput.mChannelData[i]);
