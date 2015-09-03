@@ -170,6 +170,11 @@
   font-size: 150%;
 }
 
+.identity-popup-subheadline {
+  margin: 0;
+  font-weight: bold;
+}
+
 .identity-popup-warning-gray {
   -moz-padding-start: 24px;
   background: url(chrome://browser/skin/controlcenter/warning-gray.svg) no-repeat 0 50%;
@@ -295,6 +300,12 @@ description#identity-popup-content-verifier,
 #identity-popup-permission-list,
 #identity-popup-permission-subview-list {
   margin-top: 5px;
+}
+
+#permission-subview-list-page-functionality,
+#permission-subview-list-system-access {
+  margin: 3px 0;
+  -moz-margin-start: 3px;
 }
 
 #identity-popup-permission-list menulist.identity-popup-permission,
