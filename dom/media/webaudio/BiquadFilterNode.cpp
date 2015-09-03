@@ -138,8 +138,8 @@ public:
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
-                            const AudioChunk& aInput,
-                            AudioChunk* aOutput,
+                            const AudioBlock& aInput,
+                            AudioBlock* aOutput,
                             bool* aFinished) override
   {
     float inputBuffer[WEBAUDIO_BLOCK_SIZE];
@@ -183,7 +183,7 @@ public:
     }
 
     uint32_t numberOfChannels = mBiquads.Length();
-    AllocateAudioBlock(numberOfChannels, aOutput);
+    aOutput->AllocateChannels(numberOfChannels);
 
     StreamTime pos = aStream->GetCurrentPosition();
 

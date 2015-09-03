@@ -30,7 +30,6 @@
 #include "ReverbConvolverStage.h"
 
 #include <math.h>
-#include "AudioBlock.h"
 #include "ReverbConvolver.h"
 #include "mozilla/FloatingPoint.h"
 
@@ -145,12 +144,12 @@ void Reverb::initialize(const nsTArray<const float*>& impulseResponseBuffer,
     // For "True" stereo processing we allocate a temporary buffer to avoid repeatedly allocating it in the process() method.
     // It can be bad to allocate memory in a real-time thread.
     if (numResponseChannels == 4) {
-        AllocateAudioBlock(2, &m_tempBuffer);
+        m_tempBuffer.AllocateChannels(2);
         WriteZeroesToAudioBlock(&m_tempBuffer, 0, WEBAUDIO_BLOCK_SIZE);
     }
 }
 
-void Reverb::process(const AudioChunk* sourceBus, AudioChunk* destinationBus, size_t framesToProcess)
+void Reverb::process(const AudioBlock* sourceBus, AudioBlock* destinationBus, size_t framesToProcess)
 {
     // Do a fairly comprehensive sanity check.
     // If these conditions are satisfied, all of the source and destination pointers will be valid for the various matrixing cases.

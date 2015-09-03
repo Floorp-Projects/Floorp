@@ -48,6 +48,21 @@ public:
     return this;
   }
 
+  /**
+   * Allocates, if necessary, aChannelCount buffers of WEBAUDIO_BLOCK_SIZE float
+   * samples for writing.
+   */
+  void AllocateChannels(uint32_t aChannelCount);
+
+  float* ChannelFloatsForWrite(size_t aChannel)
+  {
+    MOZ_ASSERT(mBufferFormat == AUDIO_FORMAT_FLOAT32);
+#if DEBUG
+    AssertNoLastingShares();
+#endif
+    return static_cast<float*>(const_cast<void*>(mChannelData[aChannel]));
+  }
+
   void SetBuffer(ThreadSharedObject* aNewBuffer);
   void SetNull(StreamTime aDuration) {
     MOZ_ASSERT(aDuration == WEBAUDIO_BLOCK_SIZE);
@@ -88,6 +103,7 @@ public:
 
 private:
   void ClearDownstreamMark();
+  void AssertNoLastingShares();
 
   // mBufferIsDownstreamRef is set only when mBuffer references an
   // AudioBlockBuffer created in a different AudioBlock.  That can happen when
@@ -98,11 +114,6 @@ private:
   // notified when mBuffer releases this reference.
   bool mBufferIsDownstreamRef = false;
 };
-/**
- * Allocates, if necessary, aChannelCount buffers of WEBAUDIO_BLOCK_SIZE float
- * samples for writing to an AudioChunk.
- */
-void AllocateAudioBlock(uint32_t aChannelCount, AudioChunk* aChunk);
 
 } // namespace mozilla
 

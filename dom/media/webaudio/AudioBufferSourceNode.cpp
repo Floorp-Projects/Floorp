@@ -187,11 +187,10 @@ public:
 
   // Borrow a full buffer of size WEBAUDIO_BLOCK_SIZE from the source buffer
   // at offset aSourceOffset.  This avoids copying memory.
-  void BorrowFromInputBuffer(AudioChunk* aOutput,
+  void BorrowFromInputBuffer(AudioBlock* aOutput,
                              uint32_t aChannels)
   {
-    aOutput->mDuration = WEBAUDIO_BLOCK_SIZE;
-    aOutput->mBuffer = mBuffer;
+    aOutput->SetBuffer(mBuffer);
     aOutput->mChannelData.SetLength(aChannels);
     for (uint32_t i = 0; i < aChannels; ++i) {
       aOutput->mChannelData[i] = mBuffer->GetData(i) + mBufferPosition;
@@ -202,7 +201,7 @@ public:
 
   // Copy aNumberOfFrames frames from the source buffer at offset aSourceOffset
   // and put it at offset aBufferOffset in the destination buffer.
-  void CopyFromInputBuffer(AudioChunk* aOutput,
+  void CopyFromInputBuffer(AudioBlock* aOutput,
                            uint32_t aChannels,
                            uintptr_t aOffsetWithinBlock,
                            uint32_t aNumberOfFrames) {
@@ -220,7 +219,7 @@ public:
   // remaining in both the input and output buffer, and the playback rate (that
   // is, the ratio between the output samplerate and the input samplerate).
   void CopyFromInputBufferWithResampling(AudioNodeStream* aStream,
-                                         AudioChunk* aOutput,
+                                         AudioBlock* aOutput,
                                          uint32_t aChannels,
                                          uint32_t* aOffsetWithinBlock,
                                          StreamTime* aCurrentPosition,
@@ -319,7 +318,7 @@ public:
    * allocate the output buffer, and also optimizes the case where it can avoid
    * memory allocations.
    */
-  void FillWithZeroes(AudioChunk* aOutput,
+  void FillWithZeroes(AudioBlock* aOutput,
                       uint32_t aChannels,
                       uint32_t* aOffsetWithinBlock,
                       StreamTime* aCurrentPosition,
@@ -333,7 +332,7 @@ public:
       aOutput->SetNull(numFrames);
     } else {
       if (*aOffsetWithinBlock == 0) {
-        AllocateAudioBlock(aChannels, aOutput);
+        aOutput->AllocateChannels(aChannels);
       }
       WriteZeroesToAudioBlock(aOutput, *aOffsetWithinBlock, numFrames);
     }
@@ -351,7 +350,7 @@ public:
    * optimizes the case where it can avoid memory allocations.
    */
   void CopyFromBuffer(AudioNodeStream* aStream,
-                      AudioChunk* aOutput,
+                      AudioBlock* aOutput,
                       uint32_t aChannels,
                       uint32_t* aOffsetWithinBlock,
                       StreamTime* aCurrentPosition,
@@ -370,7 +369,7 @@ public:
       mBufferPosition += numFrames;
     } else {
       if (*aOffsetWithinBlock == 0) {
-        AllocateAudioBlock(aChannels, aOutput);
+        aOutput->AllocateChannels(aChannels);
       }
       if (!mResampler) {
         MOZ_ASSERT(mBufferPosition < aBufferMax);
@@ -421,8 +420,8 @@ public:
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
-                            const AudioChunk& aInput,
-                            AudioChunk* aOutput,
+                            const AudioBlock& aInput,
+                            AudioBlock* aOutput,
                             bool* aFinished) override
   {
     if (!mBuffer || !mBufferEnd) {

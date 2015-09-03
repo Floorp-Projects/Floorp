@@ -93,8 +93,8 @@ public:
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
-                            const AudioChunk& aInput,
-                            AudioChunk* aOutput,
+                            const AudioBlock& aInput,
+                            AudioBlock* aOutput,
                             bool* aFinished) override
   {
     if (aInput.IsNull()) {
@@ -122,7 +122,7 @@ public:
     mCompressor->setParameterValue(DynamicsCompressor::ParamRelease,
                                    mRelease.GetValueAtTime(pos));
 
-    AllocateAudioBlock(channelCount, aOutput);
+    aOutput->AllocateChannels(channelCount);
     mCompressor->process(&aInput, aOutput, aInput.GetDuration());
 
     SendReductionParamToMainThread(aStream,
