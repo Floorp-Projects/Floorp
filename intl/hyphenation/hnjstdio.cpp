@@ -42,14 +42,14 @@ hnjFopen(const char* aURISpec, const char* aMode)
     rv = NS_NewChannel(getter_AddRefs(channel),
                        uri,
                        nsContentUtils::GetSystemPrincipal(),
-                       nsILoadInfo::SEC_NORMAL,
+                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                        nsIContentPolicy::TYPE_OTHER);
     if (NS_FAILED(rv)) {
         return nullptr;
     }
 
     nsCOMPtr<nsIInputStream> instream;
-    rv = channel->Open(getter_AddRefs(instream));
+    rv = channel->Open2(getter_AddRefs(instream));
     if (NS_FAILED(rv)) {
         return nullptr;
     }

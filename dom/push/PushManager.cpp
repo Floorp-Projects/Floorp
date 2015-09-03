@@ -20,6 +20,7 @@
 #include "nsIPrincipal.h"
 #include "nsIPushClient.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsFrameMessageManager.h"
 #include "nsContentCID.h"
 

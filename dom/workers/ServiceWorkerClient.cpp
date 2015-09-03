@@ -80,7 +80,8 @@ class ServiceWorkerClientPostMessageRunnable final
 
 public:
   explicit ServiceWorkerClientPostMessageRunnable(uint64_t aWindowId)
-    : StructuredCloneHelper(CloningSupported, TransferringSupported)
+    : StructuredCloneHelper(CloningSupported, TransferringSupported,
+                            SameProcessDifferentThread)
     , mWindowId(aWindowId)
   {}
 
@@ -189,7 +190,7 @@ ServiceWorkerClient::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   nsRefPtr<ServiceWorkerClientPostMessageRunnable> runnable =
     new ServiceWorkerClientPostMessageRunnable(mWindowId);
 
-  runnable->Write(aCx, aMessage, transferable, true, aRv);
+  runnable->Write(aCx, aMessage, transferable, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

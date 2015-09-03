@@ -513,6 +513,13 @@ def main(args):
             print "ERROR: Invalid screen resolution %sx%s, please adjust to 1366x1050 or higher" % (width, height)
             return 1
 
+    # Check that Firefox is installed
+    expected = options.app.split('/')[-1]
+    installed = dm.shellCheckOutput(['pm', 'list', 'packages', expected])
+    if expected not in installed:
+        print "%s is not installed on this device" % expected
+        return 1
+
     automation.setAppName(options.app)
     automation.setRemoteProfile(options.remoteProfile)
     automation.setRemoteLog(options.remoteLogFile)

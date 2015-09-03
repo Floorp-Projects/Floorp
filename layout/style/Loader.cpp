@@ -104,6 +104,12 @@ namespace css {
  * Data needed to properly load a stylesheet *
  *********************************************/
 
+static_assert(eAuthorSheetFeatures == 0 &&
+              eUserSheetFeatures == 1 &&
+              eAgentSheetFeatures == 2,
+              "sheet parsing mode constants won't fit "
+              "in SheetLoadData::mParsingMode");
+
 class SheetLoadData final : public nsIRunnable,
                             public nsIUnicharStreamLoaderObserver,
                             public nsIThreadObserver
@@ -137,7 +143,7 @@ public:
                 nsIURI* aURI,
                 CSSStyleSheet* aSheet,
                 bool aSyncLoad,
-                bool aAllowUnsafeRules,
+                SheetParsingMode aParsingMode,
                 bool aUseSystemPrincipal,
                 const nsCString& aCharset,
                 nsICSSLoaderObserver* aObserver,
@@ -215,9 +221,12 @@ public:
   // created.
   bool                       mWasAlternate : 1;
 
-  // mAllowUnsafeRules is true if we should allow unsafe rules to be parsed
-  // in the loaded sheet.
-  bool                       mAllowUnsafeRules : 1;
+  // mParsingMode controls access to nonstandard style constructs that
+  // are not safe for use on the public Web but necessary in UA sheets
+  // and/or useful in user sheets.  The only values stored in this
+  // field are 0, 1, and 2; three bits are allocated to avoid issues
+  // should the enum type be signed.
+  SheetParsingMode           mParsingMode : 3;
 
   // mUseSystemPrincipal is true if the system principal should be used for
   // this sheet, no matter what the channel principal is.  Only true for sync
@@ -333,7 +342,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
     mIsCancelled(false),
     mMustNotify(false),
     mWasAlternate(aIsAlternate),
-    mAllowUnsafeRules(false),
+    mParsingMode(eAuthorSheetFeatures),
     mUseSystemPrincipal(false),
     mSheetAlreadyComplete(false),
     mOwningElement(aOwningElement),
@@ -364,7 +373,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
     mIsCancelled(false),
     mMustNotify(false),
     mWasAlternate(false),
-    mAllowUnsafeRules(false),
+    mParsingMode(eAuthorSheetFeatures),
     mUseSystemPrincipal(false),
     mSheetAlreadyComplete(false),
     mOwningElement(nullptr),
@@ -376,7 +385,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   if (mParentData) {
     mSyncLoad = mParentData->mSyncLoad;
     mIsNonDocumentSheet = mParentData->mIsNonDocumentSheet;
-    mAllowUnsafeRules = mParentData->mAllowUnsafeRules;
+    mParsingMode = mParentData->mParsingMode;
     mUseSystemPrincipal = mParentData->mUseSystemPrincipal;
     ++(mParentData->mPendingChildren);
   }
@@ -389,7 +398,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
                              nsIURI* aURI,
                              CSSStyleSheet* aSheet,
                              bool aSyncLoad,
-                             bool aAllowUnsafeRules,
+                             SheetParsingMode aParsingMode,
                              bool aUseSystemPrincipal,
                              const nsCString& aCharset,
                              nsICSSLoaderObserver* aObserver,
@@ -407,7 +416,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
     mIsCancelled(false),
     mMustNotify(false),
     mWasAlternate(false),
-    mAllowUnsafeRules(aAllowUnsafeRules),
+    mParsingMode(aParsingMode),
     mUseSystemPrincipal(aUseSystemPrincipal),
     mSheetAlreadyComplete(false),
     mOwningElement(nullptr),
@@ -417,6 +426,10 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
     mCharsetHint(aCharset)
 {
   NS_PRECONDITION(mLoader, "Must have a loader!");
+  NS_PRECONDITION(aParsingMode == eAuthorSheetFeatures ||
+                  aParsingMode == eUserSheetFeatures ||
+                  aParsingMode == eAgentSheetFeatures,
+                  "Unrecognized sheet parsing mode");
 
   NS_POSTCONDITION(!mUseSystemPrincipal || mSyncLoad,
                    "Shouldn't use system principal for async loads");
@@ -1745,7 +1758,7 @@ Loader::ParseSheet(const nsAString& aInput,
   nsresult rv = parser.ParseSheet(aInput, sheetURI, baseURI,
                                   aLoadData->mSheet->Principal(),
                                   aLoadData->mLineNumber,
-                                  aLoadData->mAllowUnsafeRules);
+                                  aLoadData->mParsingMode);
   mParsingDatas.RemoveElementAt(mParsingDatas.Length() - 1);
 
   if (NS_FAILED(rv)) {
@@ -2253,12 +2266,13 @@ Loader::LoadChildSheet(CSSStyleSheet* aParentSheet,
 }
 
 nsresult
-Loader::LoadSheetSync(nsIURI* aURL, bool aAllowUnsafeRules,
+Loader::LoadSheetSync(nsIURI* aURL,
+                      SheetParsingMode aParsingMode,
                       bool aUseSystemPrincipal,
                       CSSStyleSheet** aSheet)
 {
   LOG(("css::Loader::LoadSheetSync"));
-  return InternalLoadNonDocumentSheet(aURL, aAllowUnsafeRules,
+  return InternalLoadNonDocumentSheet(aURL, aParsingMode,
                                       aUseSystemPrincipal, nullptr,
                                       EmptyCString(), aSheet, nullptr);
 }
@@ -2272,7 +2286,7 @@ Loader::LoadSheet(nsIURI* aURL,
 {
   LOG(("css::Loader::LoadSheet(aURL, aObserver, aSheet) api call"));
   NS_PRECONDITION(aSheet, "aSheet is null");
-  return InternalLoadNonDocumentSheet(aURL, false, false,
+  return InternalLoadNonDocumentSheet(aURL, eAuthorSheetFeatures, false,
                                       aOriginPrincipal, aCharset,
                                       aSheet, aObserver);
 }
@@ -2287,7 +2301,7 @@ Loader::LoadSheet(nsIURI* aURL,
                   const nsAString& aIntegrity)
 {
   LOG(("css::Loader::LoadSheet(aURL, aObserver) api call"));
-  return InternalLoadNonDocumentSheet(aURL, false, false,
+  return InternalLoadNonDocumentSheet(aURL, eAuthorSheetFeatures, false,
                                       aOriginPrincipal, aCharset,
                                       nullptr, aObserver, aCORSMode,
                                       aReferrerPolicy, aIntegrity);
@@ -2295,7 +2309,7 @@ Loader::LoadSheet(nsIURI* aURL,
 
 nsresult
 Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
-                                     bool aAllowUnsafeRules,
+                                     SheetParsingMode aParsingMode,
                                      bool aUseSystemPrincipal,
                                      nsIPrincipal* aOriginPrincipal,
                                      const nsCString& aCharset,
@@ -2352,7 +2366,7 @@ Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
   }
 
   SheetLoadData* data =
-    new SheetLoadData(this, aURL, sheet, syncLoad, aAllowUnsafeRules,
+    new SheetLoadData(this, aURL, sheet, syncLoad, aParsingMode,
                       aUseSystemPrincipal, aCharset, aObserver,
                       aOriginPrincipal, mDocument);
 
