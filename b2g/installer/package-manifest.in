@@ -56,9 +56,7 @@
 #endif
 
 [xpcom]
-#ifndef XP_MACOSX
 @RESPATH@/dependentlibs.list
-#endif
 #ifdef GKMEDIAS_SHARED_LIBRARY
 @BINPATH@/@DLL_PREFIX@gkmedias@DLL_SUFFIX@
 #endif
@@ -155,7 +153,7 @@
 #endif
 #endif
 #ifdef MOZ_WEBSPEECH_MODELS
-@BINPATH@/models/
+@RESPATH@/models/
 #endif
 
 ; [Components]
@@ -167,34 +165,34 @@
 #endif
 @RESPATH@/components/accessibility.xpt
 #endif
-@BINPATH@/components/appshell.xpt
-@BINPATH@/components/appstartup.xpt
-@BINPATH@/components/autocomplete.xpt
-@BINPATH@/components/autoconfig.xpt
-@BINPATH@/components/browsercompsbase.xpt
-@BINPATH@/components/browser-element.xpt
-@BINPATH@/components/browser-feeds.xpt
-@BINPATH@/components/caps.xpt
-@BINPATH@/components/chardet.xpt
-@BINPATH@/components/chrome.xpt
-@BINPATH@/components/commandhandler.xpt
-@BINPATH@/components/commandlines.xpt
-@BINPATH@/components/composer.xpt
-@BINPATH@/components/content_events.xpt
-@BINPATH@/components/content_geckomediaplugins.xpt
-@BINPATH@/components/content_html.xpt
-@BINPATH@/components/content_xslt.xpt
-@BINPATH@/components/cookie.xpt
-@BINPATH@/components/devtools_security.xpt
-@BINPATH@/components/directory.xpt
-@BINPATH@/components/diskspacewatcher.xpt
-@BINPATH@/components/docshell.xpt
-@BINPATH@/components/dom.xpt
-@BINPATH@/components/dom_activities.xpt
-@BINPATH@/components/dom_apps.xpt
-@BINPATH@/components/dom_audiochannel.xpt
-@BINPATH@/components/dom_base.xpt
-@BINPATH@/components/dom_system.xpt
+@RESPATH@/components/appshell.xpt
+@RESPATH@/components/appstartup.xpt
+@RESPATH@/components/autocomplete.xpt
+@RESPATH@/components/autoconfig.xpt
+@RESPATH@/components/browsercompsbase.xpt
+@RESPATH@/components/browser-element.xpt
+@RESPATH@/components/browser-feeds.xpt
+@RESPATH@/components/caps.xpt
+@RESPATH@/components/chardet.xpt
+@RESPATH@/components/chrome.xpt
+@RESPATH@/components/commandhandler.xpt
+@RESPATH@/components/commandlines.xpt
+@RESPATH@/components/composer.xpt
+@RESPATH@/components/content_events.xpt
+@RESPATH@/components/content_geckomediaplugins.xpt
+@RESPATH@/components/content_html.xpt
+@RESPATH@/components/content_xslt.xpt
+@RESPATH@/components/cookie.xpt
+@RESPATH@/components/devtools_security.xpt
+@RESPATH@/components/directory.xpt
+@RESPATH@/components/diskspacewatcher.xpt
+@RESPATH@/components/docshell.xpt
+@RESPATH@/components/dom.xpt
+@RESPATH@/components/dom_activities.xpt
+@RESPATH@/components/dom_apps.xpt
+@RESPATH@/components/dom_audiochannel.xpt
+@RESPATH@/components/dom_base.xpt
+@RESPATH@/components/dom_system.xpt
 #ifdef MOZ_WIDGET_GONK
 @RESPATH@/components/dom_wifi.xpt
 @RESPATH@/components/dom_system_gonk.xpt
@@ -207,7 +205,7 @@
 @RESPATH@/components/dom_bluetooth.xpt
 #endif
 #ifdef MOZ_B2G_CAMERA
-@BINPATH@/components/dom_camera.xpt
+@RESPATH@/components/dom_camera.xpt
 #endif
 @RESPATH@/components/dom_canvas.xpt
 @RESPATH@/components/dom_contacts.xpt
@@ -492,8 +490,8 @@
 
 ; Camera
 #ifdef MOZ_B2G_CAMERA
-@BINPATH@/components/CameraTestHardware.js
-@BINPATH@/components/CameraTestHardware.manifest
+@RESPATH@/components/CameraTestHardware.js
+@RESPATH@/components/CameraTestHardware.manifest
 #endif // MOZ_B2G_CAMERA
 
 ; Tethering
