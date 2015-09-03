@@ -184,7 +184,8 @@ public:
 
   AudioListener* Listener();
 
-  AudioContextState State() const;
+  AudioContextState State() const { return mAudioContextState; }
+
   // Those three methods return a promise to content, that is resolved when an
   // (possibly long) operation is completed on the MSG (and possibly other)
   // thread(s). To avoid having to match the calls and asychronous result when
