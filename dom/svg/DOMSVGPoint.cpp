@@ -23,7 +23,7 @@ namespace mozilla {
 // Helper class: AutoChangePointNotifier
 // Stack-based helper class to pair calls to WillChangePointList and
 // DidChangePointList.
-class MOZ_STACK_CLASS AutoChangePointNotifier
+class MOZ_RAII AutoChangePointNotifier
 {
 public:
   explicit AutoChangePointNotifier(DOMSVGPoint* aPoint MOZ_GUARD_OBJECT_NOTIFIER_PARAM)

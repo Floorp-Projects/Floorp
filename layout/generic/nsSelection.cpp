@@ -332,7 +332,7 @@ IsValidSelectionPoint(nsFrameSelection *aFrameSel, nsINode *aNode)
 }
 
 namespace mozilla {
-struct MOZ_STACK_CLASS AutoPrepareFocusRange
+struct MOZ_RAII AutoPrepareFocusRange
 {
   AutoPrepareFocusRange(Selection* aSelection,
                         bool aContinueSelection,

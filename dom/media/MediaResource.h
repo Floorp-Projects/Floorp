@@ -794,7 +794,7 @@ protected:
  * us.
  */
 template<class T>
-class MOZ_STACK_CLASS AutoPinned {
+class MOZ_RAII AutoPinned {
  public:
   explicit AutoPinned(T* aResource MOZ_GUARD_OBJECT_NOTIFIER_PARAM) : mResource(aResource) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;

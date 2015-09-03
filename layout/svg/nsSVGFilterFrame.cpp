@@ -27,7 +27,7 @@ NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGFilterFrame)
 
-class MOZ_STACK_CLASS nsSVGFilterFrame::AutoFilterReferencer
+class MOZ_RAII nsSVGFilterFrame::AutoFilterReferencer
 {
 public:
   explicit AutoFilterReferencer(nsSVGFilterFrame *aFrame MOZ_GUARD_OBJECT_NOTIFIER_PARAM)

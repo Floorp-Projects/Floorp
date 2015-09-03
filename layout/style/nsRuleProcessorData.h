@@ -225,7 +225,7 @@ struct MOZ_STACK_CLASS TreeMatchContext {
   }
 
   /* Helper class for maintaining the ancestor state */
-  class MOZ_STACK_CLASS AutoAncestorPusher {
+  class MOZ_RAII AutoAncestorPusher {
   public:
     explicit AutoAncestorPusher(TreeMatchContext& aTreeMatchContext
                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
@@ -295,7 +295,7 @@ struct MOZ_STACK_CLASS TreeMatchContext {
    * in cases where we may or may not want to be skipping flex/grid-item
    * style fixup for a particular chunk of code).
    */
-  class MOZ_STACK_CLASS AutoParentDisplayBasedStyleFixupSkipper {
+  class MOZ_RAII AutoParentDisplayBasedStyleFixupSkipper {
   public:
     explicit AutoParentDisplayBasedStyleFixupSkipper(TreeMatchContext& aTreeMatchContext,
                                                      bool aSkipParentDisplayBasedStyleFixup = true

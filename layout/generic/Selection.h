@@ -217,7 +217,7 @@ public:
   nsresult     NotifySelectionListeners();
 
   friend struct AutoApplyUserSelectStyle;
-  struct MOZ_STACK_CLASS AutoApplyUserSelectStyle
+  struct MOZ_RAII AutoApplyUserSelectStyle
   {
     explicit AutoApplyUserSelectStyle(Selection* aSelection
                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
