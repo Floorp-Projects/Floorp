@@ -146,6 +146,7 @@ StorageUI.prototype = {
     if (response.hasOwnProperty(type) && response[type].indexOf(host) > -1) {
       this.table.clear();
       this.hideSidebar();
+      this.emit("store-objects-cleared");
     }
   },
 
