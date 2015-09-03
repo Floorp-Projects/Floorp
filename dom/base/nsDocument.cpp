@@ -8074,6 +8074,26 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
   }
   case Specified:
   default:
+    LayoutDeviceToScreenScale effectiveMinScale = mScaleMinFloat;
+    LayoutDeviceToScreenScale effectiveMaxScale = mScaleMaxFloat;
+    bool effectiveValidMaxScale = mValidMaxScale;
+    bool effectiveAllowZoom = mAllowZoom;
+    bool effectiveAllowDoubleTapZoom = mAllowDoubleTapZoom;
+    if (gfxPrefs::ForceUserScalable()) {
+      // If the pref to force user-scalable is enabled, we ignore the values
+      // from the meta-viewport tag for these properties and just assume they
+      // allow the page to be scalable. Note in particular that this code is
+      // in the "Specified" branch of the enclosing switch statement, so that
+      // calls to GetViewportInfo always use the latest value of the
+      // ForceUserScalable pref. Other codepaths that return nsViewportInfo
+      // instances are all consistent with ForceUserScalable() already.
+      effectiveMinScale = kViewportMinScale;
+      effectiveMaxScale = kViewportMaxScale;
+      effectiveValidMaxScale = true;
+      effectiveAllowZoom = true;
+      effectiveAllowDoubleTapZoom = true;
+    }
+
     CSSSize size = mViewportSize;
 
     if (!mValidWidth) {
@@ -8096,8 +8116,8 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     }
 
     CSSToScreenScale scaleFloat = mScaleFloat * layoutDeviceScale;
-    CSSToScreenScale scaleMinFloat = mScaleMinFloat * layoutDeviceScale;
-    CSSToScreenScale scaleMaxFloat = mScaleMaxFloat * layoutDeviceScale;
+    CSSToScreenScale scaleMinFloat = effectiveMinScale * layoutDeviceScale;
+    CSSToScreenScale scaleMaxFloat = effectiveMaxScale * layoutDeviceScale;
 
     if (mAutoSize) {
       // aDisplaySize is in screen pixels; convert them to CSS pixels for the viewport size.
@@ -8122,14 +8142,15 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
       CSSSize displaySize = ScreenSize(aDisplaySize) / scaleFloat;
       size.width = std::max(size.width, displaySize.width);
       size.height = std::max(size.height, displaySize.height);
-    } else if (mValidMaxScale) {
+    } else if (effectiveValidMaxScale) {
       CSSSize displaySize = ScreenSize(aDisplaySize) / scaleMaxFloat;
       size.width = std::max(size.width, displaySize.width);
       size.height = std::max(size.height, displaySize.height);
     }
 
     return nsViewportInfo(scaleFloat, scaleMinFloat, scaleMaxFloat, size,
-                          mAutoSize, mAllowZoom, mAllowDoubleTapZoom);
+                          mAutoSize, effectiveAllowZoom,
+                          effectiveAllowDoubleTapZoom);
   }
 }
 
