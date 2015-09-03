@@ -654,7 +654,7 @@ namespace JS {
  * specialization, define a RootedBase<T> specialization containing them.
  */
 template <typename T>
-class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
+class MOZ_RAII Rooted : public js::RootedBase<T>
 {
     static_assert(!mozilla::IsConvertible<T, Traceable*>::value,
                   "Rooted takes pointer or Traceable types but not Traceable* type");
@@ -777,7 +777,7 @@ class HandleBase<JSObject*>
 
 /* Interface substitute for Rooted<T> which does not root the variable's memory. */
 template <typename T>
-class FakeRooted : public RootedBase<T>
+class MOZ_RAII FakeRooted : public RootedBase<T>
 {
   public:
     template <typename CX>

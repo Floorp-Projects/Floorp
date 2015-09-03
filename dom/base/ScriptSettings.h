@@ -412,7 +412,7 @@ private:
  * passed as a parameter. AutoJSContext will take care of finding the most
  * appropriate JS context and release it when leaving the stack.
  */
-class MOZ_STACK_CLASS AutoJSContext {
+class MOZ_RAII AutoJSContext {
 public:
   explicit AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   operator JSContext*() const;
@@ -434,7 +434,7 @@ protected:
  * Use ThreadsafeAutoJSContext when you want an AutoJSContext but might be
  * running on a worker thread.
  */
-class MOZ_STACK_CLASS ThreadsafeAutoJSContext {
+class MOZ_RAII ThreadsafeAutoJSContext {
 public:
   explicit ThreadsafeAutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   operator JSContext*() const;
@@ -452,7 +452,7 @@ private:
  *
  * Note - This is deprecated. Please use AutoJSAPI instead.
  */
-class MOZ_STACK_CLASS AutoSafeJSContext : public AutoJSContext {
+class MOZ_RAII AutoSafeJSContext : public AutoJSContext {
 public:
   explicit AutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
 private:
@@ -462,7 +462,7 @@ private:
 /**
  * Like AutoSafeJSContext but can be used safely on worker threads.
  */
-class MOZ_STACK_CLASS ThreadsafeAutoSafeJSContext {
+class MOZ_RAII ThreadsafeAutoSafeJSContext {
 public:
   explicit ThreadsafeAutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   operator JSContext*() const;

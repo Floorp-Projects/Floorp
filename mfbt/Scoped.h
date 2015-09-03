@@ -77,7 +77,7 @@ namespace mozilla {
  *   }
  */
 template<typename Traits>
-class Scoped
+class MOZ_NON_TEMPORARY_CLASS Scoped
 {
 public:
   typedef typename Traits::type Resource;
@@ -187,7 +187,7 @@ private:
  */
 #define SCOPED_TEMPLATE(name, Traits)                                         \
 template<typename Type>                                                       \
-struct name : public mozilla::Scoped<Traits<Type> >                           \
+struct MOZ_NON_TEMPORARY_CLASS name : public mozilla::Scoped<Traits<Type> >   \
 {                                                                             \
   typedef mozilla::Scoped<Traits<Type> > Super;                               \
   typedef typename Super::Resource Resource;                                  \

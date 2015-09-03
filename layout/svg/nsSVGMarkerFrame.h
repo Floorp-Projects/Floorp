@@ -110,7 +110,7 @@ private:
   // prevent nasty reference loops) as well as the reference to the marked
   // frame and its coordinate context. It's easy to mess this up
   // and break things, so this helper makes the code far more robust.
-  class MOZ_STACK_CLASS AutoMarkerReferencer
+  class MOZ_RAII AutoMarkerReferencer
   {
   public:
     AutoMarkerReferencer(nsSVGMarkerFrame *aFrame,

@@ -377,7 +377,7 @@ static inline void profiler_tracing(const char* aCategory, const char* aInfo,
 
 namespace mozilla {
 
-class MOZ_STACK_CLASS GeckoProfilerTracingRAII {
+class MOZ_RAII GeckoProfilerTracingRAII {
 public:
   GeckoProfilerTracingRAII(const char* aCategory, const char* aInfo,
                            mozilla::UniquePtr<ProfilerBacktrace> aBacktrace
