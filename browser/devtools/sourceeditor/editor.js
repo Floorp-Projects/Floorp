@@ -8,14 +8,17 @@
 
 const { Cu, Cc, Ci, components } = require("chrome");
 
-const TAB_SIZE    = "devtools.editor.tabsize";
+const {
+  EXPAND_TAB,
+  TAB_SIZE,
+  DETECT_INDENT,
+  getIndentationFromIteration
+} = require("devtools/toolkit/shared/indentation");
+
 const ENABLE_CODE_FOLDING = "devtools.editor.enableCodeFolding";
-const EXPAND_TAB  = "devtools.editor.expandtab";
 const KEYMAP      = "devtools.editor.keymap";
 const AUTO_CLOSE  = "devtools.editor.autoclosebrackets";
 const AUTOCOMPLETE  = "devtools.editor.autocomplete";
-const DETECT_INDENT = "devtools.editor.detectindentation";
-const DETECT_INDENT_MAX_LINES = 500;
 const L10N_BUNDLE = "chrome://browser/locale/devtools/sourceeditor.properties";
 const XUL_NS      = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const VALID_KEYMAPS = new Set(["emacs", "vim", "sublime"]);
@@ -514,20 +517,15 @@ Editor.prototype = {
   resetIndentUnit: function() {
     let cm = editors.get(this);
 
-    let indentWithTabs = !Services.prefs.getBoolPref(EXPAND_TAB);
-    let indentUnit = Services.prefs.getIntPref(TAB_SIZE);
-    let shouldDetect = Services.prefs.getBoolPref(DETECT_INDENT);
+    let iterFn = function(start, end, callback) {
+      cm.eachLine(start, end, (line) => {
+        return callback(line.text);
+      });
+    };
+
+    let {indentUnit, indentWithTabs} = getIndentationFromIteration(iterFn);
 
     cm.setOption("tabSize", indentUnit);
-
-    if (shouldDetect) {
-      let indent = detectIndentation(this);
-      if (indent != null) {
-        indentWithTabs = indent.tabs;
-        indentUnit = indent.spaces ? indent.spaces : indentUnit;
-      }
-    }
-
     cm.setOption("indentUnit", indentUnit);
     cm.setOption("indentWithTabs", indentWithTabs);
   },
@@ -1298,75 +1296,6 @@ function controller(ed) {
 
     onEvent: function () {}
   };
-}
-
-/**
- * Detect the indentation used in an editor. Returns an object
- * with 'tabs' - whether this is tab-indented and 'spaces' - the
- * width of one indent in spaces. Or `null` if it's inconclusive.
- */
-function detectIndentation(ed) {
-  let cm = editors.get(ed);
-
-  let spaces = {};  // # spaces indent -> # lines with that indent
-  let last = 0;     // indentation width of the last line we saw
-  let tabs = 0;     // # of lines that start with a tab
-  let total = 0;    // # of indented lines (non-zero indent)
-
-  cm.eachLine(0, DETECT_INDENT_MAX_LINES, (line) => {
-    let text = line.text;
-
-    if (text.startsWith("\t")) {
-      tabs++;
-      total++;
-      return;
-    }
-    let width = 0;
-    while (text[width] === " ") {
-      width++;
-    }
-    // don't count lines that are all spaces
-    if (width == text.length) {
-      last = 0;
-      return;
-    }
-    if (width > 1) {
-      total++;
-    }
-
-    // see how much this line is offset from the line above it
-    let indent = Math.abs(width - last);
-    if (indent > 1 && indent <= 8) {
-      spaces[indent] = (spaces[indent] || 0) + 1;
-    }
-    last = width;
-  });
-
-  // this file is not indented at all
-  if (total == 0) {
-    return null;
-  }
-
-  // mark as tabs if they start more than half the lines
-  if (tabs >= total / 2) {
-    return { tabs: true };
-  }
-
-  // find most frequent non-zero width difference between adjacent lines
-  let freqIndent = null, max = 1;
-  for (let width in spaces) {
-    width = parseInt(width, 10);
-    let tally = spaces[width];
-    if (tally > max) {
-      max = tally;
-      freqIndent = width;
-    }
-  }
-  if (!freqIndent) {
-    return null;
-  }
-
-  return { tabs: false, spaces: freqIndent };
 }
 
 module.exports = Editor;

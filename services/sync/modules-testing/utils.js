@@ -31,6 +31,7 @@ Cu.import("resource://services-sync/browserid_identity.js");
 Cu.import("resource://testing-common/services/common/logging.js");
 Cu.import("resource://testing-common/services/sync/fakeservices.js");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
+Cu.import("resource://gre/modules/FxAccountsClient.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/Promise.jsm");
 
@@ -190,6 +191,18 @@ this.configureFxAccountIdentity = function(authService,
 
   };
   fxa = new FxAccounts(MockInternal);
+
+  let MockFxAccountsClient = function() {
+    FxAccountsClient.apply(this);
+  };
+  MockFxAccountsClient.prototype = {
+    __proto__: FxAccountsClient.prototype,
+    accountStatus() {
+      return Promise.resolve(true);
+    }
+  };
+  let mockFxAClient = new MockFxAccountsClient();
+  fxa.internal._fxAccountsClient = mockFxAClient;
 
   let mockTSC = { // TokenServerClient
     getTokenFromBrowserIDAssertion: function(uri, assertion, cb) {
