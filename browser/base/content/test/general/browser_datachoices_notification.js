@@ -100,11 +100,6 @@ let checkInfobarButton = Task.async(function* (aNotification) {
   // Wait for the preferences panel to open.
   let preferenceWindow = yield paneLoadedPromise;
   yield promiseNextTick();
-  // If the prefs are being displayed in a dialog we need to close it.
-  // If in a tab (ie, in-content prefs) it closes with the window.
-  if (!Services.prefs.getBoolPref("browser.preferences.inContent")) {
-    prefWin.close();
-  }
 });
 
 add_task(function* setup(){

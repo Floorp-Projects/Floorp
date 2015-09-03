@@ -49,7 +49,7 @@
    * @param {string} name
    * @param {function} fn
    */
-  function createTask (self, name, fn) {
+  function createTask(self, name, fn) {
     // Store a hash of task name to function on the Worker
     if (!self._tasks) {
       self._tasks = {};
@@ -70,7 +70,7 @@
    * @param {object} self
    * @return {function}
    */
-  function createHandler (self) {
+  function createHandler(self) {
     return function (e) {
       let { id, task, data } = e.data;
       let taskFn = self._tasks[task];
@@ -87,7 +87,7 @@
         handleError(e);
       }
 
-      function handleResponse (response) {
+      function handleResponse(response) {
         // If a promise
         if (response && typeof response.then === "function") {
           response.then(val => self.postMessage({ id, response: val }), handleError);
@@ -102,10 +102,31 @@
         }
       }
 
-      function handleError (e="Error") {
-        self.postMessage({ id, error: e.message || e });
+      function handleError(error="Error") {
+        try {
+          // First, try and structured clone the error across directly.
+          self.postMessage({ id, error });
+        } catch (_) {
+          // We could not clone whatever error value was given. Do our best to
+          // stringify it.
+          let errorString = `Error while performing task "${task}": `;
+
+          try {
+            errorString += error.toString();
+          } catch (_) {
+            errorString += "<could not stringify error>";
+          }
+
+          if ("stack" in error) {
+            try {
+              errorString += "\n" + error.stack;
+            } catch (_) { }
+          }
+
+          self.postMessage({ id, error: errorString });
+        }
       }
-    }
+    };
   }
 
   return { createTask: createTask };
