@@ -125,15 +125,24 @@ AudioBlock::ClearDownstreamMark() {
 }
 
 void
-AllocateAudioBlock(uint32_t aChannelCount, AudioChunk* aChunk)
+AudioBlock::AssertNoLastingShares() {
+  MOZ_ASSERT(!mBuffer->AsAudioBlockBuffer()->HasLastingShares());
+}
+
+void
+AudioBlock::AllocateChannels(uint32_t aChannelCount)
 {
-  if (aChunk->mBuffer && aChunk->ChannelCount() == aChannelCount) {
-    AudioBlockBuffer* buffer = aChunk->mBuffer->AsAudioBlockBuffer();
+  MOZ_ASSERT(mDuration == WEBAUDIO_BLOCK_SIZE);
+
+  if (mBufferIsDownstreamRef) {
+    // This is not our buffer to re-use.
+    ClearDownstreamMark();
+  } else if (mBuffer && ChannelCount() == aChannelCount) {
+    AudioBlockBuffer* buffer = mBuffer->AsAudioBlockBuffer();
     if (buffer && !buffer->HasLastingShares()) {
-      MOZ_ASSERT(aChunk->mBufferFormat == AUDIO_FORMAT_FLOAT32);
-      MOZ_ASSERT(aChunk->mDuration == WEBAUDIO_BLOCK_SIZE);
+      MOZ_ASSERT(mBufferFormat == AUDIO_FORMAT_FLOAT32);
       // No need to allocate again.
-      aChunk->mVolume = 1.0f;
+      mVolume = 1.0f;
       return;
     }
   }
@@ -141,14 +150,13 @@ AllocateAudioBlock(uint32_t aChannelCount, AudioChunk* aChunk)
   // XXX for SIMD purposes we should do something here to make sure the
   // channel buffers are 16-byte aligned.
   nsRefPtr<AudioBlockBuffer> buffer = AudioBlockBuffer::Create(aChannelCount);
-  aChunk->mDuration = WEBAUDIO_BLOCK_SIZE;
-  aChunk->mChannelData.SetLength(aChannelCount);
+  mChannelData.SetLength(aChannelCount);
   for (uint32_t i = 0; i < aChannelCount; ++i) {
-    aChunk->mChannelData[i] = buffer->ChannelData(i);
+    mChannelData[i] = buffer->ChannelData(i);
   }
-  aChunk->mBuffer = buffer.forget();
-  aChunk->mVolume = 1.0f;
-  aChunk->mBufferFormat = AUDIO_FORMAT_FLOAT32;
+  mBuffer = buffer.forget();
+  mVolume = 1.0f;
+  mBufferFormat = AUDIO_FORMAT_FLOAT32;
 }
 
 } // namespace mozilla

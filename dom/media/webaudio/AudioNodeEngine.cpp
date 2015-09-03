@@ -33,7 +33,8 @@ ThreadSharedFloatArrayBufferList::Create(uint32_t aChannelCount,
 }
 
 void
-WriteZeroesToAudioBlock(AudioChunk* aChunk, uint32_t aStart, uint32_t aLength)
+WriteZeroesToAudioBlock(AudioBlock* aChunk,
+                        uint32_t aStart, uint32_t aLength)
 {
   MOZ_ASSERT(aStart + aLength <= WEBAUDIO_BLOCK_SIZE);
   MOZ_ASSERT(!aChunk->IsNull(), "You should pass a non-null chunk");
@@ -268,6 +269,27 @@ AudioBufferSumOfSquares(const float* aInput, uint32_t aLength)
     ++aInput;
   }
   return sum;
+}
+
+void
+AudioNodeEngine::ProcessBlock(AudioNodeStream* aStream,
+                              const AudioBlock& aInput,
+                              AudioBlock* aOutput,
+                              bool* aFinished)
+{
+  MOZ_ASSERT(mInputCount <= 1 && mOutputCount <= 1);
+  *aOutput = aInput;
+}
+
+void
+AudioNodeEngine::ProcessBlocksOnPorts(AudioNodeStream* aStream,
+                                      const OutputChunks& aInput,
+                                      OutputChunks& aOutput,
+                                      bool* aFinished)
+{
+  MOZ_ASSERT(mInputCount > 1 || mOutputCount > 1);
+  // Only produce one output port, and drop all other input ports.
+  aOutput[0] = aInput[0];
 }
 
 } // namespace mozilla

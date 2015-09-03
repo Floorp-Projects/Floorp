@@ -277,14 +277,14 @@ public:
     }
   }
 
-  void ComputeSilence(AudioChunk *aOutput)
+  void ComputeSilence(AudioBlock *aOutput)
   {
     aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
-                            const AudioChunk& aInput,
-                            AudioChunk* aOutput,
+                            const AudioBlock& aInput,
+                            AudioBlock* aOutput,
                             bool* aFinished) override
   {
     MOZ_ASSERT(mSource == aStream, "Invalid source stream");
@@ -307,7 +307,7 @@ public:
       return;
     }
 
-    AllocateAudioBlock(1, aOutput);
+    aOutput->AllocateChannels(1);
     float* output = aOutput->ChannelFloatsForWrite(0);
 
     uint32_t start, end;
