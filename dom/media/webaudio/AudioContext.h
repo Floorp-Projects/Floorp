@@ -303,7 +303,8 @@ public:
 
   AudioChannel TestAudioChannelInAudioNodeStream();
 
-  void UpdateNodeCount(int32_t aDelta);
+  void RegisterNode(AudioNode* aNode);
+  void UnregisterNode(AudioNode* aNode);
 
   double DOMTimeToStreamTime(double aTime) const
   {
@@ -361,6 +362,8 @@ private:
   // See RegisterActiveNode.  These will keep the AudioContext alive while it
   // is rendering and the window remains alive.
   nsTHashtable<nsRefPtrHashKey<AudioNode> > mActiveNodes;
+  // Raw (non-owning) references to all AudioNodes for this AudioContext.
+  nsTHashtable<nsPtrHashKey<AudioNode> > mAllNodes;
   // Hashsets containing all the PannerNodes, to compute the doppler shift.
   // These are weak pointers.
   nsTHashtable<nsPtrHashKey<PannerNode> > mPannerNodes;
@@ -368,8 +371,6 @@ private:
   nsRefPtr<BasicWaveFormCache> mBasicWaveFormCache;
   // Number of channels passed in the OfflineAudioContext ctor.
   uint32_t mNumberOfChannels;
-  // Number of nodes that currently exist for this AudioContext
-  int32_t mNodeCount;
   bool mIsOffline;
   bool mIsStarted;
   bool mIsShutDown;
