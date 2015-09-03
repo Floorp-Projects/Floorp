@@ -1378,6 +1378,8 @@ MediaManager::IsInMediaThread()
 // NOTE: never Dispatch(....,NS_DISPATCH_SYNC) to the MediaManager
 // thread from the MainThread, as we NS_DISPATCH_SYNC to MainThread
 // from MediaManager thread.
+
+// Guaranteed never to return nullptr.
 /* static */  MediaManager*
 MediaManager::Get() {
   if (!sSingleton) {
@@ -2066,7 +2068,14 @@ MediaManager::EnumerateDevices(nsPIDOMWindow* aWindow,
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onFailure(aOnFailure);
   uint64_t windowId = aWindow->WindowID();
 
-  AddWindowID(windowId);
+  StreamListeners* listeners = AddWindowID(windowId);
+
+  // Create a disabled listener to act as a placeholder
+  nsRefPtr<GetUserMediaCallbackMediaStreamListener> listener =
+    new GetUserMediaCallbackMediaStreamListener(mMediaThread, windowId);
+
+  // No need for locking because we always do this in the main thread.
+  listeners->AppendElement(listener);
 
   bool fake = Preferences::GetBool("media.navigator.streams.fake");
 
@@ -2074,11 +2083,15 @@ MediaManager::EnumerateDevices(nsPIDOMWindow* aWindow,
                                                      dom::MediaSourceEnum::Camera,
                                                      dom::MediaSourceEnum::Microphone,
                                                      fake);
-  p->Then([onSuccess](SourceSet*& aDevices) mutable {
+  p->Then([onSuccess, windowId, listener](SourceSet*& aDevices) mutable {
     ScopedDeletePtr<SourceSet> devices(aDevices); // grab result
+    nsRefPtr<MediaManager> mgr = MediaManager_GetInstance();
+    mgr->RemoveFromWindowList(windowId, listener);
     nsCOMPtr<nsIWritableVariant> array = MediaManager_ToJSArray(*devices);
     onSuccess->OnSuccess(array);
-  }, [onFailure](MediaStreamError& reason) mutable {
+  }, [onFailure, windowId, listener](MediaStreamError& reason) mutable {
+    nsRefPtr<MediaManager> mgr = MediaManager_GetInstance();
+    mgr->RemoveFromWindowList(windowId, listener);
     onFailure->OnError(&reason);
   });
   return NS_OK;
