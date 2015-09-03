@@ -120,6 +120,62 @@ let gTests = [
         yield promiseEcho;
       });
     }
+  },
+  {
+    desc: "fxa web channel - logout messages should notify the fxAccounts object",
+    run: function* () {
+      let promiseLogout = new Promise((resolve, reject) => {
+        let logout = (uid) => {
+          Assert.equal(uid, 'uid');
+
+          client.tearDown();
+          resolve();
+        };
+
+        let client = new FxAccountsWebChannel({
+          content_uri: TEST_HTTP_PATH,
+          channel_id: TEST_CHANNEL_ID,
+          helpers: {
+            logout: logout
+          }
+        });
+      });
+
+      yield BrowserTestUtils.withNewTab({
+        gBrowser: gBrowser,
+        url: TEST_BASE_URL + "?logout"
+      }, function* () {
+        yield promiseLogout;
+      });
+    }
+  },
+  {
+    desc: "fxa web channel - delete messages should notify the fxAccounts object",
+    run: function* () {
+      let promiseDelete = new Promise((resolve, reject) => {
+        let logout = (uid) => {
+          Assert.equal(uid, 'uid');
+
+          client.tearDown();
+          resolve();
+        };
+
+        let client = new FxAccountsWebChannel({
+          content_uri: TEST_HTTP_PATH,
+          channel_id: TEST_CHANNEL_ID,
+          helpers: {
+            logout: logout
+          }
+        });
+      });
+
+      yield BrowserTestUtils.withNewTab({
+        gBrowser: gBrowser,
+        url: TEST_BASE_URL + "?delete"
+      }, function* () {
+        yield promiseDelete;
+      });
+    }
   }
 ]; // gTests
 

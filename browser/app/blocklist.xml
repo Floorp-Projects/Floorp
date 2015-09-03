@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1437165748000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1441146756000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -27,6 +27,12 @@
     </emItem>
       <emItem  blockID="i105" id="{95ff02bc-ffc6-45f0-a5c8-619b8226a9de}">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i994" id="addonhack@mozilla.kewis.ch">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -268,6 +274,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i972" id="831778-poidjao88DASfsAnindsd@jetpack">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i352" id="vpyekkifgv@vpyekkifgv.org">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -309,6 +321,12 @@
     </emItem>
       <emItem  blockID="i620" id="{21EAF666-26B3-4A3C-ABD0-CA2F5A326744}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i988" id="{b12785f5-d8d0-4530-a3ea-5c4263b85bef}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -460,8 +478,10 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i644" id="youtubeunblocker@unblocker.yt">
+      <emItem  blockID="i990" id="youtubeunblocker@unblocker.yt">
                         <versionRange  minVersion="43.4.1" maxVersion="77.5.1" severity="3">
+                    </versionRange>
+                                <versionRange  minVersion="0" maxVersion="0.6.16" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -818,6 +838,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i980" id="wHO@W9.net">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i99" id="pfzPXmnzQRXX6@2iABkVe.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -1149,8 +1175,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i306" id="{ADFA33FD-16F5-4355-8504-DF4D664CFE10}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+      <emItem  blockID="i437" id="{4933189D-C7F7-4C6E-834B-A29F087BFD23}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1325,6 +1351,12 @@
     </emItem>
       <emItem  blockID="i433" id="{c95a4e8e-816d-4655-8c79-d736da1adb6d}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i968" id="{184AA5E6-741D-464a-820E-94B3ABC2F3B4}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1761,6 +1793,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i982" id="odtffplugin@ibm.com">
+                        <versionRange  minVersion="9.0.1.1" maxVersion="9.0.1.100" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i564" id="/^(firefox@vebergreat\.net|EFGLQA@78ETGYN-0W7FN789T87\.COM)$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -2056,8 +2094,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i437" id="{4933189D-C7F7-4C6E-834B-A29F087BFD23}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+      <emItem  blockID="i306" id="{ADFA33FD-16F5-4355-8504-DF4D664CFE10}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2339,6 +2377,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i786" id="{63eb5ed4-e1b3-47ec-a253-f8462f205350}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i970" id="hha8771ui3-Fo9j9h7aH98jsdfa8sda@jetpack">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
@@ -3163,6 +3207,43 @@
                   </devices>
             <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g511">      <os>WINNT 5.1</os>      <vendor>0x8086</vendor>            <feature>DIRECT3D_9_LAYERS, WEBGL_ANGLE</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>6.14.10.5218</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g974">      <os>WINNT 10.0</os>      <vendor>0x1002</vendor>              <devices>
+                      <device>0x6920</device>
+                      <device>0x6921</device>
+                      <device>0x6928</device>
+                      <device>0x6929</device>
+                      <device>0x692b</device>
+                      <device>0x692f</device>
+                      <device>0x6930</device>
+                      <device>0x6938</device>
+                      <device>0x6939</device>
+                      <device>0x6900</device>
+                      <device>0x6901</device>
+                      <device>0x6902</device>
+                      <device>0x6903</device>
+                      <device>0x6907</device>
+                      <device>0x7300</device>
+                  </devices>
+            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>15.201.1151.0</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g984">      <os>All</os>      <vendor>0x8086</vendor>            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.2413</driverVersion>      <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g992">      <os>WINNT 8.1</os>      <vendor>0x1002</vendor>              <devices>
+                      <device>0x6920</device>
+                      <device>0x6921</device>
+                      <device>0x6928</device>
+                      <device>0x6929</device>
+                      <device>0x692b</device>
+                      <device>0x692f</device>
+                      <device>0x6930</device>
+                      <device>0x6938</device>
+                      <device>0x6939</device>
+                      <device>0x6900</device>
+                      <device>0x6901</device>
+                      <device>0x6902</device>
+                      <device>0x6903</device>
+                      <device>0x6907</device>
+                      <device>0x7300</device>
+                  </devices>
+            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>15.201.1151.0</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
     </gfxItems>
 
   <certItems>

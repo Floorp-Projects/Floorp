@@ -6,27 +6,24 @@
 "use strict";
 
 const {Cu} = require("chrome");
-const STORAGE_STRINGS = "chrome://browser/locale/devtools/storage.properties";
+const EventEmitter = require("devtools/toolkit/event-emitter");
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyGetter(this, "TreeWidget",
-  () => require("devtools/shared/widgets/TreeWidget").TreeWidget);
-XPCOMUtils.defineLazyGetter(this, "TableWidget",
-  () => require("devtools/shared/widgets/TableWidget").TableWidget);
-XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
-  "resource://gre/modules/devtools/event-emitter.js");
-XPCOMUtils.defineLazyModuleGetter(this, "ViewHelpers",
+loader.lazyRequireGetter(this, "TreeWidget",
+                         "devtools/shared/widgets/TreeWidget", true);
+loader.lazyRequireGetter(this, "TableWidget",
+                         "devtools/shared/widgets/TableWidget", true);
+loader.lazyImporter(this, "ViewHelpers",
   "resource:///modules/devtools/ViewHelpers.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
+loader.lazyImporter(this, "VariablesView",
   "resource:///modules/devtools/VariablesView.jsm");
 
-let Telemetry = require("devtools/shared/telemetry");
+const Telemetry = require("devtools/shared/telemetry");
 
 /**
  * Localization convenience methods.
  */
-let L10N = new ViewHelpers.L10N(STORAGE_STRINGS);
+const STORAGE_STRINGS = "chrome://browser/locale/devtools/storage.properties";
+const L10N = new ViewHelpers.L10N(STORAGE_STRINGS);
 
 const GENERIC_VARIABLES_VIEW_SETTINGS = {
   lazyEmpty: true,
@@ -177,92 +174,119 @@ StorageUI.prototype = {
    */
   onUpdate: function({ changed, added, deleted }) {
     if (deleted) {
-      for (let type in deleted) {
-        for (let host in deleted[type]) {
-          if (!deleted[type][host].length) {
-            // This means that the whole host is deleted, thus the item should
-            // be removed from the storage tree
-            if (this.tree.isSelected([type, host])) {
-              this.table.clear();
-              this.hideSidebar();
-              this.tree.selectPreviousItem();
-            }
-
-            this.tree.remove([type, host]);
-          } else if (this.tree.isSelected([type, host])) {
-            for (let name of deleted[type][host]) {
-              try {
-                // trying to parse names in case its for indexedDB
-                let names = JSON.parse(name);
-                if (!names[2]) {
-                  if (this.tree.isSelected([type, host, names[0], names[1]])) {
-                    this.tree.selectPreviousItem();
-                    this.tree.remove([type, host, names[0], names[1]]);
-                    this.table.clear();
-                    this.hideSidebar();
-                  }
-                } else if (this.tree.isSelected([ type, host,
-                                                  names[0], names[1]])) {
-                  this.removeItemFromTable(names[2]);
-                }
-              } catch (ex) {
-                this.removeItemFromTable(name);
-              }
-            }
-          }
-        }
-      }
+      this.handleDeletedItems(deleted);
     }
 
     if (added) {
-      for (let type in added) {
-        for (let host in added[type]) {
-          this.tree.add([type, {id: host, type: "url"}]);
-          for (let name of added[type][host]) {
-            try {
-              name = JSON.parse(name);
-              if (name.length == 3) {
-                name.splice(2, 1);
-              }
-              this.tree.add([type, host, ...name]);
-              if (!this.tree.selectedItem) {
-                this.tree.selectedItem = [type, host, name[0], name[1]];
-                this.fetchStorageObjects(type, host, [JSON.stringify(name)], 1);
-              }
-            } catch(ex) {
-              // Do nothing
-            }
-          }
-
-          if (this.tree.isSelected([type, host])) {
-            this.fetchStorageObjects(type, host, added[type][host], 1);
-          }
-        }
-      }
+      this.handleAddedItems(added);
     }
 
     if (changed) {
-      let [type, host, db, objectStore] = this.tree.selectedItem;
-      if (changed[type] && changed[type][host]) {
-        if (changed[type][host].length) {
-          try {
-            let toUpdate = [];
-            for (let name of changed[type][host]) {
-              let names = JSON.parse(name);
-              if (names[0] == db && names[1] == objectStore && names[2]) {
-                toUpdate.push(name);
-              }
-            }
-            this.fetchStorageObjects(type, host, toUpdate, 2);
-          } catch (ex) {
-            this.fetchStorageObjects(type, host, changed[type][host], 2);
-          }
-        }
-      }
+      this.handleChangedItems(changed);
     }
 
     if (added || deleted || changed) {
       this.emit("store-objects-updated");
+    }
+  },
+
+  /**
+   * Handle added items received by onUpdate
+   *
+   * @param {object} See onUpdate docs
+   */
+  handleAddedItems: function(added) {
+    for (let type in added) {
+      for (let host in added[type]) {
+        this.tree.add([type, {id: host, type: "url"}]);
+        for (let name of added[type][host]) {
+          try {
+            name = JSON.parse(name);
+            if (name.length == 3) {
+              name.splice(2, 1);
+            }
+            this.tree.add([type, host, ...name]);
+            if (!this.tree.selectedItem) {
+              this.tree.selectedItem = [type, host, name[0], name[1]];
+              this.fetchStorageObjects(type, host, [JSON.stringify(name)], 1);
+            }
+          } catch(ex) {
+            // Do nothing
+          }
+        }
+
+        if (this.tree.isSelected([type, host])) {
+          this.fetchStorageObjects(type, host, added[type][host], 1);
+        }
+      }
+    }
+  },
+
+  /**
+   * Handle deleted items received by onUpdate
+   *
+   * @param {object} See onUpdate docs
+   */
+  handleDeletedItems: function(deleted) {
+    for (let type in deleted) {
+      for (let host in deleted[type]) {
+        if (!deleted[type][host].length) {
+          // This means that the whole host is deleted, thus the item should
+          // be removed from the storage tree
+          if (this.tree.isSelected([type, host])) {
+            this.table.clear();
+            this.hideSidebar();
+            this.tree.selectPreviousItem();
+          }
+
+          this.tree.remove([type, host]);
+        } else if (this.tree.isSelected([type, host])) {
+          for (let name of deleted[type][host]) {
+            try {
+              // trying to parse names in case its for indexedDB
+              let names = JSON.parse(name);
+              if (!this.tree.isSelected([type, host, names[0], names[1]])) {
+                return;
+              }
+              if (!names[2]) {
+                this.tree.selectPreviousItem();
+                this.tree.remove([type, host, names[0], names[1]]);
+                this.table.clear();
+                this.hideSidebar();
+              } else {
+                this.removeItemFromTable(names[2]);
+              }
+            } catch (ex) {
+              this.removeItemFromTable(name);
+            }
+          }
+        }
+      }
+    }
+  },
+
+  /**
+   * Handle changed items received by onUpdate
+   *
+   * @param {object} See onUpdate docs
+   */
+  handleChangedItems: function(changed) {
+    let [type, host, db, objectStore] = this.tree.selectedItem;
+    if (!changed[type] || !changed[type][host] ||
+        changed[type][host].length == 0) {
+      return;
+    }
+    try {
+      let toUpdate = [];
+      for (let name of changed[type][host]) {
+        let names = JSON.parse(name);
+        if (names[0] == db && names[1] == objectStore && names[2]) {
+          toUpdate.push(name);
+        }
+      }
+      this.fetchStorageObjects(type, host, toUpdate, 2);
+    } catch (ex) {
+      this.fetchStorageObjects(type, host, changed[type][host], 2);
     }
   },
 
@@ -311,26 +335,27 @@ StorageUI.prototype = {
 
       let typeLabel = L10N.getStr("tree.labels." + type);
       this.tree.add([{id: type, label: typeLabel, type: "store"}]);
-      if (storageTypes[type].hosts) {
-        this.storageTypes[type] = storageTypes[type];
-        for (let host in storageTypes[type].hosts) {
-          this.tree.add([type, {id: host, type: "url"}]);
-          for (let name of storageTypes[type].hosts[host]) {
-            try {
-              let names = JSON.parse(name);
-              this.tree.add([type, host, ...names]);
-              if (!this.tree.selectedItem) {
-                this.tree.selectedItem = [type, host, names[0], names[1]];
-                this.fetchStorageObjects(type, host, [name], 0);
-              }
-            } catch(ex) {
-              // Do nothing
+      if (!storageTypes[type].hosts) {
+        continue;
+      }
+      this.storageTypes[type] = storageTypes[type];
+      for (let host in storageTypes[type].hosts) {
+        this.tree.add([type, {id: host, type: "url"}]);
+        for (let name of storageTypes[type].hosts[host]) {
+          try {
+            let names = JSON.parse(name);
+            this.tree.add([type, host, ...names]);
+            if (!this.tree.selectedItem) {
+              this.tree.selectedItem = [type, host, names[0], names[1]];
+              this.fetchStorageObjects(type, host, [name], 0);
             }
+          } catch(ex) {
+            // Do Nothing
           }
-          if (!this.tree.selectedItem) {
-            this.tree.selectedItem = [type, host];
-            this.fetchStorageObjects(type, host, null, 0);
-          }
+        }
+        if (!this.tree.selectedItem) {
+          this.tree.selectedItem = [type, host];
+          this.fetchStorageObjects(type, host, null, 0);
         }
       }
     }
@@ -478,8 +503,7 @@ StorageUI.prototype = {
       }
     }
     // Testing for array
-    for (let i = 0; i < separators.length; i++) {
-      let p = separators[i];
+    for (let p of separators) {
       let regex = new RegExp("^[^" + p + "]+(" + p + "+[^" + p + "]*)+$", "g");
       if (value.match(regex)) {
         return value.split(p.replace(/\\*/g, ""));

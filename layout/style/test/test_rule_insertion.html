@@ -69,6 +69,7 @@ var cjkDecimalWidth = controlCJKDecimal.getBoundingClientRect().width;
 // [at-rule type, passing condition, failing condition]
 var outerRuleInfo = [
   ["@media", "all", "not all"],
+  ["@-moz-document", "url-prefix('')", "url-prefix('zzz')"],
   ["@supports", "(color: green)", "(unknown: unknown)"]
 ];
 

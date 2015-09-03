@@ -51,11 +51,11 @@ js::DestroyHelperThreadsState()
     gHelperThreadState = nullptr;
 }
 
-void
+bool
 js::EnsureHelperThreadsInitialized()
 {
     MOZ_ASSERT(gHelperThreadState);
-    gHelperThreadState->ensureInitialized();
+    return gHelperThreadState->ensureInitialized();
 }
 
 static size_t
@@ -453,7 +453,7 @@ static const uint32_t HELPER_STACK_SIZE = kDefaultHelperStackSize;
 static const uint32_t HELPER_STACK_QUOTA = kDefaultHelperStackQuota;
 #endif
 
-void
+bool
 GlobalHelperThreadState::ensureInitialized()
 {
     MOZ_ASSERT(CanUseExtraThreads());
@@ -462,11 +462,11 @@ GlobalHelperThreadState::ensureInitialized()
     AutoLockHelperThreadState lock;
 
     if (threads)
-        return;
+        return true;
 
     threads = js_pod_calloc<HelperThread>(threadCount);
     if (!threads)
-        CrashAtUnhandlableOOM("GlobalHelperThreadState::ensureInitialized");
+        return false;
 
     for (size_t i = 0; i < threadCount; i++) {
         HelperThread& helper = threads[i];
@@ -474,11 +474,15 @@ GlobalHelperThreadState::ensureInitialized()
         helper.thread = PR_CreateThread(PR_USER_THREAD,
                                         HelperThread::ThreadMain, &helper,
                                         PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, HELPER_STACK_SIZE);
-        if (!helper.thread || !helper.threadData->init())
-            CrashAtUnhandlableOOM("GlobalHelperThreadState::ensureInitialized");
+        if (!helper.thread || !helper.threadData->init()) {
+            finishThreads();
+            return false;
+        }
     }
 
     resetAsmJSFailureState();
+
+    return true;
 }
 
 GlobalHelperThreadState::GlobalHelperThreadState()
@@ -510,12 +514,7 @@ GlobalHelperThreadState::GlobalHelperThreadState()
 void
 GlobalHelperThreadState::finish()
 {
-    if (threads) {
-        MOZ_ASSERT(CanUseExtraThreads());
-        for (size_t i = 0; i < threadCount; i++)
-            threads[i].destroy();
-        js_free(threads);
-    }
+    finishThreads();
 
     PR_DestroyCondVar(consumerWakeup);
     PR_DestroyCondVar(producerWakeup);
@@ -523,6 +522,19 @@ GlobalHelperThreadState::finish()
     PR_DestroyLock(helperLock);
 
     ionLazyLinkList_.clear();
+}
+
+void
+GlobalHelperThreadState::finishThreads()
+{
+    if (!threads)
+        return;
+
+    MOZ_ASSERT(CanUseExtraThreads());
+    for (size_t i = 0; i < threadCount; i++)
+        threads[i].destroy();
+    js_free(threads);
+    threads = nullptr;
 }
 
 void

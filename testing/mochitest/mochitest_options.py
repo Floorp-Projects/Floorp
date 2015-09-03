@@ -736,7 +736,7 @@ class MochitestArguments(ArgumentContainer):
 
         options.leakThresholds = {
             "default": options.defaultLeakThreshold,
-            "tab": 14000,  # See dependencies of bug 1051230.
+            "tab": 10000,  # See dependencies of bug 1051230.
             # GMP rarely gets a log, but when it does, it leaks a little.
             "geckomediaplugin": 20000,
         }
