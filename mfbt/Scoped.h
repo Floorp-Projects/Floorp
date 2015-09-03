@@ -96,8 +96,8 @@ public:
   }
 
   /* Move constructor. */
-  explicit Scoped(Scoped&& aOther
-                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  Scoped(Scoped&& aOther
+         MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mValue(Move(aOther.mValue))
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -209,8 +209,8 @@ struct name : public mozilla::Scoped<Traits<Type> >                           \
     : Super(aRhs                                                              \
             MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)                        \
   {}                                                                          \
-  explicit name(name&& aRhs                                                   \
-                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)                              \
+  name(name&& aRhs                                                            \
+       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)                                       \
     : Super(Move(aRhs)                                                        \
             MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)                        \
   {}                                                                          \
