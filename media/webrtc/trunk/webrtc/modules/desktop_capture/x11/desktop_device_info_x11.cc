@@ -6,6 +6,7 @@
 #include "webrtc/system_wrappers/interface/logging.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/scoped_refptr.h"
+#include <inttypes.h>
 #include <unistd.h>
 #include <stdio.h>
 #include "webrtc/modules/desktop_capture/x11/shared_x_util.h"
@@ -30,27 +31,24 @@ DesktopDeviceInfoX11::DesktopDeviceInfoX11() {
 DesktopDeviceInfoX11::~DesktopDeviceInfoX11() {
 }
 
-#if !defined(MULTI_MONITOR_SCREENSHARE)
 void DesktopDeviceInfoX11::MultiMonitorScreenshare()
 {
-  DesktopDisplayDevice *pDesktopDeviceInfo = new DesktopDisplayDevice;
-  if (pDesktopDeviceInfo) {
-    pDesktopDeviceInfo->setScreenId(webrtc::kFullDesktopScreenId);
-    pDesktopDeviceInfo->setDeviceName("Primary Monitor");
+  DesktopDisplayDevice* desktop_device_info = new DesktopDisplayDevice;
+  if (desktop_device_info) {
+    desktop_device_info->setScreenId(webrtc::kFullDesktopScreenId);
+    desktop_device_info->setDeviceName("Primary Monitor");
 
     char idStr[64];
-    snprintf(idStr, sizeof(idStr), "%ld", idStr);
-    pDesktopDeviceInfo->setUniqueIdName(idStr);
-    desktop_display_list_[pDesktopDeviceInfo->getScreenId()] = pDesktopDeviceInfo;
+    snprintf(idStr, sizeof(idStr), "%" PRIdPTR, desktop_device_info->getScreenId());
+    desktop_device_info->setUniqueIdName(idStr);
+    desktop_display_list_[desktop_device_info->getScreenId()] = desktop_device_info;
   }
 }
-#endif
 
 void DesktopDeviceInfoX11::InitializeScreenList() {
-#if !defined(MULTI_MONITOR_SCREENSHARE)
   MultiMonitorScreenshare();
-#endif
 }
+
 void DesktopDeviceInfoX11::InitializeApplicationList() {
   //List all running applications exclude background process.
   scoped_refptr<SharedXDisplay> SharedDisplay = SharedXDisplay::CreateDefault();
