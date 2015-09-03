@@ -98,6 +98,9 @@ body {
   height: 100%;
 }
 
+#edit-login-header {
+  background-color: #F5F5F5;
+}
 
 .update-button {
   flex: 1;
