@@ -408,6 +408,16 @@
  *   temporary object. If a member of another class uses this class, or if
  *   another class inherits from this class, then it is considered to be a heap
  *   class as well, although this attribute need not be provided in such cases.
+ * MOZ_NON_TEMPORARY_CLASS: Applies to all classes. Any class with this
+ *   annotation is expected not to live in a temporary. If a member of another
+ *   class uses this class or if another class inherits from this class, then it
+ *   is considered to be a non-temporary class as well, although this attribute
+ *   need not be provided in such cases.
+ * MOZ_RAII: Applies to all classes. Any class with this annotation is assumed
+ *   to be a RAII guard, which is expected to live on the stack in an automatic
+ *   allocation. It is prohibited from being allocated in a temporary, static
+ *   storage, or on the heap. This is a combination of MOZ_STACK_CLASS and
+ *   MOZ_NON_TEMPORARY_CLASS.
  * MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS: Applies to all classes that are
  *   intended to prevent introducing static initializers.  This attribute
  *   currently makes it a compile-time error to instantiate these classes
@@ -487,6 +497,7 @@
 #  define MOZ_STACK_CLASS __attribute__((annotate("moz_stack_class")))
 #  define MOZ_NONHEAP_CLASS __attribute__((annotate("moz_nonheap_class")))
 #  define MOZ_HEAP_CLASS __attribute__((annotate("moz_heap_class")))
+#  define MOZ_NON_TEMPORARY_CLASS __attribute__((annotate("moz_non_temporary_class")))
 #  define MOZ_TRIVIAL_CTOR_DTOR __attribute__((annotate("moz_trivial_ctor_dtor")))
 #  ifdef DEBUG
      /* in debug builds, these classes do have non-trivial constructors. */
@@ -523,6 +534,7 @@
 #  define MOZ_STACK_CLASS /* nothing */
 #  define MOZ_NONHEAP_CLASS /* nothing */
 #  define MOZ_HEAP_CLASS /* nothing */
+#  define MOZ_NON_TEMPORARY_CLASS /* nothing */
 #  define MOZ_TRIVIAL_CTOR_DTOR /* nothing */
 #  define MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS /* nothing */
 #  define MOZ_IMPLICIT /* nothing */
@@ -539,6 +551,8 @@
 #  define MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS /* nothing */
 #  define MOZ_NON_AUTOABLE /* nothing */
 #endif /* MOZ_CLANG_PLUGIN */
+
+#define MOZ_RAII MOZ_NON_TEMPORARY_CLASS MOZ_STACK_CLASS
 
 /*
  * MOZ_HAVE_REF_QUALIFIERS is defined for compilers that support C++11's rvalue
