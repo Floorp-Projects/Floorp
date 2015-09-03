@@ -238,7 +238,7 @@ body {
   border: 1px solid var(--timelime-border-color);
 
   /* The background color is set independently */
-  background: var(--timeline-background-color);
+  background-color: var(--timeline-background-color);
 }
 
 .animation-timeline .animation .cssanimation {
