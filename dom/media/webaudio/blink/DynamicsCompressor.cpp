@@ -154,8 +154,8 @@ void DynamicsCompressor::process(const AudioChunk* sourceChunk, AudioChunk* dest
     // It's because we internally match sourceChannels's size to destinationBus by channel up/down mix. Thus we need numberOfChannels
     // to do the loop work for both m_sourceChannels and m_destinationChannels.
 
-    unsigned numberOfChannels = destinationChunk->mChannelData.Length();
-    unsigned numberOfSourceChannels = sourceChunk->mChannelData.Length();
+    unsigned numberOfChannels = destinationChunk->ChannelCount();
+    unsigned numberOfSourceChannels = sourceChunk->ChannelCount();
 
     MOZ_ASSERT(numberOfChannels == m_numberOfChannels && numberOfSourceChannels);
 
