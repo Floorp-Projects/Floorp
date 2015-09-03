@@ -7934,15 +7934,13 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     ScreenSize viewportSize(viewportWidth, viewportWidth * aspectRatio);
     return nsViewportInfo(RoundedToInt(viewportSize),
                           CSSToScreenScale(scaleToFit),
-                          /*allowZoom*/ true,
-                          /*allowDoubleTapZoom*/ true);
+                          /*allowZoom*/ true);
   }
 
   if (!gfxPrefs::MetaViewportEnabled()) {
     return nsViewportInfo(aDisplaySize,
                           defaultScale,
-                          /*allowZoom*/ false,
-                          /*allowDoubleTapZoom*/ false);
+                          /*allowZoom*/ false);
   }
 
   // In cases where the width of the CSS viewport is less than or equal to the width
@@ -7953,8 +7951,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
   case DisplayWidthHeight:
     return nsViewportInfo(aDisplaySize,
                           defaultScale,
-                          /*allowZoom*/ true,
-                          /*allowDoubleTapZoom*/ true);
+                          /*allowZoom*/ true);
   case Unknown:
   {
     nsAutoString viewport;
@@ -7976,8 +7973,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
             mViewportType = DisplayWidthHeight;
             return nsViewportInfo(aDisplaySize,
                                   defaultScale,
-                                  /*allowZoom*/true,
-                                  /*allowDoubleTapZoom*/true);
+                                  /*allowZoom*/true);
           }
         }
       }
@@ -7988,8 +7984,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
         mViewportType = DisplayWidthHeight;
         return nsViewportInfo(aDisplaySize,
                               defaultScale,
-                              /*allowZoom*/true,
-                              /*allowDoubleTapZoom*/true);
+                              /*allowZoom*/true);
       }
     }
 
@@ -8063,7 +8058,6 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
         (userScalable.EqualsLiteral("false"))) {
       mAllowZoom = false;
     }
-    mAllowDoubleTapZoom = mAllowZoom;
 
     mScaleStrEmpty = scaleStr.IsEmpty();
     mWidthStrEmpty = widthStr.IsEmpty();
@@ -8078,7 +8072,6 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     LayoutDeviceToScreenScale effectiveMaxScale = mScaleMaxFloat;
     bool effectiveValidMaxScale = mValidMaxScale;
     bool effectiveAllowZoom = mAllowZoom;
-    bool effectiveAllowDoubleTapZoom = mAllowDoubleTapZoom;
     if (gfxPrefs::ForceUserScalable()) {
       // If the pref to force user-scalable is enabled, we ignore the values
       // from the meta-viewport tag for these properties and just assume they
@@ -8091,7 +8084,6 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
       effectiveMaxScale = kViewportMaxScale;
       effectiveValidMaxScale = true;
       effectiveAllowZoom = true;
-      effectiveAllowDoubleTapZoom = true;
     }
 
     CSSSize size = mViewportSize;
@@ -8149,8 +8141,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     }
 
     return nsViewportInfo(scaleFloat, scaleMinFloat, scaleMaxFloat, size,
-                          mAutoSize, effectiveAllowZoom,
-                          effectiveAllowDoubleTapZoom);
+                          mAutoSize, effectiveAllowZoom);
   }
 }
 
