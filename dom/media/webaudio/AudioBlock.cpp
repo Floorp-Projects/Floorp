@@ -8,6 +8,47 @@
 
 namespace mozilla {
 
+/**
+ * Heap-allocated buffer of channels of 128-sample float arrays, with
+ * threadsafe refcounting.  Typically you would allocate one of these, fill it
+ * in, and then treat it as immutable while it's shared.
+ * This only guarantees 4-byte alignment of the data. For alignment we simply
+ * assume that the memory from malloc is at least 4-byte aligned and the
+ * refcount's size is large enough that AudioBlockBuffer's size is divisible
+ * by 4.
+ */
+class AudioBlockBuffer final : public ThreadSharedObject {
+public:
+  float* ChannelData(uint32_t aChannel)
+  {
+    return reinterpret_cast<float*>(this + 1) + aChannel * WEBAUDIO_BLOCK_SIZE;
+  }
+
+  static already_AddRefed<AudioBlockBuffer> Create(uint32_t aChannelCount)
+  {
+    CheckedInt<size_t> size = WEBAUDIO_BLOCK_SIZE;
+    size *= aChannelCount;
+    size *= sizeof(float);
+    size += sizeof(AudioBlockBuffer);
+    if (!size.isValid()) {
+      MOZ_CRASH();
+    }
+    void* m = moz_xmalloc(size.value());
+    nsRefPtr<AudioBlockBuffer> p = new (m) AudioBlockBuffer();
+    NS_ASSERTION((reinterpret_cast<char*>(p.get() + 1) - reinterpret_cast<char*>(p.get())) % 4 == 0,
+                 "AudioBlockBuffers should be at least 4-byte aligned");
+    return p.forget();
+  }
+
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+private:
+  AudioBlockBuffer() {}
+};
+
 void
 AllocateAudioBlock(uint32_t aChannelCount, AudioChunk* aChunk)
 {
@@ -20,20 +61,13 @@ AllocateAudioBlock(uint32_t aChannelCount, AudioChunk* aChunk)
     return;
   }
 
-  CheckedInt<size_t> size = WEBAUDIO_BLOCK_SIZE;
-  size *= aChannelCount;
-  size *= sizeof(float);
-  if (!size.isValid()) {
-    MOZ_CRASH();
-  }
   // XXX for SIMD purposes we should do something here to make sure the
   // channel buffers are 16-byte aligned.
-  nsRefPtr<SharedBuffer> buffer = SharedBuffer::Create(size.value());
+  nsRefPtr<AudioBlockBuffer> buffer = AudioBlockBuffer::Create(aChannelCount);
   aChunk->mDuration = WEBAUDIO_BLOCK_SIZE;
   aChunk->mChannelData.SetLength(aChannelCount);
-  float* data = static_cast<float*>(buffer->Data());
   for (uint32_t i = 0; i < aChannelCount; ++i) {
-    aChunk->mChannelData[i] = data + i*WEBAUDIO_BLOCK_SIZE;
+    aChunk->mChannelData[i] = buffer->ChannelData(i);
   }
   aChunk->mBuffer = buffer.forget();
   aChunk->mVolume = 1.0f;
