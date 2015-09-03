@@ -139,6 +139,7 @@ class PackedScopeCoordinate
     F(DELETENAME) \
     F(DELETEPROP) \
     F(DELETEELEM) \
+    F(DELETESUPERELEM) \
     F(DELETEEXPR) \
     F(TRY) \
     F(CATCH) \
@@ -174,6 +175,7 @@ class PackedScopeCoordinate
     F(CLASSMETHOD) \
     F(CLASSMETHODLIST) \
     F(CLASSNAMES) \
+    F(SUPERELEM) \
     F(NEWTARGET) \
     F(POSHOLDER) \
     \
@@ -1335,17 +1337,6 @@ class PropertyByValue : public ParseNode
         pn_u.binary.left = lhs;
         pn_u.binary.right = propExpr;
     }
-
-    static bool test(const ParseNode& node) {
-        bool match = node.isKind(PNK_ELEM);
-        MOZ_ASSERT_IF(match, node.isArity(PN_BINARY));
-        return match;
-    }
-
-    bool isSuper() const {
-        // Like PropertyAccess above, PNK_POSHOLDER is "good enough".
-        return pn_left->isKind(PNK_POSHOLDER);
-    }
 };
 
 /*
@@ -1455,6 +1446,22 @@ struct ClassNode : public TernaryNode {
     ObjectBox* scopeObject() const {
         MOZ_ASSERT(pn_kid3->is<LexicalScopeNode>());
         return pn_kid3->pn_objbox;
+    }
+};
+
+struct SuperElement : public UnaryNode {
+    SuperElement(ParseNode* expr, const TokenPos& pos)
+      : UnaryNode(PNK_SUPERELEM, JSOP_NOP, pos, expr)
+    { }
+
+    static bool test(const ParseNode& node) {
+        bool match = node.isKind(PNK_SUPERELEM);
+        MOZ_ASSERT_IF(match, node.isArity(PN_UNARY));
+        return match;
+    }
+
+    ParseNode* expr() const {
+        return pn_kid;
     }
 };
 
