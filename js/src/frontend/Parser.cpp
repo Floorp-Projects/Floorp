@@ -8949,13 +8949,8 @@ Parser<ParseHandler>::tryNewTarget(Node &newTarget)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_NEW));
 
-    newTarget = null();
-
-    Node newHolder = handler.newPosHolder(pos());
-    if (!newHolder)
-        return false;
-
     uint32_t begin = pos().begin;
+    newTarget = null();
 
     // |new| expects to look for an operand, so we will honor that.
     TokenKind next;
@@ -8980,11 +8975,7 @@ Parser<ParseHandler>::tryNewTarget(Node &newTarget)
         return false;
     }
 
-    Node targetHolder = handler.newPosHolder(pos());
-    if (!targetHolder)
-        return false;
-
-    newTarget = handler.newNewTarget(newHolder, targetHolder);
+    newTarget = handler.newNewTarget(TokenPos(begin, pos().end));
     return !!newTarget;
 }
 

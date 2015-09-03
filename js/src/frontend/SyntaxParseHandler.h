@@ -281,8 +281,7 @@ class SyntaxParseHandler
     Node newSuperElement(Node expr, const TokenPos& pos) {
         return NodeSuperElement;
     }
-    Node newNewTarget(Node newHolder, Node targetHolder) { return NodeGeneric; }
-    Node newPosHolder(const TokenPos& pos) { return NodeGeneric; }
+    Node newNewTarget(const TokenPos& pos) { return NodeGeneric; }
 
     bool addPrototypeMutation(Node literal, uint32_t begin, Node expr) { return true; }
     bool addPropertyDefinition(Node literal, Node name, Node expr) { return true; }
