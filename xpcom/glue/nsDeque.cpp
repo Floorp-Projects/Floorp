@@ -11,6 +11,8 @@
 #include <stdio.h>
 #endif
 
+#include "mozilla/CheckedInt.h"
+
 /**
  * 07/02/2001  09:17p 509,104 clangref.pdf from openwatcom's site
  * Watcom C Language Reference Edition 11.0c
@@ -163,12 +165,24 @@ nsDeque::Erase()
 bool
 nsDeque::GrowCapacity()
 {
-  int32_t theNewSize = mCapacity << 2;
-  NS_ASSERTION(theNewSize > mCapacity, "Overflow");
-  if (theNewSize <= mCapacity) {
+  mozilla::CheckedInt<int32_t> newCapacity = mCapacity;
+  newCapacity *= 4;
+
+  NS_ASSERTION(newCapacity.isValid(), "Overflow");
+  if (!newCapacity.isValid()) {
     return false;
   }
-  void** temp = (void**)malloc(theNewSize * sizeof(void*));
+
+  // Sanity check the new byte size.
+  mozilla::CheckedInt<int32_t> newByteSize = newCapacity;
+  newByteSize *= sizeof(void*);
+
+  NS_ASSERTION(newByteSize.isValid(), "Overflow");
+  if (!newByteSize.isValid()) {
+    return false;
+  }
+
+  void** temp = (void**)malloc(newByteSize.value());
   if (!temp) {
     return false;
   }
@@ -185,7 +199,7 @@ nsDeque::GrowCapacity()
     free(mData);
   }
 
-  mCapacity = theNewSize;
+  mCapacity = newCapacity.value();
   mOrigin = 0; //now realign the origin...
   mData = temp;
 
