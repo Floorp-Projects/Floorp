@@ -647,18 +647,19 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     // bug 1036967 removed the (dead) call.
 
 #if defined(MOZ_ANDROID_APZ)
-    if (mIsFirstPaint) {
-      CSSToLayerScale geckoZoom = metrics.LayersPixelsPerCSSPixel().ToScaleFactor();
-      LayerIntPoint scrollOffsetLayerPixels = RoundedToInt(metrics.GetScrollOffset() * geckoZoom);
-      mContentRect = metrics.GetScrollableRect();
-      SetFirstPaintViewport(scrollOffsetLayerPixels,
-                            geckoZoom,
-                            mContentRect);
+    if (metrics.IsRootContent()) {
+      if (mIsFirstPaint) {
+        CSSToLayerScale geckoZoom = metrics.LayersPixelsPerCSSPixel().ToScaleFactor();
+        LayerIntPoint scrollOffsetLayerPixels = RoundedToInt(metrics.GetScrollOffset() * geckoZoom);
+        mContentRect = metrics.GetScrollableRect();
+        SetFirstPaintViewport(scrollOffsetLayerPixels,
+                              geckoZoom,
+                              mContentRect);
+      }
+      mIsFirstPaint = false;
+      mLayersUpdated = false;
     }
 #endif
-
-    mIsFirstPaint = false;
-    mLayersUpdated = false;
 
     // Transform the current local clip by this APZC's async transform. If we're
     // using containerful scrolling, then the clip is not part of the scrolled

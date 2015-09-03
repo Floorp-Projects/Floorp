@@ -202,7 +202,7 @@ public:
                                             bool aRunInGlobalScope) override;
     virtual bool DoSendAsyncMessage(JSContext* aCx,
                                     const nsAString& aMessage,
-                                    const mozilla::dom::StructuredCloneData& aData,
+                                    mozilla::dom::StructuredCloneIPCHelper& aHelper,
                                     JS::Handle<JSObject *> aCpows,
                                     nsIPrincipal* aPrincipal) override;
     virtual bool CheckPermission(const nsAString& aPermission) override;

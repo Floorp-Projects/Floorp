@@ -4409,7 +4409,8 @@ FindSheet(const nsCOMArray<nsIStyleSheet>& aSheets, nsIURI* aSheetURI)
 }
 
 nsresult
-nsDocument::LoadAdditionalStyleSheet(additionalSheetType aType, nsIURI* aSheetURI)
+nsDocument::LoadAdditionalStyleSheet(additionalSheetType aType,
+                                     nsIURI* aSheetURI)
 {
   NS_PRECONDITION(aSheetURI, "null arg");
 
@@ -4418,11 +4419,29 @@ nsDocument::LoadAdditionalStyleSheet(additionalSheetType aType, nsIURI* aSheetUR
     return NS_ERROR_INVALID_ARG;
 
   // Loading the sheet sync.
-  nsRefPtr<mozilla::css::Loader> loader = new mozilla::css::Loader();
+  nsRefPtr<css::Loader> loader = new css::Loader();
+
+  css::SheetParsingMode parsingMode;
+  switch (aType) {
+    case nsIDocument::eAgentSheet:
+      parsingMode = css::eAgentSheetFeatures;
+      break;
+
+    case nsIDocument::eUserSheet:
+      parsingMode = css::eUserSheetFeatures;
+      break;
+
+    case nsIDocument::eAuthorSheet:
+      parsingMode = css::eAuthorSheetFeatures;
+      break;
+
+    default:
+      MOZ_CRASH("impossible value for aType");
+  }
 
   nsRefPtr<CSSStyleSheet> sheet;
-  nsresult rv = loader->LoadSheetSync(aSheetURI, aType == eAgentSheet,
-    true, getter_AddRefs(sheet));
+  nsresult rv = loader->LoadSheetSync(aSheetURI, parsingMode, true,
+                                      getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
   sheet->SetOwningDocument(this);
@@ -9935,7 +9954,10 @@ nsresult
 nsDocument::LoadChromeSheetSync(nsIURI* uri, bool isAgentSheet,
                                 CSSStyleSheet** sheet)
 {
-  return CSSLoader()->LoadSheetSync(uri, isAgentSheet, isAgentSheet, sheet);
+  css::SheetParsingMode mode =
+    isAgentSheet ? css::eAgentSheetFeatures
+                 : css::eAuthorSheetFeatures;
+  return CSSLoader()->LoadSheetSync(uri, mode, isAgentSheet, sheet);
 }
 
 class nsDelayedEventDispatcher : public nsRunnable

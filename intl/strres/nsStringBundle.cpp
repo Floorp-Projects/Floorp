@@ -86,7 +86,7 @@ nsStringBundle::LoadProperties()
   rv = NS_NewChannel(getter_AddRefs(channel),
                      uri,
                      nsContentUtils::GetSystemPrincipal(),
-                     nsILoadInfo::SEC_NORMAL,
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                      nsIContentPolicy::TYPE_OTHER);
 
   if (NS_FAILED(rv)) return rv;
@@ -95,7 +95,7 @@ nsStringBundle::LoadProperties()
   channel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
 
   nsCOMPtr<nsIInputStream> in;
-  rv = channel->Open(getter_AddRefs(in));
+  rv = channel->Open2(getter_AddRefs(in));
   if (NS_FAILED(rv)) return rv;
 
   NS_ASSERTION(NS_SUCCEEDED(rv) && in, "Error in OpenBlockingStream");

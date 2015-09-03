@@ -1883,6 +1883,10 @@ ReportZoneStats(const JS::ZoneStats& zStats,
         zStats.unusedGCThings.totalSize(),
         "Unused GC thing cells within non-empty arenas.");
 
+    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("unique-id-map"),
+        zStats.uniqueIdMap,
+        "Address-independent cell identities.");
+
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/gc-heap"),
         zStats.lazyScriptsGCHeap,
         "Scripts that haven't executed yet.");
@@ -2506,14 +2510,6 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/whole-cells"),
         KIND_HEAP, rtStats.runtime.gc.storeBufferWholeCells,
         "Whole cells in the store buffer.");
-
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/reloc-vals"),
-        KIND_HEAP, rtStats.runtime.gc.storeBufferRelocVals,
-        "Relocatable values in the store buffer.");
-
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/reloc-cells"),
-        KIND_HEAP, rtStats.runtime.gc.storeBufferRelocCells,
-        "Relocatable cells in the store buffer.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/generics"),
         KIND_HEAP, rtStats.runtime.gc.storeBufferGenerics,
