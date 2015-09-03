@@ -261,7 +261,8 @@ public:
   SendRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
                const nsAString& aStringBody)
   : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy)
-  , StructuredCloneHelper(CloningSupported, TransferringNotSupported)
+  , StructuredCloneHelper(CloningSupported, TransferringNotSupported,
+                          SameProcessDifferentThread)
   , mStringBody(aStringBody)
   , mHasUploadListeners(false)
   {
@@ -566,7 +567,8 @@ public:
   EventRunnable(Proxy* aProxy, bool aUploadEvent, const nsString& aType,
                 bool aLengthComputable, uint64_t aLoaded, uint64_t aTotal)
   : MainThreadProxyRunnable(aProxy->mWorkerPrivate, aProxy),
-    StructuredCloneHelper(CloningSupported, TransferringNotSupported),
+    StructuredCloneHelper(CloningSupported, TransferringNotSupported,
+                          SameProcessDifferentThread),
     mType(aType), mResponse(JS::UndefinedValue()), mLoaded(aLoaded),
     mTotal(aTotal), mEventStreamId(aProxy->mInnerEventStreamId), mStatus(0),
     mReadyState(0), mUploadEvent(aUploadEvent), mProgressEvent(true),
@@ -576,7 +578,8 @@ public:
 
   EventRunnable(Proxy* aProxy, bool aUploadEvent, const nsString& aType)
   : MainThreadProxyRunnable(aProxy->mWorkerPrivate, aProxy),
-    StructuredCloneHelper(CloningSupported, TransferringNotSupported),
+    StructuredCloneHelper(CloningSupported, TransferringNotSupported,
+                          SameProcessDifferentThread),
     mType(aType), mResponse(JS::UndefinedValue()), mLoaded(0), mTotal(0),
     mEventStreamId(aProxy->mInnerEventStreamId), mStatus(0), mReadyState(0),
     mUploadEvent(aUploadEvent), mProgressEvent(false), mLengthComputable(0),
@@ -1232,7 +1235,7 @@ EventRunnable::PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
         if (doClone) {
           ErrorResult rv;
-          Write(aCx, response, transferable, false, rv);
+          Write(aCx, response, transferable, rv);
           if (NS_WARN_IF(rv.Failed())) {
             NS_WARNING("Failed to clone response!");
             mResponseResult = rv.StealNSResult();
@@ -2152,7 +2155,7 @@ XMLHttpRequest::Send(JS::Handle<JSObject*> aBody, ErrorResult& aRv)
   nsRefPtr<SendRunnable> sendRunnable =
     new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
 
-  sendRunnable->Write(cx, valToClone, false, aRv);
+  sendRunnable->Write(cx, valToClone, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -2193,7 +2196,7 @@ XMLHttpRequest::Send(Blob& aBody, ErrorResult& aRv)
   nsRefPtr<SendRunnable> sendRunnable =
     new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
 
-  sendRunnable->Write(cx, value, false, aRv);
+  sendRunnable->Write(cx, value, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -2226,7 +2229,7 @@ XMLHttpRequest::Send(nsFormData& aBody, ErrorResult& aRv)
   nsRefPtr<SendRunnable> sendRunnable =
     new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
 
-  sendRunnable->Write(cx, value, false, aRv);
+  sendRunnable->Write(cx, value, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

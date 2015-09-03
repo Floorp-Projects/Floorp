@@ -153,7 +153,7 @@
 #include "SandboxHal.h"
 #include "ScreenManagerParent.h"
 #include "SourceSurfaceRawData.h"
-#include "StructuredCloneUtils.h"
+#include "StructuredCloneIPCHelper.h"
 #include "TabParent.h"
 #include "URIUtils.h"
 #include "nsIWebBrowserChrome.h"
@@ -4490,12 +4490,12 @@ ContentParent::DoLoadMessageManagerScript(const nsAString& aURL,
 bool
 ContentParent::DoSendAsyncMessage(JSContext* aCx,
                                   const nsAString& aMessage,
-                                  const mozilla::dom::StructuredCloneData& aData,
+                                  StructuredCloneIPCHelper& aHelper,
                                   JS::Handle<JSObject *> aCpows,
                                   nsIPrincipal* aPrincipal)
 {
     ClonedMessageData data;
-    if (!BuildClonedMessageDataForParent(this, aData, data)) {
+    if (!BuildClonedMessageDataForParent(this, aHelper, data)) {
         return false;
     }
     InfallibleTArray<CpowEntry> cpows;

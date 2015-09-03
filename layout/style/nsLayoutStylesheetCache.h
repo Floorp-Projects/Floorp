@@ -13,15 +13,13 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/css/Loader.h"
 
 class nsIFile;
 class nsIURI;
 
 namespace mozilla {
 class CSSStyleSheet;
-namespace css {
-class Loader;
-} // namespace css
 } // namespace mozilla
 
 class nsLayoutStylesheetCache final
@@ -70,11 +68,12 @@ private:
   void InitMemoryReporter();
   static void LoadSheetURL(const char* aURL,
                            nsRefPtr<mozilla::CSSStyleSheet>& aSheet,
-                           bool aEnableUnsafeRules);
+                           mozilla::css::SheetParsingMode aParsingMode);
   static void LoadSheetFile(nsIFile* aFile,
-                            nsRefPtr<mozilla::CSSStyleSheet>& aSheet);
+                            nsRefPtr<mozilla::CSSStyleSheet>& aSheet,
+                            mozilla::css::SheetParsingMode aParsingMode);
   static void LoadSheet(nsIURI* aURI, nsRefPtr<mozilla::CSSStyleSheet>& aSheet,
-                        bool aEnableUnsafeRules);
+                        mozilla::css::SheetParsingMode aParsingMode);
   static void InvalidateSheet(nsRefPtr<mozilla::CSSStyleSheet>& aSheet);
   static void DependentPrefChanged(const char* aPref, void* aData);
   void BuildPreferenceSheet(nsRefPtr<mozilla::CSSStyleSheet>& aSheet,
