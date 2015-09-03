@@ -21,6 +21,7 @@ SOURCES += [
     'TestNoArithmeticExprInArgument.cpp',
     'TestNoAutoType.cpp',
     'TestNoDuplicateRefCntMember.cpp',
+    'TestNoExplicitMoveConstructor.cpp',
     'TestNonHeapClass.cpp',
     'TestNonMemMovable.cpp',
     'TestNoRefcountedInsideLambdas.cpp',
