@@ -224,8 +224,13 @@ public:
    * stream, set aInputFlags to BUFFER_EOS. Since encoder has limited buffers,
    * this function might not be able to encode all chunks in one call, however
    * it will remove chunks it consumes from aSegment.
+   * aSendEOS is the output to tell the caller EOS signal sent into MediaCodec
+   * because the signal might not be sent due to the dequeueInputBuffer timeout.
+   * And the value of aSendEOS won't be set to any default value, only set to
+   * true when EOS signal sent into MediaCodec.
    */
-  nsresult Encode(mozilla::AudioSegment& aSegment, int aInputFlags = 0);
+  nsresult Encode(mozilla::AudioSegment& aSegment, int aInputFlags = 0,
+                  bool* aSendEOS = nullptr);
 
   ~OMXAudioEncoder();
 protected:
@@ -298,9 +303,14 @@ public:
    * semi-planar YUV420 format stored in the buffer of aImage. aTimestamp gives
    * the frame timestamp/presentation time (in microseconds). To notify end of
    * stream, set aInputFlags to BUFFER_EOS.
+   * aSendEOS is the output to tell the caller EOS signal sent into MediaCodec
+   * because the signal might not be sent due to the dequeueInputBuffer timeout.
+   * And the value of aSendEOS won't be set to any default value, only set to
+   * true when EOS signal sent into MediaCodec.
    */
   nsresult Encode(const mozilla::layers::Image* aImage, int aWidth, int aHeight,
-                  int64_t aTimestamp, int aInputFlags = 0);
+                  int64_t aTimestamp, int aInputFlags = 0,
+                  bool* aSendEOS = nullptr);
 
 #if ANDROID_VERSION >= 18
   /** Set encoding bitrate (in kbps). */

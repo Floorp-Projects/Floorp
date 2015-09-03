@@ -180,32 +180,17 @@ nsresult
 nsStyleSheetService::LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
                                                   uint32_t aSheetType)
 {
+  NS_ENSURE_ARG(aSheetType == AGENT_SHEET ||
+                aSheetType == USER_SHEET ||
+                aSheetType == AUTHOR_SHEET);
   NS_ENSURE_ARG_POINTER(aSheetURI);
-
-  css::SheetParsingMode parsingMode;
-  switch (aSheetType) {
-    case AGENT_SHEET:
-      parsingMode = css::eAgentSheetFeatures;
-      break;
-
-    case USER_SHEET:
-      parsingMode = css::eUserSheetFeatures;
-      break;
-
-    case AUTHOR_SHEET:
-      parsingMode = css::eAuthorSheetFeatures;
-      break;
-
-    default:
-      NS_WARNING("invalid sheet type argument");
-      return NS_ERROR_INVALID_ARG;
-  }
 
   nsRefPtr<css::Loader> loader = new css::Loader();
 
   nsRefPtr<CSSStyleSheet> sheet;
-  nsresult rv = loader->LoadSheetSync(aSheetURI, parsingMode, true,
-                                      getter_AddRefs(sheet));
+  // Allow UA sheets, but not user sheets, to use unsafe rules
+  nsresult rv = loader->LoadSheetSync(aSheetURI, aSheetType == AGENT_SHEET,
+                                      true, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mSheets[aSheetType].AppendObject(sheet)) {
@@ -234,32 +219,18 @@ NS_IMETHODIMP
 nsStyleSheetService::PreloadSheet(nsIURI *aSheetURI, uint32_t aSheetType,
                                   nsIDOMStyleSheet **aSheet)
 {
-  NS_PRECONDITION(aSheet, "Null out param");
+  NS_ENSURE_ARG(aSheetType == AGENT_SHEET ||
+                aSheetType == USER_SHEET ||
+                aSheetType == AUTHOR_SHEET);
   NS_ENSURE_ARG_POINTER(aSheetURI);
-  css::SheetParsingMode parsingMode;
-  switch (aSheetType) {
-    case AGENT_SHEET:
-      parsingMode = css::eAgentSheetFeatures;
-      break;
-
-    case USER_SHEET:
-      parsingMode = css::eUserSheetFeatures;
-      break;
-
-    case AUTHOR_SHEET:
-      parsingMode = css::eAuthorSheetFeatures;
-      break;
-
-    default:
-      NS_WARNING("invalid sheet type argument");
-      return NS_ERROR_INVALID_ARG;
-  }
+  NS_PRECONDITION(aSheet, "Null out param");
 
   nsRefPtr<css::Loader> loader = new css::Loader();
 
+  // Allow UA sheets, but not user sheets, to use unsafe rules
   nsRefPtr<CSSStyleSheet> sheet;
-  nsresult rv = loader->LoadSheetSync(aSheetURI, parsingMode, true,
-                                      getter_AddRefs(sheet));
+  nsresult rv = loader->LoadSheetSync(aSheetURI, aSheetType == AGENT_SHEET,
+                                      true, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
   sheet.forget(aSheet);
   return NS_OK;
