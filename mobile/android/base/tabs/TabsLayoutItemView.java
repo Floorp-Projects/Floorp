@@ -141,14 +141,19 @@ public class TabsLayoutItemView extends LinearLayout
         if (mThumbnailWrapper != null) {
             mThumbnailWrapper.setRecording(tab.isRecording());
         }
-        mTitle.setText(tab.getDisplayTitle());
+
+        final String tabTitle = tab.getDisplayTitle();
+        mTitle.setText(tabTitle);
         mCloseButton.setTag(this);
 
-        // TODO: Set content description to indicate audio is playing.
         if (tab.isAudioPlaying()) {
             mTitle.setCompoundDrawablesWithIntrinsicBounds(R.drawable.tab_audio_playing, 0, 0, 0);
+            final String tabTitleWithAudio =
+                    getResources().getString(R.string.tab_title_prefix_is_playing_audio, tabTitle);
+            mTitle.setContentDescription(tabTitleWithAudio);
         } else {
             mTitle.setCompoundDrawables(null, null, null, null);
+            mTitle.setContentDescription(tabTitle);
         }
     }
 
