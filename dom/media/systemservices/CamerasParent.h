@@ -122,6 +122,8 @@ protected:
   nsTArray<CallbackHelper*> mCallbacks;
   // Protects the callback arrays
   Mutex mCallbackMutex;
+  // Protects the engines array
+  Mutex mEngineMutex;
 
   // image buffers
   mozilla::ShmemPool mShmemPool;

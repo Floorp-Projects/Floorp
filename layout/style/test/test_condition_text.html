@@ -8,16 +8,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=814907
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style id="style">
-    @-moz-document url(http://www.example.com/) {}
-    @-moz-document url('http://www.example.com/') {}
-    @-moz-document url("http://www.example.com/") {}
-    @-moz-document url-prefix('http://www.example.com/') {}
-    @-moz-document url-prefix("http://www.example.com/") {}
-    @-moz-document domain('example.com') {}
-    @-moz-document domain("example.com") {}
-    @-moz-document regexp('http://www.w3.org/TR/\\d{4}/[^/]*-CSS2-\\d{8}/') {}
-    @-moz-document regexp("http://www.w3.org/TR/\\d{4}/[^/]*-CSS2-\\d{8}/") {}
-
     @media all {}
     @media only color {}
     @media (color ) {}
@@ -42,51 +32,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=814907
 
 /** Test for Bug 814907 **/
 
-function runTest()
-{
-  // re-parse the style sheet with the pref turned on
-  var style = document.getElementById("style");
-  style.textContent += " ";
+var style = document.getElementById("style");
+style.textContent += " ";
 
-  var sheet = style.sheet;
+var sheet = style.sheet;
 
-  var conditions = [
-    "url(\"http://www.example.com/\")",
-    "url(\"http://www.example.com/\")",
-    "url(\"http://www.example.com/\")",
-    "url-prefix(\"http://www.example.com/\")",
-    "url-prefix(\"http://www.example.com/\")",
-    "domain(\"example.com\")",
-    "domain(\"example.com\")",
-    "regexp(\"http://www.w3.org/TR/\\\\d{4}/[^/]*-CSS2-\\\\d{8}/\")",
-    "regexp(\"http://www.w3.org/TR/\\\\d{4}/[^/]*-CSS2-\\\\d{8}/\")",
-    "all",
-    "only color",
-    "(color)",
-    "color and (monochrome)",
-    "(max-width: 200px), (color)",
-    "(color: green)",
-    "(color: green)",
-    "((color: green))",
-    "(color: green) and (color: blue)",
-    "( Font:  20px serif ! Important)"
-  ];
+var conditions = [
+  "all",
+  "only color",
+  "(color)",
+  "color and (monochrome)",
+  "(max-width: 200px), (color)",
+  "(color: green)",
+  "(color: green)",
+  "((color: green))",
+  "(color: green) and (color: blue)",
+  "( Font:  20px serif ! Important)"
+];
 
-  is(sheet.cssRules.length, conditions.length);
+is(sheet.cssRules.length, conditions.length);
 
-  for (var i = 0; i < sheet.cssRules.length; i++) {
-    var rule = sheet.cssRules[i];
-    is(rule.conditionText, conditions[i], "rule " + i + " has expected conditionText");
-    if (rule.type == CSSRule.MEDIA_RULE) {
-      is(rule.conditionText, rule.media.mediaText, "rule " + i + " conditionText matches media.mediaText");
-    }
+for (var i = 0; i < sheet.cssRules.length; i++) {
+  var rule = sheet.cssRules[i];
+  is(rule.conditionText, conditions[i], "rule " + i + " has expected conditionText");
+  if (rule.type == CSSRule.MEDIA_RULE) {
+    is(rule.conditionText, rule.media.mediaText, "rule " + i + " conditionText matches media.mediaText");
   }
-
-  SimpleTest.finish();
 }
-
-SimpleTest.waitForExplicitFinish();
-runTest();
 </script>
 </pre>
 </body>

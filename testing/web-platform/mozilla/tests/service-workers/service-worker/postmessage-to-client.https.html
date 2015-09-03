@@ -6,7 +6,8 @@
 <script>
 var t = async_test('postMessage from ServiceWorker to Client');
 t.step(function() {
-    var scope = 'resources/blank.html'
+    var scope = 'resources/blank.html';
+    var sw;
     service_worker_unregister_and_register(
         t, 'resources/postmessage-to-client-worker.js', scope)
       .then(function(registration) {
@@ -14,9 +15,9 @@ t.step(function() {
         })
       .then(function() { return with_iframe(scope); })
       .then(function(frame) {
-          var w = frame.contentWindow;
-          w.onmessage = t.step_func(onMessage);
-          w.navigator.serviceWorker.controller.postMessage('ping');
+          sw = frame.contentWindow.navigator.serviceWorker;
+          sw.onmessage = t.step_func(onMessage);
+          sw.controller.postMessage('ping');
         })
       .catch(unreached_rejection(t));
 
@@ -24,6 +25,11 @@ t.step(function() {
     var expected = ['Sending message via clients'];
 
     function onMessage(e) {
+      assert_equals(e.bubbles, false, 'message events should not bubble.');
+      assert_equals(e.cancelable, false, 'message events should not be cancelable.');
+// XXXkhuey fixme!
+//      assert_equals(e.source, sw.controller, 'source should be ServiceWorker.');
+
       var message = e.data;
       if (message === 'quit') {
         assert_array_equals(result, expected,

@@ -13,7 +13,7 @@ EXTRA_JS_MODULES.accessibility += [
     'OutputGenerator.jsm',
     'PointerAdapter.jsm',
     'Presentation.jsm',
-    'TraversalRules.jsm',
+    'Traversal.jsm',
     'Utils.jsm'
 ]
 

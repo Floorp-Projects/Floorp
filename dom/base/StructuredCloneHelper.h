@@ -125,25 +125,35 @@ public:
     TransferringNotSupported
   };
 
+  enum ContextSupport
+  {
+    SameProcessSameThread,
+    SameProcessDifferentThread,
+    DifferentProcess
+  };
+
   // If cloning is supported, this object will clone objects such as Blobs,
   // FileList, ImageData, etc.
   // If transferring is supported, we will transfer MessagePorts and in the
   // future other transferrable objects.
+  // The ContextSupport is useful to know where the cloned/transferred data can
+  // be read and written. Additional checks about the nature of the objects
+  // will be done based on this context value because not all the objects can
+  // be sent between threads or processes.
   explicit StructuredCloneHelper(CloningSupport aSupportsCloning,
-                                 TransferringSupport aSupportsTransferring);
+                                 TransferringSupport aSupportsTransferring,
+                                 ContextSupport aContextSupport);
   virtual ~StructuredCloneHelper();
 
   // Normally you should just use Write() and Read().
 
   void Write(JSContext* aCx,
              JS::Handle<JS::Value> aValue,
-             bool aMaybeToDifferentThread,
              ErrorResult &aRv);
 
   void Write(JSContext* aCx,
              JS::Handle<JS::Value> aValue,
              JS::Handle<JS::Value> aTransfer,
-             bool aMaybeToDifferentThread,
              ErrorResult &aRv);
 
   void Read(nsISupports* aParent,
@@ -246,9 +256,10 @@ public:
                                     JS::TransferableOwnership aOwnership,
                                     void* aContent,
                                     uint64_t aExtraData) override;
-private:
+protected:
   bool mSupportsCloning;
   bool mSupportsTransferring;
+  ContextSupport mContext;
 
   // Useful for the structured clone algorithm:
 
@@ -272,6 +283,10 @@ private:
   // are able to reconnect the new transferred ports with the other
   // MessageChannel ports.
   nsTArray<MessagePortIdentifier> mPortIdentifiers;
+
+#ifdef DEBUG
+  nsCOMPtr<nsIThread> mCreationThread;
+#endif
 };
 
 } // dom namespace
