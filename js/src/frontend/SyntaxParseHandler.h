@@ -47,6 +47,8 @@ class SyntaxParseHandler
         NodeThrow,
         NodeEmptyStatement,
 
+        NodeSuperElement,
+
         // This is needed for proper assignment-target handling.  ES6 formally
         // requires function calls *not* pass IsValidSimpleAssignmentTarget,
         // but at last check there were still sites with |f() = 5| and similar
@@ -138,7 +140,8 @@ class SyntaxParseHandler
     typedef Definition::Kind DefinitionNode;
 
     bool isPropertyAccess(Node node) {
-        return node == NodeDottedProperty || node == NodeElement;
+        return node == NodeDottedProperty || node == NodeElement ||
+               node == NodeSuperElement;
     }
 
     bool isFunctionCall(Node node) {
@@ -274,6 +277,9 @@ class SyntaxParseHandler
     Node newObjectLiteral(uint32_t begin) { return NodeUnparenthesizedObject; }
     Node newClassMethodList(uint32_t begin) { return NodeGeneric; }
 
+    Node newSuperElement(Node expr, const TokenPos& pos) {
+        return NodeSuperElement;
+    }
     Node newNewTarget(Node newHolder, Node targetHolder) { return NodeGeneric; }
     Node newPosHolder(const TokenPos& pos) { return NodeGeneric; }
     Node newSuperBase(const TokenPos& pos, ExclusiveContext* cx) { return NodeSuperBase; }
