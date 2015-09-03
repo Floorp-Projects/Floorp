@@ -7,6 +7,8 @@
  * Instead, please regenerate using intl/uconv/tools/gen-big5-data.py
  */
 
+#include "nsBIG5Data.h"
+
 static const char16_t kBig5LowBitsTable[] = {
   0x43F0,
   0x4C32,
@@ -18807,7 +18809,7 @@ static const uint32_t kBig5AstralnessTable[] = {
 
 // static
 char16_t
-nsBIG5ToUnicode::LowBits(size_t aPointer)
+nsBIG5Data::LowBits(size_t aPointer)
 {
   if (aPointer < 942) {
     return 0;
@@ -18844,7 +18846,7 @@ nsBIG5ToUnicode::LowBits(size_t aPointer)
 
 // static
 bool
-nsBIG5ToUnicode::IsAstral(size_t aPointer)
+nsBIG5Data::IsAstral(size_t aPointer)
 {
   if (aPointer < 947) {
     return false;
@@ -18909,4 +18911,44 @@ nsBIG5ToUnicode::IsAstral(size_t aPointer)
     return kBig5AstralnessTable[index >> 5] & (1 << (index & 0x1F));
   }
   return false;
+}
+
+//static
+size_t
+nsBIG5Data::FindPointer(char16_t aLowBits, bool aIsAstral)
+{
+  if (!aIsAstral) {
+    switch (aLowBits) {
+      case 0x2550:
+        return 18991;
+      case 0x255E:
+        return 18975;
+      case 0x2561:
+        return 18977;
+      case 0x256A:
+        return 18976;
+      case 0x5341:
+        return 5512;
+      case 0x5345:
+        return 5599;
+      default:
+        break;
+    }
+  }
+  for (size_t i = 3967; i < MOZ_ARRAY_LENGTH(kBig5LowBitsTable); ++i) {
+    if (kBig5LowBitsTable[i] == aLowBits) {
+      size_t pointer;
+      if (i < 4409) {
+        pointer = i + 1057;
+      } else if (i < 10128) {
+        pointer = i + 1086;
+      } else {
+        pointer = i + 1126;
+      }
+      if (aIsAstral == IsAstral(pointer)) {
+        return pointer;
+      }
+    }
+  }
+  return 0;
 }

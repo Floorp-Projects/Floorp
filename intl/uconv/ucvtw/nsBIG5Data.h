@@ -3,10 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsUCvTWDll_h_
-#define nsUCvTWDll_h_
+#ifndef nsBIG5Data_h_
+#define nsBIG5Data_h_
 
-extern const uint16_t g_ufBig5Mapping[];
-extern const uint16_t g_ASCIIMappingTable[];
+class nsBIG5Data
+{
+public:
+  static char16_t LowBits(size_t aPointer);
+  static bool     IsAstral(size_t aPointer);
+  static size_t   FindPointer(char16_t aLowBits, bool aIsAstral);
+};
 
-#endif /* nsUCvTWDll_h_ */
+#endif /* nsBIG5Data_h_ */
+
