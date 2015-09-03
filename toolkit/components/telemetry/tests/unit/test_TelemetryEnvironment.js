@@ -368,10 +368,7 @@ function checkSystemSection(data) {
 
   if (gIsWindows || gIsMac || gIsLinux) {
     let EXTRA_CPU_FIELDS = ["cores", "model", "family", "stepping",
-			    "l2cacheKB", "l3cacheKB", "speedMHz"];
-    if (gIsMac || gIsLinux) {
-      EXTRA_CPU_FIELDS.push("vendor");
-    }
+			    "l2cacheKB", "l3cacheKB", "speedMHz", "vendor"];
 
     for (let f of EXTRA_CPU_FIELDS) {
       // Note this is testing TelemetryEnvironment.js only, not that the

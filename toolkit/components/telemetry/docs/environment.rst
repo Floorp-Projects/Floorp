@@ -80,7 +80,7 @@ Structure::
         cpu: {
             count: <number>,  // desktop only, e.g. 8, or null on failure - logical cpus
             cores: <number>, // desktop only, e.g., 4, or null on failure - physical cores
-            vendor: <string>, // e.g. "GenuineIntel", or null on failure, only on mac & linux
+            vendor: <string>, // desktop only, e.g. "GenuineIntel", or null on failure
             family: <string>, // desktop only, null on failure
             model: <string>, // desktop only, null on failure
             stepping: <string>, // desktop only, null on failure

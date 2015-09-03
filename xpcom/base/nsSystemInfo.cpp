@@ -396,13 +396,28 @@ nsSystemInfo::Init()
 
   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName , 0, KEY_QUERY_VALUE, &key)
       == ERROR_SUCCESS) {
-    DWORD data, len;
+    DWORD data, len, vtype;
     len = sizeof(data);
 
     if (RegQueryValueEx(key, L"~Mhz", 0, 0, reinterpret_cast<LPBYTE>(&data),
                         &len) == ERROR_SUCCESS) {
       cpuSpeed = static_cast<int>(data);
     }
+
+    // Limit to 64 double byte characters, should be plenty, but create
+    // a buffer one larger as the result may not be null terminated. If
+    // it is more than 64, we will not get the value.
+    wchar_t cpuVendorStr[64+1];
+    len = sizeof(cpuVendorStr)-2;
+    if (RegQueryValueExW(key, L"VendorIdentifier",
+                         0, &vtype,
+                         reinterpret_cast<LPBYTE>(cpuVendorStr),
+                         &len) == ERROR_SUCCESS &&
+        vtype == REG_SZ && len % 2 == 0 && len > 1) {
+      cpuVendorStr[len/2] = 0; // In case it isn't null terminated
+      CopyUTF16toUTF8(nsDependentString(cpuVendorStr), cpuVendor);
+    }
+
     RegCloseKey(key);
   }
 
