@@ -315,6 +315,7 @@
   <string name="new_tab_opened">&new_tab_opened;</string>
   <string name="new_private_tab_opened">&new_private_tab_opened;</string>
   <string name="switch_button_message">&switch_button_message;</string>
+  <string name="tab_title_prefix_is_playing_audio">&tab_title_prefix_is_playing_audio;</string>
   <string name="one_tab">&one_tab;</string>
   <string name="num_tabs">&num_tabs2;</string>
   <string name="addons">&addons;</string>
