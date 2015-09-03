@@ -542,11 +542,11 @@ html[dir="rtl"] .room-entry-call-btn {
 
 html[dir="rtl"] .room-entry-context-actions > .dropdown-menu {
   right: auto;
-  left: 45px;
+  left: 21px;
 }
 
 .room-entry-context-actions > .dropdown-menu {
-  right: 45px;
+  right: 21px;
   bottom: auto;
   left: auto;
 }
