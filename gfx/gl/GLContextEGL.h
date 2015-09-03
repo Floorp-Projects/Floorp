@@ -70,10 +70,6 @@ public:
         return sEGLLibrary.IsWARP();
     }
 
-    virtual bool NeedsDrawElementsValidation() const override {
-        return true;
-    }
-
     virtual bool BindTexImage() override;
 
     virtual bool ReleaseTexImage() override;

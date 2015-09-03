@@ -254,18 +254,13 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type,
     if (!ValidateBufferFetching(info))
         return false;
 
-    if (gl->IsSupported(GLFeature::robust_buffer_access_behavior)) {
-        *out_upperBound = 0;
-    } else {
-        if (!mMaxFetchedVertices ||
-            !elemArrayBuffer.Validate(type, mMaxFetchedVertices - 1, first, count,
-                                      out_upperBound))
-        {
-            ErrorInvalidOperation(
-                                  "%s: bound vertex attribute buffers do not have sufficient "
-                                  "size for given indices from the bound element array", info);
-            return false;
-        }
+    if (!mMaxFetchedVertices ||
+        !elemArrayBuffer.Validate(type, mMaxFetchedVertices - 1, first, count, out_upperBound))
+    {
+        ErrorInvalidOperation(
+                              "%s: bound vertex attribute buffers do not have sufficient "
+                              "size for given indices from the bound element array", info);
+        return false;
     }
 
     if (uint32_t(primcount) > mMaxFetchedInstances) {
@@ -327,7 +322,7 @@ WebGLContext::DrawElements(GLenum mode, GLsizei count, GLenum type,
     {
         ScopedMaskWorkaround autoMask(*this);
 
-        if (upperBound && gl->IsSupported(gl::GLFeature::draw_range_elements)) {
+        if (gl->IsSupported(gl::GLFeature::draw_range_elements)) {
             gl->fDrawRangeElements(mode, 0, upperBound, count, type,
                                    reinterpret_cast<GLvoid*>(byteOffset));
         } else {
