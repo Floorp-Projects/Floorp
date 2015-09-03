@@ -169,6 +169,10 @@ public:
 
     virtual uint32_t GetMaxTouchPoints() const override;
 
+    void UpdateZoomConstraints(const uint32_t& aPresShellId,
+                               const FrameMetrics::ViewID& aViewId,
+                               const mozilla::Maybe<ZoomConstraints>& aConstraints) override;
+
 protected:
     void BringToFront();
     nsWindow *FindTopLevel();
