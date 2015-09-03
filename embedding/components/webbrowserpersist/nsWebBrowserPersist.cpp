@@ -81,9 +81,6 @@ struct nsWebBrowserPersist::DocData
     nsCOMPtr<nsIURI> mBaseURI;
     nsCOMPtr<nsIWebBrowserPersistDocument> mDocument;
     nsCOMPtr<nsIURI> mFile;
-    nsCOMPtr<nsIURI> mDataPath;
-    bool mDataPathIsRelative;
-    nsCString mRelativePathToData;
     nsCString mCharset;
 };
 
@@ -99,10 +96,17 @@ struct nsWebBrowserPersist::URIData
     nsString mSubFrameExt;
     nsCOMPtr<nsIURI> mFile;
     nsCOMPtr<nsIURI> mDataPath;
+    nsCOMPtr<nsIURI> mRelativeDocumentURI;
     nsCString mRelativePathToData;
     nsCString mCharset;
 
-    nsresult GetLocalURI(nsCString& aSpec);
+    nsresult GetLocalURI(nsIURI *targetBaseURI, nsCString& aSpecOut);
+};
+
+struct nsWebBrowserPersist::URIFixupData
+{
+    nsRefPtr<FlatURIMap> mFlatMap;
+    nsCOMPtr<nsIURI> mTargetBaseURI;
 };
 
 // Information about the output stream
@@ -643,20 +647,27 @@ nsWebBrowserPersist::SerializeNextFile()
 
     // Save the document, fixing it up with the new URIs as we do
 
-    if (!mFlatURIMap) {
-        nsAutoCString targetBaseSpec;
-        if (mTargetBaseURI) {
-            rv = mTargetBaseURI->GetSpec(targetBaseSpec);
-            if (NS_FAILED(rv)) {
-                SendErrorStatusChange(true, rv, nullptr, nullptr);
-                EndDownload(rv);
-                return;
-            }
+    nsAutoCString targetBaseSpec;
+    if (mTargetBaseURI) {
+        rv = mTargetBaseURI->GetSpec(targetBaseSpec);
+        if (NS_FAILED(rv)) {
+            SendErrorStatusChange(true, rv, nullptr, nullptr);
+            EndDownload(rv);
+            return;
         }
-        nsRefPtr<FlatURIMap> flatMap = new FlatURIMap(targetBaseSpec);
-        mURIMap.EnumerateRead(EnumCopyURIsToFlatMap, flatMap);
-        mFlatURIMap = flatMap.forget();
     }
+    
+    // mFlatURIMap must be rebuilt each time through SerializeNextFile, as
+    // mTargetBaseURI is used to create the relative URLs and will be different
+    // with each serialized document.
+    nsRefPtr<FlatURIMap> flatMap = new FlatURIMap(targetBaseSpec);
+    
+    URIFixupData fixupData;
+    fixupData.mFlatMap = flatMap;
+    fixupData.mTargetBaseURI = mTargetBaseURI;
+    
+    mURIMap.EnumerateRead(EnumCopyURIsToFlatMap, &fixupData);
+    mFlatURIMap = flatMap.forget();
 
     nsCOMPtr<nsIFile> localFile;
     GetLocalFileFromURI(docData->mFile, getter_AddRefs(localFile));
@@ -1196,7 +1207,8 @@ nsresult nsWebBrowserPersist::GetValidURIFromObject(nsISupports *aObject, nsIURI
     return NS_ERROR_FAILURE;
 }
 
-nsresult nsWebBrowserPersist::GetLocalFileFromURI(nsIURI *aURI, nsIFile **aLocalFile) const
+/* static */ nsresult
+nsWebBrowserPersist::GetLocalFileFromURI(nsIURI *aURI, nsIFile **aLocalFile)
 {
     nsresult rv;
 
@@ -1553,6 +1565,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         mCurrentDataPath = aDataPath;
         mCurrentRelativePathToData = "";
         mCurrentThingsToPersist = 0;
+        mTargetBaseURI = aFile;
 
         // Determine if the specified data path is relative to the
         // specified file, (e.g. c:\docs\htmldata is relative to
@@ -1618,9 +1631,6 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         docData->mCharset = mCurrentCharset;
         docData->mDocument = aDocument;
         docData->mFile = aFile;
-        docData->mRelativePathToData = mCurrentRelativePathToData;
-        docData->mDataPath = mCurrentDataPath;
-        docData->mDataPathIsRelative = mCurrentDataPathIsRelative;
         mDocList.AppendElement(docData);
 
         // Walk the DOM gathering a list of externally referenced URIs in the uri map
@@ -1635,9 +1645,6 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         docData->mCharset = mCurrentCharset;
         docData->mDocument = aDocument;
         docData->mFile = aFile;
-        docData->mRelativePathToData = nullptr;
-        docData->mDataPath = nullptr;
-        docData->mDataPathIsRelative = false;
         mDocList.AppendElement(docData);
 
         // Not walking DOMs, so go directly to serialization.
@@ -2513,9 +2520,10 @@ nsWebBrowserPersist::EnumCopyURIsToFlatMap(const nsACString &aKey,
                                           URIData *aData,
                                           void* aClosure)
 {
-    FlatURIMap* theMap = static_cast<FlatURIMap*>(aClosure);
+    URIFixupData *fixupData = static_cast<URIFixupData*>(aClosure);
+    FlatURIMap* theMap = fixupData->mFlatMap;
     nsAutoCString mapTo;
-    nsresult rv = aData->GetLocalURI(mapTo);
+    nsresult rv = aData->GetLocalURI(fixupData->mTargetBaseURI, mapTo);
     if (NS_SUCCEEDED(rv) || !mapTo.IsVoid()) {
         theMap->Add(aKey, mapTo);
     }
@@ -2575,7 +2583,7 @@ nsWebBrowserPersist::StoreURI(
 }
 
 nsresult
-nsWebBrowserPersist::URIData::GetLocalURI(nsCString& aSpecOut)
+nsWebBrowserPersist::URIData::GetLocalURI(nsIURI *targetBaseURI, nsCString& aSpecOut)
 {
     aSpecOut.SetIsVoid(true);
     if (!mNeedsFixup) {
@@ -2599,19 +2607,42 @@ nsWebBrowserPersist::URIData::GetLocalURI(nsCString& aSpecOut)
     // reset node attribute
     // Use relative or absolute links
     if (mDataPathIsRelative) {
-        nsCOMPtr<nsIURL> url(do_QueryInterface(fileAsURI));
-        if (!url) {
-            return NS_ERROR_FAILURE;
+        bool isEqual = false;
+        if (NS_SUCCEEDED(mRelativeDocumentURI->Equals(targetBaseURI, &isEqual)) && isEqual) {
+            nsCOMPtr<nsIURL> url(do_QueryInterface(fileAsURI));
+            if (!url) {
+                return NS_ERROR_FAILURE;
+            }
+            
+            nsAutoCString filename;
+            url->GetFileName(filename);
+            
+            nsAutoCString rawPathURL(mRelativePathToData);
+            rawPathURL.Append(filename);
+            
+            nsAutoCString buf;
+            aSpecOut = NS_EscapeURL(rawPathURL, esc_FilePath, buf);
+        } else {
+            nsAutoCString rawPathURL;
+            
+            nsCOMPtr<nsIFile> dataFile;
+            rv = GetLocalFileFromURI(mFile, getter_AddRefs(dataFile));
+            NS_ENSURE_SUCCESS(rv, rv);
+            
+            nsCOMPtr<nsIFile> docFile;
+            rv = GetLocalFileFromURI(targetBaseURI, getter_AddRefs(docFile));
+            NS_ENSURE_SUCCESS(rv, rv);
+            
+            nsCOMPtr<nsIFile> parentDir;
+            rv = docFile->GetParent(getter_AddRefs(parentDir));
+            NS_ENSURE_SUCCESS(rv, rv);
+            
+            rv = dataFile->GetRelativePath(parentDir, rawPathURL);
+            NS_ENSURE_SUCCESS(rv, rv);
+            
+            nsAutoCString buf;
+            aSpecOut = NS_EscapeURL(rawPathURL, esc_FilePath, buf);
         }
-
-        nsAutoCString filename;
-        url->GetFileName(filename);
-
-        nsAutoCString rawPathURL(mRelativePathToData);
-        rawPathURL.Append(filename);
-
-        nsAutoCString buf;
-        aSpecOut = NS_EscapeURL(rawPathURL, esc_FilePath, buf);
     } else {
         fileAsURI->GetSpec(aSpecOut);
     }
@@ -2795,6 +2826,7 @@ nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(
     data->mDataPath = mCurrentDataPath;
     data->mDataPathIsRelative = mCurrentDataPathIsRelative;
     data->mRelativePathToData = mCurrentRelativePathToData;
+    data->mRelativeDocumentURI = mTargetBaseURI;
     data->mCharset = mCurrentCharset;
 
     if (aNeedsPersisting)
