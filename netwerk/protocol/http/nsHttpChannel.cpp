@@ -452,13 +452,13 @@ nsHttpChannel::ContinueConnect()
     // Note that it is important to do this before the early returns below.
     if (!mIsCorsPreflightDone && mRequireCORSPreflight &&
         mInterceptCache != INTERCEPTED) {
-        nsCOMPtr<nsIChannel> preflightChannel;
+        MOZ_ASSERT(!mPreflightChannel);
         nsresult rv =
             nsCORSListenerProxy::StartCORSPreflight(this, mListener,
                                                     mPreflightPrincipal, this,
                                                     mWithCredentials,
                                                     mUnsafeHeaders,
-                                                    getter_AddRefs(preflightChannel));
+                                                    getter_AddRefs(mPreflightChannel));
         return rv;
     }
 
@@ -4890,6 +4890,8 @@ NS_IMETHODIMP
 nsHttpChannel::Cancel(nsresult status)
 {
     MOZ_ASSERT(NS_IsMainThread());
+    // We should never have a pump open while a CORS preflight is in progress.
+    MOZ_ASSERT_IF(mPreflightChannel, !mCachePump);
 
     LOG(("nsHttpChannel::Cancel [this=%p status=%x]\n", this, status));
     if (mCanceled) {
@@ -4912,6 +4914,8 @@ nsHttpChannel::Cancel(nsresult status)
         mCachePump->Cancel(status);
     if (mAuthProvider)
         mAuthProvider->Cancel(status);
+    if (mPreflightChannel)
+        mPreflightChannel->Cancel(status);
     return NS_OK;
 }
 
@@ -7004,6 +7008,7 @@ nsHttpChannel::OnPreflightSucceeded()
 {
     MOZ_ASSERT(mRequireCORSPreflight, "Why did a preflight happen?");
     mIsCorsPreflightDone = 1;
+    mPreflightChannel = nullptr;
 
     return ContinueConnect();
 }
@@ -7013,6 +7018,7 @@ nsHttpChannel::OnPreflightFailed(nsresult aError)
 {
     MOZ_ASSERT(mRequireCORSPreflight, "Why did a preflight happen?");
     mIsCorsPreflightDone = 1;
+    mPreflightChannel = nullptr;
 
     Cancel(aError);
     mListener->OnStartRequest(this, mListenerContext);

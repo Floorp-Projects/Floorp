@@ -494,6 +494,8 @@ private:
     // True if CORS preflight has been performed
     uint32_t                          mIsCorsPreflightDone : 1;
 
+    nsCOMPtr<nsIChannel>              mPreflightChannel;
+
     nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
 
     // Needed for accurate DNS timing
