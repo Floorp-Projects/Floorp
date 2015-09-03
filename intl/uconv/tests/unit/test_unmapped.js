@@ -11,7 +11,6 @@ function run_test() {
     // this list excludes codepages that can represent all Unicode
     var encoders = [
         "Big5",
-        "Big5-HKSCS",
         "EUC-JP",
         "EUC-KR",
         "gbk",
