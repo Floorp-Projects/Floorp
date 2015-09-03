@@ -35,7 +35,8 @@ public:
 
   nsJSScriptTimeoutHandler();
   // This will call SwapElements on aArguments with an empty array.
-  nsJSScriptTimeoutHandler(nsGlobalWindow *aWindow, Function& aFunction,
+  nsJSScriptTimeoutHandler(JSContext* aCx, nsGlobalWindow *aWindow,
+                           Function& aFunction,
                            FallibleTArray<JS::Heap<JS::Value> >& aArguments,
                            ErrorResult& aError);
   nsJSScriptTimeoutHandler(JSContext* aCx, nsGlobalWindow *aWindow,
@@ -188,7 +189,8 @@ nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler() :
 {
 }
 
-nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler(nsGlobalWindow *aWindow,
+nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler(JSContext* aCx,
+                                                   nsGlobalWindow *aWindow,
                                                    Function& aFunction,
                                                    FallibleTArray<JS::Heap<JS::Value> >& aArguments,
                                                    ErrorResult& aError) :
@@ -204,6 +206,9 @@ nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler(nsGlobalWindow *aWindow,
 
   mozilla::HoldJSObjects(this);
   mArgs.SwapElements(aArguments);
+
+  // Get the calling location.
+  nsJSUtils::GetCallingLocation(aCx, mFileName, &mLineNo);
 }
 
 nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler(JSContext* aCx,
@@ -253,7 +258,8 @@ nsJSScriptTimeoutHandler::GetHandlerText()
 }
 
 already_AddRefed<nsIScriptTimeoutHandler>
-NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow, Function& aFunction,
+NS_CreateJSTimeoutHandler(JSContext *aCx, nsGlobalWindow *aWindow,
+                          Function& aFunction,
                           const Sequence<JS::Value>& aArguments,
                           ErrorResult& aError)
 {
@@ -264,7 +270,7 @@ NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow, Function& aFunction,
   }
 
   nsRefPtr<nsJSScriptTimeoutHandler> handler =
-    new nsJSScriptTimeoutHandler(aWindow, aFunction, args, aError);
+    new nsJSScriptTimeoutHandler(aCx, aWindow, aFunction, args, aError);
   return aError.Failed() ? nullptr : handler.forget();
 }
 
