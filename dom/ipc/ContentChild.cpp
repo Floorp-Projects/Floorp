@@ -178,7 +178,7 @@
 #endif
 
 #include "ProcessUtils.h"
-#include "StructuredCloneUtils.h"
+#include "StructuredCloneIPCHelper.h"
 #include "URIUtils.h"
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
@@ -2082,10 +2082,11 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg,
 {
     nsRefPtr<nsFrameMessageManager> cpm = nsFrameMessageManager::GetChildProcessManager();
     if (cpm) {
-        StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForChild(aData);
+        StructuredCloneIPCHelper helper;
+        ipc::UnpackClonedMessageDataForChild(aData, helper);
         CrossProcessCpowHolder cpows(this, aCpows);
         cpm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(cpm.get()), nullptr,
-                            aMsg, false, &cloneData, &cpows, aPrincipal, nullptr);
+                            aMsg, false, &helper, &cpows, aPrincipal, nullptr);
     }
     return true;
 }
@@ -2867,4 +2868,3 @@ ContentChild::RecvTestGraphicsDeviceReset(const uint32_t& aResetReason)
 
 } // namespace dom
 } // namespace mozilla
-

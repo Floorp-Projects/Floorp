@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tests AccessFu TraversalRules</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js">
+  </script>
+
+  <script type="application/javascript" src="../common.js"></script>
+  <script type="application/javascript" src="../browser.js"></script>
+  <script type="application/javascript" src="../events.js"></script>
+  <script type="application/javascript" src="../role.js"></script>
+  <script type="application/javascript" src="../states.js"></script>
+  <script type="application/javascript" src="../pivot.js"></script>
+  <script type="application/javascript" src="../layout.js"></script>
+
+  <script type="application/javascript">
+    Components.utils.import("resource://gre/modules/accessibility/Traversal.jsm");
+
+    var vc;
+
+    function accessibleIs(aAccessible, aExpected, aMessage) {
+      if (!aAccessible && aAccessible == aExpected) {
+        ok(true, "Accessible is null. " + aMessage);
+      } else {
+        ok(aAccessible.DOMNode.id == aExpected || aAccessible.name == aExpected,
+          "expected '" + aExpected + "', got " + prettyName(vc.position) +
+          ". " + aMessage);
+      }
+    }
+
+    function walkSequence(aMethod, aRule, aExpectedSequence) {
+      for (var expected of aExpectedSequence) {
+        ok(TraversalHelper.move(vc, aMethod, aRule),
+          "successfully did " + aMethod + " with " + aRule);
+        accessibleIs(vc.position, expected, "landed on correct accessible");
+      }
+    }
+
+    function testTraversalHelper(aRule, aExpectedSequence) {
+      vc.position = null;
+
+      walkSequence('moveNext', aRule, aExpectedSequence);
+
+      ok(!TraversalHelper.move(vc, 'moveNext', aRule), "reached end");
+
+      TraversalHelper.move(vc, 'moveLast', 'Simple');
+
+      walkSequence('movePrevious', aRule,
+        Array.from(aExpectedSequence).reverse());
+
+      ok(!TraversalHelper.move(vc, 'movePrevious', aRule), "reached start");
+
+      vc.position = null;
+
+      ok(TraversalHelper.move(vc, 'moveFirst', aRule), "moveFirst");
+
+      accessibleIs(vc.position, aExpectedSequence[0],
+        "moveFirst to correct accessible");
+
+      ok(TraversalHelper.move(vc, 'moveLast', aRule), "moveLast");
+
+      accessibleIs(vc.position, aExpectedSequence[aExpectedSequence.length - 1],
+        "moveLast to correct accessible");
+    }
+
+
+    function doTest()
+    {
+      var doc = currentTabDocument();
+      var docAcc = getAccessible(doc, [nsIAccessibleDocument]);
+      vc = docAcc.virtualCursor;
+
+      testTraversalHelper('Landmark',
+        ['heading-1', 'heading-2', 'statusbar-1']);
+
+      testTraversalHelper('List',
+        ['Programming Language', 'listitem-2-1', 'listitem-3-1']);
+
+      vc.position = null;
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(function () {
+      /* We open a new browser because we need to test with a top-level content
+         document. */
+      openBrowserWindow(
+        doTest,
+        getRootDirectory(window.location.href) + "doc_traversal.html");
+    });
+  </script>
+</head>
+<body id="body">
+
+  <a target="_blank"
+     title="Add tests for AccessFu TraversalRules"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=xxx">Mozilla Bug xxx</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+</body>
+</html>

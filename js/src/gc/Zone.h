@@ -13,9 +13,12 @@
 
 #include "jscntxt.h"
 
+#include "ds/SpinLock.h"
+#include "ds/SplayTree.h"
 #include "gc/FindSCCs.h"
 #include "gc/GCRuntime.h"
 #include "js/TracingAPI.h"
+#include "vm/MallocProvider.h"
 #include "vm/TypeInference.h"
 
 namespace js {
@@ -57,6 +60,73 @@ class ZoneHeapThreshold
                                           JSGCInvocationKind gckind,
                                           const GCSchedulingTunables& tunables);
 };
+
+// Maps a Cell* to a unique, 64bit id. This implementation uses a SplayTree
+// instead of a HashMap. While a SplayTree has worse worst-case performance,
+// the typical usage of storing stable hashmap keys tends to cluster with
+// extremely frequent lookups of the same key repeatedly. Thus, we typically
+// get very close to HashMap-like O(1) performance with much denser storage.
+class UniqueIdMap
+{
+    struct Pair {
+        uint64_t uniqueId;
+        Cell* key;
+
+      public:
+        Pair(Cell* cell, uint64_t uid) : uniqueId(uid), key(cell) {}
+        Pair(const Pair& other) : uniqueId(other.uniqueId), key(other.key) {}
+
+        static ptrdiff_t compare(const Pair& a, const Pair& b) {
+            return b.key - a.key;
+        }
+    };
+
+    // Use a relatively small chunk, as many users will not have many entries.
+    const size_t AllocChunkSize = mozilla::RoundUpPow2(16 * sizeof(Pair));
+
+    LifoAlloc alloc;
+    SplayTree<Pair, Pair> map;
+
+  public:
+    UniqueIdMap() : alloc(AllocChunkSize), map(&alloc) {}
+
+    // Returns true if the map is empty.
+    bool isEmpty() { return map.empty(); }
+
+    // Return true if the cell is present in the map.
+    bool has(Cell* cell) {
+        return map.maybeLookup(Pair(cell, 0));
+    }
+
+    // Returns whether the cell is present or not. If true, sets the uid.
+    bool lookup(Cell* cell, uint64_t* uidp) {
+        Pair tmp(nullptr, 0);
+        if (!map.contains(Pair(cell, 0), &tmp))
+            return false;
+        MOZ_ASSERT(tmp.key == cell);
+        MOZ_ASSERT(tmp.uniqueId > 0);
+        *uidp = tmp.uniqueId;
+        return true;
+    }
+
+    // Inserts a value; returns false on OOM.
+    bool put(Cell* cell, uint64_t uid) {
+        MOZ_ASSERT(uid > 0);
+        return map.insert(Pair(cell, uid));
+    }
+
+    // Remove the given key from the map.
+    void remove(Cell* cell) {
+        map.remove(Pair(cell, 0));
+    }
+
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        // All data allocated by |map| is contained in |alloc|.
+        return alloc.sizeOfExcludingThis(mallocSizeOf);
+    }
+};
+
+extern uint64_t NextCellUniqueId(JSRuntime* rt);
 
 } // namespace gc
 } // namespace js
@@ -118,7 +188,8 @@ struct Zone : public JS::shadow::Zone,
 
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 size_t* typePool,
-                                size_t* baselineStubsOptimized);
+                                size_t* baselineStubsOptimized,
+                                size_t* uniqueIdMap);
 
     void resetGCMallocBytes();
     void setGCMaxMallocBytes(size_t value);
@@ -250,6 +321,13 @@ struct Zone : public JS::shadow::Zone,
         return isOnList();
     }
 
+    // Side map for storing a unique ids for cells, independent of address.
+    js::gc::UniqueIdMap uniqueIds_;
+
+    // Guards the uniqueIds_ map as it is accessed directly from the background
+    // sweeping thread. This uses a spinlock, since it is normally uncontended.
+    js::SpinLock uniqueIdsLock_;
+
   public:
     bool hasDebuggers() const { return debuggers && debuggers->length(); }
     DebuggerVector* getDebuggers() const { return debuggers; }
@@ -317,6 +395,74 @@ struct Zone : public JS::shadow::Zone,
     bool active;
 
     mozilla::DebugOnly<unsigned> gcLastZoneGroupIndex;
+
+    // Creates a HashNumber based on getUniqueId. Returns false on OOM.
+    bool getHashCode(js::gc::Cell* cell, js::HashNumber* hashp) {
+        uint64_t uid;
+        if (!getUniqueId(cell, &uid))
+            return false;
+        *hashp = (uid >> 32) & (uid & 0xFFFFFFFF);
+        return true;
+    }
+
+    // Puts an existing UID in |uidp|, or creates a new UID for this Cell and
+    // puts that into |uidp|. Returns false on OOM.
+    bool getUniqueId(js::gc::Cell* cell, uint64_t* uidp) {
+        MOZ_ASSERT(uidp);
+        js::AutoSpinLock lock(uniqueIdsLock_);
+
+        // Get an existing uid, if one has been set.
+        if (uniqueIds_.lookup(cell, uidp))
+            return true;
+
+        // Set a new uid on the cell.
+        *uidp = js::gc::NextCellUniqueId(runtimeFromAnyThread());
+        if (!uniqueIds_.put(cell, *uidp))
+            return false;
+
+        // If the cell was in the nursery, hopefully unlikely, then we need to
+        // tell the nursery about it so that it can sweep the uid if the thing
+        // does not get tenured.
+        if (!runtimeFromAnyThread()->gc.nursery.addedUniqueIdToCell(cell))
+            js::CrashAtUnhandlableOOM("failed to allocate tracking data for a nursery uid");
+        return true;
+    }
+
+    // Return true if this cell has a UID associated with it.
+    bool hasUniqueId(js::gc::Cell* cell) {
+        js::AutoSpinLock lock(uniqueIdsLock_);
+        uint64_t tmp;
+        return uniqueIds_.lookup(cell, &tmp);
+    }
+
+    // Transfer an id from another cell. This must only be called on behalf of a
+    // moving GC. This method is infallible.
+    void transferUniqueId(js::gc::Cell* tgt, js::gc::Cell* src) {
+        MOZ_ASSERT(src != tgt);
+        MOZ_ASSERT(!IsInsideNursery(tgt));
+        MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtimeFromMainThread()));
+        js::AutoSpinLock lock(uniqueIdsLock_);
+
+        // Return early if we do not have a UID set on the source.
+        uint64_t uid = 0;
+        if (!uniqueIds_.lookup(src, &uid))
+            return;
+
+        // Remove from the source first to guarantee that at least one node
+        // will be available in the free pool. This allows us to avoid OOM
+        // in all cases when transfering uids.
+        uniqueIds_.remove(src);
+
+        MOZ_ASSERT(uid > 0);
+        mozilla::DebugOnly<bool> ok = uniqueIds_.put(tgt, uid);
+        MOZ_ASSERT(ok);
+    }
+
+    // Remove any unique id associated with this Cell.
+    void removeUniqueId(js::gc::Cell* cell) {
+        js::AutoSpinLock lock(uniqueIdsLock_);
+        uniqueIds_.remove(cell);
+    }
 
   private:
     js::jit::JitZone* jitZone_;

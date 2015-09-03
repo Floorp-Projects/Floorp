@@ -971,9 +971,6 @@ nsChildView::BackingScaleFactorChanged()
     if (presShell) {
       presShell->BackingScaleFactorChanged();
     }
-    // When the backing scale factor changes, so does our size in device pixels
-    // (though not in display pixels).
-    ReportSizeEvent();
   }
 }
 

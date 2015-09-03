@@ -667,9 +667,9 @@ DXGIYCbCrTextureClient::~DXGIYCbCrTextureClient()
 already_AddRefed<DXGIYCbCrTextureClient>
 DXGIYCbCrTextureClient::Create(ISurfaceAllocator* aAllocator,
                                TextureFlags aFlags,
-                               IDirect3DTexture9* aTextureY,
-                               IDirect3DTexture9* aTextureCb,
-                               IDirect3DTexture9* aTextureCr,
+                               IUnknown* aTextureY,
+                               IUnknown* aTextureCb,
+                               IUnknown* aTextureCr,
                                HANDLE aHandleY,
                                HANDLE aHandleCb,
                                HANDLE aHandleCr,
@@ -682,71 +682,11 @@ DXGIYCbCrTextureClient::Create(ISurfaceAllocator* aAllocator,
     return nullptr;
   }
 
-  aTextureY->SetPrivateData(sD3D11TextureUsage,
-    new TextureMemoryMeasurer(aSizeY.width * aSizeY.height), sizeof(IUnknown*), D3DSPD_IUNKNOWN);
-  aTextureCb->SetPrivateData(sD3D11TextureUsage,
-    new TextureMemoryMeasurer(aSizeCbCr.width * aSizeCbCr.height), sizeof(IUnknown*), D3DSPD_IUNKNOWN);
-  aTextureCr->SetPrivateData(sD3D11TextureUsage,
-    new TextureMemoryMeasurer(aSizeCbCr.width * aSizeCbCr.height), sizeof(IUnknown*), D3DSPD_IUNKNOWN);
-
   RefPtr<DXGIYCbCrTextureClient> texture =
     new DXGIYCbCrTextureClient(aAllocator, aFlags);
   texture->mHandles[0] = aHandleY;
   texture->mHandles[1] = aHandleCb;
   texture->mHandles[2] = aHandleCr;
-  texture->mHoldRefs[0] = aTextureY;
-  texture->mHoldRefs[1] = aTextureCb;
-  texture->mHoldRefs[2] = aTextureCr;
-  texture->mSize = aSize;
-  texture->mSizeY = aSizeY;
-  texture->mSizeCbCr = aSizeCbCr;
-  return texture.forget();
-}
-
-already_AddRefed<DXGIYCbCrTextureClient>
-DXGIYCbCrTextureClient::Create(ISurfaceAllocator* aAllocator,
-                               TextureFlags aFlags,
-                               ID3D11Texture2D* aTextureY,
-                               ID3D11Texture2D* aTextureCb,
-                               ID3D11Texture2D* aTextureCr,
-                               const gfx::IntSize& aSize,
-                               const gfx::IntSize& aSizeY,
-                               const gfx::IntSize& aSizeCbCr)
-{
-  if (!aTextureY || !aTextureCb || !aTextureCr) {
-    return nullptr;
-  }
-
-  aTextureY->SetPrivateDataInterface(sD3D11TextureUsage,
-    new TextureMemoryMeasurer(aSize.width * aSize.height));
-  aTextureCb->SetPrivateDataInterface(sD3D11TextureUsage,
-    new TextureMemoryMeasurer(aSizeCbCr.width * aSizeCbCr.height));
-  aTextureCr->SetPrivateDataInterface(sD3D11TextureUsage,
-    new TextureMemoryMeasurer(aSizeCbCr.width * aSizeCbCr.height));
-
-  RefPtr<DXGIYCbCrTextureClient> texture =
-    new DXGIYCbCrTextureClient(aAllocator, aFlags);
-
-  RefPtr<IDXGIResource> resource;
-
-  aTextureY->QueryInterface((IDXGIResource**)byRef(resource));
-  HRESULT hr = resource->GetSharedHandle(&texture->mHandles[0]);
-  if (FAILED(hr)) {
-    return nullptr;
-  }
-
-  aTextureCb->QueryInterface((IDXGIResource**)byRef(resource));
-  hr = resource->GetSharedHandle(&texture->mHandles[1]);
-  if (FAILED(hr)) {
-    return nullptr;
-  }
-
-  aTextureCr->QueryInterface((IDXGIResource**)byRef(resource));
-  hr = resource->GetSharedHandle(&texture->mHandles[2]);
-  if (FAILED(hr)) {
-    return nullptr;
-  }
-
   texture->mHoldRefs[0] = aTextureY;
   texture->mHoldRefs[1] = aTextureCb;
   texture->mHoldRefs[2] = aTextureCr;

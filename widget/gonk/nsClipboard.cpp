@@ -14,6 +14,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
+#include "nsServiceManagerUtils.h"
 #include "nsStringStream.h"
 #include "nsXULAppAPI.h"
 
