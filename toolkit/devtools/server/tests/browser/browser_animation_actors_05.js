@@ -45,7 +45,13 @@ add_task(function*() {
         info("Stop the auto-refresh");
         player.stopAutoRefresh();
 
-        resolve();
+        if (player.pendingRefreshStatePromise) {
+          // A new request was fired before we had chance to stop it. Wait for
+          // it to complete.
+          player.pendingRefreshStatePromise.then(resolve);
+        } else {
+          resolve();
+        }
       }
     };
     player.on(player.AUTO_REFRESH_EVENT, onNewState);

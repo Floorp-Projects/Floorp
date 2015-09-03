@@ -252,8 +252,8 @@
                 <label id="fxaEmailAddress1"/>
                 <label id="fxaDisplayName" hidden="true"/>
                 <hbox class="fxaAccountBoxButtons" align="center">
-                  <vbox flex="1"><button id="fxaUnlinkButton">&disconnect.label;</button></vbox>
-                  <vbox flex="1"><label id="verifiedManage" class="text-link">&verifiedManage.label;</label></vbox>
+                  <button id="fxaUnlinkButton">&disconnect.label;</button>
+                  <label id="verifiedManage" class="text-link">&verifiedManage.label;</label>
                 </hbox>
               </vbox>
             </hbox>

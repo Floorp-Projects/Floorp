@@ -77,6 +77,46 @@ add_test(function test_login_message() {
   channel._channelCallback(WEBCHANNEL_ID, mockMessage, mockSendingContext);
 });
 
+add_test(function test_logout_message() {
+  let mockMessage = {
+    command: 'fxaccounts:logout',
+    data: { uid: "foo" }
+  };
+
+  let channel = new FxAccountsWebChannel({
+    channel_id: WEBCHANNEL_ID,
+    content_uri: URL_STRING,
+    helpers: {
+      logout: function (uid) {
+        do_check_eq(uid, 'foo');
+        run_next_test();
+      }
+    }
+  });
+
+  channel._channelCallback(WEBCHANNEL_ID, mockMessage, mockSendingContext);
+});
+
+add_test(function test_delete_message() {
+  let mockMessage = {
+    command: 'fxaccounts:delete',
+    data: { uid: "foo" }
+  };
+
+  let channel = new FxAccountsWebChannel({
+    channel_id: WEBCHANNEL_ID,
+    content_uri: URL_STRING,
+    helpers: {
+      logout: function (uid) {
+        do_check_eq(uid, 'foo');
+        run_next_test();
+      }
+    }
+  });
+
+  channel._channelCallback(WEBCHANNEL_ID, mockMessage, mockSendingContext);
+});
+
 add_test(function test_can_link_account_message() {
   let mockMessage = {
     command: 'fxaccounts:can_link_account',
