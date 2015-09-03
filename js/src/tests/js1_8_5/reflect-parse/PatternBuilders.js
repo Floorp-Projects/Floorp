@@ -132,14 +132,14 @@ function superElem(id) {
 
 function classStmt(id, heritage, body) {
     return Pattern({ type: "ClassStatement",
-                     id: id,
-                     superClass: heritage,
+                     name: id,
+                     heritage: heritage,
                      body: body});
 }
 function classExpr(id, heritage, body) {
     return Pattern({ type: "ClassExpression",
-                     id: id,
-                     superClass: heritage,
+                     name: id,
+                     heritage: heritage,
                      body: body});
 }
 function classMethod(id, body, kind, static) {
