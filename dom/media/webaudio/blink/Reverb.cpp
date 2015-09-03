@@ -30,6 +30,7 @@
 #include "ReverbConvolverStage.h"
 
 #include <math.h>
+#include "AudioBlock.h"
 #include "ReverbConvolver.h"
 #include "mozilla/FloatingPoint.h"
 
