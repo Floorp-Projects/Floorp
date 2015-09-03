@@ -1,8 +1,6 @@
-Services.prefs.setBoolPref("browser.preferences.inContent", true);
 Services.prefs.setBoolPref("browser.preferences.instantApply", true);
 
 registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("browser.preferences.inContent");
   Services.prefs.clearUserPref("browser.preferences.instantApply");
 });
 
