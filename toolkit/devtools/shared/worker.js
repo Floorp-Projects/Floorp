@@ -38,7 +38,7 @@ let MESSAGE_COUNTER = 0;
  *        - name: a name that will be printed with logs
  *        - verbose: log incoming and outgoing messages
  */
-function DevToolsWorker (url, opts) {
+function DevToolsWorker(url, opts) {
   opts = opts || {};
   this._worker = new ChromeWorker(url);
   this._verbose = opts.verbose;
@@ -97,7 +97,7 @@ DevToolsWorker.prototype.performTask = function (task, data) {
 
     worker.addEventListener("message", listener);
   });
-}
+};
 
 /**
  * Terminates the underlying worker. Use when no longer needing the worker.
@@ -110,7 +110,7 @@ DevToolsWorker.prototype.destroy = function () {
 
 DevToolsWorker.prototype.onError = function({ message, filename, lineno }) {
   dump(new Error(message + " @ " + filename + ":" + lineno) + "\n");
-}
+};
 
 /**
  * Takes a function and returns a Worker-wrapped version of the same function.
