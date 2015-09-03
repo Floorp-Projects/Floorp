@@ -59,6 +59,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsCharTraits.h"
 #include "nsCocoaFeatures.h"
+#include "nsCocoaUtils.h"
 #include "gfxFontConstants.h"
 
 #include "mozilla/MemoryReporting.h"
@@ -70,20 +71,6 @@
 #include <time.h>
 
 using namespace mozilla;
-
-class nsAutoreleasePool {
-public:
-    nsAutoreleasePool()
-    {
-        mLocalPool = [[NSAutoreleasePool alloc] init];
-    }
-    ~nsAutoreleasePool()
-    {
-        [mLocalPool release];
-    }
-private:
-    NSAutoreleasePool *mLocalPool;
-};
 
 // indexes into the NSArray objects that the Cocoa font manager returns
 // as the available members of a family
