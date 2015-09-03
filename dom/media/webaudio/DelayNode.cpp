@@ -114,9 +114,6 @@ public:
     // ProduceBlockBeforeInput() when in a cycle.
     if (!mHaveProducedBeforeInput) {
       UpdateOutputBlock(aOutput, 0.0);
-      // Not in cycle, so no need for additional buffer reference.
-      // See ProduceBlockBeforeInput().
-      mLastOutput.SetNull(0);
     }
     mHaveProducedBeforeInput = false;
     mBuffer.NextBlock();
@@ -159,13 +156,7 @@ public:
     if (mLeftOverData <= 0) {
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
     } else {
-      // AudioNodeStream::ReleaseSharedBuffers() is called on delay nodes in
-      // cycles first and so may release the buffer reference in aOutput
-      // because downstream nodes may still be sharing when called.  Therefore
-      // keep a separate reference to the output buffer for re-use next
-      // iteration.
-      UpdateOutputBlock(&mLastOutput, WEBAUDIO_BLOCK_SIZE);
-      *aOutput = mLastOutput;
+      UpdateOutputBlock(aOutput, WEBAUDIO_BLOCK_SIZE);
     }
     mHaveProducedBeforeInput = true;
   }
@@ -186,7 +177,6 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  AudioChunk mLastOutput; // Used only when in a cycle.
   AudioNodeStream* mSource;
   AudioNodeStream* mDestination;
   AudioParamTimeline mDelay;

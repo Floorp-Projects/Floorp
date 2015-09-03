@@ -85,8 +85,8 @@ function download() {
     throw "ERROR: could not decode data as base64 from '" + SOURCE + "': " + e;
   }
 
-  // we have to filter out '//' comments
-  var result = resultDecoded.replace(/\/\/[^\n]*\n/g, "");
+  // we have to filter out '//' comments, while not mangling the json
+  var result = resultDecoded.replace(/^(\s*)?\/\/[^\n]*\n/mg, "");
   var data = null;
   try {
     data = JSON.parse(result);
