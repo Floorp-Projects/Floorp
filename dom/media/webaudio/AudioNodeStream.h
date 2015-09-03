@@ -8,7 +8,7 @@
 
 #include "MediaStreamGraph.h"
 #include "mozilla/dom/AudioNodeBinding.h"
-#include "AudioSegment.h"
+#include "AudioBlock.h"
 
 namespace mozilla {
 
