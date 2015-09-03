@@ -3579,7 +3579,6 @@ Tab.prototype = {
 
     Services.obs.addObserver(this, "before-first-paint", false);
     Services.obs.addObserver(this, "after-viewport-change", false);
-    Services.prefs.addObserver("browser.ui.zoom.force-user-scalable", this, false);
 
     if (aParams.delayLoad) {
       // If this is a zombie tab, attach restore data so the tab will be
@@ -3762,7 +3761,6 @@ Tab.prototype = {
 
     Services.obs.removeObserver(this, "before-first-paint");
     Services.obs.removeObserver(this, "after-viewport-change");
-    Services.prefs.removeObserver("browser.ui.zoom.force-user-scalable", this);
 
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are removed.
@@ -4723,63 +4721,8 @@ Tab.prototype = {
     return ViewportHandler.getMetadataForDocument(this.browser.contentDocument);
   },
 
-  /** Update viewport when the metadata changes. */
-  updateViewportMetadata: function updateViewportMetadata(aMetadata) {
-    if (Services.prefs.getBoolPref("browser.ui.zoom.force-user-scalable")) {
-      aMetadata.allowZoom = true;
-      aMetadata.allowDoubleTapZoom = true;
-      aMetadata.minZoom = aMetadata.maxZoom = NaN;
-    }
-    this.recomputeDoubleTapToZoomAllowed();
-
-    let scaleRatio = window.devicePixelRatio;
-
-    if (aMetadata.minZoom > 0)
-      aMetadata.minZoom *= scaleRatio;
-    if (aMetadata.maxZoom > 0)
-      aMetadata.maxZoom *= scaleRatio;
-
-    aMetadata.isRTL = this.browser.contentDocument.documentElement.dir == "rtl";
-
-    ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
-    this.sendViewportMetadata();
-  },
-
   viewportSizeUpdated: function viewportSizeUpdated() {
-    if (this.recomputeDoubleTapToZoomAllowed()) {
-      this.sendViewportMetadata();
-    }
     this.sendViewportUpdate(); // recompute displayport
-  },
-
-  recomputeDoubleTapToZoomAllowed: function recomputeDoubleTapToZoomAllowed() {
-    let metadata = this.metadata;
-    if (metadata.allowZoom && !Services.prefs.getBoolPref("browser.ui.zoom.force-user-scalable")) {
-      // If the CSS viewport is narrower than the screen (i.e. width <= device-width)
-      // then we disable double-tap-to-zoom behaviour.
-      var oldAllowDoubleTapZoom = metadata.allowDoubleTapZoom;
-      // XXX: the window.innerWidth in the next line should really be the CSS viewport width
-      // (but the innerWidth is the SPCSPS width)
-      var newAllowDoubleTapZoom = (!metadata.isSpecified) || (window.innerWidth > gScreenWidth / window.devicePixelRatio);
-      if (oldAllowDoubleTapZoom !== newAllowDoubleTapZoom) {
-        metadata.allowDoubleTapZoom = newAllowDoubleTapZoom;
-        return true;
-      }
-    }
-    return false;
-  },
-
-  sendViewportMetadata: function sendViewportMetadata() {
-    let metadata = this.metadata;
-    Messaging.sendRequest({
-      type: "Tab:ViewportMetadata",
-      allowZoom: metadata.allowZoom,
-      allowDoubleTapZoom: metadata.allowDoubleTapZoom,
-      minZoom: metadata.minZoom || 0,
-      maxZoom: metadata.maxZoom || 0,
-      isRTL: metadata.isRTL,
-      tabID: this.id
-    });
   },
 
   /** Takes a scale and restricts it based on this tab's zoom limits. */
@@ -4810,7 +4753,6 @@ Tab.prototype = {
           }
           this.contentDocumentIsDisplayed = true;
 
-          ViewportHandler.updateMetadata(this);
           let zoom = this.restoredSessionZoom();
           if (zoom) {
             this.setResolution(zoom, true);
@@ -4842,10 +4784,6 @@ Tab.prototype = {
         if (BrowserApp.selectedTab._mReflozPositioned) {
           BrowserApp.selectedTab.clearReflowOnZoomPendingActions();
         }
-        break;
-      case "nsPref:changed":
-        if (aData == "browser.ui.zoom.force-user-scalable")
-          ViewportHandler.updateMetadata(this);
         break;
     }
   },
@@ -6310,29 +6248,26 @@ var ViewportHandler = {
   _metadata: new WeakMap(),
 
   init: function init() {
-    addEventListener("DOMMetaAdded", this, false);
-    addEventListener("DOMMetaChanged", this, false);
     Services.obs.addObserver(this, "Window:Resize", false);
-  },
-
-  handleEvent: function handleEvent(aEvent) {
-    switch (aEvent.type) {
-      case "DOMMetaChanged":
-      case "DOMMetaAdded":
-        let target = aEvent.originalTarget;
-        if (target.name != "viewport")
-          break;
-        let document = target.ownerDocument;
-        let browser = BrowserApp.getBrowserForDocument(document);
-        let tab = BrowserApp.getTabForBrowser(browser);
-        if (tab)
-          this.updateMetadata(tab);
-        break;
-    }
+    Services.obs.addObserver(this, "zoom-constraints-updated", false);
   },
 
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case "zoom-constraints-updated":
+        // aSubject should be a document, so let's find the tab corresponding
+        // to that if there is one
+        let constraints = JSON.parse(aData);
+        let doc = aSubject;
+        constraints.isRTL = doc.documentElement.dir == "rtl";
+        ViewportHandler.setMetadataForDocument(doc, constraints);
+        let tab = BrowserApp.getTabForWindow(doc.defaultView);
+        if (tab) {
+          constraints.type = "Tab:ViewportMetadata";
+          constraints.tabID = tab.id;
+          Messaging.sendRequest(constraints);
+        }
+        return;
       case "Window:Resize":
         if (window.outerWidth == gScreenWidth && window.outerHeight == gScreenHeight)
           break;
@@ -6356,14 +6291,6 @@ var ViewportHandler = {
       let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
       windowUtils.setNextPaintSyncId(scrollChange.id);
       win.scrollBy(scrollChange.x, scrollChange.y);
-    }
-  },
-
-  updateMetadata: function updateMetadata(tab) {
-    let contentWindow = tab.browser.contentWindow;
-    if (contentWindow.document.documentElement) {
-      let metadata = this.getViewportMetadata(contentWindow);
-      tab.updateViewportMetadata(metadata);
     }
   },
 
