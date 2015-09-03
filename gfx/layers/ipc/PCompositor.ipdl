@@ -70,11 +70,10 @@ child:
                                    PluginWindowData[] aPlugins);
 
   /**
-   * Sets the list of currently visible plugin windows based on a
-   * list of plugin window ids.
+   * Hides all registered plugin widgets associated with a particular chrome
+   * widget.
    */
-  async UpdatePluginVisibility(uintptr_t aOwnerWidget,
-                               uintptr_t[] aVisibleIdList);
+  async HideAllPlugins(uintptr_t aParentWidget);
 
   /**
    * Drop any buffers that might be retained on the child compositor
