@@ -14,6 +14,7 @@ import java.util.concurrent.CountDownLatch;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.common.log.writers.LevelFilteringLogWriter;
 import org.mozilla.gecko.background.common.log.writers.LogWriter;
@@ -23,7 +24,9 @@ import org.mozilla.gecko.background.common.log.writers.StringLogWriter;
 import org.mozilla.gecko.background.common.log.writers.ThreadLocalTagLogWriter;
 
 import android.util.Log;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestLogWriters {
 
   public static final String TEST_LOG_TAG_1 = "TestLogTag1";

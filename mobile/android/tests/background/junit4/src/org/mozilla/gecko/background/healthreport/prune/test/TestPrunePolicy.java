@@ -9,13 +9,16 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
 import org.mozilla.gecko.background.healthreport.prune.PrunePolicy;
 import org.mozilla.gecko.background.healthreport.prune.PrunePolicyStorage;
 import org.mozilla.gecko.background.testhelpers.MockSharedPreferences;
 
 import android.content.SharedPreferences;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestPrunePolicy {
   public static class MockPrunePolicy extends PrunePolicy {
     public MockPrunePolicy(final PrunePolicyStorage storage, final SharedPreferences sharedPrefs) {

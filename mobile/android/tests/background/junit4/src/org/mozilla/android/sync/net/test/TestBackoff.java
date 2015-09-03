@@ -7,6 +7,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.MockGlobalSession;
 import org.mozilla.gecko.background.testhelpers.MockSharedPreferences;
 import org.mozilla.gecko.sync.GlobalSession;
@@ -20,7 +21,9 @@ import ch.boye.httpclientandroidlib.message.BasicHttpResponse;
 import ch.boye.httpclientandroidlib.message.BasicStatusLine;
 
 import org.mozilla.android.sync.test.helpers.MockGlobalSessionCallback;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestBackoff {
   private final String TEST_USERNAME            = "johndoe";
   private final String TEST_PASSWORD            = "password";

@@ -9,16 +9,19 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.HKDF;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
+import org.robolectric.RobolectricGradleTestRunner;
 
 /*
  * This class tests the HKDF.java class.
  * The tests are the 3 HMAC-based test cases
  * from the RFC 5869 specification.
  */
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestHKDF {
   @Test
   public void testCase1() {

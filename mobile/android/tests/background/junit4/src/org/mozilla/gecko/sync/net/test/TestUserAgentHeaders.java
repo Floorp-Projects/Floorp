@@ -10,6 +10,7 @@ import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.helpers.HTTPServerTestHelper;
 import org.mozilla.android.sync.test.helpers.MockServer;
 import org.mozilla.gecko.background.fxa.FxAccountClient10;
@@ -25,11 +26,13 @@ import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.SyncStorageRecordRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
+import org.robolectric.RobolectricGradleTestRunner;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 
 import ch.boye.httpclientandroidlib.protocol.HTTP;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestUserAgentHeaders {
   private static final int TEST_PORT = HTTPServerTestHelper.getTestPort();
   private static final String TEST_SERVER = "http://localhost:" + TEST_PORT;
@@ -98,9 +101,6 @@ public class TestUserAgentHeaders {
 
     // Verify that we're getting the value from the correct place.
     Assert.assertEquals(SyncConstants.USER_AGENT, userAgentServer.lastUserAgent);
-    // And that the value is correct. This is fragile, but better than breaking
-    // our header and not discovering until too late.
-    Assert.assertEquals("Firefox AndroidSync 1.24.0a1.0 (FxSync)", userAgentServer.lastUserAgent);
   }
 
   @Test
@@ -130,8 +130,5 @@ public class TestUserAgentHeaders {
 
     // Verify that we're getting the value from the correct place.
     Assert.assertEquals(FxAccountConstants.USER_AGENT, userAgentServer.lastUserAgent);
-    // And that the value is correct. This is fragile, but better than breaking
-    // our header and not discovering until too late.
-    Assert.assertEquals("Firefox-Android-FxAccounts/24.0a1 (FxSync)", userAgentServer.lastUserAgent);
   }
 }

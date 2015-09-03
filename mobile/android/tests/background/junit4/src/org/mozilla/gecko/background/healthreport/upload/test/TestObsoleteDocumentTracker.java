@@ -17,13 +17,16 @@ import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
 import org.mozilla.gecko.background.healthreport.upload.ObsoleteDocumentTracker;
 import org.mozilla.gecko.background.testhelpers.MockSharedPreferences;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 
 import android.content.SharedPreferences;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestObsoleteDocumentTracker {
   public static class MockObsoleteDocumentTracker extends ObsoleteDocumentTracker {
     public MockObsoleteDocumentTracker(SharedPreferences sharedPrefs) {

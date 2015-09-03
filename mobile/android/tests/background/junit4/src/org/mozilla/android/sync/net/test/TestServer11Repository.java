@@ -8,9 +8,12 @@ import java.net.URISyntaxException;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.repositories.Server11Repository;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestServer11Repository {
 
   private static final String COLLECTION = "bookmarks";

@@ -17,6 +17,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.parser.ParseException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.android.sync.net.test.TestMetaGlobal;
 import org.mozilla.android.sync.test.helpers.HTTPServerTestHelper;
 import org.mozilla.android.sync.test.helpers.MockGlobalSessionCallback;
@@ -40,9 +41,11 @@ import org.mozilla.gecko.sync.delegates.WipeServerDelegate;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.stage.FetchMetaGlobalStage;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
+import org.robolectric.RobolectricGradleTestRunner;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestFetchMetaGlobalStage {
   @SuppressWarnings("unused")
   private static final String  LOG_TAG          = "TestMetaGlobalStage";

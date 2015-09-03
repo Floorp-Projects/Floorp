@@ -13,6 +13,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.helpers.HTTPServerTestHelper;
 import org.mozilla.android.sync.test.helpers.MockServer;
 import org.mozilla.gecko.background.common.log.Logger;
@@ -21,9 +22,11 @@ import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.SyncStorageCollectionRequest;
 import org.mozilla.gecko.sync.net.SyncStorageCollectionRequestDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
+import org.robolectric.RobolectricGradleTestRunner;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestLineByLineHandling {
   private static final int     TEST_PORT   = HTTPServerTestHelper.getTestPort();
   private static final String  TEST_SERVER = "http://localhost:" + TEST_PORT;

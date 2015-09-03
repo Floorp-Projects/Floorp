@@ -7,8 +7,11 @@ import java.math.BigInteger;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.sync.net.SRPConstants;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestSRPConstants extends SRPConstants {
   public void assertSRPConstants(SRPConstants.Parameters params, int bitLength) {
     Assert.assertNotNull(params.g);

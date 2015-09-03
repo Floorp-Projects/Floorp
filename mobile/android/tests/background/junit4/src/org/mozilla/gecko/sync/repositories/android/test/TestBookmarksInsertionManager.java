@@ -14,11 +14,14 @@ import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.android.BookmarksInsertionManager;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestBookmarksInsertionManager {
   public BookmarksInsertionManager manager;
   public ArrayList<String[]> insertions;
