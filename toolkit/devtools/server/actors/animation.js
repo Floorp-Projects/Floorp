@@ -324,7 +324,14 @@ let AnimationPlayerActor = ActorClass({
    */
   onAnimationMutation: function(mutations) {
     let hasChanged = false;
-    for (let {changedAnimations} of mutations) {
+    for (let {removedAnimations, changedAnimations} of mutations) {
+      if (removedAnimations.length) {
+        // Reset the local copy of the state on removal, since the animation can
+        // be kept on the client and re-added, its state needs to be sent in
+        // full.
+        this.currentState = null;
+      }
+
       if (!changedAnimations.length) {
         return;
       }

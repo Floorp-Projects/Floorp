@@ -796,7 +796,7 @@ AnimationsTimeline.prototype = {
     this.emit("current-time-changed", time);
   },
 
-  render: function(animations) {
+  render: function(animations, documentCurrentTime) {
     this.unrender();
 
     this.animations = animations;
@@ -854,12 +854,11 @@ AnimationsTimeline.prototype = {
     // doesn't provide it, hide the scrubber entirely).
     // Note that because the currentTime was sent via the protocol, some time
     // may have gone by since then, and so the scrubber might be a bit late.
-    let time = this.animations[0].state.documentCurrentTime;
-    if (!time) {
+    if (!documentCurrentTime) {
       this.scrubberEl.style.display = "none";
     } else {
       this.scrubberEl.style.display = "block";
-      this.startAnimatingScrubber(time);
+      this.startAnimatingScrubber(documentCurrentTime);
     }
   },
 

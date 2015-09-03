@@ -183,7 +183,8 @@ let AnimationsPanel = {
     // Re-render the timeline component.
     if (this.animationsTimelineComponent) {
       this.animationsTimelineComponent.render(
-        AnimationsController.animationPlayers);
+        AnimationsController.animationPlayers,
+        AnimationsController.documentCurrentTime);
     }
 
     // If there are no players to show, show the error message instead and
