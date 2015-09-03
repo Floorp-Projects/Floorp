@@ -6,11 +6,12 @@ pref("security.tls.version.min", 1);
 pref("security.tls.version.max", 3);
 pref("security.tls.version.fallback-limit", 3);
 pref("security.tls.insecure_fallback_hosts", "");
-pref("security.tls.insecure_fallback_hosts.use_static_list", true);
 
 #ifdef RELEASE_BUILD
+pref("security.tls.insecure_fallback_hosts.use_static_list", true);
 pref("security.tls.unrestricted_rc4_fallback", true);
 #else
+pref("security.tls.insecure_fallback_hosts.use_static_list", false);
 pref("security.tls.unrestricted_rc4_fallback", false);
 #endif
 
