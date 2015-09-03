@@ -8,10 +8,13 @@ import java.util.Arrays;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.bagheera.BoundedByteArrayEntity;
 
 import ch.boye.httpclientandroidlib.HttpEntity;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestBoundedByteArrayEntity {
   private static void expectFail(byte[] input, int start, int end) {
     try {

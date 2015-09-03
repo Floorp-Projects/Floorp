@@ -6,8 +6,11 @@ package org.mozilla.gecko.sync.repositories.test;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestRepositorySessionBundle {
   @Test
   public void testSetGetTimestamp() {

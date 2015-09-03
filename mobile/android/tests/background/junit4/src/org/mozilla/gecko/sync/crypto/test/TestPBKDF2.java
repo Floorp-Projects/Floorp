@@ -10,8 +10,10 @@ import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.PBKDF2;
+import org.robolectric.RobolectricGradleTestRunner;
 
 /**
  * Test PBKDF2 implementations against vectors from
@@ -21,6 +23,7 @@ import org.mozilla.gecko.sync.crypto.PBKDF2;
  * <dd><a href="https://gitorious.org/scrypt/nettle-scrypt/blobs/37c0d5288e991604fe33dba2f1724986a8dddf56/testsuite/pbkdf2-test.c">https://gitorious.org/scrypt/nettle-scrypt/blobs/37c0d5288e991604fe33dba2f1724986a8dddf56/testsuite/pbkdf2-test.c</a></dd>
  * </dl>
  */
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestPBKDF2 {
 
   @Test

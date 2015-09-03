@@ -8,6 +8,7 @@ import java.security.GeneralSecurityException;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.DSACryptoImplementation;
 import org.mozilla.gecko.browserid.JSONWebTokenUtils;
@@ -15,7 +16,9 @@ import org.mozilla.gecko.browserid.RSACryptoImplementation;
 import org.mozilla.gecko.browserid.SigningPrivateKey;
 import org.mozilla.gecko.browserid.VerifyingPublicKey;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestJSONWebTokenUtils {
   public void doTestEncodeDecode(BrowserIDKeyPair keyPair) throws Exception {
     SigningPrivateKey privateKey = keyPair.getPrivate();

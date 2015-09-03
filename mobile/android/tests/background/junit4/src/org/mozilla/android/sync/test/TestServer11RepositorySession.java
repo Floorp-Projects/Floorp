@@ -13,6 +13,7 @@ import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.SynchronizerHelpers.TrackingWBORepository;
 import org.mozilla.android.sync.test.helpers.BaseTestStorageRequestDelegate;
 import org.mozilla.android.sync.test.helpers.HTTPServerTestHelper;
@@ -42,12 +43,14 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
 import org.mozilla.gecko.sync.stage.SafeConstrainedServer11Repository;
 import org.mozilla.gecko.sync.synchronizer.ServerLocalSynchronizer;
 import org.mozilla.gecko.sync.synchronizer.Synchronizer;
+import org.robolectric.RobolectricGradleTestRunner;
 import org.simpleframework.http.ContentType;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 
 import ch.boye.httpclientandroidlib.HttpEntity;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestServer11RepositorySession {
 
   public class POSTMockServer extends MockServer {

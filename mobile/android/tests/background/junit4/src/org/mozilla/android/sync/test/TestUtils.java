@@ -13,9 +13,12 @@ import java.util.Arrays;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.sync.SyncConstants;
 import org.mozilla.gecko.sync.Utils;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestUtils extends Utils {
 
   @Test

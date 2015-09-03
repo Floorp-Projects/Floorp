@@ -10,9 +10,12 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.apache.commons.codec.binary.Base32;
 import org.mozilla.gecko.sync.Utils;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestBase32 {
 
   public static void assertSame(byte[] arrayOne, byte[] arrayTwo) {

@@ -13,6 +13,7 @@ import java.security.NoSuchAlgorithmException;
 
 import org.json.simple.parser.ParseException;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.NonObjectJSONException;
@@ -28,7 +29,9 @@ import org.mozilla.gecko.sync.jpake.JPakeParty;
 import org.mozilla.gecko.sync.jpake.stage.ComputeKeyVerificationStage;
 import org.mozilla.gecko.sync.jpake.stage.VerifyPairingStage;
 import org.mozilla.gecko.sync.setup.Constants;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestJPakeSetup {
   // Note: will throw NullPointerException if aborts. Only use stateless public
   // methods.

@@ -6,6 +6,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.sync.net.SyncResponse;
 
 import ch.boye.httpclientandroidlib.HttpResponse;
@@ -13,7 +14,9 @@ import ch.boye.httpclientandroidlib.ProtocolVersion;
 import ch.boye.httpclientandroidlib.impl.cookie.DateUtils;
 import ch.boye.httpclientandroidlib.message.BasicHttpResponse;
 import ch.boye.httpclientandroidlib.message.BasicStatusLine;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestRetryAfter {
   private int TEST_SECONDS = 120;
 

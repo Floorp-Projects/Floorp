@@ -16,6 +16,7 @@ import junit.framework.AssertionFailedError;
 import org.json.simple.parser.ParseException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionBeginDelegate;
 import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionCreationDelegate;
 import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionFetchRecordsDelegate;
@@ -37,7 +38,9 @@ import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestCrypto5MiddlewareRepositorySession {
   public static WaitHelper getTestWaiter() {
     return WaitHelper.getTestWaiter();

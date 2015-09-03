@@ -12,6 +12,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.sync.net.HawkAuthHeaderProvider;
 
 import ch.boye.httpclientandroidlib.Header;
@@ -23,11 +24,13 @@ import ch.boye.httpclientandroidlib.entity.StringEntity;
 import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
 import ch.boye.httpclientandroidlib.message.BasicHeader;
 import ch.boye.httpclientandroidlib.protocol.BasicHttpContext;
+import org.robolectric.RobolectricGradleTestRunner;
 
 /**
  * These test vectors were taken from
  * <a href="https://github.com/hueniverse/hawk/blob/871cc597973110900467bd3dfb84a3c892f678fb/README.md">https://github.com/hueniverse/hawk/blob/871cc597973110900467bd3dfb84a3c892f678fb/README.md</a>.
  */
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestHawkAuthHeaderProvider {
   // Expose a few protected static member functions as public for testing.
   protected static class LeakyHawkAuthHeaderProvider extends HawkAuthHeaderProvider {

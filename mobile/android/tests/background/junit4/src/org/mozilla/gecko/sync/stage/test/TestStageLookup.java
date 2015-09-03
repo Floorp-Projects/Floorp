@@ -9,8 +9,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestStageLookup {
 
   @Test

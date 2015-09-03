@@ -10,6 +10,7 @@ import static org.junit.Assert.assertNull;
 import java.util.ArrayList;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.SynchronizerHelpers.BatchFailStoreWBORepository;
 import org.mozilla.android.sync.test.SynchronizerHelpers.BeginErrorWBORepository;
 import org.mozilla.android.sync.test.SynchronizerHelpers.BeginFailedException;
@@ -27,7 +28,9 @@ import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.synchronizer.ServerLocalSynchronizer;
 import org.mozilla.gecko.sync.synchronizer.Synchronizer;
 import org.mozilla.gecko.sync.synchronizer.SynchronizerDelegate;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestServerLocalSynchronizer {
   public static final String LOG_TAG = "TestServLocSync";
 

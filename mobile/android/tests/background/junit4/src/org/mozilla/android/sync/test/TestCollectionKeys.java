@@ -17,6 +17,7 @@ import java.util.Set;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.ParseException;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.CollectionKeys;
 import org.mozilla.gecko.sync.CryptoRecord;
@@ -24,7 +25,9 @@ import org.mozilla.gecko.sync.NoCollectionKeysSetException;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestCollectionKeys {
 
   @Test

@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.SynchronizerHelpers.FailFetchWBORepository;
 import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionCreationDelegate;
 import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionFinishDelegate;
@@ -24,7 +25,9 @@ import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.synchronizer.RecordsChannel;
 import org.mozilla.gecko.sync.synchronizer.RecordsChannelDelegate;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestRecordsChannel {
 
   protected WBORepository remote;

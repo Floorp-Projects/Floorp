@@ -21,6 +21,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import org.junit.After;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.helpers.HTTPServerTestHelper;
 import org.mozilla.android.sync.test.helpers.MockGlobalSessionCallback;
 import org.mozilla.android.sync.test.helpers.MockServer;
@@ -51,11 +52,13 @@ import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
+import org.robolectric.RobolectricGradleTestRunner;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 
 import ch.boye.httpclientandroidlib.HttpStatus;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestClientsEngineStage extends MockSyncClientsEngineStage {
   public final static String LOG_TAG = "TestClientsEngSta";
 

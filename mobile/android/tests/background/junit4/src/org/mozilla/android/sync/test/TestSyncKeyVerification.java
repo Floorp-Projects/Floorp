@@ -7,9 +7,12 @@ import static org.junit.Assert.fail;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.sync.setup.InvalidSyncKeyException;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestSyncKeyVerification {
 
   private int[] mutateIndices;
