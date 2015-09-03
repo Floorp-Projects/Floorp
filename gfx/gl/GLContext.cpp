@@ -97,7 +97,6 @@ static const char *sExtensionNames[] = {
     "GL_ARB_map_buffer_range",
     "GL_ARB_occlusion_query2",
     "GL_ARB_pixel_buffer_object",
-    "GL_ARB_robust_buffer_access_behavior",
     "GL_ARB_robustness",
     "GL_ARB_sampler_objects",
     "GL_ARB_sync",
@@ -149,7 +148,6 @@ static const char *sExtensionNames[] = {
     "GL_IMG_texture_compression_pvrtc",
     "GL_IMG_texture_npot",
     "GL_KHR_debug",
-    "GL_KHR_robust_buffer_access_behavior",
     "GL_NV_draw_instanced",
     "GL_NV_fence",
     "GL_NV_framebuffer_blit",
@@ -1642,19 +1640,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                                  LOCAL_GL_DONT_CARE,
                                  0, nullptr,
                                  true);
-        }
-
-        // Until ANGLE supports robust_buffer_access_behavior explicitly, we'll need to
-        // add it ourselves for D3D10+. (D3D10+ always supports
-        // robust_buffer_access_behavior)
-        if (IsANGLE()) {
-            const char* renderer = (const char*)fGetString(LOCAL_GL_RENDERER);
-            if (strstr(renderer, "Direct3D10") || strstr(renderer, "Direct3D11")) {
-                MOZ_ASSERT(!IsSupported(GLFeature::robust_buffer_access_behavior),
-                           "Since ANGLE supports robust_buffer_access_behavior now, we can"
-                           " remove this block of code.");
-                MarkSupported(GLFeature::robust_buffer_access_behavior);
-            }
         }
 
         reporter.SetSuccessful();
