@@ -575,8 +575,9 @@ PluginAsyncSurrogate::NotifyAsyncInitFailed()
       return;
   }
   nsPluginInstanceOwner* owner = inst->GetOwner();
-  MOZ_ASSERT(owner);
-  owner->NotifyHostAsyncInitFailed();
+  if (owner) {
+    owner->NotifyHostAsyncInitFailed();
+  }
 }
 
 // static
