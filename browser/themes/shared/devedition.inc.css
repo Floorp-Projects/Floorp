@@ -50,6 +50,7 @@
   /* Url and search bars */
   --url-and-searchbar-background-color: #171B1F;
   --url-and-searchbar-color: #fff;
+  --urlbar-separator-color: #5F6670;
   --urlbar-dropmarker-url: url("chrome://browser/skin/devedition/urlbar-history-dropmarker.svg");
   --urlbar-dropmarker-region: rect(0px, 11px, 14px, 0px);
   --urlbar-dropmarker-hover-region: rect(0, 22px, 14px, 11px);
@@ -62,7 +63,6 @@
 }
 
 :root[devtoolstheme="dark"] #identity-box {
-  --identity-box-border-color: #5F6670;
   --identity-box-chrome-color: #46afe3;
   --identity-box-verified-background-color: transparent;
   --identity-box-selected-background-color: rgba(231,230,230,.2);
