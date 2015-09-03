@@ -581,7 +581,12 @@
 }
 
 #debugger-controls toolbarbutton[disabled] {
-    opacity: .5;
+  opacity: .5;
+  transition: none;
+}
+
+#resume[break-on-next] {
+  background: var(--theme-highlight-lightorange);
 }
 
 #step-over {

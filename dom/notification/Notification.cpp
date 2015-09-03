@@ -753,8 +753,10 @@ Notification::SetAlertName()
   }
 
   nsAutoString alertName;
-  DebugOnly<nsresult> rv = GetOrigin(GetPrincipal(), alertName);
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "GetOrigin should not have failed");
+  nsresult rv = GetOrigin(GetPrincipal(), alertName);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 
   // Get the notification name that is unique per origin + tag/ID.
   // The name of the alert is of the form origin#tag/ID.
@@ -851,7 +853,9 @@ Notification::PersistNotification()
 
   nsString origin;
   rv = GetOrigin(GetPrincipal(), origin);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   nsString id;
   GetID(id);
@@ -1002,6 +1006,10 @@ protected:
     AssertIsOnMainThread();
 
     MOZ_ASSERT(mNotificationRef);
+    Notification* notification = mNotificationRef->GetNotification();
+    if (notification) {
+      notification->mObserver = nullptr;
+    }
   }
 };
 
@@ -1937,7 +1945,10 @@ Notification::CloseInternal()
 nsresult
 Notification::GetOrigin(nsIPrincipal* aPrincipal, nsString& aOrigin)
 {
-  MOZ_ASSERT(aPrincipal);
+  if (!aPrincipal) {
+    return NS_ERROR_FAILURE;
+  }
+
   uint16_t appStatus = aPrincipal->GetAppStatus();
   uint32_t appId = aPrincipal->GetAppId();
 

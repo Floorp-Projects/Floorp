@@ -9,6 +9,7 @@
 #define nsCSSParser_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/css/Loader.h"
 
 #include "nsCSSProperty.h"
 #include "nsCSSScanner.h"
@@ -32,7 +33,6 @@ class CSSVariableValues;
 namespace css {
 class Rule;
 class Declaration;
-class Loader;
 class StyleRule;
 } // namespace css
 } // namespace mozilla
@@ -77,15 +77,14 @@ public:
    * @param aSheetPrincipal the principal of the stylesheet.  This must match
    *                        the principal of the sheet passed to SetStyleSheet.
    * @param aLineNumber the line number of the first line of the sheet.
-   * @param aAllowUnsafeRules see aEnableUnsafeRules in
-   *                          mozilla::css::Loader::LoadSheetSync
+   * @param aParsingMode  see SheetParsingMode in css/Loader.h
    */
   nsresult ParseSheet(const nsAString& aInput,
                       nsIURI*          aSheetURL,
                       nsIURI*          aBaseURI,
                       nsIPrincipal*    aSheetPrincipal,
                       uint32_t         aLineNumber,
-                      bool             aAllowUnsafeRules);
+                      mozilla::css::SheetParsingMode aParsingMode);
 
   // Parse HTML style attribute or its equivalent in other markup
   // languages.  aBaseURL is the base url to use for relative links in

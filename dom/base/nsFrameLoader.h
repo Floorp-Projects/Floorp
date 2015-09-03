@@ -41,8 +41,8 @@ namespace mozilla {
 namespace dom {
 class ContentParent;
 class PBrowserParent;
+class StructuredCloneIPCHelper;
 class TabParent;
-struct StructuredCloneData;
 } // namespace dom
 
 namespace layout {
@@ -90,7 +90,7 @@ public:
                                           bool aRunInGlobalScope) override;
   virtual bool DoSendAsyncMessage(JSContext* aCx,
                                   const nsAString& aMessage,
-                                  const mozilla::dom::StructuredCloneData& aData,
+                                  mozilla::dom::StructuredCloneIPCHelper& aHelper,
                                   JS::Handle<JSObject *> aCpows,
                                   nsIPrincipal* aPrincipal) override;
   virtual bool CheckPermission(const nsAString& aPermission) override;
@@ -180,6 +180,8 @@ public:
    * or ReallyStartLoading().
    */
   void SetRemoteBrowser(nsITabParent* aTabParent);
+
+  nsresult SwapRemoteBrowser(nsITabParent* aTabParent);
 
   /**
    * Stashes a detached view on the frame loader. We do this when we're
