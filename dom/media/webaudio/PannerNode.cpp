@@ -323,7 +323,7 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioChunk& aInput,
                                             AudioChunk* aOutput)
 {
   float azimuth, elevation, gainL, gainR, normalizedAzimuth, distanceGain, coneGain;
-  int inputChannels = aInput.mChannelData.Length();
+  int inputChannels = aInput.ChannelCount();
 
   // If both the listener are in the same spot, and no cone gain is specified,
   // this node is noop.

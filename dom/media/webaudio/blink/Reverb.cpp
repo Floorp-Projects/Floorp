@@ -154,7 +154,7 @@ void Reverb::process(const AudioChunk* sourceBus, AudioChunk* destinationBus, si
 {
     // Do a fairly comprehensive sanity check.
     // If these conditions are satisfied, all of the source and destination pointers will be valid for the various matrixing cases.
-    bool isSafeToProcess = sourceBus && destinationBus && sourceBus->mChannelData.Length() > 0 && destinationBus->mChannelData.Length() > 0
+    bool isSafeToProcess = sourceBus && destinationBus && sourceBus->ChannelCount() > 0 && destinationBus->mChannelData.Length() > 0
         && framesToProcess <= MaxFrameSize && framesToProcess <= size_t(sourceBus->mDuration) && framesToProcess <= size_t(destinationBus->mDuration);
 
     MOZ_ASSERT(isSafeToProcess);
@@ -162,14 +162,14 @@ void Reverb::process(const AudioChunk* sourceBus, AudioChunk* destinationBus, si
         return;
 
     // For now only handle mono or stereo output
-    MOZ_ASSERT(destinationBus->mChannelData.Length() <= 2);
+    MOZ_ASSERT(destinationBus->ChannelCount() <= 2);
 
     float* destinationChannelL = static_cast<float*>(const_cast<void*>(destinationBus->mChannelData[0]));
     const float* sourceBusL = static_cast<const float*>(sourceBus->mChannelData[0]);
 
     // Handle input -> output matrixing...
-    size_t numInputChannels = sourceBus->mChannelData.Length();
-    size_t numOutputChannels = destinationBus->mChannelData.Length();
+    size_t numInputChannels = sourceBus->ChannelCount();
+    size_t numOutputChannels = destinationBus->ChannelCount();
     size_t numReverbChannels = m_convolvers.Length();
 
     if (numInputChannels == 2 && numReverbChannels == 2 && numOutputChannels == 2) {

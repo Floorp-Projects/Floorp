@@ -103,11 +103,11 @@ public:
       return;
     }
 
-    const uint32_t channelCount = aInput.mChannelData.Length();
+    const uint32_t channelCount = aInput.ChannelCount();
     if (mCompressor->numberOfChannels() != channelCount) {
       // Create a new compressor object with a new channel count
       mCompressor = new WebCore::DynamicsCompressor(aStream->SampleRate(),
-                                                    aInput.mChannelData.Length());
+                                                    aInput.ChannelCount());
     }
 
     StreamTime pos = aStream->GetCurrentPosition();

@@ -315,7 +315,7 @@ public:
         PodZero(writeData, aInput.GetDuration());
       } else {
         MOZ_ASSERT(aInput.GetDuration() == WEBAUDIO_BLOCK_SIZE, "sanity check");
-        MOZ_ASSERT(aInput.mChannelData.Length() == inputChannelCount);
+        MOZ_ASSERT(aInput.ChannelCount() == inputChannelCount);
         AudioBlockCopyChannelWithScale(static_cast<const float*>(aInput.mChannelData[i]),
                                        aInput.mVolume, writeData);
       }

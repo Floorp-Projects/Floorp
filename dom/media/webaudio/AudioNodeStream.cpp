@@ -393,20 +393,20 @@ AudioNodeStream::ObtainInputBlock(AudioChunk& aTmpChunk, uint32_t aPortIndex)
 
     inputChunks.AppendElement(chunk);
     outputChannelCount =
-      GetAudioChannelsSuperset(outputChannelCount, chunk->mChannelData.Length());
+      GetAudioChannelsSuperset(outputChannelCount, chunk->ChannelCount());
   }
 
   outputChannelCount = ComputedNumberOfChannels(outputChannelCount);
 
   uint32_t inputChunkCount = inputChunks.Length();
   if (inputChunkCount == 0 ||
-      (inputChunkCount == 1 && inputChunks[0]->mChannelData.Length() == 0)) {
+      (inputChunkCount == 1 && inputChunks[0]->ChannelCount() == 0)) {
     aTmpChunk.SetNull(WEBAUDIO_BLOCK_SIZE);
     return;
   }
 
   if (inputChunkCount == 1 &&
-      inputChunks[0]->mChannelData.Length() == outputChannelCount) {
+      inputChunks[0]->ChannelCount() == outputChannelCount) {
     aTmpChunk = *inputChunks[0];
     return;
   }
@@ -431,7 +431,7 @@ AudioNodeStream::AccumulateInputChunk(uint32_t aInputIndex, const AudioChunk& aC
                                       nsTArray<float>* aDownmixBuffer)
 {
   nsAutoTArray<const float*,GUESS_AUDIO_CHANNELS> channels;
-  UpMixDownMixChunk(&aChunk, aBlock->mChannelData.Length(), channels, *aDownmixBuffer);
+  UpMixDownMixChunk(&aChunk, aBlock->ChannelCount(), channels, *aDownmixBuffer);
 
   for (uint32_t c = 0; c < channels.Length(); ++c) {
     const float* inputData = static_cast<const float*>(channels[c]);
@@ -458,7 +458,7 @@ AudioNodeStream::UpMixDownMixChunk(const AudioChunk* aChunk,
 {
   static const float silenceChannel[WEBAUDIO_BLOCK_SIZE] = {0.f};
 
-  for (uint32_t i = 0; i < aChunk->mChannelData.Length(); i++) {
+  for (uint32_t i = 0; i < aChunk->ChannelCount(); i++) {
     aOutputChannels.AppendElement(static_cast<const float*>(aChunk->mChannelData[i]));
   }
   if (aOutputChannels.Length() < aOutputChannelCount) {

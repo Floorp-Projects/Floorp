@@ -40,7 +40,7 @@ WriteZeroesToAudioBlock(AudioChunk* aChunk, uint32_t aStart, uint32_t aLength)
   if (aLength == 0)
     return;
 
-  for (uint32_t i = 0; i < aChunk->mChannelData.Length(); ++i) {
+  for (uint32_t i = 0; i < aChunk->ChannelCount(); ++i) {
     PodZero(aChunk->ChannelFloatsForWrite(i) + aStart, aLength);
   }
 }
