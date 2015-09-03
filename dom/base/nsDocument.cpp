@@ -8593,9 +8593,6 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
     // The misspelled key 'referer' is as per the HTTP spec
     rv = httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("referer"),
                                        mReferrer);
-    if (NS_FAILED(rv)) {
-      mReferrer.Truncate();
-    }
 
     static const char *const headers[] = {
       "default-style",
