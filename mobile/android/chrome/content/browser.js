@@ -459,7 +459,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Tab:Load", false);
     Services.obs.addObserver(this, "Tab:Selected", false);
     Services.obs.addObserver(this, "Tab:Closed", false);
-    Services.obs.addObserver(this, "Tab:ToggleMuteAudio", false);
     Services.obs.addObserver(this, "Session:Back", false);
     Services.obs.addObserver(this, "Session:Forward", false);
     Services.obs.addObserver(this, "Session:Navigate", false);
@@ -1856,13 +1855,6 @@ var BrowserApp = {
       case "Tab:Closed": {
         let data = JSON.parse(aData);
         this._handleTabClosed(this.getTabForId(data.tabId), data.showUndoToast);
-        break;
-      }
-
-      case "Tab:ToggleMuteAudio": {
-        let data = JSON.parse(aData);
-        let tab = this.getTabForId(data.tabId);
-        tab.toggleMuteAudio();
         break;
       }
 
@@ -4144,14 +4136,6 @@ Tab.prototype = {
           visible: true
         };
       });
-    }
-  },
-
-  toggleMuteAudio: function() {
-    if (this.browser.audioMuted) {
-      this.browser.unmute();
-    } else {
-      this.browser.mute();
     }
   },
 

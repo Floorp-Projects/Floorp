@@ -529,74 +529,55 @@ function openPreferences(paneID, extraArgs)
     return (aName || "").replace(/^pane./, function(toReplace) { return toReplace[4].toLowerCase(); });
   }
 
-  if (getBoolPref("browser.preferences.inContent")) {
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
-    let friendlyCategoryName = internalPrefCategoryNameToFriendlyName(paneID);
-    let params;
-    if (extraArgs && extraArgs["urlParams"]) {
-      params = new URLSearchParams();
-      let urlParams = extraArgs["urlParams"];
-      for (let name in urlParams) {
-        if (urlParams[name] !== undefined) {
-          params.set(name, urlParams[name]);
-        }
+  let win = Services.wm.getMostRecentWindow("navigator:browser");
+  let friendlyCategoryName = internalPrefCategoryNameToFriendlyName(paneID);
+  let params;
+  if (extraArgs && extraArgs["urlParams"]) {
+    params = new URLSearchParams();
+    let urlParams = extraArgs["urlParams"];
+    for (let name in urlParams) {
+      if (urlParams[name] !== undefined) {
+        params.set(name, urlParams[name]);
       }
     }
-    let preferencesURL = "about:preferences" + (params ? "?" + params : "") +
-                         (friendlyCategoryName ? "#" + friendlyCategoryName : "");
-    let newLoad = true;
-    let browser = null;
-    if (!win) {
-      const Cc = Components.classes;
-      const Ci = Components.interfaces;
-      let windowArguments = Cc["@mozilla.org/supports-array;1"]
-                              .createInstance(Ci.nsISupportsArray);
-      let supportsStringPrefURL = Cc["@mozilla.org/supports-string;1"]
-                                    .createInstance(Ci.nsISupportsString);
-      supportsStringPrefURL.data = preferencesURL;
-      windowArguments.AppendElement(supportsStringPrefURL);
+  }
+  let preferencesURL = "about:preferences" + (params ? "?" + params : "") +
+                       (friendlyCategoryName ? "#" + friendlyCategoryName : "");
+  let newLoad = true;
+  let browser = null;
+  if (!win) {
+    const Cc = Components.classes;
+    const Ci = Components.interfaces;
+    let windowArguments = Cc["@mozilla.org/supports-array;1"]
+                            .createInstance(Ci.nsISupportsArray);
+    let supportsStringPrefURL = Cc["@mozilla.org/supports-string;1"]
+                                  .createInstance(Ci.nsISupportsString);
+    supportsStringPrefURL.data = preferencesURL;
+    windowArguments.AppendElement(supportsStringPrefURL);
 
-      win = Services.ww.openWindow(null, Services.prefs.getCharPref("browser.chromeURL"),
-                                   "_blank", "chrome,dialog=no,all", windowArguments);
-    } else {
-      newLoad = !win.switchToTabHavingURI(preferencesURL, true, {ignoreFragment: true});
-      browser = win.gBrowser.selectedBrowser;
-    }
-
-    if (newLoad) {
-      Services.obs.addObserver(function advancedPaneLoadedObs(prefWin, topic, data) {
-        if (!browser) {
-          browser = win.gBrowser.selectedBrowser;
-        }
-        if (prefWin != browser.contentWindow) {
-          return;
-        }
-        Services.obs.removeObserver(advancedPaneLoadedObs, "advanced-pane-loaded");
-        switchToAdvancedSubPane(browser.contentDocument);
-      }, "advanced-pane-loaded", false);
-    } else {
-      if (paneID) {
-        browser.contentWindow.gotoPref(paneID);
-      }
-      switchToAdvancedSubPane(browser.contentDocument);
-    }
+    win = Services.ww.openWindow(null, Services.prefs.getCharPref("browser.chromeURL"),
+                                 "_blank", "chrome,dialog=no,all", windowArguments);
   } else {
-    var instantApply = getBoolPref("browser.preferences.instantApply", false);
-    var features = "chrome,titlebar,toolbar,centerscreen" + (instantApply ? ",dialog=no" : ",modal");
+    newLoad = !win.switchToTabHavingURI(preferencesURL, true, {ignoreFragment: true});
+    browser = win.gBrowser.selectedBrowser;
+  }
 
-    var win = Services.wm.getMostRecentWindow("Browser:Preferences");
-    if (win) {
-      win.focus();
-      if (paneID) {
-        var pane = win.document.getElementById(paneID);
-        win.document.documentElement.showPane(pane);
+  if (newLoad) {
+    Services.obs.addObserver(function advancedPaneLoadedObs(prefWin, topic, data) {
+      if (!browser) {
+        browser = win.gBrowser.selectedBrowser;
       }
-
-      switchToAdvancedSubPane(win.document);
-    } else {
-      openDialog("chrome://browser/content/preferences/preferences.xul",
-                 "Preferences", features, paneID, extraArgs);
+      if (prefWin != browser.contentWindow) {
+        return;
+      }
+      Services.obs.removeObserver(advancedPaneLoadedObs, "advanced-pane-loaded");
+      switchToAdvancedSubPane(browser.contentDocument);
+    }, "advanced-pane-loaded", false);
+  } else {
+    if (paneID) {
+      browser.contentWindow.gotoPref(paneID);
     }
+    switchToAdvancedSubPane(browser.contentDocument);
   }
 }
 
