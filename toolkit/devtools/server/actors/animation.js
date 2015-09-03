@@ -483,7 +483,17 @@ let AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
       return;
     }
 
-    this.autoRefreshTimer = setInterval(this.refreshState.bind(this), interval);
+    this.autoRefreshTimer = setInterval(() => {
+      // Save the refresh promise for tests. The tests need to detect when the
+      // last request completes or they might finish too early.
+      // Storing the latest Promise is enough to know that there is no pending
+      // requests left as p.js guarantees the last request will get the reply
+      // last.
+      this.pendingRefreshStatePromise = this.refreshState();
+      this.pendingRefreshStatePromise.then(() => {
+        this.pendingRefreshStatePromise = null;
+      });
+    }, interval);
   },
 
   /**

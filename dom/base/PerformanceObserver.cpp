@@ -23,10 +23,22 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::workers;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PerformanceObserver,
-                                      mOwner,
-                                      mPerformance,
-                                      mCallback)
+NS_IMPL_CYCLE_COLLECTION_CLASS(PerformanceObserver)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PerformanceObserver)
+  tmp->Disconnect();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPerformance)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(PerformanceObserver)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPerformance)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(PerformanceObserver)
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PerformanceObserver)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PerformanceObserver)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PerformanceObserver)
@@ -95,7 +107,22 @@ PerformanceObserver::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 }
 
 void
-PerformanceObserver::Notify(PerformanceEntry* aEntry)
+PerformanceObserver::Notify()
+{
+  if (mQueuedEntries.IsEmpty()) {
+    return;
+  }
+  nsRefPtr<PerformanceObserverEntryList> list =
+    new PerformanceObserverEntryList(this, mQueuedEntries);
+
+  ErrorResult rv;
+  mCallback->Call(this, *list, *this, rv);
+  NS_WARN_IF(rv.Failed());
+  mQueuedEntries.Clear();
+}
+
+void
+PerformanceObserver::QueueEntry(PerformanceEntry* aEntry)
 {
   MOZ_ASSERT(aEntry);
 
@@ -105,12 +132,7 @@ PerformanceObserver::Notify(PerformanceEntry* aEntry)
     return;
   }
 
-  nsRefPtr<PerformanceObserverEntryList> list = new PerformanceObserverEntryList(this);
-  list->AppendEntry(aEntry);
-
-  ErrorResult rv;
-  mCallback->Call(this, *list, *this, rv);
-  NS_WARN_IF(rv.Failed());
+  mQueuedEntries.AppendElement(aEntry);
 }
 
 static nsString sValidTypeNames[7] = {

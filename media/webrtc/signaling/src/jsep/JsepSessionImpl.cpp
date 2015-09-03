@@ -490,7 +490,10 @@ JsepSessionImpl::AddRecvonlyMsections(SdpMediaSection::MediaType mediatype,
 {
   while (count--) {
     nsresult rv = CreateOfferMSection(
-        mediatype, SdpDirectionAttribute::kRecvonly, sdp);
+        mediatype,
+        mSdpHelper.GetProtocolForMediaType(mediatype),
+        SdpDirectionAttribute::kRecvonly,
+        sdp);
 
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -510,6 +513,7 @@ JsepSessionImpl::AddReofferMsections(const Sdp& oldLocalSdp,
     // We do not set the direction in this function (or disable when previously
     // disabled), that happens in |SetupOfferMSectionsByType|
     rv = CreateOfferMSection(oldLocalSdp.GetMediaSection(i).GetMediaType(),
+                             oldLocalSdp.GetMediaSection(i).GetProtocol(),
                              SdpDirectionAttribute::kInactive,
                              newSdp);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -975,12 +979,10 @@ JsepSessionImpl::CreateAnswer(const JsepAnswerOptions& options,
 
 nsresult
 JsepSessionImpl::CreateOfferMSection(SdpMediaSection::MediaType mediatype,
+                                     SdpMediaSection::Protocol proto,
                                      SdpDirectionAttribute::Direction dir,
                                      Sdp* sdp)
 {
-  SdpMediaSection::Protocol proto =
-    mSdpHelper.GetProtocolForMediaType(mediatype);
-
   SdpMediaSection* msection =
       &sdp->AddMediaSection(mediatype, dir, 0, proto, sdp::kIPv4, "0.0.0.0");
 
@@ -1019,6 +1021,7 @@ JsepSessionImpl::GetFreeMsectionForSend(
 
   // Ok, no pre-existing m-section. Make a new one.
   nsresult rv = CreateOfferMSection(type,
+                                    mSdpHelper.GetProtocolForMediaType(type),
                                     SdpDirectionAttribute::kInactive,
                                     sdp);
   NS_ENSURE_SUCCESS(rv, rv);

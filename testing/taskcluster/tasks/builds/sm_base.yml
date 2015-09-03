@@ -14,7 +14,7 @@ task:
   payload:
     image: '{{#docker_image}}desktop-build{{/docker_image}}'
     cache:
-      build-spidermonkey-workspace: '/home/worker/workspace'
+      build-spidermonkey-c6-workspace: '/home/worker/workspace'
 
     env:
       GECKO_REPOSITORY: '{{base_repository}}'

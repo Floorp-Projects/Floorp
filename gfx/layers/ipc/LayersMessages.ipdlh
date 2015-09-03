@@ -42,7 +42,6 @@ using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using struct mozilla::layers::FenceHandle from "mozilla/layers/FenceUtils.h";
-using std::string from "string";
 
 namespace mozilla {
 namespace layers {
@@ -232,7 +231,6 @@ struct CommonLayerAttributes {
   Animation[] animations;
   nsIntRegion invalidRegion;
   FrameMetrics[] metrics;
-  string contentDescription;
   nsCString displayListLog;
 };
 

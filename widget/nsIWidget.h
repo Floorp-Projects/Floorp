@@ -1024,7 +1024,7 @@ class nsIWidget : public nsISupports {
      * helper to hide widgets it knows nothing about.
      */
     static void UpdateRegisteredPluginWindowVisibility(uintptr_t aOwnerWidget,
-                                                       nsTArray<uintptr_t>& aVisibleList);
+                                                       nsTArray<uintptr_t>& aPluginIds);
 
     /**
      * Set the shadow style of the window.

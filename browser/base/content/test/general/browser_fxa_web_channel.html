@@ -21,6 +21,12 @@
       case "can_link_account":
         test_can_link_account();
         break;
+      case "logout":
+        test_logout();
+        break;
+      case "delete":
+        test_delete();
+        break;
     }
   };
 
@@ -87,6 +93,40 @@
             email: "testuser@testuser.com",
           },
           messageId: 2,
+        },
+      },
+    });
+
+    window.dispatchEvent(event);
+  }
+
+  function test_logout() {
+    var event = new window.CustomEvent("WebChannelMessageToChrome", {
+      detail: {
+        id: webChannelId,
+        message: {
+          command: "fxaccounts:logout",
+          data: {
+            uid: 'uid'
+          },
+          messageId: 3,
+        },
+      },
+    });
+
+    window.dispatchEvent(event);
+  }
+
+  function test_delete() {
+    var event = new window.CustomEvent("WebChannelMessageToChrome", {
+      detail: {
+        id: webChannelId,
+        message: {
+          command: "fxaccounts:delete",
+          data: {
+            uid: 'uid'
+          },
+          messageId: 4,
         },
       },
     });
