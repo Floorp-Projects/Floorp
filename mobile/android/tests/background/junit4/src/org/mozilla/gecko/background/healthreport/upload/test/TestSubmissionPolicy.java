@@ -14,6 +14,7 @@ import java.util.HashSet;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
 import org.mozilla.gecko.background.healthreport.upload.SubmissionClient;
 import org.mozilla.gecko.background.healthreport.upload.SubmissionPolicy;
@@ -23,7 +24,9 @@ import org.mozilla.gecko.background.testhelpers.MockSharedPreferences;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 
 import android.content.SharedPreferences;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestSubmissionPolicy {
   public static class MockSubmissionClient implements SubmissionClient {
     public String lastId = null;

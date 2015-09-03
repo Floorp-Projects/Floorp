@@ -10,17 +10,20 @@ import java.io.UnsupportedEncodingException;
 
 import org.json.simple.parser.ParseException;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 
 import ch.boye.httpclientandroidlib.Header;
+import org.robolectric.RobolectricGradleTestRunner;
 
 /**
  * Test the transfer of a UTF-8 string from desktop, and ensure that it results in the
  * correct hashed Basic Auth header.
  */
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestCredentialsEndToEnd {
 
   public static final String REAL_PASSWORD         = "pïgéons1";

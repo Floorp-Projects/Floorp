@@ -7,9 +7,12 @@ import java.math.BigInteger;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.browserid.ASNUtils;
 import org.mozilla.gecko.sync.Utils;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestASNUtils {
   public void doTestEncodeDecodeArrays(int length1, int length2) {
     if (4 + length1 + length2 > 127) {

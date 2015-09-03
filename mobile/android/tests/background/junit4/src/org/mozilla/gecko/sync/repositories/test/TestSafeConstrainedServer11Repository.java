@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.helpers.HTTPServerTestHelper;
 import org.mozilla.android.sync.test.helpers.MockServer;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
@@ -18,9 +19,11 @@ import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.stage.SafeConstrainedServer11Repository;
+import org.robolectric.RobolectricGradleTestRunner;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestSafeConstrainedServer11Repository {
   private static final int     TEST_PORT      = HTTPServerTestHelper.getTestPort();
   private static final String  TEST_SERVER    = "http://localhost:" + TEST_PORT + "/";

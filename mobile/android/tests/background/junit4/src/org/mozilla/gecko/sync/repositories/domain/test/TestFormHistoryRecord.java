@@ -8,10 +8,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.domain.FormHistoryRecord;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestFormHistoryRecord {
   public static FormHistoryRecord withIdFieldNameAndValue(long id, String fieldName, String value) {
     FormHistoryRecord fr = new FormHistoryRecord();

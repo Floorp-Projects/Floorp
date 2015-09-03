@@ -14,12 +14,14 @@ import java.net.URISyntaxException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.helpers.HTTPServerTestHelper;
 import org.mozilla.android.sync.test.helpers.MockServer;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.setup.auth.AuthenticateAccountStage;
 import org.mozilla.gecko.sync.setup.auth.AuthenticateAccountStage.AuthenticateAccountStageDelegate;
+import org.robolectric.RobolectricGradleTestRunner;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 
@@ -30,6 +32,7 @@ import ch.boye.httpclientandroidlib.HttpResponse;
  * @author liuche
  *
  */
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestAccountAuthenticatorStage {
   private static final int TEST_PORT      = HTTPServerTestHelper.getTestPort();
   private static final String TEST_SERVER = "http://localhost:" + TEST_PORT;

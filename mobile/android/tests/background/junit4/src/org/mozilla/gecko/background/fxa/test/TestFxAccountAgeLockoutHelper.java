@@ -7,9 +7,12 @@ import java.util.Calendar;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
 import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestFxAccountAgeLockoutHelper {
   @Test
   public void testPassesAgeCheck() {

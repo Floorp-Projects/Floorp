@@ -11,13 +11,16 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.sync.net.HMACAuthHeaderProvider;
 
 import ch.boye.httpclientandroidlib.client.methods.HttpGet;
 import ch.boye.httpclientandroidlib.client.methods.HttpPost;
 import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
 import ch.boye.httpclientandroidlib.client.methods.HttpUriRequest;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestHMACAuthHeaderProvider {
   // Expose a few protected static member functions as public for testing.
   protected static class LeakyHMACAuthHeaderProvider extends HMACAuthHeaderProvider {

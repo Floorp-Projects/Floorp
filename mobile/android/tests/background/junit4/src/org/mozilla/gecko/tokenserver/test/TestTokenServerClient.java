@@ -17,6 +17,7 @@ import junit.framework.Assert;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.common.log.writers.StringLogWriter;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
@@ -44,7 +45,9 @@ import ch.boye.httpclientandroidlib.entity.StringEntity;
 import ch.boye.httpclientandroidlib.message.BasicHeader;
 import ch.boye.httpclientandroidlib.message.BasicHttpResponse;
 import ch.boye.httpclientandroidlib.message.BasicStatusLine;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestTokenServerClient {
   public static final String JSON = "application/json";
   public static final String TEXT = "text/plain";

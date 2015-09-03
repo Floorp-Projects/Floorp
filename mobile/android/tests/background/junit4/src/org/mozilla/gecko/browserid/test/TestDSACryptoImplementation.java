@@ -8,10 +8,13 @@ import java.math.BigInteger;
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.DSACryptoImplementation;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestDSACryptoImplementation {
   @Test
   public void testToJSONObject() throws Exception {

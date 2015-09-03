@@ -12,10 +12,13 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestKeyBundle {
   @Test
   public void testCreateKeyBundle() throws UnsupportedEncodingException, CryptoException {

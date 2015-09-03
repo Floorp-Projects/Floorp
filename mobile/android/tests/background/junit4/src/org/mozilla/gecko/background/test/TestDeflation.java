@@ -10,11 +10,14 @@ import java.util.zip.Inflater;
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.bagheera.DeflateHelper;
 import org.mozilla.gecko.background.common.log.Logger;
 
 import ch.boye.httpclientandroidlib.HttpEntity;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestDeflation {
   public static final String TEST_BODY_A = "";
   public static final String TEST_BODY_B = "éíôü}ABCDEFGHaaQRSTUVWXYZá{Zá{";

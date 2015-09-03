@@ -16,6 +16,7 @@ import java.util.Map.Entry;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.SynchronizerHelpers.DataAvailableWBORepository;
 import org.mozilla.android.sync.test.SynchronizerHelpers.ShouldSkipWBORepository;
 import org.mozilla.gecko.background.common.log.Logger;
@@ -30,7 +31,9 @@ import org.mozilla.gecko.sync.synchronizer.SynchronizerSession;
 import org.mozilla.gecko.sync.synchronizer.SynchronizerSessionDelegate;
 
 import android.content.Context;
+import org.robolectric.RobolectricGradleTestRunner;
 
+@RunWith(RobolectricGradleTestRunner.class)
 public class TestSynchronizerSession {
   public static final String LOG_TAG = TestSynchronizerSession.class.getSimpleName();
 
