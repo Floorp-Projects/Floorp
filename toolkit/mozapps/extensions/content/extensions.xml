@@ -1238,9 +1238,7 @@
               this._errorLink.value = gStrings.ext.GetStringFromName("notification.blocked.link");
               this._errorLink.href = this.mAddon.blocklistURL;
               this._errorLink.hidden = false;
-            } else if (!isUpgrade &&
-                       this.mAddon.signedState <= AddonManager.SIGNEDSTATE_MISSING &&
-                       SIGNING_REQUIRED) {
+            } else if (!isUpgrade && !isCorrectlySigned(this.mAddon) && SIGNING_REQUIRED) {
               this.setAttribute("notification", "error");
               this._error.textContent = gStrings.ext.formatStringFromName(
                 "notification.unsignedAndDisabled", [this.mAddon.name, gStrings.brandShortName], 2
@@ -1257,8 +1255,7 @@
               );
               this._warningLink.hidden = true;
               this._warningBtn.hidden = true;
-            } else if (!isUpgrade &&
-                       this.mAddon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
+            } else if (!isUpgrade && !isCorrectlySigned(this.mAddon)) {
               this.setAttribute("notification", "warning");
               this._warning.textContent = gStrings.ext.formatStringFromName(
                 "notification.unsigned", [this.mAddon.name, gStrings.brandShortName], 2
