@@ -170,15 +170,9 @@ function arrowExpr(args, body) {
                      body: body });
 }
 
-function metaProperty(meta, property) {
-    return Pattern({ type: "MetaProperty",
-                     meta: meta,
-                     property: property });
-}
 function newTarget() {
-    return metaProperty(ident("new"), ident("target"));
+    return Pattern({ type: "NewTargetExpression" });
 }
-
 function unExpr(op, arg) {
     return Pattern({ type: "UnaryExpression", operator: op, argument: arg });
 }
