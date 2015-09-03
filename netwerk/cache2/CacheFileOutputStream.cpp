@@ -94,7 +94,7 @@ CacheFileOutputStream::Write(const char * aBuf, uint32_t aCount,
     return NS_FAILED(mStatus) ? mStatus : NS_BASE_STREAM_CLOSED;
   }
 
-  if (CacheObserver::EntryIsTooBig(mPos + aCount, !mFile->mMemoryOnly)) {
+  if (!mFile->mSkipSizeCheck && CacheObserver::EntryIsTooBig(mPos + aCount, !mFile->mMemoryOnly)) {
     LOG(("CacheFileOutputStream::Write() - Entry is too big, failing and "
          "dooming the entry. [this=%p]", this));
 
