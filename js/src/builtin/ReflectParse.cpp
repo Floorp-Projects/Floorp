@@ -758,8 +758,6 @@ class NodeBuilder
 
     bool metaProperty(HandleValue meta, HandleValue property, TokenPos* pos, MutableHandleValue dst);
 
-    bool super(TokenPos* pos, MutableHandleValue dst);
-
     /*
      * declarations
      */
@@ -1838,16 +1836,6 @@ NodeBuilder::metaProperty(HandleValue meta, HandleValue property, TokenPos* pos,
                    "meta", meta,
                    "property", property,
                    dst);
-}
-
-bool
-NodeBuilder::super(TokenPos* pos, MutableHandleValue dst)
-{
-    RootedValue cb(cx, callbacks[AST_SUPER]);
-    if (!cb.isNull())
-        return callback(cb, pos, dst);
-
-    return newNode(AST_SUPER, pos, dst);
 }
 
 namespace {
@@ -3081,6 +3069,7 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
 
       case PNK_DELETENAME:
       case PNK_DELETEPROP:
+      case PNK_DELETESUPERPROP:
       case PNK_DELETEELEM:
       case PNK_DELETESUPERELEM:
       case PNK_DELETEEXPR:
@@ -3143,20 +3132,21 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
       {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_expr->pn_pos));
 
-        RootedValue expr(cx);
-        RootedValue propname(cx);
+        RootedValue expr(cx), id(cx);
         RootedAtom pnAtom(cx, pn->pn_atom);
+        return expression(pn->pn_expr, &expr) &&
+               identifier(pnAtom, nullptr, &id) &&
+               builder.memberExpression(false, expr, id, &pn->pn_pos, dst);
+      }
 
-        if (pn->as<PropertyAccess>().isSuper()) {
-            if (!builder.super(&pn->pn_expr->pn_pos, &expr))
-                return false;
-        } else {
-            if (!expression(pn->pn_expr, &expr))
-                return false;
-        }
-
-        return identifier(pnAtom, nullptr, &propname) &&
-               builder.memberExpression(false, expr, propname, &pn->pn_pos, dst);
+      case PNK_SUPERPROP:
+      {
+        RootedValue superBase(cx), id(cx);
+        RootedAtom superAtom(cx, cx->names().super);
+        RootedAtom pnAtom(cx, pn->pn_atom);
+        return identifier(superAtom, nullptr, &superBase) &&
+               identifier(pnAtom, nullptr, &id) &&
+               builder.memberExpression(false, superBase, id, &pn->pn_pos, dst);
       }
 
       case PNK_ELEM:
