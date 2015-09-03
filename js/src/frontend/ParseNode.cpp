@@ -230,6 +230,7 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_DELETENAME:
       case PNK_DELETEPROP:
       case PNK_DELETEELEM:
+      case PNK_DELETESUPERELEM:
       case PNK_DELETEEXPR:
       case PNK_POS:
       case PNK_NEG:
@@ -243,6 +244,7 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_MUTATEPROTO:
       case PNK_EXPORT:
       case PNK_EXPORT_DEFAULT:
+      case PNK_SUPERELEM:
         return PushUnaryNodeChild(pn, stack);
 
       // Nodes with a single nullable child.
