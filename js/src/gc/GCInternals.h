@@ -92,7 +92,7 @@ IsIncrementalGCSafe(JSRuntime* rt);
 
 #ifdef JS_GC_ZEAL
 
-class AutoStopVerifyingBarriers
+class MOZ_RAII AutoStopVerifyingBarriers
 {
     GCRuntime* gc;
     bool restartPreVerifier;
@@ -152,7 +152,7 @@ struct MovingTracer : JS::CallbackTracer
 #endif
 };
 
-class AutoMaybeStartBackgroundAllocation
+class MOZ_RAII AutoMaybeStartBackgroundAllocation
 {
   private:
     JSRuntime* runtime;
@@ -176,7 +176,7 @@ class AutoMaybeStartBackgroundAllocation
 };
 
 // In debug builds, set/unset the GC sweeping flag for the current thread.
-struct AutoSetThreadIsSweeping
+struct MOZ_RAII AutoSetThreadIsSweeping
 {
 #ifdef DEBUG
     explicit AutoSetThreadIsSweeping(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)

@@ -982,7 +982,7 @@ StackBaseShape::StackBaseShape(Shape* shape)
     compartment(shape->compartment())
 {}
 
-class AutoRooterGetterSetter
+class MOZ_RAII AutoRooterGetterSetter
 {
     class Inner : private JS::CustomAutoRooter
     {

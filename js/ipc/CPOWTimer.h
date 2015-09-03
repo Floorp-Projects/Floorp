@@ -20,7 +20,7 @@
  * This stopwatch is active iff JSRuntime::stopwatch.isActive is set.
  * Upon destruction, update JSRuntime::stopwatch.data.totalCPOWTime.
  */
-class MOZ_STACK_CLASS CPOWTimer final {
+class MOZ_RAII CPOWTimer final {
   public:
     explicit inline CPOWTimer(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     ~CPOWTimer();

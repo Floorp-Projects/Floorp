@@ -67,7 +67,7 @@ class JS_PUBLIC_API(AutoCheckRequestDepth)
 
 /* AutoValueArray roots an internal fixed-size array of Values. */
 template <size_t N>
-class AutoValueArray : public AutoGCRooter
+class MOZ_RAII AutoValueArray : public AutoGCRooter
 {
     const size_t length_;
     Value elements_[N];
@@ -99,7 +99,7 @@ class AutoValueArray : public AutoGCRooter
 };
 
 template<class T>
-class AutoVectorRooterBase : protected AutoGCRooter
+class MOZ_RAII AutoVectorRooterBase : protected AutoGCRooter
 {
     typedef js::Vector<T, 8> VectorImpl;
     VectorImpl vector;
@@ -196,7 +196,7 @@ class AutoVectorRooterBase : protected AutoGCRooter
 };
 
 template <typename T>
-class MOZ_STACK_CLASS AutoVectorRooter : public AutoVectorRooterBase<T>
+class MOZ_RAII AutoVectorRooter : public AutoVectorRooterBase<T>
 {
   public:
     explicit AutoVectorRooter(JSContext* cx
@@ -225,7 +225,7 @@ using IdVector = js::TraceableVector<jsid>;
 using ScriptVector = js::TraceableVector<JSScript*>;
 
 template<class Key, class Value>
-class AutoHashMapRooter : protected AutoGCRooter
+class MOZ_RAII AutoHashMapRooter : protected AutoGCRooter
 {
   private:
     typedef js::HashMap<Key, Value> HashMapImpl;
@@ -349,7 +349,7 @@ class AutoHashMapRooter : protected AutoGCRooter
 };
 
 template<class T>
-class AutoHashSetRooter : protected AutoGCRooter
+class MOZ_RAII AutoHashSetRooter : protected AutoGCRooter
 {
   private:
     typedef js::HashSet<T> HashSetImpl;
@@ -460,7 +460,7 @@ class AutoHashSetRooter : protected AutoGCRooter
 /*
  * Custom rooting behavior for internal and external clients.
  */
-class JS_PUBLIC_API(CustomAutoRooter) : private AutoGCRooter
+class MOZ_RAII JS_PUBLIC_API(CustomAutoRooter) : private AutoGCRooter
 {
   public:
     template <typename CX>
@@ -1070,7 +1070,7 @@ AssertHeapIsIdle(JSContext* cx);
 
 } /* namespace js */
 
-class JSAutoRequest
+class MOZ_RAII JSAutoRequest
 {
   public:
     explicit JSAutoRequest(JSContext* cx
@@ -1409,7 +1409,7 @@ JS_RefreshCrossCompartmentWrappers(JSContext* cx, JS::Handle<JSObject*> obj);
  * the corresponding JS_LeaveCompartment call.
  */
 
-class JS_PUBLIC_API(JSAutoCompartment)
+class MOZ_RAII JS_PUBLIC_API(JSAutoCompartment)
 {
     JSContext* cx_;
     JSCompartment* oldCompartment_;
@@ -1423,7 +1423,7 @@ class JS_PUBLIC_API(JSAutoCompartment)
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class JS_PUBLIC_API(JSAutoNullableCompartment)
+class MOZ_RAII JS_PUBLIC_API(JSAutoNullableCompartment)
 {
     JSContext* cx_;
     JSCompartment* oldCompartment_;
@@ -4227,7 +4227,7 @@ JS_GetStringEncodingLength(JSContext* cx, JSString* str);
 JS_PUBLIC_API(size_t)
 JS_EncodeStringToBuffer(JSContext* cx, JSString* str, char* buffer, size_t length);
 
-class JSAutoByteString
+class MOZ_RAII JSAutoByteString
 {
   public:
     JSAutoByteString(JSContext* cx, JSString* str
@@ -5039,7 +5039,7 @@ HideScriptedCaller(JSContext* cx);
 extern JS_PUBLIC_API(void)
 UnhideScriptedCaller(JSContext* cx);
 
-class AutoHideScriptedCaller
+class MOZ_RAII AutoHideScriptedCaller
 {
   public:
     explicit AutoHideScriptedCaller(JSContext* cx

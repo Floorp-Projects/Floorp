@@ -634,7 +634,7 @@ AllDescendantsOfType(nsIDocShellTreeItem* aParentItem, int32_t aType)
  * A class that automatically sets mInShow to false when it goes
  * out of scope.
  */
-class MOZ_STACK_CLASS AutoResetInShow {
+class MOZ_RAII AutoResetInShow {
   private:
     nsFrameLoader* mFrameLoader;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -989,7 +989,7 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
   return NS_OK;
 }
 
-class MOZ_STACK_CLASS AutoResetInFrameSwap final
+class MOZ_RAII AutoResetInFrameSwap final
 {
 public:
   AutoResetInFrameSwap(nsFrameLoader* aThisFrameLoader,

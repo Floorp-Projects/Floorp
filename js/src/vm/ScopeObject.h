@@ -825,7 +825,7 @@ CloneNestedScopeObject(JSContext* cx, HandleObject enclosingScope, Handle<Nested
 // whether the current scope is within the extent of this initial frame.
 // Here, "frame" means a single activation of: a function, eval, or global
 // code.
-class ScopeIter
+class MOZ_RAII ScopeIter
 {
     StaticScopeIter<CanGC> ssi_;
     RootedObject scope_;

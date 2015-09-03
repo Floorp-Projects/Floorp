@@ -137,7 +137,7 @@ private:
 // GRRR WINDOWS HATE HATE HATE
 #undef CLIP_MASK
 
-class MOZ_STACK_CLASS SVGAutoRenderState
+class MOZ_RAII SVGAutoRenderState
 {
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
