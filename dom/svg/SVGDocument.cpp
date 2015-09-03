@@ -148,9 +148,7 @@ SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded()
             NS_NewURI(getter_AddRefs(uri), spec);
             if (uri) {
               nsRefPtr<CSSStyleSheet> cssSheet;
-              cssLoader->LoadSheetSync(uri,
-                                       mozilla::css::eAgentSheetFeatures,
-                                       true, getter_AddRefs(cssSheet));
+              cssLoader->LoadSheetSync(uri, true, true, getter_AddRefs(cssSheet));
               if (cssSheet) {
                 EnsureOnDemandBuiltInUASheet(cssSheet);
               }
