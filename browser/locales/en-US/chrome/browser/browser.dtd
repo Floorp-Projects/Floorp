@@ -730,6 +730,8 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY identity.moreInfoLinkText2 "More Information">
 
 <!ENTITY identity.permissions "Permissions">
+<!ENTITY identity.permissionsPageFunctionality "Page Functionality">
+<!ENTITY identity.permissionsSystemAccess "System Access">
 
 <!-- Name for the tabs toolbar as spoken by screen readers.
      The word "toolbar" is appended automatically and should not be contained below! -->
