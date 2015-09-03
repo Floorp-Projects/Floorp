@@ -312,8 +312,6 @@
   <string name="stop">&stop;</string>
   <string name="site_security">&site_security;</string>
   <string name="close_tab">&close_tab;</string>
-  <string name="tab_audio_playing">&tab_audio_playing;</string>
-  <string name="tab_audio_muted">&tab_audio_muted;</string>
   <string name="new_tab_opened">&new_tab_opened;</string>
   <string name="new_private_tab_opened">&new_private_tab_opened;</string>
   <string name="switch_button_message">&switch_button_message;</string>
