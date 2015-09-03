@@ -308,6 +308,25 @@ let AnimationsController = {
     this.emit(this.PLAYERS_UPDATED_EVENT, this.animationPlayers);
   }),
 
+  /**
+   * Get the latest known current time of document.timeline.
+   * This value is sent along with all AnimationPlayerActors' states, but it
+   * isn't updated after that, so this function loops over all know animations
+   * to find the highest value.
+   * @return {Number|Boolean} False is returned if this server version doesn't
+   * provide document's current time.
+   */
+  get documentCurrentTime() {
+    let time = 0;
+    for (let {state} of this.animationPlayers) {
+      if (!state.documentCurrentTime) {
+        return false;
+      }
+      time = Math.max(time, state.documentCurrentTime);
+    }
+    return time;
+  },
+
   startAllAutoRefresh: function() {
     if (this.traits.isNewUI) {
       return;
