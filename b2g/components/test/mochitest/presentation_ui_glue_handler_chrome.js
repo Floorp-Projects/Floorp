@@ -28,7 +28,7 @@ addMessageListener('trigger-ui-glue', function(aData) {
 addMessageListener('trigger-presentation-content-event', function(aData) {
   var detail = {
     type: 'presentation-receiver-launched',
-    sessionId: aData.sessionId,
+    id: aData.sessionId,
     frame: aData.frame
   };
   SystemAppProxy._sendCustomEvent('mozPresentationContentEvent', detail);
