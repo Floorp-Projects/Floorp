@@ -27,7 +27,7 @@
  */
 
 #include "DynamicsCompressor.h"
-#include "AudioSegment.h"
+#include "AudioBlock.h"
 
 #include <cmath>
 #include "AudioNodeEngine.h"
@@ -148,7 +148,7 @@ void DynamicsCompressor::setEmphasisParameters(float gain, float anchorFreq, flo
     setEmphasisStageParameters(3, gain, anchorFreq / (filterStageRatio * filterStageRatio * filterStageRatio));
 }
 
-void DynamicsCompressor::process(const AudioChunk* sourceChunk, AudioChunk* destinationChunk, unsigned framesToProcess)
+void DynamicsCompressor::process(const AudioBlock* sourceChunk, AudioBlock* destinationChunk, unsigned framesToProcess)
 {
     // Though numberOfChannels is retrived from destinationBus, we still name it numberOfChannels instead of numberOfDestinationChannels.
     // It's because we internally match sourceChannels's size to destinationBus by channel up/down mix. Thus we need numberOfChannels

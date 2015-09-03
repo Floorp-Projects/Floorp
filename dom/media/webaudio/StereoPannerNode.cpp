@@ -83,7 +83,7 @@ public:
     aRightGain = sin(0.5 * M_PI * aPanning);
   }
 
-  void SetToSilentStereoBlock(AudioChunk* aChunk)
+  void SetToSilentStereoBlock(AudioBlock* aChunk)
   {
     for (uint32_t channel = 0; channel < 2; channel++) {
       float* samples = aChunk->ChannelFloatsForWrite(channel);
@@ -93,13 +93,13 @@ public:
     }
   }
 
-  void UpmixToStereoIfNeeded(const AudioChunk& aInput, AudioChunk* aOutput)
+  void UpmixToStereoIfNeeded(const AudioBlock& aInput, AudioBlock* aOutput)
   {
     if (aInput.ChannelCount() == 2) {
       *aOutput = aInput;
     } else {
       MOZ_ASSERT(aInput.ChannelCount() == 1);
-      AllocateAudioBlock(2, aOutput);
+      aOutput->AllocateChannels(2);
       const float* input = static_cast<const float*>(aInput.mChannelData[0]);
       for (uint32_t channel = 0; channel < 2; channel++) {
         float* output = aOutput->ChannelFloatsForWrite(channel);
@@ -109,15 +109,15 @@ public:
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
-                            const AudioChunk& aInput,
-                            AudioChunk* aOutput,
+                            const AudioBlock& aInput,
+                            AudioBlock* aOutput,
                             bool *aFinished) override
   {
     MOZ_ASSERT(mSource == aStream, "Invalid source stream");
 
     // The output of this node is always stereo, no matter what the inputs are.
     MOZ_ASSERT(aInput.ChannelCount() <= 2);
-    AllocateAudioBlock(2, aOutput);
+    aOutput->AllocateChannels(2);
     bool monoToStereo = aInput.ChannelCount() == 1;
 
     if (aInput.IsNull()) {

@@ -27,6 +27,7 @@
 
 #include "FFTConvolver.h"
 #include "HRTFDatabase.h"
+#include "AudioBlock.h"
 
 using namespace std;
 using namespace mozilla;
@@ -128,7 +129,7 @@ int HRTFPanner::calculateDesiredAzimuthIndexAndBlend(double azimuth, double& azi
     return desiredAzimuthIndex;
 }
 
-void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioChunk* inputBus, AudioChunk* outputBus)
+void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioBlock* inputBus, AudioBlock* outputBus)
 {
 #ifdef DEBUG
     unsigned numInputChannels =
