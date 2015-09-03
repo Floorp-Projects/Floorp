@@ -582,9 +582,9 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
         reportp->exnType = efs->exnType;
 
         size_t totalArgsLength = 0;
-        size_t argLengths[10]; /* only {0} thru {9} supported */
+        size_t argLengths[JS::MaxNumErrorArguments]; /* only {0} thru {9} supported */
         argCount = efs->argCount;
-        MOZ_ASSERT(argCount <= 10);
+        MOZ_ASSERT(argCount <= JS::MaxNumErrorArguments);
         if (argCount > 0) {
             /*
              * Gather the arguments into an array, and accumulate
