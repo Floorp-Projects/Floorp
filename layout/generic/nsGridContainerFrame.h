@@ -9,7 +9,6 @@
 #ifndef nsGridContainerFrame_h___
 #define nsGridContainerFrame_h___
 
-#include "mozilla/TypeTraits.h"
 #include "nsContainerFrame.h"
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
@@ -51,35 +50,8 @@ public:
   static const nsRect& GridItemCB(nsIFrame* aChild);
 
   struct TrackSize {
-    void Initialize(nscoord aPercentageBasis,
-                    const nsStyleCoord& aMinCoord,
-                    const nsStyleCoord& aMaxCoord);
-    bool IsFrozen() const { return mState & eFrozen; }
-#ifdef DEBUG
-    void Dump() const;
-#endif
-    enum StateBits : uint16_t {
-      eAutoMinSizing =           0x1,
-      eMinContentMinSizing =     0x2,
-      eMaxContentMinSizing =     0x4,
-      eMinOrMaxContentMinSizing = eMinContentMinSizing | eMaxContentMinSizing,
-      eIntrinsicMinSizing = eMinOrMaxContentMinSizing | eAutoMinSizing,
-      eFlexMinSizing =           0x8,
-      eAutoMaxSizing =          0x10,
-      eMinContentMaxSizing =    0x20,
-      eMaxContentMaxSizing =    0x40,
-      eAutoOrMaxContentMaxSizing = eAutoMaxSizing | eMaxContentMaxSizing,
-      eIntrinsicMaxSizing = eAutoOrMaxContentMaxSizing | eMinContentMaxSizing,
-      eFlexMaxSizing =          0x80,
-      eFrozen =                0x100,
-      eSkipGrowUnlimited1 =    0x200,
-      eSkipGrowUnlimited2 =    0x400,
-      eSkipGrowUnlimited = eSkipGrowUnlimited1 | eSkipGrowUnlimited2,
-    };
-
     nscoord mBase;
     nscoord mLimit;
-    StateBits mState;
   };
 
   // @note when used in a function that measures a child's size, eColDimension
@@ -100,7 +72,6 @@ protected:
   typedef mozilla::LogicalRect LogicalRect;
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::css::GridNamedArea GridNamedArea;
-  typedef nsLayoutUtils::IntrinsicISizeType IntrinsicISizeType;
   class GridItemCSSOrderIterator;
   struct TrackSizingFunctions;
   struct Tracks;
@@ -439,8 +410,7 @@ protected:
    * Calculate track sizes.
    */
   void CalculateTrackSizes(GridReflowState&            aState,
-                           const mozilla::LogicalSize& aContentBox,
-                           IntrinsicISizeType          aConstraint);
+                           const mozilla::LogicalSize& aContentBox);
 
   /**
    * Helper method for ResolveLineRange.
@@ -552,10 +522,5 @@ private:
    */
   bool mIsNormalFlowInCSSOrder : 1;
 };
-
-namespace mozilla {
-template <>
-struct IsPod<nsGridContainerFrame::TrackSize> : TrueType {};
-}
 
 #endif /* nsGridContainerFrame_h___ */
