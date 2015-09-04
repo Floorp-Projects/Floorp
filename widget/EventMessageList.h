@@ -119,7 +119,7 @@ NS_EVENT_MESSAGE(eXULEventFirst,        1500)
 NS_EVENT_MESSAGE(eXULPopupShowing,      eXULEventFirst)
 NS_EVENT_MESSAGE(eXULPopupShown,        eXULEventFirst + 1)
 NS_EVENT_MESSAGE(eXULPopupHiding,       eXULEventFirst + 2)
-NS_EVENT_MESSAGE(NS_XUL_POPUP_HIDDEN,   eXULEventFirst + 3)
+NS_EVENT_MESSAGE(eXULPopupHidden,       eXULEventFirst + 3)
 NS_EVENT_MESSAGE(NS_XUL_BROADCAST,      eXULEventFirst + 5)
 NS_EVENT_MESSAGE(NS_XUL_COMMAND_UPDATE, eXULEventFirst + 6)
 
