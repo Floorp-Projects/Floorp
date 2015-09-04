@@ -10,7 +10,7 @@ DIRS += [
 ]
 
 # Build jemalloc3 as a replace-malloc lib when building with mozjemalloc
-if not CONFIG['MOZ_JEMALLOC3']:
+if not CONFIG['MOZ_JEMALLOC4']:
     DIRS += ['jemalloc']
 
 if CONFIG['MOZ_REPLACE_MALLOC_LINKAGE'] == 'dummy library':

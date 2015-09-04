@@ -222,6 +222,7 @@ def parse_commit(message, jobs):
     parser.add_argument('-b', '--build', dest='build_types')
     parser.add_argument('-p', '--platform', nargs='?', dest='platforms', const='all', default='all')
     parser.add_argument('-u', '--unittests', nargs='?', dest='tests', const='all', default='all')
+    parser.add_argument('-i', '--interactive', dest='interactive', action='store_true', default=False)
     args, unknown = parser.parse_known_args(parts[try_idx:])
 
     # Then builds...
@@ -278,6 +279,7 @@ def parse_commit(message, jobs):
                 'additional-parameters': additional_parameters,
                 'build_name': platform,
                 'build_type': build_type,
+                'interactive': args.interactive,
             })
 
     return result

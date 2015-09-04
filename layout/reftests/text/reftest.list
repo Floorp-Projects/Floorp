@@ -185,8 +185,8 @@ HTTP(..) != 1170688.html 1170688-ref.html
 == emoji-03.html emoji-03-ref.html
 # the next two will fail on OS X 10.6 and on Windows prior to 8.1 because no color emoji font is present,
 # and also on Linux/Android/B2G platforms until we have color emoji fonts there
-fails-if(OSX==1006||/^Windows\x20NT\x20(5|6\.[0-2])/.test(http.oscpu)||gtkWidget||Android||B2G) != emoji-03.html emoji-03-notref.html
-fails-if(OSX==1006||/^Windows\x20NT\x20(5|6\.[0-2])/.test(http.oscpu)||gtkWidget||Android||B2G) == emoji-04.html emoji-04-ref.html
+fails-if(OSX==1006||/^Windows\x20NT\x20(5|6\.[0-2])/.test(http.oscpu)||gtkWidget||Android) != emoji-03.html emoji-03-notref.html
+fails-if(OSX==1006||/^Windows\x20NT\x20(5|6\.[0-2])/.test(http.oscpu)||gtkWidget||Android) == emoji-04.html emoji-04-ref.html
 != emoji-05.html emoji-05-notref.html
 
 # check that Graphite shaping (bug 631479) is working

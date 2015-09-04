@@ -285,7 +285,7 @@ nsresult nsAutoConfig::downloadAutoConfig()
     rv = NS_NewChannel(getter_AddRefs(channel),
                        url,
                        nsContentUtils::GetSystemPrincipal(),
-                       nsILoadInfo::SEC_NORMAL,
+                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                        nsIContentPolicy::TYPE_OTHER,
                        nullptr,  // loadGroup
                        nullptr,  // aCallbacks
@@ -295,7 +295,7 @@ nsresult nsAutoConfig::downloadAutoConfig()
     if (NS_FAILED(rv)) 
         return rv;
 
-    rv = channel->AsyncOpen(this, nullptr); 
+    rv = channel->AsyncOpen2(this);
     if (NS_FAILED(rv)) {
         readOfflineFile();
         return rv;

@@ -116,7 +116,7 @@
 @BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
 #endif
 #ifdef MOZ_REPLACE_MALLOC
-#ifndef MOZ_JEMALLOC3
+#ifndef MOZ_JEMALLOC4
 @BINPATH@/@DLL_PREFIX@replace_jemalloc@DLL_SUFFIX@
 #endif
 #endif
