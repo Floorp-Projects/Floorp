@@ -355,6 +355,11 @@ struct BasicTiledLayerPaintData {
   bool mPaintFinished : 1;
 
   /*
+   * Whether or not there is an async transform animation active
+   */
+  bool mHasTransformAnimation : 1;
+
+  /*
    * Initializes/clears data to prepare for paint action.
    */
   void ResetPaintData();
