@@ -32,13 +32,12 @@
                    anonid="searchbar-textbox"
                    type="autocomplete"
                    flex="1"
-                   autocompletepopup="PopupAutoComplete"
+                   autocompletepopup="PopupSearchAutoComplete"
                    autocompletesearch="search-autocomplete"
                    autocompletesearchparam="searchbar-history"
                    maxrows="10"
                    completeselectedindex="true"
-                   showcommentcolumn="true"
-                   tabscrolling="true"
+                   minresultsforpopup="0"
                    xbl:inherits="disabled,disableautocomplete,searchengine,src,newlines">
         <!--
         Empty <box> to properly position the icon within the autocomplete
@@ -46,6 +45,12 @@
         children differently)
         -->
         <xul:box>
+          <xul:hbox class="searchbar-search-button-container">
+            <xul:image class="searchbar-search-button"
+                       anonid="searchbar-search-button"
+                       xbl:inherits="addengines"
+                       tooltiptext="&searchEndCap.label;"/>
+          </xul:hbox>
           <xul:button class="searchbar-engine-button"
                       type="menu"
                       anonid="searchbar-engine-button">
@@ -62,7 +67,7 @@
           </xul:button>
         </xul:box>
         <xul:hbox class="search-go-container">
-          <xul:image class="search-go-button"
+          <xul:image class="search-go-button" hidden="true"
                      anonid="search-go-button"
                      onclick="handleSearchCommand(event);"
                      tooltiptext="&searchEndCap.label;"/>
@@ -74,7 +79,6 @@
       <constructor><![CDATA[
         if (!this.hasAttribute("oneoffui")) {
           this.setAttribute("oneoffui", "true");
-          return;
         }
 
         if (this.parentNode.parentNode.localName == "toolbarpaletteitem")
@@ -127,6 +131,8 @@
         ]]></body>
       </method>
 
+      <field name="_ignoreFocus">false</field>
+      <field name="_clickClosedPopup">false</field>
       <field name="_stringBundle">document.getAnonymousElementByAttribute(this,
           "anonid", "searchbar-stringbundle");</field>
       <field name="_textboxInitialized">false</field>
@@ -389,42 +395,39 @@
         ]]></body>
       </method>
 
-      <!-- Rebuilds the list of visible search engines in the menu.  Does not remove
-           or update any dynamic entries (i.e., "Add this engine" items) nor the
-           Manage Engines item.  This is called by the observer when the list of
-           visible engines, or the currently selected engine, has changed.
+      <!-- This is called by the observer when the list of visible engines,
+           or the currently selected engine, has changed.
       -->
       <method name="rebuildPopup">
         <body><![CDATA[
-          var popup = this._popup;
+          this._textbox.popup.updateHeader();
+        ]]></body>
+      </method>
 
-          // Clear the popup, down to the first separator
-          while (popup.firstChild && popup.firstChild.localName != "menuseparator")
-            popup.removeChild(popup.firstChild);
+      <method name="updateGoButtonVisibility">
+        <body><![CDATA[
+          document.getAnonymousElementByAttribute(this, "anonid",
+                                                  "search-go-button")
+                  .hidden = !this._textbox.value;
+        ]]></body>
+      </method>
 
-          const kXULNS =
-               "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+      <method name="openSuggestionsPanel">
+        <parameter name="aShowOnlySettingsIfEmpty"/>
+        <body><![CDATA[
+          if (this._textbox.open)
+            return;
 
-          var engines = this.engines;
-          for (var i = engines.length - 1; i >= 0; --i) {
-            var menuitem = document.createElementNS(kXULNS, "menuitem");
-            var name = engines[i].name;
-            menuitem.setAttribute("label", name);
-            menuitem.setAttribute("class", "menuitem-iconic searchbar-engine-menuitem menuitem-with-favicon");
-            // Since this menu is rebuilt by the observer method whenever a new
-            // engine is selected, the "selected" attribute does not need to be
-            // explicitly cleared anywhere.
-            if (engines[i] == this.currentEngine)
-              menuitem.setAttribute("selected", "true");
-            var tooltip = this._stringBundle.getFormattedString("searchtip", [name]);
-            menuitem.setAttribute("tooltiptext", tooltip);
-            if (engines[i].iconURI)
-              this.setIcon(menuitem, engines[i].iconURI.spec);
-            popup.insertBefore(menuitem, popup.firstChild);
-            menuitem.engine = engines[i];
+          this._textbox.showHistoryPopup();
+
+          if (this._textbox.value) {
+            // showHistoryPopup does a startSearch("") call, ensure the
+            // controller handles the text from the input box instead:
+            this._textbox.mController.handleText();
           }
-
-          this._needToBuildPopup = false;
+          else if (aShowOnlySettingsIfEmpty) {
+            this.setAttribute("showonlysettings", "true");
+          }
         ]]></body>
       </method>
 
@@ -600,127 +603,8 @@
                modifiers="accel"
                action="this.selectEngine(event, (event.detail > 0));"/>
 
-      <handler event="focus">
-      <![CDATA[
-        // Speculatively connect to the current engine's search URI (and
-        // suggest URI, if different) to reduce request latency
-        this.currentEngine.speculativeConnect({window: window});
-      ]]></handler>
-    </handlers>
-  </binding>
-
-  <binding id="searchbar-flare" extends="chrome://browser/content/search/search.xml#searchbar">
-    <resources>
-      <stylesheet src="chrome://browser/content/search/searchbarBindings.css"/>
-      <stylesheet src="chrome://browser/skin/searchbar.css"/>
-    </resources>
-    <content>
-      <xul:stringbundle src="chrome://browser/locale/search.properties"
-                        anonid="searchbar-stringbundle"/>
-      <!--
-      There is a dependency between "maxrows" attribute and
-      "SuggestAutoComplete._historyLimit" (nsSearchSuggestions.js). Changing
-      one of them requires changing the other one.
-      -->
-      <xul:textbox class="searchbar-textbox"
-                   anonid="searchbar-textbox"
-                   type="autocomplete"
-                   flex="1"
-                   autocompletepopup="PopupSearchAutoComplete"
-                   autocompletesearch="search-autocomplete"
-                   autocompletesearchparam="searchbar-history"
-                   maxrows="10"
-                   completeselectedindex="true"
-                   minresultsforpopup="0"
-                   xbl:inherits="disabled,disableautocomplete,searchengine,src,newlines">
-        <!--
-        Empty <box> to properly position the icon within the autocomplete
-        binding's anonymous children (the autocomplete binding positions <box>
-        children differently)
-        -->
-        <xul:box>
-          <xul:hbox class="searchbar-search-button-container">
-            <xul:image class="searchbar-search-button"
-                       anonid="searchbar-search-button"
-                       xbl:inherits="addengines"
-                       tooltiptext="&searchEndCap.label;"/>
-          </xul:hbox>
-          <xul:button class="searchbar-engine-button"
-                      type="menu"
-                      anonid="searchbar-engine-button">
-            <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
-            <xul:image class="searchbar-dropmarker-image"/>
-            <xul:menupopup class="searchbar-popup"
-                           anonid="searchbar-popup">
-              <xul:menuseparator/>
-              <xul:menuitem class="open-engine-manager"
-                            anonid="open-engine-manager"
-                            label="&cmd_engineManager.label;"
-                            oncommand="openManager(event);"/>
-            </xul:menupopup>
-          </xul:button>
-        </xul:box>
-        <xul:hbox class="search-go-container">
-          <xul:image class="search-go-button" hidden="true"
-                     anonid="search-go-button"
-                     onclick="handleSearchCommand(event);"
-                     tooltiptext="&searchEndCap.label;"/>
-        </xul:hbox>
-      </xul:textbox>
-    </content>
-    <implementation>
-      <destructor><![CDATA[
-        // For some reason the destructor of the base binding is called
-        // automatically when the window is closed, but now when the node
-        // is removed from the DOM.
-        this.destroy();
-      ]]></destructor>
-
-      <field name="_ignoreFocus">false</field>
-      <field name="_clickClosedPopup">false</field>
-
-      <method name="rebuildPopup">
-        <body><![CDATA[
-          this._textbox.popup.updateHeader();
-        ]]></body>
-      </method>
-
-      <method name="inputChanged">
-        <body><![CDATA[
-          this.updateGoButtonVisibility();
-        ]]></body>
-      </method>
-
-      <method name="updateGoButtonVisibility">
-        <body><![CDATA[
-          document.getAnonymousElementByAttribute(this, "anonid",
-                                                  "search-go-button")
-                  .hidden = !this._textbox.value;
-        ]]></body>
-      </method>
-
-      <method name="openSuggestionsPanel">
-        <parameter name="aShowOnlySettingsIfEmpty"/>
-        <body><![CDATA[
-          if (this._textbox.open)
-            return;
-
-          this._textbox.showHistoryPopup();
-
-          if (this._textbox.value) {
-            // showHistoryPopup does a startSearch("") call, ensure the
-            // controller handles the text from the input box instead:
-            this._textbox.mController.handleText();
-          }
-          else if (aShowOnlySettingsIfEmpty) {
-            this.setAttribute("showonlysettings", "true");
-          }
-        ]]></body>
-      </method>
-    </implementation>
-    <handlers>
-      <handler event="input" action="this.inputChanged();"/>
-      <handler event="drop" action="this.inputChanged();"/>
+      <handler event="input" action="this.updateGoButtonVisibility();"/>
+      <handler event="drop" action="this.updateGoButtonVisibility();"/>
 
       <handler event="blur">
       <![CDATA[
@@ -731,6 +615,10 @@
 
       <handler event="focus">
       <![CDATA[
+        // Speculatively connect to the current engine's search URI (and
+        // suggest URI, if different) to reduce request latency
+        this.currentEngine.speculativeConnect({window: window});
+
         if (this._ignoreFocus) {
           // This window has been re-focused, don't show the suggestions
           this._ignoreFocus = false;
