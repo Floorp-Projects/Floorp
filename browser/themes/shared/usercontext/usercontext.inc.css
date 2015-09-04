@@ -15,3 +15,55 @@
 #menu_newUserContextTabShopping {
   list-style-image: url("chrome://browser/skin/usercontext/shopping.svg");
 }
+
+/* URL Bar Decoration */
+
+#userContext-indicator {
+  height: 16px;
+  width: 16px;
+}
+
+#userContext-label {
+  margin-inline-end: 3px;
+  color: #909090;
+}
+
+#userContext-icons:not([usercontextid]) {
+  display: none;
+}
+
+#userContext-icons {
+  -moz-box-align: center;
+}
+
+/* Personal User Context */
+#userContext-icons[usercontextid="1"] > #userContext-label {
+  color: #00a7e0;
+}
+#userContext-icons[usercontextid="1"] > #userContext-indicator {
+  list-style-image: url("chrome://browser/skin/usercontext/personal.svg");
+}
+
+/* Work User Context */
+#userContext-icons[usercontextid="2"] > #userContext-label {
+  color: #f89c24;
+}
+#userContext-icons[usercontextid="2"] > #userContext-indicator {
+  list-style-image: url("chrome://browser/skin/usercontext/work.svg");
+}
+
+/* Banking User Context */
+#userContext-icons[usercontextid="3"] > #userContext-label {
+  color: #7dc14c;
+}
+#userContext-icons[usercontextid="3"] > #userContext-indicator {
+  list-style-image: url("chrome://browser/skin/usercontext/banking.svg");
+}
+
+/* Shopping User Context */
+#userContext-icons[usercontextid="4"] > #userContext-label {
+  color: #ee5195;
+}
+#userContext-icons[usercontextid="4"] > #userContext-indicator {
+  list-style-image: url("chrome://browser/skin/usercontext/shopping.svg");
+}

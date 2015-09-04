@@ -768,6 +768,10 @@
                        hidden="true"
                        onclick="ReaderParent.buttonClick(event);"/>
               </hbox>
+              <hbox id="userContext-icons">
+                <label id="userContext-label"/>
+                <image id="userContext-indicator"/>
+              </hbox>
               <toolbarbutton id="urlbar-go-button"
                              class="chromeclass-toolbar-additional"
                              onclick="gURLBar.handleCommand(event);"
