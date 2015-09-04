@@ -229,9 +229,6 @@ this.UITour = {
     ["searchIcon", {
       query: (aDocument) => {
         let searchbar = aDocument.getElementById("searchbar");
-        if (!searchbar.hasAttribute("oneoffui")) {
-          return null;
-        }
         return aDocument.getAnonymousElementByAttribute(searchbar,
                                                         "anonid",
                                                         "searchbar-search-button");
@@ -242,14 +239,12 @@ this.UITour = {
       query: (aDocument) => {
         let element = null;
         let searchbar = aDocument.getElementById("searchbar");
-        if (searchbar.hasAttribute("oneoffui")) {
-          let popup = aDocument.getElementById("PopupSearchAutoComplete");
-          if (popup.state != "open")
-            return null;
-          element = aDocument.getAnonymousElementByAttribute(popup,
-                                                             "anonid",
-                                                             "search-settings");
-        }
+        let popup = aDocument.getElementById("PopupSearchAutoComplete");
+        if (popup.state != "open")
+          return null;
+        element = aDocument.getAnonymousElementByAttribute(popup,
+                                                           "anonid",
+                                                           "search-settings");
         if (!element || !UITour.isElementVisible(element)) {
           return null;
         }

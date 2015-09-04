@@ -4,14 +4,6 @@
 
 %include ../shared/devedition.inc.css
 
-/* Use forward-facing magnifying glasses for the search box */
-:root[devtoolstheme="dark"] {
-  --search-button-image: url("chrome://browser/skin/devedition/search.svg#search-icon-mac-inverted");
-}
-:root[devtoolstheme="light"] {
-  --search-button-image: url("chrome://browser/skin/devedition/search.svg#search-icon-mac");
-}
-
 /* Use only 1px separator between nav toolbox and page content */
 #navigator-toolbox::after {
   background: linear-gradient(to top, var(--chrome-navigator-toolbox-separator-color), var(--chrome-navigator-toolbox-separator-color) 1px, transparent 1px);
