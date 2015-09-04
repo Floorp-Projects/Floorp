@@ -1011,7 +1011,12 @@ static bool test_fallible()
   const unsigned numArrays = 36;
   FallibleTArray<char> arrays[numArrays];
   for (size_t i = 0; i < numArrays; i++) {
-    bool success = arrays[i].SetCapacity(128 * 1024 * 1024, fallible);
+    // SetCapacity allocates the requested capacity + a header, and we want to
+    // avoid allocating more than 128MB overall because of the size padding it
+    // will cause, which depends on allocator behavior, so use 128MB - an
+    // arbitrary size larger than the array header, so that chances are good
+    // that allocations will always be 128MB.
+    bool success = arrays[i].SetCapacity(128 * 1024 * 1024 - 1024, fallible);
     if (!success) {
       // We got our OOM.  Check that it didn't come too early.
       if (i < 8) {

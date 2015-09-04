@@ -46,6 +46,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
+this.__defineGetter__("gDecimalSymbol", function() {
+    delete this.gDecimalSymbol;
+      return this.gDecimalSymbol = Number(5.4).toLocaleString().match(/\D/);
+});
+
 let localeNumberFormatCache = new Map();
 function getLocaleNumberFormat(fractionDigits) {
   // Backward compatibility: don't use localized digits
@@ -478,8 +483,13 @@ this.DownloadUtils = {
     if (aBytes === Infinity) {
       aBytes = "Infinity";
     } else {
-      aBytes = getLocaleNumberFormat(fractionDigits)
-                 .format(aBytes);
+      if (Intl) {
+        aBytes = getLocaleNumberFormat(fractionDigits)
+                   .format(aBytes);
+      } else if (gDecimalSymbol != ".") {
+        // FIXME: Fall back to the old hack, will be fixed in bug 1200494.
+        aBytes = aBytes.toFixed(fractionDigits).replace(".", gDecimalSymbol);
+      }
     }
 
     return [aBytes, gBundle.GetStringFromName(gStr.units[unitIndex])];

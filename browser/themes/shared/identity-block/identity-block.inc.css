@@ -5,7 +5,6 @@
 %endif
 
 #identity-box {
-  --identity-box-border-color: hsla(0,0%,16%,.2);
   --identity-box-selected-background-color: rgb(231,230,230);
   --identity-box-verified-color: hsl(92,100%,30%);
 %ifdef MOZ_OFFICIAL_BRANDING
@@ -18,10 +17,10 @@
 %endif
 %endif
 
-  border-inline-end: 1px solid var(--identity-box-border-color);
+  border-inline-end: 1px solid var(--urlbar-separator-color);
   border-image: linear-gradient(transparent 15%,
-                                var(--identity-box-border-color) 15%,
-                                var(--identity-box-border-color) 85%,
+                                var(--urlbar-separator-color) 15%,
+                                var(--urlbar-separator-color) 85%,
                                 transparent 85%);
   border-image-slice: 1;
   font-size: .9em;
