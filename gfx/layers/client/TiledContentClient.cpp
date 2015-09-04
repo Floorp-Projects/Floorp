@@ -1694,6 +1694,7 @@ BasicTiledLayerPaintData::ResetPaintData()
 {
   mLowPrecisionPaintCount = 0;
   mPaintFinished = false;
+  mHasTransformAnimation = false;
   mCompositionBounds.SetEmpty();
   mCriticalDisplayPort = Nothing();
 }
