@@ -10,6 +10,8 @@
 #define NOT_IMPLEMENTED MOZ_CRASH("Not implemented")
 
 #include "mozilla/RefPtr.h"
+#include <windows.h>
+#include <list>
 
 namespace mozilla {
 namespace gfx {
@@ -19,10 +21,37 @@ class Task;
 
 class Mutex {
 public:
-  Mutex() { NOT_IMPLEMENTED; }
-  ~Mutex() { NOT_IMPLEMENTED; }
-  void Lock() { NOT_IMPLEMENTED; }
-  void Unlock() { NOT_IMPLEMENTED; }
+  Mutex() {
+    ::InitializeCriticalSection(&mMutex);
+#ifdef DEBUG
+    mOwner = 0;
+#endif
+  }
+
+  ~Mutex() { ::DeleteCriticalSection(&mMutex); }
+
+  void Lock() {
+    ::EnterCriticalSection(&mMutex);
+#ifdef DEBUG
+    MOZ_ASSERT(mOwner != GetCurrentThreadId(), "recursive locking");
+    mOwner = GetCurrentThreadId();
+#endif
+  }
+
+  void Unlock() {
+#ifdef DEBUG
+    // GetCurrentThreadId cannot return 0: it is not a valid thread id
+    MOZ_ASSERT(mOwner == GetCurrentThreadId(), "mismatched lock/unlock");
+    mOwner = 0;
+#endif
+    ::LeaveCriticalSection(&mMutex);
+  }
+
+protected:
+  CRITICAL_SECTION mMutex;
+#ifdef DEBUG
+  DWORD mOwner;
+#endif
 };
 
 // The public interface of this class must remain identical to its equivalent
@@ -34,14 +63,43 @@ public:
     NON_BLOCKING
   };
 
-  bool WaitForTask(Task*& aOutCommands) { NOT_IMPLEMENTED; }
-  bool PopTask(Task*& aOutCommands, AccessType aAccess) { NOT_IMPLEMENTED; }
-  void SubmitTask(Task* aCommands) { NOT_IMPLEMENTED; }
-  void ShutDown() { NOT_IMPLEMENTED; }
-  size_t NumTasks() { NOT_IMPLEMENTED;  }
-  bool IsEmpty() { NOT_IMPLEMENTED; }
-  void RegisterThread() { NOT_IMPLEMENTED; }
-  void UnregisterThread() { NOT_IMPLEMENTED; }
+  MultiThreadedTaskQueue()
+  : mThreadsCount(0)
+  , mShuttingDown(false)
+  {
+    mAvailableEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    mShutdownEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
+  }
+
+  ~MultiThreadedTaskQueue()
+  {
+    ::CloseHandle(mAvailableEvent);
+    ::CloseHandle(mShutdownEvent);
+  }
+
+  bool WaitForTask(Task*& aOutTask) { return PopTask(aOutTask, BLOCKING); }
+
+  bool PopTask(Task*& aOutTask, AccessType aAccess);
+
+  void SubmitTask(Task* aTask);
+
+  void ShutDown();
+
+  size_t NumTasks();
+
+  bool IsEmpty();
+
+  void RegisterThread();
+
+  void UnregisterThread();
+
+protected:
+  std::list<Task*> mTasks;
+  Mutex mMutex;
+  HANDLE mAvailableEvent;
+  HANDLE mShutdownEvent;
+  int32_t mThreadsCount;
+  bool mShuttingDown;
 
   friend class WorkerThread;
 };
@@ -54,19 +112,18 @@ class EventObject : public external::AtomicRefCounted<EventObject>
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(EventObject)
 
-  EventObject() { NOT_IMPLEMENTED; }
-  ~EventObject() { NOT_IMPLEMENTED; }
-  void Wait() { NOT_IMPLEMENTED; }
-  bool Peak() { NOT_IMPLEMENTED; }
-  void Set() { NOT_IMPLEMENTED; }
-};
+  EventObject() { mEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr); }
 
-// The public interface of this class must remain identical to its equivalent
-// in TaskScheduler_posix.h
-class WorkerThread {
-public:
-  WorkerThread(MultiThreadedTaskQueue* aTaskQueue) { NOT_IMPLEMENTED; }
-  void Run();
+  ~EventObject() { ::CloseHandle(mEvent); }
+
+  void Wait() { ::WaitForSingleObject(mEvent, INFINITE); }
+
+  bool Peak() { return ::WaitForSingleObject(mEvent, 0) == WAIT_OBJECT_0; }
+
+  void Set() { ::SetEvent(mEvent); }
+protected:
+  // TODO: it's expensive to create events so we should try to reuse them
+  HANDLE mEvent;
 };
 
 } // namespace
