@@ -404,15 +404,13 @@ MP3TrackDemuxer::FindNextFrame() {
     NS_ENSURE_TRUE(mOffset + read > mOffset, MediaByteRange(0, 0));
     mOffset += read;
     bufferEnd = buffer + read;
-    frameBeg = mParser.Parse(buffer, bufferEnd);
+    const FrameParserResult parseResults = mParser.Parse(buffer, bufferEnd);
+    frameBeg = parseResults.mBufferPos;
 
-    if (frameBeg > bufferEnd) {
-      // We need to skip an ID3 tag which stretches beyond the current buffer.
-      const uint32_t bytesToSkip = frameBeg - bufferEnd;
-      NS_ENSURE_TRUE(mOffset + bytesToSkip > mOffset, MediaByteRange(0, 0));
-      mOffset += bytesToSkip;
-      frameBeg = bufferEnd;
-    }
+    // If mBytesToSkip is > 0, this skips the rest of an ID3 tag which stretches
+    // beyond the current buffer.
+    NS_ENSURE_TRUE(mOffset + parseResults.mBytesToSkip >= mOffset, MediaByteRange(0, 0));
+    mOffset += parseResults.mBytesToSkip;
   }
 
   if (frameBeg == bufferEnd || !mParser.CurrentFrame().Length()) {
@@ -613,10 +611,10 @@ FrameParser::VBRInfo() const {
   return mVBRHeader;
 }
 
-const uint8_t*
+FrameParserResult
 FrameParser::Parse(const uint8_t* aBeg, const uint8_t* aEnd) {
   if (!aBeg || !aEnd || aBeg >= aEnd) {
-    return aEnd;
+    return { aEnd, 0 };
   }
 
   if (!mID3Parser.Header().Size() && !mFirstFrame.Length()) {
@@ -625,9 +623,16 @@ FrameParser::Parse(const uint8_t* aBeg, const uint8_t* aEnd) {
     // TODO: should we try to read ID3 tags at end of file/mid-stream, too?
     const uint8_t* id3Beg = mID3Parser.Parse(aBeg, aEnd);
     if (id3Beg != aEnd) {
-      // ID3 headers found, skip past them.
-      aBeg = id3Beg + ID3Parser::ID3Header::SIZE + mID3Parser.Header().Size() +
-             mID3Parser.Header().FooterSize();
+      // ID3 tag found, skip past it.
+      const uint32_t tagSize = ID3Parser::ID3Header::SIZE + mID3Parser.Header().Size() +
+                               mID3Parser.Header().FooterSize();
+      const uint32_t remainingBuffer = aEnd - id3Beg;
+      if (tagSize > remainingBuffer) {
+        // Skipping across the ID3 tag would take us past the end of the buffer, therefore we
+        // return immediately and let the calling function handle skipping the rest of the tag.
+        return { aEnd, tagSize - remainingBuffer };
+      }
+      aBeg = id3Beg + tagSize;
     }
   }
 
@@ -642,11 +647,9 @@ FrameParser::Parse(const uint8_t* aBeg, const uint8_t* aEnd) {
     }
     // Move to the frame header begin to allow for whole-frame parsing.
     aBeg -= FrameHeader::SIZE;
+    return { aBeg, 0 };
   }
-  // If no headers (both ID3 and MP3) have been found, this is equivalent to returning aEnd.
-  // If we have found a large ID3 tag and want to skip past it, aBeg will point past the
-  // end of the buffer, which needs to be handled by the calling function.
-  return aBeg;
+  return { aEnd, 0 };
 }
 
 // FrameParser::Header
