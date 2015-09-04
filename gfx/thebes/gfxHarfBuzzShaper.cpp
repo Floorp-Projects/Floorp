@@ -1024,13 +1024,6 @@ HBGetCombiningClass(hb_unicode_funcs_t *ufuncs, hb_codepoint_t aCh,
     return hb_unicode_combining_class_t(GetCombiningClass(aCh));
 }
 
-static unsigned int
-HBGetEastAsianWidth(hb_unicode_funcs_t *ufuncs, hb_codepoint_t aCh,
-                    void *user_data)
-{
-    return GetEastAsianWidth(aCh);
-}
-
 // Hebrew presentation forms with dagesh, for characters 0x05D0..0x05EA;
 // note that some letters do not have a dagesh presForm encoded
 static const char16_t sDageshForms[0x05EA - 0x05D0 + 1] = {
@@ -1303,9 +1296,6 @@ gfxHarfBuzzShaper::Initialize()
                                                    nullptr, nullptr);
         hb_unicode_funcs_set_combining_class_func(sHBUnicodeFuncs,
                                                   HBGetCombiningClass,
-                                                  nullptr, nullptr);
-        hb_unicode_funcs_set_eastasian_width_func(sHBUnicodeFuncs,
-                                                  HBGetEastAsianWidth,
                                                   nullptr, nullptr);
         hb_unicode_funcs_set_compose_func(sHBUnicodeFuncs,
                                           HBUnicodeCompose,
