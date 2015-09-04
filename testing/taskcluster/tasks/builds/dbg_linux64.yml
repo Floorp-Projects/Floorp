@@ -1,22 +1,10 @@
 $inherits:
-  from: 'tasks/builds/opt_linux64.yml'
-  variables:
-    build_name: 'linux64'
-    build_type: 'dbg'
+  from: 'tasks/builds/dbg_linux64_clobber.yml'
 task:
-  metadata:
-      name: '[TC] Linux64 Dbg'
-      description: 'Linux64 Dbg'
-
-  workerType: dbg-linux64
+  # same as clobber, but with a cached workspace
+  scopes:
+    - 'docker-worker:cache:build-linux64-c6-workspace'
 
   payload:
-    env:
-      MH_CUSTOM_BUILD_VARIANT_CFG: 'debug'
-  extra:
-    treeherder:
-      groupSymbol: tc
-      groupName: Submitted by taskcluster
-      symbol: B
-      collection:
-        debug: true
+    cache:
+      build-linux64-c6-workspace: '/home/worker/workspace'
