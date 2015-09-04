@@ -296,12 +296,11 @@ MediaStreamGraphImpl::StreamReadyToFinish(MediaStream* aStream)
 }
 
 void
-MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime,
-                                                  GraphTime aNextCurrentTime)
+MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime)
 {
   for (MediaStream* stream : AllStreams()) {
     // Calculate blocked time and fire Blocked/Unblocked events
-    GraphTime blockedTime = aNextCurrentTime - stream->mStartBlocking;
+    GraphTime blockedTime = mStateComputedTime - stream->mStartBlocking;
     NS_ASSERTION(blockedTime >= 0, "Error in blocking time");
 
     if (stream->mStartBlocking > aPrevCurrentTime && stream->mNotifiedBlocked) {
@@ -311,7 +310,7 @@ MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime,
       }
       stream->mNotifiedBlocked = false;
     }
-    if (stream->mStartBlocking < aNextCurrentTime && !stream->mNotifiedBlocked) {
+    if (stream->mStartBlocking < mStateComputedTime && !stream->mNotifiedBlocked) {
       for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
         MediaStreamListener* l = stream->mListeners[j];
         l->NotifyBlockingChanged(this, MediaStreamListener::BLOCKED);
@@ -319,7 +318,7 @@ MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime,
       stream->mNotifiedBlocked = true;
     }
 
-    stream->AdvanceTimeVaryingValuesToCurrentTime(aNextCurrentTime,
+    stream->AdvanceTimeVaryingValuesToCurrentTime(mStateComputedTime,
                                                   blockedTime);
 
     STREAM_LOG(LogLevel::Verbose,
@@ -1262,7 +1261,7 @@ MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd)
 
   mProcessedTime = stateEnd;
 
-  UpdateCurrentTimeForStreams(stateFrom, stateEnd);
+  UpdateCurrentTimeForStreams(stateFrom);
 
   return UpdateMainThreadState();
 }
