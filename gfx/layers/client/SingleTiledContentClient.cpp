@@ -45,6 +45,7 @@ ClientSingleTiledLayerBuffer::ClientSingleTiledLayerBuffer(ClientTiledPaintedLay
                                                            ClientLayerManager* aManager)
   : ClientTiledLayerBuffer(aPaintedLayer, aCompositableClient)
   , mManager(aManager)
+  , mWasLastPaintProgressive(false)
 {
 }
 
@@ -89,7 +90,8 @@ ClientSingleTiledLayerBuffer::GetSurfaceDescriptorTiles()
                                 0, 0, 1, 1,
                                 1.0,
                                 mFrameResolution.xScale,
-                                mFrameResolution.yScale);
+                                mFrameResolution.yScale,
+                                mWasLastPaintProgressive);
 }
 
 already_AddRefed<TextureClient>
@@ -105,8 +107,11 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
                                           const nsIntRegion& aPaintRegion,
                                           const nsIntRegion& aDirtyRegion,
                                           LayerManager::DrawPaintedLayerCallback aCallback,
-                                          void* aCallbackData)
+                                          void* aCallbackData,
+                                          bool aIsProgressive)
 {
+  mWasLastPaintProgressive = aIsProgressive;
+
   // Compare layer visible region size to current backbuffer size, discard if not matching.
   IntSize size = mPaintedLayer->GetVisibleRegion().GetBounds().Size();
   IntPoint origin = mPaintedLayer->GetVisibleRegion().GetBounds().TopLeft();
