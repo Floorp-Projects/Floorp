@@ -2282,6 +2282,21 @@ nsGridContainerFrame::LineRange::ToPositionAndLength(
   *aLength = length;
 }
 
+nscoord
+nsGridContainerFrame::LineRange::ToLength(
+  const nsTArray<TrackSize>& aTrackSizes) const
+{
+  MOZ_ASSERT(mStart != kAutoLine && mEnd != kAutoLine,
+             "expected a definite LineRange");
+  nscoord length = 0;
+  const uint32_t end = mEnd;
+  MOZ_ASSERT(end <= aTrackSizes.Length(), "aTrackSizes isn't large enough");
+  for (uint32_t i = mStart; i < end; ++i) {
+    length += aTrackSizes[i].mBase;
+  }
+  return length;
+}
+
 void
 nsGridContainerFrame::LineRange::ToPositionAndLengthForAbsPos(
   const nsTArray<TrackSize>& aTrackSizes, nscoord aGridOrigin,
@@ -2500,6 +2515,56 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   FinishAndStoreOverflow(&aDesiredSize);
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+}
+
+nscoord
+nsGridContainerFrame::IntrinsicISize(nsRenderingContext* aRenderingContext,
+                                     IntrinsicISizeType  aConstraint)
+{
+  // Calculate the sum of column sizes under aConstraint.
+  // http://dev.w3.org/csswg/css-grid/#intrinsic-sizes
+  GridReflowState state(this, *aRenderingContext);
+  InitImplicitNamedAreas(state.mGridStyle); // XXX optimize
+  PlaceGridItems(state);                    // XXX optimize
+  if (mGridColEnd == 0) {
+    return 0;
+  }
+  state.mCols.Initialize(state.mColFunctions, mGridColEnd,
+                         NS_UNCONSTRAINEDSIZE);
+  state.mIter.Reset();
+  state.mCols.CalculateSizes(state, mGridItems, state.mColFunctions,
+                             NS_UNCONSTRAINEDSIZE, &GridArea::mCols,
+                             aConstraint);
+  TranslatedLineRange allTracks(0, mGridColEnd);
+  return allTracks.ToLength(state.mCols.mSizes);
+}
+
+nscoord
+nsGridContainerFrame::GetMinISize(nsRenderingContext* aRC)
+{
+  DISPLAY_MIN_WIDTH(this, mCachedMinISize);
+  if (mCachedMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
+    mCachedMinISize = IntrinsicISize(aRC, nsLayoutUtils::MIN_ISIZE);
+  }
+  return mCachedMinISize;
+}
+
+nscoord
+nsGridContainerFrame::GetPrefISize(nsRenderingContext* aRC)
+{
+  DISPLAY_PREF_WIDTH(this, mCachedPrefISize);
+  if (mCachedPrefISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
+    mCachedPrefISize = IntrinsicISize(aRC, nsLayoutUtils::PREF_ISIZE);
+  }
+  return mCachedPrefISize;
+}
+
+void
+nsGridContainerFrame::MarkIntrinsicISizesDirty()
+{
+  mCachedMinISize = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mCachedPrefISize = NS_INTRINSIC_WIDTH_UNKNOWN;
+  nsContainerFrame::MarkIntrinsicISizesDirty();
 }
 
 nsIAtom*
