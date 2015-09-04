@@ -260,6 +260,7 @@ ModuleObject::create(ExclusiveContext* cx)
 void
 ModuleObject::init(HandleScript script)
 {
+    MOZ_ASSERT(!script->enclosingStaticScope());
     initReservedSlot(ScriptSlot, PrivateValue(script));
 }
 
@@ -283,6 +284,14 @@ ModuleObject::initImportExportData(HandleArrayObject requestedModules,
     initReservedSlot(StarExportEntriesSlot, ObjectValue(*starExportEntries));
 }
 
+bool
+ModuleObject::hasScript() const
+{
+    // When modules are parsed via the Reflect.parse() API, the module object
+    // doesn't have a script.
+    return !getReservedSlot(ScriptSlot).isUndefined();
+}
+
 JSScript*
 ModuleObject::script() const
 {
@@ -295,13 +304,24 @@ ModuleObject::initialEnvironment() const
     return getReservedSlot(InitialEnvironmentSlot).toObject().as<ModuleEnvironmentObject>();
 }
 
+JSObject*
+ModuleObject::enclosingStaticScope() const
+{
+    // A ModuleObject is always the last thing on the scope chain before the global.
+    // TODO: This may no longer be true when we get top-level lexical scopes.
+    MOZ_ASSERT_IF(hasScript(), !script()->enclosingStaticScope());
+    return nullptr;
+}
+
 /* static */ void
 ModuleObject::trace(JSTracer* trc, JSObject* obj)
 {
     ModuleObject& module = obj->as<ModuleObject>();
-    JSScript* script = module.script();
-    TraceManuallyBarrieredEdge(trc, &script, "Module script");
-    module.setReservedSlot(ScriptSlot, PrivateValue(script));
+    if (module.hasScript()) {
+        JSScript* script = module.script();
+        TraceManuallyBarrieredEdge(trc, &script, "Module script");
+        module.setReservedSlot(ScriptSlot, PrivateValue(script));
+    }
 }
 
 DEFINE_GETTER_FUNCTIONS(ModuleObject, initialEnvironment, InitialEnvironmentSlot)
