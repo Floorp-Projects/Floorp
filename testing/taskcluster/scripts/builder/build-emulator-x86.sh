@@ -63,5 +63,6 @@ done
 mv $gecko_objdir/dist/test_packages_tc.json $HOME/artifacts/test_packages.json
 mv $WORKSPACE/B2G/out/emulator.tar.gz $HOME/artifacts/emulator.tar.gz
 mv $gecko_objdir/dist/b2g-*.crashreporter-symbols.zip $HOME/artifacts/b2g-crashreporter-symbols.zip
+mv $gecko_objdir/dist/mozharness.zip $HOME/artifacts/mozharness.zip
 
 ccache -s

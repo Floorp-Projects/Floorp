@@ -430,7 +430,9 @@ package-tests:
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 # Exclude harness specific directories when generating the common zip.
 	$(MKDIR) -p $(abspath $(DIST))/$(PKG_PATH) && \
-	cd $(PKG_STAGE) && \
+	cd $(topsrcdir)/testing/ && \
+	  zip -rq9D $(abspath $(DIST))/$(PKG_PATH)mozharness.zip mozharness && \
+	cd $(abspath $(PKG_STAGE)) && \
 	  zip -rq9D '$(abspath $(DIST))/$(PKG_PATH)$(TEST_PACKAGE)' \
 	  * -x \*/.mkdir.done \*.pyc $(foreach name,$(TEST_PKGS),$(name)\*) && \
 	$(foreach name,$(TEST_PKGS),rm -f '$(DIST)/$(PKG_PATH)$(PKG_BASENAME).'$(name)'.tests.zip' && \

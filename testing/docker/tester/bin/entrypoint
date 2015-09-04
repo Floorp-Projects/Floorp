@@ -1,8 +1,5 @@
 #! /bin/bash -ex
 
-test $MOZHARNESS_REPOSITORY # mozharness repository
-test $MOZHARNESS_REV # mozharness revision
-
 # This file is intended to be used as the "entrypoint" or first command in the
 # docker image. It uses "eval" so it takes place of the usual /bin/bash -c
 # <stuff> conventions you need when running a docker image. Primarily it
@@ -14,13 +11,11 @@ export DISPLAY=:0
 
 pulseaudio --start
 
-# First check if the mozharness directory is available. This is intended to be
-# used locally in development to test mozharness changes:
-#
-#   $ docker -v your_mozharness:/home/worker/mozharness ...
-#
-if [ ! -d mozharness ]; then
-  buildbot_step 'Checkout mozharness' tc-vcs checkout mozharness $MOZHARNESS_REPOSITORY $MOZHARNESS_REPOSITORY $MOZHARNESS_REV
+# Download mozharness only when $MOZHARNESS_URL is defined
+if [ ! -z "$MOZHARNESS_URL" ]; then
+  buildbot_step 'Download mozharness' wget -c $MOZHARNESS_URL && \
+    unzip -q mozharness.zip && \
+    rm mozharness.zip
 fi
 
 buildbot_step 'Running tests' $@
