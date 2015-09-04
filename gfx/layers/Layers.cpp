@@ -1737,7 +1737,7 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   }
   if (GetIsFixedPosition()) {
     LayerPoint anchor = GetFixedPositionAnchor();
-    aStream << nsPrintfCString(" [isFixedPosition scrollId=%d anchor=%s]",
+    aStream << nsPrintfCString(" [isFixedPosition scrollId=%lld anchor=%s]",
                      GetFixedPositionScrollContainerId(),
                      ToString(anchor).c_str()).get();
   }
