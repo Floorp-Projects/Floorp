@@ -167,12 +167,17 @@ public:
     }
 #endif
   }
-  /*
-   * This does the actual iteration: Message processing, MediaStream ordering,
-   * blocking computation and processing.
-   */
-  void DoIteration();
 
+  void MaybeProduceMemoryReport();
+
+  /**
+   * Returns true if this MediaStreamGraph should keep running
+   */
+  bool UpdateMainThreadState();
+
+  /**
+   * Returns true if this MediaStreamGraph should keep running
+   */
   bool OneIteration(GraphTime aStateEnd);
 
   bool Running() const
