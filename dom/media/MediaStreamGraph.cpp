@@ -268,34 +268,6 @@ MediaStreamGraphImpl::IterationEnd() const
 }
 
 void
-MediaStreamGraphImpl::StreamNotifyOutput(MediaStream* aStream)
-{
-  for (uint32_t j = 0; j < aStream->mListeners.Length(); ++j) {
-    MediaStreamListener* l = aStream->mListeners[j];
-    l->NotifyOutput(this, mProcessedTime);
-  }
-}
-
-void
-MediaStreamGraphImpl::StreamReadyToFinish(MediaStream* aStream)
-{
-  MOZ_ASSERT(aStream->mFinished);
-  MOZ_ASSERT(!aStream->mNotifiedFinished);
-
-  // The stream is fully finished when all of its track data has been played
-  // out.
-  if (mProcessedTime >=
-      aStream->StreamTimeToGraphTime(aStream->GetStreamBuffer().GetAllTracksEnd()))  {
-    aStream->mNotifiedFinished = true;
-    SetStreamOrderDirty();
-    for (uint32_t j = 0; j < aStream->mListeners.Length(); ++j) {
-      MediaStreamListener* l = aStream->mListeners[j];
-      l->NotifyEvent(this, MediaStreamListener::EVENT_FINISHED);
-    }
-  }
-}
-
-void
 MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime)
 {
   for (MediaStream* stream : AllStreams()) {
@@ -326,16 +298,26 @@ MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime)
                 MediaTimeToSeconds(stream->mBufferStartTime),
                 MediaTimeToSeconds(blockedTime)));
 
-    bool streamHasOutput = stream->mStartBlocking > aPrevCurrentTime;
-    NS_ASSERTION(!streamHasOutput || !stream->mNotifiedFinished,
-      "Shouldn't have already notified of finish *and* have output!");
-
-    if (streamHasOutput) {
-      StreamNotifyOutput(stream);
+    if (stream->mStartBlocking > aPrevCurrentTime) {
+      NS_ASSERTION(!stream->mNotifiedFinished,
+        "Shouldn't have already notified of finish *and* have output!");
+      for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
+        MediaStreamListener* l = stream->mListeners[j];
+        l->NotifyOutput(this, mProcessedTime);
+      }
     }
 
-    if (stream->mFinished && !stream->mNotifiedFinished) {
-      StreamReadyToFinish(stream);
+    // The stream is fully finished when all of its track data has been played
+    // out.
+    if (stream->mFinished && !stream->mNotifiedFinished &&
+        mProcessedTime >=
+          stream->StreamTimeToGraphTime(stream->GetStreamBuffer().GetAllTracksEnd()))  {
+      stream->mNotifiedFinished = true;
+      SetStreamOrderDirty();
+      for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
+        MediaStreamListener* l = stream->mListeners[j];
+        l->NotifyEvent(this, MediaStreamListener::EVENT_FINISHED);
+      }
     }
   }
 }

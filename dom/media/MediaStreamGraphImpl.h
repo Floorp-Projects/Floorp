@@ -744,10 +744,6 @@ public:
 private:
   virtual ~MediaStreamGraphImpl();
 
-  void StreamNotifyOutput(MediaStream* aStream);
-
-  void StreamReadyToFinish(MediaStream* aStream);
-
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
   /**
