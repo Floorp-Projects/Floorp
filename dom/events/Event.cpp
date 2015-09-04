@@ -758,7 +758,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
           abuse = openControlled;
         }
         break;
-      case NS_XUL_COMMAND:
+      case eXULCommand:
         abuse = openControlled;
         break;
       default:
