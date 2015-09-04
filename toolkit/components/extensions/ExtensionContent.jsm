@@ -483,6 +483,7 @@ var ExtensionManager = {
         extension = new BrowserExtensionContent(data);
         this.extensions.set(data.id, extension);
         DocumentManager.startupExtension(data.id);
+        Services.cpmm.sendAsyncMessage("Extension:StartupComplete");
         break;
       }
 
