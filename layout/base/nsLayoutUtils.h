@@ -1342,26 +1342,6 @@ public:
                                             IntrinsicISizeType    aType,
                                             uint32_t              aFlags = 0);
 
-  /**
-   * This function increases an initial intrinsic size, 'aCurrent', according
-   * to the given 'aPercent', such that the size-increase makes up exactly
-   * 'aPercent' percent of the returned value.  If 'aPercent' is less than
-   * or equal to zero the original 'aCurrent' value is returned. If 'aPercent'
-   * is greater than or equal to 1.0 the value nscoord_MAX is returned.
-   * (We don't increase the size if MIN_ISIZE is passed in, though.)
-   */
-  static nscoord AddPercents(IntrinsicISizeType aType, nscoord aCurrent,
-                             float aPercent)
-  {
-    if (aPercent > 0.0f && aType == nsLayoutUtils::PREF_ISIZE) {
-      // XXX Should we also consider percentages for min widths, up to a
-      // limit?
-      return MOZ_UNLIKELY(aPercent >= 1.0f) ? nscoord_MAX
-        : NSToCoordRound(float(aCurrent) / (1.0f - aPercent));
-    }
-    return aCurrent;
-  }
-
   /*
    * Convert nsStyleCoord to nscoord when percentages depend on the
    * containing block size.
