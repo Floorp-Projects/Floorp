@@ -560,7 +560,7 @@ void nsMenuX::LoadSubMenu(nsIContent* inMenuContent)
 bool nsMenuX::OnOpen()
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetMouseEvent event(true, NS_XUL_POPUP_SHOWING, nullptr,
+  WidgetMouseEvent event(true, eXULPopupShowing, nullptr,
                          WidgetMouseEvent::eReal);
   
   nsCOMPtr<nsIContent> popupContent;
@@ -577,7 +577,7 @@ bool nsMenuX::OnOpen()
   // must potentially be updated.
 
   // Get new popup content first since it might have changed as a result of the
-  // NS_XUL_POPUP_SHOWING event above.
+  // eXULPopupShowing event above.
   GetMenuPopupContent(getter_AddRefs(popupContent));
   if (!popupContent)
     return true;
