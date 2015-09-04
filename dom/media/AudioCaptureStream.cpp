@@ -65,8 +65,7 @@ AudioCaptureStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
   // HTMLMediaElement with a stream as source, or an AudioContext), a cycle
   // situation occur. This can work if it's an AudioContext with at least one
   // DelayNode, but the MSG will mute the whole cycle otherwise.
-  bool blocked = mFinished || mBlocked.GetAt(aFrom);
-  if (blocked || InMutedCycle() || inputCount == 0) {
+  if (mFinished || InMutedCycle() || inputCount == 0) {
     track->Get<AudioSegment>()->AppendNullData(aTo - aFrom);
   } else {
     // We mix down all the tracks of all inputs, to a stereo track. Everything
