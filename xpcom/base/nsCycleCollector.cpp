@@ -888,6 +888,8 @@ public:
     // pointers are non-owning.
     n += mWeakMaps.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
+    n += mPtrToNodeMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
+
     return n;
   }
 };
