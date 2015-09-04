@@ -469,10 +469,6 @@ panel[noactions] > richlistbox > richlistitem.overridable-action > .ac-url-box >
   display: -moz-stack;
 }
 
-searchbar[oneoffui] {
-  -moz-binding: url("chrome://browser/content/search/search.xml#searchbar-flare") !important;
-}
-
 #PopupAutoCompleteRichResult {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-rich-result-popup");
 }
