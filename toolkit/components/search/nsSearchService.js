@@ -4916,6 +4916,14 @@ SearchService.prototype = {
       this._currentEngine = this._originalDefaultEngine;
     if (!this._currentEngine || this._currentEngine.hidden)
       this._currentEngine = this._getSortedEngines(false)[0];
+
+    if (!this._currentEngine) {
+      // Last resort fallback: unhide the original default engine.
+      this._currentEngine = this._originalDefaultEngine;
+      if (this._currentEngine)
+        this._currentEngine.hidden = false;
+    }
+
     return this._currentEngine;
   },
 
