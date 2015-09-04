@@ -716,7 +716,7 @@ NON_IDL_EVENT(broadcast,
               EventNameType_XUL,
               eBasicEventClass)
 NON_IDL_EVENT(commandupdate,
-              NS_XUL_COMMAND_UPDATE,
+              eXULCommandUpdate,
               EventNameType_XUL,
               eBasicEventClass)
 NON_IDL_EVENT(dragexit,
