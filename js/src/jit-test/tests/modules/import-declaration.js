@@ -203,12 +203,12 @@ program([
             ),
             importSpecifier(
                 ident("c"),
-                ident("d")
+                ident("f")
             ),
         ],
         lit("e")
     )
-]).assert(parseAsModule("import d, { a as b, c as d } from 'e'"));
+]).assert(parseAsModule("import d, { a as b, c as f } from 'e'"));
 
 program([
     importDeclaration(

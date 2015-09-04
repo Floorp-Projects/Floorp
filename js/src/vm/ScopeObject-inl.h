@@ -147,6 +147,7 @@ StaticScopeIter<allowGC>::type() const
         return NonSyntactic;
     if (obj->template is<ModuleObject>())
         return Module;
+    MOZ_ASSERT(obj->template is<JSFunction>());
     return Function;
 }
 

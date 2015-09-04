@@ -144,6 +144,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
     emittingRunOnceLambda(false),
     insideEval(insideEval),
     insideNonGlobalEval(insideNonGlobalEval),
+    insideModule(false),
     emitterMode(emitterMode)
 {
     MOZ_ASSERT_IF(evalCaller, insideEval);
@@ -1428,6 +1429,7 @@ BytecodeEmitter::isAliasedName(BytecodeEmitter* bceOfDef, ParseNode* pn)
       case Definition::PLACEHOLDER:
       case Definition::NAMED_LAMBDA:
       case Definition::MISSING:
+      case Definition::IMPORT:
         MOZ_CRASH("unexpected dn->kind");
     }
     return false;
@@ -1588,6 +1590,11 @@ BytecodeEmitter::tryConvertFreeName(ParseNode* pn)
     // Unbound names aren't recognizable global-property references if the
     // script is inside a non-global eval call.
     if (insideNonGlobalEval)
+        return false;
+
+    // If we are inside a module then unbound names in a function may refer to
+    // imports, so we can't use GNAME ops here.
+    if (insideModule)
         return false;
 
     // Skip trying to use GNAME ops if we know our script has a non-syntactic
@@ -1841,10 +1848,11 @@ BytecodeEmitter::bindNameToSlotHelper(ParseNode* pn)
       }
 
       case Definition::PLACEHOLDER:
+      case Definition::IMPORT:
         return true;
 
       case Definition::MISSING:
-        MOZ_CRASH("missing");
+        MOZ_CRASH("unexpected definition kind");
     }
 
     // The hop count is the number of dynamic scopes during execution that must
@@ -1862,7 +1870,7 @@ BytecodeEmitter::bindNameToSlotHelper(ParseNode* pn)
      * alive.), ScopeCoordinateToTypeSet is not able to find the var/let's
      * associated TypeSet.
      */
-    if (bceOfDef != this && !bceOfDef->sc->isFunctionBox())
+    if (bceOfDef != this && bceOfDef->sc->isGlobalContext())
         return true;
 
     if (!pn->pn_scopecoord.set(parser->tokenStream, hops, slot))
@@ -3355,6 +3363,16 @@ BytecodeEmitter::emitYieldOp(JSOp op)
     return emit1(JSOP_DEBUGAFTERYIELD);
 }
 
+static bool
+IsModuleOnScopeChain(JSObject* obj)
+{
+    for (StaticScopeIter<NoGC> ssi(obj); !ssi.done(); ssi++) {
+        if (ssi.type() == StaticScopeIter<NoGC>::Module)
+            return true;
+    }
+    return false;
+}
+
 bool
 BytecodeEmitter::emitFunctionScript(ParseNode* body)
 {
@@ -3373,6 +3391,9 @@ BytecodeEmitter::emitFunctionScript(ParseNode* body)
     // Link the function and the script to each other, so that StaticScopeIter
     // may walk the scope chain of currently compiling scripts.
     JSScript::linkToFunctionFromEmitter(cx, script, funbox);
+
+    // Determine whether the function is defined inside a module.
+    insideModule = IsModuleOnScopeChain(sc->staticScope());
 
     if (funbox->argumentsHasLocalBinding()) {
         MOZ_ASSERT(offset() == 0);  /* See JSScript::argumentsBytecode. */
@@ -3484,6 +3505,8 @@ BytecodeEmitter::emitFunctionScript(ParseNode* body)
 bool
 BytecodeEmitter::emitModuleScript(ParseNode* body)
 {
+    insideModule = true;
+
     if (!updateLocalsToFrameSlots())
         return false;
 
@@ -5732,18 +5755,18 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
     MOZ_ASSERT_IF(fun->isInterpretedLazy(), fun->lazyScript());
 
     /*
-     * Set the EMITTEDFUNCTION flag in function definitions once they have
-     * been emitted. Function definitions that need hoisting to the top of the
+     * Set the |wasEmitted| flag in the funbox once the function has been
+     * emitted. Function definitions that need hoisting to the top of the
      * function will be seen by emitFunction in two places.
      */
-    if (pn->pn_dflags & PND_EMITTEDFUNCTION) {
+    if (funbox->wasEmitted) {
         MOZ_ASSERT_IF(fun->hasScript(), fun->nonLazyScript());
         MOZ_ASSERT(pn->functionIsHoisted());
         MOZ_ASSERT(sc->isFunctionBox());
         return true;
     }
 
-    pn->pn_dflags |= PND_EMITTEDFUNCTION;
+    funbox->wasEmitted = true;
 
     /*
      * Mark as singletons any function which will only be executed once, or
