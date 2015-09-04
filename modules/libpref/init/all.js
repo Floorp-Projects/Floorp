@@ -4044,37 +4044,6 @@ pref("zoom.minPercent", 30);
 pref("zoom.maxPercent", 300);
 pref("toolkit.zoomManager.zoomValues", ".3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2,2.4,3");
 
-/**
- * Specify whether or not the browser should generate a reflow event on zoom.
- * For a pan-and-zoom ui on mobile, it is sometimes desirable for a zoom event
- * to limit the max line box width of text in order to enable easier reading
- * of large amounts of text.
- *
- * If enabled, this will limit the max line box width of all text on a page to
- * the viewport width (also generating a reflow), after a zoom event occurs.
- *
- * By default, this is not enabled.
- */
-pref("browser.zoom.reflowOnZoom", false);
-
-/**
- * Specifies the number of milliseconds to wait after a given reflow-on-zoom
- * operation has completed before allowing another one to be triggered. This
- * is to prevent a buildup of reflow-zoom events.
- */
-pref("browser.zoom.reflowZoom.reflowTimeout", 500);
-
-/**
- * Controls whether or not the reflow-on-zoom behavior happens on page load.
- * This can be enabled in conjunction with the above preference (reflowOnZoom),
- * but has no effect if browser.zoom.reflowOnZoom is disabled.
- *
- * Note that this should be turned off only in cases where debugging of the
- * reflow-on-zoom feature is necessary, and enabling the feature during
- * a page load inhbits this debugging.
- */
-pref("browser.zoom.reflowZoom.reflowTextOnPageLoad", true);
-
 //
 // Image-related prefs
 //

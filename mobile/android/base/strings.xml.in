@@ -228,7 +228,6 @@
   <string name="pref_voice_input_summary">&pref_voice_input_summary;</string>
   <string name="pref_qrcode_enabled">&pref_qrcode_enabled;</string>
   <string name="pref_qrcode_enabled_summary">&pref_qrcode_enabled_summary;</string>
-  <string name="pref_reflow_on_zoom">&pref_reflow_on_zoom4;</string>
   <string name="pref_restore">&pref_restore;</string>
   <string name="pref_restore_always">&pref_restore_always;</string>
   <string name="pref_restore_quit">&pref_restore_quit;</string>
