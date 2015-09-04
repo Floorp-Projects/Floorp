@@ -250,10 +250,6 @@ public:
    * Update "have enough data" flags in aStream.
    */
   void UpdateBufferSufficiencyState(SourceMediaStream* aStream);
-  /**
-   * Mark aStream and all its inputs (recursively) as consumed.
-   */
-  static void MarkConsumed(MediaStream* aStream);
 
   /**
    * Called when a suspend/resume/close operation has been completed, on the
