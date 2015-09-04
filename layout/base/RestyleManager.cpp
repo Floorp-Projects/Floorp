@@ -2770,22 +2770,213 @@ private:
  * mSelectorsForDescendants.  If the element does match one of the selectors,
  * we cause it to be restyled with eRestyle_Self.
  *
- * We traverse down the flattened tree unless we find an element that
- * (a) already has a pending restyle, or (b) does not have a pending restyle
- * but does match one of the selectors in mSelectorsForDescendants.  For (a),
- * we add the current mSelectorsForDescendants into the existing restyle data,
- * and for (b) we add a new pending restyle with that array.  So in both
- * cases, when we come to restyling this element back up in
- * ProcessPendingRestyles, we will again find the eRestyle_SomeDescendants
- * hint and its selectors array.
+ * We traverse down the frame tree (and through the flattened content tree
+ * when we find undisplayed content) unless we find an element that (a) already
+ * has a pending restyle, or (b) does not have a pending restyle but does match
+ * one of the selectors in mSelectorsForDescendants.  For (a), we add the
+ * current mSelectorsForDescendants into the existing restyle data, and for (b)
+ * we add a new pending restyle with that array.  So in both cases, when we
+ * come to restyling this element back up in ProcessPendingRestyles, we will
+ * again find the eRestyle_SomeDescendants hint and its selectors array.
  *
  * This ensures that we don't visit descendant elements and check them
  * against mSelectorsForDescendants more than once.
  */
 void
-ElementRestyler::AddPendingRestylesForDescendantsMatchingSelectors(
-    Element* aElement,
+ElementRestyler::ConditionallyRestyleChildren()
+{
+  MOZ_ASSERT(mContent == mFrame->GetContent());
+
+  if (!mContent->IsElement() || mSelectorsForDescendants.IsEmpty()) {
+    return;
+  }
+
+  Element* element = mContent->AsElement();
+
+  LOG_RESTYLE("traversing descendants of frame %s (with element %s) to "
+              "propagate eRestyle_SomeDescendants for these %d selectors:",
+              FrameTagToString(mFrame).get(),
+              ElementTagToString(element).get(),
+              int(mSelectorsForDescendants.Length()));
+  LOG_RESTYLE_INDENT();
+#ifdef RESTYLE_LOGGING
+  for (nsCSSSelector* sel : mSelectorsForDescendants) {
+    LOG_RESTYLE("%s", sel->RestrictedSelectorToString().get());
+  }
+#endif
+
+  Element* restyleRoot = mRestyleTracker.FindClosestRestyleRoot(element);
+  ConditionallyRestyleChildren(mFrame, restyleRoot);
+}
+
+void
+ElementRestyler::ConditionallyRestyleChildren(nsIFrame* aFrame,
+                                              Element* aRestyleRoot)
+{
+  MOZ_ASSERT(aFrame->GetContent());
+  MOZ_ASSERT(aFrame->GetContent()->IsElement());
+
+  ConditionallyRestyleUndisplayedDescendants(aFrame, aRestyleRoot);
+  ConditionallyRestyleContentChildren(aFrame, aRestyleRoot);
+}
+
+// The structure of this method parallels RestyleContentChildren.
+// If you update this method, you probably want to update that one too.
+void
+ElementRestyler::ConditionallyRestyleContentChildren(nsIFrame* aFrame,
+                                                     Element* aRestyleRoot)
+{
+  MOZ_ASSERT(aFrame->GetContent());
+  MOZ_ASSERT(aFrame->GetContent()->IsElement());
+
+  if (aFrame->GetContent()->HasFlag(mRestyleTracker.RootBit())) {
+    aRestyleRoot = aFrame->GetContent()->AsElement();
+  }
+
+  for (nsIFrame* f = aFrame; f;
+       f = GetNextContinuationWithSameStyle(f, f->StyleContext())) {
+    nsIFrame::ChildListIterator lists(f);
+    for (; !lists.IsDone(); lists.Next()) {
+      nsFrameList::Enumerator childFrames(lists.CurrentList());
+      for (; !childFrames.AtEnd(); childFrames.Next()) {
+        nsIFrame* child = childFrames.get();
+        // Out-of-flows are reached through their placeholders.  Continuations
+        // and block-in-inline splits are reached through those chains.
+        if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
+            !GetPrevContinuationWithSameStyle(child)) {
+          // only do frames that are in flow
+          if (child->GetType() == nsGkAtoms::placeholderFrame) { // placeholder
+            // get out of flow frame and recur there
+            nsIFrame* outOfFlowFrame =
+              nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
+
+            // |nsFrame::GetParentStyleContext| checks being out
+            // of flow so that this works correctly.
+            do {
+              if (GetPrevContinuationWithSameStyle(outOfFlowFrame)) {
+                continue;
+              }
+              if (!ConditionallyRestyle(outOfFlowFrame, aRestyleRoot)) {
+                ConditionallyRestyleChildren(outOfFlowFrame, aRestyleRoot);
+              }
+            } while ((outOfFlowFrame = outOfFlowFrame->GetNextContinuation()));
+          } else {  // regular child frame
+            if (child != mResolvedChild) {
+              if (!ConditionallyRestyle(child, aRestyleRoot)) {
+                ConditionallyRestyleChildren(child, aRestyleRoot);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// The structure of this method parallels RestyleUndisplayedDescendants.
+// If you update this method, you probably want to update that one too.
+void
+ElementRestyler::ConditionallyRestyleUndisplayedDescendants(
+    nsIFrame* aFrame,
     Element* aRestyleRoot)
+{
+  nsIContent* undisplayedParent;
+  if (MustCheckUndisplayedContent(aFrame, undisplayedParent)) {
+    DoConditionallyRestyleUndisplayedDescendants(undisplayedParent,
+                                                 aRestyleRoot);
+  }
+}
+
+// The structure of this method parallels DoRestyleUndisplayedDescendants.
+// If you update this method, you probably want to update that one too.
+void
+ElementRestyler::DoConditionallyRestyleUndisplayedDescendants(
+    nsIContent* aParent,
+    Element* aRestyleRoot)
+{
+  nsCSSFrameConstructor* fc = mPresContext->FrameConstructor();
+  UndisplayedNode* nodes = fc->GetAllUndisplayedContentIn(aParent);
+  ConditionallyRestyleUndisplayedNodes(nodes, aParent,
+                                       NS_STYLE_DISPLAY_NONE, aRestyleRoot);
+  nodes = fc->GetAllDisplayContentsIn(aParent);
+  ConditionallyRestyleUndisplayedNodes(nodes, aParent,
+                                       NS_STYLE_DISPLAY_CONTENTS, aRestyleRoot);
+}
+
+// The structure of this method parallels RestyleUndisplayedNodes.
+// If you update this method, you probably want to update that one too.
+void
+ElementRestyler::ConditionallyRestyleUndisplayedNodes(
+    UndisplayedNode* aUndisplayed,
+    nsIContent* aUndisplayedParent,
+    const uint8_t aDisplay,
+    Element* aRestyleRoot)
+{
+  MOZ_ASSERT(aDisplay == NS_STYLE_DISPLAY_NONE ||
+             aDisplay == NS_STYLE_DISPLAY_CONTENTS);
+
+  if (!aUndisplayed) {
+    return;
+  }
+
+  if (aUndisplayedParent &&
+      aUndisplayedParent->IsElement() &&
+      aUndisplayedParent->HasFlag(mRestyleTracker.RootBit())) {
+    aRestyleRoot = aUndisplayedParent->AsElement();
+  }
+
+  for (UndisplayedNode* undisplayed = aUndisplayed; undisplayed;
+       undisplayed = undisplayed->mNext) {
+
+    if (!undisplayed->mContent->IsElement()) {
+      continue;
+    }
+
+    Element* element = undisplayed->mContent->AsElement();
+
+    if (!ConditionallyRestyle(element, aRestyleRoot)) {
+      if (aDisplay == NS_STYLE_DISPLAY_NONE) {
+        ConditionallyRestyleContentDescendants(element, aRestyleRoot);
+      } else {  // NS_STYLE_DISPLAY_CONTENTS
+        DoConditionallyRestyleUndisplayedDescendants(element, aRestyleRoot);
+      }
+    }
+  }
+}
+
+void
+ElementRestyler::ConditionallyRestyleContentDescendants(Element* aElement,
+                                                        Element* aRestyleRoot)
+{
+  if (aElement->HasFlag(mRestyleTracker.RootBit())) {
+    aRestyleRoot = aElement;
+  }
+
+  FlattenedChildIterator it(aElement);
+  for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
+    if (n->IsElement()) {
+      Element* e = n->AsElement();
+      if (!ConditionallyRestyle(e, aRestyleRoot)) {
+        ConditionallyRestyleContentDescendants(e, aRestyleRoot);
+      }
+    }
+  }
+}
+
+bool
+ElementRestyler::ConditionallyRestyle(nsIFrame* aFrame, Element* aRestyleRoot)
+{
+  MOZ_ASSERT(aFrame->GetContent());
+
+  if (!aFrame->GetContent()->IsElement()) {
+    return true;
+  }
+
+  return ConditionallyRestyle(aFrame->GetContent()->AsElement(), aRestyleRoot);
+}
+
+bool
+ElementRestyler::ConditionallyRestyle(Element* aElement, Element* aRestyleRoot)
 {
   LOG_RESTYLE("considering element %s for eRestyle_SomeDescendants",
               ElementTagToString(aElement).get());
@@ -2807,7 +2998,7 @@ ElementRestyler::AddPendingRestylesForDescendantsMatchingSelectors(
     data.mSelectorsForDescendants = mSelectorsForDescendants;
     mRestyleTracker.AddPendingRestyle(aElement, rshint, nsChangeHint(0), &data,
                                       Some(aRestyleRoot));
-    return;
+    return true;
   }
 
   if (SelectorMatchesForRestyle(aElement)) {
@@ -2818,46 +3009,10 @@ ElementRestyler::AddPendingRestylesForDescendantsMatchingSelectors(
                                       eRestyle_Self | eRestyle_SomeDescendants,
                                       nsChangeHint(0), &data,
                                       Some(aRestyleRoot));
-    return;
+    return true;
   }
 
-  FlattenedChildIterator it(aElement);
-  for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
-    if (n->IsElement()) {
-      AddPendingRestylesForDescendantsMatchingSelectors(n->AsElement(),
-                                                        aRestyleRoot);
-    }
-  }
-}
-
-void
-ElementRestyler::AddPendingRestylesForDescendantsMatchingSelectors(
-    nsIContent* aContent)
-{
-  if (!mContent->IsElement() || mSelectorsForDescendants.IsEmpty()) {
-    return;
-  }
-
-  Element* element = mContent->AsElement();
-
-  LOG_RESTYLE("traversing descendants of element %s to propagate "
-              "eRestyle_SomeDescendants for these %d selectors:",
-              ElementTagToString(element).get(),
-              int(mSelectorsForDescendants.Length()));
-  LOG_RESTYLE_INDENT();
-#ifdef RESTYLE_LOGGING
-  for (nsCSSSelector* sel : mSelectorsForDescendants) {
-    LOG_RESTYLE("%s", sel->RestrictedSelectorToString().get());
-  }
-#endif
-  Element* restyleRoot = mRestyleTracker.FindClosestRestyleRoot(element);
-  FlattenedChildIterator it(element);
-  for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
-    if (n->IsElement()) {
-      AddPendingRestylesForDescendantsMatchingSelectors(n->AsElement(),
-                                                        restyleRoot);
-    }
-  }
+  return false;
 }
 
 bool
@@ -3174,7 +3329,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
 
     mRestyleTracker.AddRestyleRootsIfAwaitingRestyle(descendants);
     if (aRestyleHint & eRestyle_SomeDescendants) {
-      AddPendingRestylesForDescendantsMatchingSelectors(mContent);
+      ConditionallyRestyleChildren();
     }
     return;
   }
@@ -3206,7 +3361,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
 
       mRestyleTracker.AddRestyleRootsIfAwaitingRestyle(descendants);
       if (aRestyleHint & eRestyle_SomeDescendants) {
-        AddPendingRestylesForDescendantsMatchingSelectors(mContent);
+        ConditionallyRestyleChildren();
       }
       return;
     }
@@ -4246,6 +4401,8 @@ ElementRestyler::ComputeStyleChangeFor(nsIFrame*          aFrame,
   }
 }
 
+// The structure of this method parallels ConditionallyRestyleUndisplayedDescendants.
+// If you update this method, you probably want to update that one too.
 void
 ElementRestyler::RestyleUndisplayedDescendants(nsRestyleHint aChildRestyleHint)
 {
@@ -4256,6 +4413,8 @@ ElementRestyler::RestyleUndisplayedDescendants(nsRestyleHint aChildRestyleHint)
   }
 }
 
+// The structure of this method parallels DoConditionallyRestyleUndisplayedDescendants.
+// If you update this method, you probably want to update that one too.
 void
 ElementRestyler::DoRestyleUndisplayedDescendants(nsRestyleHint aChildRestyleHint,
                                                  nsIContent* aParent,
@@ -4270,6 +4429,8 @@ ElementRestyler::DoRestyleUndisplayedDescendants(nsRestyleHint aChildRestyleHint
                           aParentContext, NS_STYLE_DISPLAY_CONTENTS);
 }
 
+// The structure of this method parallels ConditionallyRestyleUndisplayedNodes.
+// If you update this method, you probably want to update that one too.
 void
 ElementRestyler::RestyleUndisplayedNodes(nsRestyleHint    aChildRestyleHint,
                                          UndisplayedNode* aUndisplayed,
@@ -4498,6 +4659,8 @@ ElementRestyler::InitializeAccessibilityNotifications(nsStyleContext* aNewContex
 #endif
 }
 
+// The structure of this method parallels ConditionallyRestyleContentChildren.
+// If you update this method, you probably want to update that one too.
 void
 ElementRestyler::RestyleContentChildren(nsIFrame* aParent,
                                         nsRestyleHint aChildRestyleHint)
