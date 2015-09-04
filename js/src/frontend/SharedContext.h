@@ -381,6 +381,7 @@ class ModuleBox : public ObjectBox, public SharedContext
 {
   public:
     Bindings bindings;
+    TraceableVector<JSAtom*> exportNames;
 
     template <typename ParseHandler>
     ModuleBox(ExclusiveContext* cx, ObjectBox* traceListHead, ModuleObject* module,
