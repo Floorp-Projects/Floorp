@@ -23,7 +23,7 @@ USE_LIBS += [
     'jemalloc',
 ]
 
-DEFINES['MOZ_JEMALLOC3'] = True
+DEFINES['MOZ_JEMALLOC4'] = True
 DEFINES['MOZ_REPLACE_JEMALLOC'] = True
 
 GENERATED_INCLUDES += ['../../jemalloc/src/include']

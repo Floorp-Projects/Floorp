@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef MOZ_JEMALLOC3
+#ifdef MOZ_JEMALLOC4
 
 #define MOZ_JEMALLOC_IMPL
 
@@ -161,7 +161,7 @@ JemallocInit gJemallocInit;
 
 #else
 #include <mozilla/Assertions.h>
-#endif /* MOZ_JEMALLOC3 */
+#endif /* MOZ_JEMALLOC4 */
 
 /* Provide an abort function for use in jemalloc code */
 extern "C" void moz_abort() {
