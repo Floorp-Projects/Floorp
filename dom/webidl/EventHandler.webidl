@@ -89,9 +89,6 @@ interface GlobalEventHandlers {
            attribute EventHandler onvolumechange;
            attribute EventHandler onwaiting;
 
-           [Pref="dom.select_events.enabled"]
-           attribute EventHandler onselectstart;
-
            // Pointer events handlers
            [Pref="dom.w3c_pointer_events.enabled"]
            attribute EventHandler onpointercancel;

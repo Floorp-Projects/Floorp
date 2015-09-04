@@ -151,7 +151,6 @@ partial interface Document {
                 attribute EventHandler onpaste;
                 attribute EventHandler onbeforescriptexecute;
                 attribute EventHandler onafterscriptexecute;
-
   /**
    * True if this document is synthetic : stand alone image, video, audio file,
    * etc.

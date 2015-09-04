@@ -752,8 +752,6 @@ private:
   bool mDesiredPosSet;
 
   int8_t mCaretMovementStyle;
-
-  static bool sSelectionEventsEnabled;
 };
 
 #endif /* nsFrameSelection_h___ */
