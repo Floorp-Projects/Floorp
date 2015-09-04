@@ -717,8 +717,6 @@ protected:
   // True if the stream is being consumed (i.e. has track data being played,
   // or is feeding into some stream that is being consumed).
   bool mIsConsumed;
-  // True if this stream should be blocked in this phase.
-  bool mBlockInThisPhase;
 
   // This state is only used on the main thread.
   DOMMediaStream* mWrapper;

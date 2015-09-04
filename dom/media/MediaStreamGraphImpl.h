@@ -305,12 +305,6 @@ public:
   void RecomputeBlocking(GraphTime aEndBlockingDecisions);
 
   /**
-   * Mark a stream blocked at time aTime. If this results in decisions that need
-   * to be revisited at some point in the future, *aEnd will be reduced to the
-   * first time in the future to recompute those decisions.
-   */
-  void MarkStreamBlocking(MediaStream* aStream);
-  /**
    * Recompute blocking for the streams in aStreams for the interval starting at aTime.
    * If this results in decisions that need to be revisited at some point
    * in the future, *aEnd will be reduced to the first time in the future to
