@@ -111,6 +111,11 @@ private:
   ID3Header mHeader;
 };
 
+struct FrameParserResult {
+  const uint8_t* mBufferPos;
+  const uint32_t mBytesToSkip;
+};
+
 // MPEG audio frame parser.
 // The MPEG frame header has the following format (one bit per character):
 // 11111111 111VVLLC BBBBSSPR MMEETOHH
@@ -285,11 +290,11 @@ public:
   // - resets ID3Header if no valid header was parsed yet
   void EndFrameSession();
 
-  // Parses given buffer [aBeg, aEnd) for a valid frame header.
-  // Returns begin of frame header if a frame header was found or a value >= aEnd otherwise.
-  // Values > aEnd indicate that additional bytes need to be skipped for jumping
-  // across an ID3 tag stretching beyond the given buffer.
-  const uint8_t* Parse(const uint8_t* aBeg, const uint8_t* aEnd);
+  // Parses given buffer [aBeg, aEnd) for a valid frame header and returns a FrameParserResult.
+  // FrameParserResult.mBufferPos points to begin of frame header if a frame header was found
+  // or to aEnd otherwise. FrameParserResult.mBytesToSkip indicates whether additional bytes need to
+  // be skipped in order to jump across an ID3 tag that stretches beyond the given buffer.
+  FrameParserResult Parse(const uint8_t* aBeg, const uint8_t* aEnd);
 
   // Parses given buffer [aBeg, aEnd) for a valid VBR header.
   // Returns whether a valid VBR header was found.
