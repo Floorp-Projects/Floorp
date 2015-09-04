@@ -55,11 +55,24 @@ DriverCrashGuard::InitializeIfNeeded()
 void
 DriverCrashGuard::Initialize()
 {
+#ifdef NIGHTLY_BUILD
+  // We only use the crash guard on non-nightly channels, since the nightly
+  // channel is for development and having graphics features perma-disabled
+  // is rather annoying.
+  return;
+#endif
+
   // Using DriverCrashGuard off the main thread currently does not work. Under
   // e10s it could conceivably work by dispatching the IPC calls via the main
   // thread. In the parent process this would be harder. For now, we simply
   // exit early instead.
   if (!NS_IsMainThread()) {
+    return;
+  }
+
+  // Check to see if all guards have been disabled through the environment.
+  static bool sAllGuardsDisabled = !!PR_GetEnv("MOZ_DISABLE_CRASH_GUARD");
+  if (sAllGuardsDisabled) {
     return;
   }
 
@@ -467,6 +480,18 @@ D3D9VideoCrashGuard::LogFeatureDisabled()
 GLContextCrashGuard::GLContextCrashGuard(dom::ContentParent* aContentParent)
  : DriverCrashGuard(CrashGuardType::GLContext, aContentParent)
 {
+}
+
+void
+GLContextCrashGuard::Initialize()
+{
+  if (XRE_IsContentProcess()) {
+    // Disable the GL crash guard in content processes, since we're not going
+    // to lose the entire browser and we don't want to hinder WebGL availability.
+    return;
+  }
+
+  DriverCrashGuard::Initialize();
 }
 
 bool
