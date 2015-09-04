@@ -216,30 +216,6 @@ WorkerPushSubscription::Constructor(GlobalObject& aGlobal, const nsAString& aEnd
   return sub.forget();
 }
 
-namespace {
-// The caller MUST take ownership of the proxy's lock before it calls this.
-void
-ReleasePromiseWorkerProxy(already_AddRefed<PromiseWorkerProxy> aProxy)
-{
-  AssertIsOnMainThread();
-  nsRefPtr<PromiseWorkerProxy> proxy = aProxy;
-  MOZ_ASSERT(proxy);
-  proxy->GetCleanUpLock().AssertCurrentThreadOwns();
-  if (proxy->IsClean()) {
-    return;
-  }
-
-  AutoJSAPI jsapi;
-  jsapi.Init();
-
-  nsRefPtr<PromiseWorkerProxyControlRunnable> cr =
-    new PromiseWorkerProxyControlRunnable(proxy->GetWorkerPrivate(),
-                                          proxy);
-
-  MOZ_ALWAYS_TRUE(cr->Dispatch(jsapi.cx()));
-}
-} // anonymous namespace
-
 class UnsubscribeResultRunnable final : public WorkerRunnable
 {
 public:
@@ -260,15 +236,14 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
 
-    nsRefPtr<PromiseWorkerProxy> proxy = mProxy.forget();
-    nsRefPtr<Promise> promise = proxy->GetWorkerPromise();
+    nsRefPtr<Promise> promise = mProxy->WorkerPromise();
     if (NS_SUCCEEDED(mStatus)) {
       promise->MaybeResolve(mSuccess);
     } else {
       promise->MaybeReject(NS_ERROR_DOM_NETWORK_ERR);
     }
 
-    proxy->CleanUp(aCx);
+    mProxy->CleanUp(aCx);
     return true;
   }
 private:
@@ -295,12 +270,12 @@ public:
   OnUnsubscribe(nsresult aStatus, bool aSuccess) override
   {
     AssertIsOnMainThread();
-    if (!mProxy) {
-      return NS_OK;
-    }
+    MOZ_ASSERT(mProxy, "OnUnsubscribe() called twice?");
 
-    MutexAutoLock lock(mProxy->GetCleanUpLock());
-    if (mProxy->IsClean()) {
+    nsRefPtr<PromiseWorkerProxy> proxy = mProxy.forget();
+
+    MutexAutoLock lock(proxy->Lock());
+    if (proxy->CleanedUp()) {
       return NS_OK;
     }
 
@@ -308,29 +283,14 @@ public:
     jsapi.Init();
 
     nsRefPtr<UnsubscribeResultRunnable> r =
-      new UnsubscribeResultRunnable(mProxy, aStatus, aSuccess);
-    if (!r->Dispatch(jsapi.cx())) {
-      ReleasePromiseWorkerProxy(mProxy.forget());
-    }
-
-    mProxy = nullptr;
+      new UnsubscribeResultRunnable(proxy, aStatus, aSuccess);
+    r->Dispatch(jsapi.cx());
     return NS_OK;
   }
 
 private:
   ~WorkerUnsubscribeResultCallback()
   {
-    AssertIsOnMainThread();
-    if (mProxy) {
-      MutexAutoLock lock(mProxy->GetCleanUpLock());
-      if (!mProxy->IsClean()) {
-        AutoJSAPI jsapi;
-        jsapi.Init();
-        nsRefPtr<PromiseWorkerProxyControlRunnable> cr =
-          new PromiseWorkerProxyControlRunnable(mProxy->GetWorkerPrivate(), mProxy);
-        cr->Dispatch(jsapi.cx());
-      }
-    }
   }
 
   nsRefPtr<PromiseWorkerProxy> mProxy;
@@ -354,8 +314,8 @@ public:
   Run() override
   {
     AssertIsOnMainThread();
-    MutexAutoLock lock(mProxy->GetCleanUpLock());
-    if (mProxy->IsClean()) {
+    MutexAutoLock lock(mProxy->Lock());
+    if (mProxy->CleanedUp()) {
       return NS_OK;
     }
 
@@ -448,8 +408,7 @@ public:
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    nsRefPtr<PromiseWorkerProxy> proxy = mProxy.forget();
-    nsRefPtr<Promise> promise = proxy->GetWorkerPromise();
+    nsRefPtr<Promise> promise = mProxy->WorkerPromise();
     if (NS_SUCCEEDED(mStatus)) {
       if (mEndpoint.IsEmpty()) {
         promise->MaybeResolve(JS::NullHandleValue);
@@ -462,7 +421,7 @@ public:
       promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     }
 
-    proxy->CleanUp(aCx);
+    mProxy->CleanUp(aCx);
     return true;
   }
 private:
@@ -490,13 +449,12 @@ public:
   OnPushEndpoint(nsresult aStatus, const nsAString& aEndpoint) override
   {
     AssertIsOnMainThread();
+    MOZ_ASSERT(mProxy, "OnPushEndpoint() called twice?");
 
-    if (!mProxy) {
-      return NS_OK;
-    }
+    nsRefPtr<PromiseWorkerProxy> proxy = mProxy.forget();
 
-    MutexAutoLock lock(mProxy->GetCleanUpLock());
-    if (mProxy->IsClean()) {
+    MutexAutoLock lock(proxy->Lock());
+    if (proxy->CleanedUp()) {
       return NS_OK;
     }
 
@@ -504,30 +462,14 @@ public:
     jsapi.Init();
 
     nsRefPtr<GetSubscriptionResultRunnable> r =
-      new GetSubscriptionResultRunnable(mProxy, aStatus, aEndpoint, mScope);
-    if (!r->Dispatch(jsapi.cx())) {
-      ReleasePromiseWorkerProxy(mProxy.forget());
-    }
-
-    mProxy = nullptr;
+      new GetSubscriptionResultRunnable(proxy, aStatus, aEndpoint, mScope);
+    r->Dispatch(jsapi.cx());
     return NS_OK;
   }
 
 protected:
   ~GetSubscriptionCallback()
-  {
-    AssertIsOnMainThread();
-    if (mProxy) {
-      MutexAutoLock lock(mProxy->GetCleanUpLock());
-      if (!mProxy->IsClean()) {
-        AutoJSAPI jsapi;
-        jsapi.Init();
-        nsRefPtr<PromiseWorkerProxyControlRunnable> cr =
-          new PromiseWorkerProxyControlRunnable(mProxy->GetWorkerPrivate(), mProxy);
-        cr->Dispatch(jsapi.cx());
-      }
-    }
-  }
+  {}
 
 private:
   nsRefPtr<PromiseWorkerProxy> mProxy;
@@ -550,8 +492,8 @@ public:
   Run() override
   {
     AssertIsOnMainThread();
-    MutexAutoLock lock(mProxy->GetCleanUpLock());
-    if (mProxy->IsClean()) {
+    MutexAutoLock lock(mProxy->Lock());
+    if (mProxy->CleanedUp()) {
       return NS_OK;
     }
 
@@ -564,9 +506,11 @@ public:
       return NS_OK;
     }
 
+    nsCOMPtr<nsIPrincipal> principal = mProxy->GetWorkerPrivate()->GetPrincipal();
+
     uint32_t permission = nsIPermissionManager::DENY_ACTION;
     nsresult rv = permManager->TestExactPermissionFromPrincipal(
-                    mProxy->GetWorkerPrivate()->GetPrincipal(),
+                    principal,
                     "push",
                     &permission);
 
@@ -581,9 +525,6 @@ public:
       callback->OnPushEndpoint(NS_ERROR_FAILURE, EmptyString());
       return NS_OK;
     }
-
-    nsCOMPtr<nsIPrincipal> principal = mProxy->GetWorkerPrivate()->GetPrincipal();
-    mProxy = nullptr;
 
     if (mAction == WorkerPushManager::SubscribeAction) {
       rv = client->Subscribe(mScope, principal, callback);
@@ -667,17 +608,17 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
 
-    nsRefPtr<PromiseWorkerProxy> proxy = mProxy.forget();
-    nsRefPtr<Promise> promise = proxy->GetWorkerPromise();
+    nsRefPtr<Promise> promise = mProxy->WorkerPromise();
     if (NS_SUCCEEDED(mStatus)) {
       MOZ_ASSERT(uint32_t(mState) < ArrayLength(PushPermissionStateValues::strings));
-      nsAutoCString stringState(PushPermissionStateValues::strings[uint32_t(mState)].value, PushPermissionStateValues::strings[uint32_t(mState)].length);
+      nsAutoCString stringState(PushPermissionStateValues::strings[uint32_t(mState)].value,
+                                PushPermissionStateValues::strings[uint32_t(mState)].length);
       promise->MaybeResolve(NS_ConvertUTF8toUTF16(stringState));
     } else {
       promise->MaybeReject(aCx, JS::UndefinedHandleValue);
     }
 
-    proxy->CleanUp(aCx);
+    mProxy->CleanUp(aCx);
     return true;
   }
 
@@ -701,8 +642,8 @@ public:
   Run() override
   {
     AssertIsOnMainThread();
-    MutexAutoLock lock(mProxy->GetCleanUpLock());
-    if (mProxy->IsClean()) {
+    MutexAutoLock lock(mProxy->Lock());
+    if (mProxy->CleanedUp()) {
       return NS_OK;
     }
 
@@ -740,9 +681,7 @@ public:
     jsapi.Init();
     nsRefPtr<PermissionResultRunnable> r =
       new PermissionResultRunnable(mProxy, rv, state);
-    if (!r->Dispatch(jsapi.cx())) {
-      ReleasePromiseWorkerProxy(mProxy.forget());
-    }
+    r->Dispatch(jsapi.cx());
     return NS_OK;
   }
 

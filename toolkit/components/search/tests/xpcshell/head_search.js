@@ -74,20 +74,16 @@ function dumpn(text)
 /**
  * Configure preferences to load engines from
  * chrome://testsearchplugin/locale/searchplugins/
- * unless the loadFromJars parameter is set to false.
  */
-function configureToLoadJarEngines(loadFromJars = true)
+function configureToLoadJarEngines()
 {
   let defaultBranch = Services.prefs.getDefaultBranch(null);
 
   let url = "chrome://testsearchplugin/locale/searchplugins/";
-  defaultBranch.setCharPref("browser.search.jarURIs", url);
-
-  defaultBranch.setBoolPref("browser.search.loadFromJars", loadFromJars);
-
-  // Give the pref a user set value that is the opposite of the default,
-  // to ensure user set values are ignored.
-  Services.prefs.setBoolPref("browser.search.loadFromJars", !loadFromJars)
+  let resProt = Services.io.getProtocolHandler("resource")
+                        .QueryInterface(Ci.nsIResProtocolHandler);
+  resProt.setSubstitution("search-plugins",
+                          Services.io.newURI(url, null, null));
 
   // Ensure a test engine exists in the app dir anyway.
   let dir = Services.dirsvc.get(NS_APP_SEARCH_DIR, Ci.nsIFile);

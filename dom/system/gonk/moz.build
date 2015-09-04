@@ -34,6 +34,7 @@ XPIDL_MODULE = 'dom_system_gonk'
 
 EXPORTS += [
     'GonkGPSGeolocationProvider.h',
+    'mozstumbler/MozStumbler.h',
     'nsVolume.h',
     'nsVolumeService.h',
 ]
@@ -46,6 +47,10 @@ UNIFIED_SOURCES += [
     'MozMtpDatabase.cpp',
     'MozMtpServer.cpp',
     'MozMtpStorage.cpp',
+    'mozstumbler/MozStumbler.cpp',
+    'mozstumbler/StumblerLogging.cpp',
+    'mozstumbler/UploadStumbleRunnable.cpp',
+    'mozstumbler/WriteStumbleOnThread.cpp',
     'NetIdManager.cpp',
     'NetworkUtils.cpp',
     'NetworkWorker.cpp',

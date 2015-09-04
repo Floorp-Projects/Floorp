@@ -8505,7 +8505,7 @@ class CGMemberJITInfo(CGThing):
                 """
                 {
                   { ${opName} },
-                  prototypes::id::${name},
+                  { prototypes::id::${name} },
                   PrototypeTraits<prototypes::id::${name}>::Depth,
                   JSJitInfo::${opType},
                   JSJitInfo::${aliasSet}, /* aliasSet.  Not relevant for setters. */
@@ -8886,7 +8886,7 @@ class CGStaticMethodJitinfo(CGGeneric):
             "\n"
             "static const JSJitInfo %s_methodinfo = {\n"
             "  { (JSJitGetterOp)%s },\n"
-            "  prototypes::id::_ID_Count, 0, JSJitInfo::StaticMethod,\n"
+            "  { prototypes::id::_ID_Count }, 0, JSJitInfo::StaticMethod,\n"
             "  JSJitInfo::AliasEverything, JSVAL_TYPE_MISSING, false, false,\n"
             "  false, false, 0\n"
             "};\n" %

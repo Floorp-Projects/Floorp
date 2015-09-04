@@ -504,6 +504,9 @@ private:
 
     bool AsyncPanZoomEnabled() const;
 
+    // Cached value indicating the docshell active state of the remote browser.
+    bool mDocShellIsActive;
+
     // Update state prior to routing an APZ-aware event to the child process.
     // |aOutTargetGuid| will contain the identifier
     // of the APZC instance that handled the event. aOutTargetGuid may be null.

@@ -140,7 +140,6 @@ public class StringHelper {
     public final String VOICE_INPUT_SUMMARY_LABEL;
     public final String QRCODE_INPUT_TITLE_LABEL;
     public final String QRCODE_INPUT_SUMMARY_LABEL;
-    public final String TEXT_REFLOW_LABEL;
     public final String CHARACTER_ENCODING_LABEL;
     public final String PLUGINS_LABEL;
 
@@ -385,7 +384,6 @@ public class StringHelper {
         VOICE_INPUT_SUMMARY_LABEL = res.getString(R.string.pref_voice_input_summary);
         QRCODE_INPUT_TITLE_LABEL = res.getString(R.string.pref_qrcode_enabled);
         QRCODE_INPUT_SUMMARY_LABEL = res.getString(R.string.pref_qrcode_enabled_summary);
-        TEXT_REFLOW_LABEL = res.getString(R.string.pref_reflow_on_zoom);
         CHARACTER_ENCODING_LABEL = res.getString(R.string.pref_char_encoding);
         PLUGINS_LABEL = res.getString(R.string.pref_plugins);
 
