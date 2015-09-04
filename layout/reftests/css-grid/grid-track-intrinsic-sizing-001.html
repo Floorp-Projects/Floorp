@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Distribute space beyond growth limits</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151212">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#distribute-extra-space">
+  <link rel="match" href="grid-track-intrinsic-sizing-001-ref.html">
+  <style type="text/css">
+body,html { color:black; background:white; font-family:monospace; font-size:16px; padding:0; margin:0; }
+
+.grid {
+ display: grid;
+ border: 1px solid;
+ width: 500px;
+}
+.t1 {
+ grid-template-columns: minmax(max-content,200px) minmax(max-content,200px);
+}
+.t2 {
+ grid-template-columns: minmax(0,auto) minmax(max-content,auto);
+}
+
+.c1 { grid-column: span 2; border:2px solid; min-width:0; }
+.c2 { background: grey; min-height:10px; min-width:0; }
+.c3 { background: blue; min-width:0;}
+  </style>
+</head>
+<body>
+
+<div class="grid t1">
+  <span class="c1">1 2 3 4 5</span>
+  <div class="c2">&nbsp;</div>
+  <div class="c3">&nbsp;</div>
+</div>
+<div class="grid t1">
+  <span class="c1">1 2 3 4 5</span>
+  <div class="c2">&nbsp;</div>
+  <div class="c3"></div>
+</div>
+<div class="grid t1">
+  <span class="c1">1 2 3 4 5</span>
+  <div class="c2"></div>
+  <div class="c3"></div>
+</div>
+<div class="grid t1">
+  <span class="c1">1 2 3 4 5 6 7 8 9 0 1 2 3 4 5</span>
+  <div class="c2">&nbsp;</div>
+  <div class="c3">&nbsp;</div>
+</div>
+<div class="grid t1">
+  <span class="c1">1 2 3 4 5 6 7 8 9 0 1 2 3 4 5</span>
+  <div class="c2">&nbsp;</div>
+  <div class="c3"></div>
+</div>
+<div class="grid t1">
+  <span class="c1">1 2 3 4 5 6 7 8 9 0 1 2 3 4 5</span>
+  <div class="c2"></div>
+  <div class="c3"></div>
+</div>
+<div class="grid t1">
+  <span class="c1">1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4</span>
+  <div class="c2">&nbsp;</div>
+  <div class="c3">&nbsp;</div>
+</div>
+<div class="grid t2">
+  <span class="c1">1 2 3 4 5</span>
+  <div class="c2">&nbsp;</div>
+  <div class="c3">&nbsp;</div>
+</div>
+<div class="grid t2">
+  <span class="c1">1 2 3 4 5</span>
+  <div class="c2">&nbsp;</div>
+  <div class="c3"></div>
+</div>
+<div class="grid t2">
+  <span class="c1">1 2 3 4 5</span>
+  <div class="c2"></div>
+  <div class="c3">&nbsp;</div>
+</div>
+<div class="grid t2">
+  <span class="c1">1 2 3 4 5</span>
+  <div class="c2"></div>
+  <div class="c3"></div>
+</div>
+<div class="grid t2">
+  <span class="c1">1 2 3 4 5 6 7 8 9 0 1 2 3 4 5</span>
+  <div class="c2">&nbsp;</div>
+  <div class="c3">&nbsp;</div>
+</div>
+<div class="grid t2">
+  <span class="c1">1 2 3 4 5</span>
+  <div class="c2">&nbsp;</div>
+  <div class="c3">&nbsp;</div>
+</div>
+
+</body>
+</html>
