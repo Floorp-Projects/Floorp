@@ -1026,7 +1026,7 @@ function getFileForAddon(aDir, aId) {
 function registerDirectory(aKey, aDir) {
   var dirProvider = {
     getFile: function(aProp, aPersistent) {
-      aPersistent.value = false;
+      aPersistent.value = true;
       if (aProp == aKey)
         return aDir.clone();
       return null;

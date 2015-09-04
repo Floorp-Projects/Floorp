@@ -1646,7 +1646,6 @@ var AddonManagerInternal = {
 
     if (gStartupComplete)
       return;
-    logger.debug("Registering startup change '" + aType + "' for " + aID);
 
     // Ensure that an ID is only listed in one type of change
     for (let type in this.startupChanges)
