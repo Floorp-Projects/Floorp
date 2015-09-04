@@ -91,8 +91,9 @@ AnalyserNode::AnalyserNode(AudioContext* aContext)
 
   // Enough chunks must be recorded to handle the case of fftSize being
   // increased to maximum immediately before getFloatTimeDomainData() is
-  // called, for example.
-  (void)mChunks.SetLength(CHUNK_COUNT, fallible);
+  // called, for example. This can be fallible because all accesses to
+  // mChunks are zero-length-checked.
+  unused << mChunks.SetLength(CHUNK_COUNT, fallible);
 
   AllocateBuffer();
 }
