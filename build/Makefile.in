@@ -64,6 +64,9 @@ ifdef MOZTTDIR
 # Install the Firefox OS fonts.
 include $(MOZTTDIR)/fonts.mk
 MOZTT_DEST = $(FINAL_TARGET)/fonts
+ifdef MOZ_B2GDROID
+MOZTT_DEST = $(FINAL_TARGET)/res/fonts
+endif
 MOZTT_FILES = $(patsubst external/moztt/%,$(MOZTTDIR)/%,$(filter external/moztt/%,$(subst :, ,$(PRODUCT_COPY_FILES))))
 INSTALL_TARGETS += MOZTT
 endif
