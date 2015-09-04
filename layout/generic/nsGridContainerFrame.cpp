@@ -225,13 +225,10 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::TrackSizingFunctions
  */
 struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
 {
-  explicit Tracks(Dimension aDimension) : mDimension(aDimension) {}
-
   void Initialize(const TrackSizingFunctions& aFunctions,
                   nscoord                     aPercentageBasis);
 
   nsAutoTArray<TrackSize, 32> mSizes;
-  Dimension mDimension;
 };
 
 struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowState
@@ -270,8 +267,6 @@ private:
                   const WritingMode&       aWM)
     : mIter(aFrame, kPrincipalList)
     , mGridStyle(aGridStyle)
-    , mCols(eColDimension)
-    , mRows(eRowDimension)
     , mColFunctions({
         mGridStyle->mGridTemplateColumns.mMinTrackSizingFunctions,
         mGridStyle->mGridTemplateColumns.mMaxTrackSizingFunctions,
@@ -1256,19 +1251,6 @@ nsGridContainerFrame::Tracks::Initialize(const TrackSizingFunctions& aFunctions,
                         &mSizes[i]);
   }
 }
-
-#if 0
-static nscoord
-MinSize(nsIFrame* aChild, nsRenderingContext* aRC, WritingMode aCBWM,
-        nsGridContainerFrame::Dimension aDimension,
-        nsLayoutUtils::IntrinsicISizeType aConstraint)
-{
-  PhysicalAxis axis(((aDimension == nsGridContainerFrame::eColDimension) ==
-                     aCBWM.IsVertical()) ? eAxisVertical : eAxisHorizontal);
-  return nsLayoutUtils::MinSizeContributionForAxis(axis, aRC, aChild,
-                                                   aConstraint);
-}
-#endif
 
 void
 nsGridContainerFrame::CalculateTrackSizes(GridReflowState&   aState,
