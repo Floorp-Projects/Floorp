@@ -33,3 +33,9 @@ fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-m
 == grid-track-intrinsic-sizing-002.html grid-track-intrinsic-sizing-002-ref.html
 == grid-track-intrinsic-sizing-003.html grid-track-intrinsic-sizing-003-ref.html
 == grid-track-intrinsic-sizing-004.html grid-track-intrinsic-sizing-004-ref.html
+== grid-max-sizing-flex-001.html grid-max-sizing-flex-001-ref.html
+== grid-max-sizing-flex-002.html grid-max-sizing-flex-002-ref.html
+== grid-max-sizing-flex-003.html grid-max-sizing-flex-003-ref.html
+== grid-max-sizing-flex-004.html grid-max-sizing-flex-004-ref.html
+== grid-max-sizing-flex-005.html grid-max-sizing-flex-005-ref.html
+== grid-max-sizing-flex-006.html grid-max-sizing-flex-006-ref.html
