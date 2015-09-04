@@ -2476,20 +2476,6 @@ SourceMediaStream::EndAllTrackAndFinish()
   // we will call NotifyEvent() to let GetUserMedia know
 }
 
-StreamTime
-SourceMediaStream::GetBufferedTicks(TrackID aID)
-{
-  StreamBuffer::Track* track  = mBuffer.FindTrack(aID);
-  if (track) {
-    MediaSegment* segment = track->GetSegment();
-    if (segment) {
-      return segment->GetDuration() -
-          GraphTimeToStreamTime(GraphImpl()->mStateComputedTime);
-    }
-  }
-  return 0;
-}
-
 void
 SourceMediaStream::RegisterForAudioMixing()
 {
