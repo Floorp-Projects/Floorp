@@ -428,6 +428,9 @@ ifndef CROSS_COMPILE
 HOST_CFLAGS += $(RTL_FLAGS)
 endif
 
+HOST_CFLAGS += $(HOST_DEFINES) $(MOZBUILD_HOST_CFLAGS)
+HOST_CXXFLAGS += $(HOST_DEFINES) $(MOZBUILD_HOST_CXXFLAGS)
+
 #
 # Name of the binary code directories
 #

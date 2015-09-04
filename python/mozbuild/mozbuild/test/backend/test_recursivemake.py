@@ -307,6 +307,14 @@ class TestRecursiveMakeBackend(BackendTester):
                 'MOZBUILD_LDFLAGS += -DELAYLOAD:foo.dll',
                 'MOZBUILD_LDFLAGS += -DELAYLOAD:bar.dll',
             ],
+            'MOZBUILD_HOST_CFLAGS': [
+                'MOZBUILD_HOST_CFLAGS += -funroll-loops',
+                'MOZBUILD_HOST_CFLAGS += -wall',
+            ],
+            'MOZBUILD_HOST_CXXFLAGS': [
+                'MOZBUILD_HOST_CXXFLAGS += -funroll-loops-harder',
+                'MOZBUILD_HOST_CXXFLAGS += -wall-day-everyday',
+            ],
             'WIN32_EXE_LDFLAGS': [
                 'WIN32_EXE_LDFLAGS += -subsystem:console',
             ],
@@ -576,6 +584,19 @@ class TestRecursiveMakeBackend(BackendTester):
         defines = [val for val in lines if val.startswith(var)]
 
         expected = ['DEFINES += -DFOO -DBAZ=\'"ab\'\\\'\'cd"\' -UQUX -DBAR=7 -DVALUE=\'xyz\'']
+        self.assertEqual(defines, expected)
+
+    def test_host_defines(self):
+        """Test that HOST_DEFINES are written to backend.mk correctly."""
+        env = self._consume('host-defines', RecursiveMakeBackend)
+
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        var = 'HOST_DEFINES'
+        defines = [val for val in lines if val.startswith(var)]
+
+        expected = ['HOST_DEFINES += -DFOO -DBAZ=\'"ab\'\\\'\'cd"\' -UQUX -DBAR=7 -DVALUE=\'xyz\'']
         self.assertEqual(defines, expected)
 
     def test_local_includes(self):

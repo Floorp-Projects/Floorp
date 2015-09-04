@@ -1,0 +1,14 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+value = 'xyz'
+HOST_DEFINES = {
+    'FOO': True,
+}
+
+HOST_DEFINES['BAZ'] = '"ab\'cd"'
+HOST_DEFINES.update({
+    'BAR': 7,
+    'VALUE': value,
+    'QUX': False,
+})
