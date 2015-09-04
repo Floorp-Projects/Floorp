@@ -153,37 +153,102 @@ assertEq(evaled, true);
 
 assertThrowsInstanceOf(() => new Function('var [...rest = defaults] = [];'), SyntaxError);
 
-// bug 1124480: destructuring defaults should work correctly as part of for-in
-var defaultsSupportedInForVar = false;
-try
-{
-  new Function('for (var [a, b = 10] in " ") {}');
-  defaultsSupportedInForVar = true;
-}
-catch (e)
-{
-}
+new Function(`
+  b = undefined;
+  for (var [a, b = 10] in " ") {}
+  assertEq(b, 10);`)();
 
-if (defaultsSupportedInForVar) {
-  new Function(`
-    b = undefined;
-    for (var [a, b = 10] in " ") {}
-    assertEq(b, 10);
+new Function(`
+  b = undefined;
+  for (let [a, c = 10] in " ") { b = c; }
+  assertEq(b, 10);`)();
 
-    b = undefined;
-    for (let [a, c = 10] in " ") { b = c; }
-    assertEq(b, 10);
+new Function(`
+  b = undefined;
+  for (let [a, c = (x => y)] in " ") { b = c; }
+  assertEq(typeof b, "function");`)();
 
-    b = undefined;
-    for (var {1: b = 10} in " ") {}
-    assertEq(b, 10);
+new Function(`
+  b = undefined;
+  for (let [a, __proto__ = 10] in " ") { b = __proto__; }
+  assertEq(b, 10);`)();
 
-    b = undefined;
-    for (let {1: c = 10} in " ") { b = c; }
-    assertEq(b, 10);
+new Function(`
+  b = undefined;
+  for (let [a, __proto__ = (x => y)] in " ") { b = __proto__; }
+  assertEq(typeof b, "function");`)();
 
-    b = undefined;
-    for (let {c = 10} in " ") { b = c; }
-    assertEq(b, 10);
-  `)();
-}
+new Function(`
+  b = undefined;
+  for (var {1: b = 10} in " ") {}
+  assertEq(b, 10);`)();
+
+new Function(`
+  b = undefined;
+  for (let {1: c = 10} in " ") { b = c; }
+  assertEq(b, 10);`)();
+
+new Function(`
+  b = undefined;
+  for (let { c = 10 } in " ") { b = c; }
+  assertEq(b, 10);`)();
+
+new Function(`
+  b = undefined;
+  assertEq(Number.prototype.a, undefined);
+  for (var { a: c = (x => y) } in [{}]) { b = c; }
+  assertEq(typeof b, "function");`)();
+
+new Function(`
+  b = undefined;
+  Object.defineProperty(String.prototype, "__proto__",
+                        { value: undefined, configurable: true });
+  for (var { __proto__: c = (x => y) } in [{}]) { b = c; }
+  delete String.prototype.__proto__;
+  assertEq(typeof b, "function");`)();
+
+new Function(`
+  b = undefined;
+  for (var { a: c = (x => y) } of [{ a: undefined }]) { b = c; }
+  assertEq(typeof b, "function");`)();
+
+new Function(`
+  b = undefined;
+  for (var { __proto__: c = (x => y) } of [{ ["__proto__"]: undefined }]) { b = c; }
+  assertEq(typeof b, "function");`)();
+
+new Function(`
+  b = undefined;
+  var ts = Function.prototype.toString;
+  Function.prototype.toString = () => 'hi';
+  String.prototype.hi = 42;
+  for (var { [(x => y)]: c } in [0]) { b = c; }
+  Function.prototype.toString = ts;
+  delete String.prototype.hi;
+  assertEq(b, 42);`)();
+
+new Function(`
+  b = undefined;
+  var ts = Function.prototype.toString;
+  Function.prototype.toString = () => 'hi';
+  String.prototype.hi = 42;
+  for (var { [(x => y)]: __proto__ } in [0]) { b = __proto__; }
+  Function.prototype.toString = ts;
+  delete String.prototype.hi;
+  assertEq(b, 42);`)();
+
+new Function(`
+  b = undefined;
+  var ts = Function.prototype.toString;
+  Function.prototype.toString = () => 'hi';
+  for (var { [(x => y)]: c } of [{ 'hi': 42 }]) { b = c; }
+  Function.prototype.toString = ts;
+  assertEq(b, 42);`)();
+
+new Function(`
+  b = undefined;
+  var ts = Function.prototype.toString;
+  Function.prototype.toString = () => 'hi';
+  for (var { [(x => y)]: __proto__ } of [{ hi: 42 }]) { b = __proto__; }
+  Function.prototype.toString = ts;
+  assertEq(b, 42);`)();
