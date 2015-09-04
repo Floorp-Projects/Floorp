@@ -205,7 +205,7 @@ NS_EVENT_MESSAGE(NS_SVG_ZOOM,           NS_SVGZOOM_EVENT_START)
 
 // XUL command events
 NS_EVENT_MESSAGE(eXULCommandEventFirst, 3000)
-NS_EVENT_MESSAGE(NS_XUL_COMMAND,        eXULCommandEventFirst)
+NS_EVENT_MESSAGE(eXULCommand,           eXULCommandEventFirst)
 
 // Cut, copy, paste events
 NS_EVENT_MESSAGE(NS_CUTCOPYPASTE_EVENT_START, 3100)

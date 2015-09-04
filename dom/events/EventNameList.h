@@ -688,7 +688,7 @@ NON_IDL_EVENT(compositionend,
               EventNameType_XUL,
               eCompositionEventClass)
 NON_IDL_EVENT(command,
-              NS_XUL_COMMAND,
+              eXULCommand,
               EventNameType_XUL,
               eInputEventClass)
 NON_IDL_EVENT(close,
