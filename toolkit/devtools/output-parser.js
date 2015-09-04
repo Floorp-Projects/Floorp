@@ -314,9 +314,6 @@ OutputParser.prototype = {
    * @param  {Object} [options]
    *         Options object. For valid options and default values see
    *         _mergeOptions().
-   * @returns {Boolean}
-   *          true if the color passed in was valid, false otherwise. Special
-   *          values such as transparent also return false.
    */
   _appendColor: function(color, options={}) {
     let colorObj = new colorUtils.CssColor(color);
@@ -347,9 +344,9 @@ OutputParser.prototype = {
 
       container.appendChild(value);
       this.parsed.push(container);
-      return true;
+    } else {
+      this._appendTextNode(color);
     }
-    return false;
   },
 
   /**

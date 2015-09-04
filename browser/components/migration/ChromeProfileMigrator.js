@@ -390,7 +390,9 @@ function GetWindowsPasswordsResource(aProfileFolder) {
         _rowToLoginInfo(row) {
           let loginInfo = {
             username: row.getResultByName("username_value"),
-            password: crypto.decryptData(row.getResultByName("password_value")),
+            password: crypto.
+                      decryptData(crypto.arrayToString(row.getResultByName("password_value")),
+                                                       null),
             hostName: NetUtil.newURI(row.getResultByName("origin_url")).prePath,
             submitURL: null,
             httpRealm: null,
