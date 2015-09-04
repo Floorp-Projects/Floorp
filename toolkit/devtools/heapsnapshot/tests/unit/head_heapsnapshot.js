@@ -20,6 +20,7 @@ const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const HeapAnalysesClient =
   require("devtools/toolkit/heapsnapshot/HeapAnalysesClient");
 const Services = require("Services");
+const { CensusTreeNode } = require("devtools/toolkit/heapsnapshot/census-tree-node");
 
 // Always log packets when running tests. runxpcshelltests.py will throw
 // the output away anyway, unless you give it the --verbose flag.
@@ -152,4 +153,9 @@ function saveHeapSnapshotAndTakeCensus(dbg=null, censusOptions=undefined,
 
   equal(typeof snapshot.takeCensus, "function", "snapshot should have a takeCensus method");
   return snapshot.takeCensus(censusOptions);
+}
+
+function compareCensusViewData (breakdown, report, expected, assertion) {
+  let data = new CensusTreeNode(breakdown, report);
+  equal(JSON.stringify(data), JSON.stringify(expected), assertion);
 }

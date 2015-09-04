@@ -19,7 +19,7 @@ Bug 1067491 - Test taking a census over the RDP.
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script>
 window.onload = function() {
-  var { CensusTreeNode } = require("devtools/memory/census");
+  var { CensusTreeNode } = require("devtools/toolkit/heapsnapshot/census-tree-node");
   var { INDENTATION, CensusView } = require("devtools/memory/census-view");
   SimpleTest.waitForExplicitFinish();
   const countBreakdown = { by: "count", count: true, bytes: true };

@@ -5,9 +5,7 @@
 
 EXTRA_JS_MODULES.devtools.memory += [
     'modules/census-view.js',
-    'modules/census.js',
     'panel.js',
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']
