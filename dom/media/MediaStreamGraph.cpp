@@ -735,20 +735,12 @@ MediaStreamGraphImpl::RecomputeBlocking(GraphTime aEndBlockingDecisions)
 }
 
 void
-MediaStreamGraphImpl::MarkStreamBlocking(MediaStream* aStream)
-{
-  if (aStream->mBlockInThisPhase)
-    return;
-  aStream->mBlockInThisPhase = true;
-}
-
-void
 MediaStreamGraphImpl::RecomputeBlockingAt(MediaStream* aStream,
                                           GraphTime aTime,
                                           GraphTime aEndBlockingDecisions,
                                           GraphTime* aEnd)
 {
-  aStream->mBlockInThisPhase = false;
+  bool block = false;
 
   do {
     if (aStream->mFinished) {
@@ -757,7 +749,7 @@ MediaStreamGraphImpl::RecomputeBlockingAt(MediaStream* aStream,
       if (endTime <= aTime) {
         STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to being finished", aStream));
         // We'll block indefinitely
-        MarkStreamBlocking(aStream);
+        block = true;
         *aEnd = std::min(*aEnd, aEndBlockingDecisions);
         continue;
       } else {
@@ -773,20 +765,20 @@ MediaStreamGraphImpl::RecomputeBlockingAt(MediaStream* aStream,
     *aEnd = std::min(*aEnd, end);
     if (explicitBlock) {
       STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to explicit blocker", aStream));
-      MarkStreamBlocking(aStream);
+      block = true;
       continue;
     }
 
     if (aStream->IsSuspended()) {
       STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to being suspended", aStream));
-      MarkStreamBlocking(aStream);
+      block = true;
       continue;
     }
 
     bool underrun = WillUnderrun(aStream, aTime, aEndBlockingDecisions, aEnd);
     if (underrun) {
       // We'll block indefinitely
-      MarkStreamBlocking(aStream);
+      block = true;
       *aEnd = std::min(*aEnd, aEndBlockingDecisions);
       continue;
     }
@@ -794,7 +786,7 @@ MediaStreamGraphImpl::RecomputeBlockingAt(MediaStream* aStream,
 
   NS_ASSERTION(*aEnd > aTime, "Failed to advance!");
 
-  aStream->mBlocked.SetAtAndAfter(aTime, aStream->mBlockInThisPhase);
+  aStream->mBlocked.SetAtAndAfter(aTime, block);
 }
 
 void
