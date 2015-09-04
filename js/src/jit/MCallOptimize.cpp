@@ -65,79 +65,6 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
     // Object natives.
     if (native == obj_create)
         return inlineObjectCreate(callInfo);
-    if (native == intrinsic_DefineDataProperty)
-        return inlineDefineDataProperty(callInfo);
-
-    // Slot intrinsics.
-    if (native == intrinsic_UnsafeSetReservedSlot)
-        return inlineUnsafeSetReservedSlot(callInfo);
-    if (native == intrinsic_UnsafeGetReservedSlot)
-        return inlineUnsafeGetReservedSlot(callInfo, MIRType_Value);
-    if (native == intrinsic_UnsafeGetObjectFromReservedSlot)
-        return inlineUnsafeGetReservedSlot(callInfo, MIRType_Object);
-    if (native == intrinsic_UnsafeGetInt32FromReservedSlot)
-        return inlineUnsafeGetReservedSlot(callInfo, MIRType_Int32);
-    if (native == intrinsic_UnsafeGetStringFromReservedSlot)
-        return inlineUnsafeGetReservedSlot(callInfo, MIRType_String);
-    if (native == intrinsic_UnsafeGetBooleanFromReservedSlot)
-        return inlineUnsafeGetReservedSlot(callInfo, MIRType_Boolean);
-
-    // Utility intrinsics.
-    if (native == intrinsic_IsCallable)
-        return inlineIsCallable(callInfo);
-    if (native == intrinsic_ToObject)
-        return inlineToObject(callInfo);
-    if (native == intrinsic_IsObject)
-        return inlineIsObject(callInfo);
-    if (native == intrinsic_ToInteger)
-        return inlineToInteger(callInfo);
-    if (native == intrinsic_ToString)
-        return inlineToString(callInfo);
-    if (native == intrinsic_IsConstructing)
-        return inlineIsConstructing(callInfo);
-    if (native == intrinsic_SubstringKernel)
-        return inlineSubstringKernel(callInfo);
-    if (native == intrinsic_IsArrayIterator)
-        return inlineHasClass(callInfo, &ArrayIteratorObject::class_);
-    if (native == intrinsic_IsMapIterator)
-        return inlineHasClass(callInfo, &MapIteratorObject::class_);
-    if (native == intrinsic_IsStringIterator)
-        return inlineHasClass(callInfo, &StringIteratorObject::class_);
-
-    // TypedArray intrinsics.
-    if (native == intrinsic_IsTypedArray)
-        return inlineIsTypedArray(callInfo);
-    if (native == intrinsic_IsPossiblyWrappedTypedArray)
-        return inlineIsPossiblyWrappedTypedArray(callInfo);
-    if (native == intrinsic_TypedArrayLength)
-        return inlineTypedArrayLength(callInfo);
-    if (native == intrinsic_SetDisjointTypedElements)
-        return inlineSetDisjointTypedElements(callInfo);
-
-    // TypedObject intrinsics.
-    if (native == js::ObjectIsTypedObject)
-        return inlineHasClass(callInfo,
-                              &OutlineTransparentTypedObject::class_,
-                              &OutlineOpaqueTypedObject::class_,
-                              &InlineTransparentTypedObject::class_,
-                              &InlineOpaqueTypedObject::class_);
-    if (native == js::ObjectIsTransparentTypedObject)
-        return inlineHasClass(callInfo,
-                              &OutlineTransparentTypedObject::class_,
-                              &InlineTransparentTypedObject::class_);
-    if (native == js::ObjectIsOpaqueTypedObject)
-        return inlineHasClass(callInfo,
-                              &OutlineOpaqueTypedObject::class_,
-                              &InlineOpaqueTypedObject::class_);
-    if (native == js::ObjectIsTypeDescr)
-        return inlineObjectIsTypeDescr(callInfo);
-    if (native == js::TypeDescrIsSimpleType)
-        return inlineHasClass(callInfo,
-                              &ScalarTypeDescr::class_, &ReferenceTypeDescr::class_);
-    if (native == js::TypeDescrIsArrayType)
-        return inlineHasClass(callInfo, &ArrayTypeDescr::class_);
-    if (native == js::SetTypedObjectOffset)
-        return inlineSetTypedObjectOffset(callInfo);
 
     // Testing Functions
     if (native == testingFunc_bailout)
@@ -429,6 +356,79 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineStrCharAt(callInfo);
       case InlinableNative::StringReplace:
         return inlineStrReplace(callInfo);
+
+      // Slot intrinsics.
+      case InlinableNative::IntrinsicUnsafeSetReservedSlot:
+        return inlineUnsafeSetReservedSlot(callInfo);
+      case InlinableNative::IntrinsicUnsafeGetReservedSlot:
+        return inlineUnsafeGetReservedSlot(callInfo, MIRType_Value);
+      case InlinableNative::IntrinsicUnsafeGetObjectFromReservedSlot:
+        return inlineUnsafeGetReservedSlot(callInfo, MIRType_Object);
+      case InlinableNative::IntrinsicUnsafeGetInt32FromReservedSlot:
+        return inlineUnsafeGetReservedSlot(callInfo, MIRType_Int32);
+      case InlinableNative::IntrinsicUnsafeGetStringFromReservedSlot:
+        return inlineUnsafeGetReservedSlot(callInfo, MIRType_String);
+      case InlinableNative::IntrinsicUnsafeGetBooleanFromReservedSlot:
+        return inlineUnsafeGetReservedSlot(callInfo, MIRType_Boolean);
+
+      // Utility intrinsics.
+      case InlinableNative::IntrinsicIsCallable:
+        return inlineIsCallable(callInfo);
+      case InlinableNative::IntrinsicToObject:
+        return inlineToObject(callInfo);
+      case InlinableNative::IntrinsicIsObject:
+        return inlineIsObject(callInfo);
+      case InlinableNative::IntrinsicToInteger:
+        return inlineToInteger(callInfo);
+      case InlinableNative::IntrinsicToString:
+        return inlineToString(callInfo);
+      case InlinableNative::IntrinsicIsConstructing:
+        return inlineIsConstructing(callInfo);
+      case InlinableNative::IntrinsicSubstringKernel:
+        return inlineSubstringKernel(callInfo);
+      case InlinableNative::IntrinsicIsArrayIterator:
+        return inlineHasClass(callInfo, &ArrayIteratorObject::class_);
+      case InlinableNative::IntrinsicIsMapIterator:
+        return inlineHasClass(callInfo, &MapIteratorObject::class_);
+      case InlinableNative::IntrinsicIsStringIterator:
+        return inlineHasClass(callInfo, &StringIteratorObject::class_);
+      case InlinableNative::IntrinsicDefineDataProperty:
+        return inlineDefineDataProperty(callInfo);
+
+      // TypedArray intrinsics.
+      case InlinableNative::IntrinsicIsTypedArray:
+        return inlineIsTypedArray(callInfo);
+      case InlinableNative::IntrinsicIsPossiblyWrappedTypedArray:
+        return inlineIsPossiblyWrappedTypedArray(callInfo);
+      case InlinableNative::IntrinsicTypedArrayLength:
+        return inlineTypedArrayLength(callInfo);
+      case InlinableNative::IntrinsicSetDisjointTypedElements:
+        return inlineSetDisjointTypedElements(callInfo);
+
+      // TypedObject intrinsics.
+      case InlinableNative::IntrinsicObjectIsTypedObject:
+        return inlineHasClass(callInfo,
+                              &OutlineTransparentTypedObject::class_,
+                              &OutlineOpaqueTypedObject::class_,
+                              &InlineTransparentTypedObject::class_,
+                              &InlineOpaqueTypedObject::class_);
+      case InlinableNative::IntrinsicObjectIsTransparentTypedObject:
+        return inlineHasClass(callInfo,
+                              &OutlineTransparentTypedObject::class_,
+                              &InlineTransparentTypedObject::class_);
+      case InlinableNative::IntrinsicObjectIsOpaqueTypedObject:
+        return inlineHasClass(callInfo,
+                              &OutlineOpaqueTypedObject::class_,
+                              &InlineOpaqueTypedObject::class_);
+      case InlinableNative::IntrinsicObjectIsTypeDescr:
+        return inlineObjectIsTypeDescr(callInfo);
+      case InlinableNative::IntrinsicTypeDescrIsSimpleType:
+        return inlineHasClass(callInfo,
+                              &ScalarTypeDescr::class_, &ReferenceTypeDescr::class_);
+      case InlinableNative::IntrinsicTypeDescrIsArrayType:
+        return inlineHasClass(callInfo, &ArrayTypeDescr::class_);
+      case InlinableNative::IntrinsicSetTypedObjectOffset:
+        return inlineSetTypedObjectOffset(callInfo);
     }
 
     MOZ_CRASH("Shouldn't get here");
