@@ -408,13 +408,15 @@ public:
     , mCompositableClient(aCompositableClient)
     , mLastPaintContentType(gfxContentType::COLOR)
     , mLastPaintSurfaceMode(SurfaceMode::SURFACE_OPAQUE)
+    , mWasLastPaintProgressive(false)
   {}
 
   virtual void PaintThebes(const nsIntRegion& aNewValidRegion,
                    const nsIntRegion& aPaintRegion,
                    const nsIntRegion& aDirtyRegion,
                    LayerManager::DrawPaintedLayerCallback aCallback,
-                   void* aCallbackData) = 0;
+                   void* aCallbackData,
+                   bool aIsProgressive = false) = 0;
 
   virtual bool SupportsProgressiveUpdate() = 0;
   virtual bool ProgressiveUpdate(nsIntRegion& aValidRegion,
@@ -449,6 +451,8 @@ protected:
   gfxContentType mLastPaintContentType;
   SurfaceMode mLastPaintSurfaceMode;
   CSSToParentLayerScale2D mFrameResolution;
+
+  bool mWasLastPaintProgressive;
 };
 
 class ClientMultiTiledLayerBuffer
@@ -475,7 +479,8 @@ public:
                    const nsIntRegion& aPaintRegion,
                    const nsIntRegion& aDirtyRegion,
                    LayerManager::DrawPaintedLayerCallback aCallback,
-                   void* aCallbackData) override;
+                   void* aCallbackData,
+                   bool aIsProgressive = false) override;
 
   virtual bool SupportsProgressiveUpdate() override { return true; }
   /**

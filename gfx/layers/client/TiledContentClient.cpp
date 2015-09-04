@@ -895,7 +895,8 @@ ClientMultiTiledLayerBuffer::GetSurfaceDescriptorTiles()
                                 mTiles.mFirst.x, mTiles.mFirst.y,
                                 mTiles.mSize.width, mTiles.mSize.height,
                                 mResolution, mFrameResolution.xScale,
-                                mFrameResolution.yScale);
+                                mFrameResolution.yScale,
+                                mWasLastPaintProgressive);
 }
 
 void
@@ -903,13 +904,15 @@ ClientMultiTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
                                          const nsIntRegion& aPaintRegion,
                                          const nsIntRegion& aDirtyRegion,
                                          LayerManager::DrawPaintedLayerCallback aCallback,
-                                         void* aCallbackData)
+                                         void* aCallbackData,
+                                         bool aIsProgressive)
 {
   TILING_LOG("TILING %p: PaintThebes painting region %s\n", mPaintedLayer, Stringify(aPaintRegion).c_str());
   TILING_LOG("TILING %p: PaintThebes new valid region %s\n", mPaintedLayer, Stringify(aNewValidRegion).c_str());
 
   mCallback = aCallback;
   mCallbackData = aCallbackData;
+  mWasLastPaintProgressive = aIsProgressive;
 
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
   long start = PR_IntervalNow();
@@ -1651,7 +1654,7 @@ ClientMultiTiledLayerBuffer::ProgressiveUpdate(nsIntRegion& aValidRegion,
 
     // Paint the computed region and subtract it from the invalid region.
     PaintThebes(validOrStale, regionToPaint, aInvalidRegion,
-                aCallback, aCallbackData);
+                aCallback, aCallbackData, true);
     aInvalidRegion.Sub(aInvalidRegion, regionToPaint);
   } while (repeat);
 
