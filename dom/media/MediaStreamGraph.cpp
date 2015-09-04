@@ -825,13 +825,6 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
   for (uint32_t i = 0; i < aStream->mAudioOutputStreams.Length(); ++i) {
     ticksWritten = 0;
 
-    // We compute the number of needed ticks by converting a difference of graph
-    // time rather than by subtracting two converted stream times to ensure that
-    // the rounding between {Graph,Stream}Time and track ticks is not dependant
-    // on the absolute value of the {Graph,Stream}Time, and so that number of
-    // ticks to play is the same for each cycle.
-    StreamTime ticksNeeded = aTo - aFrom;
-
     MediaStream::AudioOutputStream& audioOutput = aStream->mAudioOutputStreams[i];
     StreamBuffer::Track* track = aStream->mBuffer.FindTrack(audioOutput.mTrackID);
     AudioSegment* audio = track->Get<AudioSegment>();
@@ -849,20 +842,14 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
     // from the right offsets in the stream buffer, even if we've already
     // written silence for some amount of blocked time after the current time.
     GraphTime t = aFrom;
-    while (ticksNeeded) {
+    while (t < aTo) {
       GraphTime end;
       bool blocked = aStream->mBlocked.GetAt(t, &end);
       end = std::min(end, aTo);
 
       // Check how many ticks of sound we can provide if we are blocked some
       // time in the middle of this cycle.
-      StreamTime toWrite = 0;
-      if (end >= aTo) {
-        toWrite = ticksNeeded;
-      } else {
-        toWrite = end - t;
-      }
-      ticksNeeded -= toWrite;
+      StreamTime toWrite = end - t;
 
       if (blocked) {
         output.InsertNullDataAtStart(toWrite);
