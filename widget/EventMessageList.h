@@ -117,7 +117,7 @@ NS_EVENT_MESSAGE(eDragDropEventLast,    eDragLeave)
 // XUL specific events
 NS_EVENT_MESSAGE(eXULEventFirst,        1500)
 NS_EVENT_MESSAGE(eXULPopupShowing,      eXULEventFirst)
-NS_EVENT_MESSAGE(NS_XUL_POPUP_SHOWN,    eXULEventFirst + 1)
+NS_EVENT_MESSAGE(eXULPopupShown,        eXULEventFirst + 1)
 NS_EVENT_MESSAGE(NS_XUL_POPUP_HIDING,   eXULEventFirst + 2)
 NS_EVENT_MESSAGE(NS_XUL_POPUP_HIDDEN,   eXULEventFirst + 3)
 NS_EVENT_MESSAGE(NS_XUL_BROADCAST,      eXULEventFirst + 5)
