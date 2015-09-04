@@ -68,11 +68,6 @@
   --identity-box-selected-background-color: rgba(231,230,230,.2);
 }
 
-:root[devtoolstheme="dark"] .searchbar-dropmarker-image {
-  --searchbar-dropmarker-url: url("chrome://browser/skin/devtools/dropmarker.svg");
-  --searchbar-dropmarker-2x-url: url("chrome://browser/skin/devtools/dropmarker.svg");
-}
-
 :root[devtoolstheme="light"] {
   --url-and-searchbar-background-color: #fff;
 
