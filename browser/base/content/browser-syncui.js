@@ -248,7 +248,7 @@ let gSyncUI = {
   },
 
   handleToolbarButton: function SUI_handleStatusbarButton() {
-    if (this._needsSetup())
+    if (this._needsSetup() || this._loginFailed())
       this.openSetup();
     else
       this.doSync();

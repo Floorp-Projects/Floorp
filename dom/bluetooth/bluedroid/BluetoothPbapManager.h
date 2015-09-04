@@ -143,8 +143,7 @@ private:
   void ReplyToSetPath();
   void ReplyError(uint8_t aError);
   void SendObexData(uint8_t* aData, uint8_t aOpcode, int aSize);
-  bool ReplyToGet(nsIInputStream* aStream, uint16_t aPhonebookSize = 0);
-  bool GetInputStreamFromBlob(nsIInputStream* aStream, Blob* aBlob);
+  bool ReplyToGet(uint16_t aPhonebookSize = 0);
 
   uint8_t SetPhoneBookPath(uint8_t flags, const ObexHeaderSet& aHeader);
   uint8_t PullPhonebook(const ObexHeaderSet& aHeader);
@@ -158,6 +157,7 @@ private:
   InfallibleTArray<uint32_t>  PackPropertiesMask(uint8_t* aData, int aSize);
   bool CompareHeaderTarget(const ObexHeaderSet& aHeader);
   bool IsLegalPath(const nsAString& aPath);
+  bool GetInputStreamFromBlob(Blob* aBlob);
   void AfterPbapConnected();
   void AfterPbapDisconnected();
 
@@ -188,15 +188,14 @@ private:
   nsRefPtr<BluetoothSocket> mServerSocket;
 
   /**
-   * The data stream of vCards which is used in current processing response.
+   * The vCard data stream for current processing response
    */
   nsCOMPtr<nsIInputStream> mVCardDataStream;
 
   /**
-   * A flag to indicate whether 'PhonebookSize' is mandatory for next OBEX
-   * response
+   * Whether 'PhonebookSize' is mandatory for next OBEX response
    */
-  bool mRequirePhonebookSize;
+  bool mPhonebookSizeRequired;
 };
 
 END_BLUETOOTH_NAMESPACE

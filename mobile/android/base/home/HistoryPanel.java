@@ -5,8 +5,11 @@
 
 package org.mozilla.gecko.home;
 
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.EnumSet;
+import java.util.List;
+import java.util.Locale;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,25 +18,29 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.RestrictedProfiles;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.restrictions.Restriction;
+import org.mozilla.gecko.util.ColorUtils;
+import org.mozilla.gecko.util.HardwareUtils;
 
 import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.content.Loader;
+import android.support.v4.widget.CursorAdapter;
 import android.text.SpannableStringBuilder;
 import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
@@ -41,13 +48,13 @@ import android.text.style.ClickableSpan;
 import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -58,6 +65,11 @@ public class HistoryPanel extends HomeFragment {
     // Logging tag name
     private static final String LOGTAG = "GeckoHistoryPanel";
 
+    // For the time sections in history
+    private static final long MS_PER_DAY = 86400000;
+    private static final long MS_PER_WEEK = MS_PER_DAY * 7;
+    private static final List<MostRecentSectionRange> recentSectionTimeOffsetList = new ArrayList<>(MostRecentSection.values().length);
+
     // Cursor loader ID for history query
     private static final int LOADER_ID_HISTORY = 0;
 
@@ -65,11 +77,19 @@ public class HistoryPanel extends HomeFragment {
     private final static String FORMAT_S1 = "%1$s";
     private final static String FORMAT_S2 = "%2$s";
 
+    // Maintain selected range state.
+    // Only accessed from the UI thread.
+    private static MostRecentSection selected;
+
     // Adapter for the list of recent history entries.
-    private HistoryAdapter mAdapter;
+    private CursorAdapter mAdapter;
+
+    // Adapter for the timeline of history entries.
+    private ArrayAdapter<MostRecentSection> mRangeAdapter;
 
     // The view shown by the fragment.
     private HomeListView mList;
+    private HomeListView mRangeList;
 
     // The button view for clearing browsing history.
     private View mClearHistoryButton;
@@ -80,22 +100,62 @@ public class HistoryPanel extends HomeFragment {
     // Callbacks used for the search and favicon cursor loaders
     private CursorLoaderCallbacks mCursorLoaderCallbacks;
 
+    // The time ranges for each section
+    public enum MostRecentSection {
+        TODAY,
+        YESTERDAY,
+        WEEK,
+        THIS_MONTH,
+        MONTH_AGO,
+        TWO_MONTHS_AGO,
+        THREE_MONTHS_AGO,
+        FOUR_MONTHS_AGO,
+        FIVE_MONTHS_AGO,
+        MostRecentSection, OLDER_THAN_SIX_MONTHS
+    };
+
+    protected interface HistoryUrlProvider {
+        public String getURL(int position);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.home_history_panel, container, false);
+        if (HardwareUtils.isTablet() && GeckoScreenOrientation.getInstance().getAndroidOrientation() == Configuration.ORIENTATION_LANDSCAPE) {
+            return inflater.inflate(R.layout.home_history_split_pane_panel, container, false);
+        } else {
+            return inflater.inflate(R.layout.home_history_panel, container, false);
+        }
     }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        mRangeList = (HomeListView) view.findViewById(R.id.range_list);
         mList = (HomeListView) view.findViewById(R.id.list);
         mList.setTag(HomePager.LIST_TAG_HISTORY);
+
+        if (mRangeList != null) {
+            mRangeList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> adapter, View view, int position, long id) {
+                    final MostRecentSection rangeItem = (MostRecentSection) adapter.getItemAtPosition(position);
+                    if (rangeItem != null) {
+                        // Notify data has changed for both range and item adapter.
+                        // This will update selected rangeItem item background and the tabs list.
+                        // This will also update the selected range along with cursor start and end.
+                        selected = rangeItem;
+                        mRangeAdapter.notifyDataSetChanged();
+                        getLoaderManager().getLoader(LOADER_ID_HISTORY).forceLoad();
+                    }
+                }
+            });
+        }
 
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                position -= mAdapter.getMostRecentSectionsCountBefore(position);
-                final Cursor c = mAdapter.getCursor(position);
-                final String url = c.getString(c.getColumnIndexOrThrow(History.URL));
+                final String url = ((HistoryUrlProvider) mAdapter).getURL(position);
 
                 Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM);
 
@@ -177,6 +237,7 @@ public class HistoryPanel extends HomeFragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        mRangeList = null;
         mList = null;
         mEmptyView = null;
         mClearHistoryButton = null;
@@ -186,35 +247,43 @@ public class HistoryPanel extends HomeFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        // Intialize adapter
-        mAdapter = new HistoryAdapter(getActivity());
-        mList.setAdapter(mAdapter);
+        // Reset selection.
+        selected = mRangeList == null ? MostRecentSection.THIS_MONTH : MostRecentSection.TODAY;
+
+        // Initialize adapter
+        if (mRangeList != null) {
+            mAdapter = new HistoryItemAdapter(getActivity(), null, R.layout.home_item_row);
+            mRangeAdapter = new HistoryRangeAdapter(getActivity(), R.layout.home_history_range_item);
+
+            mRangeList.setAdapter(mRangeAdapter);
+            mList.setAdapter(mAdapter);
+        } else {
+            mAdapter = new HistoryHeaderListCursorAdapter(getActivity());
+            mList.setAdapter(mAdapter);
+        }
 
         // Create callbacks before the initial loader is started
         mCursorLoaderCallbacks = new CursorLoaderCallbacks();
+
+        // Update the section string with current time as reference.
+        updateRecentSectionOffset(getActivity());
         loadIfVisible();
+    }
+
+    @Override
+    protected void loadIfVisible() {
+        // Force reload fragment only in tablets.
+        if (canLoad() && HardwareUtils.isTablet()) {
+            load();
+            return;
+        }
+
+         super.loadIfVisible();
     }
 
     @Override
     protected void load() {
         getLoaderManager().initLoader(LOADER_ID_HISTORY, null, mCursorLoaderCallbacks);
-    }
-
-    private static class HistoryCursorLoader extends SimpleCursorLoader {
-        // Max number of history results
-        private static final int HISTORY_LIMIT = 100;
-        private final BrowserDB mDB;
-
-        public HistoryCursorLoader(Context context) {
-            super(context);
-            mDB = GeckoProfile.get(context).getDB();
-        }
-
-        @Override
-        public Cursor loadCursor() {
-            final ContentResolver cr = getContext().getContentResolver();
-            return mDB.getRecentHistory(cr, HISTORY_LIMIT);
-        }
     }
 
     private void updateUiFromCursor(Cursor c) {
@@ -314,176 +383,109 @@ public class HistoryPanel extends HomeFragment {
         return ssb;
     }
 
-    private static class HistoryAdapter extends MultiTypeCursorAdapter {
-        private static final int ROW_HEADER = 0;
-        private static final int ROW_STANDARD = 1;
+    private static void updateRecentSectionOffset(final Context context) {
+        final long now = System.currentTimeMillis();
+        final Calendar cal  = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 1);
 
-        private static final int[] VIEW_TYPES = new int[] { ROW_STANDARD, ROW_HEADER };
-        private static final int[] LAYOUT_TYPES = new int[] { R.layout.home_item_row, R.layout.home_header_row };
+        // Calculate the start, end time and display text for the MostRecentSection range.
+        recentSectionTimeOffsetList.add(MostRecentSection.TODAY.ordinal(),
+                new MostRecentSectionRange(cal.getTimeInMillis(), now, context.getString(R.string.history_today_section)));
+        recentSectionTimeOffsetList.add(MostRecentSection.YESTERDAY.ordinal(),
+                new MostRecentSectionRange(cal.getTimeInMillis() - MS_PER_DAY, cal.getTimeInMillis(), context.getString(R.string.history_yesterday_section)));
+        recentSectionTimeOffsetList.add(MostRecentSection.WEEK.ordinal(),
+                new MostRecentSectionRange(cal.getTimeInMillis() - MS_PER_WEEK, now, context.getString(R.string.history_week_section)));
 
-        // For the time sections in history
-        private static final long MS_PER_DAY = 86400000;
-        private static final long MS_PER_WEEK = MS_PER_DAY * 7;
+        // Update the calendar to start of next month.
+        cal.add(Calendar.MONTH, 1);
+        cal.set(Calendar.DAY_OF_MONTH, cal.getMinimum(Calendar.DAY_OF_MONTH));
 
-        // The time ranges for each section
-        private static enum MostRecentSection {
-            TODAY,
-            YESTERDAY,
-            WEEK,
-            OLDER
-        };
+        // Iterate over the remaining MostRecentSections, to find the start, end and display text.
+        for (int i = MostRecentSection.THIS_MONTH.ordinal(); i <= MostRecentSection.OLDER_THAN_SIX_MONTHS.ordinal(); i++) {
+            final long end = cal.getTimeInMillis();
+            cal.add(Calendar.MONTH, -1);
+            final long start = cal.getTimeInMillis();
+            final String displayName = (i != MostRecentSection.OLDER_THAN_SIX_MONTHS.ordinal())
+                    ? cal.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault())
+                    : context.getString(R.string.history_older_section);
+            recentSectionTimeOffsetList.add(i, new MostRecentSectionRange(start, end, displayName));
+        }
+    }
 
-        private final Context mContext;
+    private static class HistoryCursorLoader extends SimpleCursorLoader {
+        // Max number of history results
+        private static final int HISTORY_LIMIT = 100;
+        private final BrowserDB mDB;
 
-        // Maps headers in the list with their respective sections
-        private final SparseArray<MostRecentSection> mMostRecentSections;
-
-        public HistoryAdapter(Context context) {
-            super(context, null, VIEW_TYPES, LAYOUT_TYPES);
-
-            mContext = context;
-
-            // Initialize map of history sections
-            mMostRecentSections = new SparseArray<MostRecentSection>();
+        public HistoryCursorLoader(Context context) {
+            super(context);
+            mDB = GeckoProfile.get(context).getDB();
         }
 
         @Override
-        public Object getItem(int position) {
-            final int type = getItemViewType(position);
+        public Cursor loadCursor() {
+            final ContentResolver cr = getContext().getContentResolver();
+            updateRecentSectionOffset(getContext());
+            MostRecentSectionRange mostRecentSectionRange = recentSectionTimeOffsetList.get(selected.ordinal());
+            return mDB.getRecentHistoryBetweenTime(cr, HISTORY_LIMIT, mostRecentSectionRange.start, mostRecentSectionRange.end);
+        }
+    }
 
-            // Header items are not in the cursor
-            if (type == ROW_HEADER) {
-                return null;
+    protected static String getMostRecentSectionTitle(MostRecentSection section) {
+        return recentSectionTimeOffsetList.get(section.ordinal()).displayName;
+    }
+
+    protected static MostRecentSection getMostRecentSectionForTime(long time) {
+        for (int i = 0; i < MostRecentSection.OLDER_THAN_SIX_MONTHS.ordinal(); i++) {
+            if (time > recentSectionTimeOffsetList.get(i).start) {
+                return MostRecentSection.values()[i];
             }
+        }
 
-            return super.getItem(position - getMostRecentSectionsCountBefore(position));
+        return MostRecentSection.OLDER_THAN_SIX_MONTHS;
+    }
+
+    private static class MostRecentSectionRange {
+        private final long start;
+        private final long end;
+        private final String displayName;
+
+        private MostRecentSectionRange(long start, long end, String displayName) {
+            this.start = start;
+            this.end = end;
+            this.displayName = displayName;
+        }
+    }
+
+    private static class HistoryRangeAdapter extends ArrayAdapter<MostRecentSection> {
+        private final Context context;
+        private final int resource;
+
+        public HistoryRangeAdapter(Context context, int resource) {
+            super(context, resource, MostRecentSection.values());
+            this.context = context;
+            this.resource = resource;
         }
 
         @Override
-        public int getItemViewType(int position) {
-            if (mMostRecentSections.get(position) != null) {
-                return ROW_HEADER;
-            }
-
-            return ROW_STANDARD;
-        }
-
-        @Override
-        public boolean isEnabled(int position) {
-            return (getItemViewType(position) == ROW_STANDARD);
-        }
-
-        @Override
-        public int getCount() {
-            // Add the history section headers to the number of reported results.
-            return super.getCount() + mMostRecentSections.size();
-        }
-
-        @Override
-        public Cursor swapCursor(Cursor cursor) {
-            loadMostRecentSections(cursor);
-            Cursor oldCursor = super.swapCursor(cursor);
-            return oldCursor;
-        }
-
-        @Override
-        public void bindView(View view, Context context, int position) {
-            final int type = getItemViewType(position);
-
-            if (type == ROW_HEADER) {
-                final MostRecentSection section = mMostRecentSections.get(position);
-                final TextView row = (TextView) view;
-                row.setText(getMostRecentSectionTitle(section));
+        public View getView(int position, View convertView, ViewGroup parent) {
+            final View view;
+            if (convertView != null) {
+                view = convertView;
             } else {
-                // Account for the most recent section headers
-                position -= getMostRecentSectionsCountBefore(position);
-                final Cursor c = getCursor(position);
-                final TwoLinePageRow row = (TwoLinePageRow) view;
-                row.updateFromCursor(c);
+                final LayoutInflater inflater = LayoutInflater.from(context);
+                view = inflater.inflate(resource, parent, false);
+                view.setTag(view.findViewById(R.id.range_title));
             }
-        }
-
-        private String getMostRecentSectionTitle(MostRecentSection section) {
-            switch (section) {
-            case TODAY:
-                return mContext.getString(R.string.history_today_section);
-            case YESTERDAY:
-                return mContext.getString(R.string.history_yesterday_section);
-            case WEEK:
-                return mContext.getString(R.string.history_week_section);
-            case OLDER:
-                return mContext.getString(R.string.history_older_section);
-            }
-
-            throw new IllegalStateException("Unrecognized history section");
-        }
-
-        private int getMostRecentSectionsCountBefore(int position) {
-            // Account for the number headers before the given position
-            int sectionsBefore = 0;
-
-            final int historySectionsCount = mMostRecentSections.size();
-            for (int i = 0; i < historySectionsCount; i++) {
-                final int sectionPosition = mMostRecentSections.keyAt(i);
-                if (sectionPosition > position) {
-                    break;
-                }
-
-                sectionsBefore++;
-            }
-
-            return sectionsBefore;
-        }
-
-        private static MostRecentSection getMostRecentSectionForTime(long from, long time) {
-            long delta = from - time;
-
-            if (delta < 0) {
-                return MostRecentSection.TODAY;
-            }
-
-            if (delta < MS_PER_DAY) {
-                return MostRecentSection.YESTERDAY;
-            }
-
-            if (delta < MS_PER_WEEK) {
-                return MostRecentSection.WEEK;
-            }
-
-            return MostRecentSection.OLDER;
-        }
-
-        private void loadMostRecentSections(Cursor c) {
-            // Clear any history sections that may have been loaded before.
-            mMostRecentSections.clear();
-
-            if (c == null || !c.moveToFirst()) {
-                return;
-            }
-
-            final Date now = new Date();
-            now.setHours(0);
-            now.setMinutes(0);
-            now.setSeconds(0);
-
-            final long today = now.getTime();
-            MostRecentSection section = null;
-
-            do {
-                final int position = c.getPosition();
-                final long time = c.getLong(c.getColumnIndexOrThrow(History.DATE_LAST_VISITED));
-                final MostRecentSection itemSection = HistoryAdapter.getMostRecentSectionForTime(today, time);
-
-                if (section != itemSection) {
-                    section = itemSection;
-                    mMostRecentSections.append(position + mMostRecentSections.size(), section);
-                }
-
-                // Reached the last section, no need to continue
-                if (section == MostRecentSection.OLDER) {
-                    break;
-                }
-            } while (c.moveToNext());
+            final MostRecentSection current = getItem(position);
+            final TextView textView = (TextView) view.getTag();
+            textView.setText(getMostRecentSectionTitle(current));
+            textView.setTextColor(ColorUtils.getColor(context, current == selected ? R.color.text_and_tabs_tray_grey : R.color.disabled_grey));
+            textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, current == selected ? R.drawable.home_group_collapsed : 0, 0);
+            return view;
         }
     }
 

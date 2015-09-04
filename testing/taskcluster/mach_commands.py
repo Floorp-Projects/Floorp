@@ -175,6 +175,20 @@ def configure_dependent_task(task_path, parameters, taskid, templates, build_tre
 
     return task
 
+def set_interactive_task(task, interactive):
+    r"""Make the task interactive.
+
+    :param task: task definition.
+    :param interactive: True if the task should be interactive.
+    """
+    if not interactive:
+        return
+
+    payload = task["task"]["payload"]
+    if "features" not in payload:
+        payload["features"] = {}
+    payload["features"]["interactive"] = True
+
 @CommandProvider
 class DecisionTask(object):
     @Command('taskcluster-decision', category="ci",
@@ -255,6 +269,12 @@ class Graph(object):
         help='email address of who owns this graph')
     @CommandArgument('--extend-graph',
         action="store_true", dest="ci", help='Omit create graph arguments')
+    @CommandArgument('--interactive',
+        required=False,
+        default=False,
+        action="store_true",
+        dest="interactive",
+        help="Run the tasks with the interactive feature enabled")
     def create_graph(self, **params):
         from taskcluster_graph.commit_parser import parse_commit
         from taskcluster_graph.slugid import slugid
@@ -286,6 +306,8 @@ class Graph(object):
 
         # once everything uses in-tree mozharness (bug 1187706), this can go away.
         mozharness = load_mozharness_info()
+
+        cmdline_interactive = params.get('interactive', False)
 
         # Template parameters used when expanding the graph
         parameters = dict(gaia_info().items() + {
@@ -337,9 +359,11 @@ class Graph(object):
         }
 
         for build in job_graph:
+            interactive = cmdline_interactive or build["interactive"]
             build_parameters = dict(parameters)
             build_parameters['build_slugid'] = slugid()
             build_task = templates.load(build['task'], build_parameters)
+            set_interactive_task(build_task, interactive)
 
             if params['revision_hash']:
                 decorate_task_treeherder_routes(build_task['task'],
@@ -412,6 +436,7 @@ class Graph(object):
                                                      slugid(),
                                                      templates,
                                                      build_treeherder_config)
+                set_interactive_task(post_task, interactive)
                 graph['tasks'].append(post_task)
 
             for test in build['dependents']:
@@ -443,6 +468,7 @@ class Graph(object):
                                                          slugid(),
                                                          templates,
                                                          build_treeherder_config)
+                    set_interactive_task(test_task, interactive)
 
                     if params['revision_hash']:
                         decorate_task_treeherder_routes(
@@ -485,6 +511,12 @@ class CIBuild(object):
         help='email address of who owns this graph')
     @CommandArgument('build_task',
         help='path to build task definition')
+    @CommandArgument('--interactive',
+        required=False,
+        default=False,
+        action="store_true",
+        dest="interactive",
+        help="Run the task with the interactive feature enabled")
     def create_ci_build(self, **params):
         from taskcluster_graph.templates import Templates
         import taskcluster_graph.build_task
@@ -518,6 +550,7 @@ class CIBuild(object):
 
         try:
             build_task = templates.load(params['build_task'], build_parameters)
+            set_interactive_task(build_task, params.get('interactive', False))
         except IOError:
             sys.stderr.write(
                 "Could not load build task file.  Ensure path is a relative " \
