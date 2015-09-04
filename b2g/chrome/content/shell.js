@@ -77,6 +77,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "SafeBrowsing",
               "resource://gre/modules/SafeBrowsing.jsm");
 #endif
 
+XPCOMUtils.defineLazyModuleGetter(this, "SafeMode",
+                                  "resource://gre/modules/SafeMode.jsm");
+
 window.performance.measure('gecko-shell-jsm-loaded', 'gecko-shell-loadstart');
 
 function getContentWindow() {
@@ -238,17 +241,21 @@ var shell = {
 #endif
 
     window.performance.mark('gecko-shell-bootstrap');
-    let startManifestURL =
-      Cc['@mozilla.org/commandlinehandler/general-startup;1?type=b2gbootstrap']
-        .getService(Ci.nsISupports).wrappedJSObject.startManifestURL;
-    if (startManifestURL) {
-      Cu.import('resource://gre/modules/Bootstraper.jsm');
-      Bootstraper.ensureSystemAppInstall(startManifestURL)
-                 .then(this.start.bind(this))
-                 .catch(Bootstraper.bailout);
-    } else {
-      this.start();
-    }
+
+    // Before anything, check if we want to start in safe mode.
+    SafeMode.check(window).then(() => {
+      let startManifestURL =
+        Cc['@mozilla.org/commandlinehandler/general-startup;1?type=b2gbootstrap']
+          .getService(Ci.nsISupports).wrappedJSObject.startManifestURL;
+      if (startManifestURL) {
+        Cu.import('resource://gre/modules/Bootstraper.jsm');
+        Bootstraper.ensureSystemAppInstall(startManifestURL)
+                   .then(this.start.bind(this))
+                   .catch(Bootstraper.bailout);
+      } else {
+        this.start();
+      }
+    });
   },
 
   start: function shell_start() {
