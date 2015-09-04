@@ -1,0 +1,223 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Intrinsic track sizing (with span:1)</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151212">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#algo-content">
+  <link rel="match" href="grid-track-intrinsic-sizing-004-ref.html">
+  <style type="text/css">
+body,html { color:black; background:white; font-family:monospace; font-size:16px; padding:0; margin:0; }
+
+.grid {
+ display: grid;
+ border: 1px solid black;
+ width: 500px;
+}
+.float { width:auto; float:left; }
+.g1 {
+ grid-template-columns: minmax(0,auto)
+                        minmax(max-content,auto)
+                        minmax(max-content,max-content);
+}
+.g2 {
+ grid-template-columns: minmax(max-content,auto)
+                        minmax(min-content,auto)
+                        minmax(max-content,max-content);
+}
+.g2f {
+ grid-template-columns: minmax(max-content,auto)
+                        minmax(1fr,auto)
+                        minmax(max-content,max-content);
+}
+.g3 {
+ grid-template-columns: minmax(max-content,max-content)
+                        minmax(min-content,max-content)
+                        minmax(max-content,max-content);
+}
+.g4 {
+ grid-template-columns: minmax(max-content,max-content)
+                        minmax(min-content,max-content)
+                        minmax(min-content,max-content);
+}
+.g4f {
+ grid-template-columns: minmax(max-content,max-content)
+                        minmax(1fr,max-content)
+                        minmax(min-content,max-content);
+}
+.g5 {
+ grid-template-columns: minmax(max-content,auto)
+                        minmax(min-content,max-content)
+                        minmax(min-content,auto);
+}
+.g6 {
+ grid-template-columns: minmax(min-content,auto)
+                        minmax(min-content,max-content)
+                        minmax(min-content,auto);
+}
+.g6f {
+ grid-template-columns: minmax(1fr,auto)
+                        minmax(min-content,max-content)
+                        minmax(min-content,auto);
+}
+.g7 {
+ grid-template-columns: minmax(min-content,auto)
+                        minmax(min-content,auto)
+                        minmax(min-content,auto);
+}
+.g8 {
+ grid-template-columns: minmax(auto,min-content)
+                        minmax(200px,min-content)
+                        minmax(min-content,min-content);
+}
+.g9 {
+ grid-template-columns: minmax(auto,auto)
+                        minmax(auto,auto)
+                        minmax(auto,auto);
+}
+.gA {
+ grid-template-columns: minmax(auto,auto)
+                        minmax(min-content,min-content)
+                        minmax(min-content,min-content);
+}
+.gB {
+ grid-template-columns: minmax(auto,auto)
+                        minmax(max-content,min-content)
+                        minmax(min-content,min-content);
+}
+.gC {
+ grid-template-columns: minmax(auto,auto)
+                        minmax(max-content,min-content)
+                        minmax(min-content,max-content);
+}
+.gD {
+ grid-template-columns: minmax(auto,auto)
+                        minmax(max-content,max-content)
+                        minmax(min-content,max-content);
+}
+
+.t { grid-column: span 3; border:2px solid; }
+.c1 { grid-column: 1; height:10px; }
+.c2 { grid-column: 2; background: grey; height:10px; }
+.c3 { grid-column: 3; background: blue; height:10px; }
+div { min-width:0; min-height:10px; }
+t { display:inline-block; width:20px; }
+
+  </style>
+</head>
+<body>
+
+<div class="g1 grid">
+  <div class="t"><t>1 </t><t>2 </t><t>3 </t><t>4 </t><t>5</t></div>
+  <div class="c1"></div>
+  <div class="c2"></div>
+  <div class="c3"><t>&nbsp;</t></div>
+</div>
+
+<div class="g2 grid">
+  <div class="t"><t>1 </t><t>2 </t><t>3 </t><t>4 </t><t>5</t></div>
+  <div class="c1"></div>
+  <div class="c2"></div>
+  <div class="c3"><t>&nbsp;</t></div>
+</div>
+<div class="g2f grid">
+  <div class="t"><t>1 </t><t>2 </t><t>3 </t><t>4 </t><t>5</t></div>
+  <div class="c1"></div>
+  <div class="c2"></div>
+  <div class="c3"><t>&nbsp;</t></div>
+</div>
+
+<div class="g3 grid">
+  <div class="t"><t>1 </t><t>2 </t><t>3 </t><t>4 </t><t>5</t></div>
+  <div class="c1"></div>
+  <div class="c2"></div>
+  <div class="c3"><t>&nbsp;</t></div>
+</div>
+
+<div class="g4 grid">
+  <div class="t"><t>1 </t><t>2 </t><t>3 </t><t>4 </t><t>5</t></div>
+  <div class="c1"></div>
+  <div class="c2"></div>
+  <div class="c3"><t>&nbsp;</t></div>
+</div>
+<div class="g4f grid">
+  <div class="t"><t>1 </t><t>2 </t><t>3 </t><t>4 </t><t>5</t></div>
+  <div class="c1"></div>
+  <div class="c2"></div>
+  <div class="c3"><t>&nbsp;</t></div>
+</div>
+
+<div class="g5 grid">
+  <div class="t"><t>1 </t><t>2 </t><t>3 </t><t>4 </t><t>5</t></div>
+  <div class="c1"></div>
+  <div class="c2"></div>
+  <div class="c3"><t>&nbsp;</t></div>
+</div>
+
+<div class="g6 grid">
+  <div class="t"><t>1 </t><t>2 </t><t>3 </t><t>4 </t><t>5</t></div>
+  <div class="c1"></div>
+  <div class="c2"></div>
+  <div class="c3"><t>&nbsp;</t></div>
+</div>
+<div class="g6f grid">
+  <div class="t"><t>1 </t><t>2 </t><t>3 </t><t>4 </t><t>5</t></div>
+  <div class="c1"></div>
+  <div class="c2"></div>
+  <div class="c3"><t>&nbsp;</t></div>
+</div>
+
+<div class="g7 grid">
+  <div class="t"><t>1 </t><t>2 </t><t>3 </t><t>4 </t><t>5</t></div>
+  <div class="c1"></div>
+  <div class="c2"></div>
+  <div class="c3"><t>&nbsp;</t></div>
+</div>
+
+<div class="g8 grid">
+  <div class="t"><t>1 </t><t>2 </t><t>3 </t><t>4 </t><t>5</t></div>
+  <div class="c1"></div>
+  <div class="c2"></div>
+  <div class="c3"><t>&nbsp;</t></div>
+</div>
+
+<div class="g9 grid">
+  <div class="t"><t>1 </t><t>2 </t><t>3 </t><t>4 </t><t>5</t></div>
+  <div class="c1"></div>
+  <div class="c2"></div>
+  <div class="c3"><t>&nbsp;</t></div>
+</div>
+
+<div class="gA grid">
+  <div class="t"><t>1 </t><t>2 </t><t>3 </t><t>4 </t><t>5</t></div>
+  <div class="c1"></div>
+  <div class="c2"></div>
+  <div class="c3"><t>&nbsp;</t></div>
+</div>
+
+<div class="gB grid">
+  <div class="t"><t>1 </t><t>2 </t><t>3 </t><t>4 </t><t>5</t></div>
+  <div class="c1"></div>
+  <div class="c2"></div>
+  <div class="c3"><t>&nbsp;</t></div>
+</div>
+
+<div class="gC grid">
+  <div class="t"><t>1 </t><t>2 </t><t>3 </t><t>4 </t><t>5</t></div>
+  <div class="c1"></div>
+  <div class="c2"></div>
+  <div class="c3"><t>&nbsp;</t></div>
+</div>
+
+<div class="gD grid">
+  <div class="t"><t>1 </t><t>2 </t><t>3 </t><t>4 </t><t>5</t></div>
+  <div class="c1"></div>
+  <div class="c2"></div>
+  <div class="c3"><t>&nbsp;</t></div>
+</div>
+
+</body>
+</html>
