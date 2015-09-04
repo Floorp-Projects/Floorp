@@ -627,13 +627,11 @@ protected:
   nsTArray<MainThreadMediaStreamListener*> mMainThreadListeners;
   nsTArray<TrackID> mDisabledTrackIDs;
 
-  // Precomputed blocking status (over GraphTime).
-  // This is only valid between the graph's mCurrentTime and
-  // mStateComputedTime. The stream is considered to have
-  // not been blocked before mCurrentTime (its mBufferStartTime is increased
-  // as necessary to account for that time instead) --- this avoids us having to
-  // record the entire history of the stream's blocking-ness in mBlocked.
-  TimeVarying<GraphTime,bool,5> mBlocked;
+  // GraphTime at which this stream starts blocking.
+  // This is only valid up to mStateComputedTime. The stream is considered to
+  // have not been blocked before mCurrentTime (its mBufferStartTime is increased
+  // as necessary to account for that time instead).
+  GraphTime mStartBlocking;
 
   // MediaInputPorts to which this is connected
   nsTArray<MediaInputPort*> mConsumers;
