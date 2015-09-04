@@ -152,6 +152,10 @@ const mockedControlChannel = {
     sendAsyncMessage('answer-received');
     this._listener.QueryInterface(Ci.nsIPresentationControlChannelListener).onAnswer(mockedChannelDescription);
   },
+  simulateNotifyOpened: function() {
+    sendAsyncMessage('control-channel-opened');
+    this._listener.QueryInterface(Ci.nsIPresentationControlChannelListener).notifyOpened();
+  },
 };
 
 const mockedDevice = {
@@ -367,6 +371,10 @@ addMessageListener('trigger-incoming-answer', function() {
 
 addMessageListener('trigger-incoming-transport', function() {
   mockedServerSocket.simulateOnSocketAccepted(mockedServerSocket, mockedSocketTransport);
+});
+
+addMessageListener('trigger-control-channel-open', function(reason) {
+  mockedControlChannel.simulateNotifyOpened();
 });
 
 addMessageListener('trigger-control-channel-close', function(reason) {
