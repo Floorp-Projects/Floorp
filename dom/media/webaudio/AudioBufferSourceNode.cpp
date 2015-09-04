@@ -222,11 +222,9 @@ public:
                                          AudioBlock* aOutput,
                                          uint32_t aChannels,
                                          uint32_t* aOffsetWithinBlock,
+                                         uint32_t aAvailableInOutput,
                                          StreamTime* aCurrentPosition,
                                          int32_t aBufferMax) {
-    // TODO: adjust for mStop (see bug 913854 comment 9).
-    uint32_t availableInOutputBuffer =
-      WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock;
     SpeexResamplerState* resampler = mResampler;
     MOZ_ASSERT(aChannels > 0);
 
@@ -238,7 +236,7 @@ public:
       // format-converted for resampling by estimating how many will be used.
       // This may be a little small if still filling the resampler with
       // initial data, but we'll get called again and it will work out.
-      uint32_t inputLimit = availableInOutputBuffer * ratioNum / ratioDen + 10;
+      uint32_t inputLimit = aAvailableInOutput * ratioNum / ratioDen + 10;
       if (!BegunResampling()) {
         // First time the resampler is used.
         uint32_t inputLatency = speex_resampler_get_input_latency(resampler);
@@ -265,7 +263,7 @@ public:
         uint32_t inSamples = inputLimit;
         const float* inputData = mBuffer->GetData(i) + mBufferPosition;
 
-        uint32_t outSamples = availableInOutputBuffer;
+        uint32_t outSamples = aAvailableInOutput;
         float* outputData =
           aOutput->ChannelFloatsForWrite(i) + *aOffsetWithinBlock;
 
@@ -290,7 +288,7 @@ public:
     } else {
       for (uint32_t i = 0; true; ) {
         uint32_t inSamples = mRemainingResamplerTail;
-        uint32_t outSamples = availableInOutputBuffer;
+        uint32_t outSamples = aAvailableInOutput;
         float* outputData =
           aOutput->ChannelFloatsForWrite(i) + *aOffsetWithinBlock;
 
@@ -357,10 +355,11 @@ public:
                       int32_t aBufferMax)
   {
     MOZ_ASSERT(*aCurrentPosition < mStop);
-    uint32_t numFrames =
-      std::min(std::min<StreamTime>(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
-                                    aBufferMax - mBufferPosition),
-               mStop - *aCurrentPosition);
+    uint32_t availableInOutput =
+      std::min<StreamTime>(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
+                           mStop - *aCurrentPosition);
+    uint32_t numFrames = std::min<uint32_t>(aBufferMax - mBufferPosition,
+                                            availableInOutput);
     if (numFrames == WEBAUDIO_BLOCK_SIZE && !mResampler) {
       MOZ_ASSERT(mBufferPosition < aBufferMax);
       BorrowFromInputBuffer(aOutput, aChannels);
@@ -378,7 +377,9 @@ public:
         *aCurrentPosition += numFrames;
         mBufferPosition += numFrames;
       } else {
-        CopyFromInputBufferWithResampling(aStream, aOutput, aChannels, aOffsetWithinBlock, aCurrentPosition, aBufferMax);
+        CopyFromInputBufferWithResampling(aStream, aOutput, aChannels,
+                                          aOffsetWithinBlock, availableInOutput,
+                                          aCurrentPosition, aBufferMax);
       }
     }
   }
