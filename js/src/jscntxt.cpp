@@ -947,7 +947,7 @@ ExclusiveContext::recoverFromOutOfMemory()
 JSContext::JSContext(JSRuntime* rt)
   : ExclusiveContext(rt, &rt->mainThread, Context_JS),
     throwing(false),
-    unwrappedException_(UndefinedValue()),
+    unwrappedException_(this),
     options_(),
     overRecursed_(false),
     propagatingForcedReturn_(false),
@@ -1135,10 +1135,6 @@ void
 JSContext::mark(JSTracer* trc)
 {
     /* Stack frames and slots are traced by StackSpace::mark. */
-
-    /* Mark other roots-by-definition in the JSContext. */
-    if (isExceptionPending())
-        TraceRoot(trc, &unwrappedException_, "unwrapped exception");
 
     TraceCycleDetectionSet(trc, cycleDetectorSet);
 
