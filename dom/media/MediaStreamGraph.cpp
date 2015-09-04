@@ -647,27 +647,6 @@ MediaStreamGraphImpl::UpdateStreamOrder()
   MOZ_ASSERT(orderedStreamCount == mFirstCycleBreaker);
 }
 
-void
-MediaStreamGraphImpl::RecomputeBlocking(GraphTime aEndBlockingDecisions)
-{
-  STREAM_LOG(LogLevel::Verbose, ("Media graph %p computing blocking for time %f",
-                              this, MediaTimeToSeconds(mStateComputedTime)));
-  for (MediaStream* stream : AllStreams()) {
-    stream->mStartBlocking =
-      ComputeStreamBlockTime(stream, mStateComputedTime, aEndBlockingDecisions);
-  }
-  STREAM_LOG(LogLevel::Verbose, ("Media graph %p computed blocking for interval %f to %f",
-                              this, MediaTimeToSeconds(mStateComputedTime),
-                              MediaTimeToSeconds(aEndBlockingDecisions)));
-
-  MOZ_ASSERT(aEndBlockingDecisions >= mProcessedTime);
-  // The next state computed time can be the same as the previous: it
-  // means the driver would be have been blocking indefinitly, but the graph has
-  // been woken up right after having been to sleep.
-  MOZ_ASSERT(aEndBlockingDecisions >= mStateComputedTime);
-  mStateComputedTime = aEndBlockingDecisions;
-}
-
 GraphTime
 MediaStreamGraphImpl::ComputeStreamBlockTime(MediaStream* aStream,
                                              GraphTime aTime,
@@ -1138,7 +1117,7 @@ MediaStreamGraphImpl::AllFinishedStreamsNotified()
 }
 
 void
-MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecision)
+MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
 {
   // Calculate independent action times for each batch of messages (each
   // batch corresponding to an event loop task). This isolates the performance
@@ -1152,17 +1131,30 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecision)
   }
   mFrontMessageQueue.Clear();
 
+  MOZ_ASSERT(aEndBlockingDecisions >= mProcessedTime);
+  // The next state computed time can be the same as the previous: it
+  // means the driver would be have been blocking indefinitly, but the graph has
+  // been woken up right after having been to sleep.
+  MOZ_ASSERT(aEndBlockingDecisions >= mStateComputedTime);
+
   UpdateStreamOrder();
 
   bool ensureNextIteration = false;
 
-  // Grab pending stream input.
-  for (uint32_t i = 0; i < mStreams.Length(); ++i) {
-    SourceMediaStream* is = mStreams[i]->AsSourceStream();
+  // Grab pending stream input and compute blocking time
+  for (MediaStream* stream : mStreams) {
+    SourceMediaStream* is = stream->AsSourceStream();
     if (is) {
       UpdateConsumptionState(is);
-      ExtractPendingInput(is, aEndBlockingDecision, &ensureNextIteration);
+      ExtractPendingInput(is, aEndBlockingDecisions, &ensureNextIteration);
     }
+
+    stream->mStartBlocking =
+      ComputeStreamBlockTime(stream, mStateComputedTime, aEndBlockingDecisions);
+  }
+  for (MediaStream* stream : mSuspendedStreams) {
+    stream->mStartBlocking =
+      ComputeStreamBlockTime(stream, mStateComputedTime, aEndBlockingDecisions);
   }
 
   // The loop is woken up so soon that IterationEnd() barely advances and we
@@ -1172,12 +1164,11 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecision)
   // We should ensure next iteration so that pending blocking changes will be
   // computed in next loop.
   if (ensureNextIteration ||
-      aEndBlockingDecision == mStateComputedTime) {
+      aEndBlockingDecisions == mStateComputedTime) {
     EnsureNextIteration();
   }
 
-  // Figure out which streams are blocked and when.
-  RecomputeBlocking(aEndBlockingDecision);
+  mStateComputedTime = aEndBlockingDecisions;
 }
 
 void
