@@ -1,35 +1,28 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for generating WebExtensions</title>
+  <title>Test for simple WebExtension</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 
 <script type="application/javascript;version=1.8">
 
-function backgroundScript() {
-  browser.test.log("running background script");
-
-  browser.test.onMessage.addListener((x, y) => {
-    browser.test.assertEq(x, 10, "x is 10");
-    browser.test.assertEq(y, 20, "y is 20");
-
-    browser.test.notifyPass("background test passed");
-  });
-
-  browser.test.sendMessage("running", 1);
-}
-
-let extensionData = {
-  background: "(" + backgroundScript.toString() + ")()"
-};
+add_task(function* test_simple() {
+  let extension = ExtensionTestUtils.loadExtension("simple");
+  info("load complete");
+  yield extension.startup();
+  info("startup complete");
+  yield extension.unload();
+  info("extension unloaded successfully");
+});
 
 add_task(function* test_background() {
-  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  let extension = ExtensionTestUtils.loadExtension("background");
   info("load complete");
   yield extension.startup();
   let x = yield extension.awaitMessage("running");
