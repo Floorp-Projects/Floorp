@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<script>
+function draw() {
+var ctx = document.getElementById('c').getContext('2d');
+
+ctx.beginPath();
+ctx.arc(75, 75, 74, 0, 2 * Math.PI);
+ctx.closePath();
+ctx.fill();
+
+ctx.globalCompositeOperation = 'destination-out';
+ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+ctx.shadowBlur = 3;
+ctx.beginPath();
+ctx.arc(75, 75, 40, 0, 2 * Math.PI);
+ctx.closePath();
+ctx.fill();
+ctx.shadowBlur = 0;
+
+ctx.globalCompositeOperation = 'source-over';
+ctx.lineWidth = 10;
+ctx.strokeStyle = 'green';
+ctx.beginPath();
+ctx.arc(75, 75, 40, 0, 2 * Math.PI);
+ctx.closePath();
+ctx.stroke();
+}
+</script>
+</head>
+<body onload='draw()' style='background: white;'>
+<canvas id='c' width='200' height='200'></canvas>
+</body>
+</html>
