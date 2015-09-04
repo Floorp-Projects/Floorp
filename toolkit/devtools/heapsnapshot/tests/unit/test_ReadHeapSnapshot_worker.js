@@ -28,7 +28,7 @@ add_task(function* () {
 
 function waitForDone(w) {
   return new Promise((resolve, reject) => {
-    worker.onerror = e => {
+    w.onerror = e => {
       reject();
       ok(false, "Error in worker: " + e);
     };
