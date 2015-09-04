@@ -188,15 +188,14 @@ private:
   nsRefPtr<BluetoothSocket> mServerSocket;
 
   /**
-   * The data stream of vCards which is used in current processing response.
+   * The vCard data stream for current processing response
    */
   nsCOMPtr<nsIInputStream> mVCardDataStream;
 
   /**
-   * A flag to indicate whether 'PhonebookSize' is mandatory for next OBEX
-   * response
+   * Whether 'PhonebookSize' is mandatory for next OBEX response
    */
-  bool mRequirePhonebookSize;
+  bool mPhonebookSizeRequired;
 };
 
 END_BLUETOOTH_NAMESPACE
