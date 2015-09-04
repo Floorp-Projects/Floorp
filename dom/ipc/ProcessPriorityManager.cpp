@@ -118,7 +118,6 @@ public:
 private:
   ProcessPriority mPriority;
   uint32_t mLRUPoolLevels;
-  uint32_t mLRUPoolSize;
   nsTArray<ParticularProcessPriorityManager*> mLRUPool;
 
   uint32_t CalculateLRULevel(uint32_t aLRUPoolIndex);
@@ -1359,9 +1358,9 @@ ProcessLRUPool::ProcessLRUPool(ProcessPriority aPriority)
              mLRUPoolLevels <= 4);
 
   // LRU pool size = 2 ^ (number of background LRU pool levels) - 1
-  mLRUPoolSize = (1 << mLRUPoolLevels) - 1;
+  uint32_t LRUPoolSize = (1 << mLRUPoolLevels) - 1;
 
-  LOG("Making %s LRU pool with size(%d)", str, mLRUPoolSize);
+  LOG("Making %s LRU pool with size(%d)", str, LRUPoolSize);
 }
 
 uint32_t
