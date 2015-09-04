@@ -207,21 +207,6 @@ protected:
       uint32_t mEnd;
       int32_t mUntranslatedEnd;
     };
-  protected:
-    LineRange() {}
-  };
-
-  /**
-   * Helper class to construct a LineRange from translated lines.
-   * The ctor only accepts translated definite line numbers.
-   */
-  struct TranslatedLineRange : public LineRange {
-    TranslatedLineRange(uint32_t aStart, uint32_t aEnd)
-    {
-      MOZ_ASSERT(aStart < aEnd && aEnd <= kTranslatedMaxLine);
-      mStart = aStart;
-      mEnd = aEnd;
-    }
   };
 
   /**
@@ -274,15 +259,8 @@ protected:
   };
 
   struct GridItemInfo {
-    explicit GridItemInfo(const GridArea& aArea)
-      : mArea(aArea)
-    {
-      mIsFlexing[0] = false;
-      mIsFlexing[1] = false;
-    }
-
+    explicit GridItemInfo(const GridArea& aArea) : mArea(aArea) {}
     GridArea mArea;
-    bool mIsFlexing[2]; // does the item span a flex track? (index by Dimension)
 #ifdef DEBUG
     nsIFrame* mFrame;
 #endif
