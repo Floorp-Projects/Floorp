@@ -519,12 +519,7 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
   uint16_t outputCount = mLastChunks.Length();
   MOZ_ASSERT(outputCount == std::max(uint16_t(1), mEngine->OutputCount()));
 
-  // Consider this stream blocked if it has already finished output. Normally
-  // mBlocked would reflect this, but due to rounding errors our audio track may
-  // appear to extend slightly beyond aFrom, so we might not be blocked yet.
-  bool blocked = mFinished || mBlocked.GetAt(aFrom);
-  // If the stream has finished at this time, it will be blocked.
-  if (blocked || InMutedCycle()) {
+  if (mFinished || InMutedCycle()) {
     mInputChunks.Clear();
     for (uint16_t i = 0; i < outputCount; ++i) {
       mLastChunks[i].SetNull(WEBAUDIO_BLOCK_SIZE);
@@ -562,8 +557,8 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
     }
   }
 
-  if (!blocked) {
-    // Don't output anything while blocked
+  if (!mFinished) {
+    // Don't output anything while finished
     AdvanceOutputSegment();
     if (mMarkAsFinishedAfterThisBlock && (aFlags & ALLOW_FINISH)) {
       // This stream was finished the last time that we looked at it, and all
@@ -583,12 +578,7 @@ AudioNodeStream::ProduceOutputBeforeInput(GraphTime aFrom)
   MOZ_ASSERT(!InMutedCycle(), "DelayNodes should break cycles");
   MOZ_ASSERT(mLastChunks.Length() == 1);
 
-  // Consider this stream blocked if it has already finished output. Normally
-  // mBlocked would reflect this, but due to rounding errors our audio track may
-  // appear to extend slightly beyond aFrom, so we might not be blocked yet.
-  bool blocked = mFinished || mBlocked.GetAt(aFrom);
-  // If the stream has finished at this time, it will be blocked.
-  if (blocked) {
+  if (mFinished) {
     mLastChunks[0].SetNull(WEBAUDIO_BLOCK_SIZE);
   } else {
     mEngine->ProduceBlockBeforeInput(&mLastChunks[0]);
