@@ -224,7 +224,11 @@ public:
                                          uint32_t* aOffsetWithinBlock,
                                          uint32_t aAvailableInOutput,
                                          StreamTime* aCurrentPosition,
-                                         int32_t aBufferMax) {
+                                         int32_t aBufferMax)
+  {
+    if (*aOffsetWithinBlock == 0) {
+      aOutput->AllocateChannels(aChannels);
+    }
     SpeexResamplerState* resampler = mResampler;
     MOZ_ASSERT(aChannels > 0);
 
@@ -358,30 +362,27 @@ public:
     uint32_t availableInOutput =
       std::min<StreamTime>(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
                            mStop - *aCurrentPosition);
+    if (mResampler) {
+      CopyFromInputBufferWithResampling(aStream, aOutput, aChannels,
+                                        aOffsetWithinBlock, availableInOutput,
+                                        aCurrentPosition, aBufferMax);
+      return;
+    }
     uint32_t numFrames = std::min<uint32_t>(aBufferMax - mBufferPosition,
                                             availableInOutput);
-    if (numFrames == WEBAUDIO_BLOCK_SIZE && !mResampler) {
+    if (numFrames == WEBAUDIO_BLOCK_SIZE) {
       MOZ_ASSERT(mBufferPosition < aBufferMax);
       BorrowFromInputBuffer(aOutput, aChannels);
-      *aOffsetWithinBlock += numFrames;
-      *aCurrentPosition += numFrames;
-      mBufferPosition += numFrames;
     } else {
       if (*aOffsetWithinBlock == 0) {
         aOutput->AllocateChannels(aChannels);
       }
-      if (!mResampler) {
-        MOZ_ASSERT(mBufferPosition < aBufferMax);
-        CopyFromInputBuffer(aOutput, aChannels, *aOffsetWithinBlock, numFrames);
-        *aOffsetWithinBlock += numFrames;
-        *aCurrentPosition += numFrames;
-        mBufferPosition += numFrames;
-      } else {
-        CopyFromInputBufferWithResampling(aStream, aOutput, aChannels,
-                                          aOffsetWithinBlock, availableInOutput,
-                                          aCurrentPosition, aBufferMax);
-      }
+      MOZ_ASSERT(mBufferPosition < aBufferMax);
+      CopyFromInputBuffer(aOutput, aChannels, *aOffsetWithinBlock, numFrames);
     }
+    *aOffsetWithinBlock += numFrames;
+    *aCurrentPosition += numFrames;
+    mBufferPosition += numFrames;
   }
 
   int32_t ComputeFinalOutSampleRate(float aPlaybackRate, float aDetune)
