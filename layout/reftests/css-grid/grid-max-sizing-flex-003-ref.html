@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Testing track flex max-sizing</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151212">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:8px; line-height:10px; padding:0; margin:0; }
+
+body { width: 800px; }
+.grid {
+  display: block;
+  border: 3px dashed blue;
+  width: 794px;
+}
+
+.c1 { min-height:40px; margin-top:1px; }
+.r1 { min-height:70px; margin-top:38px; }
+.c3 { min-height:0; margin-top:138px; }
+
+.gc1 { grid-row: 1 / span 2; min-height:40px; }
+.gr1 { grid-row: 2 / span 3; min-height:70px; }
+.gc3 { grid-row: 3 / span 1; min-height:0; }
+
+span {
+  display: block;
+  background: gray;
+  border-style: solid;
+  border-height: 1px 3px 5px 7px;
+  padding: 1px 3px;
+  margin: 1px 5px;
+  justify-self: flex-start;
+}
+
+td {
+  vertical-align:top;
+}
+x { display:inline-block; height:10px; width:18px; }
+  </style>
+</head>
+<body>
+
+<div class="grid">
+<table cellpadding="0" cellspacing="0"><tr>
+<td><span class="c1" style="height:43px"><x>&nbsp;</x></span>
+<td><span class="r1" style="margin-top:28px;margin-left:5px"><x>&nbsp;</x></span>
+</tr></table>
+</div>
+
+<div class="grid">
+<table cellpadding="0" cellspacing="0"><tr>
+<td><span class="c1" style="display:inline-block; margin-left:5px; height:43px"><x>&nbsp;</x></span>
+<td rowspan="2"><span class="r1" style="margin-left:5px; margin-top:27px;"><x>&nbsp;</x></span>
+<tr><td><span class="c3" style="margin-left:5px; margin-top:-52px; height:17px"><x>&nbsp;</x></span>
+</tr></table>
+</div>
+
+<div class="grid">
+<table cellpadding="0" cellspacing="0"><tr>
+<td><span class="c1" style="height:44px"><x>&nbsp;</x></span>
+<td><span class="r1" style="margin-top:28px;"><x>&nbsp;</x></span>
+<td><span class="r1" style="margin-top:28px;"><x>&nbsp;</x></span>
+<td><span class="r1" style="margin-top:28px;"><x>&nbsp;</x></span>
+</tr></table>
+</div>
+
+<div class="grid" style="height:100px;">
+<table cellpadding="0" cellspacing="0"><tr>
+<td><span class="c1" style="height:40px"><x>&nbsp;</x></span>
+<td><span class="r1" style="margin-top:26px; min-height:65px;"><x>&nbsp;</x></span>
+<td><span class="r1" style="margin-top:26px; min-height:65px"><x>&nbsp;</x></span>
+<td><span class="r1" style="margin-top:26px; min-height:65px"><x>&nbsp;</x></span>
+</tr></table>
+</div>
+
+<div class="grid">
+<table cellpadding="0" cellspacing="0"><tr>
+<td><span class="c1" style="display:inline-block; margin-left:5px; height:40px"><x>&nbsp;</x></span>
+<td rowspan="2"><span class="r1" style="margin-left:5px; margin-top:28px;"><x>&nbsp;</x></span>
+<tr><td><span class="c3" style="margin-left:5px; margin-top:-53px; height:17px"><x>&nbsp;</x></span>
+</tr></table>
+</div>
+
+</body>
+</html>
