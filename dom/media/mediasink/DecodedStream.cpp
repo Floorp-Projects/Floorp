@@ -223,7 +223,7 @@ OutputStreamData::Connect(MediaStream* aStream)
   MOZ_ASSERT(!mPort, "Already connected?");
   MOZ_ASSERT(!mStream->IsDestroyed(), "Can't connect a destroyed stream.");
 
-  mPort = mStream->AllocateInputPort(aStream, 0);
+  mPort = mStream->AllocateInputPort(aStream);
 }
 
 bool

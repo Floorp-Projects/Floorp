@@ -2769,7 +2769,7 @@ MediaInputPort::SetGraphImpl(MediaStreamGraphImpl* aGraph)
 }
 
 already_AddRefed<MediaInputPort>
-ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, uint32_t aFlags,
+ProcessedMediaStream::AllocateInputPort(MediaStream* aStream,
                                         uint16_t aInputNumber, uint16_t aOutputNumber)
 {
   // This method creates two references to the MediaInputPort: one for
@@ -2792,7 +2792,7 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, uint32_t aFlags,
     }
     nsRefPtr<MediaInputPort> mPort;
   };
-  nsRefPtr<MediaInputPort> port = new MediaInputPort(aStream, this, aFlags,
+  nsRefPtr<MediaInputPort> port = new MediaInputPort(aStream, this, 0,
                                                      aInputNumber, aOutputNumber);
   port->SetGraphImpl(GraphImpl());
   GraphImpl()->AppendMessage(new Message(port));
@@ -3476,7 +3476,7 @@ MediaStreamGraphImpl::ConnectToCaptureStream(uint64_t aWindowId,
   for (uint32_t i = 0; i < mWindowCaptureStreams.Length(); i++) {
     if (mWindowCaptureStreams[i].mWindowId == aWindowId) {
       ProcessedMediaStream* sink = mWindowCaptureStreams[i].mCaptureStreamSink;
-      return sink->AllocateInputPort(aMediaStream, 0);
+      return sink->AllocateInputPort(aMediaStream);
     }
   }
   return nullptr;
