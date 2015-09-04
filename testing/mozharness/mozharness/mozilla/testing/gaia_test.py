@@ -25,7 +25,7 @@ from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_opt
 from mozharness.mozilla.proxxy import Proxxy
 
 
-class GaiaTest(TestingMixin, MercurialScript, TransferMixin, GaiaMixin, BlobUploadMixin):
+class GaiaTest(MercurialScript, TestingMixin, BlobUploadMixin, GaiaMixin, TransferMixin):
     config_options = [[
         ["--application"],
         {"action": "store",

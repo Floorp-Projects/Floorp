@@ -36,9 +36,8 @@ task:
       GAIA_BASE_REPOSITORY: '{{{gaia_base_repository}}}'
       GAIA_REF: '{{{gaia_ref}}}'
       GAIA_REV: '{{{gaia_rev}}}'
-      MOZHARNESS_REPOSITORY: '{{mozharness_repository}}'
-      MOZHARNESS_REV: '{{mozharness_rev}}'
       MOZILLA_BUILD_URL: '{{build_url}}'
+      MOZHARNESS_URL: '{{mozharness_url}}'
 
     # All builds share a common artifact directory for ease of uploading.
     artifacts:
