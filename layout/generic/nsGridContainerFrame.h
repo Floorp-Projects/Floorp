@@ -54,6 +54,9 @@ public:
     nscoord mLimit;
   };
 
+  // @note when used in a function that measures a child's size, eColDimension
+  // means we're calculating the child's contribution to the column sizing.
+  // (i.e. the child's inline size if its 'writing-mode' is horizontal)
   enum Dimension { eColDimension, eRowDimension };
 
   // @see nsAbsoluteContainingBlock::Reflow about this magic number
