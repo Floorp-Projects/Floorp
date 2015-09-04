@@ -995,11 +995,9 @@ class MediaInputPort final
 private:
   // Do not call this constructor directly. Instead call aDest->AllocateInputPort.
   MediaInputPort(MediaStream* aSource, ProcessedMediaStream* aDest,
-                 uint32_t aFlags, uint16_t aInputNumber,
-                 uint16_t aOutputNumber)
+                 uint16_t aInputNumber, uint16_t aOutputNumber)
     : mSource(aSource)
     , mDest(aDest)
-    , mFlags(aFlags)
     , mInputNumber(aInputNumber)
     , mOutputNumber(aOutputNumber)
     , mGraph(nullptr)
@@ -1015,20 +1013,6 @@ private:
 
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaInputPort)
-
-  /**
-   * The FLAG_BLOCK_INPUT and FLAG_BLOCK_OUTPUT flags can be used to control
-   * exactly how the blocking statuses of the input and output streams affect
-   * each other.
-   */
-  enum {
-    // When set, blocking on the output stream forces blocking on the input
-    // stream.
-    FLAG_BLOCK_INPUT = 0x01,
-    // When set, blocking on the input stream forces blocking on the output
-    // stream.
-    FLAG_BLOCK_OUTPUT = 0x02
-  };
 
   // Called on graph manager thread
   // Do not call these from outside MediaStreamGraph.cpp!
@@ -1093,7 +1077,6 @@ private:
   // Never modified after Init()
   MediaStream* mSource;
   ProcessedMediaStream* mDest;
-  uint32_t mFlags;
   // The input and output numbers are optional, and are currently only used by
   // Web Audio.
   const uint16_t mInputNumber;
