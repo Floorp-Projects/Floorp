@@ -14,12 +14,17 @@ const { Match } = Cu.import("resource://test/Match.jsm", {});
 const { Census } = Cu.import("resource://test/Census.jsm", {});
 const { addDebuggerToGlobal } =
   Cu.import("resource://gre/modules/jsdebugger.jsm", {});
+const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 
+const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const HeapAnalysesClient =
+  require("devtools/toolkit/heapsnapshot/HeapAnalysesClient");
 const Services = require("Services");
 
 // Always log packets when running tests. runxpcshelltests.py will throw
 // the output away anyway, unless you give it the --verbose flag.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
+DevToolsUtils.dumpn.wantLogging = true;
 
 const SYSTEM_PRINCIPAL = Cc["@mozilla.org/systemprincipal;1"]
   .createInstance(Ci.nsIPrincipal);
@@ -98,6 +103,16 @@ function getFilePath(aName, aAllowMissing=false, aUsePlatformPathSeparator=false
   }
 
   return path;
+}
+
+function saveNewHeapSnapshot(fileName=`core-dump-${Math.random()}.tmp`) {
+  const filePath = getFilePath(fileName, true, true);
+  ok(filePath, "Should get a file path to save the core dump to.");
+
+  ChromeUtils.saveHeapSnapshot(filePath, { runtime: true });
+  ok(true, "Saved a heap snapshot to " + filePath);
+
+  return filePath;
 }
 
 /**
