@@ -76,9 +76,9 @@ BluetoothPbapManager::HandleShutdown()
   sPbapManager = nullptr;
 }
 
-BluetoothPbapManager::BluetoothPbapManager() : mConnected(false)
+BluetoothPbapManager::BluetoothPbapManager() : mPhonebookSizeRequired(false)
+                                             , mConnected(false)
                                              , mRemoteMaxPacketLength(0)
-                                             , mPhonebookSizeRequired(false)
 {
   mDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
   mCurrentPath.AssignLiteral("");
@@ -818,7 +818,13 @@ BluetoothPbapManager::ReplyToPullPhonebook(Blob* aBlob, uint16_t aPhonebookSize)
     return false;
   }
 
-  if (!GetInputStreamFromBlob(aBlob)) {
+  /**
+   * Open vCard input stream only if |mPhonebookSizeRequired| is false,
+   * according to section 2.1.4.3 "MaxListCount", PBAP 1.2:
+   * "When MaxListCount = 0, ... The response shall not contain any
+   *  Body header."
+   */
+  if (!mPhonebookSizeRequired && !GetInputStreamFromBlob(aBlob)) {
     ReplyError(ObexResponseCode::InternalServerError);
     return false;
   }
@@ -844,7 +850,12 @@ BluetoothPbapManager::ReplyToPullvCardListing(Blob* aBlob,
     return false;
   }
 
-  if (!GetInputStreamFromBlob(aBlob)) {
+  /**
+   * Open vCard input stream only if |mPhonebookSizeRequired| is false,
+   * according to section 5.3.4.4 "MaxListCount", PBAP 1.2:
+   * "When MaxListCount = 0, ... The response shall not contain a Body header."
+   */
+  if (!mPhonebookSizeRequired && !GetInputStreamFromBlob(aBlob)) {
     ReplyError(ObexResponseCode::InternalServerError);
     return false;
   }
@@ -879,23 +890,29 @@ BluetoothPbapManager::ReplyToPullvCardEntry(Blob* aBlob)
 bool
 BluetoothPbapManager::ReplyToGet(uint16_t aPhonebookSize)
 {
-  MOZ_ASSERT(mVCardDataStream);
   MOZ_ASSERT(mRemoteMaxPacketLength >= kObexLeastMaxSize);
 
-  // This response will be composed by these four parts.
-  // Part 1: [response code:1][length:2]
-  // Part 2: [headerId:1][length:2][PhonebookSize:4]  (optional)
-  // Part 3: [headerId:1][length:2][Body:var]
-  // Part 4: [headerId:1][length:2][EndOfBody:0]      (optional)
-
+  /**
+   * This response consists of following parts:
+   * - Part 1: [response code:1][length:2]
+   *
+   * If |mPhonebookSizeRequired| is true,
+   * - Part 2: [headerId:1][length:2][PhonebookSize:4]
+   * - Part 3: [headerId:1][length:2][EndOfBody:0]
+   * Otherwise,
+   * - Part 2: [headerId:1][length:2][Body:var]
+   * - (optional) Part 3: [headerId:1][length:2][EndOfBody:0]
+   */
   uint8_t* res = new uint8_t[mRemoteMaxPacketLength];
+  uint8_t opcode;
 
-  // ---- Part 1, move index for [response code:1][length:2] ---- //
-  // res[0~2] will be set in SendObexData()
+  // ---- Part 1: [response code:1][length:2] ---- //
+  // [response code:1][length:2] will be set in |SendObexData|.
+  // Reserve index for them here
   unsigned int index = kObexRespHeaderSize;
 
-  // ---- Part 2, add [response code:1][length:2] to response ---- //
   if (mPhonebookSizeRequired) {
+    // ---- Part 2: [headerId:1][length:2][PhonebookSize:4] ---- //
     // convert little endian to big endian
     uint8_t phonebookSize[2];
     phonebookSize[0] = (aPhonebookSize & 0xFF00) >> 8;
@@ -915,43 +932,50 @@ BluetoothPbapManager::ReplyToGet(uint16_t aPhonebookSize)
                                        mRemoteMaxPacketLength,
                                        appParameters,
                                        sizeof(appParameters));
-    mPhonebookSizeRequired = false;
-  }
 
-  // ---- Part 3, add [headerId:1][length:2][Body:var] to response ---- //
-  // Remaining packet size to append Body, excluding Body's header
-  uint32_t remainingPacketSize = mRemoteMaxPacketLength - kObexBodyHeaderSize
-                                                        - index;
-
-  // Read vCard data from input stream
-  uint32_t numRead = 0;
-  nsAutoArrayPtr<char> buffer(new char[remainingPacketSize]);
-  nsresult rv = mVCardDataStream->Read(buffer, remainingPacketSize, &numRead);
-  if (NS_FAILED(rv)) {
-    BT_LOGR("Failed to read from input stream. rv=0x%x",
-            static_cast<uint32_t>(rv));
-    return false;
-  }
-
-  if (numRead) {
-    index += AppendHeaderBody(&res[index],
-                              remainingPacketSize,
-                              (uint8_t*) buffer.forget(),
-                              numRead);
-  }
-
-  // More GET requests are required if remaining packet size isn't
-  // enough for 1) number of bytes read and 2) one EndOfBody's header
-  uint8_t opcode;
-  if (numRead + kObexBodyHeaderSize > remainingPacketSize) {
-    opcode = ObexResponseCode::Continue;
-  } else {
-    // ---- Part 4, add [headerId:1][length:2][EndOfBody:var] to response --- //
+    // ---- Part 3: [headerId:1][length:2][EndOfBody:0] ---- //
     opcode = ObexResponseCode::Success;
     index += AppendHeaderEndOfBody(&res[index]);
 
-    mVCardDataStream->Close();
-    mVCardDataStream = nullptr;
+    mPhonebookSizeRequired = false;
+  } else {
+    MOZ_ASSERT(mVCardDataStream);
+
+    // ---- Part 2: [headerId:1][length:2][Body:var] ---- //
+    // Compute remaining packet size to append Body, excluding Body's header
+    uint32_t remainingPacketSize =
+      mRemoteMaxPacketLength - kObexBodyHeaderSize - index;
+
+    // Read vCard data from input stream
+    uint32_t numRead = 0;
+    nsAutoArrayPtr<char> buf(new char[remainingPacketSize]);
+    nsresult rv = mVCardDataStream->Read(buf, remainingPacketSize, &numRead);
+    if (NS_FAILED(rv)) {
+      BT_LOGR("Failed to read from input stream. rv=0x%x",
+              static_cast<uint32_t>(rv));
+      return false;
+    }
+
+    if (numRead) {
+      index += AppendHeaderBody(&res[index],
+                                remainingPacketSize,
+                                (uint8_t*) buf.forget(),
+                                numRead);
+    }
+
+    // More GET requests are required if remaining packet size isn't
+    // enough for 1) number of bytes read plus 2) one EndOfBody's header
+    if (numRead + kObexBodyHeaderSize > remainingPacketSize) {
+      opcode = ObexResponseCode::Continue;
+    } else {
+      // ---- Part 3: [headerId:1][length:2][EndOfBody:0] ---- //
+      opcode = ObexResponseCode::Success;
+      index += AppendHeaderEndOfBody(&res[index]);
+
+      // Close input stream
+      mVCardDataStream->Close();
+      mVCardDataStream = nullptr;
+    }
   }
 
   SendObexData(res, opcode, index);

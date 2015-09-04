@@ -18,6 +18,7 @@
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/LookAndFeel.h"
+#include "LayerAnimationInfo.h" // For LayerAnimationInfo::sRecords
 #include "Layers.h"
 #include "FrameLayerBuilder.h"
 #include "nsDisplayList.h"
@@ -406,30 +407,6 @@ CommonAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
   return collection->mStyleRule;
 }
 
-/* static */ const CommonAnimationManager::LayerAnimationRecord
-  CommonAnimationManager::sLayerAnimationInfo[] =
-    { { eCSSProperty_transform,
-        nsDisplayItem::TYPE_TRANSFORM,
-        nsChangeHint_UpdateTransformLayer },
-      { eCSSProperty_opacity,
-        nsDisplayItem::TYPE_OPACITY,
-        nsChangeHint_UpdateOpacityLayer } };
-
-/* static */ const CommonAnimationManager::LayerAnimationRecord*
-CommonAnimationManager::LayerAnimationRecordFor(nsCSSProperty aProperty)
-{
-  MOZ_ASSERT(nsCSSProps::PropHasFlags(aProperty,
-                                      CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
-             "unexpected property");
-  const auto& info = sLayerAnimationInfo;
-  for (size_t i = 0; i < ArrayLength(info); ++i) {
-    if (aProperty == info[i].mProperty) {
-      return &info[i];
-    }
-  }
-  return nullptr;
-}
-
 /* virtual */ void
 CommonAnimationManager::WillRefresh(TimeStamp aTime)
 {
@@ -454,42 +431,6 @@ CommonAnimationManager::WillRefresh(TimeStamp aTime)
 
   MaybeStartOrStopObservingRefreshDriver();
 }
-
-#ifdef DEBUG
-/* static */ void
-CommonAnimationManager::Initialize()
-{
-  const auto& info = CommonAnimationManager::sLayerAnimationInfo;
-  for (size_t i = 0; i < ArrayLength(info); i++) {
-    auto record = info[i];
-    MOZ_ASSERT(nsCSSProps::PropHasFlags(record.mProperty,
-                                        CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
-               "CSS property with entry in sLayerAnimationInfo does not "
-               "have the CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR flag");
-  }
-
-  // Check that every property with the flag for animating on the
-  // compositor has an entry in sLayerAnimationInfo.
-  for (nsCSSProperty prop = nsCSSProperty(0);
-       prop < eCSSProperty_COUNT;
-       prop = nsCSSProperty(prop + 1)) {
-    if (nsCSSProps::PropHasFlags(prop,
-                                 CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR)) {
-      bool found = false;
-      for (size_t i = 0; i < ArrayLength(info); i++) {
-        auto record = info[i];
-        if (record.mProperty == prop) {
-          found = true;
-          break;
-        }
-      }
-      MOZ_ASSERT(found,
-                 "CSS property with the CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR "
-                 "flag does not have an entry in sLayerAnimationInfo");
-    }
-  }
-}
-#endif
 
 NS_IMPL_ISUPPORTS(AnimValuesStyleRule, nsIStyleRule)
 
@@ -901,9 +842,8 @@ AnimationCollection::CanThrottleAnimation(TimeStamp aTime)
     return false;
   }
 
-  const auto& info = CommonAnimationManager::sLayerAnimationInfo;
-  for (size_t i = 0; i < ArrayLength(info); i++) {
-    auto record = info[i];
+  for (const LayerAnimationInfo::Record& record :
+        LayerAnimationInfo::sRecords) {
     // We only need to worry about *current* animations here.
     // - If we have a newly-finished animation, Animation::CanThrottle will
     //   detect that and force an unthrottled sample.

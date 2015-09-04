@@ -4,43 +4,6 @@
 "use strict";
 
 var ZoomHelper = {
-  zoomInAndSnapToRange: function(aRange) {
-    // aRange is always non-null here, since a check happened previously.
-    let viewport = BrowserApp.selectedTab.getViewport();
-    let fudge = 15; // Add a bit of fudge.
-    let boundingElement = aRange.offsetNode;
-    while (!boundingElement.getBoundingClientRect && boundingElement.parentNode) {
-      boundingElement = boundingElement.parentNode;
-    }
-
-    let rect = ElementTouchHelper.getBoundingContentRect(boundingElement);
-    let drRect = aRange.getClientRect();
-    let scrollTop =
-      BrowserApp.selectedBrowser.contentDocument.documentElement.scrollTop ||
-      BrowserApp.selectedBrowser.contentDocument.body.scrollTop;
-
-    // We subtract half the height of the viewport so that we can (ideally)
-    // center the area of interest on the screen.
-    let topPos = scrollTop + drRect.top - (viewport.cssHeight / 2.0);
-
-    // Factor in the border and padding
-    let boundingStyle = window.getComputedStyle(boundingElement);
-    let leftAdjustment = parseInt(boundingStyle.paddingLeft) +
-                         parseInt(boundingStyle.borderLeftWidth);
-
-    BrowserApp.selectedTab._mReflozPositioned = true;
-
-    rect.type = "Browser:ZoomToRect";
-    rect.x = Math.max(viewport.cssPageLeft, rect.x  - fudge + leftAdjustment);
-    rect.y = Math.max(topPos, viewport.cssPageTop);
-    rect.w = viewport.cssWidth;
-    rect.h = viewport.cssHeight;
-    rect.animate = false;
-
-    Messaging.sendRequest(rect);
-    BrowserApp.selectedTab._mReflozPoint = null;
-  },
-
   zoomOut: function() {
     BrowserEventHandler.resetMaxLineBoxWidth();
     Messaging.sendRequest({ type: "Browser:ZoomToPageWidth" });

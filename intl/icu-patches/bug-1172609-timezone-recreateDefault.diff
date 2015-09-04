@@ -63,7 +63,7 @@ diff --git a/intl/icu/source/i18n/timezone.cpp b/intl/icu/source/i18n/timezone.c
 diff --git a/intl/icu/source/i18n/unicode/timezone.h b/intl/icu/source/i18n/unicode/timezone.h
 --- a/intl/icu/source/i18n/unicode/timezone.h
 +++ b/intl/icu/source/i18n/unicode/timezone.h
-@@ -299,16 +299,18 @@ public:
+@@ -299,16 +299,19 @@ public:
       * and made the default.
       *
       * @return   A default TimeZone. Clients are responsible for deleting the time zone
@@ -72,6 +72,7 @@ diff --git a/intl/icu/source/i18n/unicode/timezone.h b/intl/icu/source/i18n/unic
       */
      static TimeZone* U_EXPORT2 createDefault(void);
  
++#define ICU_TZ_HAS_RECREATE_DEFAULT
 +    static void U_EXPORT2 recreateDefault();
 +
      /**

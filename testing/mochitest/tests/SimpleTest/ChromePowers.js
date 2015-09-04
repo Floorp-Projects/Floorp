@@ -15,6 +15,8 @@ function ChromePowers(window) {
   }
 
   this.spObserver = new SpecialPowersObserverAPI();
+  this.spObserver._sendReply = this._sendReply.bind(this);
+  this.listeners = new Map();
 }
 
 ChromePowers.prototype = new SpecialPowersAPI();
@@ -25,14 +27,32 @@ ChromePowers.prototype.sanityCheck = function() { return "foo"; };
 // This gets filled in in the constructor.
 ChromePowers.prototype.DOMWindowUtils = undefined;
 
-ChromePowers.prototype._sendSyncMessage = function(type, msg) {
-  var aMessage = {'name':type, 'json': msg};
-  return [this._receiveMessage(aMessage)];
+ChromePowers.prototype._sendReply = function(aOrigMsg, aType, aMsg) {
+  var msg = {'name':aType, 'json': aMsg, 'data': aMsg};
+  if (!this.listeners.has(aType)) {
+    throw new Error(`No listener for ${aType}`);
+  }
+  this.listeners.get(aType)(msg);
 };
 
-ChromePowers.prototype._sendAsyncMessage = function(type, msg) {
-  var aMessage = {'name':type, 'json': msg};
-  this._receiveMessage(aMessage);
+ChromePowers.prototype._sendSyncMessage = function(aType, aMsg) {
+  var msg = {'name':aType, 'json': aMsg, 'data': aMsg};
+  return [this._receiveMessage(msg)];
+};
+
+ChromePowers.prototype._sendAsyncMessage = function(aType, aMsg) {
+  var msg = {'name':aType, 'json': aMsg, 'data': aMsg};
+  this._receiveMessage(msg);
+};
+
+ChromePowers.prototype._addMessageListener = function(aType, aCallback) {
+  if (this.listeners.has(aType)) {
+    throw new Error(`unable to handle multiple listeners for ${aType}`);
+  }
+  this.listeners.set(aType, aCallback);
+};
+ChromePowers.prototype._removeMessageListener = function(aType, aCallback) {
+  this.listeners.delete(aType);
 };
 
 ChromePowers.prototype.registerProcessCrashObservers = function() {
