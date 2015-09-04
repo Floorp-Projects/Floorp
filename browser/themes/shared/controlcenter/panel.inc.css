@@ -159,6 +159,7 @@
 #identity-popup-security-descriptions > description,
 #identity-popup-securityView-header > description,
 #identity-popup-securityView-body > description,
+#identity-popup-permissions-content > description,
 #tracking-protection-content > label {
   white-space: pre-wrap;
   font-size: 110%;
@@ -288,8 +289,12 @@ description#identity-popup-content-verifier,
   background-image: url(chrome://browser/skin/controlcenter/permissions.svg);
 }
 
-#identity-popup-permission-list {
+#identity-popup-permission-list:not(:empty) {
   margin-top: 5px;
+}
+
+#identity-popup-permission-list:not(:empty) + description {
+  display: none;
 }
 
 .identity-popup-permission-label {
