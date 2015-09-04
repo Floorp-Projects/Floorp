@@ -121,7 +121,7 @@ NS_EVENT_MESSAGE(eXULPopupShown,        eXULEventFirst + 1)
 NS_EVENT_MESSAGE(eXULPopupHiding,       eXULEventFirst + 2)
 NS_EVENT_MESSAGE(eXULPopupHidden,       eXULEventFirst + 3)
 NS_EVENT_MESSAGE(eXULBroadcast,         eXULEventFirst + 5)
-NS_EVENT_MESSAGE(NS_XUL_COMMAND_UPDATE, eXULEventFirst + 6)
+NS_EVENT_MESSAGE(eXULCommandUpdate,     eXULEventFirst + 6)
 
 // Scroll events
 NS_EVENT_MESSAGE(NS_MOUSE_SCROLL_START, 1600)
