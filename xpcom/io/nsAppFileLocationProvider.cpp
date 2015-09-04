@@ -7,6 +7,7 @@
 #include "nsAppFileLocationProvider.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsEnumeratorUtils.h"
 #include "nsIAtom.h"
 #include "nsIFile.h"
 #include "nsString.h"
@@ -583,7 +584,7 @@ nsAppFileLocationProvider::GetFiles(const char* aProp,
     rv = NS_OK;
   }
   if (!nsCRT::strcmp(aProp, NS_APP_SEARCH_DIR_LIST)) {
-    static const char* keys[] = { nullptr, NS_APP_SEARCH_DIR, NS_APP_USER_SEARCH_DIR, nullptr };
+    static const char* keys[] = { nullptr, NS_APP_USER_SEARCH_DIR, nullptr };
     if (!keys[0] && !(keys[0] = PR_GetEnv("MOZ_SEARCH_ENGINE_PATH"))) {
       static const char nullstr = 0;
       keys[0] = &nullstr;
@@ -591,6 +592,9 @@ nsAppFileLocationProvider::GetFiles(const char* aProp,
     *aResult = new nsPathsDirectoryEnumerator(this, keys);
     NS_ADDREF(*aResult);
     rv = NS_OK;
+  }
+  if (!strcmp(aProp, NS_APP_DISTRIBUTION_SEARCH_DIR_LIST)) {
+    return NS_NewEmptyEnumerator(aResult);
   }
   return rv;
 }

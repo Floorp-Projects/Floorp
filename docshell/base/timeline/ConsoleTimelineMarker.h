@@ -27,7 +27,7 @@ public:
     }
   }
 
-  virtual bool Equals(const TimelineMarker& aOther) override
+  virtual bool Equals(const AbstractTimelineMarker& aOther) override
   {
     if (!TimelineMarker::Equals(aOther)) {
       return false;
