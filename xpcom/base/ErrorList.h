@@ -335,6 +335,8 @@
   ERROR(NS_ERROR_CLIENT_REQUEST_OPAQUE_INTERCEPTION,   FAILURE(105)),
   /* Service worker intercepted a non-navigation with an opaque redirect */
   ERROR(NS_ERROR_BAD_OPAQUE_REDIRECT_INTERCEPTION,     FAILURE(106)),
+  /* Service worker intentionally canceled load via preventDefault(). */
+  ERROR(NS_ERROR_INTERCEPTION_CANCELED,                FAILURE(107)),
 #undef MODULE
 
 
