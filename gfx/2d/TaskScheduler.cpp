@@ -23,7 +23,7 @@ bool TaskScheduler::Init(uint32_t aNumThreads, uint32_t aNumQueues)
   }
 
   for (uint32_t i = 0; i < aNumThreads; ++i) {
-    sSingleton->mWorkerThreads.push_back(new WorkerThread(sSingleton->mDrawingQueues[i%aNumQueues]));
+    sSingleton->mWorkerThreads.push_back(WorkerThread::Create(sSingleton->mDrawingQueues[i%aNumQueues]));
   }
   return true;
 }
@@ -228,6 +228,32 @@ SyncObject::AddSubsequent(Task* aTask)
 #ifdef DEBUG
   mSubsequents.push_back(aTask);
 #endif
+}
+
+WorkerThread::WorkerThread(MultiThreadedTaskQueue* aTaskQueue)
+: mQueue(aTaskQueue)
+{
+  aTaskQueue->RegisterThread();
+}
+
+void
+WorkerThread::Run()
+{
+  for (;;) {
+    Task* commands = nullptr;
+    if (!mQueue->WaitForTask(commands)) {
+      mQueue->UnregisterThread();
+      return;
+    }
+
+    TaskStatus status = TaskScheduler::ProcessTask(commands);
+
+    if (status == TaskStatus::Error) {
+      // Don't try to handle errors for now, but that's open to discussions.
+      // I expect errors to be mostly OOM issues.
+      MOZ_CRASH();
+    }
+  }
 }
 
 } //namespace
