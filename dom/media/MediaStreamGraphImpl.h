@@ -296,13 +296,6 @@ public:
    * Also sets mIsConsumed on every stream.
    */
   void UpdateStreamOrder();
-  /**
-   * Compute the blocking states of streams from mStateComputedTime
-   * until the desired future time aEndBlockingDecisions.
-   * Updates mStateComputedTime and sets MediaStream::mBlocked
-   * for all streams.
-   */
-  void RecomputeBlocking(GraphTime aEndBlockingDecisions);
 
   /**
    * Recompute blocking for the streams in aStreams for the interval starting at aTime.
