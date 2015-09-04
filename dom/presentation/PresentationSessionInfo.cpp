@@ -344,18 +344,21 @@ PresentationSessionInfo::NotifyData(const nsACString& aData)
  * Implementation of PresentationRequesterInfo
  *
  * During presentation session establishment, the sender expects the following
- * after trying to establish the control channel: (The order between step 2 and
- * 3 is not guaranteed.)
+ * after trying to establish the control channel: (The order between step 3 and
+ * 4 is not guaranteed.)
  * 1. |Init| is called to open a socket |mServerSocket| for data transport
- *    channel and send the offer to the receiver via the control channel.
- * 2.1 |OnSocketAccepted| of |nsIServerSocketListener| is called to indicate the
+ *    channel.
+ * 2. |NotifyOpened| of |nsIPresentationControlChannelListener| is called to
+ *    indicate the control channel is ready to use. Then send the offer to the
+ *    receiver via the control channel.
+ * 3.1 |OnSocketAccepted| of |nsIServerSocketListener| is called to indicate the
  *     data transport channel is connected. Then initialize |mTransport|.
- * 2.2 |NotifyTransportReady| of |nsIPresentationSessionTransportCallback| is
+ * 3.2 |NotifyTransportReady| of |nsIPresentationSessionTransportCallback| is
  *     called.
- * 3. |OnAnswer| of |nsIPresentationControlChannelListener| is called to
+ * 4. |OnAnswer| of |nsIPresentationControlChannelListener| is called to
  *    indicate the receiver is ready. Close the control channel since it's no
  *    longer needed.
- * 4. Once both step 2 and 3 are done, the presentation session is ready to use.
+ * 5. Once both step 3 and 4 are done, the presentation session is ready to use.
  *    So notify the listener of CONNECTED state.
  */
 
@@ -381,26 +384,6 @@ PresentationRequesterInfo::Init(nsIPresentationControlChannel* aControlChannel)
   }
 
   rv = mServerSocket->AsyncListen(this);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Prepare and send the offer.
-  int32_t port;
-  rv = mServerSocket->GetPort(&port);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCString address;
-  rv = GetAddress(address);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsRefPtr<PresentationChannelDescription> description =
-    new PresentationChannelDescription(address, static_cast<uint16_t>(port));
-  rv = mControlChannel->SendOffer(description);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -496,8 +479,22 @@ PresentationRequesterInfo::OnAnswer(nsIPresentationChannelDescription* aDescript
 NS_IMETHODIMP
 PresentationRequesterInfo::NotifyOpened()
 {
-  // Do nothing and wait for receiver to be ready.
-  return NS_OK;
+  // Prepare and send the offer.
+  int32_t port;
+  nsresult rv = mServerSocket->GetPort(&port);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCString address;
+  rv = GetAddress(address);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsRefPtr<PresentationChannelDescription> description =
+    new PresentationChannelDescription(address, static_cast<uint16_t>(port));
+  return mControlChannel->SendOffer(description);
 }
 
 NS_IMETHODIMP
@@ -666,24 +663,19 @@ PresentationResponderInfo::InitTransportAndSendAnswer()
   // description for the answer, which is not actually checked at requester side.
   nsCOMPtr<nsINetAddr> selfAddr;
   rv = mTransport->GetSelfAddress(getter_AddRefs(selfAddr));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  NS_WARN_IF(NS_FAILED(rv));
 
   nsCString address;
-  selfAddr->GetAddress(address);
-  uint16_t port;
-  selfAddr->GetPort(&port);
+  uint16_t port = 0;
+  if (NS_SUCCEEDED(rv)) {
+    selfAddr->GetAddress(address);
+    selfAddr->GetPort(&port);
+  }
   nsCOMPtr<nsIPresentationChannelDescription> description =
     new PresentationChannelDescription(address, port);
 
-  rv = mControlChannel->SendAnswer(description);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
- }
+  return mControlChannel->SendAnswer(description);
+}
 
 nsresult
 PresentationResponderInfo::UntrackFromService()
