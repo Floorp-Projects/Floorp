@@ -348,6 +348,7 @@ struct SurfaceDescriptorTiles {
   float       resolution;
   float       frameXResolution;
   float       frameYResolution;
+  bool        isProgressive;
 };
 
 struct OpUseTiledLayerBuffer {
