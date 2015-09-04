@@ -71,7 +71,40 @@
     _(StringCharCodeAt)             \
     _(StringFromCharCode)           \
     _(StringCharAt)                 \
-    _(StringReplace)
+    _(StringReplace)                \
+                                    \
+    _(IntrinsicUnsafeSetReservedSlot) \
+    _(IntrinsicUnsafeGetReservedSlot) \
+    _(IntrinsicUnsafeGetObjectFromReservedSlot) \
+    _(IntrinsicUnsafeGetInt32FromReservedSlot) \
+    _(IntrinsicUnsafeGetStringFromReservedSlot) \
+    _(IntrinsicUnsafeGetBooleanFromReservedSlot) \
+                                    \
+    _(IntrinsicIsCallable)          \
+    _(IntrinsicToObject)            \
+    _(IntrinsicIsObject)            \
+    _(IntrinsicToInteger)           \
+    _(IntrinsicToString)            \
+    _(IntrinsicIsConstructing)      \
+    _(IntrinsicSubstringKernel)     \
+    _(IntrinsicDefineDataProperty)  \
+                                    \
+    _(IntrinsicIsArrayIterator)     \
+    _(IntrinsicIsMapIterator)       \
+    _(IntrinsicIsStringIterator)    \
+                                    \
+    _(IntrinsicIsTypedArray)        \
+    _(IntrinsicIsPossiblyWrappedTypedArray) \
+    _(IntrinsicTypedArrayLength)    \
+    _(IntrinsicSetDisjointTypedElements) \
+                                    \
+    _(IntrinsicObjectIsTypedObject) \
+    _(IntrinsicObjectIsTransparentTypedObject) \
+    _(IntrinsicObjectIsOpaqueTypedObject) \
+    _(IntrinsicObjectIsTypeDescr)   \
+    _(IntrinsicTypeDescrIsSimpleType) \
+    _(IntrinsicTypeDescrIsArrayType)\
+    _(IntrinsicSetTypedObjectOffset)
 
 struct JSJitInfo;
 
