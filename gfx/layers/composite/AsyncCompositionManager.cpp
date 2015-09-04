@@ -368,8 +368,12 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   // fixed/sticky layer is the same as aTransformedSubtreeRoot, then the clip
   // rect is not affected by the scroll-induced async scroll transform anyway
   // (since the clip is applied post-transform) so we don't need to make the
-  // adjustment.
-  TranslateShadowLayer(aLayer, ThebesPoint(translation), aLayer != aTransformedSubtreeRoot);
+  // adjustment. Also, some layers want async scrolling to move their clip rect
+  // (IsClipFixed() = false), so we don't make a compensating adjustment for
+  // those.
+  bool adjustClipRect = aLayer != aTransformedSubtreeRoot &&
+                        aLayer->IsClipFixed();
+  TranslateShadowLayer(aLayer, ThebesPoint(translation), adjustClipRect);
 }
 
 static void
