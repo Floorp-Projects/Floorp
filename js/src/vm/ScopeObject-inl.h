@@ -81,7 +81,7 @@ StaticScopeIter<allowGC>::operator++(int)
     } else if (obj->template is<StaticNonSyntacticScopeObjects>()) {
         obj = obj->template as<StaticNonSyntacticScopeObjects>().enclosingScopeForStaticScopeIter();
     } else if (obj->template is<ModuleObject>()) {
-        obj = obj->template as<ModuleObject>().script()->enclosingStaticScope();
+        obj = obj->template as<ModuleObject>().enclosingStaticScope();
     } else if (onNamedLambda || !obj->template as<JSFunction>().isNamedLambda()) {
         onNamedLambda = false;
         JSFunction& fun = obj->template as<JSFunction>();

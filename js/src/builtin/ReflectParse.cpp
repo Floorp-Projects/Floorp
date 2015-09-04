@@ -33,6 +33,12 @@ using JS::AutoValueArray;
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 
+enum class ParseTarget
+{
+    Script,
+    Module
+};
+
 enum ASTType {
     AST_ERROR = -1,
 #define ASTDEF(ast, str, method) ast,
@@ -2340,7 +2346,7 @@ ASTSerializer::exportDeclaration(ParseNode* pn, MutableHandleValue dst)
       case PNK_CONST:
       case PNK_GLOBALCONST:
       case PNK_LET:
-        if (!variableDeclaration(kid, kind == PNK_LET, &decl))
+        if (!variableDeclaration(kid, (kind == PNK_LET || kind == PNK_CONST), &decl))
             return false;
         break;
 
@@ -3716,8 +3722,8 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
     ScopedJSFreePtr<char> filename;
     uint32_t lineno = 1;
     bool loc = true;
-
     RootedObject builder(cx);
+    ParseTarget target = ParseTarget::Script;
 
     RootedValue arg(cx, args.get(1));
 
@@ -3782,6 +3788,36 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
             }
             builder = &prop.toObject();
         }
+
+        /* config.target */
+        RootedId targetId(cx, NameToId(cx->names().target));
+        RootedValue scriptVal(cx, StringValue(cx->names().script));
+        if (!GetPropertyDefault(cx, config, targetId, scriptVal, &prop))
+            return false;
+
+        if (!prop.isString()) {
+            ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK,
+                                  prop, nullptr, "not 'script' or 'module'", nullptr);
+            return false;
+        }
+
+        RootedString stringProp(cx, prop.toString());
+        bool isScript = false;
+        bool isModule = false;
+        if (!EqualStrings(cx, stringProp, cx->names().script, &isScript))
+            return false;
+
+        if (!EqualStrings(cx, stringProp, cx->names().module, &isModule))
+            return false;
+
+        if (isScript) {
+            target = ParseTarget::Script;
+        } else if (isModule) {
+            target = ParseTarget::Module;
+        } else {
+            JS_ReportError(cx, "Bad target value, expected 'script' or 'module'");
+            return false;
+        }
     }
 
     /* Extract the builder methods first to report errors before parsing. */
@@ -3808,9 +3844,23 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
 
     serialize.setParser(&parser);
 
-    ParseNode* pn = parser.parse();
-    if (!pn)
-        return false;
+    ParseNode* pn;
+    if (target == ParseTarget::Script) {
+        pn = parser.parse();
+        if (!pn)
+            return false;
+    } else {
+        Rooted<ModuleObject*> module(cx, ModuleObject::create(cx));
+        if (!module)
+            return false;
+
+        pn = parser.standaloneModule(module);
+        if (!pn)
+            return false;
+
+        MOZ_ASSERT(pn->getKind() == PNK_MODULE);
+        pn = pn->pn_body;
+    }
 
     RootedValue val(cx);
     if (!serialize.program(pn, &val)) {

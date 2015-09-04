@@ -359,7 +359,6 @@ BytecodeEmitter::emitDupAt(unsigned slotFromTop)
 /* XXX too many "... statement" L10N gaffes below -- fix via js.msg! */
 const char js_with_statement_str[] = "with statement";
 const char js_finally_block_str[]  = "finally block";
-const char js_script_str[]         = "script";
 
 static const char * const statementName[] = {
     "label statement",       /* LABEL */

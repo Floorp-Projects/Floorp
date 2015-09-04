@@ -13,11 +13,11 @@ f2()
 Reflect.parse(`
 import 'a'
 f2()
-`);
+`, {target: "module"});
 Reflect.parse(`
 export { a } from 'a'
 f2()
-`);
+`, {target: "module"});
 Reflect.parse(`
 var a
 f2()
