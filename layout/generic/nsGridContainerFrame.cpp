@@ -231,8 +231,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
   explicit Tracks(Dimension aDimension) : mDimension(aDimension) {}
 
   void Initialize(const TrackSizingFunctions& aFunctions,
-                  uint32_t                    aNumTracks,
-                  nscoord                     aContentBoxSize);
+                  nscoord                     aPercentageBasis);
 
   /**
    * Return true if aRange spans at least one track with an intrinsic sizing
@@ -575,18 +574,6 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
                              nsTArray<GridItemInfo>&     aGridItems,
                              const TrackSizingFunctions& aFunctions,
                              nscoord                     aAvailableSize);
-
-  /**
-   * Implements "12.3. Track Sizing Algorithm"
-   * http://dev.w3.org/csswg/css-grid/#algo-track-sizing
-   */
-  void CalculateSizes(GridReflowState&            aState,
-                      nsTArray<GridItemInfo>&     aGridItems,
-                      const TrackSizingFunctions& aFunctions,
-                      nscoord                     aContentSize,
-                      LineRange GridArea::*       aRange,
-                      IntrinsicISizeType          aConstraint);
-
 #ifdef DEBUG
   void Dump() const
   {
@@ -1611,18 +1598,9 @@ nsGridContainerFrame::TrackSize::Initialize(nscoord aPercentageBasis,
 }
 
 void
-nsGridContainerFrame::Tracks::Initialize(
-  const TrackSizingFunctions& aFunctions,
-  uint32_t                    aNumTracks,
-  nscoord                     aContentBoxSize)
+nsGridContainerFrame::Tracks::Initialize(const TrackSizingFunctions& aFunctions,
+                                         nscoord            aPercentageBasis)
 {
-  mSizes.SetLength(aNumTracks);
-  PodZero(mSizes.Elements(), mSizes.Length());
-  nscoord percentageBasis = aContentBoxSize;
-  if (percentageBasis == NS_UNCONSTRAINEDSIZE) {
-    percentageBasis = 0;
-  }
-
   const uint32_t explicitGridOffset = aFunctions.mExplicitGridOffset;
   MOZ_ASSERT(mSizes.Length() >=
                explicitGridOffset + aFunctions.mMinSizingFunctions.Length());
@@ -1630,19 +1608,19 @@ nsGridContainerFrame::Tracks::Initialize(
                aFunctions.mMaxSizingFunctions.Length());
   uint32_t i = 0;
   for (; i < explicitGridOffset; ++i) {
-    mSizes[i].Initialize(percentageBasis,
+    mSizes[i].Initialize(aPercentageBasis,
                          aFunctions.mAutoMinSizing,
                          aFunctions.mAutoMaxSizing);
   }
   uint32_t j = 0;
   for (uint32_t len = aFunctions.mMinSizingFunctions.Length(); j < len; ++j) {
-    mSizes[i + j].Initialize(percentageBasis,
+    mSizes[i + j].Initialize(aPercentageBasis,
                              aFunctions.mMinSizingFunctions[j],
                              aFunctions.mMaxSizingFunctions[j]);
   }
   i += j;
   for (; i < mSizes.Length(); ++i) {
-    mSizes[i].Initialize(percentageBasis,
+    mSizes[i].Initialize(aPercentageBasis,
                          aFunctions.mAutoMinSizing,
                          aFunctions.mAutoMaxSizing);
   }
@@ -1739,45 +1717,42 @@ MaxContentContribution(nsIFrame*                       aChild,
 }
 
 void
-nsGridContainerFrame::Tracks::CalculateSizes(
-  GridReflowState&            aState,
-  nsTArray<GridItemInfo>&     aGridItems,
-  const TrackSizingFunctions& aFunctions,
-  nscoord                     aContentBoxSize,
-  LineRange GridArea::*       aRange,
-  IntrinsicISizeType          aConstraint)
-{
-  nscoord percentageBasis = aContentBoxSize;
-  if (percentageBasis == NS_UNCONSTRAINEDSIZE) {
-    percentageBasis = 0;
-  }
-  ResolveIntrinsicSize(aState, aGridItems, aFunctions, aRange, percentageBasis,
-                       aConstraint);
-  if (aConstraint != nsLayoutUtils::MIN_ISIZE) {
-    DistributeFreeSpace(aContentBoxSize);
-    StretchFlexibleTracks(aState, aGridItems, aFunctions, aContentBoxSize);
-  }
-}
-
-void
 nsGridContainerFrame::CalculateTrackSizes(GridReflowState&   aState,
                                           const LogicalSize& aContentBox,
                                           IntrinsicISizeType aConstraint)
 {
+  aState.mCols.mSizes.SetLength(mGridColEnd);
+  PodZero(aState.mCols.mSizes.Elements(), aState.mCols.mSizes.Length());
   const WritingMode& wm = aState.mWM;
-  aState.mCols.Initialize(aState.mColFunctions, mGridColEnd,
-                          aContentBox.ISize(wm));
-  aState.mRows.Initialize(aState.mRowFunctions, mGridRowEnd,
-                          aContentBox.BSize(wm));
+  nscoord colPercentageBasis = aContentBox.ISize(wm);
+  auto& colFunctions = aState.mColFunctions;
+  aState.mCols.Initialize(colFunctions, colPercentageBasis);
+  aState.mCols.ResolveIntrinsicSize(aState, mGridItems, colFunctions,
+                                    &GridArea::mCols, colPercentageBasis,
+                                    aConstraint);
+  if (aConstraint != nsLayoutUtils::MIN_ISIZE) {
+    nscoord size = aContentBox.ISize(wm);
+    aState.mCols.DistributeFreeSpace(size);
+    aState.mCols.StretchFlexibleTracks(aState, mGridItems, colFunctions, size);
+  }
 
-  aState.mCols.CalculateSizes(aState, mGridItems, aState.mColFunctions,
-                              aContentBox.ISize(wm), &GridArea::mCols,
-                              aConstraint);
-
+  aState.mRows.mSizes.SetLength(mGridRowEnd);
+  PodZero(aState.mRows.mSizes.Elements(), aState.mRows.mSizes.Length());
+  nscoord rowPercentageBasis = aContentBox.BSize(wm);
+  if (rowPercentageBasis == NS_AUTOHEIGHT) {
+    rowPercentageBasis = 0;
+  }
+  auto& rowFunctions = aState.mRowFunctions;
+  aState.mRows.Initialize(rowFunctions, rowPercentageBasis);
   aState.mIter.Reset(); // XXX cleanup this Reset mess!
-  aState.mRows.CalculateSizes(aState, mGridItems, aState.mRowFunctions,
-                              aContentBox.BSize(wm), &GridArea::mRows,
-                              aConstraint);
+  aState.mRows.ResolveIntrinsicSize(aState, mGridItems, rowFunctions,
+                                    &GridArea::mRows, rowPercentageBasis,
+                                    aConstraint);
+  if (aConstraint != nsLayoutUtils::MIN_ISIZE) {
+    nscoord size = aContentBox.BSize(wm);
+    aState.mRows.DistributeFreeSpace(size);
+    aState.mRows.StretchFlexibleTracks(aState, mGridItems, rowFunctions, size);
+  }
 }
 
 bool
