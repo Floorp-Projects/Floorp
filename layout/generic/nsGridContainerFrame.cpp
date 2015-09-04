@@ -238,9 +238,9 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
    * function and does not span any tracks with a <flex> max-sizing function.
    * @param aRange the span of tracks to check
    * @param aConstraint if MIN_ISIZE, treat a <flex> min-sizing as 'min-content'
-   * @param aState will be set to the union of the state bits for the tracks
-   *               when this method returns true, the value is undefined when
-   *               this method returns false
+   * @param aState will be set to the union of the state bits of all the spanned
+   *               tracks, unless a flex track is found - then it only contains
+   *               the union of the tracks up to and including the flex track.
    */
   bool HasIntrinsicButNoFlexSizingInRange(const LineRange&      aRange,
                                           IntrinsicISizeType    aConstraint,
@@ -259,9 +259,10 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
 
   /**
    * Helper for ResolveIntrinsicSize.  It implements step 1 "size tracks to fit
-   * non-spanning items" in the spec.
+   * non-spanning items" in the spec.  Return true if the track has a <flex>
+   * max-sizing function, false otherwise.
    */
-  void ResolveIntrinsicSizeStep1(GridReflowState&            aState,
+  bool ResolveIntrinsicSizeStep1(GridReflowState&            aState,
                                  const TrackSizingFunctions& aFunctions,
                                  nscoord                     aPercentageBasis,
                                  IntrinsicISizeType          aConstraint,
@@ -543,6 +544,36 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
     }
   }
 
+  /**
+   * Implements "12.7.1. Find the Size of an 'fr'".
+   * http://dev.w3.org/csswg/css-grid/#algo-find-fr-size
+   * (The returned value is a 'nscoord' divided by a factor - a floating type
+   * is used to avoid intermediary rounding errors.)
+   */
+  float FindFrUnitSize(const LineRange&            aRange,
+                       const nsTArray<uint32_t>&   aFlexTracks,
+                       const TrackSizingFunctions& aFunctions,
+                       nscoord                     aSpaceToFill) const;
+
+  /**
+   * Implements the "find the used flex fraction" part of StretchFlexibleTracks.
+   * (The returned value is a 'nscoord' divided by a factor - a floating type
+   * is used to avoid intermediary rounding errors.)
+   */
+  float FindUsedFlexFraction(GridReflowState&            aState,
+                             nsTArray<GridItemInfo>&     aGridItems,
+                             const nsTArray<uint32_t>&   aFlexTracks,
+                             const TrackSizingFunctions& aFunctions,
+                             nscoord                     aAvailableSize) const;
+
+  /**
+   * Implements "12.7. Stretch Flexible Tracks"
+   * http://dev.w3.org/csswg/css-grid/#algo-flex-tracks
+   */
+  void StretchFlexibleTracks(GridReflowState&            aState,
+                             nsTArray<GridItemInfo>&     aGridItems,
+                             const TrackSizingFunctions& aFunctions,
+                             nscoord                     aAvailableSize);
 #ifdef DEBUG
   void Dump() const
   {
@@ -1700,7 +1731,9 @@ nsGridContainerFrame::CalculateTrackSizes(GridReflowState&   aState,
                                     &GridArea::mCols, colPercentageBasis,
                                     aConstraint);
   if (aConstraint != nsLayoutUtils::MIN_ISIZE) {
-    aState.mCols.DistributeFreeSpace(aContentBox.ISize(wm));
+    nscoord size = aContentBox.ISize(wm);
+    aState.mCols.DistributeFreeSpace(size);
+    aState.mCols.StretchFlexibleTracks(aState, mGridItems, colFunctions, size);
   }
 
   aState.mRows.mSizes.SetLength(mGridRowEnd);
@@ -1716,7 +1749,9 @@ nsGridContainerFrame::CalculateTrackSizes(GridReflowState&   aState,
                                     &GridArea::mRows, rowPercentageBasis,
                                     aConstraint);
   if (aConstraint != nsLayoutUtils::MIN_ISIZE) {
-    aState.mRows.DistributeFreeSpace(aContentBox.BSize(wm));
+    nscoord size = aContentBox.BSize(wm);
+    aState.mRows.DistributeFreeSpace(size);
+    aState.mRows.StretchFlexibleTracks(aState, mGridItems, rowFunctions, size);
   }
 }
 
@@ -1729,26 +1764,26 @@ nsGridContainerFrame::Tracks::HasIntrinsicButNoFlexSizingInRange(
   MOZ_ASSERT(!aRange.IsAuto(), "must have a definite range");
   const uint32_t start = aRange.mStart;
   const uint32_t end = aRange.mEnd;
-  bool foundIntrinsic = false;
   const TrackSize::StateBits selector =
     TrackSize::eIntrinsicMinSizing |
     TrackSize::eIntrinsicMaxSizing |
     (aConstraint == nsLayoutUtils::MIN_ISIZE ? TrackSize::eFlexMinSizing
                                              : TrackSize::StateBits(0));
+  bool foundIntrinsic = false;
   for (uint32_t i = start; i < end; ++i) {
     TrackSize::StateBits state = mSizes[i].mState;
+    *aState |= state;
     if (state & TrackSize::eFlexMaxSizing) {
       return false;
     }
     if (state & selector) {
       foundIntrinsic = true;
     }
-    *aState |= state;
   }
   return foundIntrinsic;
 }
 
-void
+bool
 nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   GridReflowState&            aState,
   const TrackSizingFunctions& aFunctions,
@@ -1804,6 +1839,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   if (sz.mLimit < sz.mBase) {
     sz.mLimit = sz.mBase;
   }
+  return sz.mState & TrackSize::eFlexMaxSizing;
 }
 
 void
@@ -1833,6 +1869,8 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
 
   // Resolve Intrinsic Track Sizes
   // http://dev.w3.org/csswg/css-grid/#algo-content
+  // We're also setting mIsFlexing on the item here to speed up
+  // FindUsedFlexFraction later.
   nsAutoTArray<TrackSize::StateBits, 16> stateBitsPerSpan;
   nsTArray<Step2ItemData> step2Items;
   GridItemCSSOrderIterator& iter = aState.mIter;
@@ -1849,8 +1887,9 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
     uint32_t span = lineRange.Extent();
     if (span == 1) {
       // Step 1. Size tracks to fit non-spanning items.
-      ResolveIntrinsicSizeStep1(aState, aFunctions, aPercentageBasis,
-                                aConstraint, lineRange, child);
+      aGridItems[iter.GridItemIndex()].mIsFlexing[mDimension] =
+        ResolveIntrinsicSizeStep1(aState, aFunctions, aPercentageBasis,
+                                  aConstraint, lineRange, child);
     } else {
       TrackSize::StateBits state = TrackSize::StateBits(0);
       if (HasIntrinsicButNoFlexSizingInRange(lineRange, aConstraint, &state)) {
@@ -1883,6 +1922,9 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         step2Items.AppendElement(
           Step2ItemData({span, state, lineRange, minSize,
                          minContent, maxContent, child}));
+      } else {
+        aGridItems[iter.GridItemIndex()].mIsFlexing[mDimension] =
+          !!(state & TrackSize::eFlexMaxSizing);
       }
     }
   }
@@ -2048,6 +2090,146 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
   for (TrackSize& sz : mSizes) {
     if (sz.mLimit == NS_UNCONSTRAINEDSIZE) {
       sz.mLimit = sz.mBase;
+    }
+  }
+}
+
+float
+nsGridContainerFrame::Tracks::FindFrUnitSize(
+  const LineRange&            aRange,
+  const nsTArray<uint32_t>&   aFlexTracks,
+  const TrackSizingFunctions& aFunctions,
+  nscoord                     aSpaceToFill) const
+{
+  MOZ_ASSERT(aSpaceToFill > 0 && !aFlexTracks.IsEmpty());
+  float flexFactorSum = 0.0f;
+  nscoord leftOverSpace = aSpaceToFill;
+  for (uint32_t i = aRange.mStart, end = aRange.mEnd; i < end; ++i) {
+    const TrackSize& sz = mSizes[i];
+    if (sz.mState & TrackSize::eFlexMaxSizing) {
+      flexFactorSum += aFunctions.MaxSizingFor(i).GetFlexFractionValue();
+    } else {
+      leftOverSpace -= sz.mBase;
+      if (leftOverSpace <= 0) {
+        return 0.0f;
+      }
+    }
+  }
+  bool restart;
+  float hypotheticalFrSize;
+  nsTArray<uint32_t> flexTracks(aFlexTracks);
+  uint32_t numFlexTracks = flexTracks.Length();
+  do {
+    restart = false;
+    hypotheticalFrSize = leftOverSpace / std::max(flexFactorSum, 1.0f);
+    for (uint32_t i = 0, len = flexTracks.Length(); i < len; ++i) {
+      uint32_t track = flexTracks[i];
+      if (track == kAutoLine) {
+        continue; // Track marked as inflexible in a prev. iter of this loop.
+      }
+      float flexFactor = aFunctions.MaxSizingFor(track).GetFlexFractionValue();
+      const nscoord base = mSizes[track].mBase;
+      if (flexFactor * hypotheticalFrSize < base) {
+        // 12.7.1.4: Treat this track as inflexible.
+        flexTracks[i] = kAutoLine;
+        flexFactorSum -= flexFactor;
+        leftOverSpace -= base;
+        --numFlexTracks;
+        if (numFlexTracks == 0 || leftOverSpace <= 0) {
+          return 0.0f;
+        }
+        restart = true;
+        // break; XXX (bug 1176621 comment 16) measure which is more common
+      }
+    }
+  } while (restart);
+  return hypotheticalFrSize;
+}
+
+float
+nsGridContainerFrame::Tracks::FindUsedFlexFraction(
+  GridReflowState&            aState,
+  nsTArray<GridItemInfo>&     aGridItems,
+  const nsTArray<uint32_t>&   aFlexTracks,
+  const TrackSizingFunctions& aFunctions,
+  nscoord                     aAvailableSize) const
+{
+  if (aAvailableSize != NS_UNCONSTRAINEDSIZE) {
+    // Use all of the grid tracks and a 'space to fill' of the available space.
+    const TranslatedLineRange range(0, mSizes.Length());
+    return FindFrUnitSize(range, aFlexTracks, aFunctions, aAvailableSize);
+  }
+
+  // The used flex fraction is the maximum of:
+  // ... each flexible track's base size divided by its flex factor
+  float fr = 0.0f;
+  for (uint32_t track : aFlexTracks) {
+    float flexFactor = aFunctions.MaxSizingFor(track).GetFlexFractionValue();
+    if (flexFactor > 0.0f) {
+      fr = std::max(fr, mSizes[track].mBase / flexFactor);
+    }
+  }
+  WritingMode wm = aState.mWM;
+  nsRenderingContext* rc = &aState.mRenderingContext;
+  const nsHTMLReflowState* rs = aState.mReflowState;
+  GridItemCSSOrderIterator& iter = aState.mIter;
+  iter.Reset();
+  // ... the result of 'finding the size of an fr' for each item that spans
+  // a flex track with its max-content contribution as 'space to fill'
+  for (; !iter.AtEnd(); iter.Next()) {
+    const GridItemInfo& item = aGridItems[iter.GridItemIndex()];
+    if (item.mIsFlexing[mDimension]) {
+      nscoord spaceToFill = MaxContentContribution(*iter, rs, rc, wm,
+                                                   mDimension);
+      if (spaceToFill <= 0) {
+        continue;
+      }
+      // ... and all its spanned tracks as input.
+      const LineRange& range =
+        mDimension == eColDimension ? item.mArea.mCols : item.mArea.mRows;
+      nsTArray<uint32_t> itemFlexTracks;
+      for (uint32_t i = range.mStart, end = range.mEnd; i < end; ++i) {
+        if (mSizes[i].mState & TrackSize::eFlexMaxSizing) {
+          itemFlexTracks.AppendElement(i);
+        }
+      }
+      float itemFr =
+        FindFrUnitSize(range, itemFlexTracks, aFunctions, spaceToFill);
+      fr = std::max(fr, itemFr);
+    }
+  }
+  return fr;
+}
+
+void
+nsGridContainerFrame::Tracks::StretchFlexibleTracks(
+  GridReflowState&            aState,
+  nsTArray<GridItemInfo>&     aGridItems,
+  const TrackSizingFunctions& aFunctions,
+  nscoord                     aAvailableSize)
+{
+  if (aAvailableSize <= 0) {
+    return;
+  }
+  nsTArray<uint32_t> flexTracks(mSizes.Length());
+  for (uint32_t i = 0, len = mSizes.Length(); i < len; ++i) {
+    if (mSizes[i].mState & TrackSize::eFlexMaxSizing) {
+      flexTracks.AppendElement(i);
+    }
+  }
+  if (flexTracks.IsEmpty()) {
+    return;
+  }
+  float fr = FindUsedFlexFraction(aState, aGridItems, flexTracks,
+                                  aFunctions, aAvailableSize);
+  if (fr != 0.0f) {
+    for (uint32_t i : flexTracks) {
+      float flexFactor = aFunctions.MaxSizingFor(i).GetFlexFractionValue();
+      nscoord flexLength = NSToCoordRound(flexFactor * fr);
+      nscoord& base = mSizes[i].mBase;
+      if (flexLength > base) {
+        base = flexLength;
+      }
     }
   }
 }
