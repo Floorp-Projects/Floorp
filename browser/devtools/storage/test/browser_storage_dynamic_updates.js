@@ -197,5 +197,13 @@ add_task(function*() {
 
   yield findVariableViewProperties([{name: "ss2", value: "changed=ss2"}]);
 
+  // Clearing items
+  yield gWindow.clear();
+
+  yield gUI.once("store-objects-cleared");
+
+  is($$("#value .table-widget-cell").length, 0,
+     "Table should be cleared");
+
   yield finishTests();
 });
