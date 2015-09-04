@@ -56,28 +56,6 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
             return InliningStatus_NotInlined;
     }
 
-    // Atomic natives.
-    if (native == atomics_compareExchange)
-        return inlineAtomicsCompareExchange(callInfo);
-    if (native == atomics_exchange)
-        return inlineAtomicsExchange(callInfo);
-    if (native == atomics_load)
-        return inlineAtomicsLoad(callInfo);
-    if (native == atomics_store)
-        return inlineAtomicsStore(callInfo);
-    if (native == atomics_fence)
-        return inlineAtomicsFence(callInfo);
-    if (native == atomics_add ||
-        native == atomics_sub ||
-        native == atomics_and ||
-        native == atomics_or ||
-        native == atomics_xor)
-    {
-        return inlineAtomicsBinop(callInfo, target);
-    }
-    if (native == atomics_isLockFree)
-        return inlineAtomicsIsLockFree(callInfo);
-
     if (native == ArrayConstructor)
         return inlineArray(callInfo);
 
@@ -325,7 +303,7 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return InliningStatus_NotInlined;
     }
 
-    switch (target->jitInfo()->inlinableNative) {
+    switch (InlinableNative inlNative = target->jitInfo()->inlinableNative) {
       // Array natives.
       case InlinableNative::ArrayIsArray:
         return inlineArrayIsArray(callInfo);
@@ -341,6 +319,26 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineArraySlice(callInfo);
       case InlinableNative::ArraySplice:
         return inlineArraySplice(callInfo);
+
+      // Atomic natives.
+      case InlinableNative::AtomicsCompareExchange:
+        return inlineAtomicsCompareExchange(callInfo);
+      case InlinableNative::AtomicsExchange:
+        return inlineAtomicsExchange(callInfo);
+      case InlinableNative::AtomicsLoad:
+        return inlineAtomicsLoad(callInfo);
+      case InlinableNative::AtomicsStore:
+        return inlineAtomicsStore(callInfo);
+      case InlinableNative::AtomicsFence:
+        return inlineAtomicsFence(callInfo);
+      case InlinableNative::AtomicsAdd:
+      case InlinableNative::AtomicsSub:
+      case InlinableNative::AtomicsAnd:
+      case InlinableNative::AtomicsOr:
+      case InlinableNative::AtomicsXor:
+        return inlineAtomicsBinop(callInfo, inlNative);
+      case InlinableNative::AtomicsIsLockFree:
+        return inlineAtomicsIsLockFree(callInfo);
 
       // Math natives.
       case InlinableNative::MathAbs:
@@ -2987,7 +2985,7 @@ IonBuilder::inlineAtomicsFence(CallInfo& callInfo)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineAtomicsBinop(CallInfo& callInfo, JSFunction* target)
+IonBuilder::inlineAtomicsBinop(CallInfo& callInfo, InlinableNative target)
 {
     if (callInfo.argc() != 3 || callInfo.constructing()) {
         trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
@@ -3008,20 +3006,26 @@ IonBuilder::inlineAtomicsBinop(CallInfo& callInfo, JSFunction* target)
     MDefinition* index;
     atomicsCheckBounds(callInfo, &elements, &index);
 
-    JSNative native = target->native();
     AtomicOp k = AtomicFetchAddOp;
-    if (native == atomics_add)
+    switch (target) {
+      case InlinableNative::AtomicsAdd:
         k = AtomicFetchAddOp;
-    else if (native == atomics_sub)
+        break;
+      case InlinableNative::AtomicsSub:
         k = AtomicFetchSubOp;
-    else if (native == atomics_and)
+        break;
+      case InlinableNative::AtomicsAnd:
         k = AtomicFetchAndOp;
-    else if (native == atomics_or)
+        break;
+      case InlinableNative::AtomicsOr:
         k = AtomicFetchOrOp;
-    else if (native == atomics_xor)
+        break;
+      case InlinableNative::AtomicsXor:
         k = AtomicFetchXorOp;
-    else
+        break;
+      default:
         MOZ_CRASH("Bad atomic operation");
+    }
 
     MAtomicTypedArrayElementBinop* binop =
         MAtomicTypedArrayElementBinop::New(alloc(), k, elements, index, arrayType, value);

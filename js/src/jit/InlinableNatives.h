@@ -16,6 +16,18 @@
     _(ArraySlice)                   \
     _(ArraySplice)                  \
                                     \
+    _(AtomicsCompareExchange)       \
+    _(AtomicsExchange)              \
+    _(AtomicsLoad)                  \
+    _(AtomicsStore)                 \
+    _(AtomicsFence)                 \
+    _(AtomicsAdd)                   \
+    _(AtomicsSub)                   \
+    _(AtomicsAnd)                   \
+    _(AtomicsOr)                    \
+    _(AtomicsXor)                   \
+    _(AtomicsIsLockFree)            \
+                                    \
     _(MathAbs)                      \
     _(MathFloor)                    \
     _(MathCeil)                     \

@@ -55,6 +55,7 @@
 
 #include "asmjs/AsmJSModule.h"
 #include "jit/AtomicOperations.h"
+#include "jit/InlinableNatives.h"
 #include "js/Class.h"
 #include "vm/GlobalObject.h"
 #include "vm/SharedTypedArrayObject.h"
@@ -1214,20 +1215,20 @@ js::FutexRuntime::wake(WakeReason reason)
 }
 
 const JSFunctionSpec AtomicsMethods[] = {
-    JS_FN("compareExchange",    atomics_compareExchange,    4,0),
-    JS_FN("load",               atomics_load,               2,0),
-    JS_FN("store",              atomics_store,              3,0),
-    JS_FN("exchange",           atomics_exchange,           3,0),
-    JS_FN("fence",              atomics_fence,              0,0),
-    JS_FN("add",                atomics_add,                3,0),
-    JS_FN("sub",                atomics_sub,                3,0),
-    JS_FN("and",                atomics_and,                3,0),
-    JS_FN("or",                 atomics_or,                 3,0),
-    JS_FN("xor",                atomics_xor,                3,0),
-    JS_FN("isLockFree",         atomics_isLockFree,         1,0),
-    JS_FN("futexWait",          atomics_futexWait,          4,0),
-    JS_FN("futexWake",          atomics_futexWake,          3,0),
-    JS_FN("futexWakeOrRequeue", atomics_futexWakeOrRequeue, 5,0),
+    JS_INLINABLE_FN("compareExchange",    atomics_compareExchange,    4,0, AtomicsCompareExchange),
+    JS_INLINABLE_FN("load",               atomics_load,               2,0, AtomicsLoad),
+    JS_INLINABLE_FN("store",              atomics_store,              3,0, AtomicsStore),
+    JS_INLINABLE_FN("exchange",           atomics_exchange,           3,0, AtomicsExchange),
+    JS_INLINABLE_FN("fence",              atomics_fence,              0,0, AtomicsFence),
+    JS_INLINABLE_FN("add",                atomics_add,                3,0, AtomicsAdd),
+    JS_INLINABLE_FN("sub",                atomics_sub,                3,0, AtomicsSub),
+    JS_INLINABLE_FN("and",                atomics_and,                3,0, AtomicsAnd),
+    JS_INLINABLE_FN("or",                 atomics_or,                 3,0, AtomicsOr),
+    JS_INLINABLE_FN("xor",                atomics_xor,                3,0, AtomicsXor),
+    JS_INLINABLE_FN("isLockFree",         atomics_isLockFree,         1,0, AtomicsIsLockFree),
+    JS_FN("futexWait",                    atomics_futexWait,          4,0),
+    JS_FN("futexWake",                    atomics_futexWake,          3,0),
+    JS_FN("futexWakeOrRequeue",           atomics_futexWakeOrRequeue, 5,0),
     JS_FS_END
 };
 
