@@ -64,6 +64,23 @@ IDBKeyRange::~IDBKeyRange()
   DropJSObjects();
 }
 
+IDBLocaleAwareKeyRange::IDBLocaleAwareKeyRange(nsISupports* aGlobal,
+                                               bool aLowerOpen,
+                                               bool aUpperOpen,
+                                               bool aIsOnly)
+  : IDBKeyRange(aGlobal, aLowerOpen, aUpperOpen, aIsOnly)
+{
+#ifdef DEBUG
+  mOwningThread = PR_GetCurrentThread();
+#endif
+  AssertIsOnOwningThread();
+}
+
+IDBLocaleAwareKeyRange::~IDBLocaleAwareKeyRange()
+{
+  DropJSObjects();
+}
+
 #ifdef DEBUG
 
 void
@@ -233,6 +250,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(IDBKeyRange)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(IDBKeyRange)
 
+NS_IMPL_ISUPPORTS_INHERITED0(IDBLocaleAwareKeyRange, IDBKeyRange)
+
 void
 IDBKeyRange::DropJSObjects()
 {
@@ -251,6 +270,12 @@ bool
 IDBKeyRange::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector)
 {
   return IDBKeyRangeBinding::Wrap(aCx, this, aGivenProto, aReflector);
+}
+
+bool
+IDBLocaleAwareKeyRange::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector)
+{
+  return IDBLocaleAwareKeyRangeBinding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
 void
@@ -378,6 +403,36 @@ IDBKeyRange::Bound(const GlobalObject& aGlobal,
 
   if (keyRange->Lower() > keyRange->Upper() ||
       (keyRange->Lower() == keyRange->Upper() && (aLowerOpen || aUpperOpen))) {
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
+    return nullptr;
+  }
+
+  return keyRange.forget();
+}
+
+// static
+already_AddRefed<IDBLocaleAwareKeyRange>
+IDBLocaleAwareKeyRange::Bound(const GlobalObject& aGlobal,
+                              JS::Handle<JS::Value> aLower,
+                              JS::Handle<JS::Value> aUpper,
+                              bool aLowerOpen,
+                              bool aUpperOpen,
+                              ErrorResult& aRv)
+{
+  nsRefPtr<IDBLocaleAwareKeyRange> keyRange =
+    new IDBLocaleAwareKeyRange(aGlobal.GetAsSupports(), aLowerOpen, aUpperOpen, false);
+
+  aRv = GetKeyFromJSVal(aGlobal.Context(), aLower, keyRange->Lower());
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  aRv = GetKeyFromJSVal(aGlobal.Context(), aUpper, keyRange->Upper());
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  if (keyRange->Lower() == keyRange->Upper() && (aLowerOpen || aUpperOpen)) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
     return nullptr;
   }
