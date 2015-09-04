@@ -63,7 +63,6 @@ class nsDequeIterator;
 
 class nsDeque
 {
-  friend class nsDequeIterator;
   typedef mozilla::fallible_t fallible_t;
 public:
   explicit nsDeque(nsDequeFunctor* aDeallocator = nullptr);
@@ -161,22 +160,6 @@ public:
    */
   void Erase();
 
-  /**
-   * Creates a new iterator, pointing to the first
-   * item in the deque.
-   *
-   * @return  new dequeIterator
-   */
-  nsDequeIterator Begin() const;
-
-  /**
-   * Creates a new iterator, pointing to the last
-   * item in the deque.
-   *
-   * @return  new dequeIterator
-   */
-  nsDequeIterator End() const;
-
   void* Last() const;
 
   /**
@@ -230,168 +213,5 @@ private:
   nsDeque& operator=(const nsDeque& aOther);
 
   bool GrowCapacity();
-};
-
-/******************************************************
- * Here comes the nsDequeIterator class...
- ******************************************************/
-
-class nsDequeIterator
-{
-public:
-  /**
-   * DequeIterator is an object that knows how to iterate
-   * (forward and backward) through a Deque. Normally,
-   * you don't need to do this, but there are some special
-   * cases where it is pretty handy.
-   *
-   * One warning: the iterator is not bound to an item,
-   * it is bound to an index, so if you insert or remove
-   * from the beginning while using an iterator
-   * (which is not recommended) then the iterator will
-   * point to a different item.  @see GetCurrent()
-   *
-   * Here you go.
-   *
-   * @param   aQueue is the deque object to be iterated
-   * @param   aIndex is the starting position for your iteration
-   */
-  explicit nsDequeIterator(const nsDeque& aQueue, int aIndex = 0);
-
-  /**
-   * Create a copy of a DequeIterator
-   *
-   * @param   aCopy is another iterator to copy from
-   */
-  nsDequeIterator(const nsDequeIterator& aCopy);
-
-  /**
-   * Moves iterator to first element in the deque
-   * @return  *this
-   */
-  nsDequeIterator& First();
-
-  /**
-   * Standard assignment operator for dequeiterator
-   * @param   aCopy is another iterator to copy from
-   * @return  *this
-   */
-  nsDequeIterator& operator=(const nsDequeIterator& aCopy);
-
-  /**
-   * preform ! operation against two iterators to test for equivalence
-   * (or lack thereof)!
-   *
-   * @param   aIter is the object to be compared to
-   * @return  TRUE if NOT equal.
-   */
-  bool operator!=(nsDequeIterator& aIter);
-
-  /**
-   * Compare two iterators for increasing order.
-   *
-   * @param   aIter is the other iterator to be compared to
-   * @return  TRUE if this object points to an element before
-   *          the element pointed to by aIter.
-   *          FALSE if this and aIter are not iterating over
-   *          the same deque.
-   */
-  bool operator<(nsDequeIterator& aIter);
-
-  /**
-   * Compare two iterators for equivalence.
-   *
-   * @param   aIter is the other iterator to be compared to
-   * @return  TRUE if EQUAL
-   */
-  bool operator==(nsDequeIterator& aIter);
-
-  /**
-   * Compare two iterators for non strict decreasing order.
-   *
-   * @param   aIter is the other iterator to be compared to
-   * @return  TRUE if this object points to the same element, or
-   *          an element after the element pointed to by aIter.
-   *          FALSE if this and aIter are not iterating over
-   *          the same deque.
-   */
-  bool operator>=(nsDequeIterator& aIter);
-
-  /**
-   * Pre-increment operator
-   * Iterator will advance one index towards the end.
-   *
-   * @return  object_at(++index)
-   */
-  void* operator++();
-
-  /**
-   * Post-increment operator
-   * Iterator will advance one index towards the end.
-   *
-   * @param   param is ignored
-   * @return  object_at(mIndex++)
-   */
-  void* operator++(int);
-
-  /**
-   * Pre-decrement operator
-   * Iterator will advance one index towards the beginning.
-   *
-   * @return  object_at(--index)
-   */
-  void* operator--();
-
-  /**
-   * Post-decrement operator
-   * Iterator will advance one index towards the beginning.
-   *
-   * @param   param is ignored
-   * @return  object_at(index--)
-   */
-  void* operator--(int);
-
-  /**
-   * Retrieve the the iterator's notion of current node.
-   *
-   * Note that the iterator floats, so you don't need to do:
-   * <code>++iter; aDeque.PopFront();</code>
-   * Unless you actually want your iterator to jump 2 positions
-   * relative to its origin.
-   *
-   * Picture: [1 2i 3 4]
-   * PopFront()
-   * Picture: [2 3i 4]
-   * Note that I still happily points to object at the second index.
-   *
-   * @return  object at i'th index
-   */
-  void* GetCurrent();
-
-  /**
-   * Call this method when you want to iterate all the
-   * members of the container, passing a functor along
-   * to call your code.
-   *
-   * @param   aFunctor object to call for each member
-   * @return  *this
-   */
-  void ForEach(nsDequeFunctor& aFunctor) const;
-
-  /**
-   * Call this method when you want to iterate all the
-   * members of the container, calling the functor you
-   * passed with each member. This process will interrupt
-   * if your function returns non 0 to this method.
-   *
-   * @param   aFunctor object to call for each member
-   * @return  first nonzero result of aFunctor or 0.
-   */
-  const void* FirstThat(nsDequeFunctor& aFunctor) const;
-
-protected:
-
-  int32_t         mIndex;
-  const nsDeque&  mDeque;
 };
 #endif
