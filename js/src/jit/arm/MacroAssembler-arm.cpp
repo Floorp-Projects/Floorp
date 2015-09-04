@@ -405,7 +405,18 @@ MacroAssemblerARM::ma_alu(Register src1, Imm32 imm, Register dest,
         alu_dbl(src1, negImm, negDest, negOp, s, c))
         return;
 
-    ScratchRegisterScope scratch(asMasm());
+    // Often this code is called with dest as the ScratchRegister.  The register
+    // is logically owned by the caller after this call.
+    const Register& scratch = ScratchRegister;
+    MOZ_ASSERT(src1 != scratch);
+#ifdef DEBUG
+    if (dest != scratch) {
+        // If the destination register is not the scratch register, double check
+        // that the current function does not erase the content of the scratch
+        // register.
+        ScratchRegisterScope assertScratch(asMasm());
+    }
+#endif
 
     // Well, damn. We can use two 16 bit mov's, then do the op or we can do a
     // single load from a pool then op.
