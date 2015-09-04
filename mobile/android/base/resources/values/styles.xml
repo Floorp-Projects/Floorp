@@ -578,6 +578,11 @@
         <item name="android:drawSelectorOnTop">true</item>
     </style>
 
+    <style name="Widget.HistoryListView" parent="Widget.HomeListView">
+        <item name="android:childDivider">@color/divider_light</item>
+        <item name="android:drawSelectorOnTop">true</item>
+    </style>
+
     <!-- TabsLayout Row -->
     <style name="TabLayoutItemTextAppearance">
         <item name="android:textColor">#FFFFFFFF</item>

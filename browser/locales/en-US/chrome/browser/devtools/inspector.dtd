@@ -105,6 +105,12 @@
      opens the split Console and displays the properties in its side panel. -->
 <!ENTITY inspectorShowDOMProperties.label       "Show DOM Properties">
 
+<!-- LOCALIZATION NOTE (inspectorUseInConsole.label): This is the label
+     shown in the inspector contextual-menu for the item that outputs a
+     variable for the current node to the console. When triggered,
+     this item opens the split Console. -->
+<!ENTITY inspectorUseInConsole.label       "Use in Console">
+
 <!-- LOCALIZATION NOTE (inspectorExpandNode.label): This is the label
      shown in the inspector contextual-menu for recursively expanding
      mark-up elements -->

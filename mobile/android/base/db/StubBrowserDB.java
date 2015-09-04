@@ -224,6 +224,11 @@ public class StubBrowserDB implements BrowserDB {
         return null;
     }
 
+    @Override
+    public Cursor getRecentHistoryBetweenTime(ContentResolver cr, int limit, long time, long end) {
+        return null;
+    }
+
     public void expireHistory(ContentResolver cr, BrowserContract.ExpirePriority priority) {
     }
 
