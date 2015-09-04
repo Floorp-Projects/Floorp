@@ -11,6 +11,7 @@
 #include "builtin/TestingFunctions.h"
 #include "builtin/TypedObject.h"
 #include "jit/BaselineInspector.h"
+#include "jit/InlinableNatives.h"
 #include "jit/IonBuilder.h"
 #include "jit/Lowering.h"
 #include "jit/MIR.h"
@@ -94,78 +95,6 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineArraySlice(callInfo);
     if (native == js::array_splice)
         return inlineArraySplice(callInfo);
-
-    // Math natives.
-    if (native == js::math_abs)
-        return inlineMathAbs(callInfo);
-    if (native == js::math_floor)
-        return inlineMathFloor(callInfo);
-    if (native == js::math_ceil)
-        return inlineMathCeil(callInfo);
-    if (native == js::math_clz32)
-        return inlineMathClz32(callInfo);
-    if (native == js::math_round)
-        return inlineMathRound(callInfo);
-    if (native == js::math_sqrt)
-        return inlineMathSqrt(callInfo);
-    if (native == js::math_atan2)
-        return inlineMathAtan2(callInfo);
-    if (native == js::math_hypot)
-        return inlineMathHypot(callInfo);
-    if (native == js::math_max)
-        return inlineMathMinMax(callInfo, true /* max */);
-    if (native == js::math_min)
-        return inlineMathMinMax(callInfo, false /* max */);
-    if (native == js::math_pow)
-        return inlineMathPow(callInfo);
-    if (native == js::math_random)
-        return inlineMathRandom(callInfo);
-    if (native == js::math_imul)
-        return inlineMathImul(callInfo);
-    if (native == js::math_fround)
-        return inlineMathFRound(callInfo);
-    if (native == js::math_sin)
-        return inlineMathFunction(callInfo, MMathFunction::Sin);
-    if (native == js::math_cos)
-        return inlineMathFunction(callInfo, MMathFunction::Cos);
-    if (native == js::math_exp)
-        return inlineMathFunction(callInfo, MMathFunction::Exp);
-    if (native == js::math_tan)
-        return inlineMathFunction(callInfo, MMathFunction::Tan);
-    if (native == js::math_log)
-        return inlineMathFunction(callInfo, MMathFunction::Log);
-    if (native == js::math_atan)
-        return inlineMathFunction(callInfo, MMathFunction::ATan);
-    if (native == js::math_asin)
-        return inlineMathFunction(callInfo, MMathFunction::ASin);
-    if (native == js::math_acos)
-        return inlineMathFunction(callInfo, MMathFunction::ACos);
-    if (native == js::math_log10)
-        return inlineMathFunction(callInfo, MMathFunction::Log10);
-    if (native == js::math_log2)
-        return inlineMathFunction(callInfo, MMathFunction::Log2);
-    if (native == js::math_log1p)
-        return inlineMathFunction(callInfo, MMathFunction::Log1P);
-    if (native == js::math_expm1)
-        return inlineMathFunction(callInfo, MMathFunction::ExpM1);
-    if (native == js::math_cosh)
-        return inlineMathFunction(callInfo, MMathFunction::CosH);
-    if (native == js::math_sinh)
-        return inlineMathFunction(callInfo, MMathFunction::SinH);
-    if (native == js::math_tanh)
-        return inlineMathFunction(callInfo, MMathFunction::TanH);
-    if (native == js::math_acosh)
-        return inlineMathFunction(callInfo, MMathFunction::ACosH);
-    if (native == js::math_asinh)
-        return inlineMathFunction(callInfo, MMathFunction::ASinH);
-    if (native == js::math_atanh)
-        return inlineMathFunction(callInfo, MMathFunction::ATanH);
-    if (native == js::math_sign)
-        return inlineMathFunction(callInfo, MMathFunction::Sign);
-    if (native == js::math_trunc)
-        return inlineMathFunction(callInfo, MMathFunction::Trunc);
-    if (native == js::math_cbrt)
-        return inlineMathFunction(callInfo, MMathFunction::Cbrt);
 
     // String natives.
     if (native == StringConstructor)
@@ -423,11 +352,88 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
     if (native == js::simd_int32x4_bool)
         return inlineSimdBool(callInfo, native, SimdTypeDescr::Int32x4);
 
-    // Reaching here means we tried to inline a native for which there is no
-    // Ion specialization.
-    trackOptimizationOutcome(TrackedOutcome::CantInlineNativeNoSpecialization);
+    if (!target->jitInfo() || target->jitInfo()->type() != JSJitInfo::InlinableNative) {
+        // Reaching here means we tried to inline a native for which there is no
+        // Ion specialization.
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeNoSpecialization);
+        return InliningStatus_NotInlined;
+    }
 
-    return InliningStatus_NotInlined;
+    switch (target->jitInfo()->inlinableNative) {
+      // Math natives.
+      case InlinableNative::MathAbs:
+        return inlineMathAbs(callInfo);
+      case InlinableNative::MathFloor:
+        return inlineMathFloor(callInfo);
+      case InlinableNative::MathCeil:
+        return inlineMathCeil(callInfo);
+      case InlinableNative::MathRound:
+        return inlineMathRound(callInfo);
+      case InlinableNative::MathClz32:
+        return inlineMathClz32(callInfo);
+      case InlinableNative::MathSqrt:
+        return inlineMathSqrt(callInfo);
+      case InlinableNative::MathATan2:
+        return inlineMathAtan2(callInfo);
+      case InlinableNative::MathHypot:
+        return inlineMathHypot(callInfo);
+      case InlinableNative::MathMax:
+        return inlineMathMinMax(callInfo, true /* max */);
+      case InlinableNative::MathMin:
+        return inlineMathMinMax(callInfo, false /* max */);
+      case InlinableNative::MathPow:
+        return inlineMathPow(callInfo);
+      case InlinableNative::MathRandom:
+        return inlineMathRandom(callInfo);
+      case InlinableNative::MathImul:
+        return inlineMathImul(callInfo);
+      case InlinableNative::MathFRound:
+        return inlineMathFRound(callInfo);
+      case InlinableNative::MathSin:
+        return inlineMathFunction(callInfo, MMathFunction::Sin);
+      case InlinableNative::MathTan:
+        return inlineMathFunction(callInfo, MMathFunction::Tan);
+      case InlinableNative::MathCos:
+        return inlineMathFunction(callInfo, MMathFunction::Cos);
+      case InlinableNative::MathExp:
+        return inlineMathFunction(callInfo, MMathFunction::Exp);
+      case InlinableNative::MathLog:
+        return inlineMathFunction(callInfo, MMathFunction::Log);
+      case InlinableNative::MathASin:
+        return inlineMathFunction(callInfo, MMathFunction::ASin);
+      case InlinableNative::MathATan:
+        return inlineMathFunction(callInfo, MMathFunction::ATan);
+      case InlinableNative::MathACos:
+        return inlineMathFunction(callInfo, MMathFunction::ACos);
+      case InlinableNative::MathLog10:
+        return inlineMathFunction(callInfo, MMathFunction::Log10);
+      case InlinableNative::MathLog2:
+        return inlineMathFunction(callInfo, MMathFunction::Log2);
+      case InlinableNative::MathLog1P:
+        return inlineMathFunction(callInfo, MMathFunction::Log1P);
+      case InlinableNative::MathExpM1:
+        return inlineMathFunction(callInfo, MMathFunction::ExpM1);
+      case InlinableNative::MathCosH:
+        return inlineMathFunction(callInfo, MMathFunction::CosH);
+      case InlinableNative::MathSinH:
+        return inlineMathFunction(callInfo, MMathFunction::SinH);
+      case InlinableNative::MathTanH:
+        return inlineMathFunction(callInfo, MMathFunction::TanH);
+      case InlinableNative::MathACosH:
+        return inlineMathFunction(callInfo, MMathFunction::ACosH);
+      case InlinableNative::MathASinH:
+        return inlineMathFunction(callInfo, MMathFunction::ASinH);
+      case InlinableNative::MathATanH:
+        return inlineMathFunction(callInfo, MMathFunction::ATanH);
+      case InlinableNative::MathSign:
+        return inlineMathFunction(callInfo, MMathFunction::Sign);
+      case InlinableNative::MathTrunc:
+        return inlineMathFunction(callInfo, MMathFunction::Trunc);
+      case InlinableNative::MathCbrt:
+        return inlineMathFunction(callInfo, MMathFunction::Cbrt);
+    }
+
+    MOZ_CRASH("Shouldn't get here");
 }
 
 IonBuilder::InliningStatus
@@ -3560,6 +3566,11 @@ IonBuilder::inlineSimdBool(CallInfo& callInfo, JSNative native, SimdTypeDescr::T
                                                      MIRType_Int32x4);
     return boxSimd(callInfo, result, templateObj);
 }
+
+#define ADD_NATIVE(native) const JSJitInfo JitInfo_##native { \
+    { nullptr }, { uint16_t(InlinableNative::native) }, 0, JSJitInfo::InlinableNative };
+    INLINABLE_NATIVE_LIST(ADD_NATIVE)
+#undef ADD_NATIVE
 
 } // namespace jit
 } // namespace js
