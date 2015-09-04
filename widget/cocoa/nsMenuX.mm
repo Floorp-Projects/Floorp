@@ -379,7 +379,7 @@ void nsMenuX::MenuClosed()
     mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::open, true);
 
     nsEventStatus status = nsEventStatus_eIgnore;
-    WidgetMouseEvent event(true, NS_XUL_POPUP_HIDDEN, nullptr,
+    WidgetMouseEvent event(true, eXULPopupHidden, nullptr,
                            WidgetMouseEvent::eReal);
 
     nsCOMPtr<nsIContent> popupContent;
