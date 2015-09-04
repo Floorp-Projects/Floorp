@@ -841,6 +841,8 @@ protected:
   static bool sDoNotReturnNoLayoutErrorToEasyChangjei;
   static bool sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar;
   static bool sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret;
+  static bool sHackQueryInsertForMSSimplifiedTIP;
+  static bool sHackQueryInsertForMSTraditionalTIP;
 };
 
 } // namespace widget
