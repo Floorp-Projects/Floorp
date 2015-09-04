@@ -28,6 +28,11 @@ class ScreenStateObserver extends BroadcastReceiver {
         context.registerReceiver(this, filter);
     }
 
+    void destroy(Context context) {
+        Log.d(LOGTAG, "ScreenStateObserver::unint");
+        context.unregisterReceiver(this);
+    }
+
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(LOGTAG, "ScreenStateObserver: " + intent.getAction());

@@ -116,6 +116,7 @@ public class Launcher extends Activity
         Log.w(LOGTAG, "onDestroy");
         super.onDestroy();
         IntentHelper.destroy();
+        mScreenStateObserver.destroy(this);
         mScreenStateObserver = null;
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
@@ -125,7 +126,7 @@ public class Launcher extends Activity
     }
 
     @Override
-    protected void onNewIntent (Intent intent) {
+    protected void onNewIntent(Intent intent) {
         final String action = intent.getAction();
         Log.w(LOGTAG, "onNewIntent " + action);
         if (Intent.ACTION_VIEW.equals(action)) {
