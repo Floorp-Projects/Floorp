@@ -1029,7 +1029,7 @@ nsContextMenu.prototype = {
     BrowserViewSourceOfDocument({
       browser: this.browser,
       URL: gContextMenuContentData.docLocation,
-      outerWindowID: gContextMenuContentData.frameOuterWindowID,
+      outerWindowID: this.frameOuterWindowID,
     });
   },
 
@@ -1342,7 +1342,7 @@ nsContextMenu.prototype = {
     urlSecurityCheck(this.linkURL, this.principal);
     this.saveHelper(this.linkURL, this.linkTextStr, null, true, this.ownerDoc,
                     gContextMenuContentData.documentURIObject,
-                    gContextMenuContentData.frameOuterWindowID,
+                    this.frameOuterWindowID,
                     this.linkDownload);
   },
 
@@ -1373,7 +1373,7 @@ nsContextMenu.prototype = {
       urlSecurityCheck(this.mediaURL, this.principal);
       var dialogTitle = this.onVideo ? "SaveVideoTitle" : "SaveAudioTitle";
       this.saveHelper(this.mediaURL, null, dialogTitle, false, doc, referrerURI,
-                      gContextMenuContentData.frameOuterWindowID, "");
+                      this.frameOuterWindowID, "");
     }
   },
 
