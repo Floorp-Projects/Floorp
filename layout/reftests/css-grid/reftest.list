@@ -18,7 +18,7 @@ fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
 skip-if(Android) == grid-placement-definite-implicit-001.html grid-placement-definite-implicit-001-ref.html
 == grid-placement-definite-implicit-002.html grid-placement-definite-implicit-002-ref.html
-skip-if(Android) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html
+skip-if(Android) fuzzy-if(winWidget,1,32) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html
 == grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001-ref.html
 pref(layout.css.vertical-text.enabled,true) == rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001-ref.html
 pref(layout.css.vertical-text.enabled,true) == rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001-ref.html
