@@ -37,7 +37,16 @@
 }
 
 .search-go-button {
-  list-style-image: url("chrome://browser/skin/Search.png");
+  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
+  -moz-image-region: rect(0, 42px, 14px, 28px);
+}
+
+.search-go-button:hover:active {
+  -moz-image-region: rect(14px, 42px, 28px, 28px);
+}
+
+.search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  transform: scaleX(-1);
 }
 
 .searchbar-search-button {
@@ -59,26 +68,20 @@
   -moz-image-region: rect(0, 60px, 20px, 40px);
 }
 
-searchbar[oneoffui] .search-go-button {
-  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
-  -moz-image-region: rect(0, 42px, 14px, 28px);
-}
-
-searchbar[oneoffui] .search-go-button:hover:active {
-  -moz-image-region: rect(14px, 42px, 28px, 28px);
-}
-
-searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  transform: scaleX(-1);
-}
-
 @media (min-resolution: 2dppx) {
   .searchbar-engine-image {
     list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
   }
 
   .search-go-button {
-    list-style-image: url("chrome://browser/skin/Search@2x.png");
+    list-style-image: url("chrome://browser/skin/reload-stop-go@2x.png");
+    -moz-image-region: rect(0, 84px, 28px, 56px);
+    width: 14px;
+  }
+
+  .search-go-button:hover:active {
+    list-style-image: url("chrome://browser/skin/reload-stop-go@2x.png");
+    -moz-image-region: rect(28px, 84px, 56px, 56px);
     width: 14px;
   }
 
@@ -98,18 +101,6 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
 
   .searchbar-search-button:hover:active {
     -moz-image-region: rect(0, 120px, 40px, 80px);
-  }
-
-  searchbar[oneoffui] .search-go-button {
-    list-style-image: url("chrome://browser/skin/reload-stop-go@2x.png");
-    -moz-image-region: rect(0, 84px, 28px, 56px);
-    width: 14px;
-  }
-
-  searchbar[oneoffui] .search-go-button:hover:active {
-    list-style-image: url("chrome://browser/skin/reload-stop-go@2x.png");
-    -moz-image-region: rect(28px, 84px, 56px, 56px);
-    width: 14px;
   }
 }
 
