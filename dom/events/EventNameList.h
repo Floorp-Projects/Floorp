@@ -712,7 +712,7 @@ NON_IDL_EVENT(popuphidden,
               EventNameType_XUL,
               eBasicEventClass)
 NON_IDL_EVENT(broadcast,
-              NS_XUL_BROADCAST,
+              eXULBroadcast,
               EventNameType_XUL,
               eBasicEventClass)
 NON_IDL_EVENT(commandupdate,
