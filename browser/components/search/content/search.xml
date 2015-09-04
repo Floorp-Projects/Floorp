@@ -51,20 +51,6 @@
                        xbl:inherits="addengines"
                        tooltiptext="&searchEndCap.label;"/>
           </xul:hbox>
-          <xul:button class="searchbar-engine-button"
-                      type="menu"
-                      anonid="searchbar-engine-button">
-            <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
-            <xul:image class="searchbar-dropmarker-image"/>
-            <xul:menupopup class="searchbar-popup"
-                           anonid="searchbar-popup">
-              <xul:menuseparator/>
-              <xul:menuitem class="open-engine-manager"
-                            anonid="open-engine-manager"
-                            label="&cmd_engineManager.label;"
-                            oncommand="openManager(event);"/>
-            </xul:menupopup>
-          </xul:button>
         </xul:box>
         <xul:hbox class="search-go-container">
           <xul:image class="search-go-button" hidden="true"
@@ -138,8 +124,6 @@
       <field name="_textboxInitialized">false</field>
       <field name="_textbox">document.getAnonymousElementByAttribute(this,
           "anonid", "searchbar-textbox");</field>
-      <field name="_popup">document.getAnonymousElementByAttribute(this,
-          "anonid", "searchbar-popup");</field>
       <field name="_ss">null</field>
       <field name="_engines">null</field>
       <field name="FormHistory" readonly="true">
@@ -156,9 +140,6 @@
           return this._engines;
         ]]></getter>
       </property>
-
-      <field name="searchButton">document.getAnonymousElementByAttribute(this,
-          "anonid", "searchbar-engine-button");</field>
 
       <property name="currentEngine">
         <setter><![CDATA[
@@ -218,12 +199,6 @@
             case "engine-added":
               this.hideNewEngine(aEngine);
               break;
-            case "engine-current":
-              // The current engine was changed.  Rebuilding the menu appears to
-              // confuse its idea of whether it should be open when it's just
-              // been clicked, so we force it to close now.
-              this._popup.hidePopup();
-              break;
             case "engine-changed":
               // An engine was removed (or hidden) or added, or an icon was
               // changed.  Do nothing special.
@@ -232,8 +207,8 @@
             // Make sure the engine list is refetched next time it's needed
             this._engines = null;
 
-            // Rebuild the popup and update the display after any modification.
-            this.rebuildPopup();
+            // Update the popup header and update the display after any modification.
+            this._textbox.popup.updateHeader();
             this.updateDisplay();
           }
         ]]></body>
@@ -278,7 +253,7 @@
               }
             }
           }
-          BrowserSearch.updateSearchButton();
+          BrowserSearch.updateOpenSearchBadge();
         ]]></body>
       </method>
 
@@ -304,7 +279,7 @@
               }
             }
           }
-          BrowserSearch.updateSearchButton();
+          BrowserSearch.updateOpenSearchBadge();
         ]]></body>
       </method>
 
@@ -333,77 +308,6 @@
         ]]></body>
       </method>
 
-      <!-- Rebuilds the dynamic portion of the popup menu (i.e., the menu items
-           for new search engines that can be added to the available list).  This
-           is called each time the popup is shown.
-      -->
-      <method name="rebuildPopupDynamic">
-        <body><![CDATA[
-          // We might not have added the main popup items yet, do that first
-          // if needed.
-          if (this._needToBuildPopup)
-            this.rebuildPopup();
-
-          var popup = this._popup;
-          // Clear any addengine menuitems, including addengine-item entries and
-          // the addengine-separator.  Work backward to avoid invalidating the
-          // indexes as items are removed.
-          var items = popup.childNodes;
-          for (var i = items.length - 1; i >= 0; i--) {
-            if (items[i].classList.contains("addengine-item") ||
-                items[i].classList.contains("addengine-separator"))
-              popup.removeChild(items[i]);
-          }
-
-          var addengines = gBrowser.selectedBrowser.engines;
-          if (addengines && addengines.length > 0) {
-            const kXULNS =
-               "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-            // Find the (first) separator in the remaining menu, or the first item
-            // if no separators are present.
-            var insertLocation = popup.firstChild;
-            while (insertLocation.nextSibling &&
-                   insertLocation.localName != "menuseparator") {
-              insertLocation = insertLocation.nextSibling;
-            }
-            if (insertLocation.localName != "menuseparator")
-              insertLocation = popup.firstChild;
-
-            var separator = document.createElementNS(kXULNS, "menuseparator");
-            separator.setAttribute("class", "addengine-separator");
-            popup.insertBefore(separator, insertLocation);
-
-            // Insert the "add this engine" items.
-            for (var i = 0; i < addengines.length; i++) {
-              var menuitem = document.createElement("menuitem");
-              var engineInfo = addengines[i];
-              var labelStr =
-                  this._stringBundle.getFormattedString("cmd_addFoundEngine",
-                                                        [engineInfo.title]);
-              menuitem = document.createElementNS(kXULNS, "menuitem");
-              menuitem.setAttribute("class", "menuitem-iconic addengine-item");
-              menuitem.setAttribute("label", labelStr);
-              menuitem.setAttribute("tooltiptext", engineInfo.uri);
-              menuitem.setAttribute("uri", engineInfo.uri);
-              if (engineInfo.icon)
-                this.setIcon(menuitem, engineInfo.icon);
-              menuitem.setAttribute("title", engineInfo.title);
-              popup.insertBefore(menuitem, insertLocation);
-            }
-          }
-        ]]></body>
-      </method>
-
-      <!-- This is called by the observer when the list of visible engines,
-           or the currently selected engine, has changed.
-      -->
-      <method name="rebuildPopup">
-        <body><![CDATA[
-          this._textbox.popup.updateHeader();
-        ]]></body>
-      </method>
-
       <method name="updateGoButtonVisibility">
         <body><![CDATA[
           document.getAnonymousElementByAttribute(this, "anonid",
@@ -427,25 +331,6 @@
           }
           else if (aShowOnlySettingsIfEmpty) {
             this.setAttribute("showonlysettings", "true");
-          }
-        ]]></body>
-      </method>
-
-      <method name="openManager">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          var wm =
-                Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                          .getService(Components.interfaces.nsIWindowMediator);
-
-          var window = wm.getMostRecentWindow("Browser:SearchManager");
-          if (window)
-            window.focus()
-          else {
-            setTimeout(function () {
-              openDialog("chrome://browser/content/search/engineManager.xul",
-                         "_blank", "chrome,dialog,modal,centerscreen,resizable");
-            }, 0);
           }
         ]]></body>
       </method>
@@ -595,8 +480,6 @@
         this.focus();
         this.select();
       ]]></handler>
-
-      <handler event="popupshowing" action="this.rebuildPopupDynamic();"/>
 
       <handler event="DOMMouseScroll"
                phase="capturing"
@@ -861,13 +744,8 @@
       <method name="openSearch">
         <body>
           <![CDATA[
-            // Don't open search popup if history popup is open
             if (!this.popupOpen) {
-              let searchBox = document.getBindingParent(this);
-              if (searchBox.hasAttribute("oneoffui"))
-                searchBox.openSuggestionsPanel();
-              else
-                searchBox.searchButton.open = true;
+              document.getBindingParent(this).openSuggestionsPanel();
               return false;
             }
             return true;

@@ -222,13 +222,7 @@ this.UITour = {
     }],
     ["searchProvider", {
       query: (aDocument) => {
-        let searchbar = aDocument.getElementById("searchbar");
-        if (searchbar.hasAttribute("oneoffui")) {
-          return null;
-        }
-        return aDocument.getAnonymousElementByAttribute(searchbar,
-                                                        "anonid",
-                                                        "searchbar-engine-button");
+        return null;
       },
       widgetName: "search-container",
     }],
@@ -255,10 +249,6 @@ this.UITour = {
           element = aDocument.getAnonymousElementByAttribute(popup,
                                                              "anonid",
                                                              "search-settings");
-        } else {
-          element = aDocument.getAnonymousElementByAttribute(searchbar,
-                                                             "anonid",
-                                                             "open-engine-manager");
         }
         if (!element || !UITour.isElementVisible(element)) {
           return null;

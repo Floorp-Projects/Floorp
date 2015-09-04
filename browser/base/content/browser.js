@@ -3469,7 +3469,7 @@ const BrowserSearch = {
     else {
       browser.engines = engines;
       if (browser == gBrowser.selectedBrowser)
-        this.updateSearchButton();
+        this.updateOpenSearchBadge();
     }
   },
 
@@ -3478,13 +3478,13 @@ const BrowserSearch = {
    * available when a page is loaded or the user switches tabs to a page that
    * has search engines.
    */
-  updateSearchButton: function() {
+  updateOpenSearchBadge: function() {
     var searchBar = this.searchBar;
 
     // The search bar binding might not be applied even though the element is
     // in the document (e.g. when the navigation toolbar is hidden), so check
-    // for .searchButton specifically.
-    if (!searchBar || !searchBar.searchButton)
+    // for .textbox specifically.
+    if (!searchBar || !searchBar.textbox)
       return;
 
     var engines = gBrowser.selectedBrowser.engines;
@@ -4445,7 +4445,7 @@ var XULBrowserWindow = {
 
   asyncUpdateUI: function () {
     FeedHandler.updateFeeds();
-    BrowserSearch.updateSearchButton();
+    BrowserSearch.updateOpenSearchBadge();
   },
 
   // Left here for add-on compatibility, see bug 752434
