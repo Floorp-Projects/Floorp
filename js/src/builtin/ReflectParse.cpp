@@ -2308,12 +2308,13 @@ ASTSerializer::exportDeclaration(ParseNode* pn, MutableHandleValue dst)
     MOZ_ASSERT(pn->isKind(PNK_EXPORT) ||
                pn->isKind(PNK_EXPORT_FROM) ||
                pn->isKind(PNK_EXPORT_DEFAULT));
+    MOZ_ASSERT(pn->getArity() == pn->isKind(PNK_EXPORT) ? PN_UNARY : PN_BINARY);
     MOZ_ASSERT_IF(pn->isKind(PNK_EXPORT_FROM), pn->pn_right->isKind(PNK_STRING));
 
     RootedValue decl(cx, NullValue());
     NodeVector elts(cx);
 
-    ParseNode* kid = pn->isKind(PNK_EXPORT_FROM) ? pn->pn_left: pn->pn_kid;
+    ParseNode* kid = pn->isKind(PNK_EXPORT) ? pn->pn_kid : pn->pn_left;
     switch (ParseNodeKind kind = kid->getKind()) {
       case PNK_EXPORT_SPEC_LIST:
         if (!elts.reserve(pn->pn_left->pn_count))
