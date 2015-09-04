@@ -33,9 +33,6 @@ public:
               nsHTMLReflowMetrics&     aDesiredSize,
               const nsHTMLReflowState& aReflowState,
               nsReflowStatus&          aStatus) override;
-  nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
-  nscoord GetPrefISize(nsRenderingContext* aRenderingContext) override;
-  void MarkIntrinsicISizesDirty() override;
   virtual nsIAtom* GetType() const override;
 
   void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -110,11 +107,7 @@ protected:
   struct GridReflowState;
   friend nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                                     nsStyleContext* aContext);
-  explicit nsGridContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext)
-    , mCachedMinISize(NS_INTRINSIC_WIDTH_UNKNOWN)
-    , mCachedPrefISize(NS_INTRINSIC_WIDTH_UNKNOWN)
-  {}
+  explicit nsGridContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
 
   /**
    * A LineRange can be definite or auto - when it's definite it represents
@@ -189,11 +182,6 @@ protected:
      */
     void ToPositionAndLength(const nsTArray<TrackSize>& aTrackSizes,
                              nscoord* aPos, nscoord* aLength) const;
-    /**
-     * Given an array of track sizes, return the length of the tracks in this
-     * line range.
-     */
-    nscoord ToLength(const nsTArray<TrackSize>& aTrackSizes) const;
     /**
      * Given an array of track sizes and a grid origin coordinate, adjust the
      * abs.pos. containing block along an axis given by aPos and aLength.
@@ -535,12 +523,6 @@ protected:
                       nsHTMLReflowMetrics& aDesiredSize,
                       nsReflowStatus&      aStatus);
 
-  /**
-   * Helper for GetMinISize / GetPrefISize.
-   */
-  nscoord IntrinsicISize(nsRenderingContext* aRenderingContext,
-                         IntrinsicISizeType  aConstraint);
-
 #ifdef DEBUG
   void SanityCheckAnonymousGridItems() const;
 #endif // DEBUG
@@ -585,12 +567,6 @@ private:
    */
   uint32_t mExplicitGridOffsetCol;
   uint32_t mExplicitGridOffsetRow;
-
-  /**
-   * Cached values to optimize GetMinISize/GetPrefISize.
-   */
-  nscoord mCachedMinISize;
-  nscoord mCachedPrefISize;
 
   /**
    * True iff the normal flow children are already in CSS 'order' in the
