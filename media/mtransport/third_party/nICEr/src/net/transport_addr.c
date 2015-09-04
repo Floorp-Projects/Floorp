@@ -256,7 +256,7 @@ int nr_ip6_port_to_transport_addr(struct in6_addr* addr6, UINT2 port, int protoc
     return(_status);
   }
 
-int nr_transport_addr_get_addrstring(nr_transport_addr *addr, char *str, int maxlen)
+int nr_transport_addr_get_addrstring(const nr_transport_addr *addr, char *str, int maxlen)
   {
     int _status;
     const char *res;

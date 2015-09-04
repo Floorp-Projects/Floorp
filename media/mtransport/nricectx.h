@@ -216,7 +216,6 @@ class NrIceCtx {
   // TODO(ekr@rtfm.com): Too many bools here. Bug 1193437.
   static RefPtr<NrIceCtx> Create(const std::string& name,
                                  bool offerer,
-                                 bool set_interface_priorities = true,
                                  bool allow_loopback = false,
                                  bool tcp_enabled = true,
                                  bool allow_link_local = false,
