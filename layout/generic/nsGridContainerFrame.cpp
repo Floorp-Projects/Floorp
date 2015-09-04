@@ -494,55 +494,6 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
     CopyPlanToLimit(aPlan, aGrowableTracks);
   }
 
-  /**
-   * Distribute aAvailableSize to the tracks.  This implements 12.6 at:
-   * http://dev.w3.org/csswg/css-grid/#algo-grow-tracks
-   */
-  void DistributeFreeSpace(nscoord aAvailableSize)
-  {
-    const uint32_t numTracks = mSizes.Length();
-    if (MOZ_UNLIKELY(numTracks == 0 || aAvailableSize <= 0)) {
-      return;
-    }
-    if (aAvailableSize == NS_UNCONSTRAINEDSIZE) {
-      for (TrackSize& sz : mSizes) {
-        sz.mBase = sz.mLimit;
-      }
-    } else {
-      // Compute free space and count growable tracks.
-      nscoord space = aAvailableSize;
-      uint32_t numGrowable = numTracks;
-      for (const TrackSize& sz : mSizes) {
-        space -= sz.mBase;
-        MOZ_ASSERT(sz.mBase <= sz.mLimit);
-        if (sz.mBase == sz.mLimit) {
-          --numGrowable;
-        }
-      }
-      // Distribute the free space evenly to the growable tracks. If not exactly
-      // divisable the remainder is added to the leading tracks.
-      while (space > 0 && numGrowable) {
-        nscoord spacePerTrack =
-          std::max<nscoord>(space / numGrowable, 1);
-        for (uint32_t i = 0; i < numTracks && space > 0; ++i) {
-          TrackSize& sz = mSizes[i];
-          if (sz.mBase == sz.mLimit) {
-            continue;
-          }
-          nscoord newBase = sz.mBase + spacePerTrack;
-          if (newBase >= sz.mLimit) {
-            space -= sz.mLimit - sz.mBase;
-            sz.mBase = sz.mLimit;
-            --numGrowable;
-          } else {
-            space -= spacePerTrack;
-            sz.mBase = newBase;
-          }
-        }
-      }
-    }
-  }
-
 #ifdef DEBUG
   void Dump() const
   {
@@ -1699,9 +1650,6 @@ nsGridContainerFrame::CalculateTrackSizes(GridReflowState&   aState,
   aState.mCols.ResolveIntrinsicSize(aState, mGridItems, colFunctions,
                                     &GridArea::mCols, colPercentageBasis,
                                     aConstraint);
-  if (aConstraint != nsLayoutUtils::MIN_ISIZE) {
-    aState.mCols.DistributeFreeSpace(aContentBox.ISize(wm));
-  }
 
   aState.mRows.mSizes.SetLength(mGridRowEnd);
   PodZero(aState.mRows.mSizes.Elements(), aState.mRows.mSizes.Length());
@@ -1715,9 +1663,6 @@ nsGridContainerFrame::CalculateTrackSizes(GridReflowState&   aState,
   aState.mRows.ResolveIntrinsicSize(aState, mGridItems, rowFunctions,
                                     &GridArea::mRows, rowPercentageBasis,
                                     aConstraint);
-  if (aConstraint != nsLayoutUtils::MIN_ISIZE) {
-    aState.mRows.DistributeFreeSpace(aContentBox.BSize(wm));
-  }
 }
 
 bool
