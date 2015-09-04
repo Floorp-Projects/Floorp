@@ -144,8 +144,8 @@ function download(filename) {
 }
 
 function downloadAsJson(filename) {
-  // we have to filter out '//' comments
-  let result = download(filename).replace(/\/\/[^\n]*\n/g, "");
+  // we have to filter out '//' comments, while not mangling the json
+  let result = download(filename).replace(/^(\s*)?\/\/[^\n]*\n/mg, "");
   let data = null;
   try {
     data = JSON.parse(result);
