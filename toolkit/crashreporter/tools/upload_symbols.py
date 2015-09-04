@@ -80,7 +80,7 @@ def main():
                 timeout=120)
             # 500 is likely to be a transient failure.
             # Break out for success or other error codes.
-            if r.status_code  != 500:
+            if r.status_code < 500:
                 break
             print_error(r)
         except requests.exceptions.RequestException as e:
