@@ -118,7 +118,8 @@ class EventObject;
 class SetEventTask : public Task
 {
 public:
-  SetEventTask(MultiThreadedTaskQueue* aQueue, SyncObject* aStart = nullptr, SyncObject* aCompletion = nullptr);
+  explicit SetEventTask(MultiThreadedTaskQueue* aQueue,
+                        SyncObject* aStart = nullptr, SyncObject* aCompletion = nullptr);
 
   ~SetEventTask();
 
@@ -213,7 +214,7 @@ public:
 
   void Run();
 protected:
-  WorkerThread(MultiThreadedTaskQueue* aTaskQueue);
+  explicit WorkerThread(MultiThreadedTaskQueue* aTaskQueue);
 
   MultiThreadedTaskQueue* mQueue;
 };

@@ -15,7 +15,7 @@ DWORD __stdcall ThreadCallback(void* threadData);
 
 class WorkerThreadWin32 : public WorkerThread {
 public:
-  WorkerThreadWin32(MultiThreadedTaskQueue* aTaskQueue)
+  explicit WorkerThreadWin32(MultiThreadedTaskQueue* aTaskQueue)
   : WorkerThread(aTaskQueue)
   {
     mThread = ::CreateThread(nullptr, 0, ThreadCallback, static_cast<WorkerThread*>(this), 0, nullptr);
