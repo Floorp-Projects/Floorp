@@ -2861,18 +2861,19 @@ ElementRestyler::AddPendingRestylesForDescendantsMatchingSelectors(
 }
 
 bool
-ElementRestyler::MustCheckUndisplayedContent(nsIContent*& aUndisplayedParent)
+ElementRestyler::MustCheckUndisplayedContent(nsIFrame* aFrame,
+                                             nsIContent*& aUndisplayedParent)
 {
   // When the root element is display:none, we still construct *some*
   // frames that have the root element as their mContent, down to the
   // DocElementContainingBlock.
-  if (mFrame->StyleContext()->GetPseudo()) {
+  if (aFrame->StyleContext()->GetPseudo()) {
     aUndisplayedParent = nullptr;
-    return mFrame == mPresContext->FrameConstructor()->
+    return aFrame == mPresContext->FrameConstructor()->
                        GetDocElementContainingBlock();
   }
 
-  aUndisplayedParent = mFrame->GetContent();
+  aUndisplayedParent = aFrame->GetContent();
   return !!aUndisplayedParent;
 }
 
@@ -2945,7 +2946,7 @@ ElementRestyler::MoveStyleContextsForChildren(nsStyleContext* aOldContext)
   // Bail out if there are undisplayed or display:contents children.
   // FIXME: We could get this to work if we need to.
   nsIContent* undisplayedParent;
-  if (MustCheckUndisplayedContent(undisplayedParent)) {
+  if (MustCheckUndisplayedContent(mFrame, undisplayedParent)) {
     nsCSSFrameConstructor* fc = mPresContext->FrameConstructor();
     if (fc->GetAllUndisplayedContentIn(undisplayedParent) ||
         fc->GetAllDisplayContentsIn(undisplayedParent)) {
@@ -4249,7 +4250,7 @@ void
 ElementRestyler::RestyleUndisplayedDescendants(nsRestyleHint aChildRestyleHint)
 {
   nsIContent* undisplayedParent;
-  if (MustCheckUndisplayedContent(undisplayedParent)) {
+  if (MustCheckUndisplayedContent(mFrame, undisplayedParent)) {
     DoRestyleUndisplayedDescendants(aChildRestyleHint, undisplayedParent,
                                     mFrame->StyleContext());
   }
