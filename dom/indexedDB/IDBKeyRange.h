@@ -31,9 +31,10 @@ namespace indexedDB {
 
 class SerializedKeyRange;
 
-class IDBKeyRange final
+class IDBKeyRange
   : public nsISupports
 {
+protected:
   nsCOMPtr<nsISupports> mGlobal;
   Key mLower;
   Key mUpper;
@@ -169,13 +170,39 @@ public:
     return mUpperOpen;
   }
 
-private:
+protected:
   IDBKeyRange(nsISupports* aGlobal,
               bool aLowerOpen,
               bool aUpperOpen,
               bool aIsOnly);
 
-  ~IDBKeyRange();
+  virtual ~IDBKeyRange();
+};
+
+class IDBLocaleAwareKeyRange final
+  : public IDBKeyRange
+{
+  IDBLocaleAwareKeyRange(nsISupports* aGlobal,
+                         bool aLowerOpen,
+                         bool aUpperOpen,
+                         bool aIsOnly);
+
+  ~IDBLocaleAwareKeyRange();
+
+public:
+  static already_AddRefed<IDBLocaleAwareKeyRange>
+  Bound(const GlobalObject& aGlobal,
+        JS::Handle<JS::Value> aLower,
+        JS::Handle<JS::Value> aUpper,
+        bool aLowerOpen,
+        bool aUpperOpen,
+        ErrorResult& aRv);
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // WebIDL
+  bool
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
 };
 
 } // namespace indexedDB
