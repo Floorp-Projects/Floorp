@@ -135,10 +135,6 @@ public:
     return ((mFlags & NEED_MAIN_THREAD_FINISHED) && mFinished) ||
       (mFlags & NEED_MAIN_THREAD_CURRENT_TIME);
   }
-  virtual bool IsIntrinsicallyConsumed() const override
-  {
-    return true;
-  }
 
   // Any thread
   AudioNodeEngine* Engine() { return mEngine; }
