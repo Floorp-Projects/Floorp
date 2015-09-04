@@ -1802,6 +1802,8 @@
 
             var uriIsAboutBlank = !aURI || aURI == "about:blank";
 
+            if (aUserContextId)
+              t.setAttribute("usercontextid", aUserContextId);
             t.setAttribute("crop", "end");
             t.setAttribute("onerror", "this.removeAttribute('image');");
             t.className = "tabbrowser-tab";
@@ -2521,6 +2523,10 @@
             if (aOtherTab.hasAttribute("soundplaying")) {
               aOurTab.setAttribute("soundplaying", "true");
               modifiedAttrs.push("soundplaying");
+            }
+            if (aOtherTab.hasAttribute("usercontextid")) {
+              aOurTab.setAttribute("usercontextid", aOtherTab.getAttribute("usercontextid"));
+              modifiedAttrs.push("usercontextid");
             }
 
             // If the other tab is pending (i.e. has not been restored, yet)
