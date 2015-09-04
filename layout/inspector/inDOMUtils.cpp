@@ -600,6 +600,7 @@ static void GetColorsForProperty(const uint32_t aParserVariant,
     for (size_t i = 0; i < size; i++) {
       CopyASCIItoUTF16(allColorNames[i], *aArray.AppendElement());
     }
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("currentColor"));
   }
   return;
 }

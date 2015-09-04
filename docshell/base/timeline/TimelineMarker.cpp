@@ -11,11 +11,8 @@ namespace mozilla {
 TimelineMarker::TimelineMarker(const char* aName,
                                MarkerTracingType aTracingType,
                                MarkerStackRequest aStackRequest)
-  : mName(aName)
-  , mTracingType(aTracingType)
+  : AbstractTimelineMarker(aName, aTracingType)
 {
-  MOZ_COUNT_CTOR(TimelineMarker);
-  SetCurrentTime();
   CaptureStackIfNecessary(aTracingType, aStackRequest);
 }
 
@@ -23,31 +20,46 @@ TimelineMarker::TimelineMarker(const char* aName,
                                const TimeStamp& aTime,
                                MarkerTracingType aTracingType,
                                MarkerStackRequest aStackRequest)
-  : mName(aName)
-  , mTracingType(aTracingType)
+  : AbstractTimelineMarker(aName, aTime, aTracingType)
 {
-  MOZ_COUNT_CTOR(TimelineMarker);
-  SetCustomTime(aTime);
   CaptureStackIfNecessary(aTracingType, aStackRequest);
 }
 
-TimelineMarker::~TimelineMarker()
+bool
+TimelineMarker::Equals(const AbstractTimelineMarker& aOther)
 {
-  MOZ_COUNT_DTOR(TimelineMarker);
+  // Check whether two markers should be considered the same, for the purpose
+  // of pairing start and end markers. Normally this definition suffices.
+  return strcmp(GetName(), aOther.GetName()) == 0;
 }
 
 void
-TimelineMarker::SetCurrentTime()
+TimelineMarker::AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker)
 {
- TimeStamp now = TimeStamp::Now();
- SetCustomTime(now);
+  // Nothing to do here for plain markers.
+}
+
+JSObject*
+TimelineMarker::GetStack()
+{
+  if (mStackTrace.initialized()) {
+    return mStackTrace;
+  }
+  return nullptr;
 }
 
 void
-TimelineMarker::SetCustomTime(const TimeStamp& aTime)
+TimelineMarker::CaptureStack()
 {
-  bool isInconsistent = false;
-  mTime = (aTime - TimeStamp::ProcessCreation(isInconsistent)).ToMilliseconds();
+  JSContext* ctx = nsContentUtils::GetCurrentJSContext();
+  if (ctx) {
+    JS::RootedObject stack(ctx);
+    if (JS::CaptureCurrentStack(ctx, &stack)) {
+      mStackTrace.init(ctx, stack.get());
+    } else {
+      JS_ClearPendingException(ctx);
+    }
+  }
 }
 
 void

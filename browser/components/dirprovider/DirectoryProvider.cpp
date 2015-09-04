@@ -219,7 +219,6 @@ DirectoryProvider::GetFiles(const char *aKey, nsISimpleEnumerator* *aResult)
    *   - extension search plugin locations (prepended below using
    *     NS_NewUnionEnumerator)
    *   - user search plugin locations (profile)
-   *   - app search plugin location (shipped engines)
    */
 
   nsresult rv;
@@ -245,7 +244,6 @@ DirectoryProvider::GetFiles(const char *aKey, nsISimpleEnumerator* *aResult)
     nsCOMArray<nsIFile> baseFiles;
 
     AppendFileKey(NS_APP_USER_SEARCH_DIR, dirSvc, baseFiles);
-    AppendFileKey(NS_APP_SEARCH_DIR, dirSvc, baseFiles);
 
     nsCOMPtr<nsISimpleEnumerator> baseEnum;
     rv = NS_NewArrayEnumerator(getter_AddRefs(baseEnum), baseFiles);
