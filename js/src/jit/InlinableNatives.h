@@ -8,6 +8,14 @@
 #define jit_InlinableNatives_h
 
 #define INLINABLE_NATIVE_LIST(_)    \
+    _(ArrayIsArray)                 \
+    _(ArrayPop)                     \
+    _(ArrayShift)                   \
+    _(ArrayPush)                    \
+    _(ArrayConcat)                  \
+    _(ArraySlice)                   \
+    _(ArraySplice)                  \
+                                    \
     _(MathAbs)                      \
     _(MathFloor)                    \
     _(MathCeil)                     \
