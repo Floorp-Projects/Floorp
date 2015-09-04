@@ -127,21 +127,6 @@ MediaStreamGraphImpl::RemoveStreamGraphThread(MediaStream* aStream)
 }
 
 void
-MediaStreamGraphImpl::UpdateConsumptionState(SourceMediaStream* aStream)
-{
-  MediaStreamListener::Consumption state =
-      aStream->mIsConsumed ? MediaStreamListener::CONSUMED
-      : MediaStreamListener::NOT_CONSUMED;
-  if (state != aStream->mLastConsumptionState) {
-    aStream->mLastConsumptionState = state;
-    for (uint32_t j = 0; j < aStream->mListeners.Length(); ++j) {
-      MediaStreamListener* l = aStream->mListeners[j];
-      l->NotifyConsumptionChanged(this, state);
-    }
-  }
-}
-
-void
 MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
                                           GraphTime aDesiredUpToTime,
                                           bool* aEnsureNextIteration)
@@ -383,24 +368,6 @@ MediaStreamGraphImpl::WillUnderrun(MediaStream* aStream,
   return std::min(bufferEnd, aEndBlockingDecisions);
 }
 
-void
-MediaStreamGraphImpl::MarkConsumed(MediaStream* aStream)
-{
-  if (aStream->mIsConsumed) {
-    return;
-  }
-  aStream->mIsConsumed = true;
-
-  ProcessedMediaStream* ps = aStream->AsProcessedStream();
-  if (!ps) {
-    return;
-  }
-  // Mark all the inputs to this stream as consumed
-  for (uint32_t i = 0; i < ps->mInputs.Length(); ++i) {
-    MarkConsumed(ps->mInputs[i]->mSource);
-  }
-}
-
 namespace {
   // Value of mCycleMarker for unvisited streams in cycle detection.
   const uint32_t NOT_VISITED = UINT32_MAX;
@@ -417,7 +384,6 @@ MediaStreamGraphImpl::UpdateStreamOrder()
   bool audioTrackPresent = false;
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     MediaStream* stream = mStreams[i];
-    stream->mIsConsumed = false;
 #ifdef MOZ_WEBRTC
     if (stream->AsSourceStream() &&
         stream->AsSourceStream()->NeedsMixing()) {
@@ -487,9 +453,6 @@ MediaStreamGraphImpl::UpdateStreamOrder()
 
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     MediaStream* s = mStreams[i];
-    if (s->IsIntrinsicallyConsumed()) {
-      MarkConsumed(s);
-    }
     ProcessedMediaStream* ps = s->AsProcessedStream();
     if (ps) {
       // The dfsStack initially contains a list of all processed streams in
@@ -1113,7 +1076,6 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
   // Grab pending stream input and compute blocking time
   for (MediaStream* stream : mStreams) {
     if (SourceMediaStream* is = stream->AsSourceStream()) {
-      UpdateConsumptionState(is);
       ExtractPendingInput(is, aEndBlockingDecisions, &ensureNextIteration);
     }
 
@@ -2946,7 +2908,6 @@ MediaStreamGraphImpl::DecrementSuspendCount(MediaStream* aStream)
     ProcessedMediaStream* ps = aStream->AsProcessedStream();
     if (ps) {
       ps->mCycleMarker = NOT_VISITED;
-      ps->mIsConsumed = false;
     }
     SetStreamOrderDirty();
   }

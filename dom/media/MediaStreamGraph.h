@@ -101,18 +101,6 @@ protected:
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStreamListener)
 
-  enum Consumption {
-    CONSUMED,
-    NOT_CONSUMED
-  };
-
-  /**
-   * Notify that the stream is hooked up and we'd like to start or stop receiving
-   * data on it. Only fires on SourceMediaStreams.
-   * The initial state is assumed to be NOT_CONSUMED.
-   */
-  virtual void NotifyConsumptionChanged(MediaStreamGraph* aGraph, Consumption aConsuming) {}
-
   /**
    * When a SourceMediaStream has pulling enabled, and the MediaStreamGraph
    * control loop is ready to pull, this gets called. A NotifyPull implementation
@@ -470,16 +458,6 @@ public:
   void RemoveListenerImpl(MediaStreamListener* aListener);
   void RemoveAllListenersImpl();
   virtual void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled);
-  /**
-   * Returns true when this stream requires the contents of its inputs even if
-   * its own outputs are not being consumed. This is used to signal inputs to
-   * this stream that they are being consumed; when they're not being consumed,
-   * we make some optimizations.
-   */
-  virtual bool IsIntrinsicallyConsumed() const
-  {
-    return !mAudioOutputs.IsEmpty() || !mVideoOutputs.IsEmpty();
-  }
 
   void AddConsumer(MediaInputPort* aPort)
   {
@@ -684,10 +662,6 @@ protected:
    */
   bool mNotifiedHasCurrentData;
 
-  // True if the stream is being consumed (i.e. has track data being played,
-  // or is feeding into some stream that is being consumed).
-  bool mIsConsumed;
-
   // This state is only used on the main thread.
   DOMMediaStream* mWrapper;
   // Main-thread views of state
@@ -713,7 +687,6 @@ class SourceMediaStream : public MediaStream
 public:
   explicit SourceMediaStream(DOMMediaStream* aWrapper) :
     MediaStream(aWrapper),
-    mLastConsumptionState(MediaStreamListener::NOT_CONSUMED),
     mMutex("mozilla::media::SourceMediaStream"),
     mUpdateKnownTracksTime(0),
     mPullEnabled(false),
@@ -909,9 +882,6 @@ protected:
    */
   void NotifyDirectConsumers(TrackData *aTrack,
                              MediaSegment *aSegment);
-
-  // Media stream graph thread only
-  MediaStreamListener::Consumption mLastConsumptionState;
 
   // This must be acquired *before* MediaStreamGraphImpl's lock, if they are
   // held together.
