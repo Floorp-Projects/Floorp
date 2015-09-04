@@ -720,6 +720,21 @@ public class LocalBrowserDB implements BrowserDB {
     }
 
     @Override
+    public Cursor getRecentHistoryBetweenTime(ContentResolver cr, int limit, long start, long end) {
+        return cr.query(combinedUriWithLimit(limit),
+                new String[] { Combined._ID,
+                        Combined.BOOKMARK_ID,
+                        Combined.HISTORY_ID,
+                        Combined.URL,
+                        Combined.TITLE,
+                        Combined.DATE_LAST_VISITED,
+                        Combined.VISITS },
+                History.DATE_LAST_VISITED + " >= " + start + " AND " + History.DATE_LAST_VISITED + " < " + end,
+                null,
+                History.DATE_LAST_VISITED + " DESC");
+    }
+
+    @Override
     public void expireHistory(ContentResolver cr, ExpirePriority priority) {
         Uri url = mHistoryExpireUriWithProfile;
         url = url.buildUpon().appendQueryParameter(BrowserContract.PARAM_EXPIRE_PRIORITY, priority.toString()).build();

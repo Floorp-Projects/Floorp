@@ -461,21 +461,17 @@ this.PlacesUIUtils = {
   showBookmarkDialog:
   function PUIU_showBookmarkDialog(aInfo, aParentWindow) {
     // Preserve size attributes differently based on the fact the dialog has
-    // a folder picker or not.  If the picker is visible, the dialog should
-    // be resizable since it may not show enough content for the folders
-    // hierarchy.
+    // a folder picker or not, since it needs more horizontal space than the
+    // other controls.
     let hasFolderPicker = !("hiddenRows" in aInfo) ||
                           aInfo.hiddenRows.indexOf("folderPicker") == -1;
-    // Use a different chrome url, since this allows to persist different sizes,
-    // based on resizability of the dialog.
+    // Use a different chrome url to persist different sizes.
     let dialogURL = hasFolderPicker ?
                     "chrome://browser/content/places/bookmarkProperties2.xul" :
                     "chrome://browser/content/places/bookmarkProperties.xul";
 
-    let features =
-      "centerscreen,chrome,modal,resizable=" + (hasFolderPicker ? "yes" : "no");
-
-    aParentWindow.openDialog(dialogURL, "",  features, aInfo);
+    let features = "centerscreen,chrome,modal,resizable=yes";
+    aParentWindow.openDialog(dialogURL, "", features, aInfo);
     return ("performed" in aInfo && aInfo.performed);
   },
 

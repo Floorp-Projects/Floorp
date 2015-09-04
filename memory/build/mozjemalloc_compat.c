@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZ_JEMALLOC3
+#ifndef MOZ_JEMALLOC4
 #  error Should only compile this file when building with jemalloc 3
 #endif
 
@@ -105,7 +105,6 @@ compute_bin_unused_and_bookkeeping(jemalloc_stats_t *stats, unsigned int narenas
     unsigned int i, j;
 
     size_t stats_metadata;
-    size_t ameta; // internal allocations for a single arena
     size_t stats_ametadata = 0; // total internal allocations in all arenas
 
     // narenas also counts uninitialized arenas, and initialized arenas
@@ -125,9 +124,6 @@ compute_bin_unused_and_bookkeeping(jemalloc_stats_t *stats, unsigned int narenas
                 continue;
             }
 
-            CTL_I_GET("stats.arenas.0.metadata.allocated", ameta, i);
-            stats_ametadata += ameta;
-
             CTL_IJ_GET("stats.arenas.0.bins.0.curruns", curruns, i, j);
             CTL_IJ_GET("stats.arenas.0.bins.0.curregs", curregs, i, j);
 
@@ -136,6 +132,10 @@ compute_bin_unused_and_bookkeeping(jemalloc_stats_t *stats, unsigned int narenas
     }
 
     CTL_GET("stats.metadata", stats_metadata);
+
+    /* get the summation for all arenas, i == narenas */
+    CTL_I_GET("stats.arenas.0.metadata.allocated", stats_ametadata, narenas);
+
     stats->bookkeeping = stats_metadata - stats_ametadata;
     stats->bin_unused = bin_unused;
 }
