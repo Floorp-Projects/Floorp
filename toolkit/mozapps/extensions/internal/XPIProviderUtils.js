@@ -53,6 +53,8 @@ const PREF_EM_DSS_ENABLED             = "extensions.dss.enabled";
 const PREF_EM_AUTO_DISABLED_SCOPES    = "extensions.autoDisableScopes";
 
 const KEY_APP_PROFILE                 = "app-profile";
+const KEY_APP_SYSTEM_ADDONS           = "app-system-addons";
+const KEY_APP_SYSTEM_DEFAULTS         = "app-system-defaults";
 const KEY_APP_GLOBAL                  = "app-global";
 
 // Properties that only exist in the database
@@ -1512,10 +1514,13 @@ this.XPIDatabaseReconcile = {
    * Returns a map of ID -> add-on. When the same add-on ID exists in multiple
    * install locations the highest priority location is chosen.
    */
-  flattenByID(addonMap) {
+  flattenByID(addonMap, hideLocation) {
     let map = new Map();
 
     for (let installLocation of XPIProvider.installLocations) {
+      if (installLocation.name == hideLocation)
+        continue;
+
       let locationMap = addonMap.get(installLocation.name);
       if (!locationMap)
         continue;
@@ -1623,7 +1628,12 @@ this.XPIDatabaseReconcile = {
     aNewAddon._installLocation = aInstallLocation;
     aNewAddon.installDate = aAddonState.mtime;
     aNewAddon.updateDate = aAddonState.mtime;
-    aNewAddon.foreignInstall = isDetectedInstall;
+
+    // Assume that add-ons in the system add-ons install location aren't
+    // foreign and should default to enabled.
+    aNewAddon.foreignInstall = isDetectedInstall &&
+                               aInstallLocation.name != KEY_APP_SYSTEM_ADDONS &&
+                               aInstallLocation.name != KEY_APP_SYSTEM_DEFAULTS;
 
     // appDisabled depends on whether the add-on is a foreignInstall so update
     aNewAddon.appDisabled = !isUsableAddon(aNewAddon);
@@ -1901,7 +1911,8 @@ this.XPIDatabaseReconcile = {
             // has changed
             let newAddon = loadedManifest(installLocation, id);
             if (newAddon || oldAddon.updateDate != xpiState.mtime ||
-                (aUpdateCompatibility && installLocation.name == KEY_APP_GLOBAL)) {
+                (aUpdateCompatibility && (installLocation.name == KEY_APP_GLOBAL ||
+                                          installLocation.name == KEY_APP_SYSTEM_DEFAULTS))) {
               newAddon = this.updateMetadata(installLocation, oldAddon, xpiState, newAddon);
             }
             else if (oldAddon.descriptor != xpiState.descriptor) {
@@ -1958,8 +1969,24 @@ this.XPIDatabaseReconcile = {
       }
     }
 
+    // Validate the updated system add-ons
+    let systemAddonLocation = XPIProvider.installLocationsByName[KEY_APP_SYSTEM_ADDONS];
+    let addons = currentAddons.get(KEY_APP_SYSTEM_ADDONS) || new Map();
+
+    let hideLocation;
+    if (systemAddonLocation.isActive() && systemAddonLocation.isValid(addons)) {
+      // Hide the system add-on defaults
+      logger.info("Hiding the default system add-ons.");
+      hideLocation = KEY_APP_SYSTEM_DEFAULTS;
+    }
+    else {
+      // Hide the system add-on updates
+      logger.info("Hiding the updated system add-ons.");
+      hideLocation = KEY_APP_SYSTEM_ADDONS;
+    }
+
     let previousVisible = this.getVisibleAddons(previousAddons);
-    let currentVisible = this.flattenByID(currentAddons);
+    let currentVisible = this.flattenByID(currentAddons, hideLocation);
     let sawActiveTheme = false;
     XPIProvider.bootstrappedAddons = {};
 
@@ -2027,11 +2054,9 @@ this.XPIDatabaseReconcile = {
           // and still exists then call its uninstall method.
           if (previousAddon.bootstrap && previousAddon._installLocation &&
               currentAddon._installLocation != previousAddon._installLocation &&
-              currentAddons.get(previousAddon._installLocation.name).has(id)) {
+              previousAddon._sourceBundle.exists()) {
 
-            let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-            file.persistentDescriptor = previousAddon._sourceBundle.persistentDescriptor;
-            XPIProvider.callBootstrapMethod(previousAddon, file,
+            XPIProvider.callBootstrapMethod(previousAddon, previousAddon._sourceBundle,
                                             "uninstall", installReason,
                                             { newVersion: currentAddon.version });
             XPIProvider.unloadBootstrapScope(previousAddon.id);
@@ -2084,6 +2109,15 @@ this.XPIDatabaseReconcile = {
 
       // This add-on vanished
       AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_UNINSTALLED, id);
+    }
+
+    // Make sure add-ons from hidden locations are marked invisible and inactive
+    let locationAddonMap = currentAddons.get(hideLocation);
+    if (locationAddonMap) {
+      for (let addon of locationAddonMap.values()) {
+        addon.visible = false;
+        addon.active = false;
+      }
     }
 
     // None of the active add-ons match the selected theme, enable the default.
