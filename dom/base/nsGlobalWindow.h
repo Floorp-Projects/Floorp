@@ -130,7 +130,7 @@ class VRHMDInfo;
 } // namespace mozilla
 
 extern already_AddRefed<nsIScriptTimeoutHandler>
-NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,
+NS_CreateJSTimeoutHandler(JSContext* aCx, nsGlobalWindow *aWindow,
                           mozilla::dom::Function& aFunction,
                           const mozilla::dom::Sequence<JS::Value>& aArguments,
                           mozilla::ErrorResult& aError);
@@ -1394,7 +1394,8 @@ public:
   nsresult SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
                                 int32_t interval,
                                 bool aIsInterval, int32_t* aReturn) override;
-  int32_t SetTimeoutOrInterval(mozilla::dom::Function& aFunction,
+  int32_t SetTimeoutOrInterval(JSContext* aCx,
+                               mozilla::dom::Function& aFunction,
                                int32_t aTimeout,
                                const mozilla::dom::Sequence<JS::Value>& aArguments,
                                bool aIsInterval, mozilla::ErrorResult& aError);

@@ -426,7 +426,7 @@ ToMarkable(Cell* cell)
 MOZ_ALWAYS_INLINE bool
 IsNullTaggedPointer(void* p)
 {
-    return uintptr_t(p) <= LargestTaggedNullCellPointer;
+    return uintptr_t(p) < 32;
 }
 
 // HashKeyRef represents a reference to a HashMap key. This should normally
