@@ -37,7 +37,6 @@ browser.jar:
   skin/classic/browser/click-to-play-warning-stripes.png
   skin/classic/browser/content-contextmenu.svg
   skin/classic/browser/drm-icon.svg                         (../shared/drm-icon.svg)
-* skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/fullscreen/insecure.svg              (../shared/fullscreen/insecure.svg)
   skin/classic/browser/fullscreen/secure.svg                (../shared/fullscreen/secure.svg)
   skin/classic/browser/Geolocation-16.png
