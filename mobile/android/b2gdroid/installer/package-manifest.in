@@ -419,6 +419,7 @@
 @BINPATH@/components/htmlMenuBuilder.manifest
 
 @BINPATH@/components/Activities.manifest
+@BINPATH@/components/AndroidActivitiesGlue.js
 @BINPATH@/components/ActivitiesGlue.js
 @BINPATH@/components/ActivityProxy.js
 @BINPATH@/components/ActivityRequestHandler.js
