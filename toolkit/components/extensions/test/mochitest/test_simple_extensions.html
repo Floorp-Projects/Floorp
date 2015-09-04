@@ -4,7 +4,7 @@
   <title>Test for simple WebExtension</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript;version=1.8" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -12,7 +12,7 @@
 <script type="application/javascript;version=1.8">
 
 add_task(function* test_simple() {
-  let extension = ExtensionTestUtils.loadExtension("simple");
+  let extension = loadExtension("simple");
   info("load complete");
   yield extension.startup();
   info("startup complete");
@@ -21,7 +21,7 @@ add_task(function* test_simple() {
 });
 
 add_task(function* test_background() {
-  let extension = ExtensionTestUtils.loadExtension("background");
+  let extension = loadExtension("background");
   info("load complete");
   yield extension.startup();
   let x = yield extension.awaitMessage("running");

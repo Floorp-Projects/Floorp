@@ -6,7 +6,6 @@
 
 DIRS += [
     'background',
-    'content_script',
     'simple',
     'webrequest',
 ]

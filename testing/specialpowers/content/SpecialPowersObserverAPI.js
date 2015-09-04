@@ -560,21 +560,11 @@ SpecialPowersObserverAPI.prototype = {
         let {Extension} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
 
         let id = aMessage.data.id;
-        let ext = aMessage.data.ext;
-        let extension;
-        if (typeof(ext) == "string") {
-          let target = "resource://testing-common/extensions/" + ext + "/";
-          let resourceHandler = Services.io.getProtocolHandler("resource")
-                                        .QueryInterface(Ci.nsISubstitutingProtocolHandler);
-          let resURI = Services.io.newURI(target, null, null);
-          let uri = Services.io.newURI(resourceHandler.resolveURI(resURI), null, null);
-          extension = new Extension({
-            id,
-            resourceURI: uri
-          });
-        } else {
-          extension = Extension.generate(ext);
-        }
+        let uri = Services.io.newURI(aMessage.data.url, null, null);
+        let extension = new Extension({
+          id,
+          resourceURI: uri
+        });
 
         let resultListener = (...args) => {
           this._sendReply(aMessage, "SPExtensionMessage", {id, type: "testResult", args});
