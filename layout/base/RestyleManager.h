@@ -709,7 +709,8 @@ private:
 
   // Helpers for RestyleChildren().
   void RestyleUndisplayedDescendants(nsRestyleHint aChildRestyleHint);
-  bool MustCheckUndisplayedContent(nsIContent*& aUndisplayedParent);
+  bool MustCheckUndisplayedContent(nsIFrame* aFrame,
+                                   nsIContent*& aUndisplayedParent);
 
   /**
    * In the following two methods, aParentStyleContext is either
@@ -757,9 +758,27 @@ private:
     eNotifyHidden
   };
 
-  void AddPendingRestylesForDescendantsMatchingSelectors(Element* aElement,
-                                                         Element* aRestyleRoot);
-  void AddPendingRestylesForDescendantsMatchingSelectors(nsIContent* aContent);
+  // These methods handle the eRestyle_SomeDescendants hint by traversing
+  // down the frame tree (and then when reaching undisplayed content,
+  // the flattened content tree) find elements that match a selector
+  // in mSelectorsForDescendants and call AddPendingRestyle for them.
+  void ConditionallyRestyleChildren();
+  void ConditionallyRestyleChildren(nsIFrame* aFrame,
+                                    Element* aRestyleRoot);
+  void ConditionallyRestyleContentChildren(nsIFrame* aFrame,
+                                           Element* aRestyleRoot);
+  void ConditionallyRestyleUndisplayedDescendants(nsIFrame* aFrame,
+                                                  Element* aRestyleRoot);
+  void DoConditionallyRestyleUndisplayedDescendants(nsIContent* aParent,
+                                                    Element* aRestyleRoot);
+  void ConditionallyRestyleUndisplayedNodes(UndisplayedNode* aUndisplayed,
+                                            nsIContent* aUndisplayedParent,
+                                            const uint8_t aDisplay,
+                                            Element* aRestyleRoot);
+  void ConditionallyRestyleContentDescendants(Element* aElement,
+                                              Element* aRestyleRoot);
+  bool ConditionallyRestyle(nsIFrame* aFrame, Element* aRestyleRoot);
+  bool ConditionallyRestyle(Element* aElement, Element* aRestyleRoot);
 
 #ifdef RESTYLE_LOGGING
   int32_t& LoggingDepth() { return mLoggingDepth; }

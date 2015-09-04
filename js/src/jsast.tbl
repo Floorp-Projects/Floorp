@@ -38,7 +38,8 @@ ASTDEF(AST_COMP_EXPR,             "ComprehensionExpression",        "comprehensi
 ASTDEF(AST_GENERATOR_EXPR,        "GeneratorExpression",            "generatorExpression")
 ASTDEF(AST_YIELD_EXPR,            "YieldExpression",                "yieldExpression")
 ASTDEF(AST_CLASS_EXPR,            "ClassExpression",                "classExpression")
-ASTDEF(AST_NEWTARGET_EXPR,        "NewTargetExpression",            "newTargetExpression")
+ASTDEF(AST_METAPROPERTY,          "MetaProperty",                   "metaProperty")
+ASTDEF(AST_SUPER,                 "Super",                          "super")
 
 ASTDEF(AST_EMPTY_STMT,            "EmptyStatement",                 "emptyStatement")
 ASTDEF(AST_BLOCK_STMT,            "BlockStatement",                 "blockStatement")

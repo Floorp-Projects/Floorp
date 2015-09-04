@@ -584,8 +584,7 @@ struct ZoneStats
     macro(Other,   GCHeapUsed,  objectGroupsGCHeap) \
     macro(Other,   MallocHeap,  objectGroupsMallocHeap) \
     macro(Other,   MallocHeap,  typePool) \
-    macro(Other,   MallocHeap,  baselineStubsOptimized) \
-    macro(Other,   MallocHeap,  uniqueIdMap)
+    macro(Other,   MallocHeap,  baselineStubsOptimized)
 
     ZoneStats()
       : FOR_EACH_SIZE(ZERO_SIZE)

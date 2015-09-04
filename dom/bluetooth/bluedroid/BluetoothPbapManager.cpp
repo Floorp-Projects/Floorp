@@ -78,7 +78,7 @@ BluetoothPbapManager::HandleShutdown()
 
 BluetoothPbapManager::BluetoothPbapManager() : mConnected(false)
                                              , mRemoteMaxPacketLength(0)
-                                             , mRequirePhonebookSize(false)
+                                             , mPhonebookSizeRequired(false)
 {
   mDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
   mCurrentPath.AssignLiteral("");
@@ -273,7 +273,7 @@ BluetoothPbapManager::ReceiveSocketData(BluetoothSocket* aSocket,
       // All OBEX request messages shall be sent as one OBEX packet containing
       // all of the headers. I.e. OBEX GET with opcode 0x83 shall always be
       // used. OBEX GET with opcode 0x03 shall never be used.
-      BT_WARNING("PBAP shall always uses OBEX GetFinal instead of Get.");
+      BT_LOGR("PBAP shall always uses OBEX GetFinal instead of Get.");
 
       // no break. Treat 'Get' as 'GetFinal' for error tolerance.
     case ObexRequestCode::GetFinal: {
@@ -282,8 +282,8 @@ BluetoothPbapManager::ReceiveSocketData(BluetoothSocket* aSocket,
       // final body information (in an End-of-Body header) arrives, along with
       // the response code 0xA0 Success.
       if (mVCardDataStream) {
-        if (!ReplyToGet(mVCardDataStream)) {
-          BT_WARNING("Failed to reply to PBAP GET request.");
+        if (!ReplyToGet()) {
+          BT_LOGR("Failed to reply to PBAP GET request.");
           ReplyError(ObexResponseCode::InternalServerError);
         }
         return;
@@ -541,7 +541,7 @@ BluetoothPbapManager::AppendBtNamedValueByTagId(
       if (order < MOZ_ARRAY_LENGTH(sOrderStr)) {
         BT_APPEND_NAMED_VALUE(aValues, "order", sOrderStr[order]);
       } else {
-        BT_WARNING("%s: Unexpected value '%d' of 'Order'", __FUNCTION__, order);
+        BT_LOGR("Unexpected value %d of 'Order'", order);
       }
       break;
     }
@@ -572,8 +572,7 @@ BluetoothPbapManager::AppendBtNamedValueByTagId(
       if (searchKey < MOZ_ARRAY_LENGTH(sSearchKeyStr)) {
         BT_APPEND_NAMED_VALUE(aValues, "searchKey", sSearchKeyStr[searchKey]);
       } else {
-        BT_WARNING("%s: Unexpected value '%d' of 'SearchProperty'",
-                   __FUNCTION__, searchKey);
+        BT_LOGR("Unexpected value %d of 'SearchProperty'", searchKey);
       }
       break;
     }
@@ -590,7 +589,7 @@ BluetoothPbapManager::AppendBtNamedValueByTagId(
       // Section 5 "Phone Book Access Profile Functions", PBAP 1.2
       // Replying 'PhonebookSize' is mandatory if 'MaxListCount' parameter is
       // present in the request with a value of 0, else it is excluded.
-      mRequirePhonebookSize = !maxListCount;
+      mPhonebookSizeRequired = !maxListCount;
 
       BT_APPEND_NAMED_VALUE(aValues, "maxListCount", (uint32_t) maxListCount);
       break;
@@ -697,7 +696,7 @@ BluetoothPbapManager::AfterPbapDisconnected()
   mConnected = false;
 
   mRemoteMaxPacketLength = 0;
-  mRequirePhonebookSize = false;
+  mPhonebookSizeRequired = false;
 
   if (mVCardDataStream) {
     mVCardDataStream->Close();
@@ -819,12 +818,12 @@ BluetoothPbapManager::ReplyToPullPhonebook(Blob* aBlob, uint16_t aPhonebookSize)
     return false;
   }
 
-  if (!GetInputStreamFromBlob(mVCardDataStream, aBlob)) {
+  if (!GetInputStreamFromBlob(aBlob)) {
     ReplyError(ObexResponseCode::InternalServerError);
     return false;
   }
 
-  return ReplyToGet(mVCardDataStream, aPhonebookSize);
+  return ReplyToGet(aPhonebookSize);
 }
 
 bool
@@ -845,12 +844,12 @@ BluetoothPbapManager::ReplyToPullvCardListing(Blob* aBlob,
     return false;
   }
 
-  if (!GetInputStreamFromBlob(mVCardDataStream, aBlob)) {
+  if (!GetInputStreamFromBlob(aBlob)) {
     ReplyError(ObexResponseCode::InternalServerError);
     return false;
   }
 
-  return ReplyToGet(mVCardDataStream, aPhonebookSize);
+  return ReplyToGet(aPhonebookSize);
 }
 
 bool
@@ -869,19 +868,18 @@ BluetoothPbapManager::ReplyToPullvCardEntry(Blob* aBlob)
     return false;
   }
 
-  if (!GetInputStreamFromBlob(mVCardDataStream, aBlob)) {
+  if (!GetInputStreamFromBlob(aBlob)) {
     ReplyError(ObexResponseCode::InternalServerError);
     return false;
   }
 
-  return ReplyToGet(mVCardDataStream);
+  return ReplyToGet();
 }
 
 bool
-BluetoothPbapManager::ReplyToGet(nsIInputStream* aStream,
-                                 uint16_t aPhonebookSize)
+BluetoothPbapManager::ReplyToGet(uint16_t aPhonebookSize)
 {
-  MOZ_ASSERT(aStream);
+  MOZ_ASSERT(mVCardDataStream);
   MOZ_ASSERT(mRemoteMaxPacketLength >= kObexLeastMaxSize);
 
   // This response will be composed by these four parts.
@@ -897,7 +895,7 @@ BluetoothPbapManager::ReplyToGet(nsIInputStream* aStream,
   unsigned int index = kObexRespHeaderSize;
 
   // ---- Part 2, add [response code:1][length:2] to response ---- //
-  if (mRequirePhonebookSize) {
+  if (mPhonebookSizeRequired) {
     // convert little endian to big endian
     uint8_t phonebookSize[2];
     phonebookSize[0] = (aPhonebookSize & 0xFF00) >> 8;
@@ -917,7 +915,7 @@ BluetoothPbapManager::ReplyToGet(nsIInputStream* aStream,
                                        mRemoteMaxPacketLength,
                                        appParameters,
                                        sizeof(appParameters));
-    mRequirePhonebookSize = false;
+    mPhonebookSizeRequired = false;
   }
 
   // ---- Part 3, add [headerId:1][length:2][Body:var] to response ---- //
@@ -928,9 +926,10 @@ BluetoothPbapManager::ReplyToGet(nsIInputStream* aStream,
   // Read vCard data from input stream
   uint32_t numRead = 0;
   nsAutoArrayPtr<char> buffer(new char[remainingPacketSize]);
-  nsresult rv = aStream->Read(buffer, remainingPacketSize, &numRead);
+  nsresult rv = mVCardDataStream->Read(buffer, remainingPacketSize, &numRead);
   if (NS_FAILED(rv)) {
-    BT_WARNING("Failed to read from input stream.");
+    BT_LOGR("Failed to read from input stream. rv=0x%x",
+            static_cast<uint32_t>(rv));
     return false;
   }
 
@@ -951,8 +950,8 @@ BluetoothPbapManager::ReplyToGet(nsIInputStream* aStream,
     opcode = ObexResponseCode::Success;
     index += AppendHeaderEndOfBody(&res[index]);
 
-    aStream->Close();
-    aStream = nullptr;
+    mVCardDataStream->Close();
+    mVCardDataStream = nullptr;
   }
 
   SendObexData(res, opcode, index);
@@ -962,19 +961,20 @@ BluetoothPbapManager::ReplyToGet(nsIInputStream* aStream,
 }
 
 bool
-BluetoothPbapManager::GetInputStreamFromBlob(nsIInputStream* aStream,
-                                             Blob* aBlob)
+BluetoothPbapManager::GetInputStreamFromBlob(Blob* aBlob)
 {
   // PBAP can only handle one OBEX BODY transfer at the same time.
   if (mVCardDataStream) {
-    BT_WARNING("Shouldn't handle multiple PBAP responses at the same time");
+    BT_LOGR("Shouldn't handle multiple PBAP responses simultaneously");
     mVCardDataStream->Close();
     mVCardDataStream = nullptr;
   }
 
   ErrorResult rv;
   aBlob->GetInternalStream(getter_AddRefs(mVCardDataStream), rv);
-  if (NS_WARN_IF(rv.Failed())) {
+  if (rv.Failed()) {
+    BT_LOGR("Failed to get internal stream from blob. rv=0x%x",
+            rv.ErrorCodeAsInt());
     return false;
   }
 
@@ -1043,11 +1043,12 @@ BluetoothPbapManager::OnSocketDisconnect(BluetoothSocket* aSocket)
 void
 BluetoothPbapManager::Disconnect(BluetoothProfileController* aController)
 {
-  if (mSocket) {
-    mSocket->Close();
-  } else {
-    BT_WARNING("%s: No ongoing connection to disconnect", __FUNCTION__);
+  if (!mSocket) {
+    BT_LOGR("No ongoing connection to disconnect");
+    return;
   }
+
+  mSocket->Close();
 }
 
 NS_IMPL_ISUPPORTS(BluetoothPbapManager, nsIObserver)

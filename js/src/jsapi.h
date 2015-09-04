@@ -4478,6 +4478,10 @@ JS_GetLocaleCallbacks(JSRuntime* rt);
  * Error reporting.
  */
 
+namespace JS {
+const uint16_t MaxNumErrorArguments = 10;
+};
+
 /*
  * Report an exception represented by the sprintf-like conversion of format
  * and its arguments.  This exception message string is passed to a pre-set

@@ -286,7 +286,7 @@ MOZ_BEGIN_EXTERN_C
 
 /* mozjemalloc relies on DllMain to initialize, but DllMain is not invoked
  * for executables, so manually invoke mozjemalloc initialization. */
-#if defined(_WIN32) && !defined(MOZ_JEMALLOC3)
+#if defined(_WIN32) && !defined(MOZ_JEMALLOC4)
 void malloc_init_hard(void);
 #endif
 
@@ -487,7 +487,7 @@ main()
   FdReader reader(0);
   Replay replay;
 
-#if defined(_WIN32) && !defined(MOZ_JEMALLOC3)
+#if defined(_WIN32) && !defined(MOZ_JEMALLOC4)
   malloc_init_hard();
 #endif
 

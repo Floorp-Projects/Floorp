@@ -216,7 +216,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDropVideoUntilNextDiscontinuity(false),
   mDecodeToSeekTarget(false),
   mCurrentTimeBeforeSeek(0),
-  mCorruptFrames(30),
+  mCorruptFrames(60),
   mDecodingFirstFrame(true),
   mSentLoadedMetadataEvent(false),
   mSentFirstFrameLoadedEvent(false),
@@ -2474,8 +2474,8 @@ bool MediaDecoderStateMachine::CheckFrameValidity(VideoData* aData)
     // only supports integer types.
     mCorruptFrames.insert(10);
     if (mReader->VideoIsHardwareAccelerated() &&
-        frameStats.GetPresentedFrames() > 30 &&
-        mCorruptFrames.mean() >= 1 /* 10% */) {
+        frameStats.GetPresentedFrames() > 60 &&
+        mCorruptFrames.mean() >= 2 /* 20% */) {
         nsCOMPtr<nsIRunnable> task =
           NS_NewRunnableMethod(mReader, &MediaDecoderReader::DisableHardwareAcceleration);
         DecodeTaskQueue()->Dispatch(task.forget());
