@@ -219,13 +219,14 @@
       <property name="docShellIsActive">
         <getter>
           <![CDATA[
-            throw new Error("not supported");
+            let {frameLoader} = this.QueryInterface(Ci.nsIFrameLoaderOwner);
+            return frameLoader.tabParent.docShellIsActive;
           ]]>
         </getter>
         <setter>
           <![CDATA[
             let {frameLoader} = this.QueryInterface(Ci.nsIFrameLoaderOwner);
-            frameLoader.tabParent.setIsDocShellActive(val);
+            frameLoader.tabParent.docShellIsActive = val;
             return val;
           ]]>
         </setter>

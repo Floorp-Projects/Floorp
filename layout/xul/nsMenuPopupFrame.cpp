@@ -352,7 +352,7 @@ NS_IMETHODIMP nsXULPopupShownEvent::Run()
     popup->SetPopupState(ePopupShown);
   }
 
-  WidgetMouseEvent event(true, NS_XUL_POPUP_SHOWN, nullptr,
+  WidgetMouseEvent event(true, eXULPopupShown, nullptr,
                          WidgetMouseEvent::eReal);
   return EventDispatcher::Dispatch(mPopup, mPresContext, &event);                 
 }

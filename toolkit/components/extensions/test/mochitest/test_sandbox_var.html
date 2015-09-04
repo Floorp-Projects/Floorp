@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for content script</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+"use strict";
+
+function backgroundScript() {
+  browser.runtime.onMessage.addListener(result => {
+    browser.test.assertEq(result, 12, "x is 12");
+    browser.test.notifyPass("background test passed");
+  });
+}
+
+function contentScript() {
+  window.x = 12;
+  browser.runtime.onMessage.addListener(function() {});
+  browser.runtime.sendMessage(window.x);
+}
+
+let extensionData = {
+  background: "(" + backgroundScript.toString() + ")()",
+  manifest: {
+    "content_scripts": [{
+      "matches": ["http://mochi.test/tests/toolkit/components/extensions/test/mochitest/file_contentscript_*.html"],
+      "js": ["content_script.js"],
+      "run_at": "document_start"
+    }]
+  },
+
+  files: {
+    "content_script.js": "(" + contentScript.toString() + ")()",
+  },
+};
+
+add_task(function* test_contentscript() {
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  info("extension loaded");
+
+  yield new Promise(resolve => { setTimeout(resolve, 0); });
+
+  let win = window.open();
+
+  win.location = "file_contentscript_page1.html";
+
+  yield Promise.all([waitForLoad(win), extension.awaitFinish()]);
+
+  win.close();
+
+  yield extension.unload();
+  info("extension unloaded");
+});
+
+function waitForLoad(win) {
+  return new Promise(resolve => {
+    win.addEventListener("load", function listener() {
+      win.removeEventListener("load", listener, true);
+      resolve();
+    }, true);
+  });
+}
+</script>
+
+</body>
+</html>

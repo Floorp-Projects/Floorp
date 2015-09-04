@@ -109,7 +109,7 @@ void nsNotifyAddrListener::checkLink(void)
     bool link = false;
     bool prevLinkUp = mLinkUp;
 
-    if(getifaddrs(&list))
+    if (getifaddrs(&list))
         return;
 
     // Walk through the linked list, maintaining head pointer so we can free
@@ -150,8 +150,10 @@ void nsNotifyAddrListener::OnNetlinkMessage(int aNetlinkSocket)
     // partly on existing sample source code using this size. It needs to be
     // large enough to hold the netlink messages from the kernel.
     char buffer[4095];
+    struct rtattr *attr;
+    int attr_len;
+    bool link_local;
 
-    // Receiving netlink socket data
     ssize_t rc = EINTR_RETRY(recv(aNetlinkSocket, buffer, sizeof(buffer), 0));
     if (rc < 0) {
         return;
@@ -179,10 +181,39 @@ void nsNotifyAddrListener::OnNetlinkMessage(int aNetlinkSocket)
             if (route_entry->rtm_table != RT_TABLE_MAIN)
                 continue;
 
-            networkChange = true;
+            if ((route_entry->rtm_family != AF_INET) &&
+                (route_entry->rtm_family != AF_INET6)) {
+                continue;
+            }
+
+            attr = (struct rtattr *) RTM_RTA(route_entry);
+            attr_len =  RTM_PAYLOAD(nlh);
+            link_local = false;
+
+            /* Loop through all attributes */
+            for ( ; RTA_OK(attr, attr_len); attr = RTA_NEXT(attr, attr_len)) {
+                if (attr->rta_type == RTA_GATEWAY) {
+                    if (route_entry->rtm_family == AF_INET6) {
+                        unsigned char *g = (unsigned char *)
+                            RTA_DATA(attr);
+                        if ((g[0] == 0xFE) && ((g[1] & 0xc0) == 0x80)) {
+                            link_local = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!link_local) {
+                LOG(("OnNetlinkMessage: route update\n"));
+                networkChange = true;
+            } else {
+                LOG(("OnNetlinkMessage: ignored link-local route update\n"));
+            }
             break;
 
         case RTM_NEWADDR:
+            LOG(("OnNetlinkMessage: new address\n"));
             networkChange = true;
             break;
 
@@ -314,7 +345,7 @@ nsNotifyAddrListener::Init(void)
     Preferences::AddBoolVarCache(&mAllowChangedEvent,
                                  NETWORK_NOTIFY_CHANGED_PREF, true);
 
-    rv = NS_NewNamedThread("Link Monitor", getter_AddRefs(mThread));
+    rv = NS_NewNamedThread("Link Monitor", getter_AddRefs(mThread), this);
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef MOZ_NUWA_PROCESS
@@ -365,6 +396,7 @@ nsNotifyAddrListener::SendEvent(const char *aEventID)
     if (!aEventID)
         return NS_ERROR_NULL_POINTER;
 
+    LOG(("SendEvent: %s\n", aEventID));
     nsresult rv = NS_OK;
     nsCOMPtr<nsIRunnable> event = new ChangeEvent(this, aEventID);
     if (NS_FAILED(rv = NS_DispatchToMainThread(event)))

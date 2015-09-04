@@ -432,12 +432,18 @@ function prompt(aBrowser, aRequest) {
         menupopup.appendChild(chromeDoc.createElement("menuseparator"));
 
         // Build the list of 'devices'.
+        let monitorIndex = 1;
         for (let i = 0; i < devices.length; ++i) {
           let name;
-          // Screen has a special treatment because we currently only support
-          // sharing the primary screen and want to display a localized string.
+          // Building screen list from available screens.
           if (type == "screen") {
-            name = stringBundle.getString("getUserMedia.shareEntireScreen.label");
+            if (devices[i].name == "Primary Monitor") {
+              name = stringBundle.getString("getUserMedia.shareEntireScreen.label");
+            } else {
+              name = stringBundle.getFormattedString("getUserMedia.shareMonitor.label",
+                                                     [monitorIndex]);
+              ++monitorIndex;
+            }
           }
           else {
             name = devices[i].name;

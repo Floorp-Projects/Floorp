@@ -21,6 +21,8 @@ Optimization succeeded.
 
 ### Disabled
 
+The optimization has been explicitly disallowed.
+
 ### NoTypeInfo
 
 Optimization failed because there was no type information associated with
@@ -28,9 +30,16 @@ object containing the property. This failure mode is unlikely, and occurs
 if the target object is obtained in some roundabout way.
 
 ### NoAnalysisInfo
+
+TODO
+
 ### NoShapeInfo
+
+The baseline compiler recorded no usable shape information for this operation.
+
 ### UnknownObject
-### UnknownProperties
+
+The type of the object is not known.  This can happen if the operation sees many different types of objects, and so the type of the input to the operation cannot be resolved to a single type.
 
 ### UnknownProperties
 
@@ -40,7 +49,8 @@ defined on the object, or if `delete` is used to remove one of the object's
 properties.
 
 ### Singleton
-### NotSingleton
+
+One of the types present in the typeset was a singleton type, preventing the optimization from being enabled.
 
 ### NotSingleton
 
@@ -50,7 +60,12 @@ have a 'singleton' type. Singleton types are assigned to objects that are
 global scope, and top-level function objects.
 
 ### NotFixedSlot
+
+The property being accessed is not stored at a known location in the object.  This can occur if one of the expected types of objects to be used in this operation has unknown properties, or if different instances of the object store the property at different locations (for example, some instances have the property assigned in a different order than others).
+
 ### InconsistentFixedSlot
+
+The property being accessed is not stored at a known location in the object.  This can occur if the operation is polymorphic on different object types and one or more of the object types contain the property at a different slot than the others.
 
 ### NotObject
 
@@ -63,15 +78,27 @@ optimization strategy fails in this case.
 The object holding the property is not a typed struct object.
 
 ### NotUnboxed
+
+The object whose property is being accessed is not formatted as an
+unboxed object.
+
 ### UnboxedConvertedToNative
+
+The object whose property is being accessed was previously unboxed,
+but was deoptimized and converted to a native object.
 
 ### StructNoField
 
-The property being accessed does not correspond to a field on typed
+The unboxed property being accessed does not correspond to a field on typed
 object.
 
 ### InconsistentFieldType
+
+The type of an unboxed field is not consistent across all the different types of objects it could be accessed from.
+
 ### InconsistentFieldOffset
+
+The offset of an unboxed field is not consistent across all the different types of objects it could be accessed from.
 
 ### NeedsTypeBarrier
 
@@ -80,16 +107,49 @@ that returned a different type than the expected constant. This is an
 unlikely failure mode, and should not occur.
 
 ### InDictionaryMode
+
+The object whose property is being accessed is in dictionary mode.  Objects which are used in ways that suggest they are hashtables, are turned into dictionary objects and their types marked as such.
+
 ### NoProtoFound
+
+A prototype object was not found for all the object used by this operation.
+
 ### MultiProtoPaths
+
+Objects used in this operation had differing prototypes.
+
 ### NonWritableProperty
+
+The property being assigned to is not writable for some types of objects which are used in this operation.
+
 ### ProtoIndexedProps
+
+The object being accessed has indexed properties that are exotic (for example, defined as a property on a prototype object and left as a hole in the underlying object).
+
 ### ArrayBadFlags
+
+The array being accessed may have flags that the optimization strategy cannot handle.  For example, if the array has sparse indexes, or has indexes that overflow the array's length, the optimization strategy may fail.
+
 ### ArrayDoubleConversion
+
+The type-system indicates that some arrays at this site should be converted to packed arrays of doubles, while others should not.  The optimization strategy fails for this condition.
+
 ### ArrayRange
+
+Could not accurately calculate the range attributes of an inline array creation.
+
 ### ArraySeenNegativeIndex
+
+Arrays at this element access location have seen negative indexes.
+
 ### TypedObjectNeutered
+
+The typed object being accessed at this location may have been neutered (a neutered typed object is one where the underlying byte buffer has been removed or transferred to a worker).
+
 ### TypedObjectArrayRange
+
+Failed to do range check of element access on a typed object.
+
 ### AccessNotDense
 
 ### AccessNotSimdObject
