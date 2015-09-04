@@ -684,7 +684,7 @@ Finish()
   }
 
   // Compute the mean.
-  double sum = std::accumulate(gTotals_W.begin(), gTotals_W.end(), 0);
+  double sum = std::accumulate(gTotals_W.begin(), gTotals_W.end(), 0.0);
   double mean = sum / n;
 
   // Compute the *population* standard deviation:
