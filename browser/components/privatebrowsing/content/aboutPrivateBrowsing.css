@@ -41,6 +41,10 @@ body[globalTpEnabled] .showGlobalTpDisabled {
   line-height: 2.5em;
 }
 
+#bar:-moz-dir(rtl) {
+  background-position: right 22px top 50%;
+}
+
 #main {
   padding: 0 2em;
   flex: 1;
@@ -72,6 +76,10 @@ li {
   background-size: 16px 16px;
   background-repeat: no-repeat;
   background-position: 0 50%;
+}
+
+li:-moz-dir(rtl) {
+  background-position: 100% 50%;
 }
 
 #forgotten > li {

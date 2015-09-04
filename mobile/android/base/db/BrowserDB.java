@@ -97,6 +97,8 @@ public interface BrowserDB {
      */
     public abstract Cursor getRecentHistory(ContentResolver cr, int limit);
 
+    public abstract Cursor getRecentHistoryBetweenTime(ContentResolver cr, int historyLimit, long start, long end);
+
     public abstract void expireHistory(ContentResolver cr, ExpirePriority priority);
 
     public abstract void removeHistoryEntry(ContentResolver cr, String url);

@@ -55,8 +55,9 @@
 
 <!ENTITY history_today_section "Today">
 <!ENTITY history_yesterday_section "Yesterday">
-<!ENTITY history_week_section2 "Last Week">
-<!ENTITY history_older_section2 "Last Month">
+<!ENTITY history_week_section3 "Last 7 days">
+<!ENTITY history_this_month_section "This month">
+<!ENTITY history_older_section3 "Older than 6 months">
 
 <!ENTITY go "Go">
 <!ENTITY search "Search">
@@ -69,8 +70,6 @@
 <!ENTITY edit_mode_cancel "Cancel">
 
 <!ENTITY close_tab "Close Tab">
-<!ENTITY tab_audio_playing "This tab is playing audio">
-<!ENTITY tab_audio_muted "This tab has been muted">
 <!ENTITY one_tab "1 tab">
 <!-- Localization note (num_tabs2) : Number of tabs is always more than one.
      We can't use android plural forms, sadly. See bug #753859. -->
@@ -81,6 +80,14 @@
      as possible because it's shown as a label in a toast.  Ideally, this string
      is upper-case, to match Google and Android's convention. -->
 <!ENTITY switch_button_message "SWITCH">
+<!-- Localization note (tab_title_prefix_is_playing_audio): This string is not
+     visible in the UI, but rather used as a text-to-speech content description
+     for sight-impaired a11y users. The content description is set on a tab
+     title in a list of open tabs when content in that tab is playing audio.
+     &formatS; will be replaced with the title of the tab, as received from the
+     web page. When audio is not playing in a tab, &formatS; will be used as
+     the content description. -->
+<!ENTITY tab_title_prefix_is_playing_audio "Playing audio – &formatS;">
 
 <!ENTITY settings "Settings">
 <!ENTITY settings_title "Settings">

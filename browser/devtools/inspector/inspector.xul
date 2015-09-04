@@ -55,6 +55,9 @@
       <menuitem id="node-menu-showdomproperties"
         label="&inspectorShowDOMProperties.label;"
         oncommand="inspector.showDOMProperties()"/>
+      <menuitem id="node-menu-useinconsole"
+        label="&inspectorUseInConsole.label;"
+        oncommand="inspector.useInConsole()"/>
       <menuitem id="node-menu-expand"
         label="&inspectorExpandNode.label;"
         oncommand="inspector.expandNode()"/>

@@ -468,3 +468,15 @@ function redoChange(inspector) {
   inspector.markup.undo.redo();
   return mutated;
 }
+
+/**
+ * Dispatch a command event on a node (e.g. click on a contextual menu item).
+ * @param {DOMNode} node
+ */
+function dispatchCommandEvent(node) {
+  info("Dispatching command event on " + node);
+  let commandEvent = document.createEvent("XULCommandEvent");
+  commandEvent.initCommandEvent("command", true, true, window, 0, false, false,
+                                false, false, null);
+  node.dispatchEvent(commandEvent);
+}

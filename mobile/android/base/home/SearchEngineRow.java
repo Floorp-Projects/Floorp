@@ -218,27 +218,22 @@ class SearchEngineRow extends AnimatedHeightLayout {
         final ContentResolver cr = getContext().getContentResolver();
 
         String[] columns = new String[] { SearchHistory.QUERY };
-        String sortOrderAndLimit = SearchHistory.DATE + " DESC";
+        String actualQuery = SearchHistory.QUERY + " LIKE ?";
+        String[] queryArgs = new String[] { '%' + searchTerm + '%' };
+        String sortOrderAndLimit = SearchHistory.DATE + " DESC LIMIT 4";
 
-        final Cursor c = cr.query(SearchHistory.CONTENT_URI, columns, null, null, sortOrderAndLimit);
+        final Cursor c = cr.query(SearchHistory.CONTENT_URI, columns, actualQuery, queryArgs, sortOrderAndLimit);
+
         if (c == null) {
             return;
         }
         try {
             if (c.moveToFirst()) {
-                int counter = 0;
                 final int searchColumn = c.getColumnIndexOrThrow(SearchHistory.QUERY);
                 do {
                     final String savedSearch = c.getString(searchColumn);
-                    if (counter == 4) {
-                        break;
-                    }
-                    // Bug 1200371 will move the filtering/matching and limit into the sql query
-                    if (savedSearch.startsWith(searchTerm)) {
-                        bindSuggestionView(savedSearch, animate, recycledSuggestionCount, suggestionCounter, true);
-                        ++suggestionCounter;
-                        ++counter;
-                    }
+                    bindSuggestionView(savedSearch, animate, recycledSuggestionCount, suggestionCounter, true);
+                    ++suggestionCounter;
                 } while (c.moveToNext());
             }
         } finally {
