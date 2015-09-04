@@ -78,23 +78,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
     if (native == atomics_isLockFree)
         return inlineAtomicsIsLockFree(callInfo);
 
-    // Array natives.
     if (native == ArrayConstructor)
         return inlineArray(callInfo);
-    if (native == js::array_isArray)
-        return inlineArrayIsArray(callInfo);
-    if (native == js::array_pop)
-        return inlineArrayPopShift(callInfo, MArrayPopShift::Pop);
-    if (native == js::array_shift)
-        return inlineArrayPopShift(callInfo, MArrayPopShift::Shift);
-    if (native == js::array_push)
-        return inlineArrayPush(callInfo);
-    if (native == js::array_concat)
-        return inlineArrayConcat(callInfo);
-    if (native == js::array_slice)
-        return inlineArraySlice(callInfo);
-    if (native == js::array_splice)
-        return inlineArraySplice(callInfo);
 
     // String natives.
     if (native == StringConstructor)
@@ -360,6 +345,22 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
     }
 
     switch (target->jitInfo()->inlinableNative) {
+      // Array natives.
+      case InlinableNative::ArrayIsArray:
+        return inlineArrayIsArray(callInfo);
+      case InlinableNative::ArrayPop:
+        return inlineArrayPopShift(callInfo, MArrayPopShift::Pop);
+      case InlinableNative::ArrayShift:
+        return inlineArrayPopShift(callInfo, MArrayPopShift::Shift);
+      case InlinableNative::ArrayPush:
+        return inlineArrayPush(callInfo);
+      case InlinableNative::ArrayConcat:
+        return inlineArrayConcat(callInfo);
+      case InlinableNative::ArraySlice:
+        return inlineArraySlice(callInfo);
+      case InlinableNative::ArraySplice:
+        return inlineArraySplice(callInfo);
+
       // Math natives.
       case InlinableNative::MathAbs:
         return inlineMathAbs(callInfo);
