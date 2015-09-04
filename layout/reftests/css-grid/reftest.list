@@ -39,3 +39,5 @@ fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-m
 == grid-max-sizing-flex-004.html grid-max-sizing-flex-004-ref.html
 == grid-max-sizing-flex-005.html grid-max-sizing-flex-005-ref.html
 == grid-max-sizing-flex-006.html grid-max-sizing-flex-006-ref.html
+== grid-flex-min-sizing-001.html grid-flex-min-sizing-001-ref.html
+== grid-flex-min-sizing-002.html grid-flex-min-sizing-002-ref.html
