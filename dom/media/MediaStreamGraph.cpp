@@ -760,15 +760,6 @@ MediaStreamGraphImpl::RecomputeBlockingAt(MediaStream* aStream,
       }
     }
 
-    GraphTime end;
-    bool explicitBlock = aStream->mExplicitBlockerCount.GetAt(aTime, &end) > 0;
-    *aEnd = std::min(*aEnd, end);
-    if (explicitBlock) {
-      STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to explicit blocker", aStream));
-      block = true;
-      continue;
-    }
-
     if (aStream->IsSuspended()) {
       STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to being suspended", aStream));
       block = true;
@@ -1799,7 +1790,6 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
 
 MediaStream::MediaStream(DOMMediaStream* aWrapper)
   : mBufferStartTime(0)
-  , mExplicitBlockerCount(0)
   , mBlocked(false)
   , mSuspendedCount(0)
   , mFinished(false)
@@ -1841,7 +1831,6 @@ MediaStream::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   amount += mBuffer.SizeOfExcludingThis(aMallocSizeOf);
   amount += mAudioOutputs.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mVideoOutputs.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  amount += mExplicitBlockerCount.SizeOfExcludingThis(aMallocSizeOf);
   amount += mListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mMainThreadListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mDisabledTrackIDs.ShallowSizeOfExcludingThis(aMallocSizeOf);
@@ -2115,46 +2104,6 @@ MediaStream::Resume()
 
   // This can happen if this method has been called asynchronously, and the
   // stream has been destroyed since then.
-  if (mMainThreadDestroyed) {
-    return;
-  }
-  GraphImpl()->AppendMessage(new Message(this));
-}
-
-void
-MediaStream::BlockStreamIfNeeded()
-{
-  class Message : public ControlMessage {
-  public:
-    explicit Message(MediaStream* aStream) : ControlMessage(aStream)
-    { }
-    virtual void Run()
-    {
-      mStream->BlockStreamIfNeededImpl(
-          mStream->GraphImpl()->mStateComputedTime);
-    }
-  };
-
-  if (mMainThreadDestroyed) {
-    return;
-  }
-  GraphImpl()->AppendMessage(new Message(this));
-}
-
-void
-MediaStream::UnblockStreamIfNeeded()
-{
-  class Message : public ControlMessage {
-  public:
-    explicit Message(MediaStream* aStream) : ControlMessage(aStream)
-    { }
-    virtual void Run()
-    {
-      mStream->UnblockStreamIfNeededImpl(
-          mStream->GraphImpl()->mStateComputedTime);
-    }
-  };
-
   if (mMainThreadDestroyed) {
     return;
   }
