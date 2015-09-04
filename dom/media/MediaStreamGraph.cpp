@@ -1204,26 +1204,55 @@ MediaStreamGraphImpl::Process(GraphTime aFrom, GraphTime aTo)
   }
 }
 
+void
+MediaStreamGraphImpl::MaybeProduceMemoryReport()
+{
+  MonitorAutoLock lock(mMemoryReportMonitor);
+  if (mNeedsMemoryReport) {
+    mNeedsMemoryReport = false;
+
+    for (MediaStream* s : AllStreams()) {
+      AudioNodeStream* stream = s->AsAudioNodeStream();
+      if (stream) {
+        AudioNodeSizes usage;
+        stream->SizeOfAudioNodesIncludingThis(MallocSizeOf, usage);
+        mAudioStreamSizes.AppendElement(usage);
+      }
+    }
+
+    lock.Notify();
+  }
+}
+
+bool
+MediaStreamGraphImpl::UpdateMainThreadState()
+{
+  MonitorAutoLock lock(mMonitor);
+  bool finalUpdate = mForceShutDown ||
+    (mProcessedTime >= mEndTime && AllFinishedStreamsNotified()) ||
+    (IsEmpty() && mBackMessageQueue.IsEmpty());
+  PrepareUpdatesToMainThreadState(finalUpdate);
+  if (finalUpdate) {
+    // Enter shutdown mode. The stable-state handler will detect this
+    // and complete shutdown. Destroy any streams immediately.
+    STREAM_LOG(LogLevel::Debug, ("MediaStreamGraph %p waiting for main thread cleanup", this));
+    // We'll shut down this graph object if it does not get restarted.
+    mLifecycleState = LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP;
+    // No need to Destroy streams here. The main-thread owner of each
+    // stream is responsible for calling Destroy on them.
+    return false;
+  }
+
+  CurrentDriver()->WaitForNextIteration();
+
+  SwapMessageQueues();
+  return true;
+}
+
 bool
 MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd)
 {
-  {
-    MonitorAutoLock lock(mMemoryReportMonitor);
-    if (mNeedsMemoryReport) {
-      mNeedsMemoryReport = false;
-
-      for (MediaStream* s : AllStreams()) {
-        AudioNodeStream* stream = s->AsAudioNodeStream();
-        if (stream) {
-          AudioNodeSizes usage;
-          stream->SizeOfAudioNodesIncludingThis(MallocSizeOf, usage);
-          mAudioStreamSizes.AppendElement(usage);
-        }
-      }
-
-      lock.Notify();
-    }
-  }
+  MaybeProduceMemoryReport();
 
   GraphTime stateFrom = mStateComputedTime;
   GraphTime stateEnd = std::min(aStateEnd, mEndTime);
@@ -1234,31 +1263,7 @@ MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd)
 
   UpdateCurrentTimeForStreams(stateFrom, stateEnd);
 
-  // Send updates to the main thread and wait for the next control loop
-  // iteration.
-  {
-    MonitorAutoLock lock(mMonitor);
-    bool finalUpdate = mForceShutDown ||
-      (stateEnd >= mEndTime && AllFinishedStreamsNotified()) ||
-      (IsEmpty() && mBackMessageQueue.IsEmpty());
-    PrepareUpdatesToMainThreadState(finalUpdate);
-    if (finalUpdate) {
-      // Enter shutdown mode. The stable-state handler will detect this
-      // and complete shutdown. Destroy any streams immediately.
-      STREAM_LOG(LogLevel::Debug, ("MediaStreamGraph %p waiting for main thread cleanup", this));
-      // We'll shut down this graph object if it does not get restarted.
-      mLifecycleState = LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP;
-      // No need to Destroy streams here. The main-thread owner of each
-      // stream is responsible for calling Destroy on them.
-      return false;
-    }
-
-    CurrentDriver()->WaitForNextIteration();
-
-    SwapMessageQueues();
-  }
-
-  return true;
+  return UpdateMainThreadState();
 }
 
 void
