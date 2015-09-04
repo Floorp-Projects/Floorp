@@ -42,6 +42,7 @@
 #ifdef NIGHTLY_BUILD
   locale/@AB_CD@/browser/webcompatReporter.properties (%chrome/webcompatReporter.properties)
 #endif
+% resource search-plugins chrome://browser/locale/searchplugins/
 
 # overrides for toolkit l10n, also for en-US
 relativesrcdir toolkit/locales:

@@ -98,7 +98,9 @@ function testParseCssProperty(doc, parser) {
                    "url(red.svg#blue)\"><span>",
                    "blur(1px) drop-shadow(0 0 0 ",
                    {name: "blue", value: "#00F"},
-                   ") url(\"red.svg#blue\")</span></span>"])
+                   ") url(\"red.svg#blue\")</span></span>"]),
+
+    makeColorTest("color", "currentColor", ["currentColor"]),
   ];
 
   let target = doc.querySelector("div");

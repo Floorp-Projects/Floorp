@@ -21,9 +21,7 @@ protected:
   virtual void InitializeScreenList() OVERRIDE;
 
 private:
-#if !defined(MULTI_MONITOR_SCREENSHARE)
   void MultiMonitorScreenshare();
-#endif
 };
 
 }// namespace webrtc

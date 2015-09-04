@@ -15,6 +15,7 @@
 #include "AnimationCommon.h" // For GetLayerAnimationInfo
 #include "FrameLayerBuilder.h"
 #include "GeckoProfiler.h"
+#include "LayerAnimationInfo.h" // For LayerAnimationInfo::sRecords
 #include "nsStyleChangeList.h"
 #include "nsRuleProcessorData.h"
 #include "nsStyleUtil.h"
@@ -2666,10 +2667,10 @@ ElementRestyler::AddLayerChangesForAnimation()
     RestyleManager::GetMaxAnimationGenerationForFrame(mFrame);
 
   nsChangeHint hint = nsChangeHint(0);
-  const auto& layerInfo = CommonAnimationManager::sLayerAnimationInfo;
-  for (size_t i = 0; i < ArrayLength(layerInfo); i++) {
+  for (const LayerAnimationInfo::Record& layerInfo :
+         LayerAnimationInfo::sRecords) {
     Layer* layer =
-      FrameLayerBuilder::GetDedicatedLayer(mFrame, layerInfo[i].mLayerType);
+      FrameLayerBuilder::GetDedicatedLayer(mFrame, layerInfo.mLayerType);
     if (layer && frameGeneration > layer->GetAnimationGeneration()) {
       // If we have a transform layer but don't have any transform style, we
       // probably just removed the transform but haven't destroyed the layer
@@ -2678,11 +2679,11 @@ ElementRestyler::AddLayerChangesForAnimation()
       // so we can skip adding any change hint here. (If we *were* to add
       // nsChangeHint_UpdateTransformLayer, ApplyRenderingChangeToTree would
       // complain that we're updating a transform layer without a transform).
-      if (layerInfo[i].mLayerType == nsDisplayItem::TYPE_TRANSFORM &&
+      if (layerInfo.mLayerType == nsDisplayItem::TYPE_TRANSFORM &&
           !mFrame->StyleDisplay()->HasTransformStyle()) {
         continue;
       }
-      NS_UpdateHint(hint, layerInfo[i].mChangeHint);
+      NS_UpdateHint(hint, layerInfo.mChangeHint);
     }
   }
   if (hint) {

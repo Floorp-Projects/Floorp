@@ -17,6 +17,7 @@ class GeckoRuntimeRunner(BaseRunner):
     """
 
     def __init__(self, binary, cmdargs=None, **runner_args):
+        self.show_crash_reporter = runner_args.pop('show_crash_reporter', False)
         BaseRunner.__init__(self, **runner_args)
 
         self.binary = binary
@@ -72,7 +73,9 @@ class GeckoRuntimeRunner(BaseRunner):
         if has_debugger:
             self.env["MOZ_CRASHREPORTER_DISABLE"] = "1"
         else:
-            self.env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
+            if not self.show_crash_reporter:
+                # hide the crash reporter window
+                self.env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
             self.env["MOZ_CRASHREPORTER"] = "1"
 
         BaseRunner.start(self, *args, **kwargs)

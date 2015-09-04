@@ -6556,6 +6556,8 @@ IonBuilder::makeCallHelper(JSFunction* target, CallInfo& callInfo)
 static bool
 DOMCallNeedsBarrier(const JSJitInfo* jitinfo, TemporaryTypeSet* types)
 {
+    MOZ_ASSERT(jitinfo->type() != JSJitInfo::InlinableNative);
+
     // If the return type of our DOM native is in "types" already, we don't
     // actually need a barrier.
     if (jitinfo->returnType() == JSVAL_TYPE_UNKNOWN)

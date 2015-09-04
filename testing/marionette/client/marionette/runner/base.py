@@ -984,6 +984,8 @@ setReq.onerror = function() {
             if hasattr(results, 'expectedFailures'):
                 self.todo += len(results.expectedFailures)
 
+            self.mixin_run_tests = []
+
     def run_test_set(self, tests):
         if self.shuffle:
             random.seed(self.shuffle_seed)

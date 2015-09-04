@@ -200,6 +200,8 @@ struct BytecodeEmitter
     const bool      insideNonGlobalEval:1;  /* True if this is a direct eval
                                                call in some non-global scope. */
 
+    bool            insideModule:1;     /* True if compiling inside a module. */
+
     enum EmitterMode {
         Normal,
 

@@ -24,7 +24,6 @@ namespace js {
 
 class ModuleObject;
 class StaticFunctionBoxScopeObject;
-class StaticModuleBoxScopeObject;
 
 namespace frontend {
 
@@ -738,7 +737,9 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node destructuringExprWithoutYield(YieldHandling yieldHandling, BindData<ParseHandler>* data,
                                        TokenKind tt, unsigned msg);
 
+    Node newBoundImportForCurrentName();
     bool namedImportsOrNamespaceImport(TokenKind tt, Node importSpecSet);
+    bool addExportName(JSAtom* exportName);
 
     enum ClassContext { ClassStatement, ClassExpression };
     Node classDefinition(YieldHandling yieldHandling, ClassContext classContext, DefaultHandling defaultHandling);
@@ -826,6 +827,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool checkDestructuringName(BindData<ParseHandler>* data, Node expr);
 
     bool bindInitialized(BindData<ParseHandler>* data, Node pn);
+    bool bindUninitialized(BindData<ParseHandler>* data, Node pn);
     bool makeSetCall(Node node, unsigned errnum);
     Node cloneDestructuringDefault(Node opn);
     Node cloneLeftHandSide(Node opn);

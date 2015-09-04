@@ -145,7 +145,7 @@ static const std::string strSampleSdpAudioVideoNoIce =
 static const std::string strSampleCandidate =
   "a=candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host\r\n";
 
-static const std::string strSampleMid = "";
+static const std::string strSampleMid = "sdparta";
 
 static const unsigned short nSamplelevel = 2;
 
@@ -1432,6 +1432,7 @@ class SignalingAgent {
 
     // Verify that adding ICE candidates does not change the signaling state
     ASSERT_EQ(signaling_state(), endState);
+    ASSERT_NE("", mid);
   }
 
   int GetPacketsReceived(const std::string& streamId) const

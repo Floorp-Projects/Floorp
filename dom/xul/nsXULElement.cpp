@@ -1267,7 +1267,7 @@ nsXULElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
         (IsAnyOfXULElements(nsGkAtoms::scrollbar, nsGkAtoms::scrollcorner)) &&
         (aVisitor.mEvent->mMessage == eMouseClick ||
          aVisitor.mEvent->mMessage == eMouseDoubleClick ||
-         aVisitor.mEvent->mMessage == NS_XUL_COMMAND ||
+         aVisitor.mEvent->mMessage == eXULCommand ||
          aVisitor.mEvent->mMessage == eContextMenu ||
          aVisitor.mEvent->mMessage == eDragStart ||
          aVisitor.mEvent->mMessage == eLegacyDragGesture)) {
@@ -1276,7 +1276,7 @@ nsXULElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
         aVisitor.mParentTarget = nullptr;
         return NS_OK;
     }
-    if (aVisitor.mEvent->mMessage == NS_XUL_COMMAND &&
+    if (aVisitor.mEvent->mMessage == eXULCommand &&
         aVisitor.mEvent->mClass == eInputEventClass &&
         aVisitor.mEvent->originalTarget == static_cast<nsIContent*>(this) &&
         !IsXULElement(nsGkAtoms::command)) {

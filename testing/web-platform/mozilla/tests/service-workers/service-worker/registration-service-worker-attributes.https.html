@@ -31,19 +31,22 @@ async_test(function(t) {
       .then(function() {
           assert_equals(registration.installing, null,
                         'installing after installed');
-          assert_equals(registration.waiting.scriptURL, expected_url,
-                        'waiting after installed');
-          assert_equals(registration.active, null,
-                        'active after installed');
-          return wait_for_state(t, registration.waiting, 'activated');
+          var newest = registration.waiting || registration.active;
+          assert_equals(newest.scriptURL, expected_url,
+                        'waiting or active after installed');
+          if (registration.waiting) {
+            return wait_for_state(t, registration.waiting, 'activated')
+                .then(function() {
+                    assert_equals(registration.installing, null,
+                                  'installing after activated');
+                    assert_equals(registration.waiting, null,
+                                  'waiting after activated');
+                    assert_equals(registration.active.scriptURL, expected_url,
+                                  'active after activated');
+                });
+          }
         })
       .then(function() {
-          assert_equals(registration.installing, null,
-                        'installing after activated');
-          assert_equals(registration.waiting, null,
-                        'waiting after activated');
-          assert_equals(registration.active.scriptURL, expected_url,
-                        'active after activated');
           return Promise.all([
               wait_for_state(t, registration.active, 'redundant'),
               registration.unregister()
@@ -54,8 +57,12 @@ async_test(function(t) {
                         'installing after redundant');
           assert_equals(registration.waiting, null,
                         'waiting after redundant');
-          assert_equals(registration.active.scriptURL, expected_url,
-                        'active after redundant');
+          // According to spec, Clear Registration runs Update State which is
+          // immediately followed by setting active to null, which means by the
+          // time the event loop turns and the Promise for statechange is
+          // resolved, this will be gone.
+          assert_equals(registration.active, null,
+                        'active should be null after redundant');
           t.done();
         })
       .catch(unreached_rejection(t));

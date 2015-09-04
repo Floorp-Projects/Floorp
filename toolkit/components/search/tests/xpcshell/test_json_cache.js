@@ -57,58 +57,46 @@ function run_test() {
 
   // Add the application's built-in plugin locations to the cache so it won't be ignored.
   let filesToIgnore = []
-  let defaultBranch = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
-
-  let loadFromJARs = false;
-  try {
-    loadFromJARs = defaultBranch.getBoolPref("loadFromJars");
-  } catch (ex) {}
-
+  let chan = NetUtil.ioService.newChannel2("resource://search-plugins/list.txt",
+                                           null, // aOriginCharset
+                                           null, // aBaseURI
+                                           null, // aLoadingNode
+                                           Services.scriptSecurityManager.getSystemPrincipal(),
+                                           null, // aTriggeringPrincipal
+                                           Ci.nsILoadInfo.SEC_NORMAL,
+                                           Ci.nsIContentPolicy.TYPE_OTHER);
   let visibleDefaultEngines = [];
-  if (!loadFromJARs) {
-    filesToIgnore.push(getDir(NS_APP_SEARCH_DIR));
+  let sis = Cc["@mozilla.org/scriptableinputstream;1"].
+              createInstance(Ci.nsIScriptableInputStream);
+  sis.init(chan.open());
+  let list = sis.read(sis.available());
+  let names = list.split("\n").filter(n => !!n);
+  for (let name of names) {
+    if (name.endsWith(":hidden"))
+      continue;
+    visibleDefaultEngines.push(name);
+  }
+  let chromeURI = chan.URI;
+  if (chromeURI instanceof Ci.nsIJARURI) {
+    // JAR packaging, we only need the parent jar file.
+    let fileURI = chromeURI; // flat packaging
+    while (fileURI instanceof Ci.nsIJARURI)
+      fileURI = fileURI.JARFile;
+    fileURI.QueryInterface(Ci.nsIFileURL);
+    filesToIgnore.push(fileURI.file);
   } else {
-    let rootURIPref = defaultBranch.getCharPref("jarURIs");
-    let rootURIs = rootURIPref.split(",");
-    for (let root of rootURIs) {
-      let visibleEnginesForRoot = [];
-      let listURL = root + "list.txt";
-      let chan = NetUtil.ioService.newChannelFromURI2(makeURI(listURL),
-                                                      null, // aLoadingNode
-                                                      Services.scriptSecurityManager.getSystemPrincipal(),
-                                                      null, // aTriggeringPrincipal
-                                                      Ci.nsILoadInfo.SEC_NORMAL,
-                                                      Ci.nsIContentPolicy.TYPE_OTHER);
-      let sis = Cc["@mozilla.org/scriptableinputstream;1"].
-                createInstance(Ci.nsIScriptableInputStream);
-      sis.init(chan.open());
-      let list = sis.read(sis.available());
-      let names = list.split("\n").filter(n => !!n);
-      for (let name of names) {
-        if (name.endsWith(":hidden"))
-          continue;
-        visibleEnginesForRoot.push(name);
-      }
-
-      let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
-                        getService(Ci.nsIChromeRegistry);
-      let chromeURI = chromeReg.convertChromeURL(makeURI(root));
-      if (chromeURI instanceof Ci.nsIJARURI) {
-        // JAR packaging, we only need the parent jar file.
-        let fileURI = chromeURI; // flat packaging
-        while (fileURI instanceof Ci.nsIJARURI)
-          fileURI = fileURI.JARFile;
-        fileURI.QueryInterface(Ci.nsIFileURL);
-        filesToIgnore.push(fileURI.file);
-      } else {
-        // flat packaging, we need to find each .xml file.
-        for (let name of visibleEnginesForRoot) {
-          let uri = chromeReg.convertChromeURL(makeURI(root + name + ".xml"));
-          filesToIgnore.push(uri.QueryInterface(Ci.nsIFileURL).file);
-        }
-      }
-
-      visibleDefaultEngines = visibleDefaultEngines.concat(visibleEnginesForRoot);
+    // flat packaging, we need to find each .xml file.
+    for (let name of names) {
+      let url = "resource://search-plugins/" + name + ".xml";
+      let chan = NetUtil.ioService.newChannel2(url,
+                                               null, // aOriginCharset
+                                               null, // aBaseURI
+                                               null, // aLoadingNode
+                                               Services.scriptSecurityManager.getSystemPrincipal(),
+                                               null, // aTriggeringPrincipal
+                                               Ci.nsILoadInfo.SEC_NORMAL,
+                                               Ci.nsIContentPolicy.TYPE_OTHER);
+      filesToIgnore.push(chan.URI.QueryInterface(Ci.nsIFileURL).file);
     }
   }
 

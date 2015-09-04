@@ -954,32 +954,6 @@ SendFunctionsToPerf(JSContext* cx, AsmJSModule& module)
 
     return true;
 }
-
-static bool
-SendBlocksToPerf(JSContext* cx, AsmJSModule& module)
-{
-    if (!PerfBlockEnabled())
-        return true;
-
-    unsigned long funcBaseAddress = (unsigned long) module.codeBase();
-    const char* filename = module.scriptSource()->filename();
-
-    for (unsigned i = 0; i < module.numPerfBlocksFunctions(); i++) {
-        const AsmJSModule::ProfiledBlocksFunction& func = module.perfProfiledBlocksFunction(i);
-
-        size_t size = func.pod.endCodeOffset - func.pod.startCodeOffset;
-
-        JSAutoByteString bytes;
-        const char* name = AtomToPrintableString(cx, func.name, &bytes);
-        if (!name)
-            return false;
-
-        writePerfSpewerAsmJSBlocksMap(funcBaseAddress, func.pod.startCodeOffset,
-                                      func.endInlineCodeOffset, size, filename, name, func.blocks);
-    }
-
-    return true;
-}
 #endif
 
 static bool
@@ -995,8 +969,6 @@ SendModuleToAttachedProfiler(JSContext* cx, AsmJSModule& module)
         size_t firstEntryCode = size_t(module.codeBase() + module.functionBytes());
         writePerfSpewerAsmJSEntriesAndExits(firstEntryCode, module.codeBytes() - module.functionBytes());
     }
-    if (!SendBlocksToPerf(cx, module))
-        return false;
     if (!SendFunctionsToPerf(cx, module))
         return false;
 #endif

@@ -24,6 +24,8 @@ def Runner(*args, **kwargs):
     :param process_class: Class used to launch the binary.
     :param process_args: Arguments to pass into process_class.
     :param symbols_path: Path to symbol files used for crash analysis.
+    :param show_crash_reporter: allow the crash reporter window to pop up.
+        Defaults to False.
     :returns: A generic GeckoRuntimeRunner.
     """
     return GeckoRuntimeRunner(*args, **kwargs)
@@ -41,6 +43,8 @@ def FirefoxRunner(*args, **kwargs):
     :param process_class: Class used to launch the binary.
     :param process_args: Arguments to pass into process_class.
     :param symbols_path: Path to symbol files used for crash analysis.
+    :param show_crash_reporter: allow the crash reporter window to pop up.
+        Defaults to False.
     :returns: A GeckoRuntimeRunner for Firefox.
     """
     kwargs['app_ctx'] = get_app_context('firefox')()
@@ -59,6 +63,8 @@ def ThunderbirdRunner(*args, **kwargs):
     :param process_class: Class used to launch the binary.
     :param process_args: Arguments to pass into process_class.
     :param symbols_path: Path to symbol files used for crash analysis.
+    :param show_crash_reporter: allow the crash reporter window to pop up.
+        Defaults to False.
     :returns: A GeckoRuntimeRunner for Thunderbird.
     """
     kwargs['app_ctx'] = get_app_context('thunderbird')()
@@ -77,6 +83,8 @@ def B2GDesktopRunner(*args, **kwargs):
     :param process_class: Class used to launch the binary.
     :param process_args: Arguments to pass into process_class.
     :param symbols_path: Path to symbol files used for crash analysis.
+    :param show_crash_reporter: allow the crash reporter window to pop up.
+        Defaults to False.
     :returns: A GeckoRuntimeRunner for b2g desktop.
     """
     # There is no difference between a generic and b2g desktop runner,

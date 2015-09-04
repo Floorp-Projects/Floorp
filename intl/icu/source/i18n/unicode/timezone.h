@@ -304,6 +304,7 @@ public:
      */
     static TimeZone* U_EXPORT2 createDefault(void);
 
+#define ICU_TZ_HAS_RECREATE_DEFAULT
     static void U_EXPORT2 recreateDefault();
 
     /**

@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(531b902b-b551-4faa-9814-1a73e8299ac4)]
+[scriptable, uuid(3dd203e4-66ec-40fd-acde-43f0b35c98e9)]
 interface nsITabParent : nsISupports
 {
   void injectTouchEvent(in AString aType,
@@ -23,7 +23,10 @@ interface nsITabParent : nsISupports
 
   readonly attribute boolean useAsyncPanZoom;
 
-  void setIsDocShellActive(in bool aIsActive);
+  /**
+    * Manages the docshell active state of the remote browser.
+    */
+  attribute boolean docShellIsActive;
 
   /**
    * During interactions where painting performance

@@ -292,6 +292,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool            hasDestructuringArgs:1; /* arguments list contains destructuring expression */
     bool            useAsm:1;               /* see useAsmOrInsideUseAsm */
     bool            insideUseAsm:1;         /* see useAsmOrInsideUseAsm */
+    bool            wasEmitted:1;           /* Bytecode has been emitted for this function. */
 
     // Fields for use in heuristics.
     bool            usesArguments:1;  /* contains a free use of 'arguments' */
@@ -381,6 +382,7 @@ class ModuleBox : public ObjectBox, public SharedContext
 {
   public:
     Bindings bindings;
+    TraceableVector<JSAtom*> exportNames;
 
     template <typename ParseHandler>
     ModuleBox(ExclusiveContext* cx, ObjectBox* traceListHead, ModuleObject* module,
