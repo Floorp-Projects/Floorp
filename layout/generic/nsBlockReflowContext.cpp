@@ -308,9 +308,8 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
 
 #ifdef DEBUG
   if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {
-    if ((CRAZY_SIZE(mMetrics.ISize(mWritingMode)) ||
-         CRAZY_SIZE(mMetrics.BSize(mWritingMode))) &&
-        !mFrame->GetParent()->IsCrazySizeAssertSuppressed()) {
+    if (CRAZY_SIZE(mMetrics.ISize(mWritingMode)) ||
+        CRAZY_SIZE(mMetrics.BSize(mWritingMode))) {
       printf("nsBlockReflowContext: ");
       nsFrame::ListTag(stdout, mFrame);
       printf(" metrics=%d,%d!\n",
