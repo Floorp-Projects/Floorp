@@ -224,14 +224,6 @@ protected:
     nsTArray<nsTArray<Cell>> mCells;
   };
 
-  struct GridItemInfo {
-    explicit GridItemInfo(const GridArea& aArea) : mArea(aArea) {}
-    GridArea mArea;
-#ifdef DEBUG
-    nsIFrame* mFrame;
-#endif
-  };
-
   enum LineRangeSide {
     eLineRangeSideStart, eLineRangeSideEnd
   };
@@ -440,6 +432,15 @@ protected:
     return areas && areas->Contains(aName);
   }
 
+  NS_DECLARE_FRAME_PROPERTY(GridAreaProperty, DeleteValue<GridArea>)
+
+  /**
+   * A convenience method to get the stored GridArea* for a frame.
+   */
+  static GridArea* GetGridAreaForChild(nsIFrame* aChild) {
+    return static_cast<GridArea*>(aChild->Properties().Get(GridAreaProperty()));
+  }
+
   /**
    * Return the containing block for a grid item occupying aArea.
    */
@@ -471,16 +472,6 @@ protected:
 #endif // DEBUG
 
 private:
-  /**
-   * Info about each (normal flow) grid item.
-   */
-  nsTArray<GridItemInfo> mGridItems;
-
-  /**
-   * Info about each grid-aligned abs.pos. child.
-   */
-  nsTArray<GridItemInfo> mAbsPosItems;
-
   /**
    * State for each cell in the grid.
    */
