@@ -228,7 +228,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::TrackSizingFunctions
  */
 struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
 {
-  explicit Tracks(LogicalAxis aAxis) : mAxis(aAxis) {}
+  explicit Tracks(Dimension aDimension) : mDimension(aDimension) {}
 
   void Initialize(const TrackSizingFunctions& aFunctions,
                   uint32_t                    aNumTracks,
@@ -599,7 +599,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
 #endif
 
   nsAutoTArray<TrackSize, 32> mSizes;
-  LogicalAxis mAxis;
+  Dimension mDimension;
 };
 
 struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowState
@@ -638,8 +638,8 @@ private:
                   const WritingMode&       aWM)
     : mIter(aFrame, kPrincipalList)
     , mGridStyle(aGridStyle)
-    , mCols(eLogicalAxisInline)
-    , mRows(eLogicalAxisBlock)
+    , mCols(eColDimension)
+    , mRows(eRowDimension)
     , mColFunctions({
         mGridStyle->mGridTemplateColumns.mMinTrackSizingFunctions,
         mGridStyle->mGridTemplateColumns.mMaxTrackSizingFunctions,
@@ -1650,26 +1650,29 @@ nsGridContainerFrame::Tracks::Initialize(
 
 static nscoord
 MinSize(nsIFrame* aChild, nsRenderingContext* aRC, WritingMode aCBWM,
-        LogicalAxis aAxis, nsLayoutUtils::IntrinsicISizeType aConstraint)
+        nsGridContainerFrame::Dimension aDimension,
+        nsLayoutUtils::IntrinsicISizeType aConstraint)
 {
-  PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
+  PhysicalAxis axis(((aDimension == nsGridContainerFrame::eColDimension) ==
+                     aCBWM.IsVertical()) ? eAxisVertical : eAxisHorizontal);
   return nsLayoutUtils::MinSizeContributionForAxis(axis, aRC, aChild,
                                                    aConstraint);
 }
 
 /**
  * Return the [min|max]-content contribution of aChild to its parent (i.e.
- * the child's margin-box) in aAxis.
+ * the child's margin-box) in aDimension.
  */
 static nscoord
 ContentContribution(nsIFrame*                         aChild,
                     const nsHTMLReflowState*          aReflowState,
                     nsRenderingContext*               aRC,
                     WritingMode                       aCBWM,
-                    LogicalAxis                       aAxis,
+                    nsGridContainerFrame::Dimension   aDimension,
                     nsLayoutUtils::IntrinsicISizeType aConstraint)
 {
-  PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
+  PhysicalAxis axis(((aDimension == nsGridContainerFrame::eColDimension) ==
+                     aCBWM.IsVertical()) ? eAxisVertical : eAxisHorizontal);
   nscoord size = nsLayoutUtils::IntrinsicForAxis(axis, aRC, aChild, aConstraint,
                    nsLayoutUtils::BAIL_IF_REFLOW_NEEDED);
   if (size == NS_INTRINSIC_WIDTH_UNKNOWN) {
@@ -1714,24 +1717,24 @@ ContentContribution(nsIFrame*                         aChild,
 }
 
 static nscoord
-MinContentContribution(nsIFrame*                aChild,
-                       const nsHTMLReflowState* aRS,
-                       nsRenderingContext*      aRC,
-                       WritingMode              aCBWM,
-                       LogicalAxis              aAxis)
+MinContentContribution(nsIFrame*                       aChild,
+                       const nsHTMLReflowState*        aRS,
+                       nsRenderingContext*             aRC,
+                       WritingMode                     aCBWM,
+                       nsGridContainerFrame::Dimension aDimension)
 {
-  return ContentContribution(aChild, aRS, aRC, aCBWM, aAxis,
+  return ContentContribution(aChild, aRS, aRC, aCBWM, aDimension,
                              nsLayoutUtils::MIN_ISIZE);
 }
 
 static nscoord
-MaxContentContribution(nsIFrame*                aChild,
-                       const nsHTMLReflowState* aRS,
-                       nsRenderingContext*      aRC,
-                       WritingMode              aCBWM,
-                       LogicalAxis              aAxis)
+MaxContentContribution(nsIFrame*                       aChild,
+                       const nsHTMLReflowState*        aRS,
+                       nsRenderingContext*             aRC,
+                       WritingMode                     aCBWM,
+                       nsGridContainerFrame::Dimension aDimension)
 {
-  return ContentContribution(aChild, aRS, aRC, aCBWM, aAxis,
+  return ContentContribution(aChild, aRS, aRC, aCBWM, aDimension,
                              nsLayoutUtils::PREF_ISIZE);
 }
 
@@ -1822,23 +1825,23 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   const nsHTMLReflowState* rs = aState.mReflowState;
   nsRenderingContext* rc = &aState.mRenderingContext;
   if (sz.mState & TrackSize::eAutoMinSizing) {
-    nscoord s = MinSize(aGridItem, rc, wm, mAxis, aConstraint);
+    nscoord s = MinSize(aGridItem, rc, wm, mDimension, aConstraint);
     sz.mBase = std::max(sz.mBase, s);
   } else if ((sz.mState & TrackSize::eMinContentMinSizing) ||
              (aConstraint == nsLayoutUtils::MIN_ISIZE &&
               (sz.mState & TrackSize::eFlexMinSizing))) {
-    nscoord s = MinContentContribution(aGridItem, rs, rc, wm, mAxis);
+    nscoord s = MinContentContribution(aGridItem, rs, rc, wm, mDimension);
     minContentContribution.emplace(s);
     sz.mBase = std::max(sz.mBase, minContentContribution.value());
   } else if (sz.mState & TrackSize::eMaxContentMinSizing) {
-    nscoord s = MaxContentContribution(aGridItem, rs, rc, wm, mAxis);
+    nscoord s = MaxContentContribution(aGridItem, rs, rc, wm, mDimension);
     maxContentContribution.emplace(s);
     sz.mBase = std::max(sz.mBase, maxContentContribution.value());
   }
   // max sizing
   if (sz.mState & TrackSize::eMinContentMaxSizing) {
     if (minContentContribution.isNothing()) {
-      nscoord s = MinContentContribution(aGridItem, rs, rc, wm, mAxis);
+      nscoord s = MinContentContribution(aGridItem, rs, rc, wm, mDimension);
       minContentContribution.emplace(s);
     }
     if (sz.mLimit == NS_UNCONSTRAINEDSIZE) {
@@ -1849,7 +1852,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   } else if (sz.mState & (TrackSize::eAutoMaxSizing |
                           TrackSize::eMaxContentMaxSizing)) {
     if (maxContentContribution.isNothing()) {
-      nscoord s = MaxContentContribution(aGridItem, rs, rc, wm, mAxis);
+      nscoord s = MaxContentContribution(aGridItem, rs, rc, wm, mDimension);
       maxContentContribution.emplace(s);
     }
     if (sz.mLimit == NS_UNCONSTRAINEDSIZE) {
@@ -1909,7 +1912,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
     uint32_t span = lineRange.Extent();
     if (span == 1) {
       // Step 1. Size tracks to fit non-spanning items.
-      aGridItems[iter.GridItemIndex()].mIsFlexing[mAxis] =
+      aGridItems[iter.GridItemIndex()].mIsFlexing[mDimension] =
         ResolveIntrinsicSizeStep1(aState, aFunctions, aPercentageBasis,
                                   aConstraint, lineRange, child);
     } else {
@@ -1927,25 +1930,25 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         stateBitsPerSpan[span] |= state;
         nscoord minSize = 0;
         if (state & (flexMin | TrackSize::eIntrinsicMinSizing)) { // for 2.1
-          minSize = MinSize(child, rc, wm, mAxis, aConstraint);
+          minSize = MinSize(child, rc, wm, mDimension, aConstraint);
         }
         nscoord minContent = 0;
         if (state & (flexMin | TrackSize::eMinOrMaxContentMinSizing | // for 2.2
                      TrackSize::eIntrinsicMaxSizing)) {               // for 2.5
           minContent = MinContentContribution(child, aState.mReflowState,
-                                              rc, wm, mAxis);
+                                              rc, wm, mDimension);
         }
         nscoord maxContent = 0;
         if (state & (TrackSize::eMaxContentMinSizing |         // for 2.3
                      TrackSize::eAutoOrMaxContentMaxSizing)) { // for 2.6
           maxContent = MaxContentContribution(child, aState.mReflowState,
-                                              rc, wm, mAxis);
+                                              rc, wm, mDimension);
         }
         step2Items.AppendElement(
           Step2ItemData({span, state, lineRange, minSize,
                          minContent, maxContent, child}));
       } else {
-        aGridItems[iter.GridItemIndex()].mIsFlexing[mAxis] =
+        aGridItems[iter.GridItemIndex()].mIsFlexing[mDimension] =
           !!(state & TrackSize::eFlexMaxSizing);
       }
     }
@@ -2200,14 +2203,15 @@ nsGridContainerFrame::Tracks::FindUsedFlexFraction(
   // a flex track with its max-content contribution as 'space to fill'
   for (; !iter.AtEnd(); iter.Next()) {
     const GridItemInfo& item = aGridItems[iter.GridItemIndex()];
-    if (item.mIsFlexing[mAxis]) {
-      nscoord spaceToFill = MaxContentContribution(*iter, rs, rc, wm, mAxis);
+    if (item.mIsFlexing[mDimension]) {
+      nscoord spaceToFill = MaxContentContribution(*iter, rs, rc, wm,
+                                                   mDimension);
       if (spaceToFill <= 0) {
         continue;
       }
       // ... and all its spanned tracks as input.
       const LineRange& range =
-        mAxis == eLogicalAxisInline ? item.mArea.mCols : item.mArea.mRows;
+        mDimension == eColDimension ? item.mArea.mCols : item.mArea.mRows;
       nsTArray<uint32_t> itemFlexTracks;
       for (uint32_t i = range.mStart, end = range.mEnd; i < end; ++i) {
         if (mSizes[i].mState & TrackSize::eFlexMaxSizing) {
