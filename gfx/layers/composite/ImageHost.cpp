@@ -111,6 +111,10 @@ ImageHost::Composite(EffectChain& aEffectChain,
     return;
   }
 
+  if (!GetCompositor()->SupportsEffect(effect->mType)) {
+    return;
+  }
+
   aEffectChain.mPrimaryEffect = effect;
   IntSize textureSize = mTextureSource->GetSize();
   gfx::Rect gfxPictureRect
