@@ -552,6 +552,12 @@ def get_parser(argv=None):
                         help='Find test on chunk with electrolysis preferences enabled.',
                         default=False)
 
+    parser.add_argument('-p', '--platform',
+                        choices=['linux', 'linux64', 'mac', 'macosx64', 'win32', 'win64'],
+                        dest='platform',
+                        help="Platform for the chunk to find the test.",
+                        default=None)
+
     parser.add_argument('--debug',
                         action='store_true',
                         dest='debug',
@@ -561,7 +567,7 @@ def get_parser(argv=None):
     return parser
 
 
-def download_mozinfo(debug_build=False):
+def download_mozinfo(platform=None, debug_build=False):
     temp_dir = tempfile.mkdtemp()
     temp_path = os.path.join(temp_dir, "mozinfo.json")
     args = [
@@ -570,6 +576,10 @@ def download_mozinfo(debug_build=False):
         '--ext', 'mozinfo.json',
         '-d', temp_path,
     ]
+    if platform:
+        if platform == 'macosx64':
+            platform = 'mac64'
+        args.extend(['-p', platform])
     if debug_build:
         args.extend(['--debug-build'])
 
@@ -596,10 +606,10 @@ class ChunkFinder(MachCommandBase):
         }
 
         temp_dir = None
-        if kwargs['debug']:
+        if kwargs['platform'] or kwargs['debug']:
             self._activate_virtualenv()
             self.virtualenv_manager.install_pip_package('mozdownload==1.17')
-            temp_dir, temp_path = download_mozinfo(kwargs['debug'])
+            temp_dir, temp_path = download_mozinfo(kwargs['platform'], kwargs['debug'])
             args['extra_mozinfo_json'] = temp_path
 
         found = False
