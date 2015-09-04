@@ -1805,7 +1805,7 @@ GeckoDriver.prototype.singleTap = function(cmd, resp) {
 
     case Context.CONTENT:
       this.addFrameCloseListener("tap");
-      yield this.listener.singleTap(id, x, y);
+      yield this.listener.singleTap({id: id, corx: x, cory: y});
       break;
   }
 };
@@ -1843,7 +1843,7 @@ GeckoDriver.prototype.actionChain = function(cmd, resp) {
 
     case Context.CONTENT:
       this.addFrameCloseListener("action chain");
-      resp.value = yield this.listener.actionChain(chain, nextId);
+      resp.value = yield this.listener.actionChain({chain: chain, nextId: nextId});
       break;
   }
 };
@@ -1863,7 +1863,8 @@ GeckoDriver.prototype.multiAction = function(cmd, resp) {
 
     case Context.CONTENT:
       this.addFrameCloseListener("multi action chain");
-      yield this.listener.multiAction( cmd.parameters.value, cmd.parameters.max_len);
+      yield this.listener.multiAction(
+          {value: cmd.parameters.value, maxlen: cmd.parameters.max_len});
       break;
   }
 };
