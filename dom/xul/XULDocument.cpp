@@ -890,7 +890,7 @@ XULDocument::ExecuteOnBroadcastHandlerFor(Element* aBroadcaster,
 
         // This is the right <observes> element. Execute the
         // |onbroadcast| event handler
-        WidgetEvent event(true, NS_XUL_BROADCAST);
+        WidgetEvent event(true, eXULBroadcast);
 
         nsCOMPtr<nsIPresShell> shell = GetShell();
         if (shell) {
