@@ -269,12 +269,22 @@ const LAZY_OBJECTS = ["XPIDatabase"];
 var gLazyObjectsLoaded = false;
 
 function loadLazyObjects() {
-  let scope = {};
-  scope.AddonInternal = AddonInternal;
-  scope.XPIProvider = XPIProvider;
-  scope.XPIStates = XPIStates;
-  Services.scriptloader.loadSubScript("resource://gre/modules/addons/XPIProviderUtils.js",
-                                      scope);
+  let uri = "resource://gre/modules/addons/XPIProviderUtils.js";
+  let scope = Cu.Sandbox(Services.scriptSecurityManager.getSystemPrincipal(), {
+    sandboxName: uri,
+    wantGlobalProperties: ["TextDecoder"],
+  });
+
+  let shared = {
+    AddonInternal,
+    XPIProvider,
+    XPIStates,
+  }
+
+  for (let key of Object.keys(shared))
+    scope[key] = shared[key];
+
+  Services.scriptloader.loadSubScript(uri, scope);
 
   for (let name of LAZY_OBJECTS) {
     delete gGlobalScope[name];
