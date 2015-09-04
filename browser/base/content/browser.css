@@ -458,13 +458,13 @@ panel[noactions] > richlistbox > richlistitem.overridable-action > .ac-url-box >
 }
 
 #PopupSearchAutoComplete {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#browser-search-autocomplete-result-popup");
+  -moz-binding: url("chrome://browser/content/search/search.xml#browser-search-autocomplete-result-popup");
 }
 
 /* Overlay a badge on top of the icon of additional open search providers
    in the search panel. */
 .addengine-item > .button-box > .button-icon {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#addengine-icon");
+  -moz-binding: url("chrome://browser/content/search/search.xml#addengine-icon");
   display: -moz-stack;
 }
 
