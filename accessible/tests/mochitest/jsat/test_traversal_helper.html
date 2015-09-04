@@ -83,7 +83,9 @@
       testTraversalHelper('List',
         ['Programming Language', 'listitem-2-1', 'listitem-3-1']);
 
-      vc.position = null;
+      testTraversalHelper('Section',
+        ['heading-1', 'heading-2', 'heading-3',
+         'heading-5', 'link-1', 'statusbar-1']);
 
       SimpleTest.finish();
     }
