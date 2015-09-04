@@ -221,10 +221,9 @@ public:
   bool ShouldUpdateMainThread();
   // The following methods are the various stages of RunThread processing.
   /**
-   * Advance all stream state to the new current time.
+   * Advance all stream state to mStateComputedTime.
    */
-  void UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime,
-                                   GraphTime aNextCurrentTime);
+  void UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime);
   /**
    * Process graph message for this iteration, update stream processing order,
    * and recompute stream blocking until aEndBlockingDecisions.
