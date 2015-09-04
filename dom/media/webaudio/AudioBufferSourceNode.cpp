@@ -44,7 +44,9 @@ public:
     mResampler(nullptr), mRemainingResamplerTail(0),
     mBufferEnd(0),
     mLoopStart(0), mLoopEnd(0),
-    mBufferSampleRate(0), mBufferPosition(0), mChannels(0),
+    mBufferPosition(0), mBufferSampleRate(0),
+    // mResamplerOutRate is initialized in UpdateResampler().
+    mChannels(0),
     mDopplerShift(1.0f),
     mDestination(aDestination->Stream()),
     mPlaybackRateTimeline(1.0f),
@@ -148,7 +150,9 @@ public:
       mBeginProcessing = mStart + 0.5;
     }
 
-    if (aOutRate == mBufferSampleRate && !mResampler) {
+    if (aChannels == 0 ||
+        (aOutRate == mBufferSampleRate && !mResampler)) {
+      mResamplerOutRate = aOutRate;
       return;
     }
 
@@ -158,14 +162,13 @@ public:
                                         SPEEX_RESAMPLER_QUALITY_MIN,
                                         nullptr);
     } else {
-      uint32_t currentOutSampleRate, currentInSampleRate;
-      speex_resampler_get_rate(mResampler, &currentInSampleRate,
-                               &currentOutSampleRate);
-      if (currentOutSampleRate == static_cast<uint32_t>(aOutRate)) {
+      if (mResamplerOutRate == aOutRate) {
         return;
       }
-      speex_resampler_set_rate(mResampler, currentInSampleRate, aOutRate);
+      speex_resampler_set_rate(mResampler, mBufferSampleRate, aOutRate);
     }
+
+    mResamplerOutRate = aOutRate;
 
     if (!BegunResampling()) {
       // Low pass filter effects from the resampler mean that samples before
@@ -330,7 +333,7 @@ public:
     uint32_t numFrames =
       std::min<StreamTime>(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
                            aMaxPos - *aCurrentPosition);
-    if (numFrames == WEBAUDIO_BLOCK_SIZE) {
+    if (numFrames == WEBAUDIO_BLOCK_SIZE || !aChannels) {
       aOutput->SetNull(numFrames);
     } else {
       if (*aOffsetWithinBlock == 0) {
@@ -368,6 +371,27 @@ public:
                                         aCurrentPosition, aBufferMax);
       return;
     }
+
+    if (aChannels == 0) {
+      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
+      // There is no attempt here to limit advance so that mBufferPosition is
+      // limited to aBufferMax.  The only observable affect of skipping the
+      // check would be in the precise timing of the ended event if the loop
+      // attribute is reset after playback has looped.
+      *aOffsetWithinBlock += availableInOutput;
+      *aCurrentPosition += availableInOutput;
+      // Rounding at the start and end of the period means that fractional
+      // increments essentially accumulate if outRate remains constant.  If
+      // outRate is varying, then accumulation happens on average but not
+      // precisely.
+      TrackTicks start = *aCurrentPosition *
+        mBufferSampleRate / mResamplerOutRate;
+      TrackTicks end = (*aCurrentPosition + availableInOutput) *
+        mBufferSampleRate / mResamplerOutRate;
+      mBufferPosition += end - start;
+      return;
+    }
+
     uint32_t numFrames = std::min<uint32_t>(aBufferMax - mBufferPosition,
                                             availableInOutput);
     if (numFrames == WEBAUDIO_BLOCK_SIZE) {
@@ -432,10 +456,6 @@ public:
     }
 
     uint32_t channels = mBuffer->GetChannels();
-    if (!channels) {
-      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
-      return;
-    }
 
     UpdateSampleRateIfNeeded(channels);
 
@@ -518,8 +538,9 @@ public:
   int32_t mBufferEnd;
   int32_t mLoopStart;
   int32_t mLoopEnd;
-  int32_t mBufferSampleRate;
   int32_t mBufferPosition;
+  int32_t mBufferSampleRate;
+  int32_t mResamplerOutRate;
   uint32_t mChannels;
   float mDopplerShift;
   AudioNodeStream* mDestination;
