@@ -28,7 +28,6 @@ namespace dom {
 class DocumentFragment;
 class DOMRect;
 class DOMRectList;
-class Selection;
 } // namespace dom
 } // namespace mozilla
 
@@ -43,7 +42,26 @@ class nsRange final : public nsIDOMRange,
   virtual ~nsRange();
 
 public:
-  explicit nsRange(nsINode* aNode);
+  explicit nsRange(nsINode* aNode)
+    : mRoot(nullptr)
+    , mStartOffset(0)
+    , mEndOffset(0)
+    , mIsPositioned(false)
+    , mIsDetached(false)
+    , mMaySpanAnonymousSubtrees(false)
+    , mInSelection(false)
+    , mIsGenerated(false)
+    , mStartOffsetWasIncremented(false)
+    , mEndOffsetWasIncremented(false)
+    , mEnableGravitationOnElementRemoval(true)
+#ifdef DEBUG
+    , mAssertNextInsertOrAppendIndex(-1)
+    , mAssertNextInsertOrAppendNode(nullptr)
+#endif
+  {
+    MOZ_ASSERT(aNode, "range isn't in a document!");
+    mOwner = aNode->OwnerDoc();
+  }
 
   static nsresult CreateRange(nsIDOMNode* aStartParent, int32_t aStartOffset,
                               nsIDOMNode* aEndParent, int32_t aEndOffset,
@@ -111,18 +129,31 @@ public:
   }
   
   /**
-   * Return true iff this range is part of a Selection object
+   * Return true iff this range is part of at least one Selection object
    * and isn't detached.
    */
   bool IsInSelection() const
   {
-    return !!mSelection;
+    return mInSelection;
   }
 
   /**
    * Called when the range is added/removed from a Selection.
    */
-  void SetSelection(mozilla::dom::Selection* aSelection);
+  void SetInSelection(bool aInSelection)
+  {
+    if (mInSelection == aInSelection) {
+      return;
+    }
+    mInSelection = aInSelection;
+    nsINode* commonAncestor = GetCommonAncestor();
+    NS_ASSERTION(commonAncestor, "unexpected disconnected nodes");
+    if (mInSelection) {
+      RegisterCommonAncestor(commonAncestor);
+    } else {
+      UnregisterCommonAncestor(commonAncestor);
+    }
+  }
 
   /**
    * Return true if this range was generated.
@@ -318,13 +349,13 @@ protected:
   nsCOMPtr<nsINode> mRoot;
   nsCOMPtr<nsINode> mStartParent;
   nsCOMPtr<nsINode> mEndParent;
-  nsRefPtr<mozilla::dom::Selection> mSelection;
   int32_t mStartOffset;
   int32_t mEndOffset;
 
   bool mIsPositioned : 1;
   bool mIsDetached : 1;
   bool mMaySpanAnonymousSubtrees : 1;
+  bool mInSelection : 1;
   bool mIsGenerated : 1;
   bool mStartOffsetWasIncremented : 1;
   bool mEndOffsetWasIncremented : 1;
