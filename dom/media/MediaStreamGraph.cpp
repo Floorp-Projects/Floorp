@@ -830,10 +830,6 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
     AudioSegment* audio = track->Get<AudioSegment>();
     AudioSegment output;
 
-    // offset and audioOutput.mLastTickWritten can differ by at most one sample,
-    // because of the rounding issue. We track that to ensure we don't skip a
-    // sample. One sample may be played twice, but this should not happen
-    // again during an unblocked sequence of track samples.
     StreamTime offset = GraphTimeToStreamTime(aStream, aFrom);
 
     // We don't update aStream->mBufferStartTime here to account for time spent
