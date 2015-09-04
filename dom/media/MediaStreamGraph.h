@@ -17,7 +17,6 @@
 #include "nsTArray.h"
 #include "nsIRunnable.h"
 #include "StreamBuffer.h"
-#include "TimeVarying.h"
 #include "VideoFrameContainer.h"
 #include "VideoSegment.h"
 #include "MainThreadUtils.h"
