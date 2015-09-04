@@ -1268,6 +1268,85 @@ MinSize(nsIFrame* aChild, nsRenderingContext* aRC, WritingMode aCBWM,
   return nsLayoutUtils::MinSizeContributionForAxis(axis, aRC, aChild,
                                                    aConstraint);
 }
+
+/**
+ * Return the [min|max]-content contribution of aChild to its parent (i.e.
+ * the child's margin-box) in aDimension.
+ */
+static nscoord
+ContentContribution(nsIFrame*                         aChild,
+                    const nsHTMLReflowState*          aReflowState,
+                    nsRenderingContext*               aRC,
+                    WritingMode                       aCBWM,
+                    nsGridContainerFrame::Dimension   aDimension,
+                    nsLayoutUtils::IntrinsicISizeType aConstraint)
+{
+  PhysicalAxis axis(((aDimension == nsGridContainerFrame::eColDimension) ==
+                     aCBWM.IsVertical()) ? eAxisVertical : eAxisHorizontal);
+  nscoord size = nsLayoutUtils::IntrinsicForAxis(axis, aRC, aChild, aConstraint,
+                   nsLayoutUtils::BAIL_IF_REFLOW_NEEDED);
+  if (size == NS_INTRINSIC_WIDTH_UNKNOWN) {
+    // We need to reflow the child to find its BSize contribution.
+    WritingMode wm = aChild->GetWritingMode();
+    nsContainerFrame* parent = aChild->GetParent();
+    nsPresContext* pc = aChild->PresContext();
+    Maybe<nsHTMLReflowState> dummyParentState;
+    const nsHTMLReflowState* rs = aReflowState;
+    if (!aReflowState) {
+      MOZ_ASSERT(!parent->HasAnyStateBits(NS_FRAME_IN_REFLOW));
+      dummyParentState.emplace(pc, parent, aRC,
+                               LogicalSize(parent->GetWritingMode(), 0,
+                                           NS_UNCONSTRAINEDSIZE),
+                               nsHTMLReflowState::DUMMY_PARENT_REFLOW_STATE);
+      rs = dummyParentState.ptr();
+    }
+#ifdef DEBUG
+    // This will suppress various CRAZY_SIZE warnings for this reflow.
+    parent->Properties().Set(nsContainerFrame::DebugReflowingWithInfiniteISize(),
+                             parent /* anything non-null will do */);
+#endif
+    // XXX this will give mostly correct results for now (until bug 1174569).
+    LogicalSize availableSize(wm, INFINITE_ISIZE_COORD, NS_UNCONSTRAINEDSIZE);
+    nsHTMLReflowState childRS(pc, *rs, aChild, availableSize);
+    nsHTMLReflowMetrics childSize(childRS);
+    nsReflowStatus childStatus;
+    const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW;
+    parent->ReflowChild(aChild, pc, childSize, childRS, wm,
+                        LogicalPoint(wm), nsSize(), flags, childStatus);
+    parent->FinishReflowChild(aChild, pc, childSize, &childRS, wm,
+                              LogicalPoint(wm), nsSize(), flags);
+    size = childSize.BSize(wm);
+    nsIFrame::IntrinsicISizeOffsetData offsets = aChild->IntrinsicBSizeOffsets();
+    size += offsets.hMargin;
+    size = nsLayoutUtils::AddPercents(aConstraint, size, offsets.hPctMargin);
+#ifdef DEBUG
+    parent->Properties().Delete(nsContainerFrame::DebugReflowingWithInfiniteISize());
+#endif
+  }
+  return std::max(size, 0);
+}
+
+static nscoord
+MinContentContribution(nsIFrame*                       aChild,
+                       const nsHTMLReflowState*        aRS,
+                       nsRenderingContext*             aRC,
+                       WritingMode                     aCBWM,
+                       nsGridContainerFrame::Dimension aDimension)
+{
+  return ContentContribution(aChild, aRS, aRC, aCBWM, aDimension,
+                             nsLayoutUtils::MIN_ISIZE);
+}
+
+static nscoord
+MaxContentContribution(nsIFrame*                       aChild,
+                       const nsHTMLReflowState*        aRS,
+                       nsRenderingContext*             aRC,
+                       WritingMode                     aCBWM,
+                       nsGridContainerFrame::Dimension aDimension)
+{
+  return ContentContribution(aChild, aRS, aRC, aCBWM, aDimension,
+                             nsLayoutUtils::PREF_ISIZE);
+}
 #endif
 
 void
