@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <org.mozilla.gecko.home.HomeListView
+            android:id="@+id/range_list"
+            style="@style/Widget.HistoryListView"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="@dimen/split_plane_left_pane_weight"/>
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/divider_light"/>
+
+        <ViewStub android:id="@id/home_empty_view_stub"
+                  android:layout="@layout/home_empty_panel"
+                  android:layout_height="match_parent"
+                  android:layout_width="0dp"
+                  android:layout_weight="@dimen/split_plane_right_pane_weight"/>
+
+        <org.mozilla.gecko.home.HomeListView
+            android:id="@+id/list"
+            style="@style/Widget.HistoryListView"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="@dimen/split_plane_right_pane_weight"/>
+
+    </LinearLayout>
+
+    <Button android:id="@+id/clear_history_button"
+            style="@style/Widget.Home.ActionButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/home_button_bar_bg"
+            android:text="@string/home_clear_history_button"
+            android:gravity="center"
+            android:visibility="gone"/>
+
+</LinearLayout>

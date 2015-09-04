@@ -6795,9 +6795,13 @@ var gIdentityHandler = {
     delete this._permissionList;
     return this._permissionList = document.getElementById("identity-popup-permission-list");
   },
-  get _permissionSubviewList () {
-    delete this._permissionSubviewList;
-    return this._permissionSubviewList = document.getElementById("identity-popup-permission-subview-list");
+  get _permissionSubviewListPageFunctionality () {
+    delete this._permissionSubviewListPageFunctionality;
+    return this._permissionSubviewListPageFunctionality = document.getElementById("permission-subview-list-page-functionality");
+  },
+  get _permissionSubviewListSystemAccess () {
+    delete this._permissionSubviewListSystemAccess;
+    return this._permissionSubviewListSystemAccess = document.getElementById("permission-subview-list-system-access");
   },
 
   /**
@@ -6819,7 +6823,8 @@ var gIdentityHandler = {
     this._identityIcon = document.getElementById("page-proxy-favicon");
     this._permissionsContainer = document.getElementById("identity-popup-permissions");
     this._permissionList = document.getElementById("identity-popup-permission-list");
-    this._permissionSubviewList = document.getElementById("identity-popup-permission-subview-list");
+    this._permissionSubviewListPageFunctionality = document.getElementById("permission-subview-list-page-functionality");
+    this._permissionSubviewListSystemAccess = document.getElementById("permission-subview-list-system-access");
   },
 
   /**
@@ -7290,26 +7295,33 @@ var gIdentityHandler = {
   },
 
   updateSitePermissions: function () {
-    while (this._permissionList.hasChildNodes())
-      this._permissionList.removeChild(this._permissionList.lastChild);
-
-    while (this._permissionSubviewList.hasChildNodes())
-      this._permissionSubviewList.removeChild(this._permissionSubviewList.lastChild);
+    // Clear all lists and then repopulate them.
+    this._permissionList.textContent = "";
+    this._permissionSubviewListPageFunctionality.textContent = "";
+    this._permissionSubviewListSystemAccess.textContent = "";
 
     let uri = gBrowser.currentURI;
 
-    for (let permission of SitePermissions.listPermissions()) {
+    for (let permission of SitePermissions.listPageFunctionalityPermissions()) {
       let state = SitePermissions.get(uri, permission);
       let item = this._createPermissionItem(permission, state);
+      this._permissionSubviewListPageFunctionality.appendChild(item);
+    }
 
+    for (let permission of SitePermissions.listSystemAccessPermissions()) {
+      let state = SitePermissions.get(uri, permission);
+      let item = this._createPermissionItem(permission, state);
+      this._permissionSubviewListSystemAccess.appendChild(item);
+    }
+
+    for (let permission of SitePermissions.listPermissions()) {
       // Add to the main view only if there is a known / non-default
       // value for the permission for this site.
+      let state = SitePermissions.get(uri, permission);
       if (state != SitePermissions.UNKNOWN) {
-        this._permissionList.appendChild(item.cloneNode(true));
+        let item = this._createPermissionItem(permission, state);
+        this._permissionList.appendChild(item);
       }
-
-      // Add all permissions to the subview.
-      this._permissionSubviewList.appendChild(item);
     }
 
     this._permissionsContainer.hidden = !this._permissionList.hasChildNodes();
