@@ -595,7 +595,7 @@ FrameIter::Data::Data(JSContext* cx, SavedOption savedOption,
 }
 
 FrameIter::Data::Data(const FrameIter::Data& other)
-  : cx_(nullptr),
+  : cx_(other.cx_),
     savedOption_(other.savedOption_),
     contextOption_(other.contextOption_),
     debuggerEvalOption_(other.debuggerEvalOption_),
@@ -645,12 +645,11 @@ FrameIter::FrameIter(const FrameIter& other)
 {
 }
 
-FrameIter::FrameIter(JSContext* cx, const Data& data)
+FrameIter::FrameIter(const Data& data)
   : data_(data),
-    ionInlineFrames_(cx, data_.jitFrames_.isIonScripted() ? &data_.jitFrames_ : nullptr)
+    ionInlineFrames_(data.cx_, data_.jitFrames_.isIonScripted() ? &data_.jitFrames_ : nullptr)
 {
-    MOZ_ASSERT(!data.cx_);
-    data_.cx_ = cx;
+    MOZ_ASSERT(data.cx_);
 
     if (data_.jitFrames_.isIonScripted()) {
         while (ionInlineFrames_.frameNo() != data.ionInlineFrameNo_)
@@ -756,6 +755,11 @@ FrameIter::copyData() const
     MOZ_ASSERT(data_.state_ != ASMJS);
     if (data && data_.jitFrames_.isIonScripted())
         data->ionInlineFrameNo_ = ionInlineFrames_.frameNo();
+    // Give the copied Data the cx of the current activation, which may be
+    // different than the cx that the current FrameIter was constructed
+    // with. This ensures that when we instantiate another FrameIter with the
+    // copied data, its cx is still alive.
+    data->cx_ = activation()->cx();
     return data;
 }
 

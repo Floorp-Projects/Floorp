@@ -39,7 +39,7 @@ JEMALLOC_INLINE_C arena_chunk_map_misc_t *
 arena_miscelm_key_create(size_t size)
 {
 
-	return ((arena_chunk_map_misc_t *)((size << CHUNK_MAP_SIZE_SHIFT) |
+	return ((arena_chunk_map_misc_t *)(arena_mapbits_size_encode(size) |
 	    CHUNK_MAP_KEY));
 }
 
@@ -58,8 +58,7 @@ arena_miscelm_key_size_get(const arena_chunk_map_misc_t *miscelm)
 
 	assert(arena_miscelm_is_key(miscelm));
 
-	return (((uintptr_t)miscelm & CHUNK_MAP_SIZE_MASK) >>
-	    CHUNK_MAP_SIZE_SHIFT);
+	return (arena_mapbits_size_decode((uintptr_t)miscelm));
 }
 
 JEMALLOC_INLINE_C size_t
@@ -73,7 +72,7 @@ arena_miscelm_size_get(arena_chunk_map_misc_t *miscelm)
 	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(miscelm);
 	pageind = arena_miscelm_to_pageind(miscelm);
 	mapbits = arena_mapbits_get(chunk, pageind);
-	return ((mapbits & CHUNK_MAP_SIZE_MASK) >> CHUNK_MAP_SIZE_SHIFT);
+	return (arena_mapbits_size_decode(mapbits));
 }
 
 JEMALLOC_INLINE_C int
@@ -315,7 +314,7 @@ arena_run_reg_dalloc(arena_run_t *run, void *ptr)
 	arena_chunk_t *chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(run);
 	size_t pageind = ((uintptr_t)ptr - (uintptr_t)chunk) >> LG_PAGE;
 	size_t mapbits = arena_mapbits_get(chunk, pageind);
-	index_t binind = arena_ptr_small_binind_get(ptr, mapbits);
+	szind_t binind = arena_ptr_small_binind_get(ptr, mapbits);
 	arena_bin_info_t *bin_info = &arena_bin_info[binind];
 	unsigned regind = arena_run_regind(run, bin_info, ptr);
 
@@ -508,7 +507,7 @@ arena_run_init_large(arena_t *arena, arena_run_t *run, size_t size, bool zero)
 
 static bool
 arena_run_split_small(arena_t *arena, arena_run_t *run, size_t size,
-    index_t binind)
+    szind_t binind)
 {
 	arena_chunk_t *chunk;
 	arena_chunk_map_misc_t *miscelm;
@@ -780,7 +779,7 @@ arena_chunk_dalloc(arena_t *arena, arena_chunk_t *chunk)
 static void
 arena_huge_malloc_stats_update(arena_t *arena, size_t usize)
 {
-	index_t index = size2index(usize) - nlclasses - NBINS;
+	szind_t index = size2index(usize) - nlclasses - NBINS;
 
 	cassert(config_stats);
 
@@ -793,7 +792,7 @@ arena_huge_malloc_stats_update(arena_t *arena, size_t usize)
 static void
 arena_huge_malloc_stats_update_undo(arena_t *arena, size_t usize)
 {
-	index_t index = size2index(usize) - nlclasses - NBINS;
+	szind_t index = size2index(usize) - nlclasses - NBINS;
 
 	cassert(config_stats);
 
@@ -806,7 +805,7 @@ arena_huge_malloc_stats_update_undo(arena_t *arena, size_t usize)
 static void
 arena_huge_dalloc_stats_update(arena_t *arena, size_t usize)
 {
-	index_t index = size2index(usize) - nlclasses - NBINS;
+	szind_t index = size2index(usize) - nlclasses - NBINS;
 
 	cassert(config_stats);
 
@@ -819,7 +818,7 @@ arena_huge_dalloc_stats_update(arena_t *arena, size_t usize)
 static void
 arena_huge_dalloc_stats_update_undo(arena_t *arena, size_t usize)
 {
-	index_t index = size2index(usize) - nlclasses - NBINS;
+	szind_t index = size2index(usize) - nlclasses - NBINS;
 
 	cassert(config_stats);
 
@@ -1125,7 +1124,7 @@ arena_run_alloc_large(arena_t *arena, size_t size, bool zero)
 }
 
 static arena_run_t *
-arena_run_alloc_small_helper(arena_t *arena, size_t size, index_t binind)
+arena_run_alloc_small_helper(arena_t *arena, size_t size, szind_t binind)
 {
 	arena_run_t *run = arena_run_first_best_fit(arena, size);
 	if (run != NULL) {
@@ -1136,7 +1135,7 @@ arena_run_alloc_small_helper(arena_t *arena, size_t size, index_t binind)
 }
 
 static arena_run_t *
-arena_run_alloc_small(arena_t *arena, size_t size, index_t binind)
+arena_run_alloc_small(arena_t *arena, size_t size, szind_t binind)
 {
 	arena_chunk_t *chunk;
 	arena_run_t *run;
@@ -1750,15 +1749,6 @@ arena_run_dalloc(arena_t *arena, arena_run_t *run, bool dirty, bool cleaned,
 }
 
 static void
-arena_run_dalloc_decommit(arena_t *arena, arena_chunk_t *chunk,
-    arena_run_t *run)
-{
-	bool committed = arena_run_decommit(arena, chunk, run);
-
-	arena_run_dalloc(arena, run, committed, false, !committed);
-}
-
-static void
 arena_run_trim_head(arena_t *arena, arena_chunk_t *chunk, arena_run_t *run,
     size_t oldsize, size_t newsize)
 {
@@ -1889,7 +1879,7 @@ static arena_run_t *
 arena_bin_nonfull_run_get(arena_t *arena, arena_bin_t *bin)
 {
 	arena_run_t *run;
-	index_t binind;
+	szind_t binind;
 	arena_bin_info_t *bin_info;
 
 	/* Look for a usable run. */
@@ -1940,7 +1930,7 @@ static void *
 arena_bin_malloc_hard(arena_t *arena, arena_bin_t *bin)
 {
 	void *ret;
-	index_t binind;
+	szind_t binind;
 	arena_bin_info_t *bin_info;
 	arena_run_t *run;
 
@@ -1986,7 +1976,7 @@ arena_bin_malloc_hard(arena_t *arena, arena_bin_t *bin)
 }
 
 void
-arena_tcache_fill_small(arena_t *arena, tcache_bin_t *tbin, index_t binind,
+arena_tcache_fill_small(arena_t *arena, tcache_bin_t *tbin, szind_t binind,
     uint64_t prof_accumbytes)
 {
 	unsigned i, nfill;
@@ -2131,7 +2121,7 @@ arena_dalloc_junk_small_t *arena_dalloc_junk_small =
 void
 arena_quarantine_junk_small(void *ptr, size_t usize)
 {
-	index_t binind;
+	szind_t binind;
 	arena_bin_info_t *bin_info;
 	cassert(config_fill);
 	assert(opt_junk_free);
@@ -2149,7 +2139,7 @@ arena_malloc_small(arena_t *arena, size_t size, bool zero)
 	void *ret;
 	arena_bin_t *bin;
 	arena_run_t *run;
-	index_t binind;
+	szind_t binind;
 
 	binind = size2index(size);
 	assert(binind < NBINS);
@@ -2233,7 +2223,7 @@ arena_malloc_large(arena_t *arena, size_t size, bool zero)
 	ret = (void *)((uintptr_t)arena_miscelm_to_rpages(miscelm) +
 	    random_offset);
 	if (config_stats) {
-		index_t index = size2index(usize) - NBINS;
+		szind_t index = size2index(usize) - NBINS;
 
 		arena->stats.nmalloc_large++;
 		arena->stats.nrequests_large++;
@@ -2326,7 +2316,7 @@ arena_palloc_large(tsd_t *tsd, arena_t *arena, size_t usize, size_t alignment,
 	ret = arena_miscelm_to_rpages(miscelm);
 
 	if (config_stats) {
-		index_t index = size2index(usize) - NBINS;
+		szind_t index = size2index(usize) - NBINS;
 
 		arena->stats.nmalloc_large++;
 		arena->stats.nrequests_large++;
@@ -2385,7 +2375,7 @@ arena_prof_promoted(const void *ptr, size_t size)
 {
 	arena_chunk_t *chunk;
 	size_t pageind;
-	index_t binind;
+	szind_t binind;
 
 	cassert(config_prof);
 	assert(ptr != NULL);
@@ -2413,7 +2403,7 @@ arena_dissociate_bin_run(arena_chunk_t *chunk, arena_run_t *run,
 	if (run == bin->runcur)
 		bin->runcur = NULL;
 	else {
-		index_t binind = arena_bin_index(extent_node_arena_get(
+		szind_t binind = arena_bin_index(extent_node_arena_get(
 		    &chunk->node), bin);
 		arena_bin_info_t *bin_info = &arena_bin_info[binind];
 
@@ -2440,7 +2430,7 @@ arena_dalloc_bin_run(arena_t *arena, arena_chunk_t *chunk, arena_run_t *run,
 	malloc_mutex_unlock(&bin->lock);
 	/******************************/
 	malloc_mutex_lock(&arena->lock);
-	arena_run_dalloc_decommit(arena, chunk, run);
+	arena_run_dalloc(arena, run, true, false, false);
 	malloc_mutex_unlock(&arena->lock);
 	/****************************/
 	malloc_mutex_lock(&bin->lock);
@@ -2477,7 +2467,7 @@ arena_dalloc_bin_locked_impl(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 	arena_run_t *run;
 	arena_bin_t *bin;
 	arena_bin_info_t *bin_info;
-	index_t binind;
+	szind_t binind;
 
 	pageind = ((uintptr_t)ptr - (uintptr_t)chunk) >> LG_PAGE;
 	rpages_ind = pageind - arena_mapbits_small_runind_get(chunk, pageind);
@@ -2574,7 +2564,7 @@ arena_dalloc_large_locked_impl(arena_t *arena, arena_chunk_t *chunk,
 		if (!junked)
 			arena_dalloc_junk_large(ptr, usize);
 		if (config_stats) {
-			index_t index = size2index(usize) - NBINS;
+			szind_t index = size2index(usize) - NBINS;
 
 			arena->stats.ndalloc_large++;
 			arena->stats.allocated_large -= usize;
@@ -2583,7 +2573,7 @@ arena_dalloc_large_locked_impl(arena_t *arena, arena_chunk_t *chunk,
 		}
 	}
 
-	arena_run_dalloc_decommit(arena, chunk, run);
+	arena_run_dalloc(arena, run, true, false, false);
 }
 
 void
@@ -2621,8 +2611,8 @@ arena_ralloc_large_shrink(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 	arena_run_trim_tail(arena, chunk, run, oldsize + large_pad, size +
 	    large_pad, true);
 	if (config_stats) {
-		index_t oldindex = size2index(oldsize) - NBINS;
-		index_t index = size2index(size) - NBINS;
+		szind_t oldindex = size2index(oldsize) - NBINS;
+		szind_t index = size2index(size) - NBINS;
 
 		arena->stats.ndalloc_large++;
 		arena->stats.allocated_large -= oldsize;
@@ -2700,8 +2690,8 @@ arena_ralloc_large_grow(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 		    pageind+npages-1)));
 
 		if (config_stats) {
-			index_t oldindex = size2index(oldsize) - NBINS;
-			index_t index = size2index(size) - NBINS;
+			szind_t oldindex = size2index(oldsize) - NBINS;
+			szind_t index = size2index(size) - NBINS;
 
 			arena->stats.ndalloc_large++;
 			arena->stats.allocated_large -= oldsize;
