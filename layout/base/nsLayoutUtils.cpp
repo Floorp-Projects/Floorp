@@ -4733,6 +4733,59 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext* aRenderingContext,
 }
 
 /* static */ nscoord
+nsLayoutUtils::MinSizeContributionForAxis(PhysicalAxis        aAxis,
+                                          nsRenderingContext* aRC,
+                                          nsIFrame*           aFrame,
+                                          IntrinsicISizeType  aType,
+                                          uint32_t            aFlags)
+{
+  NS_PRECONDITION(aFrame, "null frame");
+  NS_PRECONDITION(aFrame->GetParent(),
+                  "MinSizeContributionForAxis called on frame not in tree");
+
+#ifdef DEBUG_INTRINSIC_WIDTH
+  nsFrame::IndentBy(stderr, gNoiseIndent);
+  static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+  printf_stderr(" %s min-isize for %s WM:\n",
+                aType == MIN_ISIZE ? "min" : "pref",
+                aWM.IsVertical() ? "vertical" : "horizontal");
+#endif
+
+  // If aFrame is a container for font size inflation, then shrink
+  // wrapping inside of it should not apply font size inflation.
+  AutoMaybeDisableFontInflation an(aFrame);
+
+  PhysicalAxis ourInlineAxis =
+    aFrame->GetWritingMode().PhysicalAxis(eLogicalAxisInline);
+  nsIFrame::IntrinsicISizeOffsetData offsets =
+    ourInlineAxis == aAxis ? aFrame->IntrinsicISizeOffsets()
+                           : aFrame->IntrinsicBSizeOffsets();
+  nscoord result = 0;
+  nscoord min = 0;
+  const nsStylePosition* stylePos = aFrame->StylePosition();
+  uint8_t boxSizing = stylePos->mBoxSizing;
+  const nsStyleCoord& style = aAxis == eAxisHorizontal ? stylePos->mMinWidth
+                                                       : stylePos->mMinHeight;
+  nscoord minSize;
+  nscoord* fixedMinSize = nullptr;
+  if (GetAbsoluteCoord(style, minSize)) {
+    fixedMinSize = &minSize;
+  }
+  result = AddIntrinsicSizeOffset(aRC, aFrame, offsets, aType, boxSizing,
+                                  result, min, style, fixedMinSize,
+                                  style, fixedMinSize, style, aFlags, aAxis);
+
+#ifdef DEBUG_INTRINSIC_WIDTH
+  nsFrame::IndentBy(stderr, gNoiseIndent);
+  static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+  printf_stderr(" %s min-isize is %d twips.\n",
+         aType == MIN_ISIZE ? "min" : "pref", result);
+#endif
+
+  return result;
+}
+
+/* static */ nscoord
 nsLayoutUtils::ComputeCBDependentValue(nscoord aPercentBasis,
                                        const nsStyleCoord& aCoord)
 {
