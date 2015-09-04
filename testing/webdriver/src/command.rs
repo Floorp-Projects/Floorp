@@ -4,11 +4,11 @@ use std::collections::BTreeMap;
 
 use common::{Date, Nullable, WebElement, FrameId, LocatorStrategy};
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
-use httpapi::Route;
+use httpapi::{Route, WebDriverExtensionRoute, VoidWebDriverExtensionRoute};
 
 
 #[derive(PartialEq)]
-pub enum WebDriverCommand {
+pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     NewSession,
     DeleteSession,
     Get(GetParameters),
@@ -57,25 +57,39 @@ pub enum WebDriverCommand {
     AcceptAlert,
     GetAlertText,
     SendAlertText(SendAlertTextParameters),
-    TakeScreenshot
+    TakeScreenshot,
+    Extension(T)
+}
+
+pub trait WebDriverExtensionCommand : Clone + Send + PartialEq {
+    fn parameters_json(&self) -> Option<Json>;
+}
+
+#[derive(Clone, PartialEq)]
+pub struct VoidWebDriverExtensionCommand;
+
+impl WebDriverExtensionCommand for VoidWebDriverExtensionCommand {
+    fn parameters_json(&self) -> Option<Json> {
+        panic!("No extensions implemented");
+    }
 }
 
 #[derive(PartialEq)]
-pub struct WebDriverMessage {
+pub struct WebDriverMessage <U: WebDriverExtensionRoute=VoidWebDriverExtensionRoute> {
     pub session_id: Option<String>,
-    pub command: WebDriverCommand
+    pub command: WebDriverCommand<U::Command>,
 }
 
-impl WebDriverMessage {
-    pub fn new(session_id: Option<String>, command: WebDriverCommand) -> WebDriverMessage {
+impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
+    pub fn new(session_id: Option<String>, command: WebDriverCommand<U::Command>) -> WebDriverMessage<U> {
         WebDriverMessage {
             session_id: session_id,
-            command: command
+            command: command,
         }
     }
 
-    pub fn from_http(match_type: Route, params: &Captures, body: &str, requires_body: bool) -> WebDriverResult<WebDriverMessage> {
-        let session_id = WebDriverMessage::get_session_id(params);
+    pub fn from_http(match_type: Route<U>, params: &Captures, body: &str, requires_body: bool) -> WebDriverResult<WebDriverMessage<U>> {
+        let session_id = WebDriverMessage::<U>::get_session_id(params);
         let body_data = if requires_body {
             debug!("Got request body {}", body);
             match Json::from_str(body) {
@@ -286,6 +300,9 @@ impl WebDriverMessage {
                 WebDriverCommand::SendAlertText(parameters)
             },
             Route::TakeScreenshot => WebDriverCommand::TakeScreenshot,
+            Route::Extension(ref extension) => {
+                try!(extension.command(params, &body_data))
+            }
         };
         Ok(WebDriverMessage::new(session_id, command))
     }
@@ -295,7 +312,7 @@ impl WebDriverMessage {
     }
 }
 
-impl ToJson for WebDriverMessage {
+impl <U:WebDriverExtensionRoute> ToJson for WebDriverMessage<U> {
     fn to_json(&self) -> Json {
         let mut data = BTreeMap::new();
         let parameters = match self.command {
@@ -332,6 +349,7 @@ impl ToJson for WebDriverMessage {
             WebDriverCommand::ExecuteAsyncScript(ref x) => Some(x.to_json()),
             WebDriverCommand::AddCookie(ref x) => Some(x.to_json()),
             WebDriverCommand::SendAlertText(ref x) => Some(x.to_json()),
+            WebDriverCommand::Extension(ref x) => x.parameters_json(),
         };
         if parameters.is_some() {
             data.insert("parameters".to_string(), parameters.unwrap());
@@ -340,7 +358,7 @@ impl ToJson for WebDriverMessage {
     }
 }
 
-trait Parameters: Sized {
+pub trait Parameters: Sized {
     fn from_json(body: &Json) -> WebDriverResult<Self>;
 }
 

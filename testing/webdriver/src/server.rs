@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 use std::io::{Write, Read};
 use std::sync::Mutex;
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -12,11 +13,11 @@ use hyper::status::StatusCode;
 
 use command::{WebDriverMessage, WebDriverCommand};
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
-use httpapi::WebDriverHttpApi;
+use httpapi::{WebDriverHttpApi, WebDriverExtensionRoute, VoidWebDriverExtensionRoute};
 use response::WebDriverResponse;
 
-enum DispatchMessage {
-    HandleWebDriver(WebDriverMessage, Sender<WebDriverResult<WebDriverResponse>>),
+enum DispatchMessage<U: WebDriverExtensionRoute> {
+    HandleWebDriver(WebDriverMessage<U>, Sender<WebDriverResult<WebDriverResponse>>),
     Quit
 }
 
@@ -33,25 +34,29 @@ impl Session {
     }
 }
 
-pub trait WebDriverHandler : Send {
-    fn handle_command(&mut self, session: &Option<Session>, msg: &WebDriverMessage) -> WebDriverResult<WebDriverResponse>;
+pub trait WebDriverHandler<U: WebDriverExtensionRoute=VoidWebDriverExtensionRoute> : Send {
+    fn handle_command(&mut self, session: &Option<Session>, msg: &WebDriverMessage<U>) -> WebDriverResult<WebDriverResponse>;
     fn delete_session(&mut self, session: &Option<Session>);
 }
 
-struct Dispatcher<T: WebDriverHandler> {
+struct Dispatcher<T: WebDriverHandler<U>,
+                  U: WebDriverExtensionRoute> {
     handler: T,
-    session: Option<Session>
+    session: Option<Session>,
+    extension_type: PhantomData<U>,
 }
 
-impl<T: WebDriverHandler> Dispatcher<T> {
-    fn new(handler: T) -> Dispatcher<T> {
+impl <T: WebDriverHandler<U>,
+      U: WebDriverExtensionRoute> Dispatcher<T,U> {
+    fn new(handler: T) -> Dispatcher<T,U> {
         Dispatcher {
             handler: handler,
-            session: None
+            session: None,
+            extension_type: PhantomData
         }
     }
 
-    fn run(&mut self, msg_chan: Receiver<DispatchMessage>) {
+    fn run(&mut self, msg_chan: Receiver<DispatchMessage<U>>) {
         loop {
             match msg_chan.recv() {
                 Ok(DispatchMessage::HandleWebDriver(msg, resp_chan)) => {
@@ -91,7 +96,7 @@ impl<T: WebDriverHandler> Dispatcher<T> {
         self.session = None;
     }
 
-    fn check_session(&self, msg: &WebDriverMessage) -> WebDriverResult<()> {
+    fn check_session(&self, msg: &WebDriverMessage<U>) -> WebDriverResult<()> {
         match msg.session_id {
             Some(ref msg_session_id) => {
                 match self.session {
@@ -142,13 +147,13 @@ impl<T: WebDriverHandler> Dispatcher<T> {
     }
 }
 
-struct HttpHandler {
-    chan: Mutex<Sender<DispatchMessage>>,
-    api: Mutex<WebDriverHttpApi>
+struct HttpHandler<U: WebDriverExtensionRoute> {
+    chan: Mutex<Sender<DispatchMessage<U>>>,
+    api: Mutex<WebDriverHttpApi<U>>
 }
 
-impl HttpHandler {
-    fn new(api: WebDriverHttpApi, chan: Sender<DispatchMessage>) -> HttpHandler {
+impl <U: WebDriverExtensionRoute> HttpHandler<U> {
+    fn new(api: WebDriverHttpApi<U>, chan: Sender<DispatchMessage<U>>) -> HttpHandler<U> {
         HttpHandler {
             chan: Mutex::new(chan),
             api: Mutex::new(api)
@@ -156,7 +161,7 @@ impl HttpHandler {
     }
 }
 
-impl Handler for HttpHandler {
+impl <U: WebDriverExtensionRoute> Handler for HttpHandler<U> {
     fn handle(&self, req: Request, res: Response) {
         let mut req = req;
         let mut res = res;
@@ -227,10 +232,13 @@ impl Handler for HttpHandler {
     }
 }
 
-pub fn start<T: 'static+WebDriverHandler>(address: SocketAddr, handler: T) {
+pub fn start<T: 'static+WebDriverHandler<U>,
+             U: 'static+WebDriverExtensionRoute>(address: SocketAddr,
+                                                 handler: T,
+                                                 extension_routes:Vec<(Method, &str, U)>) {
     let (msg_send, msg_recv) = channel();
 
-    let api = WebDriverHttpApi::new();
+    let api = WebDriverHttpApi::new(extension_routes);
     let http_handler = HttpHandler::new(api, msg_send);
     let server = Server::http(address).unwrap();
 

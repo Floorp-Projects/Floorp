@@ -7,7 +7,7 @@ extern crate hyper;
 extern crate regex;
 
 #[macro_use] pub mod macros;
-mod httpapi;
+pub mod httpapi;
 pub mod command;
 pub mod common;
 pub mod error;
