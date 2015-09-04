@@ -8,7 +8,6 @@
 
 #include <algorithm>
 
-#include "DOMError.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemBase.h"
@@ -297,9 +296,7 @@ CreateFileTask::HandlerCallback()
   }
 
   if (HasError()) {
-    nsRefPtr<DOMError> domError = new DOMError(mFileSystem->GetWindow(),
-      mErrorValue);
-    mPromise->MaybeRejectBrokenly(domError);
+    mPromise->MaybeReject(mErrorValue);
     mPromise = nullptr;
     mBlobData = nullptr;
     return;
