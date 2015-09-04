@@ -5,6 +5,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -29,7 +30,7 @@ let extensionData = {
   background: "(" + backgroundScript.toString() + ")()",
   manifest: {
     "content_scripts": [{
-      "matches": ["http://mochi.test/tests/toolkit/components/extensions/test/mochitest/file_contentscript_*.html"],
+      "matches": ["http://mochi.test/*/file_sample.html"],
       "js": ["content_script.js"],
       "run_at": "document_start"
     }]
@@ -45,11 +46,7 @@ add_task(function* test_contentscript() {
   yield extension.startup();
   info("extension loaded");
 
-  yield new Promise(resolve => { setTimeout(resolve, 0); });
-
-  let win = window.open();
-
-  win.location = "file_contentscript_page1.html";
+  let win = window.open("file_sample.html");
 
   yield Promise.all([waitForLoad(win), extension.awaitFinish()]);
 
@@ -58,15 +55,6 @@ add_task(function* test_contentscript() {
   yield extension.unload();
   info("extension unloaded");
 });
-
-function waitForLoad(win) {
-  return new Promise(resolve => {
-    win.addEventListener("load", function listener() {
-      win.removeEventListener("load", listener, true);
-      resolve();
-    }, true);
-  });
-}
 </script>
 
 </body>
