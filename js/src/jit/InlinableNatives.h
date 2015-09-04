@@ -50,7 +50,16 @@
     _(MathACosH)                    \
     _(MathSign)                     \
     _(MathTrunc)                    \
-    _(MathCbrt)
+    _(MathCbrt)                     \
+                                    \
+    _(RegExpExec)                   \
+    _(RegExpTest)                   \
+                                    \
+    _(StringSplit)                  \
+    _(StringCharCodeAt)             \
+    _(StringFromCharCode)           \
+    _(StringCharAt)                 \
+    _(StringReplace)
 
 struct JSJitInfo;
 

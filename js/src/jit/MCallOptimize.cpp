@@ -81,27 +81,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
     if (native == ArrayConstructor)
         return inlineArray(callInfo);
 
-    // String natives.
     if (native == StringConstructor)
         return inlineStringObject(callInfo);
-    if (native == str_split)
-        return inlineStringSplit(callInfo);
-    if (native == str_charCodeAt)
-        return inlineStrCharCodeAt(callInfo);
-    if (native == str_fromCharCode)
-        return inlineStrFromCharCode(callInfo);
-    if (native == str_charAt)
-        return inlineStrCharAt(callInfo);
-    if (native == str_replace)
-        return inlineStrReplace(callInfo);
-
-    // RegExp natives.
-    if (native == regexp_exec && CallResultEscapes(pc))
-        return inlineRegExpExec(callInfo);
-    if (native == regexp_exec && !CallResultEscapes(pc))
-        return inlineRegExpTest(callInfo);
-    if (native == regexp_test)
-        return inlineRegExpTest(callInfo);
 
     // Object natives.
     if (native == obj_create)
@@ -432,6 +413,24 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineMathFunction(callInfo, MMathFunction::Trunc);
       case InlinableNative::MathCbrt:
         return inlineMathFunction(callInfo, MMathFunction::Cbrt);
+
+      // RegExp natives.
+      case InlinableNative::RegExpExec:
+        return CallResultEscapes(pc) ? inlineRegExpExec(callInfo) : inlineRegExpTest(callInfo);
+      case InlinableNative::RegExpTest:
+        return inlineRegExpTest(callInfo);
+
+      // String natives.
+      case InlinableNative::StringSplit:
+        return inlineStringSplit(callInfo);
+      case InlinableNative::StringCharCodeAt:
+        return inlineStrCharCodeAt(callInfo);
+      case InlinableNative::StringFromCharCode:
+        return inlineStrFromCharCode(callInfo);
+      case InlinableNative::StringCharAt:
+        return inlineStrCharAt(callInfo);
+      case InlinableNative::StringReplace:
+        return inlineStrReplace(callInfo);
     }
 
     MOZ_CRASH("Shouldn't get here");

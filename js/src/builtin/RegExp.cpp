@@ -11,6 +11,7 @@
 #include "jscntxt.h"
 
 #include "irregexp/RegExpParser.h"
+#include "jit/InlinableNatives.h"
 #include "vm/RegExpStatics.h"
 #include "vm/StringBuffer.h"
 
@@ -560,8 +561,8 @@ const JSFunctionSpec js::regexp_methods[] = {
 #endif
     JS_SELF_HOSTED_FN(js_toString_str, "RegExpToString", 0, 0),
     JS_FN("compile",        regexp_compile,     2,0),
-    JS_FN("exec",           regexp_exec,        1,0),
-    JS_FN("test",           regexp_test,        1,0),
+    JS_INLINABLE_FN("exec", regexp_exec,        1,0, RegExpExec),
+    JS_INLINABLE_FN("test", regexp_test,        1,0, RegExpTest),
     JS_FS_END
 };
 
