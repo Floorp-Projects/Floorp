@@ -296,13 +296,21 @@ class BaseBootstrapper(object):
     def ensure_mercurial_modern(self):
         installed, modern, version = self.is_mercurial_modern()
 
-        if not installed or modern:
+        if modern:
             print('Your version of Mercurial (%s) is sufficiently modern.' %
                   version)
             return
 
         self._ensure_package_manager_updated()
-        self.upgrade_mercurial(version)
+
+        if installed:
+            print('Your version of Mercurial (%s) is not modern enough.' %
+                  version)
+        else:
+            print('You do not have Mercurial installed')
+
+        if self.upgrade_mercurial(version) is False:
+            return
 
         installed, modern, after = self.is_mercurial_modern()
 
@@ -313,6 +321,9 @@ class BaseBootstrapper(object):
         """Upgrade Mercurial.
 
         Child classes should reimplement this.
+
+        Return False to not perform a version check after the upgrade is
+        performed.
         """
         print(MERCURIAL_UNABLE_UPGRADE % (current, MODERN_MERCURIAL_VERSION))
 
