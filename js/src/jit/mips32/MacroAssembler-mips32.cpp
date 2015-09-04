@@ -151,13 +151,18 @@ void
 MacroAssemblerMIPS::convertFloat32ToInt32(FloatRegister src, Register dest,
                                           Label* fail, bool negativeZeroCheck)
 {
-    // convert the floating point value to an integer, if it did not fit, then
-    // when we convert it *back* to  a float, it will have a different value,
-    // which we can test.
+    // Converting the floating point value to an integer and then converting it
+    // back to a float32 would not work, as float to int32 conversions are
+    // clamping (e.g. float(INT32_MAX + 1) would get converted into INT32_MAX
+    // and then back to float(INT32_MAX + 1)).  If this ever happens, we just
+    // bail out.
     as_cvtws(ScratchFloat32Reg, src);
     as_mfc1(dest, ScratchFloat32Reg);
     as_cvtsw(ScratchFloat32Reg, ScratchFloat32Reg);
     ma_bc1s(src, ScratchFloat32Reg, fail, Assembler::DoubleNotEqualOrUnordered);
+
+    // Bail out in the clamped cases.
+    ma_b(dest, Imm32(INT32_MAX), fail, Assembler::Equal);
 
     if (negativeZeroCheck) {
         Label notZero;
@@ -2771,7 +2776,7 @@ MacroAssemblerMIPSCompat::moveValue(const Value& val, const ValueOperand& dest)
  * being executed. Look also at jit::PatchBackedge().
  */
 CodeOffsetJump
-MacroAssemblerMIPSCompat::backedgeJump(RepatchLabel* label)
+MacroAssemblerMIPSCompat::backedgeJump(RepatchLabel* label, Label* documentation)
 {
     // Only one branch per label.
     MOZ_ASSERT(!label->used());

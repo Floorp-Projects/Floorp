@@ -688,7 +688,7 @@ NON_IDL_EVENT(compositionend,
               EventNameType_XUL,
               eCompositionEventClass)
 NON_IDL_EVENT(command,
-              NS_XUL_COMMAND,
+              eXULCommand,
               EventNameType_XUL,
               eInputEventClass)
 NON_IDL_EVENT(close,
@@ -696,27 +696,27 @@ NON_IDL_EVENT(close,
               EventNameType_XUL,
               eBasicEventClass)
 NON_IDL_EVENT(popupshowing,
-              NS_XUL_POPUP_SHOWING,
+              eXULPopupShowing,
               EventNameType_XUL,
               eBasicEventClass)
 NON_IDL_EVENT(popupshown,
-              NS_XUL_POPUP_SHOWN,
+              eXULPopupShown,
               EventNameType_XUL,
               eBasicEventClass)
 NON_IDL_EVENT(popuphiding,
-              NS_XUL_POPUP_HIDING,
+              eXULPopupHiding,
               EventNameType_XUL,
               eBasicEventClass)
 NON_IDL_EVENT(popuphidden,
-              NS_XUL_POPUP_HIDDEN,
+              eXULPopupHidden,
               EventNameType_XUL,
               eBasicEventClass)
 NON_IDL_EVENT(broadcast,
-              NS_XUL_BROADCAST,
+              eXULBroadcast,
               EventNameType_XUL,
               eBasicEventClass)
 NON_IDL_EVENT(commandupdate,
-              NS_XUL_COMMAND_UPDATE,
+              eXULCommandUpdate,
               EventNameType_XUL,
               eBasicEventClass)
 NON_IDL_EVENT(dragexit,

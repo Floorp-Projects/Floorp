@@ -65,10 +65,6 @@ public:
   // nsARefreshObserver
   void WillRefresh(TimeStamp aTime) override;
 
-#ifdef DEBUG
-  static void Initialize();
-#endif
-
   // NOTE:  This can return null after Disconnect().
   nsPresContext* PresContext() const { return mPresContext; }
 
@@ -119,18 +115,6 @@ public:
     nsDisplayItem::Type mLayerType;
     nsChangeHint mChangeHint;
   };
-
-protected:
-  static const size_t kLayerRecords = 2;
-
-public:
-  static const LayerAnimationRecord sLayerAnimationInfo[kLayerRecords];
-
-  // Will return non-null for any property with the
-  // CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR flag; should only be called
-  // on such properties.
-  static const LayerAnimationRecord*
-    LayerAnimationRecordFor(nsCSSProperty aProperty);
 
 protected:
   virtual ~CommonAnimationManager();

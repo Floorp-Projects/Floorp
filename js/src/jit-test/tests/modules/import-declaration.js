@@ -26,6 +26,11 @@ lit = (val) => Pattern({
     value: val
 })
 
+function parseAsModule(source)
+{
+    return Reflect.parse(source, {target: "module"});
+}
+
 program([
     importDeclaration(
         [
@@ -36,7 +41,7 @@ program([
         ],
         lit("b")
     )
-]).assert(Reflect.parse("import a from 'b'"));
+]).assert(parseAsModule("import a from 'b'"));
 
 program([
     importDeclaration(
@@ -48,14 +53,14 @@ program([
         ],
         lit("b")
     )
-]).assert(Reflect.parse("import * as a from 'b'"));
+]).assert(parseAsModule("import * as a from 'b'"));
 
 program([
     importDeclaration(
         [],
         lit("a")
     )
-]).assert(Reflect.parse("import {} from 'a'"));
+]).assert(parseAsModule("import {} from 'a'"));
 
 program([
     importDeclaration(
@@ -67,7 +72,7 @@ program([
         ],
         lit("b")
     )
-]).assert(Reflect.parse("import { a } from 'b'"));
+]).assert(parseAsModule("import { a } from 'b'"));
 
 program([
     importDeclaration(
@@ -79,7 +84,7 @@ program([
         ],
         lit("b")
     )
-]).assert(Reflect.parse("import { a, } from 'b'"));
+]).assert(parseAsModule("import { a, } from 'b'"));
 
 program([
     importDeclaration(
@@ -91,7 +96,7 @@ program([
         ],
         lit("c")
     )
-]).assert(Reflect.parse("import { a as b } from 'c'"));
+]).assert(parseAsModule("import { a as b } from 'c'"));
 
 program([
     importDeclaration(
@@ -103,7 +108,7 @@ program([
         ],
         lit("a")
     )
-]).assert(Reflect.parse("import { as as as } from 'a'"));
+]).assert(parseAsModule("import { as as as } from 'a'"));
 
 program([
     importDeclaration(
@@ -119,7 +124,7 @@ program([
         ],
         lit("c")
     )
-]).assert(Reflect.parse("import a, * as b from 'c'"));
+]).assert(parseAsModule("import a, * as b from 'c'"));
 
 program([
     importDeclaration(
@@ -131,7 +136,7 @@ program([
         ],
         lit("a")
     )
-]).assert(Reflect.parse("import d, {} from 'a'"));
+]).assert(parseAsModule("import d, {} from 'a'"));
 
 program([
     importDeclaration(
@@ -147,7 +152,7 @@ program([
         ],
         lit("b")
     )
-]).assert(Reflect.parse("import d, { a } from 'b'"));
+]).assert(parseAsModule("import d, { a } from 'b'"));
 
 program([
     importDeclaration(
@@ -163,7 +168,7 @@ program([
         ],
         lit("c")
     )
-]).assert(Reflect.parse("import d, { a as b } from 'c'"));
+]).assert(parseAsModule("import d, { a as b } from 'c'"));
 
 program([
     importDeclaration(
@@ -183,7 +188,7 @@ program([
         ],
         lit("c")
     )
-]).assert(Reflect.parse("import d, { a, b } from 'c'"));
+]).assert(parseAsModule("import d, { a, b } from 'c'"));
 
 program([
     importDeclaration(
@@ -198,12 +203,12 @@ program([
             ),
             importSpecifier(
                 ident("c"),
-                ident("d")
+                ident("f")
             ),
         ],
         lit("e")
     )
-]).assert(Reflect.parse("import d, { a as b, c as d } from 'e'"));
+]).assert(parseAsModule("import d, { a as b, c as f } from 'e'"));
 
 program([
     importDeclaration(
@@ -215,7 +220,7 @@ program([
         ],
         lit("b")
     )
-]).assert(Reflect.parse("import { true as a } from 'b'"));
+]).assert(parseAsModule("import { true as a } from 'b'"));
 
 program([
     importDeclaration(
@@ -231,7 +236,7 @@ program([
         ],
         lit("c")
     )
-]).assert(Reflect.parse("import { a, b } from 'c'"));
+]).assert(parseAsModule("import { a, b } from 'c'"));
 
 program([
     importDeclaration(
@@ -247,16 +252,16 @@ program([
         ],
         lit("e")
     )
-]).assert(Reflect.parse("import { a as b, c as d } from 'e'"));
+]).assert(parseAsModule("import { a as b, c as d } from 'e'"));
 
 program([
     importDeclaration(
         [],
         lit("a")
     )
-]).assert(Reflect.parse("import 'a'"));
+]).assert(parseAsModule("import 'a'"));
 
-var loc = Reflect.parse("import { a as b } from 'c'", {
+var loc = parseAsModule("import { a as b } from 'c'", {
     loc: true
 }).body[0].loc;
 
@@ -266,73 +271,73 @@ assertEq(loc.start.line, 1);
 assertEq(loc.end.column, 26);
 
 assertThrowsInstanceOf(function () {
-   Reflect.parse("function f() { import a from 'b' }");
+   parseAsModule("function f() { import a from 'b' }");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function () {
-   Reflect.parse("if (true) import a from 'b'");
+   parseAsModule("if (true) import a from 'b'");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function() {
-    Reflect.parse("import {");
+    parseAsModule("import {");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function() {
-    Reflect.parse("import {}");
+    parseAsModule("import {}");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function() {
-    Reflect.parse("import {} from");
+    parseAsModule("import {} from");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function() {
-    Reflect.parse("import {,} from 'a'");
+    parseAsModule("import {,} from 'a'");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function() {
-    Reflect.parse("import { a as true } from 'b'");
+    parseAsModule("import { a as true } from 'b'");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function() {
-    Reflect.parse("import { true } from 'a'");
+    parseAsModule("import { true } from 'a'");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function() {
-    Reflect.parse("import a,");
+    parseAsModule("import a,");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function() {
-    Reflect.parse("import a, b from 'a'");
+    parseAsModule("import a, b from 'a'");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function() {
-    Reflect.parse("import * as a,");
+    parseAsModule("import * as a,");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function() {
-    Reflect.parse("import * as a, {} from 'a'");
+    parseAsModule("import * as a, {} from 'a'");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function() {
-    Reflect.parse("import as a from 'a'");
+    parseAsModule("import as a from 'a'");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function() {
-    Reflect.parse("import * a from 'a'");
+    parseAsModule("import * a from 'a'");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function() {
-    Reflect.parse("import * as from 'a'");
+    parseAsModule("import * as from 'a'");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function() {
-    Reflect.parse("import , {} from 'a'");
+    parseAsModule("import , {} from 'a'");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function() {
-    Reflect.parse("import d, from 'a'");
+    parseAsModule("import d, from 'a'");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function() {
-    Reflect.parse("import * as true from 'b'");
+    parseAsModule("import * as true from 'b'");
 }, SyntaxError);
