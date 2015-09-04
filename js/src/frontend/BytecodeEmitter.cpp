@@ -7862,12 +7862,9 @@ BytecodeEmitter::emitTree(ParseNode* pn)
       case PNK_EXPORT_DEFAULT:
         if (!checkIsModule())
             return false;
-        if (pn->pn_kid->isDefn()) {
-            ok = emitTree(pn->pn_kid);
-        } else {
-            // TODO: Emit a definition of *default* from child expression.
-            ok = true;
-        }
+        ok = emitTree(pn->pn_kid);
+        if (ok && pn->pn_right)
+            ok = emitLexicalInitialization(pn->pn_right, JSOP_DEFCONST) && emit1(JSOP_POP);
         break;
 
       case PNK_EXPORT_FROM:

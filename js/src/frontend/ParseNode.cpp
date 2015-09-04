@@ -242,7 +242,6 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_SPREAD:
       case PNK_MUTATEPROTO:
       case PNK_EXPORT:
-      case PNK_EXPORT_DEFAULT:
         return PushUnaryNodeChild(pn, stack);
 
       // Nodes with a single nullable child.
@@ -364,6 +363,15 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
         MOZ_ASSERT(pn->pn_right->isKind(PNK_STRING));
         stack->pushList(pn->pn_left);
         stack->push(pn->pn_right);
+        return PushResult::Recyclable;
+      }
+
+      case PNK_EXPORT_DEFAULT: {
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        MOZ_ASSERT_IF(pn->pn_right, pn->pn_right->isKind(PNK_NAME));
+        stack->push(pn->pn_left);
+        if (pn->pn_right)
+            stack->push(pn->pn_right);
         return PushResult::Recyclable;
       }
 
