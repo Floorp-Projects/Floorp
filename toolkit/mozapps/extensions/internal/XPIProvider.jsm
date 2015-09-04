@@ -98,6 +98,7 @@ const PREF_INSTALL_DISTRO_ADDONS      = "extensions.installDistroAddons";
 const PREF_BRANCH_INSTALLED_ADDON     = "extensions.installedDistroAddon.";
 const PREF_SHOWN_SELECTION_UI         = "extensions.shownSelectionUI";
 const PREF_INTERPOSITION_ENABLED      = "extensions.interposition.enabled";
+const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
 
 const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion";
 const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVersion";
@@ -115,6 +116,7 @@ const URI_EXTENSION_STRINGS           = "chrome://mozapps/locale/extensions/exte
 const STRING_TYPE_NAME                = "type.%ID%.name";
 
 const DIR_EXTENSIONS                  = "extensions";
+const DIR_SYSTEM_ADDONS               = "features";
 const DIR_STAGE                       = "staged";
 const DIR_TRASH                       = "trash";
 
@@ -130,6 +132,8 @@ const KEY_TEMPDIR                     = "TmpD";
 const KEY_APP_DISTRIBUTION            = "XREAppDist";
 
 const KEY_APP_PROFILE                 = "app-profile";
+const KEY_APP_SYSTEM_ADDONS           = "app-system-addons";
+const KEY_APP_SYSTEM_DEFAULTS         = "app-system-defaults";
 const KEY_APP_GLOBAL                  = "app-global";
 const KEY_APP_SYSTEM_LOCAL            = "app-system-local";
 const KEY_APP_SYSTEM_SHARE            = "app-system-share";
@@ -1968,7 +1972,7 @@ this.XPIStates = {
 
     for (let location of XPIProvider.installLocations) {
       // The list of add-on like file/directory names in the install location.
-      let addons = location.addonLocations;
+      let addons = location.getAddonLocations();
       // The results of scanning this location.
       let foundAddons = new SerializableMap();
 
@@ -2324,6 +2328,28 @@ this.XPIProvider = {
       XPIProvider.installLocationsByName[location.name] = location;
     }
 
+    function addSystemAddonInstallLocation(aName, aKey, aPaths, aScope) {
+      try {
+        var dir = FileUtils.getDir(aKey, aPaths);
+      }
+      catch (e) {
+        // Some directories aren't defined on some platforms, ignore them
+        logger.debug("Skipping unavailable install location " + aName);
+        return;
+      }
+
+      try {
+        var location = new SystemAddonInstallLocation(aName, dir, aScope, aAppChanged !== false);
+      }
+      catch (e) {
+        logger.warn("Failed to add system add-on install location " + aName, e);
+        return;
+      }
+
+      XPIProvider.installLocations.push(location);
+      XPIProvider.installLocationsByName[location.name] = location;
+    }
+
     function addRegistryInstallLocation(aName, aRootkey, aScope) {
       try {
         var location = new WinRegInstallLocation(aName, aRootkey, aScope);
@@ -2365,6 +2391,14 @@ this.XPIProvider = {
       addDirectoryInstallLocation(KEY_APP_PROFILE, KEY_PROFILEDIR,
                                   [DIR_EXTENSIONS],
                                   AddonManager.SCOPE_PROFILE, false);
+
+      addSystemAddonInstallLocation(KEY_APP_SYSTEM_ADDONS, KEY_PROFILEDIR,
+                                    [DIR_SYSTEM_ADDONS],
+                                    AddonManager.SCOPE_PROFILE);
+
+      addDirectoryInstallLocation(KEY_APP_SYSTEM_DEFAULTS, KEY_APP_DISTRIBUTION,
+                                  [DIR_SYSTEM_ADDONS],
+                                  AddonManager.SCOPE_PROFILE, true);
 
       if (enabledScopes & AddonManager.SCOPE_USER) {
         addDirectoryInstallLocation(KEY_APP_SYSTEM_USER, "XREUSysExt",
@@ -6768,7 +6802,7 @@ function DirectoryInstallLocation(aName, aDirectory, aScope) {
   this._IDToFileMap = {};
   this._linkedAddons = [];
 
-  if (!aDirectory.exists())
+  if (!aDirectory || !aDirectory.exists())
     return;
   if (!aDirectory.isDirectory())
     throw new Error("Location must be a directory.");
@@ -6893,7 +6927,7 @@ DirectoryInstallLocation.prototype = {
   /**
    * Gets an array of nsIFiles for add-ons installed in this location.
    */
-  get addonLocations() {
+  getAddonLocations: function() {
     let locations = new Map();
     for (let id in this._IDToFileMap) {
       locations.set(id, this._IDToFileMap[id].clone());
@@ -7212,6 +7246,128 @@ Object.assign(MutableDirectoryInstallLocation.prototype, {
   },
 });
 
+/**
+ * An object which identifies a directory install location for system add-ons.
+ * The location consists of a directory which contains the add-ons installed in
+ * the location.
+ *
+ * @param  aName
+ *         The string identifier for the install location
+ * @param  aDirectory
+ *         The nsIFile directory for the install location
+ * @param  aScope
+ *         The scope of add-ons installed in this location
+ * @param  aResetSet
+ *         True to throw away the current add-on set
+ */
+function SystemAddonInstallLocation(aName, aDirectory, aScope, aResetSet) {
+  this._baseDir = aDirectory;
+
+  if (aResetSet) {
+    this._addonSet = { schema: 1, addons: {} };
+    this._saveAddonSet(this._addonSet);
+  }
+  else {
+    this._addonSet = this._loadAddonSet();
+  }
+
+  this._directory = null;
+  if (this._addonSet.directory) {
+    this._directory = aDirectory.clone();
+    this._directory.append(this._addonSet.directory);
+    logger.info("SystemAddonInstallLocation scanning directory " + this._directory.path);
+  }
+  else {
+    logger.info("SystemAddonInstallLocation directory is missing");
+  }
+
+  DirectoryInstallLocation.call(this, aName, this._directory, aScope);
+  this.locked = true;
+}
+
+SystemAddonInstallLocation.prototype = Object.create(DirectoryInstallLocation.prototype);
+Object.assign(SystemAddonInstallLocation.prototype, {
+  /**
+   * Reads the current set of system add-ons
+   */
+  _loadAddonSet: function() {
+    try {
+      let setStr = Preferences.get(PREF_SYSTEM_ADDON_SET, null);
+      if (setStr) {
+        let addonSet = JSON.parse(setStr);
+        if ((typeof addonSet == "object") && addonSet.schema == 1)
+          return addonSet;
+      }
+    }
+    catch (e) {
+      logger.error("Malformed system add-on set, resetting.");
+    }
+
+    return { schema: 1, addons: {} };
+  },
+
+  /**
+   * Saves the current set of system add-ons
+   */
+  _saveAddonSet: function(aAddonSet) {
+    Preferences.set(PREF_SYSTEM_ADDON_SET, JSON.stringify(aAddonSet));
+  },
+
+  getAddonLocations: function() {
+    let addons = DirectoryInstallLocation.prototype.getAddonLocations.call(this);
+
+    // Strip out any unexpected add-ons from the list
+    for (let id of addons.keys()) {
+      if (!(id in this._addonSet.addons))
+        addons.delete(id);
+    }
+
+    return addons;
+  },
+
+  /**
+   * Tests whether updated system add-ons are expected.
+   */
+  isActive: function() {
+    return this._directory != null;
+  },
+
+  /**
+   * Tests whether the loaded add-on information matches what is expected.
+   */
+  isValid: function(aAddons) {
+    for (let id of Object.keys(this._addonSet.addons)) {
+      if (!aAddons.has(id)) {
+        logger.warn("Expected add-on " + id + " is missing from the system add-on location.");
+        return false;
+      }
+
+      let addon = aAddons.get(id);
+      if (addon.appDisabled) {
+        logger.warn("System add-on " + id + " isn't compatible with the application.");
+        return false;
+      }
+
+      if (addon.unpack) {
+        logger.warn("System add-on " + id + " isn't a packed add-on.");
+        return false;
+      }
+
+      if (!addon.bootstrap) {
+        logger.warn("System add-on " + id + " isn't restartless.");
+        return false;
+      }
+
+      if (addon.version != this._addonSet.addons[id].version) {
+        logger.warn("System add-on " + id + " wasn't the correct version.");
+        return false;
+      }
+    }
+
+    return true;
+  },
+});
+
 #ifdef XP_WIN
 /**
  * An object that identifies a registry install location for add-ons. The location
@@ -7318,7 +7474,7 @@ WinRegInstallLocation.prototype = {
   /**
    * Gets an array of nsIFiles for add-ons installed in this location.
    */
-  get addonLocations() {
+  getAddonLocations: function() {
     let locations = new Map();
     for (let id in this._IDToFileMap) {
       locations.set(id, this._IDToFileMap[id].clone());
