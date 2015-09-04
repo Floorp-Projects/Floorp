@@ -26,10 +26,3 @@ pref(layout.css.vertical-text.enabled,true) == vlr-grid-placement-auto-row-spars
 pref(layout.css.vertical-text.enabled,true) == vrl-grid-placement-auto-row-sparse-001.html vrl-grid-placement-auto-row-sparse-001-ref.html
 == grid-relpos-items-001.html grid-relpos-items-001-ref.html
 == grid-item-dir-001.html grid-item-dir-001-ref.html
-fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-max-content-001.html grid-col-max-sizing-max-content-001-ref.html
-fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-max-content-002.html grid-col-max-sizing-max-content-002-ref.html
-== grid-min-max-content-sizing-001.html grid-min-max-content-sizing-001-ref.html
-== grid-track-intrinsic-sizing-001.html grid-track-intrinsic-sizing-001-ref.html
-== grid-track-intrinsic-sizing-002.html grid-track-intrinsic-sizing-002-ref.html
-== grid-track-intrinsic-sizing-003.html grid-track-intrinsic-sizing-003-ref.html
-== grid-track-intrinsic-sizing-004.html grid-track-intrinsic-sizing-004-ref.html
