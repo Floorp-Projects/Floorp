@@ -7,7 +7,3 @@
 .searchbar-textbox {
   -moz-binding: url("chrome://browser/content/search/search.xml#searchbar-textbox");
 }
-
-.searchbar-engine-button {
-  -moz-user-focus: none;
-}

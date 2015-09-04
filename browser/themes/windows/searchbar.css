@@ -6,10 +6,6 @@
   -moz-margin-start: -25px;
 }
 
-.searchbar-dropmarker-image {
-  --searchbar-dropmarker-url: url("chrome://browser/skin/searchbar-dropdown-arrow.png");
-}
-
 .autocomplete-textbox-container {
   -moz-box-align: stretch;
 }
@@ -25,35 +21,8 @@
   width: 16px;
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
+  -moz-margin-start: -1px;
 }
-
-.searchbar-engine-button {
-  -moz-appearance: none;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  -moz-padding-end: 2px;
-  -moz-box-align: center;
-  background: none;
-  border: none;
-}
-
-.searchbar-engine-button > .button-box {
-  -moz-appearance: none;
-  padding: 0;
-  border: 0;
-}
-
-.searchbar-dropmarker-image {
-  list-style-image: var(--searchbar-dropmarker-url);
-  -moz-image-region: rect(0, 13px, 11px, 0);
-  width: 7px;
-}
-
-.searchbar-engine-button[open="true"] > .searchbar-dropmarker-image {
-  -moz-image-region: rect(0, 26px, 11px, 13px);
-}
-
 
 /* ::::: search-go-button ::::: */
 
@@ -78,11 +47,6 @@
 .search-go-button:hover:active {
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
-
-.searchbar-engine-menuitem[selected="true"] > .menu-iconic-text {
-  font-weight: bold;
-}
-
 
 
 .searchbar-search-button-container {
@@ -299,10 +263,6 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
   }
 }
 
-searchbar[oneoffui] .searchbar-engine-button {
-  display: none;
-}
-
 .search-panel-tree > .autocomplete-treebody::-moz-tree-cell {
   border-top: none !important;
 }
@@ -323,10 +283,6 @@ searchbar[oneoffui] .searchbar-engine-button {
 
 .search-panel-tree > .autocomplete-treebody::-moz-tree-image(fromhistory, selected) {
   list-style-image: url("chrome://browser/skin/search-history-icon.svg#search-history-icon-active");
-}
-
-searchbar[oneoffui] .searchbar-engine-image {
-  -moz-margin-start: -1px;
 }
 
 .search-setting-button {
