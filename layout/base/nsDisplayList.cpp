@@ -2385,14 +2385,6 @@ nsDisplayBackgroundImage::CanOptimizeToImageLayer(LayerManager* aManager,
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   const nsStyleBackground::Layer &layer = mBackgroundStyle->mLayers[mLayer];
 
-  if (layer.mClip != NS_STYLE_BG_CLIP_BORDER) {
-    return false;
-  }
-  nscoord radii[8];
-  if (mFrame->GetBorderRadii(radii)) {
-    return false;
-  }
-
   nsBackgroundLayerState state =
     nsCSSRendering::PrepareBackgroundLayer(presContext, mFrame, flags,
                                            borderArea, borderArea, layer);

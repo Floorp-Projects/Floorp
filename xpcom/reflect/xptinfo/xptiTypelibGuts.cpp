@@ -10,6 +10,13 @@
 
 using namespace mozilla;
 
+// Ensure through static analysis that xptiTypelibGuts won't have a vtable.
+template <class T>
+class MOZ_NEEDS_NO_VTABLE_TYPE CheckNoVTable
+{
+};
+CheckNoVTable<xptiTypelibGuts> gChecker;
+
 // static 
 xptiTypelibGuts* 
 xptiTypelibGuts::Create(XPTHeader* aHeader)

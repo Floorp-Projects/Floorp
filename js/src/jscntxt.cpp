@@ -565,8 +565,7 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                            ErrorArgumentsType argumentsType, va_list ap)
 {
     const JSErrorFormatString* efs;
-    int i;
-    int argCount;
+    uint16_t argCount;
     bool messageArgsPassed = !!reportp->messageArgs;
 
     *messagep = nullptr;
@@ -583,9 +582,9 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
         reportp->exnType = efs->exnType;
 
         size_t totalArgsLength = 0;
-        size_t argLengths[10]; /* only {0} thru {9} supported */
+        size_t argLengths[JS::MaxNumErrorArguments]; /* only {0} thru {9} supported */
         argCount = efs->argCount;
-        MOZ_ASSERT(argCount <= 10);
+        MOZ_RELEASE_ASSERT(argCount <= JS::MaxNumErrorArguments);
         if (argCount > 0) {
             /*
              * Gather the arguments into an array, and accumulate
@@ -602,7 +601,7 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                 /* nullptr-terminate for easy copying. */
                 reportp->messageArgs[argCount] = nullptr;
             }
-            for (i = 0; i < argCount; i++) {
+            for (uint16_t i = 0; i < argCount; i++) {
                 if (messageArgsPassed) {
                     /* Do nothing. */
                 } else if (argumentsType == ArgumentsAreASCII) {
@@ -652,7 +651,7 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                     if (*fmt == '{') {
                         if (isdigit(fmt[1])) {
                             int d = JS7_UNDEC(fmt[1]);
-                            MOZ_ASSERT(d < argCount);
+                            MOZ_RELEASE_ASSERT(d < argCount);
                             js_strncpy(out, reportp->messageArgs[d],
                                        argLengths[d]);
                             out += argLengths[d];
@@ -708,7 +707,7 @@ error:
     if (!messageArgsPassed && reportp->messageArgs) {
         /* free the arguments only if we allocated them */
         if (argumentsType == ArgumentsAreASCII) {
-            i = 0;
+            uint16_t i = 0;
             while (reportp->messageArgs[i])
                 js_free((void*)reportp->messageArgs[i++]);
         }

@@ -1883,10 +1883,6 @@ ReportZoneStats(const JS::ZoneStats& zStats,
         zStats.unusedGCThings.totalSize(),
         "Unused GC thing cells within non-empty arenas.");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("unique-id-map"),
-        zStats.uniqueIdMap,
-        "Address-independent cell identities.");
-
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/gc-heap"),
         zStats.lazyScriptsGCHeap,
         "Scripts that haven't executed yet.");

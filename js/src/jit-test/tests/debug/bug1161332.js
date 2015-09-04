@@ -2,7 +2,7 @@
 
 var g = newGlobal();
 g.eval('function f(a) { if (a == 1) debugger; evaluate("f(" + a + " - 1);", {newContext: true}); }');
-var N = 9;
+var N = 2;
 var dbg = new Debugger(g);
 var frames = [];
 dbg.onEnterFrame = function (frame) {
