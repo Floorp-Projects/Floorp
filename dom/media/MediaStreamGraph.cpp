@@ -1114,8 +1114,6 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
       aEndBlockingDecisions == mStateComputedTime) {
     EnsureNextIteration();
   }
-
-  mStateComputedTime = aEndBlockingDecisions;
 }
 
 void
@@ -1258,7 +1256,10 @@ MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd)
   GraphTime stateEnd = std::min(aStateEnd, mEndTime);
   UpdateGraph(stateEnd);
 
+  mStateComputedTime = stateEnd;
+
   Process(stateFrom, stateEnd);
+
   mProcessedTime = stateEnd;
 
   UpdateCurrentTimeForStreams(stateFrom, stateEnd);
