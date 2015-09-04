@@ -11,6 +11,7 @@
 #include <algorithm> // for std::stable_sort
 #include <limits>
 #include "mozilla/Maybe.h"
+#include "mozilla/PodOperations.h" // for PodZero
 #include "nsAbsoluteContainingBlock.h"
 #include "nsAlgorithm.h" // for clamped()
 #include "nsAutoPtr.h"
@@ -30,6 +31,8 @@ typedef nsGridContainerFrame::TrackSize TrackSize;
 const uint32_t nsGridContainerFrame::kTranslatedMaxLine =
   uint32_t(nsStyleGridLine::kMaxLine - nsStyleGridLine::kMinLine - 1);
 const uint32_t nsGridContainerFrame::kAutoLine = kTranslatedMaxLine + 3457U;
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(TrackSize::StateBits)
 
 class nsGridContainerFrame::GridItemCSSOrderIterator
 {
@@ -230,6 +233,278 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
   void Initialize(const TrackSizingFunctions& aFunctions,
                   nscoord                     aPercentageBasis);
 
+  /**
+   * Return true if aRange spans at least one track with an intrinsic sizing
+   * function and does not span any tracks with a <flex> max-sizing function.
+   * @param aRange the span of tracks to check
+   * @param aConstraint if MIN_ISIZE, treat a <flex> min-sizing as 'min-content'
+   * @param aState will be set to the union of the state bits for the tracks
+   *               when this method returns true, the value is undefined when
+   *               this method returns false
+   */
+  bool HasIntrinsicButNoFlexSizingInRange(const LineRange&      aRange,
+                                          IntrinsicISizeType    aConstraint,
+                                          TrackSize::StateBits* aState) const;
+
+  /**
+   * Resolve Intrinsic Track Sizes.
+   * http://dev.w3.org/csswg/css-grid/#algo-content
+   */
+  void ResolveIntrinsicSize(GridReflowState&            aState,
+                            nsTArray<GridItemInfo>&     aGridItems,
+                            const TrackSizingFunctions& aFunctions,
+                            LineRange GridArea::*       aRange,
+                            nscoord                     aPercentageBasis,
+                            IntrinsicISizeType          aConstraint);
+
+  /**
+   * Helper for ResolveIntrinsicSize.  It implements step 1 "size tracks to fit
+   * non-spanning items" in the spec.
+   */
+  void ResolveIntrinsicSizeStep1(GridReflowState&            aState,
+                                 const TrackSizingFunctions& aFunctions,
+                                 nscoord                     aPercentageBasis,
+                                 IntrinsicISizeType          aConstraint,
+                                 const LineRange&            aRange,
+                                 nsIFrame*                   aGridItem);
+  /**
+   * Collect the tracks which are growable (matching aSelector) and return
+   * aAvailableSpace minus the sum of mBase's in aPlan for the tracks
+   * in aRange, or 0 if this subtraction goes below 0.
+   * @note aPlan[*].mBase represents a planned new base or limit.
+   */
+  static nscoord CollectGrowable(nscoord                    aAvailableSpace,
+                                 const nsTArray<TrackSize>& aPlan,
+                                 const LineRange&           aRange,
+                                 TrackSize::StateBits       aSelector,
+                                 nsTArray<uint32_t>&        aGrowableTracks)
+  {
+    MOZ_ASSERT(aAvailableSpace > 0, "why call me?");
+    nscoord space = aAvailableSpace;
+    const uint32_t start = aRange.mStart;
+    const uint32_t end = aRange.mEnd;
+    for (uint32_t i = start; i < end; ++i) {
+      const TrackSize& sz = aPlan[i];
+      MOZ_ASSERT(!sz.IsFrozen());
+      space -= sz.mBase;
+      if (space <= 0) {
+        return 0;
+      }
+      if (sz.mState & aSelector) {
+        aGrowableTracks.AppendElement(i);
+      }
+    }
+    return space;
+  }
+
+  void SetupGrowthPlan(nsTArray<TrackSize>&      aPlan,
+                       const nsTArray<uint32_t>& aTracks) const
+  {
+    for (uint32_t track : aTracks) {
+      aPlan[track] = mSizes[track];
+    }
+  }
+
+  void CopyPlanToBase(const nsTArray<TrackSize>& aPlan,
+                      const nsTArray<uint32_t>&  aTracks)
+  {
+    for (uint32_t track : aTracks) {
+      MOZ_ASSERT(mSizes[track].mBase <= aPlan[track].mBase);
+      mSizes[track].mBase = aPlan[track].mBase;
+    }
+  }
+
+  void CopyPlanToLimit(const nsTArray<TrackSize>& aPlan,
+                       const nsTArray<uint32_t>&  aTracks)
+  {
+    for (uint32_t track : aTracks) {
+      MOZ_ASSERT(mSizes[track].mLimit == NS_UNCONSTRAINEDSIZE ||
+                 mSizes[track].mLimit <= aPlan[track].mBase);
+      mSizes[track].mLimit = aPlan[track].mBase;
+    }
+  }
+
+  /**
+   * Grow the planned size for tracks in aGrowableTracks up to their limit
+   * and then freeze them (all aGrowableTracks must be unfrozen on entry).
+   * Subtract the space added from aAvailableSpace and return that.
+   */
+  nscoord GrowTracksToLimit(nscoord                   aAvailableSpace,
+                            nsTArray<TrackSize>&      aPlan,
+                            const nsTArray<uint32_t>& aGrowableTracks) const
+  {
+    MOZ_ASSERT(aAvailableSpace > 0 && aGrowableTracks.Length() > 0);
+    nscoord space = aAvailableSpace;
+    uint32_t numGrowable = aGrowableTracks.Length();
+    while (true) {
+      nscoord spacePerTrack = std::max<nscoord>(space / numGrowable, 1);
+      for (uint32_t track : aGrowableTracks) {
+        TrackSize& sz = aPlan[track];
+        if (sz.IsFrozen()) {
+          continue;
+        }
+        nscoord newBase = sz.mBase + spacePerTrack;
+        if (newBase > sz.mLimit) {
+          nscoord consumed = sz.mLimit - sz.mBase;
+          if (consumed > 0) {
+            space -= consumed;
+            sz.mBase = sz.mLimit;
+          }
+          sz.mState |= TrackSize::eFrozen;
+          if (--numGrowable == 0) {
+            return space;
+          }
+        } else {
+          sz.mBase = newBase;
+          space -= spacePerTrack;
+        }
+        MOZ_ASSERT(space >= 0);
+        if (space == 0) {
+          return 0;
+        }
+      }
+    }
+    MOZ_ASSERT_UNREACHABLE("we don't exit the loop above except by return");
+    return 0;
+  }
+
+  /**
+   * Helper for GrowSelectedTracksUnlimited.  For the set of tracks (S) that
+   * match aMinSizingSelector: if a track in S doesn't match aMaxSizingSelector
+   * then mark it with aSkipFlag.  If all tracks in S were marked then unmark
+   * them.  Return aNumGrowable minus the number of tracks marked.  It is
+   * assumed that aPlan have no aSkipFlag set for tracks in aGrowableTracks
+   * on entry to this method.
+   */
+   uint32_t MarkExcludedTracks(nsTArray<TrackSize>&      aPlan,
+                               uint32_t                  aNumGrowable,
+                               const nsTArray<uint32_t>& aGrowableTracks,
+                               TrackSize::StateBits      aMinSizingSelector,
+                               TrackSize::StateBits      aMaxSizingSelector,
+                               TrackSize::StateBits      aSkipFlag) const
+  {
+    bool foundOneSelected = false;
+    bool foundOneGrowable = false;
+    uint32_t numGrowable = aNumGrowable;
+    for (uint32_t track : aGrowableTracks) {
+      TrackSize& sz = aPlan[track];
+      const auto state = sz.mState;
+      if (state & aMinSizingSelector) {
+        foundOneSelected = true;
+        if (state & aMaxSizingSelector) {
+          foundOneGrowable = true;
+          continue;
+        }
+        sz.mState |= aSkipFlag;
+        MOZ_ASSERT(numGrowable != 0);
+        --numGrowable;
+      }
+    }
+    // 12.5 "if there are no such tracks, then all affected tracks"
+    if (foundOneSelected && !foundOneGrowable) {
+      for (uint32_t track : aGrowableTracks) {
+        aPlan[track].mState &= ~aSkipFlag;
+      }
+      numGrowable = aNumGrowable;
+    }
+    return numGrowable;
+  }
+
+  /**
+   * Increase the planned size for tracks in aGrowableTracks that match
+   * aSelector (or all tracks if aSelector is zero) beyond their limit.
+   * This implements the "Distribute space beyond growth limits" step in
+   * https://drafts.csswg.org/css-grid/#distribute-extra-space
+   */
+  void GrowSelectedTracksUnlimited(nscoord                   aAvailableSpace,
+                                   nsTArray<TrackSize>&      aPlan,
+                                   const nsTArray<uint32_t>& aGrowableTracks,
+                                   TrackSize::StateBits      aSelector) const
+  {
+    MOZ_ASSERT(aAvailableSpace > 0 && aGrowableTracks.Length() > 0);
+    uint32_t numGrowable = aGrowableTracks.Length();
+    if (aSelector) {
+      DebugOnly<TrackSize::StateBits> withoutFlexMin =
+        TrackSize::StateBits(aSelector & ~TrackSize::eFlexMinSizing);
+      MOZ_ASSERT(withoutFlexMin == TrackSize::eIntrinsicMinSizing ||
+                 withoutFlexMin == TrackSize::eMinOrMaxContentMinSizing ||
+                 withoutFlexMin == TrackSize::eMaxContentMinSizing);
+      // Note that eMaxContentMinSizing is always included. We do those first:
+      numGrowable = MarkExcludedTracks(aPlan, numGrowable, aGrowableTracks,
+                                       TrackSize::eMaxContentMinSizing,
+                                       TrackSize::eMaxContentMaxSizing,
+                                       TrackSize::eSkipGrowUnlimited1);
+      // Now mark min-content/auto/<flex> min-sizing tracks if requested.
+      auto minOrAutoSelector = aSelector & ~TrackSize::eMaxContentMinSizing;
+      if (minOrAutoSelector) {
+        numGrowable = MarkExcludedTracks(aPlan, numGrowable, aGrowableTracks,
+                                         minOrAutoSelector,
+                                         TrackSize::eIntrinsicMaxSizing,
+                                         TrackSize::eSkipGrowUnlimited2);
+      }
+    }
+    nscoord space = aAvailableSpace;
+    while (true) {
+      nscoord spacePerTrack = std::max<nscoord>(space / numGrowable, 1);
+      for (uint32_t track : aGrowableTracks) {
+        TrackSize& sz = aPlan[track];
+        if (sz.mState & TrackSize::eSkipGrowUnlimited) {
+          continue; // an excluded track
+        }
+        sz.mBase += spacePerTrack;
+        space -= spacePerTrack;
+        MOZ_ASSERT(space >= 0);
+        if (space == 0) {
+          return;
+        }
+      }
+    }
+    MOZ_ASSERT_UNREACHABLE("we don't exit the loop above except by return");
+  }
+
+  /**
+   * Distribute aAvailableSpace to the planned base size for aGrowableTracks
+   * up to their limits, then distribute the remaining space beyond the limits.
+   */
+  void DistributeToTrackBases(nscoord              aAvailableSpace,
+                              nsTArray<TrackSize>& aPlan,
+                              nsTArray<uint32_t>&  aGrowableTracks,
+                              TrackSize::StateBits aSelector)
+  {
+    SetupGrowthPlan(aPlan, aGrowableTracks);
+    nscoord space = GrowTracksToLimit(aAvailableSpace, aPlan, aGrowableTracks);
+    if (space > 0) {
+      GrowSelectedTracksUnlimited(space, aPlan, aGrowableTracks, aSelector);
+    }
+    CopyPlanToBase(aPlan, aGrowableTracks);
+  }
+
+  /**
+   * Distribute aAvailableSpace to the planned limits for aGrowableTracks.
+   */
+  void DistributeToTrackLimits(nscoord              aAvailableSpace,
+                               nsTArray<TrackSize>& aPlan,
+                               nsTArray<uint32_t>&  aGrowableTracks)
+  {
+    nscoord space = GrowTracksToLimit(aAvailableSpace, aPlan, aGrowableTracks);
+    if (space > 0) {
+      GrowSelectedTracksUnlimited(aAvailableSpace, aPlan, aGrowableTracks,
+                                  TrackSize::StateBits(0));
+    }
+    CopyPlanToLimit(aPlan, aGrowableTracks);
+  }
+
+#ifdef DEBUG
+  void Dump() const
+  {
+    for (uint32_t i = 0, len = mSizes.Length(); i < len; ++i) {
+      printf("  %d: ", i);
+      mSizes[i].Dump();
+      printf("\n");
+    }
+  }
+#endif
+
   nsAutoTArray<TrackSize, 32> mSizes;
   Dimension mDimension;
 };
@@ -289,6 +564,13 @@ private:
     , mWM(aWM)
   {}
 };
+
+static
+bool IsMinContent(const nsStyleCoord& aCoord)
+{
+  return aCoord.GetUnit() == eStyleUnit_Enumerated &&
+         aCoord.GetIntValue() == NS_STYLE_GRID_TRACK_BREADTH_MIN_CONTENT;
+}
 
 /**
  * Search for the aNth occurrence of aName in aNameList (forward), starting at
@@ -1191,36 +1473,46 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
   }
 }
 
-static void
-InitializeTrackSize(nscoord aPercentageBasis,
-                    const nsStyleCoord& aMinCoord,
-                    const nsStyleCoord& aMaxCoord,
-                    TrackSize* aTrackSize)
+void
+nsGridContainerFrame::TrackSize::Initialize(nscoord aPercentageBasis,
+                                            const nsStyleCoord& aMinCoord,
+                                            const nsStyleCoord& aMaxCoord)
 {
+  MOZ_ASSERT(mBase == 0 && mLimit == 0 && mState == 0,
+             "track size data is expected to be initialized to zero");
   // http://dev.w3.org/csswg/css-grid/#algo-init
-  nscoord& base = aTrackSize->mBase;
   switch (aMinCoord.GetUnit()) {
     case eStyleUnit_Auto:
+      mState = eAutoMinSizing;
+      break;
     case eStyleUnit_Enumerated:
+      mState = IsMinContent(aMinCoord) ? eMinContentMinSizing
+                                       : eMaxContentMinSizing;
+      break;
     case eStyleUnit_FlexFraction:
-      base = 0;
+      mState = eFlexMinSizing;
       break;
     default:
-      base = nsRuleNode::ComputeCoordPercentCalc(aMinCoord, aPercentageBasis);
+      mBase = nsRuleNode::ComputeCoordPercentCalc(aMinCoord, aPercentageBasis);
   }
-  nscoord& limit = aTrackSize->mLimit;
   switch (aMaxCoord.GetUnit()) {
     case eStyleUnit_Auto:
+      mState |= eAutoMaxSizing;
+      mLimit = NS_UNCONSTRAINEDSIZE;
+      break;
     case eStyleUnit_Enumerated:
-      limit = NS_UNCONSTRAINEDSIZE;
+      mState |= IsMinContent(aMaxCoord) ? eMinContentMaxSizing
+                                        : eMaxContentMaxSizing;
+      mLimit = NS_UNCONSTRAINEDSIZE;
       break;
     case eStyleUnit_FlexFraction:
-      limit = base;
+      mState |= eFlexMaxSizing;
+      mLimit = mBase;
       break;
     default:
-      limit = nsRuleNode::ComputeCoordPercentCalc(aMaxCoord, aPercentageBasis);
-      if (limit < base) {
-        limit = base;
+      mLimit = nsRuleNode::ComputeCoordPercentCalc(aMaxCoord, aPercentageBasis);
+      if (mLimit < mBase) {
+        mLimit = mBase;
       }
   }
 }
@@ -1236,28 +1528,24 @@ nsGridContainerFrame::Tracks::Initialize(const TrackSizingFunctions& aFunctions,
                aFunctions.mMaxSizingFunctions.Length());
   uint32_t i = 0;
   for (; i < explicitGridOffset; ++i) {
-    InitializeTrackSize(aPercentageBasis,
-                        aFunctions.mAutoMinSizing,
-                        aFunctions.mAutoMaxSizing,
-                        &mSizes[i]);
+    mSizes[i].Initialize(aPercentageBasis,
+                         aFunctions.mAutoMinSizing,
+                         aFunctions.mAutoMaxSizing);
   }
   uint32_t j = 0;
   for (uint32_t len = aFunctions.mMinSizingFunctions.Length(); j < len; ++j) {
-    InitializeTrackSize(aPercentageBasis,
-                        aFunctions.mMinSizingFunctions[j],
-                        aFunctions.mMaxSizingFunctions[j],
-                        &mSizes[i + j]);
+    mSizes[i + j].Initialize(aPercentageBasis,
+                             aFunctions.mMinSizingFunctions[j],
+                             aFunctions.mMaxSizingFunctions[j]);
   }
   i += j;
   for (; i < mSizes.Length(); ++i) {
-    InitializeTrackSize(aPercentageBasis,
-                        aFunctions.mAutoMinSizing,
-                        aFunctions.mAutoMaxSizing,
-                        &mSizes[i]);
+    mSizes[i].Initialize(aPercentageBasis,
+                         aFunctions.mAutoMinSizing,
+                         aFunctions.mAutoMaxSizing);
   }
 }
 
-#if 0
 static nscoord
 MinSize(nsIFrame* aChild, nsRenderingContext* aRC, WritingMode aCBWM,
         nsGridContainerFrame::Dimension aDimension,
@@ -1347,21 +1635,366 @@ MaxContentContribution(nsIFrame*                       aChild,
   return ContentContribution(aChild, aRS, aRC, aCBWM, aDimension,
                              nsLayoutUtils::PREF_ISIZE);
 }
-#endif
 
 void
 nsGridContainerFrame::CalculateTrackSizes(GridReflowState&   aState,
-                                          const LogicalSize& aContentBox)
+                                          const LogicalSize& aContentBox,
+                                          IntrinsicISizeType aConstraint)
 {
   aState.mCols.mSizes.SetLength(mGridColEnd);
-  aState.mRows.mSizes.SetLength(mGridRowEnd);
+  PodZero(aState.mCols.mSizes.Elements(), aState.mCols.mSizes.Length());
   const WritingMode& wm = aState.mWM;
-  aState.mCols.Initialize(aState.mColFunctions, aContentBox.ISize(wm));
+  nscoord colPercentageBasis = aContentBox.ISize(wm);
+  auto& colFunctions = aState.mColFunctions;
+  aState.mCols.Initialize(colFunctions, colPercentageBasis);
+  aState.mCols.ResolveIntrinsicSize(aState, mGridItems, colFunctions,
+                                    &GridArea::mCols, colPercentageBasis,
+                                    aConstraint);
+
+  aState.mRows.mSizes.SetLength(mGridRowEnd);
+  PodZero(aState.mRows.mSizes.Elements(), aState.mRows.mSizes.Length());
   nscoord rowPercentageBasis = aContentBox.BSize(wm);
   if (rowPercentageBasis == NS_AUTOHEIGHT) {
     rowPercentageBasis = 0;
   }
-  aState.mRows.Initialize(aState.mRowFunctions, rowPercentageBasis);
+  auto& rowFunctions = aState.mRowFunctions;
+  aState.mRows.Initialize(rowFunctions, rowPercentageBasis);
+  aState.mIter.Reset(); // XXX cleanup this Reset mess!
+  aState.mRows.ResolveIntrinsicSize(aState, mGridItems, rowFunctions,
+                                    &GridArea::mRows, rowPercentageBasis,
+                                    aConstraint);
+}
+
+bool
+nsGridContainerFrame::Tracks::HasIntrinsicButNoFlexSizingInRange(
+  const LineRange&      aRange,
+  IntrinsicISizeType    aConstraint,
+  TrackSize::StateBits* aState) const
+{
+  MOZ_ASSERT(!aRange.IsAuto(), "must have a definite range");
+  const uint32_t start = aRange.mStart;
+  const uint32_t end = aRange.mEnd;
+  bool foundIntrinsic = false;
+  const TrackSize::StateBits selector =
+    TrackSize::eIntrinsicMinSizing |
+    TrackSize::eIntrinsicMaxSizing |
+    (aConstraint == nsLayoutUtils::MIN_ISIZE ? TrackSize::eFlexMinSizing
+                                             : TrackSize::StateBits(0));
+  for (uint32_t i = start; i < end; ++i) {
+    TrackSize::StateBits state = mSizes[i].mState;
+    if (state & TrackSize::eFlexMaxSizing) {
+      return false;
+    }
+    if (state & selector) {
+      foundIntrinsic = true;
+    }
+    *aState |= state;
+  }
+  return foundIntrinsic;
+}
+
+void
+nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
+  GridReflowState&            aState,
+  const TrackSizingFunctions& aFunctions,
+  nscoord                     aPercentageBasis,
+  IntrinsicISizeType          aConstraint,
+  const LineRange&            aRange,
+  nsIFrame*                   aGridItem)
+{
+  Maybe<nscoord> minContentContribution;
+  Maybe<nscoord> maxContentContribution;
+  // min sizing
+  TrackSize& sz = mSizes[aRange.mStart];
+  WritingMode wm = aState.mWM;
+  const nsHTMLReflowState* rs = aState.mReflowState;
+  nsRenderingContext* rc = &aState.mRenderingContext;
+  if (sz.mState & TrackSize::eAutoMinSizing) {
+    nscoord s = MinSize(aGridItem, rc, wm, mDimension, aConstraint);
+    sz.mBase = std::max(sz.mBase, s);
+  } else if ((sz.mState & TrackSize::eMinContentMinSizing) ||
+             (aConstraint == nsLayoutUtils::MIN_ISIZE &&
+              (sz.mState & TrackSize::eFlexMinSizing))) {
+    nscoord s = MinContentContribution(aGridItem, rs, rc, wm, mDimension);
+    minContentContribution.emplace(s);
+    sz.mBase = std::max(sz.mBase, minContentContribution.value());
+  } else if (sz.mState & TrackSize::eMaxContentMinSizing) {
+    nscoord s = MaxContentContribution(aGridItem, rs, rc, wm, mDimension);
+    maxContentContribution.emplace(s);
+    sz.mBase = std::max(sz.mBase, maxContentContribution.value());
+  }
+  // max sizing
+  if (sz.mState & TrackSize::eMinContentMaxSizing) {
+    if (minContentContribution.isNothing()) {
+      nscoord s = MinContentContribution(aGridItem, rs, rc, wm, mDimension);
+      minContentContribution.emplace(s);
+    }
+    if (sz.mLimit == NS_UNCONSTRAINEDSIZE) {
+      sz.mLimit = minContentContribution.value();
+    } else {
+      sz.mLimit = std::max(sz.mLimit, minContentContribution.value());
+    }
+  } else if (sz.mState & (TrackSize::eAutoMaxSizing |
+                          TrackSize::eMaxContentMaxSizing)) {
+    if (maxContentContribution.isNothing()) {
+      nscoord s = MaxContentContribution(aGridItem, rs, rc, wm, mDimension);
+      maxContentContribution.emplace(s);
+    }
+    if (sz.mLimit == NS_UNCONSTRAINEDSIZE) {
+      sz.mLimit = maxContentContribution.value();
+    } else {
+      sz.mLimit = std::max(sz.mLimit, maxContentContribution.value());
+    }
+  }
+  if (sz.mLimit < sz.mBase) {
+    sz.mLimit = sz.mBase;
+  }
+}
+
+void
+nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
+  GridReflowState&            aState,
+  nsTArray<GridItemInfo>&     aGridItems,
+  const TrackSizingFunctions& aFunctions,
+  LineRange GridArea::*       aRange,
+  nscoord                     aPercentageBasis,
+  IntrinsicISizeType          aConstraint)
+{
+  // Some data we collect on each item for Step 2 of the algorithm below.
+  struct Step2ItemData
+  {
+    uint32_t mSpan;
+    TrackSize::StateBits mState;
+    LineRange mLineRange;
+    nscoord mMinSize;
+    nscoord mMinContentContribution;
+    nscoord mMaxContentContribution;
+    nsIFrame* mFrame;
+    static bool IsSpanLessThan(const Step2ItemData& a, const Step2ItemData& b)
+    {
+      return a.mSpan < b.mSpan;
+    }
+  };
+
+  // Resolve Intrinsic Track Sizes
+  // http://dev.w3.org/csswg/css-grid/#algo-content
+  nsAutoTArray<TrackSize::StateBits, 16> stateBitsPerSpan;
+  nsTArray<Step2ItemData> step2Items;
+  GridItemCSSOrderIterator& iter = aState.mIter;
+  nsRenderingContext* rc = &aState.mRenderingContext;
+  WritingMode wm = aState.mWM;
+  uint32_t maxSpan = 0; // max span of the step2Items items
+  const TrackSize::StateBits flexMin =
+    aConstraint == nsLayoutUtils::MIN_ISIZE ? TrackSize::eFlexMinSizing
+                                            : TrackSize::StateBits(0);
+  for (; !iter.AtEnd(); iter.Next()) {
+    nsIFrame* child = *iter;
+    const GridArea& area = aGridItems[iter.GridItemIndex()].mArea;
+    const LineRange& lineRange = area.*aRange;
+    uint32_t span = lineRange.Extent();
+    if (span == 1) {
+      // Step 1. Size tracks to fit non-spanning items.
+      ResolveIntrinsicSizeStep1(aState, aFunctions, aPercentageBasis,
+                                aConstraint, lineRange, child);
+    } else {
+      TrackSize::StateBits state = TrackSize::StateBits(0);
+      if (HasIntrinsicButNoFlexSizingInRange(lineRange, aConstraint, &state)) {
+        // Collect data for Step 2.
+        maxSpan = std::max(maxSpan, span);
+        if (span >= stateBitsPerSpan.Length()) {
+          uint32_t len = 2 * span;
+          stateBitsPerSpan.SetCapacity(len);
+          for (uint32_t i = stateBitsPerSpan.Length(); i < len; ++i) {
+            stateBitsPerSpan.AppendElement(TrackSize::StateBits(0));
+          }
+        }
+        stateBitsPerSpan[span] |= state;
+        nscoord minSize = 0;
+        if (state & (flexMin | TrackSize::eIntrinsicMinSizing)) { // for 2.1
+          minSize = MinSize(child, rc, wm, mDimension, aConstraint);
+        }
+        nscoord minContent = 0;
+        if (state & (flexMin | TrackSize::eMinOrMaxContentMinSizing | // for 2.2
+                     TrackSize::eIntrinsicMaxSizing)) {               // for 2.5
+          minContent = MinContentContribution(child, aState.mReflowState,
+                                              rc, wm, mDimension);
+        }
+        nscoord maxContent = 0;
+        if (state & (TrackSize::eMaxContentMinSizing |         // for 2.3
+                     TrackSize::eAutoOrMaxContentMaxSizing)) { // for 2.6
+          maxContent = MaxContentContribution(child, aState.mReflowState,
+                                              rc, wm, mDimension);
+        }
+        step2Items.AppendElement(
+          Step2ItemData({span, state, lineRange, minSize,
+                         minContent, maxContent, child}));
+      }
+    }
+  }
+
+  // Step 2.
+  if (maxSpan) {
+    // Sort the collected items on span length, shortest first.
+    std::stable_sort(step2Items.begin(), step2Items.end(),
+                     Step2ItemData::IsSpanLessThan);
+
+    nsTArray<uint32_t> tracks(maxSpan);
+    nsTArray<TrackSize> plan(mSizes.Length());
+    plan.SetLength(mSizes.Length());
+    for (uint32_t i = 0, len = step2Items.Length(); i < len; ) {
+      // Start / end index for items of the same span length:
+      const uint32_t spanGroupStartIndex = i;
+      uint32_t spanGroupEndIndex = len;
+      const uint32_t span = step2Items[i].mSpan;
+      for (++i; i < len; ++i) {
+        if (step2Items[i].mSpan != span) {
+          spanGroupEndIndex = i;
+          break;
+        }
+      }
+
+      bool updatedBase = false; // Did we update any mBase in step 2.1 - 2.3?
+      TrackSize::StateBits selector(flexMin | TrackSize::eIntrinsicMinSizing);
+      if (stateBitsPerSpan[span] & selector) {
+        // Step 2.1 MinSize to intrinsic min-sizing.
+        for (i = spanGroupStartIndex; i < spanGroupEndIndex; ++i) {
+          Step2ItemData& item = step2Items[i];
+          if (!(item.mState & selector)) {
+            continue;
+          }
+          nscoord space = item.mMinSize;
+          if (space <= 0) {
+            continue;
+          }
+          tracks.ClearAndRetainStorage();
+          space = CollectGrowable(space, mSizes, item.mLineRange, selector,
+                                  tracks);
+          if (space > 0) {
+            DistributeToTrackBases(space, plan, tracks, selector);
+            updatedBase = true;
+          }
+        }
+      }
+
+      selector = flexMin | TrackSize::eMinOrMaxContentMinSizing;
+      if (stateBitsPerSpan[span] & selector) {
+        // Step 2.2 MinContentContribution to min-/max-content min-sizing.
+        for (i = spanGroupStartIndex; i < spanGroupEndIndex; ++i) {
+          Step2ItemData& item = step2Items[i];
+          if (!(item.mState & selector)) {
+            continue;
+          }
+          nscoord space = item.mMinContentContribution;
+          if (space <= 0) {
+            continue;
+          }
+          tracks.ClearAndRetainStorage();
+          space = CollectGrowable(space, mSizes, item.mLineRange, selector,
+                                  tracks);
+          if (space > 0) {
+            DistributeToTrackBases(space, plan, tracks, selector);
+            updatedBase = true;
+          }
+        }
+      }
+
+      if (stateBitsPerSpan[span] & TrackSize::eMaxContentMinSizing) {
+        // Step 2.3 MaxContentContribution to max-content min-sizing.
+        for (i = spanGroupStartIndex; i < spanGroupEndIndex; ++i) {
+          Step2ItemData& item = step2Items[i];
+          if (!(item.mState & TrackSize::eMaxContentMinSizing)) {
+            continue;
+          }
+          nscoord space = item.mMaxContentContribution;
+          if (space <= 0) {
+            continue;
+          }
+          tracks.ClearAndRetainStorage();
+          space = CollectGrowable(space, mSizes, item.mLineRange,
+                                  TrackSize::eMaxContentMinSizing,
+                                  tracks);
+          if (space > 0) {
+            DistributeToTrackBases(space, plan, tracks,
+                                   TrackSize::eMaxContentMinSizing);
+            updatedBase = true;
+          }
+        }
+      }
+
+      if (updatedBase) {
+        // Step 2.4
+        for (TrackSize& sz : mSizes) {
+          if (sz.mBase > sz.mLimit) {
+            sz.mLimit = sz.mBase;
+          }
+        }
+      }
+      if (stateBitsPerSpan[span] & TrackSize::eIntrinsicMaxSizing) {
+        plan = mSizes;
+        for (TrackSize& sz : plan) {
+          if (sz.mLimit == NS_UNCONSTRAINEDSIZE) {
+            // use mBase as the planned limit
+          } else {
+            sz.mBase = sz.mLimit;
+          }
+        }
+
+        // Step 2.5 MinContentContribution to intrinsic max-sizing.
+        for (i = spanGroupStartIndex; i < spanGroupEndIndex; ++i) {
+          Step2ItemData& item = step2Items[i];
+          if (!(item.mState & TrackSize::eIntrinsicMaxSizing)) {
+            continue;
+          }
+          nscoord space = item.mMinContentContribution;
+          if (space <= 0) {
+            continue;
+          }
+          tracks.ClearAndRetainStorage();
+          space = CollectGrowable(space, plan, item.mLineRange,
+                                  TrackSize::eIntrinsicMaxSizing,
+                                  tracks);
+          if (space > 0) {
+            DistributeToTrackLimits(space, plan, tracks);
+          }
+        }
+        for (size_t j = 0, len = mSizes.Length(); j < len; ++j) {
+          TrackSize& sz = plan[j];
+          sz.mState &= ~(TrackSize::eFrozen | TrackSize::eSkipGrowUnlimited);
+          if (sz.mLimit != NS_UNCONSTRAINEDSIZE) {
+            sz.mLimit = sz.mBase;  // collect the results from 2.5
+          }
+        }
+
+        if (stateBitsPerSpan[span] & TrackSize::eAutoOrMaxContentMaxSizing) {
+          // Step 2.6 MaxContentContribution to max-content max-sizing.
+          for (i = spanGroupStartIndex; i < spanGroupEndIndex; ++i) {
+            Step2ItemData& item = step2Items[i];
+            if (!(item.mState & TrackSize::eAutoOrMaxContentMaxSizing)) {
+              continue;
+            }
+            nscoord space = item.mMaxContentContribution;
+            if (space <= 0) {
+              continue;
+            }
+            tracks.ClearAndRetainStorage();
+            space = CollectGrowable(space, plan, item.mLineRange,
+                                    TrackSize::eAutoOrMaxContentMaxSizing,
+                                    tracks);
+            if (space > 0) {
+              DistributeToTrackLimits(space, plan, tracks);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Step 3.
+  for (TrackSize& sz : mSizes) {
+    if (sz.mLimit == NS_UNCONSTRAINEDSIZE) {
+      sz.mLimit = sz.mBase;
+    }
+  }
 }
 
 void
@@ -1444,7 +2077,7 @@ nsGridContainerFrame::ContainingBlockForAbsPos(const GridReflowState& aState,
   aArea.mRows.ToPositionAndLengthForAbsPos(aState.mRows.mSizes,
                                            aGridOrigin.B(wm),
                                            &b, &bSize);
-  return LogicalRect(aWM, i, b, iSize, bSize);
+  return LogicalRect(wm, i, b, iSize, bSize);
 }
 
 void
@@ -1578,8 +2211,10 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   const nscoord computedBSize = aReflowState.ComputedBSize();
   const nscoord computedISize = aReflowState.ComputedISize();
   const WritingMode& wm = gridReflowState.mWM;
+  gridReflowState.mIter.Reset();
   CalculateTrackSizes(gridReflowState,
-                      LogicalSize(wm, computedISize, computedBSize));
+                      LogicalSize(wm, computedISize, computedBSize),
+                      nsLayoutUtils::PREF_ISIZE);
 
   nscoord bSize = 0;
   if (computedBSize == NS_AUTOHEIGHT) {
@@ -1756,4 +2391,37 @@ nsGridContainerFrame::SanityCheckAnonymousGridItems() const
     }
   }
 }
+
+void
+nsGridContainerFrame::TrackSize::Dump() const
+{
+  printf("mBase=%d mLimit=%d", mBase, mLimit);
+
+  printf(" min:");
+  if (mState & eAutoMinSizing) {
+    printf("auto ");
+  } else if (mState & eMinContentMinSizing) {
+    printf("min-content ");
+  } else if (mState & eMaxContentMinSizing) {
+    printf("max-content ");
+  } else if (mState & eFlexMinSizing) {
+    printf("flex ");
+  }
+
+  printf(" max:");
+  if (mState & eAutoMaxSizing) {
+    printf("auto ");
+  } else if (mState & eMinContentMaxSizing) {
+    printf("min-content ");
+  } else if (mState & eMaxContentMaxSizing) {
+    printf("max-content ");
+  } else if (mState & eFlexMaxSizing) {
+    printf("flex ");
+  }
+
+  if (mState & eFrozen) {
+    printf("frozen ");
+  }
+}
+
 #endif // DEBUG
