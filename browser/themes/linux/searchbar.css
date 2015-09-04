@@ -30,7 +30,20 @@
 
 .search-go-button {
   padding: 1px;
-  list-style-image: url(moz-icon://stock/gtk-find?size=menu);
+  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
+  -moz-image-region: rect(0, 42px, 14px, 28px);
+}
+
+.search-go-button:hover {
+  -moz-image-region: rect(14px, 42px, 28px, 28px);
+}
+
+.search-go-button:hover:active {
+  -moz-image-region: rect(28px, 42px, 42px, 28px);
+}
+
+.search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  transform: scaleX(-1);
 }
 
 menuitem[cmd="cmd_clearhistory"] {
@@ -66,23 +79,6 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 
 .searchbar-search-button:hover:active {
   -moz-image-region: rect(0, 60px, 20px, 40px);
-}
-
-searchbar[oneoffui] .search-go-button {
-  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
-  -moz-image-region: rect(0, 42px, 14px, 28px);
-}
-
-searchbar[oneoffui] .search-go-button:hover {
-  -moz-image-region: rect(14px, 42px, 28px, 28px);
-}
-
-searchbar[oneoffui] .search-go-button:hover:active {
-  -moz-image-region: rect(28px, 42px, 42px, 28px);
-}
-
-searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  transform: scaleX(-1);
 }
 
 

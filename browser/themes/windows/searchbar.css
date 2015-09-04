@@ -32,20 +32,22 @@
 
 .search-go-button {
   padding: 1px;
-  list-style-image: url("chrome://global/skin/icons/Search-glass.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
+  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
+  -moz-image-region: rect(0, 42px, 14px, 28px);
+  width: 14px;
 }
 
-.search-go-button:-moz-locale-dir(rtl) {
+.search-go-button:-moz-locale-dir(rtl),
+.search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   transform: scaleX(-1);
 }
 
 .search-go-button:hover {
-  -moz-image-region: rect(0px 32px 16px 16px);
+  -moz-image-region: rect(14px, 42px, 28px, 28px);
 }
 
 .search-go-button:hover:active {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
+  -moz-image-region: rect(28px, 42px, 42px, 28px);
 }
 
 
@@ -74,24 +76,6 @@
   -moz-image-region: rect(0, 60px, 20px, 40px);
 }
 
-searchbar[oneoffui] .search-go-button {
-  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
-  -moz-image-region: rect(0, 42px, 14px, 28px);
-  width: 14px;
-}
-
-searchbar[oneoffui] .search-go-button:hover {
-  -moz-image-region: rect(14px, 42px, 28px, 28px);
-}
-
-searchbar[oneoffui] .search-go-button:hover:active {
-  -moz-image-region: rect(28px, 42px, 42px, 28px);
-}
-
-searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  transform: scaleX(-1);
-}
-
 @media (min-resolution: 1.1dppx) {
   .searchbar-engine-image {
     list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
@@ -114,16 +98,16 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
     -moz-image-region: rect(0, 120px, 40px, 80px);
   }
 
-  searchbar[oneoffui] .search-go-button {
+  .search-go-button {
     list-style-image: url("chrome://browser/skin/reload-stop-go@2x.png");
     -moz-image-region: rect(0, 84px, 28px, 56px);
   }
 
-  searchbar[oneoffui] .search-go-button:hover {
+  .search-go-button:hover {
     -moz-image-region: rect(28px, 84px, 56px, 56px);
   }
 
-  searchbar[oneoffui] .search-go-button:hover:active {
+  .search-go-button:hover:active {
     -moz-image-region: rect(56px, 84px, 84px, 56px);
   }
 }

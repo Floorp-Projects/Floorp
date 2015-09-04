@@ -63,10 +63,6 @@
 
     <implementation implements="nsIObserver">
       <constructor><![CDATA[
-        if (!this.hasAttribute("oneoffui")) {
-          this.setAttribute("oneoffui", "true");
-        }
-
         if (this.parentNode.parentNode.localName == "toolbarpaletteitem")
           return;
         // Make sure we rebuild the popup in onpopupshowing
@@ -350,8 +346,7 @@
           aEvent.preventDefault();
           aEvent.stopPropagation();
 
-          if (this.hasAttribute("oneoffui"))
-            this.openSuggestionsPanel();
+          this.openSuggestionsPanel();
         ]]></body>
       </method>
 
