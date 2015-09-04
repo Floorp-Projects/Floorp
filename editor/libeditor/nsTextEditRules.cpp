@@ -831,14 +831,6 @@ nsTextEditRules::WillDeleteSelection(Selection* aSelection,
   }
 
   nsresult res = NS_OK;
-  // If the current selection is empty (e.g the user presses backspace with
-  // a collapsed selection), then we want to avoid sending the selectstart
-  // event to the user, so we hide selection changes. However, we still
-  // want to send a single selectionchange event to the document, so we
-  // batch the selectionchange events, such that a single event fires after
-  // the AutoHideSelectionChanges destructor has been run.
-  SelectionBatcher selectionBatcher(aSelection);
-  AutoHideSelectionChanges hideSelection(aSelection);
   nsAutoScriptBlocker scriptBlocker;
 
   if (IsPasswordEditor())
