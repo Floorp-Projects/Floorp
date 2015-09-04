@@ -679,7 +679,7 @@ Finish()
     int(n), n == 1 ? "" : "s",
     n * gSampleInterval_sec, time == 1.0 ? "" : "s");
 
-  if (n == 0) {
+  if (n == 0 || n == 1) {
     exit(0);
   }
 
