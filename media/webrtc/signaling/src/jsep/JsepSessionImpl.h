@@ -121,8 +121,8 @@ public:
                                          uint16_t level) override;
 
   virtual nsresult AddLocalIceCandidate(const std::string& candidate,
-                                        const std::string& mid,
                                         uint16_t level,
+                                        std::string* mid,
                                         bool* skipped) override;
 
   virtual nsresult EndOfLocalCandidates(const std::string& defaultCandidateAddr,

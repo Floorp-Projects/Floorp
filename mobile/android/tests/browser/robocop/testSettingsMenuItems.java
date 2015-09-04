@@ -181,10 +181,6 @@ public class testSettingsMenuItems extends PixelTest {
     public void updateConditionalSettings(Map<String[], List<String[]>> settingsMap) {
         // Preferences dependent on RELEASE_BUILD
         if (!AppConstants.RELEASE_BUILD) {
-            // Text reflow - only built if *not* release build
-            String[] textReflowUi = { mStringHelper.TEXT_REFLOW_LABEL };
-            settingsMap.get(PATH_DISPLAY).add(textReflowUi);
-
             if (AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED) {
                 // Anonymous cell tower/wifi collection
                 String[] networkReportingUi = { mStringHelper.MOZ_LOCATION, mStringHelper.MOZ_LOCATION_MSG };

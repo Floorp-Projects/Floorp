@@ -2572,7 +2572,7 @@ TabChild::RecvSetUpdateHitRegion(const bool& aEnabled)
 }
 
 bool
-TabChild::RecvSetIsDocShellActive(const bool& aIsActive)
+TabChild::RecvSetDocShellIsActive(const bool& aIsActive)
 {
     nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
     if (docShell) {

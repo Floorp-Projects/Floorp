@@ -708,33 +708,6 @@ AST_MATCHER(MemberExpr, isAddRefOrRelease) {
 /// This matcher will select classes which are refcounted.
 AST_MATCHER(QualType, isRefCounted) { return isClassRefCounted(Node); }
 
-#if CLANG_VERSION_FULL < 304
-
-/// The 'equalsBoundeNode' matcher was added in clang 3.4.
-/// Since infra runs clang 3.3, we polyfill it here.
-AST_POLYMORPHIC_MATCHER_P(equalsBoundNode, std::string, ID) {
-  BoundNodesTree bindings = Builder->build();
-  bool haveMatchingResult = false;
-  struct Visitor : public BoundNodesTree::Visitor {
-    const NodeType &Node;
-    std::string ID;
-    bool &haveMatchingResult;
-    Visitor(const NodeType &Node, const std::string &ID,
-            bool &haveMatchingResult)
-        : Node(Node), ID(ID), haveMatchingResult(haveMatchingResult) {}
-    void visitMatch(const BoundNodes &BoundNodesView) override {
-      if (BoundNodesView.getNodeAs<NodeType>(ID) == &Node) {
-        haveMatchingResult = true;
-      }
-    }
-  };
-  Visitor visitor(Node, ID, haveMatchingResult);
-  bindings.visitMatches(&visitor);
-  return haveMatchingResult;
-}
-
-#endif
-
 AST_MATCHER(CXXRecordDecl, hasRefCntMember) {
   return isClassRefCounted(&Node) && getClassRefCntMember(&Node);
 }

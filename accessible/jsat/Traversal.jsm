@@ -224,6 +224,28 @@ this.TraversalRules = { // jshint ignore:line
         Filters.IGNORE;
     }, null, true),
 
+  /* A rule for Android's section navigation, lands on landmarks, regions, and
+     on headings to aid navigation of traditionally structured documents */
+  Section: new BaseTraversalRule(
+    [],
+    function Section_match(aAccessible) {
+      if (aAccessible.role === Roles.HEADING) {
+        return Filters.MATCH;
+      }
+
+      let matchedRole = Utils.matchRoles(aAccessible, [
+        'banner',
+        'complementary',
+        'contentinfo',
+        'main',
+        'navigation',
+        'search',
+        'region'
+        ]);
+
+      return matchedRole ? Filters.MATCH : Filters.IGNORE;
+    }, null, true),
+
   Entry: new BaseTraversalRule(
     [Roles.ENTRY,
      Roles.PASSWORD_TEXT]),

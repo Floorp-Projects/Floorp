@@ -105,9 +105,12 @@ class ModuleObject : public NativeObject
     ArrayObject& localExportEntries() const;
     ArrayObject& indirectExportEntries() const;
     ArrayObject& starExportEntries() const;
+    JSObject* enclosingStaticScope() const;
 
   private:
     static void trace(JSTracer* trc, JSObject* obj);
+
+    bool hasScript() const;
 };
 
 typedef Rooted<ModuleObject*> RootedModuleObject;

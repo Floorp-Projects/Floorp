@@ -27,6 +27,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -47,28 +48,27 @@ namespace dom {
 
 using namespace workers;
 
-class WorkerFetchResolver final : public FetchDriverObserver,
-                                  public WorkerFeature
+class WorkerFetchResolver final : public FetchDriverObserver
 {
   friend class MainThreadFetchRunnable;
   friend class WorkerFetchResponseEndRunnable;
   friend class WorkerFetchResponseRunnable;
 
-  workers::WorkerPrivate* mWorkerPrivate;
-
-  Mutex mCleanUpLock;
-  bool mCleanedUp;
-  // The following are initialized and used exclusively on the worker thread.
-  nsRefPtr<Promise> mFetchPromise;
-  nsRefPtr<Response> mResponse;
+  nsRefPtr<PromiseWorkerProxy> mPromiseProxy;
 public:
-
-  WorkerFetchResolver(workers::WorkerPrivate* aWorkerPrivate, Promise* aPromise)
-    : mWorkerPrivate(aWorkerPrivate)
-    , mCleanUpLock("WorkerFetchResolver")
-    , mCleanedUp(false)
-    , mFetchPromise(aPromise)
+  // Returns null if worker is shutting down.
+  static already_AddRefed<WorkerFetchResolver>
+  Create(workers::WorkerPrivate* aWorkerPrivate, Promise* aPromise)
   {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+    nsRefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(aWorkerPrivate, aPromise);
+    if (!proxy) {
+      return nullptr;
+    }
+
+    nsRefPtr<WorkerFetchResolver> r = new WorkerFetchResolver(proxy);
+    return r.forget();
   }
 
   void
@@ -77,58 +77,16 @@ public:
   void
   OnResponseEnd() override;
 
-  bool
-  Notify(JSContext* aCx, Status aStatus) override
-  {
-    if (aStatus > Running) {
-      CleanUp(aCx);
-    }
-    return true;
-  }
-
-  void
-  CleanUp(JSContext* aCx)
-  {
-    MutexAutoLock lock(mCleanUpLock);
-
-    if (mCleanedUp) {
-      return;
-    }
-
-    MOZ_ASSERT(mWorkerPrivate);
-    mWorkerPrivate->AssertIsOnWorkerThread();
-    MOZ_ASSERT(mWorkerPrivate->GetJSContext() == aCx);
-
-    mWorkerPrivate->RemoveFeature(aCx, this);
-    CleanUpUnchecked();
-  }
-
-  void
-  CleanUpUnchecked()
-  {
-    mResponse = nullptr;
-    if (mFetchPromise) {
-      mFetchPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-      mFetchPromise = nullptr;
-    }
-    mCleanedUp = true;
-  }
-
-  workers::WorkerPrivate*
-  GetWorkerPrivate() const
-  {
-    // It's ok to race on |mCleanedUp|, because it will never cause us to fire
-    // the assertion when we should not.
-    MOZ_ASSERT(!mCleanedUp);
-    return mWorkerPrivate;
-  }
-
 private:
-  ~WorkerFetchResolver()
+  explicit WorkerFetchResolver(PromiseWorkerProxy* aProxy)
+    : mPromiseProxy(aProxy)
   {
-    MOZ_ASSERT(mCleanedUp);
-    MOZ_ASSERT(!mFetchPromise);
+    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(mPromiseProxy);
   }
+
+  ~WorkerFetchResolver()
+  {}
 };
 
 class MainThreadFetchResolver final : public FetchDriverObserver
@@ -153,34 +111,31 @@ class MainThreadFetchRunnable : public nsRunnable
   nsRefPtr<InternalRequest> mRequest;
 
 public:
-  MainThreadFetchRunnable(WorkerPrivate* aWorkerPrivate,
-                          Promise* aPromise,
+  MainThreadFetchRunnable(WorkerFetchResolver* aResolver,
                           InternalRequest* aRequest)
-    : mResolver(new WorkerFetchResolver(aWorkerPrivate, aPromise))
+    : mResolver(aResolver)
     , mRequest(aRequest)
   {
-    MOZ_ASSERT(aWorkerPrivate);
-    aWorkerPrivate->AssertIsOnWorkerThread();
-    if (!aWorkerPrivate->AddFeature(aWorkerPrivate->GetJSContext(), mResolver)) {
-      NS_WARNING("Could not add WorkerFetchResolver feature to worker");
-      mResolver->CleanUpUnchecked();
-      mResolver = nullptr;
-    }
+    MOZ_ASSERT(mResolver);
   }
 
   NS_IMETHODIMP
   Run()
   {
     AssertIsOnMainThread();
-    // AddFeature() call failed, don't bother running.
-    if (!mResolver) {
+    nsRefPtr<PromiseWorkerProxy> proxy = mResolver->mPromiseProxy;
+    MutexAutoLock lock(proxy->Lock());
+    if (proxy->CleanedUp()) {
+      NS_WARNING("Aborting Fetch because worker already shut down");
       return NS_OK;
     }
 
-    nsCOMPtr<nsIPrincipal> principal = mResolver->GetWorkerPrivate()->GetPrincipal();
-    nsCOMPtr<nsILoadGroup> loadGroup = mResolver->GetWorkerPrivate()->GetLoadGroup();
+    nsCOMPtr<nsIPrincipal> principal = proxy->GetWorkerPrivate()->GetPrincipal();
+    MOZ_ASSERT(principal);
+    nsCOMPtr<nsILoadGroup> loadGroup = proxy->GetWorkerPrivate()->GetLoadGroup();
+    MOZ_ASSERT(loadGroup);
     nsRefPtr<FetchDriver> fetch = new FetchDriver(mRequest, principal, loadGroup);
-    nsIDocument* doc = mResolver->GetWorkerPrivate()->GetDocument();
+    nsIDocument* doc = proxy->GetWorkerPrivate()->GetDocument();
     if (doc) {
       fetch->SetDocument(doc);
     }
@@ -262,10 +217,15 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
       r->SetSkipServiceWorker();
     }
 
-    nsRefPtr<MainThreadFetchRunnable> run = new MainThreadFetchRunnable(worker, p, r);
-    if (NS_FAILED(NS_DispatchToMainThread(run))) {
-      NS_WARNING("MainThreadFetchRunnable dispatch failed!");
+    nsRefPtr<WorkerFetchResolver> resolver = WorkerFetchResolver::Create(worker, p);
+    if (!resolver) {
+      NS_WARNING("Could not add WorkerFetchResolver feature to worker");
+      aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+      return nullptr;
     }
+
+    nsRefPtr<MainThreadFetchRunnable> run = new MainThreadFetchRunnable(resolver, r);
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(run)));
   }
 
   return p.forget();
@@ -304,8 +264,10 @@ class WorkerFetchResponseRunnable final : public WorkerRunnable
   // Passed from main thread to worker thread after being initialized.
   nsRefPtr<InternalResponse> mInternalResponse;
 public:
-  WorkerFetchResponseRunnable(WorkerFetchResolver* aResolver, InternalResponse* aResponse)
-    : WorkerRunnable(aResolver->GetWorkerPrivate(), WorkerThreadModifyBusyCount)
+  WorkerFetchResponseRunnable(WorkerPrivate* aWorkerPrivate,
+                              WorkerFetchResolver* aResolver,
+                              InternalResponse* aResponse)
+    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
     , mResolver(aResolver)
     , mInternalResponse(aResponse)
   {
@@ -316,15 +278,13 @@ public:
   {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
-    MOZ_ASSERT(aWorkerPrivate == mResolver->GetWorkerPrivate());
 
-    nsRefPtr<Promise> promise = mResolver->mFetchPromise.forget();
+    nsRefPtr<Promise> promise = mResolver->mPromiseProxy->WorkerPromise();
 
     if (mInternalResponse->Type() != ResponseType::Error) {
       nsRefPtr<nsIGlobalObject> global = aWorkerPrivate->GlobalScope();
-      mResolver->mResponse = new Response(global, mInternalResponse);
-
-      promise->MaybeResolve(mResolver->mResponse);
+      nsRefPtr<Response> response = new Response(global, mInternalResponse);
+      promise->MaybeResolve(response);
     } else {
       ErrorResult result;
       result.ThrowTypeError(MSG_FETCH_FAILED);
@@ -338,8 +298,9 @@ class WorkerFetchResponseEndRunnable final : public WorkerRunnable
 {
   nsRefPtr<WorkerFetchResolver> mResolver;
 public:
-  explicit WorkerFetchResponseEndRunnable(WorkerFetchResolver* aResolver)
-    : WorkerRunnable(aResolver->GetWorkerPrivate(), WorkerThreadModifyBusyCount)
+  WorkerFetchResponseEndRunnable(WorkerPrivate* aWorkerPrivate,
+                                 WorkerFetchResolver* aResolver)
+    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
     , mResolver(aResolver)
   {
   }
@@ -349,9 +310,8 @@ public:
   {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
-    MOZ_ASSERT(aWorkerPrivate == mResolver->GetWorkerPrivate());
 
-    mResolver->CleanUp(aCx);
+    mResolver->mPromiseProxy->CleanUp(aCx);
     return true;
   }
 };
@@ -361,17 +321,19 @@ WorkerFetchResolver::OnResponseAvailable(InternalResponse* aResponse)
 {
   AssertIsOnMainThread();
 
-  MutexAutoLock lock(mCleanUpLock);
-  if (mCleanedUp) {
+  MutexAutoLock lock(mPromiseProxy->Lock());
+  if (mPromiseProxy->CleanedUp()) {
     return;
   }
 
   nsRefPtr<WorkerFetchResponseRunnable> r =
-    new WorkerFetchResponseRunnable(this, aResponse);
+    new WorkerFetchResponseRunnable(mPromiseProxy->GetWorkerPrivate(), this,
+                                    aResponse);
 
-  AutoSafeJSContext cx;
-  if (!r->Dispatch(cx)) {
-    NS_WARNING("Could not dispatch fetch resolve");
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  if (!r->Dispatch(jsapi.cx())) {
+    NS_WARNING("Could not dispatch fetch response");
   }
 }
 
@@ -379,17 +341,18 @@ void
 WorkerFetchResolver::OnResponseEnd()
 {
   AssertIsOnMainThread();
-  MutexAutoLock lock(mCleanUpLock);
-  if (mCleanedUp) {
+  MutexAutoLock lock(mPromiseProxy->Lock());
+  if (mPromiseProxy->CleanedUp()) {
     return;
   }
 
   nsRefPtr<WorkerFetchResponseEndRunnable> r =
-    new WorkerFetchResponseEndRunnable(this);
+    new WorkerFetchResponseEndRunnable(mPromiseProxy->GetWorkerPrivate(), this);
 
-  AutoSafeJSContext cx;
-  if (!r->Dispatch(cx)) {
-    NS_WARNING("Could not dispatch fetch resolve end");
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  if (!r->Dispatch(jsapi.cx())) {
+    NS_WARNING("Could not dispatch fetch response end");
   }
 }
 

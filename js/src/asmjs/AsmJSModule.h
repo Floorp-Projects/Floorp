@@ -862,9 +862,6 @@ class AsmJSModule
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
     Vector<ProfiledFunction,       0, SystemAllocPolicy> profiledFunctions_;
 #endif
-#if defined(JS_ION_PERF)
-    Vector<ProfiledBlocksFunction, 0, SystemAllocPolicy> perfProfiledBlocksFunctions_;
-#endif
 
     ScriptSource *                        scriptSource_;
     PropertyName *                        globalArgumentName_;
@@ -1223,21 +1220,6 @@ class AsmJSModule
     ProfiledFunction& profiledFunction(unsigned i) {
         MOZ_ASSERT(isFinishedWithModulePrologue());
         return profiledFunctions_[i];
-    }
-#endif
-#ifdef JS_ION_PERF
-    bool addProfiledBlocks(ProfiledBlocksFunction&& func)
-    {
-        MOZ_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
-        return perfProfiledBlocksFunctions_.append(mozilla::Move(func));
-    }
-    unsigned numPerfBlocksFunctions() const {
-        MOZ_ASSERT(isFinishedWithModulePrologue());
-        return perfProfiledBlocksFunctions_.length();
-    }
-    ProfiledBlocksFunction& perfProfiledBlocksFunction(unsigned i) {
-        MOZ_ASSERT(isFinishedWithModulePrologue());
-        return perfProfiledBlocksFunctions_[i];
     }
 #endif
 

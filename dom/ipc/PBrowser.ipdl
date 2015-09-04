@@ -722,9 +722,9 @@ child:
     SetUpdateHitRegion(bool aEnabled);
 
     /**
-     * Tell the child to update its docShell's active state.
+     * Update the child side docShell active (resource use) state.
      */
-    SetIsDocShellActive(bool aIsActive);
+    SetDocShellIsActive(bool aIsActive);
 
     /**
      * Notify the child that it shouldn't paint the offscreen displayport.

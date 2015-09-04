@@ -49,6 +49,9 @@ class SdpHelper {
         const Sdp& sdp,
         std::vector<SdpGroupAttributeList::Group>* groups) const;
 
+    nsresult GetMidFromLevel(const Sdp& sdp,
+                             uint16_t level,
+                             std::string* mid);
     nsresult GetIdsFromMsid(const Sdp& sdp,
                             const SdpMediaSection& msection,
                             std::string* streamId,
