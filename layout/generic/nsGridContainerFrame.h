@@ -85,11 +85,6 @@ public:
     StateBits mState;
   };
 
-  // @note when used in a function that measures a child's size, eColDimension
-  // means we're calculating the child's contribution to the column sizing.
-  // (i.e. the child's inline size if its 'writing-mode' is horizontal)
-  enum Dimension { eColDimension, eRowDimension };
-
   // @see nsAbsoluteContainingBlock::Reflow about this magic number
   static const nscoord VERY_LIKELY_A_GRID_CONTAINER = -123456789;
 
@@ -294,7 +289,9 @@ protected:
     }
 
     GridArea mArea;
-    bool mIsFlexing[2]; // does the item span a flex track? (index by Dimension)
+    bool mIsFlexing[2]; // does the item span a flex track? (LogicalAxis index)
+    static_assert(mozilla::eLogicalAxisBlock == 0, "unexpected index value");
+    static_assert(mozilla::eLogicalAxisInline == 1, "unexpected index value");
 #ifdef DEBUG
     nsIFrame* mFrame;
 #endif
