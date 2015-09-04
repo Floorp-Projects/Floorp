@@ -567,7 +567,12 @@ let TimeScale = {
   addAnimation: function(state) {
     let {startTime, delay, duration, iterationCount, playbackRate} = state;
 
-    this.minStartTime = Math.min(this.minStartTime, startTime);
+    // Negative-delayed animations have their startTimes set such that we would
+    // be displaying the delay outside the time window if we didn't take it into
+    // account here.
+    let relevantDelay = delay < 0 ? delay / playbackRate : 0;
+
+    this.minStartTime = Math.min(this.minStartTime, startTime + relevantDelay);
     let length = (delay / playbackRate) +
                  ((duration / playbackRate) *
                   (!iterationCount ? 1 : iterationCount));
@@ -953,23 +958,31 @@ AnimationsTimeline.prototype = {
     });
 
     // The animation name is displayed over the iterations.
+    // Note that in case of negative delay, we push the name towards the right
+    // so the delay can be shown.
     createNode({
       parent: iterations,
       attributes: {
         "class": "name",
-        "title": this.getAnimationTooltipText(state)
+        "title": this.getAnimationTooltipText(state),
+        "style": delay < 0
+                 ? "margin-left:" +
+                   TimeScale.durationToDistance(Math.abs(delay), width) + "px"
+                 : ""
       },
       textContent: state.name
     });
 
     // Delay.
     if (delay) {
-      let w = TimeScale.durationToDistance(delay / rate, width);
+      // Negative delays need to start at 0.
+      let x = TimeScale.durationToDistance((delay < 0 ? 0 : delay) / rate, width);
+      let w = TimeScale.durationToDistance(Math.abs(delay) / rate, width);
       createNode({
         parent: iterations,
         attributes: {
           "class": "delay",
-          "style": `left:-${w}px;
+          "style": `left:-${x}px;
                     width:${w}px;`
         }
       });
