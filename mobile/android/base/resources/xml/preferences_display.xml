@@ -54,12 +54,6 @@
 
     <PreferenceCategory android:title="@string/pref_category_advanced">
 
-        <CheckBoxPreference
-                        android:key="browser.zoom.reflowOnZoom"
-                        android:title="@string/pref_reflow_on_zoom"
-                        android:defaultValue="false"
-                        android:persistent="false" />
-
         <ListPreference android:key="browser.menu.showCharacterEncoding"
                         android:title="@string/pref_char_encoding"
                         android:entries="@array/pref_char_encoding_entries"

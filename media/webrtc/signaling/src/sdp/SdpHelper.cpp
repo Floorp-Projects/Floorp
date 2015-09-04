@@ -228,6 +228,27 @@ SdpHelper::IsBundleSlave(const Sdp& sdp, uint16_t level)
 }
 
 nsresult
+SdpHelper::GetMidFromLevel(const Sdp& sdp,
+                           uint16_t level,
+                           std::string* mid)
+{
+  if (level >= sdp.GetMediaSectionCount()) {
+    SDP_SET_ERROR("Index " << level << " out of range");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  const SdpMediaSection& msection = sdp.GetMediaSection(level);
+  const SdpAttributeList& attrList = msection.GetAttributeList();
+
+  // grab the mid and set the outparam
+  if (attrList.HasAttribute(SdpAttribute::kMidAttribute)) {
+    *mid = attrList.GetMid();
+  }
+
+  return NS_OK;
+}
+
+nsresult
 SdpHelper::AddCandidateToSdp(Sdp* sdp,
                              const std::string& candidateUntrimmed,
                              const std::string& mid,

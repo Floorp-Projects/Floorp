@@ -265,7 +265,9 @@ NS_IMETHODIMP
 nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
 {
   nsresult rv;
-  NS_ASSERTION(aChromeURI, "null url!");
+  if (NS_WARN_IF(!aChromeURI)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   if (mOverrideTable.Get(aChromeURI, aResult))
     return NS_OK;

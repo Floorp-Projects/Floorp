@@ -746,44 +746,8 @@ class AutoAssertNoException
     }
 };
 
-/* Exposed intrinsics so that Ion may inline them. */
-bool intrinsic_ToObject(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_IsObject(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_ToInteger(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_ToString(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_IsCallable(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_ThrowRangeError(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_ThrowTypeError(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_IsConstructing(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_SubstringKernel(JSContext* cx, unsigned argc, Value* vp);
-
-bool intrinsic_DefineDataProperty(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_UnsafeSetReservedSlot(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_UnsafeGetReservedSlot(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_UnsafeGetObjectFromReservedSlot(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_UnsafeGetInt32FromReservedSlot(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_UnsafeGetStringFromReservedSlot(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_UnsafeGetBooleanFromReservedSlot(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_IsPackedArray(JSContext* cx, unsigned argc, Value* vp);
-
+/* Exposed intrinsics for the JITs. */
 bool intrinsic_IsSuspendedStarGenerator(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_IsArrayIterator(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_IsMapIterator(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_IsStringIterator(JSContext* cx, unsigned argc, Value* vp);
-
-bool intrinsic_IsArrayBuffer(JSContext* cx, unsigned argc, Value* vp);
-
-bool intrinsic_IsTypedArray(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_IsPossiblyWrappedTypedArray(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_TypedArrayBuffer(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_TypedArrayByteOffset(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_TypedArrayElementShift(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_TypedArrayLength(JSContext* cx, unsigned argc, Value* vp);
-
-bool intrinsic_MoveTypedArrayElements(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_SetFromTypedArrayApproach(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_SetDisjointTypedElements(JSContext* cx, unsigned argc, Value* vp);
-bool intrinsic_SetOverlappingTypedElements(JSContext* cx, unsigned argc, Value* vp);
 
 class AutoLockForExclusiveAccess
 {

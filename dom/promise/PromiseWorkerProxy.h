@@ -24,8 +24,8 @@ namespace workers {
 class WorkerPrivate;
 } // namespace workers
 
-// A proxy to catch the resolved/rejected Promise's result from the main thread
-// and resolve/reject that on the worker thread eventually.
+// A proxy to (eventually) mirror a resolved/rejected Promise's result from the
+// main thread to a Promise on the worker thread.
 //
 // How to use:
 //
@@ -36,13 +36,27 @@ class WorkerPrivate;
 //        if (aRv.Failed()) {
 //          return nullptr;
 //        }
-//        // Pass |promise| around to the WorkerMainThreadRunnable
+//
+//   2. Create a PromiseWorkerProxy wrapping the Promise. If this fails, the
+//      worker is shutting down and you should fail the original call. This is
+//      only likely to happen in (Gecko-specific) worker onclose handlers.
+//
+//        nsRefPtr<PromiseWorkerProxy> proxy =
+//          PromiseWorkerProxy::Create(workerPrivate, promise);
+//        if (!proxy) {
+//          // You may also reject the Promise with an AbortError or similar.
+//          return nullptr;
+//        }
+//
+//   3. Dispatch a runnable to the main thread, with a reference to the proxy to
+//      perform the main thread operation. PromiseWorkerProxy is thread-safe
+//      refcounted.
+//
+//   4. Return the worker thread promise to the JS caller:
+//
 //        return promise.forget();
 //
-//   2. In your WorkerMainThreadRunnable's ctor, create a PromiseWorkerProxy
-//      which holds a nsRefPtr<Promise> to the Promise created at #1.
-//
-//   3. In your WorkerMainThreadRunnable::MainThreadRun(), obtain a Promise on
+//   5. In your main thread runnable Run(), obtain a Promise on
 //      the main thread and call its AppendNativeHandler(PromiseNativeHandler*)
 //      to bind the PromiseWorkerProxy created at #2.
 //
@@ -52,17 +66,49 @@ class WorkerPrivate;
 //
 // PromiseWorkerProxy can also be used in situations where there is no main
 // thread Promise, or where special handling is required on the worker thread
-// for promise resolution. Create a PromiseWorkerProxy as in steps 1 and
-// 2 above. When the main thread is ready to resolve the worker thread promise,
-// dispatch a runnable to the worker. Use GetWorkerPrivate() to acquire the
-// worker. This might be null! In the WorkerRunnable's WorkerRun() use
-// GetWorkerPromise() to access the Promise and resolve/reject it. Then call
-// CleanUp() on the worker thread.
+// for promise resolution. Create a PromiseWorkerProxy as in steps 1 to 3
+// above. When the main thread is ready to resolve the worker thread promise:
 //
-// IMPORTANT: Dispatching the runnable to the worker thread may fail causing
-// the promise to leak. To successfully release the promise on the
-// worker thread in this case, use |PromiseWorkerProxyControlRunnable| to
-// dispatch a control runnable that will deref the object on the correct thread.
+//   1. Acquire the mutex before attempting to access the worker private.
+//
+//        AssertIsOnMainThread();
+//        MutexAutoLock lock(proxy->Lock());
+//        if (proxy->CleanedUp()) {
+//          // Worker has already shut down, can't access worker private.
+//          return;
+//        }
+//
+//   2. Dispatch a runnable to the worker. Use GetWorkerPrivate() to acquire the
+//      worker.
+//
+//        nsRefPtr<FinishTaskWorkerRunnable> runnable =
+//          new FinishTaskWorkerRunnable(proxy->GetWorkerPrivate(), proxy, result);
+//        AutoJSAPI jsapi;
+//        jsapi.Init();
+//        if (!r->Dispatch(jsapi.cx())) {
+//          // Worker is alive but not Running any more, so the Promise can't
+//          // be resolved, give up. The proxy will get Release()d at some
+//          // point.
+//
+//          // Usually do nothing, but you may want to log the fact.
+//        }
+//
+//   3. In the WorkerRunnable's WorkerRun() use WorkerPromise() to access the
+//      Promise and resolve/reject it. Then call CleanUp().
+//
+//        bool
+//        WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+//        {
+//          aWorkerPrivate->AssertIsOnWorkerThread();
+//          nsRefPtr<Promise> promise = mProxy->WorkerPromise();
+//          promise->MaybeResolve(mResult);
+//          mProxy->CleanUp(aCx);
+//        }
+//
+// Note: If a PromiseWorkerProxy is not cleaned up by a WorkerRunnable - this
+// can happen if the main thread Promise is never fulfilled - it will
+// stay alive till the worker reaches a Canceling state, even if all external
+// references to it are dropped.
 
 class PromiseWorkerProxy : public PromiseNativeHandler,
                            public workers::WorkerFeature
@@ -77,20 +123,29 @@ public:
          Promise* aWorkerPromise,
          const JSStructuredCloneCallbacks* aCallbacks = nullptr);
 
+  // Main thread callers must hold Lock() and check CleanUp() before calling this.
+  // Worker thread callers, this will assert that the proxy has not been cleaned
+  // up.
   workers::WorkerPrivate* GetWorkerPrivate() const;
 
-  Promise* GetWorkerPromise() const;
+  // This should only be used within WorkerRunnable::WorkerRun() running on the
+  // worker thread! Do not call this after calling CleanUp().
+  Promise* WorkerPromise() const;
 
   void StoreISupports(nsISupports* aSupports);
 
+  // Worker thread only. Calling this invalidates several assumptions, so be
+  // sure this is the last thing you do.
+  // 1. WorkerPrivate() will no longer return a valid worker.
+  // 2. WorkerPromise() will crash!
   void CleanUp(JSContext* aCx);
 
-  Mutex& GetCleanUpLock()
+  Mutex& Lock()
   {
     return mCleanUpLock;
   }
 
-  bool IsClean() const
+  bool CleanedUp() const
   {
     mCleanUpLock.AssertCurrentThreadOwns();
     return mCleanedUp;
@@ -112,6 +167,11 @@ private:
 
   virtual ~PromiseWorkerProxy();
 
+  bool AddRefObject();
+
+  // If not called from Create(), be sure to hold Lock().
+  void CleanProperties();
+
   // Function pointer for calling Promise::{ResolveInternal,RejectInternal}.
   typedef void (Promise::*RunCallbackFunc)(JSContext*,
                                            JS::Handle<JS::Value>);
@@ -120,11 +180,15 @@ private:
                    JS::Handle<JS::Value> aValue,
                    RunCallbackFunc aFunc);
 
+  // Any thread with appropriate checks.
   workers::WorkerPrivate* mWorkerPrivate;
 
-  // This lives on the worker thread.
+  // Worker thread only.
   nsRefPtr<Promise> mWorkerPromise;
 
+  // Modified on the worker thread.
+  // It is ok to *read* this without a lock on the worker.
+  // Main thread must always acquire a lock.
   bool mCleanedUp; // To specify if the cleanUp() has been done.
 
   const JSStructuredCloneCallbacks* mCallbacks;
@@ -135,32 +199,10 @@ private:
 
   // Ensure the worker and the main thread won't race to access |mCleanedUp|.
   Mutex mCleanUpLock;
+
+  // Maybe get rid of this entirely and rely on mCleanedUp
+  DebugOnly<bool> mFeatureAdded;
 };
-
-// Helper runnable used for releasing the proxied promise when the worker
-// is not accepting runnables and the promise object would leak.
-// See the instructions above.
-class PromiseWorkerProxyControlRunnable final : public workers::WorkerControlRunnable
-{
-  nsRefPtr<PromiseWorkerProxy> mProxy;
-
-public:
-  PromiseWorkerProxyControlRunnable(workers::WorkerPrivate* aWorkerPrivate,
-                                    PromiseWorkerProxy* aProxy)
-    : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
-    , mProxy(aProxy)
-  {
-    MOZ_ASSERT(aProxy);
-  }
-
-  virtual bool
-  WorkerRun(JSContext* aCx, workers::WorkerPrivate* aWorkerPrivate) override;
-
-private:
-  ~PromiseWorkerProxyControlRunnable()
-  {}
-};
-
 } // namespace dom
 } // namespace mozilla
 

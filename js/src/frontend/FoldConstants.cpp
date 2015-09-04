@@ -1775,10 +1775,13 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_COMPUTED_NAME:
       case PNK_SPREAD:
       case PNK_EXPORT:
-      case PNK_EXPORT_DEFAULT:
       case PNK_VOID:
         MOZ_ASSERT(pn->isArity(PN_UNARY));
         return Fold(cx, &pn->pn_kid, parser, inGenexpLambda);
+
+      case PNK_EXPORT_DEFAULT:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        return Fold(cx, &pn->pn_left, parser, inGenexpLambda);
 
       case PNK_SEMI:
         MOZ_ASSERT(pn->isArity(PN_UNARY));

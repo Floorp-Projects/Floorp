@@ -30,48 +30,45 @@ Cu.importGlobalProperties(["File"]);
 ////////////////////////////////////////////////////////////////////////////////
 //// Helpers.
 
-let CtypesHelpers = {
-  _structs: {},
-  _functions: {},
-  _libs: {},
+function CtypesHelpers() {
+  this._structs = {};
+  this._functions = {};
+  this._libs = {};
 
-  /**
-   * Must be invoked once before first use of any of the provided helpers.
-   */
-  initialize() {
-    const WORD = ctypes.uint16_t;
-    const DWORD = ctypes.uint32_t;
-    const BOOL = ctypes.int;
+  const WORD = ctypes.uint16_t;
+  const DWORD = ctypes.uint32_t;
+  const BOOL = ctypes.int;
 
-    this._structs.SYSTEMTIME = new ctypes.StructType('SYSTEMTIME', [
-      {wYear: WORD},
-      {wMonth: WORD},
-      {wDayOfWeek: WORD},
-      {wDay: WORD},
-      {wHour: WORD},
-      {wMinute: WORD},
-      {wSecond: WORD},
-      {wMilliseconds: WORD}
-    ]);
+  this._structs.SYSTEMTIME = new ctypes.StructType('SYSTEMTIME', [
+    {wYear: WORD},
+    {wMonth: WORD},
+    {wDayOfWeek: WORD},
+    {wDay: WORD},
+    {wHour: WORD},
+    {wMinute: WORD},
+    {wSecond: WORD},
+    {wMilliseconds: WORD}
+  ]);
 
-    this._structs.FILETIME = new ctypes.StructType('FILETIME', [
-      {dwLowDateTime: DWORD},
-      {dwHighDateTime: DWORD}
-    ]);
+  this._structs.FILETIME = new ctypes.StructType('FILETIME', [
+    {dwLowDateTime: DWORD},
+    {dwHighDateTime: DWORD}
+  ]);
 
-    try {
-      this._libs.kernel32 = ctypes.open("Kernel32");
-      this._functions.FileTimeToSystemTime =
-        this._libs.kernel32.declare("FileTimeToSystemTime",
-                                    ctypes.default_abi,
-                                    BOOL,
-                                    this._structs.FILETIME.ptr,
-                                    this._structs.SYSTEMTIME.ptr);
-    } catch (ex) {
-      this.finalize();
-    }
-  },
+  try {
+    this._libs.kernel32 = ctypes.open("Kernel32");
+    this._functions.FileTimeToSystemTime =
+      this._libs.kernel32.declare("FileTimeToSystemTime",
+                                  ctypes.default_abi,
+                                  BOOL,
+                                  this._structs.FILETIME.ptr,
+                                  this._structs.SYSTEMTIME.ptr);
+  } catch (ex) {
+    this.finalize();
+  }
+}
 
+CtypesHelpers.prototype = {
   /**
    * Must be invoked once after last use of any of the provided helpers.
    */
@@ -433,7 +430,7 @@ Cookies.prototype = {
   },
 
   migrate(aCallback) {
-    CtypesHelpers.initialize();
+    this.ctypesHelpers = new CtypesHelpers();
 
     let cookiesGenerator = (function genCookie() {
       let success = false;
@@ -460,7 +457,7 @@ Cookies.prototype = {
         }
       }
 
-      CtypesHelpers.finalize();
+      this.ctypesHelpers.finalize();
 
       aCallback(success);
     }).apply(this);
@@ -536,8 +533,8 @@ Cookies.prototype = {
           host = "." + host;
       }
 
-      let expireTime = CtypesHelpers.fileTimeToSecondsSinceEpoch(Number(expireTimeHi),
-                                                                 Number(expireTimeLo));
+      let expireTime = this.ctypesHelpers.fileTimeToSecondsSinceEpoch(Number(expireTimeHi),
+                                                                      Number(expireTimeLo));
       Services.cookies.add(host,
                            path,
                            name,
@@ -554,6 +551,7 @@ Cookies.prototype = {
 let MSMigrationUtils = {
   MIGRATION_TYPE_IE: 1,
   MIGRATION_TYPE_EDGE: 2,
+  CtypesHelpers: CtypesHelpers,
   getBookmarksMigrator(migrationType = this.MIGRATION_TYPE_IE) {
     return new Bookmarks(migrationType);
   },

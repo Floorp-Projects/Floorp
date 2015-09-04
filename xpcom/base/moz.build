@@ -53,6 +53,7 @@ EXPORTS += [
     'nscore.h',
     'nsCycleCollector.h',
     'nsDebugImpl.h',
+    'nsDumpUtils.h',
     'nsError.h',
     'nsGZFileWriter.h',
     'nsIID.h',

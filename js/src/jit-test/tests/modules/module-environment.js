@@ -22,6 +22,6 @@ testInitialEnvironment('export var x = 1;', ['x']);
 testInitialEnvironment('export let x = 1;', ['x']);
 testInitialEnvironment('export default class x { constructor() {} };', ['x']);
 testInitialEnvironment('export default function x() {};', ['x']);
-testInitialEnvironment('export default 1;', []);
+testInitialEnvironment('export default 1;', ['*default*']);
 testInitialEnvironment('export default class { constructor() {} };', ['*default*']);
 testInitialEnvironment('export default function() {};', ['*default*']);

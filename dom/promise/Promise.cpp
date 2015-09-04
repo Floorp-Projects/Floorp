@@ -1509,8 +1509,7 @@ public:
     MOZ_ASSERT(aWorkerPrivate == mWorkerPrivate);
 
     MOZ_ASSERT(mPromiseWorkerProxy);
-    nsRefPtr<Promise> workerPromise = mPromiseWorkerProxy->GetWorkerPromise();
-    MOZ_ASSERT(workerPromise);
+    nsRefPtr<Promise> workerPromise = mPromiseWorkerProxy->WorkerPromise();
 
     // Here we convert the buffer to a JS::Value.
     JS::Rooted<JS::Value> value(aCx);
@@ -1553,11 +1552,10 @@ PromiseWorkerProxy::Create(workers::WorkerPrivate* aWorkerPrivate,
 
   // We do this to make sure the worker thread won't shut down before the
   // promise is resolved/rejected on the worker thread.
-  if (!aWorkerPrivate->AddFeature(aWorkerPrivate->GetJSContext(), proxy)) {
+  if (!proxy->AddRefObject()) {
     // Probably the worker is terminating. We cannot complete the operation
     // and we have to release all the resources.
-    proxy->mCleanedUp = true;
-    proxy->mWorkerPromise = nullptr;
+    proxy->CleanProperties();
     return nullptr;
   }
 
@@ -1574,40 +1572,76 @@ PromiseWorkerProxy::PromiseWorkerProxy(workers::WorkerPrivate* aWorkerPrivate,
   , mCleanedUp(false)
   , mCallbacks(aCallbacks)
   , mCleanUpLock("cleanUpLock")
+  , mFeatureAdded(false)
 {
 }
 
 PromiseWorkerProxy::~PromiseWorkerProxy()
 {
   MOZ_ASSERT(mCleanedUp);
+  MOZ_ASSERT(!mFeatureAdded);
   MOZ_ASSERT(!mWorkerPromise);
+  MOZ_ASSERT(!mWorkerPrivate);
 }
 
-workers::WorkerPrivate*
-PromiseWorkerProxy::GetWorkerPrivate() const
+void
+PromiseWorkerProxy::CleanProperties()
 {
-  // It's ok to race on |mCleanedUp|, because it will never cause us to fire
-  // the assertion when we should not.
-  MOZ_ASSERT(!mCleanedUp);
-
-#ifdef DEBUG
-  if (NS_IsMainThread()) {
-    mCleanUpLock.AssertCurrentThreadOwns();
-  }
-#endif
-
-  return mWorkerPrivate;
-}
-
-Promise*
-PromiseWorkerProxy::GetWorkerPromise() const
-{
-
 #ifdef DEBUG
   workers::WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(worker);
   worker->AssertIsOnWorkerThread();
 #endif
+  // Ok to do this unprotected from Create().
+  // CleanUp() holds the lock before calling this.
+  mCleanedUp = true;
+  mWorkerPromise = nullptr;
+  mWorkerPrivate = nullptr;
+}
+
+bool
+PromiseWorkerProxy::AddRefObject()
+{
+  MOZ_ASSERT(mWorkerPrivate);
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  MOZ_ASSERT(!mFeatureAdded);
+  if (!mWorkerPrivate->AddFeature(mWorkerPrivate->GetJSContext(),
+                                  this)) {
+    return false;
+  }
+
+  mFeatureAdded = true;
+  // Maintain a reference so that we have a valid object to clean up when
+  // removing the feature.
+  AddRef();
+  return true;
+}
+
+workers::WorkerPrivate*
+PromiseWorkerProxy::GetWorkerPrivate() const
+{
+#ifdef DEBUG
+  if (NS_IsMainThread()) {
+    mCleanUpLock.AssertCurrentThreadOwns();
+  }
+#endif
+  // Safe to check this without a lock since we assert lock ownership on the
+  // main thread above.
+  MOZ_ASSERT(!mCleanedUp);
+  MOZ_ASSERT(mFeatureAdded);
+
+  return mWorkerPrivate;
+}
+
+Promise*
+PromiseWorkerProxy::WorkerPromise() const
+{
+#ifdef DEBUG
+  workers::WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(worker);
+  worker->AssertIsOnWorkerThread();
+#endif
+  MOZ_ASSERT(mWorkerPromise);
   return mWorkerPromise;
 }
 
@@ -1621,14 +1655,6 @@ PromiseWorkerProxy::StoreISupports(nsISupports* aSupports)
   mSupportsArray.AppendElement(supports);
 }
 
-bool
-PromiseWorkerProxyControlRunnable::WorkerRun(JSContext* aCx,
-                                             workers::WorkerPrivate* aWorkerPrivate)
-{
-  mProxy->CleanUp(aCx);
-  return true;
-}
-
 void
 PromiseWorkerProxy::RunCallback(JSContext* aCx,
                                 JS::Handle<JS::Value> aValue,
@@ -1636,9 +1662,9 @@ PromiseWorkerProxy::RunCallback(JSContext* aCx,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  MutexAutoLock lock(GetCleanUpLock());
+  MutexAutoLock lock(Lock());
   // If the worker thread's been cancelled we don't need to resolve the Promise.
-  if (IsClean()) {
+  if (CleanedUp()) {
     return;
   }
 
@@ -1657,11 +1683,7 @@ PromiseWorkerProxy::RunCallback(JSContext* aCx,
                                    Move(buffer),
                                    aFunc);
 
-  if (!runnable->Dispatch(aCx)) {
-    nsRefPtr<WorkerControlRunnable> runnable =
-      new PromiseWorkerProxyControlRunnable(mWorkerPrivate, this);
-    mWorkerPrivate->DispatchControlRunnable(runnable.forget());
-  }
+  runnable->Dispatch(aCx);
 }
 
 void
@@ -1681,10 +1703,6 @@ PromiseWorkerProxy::RejectedCallback(JSContext* aCx,
 bool
 PromiseWorkerProxy::Notify(JSContext* aCx, Status aStatus)
 {
-  MOZ_ASSERT(mWorkerPrivate);
-  mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(mWorkerPrivate->GetJSContext() == aCx);
-
   if (aStatus >= Canceling) {
     CleanUp(aCx);
   }
@@ -1695,24 +1713,29 @@ PromiseWorkerProxy::Notify(JSContext* aCx, Status aStatus)
 void
 PromiseWorkerProxy::CleanUp(JSContext* aCx)
 {
-  MutexAutoLock lock(mCleanUpLock);
+  // Can't release Mutex while it is still locked, so scope the lock.
+  {
+    MutexAutoLock lock(Lock());
 
-  // |mWorkerPrivate| might not be safe to use anymore if we have already
-  // cleaned up and RemoveFeature(), so we need to check |mCleanedUp| first.
-  if (mCleanedUp) {
-    return;
+    // |mWorkerPrivate| is not safe to use anymore if we have already
+    // cleaned up and RemoveFeature(), so we need to check |mCleanedUp| first.
+    if (CleanedUp()) {
+      return;
+    }
+
+    MOZ_ASSERT(mWorkerPrivate);
+    mWorkerPrivate->AssertIsOnWorkerThread();
+    MOZ_ASSERT(mWorkerPrivate->GetJSContext() == aCx);
+
+    // Release the Promise and remove the PromiseWorkerProxy from the features of
+    // the worker thread since the Promise has been resolved/rejected or the
+    // worker thread has been cancelled.
+    MOZ_ASSERT(mFeatureAdded);
+    mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(), this);
+    mFeatureAdded = false;
+    CleanProperties();
   }
-
-  MOZ_ASSERT(mWorkerPrivate);
-  mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(mWorkerPrivate->GetJSContext() == aCx);
-
-  // Release the Promise and remove the PromiseWorkerProxy from the features of
-  // the worker thread since the Promise has been resolved/rejected or the
-  // worker thread has been cancelled.
-  mWorkerPromise = nullptr;
-  mWorkerPrivate->RemoveFeature(aCx, this);
-  mCleanedUp = true;
+  Release();
 }
 
 // Specializations of MaybeRejectBrokenly we actually support.

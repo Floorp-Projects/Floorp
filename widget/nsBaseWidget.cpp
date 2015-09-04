@@ -2662,8 +2662,8 @@ case _value: eventName.AssignLiteral(_name) ; break
     _ASSIGN_eventName(eUnload,"eUnload");
     _ASSIGN_eventName(eHashChange,"eHashChange");
     _ASSIGN_eventName(eReadyStateChange,"eReadyStateChange");
-    _ASSIGN_eventName(NS_XUL_BROADCAST, "NS_XUL_BROADCAST");
-    _ASSIGN_eventName(NS_XUL_COMMAND_UPDATE, "NS_XUL_COMMAND_UPDATE");
+    _ASSIGN_eventName(eXULBroadcast, "eXULBroadcast");
+    _ASSIGN_eventName(eXULCommandUpdate, "eXULCommandUpdate");
 
 #undef _ASSIGN_eventName
 

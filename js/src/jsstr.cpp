@@ -32,6 +32,7 @@
 
 #include "builtin/Intl.h"
 #include "builtin/RegExp.h"
+#include "jit/InlinableNatives.h"
 #include "js/Conversions.h"
 #if ENABLE_INTL_API
 #include "unicode/unorm.h"
@@ -3989,8 +3990,8 @@ static const JSFunctionSpec string_methods[] = {
     JS_FN(js_valueOf_str,      str_toString,          0,0),
     JS_FN("toLowerCase",       str_toLowerCase,       0,JSFUN_GENERIC_NATIVE),
     JS_FN("toUpperCase",       str_toUpperCase,       0,JSFUN_GENERIC_NATIVE),
-    JS_FN("charAt",            str_charAt,            1,JSFUN_GENERIC_NATIVE),
-    JS_FN("charCodeAt",        str_charCodeAt,        1,JSFUN_GENERIC_NATIVE),
+    JS_INLINABLE_FN("charAt",  str_charAt,            1,JSFUN_GENERIC_NATIVE, StringCharAt),
+    JS_INLINABLE_FN("charCodeAt", str_charCodeAt,     1,JSFUN_GENERIC_NATIVE, StringCharCodeAt),
     JS_SELF_HOSTED_FN("substring", "String_substring", 2,0),
     JS_SELF_HOSTED_FN("codePointAt", "String_codePointAt", 1,0),
     JS_FN("includes",          str_includes,          1,JSFUN_GENERIC_NATIVE),
@@ -4017,8 +4018,8 @@ static const JSFunctionSpec string_methods[] = {
     /* Perl-ish methods (search is actually Python-esque). */
     JS_FN("match",             str_match,             1,JSFUN_GENERIC_NATIVE),
     JS_FN("search",            str_search,            1,JSFUN_GENERIC_NATIVE),
-    JS_FN("replace",           str_replace,           2,JSFUN_GENERIC_NATIVE),
-    JS_FN("split",             str_split,             2,JSFUN_GENERIC_NATIVE),
+    JS_INLINABLE_FN("replace", str_replace,           2,JSFUN_GENERIC_NATIVE, StringReplace),
+    JS_INLINABLE_FN("split",   str_split,             2,JSFUN_GENERIC_NATIVE, StringSplit),
     JS_SELF_HOSTED_FN("substr", "String_substr",      2,0),
 
     /* Python-esque sequence methods. */
@@ -4157,7 +4158,7 @@ js::str_fromCharCode_one_arg(JSContext* cx, HandleValue code, MutableHandleValue
 }
 
 static const JSFunctionSpec string_static_methods[] = {
-    JS_FN("fromCharCode", js::str_fromCharCode, 1, 0),
+    JS_INLINABLE_FN("fromCharCode", js::str_fromCharCode, 1, 0, StringFromCharCode),
 
     JS_SELF_HOSTED_FN("fromCodePoint",   "String_static_fromCodePoint", 1,0),
     JS_SELF_HOSTED_FN("raw",             "String_static_raw",           2,0),
