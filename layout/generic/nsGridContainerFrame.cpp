@@ -20,7 +20,6 @@
 #include "nsHashKeys.h"
 #include "nsIFrameInlines.h"
 #include "nsPresContext.h"
-#include "nsRenderingContext.h"
 #include "nsReadableUtils.h"
 #include "nsRuleNode.h"
 #include "nsStyleContext.h"
@@ -167,102 +166,6 @@ private:
   nsIFrame* mGridContainer;
   nsIFrame::ChildListID mListID;
 #endif
-};
-
-/**
- * Encapsulates CSS track-sizing functions.
- */
-struct MOZ_STACK_CLASS nsGridContainerFrame::TrackSizingFunctions
-{
-  const nsStyleCoord& MinSizingFor(uint32_t aTrackIndex) const
-  {
-    if (MOZ_UNLIKELY(aTrackIndex < mExplicitGridOffset)) {
-      return mAutoMinSizing;
-    }
-    uint32_t index = aTrackIndex - mExplicitGridOffset;
-    return index < mMinSizingFunctions.Length() ?
-      mMinSizingFunctions[index] : mAutoMinSizing;
-  }
-  const nsStyleCoord& MaxSizingFor(uint32_t aTrackIndex) const
-  {
-    if (MOZ_UNLIKELY(aTrackIndex < mExplicitGridOffset)) {
-      return mAutoMaxSizing;
-    }
-    uint32_t index = aTrackIndex - mExplicitGridOffset;
-    return index < mMaxSizingFunctions.Length() ?
-      mMaxSizingFunctions[index] : mAutoMaxSizing;
-  }
-
-  const nsTArray<nsStyleCoord>& mMinSizingFunctions;
-  const nsTArray<nsStyleCoord>& mMaxSizingFunctions;
-  const nsStyleCoord& mAutoMinSizing;
-  const nsStyleCoord& mAutoMaxSizing;
-  uint32_t mExplicitGridOffset;
-};
-
-/**
- * State for the tracks in one dimension.
- */
-struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
-{
-  void Initialize(const TrackSizingFunctions& aFunctions,
-                  nscoord                     aPercentageBasis);
-
-  nsAutoTArray<TrackSize, 32> mSizes;
-};
-
-struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowState
-{
-  GridReflowState(nsGridContainerFrame*    aFrame,
-                  const nsHTMLReflowState& aRS)
-    : GridReflowState(aFrame, *aRS.rendContext, &aRS, aRS.mStylePosition,
-                      aRS.GetWritingMode())
-  {}
-  GridReflowState(nsGridContainerFrame* aFrame,
-                  nsRenderingContext&   aRC)
-    : GridReflowState(aFrame, aRC, nullptr, aFrame->StylePosition(),
-                      aFrame->GetWritingMode())
-  {}
-
-  GridItemCSSOrderIterator mIter;
-  const nsStylePosition* const mGridStyle;
-  Tracks mCols;
-  Tracks mRows;
-  TrackSizingFunctions mColFunctions;
-  TrackSizingFunctions mRowFunctions;
-  /**
-   * @note mReflowState may be null when using the 2nd ctor above. In this case
-   * we'll construct a dummy parent reflow state if we need it to calculate
-   * min/max-content contributions when sizing tracks.
-   */
-  const nsHTMLReflowState* mReflowState;
-  nsRenderingContext& mRenderingContext;
-  const WritingMode mWM;
-
-private:
-  GridReflowState(nsGridContainerFrame*    aFrame,
-                  nsRenderingContext&      aRenderingContext,
-                  const nsHTMLReflowState* aReflowState,
-                  const nsStylePosition*   aGridStyle,
-                  const WritingMode&       aWM)
-    : mIter(aFrame, kPrincipalList)
-    , mGridStyle(aGridStyle)
-    , mColFunctions({
-        mGridStyle->mGridTemplateColumns.mMinTrackSizingFunctions,
-        mGridStyle->mGridTemplateColumns.mMaxTrackSizingFunctions,
-        mGridStyle->mGridAutoColumnsMin,
-        mGridStyle->mGridAutoColumnsMax,
-      })
-    , mRowFunctions({
-        mGridStyle->mGridTemplateRows.mMinTrackSizingFunctions,
-        mGridStyle->mGridTemplateRows.mMaxTrackSizingFunctions,
-        mGridStyle->mGridAutoRowsMin,
-        mGridStyle->mGridAutoRowsMax,
-      })
-    , mReflowState(aReflowState)
-    , mRenderingContext(aRenderingContext)
-    , mWM(aWM)
-  {}
 };
 
 /**
@@ -977,20 +880,19 @@ nsGridContainerFrame::InitializeGridBounds(const nsStylePosition* aStyle)
 }
 
 void
-nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
+nsGridContainerFrame::PlaceGridItems(GridItemCSSOrderIterator& aIter,
+                                     const nsStylePosition*    aStyle)
 {
-  const nsStylePosition* const gridStyle = aState.mGridStyle;
-
   mCellMap.ClearOccupied();
-  InitializeGridBounds(gridStyle);
+  InitializeGridBounds(aStyle);
 
   // http://dev.w3.org/csswg/css-grid/#line-placement
   // Resolve definite positions per spec chap 9.2.
   int32_t minCol = 1;
   int32_t minRow = 1;
-  for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
-    nsIFrame* child = *aState.mIter;
-    const GridArea& area = PlaceDefinite(child, gridStyle);
+  for (; !aIter.AtEnd(); aIter.Next()) {
+    nsIFrame* child = *aIter;
+    const GridArea& area = PlaceDefinite(child, aStyle);
     if (area.mCols.IsDefinite()) {
       minCol = std::min(minCol, area.mCols.mUntranslatedStart);
     }
@@ -1009,15 +911,13 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
   // Translate the whole grid so that the top-/left-most area is at 0,0.
   mExplicitGridOffsetCol = 1 - minCol; // minCol/Row is always <= 1, see above
   mExplicitGridOffsetRow = 1 - minRow;
-  aState.mColFunctions.mExplicitGridOffset = mExplicitGridOffsetCol;
-  aState.mRowFunctions.mExplicitGridOffset = mExplicitGridOffsetRow;
   const int32_t offsetToColZero = int32_t(mExplicitGridOffsetCol) - 1;
   const int32_t offsetToRowZero = int32_t(mExplicitGridOffsetRow) - 1;
   mGridColEnd += offsetToColZero;
   mGridRowEnd += offsetToRowZero;
-  aState.mIter.Reset();
-  for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
-    nsIFrame* child = *aState.mIter;
+  aIter.Reset();
+  for (; !aIter.AtEnd(); aIter.Next()) {
+    nsIFrame* child = *aIter;
     GridArea* area = GetGridAreaForChild(child);
     if (area->mCols.IsDefinite()) {
       area->mCols.mStart = area->mCols.mUntranslatedStart + offsetToColZero;
@@ -1036,7 +936,7 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
   // http://dev.w3.org/csswg/css-grid/#auto-placement-algo
   // Step 1, place 'auto' items that have one definite position -
   // definite row (column) for grid-auto-flow:row (column).
-  auto flowStyle = gridStyle->mGridAutoFlow;
+  auto flowStyle = aStyle->mGridAutoFlow;
   const bool isRowOrder = (flowStyle & NS_STYLE_GRID_AUTO_FLOW_ROW);
   const bool isSparse = !(flowStyle & NS_STYLE_GRID_AUTO_FLOW_DENSE);
   // We need 1 cursor per row (or column) if placement is sparse.
@@ -1047,9 +947,9 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
     }
     auto placeAutoMinorFunc = isRowOrder ? &nsGridContainerFrame::PlaceAutoCol
                                          : &nsGridContainerFrame::PlaceAutoRow;
-    aState.mIter.Reset();
-    for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
-      nsIFrame* child = *aState.mIter;
+    aIter.Reset();
+    for (; !aIter.AtEnd(); aIter.Next()) {
+      nsIFrame* child = *aIter;
       GridArea* area = GetGridAreaForChild(child);
       LineRange& major = isRowOrder ? area->mRows : area->mCols;
       LineRange& minor = isRowOrder ? area->mCols : area->mRows;
@@ -1082,9 +982,9 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
   uint32_t cursorMinor = 0;
   auto placeAutoMajorFunc = isRowOrder ? &nsGridContainerFrame::PlaceAutoRow
                                        : &nsGridContainerFrame::PlaceAutoCol;
-  aState.mIter.Reset();
-  for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
-    nsIFrame* child = *aState.mIter;
+  aIter.Reset();
+  for (; !aIter.AtEnd(); aIter.Next()) {
+    nsIFrame* child = *aIter;
     GridArea* area = GetGridAreaForChild(child);
     LineRange& major = isRowOrder ? area->mRows : area->mCols;
     LineRange& minor = isRowOrder ? area->mCols : area->mRows;
@@ -1142,7 +1042,7 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
     mGridRowEnd -= offsetToRowZero;
     for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
       nsIFrame* child = e.get();
-      GridArea area(PlaceAbsPos(child, gridStyle));
+      GridArea area(PlaceAbsPos(child, aStyle));
       if (area.mCols.mUntranslatedStart != int32_t(kAutoLine)) {
         area.mCols.mStart = area.mCols.mUntranslatedStart + offsetToColZero;
       }
@@ -1199,51 +1099,60 @@ InitializeTrackSize(nscoord aPercentageBasis,
   }
 }
 
-void
-nsGridContainerFrame::Tracks::Initialize(const TrackSizingFunctions& aFunctions,
-                                         nscoord            aPercentageBasis)
+static void
+InitializeTrackSizes(nscoord aPercentageBasis,
+                     const nsTArray<nsStyleCoord>& aMinSizingFunctions,
+                     const nsTArray<nsStyleCoord>& aMaxSizingFunctions,
+                     const nsStyleCoord& aAutoMinFunction,
+                     const nsStyleCoord& aAutoMaxFunction,
+                     uint32_t aExplicitGridOffset,
+                     nsTArray<TrackSize>& aResults)
 {
-  const uint32_t explicitGridOffset = aFunctions.mExplicitGridOffset;
-  MOZ_ASSERT(mSizes.Length() >=
-               explicitGridOffset + aFunctions.mMinSizingFunctions.Length());
-  MOZ_ASSERT(aFunctions.mMinSizingFunctions.Length() ==
-               aFunctions.mMaxSizingFunctions.Length());
-  uint32_t i = 0;
-  for (; i < explicitGridOffset; ++i) {
+  MOZ_ASSERT(aResults.Length() >= aExplicitGridOffset + aMinSizingFunctions.Length());
+  MOZ_ASSERT(aMinSizingFunctions.Length() == aMaxSizingFunctions.Length());
+  size_t i = 0;
+  for (; i < aExplicitGridOffset; ++i) {
     InitializeTrackSize(aPercentageBasis,
-                        aFunctions.mAutoMinSizing,
-                        aFunctions.mAutoMaxSizing,
-                        &mSizes[i]);
+                        aAutoMinFunction, aAutoMaxFunction,
+                        &aResults[i]);
   }
-  uint32_t j = 0;
-  for (uint32_t len = aFunctions.mMinSizingFunctions.Length(); j < len; ++j) {
+  size_t j = 0;
+  for (const size_t len = aMinSizingFunctions.Length(); j < len; ++j) {
     InitializeTrackSize(aPercentageBasis,
-                        aFunctions.mMinSizingFunctions[j],
-                        aFunctions.mMaxSizingFunctions[j],
-                        &mSizes[i + j]);
+                        aMinSizingFunctions[j], aMaxSizingFunctions[j],
+                        &aResults[i + j]);
   }
   i += j;
-  for (; i < mSizes.Length(); ++i) {
+  for (; i < aResults.Length(); ++i) {
     InitializeTrackSize(aPercentageBasis,
-                        aFunctions.mAutoMinSizing,
-                        aFunctions.mAutoMaxSizing,
-                        &mSizes[i]);
+                        aAutoMinFunction, aAutoMaxFunction,
+                        &aResults[i]);
   }
 }
 
 void
-nsGridContainerFrame::CalculateTrackSizes(GridReflowState&   aState,
-                                          const LogicalSize& aContentBox)
+nsGridContainerFrame::CalculateTrackSizes(const LogicalSize& aPercentageBasis,
+                                          const nsStylePosition* aStyle,
+                                          nsTArray<TrackSize>& aColSizes,
+                                          nsTArray<TrackSize>& aRowSizes)
 {
-  aState.mCols.mSizes.SetLength(mGridColEnd);
-  aState.mRows.mSizes.SetLength(mGridRowEnd);
-  const WritingMode& wm = aState.mWM;
-  aState.mCols.Initialize(aState.mColFunctions, aContentBox.ISize(wm));
-  nscoord rowPercentageBasis = aContentBox.BSize(wm);
-  if (rowPercentageBasis == NS_AUTOHEIGHT) {
-    rowPercentageBasis = 0;
-  }
-  aState.mRows.Initialize(aState.mRowFunctions, rowPercentageBasis);
+  aColSizes.SetLength(mGridColEnd);
+  aRowSizes.SetLength(mGridRowEnd);
+  WritingMode wm = GetWritingMode();
+  InitializeTrackSizes(aPercentageBasis.ISize(wm),
+                       aStyle->mGridTemplateColumns.mMinTrackSizingFunctions,
+                       aStyle->mGridTemplateColumns.mMaxTrackSizingFunctions,
+                       aStyle->mGridAutoColumnsMin,
+                       aStyle->mGridAutoColumnsMax,
+                       mExplicitGridOffsetCol,
+                       aColSizes);
+  InitializeTrackSizes(aPercentageBasis.BSize(wm),
+                       aStyle->mGridTemplateRows.mMinTrackSizingFunctions,
+                       aStyle->mGridTemplateRows.mMaxTrackSizingFunctions,
+                       aStyle->mGridAutoRowsMin,
+                       aStyle->mGridAutoRowsMax,
+                       mExplicitGridOffsetRow,
+                       aRowSizes);
 }
 
 void
@@ -1298,66 +1207,70 @@ nsGridContainerFrame::LineRange::ToPositionAndLengthForAbsPos(
 }
 
 LogicalRect
-nsGridContainerFrame::ContainingBlockFor(const GridReflowState& aState,
-                                         const GridArea&        aArea) const
+nsGridContainerFrame::ContainingBlockFor(
+  const WritingMode& aWM,
+  const GridArea& aArea,
+  const nsTArray<TrackSize>& aColSizes,
+  const nsTArray<TrackSize>& aRowSizes) const
 {
   nscoord i, b, iSize, bSize;
   MOZ_ASSERT(aArea.mCols.Extent() > 0, "grid items cover at least one track");
   MOZ_ASSERT(aArea.mRows.Extent() > 0, "grid items cover at least one track");
-  aArea.mCols.ToPositionAndLength(aState.mCols.mSizes, &i, &iSize);
-  aArea.mRows.ToPositionAndLength(aState.mRows.mSizes, &b, &bSize);
-  return LogicalRect(aState.mWM, i, b, iSize, bSize);
+  aArea.mCols.ToPositionAndLength(aColSizes, &i, &iSize);
+  aArea.mRows.ToPositionAndLength(aRowSizes, &b, &bSize);
+  return LogicalRect(aWM, i, b, iSize, bSize);
 }
 
 LogicalRect
-nsGridContainerFrame::ContainingBlockForAbsPos(const GridReflowState& aState,
-                                               const GridArea&        aArea,
-                                               const LogicalPoint& aGridOrigin,
-                                               const LogicalRect& aGridCB) const
+nsGridContainerFrame::ContainingBlockForAbsPos(
+  const WritingMode& aWM,
+  const GridArea& aArea,
+  const nsTArray<TrackSize>& aColSizes,
+  const nsTArray<TrackSize>& aRowSizes,
+  const LogicalPoint& aGridOrigin,
+  const LogicalRect& aGridCB) const
 {
-  const WritingMode& wm = aState.mWM;
-  nscoord i = aGridCB.IStart(wm);
-  nscoord b = aGridCB.BStart(wm);
-  nscoord iSize = aGridCB.ISize(wm);
-  nscoord bSize = aGridCB.BSize(wm);
-  aArea.mCols.ToPositionAndLengthForAbsPos(aState.mCols.mSizes,
-                                           aGridOrigin.I(wm),
+  nscoord i = aGridCB.IStart(aWM);
+  nscoord b = aGridCB.BStart(aWM);
+  nscoord iSize = aGridCB.ISize(aWM);
+  nscoord bSize = aGridCB.BSize(aWM);
+  aArea.mCols.ToPositionAndLengthForAbsPos(aColSizes, aGridOrigin.I(aWM),
                                            &i, &iSize);
-  aArea.mRows.ToPositionAndLengthForAbsPos(aState.mRows.mSizes,
-                                           aGridOrigin.B(wm),
+  aArea.mRows.ToPositionAndLengthForAbsPos(aRowSizes, aGridOrigin.B(aWM),
                                            &b, &bSize);
   return LogicalRect(aWM, i, b, iSize, bSize);
 }
 
 void
-nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
-                                     const LogicalRect&   aContentArea,
-                                     nsHTMLReflowMetrics& aDesiredSize,
-                                     nsReflowStatus&      aStatus)
+nsGridContainerFrame::ReflowChildren(GridItemCSSOrderIterator&  aIter,
+                                     const LogicalRect&         aContentArea,
+                                     const nsTArray<TrackSize>& aColSizes,
+                                     const nsTArray<TrackSize>& aRowSizes,
+                                     nsHTMLReflowMetrics&       aDesiredSize,
+                                     const nsHTMLReflowState&   aReflowState,
+                                     nsReflowStatus&            aStatus)
 {
-  MOZ_ASSERT(aState.mReflowState);
-
-  WritingMode wm = aState.mReflowState->GetWritingMode();
+  WritingMode wm = aReflowState.GetWritingMode();
   const LogicalPoint gridOrigin(aContentArea.Origin(wm));
   const nsSize containerSize =
     (aContentArea.Size(wm) +
-     aState.mReflowState->ComputedLogicalBorderPadding().Size(wm)).GetPhysicalSize(wm);
+     aReflowState.ComputedLogicalBorderPadding().Size(wm)).GetPhysicalSize(wm);
   nsPresContext* pc = PresContext();
-  for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
-    nsIFrame* child = *aState.mIter;
+  for (; !aIter.AtEnd(); aIter.Next()) {
+    nsIFrame* child = *aIter;
     const bool isGridItem = child->GetType() != nsGkAtoms::placeholderFrame;
     LogicalRect cb(wm);
     if (MOZ_LIKELY(isGridItem)) {
       GridArea* area = GetGridAreaForChild(child);
       MOZ_ASSERT(area && area->IsDefinite());
-      cb = ContainingBlockFor(aState, *area);
+      cb = ContainingBlockFor(wm, *area, aColSizes, aRowSizes);
       cb += gridOrigin;
     } else {
       cb = aContentArea;
     }
     WritingMode childWM = child->GetWritingMode();
     LogicalSize childCBSize = cb.Size(wm).ConvertTo(childWM, wm);
-    nsHTMLReflowState childRS(pc, *aState.mReflowState, child, childCBSize);
+    nsHTMLReflowState childRS(pc, aReflowState, child, childCBSize);
     const LogicalMargin margin = childRS.ComputedLogicalMargin();
     if (childRS.ComputedBSize() == NS_AUTOHEIGHT && MOZ_LIKELY(isGridItem)) {
       // XXX the start of an align-self:stretch impl.  Needs min-/max-bsize
@@ -1392,8 +1305,8 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
   if (IsAbsoluteContainer()) {
     nsFrameList children(GetChildList(GetAbsoluteListID()));
     if (!children.IsEmpty()) {
-      LogicalMargin pad(aState.mReflowState->ComputedLogicalPadding());
-      pad.ApplySkipSides(GetLogicalSkipSides(aState.mReflowState));
+      LogicalMargin pad(aReflowState.ComputedLogicalPadding());
+      pad.ApplySkipSides(GetLogicalSkipSides(&aReflowState));
       // 'gridOrigin' is the origin of the grid (the start of the first track),
       // with respect to the grid container's padding-box (CB).
       const LogicalPoint gridOrigin(wm, pad.IStart(wm), pad.BStart(wm));
@@ -1404,7 +1317,8 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
         nsIFrame* child = e.get();
         GridArea* area = GetGridAreaForChild(child);
         MOZ_ASSERT(area);
-        LogicalRect itemCB(ContainingBlockForAbsPos(aState, *area,
+        LogicalRect itemCB(ContainingBlockForAbsPos(wm, *area,
+                                                    aColSizes, aRowSizes,
                                                     gridOrigin, gridCB));
         // nsAbsoluteContainingBlock::Reflow uses physical coordinates.
         nsRect* cb = static_cast<nsRect*>(child->Properties().Get(
@@ -1419,8 +1333,8 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
       // away the virtual GetType() call in the callee in most cases.
       // @see nsAbsoluteContainingBlock::Reflow
       nsRect dummyRect(0, 0, VERY_LIKELY_A_GRID_CONTAINER, 0);
-      GetAbsoluteContainingBlock()->Reflow(this, pc, *aState.mReflowState,
-                                           aStatus, dummyRect, true,
+      GetAbsoluteContainingBlock()->Reflow(this, pc, aReflowState, aStatus,
+                                           dummyRect, true,
                                            true, true, // XXX could be optimized
                                            &aDesiredSize.mOverflowAreas);
     }
@@ -1449,20 +1363,23 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   bp.ApplySkipSides(GetLogicalSkipSides());
   const nsStylePosition* stylePos = aReflowState.mStylePosition;
   InitImplicitNamedAreas(stylePos);
-  GridReflowState gridReflowState(this, aReflowState);
-  mIsNormalFlowInCSSOrder = gridReflowState.mIter.ItemsAreAlreadyInOrder();
-  PlaceGridItems(gridReflowState);
+  GridItemCSSOrderIterator normalFlowIter(this, kPrincipalList);
+  mIsNormalFlowInCSSOrder = normalFlowIter.ItemsAreAlreadyInOrder();
+  PlaceGridItems(normalFlowIter, stylePos);
 
+  nsAutoTArray<TrackSize, 32> colSizes;
+  nsAutoTArray<TrackSize, 32> rowSizes;
+  WritingMode wm = aReflowState.GetWritingMode();
   const nscoord computedBSize = aReflowState.ComputedBSize();
   const nscoord computedISize = aReflowState.ComputedISize();
-  const WritingMode& wm = gridReflowState.mWM;
-  CalculateTrackSizes(gridReflowState,
-                      LogicalSize(wm, computedISize, computedBSize));
+  LogicalSize percentageBasis(wm, computedISize,
+      computedBSize == NS_AUTOHEIGHT ? 0 : computedBSize);
+  CalculateTrackSizes(percentageBasis, stylePos, colSizes, rowSizes);
 
   nscoord bSize = 0;
   if (computedBSize == NS_AUTOHEIGHT) {
     for (uint32_t i = 0; i < mGridRowEnd; ++i) {
-      bSize += gridReflowState.mRows.mSizes[i].mBase;
+      bSize += rowSizes[i].mBase;
     }
   } else {
     bSize = computedBSize;
@@ -1475,8 +1392,9 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   LogicalRect contentArea(wm, bp.IStart(wm), bp.BStart(wm),
                           computedISize, bSize);
-  gridReflowState.mIter.Reset(GridItemCSSOrderIterator::eIncludeAll);
-  ReflowChildren(gridReflowState, contentArea, aDesiredSize, aStatus);
+  normalFlowIter.Reset(GridItemCSSOrderIterator::eIncludeAll);
+  ReflowChildren(normalFlowIter, contentArea, colSizes, rowSizes, aDesiredSize,
+                 aReflowState, aStatus);
 
   FinishAndStoreOverflow(&aDesiredSize);
   aStatus = NS_FRAME_COMPLETE;
