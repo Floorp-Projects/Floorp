@@ -606,8 +606,13 @@ nsresult
 Key::BindToStatement(mozIStorageStatement* aStatement,
                      const nsACString& aParamName) const
 {
-  nsresult rv = aStatement->BindBlobByName(aParamName,
-    reinterpret_cast<const uint8_t*>(mBuffer.get()), mBuffer.Length());
+  nsresult rv;
+  if (IsUnset()) {
+    rv = aStatement->BindNullByName(aParamName);
+  } else {
+    rv = aStatement->BindBlobByName(aParamName,
+      reinterpret_cast<const uint8_t*>(mBuffer.get()), mBuffer.Length());
+  }
 
   return NS_SUCCEEDED(rv) ? NS_OK : NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
 }
