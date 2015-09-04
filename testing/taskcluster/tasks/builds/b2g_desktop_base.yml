@@ -34,4 +34,3 @@ task:
     # files are located.
     locations:
       build: 'public/build/target.linux-x86_64.tar.bz2'
-      test_packages: 'public/build/test_packages.json'

@@ -21,7 +21,6 @@ from mach.decorators import (
 ROOT = os.path.dirname(os.path.realpath(__file__))
 GECKO = os.path.realpath(os.path.join(ROOT, '..', '..'))
 DOCKER_ROOT = os.path.join(ROOT, '..', 'docker')
-MOZHARNESS_CONFIG = os.path.join(GECKO, 'testing', 'mozharness', 'mozharness.json')
 
 # XXX: If/when we have the taskcluster queue use construct url instead
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
@@ -39,10 +38,6 @@ DEFAULT_TRY = 'try: -b do -p all -u all'
 DEFAULT_JOB_PATH = os.path.join(
     ROOT, 'tasks', 'branches', 'base_jobs.yml'
 )
-
-def load_mozharness_info():
-    with open(MOZHARNESS_CONFIG) as content:
-        return json.load(content)
 
 def docker_image(name):
     ''' Determine the docker tag/revision from an in tree docker file '''
@@ -322,9 +317,6 @@ class Graph(object):
 
         job_graph = parse_commit(message, jobs)
 
-        # once everything uses in-tree mozharness (bug 1187706), this can go away.
-        mozharness = load_mozharness_info()
-
         cmdline_interactive = params.get('interactive', False)
 
         # Template parameters used when expanding the graph
@@ -341,9 +333,6 @@ class Graph(object):
             'owner': params['owner'],
             'from_now': json_time_from_now,
             'now': current_json_time(),
-            'mozharness_repository': mozharness['repo'],
-            'mozharness_rev': mozharness['revision'],
-            'mozharness_ref':mozharness.get('reference', mozharness['revision']),
             'revision_hash': params['revision_hash']
         }.items())
 
@@ -399,7 +388,7 @@ class Graph(object):
             taskcluster_graph.build_task.validate(build_task)
             graph['tasks'].append(build_task)
 
-            test_packages_url, tests_url = None, None
+            test_packages_url, tests_url, mozharness_url = None, None, None
 
             if 'test_packages' in build_task['task']['extra']['locations']:
                 test_packages_url = ARTIFACT_URL.format(
@@ -411,6 +400,12 @@ class Graph(object):
                 tests_url = ARTIFACT_URL.format(
                     build_parameters['build_slugid'],
                     build_task['task']['extra']['locations']['tests']
+                )
+
+            if 'mozharness' in build_task['task']['extra']['locations']:
+                mozharness_url = ARTIFACT_URL.format(
+                    build_parameters['build_slugid'],
+                    build_task['task']['extra']['locations']['mozharness']
                 )
 
             build_url = ARTIFACT_URL.format(
@@ -470,6 +465,8 @@ class Graph(object):
                     test_parameters['tests_url'] = tests_url
                 if test_packages_url:
                     test_parameters['test_packages_url'] = test_packages_url
+                if mozharness_url:
+                    test_parameters['mozharness_url'] = mozharness_url
                 test_definition = templates.load(test['task'], {})['task']
                 chunk_config = test_definition['extra']['chunks']
 
