@@ -239,20 +239,9 @@ MediaStreamGraphImpl::GraphTimeToStreamTime(MediaStream* aStream,
                                             GraphTime aTime)
 {
   MOZ_ASSERT(aTime <= mStateComputedTime,
-               "Don't ask about times where we haven't made blocking decisions yet");
-  if (aTime <= mProcessedTime) {
-    return std::max<StreamTime>(0, aTime - aStream->mBufferStartTime);
-  }
-  GraphTime t = mProcessedTime;
-  StreamTime s = t - aStream->mBufferStartTime;
-  while (t < aTime) {
-    GraphTime end;
-    if (!aStream->mBlocked.GetAt(t, &end)) {
-      s += std::min(aTime, end) - t;
-    }
-    t = end;
-  }
-  return std::max<StreamTime>(0, s);
+             "Don't ask about times where we haven't made blocking decisions yet");
+  return std::max<StreamTime>(0,
+      std::min(aTime, aStream->mStartBlocking) - aStream->mBufferStartTime);
 }
 
 StreamTime
@@ -268,46 +257,23 @@ GraphTime
 MediaStreamGraphImpl::StreamTimeToGraphTime(MediaStream* aStream,
                                             StreamTime aTime, uint32_t aFlags)
 {
+  // Avoid overflows
   if (aTime >= STREAM_TIME_MAX) {
     return GRAPH_TIME_MAX;
   }
-  MediaTime bufferElapsedToCurrentTime =
-    mProcessedTime - aStream->mBufferStartTime;
-  if (aTime < bufferElapsedToCurrentTime ||
-      (aTime == bufferElapsedToCurrentTime && !(aFlags & INCLUDE_TRAILING_BLOCKED_INTERVAL))) {
-    return aTime + aStream->mBufferStartTime;
-  }
 
-  MediaTime streamAmount = aTime - bufferElapsedToCurrentTime;
-  NS_ASSERTION(streamAmount >= 0, "Can't answer queries before current time");
-
-  GraphTime t = mProcessedTime;
-  while (t < GRAPH_TIME_MAX) {
-    if (!(aFlags & INCLUDE_TRAILING_BLOCKED_INTERVAL) && streamAmount == 0) {
-      return t;
-    }
-    bool blocked;
-    GraphTime end;
-    if (t < mStateComputedTime) {
-      blocked = aStream->mBlocked.GetAt(t, &end);
-      end = std::min(end, mStateComputedTime);
-    } else {
-      blocked = false;
-      end = GRAPH_TIME_MAX;
-    }
-    if (blocked) {
-      t = end;
-    } else {
-      if (streamAmount == 0) {
-        // No more stream time to consume at time t, so we're done.
-        break;
-      }
-      MediaTime consume = std::min(end - t, streamAmount);
-      streamAmount -= consume;
-      t += consume;
-    }
+  // Assume we're unblocked from 0..mStartBlocking, blocked from mStartBlocking
+  // to mStateComputedTime, and unblocked from mStateComputedTime..forever
+  GraphTime timeAssumingNoBlocking = aTime + aStream->mBufferStartTime;
+  if (timeAssumingNoBlocking < aStream->mStartBlocking ||
+      (timeAssumingNoBlocking == aStream->mStartBlocking &&
+             !(aFlags & INCLUDE_TRAILING_BLOCKED_INTERVAL))) {
+    return timeAssumingNoBlocking;
   }
-  return t;
+  // XXX we generally shouldn't need to call this for aTime >= mStartBlocking!
+  // Check callers.
+
+  return timeAssumingNoBlocking + (mStateComputedTime - aStream->mStartBlocking);
 }
 
 GraphTime
@@ -350,41 +316,33 @@ MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime,
 {
   for (MediaStream* stream : AllStreams()) {
     // Calculate blocked time and fire Blocked/Unblocked events
-    GraphTime blockedTime = 0;
-    GraphTime t = aPrevCurrentTime;
-    // include |nextCurrentTime| to ensure NotifyBlockingChanged() is called
-    // before NotifyEvent(this, EVENT_FINISHED) when |nextCurrentTime ==
-    // stream end time|
-    while (t <= aNextCurrentTime) {
-      GraphTime end;
-      bool blocked = stream->mBlocked.GetAt(t, &end);
-      if (blocked) {
-        blockedTime += std::min(end, aNextCurrentTime) - t;
+    GraphTime blockedTime = aNextCurrentTime - stream->mStartBlocking;
+    NS_ASSERTION(blockedTime >= 0, "Error in blocking time");
+
+    if (stream->mStartBlocking > aPrevCurrentTime && stream->mNotifiedBlocked) {
+      for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
+        MediaStreamListener* l = stream->mListeners[j];
+        l->NotifyBlockingChanged(this, MediaStreamListener::UNBLOCKED);
       }
-      if (blocked != stream->mNotifiedBlocked) {
-        for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
-          MediaStreamListener* l = stream->mListeners[j];
-          l->NotifyBlockingChanged(this, blocked
-                                           ? MediaStreamListener::BLOCKED
-                                           : MediaStreamListener::UNBLOCKED);
-        }
-        stream->mNotifiedBlocked = blocked;
+      stream->mNotifiedBlocked = false;
+    }
+    if (stream->mStartBlocking < aNextCurrentTime && !stream->mNotifiedBlocked) {
+      for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
+        MediaStreamListener* l = stream->mListeners[j];
+        l->NotifyBlockingChanged(this, MediaStreamListener::BLOCKED);
       }
-      t = end;
+      stream->mNotifiedBlocked = true;
     }
 
     stream->AdvanceTimeVaryingValuesToCurrentTime(aNextCurrentTime,
                                                   blockedTime);
-    // Advance mBlocked last so that AdvanceTimeVaryingValuesToCurrentTime
-    // can rely on the value of mBlocked.
-    stream->mBlocked.AdvanceCurrentTime(aNextCurrentTime);
 
     STREAM_LOG(LogLevel::Verbose,
                ("MediaStream %p bufferStartTime=%f blockedTime=%f", stream,
                 MediaTimeToSeconds(stream->mBufferStartTime),
                 MediaTimeToSeconds(blockedTime)));
 
-    bool streamHasOutput = blockedTime < aNextCurrentTime - aPrevCurrentTime;
+    bool streamHasOutput = stream->mStartBlocking > aPrevCurrentTime;
     NS_ASSERTION(!streamHasOutput || !stream->mNotifiedFinished,
       "Shouldn't have already notified of finish *and* have output!");
 
@@ -395,7 +353,6 @@ MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime,
     if (stream->mFinished && !stream->mNotifiedFinished) {
       StreamReadyToFinish(stream);
     }
-
   }
 }
 
@@ -409,9 +366,10 @@ MediaStreamGraphImpl::WillUnderrun(MediaStream* aStream,
   if (aStream->mFinished || aStream->AsProcessedStream()) {
     return aEndBlockingDecisions;
   }
-  GraphTime bufferEnd =
-    StreamTimeToGraphTime(aStream, aStream->GetBufferEnd(),
-                          INCLUDE_TRAILING_BLOCKED_INTERVAL);
+  // This stream isn't finished or suspended. We don't need to call
+  // StreamTimeToGraphTime since an underrun is the only thing that can block
+  // it.
+  GraphTime bufferEnd = aStream->GetBufferEnd() + aStream->mBufferStartTime;
 #ifdef DEBUG
   if (bufferEnd < mProcessedTime) {
     STREAM_LOG(LogLevel::Error, ("MediaStream %p underrun, "
@@ -695,10 +653,8 @@ MediaStreamGraphImpl::RecomputeBlocking(GraphTime aEndBlockingDecisions)
   STREAM_LOG(LogLevel::Verbose, ("Media graph %p computing blocking for time %f",
                               this, MediaTimeToSeconds(mStateComputedTime)));
   for (MediaStream* stream : AllStreams()) {
-    GraphTime blockTime =
+    stream->mStartBlocking =
       ComputeStreamBlockTime(stream, mStateComputedTime, aEndBlockingDecisions);
-    stream->mBlocked.SetAtAndAfter(mStateComputedTime, false);
-    stream->mBlocked.SetAtAndAfter(blockTime, true);
   }
   STREAM_LOG(LogLevel::Verbose, ("Media graph %p computed blocking for interval %f to %f",
                               this, MediaTimeToSeconds(mStateComputedTime),
@@ -717,9 +673,17 @@ MediaStreamGraphImpl::ComputeStreamBlockTime(MediaStream* aStream,
                                              GraphTime aTime,
                                              GraphTime aEndBlockingDecisions)
 {
+  if (aStream->IsSuspended()) {
+    STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to being suspended", aStream));
+    return aTime;
+  }
+
   if (aStream->mFinished) {
-    GraphTime endTime = StreamTimeToGraphTime(aStream,
-        aStream->GetStreamBuffer().GetAllTracksEnd());
+    // The stream's not suspended, and since it's finished, underruns won't
+    // stop it playing out. So there's no blocking other than what we impose
+    // here.
+    GraphTime endTime = aStream->GetStreamBuffer().GetAllTracksEnd() +
+        aStream->mBufferStartTime;
     if (endTime <= aTime) {
       STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to being finished", aStream));
       return aTime;
@@ -730,11 +694,6 @@ MediaStreamGraphImpl::ComputeStreamBlockTime(MediaStream* aStream,
       // Data can't be added to a finished stream, so underruns are irrelevant.
       return std::min(endTime, aEndBlockingDecisions);
     }
-  }
-
-  if (aStream->IsSuspended()) {
-    STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to being suspended", aStream));
-    return aTime;
   }
 
   return WillUnderrun(aStream, aEndBlockingDecisions);
@@ -839,9 +798,9 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
     // written silence for some amount of blocked time after the current time.
     GraphTime t = aFrom;
     while (t < aTo) {
-      GraphTime end;
-      bool blocked = aStream->mBlocked.GetAt(t, &end);
-      end = std::min(end, aTo);
+      bool blocked = t >= aStream->mStartBlocking;
+      GraphTime end = blocked ? aTo : aStream->mStartBlocking;
+      NS_ASSERTION(end <= aTo, "mStartBlocking is wrong!");
 
       // Check how many ticks of sound we can provide if we are blocked some
       // time in the middle of this cycle.
@@ -1279,8 +1238,7 @@ MediaStreamGraphImpl::Process(GraphTime aFrom, GraphTime aTo)
       }
       PlayVideo(stream);
     }
-    GraphTime end;
-    if (!stream->mBlocked.GetAt(aTo, &end) || end < GRAPH_TIME_MAX) {
+    if (stream->mStartBlocking > aFrom) {
       allBlockedForever = false;
     }
   }
@@ -1732,7 +1690,7 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
 
 MediaStream::MediaStream(DOMMediaStream* aWrapper)
   : mBufferStartTime(0)
-  , mBlocked(false)
+  , mStartBlocking(GRAPH_TIME_MAX)
   , mSuspendedCount(0)
   , mFinished(false)
   , mNotifiedFinished(false)
@@ -1776,7 +1734,6 @@ MediaStream::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   amount += mListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mMainThreadListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mDisabledTrackIDs.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  amount += mBlocked.SizeOfExcludingThis(aMallocSizeOf);
   amount += mConsumers.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
   return amount;
@@ -2521,21 +2478,15 @@ MediaInputPort::InputInterval
 MediaInputPort::GetNextInputInterval(GraphTime aTime)
 {
   InputInterval result = { GRAPH_TIME_MAX, GRAPH_TIME_MAX, false };
-  GraphTime t = aTime;
-  GraphTime end;
-  for (;;) {
-    if (!mDest->mBlocked.GetAt(t, &end)) {
-      break;
-    }
-    if (end >= GRAPH_TIME_MAX) {
-      return result;
-    }
-    t = end;
+  if (aTime >= mDest->mStartBlocking) {
+    return result;
   }
-  result.mStart = t;
-  GraphTime sourceEnd;
-  result.mInputIsBlocked = mSource->mBlocked.GetAt(t, &sourceEnd);
-  result.mEnd = std::min(end, sourceEnd);
+  result.mStart = aTime;
+  result.mEnd = mDest->mStartBlocking;
+  result.mInputIsBlocked = aTime >= mSource->mStartBlocking;
+  if (!result.mInputIsBlocked) {
+    result.mEnd = std::min(result.mEnd, mSource->mStartBlocking);
+  }
   return result;
 }
 
