@@ -10,6 +10,7 @@
 #define NOT_IMPLEMENTED MOZ_CRASH("Not implemented")
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/gfx/CriticalSection.h"
 #include <windows.h>
 #include <list>
 
@@ -18,41 +19,6 @@ namespace gfx {
 
 class WorkerThread;
 class Task;
-
-class Mutex {
-public:
-  Mutex() {
-    ::InitializeCriticalSection(&mMutex);
-#ifdef DEBUG
-    mOwner = 0;
-#endif
-  }
-
-  ~Mutex() { ::DeleteCriticalSection(&mMutex); }
-
-  void Lock() {
-    ::EnterCriticalSection(&mMutex);
-#ifdef DEBUG
-    MOZ_ASSERT(mOwner != GetCurrentThreadId(), "recursive locking");
-    mOwner = GetCurrentThreadId();
-#endif
-  }
-
-  void Unlock() {
-#ifdef DEBUG
-    // GetCurrentThreadId cannot return 0: it is not a valid thread id
-    MOZ_ASSERT(mOwner == GetCurrentThreadId(), "mismatched lock/unlock");
-    mOwner = 0;
-#endif
-    ::LeaveCriticalSection(&mMutex);
-  }
-
-protected:
-  CRITICAL_SECTION mMutex;
-#ifdef DEBUG
-  DWORD mOwner;
-#endif
-};
 
 // The public interface of this class must remain identical to its equivalent
 // in TaskScheduler_posix.h
@@ -95,7 +61,7 @@ public:
 
 protected:
   std::list<Task*> mTasks;
-  Mutex mMutex;
+  CriticalSection mSection;
   HANDLE mAvailableEvent;
   HANDLE mShutdownEvent;
   int32_t mThreadsCount;

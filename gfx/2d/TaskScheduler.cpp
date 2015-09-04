@@ -175,7 +175,7 @@ SyncObject::Signal()
 void
 SyncObject::AddWaitingTask(Task* aTask)
 {
-  MutexAutoLock lock(&mMutex);
+  CriticalSectionAutoEnter lock(&mWaitingTasksSection);
   mWaitingTasks.push_back(aTask);
 }
 
@@ -190,7 +190,7 @@ void SyncObject::SubmitWaitingTasks()
     // hold a strong ref to prevent that!
     RefPtr<SyncObject> kungFuDeathGrip(this);
 
-    MutexAutoLock lock(&mMutex);
+    CriticalSectionAutoEnter lock(&mWaitingTasksSection);
     tasksToSubmit = Move(mWaitingTasks);
     mWaitingTasks.clear();
   }
