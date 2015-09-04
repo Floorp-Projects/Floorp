@@ -23,7 +23,7 @@ SOURCES += [
     'mozmemory_wrap.c',
 ]
 
-if CONFIG['MOZ_JEMALLOC3']:
+if CONFIG['MOZ_JEMALLOC4']:
     SOURCES += [
         'mozjemalloc_compat.c',
     ]
@@ -40,7 +40,7 @@ if CONFIG['MOZ_REPLACE_MALLOC']:
 
 Library('memory')
 
-if CONFIG['MOZ_JEMALLOC3']:
+if CONFIG['MOZ_JEMALLOC4']:
     if not CONFIG['MOZ_NATIVE_JEMALLOC']:
         USE_LIBS += [
             'jemalloc',

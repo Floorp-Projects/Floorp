@@ -8,7 +8,7 @@ EXPORTS += [
     'jemalloc_types.h',
 ]
 
-if not CONFIG['MOZ_JEMALLOC3']:
+if not CONFIG['MOZ_JEMALLOC4']:
     SOURCES += [
         'jemalloc.c',
     ]
