@@ -4218,6 +4218,46 @@
         "url": "/html/rendering/non-replaced-elements/flow-content-0/figure.html"
       },
       {
+        "path": "html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-a.html",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-a.html"
+      },
+      {
+        "path": "html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-q.html",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-q.html"
+      },
+      {
+        "path": "html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-s.html",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-s.html"
+      },
+      {
+        "path": "html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-x.xhtml",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-x.xhtml"
+      },
+      {
         "path": "html/rendering/non-replaced-elements/tables/table-border-1.html",
         "references": [
           [
@@ -4826,46 +4866,6 @@
           ]
         ],
         "url": "/html/semantics/text-level-semantics/the-wbr-element/wbr-element.html"
-      },
-      {
-        "path": "quirks-mode/font-element-text-decoration-color/001-a.html",
-        "references": [
-          [
-            "/quirks-mode/font-element-text-decoration-color/001-ref.html",
-            "=="
-          ]
-        ],
-        "url": "/quirks-mode/font-element-text-decoration-color/001-a.html"
-      },
-      {
-        "path": "quirks-mode/font-element-text-decoration-color/001-q.html",
-        "references": [
-          [
-            "/quirks-mode/font-element-text-decoration-color/001-ref.html",
-            "=="
-          ]
-        ],
-        "url": "/quirks-mode/font-element-text-decoration-color/001-q.html"
-      },
-      {
-        "path": "quirks-mode/font-element-text-decoration-color/001-s.html",
-        "references": [
-          [
-            "/quirks-mode/font-element-text-decoration-color/001-ref.html",
-            "=="
-          ]
-        ],
-        "url": "/quirks-mode/font-element-text-decoration-color/001-s.html"
-      },
-      {
-        "path": "quirks-mode/font-element-text-decoration-color/001-x.xhtml",
-        "references": [
-          [
-            "/quirks-mode/font-element-text-decoration-color/001-ref.html",
-            "=="
-          ]
-        ],
-        "url": "/quirks-mode/font-element-text-decoration-color/001-x.xhtml"
       },
       {
         "path": "shadow-dom/shadow-trees/lower-boundary-encapsulation/distribution-001.html",
@@ -12300,8 +12300,8 @@
         "url": "/content-security-policy/blink-contrib/blob-urls-match-blob.sub.html"
       },
       {
-        "path": "content-security-policy/blink-contrib/combine-multiple-policies.sub.html",
-        "url": "/content-security-policy/blink-contrib/combine-multiple-policies.sub.html"
+        "path": "content-security-policy/blink-contrib/combine-header-and-meta-policies.sub.html",
+        "url": "/content-security-policy/blink-contrib/combine-header-and-meta-policies.sub.html"
       },
       {
         "path": "content-security-policy/blink-contrib/connect-src-beacon-allowed.sub.html",
@@ -12674,10 +12674,6 @@
       {
         "path": "content-security-policy/script-src/script-src-1_4_2.html",
         "url": "/content-security-policy/script-src/script-src-1_4_2.html"
-      },
-      {
-        "path": "content-security-policy/script-src/script-src-1_9.html",
-        "url": "/content-security-policy/script-src/script-src-1_9.html"
       },
       {
         "path": "content-security-policy/style-src/style-src-3_1.html",
@@ -13122,6 +13118,10 @@
       {
         "path": "dom/nodes/CharacterData-substringData.html",
         "url": "/dom/nodes/CharacterData-substringData.html"
+      },
+      {
+        "path": "dom/nodes/CharacterData-surrogates.html",
+        "url": "/dom/nodes/CharacterData-surrogates.html"
       },
       {
         "path": "dom/nodes/ChildNode-after.html",
@@ -14696,8 +14696,8 @@
         "url": "/html/browsers/windows/nested-browsing-contexts/frameElement.sub.html"
       },
       {
-        "path": "html/dom/documents/dom-tree-accessors/Document.currentScript.html",
-        "url": "/html/dom/documents/dom-tree-accessors/Document.currentScript.html"
+        "path": "html/dom/documents/dom-tree-accessors/Document.currentScript.sub.html",
+        "url": "/html/dom/documents/dom-tree-accessors/Document.currentScript.sub.html"
       },
       {
         "path": "html/dom/documents/dom-tree-accessors/Document.getElementsByClassName-null-undef.html",
@@ -18006,6 +18006,10 @@
       {
         "path": "infrastructure/failing-test.html",
         "url": "/infrastructure/failing-test.html"
+      },
+      {
+        "path": "js/behaviours/SetPrototypeOf-window.html",
+        "url": "/js/behaviours/SetPrototypeOf-window.html"
       },
       {
         "path": "js/builtins/Array.DefineOwnProperty.html",
@@ -30791,6 +30795,54 @@
         "url": "/html/rendering/non-replaced-elements/flow-content-0/figure.html"
       }
     ],
+    "html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-a.html": [
+      {
+        "path": "html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-a.html",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-a.html"
+      }
+    ],
+    "html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-q.html": [
+      {
+        "path": "html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-q.html",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-q.html"
+      }
+    ],
+    "html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-s.html": [
+      {
+        "path": "html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-s.html",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-s.html"
+      }
+    ],
+    "html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-x.xhtml": [
+      {
+        "path": "html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-x.xhtml",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/phrasing-content-0/font-element-text-decoration-color/001-x.xhtml"
+      }
+    ],
     "html/rendering/non-replaced-elements/tables/table-border-1.html": [
       {
         "path": "html/rendering/non-replaced-elements/tables/table-border-1.html",
@@ -31641,54 +31693,6 @@
           ]
         ],
         "url": "/html/semantics/text-level-semantics/the-wbr-element/wbr-element.html"
-      }
-    ],
-    "quirks-mode/font-element-text-decoration-color/001-a.html": [
-      {
-        "path": "quirks-mode/font-element-text-decoration-color/001-a.html",
-        "references": [
-          [
-            "/quirks-mode/font-element-text-decoration-color/001-ref.html",
-            "=="
-          ]
-        ],
-        "url": "/quirks-mode/font-element-text-decoration-color/001-a.html"
-      }
-    ],
-    "quirks-mode/font-element-text-decoration-color/001-q.html": [
-      {
-        "path": "quirks-mode/font-element-text-decoration-color/001-q.html",
-        "references": [
-          [
-            "/quirks-mode/font-element-text-decoration-color/001-ref.html",
-            "=="
-          ]
-        ],
-        "url": "/quirks-mode/font-element-text-decoration-color/001-q.html"
-      }
-    ],
-    "quirks-mode/font-element-text-decoration-color/001-s.html": [
-      {
-        "path": "quirks-mode/font-element-text-decoration-color/001-s.html",
-        "references": [
-          [
-            "/quirks-mode/font-element-text-decoration-color/001-ref.html",
-            "=="
-          ]
-        ],
-        "url": "/quirks-mode/font-element-text-decoration-color/001-s.html"
-      }
-    ],
-    "quirks-mode/font-element-text-decoration-color/001-x.xhtml": [
-      {
-        "path": "quirks-mode/font-element-text-decoration-color/001-x.xhtml",
-        "references": [
-          [
-            "/quirks-mode/font-element-text-decoration-color/001-ref.html",
-            "=="
-          ]
-        ],
-        "url": "/quirks-mode/font-element-text-decoration-color/001-x.xhtml"
       }
     ],
     "shadow-dom/shadow-trees/lower-boundary-encapsulation/distribution-001.html": [
@@ -34452,7 +34456,7 @@
       }
     ]
   },
-  "rev": "4600b7dbae996754fe52f48bc9c225834f11a686",
+  "rev": "d0571e01e1a2e4b8c5f696af2f81cbc1be9a5842",
   "url_base": "/",
   "version": 2
 }

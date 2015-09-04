@@ -2675,15 +2675,11 @@ PeerConnectionImpl::CandidateReady(const std::string& candidate,
                                    uint16_t level) {
   PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
 
-  // TODO: What about mid? Is this something that we will choose, or will
-  // JsepSession choose for us? If the latter, we'll need to make it an
-  // outparam or something. Bug 1051052.
   std::string mid;
-
   bool skipped = false;
   nsresult res = mJsepSession->AddLocalIceCandidate(candidate,
-                                                    mid,
                                                     level,
+                                                    &mid,
                                                     &skipped);
 
   if (NS_FAILED(res)) {
@@ -2695,6 +2691,7 @@ PeerConnectionImpl::CandidateReady(const std::string& candidate,
                         candidate.c_str(),
                         static_cast<unsigned>(level),
                         errorString.c_str());
+    return;
   }
 
   if (skipped) {

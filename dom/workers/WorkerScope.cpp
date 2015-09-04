@@ -546,9 +546,7 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
 
-    Promise* promise = mPromiseProxy->GetWorkerPromise();
-    MOZ_ASSERT(promise);
-
+    nsRefPtr<Promise> promise = mPromiseProxy->WorkerPromise();
     promise->MaybeResolve(JS::UndefinedHandleValue);
 
     // Release the reference on the worker thread.
@@ -579,13 +577,12 @@ public:
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     MOZ_ASSERT(swm);
 
-    MutexAutoLock lock(mPromiseProxy->GetCleanUpLock());
-    if (mPromiseProxy->IsClean()) {
+    MutexAutoLock lock(mPromiseProxy->Lock());
+    if (mPromiseProxy->CleanedUp()) {
       return NS_OK;
     }
-    WorkerPrivate* workerPrivate = mPromiseProxy->GetWorkerPrivate();
-    MOZ_ASSERT(workerPrivate);
 
+    WorkerPrivate* workerPrivate = mPromiseProxy->GetWorkerPrivate();
     swm->SetSkipWaitingFlag(workerPrivate->GetPrincipal(), mScope,
                             workerPrivate->ServiceWorkerID());
 
@@ -594,20 +591,7 @@ public:
 
     AutoJSAPI jsapi;
     jsapi.Init();
-    JSContext* cx = jsapi.cx();
-    if (runnable->Dispatch(cx)) {
-      return NS_OK;
-    }
-
-    // Dispatch to worker thread failed because the worker is shutting down.
-    // Use a control runnable to release the runnable on the worker thread.
-    nsRefPtr<PromiseWorkerProxyControlRunnable> releaseRunnable =
-      new PromiseWorkerProxyControlRunnable(workerPrivate, mPromiseProxy);
-
-    if (!releaseRunnable->Dispatch(cx)) {
-      NS_RUNTIMEABORT("Failed to dispatch Claim control runnable.");
-    }
-
+    runnable->Dispatch(jsapi.cx());
     return NS_OK;
   }
 };
@@ -627,8 +611,7 @@ ServiceWorkerGlobalScope::SkipWaiting(ErrorResult& aRv)
 
   nsRefPtr<PromiseWorkerProxy> promiseProxy =
     PromiseWorkerProxy::Create(mWorkerPrivate, promise);
-  if (!promiseProxy->GetWorkerPromise()) {
-    // Don't dispatch if adding the worker feature failed.
+  if (!promiseProxy) {
     promise->MaybeResolve(JS::UndefinedHandleValue);
     return promise.forget();
   }
@@ -637,11 +620,7 @@ ServiceWorkerGlobalScope::SkipWaiting(ErrorResult& aRv)
     new WorkerScopeSkipWaitingRunnable(promiseProxy,
                                        NS_ConvertUTF16toUTF8(mScope));
 
-  aRv = NS_DispatchToMainThread(runnable);
-  if (NS_WARN_IF(aRv.Failed())) {
-    promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-  }
-
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
   return promise.forget();
 }
 

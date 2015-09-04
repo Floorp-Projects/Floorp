@@ -281,6 +281,13 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
             return false;
         break;
 
+      case Definition::IMPORT:
+        dn->pn_dflags |= PND_LEXICAL | PND_CLOSED;
+        MOZ_ASSERT(atBodyLevel());
+        if (!decls_.addShadow(name, dn))
+            return false;
+        break;
+
       default:
         MOZ_CRASH("unexpected kind");
     }
@@ -336,7 +343,7 @@ ParseContext<ParseHandler>::updateDecl(JSAtom* atom, Node pn)
     Definition* newDecl = (Definition*)pn;
     decls_.updateFirst(atom, newDecl);
 
-    if (!sc->isFunctionBox()) {
+    if (sc->isGlobalContext()) {
         MOZ_ASSERT(newDecl->isFreeVar());
         return;
     }
@@ -392,6 +399,9 @@ AppendPackedBindings(const ParseContext<ParseHandler>* pc, const DeclVector& vec
           case Definition::ARG:
             kind = Binding::ARGUMENT;
             break;
+          case Definition::IMPORT:
+            // Skip module imports.
+            continue;
           default:
             MOZ_CRASH("unexpected dn->kind");
         }
@@ -647,6 +657,7 @@ FunctionBox::FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunct
     hasDestructuringArgs(false),
     useAsm(false),
     insideUseAsm(outerpc && outerpc->useAsmOrInsideUseAsm()),
+    wasEmitted(false),
     usesArguments(false),
     usesApply(false),
     usesThis(false),
@@ -697,7 +708,8 @@ ModuleBox::ModuleBox(ExclusiveContext* cx, ObjectBox* traceListHead, ModuleObjec
                      ParseContext<ParseHandler>* outerpc)
   : ObjectBox(module, traceListHead),
     SharedContext(cx, Directives(true), false),
-    bindings()
+    bindings(),
+    exportNames(cx)
 {}
 
 template <typename ParseHandler>
@@ -3243,8 +3255,15 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
     if (!pn->pn_scopecoord.setSlot(parser->tokenStream, index))
         return false;
 
+    Definition::Kind bindingKind;
+    if (pn->isImport())
+        bindingKind = Definition::IMPORT;
+    else if (data->isConst())
+        bindingKind = Definition::CONST;
+    else
+        bindingKind = Definition::LET;
+
     Definition* dn = pc->decls().lookupFirst(name);
-    Definition::Kind bindingKind = data->isConst() ? Definition::CONST : Definition::LET;
 
     /*
      * For bindings that are hoisted to the beginning of the block/function,
@@ -3501,6 +3520,7 @@ Parser<ParseHandler>::bindVarOrGlobalConst(BindData<ParseHandler>* data,
     } else {
         bool inCatchBody = (stmt && stmt->type == StmtType::CATCH);
         bool error = (isConstDecl ||
+                      dn_kind == Definition::IMPORT ||
                       dn_kind == Definition::CONST ||
                       dn_kind == Definition::GLOBALCONST ||
                       (dn_kind == Definition::LET &&
@@ -3600,7 +3620,7 @@ Parser<ParseHandler>::noteNameUse(HandlePropertyName name, Node pn)
 
 template <>
 bool
-Parser<FullParseHandler>::bindInitialized(BindData<FullParseHandler>* data, ParseNode* pn)
+Parser<FullParseHandler>::bindUninitialized(BindData<FullParseHandler>* data, ParseNode* pn)
 {
     MOZ_ASSERT(pn->isKind(PNK_NAME));
 
@@ -3608,6 +3628,15 @@ Parser<FullParseHandler>::bindInitialized(BindData<FullParseHandler>* data, Pars
 
     data->setNameNode(pn);
     if (!data->bind(name, this))
+        return false;
+    return true;
+}
+
+template <>
+bool
+Parser<FullParseHandler>::bindInitialized(BindData<FullParseHandler>* data, ParseNode* pn)
+{
+    if (!bindUninitialized(data, pn))
         return false;
 
     /*
@@ -4446,6 +4475,32 @@ Parser<SyntaxParseHandler>::letDeclarationOrBlock(YieldHandling yieldHandling)
 }
 
 template<>
+ParseNode*
+Parser<FullParseHandler>::newBoundImportForCurrentName()
+{
+    Node importNode = newName(tokenStream.currentName());
+    if (!importNode)
+        return null();
+
+    importNode->pn_dflags |= PND_CONST | PND_IMPORT;
+    BindData<FullParseHandler> data(context);
+    data.initLexical(HoistVars, nullptr, JSMSG_TOO_MANY_LOCALS);
+    handler.setPosition(importNode, pos());
+    if (!bindUninitialized(&data, importNode))
+        return null();
+
+    return importNode;
+}
+
+template <>
+SyntaxParseHandler::Node
+Parser<SyntaxParseHandler>::newBoundImportForCurrentName()
+{
+    JS_ALWAYS_FALSE(abortIfSyntaxParser());
+    return SyntaxParseHandler::NodeFailure;
+}
+
+template<>
 bool
 Parser<FullParseHandler>::namedImportsOrNamespaceImport(TokenKind tt, Node importSpecSet)
 {
@@ -4488,7 +4543,8 @@ Parser<FullParseHandler>::namedImportsOrNamespaceImport(TokenKind tt, Node impor
                 }
                 tokenStream.ungetToken();
             }
-            Node bindingName = newName(tokenStream.currentName());
+
+            Node bindingName = newBoundImportForCurrentName();
             if (!bindingName)
                 return false;
 
@@ -4525,7 +4581,7 @@ Parser<FullParseHandler>::namedImportsOrNamespaceImport(TokenKind tt, Node impor
         if (!importName)
             return null();
 
-        Node bindingName = newName(tokenStream.currentName());
+        Node bindingName = newBoundImportForCurrentName();
         if (!bindingName)
             return false;
 
@@ -4553,7 +4609,7 @@ Parser<ParseHandler>::importDeclaration()
 {
     MOZ_ASSERT(tokenStream.currentToken().type == TOK_IMPORT);
 
-    if (pc->sc->isFunctionBox() || !pc->atBodyLevel()) {
+    if (!pc->atModuleLevel()) {
         report(ParseError, false, null(), JSMSG_IMPORT_DECL_AT_TOP_LEVEL);
         return null();
     }
@@ -4577,7 +4633,7 @@ Parser<ParseHandler>::importDeclaration()
             if (!importName)
                 return null();
 
-            Node bindingName = newName(tokenStream.currentName());
+            Node bindingName = newBoundImportForCurrentName();
             if (!bindingName)
                 return null();
 
@@ -4649,13 +4705,39 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
                                           ClassContext classContext,
                                           DefaultHandling defaultHandling);
 
+
+template<>
+bool
+Parser<FullParseHandler>::addExportName(JSAtom* exportName)
+{
+    TraceableVector<JSAtom*>& exportNames = pc->sc->asModuleBox()->exportNames;
+    for (JSAtom* name : exportNames) {
+        if (name == exportName) {
+            JSAutoByteString str;
+            if (AtomToPrintableString(context, exportName, &str))
+                report(ParseError, false, null(), JSMSG_DUPLICATE_EXPORT_NAME, str.ptr());
+            return false;
+        }
+    }
+
+    return exportNames.append(exportName);
+}
+
+template<>
+bool
+Parser<SyntaxParseHandler>::addExportName(JSAtom* exportName)
+{
+    JS_ALWAYS_FALSE(abortIfSyntaxParser());
+    return SyntaxParseHandler::NodeFailure;
+}
+
 template<>
 ParseNode*
 Parser<FullParseHandler>::exportDeclaration()
 {
     MOZ_ASSERT(tokenStream.currentToken().type == TOK_EXPORT);
 
-    if (pc->sc->isFunctionBox() || !pc->atBodyLevel()) {
+    if (!pc->atModuleLevel()) {
         report(ParseError, false, null(), JSMSG_EXPORT_DECL_AT_TOP_LEVEL);
         return null();
     }
@@ -4703,6 +4785,9 @@ Parser<FullParseHandler>::exportDeclaration()
                 }
                 Node exportName = newName(tokenStream.currentName());
                 if (!exportName)
+                    return null();
+
+                if (!addExportName(exportName->pn_atom))
                     return null();
 
                 Node exportSpec = handler.newBinary(PNK_EXPORT_SPEC, bindingName, exportName);
@@ -4756,13 +4841,22 @@ Parser<FullParseHandler>::exportDeclaration()
         kid = functionStmt(YieldIsKeyword, NameRequired);
         if (!kid)
             return null();
+
+        if (!addExportName(kid->pn_funbox->function()->atom()))
+            return null();
         break;
 
-      case TOK_CLASS:
+      case TOK_CLASS: {
         kid = classDefinition(YieldIsKeyword, ClassStatement, NameRequired);
         if (!kid)
             return null();
+
+        const ClassNode& cls = kid->as<ClassNode>();
+        MOZ_ASSERT(cls.names());
+        if (!addExportName(cls.names()->innerBinding()->pn_atom))
+            return null();
         break;
+      }
 
       case TOK_VAR:
         kid = variables(YieldIsName, PNK_VAR, NotInForInit);
@@ -4773,12 +4867,25 @@ Parser<FullParseHandler>::exportDeclaration()
         kid = MatchOrInsertSemicolon(tokenStream) ? kid : nullptr;
         if (!kid)
             return null();
+
+        MOZ_ASSERT(kid->isArity(PN_LIST));
+        for (ParseNode* var = kid->pn_head; var; var = var->pn_next) {
+            if (var->isKind(PNK_ASSIGN))
+                var = var->pn_left;
+              MOZ_ASSERT(var->isKind(PNK_NAME));
+              if (!addExportName(var->pn_atom))
+                  return null();
+        }
         break;
 
       case TOK_DEFAULT: {
         if (!tokenStream.getToken(&tt, TokenStream::Operand))
             return null();
 
+        if (!addExportName(context->names().default_))
+            return null();
+
+        ParseNode* binding = nullptr;
         switch (tt) {
           case TOK_FUNCTION:
             kid = functionStmt(YieldIsKeyword, AllowDefaultName);
@@ -4788,6 +4895,10 @@ Parser<FullParseHandler>::exportDeclaration()
             break;
           default:
             tokenStream.ungetToken();
+            RootedPropertyName name(context, context->names().starDefaultStar);
+            binding = makeInitializedLexicalBinding(name, true, pos());
+            if (!binding)
+                return null();
             kid = assignExpr(InAllowed, YieldIsKeyword);
             if (kid) {
                 if (!MatchOrInsertSemicolon(tokenStream))
@@ -4798,7 +4909,7 @@ Parser<FullParseHandler>::exportDeclaration()
         if (!kid)
             return null();
 
-        return handler.newExportDefaultDeclaration(kid, TokenPos(begin, pos().end));
+        return handler.newExportDefaultDeclaration(kid, binding, TokenPos(begin, pos().end));
       }
 
       case TOK_LET:

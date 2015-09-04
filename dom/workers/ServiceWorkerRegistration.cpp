@@ -301,7 +301,7 @@ public:
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    Promise* promise = mPromiseProxy->GetWorkerPromise();
+    Promise* promise = mPromiseProxy->WorkerPromise();
     if (NS_SUCCEEDED(mStatus)) {
       promise->MaybeResolve(JS::UndefinedHandleValue);
     } else {
@@ -318,7 +318,6 @@ class WorkerThreadUpdateCallback final : public ServiceWorkerUpdateFinishCallbac
 
   ~WorkerThreadUpdateCallback()
   {
-    Finish(NS_ERROR_FAILURE);
   }
 
 public:
@@ -351,8 +350,8 @@ public:
 
     nsRefPtr<PromiseWorkerProxy> proxy = mPromiseProxy.forget();
 
-    MutexAutoLock lock(proxy->GetCleanUpLock());
-    if (proxy->IsClean()) {
+    MutexAutoLock lock(proxy->Lock());
+    if (proxy->CleanedUp()) {
       return;
     }
 
@@ -361,11 +360,7 @@ public:
 
     nsRefPtr<UpdateResultRunnable> r =
       new UpdateResultRunnable(proxy, aStatus);
-    if (!r->Dispatch(jsapi.cx())) {
-      nsRefPtr<PromiseWorkerProxyControlRunnable> r =
-        new PromiseWorkerProxyControlRunnable(proxy->GetWorkerPrivate(), proxy);
-      r->Dispatch(jsapi.cx());
-    }
+    r->Dispatch(jsapi.cx());
   }
 };
 
@@ -384,8 +379,8 @@ public:
     AssertIsOnMainThread();
     ErrorResult result;
 
-    MutexAutoLock lock(mPromiseProxy->GetCleanUpLock());
-    if (mPromiseProxy->IsClean()) {
+    MutexAutoLock lock(mPromiseProxy->Lock());
+    if (mPromiseProxy->CleanedUp()) {
       return NS_OK;
     }
 
@@ -445,10 +440,9 @@ class FulfillUnregisterPromiseRunnable final : public WorkerRunnable
   nsRefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
   Maybe<bool> mState;
 public:
-  FulfillUnregisterPromiseRunnable(WorkerPrivate* aWorkerPrivate,
-                                   PromiseWorkerProxy* aProxy,
+  FulfillUnregisterPromiseRunnable(PromiseWorkerProxy* aProxy,
                                    Maybe<bool> aState)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+    : WorkerRunnable(aProxy->GetWorkerPrivate(), WorkerThreadModifyBusyCount)
     , mPromiseWorkerProxy(aProxy)
     , mState(aState)
   {
@@ -459,8 +453,7 @@ public:
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    Promise* promise = mPromiseWorkerProxy->GetWorkerPromise();
-    MOZ_ASSERT(promise);
+    nsRefPtr<Promise> promise = mPromiseWorkerProxy->WorkerPromise();
     if (mState.isSome()) {
       promise->MaybeResolve(mState.value());
     } else {
@@ -481,6 +474,7 @@ public:
   explicit WorkerUnregisterCallback(PromiseWorkerProxy* aProxy)
     : mPromiseWorkerProxy(aProxy)
   {
+    MOZ_ASSERT(aProxy);
   }
 
   NS_IMETHODIMP
@@ -501,7 +495,7 @@ public:
 
 private:
   ~WorkerUnregisterCallback()
-  { }
+  {}
 
   void
   Finish(Maybe<bool> aState)
@@ -511,24 +505,18 @@ private:
       return;
     }
 
-    MutexAutoLock lock(mPromiseWorkerProxy->GetCleanUpLock());
-    if (mPromiseWorkerProxy->IsClean()) {
+    nsRefPtr<PromiseWorkerProxy> proxy = mPromiseWorkerProxy.forget();
+    MutexAutoLock lock(proxy->Lock());
+    if (proxy->CleanedUp()) {
       return;
     }
 
     nsRefPtr<WorkerRunnable> r =
-      new FulfillUnregisterPromiseRunnable(mPromiseWorkerProxy->GetWorkerPrivate(),
-                                           mPromiseWorkerProxy, aState);
+      new FulfillUnregisterPromiseRunnable(proxy, aState);
 
     AutoJSAPI jsapi;
     jsapi.Init();
-    if (!r->Dispatch(jsapi.cx())) {
-      nsRefPtr<WorkerControlRunnable> cr =
-        new PromiseWorkerProxyControlRunnable(
-          mPromiseWorkerProxy->GetWorkerPrivate(),
-          mPromiseWorkerProxy);
-      cr->Dispatch(jsapi.cx());
-    }
+    r->Dispatch(jsapi.cx());
   }
 };
 
@@ -544,20 +532,18 @@ class StartUnregisterRunnable final : public nsRunnable
   const nsString mScope;
 
 public:
-  StartUnregisterRunnable(WorkerPrivate* aWorker, Promise* aPromise,
+  StartUnregisterRunnable(PromiseWorkerProxy* aProxy,
                           const nsAString& aScope)
-    : mPromiseWorkerProxy(PromiseWorkerProxy::Create(aWorker, aPromise))
+    : mPromiseWorkerProxy(aProxy)
     , mScope(aScope)
   {
-    // mPromiseWorkerProxy may be null if AddFeature failed.
+    MOZ_ASSERT(aProxy);
   }
 
   NS_IMETHOD
   Run() override
   {
     AssertIsOnMainThread();
-
-    nsRefPtr<WorkerUnregisterCallback> cb = new WorkerUnregisterCallback(mPromiseWorkerProxy);
 
     // XXXnsm: There is a rare chance of this failing if the worker gets
     // destroyed. In that case, unregister() called from a SW is no longer
@@ -566,8 +552,8 @@ public:
     // principal. Can that be trusted?
     nsCOMPtr<nsIPrincipal> principal;
     {
-      MutexAutoLock lock(mPromiseWorkerProxy->GetCleanUpLock());
-      if (mPromiseWorkerProxy->IsClean()) {
+      MutexAutoLock lock(mPromiseWorkerProxy->Lock());
+      if (mPromiseWorkerProxy->CleanedUp()) {
         return NS_OK;
       }
 
@@ -577,6 +563,8 @@ public:
     }
     MOZ_ASSERT(principal);
 
+    nsRefPtr<WorkerUnregisterCallback> cb =
+      new WorkerUnregisterCallback(mPromiseWorkerProxy);
     nsCOMPtr<nsIServiceWorkerManager> swm =
       mozilla::services::GetServiceWorkerManager();
     nsresult rv = swm->Unregister(principal, cb, mScope);
@@ -962,8 +950,8 @@ ServiceWorkerRegistrationWorkerThread::Update(ErrorResult& aRv)
 
   nsRefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, promise);
   if (!proxy) {
-    promise->MaybeResolve(NS_ERROR_DOM_ABORT_ERR);
-    return promise.forget();
+    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+    return nullptr;
   }
 
   nsRefPtr<UpdateRunnable> r = new UpdateRunnable(proxy, mScope);
@@ -992,7 +980,13 @@ ServiceWorkerRegistrationWorkerThread::Unregister(ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<StartUnregisterRunnable> r = new StartUnregisterRunnable(worker, promise, mScope);
+  nsRefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, promise);
+  if (!proxy) {
+    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+    return nullptr;
+  }
+
+  nsRefPtr<StartUnregisterRunnable> r = new StartUnregisterRunnable(proxy, mScope);
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
 
   return promise.forget();

@@ -237,26 +237,18 @@ tests:
         task: tasks/tests/b2g_gaia_unit.yml
   marionette:
     allowed_build_tasks:
-      tasks/builds/b2g_emulator_kk_opt.yml:
-        task: tasks/tests/b2g_emulator_marionette.yml
       tasks/builds/b2g_emulator_x86_kk_opt.yml:
         task: tasks/tests/b2g_emulator_marionette.yml
       tasks/builds/b2g_emulator_ics_opt.yml:
         task: tasks/tests/b2g_emulator_marionette.yml
   marionette-webapi:
     allowed_build_tasks:
-      tasks/builds/b2g_emulator_kk_opt.yml:
-        task: tasks/tests/b2g_emulator_marionette_webapi.yml
       tasks/builds/b2g_emulator_x86_kk_opt.yml:
         task: tasks/tests/b2g_emulator_marionette_webapi.yml
       tasks/builds/b2g_emulator_ics_opt.yml:
         task: tasks/tests/b2g_emulator_marionette_webapi.yml
   mochitest:
     allowed_build_tasks:
-      tasks/builds/b2g_emulator_kk_debug.yml:
-        task: tasks/tests/b2g_emulator_mochitest.yml
-      tasks/builds/b2g_emulator_kk_opt.yml:
-        task: tasks/tests/b2g_emulator_mochitest.yml
       tasks/builds/b2g_emulator_x86_l_opt.yml:
         task: tasks/tests/b2g_emulator_mochitest.yml
       tasks/builds/b2g_emulator_x86_kk_opt.yml:
@@ -275,8 +267,6 @@ tests:
     allowed_build_tasks:
       tasks/builds/mulet_linux.yml:
         task: tasks/tests/mulet_reftests.yml
-      tasks/builds/b2g_emulator_kk_opt.yml:
-        task: tasks/tests/b2g_emulator_reftest.yml
       tasks/builds/b2g_emulator_x86_l_opt.yml:
         task: tasks/tests/b2g_emulator_reftest.yml
       tasks/builds/b2g_emulator_x86_kk_opt.yml:
@@ -289,8 +279,6 @@ tests:
         task: tasks/tests/b2g_reftests_sanity_oop.yml
   xpcshell:
     allowed_build_tasks:
-      tasks/builds/b2g_emulator_kk_opt.yml:
-        task: tasks/tests/b2g_emulator_xpcshell_chunked.yml
       tasks/builds/b2g_emulator_x86_kk_opt.yml:
         task: tasks/tests/b2g_emulator_xpcshell_chunked.yml
       tasks/builds/b2g_emulator_ics_opt.yml:
