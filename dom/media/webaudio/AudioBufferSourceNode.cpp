@@ -460,12 +460,13 @@ public:
                             AudioBlock* aOutput,
                             bool* aFinished) override
   {
-    if (!mBuffer || !mBufferEnd) {
+    if (mBufferSampleRate == 0) {
+      // start() has not yet been called or no buffer has yet been set
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
       return;
     }
 
-    uint32_t channels = mBuffer->GetChannels();
+    uint32_t channels = mBuffer ? mBuffer->GetChannels() : 0;
 
     UpdateSampleRateIfNeeded(channels);
 
@@ -669,16 +670,15 @@ AudioBufferSourceNode::SendBufferParameterToStream(JSContext* aCx)
   }
 
   if (mBuffer) {
-    float rate = mBuffer->SampleRate();
     nsRefPtr<ThreadSharedFloatArrayBufferList> data =
       mBuffer->GetThreadSharedChannelsForRate(aCx);
     ns->SetBuffer(data.forget());
-    ns->SetInt32Parameter(SAMPLE_RATE, rate);
 
     if (mStartCalled) {
       SendOffsetAndDurationParametersToStream(ns);
     }
   } else {
+    ns->SetInt32Parameter(BUFFEREND, 0);
     ns->SetBuffer(nullptr);
 
     MarkInactive();
@@ -692,6 +692,8 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
                "Only call this when we have a buffer and start() has been called");
 
   float rate = mBuffer->SampleRate();
+  aStream->SetInt32Parameter(SAMPLE_RATE, rate);
+
   int32_t bufferEnd = mBuffer->Length();
   int32_t offsetSamples = std::max(0, NS_lround(mOffset * rate));
 
@@ -823,7 +825,7 @@ AudioBufferSourceNode::SendLoopParametersToStream()
       // looping impossible.
       SendInt32ParameterToStream(LOOP, 0);
     }
-  } else if (!mLoop) {
+  } else {
     SendInt32ParameterToStream(LOOP, 0);
   }
 }
