@@ -169,9 +169,10 @@ public:
 
     // Ensure we can read and write starting at fn - 5 (for the long jmp we're
     // going to write) and ending at fn + 2 (for the short jmp up to the long
-    // jmp).
-    AutoVirtualProtect protect(fn - 5, 7, PAGE_EXECUTE_READWRITE);
-    if (!protect.Protect()) {
+    // jmp). These bytes may span two pages with different protection.
+    AutoVirtualProtect protectBefore(fn - 5, 5, PAGE_EXECUTE_READWRITE);
+    AutoVirtualProtect protectAfter(fn, 2, PAGE_EXECUTE_READWRITE);
+    if (!protectBefore.Protect() || !protectAfter.Protect()) {
       //printf ("VirtualProtectEx failed! %d\n", GetLastError());
       return false;
     }
