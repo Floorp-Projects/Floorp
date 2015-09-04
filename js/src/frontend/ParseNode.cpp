@@ -651,11 +651,19 @@ ParseNode::appendOrCreateList(ParseNodeKind kind, JSOp op, ParseNode* left, Pars
 const char*
 Definition::kindString(Kind kind)
 {
-    static const char * const table[] = {
-        "", js_var_str, js_const_str, js_const_str, js_let_str, "argument", js_function_str, "unknown"
+    static const char* const table[] = {
+        "",
+        js_var_str,
+        js_const_str,
+        js_const_str,
+        js_let_str,
+        "argument",
+        js_function_str,
+        "unknown",
+        js_import_str
     };
 
-    MOZ_ASSERT(unsigned(kind) <= unsigned(ARG));
+    MOZ_ASSERT(kind < ArrayLength(table));
     return table[kind];
 }
 
