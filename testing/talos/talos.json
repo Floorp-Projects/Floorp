@@ -32,6 +32,10 @@
         "other": {
             "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"]
         },
+        "other-e10s": {
+            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"],
+            "talos_options": ["--e10s"]
+        },
         "other-osx-e10s": {
             "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"],
             "talos_options": ["--e10s"]
