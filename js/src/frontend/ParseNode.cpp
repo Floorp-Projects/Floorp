@@ -1172,6 +1172,7 @@ ObjectBox::trace(JSTracer* trc)
         } else if (box->isModuleBox()) {
             ModuleBox* modulebox = box->asModuleBox();
             modulebox->bindings.trace(trc);
+            modulebox->exportNames.trace(trc);
         }
         box = box->traceLink;
     }
