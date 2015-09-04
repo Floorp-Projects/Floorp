@@ -313,6 +313,8 @@ gbjar.sources += [
     'home/BrowserSearch.java',
     'home/DynamicPanel.java',
     'home/FramePanelLayout.java',
+    'home/HistoryHeaderListCursorAdapter.java',
+    'home/HistoryItemAdapter.java',
     'home/HistoryPanel.java',
     'home/HomeAdapter.java',
     'home/HomeBanner.java',

@@ -647,7 +647,17 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     // bug 1036967 removed the (dead) call.
 
 #if defined(MOZ_ANDROID_APZ)
-    if (metrics.IsRootContent()) {
+    bool rootContentLayer = metrics.IsRootContent();
+#ifdef MOZ_B2GDROID
+    // B2GDroid is a special snowflake since it doesn't seem to have any root
+    // content document. However we still need to send a setFirstPaintViewport
+    // message, so we use the root of the layer tree as the root content layer
+    // instead. For the most part this should work fine; the Java code will just
+    // think the root layer is the "main" content, which in a manner of speaking,
+    // it is.
+    rootContentLayer = (aLayer->GetParent() == nullptr);
+#endif // MOZ_B2GDROID
+    if (rootContentLayer) {
       if (mIsFirstPaint) {
         CSSToLayerScale geckoZoom = metrics.LayersPixelsPerCSSPixel().ToScaleFactor();
         LayerIntPoint scrollOffsetLayerPixels = RoundedToInt(metrics.GetScrollOffset() * geckoZoom);
@@ -659,7 +669,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
       mIsFirstPaint = false;
       mLayersUpdated = false;
     }
-#endif
+#endif // MOZ_ANDROID_APZ
 
     // Transform the current local clip by this APZC's async transform. If we're
     // using containerful scrolling, then the clip is not part of the scrolled
