@@ -1257,7 +1257,6 @@ MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd)
 
     SwapMessageQueues();
   }
-  mFlushSourcesNow = false;
 
   return true;
 }
@@ -2557,8 +2556,6 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
   , mEndTime(GRAPH_TIME_MAX)
   , mForceShutDown(false)
   , mPostedRunInStableStateEvent(false)
-  , mFlushSourcesNow(false)
-  , mFlushSourcesOnNextIteration(false)
   , mDetectedNotRunning(false)
   , mPostedRunInStableState(false)
   , mRealtime(aDriverRequested != OFFLINE_THREAD_DRIVER)
