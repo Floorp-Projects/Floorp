@@ -140,7 +140,6 @@ BrowserAction.prototype = {
         panel.setAttribute("flip", "slide");
         node.appendChild(panel);
 
-        const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
         let browser = document.createElementNS(XUL_NS, "browser");
         browser.setAttribute("type", "content");
         browser.setAttribute("disableglobalhistory", "true");

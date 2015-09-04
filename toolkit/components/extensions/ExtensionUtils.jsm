@@ -527,11 +527,6 @@ Messenger.prototype = {
   },
 };
 
-function flushJarCache(jarFile)
-{
-  Services.obs.notifyObservers(jarFile, "flush-cache-entry", null);
-}
-
 this.ExtensionUtils = {
   runSafeWithoutClone,
   runSafe,
@@ -542,6 +537,5 @@ this.ExtensionUtils = {
   injectAPI,
   MessageBroker,
   Messenger,
-  flushJarCache,
 };
 

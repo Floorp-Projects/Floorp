@@ -5,5 +5,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 JAR_MANIFESTS += ['jar.mn']
-
-BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
