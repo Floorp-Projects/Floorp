@@ -68,6 +68,9 @@ protected:
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::css::GridNamedArea GridNamedArea;
   class GridItemCSSOrderIterator;
+  struct TrackSizingFunctions;
+  struct Tracks;
+  struct GridReflowState;
   friend nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                                     nsStyleContext* aContext);
   explicit nsGridContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
@@ -366,11 +369,8 @@ protected:
    * Place all child frames into the grid and expand the (implicit) grid as
    * needed.  The allocated GridAreas are stored in the GridAreaProperty
    * frame property on the child frame.
-   * @param aIter a grid item iterator
-   * @param aStyle the StylePosition() for the grid container
    */
-  void PlaceGridItems(GridItemCSSOrderIterator& aIter,
-                      const nsStylePosition* aStyle);
+  void PlaceGridItems(GridReflowState& aState);
 
   /**
    * Initialize the end lines of the Explicit Grid (mExplicitGridCol[Row]End).
@@ -396,10 +396,8 @@ protected:
   /**
    * Calculate track sizes.
    */
-  void CalculateTrackSizes(const mozilla::LogicalSize& aPercentageBasis,
-                           const nsStylePosition*      aStyle,
-                           nsTArray<TrackSize>&        aColSizes,
-                           nsTArray<TrackSize>&        aRowSizes);
+  void CalculateTrackSizes(GridReflowState&            aState,
+                           const mozilla::LogicalSize& aContentBox);
 
   /**
    * Helper method for ResolveLineRange.
@@ -445,40 +443,29 @@ protected:
 
   /**
    * Return the containing block for a grid item occupying aArea.
-   * @param aColSizes column track sizes
-   * @param aRowSizes row track sizes
    */
-  LogicalRect ContainingBlockFor(const WritingMode& aWM,
-                                 const GridArea& aArea,
-                                 const nsTArray<TrackSize>& aColSizes,
-                                 const nsTArray<TrackSize>& aRowSizes) const;
+  LogicalRect ContainingBlockFor(const GridReflowState& aState,
+                                 const GridArea&        aArea) const;
 
   /**
    * Return the containing block for an abs.pos. grid item occupying aArea.
    * Any 'auto' lines in the grid area will be aligned with grid container
    * containing block on that side.
-   * @param aColSizes column track sizes
-   * @param aRowSizes row track sizes
    * @param aGridOrigin the origin of the grid
    * @param aGridCB the grid container containing block (its padding area)
    */
-  LogicalRect ContainingBlockForAbsPos(const WritingMode& aWM,
-                                       const GridArea& aArea,
-                                       const nsTArray<TrackSize>& aColSizes,
-                                       const nsTArray<TrackSize>& aRowSizes,
-                                       const LogicalPoint& aGridOrigin,
-                                       const LogicalRect& aGridCB) const;
+  LogicalRect ContainingBlockForAbsPos(const GridReflowState& aState,
+                                       const GridArea&        aArea,
+                                       const LogicalPoint&    aGridOrigin,
+                                       const LogicalRect&     aGridCB) const;
 
   /**
    * Reflow and place our children.
    */
-  void ReflowChildren(GridItemCSSOrderIterator&   aIter,
-                      const LogicalRect&          aContentArea,
-                      const nsTArray<TrackSize>&  aColSizes,
-                      const nsTArray<TrackSize>&  aRowSizes,
-                      nsHTMLReflowMetrics&        aDesiredSize,
-                      const nsHTMLReflowState&    aReflowState,
-                      nsReflowStatus&             aStatus);
+  void ReflowChildren(GridReflowState&     aState,
+                      const LogicalRect&   aContentArea,
+                      nsHTMLReflowMetrics& aDesiredSize,
+                      nsReflowStatus&      aStatus);
 
 #ifdef DEBUG
   void SanityCheckAnonymousGridItems() const;
