@@ -12,6 +12,8 @@
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/MemoryStats.js"/>
   <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/StructuredLog.jsm"/>
+  <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/TestRunner.js"/>
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>

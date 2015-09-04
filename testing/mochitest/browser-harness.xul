@@ -11,6 +11,7 @@
         width="1024">
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/LogController.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/StructuredLog.jsm"/>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/TestRunner.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/manifestLibrary.js" />
@@ -83,7 +84,7 @@
         delete this.fileLogger;
         return this.fileLogger = logger;
       },
-      structuredLogger: new StructuredLogger(),
+      structuredLogger: TestRunner.structuredLogger,
       dump: function (str) {
         this.structuredLogger.info(str);
 
