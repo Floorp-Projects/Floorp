@@ -35,7 +35,7 @@ void MaybeYieldThread()
 /// Used by the TestCommand to check that tasks are processed in the right order.
 struct SanityChecker {
   std::vector<uint64_t> mAdvancements;
-  mozilla::gfx::Mutex mMutex;
+  mozilla::gfx::CriticalSection mSection;
 
   explicit SanityChecker(uint64_t aNumCmdBuffers)
   {
@@ -47,7 +47,7 @@ struct SanityChecker {
   virtual void Check(uint64_t aTaskId, uint64_t aCmdId)
   {
     MaybeYieldThread();
-    MutexAutoLock lock(&mMutex);
+    CriticalSectionAutoEnter lock(&mSection);
     ASSERT_EQ(mAdvancements[aTaskId], aCmdId-1);
     mAdvancements[aTaskId] = aCmdId;
   }
