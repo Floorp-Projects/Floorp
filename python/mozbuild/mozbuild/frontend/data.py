@@ -173,8 +173,9 @@ class XPIDLFile(ContextDerived):
 
         self.install_target = context['FINAL_TARGET']
 
-class Defines(ContextDerived):
-    """Context derived container object for DEFINES, which is an OrderedDict.
+class BaseDefines(ContextDerived):
+    """Context derived container object for DEFINES/HOST_DEFINES,
+    which are OrderedDicts.
     """
     __slots__ = ('defines')
 
@@ -196,6 +197,12 @@ class Defines(ContextDerived):
             self.defines.update(more_defines.defines)
         else:
             self.defines.update(more_defines)
+
+class Defines(BaseDefines):
+    pass
+
+class HostDefines(BaseDefines):
+    pass
 
 class Exports(ContextDerived):
     """Context derived container object for EXPORTS, which is a

@@ -1519,6 +1519,11 @@ VARIABLES = {
            appear in the moz.build file.
         """, None),
 
+    'HOST_DEFINES': (OrderedDict, dict,
+        """Dictionary of compiler defines to declare for host compilation.
+        See ``DEFINES`` for specifics.
+        """, None),
+
     'CMFLAGS': (List, list,
         """Flags passed to the Objective-C compiler for all of the Objective-C
            source files declared in this directory.
@@ -1543,6 +1548,24 @@ VARIABLES = {
 
            Note that the ordering of flags matters here; these flags will be
            added to the assembler's command line in the same order as they
+           appear in the moz.build file.
+        """, None),
+
+    'HOST_CFLAGS': (List, list,
+        """Flags passed to the host C compiler for all of the C source files
+           declared in this directory.
+
+           Note that the ordering of flags matters here, these flags will be
+           added to the compiler's command line in the same order as they
+           appear in the moz.build file.
+        """, None),
+
+    'HOST_CXXFLAGS': (List, list,
+        """Flags passed to the host C++ compiler for all of the C++ source files
+           declared in this directory.
+
+           Note that the ordering of flags matters here; these flags will be
+           added to the compiler's command line in the same order as they
            appear in the moz.build file.
         """, None),
 
