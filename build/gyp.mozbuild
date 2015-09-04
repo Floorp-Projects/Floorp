@@ -46,6 +46,9 @@ gyp_vars = {
     'moz_webrtc_omx': 0,
     'moz_webrtc_mediacodec': 0,
 
+    # Turn off multi monitor screen share
+    'multi_monitor_screenshare%' : 0,
+
     # (for vp8) chromium sets to 0 also
     'use_temporal_layers': 0,
 

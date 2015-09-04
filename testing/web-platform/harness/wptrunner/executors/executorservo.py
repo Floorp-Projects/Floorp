@@ -65,6 +65,8 @@ class ServoTestharnessExecutor(ProcessTestExecutor):
         args = ["--cpu", "--hard-fail", "-u", "Servo/wptrunner", "-z", self.test_url(test)]
         for stylesheet in self.browser.user_stylesheets:
             args += ["--user-stylesheet", stylesheet]
+        for pref in test.environment.get('prefs', {}):
+            args += ["--pref", pref]
         debug_args, command = browser_command(self.binary, args, self.debug_info)
 
         self.command = command
@@ -197,6 +199,9 @@ class ServoRefTestExecutor(ProcessTestExecutor):
 
             for stylesheet in self.browser.user_stylesheets:
                 command += ["--user-stylesheet", stylesheet]
+
+            for pref in test.environment.get('prefs', {}):
+                command += ["--pref", pref]
 
             self.command = debug_args + command
 

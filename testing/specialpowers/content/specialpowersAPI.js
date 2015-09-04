@@ -2044,7 +2044,7 @@ SpecialPowersAPI.prototype = {
     this.notifyObserversInParentProcess(null, "browser:purge-domain-data", "example.com");
   },
 
-  loadExtension: function(url, handler) {
+  loadExtension: function(ext, handler) {
     let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
     let id = uuidGenerator.generateUUID().number;
 
@@ -2055,13 +2055,11 @@ SpecialPowersAPI.prototype = {
     });
     let unloadPromise = new Promise(resolve => { resolveUnload = resolve; });
 
-    handler = handler.wrappedJSObject;
+    handler = Cu.waiveXrays(handler);
+    ext = Cu.waiveXrays(ext);
 
     let sp = this;
     let extension = {
-      id,
-      url,
-
       startup() {
         sp._sendAsyncMessage("SPStartupExtension", {id});
         return startupPromise;
@@ -2077,13 +2075,13 @@ SpecialPowersAPI.prototype = {
       },
     };
 
-    this._sendAsyncMessage("SPLoadExtension", {url, id});
+    this._sendAsyncMessage("SPLoadExtension", {ext, id});
 
     let listener = (msg) => {
       if (msg.data.id == id) {
         if (msg.data.type == "extensionStarted") {
           resolveStartup();
-        } if (msg.data.type == "extensionFailed") {
+        } else if (msg.data.type == "extensionFailed") {
           rejectStartup("startup failed");
         } else if (msg.data.type == "extensionUnloaded") {
           this._removeMessageListener("SPExtensionMessage", listener);

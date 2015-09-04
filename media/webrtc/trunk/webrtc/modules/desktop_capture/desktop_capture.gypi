@@ -8,7 +8,7 @@
 
 {
   'variables': {
-    'multi_monitor_screenshare%' : 0,
+    'multi_monitor_screenshare%' : 1,
   },
   'targets': [
     {

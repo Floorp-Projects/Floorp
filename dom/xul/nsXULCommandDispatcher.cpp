@@ -397,7 +397,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
     }
 #endif
 
-    WidgetEvent event(true, NS_XUL_COMMAND_UPDATE);
+    WidgetEvent event(true, eXULCommandUpdate);
     EventDispatcher::Dispatch(content, nullptr, &event);
   }
   return NS_OK;
