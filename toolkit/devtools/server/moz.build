@@ -8,34 +8,15 @@ BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-if CONFIG['ENABLE_TESTS']:
-    DIRS += ['tests/gtest']
-
 XPIDL_SOURCES += [
     'nsIJSInspector.idl',
 ]
 
 XPIDL_MODULE = 'jsinspector'
 
-EXPORTS.mozilla.devtools += [
-    'AutoMemMap.h',
-    'CoreDump.pb.h',
-    'DeserializedNode.h',
-    'HeapSnapshot.h',
-    'ZeroCopyNSIOutputStream.h',
-]
-
 SOURCES += [
-    'AutoMemMap.cpp',
-    'CoreDump.pb.cc',
-    'DeserializedNode.cpp',
-    'HeapSnapshot.cpp',
     'nsJSInspector.cpp',
-    'ZeroCopyNSIOutputStream.cpp',
 ]
-
-# Disable RTTI in google protocol buffer
-DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
 
 FINAL_LIBRARY = 'xul'
 

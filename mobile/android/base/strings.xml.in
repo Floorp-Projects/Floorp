@@ -87,8 +87,9 @@
 
   <string name="history_today_section">&history_today_section;</string>
   <string name="history_yesterday_section">&history_yesterday_section;</string>
-  <string name="history_week_section">&history_week_section2;</string>
-  <string name="history_older_section">&history_older_section2;</string>
+  <string name="history_week_section">&history_week_section3;</string>
+  <string name="history_this_month_section">&history_this_month_section;</string>
+  <string name="history_older_section">&history_older_section3;</string>
 
   <string name="share">&share;</string>
   <string name="share_title">&share_title;</string>
@@ -311,11 +312,10 @@
   <string name="stop">&stop;</string>
   <string name="site_security">&site_security;</string>
   <string name="close_tab">&close_tab;</string>
-  <string name="tab_audio_playing">&tab_audio_playing;</string>
-  <string name="tab_audio_muted">&tab_audio_muted;</string>
   <string name="new_tab_opened">&new_tab_opened;</string>
   <string name="new_private_tab_opened">&new_private_tab_opened;</string>
   <string name="switch_button_message">&switch_button_message;</string>
+  <string name="tab_title_prefix_is_playing_audio">&tab_title_prefix_is_playing_audio;</string>
   <string name="one_tab">&one_tab;</string>
   <string name="num_tabs">&num_tabs2;</string>
   <string name="addons">&addons;</string>

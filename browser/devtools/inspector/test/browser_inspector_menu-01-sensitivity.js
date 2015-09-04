@@ -16,36 +16,40 @@ const PASTE_MENU_ITEMS = [
   "node-menu-pastelastchild",
 ];
 
+const ACTIVE_ON_DOCTYPE_ITEMS = [
+  "node-menu-showdomproperties",
+  "node-menu-useinconsole"
+];
+
 const ALL_MENU_ITEMS = [
   "node-menu-edithtml",
   "node-menu-copyinner",
   "node-menu-copyouter",
   "node-menu-copyuniqueselector",
   "node-menu-copyimagedatauri",
-  "node-menu-showdomproperties",
   "node-menu-delete",
   "node-menu-pseudo-hover",
   "node-menu-pseudo-active",
   "node-menu-pseudo-focus",
   "node-menu-scrollnodeintoview",
   "node-menu-screenshotnode"
-].concat(PASTE_MENU_ITEMS);
+].concat(PASTE_MENU_ITEMS, ACTIVE_ON_DOCTYPE_ITEMS);
 
-const ITEMS_WITHOUT_SHOWDOMPROPS =
-  ALL_MENU_ITEMS.filter(item => item != "node-menu-showdomproperties");
+const INACTIVE_ON_DOCTYPE_ITEMS =
+  ALL_MENU_ITEMS.filter(item => ACTIVE_ON_DOCTYPE_ITEMS.indexOf(item) === -1);
 
 const TEST_CASES = [
   {
     desc: "doctype node with empty clipboard",
     selector: null,
-    disabled: ITEMS_WITHOUT_SHOWDOMPROPS,
+    disabled: INACTIVE_ON_DOCTYPE_ITEMS,
   },
   {
     desc: "doctype node with html on clipboard",
     clipboardData: "<p>some text</p>",
     clipboardDataType: "html",
     selector: null,
-    disabled: ITEMS_WITHOUT_SHOWDOMPROPS,
+    disabled: INACTIVE_ON_DOCTYPE_ITEMS,
   },
   {
     desc: "element node HTML on the clipboard",

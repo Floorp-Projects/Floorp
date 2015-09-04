@@ -1,0 +1,81 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* CSS Variables specific to this panel that aren't defined by the themes */
+.theme-dark {
+  --cell-border-color: rgba(255,255,255,0.15);
+  --cell-border-color-light: rgba(255,255,255,0.1);
+  --focus-cell-border-color: rgba(255,255,255,0.5);
+  --row-alt-background-color: rgba(29,79,115,0.15);
+  --row-hover-background-color: rgba(29,79,115,0.25);
+}
+
+.theme-light {
+  --cell-border-color: rgba(0,0,0,0.15);
+  --cell-border-color-light: rgba(0,0,0,0.1);
+  --focus-cell-border-color: rgba(0,0,0,0.3);
+  --row-alt-background-color: rgba(76,158,217,0.1);
+  --row-hover-background-color: rgba(76,158,217,0.2);
+}
+
+.heap-view {
+  position: relative;
+}
+
+.heap-view .theme-twisty {
+  text-align: end;
+}
+
+.heap-tree-item {
+  list-style-type: none;
+  /* display: none; */
+}
+
+.heap-tree-item[expanded] {
+  display: block;
+}
+
+.heap-tree-item:nth-child(2n) {
+  background-color: var(--row-alt-background-color);
+}
+
+.heap-tree-item:hover {
+  background-color: var(--row-hover-background-color);
+}
+
+.heap-tree-item:focus {
+  background-color: var(--theme-selection-background);
+}
+
+.heap-tree-item:focus description {
+  color: var(--theme-selection-color) !important;
+}
+
+.heap-tree-item:focus .call-tree-cell {
+  -moz-border-end-color: var(--focus-cell-border-color);
+}
+
+
+.heap-tree-cell[type="bytes"], .heap-tree-cell[type="count"] {
+  position: absolute;
+  text-align: right;
+  width: 40px;
+}
+
+.heap-tree-cell[type="name"] {
+  width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.heap-tree-cell[type="count"] {
+  left: 300px;
+}
+
+.heap-tree-cell[type="bytes"] {
+  left: 250px;
+}

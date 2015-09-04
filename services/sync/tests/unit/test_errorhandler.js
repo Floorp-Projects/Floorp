@@ -12,7 +12,17 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
-const FAKE_SERVER_URL = "http://dummy:9000/";
+let fakeServer = new SyncServer();
+fakeServer.start();
+
+do_register_cleanup(function() {
+  return new Promise(resolve => {
+    fakeServer.stop(resolve);
+  });
+});
+
+let fakeServerUrl = "http://localhost:" + fakeServer.port;
+
 const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
 
 const PROLONGED_ERROR_DURATION =
@@ -236,8 +246,8 @@ add_identity_test(this, function test_shouldReportError() {
 
   // Give ourselves a clusterURL so that the temporary 401 no-error situation
   // doesn't come into play.
-  Service.serverURL  = FAKE_SERVER_URL;
-  Service.clusterURL = FAKE_SERVER_URL;
+  Service.serverURL  = fakeServerUrl;
+  Service.clusterURL = fakeServerUrl;
 
   // Test dontIgnoreErrors, non-network, non-prolonged, login error reported
   Status.resetSync();
@@ -589,8 +599,8 @@ add_identity_test(this, function test_sync_syncAndReportErrors_prolonged_non_net
 add_identity_test(this, function test_login_syncAndReportErrors_network_error() {
   // Test network errors are reported when calling syncAndReportErrors.
   yield configureIdentity({username: "broken.wipe"});
-  Service.serverURL  = FAKE_SERVER_URL;
-  Service.clusterURL = FAKE_SERVER_URL;
+  Service.serverURL  = fakeServerUrl;
+  Service.clusterURL = fakeServerUrl;
 
   let deferred = Promise.defer();
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
@@ -629,8 +639,8 @@ add_identity_test(this, function test_login_syncAndReportErrors_prolonged_networ
   // when calling syncAndReportErrors.
   yield configureIdentity({username: "johndoe"});
 
-  Service.serverURL  = FAKE_SERVER_URL;
-  Service.clusterURL = FAKE_SERVER_URL;
+  Service.serverURL  = fakeServerUrl;
+  Service.clusterURL = fakeServerUrl;
 
   let deferred = Promise.defer();
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
@@ -715,8 +725,8 @@ add_task(function test_sync_prolonged_non_network_error() {
 add_identity_test(this, function test_login_prolonged_network_error() {
   // Test prolonged, network errors are reported
   yield configureIdentity({username: "johndoe"});
-  Service.serverURL  = FAKE_SERVER_URL;
-  Service.clusterURL = FAKE_SERVER_URL;
+  Service.serverURL  = fakeServerUrl;
+  Service.clusterURL = fakeServerUrl;
 
   let deferred = Promise.defer();
   Svc.Obs.add("weave:ui:login:error", function onSyncError() {
@@ -801,8 +811,8 @@ add_task(function test_sync_non_network_error() {
 
 add_identity_test(this, function test_login_network_error() {
   yield configureIdentity({username: "johndoe"});
-  Service.serverURL  = FAKE_SERVER_URL;
-  Service.clusterURL = FAKE_SERVER_URL;
+  Service.serverURL  = fakeServerUrl;
+  Service.clusterURL = fakeServerUrl;
 
   let deferred = Promise.defer();
   // Test network errors are not reported.
