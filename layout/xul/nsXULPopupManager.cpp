@@ -1434,7 +1434,7 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
   nsCOMPtr<nsIPresShell> presShell = aPresContext->PresShell();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetMouseEvent event(true, NS_XUL_POPUP_HIDING, nullptr,
+  WidgetMouseEvent event(true, eXULPopupHiding, nullptr,
                          WidgetMouseEvent::eReal);
   EventDispatcher::Dispatch(aPopup, aPresContext, &event, nullptr, &status);
 
