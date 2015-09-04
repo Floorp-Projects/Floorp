@@ -42,7 +42,6 @@ public:
                            OrderState aState = eUnknownOrder)
     : mChildren(aGridContainer->GetChildList(aListID))
     , mArrayIndex(0)
-    , mGridItemIndex(0)
     , mSkipPlaceholders(aFilter == eSkipPlaceholders)
 #ifdef DEBUG
     , mGridContainer(aGridContainer)
@@ -90,18 +89,6 @@ public:
   }
 
   /**
-   * Return the child index of the current item, placeholders not counted.
-   * It's forbidden to call this method when the current frame is placeholder.
-   */
-  size_t GridItemIndex() const
-  {
-    MOZ_ASSERT(!AtEnd());
-    MOZ_ASSERT((**this)->GetType() != nsGkAtoms::placeholderFrame,
-               "MUST not call this when at a placeholder");
-    return mGridItemIndex;
-  }
-
-  /**
    * Skip over placeholder children.
    */
   void SkipPlaceholders()
@@ -132,19 +119,15 @@ public:
   void Next()
   {
 #ifdef DEBUG
-    MOZ_ASSERT(!AtEnd());
     nsFrameList list = mGridContainer->GetChildList(mListID);
     MOZ_ASSERT(list.FirstChild() == mChildren.FirstChild() &&
                list.LastChild() == mChildren.LastChild(),
                "the list of child frames must not change while iterating!");
 #endif
-    if (mSkipPlaceholders ||
-        (**this)->GetType() != nsGkAtoms::placeholderFrame) {
-      ++mGridItemIndex;
-    }
     if (mEnumerator) {
       mEnumerator->Next();
     } else {
+      MOZ_ASSERT(mArrayIndex < mArray->Length(), "iterating past end");
       ++mArrayIndex;
     }
     if (mSkipPlaceholders) {
@@ -160,7 +143,6 @@ public:
     } else {
       mArrayIndex = 0;
     }
-    mGridItemIndex = 0;
     mSkipPlaceholders = aFilter == eSkipPlaceholders;
     if (mSkipPlaceholders) {
       SkipPlaceholders();
@@ -179,8 +161,6 @@ private:
   // Used if child list is *not* in ascending 'order'.
   Maybe<nsTArray<nsIFrame*>> mArray;
   size_t mArrayIndex;
-  // The index of the current grid item (placeholders excluded).
-  size_t mGridItemIndex;
   // Skip placeholder children in the iteration?
   bool mSkipPlaceholders;
 #ifdef DEBUG
@@ -1008,22 +988,21 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
   // Resolve definite positions per spec chap 9.2.
   int32_t minCol = 1;
   int32_t minRow = 1;
-  mGridItems.ClearAndRetainStorage();
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
     nsIFrame* child = *aState.mIter;
-    GridItemInfo* info =
-      mGridItems.AppendElement(GridItemInfo(PlaceDefinite(child, gridStyle)));
-#ifdef DEBUG
-    MOZ_ASSERT(aState.mIter.GridItemIndex() == mGridItems.Length() - 1,
-               "GridItemIndex() is broken");
-    info->mFrame = child;
-#endif
-    GridArea& area = info->mArea;
+    const GridArea& area = PlaceDefinite(child, gridStyle);
     if (area.mCols.IsDefinite()) {
       minCol = std::min(minCol, area.mCols.mUntranslatedStart);
     }
     if (area.mRows.IsDefinite()) {
       minRow = std::min(minRow, area.mRows.mUntranslatedStart);
+    }
+    GridArea* prop = GetGridAreaForChild(child);
+    if (prop) {
+      *prop = area;
+    } else {
+      prop = new GridArea(area);
+      child->Properties().Set(GridAreaProperty(), prop);
     }
   }
 
@@ -1038,18 +1017,19 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
   mGridRowEnd += offsetToRowZero;
   aState.mIter.Reset();
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
-    GridArea& area = mGridItems[aState.mIter.GridItemIndex()].mArea;
-    if (area.mCols.IsDefinite()) {
-      area.mCols.mStart = area.mCols.mUntranslatedStart + offsetToColZero;
-      area.mCols.mEnd = area.mCols.mUntranslatedEnd + offsetToColZero;
+    nsIFrame* child = *aState.mIter;
+    GridArea* area = GetGridAreaForChild(child);
+    if (area->mCols.IsDefinite()) {
+      area->mCols.mStart = area->mCols.mUntranslatedStart + offsetToColZero;
+      area->mCols.mEnd = area->mCols.mUntranslatedEnd + offsetToColZero;
     }
-    if (area.mRows.IsDefinite()) {
-      area.mRows.mStart = area.mRows.mUntranslatedStart + offsetToRowZero;
-      area.mRows.mEnd = area.mRows.mUntranslatedEnd + offsetToRowZero;
+    if (area->mRows.IsDefinite()) {
+      area->mRows.mStart = area->mRows.mUntranslatedStart + offsetToRowZero;
+      area->mRows.mEnd = area->mRows.mUntranslatedEnd + offsetToRowZero;
     }
-    if (area.IsDefinite()) {
-      mCellMap.Fill(area);
-      InflateGridFor(area);
+    if (area->IsDefinite()) {
+      mCellMap.Fill(*area);
+      InflateGridFor(*area);
     }
   }
 
@@ -1069,22 +1049,23 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
                                          : &nsGridContainerFrame::PlaceAutoRow;
     aState.mIter.Reset();
     for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
-      GridArea& area = mGridItems[aState.mIter.GridItemIndex()].mArea;
-      LineRange& major = isRowOrder ? area.mRows : area.mCols;
-      LineRange& minor = isRowOrder ? area.mCols : area.mRows;
+      nsIFrame* child = *aState.mIter;
+      GridArea* area = GetGridAreaForChild(child);
+      LineRange& major = isRowOrder ? area->mRows : area->mCols;
+      LineRange& minor = isRowOrder ? area->mCols : area->mRows;
       if (major.IsDefinite() && minor.IsAuto()) {
         // Items with 'auto' in the minor dimension only.
         uint32_t cursor = 0;
         if (isSparse) {
           cursors->Get(major.mStart, &cursor);
         }
-        (this->*placeAutoMinorFunc)(cursor, &area);
-        mCellMap.Fill(area);
+        (this->*placeAutoMinorFunc)(cursor, area);
+        mCellMap.Fill(*area);
         if (isSparse) {
           cursors->Put(major.mStart, minor.mEnd);
         }
       }
-      InflateGridFor(area);  // Step 2, inflating for auto items too
+      InflateGridFor(*area);  // Step 2, inflating for auto items too
     }
   }
 
@@ -1103,11 +1084,10 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
                                        : &nsGridContainerFrame::PlaceAutoCol;
   aState.mIter.Reset();
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
-    GridArea& area = mGridItems[aState.mIter.GridItemIndex()].mArea;
-    MOZ_ASSERT(*aState.mIter == mGridItems[aState.mIter.GridItemIndex()].mFrame,
-               "iterator out of sync with mGridItems");
-    LineRange& major = isRowOrder ? area.mRows : area.mCols;
-    LineRange& minor = isRowOrder ? area.mCols : area.mRows;
+    nsIFrame* child = *aState.mIter;
+    GridArea* area = GetGridAreaForChild(child);
+    LineRange& major = isRowOrder ? area->mRows : area->mCols;
+    LineRange& minor = isRowOrder ? area->mCols : area->mRows;
     if (major.IsAuto()) {
       if (minor.IsDefinite()) {
         // Items with 'auto' in the major dimension only.
@@ -1117,16 +1097,16 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
           }
           cursorMinor = minor.mStart;
         }
-        (this->*placeAutoMajorFunc)(cursorMajor, &area);
+        (this->*placeAutoMajorFunc)(cursorMajor, area);
         if (isSparse) {
           cursorMajor = major.mStart;
         }
       } else {
         // Items with 'auto' in both dimensions.
         if (isRowOrder) {
-          PlaceAutoAutoInRowOrder(cursorMinor, cursorMajor, &area);
+          PlaceAutoAutoInRowOrder(cursorMinor, cursorMajor, area);
         } else {
-          PlaceAutoAutoInColOrder(cursorMajor, cursorMinor, &area);
+          PlaceAutoAutoInColOrder(cursorMajor, cursorMinor, area);
         }
         if (isSparse) {
           cursorMajor = major.mStart;
@@ -1142,8 +1122,8 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
 #endif
         }
       }
-      mCellMap.Fill(area);
-      InflateGridFor(area);
+      mCellMap.Fill(*area);
+      InflateGridFor(*area);
     }
   }
 
@@ -1160,16 +1140,9 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
     AutoRestore<uint32_t> save2(mGridRowEnd);
     mGridColEnd -= offsetToColZero;
     mGridRowEnd -= offsetToRowZero;
-    mAbsPosItems.ClearAndRetainStorage();
-    size_t i = 0;
-    for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next(), ++i) {
+    for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
       nsIFrame* child = e.get();
-      GridItemInfo* info =
-        mAbsPosItems.AppendElement(GridItemInfo(PlaceAbsPos(child, gridStyle)));
-#ifdef DEBUG
-      info->mFrame = child;
-#endif
-      GridArea& area = info->mArea;
+      GridArea area(PlaceAbsPos(child, gridStyle));
       if (area.mCols.mUntranslatedStart != int32_t(kAutoLine)) {
         area.mCols.mStart = area.mCols.mUntranslatedStart + offsetToColZero;
       }
@@ -1181,6 +1154,12 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
       }
       if (area.mRows.mUntranslatedEnd != int32_t(kAutoLine)) {
         area.mRows.mEnd = area.mRows.mUntranslatedEnd + offsetToRowZero;
+      }
+      GridArea* prop = GetGridAreaForChild(child);
+      if (prop) {
+        *prop = area;
+      } else {
+        child->Properties().Set(GridAreaProperty(), new GridArea(area));
       }
     }
   }
@@ -1369,11 +1348,9 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
     const bool isGridItem = child->GetType() != nsGkAtoms::placeholderFrame;
     LogicalRect cb(wm);
     if (MOZ_LIKELY(isGridItem)) {
-      MOZ_ASSERT(mGridItems[aState.mIter.GridItemIndex()].mFrame == child,
-                 "iterator out of sync with mGridItems");
-      GridArea& area = mGridItems[aState.mIter.GridItemIndex()].mArea;
-      MOZ_ASSERT(area.IsDefinite());
-      cb = ContainingBlockFor(aState, area);
+      GridArea* area = GetGridAreaForChild(child);
+      MOZ_ASSERT(area && area->IsDefinite());
+      cb = ContainingBlockFor(aState, *area);
       cb += gridOrigin;
     } else {
       cb = aContentArea;
@@ -1423,14 +1400,12 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
       const LogicalRect gridCB(wm, 0, 0,
                                aContentArea.ISize(wm) + pad.IStartEnd(wm),
                                aContentArea.BSize(wm) + pad.BStartEnd(wm));
-      size_t i = 0;
-      for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next(), ++i) {
+      for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
         nsIFrame* child = e.get();
-        MOZ_ASSERT(i < mAbsPosItems.Length());
-        MOZ_ASSERT(mAbsPosItems[i].mFrame == child);
-        GridArea& area = mAbsPosItems[i].mArea;
-        LogicalRect itemCB =
-          ContainingBlockForAbsPos(aState, area, gridOrigin, gridCB);
+        GridArea* area = GetGridAreaForChild(child);
+        MOZ_ASSERT(area);
+        LogicalRect itemCB(ContainingBlockForAbsPos(aState, *area,
+                                                    gridOrigin, gridCB));
         // nsAbsoluteContainingBlock::Reflow uses physical coordinates.
         nsRect* cb = static_cast<nsRect*>(child->Properties().Get(
                        GridItemContainingBlockRect()));
