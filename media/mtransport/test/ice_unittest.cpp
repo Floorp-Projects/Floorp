@@ -50,6 +50,7 @@
 
 extern "C" {
 #include "r_data.h"
+#include "util.h"
 }
 
 #define GTEST_HAS_RTTI 0
@@ -65,7 +66,6 @@ static unsigned int kDefaultTimeout = 7000;
 
 //TODO(nils@mozilla.com): This should get replaced with some non-external
 //solution like discussed in bug 860775.
-const std::string kDefaultStunServerAddress((char *)"52.27.56.60");
 const std::string kDefaultStunServerHostname(
     (char *)"global.stun.twilio.com");
 const std::string kBogusStunServerHostname(
@@ -77,7 +77,7 @@ const std::string kBogusIceCandidate(
 const std::string kUnreachableHostIceCandidate(
     (char *)"candidate:0 1 UDP 2113601790 192.168.178.20 50769 typ host");
 
-std::string g_stun_server_address(kDefaultStunServerAddress);
+std::string g_stun_server_address;
 std::string g_stun_server_hostname(kDefaultStunServerHostname);
 std::string g_turn_server;
 std::string g_turn_user;
@@ -3060,6 +3060,48 @@ static std::string get_environment(const char *name) {
   return value;
 }
 
+// DNS resolution helper code
+static std::string
+Resolve(const std::string& fqdn, int address_family)
+{
+  struct addrinfo hints;
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = address_family;
+  hints.ai_protocol = IPPROTO_UDP;
+  struct addrinfo *res;
+  int err = getaddrinfo(fqdn.c_str(), nullptr, &hints, &res);
+  if (err) {
+    std::cerr << "Error in getaddrinfo: " << err << std::endl;
+    return "";
+  }
+
+  char str_addr[64] = {0};
+  switch (res->ai_family) {
+    case AF_INET:
+      inet_ntop(
+          AF_INET,
+          &reinterpret_cast<struct sockaddr_in*>(res->ai_addr)->sin_addr,
+          str_addr,
+          sizeof(str_addr));
+    case AF_INET6:
+      inet_ntop(
+          AF_INET6,
+          &reinterpret_cast<struct sockaddr_in6*>(res->ai_addr)->sin6_addr,
+          str_addr,
+          sizeof(str_addr));
+    default:
+      std::cerr << "Got unexpected address family in DNS lookup: "
+                << res->ai_family << std::endl;
+      return "";
+  }
+
+  if (!strlen(str_addr)) {
+    std::cerr << "inet_ntop failed" << std::endl;
+  }
+
+  return str_addr;
+}
+
 int main(int argc, char **argv)
 {
 #ifdef ANDROID
@@ -3070,6 +3112,7 @@ int main(int argc, char **argv)
   g_turn_server = get_environment("TURN_SERVER_ADDRESS");
   g_turn_user = get_environment("TURN_SERVER_USER");
   g_turn_password = get_environment("TURN_SERVER_PASSWORD");
+
 
   if (g_turn_server.empty() ||
       g_turn_user.empty(),
@@ -3103,6 +3146,12 @@ int main(int argc, char **argv)
   test_utils = new MtransportTestUtils();
   NSS_NoDB_Init(nullptr);
   NSS_SetDomesticPolicy();
+
+  // If only a STUN server FQDN was provided, look up its IP address for the
+  // address-only tests.
+  if (g_stun_server_address.empty() && !g_stun_server_hostname.empty()) {
+    g_stun_server_address = Resolve(g_stun_server_hostname, AF_INET);
+  }
 
   // Start the tests
   ::testing::InitGoogleTest(&argc, argv);
