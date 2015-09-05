@@ -272,8 +272,11 @@ static EventRegions
 GetEventRegions(const LayerMetricsWrapper& aLayer)
 {
   if (aLayer.IsScrollInfoLayer()) {
-    return EventRegions(nsIntRegion(ParentLayerIntRect::ToUntyped(
-      RoundedToInt(aLayer.Metrics().GetCompositionBounds()))));
+    ParentLayerIntRect compositionBounds(RoundedToInt(aLayer.Metrics().GetCompositionBounds()));
+    nsIntRegion hitRegion(ParentLayerIntRect::ToUntyped(compositionBounds));
+    EventRegions eventRegions(hitRegion);
+    eventRegions.mDispatchToContentHitRegion = eventRegions.mHitRegion;
+    return eventRegions;
   }
   return aLayer.GetEventRegions();
 }
