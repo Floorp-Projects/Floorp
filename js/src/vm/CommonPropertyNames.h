@@ -311,6 +311,7 @@
      * enum JS::SymbolCode in jsapi.h. */ \
     macro(iterator, iterator, "iterator") \
     macro(match, match, "match") \
+    macro(search, search, "search") \
     macro(species, species, "species") \
     macro(toPrimitive, toPrimitive, "toPrimitive") \
     macro(unscopables, unscopables, "unscopables") \
@@ -319,6 +320,7 @@
     macro(Symbol_isConcatSpreadable, Symbol_isConcatSpreadable, "Symbol.isConcatSpreadable") \
     macro(Symbol_iterator, Symbol_iterator, "Symbol.iterator") \
     macro(Symbol_match,    Symbol_match,    "Symbol.match") \
+    macro(Symbol_search,   Symbol_search,   "Symbol.search") \
     macro(Symbol_species,  Symbol_species,  "Symbol.species") \
     macro(Symbol_toPrimitive, Symbol_toPrimitive, "Symbol.toPrimitive") \
     macro(Symbol_unscopables, Symbol_unscopables, "Symbol.unscopables") \

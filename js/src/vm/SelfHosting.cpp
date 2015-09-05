@@ -2421,6 +2421,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     RegExpInstanceOptimizable),
 
     JS_FN("FlatStringMatch", FlatStringMatch, 2,0),
+    JS_FN("FlatStringSearch", FlatStringSearch, 2,0),
 
     // See builtin/RegExp.h for descriptions of the regexp_* functions.
     JS_FN("regexp_exec_no_statics", regexp_exec_no_statics, 2,0),
