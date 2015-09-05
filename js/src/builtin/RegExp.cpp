@@ -649,6 +649,7 @@ const JSFunctionSpec js::regexp_methods[] = {
     JS_SELF_HOSTED_SYM_FN(match, "RegExpMatch", 1,0),
     JS_SELF_HOSTED_SYM_FN(replace, "RegExpReplace", 2,0),
     JS_SELF_HOSTED_SYM_FN(search, "RegExpSearch", 1,0),
+    JS_SELF_HOSTED_SYM_FN(split, "RegExpSplit", 2,0),
     JS_FS_END
 };
 
