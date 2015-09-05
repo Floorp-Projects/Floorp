@@ -18,6 +18,7 @@
 #include "jsfriendapi.h"
 #include "jsfun.h"
 #include "jshashutil.h"
+#include "jsstr.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
 #include "selfhosted.out.h"
@@ -2074,6 +2075,32 @@ intrinsic_captureCurrentStack(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+IsMatchFlagsArgumentEnabled(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 0);
+
+    args.rval().setBoolean(cx->runtime()->options().matchFlagArgument());
+    return true;
+}
+
+static bool
+WarnOnceAboutFlagsArgument(JSContext* cx, unsigned argc, Value* vp)
+{
+    if (!cx->compartment()->warnedAboutFlagsArgument) {
+        if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
+                                          cx->runtime()->options().matchFlagArgument()
+                                          ? JSMSG_DEPRECATED_FLAGS_ARG
+                                          : JSMSG_OBSOLETE_FLAGS_ARG))
+        {
+            return false;
+        }
+        cx->compartment()->warnedAboutFlagsArgument = true;
+    }
+    return true;
+}
+
 // The self-hosting global isn't initialized with the normal set of builtins.
 // Instead, individual C++-implemented functions that're required by
 // self-hosted code are defined as global functions. Accessing these
@@ -2131,7 +2158,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("std_String_charCodeAt",     str_charCodeAt,               1,0, StringCharCodeAt),
     JS_FN("std_String_indexOf",                  str_indexOf,                  1,0),
     JS_FN("std_String_lastIndexOf",              str_lastIndexOf,              1,0),
-    JS_FN("std_String_match",                    str_match,                    1,0),
     JS_INLINABLE_FN("std_String_replace",        str_replace,                  2,0, StringReplace),
     JS_INLINABLE_FN("std_String_split",          str_split,                    2,0, StringSplit),
     JS_FN("std_String_startsWith",               str_startsWith,               1,0),
@@ -2394,10 +2420,15 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("RegExpInstanceOptimizable", RegExpInstanceOptimizable, 1,0,
                     RegExpInstanceOptimizable),
 
+    JS_FN("FlatStringMatch", FlatStringMatch, 2,0),
+
     // See builtin/RegExp.h for descriptions of the regexp_* functions.
     JS_FN("regexp_exec_no_statics", regexp_exec_no_statics, 2,0),
     JS_FN("regexp_test_no_statics", regexp_test_no_statics, 2,0),
     JS_FN("regexp_construct", regexp_construct_self_hosting, 2,0),
+
+    JS_FN("IsMatchFlagsArgumentEnabled", IsMatchFlagsArgumentEnabled, 0,0),
+    JS_FN("WarnOnceAboutFlagsArgument", WarnOnceAboutFlagsArgument, 0,0),
 
     JS_FN("IsModule", intrinsic_IsInstanceOfBuiltin<ModuleObject>, 1, 0),
     JS_FN("CallModuleMethodIfWrapped",

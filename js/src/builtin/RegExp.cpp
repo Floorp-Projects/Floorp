@@ -644,6 +644,7 @@ const JSFunctionSpec js::regexp_methods[] = {
     JS_FN("compile",        regexp_compile,     2,0),
     JS_SELF_HOSTED_FN("exec", "RegExp_prototype_Exec", 1,0),
     JS_SELF_HOSTED_FN("test", "RegExpTest" ,    1,0),
+    JS_SELF_HOSTED_SYM_FN(match, "RegExpMatch", 1,0),
     JS_FS_END
 };
 
