@@ -157,7 +157,7 @@ reportCompare(
 
 rex = /y/, rex.lastIndex = 1;
 reportCompare(
-  "xxx1",
+  "xxx0",
   "xxx".replace(rex, "y") + rex.lastIndex,
   "Section 25"
 );

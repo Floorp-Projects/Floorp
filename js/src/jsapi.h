@@ -4874,6 +4874,7 @@ GetSymbolDescription(HandleSymbol symbol);
 #define JS_FOR_EACH_WELL_KNOWN_SYMBOL(macro) \
     macro(iterator) \
     macro(match) \
+    macro(replace) \
     macro(search) \
     macro(species) \
     macro(toPrimitive) \

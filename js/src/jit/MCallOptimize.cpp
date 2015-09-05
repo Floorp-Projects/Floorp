@@ -197,8 +197,10 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineStrFromCharCode(callInfo);
       case InlinableNative::StringCharAt:
         return inlineStrCharAt(callInfo);
-      case InlinableNative::StringReplace:
-        return inlineStrReplace(callInfo);
+
+      // String intrinsics.
+      case InlinableNative::IntrinsicStringReplaceString:
+        return inlineStringReplaceString(callInfo);
 
       // Object natives.
       case InlinableNative::ObjectCreate:
@@ -1994,41 +1996,32 @@ IonBuilder::inlineRegExpInstanceOptimizable(CallInfo& callInfo)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineStrReplace(CallInfo& callInfo)
+IonBuilder::inlineStringReplaceString(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 2 || callInfo.constructing()) {
+    if (callInfo.argc() != 3 || callInfo.constructing()) {
         trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
         return InliningStatus_NotInlined;
     }
 
-    // Return: String.
     if (getInlineReturnType() != MIRType_String)
         return InliningStatus_NotInlined;
 
-    // This: String.
-    if (callInfo.thisArg()->type() != MIRType_String)
+    MDefinition* strArg = callInfo.getArg(0);
+    MDefinition* patArg = callInfo.getArg(1);
+    MDefinition* replArg = callInfo.getArg(2);
+
+    if (strArg->type() != MIRType_String)
         return InliningStatus_NotInlined;
 
-    // Arg 0: RegExp.
-    TemporaryTypeSet* arg0Type = callInfo.getArg(0)->resultTypeSet();
-    const Class* clasp = arg0Type ? arg0Type->getKnownClass(constraints()) : nullptr;
-    if (clasp != &RegExpObject::class_ && callInfo.getArg(0)->type() != MIRType_String)
+    if (patArg->type() != MIRType_String)
         return InliningStatus_NotInlined;
 
-    // Arg 1: String.
-    if (callInfo.getArg(1)->type() != MIRType_String)
+    if (replArg->type() != MIRType_String)
         return InliningStatus_NotInlined;
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MInstruction* cte;
-    if (callInfo.getArg(0)->type() == MIRType_String) {
-        cte = MStringReplace::New(alloc(), callInfo.thisArg(), callInfo.getArg(0),
-                                  callInfo.getArg(1));
-    } else {
-        cte = MRegExpReplace::New(alloc(), callInfo.thisArg(), callInfo.getArg(0),
-                                  callInfo.getArg(1));
-    }
+    MInstruction* cte = MStringReplace::New(alloc(), strArg, patArg, replArg);
     current->add(cte);
     current->push(cte);
     if (cte->isEffectful() && !resumeAfter(cte))

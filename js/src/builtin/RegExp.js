@@ -147,6 +147,313 @@ function RegExpMatch(string) {
     }
 }
 
+function IsRegExpReplaceOptimizable(rx) {
+    var RegExpProto = GetBuiltinPrototype("RegExp");
+    // If RegExpPrototypeOptimizable and RegExpInstanceOptimizable succeed,
+    // `RegExpProto.exec` is guaranteed to be data properties.
+    return RegExpPrototypeOptimizable(RegExpProto) &&
+           RegExpInstanceOptimizable(rx, RegExpProto) &&
+           RegExpProto.exec === RegExp_prototype_Exec;
+}
+
+// ES 2016 draft Mar 25, 2016 21.2.5.8.
+function RegExpReplace(string, replaceValue) {
+    // Step 1.
+    var rx = this;
+
+    // Step 2.
+    if (!IsObject(rx))
+        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, rx === null ? "null" : typeof rx);
+
+    // Step 3.
+    var S = ToString(string);
+
+    // Step 4.
+    var lengthS = S.length;
+
+    // Step 5.
+    var functionalReplace = IsCallable(replaceValue);
+
+    // Step 6.
+    var firstDollarIndex = -1;
+    if (!functionalReplace) {
+        // Step 6.a.
+        replaceValue = ToString(replaceValue);
+        firstDollarIndex = callFunction(std_String_indexOf, replaceValue, "$");
+    }
+
+    // Step 7.
+    var global = !!rx.global;
+
+    // Optimized paths for simple cases.
+    if (!functionalReplace && firstDollarIndex === -1 && IsRegExpReplaceOptimizable(rx)) {
+        if (global)
+            return RegExpGlobalReplaceOpt(rx, S, lengthS, replaceValue);
+        return RegExpLocalReplaceOpt(rx, S, lengthS, replaceValue);
+    }
+
+    // Step 8.
+    var fullUnicode = false;
+    if (global) {
+        // Step 8.a.
+        fullUnicode = !!rx.unicode;
+
+        // Step 8.b.
+        rx.lastIndex = 0;
+    }
+
+    // Step 9.
+    var results = [];
+    var nResults = 0;
+
+    // Step 11.
+    while (true) {
+        // Step 11.a.
+        var result = RegExpExec(rx, S, false);
+
+        // Step 11.b.
+        if (result === null)
+            break;
+
+        // Step 11.c.i.
+        _DefineDataProperty(results, nResults++, result);
+
+        // Step 11.c.ii.
+        if (!global)
+            break;
+
+        // Step 11.c.iii.1.
+        var matchStr = ToString(result[0]);
+
+        // Step 11.c.iii.2.
+        if (matchStr === "") {
+            var lastIndex = ToLength(rx.lastIndex);
+            rx.lastIndex = fullUnicode ? AdvanceStringIndex(S, lastIndex) : lastIndex + 1;
+        }
+    }
+
+    // Step 12.
+    var accumulatedResult = "";
+
+    // Step 13.
+    var nextSourcePosition = 0;
+
+    // Step 14.
+    for (var i = 0; i < nResults; i++) {
+        result = results[i];
+
+        // Steps 14.a-b.
+        var nCaptures = std_Math_max(ToLength(result.length) - 1, 0);
+
+        // Step 14.c.
+        var matched = ToString(result[0]);
+
+        // Step 14.d.
+        var matchLength = matched.length;
+
+        // Steps 14.e-f.
+        var position = std_Math_max(std_Math_min(ToInteger(result.index), lengthS), 0);
+
+        var n, capN, replacement;
+        if (functionalReplace || firstDollarIndex !== -1) {
+            // Step 14.h.
+            var captures = [];
+            var capturesLength = 0;
+
+            // Step 14.j.i (reordered).
+            // For nCaptures <= 4 case, call replaceValue directly, otherwise
+            // use std_Function_apply with all arguments stored in captures.
+            // In latter case, store matched as the first element here, to
+            // avoid unshift later.
+            if (functionalReplace && nCaptures > 4)
+                _DefineDataProperty(captures, capturesLength++, matched);
+
+            // Step 14.g, 14.i, 14.i.iv.
+            for (n = 1; n <= nCaptures; n++) {
+                // Step 14.i.i.
+                capN = result[n];
+
+                // Step 14.i.ii.
+                if (capN !== undefined)
+                    capN = ToString(capN);
+
+                // Step 14.i.iii.
+                _DefineDataProperty(captures, capturesLength++, capN);
+            }
+
+            // Step 14.j.
+            if (functionalReplace) {
+                switch (nCaptures) {
+                  case 0:
+                    replacement = ToString(replaceValue(matched, position, S));
+                    break;
+                  case 1:
+                    replacement = ToString(replaceValue(matched, captures[0], position, S));
+                    break;
+                  case 2:
+                    replacement = ToString(replaceValue(matched, captures[0], captures[1],
+                                                        position, S));
+                    break;
+                  case 3:
+                    replacement = ToString(replaceValue(matched, captures[0], captures[1],
+                                                        captures[2], position, S));
+                    break;
+                  case 4:
+                    replacement = ToString(replaceValue(matched, captures[0], captures[1],
+                                                        captures[2], captures[3], position, S));
+                    break;
+                  default:
+                    // Steps 14.j.ii-v.
+                    _DefineDataProperty(captures, capturesLength++, position);
+                    _DefineDataProperty(captures, capturesLength++, S);
+                    replacement = ToString(callFunction(std_Function_apply, replaceValue, null,
+                                                        captures));
+                }
+            } else {
+                // Steps 14.k.i.
+                replacement = RegExpGetSubstitution(matched, S, position, captures, replaceValue,
+                                                    firstDollarIndex);
+            }
+        } else {
+            // Step 14.g, 14.i, 14.i.iv.
+            // We don't need captures array, but ToString is visible to script.
+            for (n = 1; n <= nCaptures; n++) {
+                // Step 14.i.i-ii.
+                capN = result[n];
+
+                // Step 14.i.ii.
+                if (capN !== undefined)
+                    ToString(capN);
+            }
+            replacement = replaceValue;
+        }
+
+        // Step 14.l.
+        if (position >= nextSourcePosition) {
+            // Step 14.l.ii.
+          accumulatedResult += Substring(S, nextSourcePosition,
+                                         position - nextSourcePosition) + replacement;
+
+            // Step 14.l.iii.
+            nextSourcePosition = position + matchLength;
+        }
+    }
+
+    // Step 15.
+    if (nextSourcePosition >= lengthS)
+        return accumulatedResult;
+
+    // Step 16.
+    return accumulatedResult + Substring(S, nextSourcePosition, lengthS - nextSourcePosition);
+}
+
+// Optimized path for @@replace with global flag.
+function RegExpGlobalReplaceOpt(rx, S, lengthS, replaceValue)
+{
+   // Step 8.a.
+    var fullUnicode = !!rx.unicode;
+
+    // Step 8.b.
+    var lastIndex = 0;
+    rx.lastIndex = 0;
+
+    // Step 12 (reordered).
+    var accumulatedResult = "";
+
+    // Step 13 (reordered).
+    var nextSourcePosition = 0;
+
+    var sticky = !!rx.sticky;
+
+    // Step 11.
+    while (true) {
+        // Step 11.a.
+        var result = RegExpMatcher(rx, S, lastIndex, sticky);
+
+        // Step 11.b.
+        if (result === null)
+            break;
+
+        // Step 11.c.iii.1.
+        var matchStr = result[0];
+
+        // Step 14.c.
+        var matched = result[0];
+
+        // Step 14.d.
+        var matchLength = matched.length;
+
+        // Steps 14.e-f.
+        var position = result.index;
+        lastIndex = position + matchLength;
+
+        // Step 14.l.ii.
+        accumulatedResult += Substring(S, nextSourcePosition,
+                                       position - nextSourcePosition) + replaceValue;
+
+        // Step 14.l.iii.
+        nextSourcePosition = lastIndex;
+
+        // Step 11.c.iii.2.
+        if (matchLength === 0) {
+            lastIndex = fullUnicode ? AdvanceStringIndex(S, lastIndex) : lastIndex + 1;
+            if (lastIndex > lengthS)
+                break;
+        }
+    }
+
+    // Step 15.
+    if (nextSourcePosition >= lengthS)
+        return accumulatedResult;
+
+    // Step 16.
+    return accumulatedResult + Substring(S, nextSourcePosition, lengthS - nextSourcePosition);
+}
+
+// Optimized path for @@replace without global flag.
+function RegExpLocalReplaceOpt(rx, S, lengthS, replaceValue)
+{
+    var sticky = !!rx.sticky;
+
+    var lastIndex = sticky ? rx.lastIndex : 0;
+
+    // Step 11.a.
+    var result = RegExpMatcher(rx, S, lastIndex, sticky);
+
+    // Step 11.b.
+    if (result === null) {
+        rx.lastIndex = 0;
+        return S;
+    }
+
+    // Steps 11.c, 12-13, 14.a-b (skipped).
+
+    // Step 14.c.
+    var matched = result[0];
+
+    // Step 14.d.
+    var matchLength = matched.length;
+
+    // Step 14.e-f.
+    var position = result.index;
+
+    // Step 14.l.ii.
+    var accumulatedResult = Substring(S, 0, position) + replaceValue;
+
+    // Step 14.l.iii.
+    var nextSourcePosition = position + matchLength;
+
+   if (sticky)
+       rx.lastIndex = nextSourcePosition;
+
+    // Step 15.
+    if (nextSourcePosition >= lengthS)
+        return accumulatedResult;
+
+    // Step 16.
+    return accumulatedResult + Substring(S, nextSourcePosition, lengthS - nextSourcePosition);
+}
+
 // ES 2016 draft Mar 25, 2016 21.2.5.9.
 function RegExpSearch(string) {
     // Step 1.

@@ -501,10 +501,6 @@ class RegExpObject : public NativeObject
     void setPrivate(void* priv) = delete;
 };
 
-JSString*
-str_replace_regexp_raw(JSContext* cx, HandleString string, Handle<RegExpObject*> regexp,
-                       HandleString replacement);
-
 /*
  * Parse regexp flags. Report an error and return false if an invalid
  * sequence of flags is encountered (repeat/invalid flag).
@@ -531,8 +527,20 @@ XDRScriptRegExpObject(XDRState<mode>* xdr, MutableHandle<RegExpObject*> objp);
 extern JSObject*
 CloneScriptRegExpObject(JSContext* cx, RegExpObject& re);
 
-JSAtom*
+/* Escape all slashes and newlines in the given string. */
+extern JSAtom*
 EscapeRegExpPattern(JSContext* cx, HandleAtom src);
+
+template <typename CharT>
+extern bool
+HasRegExpMetaChars(const CharT* chars, size_t length);
+
+extern bool
+StringHasRegExpMetaChars(JSLinearString* str);
+
+/* Escape all meta chars in given string. */
+extern JSString*
+RegExpEscapeMetaChars(JSContext* cx, HandleString src);
 
 } /* namespace js */
 
