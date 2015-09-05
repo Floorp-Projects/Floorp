@@ -76,7 +76,8 @@
     _(StringCharCodeAt)             \
     _(StringFromCharCode)           \
     _(StringCharAt)                 \
-    _(StringReplace)                \
+                                    \
+    _(IntrinsicStringReplaceString) \
                                     \
     _(ObjectCreate)                 \
                                     \

@@ -233,13 +233,6 @@ StringFindPattern(JSLinearString* text, JSLinearString* pat, size_t start);
 extern bool
 HasSubstringAt(JSLinearString* text, JSLinearString* pat, size_t start);
 
-template <typename CharT>
-extern bool
-HasRegExpMetaChars(const CharT* chars, size_t length);
-
-extern bool
-StringHasRegExpMetaChars(JSLinearString* str);
-
 template <typename Char1, typename Char2>
 inline bool
 EqualChars(const Char1* s1, const Char2* s2, size_t len);
@@ -307,13 +300,6 @@ template <typename CharT>
 extern bool
 DeflateStringToBuffer(JSContext* maybecx, const CharT* chars,
                       size_t charsLength, char* bytes, size_t* length);
-
-/*
- * The String.prototype.replace fast-native entry point is exported for joined
- * function optimization in js{interp,tracer}.cpp.
- */
-extern bool
-str_replace(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern bool
 str_fromCharCode(JSContext* cx, unsigned argc, Value* vp);

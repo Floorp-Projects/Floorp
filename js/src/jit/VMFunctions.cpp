@@ -1066,15 +1066,6 @@ CreateDerivedTypedObj(JSContext* cx, HandleObject descr,
 }
 
 JSString*
-RegExpReplace(JSContext* cx, HandleString string, HandleObject regexp, HandleString repl)
-{
-    MOZ_ASSERT(string);
-    MOZ_ASSERT(repl);
-
-    return str_replace_regexp_raw(cx, string, regexp.as<RegExpObject>(), repl);
-}
-
-JSString*
 StringReplace(JSContext* cx, HandleString string, HandleString pattern, HandleString repl)
 {
     MOZ_ASSERT(string);

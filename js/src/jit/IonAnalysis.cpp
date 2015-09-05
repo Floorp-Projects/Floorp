@@ -1848,7 +1848,7 @@ jit::MakeMRegExpHoistable(MIRGraph& graph)
 
                 // All MRegExp* MIR's don't adjust the regexp.
                 MDefinition* use = i->consumer()->toDefinition();
-                if (use->isRegExpReplace())
+                if (use->isRegExpMatcher() || use->isRegExpTester())
                     continue;
 
                 hoistable = false;

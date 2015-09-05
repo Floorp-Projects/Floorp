@@ -103,6 +103,11 @@ RegExpInstanceOptimizable(JSContext* cx, unsigned argc, Value* vp);
 extern bool
 RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* rx, JSObject* proto, uint8_t* result);
 
+extern bool
+RegExpGetSubstitution(JSContext* cx, HandleLinearString matched, HandleLinearString string,
+                      size_t position, HandleObject capturesObj, HandleLinearString replacement,
+                      size_t firstDollarIndex, MutableHandleValue rval);
+
 // RegExp ClassSpec members used in RegExpObject.cpp.
 extern bool
 regexp_construct(JSContext* cx, unsigned argc, Value* vp);
