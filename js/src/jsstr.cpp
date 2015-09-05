@@ -1966,300 +1966,6 @@ str_trimRight(JSContext* cx, unsigned argc, Value* vp)
     return TrimString(cx, vp, false, true);
 }
 
-/*
- * Perl-inspired string functions.
- */
-
-namespace {
-
-/* Result of a successfully performed flat match. */
-class FlatMatch
-{
-    RootedAtom pat_;
-    int32_t match_;
-
-    friend class StringRegExpGuard;
-
-  public:
-    explicit FlatMatch(JSContext* cx) : pat_(cx) {}
-    JSLinearString* pattern() const { return pat_; }
-    size_t patternLength() const { return pat_->length(); }
-
-    /*
-     * Note: The match is -1 when the match is performed successfully,
-     * but no match is found.
-     */
-    int32_t match() const { return match_; }
-};
-
-} /* anonymous namespace */
-
-static inline bool
-IsRegExpMetaChar(char16_t c)
-{
-    switch (c) {
-      /* Taken from the PatternCharacter production in 15.10.1. */
-      case '^': case '$': case '\\': case '.': case '*': case '+':
-      case '?': case '(': case ')': case '[': case ']': case '{':
-      case '}': case '|':
-        return true;
-      default:
-        return false;
-    }
-}
-
-template <typename CharT>
-bool
-js::HasRegExpMetaChars(const CharT* chars, size_t length)
-{
-    for (size_t i = 0; i < length; ++i) {
-        if (IsRegExpMetaChar(chars[i]))
-            return true;
-    }
-    return false;
-}
-
-template bool
-js::HasRegExpMetaChars<Latin1Char>(const Latin1Char* chars, size_t length);
-
-template bool
-js::HasRegExpMetaChars<char16_t>(const char16_t* chars, size_t length);
-
-bool
-js::StringHasRegExpMetaChars(JSLinearString* str)
-{
-    AutoCheckCannotGC nogc;
-    if (str->hasLatin1Chars())
-        return HasRegExpMetaChars(str->latin1Chars(nogc), str->length());
-
-    return HasRegExpMetaChars(str->twoByteChars(nogc), str->length());
-}
-
-namespace {
-
-/*
- * StringRegExpGuard factors logic out of String regexp operations.
- *
- * |optarg| indicates in which argument position RegExp flags will be found, if
- * present. This is a Mozilla extension and not part of any ECMA spec.
- */
-class MOZ_STACK_CLASS StringRegExpGuard
-{
-    RegExpGuard re_;
-    FlatMatch   fm;
-    RootedObject obj_;
-
-    /*
-     * Upper bound on the number of characters we are willing to potentially
-     * waste on searching for RegExp meta-characters.
-     */
-    static const size_t MAX_FLAT_PAT_LEN = 256;
-
-    template <typename CharT>
-    static bool
-    flattenPattern(StringBuffer& sb, const CharT* chars, size_t len)
-    {
-        static const char ESCAPE_CHAR = '\\';
-        for (const CharT* it = chars; it < chars + len; ++it) {
-            if (IsRegExpMetaChar(*it)) {
-                if (!sb.append(ESCAPE_CHAR) || !sb.append(*it))
-                    return false;
-            } else {
-                if (!sb.append(*it))
-                    return false;
-            }
-        }
-        return true;
-    }
-
-    static JSAtom*
-    flattenPattern(JSContext* cx, JSAtom* pat)
-    {
-        StringBuffer sb(cx);
-        if (!sb.reserve(pat->length()))
-            return nullptr;
-
-        if (pat->hasLatin1Chars()) {
-            AutoCheckCannotGC nogc;
-            if (!flattenPattern(sb, pat->latin1Chars(nogc), pat->length()))
-                return nullptr;
-        } else {
-            AutoCheckCannotGC nogc;
-            if (!flattenPattern(sb, pat->twoByteChars(nogc), pat->length()))
-                return nullptr;
-        }
-
-        return sb.finishAtom();
-    }
-
-  public:
-    explicit StringRegExpGuard(JSContext* cx)
-      : re_(cx), fm(cx), obj_(cx)
-    { }
-
-    /* init must succeed in order to call tryFlatMatch or normalizeRegExp. */
-    bool init(JSContext* cx, const CallArgs& args, bool convertVoid = false)
-    {
-        if (args.length() != 0) {
-            ESClassValue cls;
-            if (!GetClassOfValue(cx, args[0], &cls))
-                return false;
-
-            if (cls == ESClass_RegExp)
-                return initRegExp(cx, &args[0].toObject());
-        }
-
-        if (convertVoid && !args.hasDefined(0)) {
-            fm.pat_ = cx->runtime()->emptyString;
-            return true;
-        }
-
-        JSString* arg = ArgToRootedString(cx, args, 0);
-        if (!arg)
-            return false;
-
-        fm.pat_ = AtomizeString(cx, arg);
-        if (!fm.pat_)
-            return false;
-
-        return true;
-    }
-
-    bool initRegExp(JSContext* cx, JSObject* regexp) {
-        obj_ = regexp;
-        return RegExpToShared(cx, obj_, &re_);
-    }
-
-    bool init(JSContext* cx, HandleString pattern) {
-        fm.pat_ = AtomizeString(cx, pattern);
-        if (!fm.pat_)
-            return false;
-        return true;
-    }
-
-    /*
-     * Attempt to match |patstr| to |textstr|. A flags argument, metachars in
-     * the pattern string, or a lengthy pattern string can thwart this process.
-     *
-     * |checkMetaChars| looks for regexp metachars in the pattern string.
-     *
-     * Return whether flat matching could be used.
-     *
-     * N.B. tryFlatMatch returns nullptr on OOM, so the caller must check
-     * cx->isExceptionPending().
-     */
-    const FlatMatch*
-    tryFlatMatch(JSContext* cx, JSString* text, unsigned optarg, unsigned argc,
-                 bool checkMetaChars = true)
-    {
-        if (re_.initialized())
-            return nullptr;
-
-        if (optarg < argc)
-            return nullptr;
-
-        size_t patLen = fm.pat_->length();
-        if (checkMetaChars && (patLen > MAX_FLAT_PAT_LEN || StringHasRegExpMetaChars(fm.pat_)))
-            return nullptr;
-
-        /*
-         * |text| could be a rope, so we want to avoid flattening it for as
-         * long as possible.
-         */
-        if (text->isRope()) {
-            if (!RopeMatch(cx, &text->asRope(), fm.pat_, &fm.match_))
-                return nullptr;
-        } else {
-            fm.match_ = StringMatch(&text->asLinear(), fm.pat_, 0);
-        }
-
-        return &fm;
-    }
-
-    /* If the pattern is not already a regular expression, make it so. */
-    bool normalizeRegExp(JSContext* cx, bool flat, unsigned optarg, const CallArgs& args)
-    {
-        if (re_.initialized())
-            return true;
-
-        /* Build RegExp from pattern string. */
-        RootedString opt(cx);
-        if (optarg < args.length()) {
-            // flag argument is enabled only in release build by default.
-            // In non-release build, both telemetry and warning are still
-            // enabled, but the value of flag argument is ignored.
-
-            if (JSScript* script = cx->currentScript()) {
-                const char* filename = script->filename();
-                cx->compartment()->addTelemetry(filename, JSCompartment::DeprecatedFlagsArgument);
-            }
-
-            bool flagArgumentEnabled = cx->runtime()->options().matchFlagArgument();
-            if (!cx->compartment()->warnedAboutFlagsArgument) {
-                if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-                                                  flagArgumentEnabled
-                                                  ? JSMSG_DEPRECATED_FLAGS_ARG
-                                                  : JSMSG_OBSOLETE_FLAGS_ARG))
-                {
-                    return false;
-                }
-                cx->compartment()->warnedAboutFlagsArgument = true;
-            }
-
-            if (flagArgumentEnabled) {
-                opt = ToString<CanGC>(cx, args[optarg]);
-                if (!opt)
-                    return false;
-            }
-        }
-
-        Rooted<JSAtom*> pat(cx);
-        if (flat) {
-            pat = flattenPattern(cx, fm.pat_);
-            if (!pat)
-                return false;
-        } else {
-            pat = fm.pat_;
-        }
-        MOZ_ASSERT(pat);
-
-        return cx->compartment()->regExps.get(cx, pat, opt, &re_);
-    }
-
-    bool zeroLastIndex(JSContext* cx) {
-        if (!regExpIsObject())
-            return true;
-
-        // Use a fast path for same-global RegExp objects with writable
-        // lastIndex.
-        if (obj_->is<RegExpObject>()) {
-            RegExpObject* nobj = &obj_->as<RegExpObject>();
-            if (nobj->lookup(cx, cx->names().lastIndex)->writable()) {
-                nobj->zeroLastIndex(cx);
-                return true;
-            }
-        }
-
-        // Handle everything else generically (including throwing if .lastIndex is non-writable).
-        RootedValue zero(cx, Int32Value(0));
-        return SetProperty(cx, obj_, cx->names().lastIndex, zero);
-    }
-
-    RegExpShared& regExp() { return *re_; }
-
-    bool regExpIsObject() { return obj_ != nullptr; }
-    HandleObject regExpObject() {
-        MOZ_ASSERT(regExpIsObject());
-        return obj_;
-    }
-
-  private:
-    StringRegExpGuard(const StringRegExpGuard&) = delete;
-    void operator=(const StringRegExpGuard&) = delete;
-};
-
-} /* anonymous namespace */
-
 /* ES6 21.2.5.2.3. */
 static size_t
 AdvanceStringIndex(HandleLinearString input, size_t length, size_t index, bool unicode)
@@ -2332,395 +2038,14 @@ FindDollarIndex(const CharT* chars, size_t length)
     return UINT32_MAX;
 }
 
-struct ReplaceData
-{
-    explicit ReplaceData(JSContext* cx)
-      : str(cx), g(cx), lambda(cx), elembase(cx), repstr(cx),
-        fig(cx, NullValue()), sb(cx)
-    {}
-
-    inline void setReplacementString(JSLinearString* string) {
-        MOZ_ASSERT(string);
-        lambda = nullptr;
-        elembase = nullptr;
-        repstr = string;
-
-        AutoCheckCannotGC nogc;
-        dollarIndex = string->hasLatin1Chars()
-                      ? FindDollarIndex(string->latin1Chars(nogc), string->length())
-                      : FindDollarIndex(string->twoByteChars(nogc), string->length());
-    }
-
-    inline void setReplacementFunction(JSObject* func) {
-        MOZ_ASSERT(func);
-        lambda = func;
-        elembase = nullptr;
-        repstr = nullptr;
-        dollarIndex = UINT32_MAX;
-    }
-
-    RootedString       str;            /* 'this' parameter object as a string */
-    StringRegExpGuard  g;              /* regexp parameter object and private data */
-    RootedObject       lambda;         /* replacement function object or null */
-    RootedNativeObject elembase;       /* object for function(a){return b[a]} replace */
-    RootedLinearString repstr;         /* replacement string */
-    uint32_t           dollarIndex;    /* index of first $ in repstr, or UINT32_MAX */
-    int                leftIndex;      /* left context index in str->chars */
-    bool               calledBack;     /* record whether callback has been called */
-    FastInvokeGuard    fig;            /* used for lambda calls, also holds arguments */
-    StringBuffer       sb;             /* buffer built during DoMatch */
-};
-
 } /* anonymous namespace */
-
-static bool
-ReplaceRegExp(JSContext* cx, RegExpStatics* res, ReplaceData& rdata);
-
-static bool
-DoMatchForReplaceLocal(JSContext* cx, RegExpStatics* res, HandleLinearString linearStr,
-                       RegExpShared& re, ReplaceData& rdata, size_t* rightContextOffset)
-{
-    ScopedMatchPairs matches(&cx->tempLifoAlloc());
-    bool sticky = re.sticky();
-    RegExpRunStatus status = re.execute(cx, linearStr, 0, sticky, &matches, nullptr);
-    if (status == RegExpRunStatus_Error)
-        return false;
-
-    if (status == RegExpRunStatus_Success_NotFound)
-        return true;
-
-    MatchPair& match = matches[0];
-    *rightContextOffset = match.limit;
-
-    if (!res->updateFromMatchPairs(cx, linearStr, matches))
-        return false;
-
-    return ReplaceRegExp(cx, res, rdata);
-}
-
-static bool
-DoMatchForReplaceGlobal(JSContext* cx, RegExpStatics* res, HandleLinearString linearStr,
-                        RegExpShared& re, ReplaceData& rdata, size_t* rightContextOffset)
-{
-    bool unicode = re.unicode();
-    bool sticky = re.sticky();
-    size_t charsLen = linearStr->length();
-    ScopedMatchPairs matches(&cx->tempLifoAlloc());
-    for (size_t count = 0, searchIndex = 0; searchIndex <= charsLen; ++count) {
-        if (!CheckForInterrupt(cx))
-            return false;
-
-        RegExpRunStatus status = re.execute(cx, linearStr, searchIndex, sticky, &matches, nullptr);
-        if (status == RegExpRunStatus_Error)
-            return false;
-
-        if (status == RegExpRunStatus_Success_NotFound)
-            break;
-
-        MatchPair& match = matches[0];
-        searchIndex = match.isEmpty()
-                      ? AdvanceStringIndex(linearStr, charsLen, match.limit, unicode)
-                      : match.limit;
-        *rightContextOffset = match.limit;
-
-        if (!res->updateFromMatchPairs(cx, linearStr, matches))
-            return false;
-
-        if (!ReplaceRegExp(cx, res, rdata))
-            return false;
-    }
-
-    return true;
-}
-
-template <typename CharT>
-static bool
-InterpretDollar(RegExpStatics* res, const CharT* bp, const CharT* dp, const CharT* ep,
-                ReplaceData& rdata, JSSubString* out, size_t* skip)
-{
-    MOZ_ASSERT(*dp == '$');
-
-    /* If there is only a dollar, bail now */
-    if (dp + 1 >= ep)
-        return false;
-
-    /* Interpret all Perl match-induced dollar variables. */
-    char16_t dc = dp[1];
-    if (JS7_ISDEC(dc)) {
-        /* ECMA-262 Edition 3: 1-9 or 01-99 */
-        unsigned num = JS7_UNDEC(dc);
-        if (num > res->getMatches().parenCount())
-            return false;
-
-        const CharT* cp = dp + 2;
-        if (cp < ep && (dc = *cp, JS7_ISDEC(dc))) {
-            unsigned tmp = 10 * num + JS7_UNDEC(dc);
-            if (tmp <= res->getMatches().parenCount()) {
-                cp++;
-                num = tmp;
-            }
-        }
-        if (num == 0)
-            return false;
-
-        *skip = cp - dp;
-
-        MOZ_ASSERT(num <= res->getMatches().parenCount());
-
-        /*
-         * Note: we index to get the paren with the (1-indexed) pair
-         * number, as opposed to a (0-indexed) paren number.
-         */
-        res->getParen(num, out);
-        return true;
-    }
-
-    *skip = 2;
-    switch (dc) {
-      case '$':
-        out->init(rdata.repstr, dp - bp, 1);
-        return true;
-      case '&':
-        res->getLastMatch(out);
-        return true;
-      case '+':
-        res->getLastParen(out);
-        return true;
-      case '`':
-        res->getLeftContext(out);
-        return true;
-      case '\'':
-        res->getRightContext(out);
-        return true;
-    }
-    return false;
-}
-
-template <typename CharT>
-static bool
-FindReplaceLengthString(JSContext* cx, RegExpStatics* res, ReplaceData& rdata, size_t* sizep)
-{
-    JSLinearString* repstr = rdata.repstr;
-    CheckedInt<uint32_t> replen = repstr->length();
-
-    if (rdata.dollarIndex != UINT32_MAX) {
-        AutoCheckCannotGC nogc;
-        MOZ_ASSERT(rdata.dollarIndex < repstr->length());
-        const CharT* bp = repstr->chars<CharT>(nogc);
-        const CharT* dp = bp + rdata.dollarIndex;
-        const CharT* ep = bp + repstr->length();
-        do {
-            JSSubString sub;
-            size_t skip;
-            if (InterpretDollar(res, bp, dp, ep, rdata, &sub, &skip)) {
-                if (sub.length > skip)
-                    replen += sub.length - skip;
-                else
-                    replen -= skip - sub.length;
-                dp += skip;
-            } else {
-                dp++;
-            }
-
-            dp = js_strchr_limit(dp, '$', ep);
-        } while (dp);
-    }
-
-    if (!replen.isValid()) {
-        ReportAllocationOverflow(cx);
-        return false;
-    }
-
-    *sizep = replen.value();
-    return true;
-}
-
-static bool
-FindReplaceLength(JSContext* cx, RegExpStatics* res, ReplaceData& rdata, size_t* sizep)
-{
-    if (rdata.elembase) {
-        /*
-         * The base object is used when replace was passed a lambda which looks like
-         * 'function(a) { return b[a]; }' for the base object b.  b will not change
-         * in the course of the replace unless we end up making a scripted call due
-         * to accessing a scripted getter or a value with a scripted toString.
-         */
-        MOZ_ASSERT(rdata.lambda);
-        MOZ_ASSERT(!rdata.elembase->getOps()->lookupProperty);
-        MOZ_ASSERT(!rdata.elembase->getOps()->getProperty);
-
-        RootedValue match(cx);
-        if (!res->createLastMatch(cx, &match))
-            return false;
-        JSAtom* atom = ToAtom<CanGC>(cx, match);
-        if (!atom)
-            return false;
-
-        RootedValue v(cx);
-        if (HasDataProperty(cx, rdata.elembase, AtomToId(atom), v.address()) && v.isString()) {
-            rdata.repstr = v.toString()->ensureLinear(cx);
-            if (!rdata.repstr)
-                return false;
-            *sizep = rdata.repstr->length();
-            return true;
-        }
-
-        /*
-         * Couldn't handle this property, fall through and despecialize to the
-         * general lambda case.
-         */
-        rdata.elembase = nullptr;
-    }
-
-    if (rdata.lambda) {
-        RootedObject lambda(cx, rdata.lambda);
-
-        /*
-         * In the lambda case, not only do we find the replacement string's
-         * length, we compute repstr and return it via rdata for use within
-         * DoReplace.  The lambda is called with arguments ($&, $1, $2, ...,
-         * index, input), i.e., all the properties of a regexp match array.
-         * For $&, etc., we must create string jsvals from cx->regExpStatics.
-         * We grab up stack space to keep the newborn strings GC-rooted.
-         */
-        unsigned p = res->getMatches().parenCount();
-        unsigned argc = 1 + p + 2;
-
-        InvokeArgs& args = rdata.fig.args();
-        if (!args.init(argc))
-            return false;
-
-        args.setCallee(ObjectValue(*lambda));
-        args.setThis(UndefinedValue());
-
-        /* Push $&, $1, $2, ... */
-        unsigned argi = 0;
-        if (!res->createLastMatch(cx, args[argi++]))
-            return false;
-
-        for (size_t i = 0; i < res->getMatches().parenCount(); ++i) {
-            if (!res->createParen(cx, i + 1, args[argi++]))
-                return false;
-        }
-
-        /* Push match index and input string. */
-        args[argi++].setInt32(res->getMatches()[0].start);
-        args[argi].setString(rdata.str);
-
-        if (!rdata.fig.invoke(cx))
-            return false;
-
-        /* root repstr: rdata is on the stack, so scanned by conservative gc. */
-        JSString* repstr = ToString<CanGC>(cx, args.rval());
-        if (!repstr)
-            return false;
-        rdata.repstr = repstr->ensureLinear(cx);
-        if (!rdata.repstr)
-            return false;
-        *sizep = rdata.repstr->length();
-        return true;
-    }
-
-    return rdata.repstr->hasLatin1Chars()
-           ? FindReplaceLengthString<Latin1Char>(cx, res, rdata, sizep)
-           : FindReplaceLengthString<char16_t>(cx, res, rdata, sizep);
-}
-
-/*
- * Precondition: |rdata.sb| already has necessary growth space reserved (as
- * derived from FindReplaceLength), and has been inflated to TwoByte if
- * necessary.
- */
-template <typename CharT>
-static void
-DoReplace(RegExpStatics* res, ReplaceData& rdata)
-{
-    AutoCheckCannotGC nogc;
-    JSLinearString* repstr = rdata.repstr;
-    const CharT* bp = repstr->chars<CharT>(nogc);
-    const CharT* cp = bp;
-
-    if (rdata.dollarIndex != UINT32_MAX) {
-        MOZ_ASSERT(rdata.dollarIndex < repstr->length());
-        const CharT* dp = bp + rdata.dollarIndex;
-        const CharT* ep = bp + repstr->length();
-        do {
-            /* Move one of the constant portions of the replacement value. */
-            size_t len = dp - cp;
-            rdata.sb.infallibleAppend(cp, len);
-            cp = dp;
-
-            JSSubString sub;
-            size_t skip;
-            if (InterpretDollar(res, bp, dp, ep, rdata, &sub, &skip)) {
-                rdata.sb.infallibleAppendSubstring(sub.base, sub.offset, sub.length);
-                cp += skip;
-                dp += skip;
-            } else {
-                dp++;
-            }
-
-            dp = js_strchr_limit(dp, '$', ep);
-        } while (dp);
-    }
-    rdata.sb.infallibleAppend(cp, repstr->length() - (cp - bp));
-}
-
-static bool
-ReplaceRegExp(JSContext* cx, RegExpStatics* res, ReplaceData& rdata)
-{
-
-    const MatchPair& match = res->getMatches()[0];
-    MOZ_ASSERT(!match.isUndefined());
-    MOZ_ASSERT(match.limit >= match.start && match.limit >= 0);
-
-    rdata.calledBack = true;
-    size_t leftoff = rdata.leftIndex;
-    size_t leftlen = match.start - leftoff;
-    rdata.leftIndex = match.limit;
-
-    size_t replen = 0;  /* silence 'unused' warning */
-    if (!FindReplaceLength(cx, res, rdata, &replen))
-        return false;
-
-    CheckedInt<uint32_t> newlen(rdata.sb.length());
-    newlen += leftlen;
-    newlen += replen;
-    if (!newlen.isValid()) {
-        ReportAllocationOverflow(cx);
-        return false;
-    }
-
-    /*
-     * Inflate the buffer now if needed, to avoid (fallible) Latin1 to TwoByte
-     * inflation later on.
-     */
-    JSLinearString& str = rdata.str->asLinear();  /* flattened for regexp */
-    if (str.hasTwoByteChars() || rdata.repstr->hasTwoByteChars()) {
-        if (!rdata.sb.ensureTwoByteChars())
-            return false;
-    }
-
-    if (!rdata.sb.reserve(newlen.value()))
-        return false;
-
-    /* Append skipped-over portion of the search value. */
-    rdata.sb.infallibleAppendSubstring(&str, leftoff, leftlen);
-
-    if (rdata.repstr->hasLatin1Chars())
-        DoReplace<Latin1Char>(res, rdata);
-    else
-        DoReplace<char16_t>(res, rdata);
-    return true;
-}
 
 static JSString*
 BuildFlatReplacement(JSContext* cx, HandleString textstr, HandleString repstr,
-                     const FlatMatch& fm)
+                     size_t match, size_t patternLength)
 {
     RopeBuilder builder(cx);
-    size_t match = fm.match();
-    size_t matchEnd = match + fm.patternLength();
+    size_t matchEnd = match + patternLength;
 
     if (textstr->isRope()) {
         /*
@@ -2780,8 +2105,8 @@ BuildFlatReplacement(JSContext* cx, HandleString textstr, HandleString repstr,
         if (!leftSide)
             return nullptr;
         RootedString rightSide(cx);
-        rightSide = NewDependentString(cx, textstr, match + fm.patternLength(),
-                                       textstr->length() - match - fm.patternLength());
+        rightSide = NewDependentString(cx, textstr, match + patternLength,
+                                       textstr->length() - match - patternLength);
         if (!rightSide ||
             !builder.append(leftSide) ||
             !builder.append(repstr) ||
@@ -2797,13 +2122,10 @@ BuildFlatReplacement(JSContext* cx, HandleString textstr, HandleString repstr,
 template <typename CharT>
 static bool
 AppendDollarReplacement(StringBuffer& newReplaceChars, size_t firstDollarIndex,
-                        const FlatMatch& fm, JSLinearString* text,
+                        size_t matchStart, size_t matchLimit, JSLinearString* text,
                         const CharT* repChars, size_t repLength)
 {
     MOZ_ASSERT(firstDollarIndex < repLength);
-
-    size_t matchStart = fm.match();
-    size_t matchLimit = matchStart + fm.patternLength();
 
     /* Move the pre-dollar chunk in bulk. */
     newReplaceChars.infallibleAppend(repChars, firstDollarIndex);
@@ -2853,14 +2175,13 @@ AppendDollarReplacement(StringBuffer& newReplaceChars, size_t firstDollarIndex,
  */
 static JSString*
 BuildDollarReplacement(JSContext* cx, JSString* textstrArg, JSLinearString* repstr,
-                       uint32_t firstDollarIndex, const FlatMatch& fm)
+                       uint32_t firstDollarIndex, size_t matchStart, size_t patternLength)
 {
     RootedLinearString textstr(cx, textstrArg->ensureLinear(cx));
     if (!textstr)
         return nullptr;
 
-    size_t matchStart = fm.match();
-    size_t matchLimit = matchStart + fm.patternLength();
+    size_t matchLimit = matchStart + patternLength;
 
     /*
      * Most probably:
@@ -2873,18 +2194,18 @@ BuildDollarReplacement(JSContext* cx, JSString* textstrArg, JSLinearString* reps
     if (repstr->hasTwoByteChars() && !newReplaceChars.ensureTwoByteChars())
         return nullptr;
 
-    if (!newReplaceChars.reserve(textstr->length() - fm.patternLength() + repstr->length()))
+    if (!newReplaceChars.reserve(textstr->length() - patternLength + repstr->length()))
         return nullptr;
 
     bool res;
     if (repstr->hasLatin1Chars()) {
         AutoCheckCannotGC nogc;
-        res = AppendDollarReplacement(newReplaceChars, firstDollarIndex, fm, textstr,
-                                      repstr->latin1Chars(nogc), repstr->length());
+        res = AppendDollarReplacement(newReplaceChars, firstDollarIndex, matchStart, matchLimit,
+                                      textstr, repstr->latin1Chars(nogc), repstr->length());
     } else {
         AutoCheckCannotGC nogc;
-        res = AppendDollarReplacement(newReplaceChars, firstDollarIndex, fm, textstr,
-                                      repstr->twoByteChars(nogc), repstr->length());
+        res = AppendDollarReplacement(newReplaceChars, firstDollarIndex, matchStart, matchLimit,
+                                      textstr, repstr->twoByteChars(nogc), repstr->length());
     }
     if (!res)
         return nullptr;
@@ -2908,289 +2229,6 @@ BuildDollarReplacement(JSContext* cx, JSString* textstrArg, JSLinearString* reps
         return nullptr;
 
     return builder.result();
-}
-
-struct StringRange
-{
-    size_t start;
-    size_t length;
-
-    StringRange(size_t s, size_t l)
-      : start(s), length(l)
-    { }
-};
-
-template <typename CharT>
-static void
-CopySubstringsToFatInline(JSFatInlineString* dest, const CharT* src, const StringRange* ranges,
-                          size_t rangesLen, size_t outputLen)
-{
-    CharT* buf = dest->init<CharT>(outputLen);
-    size_t pos = 0;
-    for (size_t i = 0; i < rangesLen; i++) {
-        PodCopy(buf + pos, src + ranges[i].start, ranges[i].length);
-        pos += ranges[i].length;
-    }
-
-    MOZ_ASSERT(pos == outputLen);
-    buf[outputLen] = 0;
-}
-
-static inline JSFatInlineString*
-FlattenSubstrings(JSContext* cx, HandleLinearString str, const StringRange* ranges,
-                  size_t rangesLen, size_t outputLen)
-{
-    JSFatInlineString* result = Allocate<JSFatInlineString>(cx);
-    if (!result)
-        return nullptr;
-
-    AutoCheckCannotGC nogc;
-    if (str->hasLatin1Chars())
-        CopySubstringsToFatInline(result, str->latin1Chars(nogc), ranges, rangesLen, outputLen);
-    else
-        CopySubstringsToFatInline(result, str->twoByteChars(nogc), ranges, rangesLen, outputLen);
-    return result;
-}
-
-static JSString*
-AppendSubstrings(JSContext* cx, HandleLinearString str, const StringRange* ranges,
-                 size_t rangesLen)
-{
-    MOZ_ASSERT(rangesLen);
-
-    /* For single substrings, construct a dependent string. */
-    if (rangesLen == 1)
-        return NewDependentString(cx, str, ranges[0].start, ranges[0].length);
-
-    bool isLatin1 = str->hasLatin1Chars();
-    uint32_t fatInlineMaxLength = JSFatInlineString::MAX_LENGTH_TWO_BYTE;
-    if (isLatin1)
-        fatInlineMaxLength = JSFatInlineString::MAX_LENGTH_LATIN1;
-
-    /* Collect substrings into a rope */
-    size_t i = 0;
-    RopeBuilder rope(cx);
-    RootedString part(cx, nullptr);
-    while (i < rangesLen) {
-
-        /* Find maximum range that fits in JSFatInlineString */
-        size_t substrLen = 0;
-        size_t end = i;
-        for (; end < rangesLen; end++) {
-            if (substrLen + ranges[end].length > fatInlineMaxLength)
-                break;
-            substrLen += ranges[end].length;
-        }
-
-        if (i == end) {
-            /* Not even one range fits JSFatInlineString, use DependentString */
-            const StringRange& sr = ranges[i++];
-            part = NewDependentString(cx, str, sr.start, sr.length);
-        } else {
-            /* Copy the ranges (linearly) into a JSFatInlineString */
-            part = FlattenSubstrings(cx, str, ranges + i, end - i, substrLen);
-            i = end;
-        }
-
-        if (!part)
-            return nullptr;
-
-        /* Appending to the rope permanently roots the substring. */
-        if (!rope.append(part))
-            return nullptr;
-    }
-
-    return rope.result();
-}
-
-static JSString*
-StrReplaceRegexpRemove(JSContext* cx, HandleString str, RegExpShared& re)
-{
-    RootedLinearString linearStr(cx, str->ensureLinear(cx));
-    if (!linearStr)
-        return nullptr;
-
-    Vector<StringRange, 16, SystemAllocPolicy> ranges;
-
-    size_t charsLen = linearStr->length();
-
-    ScopedMatchPairs matches(&cx->tempLifoAlloc());
-    size_t startIndex = 0; /* Index used for iterating through the string. */
-    size_t lastIndex = 0;  /* Index after last successful match. */
-    size_t lazyIndex = 0;  /* Index before last successful match. */
-
-    /* Accumulate StringRanges for unmatched substrings. */
-    bool unicode = re.unicode();
-    bool sticky = re.sticky();
-    while (startIndex <= charsLen) {
-        if (!CheckForInterrupt(cx))
-            return nullptr;
-
-        RegExpRunStatus status = re.execute(cx, linearStr, startIndex, sticky, &matches, nullptr);
-        if (status == RegExpRunStatus_Error)
-            return nullptr;
-        if (status == RegExpRunStatus_Success_NotFound)
-            break;
-        MatchPair& match = matches[0];
-
-        /* Include the latest unmatched substring. */
-        if (size_t(match.start) > lastIndex) {
-            if (!ranges.append(StringRange(lastIndex, match.start - lastIndex)))
-                return nullptr;
-        }
-
-        lazyIndex = lastIndex;
-        lastIndex = match.limit;
-
-        startIndex = match.isEmpty()
-                     ? AdvanceStringIndex(linearStr, charsLen, match.limit, unicode)
-                     : match.limit;
-
-        /* Non-global removal executes at most once. */
-        if (!re.global())
-            break;
-    }
-
-    RegExpStatics* res;
-
-    /* If unmatched, return the input string. */
-    if (!lastIndex) {
-        if (startIndex > 0) {
-            res = cx->global()->getRegExpStatics(cx);
-            if (!res)
-                return nullptr;
-            res->updateLazily(cx, linearStr, &re, lazyIndex, sticky);
-        }
-
-        return str;
-    }
-
-    /* The last successful match updates the RegExpStatics. */
-    res = cx->global()->getRegExpStatics(cx);
-    if (!res)
-        return nullptr;
-
-    res->updateLazily(cx, linearStr, &re, lazyIndex, sticky);
-
-    /* Include any remaining part of the string. */
-    if (lastIndex < charsLen) {
-        if (!ranges.append(StringRange(lastIndex, charsLen - lastIndex)))
-            return nullptr;
-    }
-
-    /* Handle the empty string before calling .begin(). */
-    if (ranges.empty())
-        return cx->runtime()->emptyString;
-
-    return AppendSubstrings(cx, linearStr, ranges.begin(), ranges.length());
-}
-
-static inline JSString*
-StrReplaceRegExp(JSContext* cx, ReplaceData& rdata)
-{
-    rdata.leftIndex = 0;
-    rdata.calledBack = false;
-
-    RegExpStatics* res = cx->global()->getRegExpStatics(cx);
-    if (!res)
-        return nullptr;
-
-    RegExpShared& re = rdata.g.regExp();
-
-    // The spec doesn't describe this function very clearly, so we go ahead and
-    // assume that when the input to String.prototype.replace is a global
-    // RegExp, calling the replacer function (assuming one was provided) takes
-    // place only after the matching is done. See the comment at the beginning
-    // of DoMatchGlobal explaining why we can zero the the RegExp object's
-    // lastIndex property here.
-    if (re.global() && !rdata.g.zeroLastIndex(cx))
-        return nullptr;
-
-    /* Optimize removal. */
-    if (rdata.repstr && rdata.repstr->length() == 0) {
-        MOZ_ASSERT(!rdata.lambda && !rdata.elembase && rdata.dollarIndex == UINT32_MAX);
-        return StrReplaceRegexpRemove(cx, rdata.str, re);
-    }
-
-    RootedLinearString linearStr(cx, rdata.str->ensureLinear(cx));
-    if (!linearStr)
-        return nullptr;
-
-    size_t rightContextOffset = 0;
-    if (re.global()) {
-        if (!DoMatchForReplaceGlobal(cx, res, linearStr, re, rdata, &rightContextOffset))
-            return nullptr;
-    } else {
-        if (!DoMatchForReplaceLocal(cx, res, linearStr, re, rdata, &rightContextOffset))
-            return nullptr;
-    }
-
-    if (!rdata.calledBack) {
-        /* Didn't match, so the string is unmodified. */
-        return rdata.str;
-    }
-
-    MOZ_ASSERT(rightContextOffset <= rdata.str->length());
-    size_t length = rdata.str->length() - rightContextOffset;
-    if (!rdata.sb.appendSubstring(rdata.str, rightContextOffset, length))
-        return nullptr;
-
-    return rdata.sb.finishString();
-}
-
-static inline bool
-str_replace_regexp(JSContext* cx, const CallArgs& args, ReplaceData& rdata)
-{
-    if (!rdata.g.normalizeRegExp(cx, true, 2, args))
-        return false;
-
-    JSString* res = StrReplaceRegExp(cx, rdata);
-    if (!res)
-        return false;
-
-    args.rval().setString(res);
-    return true;
-}
-
-JSString*
-js::str_replace_regexp_raw(JSContext* cx, HandleString string, Handle<RegExpObject*> regexp,
-                           HandleString replacement)
-{
-    /* Optimize removal, so we don't have to create ReplaceData */
-    if (replacement->length() == 0) {
-        StringRegExpGuard guard(cx);
-        if (!guard.initRegExp(cx, regexp))
-            return nullptr;
-
-        RegExpShared& re = guard.regExp();
-        return StrReplaceRegexpRemove(cx, string, re);
-    }
-
-    ReplaceData rdata(cx);
-    rdata.str = string;
-
-    JSLinearString* repl = replacement->ensureLinear(cx);
-    if (!repl)
-        return nullptr;
-
-    rdata.setReplacementString(repl);
-
-    if (!rdata.g.initRegExp(cx, regexp))
-        return nullptr;
-
-    return StrReplaceRegExp(cx, rdata);
-}
-
-static JSString*
-StrReplaceString(JSContext* cx, ReplaceData& rdata, const FlatMatch& fm)
-{
-    /*
-     * Note: we could optimize the text.length == pattern.length case if we wanted,
-     * even in the presence of dollar metachars.
-     */
-    if (rdata.dollarIndex != UINT32_MAX)
-        return BuildDollarReplacement(cx, rdata.str, rdata.repstr, rdata.dollarIndex, fm);
-    return BuildFlatReplacement(cx, rdata.str, rdata.repstr, fm);
 }
 
 template <typename StrChar, typename RepChar>
@@ -3306,205 +2344,43 @@ js::str_flat_replace_string(JSContext *cx, HandleString string, HandleString pat
     return str;
 }
 
-static const uint32_t ReplaceOptArg = 2;
-
 JSString*
 js::str_replace_string_raw(JSContext* cx, HandleString string, HandleString pattern,
                            HandleString replacement)
 {
-    ReplaceData rdata(cx);
-
-    rdata.str = string;
-    JSLinearString* repl = replacement->ensureLinear(cx);
+    RootedLinearString repl(cx, replacement->ensureLinear(cx));
     if (!repl)
         return nullptr;
-    rdata.setReplacementString(repl);
 
-    if (!rdata.g.init(cx, pattern))
-        return nullptr;
-    const FlatMatch* fm = rdata.g.tryFlatMatch(cx, rdata.str, ReplaceOptArg, ReplaceOptArg, false);
+    RootedAtom pat(cx, AtomizeString(cx, pattern));
+    size_t patternLength = pat->length();
+    int32_t match;
+    uint32_t dollarIndex;
 
-    if (fm->match() < 0)
+    {
+        AutoCheckCannotGC nogc;
+        dollarIndex = repl->hasLatin1Chars()
+                      ? FindDollarIndex(repl->latin1Chars(nogc), repl->length())
+                      : FindDollarIndex(repl->twoByteChars(nogc), repl->length());
+    }
+
+    /*
+     * |string| could be a rope, so we want to avoid flattening it for as
+     * long as possible.
+     */
+    if (string->isRope()) {
+        if (!RopeMatch(cx, &string->asRope(), pat, &match))
+            return nullptr;
+    } else {
+        match = StringMatch(&string->asLinear(), pat, 0);
+    }
+
+    if (match < 0)
         return string;
 
-    return StrReplaceString(cx, rdata, *fm);
-}
-
-static inline bool
-str_replace_flat_lambda(JSContext* cx, const CallArgs& outerArgs, ReplaceData& rdata,
-                        const FlatMatch& fm)
-{
-    RootedString matchStr(cx, NewDependentString(cx, rdata.str, fm.match(), fm.patternLength()));
-    if (!matchStr)
-        return false;
-
-    /* lambda(matchStr, matchStart, textstr) */
-    static const uint32_t lambdaArgc = 3;
-    if (!rdata.fig.args().init(lambdaArgc))
-        return false;
-
-    CallArgs& args = rdata.fig.args();
-    args.setCallee(ObjectValue(*rdata.lambda));
-    args.setThis(UndefinedValue());
-
-    Value* sp = args.array();
-    sp[0].setString(matchStr);
-    sp[1].setInt32(fm.match());
-    sp[2].setString(rdata.str);
-
-    if (!rdata.fig.invoke(cx))
-        return false;
-
-    RootedString repstr(cx, ToString<CanGC>(cx, args.rval()));
-    if (!repstr)
-        return false;
-
-    RootedString leftSide(cx, NewDependentString(cx, rdata.str, 0, fm.match()));
-    if (!leftSide)
-        return false;
-
-    size_t matchLimit = fm.match() + fm.patternLength();
-    RootedString rightSide(cx, NewDependentString(cx, rdata.str, matchLimit,
-                                                  rdata.str->length() - matchLimit));
-    if (!rightSide)
-        return false;
-
-    RopeBuilder builder(cx);
-    if (!(builder.append(leftSide) &&
-          builder.append(repstr) &&
-          builder.append(rightSide))) {
-        return false;
-    }
-
-    outerArgs.rval().setString(builder.result());
-    return true;
-}
-
-/*
- * Pattern match the script to check if it is is indexing into a particular
- * object, e.g. 'function(a) { return b[a]; }'. Avoid calling the script in
- * such cases, which are used by javascript packers (particularly the popular
- * Dean Edwards packer) to efficiently encode large scripts. We only handle the
- * code patterns generated by such packers here.
- */
-static bool
-LambdaIsGetElem(JSContext* cx, JSObject& lambda, MutableHandleNativeObject pobj)
-{
-    if (!lambda.is<JSFunction>())
-        return true;
-
-    RootedFunction fun(cx, &lambda.as<JSFunction>());
-    if (!fun->isInterpreted() || fun->isClassConstructor())
-        return true;
-
-    JSScript* script = fun->getOrCreateScript(cx);
-    if (!script)
-        return false;
-
-    jsbytecode* pc = script->code();
-
-    /*
-     * JSOP_GETALIASEDVAR tells us exactly where to find the base object 'b'.
-     * Rule out the (unlikely) possibility of a function with a call object
-     * since it would make our scope walk off by 1.
-     */
-    if (JSOp(*pc) != JSOP_GETALIASEDVAR || fun->needsCallObject())
-        return true;
-    ScopeCoordinate sc(pc);
-    ScopeObject* scope = &fun->environment()->as<ScopeObject>();
-    for (unsigned i = 0; i < sc.hops(); ++i)
-        scope = &scope->enclosingScope().as<ScopeObject>();
-    Value b = scope->aliasedVar(sc);
-    pc += JSOP_GETALIASEDVAR_LENGTH;
-
-    /* Look for 'a' to be the lambda's first argument. */
-    if (JSOp(*pc) != JSOP_GETARG || GET_ARGNO(pc) != 0)
-        return true;
-    pc += JSOP_GETARG_LENGTH;
-
-    /* 'b[a]' */
-    if (JSOp(*pc) != JSOP_GETELEM)
-        return true;
-    pc += JSOP_GETELEM_LENGTH;
-
-    /* 'return b[a]' */
-    if (JSOp(*pc) != JSOP_RETURN)
-        return true;
-
-    /* 'b' must behave like a normal object. */
-    if (!b.isObject())
-        return true;
-
-    JSObject& bobj = b.toObject();
-    const Class* clasp = bobj.getClass();
-    if (!clasp->isNative() || clasp->ops.lookupProperty || clasp->ops.getProperty)
-        return true;
-
-    pobj.set(&bobj.as<NativeObject>());
-    return true;
-}
-
-bool
-js::str_replace(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    ReplaceData rdata(cx);
-    rdata.str = ThisToStringForStringProto(cx, args);
-    if (!rdata.str)
-        return false;
-
-    if (!rdata.g.init(cx, args))
-        return false;
-
-    /* Extract replacement string/function. */
-    if (args.length() >= ReplaceOptArg && IsCallable(args[1])) {
-        rdata.setReplacementFunction(&args[1].toObject());
-
-        if (!LambdaIsGetElem(cx, *rdata.lambda, &rdata.elembase))
-            return false;
-    } else {
-        JSLinearString* string = ArgToRootedString(cx, args, 1);
-        if (!string)
-            return false;
-
-        rdata.setReplacementString(string);
-    }
-
-    rdata.fig.initFunction(ObjectOrNullValue(rdata.lambda));
-
-    /*
-     * Unlike its |String.prototype| brethren, |replace| doesn't convert
-     * its input to a regular expression. (Even if it contains metachars.)
-     *
-     * However, if the user invokes our (non-standard) |flags| argument
-     * extension then we revert to creating a regular expression. Note that
-     * this is observable behavior through the side-effect mutation of the
-     * |RegExp| statics.
-     */
-
-    const FlatMatch* fm = rdata.g.tryFlatMatch(cx, rdata.str, ReplaceOptArg, args.length(), false);
-
-    if (!fm) {
-        if (cx->isExceptionPending())  /* oom in RopeMatch in tryFlatMatch */
-            return false;
-        return str_replace_regexp(cx, args, rdata);
-    }
-
-    if (fm->match() < 0) {
-        args.rval().setString(rdata.str);
-        return true;
-    }
-
-    if (rdata.lambda)
-        return str_replace_flat_lambda(cx, args, rdata, *fm);
-
-    JSString* res = StrReplaceString(cx, rdata, *fm);
-    if (!res)
-        return false;
-
-    args.rval().setString(res);
-    return true;
+    if (dollarIndex != UINT32_MAX)
+        return BuildDollarReplacement(cx, string, repl, dollarIndex, match, patternLength);
+    return BuildFlatReplacement(cx, string, repl, match, patternLength);
 }
 
 namespace {
@@ -3949,7 +2825,7 @@ static const JSFunctionSpec string_methods[] = {
     /* Perl-ish methods (search is actually Python-esque). */
     JS_SELF_HOSTED_FN("match", "String_match",        1,0),
     JS_SELF_HOSTED_FN("search", "String_search",      1,0),
-    JS_INLINABLE_FN("replace", str_replace,           2,JSFUN_GENERIC_NATIVE, StringReplace),
+    JS_SELF_HOSTED_FN("replace", "String_replace",    2,0),
     JS_INLINABLE_FN("split",   str_split,             2,JSFUN_GENERIC_NATIVE, StringSplit),
     JS_SELF_HOSTED_FN("substr", "String_substr",      2,0),
 
@@ -4103,6 +2979,7 @@ static const JSFunctionSpec string_static_methods[] = {
     JS_SELF_HOSTED_FN("slice",           "String_static_slice",         3,0),
 
     JS_SELF_HOSTED_FN("match",           "String_generic_match",        2,0),
+    JS_SELF_HOSTED_FN("replace",         "String_generic_replace",      3,0),
     JS_SELF_HOSTED_FN("search",          "String_generic_search",       2,0),
 
     // This must be at the end because of bug 853075: functions listed after

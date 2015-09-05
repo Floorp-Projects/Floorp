@@ -106,7 +106,7 @@ function removeUnicodeExtensions(locale) {
     var extensions;
     var unicodeLocaleExtensionSequenceRE = getUnicodeLocaleExtensionSequenceRE();
     while ((extensions = regexp_exec_no_statics(unicodeLocaleExtensionSequenceRE, left)) !== null) {
-        left = callFunction(std_String_replace, left, extensions[0], "");
+        left = callFunction(String_replace, left, extensions[0], "");
         unicodeLocaleExtensionSequenceRE.lastIndex = 0;
     }
 

@@ -2106,27 +2106,6 @@ CodeGenerator::visitOutOfLineRegExpInstanceOptimizable(OutOfLineRegExpInstanceOp
     masm.jump(ool->rejoin());
 }
 
-typedef JSString* (*RegExpReplaceFn)(JSContext*, HandleString, HandleObject, HandleString);
-static const VMFunction RegExpReplaceInfo = FunctionInfo<RegExpReplaceFn>(RegExpReplace);
-
-void
-CodeGenerator::visitRegExpReplace(LRegExpReplace* lir)
-{
-    if (lir->replacement()->isConstant())
-        pushArg(ImmGCPtr(lir->replacement()->toConstant()->toString()));
-    else
-        pushArg(ToRegister(lir->replacement()));
-
-    pushArg(ToRegister(lir->pattern()));
-
-    if (lir->string()->isConstant())
-        pushArg(ImmGCPtr(lir->string()->toConstant()->toString()));
-    else
-        pushArg(ToRegister(lir->string()));
-
-    callVM(RegExpReplaceInfo, lir);
-}
-
 typedef JSString* (*StringReplaceFn)(JSContext*, HandleString, HandleString, HandleString);
 static const VMFunction StringFlatReplaceInfo = FunctionInfo<StringReplaceFn>(js::str_flat_replace_string);
 static const VMFunction StringReplaceInfo = FunctionInfo<StringReplaceFn>(StringReplace);
