@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1452199785690000);
+const PRTime gPreloadListExpirationTime = INT64_C(1452335501132000);
 
 class nsSTSPreload
 {
@@ -59,7 +59,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "acorns.com", true },
   { "acuica.co.uk", false },
   { "acus.gov", true },
-  { "ada.is", true },
   { "adambyers.com", true },
   { "adamkostecki.de", true },
   { "adamstas.com", true },
@@ -85,12 +84,10 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "ahwatukeefoothillsmontessori.com", true },
   { "aids.gov", true },
   { "aie.de", true },
-  { "aircomms.com", true },
   { "airlea.com", true },
   { "aiticon.com", true },
   { "ajouin.com", true },
   { "akachanikuji.com", true },
-  { "akclinics.org", true },
   { "akselinurmio.fi", true },
   { "aktiv-naturheilmittel.at", true },
   { "aktiv-naturheilmittel.ch", true },
@@ -117,7 +114,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "amunoz.org", true },
   { "anadoluefessk.org", true },
   { "anadoluefessporkulubu.org", true },
-  { "anakros.me", true },
+  { "anakros.me", false },
   { "andere-gedanken.net", true },
   { "andreasbreitenlohner.de", true },
   { "andreasolsson.se", true },
@@ -648,8 +645,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "ducohosting.com", true },
   { "dyeager.org", true },
   { "dylanscott.com.au", true },
-  { "dymersion.com", true },
-  { "dynaloop.net", true },
   { "dynamicsnetwork.net", true },
   { "dzlibs.io", true },
   { "e-deca2.org", true },
@@ -978,7 +973,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "healthcare.gov", false },
   { "heartlandrentals.com", true },
   { "heavystresser.com", true },
-  { "heftkaufen.de", true },
   { "heh.ee", true },
   { "heha.co", false },
   { "heid.ws", true },
@@ -1007,7 +1001,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "holymoly.lu", true },
   { "honeybadger.io", false },
   { "horza.org", true },
-  { "hoshinplan.com", true },
   { "hostedtalkgadget.google.com", true },
   { "hostinginnederland.nl", true },
   { "hostix.de", true },
@@ -1032,6 +1025,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "i10z.com", true },
   { "i5y.co.uk", true },
   { "iamcarrico.com", true },
+  { "ian.sh", true },
   { "iban.is", true },
   { "icq-project.net", true },
   { "id-co.in", true },
@@ -1124,6 +1118,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "jakenbake.com", true },
   { "jakub-boucek.cz", true },
   { "jamesbywater.co.uk", true },
+  { "jamesbywater.com", true },
   { "jamesbywater.me", true },
   { "jamesbywater.me.uk", true },
   { "jamesbywater.uk", true },
@@ -1639,7 +1634,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "ohling.org", true },
   { "ohnemusik.com", true },
   { "okmx.de", true },
-  { "okonetwork.org.uk", true },
   { "olivierlemoal.fr", true },
   { "ollning.com", true },
   { "omacostudio.com", true },
@@ -2228,6 +2222,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "theamp.com", true },
   { "thebimhub.com", true },
   { "thecustomizewindows.com", true },
+  { "thedreamtravelgroup.co.uk", true },
   { "theescapistswiki.com", true },
   { "thefrozenfire.com", false },
   { "thehiddenbay.me", true },
