@@ -8,13 +8,18 @@
 interface nsIX509Cert;
 interface nsIInterfaceRequestor;
 
-[scriptable, uuid(06d018e0-d41b-4629-a4fc-daaa6029888e)]
+[scriptable, uuid(92396323-23f2-49e0-bf98-a25a725231ab)]
 interface nsIUserCertPicker : nsISupports {
   nsIX509Cert pickByUsage(in nsIInterfaceRequestor ctx, 
                           in wstring selectedNickname,
                           in long certUsage, // as defined by NSS enum SECCertUsage
                           in boolean allowInvalid,
                           in boolean allowDuplicateNicknames,
+                          in AString emailAddress, // optional - if non-empty,
+                                                   // skip certificates which
+                                                   // have at least one e-mail
+                                                   // address but do not
+                                                   // include this specific one
                           out boolean canceled);
 };
 
