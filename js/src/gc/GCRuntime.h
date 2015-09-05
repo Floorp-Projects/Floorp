@@ -9,7 +9,6 @@
 
 #include "mozilla/Atomics.h"
 
-#include "jsfriendapi.h"
 #include "jsgc.h"
 
 #include "gc/Heap.h"
@@ -985,8 +984,6 @@ class GCRuntime
     /* GC scheduling state and parameters. */
     GCSchedulingTunables tunables;
     GCSchedulingState schedulingState;
-
-    MemProfiler mMemProfiler;
 
   private:
     // When empty, chunks reside in the emptyChunks pool and are re-used as
