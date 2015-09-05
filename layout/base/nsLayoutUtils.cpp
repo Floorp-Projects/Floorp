@@ -3103,6 +3103,11 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
         builder, rootScrollFrame, displayportBase, &displayport);
   }
 
+  nsDisplayList hoistedScrollItemStorage;
+  if (aFlags & (PAINT_WIDGET_LAYERS | PAINT_TO_WINDOW)) {
+    builder.SetCommittedScrollInfoItemList(&hoistedScrollItemStorage);
+  }
+
   nsRegion visibleRegion;
   if (aFlags & PAINT_WIDGET_LAYERS) {
     // This layer tree will be reused, so we'll need to calculate it
