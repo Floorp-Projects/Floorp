@@ -30,6 +30,7 @@
 #include "js/Conversions.h"
 #include "js/GCVector.h"
 #include "vm/Opcodes.h"
+#include "vm/SelfHosting.h"
 #include "vm/TypedArrayCommon.h"
 
 #include "jsboolinlines.h"
@@ -5661,7 +5662,9 @@ GetTemplateObjectForNative(JSContext* cx, JSFunction* target, const CallArgs& ar
         }
     }
 
-    if (native == js::str_split && args.length() == 1 && args[0].isString()) {
+    if (native == js::intrinsic_StringSplitString && args.length() == 2 && args[0].isString() &&
+        args[1].isString())
+    {
         ObjectGroup* group = ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array);
         if (!group)
             return false;
@@ -5714,19 +5717,19 @@ GetTemplateObjectForClassHook(JSContext* cx, JSNative hook, CallArgs& args,
 }
 
 static bool
-IsOptimizableCallStringSplit(Value callee, Value thisv, int argc, Value* args)
+IsOptimizableCallStringSplit(Value callee, int argc, Value* args)
 {
-    if (argc != 1 || !thisv.isString() || !args[0].isString())
+    if (argc != 2 || !args[0].isString() || !args[1].isString())
         return false;
 
-    if (!thisv.toString()->isAtom() || !args[0].toString()->isAtom())
+    if (!args[0].toString()->isAtom() || !args[1].toString()->isAtom())
         return false;
 
     if (!callee.isObject() || !callee.toObject().is<JSFunction>())
         return false;
 
     JSFunction& calleeFun = callee.toObject().as<JSFunction>();
-    if (!calleeFun.isNative() || calleeFun.native() != js::str_split)
+    if (!calleeFun.isNative() || calleeFun.native() != js::intrinsic_StringSplitString)
         return false;
 
     return true;
@@ -5753,7 +5756,7 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
 
     // Don't attach an optimized call stub if we could potentially attach an
     // optimized StringSplit stub.
-    if (stub->numOptimizedStubs() == 0 && IsOptimizableCallStringSplit(callee, thisv, argc, vp + 2))
+    if (stub->numOptimizedStubs() == 0 && IsOptimizableCallStringSplit(callee, argc, vp + 2))
         return true;
 
     MOZ_ASSERT_IF(stub->hasStub(ICStub::Call_StringSplit), stub->numOptimizedStubs() == 1);
@@ -6001,21 +6004,20 @@ TryAttachStringSplit(JSContext* cx, ICCall_Fallback* stub, HandleScript script,
     if (stub->numOptimizedStubs() != 0)
         return true;
 
-    RootedValue thisv(cx, vp[1]);
     Value* args = vp + 2;
 
     // String.prototype.split will not yield a constructable.
     if (JSOp(*pc) == JSOP_NEW)
         return true;
 
-    if (!IsOptimizableCallStringSplit(callee, thisv, argc, args))
+    if (!IsOptimizableCallStringSplit(callee, argc, args))
         return true;
 
     MOZ_ASSERT(callee.isObject());
     MOZ_ASSERT(callee.toObject().is<JSFunction>());
 
-    RootedString thisString(cx, thisv.toString());
-    RootedString argString(cx, args[0].toString());
+    RootedString str(cx, args[0].toString());
+    RootedString sep(cx, args[1].toString());
     RootedObject obj(cx, &res.toObject());
     RootedValue arr(cx);
 
@@ -6038,7 +6040,7 @@ TryAttachStringSplit(JSContext* cx, ICCall_Fallback* stub, HandleScript script,
     }
 
     ICCall_StringSplit::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
-                                          script->pcToOffset(pc), thisString, argString,
+                                          script->pcToOffset(pc), str, sep,
                                           arr);
     ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
     if (!newStub)
@@ -6930,21 +6932,25 @@ ICCall_StringSplit::Compiler::generateStubCode(MacroAssembler& masm)
 {
     MOZ_ASSERT(engine_ == Engine::Baseline);
 
-    // Stack Layout: [ ..., CalleeVal, ThisVal, Arg0Val, +ICStackValueOffset+ ]
+    // Stack Layout: [ ..., CalleeVal, ThisVal, strVal, sepVal, +ICStackValueOffset+ ]
+    static const size_t SEP_DEPTH = 0;
+    static const size_t STR_DEPTH = sizeof(Value);
+    static const size_t CALLEE_DEPTH = 3 * sizeof(Value);
+
     AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
     Label failureRestoreArgc;
 #ifdef DEBUG
-    Label oneArg;
+    Label twoArg;
     Register argcReg = R0.scratchReg();
-    masm.branch32(Assembler::Equal, argcReg, Imm32(1), &oneArg);
-    masm.assumeUnreachable("Expected argc == 1");
-    masm.bind(&oneArg);
+    masm.branch32(Assembler::Equal, argcReg, Imm32(2), &twoArg);
+    masm.assumeUnreachable("Expected argc == 2");
+    masm.bind(&twoArg);
 #endif
     Register scratchReg = regs.takeAny();
 
-    // Guard that callee is native function js::str_split.
+    // Guard that callee is native function js::intrinsic_StringSplitString.
     {
-        Address calleeAddr(masm.getStackPointer(), ICStackValueOffset + (2 * sizeof(Value)));
+        Address calleeAddr(masm.getStackPointer(), ICStackValueOffset + CALLEE_DEPTH);
         ValueOperand calleeVal = regs.takeAnyValue();
 
         // Ensure that callee is an object.
@@ -6956,41 +6962,42 @@ ICCall_StringSplit::Compiler::generateStubCode(MacroAssembler& masm)
         masm.branchTestObjClass(Assembler::NotEqual, calleeObj, scratchReg,
                                 &JSFunction::class_, &failureRestoreArgc);
 
-        // Ensure that callee's function impl is the native str_split.
+        // Ensure that callee's function impl is the native intrinsic_StringSplitString.
         masm.loadPtr(Address(calleeObj, JSFunction::offsetOfNativeOrScript()), scratchReg);
-        masm.branchPtr(Assembler::NotEqual, scratchReg, ImmPtr(js::str_split), &failureRestoreArgc);
+        masm.branchPtr(Assembler::NotEqual, scratchReg, ImmPtr(js::intrinsic_StringSplitString),
+                       &failureRestoreArgc);
 
         regs.add(calleeVal);
     }
 
-    // Guard argument.
+    // Guard sep.
     {
-        // Ensure that arg is a string.
-        Address argAddr(masm.getStackPointer(), ICStackValueOffset);
-        ValueOperand argVal = regs.takeAnyValue();
+        // Ensure that sep is a string.
+        Address sepAddr(masm.getStackPointer(), ICStackValueOffset + SEP_DEPTH);
+        ValueOperand sepVal = regs.takeAnyValue();
 
-        masm.loadValue(argAddr, argVal);
-        masm.branchTestString(Assembler::NotEqual, argVal, &failureRestoreArgc);
+        masm.loadValue(sepAddr, sepVal);
+        masm.branchTestString(Assembler::NotEqual, sepVal, &failureRestoreArgc);
 
-        Register argString = masm.extractString(argVal, ExtractTemp0);
-        masm.branchPtr(Assembler::NotEqual, Address(ICStubReg, offsetOfExpectedArg()),
-                       argString, &failureRestoreArgc);
-        regs.add(argVal);
+        Register sep = masm.extractString(sepVal, ExtractTemp0);
+        masm.branchPtr(Assembler::NotEqual, Address(ICStubReg, offsetOfExpectedSep()),
+                       sep, &failureRestoreArgc);
+        regs.add(sepVal);
     }
 
-    // Guard this-value.
+    // Guard str.
     {
-        // Ensure that thisv is a string.
-        Address thisvAddr(masm.getStackPointer(), ICStackValueOffset + sizeof(Value));
-        ValueOperand thisvVal = regs.takeAnyValue();
+        // Ensure that str is a string.
+        Address strAddr(masm.getStackPointer(), ICStackValueOffset + STR_DEPTH);
+        ValueOperand strVal = regs.takeAnyValue();
 
-        masm.loadValue(thisvAddr, thisvVal);
-        masm.branchTestString(Assembler::NotEqual, thisvVal, &failureRestoreArgc);
+        masm.loadValue(strAddr, strVal);
+        masm.branchTestString(Assembler::NotEqual, strVal, &failureRestoreArgc);
 
-        Register thisvString = masm.extractString(thisvVal, ExtractTemp0);
-        masm.branchPtr(Assembler::NotEqual, Address(ICStubReg, offsetOfExpectedThis()),
-                       thisvString, &failureRestoreArgc);
-        regs.add(thisvVal);
+        Register str = masm.extractString(strVal, ExtractTemp0);
+        masm.branchPtr(Assembler::NotEqual, Address(ICStubReg, offsetOfExpectedStr()),
+                       str, &failureRestoreArgc);
+        regs.add(strVal);
     }
 
     // Main stub body.
@@ -7013,7 +7020,7 @@ ICCall_StringSplit::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Guard failure path.
     masm.bind(&failureRestoreArgc);
-    masm.move32(Imm32(1), R0.scratchReg());
+    masm.move32(Imm32(2), R0.scratchReg());
     EmitStubGuardFailure(masm);
     return true;
 }
