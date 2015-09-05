@@ -88,6 +88,9 @@ regexp_construct_self_hosting(JSContext* cx, unsigned argc, Value* vp);
 extern bool
 IsRegExp(JSContext* cx, HandleValue value, bool* result);
 
+extern bool
+RegExpCreate(JSContext* cx, HandleValue pattern, HandleValue flags, MutableHandleValue rval);
+
 // RegExp ClassSpec members used in RegExpObject.cpp.
 extern bool
 regexp_construct(JSContext* cx, unsigned argc, Value* vp);
