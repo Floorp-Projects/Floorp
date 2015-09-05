@@ -2039,6 +2039,7 @@ js::TenuringTracer::moveToTenured(JSObject* src)
             CrashAtUnhandlableOOM("Failed to allocate object while tenuring.");
     }
     JSObject* dst = reinterpret_cast<JSObject*>(t);
+
     tenuredSize += moveObjectToTenured(dst, src, dstKind);
 
     RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
@@ -2050,7 +2051,6 @@ js::TenuringTracer::moveToTenured(JSObject* src)
     }
 
     TracePromoteToTenured(src, dst);
-    MemProfiler::MoveNurseryToTenured(src, dst);
     return dst;
 }
 

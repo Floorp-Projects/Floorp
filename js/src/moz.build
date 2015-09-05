@@ -172,7 +172,6 @@ UNIFIED_SOURCES += [
     'gc/Iteration.cpp',
     'gc/Marking.cpp',
     'gc/Memory.cpp',
-    'gc/MemoryProfiler.cpp',
     'gc/Nursery.cpp',
     'gc/RootMarking.cpp',
     'gc/Statistics.cpp',
