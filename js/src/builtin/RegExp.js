@@ -147,6 +147,38 @@ function RegExpMatch(string) {
     }
 }
 
+// ES 2016 draft Mar 25, 2016 21.2.5.9.
+function RegExpSearch(string) {
+    // Step 1.
+    var rx = this;
+
+    // Step 2.
+    if (!IsObject(rx))
+        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, rx === null ? "null" : typeof rx);
+
+    // Step 3.
+    var S = ToString(string);
+
+    // Step 4.
+    var previousLastIndex = rx.lastIndex;
+
+    // Step 5.
+    rx.lastIndex = 0;
+
+    // Step 6.
+    var result = RegExpExec(rx, S, false);
+
+    // Step 7.
+    rx.lastIndex = previousLastIndex;
+
+    // Step 8.
+    if (result === null)
+        return -1;
+
+    // Step 9.
+    return result.index;
+}
+
 // ES6 21.2.5.2.
 // NOTE: This is not RegExpExec (21.2.5.2.1).
 function RegExp_prototype_Exec(string) {

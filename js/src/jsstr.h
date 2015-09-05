@@ -431,9 +431,6 @@ FileEscapedString(FILE* fp, const char* chars, size_t length, uint32_t quote)
 }
 
 bool
-str_search(JSContext* cx, unsigned argc, Value* vp);
-
-bool
 str_split(JSContext* cx, unsigned argc, Value* vp);
 
 JSObject*
@@ -452,6 +449,9 @@ StringConstructor(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool
 FlatStringMatch(JSContext* cx, unsigned argc, Value* vp);
+
+extern bool
+FlatStringSearch(JSContext* cx, unsigned argc, Value* vp);
 
 } /* namespace js */
 
