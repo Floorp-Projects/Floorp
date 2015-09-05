@@ -4,6 +4,73 @@
 
 /*global intl_Collator: false, */
 
+function StringProtoHasNoMatch() {
+    var ObjectProto = GetBuiltinPrototype("Object");
+    var StringProto = GetBuiltinPrototype("String");
+    if (!ObjectHasPrototype(StringProto, ObjectProto))
+        return false;
+    return !(std_match in StringProto);
+}
+
+function IsStringMatchOptimizable() {
+    var RegExpProto = GetBuiltinPrototype("RegExp");
+    // If RegExpPrototypeOptimizable succeeds, `exec` and `@@match` are
+    // guaranteed to be data properties.
+    return RegExpPrototypeOptimizable(RegExpProto) &&
+           RegExpProto.exec === RegExp_prototype_Exec &&
+           RegExpProto[std_match] === RegExpMatch;
+}
+
+// ES 2016 draft Mar 25, 2016 21.1.3.11.
+function String_match(regexp) {
+    // Step 1.
+    RequireObjectCoercible(this);
+
+    // Step 2.
+    var isPatternString = (typeof regexp === "string");
+    if (!(isPatternString && StringProtoHasNoMatch()) && regexp !== undefined && regexp !== null) {
+        // Step 2.a.
+        var matcher = GetMethod(regexp, std_match);
+
+        // Step 2.b.
+        if (matcher !== undefined)
+            return callContentFunction(matcher, regexp, this);
+    }
+
+    // Step 3.
+    var S = ToString(this);
+
+    // FIXME: Non-standard flags argument (bug 1108382).
+    var flags = undefined;
+    if (arguments.length > 1) {
+        if (IsMatchFlagsArgumentEnabled())
+            flags = arguments[1];
+        WarnOnceAboutFlagsArgument();
+    } else {
+        if (isPatternString && IsStringMatchOptimizable()) {
+            var flatResult = FlatStringMatch(S, regexp);
+            if (flatResult !== undefined)
+                return flatResult;
+        }
+    }
+
+    // Step 4.
+    var rx = RegExpCreate(regexp, flags);
+
+    // Step 5 (optimized case).
+    if (IsStringMatchOptimizable() && !flags)
+        return RegExpMatcher(rx, S, 0, false);
+
+    // Step 5.
+    return callContentFunction(GetMethod(rx, std_match), rx, S);
+}
+
+function String_generic_match(thisValue, regexp) {
+    if (thisValue === undefined)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'String.match');
+    return callFunction(String_match, thisValue, regexp);
+}
+
 /* ES6 Draft Oct 14, 2014 21.1.3.19 */
 function String_substring(start, end) {
     // Steps 1-3.
