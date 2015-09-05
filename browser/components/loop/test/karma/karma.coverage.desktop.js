@@ -26,8 +26,6 @@ module.exports = function(config) {
     "content/shared/js/dispatcher.js",
     "content/shared/js/store.js",
     "content/shared/js/conversationStore.js",
-    "content/shared/js/roomStates.js",
-    "content/shared/js/fxOSActiveRoomStore.js",
     "content/shared/js/activeRoomStore.js",
     "content/shared/js/views.js",
     "content/shared/js/textChatStore.js",
