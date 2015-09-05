@@ -72,12 +72,12 @@
     _(RegExpInstanceOptimizable)    \
                                     \
     _(String)                       \
-    _(StringSplit)                  \
     _(StringCharCodeAt)             \
     _(StringFromCharCode)           \
     _(StringCharAt)                 \
                                     \
     _(IntrinsicStringReplaceString) \
+    _(IntrinsicStringSplitString)   \
                                     \
     _(ObjectCreate)                 \
                                     \

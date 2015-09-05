@@ -231,6 +231,83 @@ function String_generic_search(thisValue, regexp) {
     return callFunction(String_search, thisValue, regexp);
 }
 
+function StringProtoHasNoSplit() {
+    var ObjectProto = GetBuiltinPrototype("Object");
+    var StringProto = GetBuiltinPrototype("String");
+    if (!ObjectHasPrototype(StringProto, ObjectProto))
+        return false;
+    return !(std_split in StringProto);
+}
+
+// ES 2016 draft Mar 25, 2016 21.1.3.17.
+function String_split(separator, limit) {
+    // Step 1.
+    RequireObjectCoercible(this);
+
+    // Optimized path for string.split(string), especially when both strings
+    // are constants.  Following sequence of if's cannot be put together in
+    // order that IonMonkey sees the constant if present (bug 1246141).
+    if (typeof this === "string") {
+        if (StringProtoHasNoSplit()) {
+            if (typeof separator === "string") {
+                if (limit === undefined) {
+                    // inlineConstantStringSplitString needs both arguments to
+                    // be MConstant, so pass them directly.
+                    return StringSplitString(this, separator);
+                }
+            }
+        }
+    }
+
+    // Step 2.
+    if (!(typeof separator == "string" && StringProtoHasNoSplit()) &&
+        separator !== undefined && separator !== null)
+    {
+        // Step 2.a.
+        var splitter = separator[std_split];
+
+        // Step 2.b.
+        if (splitter !== undefined)
+            return callContentFunction(splitter, separator, this, limit);
+    }
+
+    // Step 3.
+    var S = ToString(this);
+
+    // Step 9 (reordered).
+    var R = ToString(separator);
+
+    // Step 6.
+    if (limit !== undefined) {
+        var lim = limit >>> 0;
+
+        // Step 10.
+        if (lim === 0)
+            return [];
+
+        // Step 11.
+        if (separator === undefined)
+            return [S];
+
+        // Steps 4, 8, 12-18.
+        return StringSplitStringLimit(S, R, lim);
+    }
+
+    // Step 11.
+    if (separator === undefined)
+        return [S];
+
+    // Optimized path.
+    // Steps 4, 8, 12-18.
+    return StringSplitString(S, R);
+}
+
+function String_generic_split(thisValue, separator, limit) {
+    if (thisValue === undefined)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'String.split');
+    return callFunction(String_split, thisValue, separator, limit);
+}
+
 /* ES6 Draft Oct 14, 2014 21.1.3.19 */
 function String_substring(start, end) {
     // Steps 1-3.

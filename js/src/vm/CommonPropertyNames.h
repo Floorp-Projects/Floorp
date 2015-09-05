@@ -311,6 +311,7 @@
     macro(replace, replace, "replace") \
     macro(search, search, "search") \
     macro(species, species, "species") \
+    macro(split, split, "split") \
     macro(toPrimitive, toPrimitive, "toPrimitive") \
     macro(unscopables, unscopables, "unscopables") \
     /* Same goes for the descriptions of the well-known symbols. */ \
@@ -321,6 +322,7 @@
     macro(Symbol_replace,  Symbol_replace,  "Symbol.replace") \
     macro(Symbol_search,   Symbol_search,   "Symbol.search") \
     macro(Symbol_species,  Symbol_species,  "Symbol.species") \
+    macro(Symbol_split,    Symbol_split,    "Symbol.split") \
     macro(Symbol_toPrimitive, Symbol_toPrimitive, "Symbol.toPrimitive") \
     macro(Symbol_unscopables, Symbol_unscopables, "Symbol.unscopables") \
     /* Function names for properties named by symbols. */ \
