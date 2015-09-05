@@ -506,9 +506,7 @@ float Strtof(Vector<const char> buffer, int exponent) {
   double double_previous = Double(double_guess).PreviousDouble();
 
   float f1 = static_cast<float>(double_previous);
-#if defined(DEBUG)
   float f2 = float_guess;
-#endif
   float f3 = static_cast<float>(double_next);
   float f4;
   if (is_correct) {
@@ -517,6 +515,7 @@ float Strtof(Vector<const char> buffer, int exponent) {
     double double_next2 = Double(double_next).NextDouble();
     f4 = static_cast<float>(double_next2);
   }
+  (void) f2; // Mark variable as used.
   ASSERT(f1 <= f2 && f2 <= f3 && f3 <= f4);
 
   // If the guess doesn't lie near a single-precision boundary we can simply
