@@ -1526,8 +1526,8 @@ RopeMatch(JSContext* cx, JSRope* text, JSLinearString* pat, int* match)
 }
 
 /* ES6 draft rc4 21.1.3.7. */
-static bool
-str_includes(JSContext* cx, unsigned argc, Value* vp)
+bool
+js::str_includes(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1966,41 +1966,6 @@ str_trimRight(JSContext* cx, unsigned argc, Value* vp)
     return TrimString(cx, vp, false, true);
 }
 
-/* ES6 21.2.5.2.3. */
-static size_t
-AdvanceStringIndex(HandleLinearString input, size_t length, size_t index, bool unicode)
-{
-    /* Steps 1-3 (implicit). */
-
-    /* Step 4: If input is latin1, there is no surrogate pair. */
-    if (!unicode || input->hasLatin1Chars())
-        return index + 1;
-
-    JS::AutoCheckCannotGC nogc;
-    const char16_t* S = input->twoByteChars(nogc);
-
-    /* Step 6. */
-    if (index + 1 >= length)
-        return index + 1;
-
-    /* Step 7. */
-    char16_t first = S[index];
-
-    /* Step 8. */
-    if (!unicode::IsLeadSurrogate(first))
-        return index + 1;
-
-    /* Step 9. */
-    char16_t second = S[index + 1];
-
-    /* Step 10. */
-    if (!unicode::IsTrailSurrogate(second))
-        return index + 1;
-
-    /* Step 11. */
-    return index + 2;
-}
-
 // Utility for building a rope (lazy concatenation) of strings.
 class RopeBuilder {
     JSContext* cx;
@@ -2383,162 +2348,100 @@ js::str_replace_string_raw(JSContext* cx, HandleString string, HandleString patt
     return BuildFlatReplacement(cx, string, repl, match, patternLength);
 }
 
-namespace {
-
-class SplitMatchResult {
-    size_t endIndex_;
-    size_t length_;
-
-  public:
-    void setFailure() {
-        JS_STATIC_ASSERT(SIZE_MAX > JSString::MAX_LENGTH);
-        endIndex_ = SIZE_MAX;
-    }
-    bool isFailure() const {
-        return endIndex_ == SIZE_MAX;
-    }
-    size_t endIndex() const {
-        MOZ_ASSERT(!isFailure());
-        return endIndex_;
-    }
-    size_t length() const {
-        MOZ_ASSERT(!isFailure());
-        return length_;
-    }
-    void setResult(size_t length, size_t endIndex) {
-        length_ = length;
-        endIndex_ = endIndex;
-    }
-};
-
-} /* anonymous namespace */
-
-template<class Matcher>
+// ES 2016 draft Mar 25, 2016 21.1.3.17 steps 4, 8, 12-18.
 static JSObject*
-SplitHelper(JSContext* cx, HandleLinearString str, uint32_t limit, const Matcher& splitMatch,
-            HandleObjectGroup group, bool unicode)
+SplitHelper(JSContext* cx, HandleLinearString str, uint32_t limit, HandleLinearString sep,
+            HandleObjectGroup group)
 {
     size_t strLength = str->length();
-    SplitMatchResult result;
+    size_t sepLength = sep->length();
+    MOZ_ASSERT(sepLength != 0);
 
-    /* Step 11. */
+    // Step 12.
     if (strLength == 0) {
-        if (!splitMatch(cx, str, 0, &result))
-            return nullptr;
+        // Step 12.a.
+        int match = StringMatch(str, sep, 0);
 
-        /*
-         * NB: Unlike in the non-empty string case, it's perfectly fine
-         *     (indeed the spec requires it) if we match at the end of the
-         *     string.  Thus these cases should hold:
-         *
-         *   var a = "".split("");
-         *   assertEq(a.length, 0);
-         *   var b = "".split(/.?/);
-         *   assertEq(b.length, 0);
-         */
-        if (!result.isFailure())
+        // Step 12.b.
+        if (match != -1)
             return NewFullyAllocatedArrayTryUseGroup(cx, group, 0);
 
+        // Steps 12.c-e.
         RootedValue v(cx, StringValue(str));
         return NewCopiedArrayTryUseGroup(cx, group, v.address(), 1);
     }
 
-    /* Step 12. */
-    size_t lastEndIndex = 0;
-    size_t index = 0;
-
-    /* Step 13. */
+    // Step 3 (reordered).
     AutoValueVector splits(cx);
 
-    while (index < strLength) {
-        /* Step 13(a). */
-        if (!splitMatch(cx, str, index, &result))
-            return nullptr;
+    // Step 8 (reordered).
+    size_t lastEndIndex = 0;
 
-        /*
-         * Step 13(b).
-         *
-         * Our match algorithm differs from the spec in that it returns the
-         * next index at which a match happens.  If no match happens we're
-         * done.
-         *
-         * But what if the match is at the end of the string (and the string is
-         * not empty)?  Per 13(c)(ii) this shouldn't be a match, so we have to
-         * specially exclude it.  Thus this case should hold:
-         *
-         *   var a = "abc".split(/\b/);
-         *   assertEq(a.length, 1);
-         *   assertEq(a[0], "abc");
-         */
-        if (result.isFailure())
+    // Step 13.
+    size_t index = 0;
+
+    // Step 14.
+    while (index != strLength) {
+        // Step 14.a.
+        int match = StringMatch(str, sep, index);
+
+        // Step 14.b.
+        //
+        // Our match algorithm differs from the spec in that it returns the
+        // next index at which a match happens.  If no match happens we're
+        // done.
+        //
+        // But what if the match is at the end of the string (and the string is
+        // not empty)?  Per 14.c.i this shouldn't be a match, so we have to
+        // specially exclude it.  Thus this case should hold:
+        //
+        //   var a = "abc".split(/\b/);
+        //   assertEq(a.length, 1);
+        //   assertEq(a[0], "abc");
+        if (match == -1)
             break;
 
-        /* Step 13(c)(i). */
-        size_t sepLength = result.length();
-        size_t endIndex = result.endIndex();
-        if (sepLength == 0 && endIndex == strLength)
-            break;
+        // Step 14.c.
+        size_t endIndex = match + sepLength;
 
-        /* Step 13(c)(ii). */
+        // Step 14.c.i.
         if (endIndex == lastEndIndex) {
-            index = AdvanceStringIndex(str, strLength, index, unicode);
+            index++;
             continue;
         }
 
-        /* Step 13(c)(iii). */
+        // Step 14.c.ii.
         MOZ_ASSERT(lastEndIndex < endIndex);
         MOZ_ASSERT(sepLength <= strLength);
         MOZ_ASSERT(lastEndIndex + sepLength <= endIndex);
 
-        /* Steps 13(c)(iii)(1-3). */
+        // Step 14.c.ii.1.
         size_t subLength = size_t(endIndex - sepLength - lastEndIndex);
         JSString* sub = NewDependentString(cx, str, lastEndIndex, subLength);
+
+        // Steps 14.c.ii.2-4.
         if (!sub || !splits.append(StringValue(sub)))
             return nullptr;
 
-        /* Step 13(c)(iii)(4). */
+        // Step 14.c.ii.5.
         if (splits.length() == limit)
             return NewCopiedArrayTryUseGroup(cx, group, splits.begin(), splits.length());
 
-        /* Step 13(c)(iii)(5). */
-        lastEndIndex = endIndex;
+        // Step 14.c.ii.6.
+        index = endIndex;
 
-        /* Step 13(c)(iii)(6-7). */
-        if (Matcher::returnsCaptures) {
-            RegExpStatics* res = cx->global()->getRegExpStatics(cx);
-            if (!res)
-                return nullptr;
-
-            const MatchPairs& matches = res->getMatches();
-            for (size_t i = 0; i < matches.parenCount(); i++) {
-                /* Steps 13(c)(iii)(7)(a-c). */
-                if (!matches[i + 1].isUndefined()) {
-                    JSSubString parsub;
-                    res->getParen(i + 1, &parsub);
-                    sub = NewDependentString(cx, parsub.base, parsub.offset, parsub.length);
-                    if (!sub || !splits.append(StringValue(sub)))
-                        return nullptr;
-                } else {
-                    if (!splits.append(UndefinedValue()))
-                        return nullptr;
-                }
-
-                /* Step 13(c)(iii)(7)(d). */
-                if (splits.length() == limit)
-                    return NewCopiedArrayTryUseGroup(cx, group, splits.begin(), splits.length());
-            }
-        }
-
-        /* Step 13(c)(iii)(8). */
-        index = lastEndIndex;
+        // Step 14.c.ii.7.
+        lastEndIndex = index;
     }
 
-    /* Steps 14-15. */
+    // Step 15.
     JSString* sub = NewDependentString(cx, str, lastEndIndex, strLength - lastEndIndex);
+
+    // Steps 16-17.
     if (!sub || !splits.append(StringValue(sub)))
         return nullptr;
 
-    /* Step 16. */
+    // Step 18.
     return NewCopiedArrayTryUseGroup(cx, group, splits.begin(), splits.length());
 }
 
@@ -2567,172 +2470,10 @@ CharSplitHelper(JSContext* cx, HandleLinearString str, uint32_t limit, HandleObj
     return NewCopiedArrayTryUseGroup(cx, group, splits.begin(), splits.length());
 }
 
-namespace {
-
-/*
- * The SplitMatch operation from ES5 15.5.4.14 is implemented using different
- * paths for regular expression and string separators.
- *
- * The algorithm differs from the spec in that the we return the next index at
- * which a match happens.
- */
-class SplitRegExpMatcher
-{
-    RegExpShared& re;
-    RegExpStatics* res;
-    bool sticky;
-
-  public:
-    SplitRegExpMatcher(RegExpShared& re, RegExpStatics* res) : re(re), res(res) {
-        sticky = re.sticky();
-    }
-
-    static const bool returnsCaptures = true;
-
-    bool operator()(JSContext* cx, HandleLinearString str, size_t index,
-                    SplitMatchResult* result) const
-    {
-        ScopedMatchPairs matches(&cx->tempLifoAlloc());
-        RegExpRunStatus status = re.execute(cx, str, index, sticky, &matches, nullptr);
-        if (status == RegExpRunStatus_Error)
-            return false;
-
-        if (status == RegExpRunStatus_Success_NotFound) {
-            result->setFailure();
-            return true;
-        }
-
-        if (!res->updateFromMatchPairs(cx, str, matches))
-            return false;
-
-        JSSubString sep;
-        res->getLastMatch(&sep);
-
-        result->setResult(sep.length, matches[0].limit);
-        return true;
-    }
-};
-
-class SplitStringMatcher
-{
-    RootedLinearString sep;
-
-  public:
-    SplitStringMatcher(JSContext* cx, HandleLinearString sep)
-      : sep(cx, sep)
-    {}
-
-    static const bool returnsCaptures = false;
-
-    bool operator()(JSContext* cx, JSLinearString* str, size_t index, SplitMatchResult* res) const
-    {
-        MOZ_ASSERT(index == 0 || index < str->length());
-        int match = StringMatch(str, sep, index);
-        if (match == -1)
-            res->setFailure();
-        else
-            res->setResult(sep->length(), match + sep->length());
-        return true;
-    }
-};
-
-} /* anonymous namespace */
-
-/* ES5 15.5.4.14 */
-bool
-js::str_split(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    /* Steps 1-2. */
-    RootedString str(cx, ThisToStringForStringProto(cx, args));
-    if (!str)
-        return false;
-
-    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
-    if (!group)
-        return false;
-
-    /* Step 5: Use the second argument as the split limit, if given. */
-    uint32_t limit;
-    if (args.hasDefined(1)) {
-        double d;
-        if (!ToNumber(cx, args[1], &d))
-            return false;
-        limit = ToUint32(d);
-    } else {
-        limit = UINT32_MAX;
-    }
-
-    /* Step 8. */
-    RegExpGuard re(cx);
-    RootedLinearString sepstr(cx);
-    bool sepDefined = args.hasDefined(0);
-    if (sepDefined) {
-        ESClassValue cls;
-        if (!GetClassOfValue(cx, args[0], &cls))
-            return false;
-
-        if (cls == ESClass_RegExp) {
-            RootedObject obj(cx, &args[0].toObject());
-            if (!RegExpToShared(cx, obj, &re))
-                return false;
-        } else {
-            sepstr = ArgToRootedString(cx, args, 0);
-            if (!sepstr)
-                return false;
-        }
-    }
-
-    /* Step 9. */
-    if (limit == 0) {
-        JSObject* aobj = NewFullyAllocatedArrayTryUseGroup(cx, group, 0);
-        if (!aobj)
-            return false;
-        args.rval().setObject(*aobj);
-        return true;
-    }
-
-    /* Step 10. */
-    if (!sepDefined) {
-        RootedValue v(cx, StringValue(str));
-        JSObject* aobj = NewCopiedArrayTryUseGroup(cx, group, v.address(), 1);
-        if (!aobj)
-            return false;
-        args.rval().setObject(*aobj);
-        return true;
-    }
-    RootedLinearString linearStr(cx, str->ensureLinear(cx));
-    if (!linearStr)
-        return false;
-
-    /* Steps 11-15. */
-    RootedObject aobj(cx);
-    if (!re.initialized()) {
-        if (sepstr->length() == 0) {
-            aobj = CharSplitHelper(cx, linearStr, limit, group);
-        } else {
-            SplitStringMatcher matcher(cx, sepstr);
-            aobj = SplitHelper(cx, linearStr, limit, matcher, group, false);
-        }
-    } else {
-        RegExpStatics* res = cx->global()->getRegExpStatics(cx);
-        if (!res)
-            return false;
-        SplitRegExpMatcher matcher(*re, res);
-        aobj = SplitHelper(cx, linearStr, limit, matcher, group, re->unicode());
-    }
-    if (!aobj)
-        return false;
-
-    /* Step 16. */
-    MOZ_ASSERT(aobj->group() == group);
-    args.rval().setObject(*aobj);
-    return true;
-}
-
+// ES 2016 draft Mar 25, 2016 21.1.3.17 steps 4, 8, 12-18.
 JSObject*
-js::str_split_string(JSContext* cx, HandleObjectGroup group, HandleString str, HandleString sep)
+js::str_split_string(JSContext* cx, HandleObjectGroup group, HandleString str, HandleString sep, uint32_t limit)
+
 {
     RootedLinearString linearStr(cx, str->ensureLinear(cx));
     if (!linearStr)
@@ -2742,13 +2483,10 @@ js::str_split_string(JSContext* cx, HandleObjectGroup group, HandleString str, H
     if (!linearSep)
         return nullptr;
 
-    uint32_t limit = UINT32_MAX;
-
     if (linearSep->length() == 0)
         return CharSplitHelper(cx, linearStr, limit, group);
 
-    SplitStringMatcher matcher(cx, linearSep);
-    return SplitHelper(cx, linearStr, limit, matcher, group, false);
+    return SplitHelper(cx, linearStr, limit, linearSep, group);
 }
 
 /*
@@ -2826,7 +2564,7 @@ static const JSFunctionSpec string_methods[] = {
     JS_SELF_HOSTED_FN("match", "String_match",        1,0),
     JS_SELF_HOSTED_FN("search", "String_search",      1,0),
     JS_SELF_HOSTED_FN("replace", "String_replace",    2,0),
-    JS_INLINABLE_FN("split",   str_split,             2,JSFUN_GENERIC_NATIVE, StringSplit),
+    JS_SELF_HOSTED_FN("split",  "String_split",       2,0),
     JS_SELF_HOSTED_FN("substr", "String_substr",      2,0),
 
     /* Python-esque sequence methods. */
@@ -2981,6 +2719,7 @@ static const JSFunctionSpec string_static_methods[] = {
     JS_SELF_HOSTED_FN("match",           "String_generic_match",        2,0),
     JS_SELF_HOSTED_FN("replace",         "String_generic_replace",      3,0),
     JS_SELF_HOSTED_FN("search",          "String_generic_search",       2,0),
+    JS_SELF_HOSTED_FN("split",           "String_generic_split",        3,0),
 
     // This must be at the end because of bug 853075: functions listed after
     // self-hosted methods aren't available in self-hosted code.
