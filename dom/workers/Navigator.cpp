@@ -94,11 +94,11 @@ public:
 #define WORKER_DATA_STORES_TAG JS_SCTAG_USER_MIN
 
 static JSObject*
-GetDataStoresStructuredCloneCallbacksRead(JSContext* aCx,
-                                          JSStructuredCloneReader* aReader,
-                                          uint32_t aTag,
-                                          uint32_t aData,
-                                          void* aClosure)
+GetDataStoresProxyCloneCallbacksRead(JSContext* aCx,
+                                     JSStructuredCloneReader* aReader,
+                                     const PromiseWorkerProxy* aProxy,
+                                     uint32_t aTag,
+                                     uint32_t aData)
 {
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
   MOZ_ASSERT(workerPrivate);
@@ -155,15 +155,12 @@ GetDataStoresStructuredCloneCallbacksRead(JSContext* aCx,
 }
 
 static bool
-GetDataStoresStructuredCloneCallbacksWrite(JSContext* aCx,
-                                           JSStructuredCloneWriter* aWriter,
-                                           JS::Handle<JSObject*> aObj,
-                                           void* aClosure)
+GetDataStoresProxyCloneCallbacksWrite(JSContext* aCx,
+                                      JSStructuredCloneWriter* aWriter,
+                                      PromiseWorkerProxy* aProxy,
+                                      JS::Handle<JSObject*> aObj)
 {
   AssertIsOnMainThread();
-
-  PromiseWorkerProxy* proxy = static_cast<PromiseWorkerProxy*>(aClosure);
-  NS_ASSERTION(proxy, "must have proxy!");
 
   if (!JS_WriteUint32Pair(aWriter, WORKER_DATA_STORES_TAG, 0)) {
     MOZ_ASSERT(false, "cannot write pair for WORKER_DATA_STORES_TAG!");
@@ -180,7 +177,7 @@ GetDataStoresStructuredCloneCallbacksWrite(JSContext* aCx,
   }
 
   // We keep the data store alive here.
-  proxy->StoreISupports(store);
+  aProxy->StoreISupports(store);
 
   // Construct the nsMainThreadPtrHolder pointing to the data store.
   nsMainThreadPtrHolder<DataStore>* dataStoreholder =
@@ -195,10 +192,10 @@ GetDataStoresStructuredCloneCallbacksWrite(JSContext* aCx,
   return true;
 }
 
-static const JSStructuredCloneCallbacks kGetDataStoresStructuredCloneCallbacks = {
-  GetDataStoresStructuredCloneCallbacksRead,
-  GetDataStoresStructuredCloneCallbacksWrite,
-  nullptr
+static const PromiseWorkerProxy::PromiseWorkerProxyStructuredCloneCallbacks
+kGetDataStoresCloneCallbacks= {
+  GetDataStoresProxyCloneCallbacksRead,
+  GetDataStoresProxyCloneCallbacksWrite
 };
 
 // A WorkerMainThreadRunnable to run WorkerNavigator::GetDataStores(...) on the
@@ -228,7 +225,7 @@ public:
     mPromiseWorkerProxy =
       PromiseWorkerProxy::Create(aWorkerPrivate,
                                  aWorkerPromise,
-                                 &kGetDataStoresStructuredCloneCallbacks);
+                                 &kGetDataStoresCloneCallbacks);
   }
 
   bool Dispatch(JSContext* aCx)

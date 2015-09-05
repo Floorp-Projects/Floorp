@@ -10,6 +10,7 @@
 // Required for Promise::PromiseTaskSync.
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/dom/StructuredCloneHelper.h"
 #include "mozilla/dom/workers/bindings/WorkerFeature.h"
 #include "nsProxyRelease.h"
 
@@ -110,18 +111,35 @@ class WorkerPrivate;
 // stay alive till the worker reaches a Canceling state, even if all external
 // references to it are dropped.
 
-class PromiseWorkerProxy : public PromiseNativeHandler,
-                           public workers::WorkerFeature
+class PromiseWorkerProxy : public PromiseNativeHandler
+                         , public workers::WorkerFeature
+                         , public StructuredCloneHelperInternal
 {
   friend class PromiseWorkerProxyRunnable;
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
 public:
+  typedef JSObject* (*ReadCallbackOp)(JSContext* aCx,
+                                      JSStructuredCloneReader* aReader,
+                                      const PromiseWorkerProxy* aProxy,
+                                      uint32_t aTag,
+                                      uint32_t aData);
+  typedef bool (*WriteCallbackOp)(JSContext* aCx,
+                                  JSStructuredCloneWriter* aWorker,
+                                  PromiseWorkerProxy* aProxy,
+                                  JS::HandleObject aObj);
+
+  struct PromiseWorkerProxyStructuredCloneCallbacks
+  {
+    ReadCallbackOp Read;
+    WriteCallbackOp Write;
+  };
+
   static already_AddRefed<PromiseWorkerProxy>
   Create(workers::WorkerPrivate* aWorkerPrivate,
          Promise* aWorkerPromise,
-         const JSStructuredCloneCallbacks* aCallbacks = nullptr);
+         const PromiseWorkerProxyStructuredCloneCallbacks* aCallbacks = nullptr);
 
   // Main thread callers must hold Lock() and check CleanUp() before calling this.
   // Worker thread callers, this will assert that the proxy has not been cleaned
@@ -151,6 +169,17 @@ public:
     return mCleanedUp;
   }
 
+  // StructuredCloneHelperInternal
+
+  JSObject* ReadCallback(JSContext* aCx,
+                         JSStructuredCloneReader* aReader,
+                         uint32_t aTag,
+                         uint32_t aIndex) override;
+
+  bool WriteCallback(JSContext* aCx,
+                     JSStructuredCloneWriter* aWriter,
+                     JS::Handle<JSObject*> aObj) override;
+
 protected:
   virtual void ResolvedCallback(JSContext* aCx,
                                 JS::Handle<JS::Value> aValue) override;
@@ -163,7 +192,7 @@ protected:
 private:
   PromiseWorkerProxy(workers::WorkerPrivate* aWorkerPrivate,
                      Promise* aWorkerPromise,
-                     const JSStructuredCloneCallbacks* aCallbacks = nullptr);
+                     const PromiseWorkerProxyStructuredCloneCallbacks* aCallbacks = nullptr);
 
   virtual ~PromiseWorkerProxy();
 
@@ -191,7 +220,7 @@ private:
   // Main thread must always acquire a lock.
   bool mCleanedUp; // To specify if the cleanUp() has been done.
 
-  const JSStructuredCloneCallbacks* mCallbacks;
+  const PromiseWorkerProxyStructuredCloneCallbacks* mCallbacks;
 
   // Aimed to keep objects alive when doing the structured-clone read/write,
   // which can be added by calling StoreISupports() on the main thread.
