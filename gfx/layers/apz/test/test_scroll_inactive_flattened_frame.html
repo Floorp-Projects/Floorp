@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test scrolling flattened inactive frames</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="container" style="height: 300px; width: 600px; overflow: auto; background: yellow">
+ <div id="outer" style="height: 400px; width: 500px; overflow: auto; background: black">
+  <div id="inner" style="mix-blend-mode: screen; height: 800px; overflow: auto; background: purple">
+  </div>
+ </div>
+</div>
+<script class="testbody" type="text/javascript;version=1.7">
+function test() {
+  var container = document.getElementById('container');
+  var outer = document.getElementById('outer');
+  var inner = document.getElementById('inner');
+  var outerScrollTop = outer.scrollTop;
+  var containerScrollTop = container.scrollTop;
+  var event = {
+    deltaMode: WheelEvent.DOM_DELTA_LINE,
+    deltaX: 0,
+    deltaY: 10,
+    lineOrPageDeltaX: 0,
+    lineOrPageDeltaY: 10,
+  };
+  sendWheelAndPaint(inner, 20, 30, event, function () {
+    ok(container.scrollTop == containerScrollTop, "container scrollframe should not have scrolled");
+    ok(outer.scrollTop > outerScrollTop, "nested scrollframe should have scrolled");
+    SimpleTest.finish();
+  });
+}
+
+window.onload = function() {
+  SpecialPowers.pushPrefEnv({
+    'set': [['general.smoothScroll', false],
+            ['mousewheel.transaction.timeout', 1000000]],
+  }, function () {
+    SimpleTest.waitForFocus(test);
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>
