@@ -145,15 +145,6 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     return platform.toLowerCase().indexOf("firefox") !== -1;
   }
 
-  function isFirefoxOS(platform) {
-    // So far WebActivities are exposed only in FxOS, but they may be
-    // exposed in Firefox Desktop soon, so we check for its existence
-    // and also check if the UA belongs to a mobile platform.
-    // XXX WebActivities are also exposed in WebRT on Firefox for Android,
-    //     so we need a better check. Bug 1065403.
-    return !!window.MozActivity && /mobi/i.test(platform);
-  }
-
   function isOpera(platform) {
     return platform.toLowerCase().indexOf("opera") > -1 ||
            platform.toLowerCase().indexOf("opr") > -1;
@@ -798,7 +789,6 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     getPlatform: getPlatform,
     isChrome: isChrome,
     isFirefox: isFirefox,
-    isFirefoxOS: isFirefoxOS,
     isOpera: isOpera,
     getUnsupportedPlatform: getUnsupportedPlatform,
     hasAudioOrVideoDevices: hasAudioOrVideoDevices,
