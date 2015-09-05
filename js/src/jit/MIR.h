@@ -8046,75 +8046,19 @@ class MRegExpInstanceOptimizable
     }
 };
 
-template <class Policy1>
-class MStrReplace
-  : public MTernaryInstruction,
-    public Mix3Policy<StringPolicy<0>, Policy1, StringPolicy<2> >::Data
-{
-  protected:
-
-    MStrReplace(MDefinition* string, MDefinition* pattern, MDefinition* replacement)
-      : MTernaryInstruction(string, pattern, replacement)
-    {
-        setMovable();
-        setResultType(MIRType_String);
-    }
-
-  public:
-
-    MDefinition* string() const {
-        return getOperand(0);
-    }
-    MDefinition* pattern() const {
-        return getOperand(1);
-    }
-    MDefinition* replacement() const {
-        return getOperand(2);
-    }
-
-    bool possiblyCalls() const override {
-        return true;
-    }
-};
-
-class MRegExpReplace
-  : public MStrReplace< ObjectPolicy<1> >
-{
-  private:
-
-    MRegExpReplace(MDefinition* string, MDefinition* pattern, MDefinition* replacement)
-      : MStrReplace< ObjectPolicy<1> >(string, pattern, replacement)
-    {
-    }
-
-  public:
-    INSTRUCTION_HEADER(RegExpReplace)
-
-    static MRegExpReplace* New(TempAllocator& alloc, MDefinition* string, MDefinition* pattern, MDefinition* replacement) {
-        return new(alloc) MRegExpReplace(string, pattern, replacement);
-    }
-
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
-    bool canRecoverOnBailout() const override {
-        // RegExpReplace will zero the lastIndex field when global flag is set.
-        // So we can only remove this if it's non-global.
-        // XXX: always return false for now, to work around bug 1132128.
-        if (false && pattern()->isRegExp())
-            return !pattern()->toRegExp()->source()->global();
-        return false;
-    }
-};
-
 class MStringReplace
-  : public MStrReplace< StringPolicy<1> >
+  : public MTernaryInstruction,
+    public Mix3Policy<StringPolicy<0>, StringPolicy<1>, StringPolicy<2> >::Data
 {
   private:
 
     bool isFlatReplacement_;
 
     MStringReplace(MDefinition* string, MDefinition* pattern, MDefinition* replacement)
-      : MStrReplace< StringPolicy<1> >(string, pattern, replacement), isFlatReplacement_(false)
+      : MTernaryInstruction(string, pattern, replacement), isFlatReplacement_(false)
     {
+        setMovable();
+        setResultType(MIRType_String);
     }
 
   public:
@@ -8147,14 +8091,25 @@ class MStringReplace
 
     bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
-        if (isFlatReplacement_)
-        {
+        if (isFlatReplacement_) {
             MOZ_ASSERT(!pattern()->isRegExp());
             return true;
         }
-        if (pattern()->isRegExp())
-            return !pattern()->toRegExp()->source()->global();
         return false;
+    }
+
+    MDefinition* string() const {
+        return getOperand(0);
+    }
+    MDefinition* pattern() const {
+        return getOperand(1);
+    }
+    MDefinition* replacement() const {
+        return getOperand(2);
+    }
+
+    bool possiblyCalls() const override {
+        return true;
     }
 };
 

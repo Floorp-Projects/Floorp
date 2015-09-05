@@ -1053,32 +1053,6 @@ RRegExpTester::recover(JSContext* cx, SnapshotIterator& iter) const
 }
 
 bool
-MRegExpReplace::writeRecoverData(CompactBufferWriter& writer) const
-{
-    MOZ_ASSERT(canRecoverOnBailout());
-    writer.writeUnsigned(uint32_t(RInstruction::Recover_RegExpReplace));
-    return true;
-}
-
-RRegExpReplace::RRegExpReplace(CompactBufferReader& reader)
-{ }
-
-bool
-RRegExpReplace::recover(JSContext* cx, SnapshotIterator& iter) const
-{
-    RootedString string(cx, iter.read().toString());
-    Rooted<RegExpObject*> regexp(cx, &iter.read().toObject().as<RegExpObject>());
-    RootedString repl(cx, iter.read().toString());
-
-    JSString* result = js::str_replace_regexp_raw(cx, string, regexp, repl);
-    if (!result)
-        return false;
-
-    iter.storeInstructionResult(StringValue(result));
-    return true;
-}
-
-bool
 MTypeOf::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());

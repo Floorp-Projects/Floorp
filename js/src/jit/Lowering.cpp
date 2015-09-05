@@ -2188,8 +2188,7 @@ MustCloneRegExpForCall(MCall* call, uint32_t useIndex)
         return true;
 
     if (useIndex == MCall::IndexOfArgument(0) &&
-        (target->native() == str_split ||
-         target->native() == str_replace))
+        (target->native() == str_split))
     {
         return false;
     }
@@ -2303,20 +2302,6 @@ LIRGenerator::visitRegExpInstanceOptimizable(MRegExpInstanceOptimizable* ins)
                                                                               useRegister(ins->proto()),
                                                                               temp());
     define(lir, ins);
-}
-
-void
-LIRGenerator::visitRegExpReplace(MRegExpReplace* ins)
-{
-    MOZ_ASSERT(ins->pattern()->type() == MIRType_Object);
-    MOZ_ASSERT(ins->string()->type() == MIRType_String);
-    MOZ_ASSERT(ins->replacement()->type() == MIRType_String);
-
-    LRegExpReplace* lir = new(alloc()) LRegExpReplace(useRegisterOrConstantAtStart(ins->string()),
-                                                      useRegisterAtStart(ins->pattern()),
-                                                      useRegisterOrConstantAtStart(ins->replacement()));
-    defineReturn(lir, ins);
-    assignSafepoint(lir, ins);
 }
 
 void
