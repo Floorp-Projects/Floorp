@@ -6,6 +6,7 @@
 
 #include "vm/NativeObject-inl.h"
 
+#include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 
 #include "jswatchpoint.h"
@@ -654,29 +655,18 @@ NativeObject::maybeDensifySparseElements(js::ExclusiveContext* cx, HandleNativeO
     return DenseElementResult::Success;
 }
 
-// Round up |reqAllocated| to a good size. Up to 1 Mebi (i.e. 1,048,576) the
-// slot count is usually a power-of-two:
+// Given a requested allocation amount (in elements) and (potentially) the
+// length of an array for which elements are being allocated, compute an actual
+// allocation amount (in elements).  (Allocation amounts include space for an
+// ObjectElements instance, so a return value of |N| implies
+// |N - ObjectElements::VALUES_PER_HEADER| usable elements.)
 //
-//   8, 16, 32, 64, ..., 256 Ki, 512 Ki, 1 Mi
+// The requested/actual allocation distinction is meant to:
 //
-// Beyond that, we use this formula:
-//
-//   count(n+1) = Math.ceil(count(n) * 1.125)
-//
-// where |count(n)| is the size of the nth bucket measured in MiSlots.
-//
-// These counts lets us add N elements to an array in amortized O(N) time.
-// Having the second class means that for bigger arrays the constant factor is
-// higher, but we waste less space.
-//
-// There is one exception to the above rule: for the power-of-two cases, if the
-// chosen capacity would be 2/3 or more of the array's length, the chosen
-// capacity is adjusted (up or down) to be equal to the array's length
-// (assuming length is at least as large as the required capacity). This avoids
-// the allocation of excess elements which are unlikely to be needed, either in
-// this resizing or a subsequent one. The 2/3 factor is chosen so that
-// exceptional resizings will at most triple the capacity, as opposed to the
-// usual doubling.
+//   * preserve amortized O(N) time to add N elements;
+//   * minimize the number of unused elements beyond an array's length, and
+//   * provide at least SLOT_CAPACITY_MIN elements no matter what (so adding
+//     the first several elements to small arrays only needs one allocation).
 //
 // Note: the structure and behavior of this method follow along with
 // UnboxedArrayObject::chooseCapacityIndex. Changes to the allocation strategy
@@ -684,62 +674,65 @@ NativeObject::maybeDensifySparseElements(js::ExclusiveContext* cx, HandleNativeO
 /* static */ uint32_t
 NativeObject::goodAllocated(uint32_t reqAllocated, uint32_t length = 0)
 {
-    static const uint32_t Mebi = 1024 * 1024;
+    // Handle "small" requests primarily by doubling.
+    const uint32_t Mebi = 1 << 20;
+    if (reqAllocated < Mebi) {
+        uint32_t goodAmount = mozilla::AssertedCast<uint32_t>(RoundUpPow2(reqAllocated));
 
-    // This table was generated with this JavaScript code and a small amount
-    // subsequent reformatting:
-    //
-    //   for (let n = 1, i = 0; i < 57; i++) {
-    //     print((n * 1024 * 1024) + ', ');
-    //     n = Math.ceil(n * 1.125);
-    //   }
-    //   print('0');
-    //
-    // The final element is a sentinel value.
-    static const uint32_t BigBuckets[] = {
-        1048576, 2097152, 3145728, 4194304, 5242880, 6291456, 7340032, 8388608,
-        9437184, 11534336, 13631488, 15728640, 17825792, 20971520, 24117248,
-        27262976, 31457280, 35651584, 40894464, 46137344, 52428800, 59768832,
-        68157440, 77594624, 88080384, 99614720, 112197632, 126877696,
-        143654912, 162529280, 183500800, 206569472, 232783872, 262144000,
-        295698432, 333447168, 375390208, 422576128, 476053504, 535822336,
-        602931200, 678428672, 763363328, 858783744, 966787072, 1088421888,
-        1224736768, 1377828864, 1550843904, 1744830464, 1962934272, 2208301056,
-        2485125120, 2796552192, 3146776576, 3541041152, 3984588800, 0
-    };
-
-    // This code relies very much on |goodAllocated| being a uint32_t.
-    uint32_t goodAllocated = reqAllocated;
-    if (goodAllocated < Mebi) {
-        goodAllocated = RoundUpPow2(goodAllocated);
-
-        // Look for the abovementioned exception.
-        uint32_t goodCapacity = goodAllocated - ObjectElements::VALUES_PER_HEADER;
+        // If |goodAmount| would be 2/3 or more of the array's length, adjust
+        // it (up or down) to be equal to the array's length.  This avoids
+        // allocating excess elements that aren't likely to be needed, either
+        // in this resizing or a subsequent one.  The 2/3 factor is chosen so
+        // that exceptional resizings will at most triple the capacity, as
+        // opposed to the usual doubling.
+        uint32_t goodCapacity = goodAmount - ObjectElements::VALUES_PER_HEADER;
         uint32_t reqCapacity = reqAllocated - ObjectElements::VALUES_PER_HEADER;
         if (length >= reqCapacity && goodCapacity > (length / 3) * 2)
-            goodAllocated = length + ObjectElements::VALUES_PER_HEADER;
+            goodAmount = length + ObjectElements::VALUES_PER_HEADER;
 
-        if (goodAllocated < SLOT_CAPACITY_MIN)
-            goodAllocated = SLOT_CAPACITY_MIN;
+        if (goodAmount < SLOT_CAPACITY_MIN)
+            goodAmount = SLOT_CAPACITY_MIN;
 
-    } else {
-        uint32_t i = 0;
-        while (true) {
-            uint32_t b = BigBuckets[i++];
-            if (b >= goodAllocated) {
-                // Found the first bucket greater than or equal to
-                // |goodAllocated|.
-                goodAllocated = b;
-                break;
-            } else if (b == 0) {
-                // Hit the end; return the maximum possible goodAllocated.
-                goodAllocated = 0xffffffff;
-                break;
-            }
-        }
+        return goodAmount;
     }
 
-    return goodAllocated;
+    // The almost-doubling above wastes a lot of space for larger bucket sizes.
+    // For large amounts, switch to bucket sizes that obey this formula:
+    //
+    //   count(n+1) = Math.ceil(count(n) * 1.125)
+    //
+    // where |count(n)| is the size of the nth bucket, measured in 2**20 slots.
+    // These bucket sizes still preserve amortized O(N) time to add N elements,
+    // just with a larger constant factor.
+    //
+    // The bucket size table below was generated with this JavaScript (and
+    // manual reformatting):
+    //
+    //   for (let n = 1, i = 0; i < 34; i++) {
+    //     print('0x' + (n * (1 << 20)).toString(16) + ', ');
+    //     n = Math.ceil(n * 1.125);
+    //   }
+    //   print('NELEMENTS_LIMIT - 1');
+    //
+    // Dense array elements can't exceed |NELEMENTS_LIMIT|, so
+    // |NELEMENTS_LIMIT - 1| is the biggest allowed length.
+    static const uint32_t BigBuckets[] = {
+        0x100000, 0x200000, 0x300000, 0x400000, 0x500000, 0x600000, 0x700000,
+        0x800000, 0x900000, 0xb00000, 0xd00000, 0xf00000, 0x1100000, 0x1400000,
+        0x1700000, 0x1a00000, 0x1e00000, 0x2200000, 0x2700000, 0x2c00000,
+        0x3200000, 0x3900000, 0x4100000, 0x4a00000, 0x5400000, 0x5f00000,
+        0x6b00000, 0x7900000, 0x8900000, 0x9b00000, 0xaf00000, 0xc500000,
+        0xde00000, 0xfa00000, NELEMENTS_LIMIT - 1
+    };
+
+    // Pick the first bucket that'll fit |reqAllocated|.
+    for (uint32_t b : BigBuckets) {
+        if (b >= reqAllocated)
+            return b;
+    }
+
+    // Otherwise, return the maximum bucket size.
+    return NELEMENTS_LIMIT - 1;
 }
 
 bool
@@ -779,7 +772,6 @@ NativeObject::growElements(ExclusiveContext* cx, uint32_t reqCapacity)
     uint32_t newCapacity = newAllocated - ObjectElements::VALUES_PER_HEADER;
     MOZ_ASSERT(newCapacity > oldCapacity && newCapacity >= reqCapacity);
 
-    // Don't let nelements get close to wrapping around uint32_t.
     if (newCapacity >= NELEMENTS_LIMIT)
         return false;
 
@@ -828,6 +820,7 @@ NativeObject::shrinkElements(ExclusiveContext* cx, uint32_t reqCapacity)
 
     MOZ_ASSERT(newAllocated > ObjectElements::VALUES_PER_HEADER);
     uint32_t newCapacity = newAllocated - ObjectElements::VALUES_PER_HEADER;
+    MOZ_ASSERT(newCapacity < NELEMENTS_LIMIT);
 
     HeapSlot* oldHeaderSlots = reinterpret_cast<HeapSlot*>(getElementsHeader());
     HeapSlot* newHeaderSlots = ReallocateObjectBuffer<HeapSlot>(cx, this, oldHeaderSlots,
