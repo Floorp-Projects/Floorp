@@ -461,6 +461,14 @@ GlobalObject::initSelfHostingBuiltins(JSContext* cx, Handle<GlobalObject*> globa
         return false;
     }
 
+    RootedValue std_search(cx);
+    std_search.setSymbol(cx->wellKnownSymbols().get(JS::SymbolCode::search));
+    if (!JS_DefineProperty(cx, global, "std_search", std_search,
+                           JSPROP_PERMANENT | JSPROP_READONLY))
+    {
+        return false;
+    }
+
     RootedValue std_species(cx);
     std_species.setSymbol(cx->wellKnownSymbols().get(JS::SymbolCode::species));
     if (!JS_DefineProperty(cx, global, "std_species", std_species,
