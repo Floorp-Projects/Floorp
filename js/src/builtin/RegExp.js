@@ -486,6 +486,184 @@ function RegExpSearch(string) {
     return result.index;
 }
 
+function IsRegExpSplitOptimizable(C) {
+    var RegExpCtor = GetBuiltinConstructor("RegExp");
+    if (C !== RegExpCtor)
+        return false;
+
+    var RegExpProto = RegExpCtor.prototype;
+    // If RegExpPrototypeOptimizable succeeds, `RegExpProto.exec` is guaranteed
+    // to be a data property.
+    return RegExpPrototypeOptimizable(RegExpProto) &&
+           RegExpProto.exec === RegExp_prototype_Exec;
+}
+
+// ES 2016 draft Mar 25, 2016 21.2.5.11.
+function RegExpSplit(string, limit) {
+    // Step 1.
+    var rx = this;
+
+    // Step 2.
+    if (!IsObject(rx))
+        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, rx === null ? "null" : typeof rx);
+
+    // Step 3.
+    var S = ToString(string);
+
+    // Step 4.
+    var C = SpeciesConstructor(rx, GetBuiltinConstructor("RegExp"));
+
+    // Step 5.
+    var flags = ToString(rx.flags);
+
+    // Steps 6-7.
+    var unicodeMatching = callFunction(std_String_includes, flags, "u");
+
+    // Steps 8-9.
+    var newFlags;
+    if (callFunction(std_String_includes, flags, "y"))
+        newFlags = flags;
+    else
+        newFlags = flags + "y";
+
+    // Step 10.
+    var splitter = new C(rx, newFlags);
+
+    // Step 11.
+    var A = [];
+
+    // Step 12.
+    var lengthA = 0;
+
+    // Step 13.
+    var lim;
+    if (limit === undefined)
+        lim = MAX_NUMERIC_INDEX;
+    else
+        lim = limit >>> 0;
+
+    // Step 14.
+    var size = S.length;
+
+    // Step 16;
+    var p = 0;
+
+    // Step 16;
+    if (lim === 0)
+        return A;
+
+    // Step 17.
+    if (size === 0) {
+        // Step 17.a.
+        var z = RegExpExec(splitter, S, false);
+
+        // Step 17.b.
+        if (z !== null)
+            return A;
+
+        // Step 17.d.
+        _DefineDataProperty(A, 0, S);
+
+        // Step 17.e.
+        return A;
+    }
+
+    var optimizable = IsRegExpSplitOptimizable(C);
+
+    // Step 18.
+    var q = p;
+
+    // Step 19.
+    while (q < size) {
+        var e;
+        if (optimizable) {
+            // Step 19.a (skipped).
+            // splitter.lastIndex is not used.
+
+            // Step 19.b.
+            // Directly call RegExpMatcher to ignore flags and find first match.
+            z = RegExpMatcher(splitter, S, q, false);
+
+            // Step 19.c.
+            if (z === null)
+                break;
+
+            // splitter.lastIndex is not updated.
+            q = z.index;
+            if (q >= size)
+                break;
+
+            // Step 19.d.i.
+            e = ToLength(q + z[0].length);
+        } else {
+            // Step 19.a.
+            splitter.lastIndex = q;
+
+            // Step 19.b.
+            z = RegExpExec(splitter, S, false);
+
+            // Step 19.c.
+            if (z === null) {
+                q = unicodeMatching ? AdvanceStringIndex(S, q) : q + 1;
+                continue;
+            }
+
+            // Step 19.d.i.
+            e = ToLength(splitter.lastIndex);
+        }
+
+        // Step 19.d.iii.
+        if (e === p) {
+            q = unicodeMatching ? AdvanceStringIndex(S, q) : q + 1;
+            continue;
+        }
+
+        // Steps 19.d.iv.1-3.
+        _DefineDataProperty(A, lengthA, Substring(S, p, q - p));
+
+        // Step 19.d.iv.4.
+        lengthA++;
+
+        // Step 19.d.iv.5.
+        if (lengthA === lim)
+            return A;
+
+        // Step 19.d.iv.6.
+        p = e;
+
+        // Steps 19.d.iv.7-8.
+        var numberOfCaptures = std_Math_max(ToLength(z.length) - 1, 0);
+
+        // Step 19.d.iv.9.
+        var i = 1;
+
+        // Step 19.d.iv.10.
+        while (i <= numberOfCaptures) {
+            // Steps 19.d.iv.10.a-b.
+            _DefineDataProperty(A, lengthA, z[i]);
+
+            // Step 19.d.iv.10.c.
+            i++;
+
+            // Step 19.d.iv.10.d.
+            lengthA++;
+
+            // Step 19.d.iv.10.e.
+            if (lengthA === lim)
+                return A;
+        }
+
+        // Step 19.d.iv.11.
+        q = p;
+    }
+
+    // Steps 20-22.
+    _DefineDataProperty(A, lengthA, Substring(S, p, size - p));
+
+    // Step 23.
+    return A;
+}
+
 // ES6 21.2.5.2.
 // NOTE: This is not RegExpExec (21.2.5.2.1).
 function RegExp_prototype_Exec(string) {
