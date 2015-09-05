@@ -56,6 +56,97 @@ function RegExpToString()
 }
 _SetCanonicalName(RegExpToString, "toString");
 
+// ES 2016 draft Mar 25, 2016 21.2.5.2.3.
+function AdvanceStringIndex(S, index) {
+    // Step 1.
+    assert(typeof S === "string", "Expected string as 1st argument");
+
+    // Step 2.
+    assert(index >= 0 && index <= MAX_NUMERIC_INDEX, "Expected integer as 2nd argument");
+
+    // Step 3 (skipped).
+
+    // Step 4 (skipped).
+
+    // Step 5.
+    var length = S.length;
+
+    // Step 6.
+    if (index + 1 >= length)
+        return index + 1;
+
+    // Step 7.
+    var first = callFunction(std_String_charCodeAt, S, index);
+
+    // Step 8.
+    if (first < 0xD800 || first > 0xDBFF)
+        return index + 1;
+
+    // Step 9.
+    var second = callFunction(std_String_charCodeAt, S, index + 1);
+
+    // Step 10.
+    if (second < 0xDC00 || second > 0xDFFF)
+        return index + 1;
+
+    // Step 11.
+    return index + 2;
+}
+
+// ES 2016 draft Mar 25, 2016 21.2.5.6.
+function RegExpMatch(string) {
+    // Step 1.
+    var rx = this;
+
+    // Step 2.
+    if (!IsObject(rx))
+        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, rx === null ? "null" : typeof rx);
+
+    // Step 3.
+    var S = ToString(string);
+
+    // Steps 4-5.
+    if (!rx.global)
+        return RegExpExec(rx, S, false);
+
+    // Step 6.a.
+    var fullUnicode = !!rx.unicode;
+
+    // Step 6.b.
+    rx.lastIndex = 0;
+
+    // Step 6.c.
+    var A = [];
+
+    // Step 6.d.
+    var n = 0;
+
+    // Step 6.e.
+    while (true) {
+        // Step 6.e.i.
+        var result = RegExpExec(rx, S, false);
+
+        // Step 6.e.ii.
+        if (result === null)
+          return (n === 0) ? null : A;
+
+        // Step 6.e.iii.1.
+        var matchStr = ToString(result[0]);
+
+        // Step 6.e.iii.2.
+        _DefineDataProperty(A, n, matchStr);
+
+        // Step 6.e.iii.4.
+        if (matchStr === "") {
+            var lastIndex = ToLength(rx.lastIndex);
+            rx.lastIndex = fullUnicode ? AdvanceStringIndex(S, lastIndex) : lastIndex + 1;
+        }
+
+        // Step 6.e.iii.5.
+        n++;
+    }
+}
+
 // ES6 21.2.5.2.
 // NOTE: This is not RegExpExec (21.2.5.2.1).
 function RegExp_prototype_Exec(string) {
