@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1440089769000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1441146756000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -27,6 +27,12 @@
     </emItem>
       <emItem  blockID="i105" id="{95ff02bc-ffc6-45f0-a5c8-619b8226a9de}">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i994" id="addonhack@mozilla.kewis.ch">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1169,8 +1175,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i306" id="{ADFA33FD-16F5-4355-8504-DF4D664CFE10}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+      <emItem  blockID="i437" id="{4933189D-C7F7-4C6E-834B-A29F087BFD23}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2088,8 +2094,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i437" id="{4933189D-C7F7-4C6E-834B-A29F087BFD23}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+      <emItem  blockID="i306" id="{ADFA33FD-16F5-4355-8504-DF4D664CFE10}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -3218,7 +3224,7 @@
                       <device>0x6907</device>
                       <device>0x7300</device>
                   </devices>
-            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
+            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>15.201.1151.0</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g984">      <os>All</os>      <vendor>0x8086</vendor>            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.2413</driverVersion>      <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g992">      <os>WINNT 8.1</os>      <vendor>0x1002</vendor>              <devices>
                       <device>0x6920</device>
@@ -3237,7 +3243,7 @@
                       <device>0x6907</device>
                       <device>0x7300</device>
                   </devices>
-            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
+            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>15.201.1151.0</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
     </gfxItems>
 
   <certItems>
