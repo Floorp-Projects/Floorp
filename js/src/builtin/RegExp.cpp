@@ -645,6 +645,7 @@ const JSFunctionSpec js::regexp_methods[] = {
     JS_SELF_HOSTED_FN("exec", "RegExp_prototype_Exec", 1,0),
     JS_SELF_HOSTED_FN("test", "RegExpTest" ,    1,0),
     JS_SELF_HOSTED_SYM_FN(match, "RegExpMatch", 1,0),
+    JS_SELF_HOSTED_SYM_FN(search, "RegExpSearch", 1,0),
     JS_FS_END
 };
 
@@ -1085,14 +1086,12 @@ js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto, uint8_t* resul
         return true;
     }
 
-    /*
     if (!HasOwnDataPropertyPure(cx, proto, SYMBOL_TO_JSID(cx->wellKnownSymbols().search), &has))
         return false;
     if (!has) {
         *result = false;
         return true;
     }
-    */
 
     if (!HasOwnDataPropertyPure(cx, proto, NameToId(cx->names().exec), &has))
         return false;

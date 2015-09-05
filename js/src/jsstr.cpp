@@ -2295,51 +2295,6 @@ AdvanceStringIndex(HandleLinearString input, size_t length, size_t index, bool u
     return index + 2;
 }
 
-bool
-js::str_search(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedString str(cx, ThisToStringForStringProto(cx, args));
-    if (!str)
-        return false;
-
-    StringRegExpGuard g(cx);
-    if (!g.init(cx, args, true))
-        return false;
-    if (const FlatMatch* fm = g.tryFlatMatch(cx, str, 1, args.length())) {
-        args.rval().setInt32(fm->match());
-        return true;
-    }
-
-    if (cx->isExceptionPending())  /* from tryFlatMatch */
-        return false;
-
-    if (!g.normalizeRegExp(cx, false, 1, args))
-        return false;
-
-    RootedLinearString linearStr(cx, str->ensureLinear(cx));
-    if (!linearStr)
-        return false;
-
-    RegExpStatics* res = cx->global()->getRegExpStatics(cx);
-    if (!res)
-        return false;
-
-    /* Per ECMAv5 15.5.4.12 (5) The last index property is ignored and left unchanged. */
-    ScopedMatchPairs matches(&cx->tempLifoAlloc());
-    RegExpShared& re = g.regExp();
-    bool sticky = re.sticky();
-    RegExpRunStatus status = re.execute(cx, linearStr, 0, sticky, &matches, nullptr);
-    if (status == RegExpRunStatus_Error)
-        return false;
-
-    if (status == RegExpRunStatus_Success)
-        res->updateLazily(cx, linearStr, &re, 0, sticky);
-
-    args.rval().setInt32(status == RegExpRunStatus_Success_NotFound ? -1 : matches[0].start);
-    return true;
-}
-
 // Utility for building a rope (lazy concatenation) of strings.
 class RopeBuilder {
     JSContext* cx;
@@ -3995,7 +3950,7 @@ static const JSFunctionSpec string_methods[] = {
 
     /* Perl-ish methods (search is actually Python-esque). */
     JS_SELF_HOSTED_FN("match", "String_match",        1,0),
-    JS_FN("search",            str_search,            1,JSFUN_GENERIC_NATIVE),
+    JS_SELF_HOSTED_FN("search", "String_search",      1,0),
     JS_INLINABLE_FN("replace", str_replace,           2,JSFUN_GENERIC_NATIVE, StringReplace),
     JS_INLINABLE_FN("split",   str_split,             2,JSFUN_GENERIC_NATIVE, StringSplit),
     JS_SELF_HOSTED_FN("substr", "String_substr",      2,0),
@@ -4150,6 +4105,7 @@ static const JSFunctionSpec string_static_methods[] = {
     JS_SELF_HOSTED_FN("slice",           "String_static_slice",         3,0),
 
     JS_SELF_HOSTED_FN("match",           "String_generic_match",        2,0),
+    JS_SELF_HOSTED_FN("search",          "String_generic_search",       2,0),
 
     // This must be at the end because of bug 853075: functions listed after
     // self-hosted methods aren't available in self-hosted code.
@@ -5305,4 +5261,35 @@ js::FlatStringMatch(JSContext* cx, unsigned argc, Value* vp)
     }
 
     return BuildFlatMatchArray(cx, str, pattern, match, args.rval());
+}
+
+bool
+js::FlatStringSearch(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(args[0].isString());
+    MOZ_ASSERT(args[1].isString());
+#ifdef DEBUG
+    bool isOptimizable = false;
+    if (!CallIsStringOptimizable(cx, "IsStringSearchOptimizable", &isOptimizable))
+        return false;
+    MOZ_ASSERT(isOptimizable);
+#endif
+
+    RootedString str(cx,args[0].toString());
+    RootedString pattern(cx, args[1].toString());
+
+    bool isFlat = false;
+    int32_t match = 0;
+    if (!FlatStringMatchHelper(cx, str, pattern, &isFlat, &match))
+        return false;
+
+    if (!isFlat) {
+        args.rval().setInt32(-2);
+        return true;
+    }
+
+    args.rval().setInt32(match);
+    return true;
 }
