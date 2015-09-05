@@ -205,8 +205,8 @@ ICStub::trace(JSTracer* trc)
       case ICStub::Call_StringSplit: {
         ICCall_StringSplit* callStub = toCall_StringSplit();
         TraceEdge(trc, &callStub->templateObject(), "baseline-callstringsplit-template");
-        TraceEdge(trc, &callStub->expectedArg(), "baseline-callstringsplit-arg");
-        TraceEdge(trc, &callStub->expectedThis(), "baseline-callstringsplit-this");
+        TraceEdge(trc, &callStub->expectedSep(), "baseline-callstringsplit-sep");
+        TraceEdge(trc, &callStub->expectedStr(), "baseline-callstringsplit-str");
         break;
       }
       case ICStub::GetElem_NativeSlotName:

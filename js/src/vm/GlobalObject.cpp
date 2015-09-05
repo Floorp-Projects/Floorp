@@ -485,6 +485,14 @@ GlobalObject::initSelfHostingBuiltins(JSContext* cx, Handle<GlobalObject*> globa
         return false;
     }
 
+    RootedValue std_split(cx);
+    std_split.setSymbol(cx->wellKnownSymbols().get(JS::SymbolCode::split));
+    if (!JS_DefineProperty(cx, global, "std_split", std_split,
+                           JSPROP_PERMANENT | JSPROP_READONLY))
+    {
+        return false;
+    }
+
     return InitBareBuiltinCtor(cx, global, JSProto_Array) &&
            InitBareBuiltinCtor(cx, global, JSProto_TypedArray) &&
            InitBareBuiltinCtor(cx, global, JSProto_Uint8Array) &&
