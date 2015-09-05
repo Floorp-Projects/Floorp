@@ -4303,7 +4303,7 @@ CodeGenerator::visitNewArray(LNewArray* lir)
     JSObject* templateObject = lir->mir()->templateObject();
     DebugOnly<uint32_t> length = lir->mir()->length();
 
-    MOZ_ASSERT(length < NativeObject::NELEMENTS_LIMIT);
+    MOZ_ASSERT(length <= NativeObject::MAX_DENSE_ELEMENTS_COUNT);
 
     if (lir->mir()->shouldUseVM()) {
         visitNewArrayCallVM(lir);
@@ -6946,7 +6946,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
                        key, &callStub);
 
         // Update initialized length. The capacity guard above ensures this won't overflow,
-        // due to NELEMENTS_LIMIT.
+        // due to MAX_DENSE_ELEMENTS_COUNT.
         masm.bumpKey(&key, 1);
         masm.storeKey(key, Address(elements, ObjectElements::offsetOfInitializedLength()));
 
