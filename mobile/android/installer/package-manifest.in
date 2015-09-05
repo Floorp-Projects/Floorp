@@ -205,9 +205,6 @@
 @BINPATH@/components/layout_xul.xpt
 @BINPATH@/components/locale.xpt
 @BINPATH@/components/lwbrk.xpt
-#ifdef MOZ_ENABLE_PROFILER_SPS
-@BINPATH@/components/memory_profiler.xpt
-#endif
 @BINPATH@/components/migration.xpt
 @BINPATH@/components/mimetype.xpt
 @BINPATH@/components/mozfind.xpt

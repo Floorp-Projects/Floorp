@@ -6,7 +6,6 @@
 
 #include "jit/MacroAssembler-inl.h"
 
-#include "jsfriendapi.h"
 #include "jsprf.h"
 
 #include "builtin/TypedObject.h"
@@ -32,7 +31,7 @@ using JS::GenericNaN;
 using JS::ToInt32;
 
 template <typename Source> void
-MacroAssembler::guardTypeSet(const Source& address, const TypeSet* types, BarrierKind kind,
+MacroAssembler::guardTypeSet(const Source& address, const TypeSet *types, BarrierKind kind,
                              Register scratch, Label* miss)
 {
     MOZ_ASSERT(kind == BarrierKind::TypeTagOnly || kind == BarrierKind::TypeSet);
@@ -148,7 +147,7 @@ MacroAssembler::guardTypeSetMightBeIncomplete(TypeSet* types, Register obj, Regi
 }
 
 void
-MacroAssembler::guardObjectType(Register obj, const TypeSet* types,
+MacroAssembler::guardObjectType(Register obj, const TypeSet *types,
                                 Register scratch, Label* miss)
 {
     MOZ_ASSERT(!types->unknown());
@@ -1054,9 +1053,8 @@ MacroAssembler::checkUnboxedArrayCapacity(Register obj, const Int32Key& index, R
 void
 MacroAssembler::checkAllocatorState(Label* fail)
 {
-    // Don't execute the inline path if we are tracing allocations,
-    // or when the memory profiler is enabled.
-    if (js::gc::TraceEnabled() || MemProfiler::enabled())
+    // Don't execute the inline path if we are tracing allocations.
+    if (js::gc::TraceEnabled())
         jump(fail);
 
 # ifdef JS_GC_ZEAL
