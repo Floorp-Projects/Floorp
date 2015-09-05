@@ -16,7 +16,7 @@ from mach.decorators import (
     Command,
 )
 
-from mozbuild.base import MachCommandBase
+from mozbuild.base import MachCommandBase, MozbuildObject
 
 
 @CommandProvider
@@ -376,3 +376,58 @@ class FormatProvider(MachCommandBase):
             os.rename(temp, target)
         return target
 
+def mozregression_import():
+    # Lazy loading of mozregression.
+    # Note that only the mach_interface module should be used from this file.
+    try:
+        import mozregression.mach_interface
+    except ImportError:
+        return None
+    return mozregression.mach_interface
+
+
+def mozregression_create_parser():
+    # Create the mozregression command line parser.
+    # if mozregression is not installed, or not up to date, it will
+    # first be installed.
+    cmd = MozbuildObject.from_environment()
+    cmd._activate_virtualenv()
+    mozregression = mozregression_import()
+    if not mozregression:
+        # mozregression is not here at all, install it
+        cmd.virtualenv_manager.install_pip_package('mozregression')
+        print("mozregression was installed. please re-run your"
+              " command.")
+    else:
+        # check if there is a new release available
+        release = mozregression.new_release_on_pypi()
+        if release:
+            print(release)
+            # there is one, so install it. Note that install_pip_package
+            # does not work here, so just run pip directly.
+            cmd.virtualenv_manager._run_pip([
+                'install',
+                'mozregression==%s' % release
+            ])
+            print("mozregression was updated to version %s. please"
+                  " re-run your command." % release)
+        else:
+            # mozregression is up to date, return the parser.
+            return mozregression.parser()
+    # exit if we updated or installed mozregression because
+    # we may have already imported mozregression and running it
+    # as this may cause issues.
+    sys.exit(0)
+
+
+@CommandProvider
+class MozregressionCommand(MachCommandBase):
+    @Command('mozregression',
+             category='misc',
+             description=("Regression range finder for nightly"
+                          " and inbound builds."),
+             parser=mozregression_create_parser)
+    def run(self, **options):
+        self._activate_virtualenv()
+        mozregression = mozregression_import()
+        mozregression.run(options)
