@@ -4116,7 +4116,7 @@ MNewArray::shouldUseVM() const
         return !templateObject()->as<UnboxedArrayObject>().hasInlineElements();
     }
 
-    MOZ_ASSERT(length() < NativeObject::NELEMENTS_LIMIT);
+    MOZ_ASSERT(length() <= NativeObject::MAX_DENSE_ELEMENTS_COUNT);
 
     size_t arraySlots =
         gc::GetGCKindSlots(templateObject()->asTenured().getAllocKind()) - ObjectElements::VALUES_PER_HEADER;

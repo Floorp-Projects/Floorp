@@ -1734,7 +1734,7 @@ MArrayLength::computeRange(TempAllocator& alloc)
 void
 MInitializedLength::computeRange(TempAllocator& alloc)
 {
-    setRange(Range::NewUInt32Range(alloc, 0, NativeObject::NELEMENTS_LIMIT));
+    setRange(Range::NewUInt32Range(alloc, 0, NativeObject::MAX_DENSE_ELEMENTS_COUNT));
 }
 
 void
