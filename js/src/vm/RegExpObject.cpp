@@ -363,7 +363,7 @@ SetupBuffer(StringBuffer& sb, const CharT* oldChars, size_t oldLen, const CharT*
     return true;
 }
 
-// Note: returns the original if no escaping need be performed.
+// Note: leaves the string buffer empty if no escaping need be performed.
 template <typename CharT>
 static bool
 EscapeRegExpPattern(StringBuffer& sb, const CharT* oldChars, size_t oldLen)
@@ -476,6 +476,102 @@ RegExpObject::toString(JSContext* cx) const
         return nullptr;
     if (sticky() && !sb.append('y'))
         return nullptr;
+
+    return sb.finishString();
+}
+
+template <typename CharT>
+static MOZ_ALWAYS_INLINE bool
+IsRegExpMetaChar(CharT ch)
+{
+    switch (ch) {
+      /* ES 2016 draft Mar 25, 2016 21.2.1 SyntaxCharacter. */
+      case '^': case '$': case '\\': case '.': case '*': case '+':
+      case '?': case '(': case ')': case '[': case ']': case '{':
+      case '}': case '|':
+        return true;
+      default:
+        return false;
+    }
+}
+
+template <typename CharT>
+bool
+js::HasRegExpMetaChars(const CharT* chars, size_t length)
+{
+    for (size_t i = 0; i < length; ++i) {
+        if (IsRegExpMetaChar<CharT>(chars[i]))
+            return true;
+    }
+    return false;
+}
+
+template bool
+js::HasRegExpMetaChars<Latin1Char>(const Latin1Char* chars, size_t length);
+
+template bool
+js::HasRegExpMetaChars<char16_t>(const char16_t* chars, size_t length);
+
+bool
+js::StringHasRegExpMetaChars(JSLinearString* str)
+{
+    AutoCheckCannotGC nogc;
+    if (str->hasLatin1Chars())
+        return HasRegExpMetaChars(str->latin1Chars(nogc), str->length());
+
+    return HasRegExpMetaChars(str->twoByteChars(nogc), str->length());
+}
+
+// Note: leaves the string buffer empty if no escaping need be performed.
+template <typename CharT>
+static bool
+RegExpEscapeMetaChars(StringBuffer& sb, const CharT* oldChars, size_t oldLen)
+{
+    for (const CharT* it = oldChars; it < oldChars + oldLen; ++it) {
+        CharT ch = *it;
+        if (IsRegExpMetaChar(ch)) {
+            if (sb.empty()) {
+                // This is the first char we've seen that needs escaping,
+                // copy everything up to this point.
+                if (!SetupBuffer(sb, oldChars, oldLen, it))
+                    return false;
+            }
+            if (!sb.append('\\'))
+                return false;
+        }
+
+        if (!sb.empty()) {
+            if (!sb.append(ch))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+JSString*
+js::RegExpEscapeMetaChars(JSContext* cx, HandleString src)
+{
+    if (src->length() == 0)
+        return src;
+
+    RootedLinearString linear(cx, src->ensureLinear(cx));
+
+    // We may never need to use |sb|. Start using it lazily.
+    StringBuffer sb(cx);
+
+    if (linear->hasLatin1Chars()) {
+        JS::AutoCheckCannotGC nogc;
+        if (!::RegExpEscapeMetaChars(sb, linear->latin1Chars(nogc), linear->length()))
+            return nullptr;
+    } else {
+        JS::AutoCheckCannotGC nogc;
+        if (!::RegExpEscapeMetaChars(sb, linear->twoByteChars(nogc), linear->length()))
+            return nullptr;
+    }
+
+    if (sb.empty())
+        return src;
 
     return sb.finishString();
 }

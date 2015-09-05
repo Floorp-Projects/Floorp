@@ -41,6 +41,7 @@
 #include "vm/Compression.h"
 #include "vm/GeneratorObject.h"
 #include "vm/Interpreter.h"
+#include "vm/RegExpObject.h"
 #include "vm/String.h"
 #include "vm/TypedArrayCommon.h"
 #include "vm/WrapperObject.h"
@@ -1571,6 +1572,77 @@ intrinsic_RegExpCreate(JSContext* cx, unsigned argc, Value* vp)
     return RegExpCreate(cx, args[0], args[1], args.rval());
 }
 
+static bool
+intrinsic_RegExpGetSubstitution(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    MOZ_ASSERT(args.length() == 6);
+
+    RootedString matched(cx, args[0].toString());
+    RootedString string(cx, args[1].toString());
+
+    int32_t position = int32_t(args[2].toNumber());
+    MOZ_ASSERT(position >= 0);
+
+    RootedObject captures(cx, &args[3].toObject());
+#ifdef DEBUG
+    bool isArray = false;
+    MOZ_ALWAYS_TRUE(IsArray(cx, captures, &isArray));
+    MOZ_ASSERT(isArray);
+#endif
+
+    RootedString replacement(cx, args[4].toString());
+
+    int32_t firstDollarIndex = int32_t(args[5].toNumber());
+    MOZ_ASSERT(firstDollarIndex >= 0);
+
+    RootedLinearString matchedLinear(cx, matched->ensureLinear(cx));
+    if (!matchedLinear)
+        return false;
+    RootedLinearString stringLinear(cx, string->ensureLinear(cx));
+    if (!stringLinear)
+        return false;
+    RootedLinearString replacementLinear(cx, replacement->ensureLinear(cx));
+    if (!replacementLinear)
+        return false;
+
+    return RegExpGetSubstitution(cx, matchedLinear, stringLinear, size_t(position), captures,
+                                 replacementLinear, size_t(firstDollarIndex), args.rval());
+}
+
+static bool
+intrinsic_StringReplaceString(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 3);
+
+    RootedString string(cx, args[0].toString());
+    RootedString pattern(cx, args[1].toString());
+    RootedString replacement(cx, args[2].toString());
+    JSString* result = str_replace_string_raw(cx, string, pattern, replacement);
+    if (!result)
+        return false;
+
+    args.rval().setString(result);
+    return true;
+}
+
+static bool
+intrinsic_RegExpEscapeMetaChars(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+
+    RootedString string(cx, args[0].toString());
+    JSString* result = RegExpEscapeMetaChars(cx, string);
+    if (!result)
+        return false;
+
+    args.rval().setString(result);
+    return true;
+}
+
 bool
 CallSelfHostedNonGenericMethod(JSContext* cx, const CallArgs& args)
 {
@@ -2158,7 +2230,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("std_String_charCodeAt",     str_charCodeAt,               1,0, StringCharCodeAt),
     JS_FN("std_String_indexOf",                  str_indexOf,                  1,0),
     JS_FN("std_String_lastIndexOf",              str_lastIndexOf,              1,0),
-    JS_INLINABLE_FN("std_String_replace",        str_replace,                  2,0, StringReplace),
     JS_INLINABLE_FN("std_String_split",          str_split,                    2,0, StringSplit),
     JS_FN("std_String_startsWith",               str_startsWith,               1,0),
     JS_FN("std_String_toLowerCase",              str_toLowerCase,              0,0),
@@ -2419,9 +2490,13 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     RegExpPrototypeOptimizable),
     JS_INLINABLE_FN("RegExpInstanceOptimizable", RegExpInstanceOptimizable, 1,0,
                     RegExpInstanceOptimizable),
+    JS_FN("RegExpGetSubstitution", intrinsic_RegExpGetSubstitution, 6,0),
+    JS_FN("RegExpEscapeMetaChars", intrinsic_RegExpEscapeMetaChars, 1,0),
 
     JS_FN("FlatStringMatch", FlatStringMatch, 2,0),
     JS_FN("FlatStringSearch", FlatStringSearch, 2,0),
+    JS_INLINABLE_FN("StringReplaceString", intrinsic_StringReplaceString, 3, 0,
+                    IntrinsicStringReplaceString),
 
     // See builtin/RegExp.h for descriptions of the regexp_* functions.
     JS_FN("regexp_exec_no_statics", regexp_exec_no_statics, 2,0),
