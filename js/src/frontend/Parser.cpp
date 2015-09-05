@@ -8767,7 +8767,7 @@ Parser<ParseHandler>::arrayInitializer(YieldHandling yieldHandling)
         uint32_t index = 0;
         TokenStream::Modifier modifier = TokenStream::Operand;
         for (; ; index++) {
-            if (index == NativeObject::NELEMENTS_LIMIT) {
+            if (index >= NativeObject::MAX_DENSE_ELEMENTS_COUNT) {
                 report(ParseError, false, null(), JSMSG_ARRAY_INIT_TOO_BIG);
                 return null();
             }

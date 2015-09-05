@@ -442,8 +442,9 @@ IonBuilder::inlineArray(CallInfo& callInfo)
 
         // Negative lengths generate a RangeError, unhandled by the inline path.
         initLength = arg->constantValue().toInt32();
-        if (initLength >= NativeObject::NELEMENTS_LIMIT)
+        if (initLength > NativeObject::MAX_DENSE_ELEMENTS_COUNT)
             return InliningStatus_NotInlined;
+        MOZ_ASSERT(initLength <= INT32_MAX);
 
         // Make sure initLength matches the template object's length. This is
         // not guaranteed to be the case, for instance if we're inlining the
