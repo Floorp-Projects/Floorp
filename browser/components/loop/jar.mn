@@ -101,8 +101,6 @@ browser.jar:
   content/browser/loop/shared/js/actions.js             (content/shared/js/actions.js)
   content/browser/loop/shared/js/conversationStore.js   (content/shared/js/conversationStore.js)
   content/browser/loop/shared/js/store.js               (content/shared/js/store.js)
-  content/browser/loop/shared/js/roomStates.js          (content/shared/js/roomStates.js)
-  content/browser/loop/shared/js/fxOSActiveRoomStore.js (content/shared/js/fxOSActiveRoomStore.js)
   content/browser/loop/shared/js/activeRoomStore.js     (content/shared/js/activeRoomStore.js)
   content/browser/loop/shared/js/dispatcher.js          (content/shared/js/dispatcher.js)
   content/browser/loop/shared/js/models.js              (content/shared/js/models.js)
