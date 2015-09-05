@@ -2260,32 +2260,6 @@ class MOZ_STACK_CLASS StringRegExpGuard
 
 } /* anonymous namespace */
 
-static bool
-DoMatchLocal(JSContext* cx, const CallArgs& args, RegExpStatics* res, HandleLinearString input,
-             RegExpShared& re)
-{
-    ScopedMatchPairs matches(&cx->tempLifoAlloc());
-    bool sticky = re.sticky();
-    RegExpRunStatus status = re.execute(cx, input, 0, sticky, &matches, nullptr);
-    if (status == RegExpRunStatus_Error)
-        return false;
-
-    if (status == RegExpRunStatus_Success_NotFound) {
-        args.rval().setNull();
-        return true;
-    }
-
-    if (!res->updateFromMatchPairs(cx, input, matches))
-        return false;
-
-    RootedValue rval(cx);
-    if (!CreateRegExpMatchResult(cx, input, matches, &rval))
-        return false;
-
-    args.rval().set(rval);
-    return true;
-}
-
 /* ES6 21.2.5.2.3. */
 static size_t
 AdvanceStringIndex(HandleLinearString input, size_t length, size_t index, bool unicode)
@@ -2319,199 +2293,6 @@ AdvanceStringIndex(HandleLinearString input, size_t length, size_t index, bool u
 
     /* Step 11. */
     return index + 2;
-}
-
-/* ES5 15.5.4.10 step 8. */
-static bool
-DoMatchGlobal(JSContext* cx, const CallArgs& args, RegExpStatics* res, HandleLinearString input,
-              StringRegExpGuard& g)
-{
-    // Step 8a.
-    //
-    // This single zeroing of "lastIndex" covers all "lastIndex" changes in the
-    // rest of String.prototype.match, particularly in steps 8f(i) and
-    // 8f(iii)(2)(a).  Here's why.
-    //
-    // The inputs to the calls to RegExp.prototype.exec are a RegExp object
-    // whose .global is true and a string.  The only side effect of a call in
-    // these circumstances is that the RegExp's .lastIndex will be modified to
-    // the next starting index after the discovered match (or to 0 if there's
-    // no remaining match).  Because .lastIndex is a non-configurable data
-    // property and no script-controllable code executes after step 8a, passing
-    // step 8a implies *every* .lastIndex set succeeds.  String.prototype.match
-    // calls RegExp.prototype.exec repeatedly, and the last call doesn't match,
-    // so the final value of .lastIndex is 0: exactly the state after step 8a
-    // succeeds.  No spec step lets script observe intermediate .lastIndex
-    // values.
-    //
-    // The arrays returned by RegExp.prototype.exec always have a string at
-    // index 0, for which [[Get]]s have no side effects.
-    //
-    // Filling in a new array using [[DefineOwnProperty]] is unobservable.
-    //
-    // This is a tricky point, because after this set, our implementation *can*
-    // fail.  The key is that script can't distinguish these failure modes from
-    // one where, in spec terms, we fail immediately after step 8a.  That *in
-    // reality* we might have done extra matching work, or created a partial
-    // results array to return, or hit an interrupt, is irrelevant.  The
-    // script can't tell we did any of those things but didn't update
-    // .lastIndex.  Thus we can optimize steps 8b onward however we want,
-    // including eliminating intermediate .lastIndex sets, as long as we don't
-    // add ways for script to observe the intermediate states.
-    //
-    // In short: it's okay to cheat (by setting .lastIndex to 0, once) because
-    // we can't get caught.
-    if (!g.zeroLastIndex(cx))
-        return false;
-
-    // Step 8b.
-    AutoValueVector elements(cx);
-
-    size_t lastSuccessfulStart = 0;
-
-    // The loop variables from steps 8c-e aren't needed, as we use different
-    // techniques from the spec to implement step 8f's loop.
-
-    // Step 8f.
-    ScopedMatchPairs matches(&cx->tempLifoAlloc());
-    size_t charsLen = input->length();
-    RegExpShared& re = g.regExp();
-    bool unicode = re.unicode();
-    bool sticky = re.sticky();
-    for (size_t searchIndex = 0; searchIndex <= charsLen; ) {
-        if (!CheckForInterrupt(cx))
-            return false;
-
-        // Steps 8f(i-ii), minus "lastIndex" updates (see above).
-        RegExpRunStatus status = re.execute(cx, input, searchIndex, sticky, &matches, nullptr);
-        if (status == RegExpRunStatus_Error)
-            return false;
-
-        // Step 8f(ii).
-        if (status == RegExpRunStatus_Success_NotFound)
-            break;
-
-        lastSuccessfulStart = searchIndex;
-        MatchPair& match = matches[0];
-
-        // Steps 8f(iii)(1-3).
-        searchIndex = match.isEmpty()
-                      ? AdvanceStringIndex(input, charsLen, match.limit, unicode)
-                      : match.limit;
-
-        // Step 8f(iii)(4-5).
-        JSLinearString* str = NewDependentString(cx, input, match.start, match.length());
-        if (!str)
-            return false;
-        if (!elements.append(StringValue(str)))
-            return false;
-    }
-
-    // Step 8g.
-    if (elements.empty()) {
-        args.rval().setNull();
-        return true;
-    }
-
-    // The last *successful* match updates the RegExpStatics. (Interestingly,
-    // this implies that String.prototype.match's semantics aren't those
-    // implied by the RegExp.prototype.exec calls in the ES5 algorithm.)
-    res->updateLazily(cx, input, &re, lastSuccessfulStart, sticky);
-
-    // Steps 8b, 8f(iii)(5-6), 8h.
-    JSObject* array = NewDenseCopiedArray(cx, elements.length(), elements.begin());
-    if (!array)
-        return false;
-
-    args.rval().setObject(*array);
-    return true;
-}
-
-static bool
-BuildFlatMatchArray(JSContext* cx, HandleString textstr, const FlatMatch& fm, CallArgs* args)
-{
-    if (fm.match() < 0) {
-        args->rval().setNull();
-        return true;
-    }
-
-    /* Get the templateObject that defines the shape and type of the output object */
-    JSObject* templateObject = cx->compartment()->regExps.getOrCreateMatchResultTemplateObject(cx);
-    if (!templateObject)
-        return false;
-
-    RootedArrayObject arr(cx, NewDenseFullyAllocatedArrayWithTemplate(cx, 1, templateObject));
-    if (!arr)
-        return false;
-
-    /* Store a Value for each pair. */
-    arr->setDenseInitializedLength(1);
-    arr->initDenseElement(0, StringValue(fm.pattern()));
-
-    /* Set the |index| property. (TemplateObject positions it in slot 0) */
-    arr->setSlot(0, Int32Value(fm.match()));
-
-    /* Set the |input| property. (TemplateObject positions it in slot 1) */
-    arr->setSlot(1, StringValue(textstr));
-
-#ifdef DEBUG
-    RootedValue test(cx);
-    RootedId id(cx, NameToId(cx->names().index));
-    if (!NativeGetProperty(cx, arr, id, &test))
-        return false;
-    MOZ_ASSERT(test == arr->getSlot(0));
-    id = NameToId(cx->names().input);
-    if (!NativeGetProperty(cx, arr, id, &test))
-        return false;
-    MOZ_ASSERT(test == arr->getSlot(1));
-#endif
-
-    args->rval().setObject(*arr);
-    return true;
-}
-
-/* ES5 15.5.4.10. */
-bool
-js::str_match(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    /* Steps 1-2. */
-    RootedString str(cx, ThisToStringForStringProto(cx, args));
-    if (!str)
-        return false;
-
-    /* Steps 3-4, plus the trailing-argument "flags" extension. */
-    StringRegExpGuard g(cx);
-    if (!g.init(cx, args, true))
-        return false;
-
-    /* Fast path when the search pattern can be searched for as a string. */
-    if (const FlatMatch* fm = g.tryFlatMatch(cx, str, 1, args.length()))
-        return BuildFlatMatchArray(cx, str, *fm, &args);
-
-    /* Return if there was an error in tryFlatMatch. */
-    if (cx->isExceptionPending())
-        return false;
-
-    /* Create regular-expression internals as needed to perform the match. */
-    if (!g.normalizeRegExp(cx, false, 1, args))
-        return false;
-
-    RegExpStatics* res = cx->global()->getRegExpStatics(cx);
-    if (!res)
-        return false;
-
-    RootedLinearString linearStr(cx, str->ensureLinear(cx));
-    if (!linearStr)
-        return false;
-
-    /* Steps 5-6, 7. */
-    if (!g.regExp().global())
-        return DoMatchLocal(cx, args, res, linearStr, g.regExp());
-
-    /* Steps 6, 8. */
-    return DoMatchGlobal(cx, args, res, linearStr, g);
 }
 
 bool
@@ -4211,7 +3992,7 @@ static const JSFunctionSpec string_methods[] = {
 #endif
 
     /* Perl-ish methods (search is actually Python-esque). */
-    JS_FN("match",             str_match,             1,JSFUN_GENERIC_NATIVE),
+    JS_SELF_HOSTED_FN("match", "String_match",        1,0),
     JS_FN("search",            str_search,            1,JSFUN_GENERIC_NATIVE),
     JS_INLINABLE_FN("replace", str_replace,           2,JSFUN_GENERIC_NATIVE, StringReplace),
     JS_INLINABLE_FN("split",   str_split,             2,JSFUN_GENERIC_NATIVE, StringSplit),
@@ -4365,6 +4146,8 @@ static const JSFunctionSpec string_static_methods[] = {
     JS_SELF_HOSTED_FN("substring",       "String_static_substring",     3,0),
     JS_SELF_HOSTED_FN("substr",          "String_static_substr",        3,0),
     JS_SELF_HOSTED_FN("slice",           "String_static_slice",         3,0),
+
+    JS_SELF_HOSTED_FN("match",           "String_generic_match",        2,0),
 
     // This must be at the end because of bug 853075: functions listed after
     // self-hosted methods aren't available in self-hosted code.
@@ -5397,3 +5180,127 @@ js::PutEscapedString(char* buffer, size_t bufferSize, const Latin1Char* chars, s
 template size_t
 js::PutEscapedString(char* buffer, size_t bufferSize, const char16_t* chars, size_t length,
                      uint32_t quote);
+
+static bool
+FlatStringMatchHelper(JSContext* cx, HandleString str, HandleString pattern, bool* isFlat, int32_t* match)
+{
+    RootedLinearString linearPattern(cx, pattern->ensureLinear(cx));
+    if (!linearPattern)
+        return false;
+
+    static const size_t MAX_FLAT_PAT_LEN = 256;
+    if (linearPattern->length() > MAX_FLAT_PAT_LEN || StringHasRegExpMetaChars(linearPattern)) {
+        *isFlat = false;
+        return true;
+    }
+
+    *isFlat = true;
+    if (str->isRope()) {
+        if (!RopeMatch(cx, &str->asRope(), linearPattern, match))
+            return false;
+    } else {
+        *match = StringMatch(&str->asLinear(), linearPattern);
+    }
+
+    return true;
+}
+
+static bool
+BuildFlatMatchArray(JSContext* cx, HandleString str, HandleString pattern, int32_t match,
+                    MutableHandleValue rval)
+{
+    if (match < 0) {
+        rval.setNull();
+        return true;
+    }
+
+    /* Get the templateObject that defines the shape and type of the output object */
+    JSObject* templateObject = cx->compartment()->regExps.getOrCreateMatchResultTemplateObject(cx);
+    if (!templateObject)
+        return false;
+
+    RootedArrayObject arr(cx, NewDenseFullyAllocatedArrayWithTemplate(cx, 1, templateObject));
+    if (!arr)
+        return false;
+
+    /* Store a Value for each pair. */
+    arr->setDenseInitializedLength(1);
+    arr->initDenseElement(0, StringValue(pattern));
+
+    /* Set the |index| property. (TemplateObject positions it in slot 0) */
+    arr->setSlot(0, Int32Value(match));
+
+    /* Set the |input| property. (TemplateObject positions it in slot 1) */
+    arr->setSlot(1, StringValue(str));
+
+#ifdef DEBUG
+    RootedValue test(cx);
+    RootedId id(cx, NameToId(cx->names().index));
+    if (!NativeGetProperty(cx, arr, id, &test))
+        return false;
+    MOZ_ASSERT(test == arr->getSlot(0));
+    id = NameToId(cx->names().input);
+    if (!NativeGetProperty(cx, arr, id, &test))
+        return false;
+    MOZ_ASSERT(test == arr->getSlot(1));
+#endif
+
+    rval.setObject(*arr);
+    return true;
+}
+
+#ifdef DEBUG
+static bool
+CallIsStringOptimizable(JSContext* cx, const char* name, bool* result)
+{
+    JSAtom* atom = Atomize(cx, name, strlen(name));
+    if (!atom)
+        return false;
+    RootedPropertyName propName(cx, atom->asPropertyName());
+
+    RootedValue funcVal(cx);
+    if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), propName, propName, 0, &funcVal))
+        return false;
+
+    InvokeArgs args(cx);
+    if (!args.init(0))
+        return false;
+    args.setCallee(funcVal);
+    args.setThis(UndefinedValue());
+    if (!Invoke(cx, args))
+        return false;
+
+    *result = args.rval().toBoolean();
+    return true;
+}
+#endif
+
+bool
+js::FlatStringMatch(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(args[0].isString());
+    MOZ_ASSERT(args[1].isString());
+#ifdef DEBUG
+    bool isOptimizable = false;
+    if (!CallIsStringOptimizable(cx, "IsStringMatchOptimizable", &isOptimizable))
+        return false;
+    MOZ_ASSERT(isOptimizable);
+#endif
+
+    RootedString str(cx,args[0].toString());
+    RootedString pattern(cx, args[1].toString());
+
+    bool isFlat = false;
+    int32_t match = 0;
+    if (!FlatStringMatchHelper(cx, str, pattern, &isFlat, &match))
+        return false;
+
+    if (!isFlat) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    return BuildFlatMatchArray(cx, str, pattern, match, args.rval());
+}
