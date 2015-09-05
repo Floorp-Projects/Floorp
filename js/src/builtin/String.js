@@ -120,6 +120,103 @@ function String_pad_end(maxLength, fillString=" ") {
     return callFunction(String_pad, this, maxLength, fillString, true);
 }
 
+function StringProtoHasNoReplace() {
+    var ObjectProto = GetBuiltinPrototype("Object");
+    var StringProto = GetBuiltinPrototype("String");
+    if (!ObjectHasPrototype(StringProto, ObjectProto))
+        return false;
+    return !(std_replace in StringProto);
+}
+
+// A thin wrapper to call SubstringKernel with int32-typed arguments.
+// Caller should check the range of |from| and |length|.
+function Substring(str, from, length) {
+    assert(typeof str === "string", "|str| should be a string");
+    assert(from | 0 === from, "coercing |from| into int32 should not change the value");
+    assert(length | 0 === length, "coercing |length| into int32 should not change the value");
+
+    return SubstringKernel(str, from | 0, length | 0);
+}
+
+// ES 2016 draft Mar 25, 2016 21.1.3.14.
+function String_replace(searchValue, replaceValue) {
+    // Step 1.
+    RequireObjectCoercible(this);
+
+    // Step 2.
+    if (!(typeof searchValue === "string" && StringProtoHasNoReplace()) &&
+        searchValue !== undefined && searchValue !== null)
+    {
+        // Step 2.a.
+        var replacer = searchValue[std_replace];
+
+        // Step 2.b.
+        if (replacer !== undefined)
+            return callContentFunction(replacer, searchValue, this, replaceValue);
+    }
+
+    // Step 3.
+    var string = ToString(this);
+
+    // Step 4.
+    var searchString = ToString(searchValue);
+
+    // FIXME: Non-standard flags argument (bug 1108382).
+    var flags = undefined;
+    if (arguments.length > 2) {
+        WarnOnceAboutFlagsArgument();
+        if (IsMatchFlagsArgumentEnabled()) {
+            flags = arguments[2];
+            var rx = RegExpCreate(RegExpEscapeMetaChars(searchString), flags);
+
+            return callContentFunction(GetMethod(rx, std_replace), rx, string, replaceValue);
+        }
+    }
+
+    if (typeof replaceValue === "string") {
+        // Steps 6-12: Optimized for string case.
+        return StringReplaceString(string, searchString, replaceValue);
+    }
+
+    // Step 5.
+    if (!IsCallable(replaceValue)) {
+        // Steps 6-12.
+        return StringReplaceString(string, searchString, ToString(replaceValue));
+    }
+
+    // Step 7.
+    var pos = callFunction(std_String_indexOf, string, searchString);
+    if (pos === -1)
+        return string;
+
+    // Step 8.
+    var replStr = ToString(callContentFunction(replaceValue, undefined, searchString, pos, string));
+
+    // Step 10.
+    var tailPos = pos + searchString.length;
+
+    // Step 11.
+    var newString;
+    if (pos === 0)
+        newString = "";
+    else
+        newString = Substring(string, 0, pos);
+
+    newString += replStr;
+    var stringLength = string.length;
+    if (tailPos < stringLength)
+        newString += Substring(string, tailPos, stringLength - tailPos);
+
+    // Step 12.
+    return newString;
+}
+
+function String_generic_replace(thisValue, searchValue, replaceValue) {
+    if (thisValue === undefined)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'String.replace');
+    return callFunction(String_replace, thisValue, searchValue, replaceValue);
+}
+
 function StringProtoHasNoSearch() {
     var ObjectProto = GetBuiltinPrototype("Object");
     var StringProto = GetBuiltinPrototype("String");

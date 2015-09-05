@@ -6,6 +6,7 @@
 
 #include "builtin/RegExp.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/TypeTraits.h"
 
 #include "jscntxt.h"
@@ -23,6 +24,7 @@
 using namespace js;
 using namespace js::unicode;
 
+using mozilla::CheckedInt;
 using mozilla::ArrayLength;
 using mozilla::Maybe;
 
@@ -645,6 +647,7 @@ const JSFunctionSpec js::regexp_methods[] = {
     JS_SELF_HOSTED_FN("exec", "RegExp_prototype_Exec", 1,0),
     JS_SELF_HOSTED_FN("test", "RegExpTest" ,    1,0),
     JS_SELF_HOSTED_SYM_FN(match, "RegExpMatch", 1,0),
+    JS_SELF_HOSTED_SYM_FN(replace, "RegExpReplace", 2,0),
     JS_SELF_HOSTED_SYM_FN(search, "RegExpSearch", 1,0),
     JS_FS_END
 };
@@ -1024,6 +1027,273 @@ js::regexp_test_no_statics(JSContext* cx, unsigned argc, Value* vp)
                                            nullptr, &ignored, DontUpdateRegExpStatics);
     args.rval().setBoolean(status == RegExpRunStatus_Success);
     return status != RegExpRunStatus_Error;
+}
+
+static void
+GetParen(JSLinearString* matched, JS::Value capture, JSSubString* out)
+{
+    if (capture.isUndefined()) {
+        out->initEmpty(matched);
+        return;
+    }
+    JSLinearString& captureLinear = capture.toString()->asLinear();
+    out->init(&captureLinear, 0, captureLinear.length());
+}
+
+template <typename CharT>
+static bool
+InterpretDollar(JSLinearString* matched, JSLinearString* string, size_t position, size_t tailPos,
+                AutoValueVector& captures, JSLinearString* replacement,
+                const CharT* replacementBegin, const CharT* currentDollar,
+                const CharT* replacementEnd,
+                JSSubString* out, size_t* skip)
+{
+    MOZ_ASSERT(*currentDollar == '$');
+
+    /* If there is only a dollar, bail now. */
+    if (currentDollar + 1 >= replacementEnd)
+        return false;
+
+    /* ES 2016 draft Mar 25, 2016 Table 46. */
+    char16_t c = currentDollar[1];
+    if (JS7_ISDEC(c)) {
+        /* $n, $nn */
+        unsigned num = JS7_UNDEC(c);
+        if (num > captures.length()) {
+            // The result is implementation-defined, do not substitute.
+            return false;
+        }
+
+        const CharT* currentChar = currentDollar + 2;
+        if (currentChar < replacementEnd && (c = *currentChar, JS7_ISDEC(c))) {
+            unsigned tmpNum = 10 * num + JS7_UNDEC(c);
+            // If num > captures.length(), the result is implementation-defined.
+            // Consume next character only if num <= captures.length().
+            if (tmpNum <= captures.length()) {
+                currentChar++;
+                num = tmpNum;
+            }
+        }
+        if (num == 0) {
+            // The result is implementation-defined.
+            // Do not substitute.
+            return false;
+        }
+
+        *skip = currentChar - currentDollar;
+
+        MOZ_ASSERT(num <= captures.length());
+
+        GetParen(matched, captures[num -1], out);
+        return true;
+    }
+
+    *skip = 2;
+    switch (c) {
+      default:
+        return false;
+      case '$':
+        out->init(replacement, currentDollar - replacementBegin, 1);
+        break;
+      case '&':
+        out->init(matched, 0, matched->length());
+        break;
+      case '+':
+        // SpiderMonkey extension
+        GetParen(matched, captures[captures.length() - 1], out);
+        break;
+      case '`':
+        out->init(string, 0, position);
+        break;
+      case '\'':
+        out->init(string, tailPos, string->length() - tailPos);
+        break;
+    }
+    return true;
+}
+
+template <typename CharT>
+static bool
+FindReplaceLengthString(JSContext* cx, HandleLinearString matched, HandleLinearString string,
+                        size_t position, size_t tailPos, AutoValueVector& captures,
+                        HandleLinearString replacement, size_t firstDollarIndex, size_t* sizep)
+{
+    CheckedInt<uint32_t> replen = replacement->length();
+
+    JS::AutoCheckCannotGC nogc;
+    MOZ_ASSERT(firstDollarIndex < replacement->length());
+    const CharT* replacementBegin = replacement->chars<CharT>(nogc);
+    const CharT* currentDollar = replacementBegin + firstDollarIndex;
+    const CharT* replacementEnd = replacementBegin + replacement->length();
+    do {
+        JSSubString sub;
+        size_t skip;
+        if (InterpretDollar(matched, string, position, tailPos, captures, replacement,
+                            replacementBegin, currentDollar, replacementEnd, &sub, &skip))
+        {
+            if (sub.length > skip)
+                replen += sub.length - skip;
+            else
+                replen -= skip - sub.length;
+            currentDollar += skip;
+        } else {
+            currentDollar++;
+        }
+
+        currentDollar = js_strchr_limit(currentDollar, '$', replacementEnd);
+    } while (currentDollar);
+
+    if (!replen.isValid()) {
+        ReportAllocationOverflow(cx);
+        return false;
+    }
+
+    *sizep = replen.value();
+    return true;
+}
+
+static bool
+FindReplaceLength(JSContext* cx, HandleLinearString matched, HandleLinearString string,
+                  size_t position, size_t tailPos, AutoValueVector& captures,
+                  HandleLinearString replacement, size_t firstDollarIndex, size_t* sizep)
+{
+    return replacement->hasLatin1Chars()
+           ? FindReplaceLengthString<Latin1Char>(cx, matched, string, position, tailPos, captures,
+                                                 replacement, firstDollarIndex, sizep)
+           : FindReplaceLengthString<char16_t>(cx, matched, string, position, tailPos, captures,
+                                               replacement, firstDollarIndex, sizep);
+}
+
+/*
+ * Precondition: |sb| already has necessary growth space reserved (as
+ * derived from FindReplaceLength), and has been inflated to TwoByte if
+ * necessary.
+ */
+template <typename CharT>
+static void
+DoReplace(HandleLinearString matched, HandleLinearString string,
+          size_t position, size_t tailPos, AutoValueVector& captures,
+          HandleLinearString replacement, size_t firstDollarIndex, StringBuffer &sb)
+{
+    JS::AutoCheckCannotGC nogc;
+    const CharT* replacementBegin = replacement->chars<CharT>(nogc);
+    const CharT* currentChar = replacementBegin;
+
+    MOZ_ASSERT(firstDollarIndex < replacement->length());
+    const CharT* currentDollar = replacementBegin + firstDollarIndex;
+    const CharT* replacementEnd = replacementBegin + replacement->length();
+    do {
+        /* Move one of the constant portions of the replacement value. */
+        size_t len = currentDollar - currentChar;
+        sb.infallibleAppend(currentChar, len);
+        currentChar = currentDollar;
+
+        JSSubString sub;
+        size_t skip;
+        if (InterpretDollar(matched, string, position, tailPos, captures, replacement,
+                            replacementBegin, currentDollar, replacementEnd, &sub, &skip))
+        {
+            sb.infallibleAppendSubstring(sub.base, sub.offset, sub.length);
+            currentChar += skip;
+            currentDollar += skip;
+        } else {
+            currentDollar++;
+        }
+
+        currentDollar = js_strchr_limit(currentDollar, '$', replacementEnd);
+    } while (currentDollar);
+    sb.infallibleAppend(currentChar, replacement->length() - (currentChar - replacementBegin));
+}
+
+/* ES 2016 draft Mar 25, 2016 21.1.3.14.1. */
+bool
+js::RegExpGetSubstitution(JSContext* cx, HandleLinearString matched, HandleLinearString string,
+                          size_t position, HandleObject capturesObj, HandleLinearString replacement,
+                          size_t firstDollarIndex, MutableHandleValue rval)
+{
+    MOZ_ASSERT(firstDollarIndex < replacement->length());
+
+    // Step 1 (skipped).
+
+    // Step 2.
+    size_t matchLength = matched->length();
+
+    // Steps 3-5 (skipped).
+
+    // Step 6.
+    MOZ_ASSERT(position <= string->length());
+
+    // Step 10 (reordered).
+    uint32_t nCaptures;
+    if (!GetLengthProperty(cx, capturesObj, &nCaptures))
+        return false;
+
+    AutoValueVector captures(cx);
+    if (!captures.reserve(nCaptures))
+        return false;
+
+    // Step 7.
+    RootedValue capture(cx);
+    for (uint32_t i = 0; i < nCaptures; i++) {
+        if (!GetElement(cx, capturesObj, capturesObj, i, &capture))
+            return false;
+
+        if (capture.isUndefined()) {
+            captures.infallibleAppend(capture);
+            continue;
+        }
+
+        MOZ_ASSERT(capture.isString());
+        RootedLinearString captureLinear(cx, capture.toString()->ensureLinear(cx));
+        if (!captureLinear)
+            return false;
+        captures.infallibleAppend(StringValue(captureLinear));
+    }
+
+    // Step 8 (skipped).
+
+    // Step 9.
+    CheckedInt<uint32_t> checkedTailPos(0);
+    checkedTailPos += position;
+    checkedTailPos += matchLength;
+    if (!checkedTailPos.isValid()) {
+        ReportAllocationOverflow(cx);
+        return false;
+    }
+    uint32_t tailPos = checkedTailPos.value();
+
+    // Step 11.
+    size_t reserveLength;
+    if (!FindReplaceLength(cx, matched, string, position, tailPos, captures, replacement,
+                           firstDollarIndex, &reserveLength))
+    {
+        return false;
+    }
+
+    StringBuffer result(cx);
+    if (string->hasTwoByteChars() || replacement->hasTwoByteChars()) {
+        if (!result.ensureTwoByteChars())
+            return false;
+    }
+
+    if (!result.reserve(reserveLength))
+        return false;
+
+    if (replacement->hasLatin1Chars()) {
+        DoReplace<Latin1Char>(matched, string, position, tailPos, captures,
+                              replacement, firstDollarIndex, result);
+    } else {
+        DoReplace<char16_t>(matched, string, position, tailPos, captures,
+                            replacement, firstDollarIndex, result);
+    }
+
+    // Step 12.
+    JSString* resultString = result.finishString();
+    if (!resultString)
+        return false;
+
+    rval.setString(resultString);
+    return true;
 }
 
 bool
