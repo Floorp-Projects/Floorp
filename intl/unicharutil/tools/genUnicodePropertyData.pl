@@ -18,7 +18,6 @@
 #     NB: not all the files are actually needed; currently, we require
 #       - UnicodeData.txt
 #       - Scripts.txt
-#       - EastAsianWidth.txt
 #       - BidiMirroring.txt
 #       - HangulSyllableType.txt
 #       - ReadMe.txt (to record version/date of the UCD)
@@ -334,7 +333,6 @@ my %verticalOrientationCode = (
 my @script;
 my @category;
 my @combining;
-my @eaw;
 my @mirror;
 my @hangul;
 my @casemap;
@@ -505,37 +503,6 @@ while (<FH>) {
         my $end = (defined $2) ? hex "0x$2" : $start;
         for (my $i = $start; $i <= $end; ++$i) {
             $script[$i] = $script;
-        }
-    }
-}
-close FH;
-
-# read EastAsianWidth.txt
-my %eawCode = (
-  'A' => 0, #         ; Ambiguous
-  'F' => 1, #         ; Fullwidth
-  'H' => 2, #         ; Halfwidth
-  'N' => 3, #         ; Neutral
-  'NA'=> 4, #         ; Narrow
-  'W' => 5  #         ; Wide 
-);
-open FH, "< $ARGV[1]/EastAsianWidth.txt" or die "can't open UCD file EastAsianWidth.txt\n";
-push @versionInfo, "";
-while (<FH>) {
-    chomp;
-    push @versionInfo, $_;
-    last if /Date:/;
-}
-while (<FH>) {
-    s/#.*//;
-    if (m/([0-9A-F]{4,6})(?:\.\.([0-9A-F]{4,6}))*\s*;\s*([^ ]+)/) {
-        my $eaw = uc($3);
-        warn "unknown EAW code $eaw" unless exists $eawCode{$eaw};
-        $eaw = $eawCode{$eaw};
-        my $start = hex "0x$1";
-        my $end = (defined $2) ? hex "0x$2" : $start;
-        for (my $i = $start; $i <= $end; ++$i) {
-            $eaw[$i] = $eaw;
         }
     }
 }
@@ -773,14 +740,14 @@ sub sprintCharProps2
 {
   my $usv = shift;
   return sprintf("{%d,%d,%d,%d,%d,%d,%d},",
-                 $script[$usv], $eaw[$usv], $category[$usv],
+                 $script[$usv], 0, $category[$usv],
                  $bidicategory[$usv], $xidmod[$usv], $numericvalue[$usv],
                  $verticalOrientation[$usv]);
 }
 $type = q/
 struct nsCharProps2 {
   unsigned char mScriptCode:8;
-  unsigned char mEAW:3;
+  unsigned char mUnused:3;
   unsigned char mCategory:5;
   unsigned char mBidiCategory:5;
   unsigned char mXidmod:4;
