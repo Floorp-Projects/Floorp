@@ -487,13 +487,13 @@ public:
    */
   nsRegion mVerticalPanRegion;
   /**
-   * Scaled versions of mHitRegion and mMaybeHitRegion.
+   * Scaled versions of the bounds of mHitRegion and mMaybeHitRegion.
    * We store these because FindPaintedLayerFor() needs to consume them
-   * in this form, and it's a hot code path so we don't wnat to scale
+   * in this form, and it's a hot code path so we don't want to scale
    * them inside that function.
    */
-  nsIntRegion mScaledHitRegion;
-  nsIntRegion mScaledMaybeHitRegion;
+  nsIntRect mScaledHitRegionBounds;
+  nsIntRect mScaledMaybeHitRegionBounds;
   /**
    * The "active scrolled root" for all content in the layer. Must
    * be non-null; all content in a PaintedLayer must have the same
@@ -2591,14 +2591,15 @@ PaintedLayerDataNode::FindPaintedLayerFor(const nsIntRect& aVisibleRect,
         MOZ_ASSERT(!data.mExclusiveToOneItem);
         lowestUsableLayer = &data;
         nsIntRegion visibleRegion = data.mVisibleRegion;
-        // When checking whether the visible region intersects the given
-        // visible rect, also include the event-regions in the visible region,
+        // Also check whether the event-regions intersect the visible rect,
         // unless we're in an inactive layer, in which case the event-regions
         // will be hoisted out into their own layer.
-        ContainerState& contState = mTree.ContState();
-        if (!contState.IsInInactiveLayer()) {
-          visibleRegion.OrWith(data.mScaledHitRegion);
-          visibleRegion.OrWith(data.mScaledMaybeHitRegion);
+        // For performance reasons, we check the intersection with the bounds
+        // of the event-regions.
+        if (!mTree.ContState().IsInInactiveLayer() &&
+            (data.mScaledHitRegionBounds.Intersects(aVisibleRect) ||
+             data.mScaledMaybeHitRegionBounds.Intersects(aVisibleRect))) {
+          break;
         }
         if (visibleRegion.Intersects(aVisibleRect)) {
           break;
@@ -3449,15 +3450,10 @@ PaintedLayerData::AccumulateEventRegions(ContainerState* aState, nsDisplayLayerE
   mHorizontalPanRegion.Or(mHorizontalPanRegion, aEventRegions->HorizontalPanRegion());
   mVerticalPanRegion.Or(mVerticalPanRegion, aEventRegions->VerticalPanRegion());
 
-  // Simplify the maybe-hit region because it can be a complex region
-  // and operations on it, such as the scaling below and the use of the
-  // result in hot code paths like FindPaintedLayerFor(), can be very expensive.
-  mMaybeHitRegion.SimplifyOutward(8);
-
-  // Calculate scaled versions of mHitRegion and mMaybeHitRegion for quick
-  // access in FindPaintedLayerFor().
-  mScaledHitRegion = aState->ScaleRegionToOutsidePixels(mHitRegion);
-  mScaledMaybeHitRegion = aState->ScaleRegionToOutsidePixels(mMaybeHitRegion);
+  // Calculate scaled versions of the bounds of mHitRegion and mMaybeHitRegion
+  // for quick access in FindPaintedLayerFor().
+  mScaledHitRegionBounds = aState->ScaleToOutsidePixels(mHitRegion.GetBounds());
+  mScaledMaybeHitRegionBounds = aState->ScaleToOutsidePixels(mMaybeHitRegion.GetBounds());
 }
 
 PaintedLayerData

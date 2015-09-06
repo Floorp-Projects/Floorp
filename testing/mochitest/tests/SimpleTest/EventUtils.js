@@ -523,10 +523,18 @@ function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWind
       if (!aCallback)
         return;
 
-      aWindow.waitForAllPaintsFlushed(function() {
-        utils.restoreNormalRefresh();
-        aCallback();
-      });
+      var waitForPaints = function () {
+        SpecialPowers.Services.obs.removeObserver(waitForPaints, "apz-repaints-flushed", false);
+        aWindow.waitForAllPaintsFlushed(function() {
+          utils.restoreNormalRefresh();
+          aCallback();
+        });
+      }
+
+      SpecialPowers.Services.obs.addObserver(waitForPaints, "apz-repaints-flushed", false);
+      if (!utils.flushApzRepaints(aWindow)) {
+        waitForPaints();
+      }
     }, 0);
   };
 

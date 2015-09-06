@@ -500,6 +500,38 @@ RotateRight(const T aValue, uint_fast8_t aShift)
   return (aValue >> aShift) | (aValue << (sizeof(T) * CHAR_BIT - aShift));
 }
 
+/**
+ * Returns true if |x| is a power of two.
+ * Zero is not an integer power of two. (-Inf is not an integer)
+ */
+template<typename T>
+inline bool
+IsPowerOfTwo(T x)
+{
+    static_assert(IsUnsigned<T>::value,
+                  "IsPowerOfTwo requires unsigned values");
+    return x && (x & (x - 1)) == 0;
+}
+
+template<typename T>
+inline T
+Clamp(const T aValue, const T aMin, const T aMax)
+{
+    static_assert(IsIntegral<T>::value,
+                  "Clamp accepts only integral types, so that it doesn't have"
+                  " to distinguish differently-signed zeroes (which users may"
+                  " or may not care to distinguish, likely at a perf cost) or"
+                  " to decide how to clamp NaN or a range with a NaN"
+                  " endpoint.");
+    MOZ_ASSERT(aMin <= aMax);
+
+    if (aValue <= aMin)
+        return aMin;
+    if (aValue >= aMax)
+        return aMax;
+    return aValue;
+}
+
 } /* namespace mozilla */
 
 #endif /* mozilla_MathAlgorithms_h */

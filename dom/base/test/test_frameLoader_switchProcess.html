@@ -68,10 +68,7 @@
   }
 
   SpecialPowers.pushPrefEnv(
-    // XXX Set LRUPoolLevels to 2 to avoid breaking priority tests
-    { "set": [["dom.ipc.processPriorityManager.BACKGROUND.LRUPoolLevels", 2],
-              ["dom.ipc.processPriorityManager.BACKGROUND_PERCEIVABLE.LRUPoolLevels", 2],
-              ["dom.ipc.processPriorityManager.testMode", true],
+    { "set": [["dom.ipc.processPriorityManager.testMode", true],
               ["dom.ipc.processPriorityManager.enabled", true],
               ["dom.ipc.tabs.disabled", false],
               ["dom.ipc.processCount", 3],
