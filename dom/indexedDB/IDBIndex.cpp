@@ -168,6 +168,15 @@ IDBIndex::MultiEntry() const
   return mMetadata->multiEntry();
 }
 
+bool
+IDBIndex::LocaleAware() const
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mMetadata);
+
+  return mMetadata->locale().IsEmpty();
+}
+
 const KeyPath&
 IDBIndex::GetKeyPath() const
 {
@@ -175,6 +184,37 @@ IDBIndex::GetKeyPath() const
   MOZ_ASSERT(mMetadata);
 
   return mMetadata->keyPath();
+}
+
+void
+IDBIndex::GetLocale(nsString& aLocale) const
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mMetadata);
+
+  if (mMetadata->locale().IsEmpty()) {
+    SetDOMStringToNull(aLocale);
+  } else {
+    aLocale.AssignWithConversion(mMetadata->locale());
+  }
+}
+
+const nsCString&
+IDBIndex::Locale() const
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mMetadata);
+
+  return mMetadata->locale();
+}
+
+bool
+IDBIndex::IsAutoLocale() const
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mMetadata);
+
+  return mMetadata->autoLocale();
 }
 
 nsPIDOMWindow*
@@ -249,21 +289,15 @@ IDBIndex::GetInternal(bool aKeyOnly,
   const int64_t objectStoreId = mObjectStore->Id();
   const int64_t indexId = Id();
 
-  OptionalKeyRange optionalKeyRange;
-  if (keyRange) {
-    SerializedKeyRange serializedKeyRange;
-    keyRange->ToSerialized(serializedKeyRange);
-    optionalKeyRange = serializedKeyRange;
-  } else {
-    optionalKeyRange = void_t();
-  }
+  SerializedKeyRange serializedKeyRange;
+  keyRange->ToSerialized(serializedKeyRange);
 
   RequestParams params;
 
   if (aKeyOnly) {
-    params = IndexGetKeyParams(objectStoreId, indexId, optionalKeyRange);
+    params = IndexGetKeyParams(objectStoreId, indexId, serializedKeyRange);
   } else {
-    params = IndexGetParams(objectStoreId, indexId, optionalKeyRange);
+    params = IndexGetParams(objectStoreId, indexId, serializedKeyRange);
   }
 
   nsRefPtr<IDBRequest> request = GenerateRequest(this);

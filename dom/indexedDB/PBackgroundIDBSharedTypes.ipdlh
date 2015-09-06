@@ -56,6 +56,7 @@ struct IndexUpdateInfo
 {
   int64_t indexId;
   Key value;
+  Key localizedValue;
 };
 
 union OptionalKeyRange
@@ -84,8 +85,10 @@ struct IndexMetadata
   int64_t id;
   nsString name;
   KeyPath keyPath;
+  nsCString locale;
   bool unique;
   bool multiEntry;
+  bool autoLocale;
 };
 
 struct DatabaseSpec

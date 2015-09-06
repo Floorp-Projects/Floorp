@@ -144,7 +144,7 @@ static_assert(JS_STRUCTURED_CLONE_VERSION == 5,
               "Need to update the major schema version.");
 
 // Major schema version. Bump for almost everything.
-const uint32_t kMajorSchemaVersion = 18;
+const uint32_t kMajorSchemaVersion = 19;
 
 // Minor schema version. Should almost always be 0 (maybe bump on release
 // branches if we have to).
@@ -289,7 +289,7 @@ struct FullIndexMetadata
 
 public:
   FullIndexMetadata()
-    : mCommonMetadata(0, nsString(), KeyPath(0), false, false)
+    : mCommonMetadata(0, nsString(), KeyPath(0), nsCString(), false, false, false)
     , mDeleted(false)
   {
     // This can happen either on the QuotaManager IO thread or on a
@@ -454,6 +454,7 @@ struct IndexDataValue final
 {
   int64_t mIndexId;
   Key mKey;
+  Key mSortKey;
   bool mUnique;
 
   IndexDataValue()
@@ -467,6 +468,7 @@ struct IndexDataValue final
   IndexDataValue(const IndexDataValue& aOther)
     : mIndexId(aOther.mIndexId)
     , mKey(aOther.mKey)
+    , mSortKey(aOther.mSortKey)
     , mUnique(aOther.mUnique)
   {
     MOZ_ASSERT(!aOther.mKey.IsUnset());
@@ -484,6 +486,18 @@ struct IndexDataValue final
     MOZ_COUNT_CTOR(IndexDataValue);
   }
 
+  IndexDataValue(int64_t aIndexId, bool aUnique, const Key& aKey,
+                 const Key& aSortKey)
+    : mIndexId(aIndexId)
+    , mKey(aKey)
+    , mSortKey(aSortKey)
+    , mUnique(aUnique)
+  {
+    MOZ_ASSERT(!aKey.IsUnset());
+
+    MOZ_COUNT_CTOR(IndexDataValue);
+  }
+
   ~IndexDataValue()
   {
     MOZ_COUNT_DTOR(IndexDataValue);
@@ -492,15 +506,23 @@ struct IndexDataValue final
   bool
   operator==(const IndexDataValue& aOther) const
   {
-    return mIndexId == aOther.mIndexId &&
-           mKey == aOther.mKey;
+    if (mIndexId != aOther.mIndexId) {
+      return false;
+    }
+    if (mSortKey.IsUnset()) {
+      return mKey == aOther.mKey;
+    }
+    return mSortKey == aOther.mSortKey;
   }
 
   bool
   operator<(const IndexDataValue& aOther) const
   {
     if (mIndexId == aOther.mIndexId) {
-      return mKey < aOther.mKey;
+      if (mSortKey.IsUnset()) {
+        return mKey < aOther.mKey;
+      }
+      return mSortKey < aOther.mSortKey;
     }
 
     return mIndexId < aOther.mIndexId;
@@ -603,8 +625,6 @@ GetDatabaseFilename(const nsAString& aName,
 uint32_t
 CompressedByteCountForNumber(uint64_t aNumber)
 {
-  MOZ_ASSERT(aNumber);
-
   // All bytes have 7 bits available.
   uint32_t count = 1;
   while ((aNumber >>= 7)) {
@@ -751,14 +771,17 @@ MakeCompressedIndexDataValues(
   for (uint32_t arrayIndex = 0; arrayIndex < arrayLength; arrayIndex++) {
     const IndexDataValue& info = aIndexValues[arrayIndex];
     const nsCString& keyBuffer = info.mKey.GetBuffer();
+    const nsCString& sortKeyBuffer = info.mSortKey.GetBuffer();
     const uint32_t keyBufferLength = keyBuffer.Length();
+    const uint32_t sortKeyBufferLength = sortKeyBuffer.Length();
 
     MOZ_ASSERT(!keyBuffer.IsEmpty());
 
     // Don't let |infoLength| overflow.
     if (NS_WARN_IF(UINT32_MAX - keyBuffer.Length() <
                    CompressedByteCountForIndexId(info.mIndexId) +
-                   CompressedByteCountForNumber(keyBufferLength))) {
+                   CompressedByteCountForNumber(keyBufferLength) +
+                   CompressedByteCountForNumber(sortKeyBufferLength))) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
@@ -766,7 +789,9 @@ MakeCompressedIndexDataValues(
     const uint32_t infoLength =
       CompressedByteCountForIndexId(info.mIndexId) +
       CompressedByteCountForNumber(keyBufferLength) +
-      keyBufferLength;
+      CompressedByteCountForNumber(sortKeyBufferLength) +
+      keyBufferLength +
+      sortKeyBufferLength;
 
     // Don't let |blobDataLength| overflow.
     if (NS_WARN_IF(UINT32_MAX - infoLength < blobDataLength)) {
@@ -789,13 +814,20 @@ MakeCompressedIndexDataValues(
   for (uint32_t arrayIndex = 0; arrayIndex < arrayLength; arrayIndex++) {
     const IndexDataValue& info = aIndexValues[arrayIndex];
     const nsCString& keyBuffer = info.mKey.GetBuffer();
+    const nsCString& sortKeyBuffer = info.mSortKey.GetBuffer();
     const uint32_t keyBufferLength = keyBuffer.Length();
+    const uint32_t sortKeyBufferLength = sortKeyBuffer.Length();
 
     WriteCompressedIndexId(info.mIndexId, info.mUnique, &blobDataIter);
-    WriteCompressedNumber(keyBuffer.Length(), &blobDataIter);
+    WriteCompressedNumber(keyBufferLength, &blobDataIter);
 
     memcpy(blobDataIter, keyBuffer.get(), keyBufferLength);
     blobDataIter += keyBufferLength;
+
+    WriteCompressedNumber(sortKeyBufferLength, &blobDataIter);
+
+    memcpy(blobDataIter, sortKeyBuffer.get(), sortKeyBufferLength);
+    blobDataIter += sortKeyBufferLength;
   }
 
   MOZ_ASSERT(blobDataIter == blobData.get() + blobDataLength);
@@ -850,9 +882,28 @@ ReadCompressedIndexDataValuesFromBlob(
                         uint32_t(keyBufferLength));
     blobDataIter += keyBufferLength;
 
-    if (NS_WARN_IF(!aIndexValues.InsertElementSorted(
-                      IndexDataValue(indexId, unique, Key(keyBuffer)),
-                      fallible))) {
+    IndexDataValue idv(indexId, unique, Key(keyBuffer));
+
+    // Read sort key buffer length.
+    const uint64_t sortKeyBufferLength =
+      ReadCompressedNumber(&blobDataIter, blobDataEnd);
+
+    if (sortKeyBufferLength > 0) {
+      if (NS_WARN_IF(blobDataIter == blobDataEnd) ||
+          NS_WARN_IF(sortKeyBufferLength > uint64_t(UINT32_MAX)) ||
+          NS_WARN_IF(blobDataIter + sortKeyBufferLength > blobDataEnd)) {
+        IDB_REPORT_INTERNAL_ERR();
+        return NS_ERROR_FILE_CORRUPTED;
+      }
+
+      nsCString sortKeyBuffer(reinterpret_cast<const char*>(blobDataIter),
+                              uint32_t(sortKeyBufferLength));
+      blobDataIter += sortKeyBufferLength;
+
+      idv.mSortKey = Key(sortKeyBuffer);
+    }
+
+    if (NS_WARN_IF(!aIndexValues.InsertElementSorted(idv, fallible))) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1042,7 +1093,7 @@ CreateTables(mozIStorageConnection* aConnection)
     return rv;
   }
 
-  // Table `index`
+  // Table `object_store_index`
   rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE object_store_index"
       "( id INTEGER PRIMARY KEY"
@@ -1051,6 +1102,8 @@ CreateTables(mozIStorageConnection* aConnection)
       ", key_path TEXT NOT NULL"
       ", unique_index INTEGER NOT NULL"
       ", multientry INTEGER NOT NULL"
+      ", locale TEXT"
+      ", is_auto_locale BOOLEAN NOT NULL"
       ", FOREIGN KEY (object_store_id) "
           "REFERENCES object_store(id) "
       ");"
@@ -1083,12 +1136,22 @@ CreateTables(mozIStorageConnection* aConnection)
       ", value BLOB NOT NULL"
       ", object_data_key BLOB NOT NULL"
       ", object_store_id INTEGER NOT NULL"
+      ", value_locale BLOB"
       ", PRIMARY KEY (index_id, value, object_data_key)"
       ", FOREIGN KEY (index_id) "
           "REFERENCES object_store_index(id) "
       ", FOREIGN KEY (object_store_id, object_data_key) "
           "REFERENCES object_data(object_store_id, key) "
       ") WITHOUT ROWID;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX index_data_value_locale_index "
+    "ON index_data (index_id, value_locale, object_data_key, value) "
+    "WHERE value_locale IS NOT NULL;"
   ));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1101,12 +1164,22 @@ CreateTables(mozIStorageConnection* aConnection)
       ", value BLOB NOT NULL"
       ", object_store_id INTEGER NOT NULL"
       ", object_data_key BLOB NOT NULL"
+      ", value_locale BLOB"
       ", PRIMARY KEY (index_id, value)"
       ", FOREIGN KEY (index_id) "
           "REFERENCES object_store_index(id) "
       ", FOREIGN KEY (object_store_id, object_data_key) "
           "REFERENCES object_data(object_store_id, key) "
       ") WITHOUT ROWID;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX unique_index_data_value_locale_index "
+    "ON unique_index_data (index_id, value_locale, object_data_key, value) "
+    "WHERE value_locale IS NOT NULL;"
   ));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -3539,6 +3612,74 @@ UpgradeSchemaFrom17_0To18_0(mozIStorageConnection* aConnection,
 }
 
 nsresult
+UpgradeSchemaFrom18_0To19_0(mozIStorageConnection* aConnection)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aConnection);
+
+  nsresult rv;
+  PROFILER_LABEL("IndexedDB", "UpgradeSchemaFrom17_0To18_0",
+    js::ProfileEntry::Category::STORAGE);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "ALTER TABLE object_store_index "
+    "ADD COLUMN locale TEXT;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "ALTER TABLE object_store_index "
+    "ADD COLUMN is_auto_locale BOOLEAN;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "ALTER TABLE index_data "
+    "ADD COLUMN value_locale BLOB;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "ALTER TABLE unique_index_data "
+    "ADD COLUMN value_locale BLOB;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX index_data_value_locale_index "
+    "ON index_data (index_id, value_locale, object_data_key, value) "
+    "WHERE value_locale IS NOT NULL;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX unique_index_data_value_locale_index "
+    "ON unique_index_data (index_id, value_locale, object_data_key, value) "
+    "WHERE value_locale IS NOT NULL;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->SetSchemaVersion(MakeSchemaVersion(19, 0));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
 GetDatabaseFileURL(nsIFile* aDatabaseFile,
                    PersistenceType aPersistenceType,
                    const nsACString& aGroup,
@@ -4030,7 +4171,7 @@ CreateStorageConnection(nsIFile* aDBFile,
       }
     } else  {
       // This logic needs to change next time we change the schema!
-      static_assert(kSQLiteSchemaVersion == int32_t((18 << 4) + 0),
+      static_assert(kSQLiteSchemaVersion == int32_t((19 << 4) + 0),
                     "Upgrade function needed due to schema version increase.");
 
       while (schemaVersion != kSQLiteSchemaVersion) {
@@ -4064,6 +4205,8 @@ CreateStorageConnection(nsIFile* aDBFile,
         } else if (schemaVersion == MakeSchemaVersion(17, 0)) {
           rv = UpgradeSchemaFrom17_0To18_0(connection, aOrigin);
           vacuumNeeded = true;
+        } else if (schemaVersion == MakeSchemaVersion(18, 0)) {
+          rv = UpgradeSchemaFrom18_0To19_0(connection);
         } else {
           IDB_WARNING("Unable to open IndexedDB database, no upgrade path is "
                       "available!");
@@ -5294,6 +5437,11 @@ protected:
   static nsresult
   BindKeyRangeToStatement(const SerializedKeyRange& aKeyRange,
                           mozIStorageStatement* aStatement);
+
+  static nsresult
+  BindKeyRangeToStatement(const SerializedKeyRange& aKeyRange,
+                          mozIStorageStatement* aStatement,
+                          const nsCString& aLocale);
 
   static void
   AppendConditionClause(const nsACString& aColumnName,
@@ -6804,6 +6952,13 @@ private:
 
   virtual void
   SendResults() override;
+
+#ifdef ENABLE_INTL_API
+  static nsresult
+  UpdateLocaleAwareIndex(mozIStorageConnection* aConnection,
+                         const IndexMetadata& aIndexMetadata,
+                         const nsCString& aLocale);
+#endif
 };
 
 class OpenDatabaseOp::VersionChangeOp final
@@ -7558,10 +7713,12 @@ private:
 
   nsCString mContinueQuery;
   nsCString mContinueToQuery;
+  nsCString mLocale;
 
   Key mKey;
   Key mObjectKey;
   Key mRangeKey;
+  Key mSortKey;
 
   CursorOpBase* mCurrentlyRunningOp;
 
@@ -7614,6 +7771,11 @@ private:
 
   virtual bool
   RecvContinue(const CursorRequestParams& aParams, const Key& key) override;
+
+  bool
+  IsLocaleAware() const {
+    return !mLocale.IsEmpty();
+  }
 };
 
 class Cursor::CursorOpBase
@@ -14518,6 +14680,10 @@ Cursor::Cursor(TransactionBase* aTransaction,
     MOZ_ASSERT(mBackgroundParent);
   }
 
+  if (aIndexMetadata) {
+    mLocale = aIndexMetadata->mCommonMetadata.locale();
+  }
+
   static_assert(OpenCursorParams::T__None == 0 &&
                   OpenCursorParams::T__Last == 4,
                 "Lots of code here assumes only four types of cursors!");
@@ -14563,6 +14729,8 @@ Cursor::VerifyRequestParams(const CursorRequestParams& aParams) const
     return false;
   }
 
+  const Key& sortKey = IsLocaleAware() ? mSortKey : mKey;
+
   switch (aParams.type()) {
     case CursorRequestParams::TContinueParams: {
       const Key& key = aParams.get_ContinueParams().key();
@@ -14570,7 +14738,7 @@ Cursor::VerifyRequestParams(const CursorRequestParams& aParams) const
         switch (mDirection) {
           case IDBCursor::NEXT:
           case IDBCursor::NEXT_UNIQUE:
-            if (NS_WARN_IF(key <= mKey)) {
+            if (NS_WARN_IF(key <= sortKey)) {
               ASSERT_UNLESS_FUZZING();
               return false;
             }
@@ -14578,7 +14746,7 @@ Cursor::VerifyRequestParams(const CursorRequestParams& aParams) const
 
           case IDBCursor::PREV:
           case IDBCursor::PREV_UNIQUE:
-            if (NS_WARN_IF(key >= mKey)) {
+            if (NS_WARN_IF(key >= sortKey)) {
               ASSERT_UNLESS_FUZZING();
               return false;
             }
@@ -17329,30 +17497,77 @@ DatabaseOperationBase::BindKeyRangeToStatement(
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aStatement);
 
-  NS_NAMED_LITERAL_CSTRING(lowerKey, "lower_key");
-
-  if (aKeyRange.isOnly()) {
-    return aKeyRange.lower().BindToStatement(aStatement, lowerKey);
-  }
-
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if (!aKeyRange.lower().IsUnset()) {
-    rv = aKeyRange.lower().BindToStatement(aStatement, lowerKey);
+    rv = aKeyRange.lower().BindToStatement(aStatement, NS_LITERAL_CSTRING("lower_key"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
+  if (aKeyRange.isOnly()) {
+    return rv;
+  }
+
   if (!aKeyRange.upper().IsUnset()) {
-    rv = aKeyRange.upper().BindToStatement(aStatement,
-                                           NS_LITERAL_CSTRING("upper_key"));
+    rv = aKeyRange.upper().BindToStatement(aStatement, NS_LITERAL_CSTRING("upper_key"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
   return NS_OK;
+}
+
+// static
+nsresult
+DatabaseOperationBase::BindKeyRangeToStatement(
+                                            const SerializedKeyRange& aKeyRange,
+                                            mozIStorageStatement* aStatement,
+                                            const nsCString& aLocale)
+{
+#ifndef ENABLE_INTL_API
+  return BindKeyRangeToStatement(aKeyRange, aStatement);
+#else
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aStatement);
+  MOZ_ASSERT(!aLocale.IsEmpty());
+
+  nsresult rv = NS_OK;
+
+  if (!aKeyRange.lower().IsUnset()) {
+    Key lower;
+    rv = aKeyRange.lower().ToLocaleBasedKey(lower, aLocale);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = lower.BindToStatement(aStatement, NS_LITERAL_CSTRING("lower_key"));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  if (aKeyRange.isOnly()) {
+    return rv;
+  }
+
+  if (!aKeyRange.upper().IsUnset()) {
+    Key upper;
+    rv = aKeyRange.upper().ToLocaleBasedKey(upper, aLocale);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = upper.BindToStatement(aStatement, NS_LITERAL_CSTRING("upper_key"));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+#endif
 }
 
 // static
@@ -17482,13 +17697,15 @@ DatabaseOperationBase::IndexDataValuesFromUpdateInfos(
     const IndexUpdateInfo& updateInfo = aUpdateInfos[idxIndex];
     const int64_t& indexId = updateInfo.indexId();
     const Key& key = updateInfo.value();
+    const Key& sortKey = updateInfo.localizedValue();
 
     bool unique;
     MOZ_ALWAYS_TRUE(aUniqueIndexTable.Get(indexId, &unique));
 
+    IndexDataValue idv(indexId, unique, key, sortKey);
+
     MOZ_ALWAYS_TRUE(
-      aIndexValues.InsertElementSorted(IndexDataValue(indexId, unique, key),
-                                       fallible));
+      aIndexValues.InsertElementSorted(idv, fallible));
   }
 
   return NS_OK;
@@ -17519,6 +17736,7 @@ DatabaseOperationBase::InsertIndexTableRows(
   NS_NAMED_LITERAL_CSTRING(objectDataKeyString, "object_data_key");
   NS_NAMED_LITERAL_CSTRING(indexIdString, "index_id");
   NS_NAMED_LITERAL_CSTRING(valueString, "value");
+  NS_NAMED_LITERAL_CSTRING(valueLocaleString, "value_locale");
 
   DatabaseConnection::CachedStatement insertUniqueStmt;
   DatabaseConnection::CachedStatement insertStmt;
@@ -17536,8 +17754,8 @@ DatabaseOperationBase::InsertIndexTableRows(
     } else if (info.mUnique) {
       rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
         "INSERT INTO unique_index_data "
-          "(index_id, value, object_store_id, object_data_key) "
-          "VALUES (:index_id, :value, :object_store_id, :object_data_key);"),
+          "(index_id, value, object_store_id, object_data_key, value_locale) "
+          "VALUES (:index_id, :value, :object_store_id, :object_data_key, :value_locale);"),
         &stmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -17545,8 +17763,8 @@ DatabaseOperationBase::InsertIndexTableRows(
     } else {
       rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
         "INSERT OR IGNORE INTO index_data "
-          "(index_id, value, object_data_key, object_store_id) "
-          "VALUES (:index_id, :value, :object_data_key, :object_store_id);"),
+          "(index_id, value, object_data_key, object_store_id, value_locale) "
+          "VALUES (:index_id, :value, :object_data_key, :object_store_id, :value_locale);"),
         &stmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -17559,6 +17777,11 @@ DatabaseOperationBase::InsertIndexTableRows(
     }
 
     rv = info.mKey.BindToStatement(stmt, valueString);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = info.mSortKey.BindToStatement(stmt, valueLocaleString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -19142,7 +19365,9 @@ OpenDatabaseOp::LoadDatabaseInformation(mozIStorageConnection* aConnection)
 
   // Load index information
   rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id, object_store_id, name, key_path, unique_index, multientry "
+    "SELECT "
+      "id, object_store_id, name, key_path, unique_index, multientry, "
+      "locale, is_auto_locale "
     "FROM object_store_index"
   ), getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -19248,6 +19473,38 @@ OpenDatabaseOp::LoadDatabaseInformation(mozIStorageConnection* aConnection)
 
     indexMetadata->mCommonMetadata.multiEntry() = !!scratch;
 
+#ifdef ENABLE_INTL_API
+    const bool localeAware = !stmt->IsNull(6);
+    if (localeAware) {
+      rv = stmt->GetUTF8String(6, indexMetadata->mCommonMetadata.locale());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = stmt->GetInt32(7, &scratch);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      indexMetadata->mCommonMetadata.autoLocale() = !!scratch;
+
+      // Update locale-aware indexes if necessary
+      const nsCString& indexedLocale = indexMetadata->mCommonMetadata.locale();
+      const bool& isAutoLocale = indexMetadata->mCommonMetadata.autoLocale();
+      nsCString systemLocale = IndexedDatabaseManager::GetLocale();
+      if (!systemLocale.IsEmpty() &&
+          isAutoLocale &&
+          !indexedLocale.EqualsASCII(systemLocale.get())) {
+        rv = UpdateLocaleAwareIndex(aConnection,
+                                    indexMetadata->mCommonMetadata,
+                                    systemLocale);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+      }
+    }
+#endif
+
     if (NS_WARN_IF(!objectStoreMetadata->mIndexes.Put(indexId, indexMetadata,
                                                       fallible))) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -19271,6 +19528,126 @@ OpenDatabaseOp::LoadDatabaseInformation(mozIStorageConnection* aConnection)
 
   return NS_OK;
 }
+
+#ifdef ENABLE_INTL_API
+/* static */
+nsresult
+OpenDatabaseOp::UpdateLocaleAwareIndex(mozIStorageConnection* aConnection,
+                                       const IndexMetadata& aIndexMetadata,
+                                       const nsCString& aLocale)
+{
+  nsresult rv;
+
+  nsCString indexTable;
+  if (aIndexMetadata.unique()) {
+    indexTable.AssignLiteral("unique_index_data");
+  }
+  else {
+    indexTable.AssignLiteral("index_data");
+  }
+
+  nsCString readQuery = NS_LITERAL_CSTRING("SELECT value, object_data_key FROM ") +
+                        indexTable +
+                        NS_LITERAL_CSTRING(" WHERE index_id = :index_id");
+  nsCOMPtr<mozIStorageStatement> readStmt;
+  rv = aConnection->CreateStatement(readQuery, getter_AddRefs(readStmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = readStmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"),
+                             aIndexMetadata.id());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<mozIStorageStatement> writeStmt;
+  bool needCreateWriteQuery = true;
+  bool hasResult;
+  while (NS_SUCCEEDED((rv = readStmt->ExecuteStep(&hasResult))) && hasResult) {
+    if (needCreateWriteQuery) {
+      needCreateWriteQuery = false;
+      nsCString writeQuery = NS_LITERAL_CSTRING("UPDATE ") + indexTable +
+                             NS_LITERAL_CSTRING("SET value_locale = :value_locale "
+                                                "WHERE index_id = :index_id AND "
+                                                "value = :value AND "
+                                                "object_data_key = :object_data_key");
+      rv = aConnection->CreateStatement(writeQuery, getter_AddRefs(writeStmt));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    mozStorageStatementScoper scoper(writeStmt);
+    rv = writeStmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"),
+                                    aIndexMetadata.id());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    Key oldKey, newSortKey, objectKey;
+    rv = oldKey.SetFromStatement(readStmt, 0);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = oldKey.BindToStatement(writeStmt, NS_LITERAL_CSTRING("value"));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = oldKey.ToLocaleBasedKey(newSortKey, aLocale);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = newSortKey.BindToStatement(writeStmt,
+                                    NS_LITERAL_CSTRING("value_locale"));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = objectKey.SetFromStatement(readStmt, 1);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = objectKey.BindToStatement(writeStmt,
+                                   NS_LITERAL_CSTRING("object_data_key"));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = writeStmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  nsCString metaQuery = NS_LITERAL_CSTRING("UPDATE object_store_index SET "
+                                           "locale = :locale WHERE id = :id");
+  nsCOMPtr<mozIStorageStatement> metaStmt;
+  rv = aConnection->CreateStatement(metaQuery, getter_AddRefs(metaStmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsString locale;
+  locale.AssignWithConversion(aLocale);
+  rv = metaStmt->BindStringByName(NS_LITERAL_CSTRING("locale"), locale);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = metaStmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), aIndexMetadata.id());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = metaStmt->Execute();
+  return rv;
+}
+#endif
 
 nsresult
 OpenDatabaseOp::BeginVersionChange()
@@ -21701,8 +22078,10 @@ CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
   DatabaseConnection::CachedStatement stmt;
   rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
     "INSERT INTO object_store_index (id, name, key_path, unique_index, "
-                                    "multientry, object_store_id) "
-    "VALUES (:id, :name, :key_path, :unique, :multientry, :osid)"),
+                                    "multientry, object_store_id, locale, "
+                                    "is_auto_locale) "
+    "VALUES (:id, :name, :key_path, :unique, :multientry, :osid, :locale, "
+            ":is_auto_locale)"),
     &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -21739,6 +22118,22 @@ CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
   }
 
   rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStoreId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (mMetadata.locale().IsEmpty()) {
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("locale"));
+  } else {
+    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("locale"),
+                                    mMetadata.locale());
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("is_auto_locale"),
+                             mMetadata.autoLocale());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -21914,6 +22309,7 @@ UpdateIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
                                              metadata.keyPath(),
                                              metadata.unique(),
                                              metadata.multiEntry(),
+                                             metadata.locale(),
                                              mCx,
                                              clone,
                                              updateInfos);
@@ -21997,7 +22393,8 @@ UpdateIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
     MOZ_ALWAYS_TRUE(
       indexValues.InsertElementSorted(IndexDataValue(metadata.id(),
                                                      metadata.unique(),
-                                                     info.value()),
+                                                     info.value(),
+                                                     info.localizedValue()),
                                       fallible));
   }
 
@@ -22034,7 +22431,8 @@ UpdateIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
       MOZ_ALWAYS_TRUE(
         indexValues.InsertElementSorted(IndexDataValue(metadata.id(),
                                                        metadata.unique(),
-                                                       info.value()),
+                                                       info.value(),
+                                                       info.localizedValue()),
                                         fallible));
     }
   }
@@ -24349,15 +24747,20 @@ CursorOpBase::PopulateResponseFromStatement(
     }
 
     case OpenCursorParams::TIndexOpenCursorParams: {
-      rv = mCursor->mObjectKey.SetFromStatement(aStmt, 1);
+      rv = mCursor->mSortKey.SetFromStatement(aStmt, 1);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = mCursor->mObjectKey.SetFromStatement(aStmt, 2);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
       StructuredCloneReadInfo cloneInfo;
       rv = GetStructuredCloneReadInfoFromStatement(aStmt,
+                                                   4,
                                                    3,
-                                                   2,
                                                    mCursor->mFileManager,
                                                    &cloneInfo);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -24370,6 +24773,7 @@ CursorOpBase::PopulateResponseFromStatement(
       auto& response = mResponse.get_IndexCursorResponse();
       response.cloneInfo().data().SwapElements(cloneInfo.mData);
       response.key() = mCursor->mKey;
+      response.sortKey() = mCursor->mSortKey;
       response.objectKey() = mCursor->mObjectKey;
 
       mFiles.AppendElement(Move(cloneInfo.mFiles));
@@ -24377,13 +24781,20 @@ CursorOpBase::PopulateResponseFromStatement(
     }
 
     case OpenCursorParams::TIndexOpenKeyCursorParams: {
-      rv = mCursor->mObjectKey.SetFromStatement(aStmt, 1);
+      rv = mCursor->mSortKey.SetFromStatement(aStmt, 1);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = mCursor->mObjectKey.SetFromStatement(aStmt, 2);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
       MOZ_ASSERT(aInitializeResponse);
-      mResponse = IndexKeyCursorResponse(mCursor->mKey, mCursor->mObjectKey);
+      mResponse = IndexKeyCursorResponse(mCursor->mKey,
+                                         mCursor->mSortKey,
+                                         mCursor->mObjectKey);
       break;
     }
 
@@ -24409,9 +24820,23 @@ OpenOp::GetRangeKeyInfo(bool aLowerBound, Key* aKey, bool* aOpen)
     if (range.isOnly()) {
       *aKey = range.lower();
       *aOpen = false;
+#ifdef ENABLE_INTL_API
+      if (mCursor->IsLocaleAware()) {
+        range.lower().ToLocaleBasedKey(*aKey, mCursor->mLocale);
+      }
+#endif
     } else {
       *aKey = aLowerBound ? range.lower() : range.upper();
       *aOpen = aLowerBound ? range.lowerOpen() : range.upperOpen();
+#ifdef ENABLE_INTL_API
+      if (mCursor->IsLocaleAware()) {
+        if (aLowerBound) {
+          range.lower().ToLocaleBasedKey(*aKey, mCursor->mLocale);
+        } else {
+          range.upper().ToLocaleBasedKey(*aKey, mCursor->mLocale);
+        }
+      }
+#endif
     }
   } else {
     *aOpen = false;
@@ -24758,20 +25183,45 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
     NS_LITERAL_CSTRING("unique_index_data") :
     NS_LITERAL_CSTRING("index_data");
 
-  NS_NAMED_LITERAL_CSTRING(value, "index_table.value");
+  NS_NAMED_LITERAL_CSTRING(sortColumn, "sort_column");
   NS_NAMED_LITERAL_CSTRING(id, "id");
   NS_NAMED_LITERAL_CSTRING(openLimit, " LIMIT ");
+
+  nsAutoCString sortColumnAlias;
+  if (mCursor->IsLocaleAware()) {
+    sortColumnAlias = "SELECT index_table.value, "
+                             "index_table.value_locale as sort_column, ";
+  } else {
+    sortColumnAlias = "SELECT index_table.value as sort_column, "
+                             "index_table.value_locale, ";
+  }
+
+  nsAutoCString queryStart =
+    sortColumnAlias +
+    NS_LITERAL_CSTRING(       "index_table.object_data_key, "
+                              "object_data.file_ids, "
+                              "object_data.data "
+                       "FROM ") +
+    indexTable +
+    NS_LITERAL_CSTRING(" AS index_table "
+                       "JOIN object_data "
+                       "ON index_table.object_store_id = "
+                         "object_data.object_store_id "
+                       "AND index_table.object_data_key = "
+                         "object_data.key "
+                       "WHERE index_table.index_id = :") +
+    id;
 
   nsAutoCString keyRangeClause;
   if (usingKeyRange) {
     GetBindingClauseForKeyRange(mOptionalKeyRange.get_SerializedKeyRange(),
-                                value,
+                                sortColumn,
                                 keyRangeClause);
   }
 
   nsAutoCString directionClause =
     NS_LITERAL_CSTRING(" ORDER BY ") +
-    value;
+    sortColumn;
 
   switch (mCursor->mDirection) {
     case IDBCursor::NEXT:
@@ -24790,22 +25240,6 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
     default:
       MOZ_CRASH("Should never get here!");
   }
-
-  nsAutoCString queryStart =
-    NS_LITERAL_CSTRING("SELECT index_table.value, "
-                              "index_table.object_data_key, "
-                              "object_data.file_ids, "
-                              "object_data.data "
-                       "FROM ") +
-    indexTable +
-    NS_LITERAL_CSTRING(" AS index_table "
-                       "JOIN object_data "
-                       "ON index_table.object_store_id = "
-                         "object_data.object_store_id "
-                       "AND index_table.object_data_key = "
-                         "object_data.key "
-                       "WHERE index_table.index_id = :") +
-    id;
 
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
@@ -24828,8 +25262,14 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
   }
 
   if (usingKeyRange) {
-    rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
-                                 stmt);
+    if (mCursor->IsLocaleAware()) {
+      rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
+                                   stmt,
+                                   mCursor->mLocale);
+    } else {
+      rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
+                                   stmt);
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -24860,20 +25300,20 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
       bool open;
       GetRangeKeyInfo(false, &upper, &open);
       if (usingKeyRange && !upper.IsUnset()) {
-        AppendConditionClause(value, rangeKey, true, !open, queryStart);
+        AppendConditionClause(sortColumn, rangeKey, true, !open, queryStart);
         mCursor->mRangeKey = upper;
       }
       mCursor->mContinueQuery =
         queryStart +
-        NS_LITERAL_CSTRING(" AND index_table.value >= :current_key "
-                            "AND ( index_table.value > :current_key OR "
+        NS_LITERAL_CSTRING(" AND sort_column >= :current_key "
+                            "AND ( sort_column > :current_key OR "
                                   "index_table.object_data_key > :object_key ) "
                           ) +
         directionClause +
         openLimit;
       mCursor->mContinueToQuery =
         queryStart +
-        NS_LITERAL_CSTRING(" AND index_table.value >= :current_key") +
+        NS_LITERAL_CSTRING(" AND sort_column >= :current_key") +
         directionClause +
         openLimit;
       break;
@@ -24884,17 +25324,17 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
       bool open;
       GetRangeKeyInfo(false, &upper, &open);
       if (usingKeyRange && !upper.IsUnset()) {
-        AppendConditionClause(value, rangeKey, true, !open, queryStart);
+        AppendConditionClause(sortColumn, rangeKey, true, !open, queryStart);
         mCursor->mRangeKey = upper;
       }
       mCursor->mContinueQuery =
         queryStart +
-        NS_LITERAL_CSTRING(" AND index_table.value > :current_key") +
+        NS_LITERAL_CSTRING(" AND sort_column > :current_key") +
         directionClause +
         openLimit;
       mCursor->mContinueToQuery =
         queryStart +
-        NS_LITERAL_CSTRING(" AND index_table.value >= :current_key") +
+        NS_LITERAL_CSTRING(" AND sort_column >= :current_key") +
         directionClause +
         openLimit;
       break;
@@ -24905,20 +25345,20 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
       bool open;
       GetRangeKeyInfo(true, &lower, &open);
       if (usingKeyRange && !lower.IsUnset()) {
-        AppendConditionClause(value, rangeKey, false, !open, queryStart);
+        AppendConditionClause(sortColumn, rangeKey, false, !open, queryStart);
         mCursor->mRangeKey = lower;
       }
       mCursor->mContinueQuery =
         queryStart +
-        NS_LITERAL_CSTRING(" AND index_table.value <= :current_key "
-                            "AND ( index_table.value < :current_key OR "
+        NS_LITERAL_CSTRING(" AND sort_column <= :current_key "
+                            "AND ( sort_column < :current_key OR "
                                   "index_table.object_data_key < :object_key ) "
                           ) +
         directionClause +
         openLimit;
       mCursor->mContinueToQuery =
         queryStart +
-        NS_LITERAL_CSTRING(" AND index_table.value <= :current_key") +
+        NS_LITERAL_CSTRING(" AND sort_column <= :current_key") +
         directionClause +
         openLimit;
       break;
@@ -24929,17 +25369,17 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
       bool open;
       GetRangeKeyInfo(true, &lower, &open);
       if (usingKeyRange && !lower.IsUnset()) {
-        AppendConditionClause(value, rangeKey, false, !open, queryStart);
+        AppendConditionClause(sortColumn, rangeKey, false, !open, queryStart);
         mCursor->mRangeKey = lower;
       }
       mCursor->mContinueQuery =
         queryStart +
-        NS_LITERAL_CSTRING(" AND index_table.value < :current_key") +
+        NS_LITERAL_CSTRING(" AND sort_column < :current_key") +
         directionClause +
         openLimit;
       mCursor->mContinueToQuery =
         queryStart +
-        NS_LITERAL_CSTRING(" AND index_table.value <= :current_key") +
+        NS_LITERAL_CSTRING(" AND sort_column <= :current_key") +
         directionClause +
         openLimit;
       break;
@@ -24974,20 +25414,37 @@ OpenOp::DoIndexKeyDatabaseWork(DatabaseConnection* aConnection)
     NS_LITERAL_CSTRING("unique_index_data") :
     NS_LITERAL_CSTRING("index_data");
 
-  NS_NAMED_LITERAL_CSTRING(value, "value");
+  NS_NAMED_LITERAL_CSTRING(sortColumn, "sort_column");
   NS_NAMED_LITERAL_CSTRING(id, "id");
   NS_NAMED_LITERAL_CSTRING(openLimit, " LIMIT ");
+
+  nsAutoCString sortColumnAlias;
+  if (mCursor->IsLocaleAware()) {
+    sortColumnAlias = "SELECT value, "
+                             "value_locale as sort_column, ";
+  } else {
+    sortColumnAlias = "SELECT value as sort_column, "
+                             "value_locale, ";
+  }
+
+  nsAutoCString queryStart =
+    sortColumnAlias +
+    NS_LITERAL_CSTRING(      "object_data_key "
+                       " FROM ") +
+    table +
+    NS_LITERAL_CSTRING(" WHERE index_id = :") +
+    id;
 
   nsAutoCString keyRangeClause;
   if (usingKeyRange) {
     GetBindingClauseForKeyRange(mOptionalKeyRange.get_SerializedKeyRange(),
-                                value,
+                                sortColumn,
                                 keyRangeClause);
   }
 
   nsAutoCString directionClause =
     NS_LITERAL_CSTRING(" ORDER BY ") +
-    value;
+    sortColumn;
 
   switch (mCursor->mDirection) {
     case IDBCursor::NEXT:
@@ -25006,13 +25463,6 @@ OpenOp::DoIndexKeyDatabaseWork(DatabaseConnection* aConnection)
     default:
       MOZ_CRASH("Should never get here!");
   }
-
-  nsAutoCString queryStart =
-    NS_LITERAL_CSTRING("SELECT value, object_data_key "
-                       "FROM ") +
-    table +
-    NS_LITERAL_CSTRING(" WHERE index_id = :") +
-    id;
 
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
@@ -25035,8 +25485,14 @@ OpenOp::DoIndexKeyDatabaseWork(DatabaseConnection* aConnection)
   }
 
   if (usingKeyRange) {
-    rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
-                                 stmt);
+    if (mCursor->IsLocaleAware()) {
+      rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
+                                   stmt,
+                                   mCursor->mLocale);
+    } else {
+      rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
+                                   stmt);
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -25067,19 +25523,19 @@ OpenOp::DoIndexKeyDatabaseWork(DatabaseConnection* aConnection)
       bool open;
       GetRangeKeyInfo(false, &upper, &open);
       if (usingKeyRange && !upper.IsUnset()) {
-        AppendConditionClause(value, rangeKey, true, !open, queryStart);
+        AppendConditionClause(sortColumn, rangeKey, true, !open, queryStart);
         mCursor->mRangeKey = upper;
       }
       mCursor->mContinueQuery =
         queryStart +
-        NS_LITERAL_CSTRING(" AND value >= :current_key "
-                            "AND ( value > :current_key OR "
+        NS_LITERAL_CSTRING(" AND sort_column >= :current_key "
+                            "AND ( sort_column > :current_key OR "
                                   "object_data_key > :object_key )") +
         directionClause +
         openLimit;
       mCursor->mContinueToQuery =
         queryStart +
-        NS_LITERAL_CSTRING(" AND value >= :current_key ") +
+        NS_LITERAL_CSTRING(" AND sort_column >= :current_key ") +
         directionClause +
         openLimit;
       break;
@@ -25090,17 +25546,17 @@ OpenOp::DoIndexKeyDatabaseWork(DatabaseConnection* aConnection)
       bool open;
       GetRangeKeyInfo(false, &upper, &open);
       if (usingKeyRange && !upper.IsUnset()) {
-        AppendConditionClause(value, rangeKey, true, !open, queryStart);
+        AppendConditionClause(sortColumn, rangeKey, true, !open, queryStart);
         mCursor->mRangeKey = upper;
       }
       mCursor->mContinueQuery =
         queryStart +
-        NS_LITERAL_CSTRING(" AND value > :current_key") +
+        NS_LITERAL_CSTRING(" AND sort_column > :current_key") +
         directionClause +
         openLimit;
       mCursor->mContinueToQuery =
         queryStart +
-        NS_LITERAL_CSTRING(" AND value >= :current_key") +
+        NS_LITERAL_CSTRING(" AND sort_column >= :current_key") +
         directionClause +
         openLimit;
       break;
@@ -25111,20 +25567,20 @@ OpenOp::DoIndexKeyDatabaseWork(DatabaseConnection* aConnection)
       bool open;
       GetRangeKeyInfo(true, &lower, &open);
       if (usingKeyRange && !lower.IsUnset()) {
-        AppendConditionClause(value, rangeKey, false, !open, queryStart);
+        AppendConditionClause(sortColumn, rangeKey, false, !open, queryStart);
         mCursor->mRangeKey = lower;
       }
 
       mCursor->mContinueQuery =
         queryStart +
-        NS_LITERAL_CSTRING(" AND value <= :current_key "
-                            "AND ( value < :current_key OR "
+        NS_LITERAL_CSTRING(" AND sort_column <= :current_key "
+                            "AND ( sort_column < :current_key OR "
                                   "object_data_key < :object_key )") +
         directionClause +
         openLimit;
       mCursor->mContinueToQuery =
         queryStart +
-        NS_LITERAL_CSTRING(" AND value <= :current_key ") +
+        NS_LITERAL_CSTRING(" AND sort_column <= :current_key ") +
         directionClause +
         openLimit;
       break;
@@ -25135,17 +25591,17 @@ OpenOp::DoIndexKeyDatabaseWork(DatabaseConnection* aConnection)
       bool open;
       GetRangeKeyInfo(true, &lower, &open);
       if (usingKeyRange && !lower.IsUnset()) {
-        AppendConditionClause(value, rangeKey, false, !open, queryStart);
+        AppendConditionClause(sortColumn, rangeKey, false, !open, queryStart);
         mCursor->mRangeKey = lower;
       }
       mCursor->mContinueQuery =
         queryStart +
-        NS_LITERAL_CSTRING(" AND value < :current_key") +
+        NS_LITERAL_CSTRING(" AND sort_column < :current_key") +
         directionClause +
         openLimit;
       mCursor->mContinueToQuery =
         queryStart +
-        NS_LITERAL_CSTRING(" AND value <= :current_key") +
+        NS_LITERAL_CSTRING(" AND sort_column <= :current_key") +
         directionClause +
         openLimit;
       break;
@@ -25214,6 +25670,8 @@ OpenOp::SendSuccessResult()
   MOZ_ASSERT(mResponse.type() != CursorResponse::T__None);
   MOZ_ASSERT_IF(mResponse.type() == CursorResponse::Tvoid_t,
                 mCursor->mKey.IsUnset());
+  MOZ_ASSERT_IF(mResponse.type() == CursorResponse::Tvoid_t,
+                mCursor->mSortKey.IsUnset());
   MOZ_ASSERT_IF(mResponse.type() == CursorResponse::Tvoid_t,
                 mCursor->mRangeKey.IsUnset());
   MOZ_ASSERT_IF(mResponse.type() == CursorResponse::Tvoid_t,
@@ -25289,8 +25747,14 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
   NS_NAMED_LITERAL_CSTRING(rangeKeyName, "range_key");
   NS_NAMED_LITERAL_CSTRING(objectKeyName, "object_key");
 
-  const Key& currentKey =
-    hasContinueKey ? mParams.get_ContinueParams().key() : mCursor->mKey;
+  const bool localeAware = mCursor->IsLocaleAware();
+
+  Key& currentKey = mCursor->mKey;
+  if (hasContinueKey) {
+    currentKey = mParams.get_ContinueParams().key();
+  } else if (localeAware) {
+    currentKey = mCursor->mSortKey;
+  }
 
   const bool usingRangeKey = !mCursor->mRangeKey.IsUnset();
 
@@ -25342,6 +25806,7 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
 
     if (!hasResult) {
       mCursor->mKey.Unset();
+      mCursor->mSortKey.Unset();
       mCursor->mRangeKey.Unset();
       mCursor->mObjectKey.Unset();
       mResponse = void_t();

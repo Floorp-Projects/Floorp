@@ -8,6 +8,7 @@
 #include "Key.h"
 
 #include <algorithm>
+#include "IndexedDatabaseManager.h"
 #include "js/Date.h"
 #include "js/Value.h"
 #include "jsfriendapi.h"
@@ -19,6 +20,10 @@
 #include "nsJSUtils.h"
 #include "ReportInternalError.h"
 #include "xpcpublic.h"
+
+#ifdef ENABLE_INTL_API
+#include "unicode/ucol.h"
+#endif
 
 namespace mozilla {
 namespace dom {
@@ -98,6 +103,101 @@ namespace indexedDB {
  [1, 2]        // 0x60 bf f0 0 0 0 0 0 0 0x10 c0
  [[]]          // 0x80
 */
+#ifdef ENABLE_INTL_API
+nsresult
+Key::ToLocaleBasedKey(Key& aTarget, const nsCString& aLocale) const
+{
+  if (IsUnset()) {
+    aTarget.Unset();
+    return NS_OK;
+  }
+
+  if (IsFloat() || IsDate()) {
+    aTarget.mBuffer = mBuffer;
+    return NS_OK;
+  }
+
+  aTarget.mBuffer.Truncate();
+  aTarget.mBuffer.SetCapacity(mBuffer.Length());
+
+  auto* it = reinterpret_cast<const unsigned char*>(mBuffer.BeginReading());
+  auto* end = reinterpret_cast<const unsigned char*>(mBuffer.EndReading());
+
+  // First we do a pass and see if there are any strings in this key. We only
+  // want to copy/decode when necessary.
+  bool canShareBuffers = true;
+  while (it < end) {
+    auto type = *it % eMaxType;
+    if (type == eTerminator || type == eArray) {
+      it++;
+    } else if (type == eFloat || type == eDate) {
+      it++;
+      it += std::min(sizeof(uint64_t), size_t(end - it));
+    } else {
+      // We have a string!
+      canShareBuffers = false;
+      break;
+    }
+  }
+
+  if (canShareBuffers) {
+    MOZ_ASSERT(it == end);
+    aTarget.mBuffer = mBuffer;
+    return NS_OK;
+  }
+
+  // A string was found, so we need to copy the data we've read so far
+  auto* start = reinterpret_cast<const unsigned char*>(mBuffer.BeginReading());
+  if (it > start) {
+    char* buffer;
+    if (!aTarget.mBuffer.GetMutableData(&buffer, it-start)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    while (start < it) {
+      *(buffer++) = *(start++);
+    }
+  }
+
+  // Now continue decoding
+  while (it < end) {
+    char* buffer;
+    uint32_t oldLen = aTarget.mBuffer.Length();
+    auto type = *it % eMaxType;
+
+    if (type == eTerminator || type == eArray) {
+      // Copy array TypeID and terminator from raw key
+      if (!aTarget.mBuffer.GetMutableData(&buffer, oldLen + 1)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      *(buffer + oldLen) = *(it++);
+    } else if (type == eFloat || type == eDate) {
+      // Copy number from raw key
+      if (!aTarget.mBuffer.GetMutableData(&buffer,
+                                          oldLen + 1 + sizeof(uint64_t))) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      buffer += oldLen;
+      *(buffer++) = *(it++);
+
+      const size_t byteCount = std::min(sizeof(uint64_t), size_t(end - it));
+      for (size_t count = 0; count < byteCount; count++) {
+        *(buffer++) = (*it++);
+      }
+    } else {
+      // Decode string and reencode
+      uint8_t typeOffset = *it - eString;
+      MOZ_ASSERT((typeOffset % eArray == 0) && (typeOffset / eArray <= 2));
+
+      nsDependentString str;
+      DecodeString(it, end, str);
+      aTarget.EncodeLocaleString(str, typeOffset, aLocale);
+    }
+  }
+  aTarget.TrimBuffer();
+  return NS_OK;
+}
+#endif
 
 nsresult
 Key::EncodeJSValInternal(JSContext* aCx, JS::Handle<JS::Value> aVal,
@@ -278,17 +378,26 @@ Key::EncodeJSVal(JSContext* aCx,
 void
 Key::EncodeString(const nsAString& aString, uint8_t aTypeOffset)
 {
+  const char16_t* start = aString.BeginReading();
+  const char16_t* end = aString.EndReading();
+  EncodeString(start, end, aTypeOffset);
+}
+
+template <typename T>
+void
+Key::EncodeString(const T* aStart, const T* aEnd, uint8_t aTypeOffset)
+{
   // First measure how long the encoded string will be.
 
   // The +2 is for initial 3 and trailing 0. We'll compensate for multi-byte
   // chars below.
-  uint32_t size = aString.Length() + 2;
+  uint32_t size = (aEnd - aStart) + 2;
   
-  const char16_t* start = aString.BeginReading();
-  const char16_t* end = aString.EndReading();
-  for (const char16_t* iter = start; iter < end; ++iter) {
+  const T* start = aStart;
+  const T* end = aEnd;
+  for (const T* iter = start; iter < end; ++iter) {
     if (*iter > ONE_BYTE_LIMIT) {
-      size += *iter > TWO_BYTE_LIMIT ? 2 : 1;
+      size += char16_t(*iter) > TWO_BYTE_LIMIT ? 2 : 1;
     }
   }
 
@@ -304,11 +413,11 @@ Key::EncodeString(const nsAString& aString, uint8_t aTypeOffset)
   *(buffer++) = eString + aTypeOffset;
 
   // Encode string
-  for (const char16_t* iter = start; iter < end; ++iter) {
+  for (const T* iter = start; iter < end; ++iter) {
     if (*iter <= ONE_BYTE_LIMIT) {
       *(buffer++) = *iter + ONE_BYTE_ADJUST;
     }
-    else if (*iter <= TWO_BYTE_LIMIT) {
+    else if (char16_t(*iter) <= TWO_BYTE_LIMIT) {
       char16_t c = char16_t(*iter) + TWO_BYTE_ADJUST + 0x8000;
       *(buffer++) = (char)(c >> 8);
       *(buffer++) = (char)(c & 0xFF);
@@ -326,6 +435,47 @@ Key::EncodeString(const nsAString& aString, uint8_t aTypeOffset)
   
   NS_ASSERTION(buffer == mBuffer.EndReading(), "Wrote wrong number of bytes");
 }
+
+#ifdef ENABLE_INTL_API
+nsresult
+Key::EncodeLocaleString(const nsDependentString& aString, uint8_t aTypeOffset,
+                        const nsCString& aLocale)
+{
+  const int length = aString.Length();
+  if (length == 0) {
+    return NS_OK;
+  }
+  const UChar* ustr = reinterpret_cast<const UChar*>(aString.BeginReading());
+
+  UErrorCode uerror = U_ZERO_ERROR;
+  UCollator* collator = ucol_open(aLocale.get(), &uerror);
+  if (NS_WARN_IF(U_FAILURE(uerror))) {
+    return NS_ERROR_FAILURE;
+  }
+  MOZ_ASSERT(collator);
+
+  nsAutoTArray<uint8_t, 128> keyBuffer;
+  int32_t sortKeyLength = ucol_getSortKey(collator, ustr, length,
+                                          keyBuffer.Elements(),
+                                          keyBuffer.Length());
+  if (sortKeyLength > (int32_t)keyBuffer.Length()) {
+    keyBuffer.SetLength(sortKeyLength);
+    sortKeyLength = ucol_getSortKey(collator, ustr, length,
+                                    keyBuffer.Elements(),
+                                    sortKeyLength);
+  }
+
+  ucol_close(collator);
+  if (NS_WARN_IF(sortKeyLength == 0)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  EncodeString(keyBuffer.Elements(),
+               keyBuffer.Elements()+sortKeyLength,
+               aTypeOffset);
+  return NS_OK;
+}
+#endif
 
 // static
 nsresult
@@ -456,8 +606,13 @@ nsresult
 Key::BindToStatement(mozIStorageStatement* aStatement,
                      const nsACString& aParamName) const
 {
-  nsresult rv = aStatement->BindBlobByName(aParamName,
-    reinterpret_cast<const uint8_t*>(mBuffer.get()), mBuffer.Length());
+  nsresult rv;
+  if (IsUnset()) {
+    rv = aStatement->BindNullByName(aParamName);
+  } else {
+    rv = aStatement->BindBlobByName(aParamName,
+      reinterpret_cast<const uint8_t*>(mBuffer.get()), mBuffer.Length());
+  }
 
   return NS_SUCCEEDED(rv) ? NS_OK : NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
 }
