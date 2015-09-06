@@ -35,10 +35,6 @@ inline nsIUGenCategory::nsUGenCategory GetGenCategory(uint32_t aCh) {
   return sDetailedToGeneralCategory[GetGeneralCategory(aCh)];
 }
 
-inline uint8_t GetEastAsianWidth(uint32_t aCh) {
-  return GetCharProps2(aCh).mEAW;
-}
-
 inline uint8_t GetScriptCode(uint32_t aCh) {
   return GetCharProps2(aCh).mScriptCode;
 }
