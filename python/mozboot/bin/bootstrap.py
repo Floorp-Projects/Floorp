@@ -44,7 +44,6 @@ REPOSITORY_PATHS = [
     'mozboot/gentoo.py',
     'mozboot/openbsd.py',
     'mozboot/osx.py',
-    'mozboot/ubuntu.py',
 ]
 
 TEMPDIR = None

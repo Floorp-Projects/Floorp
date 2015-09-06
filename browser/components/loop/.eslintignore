@@ -24,7 +24,6 @@ content/js/feedbackViews.js
 content/shared/js/textChatView.js
 content/shared/js/linkifiedTextView.js
 content/shared/js/views.js
-standalone/content/js/fxOSMarketplace.js
 standalone/content/js/standaloneRoomViews.js
 standalone/content/js/webapp.js
 ui/ui-showcase.js

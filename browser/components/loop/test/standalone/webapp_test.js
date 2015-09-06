@@ -939,7 +939,6 @@ describe("loop.webapp", function() {
           sdk: {}
         });
 
-        conversation.onMarketplaceMessage = function() {};
         sandbox.stub(notifications, "errorL10n");
         requestCallUrlInfo = sandbox.stub();
 
@@ -950,8 +949,6 @@ describe("loop.webapp", function() {
                 notifications: notifications,
                 client: {requestCallUrlInfo: requestCallUrlInfo}
               }));
-
-        loop.config.marketplaceUrl = "http://market/";
       });
 
       it("should call requestCallUrlInfo", function() {
@@ -988,20 +985,6 @@ describe("loop.webapp", function() {
           sinon.assert.calledWithExactly(notifications.errorL10n,
                                          "tech_error", { param: "value" });
       });
-
-      it("should set marketplace hidden iframe src when fxos:app-needed is " +
-         "triggered", function(done) {
-        var marketplace = view.getDOMNode().querySelector("#marketplace");
-        expect(marketplace.src).to.be.equal("");
-
-        conversation.trigger("fxos:app-needed");
-
-        view.forceUpdate(function() {
-          expect(marketplace.src).to.be.equal(loop.config.marketplaceUrl);
-          done();
-        });
-      });
-
     });
 
     describe("#render", function() {
@@ -1108,233 +1091,6 @@ describe("loop.webapp", function() {
 
         sinon.assert.calledWith(mozL10nGet, "promote_firefox_hello_heading");
         sinon.assert.calledWith(mozL10nGet, "get_firefox_button");
-      });
-    });
-  });
-
-  describe("Firefox OS", function() {
-    var conversation, client;
-
-    before(function() {
-      client = new loop.StandaloneClient({
-        baseServerUrl: "http://fake.example.com"
-      });
-      sandbox.stub(client, "requestCallInfo");
-      conversation = new sharedModels.ConversationModel({}, {
-        sdk: {},
-        pendingCallTimeout: 1000
-      });
-    });
-
-    describe("Setup call", function() {
-      var fakeConversation, setupOutgoingCall, view, requestCallUrlInfo;
-
-      beforeEach(function() {
-        fakeConversation = new loop.webapp.FxOSConversationModel({
-          loopToken: "fakeToken"
-        });
-        setupOutgoingCall = sandbox.stub(fakeConversation, "setupOutgoingCall");
-
-        var standaloneClientStub = {
-          requestCallUrlInfo: function(token, cb) {
-            cb(null, {urlCreationDate: 0});
-          },
-          settings: {baseServerUrl: loop.webapp.baseServerUrl}
-        };
-
-        view = React.addons.TestUtils.renderIntoDocument(
-          React.createElement(
-            loop.webapp.StartConversationView, {
-              conversation: fakeConversation,
-              notifications: notifications,
-              client: standaloneClientStub
-            }));
-
-        // default to succeeding with a null local media object
-        stubGetPermsAndCacheMedia.callsArgWith(1, {});
-      });
-
-      it("should start the conversation establishment process", function() {
-        var button = view.getDOMNode().querySelector("button");
-        React.addons.TestUtils.Simulate.click(button);
-
-        sinon.assert.calledOnce(setupOutgoingCall);
-      });
-    });
-
-    describe("FxOSConversationModel", function() {
-      var model, realMozActivity;
-
-      before(function() {
-        model = new loop.webapp.FxOSConversationModel({
-          loopToken: "fakeToken",
-          callerId: "callerId"
-        });
-
-        realMozActivity = window.MozActivity;
-
-        loop.config.fxosApp = {
-          name: "Firefox Hello"
-        };
-      });
-
-      after(function() {
-        window.MozActivity = realMozActivity;
-      });
-
-      describe("setupOutgoingCall", function() {
-        var _activityProps, _onerror, trigger;
-
-        function fireError(errorName) {
-          _onerror({
-            target: {
-              error: {
-                name: errorName
-              }
-            }
-          });
-        }
-
-        before(function() {
-          window.MozActivity = function(activityProps) {
-            _activityProps = activityProps;
-            return {
-              set onerror(callback) {
-                _onerror = callback;
-              }
-            };
-          };
-        });
-
-        after(function() {
-          window.MozActivity = realMozActivity;
-        });
-
-        beforeEach(function() {
-          trigger = sandbox.stub(model, "trigger");
-          _activityProps = undefined;
-        });
-
-        afterEach(function() {
-          trigger.restore();
-        });
-
-        it("Activity properties with video call", function() {
-          expect(_activityProps).to.not.exist;
-          model.setupOutgoingCall("audio-video");
-          expect(_activityProps).to.exist;
-          expect(_activityProps).eql({
-            name: "loop-call",
-            data: {
-              type: "loop/token",
-              token: "fakeToken",
-              callerId: "callerId",
-              video: true
-            }
-          });
-        });
-
-        it("Activity properties with audio call", function() {
-          expect(_activityProps).to.not.exist;
-          model.setupOutgoingCall("audio");
-          expect(_activityProps).to.exist;
-          expect(_activityProps).eql({
-            name: "loop-call",
-            data: {
-              type: "loop/token",
-              token: "fakeToken",
-              callerId: "callerId",
-              video: false
-            }
-          });
-        });
-
-        it("Activity properties by default", function() {
-          expect(_activityProps).to.not.exist;
-          model.setupOutgoingCall();
-          expect(_activityProps).to.exist;
-          expect(_activityProps).eql({
-            name: "loop-call",
-            data: {
-              type: "loop/token",
-              token: "fakeToken",
-              callerId: "callerId",
-              video: false
-            }
-          });
-        });
-
-        it("NO_PROVIDER activity error should trigger fxos:app-needed",
-          function() {
-            sinon.assert.notCalled(trigger);
-            model.setupOutgoingCall();
-            fireError("NO_PROVIDER");
-            sinon.assert.calledOnce(trigger);
-            sinon.assert.calledWithExactly(trigger, "fxos:app-needed");
-          }
-        );
-
-        it("Other activity error should trigger session:error",
-          function() {
-            sinon.assert.notCalled(trigger);
-            model.setupOutgoingCall();
-            fireError("whatever");
-            sinon.assert.calledOnce(trigger);
-            sinon.assert.calledWithExactly(trigger, "session:error",
-              "fxos_app_needed", { fxosAppName: loop.config.fxosApp.name });
-          }
-        );
-      });
-
-      describe("onMarketplaceMessage", function() {
-        var view, setupOutgoingCall, trigger;
-
-        before(function() {
-          view = React.addons.TestUtils.renderIntoDocument(
-            React.createElement(
-              loop.webapp.StartConversationView, {
-                conversation: model,
-                notifications: notifications,
-                client: {requestCallUrlInfo: sandbox.stub()}
-              }));
-        });
-
-        beforeEach(function() {
-          setupOutgoingCall = sandbox.stub(model, "setupOutgoingCall");
-          trigger = sandbox.stub(model, "trigger");
-        });
-
-        afterEach(function() {
-          setupOutgoingCall.restore();
-          trigger.restore();
-        });
-
-        it("We should call trigger a FxOS outgoing call if we get " +
-           "install-package message without error", function() {
-          sinon.assert.notCalled(setupOutgoingCall);
-          model.onMarketplaceMessage({
-            data: {
-              name: "install-package"
-            }
-          });
-          sinon.assert.calledOnce(setupOutgoingCall);
-        });
-
-        it("We should trigger a session:error event if we get " +
-           "install-package message with an error", function() {
-          sinon.assert.notCalled(trigger);
-          sinon.assert.notCalled(setupOutgoingCall);
-          model.onMarketplaceMessage({
-            data: {
-              name: "install-package",
-              error: "error"
-            }
-          });
-          sinon.assert.notCalled(setupOutgoingCall);
-          sinon.assert.calledOnce(trigger);
-          sinon.assert.calledWithExactly(trigger, "session:error",
-            "fxos_app_needed", { fxosAppName: loop.config.fxosApp.name });
-        });
       });
     });
   });

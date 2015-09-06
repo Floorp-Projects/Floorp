@@ -82,10 +82,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
     },
 
     propTypes: {
-      activeRoomStore: React.PropTypes.oneOfType([
-        React.PropTypes.instanceOf(loop.store.ActiveRoomStore),
-        React.PropTypes.instanceOf(loop.store.FxOSActiveRoomStore)
-      ]).isRequired,
+      activeRoomStore: React.PropTypes.instanceOf(loop.store.ActiveRoomStore).isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       failureReason: React.PropTypes.string,
       isFirefox: React.PropTypes.bool.isRequired,
@@ -355,10 +352,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
     propTypes: {
       // We pass conversationStore here rather than use the mixin, to allow
       // easy configurability for the ui-showcase.
-      activeRoomStore: React.PropTypes.oneOfType([
-        React.PropTypes.instanceOf(loop.store.ActiveRoomStore),
-        React.PropTypes.instanceOf(loop.store.FxOSActiveRoomStore)
-      ]).isRequired,
+      activeRoomStore: React.PropTypes.instanceOf(loop.store.ActiveRoomStore).isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       isFirefox: React.PropTypes.bool.isRequired,
       // The poster URLs are for UI-showcase testing and development
@@ -590,9 +584,6 @@ loop.standaloneRoomViews = (function(mozL10n) {
               video={{enabled: !this.state.videoMuted,
                       visible: this._roomIsActive()}} />
           </sharedViews.MediaLayoutView>
-          <loop.fxOSMarketplaceViews.FxOSHiddenMarketplaceView
-            marketplaceSrc={this.state.marketplaceSrc}
-            onMarketplaceMessage={this.state.onMarketplaceMessage} />
           <StandaloneRoomFooter dispatcher={this.props.dispatcher} />
         </div>
       );

@@ -222,22 +222,13 @@ this.UITour = {
     }],
     ["searchProvider", {
       query: (aDocument) => {
-        let searchbar = aDocument.getElementById("searchbar");
-        if (searchbar.hasAttribute("oneoffui")) {
-          return null;
-        }
-        return aDocument.getAnonymousElementByAttribute(searchbar,
-                                                        "anonid",
-                                                        "searchbar-engine-button");
+        return null;
       },
       widgetName: "search-container",
     }],
     ["searchIcon", {
       query: (aDocument) => {
         let searchbar = aDocument.getElementById("searchbar");
-        if (!searchbar.hasAttribute("oneoffui")) {
-          return null;
-        }
         return aDocument.getAnonymousElementByAttribute(searchbar,
                                                         "anonid",
                                                         "searchbar-search-button");
@@ -248,18 +239,12 @@ this.UITour = {
       query: (aDocument) => {
         let element = null;
         let searchbar = aDocument.getElementById("searchbar");
-        if (searchbar.hasAttribute("oneoffui")) {
-          let popup = aDocument.getElementById("PopupSearchAutoComplete");
-          if (popup.state != "open")
-            return null;
-          element = aDocument.getAnonymousElementByAttribute(popup,
-                                                             "anonid",
-                                                             "search-settings");
-        } else {
-          element = aDocument.getAnonymousElementByAttribute(searchbar,
-                                                             "anonid",
-                                                             "open-engine-manager");
-        }
+        let popup = aDocument.getElementById("PopupSearchAutoComplete");
+        if (popup.state != "open")
+          return null;
+        element = aDocument.getAnonymousElementByAttribute(popup,
+                                                           "anonid",
+                                                           "search-settings");
         if (!element || !UITour.isElementVisible(element)) {
           return null;
         }

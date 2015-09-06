@@ -36,17 +36,10 @@ function getConfigFile(req, res) {
     "loop.config.serverUrl = '" + loopServerUrl + "/v0';",
     "loop.config.feedbackApiUrl = '" + feedbackApiUrl + "';",
     "loop.config.feedbackProductName = '" + feedbackProductName + "';",
-    // XXX Update with the real marketplace url once the FxOS Loop app is
-    //     uploaded to the marketplace bug 1053424
-    "loop.config.marketplaceUrl = 'http://fake-market.herokuapp.com/iframe-install.html'",
     "loop.config.downloadFirefoxUrl = 'https://www.mozilla.org/firefox/new/?scene=2&utm_source=hello.firefox.com&utm_medium=referral&utm_campaign=non-webrtc-browser#download-fx';",
     "loop.config.privacyWebsiteUrl = 'https://www.mozilla.org/privacy/firefox-hello/';",
     "loop.config.learnMoreUrl = 'https://www.mozilla.org/hello/';",
     "loop.config.legalWebsiteUrl = 'https://www.mozilla.org/about/legal/terms/firefox-hello/';",
-    "loop.config.fxosApp = loop.config.fxosApp || {};",
-    "loop.config.fxosApp.name = 'Loop';",
-    "loop.config.fxosApp.rooms = true;",
-    "loop.config.fxosApp.manifestUrl = 'http://fake-market.herokuapp.com/apps/packagedApp/manifest.webapp';",
     "loop.config.roomsSupportUrl = 'https://support.mozilla.org/kb/group-conversations-firefox-hello-webrtc';",
     "loop.config.tilesIframeUrl = 'https://tiles.cdn.mozilla.net/iframe.html';",
     "loop.config.tilesSupportUrl = 'https://support.mozilla.org/tiles-firefox-hello';",

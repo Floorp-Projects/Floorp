@@ -16,13 +16,6 @@ document.addEventListener("Initialized", () => {
   if (!AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
     document.getElementById("redirectSearchCheckbox").hidden = true;
   }
-
-  if (Services.prefs.getBoolPref("browser.search.showOneOffButtons"))
-    return;
-
-  document.getElementById("category-search").hidden = true;
-  if (document.location.hash == "#search")
-    document.location.hash = "";
 });
 
 var gEngineView = null;
