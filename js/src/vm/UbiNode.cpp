@@ -280,7 +280,7 @@ class SimpleEdgeRange : public EdgeRange {
 
     bool init(JSContext* cx, void* thing, JS::TraceKind kind, bool wantNames = true) {
         SimpleEdgeVectorTracer tracer(cx, &edges, wantNames);
-        JS_TraceChildren(&tracer, thing, kind);
+        js::TraceChildren(&tracer, thing, kind);
         settle();
         return tracer.okay;
     }

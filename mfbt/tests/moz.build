@@ -22,6 +22,7 @@ CppUnitTests([
     'TestJSONWriter',
     'TestMacroArgs',
     'TestMacroForEach',
+    'TestMathAlgorithms',
     'TestMaybe',
     'TestPair',
     'TestRefPtr',

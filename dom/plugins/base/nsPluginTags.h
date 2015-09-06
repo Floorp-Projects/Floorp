@@ -165,6 +165,7 @@ public:
   nsRefPtr<nsNPAPIPlugin> mPlugin;
   bool          mIsJavaPlugin;
   bool          mIsFlashPlugin;
+  bool          mSupportsAsyncInit;
   nsCString     mFullPath; // UTF-8
   int64_t       mLastModifiedTime;
   nsCOMPtr<nsITimer> mUnloadTimer;

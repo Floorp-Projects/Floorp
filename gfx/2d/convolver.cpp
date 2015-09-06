@@ -175,11 +175,11 @@ class CircularRowBuffer {
 // |src_data| and continues for the [begin, end) of the filter.
 template<bool has_alpha>
 void ConvolveHorizontally(const unsigned char* src_data,
-                          int begin, int end,
                           const ConvolutionFilter1D& filter,
                           unsigned char* out_row) {
+  int num_values = filter.num_values();
   // Loop over each pixel on this row in the output image.
-  for (int out_x = begin; out_x < end; out_x++) {
+  for (int out_x = 0; out_x < num_values; out_x++) {
     // Get the filter that determines the current output pixel.
     int filter_offset, filter_length;
     const ConvolutionFilter1D::Fixed* filter_values =
@@ -220,17 +220,18 @@ void ConvolveHorizontally(const unsigned char* src_data,
 // Does vertical convolution to produce one output row. The filter values and
 // length are given in the first two parameters. These are applied to each
 // of the rows pointed to in the |source_data_rows| array, with each row
-// being |end - begin| wide.
+// being |pixel_width| wide.
 //
-// The output must have room for |(end - begin) * 4| bytes.
+// The output must have room for |pixel_width * 4| bytes.
 template<bool has_alpha>
 void ConvolveVertically(const ConvolutionFilter1D::Fixed* filter_values,
                         int filter_length,
                         unsigned char* const* source_data_rows,
-                        int begin, int end, unsigned char* out_row) {
+                        int pixel_width,
+                        unsigned char* out_row) {
   // We go through each column in the output and do a vertical convolution,
   // generating one output pixel each time.
-  for (int out_x = begin; out_x < end; out_x++) {
+  for (int out_x = 0; out_x < pixel_width; out_x++) {
     // Compute the number of bytes over in each row that the current column
     // we're convolving starts at. The pixel will cover the next 4 bytes.
     int byte_offset = out_x * 4;
@@ -288,28 +289,29 @@ void ConvolveVertically(const ConvolutionFilter1D::Fixed* filter_values,
 void ConvolveVertically(const ConvolutionFilter1D::Fixed* filter_values,
                         int filter_length,
                         unsigned char* const* source_data_rows,
-                        int width, unsigned char* out_row,
+                        int pixel_width, unsigned char* out_row,
                         bool has_alpha, bool use_simd) {
-  int processed = 0;
 
 #if defined(USE_SSE2) || defined(_MIPS_ARCH_LOONGSON3A)
   // If the binary was not built with SSE2 support, we had to fallback to C version.
-  int simd_width = width & ~3;
-  if (use_simd && simd_width) {
+  if (use_simd) {
     ConvolveVertically_SIMD(filter_values, filter_length,
-                            source_data_rows, 0, simd_width,
+                            source_data_rows,
+                            pixel_width,
                             out_row, has_alpha);
-    processed = simd_width;
-  }
+  } else
 #endif
-    
-  if (width > processed) {
+  {
     if (has_alpha) {
-      ConvolveVertically<true>(filter_values, filter_length, source_data_rows,
-                               processed, width, out_row);
+      ConvolveVertically<true>(filter_values, filter_length,
+                               source_data_rows,
+                               pixel_width,
+                               out_row);
     } else {
-      ConvolveVertically<false>(filter_values, filter_length, source_data_rows,
-                                processed, width, out_row);
+      ConvolveVertically<false>(filter_values, filter_length,
+                                source_data_rows,
+                                pixel_width,
+                                out_row);
     }
   }
 }
@@ -326,16 +328,16 @@ void ConvolveHorizontally(const unsigned char* src_data,
     // SIMD implementation works with 4 pixels at a time.
     // Therefore we process as much as we can using SSE and then use
     // C implementation for leftovers
-    ConvolveHorizontally_SSE2(src_data, 0, simd_width, filter, out_row);
+    ConvolveHorizontally_SSE2(src_data, filter, out_row);
     processed = simd_width;
   }
 #endif
 
   if (width > processed) {
     if (has_alpha) {
-      ConvolveHorizontally<true>(src_data, processed, width, filter, out_row);
+      ConvolveHorizontally<true>(src_data, filter, out_row);
     } else {
-      ConvolveHorizontally<false>(src_data, processed, width, filter, out_row);
+      ConvolveHorizontally<false>(src_data, filter, out_row);
     }
   }
 }
@@ -457,9 +459,23 @@ void BGRAConvolve2D(const unsigned char* source_data,
   int num_output_rows = filter_y.num_values();
   int pixel_width = filter_x.num_values();
 
+
   // We need to check which is the last line to convolve before we advance 4
   // lines in one iteration.
   int last_filter_offset, last_filter_length;
+  // SSE2 can access up to 3 extra pixels past the end of the
+  // buffer. At the bottom of the image, we have to be careful
+  // not to access data past the end of the buffer. Normally
+  // we fall back to the C++ implementation for the last row.
+  // If the last row is less than 3 pixels wide, we may have to fall
+  // back to the C++ version for more rows. Compute how many
+  // rows we need to avoid the SSE implementation for here.
+  filter_x.FilterForValue(filter_x.num_values() - 1, &last_filter_offset,
+                          &last_filter_length);
+#if defined(USE_SSE2) || defined(_MIPS_ARCH_LOONGSON3A)
+  int avoid_simd_rows = 1 + 3 /
+      (last_filter_offset + last_filter_length);
+#endif
   filter_y.FilterForValue(num_output_rows - 1, &last_filter_offset,
                           &last_filter_length);
 
@@ -473,36 +489,32 @@ void BGRAConvolve2D(const unsigned char* source_data,
       // We don't want to process too much rows in batches of 4 because
       // we can go out-of-bounds at the end
       while (next_x_row < filter_offset + filter_length) {
-        if (next_x_row + 3 < last_filter_offset + last_filter_length - 3) {
+        if (next_x_row + 3 < last_filter_offset + last_filter_length -
+            avoid_simd_rows) {
           const unsigned char* src[4];
           unsigned char* out_row[4];
           for (int i = 0; i < 4; ++i) {
             src[i] = &source_data[(next_x_row + i) * source_byte_row_stride];
             out_row[i] = row_buffer.AdvanceRow();
           }
-          ConvolveHorizontally4_SIMD(src, 0, pixel_width, filter_x, out_row);
+          ConvolveHorizontally4_SIMD(src, filter_x, out_row);
           next_x_row += 4;
         } else {
-          unsigned char* buffer = row_buffer.AdvanceRow();
-
-          // For last rows, SSE2 load possibly to access data beyond the
-          // image area. therefore we use cobined C+SSE version here
-          int simd_width = pixel_width & ~3;
-          if (simd_width) {
+          // Check if we need to avoid SSE2 for this row.
+          if (next_x_row < last_filter_offset + last_filter_length -
+              avoid_simd_rows) {
             ConvolveHorizontally_SIMD(
                 &source_data[next_x_row * source_byte_row_stride],
-                0, simd_width, filter_x, buffer);
-          }
-
-          if (pixel_width > simd_width) {
+                filter_x, row_buffer.AdvanceRow());
+          } else {
             if (source_has_alpha) {
               ConvolveHorizontally<true>(
                   &source_data[next_x_row * source_byte_row_stride],
-                  simd_width, pixel_width, filter_x, buffer);
+                  filter_x, row_buffer.AdvanceRow());
             } else {
               ConvolveHorizontally<false>(
                   &source_data[next_x_row * source_byte_row_stride],
-                  simd_width, pixel_width, filter_x, buffer);
+                  filter_x, row_buffer.AdvanceRow());
             }
           }
           next_x_row++;
@@ -513,12 +525,12 @@ void BGRAConvolve2D(const unsigned char* source_data,
       while (next_x_row < filter_offset + filter_length) {
         if (source_has_alpha) {
           ConvolveHorizontally<true>(
-              &source_data[next_x_row * source_byte_row_stride],
-              0, pixel_width, filter_x, row_buffer.AdvanceRow());
+                                     &source_data[next_x_row * source_byte_row_stride],
+                                     filter_x, row_buffer.AdvanceRow());
         } else {
           ConvolveHorizontally<false>(
-              &source_data[next_x_row * source_byte_row_stride],
-              0, pixel_width, filter_x, row_buffer.AdvanceRow());
+                                      &source_data[next_x_row * source_byte_row_stride],
+                                      filter_x, row_buffer.AdvanceRow());
         }
         next_x_row++;
       }
