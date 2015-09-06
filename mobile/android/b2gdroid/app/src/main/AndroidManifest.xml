@@ -60,7 +60,10 @@
         <activity android:name="org.mozilla.b2gdroid.Launcher"
                   android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
                   android:icon="@drawable/b2g"
-                  android:label="@string/b2g">
+                  android:label="@string/b2g"
+                  android:launchMode="singleInstance"
+                  android:clearTaskOnLaunch="true"
+                  android:stateNotNeeded="true">
 
             <!-- Set up as a homescreen replacement -->
             <intent-filter>

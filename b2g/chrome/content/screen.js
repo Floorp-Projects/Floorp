@@ -9,8 +9,12 @@ let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
 let isMulet = "ResponsiveUI" in browserWindow;
 Cu.import("resource://gre/modules/GlobalSimulatorScreen.jsm");
 
-// We do this on ContentStart because querying the displayDPI fails otherwise.
-window.addEventListener('ContentStart', function() {
+window.addEventListener('ContentStart', onStart);
+window.addEventListener('SafeModeStart', onStart);
+
+// We do this on ContentStart and SafeModeStart because querying the
+// displayDPI fails otherwise.
+function onStart() {
   // This is the toplevel <window> element
   let shell = document.getElementById('shell');
 
@@ -262,4 +266,4 @@ window.addEventListener('ContentStart', function() {
     // Exit the b2g client
     Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit);
   }
-});
+}
