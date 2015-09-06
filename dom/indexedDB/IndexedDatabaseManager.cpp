@@ -52,6 +52,11 @@
 #include "mozilla/dom/IDBTransactionBinding.h"
 #include "mozilla/dom/IDBVersionChangeEventBinding.h"
 
+#ifdef ENABLE_INTL_API
+#include "nsCharSeparatedTokenizer.h"
+#include "unicode/locid.h"
+#endif
+
 #define IDB_STR "indexedDB"
 
 // The two possible values for the data argument when receiving the disk space
@@ -394,6 +399,27 @@ IndexedDatabaseManager::Init()
   Preferences::RegisterCallbackAndCall(LoggingModePrefChangedCallback,
                                        kPrefLoggingEnabled);
 
+#ifdef ENABLE_INTL_API
+  const nsAdoptingCString& acceptLang =
+    Preferences::GetLocalizedCString("intl.accept_languages");
+
+  // Split values on commas.
+  nsCCharSeparatedTokenizer langTokenizer(acceptLang, ',');
+  while (langTokenizer.hasMoreTokens()) {
+    nsAutoCString lang(langTokenizer.nextToken());
+    icu::Locale locale = icu::Locale::createCanonical(lang.get());
+    if (!locale.isBogus()) {
+      // icu::Locale::getBaseName is always ASCII as per BCP 47
+      mLocale.AssignASCII(locale.getBaseName());
+      break;
+    }
+  }
+
+  if (mLocale.IsEmpty()) {
+    mLocale.AssignLiteral("en-US");
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -597,6 +623,7 @@ IndexedDatabaseManager::DefineIndexedDB(JSContext* aCx,
       !IDBFactoryBinding::GetConstructorObject(aCx, aGlobal) ||
       !IDBIndexBinding::GetConstructorObject(aCx, aGlobal) ||
       !IDBKeyRangeBinding::GetConstructorObject(aCx, aGlobal) ||
+      !IDBLocaleAwareKeyRangeBinding::GetConstructorObject(aCx, aGlobal) ||
       !IDBMutableFileBinding::GetConstructorObject(aCx, aGlobal) ||
       !IDBObjectStoreBinding::GetConstructorObject(aCx, aGlobal) ||
       !IDBOpenDBRequestBinding::GetConstructorObject(aCx, aGlobal) ||
@@ -952,6 +979,18 @@ IndexedDatabaseManager::LoggingModePrefChangedCallback(
     sLoggingMode = logDetails ? Logging_Detailed : Logging_Concise;
   }
 }
+
+#ifdef ENABLE_INTL_API
+// static
+const nsCString&
+IndexedDatabaseManager::GetLocale()
+{
+  IndexedDatabaseManager* idbManager = Get();
+  MOZ_ASSERT(idbManager, "IDBManager is not ready!");
+
+  return idbManager->mLocale;
+}
+#endif
 
 NS_IMPL_ADDREF(IndexedDatabaseManager)
 NS_IMPL_RELEASE_WITH_DESTROY(IndexedDatabaseManager, Destroy())

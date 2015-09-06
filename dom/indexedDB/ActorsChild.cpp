@@ -2688,11 +2688,13 @@ BackgroundCursorChild::HandleResponse(const IndexCursorResponse& aResponse)
 
   if (mCursor) {
     mCursor->Reset(Move(response.key()),
+                   Move(response.sortKey()),
                    Move(response.objectKey()),
                    Move(cloneReadInfo));
   } else {
     newCursor = IDBCursor::Create(this,
                                   Move(response.key()),
+                                  Move(response.sortKey()),
                                   Move(response.objectKey()),
                                   Move(cloneReadInfo));
     mCursor = newCursor;
@@ -2718,10 +2720,13 @@ BackgroundCursorChild::HandleResponse(const IndexKeyCursorResponse& aResponse)
   nsRefPtr<IDBCursor> newCursor;
 
   if (mCursor) {
-    mCursor->Reset(Move(response.key()), Move(response.objectKey()));
+    mCursor->Reset(Move(response.key()),
+                   Move(response.sortKey()),
+                   Move(response.objectKey()));
   } else {
     newCursor = IDBCursor::Create(this,
                                   Move(response.key()),
+                                  Move(response.sortKey()),
                                   Move(response.objectKey()));
     mCursor = newCursor;
   }

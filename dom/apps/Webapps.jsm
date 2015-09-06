@@ -4539,6 +4539,25 @@ this.DOMApplicationRegistry = {
     }
   },
 
+  // Returns a promise that resolves once all the add-ons are disabled.
+  disableAllAddons: function() {
+    for (let id in this.webapps) {
+      let app = this.webapps[id];
+      if (app.role == "addon" && app.enabled) {
+        app.enabled = false;
+        MessageBroadcaster.broadcastMessage("Webapps:UpdateState", {
+          app: app,
+          id: app.id
+        });
+        MessageBroadcaster.broadcastMessage("Webapps:SetEnabled:Return", app);
+
+        UserCustomizations.unregister(app);
+      }
+    }
+
+    return this._saveApps();
+  },
+
   getManifestFor: function(aManifestURL, aEntryPoint) {
     let id = this._appIdForManifestURL(aManifestURL);
     let app = this.webapps[id];

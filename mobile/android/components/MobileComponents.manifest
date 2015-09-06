@@ -119,6 +119,10 @@ category update-timer Snippets @mozilla.org/snippets;1,getService,snippets-updat
 component {430b987f-bb9f-46a3-99a5-241749220b29} ColorPicker.js
 contract @mozilla.org/colorpicker;1 {430b987f-bb9f-46a3-99a5-241749220b29}
 
-# ActivitiesGlue.js
-component {e4deb5f6-d5e3-4fce-bc53-901dd9951c48} ActivitiesGlue.js
+# AndroidActivitiesGlue.js
+component {e4deb5f6-d5e3-4fce-bc53-901dd9951c48} AndroidActivitiesGlue.js
+#ifdef MOZ_B2GDROID
+contract @mozilla.org/dom/activities/android-ui-glue;1 {e4deb5f6-d5e3-4fce-bc53-901dd9951c48}
+#else
 contract @mozilla.org/dom/activities/ui-glue;1 {e4deb5f6-d5e3-4fce-bc53-901dd9951c48}
+#endif

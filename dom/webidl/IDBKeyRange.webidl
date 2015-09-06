@@ -28,3 +28,10 @@ interface IDBKeyRange {
   [NewObject, Throws]
   static IDBKeyRange bound (any lower, any upper, optional boolean lowerOpen = false, optional boolean upperOpen = false);
 };
+
+[Exposed=(Window,Worker),
+ Func="mozilla::dom::indexedDB::IndexedDatabaseManager::ExperimentalFeaturesEnabled"]
+interface IDBLocaleAwareKeyRange : IDBKeyRange {
+  [NewObject, Throws]
+  static IDBLocaleAwareKeyRange bound (any lower, any upper, optional boolean lowerOpen = false, optional boolean upperOpen = false);
+};
