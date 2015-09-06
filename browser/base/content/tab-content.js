@@ -159,10 +159,6 @@ let AboutHomeListener = {
     addEventListener("click", this, true);
     addEventListener("pagehide", this, true);
 
-    if (!Services.prefs.getBoolPref("browser.search.showOneOffButtons")) {
-      doc.documentElement.setAttribute("searchUIConfiguration", "oldsearchui");
-    }
-
     sendAsyncMessage("AboutHome:RequestUpdate");
   },
 
@@ -332,7 +328,7 @@ let AboutReaderListener = {
 
   /**
    * NB: this function will update the state of the reader button asynchronously
-   * after the next mozAfterPaint call (assuming reader mode is enabled and 
+   * after the next mozAfterPaint call (assuming reader mode is enabled and
    * this is a suitable document). Calling it on things which won't be
    * painted is not going to work.
    */

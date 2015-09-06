@@ -110,6 +110,8 @@ browser.jar:
     content/browser/devtools/performance/views/details-memory-flamegraph.js (performance/views/details-memory-flamegraph.js)
     content/browser/devtools/performance/views/optimizations-list.js        (performance/views/optimizations-list.js)
     content/browser/devtools/performance/views/recordings.js           (performance/views/recordings.js)
+    content/browser/devtools/memory.xhtml                              (memory/memory.xhtml)
+    content/browser/devtools/memory/controller.js                      (memory/controller.js)
     content/browser/devtools/promisedebugger/promise-controller.js     (promisedebugger/promise-controller.js)
     content/browser/devtools/promisedebugger/promise-panel.js          (promisedebugger/promise-panel.js)
     content/browser/devtools/promisedebugger/promise-debugger.xhtml    (promisedebugger/promise-debugger.xhtml)

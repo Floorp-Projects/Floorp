@@ -37,7 +37,6 @@ browser.jar:
   skin/classic/browser/click-to-play-warning-stripes.png
   skin/classic/browser/content-contextmenu.svg
   skin/classic/browser/drm-icon.svg                         (../shared/drm-icon.svg)
-* skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/fullscreen/insecure.svg              (../shared/fullscreen/insecure.svg)
   skin/classic/browser/fullscreen/secure.svg                (../shared/fullscreen/secure.svg)
   skin/classic/browser/Geolocation-16.png
@@ -100,11 +99,7 @@ browser.jar:
   skin/classic/browser/privatebrowsing-mask-short@2x.png
   skin/classic/browser/reload-stop-go.png
   skin/classic/browser/reload-stop-go@2x.png
-  skin/classic/browser/searchbar-dropmarker.png
-  skin/classic/browser/searchbar-dropmarker@2x.png
   skin/classic/browser/searchbar.css
-  skin/classic/browser/Search.png
-  skin/classic/browser/Search@2x.png
   skin/classic/browser/search-pref.png                         (../shared/search/search-pref.png)
   skin/classic/browser/search-indicator.png                    (../shared/search/search-indicator.png)
   skin/classic/browser/search-indicator@2x.png                 (../shared/search/search-indicator@2x.png)
@@ -380,7 +375,6 @@ browser.jar:
   skin/classic/browser/translating-16@2x.png                (../shared/translation/translating-16@2x.png)
   skin/classic/browser/translation-16.png                   (../shared/translation/translation-16.png)
   skin/classic/browser/translation-16@2x.png                (../shared/translation/translation-16@2x.png)
-  skin/classic/browser/devedition/search.svg                (../shared/devedition/search.svg)
   skin/classic/browser/devedition/urlbar-history-dropmarker.svg            (../shared/devedition/urlbar-history-dropmarker.svg)
   skin/classic/browser/devedition/urlbar-arrow.png          (../shared/devedition/urlbar-arrow.png)
   skin/classic/browser/devedition/urlbar-arrow@2x.png       (../shared/devedition/urlbar-arrow@2x.png)

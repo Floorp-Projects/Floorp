@@ -59,18 +59,12 @@
   --urlbar-dropmarker-2x-region: rect(0px, 11px, 14px, 0px);
   --urlbar-dropmarker-hover-2x-region: rect(0, 22px, 14px, 11px);
   --urlbar-dropmarker-active-2x-region: rect(0px, 33px, 14px, 22px);
-  --search-button-image: url("chrome://browser/skin/devedition/search.svg#search-icon-inverted");
 }
 
 :root[devtoolstheme="dark"] #identity-box {
   --identity-box-chrome-color: #46afe3;
   --identity-box-verified-background-color: transparent;
   --identity-box-selected-background-color: rgba(231,230,230,.2);
-}
-
-:root[devtoolstheme="dark"] .searchbar-dropmarker-image {
-  --searchbar-dropmarker-url: url("chrome://browser/skin/devtools/dropmarker.svg");
-  --searchbar-dropmarker-2x-url: url("chrome://browser/skin/devtools/dropmarker.svg");
 }
 
 :root[devtoolstheme="light"] {
@@ -105,9 +99,6 @@
   --toolbarbutton-active-boxshadow: none;
   --toolbarbutton-active-bordercolor: rgba(0,0,0,0.15);
   --toolbarbutton-checkedhover-backgroundcolor: #d7d7d8;
-
-  /* Url and search bars */
-  --search-button-image: url("chrome://browser/skin/devedition/search.svg#search-icon");
 }
 
 /* Give some space to drag the window around while customizing
@@ -267,12 +258,6 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
 /* Use smaller back button icon */
 #back-button {
   -moz-image-region: rect(0, 54px, 18px, 36px);
-}
-
-searchbar:not([oneoffui]) .search-go-button {
-   /* !important is needed because searchbar.css is loaded after this */
-  -moz-image-region: auto !important;
-  list-style-image: var(--search-button-image);
 }
 
 .tab-background {
