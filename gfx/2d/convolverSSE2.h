@@ -40,7 +40,6 @@ namespace skia {
 // Convolves horizontally along a single row. The row data is given in
 // |src_data| and continues for the [begin, end) of the filter.
 void ConvolveHorizontally_SSE2(const unsigned char* src_data,
-                               int begin, int end,
                                const ConvolutionFilter1D& filter,
                                unsigned char* out_row);
 
@@ -49,7 +48,6 @@ void ConvolveHorizontally_SSE2(const unsigned char* src_data,
 // The algorithm is almost same as |ConvolveHorizontally_SSE2|. Please
 // refer to that function for detailed comments.
 void ConvolveHorizontally4_SSE2(const unsigned char* src_data[4],
-                                int begin, int end,
                                 const ConvolutionFilter1D& filter,
                                 unsigned char* out_row[4]);
 
@@ -62,7 +60,7 @@ void ConvolveHorizontally4_SSE2(const unsigned char* src_data[4],
 void ConvolveVertically_SSE2(const ConvolutionFilter1D::Fixed* filter_values,
                              int filter_length,
                              unsigned char* const* source_data_rows,
-                             int begin, int end,
+                             int pixel_width,
                              unsigned char* out_row, bool has_alpha);
 
 }  // namespace skia

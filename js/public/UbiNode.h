@@ -824,7 +824,7 @@ class Edge {
 // Concrete instances of this class need not be as lightweight as Node itself,
 // since they're usually only instantiated while iterating over a particular
 // object's edges. For example, a dumb implementation for JS Cells might use
-// JS_TraceChildren to to get the outgoing edges, and then store them in an
+// JS::TraceChildren to to get the outgoing edges, and then store them in an
 // array internal to the EdgeRange.
 class EdgeRange {
   protected:
@@ -991,7 +991,7 @@ struct Concrete<RootList> : public Base {
 };
 
 // A reusable ubi::Concrete specialization base class for types supported by
-// JS_TraceChildren.
+// JS::TraceChildren.
 template<typename Referent>
 class TracerConcrete : public Base {
     const char16_t* typeName() const override { return concreteTypeName; }
@@ -1007,7 +1007,7 @@ class TracerConcrete : public Base {
     static void construct(void* storage, Referent* ptr) { new (storage) TracerConcrete(ptr); }
 };
 
-// For JS_TraceChildren-based types that have a 'compartment' method.
+// For JS::TraceChildren-based types that have a 'compartment' method.
 template<typename Referent>
 class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
     typedef TracerConcrete<Referent> TracerBase;
