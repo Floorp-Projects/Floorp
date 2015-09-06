@@ -32,6 +32,8 @@ DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
 FINAL_LIBRARY = 'xul'
 
 EXTRA_JS_MODULES.devtools.heapsnapshot += [
+    'census-tree-node.js',
     'HeapAnalysesClient.js',
     'HeapAnalysesWorker.js',
+    'HeapSnapshotFileUtils.js',
 ]

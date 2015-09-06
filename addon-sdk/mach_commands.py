@@ -12,7 +12,6 @@ import mozpack.path as mozpath
 
 from mozbuild.base import (
     MachCommandBase,
-    MozbuildObject,
 )
 
 from mach.decorators import (
@@ -21,25 +20,8 @@ from mach.decorators import (
     Command,
 )
 
-class JetpackRunner(MozbuildObject):
-    """Run jetpack tests."""
-    def run_tests(self, **kwargs):
-        self._run_make(target='jetpack-tests')
-
 @CommandProvider
 class MachCommands(MachCommandBase):
-    @Command('jetpack-test', category='testing',
-        description='Run the jetpack test suite (Add-on SDK).')
-    def run_jetpack_test(self, **params):
-        # We should probably have a utility function to ensure the tree is
-        # ready to run tests. Until then, we just create the state dir (in
-        # case the tree wasn't built with mach).
-        self._ensure_state_subdir_exists('.')
-
-        jetpack = self._spawn(JetpackRunner)
-
-        jetpack.run_tests(**params)
-
     @Command('generate-addon-sdk-moz-build', category='misc',
         description='Generates the moz.build file for the addon-sdk/ directory.')
     def run_addon_sdk_moz_build(self, **params):

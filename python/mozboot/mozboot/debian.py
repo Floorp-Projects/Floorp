@@ -8,6 +8,26 @@ import sys
 from mozboot.base import BaseBootstrapper
 
 
+MERCURIAL_INSTALL_PROMPT = '''
+Mercurial releases a new version every 3 months and your distro's package
+may become out of date. This may cause incompatibility with some
+Mercurial extensions that rely on new Mercurial features. As a result,
+you may not have an optimal version control experience.
+
+To have the best Mercurial experience possible, we recommend installing
+Mercurial via the "pip" Python packaging utility. This will likely result
+in files being placed in /usr/local/bin and /usr/local/lib.
+
+How would you like to continue?
+
+1) Install a modern Mercurial via pip (recommended)
+2) Install a legacy Mercurial via apt
+3) Do not install Mercurial
+
+Choice:
+'''.strip()
+
+
 class DebianBootstrapper(BaseBootstrapper):
     # These are common packages for all Debian-derived distros (such as
     # Ubuntu).
@@ -15,8 +35,8 @@ class DebianBootstrapper(BaseBootstrapper):
         'autoconf2.13',
         'build-essential',
         'ccache',
-        'mercurial',
         'python-dev',
+        'python-pip',
         'python-setuptools',
         'unzip',
         'uuid',
@@ -132,3 +152,27 @@ class DebianBootstrapper(BaseBootstrapper):
 
     def _update_package_manager(self):
         self.apt_update()
+
+    def upgrade_mercurial(self, current):
+        """Install Mercurial from pip because Debian packages typically lag."""
+        if self.no_interactive:
+            # Install via Apt in non-interactive mode because it is the more
+            # conservative option and less likely to make people upset.
+            self.apt_install('mercurial')
+            return
+
+        res = self.prompt_int(MERCURIAL_INSTALL_PROMPT, 1, 3)
+
+        # Apt.
+        if res == 2:
+            self.apt_install('mercurial')
+            return False
+
+        # No Mercurial.
+        if res == 3:
+            print('Not installing Mercurial.')
+            return False
+
+        # pip.
+        assert res == 1
+        self.run_as_root(['pip', 'install', '--upgrade', 'Mercurial'])
