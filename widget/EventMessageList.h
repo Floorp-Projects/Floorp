@@ -195,7 +195,7 @@ NS_EVENT_MESSAGE(eSVGEventFirst,        2800)
 NS_EVENT_MESSAGE(eSVGLoad,              eSVGEventFirst)
 NS_EVENT_MESSAGE(eSVGUnload,            eSVGEventFirst + 1)
 NS_EVENT_MESSAGE(eSVGResize,            eSVGEventFirst + 4)
-NS_EVENT_MESSAGE(NS_SVG_SCROLL,         eSVGEventFirst + 5)
+NS_EVENT_MESSAGE(eSVGScroll,            eSVGEventFirst + 5)
 
 // SVG Zoom events
 NS_EVENT_MESSAGE(NS_SVGZOOM_EVENT_START, 2900)
