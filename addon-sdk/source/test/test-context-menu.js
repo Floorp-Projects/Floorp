@@ -6,6 +6,7 @@
 require("sdk/context-menu");
 
 const { defer } = require("sdk/core/promise");
+const { isTravisCI } = require("sdk/test/utils");
 const packaging = require('@loader/options');
 
 // These should match the same constants in the module.
@@ -3752,7 +3753,7 @@ exports.testPredicateContextTargetValueNotSet = function (assert, done) {
   });
 };
 
-if (packaging.isNative) {
+if (isTravisCI) {
   module.exports = {
     "test skip on jpm": (assert) => assert.pass("skipping this file with jpm")
   };

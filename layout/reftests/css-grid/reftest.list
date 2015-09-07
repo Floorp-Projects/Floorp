@@ -18,7 +18,7 @@ fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
 skip-if(Android) == grid-placement-definite-implicit-001.html grid-placement-definite-implicit-001-ref.html
 == grid-placement-definite-implicit-002.html grid-placement-definite-implicit-002-ref.html
-skip-if(Android) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html
+skip-if(Android) fuzzy-if(winWidget,1,32) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html
 == grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001-ref.html
 pref(layout.css.vertical-text.enabled,true) == rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001-ref.html
 pref(layout.css.vertical-text.enabled,true) == rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001-ref.html
@@ -26,3 +26,18 @@ pref(layout.css.vertical-text.enabled,true) == vlr-grid-placement-auto-row-spars
 pref(layout.css.vertical-text.enabled,true) == vrl-grid-placement-auto-row-sparse-001.html vrl-grid-placement-auto-row-sparse-001-ref.html
 == grid-relpos-items-001.html grid-relpos-items-001-ref.html
 == grid-item-dir-001.html grid-item-dir-001-ref.html
+fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-max-content-001.html grid-col-max-sizing-max-content-001-ref.html
+fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-max-content-002.html grid-col-max-sizing-max-content-002-ref.html
+== grid-min-max-content-sizing-001.html grid-min-max-content-sizing-001-ref.html
+== grid-track-intrinsic-sizing-001.html grid-track-intrinsic-sizing-001-ref.html
+== grid-track-intrinsic-sizing-002.html grid-track-intrinsic-sizing-002-ref.html
+== grid-track-intrinsic-sizing-003.html grid-track-intrinsic-sizing-003-ref.html
+== grid-track-intrinsic-sizing-004.html grid-track-intrinsic-sizing-004-ref.html
+== grid-max-sizing-flex-001.html grid-max-sizing-flex-001-ref.html
+== grid-max-sizing-flex-002.html grid-max-sizing-flex-002-ref.html
+== grid-max-sizing-flex-003.html grid-max-sizing-flex-003-ref.html
+== grid-max-sizing-flex-004.html grid-max-sizing-flex-004-ref.html
+== grid-max-sizing-flex-005.html grid-max-sizing-flex-005-ref.html
+== grid-max-sizing-flex-006.html grid-max-sizing-flex-006-ref.html
+== grid-flex-min-sizing-001.html grid-flex-min-sizing-001-ref.html
+== grid-flex-min-sizing-002.html grid-flex-min-sizing-002-ref.html

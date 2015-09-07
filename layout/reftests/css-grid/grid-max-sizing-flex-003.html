@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Testing track flex max-sizing</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151212">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/#algo-flex-tracks">
+  <link rel="match" href="grid-max-sizing-flex-003-ref.html">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:8px; line-height:10px; padding:0; margin:0; }
+
+body { width: 800px; }
+.grid {
+  display: grid;
+  grid-auto-rows: minmax(0,1fr);
+  border: 3px dashed blue;
+}
+
+.c1 { grid-row: 1 / span 2; min-height:40px; }
+.r1 { grid-row: 2 / span 3; min-height:70px; }
+.c3 { grid-row: 3 / span 1; min-height:0; }
+
+span {
+  background: gray;
+  border-style: solid;
+  border-height: 1px 3px 5px 7px;
+  padding: 1px 3px;
+  margin: 1px 5px;
+  justify-self: flex-start;
+}
+
+x { display:inline-block; height:10px; width:18px; }
+  </style>
+</head>
+<body>
+
+<div class="grid">
+<span class="c1"><x></x></span>
+<span class="r1"><x></x></span>
+</div>
+
+<div class="grid">
+<span class="c1"><x></x></span>
+<span class="r1"><x></x></span>
+<span class="c3"><x></x></span>
+</div>
+
+<div class="grid">
+<span class="c1"><x></x></span>
+<span class="r1"><x></x></span>
+<span class="r1"><x></x></span>
+<span class="r1"><x></x></span>
+</div>
+
+<div class="grid" style="height:100px;">
+<span class="c1" style="min-height:20px"><x></x></span>
+<span class="r1" style="min-height:10px"><x></x></span>
+<span class="r1" style="min-height:30px"><x></x></span>
+<span class="r1" style="min-height:10px"><x></x></span>
+</div>
+
+<div class="grid">
+<span class="c1" style="height:30px; border-sizing:border-box"><x></x></span>
+<span class="r1" style="height:40px; border-sizing:border-box"><x></x></span>
+<span class="c3"><x></x></span>
+</div>
+
+</body>
+</html>

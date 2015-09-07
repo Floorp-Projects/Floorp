@@ -115,15 +115,6 @@ SameScript(int32_t runScript, int32_t currCharScript)
            currCharScript == runScript;
 }
 
-// Return whether the char has a mirrored-pair counterpart.
-// NOTE that this depends on the implementation of nsCharProps records in
-// nsUnicodeProperties, and may need to be updated if those structures change
-static inline bool
-HasMirroredChar(uint32_t aCh)
-{
-    return GetCharProps1(aCh).mMirrorOffsetIndex != 0;
-}
-
 gfxScriptItemizer::gfxScriptItemizer(const char16_t *src, uint32_t length)
     : textPtr(src), textLength(length)
 {

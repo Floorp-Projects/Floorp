@@ -679,12 +679,12 @@ Finish()
     int(n), n == 1 ? "" : "s",
     n * gSampleInterval_sec, time == 1.0 ? "" : "s");
 
-  if (n == 0) {
+  if (n == 0 || n == 1) {
     exit(0);
   }
 
   // Compute the mean.
-  double sum = std::accumulate(gTotals_W.begin(), gTotals_W.end(), 0);
+  double sum = std::accumulate(gTotals_W.begin(), gTotals_W.end(), 0.0);
   double mean = sum / n;
 
   // Compute the *population* standard deviation:
