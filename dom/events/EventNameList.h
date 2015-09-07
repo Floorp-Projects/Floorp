@@ -750,7 +750,7 @@ NON_IDL_EVENT(SVGUnload,
               EventNameType_None,
               eBasicEventClass)
 NON_IDL_EVENT(SVGResize,
-              NS_SVG_RESIZE,
+              eSVGResize,
               EventNameType_None,
               eBasicEventClass)
 NON_IDL_EVENT(SVGScroll,
