@@ -3458,9 +3458,9 @@ MacroAssembler::callAndPushReturnAddress(Register callee)
 void
 MacroAssembler::callAndPushReturnAddress(Label* label)
 {
-    // Push return address during jalr delay slot.
+    // Push return address during bal delay slot.
     as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
-    as_jalr(label);
+    ma_bal(label, DontFillDelaySlot);
     as_sw(ra, StackPointer, 0);
 }
 
