@@ -51,8 +51,6 @@ public:
   virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded, uint32_t aDropped) final override;
   virtual void NotifyWaitingForResourcesStatusChanged() final override;
   virtual void OnReadMetadataCompleted() final override;
-  virtual void QueueMetadata(const media::TimeUnit& aTime, nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags) final override;
-  virtual void RemoveMediaTracks() final override;
   virtual void SetMediaSeekable(bool aMediaSeekable) final override;
   virtual bool HasInitializationData() final override;
 

@@ -580,13 +580,6 @@ public:
   void SetAudioChannel(dom::AudioChannel aChannel) { mAudioChannel = aChannel; }
   dom::AudioChannel GetAudioChannel() { return mAudioChannel; }
 
-  // Send a new set of metadata to the state machine, to be dispatched to the
-  // main thread to be presented when the |currentTime| of the media is greater
-  // or equal to aPublishTime.
-  void QueueMetadata(const media::TimeUnit& aPublishTime,
-                     nsAutoPtr<MediaInfo> aInfo,
-                     nsAutoPtr<MetadataTags> aTags) override;
-
   /******
    * The following methods must only be called on the main
    * thread.
@@ -619,7 +612,7 @@ public:
 
   // Removes all audio tracks and video tracks that are previously added into
   // the track list. Call on the main thread only.
-  virtual void RemoveMediaTracks() override;
+  void RemoveMediaTracks();
 
   // Called when the video has completed playing.
   // Call on the main thread only.
