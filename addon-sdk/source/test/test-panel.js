@@ -22,7 +22,8 @@ const { getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { URL } = require('sdk/url');
 const { wait } = require('./event/helpers');
 const packaging = require('@loader/options');
-const { cleanUI, after } = require("sdk/test/utils");
+const { cleanUI, after, isTravisCI } = require("sdk/test/utils");
+const { platform } = require('sdk/system');
 
 const fixtures = require('./fixtures')
 
@@ -1315,12 +1316,64 @@ exports["test Panel without contentURL and contentScriptWhen=start should show"]
   loader.unload();
 }
 
+exports["test Panel links"] = function*(assert) {
+  const loader = Loader(module);
+
+  const { Panel } = loader.require('sdk/panel');
+  const { getActiveView } = loader.require('sdk/view/core');
+  const tabs = loader.require('sdk/tabs');
+
+  const synthesizeClick = (panel, options) => {
+    let { contentWindow } = getActiveView(panel).querySelector('iframe');
+    let event = new contentWindow.MouseEvent('click', options);
+
+    contentWindow.document.querySelector('a').dispatchEvent(event);
+  }
+
+  const linkURL = 'data:text/html;charset=utf-8,' +
+                  encodeURIComponent('<html><a href="#">foo</a></html>');
+
+  const contentURL = 'data:text/html;charset=utf-8,' +
+          encodeURIComponent(`<html><a href="${linkURL}">page</a></html>`);
+
+  let panel = Panel({
+    contentURL,
+    contentScript: Isolate(() => self.postMessage(document.URL))
+  });
+
+  panel.show();
+
+  let url = yield wait(panel, 'message');
+
+  assert.equal(url, contentURL,
+    'content URL loaded');
+
+  synthesizeClick(panel, { bubbles: true });
+
+  url = yield wait(panel, 'message');
+
+  assert.equal(url, linkURL,
+    'link URL loaded in the panel after click');
+
+  synthesizeClick(panel, {
+    bubbles: true,
+    [platform === 'darwin' ? 'metaKey' : 'ctrlKey']: true
+  });
+
+  let tab = yield wait(tabs, 'ready');
+
+  assert.equal(tab.url, linkURL + '#',
+      'link URL loaded in a new tab after click + accel');
+
+  loader.unload();
+}
+
 after(exports, function*(name, assert) {
   yield cleanUI();
   assert.pass("ui was cleaned.");
 });
 
-if (packaging.isNative) {
+if (isTravisCI) {
   module.exports = {
     "test skip on jpm": (assert) => assert.pass("skipping this file with jpm")
   };
