@@ -395,10 +395,18 @@ MP3TrackDemuxer::FindNextFrame() {
 
   while (frameBeg == bufferEnd &&
          (read = Read(buffer, mOffset, BUFFER_SIZE)) > 0) {
-    MOZ_ASSERT(mOffset + read > mOffset);
+    NS_ENSURE_TRUE(mOffset + read > mOffset, MediaByteRange(0, 0));
     mOffset += read;
     bufferEnd = buffer + read;
     frameBeg = mParser.Parse(buffer, bufferEnd);
+
+    if (frameBeg > bufferEnd) {
+      // We need to skip an ID3 tag which stretches beyond the current buffer.
+      const uint32_t bytesToSkip = frameBeg - bufferEnd;
+      NS_ENSURE_TRUE(mOffset + bytesToSkip > mOffset, MediaByteRange(0, 0));
+      mOffset += bytesToSkip;
+      frameBeg = bufferEnd;
+    }
   }
 
   if (frameBeg == bufferEnd || !mParser.CurrentFrame().Length()) {
@@ -612,7 +620,8 @@ FrameParser::Parse(const uint8_t* aBeg, const uint8_t* aEnd) {
     const uint8_t* id3Beg = mID3Parser.Parse(aBeg, aEnd);
     if (id3Beg != aEnd) {
       // ID3 headers found, skip past them.
-      aBeg = id3Beg + ID3Parser::ID3Header::SIZE + mID3Parser.Header().Size();
+      aBeg = id3Beg + ID3Parser::ID3Header::SIZE + mID3Parser.Header().Size() +
+             mID3Parser.Header().FooterSize();
     }
   }
 
@@ -627,9 +636,11 @@ FrameParser::Parse(const uint8_t* aBeg, const uint8_t* aEnd) {
     }
     // Move to the frame header begin to allow for whole-frame parsing.
     aBeg -= FrameHeader::SIZE;
-    return aBeg;
   }
-  return aEnd;
+  // If no headers (both ID3 and MP3) have been found, this is equivalent to returning aEnd.
+  // If we have found a large ID3 tag and want to skip past it, aBeg will point past the
+  // end of the buffer, which needs to be handled by the calling function.
+  return aBeg;
 }
 
 // FrameParser::Header
@@ -784,7 +795,7 @@ FrameParser::FrameHeader::ParseNext(uint8_t c) {
 
 bool
 FrameParser::FrameHeader::IsValid(int aPos) const {
-  if (IsValid()) {
+  if (aPos >= SIZE) {
     return true;
   }
   if (aPos == frame_header::SYNC1) {
@@ -796,7 +807,8 @@ FrameParser::FrameHeader::IsValid(int aPos) const {
            RawLayer() != 0;
   }
   if (aPos == frame_header::BITRATE_SAMPLERATE_PADDING_PRIVATE) {
-    return RawBitrate() != 0xF;
+    return RawBitrate() != 0xF && RawBitrate() != 0 &&
+           RawSampleRate() != 3;
   }
   return true;
 }
@@ -1011,6 +1023,14 @@ ID3Parser::ID3Header::Size() const {
   return mSize;
 }
 
+uint8_t
+ID3Parser::ID3Header::FooterSize() const {
+  if (Flags() & (1 << 4)) {
+    return SIZE;
+  }
+  return 0;
+}
+
 bool
 ID3Parser::ID3Header::ParseNext(uint8_t c) {
   if (!Update(c)) {
@@ -1024,7 +1044,7 @@ ID3Parser::ID3Header::ParseNext(uint8_t c) {
 
 bool
 ID3Parser::ID3Header::IsValid(int aPos) const {
-  if (IsValid()) {
+  if (aPos >= SIZE) {
     return true;
   }
   const uint8_t c = mRaw[aPos];
