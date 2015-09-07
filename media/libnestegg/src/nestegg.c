@@ -1117,25 +1117,6 @@ ne_parse(nestegg * ctx, struct ebml_element_desc * top_level, int64_t max_offset
   return r;
 }
 
-static uint64_t
-ne_xiph_lace_value(unsigned char ** np)
-{
-  uint64_t lace;
-  uint64_t value;
-  unsigned char * p = *np;
-
-  lace = *p++;
-  value = lace;
-  while (lace == 255) {
-    lace = *p++;
-    value += lace;
-  }
-
-  *np = p;
-
-  return value;
-}
-
 static int
 ne_read_xiph_lace_value(nestegg_io * io, uint64_t * value, size_t * consumed)
 {
@@ -2264,12 +2245,13 @@ nestegg_track_codec_data(nestegg * ctx, unsigned int track, unsigned int item,
 {
   struct track_entry * entry;
   struct ebml_binary codec_private;
-  uint64_t sizes[3], total;
+  uint64_t sizes[3], size, total, avail;
   unsigned char * p;
   unsigned int count, i;
 
   *data = NULL;
   *length = 0;
+  count = 1;
 
   entry = ne_find_track_entry(ctx, track);
   if (!entry)
@@ -2284,28 +2266,42 @@ nestegg_track_codec_data(nestegg * ctx, unsigned int track, unsigned int item,
 
   if (nestegg_track_codec_id(ctx, track) == NESTEGG_CODEC_VORBIS) {
     p = codec_private.data;
-    count = *p++ + 1;
-
-    if (count > 3)
+    avail = codec_private.length;
+    if (avail < 1)
       return -1;
 
-    i = 0;
+    count = *p++ + 1;
+    avail -= 1;
+
+    if (count > 3 || item >= count)
+      return -1;
+
     total = 0;
-    while (--count) {
-      sizes[i] = ne_xiph_lace_value(&p);
-      total += sizes[i];
-      i += 1;
+    for (i = 0; i < count - 1; ++i) {
+      size = 0;
+      do {
+        if (avail - total <= size) {
+          return -1;
+        }
+        size += *p;
+        avail -= 1;
+      } while (*p++ == 255);
+      if (avail - total < size)
+        return -1;
+      sizes[i] = size;
+      total += size;
     }
-    sizes[i] = codec_private.length - total - (p - codec_private.data);
+    sizes[i] = avail - total;
 
     for (i = 0; i < item; ++i) {
-      if (sizes[i] > LIMIT_FRAME)
-        return -1;
       p += sizes[i];
     }
     *data = p;
     *length = sizes[item];
   } else {
+    if (item >= count)
+      return -1;
+
     *data = codec_private.data;
     *length = codec_private.length;
   }
