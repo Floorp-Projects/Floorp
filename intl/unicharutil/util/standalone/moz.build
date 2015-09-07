@@ -11,6 +11,10 @@ UNIFIED_SOURCES += [
     '../nsUnicodeProperties.cpp',
 ]
 
+if CONFIG['ENABLE_INTL_API']:
+    CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
+    USE_LIBS += ['icu']
+
 for var in ('MOZILLA_INTERNAL_API', 'MOZILLA_XPCOMRT_API', 'MOZILLA_EXTERNAL_LINKAGE',
             'NR_SOCKET_IS_VOID_PTR', 'HAVE_STRDUP'):
     DEFINES[var] = True

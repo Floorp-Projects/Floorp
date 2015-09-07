@@ -1345,6 +1345,7 @@ xlocale.h
 unicode/locid.h
 unicode/numsys.h
 unicode/ucal.h
+unicode/uchar.h
 unicode/uclean.h
 unicode/ucol.h
 unicode/udat.h
