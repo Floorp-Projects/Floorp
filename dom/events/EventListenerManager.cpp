@@ -75,7 +75,7 @@ MutationBitForEventType(EventMessage aEventType)
   switch (aEventType) {
     case eLegacySubtreeModified:
       return NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED;
-    case NS_MUTATION_NODEINSERTED:
+    case eLegacyNodeInserted:
       return NS_EVENT_BITS_MUTATION_NODEINSERTED;
     case NS_MUTATION_NODEREMOVED:
       return NS_EVENT_BITS_MUTATION_NODEREMOVED;

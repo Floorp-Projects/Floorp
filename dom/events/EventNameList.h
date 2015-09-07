@@ -599,7 +599,7 @@ NON_IDL_EVENT(DOMCharacterDataModified,
               EventNameType_HTMLXUL,
               eMutationEventClass)
 NON_IDL_EVENT(DOMNodeInserted,
-              NS_MUTATION_NODEINSERTED,
+              eLegacyNodeInserted,
               EventNameType_HTMLXUL,
               eMutationEventClass)
 NON_IDL_EVENT(DOMNodeRemoved,
