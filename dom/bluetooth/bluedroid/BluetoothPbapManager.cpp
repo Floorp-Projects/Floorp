@@ -12,6 +12,7 @@
 #include "BluetoothUuid.h"
 #include "ObexBase.h"
 
+#include "mozilla/dom/BluetoothPbapParametersBinding.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/RefPtr.h"
@@ -533,15 +534,17 @@ BluetoothPbapManager::AppendBtNamedValueByTagId(
 
   switch (aTagId) {
     case AppParameterTag::Order: {
-      static const nsString sOrderStr[] = {NS_LITERAL_STRING("alphabetical"),
-                                           NS_LITERAL_STRING("indexed"),
-                                           NS_LITERAL_STRING("phonetical")};
-      uint8_t order = buf[0];
-      if (order < MOZ_ARRAY_LENGTH(sOrderStr)) {
-        BT_APPEND_NAMED_VALUE(aValues, "order", sOrderStr[order]);
-      } else {
-        BT_LOGR("Unexpected value %d of 'Order'", order);
-      }
+      using namespace mozilla::dom::vCardOrderTypeValues;
+      uint32_t order = buf[0] < ArrayLength(strings) ? (uint32_t) buf[0]
+                                                     : 0; // default: indexed
+      BT_APPEND_NAMED_VALUE(aValues, "order", order);
+      break;
+    }
+    case AppParameterTag::SearchProperty: {
+      using namespace mozilla::dom::vCardSearchKeyTypeValues;
+      uint32_t searchKey = buf[0] < ArrayLength(strings) ? (uint32_t) buf[0]
+                                                         : 0; // default: name
+      BT_APPEND_NAMED_VALUE(aValues, "searchKey", searchKey);
       break;
     }
     case AppParameterTag::SearchValue: {
@@ -553,18 +556,6 @@ BluetoothPbapManager::AppendBtNamedValueByTagId(
       nsCString text((char *) buf);
 
       BT_APPEND_NAMED_VALUE(aValues, "searchText", text);
-      break;
-    }
-    case AppParameterTag::SearchProperty: {
-      static const nsString sSearchKeyStr[] = {NS_LITERAL_STRING("name"),
-                                               NS_LITERAL_STRING("number"),
-                                               NS_LITERAL_STRING("sound")};
-      uint8_t searchKey = buf[0];
-      if (searchKey < MOZ_ARRAY_LENGTH(sSearchKeyStr)) {
-        BT_APPEND_NAMED_VALUE(aValues, "searchKey", sSearchKeyStr[searchKey]);
-      } else {
-        BT_LOGR("Unexpected value %d of 'SearchProperty'", searchKey);
-      }
       break;
     }
     case AppParameterTag::MaxListCount: {
