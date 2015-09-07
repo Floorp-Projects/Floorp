@@ -2558,52 +2558,11 @@ void MediaDecoderStateMachine::RenderVideoFrames(int32_t aMaxFrames,
   container->SetCurrentFrames(frames[0]->As<VideoData>()->mDisplay, images);
 }
 
-void MediaDecoderStateMachine::ResyncAudioClock()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  AssertCurrentThreadInMonitor();
-  if (IsPlaying()) {
-    SetPlayStartTime(TimeStamp::Now());
-    mPlayDuration = GetAudioClock();
-  }
-}
-
-int64_t
-MediaDecoderStateMachine::GetAudioClock() const
-{
-  MOZ_ASSERT(OnTaskQueue());
-  // We must hold the decoder monitor while using the audio stream off the
-  // audio sink to ensure that it doesn't get destroyed on the audio sink
-  // while we're using it.
-  AssertCurrentThreadInMonitor();
-  MOZ_ASSERT(HasAudio() && !mAudioCompleted && IsPlaying());
-  // Since this function is called while we are playing and AudioSink is
-  // started once playback starts, IsStarted() is guaranteed to be true.
-  MOZ_ASSERT(mAudioSink->IsStarted());
-  return mAudioSink->GetPosition();
-}
-
 int64_t MediaDecoderStateMachine::GetStreamClock() const
 {
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
   return mDecodedStream->GetPosition();
-}
-
-int64_t MediaDecoderStateMachine::GetVideoStreamPosition(TimeStamp aTimeStamp) const
-{
-  MOZ_ASSERT(OnTaskQueue());
-  AssertCurrentThreadInMonitor();
-
-  if (!IsPlaying()) {
-    return mPlayDuration;
-  }
-
-  // Time elapsed since we started playing.
-  int64_t delta = DurationToUsecs(aTimeStamp - mPlayStartTime);
-  // Take playback rate into account.
-  delta *= mPlaybackRate;
-  return mPlayDuration + delta;
 }
 
 int64_t MediaDecoderStateMachine::GetClock(TimeStamp* aTimeStamp) const
