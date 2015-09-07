@@ -10,6 +10,7 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/nsRefPtr.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
 #include "MediaSink.h"
@@ -50,6 +51,8 @@ public:
     : mOwnerThread(aOwnerThread)
     , mCreator(new CreatorImpl<Function>(aFunc))
     , mIsStarted(false)
+    // Give an insane value to facilitate debug if used before playback starts.
+    , mPlayDuration(INT64_MAX)
   {}
 
   const PlaybackParams& GetPlaybackParams() const override;
@@ -57,7 +60,7 @@ public:
 
   nsRefPtr<GenericPromise> OnEnded(TrackType aType) override;
   int64_t GetEndTime(TrackType aType) const override;
-  int64_t GetPosition() const override;
+  int64_t GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
   bool HasUnplayedFrames(TrackType aType) const override;
 
   void SetVolume(double aVolume) override;
@@ -78,6 +81,8 @@ private:
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   }
 
+  int64_t GetVideoPosition(TimeStamp aNow) const;
+
   const nsRefPtr<AbstractThread> mOwnerThread;
   UniquePtr<Creator> mCreator;
   nsRefPtr<AudioSink> mAudioSink;
@@ -85,6 +90,9 @@ private:
 
   bool mIsStarted;
   PlaybackParams mParams;
+
+  TimeStamp mPlayStartTime;
+  int64_t mPlayDuration;
 };
 
 } // namespace media

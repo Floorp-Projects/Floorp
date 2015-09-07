@@ -13,6 +13,9 @@
 #include "MediaInfo.h"
 
 namespace mozilla {
+
+class TimeStamp;
+
 namespace media {
 
 /**
@@ -64,8 +67,10 @@ public:
   // Return playback position of the media.
   // Since A/V sync is always maintained by this sink, there is no need to
   // specify whether we want to get audio or video position.
+  // aTimeStamp returns the timeStamp corresponding to the returned position
+  // which is used by the compositor to derive the render time of video frames.
   // Must be called after playback starts.
-  virtual int64_t GetPosition() const = 0;
+  virtual int64_t GetPosition(TimeStamp* aTimeStamp = nullptr) const = 0;
 
   // Return true if there are data consumed but not played yet.
   // Can be called in any state.
