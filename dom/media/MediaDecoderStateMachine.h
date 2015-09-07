@@ -94,7 +94,6 @@ hardware (via AudioStream).
 #include "MediaEventSource.h"
 #include "MediaMetadataManager.h"
 #include "MediaTimer.h"
-#include "DecodedStream.h"
 #include "ImageContainer.h"
 
 namespace mozilla {
@@ -104,6 +103,7 @@ class MediaSink;
 }
 
 class AudioSegment;
+class DecodedStream;
 class TaskQueue;
 
 extern PRLogModuleInfo* gMediaDecoderLog;
