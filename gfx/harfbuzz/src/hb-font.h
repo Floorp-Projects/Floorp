@@ -80,12 +80,13 @@ hb_font_funcs_is_immutable (hb_font_funcs_t *ffuncs);
 
 /* glyph extents */
 
+/* Note that height is negative in coordinate systems that grow up. */
 typedef struct hb_glyph_extents_t
 {
-  hb_position_t x_bearing;
-  hb_position_t y_bearing;
-  hb_position_t width;
-  hb_position_t height;
+  hb_position_t x_bearing; /* left side of glyph from origin. */
+  hb_position_t y_bearing; /* top side of glyph from origin. */
+  hb_position_t width; /* distance from left to right side. */
+  hb_position_t height; /* distance from top to bottom side. */
 } hb_glyph_extents_t;
 
 

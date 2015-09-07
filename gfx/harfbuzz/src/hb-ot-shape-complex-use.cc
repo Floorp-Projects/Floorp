@@ -238,14 +238,6 @@ enum syllable_type_t {
 #include "hb-ot-shape-complex-use-machine.hh"
 
 
-static inline void
-set_use_properties (hb_glyph_info_t &info)
-{
-  hb_codepoint_t u = info.codepoint;
-  info.use_category() = hb_use_get_categories (u);
-}
-
-
 static void
 setup_masks_use (const hb_ot_shape_plan_t *plan,
 		 hb_buffer_t              *buffer,
@@ -444,10 +436,10 @@ reorder_syllable (hb_buffer_t *buffer, unsigned int start, unsigned int end)
 	if (info[i].use_category() == USE_H)
 	  i--;
 
+	buffer->merge_clusters (start, i + 1);
 	hb_glyph_info_t t = info[start];
 	memmove (&info[start], &info[start + 1], (i - start) * sizeof (info[0]));
 	info[i] = t;
-	buffer->merge_clusters (start, i + 1);
 
 	break;
       }
@@ -472,10 +464,10 @@ reorder_syllable (hb_buffer_t *buffer, unsigned int start, unsigned int end)
 	     0 == _hb_glyph_info_get_lig_comp (&info[i]) &&
 	     j < i)
     {
+      buffer->merge_clusters (j, i + 1);
       hb_glyph_info_t t = info[i];
       memmove (&info[j + 1], &info[j], (i - j) * sizeof (info[0]));
       info[j] = t;
-      buffer->merge_clusters (j, i + 1);
     }
   }
 }

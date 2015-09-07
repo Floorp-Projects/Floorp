@@ -266,7 +266,8 @@ struct hb_add_coverage_context_t
 #define TRACE_APPLY(this) \
 	hb_auto_trace_t<HB_DEBUG_APPLY, bool> trace \
 	(&c->debug_depth, c->get_name (), this, HB_FUNC, \
-	 "idx %d codepoint %u", c->buffer->idx, c->buffer->cur().codepoint);
+	 "idx %d gid %u lookup %d", \
+	 c->buffer->idx, c->buffer->cur().codepoint, (int) c->lookup_index);
 
 struct hb_apply_context_t
 {
@@ -481,6 +482,7 @@ struct hb_apply_context_t
   const GDEF &gdef;
   bool has_glyph_classes;
   skipping_iterator_t iter_input, iter_context;
+  unsigned int lookup_index;
   unsigned int debug_depth;
 
 
@@ -499,12 +501,13 @@ struct hb_apply_context_t
 			has_glyph_classes (gdef.has_glyph_classes ()),
 			iter_input (),
 			iter_context (),
+			lookup_index ((unsigned int) -1),
 			debug_depth (0) {}
 
   inline void set_lookup_mask (hb_mask_t mask) { lookup_mask = mask; }
   inline void set_auto_zwj (bool auto_zwj_) { auto_zwj = auto_zwj_; }
   inline void set_recurse_func (recurse_func_t func) { recurse_func = func; }
-  inline void set_lookup (const Lookup &l) { set_lookup_props (l.get_props ()); }
+  inline void set_lookup_index (unsigned int lookup_index_) { lookup_index = lookup_index_; }
   inline void set_lookup_props (unsigned int lookup_props_)
   {
     lookup_props = lookup_props_;

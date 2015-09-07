@@ -1012,7 +1012,7 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
       info[i].syllable() = i - start;
 
     /* Sit tight, rock 'n roll! */
-    hb_bubble_sort (info + start, end - start, compare_indic_order);
+    hb_stable_sort (info + start, end - start, compare_indic_order);
     /* Find base again */
     base = end;
     for (unsigned int i = start; i < end; i++)
@@ -1025,7 +1025,11 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
      * around like crazy.  In old-spec mode, we move halants around, so in
      * that case merge all clusters after base.  Otherwise, check the sort
      * order and merge as needed.
-     * For pre-base stuff, we handle cluster issues in final reordering. */
+     * For pre-base stuff, we handle cluster issues in final reordering.
+     *
+     * We could use buffer->sort() for this, if there was no special
+     * reordering of pre-base stuff happening later...
+     */
     if (indic_plan->is_old_spec || end - base > 127)
       buffer->merge_clusters (base, end);
     else
@@ -1404,12 +1408,17 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
 	if (info[i - 1].indic_position () == POS_PRE_M)
 	{
 	  unsigned int old_pos = i - 1;
+	  if (old_pos < base && base <= new_pos) /* Shouldn't actually happen. */
+	    base--;
+
 	  hb_glyph_info_t tmp = info[old_pos];
 	  memmove (&info[old_pos], &info[old_pos + 1], (new_pos - old_pos) * sizeof (info[0]));
 	  info[new_pos] = tmp;
-	  if (old_pos < base && base <= new_pos) /* Shouldn't actually happen. */
-	    base--;
+
+	  /* Note: this merge_clusters() is intentionally *after* the reordering.
+	   * Indic matra reordering is special and tricky... */
 	  buffer->merge_clusters (new_pos, MIN (end, base + 1));
+
 	  new_pos--;
 	}
     } else {
@@ -1562,12 +1571,12 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
 
     reph_move:
     {
-      buffer->merge_clusters (start, new_reph_pos + 1);
-
       /* Move */
+      buffer->merge_clusters (start, new_reph_pos + 1);
       hb_glyph_info_t reph = info[start];
       memmove (&info[start], &info[start + 1], (new_reph_pos - start) * sizeof (info[0]));
       info[new_reph_pos] = reph;
+
       if (start < base && base <= new_reph_pos)
 	base--;
     }
@@ -1640,10 +1649,12 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
 
 	  {
 	    unsigned int old_pos = i;
+
 	    buffer->merge_clusters (new_pos, old_pos + 1);
 	    hb_glyph_info_t tmp = info[old_pos];
 	    memmove (&info[new_pos + 1], &info[new_pos], (old_pos - new_pos) * sizeof (info[0]));
 	    info[new_pos] = tmp;
+
 	    if (new_pos <= base && base < old_pos)
 	      base++;
 	  }
