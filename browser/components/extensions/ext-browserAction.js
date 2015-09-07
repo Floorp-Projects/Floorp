@@ -14,6 +14,11 @@ var {
 // WeakMap[Extension -> BrowserAction]
 var browserActionMap = new WeakMap();
 
+// WeakMap[Extension -> docshell]
+// This map is a cache of the windowless browser that's used to render ImageData
+// for the browser_action icon.
+let imageRendererMap = new WeakMap();
+
 function browserActionOf(extension)
 {
   return browserActionMap.get(extension);
@@ -283,7 +288,36 @@ extensions.on("shutdown", (type, extension) => {
     browserActionMap.get(extension).shutdown();
     browserActionMap.delete(extension);
   }
+  imageRendererMap.delete(extension);
 });
+
+function convertImageDataToPNG(extension, imageData)
+{
+  let webNav = imageRendererMap.get(extension);
+  if (!webNav) {
+    webNav = Services.appShell.createWindowlessBrowser(false);
+    let principal = Services.scriptSecurityManager.createCodebasePrincipal(extension.baseURI,
+                                                                           {addonId: extension.id});
+    let interfaceRequestor = webNav.QueryInterface(Ci.nsIInterfaceRequestor);
+    let docShell = interfaceRequestor.getInterface(Ci.nsIDocShell);
+
+    GlobalManager.injectInDocShell(docShell, extension, null);
+
+    docShell.createAboutBlankContentViewer(principal);
+  }
+
+  let document = webNav.document;
+  let canvas = document.createElement("canvas");
+  canvas.width = imageData.width;
+  canvas.height = imageData.height;
+  canvas.getContext("2d").putImageData(imageData, 0, 0);
+
+  let url = canvas.toDataURL("image/png");
+
+  canvas.remove();
+
+  return url;
+}
 
 extensions.registerAPI((extension, context) => {
   return {
@@ -313,10 +347,11 @@ extensions.registerAPI((extension, context) => {
       setIcon: function(details, callback) {
         let tab = details.tabId ? TabManager.getTab(details.tabId) : null;
         if (details.imageData) {
-          // FIXME: Support the imageData attribute.
-          return;
+          let url = convertImageDataToPNG(extension, details.imageData);
+          browserActionOf(extension).setProperty(tab, "icon", url);
+        } else {
+          browserActionOf(extension).setProperty(tab, "icon", details.path);
         }
-        browserActionOf(extension).setProperty(tab, "icon", details.path);
       },
 
       setBadgeText: function(details) {
