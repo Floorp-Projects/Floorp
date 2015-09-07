@@ -554,10 +554,12 @@ ObjectGroup::defaultNewGroup(ExclusiveContext* cx, const Class* clasp,
         RootedObject obj(cx, proto.toObject());
 
         if (associated) {
-            if (associated->is<JSFunction>())
-                TypeNewScript::make(cx->asJSContext(), group, &associated->as<JSFunction>());
-            else
+            if (associated->is<JSFunction>()) {
+                if (!TypeNewScript::make(cx->asJSContext(), group, &associated->as<JSFunction>()))
+                    return nullptr;
+            } else {
                 group->setTypeDescr(&associated->as<TypeDescr>());
+            }
         }
 
         /*
