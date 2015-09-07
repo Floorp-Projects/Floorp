@@ -759,7 +759,7 @@ NON_IDL_EVENT(SVGScroll,
               eBasicEventClass)
 
 NON_IDL_EVENT(SVGZoom,
-              NS_SVG_ZOOM,
+              eSVGZoom,
               EventNameType_None,
               eSVGZoomEventClass)
 
@@ -767,7 +767,7 @@ NON_IDL_EVENT(SVGZoom,
 #ifndef MESSAGE_TO_EVENT
 // This is a bit hackish, but SVG's event names are weird.
 NON_IDL_EVENT(zoom,
-              NS_SVG_ZOOM,
+              eSVGZoom,
               EventNameType_SVGSVG,
               eBasicEventClass)
 #endif
