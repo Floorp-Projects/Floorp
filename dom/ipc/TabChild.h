@@ -49,7 +49,6 @@ class RenderFrameChild;
 namespace layers {
 class APZEventState;
 class ImageCompositeNotification;
-struct SetTargetAPZCCallback;
 } // namespace layers
 
 namespace widget {
@@ -230,7 +229,6 @@ class TabChild final : public TabChildBase,
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
     typedef mozilla::layout::RenderFrameChild RenderFrameChild;
     typedef mozilla::layers::APZEventState APZEventState;
-    typedef mozilla::layers::SetTargetAPZCCallback SetTargetAPZCCallback;
     typedef mozilla::layers::SetAllowedTouchBehaviorCallback SetAllowedTouchBehaviorCallback;
 
 public:
