@@ -289,6 +289,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mVideoQueueListener = VideoQueue().PopEvent().Connect(
     mTaskQueue, this, &MediaDecoderStateMachine::OnVideoPopped);
 
+  mMetadataManager.Connect(mReader->TimedMetadataEvent(), OwnerThread());
+
   nsRefPtr<MediaDecoderStateMachine> self = this;
   auto audioSinkCreator = [self] () {
     MOZ_ASSERT(self->OnTaskQueue());
@@ -2195,6 +2197,7 @@ MediaDecoderStateMachine::FinishShutdown()
   // Prevent dangling pointers by disconnecting the listeners.
   mAudioQueueListener.Disconnect();
   mVideoQueueListener.Disconnect();
+  mMetadataManager.Disconnect();
 
   // Disconnect canonicals and mirrors before shutting down our task queue.
   mBuffered.DisconnectIfConnected();
