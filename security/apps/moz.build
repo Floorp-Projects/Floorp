@@ -34,6 +34,7 @@ headers_arrays_certs = [
     ('xpcshell.inc', 'xpcshellRoot', test_ssl_path + '/test_signed_apps/trusted_ca1.der'),
     ('addons-public.inc', 'addonsPublicRoot', 'addons-public.crt'),
     ('addons-stage.inc', 'addonsStageRoot', 'addons-stage.crt'),
+    ('privileged-package-root.inc', 'privilegedPackageRoot', 'privileged-package-root.der'),
 ]
 
 for header, array_name, cert in headers_arrays_certs:
