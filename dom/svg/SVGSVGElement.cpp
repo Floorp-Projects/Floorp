@@ -511,7 +511,7 @@ SVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
     if (presShell && IsRoot()) {
       nsEventStatus status = nsEventStatus_eIgnore;
       if (mPreviousScale != mCurrentScale) {
-        InternalSVGZoomEvent svgZoomEvent(true, NS_SVG_ZOOM);
+        InternalSVGZoomEvent svgZoomEvent(true, eSVGZoom);
         presShell->HandleDOMEventWithTarget(this, &svgZoomEvent, &status);
       } else {
         WidgetEvent svgScrollEvent(true, eSVGScroll);

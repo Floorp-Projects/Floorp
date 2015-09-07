@@ -199,7 +199,7 @@ NS_EVENT_MESSAGE(eSVGScroll,            eSVGEventFirst + 5)
 
 // SVG Zoom events
 NS_EVENT_MESSAGE(eSVGZoomEventFirst,    2900)
-NS_EVENT_MESSAGE(NS_SVG_ZOOM,           eSVGZoomEventFirst)
+NS_EVENT_MESSAGE(eSVGZoom,              eSVGZoomEventFirst)
 
 // XUL command events
 NS_EVENT_MESSAGE(eXULCommandEventFirst, 3000)
