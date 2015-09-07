@@ -53,6 +53,7 @@ public:
     , mIsStarted(false)
     // Give an insane value to facilitate debug if used before playback starts.
     , mPlayDuration(INT64_MAX)
+    , mAudioEnded(true)
   {}
 
   const PlaybackParams& GetPlaybackParams() const override;
@@ -83,6 +84,8 @@ private:
 
   int64_t GetVideoPosition(TimeStamp aNow) const;
 
+  void OnAudioEnded();
+
   const nsRefPtr<AbstractThread> mOwnerThread;
   UniquePtr<Creator> mCreator;
   nsRefPtr<AudioSink> mAudioSink;
@@ -93,6 +96,9 @@ private:
 
   TimeStamp mPlayStartTime;
   int64_t mPlayDuration;
+
+  bool mAudioEnded;
+  MozPromiseRequestHolder<GenericPromise> mAudioSinkPromise;
 };
 
 } // namespace media
