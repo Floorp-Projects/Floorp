@@ -78,6 +78,7 @@ SEARCH_PATHS = [
     'python/pystache',
     'python/pyyaml/lib',
     'python/requests',
+    'python/slugid',
     'build',
     'build/pymake',
     'config',
