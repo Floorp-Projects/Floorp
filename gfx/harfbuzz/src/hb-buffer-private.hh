@@ -201,6 +201,8 @@ struct hb_buffer_t {
   HB_INTERNAL scratch_buffer_t *get_scratch_buffer (unsigned int *size);
 
   inline void clear_context (unsigned int side) { context_len[side] = 0; }
+
+  HB_INTERNAL void sort (unsigned int start, unsigned int end, int(*compar)(const hb_glyph_info_t *, const hb_glyph_info_t *));
 };
 
 

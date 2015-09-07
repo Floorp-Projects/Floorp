@@ -205,11 +205,11 @@ preprocess_text_hangul (const hb_ot_shape_plan_t *plan,
 	buffer->next_glyph ();
 	if (!is_zero_width_char (font, u))
 	{
+	  buffer->merge_out_clusters (start, end + 1);
 	  hb_glyph_info_t *info = buffer->out_info;
 	  hb_glyph_info_t tone = info[end];
 	  memmove (&info[start + 1], &info[start], (end - start) * sizeof (hb_glyph_info_t));
 	  info[start] = tone;
-	  buffer->merge_out_clusters (start, end + 1);
 	}
       }
       else
