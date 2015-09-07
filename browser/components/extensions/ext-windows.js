@@ -60,7 +60,7 @@ extensions.registerAPI((extension, context) => {
         runSafe(context, callback, WindowManager.convert(extension, window, getInfo));
       },
 
-      getAll: function(getAll, callback) {
+      getAll: function(getInfo, callback) {
         let e = Services.wm.getEnumerator("navigator:browser");
         let windows = [];
         while (e.hasMoreElements()) {
@@ -131,7 +131,10 @@ extensions.registerAPI((extension, context) => {
           Services.focus.activeWindow = window;
         }
         // TODO: All the other properties...
-        runSafe(context, callback, WindowManager.convert(extension, window));
+
+        if (callback) {
+          runSafe(context, callback, WindowManager.convert(extension, window));
+        }
       },
 
       remove: function(windowId, callback) {
