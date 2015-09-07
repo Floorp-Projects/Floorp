@@ -173,13 +173,7 @@ private:
   void Shutdown();
 public:
 
-  void DispatchShutdown()
-  {
-    mDecodedStream->Shutdown();
-    nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::Shutdown);
-    OwnerThread()->Dispatch(runnable.forget());
-  }
+  void DispatchShutdown();
 
   void FinishShutdown();
 
@@ -456,8 +450,6 @@ protected:
   // Recomputes mNextFrameStatus, possibly dispatching notifications to interested
   // parties.
   void UpdateNextFrameStatus();
-
-  int64_t GetStreamClock() const;
 
   // Return the current time, either the audio clock if available (if the media
   // has audio, and the playback is possible), or a clock for the video.
@@ -1273,7 +1265,7 @@ private:
   // Only written on the main thread while holding the monitor. Therefore it
   // can be read on any thread while holding the monitor, or on the main thread
   // without holding the monitor.
-  nsRefPtr<DecodedStream> mDecodedStream;
+  nsRefPtr<DecodedStream> mStreamSink;
 
   // Media data resource from the decoder.
   nsRefPtr<MediaResource> mResource;
