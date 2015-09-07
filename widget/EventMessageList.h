@@ -134,7 +134,7 @@ NS_EVENT_MESSAGE(NS_SCROLLPORT_OVERFLOW,  NS_SCROLLPORT_START + 1)
 
 NS_EVENT_MESSAGE(eLegacyMutationEventFirst,       1800)
 NS_EVENT_MESSAGE(eLegacySubtreeModified,          eLegacyMutationEventFirst)
-NS_EVENT_MESSAGE(NS_MUTATION_NODEINSERTED,             eLegacyMutationEventFirst + 1)
+NS_EVENT_MESSAGE(eLegacyNodeInserted,             eLegacyMutationEventFirst + 1)
 NS_EVENT_MESSAGE(NS_MUTATION_NODEREMOVED,              eLegacyMutationEventFirst + 2)
 NS_EVENT_MESSAGE(eLegacyNodeRemovedFromDocument,  eLegacyMutationEventFirst + 3)
 NS_EVENT_MESSAGE(eLegacyNodeInsertedIntoDocument, eLegacyMutationEventFirst + 4)
