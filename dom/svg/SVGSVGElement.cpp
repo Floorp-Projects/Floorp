@@ -514,7 +514,7 @@ SVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
         InternalSVGZoomEvent svgZoomEvent(true, NS_SVG_ZOOM);
         presShell->HandleDOMEventWithTarget(this, &svgZoomEvent, &status);
       } else {
-        WidgetEvent svgScrollEvent(true, NS_SVG_SCROLL);
+        WidgetEvent svgScrollEvent(true, eSVGScroll);
         presShell->HandleDOMEventWithTarget(this, &svgScrollEvent, &status);
       }
       InvalidateTransformNotifyFrame();
