@@ -10,7 +10,6 @@
 #include "nsIUGenCategory.h"
 #include "nsUnicodeScriptCodes.h"
 
-const nsCharProps1& GetCharProps1(uint32_t aCh);
 const nsCharProps2& GetCharProps2(uint32_t aCh);
 
 namespace mozilla {
@@ -19,11 +18,12 @@ namespace unicode {
 
 extern nsIUGenCategory::nsUGenCategory sDetailedToGeneralCategory[];
 
+// Return whether the char has a mirrored-pair counterpart.
 uint32_t GetMirroredChar(uint32_t aCh);
 
-inline uint8_t GetCombiningClass(uint32_t aCh) {
-  return GetCharProps1(aCh).mCombiningClass;
-}
+bool HasMirroredChar(uint32_t aChr);
+
+uint8_t GetCombiningClass(uint32_t aCh);
 
 // returns the detailed General Category in terms of HB_UNICODE_* values
 inline uint8_t GetGeneralCategory(uint32_t aCh) {
@@ -33,10 +33,6 @@ inline uint8_t GetGeneralCategory(uint32_t aCh) {
 // returns the simplified Gen Category as defined in nsIUGenCategory
 inline nsIUGenCategory::nsUGenCategory GetGenCategory(uint32_t aCh) {
   return sDetailedToGeneralCategory[GetGeneralCategory(aCh)];
-}
-
-inline uint8_t GetEastAsianWidth(uint32_t aCh) {
-  return GetCharProps2(aCh).mEAW;
 }
 
 inline uint8_t GetScriptCode(uint32_t aCh) {
@@ -106,19 +102,6 @@ bool IsClusterExtender(uint32_t aCh, uint8_t aCategory);
 
 inline bool IsClusterExtender(uint32_t aCh) {
   return IsClusterExtender(aCh, GetGeneralCategory(aCh));
-}
-
-enum HSType {
-  HST_NONE = 0x00,
-  HST_L    = 0x01,
-  HST_V    = 0x02,
-  HST_T    = 0x04,
-  HST_LV   = 0x03,
-  HST_LVT  = 0x07
-};
-
-inline HSType GetHangulSyllableType(uint32_t aCh) {
-  return HSType(GetCharProps1(aCh).mHangulType);
 }
 
 // Case mappings for the full Unicode range;

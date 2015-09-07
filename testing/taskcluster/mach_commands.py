@@ -277,7 +277,7 @@ class Graph(object):
         help="Run the tasks with the interactive feature enabled")
     def create_graph(self, **params):
         from taskcluster_graph.commit_parser import parse_commit
-        from taskcluster_graph.slugid import slugid
+        from slugid import nice as slugid
         from taskcluster_graph.from_now import (
             json_time_from_now,
             current_json_time,
