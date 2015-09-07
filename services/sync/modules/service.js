@@ -690,13 +690,6 @@ Sync11Service.prototype = {
   },
 
   verifyLogin: function verifyLogin(allow40XRecovery = true) {
-    // If the identity isn't ready it  might not know the username...
-    if (!this.identity.readyToAuthenticate) {
-      this._log.info("Not ready to authenticate in verifyLogin.");
-      this.status.login = LOGIN_FAILED_NOT_READY;
-      return false;
-    }
-
     if (!this.identity.username) {
       this._log.warn("No username in verifyLogin.");
       this.status.login = LOGIN_FAILED_NO_USERNAME;
@@ -943,25 +936,22 @@ Sync11Service.prototype = {
       return;
     }
 
-    this.identity.finalize().then(
-      () => {
-        // an observer so the FxA migration code can take some action before
-        // the new identity is created.
-        Svc.Obs.notify("weave:service:start-over:init-identity");
-        this.identity.username = "";
-        this.status.__authManager = null;
-        this.identity = Status._authManager;
-        this._clusterManager = this.identity.createClusterManager(this);
-        Svc.Obs.notify("weave:service:start-over:finish");
-      }
-    ).then(null,
-      err => {
-        this._log.error("startOver failed to re-initialize the identity manager: " + err);
-        // Still send the observer notification so the current state is
-        // reflected in the UI.
-        Svc.Obs.notify("weave:service:start-over:finish");
-      }
-    );
+    try {
+      this.identity.finalize();
+      // an observer so the FxA migration code can take some action before
+      // the new identity is created.
+      Svc.Obs.notify("weave:service:start-over:init-identity");
+      this.identity.username = "";
+      this.status.__authManager = null;
+      this.identity = Status._authManager;
+      this._clusterManager = this.identity.createClusterManager(this);
+      Svc.Obs.notify("weave:service:start-over:finish");
+    } catch (err) {
+      this._log.error("startOver failed to re-initialize the identity manager: " + err);
+      // Still send the observer notification so the current state is
+      // reflected in the UI.
+      Svc.Obs.notify("weave:service:start-over:finish");
+    }
   },
 
   persistLogin: function persistLogin() {
