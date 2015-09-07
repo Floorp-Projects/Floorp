@@ -11,7 +11,7 @@
  */
 
 /*
- * Created on Thu Sep  3 14:42:28 2015 from UCD data files with version info:
+ * Created on Mon Sep  7 02:52:23 2015 from UCD data files with version info:
  *
 
 # Date: 2015-06-16, 20:24:00 GMT [KW]
@@ -223,6 +223,7 @@ static const int16_t sMirrorOffsets[] = {
   -2108
 };
 
+#ifndef ENABLE_INTL_API
 #define kCharProp1MaxPlane  1
 #define kCharProp1IndexBits 11
 #define kCharProp1CharBits  5
@@ -390,6 +391,8 @@ static const nsCharProps1 sCharProp1Values[155][32] = {
   {{0,0,0}, {0,0,0}, {0,0,230}, {0,0,230}, {0,0,230}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},},
   {{0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,220}, {0,0,220}, {0,0,220}, {0,0,220}, {0,0,220}, {0,0,220}, {0,0,220}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},}
 };
+
+#endif
 
 #define kCharProp2MaxPlane  16
 #define kCharProp2IndexBits 11

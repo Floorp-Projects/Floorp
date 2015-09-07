@@ -9,10 +9,15 @@
 #include "mozilla/ArrayUtils.h"
 #include "nsCharTraits.h"
 
+#if ENABLE_INTL_API
+#include "unicode/uchar.h"
+#endif
+
 #define UNICODE_BMP_LIMIT 0x10000
 #define UNICODE_LIMIT     0x110000
 
 
+#ifndef ENABLE_INTL_API
 static const nsCharProps1&
 GetCharProps1(uint32_t aCh)
 {
@@ -34,6 +39,7 @@ GetCharProps1(uint32_t aCh)
     };
     return undefined;
 }
+#endif
 
 const nsCharProps2&
 GetCharProps2(uint32_t aCh)
@@ -127,19 +133,31 @@ nsIUGenCategory::nsUGenCategory sDetailedToGeneralCategory[] = {
 uint32_t
 GetMirroredChar(uint32_t aCh)
 {
+#if ENABLE_INTL_API
+    return u_charMirror(aCh);
+#else
     return aCh + sMirrorOffsets[GetCharProps1(aCh).mMirrorOffsetIndex];
+#endif
 }
 
 bool
 HasMirroredChar(uint32_t aCh)
 {
+#if ENABLE_INTL_API
+    return u_isMirrored(aCh);
+#else
     return GetCharProps1(aCh).mMirrorOffsetIndex != 0;
+#endif
 }
 
 uint8_t
 GetCombiningClass(uint32_t aCh)
 {
+#if ENABLE_INTL_API
+    return u_getCombiningClass(aCh);
+#else
     return GetCharProps1(aCh).mCombiningClass;
+#endif
 }
 
 uint32_t
@@ -262,18 +280,31 @@ IsClusterExtender(uint32_t aCh, uint8_t aCategory)
 }
 
 enum HSType {
+#if ENABLE_INTL_API
+    HST_NONE = U_HST_NOT_APPLICABLE,
+    HST_L    = U_HST_LEADING_JAMO,
+    HST_V    = U_HST_VOWEL_JAMO,
+    HST_T    = U_HST_TRAILING_JAMO,
+    HST_LV   = U_HST_LV_SYLLABLE,
+    HST_LVT  = U_HST_LVT_SYLLABLE
+#else
     HST_NONE = 0x00,
     HST_L    = 0x01,
     HST_V    = 0x02,
     HST_T    = 0x04,
     HST_LV   = 0x03,
     HST_LVT  = 0x07
+#endif
 };
 
 static HSType
 GetHangulSyllableType(uint32_t aCh)
 {
+#if ENABLE_INTL_API
+    return HSType(u_getIntPropertyValue(aCh, UCHAR_HANGUL_SYLLABLE_TYPE));
+#else
     return HSType(GetCharProps1(aCh).mHangulType);
+#endif
 }
 
 void
@@ -308,14 +339,15 @@ ClusterIterator::Next()
                 }
                 break;
             case HST_V:
-                if ((hangulState != HST_NONE) && !(hangulState & HST_T)) {
+                if ((hangulState != HST_NONE) && (hangulState != HST_T) &&
+                    (hangulState != HST_LVT)) {
                     hangulState = hangulType;
                     mPos++;
                     continue;
                 }
                 break;
             case HST_T:
-                if (hangulState & (HST_V | HST_T)) {
+                if (hangulState != HST_NONE && hangulState != HST_L) {
                     hangulState = hangulType;
                     mPos++;
                     continue;

@@ -734,7 +734,9 @@ struct nsCharProps1 {
   unsigned char mCombiningClass:8;
 };
 /;
+print DATA_TABLES "#ifndef ENABLE_INTL_API\n";
 &genTables("CharProp1", $type, "nsCharProps1", 11, 5, \&sprintCharProps1, 1, 2, 1);
++print DATA_TABLES "#endif\n\n";
 
 sub sprintCharProps2
 {
