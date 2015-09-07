@@ -743,6 +743,17 @@ setReq.onerror = function() {
                 self.marionette.baseurl = self.server_root
                 self.logger.info("using remote content from %s" % self.marionette.baseurl)
 
+        device_info = None
+        if self.capabilities['device'] != 'desktop' and self.capabilities['browserName'] == 'B2G':
+            dm = get_dm(self.marionette)
+            device_info = dm.getInfo()
+            # Add Android version (SDK level) to mozinfo so that manifest entries
+            # can be conditional on android_version.
+            androidVersion = dm.shellCheckOutput(['getprop', 'ro.build.version.sdk'])
+            self.logger.info(
+                "Android sdk version '%s'; will use this to filter manifests" % androidVersion)
+            mozinfo.info['android_version'] = androidVersion
+
         for test in tests:
             self.add_test(test)
 
@@ -761,11 +772,6 @@ setReq.onerror = function() {
                                               device_serial=self.device_serial,
                                               adb_host=self.marionette.adb_host,
                                               adb_port=self.marionette.adb_port)
-
-        device_info = None
-        if self.capabilities['device'] != 'desktop' and self.capabilities['browserName'] == 'B2G':
-            dm = get_dm(self.marionette)
-            device_info = dm.getInfo()
 
         self.logger.suite_start(self.tests,
                                 version_info=version_info,
