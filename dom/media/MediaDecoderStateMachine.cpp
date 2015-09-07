@@ -221,7 +221,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mSentLoadedMetadataEvent(false),
   mSentFirstFrameLoadedEvent(false),
   mSentPlaybackEndedEvent(false),
-  mDecodedStream(new DecodedStream(mTaskQueue, mAudioQueue, mVideoQueue)),
+  mStreamSink(new DecodedStream(mTaskQueue, mAudioQueue, mVideoQueue)),
   mResource(aDecoder->GetResource()),
   mBuffered(mTaskQueue, TimeIntervals(),
             "MediaDecoderStateMachine::mBuffered (Mirror)"),
@@ -1153,7 +1153,7 @@ void MediaDecoderStateMachine::VolumeChanged()
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   mAudioSink->SetVolume(mVolume);
-  mDecodedStream->SetVolume(mVolume);
+  mStreamSink->SetVolume(mVolume);
 }
 
 void MediaDecoderStateMachine::RecomputeDuration()
@@ -1407,7 +1407,7 @@ void MediaDecoderStateMachine::SameOriginMediaChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  mDecodedStream->SetSameOrigin(mSameOriginMedia);
+  mStreamSink->SetSameOrigin(mSameOriginMedia);
 }
 
 void MediaDecoderStateMachine::BufferedRangeUpdated()
@@ -1780,8 +1780,11 @@ MediaDecoderStateMachine::StopDecodedStream()
 {
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
-  mDecodedStream->StopPlayback();
-  mDecodedStreamPromise.DisconnectIfExists();
+
+  if (mStreamSink->IsStarted()) {
+    mStreamSink->Stop();
+    mDecodedStreamPromise.DisconnectIfExists();
+  }
 }
 
 void
@@ -1792,9 +1795,10 @@ MediaDecoderStateMachine::StartDecodedStream()
 
   // Tell DecodedStream to start playback with specified start time and media
   // info. This is consistent with how we create AudioSink in StartAudioThread().
-  if (mAudioCaptured && !mDecodedStreamPromise.Exists()) {
+  if (mAudioCaptured && !mStreamSink->IsStarted()) {
+    mStreamSink->Start(GetMediaTime(), mInfo);
     mDecodedStreamPromise.Begin(
-      mDecodedStream->StartPlayback(GetMediaTime(), mInfo)->Then(
+      mStreamSink->OnEnded(TrackInfo::kAudioTrack)->Then(
         OwnerThread(), __func__, this,
         &MediaDecoderStateMachine::OnDecodedStreamFinish,
         &MediaDecoderStateMachine::OnDecodedStreamError));
@@ -2187,6 +2191,15 @@ private:
 };
 
 void
+MediaDecoderStateMachine::DispatchShutdown()
+{
+  mStreamSink->BeginShutdown();
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethod(this, &MediaDecoderStateMachine::Shutdown);
+  OwnerThread()->Dispatch(runnable.forget());
+}
+
+void
 MediaDecoderStateMachine::FinishShutdown()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -2366,7 +2379,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       // end of the media, and so that we update the readyState.
       if (VideoQueue().GetSize() > 1 ||
           (HasAudio() && !mAudioCompleted) ||
-          (mAudioCaptured && !mDecodedStream->IsFinished()))
+          (mAudioCaptured && !mStreamSink->IsFinished()))
       {
         // Start playback if necessary to play the remaining media.
         MaybeStartPlayback();
@@ -2558,13 +2571,6 @@ void MediaDecoderStateMachine::RenderVideoFrames(int32_t aMaxFrames,
   container->SetCurrentFrames(frames[0]->As<VideoData>()->mDisplay, images);
 }
 
-int64_t MediaDecoderStateMachine::GetStreamClock() const
-{
-  MOZ_ASSERT(OnTaskQueue());
-  AssertCurrentThreadInMonitor();
-  return mDecodedStream->GetPosition();
-}
-
 int64_t MediaDecoderStateMachine::GetClock(TimeStamp* aTimeStamp) const
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -2580,7 +2586,7 @@ int64_t MediaDecoderStateMachine::GetClock(TimeStamp* aTimeStamp) const
     clock_time = mPlayDuration;
   } else {
     if (mAudioCaptured) {
-      clock_time = GetStreamClock();
+      clock_time = mStreamSink->GetPosition(&t);
     } else {
       clock_time = mAudioSink->GetPosition(&t);
     }
@@ -2875,10 +2881,7 @@ void MediaDecoderStateMachine::SetPlayStartTime(const TimeStamp& aTimeStamp)
   mPlayStartTime = aTimeStamp;
 
   mAudioSink->SetPlaying(!mPlayStartTime.IsNull());
-  // Have DecodedStream remember the playing state so it doesn't need to
-  // ask MDSM about IsPlaying(). Note we have to do this even before capture
-  // happens since capture could happen in the middle of playback.
-  mDecodedStream->SetPlaying(!mPlayStartTime.IsNull());
+  mStreamSink->SetPlaying(!mPlayStartTime.IsNull());
 }
 
 void MediaDecoderStateMachine::ScheduleStateMachineWithLockAndWakeDecoder()
@@ -2982,7 +2985,7 @@ MediaDecoderStateMachine::AudioEndTime() const
   if (mAudioSink->IsStarted()) {
     return mAudioSink->GetEndTime(TrackInfo::kAudioTrack);
   } else if (mAudioCaptured) {
-    return mDecodedStream->AudioEndTime();
+    return mStreamSink->GetEndTime(TrackInfo::kAudioTrack);
   }
   MOZ_ASSERT(!HasAudio());
   return -1;
@@ -3099,7 +3102,7 @@ void MediaDecoderStateMachine::AddOutputStream(ProcessedMediaStream* aStream,
 {
   MOZ_ASSERT(NS_IsMainThread());
   DECODER_LOG("AddOutputStream aStream=%p!", aStream);
-  mDecodedStream->AddOutput(aStream, aFinishWhenEnded);
+  mStreamSink->AddOutput(aStream, aFinishWhenEnded);
   DispatchAudioCaptured();
 }
 
@@ -3107,8 +3110,8 @@ void MediaDecoderStateMachine::RemoveOutputStream(MediaStream* aStream)
 {
   MOZ_ASSERT(NS_IsMainThread());
   DECODER_LOG("RemoveOutputStream=%p!", aStream);
-  mDecodedStream->RemoveOutput(aStream);
-  if (!mDecodedStream->HasConsumers()) {
+  mStreamSink->RemoveOutput(aStream);
+  if (!mStreamSink->HasConsumers()) {
     DispatchAudioUncaptured();
   }
 }
