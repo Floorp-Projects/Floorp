@@ -6,10 +6,9 @@
 #ifndef nsTransform2D_h___
 #define nsTransform2D_h___
 
-#include "gfxCore.h"
 #include "nsCoord.h"
 
-class NS_GFX nsTransform2D
+class nsTransform2D
 {
 private:
  /**
