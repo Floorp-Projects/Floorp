@@ -590,7 +590,7 @@ SVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
 nsresult
 SVGSVGElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
-  if (aVisitor.mEvent->mMessage == NS_SVG_LOAD) {
+  if (aVisitor.mEvent->mMessage == eSVGLoad) {
     if (mTimedDocumentRoot) {
       mTimedDocumentRoot->Begin();
       // Set 'resample needed' flag, so that if any script calls a DOM method
