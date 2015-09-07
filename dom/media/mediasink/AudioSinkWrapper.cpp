@@ -83,8 +83,8 @@ AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) const
   int64_t pos = -1;
   TimeStamp t = TimeStamp::Now();
 
-  if (mAudioSink) {
-    // Rely on the audio sink to report playback position when we have one.
+  if (!mAudioEnded) {
+    // Rely on the audio sink to report playback position when it is not ended.
     pos = mAudioSink->GetPosition();
   } else if (!mPlayStartTime.IsNull()) {
     // Calculate playback position using system clock if we are still playing.
@@ -123,7 +123,7 @@ AudioSinkWrapper::SetPlaybackRate(double aPlaybackRate)
 {
   AssertOwnerThread();
   mParams.playbackRate = aPlaybackRate;
-  if (mAudioSink) {
+  if (!mAudioEnded) {
     // Pass the playback rate to the audio sink. The underlying AudioStream
     // will handle playback rate changes and report correct audio position.
     mAudioSink->SetPlaybackRate(aPlaybackRate);
@@ -183,10 +183,18 @@ AudioSinkWrapper::Start(int64_t aStartTime, const MediaInfo& aInfo)
   mPlayDuration = aStartTime;
   mPlayStartTime = TimeStamp::Now();
 
+  // no audio is equivalent to audio ended before video starts.
+  mAudioEnded = !aInfo.HasAudio();
+
   if (aInfo.HasAudio()) {
     mAudioSink = mCreator->Create();
     mEndPromise = mAudioSink->Init();
     SetPlaybackParams(mParams);
+
+    mAudioSinkPromise.Begin(mEndPromise->Then(
+      mOwnerThread.get(), __func__, this,
+      &AudioSinkWrapper::OnAudioEnded,
+      &AudioSinkWrapper::OnAudioEnded));
   }
 }
 
@@ -197,8 +205,10 @@ AudioSinkWrapper::Stop()
   MOZ_ASSERT(mIsStarted, "playback not started.");
 
   mIsStarted = false;
+  mAudioEnded = true;
 
   if (mAudioSink) {
+    mAudioSinkPromise.DisconnectIfExists();
     mAudioSink->Shutdown();
     mAudioSink = nullptr;
     mEndPromise = nullptr;
@@ -210,6 +220,18 @@ AudioSinkWrapper::IsStarted() const
 {
   AssertOwnerThread();
   return mIsStarted;
+}
+
+void
+AudioSinkWrapper::OnAudioEnded()
+{
+  AssertOwnerThread();
+  mAudioSinkPromise.Complete();
+  mPlayDuration = GetPosition();
+  if (!mPlayStartTime.IsNull()) {
+    mPlayStartTime = TimeStamp::Now();
+  }
+  mAudioEnded = true;
 }
 
 } // namespace media
