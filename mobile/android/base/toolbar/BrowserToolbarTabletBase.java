@@ -50,9 +50,9 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
         actionItemBar = (LinearLayout) findViewById(R.id.menu_items);
 
         backButton = (BackButton) findViewById(R.id.back);
-        setButtonEnabled(backButton, false);
+        backButton.setEnabled(false);
         forwardButton = (ForwardButton) findViewById(R.id.forward);
-        setButtonEnabled(forwardButton, false);
+        forwardButton.setEnabled(false);
         initButtonListeners();
 
         focusOrder.addAll(Arrays.asList(tabsButton, (View) backButton, (View) forwardButton, this));
@@ -113,7 +113,7 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
 
     @Override
     protected void updateNavigationButtons(final Tab tab) {
-        setButtonEnabled(backButton, canDoBack(tab));
+        backButton.setEnabled(canDoBack(tab));
         animateForwardButton(
                 canDoForward(tab) ? ForwardButtonAnimation.SHOW : ForwardButtonAnimation.HIDE);
     }
@@ -169,9 +169,5 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
 
     protected boolean canDoForward(final Tab tab) {
         return (tab.canDoForward() && !isEditing());
-    }
-
-    protected static void setButtonEnabled(final ImageButton button, final boolean enabled) {
-        button.setEnabled(enabled);
     }
 }

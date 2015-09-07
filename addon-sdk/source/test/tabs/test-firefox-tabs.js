@@ -1234,6 +1234,33 @@ exports['test active tab properties defined on popup closed'] = function (assert
   });
 };
 
+// related to bug 922956
+// https://bugzilla.mozilla.org/show_bug.cgi?id=922956
+exports["test ready event after window.open"] = function (assert, done) {
+  setPref(OPEN_IN_NEW_WINDOW_PREF, 2);
+  setPref(DISABLE_POPUP_PREF, false);
+
+  let firstRun = true;
+  tabs.on('ready', function onReady(tab) {
+    if (firstRun) {
+      assert.pass("tab ready callback after 1st window.open");
+      firstRun = false;
+      tab.close();
+    }
+    else {
+      assert.pass("tab ready callback after 2nd window.open");
+      tabs.removeListener('ready', onReady);
+      tab.close(done);
+    }
+  });
+
+  tabs.activeTab.attach({
+    contentScript: "window.open('about:blank');" +
+                   "window.open('about:blank', '', " +
+                   "'width=800,height=600,resizable=no,status=no,location=no');"
+  });
+}
+
 after(exports, function*(name, assert) {
   resetPopupPrefs();
   yield cleanUI();
