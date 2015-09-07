@@ -186,9 +186,9 @@ NS_EVENT_MESSAGE(eLegacyDOMFocusIn,     eLegacyUIEventFirst + 1)
 NS_EVENT_MESSAGE(eLegacyDOMFocusOut,    eLegacyUIEventFirst + 2)
 
 // pagetransition events
-NS_EVENT_MESSAGE(NS_PAGETRANSITION_START, 2700)
-NS_EVENT_MESSAGE(NS_PAGE_SHOW,          NS_PAGETRANSITION_START + 1)
-NS_EVENT_MESSAGE(NS_PAGE_HIDE,          NS_PAGETRANSITION_START + 2)
+NS_EVENT_MESSAGE(ePageTransitionEventFirst, 2700)
+NS_EVENT_MESSAGE(NS_PAGE_SHOW,              ePageTransitionEventFirst + 1)
+NS_EVENT_MESSAGE(NS_PAGE_HIDE,              ePageTransitionEventFirst + 2)
 
 // SVG events
 NS_EVENT_MESSAGE(NS_SVG_EVENT_START,    2800)
