@@ -8,7 +8,6 @@
 
 #include <stdint.h>                     // for uint8_t, uint16_t
 #include <sys/types.h>                  // for int16_t
-#include "gfxCore.h"                    // for NS_GFX
 #include "gfxFontFamilyList.h"
 #include "gfxFontFeatures.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
@@ -40,7 +39,7 @@ const uint8_t kGenericFont_cursive      = 0x10;
 const uint8_t kGenericFont_fantasy      = 0x20;
 
 // Font structure.
-struct NS_GFX nsFont {
+struct nsFont {
 
   // list of font families, either named or generic
   mozilla::FontFamilyList fontlist;

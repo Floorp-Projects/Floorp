@@ -281,7 +281,7 @@ static void ScaleYCbCr444ToRGB565_Nearest_Row_C(
   }
 }
 
-NS_GFX_(void) ScaleYCbCrToRGB565(const uint8_t *y_buf,
+void ScaleYCbCrToRGB565(const uint8_t *y_buf,
                                  const uint8_t *u_buf,
                                  const uint8_t *v_buf,
                                  uint8_t *rgb_buf,
@@ -537,7 +537,7 @@ NS_GFX_(void) ScaleYCbCrToRGB565(const uint8_t *y_buf,
   }
 }
 
-NS_GFX_(bool) IsScaleYCbCrToRGB565Fast(int source_x0,
+bool IsScaleYCbCrToRGB565Fast(int source_x0,
                                        int source_y0,
                                        int source_width,
                                        int source_height,
@@ -599,7 +599,7 @@ void yuv_to_rgb565_row_c(uint16 *dst,
   }
 }
 
-NS_GFX_(void) ConvertYCbCrToRGB565(const uint8* y_buf,
+void ConvertYCbCrToRGB565(const uint8* y_buf,
                                    const uint8* u_buf,
                                    const uint8* v_buf,
                                    uint8* rgb_buf,
@@ -652,7 +652,7 @@ NS_GFX_(void) ConvertYCbCrToRGB565(const uint8* y_buf,
   }
 }
 
-NS_GFX_(bool) IsConvertYCbCrToRGB565Fast(int pic_x,
+bool IsConvertYCbCrToRGB565Fast(int pic_x,
                                          int pic_y,
                                          int pic_width,
                                          int pic_height,

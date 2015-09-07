@@ -16,7 +16,6 @@ DEFINES['MOZ_APP_VERSION'] = '"%s"' % CONFIG['MOZ_APP_VERSION']
 EXPORTS += [
     'DriverCrashGuard.h',
     'FilterSupport.h',
-    'gfxCore.h',
     'gfxCrashReporterUtils.h',
     'gfxTelemetry.h',
     'nsBoundingMetrics.h',
