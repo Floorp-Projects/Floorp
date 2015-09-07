@@ -122,8 +122,6 @@ using dom::MediaStreamError;
 using dom::GetUserMediaRequest;
 using dom::Sequence;
 using dom::OwningBooleanOrMediaTrackConstraints;
-using dom::SupportedAudioConstraints;
-using dom::SupportedVideoConstraints;
 using media::Pledge;
 using media::NewRunnableFrom;
 using media::NewTaskFrom;

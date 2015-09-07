@@ -4154,21 +4154,6 @@ nsLayoutUtils::IsViewportScrollbarFrame(nsIFrame* aFrame)
            IsProperAncestorFrame(rootScrolledFrame, aFrame));
 }
 
-static nscoord AddPercents(nsLayoutUtils::IntrinsicISizeType aType,
-                           nscoord aCurrent, float aPercent)
-{
-  nscoord result = aCurrent;
-  if (aPercent > 0.0f && aType == nsLayoutUtils::PREF_ISIZE) {
-    // XXX Should we also consider percentages for min widths, up to a
-    // limit?
-    if (aPercent >= 1.0f)
-      result = nscoord_MAX;
-    else
-      result = NSToCoordRound(float(result) / (1.0f - aPercent));
-  }
-  return result;
-}
-
 // Use only for widths/heights (or their min/max), since it clamps
 // negative calc() results to 0.
 static bool GetAbsoluteCoord(const nsStyleCoord& aStyle, nscoord& aResult)
@@ -4422,7 +4407,8 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
   if (GetAbsoluteCoord(aStyleSize, size) ||
       GetIntrinsicCoord(aStyleSize, aRenderingContext, aFrame,
                         PROP_WIDTH, size)) {
-    result = AddPercents(aType, size + coordOutsideSize, pctOutsideSize);
+    result = nsLayoutUtils::AddPercents(aType, size + coordOutsideSize,
+                                        pctOutsideSize);
   } else if (aType == nsLayoutUtils::MIN_ISIZE &&
              // The only cases of coord-percent-calc() units that
              // GetAbsoluteCoord didn't handle are percent and calc()s
@@ -4437,14 +4423,15 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
     // the coefficient on the percent is positive and there are no max()
     // expressions).  However, doing better for percents wouldn't be
     // backwards compatible.
-    result = AddPercents(aType, result, pctTotal);
+    result = nsLayoutUtils::AddPercents(aType, result, pctTotal);
   }
 
   nscoord maxSize = aFixedMaxSize ? *aFixedMaxSize : 0;
   if (aFixedMaxSize ||
       GetIntrinsicCoord(aStyleMaxSize, aRenderingContext, aFrame,
                         PROP_MAX_WIDTH, maxSize)) {
-    maxSize = AddPercents(aType, maxSize + coordOutsideSize, pctOutsideSize);
+    maxSize = nsLayoutUtils::AddPercents(aType, maxSize + coordOutsideSize,
+                                         pctOutsideSize);
     if (result > maxSize) {
       result = maxSize;
     }
@@ -4454,13 +4441,14 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
   if (aFixedMinSize ||
       GetIntrinsicCoord(aStyleMinSize, aRenderingContext, aFrame,
                         PROP_MIN_WIDTH, minSize)) {
-    minSize = AddPercents(aType, minSize + coordOutsideSize, pctOutsideSize);
+    minSize = nsLayoutUtils::AddPercents(aType, minSize + coordOutsideSize,
+                                         pctOutsideSize);
     if (result < minSize) {
       result = minSize;
     }
   }
 
-  min = AddPercents(aType, min, pctTotal);
+  min = nsLayoutUtils::AddPercents(aType, min, pctTotal);
   if (result < min) {
     result = min;
   }
@@ -4477,7 +4465,8 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
                                                      : devSize.width);
     // GetMinimumWidgetSize() returns a border-box width.
     themeSize += aOffsets.hMargin;
-    themeSize = AddPercents(aType, themeSize, aOffsets.hPctMargin);
+    themeSize = nsLayoutUtils::AddPercents(aType, themeSize,
+                                           aOffsets.hPctMargin);
 
     if (themeSize > result || !canOverride) {
       result = themeSize;
@@ -4586,6 +4575,9 @@ nsLayoutUtils::IntrinsicForAxis(PhysicalAxis        aAxis,
 #endif
     if (MOZ_UNLIKELY(aAxis != ourInlineAxis)) {
       // We need aFrame's block-dir size.
+      if (aFlags & BAIL_IF_REFLOW_NEEDED) {
+        return NS_INTRINSIC_WIDTH_UNKNOWN;
+      }
       // XXX Unfortunately, we probably don't know this yet, so this is wrong...
       // but it's not clear what we should do. If aFrame's inline size hasn't
       // been determined yet, we can't necessarily figure out its block size
@@ -4735,6 +4727,59 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext* aRenderingContext,
   PhysicalAxis axis =
     aFrame->GetParent()->GetWritingMode().PhysicalAxis(eLogicalAxisInline);
   return IntrinsicForAxis(axis, aRenderingContext, aFrame, aType, aFlags);
+}
+
+/* static */ nscoord
+nsLayoutUtils::MinSizeContributionForAxis(PhysicalAxis        aAxis,
+                                          nsRenderingContext* aRC,
+                                          nsIFrame*           aFrame,
+                                          IntrinsicISizeType  aType,
+                                          uint32_t            aFlags)
+{
+  NS_PRECONDITION(aFrame, "null frame");
+  NS_PRECONDITION(aFrame->GetParent(),
+                  "MinSizeContributionForAxis called on frame not in tree");
+
+#ifdef DEBUG_INTRINSIC_WIDTH
+  nsFrame::IndentBy(stderr, gNoiseIndent);
+  static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+  printf_stderr(" %s min-isize for %s WM:\n",
+                aType == MIN_ISIZE ? "min" : "pref",
+                aWM.IsVertical() ? "vertical" : "horizontal");
+#endif
+
+  // If aFrame is a container for font size inflation, then shrink
+  // wrapping inside of it should not apply font size inflation.
+  AutoMaybeDisableFontInflation an(aFrame);
+
+  PhysicalAxis ourInlineAxis =
+    aFrame->GetWritingMode().PhysicalAxis(eLogicalAxisInline);
+  nsIFrame::IntrinsicISizeOffsetData offsets =
+    ourInlineAxis == aAxis ? aFrame->IntrinsicISizeOffsets()
+                           : aFrame->IntrinsicBSizeOffsets();
+  nscoord result = 0;
+  nscoord min = 0;
+  const nsStylePosition* stylePos = aFrame->StylePosition();
+  uint8_t boxSizing = stylePos->mBoxSizing;
+  const nsStyleCoord& style = aAxis == eAxisHorizontal ? stylePos->mMinWidth
+                                                       : stylePos->mMinHeight;
+  nscoord minSize;
+  nscoord* fixedMinSize = nullptr;
+  if (GetAbsoluteCoord(style, minSize)) {
+    fixedMinSize = &minSize;
+  }
+  result = AddIntrinsicSizeOffset(aRC, aFrame, offsets, aType, boxSizing,
+                                  result, min, style, fixedMinSize,
+                                  style, fixedMinSize, style, aFlags, aAxis);
+
+#ifdef DEBUG_INTRINSIC_WIDTH
+  nsFrame::IndentBy(stderr, gNoiseIndent);
+  static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+  printf_stderr(" %s min-isize is %d twips.\n",
+         aType == MIN_ISIZE ? "min" : "pref", result);
+#endif
+
+  return result;
 }
 
 /* static */ nscoord
