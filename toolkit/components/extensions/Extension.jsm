@@ -278,7 +278,9 @@ var GlobalManager = {
 
     if (this.docShells.has(docShell)) {
       let {extension, context} = this.docShells.get(docShell);
-      inject(extension, context);
+      if (context) {
+        inject(extension, context);
+      }
       return;
     }
 
