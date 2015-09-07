@@ -1,2 +1,3 @@
 pystache == 0.5.4
 PyYAML == 3.11
+slugid == 1.0.6
