@@ -198,6 +198,7 @@ destroying the MediaDecoder object.
 #include "nsITimer.h"
 #include "MediaResource.h"
 #include "MediaDecoderOwner.h"
+#include "MediaEventSource.h"
 #include "MediaStreamGraph.h"
 #include "AbstractMediaDecoder.h"
 #include "DecodedStream.h"
@@ -989,6 +990,8 @@ protected:
 
   const char* PlayStateStr();
 
+  void OnMetadataUpdate(TimedMetadata&& aMetadata);
+
   // This should only ever be accessed from the main thread.
   // It is set in Init and cleared in Shutdown when the element goes away.
   // The decoder does not add a reference the element.
@@ -1058,6 +1061,9 @@ protected:
 
   // Timer to schedule updating dormant state.
   nsCOMPtr<nsITimer> mDormantTimer;
+
+  // A listener to receive metadata updates from MDSM.
+  MediaEventListener mTimedMetadataListener;
 
 protected:
   // Whether the state machine is shut down.
