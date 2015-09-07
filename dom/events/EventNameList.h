@@ -591,7 +591,7 @@ NON_IDL_EVENT(MozMouseHittest,
               eMouseEventClass)
 
 NON_IDL_EVENT(DOMAttrModified,
-              NS_MUTATION_ATTRMODIFIED,
+              eLegacyAttrModified,
               EventNameType_HTMLXUL,
               eMutationEventClass)
 NON_IDL_EVENT(DOMCharacterDataModified,
