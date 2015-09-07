@@ -140,7 +140,7 @@ NS_EVENT_MESSAGE(eLegacyNodeRemovedFromDocument,  eLegacyMutationEventFirst + 3)
 NS_EVENT_MESSAGE(eLegacyNodeInsertedIntoDocument, eLegacyMutationEventFirst + 4)
 NS_EVENT_MESSAGE(eLegacyAttrModified,             eLegacyMutationEventFirst + 5)
 NS_EVENT_MESSAGE(eLegacyCharacterDataModified,    eLegacyMutationEventFirst + 6)
-NS_EVENT_MESSAGE(NS_MUTATION_END,                 eLegacyCharacterDataModified)
+NS_EVENT_MESSAGE(eLegacyMutationEventLast,        eLegacyCharacterDataModified)
 
 NS_EVENT_MESSAGE(NS_USER_DEFINED_EVENT, 2000)
  
