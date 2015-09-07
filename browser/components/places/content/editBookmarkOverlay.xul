@@ -24,9 +24,7 @@
         <column flex="1" id="editBMPanel_editColumn" />
       </columns>
       <rows id="editBMPanel_rows">
-        <row id="editBMPanel_nameRow"
-             align="center"
-             collapsed="true">
+        <row align="center" id="editBMPanel_nameRow">
           <label value="&editBookmarkOverlay.name.label;"
                  class="editBMPanel_rowLabel"
                  accesskey="&editBookmarkOverlay.name.accesskey;"
@@ -35,9 +33,7 @@
                    onchange="gEditItemOverlay.onNamePickerChange();"/>
         </row>
 
-        <row id="editBMPanel_locationRow"
-             align="center"
-             collapsed="true">
+        <row align="center" id="editBMPanel_locationRow">
           <label value="&editBookmarkOverlay.location.label;"
                  class="editBMPanel_rowLabel"
                  accesskey="&editBookmarkOverlay.location.accesskey;"
@@ -47,9 +43,7 @@
                    onchange="gEditItemOverlay.onLocationFieldChange();"/>
         </row>
 
-        <row id="editBMPanel_folderRow"
-             align="center"
-             collapsed="true">
+        <row align="center" id="editBMPanel_folderRow">
           <label value="&editBookmarkOverlay.folder.label;"
                  class="editBMPanel_rowLabel"
                  control="editBMPanel_folderMenuList"/>
@@ -82,9 +76,7 @@
           </hbox>
         </row>
 
-        <row id="editBMPanel_folderTreeRow"
-             collapsed="true"
-             flex="1">
+        <row id="editBMPanel_folderTreeRow" collapsed="true" flex="1">
           <spacer/>
           <vbox flex="1">
             <tree id="editBMPanel_folderTree"
@@ -111,9 +103,7 @@
           </vbox>
         </row>
 
-        <row id="editBMPanel_tagsRow"
-             align="center"
-             collapsed="true">
+        <row align="center" id="editBMPanel_tagsRow">
           <label value="&editBookmarkOverlay.tags.label;"
                  class="editBMPanel_rowLabel"
                  accesskey="&editBookmarkOverlay.tags.accesskey;"
@@ -146,9 +136,7 @@
                    height="150"/>
         </row>
 
-        <row id="editBMPanel_keywordRow"
-             align="center"
-             collapsed="true">
+        <row align="center" id="editBMPanel_keywordRow">
           <observes element="additionalInfoBroadcaster" attribute="hidden"/>
           <label value="&editBookmarkOverlay.keyword.label;"
                  class="editBMPanel_rowLabel"
@@ -158,8 +146,7 @@
                    onchange="gEditItemOverlay.onKeywordFieldChange();"/>
         </row>
 
-        <row id="editBMPanel_descriptionRow"
-             collapsed="true">
+        <row id="editBMPanel_descriptionRow">
           <observes element="additionalInfoBroadcaster" attribute="hidden"/>
           <label value="&editBookmarkOverlay.description.label;"
                  class="editBMPanel_rowLabel"
@@ -174,7 +161,6 @@
     </grid>
 
     <checkbox id="editBMPanel_loadInSidebarCheckbox"
-              collapsed="true"
               label="&editBookmarkOverlay.loadInSidebar.label;"
               accesskey="&editBookmarkOverlay.loadInSidebar.accesskey;"
               oncommand="gEditItemOverlay.onLoadInSidebarCheckboxCommand();">
