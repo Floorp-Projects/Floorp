@@ -3,12 +3,21 @@ var {
   EventManager,
 } = ExtensionUtils;
 
+// WeakMap[Extension -> Set(callback)]
 var messageHandlers = new WeakMap();
 
+extensions.on("startup", (type, extension) => {
+  messageHandlers.set(extension, new Set());
+});
+
+extensions.on("shutdown", (type, extension) => {
+  messageHandlers.delete(extension);
+});
+
 extensions.on("test-message", (type, extension, ...args) => {
-  let fire = messageHandlers.get(extension);
-  if (fire) {
-    fire(...args);
+  let handlers = messageHandlers.get(extension);
+  for (let handler of handlers) {
+    handler(...args);
   }
 });
 
@@ -52,9 +61,11 @@ extensions.registerAPI((extension, context) => {
       },
 
       onMessage: new EventManager(context, "test.onMessage", fire => {
-        messageHandlers.set(extension, fire);
+        let handlers = messageHandlers.get(extension);
+        handlers.add(fire);
+
         return () => {
-          messageHandlers.delete(extension);
+          handlers.delete(fire);
         };
       }).api(),
     },
