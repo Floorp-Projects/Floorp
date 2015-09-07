@@ -12386,7 +12386,8 @@ CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
     if (!CheckFunctions(m, &mcd))
         return false;
 
-    m.finishFunctionBodies(&mcd);
+    if (!m.finishFunctionBodies(&mcd))
+        return false;
 
     if (!CheckFuncPtrTables(m))
         return false;
