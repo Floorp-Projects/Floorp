@@ -67,6 +67,7 @@ protected:
     bool mRequiresAAT;
     bool mIsCFF;
     bool mIsCFFInitialized;
+    nsTHashtable<nsUint32HashKey> mAvailableTables;
 };
 
 class gfxMacPlatformFontList : public gfxPlatformFontList {
