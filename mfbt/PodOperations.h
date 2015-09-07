@@ -180,6 +180,17 @@ PodEqual(const T* one, const T* two, size_t len)
   return !memcmp(one, two, len * sizeof(T));
 }
 
+/*
+ * Determine whether the |N| elements at |one| are memory-identical to the
+ * |N| elements at |two|.
+ */
+template <class T, size_t N>
+static MOZ_ALWAYS_INLINE bool
+PodEqual(const T (&one)[N], const T (&two)[N])
+{
+  return PodEqual(one, two, N);
+}
+
 } // namespace mozilla
 
 #endif /* mozilla_PodOperations_h */
