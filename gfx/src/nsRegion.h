@@ -9,7 +9,6 @@
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint32_t, uint64_t
 #include <sys/types.h>                  // for int32_t
-#include "gfxCore.h"                    // for NS_GFX
 #include "mozilla/ToString.h"           // for mozilla::ToString
 #include "nsCoord.h"                    // for nscoord
 #include "nsError.h"                    // for nsresult
@@ -420,7 +419,7 @@ private:
 };
 
 
-class NS_GFX nsRegionRectIterator
+class nsRegionRectIterator
 {
   const nsRegion*  mRegion;
   int i;
@@ -474,7 +473,7 @@ namespace gfx {
  * BaseIntRegions use int32_t coordinates.
  */
 template <typename Derived, typename Rect, typename Point, typename Margin>
-class NS_GFX BaseIntRegion
+class BaseIntRegion
 {
   friend class ::nsRegion;
 
@@ -763,7 +762,7 @@ public:
 
   nsCString ToString() const { return mImpl.ToString(); }
 
-  class NS_GFX RectIterator
+  class RectIterator
   {
     nsRegionRectIterator mImpl;
     Rect mTmp;
@@ -825,7 +824,7 @@ private:
 } // namespace gfx
 } // namespace mozilla
 
-class NS_GFX nsIntRegion : public mozilla::gfx::BaseIntRegion<nsIntRegion, mozilla::gfx::IntRect, nsIntPoint, nsIntMargin>
+class nsIntRegion : public mozilla::gfx::BaseIntRegion<nsIntRegion, mozilla::gfx::IntRect, nsIntPoint, nsIntMargin>
 {
 public:
   // Forward constructors.

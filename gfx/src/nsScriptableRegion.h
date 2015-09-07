@@ -8,12 +8,11 @@
 #define nsScriptableRegion_h
 
 #include "nsIScriptableRegion.h"
-#include "gfxCore.h"
 #include "nsISupports.h"
 #include "nsRegion.h"
 #include "mozilla/Attributes.h"
 
-class NS_GFX nsScriptableRegion final : public nsIScriptableRegion {
+class nsScriptableRegion final : public nsIScriptableRegion {
 public:
 	nsScriptableRegion();
 

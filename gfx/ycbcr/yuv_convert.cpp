@@ -31,7 +31,7 @@ const int kFractionBits = 16;
 const int kFractionMax = 1 << kFractionBits;
 const int kFractionMask = ((1 << kFractionBits) - 1);
 
-NS_GFX_(YUVType) TypeFromSize(int ywidth, 
+YUVType TypeFromSize(int ywidth, 
                               int yheight, 
                               int cbcrwidth, 
                               int cbcrheight)
@@ -48,18 +48,18 @@ NS_GFX_(YUVType) TypeFromSize(int ywidth,
 }
 
 // Convert a frame of YUV to 32 bit ARGB.
-NS_GFX_(void) ConvertYCbCrToRGB32(const uint8* y_buf,
-                                  const uint8* u_buf,
-                                  const uint8* v_buf,
-                                  uint8* rgb_buf,
-                                  int pic_x,
-                                  int pic_y,
-                                  int pic_width,
-                                  int pic_height,
-                                  int y_pitch,
-                                  int uv_pitch,
-                                  int rgb_pitch,
-                                  YUVType yuv_type) {
+void ConvertYCbCrToRGB32(const uint8* y_buf,
+                         const uint8* u_buf,
+                         const uint8* v_buf,
+                         uint8* rgb_buf,
+                         int pic_x,
+                         int pic_y,
+                         int pic_width,
+                         int pic_height,
+                         int y_pitch,
+                         int uv_pitch,
+                         int rgb_pitch,
+                         YUVType yuv_type) {
   unsigned int y_shift = yuv_type == YV12 ? 1 : 0;
   unsigned int x_shift = yuv_type == YV24 ? 0 : 1;
   // Test for SSE because the optimized code uses movntq, which is not part of MMX.
@@ -163,20 +163,20 @@ static inline void FilterRows(uint8* ybuf, const uint8* y0_ptr,
 
 
 // Scale a frame of YUV to 32 bit ARGB.
-NS_GFX_(void) ScaleYCbCrToRGB32(const uint8* y_buf,
-                                const uint8* u_buf,
-                                const uint8* v_buf,
-                                uint8* rgb_buf,
-                                int source_width,
-                                int source_height,
-                                int width,
-                                int height,
-                                int y_pitch,
-                                int uv_pitch,
-                                int rgb_pitch,
-                                YUVType yuv_type,
-                                Rotate view_rotate,
-                                ScaleFilter filter) {
+void ScaleYCbCrToRGB32(const uint8* y_buf,
+                       const uint8* u_buf,
+                       const uint8* v_buf,
+                       uint8* rgb_buf,
+                       int source_width,
+                       int source_height,
+                       int width,
+                       int height,
+                       int y_pitch,
+                       int uv_pitch,
+                       int rgb_pitch,
+                       YUVType yuv_type,
+                       Rotate view_rotate,
+                       ScaleFilter filter) {
   bool has_mmx = supports_mmx();
 
   // 4096 allows 3 buffers to fit in 12k.

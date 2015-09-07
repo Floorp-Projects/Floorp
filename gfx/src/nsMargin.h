@@ -8,7 +8,6 @@
 
 #include "nsCoord.h"
 #include "nsPoint.h"
-#include "gfxCore.h"
 #include "mozilla/gfx/BaseMargin.h"
 
 struct nsMargin : public mozilla::gfx::BaseMargin<nscoord, nsMargin> {

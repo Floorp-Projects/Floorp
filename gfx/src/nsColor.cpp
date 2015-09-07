@@ -75,8 +75,7 @@ static int ComponentValue(const char16_t* aColorSpec, int aLen, int color, int d
   return component;
 }
 
-NS_GFX_(bool) NS_HexToRGB(const nsAString& aColorSpec,
-                                       nscolor* aResult)
+bool NS_HexToRGB(const nsAString& aColorSpec, nscolor* aResult)
 {
   const char16_t* buffer = aColorSpec.BeginReading();
 
@@ -121,7 +120,7 @@ NS_GFX_(bool) NS_HexToRGB(const nsAString& aColorSpec,
 
 // This implements part of the algorithm for legacy behavior described in
 // http://www.whatwg.org/specs/web-apps/current-work/complete/common-microsyntaxes.html#rules-for-parsing-a-legacy-color-value
-NS_GFX_(bool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
+bool NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
 {
   if (aColorSpec.EqualsLiteral("transparent")) {
     return false;
@@ -185,7 +184,7 @@ NS_GFX_(bool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
   return true;
 }
 
-NS_GFX_(bool) NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)
+bool NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)
 {
   if (!gColorTable) return false;
 
@@ -203,7 +202,7 @@ NS_GFX_(bool) NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)
 
 // Returns kColorNames, an array of all possible color names, and sets
 // *aSizeArray to the size of that array. Do NOT call free() on this array.
-NS_GFX_(const char * const *) NS_AllColorNames(size_t *aSizeArray)
+const char * const * NS_AllColorNames(size_t *aSizeArray)
 {
   *aSizeArray = ArrayLength(kColorNames);
   return kColorNames;
@@ -215,7 +214,7 @@ NS_GFX_(const char * const *) NS_AllColorNames(size_t *aSizeArray)
 #define MOZ_BLEND(target, bg, fg, fgalpha)       \
   FAST_DIVIDE_BY_255(target, (bg)*(255-fgalpha) + (fg)*(fgalpha))
 
-NS_GFX_(nscolor)
+nscolor
 NS_ComposeColors(nscolor aBG, nscolor aFG)
 {
   // This function uses colors that are non premultiplied alpha.
@@ -264,7 +263,7 @@ HSL_HueToRGB(float m1, float m2, float h)
 }
 
 // The float parameters are all expected to be in the range 0-1
-NS_GFX_(nscolor)
+nscolor
 NS_HSL2RGB(float h, float s, float l)
 {
   uint8_t r, g, b;
@@ -281,7 +280,7 @@ NS_HSL2RGB(float h, float s, float l)
   return NS_RGB(r, g, b);  
 }
 
-NS_GFX_(const char*)
+const char*
 NS_RGBToColorName(nscolor aColor)
 {
   for (size_t idx = 0; idx < ArrayLength(kColors); ++idx) {
