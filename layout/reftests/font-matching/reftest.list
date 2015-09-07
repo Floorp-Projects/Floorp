@@ -72,6 +72,7 @@ HTTP(..) == stretchmapping-137.html stretchmapping-137-ref.html
 
 # test for font-stretch using @font-face
 skip-if(B2G||Mulet) skip-if(Android&&AndroidVersion>15) HTTP(..) == font-stretch-1.html font-stretch-1-ref.html # bugs 773482, 927602 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) skip-if(Android&&AndroidVersion>15) HTTP(..) == font-shorthand-stretch-1.html font-stretch-1-ref.html # bugs 773482, 927602 # Initial mulet triage: parity with B2G/B2G Desktop
 
 # bug 724231 - applying synthetic styles to a single @font-face font
 # should apply artificial obliquing, not switch to a true styled face
