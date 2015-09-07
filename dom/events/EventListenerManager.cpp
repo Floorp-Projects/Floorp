@@ -85,7 +85,7 @@ MutationBitForEventType(EventMessage aEventType)
       return NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT;
     case NS_MUTATION_ATTRMODIFIED:
       return NS_EVENT_BITS_MUTATION_ATTRMODIFIED;
-    case NS_MUTATION_CHARACTERDATAMODIFIED:
+    case eLegacyCharacterDataModified:
       return NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED;
     default:
       break;
