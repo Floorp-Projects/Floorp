@@ -949,11 +949,15 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       RefPtr<FilterNode> filter;
       uint32_t op = atts.GetUint(eCompositeOperator);
       if (op == SVG_FECOMPOSITE_OPERATOR_ARITHMETIC) {
+        const nsTArray<float>& coefficients = atts.GetFloats(eCompositeCoefficients);
+        static const float allZero[4] = { 0, 0, 0, 0 };
         filter = aDT->CreateFilter(FilterType::ARITHMETIC_COMBINE);
-        if (!filter) {
+        // All-zero coefficients sometimes occur in junk filters.
+        if (!filter ||
+            (coefficients.Length() == ArrayLength(allZero) &&
+             PodEqual(coefficients.Elements(), allZero, ArrayLength(allZero)))) {
           return nullptr;
         }
-        const nsTArray<float>& coefficients = atts.GetFloats(eCompositeCoefficients);
         filter->SetAttribute(ATT_ARITHMETIC_COMBINE_COEFFICIENTS,
                              coefficients.Elements(), coefficients.Length());
         filter->SetInput(IN_ARITHMETIC_COMBINE_IN, aSources[0]);
