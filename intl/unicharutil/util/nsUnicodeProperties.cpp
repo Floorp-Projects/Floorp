@@ -13,7 +13,7 @@
 #define UNICODE_LIMIT     0x110000
 
 
-const nsCharProps1&
+static const nsCharProps1&
 GetCharProps1(uint32_t aCh)
 {
     if (aCh < UNICODE_BMP_LIMIT) {
@@ -128,6 +128,18 @@ uint32_t
 GetMirroredChar(uint32_t aCh)
 {
     return aCh + sMirrorOffsets[GetCharProps1(aCh).mMirrorOffsetIndex];
+}
+
+bool
+HasMirroredChar(uint32_t aCh)
+{
+    return GetCharProps1(aCh).mMirrorOffsetIndex != 0;
+}
+
+uint8_t
+GetCombiningClass(uint32_t aCh)
+{
+    return GetCharProps1(aCh).mCombiningClass;
 }
 
 uint32_t
@@ -247,6 +259,21 @@ IsClusterExtender(uint32_t aCh, uint8_t aCategory)
              aCategory <= HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK) ||
             (aCh >= 0x200c && aCh <= 0x200d) || // ZWJ, ZWNJ
             (aCh >= 0xff9e && aCh <= 0xff9f));  // katakana sound marks
+}
+
+enum HSType {
+    HST_NONE = 0x00,
+    HST_L    = 0x01,
+    HST_V    = 0x02,
+    HST_T    = 0x04,
+    HST_LV   = 0x03,
+    HST_LVT  = 0x07
+};
+
+static HSType
+GetHangulSyllableType(uint32_t aCh)
+{
+    return HSType(GetCharProps1(aCh).mHangulType);
 }
 
 void
