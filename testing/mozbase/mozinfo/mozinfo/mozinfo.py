@@ -182,6 +182,11 @@ def find_and_update_from_json(*dirs):
 
     return None
 
+def output_to_file(path):
+    import json
+    with open(path, 'w') as f:
+        f.write(json.dumps(info));
+
 update({})
 
 # exports
@@ -194,6 +199,7 @@ __all__ += [
     'choices',
     'update',
     'find_and_update_from_json',
+    'output_to_file',
     ]
 
 def main(args=None):
