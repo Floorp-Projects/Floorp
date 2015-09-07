@@ -77,7 +77,7 @@ MutationBitForEventType(EventMessage aEventType)
       return NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED;
     case eLegacyNodeInserted:
       return NS_EVENT_BITS_MUTATION_NODEINSERTED;
-    case NS_MUTATION_NODEREMOVED:
+    case eLegacyNodeRemoved:
       return NS_EVENT_BITS_MUTATION_NODEREMOVED;
     case eLegacyNodeRemovedFromDocument:
       return NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT;
