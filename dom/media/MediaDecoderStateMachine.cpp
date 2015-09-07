@@ -16,6 +16,7 @@
 #include "MediaTimer.h"
 #include "mediasink/DecodedAudioDataSink.h"
 #include "mediasink/AudioSinkWrapper.h"
+#include "mediasink/DecodedStream.h"
 #include "nsTArray.h"
 #include "MediaDecoder.h"
 #include "MediaDecoderReader.h"
@@ -39,7 +40,6 @@
 #include "gfx2DGlue.h"
 #include "nsPrintfCString.h"
 #include "DOMMediaStream.h"
-#include "DecodedStream.h"
 #include "mozilla/Logging.h"
 
 #include <algorithm>
