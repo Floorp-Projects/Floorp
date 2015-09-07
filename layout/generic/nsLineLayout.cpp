@@ -160,12 +160,14 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
                        "very large sizes, not attempts at intrinsic width "
                        "calculation");
 #ifdef DEBUG
-  if ((aISize != NS_UNCONSTRAINEDSIZE) && CRAZY_SIZE(aISize)) {
+  if ((aISize != NS_UNCONSTRAINEDSIZE) && CRAZY_SIZE(aISize) &&
+      !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": Init: bad caller: width WAS %d(0x%x)\n",
            aISize, aISize);
   }
-  if ((aBSize != NS_UNCONSTRAINEDSIZE) && CRAZY_SIZE(aBSize)) {
+  if ((aBSize != NS_UNCONSTRAINEDSIZE) && CRAZY_SIZE(aBSize) &&
+      !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": Init: bad caller: height WAS %d(0x%x)\n",
            aBSize, aBSize);
@@ -327,13 +329,15 @@ nsLineLayout::UpdateBand(WritingMode aWM,
 #endif
 #ifdef DEBUG
   if ((availSpace.ISize(lineWM) != NS_UNCONSTRAINEDSIZE) &&
-      CRAZY_SIZE(availSpace.ISize(lineWM))) {
+      CRAZY_SIZE(availSpace.ISize(lineWM)) &&
+      !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": UpdateBand: bad caller: ISize WAS %d(0x%x)\n",
            availSpace.ISize(lineWM), availSpace.ISize(lineWM));
   }
   if ((availSpace.BSize(lineWM) != NS_UNCONSTRAINEDSIZE) &&
-      CRAZY_SIZE(availSpace.BSize(lineWM))) {
+      CRAZY_SIZE(availSpace.BSize(lineWM)) &&
+      !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": UpdateBand: bad caller: BSize WAS %d(0x%x)\n",
            availSpace.BSize(lineWM), availSpace.BSize(lineWM));
@@ -1045,8 +1049,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // Note: break-before means ignore the reflow metrics since the
   // frame will be reflowed another time.
   if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
-    if (CRAZY_SIZE(metrics.ISize(lineWM)) ||
-        CRAZY_SIZE(metrics.BSize(lineWM))) {
+    if ((CRAZY_SIZE(metrics.ISize(lineWM)) ||
+         CRAZY_SIZE(metrics.BSize(lineWM))) &&
+        !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
       printf("nsLineLayout: ");
       nsFrame::ListTag(stdout, aFrame);
       printf(" metrics=%d,%d!\n", metrics.Width(), metrics.Height());

@@ -312,10 +312,10 @@ exports.testUnloadOfDynamicPrefGeneration = function*(assert) {
   yield promise;
 
   // reopen the add-on prefs page
-  ({ tabId, document }) = yield open(addon);
+  ({ tabId, document } = yield open(addon));
 
   // confirm dynamic pref generation did not occur
-  ({ promise, resolve }) = defer();
+  ({ promise, resolve } = defer());
   results = document.querySelectorAll("*[data-jetpack-id=\"" + id + "\"]");
   assert.equal(0, results.length, "the prefs were not setup after unload");
   modelFor(getTabForId(tabId)).close(resolve);

@@ -726,7 +726,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   transition-duration: 150ms;
 }
 
-toolbarbutton[cui-areatype="toolbar"] > :-moz-any(@nestedButtons@) > .toolbarbutton-icon,
+toolbaritem[cui-areatype="toolbar"] > :-moz-any(@nestedButtons@) > .toolbarbutton-icon,
 :-moz-any(@primaryToolbarButtons@):-moz-any([cui-areatype="toolbar"],:not([cui-areatype])):not(:-moz-any(@nestedButtons@)) > .toolbarbutton-icon,
 :-moz-any(@primaryToolbarButtons@):-moz-any([cui-areatype="toolbar"],:not([cui-areatype])) > .toolbarbutton-badge-stack > .toolbarbutton-icon,
 :-moz-any(@primaryToolbarButtons@):-moz-any([cui-areatype="toolbar"],:not([cui-areatype])) > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
@@ -734,8 +734,8 @@ toolbarbutton[cui-areatype="toolbar"] > :-moz-any(@nestedButtons@) > .toolbarbut
   width: 18px;
 }
 
-#nav-bar toolbarbutton[cui-areatype="toolbar"] > :-moz-any(@nestedButtons@) > .toolbarbutton-icon,
-#nav-bar :-moz-any(@primaryToolbarButtons@):-moz-any([cui-areatype="toolbar"],:not([cui-areatype])) > .toolbarbutton-icon,
+#nav-bar toolbaritem[cui-areatype="toolbar"] > :-moz-any(@nestedButtons@) > .toolbarbutton-icon,
+#nav-bar :-moz-any(@primaryToolbarButtons@):-moz-any([cui-areatype="toolbar"],:not([cui-areatype])):not(:-moz-any(@nestedButtons@)) > .toolbarbutton-icon,
 #nav-bar :-moz-any(@primaryToolbarButtons@):-moz-any([cui-areatype="toolbar"],:not([cui-areatype])) > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 #nav-bar #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   /* horizontal padding + border + actual icon width */

@@ -11,7 +11,7 @@
  */
 
 /*
- * Created on Mon Jul 13 19:06:12 2015 from UCD data files with version info:
+ * Created on Thu Sep  3 14:42:28 2015 from UCD data files with version info:
  *
 
 # Date: 2015-06-16, 20:24:00 GMT [KW]
@@ -34,9 +34,6 @@ Standard.
 
 # Scripts-8.0.0.txt
 # Date: 2015-03-11, 22:29:42 GMT [MD]
-
-# EastAsianWidth-8.0.0.txt
-# Date: 2015-02-10, 21:00:00 GMT [KW, LI]
 
 # BidiMirroring-8.0.0.txt
 # Date: 2015-01-20, 18:30:00 GMT [KW, LI]
@@ -75,7 +72,7 @@ struct nsCharProps1 {
 
 struct nsCharProps2 {
   unsigned char mScriptCode:8;
-  unsigned char mEAW:3;
+  unsigned char mUnused:3;
   unsigned char mCategory:5;
   unsigned char mBidiCategory:5;
   unsigned char mXidmod:4;

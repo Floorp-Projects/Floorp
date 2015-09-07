@@ -3420,6 +3420,14 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
     return false;
   }
 
+  // A private document can't access a non-private one, and vice versa.
+  if (aTargetItem->GetDocument()->GetLoadContext()->UsePrivateBrowsing() !=
+      aAccessingItem->GetDocument()->GetLoadContext()->UsePrivateBrowsing())
+  {
+    return false;
+  }
+
+
   nsCOMPtr<nsIDocShellTreeItem> accessingRoot;
   aAccessingItem->GetSameTypeRootTreeItem(getter_AddRefs(accessingRoot));
 
