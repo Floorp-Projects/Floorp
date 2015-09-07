@@ -2405,7 +2405,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
   }
 
   if (aFireMutation) {
-    InternalMutationEvent mutation(true, NS_MUTATION_ATTRMODIFIED);
+    InternalMutationEvent mutation(true, eLegacyAttrModified);
 
     nsAutoString ns;
     nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
@@ -2647,7 +2647,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   }
 
   if (hasMutationListeners) {
-    InternalMutationEvent mutation(true, NS_MUTATION_ATTRMODIFIED);
+    InternalMutationEvent mutation(true, eLegacyAttrModified);
 
     mutation.mRelatedNode = attrNode;
     mutation.mAttrName = aName;
