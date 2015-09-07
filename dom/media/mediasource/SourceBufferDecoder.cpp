@@ -95,20 +95,6 @@ SourceBufferDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
   MSE_DEBUG("UNIMPLEMENTED");
 }
 
-void
-SourceBufferDecoder::QueueMetadata(const media::TimeUnit& aTime,
-                                   nsAutoPtr<MediaInfo> aInfo,
-                                   nsAutoPtr<MetadataTags> aTags)
-{
-  MSE_DEBUG("UNIMPLEMENTED");
-}
-
-void
-SourceBufferDecoder::RemoveMediaTracks()
-{
-  MSE_DEBUG("UNIMPLEMENTED");
-}
-
 bool
 SourceBufferDecoder::HasInitializationData()
 {
