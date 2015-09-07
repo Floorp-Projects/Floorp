@@ -250,7 +250,7 @@ GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, AsmJSExit:
         masm.storePtr(scratch2, Address(scratch, AsmJSActivation::offsetOfFP()));
         DebugOnly<uint32_t> prePop = masm.currentOffset();
         masm.addToStackPtr(Imm32(sizeof(void *)));
-        MOZ_ASSERT(PostStorePrePopFP == masm.currentOffset() - prePop);
+        MOZ_ASSERT_IF(!masm.oom(), PostStorePrePopFP == masm.currentOffset() - prePop);
 #else
         masm.pop(Address(scratch, AsmJSActivation::offsetOfFP()));
         MOZ_ASSERT(PostStorePrePopFP == 0);
