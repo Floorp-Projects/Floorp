@@ -215,7 +215,7 @@ EVENT(emptied,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(ended,
-      NS_ENDED,
+      eEnded,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(input,
