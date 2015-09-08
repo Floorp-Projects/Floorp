@@ -13,6 +13,8 @@
 
 namespace mozilla {
 
+class AudioBlockBuffer;
+
 /**
  * Base class for objects with a thread-safe refcount and a virtual
  * destructor.
@@ -22,6 +24,8 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ThreadSharedObject)
 
   bool IsShared() { return mRefCnt.get() > 1; }
+
+  virtual AudioBlockBuffer* AsAudioBlockBuffer() { return nullptr; };
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {

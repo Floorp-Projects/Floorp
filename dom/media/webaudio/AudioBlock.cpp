@@ -12,13 +12,20 @@ namespace mozilla {
  * Heap-allocated buffer of channels of 128-sample float arrays, with
  * threadsafe refcounting.  Typically you would allocate one of these, fill it
  * in, and then treat it as immutable while it's shared.
+ *
+ * Downstream references are accounted specially so that the creator of the
+ * buffer can reuse and modify its contents next iteration if other references
+ * are all downstream temporary references held by AudioBlock.
+ *
  * This only guarantees 4-byte alignment of the data. For alignment we simply
- * assume that the memory from malloc is at least 4-byte aligned and the
- * refcount's size is large enough that AudioBlockBuffer's size is divisible
- * by 4.
+ * assume that the memory from malloc is at least 4-byte aligned and that
+ * AudioBlockBuffer's size is divisible by 4.
  */
 class AudioBlockBuffer final : public ThreadSharedObject {
 public:
+
+  virtual AudioBlockBuffer* AsAudioBlockBuffer() override { return this; };
+
   float* ChannelData(uint32_t aChannel)
   {
     return reinterpret_cast<float*>(this + 1) + aChannel * WEBAUDIO_BLOCK_SIZE;
@@ -40,6 +47,36 @@ public:
     return p.forget();
   }
 
+  // Graph thread only.
+  void DownstreamRefAdded() { ++mDownstreamRefCount; }
+  void DownstreamRefRemoved() {
+    MOZ_ASSERT(mDownstreamRefCount > 0);
+    --mDownstreamRefCount;
+  }
+  // Whether this is shared by any owners that are not downstream.
+  // Called only from owners with a reference that is not a downstream
+  // reference.  Graph thread only.
+  bool HasLastingShares()
+  {
+    // mRefCnt is atomic and so reading its value is defined even when
+    // modifications may happen on other threads.  mDownstreamRefCount is
+    // not modified on any other thread.
+    //
+    // If all other references are downstream references (managed on this, the
+    // graph thread), then other threads are not using this buffer and cannot
+    // add further references.  This method can safely return false.  The
+    // buffer contents can be modified.
+    //
+    // If there are other references that are not downstream references, then
+    // this method will return true.  The buffer will be assumed to be still
+    // in use and so will not be reused.
+    nsrefcnt count = mRefCnt;
+    // This test is strictly less than because the caller has a reference
+    // that is not a downstream reference.
+    MOZ_ASSERT(mDownstreamRefCount < count);
+    return count != mDownstreamRefCount + 1;
+  }
+
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
@@ -47,18 +84,58 @@ public:
 
 private:
   AudioBlockBuffer() {}
+  ~AudioBlockBuffer() override { MOZ_ASSERT(mDownstreamRefCount == 0); }
+
+  nsAutoRefCnt mDownstreamRefCount;
 };
+
+AudioBlock::~AudioBlock()
+{
+  ClearDownstreamMark();
+}
+
+void
+AudioBlock::SetBuffer(ThreadSharedObject* aNewBuffer)
+{
+  if (aNewBuffer == mBuffer) {
+    return;
+  }
+
+  ClearDownstreamMark();
+
+  mBuffer = aNewBuffer;
+
+  if (!aNewBuffer) {
+    return;
+  }
+
+  AudioBlockBuffer* buffer = aNewBuffer->AsAudioBlockBuffer();
+  if (buffer) {
+    buffer->DownstreamRefAdded();
+    mBufferIsDownstreamRef = true;
+  }
+}
+
+void
+AudioBlock::ClearDownstreamMark() {
+  if (mBufferIsDownstreamRef) {
+    mBuffer->AsAudioBlockBuffer()->DownstreamRefRemoved();
+    mBufferIsDownstreamRef = false;
+  }
+}
 
 void
 AllocateAudioBlock(uint32_t aChannelCount, AudioChunk* aChunk)
 {
-  if (aChunk->mBuffer && !aChunk->mBuffer->IsShared() &&
-      aChunk->ChannelCount() == aChannelCount) {
-    MOZ_ASSERT(aChunk->mBufferFormat == AUDIO_FORMAT_FLOAT32);
-    MOZ_ASSERT(aChunk->mDuration == WEBAUDIO_BLOCK_SIZE);
-    // No need to allocate again.
-    aChunk->mVolume = 1.0f;
-    return;
+  if (aChunk->mBuffer && aChunk->ChannelCount() == aChannelCount) {
+    AudioBlockBuffer* buffer = aChunk->mBuffer->AsAudioBlockBuffer();
+    if (buffer && !buffer->HasLastingShares()) {
+      MOZ_ASSERT(aChunk->mBufferFormat == AUDIO_FORMAT_FLOAT32);
+      MOZ_ASSERT(aChunk->mDuration == WEBAUDIO_BLOCK_SIZE);
+      // No need to allocate again.
+      aChunk->mVolume = 1.0f;
+      return;
+    }
   }
 
   // XXX for SIMD purposes we should do something here to make sure the
