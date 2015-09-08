@@ -358,7 +358,7 @@ EVENT(pause,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(play,
-      NS_PLAY,
+      ePlay,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(playing,
