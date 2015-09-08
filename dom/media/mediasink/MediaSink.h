@@ -40,10 +40,10 @@ public:
 
   struct PlaybackParams {
     PlaybackParams()
-      : volume(1.0) , playbackRate(1.0) , preservesPitch(true) {}
-    double volume;
-    double playbackRate;
-    bool preservesPitch;
+      : mVolume(1.0) , mPlaybackRate(1.0) , mPreservesPitch(true) {}
+    double mVolume;
+    double mPlaybackRate;
+    bool mPreservesPitch;
   };
 
   // Return the playback parameters of this sink.
