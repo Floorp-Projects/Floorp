@@ -72,9 +72,6 @@ let StorageUI = this.StorageUI = function StorageUI(front, target, panelWin) {
   this.displayObjectSidebar = this.displayObjectSidebar.bind(this);
   this.table.on(TableWidget.EVENTS.ROW_SELECTED, this.displayObjectSidebar);
 
-  this.handleScrollEnd = this.handleScrollEnd.bind(this);
-  this.table.on(TableWidget.EVENTS.SCROLL_END, this.handleScrollEnd);
-
   this.sidebar = this._panelDoc.getElementById("storage-sidebar");
   this.sidebar.setAttribute("width", "300");
   this.view = new VariablesView(this.sidebar.firstChild,
@@ -102,7 +99,6 @@ StorageUI.prototype = {
 
   storageTypes: null,
   shouldResetColumns: true,
-  shouldLoadMoreItems: true,
 
   destroy: function() {
     this.front.off("stores-update", this.onUpdate);
@@ -306,14 +302,11 @@ StorageUI.prototype = {
    * @param {array} names
    *        Names of particular store objects. Empty if all are requested
    * @param {number} reason
-   *        3 for loading next 50 items, 2 for update, 1 for new row in an
-   *        existing table and 0 when populating a table for the first time
-   *        for the given host/type
+   *        2 for update, 1 for new row in an existing table and 0 when
+   *        populating a table for the first time for the given host/type
    */
   fetchStorageObjects: function(type, host, names, reason) {
-    let fetchOpts = reason === 3 ? {offset: this.itemOffset}
-                                 : {};
-    this.storageTypes[type].getStoreObjects(host, names, fetchOpts).then(({data}) => {
+    this.storageTypes[type].getStoreObjects(host, names).then(({data}) => {
       if (!data.length) {
         this.emit("store-objects-updated");
         return;
@@ -544,7 +537,6 @@ StorageUI.prototype = {
     }
     this.shouldResetColumns = true;
     this.fetchStorageObjects(type, host, names, 0);
-    this.itemOffset = 0;
   },
 
   /**
@@ -577,9 +569,9 @@ StorageUI.prototype = {
    * @param {array[object]} data
    *        Array of objects to be populated in the storage table
    * @param {number} reason
-   *        The reason of this populateTable call. 3 for loading next 50 items,
-   *        2 for update, 1 for new row in an existing table and 0 when 
-   *        populating a table for the first time for the given host/type
+   *        The reason of this populateTable call. 2 for update, 1 for new row
+   *        in an existing table and 0 when populating a table for the first
+   *        time for the given host/type
    */
   populateTable: function(data, reason) {
     for (let item of data) {
@@ -598,7 +590,7 @@ StorageUI.prototype = {
       if (item.lastAccessed != null) {
         item.lastAccessed = new Date(item.lastAccessed).toLocaleString();
       }
-      if (reason < 2 || reason == 3) {
+      if (reason < 2) {
         this.table.push(item, reason == 0);
       } else {
         this.table.update(item);
@@ -606,7 +598,6 @@ StorageUI.prototype = {
           this.displayObjectSidebar();
         }
       }
-      this.shouldLoadMoreItems = true;
     }
   },
 
@@ -623,22 +614,5 @@ StorageUI.prototype = {
       event.stopPropagation();
       event.preventDefault();
     }
-  },
-
-  /**
-   * Handles endless scrolling for the table
-   */
-  handleScrollEnd: function() {
-    if (!this.shouldLoadMoreItems) return;
-    this.shouldLoadMoreItems = false;
-    this.itemOffset += 50;
-
-    let item = this.tree.selectedItem;
-    let [type, host, db, objectStore] = item;
-    let names = null;
-    if (item.length > 2) {
-      names = [JSON.stringify(item.slice(2))];
-    }
-    this.fetchStorageObjects(type, host, names, 3);
   }
 };
