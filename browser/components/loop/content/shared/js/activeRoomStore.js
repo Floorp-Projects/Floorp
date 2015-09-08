@@ -51,6 +51,7 @@ loop.store.ActiveRoomStore = (function() {
   var OPTIONAL_ROOMINFO_FIELDS = {
     urls: "roomContextUrls",
     description: "roomDescription",
+    participants: "participants",
     roomInfoFailure: "roomInfoFailure",
     roomName: "roomName",
     roomState: "roomState"
@@ -296,6 +297,7 @@ loop.store.ActiveRoomStore = (function() {
           }
 
           this.dispatchAction(new sharedActions.SetupRoomInfo({
+            participants: roomData.participants,
             roomToken: actionData.roomToken,
             roomContextUrls: roomData.decryptedContext.urls,
             roomDescription: roomData.decryptedContext.description,
@@ -418,6 +420,7 @@ loop.store.ActiveRoomStore = (function() {
       }
 
       this.setStoreState({
+        participants: actionData.participants,
         roomContextUrls: actionData.roomContextUrls,
         roomDescription: actionData.roomDescription,
         roomName: actionData.roomName,
@@ -449,7 +452,7 @@ loop.store.ActiveRoomStore = (function() {
       // Iterate over the optional fields that _may_ be present on the actionData
       // object.
       Object.keys(OPTIONAL_ROOMINFO_FIELDS).forEach(function(field) {
-        if (actionData[field]) {
+        if (actionData[field] !== undefined) {
           newState[OPTIONAL_ROOMINFO_FIELDS[field]] = actionData[field];
         }
       });
@@ -478,6 +481,7 @@ loop.store.ActiveRoomStore = (function() {
       this.dispatchAction(new sharedActions.UpdateRoomInfo({
         urls: roomData.decryptedContext.urls,
         description: roomData.decryptedContext.description,
+        participants: roomData.participants,
         roomName: roomData.decryptedContext.roomName,
         roomUrl: roomData.roomUrl
       }));
@@ -792,7 +796,16 @@ loop.store.ActiveRoomStore = (function() {
      * one participantleaves.
      */
     remotePeerDisconnected: function() {
+      // Update the participants to just the owner.
+      var participants = this.getStoreState("participants");
+      if (participants) {
+        participants = participants.filter(function(participant) {
+          return participant.owner;
+        });
+      }
+
       this.setStoreState({
+        participants: participants,
         roomState: ROOM_STATES.SESSION_CONNECTED,
         remoteSrcVideoObject: null
       });
