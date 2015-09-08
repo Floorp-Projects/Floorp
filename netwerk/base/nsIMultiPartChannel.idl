@@ -12,7 +12,7 @@ interface nsIChannel;
  * associated with a MultiPartChannel.
  */
 
-[scriptable, uuid(3c329c90-2ee0-11e5-a2cb-0800200c9a66)]
+[scriptable, uuid(4fefb490-5567-11e5-a837-0800200c9a66)]
 interface nsIMultiPartChannel : nsISupports
 {
     /**
@@ -38,4 +38,9 @@ interface nsIMultiPartChannel : nsISupports
      * content-type=application/package.
      */
     readonly attribute ACString preamble;
+
+    /**
+     * The original http response header in each part.
+     */
+    readonly attribute ACString originalResponseHeader;
 };

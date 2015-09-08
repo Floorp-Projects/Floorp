@@ -75,9 +75,9 @@ arabic_fallback_synthesize_lookup_single (const hb_ot_shape_plan_t *plan HB_UNUS
   if (!num_glyphs)
     return NULL;
 
-  /* Bubble-sort!
+  /* Bubble-sort or something equally good!
    * May not be good-enough for presidential candidate interviews, but good-enough for us... */
-  hb_bubble_sort (&glyphs[0], num_glyphs, OT::GlyphID::cmp, &substitutes[0]);
+  hb_stable_sort (&glyphs[0], num_glyphs, OT::GlyphID::cmp, &substitutes[0]);
 
   OT::Supplier<OT::GlyphID> glyphs_supplier      (glyphs, num_glyphs);
   OT::Supplier<OT::GlyphID> substitutes_supplier (substitutes, num_glyphs);
@@ -126,7 +126,7 @@ arabic_fallback_synthesize_lookup_ligature (const hb_ot_shape_plan_t *plan HB_UN
     first_glyphs_indirection[num_first_glyphs] = first_glyph_idx;
     num_first_glyphs++;
   }
-  hb_bubble_sort (&first_glyphs[0], num_first_glyphs, OT::GlyphID::cmp, &first_glyphs_indirection[0]);
+  hb_stable_sort (&first_glyphs[0], num_first_glyphs, OT::GlyphID::cmp, &first_glyphs_indirection[0]);
 
   /* Now that the first-glyphs are sorted, walk again, populate ligatures. */
   for (unsigned int i = 0; i < num_first_glyphs; i++)

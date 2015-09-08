@@ -58,11 +58,8 @@ public:
   virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
                               nsAutoPtr<MetadataTags> aTags,
                               MediaDecoderEventVisibility aEventVisibility) final override;
-  virtual void QueueMetadata(const media::TimeUnit& aTime, nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags) final override;
   virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
                                 MediaDecoderEventVisibility aEventVisibility) final override;
-
-  virtual void RemoveMediaTracks() final override;
 
   virtual void OnReadMetadataCompleted() final override;
 

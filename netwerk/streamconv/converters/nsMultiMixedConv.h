@@ -44,6 +44,7 @@ public:
   void InitializeByteRange(int64_t aStart, int64_t aEnd);
   void SetIsLastPart() { mIsLastPart = true; }
   void SetPreamble(const nsACString& aPreamble);
+  void SetOriginalResponseHeader(const nsACString& aOriginalResponseHeader);
   nsresult SendOnStartRequest(nsISupports* aContext);
   nsresult SendOnDataAvailable(nsISupports* aContext, nsIInputStream* aStream,
                                uint64_t aOffset, uint32_t aLen);
@@ -89,6 +90,9 @@ protected:
   bool                    mIsLastPart;
 
   nsCString               mPreamble;
+
+  // The original http response header.
+  nsCString               mOriginalResponseHeader;
 };
 
 // The nsMultiMixedConv stream converter converts a stream of type "multipart/x-mixed-replace"
@@ -196,6 +200,9 @@ protected:
     // first boundary. It's only supported by 'application/package' content type
     // and requires the boundary is defined in the HTTP header.
     nsCString           mPreamble;
+
+    // The original http response header of each subresource.
+    nsCString           mOriginalResponseHeader;
 };
 
 #endif /* __nsmultimixedconv__h__ */

@@ -7,19 +7,41 @@
 #if !defined(MediaMetadataManager_h__)
 #define MediaMetadataManager_h__
 
+#include "mozilla/AbstractThread.h"
 #include "mozilla/LinkedList.h"
 
 #include "nsAutoPtr.h"
 #include "AbstractMediaDecoder.h"
+#include "MediaEventSource.h"
 #include "TimeUnits.h"
 #include "VideoUtils.h"
 
 namespace mozilla {
 
+class TimedMetadata;
+typedef MediaEventProducer<TimedMetadata, ListenerMode::Exclusive>
+        TimedMetadataEventProducer;
+typedef MediaEventSource<TimedMetadata, ListenerMode::Exclusive>
+        TimedMetadataEventSource;
+
 // A struct that contains the metadata of a media, and the time at which those
 // metadata should start to be reported.
 class TimedMetadata : public LinkedListElement<TimedMetadata> {
 public:
+  TimedMetadata(const media::TimeUnit& aPublishTime,
+                nsAutoPtr<MetadataTags>&& aTags,
+                nsAutoPtr<MediaInfo>&& aInfo)
+    : mPublishTime(aPublishTime)
+    , mTags(Move(aTags))
+    , mInfo(Move(aInfo)) {}
+
+  // Define our move constructor because we don't want to move the members of
+  // LinkedListElement to change the list.
+  TimedMetadata(TimedMetadata&& aOther)
+    : mPublishTime(aOther.mPublishTime)
+    , mTags(Move(aOther.mTags))
+    , mInfo(Move(aOther.mInfo)) {}
+
   // The time, in microseconds, at which those metadata should be available.
   media::TimeUnit mPublishTime;
   // The metadata. The ownership is transfered to the element when dispatching to
@@ -33,8 +55,7 @@ public:
 
 // This class encapsulate the logic to give the metadata from the reader to
 // the content, at the right time.
-class MediaMetadataManager
-{
+class MediaMetadataManager {
 public:
   ~MediaMetadataManager() {
     TimedMetadata* element;
@@ -43,30 +64,41 @@ public:
     }
   }
 
-  void QueueMetadata(TimedMetadata* aMetadata) {
-    mMetadataQueue.insertBack(aMetadata);
+  // Connect to an event source to receive TimedMetadata events.
+  void Connect(TimedMetadataEventSource& aEvent, AbstractThread* aThread) {
+    mListener = aEvent.Connect(
+      aThread, this, &MediaMetadataManager::OnMetadataQueued);
   }
 
-  void DispatchMetadataIfNeeded(AbstractMediaDecoder* aDecoder, const media::TimeUnit& aCurrentTime) {
+  // Stop receiving TimedMetadata events.
+  void Disconnect() {
+    mListener.Disconnect();
+  }
+
+  // Return an event source through which we will send TimedMetadata events
+  // when playback position reaches the publish time.
+  TimedMetadataEventSource& TimedMetadataEvent() {
+    return mTimedMetadataEvent;
+  }
+
+  void DispatchMetadataIfNeeded(const media::TimeUnit& aCurrentTime) {
     TimedMetadata* metadata = mMetadataQueue.getFirst();
     while (metadata && aCurrentTime >= metadata->mPublishTime) {
-      // Remove all media tracks from the list first.
-      nsCOMPtr<nsIRunnable> removeTracksEvent =
-        new RemoveMediaTracksEventRunner(aDecoder);
-      NS_DispatchToMainThread(removeTracksEvent);
-
-      nsCOMPtr<nsIRunnable> metadataUpdatedEvent =
-        new MetadataUpdatedEventRunner(aDecoder,
-                                       metadata->mInfo,
-                                       metadata->mTags);
-      NS_DispatchToMainThread(metadataUpdatedEvent);
+      // Our listener will figure out what to do with TimedMetadata.
+      mTimedMetadataEvent.Notify(Move(*metadata));
       delete mMetadataQueue.popFirst();
       metadata = mMetadataQueue.getFirst();
     }
   }
 
 protected:
+  void OnMetadataQueued(TimedMetadata&& aMetadata) {
+    mMetadataQueue.insertBack(new TimedMetadata(Move(aMetadata)));
+  }
+
   LinkedList<TimedMetadata> mMetadataQueue;
+  MediaEventListener mListener;
+  TimedMetadataEventProducer mTimedMetadataEvent;
 };
 
 } // namespace mozilla
