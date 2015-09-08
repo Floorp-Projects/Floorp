@@ -215,6 +215,19 @@ class ReftestRunner(MozbuildObject):
 
         return rv
 
+
+def process_test_objects(kwargs):
+    """|mach test| works by providing a test_objects argument, from
+    which the test path must be extracted and converted into a normal
+    reftest tests argument."""
+
+    if "test_objects" in kwargs:
+        if kwargs["tests"] is None:
+            kwargs["tests"] = []
+        kwargs["tests"].extend(item["path"] for item in kwargs["test_objects"])
+        del kwargs["test_objects"]
+
+
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command('reftest',
@@ -263,6 +276,7 @@ class MachCommands(MachCommandBase):
         return self._run_reftest(**kwargs)
 
     def _run_reftest(self, **kwargs):
+        process_test_objects(kwargs)
         reftest = self._spawn(ReftestRunner)
         return reftest.run_desktop_test(**kwargs)
 
@@ -307,6 +321,7 @@ class B2GCommands(MachCommandBase):
         return self._run_reftest(**kwargs)
 
     def _run_reftest(self, **kwargs):
+        process_test_objects(kwargs)
         if self.device_name:
             if self.device_name.startswith('emulator'):
                 emulator = 'arm'
