@@ -8,7 +8,7 @@ const { Task } = require("resource://gre/modules/Task.jsm");
 
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "promise");
-loader.lazyRequireGetter(this, "OS", "resource://gre/modules/commonjs/node/os");
+loader.lazyRequireGetter(this, "OS", "resource://gre/modules/commonjs/node/os.js");
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm", true);
@@ -164,18 +164,23 @@ function *getSystemInfo() {
   return info;
 }
 
-function getProfileLocation() {
-  let profd = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-  let profservice = Cc["@mozilla.org/toolkit/profile-service;1"].getService(Ci.nsIToolkitProfileService);
-  var profiles = profservice.profiles;
-  while (profiles.hasMoreElements()) {
-    let profile = profiles.getNext().QueryInterface(Ci.nsIToolkitProfile);
-    if (profile.rootDir.path == profd.path) {
-      return profile = profile.name;
+function getProfileLocation () {
+  // In child processes, we cannot access the profile location.
+  try {
+    let profd = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+    let profservice = Cc["@mozilla.org/toolkit/profile-service;1"].getService(Ci.nsIToolkitProfileService);
+    var profiles = profservice.profiles;
+    while (profiles.hasMoreElements()) {
+      let profile = profiles.getNext().QueryInterface(Ci.nsIToolkitProfile);
+      if (profile.rootDir.path == profd.path) {
+        return profile = profile.name;
+      }
     }
-  }
 
-  return profd.leafName;
+    return profd.leafName;
+  } catch (e) {
+    return "";
+  }
 }
 
 function getAppIniString(section, key) {
