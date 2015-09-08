@@ -153,7 +153,7 @@ EVENT(abort,
       EventNameType_All,
       eBasicEventClass)
 EVENT(canplay,
-      NS_CANPLAY,
+      eCanPlay,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(canplaythrough,
