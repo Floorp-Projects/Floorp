@@ -14,6 +14,7 @@
 
 #include "FFmpegH264Decoder.h"
 #include "FFmpegLog.h"
+#include "mozilla/PodOperations.h"
 
 #define GECKO_FRAME_TYPE 0x00093CC0
 
@@ -204,32 +205,34 @@ FFmpegH264Decoder<LIBAV_VER>::AllocateYUV420PVideoBuffer(
   AVCodecContext* aCodecContext, AVFrame* aFrame)
 {
   bool needAlign = aCodecContext->codec->capabilities & CODEC_CAP_DR1;
-  int edgeWidth =  needAlign ? avcodec_get_edge_width() : 0;
+  bool needEdge = !(aCodecContext->flags & CODEC_FLAG_EMU_EDGE);
+  int edgeWidth = needEdge ? avcodec_get_edge_width() : 0;
+
   int decodeWidth = aCodecContext->width + edgeWidth * 2;
-  // Make sure the decodeWidth is a multiple of 32, so a UV plane stride will be
-  // a multiple of 16. FFmpeg uses SSE2 accelerated code to copy a frame line by
-  // line.
-  decodeWidth = (decodeWidth + 31) & ~31;
   int decodeHeight = aCodecContext->height + edgeWidth * 2;
 
   if (needAlign) {
-    // Align width and height to account for CODEC_FLAG_EMU_EDGE.
-    int stride_align[AV_NUM_DATA_POINTERS];
-    avcodec_align_dimensions2(aCodecContext, &decodeWidth, &decodeHeight,
-                              stride_align);
+    // Align width and height to account for CODEC_CAP_DR1.
+    // Make sure the decodeWidth is a multiple of 64, so a UV plane stride will be
+    // a multiple of 32. FFmpeg uses SSE3 accelerated code to copy a frame line by
+    // line.
+    // VP9 decoder uses MOVAPS/VEX.256 which requires 32-bytes aligned memory.
+    decodeWidth = (decodeWidth + 63) & ~63;
+    decodeHeight = (decodeHeight + 63) & ~63;
   }
 
-  // Get strides for each plane.
-  av_image_fill_linesizes(aFrame->linesize, aCodecContext->pix_fmt,
-                          decodeWidth);
+  PodZero(&aFrame->data[0], AV_NUM_DATA_POINTERS);
+  PodZero(&aFrame->linesize[0], AV_NUM_DATA_POINTERS);
 
-  // Let FFmpeg set up its YUV plane pointers and tell us how much memory we
-  // need.
-  // Note that we're passing |nullptr| here as the base address as we haven't
-  // allocated our image yet. We will adjust |aFrame->data| below.
-  size_t allocSize =
-    av_image_fill_pointers(aFrame->data, aCodecContext->pix_fmt, decodeHeight,
-                           nullptr /* base address */, aFrame->linesize);
+  int pitch = decodeWidth;
+  int chroma_pitch  = (pitch + 1) / 2;
+  int chroma_height = (decodeHeight +1) / 2;
+
+  // Get strides for each plane.
+  aFrame->linesize[0] = pitch;
+  aFrame->linesize[1] = aFrame->linesize[2] = chroma_pitch;
+
+  size_t allocSize = pitch * decodeHeight + (chroma_pitch * chroma_height) * 2;
 
   nsRefPtr<Image> image =
     mImageContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
@@ -243,18 +246,20 @@ FFmpegH264Decoder<LIBAV_VER>::AllocateYUV420PVideoBuffer(
     return -1;
   }
 
-  // Now that we've allocated our image, we can add its address to the offsets
-  // set by |av_image_fill_pointers| above. We also have to add |edgeWidth|
-  // pixels of padding here.
-  for (uint32_t i = 0; i < AV_NUM_DATA_POINTERS; i++) {
-    // The C planes are half the resolution of the Y plane, so we need to halve
-    // the edge width here.
-    uint32_t planeEdgeWidth = edgeWidth / (i ? 2 : 1);
+  int offsets[3] = {
+    0,
+    pitch * decodeHeight,
+    pitch * decodeHeight + chroma_pitch * chroma_height };
 
-    // Add buffer offset, plus a horizontal bar |edgeWidth| pixels high at the
-    // top of the frame, plus |edgeWidth| pixels from the left of the frame.
-    aFrame->data[i] += reinterpret_cast<ptrdiff_t>(
-      buffer + planeEdgeWidth * aFrame->linesize[i] + planeEdgeWidth);
+  // Add a horizontal bar |edgeWidth| pixels high at the
+  // top of the frame, plus |edgeWidth| pixels from the left of the frame.
+  int planesEdgeWidth[3] = {
+    edgeWidth * aFrame->linesize[0] + edgeWidth,
+    edgeWidth / 2 * aFrame->linesize[1] + edgeWidth / 2,
+    edgeWidth / 2 * aFrame->linesize[2] + edgeWidth / 2 };
+
+  for (uint32_t i = 0; i < 3; i++) {
+    aFrame->data[i] = buffer + offsets[i] + planesEdgeWidth[i];
   }
 
   // Unused, but needs to be non-zero to keep ffmpeg happy.
