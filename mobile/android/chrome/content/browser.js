@@ -325,10 +325,6 @@ const kStateActive = 0x00000001; // :active pseudoclass for elements
 
 const kXLinkNamespace = "http://www.w3.org/1999/xlink";
 
-const kDefaultCSSViewportWidth = 980;
-
-const kViewportRemeasureThrottle = 500;
-
 function fuzzyEquals(a, b) {
   return (Math.abs(a - b) < 1e-6);
 }
@@ -1059,9 +1055,6 @@ var BrowserApp = {
       return;
 
     aTab.setActive(true);
-    if (!AppConstants.MOZ_ANDROID_APZ) {
-      aTab.setResolution(aTab._zoom, true);
-    }
     this.contentDocumentChanged();
     this.deck.selectedPanel = aTab.browser;
     // Focus the browser so that things like selection will be styled correctly.
@@ -3722,18 +3715,11 @@ Tab.prototype = {
       bottom: aDisplayPort.bottom - (scrolly + gScreenHeight)
     };
 
-    if (this._oldDisplayPortMargins == null ||
-        !fuzzyEquals(displayPortMargins.left, this._oldDisplayPortMargins.left) ||
-        !fuzzyEquals(displayPortMargins.top, this._oldDisplayPortMargins.top) ||
-        !fuzzyEquals(displayPortMargins.right, this._oldDisplayPortMargins.right) ||
-        !fuzzyEquals(displayPortMargins.bottom, this._oldDisplayPortMargins.bottom)) {
-      cwu.setDisplayPortMarginsForElement(displayPortMargins.left,
-                                          displayPortMargins.top,
-                                          displayPortMargins.right,
-                                          displayPortMargins.bottom,
-                                          element, 0);
-    }
-    this._oldDisplayPortMargins = displayPortMargins;
+    cwu.setDisplayPortMarginsForElement(displayPortMargins.left,
+                                        displayPortMargins.top,
+                                        displayPortMargins.right,
+                                        displayPortMargins.bottom,
+                                        element, 0);
   },
 
   setScrollClampingSize: function(zoom) {
