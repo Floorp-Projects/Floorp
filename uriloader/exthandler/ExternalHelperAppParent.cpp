@@ -499,5 +499,11 @@ ExternalHelperAppParent::GetPreamble(nsACString & aPreamble)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+ExternalHelperAppParent::GetOriginalResponseHeader(nsACString & aOriginalResponseHeader)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 } // namespace dom
 } // namespace mozilla
