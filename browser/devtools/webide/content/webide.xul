@@ -23,7 +23,7 @@
         macanimationtype="document"
         fullscreenbutton="true"
         screenX="4" screenY="4"
-        width="640" height="480"
+        width="800" height="600"
         persist="screenX screenY width height sizemode">
 
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"></script>
