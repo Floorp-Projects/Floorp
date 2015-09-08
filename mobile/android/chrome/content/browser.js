@@ -3718,18 +3718,11 @@ Tab.prototype = {
       bottom: aDisplayPort.bottom - (scrolly + gScreenHeight)
     };
 
-    if (this._oldDisplayPortMargins == null ||
-        !fuzzyEquals(displayPortMargins.left, this._oldDisplayPortMargins.left) ||
-        !fuzzyEquals(displayPortMargins.top, this._oldDisplayPortMargins.top) ||
-        !fuzzyEquals(displayPortMargins.right, this._oldDisplayPortMargins.right) ||
-        !fuzzyEquals(displayPortMargins.bottom, this._oldDisplayPortMargins.bottom)) {
-      cwu.setDisplayPortMarginsForElement(displayPortMargins.left,
-                                          displayPortMargins.top,
-                                          displayPortMargins.right,
-                                          displayPortMargins.bottom,
-                                          element, 0);
-    }
-    this._oldDisplayPortMargins = displayPortMargins;
+    cwu.setDisplayPortMarginsForElement(displayPortMargins.left,
+                                        displayPortMargins.top,
+                                        displayPortMargins.right,
+                                        displayPortMargins.bottom,
+                                        element, 0);
   },
 
   setScrollClampingSize: function(zoom) {
