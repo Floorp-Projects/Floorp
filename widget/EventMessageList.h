@@ -262,7 +262,7 @@ NS_EVENT_MESSAGE(eSeeking,              eMediaEventFirst + 13)
 NS_EVENT_MESSAGE(eSeeked,               eMediaEventFirst + 14)
 NS_EVENT_MESSAGE(eTimeUpdate,           eMediaEventFirst + 15)
 NS_EVENT_MESSAGE(eEnded,                eMediaEventFirst + 16)
-NS_EVENT_MESSAGE(NS_RATECHANGE,         eMediaEventFirst + 17)
+NS_EVENT_MESSAGE(eRateChange,           eMediaEventFirst + 17)
 NS_EVENT_MESSAGE(NS_DURATIONCHANGE,     eMediaEventFirst + 18)
 NS_EVENT_MESSAGE(NS_VOLUMECHANGE,       eMediaEventFirst + 19)
 
