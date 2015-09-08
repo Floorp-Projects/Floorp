@@ -157,7 +157,7 @@ EVENT(canplay,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(canplaythrough,
-      NS_CANPLAYTHROUGH,
+      eCanPlayThrough,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(change,
