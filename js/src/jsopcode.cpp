@@ -268,9 +268,9 @@ class BytecodeParser
         bool captureOffsetStack(LifoAlloc& alloc, const uint32_t* stack, uint32_t depth) {
             stackDepth = depth;
             offsetStack = alloc.newArray<uint32_t>(stackDepth);
+            if (!offsetStack)
+                return false;
             if (stackDepth) {
-                if (!offsetStack)
-                    return false;
                 for (uint32_t n = 0; n < stackDepth; n++)
                     offsetStack[n] = stack[n];
             }

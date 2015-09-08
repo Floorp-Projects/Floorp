@@ -850,6 +850,13 @@ describe("loop.panel", function() {
       sinon.assert.calledWithExactly(document.mozL10n.get,
                                      "no_conversations_message_heading");
     });
+
+    it("should display a loading animation when rooms are pending", function() {
+      var view = createTestComponent();
+      roomStore.setStoreState({pendingInitialRetrieval: true});
+
+      expect(view.getDOMNode().querySelectorAll(".room-list-loading").length).to.eql(1);
+    });
   });
 
   describe("loop.panel.NewRoomView", function() {

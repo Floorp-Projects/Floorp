@@ -593,8 +593,20 @@ loop.roomViews = (function(mozL10n) {
         }));
     },
 
+    /**
+     * Determine if the invitation controls should be shown.
+     *
+     * @return {Boolean} True if there's no guests.
+     */
     _shouldRenderInvitationOverlay: function() {
-      return (this.state.roomState !== ROOM_STATES.HAS_PARTICIPANTS);
+      var hasGuests = typeof this.state.participants === "object" &&
+        this.state.participants.filter(function(participant) {
+          return !participant.owner;
+        }).length > 0;
+
+      // Don't show if the room has participants whether from the room state or
+      // there being non-owner guests in the participants array.
+      return this.state.roomState !== ROOM_STATES.HAS_PARTICIPANTS && !hasGuests;
     },
 
     /**

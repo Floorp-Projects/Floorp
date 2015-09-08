@@ -73,19 +73,19 @@ static uint32_t
 MutationBitForEventType(EventMessage aEventType)
 {
   switch (aEventType) {
-    case NS_MUTATION_SUBTREEMODIFIED:
+    case eLegacySubtreeModified:
       return NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED;
-    case NS_MUTATION_NODEINSERTED:
+    case eLegacyNodeInserted:
       return NS_EVENT_BITS_MUTATION_NODEINSERTED;
-    case NS_MUTATION_NODEREMOVED:
+    case eLegacyNodeRemoved:
       return NS_EVENT_BITS_MUTATION_NODEREMOVED;
-    case NS_MUTATION_NODEREMOVEDFROMDOCUMENT:
+    case eLegacyNodeRemovedFromDocument:
       return NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT;
-    case NS_MUTATION_NODEINSERTEDINTODOCUMENT:
+    case eLegacyNodeInsertedIntoDocument:
       return NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT;
-    case NS_MUTATION_ATTRMODIFIED:
+    case eLegacyAttrModified:
       return NS_EVENT_BITS_MUTATION_ATTRMODIFIED;
-    case NS_MUTATION_CHARACTERDATAMODIFIED:
+    case eLegacyCharacterDataModified:
       return NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED;
     default:
       break;
@@ -299,8 +299,8 @@ EventListenerManager::AddEventListenerInternal(
     if (window) {
       window->SetHasPaintEventListeners();
     }
-  } else if (aEventMessage >= NS_MUTATION_START &&
-             aEventMessage <= NS_MUTATION_END) {
+  } else if (aEventMessage >= eLegacyMutationEventFirst &&
+             aEventMessage <= eLegacyMutationEventLast) {
     // For mutation listeners, we need to update the global bit on the DOM window.
     // Otherwise we won't actually fire the mutation event.
     mMayHaveMutationListeners = true;
@@ -311,10 +311,10 @@ EventListenerManager::AddEventListenerInternal(
       if (doc) {
         doc->WarnOnceAbout(nsIDocument::eMutationEvent);
       }
-      // If aEventMessage is NS_MUTATION_SUBTREEMODIFIED, we need to listen all
+      // If aEventMessage is eLegacySubtreeModified, we need to listen all
       // mutations. nsContentUtils::HasMutationListeners relies on this.
       window->SetMutationListeners(
-        (aEventMessage == NS_MUTATION_SUBTREEMODIFIED) ?
+        (aEventMessage == eLegacySubtreeModified) ?
           kAllMutationBits : MutationBitForEventType(aEventMessage));
     }
   } else if (aTypeAtom == nsGkAtoms::ondeviceorientation) {
@@ -1226,8 +1226,8 @@ EventListenerManager::HasMutationListeners()
     uint32_t count = mListeners.Length();
     for (uint32_t i = 0; i < count; ++i) {
       Listener* listener = &mListeners.ElementAt(i);
-      if (listener->mEventMessage >= NS_MUTATION_START &&
-          listener->mEventMessage <= NS_MUTATION_END) {
+      if (listener->mEventMessage >= eLegacyMutationEventFirst &&
+          listener->mEventMessage <= eLegacyMutationEventLast) {
         return true;
       }
     }
@@ -1244,9 +1244,9 @@ EventListenerManager::MutationListenerBits()
     uint32_t count = mListeners.Length();
     for (uint32_t i = 0; i < count; ++i) {
       Listener* listener = &mListeners.ElementAt(i);
-      if (listener->mEventMessage >= NS_MUTATION_START &&
-          listener->mEventMessage <= NS_MUTATION_END) {
-        if (listener->mEventMessage == NS_MUTATION_SUBTREEMODIFIED) {
+      if (listener->mEventMessage >= eLegacyMutationEventFirst &&
+          listener->mEventMessage <= eLegacyMutationEventLast) {
+        if (listener->mEventMessage == eLegacySubtreeModified) {
           return kAllMutationBits;
         }
         bits |= MutationBitForEventType(listener->mEventMessage);

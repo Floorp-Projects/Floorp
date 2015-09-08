@@ -25,7 +25,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(AppCacheStorage, CacheStorage)
 
 AppCacheStorage::AppCacheStorage(nsILoadContextInfo* aInfo,
                                  nsIApplicationCache* aAppCache)
-: CacheStorage(aInfo, true /* disk */, false /* lookup app cache */)
+: CacheStorage(aInfo, true /* disk */, false /* lookup app cache */, false /* skip size check */)
 , mAppCache(aAppCache)
 {
   MOZ_COUNT_CTOR(AppCacheStorage);

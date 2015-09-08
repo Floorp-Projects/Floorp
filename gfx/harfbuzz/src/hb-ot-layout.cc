@@ -959,7 +959,7 @@ apply_string (OT::hb_apply_context_t *c,
   if (unlikely (!buffer->len || !c->lookup_mask))
     return;
 
-  c->set_lookup (lookup);
+  c->set_lookup_props (lookup.get_props ());
 
   if (likely (!lookup.is_reverse ()))
   {
@@ -1010,7 +1010,20 @@ inline void hb_ot_map_t::apply (const Proxy &proxy,
     const stage_map_t *stage = &stages[table_index][stage_index];
     for (; i < stage->last_lookup; i++)
     {
+#if 0
+      char buf[4096];
+      hb_buffer_serialize_glyphs (buffer, 0, buffer->len,
+				  buf, sizeof (buf), NULL,
+				  font,
+				  HB_BUFFER_SERIALIZE_FORMAT_TEXT,
+				  Proxy::table_index == 0 ?
+				  HB_BUFFER_SERIALIZE_FLAG_NO_POSITIONS :
+				  HB_BUFFER_SERIALIZE_FLAG_DEFAULT);
+      printf ("buf: [%s]\n", buf);
+#endif
+
       unsigned int lookup_index = lookups[table_index][i].index;
+      c.set_lookup_index (lookup_index);
       c.set_lookup_mask (lookups[table_index][i].mask);
       c.set_auto_zwj (lookups[table_index][i].auto_zwj);
       apply_string<Proxy> (&c,

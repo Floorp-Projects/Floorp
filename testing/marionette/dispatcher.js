@@ -17,6 +17,8 @@ Cu.import("chrome://marionette/content/driver.js");
 
 this.EXPORTED_SYMBOLS = ["Dispatcher"];
 
+const PROTOCOL_VERSION = 2;
+
 const logger = Log.repository.getLogger("Marionette");
 const uuidGen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
@@ -38,12 +40,6 @@ this.Dispatcher = function(connId, transport, driverFactory, stopSignal) {
   this.id = connId;
   this.conn = transport;
 
-  // Marionette uses a protocol based on the debugger server, which
-  // requires passing back actor ID's with responses.  Unlike the debugger
-  // server, we don't actually have multiple actors, so just use a dummy
-  // value of "0".
-  this.actorId = "0";
-
   // callback for when connection is closed
   this.onclose = null;
 
@@ -64,20 +60,16 @@ this.Dispatcher = function(connId, transport, driverFactory, stopSignal) {
  * over those defined in this.driver.commands.
  */
 Dispatcher.prototype.onPacket = function(packet) {
-  // Avoid using toSource and template strings (or touching the payload at all
-  // if not necessary) for the sake of memory use.
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1150170
   if (logger.level <= Log.Level.Debug) {
-    logger.debug(this.id + " -> (" + JSON.stringify(packet) + ")");
+    logger.debug(this.id + " -> " + JSON.stringify(packet));
   }
 
   if (this.requests && this.requests[packet.name]) {
     this.requests[packet.name].bind(this)(packet);
   } else {
     let id = this.beginNewCommand();
-    let ok = this.sendOk.bind(this);
     let send = this.send.bind(this);
-    this.commandProcessor.execute(packet, ok, send, id);
+    this.commandProcessor.execute(packet, send, id);
   }
 };
 
@@ -93,11 +85,6 @@ Dispatcher.prototype.onClosed = function(status) {
 };
 
 // Dispatcher specific command handlers:
-
-Dispatcher.prototype.getMarionetteID = function() {
-  let id = this.beginNewCommand();
-  this.sendResponse({from: "root", id: this.actorId}, id);
-};
 
 Dispatcher.prototype.emulatorCmdResult = function(msg) {
   switch (this.driver.context) {
@@ -122,10 +109,7 @@ Dispatcher.prototype.quitApplication = function(msg) {
   let id = this.beginNewCommand();
 
   if (this.driver.appName != "Firefox") {
-    this.sendError({
-      "message": "In app initiated quit only supported on Firefox",
-      "status": "webdriver error",
-    }, id);
+    this.sendError(new WebDriverError("In app initiated quit only supported in Firefox"));
     return;
   }
 
@@ -145,63 +129,21 @@ Dispatcher.prototype.quitApplication = function(msg) {
 
 Dispatcher.prototype.sayHello = function() {
   let id = this.beginNewCommand();
-  let yo = {from: "root", applicationType: "gecko", traits: []};
-  this.sendResponse(yo, id);
+  let whatHo = {
+    applicationType: "gecko",
+    marionetteProtocol: PROTOCOL_VERSION,
+  };
+  this.send(whatHo, id);
 };
 
 Dispatcher.prototype.sendOk = function(cmdId) {
-  this.sendResponse({from: this.actorId, ok: true}, cmdId);
+  this.send({}, cmdId);
 };
 
 Dispatcher.prototype.sendError = function(err, cmdId) {
-  let packet = {
-    from: this.actorId,
-    status: err.status,
-    sessionId: this.driver.sessionId,
-    error: err
-  };
-  this.sendResponse(packet, cmdId);
+  let resp = new Response(cmdId, this.send.bind(this));
+  resp.sendError(err);
 };
-
-/**
- * Marshals and sends message to either client or emulator based on the
- * provided {@code cmdId}.
- *
- * This routine produces a Marionette protocol packet, which is different
- * to a WebDriver protocol response in that it contains an extra key
- * {@code from} for the debugger transport actor ID.  It also replaces the
- * key {@code value} with {@code error} when {@code msg.status} isn't
- * {@code 0}.
- *
- * @param {Object} msg
- *     Object with the properties {@code value}, {@code status}, and
- *     {@code sessionId}.
- * @param {UUID} cmdId
- *     The unique identifier for the command the message is a response to.
- */
-Dispatcher.prototype.send = function(msg, cmdId) {
-  let packet = {
-    from: this.actorId,
-    value: msg.value,
-    status: msg.status,
-    sessionId: msg.sessionId,
-  };
-
-  if (typeof packet.value == "undefined") {
-    packet.value = null;
-  }
-
-  // the Marionette protocol sends errors using the "error"
-  // key instead of, as Selenium, "value"
-  if (!error.isSuccess(msg.status)) {
-    packet.error = packet.value;
-    delete packet.value;
-  }
-
-  this.sendResponse(packet, cmdId);
-};
-
-// Low-level methods:
 
 /**
  * Delegates message to client or emulator based on the provided
@@ -220,7 +162,7 @@ Dispatcher.prototype.send = function(msg, cmdId) {
  *     The unique identifier for this payload.  {@code -1} signifies
  *     that it's an emulator callback.
  */
-Dispatcher.prototype.sendResponse = function(payload, cmdId) {
+Dispatcher.prototype.send = function(payload, cmdId) {
   if (emulator.isCallback(cmdId)) {
     this.sendToEmulator(payload);
   } else {
@@ -228,6 +170,8 @@ Dispatcher.prototype.sendResponse = function(payload, cmdId) {
     this.commandId = null;
   }
 };
+
+// Low-level methods:
 
 /**
  * Send message to emulator over the debugger transport socket.
@@ -265,11 +209,8 @@ Dispatcher.prototype.sendToClient = function(payload, cmdId) {
  * and logs it.
  */
 Dispatcher.prototype.sendRaw = function(dest, payload) {
-  // Avoid using toSource and template strings (or touching the payload at all
-  // if not necessary) for the sake of memory use.
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1150170
   if (logger.level <= Log.Level.Debug) {
-    logger.debug(this.id + " " + dest + " <- (" + JSON.stringify(payload) + ")");
+    logger.debug(this.id + " " + dest + " <- " + JSON.stringify(payload));
   }
   this.conn.send(payload);
 };
@@ -292,7 +233,6 @@ Dispatcher.prototype.isOutOfSync = function(cmdId) {
 };
 
 Dispatcher.prototype.requests = {
-  getMarionetteID: Dispatcher.prototype.getMarionetteID,
   emulatorCmdResult: Dispatcher.prototype.emulatorCmdResult,
   quitApplication: Dispatcher.prototype.quitApplication
 };
