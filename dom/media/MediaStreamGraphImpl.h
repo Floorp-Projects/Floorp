@@ -323,7 +323,7 @@ public:
    * Given a graph time aTime, convert it to a stream time taking into
    * account the time during which aStream is scheduled to be blocked.
    */
-  StreamTime GraphTimeToStreamTime(MediaStream* aStream, GraphTime aTime);
+  StreamTime GraphTimeToStreamTimeWithBlocking(MediaStream* aStream, GraphTime aTime);
   /**
    * Given a graph time aTime, convert it to a stream time taking into
    * account the time during which aStream is scheduled to be blocked, and
@@ -344,7 +344,7 @@ public:
    * interval is included in the time returned if and only if
    * aFlags includes INCLUDE_TRAILING_BLOCKED_INTERVAL.
    */
-  GraphTime StreamTimeToGraphTime(MediaStream* aStream, StreamTime aTime,
+  GraphTime StreamTimeToGraphTimeWithBlocking(MediaStream* aStream, StreamTime aTime,
                                   uint32_t aFlags = 0);
   /**
    * Call NotifyHaveCurrentData on aStream's listeners.

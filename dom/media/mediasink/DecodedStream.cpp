@@ -35,7 +35,7 @@ public:
   {
     MutexAutoLock lock(mMutex);
     if (mStream) {
-      mLastOutputTime = mStream->StreamTimeToMicroseconds(mStream->GraphTimeToStreamTime(aCurrentTime));
+      mLastOutputTime = mStream->StreamTimeToMicroseconds(mStream->GraphTimeToStreamTimeWithBlocking(aCurrentTime));
     }
   }
 

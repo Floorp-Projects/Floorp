@@ -140,7 +140,7 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
       // the stream at all between mBlockingDecisionsMadeUntilTime and
       // aDesiredUpToTime.
       StreamTime t =
-        GraphTimeToStreamTime(aStream, mStateComputedTime) +
+        GraphTimeToStreamTimeWithBlocking(aStream, mStateComputedTime) +
         (aDesiredUpToTime - mStateComputedTime);
       STREAM_LOG(LogLevel::Verbose, ("Calling NotifyPull aStream=%p t=%f current end=%f", aStream,
                                   MediaTimeToSeconds(t),
@@ -220,7 +220,7 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
 }
 
 StreamTime
-MediaStreamGraphImpl::GraphTimeToStreamTime(MediaStream* aStream,
+MediaStreamGraphImpl::GraphTimeToStreamTimeWithBlocking(MediaStream* aStream,
                                             GraphTime aTime)
 {
   MOZ_ASSERT(aTime <= mStateComputedTime,
@@ -234,12 +234,12 @@ MediaStreamGraphImpl::GraphTimeToStreamTimeOptimistic(MediaStream* aStream,
                                                       GraphTime aTime)
 {
   GraphTime computedUpToTime = std::min(mStateComputedTime, aTime);
-  StreamTime s = GraphTimeToStreamTime(aStream, computedUpToTime);
+  StreamTime s = GraphTimeToStreamTimeWithBlocking(aStream, computedUpToTime);
   return s + (aTime - computedUpToTime);
 }
 
 GraphTime
-MediaStreamGraphImpl::StreamTimeToGraphTime(MediaStream* aStream,
+MediaStreamGraphImpl::StreamTimeToGraphTimeWithBlocking(MediaStream* aStream,
                                             StreamTime aTime, uint32_t aFlags)
 {
   // Avoid overflows
@@ -311,7 +311,7 @@ MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime)
     // out.
     if (stream->mFinished && !stream->mNotifiedFinished &&
         mProcessedTime >=
-          stream->StreamTimeToGraphTime(stream->GetStreamBuffer().GetAllTracksEnd()))  {
+          stream->StreamTimeToGraphTimeWithBlocking(stream->GetStreamBuffer().GetAllTracksEnd()))  {
       stream->mNotifiedFinished = true;
       SetStreamOrderDirty();
       for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
@@ -681,7 +681,7 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
     AudioSegment* audio = track->Get<AudioSegment>();
     AudioSegment output;
 
-    StreamTime offset = GraphTimeToStreamTime(aStream, aFrom);
+    StreamTime offset = GraphTimeToStreamTimeWithBlocking(aStream, aFrom);
 
     // We don't update aStream->mBufferStartTime here to account for time spent
     // blocked. Instead, we'll update it in UpdateCurrentTimeForStreams after
@@ -802,8 +802,8 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
   nsRefPtr<Image> blackImage;
 
   MOZ_ASSERT(mProcessedTime >= aStream->mBufferStartTime, "frame position before buffer?");
-  StreamTime frameBufferTime = GraphTimeToStreamTime(aStream, mProcessedTime);
-  StreamTime bufferEndTime = GraphTimeToStreamTime(aStream, mStateComputedTime);
+  StreamTime frameBufferTime = GraphTimeToStreamTimeWithBlocking(aStream, mProcessedTime);
+  StreamTime bufferEndTime = GraphTimeToStreamTimeWithBlocking(aStream, mStateComputedTime);
   StreamTime start;
   const VideoChunk* chunk;
   for ( ;
@@ -842,7 +842,7 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
     // its start time.  These times only differ in the case of multiple
     // tracks.
     GraphTime frameTime =
-      StreamTimeToGraphTime(aStream, frameBufferTime,
+      StreamTimeToGraphTimeWithBlocking(aStream, frameBufferTime,
                             INCLUDE_TRAILING_BLOCKED_INTERVAL);
     TimeStamp targetTime = currentTimeStamp +
       TimeDuration::FromSeconds(MediaTimeToSeconds(frameTime - IterationEnd()));
@@ -964,7 +964,7 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
       StreamUpdate* update = mStreamUpdates.AppendElement();
       update->mStream = stream;
       update->mNextMainThreadCurrentTime =
-        GraphTimeToStreamTime(stream, mProcessedTime);
+        GraphTimeToStreamTimeWithBlocking(stream, mProcessedTime);
       update->mNextMainThreadFinished = stream->mNotifiedFinished;
     }
     if (!mPendingUpdateRunnables.IsEmpty()) {
@@ -1135,7 +1135,7 @@ MediaStreamGraphImpl::Process(GraphTime aFrom, GraphTime aTo)
         } else {
           ps->ProcessInput(aFrom, aTo, ProcessedMediaStream::ALLOW_FINISH);
           NS_WARN_IF_FALSE(stream->mBuffer.GetEnd() >=
-                           GraphTimeToStreamTime(stream, aTo),
+                           GraphTimeToStreamTimeWithBlocking(stream, aTo),
                            "Stream did not produce enough data");
         }
       }
@@ -1698,9 +1698,9 @@ MediaStream::SetGraphImpl(MediaStreamGraph* aGraph)
 }
 
 StreamTime
-MediaStream::GraphTimeToStreamTime(GraphTime aTime)
+MediaStream::GraphTimeToStreamTimeWithBlocking(GraphTime aTime)
 {
-  return GraphImpl()->GraphTimeToStreamTime(this, aTime);
+  return GraphImpl()->GraphTimeToStreamTimeWithBlocking(this, aTime);
 }
 
 StreamTime
@@ -1710,9 +1710,9 @@ MediaStream::GraphTimeToStreamTimeOptimistic(GraphTime aTime)
 }
 
 GraphTime
-MediaStream::StreamTimeToGraphTime(StreamTime aTime)
+MediaStream::StreamTimeToGraphTimeWithBlocking(StreamTime aTime)
 {
-  return GraphImpl()->StreamTimeToGraphTime(this, aTime, 0);
+  return GraphImpl()->StreamTimeToGraphTimeWithBlocking(this, aTime, 0);
 }
 
 void

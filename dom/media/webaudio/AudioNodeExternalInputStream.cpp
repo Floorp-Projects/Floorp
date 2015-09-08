@@ -154,8 +154,8 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
         break;
       next = interval.mEnd;
 
-      StreamTime outputStart = GraphTimeToStreamTime(interval.mStart);
-      StreamTime outputEnd = GraphTimeToStreamTime(interval.mEnd);
+      StreamTime outputStart = GraphTimeToStreamTimeWithBlocking(interval.mStart);
+      StreamTime outputEnd = GraphTimeToStreamTimeWithBlocking(interval.mEnd);
       StreamTime ticks = outputEnd - outputStart;
 
       if (interval.mInputIsBlocked) {
@@ -163,10 +163,10 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
       } else {
         StreamTime inputStart =
           std::min(inputSegment.GetDuration(),
-                   source->GraphTimeToStreamTime(interval.mStart));
+                   source->GraphTimeToStreamTimeWithBlocking(interval.mStart));
         StreamTime inputEnd =
           std::min(inputSegment.GetDuration(),
-                   source->GraphTimeToStreamTime(interval.mEnd));
+                   source->GraphTimeToStreamTimeWithBlocking(interval.mEnd));
 
         segment.AppendSlice(inputSegment, inputStart, inputEnd);
         // Pad if we're looking past the end of the track
