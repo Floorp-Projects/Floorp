@@ -79,6 +79,16 @@ protected:
   // ChildChannel.  Used during HTTP->FTP redirects.
   bool ConnectChannel(const uint32_t& channelId);
 
+  void DivertOnDataAvailable(const nsCString& data,
+                             const uint64_t& offset,
+                             const uint32_t& count);
+  void DivertOnStopRequest(const nsresult& statusCode);
+  void DivertComplete();
+
+  friend class FTPDivertDataAvailableEvent;
+  friend class FTPDivertStopRequestEvent;
+  friend class FTPDivertCompleteEvent;
+
   virtual bool RecvCancel(const nsresult& status) override;
   virtual bool RecvSuspend() override;
   virtual bool RecvResume() override;
@@ -119,6 +129,8 @@ protected:
   bool mSuspendedForDiversion;
   nsRefPtr<OfflineObserver> mObserver;
   nsRefPtr<mozilla::dom::TabParent> mTabParent;
+
+  nsRefPtr<ChannelEventQueue> mEventQ;
 };
 
 } // namespace net

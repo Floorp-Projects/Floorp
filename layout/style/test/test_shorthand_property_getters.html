@@ -113,7 +113,7 @@ e.setAttribute("style", "font: medium serif");
 isnot(e.style.font, "", "should have font shorthand");
 e.setAttribute("style", "font: medium serif; font-size-adjust: 0.45");
 is(e.style.font, "", "should not have font shorthand");
-e.setAttribute("style", "font: medium serif; font-stretch: condensed");
+e.setAttribute("style", "font: medium serif; font-feature-settings: 'liga' off");
 is(e.style.font, "", "should not have font shorthand");
 
 // Test that all combinations of background-clip and background-origin

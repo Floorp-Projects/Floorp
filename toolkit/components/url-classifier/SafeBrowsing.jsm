@@ -13,7 +13,13 @@ Cu.import("resource://gre/modules/Services.jsm");
 // Skip all the ones containining "test", because we never need to ask for
 // updates for them.
 function getLists(prefName) {
-  let pref = Services.prefs.getCharPref(prefName);
+  log("getLists: " + prefName);
+  let pref = null;
+  try {
+    pref = Services.prefs.getCharPref(prefName);
+  } catch(e) {
+    return null;
+  }
   // Splitting an empty string returns [''], we really want an empty array.
   if (!pref) {
     return [];
@@ -53,38 +59,43 @@ this.SafeBrowsing = {
     Services.prefs.addObserver("browser.safebrowsing", this.readPrefs.bind(this), false);
     Services.prefs.addObserver("privacy.trackingprotection", this.readPrefs.bind(this), false);
     this.readPrefs();
-
-    // Register our two types of tables, and add custom Mozilla entries
-    let listManager = Cc["@mozilla.org/url-classifier/listmanager;1"].
-                      getService(Ci.nsIUrlListManager);
-    for (let i = 0; i < phishingLists.length; ++i) {
-      listManager.registerTable(phishingLists[i], this.updateURL, this.gethashURL);
-    }
-    for (let i = 0; i < malwareLists.length; ++i) {
-      listManager.registerTable(malwareLists[i], this.updateURL, this.gethashURL);
-    }
-    for (let i = 0; i < downloadBlockLists.length; ++i) {
-      listManager.registerTable(downloadBlockLists[i], this.updateURL, this.gethashURL);
-    }
-    for (let i = 0; i < downloadAllowLists.length; ++i) {
-      listManager.registerTable(downloadAllowLists[i], this.updateURL, this.gethashURL);
-    }
-    for (let i = 0; i < trackingProtectionLists.length; ++i) {
-      listManager.registerTable(trackingProtectionLists[i],
-                                this.trackingUpdateURL,
-                                this.trackingGethashURL);
-    }
-    for (let i = 0; i < trackingProtectionWhitelists.length; ++i) {
-      listManager.registerTable(trackingProtectionWhitelists[i],
-                                this.trackingUpdateURL,
-                                this.trackingGethashURL);
-    }
     this.addMozEntries();
 
     this.controlUpdateChecking();
     this.initialized = true;
 
     log("init() finished");
+  },
+
+  registerTableWithURLs: function(listname) {
+    let listManager = Cc["@mozilla.org/url-classifier/listmanager;1"].
+      getService(Ci.nsIUrlListManager);
+
+    let providerName = this.listToProvider[listname];
+    let provider = this.providers[providerName];
+
+    listManager.registerTable(listname, provider.updateURL, provider.gethashURL);
+  },
+
+  registerTables: function() {
+    for (let i = 0; i < phishingLists.length; ++i) {
+      this.registerTableWithURLs(phishingLists[i]);
+    }
+    for (let i = 0; i < malwareLists.length; ++i) {
+      this.registerTableWithURLs(malwareLists[i]);
+    }
+    for (let i = 0; i < downloadBlockLists.length; ++i) {
+      this.registerTableWithURLs(downloadBlockLists[i]);
+    }
+    for (let i = 0; i < downloadAllowLists.length; ++i) {
+      this.registerTableWithURLs(downloadAllowLists[i]);
+    }
+    for (let i = 0; i < trackingProtectionLists.length; ++i) {
+      this.registerTableWithURLs(trackingProtectionLists[i]);
+    }
+    for (let i = 0; i < trackingProtectionWhitelists.length; ++i) {
+      this.registerTableWithURLs(trackingProtectionWhitelists[i]);
+    }
   },
 
 
@@ -137,6 +148,7 @@ this.SafeBrowsing = {
     this.malwareEnabled = Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
     this.trackingEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled") || Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
     this.updateProviderURLs();
+    this.registerTables();
 
     // XXX The listManager backend gets confused if this is called before the
     // lists are registered. So only call it here when a pref changes, and not
@@ -151,21 +163,61 @@ this.SafeBrowsing = {
     try {
       var clientID = Services.prefs.getCharPref("browser.safebrowsing.id");
     } catch(e) {
-      var clientID = Services.appinfo.name;
+      clientID = Services.appinfo.name;
     }
 
-    log("initializing safe browsing URLs, client id ", clientID);
+    log("initializing safe browsing URLs, client id", clientID);
 
-    // Urls used to update DB
-    this.updateURL  = Services.urlFormatter.formatURLPref("browser.safebrowsing.updateURL");
-    this.gethashURL = Services.urlFormatter.formatURLPref("browser.safebrowsing.gethashURL");
+    // Get the different providers
+    let branch = Services.prefs.getBranch("browser.safebrowsing.provider.");
+    let children = branch.getChildList("", {});
+    this.providers = {};
+    this.listToProvider = {};
 
-    this.updateURL  = this.updateURL.replace("SAFEBROWSING_ID", clientID);
-    this.gethashURL = this.gethashURL.replace("SAFEBROWSING_ID", clientID);
-    this.trackingUpdateURL = Services.urlFormatter.formatURLPref(
-      "browser.trackingprotection.updateURL");
-    this.trackingGethashURL = Services.urlFormatter.formatURLPref(
-      "browser.trackingprotection.gethashURL");
+    for (let child of children) {
+      log("Child: " + child);
+      let prefComponents =  child.split(".");
+      let providerName = prefComponents[0];
+      this.providers[providerName] = {};
+    }
+
+    if (debug) {
+      let providerStr = "";
+      Object.keys(this.providers).forEach(function(provider) {
+        if (providerStr === "") {
+          providerStr = provider;
+        } else {
+          providerStr += ", " + provider;
+        }
+      });
+      log("Providers: " + providerStr);
+    }
+
+    Object.keys(this.providers).forEach(function(provider) {
+      let updateURL = Services.urlFormatter.formatURLPref(
+        "browser.safebrowsing.provider." + provider + ".updateURL");
+      let gethashURL = Services.urlFormatter.formatURLPref(
+        "browser.safebrowsing.provider." + provider + ".gethashURL");
+      updateURL = updateURL.replace("SAFEBROWSING_ID", clientID);
+      gethashURL = gethashURL.replace("SAFEBROWSING_ID", clientID);
+
+      log("Provider: " + provider + " updateURL=" + updateURL);
+      log("Provider: " + provider + " gethashURL=" + gethashURL);
+
+      // Urls used to update DB
+      this.providers[provider].updateURL  = updateURL;
+      this.providers[provider].gethashURL = gethashURL;
+
+      // Get lists this provider manages
+      let lists = getLists("browser.safebrowsing.provider." + provider + ".lists");
+      if (lists) {
+        lists.forEach(function(list) {
+          this.listToProvider[list] = provider;
+        }, this);
+      } else {
+        log("Update URL given but no lists managed for provider: " + provider);
+      }
+    }, this);
   },
 
   controlUpdateChecking: function() {

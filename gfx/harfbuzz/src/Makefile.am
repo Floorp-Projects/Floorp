@@ -20,6 +20,8 @@ lib_LTLIBRARIES = libharfbuzz.la
 
 HBCFLAGS =
 HBLIBS =
+HBNONPCLIBS =
+HBDEPS =
 HBSOURCES =  \
 	hb-atomic-private.hh \
 	hb-blob.cc \
@@ -39,6 +41,7 @@ HBSOURCES =  \
 	hb-open-file-private.hh \
 	hb-open-type-private.hh \
 	hb-ot-cmap-table.hh \
+	hb-ot-glyf-table.hh \
 	hb-ot-head-table.hh \
 	hb-ot-hhea-table.hh \
 	hb-ot-hmtx-table.hh \
@@ -93,6 +96,7 @@ HBSOURCES += \
 	hb-ot-shape.cc \
 	hb-ot-shape-complex-arabic.cc \
 	hb-ot-shape-complex-arabic-fallback.hh \
+	hb-ot-shape-complex-arabic-private.hh \
 	hb-ot-shape-complex-arabic-table.hh \
 	hb-ot-shape-complex-arabic-win1256.hh \
 	hb-ot-shape-complex-default.cc \
@@ -132,12 +136,13 @@ endif
 
 if HAVE_PTHREAD
 HBCFLAGS += $(PTHREAD_CFLAGS)
-HBLIBS   += $(PTHREAD_LIBS)
+HBNONPCLIBS += $(PTHREAD_LIBS)
 endif
 
 if HAVE_GLIB
 HBCFLAGS += $(GLIB_CFLAGS)
 HBLIBS   += $(GLIB_LIBS)
+HBDEPS   += $(GLIB_DEPS)
 HBSOURCES += hb-glib.cc
 HBHEADERS += hb-glib.h
 endif
@@ -145,6 +150,12 @@ endif
 if HAVE_FREETYPE
 HBCFLAGS += $(FREETYPE_CFLAGS)
 HBLIBS   += $(FREETYPE_LIBS)
+# XXX
+# The following creates a recursive dependency on FreeType if FreeType is
+# built with HarfBuzz support enabled.  Newer pkg-config handles that just
+# fine but pkg-config 0.26 as shipped in Ubuntu 14.04 crashes.  Remove
+# in a year or two, or otherwise work around it...
+#HBDEPS   += $(FREETYPE_DEPS)
 HBSOURCES += hb-ft.cc
 HBHEADERS += hb-ft.h
 endif
@@ -152,20 +163,21 @@ endif
 if HAVE_GRAPHITE2
 HBCFLAGS += $(GRAPHITE2_CFLAGS)
 HBLIBS   += $(GRAPHITE2_LIBS)
+HBDEPS   += $(GRAPHITE2_DEPS)
 HBSOURCES += hb-graphite2.cc
 HBHEADERS += hb-graphite2.h
 endif
 
 if HAVE_UNISCRIBE
 HBCFLAGS += $(UNISCRIBE_CFLAGS)
-HBLIBS   += $(UNISCRIBE_LIBS)
+HBNONPCLIBS += $(UNISCRIBE_LIBS)
 HBSOURCES += hb-uniscribe.cc
 HBHEADERS += hb-uniscribe.h
 endif
 
 if HAVE_CORETEXT
 HBCFLAGS += $(CORETEXT_CFLAGS)
-HBLIBS   += $(CORETEXT_LIBS)
+HBNONPCLIBS += $(CORETEXT_LIBS)
 HBSOURCES += hb-coretext.cc
 HBHEADERS += hb-coretext.h
 endif
@@ -180,6 +192,8 @@ DIST_SUBDIRS += hb-ucdn
 
 
 # Put the library together
+
+HBLIBS += $(HBNONPCLIBS)
 
 if OS_WIN32
 export_symbols = -export-symbols harfbuzz.def
@@ -255,6 +269,8 @@ EXTRA_DIST += \
 		-e 's@%exec_prefix%@$(exec_prefix)@g' \
 		-e 's@%libdir%@$(libdir)@g' \
 		-e 's@%includedir%@$(includedir)@g' \
+		-e 's@%libs_private%@$(HBNONPCLIBS)@g' \
+		-e 's@%requires_private%@$(HBDEPS)@g' \
 		-e 's@%VERSION%@$(VERSION)@g' \
 	"$<" > "$@" \
 	|| ($(RM) "$@"; false)
@@ -269,7 +285,7 @@ harfbuzz.def: $(HBHEADERS) $(HBNODISTHEADERS)
 	$(EGREP) '^hb_.* \(' | \
 	sed -e 's/ (.*//' | \
 	LANG=C sort; \
-	echo LIBRARY libharfbuzz-$(HB_VERSION_MAJOR).dll; \
+	echo LIBRARY libharfbuzz-0.dll; \
 	) >"$@"
 	@ ! grep -q hb_ERROR "$@" \
 	|| ($(RM) "$@"; false)
@@ -370,7 +386,7 @@ TESTS_ENVIRONMENT = \
 if HAVE_INTROSPECTION
 
 -include $(INTROSPECTION_MAKEFILE)
-INTROSPECTION_GIRS = HarfBuzz-$(HB_VERSION_MAJOR).0.gir # What does the 0 mean anyway?!
+INTROSPECTION_GIRS = HarfBuzz-0.0.gir # What does the 0 mean anyway?!
 INTROSPECTION_SCANNER_ARGS = -I$(srcdir) -n hb --identifier-prefix=hb_ --warn-all
 INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
 INTROSPECTION_SCANNER_ENV = CC="$(CC)"

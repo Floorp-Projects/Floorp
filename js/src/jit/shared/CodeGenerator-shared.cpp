@@ -588,7 +588,7 @@ CodeGeneratorShared::encode(LSnapshot* snapshot)
     for (LRecoverInfo::OperandIter it(recoverInfo); !it; ++it) {
         DebugOnly<uint32_t> allocWritten = snapshots_.allocWritten();
         encodeAllocation(snapshot, *it, &allocIndex);
-        MOZ_ASSERT(allocWritten + 1 == snapshots_.allocWritten());
+        MOZ_ASSERT_IF(!snapshots_.oom(), allocWritten + 1 == snapshots_.allocWritten());
     }
 
     MOZ_ASSERT(allocIndex == snapshot->numSlots());

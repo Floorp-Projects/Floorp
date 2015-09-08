@@ -482,6 +482,8 @@ class FullParseHandler
         genName->setOp(JSOP_SETNAME);
         genName->markAsAssigned();
         ParseNode* genInit = newBinary(PNK_ASSIGN, genName, makeGen);
+        if (!genInit)
+            return false;
 
         ParseNode* initialYield = newYieldExpression(yieldPos.begin, nullptr, genInit,
                                                      JSOP_INITIALYIELD);

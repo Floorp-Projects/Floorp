@@ -814,10 +814,11 @@ bool OggReader::ReadOggChain()
   if (chained) {
     SetChained(true);
     {
-      nsAutoPtr<MediaInfo> info(new MediaInfo(mInfo));
-      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
       auto t = mDecodedAudioFrames * USECS_PER_S / mInfo.mAudio.mRate;
-      mDecoder->QueueMetadata(media::TimeUnit::FromMicroseconds(t), info, tags);
+      mTimedMetadataEvent.Notify(
+        TimedMetadata(media::TimeUnit::FromMicroseconds(t),
+                      Move(tags),
+                      nsAutoPtr<MediaInfo>(new MediaInfo(mInfo))));
     }
     return true;
   }

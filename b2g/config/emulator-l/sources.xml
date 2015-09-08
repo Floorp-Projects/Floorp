@@ -12,10 +12,10 @@
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="05a36844c1046a1eb07d5b1325f85ed741f961ea">
+  <project name="platform_build" path="build" remote="b2g" revision="c9d4fe680662ee44a4bdea42ae00366f5df399cf">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="891798f1e345bc2b69e71de42bd524a90b1745c4"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="b81185d30e548f782770b852473ffb53c641a490"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="e9e2923fd6cab93cf88b4b9ada82225e44fe6635"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -141,7 +141,7 @@
   <default remote="caf" revision="refs/tags/android-5.1.0_r1" sync-j="4"/>
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="fe7df1bc8dd0fd71571505d7be1c31a4ad1e40fb"/>
-  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="48132ec0b0dfe9fc29c7c3f0e799066be8999198"/>
+  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="dc8c7896562bf63190befb3e6b21310a4b7144fa"/>
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="59e434cbecc02653f44cedeb2ef5cc88dc8bb61b"/>
   <project name="platform_external_wpa_supplicant_8" path="external/wpa_supplicant_8" remote="b2g" revision="cbda29a58abc4ea1f7f4611fe354ab67b606219d"/>
   <project name="platform/development" path="development" revision="0c51f6e0aa2ee57fcb75ec3b2ff6bf754cece63e"/>

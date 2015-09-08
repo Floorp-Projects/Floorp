@@ -21,7 +21,7 @@ from marionette_driver.errors import (
         StaleElementException, ScriptTimeoutException, ElementNotVisibleException,
         NoSuchFrameException, InvalidElementStateException, NoAlertPresentException,
         InvalidCookieDomainException, UnableToSetCookieException, InvalidSelectorException,
-        MoveTargetOutOfBoundsException, FrameSendNotInitializedError, FrameSendFailureError
+        MoveTargetOutOfBoundsException
         )
 from marionette_driver.marionette import Marionette
 from marionette_driver.wait import Wait

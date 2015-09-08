@@ -156,7 +156,7 @@ ActionChain.prototype.resetValues = function() {
  */
 ActionChain.prototype.actions = function(chain, touchId, i, keyModifiers) {
   if (i == chain.length) {
-    this.onSuccess({value: touchId});
+    this.onSuccess({value: touchId || null});
     this.resetValues();
     return;
   }

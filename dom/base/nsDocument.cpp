@@ -9436,7 +9436,7 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
 
     int32_t realTargetCount = realTargets.Count();
     for (int32_t k = 0; k < realTargetCount; ++k) {
-      InternalMutationEvent mutation(true, NS_MUTATION_SUBTREEMODIFIED);
+      InternalMutationEvent mutation(true, eLegacySubtreeModified);
       (new AsyncEventDispatcher(realTargets[k], mutation))->
         RunDOMEventWhenSafe();
     }

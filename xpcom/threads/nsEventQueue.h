@@ -8,25 +8,43 @@
 #define nsEventQueue_h__
 
 #include <stdlib.h>
+#include "mozilla/Monitor.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsIRunnable.h"
 #include "nsCOMPtr.h"
 #include "mozilla/AlreadyAddRefed.h"
 
-// A threadsafe FIFO event queue...
-class nsEventQueue
-{
-  typedef mozilla::ReentrantMonitor ReentrantMonitor;
+template<typename MonitorType>
+struct MonitorAutoEnterChooser;
 
+template<>
+struct MonitorAutoEnterChooser<mozilla::Monitor>
+{
+  typedef mozilla::MonitorAutoLock Type;
+};
+
+template<>
+struct MonitorAutoEnterChooser<mozilla::ReentrantMonitor>
+{
+  typedef mozilla::ReentrantMonitorAutoEnter Type;
+};
+
+// A threadsafe FIFO event queue...
+template<typename MonitorType>
+class nsEventQueueBase
+{
 public:
-  nsEventQueue();
-  ~nsEventQueue();
+  typedef MonitorType Monitor;
+  typedef typename MonitorAutoEnterChooser<Monitor>::Type MonitorAutoEnterType;
+
+  nsEventQueueBase();
+  ~nsEventQueueBase();
 
   // This method adds a new event to the pending event queue.  The queue holds
   // a strong reference to the event after this method returns.  This method
   // cannot fail.
-  void PutEvent(nsIRunnable* aEvent);
-  void PutEvent(already_AddRefed<nsIRunnable>&& aEvent);
+  void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
+                MonitorAutoEnterType& aProofOfLock);
 
   // This method gets an event from the event queue.  If mayWait is true, then
   // the method will block the calling thread until an event is available.  If
@@ -34,30 +52,19 @@ public:
   // or not an event is pending.  When the resulting event is non-null, the
   // caller is responsible for releasing the event object.  This method does
   // not alter the reference count of the resulting event.
-  bool GetEvent(bool aMayWait, nsIRunnable** aEvent);
-
-  // This method returns true if there is a pending event.
-  bool HasPendingEvent()
-  {
-    return GetEvent(false, nullptr);
-  }
+  bool GetEvent(bool aMayWait, nsIRunnable** aEvent,
+                MonitorAutoEnterType& aProofOfLock);
 
   // This method returns the next pending event or null.
-  bool GetPendingEvent(nsIRunnable** runnable)
+  bool GetPendingEvent(nsIRunnable** aRunnable,
+                       MonitorAutoEnterType& aProofOfLock)
   {
-    return GetEvent(false, runnable);
+    return GetEvent(false, aRunnable, aProofOfLock);
   }
 
-  // Expose the event queue's monitor for "power users"
-  ReentrantMonitor& GetReentrantMonitor()
-  {
-    return mReentrantMonitor;
-  }
-
-  size_t Count();
+  size_t Count(MonitorAutoEnterType& aProofOfLock);
 
 private:
-
   bool IsEmpty()
   {
     return !mHead || (mHead == mTail && mOffsetHead == mOffsetTail);
@@ -89,13 +96,54 @@ private:
     free(aPage);
   }
 
-  ReentrantMonitor mReentrantMonitor;
-
   Page* mHead;
   Page* mTail;
 
   uint16_t mOffsetHead;  // offset into mHead where next item is removed
   uint16_t mOffsetTail;  // offset into mTail where next item is added
+};
+
+class nsEventQueue : protected nsEventQueueBase<mozilla::ReentrantMonitor>
+{
+private:
+  typedef nsEventQueueBase<mozilla::ReentrantMonitor> Base;
+  // Can't use typedefs or type alias templates here to name the base type.
+  friend class nsEventQueueBase<mozilla::ReentrantMonitor>;
+
+  typedef Base::Monitor MonitorType;
+  typedef Base::MonitorAutoEnterType MonitorAutoEnterType;
+  MonitorType mMonitor;
+
+public:
+  nsEventQueue();
+
+  // This method adds a new event to the pending event queue.  The queue holds
+  // a strong reference to the event after this method returns.  This method
+  // cannot fail.
+  void PutEvent(nsIRunnable* aEvent);
+  void PutEvent(already_AddRefed<nsIRunnable>&& aEvent);
+
+  // This method gets an event from the event queue.  If mayWait is true, then
+  // the method will block the calling thread until an event is available.  If
+  // the event is null, then the method returns immediately indicating whether
+  // or not an event is pending.  When the resulting event is non-null, the
+  // caller is responsible for releasing the event object.  This method does
+  // not alter the reference count of the resulting event.
+  bool GetEvent(bool aMayWait, nsIRunnable** aEvent);
+
+  // This method returns true if there is a pending event.
+  bool HasPendingEvent()
+  {
+    return GetEvent(false, nullptr);
+  }
+
+  // This method returns the next pending event or null.
+  bool GetPendingEvent(nsIRunnable** aRunnable)
+  {
+    return GetEvent(false, aRunnable);
+  }
+
+  size_t Count();
 };
 
 #endif  // nsEventQueue_h__

@@ -278,6 +278,7 @@ private:
                            nsIURI* aURI,
                            const nsACString & aIdExtension,
                            bool aWriteToDisk,
+                           bool aSkipSizeCheck,
                            bool aCreateIfNotExist,
                            bool aReplace,
                            CacheEntryHandle** aResult);

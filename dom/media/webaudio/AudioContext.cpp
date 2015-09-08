@@ -857,11 +857,6 @@ AudioContext::Suspend(ErrorResult& aRv)
 
   Destination()->Suspend();
 
-  MediaStream* ds = DestinationStream();
-  if (ds) {
-    ds->BlockStreamIfNeeded();
-  }
-
   mPromiseGripArray.AppendElement(promise);
   Graph()->ApplyAudioContextOperation(DestinationStream()->AsAudioNodeStream(),
                                       AudioContextOperation::Suspend, promise);
@@ -896,11 +891,6 @@ AudioContext::Resume(ErrorResult& aRv)
   }
 
   Destination()->Resume();
-
-  MediaStream* ds = DestinationStream();
-  if (ds) {
-    ds->UnblockStreamIfNeeded();
-  }
 
   mPromiseGripArray.AppendElement(promise);
   Graph()->ApplyAudioContextOperation(DestinationStream()->AsAudioNodeStream(),
@@ -943,10 +933,6 @@ AudioContext::Close(ErrorResult& aRv)
   if (ds) {
     Graph()->ApplyAudioContextOperation(ds->AsAudioNodeStream(),
                                         AudioContextOperation::Close, promise);
-
-    if (ds) {
-      ds->BlockStreamIfNeeded();
-    }
   }
   return promise.forget();
 }

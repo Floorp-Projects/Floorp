@@ -159,10 +159,6 @@ DIRS += [
 if CONFIG['MOZ_ENABLE_GNOME_COMPONENT']:
     DIRS += ['/toolkit/system/gnome']
 
-# if QtNetwork is present, it will do its own network monitoring
-if not CONFIG['MOZ_ENABLE_QTNETWORK'] and CONFIG['MOZ_ENABLE_DBUS']:
-    DIRS += ['/toolkit/system/dbus']
-
 DIRS += ['/addon-sdk']
 
 if CONFIG['ENABLE_MARIONETTE'] or CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('gonk', 'android'):

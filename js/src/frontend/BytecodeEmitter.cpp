@@ -2923,7 +2923,8 @@ BytecodeEmitter::emitNumberOp(double dval)
 
         uint32_t u = uint32_t(ival);
         if (u < JS_BIT(16)) {
-            emitUint16Operand(JSOP_UINT16, u);
+            if (!emitUint16Operand(JSOP_UINT16, u))
+                return false;
         } else if (u < JS_BIT(24)) {
             ptrdiff_t off;
             if (!emitN(JSOP_UINT24, 3, &off))
