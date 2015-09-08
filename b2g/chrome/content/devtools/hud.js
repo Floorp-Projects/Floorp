@@ -765,9 +765,25 @@ let performanceEntriesWatcher = {
   _fronts: new Map(),
   _appLaunchName: null,
   _appLaunchStartTime: null,
+  _supported: [
+    'contentInteractive',
+    'navigationInteractive',
+    'navigationLoaded',
+    'visuallyLoaded',
+    'fullyLoaded',
+    'mediaEnumerated',
+    'scanEnd'
+  ],
 
   init(client) {
     this._client = client;
+    let setting = 'devtools.telemetry.supported_performance_marks';
+    let defaultValue = this._supported.join(',');
+
+    SettingsListener.observe(setting, defaultValue, supported => {
+      let value = supported || defaultValue;
+      this._supported = value.split(',');
+    });
   },
 
   trackTarget(target) {
@@ -783,38 +799,56 @@ let performanceEntriesWatcher = {
     front.start();
 
     front.on('entry', detail => {
-      if (detail.type === 'mark') {
-        let name = detail.name;
-        let epoch = detail.epoch;
-        let CHARS_UNTIL_APP_NAME = 7; // '@app://'
 
-        // FIXME There is a potential race condition that can result
-        // in some performance entries being disregarded. See bug 1189942.
-        if (name.indexOf('appLaunch') != -1) {
-          let appStartPos = name.indexOf('@app') + CHARS_UNTIL_APP_NAME;
-          let length = (name.indexOf('.') - appStartPos);
-          this._appLaunchName = name.substr(appStartPos, length);
-          this._appLaunchStartTime = epoch;
-        } else {
-          let origin = detail.origin;
-          origin = origin.substr(0, origin.indexOf('.'));
-          if (this._appLaunchName === origin) {
-            let time = epoch - this._appLaunchStartTime;
-            let eventName = 'app-startup-time-' + name;
-
-            // Events based on performance marks are for telemetry only, they are
-            // not displayed in the HUD front end.
-            target._logHistogram({name: eventName, value: time});
-
-            memoryWatcher.front(target).residentUnique().then(value => {
-              eventName = 'app-memory-' + name;
-              target._logHistogram({name: eventName, value: value});
-            }, err => {
-              console.error(err);
-            });
-          }
-        }
+      // Only process performance marks.
+      if (detail.type !== 'mark') {
+        return;
       }
+
+      let name = detail.name;
+      let epoch = detail.epoch;
+
+      // FIXME There is a potential race condition that can result
+      // in some performance entries being disregarded. See bug 1189942.
+      //
+      // If this is an "app launch" mark, record the app that was
+      // launched and the epoch of when it was launched.
+      if (name.indexOf('appLaunch') !== -1) {
+        let CHARS_UNTIL_APP_NAME = 7; // '@app://'
+        let startPos = name.indexOf('@app') + CHARS_UNTIL_APP_NAME;
+        let endPos = name.indexOf('.');
+        this._appLaunchName = name.slice(startPos, endPos);
+        this._appLaunchStartTime = epoch;
+        return;
+      }
+
+      // Only process supported performance marks
+      if (this._supported.indexOf(name) === -1) {
+        return;
+      }
+
+      let origin = detail.origin;
+      origin = origin.slice(0, origin.indexOf('.'));
+
+      // Continue if the performance mark corresponds to the app
+      // for which we have recorded app launch information.
+      if (this._appLaunchName !== origin) {
+        return;
+      }
+
+      let time = epoch - this._appLaunchStartTime;
+      let eventName = 'app_startup_time_' + name;
+
+      // Events based on performance marks are for telemetry only, they are
+      // not displayed in the HUD front end.
+      target._logHistogram({name: eventName, value: time});
+
+      memoryWatcher.front(target).residentUnique().then(value => {
+        eventName = 'app_memory_' + name;
+        target._logHistogram({name: eventName, value: value});
+      }, err => {
+        console.error(err);
+      });
     });
   },
 
