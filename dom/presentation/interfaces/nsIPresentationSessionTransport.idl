@@ -28,7 +28,7 @@ interface nsIPresentationSessionTransportCallback : nsISupports
 /*
  * App-to-App transport channel for the presentation session.
  */
-[scriptable, uuid(5a9fb9e9-b846-4c49-ad57-20ed88457295)]
+[scriptable, uuid(5d23ea5f-a7e5-4cf0-8fa5-6b0abd106bf2)]
 interface nsIPresentationSessionTransport : nsISupports
 {
   attribute nsIPresentationSessionTransportCallback callback;
@@ -51,6 +51,12 @@ interface nsIPresentationSessionTransport : nsISupports
    */
   void initWithChannelDescription(in nsIPresentationChannelDescription description,
                                   in nsIPresentationSessionTransportCallback callback);
+
+  /*
+   * Enable the notification for incoming data. |notifyData| of
+   * |nsIPresentationSessionTransportCallback| can start getting invoked.
+   */
+  void enableDataNotification();
 
   /*
    * Send message to the remote endpoint.
