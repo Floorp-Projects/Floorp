@@ -55,6 +55,21 @@ function testSessionReady() {
   });
 }
 
+function testIncomingMessage() {
+  return new Promise(function(aResolve, aReject) {
+    const incomingMessage = "test incoming message";
+
+    session.addEventListener('message', function messageHandler(aEvent) {
+      session.removeEventListener('message', messageHandler);
+      is(aEvent.data, incomingMessage, "An incoming message should be received.");
+      aResolve();
+    });
+
+    command({ name: 'trigger-incoming-message',
+    	      data: incomingMessage });
+  });
+}
+
 function testCloseSession() {
   return new Promise(function(aResolve, aReject) {
     session.onstatechange = function() {
@@ -69,6 +84,7 @@ function testCloseSession() {
 
 testSessionAvailable().
 then(testSessionReady).
+then(testIncomingMessage).
 then(testCloseSession).
 then(finish);
 
