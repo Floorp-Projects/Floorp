@@ -41,8 +41,6 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-HOST_CFLAGS += -DUNICODE -D_UNICODE
-
 ifndef JS_STANDALONE
 ifndef MOZ_PROFILE_USE
 # Generate a new buildid every time we "export" in config... that's only

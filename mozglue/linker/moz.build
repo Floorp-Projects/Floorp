@@ -33,3 +33,12 @@ TEST_DIRS += ['tests']
 HOST_OS_LIBS += [
     'z',
 ]
+
+if CONFIG['TARGET_CPU'] == 'arm':
+    if CONFIG['MOZ_THUMB2']:
+        HOST_DEFINES['TARGET_THUMB'] = True
+    else:
+        HOST_DEFINES['TARGET_ARM'] = True
+
+if CONFIG['CPU_ARCH'] == 'x86':
+    HOST_DEFINES['TARGET_X86'] = True
