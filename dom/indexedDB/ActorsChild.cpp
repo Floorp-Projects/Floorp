@@ -789,14 +789,14 @@ class WorkerPermissionChallenge;
 
 // This class calles WorkerPermissionChallenge::OperationCompleted() in the
 // worker thread.
-class WorkerPermissionOperationCompleted final : public WorkerRunnable
+class WorkerPermissionOperationCompleted final : public WorkerControlRunnable
 {
   nsRefPtr<WorkerPermissionChallenge> mChallenge;
 
 public:
   WorkerPermissionOperationCompleted(WorkerPrivate* aWorkerPrivate,
                                      WorkerPermissionChallenge* aChallenge)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
+    : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
     , mChallenge(aChallenge)
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -902,11 +902,7 @@ public:
       nsRefPtr<WorkerPermissionOperationCompleted> runnable =
         new WorkerPermissionOperationCompleted(mWorkerPrivate, this);
 
-      if (!runnable->Dispatch(nullptr)) {
-        NS_WARNING("Failed to dispatch a runnable to the worker thread.");
-        return;
-      }
-
+      MOZ_ALWAYS_TRUE(runnable->Dispatch(nullptr));
       return;
     }
 
@@ -1384,7 +1380,7 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
     JSContext* cx = workerPrivate->GetJSContext();
     MOZ_ASSERT(cx);
 
-    if (!workerPrivate->AddFeature(cx, challenge)) {
+    if (NS_WARN_IF(!workerPrivate->AddFeature(cx, challenge))) {
       return false;
     }
 
@@ -1406,7 +1402,9 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
     nsCOMPtr<Element> ownerElement =
       do_QueryInterface(window->GetChromeEventHandler());
     if (NS_WARN_IF(!ownerElement)) {
-      return false;
+      // If this fails, the page was navigated. Fail the permission check by
+      // forcing an immediate retry.
+      return SendPermissionRetry();
     }
 
     nsRefPtr<PermissionRequestMainProcessHelper> helper =
