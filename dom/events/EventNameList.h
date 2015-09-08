@@ -207,7 +207,7 @@ EVENT(drop,
       EventNameType_HTMLXUL,
       eDragEventClass)
 EVENT(durationchange,
-      NS_DURATIONCHANGE,
+      eDurationChange,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(emptied,
