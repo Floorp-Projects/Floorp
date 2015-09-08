@@ -362,7 +362,7 @@ EVENT(play,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(playing,
-      NS_PLAYING,
+      ePlaying,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(progress,
