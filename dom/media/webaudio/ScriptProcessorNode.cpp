@@ -333,6 +333,14 @@ public:
     }
   }
 
+  virtual bool IsActive() const override
+  {
+    // Could return false when !mIsConnected after all output chunks produced
+    // by main thread events calling
+    // SharedBuffers::FinishProducingOutputBuffer() have been processed.
+    return true;
+  }
+
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     // Not owned:
