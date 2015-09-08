@@ -406,9 +406,13 @@ class JitCompartment
             return p->value();
         return nullptr;
     }
-    bool putStubCode(uint32_t key, Handle<JitCode*> stubCode) {
+    bool putStubCode(JSContext* cx, uint32_t key, Handle<JitCode*> stubCode) {
         MOZ_ASSERT(stubCode);
-        return stubCodes_->putNew(key, stubCode.get());
+        if (!stubCodes_->putNew(key, stubCode.get())) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+        return true;
     }
     void initBaselineCallReturnAddr(void* addr, bool constructing) {
         MOZ_ASSERT(baselineCallReturnAddrs_[constructing] == nullptr);
