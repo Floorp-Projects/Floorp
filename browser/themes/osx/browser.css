@@ -1614,7 +1614,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 #urlbar {
-  -moz-padding-end: 4px;
   border-radius: @toolbarbuttonCornerRadius@;
 }
 
@@ -1906,6 +1905,7 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
                                 var(--urlbar-separator-color) 15%,
                                 var(--urlbar-separator-color) 85%,
                                 transparent 85%);
+  border-image-slice: 1;
 }
 
 #urlbar-go-button {
