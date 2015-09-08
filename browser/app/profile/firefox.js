@@ -1969,7 +1969,12 @@ pref("browser.pocket.oAuthConsumerKey", "40249-e88c401e1b1f2242d9e441c4");
 pref("browser.pocket.useLocaleList", true);
 pref("browser.pocket.enabledLocales", "cs de en-GB en-US en-ZA es-ES es-MX fr hu it ja ja-JP-mac ko nl pl pt-BR pt-PT ru zh-CN zh-TW");
 
+// View source tabs are only enabled by default for Dev. Ed and Nightly.
+#ifdef RELEASE_BUILD
+pref("view_source.tab", false);
+#else
 pref("view_source.tab", true);
+#endif
 
 // Enable Service Workers for desktop on non-release builds
 #ifndef RELEASE_BUILD
