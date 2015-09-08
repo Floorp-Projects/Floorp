@@ -154,19 +154,23 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
         break;
       next = interval.mEnd;
 
-      StreamTime outputStart = GraphTimeToStreamTimeWithBlocking(interval.mStart);
-      StreamTime outputEnd = GraphTimeToStreamTimeWithBlocking(interval.mEnd);
+      // We know this stream does not block during the processing interval ---
+      // we're not finished, we don't underrun, and we're not suspended.
+      StreamTime outputStart = GraphTimeToStreamTime(interval.mStart);
+      StreamTime outputEnd = GraphTimeToStreamTime(interval.mEnd);
       StreamTime ticks = outputEnd - outputStart;
 
       if (interval.mInputIsBlocked) {
         segment.AppendNullData(ticks);
       } else {
+        // The input stream is not blocked in this interval, so no need to call
+        // GraphTimeToStreamTimeWithBlocking.
         StreamTime inputStart =
           std::min(inputSegment.GetDuration(),
-                   source->GraphTimeToStreamTimeWithBlocking(interval.mStart));
+                   source->GraphTimeToStreamTime(interval.mStart));
         StreamTime inputEnd =
           std::min(inputSegment.GetDuration(),
-                   source->GraphTimeToStreamTimeWithBlocking(interval.mEnd));
+                   source->GraphTimeToStreamTime(interval.mEnd));
 
         segment.AppendSlice(inputSegment, inputStart, inputEnd);
         // Pad if we're looking past the end of the track
