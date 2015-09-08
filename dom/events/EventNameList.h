@@ -382,7 +382,7 @@ EVENT(seeked,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(seeking,
-      NS_SEEKING,
+      eSeeking,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(select,
