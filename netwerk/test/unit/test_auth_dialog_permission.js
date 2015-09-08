@@ -1,5 +1,5 @@
 // This file tests authentication prompt depending on pref
-// network.auth.allow-subresource-auth:
+// network.auth.subresource-http-auth-allow:
 //   0 - don't allow sub-resources to open HTTP authentication credentials
 //       dialogs
 //   1 - allow sub-resources to open HTTP authentication credentials dialogs,
@@ -131,9 +131,9 @@ function makeChan(loadingUrl, url, contentPolicy) {
   return chan;
 }
 
-function Test(allow_subresource_auth_pref, loadingUri, uri, contentPolicy,
+function Test(subresource_http_auth_allow_pref, loadingUri, uri, contentPolicy,
               expectedCode) {
-  this._allow_subresource_auth_pref = allow_subresource_auth_pref;
+  this._subresource_http_auth_allow_pref = subresource_http_auth_allow_pref;
   this._loadingUri = loadingUri;
   this._uri = uri;
   this._contentPolicy = contentPolicy;
@@ -141,7 +141,7 @@ function Test(allow_subresource_auth_pref, loadingUri, uri, contentPolicy,
 }
 
 Test.prototype = {
-  _allow_subresource_auth_pref: 1,
+  _subresource_http_auth_allow_pref: 1,
   _loadingUri: null,
   _uri: null,
   _contentPolicy: Ci.nsIContentPolicy.TYPE_OTHER,
@@ -184,14 +184,14 @@ Test.prototype = {
   },
 
   run: function() {
-    dump("Run test: " + this._allow_subresource_auth_pref
+    dump("Run test: " + this._subresource_http_auth_allow_pref
                       + this._loadingUri
                       + this._uri
                       + this._contentPolicy
                       + this._expectedCode + " \n");
 
-    prefs.setIntPref("network.auth.allow-subresource-auth",
-                     this._allow_subresource_auth_pref);
+    prefs.setIntPref("network.auth.subresource-http-auth-allow",
+                     this._subresource_http_auth_allow_pref);
     let chan = makeChan(this._loadingUri, this._uri, this._contentPolicy);
     chan.notificationCallbacks = new Requestor(this._expectedCode == 200);
     chan.asyncOpen(this, null);
