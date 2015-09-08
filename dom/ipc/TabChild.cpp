@@ -460,6 +460,24 @@ PreloadSlowThingsPostFork(void* aUnused)
     nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
     observerService->NotifyObservers(nullptr, "preload-postfork", nullptr);
+
+    MOZ_ASSERT(sPreallocatedTab);
+    // Initialize initial reflow of the PresShell has to happen after fork
+    // because about:blank content viewer is created in the above observer
+    // notification.
+    nsCOMPtr<nsIDocShell> docShell =
+      do_GetInterface(sPreallocatedTab->WebNavigation());
+    if (nsIPresShell* presShell = docShell->GetPresShell()) {
+        // Initialize and do an initial reflow of the about:blank
+        // PresShell to let it preload some things for us.
+        presShell->Initialize(0, 0);
+        nsIDocument* doc = presShell->GetDocument();
+        doc->FlushPendingNotifications(Flush_Layout);
+        // ... but after it's done, make sure it doesn't do any more
+        // work.
+        presShell->MakeZombie();
+    }
+
 }
 
 #ifdef MOZ_NUWA_PROCESS
@@ -549,18 +567,6 @@ TabChild::PreloadSlowThings()
 #else
     PreloadSlowThingsPostFork(nullptr);
 #endif
-
-    nsCOMPtr<nsIDocShell> docShell = do_GetInterface(tab->WebNavigation());
-    if (nsIPresShell* presShell = docShell->GetPresShell()) {
-        // Initialize and do an initial reflow of the about:blank
-        // PresShell to let it preload some things for us.
-        presShell->Initialize(0, 0);
-        nsIDocument* doc = presShell->GetDocument();
-        doc->FlushPendingNotifications(Flush_Layout);
-        // ... but after it's done, make sure it doesn't do any more
-        // work.
-        presShell->MakeZombie();
-    }
 
     sPreallocatedTab = tab;
     ClearOnShutdown(&sPreallocatedTab);
