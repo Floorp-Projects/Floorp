@@ -161,6 +161,11 @@ public:
     mHaveProducedBeforeInput = true;
   }
 
+  virtual bool IsActive() const override
+  {
+    return mLeftOverData != INT32_MIN;
+  }
+
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);

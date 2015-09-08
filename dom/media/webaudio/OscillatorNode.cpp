@@ -330,6 +330,12 @@ public:
 
   }
 
+  virtual bool IsActive() const override
+  {
+    // start() has been called.
+    return mStart != -1;
+  }
+
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
