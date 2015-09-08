@@ -343,6 +343,8 @@ int AppendHeaderName(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aName,
                      int aLength);
 int AppendHeaderBody(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aBody,
                      int aLength);
+int AppendHeaderTarget(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aTarget,
+                       int aLength);
 int AppendHeaderWho(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aWho,
                     int aLength);
 int AppendHeaderAppParameters(uint8_t* aRetBuf, int aBufferSize,
