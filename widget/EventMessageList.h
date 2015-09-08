@@ -294,9 +294,9 @@ NS_EVENT_MESSAGE(ePluginEventFirst,     3600)
 NS_EVENT_MESSAGE(ePluginInputEvent,     ePluginEventFirst)
 
 // Events to manipulate selection (WidgetSelectionEvent)
-NS_EVENT_MESSAGE(NS_SELECTION_EVENT_START, 3700)
+NS_EVENT_MESSAGE(eSelectionEventFirst,  3700)
 // Clear any previous selection and set the given range as the selection
-NS_EVENT_MESSAGE(NS_SELECTION_SET,      NS_SELECTION_EVENT_START)
+NS_EVENT_MESSAGE(NS_SELECTION_SET,      eSelectionEventFirst)
 
 // Events of commands for the contents
 NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_EVENT_START,        3800)
