@@ -520,7 +520,7 @@ nsClipboardCommand::DoCommand(const char *aCommandName, nsISupports *aContext)
   nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-  EventMessage eventMessage = NS_COPY;
+  EventMessage eventMessage = eCopy;
   if (strcmp(aCommandName, "cmd_cut") == 0) {
     eventMessage = NS_CUT;
   }
