@@ -646,7 +646,7 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream)
     AudioSegment* audio = track->Get<AudioSegment>();
     AudioSegment output;
 
-    StreamTime offset = GraphTimeToStreamTimeWithBlocking(aStream, mProcessedTime);
+    StreamTime offset = aStream->GraphTimeToStreamTime(mProcessedTime);
 
     // We don't update aStream->mBufferStartTime here to account for time spent
     // blocked. Instead, we'll update it in UpdateCurrentTimeForStreams after
