@@ -999,9 +999,18 @@ var readFileList = function(url) {
  * @param {string} shaderSource The shader source.
  * @param {number} shaderType The type of shader.
  * @param {function(string): void) opt_errorCallback callback for errors.
+ * @param {boolean} opt_logShaders Whether to log shader source.
+ * @param {string} opt_shaderLabel Label that identifies the shader source in
+ *     the log.
+ * @param {string} opt_url URL from where the shader source was loaded from.
+ *     If opt_logShaders is set, then a link to the source file will also be
+ *     added.
+ * @param {boolean} Skip compilation status check. Default = false.
  * @return {!WebGLShader} The created shader.
  */
-var loadShader = function(gl, shaderSource, shaderType, opt_errorCallback) {
+var loadShader = function(
+    gl, shaderSource, shaderType, opt_errorCallback, opt_logShaders,
+    opt_shaderLabel, opt_url, opt_skipCompileStatus) {
   var errFn = opt_errorCallback || error;
   // Create the shader object
   var shader = gl.createShader(shaderType);
@@ -1021,14 +1030,25 @@ var loadShader = function(gl, shaderSource, shaderType, opt_errorCallback) {
   // Compile the shader
   gl.compileShader(shader);
 
+  if (opt_logShaders) {
+    var label = shaderType == gl.VERTEX_SHADER ? 'vertex shader' : 'fragment_shader';
+    if (opt_shaderLabel) {
+      label = opt_shaderLabel + ' ' + label;
+    }
+    addShaderSources(
+        gl, document.getElementById('console'), label, shader, shaderSource, opt_url);
+  }
+
   // Check the compile status
-  var compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-  if (!compiled) {
-    // Something went wrong during compilation; get the error
-    lastError = gl.getShaderInfoLog(shader);
-    errFn("*** Error compiling shader '" + shader + "':" + lastError);
-    gl.deleteShader(shader);
-    return null;
+  if (!opt_skipCompileStatus) {
+    var compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+    if (!compiled) {
+      // Something went wrong during compilation; get the error
+      lastError = gl.getShaderInfoLog(shader);
+      errFn("*** Error compiling " + glEnumToString(gl, shaderType) + " '" + shader + "':" + lastError);
+      gl.deleteShader(shader);
+      return null;
+    }
   }
 
   return shader;
@@ -1065,12 +1085,13 @@ var getScript = function(scriptId) {
  * @param {number} opt_shaderType The type of shader. If not passed in it will
  *     be derived from the type of the script tag.
  * @param {function(string): void) opt_errorCallback callback for errors.
+ * @param {boolean} opt_logShaders Whether to log shader source.
+ * @param {boolean} Skip compilation status check. Default = false.
  * @return {!WebGLShader} The created shader.
  */
 var loadShaderFromScript = function(
-    gl, scriptId, opt_shaderType, opt_errorCallback) {
+    gl, scriptId, opt_shaderType, opt_errorCallback, opt_logShaders, opt_skipCompileStatus) {
   var shaderSource = "";
-  var shaderType;
   var shaderScript = document.getElementById(scriptId);
   if (!shaderScript) {
     throw("*** Error: unknown script element " + scriptId);
@@ -1079,18 +1100,17 @@ var loadShaderFromScript = function(
 
   if (!opt_shaderType) {
     if (shaderScript.type == "x-shader/x-vertex") {
-      shaderType = gl.VERTEX_SHADER;
+      opt_shaderType = gl.VERTEX_SHADER;
     } else if (shaderScript.type == "x-shader/x-fragment") {
-      shaderType = gl.FRAGMENT_SHADER;
-    } else if (shaderType != gl.VERTEX_SHADER && shaderType != gl.FRAGMENT_SHADER) {
+      opt_shaderType = gl.FRAGMENT_SHADER;
+    } else {
       throw("*** Error: unknown shader type");
       return null;
     }
   }
 
-  return loadShader(
-      gl, shaderSource, opt_shaderType ? opt_shaderType : shaderType,
-      opt_errorCallback);
+  return loadShader(gl, shaderSource, opt_shaderType, opt_errorCallback,
+      opt_logShaders, undefined, undefined, opt_skipCompileStatus);
 };
 
 var loadStandardProgram = function(gl) {
