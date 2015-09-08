@@ -5,4 +5,4 @@ skip-if(B2G) fuzzy-if(Android&&AndroidVersion>=15,8,1000) == 709477-1.html 70947
 skip-if(!asyncPan) == 1086723.html 1086723-ref.html
 == 853889-1.html 853889-1-ref.html
 == 1143303-1.svg pass.svg
-fuzzy(30,30) == 1149923.html 1149923-ref.html # use fuzzy due to few distorted pixels caused by border-radius
+fuzzy(100,30) == 1149923.html 1149923-ref.html # use fuzzy due to few distorted pixels caused by border-radius
