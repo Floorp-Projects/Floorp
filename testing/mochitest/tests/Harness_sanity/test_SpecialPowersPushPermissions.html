@@ -18,13 +18,16 @@ const ACCESS_ALLOW_FIRST_PARTY_ONLY = SpecialPowers.Ci.nsICookiePermission.ACCES
 const ACCESS_LIMIT_THIRD_PARTY = SpecialPowers.Ci.nsICookiePermission.ACCESS_LIMIT_THIRD_PARTY;
 
 const EXPIRE_TIME = SpecialPowers.Ci.nsIPermissionManager.EXPIRE_TIME;
+// expire Setting:
+//     start                 expire time point
+//   ----|------------------------|-----------
+//       <------------------------>
+//                 PERIOD
 var start;
-const DELAY = 500;
-// PR_Now() that called in nsPermissionManager to get the system time and
-// Date.now() are out of sync on win32 platform(XP/win7). The PR_Now() is
-// 15~20ms less than Date.now(). Unfortunately, this time skew can't be
-// avoided, so it needs to add a time buffer to compensate.
-const TIME_SKEW = 100;
+// PR_Now() that called in nsPermissionManager to get the system time
+// is sometimes 100ms~600s more than Date.now() on Android 4.3 API11.
+// Thus, the PERIOD should be larger than 600ms in this test.
+const PERIOD = 900;
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('specialPowers_framescript.js'));
 SimpleTest.requestFlakyTimeout("untriaged");
 
@@ -155,7 +158,11 @@ function test7() {
   afterPermissionChanged('pEXPIRE', 'deleted', test8);
   afterPermissionChanged('pEXPIRE', 'added', permissionPollingCheck);
   start = Number(Date.now());
-  SpecialPowers.addPermission('pEXPIRE', true, document, EXPIRE_TIME, start + DELAY);
+  SpecialPowers.addPermission('pEXPIRE',
+                              true,
+                              document,
+                              EXPIRE_TIME,
+                              (start + PERIOD + getPlatformInfo().timeCompensation));
 }
 
 function test8() {
@@ -166,10 +173,10 @@ function test8() {
     { 'type': 'pEXPIRE',
       'allow': true,
       'expireType': EXPIRE_TIME,
-      'expireTime': start + DELAY,
+      'expireTime': (start + PERIOD + getPlatformInfo().timeCompensation),
       'context': document
     }], function() {
-      info("Wait permission changed signal!");
+      info("Wait for permission-changed signal!");
     }
   );
 }
@@ -186,33 +193,45 @@ function afterPermissionChanged(type, op, callback) {
 
 function permissionPollingCheck() {
   var now = Number(Date.now());
-  if (now < start + DELAY) {
-    ok(SpecialPowers.testPermission('pEXPIRE', ALLOW_ACTION, document),
-       'unexpired permission is still there!');
-    setTimeout(permissionPollingCheck, DELAY);
-    return;
-  }
+  if (now < (start + PERIOD)) {
+    if (SpecialPowers.testPermission('pEXPIRE', ALLOW_ACTION, document)) {
+      // To make sure that permission will be expired in next round,
+      // the next permissionPollingCheck calling will be fired 100ms later after
+      // permission is out-of-period.
+      setTimeout(permissionPollingCheck, PERIOD + 100);
+      return;
+    }
 
-  if (SpecialPowers.testPermission('pEXPIRE', ALLOW_ACTION, document) &&
-      (now < start + DELAY + TIME_SKEW) &&
-      isWin32()) {
-    setTimeout(permissionPollingCheck, DELAY);
-    return;
+    errorHandler('unexpired permission should be allowed!');
   }
 
   // The permission is already expired!
-  ok(!SpecialPowers.testPermission('pEXPIRE', ALLOW_ACTION, document),
-     'expired permission should be removed!');
+  if (SpecialPowers.testPermission('pEXPIRE', ALLOW_ACTION, document)) {
+    errorHandler('expired permission should be removed!');
+  }
 }
 
-function isWin32() {
+function getPlatformInfo() {
   var version = SpecialPowers.Services.sysinfo.getProperty('version');
   version = parseFloat(version);
-  // version 5.1 is win XP, 6.1 is win7
-  return (navigator.platform.indexOf('Win') == 0) && (version <= 6.1);
+
+  // PR_Now() that called in nsPermissionManager to get the system time and
+  // Date.now() are out of sync on win32 platform(XP/win7). The PR_Now() is
+  // 15~20ms less than Date.now(). Unfortunately, this time skew can't be
+  // avoided, so it needs to add a time buffer to compensate.
+  // Version 5.1 is win XP, 6.1 is win7
+  if (navigator.platform.startsWith('Win32') && (version <= 6.1)) {
+    return { platform: "Win32", timeCompensation: -100 };
+  }
+
+  return { platform: "NoMatter", timeCompensation: 0 };
+}
+
+function errorHandler(msg) {
+  ok(false, msg);
+  SimpleTest.finish();
 }
 </script>
 </pre>
 </body>
 </html>
-
