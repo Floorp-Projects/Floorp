@@ -647,37 +647,6 @@ MediaStreamGraphImpl::UpdateStreamOrder()
   MOZ_ASSERT(orderedStreamCount == mFirstCycleBreaker);
 }
 
-GraphTime
-MediaStreamGraphImpl::ComputeStreamBlockTime(MediaStream* aStream,
-                                             GraphTime aTime,
-                                             GraphTime aEndBlockingDecisions)
-{
-  if (aStream->IsSuspended()) {
-    STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to being suspended", aStream));
-    return aTime;
-  }
-
-  if (aStream->mFinished) {
-    // The stream's not suspended, and since it's finished, underruns won't
-    // stop it playing out. So there's no blocking other than what we impose
-    // here.
-    GraphTime endTime = aStream->GetStreamBuffer().GetAllTracksEnd() +
-        aStream->mBufferStartTime;
-    if (endTime <= aTime) {
-      STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to being finished", aStream));
-      return aTime;
-    } else {
-      STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is finished, but not blocked yet (end at %f, with blocking at %f)",
-          aStream, MediaTimeToSeconds(aStream->GetBufferEnd()),
-          MediaTimeToSeconds(endTime)));
-      // Data can't be added to a finished stream, so underruns are irrelevant.
-      return std::min(endTime, aEndBlockingDecisions);
-    }
-  }
-
-  return WillUnderrun(aStream, aEndBlockingDecisions);
-}
-
 void
 MediaStreamGraphImpl::NotifyHasCurrentData(MediaStream* aStream)
 {
@@ -1143,18 +1112,34 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
 
   // Grab pending stream input and compute blocking time
   for (MediaStream* stream : mStreams) {
-    SourceMediaStream* is = stream->AsSourceStream();
-    if (is) {
+    if (SourceMediaStream* is = stream->AsSourceStream()) {
       UpdateConsumptionState(is);
       ExtractPendingInput(is, aEndBlockingDecisions, &ensureNextIteration);
     }
 
-    stream->mStartBlocking =
-      ComputeStreamBlockTime(stream, mStateComputedTime, aEndBlockingDecisions);
+    if (stream->mFinished) {
+      // The stream's not suspended, and since it's finished, underruns won't
+      // stop it playing out. So there's no blocking other than what we impose
+      // here.
+      GraphTime endTime = stream->GetStreamBuffer().GetAllTracksEnd() +
+          stream->mBufferStartTime;
+      if (endTime <= mStateComputedTime) {
+        STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to being finished", stream));
+        stream->mStartBlocking = mStateComputedTime;
+      } else {
+        STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is finished, but not blocked yet (end at %f, with blocking at %f)",
+            stream, MediaTimeToSeconds(stream->GetBufferEnd()),
+            MediaTimeToSeconds(endTime)));
+        // Data can't be added to a finished stream, so underruns are irrelevant.
+        stream->mStartBlocking = std::min(endTime, aEndBlockingDecisions);
+      }
+    } else {
+      stream->mStartBlocking = WillUnderrun(stream, aEndBlockingDecisions);
+    }
   }
+
   for (MediaStream* stream : mSuspendedStreams) {
-    stream->mStartBlocking =
-      ComputeStreamBlockTime(stream, mStateComputedTime, aEndBlockingDecisions);
+    stream->mStartBlocking = mStateComputedTime;
   }
 
   // The loop is woken up so soon that IterationEnd() barely advances and we

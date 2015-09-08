@@ -298,15 +298,6 @@ public:
   void UpdateStreamOrder();
 
   /**
-   * Recompute blocking for the streams in aStreams for the interval starting at aTime.
-   * If this results in decisions that need to be revisited at some point
-   * in the future, *aEnd will be reduced to the first time in the future to
-   * recompute those decisions.
-   */
-  GraphTime ComputeStreamBlockTime(MediaStream* aStream,
-                                   GraphTime aTime,
-                                   GraphTime aEndBlockingDecisions);
-  /**
    * Returns smallest value of t such that t is a multiple of
    * WEBAUDIO_BLOCK_SIZE and t > aTime.
    */
