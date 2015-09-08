@@ -359,61 +359,54 @@ void
 MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime,
                                                   GraphTime aNextCurrentTime)
 {
-  nsTArray<MediaStream*>* runningAndSuspendedPair[2];
-  runningAndSuspendedPair[0] = &mStreams;
-  runningAndSuspendedPair[1] = &mSuspendedStreams;
-
-  for (uint32_t array = 0; array < 2; array++) {
-    for (uint32_t i = 0; i < runningAndSuspendedPair[array]->Length(); ++i) {
-      MediaStream* stream = (*runningAndSuspendedPair[array])[i];
-
-      // Calculate blocked time and fire Blocked/Unblocked events
-      GraphTime blockedTime = 0;
-      GraphTime t = aPrevCurrentTime;
-      // include |nextCurrentTime| to ensure NotifyBlockingChanged() is called
-      // before NotifyEvent(this, EVENT_FINISHED) when |nextCurrentTime ==
-      // stream end time|
-      while (t <= aNextCurrentTime) {
-        GraphTime end;
-        bool blocked = stream->mBlocked.GetAt(t, &end);
-        if (blocked) {
-          blockedTime += std::min(end, aNextCurrentTime) - t;
+  for (MediaStream* stream : AllStreams()) {
+    // Calculate blocked time and fire Blocked/Unblocked events
+    GraphTime blockedTime = 0;
+    GraphTime t = aPrevCurrentTime;
+    // include |nextCurrentTime| to ensure NotifyBlockingChanged() is called
+    // before NotifyEvent(this, EVENT_FINISHED) when |nextCurrentTime ==
+    // stream end time|
+    while (t <= aNextCurrentTime) {
+      GraphTime end;
+      bool blocked = stream->mBlocked.GetAt(t, &end);
+      if (blocked) {
+        blockedTime += std::min(end, aNextCurrentTime) - t;
+      }
+      if (blocked != stream->mNotifiedBlocked) {
+        for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
+          MediaStreamListener* l = stream->mListeners[j];
+          l->NotifyBlockingChanged(this, blocked
+                                           ? MediaStreamListener::BLOCKED
+                                           : MediaStreamListener::UNBLOCKED);
         }
-        if (blocked != stream->mNotifiedBlocked) {
-          for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
-            MediaStreamListener* l = stream->mListeners[j];
-            l->NotifyBlockingChanged(this, blocked
-                                             ? MediaStreamListener::BLOCKED
-                                             : MediaStreamListener::UNBLOCKED);
-          }
-          stream->mNotifiedBlocked = blocked;
-        }
-        t = end;
+        stream->mNotifiedBlocked = blocked;
+      }
+      t = end;
+    }
+
+    stream->AdvanceTimeVaryingValuesToCurrentTime(aNextCurrentTime,
+                                                  blockedTime);
+    // Advance mBlocked last so that AdvanceTimeVaryingValuesToCurrentTime
+    // can rely on the value of mBlocked.
+    stream->mBlocked.AdvanceCurrentTime(aNextCurrentTime);
+
+    STREAM_LOG(LogLevel::Verbose,
+               ("MediaStream %p bufferStartTime=%f blockedTime=%f", stream,
+                MediaTimeToSeconds(stream->mBufferStartTime),
+                MediaTimeToSeconds(blockedTime)));
+
+    if (mSuspendedStreams.IndexOf(stream) == mSuspendedStreams.NoIndex) {
+      bool streamHasOutput = blockedTime < aNextCurrentTime - aPrevCurrentTime;
+      NS_ASSERTION(!streamHasOutput || !stream->mNotifiedFinished,
+        "Shouldn't have already notified of finish *and* have output!");
+
+      if (streamHasOutput) {
+        StreamNotifyOutput(stream);
       }
 
-      stream->AdvanceTimeVaryingValuesToCurrentTime(aNextCurrentTime,
-                                                    blockedTime);
-      // Advance mBlocked last so that AdvanceTimeVaryingValuesToCurrentTime
-      // can rely on the value of mBlocked.
-      stream->mBlocked.AdvanceCurrentTime(aNextCurrentTime);
-
-      if (runningAndSuspendedPair[array] == &mStreams) {
-        bool streamHasOutput = blockedTime < aNextCurrentTime - aPrevCurrentTime;
-        NS_ASSERTION(!streamHasOutput || !stream->mNotifiedFinished,
-          "Shouldn't have already notified of finish *and* have output!");
-
-        if (streamHasOutput) {
-          StreamNotifyOutput(stream);
-        }
-
-        if (stream->mFinished && !stream->mNotifiedFinished) {
-          StreamReadyToFinish(stream);
-        }
+      if (stream->mFinished && !stream->mNotifiedFinished) {
+        StreamReadyToFinish(stream);
       }
-      STREAM_LOG(LogLevel::Verbose,
-                 ("MediaStream %p bufferStartTime=%f blockedTime=%f", stream,
-                  MediaTimeToSeconds(stream->mBufferStartTime),
-                  MediaTimeToSeconds(blockedTime)));
     }
   }
 }
@@ -742,26 +735,19 @@ MediaStreamGraphImpl::RecomputeBlocking(GraphTime aEndBlockingDecisions)
 {
   STREAM_LOG(LogLevel::Verbose, ("Media graph %p computing blocking for time %f",
                               this, MediaTimeToSeconds(mStateComputedTime)));
-  nsTArray<MediaStream*>* runningAndSuspendedPair[2];
-  runningAndSuspendedPair[0] = &mStreams;
-  runningAndSuspendedPair[1] = &mSuspendedStreams;
+  for (MediaStream* stream : AllStreams()) {
+    if (!stream->mInBlockingSet) {
+      // Compute a partition of the streams containing 'stream' such that we
+      // can
+      // compute the blocking status of each subset independently.
+      nsAutoTArray<MediaStream*, 10> streamSet;
+      AddBlockingRelatedStreamsToSet(&streamSet, stream);
 
-  for (uint32_t array = 0; array < 2; array++) {
-    for (uint32_t i = 0; i < (*runningAndSuspendedPair[array]).Length(); ++i) {
-      MediaStream* stream = (*runningAndSuspendedPair[array])[i];
-      if (!stream->mInBlockingSet) {
-        // Compute a partition of the streams containing 'stream' such that we
-        // can
-        // compute the blocking status of each subset independently.
-        nsAutoTArray<MediaStream*, 10> streamSet;
-        AddBlockingRelatedStreamsToSet(&streamSet, stream);
-
-        GraphTime end;
-        for (GraphTime t = mStateComputedTime;
-             t < aEndBlockingDecisions; t = end) {
-          end = GRAPH_TIME_MAX;
-          RecomputeBlockingAt(streamSet, t, aEndBlockingDecisions, &end);
-        }
+      GraphTime end;
+      for (GraphTime t = mStateComputedTime;
+           t < aEndBlockingDecisions; t = end) {
+        end = GRAPH_TIME_MAX;
+        RecomputeBlockingAt(streamSet, t, aEndBlockingDecisions, &end);
       }
     }
   }
@@ -3192,19 +3178,12 @@ void
 MediaStreamGraphImpl::ResetVisitedStreamState()
 {
   // Reset the visited/consumed/blocked state of the streams.
-  nsTArray<MediaStream*>* runningAndSuspendedPair[2];
-  runningAndSuspendedPair[0] = &mStreams;
-  runningAndSuspendedPair[1] = &mSuspendedStreams;
-
-  for (uint32_t array = 0; array < 2; array++) {
-    for (uint32_t i = 0; i < runningAndSuspendedPair[array]->Length(); ++i) {
-      ProcessedMediaStream* ps =
-        (*runningAndSuspendedPair[array])[i]->AsProcessedStream();
-      if (ps) {
-        ps->mCycleMarker = NOT_VISITED;
-        ps->mIsConsumed = false;
-        ps->mInBlockingSet = false;
-      }
+  for (MediaStream* stream : AllStreams()) {
+    ProcessedMediaStream* ps = stream->AsProcessedStream();
+    if (ps) {
+      ps->mCycleMarker = NOT_VISITED;
+      ps->mIsConsumed = false;
+      ps->mInBlockingSet = false;
     }
   }
 }
