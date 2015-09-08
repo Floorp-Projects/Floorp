@@ -13,6 +13,8 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm")
 Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
+let { computeHash } = Cu.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
+
 do_get_profile();
 
 function run_test() {Cu.import("resource://gre/modules/Preferences.jsm")
@@ -431,7 +433,7 @@ function* test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
   let data = "e~=0.5772156649";
   let zipFile = createNewZipFile(zipFileName, data);
   let hashFunc = "sha256";
-  let expectedDigest = yield GMPDownloader.computeHash(hashFunc, zipFile);
+  let expectedDigest = yield computeHash(hashFunc, zipFile.path);
   let fileSize = zipFile.fileSize;
   if (wantInstallReject) {
     fileSize = 1;
@@ -457,7 +459,6 @@ function* test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
   let gmpAddon = gmpAddons[0];
   do_check_false(gmpAddon.isInstalled);
 
-  GMPInstallManager.overrideLeaveDownloadedZip = true;
   try {
     let extractedPaths = yield installManager.installAddon(gmpAddon);
     if (wantInstallReject) {
@@ -475,14 +476,6 @@ function* test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
     let readData = readStringFromFile(extractedFile);
     do_check_eq(readData, data);
 
-    // Check that the downloaded zip matches the offered zip exactly
-    let downloadedGMPFile = FileUtils.getFile("TmpD",
-      [gmpAddon.id + ".zip"]);
-    do_check_true(downloadedGMPFile.exists());
-    let downloadedBytes = getBinaryFileData(downloadedGMPFile);
-    let sourceBytes = getBinaryFileData(zipFile);
-    do_check_true(compareBinaryData(downloadedBytes, sourceBytes));
-
     // Make sure the prefs are set correctly
     do_check_true(!!GMPScope.GMPPrefs.get(
       GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "", gmpAddon.id));
@@ -499,16 +492,9 @@ function* test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
     extractedFile.parent.remove(true);
     zipFile.remove(false);
     httpServer.stop(function() {});
-    do_print("Removing downloaded GMP file: " + downloadedGMPFile.path);
-    downloadedGMPFile.remove(false);
     installManager.uninit();
   } catch(ex) {
     zipFile.remove(false);
-    let downloadedGMPFile = FileUtils.getFile("TmpD",
-      [gmpAddon.id + ".zip"]);
-    do_print("Removing downloaded GMP file from exception handler: " +
-             downloadedGMPFile.path);
-    downloadedGMPFile.remove(false);
     if (!wantInstallReject) {
       do_throw("install update should not reject");
     }
@@ -797,45 +783,6 @@ function overrideXHR(status, response, options) {
                             overrideXHR.myxhr.contractID,
                             overrideXHR.myxhr);
   return overrideXHR.myxhr;
-}
-
-/**
- * Compares binary data of 2 arrays and returns true if they are the same
- *
- * @param arr1 The first array to compare
- * @param arr2 The second array to compare
-*/
-function compareBinaryData(arr1, arr2) {
-  do_check_eq(arr1.length, arr2.length);
-  for (let i = 0; i < arr1.length; i++) {
-    if (arr1[i] != arr2[i]) {
-      do_print("Data differs at index " + i +
-               ", arr1: " + arr1[i] + ", arr2: " + arr2[i]);
-      return false;
-    }
-  }
-  return true;
-}
-
-/**
- * Reads a file's data and returns it
- *
- * @param file The file to read the data from
- * @return array of bytes for the data in the file.
-*/
-function getBinaryFileData(file) {
-  let fileStream = Cc["@mozilla.org/network/file-input-stream;1"].
-                   createInstance(Ci.nsIFileInputStream);
-  // Open as RD_ONLY with default permissions.
-  fileStream.init(file, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
-
-  // Check the returned size versus the expected size.
-  let stream = Cc["@mozilla.org/binaryinputstream;1"].
-               createInstance(Ci.nsIBinaryInputStream);
-  stream.setInputStream(fileStream);
-  let bytes = stream.readByteArray(stream.available());
-  fileStream.close();
-  return bytes;
 }
 
 /**
