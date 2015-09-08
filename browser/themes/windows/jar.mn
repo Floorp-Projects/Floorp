@@ -457,7 +457,6 @@ browser.jar:
         skin/classic/browser/devtools/editor-debug-location.png     (../shared/devtools/images/editor-debug-location.png)
         skin/classic/browser/devtools/editor-debug-location@2x.png     (../shared/devtools/images/editor-debug-location@2x.png)
 *       skin/classic/browser/devtools/webconsole.css                (../shared/devtools/webconsole.css)
-        skin/classic/browser/devtools/webconsole_networkpanel.css   (../shared/devtools/webconsole_networkpanel.css)
         skin/classic/browser/devtools/webconsole.svg                (../shared/devtools/images/webconsole.svg)
         skin/classic/browser/devtools/breadcrumbs-divider@2x.png    (../shared/devtools/images/breadcrumbs-divider@2x.png)
         skin/classic/browser/devtools/breadcrumbs-scrollbutton.png  (../shared/devtools/images/breadcrumbs-scrollbutton.png)
