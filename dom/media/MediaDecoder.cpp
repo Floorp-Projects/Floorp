@@ -463,6 +463,7 @@ void MediaDecoder::Shutdown()
   // the asynchronous shutdown in nsDestroyStateMachine won't deadlock.
   if (mDecoderStateMachine) {
     mDecoderStateMachine->DispatchShutdown();
+    mTimedMetadataListener.Disconnect();
   }
 
   // Force any outstanding seek and byterange requests to complete
@@ -545,6 +546,8 @@ void MediaDecoder::SetStateMachineParameters()
   if (mMinimizePreroll) {
     mDecoderStateMachine->DispatchMinimizePrerollUntilPlaybackStarts();
   }
+  mTimedMetadataListener = mDecoderStateMachine->TimedMetadataEvent().Connect(
+    AbstractThread::MainThread(), this, &MediaDecoder::OnMetadataUpdate);
 }
 
 void MediaDecoder::SetMinimizePrerollUntilPlaybackStarts()
@@ -635,13 +638,15 @@ already_AddRefed<nsIPrincipal> MediaDecoder::GetCurrentPrincipal()
   return mResource ? mResource->GetCurrentPrincipal() : nullptr;
 }
 
-void MediaDecoder::QueueMetadata(const TimeUnit& aPublishTime,
-                                 nsAutoPtr<MediaInfo> aInfo,
-                                 nsAutoPtr<MetadataTags> aTags)
+void MediaDecoder::OnMetadataUpdate(TimedMetadata&& aMetadata)
 {
-  MOZ_ASSERT(OnDecodeTaskQueue());
-  GetReentrantMonitor().AssertCurrentThreadIn();
-  mDecoderStateMachine->QueueMetadata(aPublishTime, aInfo, aTags);
+  MOZ_ASSERT(NS_IsMainThread());
+  RemoveMediaTracks();
+  MetadataLoaded(nsAutoPtr<MediaInfo>(new MediaInfo(*aMetadata.mInfo)),
+                 Move(aMetadata.mTags),
+                 MediaDecoderEventVisibility::Observable);
+  FirstFrameLoaded(Move(aMetadata.mInfo),
+                   MediaDecoderEventVisibility::Observable);
 }
 
 void MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,

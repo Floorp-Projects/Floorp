@@ -1435,6 +1435,11 @@ pref("network.http.enforce-framing.soft", true);
 // See http://www.w3.org/TR/web-packaging/#streamable-package-format
 pref("network.http.enable-packaged-apps", false);
 
+// Enable this pref to skip verification process. The packaged app
+// will be considered signed no matter the package has a valid/invalid
+// signature or no signature.
+pref("network.http.packaged-apps-developer-mode", false);
+
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
 // Section 4.8 "High-Throughput Data Service Class", and 80 (0x50, or AF22)
@@ -4763,8 +4768,10 @@ pref("urlclassifier.disallow_completions", "test-malware-simple,test-phish-simpl
 // checks.
 pref("urlclassifier.trackingTable", "test-track-simple,mozpub-track-digest256");
 pref("urlclassifier.trackingWhitelistTable", "test-trackwhite-simple,mozpub-trackwhite-digest256");
-pref("browser.trackingprotection.updateURL", "https://tracking.services.mozilla.com/downloads?client=SAFEBROWSING_ID&appver=%VERSION%&pver=2.2");
-pref("browser.trackingprotection.gethashURL", "https://tracking.services.mozilla.com/gethash?client=SAFEBROWSING_ID&appver=%VERSION%&pver=2.2");
+
+pref("browser.safebrowsing.provider.mozilla.lists", "mozpub-track-digest256,mozpub-trackwhite-digest256");
+pref("browser.safebrowsing.provider.mozilla.updateURL", "https://tracking.services.mozilla.com/downloads?client=SAFEBROWSING_ID&appver=%VERSION%&pver=2.2");
+pref("browser.safebrowsing.provider.mozilla.gethashURL", "https://tracking.services.mozilla.com/gethash?client=SAFEBROWSING_ID&appver=%VERSION%&pver=2.2");
 
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);

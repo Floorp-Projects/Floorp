@@ -809,9 +809,6 @@ protected:
   nsresult DoContentCommandEvent(WidgetContentCommandEvent* aEvent);
   nsresult DoContentCommandScrollEvent(WidgetContentCommandEvent* aEvent);
 
-  void DoQuerySelectedText(WidgetQueryContentEvent* aEvent);
-
-  bool RemoteQueryContentEvent(WidgetEvent* aEvent);
   dom::TabParent *GetCrossProcessTarget();
   bool IsTargetCrossProcess(WidgetGUIEvent* aEvent);
 
@@ -822,6 +819,8 @@ protected:
                                nsEventStatus* aStatus);
 
   void ReleaseCurrentIMEContentObserver();
+
+  void HandleQueryContentEvent(WidgetQueryContentEvent* aEvent);
 
 private:
   static inline void DoStateChange(dom::Element* aElement,

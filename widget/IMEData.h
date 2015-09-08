@@ -578,6 +578,10 @@ struct IMENotification final
     {
       return mOffset + Length() <= INT32_MAX;
     }
+    bool IsCollapsed() const
+    {
+      return mString->IsEmpty();
+    }
     void Clear()
     {
       mOffset = UINT32_MAX;

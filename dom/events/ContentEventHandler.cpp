@@ -792,6 +792,34 @@ ContentEventHandler::GetLineBreakType(bool aUseNativeLineBreak)
     LINE_BREAK_TYPE_NATIVE : LINE_BREAK_TYPE_XP;
 }
 
+nsresult
+ContentEventHandler::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
+{
+  switch (aEvent->mMessage) {
+    case NS_QUERY_SELECTED_TEXT:
+      return OnQuerySelectedText(aEvent);
+    case NS_QUERY_TEXT_CONTENT:
+      return OnQueryTextContent(aEvent);
+    case NS_QUERY_CARET_RECT:
+      return OnQueryCaretRect(aEvent);
+    case NS_QUERY_TEXT_RECT:
+      return OnQueryTextRect(aEvent);
+    case NS_QUERY_EDITOR_RECT:
+      return OnQueryEditorRect(aEvent);
+    case NS_QUERY_CONTENT_STATE:
+      return OnQueryContentState(aEvent);
+    case NS_QUERY_SELECTION_AS_TRANSFERABLE:
+      return OnQuerySelectionAsTransferable(aEvent);
+    case NS_QUERY_CHARACTER_AT_POINT:
+      return OnQueryCharacterAtPoint(aEvent);
+    case NS_QUERY_DOM_WIDGET_HITTEST:
+      return OnQueryDOMWidgetHittest(aEvent);
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return NS_OK;
+}
+
 // Similar to nsFrameSelection::GetFrameForNodeOffset,
 // but this is more flexible for OnQueryTextRect to use
 static nsresult GetFrameForTextRect(nsINode* aNode,
