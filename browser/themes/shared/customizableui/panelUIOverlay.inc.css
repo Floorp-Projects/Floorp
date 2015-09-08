@@ -120,8 +120,8 @@
 }
 
 #PanelUI-menu-button[badge-status="fxa-needs-authentication"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  background-color: transparent;
-  background-image: url(chrome://browser/skin/warning.svg);
+  background: transparent url(chrome://browser/skin/warning.svg) no-repeat center;
+  height: 13px;
   box-shadow: none;
   filter: drop-shadow(0 1px 0 hsla(206, 50%, 10%, .15));
 }
