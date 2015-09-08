@@ -1688,16 +1688,18 @@ MediaStream::SetGraphImpl(MediaStreamGraph* aGraph)
 StreamTime
 MediaStream::GraphTimeToStreamTime(GraphTime aTime)
 {
-  NS_ASSERTION(mStartBlocking == GraphImpl()->mStateComputedTime,
-               "Don't call this when there's pending blocking time!");
+  NS_ASSERTION(mStartBlocking == GraphImpl()->mStateComputedTime ||
+               aTime <= mStartBlocking,
+               "Incorrectly ignoring blocking!");
   return aTime - mBufferStartTime;
 }
 
 GraphTime
 MediaStream::StreamTimeToGraphTime(StreamTime aTime)
 {
-  NS_ASSERTION(mStartBlocking == GraphImpl()->mStateComputedTime,
-               "Don't call this when there's pending blocking time!");
+  NS_ASSERTION(mStartBlocking == GraphImpl()->mStateComputedTime ||
+               aTime + mBufferStartTime <= mStartBlocking,
+               "Incorrectly ignoring blocking!");
   return aTime + mBufferStartTime;
 }
 
