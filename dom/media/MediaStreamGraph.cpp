@@ -302,7 +302,7 @@ MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime)
     // out.
     if (stream->mFinished && !stream->mNotifiedFinished &&
         mProcessedTime >=
-          stream->StreamTimeToGraphTimeWithBlocking(stream->GetStreamBuffer().GetAllTracksEnd()))  {
+          stream->StreamTimeToGraphTime(stream->GetStreamBuffer().GetAllTracksEnd())) {
       stream->mNotifiedFinished = true;
       SetStreamOrderDirty();
       for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
@@ -1707,12 +1707,6 @@ StreamTime
 MediaStream::GraphTimeToStreamTimeWithBlocking(GraphTime aTime)
 {
   return GraphImpl()->GraphTimeToStreamTimeWithBlocking(this, aTime);
-}
-
-GraphTime
-MediaStream::StreamTimeToGraphTimeWithBlocking(StreamTime aTime)
-{
-  return GraphImpl()->StreamTimeToGraphTimeWithBlocking(this, aTime);
 }
 
 void
