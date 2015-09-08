@@ -5,8 +5,8 @@
 "use strict";
 
 const { Ci } = require("chrome");
-const { getOuterId } = require("sdk/window/utils");
-const { getBrowserForTab } = require("sdk/tabs/utils");
+loader.lazyRequireGetter(this, "getOuterId", "sdk/window/utils", true);
+loader.lazyRequireGetter(this, "getBrowserForTab", "sdk/tabs/utils", true);
 
 let telemetry;
 try {
