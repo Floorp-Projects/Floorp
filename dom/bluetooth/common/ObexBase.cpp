@@ -66,6 +66,14 @@ AppendHeaderBody(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aBody,
 }
 
 int
+AppendHeaderTarget(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aTarget,
+                   int aLength)
+{
+  return AppendHeader(ObexHeaderId::Target, aRetBuf, aBufferSize,
+                      aTarget, aLength);
+}
+
+int
 AppendHeaderWho(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aWho,
                 int aLength)
 {
