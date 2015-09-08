@@ -267,8 +267,8 @@ nsTArray_base<Alloc, Copy>::ShiftData(index_type aStart,
     aStart *= aElemSize;
     aNewLen *= aElemSize;
     aOldLen *= aElemSize;
-    char* base = reinterpret_cast<char*>(mHdr + 1) + aStart;
-    Copy::MoveElements(base + aNewLen, base + aOldLen, num, aElemSize);
+    char* baseAddr = reinterpret_cast<char*>(mHdr + 1) + aStart;
+    Copy::MoveElements(baseAddr + aNewLen, baseAddr + aOldLen, num, aElemSize);
   }
 }
 

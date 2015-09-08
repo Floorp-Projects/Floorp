@@ -36,3 +36,6 @@ if CONFIG['_MSC_VER']:
 DEFINES['MOZ_NO_MOZALLOC'] = True
 
 DIST_INSTALL = True
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']
