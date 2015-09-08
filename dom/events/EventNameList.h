@@ -504,11 +504,11 @@ WINDOW_EVENT(online,
              EventNameType_XUL | EventNameType_HTMLBodyOrFramesetOnly,
              eBasicEventClass)
 WINDOW_EVENT(pagehide,
-             NS_PAGE_HIDE,
+             ePageHide,
              EventNameType_HTMLBodyOrFramesetOnly,
              eBasicEventClass)
 WINDOW_EVENT(pageshow,
-             NS_PAGE_SHOW,
+             ePageShow,
              EventNameType_HTMLBodyOrFramesetOnly,
              eBasicEventClass)
 WINDOW_EVENT(popstate,
@@ -591,31 +591,31 @@ NON_IDL_EVENT(MozMouseHittest,
               eMouseEventClass)
 
 NON_IDL_EVENT(DOMAttrModified,
-              NS_MUTATION_ATTRMODIFIED,
+              eLegacyAttrModified,
               EventNameType_HTMLXUL,
               eMutationEventClass)
 NON_IDL_EVENT(DOMCharacterDataModified,
-              NS_MUTATION_CHARACTERDATAMODIFIED,
+              eLegacyCharacterDataModified,
               EventNameType_HTMLXUL,
               eMutationEventClass)
 NON_IDL_EVENT(DOMNodeInserted,
-              NS_MUTATION_NODEINSERTED,
+              eLegacyNodeInserted,
               EventNameType_HTMLXUL,
               eMutationEventClass)
 NON_IDL_EVENT(DOMNodeRemoved,
-              NS_MUTATION_NODEREMOVED,
+              eLegacyNodeRemoved,
               EventNameType_HTMLXUL,
               eMutationEventClass)
 NON_IDL_EVENT(DOMNodeInsertedIntoDocument,
-              NS_MUTATION_NODEINSERTEDINTODOCUMENT,
+              eLegacyNodeInsertedIntoDocument,
               EventNameType_HTMLXUL,
               eMutationEventClass)
 NON_IDL_EVENT(DOMNodeRemovedFromDocument,
-              NS_MUTATION_NODEREMOVEDFROMDOCUMENT,
+              eLegacyNodeRemovedFromDocument,
               EventNameType_HTMLXUL,
               eMutationEventClass)
 NON_IDL_EVENT(DOMSubtreeModified,
-              NS_MUTATION_SUBTREEMODIFIED,
+              eLegacySubtreeModified,
               EventNameType_HTMLXUL,
               eMutationEventClass)
 
@@ -742,24 +742,24 @@ NON_IDL_EVENT(underflow,
 
 // Various SVG events
 NON_IDL_EVENT(SVGLoad,
-              NS_SVG_LOAD,
+              eSVGLoad,
               EventNameType_None,
               eBasicEventClass)
 NON_IDL_EVENT(SVGUnload,
-              NS_SVG_UNLOAD,
+              eSVGUnload,
               EventNameType_None,
               eBasicEventClass)
 NON_IDL_EVENT(SVGResize,
-              NS_SVG_RESIZE,
+              eSVGResize,
               EventNameType_None,
               eBasicEventClass)
 NON_IDL_EVENT(SVGScroll,
-              NS_SVG_SCROLL,
+              eSVGScroll,
               EventNameType_None,
               eBasicEventClass)
 
 NON_IDL_EVENT(SVGZoom,
-              NS_SVG_ZOOM,
+              eSVGZoom,
               EventNameType_None,
               eSVGZoomEventClass)
 
@@ -767,7 +767,7 @@ NON_IDL_EVENT(SVGZoom,
 #ifndef MESSAGE_TO_EVENT
 // This is a bit hackish, but SVG's event names are weird.
 NON_IDL_EVENT(zoom,
-              NS_SVG_ZOOM,
+              eSVGZoom,
               EventNameType_SVGSVG,
               eBasicEventClass)
 #endif

@@ -31,6 +31,8 @@
 #include "hb-font-private.hh"
 
 #include "hb-ot-cmap-table.hh"
+#include "hb-ot-glyf-table.hh"
+#include "hb-ot-head-table.hh"
 #include "hb-ot-hhea-table.hh"
 #include "hb-ot-hmtx-table.hh"
 
@@ -76,8 +78,8 @@ struct hb_ot_face_metrics_accelerator_t
     if (unlikely (glyph >= this->num_metrics))
     {
       /* If this->num_metrics is zero, it means we don't have the metrics table
-       * for this direction: return one EM.  Otherwise, it means that the glyph
-       * index is out of bound: return zero. */
+       * for this direction: return default advance.  Otherwise, it means that the
+       * glyph index is out of bound: return zero. */
       if (this->num_metrics)
 	return 0;
       else
@@ -88,6 +90,79 @@ struct hb_ot_face_metrics_accelerator_t
       glyph = this->num_advances - 1;
 
     return this->table->longMetric[glyph].advance;
+  }
+};
+
+struct hb_ot_face_glyf_accelerator_t
+{
+  bool short_offset;
+  unsigned int num_glyphs;
+  const OT::loca *loca;
+  const OT::glyf *glyf;
+  hb_blob_t *loca_blob;
+  hb_blob_t *glyf_blob;
+  unsigned int glyf_len;
+
+  inline void init (hb_face_t *face)
+  {
+    hb_blob_t *head_blob = OT::Sanitizer<OT::head>::sanitize (face->reference_table (HB_OT_TAG_head));
+    const OT::head *head = OT::Sanitizer<OT::head>::lock_instance (head_blob);
+    if ((unsigned int) head->indexToLocFormat > 1 || head->glyphDataFormat != 0)
+    {
+      /* Unknown format.  Leave num_glyphs=0, that takes care of disabling us. */
+      hb_blob_destroy (head_blob);
+      return;
+    }
+    this->short_offset = 0 == head->indexToLocFormat;
+    hb_blob_destroy (head_blob);
+
+    this->loca_blob = OT::Sanitizer<OT::loca>::sanitize (face->reference_table (HB_OT_TAG_loca));
+    this->loca = OT::Sanitizer<OT::loca>::lock_instance (this->loca_blob);
+    this->glyf_blob = OT::Sanitizer<OT::glyf>::sanitize (face->reference_table (HB_OT_TAG_glyf));
+    this->glyf = OT::Sanitizer<OT::glyf>::lock_instance (this->glyf_blob);
+
+    this->num_glyphs = MAX (1u, hb_blob_get_length (this->loca_blob) / (this->short_offset ? 2 : 4)) - 1;
+    this->glyf_len = hb_blob_get_length (this->glyf_blob);
+  }
+
+  inline void fini (void)
+  {
+    hb_blob_destroy (this->loca_blob);
+    hb_blob_destroy (this->glyf_blob);
+  }
+
+  inline bool get_extents (hb_codepoint_t glyph,
+			   hb_glyph_extents_t *extents) const
+  {
+    if (unlikely (glyph >= this->num_glyphs))
+      return false;
+
+    unsigned int start_offset, end_offset;
+    if (this->short_offset)
+    {
+      start_offset = 2 * this->loca->u.shortsZ[glyph];
+      end_offset   = 2 * this->loca->u.shortsZ[glyph + 1];
+    }
+    else
+    {
+      start_offset = this->loca->u.longsZ[glyph];
+      end_offset   = this->loca->u.longsZ[glyph + 1];
+    }
+
+    if (start_offset > end_offset || end_offset > this->glyf_len)
+      return false;
+
+    if (end_offset - start_offset < OT::glyfGlyphHeader::static_size)
+      return true; /* Empty glyph; zero extents. */
+
+    const OT::glyfGlyphHeader &glyph_header = OT::StructAtOffset<OT::glyfGlyphHeader> (this->glyf, start_offset);
+
+    extents->x_bearing = MIN (glyph_header.xMin, glyph_header.xMax);
+    extents->y_bearing = MAX (glyph_header.yMin, glyph_header.yMax);
+    extents->width     = MAX (glyph_header.xMin, glyph_header.xMax) - extents->x_bearing;
+    extents->height    = MIN (glyph_header.yMin, glyph_header.yMax) - extents->y_bearing;
+
+    return true;
   }
 };
 
@@ -158,6 +233,7 @@ struct hb_ot_font_t
   hb_ot_face_cmap_accelerator_t cmap;
   hb_ot_face_metrics_accelerator_t h_metrics;
   hb_ot_face_metrics_accelerator_t v_metrics;
+  hb_ot_face_glyf_accelerator_t glyf;
 };
 
 
@@ -175,6 +251,7 @@ _hb_ot_font_create (hb_font_t *font)
   ot_font->cmap.init (face);
   ot_font->h_metrics.init (face, HB_OT_TAG_hhea, HB_OT_TAG_hmtx, upem>>1);
   ot_font->v_metrics.init (face, HB_OT_TAG_vhea, HB_OT_TAG_vmtx, upem); /* TODO Can we do this lazily? */
+  ot_font->glyf.init (face);
 
   return ot_font;
 }
@@ -276,8 +353,13 @@ hb_ot_get_glyph_extents (hb_font_t *font HB_UNUSED,
 			 hb_glyph_extents_t *extents,
 			 void *user_data HB_UNUSED)
 {
-  /* TODO */
-  return false;
+  const hb_ot_font_t *ot_font = (const hb_ot_font_t *) font_data;
+  bool ret = ot_font->glyf.get_extents (glyph, extents);
+  extents->x_bearing = font->em_scale_x (extents->x_bearing);
+  extents->y_bearing = font->em_scale_y (extents->y_bearing);
+  extents->width     = font->em_scale_x (extents->width);
+  extents->height    = font->em_scale_y (extents->height);
+  return ret;
 }
 
 static hb_bool_t

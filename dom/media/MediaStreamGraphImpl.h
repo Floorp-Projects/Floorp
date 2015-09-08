@@ -528,6 +528,56 @@ public:
   already_AddRefed<MediaInputPort>
   ConnectToCaptureStream(uint64_t aWindowId, MediaStream* aMediaStream);
 
+  class StreamSet {
+  public:
+    class iterator {
+    public:
+      explicit iterator(MediaStreamGraphImpl& aGraph)
+        : mGraph(&aGraph), mArrayNum(-1), mArrayIndex(0)
+      {
+        ++(*this);
+      }
+      iterator() : mGraph(nullptr), mArrayNum(2), mArrayIndex(0) {}
+      MediaStream* operator*()
+      {
+        return Array()->ElementAt(mArrayIndex);
+      }
+      iterator operator++()
+      {
+        ++mArrayIndex;
+        while (mArrayNum < 2 &&
+          (mArrayNum < 0 || mArrayIndex >= Array()->Length())) {
+          ++mArrayNum;
+          mArrayIndex = 0;
+        }
+        return *this;
+      }
+      bool operator==(const iterator& aOther) const
+      {
+        return mArrayNum == aOther.mArrayNum && mArrayIndex == aOther.mArrayIndex;
+      }
+      bool operator!=(const iterator& aOther) const
+      {
+        return !(*this == aOther);
+      }
+    private:
+      nsTArray<MediaStream*>* Array()
+      {
+        return mArrayNum == 0 ? &mGraph->mStreams : &mGraph->mSuspendedStreams;
+      }
+      MediaStreamGraphImpl* mGraph;
+      int mArrayNum;
+      uint32_t mArrayIndex;
+    };
+
+    explicit StreamSet(MediaStreamGraphImpl& aGraph) : mGraph(aGraph) {}
+    iterator begin() { return iterator(mGraph); }
+    iterator end() { return iterator(); }
+  private:
+    MediaStreamGraphImpl& mGraph;
+  };
+  StreamSet AllStreams() { return StreamSet(*this); }
+
   // Data members
   //
   /**

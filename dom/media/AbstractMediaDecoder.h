@@ -103,10 +103,7 @@ public:
   virtual bool IsMediaSeekable() = 0;
 
   virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags, MediaDecoderEventVisibility aEventVisibility) = 0;
-  virtual void QueueMetadata(const media::TimeUnit& aTime, nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags) = 0;
   virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo, MediaDecoderEventVisibility aEventVisibility) = 0;
-
-  virtual void RemoveMediaTracks() = 0;
 
   // May be called by the reader to notify this decoder that the metadata from
   // the media file has been read. Call on the decode thread only.
@@ -219,45 +216,6 @@ public:
     mDecoder->FirstFrameLoaded(mInfo, mEventVisibility);
     return NS_OK;
   }
-};
-
-class MetadataUpdatedEventRunner : public nsRunnable, private MetadataContainer
-{
-public:
-  MetadataUpdatedEventRunner(AbstractMediaDecoder* aDecoder,
-                             nsAutoPtr<MediaInfo> aInfo,
-                             nsAutoPtr<MetadataTags> aTags,
-                             MediaDecoderEventVisibility aEventVisibility = MediaDecoderEventVisibility::Observable)
-    : MetadataContainer(aDecoder, aInfo, aTags, aEventVisibility)
-  {}
-
-  NS_IMETHOD Run() override
-  {
-    nsAutoPtr<MediaInfo> info(new MediaInfo());
-    *info = *mInfo;
-    mDecoder->MetadataLoaded(info, mTags, mEventVisibility);
-    mDecoder->FirstFrameLoaded(mInfo, mEventVisibility);
-    return NS_OK;
-  }
-};
-
-class RemoveMediaTracksEventRunner : public nsRunnable
-{
-public:
-  explicit RemoveMediaTracksEventRunner(AbstractMediaDecoder* aDecoder)
-    : mDecoder(aDecoder)
-  {}
-
-  NS_IMETHOD Run() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    mDecoder->RemoveMediaTracks();
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<AbstractMediaDecoder> mDecoder;
 };
 
 } // namespace mozilla

@@ -541,7 +541,7 @@ private:
 
     // Bind this Track Union Stream with Source Media.
     mInputPort = mTrackUnionStream->AllocateInputPort(mRecorder->GetSourceMediaStream(),
-                                                      MediaInputPort::FLAG_BLOCK_OUTPUT);
+                                                      0);
 
     DOMMediaStream* domStream = mRecorder->Stream();
     if (domStream) {
@@ -792,7 +792,7 @@ MediaRecorder::MediaRecorder(AudioNode& aSrcAudioNode,
     AudioNodeStream* ns = aSrcAudioNode.GetStream();
     if (ns) {
       mInputPort = mPipeStream->AllocateInputPort(aSrcAudioNode.GetStream(),
-                                                  MediaInputPort::FLAG_BLOCK_INPUT,
+                                                  0,
                                                   0,
                                                   aSrcOutput);
     }

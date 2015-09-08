@@ -728,7 +728,7 @@ ICStubCompiler::getStubCode()
         newStubCode->togglePreBarriers(true);
 
     // Cache newly compiled stubcode.
-    if (!comp->putStubCode(stubKey, newStubCode))
+    if (!comp->putStubCode(cx, stubKey, newStubCode))
         return nullptr;
 
     MOZ_ASSERT(entersStubFrame_ == ICStub::CanMakeCalls(kind));

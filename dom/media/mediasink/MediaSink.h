@@ -13,6 +13,9 @@
 #include "MediaInfo.h"
 
 namespace mozilla {
+
+class TimeStamp;
+
 namespace media {
 
 /**
@@ -37,10 +40,10 @@ public:
 
   struct PlaybackParams {
     PlaybackParams()
-      : volume(1.0) , playbackRate(1.0) , preservesPitch(true) {}
-    double volume;
-    double playbackRate;
-    bool preservesPitch;
+      : mVolume(1.0) , mPlaybackRate(1.0) , mPreservesPitch(true) {}
+    double mVolume;
+    double mPlaybackRate;
+    bool mPreservesPitch;
   };
 
   // Return the playback parameters of this sink.
@@ -64,8 +67,10 @@ public:
   // Return playback position of the media.
   // Since A/V sync is always maintained by this sink, there is no need to
   // specify whether we want to get audio or video position.
+  // aTimeStamp returns the timeStamp corresponding to the returned position
+  // which is used by the compositor to derive the render time of video frames.
   // Must be called after playback starts.
-  virtual int64_t GetPosition() const = 0;
+  virtual int64_t GetPosition(TimeStamp* aTimeStamp = nullptr) const = 0;
 
   // Return true if there are data consumed but not played yet.
   // Can be called in any state.

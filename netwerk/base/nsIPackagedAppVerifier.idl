@@ -1,0 +1,115 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIStreamListener.idl"
+
+interface nsIURI;
+interface nsICacheEntry;
+interface nsIPackagedAppVerifierListener;
+
+/**
+ * nsIPackagedAppVerifier
+ *
+ * It inherits nsIStreamListener and all the data will be fed by
+ * onStartRequest/onDataAvailable/onStopRequest.
+ *
+ */
+[scriptable, uuid(16419a80-4cc3-11e5-b970-0800200c9a66)]
+interface nsIPackagedAppVerifier : nsIStreamListener
+{
+  // The package origin of either a signed or unsigned package.
+  readonly attribute ACString packageOrigin;
+
+  // Whether this package is signed.
+  readonly attribute boolean isPackageSigned;
+
+  /**
+   * @param aListener
+   *    an object implementing nsIPackagedAppVerifierListener as the bridge that
+   *    the client gets callback from the package verifier. The callback might be
+   *    sync or async depending on the implementation.
+   *
+   * @param aPackageOrigin
+   *    the origin of the package. It will be updated based on the package
+   *    identifier defined in the manifest.
+   *
+   * @param aSignature
+   *    the signature of the package we desire to verify against. See
+   *    https://wiki.mozilla.org/User:Ptheriault/Packagedprivilegedcontent#The_Signed_Manifest
+   *    for further information.
+   *
+   * @param aPackageCacheEntry
+   *    the cache entry of the package itself (not the resource's cache).
+   *    It will be used to store any necessary information like the signed
+   *    package origin.
+   *
+   * The verifier init function.
+   */
+  void init(in nsIPackagedAppVerifierListener aListener,
+            in ACString aPackageOrigin,
+            in ACString aSignature,
+            in nsICacheEntry aPackageCacheEntry);
+
+  /**
+   * @param aUri
+   *    the URI of the resource.
+   *
+   * @param aCacheEntry
+   *    the cache entry of the resource.
+   *
+   * @param aStatusCode
+   *    the status code of the resource we just finished download.
+   *
+   * @param aIsLastPart
+   *    whether this resource is the last one in the package.
+   *
+   * Create an object that we will pass to the verifier as a user context
+   * through onStartRequest. The main purpose of this function is to make
+   * nsIPackagedAppVerifier xpcshell-testable. See test_packaged_app_verifier.js.
+   *
+   */
+  nsISupports createResourceCacheInfo(in nsIURI aUri,
+                                      in nsICacheEntry aCacheEntry,
+                                      in nsresult aStatusCode,
+                                      in boolean aIsLastPart);
+};
+
+/**
+ * nsIPackagedAppVerifierListener
+ */
+[scriptable, uuid(092eba70-4cbf-11e5-b970-0800200c9a66)]
+interface nsIPackagedAppVerifierListener : nsISupports
+{
+  /**
+   * @param aIsManifest
+   *    indicate if this callback is for manifest or not. True for manifest and false
+   *    for resource.
+   *
+   * @param aUri
+   *    the URI of the resource that has just been verified.
+   *
+   * @param aCacheEntry
+   *    the cache entry of the resource that has just been verified.
+   *
+   * @param aStatusCode
+   *    the resource download status code from nsIMultipartChannel.
+   *
+   * @param aIsLastPart
+   *    indicate if the verified resource is that last one in the package.
+   *
+   * @param aVerificationSuccess
+   *    the verification result.
+   *
+   * Callback'ed when a manifest/resource is verified.
+   */
+  void onVerified(in boolean aIsManifest,
+                  in nsIURI aUri,
+                  in nsICacheEntry aCacheEntry,
+                  in nsresult aStatusCode,
+                  in boolean aIsLastPart,
+                  in boolean aVerificationSuccess);
+};
+

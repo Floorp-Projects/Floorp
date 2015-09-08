@@ -56,8 +56,8 @@ var all_but_one = {
   "font-variant": "normal",
   "font-weight": "bold",
   "font-size": "small",
+  "font-stretch": "normal",
   "font-size-adjust": "none", // has to be default value
-  "font-stretch": "normal", // has to be default value
   "font-feature-settings": "normal", // has to be default value
   "font-language-override": "normal", // has to be default value
   "font-kerning": "auto", // has to be default value
@@ -78,10 +78,10 @@ is(s.getPropertyValue("font"), "",
 s.setProperty("line-height", "1.5", "");
 isnot(s.getPropertyValue("font"), "",
       "font shorthand should produce value when all subproperties set");
-s.setProperty("font-stretch", "condensed", "");
+s.setProperty("font-size-adjust", "0.5", "");
 is(s.getPropertyValue("font"), "",
-   "font shorthand should be empty when font-stretch is non-default");
-s.setProperty("font-stretch", "normal", "");
+   "font shorthand should be empty when font-size-adjust is non-default");
+s.setProperty("font-size-adjust", "none", "");
 isnot(s.getPropertyValue("font"), "",
       "font shorthand should produce value when all subproperties set");
 s.removeProperty("font");

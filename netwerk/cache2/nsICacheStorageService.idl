@@ -13,7 +13,7 @@ interface nsICacheStorageConsumptionObserver;
 /**
  * Provides access to particual cache storages of the network URI cache.
  */
-[scriptable, uuid(44de2fa4-1b0e-4cd3-9e32-211e936f721e)]
+[scriptable, uuid(9c9dc1d6-533e-4716-9ad8-11e08c3763b3)]
 interface nsICacheStorageService : nsISupports
 {
   /**
@@ -54,6 +54,13 @@ interface nsICacheStorageService : nsISupports
    */
   nsICacheStorage appCacheStorage(in nsILoadContextInfo aLoadContextInfo,
                                   in nsIApplicationCache aApplicationCache);
+
+  /**
+   * Get storage for synthesized cache entries that we currently use for ServiceWorker interception in non-e10s mode.
+   *
+   * This cache storage has no limits on file size to allow the ServiceWorker to intercept large files.
+   */
+  nsICacheStorage synthesizedCacheStorage(in nsILoadContextInfo aLoadContextInfo);
 
   /**
    * Evict the whole cache.
