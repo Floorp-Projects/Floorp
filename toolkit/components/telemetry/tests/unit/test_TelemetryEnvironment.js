@@ -366,10 +366,10 @@ function checkSystemSection(data) {
 
   Assert.ok(Number.isFinite(data.system.memoryMB), "MemoryMB must be a number.");
 
-  if (gIsWindows || gIsMac) {
+  if (gIsWindows || gIsMac || gIsLinux) {
     let EXTRA_CPU_FIELDS = ["cores", "model", "family", "stepping",
 			    "l2cacheKB", "l3cacheKB", "speedMHz"];
-    if (gIsMac) {
+    if (gIsMac || gIsLinux) {
       EXTRA_CPU_FIELDS.push("vendor");
     }
 
@@ -388,14 +388,15 @@ function checkSystemSection(data) {
     }
 
     // We insist these are available
-    for (let f of ["cores", "speedMHz"]) {
+    for (let f of ["cores"]) {
 	Assert.ok(!(f in data.system.cpu) ||
 		  Number.isFinite(data.system.cpu[f]),
 		  f + " must be a number if non null.");
     }
 
     // These should be numbers if they are not null
-    for (let f of ["model", "family", "stepping", "l2cacheKB", "l3cacheKB"]) {
+    for (let f of ["model", "family", "stepping", "l2cacheKB",
+		   "l3cacheKB", "speedMHz"]) {
 	Assert.ok(!(f in data.system.cpu) ||
 		  data.system.cpu[f] === null ||
 		  Number.isFinite(data.system.cpu[f]),
