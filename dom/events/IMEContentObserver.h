@@ -66,6 +66,8 @@ public:
   bool OnMouseButtonEvent(nsPresContext* aPresContext,
                           WidgetMouseEvent* aMouseEvent);
 
+  nsresult HandleQueryContentEvent(WidgetQueryContentEvent* aEvent);
+
   void Init(nsIWidget* aWidget, nsPresContext* aPresContext,
             nsIContent* aContent, nsIEditor* aEditor);
   void Destroy();
