@@ -1197,6 +1197,12 @@ ContainerLayer::SortChildrenBy3DZOrder(nsTArray<Layer*>& aArray)
       if (toSort.Length() > 0) {
         SortLayersBy3DZOrder(toSort);
         aArray.AppendElements(Move(toSort));
+        // XXX The move analysis gets confused here, because toSort gets moved
+        // here, and then gets used again outside of the loop. To clarify that
+        // we realize that the array is going to be empty to the move checker,
+        // we clear it again here. (This method renews toSort for the move
+        // analysis)
+        toSort.ClearAndRetainStorage();
       }
       aArray.AppendElement(l);
     }
