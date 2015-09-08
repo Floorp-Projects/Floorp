@@ -414,7 +414,7 @@ EVENT(volumechange,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(waiting,
-      NS_WAITING,
+      eWaiting,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(wheel,
