@@ -278,19 +278,19 @@ NS_IsAsciiDigit(char16_t aChar)
   return aChar >= '0' && aChar <= '9';
 }
 
-
 #ifndef XPCOM_GLUE_AVOID_NSPR
-#define TABLE_SIZE 36
-static const char table[] = {
-  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-  'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-  'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3',
-  '4', '5', '6', '7', '8', '9'
-};
 
 void
 NS_MakeRandomString(char* aBuf, int32_t aBufLen)
 {
+#define TABLE_SIZE 36
+  static const char table[] = {
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+    'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+    'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3',
+    '4', '5', '6', '7', '8', '9'
+  };
+
   // turn PR_Now() into milliseconds since epoch
   // and salt rand with that.
   static unsigned int seed = 0;
@@ -435,5 +435,3 @@ fprintf_stderr(FILE* aFile, const char* aFmt, ...)
   }
   va_end(args);
 }
-
-

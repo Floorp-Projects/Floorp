@@ -1016,9 +1016,9 @@ nsDiscriminatedUnion::ConvertToStringWithSize(uint32_t* aSize, char** aStr) cons
       // *aSize = *mUTF8StringValue->Length();
       // *aStr = ToNewCString(*mUTF8StringValue);
       // But this will have to do for now.
-      NS_ConvertUTF8toUTF16 tempString(*u.mUTF8StringValue);
-      *aSize = tempString.Length();
-      *aStr = ToNewCString(tempString);
+      const NS_ConvertUTF8toUTF16 tempString16(*u.mUTF8StringValue);
+      *aSize = tempString16.Length();
+      *aStr = ToNewCString(tempString16);
       break;
     }
     case nsIDataType::VTYPE_CHAR_STR: {

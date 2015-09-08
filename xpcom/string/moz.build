@@ -57,3 +57,6 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['nsUTF8UtilsSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
 FINAL_LIBRARY = 'xul'
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

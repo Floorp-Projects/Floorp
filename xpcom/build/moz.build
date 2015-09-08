@@ -70,6 +70,7 @@ SOURCES += [
 
 if CONFIG['GNU_CC']:
     CFLAGS += ['-Wshadow']
+    CXXFLAGS += ['-Wshadow']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
