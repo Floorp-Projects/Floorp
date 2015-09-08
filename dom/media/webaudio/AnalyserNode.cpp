@@ -83,6 +83,11 @@ public:
     NS_DispatchToMainThread(transfer);
   }
 
+  virtual bool IsActive() const override
+  {
+    return mChunksToProcess != 0;
+  }
+
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
