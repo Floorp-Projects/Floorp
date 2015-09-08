@@ -66,6 +66,8 @@ public:
   bool OnMouseButtonEvent(nsPresContext* aPresContext,
                           WidgetMouseEvent* aMouseEvent);
 
+  nsresult HandleQueryContentEvent(WidgetQueryContentEvent* aEvent);
+
   void Init(nsIWidget* aWidget, nsPresContext* aPresContext,
             nsIContent* aContent, nsIEditor* aEditor);
   void Destroy();
@@ -94,14 +96,8 @@ public:
   }
   nsIWidget* GetWidget() const { return mWidget; }
   nsIEditor* GetEditor() const { return mEditor; }
-  void SuppressNotifyingIME() { mSuppressNotifications++; }
-  void UnsuppressNotifyingIME()
-  {
-    if (!mSuppressNotifications || --mSuppressNotifications) {
-      return;
-    }
-    FlushMergeableNotifications();
-  }
+  void SuppressNotifyingIME();
+  void UnsuppressNotifyingIME();
   nsPresContext* GetPresContext() const;
   nsresult GetSelectionAndRoot(nsISelection** aSelection,
                                nsIContent** aRoot) const;
@@ -122,32 +118,15 @@ private:
   bool IsSafeToNotifyIME() const;
 
   void PostFocusSetNotification();
-  void MaybeNotifyIMEOfFocusSet()
-  {
-    PostFocusSetNotification();
-    FlushMergeableNotifications();
-  }
+  void MaybeNotifyIMEOfFocusSet();
   void PostTextChangeNotification(const TextChangeDataBase& aTextChangeData);
-  void MaybeNotifyIMEOfTextChange(const TextChangeDataBase& aTextChangeData)
-  {
-    PostTextChangeNotification(aTextChangeData);
-    FlushMergeableNotifications();
-  }
+  void MaybeNotifyIMEOfTextChange(const TextChangeDataBase& aTextChangeData);
   void PostSelectionChangeNotification(bool aCausedByComposition,
                                        bool aCausedBySelectionEvent);
   void MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition,
-                                       bool aCausedBySelectionEvent)
-  {
-    PostSelectionChangeNotification(aCausedByComposition,
-                                    aCausedBySelectionEvent);
-    FlushMergeableNotifications();
-  }
+                                       bool aCausedBySelectionEvent);
   void PostPositionChangeNotification();
-  void MaybeNotifyIMEOfPositionChange()
-  {
-    PostPositionChangeNotification();
-    FlushMergeableNotifications();
-  }
+  void MaybeNotifyIMEOfPositionChange();
 
   void NotifyContentAdded(nsINode* aContainer, int32_t aStart, int32_t aEnd);
   void ObserveEditableNode();
@@ -178,6 +157,10 @@ private:
   bool UpdateSelectionCache();
 
   nsCOMPtr<nsIWidget> mWidget;
+  // mFocusedWidget has the editor observed by the instance.  E.g., if the
+  // focused editor is in XUL panel, this should be the widget of the panel.
+  // On the other hand, mWidget is its parent which handles IME.
+  nsCOMPtr<nsIWidget> mFocusedWidget;
   nsCOMPtr<nsISelection> mSelection;
   nsCOMPtr<nsIContent> mRootContent;
   nsCOMPtr<nsINode> mEditableNode;

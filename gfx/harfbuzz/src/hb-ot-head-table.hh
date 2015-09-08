@@ -138,9 +138,10 @@ struct head
 					 * 2: Like 1 but also contains neutrals;
 					 * -1: Only strongly right to left;
 					 * -2: Like -1 but also contains neutrals. */
+  public:
   SHORT		indexToLocFormat;	/* 0 for short offsets, 1 for long. */
   SHORT		glyphDataFormat;	/* 0 for current format. */
-  public:
+
   DEFINE_SIZE_STATIC (54);
 };
 

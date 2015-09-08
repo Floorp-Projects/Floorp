@@ -2169,18 +2169,18 @@ class MOZ_STACK_CLASS AutoInitGCManagedObject
     }
 
     T& operator*() const {
-        return *ptr_.get();
+        return *get();
     }
 
     T* operator->() const {
-        return ptr_.get();
+        return get();
     }
 
     explicit operator bool() const {
-        return ptr_.get() != nullptr;
+        return get() != nullptr;
     }
 
-    T* get() {
+    T* get() const {
         return ptr_.get();
     }
 

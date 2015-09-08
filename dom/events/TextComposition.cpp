@@ -114,6 +114,7 @@ TextComposition::CloneAndDispatchAs(
   compositionEvent.time = aCompositionEvent->time;
   compositionEvent.timeStamp = aCompositionEvent->timeStamp;
   compositionEvent.mData = aCompositionEvent->mData;
+  compositionEvent.mOriginalMessage = aCompositionEvent->mMessage;
   compositionEvent.mFlags.mIsSynthesizedForTests =
     aCompositionEvent->mFlags.mIsSynthesizedForTests;
 

@@ -583,9 +583,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       } else {
         // properties reset by this shorthand property to their
         // initial values but not represented in its syntax
-        if (stretch->GetUnit() != eCSSUnit_Enumerated ||
-            stretch->GetIntValue() != NS_STYLE_FONT_STRETCH_NORMAL ||
-            sizeAdjust->GetUnit() != eCSSUnit_None ||
+        if (sizeAdjust->GetUnit() != eCSSUnit_None ||
             featureSettings->GetUnit() != eCSSUnit_Normal ||
             languageOverride->GetUnit() != eCSSUnit_Normal ||
             fontKerning->GetIntValue() != NS_FONT_KERNING_AUTO ||
@@ -623,6 +621,12 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
             weight->GetIntValue() != NS_FONT_WEIGHT_NORMAL) {
           weight->AppendToString(eCSSProperty_font_weight, aValue,
                                  aSerialization);
+          aValue.Append(char16_t(' '));
+        }
+        if (stretch->GetUnit() != eCSSUnit_Enumerated ||
+            stretch->GetIntValue() != NS_FONT_STRETCH_NORMAL) {
+          stretch->AppendToString(eCSSProperty_font_stretch, aValue,
+                                  aSerialization);
           aValue.Append(char16_t(' '));
         }
         size->AppendToString(eCSSProperty_font_size, aValue, aSerialization);

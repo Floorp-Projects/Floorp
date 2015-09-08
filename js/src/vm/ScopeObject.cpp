@@ -1110,10 +1110,19 @@ ScopeIter::settle()
 {
     // Check for trying to iterate a function frame before the prologue has
     // created the CallObject, in which case we have to skip.
-    if (frame_ && frame_.isNonEvalFunctionFrame() &&
-        frame_.fun()->needsCallObject() && !frame_.hasCallObj())
+    if (frame_ && frame_.isNonEvalFunctionFrame() && frame_.fun()->needsCallObject() &&
+        !frame_.hasCallObj())
     {
         MOZ_ASSERT(ssi_.type() == StaticScopeIter<CanGC>::Function);
+        incrementStaticScopeIter();
+    }
+
+    // Check for trying to iterate a strict eval frame before the prologue has
+    // created the CallObject.
+    if (frame_ && frame_.isStrictEvalFrame() && !frame_.hasCallObj() && !ssi_.done()) {
+        MOZ_ASSERT(ssi_.type() == StaticScopeIter<CanGC>::Block);
+        incrementStaticScopeIter();
+        MOZ_ASSERT(ssi_.type() == StaticScopeIter<CanGC>::Eval);
         incrementStaticScopeIter();
     }
 
