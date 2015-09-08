@@ -1,0 +1,65 @@
+Pageload Test Component
+=======================
+
+Usage:
+
+  ./firefox -tp file:///path/to/manifest.txt [-tpargs...]
+
+See ./firefox -help for other arguments.
+
+
+Manifest file format
+====================
+
+Comments in the manifest file start with a #.  Each line may be:
+
+* a URL (absolute or relative to the manifest)
+
+This URL is added to the list of tests.
+
+* one or more flags, followed by whitespace, followed by a URL
+
+The only flag supported currently is '%', which indicates that
+a test will do its own timing.  (See Self-timing Tests below.)
+
+* "include" followed by whitespace, followed by a URL
+
+Parse the given manifest file.
+
+Self-timing Tests
+=================
+
+Most timing tests are interested in timing how long it takes the page
+to load; that is, from the start of page loading until the 'load'
+event is dispatched.  By default, this is what the pageloader will
+time.  However, if a test URL has the % flag, the test is expected to
+report its own timing.  For this purpose, the pageloader will provide
+a function named "tpRecordTime" in the test's global object that it
+should call once it has performed whatever timing it wants to do.
+The given value will be used as the timing result for this test.
+
+Output format
+=============
+
+The result is a dump to stdout via dump() --
+browser.dom.window.dump.enabled must be set to true in the profile.
+
+Sample output:
+
+__start_tp_report
+_x_x_mozilla_page_load,778.5,NaN,NaN
+_x_x_mozilla_page_load_details,avgmedian|778.5|average|766.75|minimum|NaN|maximum|NaN|stddev|NaN|0;file:///c:/proj/mozilla-cvs/perf/tp2/base/www.cnn.com/index.html;778.5;766.75;722;1027;1027;788;777;722;780|...
+__end_tp_report
+
+Note that the minimum, maximum, stddev are not calculated; they're
+always reported as NaN.  (They were the minimum and maximum values of
+any sampled value, and the standard deviation across all sampled
+values -- not very useful.)
+
+TODO
+====
+
+* Command line option to choose whether to run with or without browser chrome.  Currently runs without.
+
+* Tinderbox-dropping style output
+  * better yet would be to teach tinderbox about JSON

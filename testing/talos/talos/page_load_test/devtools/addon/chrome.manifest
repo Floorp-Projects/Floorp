@@ -1,0 +1,2 @@
+content damp content/
+overlay chrome://browser/content/browser.xul chrome://damp/content/damp.overlay.xul

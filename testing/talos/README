@@ -1,0 +1,12 @@
+Talos is a python performance testing framework that is usable on Windows,
+Mac and Linux. Talos is our versatile performance testing framework we
+use at Mozilla. It was created to serve as a test runner for the existing
+performance tests that Mozilla was running back in 2007 as well as providing
+an extensible framework for new tests as they were created.
+
+So, why Talos? Talos is the bronze automaton of Greek myth. Talos protected
+the island of Crete, throwing giant boulders at unwary seamen. He's
+also purported to have heated himself glowing hot and then embraced his
+enemies. Basically, he was awesome.
+
+For more information, see: https://wiki.mozilla.org/Buildbot/Talos

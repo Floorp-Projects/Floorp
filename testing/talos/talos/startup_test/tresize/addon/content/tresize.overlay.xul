@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<overlay id="Scrapper-Overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/x-javascript" src="Profiler.js" />
+<script type="application/x-javascript" src="tresize.js" />
+<script type="application/x-javascript">
+(function(){
+  const TRESIZE_PREFIX = "tresize@mozilla.org:";
+
+  var groupMM = window.getGroupMessageManager("browsers");
+  groupMM.loadFrameScript("chrome://tresize/content/framescript.js", true);
+
+  // listener/executor on the chrome process for tresize.html
+  groupMM.addMessageListener(TRESIZE_PREFIX + "chrome-run-message", function listener(m) {
+    function sendResult(result) {
+      groupMM.broadcastAsyncMessage(TRESIZE_PREFIX + "chrome-run-reply", {
+        id: m.data.id,
+        result: result
+      });
+    }
+    runTest(sendResult, m.data.locationSearch);
+  });
+})();
+</script>
+</overlay>
