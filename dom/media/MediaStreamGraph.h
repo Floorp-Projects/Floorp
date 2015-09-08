@@ -516,12 +516,6 @@ public:
    * taken account of in UpdateCurrentTimeForStreams.
    */
   GraphTime StreamTimeToGraphTime(StreamTime aTime);
-  /**
-   * Convert stream time to graph time. The result can be > mStateComputedTime,
-   * in which case we did the conversion optimistically assuming the stream
-   * will not be blocked after mStateComputedTime.
-   */
-  GraphTime StreamTimeToGraphTimeWithBlocking(StreamTime aTime);
 
   bool IsFinishedOnGraphThread() { return mFinished; }
   void FinishOnGraphThread();
