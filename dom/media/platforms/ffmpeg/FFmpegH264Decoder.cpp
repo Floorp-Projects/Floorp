@@ -385,6 +385,16 @@ FFmpegH264Decoder<LIBAV_VER>::GetCodecId(const nsACString& aMimeType)
     return AV_CODEC_ID_VP6F;
   }
 
+  if (aMimeType.EqualsLiteral("video/webm; codecs=vp8")) {
+    return AV_CODEC_ID_VP8;
+  }
+
+#if LIBAVCODEC_VERSION_MAJOR >= 55
+  if (aMimeType.EqualsLiteral("video/webm; codecs=vp9")) {
+    return AV_CODEC_ID_VP9;
+  }
+#endif
+
   return AV_CODEC_ID_NONE;
 }
 
