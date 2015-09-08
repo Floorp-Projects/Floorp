@@ -1786,7 +1786,7 @@ pref("network.generic-ntlm-auth.workstation", "WORKSTATION");
 //   1 - allow sub-resources to open HTTP authentication credentials dialogs,
 //       but don't allow it for cross-origin sub-resources
 //   2 - allow the cross-origin authentication as well.
-pref("network.auth.allow-subresource-auth", 2);
+pref("network.auth.subresource-http-auth-allow", 2);
 
 pref("permissions.default.image",           1); // 1-Accept, 2-Deny, 3-dontAcceptForeign
 
