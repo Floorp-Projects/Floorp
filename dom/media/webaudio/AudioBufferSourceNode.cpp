@@ -508,6 +508,12 @@ public:
     }
   }
 
+  virtual bool IsActive() const override
+  {
+    // Whether buffer has been set and start() has been called.
+    return mBufferSampleRate != 0;
+  }
+
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     // Not owned:

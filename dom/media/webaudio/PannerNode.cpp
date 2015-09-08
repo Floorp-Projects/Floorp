@@ -172,6 +172,11 @@ public:
     (this->*mPanningModelFunction)(aInput, aOutput);
   }
 
+  virtual bool IsActive() const override
+  {
+    return mLeftOverData != INT_MIN;
+  }
+
   void ComputeAzimuthAndElevation(float& aAzimuth, float& aElevation);
   float ComputeConeGain();
   // Compute how much the distance contributes to the gain reduction.
