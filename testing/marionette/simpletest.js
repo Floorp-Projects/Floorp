@@ -11,9 +11,8 @@ this.EXPORTED_SYMBOLS = ["Marionette"];
 /*
  * The Marionette object, passed to the script context.
  */
-this.Marionette = function(scope, window, context, logObj, timeout,
-                           heartbeatCallback, testName) {
-  this.scope = scope;
+this.Marionette = function(window, context, logObj, timeout,
+    heartbeatCallback, testName) {
   this.window = window;
   this.tests = [];
   this.logObj = logObj;
@@ -37,8 +36,6 @@ Marionette.prototype = {
     "getLogs",
     "generate_results",
     "waitFor",
-    "runEmulatorCmd",
-    "runEmulatorShell",
     "TEST_PASS",
     "TEST_KNOWN_FAIL",
     "TEST_UNEXPECTED_FAIL",
@@ -46,7 +43,6 @@ Marionette.prototype = {
   ],
 
   addTest: function Marionette__addTest(condition, name, passString, failString, diag, state) {
-
     let test = {'result': !!condition, 'name': name, 'diag': diag, 'state': state};
     this.logResult(test,
                    typeof(passString) == "undefined" ? this.TEST_PASS : passString,
@@ -202,15 +198,5 @@ Marionette.prototype = {
         return;
       }
       this.window.setTimeout(this.waitFor.bind(this), 100, callback, test, deadline);
-  },
-
-  runEmulatorCmd: function runEmulatorCmd(cmd, callback) {
-    this.heartbeatCallback();
-    this.scope.runEmulatorCmd(cmd, callback);
-  },
-
-  runEmulatorShell: function runEmulatorShell(args, callback) {
-    this.heartbeatCallback();
-    this.scope.runEmulatorShell(args, callback);
   },
 };

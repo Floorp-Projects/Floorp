@@ -908,7 +908,6 @@ GeckoDriver.prototype.execute = function(cmd, resp, directInject) {
       !(sandboxName in this.sandboxes) ||
       (this.sandboxes[sandboxName].proto != win)) {
     let marionette = new Marionette(
-        this,
         win,
         "chrome",
         this.marionetteLog,
@@ -1112,7 +1111,6 @@ GeckoDriver.prototype.executeWithCallback = function(cmd, resp, directInject) {
 
     if (newSandbox || !(sandboxName in this.sandboxes)) {
       let marionette = new Marionette(
-          this,
           win,
           "chrome",
           this.marionetteLog,
