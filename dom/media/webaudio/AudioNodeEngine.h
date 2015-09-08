@@ -346,6 +346,12 @@ public:
                                     OutputChunks& aOutput,
                                     bool* aFinished);
 
+  // IsActive() returns true if the engine needs to continue processing an
+  // unfinished stream even when it has silent or no input connections.  This
+  // includes tail-times and when sources have been scheduled to start.  If
+  // returning false, then the stream can be suspended.
+  virtual bool IsActive() const { return false; }
+
   bool HasNode() const
   {
     MOZ_ASSERT(NS_IsMainThread());

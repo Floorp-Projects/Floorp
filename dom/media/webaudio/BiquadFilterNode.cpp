@@ -211,6 +211,11 @@ public:
     }
   }
 
+  virtual bool IsActive() const override
+  {
+    return !mBiquads.IsEmpty();
+  }
+
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     // Not owned:
