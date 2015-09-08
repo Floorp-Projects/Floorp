@@ -34,9 +34,9 @@ AudioSinkWrapper::SetPlaybackParams(const PlaybackParams& aParams)
 {
   AssertOwnerThread();
   if (mAudioSink) {
-    mAudioSink->SetVolume(aParams.volume);
-    mAudioSink->SetPlaybackRate(aParams.playbackRate);
-    mAudioSink->SetPreservesPitch(aParams.preservesPitch);
+    mAudioSink->SetVolume(aParams.mVolume);
+    mAudioSink->SetPlaybackRate(aParams.mPlaybackRate);
+    mAudioSink->SetPreservesPitch(aParams.mPreservesPitch);
   }
   mParams = aParams;
 }
@@ -71,7 +71,7 @@ AudioSinkWrapper::GetVideoPosition(TimeStamp aNow) const
   // Time elapsed since we started playing.
   int64_t delta = (aNow - mPlayStartTime).ToMicroseconds();
   // Take playback rate into account.
-  return mPlayDuration + delta * mParams.playbackRate;
+  return mPlayDuration + delta * mParams.mPlaybackRate;
 }
 
 int64_t
@@ -112,7 +112,7 @@ void
 AudioSinkWrapper::SetVolume(double aVolume)
 {
   AssertOwnerThread();
-  mParams.volume = aVolume;
+  mParams.mVolume = aVolume;
   if (mAudioSink) {
     mAudioSink->SetVolume(aVolume);
   }
@@ -122,7 +122,7 @@ void
 AudioSinkWrapper::SetPlaybackRate(double aPlaybackRate)
 {
   AssertOwnerThread();
-  mParams.playbackRate = aPlaybackRate;
+  mParams.mPlaybackRate = aPlaybackRate;
   if (!mAudioEnded) {
     // Pass the playback rate to the audio sink. The underlying AudioStream
     // will handle playback rate changes and report correct audio position.
@@ -141,7 +141,7 @@ void
 AudioSinkWrapper::SetPreservesPitch(bool aPreservesPitch)
 {
   AssertOwnerThread();
-  mParams.preservesPitch = aPreservesPitch;
+  mParams.mPreservesPitch = aPreservesPitch;
   if (mAudioSink) {
     mAudioSink->SetPreservesPitch(aPreservesPitch);
   }
