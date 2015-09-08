@@ -2026,7 +2026,7 @@ nsDOMWindowUtils::SendSelectionSetEvent(uint32_t aOffset,
     return NS_ERROR_FAILURE;
   }
 
-  WidgetSelectionEvent selectionEvent(true, NS_SELECTION_SET, widget);
+  WidgetSelectionEvent selectionEvent(true, eSetSelection, widget);
   InitEvent(selectionEvent);
 
   selectionEvent.mOffset = aOffset;
