@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<overlay id="Scrapper-Overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/x-javascript" src="Profiler.js" />
+<script type="application/x-javascript" src="tart.js" />
+<script type="application/x-javascript">
+
+(function(){
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+
+  const TART_PREFIX = "tart@mozilla.org:";
+
+  // "services" which the framescript can execute at the chrome process
+  var proxiedServices = {
+    runTest: function(config, callback) {
+      (new Tart()).startTest(callback, config);
+    },
+
+    setASAP: function() {
+      prefs.setIntPref("layout.frame_rate", 0);
+      prefs.setIntPref("docshell.event_starvation_delay_hint", 1);
+    },
+
+    unsetASAP: function() {
+      prefs.clearUserPref("layout.frame_rate");
+      prefs.clearUserPref("docshell.event_starvation_delay_hint");
+    },
+
+    toClipboard: function(text) {
+      const gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"]
+                               .getService(Ci.nsIClipboardHelper);
+      gClipboardHelper.copyString(text);
+    }
+  };
+
+  var groupMM = window.getGroupMessageManager("browsers");
+  groupMM.loadFrameScript("chrome://tart/content/framescript.js", true);
+
+  // listener/executor on the chrome process for tart.html
+  groupMM.addMessageListener(TART_PREFIX + "chrome-exec-message", function listener(m) {
+    function sendResult(result) {
+      groupMM.broadcastAsyncMessage(TART_PREFIX + "chrome-exec-reply", {
+        id: m.data.id,
+        result: result
+      });
+    }
+
+    var command = m.data.command;
+    if (!proxiedServices.hasOwnProperty(command.name))
+      throw new Error("TART: service doesn't exist: '" + command.name + "'");
+
+    var service = proxiedServices[command.name];
+    if (command.name == "runTest") // Needs async execution
+      service(command.data, sendResult);
+    else
+      sendResult(service(command.data));
+
+  });
+})();
+
+</script>
+</overlay>

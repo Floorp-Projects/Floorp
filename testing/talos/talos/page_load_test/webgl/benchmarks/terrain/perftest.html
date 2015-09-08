@@ -1,0 +1,399 @@
+<html>
+<!--
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ Version 1.1
+   - Added viewport rotation.
+   - Adapted for talos with with 4 runs on combinations of alpha/antialias
+
+ Version 1.0
+   - Benoit Jacob's WebGL tutorial demos: http://bjacob.github.io/webgl-tutorial/12-texture.html
+-->
+<head>
+<meta charset="utf-8"/>
+<script src="../../../../scripts/Profiler.js"></script>
+<script type="x-shader/x-vertex" id="vertexShader">
+  attribute vec3 vertexPosition;
+  attribute vec3 normalVector;
+  attribute vec2 textureCoord;
+  uniform mat4 modelview;
+  uniform mat4 projection;
+  varying vec3 varyingNormalVector;
+  varying vec2 varyingTextureCoord;
+  void main(void) {
+    gl_Position = projection * modelview * vec4(vertexPosition, 1.0);
+    varyingNormalVector = normalVector;
+    varyingTextureCoord = textureCoord;
+  }
+</script>
+<script type="x-shader/x-fragment" id="fragmentShader">
+  precision mediump float;
+  varying vec3 varyingNormalVector;
+  uniform vec3 lightDirection;
+  uniform sampler2D grassTextureSampler;
+  varying vec2 varyingTextureCoord;
+  void main(void) {
+    vec3 grassColor = texture2D(grassTextureSampler, varyingTextureCoord).rgb;
+    const float ambientLight = 0.3;
+    const float diffuseLight = 0.7;
+    float c = clamp(dot(normalize(varyingNormalVector), lightDirection), 0.0, 1.0);
+    vec3 resultColor = grassColor * (c * diffuseLight + ambientLight);
+    gl_FragColor = vec4(resultColor, 1);
+  }
+</script>
+<script>
+  var gl;
+
+  var modelviewUniformLoc;
+  var projectionUniformLoc;
+  var lightDirectionUniformLoc;
+  var grassTextureSamplerUniformLoc;
+
+  var modelviewMatrix = new Float32Array(16);
+  var projectionMatrix = new Float32Array(16);
+
+  var terrainSize = 32;
+  var aspectRatio;
+
+  function startTest(alpha, antialias, doneCallback) {
+    gl = document.getElementById("c").getContext("webgl", {alpha: alpha, antialias: antialias});
+
+    var grassImage = document.getElementById("grass");
+    var grassTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, grassTexture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, grassImage);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.generateMipmap(gl.TEXTURE_2D);
+
+    var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    var vertexShaderString = document.getElementById("vertexShader").text;
+    gl.shaderSource(vertexShader, vertexShaderString);
+    gl.compileShader(vertexShader);
+
+    var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    var fragmentShaderString = document.getElementById("fragmentShader").text;
+    gl.shaderSource(fragmentShader, fragmentShaderString);
+    gl.compileShader(fragmentShader);
+
+    var program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    gl.useProgram(program);
+
+    var vertexPositionAttrLoc = gl.getAttribLocation(program, "vertexPosition");
+    gl.enableVertexAttribArray(vertexPositionAttrLoc);
+    var normalVectorAttrLoc = gl.getAttribLocation(program, "normalVector");
+    gl.enableVertexAttribArray(normalVectorAttrLoc);
+    var textureCoordAttrLoc = gl.getAttribLocation(program, "textureCoord");
+    gl.enableVertexAttribArray(textureCoordAttrLoc);
+
+    modelviewUniformLoc = gl.getUniformLocation(program, "modelview");
+    projectionUniformLoc = gl.getUniformLocation(program, "projection");
+    lightDirectionUniformLoc = gl.getUniformLocation(program, "lightDirection");
+    grassTextureSamplerUniformLoc = gl.getUniformLocation(program, "grassTextureSampler");
+
+    var vertices = new Float32Array(terrainSize * terrainSize * 3);
+    var normalVectors = new Float32Array(terrainSize * terrainSize * 3);
+    var textureCoords = new Float32Array(terrainSize * terrainSize * 2);
+
+    for (var i = 0; i < terrainSize; i++) {
+      for (var j = 0; j < terrainSize; j++) {
+        var a = 2 * Math.PI * i / terrainSize;
+        var b = 2 * Math.PI * j / terrainSize;
+        var height = 4 * Math.cos(a) + 6 * Math.sin(b) + Math.cos(4 * a) + Math.sin(5 * b);
+        vertices[3 * (i + terrainSize * j) + 0] = i;
+        vertices[3 * (i + terrainSize * j) + 1] = height;
+        vertices[3 * (i + terrainSize * j) + 2] = j;
+
+        var d_y_d_x = (2 * Math.PI / terrainSize) * (- 4 * Math.sin(a) - 4 * Math.sin(4 * a));
+        var d_y_d_z = (2 * Math.PI / terrainSize) * (6 * Math.cos(b) + 5 * Math.cos(5 * b));
+        var normal_x = d_y_d_x;
+        var normal_y = -1;
+        var normal_z = d_y_d_z;
+        var normal_length = Math.sqrt(normal_x * normal_x + normal_y * normal_y + normal_z * normal_z);
+        normalVectors[3 * (i + terrainSize * j) + 0] = normal_x / normal_length;
+        normalVectors[3 * (i + terrainSize * j) + 1] = normal_y / normal_length;
+        normalVectors[3 * (i + terrainSize * j) + 2] = normal_z / normal_length;
+
+        var textureRepeatingSpeed = 0.5;
+        textureCoords[2 * (i + terrainSize * j) + 0] = i * textureRepeatingSpeed;
+        textureCoords[2 * (i + terrainSize * j) + 1] = j * textureRepeatingSpeed;
+      }
+    }
+
+    var vertexPositionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    gl.vertexAttribPointer(vertexPositionAttrLoc, 3, gl.FLOAT, false, 0, 0);
+
+    var normalVectorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, normalVectorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, normalVectors, gl.STATIC_DRAW);
+    gl.vertexAttribPointer(normalVectorAttrLoc, 3, gl.FLOAT, false, 0, 0);
+
+    var textureCoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, textureCoords, gl.STATIC_DRAW);
+    gl.vertexAttribPointer(textureCoordAttrLoc, 2, gl.FLOAT, false, 0, 0);
+
+    var indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    var indices = [];
+    for (var i = 0; i < terrainSize - 1; i++) {
+      for (var j = 0; j < terrainSize - 1; j++) {
+        indices.push(i   + terrainSize * j);
+        indices.push(i+1 + terrainSize * j);
+        indices.push(i+1 + terrainSize * (j+1));
+
+        indices.push(i   + terrainSize * j);
+        indices.push(i+1 + terrainSize * (j+1));
+        indices.push(i   + terrainSize * (j+1));
+      }
+    }
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+    gl.enable(gl.DEPTH_TEST);
+
+    onresize();
+    window.addEventListener("resize", onresize);
+
+    startTestLoop(doneCallback);
+  }
+
+  function average(arr) {
+    var sum = 0;
+    for (var i in arr)
+      sum += arr[i];
+    return sum / (arr.length || 1);
+  }
+
+  // We use sample stddev and not population stddev because
+  // well.. it's a sample and we can't collect all/infinite number of frames.
+  function sampleStdDev(arr) {
+    if (arr.length <= 1) {
+      return 0;
+    }
+    var avg = average(arr);
+
+    var squareDiffArr = arr.map( function(v) { return Math.pow(v - avg, 2); } );
+    var sum = squareDiffArr.reduce( function(a, b) { return a + b; } );
+    var rv = Math.sqrt(sum / (arr.length - 1));
+    return rv;
+  }
+
+  const PRETEST_DELAY_MS  = 500;
+  const WARMUP_TIMESTAMPS = 30; // Must be at least 2
+  const MEASURED_FRAMES   = 100;
+
+  var gDoneCallback = function placeholder(intervals) {};
+  var gCurrentTimestamp = 0;
+  var gResultTimestamps = [];
+
+  function startTestLoop(doneCallback) {
+    gDoneCallback = doneCallback;
+    gCurrentTimestamp = 0;
+    gResultTimestamps = new Array(WARMUP_TIMESTAMPS + MEASURED_FRAMES);
+
+    Profiler.resume("Starting requestAnimationFrame loop", true);
+    requestAnimationFrame(draw);
+  }
+
+  function draw(timestamp) {
+    // It's possible that under some implementations (even if not our current one), 
+    // the rAF callback arg will be in some way "optimized", e.g. always point to the
+    // estimated next vsync timestamp, in order to allow the callee to have less
+    // jitter in its time-dependent positioning/processing.
+    // Such behaviour would harm our measurements, especially with vsync off.
+    // performance.now() will not have this potential issue and is high-resolution.
+    gResultTimestamps[gCurrentTimestamp++] = performance.now();
+    var recordedTimestamps = gCurrentTimestamp;
+    if (recordedTimestamps >= WARMUP_TIMESTAMPS + MEASURED_FRAMES) {
+      Profiler.pause("Stopping requestAnimationFrame loop", true);
+      var intervals = [];
+      var lastWarmupTimestampId = WARMUP_TIMESTAMPS - 1;
+      for (var i = lastWarmupTimestampId + 1; i < gResultTimestamps.length; i++) {
+        intervals.push(gResultTimestamps[i] - gResultTimestamps[i - 1]);
+      }
+
+      gDoneCallback(intervals);
+      return;
+    }
+
+    // Used for rendering reproducible frames which are independent of actual performance (timestamps).
+    var simulatedTimestamp = gCurrentTimestamp * 1000 / 60;
+
+    var speed = 0.001;
+    var angle =  simulatedTimestamp * speed;
+    var c = Math.cos(angle / 10);
+    var s = Math.sin(angle / 10);
+    var light_x = Math.cos(angle);
+    var light_y = -1;
+    var light_z = Math.sin(angle);
+    var l = Math.sqrt(light_x * light_x + light_y * light_y + light_z * light_z);
+    light_x /= l;
+    light_y /= l;
+    light_z /= l;
+    gl.uniform3f(lightDirectionUniformLoc, light_x, light_y, light_z);
+
+    modelviewMatrix[0]  = c;
+    modelviewMatrix[1]  = 0;
+    modelviewMatrix[2]  = s;
+    modelviewMatrix[3]  = 0;
+
+    modelviewMatrix[4]  = 0;
+    modelviewMatrix[5]  = 1;
+    modelviewMatrix[6]  = 0;
+    modelviewMatrix[7]  = 0;
+
+    modelviewMatrix[8]  = -s;
+    modelviewMatrix[9]  = 0;
+    modelviewMatrix[10] = c;
+    modelviewMatrix[11] = 0;
+
+    modelviewMatrix[12] = - terrainSize / 2;
+    modelviewMatrix[13] = 0;
+    modelviewMatrix[14] = - terrainSize;
+    modelviewMatrix[15] = 1;
+
+    gl.uniformMatrix4fv(modelviewUniformLoc, false, modelviewMatrix);
+
+    var fieldOfViewY = Math.PI / 4;
+    aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight;
+    var zNear = 1;
+    var zFar = terrainSize;
+
+    projectionMatrix[0]  = fieldOfViewY / aspectRatio;
+    projectionMatrix[1]  = 0;
+    projectionMatrix[2]  = 0;
+    projectionMatrix[3]  = 0;
+
+    projectionMatrix[4]  = 0;
+    projectionMatrix[5]  = fieldOfViewY;
+    projectionMatrix[6]  = 0;
+    projectionMatrix[7]  = 0;
+
+    projectionMatrix[8]  = 0;
+    projectionMatrix[9]  = 0;
+    projectionMatrix[10] = (zNear + zFar) / (zNear - zFar);
+    projectionMatrix[11] = -1;
+
+    projectionMatrix[12] = 0;
+    projectionMatrix[13] = 0;
+    projectionMatrix[14] = 2 * zNear * zFar / (zNear - zFar);
+    projectionMatrix[15] = 0;
+
+    gl.uniformMatrix4fv(projectionUniformLoc, false, projectionMatrix);
+
+    gl.uniform1f(grassTextureSamplerUniformLoc, 0);
+
+    gl.clearColor(0.4, 0.6, 1.0, 0.5);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.drawElements(gl.TRIANGLES, (terrainSize - 1) * (terrainSize - 1) * 6, gl.UNSIGNED_SHORT, 0);
+
+    if (gCurrentTimestamp == 1) {
+      // First frame only - wait a bit (after rendering the scene once)
+      requestAnimationFrame(function() {
+        setTimeout(requestAnimationFrame, PRETEST_DELAY_MS, draw);
+      });
+    } else {
+      requestAnimationFrame(draw);
+    }
+  }
+
+  function onresize() {
+    var canvas =  document.getElementById("c");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    aspectRatio = canvas.width / canvas.height;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+
+  var gResults = {values: [], names: [], raw: []};
+
+  function setupAndRun(alpha, antialias, name, doneCallback) {
+    // Remove the old canvas if exists, and create a new one for the new run
+    var c = document.getElementById("c");
+    if (c)
+        c.parentNode.removeChild(c);
+    c = document.createElement("canvas");
+    c.id = "c";
+    document.body.insertBefore(c, document.body.firstChild)
+
+    // Trigger the run with specified args, with callback function to process the result
+    startTest(alpha, antialias, function(intervals) {
+        gResults.names.push(name);
+        gResults.raw.push(intervals);
+        setTimeout(doneCallback, 0);
+    });
+  }
+
+  function reportResults(results) {
+    // Format a nice human-readable report
+    var msg = "";
+    for (var i = 0; i < results.names.length; i++) {
+      var data = results.raw[i];
+      var avg   = average(data);
+      gResults.values.push(avg); // This is the only "official" reported value for this set
+      var sd = sampleStdDev(data);
+
+      // Compose a nice human readable message. Not used officially anywhere.
+      msg += results.names[i] + "= Average: " + avg.toFixed(2)
+           + "  stddev: " + sd.toFixed(1) + " (" + (100 * sd / avg).toFixed(1) + "%)"
+           + "\nIntervals: " + data.map(function(v) {
+                // Display with 1 decimal point digit, and make excessively big values noticeable.
+                var value = v.toFixed(1);
+                // Not scientific, but intervals over 2 * average are.. undesirable.
+                var threshold = avg * 2;
+                return v < threshold ? value : " [_" + value + "_] ";
+             }).join("  ")
+           + "\n\n";
+    }
+    dump(msg); // Put the readable report at talos run-log
+
+    if (window.tpRecordTime) {
+      // within talos - report the results
+      return tpRecordTime(results.values.join(","), 0, results.names.join(","));
+    } else {
+      // Local run in a plain browser, display the formatted report
+      alert(msg);
+    }
+  }
+
+  // The full test starts here
+  function test() {
+    gResults = {values: [], names: [], raw: []};
+    // This test measures average frame interval during WebGL animation as follows:
+    // 1. Creates a new WebGL canvas.
+    // 2. setup the scene and render 1 frame.
+    // 3. Idle a bit (500ms).
+    // 4. Render/Animate several (129) frames using requestAnimationFrame.
+    // 5. Average the intervals of the last (100) frames <-- the result.
+    //
+    // The reason for the initial idle is to allow some internal cleanups (like CC/GC etc).
+    // The unmeasured warmup rendering intervals are to allow Firefox to settle at a consistent rate.
+    // The idle + warmup are common practices in benchmarking where we're mostly interested
+    // in the stable/consistent throughput rather than in the throughput during transition state
+    // from idle to iterating.
+
+    // Run the same sequence 4 times for all combination of alpha and antialias
+    // (Not using promises chaining for better compatibility, ending up with nesting instead)
+    // talos unfortunately trims common prefixes, so we prefix with a running number to keep the full name
+    setupAndRun(false, false, "0.WebGL-terrain-alpha-no-AA-no", function() {
+      setupAndRun(false, true,  "1.WebGL-terrain-alpha-no-AA-yes", function() {
+        setupAndRun(true,  false, "2.WebGL-terrain-alpha-yes-AA-no", function() {
+          setupAndRun(true,  true,  "3.WebGL-terrain-alpha-yes-AA-yes", function() {
+            reportResults(gResults);
+          })
+        })
+      })
+    });
+  }
+</script>
+</head>
+<body onload="test();" style="overflow:hidden; margin:0">
+<canvas id="c"></canvas>
+<img src="grass.jpeg" style="display:none" id="grass"/>
+</body>
