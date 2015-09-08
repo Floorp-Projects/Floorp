@@ -67,15 +67,15 @@ nsHttpChannelAuthProvider::~nsHttpChannelAuthProvider()
 }
 
 uint32_t nsHttpChannelAuthProvider::sAuthAllowPref =
-    SUBRESOURCE_AUTH_DIALOG_DISALLOW_CROSS_ORIGIN;
+    SUBRESOURCE_AUTH_DIALOG_ALLOW_ALL;
 
 void
 nsHttpChannelAuthProvider::InitializePrefs()
 {
   MOZ_ASSERT(NS_IsMainThread());
   mozilla::Preferences::AddUintVarCache(&sAuthAllowPref,
-                                        "network.auth.allow-subresource-auth",
-                                        SUBRESOURCE_AUTH_DIALOG_DISALLOW_CROSS_ORIGIN);
+                                        "network.auth.subresource-http-auth-allow",
+                                        SUBRESOURCE_AUTH_DIALOG_ALLOW_ALL);
 }
 
 NS_IMETHODIMP
