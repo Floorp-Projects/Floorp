@@ -55,12 +55,6 @@ class CompositorParent;
 class LayerManagerComposite;
 class LayerTransactionParent;
 
-// CompositeEvent related events
-enum CallbackType {
-  WILL_COMPOSITE,
-  DID_COMPOSITE
-};
-
 struct ScopedLayerTreeRegistration
 {
   ScopedLayerTreeRegistration(uint64_t aLayersId,
@@ -445,14 +439,7 @@ protected:
    */
   bool CanComposite();
 
-  // Fires before and after composite events
-  void CompositeEvent(CallbackType aType, TimeStamp& aCompositeStart,
-                      TimeStamp& aCompositeEnd);
-  void DidComposite(TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd) {
-    CompositeEvent(DID_COMPOSITE, aCompositeStart, aCompositeEnd);
-  }
-
-  friend class AutoFireCompositorEvents;
+  void DidComposite(TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd);
 
   nsRefPtr<LayerManagerComposite> mLayerManager;
   nsRefPtr<Compositor> mCompositor;
