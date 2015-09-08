@@ -164,6 +164,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IMEContentObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWidget)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFocusedWidget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRootContent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditableNode)
@@ -399,6 +400,8 @@ IMEContentObserver::UnregisterObservers()
     if (selPrivate) {
       selPrivate->RemoveSelectionListener(this);
     }
+    mSelectionData.Clear();
+    mFocusedWidget = nullptr;
   }
 
   if (mUpdatePreference.WantTextChange() && mRootContent) {
@@ -564,8 +567,32 @@ IMEContentObserver::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
     ("IMECO: 0x%p IMEContentObserver::HandleQueryContentEvent(aEvent={ "
      "mMessage=%s })", this, ToChar(aEvent->mMessage)));
 
+  // If the instance has cache, it should use the cached selection which was
+  // sent to the widget.
+  if (aEvent->mMessage == NS_QUERY_SELECTED_TEXT &&
+      aEvent->mUseNativeLineBreak &&
+      mSelectionData.IsValid()) {
+    aEvent->mReply.mContentsRoot = mRootContent;
+    aEvent->mReply.mHasSelection = !mSelectionData.IsCollapsed();
+    aEvent->mReply.mOffset = mSelectionData.mOffset;
+    aEvent->mReply.mString = mSelectionData.String();
+    aEvent->mReply.mWritingMode = mSelectionData.GetWritingMode();
+    aEvent->mReply.mReversed = mSelectionData.mReversed;
+    aEvent->mSucceeded = true;
+    MOZ_LOG(sIMECOLog, LogLevel::Debug,
+      ("IMECO: 0x%p IMEContentObserver::HandleQueryContentEvent(aEvent={ "
+       "mMessage=%s })", this, ToChar(aEvent->mMessage)));
+    return NS_OK;
+  }
+
   ContentEventHandler handler(GetPresContext());
-  return handler.HandleQueryContentEvent(aEvent);
+  nsresult rv = handler.HandleQueryContentEvent(aEvent);
+  if (aEvent->mSucceeded) {
+    // We need to guarantee that mRootContent should be always same value for
+    // the observing editor.
+    aEvent->mReply.mContentsRoot = mRootContent;
+  }
+  return rv;
 }
 
 bool
@@ -1089,6 +1116,7 @@ IMEContentObserver::UpdateSelectionCache()
     return false;
   }
 
+  mFocusedWidget = selection.mReply.mFocusedWidget;
   mSelectionData.mOffset = selection.mReply.mOffset;
   *mSelectionData.mString = selection.mReply.mString;
   mSelectionData.SetWritingMode(selection.GetWritingMode());
