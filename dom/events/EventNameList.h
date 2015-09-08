@@ -366,7 +366,7 @@ EVENT(playing,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(progress,
-      NS_PROGRESS,
+      eProgress,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(ratechange,
