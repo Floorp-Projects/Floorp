@@ -261,6 +261,7 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
             'modules_dir': dirs['abs_modules_dir'],
             'remote_webserver': self.config['remote_webserver'],
             'xre_path': os.path.join(dirs['abs_xre_dir'], 'bin'),
+            'utility_path': os.path.join(dirs['abs_test_install_dir'], 'bin'),
             'symbols_path': self.symbols_path,
             'busybox': self.busybox_path,
             'total_chunks': self.config.get('total_chunks'),
