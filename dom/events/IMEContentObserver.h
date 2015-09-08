@@ -157,6 +157,10 @@ private:
   bool UpdateSelectionCache();
 
   nsCOMPtr<nsIWidget> mWidget;
+  // mFocusedWidget has the editor observed by the instance.  E.g., if the
+  // focused editor is in XUL panel, this should be the widget of the panel.
+  // On the other hand, mWidget is its parent which handles IME.
+  nsCOMPtr<nsIWidget> mFocusedWidget;
   nsCOMPtr<nsISelection> mSelection;
   nsCOMPtr<nsIContent> mRootContent;
   nsCOMPtr<nsINode> mEditableNode;
