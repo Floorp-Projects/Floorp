@@ -1168,7 +1168,6 @@ function CssRuleView(inspector, document, store, pageStyle) {
 
   this._outputParser = new OutputParser(document);
 
-  this._onKeydown = this._onKeydown.bind(this);
   this._onKeypress = this._onKeypress.bind(this);
   this._onAddRule = this._onAddRule.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);
@@ -1194,7 +1193,6 @@ function CssRuleView(inspector, document, store, pageStyle) {
 
   this.searchClearButton.hidden = true;
 
-  this.styleDocument.addEventListener("keydown", this._onKeydown);
   this.styleDocument.addEventListener("keypress", this._onKeypress);
   this.element.addEventListener("copy", this._onCopy);
   this.element.addEventListener("contextmenu", this._onContextMenu);
@@ -1729,8 +1727,6 @@ CssRuleView.prototype = {
     this.highlighters.destroy();
 
     // Remove bound listeners
-    this.styleDocument.removeEventListener("keydown", this._onKeydown);
-    this.styleDocument.removeEventListener("keypress", this._onKeypress);
     this.element.removeEventListener("copy", this._onCopy);
     this.element.removeEventListener("contextmenu", this._onContextMenu);
     this.addRuleButton.removeEventListener("click", this._onAddRule);
@@ -1769,22 +1765,6 @@ CssRuleView.prototype = {
   },
 
   /**
-   * Mark the view as selecting an element, disabling all interaction, and
-   * visually clearing the view after a few milliseconds to avoid confusion
-   * about which element's styles the rule view shows.
-   */
-  _startSelectingElement: function() {
-    this.element.classList.add("non-interactive");
-  },
-
-  /**
-   * Mark the view as no longer selecting an element, re-enabling interaction.
-   */
-  _stopSelectingElement: function() {
-    this.element.classList.remove("non-interactive");
-  },
-
-  /**
    * Update the view with a new selected element.
    *
    * @param {NodeActor} element
@@ -1809,38 +1789,30 @@ CssRuleView.prototype = {
     this.refreshAddRuleButtonState();
 
     if (!this._viewedElement) {
-      this._stopSelectingElement();
       this._clearRules();
       this._showEmpty();
       this.refreshPseudoClassPanel();
       return promise.resolve(undefined);
     }
 
-    let elementStyle = new ElementStyle(element, this.store,
+    this._elementStyle = new ElementStyle(element, this.store,
       this.pageStyle, this.showUserAgentStyles);
-    this._elementStyle = elementStyle;
-
-    this._startSelectingElement();
 
     return this._elementStyle.init().then(() => {
-      if (this._elementStyle === elementStyle) {
+      if (this._viewedElement === element) {
         return this._populate();
       }
     }).then(() => {
-      if (this._elementStyle === elementStyle) {
+      if (this._viewedElement === element) {
         if (!refresh) {
           this.element.scrollTop = 0;
         }
-        this._stopSelectingElement();
         this._elementStyle.onChanged = () => {
           this._changed();
         };
       }
     }).then(null, e => {
-      if (this._elementStyle === elementStyle) {
-        this._stopSelectingElement();
-        this._clearRules();
-      }
+      this._clearRules();
       console.error(e);
     });
   },
@@ -2432,16 +2404,6 @@ CssRuleView.prototype = {
   _onTogglePseudoClass: function(event) {
     let target = event.currentTarget;
     this.inspector.togglePseudoClass(target.value);
-  },
-
-  /**
-   * Handle the keydown event in the rule view.
-   */
-  _onKeydown: function(event) {
-    if (this.element.classList.contains("non-interactive") &&
-        (event.code === "Enter" || event.code === " ")) {
-      event.preventDefault();
-    }
   },
 
   /**

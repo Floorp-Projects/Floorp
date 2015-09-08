@@ -24,12 +24,6 @@ body {
   flex: 1;
 }
 
-#ruleview-container.non-interactive {
-  pointer-events: none;
-  visibility: collapse;
-  transition: visibility 0.25s;
-}
-
 .devtools-toolbar {
   width: 100%;
   display: flex;
