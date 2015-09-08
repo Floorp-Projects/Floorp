@@ -291,7 +291,7 @@ NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_EDGE_COMPLETED, NS_SIMPLE_GESTURE_EVENT_START
 
 // These are used to send native events to plugins.
 NS_EVENT_MESSAGE(ePluginEventFirst,     3600)
-NS_EVENT_MESSAGE(NS_PLUGIN_INPUT_EVENT, ePluginEventFirst)
+NS_EVENT_MESSAGE(ePluginInputEvent,     ePluginEventFirst)
 
 // Events to manipulate selection (WidgetSelectionEvent)
 NS_EVENT_MESSAGE(NS_SELECTION_EVENT_START, 3700)
