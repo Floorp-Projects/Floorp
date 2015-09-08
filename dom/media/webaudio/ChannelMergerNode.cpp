@@ -73,7 +73,7 @@ ChannelMergerNode::ChannelMergerNode(AudioContext* aContext,
               ChannelInterpretation::Speakers)
   , mInputCount(aInputCount)
 {
-  mStream = AudioNodeStream::Create(aContext->Graph(),
+  mStream = AudioNodeStream::Create(aContext,
                                     new ChannelMergerNodeEngine(this),
                                     AudioNodeStream::NO_STREAM_FLAGS);
 }

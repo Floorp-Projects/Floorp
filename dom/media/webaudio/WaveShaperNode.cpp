@@ -288,7 +288,7 @@ WaveShaperNode::WaveShaperNode(AudioContext* aContext)
   mozilla::HoldJSObjects(this);
 
   WaveShaperNodeEngine* engine = new WaveShaperNodeEngine(this);
-  mStream = AudioNodeStream::Create(aContext->Graph(), engine,
+  mStream = AudioNodeStream::Create(aContext, engine,
                                     AudioNodeStream::NO_STREAM_FLAGS);
 }
 
