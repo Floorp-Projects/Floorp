@@ -206,10 +206,10 @@ NS_EVENT_MESSAGE(eXULCommandEventFirst, 3000)
 NS_EVENT_MESSAGE(eXULCommand,           eXULCommandEventFirst)
 
 // Cut, copy, paste events
-NS_EVENT_MESSAGE(NS_CUTCOPYPASTE_EVENT_START, 3100)
-NS_EVENT_MESSAGE(NS_COPY,               NS_CUTCOPYPASTE_EVENT_START)
-NS_EVENT_MESSAGE(NS_CUT,                NS_CUTCOPYPASTE_EVENT_START + 1)
-NS_EVENT_MESSAGE(NS_PASTE,              NS_CUTCOPYPASTE_EVENT_START + 2)
+NS_EVENT_MESSAGE(eClipboardEventFirst,  3100)
+NS_EVENT_MESSAGE(NS_COPY,               eClipboardEventFirst)
+NS_EVENT_MESSAGE(NS_CUT,                eClipboardEventFirst + 1)
+NS_EVENT_MESSAGE(NS_PASTE,              eClipboardEventFirst + 2)
 
 // Query the content information
 NS_EVENT_MESSAGE(NS_QUERY_CONTENT_EVENT_START,       3200)
