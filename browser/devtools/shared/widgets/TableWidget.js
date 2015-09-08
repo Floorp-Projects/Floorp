@@ -4,12 +4,17 @@
 "use strict";
 
 const {Cc, Ci, Cu} = require("chrome");
-
 const EventEmitter = require("devtools/toolkit/event-emitter");
+
+loader.lazyImporter(this, "setNamedTimeout",
+  "resource:///modules/devtools/ViewHelpers.jsm");
+loader.lazyImporter(this, "clearNamedTimeout",
+  "resource:///modules/devtools/ViewHelpers.jsm");
+
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-
+const AFTER_SCROLL_DELAY = 100;
 // Different types of events emitted by the Various components of the TableWidget
 const EVENTS = {
   TABLE_CLEARED: "table-cleared",
@@ -18,7 +23,8 @@ const EVENTS = {
   ROW_SELECTED: "row-selected",
   ROW_UPDATED: "row-updated",
   HEADER_CONTEXT_MENU: "header-context-menu",
-  ROW_CONTEXT_MENU: "row-context-menu"
+  ROW_CONTEXT_MENU: "row-context-menu",
+  SCROLL_END: "scroll-end"
 };
 
 // Maximum number of character visible in any cell in the table. This is to avoid
@@ -62,6 +68,8 @@ function TableWidget(node, options={}) {
   this.tbody.setAttribute("flex", "1");
   this.tbody.setAttribute("tabindex", "0");
   this._parent.appendChild(this.tbody);
+  this.afterScroll = this.afterScroll.bind(this);
+  this.tbody.addEventListener("scroll", this.onScroll.bind(this));
 
   this.placeholder = this.document.createElementNS(XUL_NS, "label");
   this.placeholder.className = "plain table-widget-empty-text";
@@ -422,6 +430,27 @@ TableWidget.prototype = {
       if (id != column) {
         column.sort(sortedItems);
       }
+    }
+  },
+
+  /**
+   * Calls the afterScroll function when the user has stopped scrolling
+   */
+  onScroll: function() {
+    clearNamedTimeout("table-scroll");
+    setNamedTimeout("table-scroll", AFTER_SCROLL_DELAY, this.afterScroll);
+  },
+
+  /**
+   * Emits the "scroll-end" event when the whole table is scrolled
+   */
+  afterScroll: function() {
+    let scrollHeight = this.tbody.getBoundingClientRect().height -
+        this.tbody.querySelector(".table-widget-column-header").clientHeight;
+
+    // Emit scroll-end event when 9/10 of the table is scrolled
+    if (this.tbody.scrollTop >= 0.9 * scrollHeight) {
+      this.emit("scroll-end");
     }
   }
 };
