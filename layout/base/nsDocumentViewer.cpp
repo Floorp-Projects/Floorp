@@ -2620,7 +2620,8 @@ NS_IMETHODIMP nsDocumentViewer::SelectAll()
 
 NS_IMETHODIMP nsDocumentViewer::CopySelection()
 {
-  nsCopySupport::FireClipboardEvent(NS_COPY, nsIClipboard::kGlobalClipboard, mPresShell, nullptr);
+  nsCopySupport::FireClipboardEvent(eCopy, nsIClipboard::kGlobalClipboard,
+                                    mPresShell, nullptr);
   return NS_OK;
 }
 

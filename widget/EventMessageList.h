@@ -207,7 +207,7 @@ NS_EVENT_MESSAGE(eXULCommand,           eXULCommandEventFirst)
 
 // Cut, copy, paste events
 NS_EVENT_MESSAGE(eClipboardEventFirst,  3100)
-NS_EVENT_MESSAGE(NS_COPY,               eClipboardEventFirst)
+NS_EVENT_MESSAGE(eCopy,                 eClipboardEventFirst)
 NS_EVENT_MESSAGE(NS_CUT,                eClipboardEventFirst + 1)
 NS_EVENT_MESSAGE(NS_PASTE,              eClipboardEventFirst + 2)
 

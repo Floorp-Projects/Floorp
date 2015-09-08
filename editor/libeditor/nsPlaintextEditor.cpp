@@ -1217,7 +1217,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanCut(bool *aCanCut)
 NS_IMETHODIMP nsPlaintextEditor::Copy()
 {
   bool actionTaken = false;
-  FireClipboardEvent(NS_COPY, nsIClipboard::kGlobalClipboard, &actionTaken);
+  FireClipboardEvent(eCopy, nsIClipboard::kGlobalClipboard, &actionTaken);
 
   return actionTaken ? NS_OK : NS_ERROR_FAILURE;
 }
