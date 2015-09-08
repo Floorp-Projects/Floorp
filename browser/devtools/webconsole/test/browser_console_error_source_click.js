@@ -58,7 +58,7 @@ function test() {
 
       let msg = [...results[0].matched][0];
       ok(msg, "message element found for: " + result.text);
-      let locationNode = msg.querySelector(".message-location");
+      let locationNode = msg.querySelector(".message > .message-location");
       ok(locationNode, "message location element found");
 
       EventUtils.synthesizeMouse(locationNode, 2, 2, {}, hud.iframeWindow);
