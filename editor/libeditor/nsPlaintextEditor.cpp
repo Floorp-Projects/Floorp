@@ -1198,7 +1198,7 @@ nsPlaintextEditor::FireClipboardEvent(EventMessage aEventMessage,
 NS_IMETHODIMP nsPlaintextEditor::Cut()
 {
   bool actionTaken = false;
-  if (FireClipboardEvent(NS_CUT, nsIClipboard::kGlobalClipboard, &actionTaken)) {
+  if (FireClipboardEvent(eCut, nsIClipboard::kGlobalClipboard, &actionTaken)) {
     DeleteSelection(eNone, eStrip);
   }
   return actionTaken ? NS_OK : NS_ERROR_FAILURE;

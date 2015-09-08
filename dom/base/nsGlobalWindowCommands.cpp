@@ -522,7 +522,7 @@ nsClipboardCommand::DoCommand(const char *aCommandName, nsISupports *aContext)
 
   EventMessage eventMessage = eCopy;
   if (strcmp(aCommandName, "cmd_cut") == 0) {
-    eventMessage = NS_CUT;
+    eventMessage = eCut;
   }
 
   bool actionTaken = false;

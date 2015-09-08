@@ -426,7 +426,7 @@ EVENT(copy,
       EventNameType_HTMLXUL,
       eClipboardEventClass)
 EVENT(cut,
-      NS_CUT,
+      eCut,
       EventNameType_HTMLXUL,
       eClipboardEventClass)
 EVENT(paste,

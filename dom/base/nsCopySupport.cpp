@@ -631,7 +631,7 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
     *aActionTaken = false;
   }
 
-  NS_ASSERTION(aEventMessage == NS_CUT || aEventMessage == eCopy ||
+  NS_ASSERTION(aEventMessage == eCut || aEventMessage == eCopy ||
                aEventMessage == NS_PASTE,
                "Invalid clipboard event type");
 
@@ -743,7 +743,7 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
 
     // when cutting non-editable content, do nothing
     // XXX this is probably the wrong editable flag to check
-    if (aEventMessage != NS_CUT || content->IsEditable()) {
+    if (aEventMessage != eCut || content->IsEditable()) {
       // get the data from the selection if any
       bool isCollapsed;
       sel->GetIsCollapsed(&isCollapsed);
