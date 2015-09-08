@@ -325,10 +325,6 @@ const kStateActive = 0x00000001; // :active pseudoclass for elements
 
 const kXLinkNamespace = "http://www.w3.org/1999/xlink";
 
-const kDefaultCSSViewportWidth = 980;
-
-const kViewportRemeasureThrottle = 500;
-
 function fuzzyEquals(a, b) {
   return (Math.abs(a - b) < 1e-6);
 }
