@@ -476,20 +476,16 @@ function checkForInterrupted() {
  */
 function createExecuteContentSandbox(win, timeout) {
   let mn = new Marionette(
-      this,
       win,
       "content",
       marionetteLogObj,
       timeout,
       heartbeatCallback,
       marionetteTestName);
-  mn.runEmulatorCmd = (cmd, cb) => this.runEmulatorCmd(cmd, cb);
-  mn.runEmulatorShell = (args, cb) => this.runEmulatorShell(args, cb);
 
   let principal = win;
-  if (sandboxName == 'system') {
-    principal = Cc["@mozilla.org/systemprincipal;1"].
-                createInstance(Ci.nsIPrincipal);
+  if (sandboxName == "system") {
+    principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
   }
   let sandbox = new Cu.Sandbox(principal, {sandboxPrototype: win});
   sandbox.global = sandbox;
@@ -507,6 +503,8 @@ function createExecuteContentSandbox(win, timeout) {
       sandbox[fn] = mn[fn];
     }
   });
+  sandbox.runEmulatorCmd = (cmd, cb) => this.runEmulatorCmd(cmd, cb);
+  sandbox.runEmulatorShell = (args, cb) => this.runEmulatorShell(args, cb);
 
   sandbox.asyncComplete = (obj, id) => {
     if (id == asyncTestCommandId) {
