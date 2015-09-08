@@ -1320,6 +1320,13 @@ nsFrameMessageManager::LoadPendingScripts(nsFrameMessageManager* aManager,
 }
 
 void
+nsFrameMessageManager::LoadPendingScripts()
+{
+  nsRefPtr<nsFrameMessageManager> kungfuDeathGrip = this;
+  LoadPendingScripts(this, this);
+}
+
+void
 nsFrameMessageManager::SetCallback(MessageManagerCallback* aCallback)
 {
   MOZ_ASSERT(!mIsBroadcaster || !mCallback,
