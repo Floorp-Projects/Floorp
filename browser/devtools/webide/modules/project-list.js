@@ -142,6 +142,7 @@ ProjectList.prototype = {
       icon.setAttribute("src", opts.icon);
       opts.panel.appendChild(icon);
       opts.panel.appendChild(span);
+      opts.panel.setAttribute("title", opts.name);
     } else {
       opts.panel.setAttribute("label", opts.name);
       opts.panel.setAttribute("image", opts.icon);
