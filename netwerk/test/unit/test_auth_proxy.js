@@ -245,7 +245,7 @@ function run_test() {
   prefs.setIntPref("network.proxy.type", 1);
 
   // Turn off the authentication dialog blocking for this test.
-  prefs.setIntPref("network.auth.allow-subresource-auth", 2);
+  prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
 
   tests[current_test]();
 }
