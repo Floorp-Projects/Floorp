@@ -263,7 +263,7 @@ EVENT(loadedmetadata,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(loadstart,
-      NS_LOADSTART,
+      eLoadStart,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(mousedown,

@@ -245,7 +245,7 @@ NS_EVENT_MESSAGE(NS_QUERY_DOM_WIDGET_HITTEST,        NS_QUERY_CONTENT_EVENT_STAR
 
 // Video events
 NS_EVENT_MESSAGE(eMediaEventFirst,      3300)
-NS_EVENT_MESSAGE(NS_LOADSTART,          eMediaEventFirst)
+NS_EVENT_MESSAGE(eLoadStart,            eMediaEventFirst)
 NS_EVENT_MESSAGE(NS_PROGRESS,           eMediaEventFirst + 1)
 NS_EVENT_MESSAGE(NS_SUSPEND,            eMediaEventFirst + 2)
 NS_EVENT_MESSAGE(NS_EMPTIED,            eMediaEventFirst + 3)
