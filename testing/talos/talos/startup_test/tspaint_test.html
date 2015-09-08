@@ -1,0 +1,79 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<html>
+<meta charset="utf-8">
+<!-- Pick off begin time as a cgi argument and print it out -->
+<!-- call this with an arg, e.g. file://foo/startup-test.html?begin=12345678 -->
+<!-- In-line this to avoid compilation. -->
+<script language="Javascript" type="text/javascript" src="../scripts/MozillaFileLogger.js"></script>
+<script language="Javascript" type="text/javascript" src="../scripts/Profiler.js"></script>
+<script language="JavaScript" type="text/javascript" src="../page_load_test/quit.js"></script>
+<script language="javascript" type="text/javascript">
+
+function painted() {
+  var now = Date.now();
+  Profiler.pause();
+  Profiler.initFromURLQueryParams(location.search);
+  Profiler.finishStartupProfiling();
+
+  window.removeEventListener("MozAfterPaint", painted, true);
+
+  var startupTime = -1;
+
+  try {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var startupInfo = Components.classes['@mozilla.org/toolkit/app-startup;1'].
+                                   getService(Ci.nsIAppStartup).getStartupInfo();
+    startupTime = now - startupInfo['process'];
+  } catch(ex) {
+    dumpLog(ex + '\n');
+  }
+
+  Profiler.pause();
+
+  document.body.textContent = 'Startup time = ' + startupTime + ' ms';
+  if (window.dump) {
+    dumpLog('__start_report' + startupTime + '__end_report\n\n');
+  }
+  dumpConsoleAndQuit();
+}
+
+function failed() {
+  if (window.dump) {
+    dumpLog('BROWSER FAILED TO GENERATE MOZAFTERPAINT IN 5 SECONDS');
+  }
+  dumpConsoleAndQuit();
+}
+
+function dumpConsoleAndQuit() {
+  var messages = {}
+
+  try {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var consoleService = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
+    consoleService.getMessageArray(messages, {});
+  } catch(ex) {
+    dumpLog(ex + '\n');
+  }
+
+  for (var i = 0; i < messages.value.length; i++)
+    dumpLog(messages.value[i].message + '\n');
+
+  // Close window asynchronously, there might still be startup operations that still need to run
+  window.setTimeout(function() {
+    if (window.dump) {
+      dumpLog('__startTimestamp' + Date.now() + '__endTimestamp\n');
+    }
+    goQuitApplication();
+    window.close();
+  }, 0);
+}
+
+window.addEventListener("MozAfterPaint", painted, true);
+setTimeout(failed, 5000);
+
+</script>
+<body></body>
+</html>
+

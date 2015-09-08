@@ -1,0 +1,23 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <meta charset="utf-8">
+  <head>
+    <script language="Javascript" type="text/javascript" src="scripts/MozillaFileLogger.js"></script>
+    <script language="Javascript" type="text/javascript" src="page_load_test/quit.js"></script>
+    <title>shutdown script</title>
+  </head>
+
+  <body onload="
+    dumpLog('__metrics\tScreen width/height:' + screen.width + '/' + screen.height + '\n\tcolorDepth:' + screen.colorDepth + '\n');
+    dumpLog('\tBrowser inner width/height: ' + window.innerWidth + '/' + window.innerHeight + '\n');
+//JMAHER: this is temporarily commented out because this hangs the fennec browser
+//  dumpLog('\tBrowser outer width/height: ' + window.outerWidth + '/' + window.outerHeight);
+    dumpLog('__metrics\n');
+    goQuitApplication();
+    window.close();
+">
+  </body>
+</html>

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>talos-powers@mozilla.org</em:id>
+    <em:version>1.0</em:version>
+    <em:targetApplication>
+      <Description>
+        <em:id>toolkit@mozilla.org</em:id>
+       <em:minVersion>2.0b3pre</em:minVersion>
+       <em:maxVersion>*</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+    <!-- Front End MetaData -->
+    <em:name>Talos Powers</em:name>
+    <em:description>Gives Talos content special powers.</em:description>
+    <em:creator>Mike Conley</em:creator>
+    <em:multiprocessCompatible>true</em:multiprocessCompatible>
+  </Description>
+</RDF>

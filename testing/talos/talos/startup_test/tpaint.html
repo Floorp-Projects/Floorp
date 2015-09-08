@@ -1,0 +1,116 @@
+<html>
+<meta charset='utf-8'>
+<script language="JavaScript" type="text/javascript" src="../scripts/MozillaFileLogger.js"></script>
+<script language="JavaScript" type="text/javascript" src="../scripts/Profiler.js"></script>
+<script language="JavaScript" type="text/javascript" src="../page_load_test/quit.js"></script>
+<script>
+var OPENER_DELAY = 1000; // ms delay between tests
+var REPEAT_COUNT = 20;
+var kid, kidStartTime, kidEndTime, windowIndex, openTimes;
+var auto = document.location.search.split('=')[1]; // ?auto=1
+
+/*
+ * tpaint -- measures the amount of time between opening a new window
+ *           its contents being painted.
+ *
+ * XXX When run manually, outside of automation, need to:
+ *     1) allow popups
+ *     2) set dom.send_after_paint_to_content = true
+ *     3) set browser.link.open_newwindow = 2 (else it opens in a tab)
+ */
+
+function startTest() {
+  // Initialize
+  windowIndex = -1;
+  openTimes = [];
+
+  Profiler.initFromURLQueryParams(location.search);
+  Profiler.beginTest("tpaint");
+  scheduleNextWindow();
+}
+
+function scheduleNextWindow() {
+  windowIndex++;
+  if (windowIndex >= REPEAT_COUNT) {
+    window.setTimeout(reportTimes, 0);
+    return;
+  }
+  window.setTimeout(openWindow, OPENER_DELAY);
+}
+
+function calcMedian( numbers ) {
+  numbers.sort( function (a,b){ return a-b; } );
+  var n = Math.floor( numbers.length / 2 );
+  return numbers.length % 2 ? numbers[n] : ( numbers[n-1] + numbers[n] ) / 2;
+}
+
+function reportTimes() {
+  Profiler.finishTest();
+
+  var min = 99999, max = 0, avg = 0;
+  var count = openTimes.length;
+  for (var i = 0; i < count; i++) {
+    var time = openTimes[i];
+    avg += time;
+    if (time < min)
+      min = time;
+    if (time > max)
+      max = time;
+  }
+  avg = (avg / count).toFixed(2);
+  min = min.toFixed(2);
+  max = max.toFixed(2);
+  med = calcMedian(openTimes);
+
+  if (auto) {
+    dumpLog("__start_report" + openTimes.join('|') + "__end_report");
+    var now = (new Date()).getTime();
+    dumpLog("__startTimestamp" + now + "__endTimestamp\n");
+    dumpLog("openingTimes="+openTimes.slice(1)+"\n");
+    dumpLog("avgOpenTime:" + avg + "\n" );
+    dumpLog("minOpenTime:" + min + "\n" );
+    dumpLog("maxOpenTime:" + max + "\n" );
+    dumpLog("medOpenTime:" + med + "\n" );
+    dumpLog("__xulWinOpenTime:" + med + "\n");
+
+    goQuitApplication();
+    window.close();
+  } else {
+    alert("Average over " + count + " runs: " + avg + "\n" +
+          "(min=" + min + ", max=" + max + ")\n" +
+          "runs=" + openTimes.join(','));
+  }
+}
+
+function childIsOpen() {
+  kidEndTime = window.performance.now();
+  Profiler.pause('tpaint ' + windowIndex);
+  openTimes[windowIndex] = kidEndTime - kidStartTime;
+  scheduleNextWindow();
+}
+
+var kidHTML = "<html><meta charset='utf-8'><script>" +
+              "var e = 'MozAfterPaint';" +
+              "function done() {" +
+              "  window.removeEventListener(e, done, true);" +
+              "  window.opener.childIsOpen();" +
+              "  window.close();" +
+              "}" +
+              "window.addEventListener(e, done, true);" +
+              "</" + "script>TPAINT</html>";
+var kidURI = "data:text/html," + encodeURI(kidHTML);
+
+function openWindow() {
+  Profiler.resume('tpaint ' + windowIndex);
+  kidStartTime = window.performance.now();
+  kid = window.open(kidURI);
+}
+
+if (auto)
+  startTest();
+
+</script>
+<h2>tpaint runner</h2>
+<button onclick="startTest()">Start</button>
+</html>
+
