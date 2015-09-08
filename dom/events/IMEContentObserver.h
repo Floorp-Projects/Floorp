@@ -94,14 +94,8 @@ public:
   }
   nsIWidget* GetWidget() const { return mWidget; }
   nsIEditor* GetEditor() const { return mEditor; }
-  void SuppressNotifyingIME() { mSuppressNotifications++; }
-  void UnsuppressNotifyingIME()
-  {
-    if (!mSuppressNotifications || --mSuppressNotifications) {
-      return;
-    }
-    FlushMergeableNotifications();
-  }
+  void SuppressNotifyingIME();
+  void UnsuppressNotifyingIME();
   nsPresContext* GetPresContext() const;
   nsresult GetSelectionAndRoot(nsISelection** aSelection,
                                nsIContent** aRoot) const;
@@ -122,32 +116,15 @@ private:
   bool IsSafeToNotifyIME() const;
 
   void PostFocusSetNotification();
-  void MaybeNotifyIMEOfFocusSet()
-  {
-    PostFocusSetNotification();
-    FlushMergeableNotifications();
-  }
+  void MaybeNotifyIMEOfFocusSet();
   void PostTextChangeNotification(const TextChangeDataBase& aTextChangeData);
-  void MaybeNotifyIMEOfTextChange(const TextChangeDataBase& aTextChangeData)
-  {
-    PostTextChangeNotification(aTextChangeData);
-    FlushMergeableNotifications();
-  }
+  void MaybeNotifyIMEOfTextChange(const TextChangeDataBase& aTextChangeData);
   void PostSelectionChangeNotification(bool aCausedByComposition,
                                        bool aCausedBySelectionEvent);
   void MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition,
-                                       bool aCausedBySelectionEvent)
-  {
-    PostSelectionChangeNotification(aCausedByComposition,
-                                    aCausedBySelectionEvent);
-    FlushMergeableNotifications();
-  }
+                                       bool aCausedBySelectionEvent);
   void PostPositionChangeNotification();
-  void MaybeNotifyIMEOfPositionChange()
-  {
-    PostPositionChangeNotification();
-    FlushMergeableNotifications();
-  }
+  void MaybeNotifyIMEOfPositionChange();
 
   void NotifyContentAdded(nsINode* aContainer, int32_t aStart, int32_t aEnd);
   void ObserveEditableNode();
