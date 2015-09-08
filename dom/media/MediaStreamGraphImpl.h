@@ -236,9 +236,10 @@ public:
     mFrontMessageQueue.SwapElements(mBackMessageQueue);
   }
   /**
-   * Do all the processing and play the audio and video, ffrom aFrom to aTo.
+   * Do all the processing and play the audio and video, from
+   * mProcessedTime to mStateComputedTime.
    */
-  void Process(GraphTime aTo);
+  void Process();
   /**
    * Update the consumption state of aStream to reflect whether its data
    * is needed or not.
@@ -345,7 +346,7 @@ public:
    * Queue audio (mix of stream audio and silence for blocked intervals)
    * to the audio output stream. Returns the number of frames played.
    */
-  StreamTime PlayAudio(MediaStream* aStream, GraphTime aTo);
+  StreamTime PlayAudio(MediaStream* aStream);
   /**
    * Set the correct current video frame for stream aStream.
    */
