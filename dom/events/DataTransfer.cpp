@@ -86,7 +86,7 @@ DataTransfer::DataTransfer(nsISupports* aParent, EventMessage aEventMessage,
   // For these events, we want to be able to add data to the data transfer, so
   // clear the readonly state. Otherwise, the data is already present. For
   // external usage, cache the data from the native clipboard or drag.
-  if (aEventMessage == NS_CUT ||
+  if (aEventMessage == eCut ||
       aEventMessage == eCopy ||
       aEventMessage == eDragStart ||
       aEventMessage == eLegacyDragGesture) {
@@ -543,7 +543,7 @@ DataTransfer::MozTypesAt(uint32_t aIndex, ErrorResult& aRv)
 {
   // Only the first item is valid for clipboard events
   if (aIndex > 0 &&
-      (mEventMessage == NS_CUT || mEventMessage == eCopy ||
+      (mEventMessage == eCut || mEventMessage == eCopy ||
        mEventMessage == NS_PASTE)) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;
@@ -584,7 +584,7 @@ DataTransfer::MozGetDataAt(const nsAString& aFormat, uint32_t aIndex,
 
   // Only the first item is valid for clipboard events
   if (aIndex > 0 &&
-      (mEventMessage == NS_CUT || mEventMessage == eCopy ||
+      (mEventMessage == eCut || mEventMessage == eCopy ||
        mEventMessage == NS_PASTE)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
@@ -696,7 +696,7 @@ DataTransfer::MozSetDataAt(const nsAString& aFormat, nsIVariant* aData,
 
   // Only the first item is valid for clipboard events
   if (aIndex > 0 &&
-      (mEventMessage == NS_CUT || mEventMessage == eCopy ||
+      (mEventMessage == eCut || mEventMessage == eCopy ||
        mEventMessage == NS_PASTE)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
@@ -742,7 +742,7 @@ DataTransfer::MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
 
   // Only the first item is valid for clipboard events
   if (aIndex > 0 &&
-      (mEventMessage == NS_CUT || mEventMessage == eCopy ||
+      (mEventMessage == eCut || mEventMessage == eCopy ||
        mEventMessage == NS_PASTE)) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
@@ -758,7 +758,7 @@ DataTransfer::MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
   MOZ_ASSERT(!mReadOnly);
   MOZ_ASSERT(aIndex < mItems.Length());
   MOZ_ASSERT(aIndex == 0 ||
-             (mEventMessage != NS_CUT && mEventMessage != eCopy &&
+             (mEventMessage != eCut && mEventMessage != eCopy &&
               mEventMessage != NS_PASTE));
 
   nsAutoString format;
@@ -1300,7 +1300,7 @@ DataTransfer::FillInExternalData(TransferItem& aItem, uint32_t aIndex)
   }
 
   // only drag and paste events should be calling FillInExternalData
-  NS_ASSERTION(mEventMessage != NS_CUT && mEventMessage != eCopy,
+  NS_ASSERTION(mEventMessage != eCut && mEventMessage != eCopy,
                "clipboard event with empty data");
 
     NS_ConvertUTF16toUTF8 utf8format(aItem.mFormat);
