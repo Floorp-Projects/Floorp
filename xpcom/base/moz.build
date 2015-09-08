@@ -152,3 +152,6 @@ LOCAL_INCLUDES += [
 
 if CONFIG['MOZ_WIDGET_GTK']:
     CXXFLAGS += CONFIG['TK_CFLAGS']
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

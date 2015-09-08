@@ -138,9 +138,9 @@ nsLocalFile::CreateUnique(uint32_t aType, uint32_t aAttributes)
     rootName.SetLength(maxRootLength);
     SetNativeLeafName(rootName + suffix);
 #endif
-    nsresult rv = Create(aType, aAttributes);
-    if (rv != NS_ERROR_FILE_ALREADY_EXISTS) {
-      return rv;
+    nsresult rvCreate = Create(aType, aAttributes);
+    if (rvCreate != NS_ERROR_FILE_ALREADY_EXISTS) {
+      return rvCreate;
     }
   }
 
