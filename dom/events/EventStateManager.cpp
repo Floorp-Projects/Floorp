@@ -743,7 +743,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         InitLineOrPageDelta(aTargetFrame, this, wheelEvent);
     }
     break;
-  case NS_SELECTION_SET:
+  case eSetSelection:
     IMEStateManager::HandleSelectionEvent(aPresContext, GetFocusedContent(),
                                           aEvent->AsSelectionEvent());
     break;

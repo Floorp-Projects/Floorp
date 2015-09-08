@@ -1889,9 +1889,9 @@ TestApp::TestSelection(void)
    * nsTextStore::GetSelection not sending NS_QUERY_SELECTED_TEXT
    * NS_QUERY_SELECTED_TEXT not handled by ContentEventHandler
    * Bug in NS_QUERY_SELECTED_TEXT handler
-   * nsTextStore::SetSelection not sending NS_SELECTION_SET
-   * NS_SELECTION_SET not handled by ContentEventHandler
-   * Bug in NS_SELECTION_SET handler
+   * nsTextStore::SetSelection not sending eSetSelection
+   * eSetSelection not handled by ContentEventHandler
+   * Bug in eSetSelection handler
    */
 
   TS_SELECTION_ACP testSel;
@@ -1965,7 +1965,7 @@ TestApp::TestText(void)
    * Bug in NS_QUERY_TEXT_CONTENT handler
    * nsTextStore::SetText not calling SetSelection or InsertTextAtSelection
    * Bug in SetSelection or InsertTextAtSelection
-   *  NS_SELECTION_SET bug or NS_COMPOSITION_* / NS_COMPOSITION_CHANGE bug
+   *  eSetSelection bug or NS_COMPOSITION_* / NS_COMPOSITION_CHANGE bug
    */
 
   if (!mMgr->GetFocusedStore()) {

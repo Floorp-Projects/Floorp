@@ -2053,7 +2053,7 @@ IMContextWrapper::DeleteText(GtkIMContext* aContext,
         g_utf8_offset_to_pointer(utf8Str.get(), endInUTF8Characters);
 
     // Set selection to delete
-    WidgetSelectionEvent selectionEvent(true, NS_SELECTION_SET,
+    WidgetSelectionEvent selectionEvent(true, eSetSelection,
                                         mLastFocusedWindow);
 
     nsDependentCSubstring utf8StrBeforeOffset(utf8Str, 0,
