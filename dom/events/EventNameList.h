@@ -370,7 +370,7 @@ EVENT(progress,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(ratechange,
-      NS_RATECHANGE,
+      eRateChange,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(reset,
