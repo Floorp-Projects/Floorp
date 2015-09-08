@@ -209,7 +209,7 @@ NS_EVENT_MESSAGE(eXULCommand,           eXULCommandEventFirst)
 NS_EVENT_MESSAGE(eClipboardEventFirst,  3100)
 NS_EVENT_MESSAGE(eCopy,                 eClipboardEventFirst)
 NS_EVENT_MESSAGE(eCut,                  eClipboardEventFirst + 1)
-NS_EVENT_MESSAGE(NS_PASTE,              eClipboardEventFirst + 2)
+NS_EVENT_MESSAGE(ePaste,                eClipboardEventFirst + 2)
 
 // Query the content information
 NS_EVENT_MESSAGE(NS_QUERY_CONTENT_EVENT_START,       3200)

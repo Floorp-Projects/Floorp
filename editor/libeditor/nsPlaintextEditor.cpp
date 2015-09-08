@@ -1173,7 +1173,7 @@ nsPlaintextEditor::FireClipboardEvent(EventMessage aEventMessage,
                                       int32_t aSelectionType,
                                       bool* aActionTaken)
 {
-  if (aEventMessage == NS_PASTE) {
+  if (aEventMessage == ePaste) {
     ForceCompositionEnd();
   }
 
