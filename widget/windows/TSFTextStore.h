@@ -511,7 +511,7 @@ protected:
       COMPOSITION_START,
       COMPOSITION_UPDATE,
       COMPOSITION_END,
-      SELECTION_SET
+      SET_SELECTION
     };
     ActionType mType;
     // For compositionstart and selectionset
