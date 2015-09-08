@@ -162,8 +162,12 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 .panel-list {
   display: none;
   position: relative;
-  max-width: 250px;
+  max-width: 180px;
   overflow: hidden;
+}
+
+#project-listing-panel.panel-list {
+  max-width: 165px;
 }
 
 .panel-list-wrapper {
