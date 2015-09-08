@@ -39,7 +39,7 @@ MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode(AudioContext* a
   ProcessedMediaStream* outputStream = mDOMStream->GetStream()->AsProcessedStream();
   MOZ_ASSERT(!!outputStream);
   AudioNodeEngine* engine = new AudioNodeEngine(this);
-  mStream = AudioNodeStream::Create(aContext->Graph(), engine,
+  mStream = AudioNodeStream::Create(aContext, engine,
                                     AudioNodeStream::EXTERNAL_OUTPUT);
   mPort = outputStream->AllocateInputPort(mStream);
 

@@ -86,7 +86,7 @@ AnalyserNode::AnalyserNode(AudioContext* aContext)
   , mMaxDecibels(-30.)
   , mSmoothingTimeConstant(.8)
 {
-  mStream = AudioNodeStream::Create(aContext->Graph(),
+  mStream = AudioNodeStream::Create(aContext,
                                     new AnalyserNodeEngine(this),
                                     AudioNodeStream::NO_STREAM_FLAGS);
 
