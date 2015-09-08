@@ -401,10 +401,16 @@ MP3TrackDemuxer::FindNextFrame() {
       // This is not a valid MPEG audio stream or we've reached EOS, give up.
       break;
     }
-    MOZ_ASSERT(mOffset + read > mOffset);
+    NS_ENSURE_TRUE(mOffset + read > mOffset, MediaByteRange(0, 0));
     mOffset += read;
     bufferEnd = buffer + read;
-    frameBeg = mParser.Parse(buffer, bufferEnd);
+    const FrameParserResult parseResults = mParser.Parse(buffer, bufferEnd);
+    frameBeg = parseResults.mBufferPos;
+
+    // If mBytesToSkip is > 0, this skips the rest of an ID3 tag which stretches
+    // beyond the current buffer.
+    NS_ENSURE_TRUE(mOffset + parseResults.mBytesToSkip >= mOffset, MediaByteRange(0, 0));
+    mOffset += parseResults.mBytesToSkip;
   }
 
   if (frameBeg == bufferEnd || !mParser.CurrentFrame().Length()) {
@@ -605,10 +611,10 @@ FrameParser::VBRInfo() const {
   return mVBRHeader;
 }
 
-const uint8_t*
+FrameParserResult
 FrameParser::Parse(const uint8_t* aBeg, const uint8_t* aEnd) {
   if (!aBeg || !aEnd || aBeg >= aEnd) {
-    return aEnd;
+    return { aEnd, 0 };
   }
 
   if (!mID3Parser.Header().Size() && !mFirstFrame.Length()) {
@@ -617,8 +623,16 @@ FrameParser::Parse(const uint8_t* aBeg, const uint8_t* aEnd) {
     // TODO: should we try to read ID3 tags at end of file/mid-stream, too?
     const uint8_t* id3Beg = mID3Parser.Parse(aBeg, aEnd);
     if (id3Beg != aEnd) {
-      // ID3 headers found, skip past them.
-      aBeg = id3Beg + ID3Parser::ID3Header::SIZE + mID3Parser.Header().Size();
+      // ID3 tag found, skip past it.
+      const uint32_t tagSize = ID3Parser::ID3Header::SIZE + mID3Parser.Header().Size() +
+                               mID3Parser.Header().FooterSize();
+      const uint32_t remainingBuffer = aEnd - id3Beg;
+      if (tagSize > remainingBuffer) {
+        // Skipping across the ID3 tag would take us past the end of the buffer, therefore we
+        // return immediately and let the calling function handle skipping the rest of the tag.
+        return { aEnd, tagSize - remainingBuffer };
+      }
+      aBeg = id3Beg + tagSize;
     }
   }
 
@@ -633,9 +647,9 @@ FrameParser::Parse(const uint8_t* aBeg, const uint8_t* aEnd) {
     }
     // Move to the frame header begin to allow for whole-frame parsing.
     aBeg -= FrameHeader::SIZE;
-    return aBeg;
+    return { aBeg, 0 };
   }
-  return aEnd;
+  return { aEnd, 0 };
 }
 
 // FrameParser::Header
@@ -790,7 +804,7 @@ FrameParser::FrameHeader::ParseNext(uint8_t c) {
 
 bool
 FrameParser::FrameHeader::IsValid(int aPos) const {
-  if (IsValid()) {
+  if (aPos >= SIZE) {
     return true;
   }
   if (aPos == frame_header::SYNC1) {
@@ -802,7 +816,8 @@ FrameParser::FrameHeader::IsValid(int aPos) const {
            RawLayer() != 0;
   }
   if (aPos == frame_header::BITRATE_SAMPLERATE_PADDING_PRIVATE) {
-    return RawBitrate() != 0xF;
+    return RawBitrate() != 0xF && RawBitrate() != 0 &&
+           RawSampleRate() != 3;
   }
   return true;
 }
@@ -1017,6 +1032,14 @@ ID3Parser::ID3Header::Size() const {
   return mSize;
 }
 
+uint8_t
+ID3Parser::ID3Header::FooterSize() const {
+  if (Flags() & (1 << 4)) {
+    return SIZE;
+  }
+  return 0;
+}
+
 bool
 ID3Parser::ID3Header::ParseNext(uint8_t c) {
   if (!Update(c)) {
@@ -1030,7 +1053,7 @@ ID3Parser::ID3Header::ParseNext(uint8_t c) {
 
 bool
 ID3Parser::ID3Header::IsValid(int aPos) const {
-  if (IsValid()) {
+  if (aPos >= SIZE) {
     return true;
   }
   const uint8_t c = mRaw[aPos];

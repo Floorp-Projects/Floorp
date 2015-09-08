@@ -375,20 +375,26 @@ MacOSFontEntry::GetFontTable(uint32_t aTag)
 bool
 MacOSFontEntry::HasFontTable(uint32_t aTableTag)
 {
-    nsAutoreleasePool localPool;
+    if (mAvailableTables.Count() == 0) {
+        nsAutoreleasePool localPool;
 
-    CGFontRef fontRef = GetFontRef();
-    if (!fontRef) {
-        return false;
+        CGFontRef fontRef = GetFontRef();
+        if (!fontRef) {
+            return false;
+        }
+        CFArrayRef tags = ::CGFontCopyTableTags(fontRef);
+        if (!tags) {
+            return false;
+        }
+        int numTags = (int) ::CFArrayGetCount(tags);
+        for (int t = 0; t < numTags; t++) {
+            uint32_t tag = (uint32_t)(uintptr_t)::CFArrayGetValueAtIndex(tags, t);
+            mAvailableTables.PutEntry(tag);
+        }
+        ::CFRelease(tags);
     }
 
-    CFDataRef tableData = ::CGFontCopyTableForTag(fontRef, aTableTag);
-    if (!tableData) {
-        return false;
-    }
-
-    ::CFRelease(tableData);
-    return true;
+    return mAvailableTables.GetEntry(aTableTag);
 }
 
 void

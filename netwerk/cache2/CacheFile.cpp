@@ -183,6 +183,7 @@ CacheFile::CacheFile()
   , mOpeningFile(false)
   , mReady(false)
   , mMemoryOnly(false)
+  , mSkipSizeCheck(false)
   , mOpenAsMemoryOnly(false)
   , mPriority(false)
   , mDataAccessed(false)
@@ -212,6 +213,7 @@ nsresult
 CacheFile::Init(const nsACString &aKey,
                 bool aCreateNew,
                 bool aMemoryOnly,
+                bool aSkipSizeCheck,
                 bool aPriority,
                 CacheFileListener *aCallback)
 {
@@ -222,6 +224,7 @@ CacheFile::Init(const nsACString &aKey,
 
   mKey = aKey;
   mOpenAsMemoryOnly = mMemoryOnly = aMemoryOnly;
+  mSkipSizeCheck = aSkipSizeCheck;
   mPriority = aPriority;
 
   // Some consumers (at least nsHTTPCompressConv) assume that Read() can read

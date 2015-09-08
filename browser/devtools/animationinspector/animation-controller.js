@@ -23,6 +23,7 @@ loader.lazyRequireGetter(this, "AnimationsFront",
 
 const STRINGS_URI = "chrome://browser/locale/devtools/animationinspector.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
+const V3_UI_PREF = "devtools.inspector.animationInspectorV3";
 
 // Global toolbox/inspector, set when startup is called.
 let gToolbox, gInspector;
@@ -76,19 +77,20 @@ function destroy() {
  * @return {Object} An object with boolean properties.
  */
 let getServerTraits = Task.async(function*(target) {
-  let config = [{
-    name: "hasToggleAll", actor: "animations", method: "toggleAll"
-  }, {
-    name: "hasSetCurrentTime", actor: "animationplayer", method: "setCurrentTime"
-  }, {
-    name: "hasMutationEvents", actor: "animations", method: "stopAnimationPlayerUpdates"
-  }, {
-    name: "hasSetPlaybackRate", actor: "animationplayer", method: "setPlaybackRate"
-  }, {
-    name: "hasTargetNode", actor: "domwalker", method: "getNodeFromActor"
-  }, {
-    name: "hasSetCurrentTimes", actor: "animations", method: "setCurrentTimes"
-  }];
+  let config = [
+    { name: "hasToggleAll", actor: "animations",
+      method: "toggleAll" },
+    { name: "hasSetCurrentTime", actor: "animationplayer",
+      method: "setCurrentTime" },
+    { name: "hasMutationEvents", actor: "animations",
+     method: "stopAnimationPlayerUpdates" },
+    { name: "hasSetPlaybackRate", actor: "animationplayer",
+      method: "setPlaybackRate" },
+    { name: "hasTargetNode", actor: "domwalker",
+      method: "getNodeFromActor" },
+    { name: "hasSetCurrentTimes", actor: "animations",
+      method: "setCurrentTimes" }
+  ];
 
   let traits = {};
   for (let {name, actor, method} of config) {
@@ -96,7 +98,7 @@ let getServerTraits = Task.async(function*(target) {
   }
 
   // Special pref-based UI trait.
-  traits.isNewUI = Services.prefs.getBoolPref("devtools.inspector.animationInspectorV3");
+  traits.isNewUI = Services.prefs.getBoolPref(V3_UI_PREF);
 
   return traits;
 });
@@ -114,7 +116,8 @@ let getServerTraits = Task.async(function*(target) {
  *
  * Usage example:
  *
- * AnimationsController.on(AnimationsController.PLAYERS_UPDATED_EVENT, onPlayers);
+ * AnimationsController.on(AnimationsController.PLAYERS_UPDATED_EVENT,
+ *                         onPlayers);
  * function onPlayers() {
  *   for (let player of AnimationsController.animationPlayers) {
  *     // do something with player
@@ -126,7 +129,8 @@ let AnimationsController = {
 
   initialize: Task.async(function*() {
     if (this.initialized) {
-      return this.initialized.promise;
+      yield this.initialized.promise;
+      return;
     }
     this.initialized = promise.defer();
 
@@ -157,7 +161,8 @@ let AnimationsController = {
     }
 
     if (this.destroyed) {
-      return this.destroyed.promise;
+      yield this.destroyed.promise;
+      return;
     }
     this.destroyed = promise.defer();
 
@@ -272,7 +277,8 @@ let AnimationsController = {
   refreshAnimationPlayers: Task.async(function*(nodeFront) {
     yield this.destroyAnimationPlayers();
 
-    this.animationPlayers = yield this.animationsFront.getAnimationPlayersForNode(nodeFront);
+    this.animationPlayers = yield this.animationsFront
+                                      .getAnimationPlayersForNode(nodeFront);
     this.startAllAutoRefresh();
 
     // Start listening for animation mutations only after the first method call
@@ -307,6 +313,25 @@ let AnimationsController = {
     // Let the UI know the list has been updated.
     this.emit(this.PLAYERS_UPDATED_EVENT, this.animationPlayers);
   }),
+
+  /**
+   * Get the latest known current time of document.timeline.
+   * This value is sent along with all AnimationPlayerActors' states, but it
+   * isn't updated after that, so this function loops over all know animations
+   * to find the highest value.
+   * @return {Number|Boolean} False is returned if this server version doesn't
+   * provide document's current time.
+   */
+  get documentCurrentTime() {
+    let time = 0;
+    for (let {state} of this.animationPlayers) {
+      if (!state.documentCurrentTime) {
+        return false;
+      }
+      time = Math.max(time, state.documentCurrentTime);
+    }
+    return time;
+  },
 
   startAllAutoRefresh: function() {
     if (this.traits.isNewUI) {

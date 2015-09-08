@@ -75,12 +75,13 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
  * This is thrown by |TelemetryStorage.loadPingFile| when reading the ping
  * from the disk fails.
  */
-function PingReadError(message="Error reading the ping file") {
+function PingReadError(message="Error reading the ping file", becauseNoSuchFile = false) {
   Error.call(this, message);
   let error = new Error();
   this.name = "PingReadError";
   this.message = message;
   this.stack = error.stack;
+  this.becauseNoSuchFile = becauseNoSuchFile;
 }
 PingReadError.prototype = Object.create(Error.prototype);
 PingReadError.prototype.constructor = PingReadError;
@@ -1445,7 +1446,7 @@ let TelemetryStorageImpl = {
       array = yield OS.File.read(aFilePath, options);
     } catch(e) {
       this._log.trace("loadPingfile - unreadable ping " + aFilePath, e);
-      throw new PingReadError(e.message);
+      throw new PingReadError(e.message, e.becauseNoSuchFile);
     }
 
     let decoder = new TextDecoder();

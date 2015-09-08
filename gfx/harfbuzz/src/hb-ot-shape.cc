@@ -302,15 +302,16 @@ hb_ensure_native_direction (hb_buffer_t *buffer)
     {
       if (likely (!HB_UNICODE_GENERAL_CATEGORY_IS_MARK (_hb_glyph_info_get_general_category (&info[i]))))
       {
-	buffer->reverse_range (base, i);
 	if (buffer->cluster_level == HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS)
 	  buffer->merge_clusters (base, i);
+	buffer->reverse_range (base, i);
+
 	base = i;
       }
     }
-    buffer->reverse_range (base, count);
     if (buffer->cluster_level == HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS)
       buffer->merge_clusters (base, count);
+    buffer->reverse_range (base, count);
 
     buffer->reverse ();
 
@@ -513,6 +514,8 @@ hb_ot_map_glyphs_fast (hb_buffer_t  *buffer)
   hb_glyph_info_t *info = buffer->info;
   for (unsigned int i = 0; i < count; i++)
     info[i].codepoint = info[i].glyph_index();
+
+  buffer->content_type = HB_BUFFER_CONTENT_TYPE_GLYPHS;
 }
 
 static inline void

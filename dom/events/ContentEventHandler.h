@@ -39,6 +39,9 @@ public:
 
   explicit ContentEventHandler(nsPresContext* aPresContext);
 
+  // Handle aEvent in the current process.
+  nsresult HandleQueryContentEvent(WidgetQueryContentEvent* aEvent);
+
   // NS_QUERY_SELECTED_TEXT event handler
   nsresult OnQuerySelectedText(WidgetQueryContentEvent* aEvent);
   // NS_QUERY_TEXT_CONTENT event handler

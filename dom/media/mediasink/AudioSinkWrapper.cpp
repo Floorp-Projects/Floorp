@@ -34,9 +34,9 @@ AudioSinkWrapper::SetPlaybackParams(const PlaybackParams& aParams)
 {
   AssertOwnerThread();
   if (mAudioSink) {
-    mAudioSink->SetVolume(aParams.volume);
-    mAudioSink->SetPlaybackRate(aParams.playbackRate);
-    mAudioSink->SetPreservesPitch(aParams.preservesPitch);
+    mAudioSink->SetVolume(aParams.mVolume);
+    mAudioSink->SetPlaybackRate(aParams.mPlaybackRate);
+    mAudioSink->SetPreservesPitch(aParams.mPreservesPitch);
   }
   mParams = aParams;
 }
@@ -64,11 +64,41 @@ AudioSinkWrapper::GetEndTime(TrackType aType) const
 }
 
 int64_t
-AudioSinkWrapper::GetPosition() const
+AudioSinkWrapper::GetVideoPosition(TimeStamp aNow) const
+{
+  AssertOwnerThread();
+  MOZ_ASSERT(!mPlayStartTime.IsNull());
+  // Time elapsed since we started playing.
+  int64_t delta = (aNow - mPlayStartTime).ToMicroseconds();
+  // Take playback rate into account.
+  return mPlayDuration + delta * mParams.mPlaybackRate;
+}
+
+int64_t
+AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) const
 {
   AssertOwnerThread();
   MOZ_ASSERT(mIsStarted, "Must be called after playback starts.");
-  return mAudioSink->GetPosition();
+
+  int64_t pos = -1;
+  TimeStamp t = TimeStamp::Now();
+
+  if (!mAudioEnded) {
+    // Rely on the audio sink to report playback position when it is not ended.
+    pos = mAudioSink->GetPosition();
+  } else if (!mPlayStartTime.IsNull()) {
+    // Calculate playback position using system clock if we are still playing.
+    pos = GetVideoPosition(t);
+  } else {
+    // Return how long we've played if we are not playing.
+    pos = mPlayDuration;
+  }
+
+  if (aTimeStamp) {
+    *aTimeStamp = t;
+  }
+
+  return pos;
 }
 
 bool
@@ -82,7 +112,7 @@ void
 AudioSinkWrapper::SetVolume(double aVolume)
 {
   AssertOwnerThread();
-  mParams.volume = aVolume;
+  mParams.mVolume = aVolume;
   if (mAudioSink) {
     mAudioSink->SetVolume(aVolume);
   }
@@ -92,17 +122,26 @@ void
 AudioSinkWrapper::SetPlaybackRate(double aPlaybackRate)
 {
   AssertOwnerThread();
-  mParams.playbackRate = aPlaybackRate;
-  if (mAudioSink) {
+  mParams.mPlaybackRate = aPlaybackRate;
+  if (!mAudioEnded) {
+    // Pass the playback rate to the audio sink. The underlying AudioStream
+    // will handle playback rate changes and report correct audio position.
     mAudioSink->SetPlaybackRate(aPlaybackRate);
+  } else if (!mPlayStartTime.IsNull()) {
+    // Adjust playback duration and start time when we are still playing.
+    TimeStamp now = TimeStamp::Now();
+    mPlayDuration = GetVideoPosition(now);
+    mPlayStartTime = now;
   }
+  // Do nothing when not playing. Changes in playback rate will be taken into
+  // account by GetVideoPosition().
 }
 
 void
 AudioSinkWrapper::SetPreservesPitch(bool aPreservesPitch)
 {
   AssertOwnerThread();
-  mParams.preservesPitch = aPreservesPitch;
+  mParams.mPreservesPitch = aPreservesPitch;
   if (mAudioSink) {
     mAudioSink->SetPreservesPitch(aPreservesPitch);
   }
@@ -121,6 +160,17 @@ AudioSinkWrapper::SetPlaying(bool aPlaying)
   if (mAudioSink) {
     mAudioSink->SetPlaying(aPlaying);
   }
+
+  if (aPlaying) {
+    MOZ_ASSERT(mPlayStartTime.IsNull());
+    mPlayStartTime = TimeStamp::Now();
+  } else {
+    // Remember how long we've played.
+    mPlayDuration = GetPosition();
+    // mPlayStartTime must be updated later since GetPosition()
+    // depends on the value of mPlayStartTime.
+    mPlayStartTime = TimeStamp();
+  }
 }
 
 void
@@ -130,10 +180,22 @@ AudioSinkWrapper::Start(int64_t aStartTime, const MediaInfo& aInfo)
   MOZ_ASSERT(!mIsStarted, "playback already started.");
 
   mIsStarted = true;
+  mPlayDuration = aStartTime;
+  mPlayStartTime = TimeStamp::Now();
 
-  mAudioSink = mCreator->Create();
-  mEndPromise = mAudioSink->Init();
-  SetPlaybackParams(mParams);
+  // no audio is equivalent to audio ended before video starts.
+  mAudioEnded = !aInfo.HasAudio();
+
+  if (aInfo.HasAudio()) {
+    mAudioSink = mCreator->Create();
+    mEndPromise = mAudioSink->Init();
+    SetPlaybackParams(mParams);
+
+    mAudioSinkPromise.Begin(mEndPromise->Then(
+      mOwnerThread.get(), __func__, this,
+      &AudioSinkWrapper::OnAudioEnded,
+      &AudioSinkWrapper::OnAudioEnded));
+  }
 }
 
 void
@@ -143,9 +205,14 @@ AudioSinkWrapper::Stop()
   MOZ_ASSERT(mIsStarted, "playback not started.");
 
   mIsStarted = false;
-  mAudioSink->Shutdown();
-  mAudioSink = nullptr;
-  mEndPromise = nullptr;
+  mAudioEnded = true;
+
+  if (mAudioSink) {
+    mAudioSinkPromise.DisconnectIfExists();
+    mAudioSink->Shutdown();
+    mAudioSink = nullptr;
+    mEndPromise = nullptr;
+  }
 }
 
 bool
@@ -153,6 +220,18 @@ AudioSinkWrapper::IsStarted() const
 {
   AssertOwnerThread();
   return mIsStarted;
+}
+
+void
+AudioSinkWrapper::OnAudioEnded()
+{
+  AssertOwnerThread();
+  mAudioSinkPromise.Complete();
+  mPlayDuration = GetPosition();
+  if (!mPlayStartTime.IsNull()) {
+    mPlayStartTime = TimeStamp::Now();
+  }
+  mAudioEnded = true;
 }
 
 } // namespace media

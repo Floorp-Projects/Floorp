@@ -496,9 +496,6 @@
 #ifdef XP_MACOSX
 @RESPATH@/browser/components/SafariProfileMigrator.js
 #endif
-#ifdef MOZ_ENABLE_DBUS
-@RESPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
-#endif
 #ifdef MOZ_ENABLE_GNOME_COMPONENT
 @RESPATH@/components/@DLL_PREFIX@mozgnome@DLL_SUFFIX@
 #endif

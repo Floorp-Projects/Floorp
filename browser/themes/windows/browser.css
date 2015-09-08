@@ -1230,10 +1230,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   border: 1px solid ThreeDShadow;
 }
 
-#urlbar {
-  -moz-padding-end: 2px;
-}
-
 /* overlap the urlbar's border */
 #PopupAutoCompleteRichResult {
   margin-top: -1px;
@@ -1267,7 +1263,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
     .searchbar-textbox:not(:-moz-lwtheme) {
       border-color: hsl(0,0%,90%);
       padding: 1px;
-      -moz-padding-end: 3px;
       transition-property: border-color, box-shadow;
       transition-duration: .1s;
     }

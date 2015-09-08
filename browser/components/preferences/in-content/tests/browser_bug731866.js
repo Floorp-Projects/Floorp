@@ -19,10 +19,11 @@ function checkElements(expectedPane) {
       continue;
     }
     let attributeValue = element.getAttribute("data-category");
+    let suffix = " (id=" + element.id + ")";
     if (attributeValue == "pane" + expectedPane) {
-      is_element_visible(element, expectedPane + " elements should be visible");
+      is_element_visible(element, expectedPane + " elements should be visible" + suffix);
     } else {
-      is_element_hidden(element, "Elements not in " + expectedPane + " should be hidden");
+      is_element_hidden(element, "Elements not in " + expectedPane + " should be hidden" + suffix);
     }
   }
 }
