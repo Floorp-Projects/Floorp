@@ -69,7 +69,7 @@ describe("loop.store.RoomStore", function () {
     var defaultStoreState = {
       error: undefined,
       pendingCreation: false,
-      pendingInitialRetrieval: false,
+      pendingInitialRetrieval: true,
       rooms: [],
       activeRoom: {}
     };

@@ -23,6 +23,7 @@
 #include "BluetoothGattManager.h"
 #include "BluetoothHfpManager.h"
 #include "BluetoothHidManager.h"
+#include "BluetoothMapSmsManager.h"
 #include "BluetoothOppManager.h"
 #include "BluetoothPbapManager.h"
 #include "BluetoothProfileController.h"
@@ -301,6 +302,7 @@ BluetoothServiceBluedroid::StopInternal(BluetoothReplyRunnable* aRunnable)
     BluetoothA2dpManager::Get(),
     BluetoothOppManager::Get(),
     BluetoothPbapManager::Get(),
+    BluetoothMapSmsManager::Get(),
     BluetoothHidManager::Get()
   };
 
@@ -1519,6 +1521,11 @@ BluetoothServiceBluedroid::AdapterStateChangedNotification(bool aState)
     BluetoothPbapManager* pbap = BluetoothPbapManager::Get();
     if (!pbap || !pbap->Listen()) {
       BT_LOGR("Fail to start BluetoothPbapManager listening");
+    }
+
+    BluetoothMapSmsManager* map = BluetoothMapSmsManager::Get();
+    if (!map || !map->Listen()) {
+      BT_LOGR("Fail to start BluetoothMapSmsManager listening");
     }
   }
 

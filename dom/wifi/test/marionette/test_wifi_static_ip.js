@@ -14,6 +14,8 @@ const STATIC_IP_CONFIG = {
   dns2: "8.8.4.4",
 };
 
+const TESTING_HOSTAPD = [{ ssid: 'ap0' }];
+
 function testAssociateWithStaticIp(aNetwork, aStaticIpConfig) {
   return gTestSuite.setStaticIpMode(aNetwork, aStaticIpConfig)
     .then(() => gTestSuite.testAssociate(aNetwork))
@@ -32,10 +34,32 @@ function testAssociateWithStaticIp(aNetwork, aStaticIpConfig) {
     });
 }
 
+function findDesireNetwork(aNetworks) {
+  let i = gTestSuite.getFirstIndexBySsid(TESTING_HOSTAPD[0].ssid, aNetworks);
+
+  if (-1 !== i) {
+    return aNetworks[i];
+  }
+
+  return aNetworks[0];
+}
+
 // Start test.
-gTestSuite.doTest(function() {
+gTestSuite.doTestWithoutStockAp(function() {
   return gTestSuite.ensureWifiEnabled(true)
+
+    // Start custom hostapd for testing.
+    .then(() => gTestSuite.startHostapds(TESTING_HOSTAPD))
+    .then(() => gTestSuite.verifyNumOfProcesses('hostapd',
+                                                TESTING_HOSTAPD.length))
+
+    // Perform a wifi scan, and then run the static ip test
     .then(() => gTestSuite.requestWifiScan())
-    .then((aNetworks) => testAssociateWithStaticIp(aNetworks[0],
-                                                   STATIC_IP_CONFIG));
+    .then((aNetworks) => findDesireNetwork(aNetworks))
+    .then((aNetwork) => testAssociateWithStaticIp(aNetwork,
+                                                   STATIC_IP_CONFIG))
+
+    // Kill running hostapd.
+    .then(gTestSuite.killAllHostapd)
+    .then(() => gTestSuite.verifyNumOfProcesses('hostapd', 0));
 });
