@@ -1556,9 +1556,7 @@ CssRuleView.prototype = {
     // Reselect the currently selected element
     let refreshOnPrefs = [PREF_UA_STYLES, PREF_DEFAULT_COLOR_UNIT];
     if (refreshOnPrefs.indexOf(pref) > -1) {
-      let element = this._viewedElement;
-      this._viewedElement = null;
-      this.selectElement(element);
+      this.selectElement(this._viewedElement, true);
     }
   },
 
@@ -1771,9 +1769,12 @@ CssRuleView.prototype = {
    *
    * @param {NodeActor} element
    *        The node whose style rules we'll inspect.
+   * @param {Boolean} allowRefresh
+   *        Update the view even if the element is the same as last time.
    */
-  selectElement: function(element) {
-    if (this._viewedElement === element) {
+  selectElement: function(element, allowRefresh = false) {
+    let refresh = (this._viewedElement === element);
+    if (refresh && !allowRefresh) {
       return promise.resolve(undefined);
     }
 
@@ -1781,13 +1782,14 @@ CssRuleView.prototype = {
       this.popup.hidePopup();
     }
 
-    this.clear();
-    this.clearPseudoClassPanel();
-
+    this.clear(false);
     this._viewedElement = element;
+
+    this.clearPseudoClassPanel();
     this.refreshAddRuleButtonState();
 
     if (!this._viewedElement) {
+      this._clearRules();
       this._showEmpty();
       this.refreshPseudoClassPanel();
       return promise.resolve(undefined);
@@ -1802,11 +1804,17 @@ CssRuleView.prototype = {
       }
     }).then(() => {
       if (this._viewedElement === element) {
+        if (!refresh) {
+          this.element.scrollTop = 0;
+        }
         this._elementStyle.onChanged = () => {
           this._changed();
         };
       }
-    }).then(null, console.error);
+    }).then(null, e => {
+      this._clearRules();
+      console.error(e);
+    });
   },
 
   /**
@@ -1827,7 +1835,7 @@ CssRuleView.prototype = {
     }
 
     return promise.all(promises).then(() => {
-      return this._populate(true);
+      return this._populate();
     });
   },
 
@@ -1870,16 +1878,14 @@ CssRuleView.prototype = {
     }
   },
 
-  _populate: function(clearRules = false) {
+  _populate: function() {
     let elementStyle = this._elementStyle;
     return this._elementStyle.populate().then(() => {
       if (this._elementStyle !== elementStyle || this.isDestroyed) {
         return;
       }
 
-      if (clearRules) {
-        this._clearRules();
-      }
+      this._clearRules();
       this._createEditors();
 
       this.refreshPseudoClassPanel();
@@ -1907,18 +1913,18 @@ CssRuleView.prototype = {
    * Clear the rules.
    */
   _clearRules: function() {
-    while (this.element.hasChildNodes()) {
-      this.element.removeChild(this.element.lastChild);
-    }
+    this.element.innerHTML = "";
   },
 
   /**
    * Clear the rule view.
    */
-  clear: function() {
+  clear: function(clearDom = true) {
     this.lastSelectorIcon = null;
 
-    this._clearRules();
+    if (clearDom) {
+      this._clearRules();
+    }
     this._viewedElement = null;
 
     if (this._elementStyle) {
