@@ -59,3 +59,13 @@ if CONFIG['HOST_OS_ARCH'] == 'WINNT':
 
 # XXX: We should fix these warnings.
 ALLOW_COMPILER_WARNINGS = True
+
+HOST_CFLAGS += [
+    #TODO: bug 1200360 - don't pass make variables here
+    '$(DEFINES)',
+]
+
+HOST_DEFINES['NO_SIGN_VERIFY'] = True
+
+if CONFIG['CROSS_COMPILE'] and CONFIG['HOST_NSPR_MDCPUCFG']:
+    HOST_DEFINES['MDCPUCFG'] = CONFIG['HOST_NSPR_MDCPUCFG']
