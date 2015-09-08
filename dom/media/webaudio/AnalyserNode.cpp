@@ -65,6 +65,19 @@ public:
   {
     *aOutput = aInput;
 
+    if (aInput.IsNull()) {
+      // If AnalyserNode::mChunks has only null chunks, then there is no need
+      // to send further null chunks.
+      if (mChunksToProcess == 0) {
+        return;
+      }
+
+      --mChunksToProcess;
+    } else {
+      // This many null chunks will be required to empty AnalyserNode::mChunks.
+      mChunksToProcess = CHUNK_COUNT;
+    }
+
     nsRefPtr<TransferBuffer> transfer =
       new TransferBuffer(aStream, aInput.AsAudioChunk());
     NS_DispatchToMainThread(transfer);
@@ -74,6 +87,8 @@ public:
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
+
+  size_t mChunksToProcess = 0;
 };
 
 AnalyserNode::AnalyserNode(AudioContext* aContext)
