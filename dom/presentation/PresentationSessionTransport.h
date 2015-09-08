@@ -73,9 +73,15 @@ private:
 
   void SetReadyState(ReadyState aReadyState);
 
+  bool IsReadyToNotifyData()
+  {
+    return mDataNotificationEnabled && mReadyState == OPEN;
+  }
+
   ReadyState mReadyState;
   bool mAsyncCopierActive;
   nsresult mCloseStatus;
+  bool mDataNotificationEnabled;
 
   // Raw socket streams
   nsCOMPtr<nsISocketTransport> mTransport;
