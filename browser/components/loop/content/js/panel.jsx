@@ -809,6 +809,21 @@ loop.panel = (function(_, mozL10n) {
         mozL10n.get("display_name_guest");
     },
 
+    /**
+     * Let the user know we're loading rooms
+     * @returns {Object} React render
+     */
+    _renderLoadingRoomsView: function() {
+      return (
+        <div className="room-list">
+          <div className="room-list-loading">
+            <img src="loop/shared/img/animated-spinner.svg" />
+          </div>
+          {this._renderNewRoomButton()}
+        </div>
+      );
+    },
+
     _renderNoRoomsView: function() {
       return (
         <div className="room-list">
@@ -839,6 +854,10 @@ loop.panel = (function(_, mozL10n) {
       if (this.state.error) {
         // XXX Better end user reporting of errors.
         console.error("RoomList error", this.state.error);
+      }
+
+      if (this.state.pendingInitialRetrieval) {
+        return this._renderLoadingRoomsView();
       }
 
       if (!this.state.rooms.length) {

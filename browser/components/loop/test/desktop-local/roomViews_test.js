@@ -470,8 +470,51 @@ describe("loop.roomViews", function () {
 
           view = mountTestComponent();
 
+          expect(TestUtils.findRenderedComponentWithType(view,
+            loop.roomViews.DesktopRoomInvitationView).getDOMNode()).to.not.eql(null);
+        });
+
+      it("should render the DesktopRoomInvitationView if roomState is `JOINED` with just owner",
+        function() {
+          activeRoomStore.setStoreState({
+            participants: [{owner: true}],
+            roomState: ROOM_STATES.JOINED
+          });
+
+          view = mountTestComponent();
+
+          expect(TestUtils.findRenderedComponentWithType(view,
+            loop.roomViews.DesktopRoomInvitationView).getDOMNode()).to.not.eql(null);
+        });
+
+      it("should render the DesktopRoomConversationView if roomState is `JOINED` with remote participant",
+        function() {
+          activeRoomStore.setStoreState({
+            participants: [{}],
+            roomState: ROOM_STATES.JOINED
+          });
+
+          view = mountTestComponent();
+
           TestUtils.findRenderedComponentWithType(view,
-            loop.roomViews.DesktopRoomInvitationView);
+            loop.roomViews.DesktopRoomConversationView);
+          expect(TestUtils.findRenderedComponentWithType(view,
+            loop.roomViews.DesktopRoomInvitationView).getDOMNode()).to.eql(null);
+        });
+
+      it("should render the DesktopRoomConversationView if roomState is `JOINED` with participants",
+        function() {
+          activeRoomStore.setStoreState({
+            participants: [{owner: true}, {}],
+            roomState: ROOM_STATES.JOINED
+          });
+
+          view = mountTestComponent();
+
+          TestUtils.findRenderedComponentWithType(view,
+            loop.roomViews.DesktopRoomConversationView);
+          expect(TestUtils.findRenderedComponentWithType(view,
+            loop.roomViews.DesktopRoomInvitationView).getDOMNode()).to.eql(null);
         });
 
       it("should render the DesktopRoomConversationView if roomState is `HAS_PARTICIPANTS`",
@@ -482,6 +525,8 @@ describe("loop.roomViews", function () {
 
           TestUtils.findRenderedComponentWithType(view,
             loop.roomViews.DesktopRoomConversationView);
+          expect(TestUtils.findRenderedComponentWithType(view,
+            loop.roomViews.DesktopRoomInvitationView).getDOMNode()).to.eql(null);
         });
 
       it("should call onCallTerminated when the call ended", function() {
