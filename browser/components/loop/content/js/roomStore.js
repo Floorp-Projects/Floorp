@@ -114,7 +114,7 @@ loop.store = loop.store || {};
         activeRoom: this.activeRoomStore ? this.activeRoomStore.getStoreState() : {},
         error: null,
         pendingCreation: false,
-        pendingInitialRetrieval: false,
+        pendingInitialRetrieval: true,
         rooms: [],
         savingContext: false
       };

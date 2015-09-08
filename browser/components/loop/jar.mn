@@ -94,6 +94,7 @@ browser.jar:
   content/browser/loop/shared/img/empty_contacts.svg            (content/shared/img/empty_contacts.svg)
   content/browser/loop/shared/img/empty_conversations.svg       (content/shared/img/empty_conversations.svg)
   content/browser/loop/shared/img/empty_search.svg              (content/shared/img/empty_search.svg)
+  content/browser/loop/shared/img/animated-spinner.svg          (content/shared/img/animated-spinner.svg)
   content/browser/loop/shared/img/avatars.svg                   (content/shared/img/avatars.svg)
   content/browser/loop/shared/img/firefox-avatar.svg            (content/shared/img/firefox-avatar.svg)
 

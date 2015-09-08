@@ -340,7 +340,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               let engine = Services.search.getEngineByName(action.params.engineName);
               let query = action.params.searchSuggestion ||
                           action.params.searchQuery;
-              let submission = engine.getSubmission(query);
+              let submission = engine.getSubmission(query, null, "keyword");
 
               url = submission.uri.spec;
               postData = submission.postData;
@@ -1390,7 +1390,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   let engine = Services.search.getEngineByName(action.params.engineName);
                   let query = action.params.searchSuggestion ||
                               action.params.searchQuery;
-                  let submission = engine.getSubmission(query);
+                  let submission = engine.getSubmission(query, null, "keyword");
                   url = submission.uri.spec;
                   options.postData = submission.postData;
                   break;
