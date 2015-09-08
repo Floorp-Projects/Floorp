@@ -231,7 +231,7 @@ MediaStreamGraphImpl::GraphTimeToStreamTimeWithBlocking(MediaStream* aStream,
 
 GraphTime
 MediaStreamGraphImpl::StreamTimeToGraphTimeWithBlocking(MediaStream* aStream,
-    StreamTime aTime, uint32_t aFlags)
+    StreamTime aTime)
 {
   // Avoid overflows
   if (aTime >= STREAM_TIME_MAX) {
@@ -241,9 +241,7 @@ MediaStreamGraphImpl::StreamTimeToGraphTimeWithBlocking(MediaStream* aStream,
   // Assume we're unblocked from 0..mStartBlocking, blocked from mStartBlocking
   // to mStateComputedTime, and unblocked from mStateComputedTime..forever
   GraphTime timeAssumingNoBlocking = aTime + aStream->mBufferStartTime;
-  if (timeAssumingNoBlocking < aStream->mStartBlocking ||
-      (timeAssumingNoBlocking == aStream->mStartBlocking &&
-             !(aFlags & INCLUDE_TRAILING_BLOCKED_INTERVAL))) {
+  if (timeAssumingNoBlocking <= aStream->mStartBlocking) {
     return timeAssumingNoBlocking;
   }
   // XXX we generally shouldn't need to call this for aTime >= mStartBlocking!
@@ -835,8 +833,7 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
     // its start time.  These times only differ in the case of multiple
     // tracks.
     GraphTime frameTime =
-      StreamTimeToGraphTimeWithBlocking(aStream, frameBufferTime,
-                            INCLUDE_TRAILING_BLOCKED_INTERVAL);
+      StreamTimeToGraphTimeWithBlocking(aStream, frameBufferTime);
     TimeStamp targetTime = currentTimeStamp +
       TimeDuration::FromSeconds(MediaTimeToSeconds(frameTime - IterationEnd()));
 
@@ -1715,7 +1712,7 @@ MediaStream::GraphTimeToStreamTimeWithBlocking(GraphTime aTime)
 GraphTime
 MediaStream::StreamTimeToGraphTimeWithBlocking(StreamTime aTime)
 {
-  return GraphImpl()->StreamTimeToGraphTimeWithBlocking(this, aTime, 0);
+  return GraphImpl()->StreamTimeToGraphTimeWithBlocking(this, aTime);
 }
 
 void

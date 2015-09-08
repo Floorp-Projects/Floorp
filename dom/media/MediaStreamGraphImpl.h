@@ -324,22 +324,14 @@ public:
    * account the time during which aStream is scheduled to be blocked.
    */
   StreamTime GraphTimeToStreamTimeWithBlocking(MediaStream* aStream, GraphTime aTime);
-  enum
-  {
-    INCLUDE_TRAILING_BLOCKED_INTERVAL = 0x01
-  };
-
   /**
    * Given a stream time aTime, convert it to a graph time taking into
    * account the time during which aStream is scheduled to be blocked.
    * aTime must be <= mStateComputedTime since blocking decisions
    * are only known up to that point.
-   * If aTime is exactly at the start of a blocked interval, then the blocked
-   * interval is included in the time returned if and only if
-   * aFlags includes INCLUDE_TRAILING_BLOCKED_INTERVAL.
    */
-  GraphTime StreamTimeToGraphTimeWithBlocking(MediaStream* aStream, StreamTime aTime,
-                                  uint32_t aFlags = 0);
+  GraphTime StreamTimeToGraphTimeWithBlocking(MediaStream* aStream, StreamTime aTime);
+
   /**
    * Call NotifyHaveCurrentData on aStream's listeners.
    */
