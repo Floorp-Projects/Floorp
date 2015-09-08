@@ -57,7 +57,7 @@ function test() {
 
     let msg = [...result.matched][0];
     ok(msg, "message element found");
-    let locationNode = msg.querySelector(".message-location");
+    let locationNode = msg.querySelector(".message > .message-location");
     ok(locationNode, "message location element found");
 
     let title = locationNode.getAttribute("title");
@@ -78,7 +78,7 @@ function test() {
                                browserconsole.iframeWindow);
 
     info("wait for click on locationNode");
-    yield clickPromise;
+    yield clickPromise.promise;
 
     info("view-source url: " + URL);
     ok(URL, "we have some source URL after the click");
