@@ -406,7 +406,8 @@ public:
 NS_IMPL_ISUPPORTS(D3D9SharedTextureReporter, nsIMemoryReporter)
 
 gfxWindowsPlatform::gfxWindowsPlatform()
-  : mD3D11DeviceInitialized(false)
+  : mUseDirectWrite(false)
+  , mD3D11DeviceInitialized(false)
   , mIsWARP(false)
   , mHasDeviceReset(false)
   , mDoesD3D11TextureSharingWork(false)
@@ -508,7 +509,7 @@ gfxWindowsPlatform::UpdateRenderMode()
 
     bool isVistaOrHigher = IsVistaOrLater();
 
-    mUseDirectWrite = Preferences::GetBool("gfx.font_rendering.directwrite.enabled", false);
+    mUseDirectWrite = false;
 
 #ifdef CAIRO_HAS_D2D_SURFACE
     bool d2dDisabled = false;
