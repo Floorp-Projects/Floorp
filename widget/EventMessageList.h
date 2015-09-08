@@ -264,7 +264,7 @@ NS_EVENT_MESSAGE(eTimeUpdate,           eMediaEventFirst + 15)
 NS_EVENT_MESSAGE(eEnded,                eMediaEventFirst + 16)
 NS_EVENT_MESSAGE(eRateChange,           eMediaEventFirst + 17)
 NS_EVENT_MESSAGE(eDurationChange,       eMediaEventFirst + 18)
-NS_EVENT_MESSAGE(NS_VOLUMECHANGE,       eMediaEventFirst + 19)
+NS_EVENT_MESSAGE(eVolumeChange,         eMediaEventFirst + 19)
 
 // paint notification events
 NS_EVENT_MESSAGE(NS_NOTIFYPAINT_START,  3400)

@@ -410,7 +410,7 @@ EVENT(timeupdate,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(volumechange,
-      NS_VOLUMECHANGE,
+      eVolumeChange,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(waiting,
