@@ -10,6 +10,7 @@ EXTRA_JS_MODULES.devtools.webconsole += [
     'console-commands.js',
     'console-output.js',
     'hudservice.js',
+    'network-panel.js',
     'panel.js',
     'webconsole.js',
 ]
