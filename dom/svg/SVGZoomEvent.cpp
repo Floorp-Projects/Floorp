@@ -31,7 +31,7 @@ SVGZoomEvent::SVGZoomEvent(EventTarget* aOwner,
                            nsPresContext* aPresContext,
                            InternalSVGZoomEvent* aEvent)
   : UIEvent(aOwner, aPresContext,
-            aEvent ? aEvent : new InternalSVGZoomEvent(false, NS_SVG_ZOOM))
+            aEvent ? aEvent : new InternalSVGZoomEvent(false, eSVGZoom))
   , mPreviousScale(0)
   , mNewScale(0)
 {

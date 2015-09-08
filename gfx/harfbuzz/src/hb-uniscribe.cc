@@ -486,14 +486,16 @@ struct hb_uniscribe_shaper_font_data_t {
   LOGFONTW log_font;
   HFONT hfont;
   SCRIPT_CACHE script_cache;
+  double x_mult, y_mult; /* From LOGFONT space to HB space. */
 };
 
 static bool
 populate_log_font (LOGFONTW  *lf,
-		   hb_font_t *font)
+		   hb_font_t *font,
+		   unsigned int font_size)
 {
   memset (lf, 0, sizeof (*lf));
-  lf->lfHeight = -font->y_scale;
+  lf->lfHeight = -font_size;
   lf->lfCharSet = DEFAULT_CHARSET;
 
   hb_face_t *face = font->face;
@@ -513,9 +515,19 @@ _hb_uniscribe_shaper_font_data_create (hb_font_t *font)
   if (unlikely (!data))
     return NULL;
 
+  int font_size = font->face->get_upem (); /* Default... */
+  /* No idea if the following is even a good idea. */
+  if (font->y_ppem)
+    font_size = font->y_ppem;
+
+  if (font_size < 0)
+    font_size = -font_size;
+  data->x_mult = (double) font->x_scale / font_size;
+  data->y_mult = (double) font->y_scale / font_size;
+
   data->hdc = GetDC (NULL);
 
-  if (unlikely (!populate_log_font (&data->log_font, font))) {
+  if (unlikely (!populate_log_font (&data->log_font, font, font_size))) {
     DEBUG_MSG (UNISCRIBE, font, "Font populate_log_font() failed");
     _hb_uniscribe_shaper_font_data_destroy (data);
     return NULL;
@@ -994,21 +1006,22 @@ retry:
 
     /* The rest is crap.  Let's store position info there for now. */
     info->mask = advances[i];
-    info->var1.u32 = offsets[i].du;
-    info->var2.u32 = offsets[i].dv;
+    info->var1.i32 = offsets[i].du;
+    info->var2.i32 = offsets[i].dv;
   }
 
   /* Set glyph positions */
   buffer->clear_positions ();
+  double x_mult = font_data->x_mult, y_mult = font_data->y_mult;
   for (unsigned int i = 0; i < glyphs_len; i++)
   {
     hb_glyph_info_t *info = &buffer->info[i];
     hb_glyph_position_t *pos = &buffer->pos[i];
 
     /* TODO vertical */
-    pos->x_advance = info->mask;
-    pos->x_offset = backward ? -info->var1.u32 : info->var1.u32;
-    pos->y_offset = info->var2.u32;
+    pos->x_advance = x_mult * info->mask;
+    pos->x_offset = x_mult * (backward ? -info->var1.i32 : info->var1.i32);
+    pos->y_offset = y_mult * info->var2.i32;
   }
 
   if (backward)

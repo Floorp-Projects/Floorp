@@ -270,17 +270,21 @@ JSCompartment::putWrapper(JSContext* cx, const CrossCompartmentKey& wrapped, con
     MOZ_ASSERT(wrapped.wrapped);
     MOZ_ASSERT_IF(wrapped.kind == CrossCompartmentKey::StringWrapper, wrapper.isString());
     MOZ_ASSERT_IF(wrapped.kind != CrossCompartmentKey::StringWrapper, wrapper.isObject());
-    bool success = crossCompartmentWrappers.put(wrapped, ReadBarriered<Value>(wrapper));
 
     /* There's no point allocating wrappers in the nursery since we will tenure them anyway. */
     MOZ_ASSERT(!IsInsideNursery(static_cast<gc::Cell*>(wrapper.toGCThing())));
 
-    if (success && (IsInsideNursery(wrapped.wrapped) || IsInsideNursery(wrapped.debugger))) {
+    if (!crossCompartmentWrappers.put(wrapped, ReadBarriered<Value>(wrapper))) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    if (IsInsideNursery(wrapped.wrapped) || IsInsideNursery(wrapped.debugger)) {
         WrapperMapRef ref(&crossCompartmentWrappers, wrapped);
         cx->runtime()->gc.storeBuffer.putGeneric(ref);
     }
 
-    return success;
+    return true;
 }
 
 static JSString*

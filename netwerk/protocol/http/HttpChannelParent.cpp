@@ -79,6 +79,8 @@ HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
   }
 
   mObserver = new OfflineObserver(this);
+
+  mEventQ = new ChannelEventQueue(static_cast<nsIParentRedirectingChannel*>(this));
 }
 
 HttpChannelParent::~HttpChannelParent()
@@ -691,6 +693,32 @@ HttpChannelParent::RecvMarkOfflineCacheEntryAsForeign()
   return true;
 }
 
+class DivertDataAvailableEvent : public ChannelEvent
+{
+public:
+  DivertDataAvailableEvent(HttpChannelParent* aParent,
+                           const nsCString& data,
+                           const uint64_t& offset,
+                           const uint32_t& count)
+  : mParent(aParent)
+  , mData(data)
+  , mOffset(offset)
+  , mCount(count)
+  {
+  }
+
+  void Run()
+  {
+    mParent->DivertOnDataAvailable(mData, mOffset, mCount);
+  }
+
+private:
+  HttpChannelParent* mParent;
+  nsCString mData;
+  uint64_t mOffset;
+  uint32_t mCount;
+};
+
 bool
 HttpChannelParent::RecvDivertOnDataAvailable(const nsCString& data,
                                              const uint64_t& offset,
@@ -711,6 +739,35 @@ HttpChannelParent::RecvDivertOnDataAvailable(const nsCString& data,
     return true;
   }
 
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new DivertDataAvailableEvent(this, data, offset, count));
+    return true;
+  }
+
+  DivertOnDataAvailable(data, offset, count);
+  return true;
+}
+
+void
+HttpChannelParent::DivertOnDataAvailable(const nsCString& data,
+                                         const uint64_t& offset,
+                                         const uint32_t& count)
+{
+  LOG(("HttpChannelParent::DivertOnDataAvailable [this=%p]\n", this));
+
+  MOZ_ASSERT(mParentListener);
+  if (NS_WARN_IF(!mDivertingFromChild)) {
+    MOZ_ASSERT(mDivertingFromChild,
+               "Cannot DivertOnDataAvailable if diverting is not set!");
+    FailDiversion(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  // Drop OnDataAvailables if the parent was canceled already.
+  if (NS_FAILED(mStatus)) {
+    return;
+  }
+
   nsCOMPtr<nsIInputStream> stringStream;
   nsresult rv = NS_NewByteInputStream(getter_AddRefs(stringStream), data.get(),
                                       count, NS_ASSIGNMENT_DEPEND);
@@ -719,8 +776,10 @@ HttpChannelParent::RecvDivertOnDataAvailable(const nsCString& data,
       mChannel->Cancel(rv);
     }
     mStatus = rv;
-    return true;
+    return;
   }
+
+  AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
   rv = mParentListener->OnDataAvailable(mChannel, nullptr, stringStream,
                                         offset, count);
@@ -730,10 +789,27 @@ HttpChannelParent::RecvDivertOnDataAvailable(const nsCString& data,
       mChannel->Cancel(rv);
     }
     mStatus = rv;
-    return true;
   }
-  return true;
 }
+
+class DivertStopRequestEvent : public ChannelEvent
+{
+public:
+  DivertStopRequestEvent(HttpChannelParent* aParent,
+                         const nsresult& statusCode)
+  : mParent(aParent)
+  , mStatusCode(statusCode)
+  {
+  }
+
+  void Run() {
+    mParent->DivertOnStopRequest(mStatusCode);
+  }
+
+private:
+  HttpChannelParent* mParent;
+  nsresult mStatusCode;
+};
 
 bool
 HttpChannelParent::RecvDivertOnStopRequest(const nsresult& statusCode)
@@ -748,6 +824,28 @@ HttpChannelParent::RecvDivertOnStopRequest(const nsresult& statusCode)
     return false;
   }
 
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new DivertStopRequestEvent(this, statusCode));
+    return true;
+  }
+
+  DivertOnStopRequest(statusCode);
+  return true;
+}
+
+void
+HttpChannelParent::DivertOnStopRequest(const nsresult& statusCode)
+{
+  LOG(("HttpChannelParent::DivertOnStopRequest [this=%p]\n", this));
+
+  MOZ_ASSERT(mParentListener);
+  if (NS_WARN_IF(!mDivertingFromChild)) {
+    MOZ_ASSERT(mDivertingFromChild,
+               "Cannot DivertOnStopRequest if diverting is not set!");
+    FailDiversion(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
   // Honor the channel's status even if the underlying transaction completed.
   nsresult status = NS_FAILED(mStatus) ? mStatus : statusCode;
 
@@ -756,9 +854,25 @@ HttpChannelParent::RecvDivertOnStopRequest(const nsresult& statusCode)
     mChannel->ForcePending(false);
   }
 
+  AutoEventEnqueuer ensureSerialDispatch(mEventQ);
   mParentListener->OnStopRequest(mChannel, nullptr, status);
-  return true;
 }
+
+class DivertCompleteEvent : public ChannelEvent
+{
+public:
+  explicit DivertCompleteEvent(HttpChannelParent* aParent)
+  : mParent(aParent)
+  {
+  }
+
+  void Run() {
+    mParent->DivertComplete();
+  }
+
+private:
+  HttpChannelParent* mParent;
+};
 
 bool
 HttpChannelParent::RecvDivertComplete()
@@ -773,14 +887,35 @@ HttpChannelParent::RecvDivertComplete()
     return false;
   }
 
+  if (mEventQ->ShouldEnqueue()) {
+    mEventQ->Enqueue(new DivertCompleteEvent(this));
+    return true;
+  }
+
+  DivertComplete();
+  return true;
+}
+
+void
+HttpChannelParent::DivertComplete()
+{
+  LOG(("HttpChannelParent::DivertComplete [this=%p]\n", this));
+
+  MOZ_ASSERT(mParentListener);
+  if (NS_WARN_IF(!mDivertingFromChild)) {
+    MOZ_ASSERT(mDivertingFromChild,
+               "Cannot DivertComplete if diverting is not set!");
+    FailDiversion(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
   nsresult rv = ResumeForDiversion();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     FailDiversion(NS_ERROR_UNEXPECTED);
-    return false;
+    return;
   }
 
   mParentListener = nullptr;
-  return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -1176,13 +1311,17 @@ HttpChannelParent::StartDiversion()
     mChannel->ForcePending(true);
   }
 
-  // Call OnStartRequest for the "DivertTo" listener.
-  nsresult rv = mDivertListener->OnStartRequest(mChannel, nullptr);
-  if (NS_FAILED(rv)) {
-    if (mChannel) {
-      mChannel->Cancel(rv);
+  {
+    AutoEventEnqueuer ensureSerialDispatch(mEventQ);
+
+    // Call OnStartRequest for the "DivertTo" listener.
+    nsresult rv = mDivertListener->OnStartRequest(mChannel, nullptr);
+    if (NS_FAILED(rv)) {
+      if (mChannel) {
+        mChannel->Cancel(rv);
+      }
+      mStatus = rv;
     }
-    mStatus = rv;
   }
   mDivertedOnStartRequest = true;
 

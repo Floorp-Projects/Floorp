@@ -520,8 +520,10 @@ NativeIterator::allocateIterator(JSContext* cx, uint32_t numGuards, const AutoId
 
     size_t plength = props.length();
     NativeIterator* ni = cx->zone()->pod_malloc_with_extra<NativeIterator, void*>(plength + numGuards * 2);
-    if (!ni)
+    if (!ni) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
 
     AutoValueVector strings(cx);
     ni->props_array = ni->props_cursor = reinterpret_cast<HeapPtrFlatString*>(ni + 1);

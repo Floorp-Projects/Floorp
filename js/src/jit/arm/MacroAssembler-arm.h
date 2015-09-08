@@ -476,7 +476,7 @@ private:
                 if ((*iter).isDouble())
                     offset += delta;
                 transferFloatReg(*iter);
-            } while ((++iter).more() && (*iter).code() == (reg += sign));
+            } while ((++iter).more() && int32_t((*iter).code()) == (reg += sign));
             finishFloatTransfer();
         }
         return offset;

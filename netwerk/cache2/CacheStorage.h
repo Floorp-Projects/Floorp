@@ -52,7 +52,8 @@ class CacheStorage : public nsICacheStorage
 public:
   CacheStorage(nsILoadContextInfo* aInfo,
                bool aAllowDisk,
-               bool aLookupAppCache);
+               bool aLookupAppCache,
+               bool aSkipSizeCheck);
 
 protected:
   virtual ~CacheStorage();
@@ -62,11 +63,13 @@ protected:
   nsRefPtr<LoadContextInfo> mLoadContextInfo;
   bool mWriteToDisk : 1;
   bool mLookupAppCache : 1;
+  bool mSkipSizeCheck: 1;
 
 public:
   nsILoadContextInfo* LoadInfo() const { return mLoadContextInfo; }
   bool WriteToDisk() const { return mWriteToDisk && !mLoadContextInfo->IsPrivate(); }
   bool LookupAppCache() const { return mLookupAppCache; }
+  bool SkipSizeCheck() const { return mSkipSizeCheck; }
 };
 
 } // namespace net

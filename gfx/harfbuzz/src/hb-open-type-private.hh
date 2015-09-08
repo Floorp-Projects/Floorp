@@ -536,6 +536,20 @@ struct Supplier
 template <typename Type, int Bytes> struct BEInt;
 
 template <typename Type>
+struct BEInt<Type, 1>
+{
+  public:
+  inline void set (Type V)
+  {
+    v = V;
+  }
+  inline operator Type (void) const
+  {
+    return v;
+  }
+  private: uint8_t v;
+};
+template <typename Type>
 struct BEInt<Type, 2>
 {
   public:
@@ -618,7 +632,7 @@ struct IntType
   DEFINE_SIZE_STATIC (Size);
 };
 
-typedef		uint8_t	     BYTE;	/* 8-bit unsigned integer. */
+typedef	IntType<uint8_t	, 1> BYTE;	/* 8-bit unsigned integer. */
 typedef IntType<uint16_t, 2> USHORT;	/* 16-bit unsigned integer. */
 typedef IntType<int16_t,  2> SHORT;	/* 16-bit signed integer. */
 typedef IntType<uint32_t, 4> ULONG;	/* 32-bit unsigned integer. */

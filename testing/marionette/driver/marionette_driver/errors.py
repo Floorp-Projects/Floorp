@@ -150,16 +150,6 @@ class MoveTargetOutOfBoundsException(MarionetteException):
     status = "move target out of bounds"
 
 
-class FrameSendNotInitializedError(MarionetteException):
-    code = (54,)
-    status = "frame send not initialized"
-
-
-class FrameSendFailureError(MarionetteException):
-    code = (55,)
-    status = "frame send failure"
-
-
 class SessionNotCreatedException(MarionetteException):
     code = (33, 71)
     status = "session not created"

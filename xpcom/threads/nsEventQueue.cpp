@@ -27,16 +27,25 @@ GetLog()
 #endif
 #define LOG(args) MOZ_LOG(GetLog(), mozilla::LogLevel::Debug, args)
 
-nsEventQueue::nsEventQueue()
-  : mReentrantMonitor("nsEventQueue.mReentrantMonitor")
-  , mHead(nullptr)
+template<typename MonitorType>
+nsEventQueueBase<MonitorType>::nsEventQueueBase()
+  : mHead(nullptr)
   , mTail(nullptr)
   , mOffsetHead(0)
   , mOffsetTail(0)
 {
 }
 
-nsEventQueue::~nsEventQueue()
+template nsEventQueueBase<Monitor>::nsEventQueueBase();
+template nsEventQueueBase<ReentrantMonitor>::nsEventQueueBase();
+
+nsEventQueue::nsEventQueue()
+  : mMonitor("[nsEventQueue.mMonitor]")
+{
+}
+
+template<typename MonitorType>
+nsEventQueueBase<MonitorType>::~nsEventQueueBase()
 {
   // It'd be nice to be able to assert that no one else is holding the monitor,
   // but NSPR doesn't really expose APIs for it.
@@ -48,63 +57,60 @@ nsEventQueue::~nsEventQueue()
   }
 }
 
+template nsEventQueueBase<Monitor>::~nsEventQueueBase();
+template nsEventQueueBase<ReentrantMonitor>::~nsEventQueueBase();
+
+template<typename MonitorType>
 bool
-nsEventQueue::GetEvent(bool aMayWait, nsIRunnable** aResult)
+nsEventQueueBase<MonitorType>::GetEvent(bool aMayWait, nsIRunnable** aResult,
+                                        MonitorAutoEnterType& aProofOfLock)
 {
-  {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-    while (IsEmpty()) {
-      if (!aMayWait) {
-        if (aResult) {
-          *aResult = nullptr;
-        }
-        return false;
+  while (IsEmpty()) {
+    if (!aMayWait) {
+      if (aResult) {
+        *aResult = nullptr;
       }
-      LOG(("EVENTQ(%p): wait begin\n", this));
-      mon.Wait();
-      LOG(("EVENTQ(%p): wait end\n", this));
+      return false;
     }
+    LOG(("EVENTQ(%p): wait begin\n", this));
+    aProofOfLock.Wait();
+    LOG(("EVENTQ(%p): wait end\n", this));
+  }
 
-    if (aResult) {
-      *aResult = mHead->mEvents[mOffsetHead++];
+  if (aResult) {
+    *aResult = mHead->mEvents[mOffsetHead++];
 
-      // Check if mHead points to empty Page
-      if (mOffsetHead == EVENTS_PER_PAGE) {
-        Page* dead = mHead;
-        mHead = mHead->mNext;
-        FreePage(dead);
-        mOffsetHead = 0;
-      }
+    // Check if mHead points to empty Page
+    if (mOffsetHead == EVENTS_PER_PAGE) {
+      Page* dead = mHead;
+      mHead = mHead->mNext;
+      FreePage(dead);
+      mOffsetHead = 0;
     }
   }
 
   return true;
 }
 
-void
-nsEventQueue::PutEvent(nsIRunnable* aRunnable)
+template bool nsEventQueueBase<Monitor>::GetEvent(bool aMayWait, nsIRunnable** aResult,
+                                                  MonitorAutoLock& aProofOfLock);
+template bool nsEventQueueBase<ReentrantMonitor>::GetEvent(bool aMayWait, nsIRunnable** aResult,
+                                                           ReentrantMonitorAutoEnter& aProofOfLock);
+
+bool
+nsEventQueue::GetEvent(bool aMayWait, nsIRunnable** aEvent)
 {
-  nsCOMPtr<nsIRunnable> event(aRunnable);
-  PutEvent(event.forget());
+  MonitorAutoEnterType mon(mMonitor);
+
+  return Base::GetEvent(aMayWait, aEvent, mon);
 }
 
+template<typename MonitorType>
 void
-nsEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable)
+nsEventQueueBase<MonitorType>::PutEvent(
+    already_AddRefed<nsIRunnable>&& aRunnable,
+    MonitorAutoEnterType& aProofOfLock)
 {
-  // Avoid calling AddRef+Release while holding our monitor.
-  nsCOMPtr<nsIRunnable> event(aRunnable);
-
-  if (ChaosMode::isActive(ChaosFeature::ThreadScheduling)) {
-    // With probability 0.5, yield so other threads have a chance to
-    // dispatch events to this queue first.
-    if (ChaosMode::randomUint32LessThan(2)) {
-      PR_Sleep(PR_INTERVAL_NO_WAIT);
-    }
-  }
-
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
   if (!mHead) {
     mHead = NewPage();
     MOZ_ASSERT(mHead);
@@ -121,17 +127,46 @@ nsEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable)
     mOffsetTail = 0;
   }
 
-  event.swap(mTail->mEvents[mOffsetTail]);
+  nsIRunnable*& queueLocation = mTail->mEvents[mOffsetTail];
+  MOZ_ASSERT(!queueLocation);
+  queueLocation = aRunnable.take();
   ++mOffsetTail;
   LOG(("EVENTQ(%p): notify\n", this));
-  mon.NotifyAll();
+  aProofOfLock.Notify();
 }
 
-size_t
-nsEventQueue::Count()
-{
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+template void nsEventQueueBase<Monitor>::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable,
+                                                  MonitorAutoLock& aProofOfLock);
+template void nsEventQueueBase<ReentrantMonitor>::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable,
+                                                           ReentrantMonitorAutoEnter& aProofOfLock);
 
+void
+nsEventQueue::PutEvent(nsIRunnable* aRunnable)
+{
+  nsCOMPtr<nsIRunnable> event(aRunnable);
+  PutEvent(event.forget());
+}
+
+void
+nsEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable)
+{
+  if (ChaosMode::isActive(ChaosFeature::ThreadScheduling)) {
+    // With probability 0.5, yield so other threads have a chance to
+    // dispatch events to this queue first.
+    if (ChaosMode::randomUint32LessThan(2)) {
+      PR_Sleep(PR_INTERVAL_NO_WAIT);
+    }
+  }
+
+  MonitorAutoEnterType mon(mMonitor);
+
+  Base::PutEvent(Move(aRunnable), mon);
+}
+
+template<typename MonitorType>
+size_t
+nsEventQueueBase<MonitorType>::Count(MonitorAutoEnterType& aProofOfLock)
+{
   // It is obvious count is 0 when the queue is empty.
   if (!mHead) {
     return 0;
@@ -161,4 +196,15 @@ nsEventQueue::Count()
   MOZ_ASSERT(count >= 0);
 
   return count;
+}
+
+template size_t nsEventQueueBase<Monitor>::Count(MonitorAutoLock& aProofOfLock);
+template size_t nsEventQueueBase<ReentrantMonitor>::Count(ReentrantMonitorAutoEnter& aProofOfLock);
+
+size_t
+nsEventQueue::Count()
+{
+  MonitorAutoEnterType mon(mMonitor);
+
+  return Base::Count(mon);
 }

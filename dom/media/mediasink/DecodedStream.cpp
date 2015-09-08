@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/CheckedInt.h"
+#include "mozilla/gfx/Point.h"
+
 #include "AudioSegment.h"
 #include "DecodedStream.h"
 #include "MediaData.h"
@@ -250,10 +253,7 @@ OutputStreamData::Connect(MediaStream* aStream)
   MOZ_ASSERT(!mPort, "Already connected?");
   MOZ_ASSERT(!mStream->IsDestroyed(), "Can't connect a destroyed stream.");
 
-  // The output stream must stay in sync with the input stream, so if
-  // either stream is blocked, we block the other.
-  mPort = mStream->AllocateInputPort(aStream,
-    MediaInputPort::FLAG_BLOCK_INPUT | MediaInputPort::FLAG_BLOCK_OUTPUT);
+  mPort = mStream->AllocateInputPort(aStream, 0);
   // Unblock the output stream now. The input stream is responsible for
   // controlling blocking from now on.
   mStream->ChangeExplicitBlockerCount(-1);
@@ -358,7 +358,6 @@ DecodedStream::DecodedStream(AbstractThread* aOwnerThread,
   : mOwnerThread(aOwnerThread)
   , mShuttingDown(false)
   , mPlaying(false)
-  , mVolume(1.0)
   , mSameOrigin(false)
   , mAudioQueue(aAudioQueue)
   , mVideoQueue(aVideoQueue)
@@ -370,21 +369,52 @@ DecodedStream::~DecodedStream()
   MOZ_ASSERT(mStartTime.isNothing(), "playback should've ended.");
 }
 
+const media::MediaSink::PlaybackParams&
+DecodedStream::GetPlaybackParams() const
+{
+  AssertOwnerThread();
+  return mParams;
+}
+
 void
-DecodedStream::Shutdown()
+DecodedStream::SetPlaybackParams(const PlaybackParams& aParams)
+{
+  AssertOwnerThread();
+  mParams = aParams;
+}
+
+nsRefPtr<GenericPromise>
+DecodedStream::OnEnded(TrackType aType)
+{
+  AssertOwnerThread();
+  MOZ_ASSERT(mStartTime.isSome());
+
+  if (aType == TrackInfo::kAudioTrack) {
+    // TODO: we should return a promise which is resolved when the audio track
+    // is finished. For now this promise is resolved when the whole stream is
+    // finished.
+    return mFinishPromise;
+  }
+  // TODO: handle video track.
+  return nullptr;
+}
+
+void
+DecodedStream::BeginShutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
   mShuttingDown = true;
 }
 
-nsRefPtr<GenericPromise>
-DecodedStream::StartPlayback(int64_t aStartTime, const MediaInfo& aInfo)
+void
+DecodedStream::Start(int64_t aStartTime, const MediaInfo& aInfo)
 {
   AssertOwnerThread();
   MOZ_ASSERT(mStartTime.isNothing(), "playback already started.");
 
   mStartTime.emplace(aStartTime);
   mInfo = aInfo;
+  mPlaying = true;
   ConnectListener();
 
   class R : public nsRunnable {
@@ -408,28 +438,31 @@ DecodedStream::StartPlayback(int64_t aStartTime, const MediaInfo& aInfo)
   };
 
   MozPromiseHolder<GenericPromise> promise;
-  nsRefPtr<GenericPromise> rv = promise.Ensure(__func__);
+  mFinishPromise = promise.Ensure(__func__);
   nsCOMPtr<nsIRunnable> r = new R(this, &DecodedStream::CreateData, Move(promise));
   AbstractThread::MainThread()->Dispatch(r.forget());
-
-  return rv.forget();
 }
 
-void DecodedStream::StopPlayback()
+void
+DecodedStream::Stop()
 {
   AssertOwnerThread();
-
-  // Playback didn't even start at all.
-  if (mStartTime.isNothing()) {
-    return;
-  }
+  MOZ_ASSERT(mStartTime.isSome(), "playback not started.");
 
   mStartTime.reset();
   DisconnectListener();
+  mFinishPromise = nullptr;
 
   // Clear mData immediately when this playback session ends so we won't
   // send data to the wrong stream in SendData() in next playback session.
   DestroyData(Move(mData));
+}
+
+bool
+DecodedStream::IsStarted() const
+{
+  AssertOwnerThread();
+  return mStartTime.isSome();
 }
 
 void
@@ -531,6 +564,12 @@ void
 DecodedStream::SetPlaying(bool aPlaying)
 {
   AssertOwnerThread();
+
+  // Resume/pause matters only when playback started.
+  if (mStartTime.isNothing()) {
+    return;
+  }
+
   mPlaying = aPlaying;
   if (mData) {
     mData->SetPlaying(aPlaying);
@@ -541,7 +580,21 @@ void
 DecodedStream::SetVolume(double aVolume)
 {
   AssertOwnerThread();
-  mVolume = aVolume;
+  mParams.mVolume = aVolume;
+}
+
+void
+DecodedStream::SetPlaybackRate(double aPlaybackRate)
+{
+  AssertOwnerThread();
+  mParams.mPlaybackRate = aPlaybackRate;
+}
+
+void
+DecodedStream::SetPreservesPitch(bool aPreservesPitch)
+{
+  AssertOwnerThread();
+  mParams.mPreservesPitch = aPreservesPitch;
 }
 
 void
@@ -815,7 +868,7 @@ DecodedStream::SendData()
   }
 
   InitTracks();
-  SendAudio(mVolume, mSameOrigin);
+  SendAudio(mParams.mVolume, mSameOrigin);
   SendVideo(mSameOrigin);
   AdvanceTracks();
 
@@ -829,26 +882,31 @@ DecodedStream::SendData()
 }
 
 int64_t
-DecodedStream::AudioEndTime() const
+DecodedStream::GetEndTime(TrackType aType) const
 {
   AssertOwnerThread();
-  if (mStartTime.isSome() && mInfo.HasAudio() && mData) {
+  if (aType == TrackInfo::kAudioTrack && mInfo.HasAudio() && mData) {
     CheckedInt64 t = mStartTime.ref() +
       FramesToUsecs(mData->mAudioFramesWritten, mInfo.mAudio.mRate);
     if (t.isValid()) {
       return t.value();
     }
+  } else if (aType == TrackInfo::kVideoTrack && mData) {
+    return mData->mNextVideoTime;
   }
   return -1;
 }
 
 int64_t
-DecodedStream::GetPosition() const
+DecodedStream::GetPosition(TimeStamp* aTimeStamp) const
 {
   AssertOwnerThread();
   // This is only called after MDSM starts playback. So mStartTime is
   // guaranteed to be something.
   MOZ_ASSERT(mStartTime.isSome());
+  if (aTimeStamp) {
+    *aTimeStamp = TimeStamp::Now();
+  }
   return mStartTime.ref() + (mData ? mData->GetPosition() : 0);
 }
 

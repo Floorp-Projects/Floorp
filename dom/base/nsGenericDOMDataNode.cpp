@@ -387,7 +387,7 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
     nsNodeUtils::CharacterDataChanged(this, &info);
 
     if (haveMutationListeners) {
-      InternalMutationEvent mutation(true, NS_MUTATION_CHARACTERDATAMODIFIED);
+      InternalMutationEvent mutation(true, eLegacyCharacterDataModified);
 
       mutation.mPrevAttrValue = oldValue;
       if (aLength > 0) {

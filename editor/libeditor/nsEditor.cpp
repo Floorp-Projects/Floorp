@@ -1857,6 +1857,9 @@ nsEditor::NotifyEditorObservers(NotificationForEditorObservers aNotification)
       FireInputEvent();
       break;
     case eNotifyEditorObserversOfBefore:
+      if (NS_WARN_IF(mIsInEditAction)) {
+        break;
+      }
       mIsInEditAction = true;
       for (auto& observer : observers) {
         observer->BeforeEditAction();

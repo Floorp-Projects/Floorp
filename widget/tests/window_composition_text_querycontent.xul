@@ -3324,11 +3324,15 @@ function runRedundantChangeTest()
   var result = {};
   function clearResult()
   {
-    result = { compositionupdate: false, compositionend: false, text: false, input: false };
+    result = { compositionupdate: false, compositionend: false, text: false, input: false, inputaftercompositionend: false };
   }
 
   function handler(aEvent)
   {
+    if (aEvent.type == "input" && result.compositionend) {
+      result.inputaftercompositionend = true;
+      return;
+    }
     result[aEvent.type] = true;
   }
 
@@ -3396,7 +3400,15 @@ function runRedundantChangeTest()
   is(result.input, false, "runRedundantChangeTest: input shouldn't be fired after synthesizing composition change again");
   is(textarea.value, "\u3042\u3044", "runRedundantChangeTest: textarea has uncommitted string #3");
 
-  synthesizeComposition({ type: "compositioncommit" });
+  // synthesize commit-as-is
+  clearResult();
+  synthesizeComposition({ type: "compositioncommitasis" });
+  is(result.compositionupdate, false, "runRedundantChangeTest: compositionupdate shouldn't be fired after synthesizing composition commit-as-is");
+  is(result.compositionend, true, "runRedundantChangeTest: compositionend should be fired after synthesizing composition commit-as-is");
+  is(result.text, true, "runRedundantChangeTest: text shouldn't be fired after synthesizing composition commit-as-is for removing the ranges");
+  is(result.input, false, "runRedundantChangeTest: input shouldn't be fired before compositionend at synthesizing commit-as-is");
+  is(result.inputaftercompositionend, true, "runRedundantChangeTest: input should be fired after synthesizing composition commit-as-is after compositionend");
+  is(textarea.value, "\u3042\u3044", "runRedundantChangeTest: textarea has the commit string");
 
   textarea.removeEventListener("compositionupdate", handler, true);
   textarea.removeEventListener("compositionend", handler, true);
@@ -3411,11 +3423,15 @@ function runNotRedundantChangeTest()
   var result = {};
   function clearResult()
   {
-    result = { compositionupdate: false, compositionend: false, text: false, input: false };
+    result = { compositionupdate: false, compositionend: false, text: false, input: false, inputaftercompositionend: false };
   }
 
   function handler(aEvent)
   {
+    if (aEvent.type == "input" && result.compositionend) {
+      result.inputaftercompositionend = true;
+      return;
+    }
     result[aEvent.type] = true;
   }
 
@@ -3449,18 +3465,18 @@ function runNotRedundantChangeTest()
   clearResult();
   synthesizeCompositionChange(
     { "composition":
-      { "string": "",
+      { "string": "ABCDE",
         "clauses":
         [
           { "length": 0, "attr": 0 }
         ]
       },
     });
-  is(result.compositionupdate, true, "runNotRedundantChangeTest: compositionupdate should be fired after synthesizing composition change with null ranges after non-null ranges");
+  is(result.compositionupdate, false, "runNotRedundantChangeTest: compositionupdate shouldn't be fired after synthesizing composition change with null ranges after non-null ranges");
   is(result.compositionend, false, "runNotRedundantChangeTest: compositionend shouldn't be fired after synthesizing composition change with null ranges after non-null ranges");
   is(result.text, true, "runNotRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string with null ranges after non-null ranges");
-  is(result.input, false, "runNotRedundantChangeTest: input shouldn't be fired after synthesizing composition change with null ranges after non-null ranges");
-  is(textarea.value, "abcde", "runNotRedundantChangeTest: textarea doesn't have uncommitted string");
+  is(result.input, true, "runNotRedundantChangeTest: input should be fired after synthesizing composition change with null ranges after non-null ranges");
+  is(textarea.value, "abcdeABCDE", "runNotRedundantChangeTest: textarea has uncommitted string #2");
 
   // synthesize change event with non-null ranges
   clearResult();
@@ -3475,13 +3491,57 @@ function runNotRedundantChangeTest()
       "caret": { "start": 5, "length": 0 }
     });
 
-  is(result.compositionupdate, true, "runNotRedundantChangeTest: compositionupdate should be fired after synthesizing composition change with non-null ranges after null ranges");
+  is(result.compositionupdate, false, "runNotRedundantChangeTest: compositionupdate shouldn't be fired after synthesizing composition change with non-null ranges after null ranges");
   is(result.compositionend, false, "runNotRedundantChangeTest: compositionend shouldn't be fired after synthesizing composition change with non-null ranges after null ranges");
   is(result.text, true, "runNotRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string with non-null ranges after null ranges");
   is(result.input, true, "runNotRedundantChangeTest: input should be fired after synthesizing composition change with non-null ranges after null ranges");
-  is(textarea.value, "abcdeABCDE", "runNotRedundantChangeTest: textarea has uncommitted string #2");
+  is(textarea.value, "abcdeABCDE", "runNotRedundantChangeTest: textarea has uncommitted string #3");
 
+  // synthesize change event with empty data and null ranges
+  clearResult();
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+    });
+  is(result.compositionupdate, true, "runNotRedundantChangeTest: compositionupdate should be fired after synthesizing composition change with empty data and null ranges after non-null ranges");
+  is(result.compositionend, false, "runNotRedundantChangeTest: compositionend shouldn't be fired after synthesizing composition change with empty data and null ranges after non-null ranges");
+  is(result.text, true, "runNotRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string with empty data and null ranges after non-null ranges");
+  is(result.input, true, "runNotRedundantChangeTest: input should be fired after synthesizing composition change with empty data and null ranges after non-null ranges");
+  is(textarea.value, "abcde", "runNotRedundantChangeTest: textarea doesn't have uncommitted string #1");
+
+  // synthesize change event with non-null ranges
+  clearResult();
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "ABCDE",
+        "clauses":
+        [
+          { "length": 5, "attr": COMPOSITION_ATTR_SELECTED_CLAUSE }
+        ]
+      },
+      "caret": { "start": 5, "length": 0 }
+    });
+
+  is(result.compositionupdate, true, "runNotRedundantChangeTest: compositionupdate should be fired after synthesizing composition change with non-null ranges after empty data and null ranges");
+  is(result.compositionend, false, "runNotRedundantChangeTest: compositionend shouldn't be fired after synthesizing composition change with non-null ranges after empty data and null ranges");
+  is(result.text, true, "runNotRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string with non-null ranges after empty data and null ranges");
+  is(result.input, true, "runNotRedundantChangeTest: input should be fired after synthesizing composition change with non-null ranges after empty data and null ranges");
+  is(textarea.value, "abcdeABCDE", "runNotRedundantChangeTest: textarea has uncommitted string #4");
+
+  clearResult();
   synthesizeComposition({ type: "compositioncommit", data: "" });
+
+  is(result.compositionupdate, true, "runNotRedundantChangeTest: compositionupdate should be fired after synthesizing composition commit with empty data after non-empty data");
+  is(result.compositionend, true, "runNotRedundantChangeTest: compositionend should be fired after synthesizing composition commit with empty data after non-empty data");
+  is(result.text, true, "runNotRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string with empty data after non-empty data");
+  is(result.input, false, "runNotRedundantChangeTest: input shouldn't be fired before compositionend after synthesizing composition change with empty data after non-empty data");
+  is(result.inputaftercompositionend, true, "runNotRedundantChangeTest: input should be fired after compositionend after synthesizing composition change with empty data after non-empty data");
+  is(textarea.value, "abcde", "runNotRedundantChangeTest: textarea doesn't have uncommitted string #2");
 
   textarea.removeEventListener("compositionupdate", handler, true);
   textarea.removeEventListener("compositionend", handler, true);
