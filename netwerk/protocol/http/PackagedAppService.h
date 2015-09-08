@@ -10,6 +10,9 @@
 #include "nsIPackagedAppService.h"
 #include "nsILoadContextInfo.h"
 #include "nsICacheStorage.h"
+#include "PackagedAppVerifier.h"
+#include "nsIMultiPartChannel.h"
+#include "PackagedAppVerifier.h"
 
 namespace mozilla {
 namespace net {
@@ -61,6 +64,12 @@ private:
     static nsresult Create(nsIURI*, nsICacheStorage*, CacheEntryWriter**);
 
     nsCOMPtr<nsICacheEntry> mEntry;
+
+    // Called by PackagedAppDownloader to write data to the cache entry.
+    NS_METHOD ConsumeData(const char *aBuf,
+                          uint32_t aCount,
+                          uint32_t *aWriteCount);
+
   private:
     CacheEntryWriter() { }
     ~CacheEntryWriter() { }
@@ -73,11 +82,6 @@ private:
     static nsresult CopyHeadersFromChannel(nsIChannel *aChannel,
                                            nsHttpResponseHead *aHead);
 
-    // Static method used to write data into the cache entry
-    // Called from OnDataAvailable
-    static NS_METHOD ConsumeData(nsIInputStream *in, void *closure,
-                                 const char *fromRawSegment, uint32_t toOffset,
-                                 uint32_t count, uint32_t *writeCount);
     // We write the data we read from the network into this stream which goes
     // to the cache entry.
     nsCOMPtr<nsIOutputStream> mOutputStream;
@@ -93,27 +97,82 @@ private:
   // NotifyPackageDownloaded(packageURI), so the service releases the ref.
   class PackagedAppDownloader final
     : public nsIStreamListener
+    , public nsIPackagedAppVerifierListener
   {
+  public:
+    typedef PackagedAppVerifier::ResourceCacheInfo ResourceCacheInfo;
+
+  private:
+    enum EErrorType {
+      ERROR_MANIFEST_VERIFIED_FAILED,
+      ERROR_RESOURCE_VERIFIED_FAILED,
+    };
+
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSIPACKAGEDAPPVERIFIERLISTENER
 
     // Initializes mCacheStorage and saves aKey as mPackageKey which is later
     // used to remove this object from PackagedAppService::mDownloadingPackages
     // - aKey is a string which uniquely identifies this package within the
     //   packagedAppService
-    nsresult Init(nsILoadContextInfo* aInfo, const nsCString &aKey);
+    nsresult Init(nsILoadContextInfo* aInfo, const nsCString &aKey,
+                                             const nsACString& aPackageOrigin);
     // Registers a callback which gets called when the given nsIURI is downloaded
     // aURI is the full URI of a subresource, composed of packageURI + !// + subresourcePath
     nsresult AddCallback(nsIURI *aURI, nsICacheEntryOpenCallback *aCallback);
+
+    // Remove the callback from the resource callback list.
+    nsresult RemoveCallbacks(nsICacheEntryOpenCallback* aCallback);
 
     // Called by PackagedAppChannelListener to note the fact that the package
     // is coming from the cache, and no subresources are to be expected as only
     // package metadata is saved in the cache.
     void SetIsFromCache(bool aFromCache) { mIsFromCache = aFromCache; }
+
+    // Notify the observers who are interested in knowing a signed packaged content
+    // is about to load from either HTTP or cache..
+    void NotifyOnStartSignedPackageRequest(const nsACString& PackageOrigin);
+
   private:
     ~PackagedAppDownloader() { }
+
+    // Static method used to write data into the cache entry or discard
+    // if there's no writer. Used as a writer function of
+    // nsIInputStream::ReadSegments.
+    static NS_METHOD ConsumeData(nsIInputStream *aStream,
+                                 void *aClosure,
+                                 const char *aFromRawSegment,
+                                 uint32_t aToOffset,
+                                 uint32_t aCount,
+                                 uint32_t *aWriteCount);
+
+    //---------------------------------------------------------------
+    // For PackagedAppVerifierListener.
+    //---------------------------------------------------------------
+    virtual void OnManifestVerified(const ResourceCacheInfo* aInfo, bool aSuccess);
+    virtual void OnResourceVerified(const ResourceCacheInfo* aInfo, bool aSuccess);
+
+    // Handle all kinds of error during package downloading.
+    void OnError(EErrorType aError);
+
+    // Called when the last part is complete or the resource is from cache.
+    void FinalizeDownload(nsresult aStatusCode);
+
+    // Get the signature from the multipart channel.
+    nsCString GetSignatureFromChannel(nsIMultiPartChannel* aChannel);
+
+    // Start off a resource hash computation and feed the HTTP response header.
+    nsresult BeginHashComputation(nsIURI* aURI, nsIRequest* aRequest);
+
+    // Ensure a packaged app verifier is created.
+    void EnsureVerifier(nsIRequest *aRequest);
+
+    // Handle all tasks about app installation like permission and system message
+    // registration.
+    void InstallSignedPackagedApp();
 
     // Calls all the callbacks registered for the given URI.
     // aURI is the full URI of a subresource, composed of packageURI + !// + subresourcePath
@@ -144,6 +203,14 @@ private:
 
     // Whether the package is from the cache
     bool mIsFromCache;
+
+    // Deal with verification and delegate callbacks to the downloader.
+    nsRefPtr<PackagedAppVerifier> mVerifier;
+
+    // The package origin without signed package origin identifier.
+    // If you need the origin with the signity taken into account, use
+    // PackagedAppVerifier::GetPackageOrigin().
+    nsCString mPackageOrigin;
   };
 
   // Intercepts OnStartRequest, OnDataAvailable*, OnStopRequest method calls

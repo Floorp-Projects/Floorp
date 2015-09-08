@@ -140,15 +140,19 @@ nsSpeechTask::~nsSpeechTask()
 }
 
 void
-nsSpeechTask::Init(ProcessedMediaStream* aStream)
+nsSpeechTask::InitDirectAudio()
 {
-  if (aStream) {
-    mStream = aStream->Graph()->CreateSourceStream(nullptr);
-    mPort = aStream->AllocateInputPort(mStream, 0);
-    mIndirectAudio = false;
-  } else {
-    mIndirectAudio = true;
-  }
+  mStream = MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
+                                          AudioChannel::Normal)->
+    CreateSourceStream(nullptr);
+  mIndirectAudio = false;
+  mInited = true;
+}
+
+void
+nsSpeechTask::InitIndirectAudio()
+{
+  mIndirectAudio = true;
   mInited = true;
 }
 

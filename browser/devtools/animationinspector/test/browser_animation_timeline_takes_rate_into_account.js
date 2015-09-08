@@ -22,18 +22,23 @@ add_task(function*() {
   let timeBlocks = timelineEl.querySelectorAll(".time-block");
   is(timeBlocks.length, 2, "2 animations are displayed");
 
-  info("The first animation has its rate to 1, let's measure it");
+  info("The first animation has its rate set to 1, let's measure it");
 
   let el = timeBlocks[0];
-  let duration = el.querySelector(".iterations").getBoundingClientRect().width;
-  let delay = el.querySelector(".delay").getBoundingClientRect().width;
+  let duration = parseInt(el.querySelector(".iterations").style.width, 10);
+  let delay = parseInt(el.querySelector(".delay").style.width, 10);
 
   info("The second animation has its rate set to 2, so should be shorter");
 
   let el2 = timeBlocks[1];
-  let duration2 = el2.querySelector(".iterations").getBoundingClientRect().width;
-  let delay2 = el2.querySelector(".delay").getBoundingClientRect().width;
+  let duration2 = parseInt(el2.querySelector(".iterations").style.width, 10);
+  let delay2 = parseInt(el2.querySelector(".delay").style.width, 10);
 
-  is(duration, 2 * duration2, "The duration width is correct");
-  is(delay, 2 * delay2, "The delay width is correct");
+  // The width are calculated by the animation-inspector dynamically depending
+  // on the size of the panel, and therefore depends on the test machine/OS.
+  // Let's not try to be too precise here and compare numbers.
+  let durationDelta = (2 * duration2) - duration;
+  ok(durationDelta <= 1, "The duration width is correct");
+  let delayDelta = (2 * delay2) - delay;
+  ok(delayDelta <= 1, "The delay width is correct");
 });

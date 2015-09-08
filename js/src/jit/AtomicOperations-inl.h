@@ -12,7 +12,7 @@
 #elif defined(JS_CODEGEN_ARM64)
 # include "jit/arm64/AtomicOperations-arm64.h"
 #elif defined(JS_CODEGEN_MIPS32)
-# include "jit/mips32/AtomicOperations-mips32.h"
+# include "jit/mips-shared/AtomicOperations-mips-shared.h"
 #elif defined(JS_CODEGEN_NONE)
 # include "jit/none/AtomicOperations-none.h"
 #elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)

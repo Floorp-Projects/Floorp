@@ -94,7 +94,6 @@ hardware (via AudioStream).
 #include "MediaEventSource.h"
 #include "MediaMetadataManager.h"
 #include "MediaTimer.h"
-#include "DecodedStream.h"
 #include "ImageContainer.h"
 
 namespace mozilla {
@@ -104,6 +103,7 @@ class MediaSink;
 }
 
 class AudioSegment;
+class DecodedStream;
 class TaskQueue;
 
 extern PRLogModuleInfo* gMediaDecoderLog;
@@ -157,6 +157,10 @@ public:
   // Set/Unset dormant state.
   void SetDormant(bool aDormant);
 
+  TimedMetadataEventSource& TimedMetadataEvent() {
+    return mMetadataManager.TimedMetadataEvent();
+  }
+
 private:
   // Initialization that needs to happen on the task queue. This is the first
   // task that gets run on the task queue, and is dispatched from the MDSM
@@ -169,13 +173,7 @@ private:
   void Shutdown();
 public:
 
-  void DispatchShutdown()
-  {
-    mDecodedStream->Shutdown();
-    nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::Shutdown);
-    OwnerThread()->Dispatch(runnable.forget());
-  }
+  void DispatchShutdown();
 
   void FinishShutdown();
 
@@ -333,10 +331,6 @@ public:
   // shutting down. The decoder monitor must be held while calling this.
   bool IsShutdown();
 
-  void QueueMetadata(const media::TimeUnit& aPublishTime,
-                     nsAutoPtr<MediaInfo> aInfo,
-                     nsAutoPtr<MetadataTags> aTags);
-
   // Returns true if we're currently playing. The decoder monitor must
   // be held.
   bool IsPlaying() const;
@@ -456,22 +450,6 @@ protected:
   // Recomputes mNextFrameStatus, possibly dispatching notifications to interested
   // parties.
   void UpdateNextFrameStatus();
-
-  // Called when AudioSink reaches the end. |mPlayStartTime| and
-  // |mPlayDuration| are updated to provide a good base for calculating video
-  // stream time.
-  void ResyncAudioClock();
-
-  // Returns the audio clock, if we have audio, or -1 if we don't.
-  // Called on the state machine thread.
-  int64_t GetAudioClock() const;
-
-  int64_t GetStreamClock() const;
-
-  // Get the video stream position, taking the |playbackRate| change into
-  // account. This is a position in the media, not the duration of the playback
-  // so far. Returns the position for the given time aTimeStamp.
-  int64_t GetVideoStreamPosition(TimeStamp aTimeStamp) const;
 
   // Return the current time, either the audio clock if available (if the media
   // has audio, and the playback is possible), or a clock for the video.
@@ -1287,7 +1265,7 @@ private:
   // Only written on the main thread while holding the monitor. Therefore it
   // can be read on any thread while holding the monitor, or on the main thread
   // without holding the monitor.
-  nsRefPtr<DecodedStream> mDecodedStream;
+  nsRefPtr<DecodedStream> mStreamSink;
 
   // Media data resource from the decoder.
   nsRefPtr<MediaResource> mResource;

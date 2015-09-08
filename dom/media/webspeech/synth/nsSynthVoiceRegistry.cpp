@@ -177,14 +177,6 @@ nsSynthVoiceRegistry::~nsSynthVoiceRegistry()
   // mSpeechSynthChild's lifecycle is managed by the Content protocol.
   mSpeechSynthChild = nullptr;
 
-  if (mStream) {
-    if (!mStream->IsDestroyed()) {
-      mStream->Destroy();
-    }
-
-    mStream = nullptr;
-  }
-
   mUriVoiceMap.Clear();
 }
 
@@ -775,14 +767,9 @@ nsSynthVoiceRegistry::SpeakImpl(VoiceData* aVoice,
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to get speech service type");
 
   if (serviceType == nsISpeechService::SERVICETYPE_INDIRECT_AUDIO) {
-    aTask->Init(nullptr);
+    aTask->InitIndirectAudio();
   } else {
-    if (!mStream) {
-      mStream =
-        MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
-                                      AudioChannel::Normal)->CreateTrackUnionStream(nullptr);
-    }
-    aTask->Init(mStream);
+    aTask->InitDirectAudio();
   }
 
   aVoice->mService->Speak(aText, aVoice->mUri, aVolume, aRate, aPitch, aTask);

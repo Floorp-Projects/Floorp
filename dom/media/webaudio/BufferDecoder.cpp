@@ -130,18 +130,6 @@ BufferDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo, MediaDecoderEventVis
 }
 
 void
-BufferDecoder::QueueMetadata(const media::TimeUnit& aTime, nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags)
-{
-  // ignore
-}
-
-void
-BufferDecoder::RemoveMediaTracks()
-{
-  // ignore
-}
-
-void
 BufferDecoder::OnReadMetadataCompleted()
 {
   // ignore

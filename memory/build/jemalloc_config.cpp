@@ -37,7 +37,7 @@
 #define MOZ_MALLOC_BUILD_OPTIONS ",junk:free"
 #endif
 
-#define MOZ_MALLOC_OPTIONS "narenas:1,lg_chunk:20,tcache:false"
+#define MOZ_MALLOC_OPTIONS "narenas:1,tcache:false"
 MFBT_DATA const char* je_(malloc_conf) =
   MOZ_MALLOC_OPTIONS MOZ_MALLOC_PLATFORM_OPTIONS MOZ_MALLOC_BUILD_OPTIONS;
 

@@ -883,6 +883,9 @@ struct EntryExitRecord
   DEFINE_SIZE_STATIC (4);
 };
 
+static void
+reverse_cursive_minor_offset (hb_glyph_position_t *pos, unsigned int i, hb_direction_t direction, unsigned int new_parent);
+
 struct CursivePosFormat1
 {
   inline void collect_glyphs (hb_collect_glyphs_context_t *c) const
@@ -960,19 +963,38 @@ struct CursivePosFormat1
     }
 
     /* Cross-direction adjustment */
-    if  (c->lookup_props & LookupFlag::RightToLeft) {
-      pos[i].cursive_chain() = j - i;
-      if (likely (HB_DIRECTION_IS_HORIZONTAL (c->direction)))
-	pos[i].y_offset = entry_y - exit_y;
-      else
-	pos[i].x_offset = entry_x - exit_x;
-    } else {
-      pos[j].cursive_chain() = i - j;
-      if (likely (HB_DIRECTION_IS_HORIZONTAL (c->direction)))
-	pos[j].y_offset = exit_y - entry_y;
-      else
-	pos[j].x_offset = exit_x - entry_x;
+
+    /* We attach child to parent (think graph theory and rooted trees whereas
+     * the root stays on baseline and each node aligns itself against its
+     * parent.
+     *
+     * Optimize things for the case of RightToLeft, as that's most common in
+     * Arabinc. */
+    unsigned int child  = i;
+    unsigned int parent = j;
+    hb_position_t x_offset = entry_x - exit_x;
+    hb_position_t y_offset = entry_y - exit_y;
+    if  (!(c->lookup_props & LookupFlag::RightToLeft))
+    {
+      unsigned int k = child;
+      child = parent;
+      parent = k;
+      x_offset = -x_offset;
+      y_offset = -y_offset;
     }
+
+    /* If child was already connected to someone else, walk through its old
+     * chain and reverse the link direction, such that the whole tree of its
+     * previous connection now attaches to new parent.  Watch out for case
+     * where new parent is on the path from old chain...
+     */
+    reverse_cursive_minor_offset (pos, child, c->direction, parent);
+
+    pos[child].cursive_chain() = parent - child;
+    if (likely (HB_DIRECTION_IS_HORIZONTAL (c->direction)))
+      pos[child].y_offset = y_offset;
+    else
+      pos[child].x_offset = x_offset;
 
     buffer->idx = j;
     return TRACE_RETURN (true);
@@ -1483,6 +1505,30 @@ struct GPOS : GSUBGPOS
 
 
 static void
+reverse_cursive_minor_offset (hb_glyph_position_t *pos, unsigned int i, hb_direction_t direction, unsigned int new_parent)
+{
+  unsigned int j = pos[i].cursive_chain();
+  if (likely (!j))
+    return;
+
+  j += i;
+
+  pos[i].cursive_chain() = 0;
+
+  /* Stop if we see new parent in the chain. */
+  if (j == new_parent)
+    return;
+
+  reverse_cursive_minor_offset (pos, j, direction, new_parent);
+
+  if (HB_DIRECTION_IS_HORIZONTAL (direction))
+    pos[j].y_offset = -pos[i].y_offset;
+  else
+    pos[j].x_offset = -pos[i].x_offset;
+
+  pos[j].cursive_chain() = i - j;
+}
+static void
 fix_cursive_minor_offset (hb_glyph_position_t *pos, unsigned int i, hb_direction_t direction)
 {
   unsigned int j = pos[i].cursive_chain();
@@ -1568,8 +1614,11 @@ template <typename context_t>
   const GPOS &gpos = *(hb_ot_layout_from_face (c->face)->gpos);
   const PosLookup &l = gpos.get_lookup (lookup_index);
   unsigned int saved_lookup_props = c->lookup_props;
-  c->set_lookup (l);
+  unsigned int saved_lookup_index = c->lookup_index;
+  c->set_lookup_index (lookup_index);
+  c->set_lookup_props (l.get_props ());
   bool ret = l.dispatch (c);
+  c->set_lookup_index (saved_lookup_index);
   c->set_lookup_props (saved_lookup_props);
   return ret;
 }

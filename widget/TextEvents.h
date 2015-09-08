@@ -365,6 +365,7 @@ public:
   WidgetCompositionEvent(bool aIsTrusted, EventMessage aMessage,
                          nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eCompositionEventClass)
+    , mOriginalMessage(eVoidEvent)
   {
     // XXX compositionstart is cancelable in draft of DOM3 Events.
     //     However, it doesn't make sense for us, we cannot cancel composition
@@ -391,12 +392,17 @@ public:
 
   nsRefPtr<TextRangeArray> mRanges;
 
+  // If the instance is a clone of another event, mOriginalMessage stores
+  // the another event's mMessage.
+  EventMessage mOriginalMessage;
+
   void AssignCompositionEventData(const WidgetCompositionEvent& aEvent,
                                   bool aCopyTargets)
   {
     AssignGUIEventData(aEvent, aCopyTargets);
 
     mData = aEvent.mData;
+    mOriginalMessage = aEvent.mOriginalMessage;
 
     // Currently, we don't need to copy the other members because they are
     // for internal use only (not available from JS).
@@ -438,6 +444,12 @@ public:
     return mMessage == NS_COMPOSITION_END ||
            mMessage == NS_COMPOSITION_COMMIT ||
            mMessage == NS_COMPOSITION_COMMIT_AS_IS;
+  }
+
+  bool IsFollowedByCompositionEnd() const
+  {
+    return mOriginalMessage == NS_COMPOSITION_COMMIT ||
+           mOriginalMessage == NS_COMPOSITION_COMMIT_AS_IS;
   }
 };
 
