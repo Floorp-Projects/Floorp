@@ -67,6 +67,7 @@ PresentationSessionTransport::PresentationSessionTransport()
   : mReadyState(CLOSED)
   , mAsyncCopierActive(false)
   , mCloseStatus(NS_OK)
+  , mDataNotificationEnabled(false)
 {
 }
 
@@ -95,9 +96,8 @@ PresentationSessionTransport::InitWithSocketTransport(nsISocketTransport* aTrans
 
   SetReadyState(OPEN);
 
-  rv = CreateInputStreamPump();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (IsReadyToNotifyData()) {
+    return CreateInputStreamPump();
   }
 
   return NS_OK;
@@ -261,6 +261,26 @@ PresentationSessionTransport::CreateInputStreamPump()
 }
 
 NS_IMETHODIMP
+PresentationSessionTransport::EnableDataNotification()
+{
+  if (NS_WARN_IF(!mCallback)) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  if (mDataNotificationEnabled) {
+    return NS_OK;
+  }
+
+  mDataNotificationEnabled = true;
+
+  if (IsReadyToNotifyData()) {
+    return CreateInputStreamPump();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PresentationSessionTransport::GetCallback(nsIPresentationSessionTransportCallback** aCallback)
 {
   nsCOMPtr<nsIPresentationSessionTransportCallback> callback = mCallback;
@@ -278,7 +298,7 @@ PresentationSessionTransport::SetCallback(nsIPresentationSessionTransportCallbac
 NS_IMETHODIMP
 PresentationSessionTransport::GetSelfAddress(nsINetAddr** aSelfAddress)
 {
-  if (NS_WARN_IF(mReadyState != OPEN)) {
+  if (NS_WARN_IF(!mTransport)) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
@@ -359,6 +379,7 @@ PresentationSessionTransport::Close(nsresult aReason)
   }
 
   mSocketInputStream->Close();
+  mDataNotificationEnabled = false;
 
   return NS_OK;
 }
@@ -392,9 +413,8 @@ PresentationSessionTransport::OnTransportStatus(nsITransport* aTransport,
 
   SetReadyState(OPEN);
 
-  nsresult rv = CreateInputStreamPump();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (IsReadyToNotifyData()) {
+    return CreateInputStreamPump();
   }
 
   return NS_OK;
