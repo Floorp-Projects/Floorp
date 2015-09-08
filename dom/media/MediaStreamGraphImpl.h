@@ -323,13 +323,6 @@ public:
    * account the time during which aStream is scheduled to be blocked.
    */
   StreamTime GraphTimeToStreamTimeWithBlocking(MediaStream* aStream, GraphTime aTime);
-  /**
-   * Given a stream time aTime, convert it to a graph time taking into
-   * account the time during which aStream is scheduled to be blocked.
-   * aTime must be <= mStateComputedTime since blocking decisions
-   * are only known up to that point.
-   */
-  GraphTime StreamTimeToGraphTimeWithBlocking(MediaStream* aStream, StreamTime aTime);
 
   /**
    * Call NotifyHaveCurrentData on aStream's listeners.

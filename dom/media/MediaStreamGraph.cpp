@@ -227,27 +227,6 @@ MediaStreamGraphImpl::GraphTimeToStreamTimeWithBlocking(MediaStream* aStream,
 }
 
 GraphTime
-MediaStreamGraphImpl::StreamTimeToGraphTimeWithBlocking(MediaStream* aStream,
-    StreamTime aTime)
-{
-  // Avoid overflows
-  if (aTime >= STREAM_TIME_MAX) {
-    return GRAPH_TIME_MAX;
-  }
-
-  // Assume we're unblocked from 0..mStartBlocking, blocked from mStartBlocking
-  // to mStateComputedTime, and unblocked from mStateComputedTime..forever
-  GraphTime timeAssumingNoBlocking = aTime + aStream->mBufferStartTime;
-  if (timeAssumingNoBlocking <= aStream->mStartBlocking) {
-    return timeAssumingNoBlocking;
-  }
-  // XXX we generally shouldn't need to call this for aTime >= mStartBlocking!
-  // Check callers.
-
-  return timeAssumingNoBlocking + (mStateComputedTime - aStream->mStartBlocking);
-}
-
-GraphTime
 MediaStreamGraphImpl::IterationEnd() const
 {
   return CurrentDriver()->IterationEnd();
@@ -788,8 +767,9 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
   nsRefPtr<Image> blackImage;
 
   MOZ_ASSERT(mProcessedTime >= aStream->mBufferStartTime, "frame position before buffer?");
-  StreamTime frameBufferTime = GraphTimeToStreamTimeWithBlocking(aStream, mProcessedTime);
-  StreamTime bufferEndTime = GraphTimeToStreamTimeWithBlocking(aStream, mStateComputedTime);
+  // We only look at the non-blocking interval
+  StreamTime frameBufferTime = aStream->GraphTimeToStreamTime(mProcessedTime);
+  StreamTime bufferEndTime = aStream->GraphTimeToStreamTime(aStream->mStartBlocking);
   StreamTime start;
   const VideoChunk* chunk;
   for ( ;
@@ -827,8 +807,8 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
     // Schedule this frame after the previous frame finishes, instead of at
     // its start time.  These times only differ in the case of multiple
     // tracks.
-    GraphTime frameTime =
-      StreamTimeToGraphTimeWithBlocking(aStream, frameBufferTime);
+    // frameBufferTime is in the non-blocking interval.
+    GraphTime frameTime = aStream->StreamTimeToGraphTime(frameBufferTime);
     TimeStamp targetTime = currentTimeStamp +
       TimeDuration::FromSeconds(MediaTimeToSeconds(frameTime - IterationEnd()));
 
