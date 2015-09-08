@@ -14,6 +14,7 @@
 #endif
 
 #include <stdint.h>
+#include <windows.h>
 
 namespace sandbox {
   class BrokerServices;
@@ -45,6 +46,9 @@ public:
   bool AllowReadWriteFile(wchar_t const *file);
   bool AllowDirectory(wchar_t const *dir);
 
+  // Exposes AddTargetPeer from broker services, so that none sandboxed
+  // processes can be added as handle duplication targets.
+  bool AddTargetPeer(HANDLE aPeerProcess);
 private:
   static sandbox::BrokerServices *sBrokerService;
   sandbox::TargetPolicy *mPolicy;
