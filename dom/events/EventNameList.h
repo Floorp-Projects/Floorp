@@ -255,7 +255,7 @@ NON_IDL_EVENT(mozbrowserafterkeyup,
               EventNameType_None,
               eBeforeAfterKeyboardEventClass)
 EVENT(loadeddata,
-      NS_LOADEDDATA,
+      eLoadedData,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(loadedmetadata,
