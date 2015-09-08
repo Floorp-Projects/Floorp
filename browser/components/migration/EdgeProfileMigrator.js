@@ -5,8 +5,7 @@
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource:///modules/MigrationUtils.jsm");
 Cu.import("resource:///modules/MSMigrationUtils.jsm");
 
@@ -22,6 +21,16 @@ EdgeProfileMigrator.prototype.getResources = function() {
   ];
   return resources.filter(r => r.exists);
 };
+
+/* Somewhat counterintuitively, this returns:
+ * - |null| to indicate "There is only 1 (default) profile" (on win10+)
+ * - |[]| to indicate "There are no profiles" (on <=win8.1) which will avoid using this migrator.
+ * See MigrationUtils.jsm for slightly more info on how sourceProfiles is used.
+ */
+EdgeProfileMigrator.prototype.__defineGetter__("sourceProfiles", function() {
+  let isWin10OrHigher = AppConstants.isPlatformAndVersionAtLeast("win", "10.0");
+  return isWin10OrHigher ? null : [];
+});
 
 EdgeProfileMigrator.prototype.classDescription = "Edge Profile Migrator";
 EdgeProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=edge";

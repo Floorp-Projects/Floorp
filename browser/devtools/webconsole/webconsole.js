@@ -1528,6 +1528,7 @@ WebConsoleFrame.prototype = {
         line: aScriptError.lineNumber,
         column: aScriptError.columnNumber
       },
+      stack: aScriptError.stacktrace,
       category: category,
       severity: severity,
       timestamp: aScriptError.timeStamp,
