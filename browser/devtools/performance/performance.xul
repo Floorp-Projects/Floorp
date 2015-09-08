@@ -43,6 +43,7 @@
                 label="&performanceUI.enableMemory;"
                 tooltiptext="&performanceUI.enableMemory.tooltiptext;"/>
       <menuitem id="option-enable-allocations"
+                class="experimental-option"
                 type="checkbox"
                 data-pref="enable-allocations"
                 label="&performanceUI.enableAllocations;"
