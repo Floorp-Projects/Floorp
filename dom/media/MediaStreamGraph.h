@@ -501,7 +501,7 @@ public:
    * to ensure we know exactly how much time this stream will be blocked during
    * the interval.
    */
-  StreamTime GraphTimeToStreamTime(GraphTime aTime);
+  StreamTime GraphTimeToStreamTimeWithBlocking(GraphTime aTime);
   /**
    * Convert graph time to stream time. aTime can be > mStateComputedTime,
    * in which case we optimistically assume the stream will not be blocked
@@ -513,7 +513,8 @@ public:
    * in which case we did the conversion optimistically assuming the stream
    * will not be blocked after mStateComputedTime.
    */
-  GraphTime StreamTimeToGraphTime(StreamTime aTime);
+  GraphTime StreamTimeToGraphTimeWithBlocking(StreamTime aTime);
+
   bool IsFinishedOnGraphThread() { return mFinished; }
   void FinishOnGraphThread();
 
