@@ -31,6 +31,13 @@
 
 #ifdef MOZ_WIDGET_GTK
 #include <gtk/gtk.h>
+#include <unistd.h>
+#include <fstream>
+#include "mozilla/Tokenizer.h"
+#include "nsCharSeparatedTokenizer.h"
+
+#include <map>
+#include <string>
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -63,6 +70,30 @@ NS_EXPORT int android_sdk_version;
 // so we must call it before going multithreaded, but nsSystemInfo::Init
 // only happens well after that point.
 uint32_t nsSystemInfo::gUserUmask = 0;
+
+#if defined (MOZ_WIDGET_GTK)
+static void
+SimpleParseKeyValuePairs(const std::string& aFilename,
+                         std::map<nsCString, nsCString>& aKeyValuePairs)
+{
+  std::ifstream input(aFilename.c_str());
+  for (std::string line; std::getline(input, line); ) {
+    nsAutoCString key, value;
+
+    nsCCharSeparatedTokenizer tokens(nsDependentCString(line.c_str()), ':');
+    if (tokens.hasMoreTokens()) {
+      key = tokens.nextToken();
+      if (tokens.hasMoreTokens()) {
+        value = tokens.nextToken();
+      }
+      // We want the value even if there was just one token, to cover the
+      // case where we had the key, and the value was blank (seems to be
+      // a valid scenario some files.)
+      aKeyValuePairs[key] = value;
+    }
+  }
+}
+#endif
 
 #if defined(XP_WIN)
 namespace {
@@ -447,6 +478,103 @@ nsSystemInfo::Init()
   }
   MOZ_ASSERT(sizeof(sysctlValue32) == len);
 
+#elif defined (MOZ_WIDGET_GTK)
+  // Get vendor, family, model, stepping, physical cores, L3 cache size
+  // from /proc/cpuinfo file
+  {
+    std::map<nsCString, nsCString> keyValuePairs;
+    SimpleParseKeyValuePairs("/proc/cpuinfo", keyValuePairs);
+
+    // cpuVendor from "vendor_id"
+    cpuVendor.Assign(keyValuePairs[NS_LITERAL_CSTRING("vendor_id")]);
+
+    {
+      // cpuFamily from "cpu family"
+      Tokenizer::Token t;
+      Tokenizer p(keyValuePairs[NS_LITERAL_CSTRING("cpu family")]);
+      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
+          t.AsInteger() <= INT32_MAX) {
+        cpuFamily = static_cast<int>(t.AsInteger());
+      }
+    }
+
+    {
+      // cpuModel from "model"
+      Tokenizer::Token t;
+      Tokenizer p(keyValuePairs[NS_LITERAL_CSTRING("model")]);
+      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
+          t.AsInteger() <= INT32_MAX) {
+        cpuModel = static_cast<int>(t.AsInteger());
+      }
+    }
+
+    {
+      // cpuStepping from "stepping"
+      Tokenizer::Token t;
+      Tokenizer p(keyValuePairs[NS_LITERAL_CSTRING("stepping")]);
+      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
+          t.AsInteger() <= INT32_MAX) {
+        cpuStepping = static_cast<int>(t.AsInteger());
+      }
+    }
+
+    {
+      // physicalCPUs from "cpu cores"
+      Tokenizer::Token t;
+      Tokenizer p(keyValuePairs[NS_LITERAL_CSTRING("cpu cores")]);
+      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
+          t.AsInteger() <= INT32_MAX) {
+        physicalCPUs = static_cast<int>(t.AsInteger());
+      }
+    }
+
+    {
+      // cacheSizeL3 from "cache size"
+      Tokenizer::Token t;
+      Tokenizer p(keyValuePairs[NS_LITERAL_CSTRING("cache size")]);
+      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
+          t.AsInteger() <= INT32_MAX) {
+        cacheSizeL3 = static_cast<int>(t.AsInteger());
+        if (p.Next(t) && t.Type() == Tokenizer::TOKEN_WORD &&
+            t.AsString() != NS_LITERAL_CSTRING("KB")) {
+          // If we get here, there was some text after the cache size value
+          // and that text was not KB.  For now, just don't report the
+          // L3 cache.
+          cacheSizeL3 = -1;
+        }
+      }
+    }
+  }
+
+  {
+    // Get cpuSpeed from another file.
+    std::ifstream input("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
+    std::string line;
+    if (getline(input, line)) {
+      Tokenizer::Token t;
+      Tokenizer p(line.c_str());
+      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
+          t.AsInteger() <= INT32_MAX) {
+        cpuSpeed = static_cast<int>(t.AsInteger()/1000);
+      }
+    }
+  }
+
+  {
+    // Get cacheSizeL2 from yet another file
+    std::ifstream input("/sys/devices/system/cpu/cpu0/cache/index2/size");
+    std::string line;
+    if (getline(input, line)) {
+      Tokenizer::Token t;
+      Tokenizer p(line.c_str(), nullptr, "K");
+      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
+          t.AsInteger() <= INT32_MAX) {
+        cacheSizeL2 = static_cast<int>(t.AsInteger());
+      }
+    }
+  }
+
+  SetInt32Property(NS_LITERAL_STRING("cpucount"), PR_GetNumberOfProcessors());
 #else
   SetInt32Property(NS_LITERAL_STRING("cpucount"), PR_GetNumberOfProcessors());
 #endif
