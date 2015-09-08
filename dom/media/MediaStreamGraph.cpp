@@ -271,18 +271,28 @@ void
 MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime)
 {
   for (MediaStream* stream : AllStreams()) {
+    bool isAnyBlocked = stream->mStartBlocking < mStateComputedTime;
+    bool isAnyUnblocked = stream->mStartBlocking > aPrevCurrentTime;
+
     // Calculate blocked time and fire Blocked/Unblocked events
     GraphTime blockedTime = mStateComputedTime - stream->mStartBlocking;
     NS_ASSERTION(blockedTime >= 0, "Error in blocking time");
+    stream->AdvanceTimeVaryingValuesToCurrentTime(mStateComputedTime,
+                                                  blockedTime);
+    STREAM_LOG(LogLevel::Verbose,
+               ("MediaStream %p bufferStartTime=%f blockedTime=%f", stream,
+                MediaTimeToSeconds(stream->mBufferStartTime),
+                MediaTimeToSeconds(blockedTime)));
+    stream->mStartBlocking = mStateComputedTime;
 
-    if (stream->mStartBlocking > aPrevCurrentTime && stream->mNotifiedBlocked) {
+    if (isAnyUnblocked && stream->mNotifiedBlocked) {
       for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
         MediaStreamListener* l = stream->mListeners[j];
         l->NotifyBlockingChanged(this, MediaStreamListener::UNBLOCKED);
       }
       stream->mNotifiedBlocked = false;
     }
-    if (stream->mStartBlocking < mStateComputedTime && !stream->mNotifiedBlocked) {
+    if (isAnyBlocked && !stream->mNotifiedBlocked) {
       for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
         MediaStreamListener* l = stream->mListeners[j];
         l->NotifyBlockingChanged(this, MediaStreamListener::BLOCKED);
@@ -290,15 +300,7 @@ MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime)
       stream->mNotifiedBlocked = true;
     }
 
-    stream->AdvanceTimeVaryingValuesToCurrentTime(mStateComputedTime,
-                                                  blockedTime);
-
-    STREAM_LOG(LogLevel::Verbose,
-               ("MediaStream %p bufferStartTime=%f blockedTime=%f", stream,
-                MediaTimeToSeconds(stream->mBufferStartTime),
-                MediaTimeToSeconds(blockedTime)));
-
-    if (stream->mStartBlocking > aPrevCurrentTime) {
+    if (isAnyUnblocked) {
       NS_ASSERTION(!stream->mNotifiedFinished,
         "Shouldn't have already notified of finish *and* have output!");
       for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
