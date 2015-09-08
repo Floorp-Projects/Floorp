@@ -8,7 +8,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=678842
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
-<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=678842">Mozilla Bug 678842</a>
 <p id="display"></p>
 <iframe id="content"></iframe>
@@ -26,32 +25,9 @@ var content = document.getElementById('content');
 // loads.
 
 var firstLoad = true;
-var en_GB;
-var hunspell;
 
 var loadListener = function(evt) {
   Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
-  Components.utils.import("resource://gre/modules/Services.jsm");
-
-  if (firstLoad) {
-    var dir = Components.classes["@mozilla.org/file/directory_service;1"]
-                        .getService(Components.interfaces.nsIProperties)
-                        .get("CurWorkD", Components.interfaces.nsIFile);
-    dir.append("tests");
-    dir.append("editor");
-    dir.append("composer");
-    dir.append("test");
-
-    hunspell = Components.classes["@mozilla.org/spellchecker/engine;1"]
-                         .getService(Components.interfaces.mozISpellCheckingEngine);
-
-    // Install en-GB dictionary.
-    en_GB = dir.clone();
-    en_GB.append("en-GB");
-    is(en_GB.exists(), true, "true expected (en-GB directory should exist)");
-    hunspell.addDirectory(en_GB);
-  }
-
   var doc = evt.target.contentDocument;
   var elem = doc.getElementById('textarea');
   var editor = elem.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
@@ -70,23 +46,11 @@ var loadListener = function(evt) {
 
     if (firstLoad) {
       firstLoad = false;
-
-       // First time around, the dictionary defaults to the locale.
-      is (currentDictonary, "en-US", "unexpected lang " + currentDictonary + " instead of en-US");
-
-      // Select en-GB.
-      spellchecker.SetCurrentDictionary("en-GB");
-
+      is (currentDictonary, "", "unexpected lang " + currentDictonary);
       content.src = 'http://mochi.test:8888/tests/editor/composer/test/bug678842_subframe.html?firstload=false';
     } else {
-      is (currentDictonary, "en-GB", "unexpected lang " + currentDictonary + " instead of en-GB");
+      is (currentDictonary, "en-US", "unexpected lang " + currentDictonary + " instead of en-US");
       content.removeEventListener('load', loadListener, false);
-
-      // Remove the fake en-GB dictionary again, since it's otherwise picked up by later tests.
-      hunspell.removeDirectory(en_GB);
-
-      // Reset the preference, so the last value we set doesn't collide with the next test.
-      Services.prefs.setCharPref("spellchecker.dictionary", "");
       SimpleTest.finish();
     }
   });
