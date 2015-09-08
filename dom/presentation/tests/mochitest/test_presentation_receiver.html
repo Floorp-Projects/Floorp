@@ -67,6 +67,11 @@ function setup() {
       is(aReason, SpecialPowers.Cr.NS_OK, "The control channel is closed normally.");
     });
 
+    gScript.addMessageListener('data-transport-notification-enabled', function dataTransportNotificationEnabledHandler() {
+      gScript.removeMessageListener('data-transport-notification-enabled', dataTransportNotificationEnabledHandler);
+      info("Data notification is enabled for data transport channel.");
+    });
+
     gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
       gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
       is(aReason, SpecialPowers.Cr.NS_OK, "The data transport should be closed normally.");

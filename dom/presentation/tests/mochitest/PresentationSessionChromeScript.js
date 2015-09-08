@@ -203,6 +203,9 @@ const mockedSessionTransport = {
       port: description.QueryInterface(Ci.nsIPresentationChannelDescription).tcpPort,
     };
   },
+  enableDataNotification: function() {
+    sendAsyncMessage('data-transport-notification-enabled');
+  },
   send: function(data) {
     var binaryStream = Cc["@mozilla.org/binaryinputstream;1"].
                        createInstance(Ci.nsIBinaryInputStream);
