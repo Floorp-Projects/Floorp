@@ -1614,7 +1614,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 #urlbar {
-  -moz-padding-end: 4px;
   border-radius: @toolbarbuttonCornerRadius@;
 }
 
