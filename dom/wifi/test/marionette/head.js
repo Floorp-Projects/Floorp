@@ -776,7 +776,12 @@ let gTestSuite = (function() {
         .then(() => runEmulatorShellSafe(['hostapd', '-B', configFileName]))
         .then(function (reply) {
           // It may fail at the first time due to the previous ungracefully terminated one.
-          if (reply[0] === 'bind(PF_UNIX): Address already in use') {
+          if (reply.length === 0) {
+            // The hostapd starts successfully
+            return;
+          }
+
+          if (reply[0].indexOf('bind(PF_UNIX): Address already in use') !== -1) {
             return startOneHostapd(aIndex);
           }
         });

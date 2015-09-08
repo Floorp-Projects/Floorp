@@ -81,6 +81,8 @@ if CONFIG['MOZ_B2G_BT']:
                 'bluedroid/BluetoothDaemonSetupInterface.cpp',
                 'bluedroid/BluetoothDaemonSocketInterface.cpp',
                 'bluedroid/BluetoothGattManager.cpp',
+                'bluedroid/BluetoothMapFolder.cpp',
+                'bluedroid/BluetoothMapSmsManager.cpp',
                 'bluedroid/BluetoothOppManager.cpp',
                 'bluedroid/BluetoothPbapManager.cpp',
                 'bluedroid/BluetoothServiceBluedroid.cpp',

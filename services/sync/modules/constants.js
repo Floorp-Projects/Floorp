@@ -122,7 +122,6 @@ LOGIN_FAILED_NETWORK_ERROR:            "error.login.reason.network",
 LOGIN_FAILED_SERVER_ERROR:             "error.login.reason.server",
 LOGIN_FAILED_INVALID_PASSPHRASE:       "error.login.reason.recoverykey",
 LOGIN_FAILED_LOGIN_REJECTED:           "error.login.reason.account",
-LOGIN_FAILED_NOT_READY:                "error.login.reason.initializing",
 
 // sync failure status codes
 METARECORD_DOWNLOAD_FAIL:              "error.sync.reason.metarecord_download_fail",

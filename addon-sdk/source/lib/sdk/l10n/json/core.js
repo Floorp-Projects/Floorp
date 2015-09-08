@@ -32,5 +32,5 @@ exports.locale = function locale() {
 // Returns the short locale code: ja, en, fr
 exports.language = function language() {
   return bestMatchingLocale ? bestMatchingLocale.split("-")[0].toLowerCase()
-                            : null;
+                            : "en";
 }
