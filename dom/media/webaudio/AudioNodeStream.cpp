@@ -64,26 +64,27 @@ AudioNodeStream::DestroyImpl()
 }
 
 /* static */ already_AddRefed<AudioNodeStream>
-AudioNodeStream::Create(MediaStreamGraph* aGraph, AudioNodeEngine* aEngine,
-                        Flags aFlags)
+AudioNodeStream::Create(AudioContext* aCtx, AudioNodeEngine* aEngine,
+                        Flags aFlags, MediaStreamGraph* aGraph)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   // MediaRecorders use an AudioNodeStream, but no AudioNode
   AudioNode* node = aEngine->NodeMainThread();
-  MOZ_ASSERT(!node || aGraph->GraphRate() == node->Context()->SampleRate());
+  MediaStreamGraph* graph = aGraph ? aGraph : aCtx->Graph();
+  MOZ_ASSERT(graph->GraphRate() == aCtx->SampleRate());
 
   dom::AudioContext::AudioContextId contextIdForStream = node ? node->Context()->Id() :
                                                                 NO_AUDIO_CONTEXT;
   nsRefPtr<AudioNodeStream> stream =
-    new AudioNodeStream(aEngine, aFlags, aGraph->GraphRate(),
+    new AudioNodeStream(aEngine, aFlags, graph->GraphRate(),
                         contextIdForStream);
   if (aEngine->HasNode()) {
     stream->SetChannelMixingParametersImpl(aEngine->NodeMainThread()->ChannelCount(),
                                            aEngine->NodeMainThread()->ChannelCountModeValue(),
                                            aEngine->NodeMainThread()->ChannelInterpretationValue());
   }
-  aGraph->AddStream(stream);
+  graph->AddStream(stream);
   return stream.forget();
 }
 
