@@ -211,7 +211,7 @@ EVENT(durationchange,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(emptied,
-      NS_EMPTIED,
+      eEmptied,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(ended,
