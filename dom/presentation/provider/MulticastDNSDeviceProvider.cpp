@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MulticastDNSDeviceProvider.h"
+#include "MainThreadUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -96,6 +97,8 @@ MulticastDNSDeviceProvider::~MulticastDNSDeviceProvider()
 nsresult
 MulticastDNSDeviceProvider::Init()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mInitialized) {
     return NS_OK;
   }
@@ -141,6 +144,8 @@ MulticastDNSDeviceProvider::Init()
 nsresult
 MulticastDNSDeviceProvider::Uninit()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (!mInitialized) {
     return NS_OK;
   }
@@ -165,6 +170,7 @@ nsresult
 MulticastDNSDeviceProvider::RegisterService()
 {
   LOG_I("RegisterService: %s (%d)", mServiceName.get(), mDiscoverable);
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (!mDiscoverable) {
     return NS_OK;
@@ -211,6 +217,8 @@ MulticastDNSDeviceProvider::RegisterService()
 nsresult
 MulticastDNSDeviceProvider::UnregisterService(nsresult aReason)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mRegisterRequest) {
     mRegisterRequest->Cancel(aReason);
     mRegisterRequest = nullptr;
@@ -227,6 +235,8 @@ MulticastDNSDeviceProvider::UnregisterService(nsresult aReason)
 nsresult
 MulticastDNSDeviceProvider::StopDiscovery(nsresult aReason)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mDiscoveryRequest) {
     mDiscoveryRequest->Cancel(aReason);
     mDiscoveryRequest = nullptr;
@@ -239,6 +249,8 @@ MulticastDNSDeviceProvider::StopDiscovery(nsresult aReason)
 NS_IMETHODIMP
 MulticastDNSDeviceProvider::GetListener(nsIPresentationDeviceListener** aListener)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (NS_WARN_IF(!aListener)) {
     return NS_ERROR_INVALID_POINTER;
   }
@@ -252,6 +264,8 @@ MulticastDNSDeviceProvider::GetListener(nsIPresentationDeviceListener** aListene
 NS_IMETHODIMP
 MulticastDNSDeviceProvider::SetListener(nsIPresentationDeviceListener* aListener)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   mDeviceListener = do_GetWeakReference(aListener);
 
   nsresult rv;
@@ -272,6 +286,7 @@ NS_IMETHODIMP
 MulticastDNSDeviceProvider::ForceDiscovery()
 {
   LOG_I("ForceDiscovery (%d)", mDiscoveryEnabled);
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (!mDiscoveryEnabled) {
     return NS_OK;
@@ -297,6 +312,8 @@ NS_IMETHODIMP
 MulticastDNSDeviceProvider::OnDiscoveryStarted(const nsACString& aServiceType)
 {
   LOG_I("OnDiscoveryStarted");
+  MOZ_ASSERT(NS_IsMainThread());
+
   return NS_OK;
 }
 
@@ -304,12 +321,16 @@ NS_IMETHODIMP
 MulticastDNSDeviceProvider::OnDiscoveryStopped(const nsACString& aServiceType)
 {
   LOG_I("OnDiscoveryStopped");
+  MOZ_ASSERT(NS_IsMainThread());
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 MulticastDNSDeviceProvider::OnServiceFound(nsIDNSServiceInfo* aServiceInfo)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (NS_WARN_IF(!aServiceInfo)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -348,6 +369,8 @@ MulticastDNSDeviceProvider::OnServiceFound(nsIDNSServiceInfo* aServiceInfo)
 NS_IMETHODIMP
 MulticastDNSDeviceProvider::OnServiceLost(nsIDNSServiceInfo* aServiceInfo)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (NS_WARN_IF(!aServiceInfo)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -383,6 +406,8 @@ MulticastDNSDeviceProvider::OnStartDiscoveryFailed(const nsACString& aServiceTyp
                                                    int32_t aErrorCode)
 {
   LOG_E("OnStartDiscoveryFailed: %d", aErrorCode);
+  MOZ_ASSERT(NS_IsMainThread());
+
   return NS_OK;
 }
 
@@ -391,6 +416,8 @@ MulticastDNSDeviceProvider::OnStopDiscoveryFailed(const nsACString& aServiceType
                                                   int32_t aErrorCode)
 {
   LOG_E("OnStopDiscoveryFailed: %d", aErrorCode);
+  MOZ_ASSERT(NS_IsMainThread());
+
   return NS_OK;
 }
 
@@ -398,6 +425,8 @@ MulticastDNSDeviceProvider::OnStopDiscoveryFailed(const nsACString& aServiceType
 NS_IMETHODIMP
 MulticastDNSDeviceProvider::OnServiceRegistered(nsIDNSServiceInfo* aServiceInfo)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (NS_WARN_IF(!aServiceInfo)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -422,6 +451,8 @@ NS_IMETHODIMP
 MulticastDNSDeviceProvider::OnServiceUnregistered(nsIDNSServiceInfo* aServiceInfo)
 {
   LOG_I("OnServiceUnregistered");
+  MOZ_ASSERT(NS_IsMainThread());
+
   return NS_OK;
 }
 
@@ -430,6 +461,7 @@ MulticastDNSDeviceProvider::OnRegistrationFailed(nsIDNSServiceInfo* aServiceInfo
                                                  int32_t aErrorCode)
 {
   LOG_E("OnRegistrationFailed: %d", aErrorCode);
+  MOZ_ASSERT(NS_IsMainThread());
 
   mRegisterRequest = nullptr;
 
@@ -449,6 +481,8 @@ MulticastDNSDeviceProvider::OnUnregistrationFailed(nsIDNSServiceInfo* aServiceIn
                                                    int32_t aErrorCode)
 {
   LOG_E("OnUnregistrationFailed: %d", aErrorCode);
+  MOZ_ASSERT(NS_IsMainThread());
+
   return NS_OK;
 }
 
@@ -456,6 +490,8 @@ MulticastDNSDeviceProvider::OnUnregistrationFailed(nsIDNSServiceInfo* aServiceIn
 NS_IMETHODIMP
 MulticastDNSDeviceProvider::OnServiceResolved(nsIDNSServiceInfo* aServiceInfo)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (NS_WARN_IF(!aServiceInfo)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -517,6 +553,8 @@ MulticastDNSDeviceProvider::OnResolveFailed(nsIDNSServiceInfo* aServiceInfo,
                                             int32_t aErrorCode)
 {
   LOG_E("OnResolveFailed: %d", aErrorCode);
+  MOZ_ASSERT(NS_IsMainThread());
+
   return NS_OK;
 }
 
@@ -525,6 +563,7 @@ NS_IMETHODIMP
 MulticastDNSDeviceProvider::OnClose(nsresult aReason)
 {
   LOG_I("OnClose: %x", aReason);
+  MOZ_ASSERT(NS_IsMainThread());
 
   UnregisterService(aReason);
 
@@ -547,6 +586,8 @@ MulticastDNSDeviceProvider::Observe(nsISupports* aSubject,
                                     const char* aTopic,
                                     const char16_t* aData)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   NS_ConvertUTF16toUTF8 data(aData);
   LOG_I("Observe: topic = %s, data = %s", aTopic, data.get());
 
@@ -567,6 +608,7 @@ nsresult
 MulticastDNSDeviceProvider::OnDiscoveryChanged(bool aEnabled)
 {
   LOG_I("DiscoveryEnabled = %d\n", aEnabled);
+  MOZ_ASSERT(NS_IsMainThread());
 
   mDiscoveryEnabled = aEnabled;
 
@@ -581,6 +623,7 @@ nsresult
 MulticastDNSDeviceProvider::OnDiscoverableChanged(bool aEnabled)
 {
   LOG_I("Discoverable = %d\n", aEnabled);
+  MOZ_ASSERT(NS_IsMainThread());
 
   mDiscoverable = aEnabled;
 
@@ -595,6 +638,7 @@ nsresult
 MulticastDNSDeviceProvider::OnServiceNameChanged(const nsCString& aServiceName)
 {
   LOG_I("serviceName = %s\n", aServiceName.get());
+  MOZ_ASSERT(NS_IsMainThread());
 
   mServiceName = aServiceName;
 
