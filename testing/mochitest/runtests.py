@@ -2599,8 +2599,14 @@ def run_test_harness(options):
     if runner.getTestFlavor(options) == 'browser-chrome':
         options.runByDir = True
 
-    if runner.getTestFlavor(options) == 'mochitest' and (not mozinfo.info['debug']) and (not mozinfo.info['asan']):
+    if runner.getTestFlavor(options) == 'mochitest':
         options.runByDir = True
+
+    if mozinfo.info['asan'] and options.e10s:
+        options.runByDir = False
+
+    if mozinfo.isMac and mozinfo.info['debug']:
+        options.runByDir = False
 
     if mozinfo.info.get('buildapp') == 'mulet':
         options.runByDir = False
