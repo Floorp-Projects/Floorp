@@ -1188,7 +1188,6 @@ if test "$GNU_CC"; then
     # -Waddress - catches suspicious uses of memory addresses
     # -Wchar-subscripts - catches array index using signed char
     # -Wcomment - catches nested comments
-    # -Wdeclaration-after-statement - MSVC doesn't like these
     # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
     # -Wendif-labels - catches `#else FOO` and `#endif FOO` not in comment
     # -Wenum-compare - catches comparison of different enum types
@@ -1213,7 +1212,6 @@ if test "$GNU_CC"; then
     # -Wwrite-strings - catches non-const char* pointers to string literals
     #
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall"
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wdeclaration-after-statement"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wsign-compare"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wtype-limits"
 
