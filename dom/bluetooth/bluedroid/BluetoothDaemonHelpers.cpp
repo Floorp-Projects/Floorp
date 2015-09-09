@@ -978,12 +978,6 @@ Convert(const ConvertArray<Tin>& aIn, Tout& aOut)
 //
 
 nsresult
-PackPDU(bool aIn, DaemonSocketPDU& aPDU)
-{
-  return PackPDU(PackConversion<bool, uint8_t>(aIn), aPDU);
-}
-
-nsresult
 PackPDU(const BluetoothAddress& aIn, DaemonSocketPDU& aPDU)
 {
   return PackPDU(PackArray<uint8_t>(aIn.mAddr, sizeof(aIn.mAddr)), aPDU);
