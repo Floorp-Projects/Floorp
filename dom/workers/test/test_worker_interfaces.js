@@ -174,7 +174,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Response",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "ServiceWorkerRegistration", b2g: false, android: false },
+    { name: "ServiceWorkerRegistration", b2g: false, releaseAndroid: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "TextDecoder",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -223,6 +223,7 @@ function createInterfaceMap(permissionMap, version, userAgent, isB2G) {
             (entry.android === !isAndroid) ||
             (entry.b2g === !isB2G) ||
             (entry.release === !isRelease) ||
+            (entry.releaseAndroid === !(isAndroid && isRelease)) ||
             (entry.permission && !permissionMap[entry.permission]) ||
             entry.disabled) {
           interfaceMap[entry.name] = false;
