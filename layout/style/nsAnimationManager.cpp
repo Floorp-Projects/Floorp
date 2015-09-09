@@ -371,8 +371,9 @@ nsIStyleRule*
 nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
                                        mozilla::dom::Element* aElement)
 {
-  if (!mPresContext->IsDynamic()) {
-    // For print or print preview, ignore animations.
+  // Ignore animations for print or print preview, and for elements
+  // that are not attached to the document tree.
+  if (!mPresContext->IsDynamic() || !aElement->IsInComposedDoc()) {
     return nullptr;
   }
 

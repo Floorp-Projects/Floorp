@@ -371,6 +371,11 @@ CommonAnimationManager::FlushAnimations()
       continue;
     }
 
+    MOZ_ASSERT(collection->mElement->GetComposedDoc() ==
+                 mPresContext->Document(),
+               "Should not have a transition/animations collection for an "
+               "element that is not part of the document tree");
+
     collection->RequestRestyle(AnimationCollection::RestyleType::Standard);
   }
 }
@@ -882,10 +887,6 @@ AnimationCollection::RequestRestyle(RestyleType aRestyleType)
     // Pres context will be null after the manager is disconnected.
     return;
   }
-
-  MOZ_ASSERT(mElement->GetCrossShadowCurrentDoc() == presContext->Document(),
-             "Element::UnbindFromTree should have destroyed the element "
-             "transition/animations object");
 
   // Steps for Restyle::Layer:
 
