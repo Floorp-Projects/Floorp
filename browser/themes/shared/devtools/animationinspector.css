@@ -13,7 +13,12 @@
 }
 
 :root {
+  /* How high should toolbars be */
+  --toolbar-height: 20px;
+  /* How wide should the sidebar be */
   --timeline-sidebar-width: 150px;
+  /* How high should animations displayed in the timeline be */
+  --timeline-animation-height: 20px;
 }
 
 html {
@@ -38,7 +43,7 @@ body {
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
-  height: 20px;
+  height: var(--toolbar-height);
 }
 
 #toolbar .label {
@@ -47,13 +52,13 @@ body {
 
 #toggle-all {
   border-width: 0 0 0 1px;
-  min-height: 20px;
+  min-height: var(--toolbar-height);
 }
 
 /* The main animations container */
 
 #players {
-  height: calc(100% - 20px);
+  height: calc(100% - var(--toolbar-height));
   overflow: auto;
 }
 
@@ -159,7 +164,7 @@ body {
 
 .animation-timeline .time-header {
   margin-left: var(--timeline-sidebar-width);
-  height: 20px;
+  min-height: var(--toolbar-height);
   overflow: hidden;
   position: relative;
   /* This is the same color as the time graduations in
@@ -187,7 +192,7 @@ body {
 
 .animation-timeline .animation {
   margin: 4px 0;
-  height: 20px;
+  height: var(--timeline-animation-height);
   position: relative;
 }
 
@@ -372,7 +377,7 @@ body {
 /* Timeline wiget */
 
 .timeline {
-  height: 20px;
+  height: var(--timeline-animation-height);
   width: 100%;
   display: flex;
   flex-direction: row;
