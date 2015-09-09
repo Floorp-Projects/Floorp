@@ -46,14 +46,14 @@ add_task(function* testSubviewListing() {
   info("Opening control center and expanding permissions subview");
   gIdentityHandler._identityBox.click();
 
-  info("Checking 'Page Functionality' permissions");
-  let pageFunctionalityMenulists = gIdentityHandler._permissionSubviewListPageFunctionality.querySelectorAll("menulist");
-  let pageFunctionalityPerms = SitePermissions.listPageFunctionalityPermissions();
-  is(pageFunctionalityMenulists.length, pageFunctionalityPerms.length, "One menulist for each permission");
+  let menulists = gIdentityHandler._permissionSubviewList.querySelectorAll("menulist");
+  let perms = SitePermissions.listPermissions();
 
-  for (let i = 0; i < pageFunctionalityMenulists.length; i++) {
-    let menulist = pageFunctionalityMenulists[i];
-    let perm = pageFunctionalityPerms[i];
+  is(menulists.length, perms.length, "One menulist for each permission");
+
+  for (let i = 0; i < menulists.length; i++) {
+    let menulist = menulists[i];
+    let perm = perms[i];
     let expectedValue = SitePermissions.get(gBrowser.currentURI, perm);
     if (expectedValue == SitePermissions.UNKNOWN) {
       expectedValue = SitePermissions.getDefault(perm);
@@ -62,23 +62,5 @@ add_task(function* testSubviewListing() {
     is(menulist.id, "identity-popup-permission:" + perm, "Correct id for menulist: " + perm);
     is(menulist.value, expectedValue, "Correct value on menulist: " + perm);
   }
-
-  info("Checking 'System Access' permissions");
-  let systemAccessMenulists = gIdentityHandler._permissionSubviewListSystemAccess.querySelectorAll("menulist");
-  let systemAccessPerms = SitePermissions.listSystemAccessPermissions();
-  is(systemAccessMenulists.length, systemAccessPerms.length, "One menulist for each permission");
-
-  for (let i = 0; i < systemAccessMenulists.length; i++) {
-    let menulist = systemAccessMenulists[i];
-    let perm = systemAccessPerms[i];
-    let expectedValue = SitePermissions.get(gBrowser.currentURI, perm);
-    if (expectedValue == SitePermissions.UNKNOWN) {
-      expectedValue = SitePermissions.getDefault(perm);
-    }
-
-    is(menulist.id, "identity-popup-permission:" + perm, "Correct id for menulist: " + perm);
-    is(menulist.value, expectedValue, "Correct value on menulist: " + perm);
-  }
-
   gIdentityHandler._identityPopup.hidden = true;
 });

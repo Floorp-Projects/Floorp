@@ -172,16 +172,7 @@
       </vbox>
 
       <vbox id="identity-popup-permissionsView-body">
-        <vbox id="identity-popup-permission-subview-list">
-          <label class="identity-popup-subheadline"
-                 value="&identity.permissionsPageFunctionality;"
-                 crop="end"/>
-          <vbox id="permission-subview-list-page-functionality"></vbox>
-          <label class="identity-popup-subheadline"
-                 value="&identity.permissionsSystemAccess;"
-                 crop="end"/>
-          <vbox id="permission-subview-list-system-access"></vbox>
-        </vbox>
+        <vbox id="identity-popup-permission-subview-list"/>
       </vbox>
     </panelview>
   </panelmultiview>
