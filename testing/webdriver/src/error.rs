@@ -1,9 +1,10 @@
+use hyper::status::StatusCode;
 use rustc_serialize::json::{Json, ToJson, ParserError};
 use std::collections::BTreeMap;
+use std::convert::From;
 use std::error::Error;
 use std::fmt;
-use std::convert::From;
-use hyper::status::StatusCode;
+use std::io::Error as IoError;
 
 #[derive(PartialEq, Debug)]
 pub enum ErrorStatus {
@@ -159,7 +160,14 @@ impl Error for WebDriverError {
 
 impl From<ParserError> for WebDriverError {
     fn from(err: ParserError) -> WebDriverError {
-        let msg = format!("{:?}", err);
-        WebDriverError::new(ErrorStatus::UnknownError, &msg[..])
+        WebDriverError::new(ErrorStatus::UnknownError,
+                            err.description())
+    }
+}
+
+impl From<IoError> for WebDriverError {
+    fn from(err: IoError) -> WebDriverError {
+        WebDriverError::new(ErrorStatus::UnknownError,
+                            err.description())
     }
 }
