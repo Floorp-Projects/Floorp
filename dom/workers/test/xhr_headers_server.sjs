@@ -11,9 +11,11 @@ function handleRequest(request, response) {
         var optionsHost = request.getHeader("options-host");
       } catch(e) { }
 
+      bool headerFound = false;
       if (optionsHost) {
         setState("postHost", request.host);
         setState("optionsHost", optionsHost);
+        headerFound = true;
       }
 
       try {
@@ -22,8 +24,13 @@ function handleRequest(request, response) {
 
       if (emptyHeader && emptyHeader == "nada") {
         setState("emptyHeader", "nada");
+        headerFound = true;
       }
-      return;
+      if (headerFound) {
+        return;
+      } else {
+        break;
+      }
 
     case "OPTIONS":
       if (getState("optionsHost") == request.host) {
