@@ -354,7 +354,7 @@ public:
   bool DispatchEvent(WidgetGUIEvent& aEvent);
 
   /**
-   * SetSelection() dispatches NS_SELECTION_SET event for the aRange.
+   * SetSelection() dispatches eSetSelection event for the aRange.
    *
    * @param aRange                The range which will be selected.
    * @return                      TRUE if setting selection is succeeded and
