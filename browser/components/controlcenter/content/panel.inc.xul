@@ -87,12 +87,6 @@
                  value="&identity.permissions;"/>
           <vbox id="identity-popup-permission-list"/>
         </vbox>
-        <button id="identity-popup-permissions-expander"
-                class="identity-popup-expander"
-#ifndef NIGHTLY_BUILD
-                hidden="true"
-#endif
-                oncommand="gIdentityHandler.toggleSubView('permissions', this)"/>
       </hbox>
     </panelview>
 
@@ -161,19 +155,6 @@
                 oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
       </vbox>
 
-    </panelview>
-
-    <!-- Permissions SubView -->
-    <panelview id="identity-popup-permissionsView" flex="1">
-      <vbox id="identity-popup-permissionsView-header">
-        <label class="identity-popup-headline"
-               value="&identity.permissions;"
-               crop="end"/>
-      </vbox>
-
-      <vbox id="identity-popup-permissionsView-body">
-        <vbox id="identity-popup-permission-subview-list"/>
-      </vbox>
     </panelview>
   </panelmultiview>
 </panel>
