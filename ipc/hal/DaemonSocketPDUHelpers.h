@@ -502,6 +502,12 @@ template <typename T>
 nsresult
 UnpackPDU(DaemonSocketPDU& aPDU, T& aOut);
 
+nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, bool& aOut);
+
+nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, char& aOut);
+
 inline nsresult
 UnpackPDU(DaemonSocketPDU& aPDU, int8_t& aOut)
 {
@@ -586,6 +592,149 @@ struct UnpackString0
  */
 nsresult
 UnpackPDU(DaemonSocketPDU& aPDU, const UnpackString0& aOut);
+
+/* |UnpackConversion| is a helper for convering unpacked values. Pass
+ * an instance of this structure to |UnpackPDU| to read a value from
+ * the PDU in the input type and convert it to the output type.
+ */
+template<typename Tin, typename Tout>
+struct UnpackConversion {
+  UnpackConversion(Tout& aOut)
+    : mOut(aOut)
+  { }
+
+  Tout& mOut;
+};
+
+template<typename Tin, typename Tout>
+inline nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, const UnpackConversion<Tin, Tout>& aOut)
+{
+  Tin in;
+  nsresult rv = UnpackPDU(aPDU, in);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return Convert(in, aOut.mOut);
+}
+
+/* |UnpackArray| is a helper for unpacking arrays. Pass an instance
+ * of this structure as the second argument to |UnpackPDU| to unpack
+ * an array.
+ */
+template <typename T>
+struct UnpackArray
+{
+  UnpackArray(T* aData, size_t aLength)
+    : mData(aData)
+    , mLength(aLength)
+  { }
+
+  UnpackArray(nsAutoArrayPtr<T>& aData, size_t aLength)
+    : mData(nullptr)
+    , mLength(aLength)
+  {
+    aData = new T[mLength];
+    mData = aData.get();
+  }
+
+  UnpackArray(nsAutoArrayPtr<T>& aData, size_t aSize, size_t aElemSize)
+    : mData(nullptr)
+    , mLength(aSize / aElemSize)
+  {
+    aData = new T[mLength];
+    mData = aData.get();
+  }
+
+  T* mData;
+  size_t mLength;
+};
+
+template<typename T>
+inline nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, const UnpackArray<T>& aOut)
+{
+  for (size_t i = 0; i < aOut.mLength; ++i) {
+    nsresult rv = UnpackPDU(aPDU, aOut.mData[i]);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  return NS_OK;
+}
+
+template<typename T>
+inline nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, UnpackArray<T>& aOut)
+{
+  for (size_t i = 0; i < aOut.mLength; ++i) {
+    nsresult rv = UnpackPDU(aPDU, aOut.mData[i]);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  return NS_OK;
+}
+
+template<>
+inline nsresult
+UnpackPDU<uint8_t>(DaemonSocketPDU& aPDU, const UnpackArray<uint8_t>& aOut)
+{
+  /* Read raw bytes in one pass */
+  return aPDU.Read(aOut.mData, aOut.mLength);
+}
+
+template<typename T>
+inline nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, nsTArray<T>& aOut)
+{
+  for (typename nsTArray<T>::size_type i = 0; i < aOut.Length(); ++i) {
+    nsresult rv = UnpackPDU(aPDU, aOut[i]);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  return NS_OK;
+}
+
+/* |UnpackReversed| is a helper for unpacking data in reversed order. Pass an
+ * instance of this structure as the second argument to |UnpackPDU| to unpack
+ * data in reversed order.
+ */
+template<typename T>
+struct UnpackReversed
+{
+  UnpackReversed(T& aValue)
+    : mValue(&aValue)
+  { }
+
+  UnpackReversed(T&& aValue)
+    : mValue(&aValue)
+  { }
+
+  T* mValue;
+};
+
+/* No general rules to unpack data in reversed order. Signal a link error if
+ * the type |T| of |UnpackReversed| is not defined explicitly.
+ */
+template<typename T>
+nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, const UnpackReversed<T>& aOut);
+
+template<typename U>
+inline nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, const UnpackReversed<UnpackArray<U>>& aOut)
+{
+  for (size_t i = 0; i < aOut.mValue->mLength; ++i) {
+    nsresult rv = UnpackPDU(aPDU,
+                            aOut.mValue->mData[aOut.mValue->mLength - i - 1]);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  return NS_OK;
+}
 
 //
 // Init operators
