@@ -1850,8 +1850,7 @@ CodeGeneratorMIPS::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
 
     BufferOffset bo = masm.ma_BoundsCheck(ScratchRegister);
 
-    Label outOfRange;
-    Label done;
+    Label done, outOfRange;
     masm.ma_b(ptrReg, ScratchRegister, &outOfRange, Assembler::AboveOrEqual, ShortJump);
     // Offset is ok, let's load value.
     if (isFloat) {
@@ -1874,7 +1873,10 @@ CodeGeneratorMIPS::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
             masm.loadDouble(Address(GlobalReg, AsmJSNaN64GlobalDataOffset - AsmJSGlobalRegBias),
                             ToFloatRegister(out));
     } else {
-        masm.move32(Imm32(0), ToRegister(out));
+        if (mir->isAtomicAccess())
+            masm.ma_b(gen->outOfBoundsLabel());
+        else
+            masm.move32(Imm32(0), ToRegister(out));
     }
     masm.bind(&done);
 
@@ -1939,8 +1941,8 @@ CodeGeneratorMIPS::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
 
     BufferOffset bo = masm.ma_BoundsCheck(ScratchRegister);
 
-    Label rejoin;
-    masm.ma_b(ptrReg, ScratchRegister, &rejoin, Assembler::AboveOrEqual, ShortJump);
+    Label done, outOfRange;
+    masm.ma_b(ptrReg, ScratchRegister, &outOfRange, Assembler::AboveOrEqual, ShortJump);
 
     // Offset is ok, let's store value.
     if (isFloat) {
@@ -1952,7 +1954,12 @@ CodeGeneratorMIPS::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
         masm.ma_store(ToRegister(value), BaseIndex(HeapReg, ptrReg, TimesOne),
                       static_cast<LoadStoreSize>(size), isSigned ? SignExtend : ZeroExtend);
     }
-    masm.bind(&rejoin);
+    masm.ma_b(&done, ShortJump);
+    masm.bind(&outOfRange);
+    // Offset is out of range.
+    if (mir->isAtomicAccess())
+        masm.ma_b(gen->outOfBoundsLabel());
+    masm.bind(&done);
 
     masm.append(AsmJSHeapAccess(bo.getOffset()));
 }
