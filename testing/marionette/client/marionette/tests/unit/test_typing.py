@@ -2,13 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import urllib
+
 from marionette.marionette_test import MarionetteTestCase, skip_if_b2g
 from marionette_driver.keys import Keys
 from marionette_driver.errors import ElementNotVisibleException
 
 
-class TestTyping(MarionetteTestCase):
+def inline(doc):
+    return "data:text/html;charset=utf-8,%s" % urllib.quote(doc)
 
+
+class TestTyping(MarionetteTestCase):
     def testShouldFireKeyPressEvents(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
@@ -280,3 +285,17 @@ class TestTyping(MarionetteTestCase):
         self.marionette.navigate(test_html)
         not_displayed = self.marionette.find_element('id', 'notDisplayed')
         self.assertRaises(ElementNotVisibleException, not_displayed.send_keys, 'foo')
+
+    def test_appends_to_input_text(self):
+        self.marionette.navigate(inline("<input>"))
+        el = self.marionette.find_element("tag name", "input")
+        el.send_keys("foo")
+        el.send_keys("bar")
+        self.assertEqual("foobar", el.get_attribute("value"))
+
+    def test_appends_to_textarea(self):
+        self.marionette.navigate(inline("<textarea></textarea>"))
+        textarea = self.marionette.find_element("tag name", "textarea")
+        textarea.send_keys("foo")
+        textarea.send_keys("bar")
+        self.assertEqual("foobar", textarea.get_attribute("value"))
