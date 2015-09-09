@@ -1288,6 +1288,21 @@ WebConsoleActor.prototype =
    */
   preparePageErrorForRemote: function WCA_preparePageErrorForRemote(aPageError)
   {
+    let stack = null;
+    // Convert stack objects to the JSON attributes expected by client code
+    if (aPageError.stack) {
+      stack = [];
+      let s = aPageError.stack;
+      while (s !== null) {
+        stack.push({
+          filename: s.source,
+          lineNumber: s.line,
+          columnNumber: s.column,
+          functionName: s.functionDisplayName
+        });
+        s = s.parent;
+      }
+    }
     let lineText = aPageError.sourceLine;
     if (lineText && lineText.length > DebuggerServer.LONG_STRING_INITIAL_LENGTH) {
       lineText = lineText.substr(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH);
@@ -1307,6 +1322,7 @@ WebConsoleActor.prototype =
       strict: !!(aPageError.flags & aPageError.strictFlag),
       info: !!(aPageError.flags & aPageError.infoFlag),
       private: aPageError.isFromPrivateWindow,
+      stacktrace: stack
     };
   },
 

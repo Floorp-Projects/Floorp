@@ -1079,7 +1079,7 @@ function waitForMessages(options) {
         let file = frame.querySelector(".message-location").title;
         if (!checkText(expected.file, file)) {
           ok(false, "frame #" + i + " does not match file name: " +
-                    expected.file);
+                    expected.file + " != " + file);
           displayErrorContext(rule, element);
           return false;
         }
@@ -1089,7 +1089,7 @@ function waitForMessages(options) {
         let fn = frame.querySelector(".function").textContent;
         if (!checkText(expected.fn, fn)) {
           ok(false, "frame #" + i + " does not match the function name: " +
-                    expected.fn);
+                    expected.fn + " != " + fn);
           displayErrorContext(rule, element);
           return false;
         }
@@ -1099,7 +1099,7 @@ function waitForMessages(options) {
         let line = frame.querySelector(".message-location").sourceLine;
         if (!checkText(expected.line, line)) {
           ok(false, "frame #" + i + " does not match the line number: " +
-                    expected.line);
+                    expected.line + " != " + line);
           displayErrorContext(rule, element);
           return false;
         }
