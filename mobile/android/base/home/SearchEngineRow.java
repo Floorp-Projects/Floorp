@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
@@ -274,7 +275,9 @@ class SearchEngineRow extends AnimatedHeightLayout {
         if (suggestionsEnabled) {
             final int recycledSuggestionCount = mSuggestionView.getChildCount();
             final int suggestionViewCount = updateFromSearchEngine(searchEngine, animate, recycledSuggestionCount);
-            updateFromSavedSearches(searchTerm, animate, suggestionViewCount, recycledSuggestionCount);
+            if (AppConstants.NIGHTLY_BUILD) {
+                updateFromSavedSearches(searchTerm, animate, suggestionViewCount, recycledSuggestionCount);
+            }
         }
     }
 
