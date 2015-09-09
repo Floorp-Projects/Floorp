@@ -1757,10 +1757,10 @@ private:
 
     InfallibleTArray<BluetoothNamedValue> properties;
 
-    BT_APPEND_NAMED_VALUE(properties, "Address", mBdAddr);
-    BT_APPEND_NAMED_VALUE(properties, "Rssi", mRssi);
-    BT_APPEND_NAMED_VALUE(properties, "GattAdv", mAdvData);
-    BT_APPEND_NAMED_VALUE(properties, "Type", static_cast<uint32_t>(type));
+    AppendNamedValue(properties, "Address", mBdAddr);
+    AppendNamedValue(properties, "Rssi", mRssi);
+    AppendNamedValue(properties, "GattAdv", mAdvData);
+    AppendNamedValue(properties, "Type", static_cast<uint32_t>(type));
 
     BluetoothService* bs = BluetoothService::Get();
     NS_ENSURE_TRUE_VOID(bs);
@@ -1990,8 +1990,8 @@ BluetoothGattManager::GetCharacteristicNotification(
     // Notify BluetoothGatt to make BluetoothGattService create characteristics
     // then proceed
     nsTArray<BluetoothNamedValue> values;
-    BT_APPEND_NAMED_VALUE(values, "serviceId", aServiceId);
-    BT_APPEND_NAMED_VALUE(values, "characteristics", client->mCharacteristics);
+    AppendNamedValue(values, "serviceId", aServiceId);
+    AppendNamedValue(values, "characteristics", client->mCharacteristics);
 
     bs->DistributeSignal(NS_LITERAL_STRING("CharacteristicsDiscovered"),
                          client->mAppUuid,
@@ -2036,9 +2036,9 @@ BluetoothGattManager::GetDescriptorNotification(
     // Notify BluetoothGatt to make BluetoothGattCharacteristic create
     // descriptors then proceed
     nsTArray<BluetoothNamedValue> values;
-    BT_APPEND_NAMED_VALUE(values, "serviceId", aServiceId);
-    BT_APPEND_NAMED_VALUE(values, "characteristicId", aCharId);
-    BT_APPEND_NAMED_VALUE(values, "descriptors", client->mDescriptors);
+    AppendNamedValue(values, "serviceId", aServiceId);
+    AppendNamedValue(values, "characteristicId", aCharId);
+    AppendNamedValue(values, "descriptors", client->mDescriptors);
 
     bs->DistributeSignal(NS_LITERAL_STRING("DescriptorsDiscovered"),
                          client->mAppUuid,
@@ -2082,9 +2082,8 @@ BluetoothGattManager::GetIncludedServiceNotification(
     // Notify BluetoothGatt to make BluetoothGattService create included
     // services
     nsTArray<BluetoothNamedValue> values;
-    BT_APPEND_NAMED_VALUE(values, "serviceId", aServiceId);
-    BT_APPEND_NAMED_VALUE(values, "includedServices",
-                          client->mIncludedServices);
+    AppendNamedValue(values, "serviceId", aServiceId);
+    AppendNamedValue(values, "includedServices", client->mIncludedServices);
 
     bs->DistributeSignal(NS_LITERAL_STRING("IncludedServicesDiscovered"),
                          client->mAppUuid,
@@ -2491,8 +2490,8 @@ BluetoothGattManager::ConnectionNotification(int aConnId,
 
   // Notify BluetoothGattServer that connection status changed
   InfallibleTArray<BluetoothNamedValue> props;
-  BT_APPEND_NAMED_VALUE(props, "Connected", aConnected);
-  BT_APPEND_NAMED_VALUE(props, "Address", nsString(aBdAddr));
+  AppendNamedValue(props, "Connected", aConnected);
+  AppendNamedValue(props, "Address", nsString(aBdAddr));
   bs->DistributeSignal(
     NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID),
     server->mAppUuid,

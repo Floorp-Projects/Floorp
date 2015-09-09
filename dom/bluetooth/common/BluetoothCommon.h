@@ -59,22 +59,6 @@ extern bool gBluetoothDebugFlag;
 #endif
 
 /**
- * Wrap literal name and value into a BluetoothNamedValue
- * and append it to the array.
- */
-#define BT_APPEND_NAMED_VALUE(array, name, value)                    \
-  array.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING(name),   \
-                                          BluetoothValue(value)))
-
-/**
- * Wrap literal name and value into a BluetoothNamedValue
- * and insert it to the array.
- */
-#define BT_INSERT_NAMED_VALUE(array, index, name, value)                      \
-  array.InsertElementAt(index, BluetoothNamedValue(NS_LITERAL_STRING(name),   \
-                                                   BluetoothValue(value)))
-
-/**
  * Convert an enum value to string and append it to a fallible array.
  */
 #define BT_APPEND_ENUM_STRING_FALLIBLE(array, enumType, enumValue)   \
