@@ -2365,27 +2365,43 @@ function BrowserViewSourceOfDocument(aArgsOrDocument) {
     args = aArgsOrDocument;
   }
 
-  let inTab = Services.prefs.getBoolPref("view_source.tab");
-  if (inTab) {
-    let viewSourceURL = `view-source:${args.URL}`;
-    let tabBrowser = gBrowser;
-    // In the case of sidebars and chat windows, gBrowser is defined but null,
-    // because no #content element exists.  For these cases, we need to find
-    // the most recent browser window.
-    // In the case of popups, we need to find a non-popup browser window.
-    if (!tabBrowser || !window.toolbar.visible) {
-      // This returns only non-popup browser windows by default.
-      let browserWindow = RecentWindow.getMostRecentBrowserWindow();
-      tabBrowser = browserWindow.gBrowser;
+  let viewInternal = () => {
+    let inTab = Services.prefs.getBoolPref("view_source.tab");
+    if (inTab) {
+      let viewSourceURL = `view-source:${args.URL}`;
+      let tabBrowser = gBrowser;
+      // In the case of sidebars and chat windows, gBrowser is defined but null,
+      // because no #content element exists.  For these cases, we need to find
+      // the most recent browser window.
+      // In the case of popups, we need to find a non-popup browser window.
+      if (!tabBrowser || !window.toolbar.visible) {
+        // This returns only non-popup browser windows by default.
+        let browserWindow = RecentWindow.getMostRecentBrowserWindow();
+        tabBrowser = browserWindow.gBrowser;
+      }
+      let tab = tabBrowser.loadOneTab(viewSourceURL, {
+        relatedToCurrent: true,
+        inBackground: false
+      });
+      args.viewSourceBrowser = tabBrowser.getBrowserForTab(tab);
+      top.gViewSourceUtils.viewSourceInBrowser(args);
+    } else {
+      top.gViewSourceUtils.viewSource(args);
     }
-    let tab = tabBrowser.loadOneTab(viewSourceURL, {
-      relatedToCurrent: true,
-      inBackground: false
+  }
+
+  // Check if external view source is enabled.  If so, try it.  If it fails,
+  // fallback to internal view source.
+  if (Services.prefs.getBoolPref("view_source.editor.external")) {
+    top.gViewSourceUtils
+       .openInExternalEditor(args, null, null, null, result => {
+      if (!result) {
+        viewInternal();
+      }
     });
-    args.viewSourceBrowser = tabBrowser.getBrowserForTab(tab);
-    top.gViewSourceUtils.viewSourceInBrowser(args);
   } else {
-    top.gViewSourceUtils.viewSource(args);
+    // Display using internal view source
+    viewInternal();
   }
 }
 
