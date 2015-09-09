@@ -305,6 +305,11 @@ struct BluetoothUuid {
     }
     return true;
   }
+
+  bool operator!=(const BluetoothUuid& aOther) const
+  {
+    return !(*this == aOther);
+  }
 };
 
 struct BluetoothServiceRecord {

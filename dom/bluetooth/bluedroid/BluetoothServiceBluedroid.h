@@ -22,6 +22,7 @@ class BluetoothServiceBluedroid : public BluetoothService
   class DispatchReplyErrorResultHandler;
   class EnableResultHandler;
   class GetRemoteDevicePropertiesResultHandler;
+  class GetRemoteServiceRecordResultHandler;
   class InitResultHandler;
   class PinReplyResultHandler;
   class ProfileDeinitResultHandler;
@@ -30,6 +31,7 @@ class BluetoothServiceBluedroid : public BluetoothService
   class SspReplyResultHandler;
 
   class GetDeviceRequest;
+  struct GetRemoteServiceRecordRequest;
 
 public:
   BluetoothServiceBluedroid();
@@ -394,6 +396,9 @@ protected:
 
   // <address, name> mapping table for remote devices
   nsDataHashtable<nsStringHashKey, nsString> mDeviceNameMap;
+
+  // Arrays for SDP operations
+  nsTArray<GetRemoteServiceRecordRequest> mGetRemoteServiceRecordArray;
 };
 
 END_BLUETOOTH_NAMESPACE

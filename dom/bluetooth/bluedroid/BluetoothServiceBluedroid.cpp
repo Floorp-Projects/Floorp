@@ -841,12 +841,108 @@ BluetoothServiceBluedroid::SetProperty(BluetoothObjectType aType,
   return NS_OK;
 }
 
+struct BluetoothServiceBluedroid::GetRemoteServiceRecordRequest final
+{
+  GetRemoteServiceRecordRequest(const nsAString& aDeviceAddress,
+                                const BluetoothUuid& aUuid,
+                                BluetoothProfileManagerBase* aManager)
+    : mDeviceAddress(aDeviceAddress)
+    , mUuid(aUuid)
+    , mManager(aManager)
+  {
+    MOZ_ASSERT(!mDeviceAddress.IsEmpty());
+    MOZ_ASSERT(mManager);
+  }
+
+  nsString mDeviceAddress;
+  BluetoothUuid mUuid;
+  BluetoothProfileManagerBase* mManager;
+};
+
+class BluetoothServiceBluedroid::GetRemoteServiceRecordResultHandler final
+  : public BluetoothResultHandler
+{
+public:
+  GetRemoteServiceRecordResultHandler(
+    nsTArray<GetRemoteServiceRecordRequest>& aGetRemoteServiceRecordArray,
+    const nsAString& aDeviceAddress,
+    const BluetoothUuid& aUuid)
+    : mGetRemoteServiceRecordArray(aGetRemoteServiceRecordArray)
+    , mDeviceAddress(aDeviceAddress)
+    , mUuid(aUuid)
+  {
+    MOZ_ASSERT(!mDeviceAddress.IsEmpty());
+  }
+
+  void OnError(BluetoothStatus aStatus) override
+  {
+    // Find call in array
+
+    ssize_t i = FindRequest();
+
+    if (i == -1) {
+      BT_WARNING("No GetRemoteService request found");
+      return;
+    }
+
+    // Signal error to profile manager
+
+    nsAutoString uuidStr;
+    UuidToString(mUuid, uuidStr);
+    mGetRemoteServiceRecordArray[i].mManager->OnGetServiceChannel(
+      mDeviceAddress, uuidStr, -1);
+    mGetRemoteServiceRecordArray.RemoveElementAt(i);
+  }
+
+  void CancelDiscovery() override
+  {
+    // Disabled discovery mode, now perform SDP operation.
+    sBtInterface->GetRemoteServiceRecord(mDeviceAddress, mUuid.mUuid, this);
+  }
+
+private:
+  ssize_t FindRequest() const
+  {
+    for (size_t i = 0; i < mGetRemoteServiceRecordArray.Length(); ++i) {
+      if ((mGetRemoteServiceRecordArray[i].mDeviceAddress == mDeviceAddress) &&
+          (mGetRemoteServiceRecordArray[i].mUuid == mUuid)) {
+        return i;
+      }
+    }
+
+    return -1;
+  }
+
+  nsTArray<GetRemoteServiceRecordRequest>& mGetRemoteServiceRecordArray;
+  nsString mDeviceAddress;
+  BluetoothUuid mUuid;
+};
+
 nsresult
 BluetoothServiceBluedroid::GetServiceChannel(
   const nsAString& aDeviceAddress,
   const nsAString& aServiceUuid,
   BluetoothProfileManagerBase* aManager)
 {
+  BluetoothUuid uuid;
+  StringToUuid(aServiceUuid, uuid);
+  mGetRemoteServiceRecordArray.AppendElement(
+    GetRemoteServiceRecordRequest(aDeviceAddress, uuid, aManager));
+
+  nsRefPtr<BluetoothResultHandler> res =
+    new GetRemoteServiceRecordResultHandler(mGetRemoteServiceRecordArray,
+                                            aDeviceAddress, uuid);
+
+  /* Stop discovery of remote devices here, because SDP operations
+   * won't be performed while the adapter is in discovery mode.
+   */
+  if (mDiscovering) {
+    sBtInterface->CancelDiscovery(res);
+  } else {
+    sBtInterface->GetRemoteServiceRecord(
+      aDeviceAddress, uuid.mUuid, res);
+  }
+
   return NS_OK;
 }
 
@@ -1657,6 +1753,28 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
       AppendNamedValue(propertiesArray, "Type",
                        static_cast<uint32_t>(p.mTypeOfDevice));
 
+    } else if (p.mType == PROPERTY_SERVICE_RECORD) {
+
+      size_t i;
+
+      // Find call in array
+
+      for (i = 0; i < mGetRemoteServiceRecordArray.Length(); ++i) {
+        if ((mGetRemoteServiceRecordArray[i].mDeviceAddress == aBdAddr) &&
+            (mGetRemoteServiceRecordArray[i].mUuid == p.mServiceRecord.mUuid)) {
+
+          // Signal channel to profile manager
+          nsAutoString uuidStr;
+          UuidToString(mGetRemoteServiceRecordArray[i].mUuid, uuidStr);
+
+          mGetRemoteServiceRecordArray[i].mManager->OnGetServiceChannel(
+            aBdAddr, uuidStr, p.mServiceRecord.mChannel);
+
+          mGetRemoteServiceRecordArray.RemoveElementAt(i);
+          break;
+        }
+      }
+      unused << NS_WARN_IF(i == mGetRemoteServiceRecordArray.Length());
     } else if (p.mType == PROPERTY_UNKNOWN) {
       /* Bug 1065999: working around unknown properties */
     } else {
