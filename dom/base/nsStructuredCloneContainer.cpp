@@ -16,7 +16,6 @@
 #include "xpcpublic.h"
 
 #include "mozilla/Base64.h"
-#include "mozilla/dom/StructuredCloneHelper.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 using namespace mozilla;
@@ -31,24 +30,19 @@ NS_INTERFACE_MAP_BEGIN(nsStructuredCloneContainer)
 NS_INTERFACE_MAP_END
 
 nsStructuredCloneContainer::nsStructuredCloneContainer()
-  : StructuredCloneHelper(CloningSupported, TransferringNotSupported,
-                          DifferentProcess)
-  , mState(eNotInitialized) , mData(nullptr), mSize(0), mVersion(0)
+  : mVersion(0)
 {
 }
 
 nsStructuredCloneContainer::~nsStructuredCloneContainer()
 {
-  if (mData) {
-    free(mData);
-  }
 }
 
 NS_IMETHODIMP
 nsStructuredCloneContainer::InitFromJSVal(JS::Handle<JS::Value> aData,
                                           JSContext* aCx)
 {
-  if (mState != eNotInitialized) {
+  if (DataLength()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -58,7 +52,7 @@ nsStructuredCloneContainer::InitFromJSVal(JS::Handle<JS::Value> aData,
     return rv.StealNSResult();
   }
 
-  mState = eInitializedFromJSVal;
+  mVersion = JS_STRUCTURED_CLONE_VERSION;
   return NS_OK;
 }
 
@@ -67,7 +61,7 @@ nsStructuredCloneContainer::InitFromBase64(const nsAString &aData,
                                            uint32_t aFormatVersion,
                                            JSContext* aCx)
 {
-  if (mState != eNotInitialized) {
+  if (DataLength()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -77,15 +71,11 @@ nsStructuredCloneContainer::InitFromBase64(const nsAString &aData,
   nsresult rv = Base64Decode(data, binaryData);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Copy the string's data into our own buffer.
-  mData = (uint64_t*) malloc(binaryData.Length());
-  NS_ENSURE_STATE(mData);
-  memcpy(mData, binaryData.get(), binaryData.Length());
+  if (!CopyExternalData(binaryData.get(), binaryData.Length())) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  mSize = binaryData.Length();
   mVersion = aFormatVersion;
-
-  mState = eInitializedFromBase64;
   return NS_OK;
 }
 
@@ -96,21 +86,10 @@ nsStructuredCloneContainer::DeserializeToJsval(JSContext* aCx,
   aValue.setNull();
   JS::Rooted<JS::Value> jsStateObj(aCx);
 
-  if (mState == eInitializedFromJSVal) {
-    ErrorResult rv;
-    Read(nullptr, aCx, &jsStateObj, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      return rv.StealNSResult();
-    }
-  } else {
-    MOZ_ASSERT(mState == eInitializedFromBase64);
-    MOZ_ASSERT(mData);
-
-    ErrorResult rv;
-    ReadFromBuffer(nullptr, aCx, mData, mSize, mVersion, &jsStateObj, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      return rv.StealNSResult();
-    }
+  ErrorResult rv;
+  Read(aCx, &jsStateObj, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
 
   aValue.set(jsStateObj);
@@ -124,7 +103,7 @@ nsStructuredCloneContainer::DeserializeToVariant(JSContext* aCx,
   NS_ENSURE_ARG_POINTER(aData);
   *aData = nullptr;
 
-  if (mState == eNotInitialized) {
+  if (!DataLength()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -151,29 +130,15 @@ nsStructuredCloneContainer::GetDataAsBase64(nsAString &aOut)
 {
   aOut.Truncate();
 
-  if (mState == eNotInitialized) {
+  if (!DataLength()) {
     return NS_ERROR_FAILURE;
   }
 
-  uint64_t* data;
-  size_t size;
-
-  if (mState == eInitializedFromJSVal) {
-    if (HasClonedDOMObjects()) {
-      return NS_ERROR_FAILURE;
-    }
-
-    data = BufferData();
-    size = BufferSize();
-  } else {
-    MOZ_ASSERT(mState == eInitializedFromBase64);
-    MOZ_ASSERT(mData);
-
-    data = mData;
-    size = mSize;
+  if (HasClonedDOMObjects()) {
+    return NS_ERROR_FAILURE;
   }
 
-  nsAutoCString binaryData(reinterpret_cast<char*>(data), size);
+  nsAutoCString binaryData(reinterpret_cast<char*>(Data()), DataLength());
   nsAutoCString base64Data;
   nsresult rv = Base64Encode(binaryData, base64Data);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -189,22 +154,11 @@ nsStructuredCloneContainer::GetSerializedNBytes(uint64_t* aSize)
 {
   NS_ENSURE_ARG_POINTER(aSize);
 
-  if (mState == eNotInitialized) {
+  if (!DataLength()) {
     return NS_ERROR_FAILURE;
   }
 
-  if (mState == eInitializedFromJSVal) {
-    *aSize = BufferSize();
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(mState == eInitializedFromBase64);
-
-  // mSize is a size_t, while aSize is a uint64_t.  We rely on an implicit cast
-  // here so that we'll get a compile error if a size_t-to-uint64_t cast is
-  // narrowing.
-  *aSize = mSize;
-
+  *aSize = DataLength();
   return NS_OK;
 }
 
@@ -213,16 +167,10 @@ nsStructuredCloneContainer::GetFormatVersion(uint32_t* aFormatVersion)
 {
   NS_ENSURE_ARG_POINTER(aFormatVersion);
 
-  if (mState == eNotInitialized) {
+  if (!DataLength()) {
     return NS_ERROR_FAILURE;
   }
 
-  if (mState == eInitializedFromJSVal) {
-    *aFormatVersion = JS_STRUCTURED_CLONE_VERSION;
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(mState == eInitializedFromBase64);
   *aFormatVersion = mVersion;
   return NS_OK;
 }

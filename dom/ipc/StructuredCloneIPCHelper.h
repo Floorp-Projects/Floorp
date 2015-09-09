@@ -16,7 +16,7 @@ class Message;
 namespace mozilla {
 namespace dom {
 
-class StructuredCloneIPCHelper final : public StructuredCloneHelper
+class StructuredCloneIPCHelper : public StructuredCloneHelper
 {
 public:
   StructuredCloneIPCHelper()
@@ -32,9 +32,7 @@ public:
 
   ~StructuredCloneIPCHelper()
   {
-    if (mDataOwned == eAllocated) {
-      free(mData);
-    } else if (mDataOwned == eJSAllocated) {
+    if (mDataOwned == eJSAllocated) {
       js_free(mData);
     }
   }
@@ -70,6 +68,8 @@ public:
     MOZ_ASSERT(mDataOwned == eNone);
   }
 
+  bool CopyExternalData(const void* aData, size_t aDataLength);
+
   uint64_t* Data() const
   {
     return mData;
@@ -89,8 +89,7 @@ private:
   size_t mDataLength;
   enum {
     eNone,
-    eAllocated,
-    eJSAllocated
+    eJSAllocated,
   } mDataOwned;
 };
 
