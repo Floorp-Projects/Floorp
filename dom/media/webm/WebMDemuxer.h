@@ -33,7 +33,7 @@ class MediaRawDataQueue {
   }
 
   already_AddRefed<MediaRawData> PopFront() {
-    nsRefPtr<MediaRawData> result = mQueue.front();
+    nsRefPtr<MediaRawData> result = mQueue.front().forget();
     mQueue.pop_front();
     return result.forget();
   }
