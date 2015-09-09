@@ -372,7 +372,7 @@
             var left, widthdiff;
             if (style.direction == "rtl") {
               left = cellRect.x;
-              widthdiff = cellRect.x + cellRect.width - textRect.x - textRect.width;
+              widthdiff = cellRect.x - textRect.x;
             } else {
               left = textRect.x;
               widthdiff = textRect.x - cellRect.x;

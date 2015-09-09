@@ -1173,7 +1173,7 @@ nsPlaintextEditor::FireClipboardEvent(EventMessage aEventMessage,
                                       int32_t aSelectionType,
                                       bool* aActionTaken)
 {
-  if (aEventMessage == NS_PASTE) {
+  if (aEventMessage == ePaste) {
     ForceCompositionEnd();
   }
 
@@ -1198,7 +1198,7 @@ nsPlaintextEditor::FireClipboardEvent(EventMessage aEventMessage,
 NS_IMETHODIMP nsPlaintextEditor::Cut()
 {
   bool actionTaken = false;
-  if (FireClipboardEvent(NS_CUT, nsIClipboard::kGlobalClipboard, &actionTaken)) {
+  if (FireClipboardEvent(eCut, nsIClipboard::kGlobalClipboard, &actionTaken)) {
     DeleteSelection(eNone, eStrip);
   }
   return actionTaken ? NS_OK : NS_ERROR_FAILURE;
@@ -1217,7 +1217,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanCut(bool *aCanCut)
 NS_IMETHODIMP nsPlaintextEditor::Copy()
 {
   bool actionTaken = false;
-  FireClipboardEvent(NS_COPY, nsIClipboard::kGlobalClipboard, &actionTaken);
+  FireClipboardEvent(eCopy, nsIClipboard::kGlobalClipboard, &actionTaken);
 
   return actionTaken ? NS_OK : NS_ERROR_FAILURE;
 }

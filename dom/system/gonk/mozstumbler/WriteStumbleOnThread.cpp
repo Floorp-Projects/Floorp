@@ -17,12 +17,12 @@
 #define ONEDAY_IN_MSEC (24 * 60 * 60 * 1000)
 #define MAX_UPLOAD_ATTEMPTS 20
 
-mozilla::Atomic<bool> WriteStumbleOnThread::sIsUploading(false);
+mozilla::Atomic<bool> WriteStumbleOnThread::sIsFileWaitingForUpload(false);
 mozilla::Atomic<bool> WriteStumbleOnThread::sIsAlreadyRunning(false);
 WriteStumbleOnThread::UploadFreqGuard WriteStumbleOnThread::sUploadFreqGuard = {0};
 
-#define FILENAME_INPROGRESS NS_LITERAL_CSTRING("stumbles.json")
-#define FILENAME_COMPLETED NS_LITERAL_CSTRING("stumbles.done.json")
+#define FILENAME_INPROGRESS NS_LITERAL_CSTRING("stumbles.json.gz")
+#define FILENAME_COMPLETED NS_LITERAL_CSTRING("stumbles.done.json.gz")
 #define OUTPUT_DIR NS_LITERAL_CSTRING("mozstumbler")
 
 class DeleteRunnable : public nsRunnable
@@ -42,7 +42,8 @@ class DeleteRunnable : public nsRunnable
         tmpFile->Remove(true);
       }
       // critically, this sets this flag to false so writing can happen again
-      WriteStumbleOnThread::sIsUploading = false;
+      WriteStumbleOnThread::sIsAlreadyRunning = false;
+      WriteStumbleOnThread::sIsFileWaitingForUpload = false;
       return NS_OK;
     }
 
@@ -50,11 +51,17 @@ class DeleteRunnable : public nsRunnable
     ~DeleteRunnable() {}
 };
 
+bool
+WriteStumbleOnThread::IsFileWaitingForUpload()
+{
+  return sIsFileWaitingForUpload;
+}
+
 void
 WriteStumbleOnThread::UploadEnded(bool deleteUploadFile)
 {
   if (!deleteUploadFile) {
-    sIsUploading = false;
+    sIsAlreadyRunning = false;
     return;
   }
 
@@ -63,15 +70,6 @@ WriteStumbleOnThread::UploadEnded(bool deleteUploadFile)
   nsCOMPtr<nsIRunnable> event = new DeleteRunnable();
   target->Dispatch(event, NS_DISPATCH_NORMAL);
 }
-
-#define DUMP(o, s) \
-  do { \
-    const char* s2 = (s); \
-    uint32_t dummy; \
-    nsresult rv = (o)->Write((s2), strlen(s2), &dummy); \
-    if (NS_WARN_IF(NS_FAILED(rv))) \
-    STUMBLER_ERR("write err"); \
-  } while (0)
 
 void
 WriteStumbleOnThread::WriteJSON(Partition aPart)
@@ -87,10 +85,10 @@ WriteStumbleOnThread::WriteJSON(Partition aPart)
     return;
   }
 
-  nsCOMPtr<nsIFileOutputStream> ostream = do_CreateInstance("@mozilla.org/network/file-output-stream;1");
-  rv = ostream->Init(tmpFile, PR_WRONLY | PR_APPEND, 0666, 0);
+  nsRefPtr<nsGZFileWriter> gzWriter = new nsGZFileWriter(nsGZFileWriter::Append);
+  rv = gzWriter->Init(tmpFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    STUMBLER_ERR("Open a file for stumble failed");
+    STUMBLER_ERR("gzWriter init failed");
     return;
   }
 
@@ -105,8 +103,8 @@ WriteStumbleOnThread::WriteJSON(Partition aPart)
 
   // Need to add "]}" after the last item
   if (aPart == Partition::End) {
-    DUMP(ostream, "]}");
-    rv = ostream->Close();
+    gzWriter->Write("]}");
+    rv = gzWriter->Finish();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       STUMBLER_ERR("ostream finish failed");
     }
@@ -136,14 +134,14 @@ WriteStumbleOnThread::WriteJSON(Partition aPart)
 
   // Need to add "{items:[" before the first item
   if (aPart == Partition::Begining) {
-    DUMP(ostream, "{\"items\":[{");
+    gzWriter->Write("{\"items\":[{");
   } else if (aPart == Partition::Middle) {
-    DUMP(ostream, ",{");
+    gzWriter->Write(",{");
   }
-  DUMP(ostream, mDesc.get());
+  gzWriter->Write(mDesc.get());
   //  one item is ended with '}' (e.g. {item})
-  DUMP(ostream, "}");
-  rv = ostream->Close();
+  gzWriter->Write("}");
+  rv = gzWriter->Finish();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     STUMBLER_ERR("ostream finish failed");
   }
@@ -204,7 +202,9 @@ WriteStumbleOnThread::Run()
 
   if (UploadFileStatus::NoFile != status) {
     if (UploadFileStatus::ExistsAndReadyToUpload == status) {
+      sIsFileWaitingForUpload = true;
       Upload();
+      return NS_OK;
     }
   } else {
     Partition partition = GetWritePosition();
@@ -215,6 +215,7 @@ WriteStumbleOnThread::Run()
     }
   }
 
+  sIsFileWaitingForUpload = false;
   sIsAlreadyRunning = false;
   return NS_OK;
 }
@@ -259,11 +260,6 @@ WriteStumbleOnThread::Upload()
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  bool b = sIsUploading.exchange(true);
-  if (b) {
-    return;
-  }
-
   time_t seconds = time(0);
   int day = seconds / (60 * 60 * 24);
 
@@ -275,7 +271,7 @@ WriteStumbleOnThread::Upload()
   sUploadFreqGuard.attempts++;
   if (sUploadFreqGuard.attempts > MAX_UPLOAD_ATTEMPTS) {
     STUMBLER_ERR("Too many upload attempts today");
-    sIsUploading = false;
+    sIsAlreadyRunning = false;
     return;
   }
 
@@ -286,32 +282,23 @@ WriteStumbleOnThread::Upload()
   rv = tmpFile->GetFileSize(&fileSize);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     STUMBLER_ERR("GetFileSize failed");
-    sIsUploading = false;
+    sIsAlreadyRunning = false;
     return;
   }
 
   if (fileSize <= 0) {
-    sIsUploading = false;
+    sIsAlreadyRunning = false;
     return;
   }
 
   // prepare json into nsIInputStream
   nsCOMPtr<nsIInputStream> inStream;
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(inStream), tmpFile, -1, -1,
-                                  nsIFileInputStream::DEFER_OPEN);
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(inStream), tmpFile);
   if (NS_FAILED(rv)) {
-    sIsUploading = false;
+    sIsAlreadyRunning = false;
     return;
   }
 
-  nsCString bufStr;
-  rv = NS_ReadInputStreamToString(inStream, bufStr, fileSize);
-
-  if (NS_FAILED(rv)) {
-    sIsUploading = false;
-    return;
-  }
-
-  nsRefPtr<nsIRunnable> uploader = new UploadStumbleRunnable(bufStr);
+  nsRefPtr<nsIRunnable> uploader = new UploadStumbleRunnable(inStream);
   NS_DispatchToMainThread(uploader);
 }

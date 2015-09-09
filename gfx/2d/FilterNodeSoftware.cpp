@@ -629,6 +629,12 @@ FilterNodeSoftware::GetOutput(const IntRect &aRect)
 void
 FilterNodeSoftware::RequestRect(const IntRect &aRect)
 {
+  if (mRequestedRect.Contains(aRect)) {
+    // Bail out now. Otherwise pathological filters can spend time exponential
+    // in the number of primitives, e.g. if each primitive takes the
+    // previous primitive as its two inputs.
+    return;
+  }
   mRequestedRect = mRequestedRect.Union(aRect);
   RequestFromInputsForRect(aRect);
 }
