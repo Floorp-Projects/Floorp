@@ -439,6 +439,13 @@ SandboxBroker::AllowDirectory(wchar_t const *dir)
   return (sandbox::SBOX_ALL_OK == result);
 }
 
+bool
+SandboxBroker::AddTargetPeer(HANDLE aPeerProcess)
+{
+  sandbox::ResultCode result = sBrokerService->AddTargetPeer(aPeerProcess);
+  return (sandbox::SBOX_ALL_OK == result);
+}
+
 SandboxBroker::~SandboxBroker()
 {
   if (mPolicy) {

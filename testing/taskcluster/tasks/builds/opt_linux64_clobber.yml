@@ -1,0 +1,18 @@
+$inherits:
+  from: 'tasks/builds/linux64_clobber.yml'
+  variables:
+    build_name: 'linux64'
+    build_type: 'opt'
+task:
+  metadata:
+      name: '[TC] Linux64 Opt'
+      description: 'Linux64 Opt'
+
+  workerType: opt-linux64
+
+  extra:
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
+      symbol: B
+
