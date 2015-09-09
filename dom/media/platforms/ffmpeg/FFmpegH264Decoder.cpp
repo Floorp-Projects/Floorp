@@ -33,6 +33,7 @@ FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
   , mImageContainer(aImageContainer)
   , mDisplayWidth(aConfig.mDisplay.width)
   , mDisplayHeight(aConfig.mDisplay.height)
+  , mCodecParser(nullptr)
 {
   MOZ_COUNT_CTOR(FFmpegH264Decoder);
   // Use a new MediaByteBuffer as the object will be modified during initialization.
@@ -70,11 +71,62 @@ FFmpegH264Decoder<LIBAV_VER>::GetPts(const AVPacket& packet)
 FFmpegH264Decoder<LIBAV_VER>::DecodeResult
 FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
 {
+  uint8_t* inputData = const_cast<uint8_t*>(aSample->Data());
+  size_t inputSize = aSample->Size();
+
+  if (inputSize && (mCodecID == AV_CODEC_ID_VP8
+#if LIBAVCODEC_VERSION_MAJOR >= 55
+      || mCodecID == AV_CODEC_ID_VP9
+#endif
+      )) {
+    if (!mCodecParser) {
+      mCodecParser = av_parser_init(mCodecID);
+      if (!mCodecParser) {
+        mCallback->Error();
+        return DecodeResult::DECODE_ERROR;
+      }
+      mCodecParser->flags |= PARSER_FLAG_COMPLETE_FRAMES;
+    }
+    bool gotFrame = false;
+    while (inputSize) {
+      uint8_t* data;
+      int size;
+      int len = av_parser_parse2(mCodecParser, mCodecContext, &data, &size,
+                                 inputData, inputSize,
+                                 aSample->mTime, aSample->mTimecode,
+                                 aSample->mOffset);
+      if (size_t(len) > inputSize) {
+        mCallback->Error();
+        return DecodeResult::DECODE_ERROR;
+      }
+      inputData += len;
+      inputSize -= len;
+      if (size) {
+        switch (DoDecodeFrame(aSample, data, size)) {
+          case DecodeResult::DECODE_ERROR:
+            return DecodeResult::DECODE_ERROR;
+          case DecodeResult::DECODE_FRAME:
+            gotFrame = true;
+            break;
+          default:
+            break;
+        }
+      }
+    }
+    return gotFrame ? DecodeResult::DECODE_FRAME : DecodeResult::DECODE_NO_FRAME;
+  }
+  return DoDecodeFrame(aSample, inputData, inputSize);
+}
+
+FFmpegH264Decoder<LIBAV_VER>::DecodeResult
+FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
+                                            uint8_t* aData, int aSize)
+{
   AVPacket packet;
   av_init_packet(&packet);
 
-  packet.data = const_cast<uint8_t*>(aSample->Data());
-  packet.size = aSample->Size();
+  packet.data = aData;
+  packet.size = aSize;
   packet.dts = aSample->mTimecode;
   packet.pts = aSample->mTime;
   packet.flags = aSample->mKeyframe ? AV_PKT_FLAG_KEY : 0;
@@ -316,6 +368,10 @@ FFmpegH264Decoder<LIBAV_VER>::Flush()
 FFmpegH264Decoder<LIBAV_VER>::~FFmpegH264Decoder()
 {
   MOZ_COUNT_DTOR(FFmpegH264Decoder);
+  if (mCodecParser) {
+    av_parser_close(mCodecParser);
+    mCodecParser = nullptr;
+  }
 }
 
 AVCodecID
