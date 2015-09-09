@@ -2017,12 +2017,6 @@ public:
   virtual int64_t
   GetFileId() override;
 
-  virtual void
-  AddFileInfo(FileInfo* aFileInfo) override;
-
-  virtual FileInfo*
-  GetFileInfo(FileManager* aFileManager) override;
-
   virtual nsresult
   GetSendInfo(nsIInputStream** aBody,
               uint64_t* aContentLength,
@@ -2761,20 +2755,6 @@ BlobParent::
 RemoteBlobImpl::GetFileId()
 {
   return mBlobImpl->GetFileId();
-}
-
-void
-BlobParent::
-RemoteBlobImpl::AddFileInfo(FileInfo* aFileInfo)
-{
-  return mBlobImpl->AddFileInfo(aFileInfo);
-}
-
-FileInfo*
-BlobParent::
-RemoteBlobImpl::GetFileInfo(FileManager* aFileManager)
-{
-  return mBlobImpl->GetFileInfo(aFileManager);
 }
 
 nsresult
