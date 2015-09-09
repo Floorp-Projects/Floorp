@@ -82,13 +82,14 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                     remote_file = posixpath.join(self.remote_bin_dir, file)
                     self.device.pushFile(os.path.join(self.options.local_lib, file), remote_file)
             # Additional libraries may be found in a sub-directory such as "lib/armeabi-v7a"
-            local_arm_lib = os.path.join(self.options.local_lib, "lib")
-            if os.path.isdir(local_arm_lib):
-                for root, dirs, files in os.walk(local_arm_lib):
-                    for file in files:
-                        if (file.endswith(".so")):
-                            remote_file = posixpath.join(self.remote_bin_dir, file)
-                            self.device.pushFile(os.path.join(root, file), remote_file)
+            for subdir in ["assets", "lib"]:
+                local_arm_lib = os.path.join(self.options.local_lib, subdir)
+                if os.path.isdir(local_arm_lib):
+                    for root, dirs, files in os.walk(local_arm_lib):
+                        for file in files:
+                            if (file.endswith(".so")):
+                                remote_file = posixpath.join(self.remote_bin_dir, file)
+                                self.device.pushFile(os.path.join(root, file), remote_file)
 
     def push_progs(self, progs):
         for local_file in progs:
