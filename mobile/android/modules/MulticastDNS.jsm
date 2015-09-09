@@ -83,6 +83,7 @@ ServiceManager.prototype = {
     }
     let index = this.listeners[aServiceType].indexOf(aListener);
     if (index < 0) {
+      log("listener doesn't exist");
       return;
     }
 
@@ -149,7 +150,12 @@ MulticastDNS.prototype = {
   startDiscovery: function(aServiceType, aListener) {
     this.serviceManager.addListener(aServiceType, aListener);
 
-    send("NsdManager:DiscoverServices", { serviceType: aServiceType }, (result, err) => {
+    let serviceInfo = {
+      serviceType: aServiceType,
+      uniqueId: aListener.uuid
+    };
+
+    send("NsdManager:DiscoverServices", serviceInfo, (result, err) => {
       if (err) {
         log("onStartDiscoveryFailed: " + aServiceType + " (" + err + ")");
         this.serviceManager.removeListener(aServiceType, aListener);
@@ -163,7 +169,11 @@ MulticastDNS.prototype = {
   stopDiscovery: function(aServiceType, aListener) {
     this.serviceManager.removeListener(aServiceType, aListener);
 
-    send("NsdManager:StopServiceDiscovery", {}, (result, err) => {
+    let serviceInfo = {
+      uniqueId: aListener.uuid
+    };
+
+    send("NsdManager:StopServiceDiscovery", serviceInfo, (result, err) => {
       if (err) {
         log("onStopDiscoveryFailed: " + aServiceType + " (" + err + ")");
         aListener.onStopDiscoveryFailed(aServiceType, err);
@@ -177,6 +187,7 @@ MulticastDNS.prototype = {
     let serviceInfo = {
       port: aServiceInfo.port,
       serviceType: aServiceInfo.serviceType,
+      uniqueId: aListener.uuid
     };
 
     try {
@@ -206,7 +217,11 @@ MulticastDNS.prototype = {
   },
 
   unregisterService: function(aServiceInfo, aListener) {
-    send("NsdManager:UnregisterService", {}, (result, err) => {
+    let serviceInfo = {
+      uniqueId: aListener.uuid
+    };
+
+    send("NsdManager:UnregisterService", serviceInfo, (result, err) => {
       if (err) {
         log("onUnregistrationFailed: (" + err + ")");
         aListener.onUnregistrationFailed(aServiceInfo, err);
