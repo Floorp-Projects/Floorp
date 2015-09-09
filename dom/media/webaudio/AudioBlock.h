@@ -74,6 +74,12 @@ public:
     mBufferFormat = AUDIO_FORMAT_SILENCE;
   }
 
+  AudioBlock& operator=(const AudioBlock& aBlock) {
+    // Instead of just copying, mBufferIsDownstreamRef must be first cleared
+    // if set.  It is set again for the new mBuffer if possible.  This happens
+    // in SetBuffer().
+    return *this = aBlock.AsAudioChunk();
+  }
   AudioBlock& operator=(const AudioChunk& aChunk) {
     MOZ_ASSERT(aChunk.mDuration == WEBAUDIO_BLOCK_SIZE);
     SetBuffer(aChunk.mBuffer);
