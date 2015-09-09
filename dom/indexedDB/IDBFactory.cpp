@@ -454,6 +454,13 @@ IDBFactory::AssertIsOnOwningThread() const
   MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
 }
 
+PRThread*
+IDBFactory::OwningThread() const
+{
+  MOZ_ASSERT(mOwningThread);
+  return mOwningThread;
+}
+
 #endif // DEBUG
 
 bool

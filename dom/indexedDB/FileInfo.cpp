@@ -133,7 +133,8 @@ FileInfo::UpdateReferences(ThreadSafeAutoRefCnt& aRefCount,
                            int32_t aDelta)
 {
   // XXX This can go away once DOM objects no longer hold FileInfo objects...
-  //     Looking at you, IDBMutableFile...
+  //     Looking at you, BlobImplBase...
+  //     BlobImplBase is being addressed in bug 1068975.
   if (IndexedDatabaseManager::IsClosed()) {
     MOZ_ASSERT(&aRefCount == &mRefCnt);
     MOZ_ASSERT(aDelta == 1 || aDelta == -1);

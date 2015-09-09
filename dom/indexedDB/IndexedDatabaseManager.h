@@ -118,6 +118,9 @@ public:
     return ExperimentalFeaturesEnabled();
   }
 
+  static bool
+  IsFileHandleEnabled();
+
   already_AddRefed<FileManager>
   GetFileManager(PersistenceType aPersistenceType,
                  const nsACString& aOrigin,

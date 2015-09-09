@@ -2,12 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBlob;
 include protocol PBackgroundIDBDatabaseFile;
+include protocol PBackgroundMutableFile;
+include protocol PBlob;
 
 include DOMTypes;
 
 include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using struct mozilla::null_t
+  from "ipc/IPCMessageUtils.h";
 
 using struct mozilla::void_t
   from "ipc/IPCMessageUtils.h";
@@ -37,13 +41,22 @@ struct SerializedKeyRange
   bool isOnly;
 };
 
+union NullableMutableFile
+{
+  null_t;
+  PBackgroundMutableFile;
+};
+
+union BlobOrMutableFile
+{
+  PBlob;
+  NullableMutableFile;
+};
+
 struct SerializedStructuredCloneReadInfo
 {
   uint8_t[] data;
-  PBlob[] blobs;
-
-  // This will only be valid for parent process actors.
-  intptr_t[] fileInfos;
+  BlobOrMutableFile[] blobs;
 };
 
 struct SerializedStructuredCloneWriteInfo
@@ -141,11 +154,10 @@ union OpenCursorParams
   IndexOpenKeyCursorParams;
 };
 
-// XXX Remove this once MutableFile has been ported to PBackground.
-union DatabaseFileOrMutableFileId
+union DatabaseOrMutableFile
 {
   PBackgroundIDBDatabaseFile;
-  int64_t;
+  PBackgroundMutableFile;
 };
 
 struct ObjectStoreAddPutParams
@@ -154,7 +166,7 @@ struct ObjectStoreAddPutParams
   SerializedStructuredCloneWriteInfo cloneInfo;
   Key key;
   IndexUpdateInfo[] indexUpdateInfos;
-  DatabaseFileOrMutableFileId[] files;
+  DatabaseOrMutableFile[] files;
 };
 
 struct ObjectStoreAddParams

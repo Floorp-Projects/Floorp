@@ -38,9 +38,6 @@ union BlobData
   // For memory-backed blobs.
   uint8_t[];
 
-  // For file snapshots, this is an nsIInputStream.
-  intptr_t;
-
   // For multiplex blobs.
   BlobData[];
 };
