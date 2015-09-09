@@ -187,6 +187,8 @@
 #include "mozilla/layers/InputAPZContext.h"
 #include "InputData.h"
 
+#include "mozilla/Telemetry.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
@@ -3986,13 +3988,20 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
     return result;
   }
 
-  if (mTouchWindow && WinUtils::GetIsMouseFromTouch(aEventType)) {
-    // If mTouchWindow is true, then we must have APZ enabled and be
-    // feeding it raw touch events. In that case we don't need to
-    // send touch-generated mouse events to content.
-    MOZ_ASSERT(mAPZC);
-    return result;
+  if (WinUtils::GetIsMouseFromTouch(aEventMessage)) {
+    if (aEventMessage == eMouseDown) {
+      Telemetry::Accumulate(Telemetry::FX_TOUCH_USED, 1);
+    }
+
+    if (mTouchWindow) {
+      // If mTouchWindow is true, then we must have APZ enabled and be
+      // feeding it raw touch events. In that case we don't need to
+      // send touch-generated mouse events to content.
+      MOZ_ASSERT(mAPZC);
+      return result;
+    }
   }
+
 
   // Since it is unclear whether a user will use the digitizer,
   // Postpone initialization until first PEN message will be found.
