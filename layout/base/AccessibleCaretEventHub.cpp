@@ -611,8 +611,17 @@ AccessibleCaretEventHub::HandleKeyboardEvent(WidgetKeyboardEvent* aEvent)
 {
   switch (aEvent->mMessage) {
   case eKeyUp:
+    AC_LOGV("eKeyUp, state: %s", mState->Name());
+    mManager->OnKeyboardEvent();
+    break;
+
   case eKeyDown:
+    AC_LOGV("eKeyDown, state: %s", mState->Name());
+    mManager->OnKeyboardEvent();
+    break;
+
   case eKeyPress:
+    AC_LOGV("eKeyPress, state: %s", mState->Name());
     mManager->OnKeyboardEvent();
     break;
 

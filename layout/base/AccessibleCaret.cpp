@@ -112,7 +112,7 @@ AccessibleCaret::SetSelectionBarEnabled(bool aEnabled)
     return;
   }
 
-  AC_LOG("%s, enabled %d", __FUNCTION__, aEnabled);
+  AC_LOG("Set selection bar %s", __FUNCTION__, aEnabled ? "Enabled" : "Disabled");
 
   ErrorResult rv;
   CaretElement()->ClassList()->Toggle(NS_LITERAL_STRING("no-bar"),
