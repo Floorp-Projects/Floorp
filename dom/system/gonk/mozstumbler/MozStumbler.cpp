@@ -5,18 +5,123 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MozStumbler.h"
+#include "nsDataHashtable.h"
 #include "nsGeoPosition.h"
+#include "nsNetCID.h"
 #include "nsPrintfCString.h"
 #include "StumblerLogging.h"
 #include "WriteStumbleOnThread.h"
-#include "nsNetCID.h"
-#include "nsDataHashtable.h"
+#include "../GeolocationUtil.h"
+
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIMobileConnectionInfo.h"
+#include "nsIMobileConnectionService.h"
+#include "nsIMobileCellInfo.h"
+#include "nsIMobileNetworkInfo.h"
+#include "nsINetworkInterface.h"
+#include "nsIRadioInterfaceLayer.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
 
 NS_IMPL_ISUPPORTS(StumblerInfo, nsICellInfoListCallback, nsIWifiScanResultsReady)
+
+class RequestCellInfoEvent : public nsRunnable {
+public:
+  RequestCellInfoEvent(StumblerInfo *callback)
+  : mRequestCallback(callback)
+  {}
+
+  NS_IMETHOD Run() {
+    MOZ_ASSERT(NS_IsMainThread());
+    // Get Cell Info
+    nsCOMPtr<nsIMobileConnectionService> service =
+    do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
+
+    if (!service) {
+      STUMBLER_ERR("Stumbler-can not get nsIMobileConnectionService \n");
+      return NS_OK;
+    }
+    nsCOMPtr<nsIMobileConnection> connection;
+    uint32_t numberOfRilServices = 1, cellInfoNum = 0;
+
+    service->GetNumItems(&numberOfRilServices);
+    for (uint32_t rilNum = 0; rilNum < numberOfRilServices; rilNum++) {
+      service->GetItemByServiceId(rilNum /* Client Id */, getter_AddRefs(connection));
+      if (!connection) {
+        STUMBLER_ERR("Stumbler-can not get nsIMobileConnection by ServiceId %d \n", rilNum);
+      } else {
+        cellInfoNum++;
+        connection->GetCellInfoList(mRequestCallback);
+      }
+    }
+    mRequestCallback->SetCellInfoResponsesExpected(cellInfoNum);
+
+    // Get Wifi AP Info
+    nsCOMPtr<nsIInterfaceRequestor> ir = do_GetService("@mozilla.org/telephony/system-worker-manager;1");
+    nsCOMPtr<nsIWifi> wifi = do_GetInterface(ir);
+    if (!wifi) {
+      mRequestCallback->SetWifiInfoResponseReceived();
+      STUMBLER_ERR("Stumbler-can not get nsIWifi interface\n");
+      return NS_OK;
+    }
+    wifi->GetWifiScanResults(mRequestCallback);
+    return NS_OK;
+  }
+private:
+  nsRefPtr<StumblerInfo> mRequestCallback;
+};
+
+void
+MozStumble(nsGeoPosition* position)
+{
+  if (WriteStumbleOnThread::IsFileWaitingForUpload()) {
+    nsCOMPtr<nsIEventTarget> target = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+    MOZ_ASSERT(target);
+    // Knowing that file is waiting to upload, and no collection will take place,
+    // just trigger the thread with an empty string.
+    nsCOMPtr<nsIRunnable> event = new WriteStumbleOnThread(EmptyCString());
+    target->Dispatch(event, NS_DISPATCH_NORMAL);
+    return;
+  }
+
+  nsCOMPtr<nsIDOMGeoPositionCoords> coords;
+  position->GetCoords(getter_AddRefs(coords));
+  if (!coords) {
+    return;
+  }
+
+  double latitude, longitude;
+  coords->GetLatitude(&latitude);
+  coords->GetLongitude(&longitude);
+
+  const double kMinChangeInMeters = 30;
+  static int64_t lastTime_ms = 0;
+  static double sLastLat = 0;
+  static double sLastLon = 0;
+  double delta = -1.0;
+  int64_t timediff = (PR_Now() / PR_USEC_PER_MSEC) - lastTime_ms;
+
+  if (0 != sLastLon || 0 != sLastLat) {
+    delta = CalculateDeltaInMeter(latitude, longitude, sLastLat, sLastLon);
+  }
+  STUMBLER_DBG("Stumbler-Location. [%f , %f] time_diff:%lld, delta : %f\n",
+                                      longitude, latitude, timediff, delta);
+
+  // Consecutive GPS locations must be 30 meters and 3 seconds apart
+  if (lastTime_ms == 0 || ((timediff >= STUMBLE_INTERVAL_MS) && (delta > kMinChangeInMeters))){
+    lastTime_ms = (PR_Now() / PR_USEC_PER_MSEC);
+    sLastLat = latitude;
+    sLastLon = longitude;
+    nsRefPtr<StumblerInfo> requestCallback = new StumblerInfo(position);
+    nsRefPtr<RequestCellInfoEvent> runnable = new RequestCellInfoEvent(requestCallback);
+    NS_DispatchToMainThread(runnable);
+  } else {
+    STUMBLER_DBG("Stumbler-GPS locations less than 30 meters and 3 seconds. Ignore!\n");
+  }
+}
 
 void
 StumblerInfo::SetWifiInfoResponseReceived()

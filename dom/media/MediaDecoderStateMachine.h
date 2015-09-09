@@ -167,8 +167,7 @@ private:
   // constructor immediately after the task queue is created.
   void InitializationTask();
 
-  void DispatchAudioCaptured();
-  void DispatchAudioUncaptured();
+  void SetAudioCaptured(bool aCaptured);
 
   void Shutdown();
 public:
@@ -489,19 +488,17 @@ protected:
   // state machine thread.
   void UpdateRenderedVideoFrames();
 
-  // Stops the audio sink and shut it down.
+  media::MediaSink* CreateAudioSink();
+
+  // Stops the media sink and shut it down.
   // The decoder monitor must be held with exactly one lock count.
   // Called on the state machine thread.
-  void StopAudioSink();
+  void StopMediaSink();
 
-  // Create and start the audio sink.
+  // Create and start the media sink.
   // The decoder monitor must be held with exactly one lock count.
   // Called on the state machine thread.
-  void StartAudioSink();
-
-  void StopDecodedStream();
-
-  void StartDecodedStream();
+  void StartMediaSink();
 
   // Notification method invoked when mPlayState changes.
   void PlayStateChanged();
@@ -648,16 +645,12 @@ protected:
   void SetPlayStartTime(const TimeStamp& aTimeStamp);
 
 private:
-  // Resolved by the AudioSink to signal that all outstanding work is complete
+  // Resolved by the MediaSink to signal that all outstanding work is complete
   // and the sink is shutting down.
-  void OnAudioSinkComplete();
+  void OnMediaSinkComplete();
 
-  // Rejected by the AudioSink to signal errors.
-  void OnAudioSinkError();
-
-  void OnDecodedStreamFinish();
-
-  void OnDecodedStreamError();
+  // Rejected by the MediaSink to signal errors.
+  void OnMediaSinkError();
 
   // Return true if the video decoder's decode speed can not catch up the
   // play time.
@@ -977,15 +970,15 @@ private:
   // Media Fragment end time in microseconds. Access controlled by decoder monitor.
   int64_t mFragmentEndTime;
 
-  // The audio sink resource.  Used on the state machine thread.
-  nsRefPtr<media::MediaSink> mAudioSink;
+  // The media sink resource.  Used on the state machine thread.
+  nsRefPtr<media::MediaSink> mMediaSink;
 
   // The reader, don't call its methods with the decoder monitor held.
   // This is created in the state machine's constructor.
   nsRefPtr<MediaDecoderReader> mReader;
 
-  // The end time of the last audio frame that's been pushed onto the audio sink
-  // or DecodedStream in microseconds. This will approximately be the end time
+  // The end time of the last audio frame that's been pushed onto the media sink
+  // in microseconds. This will approximately be the end time
   // of the audio stream, unless another frame is pushed to the hardware.
   int64_t AudioEndTime() const;
 
@@ -1270,8 +1263,7 @@ private:
   // Media data resource from the decoder.
   nsRefPtr<MediaResource> mResource;
 
-  MozPromiseRequestHolder<GenericPromise> mAudioSinkPromise;
-  MozPromiseRequestHolder<GenericPromise> mDecodedStreamPromise;
+  MozPromiseRequestHolder<GenericPromise> mMediaSinkPromise;
 
   MediaEventListener mAudioQueueListener;
   MediaEventListener mVideoQueueListener;

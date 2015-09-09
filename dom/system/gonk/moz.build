@@ -33,6 +33,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'dom_system_gonk'
 
 EXPORTS += [
+    'GeolocationUtil.h',
     'GonkGPSGeolocationProvider.h',
     'mozstumbler/MozStumbler.h',
     'nsVolume.h',
@@ -43,6 +44,7 @@ UNIFIED_SOURCES += [
     'AudioManager.cpp',
     'AutoMounter.cpp',
     'AutoMounterSetting.cpp',
+    'GeolocationUtil.cpp',
     'GonkGPSGeolocationProvider.cpp',
     'MozMtpDatabase.cpp',
     'MozMtpServer.cpp',
