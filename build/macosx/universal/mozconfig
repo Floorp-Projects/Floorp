@@ -6,6 +6,6 @@
 
 # As used here, arguments in $MOZ_BUILD_PROJECTS are suitable as arguments
 # to gcc's -arch parameter.
-mk_add_options MOZ_BUILD_PROJECTS="i386 x86_64"
+mk_add_options MOZ_BUILD_PROJECTS="x86_64 i386"
 
 . $topsrcdir/build/macosx/universal/mozconfig.common

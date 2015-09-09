@@ -366,7 +366,7 @@ IntelWebMVideoDecoder::PopSample()
   }
 
   MOZ_ASSERT(!mSampleQueue.empty());
-  sample = mSampleQueue.front();
+  sample = mSampleQueue.front().forget();
   mSampleQueue.pop_front();
   return sample.forget();
 }

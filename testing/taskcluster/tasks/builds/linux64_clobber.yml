@@ -1,0 +1,53 @@
+$inherits:
+  from: 'tasks/builds/firefox_base.yml'
+  variables:
+    build_name: 'linux64'
+task:
+  #workerType: ..
+
+  routes:
+    - 'index.buildbot.branches.{{project}}.linux64'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64'
+
+  scopes:
+    - 'docker-worker:cache:tooltool-cache'
+    - 'docker-worker:relengapi-proxy:tooltool.download.public'
+
+  payload:
+    image: '{{#docker_image}}desktop-build{{/docker_image}}'
+    cache:
+      # "clobber" means no workspace cache; non-clobber subclasses should add that
+      tooltool-cache: '/home/worker/tooltool-cache'
+
+    features:
+      relengAPIProxy: true
+
+    env:
+      MOZHARNESS_SCRIPT: 'mozharness/scripts/fx_desktop_build.py'
+      MOZHARNESS_CONFIG: 'builds/releng_base_linux_64_builds.py balrog/production.py'
+      MH_BRANCH: {{project}}
+      MH_BUILD_POOL: taskcluster
+      # image paths
+      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
+      NEED_XVFB: true
+      DIST_UPLOADS: 'jsshell-linux-x86_64.zip'
+      DIST_TARGET_UPLOADS: 'x-test.linux-x86_64.tar.bz2 linux-x86_64.tar.bz2 linux-x86_64.json tests.zip crashreporter-symbols.zip'
+
+    maxRunTime: 36000
+
+    command: ["/bin/bash", "bin/build.sh"]
+
+  extra:
+    treeherderEnv:
+      - production
+      - staging
+    treeherder:
+      machine:
+        # see https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
+        platform: linux64
+    # Rather then enforcing particular conventions we require that all build
+    # tasks provide the "build" extra field to specify where the build and tests
+    # files are located.
+    locations:
+      build: 'public/build/target.linux-x86_64.tar.bz2'
+      tests: 'public/build/target.tests.zip'
