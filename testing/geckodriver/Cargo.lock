@@ -9,7 +9,7 @@ dependencies = [
  "mozrunner 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.16 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.1.17 (registry+https://github.com/rust-lang/crates.io-index)",
- "webdriver 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "webdriver 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -251,7 +251,7 @@ dependencies = [
 
 [[package]]
 name = "webdriver"
-version = "0.2.3"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "hyper 0.6.13 (registry+https://github.com/rust-lang/crates.io-index)",
