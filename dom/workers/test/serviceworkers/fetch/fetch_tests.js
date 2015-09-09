@@ -320,12 +320,3 @@ fetch(new Request('body-blob', {method: 'POST', body: new Blob(new String('my bo
     finish();
   });
 });
-
-expectAsyncResult();
-fetch(new Request('empty-header', {headers:{"emptyheader":""}}))
-.then(function(res) {
-  return res.text();
-}).then(function(body) {
-  my_ok(body == "emptyheader", "The empty header was observed in the fetch event");
-  finish();
-});
