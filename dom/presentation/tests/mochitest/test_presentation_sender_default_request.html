@@ -4,25 +4,24 @@
    - http://creativecommons.org/publicdomain/zero/1.0/ -->
 <head>
   <meta charset="utf-8">
-  <title>Test for session disconnection of B2G Presentation API at sender side</title>
+  <title>Test default request for B2G Presentation API at sender side</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069230">Test for session disconnection of B2G Presentation API at sender side</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069230">Test default request for B2G Presentation API at sender side</a>
 <script type="application/javascript;version=1.8">
 
 'use strict';
 
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
-var request;
 var session;
 
 function testSetup() {
   return new Promise(function(aResolve, aReject) {
-    request = new PresentationRequest("http://example.com");
+    navigator.presentation.defaultRequest = new PresentationRequest("http://example.com");
 
-    request.getAvailability().then(
+    navigator.presentation.defaultRequest.getAvailability().then(
       function(aAvailability) {
         aAvailability.onchange = function() {
           aAvailability.onchange = null;
@@ -65,64 +64,44 @@ function testStartSession() {
       info("The control channel is closed. " + aReason);
     });
 
-    gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
+    gScript.addMessageListener('offer-sent', function offerSentHandler() {
       gScript.removeMessageListener('offer-sent', offerSentHandler);
-      ok(aIsValid, "A valid offer is sent out.");
-      gScript.sendAsyncMessage('trigger-incoming-answer');
+      info("An offer is sent out.");
+      gScript.sendAsyncMessage('trigger-incoming-transport');
     });
 
     gScript.addMessageListener('answer-received', function answerReceivedHandler() {
       gScript.removeMessageListener('answer-received', answerReceivedHandler);
       info("An answer is received.");
-      gScript.sendAsyncMessage('trigger-incoming-transport');
     });
 
     gScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
       gScript.removeMessageListener('data-transport-initialized', dataTransportInitializedHandler);
       info("Data transport channel is initialized.");
+      gScript.sendAsyncMessage('trigger-incoming-answer');
     });
 
-    gScript.addMessageListener('data-transport-notification-enabled', function dataTransportNotificationEnabledHandler() {
-      gScript.removeMessageListener('data-transport-notification-enabled', dataTransportNotificationEnabledHandler);
-      info("Data notification is enabled for data transport channel.");
-    });
+    navigator.presentation.defaultRequest.onsessionconnect = function(aEvent) {
+      navigator.presentation.defaultRequest.onsessionconnect = null;
+      session = aEvent.session;
+      ok(session, "|sessionconnect| event is fired with a session.");
+      ok(session.id, "Session ID should be set.");
+      is(session.state, "connected", "Session state at sender side should be connected by default.");
+      aResolve();
+    };
 
-    request.start().then(
-      function(aSession) {
-        session = aSession;
-        ok(session, "Session should be availlable.");
-        ok(session.id, "Session ID should be set.");
-        is(session.state, "connected", "Session state at sender side should be connected by default.");
-        aResolve();
-      },
-      function(aError) {
-        ok(false, "Error occurred when starting session: " + aError);
-        teardown();
-        aReject();
-      }
-    );
+    // Simulate the UA triggers |start()| of the default request.
+    navigator.presentation.defaultRequest.start();
   });
 }
 
-function testSessionDisconnection() {
+function testCloseSession() {
   return new Promise(function(aResolve, aReject) {
     gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
       gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
       info("The data transport is closed. " + aReason);
     });
 
-    session.onstatechange = function() {
-      session.onstatechange = null;
-      is(session.state, "disconnected", "Session should be disconnected.");
-      aResolve();
-    };
-
-    gScript.sendAsyncMessage('trigger-data-transport-close', SpecialPowers.Cr.NS_ERROR_FAILURE);
-  });
-}
-
-function testCloseSession() {
-  return new Promise(function(aResolve, aReject) {
     session.onstatechange = function() {
       session.onstatechange = null;
       is(session.state, "terminated", "Session should be terminated.");
@@ -145,10 +124,10 @@ function teardown() {
 
 function runTests() {
   ok(window.PresentationRequest, "PresentationRequest should be available.");
+  ok(navigator.presentation, "navigator.presentation should be available.");
 
   testSetup().
   then(testStartSession).
-  then(testSessionDisconnection).
   then(testCloseSession).
   then(teardown);
 }

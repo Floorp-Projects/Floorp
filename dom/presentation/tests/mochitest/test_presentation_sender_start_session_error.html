@@ -15,32 +15,39 @@
 'use strict';
 
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
-var presentation;
+var request;
 
 function setup() {
   return new Promise(function(aResolve, aReject) {
-    presentation.onavailablechange = function(aIsAvailable) {
-      presentation.onavailablechange = null;
-      ok(aIsAvailable, "Device should be available.");
-      aResolve();
-    };
+    request = new PresentationRequest("http://example.com");
+
+    request.getAvailability().then(
+      function(aAvailability) {
+        aAvailability.onchange = function() {
+          aAvailability.onchange = null;
+          ok(aAvailability.value, "Device should be available.");
+          aResolve();
+        }
+      },
+      function(aError) {
+        ok(false, "Error occurred when getting availability: " + aError);
+        teardown();
+        aReject();
+      }
+    );
 
     gScript.sendAsyncMessage('trigger-device-add');
   });
 }
 
-function testStartSessionNoAvailableDevice() {
+function testCreateRequestWithEmptyURL() {
   return new Promise(function(aResolve, aReject) {
-    presentation.startSession("http://example.com").then(
-      function(aSession) {
-        ok(false, "startSession shouldn't succeed in this case.");
-        aReject();
-      },
-      function(aError) {
-        is(aError.name, "InvalidStateError", "InvalidStateError is expected when starting session.");
-        aResolve();
-      }
-    );
+    try {
+      request = new PresentationRequest("");
+    } catch (aError) {
+      is(aError.name, "SyntaxError", "SyntaxError is expected when using an empty URL.");
+      aResolve();
+    }
   });
 }
 
@@ -52,13 +59,13 @@ function testStartSessionCancelPrompt() {
       gScript.sendAsyncMessage('trigger-device-prompt-cancel');
     });
 
-    presentation.startSession("http://example.com").then(
+    request.start().then(
       function(aSession) {
-        ok(false, "startSession shouldn't succeed in this case.");
+        ok(false, "|start| shouldn't succeed in this case.");
         aReject();
       },
       function(aError) {
-        is(aError.name, "NS_ERROR_DOM_PROP_ACCESS_DENIED", "NS_ERROR_DOM_PROP_ACCESS_DENIED is expected when starting session.");
+        is(aError.name, "AbortError", "AbortError is expected when the prompt is canceled.");
         aResolve();
       }
     );
@@ -95,13 +102,13 @@ function testStartSessionUnexpectedControlChannelCloseBeforeDataTransportInit() 
       gScript.sendAsyncMessage('trigger-control-channel-close', SpecialPowers.Cr.NS_ERROR_FAILURE);
     });
 
-    presentation.startSession("http://example.com").then(
+    request.start().then(
       function(aSession) {
-        ok(false, "startSession shouldn't succeed in this case.");
+        ok(false, "|start| shouldn't succeed in this case.");
         aReject();
       },
       function(aError) {
-        is(aError.name, "NS_ERROR_FAILURE", "NS_ERROR_FAILURE is expected when starting session.");
+        is(aError.name, "OperationError", "OperationError is expected when a connection error happens during starting session.");
         aResolve();
       }
     );
@@ -149,13 +156,13 @@ function testStartSessionUnexpectedControlChannelCloseBeforeDataTransportReady()
       info("The data transport is closed. " + aReason);
     });
 
-    presentation.startSession("http://example.com").then(
+    request.start().then(
       function(aSession) {
-        ok(false, "startSession shouldn't succeed in this case.");
+        ok(false, "|start| shouldn't succeed in this case.");
         aReject();
       },
       function(aError) {
-        is(aError.name, "NS_ERROR_ABORT", "NS_ERROR_ABORT is expected when starting session.");
+        is(aError.name, "OperationError", "OperationError is expected when a connection error happens during starting session.");
         aResolve();
       }
     );
@@ -203,13 +210,13 @@ function testStartSessionUnexpectedDataTransportClose() {
       info("The data transport is closed. " + aReason);
     });
 
-    presentation.startSession("http://example.com").then(
+    request.start().then(
       function(aSession) {
-        ok(false, "startSession shouldn't succeed in this case.");
+        ok(false, "|start| shouldn't succeed in this case.");
         aReject();
       },
       function(aError) {
-        is(aError.name, "NS_ERROR_UNEXPECTED", "NS_ERROR_UNEXPECTED is expected when starting session.");
+        is(aError.name, "OperationError", "OperationError is expected when a connection error happens during starting session.");
         aResolve();
       }
     );
@@ -227,10 +234,9 @@ function teardown() {
 }
 
 function runTests() {
-  ok(navigator.presentation, "navigator.presentation should be available.");
-  presentation = navigator.presentation;
+  ok(window.PresentationRequest, "PresentationRequest should be available.");
 
-  testStartSessionNoAvailableDevice().
+  testCreateRequestWithEmptyURL().
   then(setup).
   then(testStartSessionCancelPrompt).
   then(testStartSessionUnexpectedControlChannelCloseBeforeDataTransportInit).
