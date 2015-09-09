@@ -10,6 +10,7 @@
 #include "jit/InlineList.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/Registers.h"
+#include "jit/RegisterSets.h"
 
 namespace js {
 namespace jit {
