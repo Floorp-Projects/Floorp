@@ -134,9 +134,9 @@ builds:
       - Linux64
     types:
       opt:
-        task: tasks/builds/opt_linux64.yml
+        task: tasks/builds/opt_linux64_clobber.yml
       debug:
-        task: tasks/builds/dbg_linux64.yml
+        task: tasks/builds/dbg_linux64_clobber.yml
   sm-plain:
     platforms:
       - Linux64

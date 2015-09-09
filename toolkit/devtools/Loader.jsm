@@ -141,6 +141,7 @@ SrcdirProvider.prototype = {
     let devtoolsURI = this.fileURI(devtoolsDir);
     let toolkitURI = this.fileURI(toolkitDir);
     let serverURI = this.fileURI(OS.Path.join(toolkitDir, "server"));
+    let webideURI = this.fileURI(OS.Path.join(devtoolsDir, "webide", "modules"));
     let webconsoleURI = this.fileURI(OS.Path.join(toolkitDir, "webconsole"));
     let appActorURI = this.fileURI(OS.Path.join(toolkitDir, "apps", "app-actor-front.js"));
     let cssLogicURI = this.fileURI(OS.Path.join(toolkitDir, "styleinspector", "css-logic"));
@@ -152,7 +153,7 @@ SrcdirProvider.prototype = {
     let asyncUtilsURI = this.fileURI(OS.Path.join(toolkitDir, "async-utils.js"));
     let contentObserverURI = this.fileURI(OS.Path.join(toolkitDir), "content-observer.js");
     let gcliURI = this.fileURI(OS.Path.join(toolkitDir, "gcli", "source", "lib", "gcli"));
-    let projecteditorURI = this.fileURI(OS.Path.join(devtoolsDir, "projecteditor"));
+    let projecteditorURI = this.fileURI(OS.Path.join(devtoolsDir, "projecteditor", "lib"));
     let promiseURI = this.fileURI(OS.Path.join(modulesDir, "Promise-backend.js"));
     let acornURI = this.fileURI(OS.Path.join(toolkitDir, "acorn"));
     let acornWalkURI = OS.Path.join(acornURI, "walk.js");
@@ -168,6 +169,7 @@ SrcdirProvider.prototype = {
         "devtools": devtoolsURI,
         "devtools/toolkit": toolkitURI,
         "devtools/server": serverURI,
+        "devtools/webide": webideURI,
         "devtools/toolkit/webconsole": webconsoleURI,
         "devtools/app-actor-front": appActorURI,
         "devtools/styleinspector/css-logic": cssLogicURI,

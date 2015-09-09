@@ -25,10 +25,6 @@ set -x -e
 : TOOLS_HEAD_REF                ${TOOLS_HEAD_REF:=${TOOLS_HEAD_REV}}
 : TOOLS_DISABLE                 ${TOOLS_DISABLE:=false}
 
-: MH_CUSTOM_BUILD_VARIANT_CFG   ${MH_CUSTOM_BUILD_VARIANT_CFG}
-: MH_BRANCH                     ${MH_BRANCH:=mozilla-central}
-: MH_BUILD_POOL                 ${MH_BUILD_POOL:=staging}
-
 : WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
 
 set -v

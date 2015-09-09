@@ -7,8 +7,8 @@
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const eventEmitter = new EventEmitter();
 const events = require("sdk/event/core");
-const { getOuterId } = require("sdk/window/utils");
-const { getBrowserForTab } = require("sdk/tabs/utils");
+loader.lazyRequireGetter(this, "getOuterId", "sdk/window/utils", true);
+loader.lazyRequireGetter(this, "getBrowserForTab", "sdk/tabs/utils", true);
 
 const l10n = require("gcli/l10n");
 require("devtools/server/actors/inspector");

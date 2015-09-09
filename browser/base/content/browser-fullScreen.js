@@ -95,6 +95,11 @@ var FullScreen = {
       // TabsInTitlebar._update() and bug 1173768.
       TabsInTitlebar.updateAppearance(true);
     }
+
+    if (enterFS) {
+      Services.telemetry.getHistogramById("FX_BROWSER_FULLSCREEN_USED")
+                        .add(1);
+    }
   },
 
   exitDomFullScreen : function() {
