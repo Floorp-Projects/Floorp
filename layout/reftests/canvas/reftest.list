@@ -103,6 +103,7 @@ fails-if(azureQuartz&&OSX==1006) == 672646-alpha-radial-gradient.html 672646-alp
 fuzzy-if(azureQuartz,2,128) fuzzy-if(d2d,12,21) fuzzy-if(d2d&&/^Windows\x20NT\x2010\.0/.test(http.oscpu),2,141) == 784573-1.html 784573-1-ref.html
 
 == 802658-1.html 802658-1-ref.html
+== 1074733-1.html 1074733-1-ref.html
 fuzzy-if(Mulet,45,2) == 1107096-invisibles.html 1107096-invisibles-ref.html
 == 1151821-1.html 1151821-1-ref.html
 == 1201272-1.html 1201272-1-ref.html
