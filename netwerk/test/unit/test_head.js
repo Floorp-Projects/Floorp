@@ -46,24 +46,6 @@ function setup_test() {
   setOK = channel.getRequestHeader("MergeMe");
   do_check_eq(setOK, "foo1, foo2, foo3");
 
-  channel.setEmptyRequestHeader("Empty");
-  setOK = channel.getRequestHeader("Empty");
-  do_check_eq(setOK, "");
-
-  channel.setRequestHeader("ReplaceWithEmpty", "initial value", true);
-  setOK = channel.getRequestHeader("ReplaceWithEmpty");
-  do_check_eq(setOK, "initial value");
-  channel.setEmptyRequestHeader("ReplaceWithEmpty");
-  setOK = channel.getRequestHeader("ReplaceWithEmpty");
-  do_check_eq(setOK, "");
-
-  channel.setEmptyRequestHeader("MergeWithEmpty");
-  setOK = channel.getRequestHeader("MergeWithEmpty");
-  do_check_eq(setOK, "");
-  channel.setRequestHeader("MergeWithEmpty", "foo", true);
-  setOK = channel.getRequestHeader("MergeWithEmpty");
-  do_check_eq(setOK, "foo");
-
   var uri = ios.newURI("http://foo1.invalid:80", null, null);
   channel.referrer = uri;
   do_check_true(channel.referrer.equals(uri));
@@ -103,12 +85,6 @@ function serverHandler(metadata, response) {
   do_check_eq(setOK, "replaced");
   setOK = metadata.getHeader("MergeMe");
   do_check_eq(setOK, "foo1, foo2, foo3");
-  setOK = metadata.getHeader("Empty");
-  do_check_eq(setOK, "");
-  setOK = metadata.getHeader("ReplaceWithEmpty");
-  do_check_eq(setOK, "");
-  setOK = metadata.getHeader("MergeWithEmpty");
-  do_check_eq(setOK, "foo");
   setOK = metadata.getHeader("Referer");
   do_check_eq(setOK, "http://foo2.invalid:90/bar");
 

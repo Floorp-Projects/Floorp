@@ -361,13 +361,9 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     mChannel->SetLoadFlags(loadFlags);
 
   for (uint32_t i = 0; i < requestHeaders.Length(); i++) {
-    if (requestHeaders[i].mEmpty) {
-      mChannel->SetEmptyRequestHeader(requestHeaders[i].mHeader);
-    } else {
-      mChannel->SetRequestHeader(requestHeaders[i].mHeader,
-                                 requestHeaders[i].mValue,
-                                 requestHeaders[i].mMerge);
-    }
+    mChannel->SetRequestHeader(requestHeaders[i].mHeader,
+                               requestHeaders[i].mValue,
+                               requestHeaders[i].mMerge);
   }
 
   mParentListener = new HttpChannelParentListener(this);
@@ -640,13 +636,9 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
         newHttpChannel->RedirectTo(apiRedirectUri);
 
       for (uint32_t i = 0; i < changedHeaders.Length(); i++) {
-        if (changedHeaders[i].mEmpty) {
-          newHttpChannel->SetEmptyRequestHeader(changedHeaders[i].mHeader);
-        } else {
-          newHttpChannel->SetRequestHeader(changedHeaders[i].mHeader,
-                                           changedHeaders[i].mValue,
-                                           changedHeaders[i].mMerge);
-        }
+        newHttpChannel->SetRequestHeader(changedHeaders[i].mHeader,
+                                         changedHeaders[i].mValue,
+                                         changedHeaders[i].mMerge);
       }
     }
   }
