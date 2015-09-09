@@ -15,7 +15,6 @@ add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_modify_playbackRate.html");
 
   let {panel} = yield openAnimationInspectorNewUI();
-  yield waitForAllAnimationTargets(panel);
 
   let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
 
