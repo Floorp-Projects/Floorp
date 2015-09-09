@@ -27,7 +27,7 @@ use webdriver::command::WebDriverCommand::{
     ElementClick, ElementTap, ElementClear, ElementSendKeys,
     ExecuteScript, ExecuteAsyncScript, GetCookies, GetCookie, AddCookie,
     DeleteCookies, DeleteCookie, SetTimeouts, DismissAlert,
-    AcceptAlert, GetAlertText, SendAlertText, TakeScreenshot};
+    AcceptAlert, GetAlertText, SendAlertText, TakeScreenshot, Extension};
 use webdriver::command::{
     GetParameters, WindowSizeParameters, SwitchToWindowParameters,
     SwitchToFrameParameters, LocatorParameters, JavascriptCommandParameters,
@@ -472,6 +472,9 @@ impl MarionetteSession {
             }
             DeleteSession => {
                 WebDriverResponse::DeleteSession
+            },
+            Extension(_) => {
+                panic!("No extensions implemented")
             }
         })
     }
@@ -798,7 +801,7 @@ impl ToMarionette for WebDriverMessage {
             GetCSSValue(ref e, ref x) => {
                 let mut data = BTreeMap::new();
                 data.insert("id".to_string(), e.id.to_json());
-                data.insert("name".to_string(), x.to_json());
+                data.insert("propertyName".to_string(), x.to_json());
                 (Some("getElementValueOfCssProperty"), Some(Ok(Json::Object(data))))
             },
             GetElementText(ref x) => (Some("getElementText"), Some(x.to_marionette())),
@@ -842,6 +845,9 @@ impl ToMarionette for WebDriverMessage {
                 data.insert("full".to_string(), Json::Boolean(false));
                 (Some("takeScreenshot"), Some(Ok(Json::Object(data))))
             },
+            Extension(_) => {
+                panic!("No extensions implemented");
+            }
         };
 
         let name = try_opt!(opt_name,
