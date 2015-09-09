@@ -7,6 +7,7 @@ task:
   workerType: emulator-l-debug
   scopes:
     - 'docker-worker:cache:workspace-emulator-l-debug'
+    - 'docker-worker:cache:workspace-emulator-l-debug-objdir-gecko-{{project}}'
   metadata:
     name: '[TC] B2G Emulator L (Debug)'
 
@@ -25,6 +26,7 @@ task:
   payload:
     cache:
       workspace-emulator-l-debug: /home/worker/workspace
+      workspace-emulator-l-debug-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       TARGET: 'emulator-l'
       B2G_DEBUG: 1
