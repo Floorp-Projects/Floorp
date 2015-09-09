@@ -68,7 +68,6 @@ private:
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
 
   RefPtr<IMFSample> mLastInput;
-  float mLastDuration;
 
   const bool mDXVAEnabled;
   const layers::LayersBackend mLayersBackend;
