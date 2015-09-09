@@ -162,6 +162,12 @@ Convert(size_t aIn, uint16_t& aOut)
 //
 
 nsresult
+PackPDU(bool aIn, DaemonSocketPDU& aPDU)
+{
+  return PackPDU(PackConversion<bool, uint8_t>(aIn), aPDU);
+}
+
+nsresult
 PackPDU(const DaemonSocketPDUHeader& aIn, DaemonSocketPDU& aPDU)
 {
   nsresult rv = PackPDU(aIn.mService, aPDU);
