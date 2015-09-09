@@ -818,7 +818,7 @@ impl ToJson for AddCookieParameters {
 
 #[derive(PartialEq)]
 pub struct SendAlertTextParameters {
-    keysToSend: String
+    message: String
 }
 
 impl Parameters for SendAlertTextParameters {
@@ -826,13 +826,13 @@ impl Parameters for SendAlertTextParameters {
         let data = try_opt!(body.as_object(), ErrorStatus::InvalidArgument,
                             "Message body was not an object");
         let keys = try_opt!(
-            try_opt!(data.get("keysToSend"),
+            try_opt!(data.get("message"),
                      ErrorStatus::InvalidArgument,
-                     "Missing 'handle' parameter").as_string(),
+                     "Missing 'message' parameter").as_string(),
             ErrorStatus::InvalidArgument,
-            "'keysToSend' not a string").to_string();
+            "'message' not a string").to_string();
         return Ok(SendAlertTextParameters {
-            keysToSend: keys
+            message: keys
         })
     }
 }
@@ -840,7 +840,7 @@ impl Parameters for SendAlertTextParameters {
 impl ToJson for SendAlertTextParameters {
     fn to_json(&self) -> Json {
         let mut data = BTreeMap::new();
-        data.insert("keysToSend".to_string(), self.keysToSend.to_json());
+        data.insert("message".to_string(), self.message.to_json());
         Json::Object(data)
     }
 }
