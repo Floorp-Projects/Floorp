@@ -347,6 +347,12 @@ FilterCachedColorModels::WrapForColorModel(ColorModel aColorModel)
   return FilterWrappers::LinearRGBToSRGB(mDT, unpremultipliedOriginal);
 }
 
+static const float identityMatrix[] =
+  { 1, 0, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 0, 1, 0 };
+
 // When aAmount == 0, the identity matrix is returned.
 // When aAmount == 1, aToMatrix is returned.
 // When aAmount > 1, an exaggerated version of aToMatrix is returned. This can
@@ -363,12 +369,6 @@ static void
 InterpolateFromIdentityMatrix(const float aToMatrix[20], float aAmount,
                               float aOutMatrix[20])
 {
-  static const float identityMatrix[] =
-    { 1, 0, 0, 0, 0,
-      0, 1, 0, 0, 0,
-      0, 0, 1, 0, 0,
-      0, 0, 0, 1, 0 };
-
   PodCopy(aOutMatrix, identityMatrix, 20);
 
   float oneMinusAmount = 1 - aAmount;
@@ -392,12 +392,6 @@ static nsresult
 ComputeColorMatrix(uint32_t aColorMatrixType, const nsTArray<float>& aValues,
                    float aOutMatrix[20])
 {
-  static const float identityMatrix[] =
-    { 1, 0, 0, 0, 0,
-      0, 1, 0, 0, 0,
-      0, 0, 1, 0, 0,
-      0, 0, 0, 1, 0 };
-
   // Luminance coefficients.
   static const float lumR = 0.2126f;
   static const float lumG = 0.7152f;
@@ -760,7 +754,8 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       float colorMatrix[20];
       uint32_t type = atts.GetUint(eColorMatrixType);
       const nsTArray<float>& values = atts.GetFloats(eColorMatrixValues);
-      if (NS_FAILED(ComputeColorMatrix(type, values, colorMatrix))) {
+      if (NS_FAILED(ComputeColorMatrix(type, values, colorMatrix)) ||
+          PodEqual(colorMatrix, identityMatrix)) {
         RefPtr<FilterNode> filter(aSources[0]);
         return filter.forget();
       }
@@ -954,11 +949,15 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       RefPtr<FilterNode> filter;
       uint32_t op = atts.GetUint(eCompositeOperator);
       if (op == SVG_FECOMPOSITE_OPERATOR_ARITHMETIC) {
+        const nsTArray<float>& coefficients = atts.GetFloats(eCompositeCoefficients);
+        static const float allZero[4] = { 0, 0, 0, 0 };
         filter = aDT->CreateFilter(FilterType::ARITHMETIC_COMBINE);
-        if (!filter) {
+        // All-zero coefficients sometimes occur in junk filters.
+        if (!filter ||
+            (coefficients.Length() == ArrayLength(allZero) &&
+             PodEqual(coefficients.Elements(), allZero, ArrayLength(allZero)))) {
           return nullptr;
         }
-        const nsTArray<float>& coefficients = atts.GetFloats(eCompositeCoefficients);
         filter->SetAttribute(ATT_ARITHMETIC_COMBINE_COEFFICIENTS,
                              coefficients.Elements(), coefficients.Length());
         filter->SetInput(IN_ARITHMETIC_COMBINE_IN, aSources[0]);
