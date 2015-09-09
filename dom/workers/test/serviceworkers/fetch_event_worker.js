@@ -274,13 +274,4 @@ onfetch = function(ev) {
   else if (ev.request.url.includes('xhr-method-test.txt')) {
     ev.respondWith(new Response('intercepted ' + ev.request.method));
   }
-
-  else if (ev.request.url.includes('empty-header')) {
-    if (!ev.request.headers.has("emptyheader") ||
-        ev.request.headers.get("emptyheader") !== "") {
-      ev.respondWith(Promise.reject());
-      return;
-    }
-    ev.respondWith(new Response("emptyheader"));
-  }
 };
