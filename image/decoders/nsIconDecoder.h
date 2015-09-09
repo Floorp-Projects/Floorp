@@ -39,6 +39,8 @@ class nsIconDecoder : public Decoder
 public:
   virtual ~nsIconDecoder();
 
+  virtual nsresult SetTargetSize(const nsIntSize& aSize) override;
+
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount) override;
 
 private:
@@ -47,11 +49,13 @@ private:
   // Decoders should only be instantiated via DecoderFactory.
   explicit nsIconDecoder(RasterImage* aImage);
 
-public:
-  uint8_t mWidth;
-  uint8_t mHeight;
+  Maybe<Downscaler> mDownscaler;
+
+  uint32_t mExpectedDataLength;
   uint32_t mPixBytesRead;
   uint32_t mState;
+  uint8_t mWidth;
+  uint8_t mHeight;
 };
 
 enum {

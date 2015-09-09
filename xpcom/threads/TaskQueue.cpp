@@ -63,7 +63,7 @@ TaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable,
     return NS_OK;
   }
   nsRefPtr<nsIRunnable> runner(new Runner(this));
-  nsresult rv = mPool->Dispatch(runner, NS_DISPATCH_NORMAL);
+  nsresult rv = mPool->Dispatch(runner.forget(), NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch runnable to run TaskQueue");
     return rv;
@@ -155,7 +155,7 @@ TaskQueue::Runner::Run()
       mon.NotifyAll();
       return NS_OK;
     }
-    event = mQueue->mTasks.front();
+    event = mQueue->mTasks.front().forget();
     mQueue->mTasks.pop();
   }
   MOZ_ASSERT(event);

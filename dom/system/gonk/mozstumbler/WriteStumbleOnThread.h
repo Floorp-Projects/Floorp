@@ -9,6 +9,8 @@
 
 #include "mozilla/Atomics.h"
 
+class DeleteRunnable;
+
 /*
  This class is the entry point to stumbling, in that it
  receives the location+cell+wifi string and writes it
@@ -43,10 +45,13 @@ public:
   NS_IMETHODIMP Run() override;
 
   static void UploadEnded(bool deleteUploadFile);
-  // Don't write while uploading is happening
-  static mozilla::Atomic<bool> sIsUploading;
+
+  // Used externally to determine if cell+wifi scans should happen
+  // (returns false for that case).
+  static bool IsFileWaitingForUpload();
 
 private:
+  friend class DeleteRunnable;
 
   enum class Partition {
     Begining,
@@ -70,6 +75,8 @@ private:
 
   // Only run one instance of this
   static mozilla::Atomic<bool> sIsAlreadyRunning;
+
+  static mozilla::Atomic<bool> sIsFileWaitingForUpload;
 
   // Limit the upload attempts per day. If the device is rebooted
   // this resets the allowed attempts, which is acceptable.

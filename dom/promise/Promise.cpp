@@ -36,6 +36,9 @@
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "xpcpublic.h"
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
 
 namespace mozilla {
 namespace dom {
@@ -536,10 +539,10 @@ Promise::JSCallback(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
   PromiseCallback::Task task = static_cast<PromiseCallback::Task>(v.toInt32());
 
   if (task == PromiseCallback::Resolve) {
-    promise->MaybeResolveInternal(aCx, args.get(0));
     if (!promise->CaptureStack(aCx, promise->mFullfillmentStack)) {
       return false;
     }
+    promise->MaybeResolveInternal(aCx, args.get(0));
   } else {
     promise->MaybeRejectInternal(aCx, args.get(0));
     if (!promise->CaptureStack(aCx, promise->mRejectionStack)) {
@@ -1342,6 +1345,29 @@ Promise::RejectInternal(JSContext* aCx,
 void
 Promise::Settle(JS::Handle<JS::Value> aValue, PromiseState aState)
 {
+#ifdef MOZ_CRASHREPORTER
+  if (!mGlobal && mFullfillmentStack) {
+    AutoJSAPI jsapi;
+    jsapi.Init();
+    JSContext* cx = jsapi.cx();
+    JS::RootedObject stack(cx, mFullfillmentStack);
+    JSAutoCompartment ac(cx, stack);
+    JS::RootedString stackJSString(cx);
+    if (JS::BuildStackString(cx, stack, &stackJSString)) {
+      nsAutoJSString stackString;
+      if (stackString.init(cx, stackJSString)) {
+        // Put the string in the crash report here, since we're about to crash
+        CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("cced_promise_stack"),
+                                           NS_ConvertUTF16toUTF8(stackString));
+      } else {
+        JS_ClearPendingException(cx);
+      }
+    } else {
+      JS_ClearPendingException(cx);
+    }
+  }
+#endif
+
   if (mGlobal->IsDying()) {
     return;
   }

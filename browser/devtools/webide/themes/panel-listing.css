@@ -4,7 +4,7 @@
 
 html {
   font: message-box;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 400;
 }
 
@@ -53,42 +53,59 @@ label,
   position: relative;
 }
 
+.panel-item span {
+  display: block;
+  float: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 75%;
+  white-space: nowrap;
+}
+
 .panel-item {
   padding: 3%;
   display: block;
-  background-color: #fff;
-  border-bottom: 1px solid #ccc;
-  border-right: 1px solid #ccc;
-  border-top: 1px solid #ededed;
-  border-left: 0;
   width: 94%;
+  cursor: pointer;
+  border-top: 1px solid transparent;
+  border-left: 0;
+  border-bottom: 1px solid #CCC;
+  border-right: 0;
+  background-color: transparent;
 }
 
 button.panel-item {
-  background-position: 8px 8px;
+  background-position: 5px 5px;
   background-repeat: no-repeat;
   background-size: 14px 14px;
   padding-left: 25px;
   width: 100%;
 }
 
-button.project-panel-item-refreshtabs {
-  display: inline-block;
-  float: right;
-  padding: 3px;
-  text-transform: none;
-  width: auto;
-  margin: 0 4px 5px 5px;
-}
-
 .panel-item:disabled {
   background-color: #FFF;
   color: #5A5A5A;
   opacity: 0.5;
+  cursor: default;
 }
 
-.panel-item:not(:disabled):hover {
+#refresh-tabs {
+  background-color: #FFF;
+  border-top: 1px solid #EDEDED;
+  display: inline-block;
+  float: right;
+  padding: 3px;
+  text-transform: none;
+  border-right: 1px solid #CCC;
+  width: auto;
+  margin: 0 4px 5px 5px;
+}
+
+.panel-item:not(:disabled):hover,
+button.panel-item:not(:disabled):hover,
+#refresh-tabs:hover {
   background-color: #CCF0FD;
+  border-top: 1px solid #EDEDED;
 }
 
 .configure-button {
@@ -101,7 +118,7 @@ button.project-panel-item-refreshtabs {
   background-repeat: no-repeat;
   background-size: 14px 14px;
   position: absolute;
-  top: 0;
+  top: -2px;
   right: 0;
   border: 0;
 }

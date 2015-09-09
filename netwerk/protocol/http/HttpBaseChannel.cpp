@@ -1288,6 +1288,8 @@ NS_IMETHODIMP
 HttpBaseChannel::GetRequestHeader(const nsACString& aHeader,
                                   nsACString& aValue)
 {
+  aValue.Truncate();
+
   // XXX might be better to search the header list directly instead of
   // hitting the http atom hash table.
   nsHttpAtom atom = nsHttp::ResolveAtom(aHeader);
@@ -1333,6 +1335,8 @@ HttpBaseChannel::VisitRequestHeaders(nsIHttpHeaderVisitor *visitor)
 NS_IMETHODIMP
 HttpBaseChannel::GetResponseHeader(const nsACString &header, nsACString &value)
 {
+  value.Truncate();
+
   if (!mResponseHead)
     return NS_ERROR_NOT_AVAILABLE;
 

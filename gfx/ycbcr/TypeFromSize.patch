@@ -10,10 +10,10 @@ diff --git a/gfx/ycbcr/yuv_convert.cpp b/gfx/ycbcr/yuv_convert.cpp
  const int kFractionMax = 1 << kFractionBits;
  const int kFractionMask = ((1 << kFractionBits) - 1);
  
-+NS_GFX_(YUVType) TypeFromSize(int ywidth, 
-+                              int yheight, 
-+                              int cbcrwidth, 
-+                              int cbcrheight)
++YUVType TypeFromSize(int ywidth, 
++                     int yheight, 
++                     int cbcrwidth, 
++                     int cbcrheight)
 +{
 +  if (ywidth == cbcrwidth && yheight == cbcrheight) {
 +    return YV24;
@@ -27,13 +27,13 @@ diff --git a/gfx/ycbcr/yuv_convert.cpp b/gfx/ycbcr/yuv_convert.cpp
 +}
 +
  // Convert a frame of YUV to 32 bit ARGB.
- NS_GFX_(void) ConvertYCbCrToRGB32(const uint8* y_buf,
-                                   const uint8* u_buf,
-                                   const uint8* v_buf,
-                                   uint8* rgb_buf,
-                                   int pic_x,
-                                   int pic_y,
-                                   int pic_width,
+ void ConvertYCbCrToRGB32(const uint8* y_buf,
+                          const uint8* u_buf,
+                          const uint8* v_buf,
+                          uint8* rgb_buf,
+                          int pic_x,
+                          int pic_y,
+                          int pic_width,
 diff --git a/gfx/ycbcr/yuv_convert.h b/gfx/ycbcr/yuv_convert.h
 --- a/gfx/ycbcr/yuv_convert.h
 +++ b/gfx/ycbcr/yuv_convert.h
@@ -46,13 +46,13 @@ diff --git a/gfx/ycbcr/yuv_convert.h b/gfx/ycbcr/yuv_convert.h
    FILTER_BILINEAR = 3     // Bilinear filter.
  };
  
-+NS_GFX_(YUVType) TypeFromSize(int ywidth, int yheight, int cbcrwidth, int cbcrheight);
++YUVType TypeFromSize(int ywidth, int yheight, int cbcrwidth, int cbcrheight);
 +
  // Convert a frame of YUV to 32 bit ARGB.
  // Pass in YV16/YV12 depending on source format
- NS_GFX_(void) ConvertYCbCrToRGB32(const uint8* yplane,
-                                   const uint8* uplane,
-                                   const uint8* vplane,
-                                   uint8* rgbframe,
-                                   int pic_x,
-                                   int pic_y,
+ void ConvertYCbCrToRGB32(const uint8* yplane,
+                          const uint8* uplane,
+                          const uint8* vplane,
+                          uint8* rgbframe,
+                          int pic_x,
+                          int pic_y,

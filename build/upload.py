@@ -8,7 +8,12 @@
 # to be set:
 # UPLOAD_HOST    : host to upload files to
 # UPLOAD_USER    : username on that host
+#  and one of the following:
 # UPLOAD_PATH    : path on that host to put the files in
+# UPLOAD_TO_TEMP : upload files to a new temporary directory
+#
+# If UPLOAD_HOST and UPLOAD_USER are not set, this script will simply write out
+# the properties file.
 #
 # And will use the following optional environment variables if set:
 # UPLOAD_SSH_KEY : path to a ssh private key to use
@@ -25,17 +30,11 @@
 import sys, os
 import re
 import json
+import errno
+import hashlib
 from optparse import OptionParser
 from subprocess import check_call, check_output, STDOUT
 import redo
-
-def RequireEnvironmentVariable(v):
-    """Return the value of the environment variable named v, or print
-    an error and exit if it's unset (or empty)."""
-    if not v in os.environ or os.environ[v] == "":
-        print "Error: required environment variable %s not set" % v
-        sys.exit(1)
-    return os.environ[v]
 
 def OptionalEnvironmentVariable(v):
     """Return the value of the environment variable named v, or None
@@ -119,6 +118,33 @@ def GetRemotePath(path, local_file, base_path):
     dir = dir[len(base_path)+1:].replace('\\','/')
     return path + dir
 
+def GetFileHashAndSize(filename):
+    sha512Hash = 'UNKNOWN'
+    size = 'UNKNOWN'
+
+    try:
+        # open in binary mode to make sure we get consistent results
+        # across all platforms
+        with open(filename, "rb") as f:
+            shaObj = hashlib.sha512(f.read())
+            sha512Hash = shaObj.hexdigest()
+
+        size = os.path.getsize(filename)
+    except:
+        raise Exception("Unable to get filesize/hash from file: %s" % filename)
+
+    return (sha512Hash, size)
+
+def GetMarProperties(filename):
+    if not os.path.exists(filename):
+        return {}
+    (mar_hash, mar_size) = GetFileHashAndSize(filename)
+    return {
+        'completeMarFilename': os.path.basename(filename),
+        'completeMarSize': mar_size,
+        'completeMarHash': mar_hash,
+    }
+
 def GetUrlProperties(output, package):
     # let's create a switch case using name-spaces/dict
     # rather than a long if/else with duplicate code
@@ -156,7 +182,7 @@ def GetUrlProperties(output, package):
         properties = {prop: 'UNKNOWN' for prop, condition in property_conditions}
     return properties
 
-def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None, base_path=None, upload_to_temp_dir=False, post_upload_command=None, properties_file=None, package=None):
+def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None, base_path=None, upload_to_temp_dir=False, post_upload_command=None, package=None):
     """Upload each file in the list files to user@host:path. Optionally pass
     port and ssh_key to the ssh commands. If base_path is not None, upload
     files including their path relative to base_path. If upload_to_temp_dir is
@@ -167,6 +193,13 @@ def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None,
     after uploading all files, passing it the upload path, and the full paths to
     all files uploaded.
     If verbose is True, print status updates while working."""
+    if not host or not user:
+        return {}
+    if (not path and not upload_to_temp_dir) or (path and upload_to_temp_dir):
+        print "One (and only one of UPLOAD_PATH or UPLOAD_TO_TEMP must be " + \
+                "defined."
+        sys.exit(1)
+
     if upload_to_temp_dir:
         path = DoSSHCommand("mktemp -d", user, host, port=port, ssh_key=ssh_key)
     if not path.endswith("/"):
@@ -174,6 +207,7 @@ def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None,
     if base_path is not None:
         base_path = os.path.abspath(base_path)
     remote_files = []
+    properties = {}
     try:
         for file in files:
             file = os.path.abspath(file)
@@ -193,22 +227,28 @@ def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None,
             output = DoSSHCommand('%s "%s" %s' % (post_upload_command, path, file_list), user, host, port=port, ssh_key=ssh_key)
             # We print since mozharness may parse URLs from the output stream.
             print output
-            if properties_file:
-                with open(properties_file, 'w') as outfile:
-                    properties = GetUrlProperties(output, package)
-                    properties['packageFilename'] = package
-                    properties['uploadFiles'] = [os.path.abspath(f) for f in files]
-                    json.dump(properties, outfile, indent=4)
+            properties = GetUrlProperties(output, package)
     finally:
         if upload_to_temp_dir:
             DoSSHCommand("rm -rf %s" % path, user, host, port=port,
                          ssh_key=ssh_key)
     if verbose:
         print "Upload complete"
+    return properties
+
+def WriteProperties(files, properties_file, url_properties, package):
+    properties = url_properties
+    for file in files:
+        if file.endswith('.complete.mar'):
+            properties.update(GetMarProperties(file))
+    with open(properties_file, 'w') as outfile:
+        properties['packageFilename'] = package
+        properties['uploadFiles'] = [os.path.abspath(f) for f in files]
+        json.dump(properties, outfile, indent=4)
 
 if __name__ == '__main__':
-    host = RequireEnvironmentVariable('UPLOAD_HOST')
-    user = RequireEnvironmentVariable('UPLOAD_USER')
+    host = OptionalEnvironmentVariable('UPLOAD_HOST')
+    user = OptionalEnvironmentVariable('UPLOAD_USER')
     path = OptionalEnvironmentVariable('UPLOAD_PATH')
     upload_to_temp_dir = OptionalEnvironmentVariable('UPLOAD_TO_TEMP')
     port = OptionalEnvironmentVariable('UPLOAD_PORT')
@@ -216,10 +256,7 @@ if __name__ == '__main__':
         port = int(port)
     key = OptionalEnvironmentVariable('UPLOAD_SSH_KEY')
     post_upload_command = OptionalEnvironmentVariable('POST_UPLOAD_CMD')
-    if (not path and not upload_to_temp_dir) or (path and upload_to_temp_dir):
-        print "One (and only one of UPLOAD_PATH or UPLOAD_TO_TEMP must be " + \
-              "defined."
-        sys.exit(1)
+
     if sys.platform == 'win32':
         if path is not None:
             path = FixupMsysPath(path)
@@ -240,12 +277,16 @@ if __name__ == '__main__':
     if len(args) < 1:
         print "You must specify at least one file to upload"
         sys.exit(1)
+    if not options.properties_file:
+        print "You must specify a --properties-file"
+        sys.exit(1)
     try:
-        UploadFiles(user, host, path, args, base_path=options.base_path,
-                    port=port, ssh_key=key, upload_to_temp_dir=upload_to_temp_dir,
-                    post_upload_command=post_upload_command,
-                    properties_file=options.properties_file, package=options.package,
-                    verbose=True)
+        url_properties = UploadFiles(user, host, path, args, base_path=options.base_path,
+                                     port=port, ssh_key=key, upload_to_temp_dir=upload_to_temp_dir,
+                                     post_upload_command=post_upload_command,
+                                     package=options.package,
+                                     verbose=True)
+        WriteProperties(args, options.properties_file, url_properties, options.package)
     except IOError, (strerror):
         print strerror
         sys.exit(1)
