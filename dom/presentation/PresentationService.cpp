@@ -108,13 +108,13 @@ PresentationDeviceRequest::Select(nsIPresentationDevice* aDevice)
   nsCOMPtr<nsIPresentationControlChannel> ctrlChannel;
   nsresult rv = aDevice->EstablishControlChannel(mRequestUrl, mId, getter_AddRefs(ctrlChannel));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return info->ReplyError(NS_ERROR_DOM_NETWORK_ERR);
+    return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
 
   // Initialize the session info with the control channel.
   rv = info->Init(ctrlChannel);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return info->ReplyError(NS_ERROR_DOM_NETWORK_ERR);
+    return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
 
   return NS_OK;
@@ -135,7 +135,7 @@ PresentationDeviceRequest::Cancel()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return info->ReplyError(NS_ERROR_DOM_PROP_ACCESS_DENIED);
+  return info->ReplyError(NS_ERROR_DOM_ABORT_ERR);
 }
 
 /*
@@ -267,21 +267,21 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
   nsAutoString url;
   rv = aRequest->GetUrl(url);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    ctrlChannel->Close(NS_ERROR_DOM_ABORT_ERR);
+    ctrlChannel->Close(rv);
     return rv;
   }
 
   nsAutoString sessionId;
   rv = aRequest->GetPresentationId(sessionId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    ctrlChannel->Close(NS_ERROR_DOM_ABORT_ERR);
+    ctrlChannel->Close(rv);
     return rv;
   }
 
   nsCOMPtr<nsIPresentationDevice> device;
   rv = aRequest->GetDevice(getter_AddRefs(device));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    ctrlChannel->Close(NS_ERROR_DOM_ABORT_ERR);
+    ctrlChannel->Close(rv);
     return rv;
   }
 
@@ -297,7 +297,7 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
   bool isApp;
   rv = uri->SchemeIs("app", &isApp);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    ctrlChannel->Close(NS_ERROR_DOM_ABORT_ERR);
+    ctrlChannel->Close(rv);
     return rv;
   }
 
@@ -310,15 +310,15 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
   // Create or reuse session info.
   nsRefPtr<PresentationSessionInfo> info = GetSessionInfo(sessionId);
   if (NS_WARN_IF(info)) {
-    // TODO Update here after session resumption becomes supported.
-    ctrlChannel->Close(NS_ERROR_DOM_ABORT_ERR);
+    // TODO Bug 1195605. Update here after session join/resume becomes supported.
+    ctrlChannel->Close(NS_ERROR_DOM_OPERATION_ERR);
     return NS_ERROR_DOM_ABORT_ERR;
   }
 
   info = new PresentationResponderInfo(url, sessionId, device);
   rv = info->Init(ctrlChannel);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    ctrlChannel->Close(NS_ERROR_DOM_ABORT_ERR);
+    ctrlChannel->Close(rv);
     return rv;
   }
 
@@ -328,14 +328,14 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
   nsCOMPtr<nsIPresentationRequestUIGlue> glue =
     do_CreateInstance(PRESENTATION_REQUEST_UI_GLUE_CONTRACTID);
   if (NS_WARN_IF(!glue)) {
-    ctrlChannel->Close(NS_ERROR_DOM_ABORT_ERR);
-    return info->ReplyError(NS_ERROR_NOT_AVAILABLE);
+    ctrlChannel->Close(NS_ERROR_DOM_OPERATION_ERR);
+    return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
   nsCOMPtr<nsISupports> promise;
   rv = glue->SendRequest(url, sessionId, getter_AddRefs(promise));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    ctrlChannel->Close(NS_ERROR_DOM_ABORT_ERR);
-    return info->ReplyError(rv);
+    ctrlChannel->Close(rv);
+    return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
   nsCOMPtr<Promise> realPromise = do_QueryInterface(promise);
   static_cast<PresentationResponderInfo*>(info.get())->SetPromise(realPromise);
@@ -400,13 +400,13 @@ PresentationService::StartSession(const nsAString& aUrl,
   nsCOMPtr<nsIPresentationDevicePrompt> prompt =
     do_GetService(PRESENTATION_DEVICE_PROMPT_CONTRACTID);
   if (NS_WARN_IF(!prompt)) {
-    return info->ReplyError(NS_ERROR_DOM_ABORT_ERR);
+    return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
   nsCOMPtr<nsIPresentationDeviceRequest> request =
     new PresentationDeviceRequest(aUrl, aSessionId, aOrigin);
   nsresult rv = prompt->PromptDeviceSelection(request);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return info->ReplyError(NS_ERROR_DOM_ABORT_ERR);
+    return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
 
   return NS_OK;
