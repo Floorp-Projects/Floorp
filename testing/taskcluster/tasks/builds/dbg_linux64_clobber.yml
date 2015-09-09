@@ -1,0 +1,24 @@
+$inherits:
+  from: 'tasks/builds/linux64_clobber.yml'
+  variables:
+    build_name: 'linux64'
+    build_type: 'dbg'
+task:
+  metadata:
+      name: '[TC] Linux64 Dbg'
+      description: 'Linux64 Dbg'
+
+  workerType: dbg-linux64
+
+  payload:
+    env:
+      MH_CUSTOM_BUILD_VARIANT_CFG: 'debug'
+
+  extra:
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
+      symbol: B
+      collection:
+        debug: true
+
