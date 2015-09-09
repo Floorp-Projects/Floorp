@@ -293,20 +293,14 @@ impl MarionetteSession {
 
         let json_data = try!(Json::from_str(data));
 
-        if let Some(error) = json_data.find("error") {
-            let error = try_opt!(error.as_object(),
-                                 ErrorStatus::UnknownError,
-                                 "Marionette error field was not an object");
-            let status_name = try_opt!(
-                try_opt!(error.get("status"),
-                         ErrorStatus::UnknownError,
-                         "Error dict doesn't have a status field").as_string(),
-                ErrorStatus::UnknownError,
-                "Error status isn't an string");
+        if let Some(error_status) = json_data.find("error") {
+            let status_name = try_opt!(error_status.as_string(),
+                                       ErrorStatus::UnknownError,
+                                       "Error status isn't an string");
             let status = self.error_from_string(status_name);
             let default_msg = Json::String("Unknown error".to_string());
             let err_msg = try_opt!(
-                error.get("message").unwrap_or(&default_msg).as_string(),
+                json_data.find("message").unwrap_or(&default_msg).as_string(),
                 ErrorStatus::UnknownError,
                 "Error message was not a string");
             return Err(WebDriverError::new(status,
