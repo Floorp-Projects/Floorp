@@ -26,7 +26,6 @@
 
 #PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > button {
   -moz-appearance: none;
-  -moz-user-focus: ignore;
   min-width: 80px;
   border-radius: 3px;
   padding: 4px 16px;
