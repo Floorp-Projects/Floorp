@@ -536,8 +536,6 @@ public:
               uint64_t aLength, int64_t aLastModifiedDate,
               BlobDirState aDirState) override
   {
-    NS_ASSERTION(aLength, "must have length");
-
     mName = aName;
     mContentType = aContentType;
     mLength = aLength;
