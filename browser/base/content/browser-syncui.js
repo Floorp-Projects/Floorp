@@ -125,21 +125,6 @@ let gSyncUI = {
            firstSync == "notReady";
   },
 
-  _needsVerification() {
-    // For callers who care about the distinction between "needs setup" and
-    // "setup but needs verification"
-    // See _needsSetup for the subtleties here.
-    if (Weave.Status._authManager._signedInUser === undefined) {
-      // a legacy sync user - no "verified" concept there.
-      return false;
-    }
-    if (!Weave.Status._authManager._signedInUser) {
-      // no user configured at all, so not in a "need verification" state.
-      return false;
-    }
-    return !Weave.Status._authManager._signedInUser.verified;
-  },
-
   // Note that we don't show login errors in a notification bar here, but do
   // still need to track a login-failed state so the "Tools" menu updates
   // with the correct state.
@@ -169,7 +154,21 @@ let gSyncUI = {
       document.getElementById("sync-syncnow-state").hidden = false;
     }
 
-    this._updateSyncButtonsTooltip();
+    if (!gBrowser)
+      return;
+
+    let syncButton = document.getElementById("sync-button");
+    let statusButton = document.getElementById("PanelUI-fxa-icon");
+    if (needsSetup) {
+      if (syncButton) {
+        syncButton.removeAttribute("tooltiptext");
+      }
+      if (statusButton) {
+        statusButton.removeAttribute("tooltiptext");
+      }
+    }
+
+    this._updateLastSyncTime();
   },
 
   // Functions called by observers
@@ -312,60 +311,39 @@ let gSyncUI = {
     gFxAccounts.openSignInAgainPage(entryPoint);
   },
 
-  /* Update the tooltip for the Sync Toolbar button and the Sync spinner in the
-     FxA hamburger area.
-     If Sync is configured, the tooltip is when the last sync occurred,
-     otherwise the tooltip reflects the fact that Sync needs to be
-     (re-)configured.
-  */
-  _updateSyncButtonsTooltip: function() {
+  // Helpers
+  _updateLastSyncTime: function SUI__updateLastSyncTime() {
     if (!gBrowser)
       return;
 
     let syncButton = document.getElementById("sync-button");
     let statusButton = document.getElementById("PanelUI-fxa-icon");
 
-    let email;
+    let lastSync;
     try {
-      email = Services.prefs.getCharPref("services.sync.username");
-    } catch (ex) {}
-
-    // This is a little messy as the Sync buttons are 1/2 Sync related and
-    // 1/2 FxA related - so for some strings we use Sync strings, but for
-    // others we reach into gFxAccounts for strings.
-    let tooltiptext;
-    if (this._needsVerification()) {
-      // "needs verification"
-      tooltiptext = gFxAccounts.strings.formatStringFromName("verifyDescription", [email], 1);
-    } else if (this._needsSetup()) {
-      // "needs setup".
-      tooltiptext = this._stringBundle.GetStringFromName("signInToSync.description");
-    } else if (this._loginFailed()) {
-      // "need to reconnect/re-enter your password"
-      tooltiptext = gFxAccounts.strings.formatStringFromName("reconnectDescription", [email], 1);
-    } else {
-      // Sync appears configured - format the "last synced at" time.
-      try {
-        let lastSync = new Date(Services.prefs.getCharPref("services.sync.lastSync"));
-        // Show the day-of-week and time (HH:MM) of last sync
-        let lastSyncDateString = lastSync.toLocaleFormat("%a %H:%M");
-        tooltiptext = this._stringBundle.formatStringFromName("lastSync2.label", [lastSyncDateString], 1);
-      }
-      catch (e) {
-        // pref doesn't exist (which will be the case until we've seen the
-        // first successful sync) or is invalid (which should be impossible!)
-        // Just leave tooltiptext as the empty string in these cases, which
-        // will cause the tooltip to be removed below.
-      }
+      lastSync = new Date(Services.prefs.getCharPref("services.sync.lastSync"));
     }
-    for (let button of [syncButton, statusButton]) {
-      if (button) {
-        if (tooltiptext) {
-          button.setAttribute("tooltiptext", tooltiptext);
-        } else {
-          button.removeAttribute("tooltiptext");
-        }
+    catch (e) { };
+    if (!lastSync || this._needsSetup()) {
+      if (syncButton) {
+        syncButton.removeAttribute("tooltiptext");
       }
+      if (statusButton) {
+        statusButton.removeAttribute("tooltiptext");
+      }
+      return;
+    }
+
+    // Show the day-of-week and time (HH:MM) of last sync
+    let lastSyncDateString = lastSync.toLocaleFormat("%a %H:%M");
+    let lastSyncLabel =
+      this._stringBundle.formatStringFromName("lastSync2.label", [lastSyncDateString], 1);
+
+    if (syncButton) {
+      syncButton.setAttribute("tooltiptext", lastSyncLabel);
+    }
+    if (statusButton) {
+      statusButton.setAttribute("tooltiptext", lastSyncLabel);
     }
   },
 
