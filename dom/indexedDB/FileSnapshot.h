@@ -129,18 +129,6 @@ private:
     return mBlobImpl->GetFileId();
   }
 
-  virtual void
-  AddFileInfo(FileInfo* aFileInfo) override
-  {
-    return mBlobImpl->AddFileInfo(aFileInfo);
-  }
-
-  virtual FileInfo*
-  GetFileInfo(FileManager* aFileManager) override
-  {
-    return mBlobImpl->GetFileInfo(aFileManager);
-  }
-
   virtual nsresult
   GetSendInfo(nsIInputStream** aBody,
               uint64_t* aContentLength,
