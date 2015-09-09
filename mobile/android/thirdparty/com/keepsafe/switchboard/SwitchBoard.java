@@ -24,6 +24,7 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.zip.CRC32;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -218,7 +219,15 @@ public class SwitchBoard {
 			e.printStackTrace();
 		}
 	}
-	
+
+	public static boolean isInBucket(Context c, int low, int high) {
+		int userBucket = getUserBucket(c);
+		if (userBucket >= low && userBucket < high)
+			return true;
+		else
+			return false;
+	}
+
 	/**
 	 * Looks up in config if user is in certain experiment. Returns false as a default value when experiment
 	 * does not exist.
@@ -369,5 +378,19 @@ public class SwitchBoard {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Return the bucket number of the user. There are 100 possible buckets.
+	 */
+	private static int getUserBucket(Context c) {
+		//get uuid
+		DeviceUuidFactory df = new DeviceUuidFactory(c);
+		String uuid = df.getDeviceUuid().toString();
+
+		CRC32 crc = new CRC32();
+		crc.update(uuid.getBytes());
+		long checksum = crc.getValue();
+		return (int)(checksum % 100L);
 	}
 }
