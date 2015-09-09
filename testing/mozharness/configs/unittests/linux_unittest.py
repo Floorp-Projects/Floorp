@@ -40,7 +40,6 @@ config = {
         "reftest": "runreftest.py",
         "xpcshell": "runxpcshelltests.py",
         "cppunittest": "runcppunittests.py",
-        "gtest": "rungtests.py",
         "jittest": "jit_test.py",
         "mozbase": "test.py",
         "mozmill": "runtestlist.py",
@@ -52,7 +51,6 @@ config = {
         "reftest": ["reftest/*", "jsreftest/*"],
         "xpcshell": ["xpcshell/*"],
         "cppunittest": ["cppunittest/*"],
-        "gtest": ["gtest/*"],
         "jittest": ["jit-test/*"],
         "mozbase": ["mozbase/*"],
         "mozmill": ["mozmill/*"],
@@ -165,16 +163,7 @@ config = {
             ],
             "run_filename": "runxpcshelltests.py",
             "testsdir": "xpcshell"
-        },
-        "gtest": {
-            "options": [
-                "--xre-path=%(abs_res_dir)s",
-                "--cwd=%(gtest_dir)s",
-                "--symbols-path=%(symbols_path)s",
-                "%(binary_path)s",
-            ],
-            "run_filename": "rungtests.py",
-        },
+        }
     },
     # local mochi suites
     "all_mochitest_suites": {
@@ -228,9 +217,6 @@ config = {
     },
     "all_cppunittest_suites": {
         "cppunittest": ['tests/cppunittest']
-    },
-    "all_gtest_suites": {
-        "gtest": []
     },
     "all_jittest_suites": {
         "jittest": [],

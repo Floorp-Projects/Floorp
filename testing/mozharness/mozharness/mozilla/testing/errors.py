@@ -60,12 +60,6 @@ TinderBoxPrintRe = {
         'fail_group': "Failed",
         'known_fail_group': None,
     },
-    "gtest_summary": {
-        'regex': re.compile(r'''(Passed|Failed): (\d+)'''),
-        'pass_group': "Passed",
-        'fail_group': "Failed",
-        'known_fail_group': None,
-    },
     "jittest_summary": {
         'regex': re.compile(r'''(Passed|Failed): (\d+)'''),
         'pass_group': "Passed",
