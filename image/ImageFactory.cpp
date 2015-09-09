@@ -36,7 +36,10 @@ static bool
 ShouldDownscaleDuringDecode(const nsCString& aMimeType)
 {
   DecoderType type = DecoderFactory::GetDecoderType(aMimeType.get());
-  return type == DecoderType::JPEG || type == DecoderType::PNG;
+  return type == DecoderType::JPEG ||
+         type == DecoderType::ICON ||
+         type == DecoderType::PNG ||
+         type == DecoderType::BMP;
 }
 
 static uint32_t

@@ -149,8 +149,8 @@ GetEventMessageName(EventMessage aMessage)
       return "NS_COMPOSITION_COMMIT_AS_IS";
     case NS_COMPOSITION_COMMIT:
       return "NS_COMPOSITION_COMMIT";
-    case NS_SELECTION_SET:
-      return "NS_SELECTION_SET";
+    case eSetSelection:
+      return "eSetSelection";
     default:
       return "unacceptable event message";
   }

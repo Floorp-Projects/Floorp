@@ -1689,7 +1689,7 @@ TSFTextStore::FlushPendingActions()
 
         if (action.mAdjustSelection) {
           // Select composition range so the new composition replaces the range
-          WidgetSelectionEvent selectionSet(true, NS_SELECTION_SET, mWidget);
+          WidgetSelectionEvent selectionSet(true, eSetSelection, mWidget);
           mWidget->InitEvent(selectionSet);
           selectionSet.mOffset = static_cast<uint32_t>(action.mSelectionStart);
           selectionSet.mLength = static_cast<uint32_t>(action.mSelectionLength);
@@ -1698,7 +1698,7 @@ TSFTextStore::FlushPendingActions()
           if (!selectionSet.mSucceeded) {
             MOZ_LOG(sTextStoreLog, LogLevel::Error,
                    ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
-                    "FAILED due to NS_SELECTION_SET failure", this));
+                    "FAILED due to eSetSelection failure", this));
             break;
           }
         }
@@ -1815,15 +1815,15 @@ TSFTextStore::FlushPendingActions()
         }
         break;
       }
-      case PendingAction::SELECTION_SET: {
+      case PendingAction::SET_SELECTION: {
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
                ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
-                "flushing SELECTION_SET={ mSelectionStart=%d, "
+                "flushing SET_SELECTION={ mSelectionStart=%d, "
                 "mSelectionLength=%d, mSelectionReversed=%s }",
                 this, action.mSelectionStart, action.mSelectionLength,
                 GetBoolName(action.mSelectionReversed)));
 
-        WidgetSelectionEvent selectionSet(true, NS_SELECTION_SET, mWidget);
+        WidgetSelectionEvent selectionSet(true, eSetSelection, mWidget);
         selectionSet.mOffset = 
           static_cast<uint32_t>(action.mSelectionStart);
         selectionSet.mLength =
@@ -2712,7 +2712,7 @@ TSFTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
 
   CompleteLastActionIfStillIncomplete();
   PendingAction* action = mPendingActions.AppendElement();
-  action->mType = PendingAction::SELECTION_SET;
+  action->mType = PendingAction::SET_SELECTION;
   action->mSelectionStart = pSelection->acpStart;
   action->mSelectionLength = pSelection->acpEnd - pSelection->acpStart;
   action->mSelectionReversed = (pSelection->style.ase == TS_AE_START);

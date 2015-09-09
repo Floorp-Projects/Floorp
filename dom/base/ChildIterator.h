@@ -60,16 +60,24 @@ public:
 
   nsIContent* GetNextChild();
 
-  // Looks for aChildToFind respecting insertion points until aChildToFind
+  // Looks for aChildToFind respecting insertion points until aChildToFind is
+  // found.  This version can take shortcuts that the two-argument version
+  // can't, so can be faster (and in fact can be O(1) instead of O(N) in many
+  // cases).
+  void Seek(nsIContent* aChildToFind);
+
+  // Looks for aChildToFind respecting insertion points until aChildToFind is found.
   // or aBound is found. If aBound is nullptr then the seek is unbounded. Returns
   // whether aChildToFind was found as an explicit child prior to encountering
   // aBound.
-  bool Seek(nsIContent* aChildToFind, nsIContent* aBound = nullptr)
+  bool Seek(nsIContent* aChildToFind, nsIContent* aBound)
   {
     // It would be nice to assert that we find aChildToFind, but bz thinks that
     // we might not find aChildToFind when called from ContentInserted
     // if first-letter frames are about.
 
+    // We can't easily take shortcuts here because we'd have to have a way to
+    // compare aChildToFind to aBound.
     nsIContent* child;
     do {
       child = GetNextChild();

@@ -9,6 +9,7 @@
 
 #include "BMPFileHeaders.h"
 #include "Decoder.h"
+#include "Downscaler.h"
 #include "gfxColor.h"
 #include "nsAutoPtr.h"
 
@@ -23,6 +24,8 @@ class nsBMPDecoder : public Decoder
 {
 public:
     ~nsBMPDecoder();
+
+    nsresult SetTargetSize(const nsIntSize& aSize) override;
 
     // Specifies whether or not the BMP file will contain alpha data
     // If set to true and the BMP is 32BPP, the alpha data will be
@@ -46,7 +49,10 @@ public:
 
     // Obtains whether or not a BMP file had alpha data in its 4th byte
     // for 32BPP bitmaps.  Only use after the bitmap has been processed.
-    bool HasAlphaData() const;
+    bool HasAlphaData() const { return mHaveAlphaData; }
+
+    /// Marks this BMP as having alpha data (due to e.g. an ICO alpha mask).
+    void SetHasAlphaData() { mHaveAlphaData = true; }
 
     virtual void WriteInternal(const char* aBuffer,
                                uint32_t aCount) override;
@@ -70,6 +76,8 @@ private:
     BITMAPV5HEADER mBIH;
     char mRawBuf[BIH_INTERNAL_LENGTH::WIN_V3]; //< If this is changed,
                                                // WriteInternal() MUST be updated
+
+    Maybe<Downscaler> mDownscaler;
 
     uint32_t mLOH; //< Length of the header
 
