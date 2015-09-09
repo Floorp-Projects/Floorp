@@ -8,6 +8,7 @@
 
 #include "AccessibleCaretLogger.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ToString.h"
 #include "nsCanvasFrame.h"
 #include "nsCaret.h"
 #include "nsDOMTokenList.h"
@@ -30,6 +31,24 @@ float AccessibleCaret::sWidth = 0.0f;
 float AccessibleCaret::sHeight = 0.0f;
 float AccessibleCaret::sMarginLeft = 0.0f;
 float AccessibleCaret::sBarWidth = 0.0f;
+
+std::ostream&
+operator<<(std::ostream& aStream, const AccessibleCaret::Appearance& aAppearance)
+{
+  using Appearance = AccessibleCaret::Appearance;
+
+#define AC_PROCESS_APPEARANCE_TO_STREAM(e) case(e): aStream << #e; break;
+  switch (aAppearance) {
+    AC_PROCESS_APPEARANCE_TO_STREAM(Appearance::None);
+    AC_PROCESS_APPEARANCE_TO_STREAM(Appearance::Normal);
+    AC_PROCESS_APPEARANCE_TO_STREAM(Appearance::NormalNotShown);
+    AC_PROCESS_APPEARANCE_TO_STREAM(Appearance::Left);
+    AC_PROCESS_APPEARANCE_TO_STREAM(Appearance::Right);
+  }
+#undef AC_PROCESS_APPEARANCE_TO_STREAM
+
+  return aStream;
+}
 
 // -----------------------------------------------------------------------------
 // Implementation of AccessibleCaret methods
@@ -74,6 +93,9 @@ AccessibleCaret::SetAppearance(Appearance aAppearance)
 
   CaretElement()->ClassList()->Add(AppearanceString(aAppearance), rv);
   MOZ_ASSERT(!rv.Failed(), "Add new appearance failed!");
+
+  AC_LOG("%s: %s -> %s", __FUNCTION__, ToString(mAppearance).c_str(),
+         ToString(aAppearance).c_str());
 
   mAppearance = aAppearance;
 
