@@ -10,7 +10,6 @@
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
   let {panel} = yield openAnimationInspectorNewUI();
-  yield waitForAllAnimationTargets(panel);
 
   info("Getting the animation element from the panel");
   let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
@@ -22,8 +21,8 @@ add_task(function*() {
     ok(el.hasAttribute("title"), "The tooltip is defined");
 
     let title = el.getAttribute("title");
-    ok(title.match(/Delay: [\d.]+s/), "The tooltip shows the delay");
-    ok(title.match(/Duration: [\d.]+s/), "The tooltip shows the delay");
+    ok(title.match(/Delay: [\d.-]+s/), "The tooltip shows the delay");
+    ok(title.match(/Duration: [\d.]+s/), "The tooltip shows the duration");
     ok(title.match(/Repeats: /), "The tooltip shows the iterations");
   }
 });

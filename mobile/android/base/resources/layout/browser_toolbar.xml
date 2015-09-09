@@ -70,12 +70,16 @@
          The margins will be 40dp on left, 8dp on right, instead of ideal 30dp
          and 12dp. -->
     <org.mozilla.gecko.toolbar.TabCounter android:id="@+id/tabs_counter"
-                        style="@style/UrlBar.ImageButton.TabCount"
+                        style="@style/UrlBar.ImageButton"
                         android:layout_width="24dip"
                         android:layout_height="24dip"
                         android:layout_centerVertical="true"
                         android:layout_marginRight="8dip"
-                        android:layout_alignRight="@id/tabs"/>
+                        android:layout_alignRight="@id/tabs"
+                        android:background="@drawable/tabs_count"
+                        android:gravity="center_horizontal"
+                        android:clipChildren="false"
+                        android:clipToPadding="false"/>
 
     <!-- Note that the edit components are invisible so that the views
          depending on their location can properly layout. -->

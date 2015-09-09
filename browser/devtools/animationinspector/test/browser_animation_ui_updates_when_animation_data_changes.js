@@ -23,9 +23,9 @@ function* testDataUpdates({panel, controller, inspector}, isNewUI=false) {
   yield selectNode(".animated", inspector);
 
   let animation = controller.animationPlayers[0];
-  yield setStyle(animation, "animationDuration", "5.5s", isNewUI);
-  yield setStyle(animation, "animationIterationCount", "300", isNewUI);
-  yield setStyle(animation, "animationDelay", "45s", isNewUI);
+  yield setStyle(animation, panel, "animationDuration", "5.5s", isNewUI);
+  yield setStyle(animation, panel, "animationIterationCount", "300", isNewUI);
+  yield setStyle(animation, panel, "animationDelay", "45s", isNewUI);
 
   if (isNewUI) {
     let animationsEl = panel.animationsTimelineComponent.animationsEl;
@@ -52,7 +52,7 @@ function* testDataUpdates({panel, controller, inspector}, isNewUI=false) {
   }
 }
 
-function* setStyle(animation, name, value, isNewUI=false) {
+function* setStyle(animation, panel, name, value, isNewUI=false) {
   info("Change the animation style via the content DOM. Setting " +
     name + " to " + value);
 
@@ -63,6 +63,10 @@ function* setStyle(animation, name, value, isNewUI=false) {
     propertyValue: value
   });
   yield onAnimationChanged;
+
+  // Also wait for the target node previews to be loaded if the panel got
+  // refreshed as a result of this animation mutation.
+  yield waitForAllAnimationTargets(panel);
 
   // If this is the playerWidget-based UI, wait for the auto-refresh event too
   // to make sure the UI has updated.

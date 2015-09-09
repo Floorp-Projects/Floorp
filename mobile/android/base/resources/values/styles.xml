@@ -457,13 +457,6 @@
         <item name="android:orientation">horizontal</item>
     </style>
 
-    <style name="UrlBar.ImageButton.TabCount">
-        <item name="android:background">@drawable/tabs_count</item>
-        <item name="android:gravity">center_horizontal</item>
-        <item name="android:clipChildren">false</item>
-        <item name="android:clipToPadding">false</item>
-    </style>
-
     <!-- URL bar -->
     <style name="UrlBar">
         <item name="android:layout_width">match_parent</item>
@@ -501,13 +494,6 @@
 
     <style name="UrlBar.ImageButton" parent="UrlBar.ImageButtonBase">
         <item name="android:layout_width">@dimen/browser_toolbar_height</item>
-    </style>
-
-    <!-- URL bar - Image Button - Icon -->
-    <style name="UrlBar.ImageButton.Icon">
-         <item name="android:layout_width">@dimen/browser_toolbar_icon_width</item>
-         <item name="android:layout_height">@dimen/browser_toolbar_height</item>
-         <item name="android:layout_weight">0.0</item>
     </style>
 
     <!-- TabsLayout -->
