@@ -146,6 +146,18 @@ private:
   int mUpdateProgressCounter;
 
   /**
+   * When it is true and the target service on target device couldn't be found,
+   * refreshing SDP records is necessary.
+   */
+  bool mNeedsUpdatingSdpRecords;
+
+  /**
+   * This holds the time when OPP manager fail to get service channel and
+   * prepare to refresh SDP records.
+   */
+  mozilla::TimeStamp mLastServiceChannelCheck;
+
+  /**
    * Set when StopSendingFile() is called.
    */
   bool mAbortFlag;
