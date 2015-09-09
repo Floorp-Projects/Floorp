@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<style>
+
+html { writing-mode: vertical-rl; }
+
+</style>
+<body>
+
+<p>The following blue box should have uniform padding around all sides.</p>
+
+<div style="float: left; background: olive; padding: 5px;">
+  <div id="c" style="background: blue; height: 200px; width: 100px">
+  </div>
+</div>
+
+<p style="clear:left">Note that if you zoom the page after it loads
+it fixes the problem by causing a reflow.</p>
+
+<script>
+
+var div = document.getElementById("c")
+var flush_and_ignore = div.offsetTop;
+div.style.height = "100px";
+
+</script>

@@ -477,7 +477,11 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
     nsAutoTArray<InternalHeaders::Entry, 5> headers;
     mRequest->Headers()->GetEntries(headers);
     for (uint32_t i = 0; i < headers.Length(); ++i) {
-      httpChan->SetRequestHeader(headers[i].mName, headers[i].mValue, false /* merge */);
+      if (headers[i].mValue.IsEmpty()) {
+        httpChan->SetEmptyRequestHeader(headers[i].mName);
+      } else {
+        httpChan->SetRequestHeader(headers[i].mName, headers[i].mValue, false /* merge */);
+      }
     }
 
     // Step 2. Set the referrer.

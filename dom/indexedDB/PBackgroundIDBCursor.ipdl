@@ -4,6 +4,7 @@
 
 include protocol PBackgroundIDBTransaction;
 include protocol PBackgroundIDBVersionChangeTransaction;
+include protocol PBackgroundMutableFile;
 include protocol PBlob;
 
 include PBackgroundIDBSharedTypes;

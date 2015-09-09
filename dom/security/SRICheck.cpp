@@ -191,7 +191,7 @@ SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
                                       NS_LITERAL_CSTRING("Sub-resource Integrity"),
                                       aDocument,
                                       nsContentUtils::eSECURITY_PROPERTIES,
-                                      "MalformedIntegrityURI",
+                                      "MalformedIntegrityHash",
                                       params, ArrayLength(params));
     } else if (!metadata.IsAlgorithmSupported()) {
       nsAutoCString alg;
@@ -275,7 +275,7 @@ SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
   MOZ_ASSERT(Preferences::GetBool("security.sri.enable", false));
 
   if (NS_FAILED(IsEligible(aChannel, aCORSMode, aDocument))) {
-    return NS_OK; // ignore non-CORS resources for forward-compatibility
+    return NS_ERROR_SRI_NOT_ELIGIBLE;
   }
   if (!aMetadata.IsValid()) {
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,

@@ -9,30 +9,34 @@
 #include "IDBFileHandle.h"
 #include "js/RootingAPI.h"
 #include "jsapi.h"
-#include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/dom/FileHelper.h"
 #include "mozilla/dom/IDBFileRequestBinding.h"
 #include "mozilla/dom/ProgressEvent.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/EventDispatcher.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsIDOMEvent.h"
-#include "nsIScriptContext.h"
 #include "nsLiteralString.h"
 
 namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-IDBFileRequest::IDBFileRequest(nsPIDOMWindow* aWindow)
-  : DOMRequest(aWindow), mWrapAsDOMRequest(false)
+IDBFileRequest::IDBFileRequest(nsPIDOMWindow* aWindow,
+                               IDBFileHandle* aFileHandle,
+                               bool aWrapAsDOMRequest)
+  : DOMRequest(aWindow)
+  , FileRequestBase(DEBUGONLY(aFileHandle->OwningThread()))
+  , mFileHandle(aFileHandle)
+  , mWrapAsDOMRequest(aWrapAsDOMRequest)
 {
+  AssertIsOnOwningThread();
 }
 
 IDBFileRequest::~IDBFileRequest()
 {
+  AssertIsOnOwningThread();
 }
 
 // static
@@ -40,103 +44,98 @@ already_AddRefed<IDBFileRequest>
 IDBFileRequest::Create(nsPIDOMWindow* aOwner, IDBFileHandle* aFileHandle,
                        bool aWrapAsDOMRequest)
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(aFileHandle);
+  aFileHandle->AssertIsOnOwningThread();
 
-  nsRefPtr<IDBFileRequest> request = new IDBFileRequest(aOwner);
-  request->mFileHandle = aFileHandle;
-  request->mWrapAsDOMRequest = aWrapAsDOMRequest;
+  nsRefPtr<IDBFileRequest> request =
+    new IDBFileRequest(aOwner, aFileHandle, aWrapAsDOMRequest);
 
   return request.forget();
 }
 
+NS_IMPL_ADDREF_INHERITED(IDBFileRequest, DOMRequest)
+NS_IMPL_RELEASE_INHERITED(IDBFileRequest, DOMRequest)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBFileRequest)
+NS_INTERFACE_MAP_END_INHERITING(DOMRequest)
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(IDBFileRequest, DOMRequest,
+                                   mFileHandle)
+
 nsresult
 IDBFileRequest::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnOwningThread();
 
   aVisitor.mCanHandle = true;
   aVisitor.mParentTarget = mFileHandle;
   return NS_OK;
 }
 
-void
-IDBFileRequest::OnProgress(uint64_t aProgress, uint64_t aProgressMax)
-{
-  FireProgressEvent(aProgress, aProgressMax);
-}
-
-nsresult
-IDBFileRequest::NotifyHelperCompleted(FileHelper* aFileHelper)
-{
-  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-
-  nsresult rv = aFileHelper->ResultCode();
-
-  // If the request failed then fire error event and return.
-  if (NS_FAILED(rv)) {
-    FireError(rv);
-    return NS_OK;
-  }
-
-  // Otherwise we need to get the result from the helper.
-  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
-  NS_ENSURE_STATE(sc);
-
-  AutoJSContext cx;
-  MOZ_ASSERT(cx, "Failed to get a context!");
-
-  JS::Rooted<JS::Value> result(cx);
-
-  JS::Rooted<JSObject*> global(cx, sc->GetWindowProxy());
-  MOZ_ASSERT(global, "Failed to get global object!");
-
-  JSAutoCompartment ac(cx, global);
-
-  rv = aFileHelper->GetSuccessResult(cx, &result);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("GetSuccessResult failed!");
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    FireSuccess(result);
-  }
-  else {
-    FireError(rv);
-  }
-  return NS_OK;
-}
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(IDBFileRequest, DOMRequest,
-                                   mFileHandle)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBFileRequest)
-NS_INTERFACE_MAP_END_INHERITING(DOMRequest)
-
-NS_IMPL_ADDREF_INHERITED(IDBFileRequest, DOMRequest)
-NS_IMPL_RELEASE_INHERITED(IDBFileRequest, DOMRequest)
-
 // virtual
 JSObject*
 IDBFileRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
+  AssertIsOnOwningThread();
+
   if (mWrapAsDOMRequest) {
     return DOMRequest::WrapObject(aCx, aGivenProto);
   }
   return IDBFileRequestBinding::Wrap(aCx, this, aGivenProto);
 }
 
-
-IDBFileHandle*
-IDBFileRequest::GetFileHandle() const
+mozilla::dom::FileHandleBase*
+IDBFileRequest::FileHandle() const
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnOwningThread();
 
-  return static_cast<IDBFileHandle*>(mFileHandle.get());
+  return mFileHandle;
+}
+
+void
+IDBFileRequest::OnProgress(uint64_t aProgress, uint64_t aProgressMax)
+{
+  AssertIsOnOwningThread();
+
+  FireProgressEvent(aProgress, aProgressMax);
+}
+
+void
+IDBFileRequest::SetResultCallback(ResultCallback* aCallback)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aCallback);
+
+  AutoJSAPI autoJS;
+  if (NS_WARN_IF(!autoJS.Init(GetOwner()))) {
+    FireError(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
+    return;
+  }
+
+  JSContext* cx = autoJS.cx();
+
+  JS::Rooted<JS::Value> result(cx);
+  nsresult rv = aCallback->GetResult(cx, &result);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    FireError(rv);
+  } else {
+    FireSuccess(result);
+  }
+}
+
+void
+IDBFileRequest::SetError(nsresult aError)
+{
+  AssertIsOnOwningThread();
+
+  FireError(aError);
 }
 
 void
 IDBFileRequest::FireProgressEvent(uint64_t aLoaded, uint64_t aTotal)
 {
+  AssertIsOnOwningThread();
+
   if (NS_FAILED(CheckInnerWindowCorrectness())) {
     return;
   }

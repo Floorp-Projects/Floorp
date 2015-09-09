@@ -9,10 +9,14 @@
 
 #include "mozilla/dom/StructuredCloneHelper.h"
 
+namespace IPC {
+class Message;
+}
+
 namespace mozilla {
 namespace dom {
 
-class StructuredCloneIPCHelper final : public StructuredCloneHelper
+class StructuredCloneIPCHelper : public StructuredCloneHelper
 {
 public:
   StructuredCloneIPCHelper()
@@ -24,14 +28,17 @@ public:
     , mDataOwned(eNone)
   {}
 
+  StructuredCloneIPCHelper(const StructuredCloneIPCHelper&) = delete;
+
   ~StructuredCloneIPCHelper()
   {
-    if (mDataOwned == eAllocated) {
-      free(mData);
-    } else if (mDataOwned == eJSAllocated) {
+    if (mDataOwned == eJSAllocated) {
       js_free(mData);
     }
   }
+
+  StructuredCloneIPCHelper&
+  operator=(const StructuredCloneIPCHelper& aOther) = delete;
 
   const nsTArray<nsRefPtr<BlobImpl>>& BlobImpls() const
   {
@@ -61,6 +68,8 @@ public:
     MOZ_ASSERT(mDataOwned == eNone);
   }
 
+  bool CopyExternalData(const void* aData, size_t aDataLength);
+
   uint64_t* Data() const
   {
     return mData;
@@ -71,13 +80,16 @@ public:
     return mDataLength;
   }
 
+  // For IPC serialization
+  void WriteIPCParams(IPC::Message* aMessage) const;
+  bool ReadIPCParams(const IPC::Message* aMessage, void** aIter);
+
 private:
   uint64_t* mData;
   size_t mDataLength;
   enum {
     eNone,
-    eAllocated,
-    eJSAllocated
+    eJSAllocated,
   } mDataOwned;
 };
 

@@ -53,7 +53,6 @@ if CONFIG['OS_TARGET'] == 'WINNT':
 if CONFIG['OS_TARGET'] == 'Android':
     SOURCES += ['cubeb_opensl.c']
     SOURCES += ['cubeb_resampler.cpp']
-    SOURCES['cubeb_opensl.c'].flags += ['-Wno-declaration-after-statement']
     DEFINES['USE_OPENSL'] = True
     if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         SOURCES += [

@@ -194,7 +194,6 @@ function removeMessageListenerId(messageName, handler) {
 }
 
 let getTitleFn = dispatch(getTitle);
-let getElementSizeFn = dispatch(getElementSize);
 let getPageSourceFn = dispatch(getPageSource);
 let getActiveElementFn = dispatch(getActiveElement);
 let clickElementFn = dispatch(clickElement);
@@ -208,7 +207,6 @@ let getCurrentUrlFn = dispatch(getCurrentUrl);
 let findElementContentFn = dispatch(findElementContent);
 let findElementsContentFn = dispatch(findElementsContent);
 let isElementSelectedFn = dispatch(isElementSelected);
-let getElementLocationFn = dispatch(getElementLocation);
 let clearElementFn = dispatch(clearElement);
 let isElementDisplayedFn = dispatch(isElementDisplayed);
 let getElementValueOfCssPropertyFn = dispatch(getElementValueOfCssProperty);
@@ -245,12 +243,10 @@ function startListeners() {
   addMessageListenerId("Marionette:getElementTagName", getElementTagNameFn);
   addMessageListenerId("Marionette:isElementDisplayed", isElementDisplayedFn);
   addMessageListenerId("Marionette:getElementValueOfCssProperty", getElementValueOfCssPropertyFn);
-  addMessageListenerId("Marionette:getElementSize", getElementSizeFn);  // deprecated
   addMessageListenerId("Marionette:getElementRect", getElementRectFn);
   addMessageListenerId("Marionette:isElementEnabled", isElementEnabledFn);
   addMessageListenerId("Marionette:isElementSelected", isElementSelectedFn);
   addMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
-  addMessageListenerId("Marionette:getElementLocation", getElementLocationFn); //deprecated
   addMessageListenerId("Marionette:clearElement", clearElementFn);
   addMessageListenerId("Marionette:switchToFrame", switchToFrame);
   addMessageListenerId("Marionette:switchToShadowRoot", switchToShadowRootFn);
@@ -351,12 +347,10 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getElementTagName", getElementTagNameFn);
   removeMessageListenerId("Marionette:isElementDisplayed", isElementDisplayedFn);
   removeMessageListenerId("Marionette:getElementValueOfCssProperty", getElementValueOfCssPropertyFn);
-  removeMessageListenerId("Marionette:getElementSize", getElementSizeFn); // deprecated
   removeMessageListenerId("Marionette:getElementRect", getElementRectFn);
   removeMessageListenerId("Marionette:isElementEnabled", isElementEnabledFn);
   removeMessageListenerId("Marionette:isElementSelected", isElementSelectedFn);
   removeMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
-  removeMessageListenerId("Marionette:getElementLocation", getElementLocationFn);
   removeMessageListenerId("Marionette:clearElement", clearElementFn);
   removeMessageListenerId("Marionette:switchToFrame", switchToFrame);
   removeMessageListenerId("Marionette:switchToShadowRoot", switchToShadowRootFn);
@@ -482,20 +476,16 @@ function checkForInterrupted() {
  */
 function createExecuteContentSandbox(win, timeout) {
   let mn = new Marionette(
-      this,
       win,
       "content",
       marionetteLogObj,
       timeout,
       heartbeatCallback,
       marionetteTestName);
-  mn.runEmulatorCmd = (cmd, cb) => this.runEmulatorCmd(cmd, cb);
-  mn.runEmulatorShell = (args, cb) => this.runEmulatorShell(args, cb);
 
   let principal = win;
-  if (sandboxName == 'system') {
-    principal = Cc["@mozilla.org/systemprincipal;1"].
-                createInstance(Ci.nsIPrincipal);
+  if (sandboxName == "system") {
+    principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
   }
   let sandbox = new Cu.Sandbox(principal, {sandboxPrototype: win});
   sandbox.global = sandbox;
@@ -513,6 +503,8 @@ function createExecuteContentSandbox(win, timeout) {
       sandbox[fn] = mn[fn];
     }
   });
+  sandbox.runEmulatorCmd = (cmd, cb) => this.runEmulatorCmd(cmd, cb);
+  sandbox.runEmulatorShell = (args, cb) => this.runEmulatorShell(args, cb);
 
   sandbox.asyncComplete = (obj, id) => {
     if (id == asyncTestCommandId) {
@@ -1544,22 +1536,7 @@ function getElementValueOfCssProperty(id, prop) {
 }
 
 /**
- * Get the size of the element.
- *
- * @param {WebElement} id
- *     Web element reference.
- *
- * @return {Object.<string, number>}
- *     The width/height dimensions of th element.
- */
-function getElementSize(id) {
-  let el = elementManager.getKnownElement(id, curContainer);
-  let clientRect = el.getBoundingClientRect();
-  return {width: clientRect.width, height: clientRect.height};
-}
-
-/**
- * Get the size of the element.
+ * Get the position and dimensions of the element.
  *
  * @param {WebElement} id
  *     Reference to web element.
@@ -1634,15 +1611,6 @@ function sendKeysToElement(msg) {
   } catch (e) {
     sendError(e, command_id);
   }
-}
-
-/**
- * Get the element's top left-hand corner point.
- */
-function getElementLocation(id) {
-  let el = elementManager.getKnownElement(id, curContainer);
-  let rect = el.getBoundingClientRect();
-  return {x: rect.left, y: rect.top};
 }
 
 /**

@@ -59,13 +59,14 @@ public:
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
-                            const AudioChunk& aInput,
-                            AudioChunk* aOutput,
+                            const AudioBlock& aInput,
+                            AudioBlock* aOutput,
                             bool* aFinished) override
   {
     *aOutput = aInput;
 
-    nsRefPtr<TransferBuffer> transfer = new TransferBuffer(aStream, aInput);
+    nsRefPtr<TransferBuffer> transfer =
+      new TransferBuffer(aStream, aInput.AsAudioChunk());
     NS_DispatchToMainThread(transfer);
   }
 
@@ -329,7 +330,7 @@ AnalyserNode::GetTimeDomainData(float* aData, size_t aLength)
 
   for (size_t writeIndex = 0; writeIndex < aLength; ) {
     const AudioChunk& chunk = mChunks[readChunk & (CHUNK_COUNT - 1)];
-    const size_t channelCount = chunk.mChannelData.Length();
+    const size_t channelCount = chunk.ChannelCount();
     size_t copyLength =
       std::min<size_t>(aLength - writeIndex, WEBAUDIO_BLOCK_SIZE);
     float* dataOut = &aData[writeIndex];

@@ -31,6 +31,7 @@ info("Informing server about the current host");
 var xhr = new XMLHttpRequest();
 xhr.open("POST", path + serverFilename);
 xhr.setRequestHeader("options-host", otherHost);
+xhr.setRequestHeader("empty", "");
 xhr.onreadystatechange = function() {
   if (xhr.readyState == 4) {
     info("Launching worker");

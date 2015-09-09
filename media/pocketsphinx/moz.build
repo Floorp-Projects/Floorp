@@ -50,7 +50,6 @@ SOURCES += [
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:
     CFLAGS += [
-        '-Wno-declaration-after-statement',
         '-Wno-sign-compare',
     ]
     if CONFIG['CLANG_CXX']:

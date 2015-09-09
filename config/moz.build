@@ -45,3 +45,8 @@ if CONFIG['GNU_CC'] and CONFIG['MOZ_OPTIMIZE']:
 
 # XXX: We should fix these warnings.
 ALLOW_COMPILER_WARNINGS = True
+
+HOST_DEFINES = {
+    'UNICODE': True,
+    '_UNICODE': True,
+}

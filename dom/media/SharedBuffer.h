@@ -13,6 +13,8 @@
 
 namespace mozilla {
 
+class AudioBlockBuffer;
+
 /**
  * Base class for objects with a thread-safe refcount and a virtual
  * destructor.
@@ -22,6 +24,8 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ThreadSharedObject)
 
   bool IsShared() { return mRefCnt.get() > 1; }
+
+  virtual AudioBlockBuffer* AsAudioBlockBuffer() { return nullptr; };
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
@@ -41,9 +45,9 @@ protected:
  * Heap-allocated chunk of arbitrary data with threadsafe refcounting.
  * Typically you would allocate one of these, fill it in, and then treat it as
  * immutable while it's shared.
- * This only guarantees 4-byte alignment of the data. For alignment we
- * simply assume that the refcount is at least 4-byte aligned and its size
- * is divisible by 4.
+ * This only guarantees 4-byte alignment of the data. For alignment we simply
+ * assume that the memory from malloc is at least 4-byte aligned and the
+ * refcount's size is large enough that SharedBuffer's size is divisible by 4.
  */
 class SharedBuffer : public ThreadSharedObject {
 public:

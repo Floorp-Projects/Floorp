@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <!--
+  This tests the invalidation of foreign objects in svg. At the time of writing
+  we invalidate the entire foreign object when scrolling (bug 418063).
+  -->
+  <script>
+	  iframeLoadedFirst = false;
+	  parentLoadedFirst = false;
+
+	  /* Since the script tag needs to come after the iframe, this
+	   * ensures that doScroll() is only called once and only called
+	   * after both the iframe and the parent have fired their
+	   * onload events */
+
+	  function iframeLoad() {
+	    if (parentLoadedFirst) {
+				testScroll(document.getElementById("ifrm").contentWindow, 10);
+	    } else {
+	      iframeLoadedFirst = true;
+	    }
+	  }
+	  
+	  window.onload = function() {
+	    if (iframeLoadedFirst) {
+				testScroll(document.getElementById("ifrm").contentWindow, 10);
+	    } else {
+	      parentLoadedFirst = true;
+	    }
+	  }
+  </script>	
+  <foreignObject x="5%" height="85%" width="90%">
+    <iframe onload="iframeLoad();" id="ifrm" width="99%" height="99%" xmlns="http://www.w3.org/1999/xhtml" src="drac.htm"/>
+  </foreignObject>
+  <!-- this has to come after the iframe for some reason -->
+	<script type="text/javascript" xlink:href="../../scripts/talos-debug.js"/>
+	<script type="text/javascript" xlink:href="../../scripts/Profiler.js"/>
+	<script type="text/javascript" xlink:href="scroll-test.js"/>
+</svg>

@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<meta charset="utf-8">
+<head>
+<title>accessibility perf for dhtml</title>
+<script src="a11y.js"></script>
+<script>
+  // based on: http://hacks.mozilla.org/2010/05/better-performance-with-lazy-frame-construction/
+  var ppDate = null;
+
+  function doInsertion()
+  {
+    if (!initAccessibility()) {
+      dump("__FAILinit:AccessibilityUnvailable__FAIL");
+      return;
+    }
+
+    var container = document.getElementById("container");
+    var lastchild = document.getElementById("lastchild");
+    var start = new Date();
+    var i,div;
+    for (i = 0; i < 2000; i++) {
+      div = document.createElement("div");
+      div.innerHTML = "<input type='text' value='a bc def g hijkl mn op qrs'/>";
+      container.insertBefore(div, lastchild);
+    }
+    for (i = 0; i < 2000; i++) {
+      div = document.createElement("div");
+      div.innerHTML = "<ul><li>foo<ul><li>bar</li></ul></li><li>baz</li></ul>";
+      container.insertBefore(div, lastchild);
+    }
+    for (i = 0; i < 2000; i++) {
+      div = document.createElement("div");
+      div.innerHTML = "<div role='progressbar'>progressbar</div>" +
+                      "<span id='span" + i + "'>cb</span>";
+      container.appendChild(div);
+    }
+    document.documentElement.offsetLeft; // flush layout
+    setTimeout(postProcessingRecord, 0, start);
+  }
+
+  function postProcessingRecord(s)
+  {
+    //alert(new Date() - s);
+    tpRecordTime(new Date() - s, s);
+  }
+</script>
+</head>
+<body onload="doInsertion();">
+  <div id="container" role="application"><div id="lastchild"></div></div>
+</body>
+</html>
