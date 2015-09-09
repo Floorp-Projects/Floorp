@@ -96,7 +96,7 @@ var FullScreen = {
       TabsInTitlebar.updateAppearance(true);
     }
 
-    if (enterFS) {
+    if (enterFS && !document.mozFullScreen) {
       Services.telemetry.getHistogramById("FX_BROWSER_FULLSCREEN_USED")
                         .add(1);
     }
