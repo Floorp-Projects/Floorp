@@ -7,14 +7,15 @@
 #include "UploadStumbleRunnable.h"
 #include "StumblerLogging.h"
 #include "mozilla/dom/Event.h"
+#include "nsIInputStream.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIURLFormatter.h"
 #include "nsIVariant.h"
 #include "nsIXMLHttpRequest.h"
 #include "nsNetUtil.h"
 
-UploadStumbleRunnable::UploadStumbleRunnable(const nsACString& aUploadData)
-: mUploadData(aUploadData)
+UploadStumbleRunnable::UploadStumbleRunnable(nsIInputStream* aUploadData)
+: mUploadInputStream(aUploadData)
 {
 }
 
@@ -36,7 +37,7 @@ UploadStumbleRunnable::Upload()
   nsCOMPtr<nsIWritableVariant> variant = do_CreateInstance("@mozilla.org/variant;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = variant->SetAsACString(mUploadData);
+  rv = variant->SetAsISupports(mUploadInputStream);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIXMLHttpRequest> xhr = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
@@ -63,13 +64,13 @@ UploadStumbleRunnable::Upload()
   rv = xhr->Open(NS_LITERAL_CSTRING("POST"), NS_ConvertUTF16toUTF8(url), false, EmptyString(), EmptyString());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  xhr->SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), NS_LITERAL_CSTRING("application/json"));
+  xhr->SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), NS_LITERAL_CSTRING("gzip"));
   xhr->SetMozBackgroundRequest(true);
   // 60s timeout
   xhr->SetTimeout(60 * 1000);
 
   nsCOMPtr<EventTarget> target(do_QueryInterface(xhr));
-  nsRefPtr<nsIDOMEventListener> listener = new UploadEventListener(xhr, mUploadData.Length());
+  nsRefPtr<nsIDOMEventListener> listener = new UploadEventListener(xhr);
 
   const char* const sEventStrings[] = {
     // nsIXMLHttpRequestEventTarget event types
@@ -93,8 +94,8 @@ UploadStumbleRunnable::Upload()
 
 NS_IMPL_ISUPPORTS(UploadEventListener, nsIDOMEventListener)
 
-UploadEventListener::UploadEventListener(nsIXMLHttpRequest* aXHR, int64_t aFileSize)
-: mXHR(aXHR), mFileSize(aFileSize)
+UploadEventListener::UploadEventListener(nsIXMLHttpRequest* aXHR)
+: mXHR(aXHR)
 {
 }
 
@@ -109,7 +110,7 @@ UploadEventListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   if (type.EqualsLiteral("load")) {
-    STUMBLER_DBG("Got load Event : size %lld", mFileSize);
+    STUMBLER_DBG("Got load Event\n");
   } else if (type.EqualsLiteral("error") && mXHR) {
     STUMBLER_ERR("Upload Error");
   } else {
