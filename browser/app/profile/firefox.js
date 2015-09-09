@@ -273,13 +273,7 @@ pref("browser.urlbar.doubleClickSelectsAll", false);
 pref("browser.urlbar.autoFill", true);
 pref("browser.urlbar.autoFill.typed", true);
 
-#ifdef NIGHTLY_BUILD
-// Use the new unifiedComplete component
 pref("browser.urlbar.unifiedcomplete", true);
-#else
-// Don't use the new unifiedComplete component
-pref("browser.urlbar.unifiedcomplete", false);
-#endif
 
 // 0: Match anywhere (e.g., middle of words)
 // 1: Match on word boundaries and then try matching anywhere
