@@ -46,6 +46,10 @@ public:
 
   static void UploadEnded(bool deleteUploadFile);
 
+  // Used externally to determine if cell+wifi scans should happen
+  // (returns false for that case).
+  static bool IsFileWaitingForUpload();
+
 private:
   friend class DeleteRunnable;
 
@@ -71,6 +75,8 @@ private:
 
   // Only run one instance of this
   static mozilla::Atomic<bool> sIsAlreadyRunning;
+
+  static mozilla::Atomic<bool> sIsFileWaitingForUpload;
 
   // Limit the upload attempts per day. If the device is rebooted
   // this resets the allowed attempts, which is acceptable.
