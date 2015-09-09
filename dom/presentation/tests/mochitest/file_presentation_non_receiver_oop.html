@@ -29,8 +29,18 @@ function finish() {
 function testSessionAvailable() {
   return new Promise(function(aResolve, aReject) {
     ok(navigator.presentation, "navigator.presentation should be available in OOP pages.");
-    ok(!navigator.presentation.session, "Non-receiving OOP pages shouldn't get a predefined presentation session instance.");
-    aResolve();
+
+    navigator.presentation.getSessions().then(
+      function(aSessions) {
+        is(aSessions.length, 0, "Non-receiving OOP pages shouldn't get a predefined presentation session instance.");
+        aResolve();
+      },
+      function(aError) {
+        ok(false, "Error occurred when getting sessions: " + aError);
+        teardown();
+        aReject();
+      }
+    );
   });
 }
 
