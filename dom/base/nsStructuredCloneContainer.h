@@ -9,7 +9,7 @@
 
 #include "nsIStructuredCloneContainer.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/StructuredCloneHelper.h"
+#include "mozilla/dom/StructuredCloneIPCHelper.h"
 
 #define NS_STRUCTUREDCLONECONTAINER_CONTRACTID \
   "@mozilla.org/docshell/structured-clone-container;1"
@@ -23,7 +23,7 @@
 
 class nsStructuredCloneContainer final
   : public nsIStructuredCloneContainer
-  , public mozilla::dom::StructuredCloneHelper
+  , public mozilla::dom::StructuredCloneIPCHelper
 {
   public:
     nsStructuredCloneContainer();
@@ -34,16 +34,6 @@ class nsStructuredCloneContainer final
   private:
     ~nsStructuredCloneContainer();
 
-    enum {
-      eNotInitialized = 0,
-      eInitializedFromJSVal,
-      eInitializedFromBase64,
-    } mState;
-
-    uint64_t* mData;
-
-    // This needs to be size_t rather than a PR-type so it matches the JS API.
-    size_t mSize;
     uint32_t mVersion;
 };
 
