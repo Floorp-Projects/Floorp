@@ -67,6 +67,12 @@ StringToUuid(const char* aString, BluetoothUuid& aUuid)
 }
 
 void
+StringToUuid(const nsAString& aString, BluetoothUuid& aUuid)
+{
+  StringToUuid(NS_ConvertUTF16toUTF8(aString).get(), aUuid);
+}
+
+void
 GenerateUuid(nsAString &aUuidString)
 {
   nsresult rv;
