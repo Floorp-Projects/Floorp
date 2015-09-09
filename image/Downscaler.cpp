@@ -149,6 +149,16 @@ GetFilterOffsetAndLength(UniquePtr<skia::ConvolutionFilter1D>& aFilter,
 }
 
 void
+Downscaler::ClearRow(uint32_t aStartingAtCol)
+{
+  MOZ_ASSERT(int64_t(mOriginalSize.width) > int64_t(aStartingAtCol));
+  uint32_t bytesToClear = (mOriginalSize.width - aStartingAtCol)
+                        * sizeof(uint32_t);
+  memset(mRowBuffer.get() + (aStartingAtCol * sizeof(uint32_t)),
+         0, bytesToClear);
+}
+
+void
 Downscaler::CommitRow()
 {
   MOZ_ASSERT(mOutputBuffer, "Should have a current frame");
