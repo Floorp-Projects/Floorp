@@ -13,7 +13,7 @@ rustc-serialize = "0.3.14"
 uuid = "0.1.17"
 mozrunner = "0.1.0"
 mozprofile = "0.1.0"
-webdriver = "0.2.3"
+webdriver = "0.3.1"
 
 [dependencies.argparse]
 git = "https://github.com/tailhook/rust-argparse.git"
