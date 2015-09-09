@@ -24,9 +24,16 @@ public:
   AudioBlock() {
     mDuration = WEBAUDIO_BLOCK_SIZE;
   }
-  MOZ_IMPLICIT AudioBlock(const AudioChunk& aChunk) {
-    mDuration = WEBAUDIO_BLOCK_SIZE;
-    operator=(aChunk);
+  // No effort is made in constructors to ensure that mBufferIsDownstreamRef
+  // is set because the block is expected to be a temporary and so the
+  // reference will be released before the next iteration.
+  // The custom copy constructor is required so as not to set
+  // mBufferIsDownstreamRef without notifying AudioBlockBuffer.
+  AudioBlock(const AudioBlock& aBlock) : AudioChunk(aBlock.AsAudioChunk()) {}
+  explicit AudioBlock(const AudioChunk& aChunk)
+    : AudioChunk(aChunk)
+  {
+    MOZ_ASSERT(aChunk.mDuration == WEBAUDIO_BLOCK_SIZE);
   }
   ~AudioBlock();
 
