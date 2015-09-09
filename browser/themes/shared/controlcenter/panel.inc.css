@@ -288,20 +288,11 @@ description#identity-popup-content-verifier,
   background-image: url(chrome://browser/skin/controlcenter/permissions.svg);
 }
 
-#identity-popup-permissionsView {
-  padding: 0.5em 1em;
-}
-
-#identity-popup-permission-list,
-#identity-popup-permission-subview-list {
+#identity-popup-permission-list {
   margin-top: 5px;
-}
-
-#identity-popup-permission-list menulist.identity-popup-permission,
-#identity-popup-permission-subview-list menulist.identity-popup-permission {
-  max-width: 10em;
 }
 
 .identity-popup-permission-label {
   -moz-margin-start: 0;
 }
+
