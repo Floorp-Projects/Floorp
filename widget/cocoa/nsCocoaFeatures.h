@@ -22,6 +22,7 @@ public:
   static bool OnMountainLionOrLater();
   static bool OnMavericksOrLater();
   static bool OnYosemiteOrLater();
+  static bool OnElCapitanOrLater();
   static bool AccelerateByDefault();
 
   static bool IsAtLeastVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix=0);

@@ -211,6 +211,12 @@ enum {
 };
 #endif
 
+#if !defined(MAC_OS_X_VERSION_10_11) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_11
+enum {
+  NSVisualEffectMaterialMenu = 5
+};
+#endif
+
 static NSUInteger
 VisualEffectStateForVibrancyType(VibrancyType aType)
 {
@@ -263,13 +269,14 @@ VibrancyManager::CreateEffectView(VibrancyType aType, NSRect aRect)
   [effectView setState:VisualEffectStateForVibrancyType(aType)];
 
   if (aType == VibrancyType::MENU) {
-    // NSVisualEffectMaterialTitlebar doesn't match the native menu look
-    // perfectly but comes pretty close. Ideally we'd use a material with
-    // materialTypeName "MacLight", since that's what menus use, but there's
-    // no entry with that material in the internalMaterialType-to-
-    // CGSWindowBackdropViewSpec table which NSVisualEffectView consults when
-    // setting up the effect.
-    [effectView setMaterial:NSVisualEffectMaterialTitlebar];
+    if (nsCocoaFeatures::OnElCapitanOrLater()) {
+      [effectView setMaterial:NSVisualEffectMaterialMenu];
+    } else {
+      // Before 10.11 there is no material that perfectly matches the menu
+      // look. Of all available material types, NSVisualEffectMaterialTitlebar
+      // is the one that comes closest.
+      [effectView setMaterial:NSVisualEffectMaterialTitlebar];
+    }
   } else if (aType == VibrancyType::HIGHLIGHTED_MENUITEM) {
     [effectView setMaterial:NSVisualEffectMaterialMenuItem];
     if ([effectView respondsToSelector:@selector(setEmphasized:)]) {
