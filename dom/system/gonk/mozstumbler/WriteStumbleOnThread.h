@@ -9,6 +9,8 @@
 
 #include "mozilla/Atomics.h"
 
+class DeleteRunnable;
+
 /*
  This class is the entry point to stumbling, in that it
  receives the location+cell+wifi string and writes it
@@ -43,10 +45,9 @@ public:
   NS_IMETHODIMP Run() override;
 
   static void UploadEnded(bool deleteUploadFile);
-  // Don't write while uploading is happening
-  static mozilla::Atomic<bool> sIsUploading;
 
 private:
+  friend class DeleteRunnable;
 
   enum class Partition {
     Begining,
