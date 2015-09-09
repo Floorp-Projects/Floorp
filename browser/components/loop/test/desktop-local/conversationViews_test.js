@@ -406,30 +406,6 @@ describe("loop.conversationViews", function () {
         sinon.assert.calledWith(document.mozL10n.get, "generic_failure_title");
       });
 
-    it("should show 'contact unavailable' when the reason is WEBSOCKET_REASONS.REJECT",
-      function () {
-        conversationStore.setStoreState({callStateReason: WEBSOCKET_REASONS.REJECT});
-
-        view = mountTestComponent({contact: fakeContact});
-
-        sinon.assert.calledWithExactly(document.mozL10n.get,
-          "contact_unavailable_title",
-          {contactName: loop.conversationViews
-                            ._getContactDisplayName(fakeContact)});
-      });
-
-    it("should show 'contact unavailable' when the reason is WEBSOCKET_REASONS.BUSY",
-      function () {
-        conversationStore.setStoreState({callStateReason: WEBSOCKET_REASONS.BUSY});
-
-        view = mountTestComponent({contact: fakeContact});
-
-        sinon.assert.calledWithExactly(document.mozL10n.get,
-          "contact_unavailable_title",
-          {contactName: loop.conversationViews
-                            ._getContactDisplayName(fakeContact)});
-      });
-
     it("should show 'something went wrong' when the reason is 'setup'",
       function () {
         conversationStore.setStoreState({callStateReason: "setup"});
@@ -462,8 +438,10 @@ describe("loop.conversationViews", function () {
       });
 
     it("should display a generic contact unavailable msg when the reason is" +
-       " WEBSOCKET_REASONS.BUSY and no display name is available", function() {
-        conversationStore.setStoreState({callStateReason: WEBSOCKET_REASONS.BUSY});
+       " FAILURE_DETAILS.USER_UNAVAILABLE and no display name is available", function() {
+        conversationStore.setStoreState({
+          callStateReason: FAILURE_DETAILS.USER_UNAVAILABLE
+        });
         var phoneOnlyContact = {
           tel: [{"pref": true, type: "work", value: ""}]
         };

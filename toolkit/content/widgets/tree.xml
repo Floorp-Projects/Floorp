@@ -341,8 +341,10 @@
               return false;
             if (row < 0 || row >= this.view.rowCount || !column)
               return false;
-            if (column.type != Components.interfaces.nsITreeColumn.TYPE_TEXT ||
-                column.cycler || !this.view.isEditable(row, column))
+            if (column.type != Components.interfaces.nsITreeColumn.TYPE_TEXT &&
+                column.type != Components.interfaces.nsITreeColumn.TYPE_PASSWORD)
+              return false;
+            if (column.cycler || !this.view.isEditable(row, column))
               return false;
 
             // Beyond this point, we are going to edit the cell.
