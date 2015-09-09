@@ -908,7 +908,6 @@ GeckoDriver.prototype.execute = function(cmd, resp, directInject) {
       !(sandboxName in this.sandboxes) ||
       (this.sandboxes[sandboxName].proto != win)) {
     let marionette = new Marionette(
-        this,
         win,
         "chrome",
         this.marionetteLog,
@@ -1112,7 +1111,6 @@ GeckoDriver.prototype.executeWithCallback = function(cmd, resp, directInject) {
 
     if (newSandbox || !(sandboxName in this.sandboxes)) {
       let marionette = new Marionette(
-          this,
           win,
           "chrome",
           this.marionetteLog,
@@ -2178,24 +2176,6 @@ GeckoDriver.prototype.isElementSelected = function(cmd, resp) {
   }
 };
 
-GeckoDriver.prototype.getElementSize = function(cmd, resp) {
-  let id = cmd.parameters.id;
-
-  switch (this.context) {
-    case Context.CHROME:
-      let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
-      let rect = el.getBoundingClientRect();
-      resp.body.width = rect.width;
-      resp.body.height = rect.height;
-      break;
-
-    case Context.CONTENT:
-      resp.body = yield this.listener.getElementSize(id);
-      break;
-  }
-};
-
 GeckoDriver.prototype.getElementRect = function(cmd, resp) {
   let id = cmd.parameters.id;
 
@@ -2314,20 +2294,6 @@ GeckoDriver.prototype.clearElement = function(cmd, resp) {
       yield this.listener.clearElement(id);
       break;
   }
-};
-
-/**
- * Get an element's location on the page.
- *
- * The returned point will contain the x and y coordinates of the
- * top left-hand corner of the given element.  The point (0,0)
- * refers to the upper-left corner of the document.
- *
- * @return {Object.<string, number>}
- *     A point containing X and Y coordinates as properties.
- */
-GeckoDriver.prototype.getElementLocation = function(cmd, resp) {
-  return this.listener.getElementLocation(cmd.parameters.id);
 };
 
 /**
@@ -3002,13 +2968,10 @@ GeckoDriver.prototype.commands = {
   "getElementTagName": GeckoDriver.prototype.getElementTagName,
   "isElementDisplayed": GeckoDriver.prototype.isElementDisplayed,
   "getElementValueOfCssProperty": GeckoDriver.prototype.getElementValueOfCssProperty,
-  "getElementSize": GeckoDriver.prototype.getElementSize,  //deprecated
   "getElementRect": GeckoDriver.prototype.getElementRect,
   "isElementEnabled": GeckoDriver.prototype.isElementEnabled,
   "isElementSelected": GeckoDriver.prototype.isElementSelected,
   "sendKeysToElement": GeckoDriver.prototype.sendKeysToElement,
-  "getElementLocation": GeckoDriver.prototype.getElementLocation,  // deprecated
-  "getElementPosition": GeckoDriver.prototype.getElementLocation,  // deprecated
   "clearElement": GeckoDriver.prototype.clearElement,
   "getTitle": GeckoDriver.prototype.getTitle,
   "getWindowType": GeckoDriver.prototype.getWindowType,

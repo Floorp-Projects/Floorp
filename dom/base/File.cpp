@@ -380,18 +380,6 @@ Blob::GetFileId()
   return mImpl->GetFileId();
 }
 
-void
-Blob::AddFileInfo(indexedDB::FileInfo* aFileInfo)
-{
-  mImpl->AddFileInfo(aFileInfo);
-}
-
-indexedDB::FileInfo*
-Blob::GetFileInfo(indexedDB::FileManager* aFileManager)
-{
-  return mImpl->GetFileInfo(aFileManager);
-}
-
 bool
 Blob::IsMemoryFile() const
 {
@@ -458,36 +446,6 @@ File::CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer,
 File::CreateFromFile(nsISupports* aParent, nsIFile* aFile, bool aTemporary)
 {
   nsRefPtr<File> file = new File(aParent, new BlobImplFile(aFile, aTemporary));
-  return file.forget();
-}
-
-/* static */ already_AddRefed<File>
-File::CreateFromFile(nsISupports* aParent, const nsAString& aContentType,
-                     uint64_t aLength, nsIFile* aFile,
-                     indexedDB::FileInfo* aFileInfo)
-{
-  nsRefPtr<File> file = new File(aParent,
-    new BlobImplFile(aContentType, aLength, aFile, aFileInfo));
-  return file.forget();
-}
-
-/* static */ already_AddRefed<File>
-File::CreateFromFile(nsISupports* aParent, const nsAString& aName,
-                     const nsAString& aContentType,
-                     uint64_t aLength, nsIFile* aFile,
-                     indexedDB::FileInfo* aFileInfo)
-{
-  nsRefPtr<File> file = new File(aParent,
-    new BlobImplFile(aName, aContentType, aLength, aFile, aFileInfo));
-  return file.forget();
-}
-
-/* static */ already_AddRefed<File>
-File::CreateFromFile(nsISupports* aParent, nsIFile* aFile,
-                     indexedDB::FileInfo* aFileInfo)
-{
-  nsRefPtr<File> file = new File(aParent,
-    new BlobImplFile(aFile, aFileInfo));
   return file.forget();
 }
 
@@ -800,78 +758,7 @@ BlobImplBase::SetLastModified(int64_t aLastModified)
 int64_t
 BlobImplBase::GetFileId()
 {
-  int64_t id = -1;
-
-  if (IsStoredFile() && IsWholeFile() && !IsSnapshot()) {
-    if (!indexedDB::IndexedDatabaseManager::IsClosed()) {
-      indexedDB::IndexedDatabaseManager::FileMutex().Lock();
-    }
-
-    NS_ASSERTION(!mFileInfos.IsEmpty(),
-                 "A stored file must have at least one file info!");
-
-    nsRefPtr<indexedDB::FileInfo>& fileInfo = mFileInfos.ElementAt(0);
-    if (fileInfo) {
-      id =  fileInfo->Id();
-    }
-
-    if (!indexedDB::IndexedDatabaseManager::IsClosed()) {
-      indexedDB::IndexedDatabaseManager::FileMutex().Unlock();
-    }
-  }
-
-  return id;
-}
-
-void
-BlobImplBase::AddFileInfo(indexedDB::FileInfo* aFileInfo)
-{
-  if (indexedDB::IndexedDatabaseManager::IsClosed()) {
-    NS_ERROR("Shouldn't be called after shutdown!");
-    return;
-  }
-
-  nsRefPtr<indexedDB::FileInfo> fileInfo = aFileInfo;
-
-  MutexAutoLock lock(indexedDB::IndexedDatabaseManager::FileMutex());
-
-  NS_ASSERTION(!mFileInfos.Contains(aFileInfo),
-               "Adding the same file info agan?!");
-
-  nsRefPtr<indexedDB::FileInfo>* element = mFileInfos.AppendElement();
-  element->swap(fileInfo);
-}
-
-indexedDB::FileInfo*
-BlobImplBase::GetFileInfo(indexedDB::FileManager* aFileManager)
-{
-  if (indexedDB::IndexedDatabaseManager::IsClosed()) {
-    NS_ERROR("Shouldn't be called after shutdown!");
-    return nullptr;
-  }
-
-  // A slice created from a stored file must keep the file info alive.
-  // However, we don't support sharing of slices yet, so the slice must be
-  // copied again. That's why we have to ignore the first file info.
-  // Snapshots are handled in a similar way (they have to be copied).
-  uint32_t startIndex;
-  if (IsStoredFile() && (!IsWholeFile() || IsSnapshot())) {
-    startIndex = 1;
-  }
-  else {
-    startIndex = 0;
-  }
-
-  MutexAutoLock lock(indexedDB::IndexedDatabaseManager::FileMutex());
-
-  for (uint32_t i = startIndex; i < mFileInfos.Length(); i++) {
-    nsRefPtr<indexedDB::FileInfo>& fileInfo = mFileInfos.ElementAt(i);
-    if (fileInfo->Manager() == aFileManager) {
-      return fileInfo;
-    }
-  }
-
-  return nullptr;
+  return -1;
 }
 
 nsresult

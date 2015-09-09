@@ -1,0 +1,4 @@
+content pageloader chrome/
+component {8AF052F5-8EFE-4359-8266-E16498A82E8B} components/tp-cmdline.js
+contract @mozilla.org/commandlinehandler/general-startup;1?type=tp {8AF052F5-8EFE-4359-8266-E16498A82E8B}
+category command-line-handler m-tp @mozilla.org/commandlinehandler/general-startup;1?type=tp

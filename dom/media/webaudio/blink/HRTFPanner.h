@@ -30,7 +30,7 @@
 #include "mozilla/MemoryReporting.h"
 
 namespace mozilla {
-struct AudioChunk;
+class AudioBlock;
 } // namespace mozilla
 
 namespace WebCore {
@@ -39,7 +39,7 @@ typedef nsTArray<float> AudioFloatArray;
 
 class HRTFDatabaseLoader;
 
-using mozilla::AudioChunk;
+using mozilla::AudioBlock;
 
 class HRTFPanner {
 public:
@@ -47,7 +47,7 @@ public:
     ~HRTFPanner();
 
     // chunk durations must be 128
-    void pan(double azimuth, double elevation, const AudioChunk* inputBus, AudioChunk* outputBus);
+    void pan(double azimuth, double elevation, const AudioBlock* inputBus, AudioBlock* outputBus);
     void reset();
 
     size_t fftSize() const { return m_convolverL1.fftSize(); }

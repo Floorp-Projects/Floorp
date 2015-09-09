@@ -44,6 +44,7 @@ from ..frontend.data import (
     GeneratedFile,
     GeneratedInclude,
     GeneratedSources,
+    HostDefines,
     HostLibrary,
     HostProgram,
     HostSimpleProgram,
@@ -94,8 +95,10 @@ MOZBUILD_VARIABLES = [
     b'FORCE_SHARED_LIB',
     b'FORCE_STATIC_LIB',
     b'FINAL_LIBRARY',
+    b'HOST_CFLAGS',
     b'HOST_CSRCS',
     b'HOST_CMMSRCS',
+    b'HOST_CXXFLAGS',
     b'HOST_EXTRA_LIBS',
     b'HOST_LIBRARY_NAME',
     b'HOST_PROGRAM',
@@ -504,7 +507,8 @@ class RecursiveMakeBackend(CommonBackend):
                         backend_file.write('%s := 1\n' % k)
                 else:
                     backend_file.write('%s := %s\n' % (k, v))
-
+        elif isinstance(obj, HostDefines):
+            self._process_defines(obj, backend_file, which='HOST_DEFINES')
         elif isinstance(obj, Defines):
             self._process_defines(obj, backend_file)
 
@@ -945,11 +949,11 @@ class RecursiveMakeBackend(CommonBackend):
                 dest = mozpath.join(namespace, path, mozpath.basename(s))
                 yield source, dest, strings.flags_for(s)
 
-    def _process_defines(self, obj, backend_file):
+    def _process_defines(self, obj, backend_file, which='DEFINES'):
         """Output the DEFINES rules to the given backend file."""
         defines = list(obj.get_defines())
         if defines:
-            backend_file.write('DEFINES +=')
+            backend_file.write(which + ' +=')
             for define in defines:
                 backend_file.write(' %s' % define)
             backend_file.write('\n')

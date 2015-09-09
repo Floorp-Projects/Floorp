@@ -1,0 +1,79 @@
+<html>
+<head>
+<meta charset="UTF-8"/>
+<title>DAMP - Devtools At Maximum Performance</title>
+
+<script type="application/x-javascript">
+// Empty subtests interpreted as all subtests, since otherwise meaningless.
+var config = {subtests: [], repeat: 1};
+var defaultConfig = {
+  repeat: 1,
+  rest: 100,
+  subtests: {
+    webconsoleOpen: true,
+    inspectorOpen: true,
+    debuggerOpen: true,
+    styleEditorOpen: true,
+    performanceOpen: true,
+    netmonitorOpen: true,
+  }
+};
+
+var testsInfo = {
+  webconsoleOpen: "Measure open/close toolbox on webconsole panel",
+  inspectorOpen: "Measure open/close toolbox on inspector panel",
+  debuggerOpen: "Measure open/close toolbox on debugger panel",
+  styleEditorOpen: "Measure open/close toolbox on style editor panel",
+  performanceOpen: "Measure open/close toolbox on performance panel",
+  netmonitorOpen: "Measure open/close toolbox on network monitor panel"
+};
+
+function updateConfig() {
+  config = {subtests: []};
+  for (var test in defaultConfig.subtests) {
+    if ($("subtest-" + test).checked) {
+      config.subtests.push(test);
+    }
+  }
+
+  var repeat = $("repeat").value;
+  config.repeat = isNaN(repeat) ? 1 : repeat;
+
+  // use 1ms rest as a minimum.
+  var rest = $("rest").value;
+  config.rest = Math.max(1, isNaN(rest) ? defaultConfig.rest : rest);
+}
+</script>
+<script src="addon-test-frontend.js"></script>
+</head>
+<body style="font-family:sans-serif;">
+<h4>DAMP - Devtools At Maximum Performance</h4>
+<div id="hide-during-run">
+   Visit <a href="https://wiki.mozilla.org/Buildbot/Talos/Tests#DAMP">talos/TART</a> for detailed info.<br/>
+  <ul>
+    <li><b>If you just opened the browser</b> - give Firefox few seconds to settle down before testing.</li>
+  </ul>
+
+Utilities:
+  <a href="pages/simple.html">simple page</a>&nbsp;&nbsp;&nbsp;
+  <a href="http://localhost/page_load_test/tp5n/bild.de/www.bild.de/index.html">complicated page</a>&nbsp;&nbsp;&nbsp;
+<br/><br/>
+<b>Configure DAMP</b> (CTRL-F5 to reset to talos defaults) <button type="button" onclick="deselectAll()">Deselect all tests</button><br/>
+<script>
+  for (var test in defaultConfig.subtests) {
+    document.write('<input type="checkbox" id="subtest-' + test + '" ' + (defaultConfig.subtests[test] ? "" : "un") + 'checked>'
+                  + test + '</input>'
+                  + '<span style="color:grey">&nbsp;&nbsp;&nbsp;' + testsInfo[test] + '</span>'
+                  + '<br/>');
+  }
+</script>
+  <br/>
+  Repeat: <input id="repeat" type="text" size=2 value="1" onchange="updateConfig()"/> times<br/>
+  Delay before starting a measured animation: <input id="rest" type="text" size=4 value="10"/> ms<br/>
+
+  <button type="button" id="start-test-button" onclick="triggerStart()">Start Devtools At Maximum Performance tests</button>&nbsp;&nbsp;&nbsp;
+  <div id="run-results"></div>
+</div>
+<div id="show-during-run" style="display:none">Testing in progress ...</div>
+</body>
+</html>

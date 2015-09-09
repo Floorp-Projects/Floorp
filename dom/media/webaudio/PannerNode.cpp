@@ -135,8 +135,8 @@ public:
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
-                            const AudioChunk& aInput,
-                            AudioChunk* aOutput,
+                            const AudioBlock& aInput,
+                            AudioBlock* aOutput,
                             bool *aFinished) override
   {
     if (aInput.IsNull()) {
@@ -177,8 +177,8 @@ public:
   // Compute how much the distance contributes to the gain reduction.
   float ComputeDistanceGain();
 
-  void EqualPowerPanningFunction(const AudioChunk& aInput, AudioChunk* aOutput);
-  void HRTFPanningFunction(const AudioChunk& aInput, AudioChunk* aOutput);
+  void EqualPowerPanningFunction(const AudioBlock& aInput, AudioBlock* aOutput);
+  void HRTFPanningFunction(const AudioBlock& aInput, AudioBlock* aOutput);
 
   float LinearGainFunction(float aDistance);
   float InverseGainFunction(float aDistance);
@@ -200,7 +200,7 @@ public:
   }
 
   nsAutoPtr<HRTFPanner> mHRTFPanner;
-  typedef void (PannerNodeEngine::*PanningModelFunction)(const AudioChunk& aInput, AudioChunk* aOutput);
+  typedef void (PannerNodeEngine::*PanningModelFunction)(const AudioBlock& aInput, AudioBlock* aOutput);
   PanningModelFunction mPanningModelFunction;
   typedef float (PannerNodeEngine::*DistanceModelFunction)(float aDistance);
   DistanceModelFunction mDistanceModelFunction;
@@ -302,16 +302,16 @@ PannerNodeEngine::ExponentialGainFunction(float aDistance)
 }
 
 void
-PannerNodeEngine::HRTFPanningFunction(const AudioChunk& aInput,
-                                      AudioChunk* aOutput)
+PannerNodeEngine::HRTFPanningFunction(const AudioBlock& aInput,
+                                      AudioBlock* aOutput)
 {
   // The output of this node is always stereo, no matter what the inputs are.
-  AllocateAudioBlock(2, aOutput);
+  aOutput->AllocateChannels(2);
 
   float azimuth, elevation;
   ComputeAzimuthAndElevation(azimuth, elevation);
 
-  AudioChunk input = aInput;
+  AudioBlock input = aInput;
   // Gain is applied before the delay and convolution of the HRTF.
   input.mVolume *= ComputeConeGain() * ComputeDistanceGain();
 
@@ -319,11 +319,11 @@ PannerNodeEngine::HRTFPanningFunction(const AudioChunk& aInput,
 }
 
 void
-PannerNodeEngine::EqualPowerPanningFunction(const AudioChunk& aInput,
-                                            AudioChunk* aOutput)
+PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
+                                            AudioBlock* aOutput)
 {
   float azimuth, elevation, gainL, gainR, normalizedAzimuth, distanceGain, coneGain;
-  int inputChannels = aInput.mChannelData.Length();
+  int inputChannels = aInput.ChannelCount();
 
   // If both the listener are in the same spot, and no cone gain is specified,
   // this node is noop.
@@ -335,7 +335,7 @@ PannerNodeEngine::EqualPowerPanningFunction(const AudioChunk& aInput,
   }
 
   // The output of this node is always stereo, no matter what the inputs are.
-  AllocateAudioBlock(2, aOutput);
+  aOutput->AllocateChannels(2);
 
   ComputeAzimuthAndElevation(azimuth, elevation);
   coneGain = ComputeConeGain();

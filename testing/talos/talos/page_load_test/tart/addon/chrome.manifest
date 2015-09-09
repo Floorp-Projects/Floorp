@@ -1,0 +1,2 @@
+content tart content/
+overlay chrome://browser/content/browser.xul chrome://tart/content/tart.overlay.xul

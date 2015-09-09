@@ -59,8 +59,8 @@ public:
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
-                            const AudioChunk& aInput,
-                            AudioChunk* aOutput,
+                            const AudioBlock& aInput,
+                            AudioBlock* aOutput,
                             bool* aFinished) override
   {
     MOZ_ASSERT(mSource == aStream, "Invalid source stream");
@@ -81,7 +81,7 @@ public:
       // First, compute a vector of gains for each track tick based on the
       // timeline at hand, and then for each channel, multiply the values
       // in the buffer with the gain vector.
-      AllocateAudioBlock(aInput.mChannelData.Length(), aOutput);
+      aOutput->AllocateChannels(aInput.ChannelCount());
 
       // Compute the gain values for the duration of the input AudioChunk
       StreamTime tick = aStream->GetCurrentPosition();
@@ -93,7 +93,7 @@ public:
       }
 
       // Apply the gain to the output buffer
-      for (size_t channel = 0; channel < aOutput->mChannelData.Length(); ++channel) {
+      for (size_t channel = 0; channel < aOutput->ChannelCount(); ++channel) {
         const float* inputBuffer = static_cast<const float*> (aInput.mChannelData[channel]);
         float* buffer = aOutput->ChannelFloatsForWrite(channel);
         AudioBlockCopyChannelWithScale(inputBuffer, computedGain, buffer);

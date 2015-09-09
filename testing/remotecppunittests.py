@@ -52,43 +52,68 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
         self.device.chmodDir(self.remote_bin_dir)
 
     def push_libs(self):
+        if self.options.local_bin is not None:
+            szip = os.path.join(self.options.local_bin, '..', 'host', 'bin', 'szip')
+            if not os.path.exists(szip):
+                # Tinderbox builds must run szip from the test package
+                szip = os.path.join(self.options.local_bin, 'host', 'szip')
+            if not os.path.exists(szip):
+                # If the test package doesn't contain szip, it means files
+                # are not szipped in the test package.
+                szip = None
+        else:
+            szip = None
         if self.options.local_apk:
             with mozfile.TemporaryDirectory() as tmpdir:
                 apk_contents = ZipFile(self.options.local_apk)
-                szip = os.path.join(self.options.local_bin, '..', 'host', 'bin', 'szip')
-                if not os.path.exists(szip):
-                    # Tinderbox builds must run szip from the test package
-                    szip = os.path.join(self.options.local_bin, 'host', 'szip')
-                if not os.path.exists(szip):
-                    # If the test package doesn't contain szip, it means files
-                    # are not szipped in the test package.
-                    szip = None
 
                 for info in apk_contents.infolist():
                     if info.filename.endswith(".so"):
                         print >> sys.stderr, "Pushing %s.." % info.filename
                         remote_file = posixpath.join(self.remote_bin_dir, os.path.basename(info.filename))
                         apk_contents.extract(info, tmpdir)
-                        file = os.path.join(tmpdir, info.filename)
+                        local_file = os.path.join(tmpdir, info.filename)
                         if szip:
-                            out = subprocess.check_output([szip, '-d', file], stderr=subprocess.STDOUT)
-                        self.device.pushFile(os.path.join(tmpdir, info.filename), remote_file)
-            return
+                            try:
+                                out = subprocess.check_output([szip, '-d', local_file], stderr=subprocess.STDOUT)
+                            except CalledProcessError:
+                                print >> sys.stderr, "Error calling %s on %s.." % (szip, local_file)
+                                if out:
+                                    print >> sys.stderr, out
+                        self.device.pushFile(local_file, remote_file)
 
         elif self.options.local_lib:
             for file in os.listdir(self.options.local_lib):
                 if file.endswith(".so"):
                     print >> sys.stderr, "Pushing %s.." % file
                     remote_file = posixpath.join(self.remote_bin_dir, file)
-                    self.device.pushFile(os.path.join(self.options.local_lib, file), remote_file)
+                    local_file = os.path.join(self.options.local_lib, file)
+                    if szip:
+                        try:
+                            out = subprocess.check_output([szip, '-d', local_file], stderr=subprocess.STDOUT)
+                        except CalledProcessError:
+                            print >> sys.stderr, "Error calling %s on %s.." % (szip, local_file)
+                            if out:
+                                print >> sys.stderr, out
+                    self.device.pushFile(local_file, remote_file)
             # Additional libraries may be found in a sub-directory such as "lib/armeabi-v7a"
-            local_arm_lib = os.path.join(self.options.local_lib, "lib")
-            if os.path.isdir(local_arm_lib):
-                for root, dirs, files in os.walk(local_arm_lib):
-                    for file in files:
-                        if (file.endswith(".so")):
-                            remote_file = posixpath.join(self.remote_bin_dir, file)
-                            self.device.pushFile(os.path.join(root, file), remote_file)
+            for subdir in ["assets", "lib"]:
+                local_arm_lib = os.path.join(self.options.local_lib, subdir)
+                if os.path.isdir(local_arm_lib):
+                    for root, dirs, files in os.walk(local_arm_lib):
+                        for file in files:
+                            if (file.endswith(".so")):
+                                print >> sys.stderr, "Pushing %s.." % file
+                                remote_file = posixpath.join(self.remote_bin_dir, file)
+                                local_file = os.path.join(root, file)
+                                if szip:
+                                    try:
+                                        out = subprocess.check_output([szip, '-d', local_file], stderr=subprocess.STDOUT)
+                                    except CalledProcessError:
+                                        print >> sys.stderr, "Error calling %s on %s.." % (szip, local_file)
+                                        if out:
+                                            print >> sys.stderr, out
+                                self.device.pushFile(local_file, remote_file)
 
     def push_progs(self, progs):
         for local_file in progs:

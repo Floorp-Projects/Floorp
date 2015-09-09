@@ -19,6 +19,7 @@ class AudioParamTimeline;
 class DelayNodeEngine;
 } // namespace dom
 
+class AudioBlock;
 class AudioNodeStream;
 
 /**
@@ -130,15 +131,10 @@ private:
 };
 
 /**
- * Allocates, if necessary, aChannelCount buffers of WEBAUDIO_BLOCK_SIZE float
- * samples for writing to an AudioChunk.
- */
-void AllocateAudioBlock(uint32_t aChannelCount, AudioChunk* aChunk);
-
-/**
  * aChunk must have been allocated by AllocateAudioBlock.
  */
-void WriteZeroesToAudioBlock(AudioChunk* aChunk, uint32_t aStart, uint32_t aLength);
+void WriteZeroesToAudioBlock(AudioBlock* aChunk, uint32_t aStart,
+                             uint32_t aLength);
 
 /**
  * Copy with scale. aScale == 1.0f should be optimized.
@@ -256,7 +252,7 @@ class AudioNodeEngine
 {
 public:
   // This should be compatible with AudioNodeStream::OutputChunks.
-  typedef nsAutoTArray<AudioChunk, 1> OutputChunks;
+  typedef nsAutoTArray<AudioBlock, 1> OutputChunks;
 
   explicit AudioNodeEngine(dom::AudioNode* aNode)
     : mNode(aNode)
@@ -317,19 +313,15 @@ public:
    * we'll finish the stream and not call this again.
    */
   virtual void ProcessBlock(AudioNodeStream* aStream,
-                            const AudioChunk& aInput,
-                            AudioChunk* aOutput,
-                            bool* aFinished)
-  {
-    MOZ_ASSERT(mInputCount <= 1 && mOutputCount <= 1);
-    *aOutput = aInput;
-  }
+                            const AudioBlock& aInput,
+                            AudioBlock* aOutput,
+                            bool* aFinished);
   /**
    * Produce the next block of audio samples, before input is provided.
    * ProcessBlock() will be called later, and it then should not change
    * aOutput.  This is used only for DelayNodeEngine in a feedback loop.
    */
-  virtual void ProduceBlockBeforeInput(AudioChunk* aOutput)
+  virtual void ProduceBlockBeforeInput(AudioBlock* aOutput)
   {
     NS_NOTREACHED("ProduceBlockBeforeInput called on wrong engine\n");
   }
@@ -352,12 +344,7 @@ public:
   virtual void ProcessBlocksOnPorts(AudioNodeStream* aStream,
                                     const OutputChunks& aInput,
                                     OutputChunks& aOutput,
-                                    bool* aFinished)
-  {
-    MOZ_ASSERT(mInputCount > 1 || mOutputCount > 1);
-    // Only produce one output port, and drop all other input ports.
-    aOutput[0] = aInput[0];
-  }
+                                    bool* aFinished);
 
   bool HasNode() const
   {

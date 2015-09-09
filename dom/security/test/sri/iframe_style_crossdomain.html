@@ -12,18 +12,18 @@
     }
   </script>
   <script>
-    function good_correctHashLoaded() {
-      ok(true, "A non-CORS cross-domain stylesheet was correctly loaded when integrity matched.");
+    function good_correctHashBlocked() {
+      ok(true, "A non-CORS cross-domain stylesheet with correct hash was correctly blocked.");
     }
-    function bad_correctHashBlocked() {
-      ok(false, "We should load non-CORS cross-domain stylesheets with hashes that match!");
+    function bad_correctHashLoaded() {
+      ok(false, "We should block non-CORS cross-domain stylesheets with hashes that match!");
     }
 
-    function good_incorrectHashLoaded() {
-      ok(true, "A non-CORS cross-domain stylesheet was correctly loaded even when integrity didn't match.");
+    function good_incorrectHashBlocked() {
+      ok(true, "A non-CORS cross-domain stylesheet with incorrect hash was correctly blocked.");
     }
-    function bad_incorrectHashBlocked() {
-      ok(false, "We should load non-CORS cross-domain stylesheets even when hashes don't match!");
+    function bad_incorrectHashLoaded() {
+      ok(false, "We should load non-CORS cross-domain stylesheets with incorrect hashes!");
     }
 
   </script>
@@ -31,14 +31,14 @@
   <!-- valid non-CORS sha256 hash. should trigger onload -->
   <link rel="stylesheet" href="style_301.css"
         integrity="sha256-qs8lnkunWoVldk5d5E+652yth4VTSHohlBKQvvgGwa8="
-        onerror="bad_correctHashBlocked()"
-        onload="good_correctHashLoaded()">
+        onerror="good_correctHashBlocked()"
+        onload="bad_correctHashLoaded()">
 
   <!-- invalid non-CORS sha256 hash. should trigger onload -->
   <link rel="stylesheet" href="style_301.css?again"
         integrity="sha256-bogus"
-        onerror="bad_incorrectHashBlocked()"
-        onload="good_incorrectHashLoaded()">
+        onerror="good_incorrectHashBlocked()"
+        onload="bad_incorrectHashLoaded()">
 </head>
 <body>
 <p><span id="red-text">This should be red.</span></p>

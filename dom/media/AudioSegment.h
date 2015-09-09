@@ -192,42 +192,7 @@ struct AudioChunk {
     mBufferFormat = AUDIO_FORMAT_SILENCE;
   }
 
-  bool IsSilentOrSubnormal() const
-  {
-    if (!mBuffer) {
-      return true;
-    }
-
-    for (uint32_t i = 0, length = mChannelData.Length(); i < length; ++i) {
-      const float* channel = static_cast<const float*>(mChannelData[i]);
-      for (StreamTime frame = 0; frame < mDuration; ++frame) {
-        if (fabs(channel[frame]) >= FLT_MIN) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  }
-
   size_t ChannelCount() const { return mChannelData.Length(); }
-
-  float* ChannelFloatsForWrite(size_t aChannel)
-  {
-    MOZ_ASSERT(mBufferFormat == AUDIO_FORMAT_FLOAT32);
-    MOZ_ASSERT(!mBuffer->IsShared());
-    return static_cast<float*>(const_cast<void*>(mChannelData[aChannel]));
-  }
-
-  void ReleaseBufferIfShared()
-  {
-    if (mBuffer && mBuffer->IsShared()) {
-      // Remove pointers into the buffer, but keep the array allocation for
-      // chunk re-use.
-      mChannelData.ClearAndRetainStorage();
-      mBuffer = nullptr;
-    }
-  }
 
   bool IsMuted() const { return mVolume == 0.0f; }
 

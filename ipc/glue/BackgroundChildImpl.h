@@ -11,6 +11,9 @@
 
 namespace mozilla {
 namespace dom {
+
+class FileHandleBase;
+
 namespace indexedDB {
 
 class ThreadLocal;
@@ -150,6 +153,7 @@ class BackgroundChildImpl::ThreadLocal final
 
 public:
   nsAutoPtr<mozilla::dom::indexedDB::ThreadLocal> mIndexedDBThreadLocal;
+  mozilla::dom::FileHandleBase* mCurrentFileHandle;
 
 public:
   ThreadLocal();

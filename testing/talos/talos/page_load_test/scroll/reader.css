@@ -1,0 +1,63 @@
+
+html,body {
+font-size:90%;
+border:0;
+margin:0;
+}
+
+html,body,input {
+font-family:arial,sans-serif;
+}
+
+body {
+color:#000;
+}
+
+#chrome-viewer-container {
+width:100%;
+}
+
+#viewer-header {
+background:#9e9;
+}
+
+#entries,#viewer-page-container {
+overflow:auto;
+width:100%;
+}
+
+#entries .entry,#entries.list .entry-container {
+background:#fff;
+}
+
+.entry .entry-main {
+margin-right:10px;
+margin-left:20px;
+overflow:auto;
+}
+
+.cards .entry {
+padding:5px 0;
+}
+
+.entry .card {
+-webkit-box-shadow:0 1px 1px #f00;
+-moz-box-shadow:0 1px 1px #f00;
+border-color:#bbb;
+border-style:solid;
+border-width:1px;
+}
+
+.card-common {
+/* this margin is very important */
+margin:0 10px;
+}
+
+#current-entry .card {
+border-width:2px;
+}
+
+.entry .entry-body {
+max-width:650px;
+}
+
