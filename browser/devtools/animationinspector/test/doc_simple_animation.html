@@ -65,6 +65,15 @@
       animation: simple-animation 120s;
     }
 
+    .negative-delay {
+      top: 700px;
+      left: 10px;
+      background: gray;
+
+      animation: simple-animation 15s -10s;
+      animation-fill-mode: forwards;
+    }
+
     @keyframes simple-animation {
       100% {
         transform: translateX(300px);
@@ -87,5 +96,6 @@
   <div class="ball multi-finite"></div>
   <div class="ball short"></div>
   <div class="ball long"></div>
+  <div class="ball negative-delay"></div>
 </body>
 </html>
