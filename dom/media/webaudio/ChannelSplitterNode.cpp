@@ -32,9 +32,9 @@ public:
 
     aOutput.SetLength(OutputCount());
     for (uint16_t i = 0; i < OutputCount(); ++i) {
-      if (i < aInput[0].mChannelData.Length()) {
+      if (i < aInput[0].ChannelCount()) {
         // Split out existing channels
-        AllocateAudioBlock(1, &aOutput[i]);
+        aOutput[i].AllocateChannels(1);
         AudioBlockCopyChannelWithScale(
             static_cast<const float*>(aInput[0].mChannelData[i]),
             aInput[0].mVolume,

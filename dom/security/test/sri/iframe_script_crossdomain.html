@@ -26,11 +26,11 @@
     ok(false, "Non-eligible non-SRI resources should be loaded!");
   }
 
-  function good_nonCORSInvalidLoaded() {
-    ok(true, "A non-CORS resource with invalid metadata was correctly loaded.");
+  function good_nonCORSInvalidBlocked() {
+    ok(true, "A non-CORS resource with invalid metadata was correctly blocked.");
   }
-  function bad_nonCORSInvalidBlocked() {
-    ok(false, "Non-CORS resources with invalid metadata should be loaded!");
+  function bad_nonCORSInvalidLoaded() {
+    ok(false, "Non-CORS resources with invalid metadata should be blocked!");
   }
 
   window.onerrorCalled = false;
@@ -44,18 +44,18 @@
     window.onerrorCalled = true;
   }
 
-  function good_incorrect301Loaded() {
-    ok(true, "A non-CORS load redirected to a different origin was loaded correctly despite an incorrect hash value.");
+  function good_incorrect301Blocked() {
+    ok(true, "A non-CORS load with incorrect hash redirected to a different origin was blocked correctly.");
   }
-  function bad_incorrect301Blocked() {
-    ok(false, "Non-CORS loads redirecting to a different origin should be loaded despite an incorrect hash value!");
+  function bad_incorrect301Loaded() {
+    ok(false, "Non-CORS loads with incorrect hashes redirecting to a different origin should be blocked!");
   }
 
-  function good_correct301Loaded() {
-    ok(true, "A non-CORS load redirected to a different origin was loaded correctly.");
+  function good_correct301Blocked() {
+    ok(true, "A non-CORS load with correct hash redirected to a different origin was blocked correctly.");
   }
-  function bad_correct301Blocked() {
-    ok(false, "Non-CORS loads redirecting to a different origin should be loaded!");
+  function bad_correct301Loaded() {
+    ok(false, "Non-CORS loads with correct hashes redirecting to a different origin should be blocked!");
   }
 
   window.onload = function() {
@@ -81,23 +81,23 @@
         onload="good_nonsriLoaded()"
         onerror="bad_nonsriBlocked()"></script>
 
-<!-- non-cors with invalid metadata. should trigger onload -->
+<!-- non-cors with invalid metadata -->
 <script src="http://example.com/tests/dom/security/test/sri/script_crossdomain4.js"
         integrity="sha256-bogus"
-        onload="good_nonCORSInvalidLoaded()"
-        onerror="bad_nonCORSInvalidBlocked()"></script>
+        onload="bad_nonCORSInvalidLoaded()"
+        onerror="good_nonCORSInvalidBlocked()"></script>
 
 <!-- non-cors that's same-origin initially but redirected to another origin -->
 <script src="script_301.js"
         integrity="sha384-invalid"
-        onerror="bad_incorrect301Blocked()"
-        onload="good_incorrect301Loaded()"></script>
+        onerror="good_incorrect301Blocked()"
+        onload="bad_incorrect301Loaded()"></script>
 
 <!-- non-cors that's same-origin initially but redirected to another origin -->
 <script src="script_301.js"
         integrity="sha384-1NpiDI6decClMaTWSCAfUjTdx1BiOffsCPgH4lW5hCLwmHk0VyV/g6B9Sw2kD2K3"
-        onerror="bad_correct301Blocked()"
-        onload="good_correct301Loaded()"></script>
+        onerror="good_correct301Blocked()"
+        onload="bad_correct301Loaded()"></script>
 
 <script>
   ok(window.hasCORSLoaded, "CORS-enabled resource with a correct hash");

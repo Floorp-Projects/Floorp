@@ -132,7 +132,7 @@ AudioParamTimeline::AudioNodeInputValue(size_t aCounter) const
   // get its value now.  We use aCounter to tell us which frame of the last
   // AudioChunk to look at.
   float audioNodeInputValue = 0.0f;
-  const AudioChunk& lastAudioNodeChunk =
+  const AudioBlock& lastAudioNodeChunk =
     static_cast<AudioNodeStream*>(mStream.get())->LastChunks()[0];
   if (!lastAudioNodeChunk.IsNull()) {
     MOZ_ASSERT(lastAudioNodeChunk.GetDuration() == WEBAUDIO_BLOCK_SIZE);

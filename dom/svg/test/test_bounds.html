@@ -159,13 +159,10 @@ function runTest()
   is(rect3aBounds.width, 108, "rect3a.getBoundingClientRect().width");
   is(rect3aBounds.height, 108, "rect3a.getBoundingClientRect().height");
 
-  // Our PathExtentsToMaxStrokeExtents implementation considers the stroke
-  // width to be sqrt(2)*stroke-width in case the rect is rotated 45 degrees,
-  // so unfortunately we get slightly large results currently. Bug 1092125.
-  isWithAbsTolerance(rect3bBounds.left, 198, 1, "rect3b.getBoundingClientRect().left");
-  isWithAbsTolerance(rect3bBounds.top, 198, 1, "rect3b.getBoundingClientRect().top");
-  isWithAbsTolerance(rect3bBounds.width, 54, 2, "rect3b.getBoundingClientRect().width");
-  isWithAbsTolerance(rect3bBounds.height, 54, 2, "rect3b.getBoundingClientRect().height");
+  isWithAbsTolerance(rect3bBounds.left, 198, 0.1, "rect3b.getBoundingClientRect().left");
+  isWithAbsTolerance(rect3bBounds.top, 198, 0.1, "rect3b.getBoundingClientRect().top");
+  isWithAbsTolerance(rect3bBounds.width, 54, 0.1, "rect3b.getBoundingClientRect().width");
+  isWithAbsTolerance(rect3bBounds.height, 54, 0.1, "rect3b.getBoundingClientRect().height");
 
   rect = new Rect(350 - 108 * sin45, 150 - 108 * sin45, 108 * sin45 * 2, 108 * sin45 * 2);
   isWithAbsTolerance(rect4aBounds.left, rect.left, 0.1, "rect4a.getBoundingClientRect().left");
@@ -202,6 +199,67 @@ function runTest()
   is(gBounds.top, 100, "g2.getBoundingClientRect().top");
   is(gBounds.width, 50, "g2.getBoundingClientRect().width");
   is(gBounds.height, 50, "g2.getBoundingClientRect().height");
+
+  var nonScalingStrokedCircle1Bounds =
+    doc.getElementById("nonScalingStrokedCircle1").getBoundingClientRect();
+  isWithAbsTolerance(nonScalingStrokedCircle1Bounds.left, 10, 0.15,
+                     "nonScalingStrokedCircle1.getBoundingClientRect().left");
+  isWithAbsTolerance(nonScalingStrokedCircle1Bounds.top, 105, 0.15,
+                     "nonScalingStrokedCircle1.getBoundingClientRect().top");
+  isWithAbsTolerance(nonScalingStrokedCircle1Bounds.width, 70, 0.15,
+                     "nonScalingStrokedCircle1.getBoundingClientRect().width");
+  isWithAbsTolerance(nonScalingStrokedCircle1Bounds.height, 50, 0.15,
+                     "nonScalingStrokedCircle1.getBoundingClientRect().height");
+
+  var nonScalingStrokedEllipse1Bounds =
+    doc.getElementById("nonScalingStrokedEllipse1").getBoundingClientRect();
+  isWithAbsTolerance(nonScalingStrokedEllipse1Bounds.left, 5, 0.15,
+                     "nonScalingStrokedEllipse1.getBoundingClientRect().left");
+  isWithAbsTolerance(nonScalingStrokedEllipse1Bounds.top, 40, 0.15,
+                     "nonScalingStrokedEllipse1.getBoundingClientRect().top");
+  isWithAbsTolerance(nonScalingStrokedEllipse1Bounds.width, 30, 0.15,
+                     "nonScalingStrokedEllipse1.getBoundingClientRect().width");
+  isWithAbsTolerance(nonScalingStrokedEllipse1Bounds.height, 40, 0.15,
+                     "nonScalingStrokedEllipse1.getBoundingClientRect().height");
+
+  var nonScalingStrokedLine1Bounds =
+    doc.getElementById("nonScalingStrokedLine1").getBoundingClientRect();
+  isWithAbsTolerance(nonScalingStrokedLine1Bounds.left, 235, 0.1,
+                     "nonScalingStrokedLine1.getBoundingClientRect().left");
+  isWithAbsTolerance(nonScalingStrokedLine1Bounds.top, 10, 0.1,
+                    "nonScalingStrokedLine1.getBoundingClientRect().top");
+  isWithAbsTolerance(nonScalingStrokedLine1Bounds.width, 10, 0.1,
+                     "nonScalingStrokedLine1.getBoundingClientRect().width");
+  isWithAbsTolerance(nonScalingStrokedLine1Bounds.height, 25, 0.1,
+                     "nonScalingStrokedLine1.getBoundingClientRect().height");
+
+  var nonScalingStrokedLine2Bounds =
+    doc.getElementById("nonScalingStrokedLine2").getBoundingClientRect();
+  var capDelta = 5/Math.SQRT2 + 5/Math.SQRT2;
+  rect = new Rect(260 - capDelta, 15 - capDelta, 20/Math.SQRT2 + 2 * capDelta,
+                  20/Math.SQRT2 + 2 * capDelta);
+  isWithAbsTolerance(nonScalingStrokedLine2Bounds.left, rect.left, 0.1,
+                     "nonScalingStrokedLine2.getBoundingClientRect().left");
+  isWithAbsTolerance(nonScalingStrokedLine2Bounds.top, rect.top, 0.1,
+                    "nonScalingStrokedLine2.getBoundingClientRect().top");
+  isWithAbsTolerance(nonScalingStrokedLine2Bounds.width, rect.width, 0.15,
+                     "nonScalingStrokedLine2.getBoundingClientRect().width");
+  isWithAbsTolerance(nonScalingStrokedLine2Bounds.height, rect.height, 0.15,
+                     "nonScalingStrokedLine2.getBoundingClientRect().height");
+
+  var nonScalingStrokedLine3Bounds =
+    doc.getElementById("nonScalingStrokedLine3").getBoundingClientRect();
+  var capDelta = 5/Math.SQRT2;
+  rect = new Rect(280 - capDelta, 15 - capDelta, 20/Math.SQRT2 + 2 * capDelta,
+                  20/Math.SQRT2 + 2 * capDelta);
+  isWithAbsTolerance(nonScalingStrokedLine3Bounds.left, rect.left, 0.1,
+                     "nonScalingStrokedLine3.getBoundingClientRect().left");
+  isWithAbsTolerance(nonScalingStrokedLine3Bounds.top, rect.top, 0.1,
+                    "nonScalingStrokedLine3.getBoundingClientRect().top");
+  isWithAbsTolerance(nonScalingStrokedLine3Bounds.width, rect.width, 0.1,
+                     "nonScalingStrokedLine3.getBoundingClientRect().width");
+  isWithAbsTolerance(nonScalingStrokedLine3Bounds.height, rect.height, 0.1,
+                     "nonScalingStrokedLine3.getBoundingClientRect().height");
 
   SimpleTest.finish();
 }

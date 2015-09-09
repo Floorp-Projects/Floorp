@@ -748,6 +748,13 @@ nsViewSourceChannel::SetRequestHeader(const nsACString & aHeader,
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::SetEmptyRequestHeader(const nsACString & aHeader)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->SetEmptyRequestHeader(aHeader);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::VisitRequestHeaders(nsIHttpHeaderVisitor *aVisitor)
 {
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :

@@ -35,6 +35,8 @@ if CONFIG['OS_ARCH'] == 'Linux':
         'linux/dump_symbols.cc',
         'linux/elf_symbols_to_module.cc',
     ]
+    HOST_DEFINES['HAVE_A_OUT_H'] = True
+    DEFINES['HAVE_A_OUT_H'] = True
 
 if CONFIG['OS_TARGET'] == 'Android':
     pass
@@ -69,6 +71,8 @@ if CONFIG['OS_ARCH'] == 'Darwin':
     UNIFIED_SOURCES += [
         'mac/dump_syms.mm',
     ]
+    HOST_DEFINES['HAVE_MACH_O_NLIST_H'] = True
+    DEFINES['HAVE_MACH_O_NLIST_H'] = True
 
 if CONFIG['OS_TARGET'] == 'Android':
     # We don't support unifying assembly files.

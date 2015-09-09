@@ -8,15 +8,13 @@
 #define mozilla_dom_File_h
 
 #include "mozilla/Attributes.h"
-
+#include "mozilla/ErrorResult.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Date.h"
-#include "mozilla/dom/indexedDB/FileInfo.h"
-#include "mozilla/dom/indexedDB/FileManager.h"
-#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
@@ -38,10 +36,6 @@ class nsIInputStream;
 
 namespace mozilla {
 namespace dom {
-
-namespace indexedDB {
-class FileInfo;
-} // namespace indexedDB
 
 struct BlobPropertyBag;
 struct ChromeFilePropertyBag;
@@ -136,12 +130,6 @@ public:
   int64_t
   GetFileId();
 
-  indexedDB::FileInfo*
-  GetFileInfo(indexedDB::FileManager* aFileManager);
-
-  void
-  AddFileInfo(indexedDB::FileInfo* aFileInfo);
-
   // WebIDL methods
   nsISupports* GetParentObject() const
   {
@@ -220,20 +208,6 @@ public:
 
   static already_AddRefed<File>
   CreateFromFile(nsISupports* aParent, nsIFile* aFile, bool aTemporary = false);
-
-  static already_AddRefed<File>
-  CreateFromFile(nsISupports* aParent, const nsAString& aContentType,
-                 uint64_t aLength, nsIFile* aFile,
-                 indexedDB::FileInfo* aFileInfo);
-
-  static already_AddRefed<File>
-  CreateFromFile(nsISupports* aParent, const nsAString& aName,
-                 const nsAString& aContentType, uint64_t aLength,
-                 nsIFile* aFile, indexedDB::FileInfo* aFileInfo);
-
-  static already_AddRefed<File>
-  CreateFromFile(nsISupports* aParent, nsIFile* aFile,
-                 indexedDB::FileInfo* aFileInfo);
 
   static already_AddRefed<File>
   CreateFromFile(nsISupports* aParent, nsIFile* aFile, const nsAString& aName,
@@ -344,11 +318,6 @@ public:
                                  ErrorResult& aRv) = 0;
 
   virtual int64_t GetFileId() = 0;
-
-  virtual void AddFileInfo(indexedDB::FileInfo* aFileInfo) = 0;
-
-  virtual indexedDB::FileInfo*
-  GetFileInfo(indexedDB::FileManager* aFileManager) = 0;
 
   virtual nsresult GetSendInfo(nsIInputStream** aBody,
                                uint64_t* aContentLength,
@@ -517,11 +486,6 @@ public:
 
   virtual int64_t GetFileId() override;
 
-  virtual void AddFileInfo(indexedDB::FileInfo* aFileInfo) override;
-
-  virtual indexedDB::FileInfo*
-  GetFileInfo(indexedDB::FileManager* aFileManager) override;
-
   virtual nsresult GetSendInfo(nsIInputStream** aBody,
                                uint64_t* aContentLength,
                                nsACString& aContentType,
@@ -536,8 +500,6 @@ public:
               uint64_t aLength, int64_t aLastModifiedDate,
               BlobDirState aDirState) override
   {
-    NS_ASSERTION(aLength, "must have length");
-
     mName = aName;
     mContentType = aContentType;
     mLength = aLength;
@@ -590,22 +552,6 @@ public:
     return mDirState;
   }
 
-  virtual bool IsStoredFile() const
-  {
-    return false;
-  }
-
-  virtual bool IsWholeFile() const
-  {
-    NS_NOTREACHED("Should only be called on dom blobs backed by files!");
-    return false;
-  }
-
-  virtual bool IsSnapshot() const
-  {
-    return false;
-  }
-
   virtual bool IsSizeUnknown() const override
   {
     return mLength == UINT64_MAX;
@@ -621,14 +567,6 @@ protected:
    */
   static uint64_t NextSerialNumber();
 
-  indexedDB::FileInfo* GetFileInfo() const
-  {
-    NS_ASSERTION(IsStoredFile(), "Should only be called on stored files!");
-    NS_ASSERTION(!mFileInfos.IsEmpty(), "Must have at least one file info!");
-
-    return mFileInfos.ElementAt(0);
-  }
-
   bool mIsFile;
   bool mImmutable;
   BlobDirState mDirState;
@@ -643,9 +581,6 @@ protected:
   int64_t mLastModificationDate;
 
   const uint64_t mSerialNumber;
-
-  // Protected by IndexedDatabaseManager::FileMutex()
-  nsTArray<nsRefPtr<indexedDB::FileInfo>> mFileInfos;
 };
 
 /**
@@ -793,7 +728,6 @@ public:
     : BlobImplBase(EmptyString(), EmptyString(), UINT64_MAX, INT64_MAX)
     , mFile(aFile)
     , mWholeFile(true)
-    , mStoredFile(false)
     , mIsTemporary(aTemporary)
   {
     NS_ASSERTION(mFile, "must have file");
@@ -802,29 +736,12 @@ public:
     mFile->GetLeafName(mName);
   }
 
-  BlobImplFile(nsIFile* aFile, indexedDB::FileInfo* aFileInfo)
-    : BlobImplBase(EmptyString(), EmptyString(), UINT64_MAX, INT64_MAX)
-    , mFile(aFile)
-    , mWholeFile(true)
-    , mStoredFile(true)
-    , mIsTemporary(false)
-  {
-    NS_ASSERTION(mFile, "must have file");
-    NS_ASSERTION(aFileInfo, "must have file info");
-    // Lazily get the content type and size
-    mContentType.SetIsVoid(true);
-    mFile->GetLeafName(mName);
-
-    mFileInfos.AppendElement(aFileInfo);
-  }
-
   // Create as a file
   BlobImplFile(const nsAString& aName, const nsAString& aContentType,
                uint64_t aLength, nsIFile* aFile)
     : BlobImplBase(aName, aContentType, aLength, UINT64_MAX)
     , mFile(aFile)
     , mWholeFile(true)
-    , mStoredFile(false)
     , mIsTemporary(false)
   {
     NS_ASSERTION(mFile, "must have file");
@@ -836,7 +753,6 @@ public:
     : BlobImplBase(aName, aContentType, aLength, aLastModificationDate)
     , mFile(aFile)
     , mWholeFile(true)
-    , mStoredFile(false)
     , mIsTemporary(false)
   {
     NS_ASSERTION(mFile, "must have file");
@@ -848,7 +764,6 @@ public:
     : BlobImplBase(aName, aContentType, UINT64_MAX, INT64_MAX)
     , mFile(aFile)
     , mWholeFile(true)
-    , mStoredFile(false)
     , mIsTemporary(false)
   {
     NS_ASSERTION(mFile, "must have file");
@@ -858,38 +773,10 @@ public:
     }
   }
 
-  // Create as a stored file
-  BlobImplFile(const nsAString& aName, const nsAString& aContentType,
-               uint64_t aLength, nsIFile* aFile,
-               indexedDB::FileInfo* aFileInfo)
-    : BlobImplBase(aName, aContentType, aLength, UINT64_MAX)
-    , mFile(aFile)
-    , mWholeFile(true)
-    , mStoredFile(true)
-    , mIsTemporary(false)
-  {
-    NS_ASSERTION(mFile, "must have file");
-    mFileInfos.AppendElement(aFileInfo);
-  }
-
-  // Create as a stored blob
-  BlobImplFile(const nsAString& aContentType, uint64_t aLength,
-               nsIFile* aFile, indexedDB::FileInfo* aFileInfo)
-    : BlobImplBase(aContentType, aLength)
-    , mFile(aFile)
-    , mWholeFile(true)
-    , mStoredFile(true)
-    , mIsTemporary(false)
-  {
-    NS_ASSERTION(mFile, "must have file");
-    mFileInfos.AppendElement(aFileInfo);
-  }
-
   // Create as a file to be later initialized
   BlobImplFile()
     : BlobImplBase(EmptyString(), EmptyString(), UINT64_MAX, INT64_MAX)
     , mWholeFile(true)
-    , mStoredFile(false)
     , mIsTemporary(false)
   {
     // Lazily get the content type and size
@@ -932,46 +819,18 @@ private:
     : BlobImplBase(aContentType, aOther->mStart + aStart, aLength)
     , mFile(aOther->mFile)
     , mWholeFile(false)
-    , mStoredFile(aOther->mStoredFile)
     , mIsTemporary(false)
   {
     NS_ASSERTION(mFile, "must have file");
     mImmutable = aOther->mImmutable;
-
-    if (mStoredFile) {
-      indexedDB::FileInfo* fileInfo;
-
-      using indexedDB::IndexedDatabaseManager;
-
-      if (IndexedDatabaseManager::IsClosed()) {
-        fileInfo = aOther->GetFileInfo();
-      }
-      else {
-        mozilla::MutexAutoLock lock(IndexedDatabaseManager::FileMutex());
-        fileInfo = aOther->GetFileInfo();
-      }
-
-      mFileInfos.AppendElement(fileInfo);
-    }
   }
 
   virtual already_AddRefed<BlobImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType, ErrorResult& aRv) override;
 
-  virtual bool IsStoredFile() const override
-  {
-    return mStoredFile;
-  }
-
-  virtual bool IsWholeFile() const override
-  {
-    return mWholeFile;
-  }
-
   nsCOMPtr<nsIFile> mFile;
   bool mWholeFile;
-  bool mStoredFile;
   bool mIsTemporary;
 };
 

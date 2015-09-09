@@ -13,7 +13,12 @@
 }
 
 :root {
+  /* How high should toolbars be */
+  --toolbar-height: 20px;
+  /* How wide should the sidebar be */
   --timeline-sidebar-width: 150px;
+  /* How high should animations displayed in the timeline be */
+  --timeline-animation-height: 20px;
 }
 
 html {
@@ -38,7 +43,7 @@ body {
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
-  height: 20px;
+  height: var(--toolbar-height);
 }
 
 #toolbar .label {
@@ -47,13 +52,13 @@ body {
 
 #toggle-all {
   border-width: 0 0 0 1px;
-  min-height: 20px;
+  min-height: var(--toolbar-height);
 }
 
 /* The main animations container */
 
 #players {
-  height: calc(100% - 20px);
+  height: calc(100% - var(--toolbar-height));
   overflow: auto;
 }
 
@@ -159,7 +164,7 @@ body {
 
 .animation-timeline .time-header {
   margin-left: var(--timeline-sidebar-width);
-  height: 20px;
+  min-height: var(--toolbar-height);
   overflow: hidden;
   position: relative;
   /* This is the same color as the time graduations in
@@ -187,7 +192,7 @@ body {
 
 .animation-timeline .animation {
   margin: 4px 0;
-  height: 20px;
+  height: var(--timeline-animation-height);
   position: relative;
 }
 
@@ -289,14 +294,25 @@ body {
   top: 0;
   /* Make sure the delay covers up the animation border */
   transform: translate(-1px, -1px);
-  height: 100%;
+  box-sizing: border-box;
+  height: calc(100% + 2px);
+
+  border: 1px solid var(--timelime-border-color);
+  border-width: 1px 0 1px 1px;
   background-image: repeating-linear-gradient(45deg,
                                               transparent,
                                               transparent 1px,
                                               var(--theme-selection-color) 1px,
                                               var(--theme-selection-color) 4px);
   background-color: var(--timelime-border-color);
-  border: 1px solid var(--timelime-border-color);
+}
+
+.animation-timeline .animation .delay.negative {
+  /* Negative delays are displayed on top of the animation, so they need a
+     right border. Whereas normal delays are displayed just before the
+     animation, so there's already the animation's left border that serves as
+     a separation. */
+  border-width: 1px;
 }
 
 /* Animation target node gutter, contains a preview of the dom node */
@@ -361,7 +377,7 @@ body {
 /* Timeline wiget */
 
 .timeline {
-  height: 20px;
+  height: var(--timeline-animation-height);
   width: 100%;
   display: flex;
   flex-direction: row;

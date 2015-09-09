@@ -63,7 +63,9 @@ configuration_tokens = ('branch',
                         'en_us_binary_url',
                         'update_platform',
                         'update_channel',
-                        'ssh_key_dir')
+                        'ssh_key_dir',
+                        'stage_product',
+                        )
 # some other values such as "%(version)s", "%(buildid)s", ...
 # are defined at run time and they cannot be enforced in the _pre_config_lock
 # phase
@@ -159,6 +161,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
                 "list-locales",
                 "setup",
                 "repack",
+                "create-virtualenv",
                 "taskcluster-upload",
                 "funsize-props",
                 "submit-to-balrog",
@@ -721,14 +724,11 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         if locale not in self.package_urls:
             self.package_urls[locale] = {}
         self.package_urls[locale].update(parser.matches)
-        if 'partialMarUrl' in self.package_urls[locale]:
-            self.package_urls[locale]['partialInfo'] = self._get_partial_info(
-                self.package_urls[locale]['partialMarUrl'])
         if retval == SUCCESS:
-            self.info('Upload successful (%s)' % (locale))
+            self.info('Upload successful (%s)' % locale)
             ret = SUCCESS
         else:
-            self.error('failed to upload %s' % (locale))
+            self.error('failed to upload %s' % locale)
             ret = FAILURE
         return ret
 
@@ -808,29 +808,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
                 abs_dirs[key] = dirs[key]
         self.abs_dirs = abs_dirs
         return self.abs_dirs
-
-    def _get_partial_info(self, partial_url):
-        """takes a partial url and returns a partial info dictionary"""
-        partial_file = partial_url.split('/')[-1]
-        # now get from_build...
-        # firefox-39.0a1.ar.win32.partial.20150320030211-20150320075143.mar
-        # partial file ^                  ^            ^
-        #                                 |            |
-        # we need ------------------------+------------+
-        from_buildid = partial_file.partition('partial.')[2]
-        from_buildid = from_buildid.partition('-')[0]
-        self.info('from buildid: {0}'.format(from_buildid))
-
-        dirs = self.query_abs_dirs()
-        abs_partial_file = os.path.join(dirs['abs_objdir'], 'dist',
-                                        'update', partial_file)
-
-        size = self.query_filesize(abs_partial_file)
-        hash_ = self.query_sha512sum(abs_partial_file)
-        return [{'from_buildid': from_buildid,
-                 'hash': hash_,
-                 'size': size,
-                 'url': partial_url}]
 
     def submit_to_balrog(self):
         """submit to barlog"""
@@ -989,16 +966,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         self.set_buildbot_property('funsize_info', json.dumps(funsize_info),
                                    write_to_file=True)
 
-    def query_repo(self):
-        # Find the name of our repository
-        mozilla_dir = self.config['mozilla_dir']
-        repo = None
-        for repository in self.config['repos']:
-            if repository.get('dest') == mozilla_dir:
-                repo = repository['repo']
-                break
-        return repo
-
     def taskcluster_upload(self):
         auth = os.path.join(os.getcwd(), self.config['taskcluster_credentials_file'])
         credentials = {}
@@ -1009,14 +976,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             self.warning('Skipping S3 file upload: No taskcluster credentials.')
             return
 
-        # We need to activate the virtualenv so that we can import taskcluster
-        # (and its dependent modules, like requests and hawk).  Normally we
-        # could create the virtualenv as an action, but due to some odd
-        # dependencies with query_build_env() being called from build(), which
-        # is necessary before the virtualenv can be created.
-        self.disable_mock()
-        self.create_virtualenv()
-        self.enable_mock()
         self.activate_virtualenv()
 
         # Enable Taskcluster debug logging, so at least we get some debug
@@ -1026,7 +985,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         branch = self.config['branch']
         platform = self.config['platform']
         revision = self._query_revision()
-        repo = self.query_repo()
+        repo = self.query_l10n_repo()
         if not repo:
             self.fatal("Unable to determine repository for querying the push info.")
         pushinfo = self.vcs_query_pushinfo(repo, revision, vcs='hgtool')

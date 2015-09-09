@@ -980,7 +980,7 @@ AnimationsTimeline.prototype = {
       createNode({
         parent: iterations,
         attributes: {
-          "class": "delay",
+          "class": "delay" + (delay < 0 ? " negative" : ""),
           "style": `left:-${x}px;
                     width:${w}px;`
         }

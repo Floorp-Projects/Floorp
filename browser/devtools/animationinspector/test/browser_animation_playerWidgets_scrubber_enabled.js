@@ -20,10 +20,11 @@ add_task(function*() {
 
   ok(!timeline.hasAttribute("disabled"), "The timeline input[range] is enabled");
   ok(widget.setCurrentTime, "The widget has the setCurrentTime method");
-  ok(widget.player.setCurrentTime, "The associated player front has the setCurrentTime method");
+  ok(widget.player.setCurrentTime,
+     "The associated player front has the setCurrentTime method");
 
   info("Faking an older server version by setting " +
-    "AnimationsController.traits.hasSetCurrentTime to false");
+       "AnimationsController.traits.hasSetCurrentTime to false");
 
   yield selectNode("body", inspector);
   controller.traits.hasSetCurrentTime = false;
@@ -35,7 +36,4 @@ add_task(function*() {
   timeline = widget.currentTimeEl;
 
   ok(timeline.hasAttribute("disabled"), "The timeline input[range] is disabled");
-
-  yield selectNode("body", inspector);
-  controller.traits.hasSetCurrentTime = true;
 });

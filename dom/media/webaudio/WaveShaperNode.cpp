@@ -215,11 +215,11 @@ public:
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
-                            const AudioChunk& aInput,
-                            AudioChunk* aOutput,
+                            const AudioBlock& aInput,
+                            AudioBlock* aOutput,
                             bool* aFinished) override
   {
-    uint32_t channelCount = aInput.mChannelData.Length();
+    uint32_t channelCount = aInput.ChannelCount();
     if (!mCurve.Length() || !channelCount) {
       // Optimize the case where we don't have a curve buffer,
       // or the input is null.
@@ -227,7 +227,7 @@ public:
       return;
     }
 
-    AllocateAudioBlock(channelCount, aOutput);
+    aOutput->AllocateChannels(channelCount);
     for (uint32_t i = 0; i < channelCount; ++i) {
       float* scaledSample = (float *)(aInput.mChannelData[i]);
       AudioBlockInPlaceScale(scaledSample, aInput.mVolume);

@@ -10,26 +10,51 @@ const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {TimeScale} = require("devtools/animationinspector/components");
 
 const TEST_ANIMATIONS = [{
-  startTime: 500,
-  delay: 0,
-  duration: 1000,
-  iterationCount: 1,
-  playbackRate: 1
+  desc: "Testing a few standard animations",
+  animations: [{
+    startTime: 500,
+    delay: 0,
+    duration: 1000,
+    iterationCount: 1,
+    playbackRate: 1
+  }, {
+    startTime: 400,
+    delay: 100,
+    duration: 10,
+    iterationCount: 100,
+    playbackRate: 1
+  }, {
+    startTime: 50,
+    delay: 1000,
+    duration: 100,
+    iterationCount: 20,
+    playbackRate: 1
+  }],
+  expectedMinStart: 50,
+  expectedMaxEnd: 3050
 }, {
-  startTime: 400,
-  delay: 100,
-  duration: 10,
-  iterationCount: 100,
-  playbackRate: 1
+  desc: "Testing a single negative-delay animation",
+  animations: [{
+    startTime: 100,
+    delay: -100,
+    duration: 100,
+    iterationCount: 1,
+    playbackRate: 1
+  }],
+  expectedMinStart: 0,
+  expectedMaxEnd: 100
 }, {
-  startTime: 50,
-  delay: 1000,
-  duration: 100,
-  iterationCount: 20,
-  playbackRate: 1
+  desc: "Testing a single negative-delay animation with a different rate",
+  animations: [{
+    startTime: 3500,
+    delay: -1000,
+    duration: 10000,
+    iterationCount: 2,
+    playbackRate: 2
+  }],
+  expectedMinStart: 3000,
+  expectedMaxEnd: 13000
 }];
-const EXPECTED_MIN_START = 50;
-const EXPECTED_MAX_END = 3050;
 
 const TEST_STARTTIME_TO_DISTANCE = [{
   time: 50,
@@ -126,24 +151,27 @@ function run_test() {
   equal(TimeScale.minStartTime, Infinity);
   equal(TimeScale.maxEndTime, 0);
 
-  do_print("Test adding a few animations");
-  for (let state of TEST_ANIMATIONS) {
+  for (let {desc, animations, expectedMinStart, expectedMaxEnd} of
+       TEST_ANIMATIONS) {
+    do_print("Test adding a few animations: " + desc);
+    for (let state of animations) {
+      TimeScale.addAnimation(state);
+    }
+
+    do_print("Checking the time scale range");
+    equal(TimeScale.minStartTime, expectedMinStart);
+    equal(TimeScale.maxEndTime, expectedMaxEnd);
+
+    do_print("Test reseting the animations");
+    TimeScale.reset();
+    equal(TimeScale.minStartTime, Infinity);
+    equal(TimeScale.maxEndTime, 0);
+  }
+
+  do_print("Add a set of animations again");
+  for (let state of TEST_ANIMATIONS[0].animations) {
     TimeScale.addAnimation(state);
   }
-  equal(TimeScale.minStartTime, EXPECTED_MIN_START);
-  equal(TimeScale.maxEndTime, EXPECTED_MAX_END);
-
-  do_print("Test reseting the animations");
-  TimeScale.reset();
-  equal(TimeScale.minStartTime, Infinity);
-  equal(TimeScale.maxEndTime, 0);
-
-  do_print("Test adding the animations again");
-  for (let state of TEST_ANIMATIONS) {
-    TimeScale.addAnimation(state);
-  }
-  equal(TimeScale.minStartTime, EXPECTED_MIN_START);
-  equal(TimeScale.maxEndTime, EXPECTED_MAX_END);
 
   do_print("Test converting start times to distances");
   for (let {time, width, expectedDistance} of TEST_STARTTIME_TO_DISTANCE) {
