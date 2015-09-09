@@ -831,6 +831,128 @@ private:
   DaemonSocketPDU* mPDU; // Hold pointer to allow for constant instances
 };
 
+// |UnpackPDUInitOp| is a general-purpose init operator for all variants
+// of |DaemonResultRunnable| and |DaemonNotificationRunnable|. The call
+// operators of |UnpackPDUInitOp| unpack a PDU into the supplied
+// arguments.
+class UnpackPDUInitOp final : private PDUInitOp
+{
+public:
+  UnpackPDUInitOp(DaemonSocketPDU& aPDU)
+    : PDUInitOp(aPDU)
+  { }
+
+  nsresult operator () () const
+  {
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+
+  template<typename T1>
+  nsresult operator () (T1& aArg1) const
+  {
+    nsresult rv = UnpackPDU(GetPDU(), aArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+
+  template<typename T1, typename T2>
+  nsresult operator () (T1& aArg1, T2& aArg2) const
+  {
+    DaemonSocketPDU& pdu = GetPDU();
+
+    nsresult rv = UnpackPDU(pdu, aArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+
+  template<typename T1, typename T2, typename T3>
+  nsresult operator () (T1& aArg1, T2& aArg2, T3& aArg3) const
+  {
+    DaemonSocketPDU& pdu = GetPDU();
+
+    nsresult rv = UnpackPDU(pdu, aArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+
+  template<typename T1, typename T2, typename T3, typename T4>
+  nsresult operator () (T1& aArg1, T2& aArg2, T3& aArg3, T4& aArg4) const
+  {
+    DaemonSocketPDU& pdu = GetPDU();
+
+    nsresult rv = UnpackPDU(pdu, aArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg4);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+
+  template<typename T1, typename T2, typename T3, typename T4, typename T5>
+  nsresult operator () (T1& aArg1, T2& aArg2, T3& aArg3, T4& aArg4,
+                        T5& aArg5) const
+  {
+    DaemonSocketPDU& pdu = GetPDU();
+
+    nsresult rv = UnpackPDU(pdu, aArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg4);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg5);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+};
+
 } // namespace DaemonSocketPDUHelpers
 
 } // namespace ipc
