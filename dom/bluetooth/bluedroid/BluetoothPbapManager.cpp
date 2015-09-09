@@ -9,6 +9,7 @@
 
 #include "BluetoothService.h"
 #include "BluetoothSocket.h"
+#include "BluetoothUtils.h"
 #include "BluetoothUuid.h"
 #include "ObexBase.h"
 
@@ -429,24 +430,17 @@ BluetoothPbapManager::PullPhonebook(const ObexHeaderSet& aHeader)
 
   nsString name;
   aHeader.GetName(name);
-  BT_APPEND_NAMED_VALUE(data, "name", name);
+  AppendNamedValue(data, "name", name);
 
-  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::Format);
-  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::PropertySelector);
-  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::MaxListCount);
-  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::ListStartOffset);
-  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::vCardSelector);
+  AppendNamedValueByTagId(aHeader, data, AppParameterTag::Format);
+  AppendNamedValueByTagId(aHeader, data, AppParameterTag::PropertySelector);
+  AppendNamedValueByTagId(aHeader, data, AppParameterTag::MaxListCount);
+  AppendNamedValueByTagId(aHeader, data, AppParameterTag::ListStartOffset);
+  AppendNamedValueByTagId(aHeader, data, AppParameterTag::vCardSelector);
 
-  #ifdef MOZ_B2G_BT_API_V1
-    bs->DistributeSignal(
-      BluetoothSignal(NS_LITERAL_STRING(PULL_PHONEBOOK_REQ_ID),
-                      NS_LITERAL_STRING(KEY_ADAPTER),
-                      data));
-  #else
-    bs->DistributeSignal(NS_LITERAL_STRING(PULL_PHONEBOOK_REQ_ID),
-                         NS_LITERAL_STRING(KEY_ADAPTER),
-                         data);
-  #endif
+  bs->DistributeSignal(NS_LITERAL_STRING(PULL_PHONEBOOK_REQ_ID),
+                       NS_LITERAL_STRING(KEY_ADAPTER),
+                       data);
 
   return ObexResponseCode::Success;
 }
@@ -465,25 +459,18 @@ BluetoothPbapManager::PullvCardListing(const ObexHeaderSet& aHeader)
 
   nsString name;
   aHeader.GetName(name);
-  BT_APPEND_NAMED_VALUE(data, "name", name);
+  AppendNamedValue(data, "name", name);
 
-  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::Order);
-  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::SearchValue);
-  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::SearchProperty);
-  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::MaxListCount);
-  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::ListStartOffset);
-  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::vCardSelector);
+  AppendNamedValueByTagId(aHeader, data, AppParameterTag::Order);
+  AppendNamedValueByTagId(aHeader, data, AppParameterTag::SearchValue);
+  AppendNamedValueByTagId(aHeader, data, AppParameterTag::SearchProperty);
+  AppendNamedValueByTagId(aHeader, data, AppParameterTag::MaxListCount);
+  AppendNamedValueByTagId(aHeader, data, AppParameterTag::ListStartOffset);
+  AppendNamedValueByTagId(aHeader, data, AppParameterTag::vCardSelector);
 
-  #ifdef MOZ_B2G_BT_API_V1
-    bs->DistributeSignal(
-      BluetoothSignal(NS_LITERAL_STRING(PULL_VCARD_LISTING_REQ_ID),
-                      NS_LITERAL_STRING(KEY_ADAPTER),
-                      data));
-  #else
-    bs->DistributeSignal(NS_LITERAL_STRING(PULL_VCARD_LISTING_REQ_ID),
-                         NS_LITERAL_STRING(KEY_ADAPTER),
-                         data);
-  #endif
+  bs->DistributeSignal(NS_LITERAL_STRING(PULL_VCARD_LISTING_REQ_ID),
+                       NS_LITERAL_STRING(KEY_ADAPTER),
+                       data);
 
   return ObexResponseCode::Success;
 }
@@ -502,27 +489,20 @@ BluetoothPbapManager::PullvCardEntry(const ObexHeaderSet& aHeader)
 
   nsString name;
   aHeader.GetName(name);
-  BT_APPEND_NAMED_VALUE(data, "name", name);
+  AppendNamedValue(data, "name", name);
 
-  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::Format);
-  AppendBtNamedValueByTagId(aHeader, data, AppParameterTag::PropertySelector);
+  AppendNamedValueByTagId(aHeader, data, AppParameterTag::Format);
+  AppendNamedValueByTagId(aHeader, data, AppParameterTag::PropertySelector);
 
-  #ifdef MOZ_B2G_BT_API_V1
-    bs->DistributeSignal(
-      BluetoothSignal(NS_LITERAL_STRING(PULL_VCARD_ENTRY_REQ_ID),
-                      NS_LITERAL_STRING(KEY_ADAPTER),
-                      data));
-  #else
-    bs->DistributeSignal(NS_LITERAL_STRING(PULL_VCARD_ENTRY_REQ_ID),
-                         NS_LITERAL_STRING(KEY_ADAPTER),
-                         data);
-  #endif
+  bs->DistributeSignal(NS_LITERAL_STRING(PULL_VCARD_ENTRY_REQ_ID),
+                       NS_LITERAL_STRING(KEY_ADAPTER),
+                       data);
 
   return ObexResponseCode::Success;
 }
 
 void
-BluetoothPbapManager::AppendBtNamedValueByTagId(
+BluetoothPbapManager::AppendNamedValueByTagId(
   const ObexHeaderSet& aHeader,
   InfallibleTArray<BluetoothNamedValue>& aValues,
   const AppParameterTag aTagId)
@@ -535,16 +515,18 @@ BluetoothPbapManager::AppendBtNamedValueByTagId(
   switch (aTagId) {
     case AppParameterTag::Order: {
       using namespace mozilla::dom::vCardOrderTypeValues;
-      uint32_t order = buf[0] < ArrayLength(strings) ? (uint32_t) buf[0]
-                                                     : 0; // default: indexed
-      BT_APPEND_NAMED_VALUE(aValues, "order", order);
+      uint32_t order =
+        buf[0] < ArrayLength(strings) ? static_cast<uint32_t>(buf[0])
+                                      : 0; // default: indexed
+      AppendNamedValue(aValues, "order", order);
       break;
     }
     case AppParameterTag::SearchProperty: {
       using namespace mozilla::dom::vCardSearchKeyTypeValues;
-      uint32_t searchKey = buf[0] < ArrayLength(strings) ? (uint32_t) buf[0]
-                                                         : 0; // default: name
-      BT_APPEND_NAMED_VALUE(aValues, "searchKey", searchKey);
+      uint32_t searchKey =
+        buf[0] < ArrayLength(strings) ? static_cast<uint32_t>(buf[0])
+                                      : 0; // default: name
+      AppendNamedValue(aValues, "searchKey", searchKey);
       break;
     }
     case AppParameterTag::SearchValue: {
@@ -555,7 +537,7 @@ BluetoothPbapManager::AppendBtNamedValueByTagId(
       // 'MDN:Internal_strings'.
       nsCString text((char *) buf);
 
-      BT_APPEND_NAMED_VALUE(aValues, "searchText", text);
+      AppendNamedValue(aValues, "searchText", text);
       break;
     }
     case AppParameterTag::MaxListCount: {
@@ -569,7 +551,8 @@ BluetoothPbapManager::AppendBtNamedValueByTagId(
       // present in the request with a value of 0, else it is excluded.
       mPhonebookSizeRequired = !maxListCount;
 
-      BT_APPEND_NAMED_VALUE(aValues, "maxListCount", (uint32_t) maxListCount);
+      AppendNamedValue(aValues, "maxListCount",
+                       static_cast<uint32_t>(maxListCount));
       break;
     }
     case AppParameterTag::ListStartOffset: {
@@ -578,19 +561,19 @@ BluetoothPbapManager::AppendBtNamedValueByTagId(
       // convert big endian to little endian
       listStartOffset = (listStartOffset >> 8) | (listStartOffset << 8);
 
-      BT_APPEND_NAMED_VALUE(aValues, "listStartOffset",
-                           (uint32_t) listStartOffset);
+      AppendNamedValue(aValues, "listStartOffset",
+                       static_cast<uint32_t>(listStartOffset));
       break;
     }
     case AppParameterTag::PropertySelector: {
       InfallibleTArray<uint32_t> props = PackPropertiesMask(buf, 64);
 
-      BT_APPEND_NAMED_VALUE(aValues, "propSelector", props);
+      AppendNamedValue(aValues, "propSelector", props);
       break;
     }
     case AppParameterTag::Format: {
       bool usevCard3 = buf[0];
-      BT_APPEND_NAMED_VALUE(aValues, "format", usevCard3);
+      AppendNamedValue(aValues, "format", usevCard3);
       break;
     }
     case AppParameterTag::vCardSelector: {
@@ -600,11 +583,9 @@ BluetoothPbapManager::AppendBtNamedValueByTagId(
         AppParameterTag::vCardSelectorOperator, buf, 64);
 
       if (hasVCardSelectorOperator && buf[0]) {
-        BT_APPEND_NAMED_VALUE(aValues, "vCardSelector_AND",
-                              BluetoothValue(props));
+        AppendNamedValue(aValues, "vCardSelector_AND", BluetoothValue(props));
       } else {
-        BT_APPEND_NAMED_VALUE(aValues, "vCardSelector_OR",
-                              BluetoothValue(props));
+        AppendNamedValue(aValues, "vCardSelector_OR", BluetoothValue(props));
       }
       break;
     }

@@ -244,8 +244,8 @@ BluetoothHidManager::NotifyStatusChanged()
   NS_NAMED_LITERAL_STRING(type, BLUETOOTH_HID_STATUS_CHANGED_ID);
   InfallibleTArray<BluetoothNamedValue> parameters;
 
-  BT_APPEND_NAMED_VALUE(parameters, "connected", mConnected);
-  BT_APPEND_NAMED_VALUE(parameters, "address", mDeviceAddress);
+  AppendNamedValue(parameters, "connected", mConnected);
+  AppendNamedValue(parameters, "address", mDeviceAddress);
 
   BT_ENSURE_TRUE_VOID_BROADCAST_SYSMSG(type, parameters);
 }

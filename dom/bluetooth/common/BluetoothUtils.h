@@ -157,6 +157,25 @@ DispatchStatusChangedEvent(const nsAString& aType,
                            const nsAString& aDeviceAddress,
                            bool aStatus);
 
+//
+// BluetoothNamedValue manipulation
+//
+
+/**
+ * Wrap literal name and value into a BluetoothNamedValue and
+ * append it to the array.
+ */
+void AppendNamedValue(InfallibleTArray<BluetoothNamedValue>& aArray,
+                      const char* aName, const BluetoothValue& aValue);
+
+/**
+ * Wrap literal name and value into a BluetoothNamedValue and
+ * insert it to the array.
+ */
+void InsertNamedValue(InfallibleTArray<BluetoothNamedValue>& aArray,
+                      uint8_t aIndex, const char* aName,
+                      const BluetoothValue& aValue);
+
 END_BLUETOOTH_NAMESPACE
 
 #endif // mozilla_dom_bluetooth_BluetoothUtils_h

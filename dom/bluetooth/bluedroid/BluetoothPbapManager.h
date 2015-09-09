@@ -149,7 +149,7 @@ private:
   uint8_t PullPhonebook(const ObexHeaderSet& aHeader);
   uint8_t PullvCardListing(const ObexHeaderSet& aHeader);
   uint8_t PullvCardEntry(const ObexHeaderSet& aHeader);
-  void AppendBtNamedValueByTagId(
+  void AppendNamedValueByTagId(
     const ObexHeaderSet& aHeader,
     InfallibleTArray<BluetoothNamedValue>& aValues,
     const AppParameterTag aTagId);
