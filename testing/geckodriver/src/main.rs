@@ -100,5 +100,5 @@ fn main() {
                                            launcher);
 
     //TODO: what if binary isn't a valid path?
-    start(addr, MarionetteHandler::new(settings));
+    start(addr, MarionetteHandler::new(settings), vec![]);
 }
