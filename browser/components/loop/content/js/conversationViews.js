@@ -479,8 +479,6 @@ loop.conversationViews = (function(mozL10n) {
 
     _getTitleMessage: function() {
       switch (this.getStoreState().callStateReason) {
-        case WEBSOCKET_REASONS.REJECT:
-        case WEBSOCKET_REASONS.BUSY:
         case FAILURE_DETAILS.USER_UNAVAILABLE:
           var contactDisplayName = _getContactDisplayName(this.props.contact);
           if (contactDisplayName.length) {

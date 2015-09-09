@@ -56,7 +56,8 @@ nsEdgeReadingListExtractor::Extract(const nsAString& aDBPath, nsIArray** aItems)
 
   // Check for the right page size and initialize with that
   unsigned long pageSize;
-  err = JetGetDatabaseFileInfoW(aDBPath.BeginReading(), &pageSize, sizeof(pageSize), JET_DbInfoPageSize);
+  err = JetGetDatabaseFileInfoW(static_cast<char16ptr_t>(aDBPath.BeginReading()),
+                                &pageSize, sizeof(pageSize), JET_DbInfoPageSize);
   NS_HANDLE_JET_ERROR(err)
   err = JetSetSystemParameter(&instance, NULL, JET_paramDatabasePageSize, pageSize, NULL);
   NS_HANDLE_JET_ERROR(err)
@@ -79,10 +80,12 @@ nsEdgeReadingListExtractor::Extract(const nsAString& aDBPath, nsIArray** aItems)
   sessionCreated = true;
 
   // Actually open the DB, and make sure to do so readonly:
-  err = JetAttachDatabaseW(sesid, aDBPath.BeginReading(), JET_bitDbReadOnly);
+  err = JetAttachDatabaseW(sesid, static_cast<char16ptr_t>(aDBPath.BeginReading()),
+                           JET_bitDbReadOnly);
   NS_HANDLE_JET_ERROR(err)
   dbOpened = true;
-  err = JetOpenDatabaseW(sesid, aDBPath.BeginReading(), NULL, &dbid, JET_bitDbReadOnly);
+  err = JetOpenDatabaseW(sesid, static_cast<char16ptr_t>(aDBPath.BeginReading()),
+                         NULL, &dbid, JET_bitDbReadOnly);
   NS_HANDLE_JET_ERROR(err)
 
   // Open the readinglist table and get information on the columns we are interested in:

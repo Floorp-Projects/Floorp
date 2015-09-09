@@ -32,6 +32,7 @@ interface nsITreeColumn : nsISupports
   const short TYPE_TEXT                = 1;
   const short TYPE_CHECKBOX            = 2;
   const short TYPE_PROGRESSMETER       = 3;
+  const short TYPE_PASSWORD            = 4;
   readonly attribute short type;
 
   nsITreeColumn getNext();
