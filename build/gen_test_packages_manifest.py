@@ -18,6 +18,7 @@ ALL_HARNESSES = [
     'jittest',
     'mozbase',
     'web-platform',
+    'talos',
 ]
 
 PACKAGE_SPECIFIED_HARNESSES = [
@@ -26,6 +27,7 @@ PACKAGE_SPECIFIED_HARNESSES = [
     'reftest',
     'xpcshell',
     'web-platform',
+    'talos',
 ]
 
 

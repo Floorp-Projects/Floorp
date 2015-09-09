@@ -280,8 +280,8 @@ public:
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
-                            const AudioChunk& aInput,
-                            AudioChunk* aOutput,
+                            const AudioBlock& aInput,
+                            AudioBlock* aOutput,
                             bool* aFinished) override
   {
     // This node is not connected to anything. Per spec, we don't fire the
@@ -315,7 +315,7 @@ public:
         PodZero(writeData, aInput.GetDuration());
       } else {
         MOZ_ASSERT(aInput.GetDuration() == WEBAUDIO_BLOCK_SIZE, "sanity check");
-        MOZ_ASSERT(aInput.mChannelData.Length() == inputChannelCount);
+        MOZ_ASSERT(aInput.ChannelCount() == inputChannelCount);
         AudioBlockCopyChannelWithScale(static_cast<const float*>(aInput.mChannelData[i]),
                                        aInput.mVolume, writeData);
       }

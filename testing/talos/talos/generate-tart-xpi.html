@@ -1,0 +1,74 @@
+<html>
+ <!--
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ -->
+<head>
+  <meta charset="UTF-8"/>
+  <title>TART/CART addon xpi generator</title>
+  <script src="scripts/jszip.min.js"></script>
+  <script src="scripts/xpigen.js"></script>
+
+  <script>
+    var base = "page_load_test/tart/addon/";
+    var files = [
+      "chrome.manifest",
+      "install.rdf",
+      "content/framescript.js",
+      "content/tart.overlay.xul",
+      "content/tart.html",
+      "content/tart.ico",
+      "content/tart.js",
+      "content/blank.icon.html",
+      "content/Profiler.js",
+      "content/tab-min-width-1px.css"
+    ];
+
+    function triggerBuildXpi() {
+      function $(id) { return document.getElementById(id); }
+
+      $("status-text").innerHTML = "Preparing ...";
+      $("result").style.display = "none";
+      $("status").style.display = "inline";
+
+      createXpiDataUri(base, files, {
+        onprogress: function(p) { $("status-text").innerHTML = "Preparing ... " + p.toFixed(0) + "%"; },
+
+        onerror   : function(e) { $("status-text").innerHTML = "Oops, couldn't generate XPI. Reload to retry.<br/>" + e; },
+
+        onsuccess : function(u) { $("xpi-link").href = u;
+                                  $("status").style.display = "none";
+                                  $("result").style.display = "inline"; }
+      });
+    }
+  </script>
+</head>
+
+<body onload="triggerBuildXpi()" style="font-family: sans-serif; color:#555">
+
+  <h3>TART addon</h3>
+  <h4>
+    Install / Download:
+    <span id="status">
+      <span id="status-text" style="color: #c40;">Not ready</span>
+    </span>
+
+    <span id="result" style="display: none;">
+      <a id="xpi-link" href="#" style="background-color: #dfd;">tart.xpi</a><br/>
+      <span style="color: grey";>(gibberish file name is expected, just rename/save as tart.xpi)</span>
+    </span>
+  </h4>
+
+  <p>
+    Once installed, to run TART or CART tests, visit
+    <span style="color: green; font-family: monospace;">chrome://tart/content/tart.html</span>
+    and follow the instructions.
+  </p>
+  <p>
+    You can also build the addon yourself on a local talos repo: zip the content
+    of <span style="font-family: monospace;">talos/page_load_test/tart/addon/</span> and rename the zip to xpi.
+  </p>
+
+</body>
+</html>

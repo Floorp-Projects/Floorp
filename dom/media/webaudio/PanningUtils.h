@@ -15,7 +15,7 @@ namespace dom {
 
 template<typename T>
 void
-GainMonoToStereo(const AudioChunk& aInput, AudioChunk* aOutput,
+GainMonoToStereo(const AudioBlock& aInput, AudioBlock* aOutput,
                  T aGainL, T aGainR)
 {
   float* outputL = aOutput->ChannelFloatsForWrite(0);
@@ -32,7 +32,7 @@ GainMonoToStereo(const AudioChunk& aInput, AudioChunk* aOutput,
 // depending if the value of the parameters are constant for this block.
 template<typename T, typename U>
 void
-GainStereoToStereo(const AudioChunk& aInput, AudioChunk* aOutput,
+GainStereoToStereo(const AudioBlock& aInput, AudioBlock* aOutput,
                    T aGainL, T aGainR, U aOnLeft)
 {
   float* outputL = aOutput->ChannelFloatsForWrite(0);
@@ -49,10 +49,10 @@ GainStereoToStereo(const AudioChunk& aInput, AudioChunk* aOutput,
 // T can be float or an array of float, and  U can be bool or an array of bool,
 // depending if the value of the parameters are constant for this block.
 template<typename T, typename U>
-void ApplyStereoPanning(const AudioChunk& aInput, AudioChunk* aOutput,
+void ApplyStereoPanning(const AudioBlock& aInput, AudioBlock* aOutput,
                         T aGainL, T aGainR, U aOnLeft)
 {
-  if (aInput.mChannelData.Length() == 1) {
+  if (aInput.ChannelCount() == 1) {
     GainMonoToStereo(aInput, aOutput, aGainL, aGainR);
   } else {
     GainStereoToStereo(aInput, aOutput, aGainL, aGainR, aOnLeft);

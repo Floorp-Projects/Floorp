@@ -487,8 +487,7 @@ CertPolicyId::IsAnyPolicy() const {
     return true;
   }
   return numBytes == sizeof(::mozilla::pkix::anyPolicy) &&
-         !memcmp(bytes, ::mozilla::pkix::anyPolicy,
-                 sizeof(::mozilla::pkix::anyPolicy));
+         std::equal(bytes, bytes + numBytes, ::mozilla::pkix::anyPolicy);
 }
 
 // certificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation

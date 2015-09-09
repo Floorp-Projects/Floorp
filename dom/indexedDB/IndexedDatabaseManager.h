@@ -118,6 +118,9 @@ public:
     return ExperimentalFeaturesEnabled();
   }
 
+  static bool
+  IsFileHandleEnabled();
+
   already_AddRefed<FileManager>
   GetFileManager(PersistenceType aPersistenceType,
                  const nsACString& aOrigin,
@@ -200,7 +203,7 @@ private:
   nsClassHashtable<nsRefPtrHashKey<FileManager>,
                    nsTArray<int64_t>> mPendingDeleteInfos;
 
-  // Lock protecting FileManager.mFileInfos and BlobImplBase.mFileInfos
+  // Lock protecting FileManager.mFileInfos.
   // It's s also used to atomically update FileInfo.mRefCnt, FileInfo.mDBRefCnt
   // and FileInfo.mSliceRefCnt
   mozilla::Mutex mFileMutex;

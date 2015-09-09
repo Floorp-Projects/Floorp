@@ -1,0 +1,11 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/*
+Overlay this style rule at tart/chrome.manifest (but it seems to regress tab perf):
+style chrome://browser/content/browser.xul chrome://tart/content/tab-min-width-1px.css
+*/
+
+/* Prevent overflow while adding many tabs */
+.tabbrowser-tab[fadein]:not([pinned]) {
+  min-width: 1px !important;
+}

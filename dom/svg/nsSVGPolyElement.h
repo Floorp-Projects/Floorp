@@ -47,7 +47,8 @@ public:
   virtual bool IsMarkable() override { return true; }
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks) override;
   virtual bool GetGeometryBounds(Rect* aBounds, const StrokeOptions& aStrokeOptions,
-                                 const Matrix& aTransform) override;
+                                 const Matrix& aToBoundsSpace,
+                                 const Matrix* aToNonScalingStrokeSpace = nullptr) override;
 
   // WebIDL
   already_AddRefed<mozilla::DOMSVGPointList> Points();

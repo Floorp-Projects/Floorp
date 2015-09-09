@@ -1,0 +1,40 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<html>
+<head>
+<script language="Javascript" type="text/javascript" src="../../../../scripts/Profiler.js"></script>
+<script language="Javascript" type="text/javascript" src="../../../../scripts/MozillaFileLogger.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../../../page_load_test/quit.js"></script>
+<script language="javascript" type="text/javascript">
+
+function runTest() {
+  dispatchEvent(
+    new CustomEvent("tresize@mozilla.org:chrome-run-event",
+                    { bubbles: true,
+                      detail: { locationSearch: location.search } })
+  );
+}
+
+function logResults(data) {
+  if (typeof dumpLog != "undefined") {
+    data.forEach(function(line) {
+      dumpLog(line);
+    });
+
+
+    window.setTimeout(function() {
+      goQuitApplication();
+      window.close();
+    }, 0);
+  } else {
+    alert(data[0].split("__start_report")[1].split("__end_report")[0]);
+  }
+}
+
+</script>
+</head>
+<body id="body" onload="runTest();">
+<div style="text-align:center; margin-left:auto; margin-right:auto; background-color:Silver; width:100px; height:100%;">RESIZE</div>
+</body>
+</html>

@@ -39,7 +39,7 @@ union FactoryRequestParams
   DeleteDatabaseRequestParams;
 };
 
-protocol PBackgroundIDBFactory
+sync protocol PBackgroundIDBFactory
 {
   manager PBackground;
 

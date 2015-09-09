@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <script>
+      const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+      Cu.import("resource://gre/modules/Services.jsm");
+      Cu.import("resource:///modules/NewTabURL.jsm");
+      function do_test(override) {
+        if (override || document.location.hash.indexOf("#auto") == 0) {
+          var mainWindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                   .getInterface(Components.interfaces.nsIWebNavigation)
+                   .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+                   .rootTreeItem
+                   .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                   .getInterface(Components.interfaces.nsIDOMWindow);
+          Services.obs.notifyObservers(mainWindow, 'tabswitch-do-test', null);
+          Services.obs.addObserver(function onStartup(aSubject, aTopic, aData) {
+            aSubject.close();
+            var data = JSON.parse(aData);
+            content.tpRecordTime(data.times.join(','), 0, data.urls.join(','));
+          }, 'tabswitch-test-results', false);
+        }
+      }
+    </script>
+  </head>
+  <body onload="do_test(false)">
+    Hello Talos!
+  </body>
+</html>

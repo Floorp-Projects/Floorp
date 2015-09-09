@@ -1,0 +1,2 @@
+content tresize content/
+overlay chrome://browser/content/browser.xul chrome://tresize/content/tresize.overlay.xul

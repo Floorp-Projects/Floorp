@@ -139,8 +139,7 @@ FilePickerParent::Done(int16_t aResult)
   }
 
   nsTArray<nsRefPtr<BlobImpl>> blobs;
-  if (mMode == nsIFilePicker::modeOpenMultiple ||
-      mMode == nsIFilePicker::modeGetFolder) {
+  if (mMode == nsIFilePicker::modeOpenMultiple) {
     nsCOMPtr<nsISimpleEnumerator> iter;
     NS_ENSURE_SUCCESS_VOID(mFilePicker->GetFiles(getter_AddRefs(iter)));
 
