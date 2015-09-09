@@ -17,11 +17,23 @@ body {
   overflow: hidden;
   font: menu;
   background-color: #fbfbfb;
+  height: 410px;
+  width: 330px;
+}
+
+/* Panel container flexbox */
+.panel-content {
+  height: 410px;
+  width: 330px;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: flex-start;
 }
 
 /* Notifications displayed over tabs */
 
 .panel .messages {
+  width: 100%;
   margin: 0;
 }
 
@@ -67,10 +79,15 @@ body {
 /* Tabs and tab selection buttons */
 
 .tab-view-container {
+  width: 100%;
   background-image: url("../shared/img/beta-ribbon.svg#beta-ribbon");
   background-color: #fbfbfb;
   background-size: 36px 36px;
   background-repeat: no-repeat;
+  flex: 1;
+  display: flex;
+  flex-flow: column nowrap;
+  overflow: hidden;
 }
 
 .tab-view {
@@ -179,7 +196,8 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
   background-image: url("../shared/img/icons-14x14.svg#hello-hover");
 }
 
-.tab-view li:first-child:nth-last-child(2) ~ div {
+.tab-view li:first-child:nth-last-child(2) ~ li {
+  /* hide the tab-slider when there is only one tab shown */
   display: none;
 }
 
@@ -190,10 +208,13 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
 
 .tab {
   display: none;
+  flex: 1;
+  overflow: auto;
 }
 
 .tab.selected {
-  display: block;
+  display: flex;
+  flex-flow: column nowrap;
 }
 
 /* Content area and input fields */
@@ -254,29 +275,25 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
 /* Rooms and contacts shared CSS */
 
 .contact-list-empty,
-.room-list-empty {
-  background-image: url("../shared/img/empty_contacts.svg");
+.contact-search-list-empty,
+.no-conversations-message {
   background-repeat: no-repeat;
   background-position: top center;
-  padding-top: 19%;
-  padding-bottom: 3%;
   text-align: center;
   color: #4a4a4a;
   font-weight: lighter;
 }
 
-/* Don't show the empty contacts image if we're showing gravatar promo. */
-.contacts-gravatar-promo ~ .contact-list-empty {
-  background-image: none;
-  padding-top: 3%;
-}
 
-.contact-list-empty {
-  padding-top: 27%;
-}
 
-.room-list-empty {
-  margin: 5% 15px;
+.no-conversations-message {
+  /* example of vertical aligning a container in an element
+    see: http://zerosixthree.se/vertical-align-anything-with-just-3-lines-of-css/ */
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+  padding-top: 75px;
+  padding-bottom: 10px;
   background-image: url("../shared/img/empty_conversations.svg");
 }
 
@@ -296,6 +313,8 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
 .room-list-loading {
   margin: 5rem 15px;
   text-align: center;
+  /* makes sure that buttons are anchored above footer */
+  flex: 1;
 }
 
 .room-list-loading > img {
@@ -305,9 +324,9 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
 
 /* Rooms */
 .rooms {
-  min-height: 100px;
-  /* To hold the conversation dropdown menu. */
-  position: relative;
+  flex: 1;
+  display: flex;
+  flex-flow: column nowrap;
 }
 
 .rooms > h1 {
@@ -323,6 +342,7 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
 .new-room-view {
   display: flex;
   flex-direction: column;
+  border-top: 1px solid #d8d8d8;
 }
 
 .new-room-view > .context-checkbox-checked {
@@ -332,8 +352,8 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
 .new-room-view > .context {
   border-top: 1px solid #ebebeb;
   flex: 1;
-  margin: .5rem 0;
-  padding: .5rem 15px 1rem;
+  border-radius: 3px 3px 0 0;
+  padding: 6px 15px 8px;
 }
 
 .new-room-view > .context > .context-enabled {
@@ -370,7 +390,7 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
   height: 3rem;
   display: block;
   font-size: 1.2rem;
-  margin: 0 15px 1rem 15px;
+  margin: 7px 15px 0 15px;
   padding: .5rem 1rem;
   border-radius: 4px;
 }
@@ -382,14 +402,23 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
 }
 
 .room-list {
-  max-height: 335px; /* XXX better computation needed */
-  /* At least high enough to be able to contain the conversation menu. */
-  min-height: 100px;
-  overflow: auto;
+  /* xxx  not sure why flex needs the 3 value setting
+    but setting flex to just 1, the whole tab including the new room is scrollable.
+    seems to not like the 0% of the default setting - may be FF bug */
+  flex: 1 1 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-flow: column nowrap;
 }
 
-.room-list:empty {
+.room-list-empty {
   border-bottom-width: 0;
+  flex: 1;
+  /* the child no-conversations-message is vertical aligned inside this container
+    see: http://zerosixthree.se/vertical-align-anything-with-just-3-lines-of-css/
+    stops blurring from decimal pixels being rendered - pixel rounding */
+  transform-style: preserve-3d;
 }
 
 .room-list > .room-entry {
@@ -404,8 +433,9 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
   line-height: 2.4rem;
   color: #000;
   /* See .room-entry-context-item for the margin/size reductions.
-   * An extra 40px to make space for the call button and chevron. */
+    * An extra 40px to make space for the call button and chevron. */
   width: calc(100% - 1rem - 56px);
+
 }
 
 .room-list > .room-entry.room-active > h2 {
@@ -437,7 +467,7 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
 @keyframes drop-and-fade-in {
   0%   {opacity: 0; top: -15px;}
   25%  {opacity: 0; top: -15px;}
-  100% {opacity: 1; top: 0px;}
+  100% {opacity: 1; top: 0;}
 }
 
 .room-list > .room-entry > h2 > button {
@@ -475,7 +505,7 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
   background: transparent url(../shared/img/icons-16x16.svg#checkmark);
   animation: pulse .150s;
   animation-timing-function: ease-in-out;
-  top: 0px;
+  top: 0;
 }
 
 /* keep the various room-entry row pieces aligned with each other */
@@ -551,11 +581,11 @@ html[dir="rtl"] .room-entry-call-btn {
 
 html[dir="rtl"] .room-entry-context-actions > .dropdown-menu {
   right: auto;
-  left: 21px;
+  left: 45px;
 }
 
 .room-entry-context-actions > .dropdown-menu {
-  right: 21px;
+  right: 45px;
   bottom: auto;
   left: auto;
 }
@@ -980,9 +1010,10 @@ html[dir="rtl"] .settings-menu .dropdown-menu {
   align-content: stretch;
   align-items: center;
   font-size: 1rem;
-  background-color: #fbfbfb;
   color: #666666;
-  padding: .5rem 15px;
+  padding: 10px 15px 6px 15px;
+  width: 100%;
+  height: 42px;
 }
 
 .footer .signin-details {
@@ -999,14 +1030,14 @@ html[dir="rtl"] .settings-menu .dropdown-menu {
 /* First time use */
 
 .fte-get-started-content {
+  /* Manual vertical centering */
   flex: 1;
-  padding: 4.5rem 0 3.4rem;
+  padding: 7.5rem 0 0;
   display: flex;
   flex-direction: column;
 }
 
 .fte-title {
-  flex: 1;
   margin: 0 44px;
 }
 
@@ -1022,19 +1053,14 @@ html[dir="rtl"] .settings-menu .dropdown-menu {
 }
 
 .fte-get-started-content + .powered-by-wrapper {
-  flex: 0;
+  width: 100%;
 }
 
 .fte-get-started-container {
-  height: 100%;
-  width: 100%;
-  min-height: 270px;
+  height: 410px;
+  width: 330px;
   display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  justify-content: space-between;
-  align-content: flex-start;
-  align-items: flex-start;
+  flex-flow: column nowrap;
   background: #fbfbfb;
 }
 

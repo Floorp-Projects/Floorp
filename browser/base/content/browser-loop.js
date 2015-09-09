@@ -154,7 +154,10 @@ let LoopUI;
           }
 
           this.PanelFrame.showPopup(window, event ? event.target : this.toolbarButton.node,
-                               "loop", null, "about:looppanel", null, callback);
+            "loop", null, "about:looppanel",
+            // Loop wants a fixed size for the panel. This also stops it dynamically resizing.
+            { width: 330, height: 410 },
+            callback);
         });
       });
     },

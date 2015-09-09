@@ -426,7 +426,6 @@ loop.store = loop.store || {};
      * Gather the list of all available rooms from the MozLoop API.
      */
     getAllRooms: function() {
-      this.setStoreState({pendingInitialRetrieval: true});
       this._mozLoop.rooms.getAll(null, function(err, rawRoomList) {
         var action;
 

@@ -446,7 +446,26 @@
     callback(null, []);
   };
 
+  var mockMozLoopNoRoomsNoContext = _.cloneDeep(navigator.mozLoop);
+  mockMozLoopNoRoomsNoContext.getSelectedTabMetadata = function(){};
+  mockMozLoopNoRoomsNoContext.rooms.getAll = function(version, callback) {
+    callback(null, []);
+  };
+
   var roomStoreNoRooms = new loop.store.RoomStore(new loop.Dispatcher(), {
+    mozLoop: mockMozLoopNoRooms,
+    activeRoomStore: new loop.store.ActiveRoomStore(new loop.Dispatcher(), {
+      mozLoop: mockMozLoopNoRooms,
+      sdkDriver: mockSDK
+    })
+  });
+
+  /* xxx this is asynchronous - if start seeing things pending then this is the culprit */
+  roomStoreNoRooms.setStoreState({
+    pendingInitialRetrieval: false
+  });
+
+  var roomStoreNoRoomsPending = new loop.store.RoomStore(new loop.Dispatcher(), {
     mozLoop: mockMozLoopNoRooms,
     activeRoomStore: new loop.store.ActiveRoomStore(new loop.Dispatcher(), {
       mozLoop: mockMozLoopNoRooms,
@@ -459,6 +478,10 @@
     email: "text@example.com",
     uid: "0354b278a381d3cb408bb46ffc01266"
   };
+
+  var mockMozLoopLoggedInNoContext = _.cloneDeep(navigator.mozLoop);
+  mockMozLoopLoggedInNoContext.getSelectedTabMetadata = function(){};
+  mockMozLoopLoggedInNoContext.userProfile = _.cloneDeep(mockMozLoopLoggedIn.userProfile);
 
   var mockMozLoopLoggedInLongEmail = _.cloneDeep(navigator.mozLoop);
   mockMozLoopLoggedInLongEmail.userProfile = {
@@ -723,8 +746,8 @@
             <FramedExample cssClass="fx-embedded-panel"
                            dashed={true}
                            height={410}
-                           summary="Re-sign-in view"
-                           width={332}>
+                           summary="First time experience view"
+                           width={330}>
               <div className="panel">
                 <PanelView client={mockClient}
                   dispatcher={dispatcher}
@@ -749,7 +772,7 @@
                            dashed={true}
                            height={410}
                            summary="Room list tab"
-                           width={332}>
+                           width={330}>
               <div className="panel">
                 <PanelView client={mockClient}
                            dispatcher={dispatcher}
@@ -763,8 +786,23 @@
             <FramedExample cssClass="fx-embedded-panel"
                            dashed={true}
                            height={410}
+                           summary="Room list tab (No Context)"
+                           width={330}>
+              <div className="panel">
+                <PanelView client={mockClient}
+                           dispatcher={dispatcher}
+                           mozLoop={mockMozLoopLoggedInNoContext}
+                           notifications={notifications}
+                           roomStore={roomStore}
+                           selectedTab="rooms" />
+              </div>
+            </FramedExample>
+
+            <FramedExample cssClass="fx-embedded-panel"
+                           dashed={true}
+                           height={410}
                            summary="Room list tab (no rooms)"
-                           width={332}>
+                           width={330}>
               <div className="panel">
                 <PanelView client={mockClient}
                            dispatcher={dispatcher}
@@ -778,8 +816,38 @@
             <FramedExample cssClass="fx-embedded-panel"
                            dashed={true}
                            height={410}
+                           summary="Room list tab (no rooms and no context)"
+                           width={330}>
+              <div className="panel">
+                <PanelView client={mockClient}
+                           dispatcher={dispatcher}
+                           mozLoop={mockMozLoopNoRoomsNoContext}
+                           notifications={notifications}
+                           roomStore={roomStoreNoRooms}
+                           selectedTab="rooms" />
+              </div>
+            </FramedExample>
+
+            <FramedExample cssClass="fx-embedded-panel"
+                           dashed={true}
+                           height={410}
+                           summary="Room list tab (loading view)"
+                           width={330}>
+              <div className="panel">
+                <PanelView client={mockClient}
+                           dispatcher={dispatcher}
+                           mozLoop={mockMozLoopNoRoomsNoContext}
+                           notifications={notifications}
+                           roomStore={roomStoreNoRoomsPending}
+                           selectedTab="rooms" />
+              </div>
+            </FramedExample>
+
+            <FramedExample cssClass="fx-embedded-panel"
+                           dashed={true}
+                           height={410}
                            summary="Contact list tab"
-                           width={332}>
+                           width={330}>
               <div className="panel">
                 <PanelView client={mockClient}
                            dispatcher={dispatcher}
@@ -807,7 +875,7 @@
                            dashed={true}
                            height={410}
                            summary="Contact list tab long email"
-                           width={332}>
+                           width={330}>
               <div className="panel">
                 <PanelView client={mockClient}
                            dispatcher={dispatcher}
@@ -821,7 +889,7 @@
                            dashed={true}
                            height={410}
                            summary="Contact list tab (no contacts)"
-                           width={332}>
+                           width={330}>
               <div className="panel">
                 <PanelView client={mockClient}
                            dispatcher={dispatcher}
@@ -835,7 +903,7 @@
                            dashed={true}
                            height={410}
                            summary="Error Notification"
-                           width={332}>
+                           width={330}>
               <div className="panel">
                 <PanelView client={mockClient}
                            dispatcher={dispatcher}
@@ -848,7 +916,7 @@
                            dashed={true}
                            height={410}
                            summary="Error Notification - authenticated"
-                           width={332}>
+                           width={330}>
               <div className="panel">
                 <PanelView client={mockClient}
                            dispatcher={dispatcher}
@@ -861,7 +929,7 @@
                            dashed={true}
                            height={410}
                            summary="Contact import success"
-                           width={332}>
+                           width={330}>
               <div className="panel">
                 <PanelView dispatcher={dispatcher}
                            mozLoop={mockMozLoopLoggedIn}
@@ -874,7 +942,7 @@
                            dashed={true}
                            height={410}
                            summary="Contact import error"
-                           width={332}>
+                           width={330}>
               <div className="panel">
                 <PanelView dispatcher={dispatcher}
                            mozLoop={mockMozLoopLoggedIn}
@@ -887,7 +955,7 @@
                            dashed={true}
                            height={410}
                            summary="Contact Form - Add"
-                           width={332}>
+                           width={330}>
               <div className="panel">
                 <PanelView client={mockClient}
                            dispatcher={dispatcher}
@@ -901,14 +969,18 @@
             </FramedExample>
             <FramedExample cssClass="fx-embedded-panel"
                            dashed={true}
-                           height={321}
+                           height={410}
                            summary="Contact Form - Edit"
-                           width={332}>
+                           width={330}>
               <div className="panel">
-                <ContactDetailsForm contactFormData={fakeManyContacts[1]}
-                                    mode={"edit"}
-                                    mozLoop={mockMozLoopLoggedIn}
-                                    switchToInitialView={noop} />
+                <PanelView client={mockClient}
+                           dispatcher={dispatcher}
+                           initialSelectedTabComponent="contactEdit"
+                           mozLoop={mockMozLoopLoggedIn}
+                           notifications={notifications}
+                           roomStore={roomStore}
+                           selectedTab="contacts"
+                           userProfile={{email: "test@example.com"}} />
               </div>
             </FramedExample>
           </Section>
@@ -941,9 +1013,9 @@
           <Section name="ContactDetail">
             <FramedExample cssClass="fx-embedded-panel"
                            dashed={true}
-                           height={272}
+                           height={50}
                            summary="ContactDetail"
-                           width={300}>
+                           width={334}>
               <div className="panel force-menu-show">
                 <ContactDetail contact={fakeManyContacts[0]}
                                handleContactAction={function() {}} />
