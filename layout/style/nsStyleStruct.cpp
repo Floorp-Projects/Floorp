@@ -1497,7 +1497,9 @@ IsAutonessEqual(const nsStyleSides& aSides1, const nsStyleSides& aSides2)
   return true;
 }
 
-nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) const
+nsChangeHint
+nsStylePosition::CalcDifference(const nsStylePosition& aOther,
+                                nsStyleContext* aContext) const
 {
   nsChangeHint hint = nsChangeHint(0);
 
@@ -1595,22 +1597,25 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
     NS_UpdateHint(hint, nsChangeHint_NeedReflow);
   }
 
-  if (mHeight != aOther.mHeight ||
-      mMinHeight != aOther.mMinHeight ||
-      mMaxHeight != aOther.mMaxHeight) {
-    // Height changes can affect descendant intrinsic sizes due to replaced
-    // elements with percentage heights in descendants which also have
-    // percentage heights. This is handled via nsChangeHint_UpdateComputedBSize
+  bool widthChanged = mWidth != aOther.mWidth ||
+                      mMinWidth != aOther.mMinWidth ||
+                      mMaxWidth != aOther.mMaxWidth;
+  bool heightChanged = mHeight != aOther.mHeight ||
+                       mMinHeight != aOther.mMinHeight ||
+                       mMaxHeight != aOther.mMaxHeight;
+  bool isVertical = WritingMode(aContext).IsVertical();
+  if (isVertical ? widthChanged : heightChanged) {
+    // Block-size changes can affect descendant intrinsic sizes due to replaced
+    // elements with percentage bsizes in descendants which also have
+    // percentage bsizes. This is handled via nsChangeHint_UpdateComputedBSize
     // which clears intrinsic sizes for frames that have such replaced elements.
     NS_UpdateHint(hint, nsChangeHint_NeedReflow |
         nsChangeHint_UpdateComputedBSize |
         nsChangeHint_ReflowChangesSizeOrPosition);
   }
 
-  if (mWidth != aOther.mWidth ||
-      mMinWidth != aOther.mMinWidth ||
-      mMaxWidth != aOther.mMaxWidth) {
-    // None of our width differences can affect descendant intrinsic
+  if (isVertical ? heightChanged : widthChanged) {
+    // None of our inline-size differences can affect descendant intrinsic
     // sizes and none of them need to force children to reflow.
     NS_UpdateHint(hint, NS_SubtractHint(nsChangeHint_AllReflowHints,
                                         NS_CombineHint(nsChangeHint_ClearDescendantIntrinsics,
