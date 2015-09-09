@@ -12,6 +12,7 @@
 #include "BluetoothUuid.h"
 #include "ObexBase.h"
 
+#include "mozilla/dom/BluetoothPbapParametersBinding.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/RefPtr.h"
@@ -527,29 +528,26 @@ BluetoothPbapManager::AppendBtNamedValueByTagId(
   const AppParameterTag aTagId)
 {
   uint8_t buf[64];
+  if (!aHeader.GetAppParameter(aTagId, buf, 64)) {
+    return;
+  }
 
   switch (aTagId) {
     case AppParameterTag::Order: {
-      if (!aHeader.GetAppParameter(AppParameterTag::Order, buf, 64)) {
-        break;
-      }
-
-      static const nsString sOrderStr[] = {NS_LITERAL_STRING("alphanumeric"),
-                                           NS_LITERAL_STRING("indexed"),
-                                           NS_LITERAL_STRING("phonetical")};
-      uint8_t order = buf[0];
-      if (order < MOZ_ARRAY_LENGTH(sOrderStr)) {
-        BT_APPEND_NAMED_VALUE(aValues, "order", sOrderStr[order]);
-      } else {
-        BT_LOGR("Unexpected value %d of 'Order'", order);
-      }
+      using namespace mozilla::dom::vCardOrderTypeValues;
+      uint32_t order = buf[0] < ArrayLength(strings) ? (uint32_t) buf[0]
+                                                     : 0; // default: indexed
+      BT_APPEND_NAMED_VALUE(aValues, "order", order);
+      break;
+    }
+    case AppParameterTag::SearchProperty: {
+      using namespace mozilla::dom::vCardSearchKeyTypeValues;
+      uint32_t searchKey = buf[0] < ArrayLength(strings) ? (uint32_t) buf[0]
+                                                         : 0; // default: name
+      BT_APPEND_NAMED_VALUE(aValues, "searchKey", searchKey);
       break;
     }
     case AppParameterTag::SearchValue: {
-      if (!aHeader.GetAppParameter(AppParameterTag::SearchValue, buf, 64)) {
-        break;
-      }
-
       // Section 5.3.4.3 "SearchValue {<text string>}", PBAP 1.2
       // The UTF-8 character set shall be used for <text string>.
 
@@ -560,27 +558,7 @@ BluetoothPbapManager::AppendBtNamedValueByTagId(
       BT_APPEND_NAMED_VALUE(aValues, "searchText", text);
       break;
     }
-    case AppParameterTag::SearchProperty: {
-      if (!aHeader.GetAppParameter(AppParameterTag::SearchProperty, buf, 64)) {
-        break;
-      }
-
-      static const nsString sSearchKeyStr[] = {NS_LITERAL_STRING("name"),
-                                               NS_LITERAL_STRING("number"),
-                                               NS_LITERAL_STRING("sound")};
-      uint8_t searchKey = buf[0];
-      if (searchKey < MOZ_ARRAY_LENGTH(sSearchKeyStr)) {
-        BT_APPEND_NAMED_VALUE(aValues, "searchKey", sSearchKeyStr[searchKey]);
-      } else {
-        BT_LOGR("Unexpected value %d of 'SearchProperty'", searchKey);
-      }
-      break;
-    }
     case AppParameterTag::MaxListCount: {
-      if (!aHeader.GetAppParameter(AppParameterTag::MaxListCount, buf, 64)) {
-        break;
-      }
-
       uint16_t maxListCount = *((uint16_t *)buf);
 
       // convert big endian to little endian
@@ -595,10 +573,6 @@ BluetoothPbapManager::AppendBtNamedValueByTagId(
       break;
     }
     case AppParameterTag::ListStartOffset: {
-      if (!aHeader.GetAppParameter(AppParameterTag::ListStartOffset, buf, 64)) {
-        break;
-      }
-
       uint16_t listStartOffset = *((uint16_t *)buf);
 
       // convert big endian to little endian
@@ -609,30 +583,17 @@ BluetoothPbapManager::AppendBtNamedValueByTagId(
       break;
     }
     case AppParameterTag::PropertySelector: {
-      if (!aHeader.GetAppParameter(
-          AppParameterTag::PropertySelector, buf, 64)) {
-        break;
-      }
-
       InfallibleTArray<uint32_t> props = PackPropertiesMask(buf, 64);
 
       BT_APPEND_NAMED_VALUE(aValues, "propSelector", props);
       break;
     }
     case AppParameterTag::Format: {
-      if (!aHeader.GetAppParameter(AppParameterTag::Format, buf, 64)) {
-        break;
-      }
-
       bool usevCard3 = buf[0];
       BT_APPEND_NAMED_VALUE(aValues, "format", usevCard3);
       break;
     }
     case AppParameterTag::vCardSelector: {
-      if (!aHeader.GetAppParameter(AppParameterTag::vCardSelector, buf, 64)) {
-        break;
-      }
-
       InfallibleTArray<uint32_t> props = PackPropertiesMask(buf, 64);
 
       bool hasVCardSelectorOperator = aHeader.GetAppParameter(

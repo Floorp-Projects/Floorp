@@ -4244,6 +4244,11 @@
     "kind": "count",
     "description": "Windows 10+ only: The number of times tablet-mode is used during a session"
   },
+  "FX_TOUCH_USED": {
+    "expires_in_version": "46",
+    "kind": "count",
+    "description": "Windows only. Counts occurrences of touch events"
+  },
   "FX_URLBAR_SELECTED_RESULT_INDEX": {
     "expires_in_version": "45",
     "kind": "enumerated",

@@ -38,7 +38,7 @@ add_task(function* test_LoopUI_getters() {
   yield loadLoopPanel();
   Assert.ok(LoopUI.browser, "Browser element should be there");
   Assert.strictEqual(LoopUI.selectedTab, "rooms", "Initially the rooms tab should be selected");
-  let panelTabs = LoopUI.browser.contentDocument.querySelectorAll(".tab-view > li");
+  let panelTabs = LoopUI.browser.contentDocument.querySelectorAll(".tab-view > li:not(.slide-bar)");
   Assert.strictEqual(panelTabs.length, 1, "Only one tab, 'rooms', should be visible");
 
   // Hide the panel.
@@ -52,7 +52,7 @@ add_task(function* test_LoopUI_getters() {
 
   yield LoopUI.togglePanel();
   Assert.strictEqual(LoopUI.selectedTab, "rooms", "Rooms tab should still be selected");
-  panelTabs = LoopUI.browser.contentDocument.querySelectorAll(".tab-view > li");
+  panelTabs = LoopUI.browser.contentDocument.querySelectorAll(".tab-view > li:not(.slide-bar)");
   Assert.strictEqual(panelTabs.length, 2, "Two tabs should be visible");
   yield LoopUI.togglePanel();
 

@@ -655,6 +655,9 @@ loop.contacts = (function(_, mozL10n) {
           this.state.filter) {
         return (
           React.createElement("div", {className: "contact-search-list-empty"}, 
+            React.createElement("p", {className: "panel-text-large"}, 
+              mozL10n.get("no_search_results_message_heading")
+            ), 
             React.createElement("p", {className: "panel-text-medium"}, 
               mozL10n.get("contacts_no_search_results")
             )
@@ -666,35 +669,40 @@ loop.contacts = (function(_, mozL10n) {
       if (!shownContacts.available && !shownContacts.blocked &&
           !this.state.filter) {
         return (
-          React.createElement("div", {className: "contact-list-empty"}, 
-            React.createElement("p", {className: "panel-text-medium"}, 
-              mozL10n.get("no_contacts_message_heading2")
-            ), 
-            React.createElement("p", {className: "panel-text-medium"}, 
-              mozL10n.get("no_contacts_import_or_add2")
+            React.createElement("div", {className: "contact-list-empty-container"}, 
+              this._renderGravatarPromoMessage(), 
+              React.createElement("div", {className: "contact-list-empty"}, 
+                React.createElement("p", {className: "panel-text-large"}, 
+                  mozL10n.get("no_contacts_message_heading2")
+                ), 
+                React.createElement("p", {className: "panel-text-medium"}, 
+                  mozL10n.get("no_contacts_import_or_add2")
+                )
+              )
             )
-          )
         );
       }
 
       return (
-        React.createElement("div", null, 
-          !this.state.filter ? React.createElement("div", {className: "contact-list-title"}, 
-                                  mozL10n.get("contact_list_title")
-                                ) : null, 
-          this._renderGravatarPromoMessage(), 
-          React.createElement("ul", {className: "contact-list"}, 
-            shownContacts.available ?
-              shownContacts.available.sort(this.sortContacts).map(viewForItem) :
-              null, 
-            shownContacts.blocked && shownContacts.blocked.length > 0 ?
-              React.createElement("div", {className: "contact-separator"}, mozL10n.get("contacts_blocked_contacts")) :
-              null, 
-            shownContacts.blocked ?
-              shownContacts.blocked.sort(this.sortContacts).map(viewForItem) :
-              null
+          React.createElement("div", {className: "contact-list-container"}, 
+            !this.state.filter ? React.createElement("div", {className: "contact-list-title"}, 
+              mozL10n.get("contact_list_title")
+            ) : null, 
+            React.createElement("div", {className: "contact-list-wrapper"}, 
+              this._renderGravatarPromoMessage(), 
+              React.createElement("ul", {className: "contact-list"}, 
+                shownContacts.available ?
+                    shownContacts.available.sort(this.sortContacts).map(viewForItem) :
+                    null, 
+                shownContacts.blocked && shownContacts.blocked.length > 0 ?
+                    React.createElement("div", {className: "contact-separator"}, mozL10n.get("contacts_blocked_contacts")) :
+                    null, 
+                shownContacts.blocked ?
+                    shownContacts.blocked.sort(this.sortContacts).map(viewForItem) :
+                    null
+              )
+            )
           )
-        )
       );
     },
 
@@ -735,7 +743,7 @@ loop.contacts = (function(_, mozL10n) {
 
     render: function() {
       return (
-        React.createElement("div", null, 
+        React.createElement("div", {className: "contacts-container"}, 
           this._renderContactsFilter(), 
           this._renderContactsList(), 
           this._renderAddContactButtons()

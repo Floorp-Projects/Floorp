@@ -100,7 +100,7 @@ loop.panel = (function(_, mozL10n) {
         <div className="tab-view-container">
           <ul className="tab-view">
             {tabButtons}
-            <div className="slide-bar" />
+            <li className="slide-bar" />
           </ul>
           {tabs}
         </div>
@@ -306,7 +306,7 @@ loop.panel = (function(_, mozL10n) {
       });
 
       return (
-        <div id="powered-by-wrapper">
+        <div className="powered-by-wrapper" id="powered-by-wrapper">
           <p className="powered-by" id="powered-by">
             {mozL10n.get("powered_by_beforeLogo")}
             <span className={locale} id="powered-by-logo"/>
@@ -826,14 +826,16 @@ loop.panel = (function(_, mozL10n) {
 
     _renderNoRoomsView: function() {
       return (
-        <div className="room-list">
+        <div className="rooms">
           <div className="room-list-empty">
-            <p className="panel-text-large">
-              {mozL10n.get("no_conversations_message_heading")}
-            </p>
-            <p className="panel-text-medium">
-              {mozL10n.get("no_conversations_start_message")}
-            </p>
+            <div className="no-conversations-message">
+              <p className="panel-text-large">
+                {mozL10n.get("no_conversations_message_heading")}
+              </p>
+              <p className="panel-text-medium">
+                {mozL10n.get("no_conversations_start_message")}
+              </p>
+            </div>
           </div>
           {this._renderNewRoomButton()}
         </div>
@@ -1128,7 +1130,7 @@ loop.panel = (function(_, mozL10n) {
       }
 
       return (
-        <div>
+        <div className="panel-content">
           <NotificationListView
             clearOnDocumentHidden={true}
             notifications={this.props.notifications} />
