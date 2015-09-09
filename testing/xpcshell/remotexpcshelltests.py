@@ -425,27 +425,35 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.pushLibs()
 
     def pushLibs(self):
+        if self.localBin is not None:
+            szip = os.path.join(self.localBin, '..', 'host', 'bin', 'szip')
+            if not os.path.exists(szip):
+                # Tinderbox builds must run szip from the test package
+                szip = os.path.join(self.localBin, 'host', 'szip')
+            if not os.path.exists(szip):
+                # If the test package doesn't contain szip, it means files
+                # are not szipped in the test package.
+                szip = None
+        else:
+            szip = None
         pushed_libs_count = 0
         if self.options.localAPK:
             try:
                 dir = tempfile.mkdtemp()
-                szip = os.path.join(self.localBin, '..', 'host', 'bin', 'szip')
-                if not os.path.exists(szip):
-                    # Tinderbox builds must run szip from the test package
-                    szip = os.path.join(self.localBin, 'host', 'szip')
-                if not os.path.exists(szip):
-                    # If the test package doesn't contain szip, it means files
-                    # are not szipped in the test package.
-                    szip = None
                 for info in self.localAPKContents.infolist():
                     if info.filename.endswith(".so"):
                         print >> sys.stderr, "Pushing %s.." % info.filename
                         remoteFile = remoteJoin(self.remoteBinDir, os.path.basename(info.filename))
                         self.localAPKContents.extract(info, dir)
-                        file = os.path.join(dir, info.filename)
+                        localFile = os.path.join(dir, info.filename)
                         if szip:
-                            out = subprocess.check_output([szip, '-d', file], stderr=subprocess.STDOUT)
-                        self.device.pushFile(os.path.join(dir, info.filename), remoteFile)
+                            try:
+                                out = subprocess.check_output([szip, '-d', localFile], stderr=subprocess.STDOUT)
+                            except CalledProcessError:
+                                print >> sys.stderr, "Error calling %s on %s.." % (szip, localFile)
+                                if out:
+                                    print >> sys.stderr, out
+                        self.device.pushFile(localFile, remoteFile)
                         pushed_libs_count += 1
             finally:
                 shutil.rmtree(dir)
@@ -456,8 +464,16 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                 print >> sys.stderr, "Pushing %s.." % file
                 if 'libxul' in file:
                     print >> sys.stderr, "This is a big file, it could take a while."
+                localFile = os.path.join(self.localLib, file)
                 remoteFile = remoteJoin(self.remoteBinDir, file)
-                self.device.pushFile(os.path.join(self.localLib, file), remoteFile)
+                if szip:
+                    try:
+                        out = subprocess.check_output([szip, '-d', localFile], stderr=subprocess.STDOUT)
+                    except CalledProcessError:
+                        print >> sys.stderr, "Error calling %s on %s.." % (szip, localFile)
+                        if out:
+                            print >> sys.stderr, out
+                self.device.pushFile(localFile, remoteFile)
                 pushed_libs_count += 1
 
         # Additional libraries may be found in a sub-directory such as "lib/armeabi-v7a"
@@ -467,8 +483,16 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                 for file in files:
                     if (file.endswith(".so")):
                         print >> sys.stderr, "Pushing %s.." % file
+                        localFile = os.path.join(root, file)
                         remoteFile = remoteJoin(self.remoteBinDir, file)
-                        self.device.pushFile(os.path.join(root, file), remoteFile)
+                        if szip:
+                            try:
+                                out = subprocess.check_output([szip, '-d', localFile], stderr=subprocess.STDOUT)
+                            except CalledProcessError:
+                                print >> sys.stderr, "Error calling %s on %s.." % (szip, localFile)
+                                if out:
+                                    print >> sys.stderr, out
+                        self.device.pushFile(localFile, remoteFile)
                         pushed_libs_count += 1
 
         return pushed_libs_count

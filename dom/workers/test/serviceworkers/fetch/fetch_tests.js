@@ -185,6 +185,12 @@ fetchXHR('redirect_serviceworker.sjs', function(xhr) {
   finish();
 });
 
+fetchXHR('empty-header', function(xhr) {
+  my_ok(xhr.status == 200, "load should be successful");
+  my_ok(xhr.responseText == "emptyheader", "load should have the expected content");
+  finish();
+}, null, [["emptyheader", ""]]);
+
 expectAsyncResult();
 fetch('http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200&allowOrigin=*')
 .then(function(res) {
@@ -319,4 +325,16 @@ fetch(new Request('body-blob', {method: 'POST', body: new Blob(new String('my bo
     my_ok(xhr.responseText == ("intercepted " + method), method + " load should have synthesized response");
     finish();
   });
+});
+
+expectAsyncResult();
+fetch(new Request('empty-header', {headers:{"emptyheader":""}}))
+.then(function(res) {
+  return res.text();
+}).then(function(body) {
+  my_ok(body == "emptyheader", "The empty header was observed in the fetch event");
+  finish();
+}, function(err) {
+  my_ok(false, "A promise was rejected with " + err);
+  finish();
 });

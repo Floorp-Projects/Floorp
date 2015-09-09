@@ -16,7 +16,7 @@ include PTabContext;
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
-using struct mozilla::OwningSerializedStructuredCloneBuffer from "ipc/IPCMessageUtils.h";
+using class mozilla::dom::StructuredCloneIPCHelper from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -40,7 +40,7 @@ prio(normal upto urgent) sync protocol PContentBridge
 parent:
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
                      CpowEntry[] aCpows, Principal aPrincipal)
-      returns (OwningSerializedStructuredCloneBuffer[] retval);
+      returns (StructuredCloneIPCHelper[] retval);
 both:
     // Both the parent and the child can construct the PBrowser.
     // See the comment in PContent::PBrowser().

@@ -47,6 +47,7 @@ function* testRefreshOnRemove(inspector, panel) {
     attributeValue: "ball short test-node"
   });
   yield onPanelUpdated;
+  yield waitForAllAnimationTargets(panel);
 
   assertAnimationsDisplayed(panel, 1);
 }

@@ -2898,7 +2898,7 @@ TabChild::DoSendBlockingMessage(JSContext* aCx,
                                 StructuredCloneIPCHelper& aHelper,
                                 JS::Handle<JSObject *> aCpows,
                                 nsIPrincipal* aPrincipal,
-                                nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal,
+                                nsTArray<StructuredCloneIPCHelper>* aRetVal,
                                 bool aIsSync)
 {
   ClonedMessageData data;

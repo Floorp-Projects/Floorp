@@ -83,26 +83,38 @@ SVGCircleElement::GetLengthInfo()
 // nsSVGPathGeometryElement methods
 
 bool
-SVGCircleElement::GetGeometryBounds(
-  Rect* aBounds, const StrokeOptions& aStrokeOptions, const Matrix& aTransform)
+SVGCircleElement::GetGeometryBounds(Rect* aBounds,
+                                    const StrokeOptions& aStrokeOptions,
+                                    const Matrix& aToBoundsSpace,
+                                    const Matrix* aToNonScalingStrokeSpace)
 {
   float x, y, r;
   GetAnimatedLengthValues(&x, &y, &r, nullptr);
 
   if (r <= 0.f) {
     // Rendering of the element is disabled
-    *aBounds = Rect(aTransform * Point(x, y), Size());
+    *aBounds = Rect(aToBoundsSpace * Point(x, y), Size());
     return true;
   }
 
-  if (aTransform.IsRectilinear()) {
+  if (aToBoundsSpace.IsRectilinear()) {
     // Optimize the case where we can treat the circle as a rectangle and
     // still get tight bounds.
     if (aStrokeOptions.mLineWidth > 0.f) {
+      if (aToNonScalingStrokeSpace) {
+        if (aToNonScalingStrokeSpace->IsRectilinear()) {
+          Rect userBounds(x - r, y - r, 2 * r, 2 * r);
+          SVGContentUtils::RectilinearGetStrokeBounds(
+            userBounds, aToBoundsSpace, *aToNonScalingStrokeSpace,
+            aStrokeOptions.mLineWidth, aBounds);
+          return true;
+        }
+        return false;
+      }
       r += aStrokeOptions.mLineWidth / 2.f;
     }
     Rect rect(x - r, y - r, 2 * r, 2 * r);
-    *aBounds = aTransform.TransformBounds(rect);
+    *aBounds = aToBoundsSpace.TransformBounds(rect);
     return true;
   }
 

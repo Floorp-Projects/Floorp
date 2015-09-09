@@ -22,7 +22,7 @@ fuzzy-if(true,140,70) == clipPath-html-05-extref.xhtml clipPath-html-05-ref.xhtm
 == dynamic-conditions-outer-svg-03.xhtml ../pass.svg
 == dynamic-conditions-outer-svg-04.xhtml ../pass.svg
 == filter-html-01.xhtml filter-html-01-ref.svg
-random-if(B2G||Mulet) == filter-html-01-extref.xhtml filter-html-01-ref.svg # Bug 1063987 # Initial mulet triage: parity with B2G/B2G Desktop
+random-if(B2G||Mulet||Android) == filter-html-01-extref.xhtml filter-html-01-ref.svg # Bug 1063987 # Initial mulet triage: parity with B2G/B2G Desktop # Android: bug 1198380
 == filter-html-zoomed-01.xhtml filter-html-01-ref.svg
 == mask-html-01.xhtml mask-html-01-ref.svg
 == mask-html-01-extref-01.xhtml mask-html-01-ref.svg

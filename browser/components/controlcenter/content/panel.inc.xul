@@ -128,10 +128,6 @@
         <description class="identity-popup-warning-yellow"
                      when-ciphers="weak">&identity.description.weakCipher2;</description>
 
-        <!-- More Security Information -->
-        <button label="&identity.moreInfoLinkText2;"
-                oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
-
         <!-- Active Mixed Content Blocked -->
         <description class="identity-popup-warning-gray"
                      when-mixedcontent="active-blocked">&identity.description.activeBlocked; <label observes="identity-popup-mcb-learn-more"/></description>
@@ -159,6 +155,10 @@
                 label="&identity.enableMixedContentBlocking.label;"
                 accesskey="&identity.enableMixedContentBlocking.accesskey;"
                 oncommand="gIdentityHandler.enableMixedContentProtection()"/>
+
+        <!-- More Security Information -->
+        <button label="&identity.moreInfoLinkText2;"
+                oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
       </vbox>
 
     </panelview>

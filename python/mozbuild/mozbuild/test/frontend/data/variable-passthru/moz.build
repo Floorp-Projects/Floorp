@@ -21,6 +21,8 @@ USE_STATIC_LIBS = True
 CFLAGS += ['-fno-exceptions', '-w']
 CXXFLAGS += ['-fcxx-exceptions', '-include foo.h']
 LDFLAGS += ['-framework Foo', '-x']
+HOST_CFLAGS += ['-funroll-loops', '-wall']
+HOST_CXXFLAGS += ['-funroll-loops-harder', '-wall-day-everyday']
 WIN32_EXE_LDFLAGS += ['-subsystem:console']
 
 DISABLE_STL_WRAPPING = True
