@@ -13,6 +13,7 @@
 using namespace js;
 using namespace js::frontend;
 
+using mozilla::ArrayLength;
 using mozilla::IsFinite;
 
 #ifdef DEBUG
