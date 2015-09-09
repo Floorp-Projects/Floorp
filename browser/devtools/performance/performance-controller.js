@@ -9,6 +9,9 @@ const { loader, require } = Cu.import("resource://gre/modules/devtools/Loader.js
 const { Task } = require("resource://gre/modules/Task.jsm");
 const { Heritage, ViewHelpers, WidgetMethods } = require("resource:///modules/devtools/ViewHelpers.jsm");
 
+// Events emitted by various objects in the panel.
+const EVENTS = require("devtools/performance/events");
+
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
@@ -22,6 +25,8 @@ loader.lazyRequireGetter(this, "system",
 
 loader.lazyRequireGetter(this, "L10N",
   "devtools/performance/global", true);
+loader.lazyRequireGetter(this, "PerformanceTelemetry",
+  "devtools/performance/telemetry", true);
 loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
   "devtools/performance/markers", true);
 loader.lazyRequireGetter(this, "RecordingUtils",
@@ -69,108 +74,6 @@ loader.lazyImporter(this, "PluralForm",
 
 const BRANCH_NAME = "devtools.performance.ui.";
 
-// Events emitted by various objects in the panel.
-const EVENTS = {
-  // Fired by the PerformanceController and OptionsView when a pref changes.
-  PREF_CHANGED: "Performance:PrefChanged",
-
-  // Fired by the PerformanceController when the devtools theme changes.
-  THEME_CHANGED: "Performance:ThemeChanged",
-
-  // Emitted by the PerformanceView when the state (display mode) changes,
-  // for example when switching between "empty", "recording" or "recorded".
-  // This causes certain panels to be hidden or visible.
-  UI_STATE_CHANGED: "Performance:UI:StateChanged",
-
-  // Emitted by the PerformanceView on clear button click
-  UI_CLEAR_RECORDINGS: "Performance:UI:ClearRecordings",
-
-  // Emitted by the PerformanceView on record button click
-  UI_START_RECORDING: "Performance:UI:StartRecording",
-  UI_STOP_RECORDING: "Performance:UI:StopRecording",
-
-  // Emitted by the PerformanceView on import button click
-  UI_IMPORT_RECORDING: "Performance:UI:ImportRecording",
-  // Emitted by the RecordingsView on export button click
-  UI_EXPORT_RECORDING: "Performance:UI:ExportRecording",
-
-  // When a new recording is being tracked in the panel.
-  NEW_RECORDING: "Performance:NewRecording",
-
-  // When a recording is started or stopped or stopping via the PerformanceController
-  RECORDING_STATE_CHANGE: "Performance:RecordingStateChange",
-
-  // Emitted by the PerformanceController or RecordingView
-  // when a recording model is selected
-  RECORDING_SELECTED: "Performance:RecordingSelected",
-
-  // When recordings have been cleared out
-  RECORDINGS_CLEARED: "Performance:RecordingsCleared",
-
-  // When a recording is exported via the PerformanceController
-  RECORDING_EXPORTED: "Performance:RecordingExported",
-
-  // When the front has updated information on the profiler's circular buffer
-  PROFILER_STATUS_UPDATED: "Performance:BufferUpdated",
-
-  // When the PerformanceView updates the display of the buffer status
-  UI_BUFFER_STATUS_UPDATED: "Performance:UI:BufferUpdated",
-
-  // Emitted by the OptimizationsListView when it renders new optimization
-  // data and clears the optimization data
-  OPTIMIZATIONS_RESET: "Performance:UI:OptimizationsReset",
-  OPTIMIZATIONS_RENDERED: "Performance:UI:OptimizationsRendered",
-
-  // Emitted by the OverviewView when more data has been rendered
-  OVERVIEW_RENDERED: "Performance:UI:OverviewRendered",
-  FRAMERATE_GRAPH_RENDERED: "Performance:UI:OverviewFramerateRendered",
-  MARKERS_GRAPH_RENDERED: "Performance:UI:OverviewMarkersRendered",
-  MEMORY_GRAPH_RENDERED: "Performance:UI:OverviewMemoryRendered",
-
-  // Emitted by the OverviewView when a range has been selected in the graphs
-  OVERVIEW_RANGE_SELECTED: "Performance:UI:OverviewRangeSelected",
-
-  // Emitted by the DetailsView when a subview is selected
-  DETAILS_VIEW_SELECTED: "Performance:UI:DetailsViewSelected",
-
-  // Emitted by the WaterfallView when it has been rendered
-  WATERFALL_RENDERED: "Performance:UI:WaterfallRendered",
-
-  // Emitted by the JsCallTreeView when a call tree has been rendered
-  JS_CALL_TREE_RENDERED: "Performance:UI:JsCallTreeRendered",
-
-  // Emitted by the JsFlameGraphView when it has been rendered
-  JS_FLAMEGRAPH_RENDERED: "Performance:UI:JsFlameGraphRendered",
-
-  // Emitted by the MemoryCallTreeView when a call tree has been rendered
-  MEMORY_CALL_TREE_RENDERED: "Performance:UI:MemoryCallTreeRendered",
-
-  // Emitted by the MemoryFlameGraphView when it has been rendered
-  MEMORY_FLAMEGRAPH_RENDERED: "Performance:UI:MemoryFlameGraphRendered",
-
-  // When a source is shown in the JavaScript Debugger at a specific location.
-  SOURCE_SHOWN_IN_JS_DEBUGGER: "Performance:UI:SourceShownInJsDebugger",
-  SOURCE_NOT_FOUND_IN_JS_DEBUGGER: "Performance:UI:SourceNotFoundInJsDebugger",
-
-  // These are short hands for the RECORDING_STATE_CHANGE event to make refactoring
-  // tests easier. UI components should use RECORDING_STATE_CHANGE, and these are
-  // deprecated for test usage only.
-  RECORDING_STARTED: "Performance:RecordingStarted",
-  RECORDING_WILL_STOP: "Performance:RecordingWillStop",
-  RECORDING_STOPPED: "Performance:RecordingStopped",
-
-  // Fired by the PerformanceController when `populateWithRecordings` is finished.
-  RECORDINGS_SEEDED: "Performance:RecordingsSeeded",
-
-  // Emitted by the PerformanceController when `PerformanceController.stopRecording()`
-  // is completed; used in tests, to know when a manual UI click is finished.
-  CONTROLLER_STOPPED_RECORDING: "Performance:Controller:StoppedRecording",
-
-  // Emitted by the PerformanceController when a recording is imported. Used
-  // only in tests. Should use the normal RECORDING_STATE_CHANGE in the UI.
-  RECORDING_IMPORTED: "Performance:ImportedRecording",
-};
-
 /**
  * The current target, toolbox and PerformanceFront, set by this tool's host.
  */
@@ -205,6 +108,7 @@ let PerformanceController = {
    * main UI events.
    */
   initialize: Task.async(function* () {
+    this._telemetry = new PerformanceTelemetry(this);
     this.startRecording = this.startRecording.bind(this);
     this.stopRecording = this.stopRecording.bind(this);
     this.importRecording = this.importRecording.bind(this);
@@ -214,6 +118,7 @@ let PerformanceController = {
     this._onPrefChanged = this._onPrefChanged.bind(this);
     this._onThemeChanged = this._onThemeChanged.bind(this);
     this._onFrontEvent = this._onFrontEvent.bind(this);
+    this._pipe = this._pipe.bind(this);
 
     // Store data regarding if e10s is enabled.
     this._e10s = Services.appinfo.browserTabsRemoteAutostart;
@@ -230,6 +135,7 @@ let PerformanceController = {
     PerformanceView.on(EVENTS.UI_CLEAR_RECORDINGS, this.clearRecordings);
     RecordingsView.on(EVENTS.UI_EXPORT_RECORDING, this.exportRecording);
     RecordingsView.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelectFromView);
+    DetailsView.on(EVENTS.DETAILS_VIEW_SELECTED, this._pipe);
 
     gDevTools.on("pref-changed", this._onThemeChanged);
   }),
@@ -238,6 +144,7 @@ let PerformanceController = {
    * Remove events handled by the PerformanceController
    */
   destroy: function() {
+    this._telemetry.destroy();
     this._prefs.off("pref-changed", this._onPrefChanged);
 
     gFront.off("*", this._onFrontEvent);
@@ -248,6 +155,7 @@ let PerformanceController = {
     PerformanceView.off(EVENTS.UI_CLEAR_RECORDINGS, this.clearRecordings);
     RecordingsView.off(EVENTS.UI_EXPORT_RECORDING, this.exportRecording);
     RecordingsView.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelectFromView);
+    DetailsView.off(EVENTS.DETAILS_VIEW_SELECTED, this._pipe);
 
     gDevTools.off("pref-changed", this._onThemeChanged);
   },
@@ -372,12 +280,7 @@ let PerformanceController = {
     let recording = yield gFront.importRecording(file);
     this._addNewRecording(recording);
 
-    // Only emit in tests for legacy purposes for shorthand --
-    // other things in UI should handle the generic NEW_RECORDING
-    // event to handle lazy recordings.
-    if (DevToolsUtils.testing) {
-      this.emit(EVENTS.RECORDING_IMPORTED, recording);
-    }
+    this.emit(EVENTS.RECORDING_IMPORTED, recording);
   }),
 
   /**
@@ -491,21 +394,19 @@ let PerformanceController = {
 
     // Emit the state specific events for tests that I'm too
     // lazy and frusterated to change right now. These events
-    // should only be used in tests, as the rest of the UI should
-    // react to general RECORDING_STATE_CHANGE events and NEW_RECORDING
-    // events to handle lazy recordings.
-    if (DevToolsUtils.testing) {
-      switch (state) {
-        case "recording-started":
-          this.emit(EVENTS.RECORDING_STARTED, model);
-          break;
-        case "recording-stopping":
-          this.emit(EVENTS.RECORDING_WILL_STOP, model);
-          break;
-        case "recording-stopped":
-          this.emit(EVENTS.RECORDING_STOPPED, model);
-          break;
-      }
+    // should only be used in tests and specific rare cases (telemetry),
+    // as the rest of the UI should react to general RECORDING_STATE_CHANGE
+    // events and NEW_RECORDING events to handle lazy recordings.
+    switch (state) {
+      case "recording-started":
+        this.emit(EVENTS.RECORDING_STARTED, model);
+        break;
+      case "recording-stopping":
+        this.emit(EVENTS.RECORDING_WILL_STOP, model);
+        break;
+      case "recording-stopped":
+        this.emit(EVENTS.RECORDING_STOPPED, model);
+        break;
     }
   },
 
@@ -633,6 +534,13 @@ let PerformanceController = {
     else if (!enabled && !supported) {
       $("#performance-view").setAttribute("e10s", "unsupported");
     }
+  },
+
+  /**
+   * Pipes an event from some source to the PerformanceController.
+   */
+  _pipe: function (eventName, ...data) {
+    this.emit(eventName, ...data);
   },
 
   toString: () => "[object PerformanceController]"
