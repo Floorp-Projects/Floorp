@@ -499,7 +499,6 @@ public:
   // response
   void GetResponseURL(nsAString& aUrl);
   uint32_t Status();
-  uint32_t InternalErrorCode();
   void GetStatusText(nsCString& aStatusText);
   void GetResponseHeader(const nsACString& aHeader, nsACString& aResult,
                          ErrorResult& aRv);
@@ -752,7 +751,6 @@ protected:
   nsCOMPtr<nsITimer> mTimeoutTimer;
   void StartTimeoutTimer();
   void HandleTimeoutCallback();
-  nsresult mErrorStatus;
 
   bool mErrorLoad;
   bool mWaitingForOnStopRequest;
