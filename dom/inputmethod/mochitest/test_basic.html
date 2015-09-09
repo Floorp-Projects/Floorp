@@ -38,9 +38,9 @@ function runTest() {
       return;
     }
 
-    todo_is(gContext.type, 'input', 'The input context type should match.');
+    is(gContext.type, 'input', 'The input context type should match.');
     is(gContext.inputType, 'text', 'The inputType should match.');
-    is(gContext.inputMode, 'verbatim', 'The input mode should match.');
+    is(gContext.inputMode, 'verbatim', 'The inputMode should match.');
     is(gContext.lang, 'zh', 'The language should match.');
     is(gContext.textBeforeCursor + gContext.textAfterCursor, 'Yuan',
        'Should get the text around the cursor.');

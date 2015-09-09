@@ -186,8 +186,6 @@ MozInputMethod.prototype = {
   _wrappedInputContext: null,
   _layouts: {},
   _window: null,
-  _isSystem: false,
-  _isKeyboard: true,
 
   classID: Components.ID("{4607330d-e7d2-40a4-9eb8-43967eae0142}"),
 
@@ -206,20 +204,8 @@ MozInputMethod.prototype = {
 
     Services.obs.addObserver(this, "inner-window-destroyed", false);
 
-    let principal = win.document.nodePrincipal;
-    let perm = Services.perms.testExactPermissionFromPrincipal(principal,
-                                                               "input-manage");
-    if (perm === Ci.nsIPermissionManager.ALLOW_ACTION) {
-      this._isSystem = true;
-    }
-
-    perm = Services.perms.testExactPermissionFromPrincipal(principal, "input");
-    if (perm !== Ci.nsIPermissionManager.ALLOW_ACTION) {
-      this._isKeyboard = false;
-      return;
-    }
-
-    cpmm.addWeakMessageListener('Keyboard:FocusChange', this);
+    cpmm.addWeakMessageListener('Keyboard:Focus', this);
+    cpmm.addWeakMessageListener('Keyboard:Blur', this);
     cpmm.addWeakMessageListener('Keyboard:SelectionChange', this);
     cpmm.addWeakMessageListener('Keyboard:GetContext:Result:OK', this);
     cpmm.addWeakMessageListener('Keyboard:LayoutsChange', this);
@@ -230,12 +216,9 @@ MozInputMethod.prototype = {
   uninit: function mozInputMethodUninit() {
     this._window = null;
     this._mgmt = null;
-    Services.obs.removeObserver(this, "inner-window-destroyed");
-    if (!this._isKeyboard) {
-      return;
-    }
 
-    cpmm.removeWeakMessageListener('Keyboard:FocusChange', this);
+    cpmm.removeWeakMessageListener('Keyboard:Focus', this);
+    cpmm.removeWeakMessageListener('Keyboard:Blur', this);
     cpmm.removeWeakMessageListener('Keyboard:SelectionChange', this);
     cpmm.removeWeakMessageListener('Keyboard:GetContext:Result:OK', this);
     cpmm.removeWeakMessageListener('Keyboard:LayoutsChange', this);
@@ -255,14 +238,12 @@ MozInputMethod.prototype = {
       this.takePromiseResolver(data.requestId) : null;
 
     switch(msg.name) {
-      case 'Keyboard:FocusChange':
-        if (data.type !== 'blur') {
-          // XXX Bug 904339 could receive 'text' event twice
-          this.setInputContext(data);
-        }
-        else {
-          this.setInputContext(null);
-        }
+      case 'Keyboard:Focus':
+        // XXX Bug 904339 could receive 'text' event twice
+        this.setInputContext(data);
+        break;
+      case 'Keyboard:Blur':
+        this.setInputContext(null);
         break;
       case 'Keyboard:SelectionChange':
         if (this.inputcontext) {
@@ -322,8 +303,8 @@ MozInputMethod.prototype = {
     }
 
     if (data) {
-      this._mgmt._supportsSwitching = this._layouts[data.type] ?
-        this._layouts[data.type] > 1 :
+      this._mgmt._supportsSwitching = this._layouts[data.inputType] ?
+        this._layouts[data.inputType] > 1 :
         false;
 
       this._inputcontext = new MozInputContext(data);
@@ -400,35 +381,25 @@ MozInputMethod.prototype = {
   },
 
   setValue: function(value) {
-    this._ensureIsSystem();
     cpmm.sendAsyncMessage('System:SetValue', {
       'value': value
     });
   },
 
   setSelectedOption: function(index) {
-    this._ensureIsSystem();
     cpmm.sendAsyncMessage('System:SetSelectedOption', {
       'index': index
     });
   },
 
   setSelectedOptions: function(indexes) {
-    this._ensureIsSystem();
     cpmm.sendAsyncMessage('System:SetSelectedOptions', {
       'indexes': indexes
     });
   },
 
   removeFocus: function() {
-    this._ensureIsSystem();
     cpmm.sendAsyncMessage('System:RemoveFocus', {});
-  },
-
-  _ensureIsSystem: function() {
-    if (!this._isSystem) {
-      throw new this._window.Error("Should have 'input-manage' permssion.");
-    }
   }
 };
 
@@ -494,12 +465,10 @@ InputContextDOMRequestIpcHelper.prototype = {
  */
 function MozInputContext(ctx) {
   this._context = {
-    inputtype: ctx.type,
-    inputmode: ctx.inputmode,
+    type: ctx.type,
+    inputType: ctx.inputType,
+    inputMode: ctx.inputMode,
     lang: ctx.lang,
-    type: ["textarea", "contenteditable"].indexOf(ctx.type) > -1 ?
-              ctx.type :
-              "text",
     selectionStart: ctx.selectionStart,
     selectionEnd: ctx.selectionEnd,
     textBeforeCursor: ctx.textBeforeCursor,
@@ -648,11 +617,11 @@ MozInputContext.prototype = {
 
   // type of the input field
   get inputType() {
-    return this._context.inputtype;
+    return this._context.inputType;
   },
 
   get inputMode() {
-    return this._context.inputmode;
+    return this._context.inputMode;
   },
 
   get lang() {
