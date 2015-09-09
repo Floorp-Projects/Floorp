@@ -303,6 +303,7 @@ impl MarionetteSession {
                 json_data.find("message").unwrap_or(&default_msg).as_string(),
                 ErrorStatus::UnknownError,
                 "Error message was not a string");
+
             return Err(WebDriverError::new(status,
                                            &format!("Marionette Error: {}", err_msg)[..]));
         }
@@ -319,8 +320,7 @@ impl MarionetteSession {
                 WebDriverResponse::Void
             },
             //Things that simply return the contents of the marionette "value" property
-            GetCurrentUrl | GetTitle | GetWindowHandle | GetWindowHandles |
-            IsDisplayed(_) | IsSelected(_) |
+            GetCurrentUrl | GetTitle | GetWindowHandle | IsDisplayed(_) | IsSelected(_) |
             GetElementAttribute(_, _) | GetCSSValue(_, _) | GetElementText(_) |
             GetElementTagName(_) | IsEnabled(_) | ExecuteScript(_) | ExecuteAsyncScript(_) |
             GetAlertText | TakeScreenshot => {
@@ -330,23 +330,19 @@ impl MarionetteSession {
                 //TODO: Convert webelement keys
                 WebDriverResponse::Generic(ValueResponse::new(value.clone()))
             },
+            GetWindowHandles => {
+                WebDriverResponse::Generic(ValueResponse::new(json_data.clone()))
+            },
             GetWindowSize => {
-                let value = try_opt!(
-                    try_opt!(json_data.find("value"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find value field").as_object(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret value as object");
-
                 let width = try_opt!(
-                    try_opt!(value.get("width"),
+                    try_opt!(json_data.find("width"),
                              ErrorStatus::UnknownError,
                              "Failed to find width field").as_u64(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret width as integer");
 
                 let height = try_opt!(
-                    try_opt!(value.get("height"),
+                    try_opt!(json_data.find("height"),
                              ErrorStatus::UnknownError,
                              "Failed to find height field").as_u64(),
                     ErrorStatus::UnknownError,
@@ -355,36 +351,29 @@ impl MarionetteSession {
                 WebDriverResponse::WindowSize(WindowSizeResponse::new(width, height))
             },
             GetElementRect(_) => {
-                let value = try_opt!(
-                    try_opt!(json_data.find("value"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find value field").as_object(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret value as object");
-
                 let x = try_opt!(
-                    try_opt!(value.get("x"),
+                    try_opt!(json_data.find("x"),
                              ErrorStatus::UnknownError,
                              "Failed to find x field").as_f64(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret x as float");
 
                 let y = try_opt!(
-                    try_opt!(value.get("y"),
+                    try_opt!(json_data.find("y"),
                              ErrorStatus::UnknownError,
                              "Failed to find y field").as_f64(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret y as float");
 
                 let width = try_opt!(
-                    try_opt!(value.get("width"),
+                    try_opt!(json_data.find("width"),
                              ErrorStatus::UnknownError,
                              "Failed to find width field").as_f64(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret width as float");
 
                 let height = try_opt!(
-                    try_opt!(value.get("height"),
+                    try_opt!(json_data.find("height"),
                              ErrorStatus::UnknownError,
                              "Failed to find height field").as_f64(),
                     ErrorStatus::UnknownError,
@@ -458,12 +447,9 @@ impl MarionetteSession {
     }
 
     fn process_cookies(&self, json_data: &Json) -> WebDriverResult<Vec<Cookie>> {
-        let value = try_opt!(
-            try_opt!(json_data.find("value"),
-                     ErrorStatus::UnknownError,
-                     "Failed to find value field").as_array(),
-            ErrorStatus::UnknownError,
-            "Failed to interpret value as array");
+        let value = try_opt!(json_data.as_array(),
+                             ErrorStatus::UnknownError,
+                             "Failed to interpret value as array");
         value.iter().map(|x| {
             let name = try_opt!(
                 try_opt!(x.find("name"),
