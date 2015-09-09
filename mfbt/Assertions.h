@@ -494,18 +494,8 @@ struct AssertionConditionType
 #  define MOZ_ALWAYS_TRUE(expr)      MOZ_ASSERT((expr))
 #  define MOZ_ALWAYS_FALSE(expr)     MOZ_ASSERT(!(expr))
 #else
-#  define MOZ_ALWAYS_TRUE(expr) \
-  do { \
-    if (expr) { \
-      /* Silence MOZ_WARN_UNUSED_RESULT. */ \
-    } \
-  } while (0)
-#  define MOZ_ALWAYS_FALSE(expr) \
-  do { \
-    if (expr) { \
-      /* Silence MOZ_WARN_UNUSED_RESULT. */ \
-    } \
-  } while (0)
+#  define MOZ_ALWAYS_TRUE(expr)      ((void)(expr))
+#  define MOZ_ALWAYS_FALSE(expr)     ((void)(expr))
 #endif
 
 #undef MOZ_DUMP_ASSERTION_STACK
