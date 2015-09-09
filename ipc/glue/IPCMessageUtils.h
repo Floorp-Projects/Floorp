@@ -12,6 +12,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/dom/StructuredCloneIPCHelper.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #ifdef XP_WIN
@@ -64,11 +65,6 @@ struct SerializedStructuredCloneBuffer
   : data(nullptr), dataLength(0)
   { }
 
-  explicit SerializedStructuredCloneBuffer(const JSAutoStructuredCloneBuffer& aOther)
-  {
-    *this = aOther;
-  }
-
   bool
   operator==(const SerializedStructuredCloneBuffer& aOther) const
   {
@@ -76,45 +72,8 @@ struct SerializedStructuredCloneBuffer
            this->dataLength == aOther.dataLength;
   }
 
-  SerializedStructuredCloneBuffer&
-  operator=(const JSAutoStructuredCloneBuffer& aOther)
-  {
-    data = aOther.data();
-    dataLength = aOther.nbytes();
-    return *this;
-  }
-
   uint64_t* data;
   size_t dataLength;
-};
-
-struct OwningSerializedStructuredCloneBuffer : public SerializedStructuredCloneBuffer
-{
-  OwningSerializedStructuredCloneBuffer()
-  {}
-
-  OwningSerializedStructuredCloneBuffer(const OwningSerializedStructuredCloneBuffer&) = delete;
-
-  explicit OwningSerializedStructuredCloneBuffer(const JSAutoStructuredCloneBuffer& aOther)
-   : SerializedStructuredCloneBuffer(aOther)
-  {}
-
-  ~OwningSerializedStructuredCloneBuffer()
-  {
-    if (data) {
-      js_free(data);
-    }
-  }
-
-  OwningSerializedStructuredCloneBuffer&
-  operator=(const JSAutoStructuredCloneBuffer& aOther)
-  {
-    SerializedStructuredCloneBuffer::operator=(aOther);
-    return *this;
-  }
-
-  OwningSerializedStructuredCloneBuffer&
-  operator=(const OwningSerializedStructuredCloneBuffer& aOther) = delete;
 };
 
 } // namespace mozilla
@@ -739,6 +698,27 @@ struct ParamTraits<mozilla::TimeStampValue>
 #endif
 
 template <>
+struct ParamTraits<mozilla::dom::StructuredCloneIPCHelper>
+{
+  typedef mozilla::dom::StructuredCloneIPCHelper paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    aParam.WriteIPCParams(aMsg);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return aResult->ReadIPCParams(aMsg, aIter);
+  }
+
+  static void Log(const paramType& aParam, std::wstring* aLog)
+  {
+    LogParam(aParam.DataLength(), aLog);
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::SerializedStructuredCloneBuffer>
 {
   typedef mozilla::SerializedStructuredCloneBuffer paramType;
@@ -776,31 +756,6 @@ struct ParamTraits<mozilla::SerializedStructuredCloneBuffer>
   static void Log(const paramType& aParam, std::wstring* aLog)
   {
     LogParam(aParam.dataLength, aLog);
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::OwningSerializedStructuredCloneBuffer>
-  : public ParamTraits<mozilla::SerializedStructuredCloneBuffer>
-{
-  typedef mozilla::OwningSerializedStructuredCloneBuffer paramType;
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    if (!ParamTraits<mozilla::SerializedStructuredCloneBuffer>::Read(aMsg, aIter, aResult)) {
-      return false;
-    }
-
-    if (aResult->data) {
-      uint64_t* data = static_cast<uint64_t*>(js_malloc(aResult->dataLength));
-      if (!data) {
-        return false;
-      }
-      memcpy(data, aResult->data, aResult->dataLength);
-      aResult->data = data;
-    }
-
-    return true;
   }
 };
 

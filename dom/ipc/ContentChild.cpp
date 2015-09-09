@@ -799,7 +799,7 @@ ContentChild::InitXPCOM()
     bool isConnected;
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
-    OwningSerializedStructuredCloneBuffer initialData;
+    StructuredCloneIPCHelper initialData;
 
     SendGetXPCOMProcessAttributes(&isOffline, &isConnected,
                                   &isLangRTL, &mAvailableDictionaries,
@@ -831,9 +831,10 @@ ContentChild::InitXPCOM()
         if (NS_WARN_IF(!jsapi.Init(xpc::PrivilegedJunkScope()))) {
             MOZ_CRASH();
         }
+        ErrorResult rv;
         JS::RootedValue data(jsapi.cx());
-        if (!JS_ReadStructuredClone(jsapi.cx(), initialData.data, initialData.dataLength,
-                                    JS_STRUCTURED_CLONE_VERSION, &data, nullptr, nullptr)) {
+        initialData.Read(jsapi.cx(), &data, rv);
+        if (NS_WARN_IF(rv.Failed())) {
             MOZ_CRASH();
         }
         ProcessGlobal* global = ProcessGlobal::Get();
