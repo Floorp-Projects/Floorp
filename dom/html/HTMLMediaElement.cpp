@@ -4075,7 +4075,13 @@ HTMLMediaElement::NotifyOwnerDocumentActivityChangedInternal()
 
   bool pauseElement = !IsActive();
 #ifdef PAUSE_MEDIA_ELEMENT_FROM_AUDIOCHANNEL
-  pauseElement |= ComputedMuted();
+  // Only pause the element when we start playing. If we pause without playing
+  // audio, the resource loading would be affected unexpectedly. For example,
+  // the media element is muted by default, but we don't want this behavior
+  // interrupting the loading process.
+  if (mAudioChannelAgent) {
+    pauseElement |= ComputedMuted();
+  }
 #endif
 
   SuspendOrResumeElement(pauseElement, !IsActive());
