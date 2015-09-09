@@ -35,7 +35,7 @@ for header in ('GCAPI.h', 'HeapAPI.h', 'RootingAPI.h', 'SliceBudget.h', 'TraceKi
     with Files('../public/' + header):
         BUG_COMPONENT = component_gc
 
-for stlfile in ['jsarray.*', 'jsbool*', 'jsdate.*', 'jsnum.*', 'json.*', 'jsstr.*']:
+for stlfile in ['jsarray.*', 'jsbool*', 'jsdate.*', 'jsnum.*', 'json.*', 'jsreflect.*', 'jsstr.*']:
     with Files(stlfile):
         BUG_COMPONENT = component_stl
 
