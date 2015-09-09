@@ -1295,11 +1295,11 @@ BluetoothAdapter::HandlePullVCardListingReq(const BluetoothValue& aValue)
     if (name.EqualsLiteral("name")) {
       init.mName = value.get_nsString();
     } else if (name.EqualsLiteral("order")) {
-      init.mOrder = ConvertStringToVCardOrderType(value.get_nsString());
+      init.mOrder = static_cast<vCardOrderType>(value.get_uint32_t());
+    } else if (name.EqualsLiteral("searchKey")) {
+      init.mSearchKey = static_cast<vCardSearchKeyType>(value.get_uint32_t());
     } else if (name.EqualsLiteral("searchText")) {
       init.mSearchValue = value.get_nsString();
-    } else if (name.EqualsLiteral("searchKey")) {
-      init.mSearchKey = ConvertStringToVCardSearchKeyType(value.get_nsString());
     } else if (name.EqualsLiteral("maxListCount")) {
       init.mMaxListCount = value.get_uint32_t();
     } else if (name.EqualsLiteral("listStartOffset")) {
@@ -1336,40 +1336,6 @@ BluetoothAdapter::getVCardProperties(const BluetoothValue &aValue)
   }
 
   return propSelector;
-}
-
-vCardOrderType
-BluetoothAdapter::ConvertStringToVCardOrderType(const nsAString& aString)
-{
-  using namespace mozilla::dom::vCardOrderTypeValues;
-
-  for (size_t index = 0; index < ArrayLength(strings) - 1; index++) {
-    if (aString.LowerCaseEqualsASCII(strings[index].value,
-                                     strings[index].length)) {
-      return static_cast<vCardOrderType>(index);
-    }
-  }
-
-  BT_WARNING("Treat the unexpected string '%s' as vCardOrderType::Indexed",
-    NS_ConvertUTF16toUTF8(aString).get());
-  return vCardOrderType::Indexed; // The default value is 'Indexed'.
-}
-
-vCardSearchKeyType
-BluetoothAdapter::ConvertStringToVCardSearchKeyType(const nsAString& aString)
-{
-  using namespace mozilla::dom::vCardSearchKeyTypeValues;
-
-  for (size_t index = 0; index < ArrayLength(strings) - 1; index++) {
-    if (aString.LowerCaseEqualsASCII(strings[index].value,
-                                     strings[index].length)) {
-      return static_cast<vCardSearchKeyType>(index);
-    }
-  }
-
-  BT_WARNING("Treat the unexpected string '%s' as vCardSearchKeyType::Name",
-    NS_ConvertUTF16toUTF8(aString).get());
-  return vCardSearchKeyType::Name; // The default value is 'Name'.
 }
 
 void

@@ -23,7 +23,9 @@ import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.Locale;
+import java.util.MissingResourceException;
 import java.util.UUID;
+import java.util.zip.CRC32;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -188,8 +190,18 @@ public class SwitchBoard {
 			
 			String device = Build.DEVICE;
 			String manufacturer = Build.MANUFACTURER;
-			String lang = Locale.getDefault().getISO3Language();
-			String country = Locale.getDefault().getISO3Country();			
+			String lang = "unknown";
+			try {
+				lang = Locale.getDefault().getISO3Language();
+			} catch (MissingResourceException e) {
+				e.printStackTrace();
+			}
+			String country = "unknown";
+			try {
+				country = Locale.getDefault().getISO3Country();
+			} catch (MissingResourceException e) {
+				e.printStackTrace();
+			}
 			String packageName = c.getPackageName();
 			String versionName = "none";
 			try {
@@ -218,7 +230,15 @@ public class SwitchBoard {
 			e.printStackTrace();
 		}
 	}
-	
+
+	public static boolean isInBucket(Context c, int low, int high) {
+		int userBucket = getUserBucket(c);
+		if (userBucket >= low && userBucket < high)
+			return true;
+		else
+			return false;
+	}
+
 	/**
 	 * Looks up in config if user is in certain experiment. Returns false as a default value when experiment
 	 * does not exist.
@@ -369,5 +389,19 @@ public class SwitchBoard {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Return the bucket number of the user. There are 100 possible buckets.
+	 */
+	private static int getUserBucket(Context c) {
+		//get uuid
+		DeviceUuidFactory df = new DeviceUuidFactory(c);
+		String uuid = df.getDeviceUuid().toString();
+
+		CRC32 crc = new CRC32();
+		crc.update(uuid.getBytes());
+		long checksum = crc.getValue();
+		return (int)(checksum % 100L);
 	}
 }

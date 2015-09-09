@@ -100,7 +100,7 @@ loop.panel = (function(_, mozL10n) {
         React.createElement("div", {className: "tab-view-container"}, 
           React.createElement("ul", {className: "tab-view"}, 
             tabButtons, 
-            React.createElement("div", {className: "slide-bar"})
+            React.createElement("li", {className: "slide-bar"})
           ), 
           tabs
         )
@@ -306,7 +306,7 @@ loop.panel = (function(_, mozL10n) {
       });
 
       return (
-        React.createElement("div", {id: "powered-by-wrapper"}, 
+        React.createElement("div", {className: "powered-by-wrapper", id: "powered-by-wrapper"}, 
           React.createElement("p", {className: "powered-by", id: "powered-by"}, 
             mozL10n.get("powered_by_beforeLogo"), 
             React.createElement("span", {className: locale, id: "powered-by-logo"}), 
@@ -826,13 +826,15 @@ loop.panel = (function(_, mozL10n) {
 
     _renderNoRoomsView: function() {
       return (
-        React.createElement("div", {className: "room-list"}, 
+        React.createElement("div", {className: "rooms"}, 
           React.createElement("div", {className: "room-list-empty"}, 
-            React.createElement("p", {className: "panel-text-large"}, 
-              mozL10n.get("no_conversations_message_heading")
-            ), 
-            React.createElement("p", {className: "panel-text-medium"}, 
-              mozL10n.get("no_conversations_start_message")
+            React.createElement("div", {className: "no-conversations-message"}, 
+              React.createElement("p", {className: "panel-text-large"}, 
+                mozL10n.get("no_conversations_message_heading")
+              ), 
+              React.createElement("p", {className: "panel-text-medium"}, 
+                mozL10n.get("no_conversations_start_message")
+              )
             )
           ), 
           this._renderNewRoomButton()
@@ -1128,7 +1130,7 @@ loop.panel = (function(_, mozL10n) {
       }
 
       return (
-        React.createElement("div", null, 
+        React.createElement("div", {className: "panel-content"}, 
           React.createElement(NotificationListView, {
             clearOnDocumentHidden: true, 
             notifications: this.props.notifications}), 

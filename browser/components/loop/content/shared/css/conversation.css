@@ -224,13 +224,13 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
   background-image: url("../img/svg/sharing-hover.svg");
 }
 
-.btn-settings.muted,
 .btn-screen-share.active {
-  opacity: 1;
+  background-image: url("../img/svg/sharing-active.svg");
 }
 
 .btn-screen-share.disabled {
-  background-image: url("../img/svg/sharing-mute.svg");
+  /* The screen share button is in its pending state when its disabled. */
+  background-image: url("../img/svg/sharing-pending.svg");
 }
 
 .fx-embedded .remote_wrapper {
