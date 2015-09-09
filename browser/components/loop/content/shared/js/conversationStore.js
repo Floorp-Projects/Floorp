@@ -12,6 +12,7 @@ loop.store = loop.store || {};
   var CALL_TYPES = loop.shared.utils.CALL_TYPES;
   var REST_ERRNOS = loop.shared.utils.REST_ERRNOS;
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
+  var WEBSOCKET_REASONS = loop.shared.utils.WEBSOCKET_REASONS;
 
   /**
    * Websocket states taken from:
@@ -616,8 +617,19 @@ loop.store = loop.store || {};
           (previousState !== WS_STATES.INIT &&
            previousState !== WS_STATES.ALERTING)) {
         // For outgoing calls we can treat everything as connection failure.
+
+        // XXX We currently fallback to the websocket reason, but really these should
+        // be fully migrated to use FAILURE_DETAILS, so as not to expose websocket
+        // states outside of this store. Bug 1124384 should help to fix this.
+        var reason = progressData.reason;
+
+        if (reason === WEBSOCKET_REASONS.REJECT ||
+            reason === WEBSOCKET_REASONS.BUSY) {
+          reason = FAILURE_DETAILS.USER_UNAVAILABLE;
+        }
+
         this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
-          reason: progressData.reason
+          reason: reason
         }));
         return;
       }
