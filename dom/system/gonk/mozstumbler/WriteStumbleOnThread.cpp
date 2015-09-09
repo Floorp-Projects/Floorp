@@ -17,6 +17,7 @@
 #define ONEDAY_IN_MSEC (24 * 60 * 60 * 1000)
 #define MAX_UPLOAD_ATTEMPTS 20
 
+mozilla::Atomic<bool> WriteStumbleOnThread::sIsFileWaitingForUpload(false);
 mozilla::Atomic<bool> WriteStumbleOnThread::sIsAlreadyRunning(false);
 WriteStumbleOnThread::UploadFreqGuard WriteStumbleOnThread::sUploadFreqGuard = {0};
 
@@ -42,12 +43,19 @@ class DeleteRunnable : public nsRunnable
       }
       // critically, this sets this flag to false so writing can happen again
       WriteStumbleOnThread::sIsAlreadyRunning = false;
+      WriteStumbleOnThread::sIsFileWaitingForUpload = false;
       return NS_OK;
     }
 
   private:
     ~DeleteRunnable() {}
 };
+
+bool
+WriteStumbleOnThread::IsFileWaitingForUpload()
+{
+  return sIsFileWaitingForUpload;
+}
 
 void
 WriteStumbleOnThread::UploadEnded(bool deleteUploadFile)
@@ -194,6 +202,7 @@ WriteStumbleOnThread::Run()
 
   if (UploadFileStatus::NoFile != status) {
     if (UploadFileStatus::ExistsAndReadyToUpload == status) {
+      sIsFileWaitingForUpload = true;
       Upload();
       return NS_OK;
     }
@@ -206,6 +215,7 @@ WriteStumbleOnThread::Run()
     }
   }
 
+  sIsFileWaitingForUpload = false;
   sIsAlreadyRunning = false;
   return NS_OK;
 }
