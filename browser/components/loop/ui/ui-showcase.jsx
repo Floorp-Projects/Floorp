@@ -44,6 +44,7 @@
   // Store constants
   var ROOM_STATES = loop.store.ROOM_STATES;
   var CALL_TYPES = loop.shared.utils.CALL_TYPES;
+  var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
 
   // Local helpers
   function returnTrue() {
@@ -1097,32 +1098,38 @@
                              width={300}>
                 <div className="fx-embedded">
                   <ConversationToolbar audio={{ enabled: true, visible: true }}
+                                       dispatcher={dispatcher}
                                        hangup={noop}
                                        publishStream={noop}
+                                       screenShare={{ state: SCREEN_SHARE_STATES.INACTIVE, visible: true }}
                                        settingsMenuItems={[{ id: "feedback" }]}
                                        video={{ enabled: true, visible: true }} />
                 </div>
               </FramedExample>
               <FramedExample dashed={true}
                              height={56}
-                             summary="Video muted"
+                             summary="Video muted, Screen share pending"
                              width={300}>
                 <div className="fx-embedded">
                   <ConversationToolbar audio={{ enabled: true, visible: true }}
+                                       dispatcher={dispatcher}
                                        hangup={noop}
                                        publishStream={noop}
+                                       screenShare={{ state: SCREEN_SHARE_STATES.PENDING, visible: true }}
                                        settingsMenuItems={[{ id: "feedback" }]}
                                        video={{ enabled: false, visible: true }} />
                 </div>
               </FramedExample>
               <FramedExample dashed={true}
                              height={56}
-                             summary="Audio muted"
+                             summary="Audio muted, Screen share active"
                              width={300}>
                 <div className="fx-embedded">
                   <ConversationToolbar audio={{ enabled: false, visible: true }}
+                                       dispatcher={dispatcher}
                                        hangup={noop}
                                        publishStream={noop}
+                                       screenShare={{ state: SCREEN_SHARE_STATES.ACTIVE, visible: true }}
                                        settingsMenuItems={[{ id: "feedback" }]}
                                        video={{ enabled: true, visible: true }} />
                 </div>
@@ -1734,7 +1741,7 @@
     };
 
     try {
-      React.renderComponent(<App />, document.getElementById("main"));
+      React.render(<App />, document.getElementById("main"));
 
       for (var listener of visibilityListeners) {
         listener({target: {hidden: false}});
@@ -1755,7 +1762,7 @@
 
       // This simulates the mocha layout for errors which means we can run
       // this alongside our other unit tests but use the same harness.
-      var expectedWarningsCount = 10;
+      var expectedWarningsCount = 3;
       var warningsMismatch = caughtWarnings.length !== expectedWarningsCount;
       var resultsElement = document.querySelector("#results");
       var divFailuresNode = document.createElement("div");
