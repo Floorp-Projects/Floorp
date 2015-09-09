@@ -122,15 +122,6 @@ nsBMPDecoder::GetCompressedImageSize() const
   return pixelArraySize;
 }
 
-// Obtains whether or not a BMP file had alpha data in its 4th byte
-// for 32BPP bitmaps.  Only use after the bitmap has been processed.
-bool
-nsBMPDecoder::HasAlphaData() const
-{
-  return mHaveAlphaData;
-}
-
-
 void
 nsBMPDecoder::FinishInternal()
 {
@@ -147,7 +138,7 @@ nsBMPDecoder::FinishInternal()
         nsIntRect r(0, 0, mBIH.width, GetHeight());
         PostInvalidation(r);
 
-        if (mUseAlphaData) {
+        if (mUseAlphaData && mHaveAlphaData) {
           PostFrameStop(Opacity::SOME_TRANSPARENCY);
         } else {
           PostFrameStop(Opacity::OPAQUE);
@@ -664,28 +655,11 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
             case 32:
               while (lpos > 0) {
                 if (mUseAlphaData) {
-                  if (!mHaveAlphaData && p[3]) {
-                    // Non-zero alpha byte detected! Clear previous
-                    // pixels that we have already processed.
-                    // This works because we know that if we
-                    // are reaching here then the alpha data in byte
-                    // 4 has been right all along.  And we know it
-                    // has been set to 0 the whole time, so that
-                    // means that everything is transparent so far.
-                    uint32_t* start = reinterpret_cast<uint32_t*>
-                                      (mImageData) + GetWidth() *
-                                      (mCurLine - 1);
-                    uint32_t heightDifference = GetHeight() -
-                                                mCurLine + 1;
-                    uint32_t pixelCount = GetWidth() *
-                                          heightDifference;
-
-                    memset(start, 0, pixelCount * sizeof(uint32_t));
-
+                  if (MOZ_UNLIKELY(!mHaveAlphaData && p[3])) {
                     PostHasTransparency();
                     mHaveAlphaData = true;
                   }
-                  SetPixel(d, p[2], p[1], p[0], mHaveAlphaData ?  p[3] : 0xFF);
+                  SetPixel(d, p[2], p[1], p[0], p[3]);
                 } else {
                   SetPixel(d, p[2], p[1], p[0]);
                 }
