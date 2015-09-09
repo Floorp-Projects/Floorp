@@ -167,6 +167,7 @@ private:
   // constructor immediately after the task queue is created.
   void InitializationTask();
 
+  void SetAudioCaptured(bool aCaptured);
   void DispatchAudioCaptured();
   void DispatchAudioUncaptured();
 
@@ -488,6 +489,8 @@ protected:
   // decoder monitor must be held with exactly one lock count. Called on the
   // state machine thread.
   void UpdateRenderedVideoFrames();
+
+  media::MediaSink* CreateAudioSink();
 
   // Stops the media sink and shut it down.
   // The decoder monitor must be held with exactly one lock count.
