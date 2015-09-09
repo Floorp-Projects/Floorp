@@ -66,11 +66,6 @@ public:
     aContext->SetState(aContext->ScrollState());
   }
 
-  virtual void OnScrolling(AccessibleCaretEventHub* aContext) override
-  {
-    aContext->mManager->OnScrolling();
-  }
-
   virtual void OnScrollPositionChanged(AccessibleCaretEventHub* aContext) override
   {
     aContext->mManager->OnScrollPositionChanged();
