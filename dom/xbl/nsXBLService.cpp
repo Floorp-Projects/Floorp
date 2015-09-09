@@ -651,7 +651,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
                          bool* aIsReady, nsXBLBinding** aResult)
 {
   // More than 6 binding URIs are rare, see bug 55070 comment 18.
-  nsAutoTArray<nsIURI*, 6> uris;
+  nsAutoTArray<nsCOMPtr<nsIURI>, 6> uris;
   return GetBinding(aBoundElement, aURI, aPeekOnly, aOriginPrincipal, aIsReady,
                     aResult, uris);
 }
@@ -708,7 +708,7 @@ nsresult
 nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
                          bool aPeekOnly, nsIPrincipal* aOriginPrincipal,
                          bool* aIsReady, nsXBLBinding** aResult,
-                         nsTArray<nsIURI*>& aDontExtendURIs)
+                         nsTArray<nsCOMPtr<nsIURI>>& aDontExtendURIs)
 {
   NS_ASSERTION(aPeekOnly || aResult,
                "Must have non-null out param if not just peeking to see "
@@ -784,7 +784,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   rv = protoBinding->ResolveBaseBinding();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIURI* baseBindingURI;
+  nsCOMPtr<nsIURI> baseBindingURI;
   nsXBLPrototypeBinding* baseProto = protoBinding->GetBasePrototype();
   if (baseProto) {
     baseBindingURI = baseProto->BindingURI();
@@ -818,7 +818,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
 
   nsRefPtr<nsXBLBinding> baseBinding;
   if (baseBindingURI) {
-    nsIContent* child = protoBinding->GetBindingElement();
+    nsCOMPtr<nsIContent> child = protoBinding->GetBindingElement();
     rv = GetBinding(aBoundElement, baseBindingURI, aPeekOnly,
                     child->NodePrincipal(), aIsReady,
                     getter_AddRefs(baseBinding), aDontExtendURIs);
@@ -830,6 +830,8 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
 
   if (!aPeekOnly) {
     // Make a new binding
+    protoBinding = docInfo->GetPrototypeBinding(ref);
+    NS_ENSURE_STATE(protoBinding);
     nsXBLBinding *newBinding = new nsXBLBinding(protoBinding);
 
     if (baseBinding) {
