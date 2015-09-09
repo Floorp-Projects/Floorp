@@ -6,6 +6,7 @@ include protocol PBackgroundIDBCursor;
 include protocol PBackgroundIDBDatabase;
 include protocol PBackgroundIDBDatabaseFile;
 include protocol PBackgroundIDBRequest;
+include protocol PBackgroundMutableFile;
 include protocol PBlob;
 
 include PBackgroundIDBSharedTypes;

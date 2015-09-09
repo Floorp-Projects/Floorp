@@ -1,0 +1,91 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackgroundFileRequest;
+include protocol PBackgroundMutableFile;
+include protocol PBlob;
+
+namespace mozilla {
+namespace dom {
+
+struct FileRequestGetMetadataParams
+{
+  bool size;
+  bool lastModified;
+};
+
+struct FileRequestReadParams
+{
+  uint64_t offset;
+  uint64_t size;
+};
+
+struct FileRequestStringData
+{
+  nsCString string;
+};
+
+struct FileRequestBlobData
+{
+  PBlob blob;
+};
+
+union FileRequestData
+{
+  FileRequestStringData;
+  FileRequestBlobData;
+};
+
+struct FileRequestWriteParams
+{
+  uint64_t offset;
+  FileRequestData data;
+  uint64_t dataLength;
+};
+
+struct FileRequestTruncateParams
+{
+  uint64_t offset;
+};
+
+struct FileRequestFlushParams
+{
+};
+
+struct FileRequestGetFileParams
+{
+};
+
+union FileRequestParams
+{
+  FileRequestGetMetadataParams;
+  FileRequestReadParams;
+  FileRequestWriteParams;
+  FileRequestTruncateParams;
+  FileRequestFlushParams;
+  FileRequestGetFileParams;
+};
+
+protocol PBackgroundFileHandle
+{
+  manager PBackgroundMutableFile;
+
+  manages PBackgroundFileRequest;
+
+parent:
+  DeleteMe();
+
+  Finish();
+  Abort();
+
+  PBackgroundFileRequest(FileRequestParams params);
+
+child:
+  __delete__();
+
+  Complete(bool aborted);
+};
+
+} // namespace dom
+} // namespace mozilla

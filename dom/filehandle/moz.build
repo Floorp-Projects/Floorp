@@ -4,26 +4,32 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+EXPORTS.mozilla.dom.filehandle += [
+    'ActorsChild.h',
+    'ActorsParent.h',
+    'SerializationHelpers.h',
+]
+
 EXPORTS.mozilla.dom += [
-    'AsyncHelper.h',
-    'FileHandle.h',
-    'FileHelper.h',
-    'FileRequest.h',
-    'FileService.h',
-    'MetadataHelper.h',
-    'MutableFile.h',
+    'FileHandleBase.h',
+    'FileHandleCommon.h',
+    'FileHandleStorage.h',
+    'FileRequestBase.h',
+    'MutableFileBase.h',
 ]
 
 UNIFIED_SOURCES += [
-    'AsyncHelper.cpp',
-    'FileHandle.cpp',
-    'FileHelper.cpp',
-    'FileRequest.cpp',
-    'FileService.cpp',
-    'FileStreamWrappers.cpp',
-    'MemoryStreams.cpp',
-    'MetadataHelper.cpp',
-    'MutableFile.cpp',
+    'ActorsChild.cpp',
+    'ActorsParent.cpp',
+    'FileHandleBase.cpp',
+    'FileHandleCommon.cpp',
+    'MutableFileBase.cpp',
+]
+
+IPDL_SOURCES += [
+    'PBackgroundFileHandle.ipdl',
+    'PBackgroundFileRequest.ipdl',
+    'PBackgroundMutableFile.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

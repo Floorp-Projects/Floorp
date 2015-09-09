@@ -14,6 +14,7 @@ namespace mozilla {
 namespace dom {
 
 class Element;
+class FileHandleThreadPool;
 
 namespace quota {
 
@@ -51,6 +52,9 @@ DeallocPIndexedDBPermissionRequestParent(
 
 already_AddRefed<mozilla::dom::quota::Client>
 CreateQuotaClient();
+
+FileHandleThreadPool*
+GetFileHandleThreadPool();
 
 } // namespace indexedDB
 } // namespace dom

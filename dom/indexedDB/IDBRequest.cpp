@@ -495,9 +495,12 @@ private:
   Notify(JSContext* aCx, Status aStatus) override;
 };
 
-IDBOpenDBRequest::IDBOpenDBRequest(IDBFactory* aFactory, nsPIDOMWindow* aOwner)
+IDBOpenDBRequest::IDBOpenDBRequest(IDBFactory* aFactory,
+                                   nsPIDOMWindow* aOwner,
+                                   bool aFileHandleDisabled)
   : IDBRequest(aOwner)
   , mFactory(aFactory)
+  , mFileHandleDisabled(aFileHandleDisabled)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aFactory);
@@ -521,7 +524,10 @@ IDBOpenDBRequest::CreateForWindow(IDBFactory* aFactory,
   MOZ_ASSERT(aOwner);
   MOZ_ASSERT(aScriptOwner);
 
-  nsRefPtr<IDBOpenDBRequest> request = new IDBOpenDBRequest(aFactory, aOwner);
+  bool fileHandleDisabled = !IndexedDatabaseManager::IsFileHandleEnabled();
+
+  nsRefPtr<IDBOpenDBRequest> request =
+    new IDBOpenDBRequest(aFactory, aOwner, fileHandleDisabled);
   CaptureCaller(request->mFilename, &request->mLineNo, &request->mColumn);
 
   request->SetScriptOwner(aScriptOwner);
@@ -538,7 +544,10 @@ IDBOpenDBRequest::CreateForJS(IDBFactory* aFactory,
   aFactory->AssertIsOnOwningThread();
   MOZ_ASSERT(aScriptOwner);
 
-  nsRefPtr<IDBOpenDBRequest> request = new IDBOpenDBRequest(aFactory, nullptr);
+  bool fileHandleDisabled = !IndexedDatabaseManager::IsFileHandleEnabled();
+
+  nsRefPtr<IDBOpenDBRequest> request =
+    new IDBOpenDBRequest(aFactory, nullptr, fileHandleDisabled);
   CaptureCaller(request->mFilename, &request->mLineNo, &request->mColumn);
 
   request->SetScriptOwner(aScriptOwner);

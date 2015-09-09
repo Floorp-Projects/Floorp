@@ -126,6 +126,7 @@ const uint32_t kDeleteTimeoutMs = 1000;
 
 const char kTestingPref[] = IDB_PREF_BRANCH_ROOT "testing";
 const char kPrefExperimental[] = IDB_PREF_BRANCH_ROOT "experimental";
+const char kPrefFileHandle[] = "dom.fileHandle.enabled";
 
 #define IDB_PREF_LOGGING_BRANCH_ROOT IDB_PREF_BRANCH_ROOT "logging."
 
@@ -146,6 +147,7 @@ Atomic<bool> gInitialized(false);
 Atomic<bool> gClosed(false);
 Atomic<bool> gTestingMode(false);
 Atomic<bool> gExperimentalFeaturesEnabled(false);
+Atomic<bool> gFileHandleEnabled(false);
 
 class DeleteFilesRunnable final
   : public nsIRunnable
@@ -381,6 +383,9 @@ IndexedDatabaseManager::Init()
   Preferences::RegisterCallbackAndCall(AtomicBoolPrefChangedCallback,
                                        kPrefExperimental,
                                        &gExperimentalFeaturesEnabled);
+  Preferences::RegisterCallbackAndCall(AtomicBoolPrefChangedCallback,
+                                       kPrefFileHandle,
+                                       &gFileHandleEnabled);
 
   // By default IndexedDB uses SQLite with PRAGMA synchronous = NORMAL. This
   // guarantees (unlike synchronous = OFF) atomicity and consistency, but not
@@ -446,6 +451,9 @@ IndexedDatabaseManager::Destroy()
   Preferences::UnregisterCallback(AtomicBoolPrefChangedCallback,
                                   kPrefExperimental,
                                   &gExperimentalFeaturesEnabled);
+  Preferences::UnregisterCallback(AtomicBoolPrefChangedCallback,
+                                  kPrefFileHandle,
+                                  &gFileHandleEnabled);
 
   Preferences::UnregisterCallback(LoggingModePrefChangedCallback,
                                   kPrefLoggingDetails);
@@ -740,6 +748,17 @@ IndexedDatabaseManager::ExperimentalFeaturesEnabled()
   }
 
   return gExperimentalFeaturesEnabled;
+}
+
+// static
+bool
+IndexedDatabaseManager::IsFileHandleEnabled()
+{
+  MOZ_ASSERT(gDBManager,
+             "IsFileHandleEnabled() called before indexedDB has been "
+             "initialized!");
+
+  return gFileHandleEnabled;
 }
 
 already_AddRefed<FileManager>
