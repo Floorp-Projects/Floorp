@@ -315,7 +315,7 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
     return NS_ERROR_DOM_ABORT_ERR;
   }
 
-  info = new PresentationResponderInfo(url, sessionId, device);
+  info = new PresentationPresentingInfo(url, sessionId, device);
   rv = info->Init(ctrlChannel);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ctrlChannel->Close(rv);
@@ -338,7 +338,7 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
     return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
   nsCOMPtr<Promise> realPromise = do_QueryInterface(promise);
-  static_cast<PresentationResponderInfo*>(info.get())->SetPromise(realPromise);
+  static_cast<PresentationPresentingInfo*>(info.get())->SetPromise(realPromise);
 
   return NS_OK;
 }
@@ -392,8 +392,8 @@ PresentationService::StartSession(const nsAString& aUrl,
 
   // Create session info  and set the callback. The callback is called when the
   // request is finished.
-  nsRefPtr<PresentationRequesterInfo> info =
-    new PresentationRequesterInfo(aUrl, aSessionId, aCallback);
+  nsRefPtr<PresentationSessionInfo> info =
+    new PresentationControllingInfo(aUrl, aSessionId, aCallback);
   mSessionInfo.Put(aSessionId, info);
 
   // Pop up a prompt and ask user to select a device.
@@ -558,7 +558,7 @@ PresentationService::NotifyReceiverReady(const nsAString& aSessionId,
     mRespondingWindowIds.Put(aSessionId, aWindowId);
   }
 
-  return static_cast<PresentationResponderInfo*>(info.get())->NotifyResponderReady();
+  return static_cast<PresentationPresentingInfo*>(info.get())->NotifyResponderReady();
 }
 
 NS_IMETHODIMP
