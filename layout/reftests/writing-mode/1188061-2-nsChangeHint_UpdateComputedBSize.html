@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<style>
+
+html { writing-mode: vertical-rl; }
+
+</style>
+<body onload="run()">
+
+<p>The following image should have uniform padding around all sides.</p>
+
+
+<div style="width: 200px; float: left; background: yellow; padding: 5px;">
+  <div style="width: 100%">
+    <!-- 32x32 blue image -->
+    <img style="width: 100%" src="data:image/png; charset=binary;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAChJREFUSMftzUEBAAAEBLCjf2dK8NsKrJLJp84zgUAgEAgEAoFAcGUBocYBP+pqhN4AAAAASUVORK5CYII=">
+  </div>
+</div>
+
+<p style="clear:left">Note that if you zoom the page after it loads
+it fixes the problem by causing a reflow.</p>
+
+<script>
+
+function run() {
+  /* needs to happen after the image loads */
+  var img = document.getElementsByTagName("img")[0];
+  var flush_and_ignore = img.offsetTop;
+  img.parentNode.parentNode.style.width = "150px";
+
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
