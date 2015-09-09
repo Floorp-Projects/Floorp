@@ -75,9 +75,6 @@ public:
   // Handle scroll-end event.
   virtual void OnScrollEnd();
 
-  // Handle NS_WHEEL_WHEEL event.
-  virtual void OnScrolling();
-
   // Handle ScrollPositionChanged from nsIScrollObserver. This might be called
   // at anytime, not necessary between OnScrollStart and OnScrollEnd.
   virtual void OnScrollPositionChanged();

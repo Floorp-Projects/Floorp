@@ -416,22 +416,6 @@ AccessibleCaretManager::OnScrollEnd()
 }
 
 void
-AccessibleCaretManager::OnScrolling()
-{
-  if (mCaretMode != GetCaretMode()) {
-    return;
-  }
-
-  if (GetCaretMode() == CaretMode::Cursor) {
-    AC_LOG("%s: HideCarets()", __FUNCTION__);
-    HideCarets();
-  } else {
-    AC_LOG("%s: UpdateCarets()", __FUNCTION__);
-    UpdateCarets();
-  }
-}
-
-void
 AccessibleCaretManager::OnScrollPositionChanged()
 {
   if (mCaretMode != GetCaretMode()) {
