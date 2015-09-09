@@ -11,6 +11,10 @@
 #include "nsISupports.h"
 #include "nsTArray.h"
 
+#ifdef DEBUG
+#include "nsIThread.h"
+#endif
+
 namespace mozilla {
 class ErrorResult;
 namespace layers {

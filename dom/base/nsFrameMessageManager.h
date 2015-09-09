@@ -34,9 +34,6 @@
 class nsIFrameLoader;
 
 namespace mozilla {
-
-struct OwningSerializedStructuredCloneBuffer;
-
 namespace dom {
 
 class nsIContentParent;
@@ -57,9 +54,6 @@ enum MessageManagerFlags {
 
 class MessageManagerCallback
 {
-protected:
-  typedef mozilla::OwningSerializedStructuredCloneBuffer OwningSerializedStructuredCloneBuffer;
-
 public:
   virtual ~MessageManagerCallback() {}
 
@@ -73,7 +67,7 @@ public:
                                      StructuredCloneIPCHelper& aHelper,
                                      JS::Handle<JSObject*> aCpows,
                                      nsIPrincipal* aPrincipal,
-                                     nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal,
+                                     nsTArray<StructuredCloneIPCHelper>* aRetVal,
                                      bool aIsSync)
   {
     return true;
@@ -170,7 +164,6 @@ class nsFrameMessageManager final : public nsIContentFrameMessageManager,
 {
   friend class mozilla::dom::MessageManagerReporter;
   typedef mozilla::dom::StructuredCloneIPCHelper StructuredCloneIPCHelper;
-  typedef mozilla::OwningSerializedStructuredCloneBuffer OwningSerializedStructuredCloneBuffer;
 public:
   nsFrameMessageManager(mozilla::dom::ipc::MessageManagerCallback* aCallback,
                         nsFrameMessageManager* aParentManager,
@@ -201,7 +194,7 @@ public:
                           const nsAString& aMessage,
                           bool aIsSync, StructuredCloneIPCHelper* aCloneHelper,
                           mozilla::jsipc::CpowHolder* aCpows, nsIPrincipal* aPrincipal,
-                          nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal);
+                          nsTArray<StructuredCloneIPCHelper>* aRetVal);
 
   void AddChildManager(nsFrameMessageManager* aManager);
   void RemoveChildManager(nsFrameMessageManager* aManager)
@@ -269,7 +262,7 @@ private:
                           bool aTargetClosed, const nsAString& aMessage,
                           bool aIsSync, StructuredCloneIPCHelper* aCloneHelper,
                           mozilla::jsipc::CpowHolder* aCpows, nsIPrincipal* aPrincipal,
-                          nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal);
+                          nsTArray<StructuredCloneIPCHelper>* aRetVal);
 
   NS_IMETHOD LoadScript(const nsAString& aURL,
                         bool aAllowDelayedLoad,
