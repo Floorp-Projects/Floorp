@@ -35,7 +35,7 @@ class nsInProcessTabChildGlobal : public mozilla::DOMEventTargetHelper,
                                   public nsSupportsWeakReference,
                                   public mozilla::dom::ipc::MessageManagerCallback
 {
-  typedef mozilla::OwningSerializedStructuredCloneBuffer OwningSerializedStructuredCloneBuffer;
+  typedef mozilla::dom::StructuredCloneIPCHelper StructuredCloneIPCHelper;
 
 public:
   nsInProcessTabChildGlobal(nsIDocShell* aShell, nsIContent* aOwner,
@@ -83,14 +83,14 @@ public:
    */
   virtual bool DoSendBlockingMessage(JSContext* aCx,
                                       const nsAString& aMessage,
-                                      mozilla::dom::StructuredCloneIPCHelper& aHelper,
+                                      StructuredCloneIPCHelper& aHelper,
                                       JS::Handle<JSObject *> aCpows,
                                       nsIPrincipal* aPrincipal,
-                                      nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal,
+                                      nsTArray<StructuredCloneIPCHelper>* aRetVal,
                                       bool aIsSync) override;
   virtual bool DoSendAsyncMessage(JSContext* aCx,
                                   const nsAString& aMessage,
-                                  mozilla::dom::StructuredCloneIPCHelper& aHelper,
+                                  StructuredCloneIPCHelper& aHelper,
                                   JS::Handle<JSObject *> aCpows,
                                   nsIPrincipal* aPrincipal) override;
 

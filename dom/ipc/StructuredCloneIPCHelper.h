@@ -9,6 +9,10 @@
 
 #include "mozilla/dom/StructuredCloneHelper.h"
 
+namespace IPC {
+class Message;
+}
+
 namespace mozilla {
 namespace dom {
 
@@ -24,6 +28,8 @@ public:
     , mDataOwned(eNone)
   {}
 
+  StructuredCloneIPCHelper(const StructuredCloneIPCHelper&) = delete;
+
   ~StructuredCloneIPCHelper()
   {
     if (mDataOwned == eAllocated) {
@@ -32,6 +38,9 @@ public:
       js_free(mData);
     }
   }
+
+  StructuredCloneIPCHelper&
+  operator=(const StructuredCloneIPCHelper& aOther) = delete;
 
   const nsTArray<nsRefPtr<BlobImpl>>& BlobImpls() const
   {
@@ -70,6 +79,10 @@ public:
   {
     return mDataLength;
   }
+
+  // For IPC serialization
+  void WriteIPCParams(IPC::Message* aMessage) const;
+  bool ReadIPCParams(const IPC::Message* aMessage, void** aIter);
 
 private:
   uint64_t* mData;

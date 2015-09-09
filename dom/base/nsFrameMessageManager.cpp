@@ -763,7 +763,7 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
     objects = &aObjects.toObject();
   }
 
-  nsTArray<OwningSerializedStructuredCloneBuffer> retval;
+  nsTArray<StructuredCloneIPCHelper> retval;
 
   sSendingSyncMessage |= aIsSync;
   bool ok = mCallback->DoSendBlockingMessage(aCx, aMessageName, helper, objects,
@@ -782,8 +782,9 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
 
   for (uint32_t i = 0; i < len; ++i) {
     JS::Rooted<JS::Value> ret(aCx);
-    if (!JS_ReadStructuredClone(aCx, retval[i].data, retval[i].dataLength,
-                                JS_STRUCTURED_CLONE_VERSION, &ret, nullptr, nullptr)) {
+    ErrorResult rv;
+    retval[i].Read(aCx, &ret, rv);
+    if (rv.Failed()) {
       MOZ_ASSERT(false, "Unable to read structured clone in SendMessage");
       return NS_ERROR_UNEXPECTED;
     }
@@ -1072,7 +1073,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       StructuredCloneIPCHelper* aCloneHelper,
                                       mozilla::jsipc::CpowHolder* aCpows,
                                       nsIPrincipal* aPrincipal,
-                                      nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal)
+                                      nsTArray<StructuredCloneIPCHelper>* aRetVal)
 {
   return ReceiveMessage(aTarget, aTargetFrameLoader, mClosed, aMessage, aIsSync,
                         aCloneHelper, aCpows, aPrincipal, aRetVal);
@@ -1087,7 +1088,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       StructuredCloneIPCHelper* aCloneHelper,
                                       mozilla::jsipc::CpowHolder* aCpows,
                                       nsIPrincipal* aPrincipal,
-                                      nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal)
+                                      nsTArray<StructuredCloneIPCHelper>* aRetVal)
 {
   nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =
     mListeners.Get(aMessage);
@@ -1266,8 +1267,11 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           continue;
         }
         if (aRetVal) {
-          JSAutoStructuredCloneBuffer buffer;
-          if (!buffer.write(cx, rval)) {
+          ErrorResult rv;
+          StructuredCloneIPCHelper* helper = aRetVal->AppendElement();
+          helper->Write(cx, rval, rv);
+          if (NS_WARN_IF(rv.Failed())) {
+            aRetVal->RemoveElementAt(aRetVal->Length() - 1);
             nsString msg = aMessage + NS_LITERAL_STRING(": message reply cannot be cloned. Are you trying to send an XPCOM object?");
 
             nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
@@ -1281,9 +1285,6 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
             JS_ClearPendingException(cx);
             continue;
           }
-
-          OwningSerializedStructuredCloneBuffer* data = aRetVal->AppendElement();
-          buffer.steal(&data->data, &data->dataLength);
         }
       }
     }
@@ -1994,7 +1995,7 @@ public:
                                      StructuredCloneIPCHelper& aHelper,
                                      JS::Handle<JSObject *> aCpows,
                                      nsIPrincipal* aPrincipal,
-                                     nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal,
+                                     nsTArray<StructuredCloneIPCHelper>* aRetVal,
                                      bool aIsSync) override
   {
     mozilla::dom::ContentChild* cc =
@@ -2085,7 +2086,7 @@ public:
                                      StructuredCloneIPCHelper& aHelper,
                                      JS::Handle<JSObject *> aCpows,
                                      nsIPrincipal* aPrincipal,
-                                     nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal,
+                                     nsTArray<StructuredCloneIPCHelper>* aRetVal,
                                      bool aIsSync) override
   {
     SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
