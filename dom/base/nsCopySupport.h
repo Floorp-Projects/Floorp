@@ -64,8 +64,8 @@ class nsCopySupport
 
     /**
      * Fires a cut, copy or paste event, on the given presshell, depending
-     * on the value of aEventMessage, which should be either NS_CUT, NS_COPY or
-     * NS_PASTE, and perform the default copy action if the event was not
+     * on the value of aEventMessage, which should be either eCut, eCopy or
+     * ePaste, and perform the default copy action if the event was not
      * cancelled.
      *
      * If aSelection is specified, then this selection is used as the target

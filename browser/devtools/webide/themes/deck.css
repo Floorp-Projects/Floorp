@@ -4,7 +4,7 @@
 
 html {
   font: message-box;
-  font-size: 15px;
+  font-size: 0.9em;
   font-weight: normal;
   margin: 0;
   height: 100%;
@@ -28,7 +28,7 @@ body {
 }
 
 h1 {
-  font-size: 2.5em;
+  font-size: 2em;
   font-weight: lighter;
   line-height: 1.2;
   margin: 0;
@@ -60,7 +60,7 @@ th, td {
 }
 
 th {
-  min-width: 130px;
+  min-width: 100px;
 }
 
 th:first-of-type, td:first-of-type {

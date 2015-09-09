@@ -23,7 +23,7 @@ nsWindowBase::DispatchPluginEvent(const MSG& aMsg)
   if (!PluginHasFocus()) {
     return false;
   }
-  WidgetPluginEvent pluginEvent(true, NS_PLUGIN_INPUT_EVENT, this);
+  WidgetPluginEvent pluginEvent(true, ePluginInputEvent, this);
   nsIntPoint point(0, 0);
   InitEvent(pluginEvent, &point);
   NPEvent npEvent;

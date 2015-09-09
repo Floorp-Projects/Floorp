@@ -17,7 +17,7 @@ namespace gfx {
 
 #ifdef HAVE_YCBCR_TO_RGB565
 // Convert a frame of YUV to 16 bit RGB565.
-NS_GFX_(void) ConvertYCbCrToRGB565(const uint8* yplane,
+void ConvertYCbCrToRGB565(const uint8* yplane,
                                    const uint8* uplane,
                                    const uint8* vplane,
                                    uint8* rgbframe,
@@ -31,14 +31,14 @@ NS_GFX_(void) ConvertYCbCrToRGB565(const uint8* yplane,
                                    YUVType yuv_type);
 
 // Used to test if we have an accelerated version.
-NS_GFX_(bool) IsConvertYCbCrToRGB565Fast(int pic_x,
+bool IsConvertYCbCrToRGB565Fast(int pic_x,
                                          int pic_y,
                                          int pic_width,
                                          int pic_height,
                                          YUVType yuv_type);
 
 // Scale a frame of YUV to 16 bit RGB565.
-NS_GFX_(void) ScaleYCbCrToRGB565(const uint8_t *yplane,
+void ScaleYCbCrToRGB565(const uint8_t *yplane,
                                  const uint8_t *uplane,
                                  const uint8_t *vplane,
                                  uint8_t *rgbframe,
@@ -55,7 +55,7 @@ NS_GFX_(void) ScaleYCbCrToRGB565(const uint8_t *yplane,
                                  ScaleFilter filter);
 
 // Used to test if we have an accelerated version.
-NS_GFX_(bool) IsScaleYCbCrToRGB565Fast(int source_x0,
+bool IsScaleYCbCrToRGB565Fast(int source_x0,
                                        int source_y0,
                                        int source_width,
                                        int source_height,

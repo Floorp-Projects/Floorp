@@ -1,7 +1,7 @@
 diff --git a/gfx/ycbcr/yuv_convert.cpp b/gfx/ycbcr/yuv_convert.cpp
 --- a/gfx/ycbcr/yuv_convert.cpp
 +++ b/gfx/ycbcr/yuv_convert.cpp
-@@ -337,16 +337,17 @@ NS_GFX_(void) ScaleYCbCrToRGB32(const ui
+@@ -337,16 +337,17 @@ void ScaleYCbCrToRGB32(const uint* yplan
                                           source_dx_uv >> kFractionBits);
          }
        }

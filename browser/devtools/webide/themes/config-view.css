@@ -23,7 +23,7 @@ html, body {
 }
 
 #custom-value-name {
-  width: 70%;
+  width: 50%;
 }
 
 header {
@@ -38,13 +38,15 @@ header {
 }
 
 #device-fields td {
-  background-color: #f1f1f1;
-  border-bottom: 1px solid #ccc;
-  border-right: 1px solid #fff;
+  background-color: #F9F9F9;
+  border-bottom: 1px solid #CCC;
+  border-right: 1px solid #FFF;
+  font-size: 0.75em;
 }
 
 #device-fields td:first-child {
-  min-width: 400px;
+  max-width: 250px;
+  min-width: 150px;
 }
 
 #device-fields td.preference-name, #device-fields td.setting-name {
@@ -65,7 +67,7 @@ header {
 }
 
 #device-fields .custom-input {
-  width: 300px;
+  width: 130px;
 }
 
 #search {
