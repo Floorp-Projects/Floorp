@@ -946,11 +946,97 @@ BluetoothServiceBluedroid::GetServiceChannel(
   return NS_OK;
 }
 
+struct BluetoothServiceBluedroid::GetRemoteServicesRequest final
+{
+  GetRemoteServicesRequest(const nsAString& aDeviceAddress,
+                           BluetoothProfileManagerBase* aManager)
+    : mDeviceAddress(aDeviceAddress)
+    , mManager(aManager)
+  {
+    MOZ_ASSERT(!mDeviceAddress.IsEmpty());
+    MOZ_ASSERT(mManager);
+  }
+
+  const nsString mDeviceAddress;
+  BluetoothProfileManagerBase* mManager;
+};
+
+class BluetoothServiceBluedroid::GetRemoteServicesResultHandler final
+  : public BluetoothResultHandler
+{
+public:
+  GetRemoteServicesResultHandler(
+    nsTArray<GetRemoteServicesRequest>& aGetRemoteServicesArray,
+    const nsAString& aDeviceAddress,
+    BluetoothProfileManagerBase* aManager)
+    : mGetRemoteServicesArray(aGetRemoteServicesArray)
+    , mDeviceAddress(aDeviceAddress)
+    , mManager(aManager)
+  { }
+
+  void OnError(BluetoothStatus aStatus) override
+  {
+    // Find call in array
+
+    ssize_t i = FindRequest();
+
+    if (i == -1) {
+      BT_WARNING("No GetRemoteServices request found");
+      return;
+    }
+
+    // Cleanup array
+    mGetRemoteServicesArray.RemoveElementAt(i);
+
+    // There's no error-signaling mechanism; just call manager
+    mManager->OnUpdateSdpRecords(mDeviceAddress);
+  }
+
+  void CancelDiscovery() override
+  {
+    // Disabled discovery mode, now perform SDP operation.
+    sBtInterface->GetRemoteServices(mDeviceAddress, this);
+  }
+
+private:
+  ssize_t FindRequest() const
+  {
+    for (size_t i = 0; i < mGetRemoteServicesArray.Length(); ++i) {
+      if ((mGetRemoteServicesArray[i].mDeviceAddress == mDeviceAddress) &&
+          (mGetRemoteServicesArray[i].mManager == mManager)) {
+        return i;
+      }
+    }
+
+    return -1;
+  }
+
+  nsTArray<GetRemoteServicesRequest>& mGetRemoteServicesArray;
+  const nsString mDeviceAddress;
+  BluetoothProfileManagerBase* mManager;
+};
+
 bool
 BluetoothServiceBluedroid::UpdateSdpRecords(
   const nsAString& aDeviceAddress,
   BluetoothProfileManagerBase* aManager)
 {
+  mGetRemoteServicesArray.AppendElement(
+    GetRemoteServicesRequest(aDeviceAddress, aManager));
+
+  nsRefPtr<BluetoothResultHandler> res =
+    new GetRemoteServicesResultHandler(mGetRemoteServicesArray,
+                                       aDeviceAddress, aManager);
+
+  /* Stop discovery of remote devices here, because SDP operations
+   * won't be performed while the adapter is in discovery mode.
+   */
+  if (mDiscovering) {
+    sBtInterface->CancelDiscovery(res);
+  } else {
+    sBtInterface->GetRemoteServices(aDeviceAddress, res);
+  }
+
   return true;
 }
 
@@ -1736,10 +1822,29 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
       AppendNamedValue(propertiesArray, "Cod", cod);
 
     } else if (p.mType == PROPERTY_UUIDS) {
+
+      size_t index;
+
+      // Handler for |UpdateSdpRecords|
+
+      for (index = 0; index < mGetRemoteServicesArray.Length(); ++index) {
+        if (mGetRemoteServicesArray[index].mDeviceAddress == aBdAddr) {
+          break;
+        }
+      }
+
+      if (index < mGetRemoteServicesArray.Length()) {
+        mGetRemoteServicesArray[index].mManager->OnUpdateSdpRecords(aBdAddr);
+        mGetRemoteServicesArray.RemoveElementAt(index);
+        continue; // continue with outer loop
+      }
+
+      // Handler for |FetchUuidsInternal|
+
       nsTArray<nsString> uuids;
 
       // Construct a sorted uuid set
-      for (uint32_t index = 0; index < p.mUuidArray.Length(); ++index) {
+      for (index = 0; index < p.mUuidArray.Length(); ++index) {
         nsAutoString uuid;
         UuidToString(p.mUuidArray[index], uuid);
 
