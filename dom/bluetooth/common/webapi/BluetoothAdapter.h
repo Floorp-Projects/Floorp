@@ -343,21 +343,6 @@ private:
   Sequence<vCardProperties> getVCardProperties(const BluetoothValue &aValue);
 
   /**
-   * Convert string to vCardOrderType.
-   *
-   * @param aString [in] String to convert
-   */
-  vCardOrderType ConvertStringToVCardOrderType(const nsAString& aString);
-
-  /**
-   * Convert string to vCardSearchKeyType.
-   *
-   * @param aString [in] String to convert
-   */
-  vCardSearchKeyType ConvertStringToVCardSearchKeyType(
-    const nsAString& aString);
-
-  /**
    * Fire BluetoothAttributeEvent to trigger onattributechanged event handler.
    *
    * @param aTypes [in] Array of changed attributes. Must be non-empty.

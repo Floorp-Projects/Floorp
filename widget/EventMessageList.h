@@ -206,10 +206,10 @@ NS_EVENT_MESSAGE(eXULCommandEventFirst, 3000)
 NS_EVENT_MESSAGE(eXULCommand,           eXULCommandEventFirst)
 
 // Cut, copy, paste events
-NS_EVENT_MESSAGE(NS_CUTCOPYPASTE_EVENT_START, 3100)
-NS_EVENT_MESSAGE(NS_COPY,               NS_CUTCOPYPASTE_EVENT_START)
-NS_EVENT_MESSAGE(NS_CUT,                NS_CUTCOPYPASTE_EVENT_START + 1)
-NS_EVENT_MESSAGE(NS_PASTE,              NS_CUTCOPYPASTE_EVENT_START + 2)
+NS_EVENT_MESSAGE(eClipboardEventFirst,  3100)
+NS_EVENT_MESSAGE(eCopy,                 eClipboardEventFirst)
+NS_EVENT_MESSAGE(eCut,                  eClipboardEventFirst + 1)
+NS_EVENT_MESSAGE(ePaste,                eClipboardEventFirst + 2)
 
 // Query the content information
 NS_EVENT_MESSAGE(NS_QUERY_CONTENT_EVENT_START,       3200)
@@ -244,28 +244,27 @@ NS_EVENT_MESSAGE(NS_QUERY_CHARACTER_AT_POINT,        NS_QUERY_CONTENT_EVENT_STAR
 NS_EVENT_MESSAGE(NS_QUERY_DOM_WIDGET_HITTEST,        NS_QUERY_CONTENT_EVENT_START + 9)
 
 // Video events
-NS_EVENT_MESSAGE(NS_MEDIA_EVENT_START,  3300)
-NS_EVENT_MESSAGE(NS_LOADSTART,          NS_MEDIA_EVENT_START)
-NS_EVENT_MESSAGE(NS_PROGRESS,           NS_MEDIA_EVENT_START + 1)
-NS_EVENT_MESSAGE(NS_SUSPEND,            NS_MEDIA_EVENT_START + 2)
-NS_EVENT_MESSAGE(NS_EMPTIED,            NS_MEDIA_EVENT_START + 3)
-NS_EVENT_MESSAGE(NS_STALLED,            NS_MEDIA_EVENT_START + 4)
-NS_EVENT_MESSAGE(NS_PLAY,               NS_MEDIA_EVENT_START + 5)
-NS_EVENT_MESSAGE(NS_PAUSE,              NS_MEDIA_EVENT_START + 6)
-NS_EVENT_MESSAGE(NS_LOADEDMETADATA,     NS_MEDIA_EVENT_START + 7)
-NS_EVENT_MESSAGE(NS_LOADEDDATA,         NS_MEDIA_EVENT_START + 8)
-NS_EVENT_MESSAGE(NS_WAITING,            NS_MEDIA_EVENT_START + 9)
-NS_EVENT_MESSAGE(NS_PLAYING,            NS_MEDIA_EVENT_START + 10)
-NS_EVENT_MESSAGE(NS_CANPLAY,            NS_MEDIA_EVENT_START + 11)
-NS_EVENT_MESSAGE(NS_CANPLAYTHROUGH,     NS_MEDIA_EVENT_START + 12)
-NS_EVENT_MESSAGE(NS_SEEKING,            NS_MEDIA_EVENT_START + 13)
-NS_EVENT_MESSAGE(NS_SEEKED,             NS_MEDIA_EVENT_START + 14)
-NS_EVENT_MESSAGE(NS_TIMEUPDATE,         NS_MEDIA_EVENT_START + 15)
-NS_EVENT_MESSAGE(NS_ENDED,              NS_MEDIA_EVENT_START + 16)
-NS_EVENT_MESSAGE(NS_RATECHANGE,         NS_MEDIA_EVENT_START + 17)
-NS_EVENT_MESSAGE(NS_DURATIONCHANGE,     NS_MEDIA_EVENT_START + 18)
-NS_EVENT_MESSAGE(NS_VOLUMECHANGE,       NS_MEDIA_EVENT_START + 19)
-NS_EVENT_MESSAGE(NS_NEED_KEY,           NS_MEDIA_EVENT_START + 20)
+NS_EVENT_MESSAGE(eMediaEventFirst,      3300)
+NS_EVENT_MESSAGE(eLoadStart,            eMediaEventFirst)
+NS_EVENT_MESSAGE(eProgress,             eMediaEventFirst + 1)
+NS_EVENT_MESSAGE(eSuspend,              eMediaEventFirst + 2)
+NS_EVENT_MESSAGE(eEmptied,              eMediaEventFirst + 3)
+NS_EVENT_MESSAGE(eStalled,              eMediaEventFirst + 4)
+NS_EVENT_MESSAGE(ePlay,                 eMediaEventFirst + 5)
+NS_EVENT_MESSAGE(ePause,                eMediaEventFirst + 6)
+NS_EVENT_MESSAGE(eLoadedMetaData,       eMediaEventFirst + 7)
+NS_EVENT_MESSAGE(eLoadedData,           eMediaEventFirst + 8)
+NS_EVENT_MESSAGE(eWaiting,              eMediaEventFirst + 9)
+NS_EVENT_MESSAGE(ePlaying,              eMediaEventFirst + 10)
+NS_EVENT_MESSAGE(eCanPlay,              eMediaEventFirst + 11)
+NS_EVENT_MESSAGE(eCanPlayThrough,       eMediaEventFirst + 12)
+NS_EVENT_MESSAGE(eSeeking,              eMediaEventFirst + 13)
+NS_EVENT_MESSAGE(eSeeked,               eMediaEventFirst + 14)
+NS_EVENT_MESSAGE(eTimeUpdate,           eMediaEventFirst + 15)
+NS_EVENT_MESSAGE(eEnded,                eMediaEventFirst + 16)
+NS_EVENT_MESSAGE(eRateChange,           eMediaEventFirst + 17)
+NS_EVENT_MESSAGE(eDurationChange,       eMediaEventFirst + 18)
+NS_EVENT_MESSAGE(eVolumeChange,         eMediaEventFirst + 19)
 
 // paint notification events
 NS_EVENT_MESSAGE(NS_NOTIFYPAINT_START,  3400)
@@ -291,14 +290,13 @@ NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_EDGE_CANCELED,  NS_SIMPLE_GESTURE_EVENT_START
 NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_EDGE_COMPLETED, NS_SIMPLE_GESTURE_EVENT_START + 15)
 
 // These are used to send native events to plugins.
-NS_EVENT_MESSAGE(NS_PLUGIN_EVENT_START, 3600)
-NS_EVENT_MESSAGE(NS_PLUGIN_INPUT_EVENT, NS_PLUGIN_EVENT_START)
-NS_EVENT_MESSAGE(NS_PLUGIN_FOCUS_EVENT, NS_PLUGIN_EVENT_START + 1)
+NS_EVENT_MESSAGE(ePluginEventFirst,     3600)
+NS_EVENT_MESSAGE(ePluginInputEvent,     ePluginEventFirst)
 
 // Events to manipulate selection (WidgetSelectionEvent)
-NS_EVENT_MESSAGE(NS_SELECTION_EVENT_START, 3700)
+NS_EVENT_MESSAGE(eSelectionEventFirst,  3700)
 // Clear any previous selection and set the given range as the selection
-NS_EVENT_MESSAGE(NS_SELECTION_SET,      NS_SELECTION_EVENT_START)
+NS_EVENT_MESSAGE(eSetSelection,         eSelectionEventFirst)
 
 // Events of commands for the contents
 NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_EVENT_START,        3800)
