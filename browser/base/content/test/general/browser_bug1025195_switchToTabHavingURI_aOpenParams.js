@@ -25,6 +25,12 @@ add_task(function test_ignoreFragment() {
   switchTab("about:home#1", false);
   isnot(tabRefAboutHome, gBrowser.selectedTab, "Selected tab should not be initial about:blank tab");
   is(gBrowser.tabs.length, numTabsAtStart + 1, "Should have one new tab opened");
+  switchTab("about:mozilla", true);
+  switchTab("about:home", true, {ignoreFragment: true});
+  yield promiseWaitForCondition(function() {
+    return tabRefAboutHome.linkedBrowser.currentURI.spec == "about:home";
+  });
+  is(tabRefAboutHome.linkedBrowser.currentURI.spec, "about:home", "about:home shouldn't have hash");
   switchTab("about:about", false, { ignoreFragment: true });
   cleanupTestTabs();
 });

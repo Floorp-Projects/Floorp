@@ -43,8 +43,8 @@
       srcdir.load();
 
       is(builtin.loader.mapping.length,
-         srcdir.loader.mapping.length + 1,
-         "The built-in loader should have only one more mapping for testing.");
+         srcdir.loader.mapping.length,
+         "The built-in loader should have the same number of mapping than testing.");
 
       Services.prefs.clearUserPref(SRCDIR_PREF);
     </script>
