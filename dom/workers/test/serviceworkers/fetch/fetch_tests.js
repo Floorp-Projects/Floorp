@@ -334,7 +334,4 @@ fetch(new Request('empty-header', {headers:{"emptyheader":""}}))
 }).then(function(body) {
   my_ok(body == "emptyheader", "The empty header was observed in the fetch event");
   finish();
-}, function(err) {
-  my_ok(false, "A promise was rejected with " + err);
-  finish();
 });
