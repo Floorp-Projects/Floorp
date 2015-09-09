@@ -31,8 +31,9 @@ from mozharness.mozilla.testing.codecoverage import (
     code_coverage_config_options
 )
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
+from mozharness.mozilla.buildbot import TBPL_WARNING
 
-SUITE_CATEGORIES = ['gtest', 'cppunittest', 'jittest', 'mochitest', 'reftest', 'xpcshell', 'mozbase', 'mozmill', 'webapprt']
+SUITE_CATEGORIES = ['cppunittest', 'jittest', 'mochitest', 'reftest', 'xpcshell', 'mozbase', 'mozmill', 'webapprt']
 
 
 # DesktopUnittest {{{1
@@ -77,14 +78,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "help": "Specify which cpp unittest suite to run. "
                     "Suites are defined in the config file\n."
                     "Examples: 'cppunittest'"}
-         ],
-        [['--gtest-suite', ], {
-            "action": "extend",
-            "dest": "specified_gtest_suites",
-            "type": "string",
-            "help": "Specify which gtest suite to run. "
-                    "Suites are defined in the config file\n."
-                    "Examples: 'gtest'"}
          ],
         [['--jittest-suite', ], {
             "action": "extend",
@@ -214,7 +207,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         dirs['abs_reftest_dir'] = os.path.join(dirs['abs_test_install_dir'], "reftest")
         dirs['abs_xpcshell_dir'] = os.path.join(dirs['abs_test_install_dir'], "xpcshell")
         dirs['abs_cppunittest_dir'] = os.path.join(dirs['abs_test_install_dir'], "cppunittest")
-        dirs['abs_gtest_dir'] = os.path.join(dirs['abs_test_install_dir'], "gtest")
         dirs['abs_blob_upload_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'blobber_upload_dir')
         dirs['abs_jittest_dir'] = os.path.join(dirs['abs_test_install_dir'], "jit-test", "jit-test")
         dirs['abs_mozbase_dir'] = os.path.join(dirs['abs_test_install_dir'], "mozbase")
@@ -347,10 +339,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 'abs_res_dir': abs_res_dir,
                 'raw_log_file': raw_log_file,
                 'error_summary_file': error_summary_file,
-                'gtest_dir': os.path.join(dirs['abs_test_install_dir'],
-                                          'gtest'),
             }
-
             # TestingMixin._download_and_extract_symbols() will set
             # self.symbols_path when downloading/extracting.
             if self.symbols_path:
@@ -479,8 +468,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                                   preflight_run_method=self.preflight_xpcshell)
         self._run_category_suites('cppunittest',
                                   preflight_run_method=self.preflight_cppunittest)
-        self._run_category_suites('gtest',
-                                  preflight_run_method=self.preflight_gtest)
         self._run_category_suites('jittest')
         self._run_category_suites('mozbase')
         self._run_category_suites('mozmill',
@@ -527,21 +514,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         files.extend(glob.glob(os.path.join(abs_cppunittest_dir, '*.manifest')))
         for f in files:
             self.move(f, abs_res_dir)
-
-    def preflight_gtest(self, suites):
-        abs_res_dir = self.query_abs_res_dir()
-        abs_app_dir = self.query_abs_app_dir()
-        dirs = self.query_abs_dirs()
-        abs_gtest_dir = dirs['abs_gtest_dir']
-        dirs['abs_test_bin_dir'] = os.path.join(dirs['abs_test_install_dir'], 'bin')
-
-        files = glob.glob(os.path.join(dirs['abs_test_bin_plugins_dir'], 'gmp-*'))
-        files.append(os.path.join(abs_gtest_dir, 'dependentlibs.list.gtest'))
-        for f in files:
-            self.move(f, abs_res_dir)
-
-        self.copytree(os.path.join(abs_gtest_dir, 'gtest_bin'),
-                      os.path.join(abs_app_dir))
 
     def preflight_mozmill(self, suites):
         c = self.config
@@ -634,7 +606,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 # 3) checking to see if the return code is in success_codes
 
                 success_codes = None
-                if self._is_windows() and suite_category != 'gtest':
+                if self._is_windows():
                     # bug 1120644
                     success_codes = [0, 1]
 
