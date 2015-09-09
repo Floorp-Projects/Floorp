@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  div {
+    position: absolute;
+    top: 0;
+    left: -500px;
+    height: 20px;
+    width: 500px;
+    color: red;
+    background: linear-gradient(to left, currentColor, currentColor 2px, transparent);
+  }
+
+  .zero {
+    color: blue;
+    top: 20px;
+  }
+
+  .positive {
+    color: green;
+    top: 40px;
+  }
+
+  .negative.move { animation: 5s -1s move linear forwards; }
+  .zero.move { animation: 5s 0s move linear forwards; }
+  .positive.move { animation: 5s 1s move linear forwards; }
+
+  @keyframes move {
+    to {
+      transform: translateX(500px);
+    }
+  }
+  </style>
+</head>
+<body>
+  <div class="negative"></div>
+  <div class="zero"></div>
+  <div class="positive"></div>
+  <script>
+    var negative = document.querySelector(".negative");
+    var zero = document.querySelector(".zero");
+    var positive = document.querySelector(".positive");
+
+    // The non-delayed animation starts now.
+    zero.classList.add("move");
+    // The negative-delayed animation starts in 1 second.
+    setTimeout(function() {
+      negative.classList.add("move");
+    }, 1000);
+    // The positive-delayed animation starts in 200 ms.
+    setTimeout(function() {
+      positive.classList.add("move");
+    }, 200);
+  </script>
+</body>
+</html>

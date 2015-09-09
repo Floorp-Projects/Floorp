@@ -617,6 +617,12 @@ function isUsableAddon(aAddon) {
       return false;
     if (aAddon.foreignInstall && aAddon.signedState < AddonManager.SIGNEDSTATE_SIGNED)
       return false;
+
+    if (aAddon._installLocation.name == KEY_APP_SYSTEM_ADDONS ||
+        aAddon._installLocation.name == KEY_APP_SYSTEM_DEFAULTS) {
+      if (aAddon.signedState != AddonManager.SIGNEDSTATE_SYSTEM)
+        return false;
+    }
   }
 
   if (aAddon.blocklistState == Blocklist.STATE_BLOCKED)
@@ -1155,7 +1161,7 @@ function defineSyncGUID(aAddon) {
  * @return an AddonInternal object
  * @throws if the directory does not contain a valid install manifest
  */
-let loadManifestFromDir = Task.async(function* loadManifestFromDir(aDir) {
+let loadManifestFromDir = Task.async(function* loadManifestFromDir(aDir, aInstallLocation) {
   function getFileSize(aFile) {
     if (aFile.isSymlink())
       return 0;
@@ -1202,6 +1208,7 @@ let loadManifestFromDir = Task.async(function* loadManifestFromDir(aDir) {
                 loadFromRDF(file, bis);
 
     addon._sourceBundle = aDir.clone();
+    addon._installLocation = aInstallLocation;
     addon.size = getFileSize(aDir);
     addon.signedState = yield verifyDirSignedState(aDir, addon);
     addon.appDisabled = !isUsableAddon(addon);
@@ -1224,7 +1231,7 @@ let loadManifestFromDir = Task.async(function* loadManifestFromDir(aDir) {
  * @return an AddonInternal object
  * @throws if the XPI file does not contain a valid install manifest
  */
-let loadManifestFromZipReader = Task.async(function* loadManifestFromZipReader(aZipReader) {
+let loadManifestFromZipReader = Task.async(function* loadManifestFromZipReader(aZipReader, aInstallLocation) {
   function loadFromRDF(aStream) {
     let uri = buildJarURI(aZipReader.file, FILE_RDF_MANIFEST);
     let addon = loadManifestFromRDF(uri, aStream);
@@ -1259,6 +1266,7 @@ let loadManifestFromZipReader = Task.async(function* loadManifestFromZipReader(a
                 loadFromRDF(bis);
 
     addon._sourceBundle = aZipReader.file;
+    addon._installLocation = aInstallLocation;
 
     addon.size = 0;
     let entries = aZipReader.findEntries(null);
@@ -1286,7 +1294,7 @@ let loadManifestFromZipReader = Task.async(function* loadManifestFromZipReader(a
  * @return an AddonInternal object
  * @throws if the XPI file does not contain a valid install manifest
  */
-let loadManifestFromZipFile = Task.async(function* loadManifestFromZipFile(aXPIFile) {
+let loadManifestFromZipFile = Task.async(function* loadManifestFromZipFile(aXPIFile, aInstallLocation) {
   let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
                   createInstance(Ci.nsIZipReader);
   try {
@@ -1295,7 +1303,7 @@ let loadManifestFromZipFile = Task.async(function* loadManifestFromZipFile(aXPIF
     // Can't return this promise because that will make us close the zip reader
     // before it has finished loading the manifest. Wait for the result and then
     // return.
-    let manifest = yield loadManifestFromZipReader(zipReader);
+    let manifest = yield loadManifestFromZipReader(zipReader, aInstallLocation);
     return manifest;
   }
   finally {
@@ -1303,22 +1311,22 @@ let loadManifestFromZipFile = Task.async(function* loadManifestFromZipFile(aXPIF
   }
 });
 
-function loadManifestFromFile(aFile) {
+function loadManifestFromFile(aFile, aInstallLocation) {
   if (aFile.isFile())
-    return loadManifestFromZipFile(aFile);
+    return loadManifestFromZipFile(aFile, aInstallLocation);
   else
-    return loadManifestFromDir(aFile);
+    return loadManifestFromDir(aFile, aInstallLocation);
 }
 
 /**
  * A synchronous method for loading an add-on's manifest. This should only ever
  * be used during startup or a sync load of the add-ons DB
  */
-function syncLoadManifestFromFile(aFile) {
+function syncLoadManifestFromFile(aFile, aInstallLocation) {
   let success = undefined;
   let result = null;
 
-  loadManifestFromFile(aFile).then(val => {
+  loadManifestFromFile(aFile, aInstallLocation).then(val => {
     success = true;
     result = val;
   }, val => {
@@ -1465,6 +1473,9 @@ function getSignedStatus(aRv, aCert, aExpectedID) {
           return AddonManager.SIGNEDSTATE_BROKEN;
         }
       }
+
+      if (aCert.organizationalUnit == "Mozilla Components")
+        return AddonManager.SIGNEDSTATE_SYSTEM;
 
       return /preliminary/i.test(aCert.organizationalUnit)
                ? AddonManager.SIGNEDSTATE_PRELIMINARY
@@ -2922,7 +2933,7 @@ this.XPIProvider = {
         let addon;
 
         try {
-          addon = syncLoadManifestFromFile(stageDirEntry);
+          addon = syncLoadManifestFromFile(stageDirEntry, aLocation);
         }
         catch (e) {
           logger.error("Unable to read add-on manifest from " + stageDirEntry.path, e);
@@ -3096,7 +3107,7 @@ this.XPIProvider = {
 
       let addon;
       try {
-        addon = syncLoadManifestFromFile(entry);
+        addon = syncLoadManifestFromFile(entry, profileLocation);
       }
       catch (e) {
         logger.warn("File entry " + entry.path + " contains an invalid add-on", e);
@@ -3119,7 +3130,7 @@ this.XPIProvider = {
       if (existingEntry) {
         let existingAddon;
         try {
-          existingAddon = syncLoadManifestFromFile(existingEntry);
+          existingAddon = syncLoadManifestFromFile(existingEntry, profileLocation);
 
           if (Services.vc.compare(addon.version, existingAddon.version) <= 0)
             continue;
@@ -4958,7 +4969,7 @@ AddonInstall.prototype = {
 
     try {
       // loadManifestFromZipReader performs the certificate verification for us
-      this.addon = yield loadManifestFromZipReader(zipreader);
+      this.addon = yield loadManifestFromZipReader(zipreader, this.installLocation);
     }
     catch (e) {
       zipreader.close();
@@ -5506,7 +5517,6 @@ AddonInstall.prototype = {
 
         // Update the metadata in the database
         this.addon._sourceBundle = file;
-        this.addon._installLocation = this.installLocation;
         this.addon.visible = true;
 
         if (isUpgrade) {

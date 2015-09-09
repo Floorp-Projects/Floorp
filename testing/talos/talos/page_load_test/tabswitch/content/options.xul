@@ -1,0 +1,4 @@
+<?xml version="1.0" ?>
+<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <setting pref="addon.test.tabswitch.urlfile" type="file" title="Path to page set" oninputchanged="Components.classes['@mozilla.org/observer-service;1'].getService(Components.interfaces.nsIObserverService).notifyObservers(window, 'tabswitch-urlfile', this.value);"/>
+</vbox>

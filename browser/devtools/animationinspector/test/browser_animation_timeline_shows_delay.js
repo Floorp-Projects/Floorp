@@ -6,6 +6,8 @@
 
 // Check that animation delay is visualized in the timeline-based UI when the
 // animation is delayed.
+// Also check that negative delays do not overflow the UI, and are shown like
+// positive delays.
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
@@ -13,18 +15,38 @@ add_task(function*() {
 
   info("Selecting a delayed animated node");
   yield selectNode(".delayed", inspector);
-
-  info("Getting the animation and delay elements from the panel");
   let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
-  let delay = timelineEl.querySelector(".delay");
-
-  ok(delay, "The animation timeline contains the delay element");
+  checkDelayAndName(timelineEl, true);
 
   info("Selecting a no-delay animated node");
   yield selectNode(".animated", inspector);
+  checkDelayAndName(timelineEl, false);
 
-  info("Getting the animation and delay elements from the panel again");
-  delay = timelineEl.querySelector(".delay");
-
-  ok(!delay, "The animation timeline contains no delay element");
+  info("Selecting a negative-delay animated node");
+  yield selectNode(".negative-delay", inspector);
+  checkDelayAndName(timelineEl, true);
 });
+
+function checkDelayAndName(timelineEl, hasDelay) {
+  let delay = timelineEl.querySelector(".delay");
+
+  is(!!delay, hasDelay, "The timeline " +
+                        (hasDelay ? "contains" : "does not contain") +
+                        " a delay element, as expected");
+
+  if (hasDelay) {
+    let name = timelineEl.querySelector(".name");
+    let targetNode = timelineEl.querySelector(".target");
+
+    // Check that the delay element does not cause the timeline to overflow.
+    let delayRect = delay.getBoundingClientRect();
+    let sidebarWidth = targetNode.getBoundingClientRect().width;
+    ok(delayRect.x >= sidebarWidth,
+       "The delay element isn't displayed over the sidebar");
+
+    // Check that the delay is not displayed on top of the name.
+    let nameLeft = name.getBoundingClientRect().left;
+    ok(delayRect.right <= nameLeft,
+       "The delay element does not span over the name element");
+  }
+}

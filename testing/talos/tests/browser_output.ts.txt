@@ -1,0 +1,8 @@
+__start_report392__end_report
+
+Failed to load native module at path '/home/jhammel/firefox/components/libmozgnome.so': (80004005) libnotify.so.1: cannot open shared object file: No such file or directory
+Could not read chrome manifest 'file:///home/jhammel/firefox/extensions/%7B972ce4c6-7e08-4474-a285-3208198ce6fd%7D/chrome.manifest'.
+[JavaScript Warning: "Use of enablePrivilege is deprecated.  Please use code that runs with the system principal (e.g. an extension) instead." {file: "http://localhost:15707/startup_test/startup_test.html?begin=1333663595557" line: 0}]
+__startTimestamp1333663595953__endTimestamp
+__startBeforeLaunchTimestamp1333663595557__endBeforeLaunchTimestamp
+__startAfterTerminationTimestamp1333663596551__endAfterTerminationTimestamp

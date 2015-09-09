@@ -74,12 +74,11 @@ class TalosRunner(MozbuildObject):
             },
             'title': socket.gethostname(),
             'default_actions': [
-                'clone-talos',
+                'populate-webroot',
                 'create-virtualenv',
                 'run-tests',
             ],
             'python_webserver': False,
-            'populate_webroot': True,
             'talos_extra_options': ['--develop'],
         }
 

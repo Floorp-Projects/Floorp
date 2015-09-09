@@ -22,8 +22,6 @@ if CONFIG['ENABLE_INTL_API']:
 
 EXPORTS.mozilla.dom.indexedDB += [
     'ActorsParent.h',
-    'FileInfo.h',
-    'FileManager.h',
     'FileSnapshot.h',
     'IDBCursor.h',
     'IDBDatabase.h',
@@ -77,6 +75,7 @@ IPDL_SOURCES += [
     'PBackgroundIDBCursor.ipdl',
     'PBackgroundIDBDatabase.ipdl',
     'PBackgroundIDBDatabaseFile.ipdl',
+    'PBackgroundIDBDatabaseRequest.ipdl',
     'PBackgroundIDBFactory.ipdl',
     'PBackgroundIDBFactoryRequest.ipdl',
     'PBackgroundIDBRequest.ipdl',

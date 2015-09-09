@@ -44,7 +44,7 @@ AudioNodeExternalInputStream::Create(MediaStreamGraph* aGraph,
  */
 template <typename T>
 static void
-CopyChunkToBlock(AudioChunk& aInput, AudioChunk *aBlock,
+CopyChunkToBlock(AudioChunk& aInput, AudioBlock *aBlock,
                  uint32_t aOffsetInBlock)
 {
   uint32_t blockChannels = aBlock->ChannelCount();
@@ -79,7 +79,7 @@ CopyChunkToBlock(AudioChunk& aInput, AudioChunk *aBlock,
  * channels in every chunk of aSegment. aBlock must be float format or null.
  */
 static void ConvertSegmentToAudioBlock(AudioSegment* aSegment,
-                                       AudioChunk* aBlock,
+                                       AudioBlock* aBlock,
                                        int32_t aFallbackChannelCount)
 {
   NS_ASSERTION(aSegment->GetDuration() == WEBAUDIO_BLOCK_SIZE, "Bad segment duration");
@@ -95,7 +95,7 @@ static void ConvertSegmentToAudioBlock(AudioSegment* aSegment,
     }
   }
 
-  AllocateAudioBlock(aFallbackChannelCount, aBlock);
+  aBlock->AllocateChannels(aFallbackChannelCount);
 
   uint32_t duration = 0;
   for (AudioSegment::ChunkIterator ci(*aSegment); !ci.IsEnded(); ci.Next()) {
@@ -182,11 +182,11 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
   if (inputChannels) {
     nsAutoTArray<float,GUESS_AUDIO_CHANNELS*WEBAUDIO_BLOCK_SIZE> downmixBuffer;
     for (uint32_t i = 0; i < audioSegments.Length(); ++i) {
-      AudioChunk tmpChunk;
+      AudioBlock tmpChunk;
       ConvertSegmentToAudioBlock(&audioSegments[i], &tmpChunk, inputChannels);
       if (!tmpChunk.IsNull()) {
         if (accumulateIndex == 0) {
-          AllocateAudioBlock(inputChannels, &mLastChunks[0]);
+          mLastChunks[0].AllocateChannels(inputChannels);
         }
         AccumulateInputChunk(accumulateIndex, tmpChunk, &mLastChunks[0], &downmixBuffer);
         accumulateIndex++;

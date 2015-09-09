@@ -2998,6 +2998,8 @@ this.AddonManager = {
   SIGNEDSTATE_PRELIMINARY: 1,
   // Add-on is fully reviewed.
   SIGNEDSTATE_SIGNED: 2,
+  // Add-on is system add-on.
+  SIGNEDSTATE_SYSTEM: 3,
 
   // Constants for the Addon.userDisabled property
   // Indicates that the userDisabled state of this add-on is currently

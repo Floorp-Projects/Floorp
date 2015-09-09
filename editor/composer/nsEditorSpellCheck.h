@@ -27,6 +27,12 @@ class nsITextServicesFilter;
 
 class DictionaryFetcher;
 
+enum dictCompare {
+  DICT_NORMAL_COMPARE,
+  DICT_COMPARE_CASE_INSENSITIVE,
+  DICT_COMPARE_DASHMATCH
+};
+
 class nsEditorSpellCheck final : public nsIEditorSpellCheck
 {
   friend class DictionaryFetcher;
@@ -63,6 +69,9 @@ protected:
   uint32_t mDictionaryFetcherGroup;
 
   bool mUpdateDictionaryRunning;
+
+  nsresult TryDictionary(nsAutoString aDictName, nsTArray<nsString>& aDictList,
+                         enum dictCompare aCompareType);
 
   nsresult DictionaryFetched(DictionaryFetcher* aFetchState);
 

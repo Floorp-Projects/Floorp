@@ -15,10 +15,6 @@
         <item name="drawableTintList">@color/action_bar_menu_item_colors</item>
     </style>
 
-    <style name="UrlBar.ImageButton.TabCount">
-        <item name="android:background">@drawable/tabs_count</item>
-    </style>
-
     <style name="UrlBar.Button.Container">
         <item name="android:layout_marginTop">6dp</item>
         <item name="android:layout_marginBottom">6dp</item>

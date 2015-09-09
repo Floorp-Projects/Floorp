@@ -31,6 +31,13 @@
 
 #ifdef MOZ_WIDGET_GTK
 #include <gtk/gtk.h>
+#include <unistd.h>
+#include <fstream>
+#include "mozilla/Tokenizer.h"
+#include "nsCharSeparatedTokenizer.h"
+
+#include <map>
+#include <string>
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -49,6 +56,10 @@ NS_EXPORT int android_sdk_version;
 }
 #endif
 
+#ifdef XP_MACOSX
+#include <sys/sysctl.h>
+#endif
+
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #include "mozilla/SandboxInfo.h"
 #endif
@@ -59,6 +70,30 @@ NS_EXPORT int android_sdk_version;
 // so we must call it before going multithreaded, but nsSystemInfo::Init
 // only happens well after that point.
 uint32_t nsSystemInfo::gUserUmask = 0;
+
+#if defined (MOZ_WIDGET_GTK)
+static void
+SimpleParseKeyValuePairs(const std::string& aFilename,
+                         std::map<nsCString, nsCString>& aKeyValuePairs)
+{
+  std::ifstream input(aFilename.c_str());
+  for (std::string line; std::getline(input, line); ) {
+    nsAutoCString key, value;
+
+    nsCCharSeparatedTokenizer tokens(nsDependentCString(line.c_str()), ':');
+    if (tokens.hasMoreTokens()) {
+      key = tokens.nextToken();
+      if (tokens.hasMoreTokens()) {
+        value = tokens.nextToken();
+      }
+      // We want the value even if there was just one token, to cover the
+      // case where we had the key, and the value was blank (seems to be
+      // a valid scenario some files.)
+      aKeyValuePairs[key] = value;
+    }
+  }
+}
+#endif
 
 #if defined(XP_WIN)
 namespace {
@@ -235,6 +270,66 @@ static const struct PropItems
   { "hasNEON", mozilla::supports_neon }
 };
 
+#ifdef XP_WIN
+// Lifted from media/webrtc/trunk/webrtc/base/systeminfo.cc,
+// so keeping the _ instead of switching to camel case for now.
+typedef BOOL (WINAPI *LPFN_GLPI)(
+    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION,
+    PDWORD);
+static void
+GetProcessorInformation(int* physical_cpus, int* cache_size_L2, int* cache_size_L3)
+{
+  MOZ_ASSERT(physical_cpus && cache_size_L2 && cache_size_L3);
+
+  *physical_cpus = 0;
+  *cache_size_L2 = 0; // This will be in kbytes
+  *cache_size_L3 = 0; // This will be in kbytes
+
+  // GetLogicalProcessorInformation() is available on Windows XP SP3 and beyond.
+  LPFN_GLPI glpi = reinterpret_cast<LPFN_GLPI>(GetProcAddress(
+      GetModuleHandle(L"kernel32"),
+      "GetLogicalProcessorInformation"));
+  if (nullptr == glpi) {
+    return;
+  }
+  // Determine buffer size, allocate and get processor information.
+  // Size can change between calls (unlikely), so a loop is done.
+  SYSTEM_LOGICAL_PROCESSOR_INFORMATION info_buffer[32];
+  SYSTEM_LOGICAL_PROCESSOR_INFORMATION* infos = &info_buffer[0];
+  DWORD return_length = sizeof(info_buffer);
+  while (!glpi(infos, &return_length)) {
+    if (GetLastError() == ERROR_INSUFFICIENT_BUFFER && infos == &info_buffer[0]) {
+      infos = new SYSTEM_LOGICAL_PROCESSOR_INFORMATION[return_length / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION)];
+    } else {
+      return;
+    }
+  }
+
+  for (size_t i = 0;
+      i < return_length / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i) {
+    if (infos[i].Relationship == RelationProcessorCore) {
+      ++*physical_cpus;
+    } else if (infos[i].Relationship == RelationCache) {
+      // Only care about L2 and L3 cache
+      switch (infos[i].Cache.Level) {
+        case 2:
+          *cache_size_L2 = static_cast<int>(infos[i].Cache.Size/1024);
+          break;
+        case 3:
+          *cache_size_L3 = static_cast<int>(infos[i].Cache.Size/1024);
+          break;
+        default:
+          break;
+      }
+    }
+  }
+  if (infos != &info_buffer[0]) {
+    delete [] infos;
+  }
+  return;
+}
+#endif
+
 nsresult
 nsSystemInfo::Init()
 {
@@ -272,9 +367,245 @@ nsSystemInfo::Init()
   SetInt32Property(NS_LITERAL_STRING("pagesize"), PR_GetPageSize());
   SetInt32Property(NS_LITERAL_STRING("pageshift"), PR_GetPageShift());
   SetInt32Property(NS_LITERAL_STRING("memmapalign"), PR_GetMemMapAlignment());
-  SetInt32Property(NS_LITERAL_STRING("cpucount"), PR_GetNumberOfProcessors());
   SetUint64Property(NS_LITERAL_STRING("memsize"), PR_GetPhysicalMemorySize());
   SetUint32Property(NS_LITERAL_STRING("umask"), nsSystemInfo::gUserUmask);
+
+  uint64_t virtualMem = 0;
+  nsAutoCString cpuVendor;
+  int cpuSpeed = -1;
+  int cpuFamily = -1;
+  int cpuModel = -1;
+  int cpuStepping = -1;
+  int logicalCPUs = -1;
+  int physicalCPUs = -1;
+  int cacheSizeL2 = -1;
+  int cacheSizeL3 = -1;
+
+#if defined (XP_WIN)
+  // Virtual memory:
+  MEMORYSTATUSEX memStat;
+  memStat.dwLength = sizeof(memStat);
+  if (GlobalMemoryStatusEx(&memStat)) {
+    virtualMem = memStat.ullTotalVirtual;
+  }
+
+  // CPU speed
+  HKEY key;
+  static const WCHAR keyName[] =
+    L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
+
+  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName , 0, KEY_QUERY_VALUE, &key)
+      == ERROR_SUCCESS) {
+    DWORD data, len, vtype;
+    len = sizeof(data);
+
+    if (RegQueryValueEx(key, L"~Mhz", 0, 0, reinterpret_cast<LPBYTE>(&data),
+                        &len) == ERROR_SUCCESS) {
+      cpuSpeed = static_cast<int>(data);
+    }
+
+    // Limit to 64 double byte characters, should be plenty, but create
+    // a buffer one larger as the result may not be null terminated. If
+    // it is more than 64, we will not get the value.
+    wchar_t cpuVendorStr[64+1];
+    len = sizeof(cpuVendorStr)-2;
+    if (RegQueryValueExW(key, L"VendorIdentifier",
+                         0, &vtype,
+                         reinterpret_cast<LPBYTE>(cpuVendorStr),
+                         &len) == ERROR_SUCCESS &&
+        vtype == REG_SZ && len % 2 == 0 && len > 1) {
+      cpuVendorStr[len/2] = 0; // In case it isn't null terminated
+      CopyUTF16toUTF8(nsDependentString(cpuVendorStr), cpuVendor);
+    }
+
+    RegCloseKey(key);
+  }
+
+  // Other CPU attributes:
+  SYSTEM_INFO si;
+  GetNativeSystemInfo(&si);
+  logicalCPUs = si.dwNumberOfProcessors;
+  GetProcessorInformation(&physicalCPUs, &cacheSizeL2, &cacheSizeL3);
+  if (physicalCPUs <= 0) {
+    physicalCPUs = logicalCPUs;
+  }
+  cpuFamily = si.wProcessorLevel;
+  cpuModel = si.wProcessorRevision >> 8;
+  cpuStepping = si.wProcessorRevision & 0xFF;
+#elif defined (XP_MACOSX)
+  // CPU speed
+  uint64_t sysctlValue64 = 0;
+  uint32_t sysctlValue32 = 0;
+  size_t len = 0;
+  len = sizeof(sysctlValue64);
+  if (!sysctlbyname("hw.cpufrequency_max", &sysctlValue64, &len, NULL, 0)) {
+    cpuSpeed = static_cast<int>(sysctlValue64/1000000);
+  }
+  MOZ_ASSERT(sizeof(sysctlValue64) == len);
+
+  len = sizeof(sysctlValue32);
+  if (!sysctlbyname("hw.physicalcpu_max", &sysctlValue32, &len, NULL, 0)) {
+    physicalCPUs = static_cast<int>(sysctlValue32);
+  }
+  MOZ_ASSERT(sizeof(sysctlValue32) == len);
+
+  len = sizeof(sysctlValue32);
+  if (!sysctlbyname("hw.logicalcpu_max", &sysctlValue32, &len, NULL, 0)) {
+    logicalCPUs = static_cast<int>(sysctlValue32);
+  }
+  MOZ_ASSERT(sizeof(sysctlValue32) == len);
+
+  len = sizeof(sysctlValue64);
+  if (!sysctlbyname("hw.l2cachesize", &sysctlValue64, &len, NULL, 0)) {
+    cacheSizeL2 = static_cast<int>(sysctlValue64/1024);
+  }
+  MOZ_ASSERT(sizeof(sysctlValue64) == len);
+
+  len = sizeof(sysctlValue64);
+  if (!sysctlbyname("hw.l3cachesize", &sysctlValue64, &len, NULL, 0)) {
+    cacheSizeL3 = static_cast<int>(sysctlValue64/1024);
+  }
+  MOZ_ASSERT(sizeof(sysctlValue64) == len);
+
+  if (!sysctlbyname("machdep.cpu.vendor", NULL, &len, NULL, 0)) {
+    char* cpuVendorStr = new char[len];
+    if (!sysctlbyname("machdep.cpu.vendor", cpuVendorStr, &len, NULL, 0)) {
+      cpuVendor = cpuVendorStr;
+    }
+    delete [] cpuVendorStr;
+  }
+
+  len = sizeof(sysctlValue32);
+  if (!sysctlbyname("machdep.cpu.family", &sysctlValue32, &len, NULL, 0)) {
+    cpuFamily = static_cast<int>(sysctlValue32);
+  }
+  MOZ_ASSERT(sizeof(sysctlValue32) == len);
+
+  len = sizeof(sysctlValue32);
+  if (!sysctlbyname("machdep.cpu.model", &sysctlValue32, &len, NULL, 0)) {
+    cpuModel = static_cast<int>(sysctlValue32);
+  }
+  MOZ_ASSERT(sizeof(sysctlValue32) == len);
+
+  len = sizeof(sysctlValue32);
+  if (!sysctlbyname("machdep.cpu.stepping", &sysctlValue32, &len, NULL, 0)) {
+    cpuStepping = static_cast<int>(sysctlValue32);
+  }
+  MOZ_ASSERT(sizeof(sysctlValue32) == len);
+
+#elif defined (MOZ_WIDGET_GTK)
+  // Get vendor, family, model, stepping, physical cores, L3 cache size
+  // from /proc/cpuinfo file
+  {
+    std::map<nsCString, nsCString> keyValuePairs;
+    SimpleParseKeyValuePairs("/proc/cpuinfo", keyValuePairs);
+
+    // cpuVendor from "vendor_id"
+    cpuVendor.Assign(keyValuePairs[NS_LITERAL_CSTRING("vendor_id")]);
+
+    {
+      // cpuFamily from "cpu family"
+      Tokenizer::Token t;
+      Tokenizer p(keyValuePairs[NS_LITERAL_CSTRING("cpu family")]);
+      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
+          t.AsInteger() <= INT32_MAX) {
+        cpuFamily = static_cast<int>(t.AsInteger());
+      }
+    }
+
+    {
+      // cpuModel from "model"
+      Tokenizer::Token t;
+      Tokenizer p(keyValuePairs[NS_LITERAL_CSTRING("model")]);
+      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
+          t.AsInteger() <= INT32_MAX) {
+        cpuModel = static_cast<int>(t.AsInteger());
+      }
+    }
+
+    {
+      // cpuStepping from "stepping"
+      Tokenizer::Token t;
+      Tokenizer p(keyValuePairs[NS_LITERAL_CSTRING("stepping")]);
+      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
+          t.AsInteger() <= INT32_MAX) {
+        cpuStepping = static_cast<int>(t.AsInteger());
+      }
+    }
+
+    {
+      // physicalCPUs from "cpu cores"
+      Tokenizer::Token t;
+      Tokenizer p(keyValuePairs[NS_LITERAL_CSTRING("cpu cores")]);
+      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
+          t.AsInteger() <= INT32_MAX) {
+        physicalCPUs = static_cast<int>(t.AsInteger());
+      }
+    }
+
+    {
+      // cacheSizeL3 from "cache size"
+      Tokenizer::Token t;
+      Tokenizer p(keyValuePairs[NS_LITERAL_CSTRING("cache size")]);
+      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
+          t.AsInteger() <= INT32_MAX) {
+        cacheSizeL3 = static_cast<int>(t.AsInteger());
+        if (p.Next(t) && t.Type() == Tokenizer::TOKEN_WORD &&
+            t.AsString() != NS_LITERAL_CSTRING("KB")) {
+          // If we get here, there was some text after the cache size value
+          // and that text was not KB.  For now, just don't report the
+          // L3 cache.
+          cacheSizeL3 = -1;
+        }
+      }
+    }
+  }
+
+  {
+    // Get cpuSpeed from another file.
+    std::ifstream input("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
+    std::string line;
+    if (getline(input, line)) {
+      Tokenizer::Token t;
+      Tokenizer p(line.c_str());
+      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
+          t.AsInteger() <= INT32_MAX) {
+        cpuSpeed = static_cast<int>(t.AsInteger()/1000);
+      }
+    }
+  }
+
+  {
+    // Get cacheSizeL2 from yet another file
+    std::ifstream input("/sys/devices/system/cpu/cpu0/cache/index2/size");
+    std::string line;
+    if (getline(input, line)) {
+      Tokenizer::Token t;
+      Tokenizer p(line.c_str(), nullptr, "K");
+      if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
+          t.AsInteger() <= INT32_MAX) {
+        cacheSizeL2 = static_cast<int>(t.AsInteger());
+      }
+    }
+  }
+
+  SetInt32Property(NS_LITERAL_STRING("cpucount"), PR_GetNumberOfProcessors());
+#else
+  SetInt32Property(NS_LITERAL_STRING("cpucount"), PR_GetNumberOfProcessors());
+#endif
+
+  if (virtualMem) SetUint64Property(NS_LITERAL_STRING("virtualmemsize"), virtualMem);
+  if (cpuSpeed >= 0) SetInt32Property(NS_LITERAL_STRING("cpuspeed"), cpuSpeed);
+  if (!cpuVendor.IsEmpty()) SetPropertyAsACString(NS_LITERAL_STRING("cpuvendor"), cpuVendor);
+  if (cpuFamily >= 0) SetInt32Property(NS_LITERAL_STRING("cpufamily"), cpuFamily);
+  if (cpuModel >= 0) SetInt32Property(NS_LITERAL_STRING("cpumodel"), cpuModel);
+  if (cpuStepping >= 0) SetInt32Property(NS_LITERAL_STRING("cpustepping"), cpuStepping);
+
+  if (logicalCPUs >= 0) SetInt32Property(NS_LITERAL_STRING("cpucount"), logicalCPUs);
+  if (physicalCPUs >= 0) SetInt32Property(NS_LITERAL_STRING("cpucores"), physicalCPUs);
+
+  if (cacheSizeL2 >= 0) SetInt32Property(NS_LITERAL_STRING("cpucachel2"), cacheSizeL2);
+  if (cacheSizeL3 >= 0) SetInt32Property(NS_LITERAL_STRING("cpucachel3"), cacheSizeL3);
 
   for (uint32_t i = 0; i < ArrayLength(cpuPropItems); i++) {
     rv = SetPropertyAsBool(NS_ConvertASCIItoUTF16(cpuPropItems[i].name),

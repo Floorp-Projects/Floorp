@@ -11,6 +11,8 @@ if (!("self" in this)) {
 
 const DOMException = Ci.nsIDOMDOMException;
 
+var bufferCache = [];
+
 function is(a, b, msg) {
   do_check_eq(a, b, Components.stack.caller);
 }
@@ -331,6 +333,99 @@ function installPackagedProfile(packageName)
   }
 
   zipReader.close();
+}
+
+function getBlob(str)
+{
+  return new Blob([str], {type: "type/text"});
+}
+
+function getFile(name, type, str)
+{
+  return new File([str], name, {type: type});
+}
+
+function getFileReader()
+{
+  return SpecialPowers.Cc["@mozilla.org/files/filereader;1"]
+                      .createInstance(SpecialPowers.Ci.nsIDOMFileReader);
+}
+
+function compareBuffers(buffer1, buffer2)
+{
+  if (buffer1.byteLength != buffer2.byteLength) {
+    return false;
+  }
+  let view1 = new Uint8Array(buffer1);
+  let view2 = new Uint8Array(buffer2);
+  for (let i = 0; i < buffer1.byteLength; i++) {
+    if (view1[i] != view2[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function verifyBuffers(buffer1, buffer2)
+{
+  ok(compareBuffers(buffer1, buffer2), "Correct blob data");
+}
+
+function verifyBlob(blob1, blob2)
+{
+  is(blob1 instanceof Components.interfaces.nsIDOMBlob, true,
+     "Instance of nsIDOMBlob");
+  is(blob1 instanceof File, blob2 instanceof File,
+     "Instance of DOM File");
+  is(blob1.size, blob2.size, "Correct size");
+  is(blob1.type, blob2.type, "Correct type");
+  if (blob2 instanceof File) {
+    is(blob1.name, blob2.name, "Correct name");
+  }
+
+  let buffer1;
+  let buffer2;
+
+  for (let i = 0; i < bufferCache.length; i++) {
+    if (bufferCache[i].blob == blob2) {
+      buffer2 = bufferCache[i].buffer;
+      break;
+    }
+  }
+
+  if (!buffer2) {
+    let reader = getFileReader();
+    reader.readAsArrayBuffer(blob2);
+    reader.onload = function(event) {
+      buffer2 = event.target.result;
+      bufferCache.push({ blob: blob2, buffer: buffer2 });
+      if (buffer1) {
+        verifyBuffers(buffer1, buffer2);
+        testGenerator.next();
+      }
+    }
+  }
+
+  let reader = getFileReader();
+  reader.readAsArrayBuffer(blob1);
+  reader.onload = function(event) {
+    buffer1 = event.target.result;
+    if (buffer2) {
+      verifyBuffers(buffer1, buffer2);
+      testGenerator.next();
+    }
+  }
+}
+
+function verifyMutableFile(mutableFile1, file2)
+{
+  is(mutableFile1 instanceof IDBMutableFile, true,
+     "Instance of IDBMutableFile");
+  is(mutableFile1.name, file2.name, "Correct name");
+  is(mutableFile1.type, file2.type, "Correct type");
+  executeSoon(function() {
+    testGenerator.next();
+  });
 }
 
 var SpecialPowers = {

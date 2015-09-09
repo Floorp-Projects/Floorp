@@ -1,0 +1,20 @@
+<?xml version="1.0"?><RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"     xmlns:em="http://www.mozilla.org/2004/em-rdf#"><Description about="urn:mozilla:install-manifest">
+
+<!-- Required Items -->
+<em:id>bug848358@mozilla.org</em:id>
+<em:name>TART - Tab Animation regression Test</em:name>
+<em:version>1.6.1</em:version>
+
+<em:targetApplication>
+    <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>1.5</em:minVersion>
+        <em:maxVersion>99.0.*</em:maxVersion>
+    </Description>
+</em:targetApplication>
+
+<!-- Optional Items -->
+<em:creator>Avi Halachmi</em:creator>
+<em:description>Bug 848358, bug 956388. To run: navigate to chrome://tart/content/tart.html</em:description>
+<em:homepageURL>https://bugzilla.mozilla.org/show_bug.cgi?id=848358</em:homepageURL>
+</Description></RDF>

@@ -233,6 +233,8 @@ class IDBOpenDBRequest final
 
   nsAutoPtr<WorkerFeature> mWorkerFeature;
 
+  const bool mFileHandleDisabled;
+
 public:
   static already_AddRefed<IDBOpenDBRequest>
   CreateForWindow(IDBFactory* aFactory,
@@ -242,6 +244,12 @@ public:
   static already_AddRefed<IDBOpenDBRequest>
   CreateForJS(IDBFactory* aFactory,
               JS::Handle<JSObject*> aScriptOwner);
+
+  bool
+  IsFileHandleDisabled() const
+  {
+    return mFileHandleDisabled;
+  }
 
   void
   SetTransaction(IDBTransaction* aTransaction);
@@ -270,7 +278,9 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 private:
-  IDBOpenDBRequest(IDBFactory* aFactory, nsPIDOMWindow* aOwner);
+  IDBOpenDBRequest(IDBFactory* aFactory,
+                   nsPIDOMWindow* aOwner,
+                   bool aFileHandleDisabled);
 
   ~IDBOpenDBRequest();
 };
