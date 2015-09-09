@@ -23,6 +23,7 @@ import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.Locale;
+import java.util.MissingResourceException;
 import java.util.UUID;
 import java.util.zip.CRC32;
 
@@ -189,8 +190,18 @@ public class SwitchBoard {
 			
 			String device = Build.DEVICE;
 			String manufacturer = Build.MANUFACTURER;
-			String lang = Locale.getDefault().getISO3Language();
-			String country = Locale.getDefault().getISO3Country();			
+			String lang = "unknown";
+			try {
+				lang = Locale.getDefault().getISO3Language();
+			} catch (MissingResourceException e) {
+				e.printStackTrace();
+			}
+			String country = "unknown";
+			try {
+				country = Locale.getDefault().getISO3Country();
+			} catch (MissingResourceException e) {
+				e.printStackTrace();
+			}
 			String packageName = c.getPackageName();
 			String versionName = "none";
 			try {
