@@ -52,7 +52,7 @@ PresentationRequesterCallback::NotifySuccess()
     PresentationSession::Create(mRequest->GetOwner(), mSessionId,
                                 PresentationSessionState::Connected);
   if (NS_WARN_IF(!session)) {
-    mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    mPromise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
     return NS_OK;
   }
 
