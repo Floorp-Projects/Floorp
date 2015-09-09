@@ -82,6 +82,9 @@ public:
   /// Retrieves the buffer into which the Decoder should write each row.
   uint8_t* RowBuffer() { return mRowBuffer.get(); }
 
+  /// Clears the current row buffer (optionally starting at @aStartingAtCol).
+  void ClearRow(uint32_t aStartingAtCol = 0);
+
   /// Signals that the decoder has finished writing a row into the row buffer.
   void CommitRow();
 
@@ -150,6 +153,7 @@ public:
   }
 
   uint8_t* RowBuffer() { return nullptr; }
+  void ClearRow(uint32_t = 0);
   void CommitRow() { }
   bool HasInvalidation() const { return false; }
   DownscalerInvalidRect TakeInvalidRect() { return DownscalerInvalidRect(); }
