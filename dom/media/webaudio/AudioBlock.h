@@ -24,7 +24,7 @@ public:
   AudioBlock() {
     mDuration = WEBAUDIO_BLOCK_SIZE;
   }
-  AudioBlock(const AudioChunk& aChunk) {
+  MOZ_IMPLICIT AudioBlock(const AudioChunk& aChunk) {
     mDuration = WEBAUDIO_BLOCK_SIZE;
     operator=(aChunk);
   }
