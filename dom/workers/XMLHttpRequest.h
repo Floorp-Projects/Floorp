@@ -199,11 +199,6 @@ public:
     return mStateData.mStatus;
   }
 
-  uint32_t
-  InternalErrorCode() const {
-    return 0;
-  }
-
   void
   GetStatusText(nsACString& aStatusText) const
   {
