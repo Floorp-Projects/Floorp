@@ -651,17 +651,6 @@ private:
   nsCOMPtr<nsIHashable> mKey;
 };
 
-namespace mozilla {
-
-template <typename T>
-PLDHashNumber
-Hash(const T& aValue)
-{
-  return aValue.Hash();
-}
-
-} // namespace mozilla
-
 /**
  * Hashtable key class to use with objects for which Hash() and operator==()
  * are defined.
@@ -680,7 +669,7 @@ public:
   bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mKey; }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) { return ::mozilla::Hash(*aKey); }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return aKey->Hash(); }
   enum { ALLOW_MEMMOVE = true };
 
 private:
