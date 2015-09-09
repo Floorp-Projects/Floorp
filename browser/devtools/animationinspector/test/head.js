@@ -21,6 +21,7 @@ const ROOT_TEST_DIR = getRootDirectory(gTestPath);
 const FRAME_SCRIPT_URL = ROOT_TEST_DIR + "doc_frame_script.js";
 const COMMON_FRAME_SCRIPT_URL = "chrome://browser/content/devtools/frame-script-utils.js";
 const NEW_UI_PREF = "devtools.inspector.animationInspectorV3";
+const TAB_NAME = "animationinspector";
 
 // Auto clean-up when a test ends
 registerCleanupFunction(function*() {
@@ -129,6 +130,13 @@ let selectNode = Task.async(function*(data, inspector, reason="test") {
   let updated = inspector.once("inspector-updated");
   inspector.selection.setNodeFront(nodeFront, reason);
   yield updated;
+
+  // 99% of the times, selectNode is called to select an animated node, and we
+  // want to make sure the rest of the test waits for the animations to be
+  // properly displayed (wait for all target DOM nodes to be previewed).
+  // Even if there are no animations, this is safe to do.
+  let {AnimationsPanel} = inspector.sidebar.getWindowForTab(TAB_NAME);
+  yield waitForAllAnimationTargets(AnimationsPanel);
 });
 
 /**
@@ -159,7 +167,7 @@ function assertAnimationsDisplayed(panel, nbAnimations, msg="") {
  * @return {Promise}
  */
 let waitForAnimationInspectorReady = Task.async(function*(inspector) {
-  let win = inspector.sidebar.getWindowForTab("animationinspector");
+  let win = inspector.sidebar.getWindowForTab(TAB_NAME);
   let updated = inspector.once("inspector-updated");
 
   // In e10s, if we wait for underlying toolbox actors to
@@ -192,12 +200,12 @@ let openAnimationInspector = Task.async(function*() {
   info("Waiting for toolbox focus");
   yield waitForToolboxFrameFocus(toolbox);
 
-  inspector.sidebar.select("animationinspector");
+  inspector.sidebar.select(TAB_NAME);
 
   info("Waiting for the inspector and sidebar to be ready");
   yield panelReady;
 
-  let win = inspector.sidebar.getWindowForTab("animationinspector");
+  let win = inspector.sidebar.getWindowForTab(TAB_NAME);
   let {AnimationsController, AnimationsPanel} = win;
 
   info("Waiting for the animation controller and panel to be ready");
@@ -206,6 +214,11 @@ let openAnimationInspector = Task.async(function*() {
   } else {
     yield AnimationsPanel.once(AnimationsPanel.PANEL_INITIALIZED);
   }
+
+  // Make sure we wait for all animations to be loaded (especially their target
+  // nodes to be lazily displayed). This is safe to do even if there are no
+  // animations displayed.
+  yield waitForAllAnimationTargets(AnimationsPanel);
 
   return {
     toolbox: toolbox,
@@ -250,10 +263,8 @@ let closeAnimationInspectorAndRestartWithNewUI = Task.async(function*(reload) {
   if (reload) {
     yield reloadTab();
   }
-  enableNewUI();
-  return yield openAnimationInspector();
+  return yield openAnimationInspectorNewUI();
 });
-
 
 /**
  * Wait for the toolbox frame to receive focus after it loads

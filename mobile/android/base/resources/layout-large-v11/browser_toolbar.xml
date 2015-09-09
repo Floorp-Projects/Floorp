@@ -99,7 +99,7 @@
 
     <!-- In a 56x60dp space, centering 24dp image will leave 16x18dp. -->
     <org.mozilla.gecko.toolbar.TabCounter android:id="@+id/tabs_counter"
-                        style="@style/UrlBar.ImageButton.TabCount"
+                        style="@style/UrlBar.ImageButton"
                         android:layout_alignLeft="@id/tabs"
                         android:layout_alignRight="@id/tabs"
                         android:layout_alignTop="@id/tabs"
@@ -107,7 +107,8 @@
                         android:layout_marginTop="18dp"
                         android:layout_marginBottom="18dp"
                         android:layout_marginLeft="16dp"
-                        android:layout_marginRight="16dp"/>
+                        android:layout_marginRight="16dp"
+                        android:background="@drawable/tabs_count"/>
 
     <org.mozilla.gecko.widget.themed.ThemedFrameLayout
             android:id="@+id/menu"
@@ -133,7 +134,10 @@
          which is thus drawn on top, may be pressed. -->
     <org.mozilla.gecko.widget.themed.ThemedImageView
             android:id="@+id/edit_cancel"
-            style="@style/UrlBar.ImageButton.Icon"
+            style="@style/UrlBar.ImageButton"
+            android:layout_width="@dimen/browser_toolbar_icon_width"
+            android:layout_height="@dimen/browser_toolbar_height"
+            android:layout_weight="0.0"
             android:layout_alignParentRight="true"
             android:src="@drawable/close_edit_mode_selector"
             android:contentDescription="@string/edit_mode_cancel"
