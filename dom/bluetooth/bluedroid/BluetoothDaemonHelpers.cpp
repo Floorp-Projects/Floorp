@@ -1339,18 +1339,6 @@ PackPDU(BluetoothGattWriteType aIn, DaemonSocketPDU& aPDU)
 //
 
 nsresult
-UnpackPDU(DaemonSocketPDU& aPDU, bool& aOut)
-{
-  return UnpackPDU(aPDU, UnpackConversion<uint8_t, bool>(aOut));
-}
-
-nsresult
-UnpackPDU(DaemonSocketPDU& aPDU, char& aOut)
-{
-  return UnpackPDU(aPDU, UnpackConversion<uint8_t, char>(aOut));
-}
-
-nsresult
 UnpackPDU(DaemonSocketPDU& aPDU, BluetoothA2dpAudioState& aOut)
 {
   return UnpackPDU(
