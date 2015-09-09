@@ -14,7 +14,7 @@ interface nsIHttpHeaderVisitor;
  * the inspection of the resulting HTTP response status and headers when they
  * become available.
  */
-[builtinclass, scriptable, uuid(182ee0b9-e3c1-4426-9db3-70814ea7ed24)]
+[builtinclass, scriptable, uuid(fdc70825-8ae1-4f81-bd9e-f1fd3f6307ad)]
 interface nsIHttpChannel : nsIChannel
 {
     /**************************************************************************
@@ -126,23 +126,6 @@ interface nsIHttpChannel : nsIChannel
     void setRequestHeader(in ACString aHeader,
                           in ACString aValue,
                           in boolean aMerge);
-
-    /**
-     * Set a request header with empty value.
-     *
-     * This should be used with caution in the cases where the behavior of
-     * setRequestHeader ignoring empty header values is undesirable.
-     *
-     * This method may only be called before the channel is opened.
-     *
-     * @param aHeader
-     *        The case-insensitive name of the request header to set (e.g.,
-     *        "Cookie").
-     *
-     * @throws NS_ERROR_IN_PROGRESS if called after the channel has been
-     *         opened.
-     */
-    void setEmptyRequestHeader(in ACString aHeader);
 
     /**
      * Call this method to visit all request headers.  Calling setRequestHeader

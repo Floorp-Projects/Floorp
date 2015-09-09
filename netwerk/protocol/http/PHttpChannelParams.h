@@ -24,13 +24,11 @@ struct RequestHeaderTuple {
   nsCString mHeader;
   nsCString mValue;
   bool      mMerge;
-  bool      mEmpty;
 
   bool operator ==(const RequestHeaderTuple &other) const {
     return mHeader.Equals(other.mHeader) &&
            mValue.Equals(other.mValue) &&
-           mMerge == other.mMerge &&
-           mEmpty == other.mEmpty;
+           mMerge == other.mMerge;
   }
 };
 
@@ -51,15 +49,13 @@ struct ParamTraits<mozilla::net::RequestHeaderTuple>
     WriteParam(aMsg, aParam.mHeader);
     WriteParam(aMsg, aParam.mValue);
     WriteParam(aMsg, aParam.mMerge);
-    WriteParam(aMsg, aParam.mEmpty);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     if (!ReadParam(aMsg, aIter, &aResult->mHeader) ||
         !ReadParam(aMsg, aIter, &aResult->mValue)  ||
-        !ReadParam(aMsg, aIter, &aResult->mMerge)  ||
-        !ReadParam(aMsg, aIter, &aResult->mEmpty))
+        !ReadParam(aMsg, aIter, &aResult->mMerge))
       return false;
 
     return true;
