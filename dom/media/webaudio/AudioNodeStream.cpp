@@ -513,12 +513,6 @@ AudioNodeStream::UpMixDownMixChunk(const AudioBlock* aChunk,
 void
 AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
 {
-  if (!mFinished) {
-    EnsureTrack(AUDIO_TRACK);
-  }
-  // No more tracks will be coming
-  mBuffer.AdvanceKnownTracksTime(STREAM_TIME_MAX);
-
   uint16_t outputCount = mLastChunks.Length();
   MOZ_ASSERT(outputCount == std::max(uint16_t(1), mEngine->OutputCount()));
 
@@ -605,6 +599,9 @@ void
 AudioNodeStream::AdvanceOutputSegment()
 {
   StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK);
+  // No more tracks will be coming
+  mBuffer.AdvanceKnownTracksTime(STREAM_TIME_MAX);
+
   AudioSegment* segment = track->Get<AudioSegment>();
 
   if (mFlags & EXTERNAL_OUTPUT) {
