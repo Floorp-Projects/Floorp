@@ -165,6 +165,13 @@ class FirefoxUITests(VCSToolsScript, VirtualenvMixin):
         else:
             self.fatal('Can\'t find symbols_url from installer_url: {}!'.format(installer_url))
 
+    @PreScriptAction('checkout')
+    def _pre_checkout(self, action):
+        if not self.firefox_ui_branch:
+            self.fatal(
+                'Please specify --firefox-ui-branch. Valid values can be found '
+                'in here https://github.com/mozilla/firefox-ui-tests/branches')
+
     def checkout(self):
         """
         We checkout firefox_ui_tests and update to the right branch
@@ -203,13 +210,14 @@ class FirefoxUITests(VCSToolsScript, VirtualenvMixin):
         """All required steps for running the tests against an installer."""
         dirs = self.query_abs_dirs()
 
-        bin_dir = os.path.dirname(self.query_python_path())
-        fx_ui_tests_bin = os.path.join(bin_dir, script_name)
+        venv_python_path = self.query_python_path()
+        update_script = os.path.join(dirs['fx_ui_dir'], 'firefox_ui_harness', 'cli_update.py')
         gecko_log = os.path.join(dirs['abs_log_dir'], 'gecko.log')
 
         # Build the command
         cmd = [
-            fx_ui_tests_bin,
+            venv_python_path,
+            update_script,
             '--installer', installer_path,
             # Log to stdout until tests are stable.
             '--gecko-log=-',

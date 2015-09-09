@@ -15,6 +15,8 @@
 
 class nsGeoPosition;
 
+void MozStumble(nsGeoPosition* position);
+
 class StumblerInfo final : public nsICellInfoListCallback,
                            public nsIWifiScanResultsReady
 {

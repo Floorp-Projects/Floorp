@@ -95,6 +95,7 @@ NullHttpChannel::SetReferrerWithPolicy(nsIURI *referrer, uint32_t referrerPolicy
 NS_IMETHODIMP
 NullHttpChannel::GetRequestHeader(const nsACString & aHeader, nsACString & _retval)
 {
+  _retval.Truncate();
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -167,6 +168,7 @@ NullHttpChannel::GetRequestSucceeded(bool *aRequestSucceeded)
 NS_IMETHODIMP
 NullHttpChannel::GetResponseHeader(const nsACString & header, nsACString & _retval)
 {
+  _retval.Truncate();
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

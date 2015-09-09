@@ -631,8 +631,8 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
     *aActionTaken = false;
   }
 
-  NS_ASSERTION(aEventMessage == NS_CUT || aEventMessage == NS_COPY ||
-               aEventMessage == NS_PASTE,
+  NS_ASSERTION(aEventMessage == eCut || aEventMessage == eCopy ||
+               aEventMessage == ePaste,
                "Invalid clipboard event type");
 
   nsCOMPtr<nsIPresShell> presShell = aPresShell;
@@ -688,7 +688,7 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
   nsRefPtr<DataTransfer> clipboardData;
   if (chromeShell || Preferences::GetBool("dom.event.clipboardevents.enabled", true)) {
     clipboardData =
-      new DataTransfer(piWindow, aEventMessage, aEventMessage == NS_PASTE,
+      new DataTransfer(piWindow, aEventMessage, aEventMessage == ePaste,
                        aClipboardType);
 
     nsEventStatus status = nsEventStatus_eIgnore;
@@ -703,7 +703,7 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
   // No need to do anything special during a paste. Either an event listener
   // took care of it and cancelled the event, or the caller will handle it.
   // Return true to indicate that the event wasn't cancelled.
-  if (aEventMessage == NS_PASTE) {
+  if (aEventMessage == ePaste) {
     // Clear and mark the clipboardData as readonly. This prevents someone
     // from reading the clipboard contents after the paste event has fired.
     if (clipboardData) {
@@ -743,7 +743,7 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
 
     // when cutting non-editable content, do nothing
     // XXX this is probably the wrong editable flag to check
-    if (aEventMessage != NS_CUT || content->IsEditable()) {
+    if (aEventMessage != eCut || content->IsEditable()) {
       // get the data from the selection if any
       bool isCollapsed;
       sel->GetIsCollapsed(&isCollapsed);

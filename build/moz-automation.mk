@@ -17,11 +17,6 @@ include $(topsrcdir)/toolkit/mozapps/installer/upload-files.mk
 # Clear out DIST_FILES if it was set by upload-files.mk (for Android builds)
 DIST_FILES =
 
-ifeq (1,$(MOZ_AUTOMATION_UPLOAD))
-# Properties from 'make upload' that are file URLs.
-AUTOMATION_UPLOAD_PROPERTIES = --upload-properties $(DIST)/upload-properties.json
-endif
-
 # Helper variables to convert from MOZ_AUTOMATION_* variables to the
 # corresponding the make target
 tier_MOZ_AUTOMATION_BUILD_SYMBOLS = buildsymbols
@@ -100,7 +95,7 @@ automation/l10n-check: automation/pretty-l10n-check
 automation/update-packaging: automation/pretty-update-packaging
 
 automation/build: $(addprefix automation/,$(MOZ_AUTOMATION_TIERS))
-	$(PYTHON) $(topsrcdir)/build/gen_mach_buildprops.py --complete-mar-file $(DIST)/$(COMPLETE_MAR) $(addprefix --partial-mar-file ,$(wildcard $(DIST)/$(PARTIAL_MAR))) $(AUTOMATION_UPLOAD_PROPERTIES)
+	@echo Automation steps completed.
 
 # Note: We have to force -j1 here, at least until bug 1036563 is fixed.
 AUTOMATION_EXTRA_CMDLINE-l10n-check = -j1
