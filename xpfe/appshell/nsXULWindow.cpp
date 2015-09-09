@@ -1436,16 +1436,6 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   if (!mDocShell)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMWindow> domWindow;
-  GetWindowDOMWindow(getter_AddRefs(domWindow));
-  if (domWindow) {
-    bool isFullscreen;
-    domWindow->GetFullScreen(&isFullscreen);
-    if (isFullscreen) {
-      return NS_OK;
-    }
-  }
-
   nsCOMPtr<dom::Element> docShellElement = GetWindowDOMElement();
   if (!docShellElement)
     return NS_ERROR_FAILURE;
