@@ -49,6 +49,7 @@ public:
   // Called on main thread.
   static void Init();
 private:
+  bool ShouldUseDXVA(const VideoInfo& aConfig) const;
   bool mWMFInitialized;
 };
 
