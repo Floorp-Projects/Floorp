@@ -38,7 +38,6 @@ namespace indexedDB {
 
 class BackgroundDatabaseChild;
 class DatabaseSpec;
-class FileManager;
 class IDBFactory;
 class IDBMutableFile;
 class IDBObjectStore;
@@ -68,8 +67,6 @@ class IDBDatabase final
 
   // Normally null except during a versionchange transaction.
   nsAutoPtr<DatabaseSpec> mPreviousSpec;
-
-  nsRefPtr<FileManager> mFileManager;
 
   BackgroundDatabaseChild* mBackgroundActor;
 

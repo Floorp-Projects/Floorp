@@ -7,7 +7,6 @@
 #include "ActorsChild.h"
 
 #include "BackgroundChildImpl.h"
-#include "FileManager.h"
 #include "IDBDatabase.h"
 #include "IDBEvents.h"
 #include "IDBFactory.h"

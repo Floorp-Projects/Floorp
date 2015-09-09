@@ -31,6 +31,8 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
 
+#include "FileInfo.h"
+#include "FileManager.h"
 #include "IDBEvents.h"
 #include "IDBFactory.h"
 #include "IDBKeyRange.h"

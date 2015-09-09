@@ -85,6 +85,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
+#include "nsQueryObject.h"
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"
 #include "nsThreadPool.h"
@@ -113,6 +114,9 @@
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
 #define IDB_MOBILE
 #endif
+
+#define BLOB_IMPL_STORED_FILE_IID \
+  {0x6b505c84, 0x2c60, 0x4ffb, {0x8b, 0x91, 0xfe, 0x22, 0xb1, 0xec, 0x75, 0xe2}}
 
 namespace mozilla {
 namespace dom {
@@ -8379,16 +8383,20 @@ private:
   ~DatabaseLoggingInfo();
 };
 
-class NonMainThreadHackBlobImpl final
+class BlobImplStoredFile final
   : public BlobImplFile
 {
-  bool mSnapshot;
+  nsRefPtr<FileInfo> mFileInfo;
+  const bool mSnapshot;
 
 public:
-  NonMainThreadHackBlobImpl(nsIFile* aFile, FileInfo* aFileInfo, bool aSnapshot)
-    : BlobImplFile(aFile, aFileInfo)
+  BlobImplStoredFile(nsIFile* aFile, FileInfo* aFileInfo, bool aSnapshot)
+    : BlobImplFile(aFile)
+    , mFileInfo(aFileInfo)
     , mSnapshot(aSnapshot)
   {
+    AssertIsOnBackgroundThread();
+
     // Getting the content type is not currently supported off the main thread.
     // This isn't a problem here because:
     //
@@ -8406,16 +8414,39 @@ public:
     mIsFile = false;
   }
 
-  virtual bool
-  IsSnapshot() const override
+  bool
+  IsShareable(FileManager* aFileManager) const
   {
-    return mSnapshot;
+    AssertIsOnBackgroundThread();
+
+    return mFileInfo->Manager() == aFileManager && !mSnapshot;
+  }
+
+  FileInfo*
+  GetFileInfo() const
+  {
+    AssertIsOnBackgroundThread();
+
+    return mFileInfo;
   }
 
 private:
-  ~NonMainThreadHackBlobImpl()
+  ~BlobImplStoredFile()
   { }
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECLARE_STATIC_IID_ACCESSOR(BLOB_IMPL_STORED_FILE_IID)
+
+  virtual int64_t
+  GetFileId() override
+  {
+    MOZ_ASSERT(mFileInfo);
+
+    return mFileInfo->Id();
+  }
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(BlobImplStoredFile, BLOB_IMPL_STORED_FILE_IID)
 
 class QuotaClient final
   : public mozilla::dom::quota::Client
@@ -9094,10 +9125,9 @@ ConvertBlobsToActors(PBackgroundParent* aBackgroundActor,
                                               fallible));
       }
     } else {
-      nsRefPtr<BlobImpl> impl =
-        new NonMainThreadHackBlobImpl(nativeFile,
-                                      file.mFileInfo,
-                                      /* aSnapshot */ false);
+      nsRefPtr<BlobImpl> impl = new BlobImplStoredFile(nativeFile,
+                                                       file.mFileInfo,
+                                                       /* aSnapshot */ false);
 
       PBlobParent* actor =
         BackgroundParent::GetOrCreateActorForBlobImpl(aBackgroundActor, impl);
@@ -13149,10 +13179,15 @@ Database::AllocPBackgroundIDBDatabaseFileParent(PBlobParent* aBlobParent)
     static_cast<BlobParent*>(aBlobParent)->GetBlobImpl();
   MOZ_ASSERT(blobImpl);
 
+  nsRefPtr<FileInfo> fileInfo;
   nsRefPtr<DatabaseFile> actor;
 
-  if (nsRefPtr<FileInfo> fileInfo = blobImpl->GetFileInfo(mFileManager)) {
+  nsRefPtr<BlobImplStoredFile> storedFileImpl = do_QueryObject(blobImpl);
+  if (storedFileImpl && storedFileImpl->IsShareable(mFileManager)) {
     // This blob was previously shared with the child.
+    fileInfo = storedFileImpl->GetFileInfo();
+    MOZ_ASSERT(fileInfo);
+
     actor = new DatabaseFile(fileInfo);
   } else {
     // This is a blob we haven't seen before.
@@ -16098,6 +16133,14 @@ FileManager::GetUsage(nsIFile* aDirectory, uint64_t* aUsage)
 }
 
 /*******************************************************************************
+ * FileImplStoredFile
+ ******************************************************************************/
+
+NS_IMPL_ISUPPORTS_INHERITED(BlobImplStoredFile,
+                            BlobImplFile,
+                            BlobImplStoredFile)
+
+/*******************************************************************************
  * QuotaClient
  ******************************************************************************/
 
@@ -19038,7 +19081,7 @@ MutableFile::CreateBlobImpl()
   AssertIsOnBackgroundThread();
 
   nsRefPtr<BlobImpl> blobImpl =
-    new NonMainThreadHackBlobImpl(mFile, mFileInfo, /* aSnapshot */ true);
+    new BlobImplStoredFile(mFile, mFileInfo, /* aSnapshot */ true);
   return blobImpl.forget();
 }
 
