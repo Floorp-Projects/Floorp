@@ -6,12 +6,14 @@ $inherits:
 task:
   scopes:
     - 'docker-worker:cache:build-aries-eng'
+    - 'docker-worker:cache:build-aries-eng-objdir-gecko-{{project}}'
   metadata:
     name: '[TC] B2G Aries Eng'
 
   payload:
     cache:
       build-aries-eng: /home/worker/workspace
+      build-aries-eng-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       TARGET: 'aries'
       MOZHARNESS_CONFIG: b2g/taskcluster-spark.py
