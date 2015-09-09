@@ -48,6 +48,58 @@ var fakeRooms = [
        { "displayName": "Alexis", "account": "alexis@example.com", "roomConnectionId": "2a1787a6-4a73-43b5-ae3e-906ec1e763cb" },
        { "displayName": "Adam", "roomConnectionId": "781f012b-f1ea-4ce1-9105-7cfc36fb4ec7" }
      ]
+  },
+  {
+    "roomToken": "REJRFfkdfkf",
+    "decryptedContext": {
+      "roomName": "Third Room Name"
+    },
+    "roomUrl": "http://localhost:3000/rooms/REJRFfkdfkf",
+    "roomOwner": "Alexis",
+    "maxSize": 2,
+    "creationTime": 1405537485,
+    "ctime": 1405537485,
+    "expiresAt": 1405554180,
+    "participants": []
+  },
+  {
+    "roomToken": "fjdkreFJDer",
+    "decryptedContext": {
+      "roomName": "Forth Room Name"
+    },
+    "roomUrl": "http://localhost:3000/rooms/fjdkreFJDer",
+    "roomOwner": "Alexis",
+    "maxSize": 2,
+    "creationTime": 1405546564,
+    "ctime": 1405546564,
+    "expiresAt": 1405564180,
+    "participants": []
+  },
+  {
+    "roomToken": "preFDREJhdf",
+    "decryptedContext": {
+      "roomName": "Fifth Room Name"
+    },
+    "roomUrl": "http://localhost:3000/rooms/preFDREJhdf",
+    "roomOwner": "Alexis",
+    "maxSize": 2,
+    "creationTime": 1405566934,
+    "ctime": 1405566934,
+    "expiresAt": 1405584180,
+    "participants": []
+  },
+  {
+    "roomToken": "preFLighdf",
+    "decryptedContext": {
+      "roomName": "Sixth Room Name"
+    },
+    "roomUrl": "http://localhost:3000/rooms/preFLighdf",
+    "roomOwner": "Alexis",
+    "maxSize": 2,
+    "creationTime": 1405576934,
+    "ctime": 1405576934,
+    "expiresAt": 1405614180,
+    "participants": []
   }
 ];
 
