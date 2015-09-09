@@ -97,7 +97,7 @@ AccessibleCaretManager::HideCarets()
 }
 
 void
-AccessibleCaretManager::UpdateCarets()
+AccessibleCaretManager::UpdateCarets(UpdateCaretsHint aHint)
 {
   mCaretMode = GetCaretMode();
 
@@ -106,16 +106,16 @@ AccessibleCaretManager::UpdateCarets()
     HideCarets();
     break;
   case CaretMode::Cursor:
-    UpdateCaretsForCursorMode();
+    UpdateCaretsForCursorMode(aHint);
     break;
   case CaretMode::Selection:
-    UpdateCaretsForSelectionMode();
+    UpdateCaretsForSelectionMode(aHint);
     break;
   }
 }
 
 void
-AccessibleCaretManager::UpdateCaretsForCursorMode()
+AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHint aHint)
 {
   AC_LOG("%s, selection: %p", __FUNCTION__, GetSelection());
 
@@ -148,11 +148,20 @@ AccessibleCaretManager::UpdateCaretsForCursorMode()
       break;
 
     case PositionChangedResult::Changed:
-      if (nsContentUtils::HasNonEmptyTextContent(
-            editingHost, nsContentUtils::eRecurseIntoChildren)) {
-        mFirstCaret->SetAppearance(Appearance::Normal);
-      } else {
-        mFirstCaret->SetAppearance(Appearance::NormalNotShown);
+      switch (aHint) {
+        case UpdateCaretsHint::Default:
+          if (nsContentUtils::HasNonEmptyTextContent(
+                editingHost, nsContentUtils::eRecurseIntoChildren)) {
+            mFirstCaret->SetAppearance(Appearance::Normal);
+          } else {
+            mFirstCaret->SetAppearance(Appearance::NormalNotShown);
+          }
+          break;
+
+        case UpdateCaretsHint::RespectOldAppearance:
+          // Do nothing to prevent the appearance of the caret being
+          // changed from NormalNotShown to Normal.
+          break;
       }
       break;
 
@@ -173,7 +182,7 @@ AccessibleCaretManager::UpdateCaretsForCursorMode()
 }
 
 void
-AccessibleCaretManager::UpdateCaretsForSelectionMode()
+AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
 {
   AC_LOG("%s: selection: %p", __FUNCTION__, GetSelection());
 
@@ -429,8 +438,8 @@ AccessibleCaretManager::OnScrollPositionChanged()
     return;
   }
 
-  AC_LOG("%s: UpdateCarets()", __FUNCTION__);
-  UpdateCarets();
+  AC_LOG("%s: UpdateCarets(RespectOldAppearance)", __FUNCTION__);
+  UpdateCarets(UpdateCaretsHint::RespectOldAppearance);
 }
 
 void
