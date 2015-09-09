@@ -106,7 +106,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["devtools.chrome.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["devtools.debugger.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["devtools.debugger.remote-enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
-  ["dom.ipc.plugins.asyncInit", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["dom.ipc.plugins.asyncInit.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["dom.ipc.plugins.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["experiments.manifest.uri", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["extensions.autoDisableScopes", TelemetryEnvironment.RECORD_PREF_VALUE],
