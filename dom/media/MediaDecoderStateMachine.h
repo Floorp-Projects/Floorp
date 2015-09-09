@@ -168,8 +168,6 @@ private:
   void InitializationTask();
 
   void SetAudioCaptured(bool aCaptured);
-  void DispatchAudioCaptured();
-  void DispatchAudioUncaptured();
 
   void Shutdown();
 public:
@@ -502,10 +500,6 @@ protected:
   // Called on the state machine thread.
   void StartMediaSink();
 
-  void StopDecodedStream();
-
-  void StartDecodedStream();
-
   // Notification method invoked when mPlayState changes.
   void PlayStateChanged();
 
@@ -657,10 +651,6 @@ private:
 
   // Rejected by the MediaSink to signal errors.
   void OnMediaSinkError();
-
-  void OnDecodedStreamFinish();
-
-  void OnDecodedStreamError();
 
   // Return true if the video decoder's decode speed can not catch up the
   // play time.
@@ -1274,7 +1264,6 @@ private:
   nsRefPtr<MediaResource> mResource;
 
   MozPromiseRequestHolder<GenericPromise> mMediaSinkPromise;
-  MozPromiseRequestHolder<GenericPromise> mDecodedStreamPromise;
 
   MediaEventListener mAudioQueueListener;
   MediaEventListener mVideoQueueListener;
