@@ -14,3 +14,4 @@ set -v
 # download script from the gecko repository
 url=${GECKO_HEAD_REPOSITORY}/raw-file/${GECKO_HEAD_REV}/${SCRIPT_PATH}
 wget --directory-prefix=${SCRIPT_DOWNLOAD_PATH} $url
+chmod +x `basename ${SCRIPT_PATH}`
