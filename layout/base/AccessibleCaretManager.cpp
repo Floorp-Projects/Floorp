@@ -125,24 +125,10 @@ AccessibleCaretManager::UpdateCaretsForCursorMode()
     return;
   }
 
-  nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
-  Selection* selection = GetSelection();
-  if (!fs || !selection) {
-    HideCarets();
-    return;
-  }
-
-  nsINode* focusNode = selection->GetFocusNode();
-  nsIContent* focusContent = focusNode->AsContent();
-  uint32_t focusOffset = selection->FocusOffset();
-
-  nsIFrame* frame = nullptr;
   int32_t offset = 0;
-  nsresult rv = nsCaret::GetCaretFrameForNodeOffset(
-    fs, focusContent, focusOffset, fs->GetHint(), fs->GetCaretBidiLevel(),
-    &frame, &offset);
+  nsIFrame* frame = nsCaret::GetFrameAndOffset(GetSelection(), nullptr, 0, &offset);
 
-  if (NS_FAILED(rv) || !frame) {
+  if (!frame) {
     HideCarets();
     return;
   }
