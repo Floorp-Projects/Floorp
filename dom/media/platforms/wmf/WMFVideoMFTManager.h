@@ -52,10 +52,6 @@ private:
                               int64_t aStreamOffset,
                               VideoData** aOutVideoData);
 
-  HRESULT SetDecoderMediaTypes();
-
-  bool MaybeToggleDXVA(IMFMediaType* aType);
-
   // Video frame geometry.
   VideoInfo mVideoInfo;
   uint32_t mVideoStride;
@@ -66,8 +62,6 @@ private:
   RefPtr<MFTDecoder> mDecoder;
   RefPtr<layers::ImageContainer> mImageContainer;
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
-
-  RefPtr<IMFSample> mLastInput;
 
   const bool mDXVAEnabled;
   const layers::LayersBackend mLayersBackend;
