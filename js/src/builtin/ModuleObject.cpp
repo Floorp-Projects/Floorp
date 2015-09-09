@@ -6,11 +6,14 @@
 
 #include "builtin/ModuleObject.h"
 
+#include "frontend/ParseNode.h"
+#include "frontend/SharedContext.h"
 #include "gc/Tracer.h"
 
 #include "jsobjinlines.h"
 
 using namespace js;
+using namespace js::frontend;
 
 typedef JS::Rooted<ImportEntryObject*> RootedImportEntry;
 typedef JS::Rooted<ExportEntryObject*> RootedExportEntry;
