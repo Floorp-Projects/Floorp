@@ -664,7 +664,7 @@ BluetoothService::FireAdapterStateChanged(bool aEnable)
   MOZ_ASSERT(NS_IsMainThread());
 
   InfallibleTArray<BluetoothNamedValue> props;
-  BT_APPEND_NAMED_VALUE(props, "State", aEnable);
+  AppendNamedValue(props, "State", aEnable);
 
   DistributeSignal(NS_LITERAL_STRING("PropertyChanged"),
                    NS_LITERAL_STRING(KEY_ADAPTER),

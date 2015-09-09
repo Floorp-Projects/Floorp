@@ -449,8 +449,8 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
       }
 
       InfallibleTArray<BluetoothNamedValue> props;
-      BT_APPEND_NAMED_VALUE(props, "Address", pairedDeviceAddresses[i]);
-      BT_APPEND_NAMED_VALUE(props, "Paired", true);
+      AppendNamedValue(props, "Address", pairedDeviceAddresses[i]);
+      AppendNamedValue(props, "Paired", true);
 
       // Create paired device and append to adapter's device array
       mDevices.AppendElement(

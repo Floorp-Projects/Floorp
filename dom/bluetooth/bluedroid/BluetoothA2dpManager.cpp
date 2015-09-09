@@ -631,7 +631,7 @@ BluetoothA2dpManager::ConnectionStateNotification(
   AvStatusToSinkString(aState, a2dpState);
 
   InfallibleTArray<BluetoothNamedValue> props;
-  BT_APPEND_NAMED_VALUE(props, "State", a2dpState);
+  AppendNamedValue(props, "State", a2dpState);
 
   HandleSinkPropertyChanged(BluetoothSignal(NS_LITERAL_STRING("AudioSink"),
                                             nsString(aBdAddr), props));
@@ -656,7 +656,7 @@ BluetoothA2dpManager::AudioStateNotification(BluetoothA2dpAudioState aState,
   }
 
   InfallibleTArray<BluetoothNamedValue> props;
-  BT_APPEND_NAMED_VALUE(props, "State", a2dpState);
+  AppendNamedValue(props, "State", a2dpState);
 
   HandleSinkPropertyChanged(BluetoothSignal(NS_LITERAL_STRING("AudioSink"),
                                             nsString(aBdAddr), props));
