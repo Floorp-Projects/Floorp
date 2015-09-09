@@ -394,9 +394,6 @@
 @BINPATH@/components/contentAreaDropListener.js
 @BINPATH@/components/messageWakeupService.js
 @BINPATH@/components/messageWakeupService.manifest
-#ifdef MOZ_ENABLE_DBUS
-@BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
-#endif
 @BINPATH@/components/nsINIProcessor.manifest
 @BINPATH@/components/nsINIProcessor.js
 @BINPATH@/components/nsPrompter.manifest
