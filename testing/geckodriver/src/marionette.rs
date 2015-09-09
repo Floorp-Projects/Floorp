@@ -131,21 +131,11 @@ impl MarionetteHandler {
     }
 
     fn create_connection(&mut self, session_id: &Option<String>) -> WebDriverResult<()> {
-        if let Err(e) = self.start_browser() {
-            error!("Error starting browser: {}", e.description());
-            return Err(WebDriverError::new(
-                ErrorStatus::UnknownError,
-                "Failed to start browser")
-            )
-        };
+        try!(self.start_browser());
         debug!("Creating connection");
         let mut connection = MarionetteConnection::new(self.port, session_id.clone());
         debug!("Starting marionette connection");
-        if let Err(e) = connection.connect() {
-            return Err(WebDriverError::new(
-                ErrorStatus::UnknownError,
-                &format!("Failed to start marionette connection:\n{}", e.description())[..]));
-        }
+        try!(connection.connect());
         debug!("Marionette connection started");
         self.connection = Mutex::new(Some(connection));
         Ok(())
@@ -236,13 +226,8 @@ impl WebDriverHandler for MarionetteHandler {
 
 pub struct MarionetteSession {
     pub session_id: String,
-    pub to: String
-}
-
-fn object_from_json(data: &str) -> WebDriverResult<BTreeMap<String, Json>> {
-    Ok(try_opt!(try!(Json::from_str(data)).as_object(),
-                ErrorStatus::UnknownError,
-                "Expected a json object").clone())
+    protocol: Option<String>,
+    application_type: Option<String>
 }
 
 impl MarionetteSession {
@@ -250,24 +235,25 @@ impl MarionetteSession {
         let initital_id = session_id.unwrap_or("".to_string());
         MarionetteSession {
             session_id: initital_id,
-            to: "root".to_string()
+            protocol: None,
+            application_type: None
         }
     }
 
     pub fn msg_to_marionette(&self, msg: &WebDriverMessage) -> WebDriverResult<Json> {
         let x = try!(msg.to_marionette());
-        let mut data = try_opt!(x.as_object(),
-                                ErrorStatus::UnknownError,
-                                "Message was not a JSON Object").clone();
-        data.insert("to".to_string(), self.to.to_json());
+        let data = try_opt!(x.as_object(),
+                            ErrorStatus::UnknownError,
+                            "Message was not a JSON Object").clone();
         Ok(Json::Object(data))
     }
 
-    pub fn update(&mut self, msg: &WebDriverMessage, resp: &BTreeMap<String, Json>) -> WebDriverResult<()> {
+    pub fn update(&mut self, msg: &WebDriverMessage,
+                  resp: &Json) -> WebDriverResult<()> {
         match msg.command {
             NewSession => {
                 let session_id = try_opt!(
-                    try_opt!(resp.get("sessionId"),
+                    try_opt!(resp.find("sessionId"),
                              ErrorStatus::SessionNotCreated,
                              "Unable to get session id").as_string(),
                         ErrorStatus::SessionNotCreated,
@@ -304,9 +290,10 @@ impl MarionetteSession {
 
     pub fn response_from_json(&mut self, message: &WebDriverMessage,
                               data: &str) -> WebDriverResult<WebDriverResponse> {
-        let json_data = try!(object_from_json(data));
 
-        if let Some(error) = json_data.get("error") {
+        let json_data = try!(Json::from_str(data));
+
+        if let Some(error) = json_data.find("error") {
             let error = try_opt!(error.as_object(),
                                  ErrorStatus::UnknownError,
                                  "Marionette error field was not an object");
@@ -343,7 +330,7 @@ impl MarionetteSession {
             GetElementAttribute(_, _) | GetCSSValue(_, _) | GetElementText(_) |
             GetElementTagName(_) | IsEnabled(_) | ExecuteScript(_) | ExecuteAsyncScript(_) |
             GetAlertText | TakeScreenshot => {
-                let value = try_opt!(json_data.get("value"),
+                let value = try_opt!(json_data.find("value"),
                                      ErrorStatus::UnknownError,
                                      "Failed to find value field");
                 //TODO: Convert webelement keys
@@ -351,7 +338,7 @@ impl MarionetteSession {
             },
             GetWindowSize => {
                 let value = try_opt!(
-                    try_opt!(json_data.get("value"),
+                    try_opt!(json_data.find("value"),
                              ErrorStatus::UnknownError,
                              "Failed to find value field").as_object(),
                     ErrorStatus::UnknownError,
@@ -375,7 +362,7 @@ impl MarionetteSession {
             },
             GetElementRect(_) => {
                 let value = try_opt!(
-                    try_opt!(json_data.get("value"),
+                    try_opt!(json_data.find("value"),
                              ErrorStatus::UnknownError,
                              "Failed to find value field").as_object(),
                     ErrorStatus::UnknownError,
@@ -412,28 +399,25 @@ impl MarionetteSession {
                 WebDriverResponse::ElementRect(ElementRectResponse::new(x, y, width, height))
             },
             GetCookies => {
-                let cookies = try!(self.process_cookies(json_data));
+                let cookies = try!(self.process_cookies(&json_data));
                 WebDriverResponse::Cookie(CookieResponse::new(cookies))
             },
             GetCookie(ref name) => {
-                let mut cookies = try!(self.process_cookies(json_data));
+                let mut cookies = try!(self.process_cookies(&json_data));
                 cookies.retain(|x| x.name == *name);
                 WebDriverResponse::Cookie(CookieResponse::new(cookies))
             }
             FindElement(_) | FindElementElement(_, _) => {
                 let element = try!(self.to_web_element(
-                    try_opt!(json_data.get("value"),
+                    try_opt!(json_data.find("value"),
                              ErrorStatus::UnknownError,
                              "Failed to find value field")));
                 WebDriverResponse::Generic(ValueResponse::new(element.to_json()))
             },
             FindElements(_) | FindElementElements(_, _) => {
-                let element_vec = try_opt!(
-                    try_opt!(json_data.get("value"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find value field").as_array(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret value as array");
+                let element_vec = try_opt!(json_data.as_array(),
+                                           ErrorStatus::UnknownError,
+                                           "Failed to interpret value as array");
                 let elements = try!(element_vec.iter().map(
                     |x| {
                         self.to_web_element(x)
@@ -443,14 +427,14 @@ impl MarionetteSession {
             },
             GetActiveElement => {
                 let element = try!(self.to_web_element(
-                    try_opt!(json_data.get("value"),
+                    try_opt!(json_data.find("value"),
                              ErrorStatus::UnknownError,
                              "Failed to find value field")));
                 WebDriverResponse::Generic(ValueResponse::new(element.to_json()))
             },
             NewSession => {
                 let mut session_id = try_opt!(
-                    try_opt!(json_data.get("sessionId"),
+                    try_opt!(json_data.find("sessionId"),
                              ErrorStatus::InvalidSessionId,
                              "Failed to find sessionId field").as_string(),
                     ErrorStatus::InvalidSessionId,
@@ -460,16 +444,16 @@ impl MarionetteSession {
                     session_id = &session_id[1..session_id.len()-1];
                 }
 
-                let value = try_opt!(
-                    try_opt!(json_data.get("value"),
+                let capabilities = try_opt!(
+                    try_opt!(json_data.find("capabilities"),
                              ErrorStatus::UnknownError,
-                             "Failed to find value field").as_object(),
+                             "Failed to find capabilities field").as_object(),
                     ErrorStatus::UnknownError,
-                    "value field was not an Object");
+                    "capabiltites field was not an Object");
 
                 WebDriverResponse::NewSession(NewSessionResponse::new(
-                    session_id.to_string(), Json::Object(value.clone())))
-            }
+                    session_id.to_string(), Json::Object(capabilities.clone())))
+            },
             DeleteSession => {
                 WebDriverResponse::DeleteSession
             },
@@ -479,9 +463,9 @@ impl MarionetteSession {
         })
     }
 
-    fn process_cookies(&self, json_data: BTreeMap<String, Json>) -> WebDriverResult<Vec<Cookie>> {
+    fn process_cookies(&self, json_data: &Json) -> WebDriverResult<Vec<Cookie>> {
         let value = try_opt!(
-            try_opt!(json_data.get("value"),
+            try_opt!(json_data.find("value"),
                      ErrorStatus::UnknownError,
                      "Failed to find value field").as_array(),
             ErrorStatus::UnknownError,
@@ -586,7 +570,7 @@ impl MarionetteConnection {
         }
     }
 
-    pub fn connect(&mut self) -> IoResult<()> {
+    pub fn connect(&mut self) -> WebDriverResult<()> {
         let timeout = 60 * 1000; // milliseconds
         let poll_interval = 100; // milliseconds
         let poll_attempts = timeout / poll_interval;
@@ -603,7 +587,8 @@ impl MarionetteConnection {
                         poll_attempt += 1;
                         sleep_ms(poll_interval);
                     } else {
-                        return Err(e);
+                        return Err(WebDriverError::new(ErrorStatus::UnknownError,
+                                                       e.description()));
                     }
                 }
             }
@@ -611,30 +596,27 @@ impl MarionetteConnection {
 
         debug!("TCP stream open");
 
-        self.handshake()
+        try!(self.handshake());
+
+        Ok(())
     }
 
-    fn handshake(&mut self) -> IoResult<()> {
-        try!(self.read_resp());
+    fn handshake(&mut self) -> WebDriverResult<()> {
+        let resp = try!(self.read_resp());
+        let handshake_data = try!(Json::from_str(&resp[..]));
 
-        //Would get traits and application type here
-        let mut msg = BTreeMap::new();
-        msg.insert("name".to_string(), "getMarionetteID".to_json());
-        msg.insert("to".to_string(), "root".to_json());
-        match self.send(&msg.to_json()) {
-            Ok(resp) => {
-                let json_data = object_from_json(&resp[..]).ok().expect("Failed to connect to marionette");
-                match json_data.get(&"id".to_string()) {
-                    Some(x) => match x.as_string() {
-                        Some(id) => self.session.to = id.to_string(),
-                        None => panic!("Failed to connect to marionette")
-                    },
-                    None => panic!("Failed to connect to marionette")
-                };
-                Ok(())
-            }
-            Err(_) => panic!("Failed to connect to marionette")
-        }
+        let data = try_opt!(handshake_data.as_object(),
+                            ErrorStatus::UnknownError,
+                            "Expected a json object in handshake");
+
+        self.session.protocol = Some(try_opt!(data.get("marionetteProtocol"),
+                                      ErrorStatus::UnknownError,
+                                      "Missing marionetteProtocol field in handshake").to_string());
+
+        self.session.application_type = Some(try_opt!(data.get("applicationType"),
+                                              ErrorStatus::UnknownError,
+                                              "Missing applicationType field in handshake").to_string());
+        Ok(())
     }
 
     pub fn close(&self) {
