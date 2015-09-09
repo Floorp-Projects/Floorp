@@ -41,6 +41,14 @@ EXTRA_JS_MODULES['services-sync'] += [
     'modules/util.js',
 ]
 
+EXTRA_PP_JS_MODULES['services-sync'] += [
+    'modules/constants.js',
+]
+
+# Definitions used by constants.js
+DEFINES['weave_version'] = '1.45.0'
+DEFINES['weave_id'] = '{340c2bbc-ce74-4362-90b5-7c26312808ef}'
+
 EXTRA_JS_MODULES['services-sync'].engines += [
     'modules/engines/addons.js',
     'modules/engines/bookmarks.js',
