@@ -449,12 +449,16 @@ impl MarionetteSession {
                 WebDriverResponse::Generic(ValueResponse::new(element.to_json()))
             },
             NewSession => {
-                let session_id = try_opt!(
+                let mut session_id = try_opt!(
                     try_opt!(json_data.get("sessionId"),
                              ErrorStatus::InvalidSessionId,
                              "Failed to find sessionId field").as_string(),
                     ErrorStatus::InvalidSessionId,
-                    "sessionId was not a string").to_string();
+                    "sessionId was not a string");
+
+                if session_id.starts_with("{") && session_id.ends_with("}") {
+                    session_id = &session_id[1..session_id.len()-1];
+                }
 
                 let value = try_opt!(
                     try_opt!(json_data.get("value"),
@@ -464,7 +468,7 @@ impl MarionetteSession {
                     "value field was not an Object");
 
                 WebDriverResponse::NewSession(NewSessionResponse::new(
-                    session_id, Json::Object(value.clone())))
+                    session_id.to_string(), Json::Object(value.clone())))
             }
             DeleteSession => {
                 WebDriverResponse::DeleteSession
