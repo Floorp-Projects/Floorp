@@ -58,118 +58,12 @@ public:
                       ImageContainer* aContainer,
                       Image** aOutImage) override;
 
-  virtual bool SupportsConfig(IMFMediaType* aType) override;
-
 private:
   nsRefPtr<IDirect3D9Ex> mD3D9;
   nsRefPtr<IDirect3DDevice9Ex> mDevice;
   nsRefPtr<IDirect3DDeviceManager9> mDeviceManager;
-  nsRefPtr<IDirectXVideoDecoderService> mDecoderService;
   UINT32 mResetToken;
 };
-
-void GetDXVA2ExtendedFormatFromMFMediaType(IMFMediaType *pType,
-                                           DXVA2_ExtendedFormat *pFormat)
-{
-  // Get the interlace mode.
-  MFVideoInterlaceMode interlace =
-    (MFVideoInterlaceMode)MFGetAttributeUINT32(pType, MF_MT_INTERLACE_MODE, MFVideoInterlace_Unknown);
-
-  if (interlace == MFVideoInterlace_MixedInterlaceOrProgressive) {
-    pFormat->SampleFormat = DXVA2_SampleFieldInterleavedEvenFirst;
-  } else {
-    pFormat->SampleFormat = (UINT)interlace;
-  }
-
-  pFormat->VideoChromaSubsampling =
-    MFGetAttributeUINT32(pType, MF_MT_VIDEO_CHROMA_SITING, MFVideoChromaSubsampling_Unknown);
-  pFormat->NominalRange =
-    MFGetAttributeUINT32(pType, MF_MT_VIDEO_NOMINAL_RANGE, MFNominalRange_Unknown);
-  pFormat->VideoTransferMatrix =
-    MFGetAttributeUINT32(pType, MF_MT_YUV_MATRIX, MFVideoTransferMatrix_Unknown);
-  pFormat->VideoLighting =
-    MFGetAttributeUINT32(pType, MF_MT_VIDEO_LIGHTING, MFVideoLighting_Unknown);
-  pFormat->VideoPrimaries =
-    MFGetAttributeUINT32(pType, MF_MT_VIDEO_PRIMARIES, MFVideoPrimaries_Unknown);
-  pFormat->VideoTransferFunction =
-    MFGetAttributeUINT32(pType, MF_MT_TRANSFER_FUNCTION, MFVideoTransFunc_Unknown);
-}
-
-HRESULT ConvertMFTypeToDXVAType(IMFMediaType *pType, DXVA2_VideoDesc *pDesc)
-{
-  ZeroMemory(pDesc, sizeof(*pDesc));
-
-  // The D3D format is the first DWORD of the subtype GUID.
-  GUID subtype = GUID_NULL;
-  HRESULT hr = pType->GetGUID(MF_MT_SUBTYPE, &subtype);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-  pDesc->Format = (D3DFORMAT)subtype.Data1;
-
-  UINT32 width = 0;
-  UINT32 height = 0;
-  hr = MFGetAttributeSize(pType, MF_MT_FRAME_SIZE, &width, &height);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-  pDesc->SampleWidth = width;
-  pDesc->SampleHeight = height;
-
-  UINT32 fpsNumerator = 0;
-  UINT32 fpsDenominator = 0;
-  hr = MFGetAttributeRatio(pType, MF_MT_FRAME_RATE, &fpsNumerator, &fpsDenominator);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-  pDesc->InputSampleFreq.Numerator = fpsNumerator;
-  pDesc->InputSampleFreq.Denominator = fpsDenominator;
-
-  GetDXVA2ExtendedFormatFromMFMediaType(pType, &pDesc->SampleFormat);
-  pDesc->OutputFrameFreq = pDesc->InputSampleFreq;
-  if ((pDesc->SampleFormat.SampleFormat == DXVA2_SampleFieldInterleavedEvenFirst) ||
-      (pDesc->SampleFormat.SampleFormat == DXVA2_SampleFieldInterleavedOddFirst)) {
-    pDesc->OutputFrameFreq.Numerator *= 2;
-  }
-
-  return S_OK;
-}
-
-static const GUID DXVA2_ModeH264_E = {
-  0x1b81be68, 0xa0c7, 0x11d3, { 0xb9, 0x84, 0x00, 0xc0, 0x4f, 0x2e, 0x73, 0xc5 }
-};
-
-// This tests if a DXVA video decoder can be created for the given media type/resolution.
-// It uses the same decoder device (DXVA2_ModeH264_E - DXVA2_ModeH264_VLD_NoFGT) as the H264
-// decoder MFT provided by windows (CLSID_CMSH264DecoderMFT) uses, so we can use it to determine
-// if the MFT will use software fallback or not.
-bool
-D3D9DXVA2Manager::SupportsConfig(IMFMediaType* aType)
-{
-  DXVA2_VideoDesc desc;
-  HRESULT hr = ConvertMFTypeToDXVAType(aType, &desc);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
-
-  UINT configCount;
-  DXVA2_ConfigPictureDecode* configs = nullptr;
-  hr = mDecoderService->GetDecoderConfigurations(DXVA2_ModeH264_E, &desc, nullptr, &configCount, &configs);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
-
-  nsRefPtr<IDirect3DSurface9> surface;
-  hr = mDecoderService->CreateSurface(desc.SampleWidth, desc.SampleHeight, 0, (D3DFORMAT)MAKEFOURCC('N', 'V', '1', '2'),
-  D3DPOOL_DEFAULT, 0, DXVA2_VideoDecoderRenderTarget,
-  surface.StartAssignment(), NULL);
-  if (!SUCCEEDED(hr)) {
-    CoTaskMemFree(configs);
-    return false;
-  }
-
-  for (UINT i = 0; i < configCount; i++) {
-    nsRefPtr<IDirectXVideoDecoder> decoder;
-    IDirect3DSurface9* surfaces = surface;
-    hr = mDecoderService->CreateVideoDecoder(DXVA2_ModeH264_E, &desc, &configs[i], &surfaces, 1, decoder.StartAssignment());
-    if (SUCCEEDED(hr) && decoder) {
-      CoTaskMemFree(configs);
-      return true;
-    }
-  }
-  CoTaskMemFree(configs);
-  return false;
-}
 
 D3D9DXVA2Manager::D3D9DXVA2Manager()
   : mResetToken(0)
@@ -257,35 +151,6 @@ D3D9DXVA2Manager::Init()
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
   hr = deviceManager->ResetDevice(device, resetToken);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  HANDLE deviceHandle;
-  nsRefPtr<IDirectXVideoDecoderService> decoderService;
-  hr = deviceManager->OpenDeviceHandle(&deviceHandle);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  hr = deviceManager->GetVideoService(deviceHandle, IID_PPV_ARGS(decoderService.StartAssignment()));
-  deviceManager->CloseDeviceHandle(deviceHandle);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  UINT deviceCount;
-  GUID* decoderDevices = nullptr;
-  hr = decoderService->GetDecoderDeviceGuids(&deviceCount, &decoderDevices);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  bool found = false;
-  for (UINT i = 0; i < deviceCount; i++) {
-    if (decoderDevices[i] == DXVA2_ModeH264_E) {
-      found = true;
-      break;
-    }
-  }
-  CoTaskMemFree(decoderDevices);
-
-  if (!found) {
-   return E_FAIL;
- }
-
-  mDecoderService = decoderService;
 
   mResetToken = resetToken;
   mD3D9 = d3d9Ex;

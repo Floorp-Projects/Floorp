@@ -101,7 +101,7 @@ WMFDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
     new WMFMediaDataDecoder(new WMFVideoMFTManager(aConfig,
                                                    aLayersBackend,
                                                    aImageContainer,
-                                                   sDXVAEnabled),
+                                                   sDXVAEnabled && ShouldUseDXVA(aConfig)),
                             aVideoTaskQueue,
                             aCallback);
   return decoder.forget();
@@ -120,9 +120,32 @@ WMFDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
 }
 
 bool
+WMFDecoderModule::ShouldUseDXVA(const VideoInfo& aConfig) const
+{
+  static bool isAMD = false;
+  static bool initialized = false;
+  if (!initialized) {
+    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+    nsAutoString vendor;
+    gfxInfo->GetAdapterVendorID(vendor);
+    isAMD = vendor.Equals(widget::GfxDriverInfo::GetDeviceVendor(widget::VendorAMD), nsCaseInsensitiveStringComparator()) ||
+            vendor.Equals(widget::GfxDriverInfo::GetDeviceVendor(widget::VendorATI), nsCaseInsensitiveStringComparator());
+    initialized = true;
+  }
+  if (!isAMD) {
+    return true;
+  }
+  // Don't use DXVA for 4k videos or above, since it seems to perform poorly.
+  return aConfig.mDisplay.width <= 1920 && aConfig.mDisplay.height <= 1200;
+}
+
+bool
 WMFDecoderModule::SupportsSharedDecoders(const VideoInfo& aConfig) const
 {
-  return !AgnosticMimeType(aConfig.mMimeType);
+  // If DXVA is enabled, but we're not going to use it for this specific config, then
+  // we can't use the shared decoder.
+  return !AgnosticMimeType(aConfig.mMimeType) &&
+    (!sDXVAEnabled || ShouldUseDXVA(aConfig));
 }
 
 bool
