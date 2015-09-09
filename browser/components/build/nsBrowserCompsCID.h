@@ -10,6 +10,12 @@
 
 #define NS_IEHISTORYENUMERATOR_CONTRACTID \
   "@mozilla.org/profile/migrator/iehistoryenumerator;1"
+
+#define NS_EDGEREADINGLISTEXTRACTOR_CID \
+{ 0xeeff77b1, 0xdb98, 0x4241, { 0x94, 0x36, 0x14, 0xf7, 0xa2, 0x28, 0x84, 0xc1 } }
+
+#define NS_EDGEREADINGLISTEXTRACTOR_CONTRACTID \
+  "@mozilla.org/profile/migrator/edgereadinglistextractor;1"
 #endif
 
 #define NS_SHELLSERVICE_CID \
