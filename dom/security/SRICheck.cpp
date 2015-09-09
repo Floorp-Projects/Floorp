@@ -191,7 +191,7 @@ SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
                                       NS_LITERAL_CSTRING("Sub-resource Integrity"),
                                       aDocument,
                                       nsContentUtils::eSECURITY_PROPERTIES,
-                                      "MalformedIntegrityURI",
+                                      "MalformedIntegrityHash",
                                       params, ArrayLength(params));
     } else if (!metadata.IsAlgorithmSupported()) {
       nsAutoCString alg;
