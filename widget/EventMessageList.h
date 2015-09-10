@@ -215,7 +215,7 @@ NS_EVENT_MESSAGE(ePaste,                eClipboardEventFirst + 2)
 NS_EVENT_MESSAGE(eQueryContentEventFirst,       3200)
 // Query for the selected text information, it return the selection offset,
 // selection length and selected text.
-NS_EVENT_MESSAGE(NS_QUERY_SELECTED_TEXT,        eQueryContentEventFirst)
+NS_EVENT_MESSAGE(eQuerySelectedText,            eQueryContentEventFirst)
 // Query for the text content of specified range, it returns actual lengh (if
 // the specified range is too long) and the text of the specified range.
 // Returns the entire text if requested length > actual length.

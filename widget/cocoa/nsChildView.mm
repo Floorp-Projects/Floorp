@@ -1824,7 +1824,7 @@ nsChildView::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
   // the physical direction of the arrow.
   if (aEvent.keyCode >= nsIDOMKeyEvent::DOM_VK_LEFT &&
       aEvent.keyCode <= nsIDOMKeyEvent::DOM_VK_DOWN) {
-    WidgetQueryContentEvent query(true, NS_QUERY_SELECTED_TEXT, this);
+    WidgetQueryContentEvent query(true, eQuerySelectedText, this);
     DispatchWindowEvent(query);
 
     if (query.mSucceeded && query.mReply.mWritingMode.IsVertical()) {

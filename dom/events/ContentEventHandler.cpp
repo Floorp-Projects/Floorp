@@ -796,7 +796,7 @@ nsresult
 ContentEventHandler::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
 {
   switch (aEvent->mMessage) {
-    case NS_QUERY_SELECTED_TEXT:
+    case eQuerySelectedText:
       return OnQuerySelectedText(aEvent);
     case NS_QUERY_TEXT_CONTENT:
       return OnQueryTextContent(aEvent);
