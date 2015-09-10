@@ -5614,6 +5614,27 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode* aNode,
     if (mHTMLEditor->IsVisBreak(nextNode->AsDOMNode())) {
       break;
     }
+
+    // Check for newlines in pre-formatted text nodes.
+    bool isPRE;
+    mHTMLEditor->IsPreformatted(nextNode->AsDOMNode(), &isPRE);
+    if (isPRE) {
+      nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(nextNode);
+      if (textNode) {
+        nsAutoString tempString;
+        textNode->GetData(tempString);
+        int32_t newlinePos = tempString.FindChar(nsCRT::LF);
+        if (newlinePos >= 0) {
+          if ((uint32_t)newlinePos + 1 == tempString.Length()) {
+            // No need for special processing if the newline is at the end.
+            break;
+          }
+          *outNode = nextNode->AsDOMNode();
+          *outOffset = newlinePos + 1;
+          return;
+        }
+      }
+    }
     NS_ENSURE_TRUE(mHTMLEditor, /* void */);
     nextNode = mHTMLEditor->GetNextHTMLNode(node, offset, true);
   }
@@ -5780,6 +5801,29 @@ nsHTMLEditRules::GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& aArrayOfRange
 
   int32_t rangeCount = aArrayOfRanges.Length();
   nsresult res = NS_OK;
+
+  // Split text nodes. This is necessary, since GetPromotedPoint() may return a
+  // range ending in a text node in case where part of a pre-formatted
+  // elements needs to be moved.
+  for (int32_t i = 0; i < rangeCount; i++) {
+    nsRefPtr<nsRange> r = aArrayOfRanges[i];
+    nsCOMPtr<nsIContent> endParent = do_QueryInterface(r->GetEndParent());
+
+    if (mHTMLEditor->IsTextNode(endParent)) {
+      int32_t offset = r->EndOffset();
+
+      // Split the text node.
+      nsCOMPtr<nsIDOMNode> tempNode;
+      res = mHTMLEditor->SplitNode(endParent->AsDOMNode(), offset,
+                                   getter_AddRefs(tempNode));
+      NS_ENSURE_SUCCESS(res, res);
+
+      // Correct the range.
+      // The new end parent becomes the parent node of the text.
+      nsCOMPtr<nsIContent> newParent = endParent->GetParent();
+      r->SetEnd(newParent, newParent->IndexOf(endParent));
+    }
+  }
 
   // Bust up any inlines that cross our range endpoints, but only if we are
   // allowed to touch content.
