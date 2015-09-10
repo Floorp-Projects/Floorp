@@ -498,24 +498,23 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         abs_res_plugins_dir = os.path.join(abs_res_dir, 'plugins')
         abs_res_extensions_dir = os.path.join(abs_res_dir, 'extensions')
 
-        if suites:  # there are xpcshell suites to run
-            self.mkdir_p(abs_res_plugins_dir)
-            self.info('copying %s to %s' % (os.path.join(dirs['abs_test_bin_dir'],
-                      c['xpcshell_name']), os.path.join(abs_app_dir,
-                                                        c['xpcshell_name'])))
-            shutil.copy2(os.path.join(dirs['abs_test_bin_dir'], c['xpcshell_name']),
-                         os.path.join(abs_app_dir, c['xpcshell_name']))
-            self.copytree(dirs['abs_test_bin_components_dir'],
-                          abs_res_components_dir,
+        self.mkdir_p(abs_res_plugins_dir)
+        self.info('copying %s to %s' % (os.path.join(dirs['abs_test_bin_dir'],
+                  c['xpcshell_name']), os.path.join(abs_app_dir,
+                                                    c['xpcshell_name'])))
+        shutil.copy2(os.path.join(dirs['abs_test_bin_dir'], c['xpcshell_name']),
+                     os.path.join(abs_app_dir, c['xpcshell_name']))
+        self.copytree(dirs['abs_test_bin_components_dir'],
+                      abs_res_components_dir,
+                      overwrite='overwrite_if_exists')
+        self.copytree(dirs['abs_test_bin_plugins_dir'],
+                      abs_res_plugins_dir,
+                      overwrite='overwrite_if_exists')
+        if os.path.isdir(dirs['abs_test_extensions_dir']):
+            self.mkdir_p(abs_res_extensions_dir)
+            self.copytree(dirs['abs_test_extensions_dir'],
+                          abs_res_extensions_dir,
                           overwrite='overwrite_if_exists')
-            self.copytree(dirs['abs_test_bin_plugins_dir'],
-                          abs_res_plugins_dir,
-                          overwrite='overwrite_if_exists')
-            if os.path.isdir(dirs['abs_test_extensions_dir']):
-                self.mkdir_p(abs_res_extensions_dir)
-                self.copytree(dirs['abs_test_extensions_dir'],
-                              abs_res_extensions_dir,
-                              overwrite='overwrite_if_exists')
 
     def preflight_cppunittest(self, suites):
         abs_res_dir = self.query_abs_res_dir()
@@ -549,20 +548,20 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         abs_app_dir = self.query_abs_app_dir()
         abs_app_plugins_dir = os.path.join(abs_app_dir, 'plugins')
         abs_app_extensions_dir = os.path.join(abs_app_dir, 'extensions')
-        if suites:  # there are mozmill suites to run
-            self.mkdir_p(abs_app_plugins_dir)
-            self.copytree(dirs['abs_test_bin_plugins_dir'],
-                          abs_app_plugins_dir,
+
+        self.mkdir_p(abs_app_plugins_dir)
+        self.copytree(dirs['abs_test_bin_plugins_dir'],
+                      abs_app_plugins_dir,
+                      overwrite='overwrite_if_exists')
+        if os.path.isdir(dirs['abs_test_extensions_dir']):
+            self.copytree(dirs['abs_test_extensions_dir'],
+                          abs_app_extensions_dir,
                           overwrite='overwrite_if_exists')
-            if os.path.isdir(dirs['abs_test_extensions_dir']):
-                self.copytree(dirs['abs_test_extensions_dir'],
-                              abs_app_extensions_dir,
-                              overwrite='overwrite_if_exists')
-            modules = ['jsbridge', 'mozmill']
-            for module in modules:
-                self.install_module(module=os.path.join(dirs['abs_mozmill_dir'],
-                                                        'resources',
-                                                        module))
+        modules = ['jsbridge', 'mozmill']
+        for module in modules:
+            self.install_module(module=os.path.join(dirs['abs_mozmill_dir'],
+                                                    'resources',
+                                                    module))
 
     def _run_category_suites(self, suite_category, preflight_run_method=None):
         """run suite(s) to a specific category"""
@@ -572,9 +571,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         abs_app_dir = self.query_abs_app_dir()
         abs_res_dir = self.query_abs_res_dir()
 
-        if preflight_run_method:
-            preflight_run_method(suites)
         if suites:
+            if preflight_run_method:
+                preflight_run_method(suites)
             self.info('#### Running %s suites' % suite_category)
             for suite in suites:
                 abs_base_cmd = self._query_abs_base_cmd(suite_category, suite)
