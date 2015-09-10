@@ -138,10 +138,17 @@ class FirefoxUITests(VCSToolsScript, VirtualenvMixin):
     def _pre_create_virtualenv(self, action):
         dirs = self.query_abs_dirs()
 
-        self.register_virtualenv_module(
-            'firefox-ui-tests',
-            url=dirs['fx_ui_dir'],
-        )
+        # List of exact versions of mozbase packages which are known to work
+        requirements_file = os.path.join(dirs['fx_ui_dir'], 'requirements.txt')
+        if os.path.isfile(requirements_file):
+            self.register_virtualenv_module(requirements=[requirements_file])
+
+        # Optional packages to be installed, e.g. for Jenkins
+        if self.config.get('virtualenv_modules'):
+            for module in self.config['virtualenv_modules']:
+                self.register_virtualenv_module(module)
+
+        self.register_virtualenv_module('firefox-ui-tests', url=dirs['fx_ui_dir'])
 
     def _query_symbols_url(self, installer_url):
         for suffix in INSTALLER_SUFFIXES:
