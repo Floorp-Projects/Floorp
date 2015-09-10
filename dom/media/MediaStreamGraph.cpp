@@ -2144,18 +2144,16 @@ MediaStream::RemoveVideoOutput(VideoFrameContainer* aContainer)
 }
 
 void
-MediaStream::ChangeExplicitBlockerCount(int32_t aDelta)
+MediaStream::Suspend()
 {
   class Message : public ControlMessage {
   public:
-    Message(MediaStream* aStream, int32_t aDelta) :
-      ControlMessage(aStream), mDelta(aDelta) {}
+    explicit Message(MediaStream* aStream) :
+      ControlMessage(aStream) {}
     virtual void Run()
     {
-      mStream->ChangeExplicitBlockerCountImpl(
-          mStream->GraphImpl()->mStateComputedTime, mDelta);
+      mStream->GraphImpl()->IncrementSuspendCount(mStream);
     }
-    int32_t mDelta;
   };
 
   // This can happen if this method has been called asynchronously, and the
@@ -2163,7 +2161,28 @@ MediaStream::ChangeExplicitBlockerCount(int32_t aDelta)
   if (mMainThreadDestroyed) {
     return;
   }
-  GraphImpl()->AppendMessage(new Message(this, aDelta));
+  GraphImpl()->AppendMessage(new Message(this));
+}
+
+void
+MediaStream::Resume()
+{
+  class Message : public ControlMessage {
+  public:
+    explicit Message(MediaStream* aStream) :
+      ControlMessage(aStream) {}
+    virtual void Run()
+    {
+      mStream->GraphImpl()->DecrementSuspendCount(mStream);
+    }
+  };
+
+  // This can happen if this method has been called asynchronously, and the
+  // stream has been destroyed since then.
+  if (mMainThreadDestroyed) {
+    return;
+  }
+  GraphImpl()->AppendMessage(new Message(this));
 }
 
 void

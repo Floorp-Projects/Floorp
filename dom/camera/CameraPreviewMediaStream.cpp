@@ -92,11 +92,6 @@ CameraPreviewMediaStream::RemoveVideoOutput(VideoFrameContainer* aContainer)
 }
 
 void
-CameraPreviewMediaStream::ChangeExplicitBlockerCount(int32_t aDelta)
-{
-}
-
-void
 CameraPreviewMediaStream::AddListener(MediaStreamListener* aListener)
 {
   MutexAutoLock lock(mMutex);
