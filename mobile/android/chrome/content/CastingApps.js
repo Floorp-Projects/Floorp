@@ -20,20 +20,6 @@ var rokuDevice = {
   extensions: ["mp4"]
 };
 
-var matchstickDevice = {
-  id: "matchstick:dial",
-  target: "urn:dial-multiscreen-org:service:dial:1",
-  filters: {
-    manufacturer: "openflint"
-  },
-  factory: function(aService) {
-    Cu.import("resource://gre/modules/MatchstickApp.jsm");
-    return new MatchstickApp(aService);
-  },
-  types: ["video/mp4", "video/webm"],
-  extensions: ["mp4", "webm"]
-};
-
 var mediaPlayerDevice = {
   id: "media:router",
   target: "media:router",
@@ -85,7 +71,6 @@ var CastingApps = {
 
     // Register targets
     SimpleServiceDiscovery.registerDevice(rokuDevice);
-    SimpleServiceDiscovery.registerDevice(matchstickDevice);
 
     // MediaPlayerDevice will notify us any time the native device list changes.
     mediaPlayerDevice.init();
