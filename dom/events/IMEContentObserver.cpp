@@ -53,8 +53,8 @@ ToChar(EventMessage aEventMessage)
   switch (aEventMessage) {
     case eQuerySelectedText:
       return "eQuerySelectedText";
-    case NS_QUERY_TEXT_CONTENT:
-      return "NS_QUERY_TEXT_CONTENT";
+    case eQueryTextContent:
+      return "eQueryTextContent";
     case NS_QUERY_CARET_RECT:
       return "NS_QUERY_CARET_RECT";
     case NS_QUERY_TEXT_RECT:

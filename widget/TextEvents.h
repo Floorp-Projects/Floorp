@@ -495,7 +495,7 @@ public:
   void InitForQueryTextContent(uint32_t aOffset, uint32_t aLength,
                                bool aUseNativeLineBreak = true)
   {
-    NS_ASSERTION(mMessage == NS_QUERY_TEXT_CONTENT,
+    NS_ASSERTION(mMessage == eQueryTextContent,
                  "wrong initializer is called");
     mInput.mOffset = aOffset;
     mInput.mLength = aLength;
@@ -530,7 +530,7 @@ public:
 
   void RequestFontRanges()
   {
-    NS_ASSERTION(mMessage == NS_QUERY_TEXT_CONTENT,
+    NS_ASSERTION(mMessage == eQueryTextContent,
                  "not querying text content");
     mWithFontRanges = true;
   }
@@ -590,7 +590,7 @@ public:
     mozilla::WritingMode mWritingMode;
     // Used by eQuerySelectionAsTransferable
     nsCOMPtr<nsITransferable> mTransferable;
-    // used by NS_QUERY_TEXT_CONTENT with font ranges requested
+    // Used by eQueryTextContent with font ranges requested
     nsAutoTArray<mozilla::FontRange, 1> mFontRanges;
     // true if selection is reversed (end < start)
     bool mReversed;

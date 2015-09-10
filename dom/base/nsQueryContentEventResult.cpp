@@ -117,7 +117,7 @@ nsQueryContentEventResult::GetText(nsAString &aText)
 {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(mEventMessage == eQuerySelectedText ||
-                 mEventMessage == NS_QUERY_TEXT_CONTENT,
+                 mEventMessage == eQueryTextContent,
                  NS_ERROR_NOT_AVAILABLE);
   aText = mString;
   return NS_OK;

@@ -2208,7 +2208,7 @@ nsWindow::FlushIMEChanges()
             continue;
         }
 
-        WidgetQueryContentEvent event(true, NS_QUERY_TEXT_CONTENT, this);
+        WidgetQueryContentEvent event(true, eQueryTextContent, this);
 
         if (change.mNewEnd != change.mStart) {
             InitEvent(event, nullptr);

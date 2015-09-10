@@ -2969,7 +2969,7 @@ IMEInputHandler::ConversationIdentifier()
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   // NOTE: The size of NSInteger is same as pointer size.
-  WidgetQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, mWidget);
+  WidgetQueryContentEvent textContent(true, eQueryTextContent, mWidget);
   textContent.InitForQueryTextContent(0, 0);
   DispatchEvent(textContent);
   if (!textContent.mSucceeded) {
@@ -3005,7 +3005,7 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange,
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   nsAutoString str;
-  WidgetQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, mWidget);
+  WidgetQueryContentEvent textContent(true, eQueryTextContent, mWidget);
   textContent.InitForQueryTextContent(aRange.location, aRange.length);
   textContent.RequestFontRanges();
   DispatchEvent(textContent);
