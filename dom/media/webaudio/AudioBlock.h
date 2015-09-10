@@ -44,7 +44,7 @@ public:
 
   const AudioChunk& AsAudioChunk() const { return *this; }
   AudioChunk* AsMutableChunk() {
-    void ClearDownstreamMark();
+    ClearDownstreamMark();
     return this;
   }
 
