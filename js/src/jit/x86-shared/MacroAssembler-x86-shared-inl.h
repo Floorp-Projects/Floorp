@@ -58,6 +58,18 @@ MacroAssembler::or32(Imm32 imm, const Address& dest)
     orl(imm, Operand(dest));
 }
 
+void
+MacroAssembler::xor32(Register src, Register dest)
+{
+    xorl(src, dest);
+}
+
+void
+MacroAssembler::xor32(Imm32 imm, Register dest)
+{
+    xorl(imm, dest);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

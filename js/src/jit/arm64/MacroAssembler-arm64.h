@@ -1094,9 +1094,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void xorPtr(Imm32 imm, Register dest) {
         Eor(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
     }
-    void xor32(Imm32 imm, Register dest) {
-        Eor(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
-    }
 
     void xorPtr(Register src, Register dest) {
         Eor(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
