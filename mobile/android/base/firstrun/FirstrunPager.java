@@ -22,8 +22,9 @@ import org.mozilla.gecko.animation.TransitionsTracker;
 import java.util.List;
 
 public class FirstrunPager extends ViewPager {
+
     private Context context;
-    protected FirstrunPane.PagerNavigation listener;
+    protected FirstrunPanel.PagerNavigation pagerNavigation;
 
     public FirstrunPager(Context context) {
         this(context, null);
@@ -34,7 +35,7 @@ public class FirstrunPager extends ViewPager {
         this.context = context;
     }
 
-    public void load(Context appContext, FragmentManager fm, FirstrunPane.PagerNavigation listener) {
+    public void load(Context appContext, FragmentManager fm, final FirstrunPane.OnFinishListener onFinishListener) {
         final List<FirstrunPagerConfig.FirstrunPanelConfig> panels;
 
         if (RestrictedProfiles.isUserRestricted(context)) {
@@ -44,7 +45,22 @@ public class FirstrunPager extends ViewPager {
         }
 
         setAdapter(new ViewPagerAdapter(fm, panels));
-        this.listener = listener;
+        this.pagerNavigation = new FirstrunPanel.PagerNavigation() {
+            @Override
+            public void next() {
+                final int currentPage = FirstrunPager.this.getCurrentItem();
+                if (currentPage < FirstrunPager.this.getChildCount() - 1) {
+                    FirstrunPager.this.setCurrentItem(currentPage + 1);
+                }
+            }
+
+            @Override
+            public void finish() {
+                if (onFinishListener != null) {
+                    onFinishListener.onFinish();
+                }
+            }
+        };
 
         animateLoad();
     }
@@ -73,17 +89,23 @@ public class FirstrunPager extends ViewPager {
     }
 
     private class ViewPagerAdapter extends FragmentPagerAdapter {
-        private List<FirstrunPagerConfig.FirstrunPanelConfig> panels;
+        private final List<FirstrunPagerConfig.FirstrunPanelConfig> panels;
+        private final Fragment[] fragments;
 
         public ViewPagerAdapter(FragmentManager fm, List<FirstrunPagerConfig.FirstrunPanelConfig> panels) {
             super(fm);
             this.panels = panels;
+            this.fragments = new Fragment[panels.size()];
         }
 
         @Override
         public Fragment getItem(int i) {
-            final Fragment fragment = Fragment.instantiate(context, panels.get(i).getClassname());
-            ((FirstrunPanel) fragment).setPagerNavigation(listener);
+            Fragment fragment = this.fragments[i];
+            if (fragment == null) {
+                fragment = Fragment.instantiate(context, panels.get(i).getClassname());
+                ((FirstrunPanel) fragment).setPagerNavigation(pagerNavigation);
+                fragments[i] = fragment;
+            }
             return fragment;
         }
 
