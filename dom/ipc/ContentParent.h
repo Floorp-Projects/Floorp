@@ -626,6 +626,8 @@ private:
     virtual bool RecvIsSecureURI(const uint32_t& aType, const URIParams& aURI,
                                  const uint32_t& aFlags, bool* aIsSecureURI) override;
 
+    virtual bool RecvAccumulateMixedContentHSTS(const URIParams& aURI, const bool& aActive) override;
+
     virtual bool DeallocPHalParent(PHalParent*) override;
 
     virtual PIccParent* AllocPIccParent(const uint32_t& aServiceId) override;

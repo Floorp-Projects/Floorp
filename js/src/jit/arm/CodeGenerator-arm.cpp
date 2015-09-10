@@ -547,12 +547,14 @@ CodeGeneratorARM::visitDivI(LDivI* ins)
     if (mir->canTruncateRemainder()) {
         masm.ma_sdiv(lhs, rhs, output);
     } else {
-        ScratchRegisterScope scratch(masm);
-        masm.ma_sdiv(lhs, rhs, scratch);
-        masm.ma_mul(scratch, rhs, temp);
-        masm.ma_cmp(lhs, temp);
+        {
+            ScratchRegisterScope scratch(masm);
+            masm.ma_sdiv(lhs, rhs, temp);
+            masm.ma_mul(temp, rhs, scratch);
+            masm.ma_cmp(lhs, scratch);
+        }
         bailoutIf(Assembler::NotEqual, ins->snapshot());
-        masm.ma_mov(scratch, output);
+        masm.ma_mov(temp, output);
     }
 
     masm.bind(&done);
