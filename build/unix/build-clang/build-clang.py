@@ -11,6 +11,8 @@ import platform
 import json
 import argparse
 
+centOS6 = False
+
 
 def check_run(args):
     r = subprocess.call(args)
@@ -94,11 +96,17 @@ def build_one_stage_aux(stage_dir, llvm_source_dir, gcc_toolchain_dir):
     if not is_darwin():
         targets.append("arm")
 
+    global centOS6
+    if centOS6:
+        python_path = "/usr/bin/python2.7"
+    else:
+        python_path = "/usr/local/bin/python2.7"
+
     configure_opts = ["--enable-optimized",
                       "--enable-targets=" + ",".join(targets),
                       "--disable-assertions",
                       "--disable-libedit",
-                      "--with-python=/usr/local/bin/python2.7",
+                      "--with-python=%s" % python_path,
                       "--prefix=%s" % inst_dir,
                       "--with-gcc-toolchain=%s" % gcc_toolchain_dir,
                       "--disable-compiler-version-checks"]
@@ -119,7 +127,11 @@ if __name__ == "__main__":
     compiler_rt_source_dir = source_dir + "/compiler-rt"
     libcxx_source_dir = source_dir + "/libcxx"
 
-    gcc_dir = "/tools/gcc-4.7.3-0moz1"
+    global centOS6
+    if centOS6:
+        gcc_dir = "/home/worker/workspace/build/src/gcc"
+    else:
+        gcc_dir = "/tools/gcc-4.7.3-0moz1"
 
     if is_darwin():
         os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.7'
