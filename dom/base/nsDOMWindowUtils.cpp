@@ -2055,22 +2055,23 @@ nsDOMWindowUtils::SendContentCommandEvent(const nsAString& aType,
     return NS_ERROR_FAILURE;
 
   EventMessage msg;
-  if (aType.EqualsLiteral("cut"))
+  if (aType.EqualsLiteral("cut")) {
     msg = eContentCommandCut;
-  else if (aType.EqualsLiteral("copy"))
+  } else if (aType.EqualsLiteral("copy")) {
     msg = eContentCommandCopy;
-  else if (aType.EqualsLiteral("paste"))
+  } else if (aType.EqualsLiteral("paste")) {
     msg = eContentCommandPaste;
-  else if (aType.EqualsLiteral("delete"))
+  } else if (aType.EqualsLiteral("delete")) {
     msg = eContentCommandDelete;
-  else if (aType.EqualsLiteral("undo"))
+  } else if (aType.EqualsLiteral("undo")) {
     msg = eContentCommandUndo;
-  else if (aType.EqualsLiteral("redo"))
-    msg = NS_CONTENT_COMMAND_REDO;
-  else if (aType.EqualsLiteral("pasteTransferable"))
+  } else if (aType.EqualsLiteral("redo")) {
+    msg = eContentCommandRedo;
+  } else if (aType.EqualsLiteral("pasteTransferable")) {
     msg = eContentCommandPasteTransferable;
-  else
+  } else {
     return NS_ERROR_FAILURE;
+  }
 
   WidgetContentCommandEvent event(true, msg, widget);
   if (msg == eContentCommandPasteTransferable) {
