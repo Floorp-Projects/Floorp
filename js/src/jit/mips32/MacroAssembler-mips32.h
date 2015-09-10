@@ -1151,11 +1151,32 @@ public:
         }
     }
 
-    inline void and64(Imm64 imm, Register64 dest);
-    inline void or64(Register64 src, Register64 dest);
+    void and32(Register src, Register dest);
+    void and32(Imm32 imm, Register dest);
+    void and32(Imm32 imm, const Address& dest);
+    void and32(const Address& src, Register dest);
+    void and64(Imm64 imm, Register64 dest) {
+        and32(Imm32(imm.value & LOW_32_MASK), dest.low);
+        and32(Imm32((imm.value >> 32) & LOW_32_MASK), dest.high);
+    }
+    void or32(Imm32 imm, Register dest);
+    void or32(Imm32 imm, const Address& dest);
+    void or32(Register src, Register dest);
+    void or64(Register64 src, Register64 dest) {
+        or32(src.low, dest.low);
+        or32(src.high, dest.high);
+    }
+    void xor32(Imm32 imm, Register dest);
+    void xorPtr(Imm32 imm, Register dest);
+    void xorPtr(Register src, Register dest);
+    void orPtr(Imm32 imm, Register dest);
+    void orPtr(Register src, Register dest);
+    void andPtr(Imm32 imm, Register dest);
+    void andPtr(Register src, Register dest);
     void addPtr(Register src, Register dest);
     void subPtr(Register src, Register dest);
     void addPtr(const Address& src, Register dest);
+    void not32(Register reg);
 
     void move32(Imm32 imm, Register dest);
     void move32(Register src, Register dest);

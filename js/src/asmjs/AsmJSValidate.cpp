@@ -2699,7 +2699,7 @@ ExtractSimdValue(ModuleValidator& m, ParseNode* pn)
 {
     MOZ_ASSERT(IsSimdLiteral(m, pn));
 
-    AsmJSSimdType type = AsmJSSimdType_int32x4;
+    AsmJSSimdType type;
     JS_ALWAYS_TRUE(IsSimdTuple(m, pn, &type));
 
     ParseNode* arg = CallArgList(pn);

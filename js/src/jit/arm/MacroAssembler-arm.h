@@ -987,7 +987,17 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         subPtr(imm, lhs);
         branch32(cond, lhs, Imm32(0), label);
     }
-    inline void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp, Label* label);
+    void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp, Label* label) {
+        if (cond == Assembler::Zero) {
+            MOZ_ASSERT(lhs.low == rhs.low);
+            MOZ_ASSERT(lhs.high == rhs.high);
+            mov(lhs.low, ScratchRegister);
+            or32(lhs.high, ScratchRegister);
+            branchTestPtr(cond, ScratchRegister, ScratchRegister, label);
+        } else {
+            MOZ_CRASH("Unsupported condition");
+        }
+    }
     void moveValue(const Value& val, Register type, Register data);
 
     CodeOffsetJump jumpWithPatch(RepatchLabel* label, Condition cond = Always,
@@ -1201,15 +1211,36 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         sub32(src, dest);
         j(cond, label);
     }
+    void xor32(Imm32 imm, Register dest);
 
-    inline void and64(Imm64 imm, Register64 dest);
-    inline void or64(Register64 src, Register64 dest);
+    void and32(Register src, Register dest);
+    void and32(Imm32 imm, Register dest);
+    void and32(Imm32 imm, const Address& dest);
+    void and32(const Address& src, Register dest);
+    void and64(Imm64 imm, Register64 dest) {
+        and32(Imm32(imm.value & 0xFFFFFFFFL), dest.low);
+        and32(Imm32((imm.value >> 32) & 0xFFFFFFFFL), dest.high);
+    }
+    void or32(Register src, Register dest);
+    void or32(Imm32 imm, Register dest);
+    void or32(Imm32 imm, const Address& dest);
+    void xorPtr(Imm32 imm, Register dest);
+    void xorPtr(Register src, Register dest);
+    void orPtr(Imm32 imm, Register dest);
+    void orPtr(Register src, Register dest);
+    void or64(Register64 src, Register64 dest) {
+        or32(src.low, dest.low);
+        or32(src.high, dest.high);
+    }
+    void andPtr(Imm32 imm, Register dest);
+    void andPtr(Register src, Register dest);
     void addPtr(Register src, Register dest);
     void addPtr(const Address& src, Register dest);
     void add64(Imm32 imm, Register64 dest) {
         ma_add(imm, dest.low, SetCC);
         ma_adc(Imm32(0), dest.high, LeaveCC);
     }
+    void not32(Register reg);
 
     void move32(Imm32 imm, Register dest);
     void move32(Register src, Register dest);
