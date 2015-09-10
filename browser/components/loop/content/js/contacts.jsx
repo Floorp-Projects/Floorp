@@ -590,6 +590,19 @@ loop.contacts = (function(_, mozL10n) {
       return (
         <div>
           <div className="content-area">
+            <ButtonGroup>
+              <Button caption={this.state.importBusy
+                               ? mozL10n.get("importing_contacts_progress_button")
+                               : mozL10n.get("import_contacts_button2")}
+                      disabled={this.state.importBusy}
+                      onClick={this.handleImportButtonClick}>
+                <div className={cx({"contact-import-spinner": true,
+                                    spinner: true,
+                                    busy: this.state.importBusy})} />
+              </Button>
+              <Button caption={mozL10n.get("new_contact_button")}
+                      onClick={this.handleAddContactButtonClick} />
+            </ButtonGroup>
             {showFilter ?
             <input className="contact-filter"
                    placeholder={mozL10n.get("contacts_search_placesholder")}
@@ -608,21 +621,6 @@ loop.contacts = (function(_, mozL10n) {
               shownContacts.blocked.sort(this.sortContacts).map(viewForItem) :
               null}
           </ul>
-          <ButtonGroup additionalClass="contact-controls">
-            <Button additionalClass="secondary"
-                    caption={this.state.importBusy
-                             ? mozL10n.get("importing_contacts_progress_button")
-                             : mozL10n.get("import_contacts_button3")}
-                    disabled={this.state.importBusy}
-                    onClick={this.handleImportButtonClick} >
-              <div className={cx({"contact-import-spinner": true,
-                                  spinner: true,
-                                  busy: this.state.importBusy})} />
-            </Button>
-            <Button additionalClass="primary"
-                    caption={mozL10n.get("new_contact_button")}
-                    onClick={this.handleAddContactButtonClick} />
-          </ButtonGroup>
         </div>
       );
     }
