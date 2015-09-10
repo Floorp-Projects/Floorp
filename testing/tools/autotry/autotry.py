@@ -112,7 +112,7 @@ class AutoTry(object):
                 print('ERROR hg command %s returned %s' % (hg_args, e.returncode))
                 print('The "push-to-try" hg extension is required to push from '
                       'hg to try with the autotry command.\n\nIt can be installed '
-                      'by running ./mach mercurial-setup')
+                      'to Mercurial 3.3 or above by running ./mach mercurial-setup')
                 sys.exit(1)
         else:
             try:
