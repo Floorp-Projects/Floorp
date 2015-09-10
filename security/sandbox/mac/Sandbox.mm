@@ -416,7 +416,7 @@ static const char contentSandboxRules[] =
   "\n"
   "; bug 1190032\n"
   "    (allow file*\n"
-  "        (home-subpath \"/Library/Caches/TemporaryItems/plugtmp\"))\n"
+  "        (home-regex \"/Library/Caches/TemporaryItems/plugtmp.*\"))\n"
   "  )\n"
   ")\n";
 
