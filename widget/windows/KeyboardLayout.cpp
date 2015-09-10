@@ -1366,7 +1366,7 @@ NativeKey::HandleAppCommandMessage() const
         contentCommandMessage = NS_CONTENT_COMMAND_REDO;
         break;
       case APPCOMMAND_UNDO:
-        contentCommandMessage = NS_CONTENT_COMMAND_UNDO;
+        contentCommandMessage = eContentCommandUndo;
         break;
     }
 
