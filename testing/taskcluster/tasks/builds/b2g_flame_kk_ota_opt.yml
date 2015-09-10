@@ -8,11 +8,9 @@ task:
     name: '[TC] B2G Flame KK OTA (user)'
   scopes:
     - 'docker-worker:cache:build-flame-kk-ota-user'
-    - 'docker-worker:cache:build-flame-kk-ota-user-objdir-gecko-{{project}}'
 
   payload:
     cache:
       build-flame-kk-ota-user: /home/worker/workspace
-      build-flame-kk-ota-user-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       VARIANT: user

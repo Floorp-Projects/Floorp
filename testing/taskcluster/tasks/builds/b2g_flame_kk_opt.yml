@@ -7,14 +7,12 @@ task:
   workerType: flame-kk
   scopes:
     - 'docker-worker:cache:build-flame-kk-opt'
-    - 'docker-worker:cache:build-flame-kk-opt-objdir-gecko-{{project}}'
   metadata:
     name: '[TC] B2G Flame KK Opt'
 
   payload:
     cache:
       build-flame-kk-opt: /home/worker/workspace
-      build-flame-kk-opt-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       TARGET: 'flame-kk'
       DEBUG: 0
