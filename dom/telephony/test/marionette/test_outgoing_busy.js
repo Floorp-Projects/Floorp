@@ -19,7 +19,7 @@ startTest(function() {
           is(event.call.error.name, "BusyError");
           is(event.call.disconnectedReason, "Busy");
         });
-      let p2 = emulator.runCmd("gsm busy " + outNumber);
+      let p2 = emulator.runCmd("telephony busy " + outNumber);
       return Promise.all([p1, p2]);
     })
     .then(() => gCheckAll(null, [], "", [], []))

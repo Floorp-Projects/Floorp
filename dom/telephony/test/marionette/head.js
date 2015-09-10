@@ -412,7 +412,7 @@ let Modem = Modems[0];
 
     return Promise.all(hangUpPromises)
       .then(() => {
-        return emulator.runCmd("gsm clear").then(waitForNoCall);
+        return emulator.runCmd("telephony clear").then(waitForNoCall);
       })
       .then(waitForNoCall);
   }
@@ -529,7 +529,7 @@ let Modem = Modems[0];
    * @return Promise
    */
   function checkEmulatorCallList(expectedCallList) {
-    return emulator.runCmd("gsm list").then(result => {
+    return emulator.runCmd("telephony list").then(result => {
       log("Call list is now: " + result);
       for (let i = 0; i < expectedCallList.length; ++i) {
         is(result[i], expectedCallList[i], "emulator calllist");
@@ -582,9 +582,9 @@ let Modem = Modems[0];
     return checkEmulatorCallList(callList);
   }
 
-  /**
-   * Request utility functions.
-   */
+  /****************************************************************************
+   ****                     Request utility functions                      ****
+   ****************************************************************************/
 
   /**
    * Make an outgoing call.
@@ -609,7 +609,13 @@ let Modem = Modems[0];
         is(outCall.state, "dialing");
         is(outCall.serviceId, serviceId);
       })
-      .then(() => waitForNamedStateEvent(outCall, "alerting"));
+      .then(() => {
+        // A CDMA call goes to connected state directly when the operator find
+        // its callee, which makes the "connected" state in CDMA calls behaves
+        // like the "alerting" state in GSM calls.
+        let state = Modems[serviceId].isGSM() ? "alerting" : "connected";
+        return waitForNamedStateEvent(outCall, state);
+      });
   }
 
   /**
@@ -632,7 +638,13 @@ let Modem = Modems[0];
         is(outCall.id.number, number);
         is(outCall.state, "dialing");
       })
-      .then(() => waitForNamedStateEvent(outCall, "alerting"))
+      .then(() => {
+        // Similar to function |dial|, a CDMA call directly goes to connected
+        // state  when the operator find its callee.
+        let state = Modems[outCall.serviceId].isGSM() ? "alerting"
+                                                      : "connected";
+        return waitForNamedStateEvent(outCall, state);
+      })
       .then(() => {
         is(outCall.emergency, true, "check emergency");
         return outCall;
@@ -702,19 +714,23 @@ let Modem = Modems[0];
   /**
    * Hold a call.
    *
-   * @param call
+   * @param aCall
    *        A TelephonyCall object.
+   * @param aWaitForEvent
+   *        Decide whether to wait for the state event.
    * @return Promise<TelephonyCall>
    */
-  function hold(call) {
+  function hold(aCall, aWaitForEvent = true) {
     log("Putting the call on hold.");
 
     let promises = [];
 
-    promises.push(waitForNamedStateEvent(call, "held"));
-    promises.push(call.hold());
+    if (aWaitForEvent) {
+      promises.push(waitForNamedStateEvent(aCall, "held"));
+    }
+    promises.push(aCall.hold());
 
-    return Promise.all(promises).then(() => call);
+    return Promise.all(promises).then(() => aCall);
   }
 
   /**
@@ -724,7 +740,7 @@ let Modem = Modems[0];
    *        A TelephonyCall object.
    * @return Promise<TelephonyCall>
    */
-  function resume(call) {
+  function resume(call, aWaitForEvent = true) {
     log("Resuming the held call.");
 
     let promises = [];
@@ -772,8 +788,10 @@ let Modem = Modems[0];
     numberPresentation = numberPresentation || "";
     name = name || "";
     namePresentation = namePresentation || "";
-    emulator.runCmd("gsm call " + number + "," + numberPresentation + "," + name +
-                 "," + namePresentation);
+    emulator.runCmd("telephony call " + number +
+                    "," + numberPresentation +
+                    "," + name +
+                    "," + namePresentation);
 
     return waitForEvent(telephony, "incoming")
       .then(event => {
@@ -798,9 +816,14 @@ let Modem = Modems[0];
   function remoteAnswer(call) {
     log("Remote answering the call: " + call.id.number);
 
-    emulator.runCmd("gsm accept " + call.id.number);
+    emulator.runCmd("telephony accept " + call.id.number);
 
-    return waitForNamedStateEvent(call, "connected");
+    // A CDMA call goes to connected state directly when the operator find its
+    // callee, which makes the "connected" state in CDMA calls behaves like the
+    // "alerting" state in GSM calls, so we don't have to wait for the call to
+    // change to "connected" state here for CDMA calls.
+    return Modem.isCDMA() ? Promise.resolve()
+                          : waitForNamedStateEvent(call, "connected");
   }
 
   /**
@@ -813,7 +836,7 @@ let Modem = Modems[0];
   function remoteHangUp(call) {
     log("Remote hanging up the call: " + call.id.number);
 
-    emulator.runCmd("gsm cancel " + call.id.number);
+    emulator.runCmd("telephony cancel " + call.id.number);
 
     return waitForNamedStateEvent(call, "disconnected");
   }
