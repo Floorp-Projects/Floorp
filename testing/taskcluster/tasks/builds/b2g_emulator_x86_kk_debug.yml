@@ -7,6 +7,7 @@ task:
   workerType: emulator-x86-kk
   scopes:
     - 'docker-worker:cache:workspace-emulator-kk-x86-debug'
+    - 'docker-worker:cache:workspace-emulator-kk-x86-debug-objdir-gecko-{{project}}'
   metadata:
     name: '[TC] B2G KK X86 Emulator (Debug)'
 
@@ -25,6 +26,7 @@ task:
   payload:
     cache:
       workspace-emulator-kk-x86-debug: /home/worker/workspace
+      workspace-emulator-kk-x86-debug-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       TARGET: 'emulator-x86-kk'
       TOOLTOOL_MANIFEST: 'b2g/config/emulator-x86-kk/releng-emulator-kk.tt'
