@@ -313,52 +313,6 @@ loop.conversationViews = (function(mozL10n) {
   });
 
   /**
-   * Something went wrong view. Displayed when there's a big problem.
-   */
-  var GenericFailureView = React.createClass({
-    mixins: [
-      sharedMixins.AudioMixin,
-      sharedMixins.DocumentTitleMixin
-    ],
-
-    propTypes: {
-      cancelCall: React.PropTypes.func.isRequired,
-      failureReason: React.PropTypes.string
-    },
-
-    componentDidMount: function() {
-      this.play("failure");
-    },
-
-    render: function() {
-      this.setTitle(mozL10n.get("generic_failure_title"));
-
-      var errorString;
-      switch (this.props.failureReason) {
-        case FAILURE_DETAILS.NO_MEDIA:
-        case FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA:
-          errorString = mozL10n.get("no_media_failure_message");
-          break;
-        default:
-          errorString = mozL10n.get("generic_failure_title");
-      }
-
-      return (
-        <div className="call-window">
-          <h2>{errorString}</h2>
-
-          <div className="btn-group call-action-group">
-            <button className="btn btn-cancel"
-                    onClick={this.props.cancelCall}>
-              {mozL10n.get("cancel_button")}
-            </button>
-          </div>
-        </div>
-      );
-    }
-  });
-
-  /**
    * View for pending conversations. Displays a cancel button and appropriate
    * pending/ringing strings.
    */
@@ -419,9 +373,69 @@ loop.conversationViews = (function(mozL10n) {
   });
 
   /**
-   * Call failed view. Displayed when a call fails.
+   * Used to display errors in direct calls and rooms to the user.
    */
-  var CallFailedView = React.createClass({
+  var FailureInfoView = React.createClass({
+    propTypes: {
+      contact: React.PropTypes.object,
+      extraFailureMessage: React.PropTypes.string,
+      extraMessage: React.PropTypes.string,
+      failureReason: React.PropTypes.string.isRequired
+    },
+
+    /**
+     * Returns the translated message appropraite to the failure reason.
+     *
+     * @return {String} The translated message for the failure reason.
+     */
+    _getMessage: function() {
+      switch (this.props.failureReason) {
+        case FAILURE_DETAILS.USER_UNAVAILABLE:
+          var contactDisplayName = _getContactDisplayName(this.props.contact);
+          if (contactDisplayName.length) {
+            return mozL10n.get(
+              "contact_unavailable_title",
+              {"contactName": contactDisplayName});
+          }
+          return mozL10n.get("generic_contact_unavailable_title");
+        case FAILURE_DETAILS.NO_MEDIA:
+        case FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA:
+          return mozL10n.get("no_media_failure_message");
+        default:
+          return mozL10n.get("generic_failure_message");
+      }
+    },
+
+    _renderExtraMessage: function() {
+      if (this.props.extraMessage) {
+        return <p className="failure-info-extra">{this.props.extraMessage}</p>;
+      }
+      return null;
+    },
+
+    _renderExtraFailureMessage: function() {
+      if (this.props.extraFailureMessage) {
+        return <p className="failure-info-extra-failure">{this.props.extraFailureMessage}</p>;
+      }
+      return null;
+    },
+
+    render: function() {
+      return (
+        <div className="failure-info">
+          <div className="failure-info-logo" />
+          <h2 className="failure-info-message">{this._getMessage()}</h2>
+          {this._renderExtraMessage()}
+          {this._renderExtraFailureMessage()}
+        </div>
+      );
+    }
+  });
+
+  /**
+   * Direct Call failure view. Displayed when a call fails.
+   */
+  var DirectCallFailureView = React.createClass({
     mixins: [
       Backbone.Events,
       loop.store.StoreMixin("conversationStore"),
@@ -430,7 +444,6 @@ loop.conversationViews = (function(mozL10n) {
     ],
 
     propTypes: {
-      contact: React.PropTypes.object.isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       // This is used by the UI showcase.
       emailLinkError: React.PropTypes.bool,
@@ -438,10 +451,10 @@ loop.conversationViews = (function(mozL10n) {
     },
 
     getInitialState: function() {
-      return {
+      return _.extend({
         emailLinkError: this.props.emailLinkError,
         emailLinkButtonDisabled: false
-      };
+      }, this.getStoreState());
     },
 
     componentDidMount: function() {
@@ -458,7 +471,7 @@ loop.conversationViews = (function(mozL10n) {
 
     _onEmailLinkReceived: function() {
       var emailLink = this.getStoreState().emailLink;
-      var contactEmail = _getPreferredEmail(this.props.contact).value;
+      var contactEmail = _getPreferredEmail(this.state.contact).value;
       sharedUtils.composeCallUrlEmail(emailLink, contactEmail, null, "callfailed");
       this.closeWindow();
     },
@@ -468,31 +481,6 @@ loop.conversationViews = (function(mozL10n) {
         emailLinkError: true,
         emailLinkButtonDisabled: false
       });
-    },
-
-    _renderError: function() {
-      if (!this.state.emailLinkError) {
-        return;
-      }
-      return <p className="error">{mozL10n.get("unable_retrieve_url")}</p>;
-    },
-
-    _getTitleMessage: function() {
-      switch (this.getStoreState().callStateReason) {
-        case FAILURE_DETAILS.USER_UNAVAILABLE:
-          var contactDisplayName = _getContactDisplayName(this.props.contact);
-          if (contactDisplayName.length) {
-            return mozL10n.get(
-              "contact_unavailable_title",
-              {"contactName": contactDisplayName});
-          }
-
-          return mozL10n.get("generic_contact_unavailable_title");
-        case FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA:
-          return mozL10n.get("no_media_failure_message");
-        default:
-          return mozL10n.get("generic_failure_title");
-      }
     },
 
     retryCall: function() {
@@ -510,16 +498,8 @@ loop.conversationViews = (function(mozL10n) {
       });
 
       this.props.dispatcher.dispatch(new sharedActions.FetchRoomEmailLink({
-        roomName: _getContactDisplayName(this.props.contact)
+        roomName: _getContactDisplayName(this.state.contact)
       }));
-    },
-
-    _renderMessage: function() {
-      if (this.props.outgoing) {
-        return  (<p className="btn-label">{mozL10n.get("generic_failure_with_reason2")}</p>);
-      }
-
-      return null;
     },
 
     render: function() {
@@ -538,12 +518,25 @@ loop.conversationViews = (function(mozL10n) {
         hide: !this.props.outgoing
       });
 
-      return (
-        <div className="call-window">
-          <h2>{ this._getTitleMessage() }</h2>
+      var extraMessage;
 
-          {this._renderMessage()}
-          {this._renderError()}
+      if (this.props.outgoing) {
+        extraMessage = mozL10n.get("generic_failure_with_reason2");
+      }
+
+      var extraFailureMessage;
+
+      if (this.state.emailLinkError) {
+        extraFailureMessage = mozL10n.get("unable_retrieve_url");
+      }
+
+      return (
+        <div className="direct-call-failure">
+          <FailureInfoView
+            contact={this.state.contact}
+            extraFailureMessage={extraFailureMessage}
+            extraMessage={extraMessage}
+            failureReason={this.getStoreState().callStateReason}/>
 
           <div className="btn-group call-action-group">
             <button className="btn btn-cancel"
@@ -807,8 +800,7 @@ loop.conversationViews = (function(mozL10n) {
           return null;
         }
         case CALL_STATES.TERMINATED: {
-          return (<CallFailedView
-            contact={this.state.contact}
+          return (<DirectCallFailureView
             dispatcher={this.props.dispatcher}
             outgoing={this.state.outgoing} />);
         }
@@ -846,9 +838,9 @@ loop.conversationViews = (function(mozL10n) {
     PendingConversationView: PendingConversationView,
     CallIdentifierView: CallIdentifierView,
     ConversationDetailView: ConversationDetailView,
-    CallFailedView: CallFailedView,
     _getContactDisplayName: _getContactDisplayName,
-    GenericFailureView: GenericFailureView,
+    FailureInfoView: FailureInfoView,
+    DirectCallFailureView: DirectCallFailureView,
     AcceptCallView: AcceptCallView,
     OngoingConversationView: OngoingConversationView,
     CallControllerView: CallControllerView

@@ -26,7 +26,8 @@
   var AcceptCallView = loop.conversationViews.AcceptCallView;
   var DesktopPendingConversationView = loop.conversationViews.PendingConversationView;
   var OngoingConversationView = loop.conversationViews.OngoingConversationView;
-  var CallFailedView = loop.conversationViews.CallFailedView;
+  var DirectCallFailureView = loop.conversationViews.DirectCallFailureView;
+  var RoomFailureView = loop.roomViews.RoomFailureView;
   var DesktopRoomConversationView = loop.roomViews.DesktopRoomConversationView;
 
   // 2. Standalone webapp
@@ -44,6 +45,7 @@
   // Store constants
   var ROOM_STATES = loop.store.ROOM_STATES;
   var CALL_TYPES = loop.shared.utils.CALL_TYPES;
+  var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
 
   // Local helpers
@@ -382,6 +384,14 @@
   for (var index = 0; index < 5; index++) {
     conversationStores[index] = makeConversationStore();
   }
+
+  conversationStores[0].setStoreState({
+    callStateReason: FAILURE_DETAILS.NO_MEDIA
+  });
+  conversationStores[1].setStoreState({
+    callStateReason: FAILURE_DETAILS.USER_UNAVAILABLE,
+    contact: fakeManyContacts[0]
+  });
 
   // Update the text chat store with the room info.
   textChatStore.updateRoomInfo(new sharedActions.UpdateRoomInfo({
@@ -1150,35 +1160,42 @@
             )
           ), 
 
-          React.createElement(Section, {name: "CallFailedView"}, 
-            React.createElement(FramedExample, {dashed: true, 
-                           height: 272, 
-                           summary: "Call Failed - Incoming", 
-                           width: 300}, 
+          React.createElement(Section, {name: "DirectCallFailureView"}, 
+            React.createElement(FramedExample, {
+              dashed: true, 
+              height: 254, 
+              summary: "Call Failed - Incoming", 
+              width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
-                React.createElement(CallFailedView, {dispatcher: dispatcher, 
-                                outgoing: false, 
-                                store: conversationStores[0]})
+                React.createElement(DirectCallFailureView, {
+                  conversationStore: conversationStores[0], 
+                  dispatcher: dispatcher, 
+                  outgoing: false})
               )
             ), 
-            React.createElement(FramedExample, {dashed: true, 
-                           height: 272, 
-                           summary: "Call Failed - Outgoing", 
-                           width: 300}, 
+            React.createElement(FramedExample, {
+              dashed: true, 
+              height: 254, 
+              summary: "Call Failed - Outgoing", 
+              width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
-                React.createElement(CallFailedView, {dispatcher: dispatcher, 
-                                outgoing: true, 
-                                store: conversationStores[1]})
+                React.createElement(DirectCallFailureView, {
+                  conversationStore: conversationStores[1], 
+                  dispatcher: dispatcher, 
+                  outgoing: true})
               )
             ), 
-            React.createElement(FramedExample, {dashed: true, 
-                           height: 272, 
-                           summary: "Call Failed — with call URL error", 
-                           width: 300}, 
+            React.createElement(FramedExample, {
+              dashed: true, 
+              height: 254, 
+              summary: "Call Failed — with call URL error", 
+              width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
-                React.createElement(CallFailedView, {dispatcher: dispatcher, emailLinkError: true, 
-                                outgoing: true, 
-                                store: conversationStores[0]})
+                React.createElement(DirectCallFailureView, {
+                  conversationStore: conversationStores[0], 
+                  dispatcher: dispatcher, 
+                  emailLinkError: true, 
+                  outgoing: true})
               )
             )
           ), 
@@ -1330,6 +1347,20 @@
                            width: 480}, 
               React.createElement("div", {className: "standalone"}, 
                 React.createElement(UnsupportedDeviceView, {platform: "ios"})
+              )
+            )
+          ), 
+
+          React.createElement(Section, {name: "RoomFailureView"}, 
+            React.createElement(FramedExample, {
+              dashed: true, 
+              height: 254, 
+              summary: "", 
+              width: 298}, 
+              React.createElement("div", {className: "fx-embedded"}, 
+                React.createElement(RoomFailureView, {
+                  dispatcher: dispatcher, 
+                  failureReason: FAILURE_DETAILS.UNKNOWN})
               )
             )
           ), 
@@ -1762,7 +1793,7 @@
 
       // This simulates the mocha layout for errors which means we can run
       // this alongside our other unit tests but use the same harness.
-      var expectedWarningsCount = 3;
+      var expectedWarningsCount = 0;
       var warningsMismatch = caughtWarnings.length !== expectedWarningsCount;
       var resultsElement = document.querySelector("#results");
       var divFailuresNode = document.createElement("div");

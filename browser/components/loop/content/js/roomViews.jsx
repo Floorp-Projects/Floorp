@@ -74,6 +74,41 @@ loop.roomViews = (function(mozL10n) {
     }
   };
 
+  /**
+   * Something went wrong view. Displayed when there's a big problem.
+   */
+  var RoomFailureView = React.createClass({
+    mixins: [ sharedMixins.AudioMixin ],
+
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      failureReason: React.PropTypes.string
+    },
+
+    componentDidMount: function() {
+      this.play("failure");
+    },
+
+    handleRejoinCall: function() {
+      this.props.dispatcher.dispatch(new sharedActions.JoinRoom());
+    },
+
+    render: function() {
+      return (
+        <div className="room-failure">
+          <loop.conversationViews.FailureInfoView
+            failureReason={this.props.failureReason} />
+          <div className="btn-group call-action-group">
+            <button className="btn btn-info btn-rejoin"
+                    onClick={this.handleRejoinCall}>
+              {mozL10n.get("rejoin_button")}
+            </button>
+          </div>
+        </div>
+      );
+    }
+  });
+
   var SocialShareDropdown = React.createClass({
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
@@ -726,9 +761,10 @@ loop.roomViews = (function(mozL10n) {
           // Note: While rooms are set to hold a maximum of 2 participants, the
           //       FULL case should never happen on desktop.
           return (
-            <loop.conversationViews.GenericFailureView
-              cancelCall={this.closeWindow}
-              failureReason={this.state.failureReason} />
+            <RoomFailureView
+              dispatcher={this.props.dispatcher}
+              failureReason={this.state.failureReason}
+              mozLoop={this.props.mozLoop} />
           );
         }
         case ROOM_STATES.ENDED: {
@@ -804,6 +840,7 @@ loop.roomViews = (function(mozL10n) {
 
   return {
     ActiveRoomStoreMixin: ActiveRoomStoreMixin,
+    RoomFailureView: RoomFailureView,
     SocialShareDropdown: SocialShareDropdown,
     DesktopRoomEditContextView: DesktopRoomEditContextView,
     DesktopRoomConversationView: DesktopRoomConversationView,
