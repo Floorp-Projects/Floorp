@@ -9,40 +9,43 @@
 #include "mmsystem.h"
 #endif
 
-#include "mozilla/DebugOnly.h"
+#include <algorithm>
 #include <stdint.h>
 
-#include "MediaDecoderStateMachine.h"
-#include "MediaTimer.h"
+#include "gfx2DGlue.h"
+
 #include "mediasink/DecodedAudioDataSink.h"
 #include "mediasink/AudioSinkWrapper.h"
 #include "mediasink/DecodedStream.h"
-#include "nsTArray.h"
-#include "MediaDecoder.h"
-#include "MediaDecoderReader.h"
-#include "mozilla/MathAlgorithms.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/Logging.h"
 #include "mozilla/mozalloc.h"
-#include "VideoUtils.h"
-#include "TimeUnits.h"
-#include "nsDeque.h"
-#include "AudioSegment.h"
-#include "VideoSegment.h"
-#include "ImageContainer.h"
-#include "nsComponentManagerUtils.h"
-#include "nsITimer.h"
-#include "nsContentUtils.h"
-#include "MediaShutdownManager.h"
+#include "mozilla/MathAlgorithms.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/TaskQueue.h"
-#include "nsIEventTarget.h"
-#include "prenv.h"
-#include "mozilla/Preferences.h"
-#include "gfx2DGlue.h"
-#include "nsPrintfCString.h"
-#include "DOMMediaStream.h"
-#include "mozilla/Logging.h"
 
-#include <algorithm>
+#include "nsComponentManagerUtils.h"
+#include "nsContentUtils.h"
+#include "nsIEventTarget.h"
+#include "nsITimer.h"
+#include "nsPrintfCString.h"
+#include "nsTArray.h"
+#include "nsDeque.h"
+#include "prenv.h"
+
+#include "AudioSegment.h"
+#include "DOMMediaStream.h"
+#include "ImageContainer.h"
+#include "MediaDecoder.h"
+#include "MediaDecoderReader.h"
+#include "MediaDecoderStateMachine.h"
+#include "MediaShutdownManager.h"
+#include "MediaStatistics.h"
+#include "MediaTimer.h"
+#include "TimeUnits.h"
+#include "VideoSegment.h"
+#include "VideoUtils.h"
 
 namespace mozilla {
 
@@ -2822,7 +2825,7 @@ void MediaDecoderStateMachine::StartBuffering()
   SetState(DECODER_STATE_BUFFERING);
   DECODER_LOG("Changed state from DECODING to BUFFERING, decoded for %.3lfs",
               decodeDuration.ToSeconds());
-  MediaDecoder::Statistics stats = mDecoder->GetStatistics();
+  MediaStatistics stats = mDecoder->GetStatistics();
   DECODER_LOG("Playback rate: %.1lfKB/s%s download rate: %.1lfKB/s%s",
               stats.mPlaybackRate/1024, stats.mPlaybackRateReliable ? "" : " (unreliable)",
               stats.mDownloadRate/1024, stats.mDownloadRateReliable ? "" : " (unreliable)");
