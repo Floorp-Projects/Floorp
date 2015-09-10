@@ -682,6 +682,7 @@ AndroidBridge::SetLayerClient(GeckoLayerClient::Param jobj)
     // We therefore need to link up the new java objects to Gecko, and that's what
     // we do here.
     bool resetting = (mLayerClient != nullptr);
+    __android_log_print(ANDROID_LOG_INFO, "GeckoBug1151102", "Reseting layer client: %d", resetting);
 
     mLayerClient = jobj;
 
