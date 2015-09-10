@@ -81,14 +81,12 @@ loop.panel = (function(_, mozL10n) {
         }
         var isSelected = (this.state.selectedTab == tabName);
         if (!tab.props.hidden) {
-          var label = mozL10n.get(tabName + "_tab_button");
           tabButtons.push(
             React.createElement("li", {className: cx({selected: isSelected}), 
                 "data-tab-name": tabName, 
                 key: i, 
-                onClick: this.handleSelectTab}, 
-              React.createElement("div", null, label)
-            )
+                onClick: this.handleSelectTab, 
+                title: mozL10n.get(tabName + "_tab_button")})
           );
         }
         tabs.push(
@@ -99,10 +97,7 @@ loop.panel = (function(_, mozL10n) {
       }, this);
       return (
         React.createElement("div", {className: "tab-view-container"}, 
-          React.createElement("ul", {className: "tab-view"}, 
-            tabButtons, 
-            React.createElement("div", {className: "slide-bar"})
-          ), 
+          React.createElement("ul", {className: "tab-view"}, tabButtons), 
           tabs
         )
       );

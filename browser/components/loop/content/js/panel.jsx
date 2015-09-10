@@ -81,14 +81,12 @@ loop.panel = (function(_, mozL10n) {
         }
         var isSelected = (this.state.selectedTab == tabName);
         if (!tab.props.hidden) {
-          var label = mozL10n.get(tabName + "_tab_button");
           tabButtons.push(
             <li className={cx({selected: isSelected})}
                 data-tab-name={tabName}
                 key={i}
-                onClick={this.handleSelectTab}>
-              <div>{label}</div>
-            </li>
+                onClick={this.handleSelectTab}
+                title={mozL10n.get(tabName + "_tab_button")} />
           );
         }
         tabs.push(
@@ -99,10 +97,7 @@ loop.panel = (function(_, mozL10n) {
       }, this);
       return (
         <div className="tab-view-container">
-          <ul className="tab-view">
-            {tabButtons}
-            <div className="slide-bar" />
-          </ul>
+          <ul className="tab-view">{tabButtons}</ul>
           {tabs}
         </div>
       );
