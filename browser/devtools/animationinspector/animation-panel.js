@@ -41,9 +41,9 @@ var AnimationsPanel = {
     this.toggleAllButtonEl = document.querySelector("#toggle-all");
 
     // If the server doesn't support toggling all animations at once, hide the
-    // whole bottom toolbar.
+    // whole global toolbar.
     if (!AnimationsController.traits.hasToggleAll) {
-      document.querySelector("#toolbar").style.display = "none";
+      document.querySelector("#global-toolbar").style.display = "none";
     }
 
     let hUtils = gToolbox.highlighterUtils;
