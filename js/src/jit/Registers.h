@@ -103,7 +103,7 @@ struct Register64
 #endif
 
 #ifdef JS_PUNBOX64
-    MOZ_CONSTEXPR Register64(Register r)
+    explicit MOZ_CONSTEXPR Register64(Register r)
       : reg(r)
     {}
 #else
