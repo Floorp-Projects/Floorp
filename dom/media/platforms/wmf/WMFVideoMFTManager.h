@@ -58,7 +58,7 @@ private:
 
   HRESULT SetDecoderMediaTypes();
 
-  bool MaybeToggleDXVA(IMFMediaType* aType);
+  bool CanUseDXVA(IMFMediaType* aType);
 
   // Video frame geometry.
   VideoInfo mVideoInfo;
@@ -73,7 +73,7 @@ private:
   RefPtr<IMFSample> mLastInput;
   float mLastDuration;
 
-  const bool mDXVAEnabled;
+  bool mDXVAEnabled;
   const layers::LayersBackend mLayersBackend;
   bool mUseHwAccel;
 
