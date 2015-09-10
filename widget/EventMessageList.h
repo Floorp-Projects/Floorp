@@ -229,7 +229,7 @@ NS_EVENT_MESSAGE(eQueryCaretRect,               eQueryContentEventFirst + 3)
 NS_EVENT_MESSAGE(NS_QUERY_TEXT_RECT,            eQueryContentEventFirst + 4)
 // Query for the bounding rect of the current focused frame. Result is relative
 // to top level widget coordinates
-NS_EVENT_MESSAGE(NS_QUERY_EDITOR_RECT,          eQueryContentEventFirst + 5)
+NS_EVENT_MESSAGE(eQueryEditorRect,              eQueryContentEventFirst + 5)
 // Query for the current state of the content. The particular members of
 // mReply that are set for each query content event will be valid on success.
 NS_EVENT_MESSAGE(NS_QUERY_CONTENT_STATE,        eQueryContentEventFirst + 6)
