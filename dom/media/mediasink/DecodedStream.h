@@ -126,6 +126,7 @@ public:
   void Start(int64_t aStartTime, const MediaInfo& aInfo) override;
   void Stop() override;
   bool IsStarted() const override;
+  bool IsPlaying() const override;
 
   // TODO: fix these functions that don't fit into the interface of MediaSink.
   void BeginShutdown();
