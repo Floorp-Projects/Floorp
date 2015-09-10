@@ -1020,7 +1020,7 @@ MediaDecoderStateMachine::CheckIfDecodeComplete()
 bool MediaDecoderStateMachine::IsPlaying() const
 {
   AssertCurrentThreadInMonitor();
-  return !mPlayStartTime.IsNull();
+  return mMediaSink->IsPlaying();
 }
 
 nsresult MediaDecoderStateMachine::Init(MediaDecoderStateMachine* aCloneDonor)
@@ -1049,9 +1049,9 @@ void MediaDecoderStateMachine::StopPlayback()
 
   if (IsPlaying()) {
     RenderVideoFrames(1);
-    SetPlayStartTime(TimeStamp());
+    mMediaSink->SetPlaying(false);
+    MOZ_ASSERT(!IsPlaying());
   }
-  NS_ASSERTION(!IsPlaying(), "Should report not playing at end of StopPlayback()");
 
   DispatchDecodeTasksIfNeeded();
 }
@@ -1082,12 +1082,13 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
   }
 
   DECODER_LOG("MaybeStartPlayback() starting playback");
-
   mDecoder->DispatchPlaybackStarted();
-  SetPlayStartTime(TimeStamp::Now());
-  MOZ_ASSERT(IsPlaying());
-
   StartMediaSink();
+
+  if (!IsPlaying()) {
+    mMediaSink->SetPlaying(true);
+    MOZ_ASSERT(IsPlaying());
+  }
 
   DispatchDecodeTasksIfNeeded();
 }
@@ -2827,14 +2828,6 @@ void MediaDecoderStateMachine::StartBuffering()
               stats.mDownloadRate/1024, stats.mDownloadRateReliable ? "" : " (unreliable)");
 }
 
-void MediaDecoderStateMachine::SetPlayStartTime(const TimeStamp& aTimeStamp)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  AssertCurrentThreadInMonitor();
-  mPlayStartTime = aTimeStamp;
-  mMediaSink->SetPlaying(!mPlayStartTime.IsNull());
-}
-
 void MediaDecoderStateMachine::ScheduleStateMachineWithLockAndWakeDecoder()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -2997,11 +2990,9 @@ MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
   // Restore playback parameters.
   mMediaSink->SetPlaybackParams(params);
 
-  // Start the sink if we are already playing. Otherwise it will be
-  // handled in MaybeStartPlayback().
-  if (IsPlaying()) {
-    StartMediaSink();
-  }
+  // We don't need to call StartMediaSink() here because IsPlaying() is now
+  // always in sync with the playing state of MediaSink. It will be started in
+  // MaybeStartPlayback() in the next cycle if necessary.
 
   mAudioCaptured = aCaptured;
   ScheduleStateMachine();

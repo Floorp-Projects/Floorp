@@ -640,10 +640,6 @@ protected:
   bool IsAudioDecoding();
   bool IsVideoDecoding();
 
-  // Set the time that playback started from the system clock.
-  // Can only be called on the state machine thread.
-  void SetPlayStartTime(const TimeStamp& aTimeStamp);
-
 private:
   // Resolved by the MediaSink to signal that all outstanding work is complete
   // and the sink is shutting down.
@@ -877,11 +873,6 @@ private:
   // the "decode thread", though in practise tasks can run on a different
   // thread every time they're called.
   TaskQueue* DecodeTaskQueue() const { return mReader->OwnerThread(); }
-
-  // The time that playback started from the system clock. This is used for
-  // timing the presentation of video frames when there's no audio.
-  // Accessed only via the state machine thread.  Must be set via SetPlayStartTime.
-  TimeStamp mPlayStartTime;
 
   // Time that buffering started. Used for buffering timeout and only
   // accessed on the state machine thread. This is null while we're not
