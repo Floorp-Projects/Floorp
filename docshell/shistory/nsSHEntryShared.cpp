@@ -38,7 +38,7 @@ class HistoryTracker final : public HistoryTrackerBase
 {
 public:
   explicit HistoryTracker(uint32_t aTimeout)
-    : HistoryTrackerBase(1000 * aTimeout / 2)
+    : HistoryTrackerBase(1000 * aTimeout / 2, "HistoryTracker")
   {
   }
 

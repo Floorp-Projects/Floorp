@@ -442,7 +442,7 @@ gfxShmSharedReadLock::GetReadCount() {
 class TileExpiry final : public nsExpirationTracker<TileClient, 3>
 {
   public:
-    TileExpiry() : nsExpirationTracker<TileClient, 3>(1000) {}
+    TileExpiry() : nsExpirationTracker<TileClient, 3>(1000, "TileExpiry") {}
 
     static void AddTile(TileClient* aTile)
     {
