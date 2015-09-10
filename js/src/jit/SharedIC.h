@@ -1479,7 +1479,13 @@ class ICUnaryArith_Double : public ICStub
 
 // Compare
 //      JSOP_LT
+//      JSOP_LE
 //      JSOP_GT
+//      JSOP_GE
+//      JSOP_EQ
+//      JSOP_NE
+//      JSOP_STRICTEQ
+//      JSOP_STRICTNE
 
 class ICCompare_Fallback : public ICFallbackStub
 {
@@ -1505,8 +1511,8 @@ class ICCompare_Fallback : public ICFallbackStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::Compare_Fallback, Engine::Baseline) {}
+        explicit Compiler(JSContext* cx, Engine engine)
+          : ICStubCompiler(cx, ICStub::Compare_Fallback, engine) {}
 
         ICStub* getStub(ICStubSpace* space) {
             return newStub<ICCompare_Fallback>(space, getStubCode());
@@ -1528,8 +1534,8 @@ class ICCompare_Int32 : public ICStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        Compiler(JSContext* cx, JSOp op)
-          : ICMultiStubCompiler(cx, ICStub::Compare_Int32, op, Engine::Baseline) {}
+        Compiler(JSContext* cx, JSOp op, Engine engine)
+          : ICMultiStubCompiler(cx, ICStub::Compare_Int32, op, engine) {}
 
         ICStub* getStub(ICStubSpace* space) {
             return newStub<ICCompare_Int32>(space, getStubCode());
@@ -1551,8 +1557,8 @@ class ICCompare_Double : public ICStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        Compiler(JSContext* cx, JSOp op)
-          : ICMultiStubCompiler(cx, ICStub::Compare_Double, op, Engine::Baseline)
+        Compiler(JSContext* cx, JSOp op, Engine engine)
+          : ICMultiStubCompiler(cx, ICStub::Compare_Double, op, engine)
         {}
 
         ICStub* getStub(ICStubSpace* space) {
@@ -1583,8 +1589,8 @@ class ICCompare_NumberWithUndefined : public ICStub
         bool lhsIsUndefined;
 
       public:
-        Compiler(JSContext* cx, JSOp op, bool lhsIsUndefined)
-          : ICMultiStubCompiler(cx, ICStub::Compare_NumberWithUndefined, op, Engine::Baseline),
+        Compiler(JSContext* cx, JSOp op, Engine engine, bool lhsIsUndefined)
+          : ICMultiStubCompiler(cx, ICStub::Compare_NumberWithUndefined, op, engine),
             lhsIsUndefined(lhsIsUndefined)
         {}
 
@@ -1616,8 +1622,8 @@ class ICCompare_String : public ICStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        Compiler(JSContext* cx, JSOp op)
-          : ICMultiStubCompiler(cx, ICStub::Compare_String, op, Engine::Baseline)
+        Compiler(JSContext* cx, JSOp op, Engine engine)
+          : ICMultiStubCompiler(cx, ICStub::Compare_String, op, engine)
         {}
 
         ICStub* getStub(ICStubSpace* space) {
@@ -1640,8 +1646,8 @@ class ICCompare_Boolean : public ICStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        Compiler(JSContext* cx, JSOp op)
-          : ICMultiStubCompiler(cx, ICStub::Compare_Boolean, op, Engine::Baseline)
+        Compiler(JSContext* cx, JSOp op, Engine engine)
+          : ICMultiStubCompiler(cx, ICStub::Compare_Boolean, op, engine)
         {}
 
         ICStub* getStub(ICStubSpace* space) {
@@ -1664,8 +1670,8 @@ class ICCompare_Object : public ICStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        Compiler(JSContext* cx, JSOp op)
-          : ICMultiStubCompiler(cx, ICStub::Compare_Object, op, Engine::Baseline)
+        Compiler(JSContext* cx, JSOp op, Engine engine)
+          : ICMultiStubCompiler(cx, ICStub::Compare_Object, op, engine)
         {}
 
         ICStub* getStub(ICStubSpace* space) {
@@ -1691,8 +1697,8 @@ class ICCompare_ObjectWithUndefined : public ICStub
         bool compareWithNull;
 
       public:
-        Compiler(JSContext* cx, JSOp op, bool lhsIsUndefined, bool compareWithNull)
-          : ICMultiStubCompiler(cx, ICStub::Compare_ObjectWithUndefined, op, Engine::Baseline),
+        Compiler(JSContext* cx, JSOp op, Engine engine, bool lhsIsUndefined, bool compareWithNull)
+          : ICMultiStubCompiler(cx, ICStub::Compare_ObjectWithUndefined, op, engine),
             lhsIsUndefined(lhsIsUndefined),
             compareWithNull(compareWithNull)
         {}
@@ -1741,8 +1747,8 @@ class ICCompare_Int32WithBoolean : public ICStub
         }
 
       public:
-        Compiler(JSContext* cx, JSOp op, bool lhsIsInt32)
-          : ICStubCompiler(cx, ICStub::Compare_Int32WithBoolean, Engine::Baseline),
+        Compiler(JSContext* cx, JSOp op, Engine engine, bool lhsIsInt32)
+          : ICStubCompiler(cx, ICStub::Compare_Int32WithBoolean, engine),
             op_(op),
             lhsIsInt32_(lhsIsInt32)
         {}
