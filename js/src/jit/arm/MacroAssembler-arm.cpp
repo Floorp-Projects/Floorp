@@ -1985,18 +1985,6 @@ MacroAssemblerARMCompat::xorPtr(Register src, Register dest)
 }
 
 void
-MacroAssemblerARMCompat::orPtr(Imm32 imm, Register dest)
-{
-    ma_orr(imm, dest);
-}
-
-void
-MacroAssemblerARMCompat::orPtr(Register src, Register dest)
-{
-    ma_orr(src, dest);
-}
-
-void
 MacroAssemblerARMCompat::move32(Imm32 imm, Register dest)
 {
     ma_mov(imm, dest);

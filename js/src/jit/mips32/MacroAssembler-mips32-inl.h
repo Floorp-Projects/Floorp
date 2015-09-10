@@ -75,6 +75,18 @@ MacroAssembler::or32(Imm32 imm, const Address& dest)
     store32(SecondScratchReg, dest);
 }
 
+void
+MacroAssembler::orPtr(Register src, Register dest)
+{
+    ma_or(dest, src);
+}
+
+void
+MacroAssembler::orPtr(Imm32 imm, Register dest)
+{
+    ma_or(dest, imm);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

@@ -29,6 +29,18 @@ MacroAssembler::andPtr(Imm32 imm, Register dest)
     andl(imm, dest);
 }
 
+void
+MacroAssembler::orPtr(Register src, Register dest)
+{
+    orl(src, dest);
+}
+
+void
+MacroAssembler::orPtr(Imm32 imm, Register dest)
+{
+    orl(imm, dest);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
