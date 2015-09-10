@@ -219,7 +219,7 @@ NS_EVENT_MESSAGE(eQuerySelectedText,            eQueryContentEventFirst)
 // Query for the text content of specified range, it returns actual lengh (if
 // the specified range is too long) and the text of the specified range.
 // Returns the entire text if requested length > actual length.
-NS_EVENT_MESSAGE(NS_QUERY_TEXT_CONTENT,         eQueryContentEventFirst + 1)
+NS_EVENT_MESSAGE(eQueryTextContent,             eQueryContentEventFirst + 1)
 // Query for the caret rect of nth insertion point. The offset of the result is
 // relative position from the top level widget.
 NS_EVENT_MESSAGE(NS_QUERY_CARET_RECT,           eQueryContentEventFirst + 3)

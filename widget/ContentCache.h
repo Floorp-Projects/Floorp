@@ -286,9 +286,9 @@ public:
    *  selected range. (This shouldn't happen because PuppetWidget should have
    *  already sent the whole selection.)
    *
-   * For NS_QUERY_TEXT_CONTENT, fail only if the cache doesn't overlap with
+   * For eQueryTextContent, fail only if the cache doesn't overlap with
    *  the queried range. Note the difference from above. We use
-   *  this behavior because a normal NS_QUERY_TEXT_CONTENT event is allowed to
+   *  this behavior because a normal eQueryTextContent event is allowed to
    *  have out-of-bounds offsets, so that widget can request content without
    *  knowing the exact length of text. It's up to widget to handle cases when
    *  the returned offset/length are different from the queried offset/length.
