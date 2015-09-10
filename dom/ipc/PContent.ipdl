@@ -87,7 +87,7 @@ using gfxIntSize from "nsSize.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
 using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
-using class mozilla::dom::StructuredCloneIPCHelper from "ipc/IPCMessageUtils.h";
+using class mozilla::dom::ipc::StructuredCloneData from "ipc/IPCMessageUtils.h";
 
 union ChromeRegistryItem
 {
@@ -685,7 +685,7 @@ parent:
         returns (bool isOffline, bool isConnected, bool isLangRTL, nsString[] dictionaries,
                  ClipboardCapabilities clipboardCaps,
                  DomainPolicyClone domainPolicy,
-                 StructuredCloneIPCHelper initialData);
+                 StructuredCloneData initialData);
 
     sync CreateChildProcess(IPCTabContext context,
                             ProcessPriority priority,
@@ -808,11 +808,11 @@ parent:
 
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
                      CpowEntry[] aCpows, Principal aPrincipal)
-      returns (StructuredCloneIPCHelper[] retval);
+      returns (StructuredCloneData[] retval);
 
     prio(high) sync RpcMessage(nsString aMessage, ClonedMessageData aData,
                                CpowEntry[] aCpows, Principal aPrincipal)
-      returns (StructuredCloneIPCHelper[] retval);
+      returns (StructuredCloneData[] retval);
 
     ShowAlertNotification(nsString imageUrl,
                           nsString title,
