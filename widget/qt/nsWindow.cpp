@@ -1216,7 +1216,7 @@ nsWindow::keyPressEvent(QKeyEvent* aEvent)
 
     // Qt::Key_Redo and Qt::Key_Undo are not available yet.
     if (aEvent->nativeVirtualKey() == 0xff66) {
-        return DispatchContentCommandEvent(NS_CONTENT_COMMAND_REDO);
+        return DispatchContentCommandEvent(eContentCommandRedo);
     }
     if (aEvent->nativeVirtualKey() == 0xff65) {
         return DispatchContentCommandEvent(eContentCommandUndo);
