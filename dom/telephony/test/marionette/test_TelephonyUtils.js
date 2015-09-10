@@ -78,7 +78,7 @@ function test_oneCall() {
       let p = waitForStateChanged(aAllInfo => {
         return aAllInfo[0].callState === Ci.nsITelephonyService.CALL_STATE_CONNECTED;
       });
-      emulator.runCmd("gsm accept " + number);
+      emulator.runCmd("telephony accept " + number);
       return p;
     })
     .then(() => {
@@ -87,7 +87,7 @@ function test_oneCall() {
     })
     .then(() => {
       let p = TelephonyUtils.waitForNoCalls();
-      emulator.runCmd("gsm cancel " + number);
+      emulator.runCmd("telephony cancel " + number);
       return p;
     });
 }
