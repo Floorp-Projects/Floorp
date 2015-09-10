@@ -190,7 +190,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDispatchedStateMachine(false),
   mDelayedScheduler(this),
   mState(DECODER_STATE_DECODING_NONE, "MediaDecoderStateMachine::mState"),
-  mPlayDuration(0),
   mCurrentFrameID(0),
   mObservedDuration(TimeUnit(), "MediaDecoderStateMachine::mObservedDuration"),
   mFragmentEndTime(-1),
@@ -466,6 +465,13 @@ MediaDecoderStateMachine::NeedToSkipToNextKeyframe()
   MOZ_ASSERT(mState == DECODER_STATE_DECODING ||
              mState == DECODER_STATE_BUFFERING ||
              mState == DECODER_STATE_SEEKING);
+
+  // Since GetClock() can only be called after starting MediaSink, we return
+  // false quickly if it is not started because we won't fall behind playback
+  // when not consuming media data.
+  if (!mMediaSink->IsStarted()) {
+    return false;
+  }
 
   // We are in seeking or buffering states, don't skip frame.
   if (!IsVideoDecoding() || mState == DECODER_STATE_BUFFERING ||
@@ -1043,7 +1049,6 @@ void MediaDecoderStateMachine::StopPlayback()
 
   if (IsPlaying()) {
     RenderVideoFrames(1);
-    mPlayDuration = GetClock();
     SetPlayStartTime(TimeStamp());
   }
   NS_ASSERTION(!IsPlaying(), "Should report not playing at end of StopPlayback()");
@@ -2081,7 +2086,6 @@ MediaDecoderStateMachine::SeekCompleted()
   } else {
     newCurrentTime = video ? video->mTime : seekTime;
   }
-  mPlayDuration = newCurrentTime;
 
   if (mDecodingFirstFrame) {
     // We were resuming from dormant, or initiated a seek early.
@@ -2538,28 +2542,14 @@ void MediaDecoderStateMachine::RenderVideoFrames(int32_t aMaxFrames,
   container->SetCurrentFrames(frames[0]->As<VideoData>()->mDisplay, images);
 }
 
-int64_t MediaDecoderStateMachine::GetClock(TimeStamp* aTimeStamp) const
+int64_t
+MediaDecoderStateMachine::GetClock(TimeStamp* aTimeStamp) const
 {
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
-
-  // Determine the clock time. If we've got audio, and we've not reached
-  // the end of the audio, use the audio clock. However if we've finished
-  // audio, or don't have audio, use the system clock. If our output is being
-  // fed to a MediaStream, use that stream as the source of the clock.
-  int64_t clock_time = -1;
-  TimeStamp t;
-  if (!IsPlaying()) {
-    clock_time = mPlayDuration;
-  } else {
-    clock_time = mMediaSink->GetPosition(&t);
-    NS_ASSERTION(GetMediaTime() <= clock_time, "Clock should go forwards.");
-  }
-  if (aTimeStamp) {
-    *aTimeStamp = t.IsNull() ? TimeStamp::Now() : t;
-  }
-
-  return clock_time;
+  int64_t clockTime = mMediaSink->GetPosition(aTimeStamp);
+  NS_ASSERTION(GetMediaTime() <= clockTime, "Clock should go forwards.");
+  return clockTime;
 }
 
 void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
