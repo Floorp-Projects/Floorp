@@ -355,7 +355,6 @@ NS_EVENT_MESSAGE(NS_MESSAGE,            NS_MESSAGE_EVENT_START)
 // Open and close events
 NS_EVENT_MESSAGE(eOpenCloseEventFirst,  4800)
 NS_EVENT_MESSAGE(eOpen,                 eOpenCloseEventFirst)
-NS_EVENT_MESSAGE(NS_CLOSE,              eOpenCloseEventFirst + 1)
 
 // Device motion and orientation
 NS_EVENT_MESSAGE(NS_DEVICE_ORIENTATION_START, 4900)
