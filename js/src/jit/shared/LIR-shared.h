@@ -2378,10 +2378,10 @@ class LCompareBAndBranch : public LControlInstructionHelper<2, BOX_PIECES + 1, 0
     }
 };
 
-class LCompareV : public LInstructionHelper<1, 2 * BOX_PIECES, 0>
+class LCompareBitwise : public LInstructionHelper<1, 2 * BOX_PIECES, 0>
 {
   public:
-    LIR_HEADER(CompareV)
+    LIR_HEADER(CompareBitwise)
 
     static const size_t LhsInput = 0;
     static const size_t RhsInput = BOX_PIECES;
@@ -2391,17 +2391,17 @@ class LCompareV : public LInstructionHelper<1, 2 * BOX_PIECES, 0>
     }
 };
 
-class LCompareVAndBranch : public LControlInstructionHelper<2, 2 * BOX_PIECES, 0>
+class LCompareBitwiseAndBranch : public LControlInstructionHelper<2, 2 * BOX_PIECES, 0>
 {
     MCompare* cmpMir_;
 
   public:
-    LIR_HEADER(CompareVAndBranch)
+    LIR_HEADER(CompareBitwiseAndBranch)
 
     static const size_t LhsInput = 0;
     static const size_t RhsInput = BOX_PIECES;
 
-    LCompareVAndBranch(MCompare* cmpMir, MBasicBlock* ifTrue, MBasicBlock* ifFalse)
+    LCompareBitwiseAndBranch(MCompare* cmpMir, MBasicBlock* ifTrue, MBasicBlock* ifFalse)
       : cmpMir_(cmpMir)
     {
         setSuccessor(0, ifTrue);
