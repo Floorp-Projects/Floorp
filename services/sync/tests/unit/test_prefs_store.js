@@ -81,6 +81,7 @@ function run_test() {
       "testing.string": "im in ur prefs",
       "testing.bool": false,
       "testing.deleteme": null,
+      "testing.somepref": "im a new pref from other device",
       "services.sync.prefs.sync.testing.somepref": true
     };
     store.update(record);
@@ -89,6 +90,7 @@ function run_test() {
     do_check_eq(prefs.get("testing.bool"), false);
     do_check_eq(prefs.get("testing.deleteme"), undefined);
     do_check_eq(prefs.get("testing.dont.change"), "Please don't change me.");
+    do_check_eq(prefs.get("testing.somepref"), "im a new pref from other device");
     do_check_eq(Svc.Prefs.get("prefs.sync.testing.somepref"), true);
 
     _("Enable persona");
