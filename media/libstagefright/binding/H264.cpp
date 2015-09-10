@@ -142,7 +142,9 @@ ConditionDimension(float aValue)
 /* static */ bool
 H264::DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest)
 {
-  MOZ_ASSERT(aSPS);
+  if (!aSPS) {
+    return false;
+  }
   BitReader br(aSPS);
 
   int32_t lastScale;
