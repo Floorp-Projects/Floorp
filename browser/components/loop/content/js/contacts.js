@@ -590,6 +590,19 @@ loop.contacts = (function(_, mozL10n) {
       return (
         React.createElement("div", null, 
           React.createElement("div", {className: "content-area"}, 
+            React.createElement(ButtonGroup, null, 
+              React.createElement(Button, {caption: this.state.importBusy
+                               ? mozL10n.get("importing_contacts_progress_button")
+                               : mozL10n.get("import_contacts_button2"), 
+                      disabled: this.state.importBusy, 
+                      onClick: this.handleImportButtonClick}, 
+                React.createElement("div", {className: cx({"contact-import-spinner": true,
+                                    spinner: true,
+                                    busy: this.state.importBusy})})
+              ), 
+              React.createElement(Button, {caption: mozL10n.get("new_contact_button"), 
+                      onClick: this.handleAddContactButtonClick})
+            ), 
             showFilter ?
             React.createElement("input", {className: "contact-filter", 
                    placeholder: mozL10n.get("contacts_search_placesholder"), 
@@ -607,21 +620,6 @@ loop.contacts = (function(_, mozL10n) {
             shownContacts.blocked ?
               shownContacts.blocked.sort(this.sortContacts).map(viewForItem) :
               null
-          ), 
-          React.createElement(ButtonGroup, {additionalClass: "contact-controls"}, 
-            React.createElement(Button, {additionalClass: "secondary", 
-                    caption: this.state.importBusy
-                             ? mozL10n.get("importing_contacts_progress_button")
-                             : mozL10n.get("import_contacts_button3"), 
-                    disabled: this.state.importBusy, 
-                    onClick: this.handleImportButtonClick}, 
-              React.createElement("div", {className: cx({"contact-import-spinner": true,
-                                  spinner: true,
-                                  busy: this.state.importBusy})})
-            ), 
-            React.createElement(Button, {additionalClass: "primary", 
-                    caption: mozL10n.get("new_contact_button"), 
-                    onClick: this.handleAddContactButtonClick})
           )
         )
       );

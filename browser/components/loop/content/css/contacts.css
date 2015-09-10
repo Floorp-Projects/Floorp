@@ -283,31 +283,3 @@ html[dir="rtl"] .contacts-gravatar-promo > .button-close {
   right: auto;
   left: 8px;
 }
-
-.contact-controls {
-  padding: 0 16px;
-}
-
-.contact-controls > .button {
-  padding: .5em;
-  border: none;
-  border-radius: 5px;
-}
-
-.button.primary {
-  background: #00A9DC;
-  color: #fff;
-}
-
-.button.secondary {
-  background: #EBEBEB;
-  color: #4D4D4D;
-}
-
-.contact-controls > .primary {
-  flex: 5;
-}
-
-.contact-controls > .secondary {
-  flex: 3;
-}
