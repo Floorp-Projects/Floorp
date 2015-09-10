@@ -1110,20 +1110,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void orPtr(Register src, Register dest) {
         Orr(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
     }
-    void or32(Imm32 imm, Register dest) {
-        Orr(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
-    }
-    void or32(Register src, Register dest) {
-        Orr(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(ARMRegister(src, 32)));
-    }
-    void or32(Imm32 imm, const Address& dest) {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratch32 = temps.AcquireW();
-        MOZ_ASSERT(scratch32.asUnsized() != dest.base);
-        load32(dest, scratch32.asUnsized());
-        Orr(scratch32, scratch32, Operand(imm.value));
-        store32(scratch32.asUnsized(), dest);
-    }
     void or64(Register64 src, Register64 dest) {
         orPtr(src.reg, dest.reg);
     }
