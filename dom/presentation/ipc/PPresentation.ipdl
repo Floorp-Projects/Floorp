@@ -46,15 +46,19 @@ child:
   NotifyAvailableChange(bool aAvailable);
   NotifySessionStateChange(nsString aSessionId, uint16_t aState);
   NotifyMessage(nsString aSessionId, nsCString aData);
+  NotifySessionConnect(uint64_t aWindowId, nsString aSessionId);
 
 parent:
   __delete__();
 
-  RegisterHandler();
-  UnregisterHandler();
+  RegisterAvailabilityHandler();
+  UnregisterAvailabilityHandler();
 
   RegisterSessionHandler(nsString aSessionId);
   UnregisterSessionHandler(nsString aSessionId);
+
+  RegisterRespondingHandler(uint64_t aWindowId);
+  UnregisterRespondingHandler(uint64_t aWindowId);
 
   PPresentationRequest(PresentationIPCRequest aRequest);
 

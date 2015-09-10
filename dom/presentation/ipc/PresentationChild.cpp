@@ -86,6 +86,16 @@ PresentationChild::RecvNotifyMessage(const nsString& aSessionId,
   return true;
 }
 
+bool
+PresentationChild::RecvNotifySessionConnect(const uint64_t& aWindowId,
+                                            const nsString& aSessionId)
+{
+  if (mService) {
+    NS_WARN_IF(NS_FAILED(mService->NotifySessionConnect(aWindowId, aSessionId)));
+  }
+  return true;
+}
+
 /*
  * Implementation of PresentationRequestChild
  */

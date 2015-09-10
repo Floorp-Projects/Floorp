@@ -8,6 +8,7 @@
 #define mozilla_dom_Presentation_h
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "nsIPresentationListener.h"
 
 namespace mozilla {
 namespace dom {
@@ -17,13 +18,17 @@ class PresentationRequest;
 class PresentationSession;
 
 class Presentation final : public DOMEventTargetHelper
+                         , public nsIPresentationRespondingListener
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Presentation,
                                            DOMEventTargetHelper)
+  NS_DECL_NSIPRESENTATIONRESPONDINGLISTENER
 
   static already_AddRefed<Presentation> Create(nsPIDOMWindow* aWindow);
+
+  virtual void DisconnectFromOwner() override;
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -47,6 +52,12 @@ private:
   bool Init();
 
   void Shutdown();
+
+  nsresult DispatchSessionAvailableEvent();
+
+  // Store the inner window ID for |UnregisterRespondingListener| call in
+  // |Shutdown| since the inner window may not exist at that moment.
+  uint64_t mWindowId;
 
   nsRefPtr<PresentationRequest> mDefaultRequest;
   nsTArray<nsRefPtr<PresentationSession>> mSessions;

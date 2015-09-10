@@ -27,6 +27,7 @@ NS_IMPL_ADDREF_INHERITED(PresentationAvailability, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(PresentationAvailability, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(PresentationAvailability)
+  NS_INTERFACE_MAP_ENTRY(nsIPresentationAvailabilityListener)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 /* static */ already_AddRefed<PresentationAvailability>
@@ -50,7 +51,16 @@ PresentationAvailability::~PresentationAvailability()
 bool
 PresentationAvailability::Init()
 {
-  // TODO Register listener for availability change.
+  nsCOMPtr<nsIPresentationService> service =
+    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!service)) {
+    return false;
+  }
+
+  nsresult rv = service->RegisterAvailabilityListener(this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
 
   nsCOMPtr<nsIPresentationDeviceManager> deviceManager =
     do_GetService(PRESENTATION_DEVICE_MANAGER_CONTRACTID);
@@ -64,7 +74,21 @@ PresentationAvailability::Init()
 
 void PresentationAvailability::Shutdown()
 {
-  // TODO Unregister listener for availability change.
+  nsCOMPtr<nsIPresentationService> service =
+    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!service)) {
+    return;
+  }
+
+  nsresult rv = service->UnregisterAvailabilityListener(this);
+  NS_WARN_IF(NS_FAILED(rv));
+}
+
+/* virtual */ void
+PresentationAvailability::DisconnectFromOwner()
+{
+  Shutdown();
+  DOMEventTargetHelper::DisconnectFromOwner();
 }
 
 /* virtual */ JSObject*
@@ -78,4 +102,21 @@ bool
 PresentationAvailability::Value() const
 {
   return mIsAvailable;
+}
+
+NS_IMETHODIMP
+PresentationAvailability::NotifyAvailableChange(bool aIsAvailable)
+{
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethodWithArg<bool>(this,
+                                      &PresentationAvailability::UpdateAvailabilityAndDispatchEvent,
+                                      aIsAvailable);
+  return NS_DispatchToCurrentThread(runnable);
+}
+
+void
+PresentationAvailability::UpdateAvailabilityAndDispatchEvent(bool aIsAvailable) {
+  mIsAvailable = aIsAvailable;
+
+  NS_WARN_IF(NS_FAILED(DispatchTrustedEvent(NS_LITERAL_STRING("change"))));
 }

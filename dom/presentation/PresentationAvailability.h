@@ -8,18 +8,23 @@
 #define mozilla_dom_PresentationAvailability_h
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "nsIPresentationListener.h"
 
 namespace mozilla {
 namespace dom {
 
 class PresentationAvailability final : public DOMEventTargetHelper
+                                     , public nsIPresentationAvailabilityListener
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PresentationAvailability,
                                            DOMEventTargetHelper)
+  NS_DECL_NSIPRESENTATIONAVAILABILITYLISTENER
 
   static already_AddRefed<PresentationAvailability> Create(nsPIDOMWindow* aWindow);
+
+  virtual void DisconnectFromOwner() override;
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -37,6 +42,8 @@ private:
   bool Init();
 
   void Shutdown();
+
+  void UpdateAvailabilityAndDispatchEvent(bool aIsAvailable);
 
   bool mIsAvailable;
 };
