@@ -1139,9 +1139,27 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         shldl(imm, dest.low, dest.high);
         shll(imm, dest.low);
     }
+    void xorPtr(Imm32 imm, Register dest) {
+        xorl(imm, dest);
+    }
+    void xorPtr(Register src, Register dest) {
+        xorl(src, dest);
+    }
+    void orPtr(Imm32 imm, Register dest) {
+        orl(imm, dest);
+    }
+    void orPtr(Register src, Register dest) {
+        orl(src, dest);
+    }
     void or64(Register64 src, Register64 dest) {
         orl(src.low, dest.low);
         orl(src.high, dest.high);
+    }
+    void andPtr(Imm32 imm, Register dest) {
+        andl(imm, dest);
+    }
+    void andPtr(Register src, Register dest) {
+        andl(src, dest);
     }
     void and64(Imm64 imm, Register64 dest) {
         andl(Imm32(imm.value & 0xFFFFFFFFL), dest.low);
