@@ -72,8 +72,7 @@ describe("loop.panel", function() {
       logOutFromFxA: sandbox.stub(),
       notifyUITour: sandbox.stub(),
       openURL: sandbox.stub(),
-      getSelectedTabMetadata: sandbox.stub(),
-      userProfile: null
+      getSelectedTabMetadata: sandbox.stub()
     };
 
     document.mozL10n.initialize(navigator.mozLoop);
@@ -137,9 +136,9 @@ describe("loop.panel", function() {
         navigator.mozLoop.doNotDisturb = true;
       });
 
-      it("should toggle mozLoop.doNotDisturb to false", function() {
+      it("should toggle the value of mozLoop.doNotDisturb", function() {
         var availableMenuOption = view.getDOMNode()
-                                      .querySelector(".status-available");
+                                    .querySelector(".dnd-make-available");
 
         TestUtils.Simulate.click(availableMenuOption);
 
@@ -148,7 +147,7 @@ describe("loop.panel", function() {
 
       it("should toggle the dropdown menu", function() {
         var availableMenuOption = view.getDOMNode()
-                                      .querySelector(".dnd-status span");
+                                    .querySelector(".dnd-status span");
 
         TestUtils.Simulate.click(availableMenuOption);
 
@@ -236,7 +235,8 @@ describe("loop.panel", function() {
       });
     });
 
-    describe("AccountLink", function() {
+    describe("AuthLink", function() {
+
       beforeEach(function() {
         navigator.mozLoop.calls = { clearCallInProgress: function() {} };
       });
@@ -249,12 +249,13 @@ describe("loop.panel", function() {
 
       it("should trigger the FxA sign in/up process when clicking the link",
         function() {
+          navigator.mozLoop.loggedInToFxA = false;
           navigator.mozLoop.logInToFxA = sandbox.stub();
 
           var view = createTestPanelView();
 
           TestUtils.Simulate.click(
-            view.getDOMNode().querySelector(".signin-link > a"));
+            view.getDOMNode().querySelector(".signin-link a"));
 
           sinon.assert.calledOnce(navigator.mozLoop.logInToFxA);
         });
@@ -267,7 +268,7 @@ describe("loop.panel", function() {
           var view = createTestPanelView();
 
           TestUtils.Simulate.click(
-            view.getDOMNode().querySelector(".signin-link > a"));
+            view.getDOMNode().querySelector(".signin-link a"));
 
           sinon.assert.calledOnce(fakeWindow.close);
         });
@@ -276,49 +277,8 @@ describe("loop.panel", function() {
         function() {
           navigator.mozLoop.fxAEnabled = false;
           var view = TestUtils.renderIntoDocument(
-            React.createElement(loop.panel.AccountLink, {
-              fxAEnabled: false,
-              userProfile: null
-            }));
+            React.createElement(loop.panel.AuthLink));
           expect(view.getDOMNode()).to.be.null;
-      });
-
-      it("should add ellipsis to text over 24chars", function() {
-        navigator.mozLoop.userProfile = {
-          email: "reallyreallylongtext@example.com"
-        };
-        var view = createTestPanelView();
-        var node = view.getDOMNode().querySelector(".user-identity");
-
-        expect(node.textContent).to.eql("reallyreallylongtext@exa…");
-      });
-
-      it("should throw an error when user profile is different from {} or null",
-         function() {
-          var warnstub = sandbox.stub(console, "warn");
-          var view = TestUtils.renderIntoDocument(React.createElement(
-            loop.panel.AccountLink, {
-              fxAEnabled: false,
-              userProfile: []
-            }
-          ));
-
-          sinon.assert.calledOnce(warnstub);
-          sinon.assert.calledWithExactly(warnstub, "Warning: Required prop `userProfile` was not correctly specified in `AccountLink`.");
-      });
-
-      it("should throw an error when user profile is different from {} or null",
-         function() {
-          var warnstub = sandbox.stub(console, "warn");
-          var view = TestUtils.renderIntoDocument(React.createElement(
-            loop.panel.AccountLink, {
-              fxAEnabled: false,
-              userProfile: function() {}
-            }
-          ));
-
-          sinon.assert.calledOnce(warnstub);
-          sinon.assert.calledWithExactly(warnstub, "Warning: Required prop `userProfile` was not correctly specified in `AccountLink`.");
       });
     });
 
@@ -340,39 +300,17 @@ describe("loop.panel", function() {
         navigator.mozLoop.fxAEnabled = true;
       });
 
-      describe("UserLoggedOut", function() {
-        beforeEach(function() {
-          fakeMozLoop.userProfile = null;
-        });
-
-        it("should show a signin entry when user is not authenticated",
-           function() {
-             var view = mountTestComponent();
-
-             expect(view.getDOMNode().querySelectorAll(".icon-signout"))
-               .to.have.length.of(0);
-             expect(view.getDOMNode().querySelectorAll(".icon-signin"))
-               .to.have.length.of(1);
-           });
-
-        it("should hide any account entry when user is not authenticated",
-           function() {
-             var view = mountTestComponent();
-
-             expect(view.getDOMNode().querySelectorAll(".icon-account"))
-               .to.have.length.of(0);
-           });
-
-        it("should sign in the user on click when unauthenticated", function() {
+      it("should show a signin entry when user is not authenticated",
+        function() {
           navigator.mozLoop.loggedInToFxA = false;
+
           var view = mountTestComponent();
 
-          TestUtils.Simulate.click(view.getDOMNode()
-                                     .querySelector(".icon-signin"));
-
-          sinon.assert.calledOnce(navigator.mozLoop.logInToFxA);
+          expect(view.getDOMNode().querySelectorAll(".icon-signout"))
+            .to.have.length.of(0);
+          expect(view.getDOMNode().querySelectorAll(".icon-signin"))
+            .to.have.length.of(1);
         });
-      });
 
       it("should show a signout entry when user is authenticated", function() {
         navigator.mozLoop.userProfile = {email: "test@example.com"};
@@ -394,24 +332,43 @@ describe("loop.panel", function() {
           .to.have.length.of(1);
       });
 
-      it("should open the FxA settings when the account entry is clicked",
-         function() {
-           navigator.mozLoop.userProfile = {email: "test@example.com"};
+      it("should open the FxA settings when the account entry is clicked", function() {
+        navigator.mozLoop.userProfile = {email: "test@example.com"};
 
-           var view = mountTestComponent();
+        var view = mountTestComponent();
 
-           TestUtils.Simulate.click(view.getDOMNode()
-                                      .querySelector(".icon-account"));
+        TestUtils.Simulate.click(
+          view.getDOMNode().querySelector(".icon-account"));
 
-           sinon.assert.calledOnce(navigator.mozLoop.openFxASettings);
-         });
+        sinon.assert.calledOnce(navigator.mozLoop.openFxASettings);
+      });
+
+      it("should hide any account entry when user is not authenticated",
+        function() {
+          navigator.mozLoop.loggedInToFxA = false;
+
+          var view = mountTestComponent();
+
+          expect(view.getDOMNode().querySelectorAll(".icon-account"))
+            .to.have.length.of(0);
+        });
+
+      it("should sign in the user on click when unauthenticated", function() {
+        navigator.mozLoop.loggedInToFxA = false;
+        var view = mountTestComponent();
+
+        TestUtils.Simulate.click(
+          view.getDOMNode().querySelector(".icon-signin"));
+
+        sinon.assert.calledOnce(navigator.mozLoop.logInToFxA);
+      });
 
       it("should sign out the user on click when authenticated", function() {
         navigator.mozLoop.userProfile = {email: "test@example.com"};
         var view = mountTestComponent();
 
-        TestUtils.Simulate.click(view.getDOMNode()
-                                   .querySelector(".icon-signout"));
+        TestUtils.Simulate.click(
+          view.getDOMNode().querySelector(".icon-signout"));
 
         sinon.assert.calledOnce(navigator.mozLoop.logOutFromFxA);
       });
@@ -775,8 +732,7 @@ describe("loop.panel", function() {
           store: roomStore,
           dispatcher: dispatcher,
           userDisplayName: fakeEmail,
-          mozLoop: fakeMozLoop,
-          userProfile: null
+          mozLoop: fakeMozLoop
         }));
     }
 

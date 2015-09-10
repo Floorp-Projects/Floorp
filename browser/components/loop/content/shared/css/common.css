@@ -422,6 +422,7 @@ p {
   background-color: #fdfdfd;
   box-shadow: 0 1px 3px rgba(0,0,0,.3);
   list-style: none;
+  padding: 5px;
   border-radius: 2px;
 }
 
@@ -431,17 +432,19 @@ html[dir="rtl"] .dropdown-menu {
 }
 
 .dropdown-menu-item {
-  width: 100%;
   text-align: start;
-  padding: .5em 15px;
+  margin: .3em 0;
+  padding: .2em .5em;
   cursor: pointer;
   border: 1px solid transparent;
+  border-radius: 2px;
   font-size: 1em;
   white-space: nowrap;
 }
 
 .dropdown-menu-item:hover {
-  background-color: #dbf7ff;
+  border: 1px solid #ccc;
+  background-color: #eee;
 }
 
 .dropdown-menu-item > .icon {

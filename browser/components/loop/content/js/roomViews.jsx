@@ -460,6 +460,23 @@ loop.roomViews = (function(mozL10n) {
         this.props.roomData.roomContextUrls[0];
     },
 
+    /**
+     * Truncate a string if it exceeds the length as defined in `maxLen`, which
+     * is defined as '72' characters by default. If the string needs trimming,
+     * it'll be suffixed with the unicode ellipsis char, \u2026.
+     *
+     * @param  {String} str    The string to truncate, if needed.
+     * @param  {Number} maxLen Maximum number of characters that the string is
+     *                         allowed to contain. Optional, defaults to 72.
+     * @return {String} Truncated version of `str`.
+     */
+    _truncate: function(str, maxLen) {
+      if (!maxLen) {
+        maxLen = 72;
+      }
+      return (str.length > maxLen) ? str.substr(0, maxLen) + "…" : str;
+    },
+
     render: function() {
       if (!this.state.show) {
         return null;

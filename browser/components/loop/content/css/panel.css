@@ -641,6 +641,7 @@ html[dir="rtl"] .generate-url-spinner {
   /* Undo the start border + padding so that unhovered dnd-status is aligned
      as if there was no additional spacing. */
   -moz-margin-start: calc(-1px + -4px);
+  font-size: .9em;
   cursor: pointer;
   border-radius: 3px;
 }
@@ -650,39 +651,22 @@ html[dir="rtl"] .generate-url-spinner {
   background-color: #f1f1f1;
 }
 
-.status-available:before,
-.status-unavailable:before {
-  content: "";
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  vertical-align: bottom;
-  background-repeat: no-repeat;
-  background-size: cover;
-  -moz-margin-end: .2rem;
-  margin-bottom: -2px;
-}
-
-html[dir="rtl"] .dropdown-menu-item.status-available:before,
-html[dir="rtl"] .dropdown-menu-item.status-unavailable:before {
-  margin-right: -3px;
-}
-
-.status-available:before {
-  background-image: url("../shared/img/icons-16x16.svg#status-available");
-}
-
-.status-unavailable:before {
-  background-image: url("../shared/img/icons-16x16.svg#status-unavailable");
-}
-
 /* Status badges -- Available/Unavailable */
+
 .status {
   display: inline-block;
   width: 8px;
   height: 8px;
   margin: 0 5px;
   border-radius: 50%;
+}
+
+.status-available {
+  background-color: #6cb23e;
+}
+
+.status-dnd {
+  border: 1px solid #888;
 }
 
 /* Sign in/up link */
@@ -693,36 +677,42 @@ html[dir="rtl"] .dropdown-menu-item.status-unavailable:before {
   text-align: right;
 }
 
-.signin-link > a {
-  font-weight: 500;
+.signin-link a {
+  font-size: .9em;
   text-decoration: none;
-  color: #00A9DC;
+  color: #888;
+}
+
+.footer-signin-separator {
+  border-right: 1px solid #aaa;
+  height: 16px;
+  margin: 0 1em;
 }
 
 /* Settings (gear) menu */
 
 .button-settings {
-  width: 10px;
-  height: 10px;
+  display: inline-block;
+  overflow: hidden;
   margin: 0;
   padding: 0;
   border: none;
+  background-color: #a5a;
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .9em;
   cursor: pointer;
-  vertical-align: middle;
-  background: transparent url("../shared/img/icons-10x10.svg#settings-cog");
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  -moz-margin-start: .5em;
+  background: transparent url(../shared/img/svg/glyph-settings-16x16.svg) no-repeat center center;
+  background-size: contain;
+  width: 12px;
+  height: 12px;
 }
 
-.user-details .dropdown-menu {
-  bottom: 1.3rem; /* Just above the text. */
-  left: -5px; /* Compensate for button padding. */
-}
-
-html[dir="rtl"] .user-details .dropdown-menu {
-  right: -5px;
+.footer .button-settings {
+  opacity: .6;      /* used to "grey" the icon a little */
 }
 
 .settings-menu .dropdown-menu {
@@ -731,7 +721,7 @@ html[dir="rtl"] .user-details .dropdown-menu {
      set by .dropdown-menu */
   top: auto;
   left: auto;
-  bottom: 1.1em;
+  bottom: -8px;
   right: 14px;
 }
 
@@ -745,32 +735,34 @@ html[dir="rtl"] .settings-menu .dropdown-menu {
 
 .settings-menu .icon {
   background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
   width: 12px;
   height: 12px;
   -moz-margin-end: 1em;
   margin-top: 2px;
 }
 
+.settings-menu .icon-settings {
+  background: transparent url(../shared/img/svg/glyph-settings-16x16.svg) no-repeat center center;
+}
+
 .settings-menu .icon-tour {
-  background-image: url("../shared/img/icons-16x16.svg#tour");
+  background: transparent url("../shared/img/icons-16x16.svg#tour") no-repeat center center;
 }
 
 .settings-menu .icon-account {
-  background-image: url(../shared/img/svg/glyph-account-16x16.svg);
+  background: transparent url(../shared/img/svg/glyph-account-16x16.svg) no-repeat center center;
 }
 
 .settings-menu .icon-signin {
-  background-image: url(../shared/img/svg/glyph-signin-16x16.svg);
+  background: transparent url(../shared/img/svg/glyph-signin-16x16.svg) no-repeat center center;
 }
 
 .settings-menu .icon-signout {
-  background-image: url(../shared/img/svg/glyph-signout-16x16.svg);
+  background: transparent url(../shared/img/svg/glyph-signout-16x16.svg) no-repeat center center;
 }
 
 .settings-menu .icon-help {
-  background-image: url(../shared/img/svg/glyph-help-16x16.svg);
+  background: transparent url(../shared/img/svg/glyph-help-16x16.svg) no-repeat center center;
 }
 
 /* Footer */
@@ -782,9 +774,10 @@ html[dir="rtl"] .settings-menu .dropdown-menu {
   justify-content: space-between;
   align-content: stretch;
   align-items: center;
-  font-size: 1rem;
-  background-color: #fff;
-  color: #666666;
+  font-size: 1em;
+  border-top: 1px solid #D1D1D1;
+  background-color: #eaeaea;
+  color: #7f7f7f;
   padding: .5rem 1rem;
 }
 
