@@ -1748,9 +1748,9 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
         Preferences::GetInt("nglayout.initialpaint.delay",
                             PAINTLOCK_EVENT_DELAY);
 
-      mPaintSuppressionTimer->InitWithFuncCallback(sPaintSuppressionCallback,
-                                                   this, delay,
-                                                   nsITimer::TYPE_ONE_SHOT);
+      mPaintSuppressionTimer->InitWithNamedFuncCallback(
+        sPaintSuppressionCallback, this, delay, nsITimer::TYPE_ONE_SHOT,
+        "PresShell::sPaintSuppressionCallback");
     }
   }
 

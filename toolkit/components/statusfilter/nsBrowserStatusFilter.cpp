@@ -355,8 +355,9 @@ nsBrowserStatusFilter::StartDelayTimer()
     if (!mTimer)
         return NS_ERROR_FAILURE;
 
-    return mTimer->InitWithFuncCallback(TimeoutHandler, this, 160, 
-                                        nsITimer::TYPE_ONE_SHOT);
+    return mTimer->InitWithNamedFuncCallback(
+        TimeoutHandler, this, 160, nsITimer::TYPE_ONE_SHOT,
+        "nsBrowserStatusFilter::TimeoutHandler");
 }
 
 void
