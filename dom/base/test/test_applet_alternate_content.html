@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1200602
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1200602</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SpecialPowers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1200602">Mozilla Bug 1200602</a>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+function test() {
+  "use strict";
+
+  const objLC = SpecialPowers.Ci.nsIObjectLoadingContent;
+  let obj = document.createElement("applet");
+  obj.appendChild(document.createTextNode("alternate content"));
+  document.body.appendChild(obj);
+
+  obj instanceof objLC;
+  obj = SpecialPowers.wrap(obj);
+
+  // We expect this tag to simply go to alternate content, not get a
+  // pluginProblem binding or fire any events.
+  ok(obj.displayedType == objLC.TYPE_NULL, "expected null type");
+  ok(obj.pluginFallbackType == objLC.PLUGIN_ALTERNATE,
+     "expected alternate fallback mode");
+}
+
+// Test all non-plugin types these tags can load to make sure none of them
+// trigger plugin-specific fallbacks when loaded with no URI
+test();
+</script>
+</pre>
+</body>
+</html>
