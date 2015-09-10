@@ -119,13 +119,14 @@ interface MozInputMethod : EventTarget {
  */
 [JSImplementation="@mozilla.org/b2g-imm;1",
  Pref="dom.mozInputMethod.enabled",
- CheckAnyPermissions="input"]
+ CheckAnyPermissions="input input-manage"]
 interface MozInputMethodManager {
   /**
    * Ask the OS to show a list of available inputs for users to switch from.
    * OS should sliently ignore this request if the app is currently not the
    * active one.
    */
+  [CheckAllPermissions="input"]
   void showAll();
 
   /**
@@ -133,16 +134,18 @@ interface MozInputMethodManager {
    * OS should sliently ignore this request if the app is currently not the
    * active one.
    */
+  [CheckAllPermissions="input"]
   void next();
 
   /**
-   * If this method returns true, it is recommented that the input app provides
+   * If this method returns true, it is recommended that the input app provides
    * a shortcut that would invoke the next() method above, for easy switching
    * between inputs -- i.e. show a "global" button on screen if the input app
    * implements an on-screen virtual keyboard.
    *
    * The returning value is depend on the inputType of the current input context.
    */
+  [CheckAllPermissions="input"]
   boolean supportsSwitching();
 
   /**
@@ -150,7 +153,18 @@ interface MozInputMethodManager {
    * OS should sliently ignore this request if the app is currently not the
    * active one.
    */
+  [CheckAllPermissions="input"]
   void hide();
+
+  /**
+   * Update Gecko with information on the input types which supportsSwitching()
+   * should return ture.
+   *
+   * @param types Array of input types in which supportsSwitching() should
+   *              return true.
+   */
+  [CheckAllPermissions="input-manage"]
+  void setSupportsSwitchingTypes(sequence<MozInputMethodInputContextInputTypes> types);
 };
 
 /**
