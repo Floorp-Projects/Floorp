@@ -1482,6 +1482,25 @@ let Modem = Modems[0];
   this.gSetupConference = setupConference;
   this.gSetRadioEnabled = setRadioEnabled;
   this.gSetRadioEnabledAll = setRadioEnabledAll;
+
+  // Telephony helper
+  this.TelephonyHelper = {
+    dial:   dial,
+    answer: answer,
+    hangUp: hangUp,
+    hold:   hold,
+    resume: resume,
+    equals: equals,
+    createExptectedCall: createExptectedCall
+  };
+
+  // Remote Utils, TODO: This should be an array for multi-SIM scenarios
+  this.Remotes = [{
+    dial:   remoteDial,
+    answer: remoteAnswer,
+    hangUp: remoteHangUp
+  }];
+  this.Remote = this.Remotes[0];
 }());
 
 function _startTest(permissions, test) {
