@@ -213,6 +213,35 @@ MacroAssembler::pushStaticFrameDescriptor(FrameType type)
     Push(Imm32(descriptor));
 }
 
+void
+MacroAssembler::PushCalleeToken(Register callee, bool constructing)
+{
+    if (constructing) {
+        orPtr(Imm32(CalleeToken_FunctionConstructing), callee);
+        Push(callee);
+        andPtr(Imm32(uint32_t(CalleeTokenMask)), callee);
+    } else {
+        static_assert(CalleeToken_Function == 0, "Non-constructing call requires no tagging");
+        Push(callee);
+    }
+}
+
+void
+MacroAssembler::loadFunctionFromCalleeToken(Address token, Register dest)
+{
+#ifdef DEBUG
+    Label ok;
+    loadPtr(token, dest);
+    andPtr(Imm32(uint32_t(~CalleeTokenMask)), dest);
+    branchPtr(Assembler::Equal, dest, Imm32(CalleeToken_Function), &ok);
+    branchPtr(Assembler::Equal, dest, Imm32(CalleeToken_FunctionConstructing), &ok);
+    assumeUnreachable("Unexpected CalleeToken tag");
+    bind(&ok);
+#endif
+    loadPtr(token, dest);
+    andPtr(Imm32(uint32_t(CalleeTokenMask)), dest);
+}
+
 uint32_t
 MacroAssembler::buildFakeExitFrame(Register scratch)
 {
