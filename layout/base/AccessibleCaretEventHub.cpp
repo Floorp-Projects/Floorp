@@ -534,8 +534,8 @@ nsEventStatus
 AccessibleCaretEventHub::HandleWheelEvent(WidgetWheelEvent* aEvent)
 {
   switch (aEvent->mMessage) {
-  case NS_WHEEL_WHEEL:
-    AC_LOGV("NS_WHEEL_WHEEL, isMomentum %d, state: %s", aEvent->isMomentum,
+  case eWheel:
+    AC_LOGV("eWheel, isMomentum %d, state: %s", aEvent->isMomentum,
             mState->Name());
     mState->OnScrolling(this);
     break;

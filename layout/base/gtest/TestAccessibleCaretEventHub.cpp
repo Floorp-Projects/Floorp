@@ -736,7 +736,7 @@ TEST_F(AccessibleCaretEventHubTester, TestWheelEventScroll)
                            MockAccessibleCaretEventHub::ScrollState(),
                            nsEventStatus_eIgnore);
 
-  HandleEventAndCheckState(CreateWheelEvent(NS_WHEEL_WHEEL),
+  HandleEventAndCheckState(CreateWheelEvent(eWheel),
                            MockAccessibleCaretEventHub::ScrollState(),
                            nsEventStatus_eIgnore);
 
@@ -747,7 +747,7 @@ TEST_F(AccessibleCaretEventHubTester, TestWheelEventScroll)
                            nsEventStatus_eIgnore);
 
   // Momentum scroll
-  HandleEventAndCheckState(CreateWheelEvent(NS_WHEEL_WHEEL),
+  HandleEventAndCheckState(CreateWheelEvent(eWheel),
                            MockAccessibleCaretEventHub::PostScrollState(),
                            nsEventStatus_eIgnore);
 

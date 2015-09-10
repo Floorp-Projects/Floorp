@@ -383,7 +383,8 @@ NS_EVENT_MESSAGE(NS_POINTERLOCKCHANGE,   NS_POINTERLOCK_START)
 NS_EVENT_MESSAGE(NS_POINTERLOCKERROR,    NS_POINTERLOCK_START + 1)
 
 NS_EVENT_MESSAGE(eWheelEventFirst,       5400)
-NS_EVENT_MESSAGE(NS_WHEEL_WHEEL,         eWheelEventFirst)
+// eWheel is the event message of DOM wheel event.
+NS_EVENT_MESSAGE(eWheel,                 eWheelEventFirst)
 NS_EVENT_MESSAGE(NS_WHEEL_START,         eWheelEventFirst + 1)
 NS_EVENT_MESSAGE(NS_WHEEL_STOP,          eWheelEventFirst + 2)
 

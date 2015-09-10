@@ -1789,7 +1789,7 @@ nsPluginFrame::HandleEvent(nsPresContext* aPresContext,
 #ifdef XP_MACOSX
   // we want to process some native mouse events in the cocoa event model
   if ((anEvent->mMessage == eMouseEnterIntoWidget ||
-       anEvent->mMessage == NS_WHEEL_WHEEL) &&
+       anEvent->mMessage == eWheel) &&
       mInstanceOwner->GetEventModel() == NPEventModelCocoa) {
     *anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
     // Due to plugin code reentering Gecko, this frame may be dead at this

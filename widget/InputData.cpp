@@ -241,7 +241,7 @@ PanGestureInput::IsMomentum() const
 WidgetWheelEvent
 PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
 {
-  WidgetWheelEvent wheelEvent(true, NS_WHEEL_WHEEL, aWidget);
+  WidgetWheelEvent wheelEvent(true, eWheel, aWidget);
   wheelEvent.modifiers = this->modifiers;
   wheelEvent.time = mTime;
   wheelEvent.timeStamp = mTimeStamp;
@@ -313,7 +313,7 @@ DeltaModeForDeltaType(ScrollWheelInput::ScrollDeltaType aDeltaType)
 WidgetWheelEvent
 ScrollWheelInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
 {
-  WidgetWheelEvent wheelEvent(true, NS_WHEEL_WHEEL, aWidget);
+  WidgetWheelEvent wheelEvent(true, eWheel, aWidget);
   wheelEvent.modifiers = this->modifiers;
   wheelEvent.time = mTime;
   wheelEvent.timeStamp = mTimeStamp;

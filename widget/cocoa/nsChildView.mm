@@ -2755,7 +2755,7 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
     }
   }
 
-  WidgetWheelEvent event(true, NS_WHEEL_WHEEL, this);
+  WidgetWheelEvent event(true, eWheel, this);
 
   if (mAPZC) {
     uint64_t inputBlockId = 0;
@@ -2808,8 +2808,7 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
         MOZ_CRASH("unsupported event type");
         return;
     }
-    if (event.mMessage == NS_WHEEL_WHEEL &&
-        (event.deltaX != 0 || event.deltaY != 0)) {
+    if (event.mMessage == eWheel && (event.deltaX != 0 || event.deltaY != 0)) {
       ProcessUntransformedAPZEvent(&event, guid, inputBlockId, result);
     }
     return;
@@ -2853,8 +2852,7 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
       MOZ_CRASH("unexpected event type");
       return;
   }
-  if (event.mMessage == NS_WHEEL_WHEEL &&
-      (event.deltaX != 0 || event.deltaY != 0)) {
+  if (event.mMessage == eWheel && (event.deltaX != 0 || event.deltaY != 0)) {
     DispatchEvent(&event, status);
   }
 }
