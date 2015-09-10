@@ -90,6 +90,18 @@ MacroAssembler::or32(Imm32 imm, const Address& dest)
     store32(scratch32.asUnsized(), dest);
 }
 
+void
+MacroAssembler::orPtr(Register src, Register dest)
+{
+    Orr(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
+}
+
+void
+MacroAssembler::orPtr(Imm32 imm, Register dest)
+{
+    Orr(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
@@ -100,6 +112,12 @@ MacroAssemblerCompat::and64(Imm64 imm, Register64 dest)
     const Register scratch = temps.AcquireX().asUnsized();
     mov(ImmWord(imm.value), scratch);
     asMasm().andPtr(scratch, dest.reg);
+}
+
+void
+MacroAssemblerCompat::or64(Register64 src, Register64 dest)
+{
+    asMasm().orPtr(src.reg, dest.reg);
 }
 
 template <typename T>

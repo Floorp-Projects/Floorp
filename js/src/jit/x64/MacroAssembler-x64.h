@@ -878,12 +878,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void xorPtr(Register src, Register dest) {
         xorq(src, dest);
     }
-    void orPtr(Imm32 imm, Register dest) {
-        orq(imm, dest);
-    }
-    void orPtr(Register src, Register dest) {
-        orq(src, dest);
-    }
     void or64(Register64 src, Register64 dest) {
         orq(src.reg, dest.reg);
     }

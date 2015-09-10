@@ -1649,18 +1649,6 @@ MacroAssemblerMIPSCompat::xorPtr(Register src, Register dest)
 }
 
 void
-MacroAssemblerMIPSCompat::orPtr(Imm32 imm, Register dest)
-{
-    ma_or(dest, imm);
-}
-
-void
-MacroAssemblerMIPSCompat::orPtr(Register src, Register dest)
-{
-    ma_or(dest, src);
-}
-
-void
 MacroAssemblerMIPSCompat::move32(Imm32 imm, Register dest)
 {
     ma_li(dest, imm);

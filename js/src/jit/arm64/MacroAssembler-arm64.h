@@ -1101,19 +1101,8 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void xorPtr(Register src, Register dest) {
         Eor(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
     }
-    void orPtr(ImmWord imm, Register dest) {
-        Orr(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
-    }
-    void orPtr(Imm32 imm, Register dest) {
-        Orr(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
-    }
-    void orPtr(Register src, Register dest) {
-        Orr(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
-    }
-    void or64(Register64 src, Register64 dest) {
-        orPtr(src.reg, dest.reg);
-    }
     inline void and64(Imm64 imm, Register64 dest);
+    inline void or64(Register64 src, Register64 dest);
 
     void testPtr(Register lhs, Register rhs) {
         Tst(ARMRegister(lhs, 64), Operand(ARMRegister(rhs, 64)));
