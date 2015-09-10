@@ -420,6 +420,22 @@ let gTests = [
   }
 },
 {
+  desc: "Cmd+f should focus the search box in the page",
+  setup: function () {},
+  run: Task.async(function* () {
+    let doc = gBrowser.selectedBrowser.contentDocument;
+    let logo = doc.getElementById("brandLogo");
+    let searchInput = doc.getElementById("searchText");
+
+    EventUtils.synthesizeMouseAtCenter(logo, {});
+    isnot(searchInput, doc.activeElement, "Search input should not be the active element.");
+
+    EventUtils.synthesizeKey("f", { accelKey: true });
+    yield promiseWaitForCondition(() => doc.activeElement === searchInput);
+    is(searchInput, doc.activeElement, "Search input should be the active element.");
+  })
+},
+{
   desc: "Cmd+k should focus the search box in the page when the search box in the toolbar is absent",
   setup: function () {
     // Remove the search bar from toolbar

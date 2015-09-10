@@ -209,6 +209,17 @@ describe("loop.standaloneRoomViews", function() {
 
           sinon.assert.notCalled(dispatch);
         });
+
+      it("should dispatch a `TileShown` action after a wait when a participant leaves",
+        function() {
+          activeRoomStore.setStoreState({roomState: ROOM_STATES.HAS_PARTICIPANTS});
+          clock.tick(loop.standaloneRoomViews.StandaloneRoomInfoArea.RENDER_WAITING_DELAY);
+          activeRoomStore.remotePeerDisconnected();
+          clock.tick(loop.standaloneRoomViews.StandaloneRoomInfoArea.RENDER_WAITING_DELAY);
+
+          sinon.assert.calledOnce(dispatch);
+          sinon.assert.calledWithExactly(dispatch, new sharedActions.TileShown());
+        });
     });
 
     describe("#componentWillReceiveProps", function() {

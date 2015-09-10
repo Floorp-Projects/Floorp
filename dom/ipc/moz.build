@@ -134,6 +134,7 @@ LOCAL_INCLUDES += [
     '/dom/geolocation',
     '/dom/media/webspeech/synth/ipc',
     '/dom/mobilemessage/ipc',
+    '/dom/security',
     '/dom/storage',
     '/dom/workers',
     '/editor/libeditor',

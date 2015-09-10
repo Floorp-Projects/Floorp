@@ -32,7 +32,6 @@ ifeq ($(OS_ARCH),WINNT)
 TEST_HARNESS_BINS += \
   crashinject$(BIN_SUFFIX) \
   crashinjectdll$(DLL_SUFFIX) \
-  vmwarerecordinghelper$(DLL_SUFFIX) \
   $(NULL)
 endif
 

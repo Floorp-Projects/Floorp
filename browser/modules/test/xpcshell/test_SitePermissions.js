@@ -11,12 +11,4 @@ add_task(function* testPermissionsListing() {
      "indexedDB","install","microphone","pointerLock","popup",
      "push"],
     "Correct list of all permissions");
-
-  Assert.deepEqual(SitePermissions.listPageFunctionalityPermissions().sort(),
-    ["cookie","desktop-notification","image","install","popup"],
-    "Correct list of 'page functionality' permissions");
-
-  Assert.deepEqual(SitePermissions.listSystemAccessPermissions().sort(),
-    ["camera","geo","indexedDB","microphone","pointerLock","push"],
-    "Correct list of 'page functionality' permissions");
 });

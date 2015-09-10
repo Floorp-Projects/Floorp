@@ -3670,7 +3670,7 @@ GetScrollClipIntersection(nsDisplayListBuilder* aBuilder, const nsIFrame* aAnima
       continue;
     }
 
-    const DisplayItemClip* clip = scrollFrame->ComputeScrollClip(aIsCaret);
+    Maybe<DisplayItemClip> clip = scrollFrame->ComputeScrollClip(aIsCaret);
     if (clip) {
       resultClip.IntersectWith(*clip);
     }
@@ -4542,7 +4542,7 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
     }
 
     FrameMetrics& metrics = info->metrics;
-    const DisplayItemClip* clip = info->clip;
+    Maybe<DisplayItemClip> clip = info->clip;
 
     if (clip &&
         clip->HasClip() &&

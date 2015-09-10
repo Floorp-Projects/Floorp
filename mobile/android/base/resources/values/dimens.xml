@@ -137,7 +137,6 @@
     <dimen name="tabs_strip_button_width">100dp</dimen>
     <dimen name="tabs_strip_button_padding">18dp</dimen>
     <dimen name="tabs_strip_shadow_size">1dp</dimen>
-    <dimen name="tabs_layout_horizontal_height">156dp</dimen>
     <dimen name="text_selection_handle_width">47dp</dimen>
     <dimen name="text_selection_handle_height">58dp</dimen>
     <dimen name="text_selection_handle_shadow">11dp</dimen>
@@ -152,6 +151,10 @@
     <dimen name="tab_panel_grid_padding_top">19dp</dimen>
 
     <dimen name="tab_highlight_stroke_width">4dp</dimen>
+    <dimen name="tab_title_height">22dp</dimen>
+    <dimen name="tab_vertical_padding">6dp</dimen>
+    <dimen name="tab_thumbnail_padding">4dp</dimen>
+    <dimen name="tab_thumbnail_margin">6dp</dimen>
 
     <!-- PageActionButtons dimensions -->
     <dimen name="page_action_button_width">32dp</dimen>
