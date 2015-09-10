@@ -70,6 +70,12 @@ install npm
 # enough X to run `make check` and do a PGO build
 install Xvfb
 install xvinfo
+
+# required for building OS X tools
+install patch
+install libuuid-devel
+install openssl-static
+install cmake
 run
 EOF
 
