@@ -72,120 +72,58 @@ body {
 }
 
 .tab-view {
-  position: relative;
-  width: 100%;
-  height: 4rem;
-  line-height: 3.7rem;
-  color: #4A4A4A;
+  display: flex;
+  flex-direction: row;
+  padding: 10px 0;
+  border-bottom: 1px solid #ccc;
+  color: #000;
+  border-top-right-radius: 2px;
+  border-top-left-radius: 2px;
   list-style: none;
-  border-bottom: 2px solid #ccc;
 }
 
 .tab-view > li {
-  display: inline-block;
-  vertical-align: middle;
-  line-height: 1.2rem;
+  flex: 1;
   text-align: center;
-  padding: 0;
+  color: #ccc;
+  -moz-border-end: 1px solid #ccc;
+  padding: 0 10px;
+  height: 16px;
   cursor: pointer;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  background-position: center;
 }
 
-.tab-view > .slide-bar {
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  height: .2em;
-  width: 50%;
-  background: #00A9DC;
-  border: none;
-  transition: margin .3s ease-in-out;
+.tab-view > li:last-child {
+  -moz-border-end-style: none;
 }
 
-.tab-view li:nth-child(1).selected ~ .slide-bar {
-  margin-left: 0;
+.tab-view > li[data-tab-name="call"],
+.tab-view > li[data-tab-name="rooms"] {
+  background-image: url("../shared/img/icons-16x16.svg#precall");
 }
 
-.tab-view li:nth-child(2).selected ~ .slide-bar {
-  margin-left: 50%;
+.tab-view > li[data-tab-name="call"]:hover,
+.tab-view > li[data-tab-name="rooms"]:hover {
+  background-image: url("../shared/img/icons-16x16.svg#precall-hover");
 }
 
-html[dir="rtl"] .tab-view li:nth-child(1).selected ~ .slide-bar {
-  margin-left: 50%;
+.tab-view > li[data-tab-name="call"].selected,
+.tab-view > li[data-tab-name="rooms"].selected {
+  background-image: url("../shared/img/icons-16x16.svg#precall-active");
 }
 
-html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
-  margin-left: 0;
+.tab-view > li[data-tab-name="contacts"] {
+  background-image: url("../shared/img/icons-16x16.svg#contacts");
 }
 
-.tab-view > li > div {
-  font-size: 1.2rem;
-  pointer-events: none;
-  display: inline;
+.tab-view > li[data-tab-name="contacts"]:hover {
+  background-image: url("../shared/img/icons-16x16.svg#contacts-hover");
 }
 
-.tab-view > li:before {
-  content: "";
-  pointer-events: none;
-  display: inline-block;
-  -moz-margin-end: .5rem;
-  vertical-align: middle;
-  height: 1.4rem;
-  width: 1.4rem;
-  transition-property: background-image;
-}
-
-.tab-view > li.selected {
-  transition-delay: .3s;
-}
-
-.tab-view > li[data-tab-name="rooms"]:before {
-  background-image: url("../shared/img/icons-14x14.svg#hello");
-}
-
-.tab-view > li[data-tab-name="rooms"]:hover:before {
-  background-image: url("../shared/img/icons-14x14.svg#hello-hover");
-}
-
-.tab-view > li[data-tab-name="rooms"].selected:before {
-  background-image: url("../shared/img/icons-14x14.svg#hello-active");
-}
-
-.tab-view > li[data-tab-name="contacts"]:before {
-  background-image: url("../shared/img/icons-14x14.svg#contacts");
-}
-
-.tab-view > li[data-tab-name="contacts"]:hover:before {
-  background-image: url("../shared/img/icons-14x14.svg#contacts-hover");
-}
-
-.tab-view > li[data-tab-name="contacts"].selected:before {
-  background-image: url("../shared/img/icons-14x14.svg#contacts-active");
-}
-
-/* Styling for one tab */
-.tab-view li:first-child:nth-last-child(2) {
-  width: 100%;
-}
-
-.tab-view li:first-child:nth-last-child(2) > span {
-  display: none;
-}
-
-.tab-view li:first-child:nth-last-child(2) > span {
-  display: none;
-}
-
-.tab-view li:first-child:nth-last-child(2):before {
-  background-image: url("../shared/img/icons-14x14.svg#hello-hover");
-}
-
-.tab-view li:first-child:nth-last-child(2) ~ div {
-  display: none;
-}
-
-.tab-view li:first-child:nth-last-child(3),
-.tab-view li:first-child:nth-last-child(3) ~ li {
-  width: 50%;
+.tab-view > li[data-tab-name="contacts"].selected {
+  background-image: url("../shared/img/icons-16x16.svg#contacts-active");
 }
 
 .tab {
