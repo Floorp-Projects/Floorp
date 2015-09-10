@@ -2068,12 +2068,12 @@ nsDOMWindowUtils::SendContentCommandEvent(const nsAString& aType,
   else if (aType.EqualsLiteral("redo"))
     msg = NS_CONTENT_COMMAND_REDO;
   else if (aType.EqualsLiteral("pasteTransferable"))
-    msg = NS_CONTENT_COMMAND_PASTE_TRANSFERABLE;
+    msg = eContentCommandPasteTransferable;
   else
     return NS_ERROR_FAILURE;
 
   WidgetContentCommandEvent event(true, msg, widget);
-  if (msg == NS_CONTENT_COMMAND_PASTE_TRANSFERABLE) {
+  if (msg == eContentCommandPasteTransferable) {
     event.mTransferable = aTransferable;
   }
 

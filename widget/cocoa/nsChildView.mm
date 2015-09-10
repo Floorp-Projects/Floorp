@@ -6058,7 +6058,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
       // Determine if we can paste (if receiving data from the service).
       if (mGeckoChild && returnType) {
         WidgetContentCommandEvent command(true,
-                                          NS_CONTENT_COMMAND_PASTE_TRANSFERABLE,
+                                          eContentCommandPasteTransferable,
                                           mGeckoChild, true);
         // This might possibly destroy our widget (and null out mGeckoChild).
         mGeckoChild->DispatchWindowEvent(command);
@@ -6156,7 +6156,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   NS_ENSURE_TRUE(mGeckoChild, false);
 
   WidgetContentCommandEvent command(true,
-                                    NS_CONTENT_COMMAND_PASTE_TRANSFERABLE,
+                                    eContentCommandPasteTransferable,
                                     mGeckoChild);
   command.mTransferable = trans;
   mGeckoChild->DispatchWindowEvent(command);
