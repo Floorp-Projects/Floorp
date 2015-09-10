@@ -1438,9 +1438,7 @@ AsmJSModule::CodeRange::CodeRange(AsmJSExit::BuiltinKind builtin, uint32_t begin
 void
 AsmJSModule::CodeRange::updateOffsets(jit::MacroAssembler& masm)
 {
-    uint32_t entryBefore = 0;
-    uint32_t profilingJumpBefore = 0;
-    uint32_t profilingEpilogueBefore = 0;
+    uint32_t entryBefore, profilingJumpBefore, profilingEpilogueBefore;
     if (isFunction()) {
         entryBefore = entry();
         profilingJumpBefore = profilingJump();
