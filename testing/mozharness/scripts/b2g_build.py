@@ -114,6 +114,10 @@ class B2GBuild(LocalesMixin, PurgeMixin,
             "dest": "platform",
             "help": "the platform used by balrog submmiter.",
         }],
+        [["--gecko-objdir"], {
+            "dest": "gecko_objdir",
+            "help": "Specifies the gecko object directory.",
+        }],
     ]
 
     def __init__(self, require_config_file=False, config={},
@@ -157,7 +161,8 @@ class B2GBuild(LocalesMixin, PurgeMixin,
         )
 
         dirs = self.query_abs_dirs()
-        self.objdir = os.path.join(dirs['work_dir'], 'objdir-gecko')
+        self.objdir = self.config.get("gecko_objdir",
+                os.path.join(dirs['work_dir'], 'objdir-gecko'))
         self.abs_dirs['abs_obj_dir'] = self.objdir
         if self.config.get("update_type", "ota") == "fota":
             self.make_updates_cmd = ['./build.sh', 'gecko-update-fota']
@@ -556,6 +561,9 @@ class B2GBuild(LocalesMixin, PurgeMixin,
             env['PATH'] += ':%s' % os.path.join(dirs['compare_locales_dir'], 'scripts')
             env['PYTHONPATH'] = os.environ.get('PYTHONPATH', '')
             env['PYTHONPATH'] += ':%s' % os.path.join(dirs['compare_locales_dir'], 'lib')
+
+        with open(os.path.join(dirs['work_dir'], '.userconfig'), 'w') as cfg:
+            cfg.write('GECKO_OBJDIR={0}'.format(self.objdir))
 
         self.enable_mock()
         if self.config['ccache']:
