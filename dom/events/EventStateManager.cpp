@@ -799,7 +799,7 @@ EventStateManager::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
     // Following events have not been supported in e10s mode yet.
     case eQueryContentState:
     case eQuerySelectionAsTransferable:
-    case NS_QUERY_CHARACTER_AT_POINT:
+    case eQueryCharacterAtPoint:
     case NS_QUERY_DOM_WIDGET_HITTEST:
       break;
     default:

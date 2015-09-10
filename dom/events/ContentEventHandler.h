@@ -56,7 +56,7 @@ public:
   nsresult OnQueryContentState(WidgetQueryContentEvent* aEvent);
   // eQuerySelectionAsTransferable event handler
   nsresult OnQuerySelectionAsTransferable(WidgetQueryContentEvent* aEvent);
-  // NS_QUERY_CHARACTER_AT_POINT event handler
+  // eQueryCharacterAtPoint event handler
   nsresult OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent);
   // NS_QUERY_DOM_WIDGET_HITTEST event handler
   nsresult OnQueryDOMWidgetHittest(WidgetQueryContentEvent* aEvent);

@@ -810,7 +810,7 @@ ContentEventHandler::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
       return OnQueryContentState(aEvent);
     case eQuerySelectionAsTransferable:
       return OnQuerySelectionAsTransferable(aEvent);
-    case NS_QUERY_CHARACTER_AT_POINT:
+    case eQueryCharacterAtPoint:
       return OnQueryCharacterAtPoint(aEvent);
     case NS_QUERY_DOM_WIDGET_HITTEST:
       return OnQueryDOMWidgetHittest(aEvent);
@@ -1267,7 +1267,7 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
     NS_ENSURE_TRUE(rootWidget, NS_ERROR_FAILURE);
   }
 
-  WidgetQueryContentEvent eventOnRoot(true, NS_QUERY_CHARACTER_AT_POINT,
+  WidgetQueryContentEvent eventOnRoot(true, eQueryCharacterAtPoint,
                                       rootWidget);
   eventOnRoot.mUseNativeLineBreak = aEvent->mUseNativeLineBreak;
   eventOnRoot.refPoint = aEvent->refPoint;

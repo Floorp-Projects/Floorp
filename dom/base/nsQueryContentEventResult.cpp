@@ -60,7 +60,7 @@ static bool IsRectEnabled(EventMessage aEventMessage)
   return aEventMessage == eQueryCaretRect ||
          aEventMessage == NS_QUERY_TEXT_RECT ||
          aEventMessage == eQueryEditorRect ||
-         aEventMessage == NS_QUERY_CHARACTER_AT_POINT;
+         aEventMessage == eQueryCharacterAtPoint;
 }
 
 NS_IMETHODIMP
@@ -136,7 +136,7 @@ nsQueryContentEventResult::GetNotFound(bool *aNotFound)
 {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(mEventMessage == eQuerySelectedText ||
-                 mEventMessage == NS_QUERY_CHARACTER_AT_POINT,
+                 mEventMessage == eQueryCharacterAtPoint,
                  NS_ERROR_NOT_AVAILABLE);
   *aNotFound = (mOffset == WidgetQueryContentEvent::NOT_FOUND);
   return NS_OK;
@@ -148,7 +148,7 @@ nsQueryContentEventResult::GetTentativeCaretOffsetNotFound(bool* aNotFound)
   if (NS_WARN_IF(!mSucceeded)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  if (NS_WARN_IF(mEventMessage != NS_QUERY_CHARACTER_AT_POINT)) {
+  if (NS_WARN_IF(mEventMessage != eQueryCharacterAtPoint)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   *aNotFound = (mTentativeCaretOffset == WidgetQueryContentEvent::NOT_FOUND);
