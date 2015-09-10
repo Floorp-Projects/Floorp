@@ -238,7 +238,7 @@ NS_EVENT_MESSAGE(eQuerySelectionAsTransferable, eQueryContentEventFirst + 7)
 // Query for character at a point.  This returns the character offset, its
 // rect and also tentative caret point if the point is clicked.  The point is
 // specified by Event::refPoint.
-NS_EVENT_MESSAGE(NS_QUERY_CHARACTER_AT_POINT,   eQueryContentEventFirst + 8)
+NS_EVENT_MESSAGE(eQueryCharacterAtPoint,        eQueryContentEventFirst + 8)
 // Query if the DOM element under Event::refPoint belongs to our widget
 // or not.
 NS_EVENT_MESSAGE(NS_QUERY_DOM_WIDGET_HITTEST,   eQueryContentEventFirst + 9)

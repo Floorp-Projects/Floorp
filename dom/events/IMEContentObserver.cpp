@@ -65,8 +65,8 @@ ToChar(EventMessage aEventMessage)
       return "eQueryContentState";
     case eQuerySelectionAsTransferable:
       return "eQuerySelectionAsTransferable";
-    case NS_QUERY_CHARACTER_AT_POINT:
-      return "NS_QUERY_CHARACTER_AT_POINT";
+    case eQueryCharacterAtPoint:
+      return "eQueryCharacterAtPoint";
     case NS_QUERY_DOM_WIDGET_HITTEST:
       return "NS_QUERY_DOM_WIDGET_HITTEST";
     default:
@@ -620,7 +620,7 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
 
   nsRefPtr<IMEContentObserver> kungFuDeathGrip(this);
 
-  WidgetQueryContentEvent charAtPt(true, NS_QUERY_CHARACTER_AT_POINT,
+  WidgetQueryContentEvent charAtPt(true, eQueryCharacterAtPoint,
                                    aMouseEvent->widget);
   charAtPt.refPoint = aMouseEvent->refPoint;
   ContentEventHandler handler(aPresContext);
