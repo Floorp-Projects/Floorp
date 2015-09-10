@@ -4,6 +4,8 @@
 
 #include "sandbox/win/src/target_services.h"
 
+#include <new>
+
 #include <process.h>
 
 #include "base/basictypes.h"
@@ -56,6 +58,13 @@ bool CloseOpenHandles() {
   return true;
 }
 
+// Used as storage for g_target_services, because other allocation facilities
+// are not available early. We can't use a regular function static because on
+// VS2015, because the CRT tries to acquire a lock to guard initialization, but
+// this code runs before the CRT is initialized.
+char g_target_services_memory[sizeof(sandbox::TargetServicesBase)];
+sandbox::TargetServicesBase* g_target_services = nullptr;
+
 }  // namespace
 
 namespace sandbox {
@@ -99,8 +108,10 @@ ProcessState* TargetServicesBase::GetState() {
 }
 
 TargetServicesBase* TargetServicesBase::GetInstance() {
-  static TargetServicesBase instance;
-  return &instance;
+  // Leak on purpose TargetServicesBase.
+  if (!g_target_services)
+    g_target_services = new (g_target_services_memory) TargetServicesBase;
+  return g_target_services;
 }
 
 // The broker services a 'test' IPC service with the IPC_PING_TAG tag.
@@ -155,15 +166,18 @@ bool TargetServicesBase::TestIPCPing(int version) {
   return true;
 }
 
-bool ProcessState::IsKernel32Loaded() {
+ProcessState::ProcessState() : process_state_(0) {
+}
+
+bool ProcessState::IsKernel32Loaded() const {
   return process_state_ != 0;
 }
 
-bool ProcessState::InitCalled() {
+bool ProcessState::InitCalled() const {
   return process_state_ > 1;
 }
 
-bool ProcessState::RevertedToSelf() {
+bool ProcessState::RevertedToSelf() const {
   return process_state_ > 2;
 }
 
