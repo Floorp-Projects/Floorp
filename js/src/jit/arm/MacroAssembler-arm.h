@@ -987,17 +987,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         subPtr(imm, lhs);
         branch32(cond, lhs, Imm32(0), label);
     }
-    void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp, Label* label) {
-        if (cond == Assembler::Zero) {
-            MOZ_ASSERT(lhs.low == rhs.low);
-            MOZ_ASSERT(lhs.high == rhs.high);
-            mov(lhs.low, ScratchRegister);
-            or32(lhs.high, ScratchRegister);
-            branchTestPtr(cond, ScratchRegister, ScratchRegister, label);
-        } else {
-            MOZ_CRASH("Unsupported condition");
-        }
-    }
+    inline void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp, Label* label);
     void moveValue(const Value& val, Register type, Register data);
 
     CodeOffsetJump jumpWithPatch(RepatchLabel* label, Condition cond = Always,
@@ -1214,17 +1204,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void xor32(Imm32 imm, Register dest);
 
     inline void and64(Imm64 imm, Register64 dest);
-    void or32(Register src, Register dest);
-    void or32(Imm32 imm, Register dest);
-    void or32(Imm32 imm, const Address& dest);
+    inline void or64(Register64 src, Register64 dest);
     void xorPtr(Imm32 imm, Register dest);
     void xorPtr(Register src, Register dest);
     void orPtr(Imm32 imm, Register dest);
     void orPtr(Register src, Register dest);
-    void or64(Register64 src, Register64 dest) {
-        or32(src.low, dest.low);
-        or32(src.high, dest.high);
-    }
     void addPtr(Register src, Register dest);
     void addPtr(const Address& src, Register dest);
     void add64(Imm32 imm, Register64 dest) {

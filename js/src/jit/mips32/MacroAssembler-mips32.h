@@ -1152,13 +1152,7 @@ public:
     }
 
     inline void and64(Imm64 imm, Register64 dest);
-    void or32(Imm32 imm, Register dest);
-    void or32(Imm32 imm, const Address& dest);
-    void or32(Register src, Register dest);
-    void or64(Register64 src, Register64 dest) {
-        or32(src.low, dest.low);
-        or32(src.high, dest.high);
-    }
+    inline void or64(Register64 src, Register64 dest);
     void xor32(Imm32 imm, Register dest);
     void xorPtr(Imm32 imm, Register dest);
     void xorPtr(Register src, Register dest);
