@@ -232,7 +232,7 @@ NS_EVENT_MESSAGE(NS_QUERY_TEXT_RECT,            eQueryContentEventFirst + 4)
 NS_EVENT_MESSAGE(eQueryEditorRect,              eQueryContentEventFirst + 5)
 // Query for the current state of the content. The particular members of
 // mReply that are set for each query content event will be valid on success.
-NS_EVENT_MESSAGE(NS_QUERY_CONTENT_STATE,        eQueryContentEventFirst + 6)
+NS_EVENT_MESSAGE(eQueryContentState,            eQueryContentEventFirst + 6)
 // Query for the selection in the form of a nsITransferable.
 NS_EVENT_MESSAGE(eQuerySelectionAsTransferable, eQueryContentEventFirst + 7)
 // Query for character at a point.  This returns the character offset, its

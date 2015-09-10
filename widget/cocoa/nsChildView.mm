@@ -6048,8 +6048,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
 
       // Determine if there is a selection (if sending to the service).
       if (sendType) {
-        WidgetQueryContentEvent event(true, NS_QUERY_CONTENT_STATE,
-                                      mGeckoChild);
+        WidgetQueryContentEvent event(true, eQueryContentState, mGeckoChild);
         // This might destroy our widget (and null out mGeckoChild).
         mGeckoChild->DispatchWindowEvent(event);
         if (!mGeckoChild || !event.mSucceeded || !event.mReply.mHasSelection)
