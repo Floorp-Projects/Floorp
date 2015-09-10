@@ -5,6 +5,7 @@ MARIONETTE_CONTEXT = "chrome";
 
 const SETTINGS_KEY_DATA_ENABLED = "ril.data.enabled";
 const SETTINGS_KEY_DATA_APN_SETTINGS  = "ril.data.apnSettings";
+const SETTINGS_KEY_WIFI_ENABLED = "wifi.enabled";
 
 const TOPIC_CONNECTION_STATE_CHANGED = "network-connection-state-changed";
 const TOPIC_NETWORK_ACTIVE_CHANGED = "network-active-changed";
@@ -127,6 +128,34 @@ function waitForObserverEvent(aTopic) {
   }, aTopic, false);
 
   return deferred.promise;
+}
+
+/**
+ * Wait for one named event.
+ *
+ * Resolve if that named event occurs.  Never reject.
+ *
+ * Fulfill params: the DOMEvent passed.
+ *
+ * @param aEventTarget
+ *        An EventTarget object.
+ * @param aEventName
+ *        A string event name.
+ * @param aMatchFun [optional]
+ *        A matching function returns true or false to filter the event.
+ *
+ * @return A deferred promise.
+ */
+function waitForTargetEvent(aEventTarget, aEventName, aMatchFun) {
+  return new Promise(function(aResolve, aReject) {
+    aEventTarget.addEventListener(aEventName, function onevent(aEvent) {
+      if (!aMatchFun || aMatchFun(aEvent)) {
+        aEventTarget.removeEventListener(aEventName, onevent);
+        ok(true, "Event '" + aEventName + "' got.");
+        aResolve(aEvent);
+      }
+    });
+  });
 }
 
 /**
