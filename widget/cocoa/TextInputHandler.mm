@@ -3258,7 +3258,7 @@ IMEInputHandler::CharacterIndexForPoint(NSPoint& aPoint)
     return NSNotFound;
   }
 
-  WidgetQueryContentEvent charAt(true, NS_QUERY_CHARACTER_AT_POINT, mWidget);
+  WidgetQueryContentEvent charAt(true, eQueryCharacterAtPoint, mWidget);
   NSPoint ptInWindow = [mainWindow convertScreenToBase:aPoint];
   NSPoint ptInView = [mView convertPoint:ptInWindow fromView:nil];
   charAt.refPoint.x =

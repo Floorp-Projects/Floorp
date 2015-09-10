@@ -3364,7 +3364,7 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView,
   // NOTE: Don't check if the point is in the widget since the point can be
   //       outside of the widget if focused editor is in a XUL <panel>.
 
-  WidgetQueryContentEvent charAtPt(true, NS_QUERY_CHARACTER_AT_POINT, mWidget);
+  WidgetQueryContentEvent charAtPt(true, eQueryCharacterAtPoint, mWidget);
   mWidget->InitEvent(charAtPt, &ourPt);
 
   // FYI: WidgetQueryContentEvent may cause flushing pending layout and it
@@ -3374,7 +3374,7 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView,
   if (!mWidget || mWidget->Destroyed()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetACPFromPoint() FAILED due to "
-            "mWidget was destroyed during NS_QUERY_CHARACTER_AT_POINT", this));
+            "mWidget was destroyed during eQueryCharacterAtPoint", this));
     return E_FAIL;
   }
 
@@ -3387,7 +3387,7 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView,
   if (NS_WARN_IF(!charAtPt.mSucceeded)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetACPFromPoint() FAILED due to "
-            "NS_QUERY_CHARACTER_AT_POINT failure", this));
+            "eQueryCharacterAtPoint failure", this));
     return E_FAIL;
   }
 

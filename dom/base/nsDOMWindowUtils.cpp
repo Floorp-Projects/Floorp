@@ -1942,7 +1942,7 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
       message = eQueryEditorRect;
       break;
     case QUERY_CHARACTER_AT_POINT:
-      message = NS_QUERY_CHARACTER_AT_POINT;
+      message = eQueryCharacterAtPoint;
       break;
     default:
       return NS_ERROR_INVALID_ARG;
@@ -1954,7 +1954,7 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
   bool useNativeLineBreak =
     !(aAdditionalFlags & QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK);
 
-  if (message == NS_QUERY_CHARACTER_AT_POINT) {
+  if (message == eQueryCharacterAtPoint) {
     // Looking for the widget at the point.
     WidgetQueryContentEvent dummyEvent(true, eQueryContentState, widget);
     dummyEvent.mUseNativeLineBreak = useNativeLineBreak;
