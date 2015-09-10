@@ -51,8 +51,8 @@ function create_test_promise(url, cross_origin, expected_result) {
 
 window.addEventListener('message', function(evt) {
     var port = evt.ports[0];
-    var image_url = host_info['HTTP_ORIGIN'] + image_path;
-    var remote_image_url = host_info['HTTP_REMOTE_ORIGIN'] + image_path;
+    var image_url = host_info['HTTPS_ORIGIN'] + image_path;
+    var remote_image_url = host_info['HTTPS_REMOTE_ORIGIN'] + image_path;
     Promise.all([
         // Reject tests
         create_test_promise(image_url + '&reject', '', LOAD_ERROR),
@@ -73,7 +73,7 @@ window.addEventListener('message', function(evt) {
             'anonymous',
             LOAD_ERROR),
         create_test_promise(
-            remote_image_url + '&ACAOrigin=' + host_info['HTTP_ORIGIN'] +
+            remote_image_url + '&ACAOrigin=' + host_info['HTTPS_ORIGIN'] +
             '&ignore',
             'anonymous',
             NOT_TAINTED),
@@ -82,12 +82,12 @@ window.addEventListener('message', function(evt) {
             'use-credentials',
             LOAD_ERROR),
         create_test_promise(
-            remote_image_url + '&ACAOrigin=' + host_info['HTTP_ORIGIN'] +
+            remote_image_url + '&ACAOrigin=' + host_info['HTTPS_ORIGIN'] +
             '&ignore',
             'use-credentials',
             LOAD_ERROR),
         create_test_promise(
-            remote_image_url + '&ACAOrigin=' + host_info['HTTP_ORIGIN'] +
+            remote_image_url + '&ACAOrigin=' + host_info['HTTPS_ORIGIN'] +
             '&ACACredentials=true&ignore',
             'use-credentials',
             NOT_TAINTED),
@@ -110,12 +110,12 @@ window.addEventListener('message', function(evt) {
             'use-credentials',
             LOAD_ERROR),
         create_test_promise(
-            remote_image_url + '&Auth&ACAOrigin=' + host_info['HTTP_ORIGIN'] +
+            remote_image_url + '&Auth&ACAOrigin=' + host_info['HTTPS_ORIGIN'] +
             '&ignore',
             'use-credentials',
             LOAD_ERROR),
         create_test_promise(
-            remote_image_url + '&Auth&ACAOrigin=' + host_info['HTTP_ORIGIN'] +
+            remote_image_url + '&Auth&ACAOrigin=' + host_info['HTTPS_ORIGIN'] +
             '&ACACredentials=true&ignore',
             'use-credentials',
             NOT_TAINTED),
@@ -189,58 +189,64 @@ window.addEventListener('message', function(evt) {
             image_url +
             '&mode=cors&url=' +
             encodeURIComponent(remote_image_url +
-                               '&ACAOrigin=' + host_info['HTTP_ORIGIN']),
+                               '&ACAOrigin=' + host_info['HTTPS_ORIGIN']),
             '',
-            NOT_TAINTED),
+            TAINTED), // We expect TAINTED since the default origin behavior here
+                      // is taint, and it doesn't matter what kind of fetch the
+                      // SW performs.
         create_test_promise(
             image_url +
             '&mode=cors&url=' +
             encodeURIComponent(remote_image_url +
-                               '&ACAOrigin=' + host_info['HTTP_ORIGIN']),
+                               '&ACAOrigin=' + host_info['HTTPS_ORIGIN']),
             'anonymous',
             NOT_TAINTED),
         create_test_promise(
             image_url +
             '&mode=cors&url=' +
             encodeURIComponent(remote_image_url +
-                               '&ACAOrigin=' + host_info['HTTP_ORIGIN']),
+                               '&ACAOrigin=' + host_info['HTTPS_ORIGIN']),
             'use-credentials',
-            NOT_TAINTED),
+            LOAD_ERROR), // We expect LOAD_ERROR since the server doesn't respond
+                         // with an Access-Control-Allow-Credentials header.
         create_test_promise(
             image_url +
             '&mode=cors&url=' +
             encodeURIComponent(
                 remote_image_url +
-                '&ACACredentials=true&ACAOrigin=' + host_info['HTTP_ORIGIN']),
+                '&ACACredentials=true&ACAOrigin=' + host_info['HTTPS_ORIGIN']),
             'use-credentials',
             NOT_TAINTED),
         create_test_promise(
             remote_image_url +
             '&mode=cors&url=' +
             encodeURIComponent(remote_image_url +
-                               '&ACAOrigin=' + host_info['HTTP_ORIGIN']),
+                               '&ACAOrigin=' + host_info['HTTPS_ORIGIN']),
             '',
-            NOT_TAINTED),
+            TAINTED), // We expect TAINTED since the default origin behavior here
+                      // is taint, and it doesn't matter what kind of fetch the
+                      // SW performs.
         create_test_promise(
             remote_image_url +
             '&mode=cors&url=' +
             encodeURIComponent(remote_image_url +
-                               '&ACAOrigin=' + host_info['HTTP_ORIGIN']),
+                               '&ACAOrigin=' + host_info['HTTPS_ORIGIN']),
             'anonymous',
             NOT_TAINTED),
         create_test_promise(
             remote_image_url +
             '&mode=cors&url=' +
             encodeURIComponent(remote_image_url +
-                               '&ACAOrigin=' + host_info['HTTP_ORIGIN']),
+                               '&ACAOrigin=' + host_info['HTTPS_ORIGIN']),
             'use-credentials',
-            NOT_TAINTED),
+            LOAD_ERROR), // We expect LOAD_ERROR since the server doesn't respond
+                         // with an Access-Control-Allow-Credentials header.
         create_test_promise(
             remote_image_url +
             '&mode=cors&url=' +
             encodeURIComponent(
                 remote_image_url +
-                '&ACACredentials=true&ACAOrigin=' + host_info['HTTP_ORIGIN']),
+                '&ACACredentials=true&ACAOrigin=' + host_info['HTTPS_ORIGIN']),
             'use-credentials',
             NOT_TAINTED)
       ])
