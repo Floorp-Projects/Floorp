@@ -305,7 +305,7 @@ NS_EVENT_MESSAGE(eContentCommandCopy,              eContentCommandEventFirst + 1
 NS_EVENT_MESSAGE(eContentCommandPaste,             eContentCommandEventFirst + 2)
 NS_EVENT_MESSAGE(eContentCommandDelete,            eContentCommandEventFirst + 3)
 NS_EVENT_MESSAGE(eContentCommandUndo,              eContentCommandEventFirst + 4)
-NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_REDO,          eContentCommandEventFirst + 5)
+NS_EVENT_MESSAGE(eContentCommandRedo,              eContentCommandEventFirst + 5)
 NS_EVENT_MESSAGE(eContentCommandPasteTransferable, eContentCommandEventFirst + 6)
 // NS_CONTENT_COMMAND_SCROLL scrolls the nearest scrollable element to the
 // currently focused content or latest DOM selection. This would normally be

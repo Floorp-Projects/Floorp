@@ -3045,7 +3045,7 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
         case GDK_F18:
             return DispatchContentCommandEvent(eContentCommandPaste);
         case GDK_Redo:
-            return DispatchContentCommandEvent(NS_CONTENT_COMMAND_REDO);
+            return DispatchContentCommandEvent(eContentCommandRedo);
         case GDK_Undo:
         case GDK_F14:
             return DispatchContentCommandEvent(eContentCommandUndo);
