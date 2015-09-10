@@ -270,10 +270,34 @@ SdpHelper::AddCandidateToSdp(Sdp* sdp,
 
   std::string candidate = candidateUntrimmed.substr(begin);
 
-  // TODO(bug 1095793): mid
+  // https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-11#section-3.4.2.1
+  // Implementations receiving an ICE Candidate object MUST use the MID if
+  // present, or the m= line index, if not (as it could have come from a
+  // non-JSEP endpoint). (bug 1095793)
+  SdpMediaSection* msection = 0;
+  if (!mid.empty()) {
+    // FindMsectionByMid could return nullptr
+    msection = FindMsectionByMid(*sdp, mid);
 
-  SdpMediaSection& msection = sdp->GetMediaSection(level);
-  SdpAttributeList& attrList = msection.GetAttributeList();
+    // Check to make sure mid matches what we'd get by
+    // looking up the m= line using the level. (mjf)
+    std::string checkMid;
+    nsresult rv = GetMidFromLevel(*sdp, level, &checkMid);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (mid != checkMid) {
+      SDP_SET_ERROR("Mismatch between mid and level - \"" << mid
+                     << "\" is not the mid for level " << level
+                     << "; \"" << checkMid << "\" is");
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+  if (!msection) {
+    msection = &(sdp->GetMediaSection(level));
+  }
+
+  SdpAttributeList& attrList = msection->GetAttributeList();
 
   UniquePtr<SdpMultiStringAttribute> candidates;
   if (!attrList.HasAttribute(SdpAttribute::kCandidateAttribute)) {
