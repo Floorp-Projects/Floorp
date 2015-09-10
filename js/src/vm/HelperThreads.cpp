@@ -1451,19 +1451,26 @@ HelperThread::threadLoop()
         }
 
         // Dispatch tasks, prioritizing AsmJS work.
-        if (HelperThreadState().canStartAsmJSCompile())
+        if (HelperThreadState().canStartAsmJSCompile()) {
+            js::oom::SetThreadType(js::oom::THREAD_TYPE_ASMJS);
             handleAsmJSWorkload();
-        else if (ionCompile)
+        } else if (ionCompile) {
+            js::oom::SetThreadType(js::oom::THREAD_TYPE_ION);
             handleIonWorkload();
-        else if (HelperThreadState().canStartParseTask())
+        } else if (HelperThreadState().canStartParseTask()) {
+            js::oom::SetThreadType(js::oom::THREAD_TYPE_PARSE);
             handleParseWorkload();
-        else if (HelperThreadState().canStartCompressionTask())
+        } else if (HelperThreadState().canStartCompressionTask()) {
+            js::oom::SetThreadType(js::oom::THREAD_TYPE_COMPRESS);
             handleCompressionWorkload();
-        else if (HelperThreadState().canStartGCHelperTask())
+        } else if (HelperThreadState().canStartGCHelperTask()) {
+            js::oom::SetThreadType(js::oom::THREAD_TYPE_GCHELPER);
             handleGCHelperWorkload();
-        else if (HelperThreadState().canStartGCParallelTask())
+        } else if (HelperThreadState().canStartGCParallelTask()) {
+            js::oom::SetThreadType(js::oom::THREAD_TYPE_GCPARALLEL);
             handleGCParallelWorkload();
-        else
+        } else {
             MOZ_CRASH("No task to perform");
+        }
     }
 }
