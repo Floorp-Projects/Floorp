@@ -65,10 +65,6 @@ static Register CallReg = t9;
 static const int defaultShift = 3;
 static_assert(1 << defaultShift == sizeof(JS::Value), "The defaultShift is wrong");
 
-static const uint32_t LOW_32_MASK = (1LL << 32) - 1;
-static const int32_t LOW_32_OFFSET = 0;
-static const int32_t HIGH_32_OFFSET = 4;
-
 class MacroAssemblerMIPS : public Assembler
 {
   public:
@@ -694,8 +690,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void branchTestPtr(Condition cond, const Address& lhs, Imm32 imm, Label* label) {
         branchTest32(cond, lhs, imm, label);
     }
-    void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp,
-                      Label* label);
     void branchPtr(Condition cond, Register lhs, Register rhs, Label* label) {
         ma_b(lhs, rhs, label, cond);
     }
@@ -1113,11 +1107,6 @@ public:
     void add32(Register src, Register dest);
     void add32(Imm32 imm, Register dest);
     void add32(Imm32 imm, const Address& dest);
-    void add64(Imm32 imm, Register64 dest) {
-        as_addiu(dest.low, dest.low, imm.value);
-        as_sltiu(ScratchRegister, dest.low, imm.value);
-        as_addu(dest.high, dest.high, ScratchRegister);
-    }
     void sub32(Imm32 imm, Register dest);
     void sub32(Register src, Register dest);
 
@@ -1155,17 +1144,9 @@ public:
     void and32(Imm32 imm, Register dest);
     void and32(Imm32 imm, const Address& dest);
     void and32(const Address& src, Register dest);
-    void and64(Imm64 imm, Register64 dest) {
-        and32(Imm32(imm.value & LOW_32_MASK), dest.low);
-        and32(Imm32((imm.value >> 32) & LOW_32_MASK), dest.high);
-    }
     void or32(Imm32 imm, Register dest);
     void or32(Imm32 imm, const Address& dest);
     void or32(Register src, Register dest);
-    void or64(Register64 src, Register64 dest) {
-        or32(src.low, dest.low);
-        or32(src.high, dest.high);
-    }
     void xor32(Imm32 imm, Register dest);
     void xorPtr(Imm32 imm, Register dest);
     void xorPtr(Register src, Register dest);
@@ -1180,10 +1161,6 @@ public:
 
     void move32(Imm32 imm, Register dest);
     void move32(Register src, Register dest);
-    void move64(Register64 src, Register64 dest) {
-        move32(src.low, dest.low);
-        move32(src.high, dest.high);
-    }
 
     void movePtr(Register src, Register dest);
     void movePtr(ImmWord imm, Register dest);
@@ -1206,10 +1183,6 @@ public:
     void load32(const Address& address, Register dest);
     void load32(const BaseIndex& address, Register dest);
     void load32(AbsoluteAddress address, Register dest);
-    void load64(const Address& address, Register64 dest) {
-        load32(Address(address.base, address.offset + LOW_32_OFFSET), dest.low);
-        load32(Address(address.base, address.offset + HIGH_32_OFFSET), dest.high);
-    }
 
     void loadPtr(const Address& address, Register dest);
     void loadPtr(const BaseIndex& src, Register dest);
@@ -1278,11 +1251,6 @@ public:
     // implementation without second scratch.
     void store32_NoSecondScratch(Imm32 src, const Address& address) {
         store32(src, address);
-    }
-
-    void store64(Register64 src, Address address) {
-        store32(src.low, Address(address.base, address.offset + LOW_32_OFFSET));
-        store32(src.high, Address(address.base, address.offset + HIGH_32_OFFSET));
     }
 
     template <typename T> void storePtr(ImmWord imm, T address);
@@ -1354,15 +1322,6 @@ public:
         as_addu(dest, dest, src);
     }
 
-    void mul64(Imm64 imm, const Register64& dest);
-
-    void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest);
-    void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) {
-        movePtr(imm, ScratchRegister);
-        loadDouble(Address(ScratchRegister, 0), ScratchDoubleReg);
-        mulDouble(ScratchDoubleReg, dest);
-    }
-
     void breakpoint();
 
     void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
@@ -1383,20 +1342,8 @@ public:
     void rshiftPtrArithmetic(Imm32 imm, Register dest) {
         ma_sra(dest, dest, imm);
     }
-    void rshift64(Imm32 imm, Register64 dest) {
-        as_srl(dest.low, dest.low, imm.value);
-        as_sll(ScratchRegister, dest.high, 32 - imm.value);
-        as_or(dest.low, dest.low, ScratchRegister);
-        as_srl(dest.high, dest.high, imm.value);
-    }
     void lshiftPtr(Imm32 imm, Register dest) {
         ma_sll(dest, dest, imm);
-    }
-    void lshift64(Imm32 imm, Register64 dest) {
-        as_sll(dest.high, dest.high, imm.value);
-        as_srl(ScratchRegister, dest.low, 32 - imm.value);
-        as_or(dest.high, dest.high, ScratchRegister);
-        as_sll(dest.low, dest.low, imm.value);
     }
 
     // If source is a double, load it into dest. If source is int32,

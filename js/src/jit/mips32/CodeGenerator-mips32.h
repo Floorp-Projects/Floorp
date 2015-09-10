@@ -241,7 +241,7 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
 
     void generateInvalidateEpilogue();
 
-    void setReturnDoubleRegs(LiveRegisterSet* regs);
+    void visitRandom(LRandom* ins);
 
   protected:
     void visitEffectiveAddress(LEffectiveAddress* ins);
