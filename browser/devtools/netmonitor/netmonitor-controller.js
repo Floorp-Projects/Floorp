@@ -323,6 +323,37 @@ let NetMonitorController = {
   },
 
   /**
+   * Selects the specified request in the waterfall and opens the details view.
+   *
+   * @param string requestId
+   *        The actor ID of the request to inspect.
+   * @return object
+   *         A promise resolved once the task finishes.
+   */
+  inspectRequest: function(requestId) {
+    // Look for the request in the existing ones or wait for it to appear, if
+    // the network monitor is still loading.
+    let deferred = promise.defer();
+    let request = null;
+    let inspector = function() {
+      let predicate = i => i.value === requestId;
+      request = NetMonitorView.RequestsMenu.getItemForPredicate(predicate);
+      if (request) {
+        window.off(EVENTS.REQUEST_ADDED, inspector);
+        NetMonitorView.RequestsMenu.filterOn("all");
+        NetMonitorView.RequestsMenu.selectedItem = request;
+        deferred.resolve();
+      }
+    }
+
+    inspector();
+    if (!request) {
+      window.on(EVENTS.REQUEST_ADDED, inspector);
+    }
+    return deferred.promise;
+  },
+
+  /**
    * Getter that tells if the server supports sending custom network requests.
    * @type boolean
    */

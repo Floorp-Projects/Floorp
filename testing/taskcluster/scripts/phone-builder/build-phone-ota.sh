@@ -4,7 +4,7 @@
 
 if [ $TARGET == "aries" -o $TARGET == "shinano" ]; then
   # caching objects might be dangerous for some devices (aka aries)
-  rm -rf $WORKSPACE/B2G/objdir*
+  rm -rf $gecko_objdir
   rm -rf $WORKSPACE/B2G/out
 fi
 
@@ -40,6 +40,7 @@ $WORKSPACE/gecko/testing/mozharness/scripts/b2g_build.py \
   --checkout-revision=$GECKO_HEAD_REV \
   --repo=$WORKSPACE/gecko \
   --platform $PLATFORM \
+  --gecko-objdir=$gecko_objdir \
   --complete-mar-url https://queue.taskcluster.net/v1/task/$TASK_ID/runs/$RUN_ID/artifacts/public/build/$mar_file
 
 . post-build.sh

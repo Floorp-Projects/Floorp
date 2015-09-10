@@ -345,7 +345,7 @@ let MozLoopServiceInternal = {
       detailsString = "try_again_later";
       detailsButtonLabelString = "retry_button";
     } else {
-      messageString = "generic_failure_title";
+      messageString = "generic_failure_message";
     }
 
     error.friendlyMessage = this.localizedStrings.get(messageString);

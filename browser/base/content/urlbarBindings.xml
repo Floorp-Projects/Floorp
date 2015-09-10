@@ -1106,19 +1106,34 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
   <binding id="urlbar-rich-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup">
 
-    <content ignorekeys="true" level="top" consumeoutsideclicks="never">
-      <xul:hbox anonid="search-suggestions-notification" align="center">
+    <content ignorekeys="true" level="top" consumeoutsideclicks="never"
+             aria-owns="search-suggestions-notification richlistbox">
+      <xul:hbox anonid="search-suggestions-notification"
+                align="center"
+                role="alert"
+                aria-describedby="search-suggestions-notification-text">
         <xul:description flex="1">
           &urlbar.searchSuggestionsNotification.question;
-          <xul:label anonid="search-suggestions-notification-learn-more"
+          <!-- Several things here are to make the label accessibile via an
+               accesskey so that a11y doesn't suck: the accesskey, using an
+               onclick handler instead of an href attribute, the control
+               attribute, and having the control attribute refer to a valid ID
+               that is the label itself. -->
+          <xul:label id="search-suggestions-notification-learn-more"
                      class="text-link"
-                     value="&urlbar.searchSuggestionsNotification.learnMore;"/>
+                     role="link"
+                     value="&urlbar.searchSuggestionsNotification.learnMore;"
+                     accesskey="&urlbar.searchSuggestionsNotification.learnMore.accesskey;"
+                     onclick="document.getBindingParent(this).openSearchSuggestionsNotificationLearnMoreURL();"
+                     control="search-suggestions-notification-learn-more"/>
         </xul:description>
         <xul:button anonid="search-suggestions-notification-disable"
                     label="&urlbar.searchSuggestionsNotification.disable;"
+                    accesskey="&urlbar.searchSuggestionsNotification.disable.accesskey;"
                     onclick="document.getBindingParent(this).dismissSearchSuggestionsNotification(false);"/>
         <xul:button anonid="search-suggestions-notification-enable"
                     label="&urlbar.searchSuggestionsNotification.enable;"
+                    accesskey="&urlbar.searchSuggestionsNotification.enable.accesskey;"
                     onclick="document.getBindingParent(this).dismissSearchSuggestionsNotification(true);"/>
       </xul:hbox>
       <xul:richlistbox anonid="richlistbox" class="autocomplete-richlistbox"
@@ -1143,15 +1158,18 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         );
       </field>
 
-      <field name="searchSuggestionsNotificationLearnMoreLink" readonly="true">
-        document.getAnonymousElementByAttribute(
-          this, "anonid", "search-suggestions-notification-learn-more"
-        );
-      </field>
-
       <field name="footer" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "footer");
       </field>
+
+      <method name="openSearchSuggestionsNotificationLearnMoreURL">
+        <body><![CDATA[
+        let url = Services.urlFormatter.formatURL(
+          Services.prefs.getCharPref("app.support.baseURL") + "suggestions"
+        );
+        openUILinkIn(url, "tab");
+        ]]></body>
+      </method>
 
       <method name="dismissSearchSuggestionsNotification">
         <parameter name="enableSuggestions"/>
@@ -1260,15 +1278,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <parameter name="aElement"/>
         <body>
           <![CDATA[
-          // Set the learn-more link href.
-          let link = this.searchSuggestionsNotificationLearnMoreLink;
-          if (!link.hasAttribute("href")) {
-            let url = Services.urlFormatter.formatURL(
-              Services.prefs.getCharPref("app.support.baseURL") + "suggestions"
-            );
-            link.setAttribute("href", url);
-          }
-
           // With the notification shown, the listbox's height can sometimes be
           // too small when it's flexed, as it normally is.  Also, it can start
           // out slightly scrolled down.  Both problems appear together, most
@@ -1283,6 +1292,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           this.classList.add("showSearchSuggestionsNotification");
           this._updateFooterVisibility();
+
+          // This event allows accessibility APIs to see the notification.
+          if (!this.popupOpen) {
+            let event = document.createEvent("Events");
+            event.initEvent("AlertActive", true, true);
+            this.searchSuggestionsNotification.dispatchEvent(event);
+          }
           ]]>
         </body>
       </method>

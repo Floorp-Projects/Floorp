@@ -185,6 +185,8 @@ loop.shared.views = (function(_, mozL10n) {
    */
   var SettingsControlButton = React.createClass({displayName: "SettingsControlButton",
     propTypes: {
+      // Set to true if the menu should be below the button rather than above.
+      menuBelow: React.PropTypes.bool,
       menuItems: React.PropTypes.array,
       mozLoop: React.PropTypes.object
     },
@@ -193,6 +195,12 @@ loop.shared.views = (function(_, mozL10n) {
       sharedMixins.DropdownMenuMixin(),
       React.addons.PureRenderMixin
     ],
+
+    getDefaultProps: function() {
+      return {
+        menuBelow: false
+      };
+    },
 
     /**
      * Show or hide the settings menu
@@ -304,13 +312,14 @@ loop.shared.views = (function(_, mozL10n) {
       var settingsDropdownMenuClasses = cx({
         "settings-menu": true,
         "dropdown-menu": true,
+        "menu-below": this.props.menuBelow,
         "hide": !this.state.showMenu
       });
       return (
-        React.createElement("div", null, 
+        React.createElement("div", {className: "settings-control"}, 
           React.createElement("button", {className: "btn btn-settings transparent-button", 
              onClick: this.toggleDropdownMenu, 
-             ref: "menu-button", 
+             ref: "anchor", 
              title: mozL10n.get("settings_menu_button_tooltip")}), 
           React.createElement("ul", {className: settingsDropdownMenuClasses, ref: "menu"}, 
             menuItemRows
