@@ -27,3 +27,4 @@ task:
       workspace-emulator-jb-opt-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       TARGET: 'emulator-jb'
+      TOOLTOOL_MANIFEST: 'b2g/config/emulator-jb/releng-emulator-jb.tt'
