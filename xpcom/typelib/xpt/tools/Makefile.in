@@ -3,8 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-INTERNAL_TOOLS	= 1
-
 XPT_TOOL_FILES := xpt.py
 # SDK_BIN_DIR is declared in config.mk, so this needs to be a deferred
 # assignment.
