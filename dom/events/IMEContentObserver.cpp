@@ -67,10 +67,10 @@ ToChar(EventMessage aEventMessage)
       return "eQuerySelectionAsTransferable";
     case eQueryCharacterAtPoint:
       return "eQueryCharacterAtPoint";
-    case NS_QUERY_DOM_WIDGET_HITTEST:
-      return "NS_QUERY_DOM_WIDGET_HITTEST";
+    case eQueryDOMWidgetHittest:
+      return "eQueryDOMWidgetHittest";
     default:
-      return "Unsupprted message";
+      return "Unsupported message";
   }
 }
 
