@@ -4474,6 +4474,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData, uint32_t aFlags)
   // Note: purposely leaked
   base::StatisticsRecorder* statistics_recorder = new base::StatisticsRecorder();
   MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(statistics_recorder);
+  unused << statistics_recorder;
 
   int result = main.XRE_main(argc, argv, aAppData);
   mozilla::RecordShutdownEndTimeStamp();
