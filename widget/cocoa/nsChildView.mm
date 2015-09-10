@@ -4896,17 +4896,17 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   }
 
   NSEventPhase phase = nsCocoaUtils::EventPhase(theEvent);
-  // Fire eWheelOperationStart/STOP events when 2 fingers touch/release the
+  // Fire eWheelOperationStart/End events when 2 fingers touch/release the
   // touchpad.
   if (phase & NSEventPhaseMayBegin) {
     [self sendWheelCondition:YES
-                       first:NS_WHEEL_STOP
+                       first:eWheelOperationEnd
                       second:eWheelOperationStart
                     forEvent:theEvent];
   } else if (phase & (NSEventPhaseEnded | NSEventPhaseCancelled)) {
     [self sendWheelCondition:NO
                        first:eWheelOperationStart
-                      second:NS_WHEEL_STOP
+                      second:eWheelOperationEnd
                     forEvent:theEvent];
   }
 

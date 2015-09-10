@@ -545,8 +545,8 @@ AccessibleCaretEventHub::HandleWheelEvent(WidgetWheelEvent* aEvent)
     mState->OnScrollStart(this);
     break;
 
-  case NS_WHEEL_STOP:
-    AC_LOGV("NS_WHEEL_STOP, state: %s", mState->Name());
+  case eWheelOperationEnd:
+    AC_LOGV("eWheelOperationEnd, state: %s", mState->Name());
     mState->OnScrollEnd(this);
     break;
 

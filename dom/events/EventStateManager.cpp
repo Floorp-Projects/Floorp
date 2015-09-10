@@ -713,7 +713,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     break;
   case eWheel:
   case eWheelOperationStart:
-  case NS_WHEEL_STOP:
+  case eWheelOperationEnd:
     {
       NS_ASSERTION(aEvent->mFlags.mIsTrusted,
                    "Untrusted wheel event shouldn't be here");
@@ -3008,7 +3008,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       }
     }
     break;
-  case NS_WHEEL_STOP:
+  case eWheelOperationEnd:
     {
       MOZ_ASSERT(aEvent->mFlags.mIsTrusted);
       ScrollbarsForWheel::MayInactivate();
