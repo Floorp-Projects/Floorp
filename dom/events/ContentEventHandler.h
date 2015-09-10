@@ -46,7 +46,7 @@ public:
   nsresult OnQuerySelectedText(WidgetQueryContentEvent* aEvent);
   // eQueryTextContent event handler
   nsresult OnQueryTextContent(WidgetQueryContentEvent* aEvent);
-  // NS_QUERY_CARET_RECT event handler
+  // eQueryCaretRect event handler
   nsresult OnQueryCaretRect(WidgetQueryContentEvent* aEvent);
   // NS_QUERY_TEXT_RECT event handler
   nsresult OnQueryTextRect(WidgetQueryContentEvent* aEvent);

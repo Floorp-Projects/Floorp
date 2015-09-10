@@ -296,7 +296,7 @@ public:
    * For NS_QUERY_TEXT_RECT, fail if cached offset/length aren't equals to input.
    *   Cocoa widget always queries selected offset, so it works on it.
    *
-   * For NS_QUERY_CARET_RECT, fail if cached offset isn't equals to input
+   * For eQueryCaretRect, fail if cached offset isn't equals to input
    *
    * For NS_QUERY_EDITOR_RECT, always success
    */

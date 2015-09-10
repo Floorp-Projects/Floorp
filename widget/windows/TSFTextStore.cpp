@@ -4828,14 +4828,14 @@ TSFTextStore::CreateNativeCaret()
   //     collapsed, is it OK?
   uint32_t caretOffset = currentSel.MaxOffset();
 
-  WidgetQueryContentEvent queryCaretRect(true, NS_QUERY_CARET_RECT, mWidget);
+  WidgetQueryContentEvent queryCaretRect(true, eQueryCaretRect, mWidget);
   queryCaretRect.InitForQueryCaretRect(caretOffset);
   mWidget->InitEvent(queryCaretRect);
   DispatchEvent(queryCaretRect);
   if (!queryCaretRect.mSucceeded) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::CreateNativeCaret() FAILED due to "
-            "NS_QUERY_CARET_RECT failure (offset=%d)", this, caretOffset));
+            "eQueryCaretRect failure (offset=%d)", this, caretOffset));
     return;
   }
 
