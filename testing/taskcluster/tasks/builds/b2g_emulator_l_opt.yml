@@ -7,7 +7,6 @@ task:
   workerType: emulator-l
   scopes:
     - 'docker-worker:cache:workspace-emulator-l-opt'
-    - 'docker-worker:cache:workspace-emulator-l-opt-objdir-gecko-{{project}}'
   metadata:
     name: '[TC] B2G L Emulator (Opt)'
 
@@ -24,7 +23,6 @@ task:
   payload:
     cache:
       workspace-emulator-l-opt: /home/worker/workspace
-      workspace-emulator-l-opt-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       TARGET: 'emulator-l'
       TOOLTOOL_MANIFEST: 'b2g/config/emulator-l/releng-emulator-l.tt'

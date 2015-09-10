@@ -6,14 +6,12 @@ $inherits:
 task:
   scopes:
     - 'docker-worker:cache:build-flame-kk-eng'
-    - 'docker-worker:cache:build-flame-kk-eng-objdir-gecko-{{project}}'
   metadata:
     name: '[TC] B2G Flame KK Eng'
 
   payload:
     cache:
       build-flame-kk-eng: /home/worker/workspace
-      build-flame-kk-eng-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       TARGET: 'flame-kk'
   extra:

@@ -7,14 +7,12 @@ task:
   workerType: flame-kk
   scopes:
     - 'docker-worker:cache:build-flame-kk-debug'
-    - 'docker-worker:cache:build-flame-kk-debug-objdir-gecko-{{project}}'
   metadata:
     name: '[TC] B2G Flame KK Debug'
 
   payload:
     cache:
       build-flame-kk-debug: /home/worker/workspace
-      build-flame-kk-debug-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       TARGET: 'flame-kk'
       DEBUG: 0

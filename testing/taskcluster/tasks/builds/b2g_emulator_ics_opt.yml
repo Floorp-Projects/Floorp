@@ -10,7 +10,6 @@ task:
     - 'index.buildbot.revisions.{{head_rev}}.{{project}}.emulator-ics'
   scopes:
     - 'docker-worker:cache:workspace-emulator-ics-opt'
-    - 'docker-worker:cache:workspace-emulator-ics-opt-objdir-gecko-{{project}}'
   metadata:
     name: '[TC] B2G Emulator ICS Opt'
 
@@ -22,7 +21,6 @@ task:
   payload:
     cache:
       workspace-emulator-ics-opt: /home/worker/workspace
-      workspace-emulator-ics-opt-objdir-gecko-{{project}}: /home/worker/objdir-gecko
 
     env:
       TARGET: 'emulator'
