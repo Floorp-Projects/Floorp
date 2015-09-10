@@ -150,7 +150,16 @@ EmitBaselineCallVM(JitCode* target, MacroAssembler& masm)
 inline void
 EmitIonCallVM(JitCode* target, size_t stackSlots, MacroAssembler& masm)
 {
-    MOZ_CRASH("Not implemented yet.");
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonStub);
+    masm.Push(Imm32(descriptor));
+    masm.callJit(target);
+
+    // Remove rest of the frame left on the stack. We remove the return address
+    // which is implicitly popped when returning.
+    size_t framePop = sizeof(ExitFrameLayout) - sizeof(void*);
+
+    // Pop arguments from framePushed.
+    masm.implicitPop(stackSlots * sizeof(void*) + framePop);
 }
 
 // Size of vales pushed by EmitEnterStubFrame.
@@ -189,7 +198,9 @@ EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch)
 inline void
 EmitIonEnterStubFrame(MacroAssembler& masm, Register scratch)
 {
-    MOZ_CRASH("Not implemented yet.");
+    MOZ_ASSERT(ICTailCallReg == lr);
+    masm.push(ICTailCallReg);
+    masm.push(ICStubReg);
 }
 
 inline void
@@ -222,7 +233,8 @@ EmitBaselineLeaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false)
 inline void
 EmitIonLeaveStubFrame(MacroAssembler& masm)
 {
-    MOZ_CRASH("Not implemented yet.");
+    masm.pop(ICStubReg);
+    masm.pop(ICTailCallReg);
 }
 
 inline void
