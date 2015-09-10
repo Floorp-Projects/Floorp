@@ -98,6 +98,12 @@
           }
         }
 
+        @media not all and (-moz-windows-default-theme) {
+          #main-window {
+            background-color: transparent;
+          }
+        }
+
         #titlebar-buttonbox,
         .titlebar-button {
           -moz-appearance: none !important;
