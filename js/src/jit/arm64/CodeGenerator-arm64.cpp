@@ -494,15 +494,15 @@ CodeGeneratorARM64::visitCompareBAndBranch(LCompareBAndBranch* lir)
 }
 
 void
-CodeGeneratorARM64::visitCompareV(LCompareV* lir)
+CodeGeneratorARM64::visitCompareBitwise(LCompareBitwise* lir)
 {
-    MOZ_CRASH("visitCompareV");
+    MOZ_CRASH("visitCompareBitwise");
 }
 
 void
-CodeGeneratorARM64::visitCompareVAndBranch(LCompareVAndBranch* lir)
+CodeGeneratorARM64::visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir)
 {
-    MOZ_CRASH("visitCompareVAndBranch");
+    MOZ_CRASH("visitCompareBitwiseAndBranch");
 }
 
 void

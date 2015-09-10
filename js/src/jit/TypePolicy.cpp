@@ -134,7 +134,7 @@ ComparePolicy::adjustInputs(TempAllocator& alloc, MInstruction* def)
 
     // Box inputs to get value
     if (compare->compareType() == MCompare::Compare_Unknown ||
-        compare->compareType() == MCompare::Compare_Value)
+        compare->compareType() == MCompare::Compare_Bitwise)
     {
         return BoxInputsPolicy::staticAdjustInputs(alloc, def);
     }
