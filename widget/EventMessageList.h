@@ -222,7 +222,7 @@ NS_EVENT_MESSAGE(eQuerySelectedText,            eQueryContentEventFirst)
 NS_EVENT_MESSAGE(eQueryTextContent,             eQueryContentEventFirst + 1)
 // Query for the caret rect of nth insertion point. The offset of the result is
 // relative position from the top level widget.
-NS_EVENT_MESSAGE(NS_QUERY_CARET_RECT,           eQueryContentEventFirst + 3)
+NS_EVENT_MESSAGE(eQueryCaretRect,               eQueryContentEventFirst + 3)
 // Query for the bounding rect of a range of characters. This works on any
 // valid character range given offset and length. Result is relative to top
 // level widget coordinates

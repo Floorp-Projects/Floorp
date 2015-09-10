@@ -505,7 +505,7 @@ public:
   void InitForQueryCaretRect(uint32_t aOffset,
                              bool aUseNativeLineBreak = true)
   {
-    NS_ASSERTION(mMessage == NS_QUERY_CARET_RECT,
+    NS_ASSERTION(mMessage == eQueryCaretRect,
                  "wrong initializer is called");
     mInput.mOffset = aOffset;
     mUseNativeLineBreak = aUseNativeLineBreak;
@@ -552,7 +552,7 @@ public:
   mozilla::WritingMode GetWritingMode(void) const
   {
     NS_ASSERTION(mMessage == eQuerySelectedText ||
-                 mMessage == NS_QUERY_CARET_RECT ||
+                 mMessage == eQueryCaretRect ||
                  mMessage == NS_QUERY_TEXT_RECT,
                  "not querying selection or text rect");
     return mReply.mWritingMode;

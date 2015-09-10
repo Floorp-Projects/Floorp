@@ -1810,7 +1810,7 @@ IMContextWrapper::SetCursorPosition(GtkIMContext* aContext)
     }
 
     WidgetQueryContentEvent charRect(true,
-                                     useCaret ? NS_QUERY_CARET_RECT :
+                                     useCaret ? eQueryCaretRect :
                                                 NS_QUERY_TEXT_RECT,
                                      mLastFocusedWindow);
     if (useCaret) {
@@ -1833,7 +1833,7 @@ IMContextWrapper::SetCursorPosition(GtkIMContext* aContext)
     if (!charRect.mSucceeded) {
         MOZ_LOG(gGtkIMLog, LogLevel::Error,
             ("GTKIM: %p   SetCursorPosition(), FAILED, %s was failed",
-             this, useCaret ? "NS_QUERY_CARET_RECT" : "NS_QUERY_TEXT_RECT"));
+             this, useCaret ? "eQueryCaretRect" : "NS_QUERY_TEXT_RECT"));
         return;
     }
 

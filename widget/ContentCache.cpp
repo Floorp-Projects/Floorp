@@ -219,7 +219,7 @@ ContentCacheInChild::CacheCaret(nsIWidget* aWidget,
   mCaret.mOffset = mSelection.StartOffset();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, aWidget);
+  WidgetQueryContentEvent caretRect(true, eQueryCaretRect, aWidget);
   caretRect.InitForQueryCaretRect(mCaret.mOffset);
   aWidget->DispatchEvent(&caretRect, status);
   if (NS_WARN_IF(!caretRect.mSucceeded)) {
@@ -638,10 +638,10 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
          GetWritingModeName(aEvent.mReply.mWritingMode).get(),
          GetRectText(aEvent.mReply.mRect).get()));
       break;
-    case NS_QUERY_CARET_RECT:
+    case eQueryCaretRect:
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
         ("ContentCacheInParent: 0x%p HandleQueryContentEvent("
-         "aEvent={ mMessage=NS_QUERY_CARET_RECT, mInput={ mOffset=%u } }, "
+         "aEvent={ mMessage=eQueryCaretRect, mInput={ mOffset=%u } }, "
          "aWidget=0x%p), mText.Length()=%u",
          this, aEvent.mInput.mOffset, aWidget, mText.Length()));
       if (NS_WARN_IF(!IsSelectionValid())) {

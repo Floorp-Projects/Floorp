@@ -800,7 +800,7 @@ ContentEventHandler::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
       return OnQuerySelectedText(aEvent);
     case eQueryTextContent:
       return OnQueryTextContent(aEvent);
-    case NS_QUERY_CARET_RECT:
+    case eQueryCaretRect:
       return OnQueryCaretRect(aEvent);
     case NS_QUERY_TEXT_RECT:
       return OnQueryTextRect(aEvent);

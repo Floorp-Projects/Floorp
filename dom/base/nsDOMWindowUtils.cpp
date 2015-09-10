@@ -1933,7 +1933,7 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
       message = eQueryTextContent;
       break;
     case QUERY_CARET_RECT:
-      message = NS_QUERY_CARET_RECT;
+      message = eQueryCaretRect;
       break;
     case QUERY_TEXT_RECT:
       message = NS_QUERY_TEXT_RECT;
@@ -1988,7 +1988,7 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
     case eQueryTextContent:
       queryEvent.InitForQueryTextContent(aOffset, aLength, useNativeLineBreak);
       break;
-    case NS_QUERY_CARET_RECT:
+    case eQueryCaretRect:
       queryEvent.InitForQueryCaretRect(aOffset, useNativeLineBreak);
       break;
     case NS_QUERY_TEXT_RECT:
