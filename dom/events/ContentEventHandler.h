@@ -50,7 +50,7 @@ public:
   nsresult OnQueryCaretRect(WidgetQueryContentEvent* aEvent);
   // NS_QUERY_TEXT_RECT event handler
   nsresult OnQueryTextRect(WidgetQueryContentEvent* aEvent);
-  // NS_QUERY_EDITOR_RECT event handler
+  // eQueryEditorRect event handler
   nsresult OnQueryEditorRect(WidgetQueryContentEvent* aEvent);
   // NS_QUERY_CONTENT_STATE event handler
   nsresult OnQueryContentState(WidgetQueryContentEvent* aEvent);

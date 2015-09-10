@@ -298,7 +298,7 @@ public:
    *
    * For eQueryCaretRect, fail if cached offset isn't equals to input
    *
-   * For NS_QUERY_EDITOR_RECT, always success
+   * For eQueryEditorRect, always success
    */
   bool HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
                                nsIWidget* aWidget) const;

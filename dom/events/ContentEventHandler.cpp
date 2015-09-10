@@ -804,7 +804,7 @@ ContentEventHandler::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
       return OnQueryCaretRect(aEvent);
     case NS_QUERY_TEXT_RECT:
       return OnQueryTextRect(aEvent);
-    case NS_QUERY_EDITOR_RECT:
+    case eQueryEditorRect:
       return OnQueryEditorRect(aEvent);
     case NS_QUERY_CONTENT_STATE:
       return OnQueryContentState(aEvent);
