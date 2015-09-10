@@ -182,25 +182,25 @@ WMFVideoMFTManager::InitializeDXVA(bool aForceD3D9)
   return mDXVA2Manager != nullptr;
 }
 
-already_AddRefed<MFTDecoder>
+bool
 WMFVideoMFTManager::Init()
 {
-  RefPtr<MFTDecoder> decoder = InitInternal(/* aForceD3D9 = */ false);
+  bool success = InitInternal(/* aForceD3D9 = */ false);
 
   // If initialization failed with d3d11 DXVA then try falling back
   // to d3d9.
-  if (!decoder && mDXVA2Manager && mDXVA2Manager->IsD3D11()) {
+  if (!success && mDXVA2Manager && mDXVA2Manager->IsD3D11()) {
     mDXVA2Manager = nullptr;
     nsCString d3d11Failure = mDXVAFailureReason;
-    decoder = InitInternal(true);
+    success = InitInternal(true);
     mDXVAFailureReason.Append(NS_LITERAL_CSTRING("; "));
     mDXVAFailureReason.Append(d3d11Failure);
   }
 
-  return decoder.forget();
+  return success;
 }
 
-already_AddRefed<MFTDecoder>
+bool
 WMFVideoMFTManager::InitInternal(bool aForceD3D9)
 {
   mUseHwAccel = false; // default value; changed if D3D setup succeeds.
@@ -209,7 +209,7 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
   RefPtr<MFTDecoder> decoder(new MFTDecoder());
 
   HRESULT hr = decoder->Create(GetMFTGUID());
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   RefPtr<IMFAttributes> attr(decoder->GetAttributes());
   UINT32 aware = 0;
@@ -248,7 +248,7 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
 
   mDecoder = decoder;
   hr = SetDecoderMediaTypes();
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   LOG("Video Decoder initialized, Using DXVA: %s", (mUseHwAccel ? "Yes" : "No"));
 
@@ -259,7 +259,7 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
   mVideoHeight = 0;
   mPictureRegion.SetEmpty();
 
-  return decoder.forget();
+  return true;
 }
 
 HRESULT
