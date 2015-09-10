@@ -39,8 +39,14 @@ let PointerRelay = { // jshint ignore:line
     delete this._eventsOfInterest;
 
     switch (Utils.widgetToolkit) {
-      case 'gonk':
       case 'android':
+        this._eventsOfInterest = {
+          'touchstart' : true,
+          'touchmove' : true,
+          'touchend' : true };
+        break;
+
+      case 'gonk':
         this._eventsOfInterest = {
           'touchstart' : true,
           'touchmove' : true,
@@ -117,12 +123,7 @@ let PointerRelay = { // jshint ignore:line
 
     if (Utils.widgetToolkit === 'android' &&
       changedTouches.length === 1 && changedTouches[0].identifier === 1) {
-      changedTouches = [{
-        identifier: 0,
-        screenX: changedTouches[0].screenX + 5,
-        screenY: changedTouches[0].screenY + 5,
-        target: changedTouches[0].target
-      }, changedTouches[0]];
+      return;
     }
 
     if (changedTouches.length === 1 &&
