@@ -293,6 +293,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
             mSurfaceView = new LayerSurfaceView(getContext(), this);
             mSurfaceView.setBackgroundColor(Color.WHITE);
+            Log.i("GeckoBug1151102", "Initialized surfaceview");
 
             // The "filler" view sits behind the URL bar and should never be
             // visible. It exists solely to make this LayerView actually

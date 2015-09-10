@@ -1034,6 +1034,7 @@ var BrowserApp = {
   },
 
   contentDocumentChanged: function() {
+    dump("GeckoBug1151102: Setting first-paint flag on DWU");
     window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).isFirstPaint = true;
     Services.androidBridge.contentDocumentChanged();
   },
