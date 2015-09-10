@@ -49,6 +49,7 @@
 #include "nsRenderingContext.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCSSRendering.h"
+#include "nsTextFragment.h"
 #include "nsThemeConstants.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"

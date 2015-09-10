@@ -14,6 +14,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Preferences.h"
+#include "nsCanvasFrame.h"
 #include "nsDocShell.h"
 #include "nsFocusManager.h"
 #include "nsFrameSelection.h"

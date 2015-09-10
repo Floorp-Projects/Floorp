@@ -41,6 +41,8 @@
 #include "winuser.h"
 #endif
 
+#include "gfxPrefs.h"
+#include "gfxUserFontSet.h"
 #include "nsPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
