@@ -10,6 +10,7 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
+#include "jsmath.h"
 #include "jsnum.h"
 
 #include "jit/CodeGenerator.h"
@@ -2119,10 +2120,16 @@ CodeGeneratorMIPS::visitNegF(LNegF* ins)
 }
 
 void
-CodeGeneratorMIPS::setReturnDoubleRegs(LiveRegisterSet* regs)
+CodeGeneratorMIPS::visitRandom(LRandom* ins)
 {
-    MOZ_ASSERT(ReturnFloat32Reg.code_ == ReturnDoubleReg.code_);
-    regs->add(ReturnFloat32Reg);
-    regs->add(ReturnDoubleReg.singleOverlay(1));
-    regs->add(ReturnDoubleReg);
+    Register temp = ToRegister(ins->temp());
+    Register temp2 = ToRegister(ins->temp2());
+
+    masm.loadJSContext(temp);
+
+    masm.setupUnalignedABICall(temp2);
+    masm.passABIArg(temp);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, math_random_no_outparam), MoveOp::DOUBLE);
+
+    MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
 }
