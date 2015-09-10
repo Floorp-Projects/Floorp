@@ -997,7 +997,7 @@ let FormAssistant = {
   unhandleFocus: function fa_unhandleFocus() {
     this.setFocusedElement(null);
     this.isHandlingFocus = false;
-    sendAsyncMessage("Forms:Blur", {});
+    sendAsyncMessage("Forms:Input", { "type": "blur" });
   },
 
   isFocusableElement: function fa_isFocusableElement(element) {
@@ -1026,7 +1026,7 @@ let FormAssistant = {
   },
 
   sendInputState: function(element) {
-    sendAsyncMessage("Forms:Focus", getJSON(element, this._focusCounter));
+    sendAsyncMessage("Forms:Input", getJSON(element, this._focusCounter));
   },
 
   getSelectionInfo: function fa_getSelectionInfo() {
@@ -1113,30 +1113,28 @@ function getJSON(element, focusCounter) {
   // need it's number control here in order to get the correct 'type' etc.:
   element = element.ownerNumberControl || element;
 
-  let type = element.tagName.toLowerCase();
-  let inputType = (element.type || "").toLowerCase();
+  let type = element.type || "";
   let value = element.value || "";
   let max = element.max || "";
   let min = element.min || "";
 
-  // Treat contenteditable element as a special text area field
+  // Treat contenteditble element as a special text area field
   if (isContentEditable(element)) {
-    type = "contenteditable";
-    inputType = "textarea";
+    type = "textarea";
     value = getContentEditableText(element);
   }
 
   // Until the input type=date/datetime/range have been implemented
   // let's return their real type even if the platform returns 'text'
-  let attributeInputType = element.getAttribute("type") || "";
+  let attributeType = element.getAttribute("type") || "";
 
-  if (attributeInputType) {
-    let inputTypeLowerCase = attributeInputType.toLowerCase();
-    switch (inputTypeLowerCase) {
+  if (attributeType) {
+    var typeLowerCase = attributeType.toLowerCase();
+    switch (typeLowerCase) {
       case "datetime":
       case "datetime-local":
       case "range":
-        inputType = inputTypeLowerCase;
+        type = typeLowerCase;
         break;
     }
   }
@@ -1147,11 +1145,11 @@ function getJSON(element, focusCounter) {
   // inputmode for fields. This shouldn't be used outside of pre-installed
   // apps because the attribute is going to disappear as soon as a definitive
   // solution will be find.
-  let inputMode = element.getAttribute('x-inputmode');
-  if (inputMode) {
-    inputMode = inputMode.toLowerCase();
+  let inputmode = element.getAttribute('x-inputmode');
+  if (inputmode) {
+    inputmode = inputmode.toLowerCase();
   } else {
-    inputMode = '';
+    inputmode = '';
   }
 
   let range = getSelectionRange(element);
@@ -1160,12 +1158,10 @@ function getJSON(element, focusCounter) {
   return {
     "contextId": focusCounter,
 
-    "type": type,
-    "inputType": inputType,
-    "inputMode": inputMode,
-
+    "type": type.toLowerCase(),
     "choices": getListForElement(element),
     "value": value,
+    "inputmode": inputmode,
     "selectionStart": range[0],
     "selectionEnd": range[1],
     "max": max,
