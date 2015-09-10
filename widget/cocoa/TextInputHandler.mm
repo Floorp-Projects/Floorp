@@ -3098,7 +3098,7 @@ IMEInputHandler::SelectedRange()
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
-  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, mWidget);
+  WidgetQueryContentEvent selection(true, eQuerySelectedText, mWidget);
   DispatchEvent(selection);
 
   MOZ_LOG(gLog, LogLevel::Info,

@@ -2152,7 +2152,7 @@ IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString)
     }
 
     nsEventStatus status;
-    WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT,
+    WidgetQueryContentEvent selection(true, eQuerySelectedText,
                                       mLastFocusedWindow);
     InitEvent(selection);
     mLastFocusedWindow->DispatchEvent(&selection, status);
@@ -2201,7 +2201,7 @@ IMContextWrapper::Selection::Assign(const IMENotification& aIMENotification)
 void
 IMContextWrapper::Selection::Assign(const WidgetQueryContentEvent& aEvent)
 {
-    MOZ_ASSERT(aEvent.mMessage == NS_QUERY_SELECTED_TEXT);
+    MOZ_ASSERT(aEvent.mMessage == eQuerySelectedText);
     MOZ_ASSERT(aEvent.mSucceeded);
     mOffset = aEvent.mReply.mOffset;
     mLength = aEvent.mReply.mString.Length();

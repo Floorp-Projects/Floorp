@@ -51,8 +51,8 @@ static const char*
 ToChar(EventMessage aEventMessage)
 {
   switch (aEventMessage) {
-    case NS_QUERY_SELECTED_TEXT:
-      return "NS_QUERY_SELECTED_TEXT";
+    case eQuerySelectedText:
+      return "eQuerySelectedText";
     case NS_QUERY_TEXT_CONTENT:
       return "NS_QUERY_TEXT_CONTENT";
     case NS_QUERY_CARET_RECT:
@@ -569,8 +569,7 @@ IMEContentObserver::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
 
   // If the instance has cache, it should use the cached selection which was
   // sent to the widget.
-  if (aEvent->mMessage == NS_QUERY_SELECTED_TEXT &&
-      aEvent->mUseNativeLineBreak &&
+  if (aEvent->mMessage == eQuerySelectedText && aEvent->mUseNativeLineBreak &&
       mSelectionData.IsValid()) {
     aEvent->mReply.mContentsRoot = mRootContent;
     aEvent->mReply.mHasSelection = !mSelectionData.IsCollapsed();
@@ -1109,7 +1108,7 @@ IMEContentObserver::UpdateSelectionCache()
 
   // XXX Cannot we cache some information for reducing the cost to compute
   //     selection offset and writing mode?
-  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, mWidget);
+  WidgetQueryContentEvent selection(true, eQuerySelectedText, mWidget);
   ContentEventHandler handler(GetPresContext());
   handler.OnQuerySelectedText(&selection);
   if (NS_WARN_IF(!selection.mSucceeded)) {

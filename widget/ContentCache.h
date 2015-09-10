@@ -282,7 +282,7 @@ public:
   /**
    * HandleQueryContentEvent() sets content data to aEvent.mReply.
    *
-   * For NS_QUERY_SELECTED_TEXT, fail if the cache doesn't contain the whole
+   * For eQuerySelectedText, fail if the cache doesn't contain the whole
    *  selected range. (This shouldn't happen because PuppetWidget should have
    *  already sent the whole selection.)
    *

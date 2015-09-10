@@ -2109,8 +2109,7 @@ TSFTextStore::CurrentSelection()
       MOZ_CRASH();
     }
 
-    WidgetQueryContentEvent querySelection(true, NS_QUERY_SELECTED_TEXT,
-                                           mWidget);
+    WidgetQueryContentEvent querySelection(true, eQuerySelectedText, mWidget);
     mWidget->InitEvent(querySelection);
     DispatchEvent(querySelection);
     NS_ENSURE_TRUE(querySelection.mSucceeded, mSelection);

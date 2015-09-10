@@ -1886,9 +1886,9 @@ TestApp::TestSelection(void)
   bool succeeded = true;
 
   /* If these fail the cause is probably one or more of:
-   * nsTextStore::GetSelection not sending NS_QUERY_SELECTED_TEXT
-   * NS_QUERY_SELECTED_TEXT not handled by ContentEventHandler
-   * Bug in NS_QUERY_SELECTED_TEXT handler
+   * nsTextStore::GetSelection not sending eQuerySelectedText
+   * eQuerySelectedText not handled by ContentEventHandler
+   * Bug in eQuerySelectedText handler
    * nsTextStore::SetSelection not sending eSetSelection
    * eSetSelection not handled by ContentEventHandler
    * Bug in eSetSelection handler
