@@ -3988,8 +3988,8 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
     return result;
   }
 
-  if (WinUtils::GetIsMouseFromTouch(aEventMessage)) {
-    if (aEventMessage == eMouseDown) {
+  if (WinUtils::GetIsMouseFromTouch(aEventType)) {
+    if (aEventType == NS_MOUSE_BUTTON_DOWN) {
       Telemetry::Accumulate(Telemetry::FX_TOUCH_USED, 1);
     }
 
