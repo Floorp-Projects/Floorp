@@ -1201,7 +1201,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         sub32(src, dest);
         j(cond, label);
     }
-    void xor32(Imm32 imm, Register dest);
 
     inline void and64(Imm64 imm, Register64 dest);
     inline void or64(Register64 src, Register64 dest);
