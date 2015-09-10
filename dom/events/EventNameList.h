@@ -299,7 +299,7 @@ EVENT(mozfullscreenchange,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(mozfullscreenerror,
-      NS_FULLSCREENERROR,
+      eFullscreenError,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(mozpointerlockchange,

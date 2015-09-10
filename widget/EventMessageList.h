@@ -369,7 +369,7 @@ NS_EVENT_MESSAGE(NS_SHOW_EVENT,          5000)
 // Fullscreen DOM API
 NS_EVENT_MESSAGE(eFullscreenEventFirst,  5100)
 NS_EVENT_MESSAGE(eFullscreenChange,      eFullscreenEventFirst)
-NS_EVENT_MESSAGE(NS_FULLSCREENERROR,     eFullscreenEventFirst + 1)
+NS_EVENT_MESSAGE(eFullscreenError,       eFullscreenEventFirst + 1)
 
 NS_EVENT_MESSAGE(NS_TOUCH_EVENT_START,   5200)
 NS_EVENT_MESSAGE(NS_TOUCH_START,         NS_TOUCH_EVENT_START)
