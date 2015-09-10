@@ -267,8 +267,8 @@ NS_EVENT_MESSAGE(eDurationChange,       eMediaEventFirst + 18)
 NS_EVENT_MESSAGE(eVolumeChange,         eMediaEventFirst + 19)
 
 // paint notification events
-NS_EVENT_MESSAGE(NS_NOTIFYPAINT_START,  3400)
-NS_EVENT_MESSAGE(NS_AFTERPAINT,         NS_NOTIFYPAINT_START)
+NS_EVENT_MESSAGE(ePaintEventFirst,      3400)
+NS_EVENT_MESSAGE(NS_AFTERPAINT,         ePaintEventFirst)
 
 // Simple gesture events
 NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_EVENT_START,    3500)
