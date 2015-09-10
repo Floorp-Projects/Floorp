@@ -122,7 +122,8 @@ class GradientCache final : public nsExpirationTracker<GradientCacheData,4>
 {
   public:
     GradientCache()
-      : nsExpirationTracker<GradientCacheData, 4>(MAX_GENERATION_MS)
+      : nsExpirationTracker<GradientCacheData,4>(MAX_GENERATION_MS,
+                                                 "GradientCache")
     {
       srand(time(nullptr));
       mTimerPeriod = rand() % MAX_GENERATION_MS + 1;
