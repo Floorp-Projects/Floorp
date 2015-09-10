@@ -54,9 +54,6 @@ function runTest() {
     mm.loadFrameScript('data:,(' + encodeURIComponent(appFrameScript.toString()) + ')();', false);
 
     im.oninputcontextchange = function() {
-      is(im.inputcontext.type, 'contenteditable', 'type');
-      is(im.inputcontext.inputType, 'textarea', 'inputType');
-
       if (im.inputcontext) {
         im.oninputcontextchange = null;
         register();

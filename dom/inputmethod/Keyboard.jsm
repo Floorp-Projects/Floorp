@@ -131,8 +131,7 @@ this.Keyboard = {
   },
 
   initFormsFrameScript: function(mm) {
-    mm.addMessageListener('Forms:Focus', this);
-    mm.addMessageListener('Forms:Blur', this);
+    mm.addMessageListener('Forms:Input', this);
     mm.addMessageListener('Forms:SelectionChange', this);
     mm.addMessageListener('Forms:GetText:Result:OK', this);
     mm.addMessageListener('Forms:GetText:Result:Error', this);
@@ -193,11 +192,8 @@ this.Keyboard = {
     }
 
     switch (msg.name) {
-      case 'Forms:Focus':
-        this.handleFocus(msg);
-        break;
-      case 'Forms:Blur':
-        this.handleBlur(msg);
+      case 'Forms:Input':
+        this.handleFocusChange(msg);
         break;
       case 'Forms:SelectionChange':
       case 'Forms:GetText:Result:OK':
@@ -278,50 +274,48 @@ this.Keyboard = {
     }
   },
 
-  handleFocus: function keyboardHandleFocus(msg) {
-    // Set the formMM to the new message manager received.
+  forwardEvent: function keyboardForwardEvent(newEventName, msg) {
     let mm = msg.target.QueryInterface(Ci.nsIFrameLoaderOwner)
                 .frameLoader.messageManager;
-    this.formMM = mm;
+    if (newEventName === 'Keyboard:FocusChange') {
+      if (msg.data.type !== 'blur') { // Focus on a new input field
+        // Set the formMM to the new message manager so that
+        // message gets to the right form now on.
+        this.formMM = mm;
+      } else { // input is blurred
+        // A blur message can't be sent to the keyboard if the focus has
+        // already been taken away at first place.
+        // This check is here to prevent problem caused by out-of-order
+        // ipc messages from two processes.
+        if (mm !== this.formMM) {
+          return false;
+        }
 
-    this.forwardEvent('Keyboard:Focus', msg);
+        this.formMM = null;
+      }
+    }
+
+    this.sendToKeyboard(newEventName, msg.data);
+    return true;
+  },
+
+  handleFocusChange: function keyboardHandleFocusChange(msg) {
+    let isSent = this.forwardEvent('Keyboard:FocusChange', msg);
+
+    if (!isSent) {
+      return;
+    }
 
     // Chrome event, used also to render value selectors; that's why we need
     // the info about choices / min / max here as well...
     SystemAppProxy.dispatchEvent({
       type: 'inputmethod-contextchange',
-      inputType: msg.data.inputType,
+      inputType: msg.data.type,
       value: msg.data.value,
       choices: JSON.stringify(msg.data.choices),
       min: msg.data.min,
       max: msg.data.max
     });
-  },
-
-  handleBlur: function keyboardHandleBlur(msg) {
-    let mm = msg.target.QueryInterface(Ci.nsIFrameLoaderOwner)
-                .frameLoader.messageManager;
-    // A blur message can't be sent to the keyboard if the focus has
-    // already been taken away at first place.
-    // This check is here to prevent problem caused by out-of-order
-    // ipc messages from two processes.
-    if (mm !== this.formMM) {
-      return;
-    }
-
-    // unset formMM
-    this.formMM = null;
-
-    this.forwardEvent('Keyboard:Blur', msg);
-
-    SystemAppProxy.dispatchEvent({
-      type: 'inputmethod-contextchange',
-      inputType: 'blur'
-    });
-  },
-
-  forwardEvent: function keyboardForwardEvent(newEventName, msg) {
-    this.sendToKeyboard(newEventName, msg.data);
   },
 
   setSelectedOption: function keyboardSetSelectedOption(msg) {
