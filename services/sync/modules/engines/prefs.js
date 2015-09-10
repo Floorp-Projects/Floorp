@@ -8,7 +8,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const WEAVE_SYNC_PREFS = "services.sync.prefs.sync.";
+const PREF_SYNC_PREFS_PREFIX = "services.sync.prefs.sync.";
 
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
@@ -86,16 +86,16 @@ PrefStore.prototype = {
   _getSyncPrefs: function _getSyncPrefs() {
     let syncPrefs = Cc["@mozilla.org/preferences-service;1"]
                       .getService(Ci.nsIPrefService)
-                      .getBranch(WEAVE_SYNC_PREFS)
+                      .getBranch(PREF_SYNC_PREFS_PREFIX)
                       .getChildList("", {});
     // Also sync preferences that determine which prefs get synced.
     return syncPrefs.concat(
-      syncPrefs.map(function (pref) { return WEAVE_SYNC_PREFS + pref; }));
+      syncPrefs.map(function (pref) { return PREF_SYNC_PREFS_PREFIX + pref; }));
   },
 
   _isSynced: function _isSyncedPref(pref) {
-    return (pref.indexOf(WEAVE_SYNC_PREFS) == 0)
-            || this._prefs.get(WEAVE_SYNC_PREFS + pref, false);
+    return (pref.indexOf(PREF_SYNC_PREFS_PREFIX) == 0)
+            || this._prefs.get(PREF_SYNC_PREFS_PREFIX + pref, false);
   },
 
   _getAllPrefs: function () {
@@ -241,8 +241,8 @@ PrefTracker.prototype = {
       case "nsPref:changed":
         // Trigger a sync for MULTI-DEVICE for a change that determines
         // which prefs are synced or a regular pref change.
-        if (data.indexOf(WEAVE_SYNC_PREFS) == 0 ||
-            this._prefs.get(WEAVE_SYNC_PREFS + data, false)) {
+        if (data.indexOf(PREF_SYNC_PREFS_PREFIX) == 0 ||
+            this._prefs.get(PREF_SYNC_PREFS_PREFIX + data, false)) {
           this.score += SCORE_INCREMENT_XLARGE;
           this.modified = true;
           this._log.trace("Preference " + data + " changed");
