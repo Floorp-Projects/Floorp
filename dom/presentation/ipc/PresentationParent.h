@@ -16,13 +16,15 @@ namespace mozilla {
 namespace dom {
 
 class PresentationParent final : public PPresentationParent
-                               , public nsIPresentationListener
+                               , public nsIPresentationAvailabilityListener
                                , public nsIPresentationSessionListener
+                               , public nsIPresentationRespondingListener
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIPRESENTATIONLISTENER
+  NS_DECL_NSIPRESENTATIONAVAILABILITYLISTENER
   NS_DECL_NSIPRESENTATIONSESSIONLISTENER
+  NS_DECL_NSIPRESENTATIONRESPONDINGLISTENER
 
   PresentationParent();
 
@@ -42,13 +44,17 @@ public:
 
   virtual bool Recv__delete__() override;
 
-  virtual bool RecvRegisterHandler() override;
+  virtual bool RecvRegisterAvailabilityHandler() override;
 
-  virtual bool RecvUnregisterHandler() override;
+  virtual bool RecvUnregisterAvailabilityHandler() override;
 
   virtual bool RecvRegisterSessionHandler(const nsString& aSessionId) override;
 
   virtual bool RecvUnregisterSessionHandler(const nsString& aSessionId) override;
+
+  virtual bool RecvRegisterRespondingHandler(const uint64_t& aWindowId) override;
+
+  virtual bool RecvUnregisterRespondingHandler(const uint64_t& aWindowId) override;
 
   virtual bool RecvNotifyReceiverReady(const nsString& aSessionId) override;
 

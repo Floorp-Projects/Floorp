@@ -14,6 +14,7 @@ namespace dom {
 
 class Promise;
 class PresentationAvailability;
+class PresentationSession;
 
 class PresentationRequest final : public DOMEventTargetHelper
 {
@@ -35,6 +36,8 @@ public:
   already_AddRefed<Promise> GetAvailability(ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(sessionconnect);
+
+  nsresult DispatchSessionConnectEvent(PresentationSession* aSession);
 
 private:
   PresentationRequest(nsPIDOMWindow* aWindow,
