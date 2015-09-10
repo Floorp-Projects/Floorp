@@ -289,10 +289,8 @@ add_task(function* basicAuthorizationAndRegistration() {
   yield loadLoopPanel({stayOnline: true});
   yield statusChangedPromise;
   let loopDoc = document.getElementById("loop-panel-iframe").contentDocument;
-  let accountLogin = loopDoc.getElementsByClassName("signin-link")[0];
-  let visibleEmail = loopDoc.getElementsByClassName("user-identity");
-  is(visibleEmail.length, 0, "No email should be displayed when logged out");
-  is(accountLogin.textContent, "Sign In or Sign Up", "Login/Signup links when logged out");
+  let visibleEmail = loopDoc.getElementsByClassName("user-identity")[0];
+  is(visibleEmail.textContent, "Guest", "Guest should be displayed on the panel when not logged in");
   is(MozLoopService.userProfile, null, "profile should be null before log-in");
   let loopButton = document.getElementById("loop-button");
   is(loopButton.getAttribute("state"), "", "state of loop button should be empty when not logged in");
@@ -304,8 +302,6 @@ add_task(function* basicAuthorizationAndRegistration() {
   is(tokenData.access_token, "code1_access_token", "Check access_token");
   is(tokenData.scope, "profile", "Check scope");
   is(tokenData.token_type, "bearer", "Check token_type");
-
-  visibleEmail = loopDoc.getElementsByClassName("user-identity")[0];
 
   is(MozLoopService.userProfile.email, "test@example.com", "email should exist in the profile data");
   is(MozLoopService.userProfile.uid, "1234abcd", "uid should exist in the profile data");
@@ -332,7 +328,7 @@ add_task(function* basicAuthorizationAndRegistration() {
   registrationResponse = yield promiseOAuthGetRegistration(BASE_URL);
   is(registrationResponse.response, null,
      "Check registration was deleted on the server");
-  is(accountLogin.textContent, "Sign In or Sign Up", "Login/Signup links when logged out");
+  is(visibleEmail.textContent, "Guest", "Guest should be displayed on the panel again after logout");
   is(MozLoopService.userProfile, null, "userProfile should be null after logout");
 });
 

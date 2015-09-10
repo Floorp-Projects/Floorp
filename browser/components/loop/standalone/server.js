@@ -12,8 +12,6 @@
 var express = require("express");
 var app = express();
 
-var path = require("path");
-
 var port = process.env.PORT || 3000;
 var feedbackApiUrl = process.env.LOOP_FEEDBACK_API_URL ||
                      "https://input.allizom.org/api/v1/feedback";
@@ -64,35 +62,32 @@ app.get("/content/c/config.js", getConfigFile);
 // /ui - for the ui showcase
 // /content - for the standalone files.
 
-app.use("/ui", express.static(path.join(__dirname, "..", "ui")));
-app.use("/ui/loop/", express.static(path.join(__dirname, "..", "content")));
-app.use("/ui/shared/", express.static(path.join(__dirname, "..", "content",
-                                                "shared")));
+app.use("/ui", express.static(__dirname + "/../ui"));
 
 // This exists exclusively for the unit tests. They are served the
 // whole loop/ directory structure and expect some files in the standalone directory.
-app.use("/standalone/content", express.static(path.join(__dirname, "content")));
+app.use("/standalone/content", express.static(__dirname + "/content"));
 
 // We load /content this from  both /content *and* /../content. The first one
 // does what we need for running in the github loop-client context, the second one
 // handles running in the hg repo under mozilla-central and is used so that the shared
 // files are in the right location.
-app.use("/content", express.static(path.join(__dirname, "content")));
-app.use("/content", express.static(path.join(__dirname, "..", "content")));
+app.use("/content", express.static(__dirname + "/content"));
+app.use("/content", express.static(__dirname + "/../content"));
 // These two are based on the above, but handle call urls, that have a /c/ in them.
-app.use("/content/c", express.static(path.join(__dirname, "content")));
-app.use("/content/c", express.static(path.join(__dirname, "..", "content")));
+app.use("/content/c", express.static(__dirname + "/content"));
+app.use("/content/c", express.static(__dirname + "/../content"));
 
 // Two lines for the same reason as /content above.
-app.use("/test", express.static(path.join(__dirname, "test")));
-app.use("/test", express.static(path.join(__dirname, "..", "test")));
+app.use("/test", express.static(__dirname + "/test"));
+app.use("/test", express.static(__dirname + "/../test"));
 
 // As we don't have hashes on the urls, the best way to serve the index files
 // appears to be to be to closely filter the url and match appropriately.
 function serveIndex(req, res) {
   "use strict";
 
-  return res.sendfile(path.join(__dirname, "content", "index.html"));
+  return res.sendfile(__dirname + "/content/index.html");
 }
 
 app.get(/^\/content\/[\w\-]+$/, serveIndex);

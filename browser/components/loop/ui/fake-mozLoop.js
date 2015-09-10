@@ -164,7 +164,6 @@ var fakeContacts = [{
     },
     fxAEnabled: true,
     startAlerting: function() {},
-    stopAlerting: function() {},
-    userProfile: null
+    stopAlerting: function() {}
   };
 })();
