@@ -749,7 +749,6 @@ loop.panel = (function(_, mozL10n) {
 
       var contextClasses = React.addons.classSet({
         context: true,
-        "context-checkbox-checked": this.state.checked,
         hide: !hostname ||
           !this.props.mozLoop.getLoopPref("contextInConversations.enabled")
       });

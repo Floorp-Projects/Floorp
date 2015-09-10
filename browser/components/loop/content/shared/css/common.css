@@ -100,19 +100,19 @@ p {
 }
 
 .btn-info {
-  background-color: #00a9dc;
-  border: 1px solid #00a9dc;
+  background-color: #0096dd;
+  border: 1px solid #0095dd;
   color: #fff;
 }
 
   .btn-info:hover {
-    background-color: #5cccee;
-    border: 1px solid #5cccee;
+    background-color: #008acb;
+    border: 1px solid #008acb;
   }
 
   .btn-info:active {
-    background-color: #5cccee;
-    border: 1px solid #5cccee;
+    background-color: #006b9d;
+    border: 1px solid #006b9d;
   }
 
 .btn-accept,
@@ -468,8 +468,8 @@ html[dir="rtl"] .dropdown-menu {
 
 .checkbox {
   float: left;
-  width: 2rem;
-  height: 2rem;
+  width: 1em;
+  height: 1em;
   -moz-margin-end: .5em;
   margin-top: .1em;
   border: 1px solid #999;
@@ -521,17 +521,13 @@ html[dir="rtl"] .context-content {
 
 .context-wrapper {
   border: 1px solid #5cccee;
-  border-radius: 4px;
+  border-radius: 3px;
   background: #fff;
   padding: .8em;
   /* Use the flex row mode to position the elements next to each other. */
   display: flex;
   flex-flow: row nowrap;
   line-height: 1.1em;
-}
-
-.context-wrapper:hover {
-  background-color: #dbf7ff;
 }
 
 .context-wrapper > .context-preview {
@@ -560,7 +556,7 @@ html[dir="rtl"] .context-wrapper > .context-preview {
 
 .context-wrapper > .context-description > .context-url {
   display: block;
-  color: #00a9dc;
+  color: #59A1D7;
   font-weight: 700;
   clear: both;
 }
