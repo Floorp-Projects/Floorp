@@ -4826,7 +4826,7 @@ static int32_t RoundUp(double aDouble)
 {
   WidgetWheelEvent wheelEvent(true, msg, mGeckoChild);
   [self convertCocoaMouseWheelEvent:theEvent toGeckoEvent:&wheelEvent];
-  mExpectingWheelStop = (msg == NS_WHEEL_START);
+  mExpectingWheelStop = (msg == eWheelOperationStart);
   mGeckoChild->DispatchAPZAwareEvent(wheelEvent.AsInputEvent());
 }
 
@@ -4896,11 +4896,18 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   }
 
   NSEventPhase phase = nsCocoaUtils::EventPhase(theEvent);
-  // Fire NS_WHEEL_START/STOP events when 2 fingers touch/release the touchpad.
+  // Fire eWheelOperationStart/STOP events when 2 fingers touch/release the
+  // touchpad.
   if (phase & NSEventPhaseMayBegin) {
-    [self sendWheelCondition:YES first:NS_WHEEL_STOP second:NS_WHEEL_START forEvent:theEvent];
+    [self sendWheelCondition:YES
+                       first:NS_WHEEL_STOP
+                      second:eWheelOperationStart
+                    forEvent:theEvent];
   } else if (phase & (NSEventPhaseEnded | NSEventPhaseCancelled)) {
-    [self sendWheelCondition:NO first:NS_WHEEL_START second:NS_WHEEL_STOP forEvent:theEvent];
+    [self sendWheelCondition:NO
+                       first:eWheelOperationStart
+                      second:NS_WHEEL_STOP
+                    forEvent:theEvent];
   }
 
   NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(theEvent, [self window]);
