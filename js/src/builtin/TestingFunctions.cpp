@@ -987,30 +987,15 @@ static bool
 OOMAfterAllocations(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() < 1) {
+    if (args.length() != 1) {
         JS_ReportError(cx, "count argument required");
         return false;
     }
 
-    if (args.length() > 2) {
-        JS_ReportError(cx, "too many arguments");
-        return false;
-    }
-
-    uint32_t targetThread = 0;
-    if (!ToUint32(cx, args.get(1), &targetThread))
-        return false;
-
-    if (targetThread >= js::oom::THREAD_TYPE_MAX) {
-        JS_ReportError(cx, "invalid thread type specified");
-        return false;
-    }
-
     uint32_t count;
-    if (!JS::ToUint32(cx, args.get(0), &count))
+    if (!JS::ToUint32(cx, args[0], &count))
         return false;
 
-    js::oom::targetThread = targetThread;
     OOM_maxAllocations = OOM_counter + count;
     OOM_failAlways = true;
     return true;
@@ -1020,30 +1005,15 @@ static bool
 OOMAtAllocation(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() < 1) {
+    if (args.length() != 1) {
         JS_ReportError(cx, "count argument required");
         return false;
     }
 
-    if (args.length() > 2) {
-        JS_ReportError(cx, "too many arguments");
-        return false;
-    }
-
-    uint32_t targetThread = 0;
-    if (!ToUint32(cx, args.get(1), &targetThread))
-        return false;
-
-    if (targetThread >= js::oom::THREAD_TYPE_MAX) {
-        JS_ReportError(cx, "invalid thread type specified");
-        return false;
-    }
-
     uint32_t count;
-    if (!JS::ToUint32(cx, args.get(0), &count))
+    if (!JS::ToUint32(cx, args[0], &count))
         return false;
 
-    js::oom::targetThread = targetThread;
     OOM_maxAllocations = OOM_counter + count;
     OOM_failAlways = false;
     return true;
@@ -2862,17 +2832,15 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Stop capturing the JS stack at every allocation."),
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
-    JS_FN_HELP("oomAfterAllocations", OOMAfterAllocations, 2, 0,
-"oomAfterAllocations(count [,threadType])",
+    JS_FN_HELP("oomAfterAllocations", OOMAfterAllocations, 1, 0,
+"oomAfterAllocations(count)",
 "  After 'count' js_malloc memory allocations, fail every following allocation\n"
-"  (return nullptr). The optional thread type limits the effect to the\n"
-"  specified type of helper thread."),
+"  (return NULL)."),
 
-    JS_FN_HELP("oomAtAllocation", OOMAtAllocation, 2, 0,
-"oomAtAllocation(count [,threadType])",
+    JS_FN_HELP("oomAtAllocation", OOMAtAllocation, 1, 0,
+"oomAtAllocation(count)",
 "  After 'count' js_malloc memory allocations, fail the next allocation\n"
-"  (return nullptr). The optional thread type limits the effect to the\n"
-"  specified type of helper thread."),
+"  (return NULL)."),
 
     JS_FN_HELP("resetOOMFailure", ResetOOMFailure, 0, 0,
 "resetOOMFailure()",
