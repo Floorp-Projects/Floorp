@@ -248,7 +248,7 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
     const mozilla::ipc::ContentPrincipalInfo& cInfo = data[i].principal();
 
     ASSERT_EQ((uint32_t)i, cInfo.appId());
-    ASSERT_EQ((uint32_t)(i %2), cInfo.isInBrowserElement());
+    ASSERT_EQ((uint32_t)(i % 2), (uint32_t)cInfo.isInBrowserElement());
 
     test.AppendPrintf("spec write %d", i);
     ASSERT_STREQ(test.get(), cInfo.spec().get());
