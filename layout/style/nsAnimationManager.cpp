@@ -243,7 +243,7 @@ CSSAnimation::QueueEvents()
   } else if (wasActive && !isActive) {
     message = eAnimationEnd;
   } else if (wasActive && isActive && !isSameIteration) {
-    message = NS_ANIMATION_ITERATION;
+    message = eAnimationIteration;
   } else if (skippedActivePhase) {
     // First notifying for start of 0th iteration by appending an
     // 'animationstart':
@@ -261,8 +261,7 @@ CSSAnimation::QueueEvents()
 
   StickyTimeDuration elapsedTime;
 
-  if (message == eAnimationStart ||
-      message == NS_ANIMATION_ITERATION) {
+  if (message == eAnimationStart || message == eAnimationIteration) {
     TimeDuration iterationStart = mEffect->Timing().mIterationDuration *
                                     computedTiming.mCurrentIteration;
     elapsedTime = StickyTimeDuration(std::max(iterationStart,
