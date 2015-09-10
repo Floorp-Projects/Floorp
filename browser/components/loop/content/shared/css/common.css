@@ -336,16 +336,6 @@ p {
   background-position: 80% center;
 }
 
-.pseudo-icon:before {
-  content: "";
-  display: inline-block;
-  background-repeat: no-repeat;
-  width: 14px;
-  height: 14px;
-  vertical-align: top;
-  margin: 0 .7rem;
-}
-
 .icon-small {
   background-size: 10px;
 }
@@ -429,7 +419,7 @@ p {
   position: absolute;
   bottom: 0;
   left: 0;
-  background-color: #fbfbfb;
+  background-color: #fdfdfd;
   box-shadow: 0 1px 3px rgba(0,0,0,.3);
   list-style: none;
   border-radius: 2px;
@@ -443,35 +433,20 @@ html[dir="rtl"] .dropdown-menu {
 .dropdown-menu-item {
   width: 100%;
   text-align: start;
-  padding: .3rem .8rem;
+  padding: .5em 15px;
   cursor: pointer;
   border: 1px solid transparent;
-  font-size: 1.2rem;
-  line-height: 22px;
+  font-size: 1em;
   white-space: nowrap;
-  color: #4a4a4a;
-}
-
-.dropdown-menu-item:first-child {
-  padding-top: .8rem;
-}
-
-.dropdown-menu-item:last-child {
-  padding-bottom: .8rem;
-}
-
-.dropdown-menu-item:first-child:hover {
-  border-top-right-radius: 2px;
-  border-top-left-radius: 2px;
-}
-
-.dropdown-menu-item:last-child {
-  border-bottom-right-radius: 2px;
-  border-bottom-left-radius: 2px;
 }
 
 .dropdown-menu-item:hover {
   background-color: #dbf7ff;
+}
+
+.dropdown-menu-item > .icon {
+  background-repeat: no-repeat;
+  display: inline-block;
 }
 
 .dropdown-menu-separator {

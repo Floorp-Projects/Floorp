@@ -311,7 +311,7 @@ loop.panel = (function(_, mozL10n) {
   var SettingsDropdownEntry = React.createClass({displayName: "SettingsDropdownEntry",
     propTypes: {
       displayed: React.PropTypes.bool,
-      extraCSSClass: React.PropTypes.string,
+      icon: React.PropTypes.string,
       label: React.PropTypes.string.isRequired,
       onClick: React.PropTypes.func.isRequired
     },
@@ -321,22 +321,15 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
-      var cx = React.addons.classSet;
-
       if (!this.props.displayed) {
         return null;
       }
-
-      var extraCSSClass = {
-        "dropdown-menu-item": true
-      };
-      if (this.props.extraCSSClass) {
-        extraCSSClass[this.props.extraCSSClass] = true;
-      }
-
       return (
-        React.createElement("li", {className: cx(extraCSSClass), onClick: this.props.onClick}, 
-          this.props.label
+        React.createElement("li", {className: "dropdown-menu-item", onClick: this.props.onClick}, 
+          this.props.icon ?
+            React.createElement("i", {className: "icon icon-" + this.props.icon}) :
+            null, 
+          React.createElement("span", null, this.props.label)
         )
       );
     }
@@ -387,8 +380,6 @@ loop.panel = (function(_, mozL10n) {
 
     render: function() {
       var cx = React.addons.classSet;
-      var accountEntryCSSClass = this._isSignedIn() ? "entry-settings-signout" :
-                                                      "entry-settings-signin";
 
       return (
         React.createElement("div", {className: "settings-menu dropdown"}, 
@@ -397,23 +388,24 @@ loop.panel = (function(_, mozL10n) {
              ref: "menu-button", 
              title: mozL10n.get("settings_menu_button_tooltip")}), 
           React.createElement("ul", {className: cx({"dropdown-menu": true, hide: !this.state.showMenu})}, 
-            React.createElement(SettingsDropdownEntry, {
-                displayed: this._isSignedIn() && this.props.mozLoop.fxAEnabled, 
-                extraCSSClass: "entry-settings-account", 
-                label: mozL10n.get("settings_menu_item_account"), 
-                onClick: this.handleClickAccountEntry}), 
             React.createElement(SettingsDropdownEntry, {displayed: false, 
+                                   icon: "settings", 
                                    label: mozL10n.get("settings_menu_item_settings"), 
                                    onClick: this.handleClickSettingsEntry}), 
-            React.createElement(SettingsDropdownEntry, {label: mozL10n.get("tour_label"), 
+            React.createElement(SettingsDropdownEntry, {displayed: this._isSignedIn() && this.props.mozLoop.fxAEnabled, 
+                                   icon: "account", 
+                                   label: mozL10n.get("settings_menu_item_account"), 
+                                   onClick: this.handleClickAccountEntry}), 
+            React.createElement(SettingsDropdownEntry, {icon: "tour", 
+                                   label: mozL10n.get("tour_label"), 
                                    onClick: this.openGettingStartedTour}), 
             React.createElement(SettingsDropdownEntry, {displayed: this.props.mozLoop.fxAEnabled, 
-                                   extraCSSClass: accountEntryCSSClass, 
+                                   icon: this._isSignedIn() ? "signout" : "signin", 
                                    label: this._isSignedIn() ?
                                           mozL10n.get("settings_menu_item_signout") :
                                           mozL10n.get("settings_menu_item_signin"), 
                                    onClick: this.handleClickAuthEntry}), 
-            React.createElement(SettingsDropdownEntry, {extraCSSClass: "entry-settings-help", 
+            React.createElement(SettingsDropdownEntry, {icon: "help", 
                                    label: mozL10n.get("help_label"), 
                                    onClick: this.handleHelpEntry})
           )
@@ -955,10 +947,10 @@ loop.panel = (function(_, mozL10n) {
                         userProfile: this.state.userProfile})
             ), 
             React.createElement(Tab, {name: "contacts"}, 
-              React.createElement(ContactsList, {mozLoop: this.props.mozLoop, 
-                            notifications: this.props.notifications, 
-                            selectTab: this.selectTab, 
-                            startForm: this.startForm})
+              React.createElement(ContactsList, {
+                notifications: this.props.notifications, 
+                selectTab: this.selectTab, 
+                startForm: this.startForm})
             ), 
             React.createElement(Tab, {hidden: true, name: "contacts_add"}, 
               React.createElement(ContactDetailsForm, {

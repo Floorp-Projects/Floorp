@@ -58,8 +58,6 @@ body {
 }
 
 .showcase > section .comp {
-  /* contain absolute positioned elements such as dropdowns */
-  position: relative;
   margin: 0 auto; /* width is usually set programmatically */
 }
 
@@ -169,7 +167,7 @@ body {
 }
 
 /* Force dropdown menus to display. */
-.force-menu-show .icons,
-.force-menu-show .dropdown-menu {
+.force-menu-show * {
   display: inline-block !important;
 }
+
