@@ -202,8 +202,8 @@ D3D9DXVA2Manager::SupportsConfig(IMFMediaType* aType, float aFramerate)
 
   nsRefPtr<IDirect3DSurface9> surface;
   hr = mDecoderService->CreateSurface(desc.SampleWidth, desc.SampleHeight, 0, (D3DFORMAT)MAKEFOURCC('N', 'V', '1', '2'),
-  D3DPOOL_DEFAULT, 0, DXVA2_VideoDecoderRenderTarget,
-  surface.StartAssignment(), NULL);
+                                      D3DPOOL_DEFAULT, 0, DXVA2_VideoDecoderRenderTarget,
+                                      surface.StartAssignment(), NULL);
   if (!SUCCEEDED(hr)) {
     CoTaskMemFree(configs);
     return false;
@@ -380,7 +380,7 @@ D3D9DXVA2Manager::Init(nsACString& aFailureReason)
     return hr;
   }
 
-  if (adapter.VendorId = 0x1022) {
+  if (adapter.VendorId == 0x1022) {
     for (size_t i = 0; i < MOZ_ARRAY_LENGTH(sAMDPreUVD4); i++) {
       if (adapter.DeviceId == sAMDPreUVD4[i]) {
         mIsAMDPreUVD4 = true;
@@ -624,7 +624,7 @@ D3D11DXVA2Manager::Init(nsACString& aFailureReason)
   for (UINT i = 0; i < profileCount; i++) {
     GUID id;
     hr = videoDevice->GetVideoDecoderProfile(i, &id);
-    if (SUCCEEDED(hr) && id == DXVA2_ModeH264_E || id == DXVA2_Intel_ModeH264_E) {
+    if (SUCCEEDED(hr) && (id == DXVA2_ModeH264_E || id == DXVA2_Intel_ModeH264_E)) {
       mDecoderGUID = id;
       found = true;
       break;
@@ -667,7 +667,7 @@ D3D11DXVA2Manager::Init(nsACString& aFailureReason)
     return hr;
   }
 
-  if (adapterDesc.VendorId = 0x1022) {
+  if (adapterDesc.VendorId == 0x1022) {
     for (size_t i = 0; i < MOZ_ARRAY_LENGTH(sAMDPreUVD4); i++) {
       if (adapterDesc.DeviceId == sAMDPreUVD4[i]) {
         mIsAMDPreUVD4 = true;
