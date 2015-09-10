@@ -3,19 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsBIG5ToUnicode_h___
-#define nsBIG5ToUnicode_h___
+#ifndef nsUnicodeToBIG5HKSCS_h___
+#define nsUnicodeToBIG5HKSCS_h___
 
 #include "nsISupports.h"
 
 /**
- * A character set converter from BIG5 to Unicode.
+ * A character set converter from Unicode to BIG5-HKSCS.
  *
- * @created         06/Apr/1999
- * @author  Catalin Rotaru [CATA]
+ * @created         02/Jul/2000
+ * @author  Gavin Ho, Hong Kong Professional Services, Compaq Computer (Hong Kong) Ltd.
  */
 nsresult
-nsBIG5ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+nsUnicodeToBIG5HKSCSConstructor(nsISupports *aOuter, REFNSIID aIID,
                                 void **aResult);
 
-#endif /* nsBIG5ToUnicode_h___ */
+#endif /* nsUnicodeToBIG5HKSCS_h___ */
