@@ -37,6 +37,8 @@ fi
 
 rm -rf $WORKSPACE/B2G/out/target/product/generic/tests/
 
+gecko_objdir=/home/worker/objdir-gecko/objdir
+
 $WORKSPACE/gecko/testing/mozharness/scripts/b2g_build.py \
   --config b2g/taskcluster-emulator.py \
   "$debug_flag" \
@@ -46,21 +48,22 @@ $WORKSPACE/gecko/testing/mozharness/scripts/b2g_build.py \
   --target=$TARGET \
   --b2g-config-dir=$TARGET \
   --checkout-revision=$GECKO_HEAD_REV \
-  --repo=$WORKSPACE/gecko
+  --repo=$WORKSPACE/gecko \
+  --gecko-objdir=$gecko_objdir
 
 # Move files into artifact locations!
 mkdir -p $HOME/artifacts
 
 ls -lah $WORKSPACE/B2G/out
-ls -lah $WORKSPACE/B2G/objdir-gecko/dist/
+ls -lah $gecko_objdir/dist/
 
 mv $WORKSPACE/B2G/sources.xml $HOME/artifacts/sources.xml
 mv $WORKSPACE/B2G/out/target/product/generic/tests/gaia-tests.zip $HOME/artifacts/gaia-tests.zip
 for name in common cppunittest reftest mochitest xpcshell web-platform; do
-    mv $WORKSPACE/B2G/objdir-gecko/dist/*.$name.tests.zip  $HOME/artifacts/target.$name.tests.zip ;
+    mv $gecko_objdir/dist/*.$name.tests.zip  $HOME/artifacts/target.$name.tests.zip ;
 done
-mv $WORKSPACE/B2G/objdir-gecko/dist/test_packages_tc.json $HOME/artifacts/test_packages.json
+mv $gecko_objdir/dist/test_packages_tc.json $HOME/artifacts/test_packages.json
 mv $WORKSPACE/B2G/out/emulator.tar.gz $HOME/artifacts/emulator.tar.gz
-mv $WORKSPACE/B2G/objdir-gecko/dist/b2g-*.crashreporter-symbols.zip $HOME/artifacts/b2g-crashreporter-symbols.zip
+mv $gecko_objdir/dist/b2g-*.crashreporter-symbols.zip $HOME/artifacts/b2g-crashreporter-symbols.zip
 
 ccache -s
