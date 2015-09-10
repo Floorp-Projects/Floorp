@@ -402,6 +402,12 @@ StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& options,
 void
 EnqueuePendingParseTasksAfterGC(JSRuntime* rt);
 
+struct AutoEnqueuePendingParseTasksAfterGC {
+    const gc::GCRuntime& gc_;
+    explicit AutoEnqueuePendingParseTasksAfterGC(const gc::GCRuntime& gc) : gc_(gc) {}
+    ~AutoEnqueuePendingParseTasksAfterGC();
+};
+
 /* Start a compression job for the specified token. */
 bool
 StartOffThreadCompression(ExclusiveContext* cx, SourceCompressionTask* task);
