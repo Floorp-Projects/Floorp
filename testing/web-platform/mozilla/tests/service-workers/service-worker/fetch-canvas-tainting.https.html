@@ -11,7 +11,7 @@ async_test(function(t) {
     var SCRIPT = 'resources/fetch-rewrite-worker.js';
     var host_info = get_host_info();
 
-    login(t)
+    login_https(t)
       .then(function() {
           return service_worker_unregister_and_register(t, SCRIPT, SCOPE);
         })
@@ -28,7 +28,7 @@ async_test(function(t) {
                   service_worker_unregister_and_done(t, SCOPE);
                 });
               frame.contentWindow.postMessage({},
-                                              host_info['HTTP_ORIGIN'],
+                                              host_info['HTTPS_ORIGIN'],
                                               [channel.port2]);
             });
         })
