@@ -732,7 +732,7 @@ TEST_F(AccessibleCaretEventHubTester, TestWheelEventScroll)
 
   check.Call("1");
 
-  HandleEventAndCheckState(CreateWheelEvent(NS_WHEEL_START),
+  HandleEventAndCheckState(CreateWheelEvent(eWheelOperationStart),
                            MockAccessibleCaretEventHub::ScrollState(),
                            nsEventStatus_eIgnore);
 
