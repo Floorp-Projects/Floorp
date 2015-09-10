@@ -498,7 +498,7 @@ class PushToTry(MachCommandBase):
             print('Tests from the following manifests will be selected: ')
             pprint.pprint(manifests_by_flavor)
 
-        if verbose:
+        if verbose or not push:
             print('The following try syntax was calculated:\n\n\t%s\n' % msg)
 
         if push:
