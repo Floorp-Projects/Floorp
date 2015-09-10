@@ -7,22 +7,59 @@
 #include "DaemonSocketPDUHelpers.h"
 #include <limits>
 
+// Enable this constant to abort Gecko on IPC errors. This is helpful
+// for debugging, but should *never* be enabled by default.
+#define MOZ_HAL_ABORT_ON_IPC_ERRORS (0)
+
 #ifdef CHROMIUM_LOG
 #undef CHROMIUM_LOG
 #endif
 
 #if defined(MOZ_WIDGET_GONK)
+
 #include <android/log.h>
-#define CHROMIUM_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "I/O", args);
+
+#define CHROMIUM_LOG(args...) \
+  __android_log_print(ANDROID_LOG_INFO, "HAL-IPC", args);
+
+#define CHROMIUM_LOG_VA(fmt, ap) \
+  __android_log_vprint(ANDROID_LOG_INFO, "HAL-IPC", fmt, ap);
+
 #else
+
 #include <stdio.h>
+
 #define IODEBUG true
-#define CHROMIUM_LOG(args...) if (IODEBUG) printf(args);
+#define CHROMIUM_LOG(args...) if (IODEBUG) { printf(args); }
+#define CHROMIUM_LOG_VA(fmt, ap) if (IODEBUG) { vprintf(fmt, ap); }
+
 #endif
 
 namespace mozilla {
 namespace ipc {
 namespace DaemonSocketPDUHelpers {
+
+//
+// Logging
+//
+
+namespace detail {
+
+void
+LogProtocolError(const char* aFmt, ...)
+{
+  va_list ap;
+
+  va_start(ap, aFmt);
+  CHROMIUM_LOG_VA(aFmt, ap);
+  va_end(ap);
+
+  if (MOZ_HAL_ABORT_ON_IPC_ERRORS) {
+    MOZ_CRASH("HAL IPC protocol error");
+  }
+}
+
+} // namespace detail
 
 //
 // Conversion
