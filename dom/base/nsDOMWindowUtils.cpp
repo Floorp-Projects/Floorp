@@ -1927,7 +1927,7 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
   EventMessage message;
   switch (aType) {
     case QUERY_SELECTED_TEXT:
-      message = NS_QUERY_SELECTED_TEXT;
+      message = eQuerySelectedText;
       break;
     case QUERY_TEXT_CONTENT:
       message = NS_QUERY_TEXT_CONTENT;

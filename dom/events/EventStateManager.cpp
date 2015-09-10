@@ -768,7 +768,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       // If the event is trusted event, set the selected text to data of
       // composition event.
       WidgetCompositionEvent* compositionEvent = aEvent->AsCompositionEvent();
-      WidgetQueryContentEvent selectedText(true, NS_QUERY_SELECTED_TEXT,
+      WidgetQueryContentEvent selectedText(true, eQuerySelectedText,
                                            compositionEvent->widget);
       HandleQueryContentEvent(&selectedText);
       NS_ASSERTION(selectedText.mSucceeded, "Failed to get selected text");
@@ -785,7 +785,7 @@ void
 EventStateManager::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
 {
   switch (aEvent->mMessage) {
-    case NS_QUERY_SELECTED_TEXT:
+    case eQuerySelectedText:
     case NS_QUERY_TEXT_CONTENT:
     case NS_QUERY_CARET_RECT:
     case NS_QUERY_TEXT_RECT:

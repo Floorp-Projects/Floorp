@@ -6202,7 +6202,7 @@ nsWindow::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
 
         // Check if we're targeting content with vertical writing mode,
         // and if so remap the arrow keys.
-        WidgetQueryContentEvent query(true, NS_QUERY_SELECTED_TEXT, this);
+        WidgetQueryContentEvent query(true, eQuerySelectedText, this);
         nsEventStatus status;
         DispatchEvent(&query, status);
 

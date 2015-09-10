@@ -537,21 +537,21 @@ public:
 
   uint32_t GetSelectionStart(void) const
   {
-    NS_ASSERTION(mMessage == NS_QUERY_SELECTED_TEXT,
+    NS_ASSERTION(mMessage == eQuerySelectedText,
                  "not querying selection");
     return mReply.mOffset + (mReply.mReversed ? mReply.mString.Length() : 0);
   }
 
   uint32_t GetSelectionEnd(void) const
   {
-    NS_ASSERTION(mMessage == NS_QUERY_SELECTED_TEXT,
+    NS_ASSERTION(mMessage == eQuerySelectedText,
                  "not querying selection");
     return mReply.mOffset + (mReply.mReversed ? 0 : mReply.mString.Length());
   }
 
   mozilla::WritingMode GetWritingMode(void) const
   {
-    NS_ASSERTION(mMessage == NS_QUERY_SELECTED_TEXT ||
+    NS_ASSERTION(mMessage == eQuerySelectedText ||
                  mMessage == NS_QUERY_CARET_RECT ||
                  mMessage == NS_QUERY_TEXT_RECT,
                  "not querying selection or text rect");

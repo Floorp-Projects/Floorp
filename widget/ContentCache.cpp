@@ -177,7 +177,7 @@ ContentCacheInChild::CacheSelection(nsIWidget* aWidget,
   mSelection.Clear();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWidget);
+  WidgetQueryContentEvent selection(true, eQuerySelectedText, aWidget);
   aWidget->DispatchEvent(&selection, status);
   if (NS_WARN_IF(!selection.mSucceeded)) {
     MOZ_LOG(sContentCacheLog, LogLevel::Error,
@@ -516,10 +516,10 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
   aEvent.mReply.mFocusedWidget = aWidget;
 
   switch (aEvent.mMessage) {
-    case NS_QUERY_SELECTED_TEXT:
+    case eQuerySelectedText:
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
         ("ContentCacheInParent: 0x%p HandleQueryContentEvent("
-         "aEvent={ mMessage=NS_QUERY_SELECTED_TEXT }, aWidget=0x%p)",
+         "aEvent={ mMessage=eQuerySelectedText }, aWidget=0x%p)",
          this, aWidget));
       if (NS_WARN_IF(!IsSelectionValid())) {
         // If content cache hasn't been initialized properly, make the query

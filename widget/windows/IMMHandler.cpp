@@ -2753,14 +2753,13 @@ IMMHandler::Selection::Init(nsWindow* aWindow)
 {
   Clear();
 
-  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
+  WidgetQueryContentEvent selection(true, eQuerySelectedText, aWindow);
   nsIntPoint point(0, 0);
   aWindow->InitEvent(selection, &point);
   aWindow->DispatchWindowEvent(&selection);
   if (NS_WARN_IF(!selection.mSucceeded)) {
     MOZ_LOG(gIMMLog, LogLevel::Error,
-      ("IMM: Selection::Init, FAILED, due to NS_QUERY_SELECTED_TEXT "
-       "failure"));
+      ("IMM: Selection::Init, FAILED, due to eQuerySelectedText failure"));
     return false;
   }
   // If the window is destroyed during querying selected text, we shouldn't
