@@ -115,8 +115,8 @@
     _(CompareStrictS)               \
     _(CompareB)                     \
     _(CompareBAndBranch)            \
-    _(CompareV)                     \
-    _(CompareVAndBranch)            \
+    _(CompareBitwise)               \
+    _(CompareBitwiseAndBranch)      \
     _(CompareVM)                    \
     _(BitAndAndBranch)              \
     _(IsNullOrLikeUndefinedV)       \

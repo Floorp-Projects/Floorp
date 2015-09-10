@@ -799,10 +799,11 @@ LIRGenerator::visitTest(MTest* test)
         }
 
         // Compare values.
-        if (comp->compareType() == MCompare::Compare_Value) {
-            LCompareVAndBranch* lir = new(alloc()) LCompareVAndBranch(comp, ifTrue, ifFalse);
-            useBoxAtStart(lir, LCompareVAndBranch::LhsInput, left);
-            useBoxAtStart(lir, LCompareVAndBranch::RhsInput, right);
+        if (comp->compareType() == MCompare::Compare_Bitwise) {
+            LCompareBitwiseAndBranch* lir =
+                new(alloc()) LCompareBitwiseAndBranch(comp, ifTrue, ifFalse);
+            useBoxAtStart(lir, LCompareBitwiseAndBranch::LhsInput, left);
+            useBoxAtStart(lir, LCompareBitwiseAndBranch::RhsInput, right);
             add(lir, test);
             return;
         }
@@ -1023,10 +1024,10 @@ LIRGenerator::visitCompare(MCompare* comp)
     }
 
     // Compare values.
-    if (comp->compareType() == MCompare::Compare_Value) {
-        LCompareV* lir = new(alloc()) LCompareV();
-        useBoxAtStart(lir, LCompareV::LhsInput, left);
-        useBoxAtStart(lir, LCompareV::RhsInput, right);
+    if (comp->compareType() == MCompare::Compare_Bitwise) {
+        LCompareBitwise* lir = new(alloc()) LCompareBitwise();
+        useBoxAtStart(lir, LCompareBitwise::LhsInput, left);
+        useBoxAtStart(lir, LCompareBitwise::RhsInput, right);
         define(lir, comp);
         return;
     }

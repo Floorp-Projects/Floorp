@@ -4170,7 +4170,7 @@ class MCompare
         Compare_Object,
 
         // Compare 2 values bitwise
-        Compare_Value,
+        Compare_Bitwise,
 
         // All other possible compares
         Compare_Unknown
@@ -4256,7 +4256,7 @@ class MCompare
             return AliasSet::None();
         if (compareType_ == Compare_Unknown)
             return AliasSet::Store(AliasSet::Any);
-        MOZ_ASSERT(compareType_ <= Compare_Value);
+        MOZ_ASSERT(compareType_ <= Compare_Bitwise);
         return AliasSet::None();
     }
 

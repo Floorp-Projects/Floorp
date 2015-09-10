@@ -6832,7 +6832,7 @@ IonBuilder::compareTryBitwise(bool* emitted, JSOp op, MDefinition* left, MDefini
     }
 
     MCompare* ins = MCompare::New(alloc(), left, right, op);
-    ins->setCompareType(MCompare::Compare_Value);
+    ins->setCompareType(MCompare::Compare_Bitwise);
     ins->cacheOperandMightEmulateUndefined(constraints());
 
     current->add(ins);
