@@ -9,6 +9,7 @@
 
 #include "BluetoothService.h"
 #include "BluetoothSocket.h"
+#include "BluetoothUtils.h"
 #include "BluetoothUuid.h"
 #include "ObexBase.h"
 
@@ -348,7 +349,7 @@ BluetoothMapSmsManager::MasDataHandler(UnixSocketBuffer* aMessage)
         if (type.EqualsLiteral("x-obex/folder-listing")) {
           HandleSmsMmsFolderListing(pktHeaders);
         } else if (type.EqualsLiteral("x-bt/MAP-msg-listing")) {
-          // TODO: Implement this feature in Bug 1166675
+          HandleSmsMmsMsgListing(pktHeaders);
         } else if (type.EqualsLiteral("x-bt/message"))  {
           // TODO: Implement this feature in Bug 1166679
         } else {
@@ -686,6 +687,140 @@ BluetoothMapSmsManager::HandleSmsMmsFolderListing(const ObexHeaderSet& aHeader)
   }
 
   SendMasObexData(resp, ObexResponseCode::Success, index);
+}
+
+void
+BluetoothMapSmsManager::AppendBtNamedValueByTagId(
+  const ObexHeaderSet& aHeader,
+  InfallibleTArray<BluetoothNamedValue>& aValues,
+  const Map::AppParametersTagId aTagId)
+{
+  uint8_t buf[64];
+  if (!aHeader.GetAppParameter(aTagId, buf, 64)) {
+    return;
+  }
+
+  /*
+   * Follow MAP 6.3.1 Application Parameter Header
+   */
+  switch (aTagId) {
+    case Map::AppParametersTagId::MaxListCount: {
+      uint16_t maxListCount = *((uint16_t *)buf);
+      // convert big endian to little endian
+      maxListCount = (maxListCount >> 8) | (maxListCount << 8);
+      BT_LOGR("max list count: %d", maxListCount);
+      AppendNamedValue(aValues, "maxListCount", maxListCount);
+      break;
+    }
+    case Map::AppParametersTagId::StartOffset: {
+      uint16_t startOffset = *((uint16_t *)buf);
+      // convert big endian to little endian
+      startOffset = (startOffset >> 8) | (startOffset << 8);
+      BT_LOGR("start offset : %d", startOffset);
+      AppendNamedValue(aValues, "startOffset", startOffset);
+      break;
+    }
+    case Map::AppParametersTagId::SubjectLength: {
+      uint8_t subLength = *((uint8_t *)buf);
+      // convert big endian to little endian
+      subLength = (subLength >> 8) | (subLength << 8);
+      BT_LOGR("msg subLength : %d", subLength);
+      AppendNamedValue(aValues, "subLength", subLength);
+      break;
+    }
+    case Map::AppParametersTagId::ParameterMask: {
+      // 4 bytes
+      uint32_t parameterMask = *((uint32_t *)buf);
+      // convert big endian to little endian
+      parameterMask = (parameterMask >> 8) | (parameterMask << 8);
+      BT_LOGR("msg parameterMask : %d", parameterMask);
+      AppendNamedValue(aValues, "parameterMask", parameterMask);
+      break;
+    }
+    case Map::AppParametersTagId::FilterMessageType: {
+      uint8_t filterMessageType = *((uint8_t *)buf);
+      // convert big endian to little endian
+      filterMessageType = (filterMessageType >> 8) | (filterMessageType << 8);
+      BT_LOGR("msg filterMessageType : %d", filterMessageType);
+      AppendNamedValue(aValues, "filterMessageType", filterMessageType);
+      break;
+    }
+    case Map::AppParametersTagId::FilterPeriodBegin: {
+      nsCString filterPeriodBegin((char *) buf);
+      BT_LOGR("msg FilterPeriodBegin : %s", filterPeriodBegin.get());
+      AppendNamedValue(aValues, "filterPeriodBegin", filterPeriodBegin);
+      break;
+    }
+    case Map::AppParametersTagId::FilterPeriodEnd: {
+      nsCString filterPeriodEnd((char*)buf);
+      BT_LOGR("msg filterPeriodEnd : %s", filterPeriodEnd.get());
+      AppendNamedValue(aValues, "filterPeriodEnd", filterPeriodEnd);
+      break;
+    }
+    case Map::AppParametersTagId::FilterReadStatus: {
+      uint8_t filterReadStatus = *((uint8_t *)buf);
+      // convert big endian to little endian
+      filterReadStatus = (filterReadStatus >> 8) | (filterReadStatus << 8);
+      BT_LOGR("msg filter read status : %d", filterReadStatus);
+      AppendNamedValue(aValues, "filterReadStatus", filterReadStatus);
+      break;
+    }
+    case Map::AppParametersTagId::FilterRecipient: {
+      nsCString filterRecipient((char*) buf);
+      BT_LOGR("msg filterRecipient : %s", filterRecipient.get());
+      AppendNamedValue(aValues, "filterRecipient", filterRecipient);
+      break;
+    }
+    case Map::AppParametersTagId::FilterOriginator: {
+      nsCString filterOriginator((char*) buf);
+      BT_LOGR("msg filter Originator : %s", filterOriginator.get());
+      AppendNamedValue(aValues, "filterOriginator", filterOriginator);
+      break;
+    }
+    case Map::AppParametersTagId::FilterPriority: {
+      uint8_t filterPriority = *((uint8_t *)buf);
+      // convert big endian to little endian
+      filterPriority = (filterPriority >> 8) | (filterPriority << 8);
+      BT_LOGR("msg filter priority: %d", filterPriority);
+      AppendNamedValue(aValues, "filterPriority", filterPriority);
+      break;
+    }
+    default:
+      BT_LOGR("Unsupported AppParameterTag: %x", aTagId);
+      break;
+  }
+}
+
+void
+BluetoothMapSmsManager::HandleSmsMmsMsgListing(const ObexHeaderSet& aHeader)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothService* bs = BluetoothService::Get();
+
+  InfallibleTArray<BluetoothNamedValue> data;
+
+  static Map::AppParametersTagId sMsgListingParameters[] = {
+    [0] = Map::AppParametersTagId::MaxListCount,
+    [1] = Map::AppParametersTagId::StartOffset,
+    [2] = Map::AppParametersTagId::SubjectLength,
+    [3] = Map::AppParametersTagId::ParameterMask,
+    [4] = Map::AppParametersTagId::FilterMessageType,
+    [5] = Map::AppParametersTagId::FilterPeriodBegin,
+    [6] = Map::AppParametersTagId::FilterPeriodEnd,
+    [7] = Map::AppParametersTagId::FilterReadStatus,
+    [8] = Map::AppParametersTagId::FilterRecipient,
+    [9] = Map::AppParametersTagId::FilterOriginator,
+    [10] = Map::AppParametersTagId::FilterPriority
+  };
+
+  for (uint8_t i = 0; i < MOZ_ARRAY_LENGTH(sMsgListingParameters); i++) {
+    AppendBtNamedValueByTagId(aHeader, data, sMsgListingParameters[i]);
+  }
+
+  bs->DistributeSignal(NS_LITERAL_STRING(MAP_MESSAGES_LISTING_REQ_ID),
+                       NS_LITERAL_STRING(KEY_ADAPTER),
+                       data);
 }
 
 void

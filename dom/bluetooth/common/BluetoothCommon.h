@@ -186,6 +186,12 @@ extern bool gBluetoothDebugFlag;
 #define PULL_VCARD_LISTING_REQ_ID            "pullvcardlistingreq"
 
 /**
+ * When receiving a MAP request of 'messages listing' from a remote device,
+ * we'll dispatch an event.
+ */
+#define MAP_MESSAGES_LISTING_REQ_ID          "mapmessageslistingreq"
+
+/**
  * When the value of a characteristic of a remote BLE device changes, we'll
  * dispatch an event
  */
