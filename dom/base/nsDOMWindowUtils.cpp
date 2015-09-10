@@ -2064,7 +2064,7 @@ nsDOMWindowUtils::SendContentCommandEvent(const nsAString& aType,
   else if (aType.EqualsLiteral("delete"))
     msg = eContentCommandDelete;
   else if (aType.EqualsLiteral("undo"))
-    msg = NS_CONTENT_COMMAND_UNDO;
+    msg = eContentCommandUndo;
   else if (aType.EqualsLiteral("redo"))
     msg = NS_CONTENT_COMMAND_REDO;
   else if (aType.EqualsLiteral("pasteTransferable"))

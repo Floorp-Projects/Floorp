@@ -3048,7 +3048,7 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
             return DispatchContentCommandEvent(NS_CONTENT_COMMAND_REDO);
         case GDK_Undo:
         case GDK_F14:
-            return DispatchContentCommandEvent(NS_CONTENT_COMMAND_UNDO);
+            return DispatchContentCommandEvent(eContentCommandUndo);
     }
 #endif /* ! AIX */
 #endif /* MOZ_X11 */
