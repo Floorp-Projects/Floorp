@@ -2080,8 +2080,7 @@ IMContextWrapper::DeleteText(GtkIMContext* aContext,
     }
 
     // Delete the selection
-    WidgetContentCommandEvent contentCommandEvent(true,
-                                                  NS_CONTENT_COMMAND_DELETE,
+    WidgetContentCommandEvent contentCommandEvent(true, eContentCommandDelete,
                                                   mLastFocusedWindow);
     mLastFocusedWindow->DispatchEvent(&contentCommandEvent, status);
 
