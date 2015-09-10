@@ -1961,12 +1961,6 @@ MacroAssemblerARMCompat::addPtr(const Address& src, Register dest)
 }
 
 void
-MacroAssemblerARMCompat::not32(Register reg)
-{
-    ma_mvn(reg, reg);
-}
-
-void
 MacroAssemblerARMCompat::move32(Imm32 imm, Register dest)
 {
     ma_mov(imm, dest);
