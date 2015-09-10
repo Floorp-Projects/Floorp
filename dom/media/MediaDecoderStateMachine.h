@@ -883,13 +883,6 @@ private:
   // Accessed only via the state machine thread.  Must be set via SetPlayStartTime.
   TimeStamp mPlayStartTime;
 
-  // The amount of time we've spent playing already the media. The current
-  // playback position is therefore |Now() - mPlayStartTime +
-  // mPlayDuration|, which must be adjusted by mStartTime if used with media
-  // timestamps. Accessed on state machine and main threads. Access controlled
-  // by decoder monitor.
-  int64_t mPlayDuration;
-
   // Time that buffering started. Used for buffering timeout and only
   // accessed on the state machine thread. This is null while we're not
   // buffering.
