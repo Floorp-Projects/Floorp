@@ -435,7 +435,10 @@ body {
   border-radius: 2px;
   min-height: 26px;
   font-size: 1.2rem;
-  line-height: 1.2rem;
+}
+
+.button > .button-caption {
+  vertical-align: middle;
 }
 
 .button:hover {
@@ -782,7 +785,7 @@ html[dir="rtl"] .settings-menu .dropdown-menu {
   font-size: 1rem;
   background-color: #fff;
   color: #666666;
-  padding: .5rem 15px;
+  padding: .5rem 1rem;
 }
 
 .footer .signin-details {
