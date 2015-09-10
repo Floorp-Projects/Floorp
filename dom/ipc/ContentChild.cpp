@@ -178,13 +178,13 @@
 #endif
 
 #include "ProcessUtils.h"
-#include "StructuredCloneIPCHelper.h"
 #include "URIUtils.h"
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
 #include "nsDeviceStorage.h"
 #include "DomainPolicy.h"
 #include "mozilla/dom/DataStoreService.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/dom/telephony/PTelephonyChild.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "mozilla/dom/voicemail/VoicemailIPCService.h"
@@ -799,7 +799,7 @@ ContentChild::InitXPCOM()
     bool isConnected;
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
-    StructuredCloneIPCHelper initialData;
+    StructuredCloneData initialData;
 
     SendGetXPCOMProcessAttributes(&isOffline, &isConnected,
                                   &isLangRTL, &mAvailableDictionaries,
@@ -2083,11 +2083,11 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg,
 {
     nsRefPtr<nsFrameMessageManager> cpm = nsFrameMessageManager::GetChildProcessManager();
     if (cpm) {
-        StructuredCloneIPCHelper helper;
-        ipc::UnpackClonedMessageDataForChild(aData, helper);
+        StructuredCloneData data;
+        ipc::UnpackClonedMessageDataForChild(aData, data);
         CrossProcessCpowHolder cpows(this, aCpows);
         cpm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(cpm.get()), nullptr,
-                            aMsg, false, &helper, &cpows, aPrincipal, nullptr);
+                            aMsg, false, &data, &cpows, aPrincipal, nullptr);
     }
     return true;
 }

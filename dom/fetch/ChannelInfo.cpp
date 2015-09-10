@@ -84,7 +84,7 @@ ChannelInfo::InitFromChromeGlobal(nsIGlobalObject* aGlobal)
 }
 
 void
-ChannelInfo::InitFromIPCChannelInfo(const ipc::IPCChannelInfo& aChannelInfo)
+ChannelInfo::InitFromIPCChannelInfo(const mozilla::ipc::IPCChannelInfo& aChannelInfo)
 {
   MOZ_ASSERT(!mInited, "Cannot initialize the object twice");
 
@@ -172,7 +172,7 @@ ChannelInfo::ResurrectInfoOnChannel(nsIChannel* aChannel)
   return NS_OK;
 }
 
-ipc::IPCChannelInfo
+mozilla::ipc::IPCChannelInfo
 ChannelInfo::AsIPCChannelInfo() const
 {
   // This may be called when mInited is false, for example if we try to store

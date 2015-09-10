@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "StructuredCloneIPCHelper.h"
+#include "StructuredCloneData.h"
 
 #include "nsIDOMDOMException.h"
 #include "nsIMutable.h"
@@ -22,27 +22,28 @@
 
 namespace mozilla {
 namespace dom {
+namespace ipc {
 
 bool
-StructuredCloneIPCHelper::Copy(const StructuredCloneIPCHelper& aHelper)
+StructuredCloneData::Copy(const StructuredCloneData& aData)
 {
-  if (!aHelper.mData) {
+  if (!aData.mData) {
     return true;
   }
 
-  uint64_t* data = static_cast<uint64_t*>(js_malloc(aHelper.mDataLength));
+  uint64_t* data = static_cast<uint64_t*>(js_malloc(aData.mDataLength));
   if (!data) {
     return false;
   }
 
-  memcpy(data, aHelper.mData, aHelper.mDataLength);
+  memcpy(data, aData.mData, aData.mDataLength);
 
   mData = data;
-  mDataLength = aHelper.mDataLength;
+  mDataLength = aData.mDataLength;
   mDataOwned = eJSAllocated;
 
   MOZ_ASSERT(BlobImpls().IsEmpty());
-  BlobImpls().AppendElements(aHelper.BlobImpls());
+  BlobImpls().AppendElements(aData.BlobImpls());
 
   MOZ_ASSERT(GetImages().IsEmpty());
 
@@ -50,9 +51,9 @@ StructuredCloneIPCHelper::Copy(const StructuredCloneIPCHelper& aHelper)
 }
 
 void
-StructuredCloneIPCHelper::Read(JSContext* aCx,
-                               JS::MutableHandle<JS::Value> aValue,
-                               ErrorResult &aRv)
+StructuredCloneData::Read(JSContext* aCx,
+                          JS::MutableHandle<JS::Value> aValue,
+                          ErrorResult &aRv)
 {
   MOZ_ASSERT(mData);
 
@@ -63,9 +64,9 @@ StructuredCloneIPCHelper::Read(JSContext* aCx,
 }
 
 void
-StructuredCloneIPCHelper::Write(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue,
-                                ErrorResult &aRv)
+StructuredCloneData::Write(JSContext* aCx,
+                           JS::Handle<JS::Value> aValue,
+                           ErrorResult &aRv)
 {
   MOZ_ASSERT(!mData);
 
@@ -80,7 +81,7 @@ StructuredCloneIPCHelper::Write(JSContext* aCx,
 }
 
 void
-StructuredCloneIPCHelper::WriteIPCParams(Message* aMsg) const
+StructuredCloneData::WriteIPCParams(Message* aMsg) const
 {
   WriteParam(aMsg, mDataLength);
 
@@ -91,8 +92,8 @@ StructuredCloneIPCHelper::WriteIPCParams(Message* aMsg) const
 }
 
 bool
-StructuredCloneIPCHelper::ReadIPCParams(const IPC::Message* aMsg,
-                                        void** aIter)
+StructuredCloneData::ReadIPCParams(const IPC::Message* aMsg,
+                                   void** aIter)
 {
   MOZ_ASSERT(!mData);
 
@@ -123,8 +124,8 @@ StructuredCloneIPCHelper::ReadIPCParams(const IPC::Message* aMsg,
 }
 
 bool
-StructuredCloneIPCHelper::CopyExternalData(const void* aData,
-                                           size_t aDataLength)
+StructuredCloneData::CopyExternalData(const void* aData,
+                                      size_t aDataLength)
 {
   MOZ_ASSERT(!mData);
   uint64_t* data = static_cast<uint64_t*>(js_malloc(aDataLength));
@@ -140,5 +141,6 @@ StructuredCloneIPCHelper::CopyExternalData(const void* aData,
   return true;
 }
 
+} // namespace ipc
 } // namespace dom
 } // namespace mozilla

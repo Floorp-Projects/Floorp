@@ -276,14 +276,14 @@ public:
      */
     virtual bool DoSendBlockingMessage(JSContext* aCx,
                                        const nsAString& aMessage,
-                                       mozilla::dom::StructuredCloneIPCHelper& aHelper,
+                                       StructuredCloneData& aData,
                                        JS::Handle<JSObject *> aCpows,
                                        nsIPrincipal* aPrincipal,
-                                       nsTArray<StructuredCloneIPCHelper>* aRetVal,
+                                       nsTArray<StructuredCloneData>* aRetVal,
                                        bool aIsSync) override;
     virtual bool DoSendAsyncMessage(JSContext* aCx,
                                     const nsAString& aMessage,
-                                    mozilla::dom::StructuredCloneIPCHelper& aHelper,
+                                    StructuredCloneData& aData,
                                     JS::Handle<JSObject *> aCpows,
                                     nsIPrincipal* aPrincipal) override;
     virtual bool DoUpdateZoomConstraints(const uint32_t& aPresShellId,
