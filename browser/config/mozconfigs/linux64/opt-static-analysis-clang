@@ -1,0 +1,25 @@
+MOZ_AUTOMATION_BUILD_SYMBOLS=0
+MOZ_AUTOMATION_PACKAGE_TESTS=0
+MOZ_AUTOMATION_L10N_CHECK=0
+
+. "$topsrcdir/build/mozconfig.common"
+
+ac_add_options --enable-dmd
+
+# Use Clang as specified in manifest
+CC="$topsrcdir/clang/bin/clang"
+CXX="$topsrcdir/clang/bin/clang++"
+
+# Add the static checker
+ac_add_options --enable-clang-plugin
+
+# Treat warnings as errors (modulo ALLOW_COMPILER_WARNINGS).
+ac_add_options --enable-warnings-as-errors
+
+# Avoid dependency on libstdc++ 4.7
+ac_add_options --enable-stdcxx-compat
+
+export PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig:/usr/share/pkgconfig
+. $topsrcdir/build/unix/mozconfig.gtk
+
+. "$topsrcdir/build/mozconfig.common.override"
