@@ -280,6 +280,8 @@ static CustomTypeAnnotation HeapClass =
     CustomTypeAnnotation("moz_heap_class", "heap");
 static CustomTypeAnnotation MustUse =
     CustomTypeAnnotation("moz_must_use", "must-use");
+static CustomTypeAnnotation NonMemMovable =
+  CustomTypeAnnotation("moz_non_memmovable", "non-memmove()able");
 
 class MozChecker : public ASTConsumer, public RecursiveASTVisitor<MozChecker> {
   DiagnosticsEngine &Diag;
@@ -474,92 +476,6 @@ bool isClassRefCounted(QualType T) {
   return clazz ? isClassRefCounted(clazz) : false;
 }
 
-/// A cached data of whether classes are memmovable, and if not, what
-/// declaration
-/// makes them non-movable
-typedef DenseMap<const CXXRecordDecl *, const CXXRecordDecl *>
-    InferredMovability;
-InferredMovability inferredMovability;
-
-bool isClassNonMemMovable(QualType T);
-const CXXRecordDecl *isClassNonMemMovableWorker(QualType T);
-
-const CXXRecordDecl *isClassNonMemMovableWorker(const CXXRecordDecl *D) {
-  // If we have a definition, then we want to standardize our reference to point
-  // to the definition node. If we don't have a definition, that means that
-  // either
-  // we only have a forward declaration of the type in our file, or we are being
-  // passed a template argument which is not used, and thus never instantiated
-  // by
-  // clang.
-  // As the argument isn't used, we can't memmove it (as we don't know it's
-  // size),
-  // which means not reporting an error is OK.
-  if (!D->hasDefinition()) {
-    return 0;
-  }
-  D = D->getDefinition();
-
-  // Are we explicitly marked as non-memmovable class?
-  if (MozChecker::hasCustomAnnotation(D, "moz_non_memmovable")) {
-    return D;
-  }
-
-  // Look through all base cases to figure out if the parent is a non-memmovable
-  // class.
-  for (CXXRecordDecl::base_class_const_iterator base = D->bases_begin();
-       base != D->bases_end(); ++base) {
-    const CXXRecordDecl *result = isClassNonMemMovableWorker(base->getType());
-    if (result) {
-      return result;
-    }
-  }
-
-  // Look through all members to figure out if a member is a non-memmovable
-  // class.
-  for (RecordDecl::field_iterator field = D->field_begin(), e = D->field_end();
-       field != e; ++field) {
-    const CXXRecordDecl *result = isClassNonMemMovableWorker(field->getType());
-    if (result) {
-      return result;
-    }
-  }
-
-  return 0;
-}
-
-const CXXRecordDecl *isClassNonMemMovableWorker(QualType T) {
-  while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
-    T = arrTy->getElementType();
-  const CXXRecordDecl *clazz = T->getAsCXXRecordDecl();
-  return clazz ? isClassNonMemMovableWorker(clazz) : 0;
-}
-
-bool isClassNonMemMovable(const CXXRecordDecl *D) {
-  InferredMovability::iterator it = inferredMovability.find(D);
-  if (it != inferredMovability.end())
-    return !!it->second;
-  const CXXRecordDecl *result = isClassNonMemMovableWorker(D);
-  inferredMovability.insert(std::make_pair(D, result));
-  return !!result;
-}
-
-bool isClassNonMemMovable(QualType T) {
-  while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
-    T = arrTy->getElementType();
-  const CXXRecordDecl *clazz = T->getAsCXXRecordDecl();
-  return clazz ? isClassNonMemMovable(clazz) : false;
-}
-
-const CXXRecordDecl *findWhyClassIsNonMemMovable(QualType T) {
-  while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
-    T = arrTy->getElementType();
-  CXXRecordDecl *clazz = T->getAsCXXRecordDecl();
-  InferredMovability::iterator it = inferredMovability.find(clazz);
-  assert(it != inferredMovability.end());
-  return it->second;
-}
-
 template <class T> bool IsInSystemHeader(const ASTContext &AC, const T &D) {
   auto &SourceManager = AC.getSourceManager();
   auto ExpansionLoc = SourceManager.getExpansionLoc(D.getLocStart());
@@ -719,7 +635,9 @@ AST_MATCHER(CXXRecordDecl, hasNeedsNoVTableTypeAttr) {
 }
 
 /// This matcher will select classes which are non-memmovable
-AST_MATCHER(QualType, isNonMemMovable) { return isClassNonMemMovable(Node); }
+AST_MATCHER(QualType, isNonMemMovable) {
+  return NonMemMovable.hasEffectiveAnnotation(Node);
+}
 
 /// This matcher will select classes which require a memmovable template arg
 AST_MATCHER(CXXRecordDecl, needsMemMovable) {
@@ -803,6 +721,7 @@ void CustomTypeAnnotation::dumpAnnotationReason(DiagnosticsEngine &Diag,
       break;
     }
     default:
+      // FIXME (bug 1203263): note the original annotation.
       return;
     }
 
@@ -1323,11 +1242,6 @@ void DiagnosticsMatcher::NonMemMovableChecker::run(
       "Cannot instantiate %0 with non-memmovable template argument %1");
   unsigned note1ID = Diag.getDiagnosticIDs()->getCustomDiagID(
       DiagnosticIDs::Note, "instantiation of %0 requested here");
-  unsigned note2ID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note, "%0 is non-memmovable because of the "
-                           "MOZ_NON_MEMMOVABLE annotation on %1");
-  unsigned note3ID =
-      Diag.getDiagnosticIDs()->getCustomDiagID(DiagnosticIDs::Note, "%0");
 
   // Get the specialization
   const ClassTemplateSpecializationDecl *specialization =
@@ -1341,8 +1255,7 @@ void DiagnosticsMatcher::NonMemMovableChecker::run(
       specialization->getTemplateInstantiationArgs();
   for (unsigned i = 0; i < args.size(); ++i) {
     QualType argType = args[i].getAsType();
-    if (isClassNonMemMovable(args[i].getAsType())) {
-      const CXXRecordDecl *reason = findWhyClassIsNonMemMovable(argType);
+    if (NonMemMovable.hasEffectiveAnnotation(args[i].getAsType())) {
       Diag.Report(specialization->getLocation(), errorID) << specialization
                                                           << argType;
       // XXX It would be really nice if we could get the instantiation stack
@@ -1355,7 +1268,7 @@ void DiagnosticsMatcher::NonMemMovableChecker::run(
       // cases won't
       // be useful)
       Diag.Report(requestLoc, note1ID) << specialization;
-      Diag.Report(reason->getLocation(), note2ID) << argType << reason;
+      NonMemMovable.dumpAnnotationReason(Diag, argType, requestLoc);
     }
   }
 }
