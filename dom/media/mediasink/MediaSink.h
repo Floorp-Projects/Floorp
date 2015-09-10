@@ -105,6 +105,10 @@ public:
   // Can be called in any state.
   virtual bool IsStarted() const = 0;
 
+  // Return true if playback is started and not paused otherwise false.
+  // Can be called in any state.
+  virtual bool IsPlaying() const = 0;
+
   // Called on the state machine thread to shut down the sink. All resources
   // allocated by this sink should be released.
   // Must be called after playback stopped.
