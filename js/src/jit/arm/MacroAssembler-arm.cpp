@@ -1967,18 +1967,6 @@ MacroAssemblerARMCompat::not32(Register reg)
 }
 
 void
-MacroAssemblerARMCompat::xorPtr(Imm32 imm, Register dest)
-{
-    ma_eor(imm, dest);
-}
-
-void
-MacroAssemblerARMCompat::xorPtr(Register src, Register dest)
-{
-    ma_eor(src, dest);
-}
-
-void
 MacroAssemblerARMCompat::move32(Imm32 imm, Register dest)
 {
     ma_mov(imm, dest);

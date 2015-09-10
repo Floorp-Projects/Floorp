@@ -872,12 +872,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void lshift64(Imm32 imm, Register64 dest) {
         shlq(imm, dest.reg);
     }
-    void xorPtr(Imm32 imm, Register dest) {
-        xorq(imm, dest);
-    }
-    void xorPtr(Register src, Register dest) {
-        xorq(src, dest);
-    }
     void or64(Register64 src, Register64 dest) {
         orq(src.reg, dest.reg);
     }
