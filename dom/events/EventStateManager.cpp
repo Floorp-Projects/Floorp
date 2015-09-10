@@ -749,7 +749,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     break;
   case eContentCommandCut:
   case eContentCommandCopy:
-  case NS_CONTENT_COMMAND_PASTE:
+  case eContentCommandPaste:
   case NS_CONTENT_COMMAND_DELETE:
   case NS_CONTENT_COMMAND_UNDO:
   case NS_CONTENT_COMMAND_REDO:
@@ -5043,7 +5043,7 @@ EventStateManager::DoContentCommandEvent(WidgetContentCommandEvent* aEvent)
     case eContentCommandCopy:
       cmd = "cmd_copy";
       break;
-    case NS_CONTENT_COMMAND_PASTE:
+    case eContentCommandPaste:
       cmd = "cmd_paste";
       break;
     case NS_CONTENT_COMMAND_DELETE:
