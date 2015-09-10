@@ -2584,7 +2584,7 @@ public class BrowserApp extends GeckoApp
             final ViewStub firstrunPagerStub = (ViewStub) findViewById(R.id.firstrun_pager_stub);
             mFirstrunPane = (FirstrunPane) firstrunPagerStub.inflate();
             mFirstrunPane.load(getApplicationContext(), getSupportFragmentManager());
-            mFirstrunPane.registerOnFinishListener(new FirstrunPane.PagerNavigation() {
+            mFirstrunPane.registerOnFinishListener(new FirstrunPane.OnFinishListener() {
                 @Override
                 public void onFinish() {
                     BrowserApp.this.mFirstrunPane = null;
