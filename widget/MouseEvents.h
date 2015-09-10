@@ -403,7 +403,7 @@ public:
   // scroll amount in lines.  However, if the value is
   // nsIDOMUIEvent::SCROLL_PAGE_UP or nsIDOMUIEvent::SCROLL_PAGE_DOWN, the
   // value inducates one page scroll.  If the event message is
-  // NS_MOUSE_PIXEL_SCROLL, the value indicates scroll amount in pixels.
+  // eLegacyMousePixelScroll, the value indicates scroll amount in pixels.
   int32_t delta;
 
   // If this is true, it may cause to scroll horizontally.

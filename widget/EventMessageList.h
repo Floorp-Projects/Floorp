@@ -126,7 +126,7 @@ NS_EVENT_MESSAGE(eXULCommandUpdate,     eXULEventFirst + 6)
 // Legacy mouse scroll (wheel) events
 NS_EVENT_MESSAGE(eLegacyMouseScrollEventFirst, 1600)
 NS_EVENT_MESSAGE(eLegacyMouseLineOrPageScroll, eLegacyMouseScrollEventFirst)
-NS_EVENT_MESSAGE(NS_MOUSE_PIXEL_SCROLL,        eLegacyMouseScrollEventFirst + 1)
+NS_EVENT_MESSAGE(eLegacyMousePixelScroll,      eLegacyMouseScrollEventFirst + 1)
 
 NS_EVENT_MESSAGE(NS_SCROLLPORT_START,     1700)
 NS_EVENT_MESSAGE(NS_SCROLLPORT_UNDERFLOW, NS_SCROLLPORT_START)
