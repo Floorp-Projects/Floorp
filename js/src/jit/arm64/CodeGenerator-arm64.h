@@ -220,7 +220,7 @@ class CodeGeneratorARM64 : public CodeGeneratorShared
 
     void generateInvalidateEpilogue();
 
-    void setReturnDoubleRegs(LiveRegisterSet* regs);
+    void visitRandom(LRandom* ins);
 
   protected:
     void postAsmJSCall(LAsmJSCall* lir) {

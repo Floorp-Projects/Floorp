@@ -304,8 +304,5 @@ LIRGeneratorARM64::visitSubstr(MSubstr* ins)
 void
 LIRGeneratorARM64::visitRandom(MRandom* ins)
 {
-    LRandom *lir = new(alloc()) LRandom(temp(),
-                                        temp(),
-                                        temp());
-    defineFixed(lir, ins, LFloatReg(ReturnDoubleReg));
+    MOZ_CRASH("visitRandom");
 }

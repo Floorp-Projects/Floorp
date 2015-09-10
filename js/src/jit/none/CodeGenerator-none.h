@@ -51,7 +51,6 @@ class CodeGeneratorNone : public CodeGeneratorShared
     ValueOperand ToOutValue(LInstruction*) { MOZ_CRASH(); }
     ValueOperand ToTempValue(LInstruction*, size_t) { MOZ_CRASH(); }
     void generateInvalidateEpilogue() { MOZ_CRASH(); }
-    void setReturnDoubleRegs(LiveRegisterSet* regs) { MOZ_CRASH(); }
 };
 
 typedef CodeGeneratorNone CodeGeneratorSpecific;
