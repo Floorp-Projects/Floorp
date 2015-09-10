@@ -147,8 +147,8 @@ function run_test() {
 
   // Check OneCRL OCSP request skipping works correctly
   add_test(function () {
-    // enable OneCRL OCSP skipping - allow staleness of up to 1 day
-    Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds", 86400);
+    // enable OneCRL OCSP skipping - allow staleness of up to 30 hours
+    Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds", 108000);
     // set the blocklist-background-update-timer value to the recent past
     Services.prefs.setIntPref("app.update.lastUpdateTime.blocklist-background-update-timer",
                               Math.floor(Date.now() / 1000) - 1);
@@ -173,11 +173,11 @@ function run_test() {
   });
 
   add_test(function () {
-    // enable OneCRL OCSP skipping - allow staleness of up to 1 day
-    Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds", 86400);
+    // enable OneCRL OCSP skipping - allow staleness of up to 30 hours
+    Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds", 108000);
     // set the blocklist-background-update-timer value to the more distant past
     Services.prefs.setIntPref("app.update.lastUpdateTime.blocklist-background-update-timer",
-                              Math.floor(Date.now() / 1000) - 86480);
+                              Math.floor(Date.now() / 1000) - 108080);
     clearOCSPCache();
     let ocspResponder = start_ocsp_responder(
                           gEVExpected ? ["int-ev-valid", "ev-valid"]
