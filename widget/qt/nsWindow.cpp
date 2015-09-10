@@ -1209,7 +1209,7 @@ nsWindow::keyPressEvent(QKeyEvent* aEvent)
         case Qt::Key_Paste:
         case Qt::Key_F18:
         case Qt::Key_F9:
-            return DispatchContentCommandEvent(NS_CONTENT_COMMAND_PASTE);
+            return DispatchContentCommandEvent(eContentCommandPaste);
         case Qt::Key_F14:
             return DispatchContentCommandEvent(NS_CONTENT_COMMAND_UNDO);
     }
