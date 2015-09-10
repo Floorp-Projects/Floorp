@@ -1204,8 +1204,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     inline void and64(Imm64 imm, Register64 dest);
     inline void or64(Register64 src, Register64 dest);
-    void xorPtr(Imm32 imm, Register dest);
-    void xorPtr(Register src, Register dest);
     void addPtr(Register src, Register dest);
     void addPtr(const Address& src, Register dest);
     void add64(Imm32 imm, Register64 dest) {

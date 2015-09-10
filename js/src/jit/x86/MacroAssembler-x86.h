@@ -1139,12 +1139,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         shldl(imm, dest.low, dest.high);
         shll(imm, dest.low);
     }
-    void xorPtr(Imm32 imm, Register dest) {
-        xorl(imm, dest);
-    }
-    void xorPtr(Register src, Register dest) {
-        xorl(src, dest);
-    }
     void or64(Register64 src, Register64 dest) {
         orl(src.low, dest.low);
         orl(src.high, dest.high);
