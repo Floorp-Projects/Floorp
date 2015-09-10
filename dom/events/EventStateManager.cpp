@@ -711,7 +711,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       keyEvent->mIsComposing = !!composition;
     }
     break;
-  case NS_WHEEL_WHEEL:
+  case eWheel:
   case NS_WHEEL_START:
   case NS_WHEEL_STOP:
     {
@@ -723,7 +723,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         mCurrentTargetContent = content;
       }
 
-      if (aEvent->mMessage != NS_WHEEL_WHEEL) {
+      if (aEvent->mMessage != eWheel) {
         break;
       }
 
@@ -3021,7 +3021,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       }
     }
     break;
-  case NS_WHEEL_WHEEL:
+  case eWheel:
   case NS_WHEEL_START:
     {
       MOZ_ASSERT(aEvent->mFlags.mIsTrusted);
@@ -3048,7 +3048,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
           ScrollbarsForWheel::PrepareToScrollText(this, aTargetFrame, wheelEvent);
 
-          if (aEvent->mMessage != NS_WHEEL_WHEEL ||
+          if (aEvent->mMessage != eWheel ||
               (!wheelEvent->deltaX && !wheelEvent->deltaY)) {
             break;
           }
@@ -5572,7 +5572,7 @@ EventStateManager::WheelPrefs::HasUserPrefsForDelta(WidgetWheelEvent* aEvent)
 bool
 EventStateManager::WheelEventIsScrollAction(WidgetWheelEvent* aEvent)
 {
-  return aEvent->mMessage == NS_WHEEL_WHEEL &&
+  return aEvent->mMessage == eWheel &&
          WheelPrefs::GetInstance()->ComputeActionFor(aEvent) == WheelPrefs::ACTION_SCROLL;
 }
 

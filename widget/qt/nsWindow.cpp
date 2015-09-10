@@ -1259,7 +1259,7 @@ nsEventStatus
 nsWindow::wheelEvent(QWheelEvent* aEvent)
 {
     // check to see if we should rollup
-    WidgetWheelEvent wheelEvent(true, NS_WHEEL_WHEEL, this);
+    WidgetWheelEvent wheelEvent(true, eWheel, this);
     wheelEvent.deltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
 
     // negative values for aEvent->delta indicate downward scrolling;
