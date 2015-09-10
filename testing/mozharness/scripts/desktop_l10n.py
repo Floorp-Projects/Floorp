@@ -161,7 +161,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
                 "list-locales",
                 "setup",
                 "repack",
-                "create-virtualenv",
                 "taskcluster-upload",
                 "funsize-props",
                 "submit-to-balrog",
@@ -976,6 +975,14 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             self.warning('Skipping S3 file upload: No taskcluster credentials.')
             return
 
+        # We need to activate the virtualenv so that we can import taskcluster
+        # (and its dependent modules, like requests and hawk).  Normally we
+        # could create the virtualenv as an action, but due to some odd
+        # dependencies with query_build_env() being called from build(), which
+        # is necessary before the virtualenv can be created.
+        self.disable_mock()
+        self.create_virtualenv()
+        self.enable_mock()
         self.activate_virtualenv()
 
         # Enable Taskcluster debug logging, so at least we get some debug
