@@ -212,36 +212,36 @@ NS_EVENT_MESSAGE(eCut,                  eClipboardEventFirst + 1)
 NS_EVENT_MESSAGE(ePaste,                eClipboardEventFirst + 2)
 
 // Query the content information
-NS_EVENT_MESSAGE(NS_QUERY_CONTENT_EVENT_START,       3200)
+NS_EVENT_MESSAGE(eQueryContentEventFirst,            3200)
 // Query for the selected text information, it return the selection offset,
 // selection length and selected text.
-NS_EVENT_MESSAGE(NS_QUERY_SELECTED_TEXT,             NS_QUERY_CONTENT_EVENT_START)
+NS_EVENT_MESSAGE(NS_QUERY_SELECTED_TEXT,             eQueryContentEventFirst)
 // Query for the text content of specified range, it returns actual lengh (if
 // the specified range is too long) and the text of the specified range.
 // Returns the entire text if requested length > actual length.
-NS_EVENT_MESSAGE(NS_QUERY_TEXT_CONTENT,              NS_QUERY_CONTENT_EVENT_START + 1)
+NS_EVENT_MESSAGE(NS_QUERY_TEXT_CONTENT,              eQueryContentEventFirst + 1)
 // Query for the caret rect of nth insertion point. The offset of the result is
 // relative position from the top level widget.
-NS_EVENT_MESSAGE(NS_QUERY_CARET_RECT,                NS_QUERY_CONTENT_EVENT_START + 3)
+NS_EVENT_MESSAGE(NS_QUERY_CARET_RECT,                eQueryContentEventFirst + 3)
 // Query for the bounding rect of a range of characters. This works on any
 // valid character range given offset and length. Result is relative to top
 // level widget coordinates
-NS_EVENT_MESSAGE(NS_QUERY_TEXT_RECT,                 NS_QUERY_CONTENT_EVENT_START + 4)
+NS_EVENT_MESSAGE(NS_QUERY_TEXT_RECT,                 eQueryContentEventFirst + 4)
 // Query for the bounding rect of the current focused frame. Result is relative
 // to top level widget coordinates
-NS_EVENT_MESSAGE(NS_QUERY_EDITOR_RECT,               NS_QUERY_CONTENT_EVENT_START + 5)
+NS_EVENT_MESSAGE(NS_QUERY_EDITOR_RECT,               eQueryContentEventFirst + 5)
 // Query for the current state of the content. The particular members of
 // mReply that are set for each query content event will be valid on success.
-NS_EVENT_MESSAGE(NS_QUERY_CONTENT_STATE,             NS_QUERY_CONTENT_EVENT_START + 6)
+NS_EVENT_MESSAGE(NS_QUERY_CONTENT_STATE,             eQueryContentEventFirst + 6)
 // Query for the selection in the form of a nsITransferable.
-NS_EVENT_MESSAGE(NS_QUERY_SELECTION_AS_TRANSFERABLE, NS_QUERY_CONTENT_EVENT_START + 7)
+NS_EVENT_MESSAGE(NS_QUERY_SELECTION_AS_TRANSFERABLE, eQueryContentEventFirst + 7)
 // Query for character at a point.  This returns the character offset, its
 // rect and also tentative caret point if the point is clicked.  The point is
 // specified by Event::refPoint.
-NS_EVENT_MESSAGE(NS_QUERY_CHARACTER_AT_POINT,        NS_QUERY_CONTENT_EVENT_START + 8)
+NS_EVENT_MESSAGE(NS_QUERY_CHARACTER_AT_POINT,        eQueryContentEventFirst + 8)
 // Query if the DOM element under Event::refPoint belongs to our widget
 // or not.
-NS_EVENT_MESSAGE(NS_QUERY_DOM_WIDGET_HITTEST,        NS_QUERY_CONTENT_EVENT_START + 9)
+NS_EVENT_MESSAGE(NS_QUERY_DOM_WIDGET_HITTEST,        eQueryContentEventFirst + 9)
 
 // Video events
 NS_EVENT_MESSAGE(eMediaEventFirst,      3300)
