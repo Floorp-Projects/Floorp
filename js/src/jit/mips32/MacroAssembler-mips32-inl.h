@@ -93,6 +93,18 @@ MacroAssembler::xor32(Imm32 imm, Register dest)
     ma_xor(dest, imm);
 }
 
+void
+MacroAssembler::xorPtr(Register src, Register dest)
+{
+    ma_xor(dest, src);
+}
+
+void
+MacroAssembler::xorPtr(Imm32 imm, Register dest)
+{
+    ma_xor(dest, imm);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

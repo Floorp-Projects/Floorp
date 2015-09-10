@@ -1631,18 +1631,6 @@ MacroAssemblerMIPSCompat::not32(Register reg)
 
 // Logical operations
 void
-MacroAssemblerMIPSCompat::xorPtr(Imm32 imm, Register dest)
-{
-    ma_xor(dest, imm);
-}
-
-void
-MacroAssemblerMIPSCompat::xorPtr(Register src, Register dest)
-{
-    ma_xor(dest, src);
-}
-
-void
 MacroAssemblerMIPSCompat::move32(Imm32 imm, Register dest)
 {
     ma_li(dest, imm);
