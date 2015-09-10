@@ -7,14 +7,12 @@ task:
   workerType: flame-kk
   scopes:
     - 'docker-worker:cache:build-aries-opt'
-    - 'docker-worker:cache:build-aries-opt-objdir-gecko-{{project}}'
   metadata:
     name: '[TC] B2G Aries Opt'
 
   payload:
     cache:
       build-aries-opt: /home/worker/workspace
-      build-aries-opt-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       TARGET: 'aries'
       DEBUG: 0
