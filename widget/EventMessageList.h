@@ -299,21 +299,21 @@ NS_EVENT_MESSAGE(eSelectionEventFirst,  3700)
 NS_EVENT_MESSAGE(eSetSelection,         eSelectionEventFirst)
 
 // Events of commands for the contents
-NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_EVENT_START,        3800)
-NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_CUT,                NS_CONTENT_COMMAND_EVENT_START)
-NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_COPY,               NS_CONTENT_COMMAND_EVENT_START + 1)
-NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_PASTE,              NS_CONTENT_COMMAND_EVENT_START + 2)
-NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_DELETE,             NS_CONTENT_COMMAND_EVENT_START + 3)
-NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_UNDO,               NS_CONTENT_COMMAND_EVENT_START + 4)
-NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_REDO,               NS_CONTENT_COMMAND_EVENT_START + 5)
-NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_PASTE_TRANSFERABLE, NS_CONTENT_COMMAND_EVENT_START + 6)
+NS_EVENT_MESSAGE(eContentCommandEventFirst,             3800)
+NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_CUT,                eContentCommandEventFirst)
+NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_COPY,               eContentCommandEventFirst + 1)
+NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_PASTE,              eContentCommandEventFirst + 2)
+NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_DELETE,             eContentCommandEventFirst + 3)
+NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_UNDO,               eContentCommandEventFirst + 4)
+NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_REDO,               eContentCommandEventFirst + 5)
+NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_PASTE_TRANSFERABLE, eContentCommandEventFirst + 6)
 // NS_CONTENT_COMMAND_SCROLL scrolls the nearest scrollable element to the
 // currently focused content or latest DOM selection. This would normally be
 // the same element scrolled by keyboard scroll commands, except that this event
 // will scroll an element scrollable in either direction.  I.e., if the nearest
 // scrollable ancestor element can only be scrolled vertically, and horizontal
 // scrolling is requested using this event, no scrolling will occur.
-NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_SCROLL,             NS_CONTENT_COMMAND_EVENT_START+7)
+NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_SCROLL,             eContentCommandEventFirst + 7)
 
 // Event to gesture notification
 NS_EVENT_MESSAGE(NS_GESTURENOTIFY_EVENT_START, 3900)
