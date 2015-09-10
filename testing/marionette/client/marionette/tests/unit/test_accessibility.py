@@ -97,7 +97,7 @@ class TestAccessibility(MarionetteTestCase):
                               lambda button: self.assertRaises(ElementNotAccessibleException,
                                                                button.tap))
         self.run_element_test(self.falsy_elements,
-                              lambda button: self.assertRaises(ElementNotAccessibleException,
+                              lambda button: self.assertRaises(ElementNotVisibleException,
                                                                button.tap))
 
     def test_single_tap_raises_no_exceptions(self):
@@ -120,7 +120,7 @@ class TestAccessibility(MarionetteTestCase):
                               lambda button: self.assertRaises(ElementNotAccessibleException,
                                                                button.click))
         self.run_element_test(self.falsy_elements,
-                              lambda button: self.assertRaises(ElementNotAccessibleException,
+                              lambda button: self.assertRaises(ElementNotVisibleException,
                                                                button.click))
 
     def test_click_raises_no_exceptions(self):
