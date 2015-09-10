@@ -1956,7 +1956,7 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
 
   if (message == NS_QUERY_CHARACTER_AT_POINT) {
     // Looking for the widget at the point.
-    WidgetQueryContentEvent dummyEvent(true, NS_QUERY_CONTENT_STATE, widget);
+    WidgetQueryContentEvent dummyEvent(true, eQueryContentState, widget);
     dummyEvent.mUseNativeLineBreak = useNativeLineBreak;
     InitEvent(dummyEvent, &pt);
     nsIFrame* popupFrame =

@@ -61,8 +61,8 @@ ToChar(EventMessage aEventMessage)
       return "NS_QUERY_TEXT_RECT";
     case eQueryEditorRect:
       return "eQueryEditorRect";
-    case NS_QUERY_CONTENT_STATE:
-      return "NS_QUERY_CONTENT_STATE";
+    case eQueryContentState:
+      return "eQueryContentState";
     case eQuerySelectionAsTransferable:
       return "eQuerySelectionAsTransferable";
     case NS_QUERY_CHARACTER_AT_POINT:
