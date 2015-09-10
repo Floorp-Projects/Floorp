@@ -12,7 +12,7 @@ function xhr_fail_test(frame, url) {
   return new Promise(function(resolve, reject) {
       frame.contentWindow.xhr(url)
         .then(function(){
-            reject(msg + ' should fail.');
+            reject(url + ' should fail.');
           })
         .catch(function(){
             resolve();
@@ -28,21 +28,22 @@ function xhr_succeed_test(frame, url) {
             resolve();
           })
         .catch(function(){
-            reject(msg + ' should succeed.');
+            reject(url + ' should succeed.');
           });
     });
 }
 
 async_test(function(t) {
+    var path = new URL(".", window.location).pathname;
     var SCOPE = 'resources/fetch-request-fallback-iframe.html';
     var SCRIPT = 'resources/fetch-request-fallback-worker.js';
     var host_info = get_host_info();
-    var BASE_URL = host_info['HTTP_ORIGIN'] +
-                   '/service-worker/resources/fetch-access-control.py?';
-    var OTHER_BASE_URL = host_info['HTTP_REMOTE_ORIGIN'] +
-                         '/service-worker/resources/fetch-access-control.py?';
-    var REDIRECT_URL = host_info['HTTP_ORIGIN'] +
-                       '/service-worker/resources/redirect.py?Redirect=';
+    var BASE_URL = host_info['HTTPS_ORIGIN'] +
+                   path + 'resources/fetch-access-control.py?';
+    var OTHER_BASE_URL = host_info['HTTPS_REMOTE_ORIGIN'] +
+                         path + 'resources/fetch-access-control.py?';
+    var REDIRECT_URL = host_info['HTTPS_ORIGIN'] +
+                       path + 'resources/redirect.py?Redirect=';
     var frame;
     var worker;
     service_worker_unregister_and_register(t, SCRIPT, SCOPE)
@@ -94,9 +95,9 @@ async_test(function(t) {
           assert_equals(requests[0].url, new URL(SCOPE, location).toString(),
                         'The first request to the SW must be the request for ' +
                         'the page.');
-          assert_equals(requests[0].mode, 'no-cors',
+          assert_equals(requests[0].mode, 'same-origin',
                         'The mode of the first request to the SW must be ' +
-                        'no-cors.');
+                        'same-origin');
           for (var i = 0; i < expected_urls.length; ++i) {
             assert_equals(requests[i + 1].url, expected_urls[i],
                           'The URL of the request which was passed from XHR ' +
