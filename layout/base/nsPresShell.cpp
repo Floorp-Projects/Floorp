@@ -7152,7 +7152,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       if (presShell != this) {
         nsIFrame* frame = presShell->GetRootFrame();
         if (!frame) {
-          if (aEvent->mMessage == NS_QUERY_TEXT_CONTENT ||
+          if (aEvent->mMessage == eQueryTextContent ||
               aEvent->IsContentCommandEvent()) {
             return NS_OK;
           }

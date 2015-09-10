@@ -1960,9 +1960,9 @@ TestApp::TestText(void)
   HRESULT hr;
 
   /* If these fail the cause is probably one or more of:
-   * nsTextStore::GetText not sending NS_QUERY_TEXT_CONTENT
-   * NS_QUERY_TEXT_CONTENT not handled by ContentEventHandler
-   * Bug in NS_QUERY_TEXT_CONTENT handler
+   * nsTextStore::GetText not sending eQueryTextContent
+   * eQueryTextContent not handled by ContentEventHandler
+   * Bug in eQueryTextContent handler
    * nsTextStore::SetText not calling SetSelection or InsertTextAtSelection
    * Bug in SetSelection or InsertTextAtSelection
    *  eSetSelection bug or NS_COMPOSITION_* / NS_COMPOSITION_CHANGE bug

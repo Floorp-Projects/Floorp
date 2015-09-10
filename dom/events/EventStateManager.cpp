@@ -786,7 +786,7 @@ EventStateManager::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
 {
   switch (aEvent->mMessage) {
     case eQuerySelectedText:
-    case NS_QUERY_TEXT_CONTENT:
+    case eQueryTextContent:
     case NS_QUERY_CARET_RECT:
     case NS_QUERY_TEXT_RECT:
     case NS_QUERY_EDITOR_RECT:

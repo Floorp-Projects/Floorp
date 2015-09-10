@@ -276,7 +276,7 @@ ContentCacheInChild::CacheText(nsIWidget* aWidget,
      this, aWidget, GetNotificationName(aNotification)));
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetQueryContentEvent queryText(true, NS_QUERY_TEXT_CONTENT, aWidget);
+  WidgetQueryContentEvent queryText(true, eQueryTextContent, aWidget);
   queryText.InitForQueryTextContent(0, UINT32_MAX);
   aWidget->DispatchEvent(&queryText, status);
   if (NS_WARN_IF(!queryText.mSucceeded)) {
@@ -557,10 +557,10 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
          GetBoolName(aEvent.mReply.mHasSelection),
          GetWritingModeName(aEvent.mReply.mWritingMode).get()));
       break;
-    case NS_QUERY_TEXT_CONTENT: {
+    case eQueryTextContent: {
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
         ("ContentCacheInParent: 0x%p HandleQueryContentEvent("
-         "aEvent={ mMessage=NS_QUERY_TEXT_CONTENT, mInput={ mOffset=%u, "
+         "aEvent={ mMessage=eQueryTextContent, mInput={ mOffset=%u, "
          "mLength=%u } }, aWidget=0x%p), mText.Length()=%u",
          this, aEvent.mInput.mOffset,
          aEvent.mInput.mLength, aWidget, mText.Length()));

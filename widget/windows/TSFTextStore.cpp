@@ -2083,14 +2083,14 @@ TSFTextStore::GetCurrentText(nsAString& aTextContent)
          ("TSF: 0x%p   TSFTextStore::GetCurrentText(): "
           "retrieving text from the content...", this));
 
-  WidgetQueryContentEvent queryText(true, NS_QUERY_TEXT_CONTENT, mWidget);
+  WidgetQueryContentEvent queryText(true, eQueryTextContent, mWidget);
   queryText.InitForQueryTextContent(0, UINT32_MAX);
   mWidget->InitEvent(queryText);
   DispatchEvent(queryText);
   if (NS_WARN_IF(!queryText.mSucceeded)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetCurrentText(), FAILED, due to "
-            "NS_QUERY_TEXT_CONTENT failure", this));
+            "eQueryTextContent failure", this));
     aTextContent.Truncate();
     return false;
   }

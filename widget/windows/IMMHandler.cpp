@@ -1726,14 +1726,13 @@ IMMHandler::HandleDocumentFeed(nsWindow* aWindow,
   }
 
   // Get all contents of the focused editor.
-  WidgetQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, aWindow);
+  WidgetQueryContentEvent textContent(true, eQueryTextContent, aWindow);
   textContent.InitForQueryTextContent(0, UINT32_MAX);
   aWindow->InitEvent(textContent, &point);
   aWindow->DispatchWindowEvent(&textContent);
   if (!textContent.mSucceeded) {
     MOZ_LOG(gIMMLog, LogLevel::Error,
-      ("IMM: HandleDocumentFeed, FAILED, due to NS_QUERY_TEXT_CONTENT "
-       "failure"));
+      ("IMM: HandleDocumentFeed, FAILED, due to eQueryTextContent failure"));
     return false;
   }
 
