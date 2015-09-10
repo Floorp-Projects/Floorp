@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<org.mozilla.gecko.tabs.TabsLayoutItemView xmlns:android="http://schemas.android.com/apk/res/android"
+                                           style="@style/TabsItem"
+                                           android:focusable="true"
+                                           android:id="@+id/info"
+                                           android:layout_width="match_parent"
+                                           android:layout_height="wrap_content"
+                                           android:paddingLeft="12dip"
+                                           android:paddingTop="6dip"
+                                           android:paddingBottom="6dip"
+                                           android:background="@drawable/tab_row">
+
+    <!-- We set state_private on this View dynamically in TabsListLayout. -->
+    <org.mozilla.gecko.widget.TabThumbnailWrapper
+            android:id="@+id/wrapper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="4dip"
+            android:background="@drawable/tab_thumbnail"
+            android:duplicateParentState="true">
+
+        <org.mozilla.gecko.tabs.TabsPanelThumbnailView android:id="@+id/thumbnail"
+                                                       android:layout_width="@dimen/tab_thumbnail_width"
+                                                       android:layout_height="@dimen/tab_thumbnail_height"/>
+
+    </org.mozilla.gecko.widget.TabThumbnailWrapper>
+
+    <LinearLayout android:layout_width="0dip"
+                  android:layout_height="match_parent"
+                  android:orientation="vertical"
+                  android:layout_weight="1.0"
+                  android:paddingTop="4dip"
+                  android:paddingLeft="8dip"
+                  android:paddingRight="4dip">
+
+        <TextView android:id="@+id/title"
+                  android:layout_width="match_parent"
+                  android:layout_height="0dip"
+                  android:layout_weight="1.0"
+                  style="@style/TabLayoutItemTextAppearance"
+                  android:textColor="#FFFFFFFF"
+                  android:textSize="14sp"
+                  android:singleLine="false"
+                  android:maxLines="4"
+                  android:duplicateParentState="true"/>
+
+    </LinearLayout>
+
+    <ImageButton android:id="@+id/close"
+                 style="@style/TabsItemClose"
+                 android:layout_width="34dip"
+                 android:layout_height="match_parent"
+                 android:background="@drawable/action_bar_button_inverse"
+                 android:scaleType="center"
+                 android:contentDescription="@string/close_tab"
+                 android:src="@drawable/tab_close"/>
+
+</org.mozilla.gecko.tabs.TabsLayoutItemView>

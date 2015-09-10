@@ -655,9 +655,6 @@ loop.contacts = (function(_, mozL10n) {
           this.state.filter) {
         return (
           React.createElement("div", {className: "contact-search-list-empty"}, 
-            React.createElement("p", {className: "panel-text-large"}, 
-              mozL10n.get("no_search_results_message_heading")
-            ), 
             React.createElement("p", {className: "panel-text-medium"}, 
               mozL10n.get("contacts_no_search_results")
             )
