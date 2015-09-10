@@ -390,7 +390,7 @@ SavedFrame::getAsyncCause()
 }
 
 SavedFrame*
-SavedFrame::getParent()
+SavedFrame::getParent() const
 {
     const Value& v = getReservedSlot(JSSLOT_PARENT);
     return v.isObject() ? &v.toObject().as<SavedFrame>() : nullptr;

@@ -8,8 +8,8 @@
 #include "jsfriendapi.h"
 #include "jsstr.h"
 
+#include "builtin/TestingFunctions.h"
 #include "jsapi-tests/tests.h"
-
 #include "vm/ArrayObject.h"
 #include "vm/SavedStacks.h"
 
@@ -63,3 +63,51 @@ BEGIN_TEST(testSavedStacks_ApiDefaultValues)
     return true;
 }
 END_TEST(testSavedStacks_ApiDefaultValues)
+
+BEGIN_TEST(testSavedStacks_RangeBasedForLoops)
+{
+    CHECK(js::DefineTestingFunctions(cx, global, false));
+
+    JS::RootedValue val(cx);
+    CHECK(evaluate("(function one() {                      \n"  // 1
+                   "  return (function two() {             \n"  // 2
+                   "    return (function three() {         \n"  // 3
+                   "      return saveStack();              \n"  // 4
+                   "    }());                              \n"  // 5
+                   "  }());                                \n"  // 6
+                   "}());                                  \n", // 7
+                   "filename.js",
+                   1,
+                   &val));
+
+    CHECK(val.isObject());
+    JS::RootedObject obj(cx, &val.toObject());
+
+    CHECK(obj->is<js::SavedFrame>());
+    JS::Rooted<js::SavedFrame*> savedFrame(cx, &obj->as<js::SavedFrame>());
+
+    js::SavedFrame* f = savedFrame.get();
+    for (auto& frame : *savedFrame.get()) {
+        CHECK(&frame == f);
+        f = f->getParent();
+    }
+    CHECK(f == nullptr);
+
+    const js::SavedFrame* cf = savedFrame.get();
+    for (const auto& frame : *savedFrame.get()) {
+        CHECK(&frame == cf);
+        cf = cf->getParent();
+    }
+    CHECK(cf == nullptr);
+
+    JS::Rooted<js::SavedFrame*> rf(cx, savedFrame);
+    for (JS::Handle<js::SavedFrame*> frame : js::SavedFrame::RootedRange(cx, rf)) {
+        JS_GC(cx->runtime());
+        CHECK(frame == rf);
+        rf = rf->getParent();
+    }
+    CHECK(rf == nullptr);
+
+    return true;
+}
+END_TEST(testSavedStacks_RangeBasedForLoops)
