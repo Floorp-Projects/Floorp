@@ -913,7 +913,7 @@ NON_IDL_EVENT(animationstart,
               EventNameType_None,
               eAnimationEventClass)
 NON_IDL_EVENT(animationend,
-              NS_ANIMATION_END,
+              eAnimationEnd,
               EventNameType_None,
               eAnimationEventClass)
 NON_IDL_EVENT(animationiteration,
