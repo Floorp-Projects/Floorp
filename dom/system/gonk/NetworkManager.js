@@ -486,6 +486,18 @@ NetworkManager.prototype = {
 
   networkInterfaceLinks: null,
 
+  get allNetworkInfo() {
+    let allNetworkInfo = {};
+
+    for (let networkId in this.networkInterfaces) {
+      if (this.networkInterfaces.hasOwnProperty(networkId)) {
+        allNetworkInfo[networkId] = this.networkInterfaces[networkId].info;
+      }
+    }
+
+    return allNetworkInfo;
+  },
+
   _preferredNetworkType: DEFAULT_PREFERRED_NETWORK_TYPE,
   get preferredNetworkType() {
     return this._preferredNetworkType;
