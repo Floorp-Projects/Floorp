@@ -319,7 +319,8 @@ BluetoothServiceBluedroid::StopInternal(BluetoothReplyRunnable* aRunnable)
     if (sProfiles[i]->IsConnected()) {
       sProfiles[i]->Disconnect(nullptr);
     } else if (!profileName.EqualsLiteral("OPP") &&
-               !profileName.EqualsLiteral("PBAP")) {
+               !profileName.EqualsLiteral("PBAP") &&
+               !profileName.EqualsLiteral("MapSms")) {
       sProfiles[i]->Reset();
     }
   }

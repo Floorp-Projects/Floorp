@@ -35,6 +35,78 @@ struct DaemonSocketPDUHeader {
 namespace DaemonSocketPDUHelpers {
 
 //
+// Logging
+//
+// The HAL IPC logging macros below print clear error messages for
+// failed IPC operations. Use |MOZ_HAL_IPC_CONVERT_WARN_IF|,
+// |MOZ_HAL_IPC_PACK_WARN_IF| and |MOZ_HAL_IPC_UNPACK_WARN_IF| to
+// test for failures when processing PDUs.
+//
+// All macros accept the test condition as their first argument, and
+// additional type information: the convert macro takes the input and
+// output types, the pack macro takes the input type, and the unpack
+// macro takes output type. All macros return the result of the test
+// condition. If the test fails (i.e., the condition is true), they
+// output a warning to the log.
+//
+// Don't call the functions in the detail namespace. They are helpers
+// and not for general use.
+//
+
+namespace detail {
+
+void
+LogProtocolError(const char*, ...);
+
+inline bool
+ConvertWarnIfImpl(const char* aFile, unsigned long aLine,
+                  bool aCondition, const char* aExpr, const char* aIn,
+                  const char* aOut)
+{
+  if (MOZ_UNLIKELY(aCondition)) {
+    LogProtocolError("%s:%d: Convert('%s' to '%s') failed: %s",
+                     aFile, aLine, aIn, aOut, aExpr);
+  }
+  return aCondition;
+}
+
+inline bool
+PackWarnIfImpl(const char* aFile, unsigned long aLine,
+               bool aCondition, const char* aExpr, const char* aIn)
+{
+  if (MOZ_UNLIKELY(aCondition)) {
+    LogProtocolError("%s:%d: Pack('%s') failed: %s",
+                     aFile, aLine, aIn, aExpr);
+  }
+  return aCondition;
+}
+
+inline bool
+UnpackWarnIfImpl(const char* aFile, unsigned long aLine,
+                 bool aCondition, const char* aExpr, const char* aOut)
+{
+  if (MOZ_UNLIKELY(aCondition)) {
+    LogProtocolError("%s:%d: Unpack('%s') failed: %s",
+                     aFile, aLine, aOut, aExpr);
+  }
+  return aCondition;
+}
+
+} // namespace detail
+
+#define MOZ_HAL_IPC_CONVERT_WARN_IF(condition, in, out) \
+  ::mozilla::ipc::DaemonSocketPDUHelpers::detail:: \
+    ConvertWarnIfImpl(__FILE__, __LINE__, condition, #condition, #in, #out)
+
+#define MOZ_HAL_IPC_PACK_WARN_IF(condition, in) \
+  ::mozilla::ipc::DaemonSocketPDUHelpers::detail:: \
+    PackWarnIfImpl(__FILE__, __LINE__, condition, #condition, #in)
+
+#define MOZ_HAL_IPC_UNPACK_WARN_IF(condition, out) \
+  ::mozilla::ipc::DaemonSocketPDUHelpers::detail:: \
+    UnpackWarnIfImpl(__FILE__, __LINE__, condition, #condition, #out)
+
+//
 // Conversion
 //
 // PDUs can only store primitive data types, such as integers or

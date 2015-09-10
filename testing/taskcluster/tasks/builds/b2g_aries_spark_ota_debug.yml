@@ -8,9 +8,11 @@ task:
     name: '[TC] B2G Aries OTA (userdebug)'
   scopes:
     - 'docker-worker:cache:build-aries-spark-ota-debug'
+    - 'docker-worker:cache:build-aries-spark-ota-debug-objdir-gecko-{{project}}'
   payload:
     cache:
       build-aries-spark-ota-debug: /home/worker/workspace
+      build-aries-spark-ota-debug-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       VARIANT: userdebug
       B2G_DEBUG: 0
