@@ -284,28 +284,27 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
   min-height: 230px;
 }
 
-.call-window > .btn-label {
-  text-align: center;
-}
-
-.call-window > .error {
-  text-align: center;
-  color: #f00;
-  font-size: 90%;
-}
-
 .call-action-group {
   display: flex;
-  padding: 2.5em 4px 0 4px;
+  padding: 0 4px;
   width: 100%;
 }
 
 .call-action-group > .btn,
 .room-context > .btn {
-  min-height: 26px;
-  border-radius: 2px;
+  min-height: 30px;
+  border-radius: 4px;
   margin: 0 4px;
   min-width: 64px;
+}
+
+.call-action-group > .btn {
+  max-width: 48%;
+  flex-grow: 1;
+}
+
+.call-action-group > .btn-rejoin {
+  max-width: 100%;
 }
 
 .call-action-group .btn-group-chevron,
@@ -313,16 +312,71 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
   width: 100%;
 }
 
-/* XXX Once we get the incoming call avatar, bug 1047435, the H2 should
- * disappear from our markup, and we should remove this rule entirely.
- */
-.call-window h2 {
-  font-size: 1.5em;
-  font-weight: normal;
+.direct-call-failure,
+.room-failure {
+  /* This flex allows us to not calculate the height of the logo area
+     versus the buttons */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 230px;
+  height: 100%;
+}
+
+.direct-call-failure > .call-action-group,
+.room-failure > .call-action-group {
+  flex: none;
+  margin: 1rem 0 2rem;
+}
+
+.direct-call-failure > .failure-info,
+.room-failure > .failure-info {
+  flex: auto;
+}
+
+.failure-info {
   text-align: center;
-  /* compensate for reset.css overriding this; values borrowed from
-     Firefox Mac html.css */
-  margin: 0.83em 0;
+  /* This flex is designed to set the logo in a standard place, but if the
+     text below needs more space (due to multi-line), then the logo will move
+     higher out the way */
+  display: flex;
+  flex-direction: column;
+  /* Matches 4px padding of .btn-group plus 4px of margin for .btn */
+  padding: 0 0.8rem;
+}
+
+.failure-info-logo {
+  height: 90px;
+  background-image: url("../img/sad_hello_icon_64x64.svg");
+  background-position: center center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  flex: 1;
+  background-size: 90px 90px;
+  /* Don't let the logo take up too much space, e.g. if there's only one line of
+     text. */
+  max-height: calc(90px + 4rem);
+  margin-top: 1rem;
+}
+
+.failure-info-message {
+  margin: 0.25rem 0px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #333;
+  flex: none;
+}
+
+.failure-info-extra,
+.failure-info-extra-failure {
+  margin: 0.25rem 0;
+  flex: none;
+}
+
+.failure-info-extra-failure {
+  color: #f00;
 }
 
 .fx-embedded-call-button-spacer {

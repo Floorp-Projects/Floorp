@@ -324,7 +324,7 @@ loop.store = loop.store || {};
       this._notifications.set({
         id: "create-room-error",
         level: "error",
-        message: mozL10n.get("generic_failure_title")
+        message: mozL10n.get("generic_failure_message")
       });
     },
 

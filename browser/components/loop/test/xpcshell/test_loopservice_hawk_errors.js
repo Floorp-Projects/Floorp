@@ -113,7 +113,7 @@ add_task(function* error_404() {
 
       let err = MozLoopService.errors.get("testing");
       Assert.strictEqual(err.code, 404);
-      Assert.strictEqual(err.friendlyMessage, getLoopString("generic_failure_title"));
+      Assert.strictEqual(err.friendlyMessage, getLoopString("generic_failure_message"));
       Assert.equal(err.friendlyDetails, null);
   });
 });

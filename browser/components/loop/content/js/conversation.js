@@ -12,7 +12,7 @@ loop.conversation = (function(mozL10n) {
   var CallControllerView = loop.conversationViews.CallControllerView;
   var DesktopRoomConversationView = loop.roomViews.DesktopRoomConversationView;
   var FeedbackView = loop.feedbackViews.FeedbackView;
-  var GenericFailureView = loop.conversationViews.GenericFailureView;
+  var DirectCallFailureView = loop.conversationViews.DirectCallFailureView;
 
   /**
    * Master controller view for handling if incoming or outgoing calls are
@@ -84,7 +84,10 @@ loop.conversation = (function(mozL10n) {
             roomStore: this.props.roomStore}));
         }
         case "failed": {
-          return React.createElement(GenericFailureView, {cancelCall: this.closeWindow});
+          return (React.createElement(DirectCallFailureView, {
+            contact: {}, 
+            dispatcher: this.props.dispatcher, 
+            outgoing: false}));
         }
         default: {
           // If we don't have a windowType, we don't know what we are yet,
