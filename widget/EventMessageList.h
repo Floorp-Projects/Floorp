@@ -328,7 +328,7 @@ NS_EVENT_MESSAGE(NS_TRANSITION_END,     NS_TRANSITION_EVENT_START)
 
 NS_EVENT_MESSAGE(eAnimationEventFirst,   4250)
 NS_EVENT_MESSAGE(eAnimationStart,        eAnimationEventFirst)
-NS_EVENT_MESSAGE(NS_ANIMATION_END,       eAnimationEventFirst + 1)
+NS_EVENT_MESSAGE(eAnimationEnd,          eAnimationEventFirst + 1)
 NS_EVENT_MESSAGE(NS_ANIMATION_ITERATION, eAnimationEventFirst + 2)
 
 NS_EVENT_MESSAGE(NS_SMIL_TIME_EVENT_START, 4300)
