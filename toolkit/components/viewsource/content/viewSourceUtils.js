@@ -15,6 +15,8 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ViewSourceBrowser",
   "resource://gre/modules/ViewSourceBrowser.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
+  "resource://gre/modules/Deprecated.jsm");
 
 var gViewSourceUtils = {
 
@@ -179,12 +181,64 @@ var gViewSourceUtils = {
     return editorArgs;
   },
 
-  // aCallBack is a function accepting two arguments - result (true=success) and a data object
-  // It defaults to openInInternalViewer if undefined.
-  openInExternalEditor: function(aURL, aPageDescriptor, aDocument, aLineNumber, aCallBack)
-  {
-    var data = {url: aURL, pageDescriptor: aPageDescriptor, doc: aDocument,
-                lineNumber: aLineNumber};
+  /**
+   * Opens an external editor with the view source content.
+   *
+   * @param aArgsOrURL (required)
+   *        This is either an Object containing parameters, or a string
+   *        URL for the page we want to view the source of. In the latter
+   *        case we will be paying attention to the other parameters, as
+   *        we will be supporting the old API for this method.
+   *        If aArgsOrURL is an Object, the other parameters will be ignored.
+   *        aArgsOrURL as an Object can include the following properties:
+   *
+   *        URL (required):
+   *          A string URL for the page we'd like to view the source of.
+   *        browser (optional):
+   *          The browser containing the document that we would like to view the
+   *          source of. This is required if outerWindowID is passed.
+   *        outerWindowID (optional):
+   *          The outerWindowID of the content window containing the document that
+   *          we want to view the source of. Pass this if you want to attempt to
+   *          load the document source out of the network cache.
+   *        lineNumber (optional):
+   *          The line number to focus on once the source is loaded.
+   *
+   * @param aPageDescriptor (deprecated, optional)
+   *        Accepted for compatibility reasons, but is otherwise ignored.
+   * @param aDocument (deprecated, optional)
+   *        The content document we would like to view the source of. This
+   *        function will throw if aDocument is a CPOW.
+   * @param aLineNumber (deprecated, optional)
+   *        The line number to focus on once the source is loaded.
+   * @param aCallBack
+   *        A function accepting two arguments:
+   *          * result (true = success)
+   *          * data object
+   *        The function defaults to opening an internal viewer if external
+   *        viewing fails.
+   */
+  openInExternalEditor: function(aArgsOrURL, aPageDescriptor, aDocument,
+                                 aLineNumber, aCallBack) {
+    let data;
+    if (typeof aArgsOrURL == "string") {
+      Deprecated.warning("The arguments you're passing to " +
+                         "openInExternalEditor are using an out-of-date API.",
+                         "https://developer.mozilla.org/en-US/Add-ons/" +
+                         "Code_snippets/View_Source_for_XUL_Applications");
+      data = {
+        url: aArgsOrURL,
+        pageDescriptor: aPageDescriptor,
+        doc: aDocument,
+        lineNumber: aLineNumber
+      };
+    } else {
+      let { URL, outerWindowID, lineNumber } = aArgsOrURL;
+      data = {
+        url: URL,
+        lineNumber
+      };
+    }
 
     try {
       var editor = this.getExternalViewSourceEditor();
@@ -197,7 +251,7 @@ var gViewSourceUtils = {
       var ios = Components.classes["@mozilla.org/network/io-service;1"]
                           .getService(Components.interfaces.nsIIOService);
       var charset = aDocument ? aDocument.characterSet : null;
-      var uri = ios.newURI(aURL, charset, null);
+      var uri = ios.newURI(data.url, charset, null);
       data.uri = uri;
 
       var path;
@@ -211,6 +265,7 @@ var gViewSourceUtils = {
         this.handleCallBack(aCallBack, true, data);
       } else {
         // set up the progress listener with what we know so far
+        this.viewSourceProgressListener.contentLoaded = false;
         this.viewSourceProgressListener.editor = editor;
         this.viewSourceProgressListener.callBack = aCallBack;
         this.viewSourceProgressListener.data = data;
@@ -363,6 +418,11 @@ var gViewSourceUtils = {
     },
 
     onContentLoaded: function() {
+      // The progress listener may call this multiple times, so be sure we only
+      // run once.
+      if (this.contentLoaded) {
+        return;
+      }
       try {
         if (!this.file) {
           // it's not saved to file yet, it's in the webshell
@@ -410,6 +470,7 @@ var gViewSourceUtils = {
                                                           this.data.lineNumber);
         this.editor.runw(false, editorArgs, editorArgs.length);
 
+        this.contentLoaded = true;
         gViewSourceUtils.handleCallBack(this.callBack, true, this.data);
       } catch (ex) {
         // we failed loading it with the external editor.

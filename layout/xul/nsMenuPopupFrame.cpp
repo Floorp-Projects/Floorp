@@ -1414,7 +1414,11 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aS
                        margin.top + offsetForContextMenu.y);
 
     // screen positioned popups can be flipped vertically but never horizontally
+#ifdef XP_MACOSX
+    hFlip = FlipStyle_Outside;
+#else
     vFlip = FlipStyle_Outside;
+#endif // #ifdef XP_MACOSX
   }
 
   // If a panel is being moved or has flip="none", don't constrain or flip it. But always do this for
