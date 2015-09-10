@@ -23,6 +23,17 @@ namespace jit {
     _(UnaryArith_Fallback)                       \
     _(UnaryArith_Int32)                          \
     _(UnaryArith_Double)                         \
+                                                 \
+    _(Compare_Fallback)                          \
+    _(Compare_Int32)                             \
+    _(Compare_Double)                            \
+    _(Compare_NumberWithUndefined)               \
+    _(Compare_String)                            \
+    _(Compare_Boolean)                           \
+    _(Compare_Object)                            \
+    _(Compare_ObjectWithUndefined)               \
+    _(Compare_Int32WithBoolean)                  \
+                                                 \
 
 } // namespace jit
 } // namespace js

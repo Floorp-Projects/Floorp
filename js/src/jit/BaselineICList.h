@@ -30,16 +30,6 @@ namespace jit {
     _(NewObject_Fallback)                        \
     _(NewObject_WithTemplate)                    \
                                                  \
-    _(Compare_Fallback)                          \
-    _(Compare_Int32)                             \
-    _(Compare_Double)                            \
-    _(Compare_NumberWithUndefined)               \
-    _(Compare_String)                            \
-    _(Compare_Boolean)                           \
-    _(Compare_Object)                            \
-    _(Compare_ObjectWithUndefined)               \
-    _(Compare_Int32WithBoolean)                  \
-                                                 \
     _(ToBool_Fallback)                           \
     _(ToBool_Int32)                              \
     _(ToBool_String)                             \
