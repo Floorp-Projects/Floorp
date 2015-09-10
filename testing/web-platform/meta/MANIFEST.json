@@ -29051,16 +29051,7 @@
   },
   "local_changes": {
     "deleted": [],
-    "items": {
-      "testharness": {
-        "encoding/big5-encoder.html": [
-          {
-            "path": "encoding/big5-encoder.html",
-            "url": "/encoding/big5-encoder.html"
-          }
-        ]
-      }
-    },
+    "items": {},
     "reftest_nodes": {}
   },
   "reftest_nodes": {
