@@ -1170,6 +1170,7 @@
                 <DirectCallFailureView
                   conversationStore={conversationStores[0]}
                   dispatcher={dispatcher}
+                  mozLoop={navigator.mozLoop}
                   outgoing={false} />
               </div>
             </FramedExample>
@@ -1182,6 +1183,7 @@
                 <DirectCallFailureView
                   conversationStore={conversationStores[1]}
                   dispatcher={dispatcher}
+                  mozLoop={navigator.mozLoop}
                   outgoing={true} />
               </div>
             </FramedExample>
@@ -1195,6 +1197,7 @@
                   conversationStore={conversationStores[0]}
                   dispatcher={dispatcher}
                   emailLinkError={true}
+                  mozLoop={navigator.mozLoop}
                   outgoing={true} />
               </div>
             </FramedExample>
@@ -1360,7 +1363,8 @@
               <div className="fx-embedded">
                 <RoomFailureView
                   dispatcher={dispatcher}
-                  failureReason={FAILURE_DETAILS.UNKNOWN} />
+                  failureReason={FAILURE_DETAILS.UNKNOWN}
+                  mozLoop={navigator.mozLoop} />
               </div>
             </FramedExample>
           </Section>

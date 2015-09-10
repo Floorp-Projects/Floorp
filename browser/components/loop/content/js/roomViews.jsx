@@ -82,7 +82,8 @@ loop.roomViews = (function(mozL10n) {
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      failureReason: React.PropTypes.string
+      failureReason: React.PropTypes.string,
+      mozLoop: React.PropTypes.object.isRequired
     },
 
     componentDidMount: function() {
@@ -94,6 +95,10 @@ loop.roomViews = (function(mozL10n) {
     },
 
     render: function() {
+      var settingsMenuItems = [
+        { id: "feedback" },
+        { id: "help" }
+      ];
       return (
         <div className="room-failure">
           <loop.conversationViews.FailureInfoView
@@ -104,6 +109,10 @@ loop.roomViews = (function(mozL10n) {
               {mozL10n.get("rejoin_button")}
             </button>
           </div>
+          <loop.shared.views.SettingsControlButton
+            menuBelow={true}
+            menuItems={settingsMenuItems}
+            mozLoop={this.props.mozLoop} />
         </div>
       );
     }

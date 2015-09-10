@@ -447,6 +447,7 @@ loop.conversationViews = (function(mozL10n) {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       // This is used by the UI showcase.
       emailLinkError: React.PropTypes.bool,
+      mozLoop: React.PropTypes.object.isRequired,
       outgoing: React.PropTypes.bool.isRequired
     },
 
@@ -518,6 +519,11 @@ loop.conversationViews = (function(mozL10n) {
         hide: !this.props.outgoing
       });
 
+      var settingsMenuItems = [
+        { id: "feedback" },
+        { id: "help" }
+      ];
+
       var extraMessage;
 
       if (this.props.outgoing) {
@@ -552,7 +558,11 @@ loop.conversationViews = (function(mozL10n) {
                     onClick: this.emailLink}, 
               mozL10n.get("share_button3")
             )
-          )
+          ), 
+          React.createElement(loop.shared.views.SettingsControlButton, {
+            menuBelow: true, 
+            menuItems: settingsMenuItems, 
+            mozLoop: this.props.mozLoop})
         )
       );
     }
@@ -802,6 +812,7 @@ loop.conversationViews = (function(mozL10n) {
         case CALL_STATES.TERMINATED: {
           return (React.createElement(DirectCallFailureView, {
             dispatcher: this.props.dispatcher, 
+            mozLoop: this.props.mozLoop, 
             outgoing: this.state.outgoing}));
         }
         case CALL_STATES.ONGOING: {

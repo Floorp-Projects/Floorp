@@ -208,6 +208,7 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
   height: 28px;
   background-size: 28px;
   background-image: url("../img/svg/settings.svg");
+  background-color: transparent;
 }
 
 .btn-settings:hover,
@@ -271,6 +272,10 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
 
 /* General Call (incoming or outgoing). */
 
+/* XXX call-window currently relates to multiple things like the AcceptCallView,
+   DirectCallFailureView, PendingConversationView. It doesn't relate to the direct
+   call media views. We should probably make this more explicit at some stage. */
+
 /*
  * Height matches the height of the docked window
  * but the UI breaks when you pop out
@@ -333,6 +338,19 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
 .direct-call-failure > .failure-info,
 .room-failure > .failure-info {
   flex: auto;
+}
+
+.direct-call-failure > .settings-control,
+.room-failure > .settings-control {
+  position: absolute;
+  top: 1rem;
+  right: .5rem;
+}
+
+html[dir="rtl"] .direct-call-failure > .settings-control,
+html[dir="rtl"] .room-failure > .settings-control {
+  left: .5rem;
+  right: auto;
 }
 
 .failure-info {
@@ -448,6 +466,11 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
 html[dir="rtl"] .settings-menu.dropdown-menu {
   left: 14px;
   right: auto;
+}
+
+.settings-menu.dropdown-menu.menu-below {
+  top: 11.5rem;
+  bottom: auto;
 }
 
 /* Expired call url page */
