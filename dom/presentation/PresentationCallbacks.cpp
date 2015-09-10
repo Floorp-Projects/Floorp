@@ -11,6 +11,7 @@
 #include "nsIWebProgress.h"
 #include "nsServiceManagerUtils.h"
 #include "PresentationCallbacks.h"
+#include "PresentationRequest.h"
 #include "PresentationSession.h"
 
 using namespace mozilla;
@@ -22,15 +23,15 @@ using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS(PresentationRequesterCallback, nsIPresentationServiceCallback)
 
-PresentationRequesterCallback::PresentationRequesterCallback(nsPIDOMWindow* aWindow,
+PresentationRequesterCallback::PresentationRequesterCallback(PresentationRequest* aRequest,
                                                              const nsAString& aUrl,
                                                              const nsAString& aSessionId,
                                                              Promise* aPromise)
-  : mWindow(aWindow)
+  : mRequest(aRequest)
   , mSessionId(aSessionId)
   , mPromise(aPromise)
 {
-  MOZ_ASSERT(mWindow);
+  MOZ_ASSERT(mRequest);
   MOZ_ASSERT(mPromise);
   MOZ_ASSERT(!mSessionId.IsEmpty());
 }
@@ -48,14 +49,16 @@ PresentationRequesterCallback::NotifySuccess()
   // At the sender side, this function must get called after the transport
   // channel is ready. So we simply set the session state as connected.
   nsRefPtr<PresentationSession> session =
-    PresentationSession::Create(mWindow, mSessionId, PresentationSessionState::Connected);
-  if (!session) {
+    PresentationSession::Create(mRequest->GetOwner(), mSessionId,
+                                PresentationSessionState::Connected);
+  if (NS_WARN_IF(!session)) {
     mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     return NS_OK;
   }
 
   mPromise->MaybeResolve(session);
-  return NS_OK;
+
+  return mRequest->DispatchSessionConnectEvent(session);
 }
 
 NS_IMETHODIMP

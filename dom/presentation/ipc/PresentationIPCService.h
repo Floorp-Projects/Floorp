@@ -35,6 +35,9 @@ public:
   nsresult NotifyMessage(const nsAString& aSessionId,
                          const nsACString& aData);
 
+  nsresult NotifySessionConnect(uint64_t aWindowId,
+                                const nsAString& aSessionId);
+
   void NotifyPresentationChildDestroyed();
 
   nsresult MonitorResponderLoading(const nsAString& aSessionId,
@@ -45,8 +48,9 @@ private:
   nsresult SendRequest(nsIPresentationServiceCallback* aCallback,
                        const PresentationIPCRequest& aRequest);
 
-  nsTObserverArray<nsCOMPtr<nsIPresentationListener> > mListeners;
+  nsTObserverArray<nsCOMPtr<nsIPresentationAvailabilityListener> > mAvailabilityListeners;
   nsRefPtrHashtable<nsStringHashKey, nsIPresentationSessionListener> mSessionListeners;
+  nsRefPtrHashtable<nsUint64HashKey, nsIPresentationRespondingListener> mRespondingListeners;
   nsRefPtr<PresentationResponderLoadingCallback> mCallback;
 
   // Store the mapping between the window ID of the OOP page (in this process)

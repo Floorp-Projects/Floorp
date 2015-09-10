@@ -219,7 +219,8 @@ PresentationService::HandleShutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mListeners.Clear();
+  mAvailabilityListeners.Clear();
+  mRespondingListeners.Clear();
   mSessionInfo.Clear();
   mRespondingSessionIds.Clear();
 
@@ -345,9 +346,9 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
 void
 PresentationService::NotifyAvailableChange(bool aIsAvailable)
 {
-  nsTObserverArray<nsCOMPtr<nsIPresentationListener> >::ForwardIterator iter(mListeners);
+  nsTObserverArray<nsCOMPtr<nsIPresentationAvailabilityListener>>::ForwardIterator iter(mAvailabilityListeners);
   while (iter.HasMore()) {
-    nsCOMPtr<nsIPresentationListener> listener = iter.GetNext();
+    nsCOMPtr<nsIPresentationAvailabilityListener> listener = iter.GetNext();
     NS_WARN_IF(NS_FAILED(listener->NotifyAvailableChange(aIsAvailable)));
   }
 }
@@ -442,24 +443,24 @@ PresentationService::Terminate(const nsAString& aSessionId)
 }
 
 NS_IMETHODIMP
-PresentationService::RegisterListener(nsIPresentationListener* aListener)
+PresentationService::RegisterAvailabilityListener(nsIPresentationAvailabilityListener* aListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (NS_WARN_IF(mListeners.Contains(aListener))) {
+  if (NS_WARN_IF(mAvailabilityListeners.Contains(aListener))) {
     return NS_OK;
   }
 
-  mListeners.AppendElement(aListener);
+  mAvailabilityListeners.AppendElement(aListener);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PresentationService::UnregisterListener(nsIPresentationListener* aListener)
+PresentationService::UnregisterAvailabilityListener(nsIPresentationAvailabilityListener* aListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mListeners.RemoveElement(aListener);
+  mAvailabilityListeners.RemoveElement(aListener);
   return NS_OK;
 }
 
@@ -498,6 +499,31 @@ PresentationService::UnregisterSessionListener(const nsAString& aSessionId)
     UntrackSessionInfo(aSessionId);
     return info->SetListener(nullptr);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresentationService::RegisterRespondingListener(uint64_t aWindowId,
+                                                nsIPresentationRespondingListener* aListener)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aListener);
+
+  nsCOMPtr<nsIPresentationRespondingListener> listener;
+  if (mRespondingListeners.Get(aWindowId, getter_AddRefs(listener))) {
+    return (listener == aListener) ? NS_OK : NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  mRespondingListeners.Put(aWindowId, aListener);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresentationService::UnregisterRespondingListener(uint64_t aWindowId)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mRespondingListeners.Remove(aWindowId);
   return NS_OK;
 }
 

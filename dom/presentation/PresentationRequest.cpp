@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/PresentationRequestBinding.h"
+#include "mozilla/dom/PresentationSessionConnectEvent.h"
 #include "mozilla/dom/Promise.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsCycleCollectionParticipant.h"
@@ -122,7 +123,7 @@ PresentationRequest::Start(ErrorResult& aRv)
   }
 
   nsCOMPtr<nsIPresentationServiceCallback> callback =
-    new PresentationRequesterCallback(GetOwner(), mUrl, id, promise);
+    new PresentationRequesterCallback(this, mUrl, id, promise);
   rv = service->StartSession(mUrl, id, origin, callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
@@ -147,4 +148,24 @@ PresentationRequest::GetAvailability(ErrorResult& aRv)
 
   promise->MaybeResolve(mAvailability);
   return promise.forget();
+}
+
+nsresult
+PresentationRequest::DispatchSessionConnectEvent(PresentationSession* aSession)
+{
+  PresentationSessionConnectEventInit init;
+  init.mSession = aSession;
+
+  nsRefPtr<PresentationSessionConnectEvent> event =
+    PresentationSessionConnectEvent::Constructor(this,
+                                                 NS_LITERAL_STRING("sessionconnect"),
+                                                 init);
+  if (NS_WARN_IF(!event)) {
+    return NS_ERROR_FAILURE;
+  }
+  event->SetTrusted(true);
+
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+    new AsyncEventDispatcher(this, event);
+  return asyncDispatcher->PostDOMEvent();
 }
