@@ -1595,6 +1595,36 @@ GCRuntime::setGCCallback(JSGCCallback callback, void* data)
     gcCallback.data = data;
 }
 
+void
+GCRuntime::callGCCallback(JSGCStatus status) const
+{
+    if (gcCallback.op)
+        gcCallback.op(rt, status, gcCallback.data);
+}
+
+namespace {
+
+class AutoNotifyGCActivity {
+  public:
+    explicit AutoNotifyGCActivity(GCRuntime& gc) : gc_(gc) {
+        if (!gc_.isIncrementalGCInProgress()) {
+            gcstats::AutoPhase ap(gc_.stats, gcstats::PHASE_GC_BEGIN);
+            gc_.callGCCallback(JSGC_BEGIN);
+        }
+    }
+    ~AutoNotifyGCActivity() {
+        if (!gc_.isIncrementalGCInProgress()) {
+            gcstats::AutoPhase ap(gc_.stats, gcstats::PHASE_GC_END);
+            gc_.callGCCallback(JSGC_END);
+        }
+    }
+
+  private:
+    GCRuntime& gc_;
+};
+
+} // (anon)
+
 bool
 GCRuntime::addFinalizeCallback(JSFinalizeCallback callback, void* data)
 {
@@ -1617,10 +1647,8 @@ GCRuntime::removeFinalizeCallback(JSFinalizeCallback callback)
 void
 GCRuntime::callFinalizeCallbacks(FreeOp* fop, JSFinalizeStatus status) const
 {
-    for (const Callback<JSFinalizeCallback>* p = finalizeCallbacks.begin();
-         p < finalizeCallbacks.end(); p++)
-    {
-        p->op(fop, status, !isFull, p->data);
+    for (auto& p : finalizeCallbacks) {
+        p.op(fop, status, !isFull, p.data);
     }
 }
 
@@ -6201,6 +6229,8 @@ class AutoScheduleZonesForGC
 MOZ_NEVER_INLINE bool
 GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::Reason reason)
 {
+    AutoNotifyGCActivity notify(*this);
+
     evictNursery(reason);
 
     /*
@@ -6367,24 +6397,8 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
 
     bool repeat = false;
     do {
-        /*
-         * Let the API user decide to defer a GC if it wants to (unless this
-         * is the last context). Invoke the callback regardless.
-         */
-        if (!isIncrementalGCInProgress()) {
-            gcstats::AutoPhase ap(stats, gcstats::PHASE_GC_BEGIN);
-            if (gcCallback.op)
-                gcCallback.op(rt, JSGC_BEGIN, gcCallback.data);
-        }
-
         poked = false;
         bool wasReset = gcCycle(nonincrementalByAPI, budget, reason);
-
-        if (!isIncrementalGCInProgress()) {
-            gcstats::AutoPhase ap(stats, gcstats::PHASE_GC_END);
-            if (gcCallback.op)
-                gcCallback.op(rt, JSGC_END, gcCallback.data);
-        }
 
         /* Need to re-schedule all zones for GC. */
         if (poked && cleanUpEverything)

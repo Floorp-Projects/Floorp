@@ -755,6 +755,7 @@ class GCRuntime
     void onTooMuchMalloc();
 
     void setGCCallback(JSGCCallback callback, void* data);
+    void callGCCallback(JSGCStatus status) const;
     bool addFinalizeCallback(JSFinalizeCallback callback, void* data);
     void removeFinalizeCallback(JSFinalizeCallback func);
     bool addWeakPointerZoneGroupCallback(JSWeakPointerZoneGroupCallback callback, void* data);
