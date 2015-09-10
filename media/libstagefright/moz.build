@@ -156,6 +156,7 @@ elif CONFIG['GNU_CXX']:
     ]
     CXXFLAGS += [
         '-Wno-format',
+        '-Wno-format-security',
         '-Wno-multichar',
         '-Wno-sign-compare',
         '-Wno-unused',
