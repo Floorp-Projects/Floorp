@@ -435,7 +435,7 @@ EVENT(paste,
       eClipboardEventClass)
 // Gecko-specific extensions that apply to elements
 EVENT(beforescriptexecute,
-      NS_BEFORE_SCRIPT_EXECUTE,
+      eBeforeScriptExecute,
       EventNameType_HTMLXUL,
       eBasicEventClass)
 EVENT(afterscriptexecute,
