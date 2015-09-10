@@ -300,7 +300,7 @@ NS_EVENT_MESSAGE(eSetSelection,         eSelectionEventFirst)
 
 // Events of commands for the contents
 NS_EVENT_MESSAGE(eContentCommandEventFirst,        3800)
-NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_CUT,           eContentCommandEventFirst)
+NS_EVENT_MESSAGE(eContentCommandCut,               eContentCommandEventFirst)
 NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_COPY,          eContentCommandEventFirst + 1)
 NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_PASTE,         eContentCommandEventFirst + 2)
 NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_DELETE,        eContentCommandEventFirst + 3)

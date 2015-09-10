@@ -1357,7 +1357,7 @@ NativeKey::HandleAppCommandMessage() const
         contentCommandMessage = NS_CONTENT_COMMAND_COPY;
         break;
       case APPCOMMAND_CUT:
-        contentCommandMessage = NS_CONTENT_COMMAND_CUT;
+        contentCommandMessage = eContentCommandCut;
         break;
       case APPCOMMAND_PASTE:
         contentCommandMessage = NS_CONTENT_COMMAND_PASTE;

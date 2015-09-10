@@ -2056,7 +2056,7 @@ nsDOMWindowUtils::SendContentCommandEvent(const nsAString& aType,
 
   EventMessage msg;
   if (aType.EqualsLiteral("cut"))
-    msg = NS_CONTENT_COMMAND_CUT;
+    msg = eContentCommandCut;
   else if (aType.EqualsLiteral("copy"))
     msg = NS_CONTENT_COMMAND_COPY;
   else if (aType.EqualsLiteral("paste"))
