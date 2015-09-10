@@ -1953,26 +1953,6 @@ MacroAssemblerARMCompat::sub32(Register src, Register dest)
 }
 
 void
-MacroAssemblerARMCompat::and32(Register src, Register dest)
-{
-    ma_and(src, dest, SetCC);
-}
-
-void
-MacroAssemblerARMCompat::and32(Imm32 imm, Register dest)
-{
-    ma_and(imm, dest, SetCC);
-}
-
-void
-MacroAssemblerARMCompat::and32(const Address& src, Register dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-    load32(src, scratch);
-    ma_and(scratch, dest, SetCC);
-}
-
-void
 MacroAssemblerARMCompat::addPtr(Register src, Register dest)
 {
     ma_add(src, dest);
@@ -1990,15 +1970,6 @@ void
 MacroAssemblerARMCompat::not32(Register reg)
 {
     ma_mvn(reg, reg);
-}
-
-void
-MacroAssemblerARMCompat::and32(Imm32 imm, const Address& dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-    load32(dest, scratch);
-    ma_and(imm, scratch);
-    store32(scratch, dest);
 }
 
 void

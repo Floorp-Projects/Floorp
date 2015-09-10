@@ -655,6 +655,16 @@ class MacroAssembler : public MacroAssemblerSpecific
     // This is a reference to a patch location where the JitCode* will be written.
     CodeOffsetLabel selfReferencePatch_;
 
+  public:
+    // ===============================================================
+    // Logical instructions
+
+    inline void and32(Register src, Register dest) PER_SHARED_ARCH;
+    inline void and32(Imm32 imm, Register dest) PER_SHARED_ARCH;
+    inline void and32(Imm32 imm, Register src, Register dest) DEFINED_ON(arm64);
+    inline void and32(Imm32 imm, const Address& dest) PER_SHARED_ARCH;
+    inline void and32(const Address& src, Register dest) PER_SHARED_ARCH;
+
     //}}} check_macroassembler_style
   public:
 
@@ -1182,20 +1192,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         branchTestClassIsProxy(proxy, scratch, label);
     }
 
-    void branchFunctionKind(Condition cond, JSFunction::FunctionKind kind, Register fun,
-                            Register scratch, Label* label)
-    {
-        // 16-bit loads are slow and unaligned 32-bit loads may be too so
-        // perform an aligned 32-bit load and adjust the bitmask accordingly.
-        MOZ_ASSERT(JSFunction::offsetOfNargs() % sizeof(uint32_t) == 0);
-        MOZ_ASSERT(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2);
-        Address address(fun, JSFunction::offsetOfNargs());
-        int32_t mask = IMM32_16ADJ(JSFunction::FUNCTION_KIND_MASK);
-        int32_t bit = IMM32_16ADJ(kind << JSFunction::FUNCTION_KIND_SHIFT);
-        load32(address, scratch);
-        and32(Imm32(mask), scratch);
-        branch32(cond, scratch, Imm32(bit), label);
-    }
+    inline void branchFunctionKind(Condition cond, JSFunction::FunctionKind kind, Register fun,
+                                   Register scratch, Label* label);
 
   public:
 #ifndef JS_CODEGEN_ARM64

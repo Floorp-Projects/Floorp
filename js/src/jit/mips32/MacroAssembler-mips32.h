@@ -1151,14 +1151,7 @@ public:
         }
     }
 
-    void and32(Register src, Register dest);
-    void and32(Imm32 imm, Register dest);
-    void and32(Imm32 imm, const Address& dest);
-    void and32(const Address& src, Register dest);
-    void and64(Imm64 imm, Register64 dest) {
-        and32(Imm32(imm.value & LOW_32_MASK), dest.low);
-        and32(Imm32((imm.value >> 32) & LOW_32_MASK), dest.high);
-    }
+    inline void and64(Imm64 imm, Register64 dest);
     void or32(Imm32 imm, Register dest);
     void or32(Imm32 imm, const Address& dest);
     void or32(Register src, Register dest);
