@@ -307,13 +307,13 @@ NS_EVENT_MESSAGE(eContentCommandDelete,            eContentCommandEventFirst + 3
 NS_EVENT_MESSAGE(eContentCommandUndo,              eContentCommandEventFirst + 4)
 NS_EVENT_MESSAGE(eContentCommandRedo,              eContentCommandEventFirst + 5)
 NS_EVENT_MESSAGE(eContentCommandPasteTransferable, eContentCommandEventFirst + 6)
-// NS_CONTENT_COMMAND_SCROLL scrolls the nearest scrollable element to the
+// eContentCommandScroll scrolls the nearest scrollable element to the
 // currently focused content or latest DOM selection. This would normally be
 // the same element scrolled by keyboard scroll commands, except that this event
 // will scroll an element scrollable in either direction.  I.e., if the nearest
 // scrollable ancestor element can only be scrolled vertically, and horizontal
 // scrolling is requested using this event, no scrolling will occur.
-NS_EVENT_MESSAGE(NS_CONTENT_COMMAND_SCROLL,        eContentCommandEventFirst + 7)
+NS_EVENT_MESSAGE(eContentCommandScroll,            eContentCommandEventFirst + 7)
 
 // Event to gesture notification
 NS_EVENT_MESSAGE(NS_GESTURENOTIFY_EVENT_START, 3900)
