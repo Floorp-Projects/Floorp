@@ -21,9 +21,24 @@ interface nsIEventTarget;
  */
 class nsITimer;
 typedef void (*nsTimerCallbackFunc) (nsITimer *aTimer, void *aClosure);
+
+/**
+ * The signature of the timer name callback function passed to
+ * initWithNameableFuncCallback.
+ * This is the function that will get called when timer profiling is enabled
+ * via the "TimerFirings" log module.
+ *
+ * @param aTimer the timer which has expired
+ * @param aClosure opaque parameter passed to initWithFuncCallback
+ * @param aBuf a buffer in which to put the name
+ * @param aLen the length of the buffer
+ */
+typedef void (*nsTimerNameCallbackFunc) (nsITimer *aTimer, void *aClosure,
+                                         char *aBuf, size_t aLen);
 %}
 
 native nsTimerCallbackFunc(nsTimerCallbackFunc);
+native nsTimerNameCallbackFunc(nsTimerNameCallbackFunc);
 
 /**
  * The callback interface for timers.
@@ -57,7 +72,7 @@ interface nsITimerCallback : nsISupports
  * target thread, or races may occur with bad results like timers firing after
  * they've been canceled, and/or not firing after re-initiatization.
  */
-[scriptable, uuid(c569e813-333f-4b78-8691-13ca5839e10a)]
+[scriptable, uuid(3de4b105-363c-482c-a409-baac83a01bfc)]
 interface nsITimer : nsISupports
 {
   /* Timer types */
@@ -150,6 +165,40 @@ interface nsITimer : nsISupports
    * by conserving one timer instance).
    */
   void cancel();
+
+  /**
+   * Like initWithFuncCallback, but also takes a name for the timer; the name
+   * will be used when timer profiling is enabled via the "TimerFirings" log
+   * module.
+   *
+   * @param aFunc      The function to invoke
+   * @param aClosure   An opaque pointer to pass to that function
+   * @param aDelay     The millisecond interval
+   * @param aType      Timer type per TYPE* consts defined above
+   * @param aName      The timer's name
+   */
+  [noscript] void initWithNamedFuncCallback(in nsTimerCallbackFunc aCallback,
+                                            in voidPtr aClosure,
+                                            in unsigned long aDelay,
+                                            in unsigned long aType,
+                                            in string aName);
+
+  /**
+   * Like initWithNamedFuncCallback, but instead of a timer name it takes a
+   * callback that will provide a name when the timer fires.
+   *
+   * @param aFunc      The function to invoke
+   * @param aClosure   An opaque pointer to pass to that function
+   * @param aDelay     The millisecond interval
+   * @param aType      Timer type per TYPE* consts defined above
+   * @param aNameCallback  The callback function
+   */
+  [noscript] void initWithNameableFuncCallback(
+                    in nsTimerCallbackFunc aCallback,
+                    in voidPtr aClosure,
+                    in unsigned long aDelay,
+                    in unsigned long aType,
+                    in nsTimerNameCallbackFunc aNameCallback);
 
   /**
    * The millisecond delay of the timeout.
