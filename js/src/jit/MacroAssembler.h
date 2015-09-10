@@ -678,6 +678,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void andPtr(Register src, Register dest) PER_ARCH;
     inline void andPtr(Imm32 imm, Register dest) PER_ARCH;
 
+    inline void or32(Register src, Register dest) PER_SHARED_ARCH;
+    inline void or32(Imm32 imm, Register dest) PER_SHARED_ARCH;
+    inline void or32(Imm32 imm, const Address& dest) PER_SHARED_ARCH;
+
     //}}} check_macroassembler_style
   public:
 

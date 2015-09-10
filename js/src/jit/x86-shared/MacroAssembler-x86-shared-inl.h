@@ -40,6 +40,24 @@ MacroAssembler::and32(const Address& src, Register dest)
     andl(Operand(src), dest);
 }
 
+void
+MacroAssembler::or32(Register src, Register dest)
+{
+    orl(src, dest);
+}
+
+void
+MacroAssembler::or32(Imm32 imm, Register dest)
+{
+    orl(imm, dest);
+}
+
+void
+MacroAssembler::or32(Imm32 imm, const Address& dest)
+{
+    orl(imm, Operand(dest));
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

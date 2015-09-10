@@ -57,14 +57,56 @@ MacroAssembler::andPtr(Imm32 imm, Register dest)
     ma_and(imm, dest);
 }
 
+void
+MacroAssembler::or32(Register src, Register dest)
+{
+    ma_orr(src, dest);
+}
+
+void
+MacroAssembler::or32(Imm32 imm, Register dest)
+{
+    ma_orr(imm, dest);
+}
+
+void
+MacroAssembler::or32(Imm32 imm, const Address& dest)
+{
+    ScratchRegisterScope scratch(*this);
+    load32(dest, scratch);
+    ma_orr(imm, scratch);
+    store32(scratch, dest);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
+
+void
+MacroAssemblerARMCompat::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp, Label* label)
+{
+    if (cond == Assembler::Zero) {
+        MOZ_ASSERT(lhs.low == rhs.low);
+        MOZ_ASSERT(lhs.high == rhs.high);
+        mov(lhs.low, ScratchRegister);
+        asMasm().or32(lhs.high, ScratchRegister);
+        branchTestPtr(cond, ScratchRegister, ScratchRegister, label);
+    } else {
+        MOZ_CRASH("Unsupported condition");
+    }
+}
 
 void
 MacroAssemblerARMCompat::and64(Imm64 imm, Register64 dest)
 {
     asMasm().and32(Imm32(imm.value & 0xFFFFFFFFL), dest.low);
     asMasm().and32(Imm32((imm.value >> 32) & 0xFFFFFFFFL), dest.high);
+}
+
+void
+MacroAssemblerARMCompat::or64(Register64 src, Register64 dest)
+{
+    asMasm().or32(src.low, dest.low);
+    asMasm().or32(src.high, dest.high);
 }
 
 } // namespace jit
