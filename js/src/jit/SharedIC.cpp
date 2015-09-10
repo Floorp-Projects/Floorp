@@ -1575,10 +1575,13 @@ static bool
 DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_, HandleValue lhs,
                   HandleValue rhs, MutableHandleValue ret)
 {
-    // This fallback stub may trigger debug mode toggling.
-    DebugModeOSRVolatileStub<ICCompare_Fallback*> stub(frame, stub_);
+    ICStubCompiler::Engine engine = SharedStubEngine(frame);
+    RootedScript script(cx, SharedStubScript(frame, stub_));
 
-    jsbytecode* pc = stub->icEntry()->pc(frame->script());
+    // This fallback stub may trigger debug mode toggling.
+    DebugModeOSRVolatileStub<ICCompare_Fallback*> stub(engine, frame, stub_);
+
+    jsbytecode* pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
 
     FallbackICSpew(cx, stub, "Compare(%s)", js_CodeName[op]);
@@ -1645,12 +1648,10 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
         return true;
     }
 
-    JSScript* script = frame->script();
-
     // Try to generate new stubs.
     if (lhs.isInt32() && rhs.isInt32()) {
         JitSpew(JitSpew_BaselineIC, "  Generating %s(Int32, Int32) stub", js_CodeName[op]);
-        ICCompare_Int32::Compiler compiler(cx, op);
+        ICCompare_Int32::Compiler compiler(cx, op, engine);
         ICStub* int32Stub = compiler.getStub(compiler.getStubSpace(script));
         if (!int32Stub)
             return false;
@@ -1668,7 +1669,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
         // Unlink int32 stubs, it's faster to always use the double stub.
         stub->unlinkStubsWithKind(cx, ICStub::Compare_Int32);
 
-        ICCompare_Double::Compiler compiler(cx, op);
+        ICCompare_Double::Compiler compiler(cx, op, engine);
         ICStub* doubleStub = compiler.getStub(compiler.getStubSpace(script));
         if (!doubleStub)
             return false;
@@ -1683,7 +1684,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
         JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", js_CodeName[op],
                     rhs.isUndefined() ? "Number" : "Undefined",
                     rhs.isUndefined() ? "Undefined" : "Number");
-        ICCompare_NumberWithUndefined::Compiler compiler(cx, op, lhs.isUndefined());
+        ICCompare_NumberWithUndefined::Compiler compiler(cx, op, engine, lhs.isUndefined());
         ICStub* doubleStub = compiler.getStub(compiler.getStubSpace(script));
         if (!doubleStub)
             return false;
@@ -1694,7 +1695,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
 
     if (lhs.isBoolean() && rhs.isBoolean()) {
         JitSpew(JitSpew_BaselineIC, "  Generating %s(Boolean, Boolean) stub", js_CodeName[op]);
-        ICCompare_Boolean::Compiler compiler(cx, op);
+        ICCompare_Boolean::Compiler compiler(cx, op, engine);
         ICStub* booleanStub = compiler.getStub(compiler.getStubSpace(script));
         if (!booleanStub)
             return false;
@@ -1707,7 +1708,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
         JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", js_CodeName[op],
                     rhs.isInt32() ? "Boolean" : "Int32",
                     rhs.isInt32() ? "Int32" : "Boolean");
-        ICCompare_Int32WithBoolean::Compiler compiler(cx, op, lhs.isInt32());
+        ICCompare_Int32WithBoolean::Compiler compiler(cx, op, engine, lhs.isInt32());
         ICStub* optStub = compiler.getStub(compiler.getStubSpace(script));
         if (!optStub)
             return false;
@@ -1719,7 +1720,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
     if (IsEqualityOp(op)) {
         if (lhs.isString() && rhs.isString() && !stub->hasStub(ICStub::Compare_String)) {
             JitSpew(JitSpew_BaselineIC, "  Generating %s(String, String) stub", js_CodeName[op]);
-            ICCompare_String::Compiler compiler(cx, op);
+            ICCompare_String::Compiler compiler(cx, op, engine);
             ICStub* stringStub = compiler.getStub(compiler.getStubSpace(script));
             if (!stringStub)
                 return false;
@@ -1731,7 +1732,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
         if (lhs.isObject() && rhs.isObject()) {
             MOZ_ASSERT(!stub->hasStub(ICStub::Compare_Object));
             JitSpew(JitSpew_BaselineIC, "  Generating %s(Object, Object) stub", js_CodeName[op]);
-            ICCompare_Object::Compiler compiler(cx, op);
+            ICCompare_Object::Compiler compiler(cx, op, engine);
             ICStub* objectStub = compiler.getStub(compiler.getStubSpace(script));
             if (!objectStub)
                 return false;
@@ -1748,7 +1749,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
                     js_CodeName[op]);
             bool lhsIsUndefined = lhs.isNull() || lhs.isUndefined();
             bool compareWithNull = lhs.isNull() || rhs.isNull();
-            ICCompare_ObjectWithUndefined::Compiler compiler(cx, op,
+            ICCompare_ObjectWithUndefined::Compiler compiler(cx, op, engine,
                                                              lhsIsUndefined, compareWithNull);
             ICStub* objectStub = compiler.getStub(compiler.getStubSpace(script));
             if (!objectStub)
@@ -1772,8 +1773,6 @@ static const VMFunction DoCompareFallbackInfo =
 bool
 ICCompare_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     MOZ_ASSERT(R0 == JSReturnOperand);
 
     // Restore the tail call register.
@@ -1798,8 +1797,6 @@ ICCompare_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICCompare_String::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     masm.branchTestString(Assembler::NotEqual, R0, &failure);
     masm.branchTestString(Assembler::NotEqual, R1, &failure);
@@ -1828,8 +1825,6 @@ ICCompare_String::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICCompare_Boolean::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
     masm.branchTestBoolean(Assembler::NotEqual, R1, &failure);
@@ -1858,8 +1853,6 @@ ICCompare_Boolean::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICCompare_NumberWithUndefined::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     ValueOperand numberOperand, undefinedOperand;
     if (lhsIsUndefined) {
         numberOperand = R1;
@@ -1892,8 +1885,6 @@ ICCompare_NumberWithUndefined::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICCompare_Object::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
     masm.branchTestObject(Assembler::NotEqual, R1, &failure);
@@ -1926,7 +1917,6 @@ ICCompare_Object::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICCompare_ObjectWithUndefined::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
     MOZ_ASSERT(IsEqualityOp(op));
 
     ValueOperand objectOperand, undefinedOperand;
@@ -1992,8 +1982,6 @@ ICCompare_ObjectWithUndefined::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICCompare_Int32WithBoolean::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     ValueOperand int32Val;
     ValueOperand boolVal;
