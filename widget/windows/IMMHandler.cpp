@@ -1654,12 +1654,12 @@ IMMHandler::HandleQueryCharPosition(nsWindow* aWindow,
 
   pCharPosition->cLineHeight = r.height;
 
-  WidgetQueryContentEvent editorRect(true, NS_QUERY_EDITOR_RECT, aWindow);
+  WidgetQueryContentEvent editorRect(true, eQueryEditorRect, aWindow);
   aWindow->InitEvent(editorRect);
   aWindow->DispatchWindowEvent(&editorRect);
   if (NS_WARN_IF(!editorRect.mSucceeded)) {
     MOZ_LOG(gIMMLog, LogLevel::Error,
-      ("IMM: HandleQueryCharPosition, NS_QUERY_EDITOR_RECT failed"));
+      ("IMM: HandleQueryCharPosition, eQueryEditorRect failed"));
     ::GetWindowRect(aWindow->GetWindowHandle(), &pCharPosition->rcDocument);
   } else {
     nsIntRect editorRectInWindow =
@@ -2376,13 +2376,13 @@ void
 IMMHandler::SetIMERelatedWindowsPosOnPlugin(nsWindow* aWindow,
                                             const IMEContext& aContext)
 {
-  WidgetQueryContentEvent editorRectEvent(true, NS_QUERY_EDITOR_RECT, aWindow);
+  WidgetQueryContentEvent editorRectEvent(true, eQueryEditorRect, aWindow);
   aWindow->InitEvent(editorRectEvent);
   aWindow->DispatchWindowEvent(&editorRectEvent);
   if (!editorRectEvent.mSucceeded) {
     MOZ_LOG(gIMMLog, LogLevel::Info,
       ("IMM: SetIMERelatedWindowsPosOnPlugin, "
-       "FAILED, due to NS_QUERY_EDITOR_RECT failure"));
+       "FAILED, due to eQueryEditorRect failure"));
     return;
   }
 

@@ -59,7 +59,7 @@ static bool IsRectEnabled(EventMessage aEventMessage)
 {
   return aEventMessage == eQueryCaretRect ||
          aEventMessage == NS_QUERY_TEXT_RECT ||
-         aEventMessage == NS_QUERY_EDITOR_RECT ||
+         aEventMessage == eQueryEditorRect ||
          aEventMessage == NS_QUERY_CHARACTER_AT_POINT;
 }
 

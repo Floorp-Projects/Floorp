@@ -1939,7 +1939,7 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
       message = NS_QUERY_TEXT_RECT;
       break;
     case QUERY_EDITOR_RECT:
-      message = NS_QUERY_EDITOR_RECT;
+      message = eQueryEditorRect;
       break;
     case QUERY_CHARACTER_AT_POINT:
       message = NS_QUERY_CHARACTER_AT_POINT;
