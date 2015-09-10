@@ -941,7 +941,8 @@ private:
   struct SurfaceTracker : public nsExpirationTracker<CachedSurface, 2>
   {
     explicit SurfaceTracker(uint32_t aSurfaceCacheExpirationTimeMS)
-      : nsExpirationTracker<CachedSurface, 2>(aSurfaceCacheExpirationTimeMS)
+      : nsExpirationTracker<CachedSurface, 2>(aSurfaceCacheExpirationTimeMS,
+                                              "SurfaceTracker")
     { }
 
   protected:
