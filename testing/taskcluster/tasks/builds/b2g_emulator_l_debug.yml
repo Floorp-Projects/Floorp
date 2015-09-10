@@ -29,4 +29,5 @@ task:
       workspace-emulator-l-debug-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       TARGET: 'emulator-l'
+      TOOLTOOL_MANIFEST: 'b2g/config/emulator-l/releng-emulator-l.tt'
       B2G_DEBUG: 1
