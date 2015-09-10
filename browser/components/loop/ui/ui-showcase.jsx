@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global Frame:false uncaughtError:true fakeContacts:true */
+/* global Frame:false uncaughtError:true */
 
 (function() {
   "use strict";
@@ -18,8 +18,6 @@
   var AvailabilityDropdown = loop.panel.AvailabilityDropdown;
   var PanelView = loop.panel.PanelView;
   var SignInRequestView = loop.panel.SignInRequestView;
-  var ContactDropdown = loop.contacts.ContactDropdown;
-  var ContactDetail = loop.contacts.ContactDetail;
   // 1.2. Conversation Window
   var AcceptCallView = loop.conversationViews.AcceptCallView;
   var DesktopPendingConversationView = loop.conversationViews.PendingConversationView;
@@ -453,17 +451,6 @@
     uid: "0354b278a381d3cb408bb46ffc01266"
   };
 
-  var mockMozLoopRooms = _.extend({}, navigator.mozLoop);
-
-  var mozLoopNoContacts = _.cloneDeep(navigator.mozLoop);
-  mozLoopNoContacts.userProfile = {
-    email: "reallyreallylongtext@example.com",
-    uid: "0354b278a381d3cb408bb46ffc01266"
-  };
-  mozLoopNoContacts.contacts.getAll = function(callback) {
-    callback(null, []);
-  };
-
   var mockContact = {
     name: ["Mr Smith"],
     email: [{
@@ -752,14 +739,6 @@
                          roomStore={roomStore}
                          selectedTab="contacts" />
             </Example>
-            <Example dashed={true} style={{width: "332px"}} summary="Contact list tab (no contacts)">
-              <PanelView client={mockClient}
-                         dispatcher={dispatcher}
-                         mozLoop={mozLoopNoContacts}
-                         notifications={notifications}
-                         roomStore={roomStore}
-                         selectedTab="contacts" />
-            </Example>
             <Example dashed={true} style={{width: "332px"}} summary="Error Notification">
               <PanelView client={mockClient}
                          dispatcher={dispatcher}
@@ -802,30 +781,6 @@
                      style={{width: "332px", height: "200px"}}
                      summary="AvailabilityDropdown Expanded">
               <AvailabilityDropdown />
-            </Example>
-          </Section>
-
-          <Section name="ContactDetail">
-            <Example cssClass="force-menu-show" dashed={true}
-                     style={{width: "300px", height: "272px"}}
-                     summary="ContactDetail">
-              <ContactDetail contact={fakeContacts[0]}
-                handleContactAction={function() {}} />
-            </Example>
-          </Section>
-
-          <Section name="ContactDropdown">
-            <Example dashed={true} style={{width: "300px", height: "272px"}}
-                     summary="ContactDropdown not blocked can edit">
-              <ContactDropdown blocked={false}
-                               canEdit={true}
-                               handleAction={function () {}} />
-            </Example>
-            <Example dashed={true} style={{width: "300px", height: "272px"}}
-                     summary="ContactDropdown blocked can't edit">
-              <ContactDropdown blocked={true}
-                               canEdit={false}
-                               handleAction={function () {}} />
             </Example>
           </Section>
 

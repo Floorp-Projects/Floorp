@@ -898,20 +898,21 @@ function injectLoopAPI(targetWindow) {
     /**
      * Compose a URL pointing to the location of an avatar by email address.
      * At the moment we use the Gravatar service to match email addresses with
-     * avatars. If no email address is found we return null.
+     * avatars. This might change in the future as avatars might come from another
+     * source.
      *
      * @param {String} emailAddress Users' email address
      * @param {Number} size         Size of the avatar image to return in pixels.
      *                              Optional. Default value: 40.
-     * @return the URL pointing to an avatar matching the provided email address
-     *         or null if this is not available.
+     * @return the URL pointing to an avatar matching the provided email address.
      */
     getUserAvatar: {
       enumerable: true,
       writable: true,
       value: function(emailAddress, size = 40) {
+        const kEmptyGif = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
         if (!emailAddress || !MozLoopService.getLoopPref("contacts.gravatars.show")) {
-          return null;
+          return kEmptyGif;
         }
 
         // Do the MD5 dance.

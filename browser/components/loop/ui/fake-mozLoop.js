@@ -140,8 +140,8 @@ var fakeContacts = [{
     releaseCallData: function() {},
     copyString: function() {},
     getUserAvatar: function(emailAddress) {
-      var avatarUrl = "http://www.gravatar.com/avatar/0a996f0fe2727ef1668bdb11897e4459.jpg?default=blank&s=40";
-      return Math.ceil(Math.random() * 3) === 2 ? avatarUrl : null;
+      return "http://www.gravatar.com/avatar/" + (Math.ceil(Math.random() * 3) === 2 ?
+        "0a996f0fe2727ef1668bdb11897e4459" : "foo") + ".jpg?default=blank&s=40";
     },
     getSelectedTabMetadata: function(callback) {
       callback({

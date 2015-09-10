@@ -72,9 +72,6 @@ browser.jar:
   content/browser/loop/shared/img/02@2x.png                     (content/shared/img/02@2x.png)
   content/browser/loop/shared/img/telefonica.png                (content/shared/img/telefonica.png)
   content/browser/loop/shared/img/telefonica@2x.png             (content/shared/img/telefonica@2x.png)
-  content/browser/loop/shared/img/ellipsis-v.svg                (content/shared/img/ellipsis-v.svg)
-  content/browser/loop/shared/img/empty_contacts.svg            (content/shared/img/empty_contacts.svg)
-  content/browser/loop/shared/img/avatars.svg                   (content/shared/img/avatars.svg)
 
   # Shared scripts
   content/browser/loop/shared/js/actions.js             (content/shared/js/actions.js)
