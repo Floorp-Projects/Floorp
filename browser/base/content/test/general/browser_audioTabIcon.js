@@ -213,6 +213,10 @@ function* test_swapped_browser(oldTab, newBrowser, isPlaying) {
 
   ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");
   is(newTab.hasAttribute("soundplaying"), isPlaying, "Expected the correct soundplaying attribute on the new tab");
+
+  let icon = document.getAnonymousElementByAttribute(newTab, "anonid",
+                                                     "soundplaying-icon");
+  yield test_tooltip(icon, "Unmute tab", true);
 }
 
 function* test_browser_swapping(tab, browser) {
