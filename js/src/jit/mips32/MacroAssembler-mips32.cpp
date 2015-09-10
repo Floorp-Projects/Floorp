@@ -30,7 +30,7 @@ static const int32_t TAG_OFFSET = NUNBOX32_TYPE_OFFSET;
 static_assert(sizeof(intptr_t) == 4, "Not 64-bit clean.");
 
 void
-MacroAssemblerMIPS::convertBoolToInt32(Register src, Register dest)
+MacroAssemblerMIPSCompat::convertBoolToInt32(Register src, Register dest)
 {
     // Note that C++ bool is only 1 byte, so zero extend it to clear the
     // higher-order bits.
@@ -38,14 +38,14 @@ MacroAssemblerMIPS::convertBoolToInt32(Register src, Register dest)
 }
 
 void
-MacroAssemblerMIPS::convertInt32ToDouble(Register src, FloatRegister dest)
+MacroAssemblerMIPSCompat::convertInt32ToDouble(Register src, FloatRegister dest)
 {
     as_mtc1(src, dest);
     as_cvtdw(dest, dest);
 }
 
 void
-MacroAssemblerMIPS::convertInt32ToDouble(const Address& src, FloatRegister dest)
+MacroAssemblerMIPSCompat::convertInt32ToDouble(const Address& src, FloatRegister dest)
 {
     ma_lw(ScratchRegister, src);
     as_mtc1(ScratchRegister, dest);
@@ -53,14 +53,14 @@ MacroAssemblerMIPS::convertInt32ToDouble(const Address& src, FloatRegister dest)
 }
 
 void
-MacroAssemblerMIPS::convertInt32ToDouble(const BaseIndex& src, FloatRegister dest)
+MacroAssemblerMIPSCompat::convertInt32ToDouble(const BaseIndex& src, FloatRegister dest)
 {
     computeScaledAddress(src, SecondScratchReg);
     convertInt32ToDouble(Address(SecondScratchReg, src.offset), dest);
 }
 
 void
-MacroAssemblerMIPS::convertUInt32ToDouble(Register src, FloatRegister dest)
+MacroAssemblerMIPSCompat::convertUInt32ToDouble(Register src, FloatRegister dest)
 {
     // We use SecondScratchDoubleReg because MacroAssembler::loadFromTypedArray
     // calls with ScratchDoubleReg as dest.
@@ -79,7 +79,7 @@ MacroAssemblerMIPS::convertUInt32ToDouble(Register src, FloatRegister dest)
 }
 
 void
-MacroAssemblerMIPS::convertUInt32ToFloat32(Register src, FloatRegister dest)
+MacroAssemblerMIPSCompat::convertUInt32ToFloat32(Register src, FloatRegister dest)
 {
     Label positive, done;
     ma_b(src, src, &positive, NotSigned, ShortJump);
@@ -97,7 +97,7 @@ MacroAssemblerMIPS::convertUInt32ToFloat32(Register src, FloatRegister dest)
 }
 
 void
-MacroAssemblerMIPS::convertDoubleToFloat32(FloatRegister src, FloatRegister dest)
+MacroAssemblerMIPSCompat::convertDoubleToFloat32(FloatRegister src, FloatRegister dest)
 {
     as_cvtsd(dest, src);
 }
@@ -107,7 +107,7 @@ MacroAssemblerMIPS::convertDoubleToFloat32(FloatRegister src, FloatRegister dest
 // NOTE: if the value really was supposed to be INT32_MAX / INT32_MIN then it
 // will be wrong.
 void
-MacroAssemblerMIPS::branchTruncateDouble(FloatRegister src, Register dest,
+MacroAssemblerMIPSCompat::branchTruncateDouble(FloatRegister src, Register dest,
                                          Label* fail)
 {
     Label test, success;
@@ -122,7 +122,7 @@ MacroAssemblerMIPS::branchTruncateDouble(FloatRegister src, Register dest,
 // integer is written to the output register. Otherwise, a bailout is taken to
 // the given snapshot. This function overwrites the scratch float register.
 void
-MacroAssemblerMIPS::convertDoubleToInt32(FloatRegister src, Register dest,
+MacroAssemblerMIPSCompat::convertDoubleToInt32(FloatRegister src, Register dest,
                                          Label* fail, bool negativeZeroCheck)
 {
     // Convert double to int, then convert back and check if we have the
@@ -148,7 +148,7 @@ MacroAssemblerMIPS::convertDoubleToInt32(FloatRegister src, Register dest,
 // integer is written to the output register. Otherwise, a bailout is taken to
 // the given snapshot. This function overwrites the scratch float register.
 void
-MacroAssemblerMIPS::convertFloat32ToInt32(FloatRegister src, Register dest,
+MacroAssemblerMIPSCompat::convertFloat32ToInt32(FloatRegister src, Register dest,
                                           Label* fail, bool negativeZeroCheck)
 {
     // Converting the floating point value to an integer and then converting it
@@ -177,13 +177,13 @@ MacroAssemblerMIPS::convertFloat32ToInt32(FloatRegister src, Register dest,
 }
 
 void
-MacroAssemblerMIPS::convertFloat32ToDouble(FloatRegister src, FloatRegister dest)
+MacroAssemblerMIPSCompat::convertFloat32ToDouble(FloatRegister src, FloatRegister dest)
 {
     as_cvtds(dest, src);
 }
 
 void
-MacroAssemblerMIPS::branchTruncateFloat32(FloatRegister src, Register dest,
+MacroAssemblerMIPSCompat::branchTruncateFloat32(FloatRegister src, Register dest,
                                           Label* fail)
 {
     Label test, success;
@@ -194,14 +194,14 @@ MacroAssemblerMIPS::branchTruncateFloat32(FloatRegister src, Register dest,
 }
 
 void
-MacroAssemblerMIPS::convertInt32ToFloat32(Register src, FloatRegister dest)
+MacroAssemblerMIPSCompat::convertInt32ToFloat32(Register src, FloatRegister dest)
 {
     as_mtc1(src, dest);
     as_cvtsw(dest, dest);
 }
 
 void
-MacroAssemblerMIPS::convertInt32ToFloat32(const Address& src, FloatRegister dest)
+MacroAssemblerMIPSCompat::convertInt32ToFloat32(const Address& src, FloatRegister dest)
 {
     ma_lw(ScratchRegister, src);
     as_mtc1(ScratchRegister, dest);
@@ -209,37 +209,37 @@ MacroAssemblerMIPS::convertInt32ToFloat32(const Address& src, FloatRegister dest
 }
 
 void
-MacroAssemblerMIPS::addDouble(FloatRegister src, FloatRegister dest)
+MacroAssemblerMIPSCompat::addDouble(FloatRegister src, FloatRegister dest)
 {
     as_addd(dest, dest, src);
 }
 
 void
-MacroAssemblerMIPS::subDouble(FloatRegister src, FloatRegister dest)
+MacroAssemblerMIPSCompat::subDouble(FloatRegister src, FloatRegister dest)
 {
     as_subd(dest, dest, src);
 }
 
 void
-MacroAssemblerMIPS::mulDouble(FloatRegister src, FloatRegister dest)
+MacroAssemblerMIPSCompat::mulDouble(FloatRegister src, FloatRegister dest)
 {
     as_muld(dest, dest, src);
 }
 
 void
-MacroAssemblerMIPS::divDouble(FloatRegister src, FloatRegister dest)
+MacroAssemblerMIPSCompat::divDouble(FloatRegister src, FloatRegister dest)
 {
     as_divd(dest, dest, src);
 }
 
 void
-MacroAssemblerMIPS::negateDouble(FloatRegister reg)
+MacroAssemblerMIPSCompat::negateDouble(FloatRegister reg)
 {
     as_negd(reg, reg);
 }
 
 void
-MacroAssemblerMIPS::inc64(AbsoluteAddress dest)
+MacroAssemblerMIPSCompat::inc64(AbsoluteAddress dest)
 {
     ma_li(ScratchRegister, Imm32((int32_t)dest.addr));
     as_lw(SecondScratchReg, ScratchRegister, 0);
@@ -758,7 +758,7 @@ void
 MacroAssemblerMIPS::ma_load(Register dest, const BaseIndex& src,
                             LoadStoreSize size, LoadStoreExtension extension)
 {
-    computeScaledAddress(src, SecondScratchReg);
+    asMasm().computeScaledAddress(src, SecondScratchReg);
     ma_load(dest, Address(SecondScratchReg, src.offset), size, extension);
 }
 
@@ -797,7 +797,7 @@ void
 MacroAssemblerMIPS::ma_store(Register data, const BaseIndex& dest,
                              LoadStoreSize size, LoadStoreExtension extension)
 {
-    computeScaledAddress(dest, SecondScratchReg);
+    asMasm().computeScaledAddress(dest, SecondScratchReg);
     ma_store(data, Address(SecondScratchReg, dest.offset), size, extension);
 }
 
@@ -807,7 +807,7 @@ MacroAssemblerMIPS::ma_store(Imm32 imm, const BaseIndex& dest,
 {
     // Make sure that SecondScratchReg contains absolute address so that
     // offset is 0.
-    computeEffectiveAddress(dest, SecondScratchReg);
+    asMasm().computeEffectiveAddress(dest, SecondScratchReg);
 
     // Scrach register is free now, use it for loading imm value
     ma_li(ScratchRegister, imm);
@@ -818,7 +818,7 @@ MacroAssemblerMIPS::ma_store(Imm32 imm, const BaseIndex& dest,
 }
 
 void
-MacroAssemblerMIPS::computeScaledAddress(const BaseIndex& address, Register dest)
+MacroAssemblerMIPSCompat::computeScaledAddress(const BaseIndex& address, Register dest)
 {
     int32_t shift = Imm32::ShiftOf(address.scale).value;
     if (shift) {
@@ -1448,7 +1448,7 @@ MacroAssemblerMIPS::ma_sd(FloatRegister ft, Address address)
 void
 MacroAssemblerMIPS::ma_sd(FloatRegister ft, BaseIndex address)
 {
-    computeScaledAddress(address, SecondScratchReg);
+    asMasm().computeScaledAddress(address, SecondScratchReg);
     ma_sd(ft, Address(SecondScratchReg, address.offset));
 }
 
@@ -1467,7 +1467,7 @@ MacroAssemblerMIPS::ma_ss(FloatRegister ft, Address address)
 void
 MacroAssemblerMIPS::ma_ss(FloatRegister ft, BaseIndex address)
 {
-    computeScaledAddress(address, SecondScratchReg);
+    asMasm().computeScaledAddress(address, SecondScratchReg);
     ma_ss(ft, Address(SecondScratchReg, address.offset));
 }
 
@@ -2070,13 +2070,13 @@ MacroAssemblerMIPSCompat::branchFloat(DoubleCondition cond, FloatRegister lhs,
 
 // higher level tag testing code
 Operand
-MacroAssemblerMIPS::ToPayload(Operand base)
+MacroAssemblerMIPSCompat::ToPayload(Operand base)
 {
     return Operand(Register::FromCode(base.base()), base.disp() + PAYLOAD_OFFSET);
 }
 
 Operand
-MacroAssemblerMIPS::ToType(Operand base)
+MacroAssemblerMIPSCompat::ToType(Operand base)
 {
     return Operand(Register::FromCode(base.base()), base.disp() + TAG_OFFSET);
 }
@@ -3262,13 +3262,13 @@ MacroAssemblerMIPSCompat::profilerExitFrame()
 }
 
 MacroAssembler&
-MacroAssemblerMIPSCompat::asMasm()
+MacroAssemblerMIPS::asMasm()
 {
     return *static_cast<MacroAssembler*>(this);
 }
 
 const MacroAssembler&
-MacroAssemblerMIPSCompat::asMasm() const
+MacroAssemblerMIPS::asMasm() const
 {
     return *static_cast<const MacroAssembler*>(this);
 }
