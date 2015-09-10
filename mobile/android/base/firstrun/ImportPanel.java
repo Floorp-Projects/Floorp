@@ -27,6 +27,7 @@ import java.util.List;
 public class ImportPanel extends FirstrunPanel {
     public static final String LOGTAG = "GeckoImportPanel";
     public static final int TITLE_RES = R.string.firstrun_import_title;
+    private static final int AUTOADVANCE_DELAY_MS = 1500;
 
     // These match the item positions in R.array.pref_import_android_entries.
     private static int BOOKMARKS_INDEX = 0;
@@ -121,7 +122,13 @@ public class ImportPanel extends FirstrunPanel {
                         choiceButton.setVisibility(View.GONE);
 
                         dialog.dismiss();
-                        next();
+
+                        ThreadUtils.postDelayedToUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                next();
+                            }
+                        }, AUTOADVANCE_DELAY_MS);
                     }
                 });
             }

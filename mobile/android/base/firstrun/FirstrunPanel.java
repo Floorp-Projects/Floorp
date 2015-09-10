@@ -10,9 +10,13 @@ import android.support.v4.app.Fragment;
 public class FirstrunPanel extends Fragment {
 
     public static final int TITLE_RES = -1;
-    protected FirstrunPane.PagerNavigation pagerNavigation;
+    public interface PagerNavigation {
+        void next();
+        void finish();
+    }
+    protected PagerNavigation pagerNavigation;
 
-    public void setPagerNavigation(FirstrunPane.PagerNavigation listener) {
+    public void setPagerNavigation(PagerNavigation listener) {
         this.pagerNavigation = listener;
     }
 
@@ -24,7 +28,7 @@ public class FirstrunPanel extends Fragment {
 
     protected void close() {
         if (pagerNavigation != null) {
-            pagerNavigation.onFinish();
+            pagerNavigation.finish();
         }
     }
 }
