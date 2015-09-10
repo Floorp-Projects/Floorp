@@ -814,9 +814,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     BufferOffset movePatchablePtr(ImmWord ptr, Register dest);
     BufferOffset movePatchablePtr(ImmPtr ptr, Register dest);
 
-    void not32(Register reg) {
-        Orn(ARMRegister(reg, 32), vixl::wzr, ARMRegister(reg, 32));
-    }
     void neg32(Register reg) {
         Negs(ARMRegister(reg, 32), Operand(ARMRegister(reg, 32)));
     }

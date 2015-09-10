@@ -1624,13 +1624,6 @@ MacroAssemblerMIPSCompat::subPtr(Register src, Register dest)
 }
 
 void
-MacroAssemblerMIPSCompat::not32(Register reg)
-{
-    ma_not(reg, reg);
-}
-
-// Logical operations
-void
 MacroAssemblerMIPSCompat::move32(Imm32 imm, Register dest)
 {
     ma_li(dest, imm);
