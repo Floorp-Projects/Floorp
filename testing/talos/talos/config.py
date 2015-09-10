@@ -140,6 +140,8 @@ DEFAULTS = dict(
             'http://127.0.0.1/plugins-dummy/updateCheckURL',
         'media.gmp-manager.url':
             'http://127.0.0.1/gmpmanager-dummy/update.xml',
+        'extensions.systemAddon.update.url':
+            'http://127.0.0.1/dummy-system-addons.xml',
         'media.navigator.enabled': True,
         'media.peerconnection.enabled': True,
         'media.navigator.permission.disabled': True,
