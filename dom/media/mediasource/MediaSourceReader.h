@@ -56,9 +56,9 @@ public:
 
   virtual void ReleaseMediaResources() override;
 
-  void OnAudioDecoded(AudioData* aSample);
+  void OnAudioDecoded(MediaData* aSample);
   void OnAudioNotDecoded(NotDecodedReason aReason);
-  void OnVideoDecoded(VideoData* aSample);
+  void OnVideoDecoded(MediaData* aSample);
   void OnVideoNotDecoded(NotDecodedReason aReason);
 
   void DoVideoSeek();

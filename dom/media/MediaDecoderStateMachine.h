@@ -361,8 +361,8 @@ public:
     OwnerThread()->Dispatch(r.forget());
   }
 
-  void OnAudioDecoded(AudioData* aSample);
-  void OnVideoDecoded(VideoData* aSample);
+  void OnAudioDecoded(MediaData* aAudioSample);
+  void OnVideoDecoded(MediaData* aVideoSample);
   void OnNotDecoded(MediaData::Type aType, MediaDecoderReader::NotDecodedReason aReason);
   void OnAudioNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
   {
@@ -390,10 +390,9 @@ protected:
 
   // Inserts MediaData* samples into their respective MediaQueues.
   // aSample must not be null.
-  void Push(AudioData* aSample);
-  void Push(VideoData* aSample);
-  void PushFront(AudioData* aSample);
-  void PushFront(VideoData* aSample);
+
+  void Push(MediaData* aSample, MediaData::Type aSampleType);
+  void PushFront(MediaData* aSample, MediaData::Type aSampleType);
 
   void OnAudioPopped(const nsRefPtr<MediaData>& aSample);
   void OnVideoPopped(const nsRefPtr<MediaData>& aSample);
@@ -459,8 +458,8 @@ protected:
   // to the returned stream time.
   int64_t GetClock(TimeStamp* aTimeStamp = nullptr) const;
 
-  nsresult DropAudioUpToSeekTarget(AudioData* aSample);
-  nsresult DropVideoUpToSeekTarget(VideoData* aSample);
+  nsresult DropAudioUpToSeekTarget(MediaData* aSample);
+  nsresult DropVideoUpToSeekTarget(MediaData* aSample);
 
   void SetStartTime(int64_t aStartTimeUsecs);
 
@@ -777,14 +776,14 @@ private:
       typedef typename PromiseType::ResolveValueType::element_type Type;
     };
 
-    template<typename PromiseType>
+    template<typename PromiseType, MediaData::Type SampleType>
     nsRefPtr<PromiseType> ProcessFirstSample(typename PromiseSampleType<PromiseType>::Type* aData)
     {
       typedef typename PromiseSampleType<PromiseType>::Type DataType;
       typedef typename PromiseType::Private PromisePrivate;
       MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
-      MaybeSetChannelStartTime<DataType>(aData->mTime);
+      MaybeSetChannelStartTime<SampleType>(aData->mTime);
 
       nsRefPtr<PromisePrivate> p = new PromisePrivate(__func__);
       nsRefPtr<DataType> data = aData;
@@ -799,7 +798,7 @@ private:
       return p.forget();
     }
 
-    template<typename SampleType>
+    template<MediaData::Type SampleType>
     void FirstSampleRejected(MediaDecoderReader::NotDecodedReason aReason)
     {
       MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
@@ -807,7 +806,7 @@ private:
         mHaveStartTimePromise.RejectIfExists(false, __func__);
       } else if (aReason == MediaDecoderReader::END_OF_STREAM) {
         MOZ_LOG(gMediaDecoderLog, LogLevel::Debug,
-                ("StartTimeRendezvous=%p %s Has no samples.", this, SampleType::sTypeName));
+                ("StartTimeRendezvous=%p SampleType(%d) Has no samples.", this, SampleType));
         MaybeSetChannelStartTime<SampleType>(INT64_MAX);
       }
     }
@@ -821,20 +820,20 @@ private:
   private:
     virtual ~StartTimeRendezvous() {}
 
-    template<typename SampleType>
+    template<MediaData::Type SampleType>
     void MaybeSetChannelStartTime(int64_t aStartTime)
     {
-      if (ChannelStartTime(SampleType::sType).isSome()) {
+      if (ChannelStartTime(SampleType).isSome()) {
         // If we're initialized with aForceZeroStartTime=true, the channel start
         // times are already set.
         return;
       }
 
       MOZ_LOG(gMediaDecoderLog, LogLevel::Debug,
-              ("StartTimeRendezvous=%p Setting %s start time to %lld",
-               this, SampleType::sTypeName, aStartTime));
+              ("StartTimeRendezvous=%p Setting SampleType(%d) start time to %lld",
+               this, SampleType, aStartTime));
 
-      ChannelStartTime(SampleType::sType).emplace(aStartTime);
+      ChannelStartTime(SampleType).emplace(aStartTime);
       if (HaveStartTime()) {
         mHaveStartTimePromise.ResolveIfExists(true, __func__);
       }
@@ -1083,7 +1082,7 @@ private:
   // This is so that if we hit end of stream while we're decoding to reach
   // the seek target, we will still have a frame that we can display as the
   // last frame in the media.
-  nsRefPtr<VideoData> mFirstVideoFrameAfterSeek;
+  nsRefPtr<MediaData> mFirstVideoFrameAfterSeek;
 
   // When we start decoding (either for the first time, or after a pause)
   // we may be low on decoded data. We don't want our "low data" logic to
