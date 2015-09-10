@@ -185,6 +185,11 @@ class TabsGridLayout extends GridView
         tabsAdapter.clear();
     }
 
+    @Override
+    public boolean shouldExpand() {
+        return true;
+    }
+
     private void autoHidePanel() {
         tabsPanel.autoHidePanel();
     }
