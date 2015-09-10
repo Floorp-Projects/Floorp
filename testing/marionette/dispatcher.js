@@ -47,7 +47,7 @@ this.Dispatcher = function(connId, transport, driverFactory, stopSignal) {
   // and Dispatcher.prototype.onClosed
   this.conn.hooks = this;
 
-  this.emulator = new Emulator(msg => this.sendResponse(msg, -1));
+  this.emulator = new Emulator(msg => this.send(msg, -1));
   this.driver = driverFactory(this.emulator);
   this.commandProcessor = new CommandProcessor(this.driver);
 

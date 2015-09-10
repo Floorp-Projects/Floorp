@@ -7334,6 +7334,13 @@
     "n_values": 3,
     "description": "A simple counter of daily mixed-content unblock operations and top documents loaded"
   },
+  "MIXED_CONTENT_HSTS": {
+    "alert_emails": ["seceng@mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "How often would blocked mixed content be allowed if HSTS upgrades were allowed? 0=display/no-HSTS, 1=display/HSTS, 2=active/no-HSTS, 3=active/HSTS"
+  },
   "NTLM_MODULE_USED_2": {
     "expires_in_version": "never",
     "kind": "enumerated",
