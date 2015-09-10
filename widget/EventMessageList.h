@@ -389,7 +389,10 @@ NS_EVENT_MESSAGE(eWheel,                 eWheelEventFirst)
 // wheel.  This won't be fired on some platforms which don't have corresponding
 // native event.
 NS_EVENT_MESSAGE(eWheelOperationStart,   eWheelEventFirst + 1)
-NS_EVENT_MESSAGE(NS_WHEEL_STOP,          eWheelEventFirst + 2)
+// eWheelOperationEnd may be dispatched when user ends or cancels operating
+// mouse wheel.  This won't be fired on some platforms which don't have
+// corresponding native event.
+NS_EVENT_MESSAGE(eWheelOperationEnd,     eWheelEventFirst + 2)
 
 //System time is changed
 NS_EVENT_MESSAGE(NS_MOZ_TIME_CHANGE_EVENT, 5500)

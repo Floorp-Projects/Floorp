@@ -742,7 +742,7 @@ TEST_F(AccessibleCaretEventHubTester, TestWheelEventScroll)
 
   mHub->ScrollPositionChanged();
 
-  HandleEventAndCheckState(CreateWheelEvent(NS_WHEEL_STOP),
+  HandleEventAndCheckState(CreateWheelEvent(eWheelOperationEnd),
                            MockAccessibleCaretEventHub::PostScrollState(),
                            nsEventStatus_eIgnore);
 
