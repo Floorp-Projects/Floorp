@@ -2910,11 +2910,15 @@ PresShell::CreateReferenceRenderingContext()
   if (mPresContext->IsScreen()) {
     rc = new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
   } else {
-    // We assume the devCtx has positive width and height for this call
+    // We assume the devCtx has positive width and height for this call.
+    // However, width and height, may be outside of the reasonable range
+    // so rc may still be null.
     rc = devCtx->CreateRenderingContext();
+    if (!rc) {
+      return nullptr;
+    }
   }
 
-  MOZ_ASSERT(rc, "shouldn't break promise to return non-null");
   return rc.forget();
 }
 
@@ -8969,6 +8973,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
 
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
 
+  // CreateReferenceRenderingContext can return nullptr
   nsRenderingContext rcx(CreateReferenceRenderingContext());
 
 #ifdef DEBUG
@@ -10902,6 +10907,7 @@ nsIPresShell::SyncWindowProperties(nsView* aView)
 {
   nsIFrame* frame = aView->GetFrame();
   if (frame && mPresContext) {
+    // CreateReferenceRenderingContext can return nullptr
     nsRenderingContext rcx(CreateReferenceRenderingContext());
     nsContainerFrame::SyncWindowProperties(mPresContext, frame, aView, &rcx, 0);
   }
