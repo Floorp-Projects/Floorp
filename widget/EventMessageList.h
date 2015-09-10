@@ -142,7 +142,7 @@ NS_EVENT_MESSAGE(eLegacyAttrModified,             eLegacyMutationEventFirst + 5)
 NS_EVENT_MESSAGE(eLegacyCharacterDataModified,    eLegacyMutationEventFirst + 6)
 NS_EVENT_MESSAGE(eLegacyMutationEventLast,        eLegacyCharacterDataModified)
 
-NS_EVENT_MESSAGE(NS_USER_DEFINED_EVENT, 2000)
+NS_EVENT_MESSAGE(eUnidentifiedEvent,    2000)
  
 // composition events
 NS_EVENT_MESSAGE(NS_COMPOSITION_EVENT_START,  2200)

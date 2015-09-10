@@ -252,7 +252,7 @@ TextInputProcessor::IsValidEventTypeForComposition(
   if (aKeyboardEvent.mMessage == eKeyDown) {
     return true;
   }
-  if (aKeyboardEvent.mMessage == NS_USER_DEFINED_EVENT &&
+  if (aKeyboardEvent.mMessage == eUnidentifiedEvent &&
       aKeyboardEvent.userType &&
       nsDependentAtomString(aKeyboardEvent.userType).EqualsLiteral("on")) {
     return true;
