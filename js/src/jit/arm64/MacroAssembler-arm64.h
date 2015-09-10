@@ -1045,10 +1045,8 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     template <typename T>
     void subStackPtrFrom(T t) { subPtr(getStackPointer(), t); }
 
-    template <typename T>
-    void andToStackPtr(T t) { andPtr(t, getStackPointer()); syncStackPtr(); }
-    template <typename T>
-    void andStackPtrTo(T t) { andPtr(getStackPointer(), t); }
+    template <typename T> void andToStackPtr(T t);
+    template <typename T> void andStackPtrTo(T t);
 
     template <typename T>
     void moveToStackPtr(T t) { movePtr(t, getStackPointer()); syncStackPtr(); }
@@ -1129,18 +1127,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void or64(Register64 src, Register64 dest) {
         orPtr(src.reg, dest.reg);
     }
-    void andPtr(Imm32 imm, Register dest) {
-        And(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
-    }
-    void andPtr(Register src, Register dest) {
-        And(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
-    }
-    void and64(Imm64 imm, Register64 dest) {
-        vixl::UseScratchRegisterScope temps(this);
-        const Register scratch = temps.AcquireX().asUnsized();
-        mov(ImmWord(imm.value), scratch);
-        andPtr(scratch, dest.reg);
-    }
+    inline void and64(Imm64 imm, Register64 dest);
 
     void testPtr(Register lhs, Register rhs) {
         Tst(ARMRegister(lhs, 64), Operand(ARMRegister(rhs, 64)));

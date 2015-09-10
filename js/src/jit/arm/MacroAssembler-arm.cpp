@@ -2018,18 +2018,6 @@ MacroAssemblerARMCompat::orPtr(Register src, Register dest)
 }
 
 void
-MacroAssemblerARMCompat::andPtr(Imm32 imm, Register dest)
-{
-    ma_and(imm, dest);
-}
-
-void
-MacroAssemblerARMCompat::andPtr(Register src, Register dest)
-{
-    ma_and(src, dest);
-}
-
-void
 MacroAssemblerARMCompat::move32(Imm32 imm, Register dest)
 {
     ma_mov(imm, dest);

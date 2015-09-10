@@ -1155,12 +1155,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         orl(src.low, dest.low);
         orl(src.high, dest.high);
     }
-    void andPtr(Imm32 imm, Register dest) {
-        andl(imm, dest);
-    }
-    void andPtr(Register src, Register dest) {
-        andl(src, dest);
-    }
     void and64(Imm64 imm, Register64 dest) {
         andl(Imm32(imm.value & 0xFFFFFFFFL), dest.low);
         andl(Imm32((imm.value >> 32) & 0xFFFFFFFFL), dest.high);

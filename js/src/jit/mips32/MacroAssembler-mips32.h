@@ -1164,8 +1164,6 @@ public:
     void xorPtr(Register src, Register dest);
     void orPtr(Imm32 imm, Register dest);
     void orPtr(Register src, Register dest);
-    void andPtr(Imm32 imm, Register dest);
-    void andPtr(Register src, Register dest);
     void addPtr(Register src, Register dest);
     void subPtr(Register src, Register dest);
     void addPtr(const Address& src, Register dest);

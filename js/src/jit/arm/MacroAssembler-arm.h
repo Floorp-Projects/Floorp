@@ -1225,8 +1225,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         or32(src.low, dest.low);
         or32(src.high, dest.high);
     }
-    void andPtr(Imm32 imm, Register dest);
-    void andPtr(Register src, Register dest);
     void addPtr(Register src, Register dest);
     void addPtr(const Address& src, Register dest);
     void add64(Imm32 imm, Register64 dest) {
