@@ -18,6 +18,7 @@
 #define MAC_OS_X_VERSION_10_8_HEX  0x00001080
 #define MAC_OS_X_VERSION_10_9_HEX  0x00001090
 #define MAC_OS_X_VERSION_10_10_HEX 0x000010A0
+#define MAC_OS_X_VERSION_10_11_HEX 0x000010B0
 
 #include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
@@ -170,6 +171,12 @@ nsCocoaFeatures::OnMavericksOrLater()
 nsCocoaFeatures::OnYosemiteOrLater()
 {
     return (OSXVersion() >= MAC_OS_X_VERSION_10_10_HEX);
+}
+
+/* static */ bool
+nsCocoaFeatures::OnElCapitanOrLater()
+{
+    return (OSXVersion() >= MAC_OS_X_VERSION_10_11_HEX);
 }
 
 /* static */ bool

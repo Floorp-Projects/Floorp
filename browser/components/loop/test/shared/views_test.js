@@ -325,6 +325,31 @@ describe("loop.shared.views", function() {
       expect(comp.state.showMenu).eql(true);
     });
 
+    it("should have a `menu-below` class on the dropdown when the prop is set.", function() {
+      var settingsMenuItems = [
+        { id: "help" }
+      ];
+      var comp = mountTestComponent({
+        menuBelow: true,
+        menuItems: settingsMenuItems
+      });
+      var menuItems = comp.getDOMNode().querySelector(".settings-menu");
+
+      expect(menuItems.classList.contains("menu-below")).eql(true);
+    });
+
+    it("should not have a `menu-below` class on the dropdown when the prop is not set.", function() {
+      var settingsMenuItems = [
+        { id: "help" }
+      ];
+      var comp = mountTestComponent({
+        menuItems: settingsMenuItems
+      });
+      var menuItems = comp.getDOMNode().querySelector(".settings-menu");
+
+      expect(menuItems.classList.contains("menu-below")).eql(false);
+    });
+
     it("should show edit Context on menu when the option is enabled", function() {
       var settingsMenuItems = [
         {

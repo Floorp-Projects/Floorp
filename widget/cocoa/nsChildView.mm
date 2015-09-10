@@ -6565,7 +6565,7 @@ HandleEvent(CGEventTapProxy aProxy, CGEventType aType,
   [self performSelector:@selector(shutdownAndReleaseCalledOnEventThread) onThread:mThread withObject:nil waitUntilDone:NO];
 }
 
-static const CGEventField kCGWindowNumberField = 51;
+static const CGEventField kCGWindowNumberField = (const CGEventField) 51;
 
 // Called on scroll thread
 - (void)handleEvent:(CGEventRef)cgEvent type:(CGEventType)type

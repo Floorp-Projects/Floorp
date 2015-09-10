@@ -26,7 +26,6 @@ public:
 
   uint32_t ReadBits(size_t aNum)
   {
-    MOZ_ASSERT(mBitReader.numBitsLeft());
     MOZ_ASSERT(aNum <= 32);
     if (mBitReader.numBitsLeft() < aNum) {
       return 0;
@@ -48,7 +47,10 @@ public:
       i++;
     }
     if (i == 32) {
-      MOZ_ASSERT(false);
+      // This can happen if the data is invalid, or if it's
+      // short, since ReadBit() will return 0 when it runs
+      // off the end of the buffer.
+      NS_WARNING("Invalid H.264 data");
       return 0;
     }
     uint32_t r = ReadBits(i);
