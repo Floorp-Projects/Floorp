@@ -67,49 +67,19 @@ static_assert(1 << defaultShift == sizeof(JS::Value), "The defaultShift is wrong
 
 class MacroAssemblerMIPS : public Assembler
 {
-  public:
-    // higher level tag testing code
-    Operand ToPayload(Operand base);
-    Address ToPayload(Address base) {
-        return ToPayload(Operand(base)).toAddress();
-    }
   protected:
-    Operand ToType(Operand base);
-    Address ToType(Address base) {
-        return ToType(Operand(base)).toAddress();
-    }
+    // Perform a downcast. Should be removed by Bug 996602.
+    MacroAssembler& asMasm();
+    const MacroAssembler& asMasm() const;
+
+    void branchWithCode(InstImm code, Label* label, JumpKind jumpKind);
+    Condition ma_cmp(Register rd, Register lhs, Register rhs, Condition c);
+
+    void compareFloatingPoint(FloatFormat fmt, FloatRegister lhs, FloatRegister rhs,
+                              DoubleCondition c, FloatTestKind* testKind,
+                              FPConditionBit fcc = FCC0);
 
   public:
-
-    void convertBoolToInt32(Register source, Register dest);
-    void convertInt32ToDouble(Register src, FloatRegister dest);
-    void convertInt32ToDouble(const Address& src, FloatRegister dest);
-    void convertInt32ToDouble(const BaseIndex& src, FloatRegister dest);
-    void convertUInt32ToDouble(Register src, FloatRegister dest);
-    void convertUInt32ToFloat32(Register src, FloatRegister dest);
-    void convertDoubleToFloat32(FloatRegister src, FloatRegister dest);
-    void branchTruncateDouble(FloatRegister src, Register dest, Label* fail);
-    void convertDoubleToInt32(FloatRegister src, Register dest, Label* fail,
-                              bool negativeZeroCheck = true);
-    void convertFloat32ToInt32(FloatRegister src, Register dest, Label* fail,
-                               bool negativeZeroCheck = true);
-
-    void convertFloat32ToDouble(FloatRegister src, FloatRegister dest);
-    void branchTruncateFloat32(FloatRegister src, Register dest, Label* fail);
-    void convertInt32ToFloat32(Register src, FloatRegister dest);
-    void convertInt32ToFloat32(const Address& src, FloatRegister dest);
-
-
-    void addDouble(FloatRegister src, FloatRegister dest);
-    void subDouble(FloatRegister src, FloatRegister dest);
-    void mulDouble(FloatRegister src, FloatRegister dest);
-    void divDouble(FloatRegister src, FloatRegister dest);
-
-    void negateDouble(FloatRegister reg);
-    void inc64(AbsoluteAddress dest);
-
-  public:
-
     void ma_move(Register rd, Register rs);
 
     void ma_li(Register dest, ImmGCPtr ptr);
@@ -169,19 +139,6 @@ class MacroAssemblerMIPS : public Assembler
                   LoadStoreExtension extension = SignExtend);
     void ma_store(Imm32 imm, const BaseIndex& dest, LoadStoreSize size = SizeWord,
                   LoadStoreExtension extension = SignExtend);
-
-    void computeScaledAddress(const BaseIndex& address, Register dest);
-
-    void computeEffectiveAddress(const Address& address, Register dest) {
-        ma_addu(dest, address.base, Imm32(address.offset));
-    }
-
-    void computeEffectiveAddress(const BaseIndex& address, Register dest) {
-        computeScaledAddress(address, dest);
-        if (address.offset) {
-            ma_addu(dest, dest, Imm32(address.offset));
-        }
-    }
 
     // arithmetic based ops
     // add
@@ -280,6 +237,24 @@ class MacroAssemblerMIPS : public Assembler
     void ma_bc1d(FloatRegister lhs, FloatRegister rhs, Label* label, DoubleCondition c,
                  JumpKind jumpKind = LongJump, FPConditionBit fcc = FCC0);
 
+    void ma_call(ImmPtr dest);
+
+    void ma_jump(ImmPtr dest);
+
+    void ma_cmp_set(Register dst, Register lhs, Register rhs, Condition c);
+    void ma_cmp_set(Register dst, Register lhs, Imm32 imm, Condition c);
+    void ma_cmp_set(Register dst, Register lhs, ImmPtr imm, Condition c) {
+        ma_cmp_set(dst, lhs, Imm32(uint32_t(imm.value)), c);
+    }
+    void ma_cmp_set(Register rd, Register rs, Address addr, Condition c);
+    void ma_cmp_set(Register dst, Address lhs, Register rhs, Condition c);
+    void ma_cmp_set(Register dst, Address lhs, ImmPtr imm, Condition c) {
+        ma_lw(ScratchRegister, lhs);
+        ma_li(SecondScratchReg, Imm32(uint32_t(imm.value)));
+        ma_cmp_set(dst, ScratchRegister, SecondScratchReg, c);
+    }
+    void ma_cmp_set_double(Register dst, FloatRegister lhs, FloatRegister rhs, DoubleCondition c);
+    void ma_cmp_set_float32(Register dst, FloatRegister lhs, FloatRegister rhs, DoubleCondition c);
 
     // These fuctions abstract the access to high part of the double precision
     // float register. It is intended to work on both 32 bit and 64 bit
@@ -305,51 +280,56 @@ class MacroAssemblerMIPS : public Assembler
     void moveFromFloat32(FloatRegister src, Register dest) {
         as_mfc1(dest, src);
     }
-
-  protected:
-    void branchWithCode(InstImm code, Label* label, JumpKind jumpKind);
-    Condition ma_cmp(Register rd, Register lhs, Register rhs, Condition c);
-
-    void compareFloatingPoint(FloatFormat fmt, FloatRegister lhs, FloatRegister rhs,
-                              DoubleCondition c, FloatTestKind* testKind,
-                              FPConditionBit fcc = FCC0);
-
-  public:
-    void ma_call(ImmPtr dest);
-
-    void ma_jump(ImmPtr dest);
-
-    void ma_cmp_set(Register dst, Register lhs, Register rhs, Condition c);
-    void ma_cmp_set(Register dst, Register lhs, Imm32 imm, Condition c);
-    void ma_cmp_set(Register dst, Register lhs, ImmPtr imm, Condition c) {
-        ma_cmp_set(dst, lhs, Imm32(uint32_t(imm.value)), c);
-    }
-    void ma_cmp_set(Register rd, Register rs, Address addr, Condition c);
-    void ma_cmp_set(Register dst, Address lhs, Register rhs, Condition c);
-    void ma_cmp_set(Register dst, Address lhs, ImmPtr imm, Condition c) {
-        ma_lw(ScratchRegister, lhs);
-        ma_li(SecondScratchReg, Imm32(uint32_t(imm.value)));
-        ma_cmp_set(dst, ScratchRegister, SecondScratchReg, c);
-    }
-    void ma_cmp_set_double(Register dst, FloatRegister lhs, FloatRegister rhs, DoubleCondition c);
-    void ma_cmp_set_float32(Register dst, FloatRegister lhs, FloatRegister rhs, DoubleCondition c);
 };
 
 class MacroAssembler;
 
 class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 {
-  private:
-    // Perform a downcast. Should be removed by Bug 996602.
-    MacroAssembler& asMasm();
-    const MacroAssembler& asMasm() const;
-
   public:
+    using MacroAssemblerMIPS::call;
+
     MacroAssemblerMIPSCompat()
     { }
 
-  public:
-    using MacroAssemblerMIPS::call;
+    void convertBoolToInt32(Register source, Register dest);
+    void convertInt32ToDouble(Register src, FloatRegister dest);
+    void convertInt32ToDouble(const Address& src, FloatRegister dest);
+    void convertInt32ToDouble(const BaseIndex& src, FloatRegister dest);
+    void convertUInt32ToDouble(Register src, FloatRegister dest);
+    void convertUInt32ToFloat32(Register src, FloatRegister dest);
+    void convertDoubleToFloat32(FloatRegister src, FloatRegister dest);
+    void branchTruncateDouble(FloatRegister src, Register dest, Label* fail);
+    void convertDoubleToInt32(FloatRegister src, Register dest, Label* fail,
+                              bool negativeZeroCheck = true);
+    void convertFloat32ToInt32(FloatRegister src, Register dest, Label* fail,
+                               bool negativeZeroCheck = true);
+
+    void convertFloat32ToDouble(FloatRegister src, FloatRegister dest);
+    void branchTruncateFloat32(FloatRegister src, Register dest, Label* fail);
+    void convertInt32ToFloat32(Register src, FloatRegister dest);
+    void convertInt32ToFloat32(const Address& src, FloatRegister dest);
+
+    void addDouble(FloatRegister src, FloatRegister dest);
+    void subDouble(FloatRegister src, FloatRegister dest);
+    void mulDouble(FloatRegister src, FloatRegister dest);
+    void divDouble(FloatRegister src, FloatRegister dest);
+
+    void negateDouble(FloatRegister reg);
+    void inc64(AbsoluteAddress dest);
+
+    void computeScaledAddress(const BaseIndex& address, Register dest);
+
+    void computeEffectiveAddress(const Address& address, Register dest) {
+        ma_addu(dest, address.base, Imm32(address.offset));
+    }
+
+    void computeEffectiveAddress(const BaseIndex& address, Register dest) {
+        computeScaledAddress(address, dest);
+        if (address.offset) {
+            ma_addu(dest, dest, Imm32(address.offset));
+        }
+    }
 
     void j(Label* dest) {
         ma_b(dest);
@@ -715,10 +695,21 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         branch32(cond, lhs, Imm32(0), label);
     }
 
-protected:
+    // higher level tag testing code
+    Operand ToPayload(Operand base);
+    Address ToPayload(Address base) {
+        return ToPayload(Operand(base)).toAddress();
+    }
+
+  protected:
+    Operand ToType(Operand base);
+    Address ToType(Address base) {
+        return ToType(Operand(base)).toAddress();
+    }
+
     uint32_t getType(const Value& val);
     void moveData(const Value& val, Register data);
-public:
+  public:
     void moveValue(const Value& val, Register type, Register data);
 
     CodeOffsetJump backedgeJump(RepatchLabel* label, Label* documentation = nullptr);
