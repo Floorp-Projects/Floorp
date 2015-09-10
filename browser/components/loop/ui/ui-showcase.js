@@ -1170,6 +1170,7 @@
                 React.createElement(DirectCallFailureView, {
                   conversationStore: conversationStores[0], 
                   dispatcher: dispatcher, 
+                  mozLoop: navigator.mozLoop, 
                   outgoing: false})
               )
             ), 
@@ -1182,6 +1183,7 @@
                 React.createElement(DirectCallFailureView, {
                   conversationStore: conversationStores[1], 
                   dispatcher: dispatcher, 
+                  mozLoop: navigator.mozLoop, 
                   outgoing: true})
               )
             ), 
@@ -1195,6 +1197,7 @@
                   conversationStore: conversationStores[0], 
                   dispatcher: dispatcher, 
                   emailLinkError: true, 
+                  mozLoop: navigator.mozLoop, 
                   outgoing: true})
               )
             )
@@ -1360,7 +1363,8 @@
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(RoomFailureView, {
                   dispatcher: dispatcher, 
-                  failureReason: FAILURE_DETAILS.UNKNOWN})
+                  failureReason: FAILURE_DETAILS.UNKNOWN, 
+                  mozLoop: navigator.mozLoop})
               )
             )
           ), 

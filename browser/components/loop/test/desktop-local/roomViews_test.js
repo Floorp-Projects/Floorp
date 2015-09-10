@@ -139,7 +139,8 @@ describe("loop.roomViews", function () {
     function mountTestComponent(props) {
       props = _.extend({
         dispatcher: dispatcher,
-        failureReason: FAILURE_DETAILS.UNKNOWN
+        failureReason: FAILURE_DETAILS.UNKNOWN,
+        mozLoop: fakeMozLoop
       });
       return TestUtils.renderIntoDocument(
         React.createElement(loop.roomViews.RoomFailureView, props));
