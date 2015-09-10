@@ -806,7 +806,7 @@ NON_IDL_EVENT(repeatEvent,
               eSMILTimeEventClass)
 
 NON_IDL_EVENT(MozAfterPaint,
-              NS_AFTERPAINT,
+              eAfterPaint,
               EventNameType_None,
               eBasicEventClass)
 
