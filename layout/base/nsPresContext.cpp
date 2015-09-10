@@ -2261,8 +2261,7 @@ nsPresContext::FireDOMPaintEvent(nsInvalidateRequestList* aList)
   // (hopefully it won't, or we're likely to get an infinite loop! At least
   // it won't be blocking app execution though).
   nsRefPtr<NotifyPaintEvent> event =
-    NS_NewDOMNotifyPaintEvent(eventTarget, this, nullptr, NS_AFTERPAINT,
-                              aList);
+    NS_NewDOMNotifyPaintEvent(eventTarget, this, nullptr, eAfterPaint, aList);
 
   // Even if we're not telling the window about the event (so eventTarget is
   // the chrome event handler, not the window), the window is still
