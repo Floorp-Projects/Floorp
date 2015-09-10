@@ -63,8 +63,8 @@ ToChar(EventMessage aEventMessage)
       return "NS_QUERY_EDITOR_RECT";
     case NS_QUERY_CONTENT_STATE:
       return "NS_QUERY_CONTENT_STATE";
-    case NS_QUERY_SELECTION_AS_TRANSFERABLE:
-      return "NS_QUERY_SELECTION_AS_TRANSFERABLE";
+    case eQuerySelectionAsTransferable:
+      return "eQuerySelectionAsTransferable";
     case NS_QUERY_CHARACTER_AT_POINT:
       return "NS_QUERY_CHARACTER_AT_POINT";
     case NS_QUERY_DOM_WIDGET_HITTEST:
