@@ -76,6 +76,11 @@ a11y::ProxyTextChangeEvent(ProxyAccessible* aText, const nsString& aStr,
                            int32_t aStart, uint32_t aLen, bool aInsert, bool)
 {
   AccessibleWrap* wrapper = WrapperFor(aText);
+  MOZ_ASSERT(wrapper);
+  if (!wrapper) {
+    return;
+  }
+
   auto text = static_cast<HyperTextAccessibleWrap*>(wrapper->AsHyperText());
   if (text) {
     ia2AccessibleText::UpdateTextChangeData(text, aInsert, aStr, aStart, aLen);

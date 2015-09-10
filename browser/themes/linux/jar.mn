@@ -330,7 +330,6 @@ browser.jar:
   skin/classic/browser/devtools/alerticon-warning@2x.png      (../shared/devtools/images/alerticon-warning@2x.png)
 * skin/classic/browser/devtools/ruleview.css          (../shared/devtools/ruleview.css)
 * skin/classic/browser/devtools/webconsole.css                  (../shared/devtools/webconsole.css)
-  skin/classic/browser/devtools/webconsole_networkpanel.css     (../shared/devtools/webconsole_networkpanel.css)
   skin/classic/browser/devtools/webconsole.svg                  (../shared/devtools/images/webconsole.svg)
   skin/classic/browser/devtools/commandline.css              (../shared/devtools/commandline.css)
   skin/classic/browser/devtools/markup-view.css       (../shared/devtools/markup-view.css)

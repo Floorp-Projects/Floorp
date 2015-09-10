@@ -165,14 +165,7 @@ html[dir="rtl"] .contact-filter {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.contact:hover > .details {
-  /* Hovering the contact shows the icons/ buttons, which takes up horizontal
-   * space. This causes the fixed-size avatar to resize horizontally, so we assign
-   * a flex value equivalent to the maximum pixel value to avoid the resizing
-   * to happen. Consider this a hack. */
-  flex: 190;
+  flex: auto;
 }
 
 .contact > .avatar {
@@ -188,6 +181,7 @@ html[dir="rtl"] .contact-filter {
   background-color: #4ba6e7;
   background-size: contain;
   -moz-user-select: none;
+  flex: none;
 }
 
 /*
@@ -305,9 +299,10 @@ html[dir="rtl"] .contact-filter {
 .icons {
   cursor: pointer;
   display: none;
-  -moz-margin-start: auto;
+  -moz-margin-start: 10px;
   color: #fff;
   -moz-user-select: none;
+  flex: none;
 }
 
 .icons:hover {

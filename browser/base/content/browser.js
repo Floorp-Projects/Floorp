@@ -2365,27 +2365,43 @@ function BrowserViewSourceOfDocument(aArgsOrDocument) {
     args = aArgsOrDocument;
   }
 
-  let inTab = Services.prefs.getBoolPref("view_source.tab");
-  if (inTab) {
-    let viewSourceURL = `view-source:${args.URL}`;
-    let tabBrowser = gBrowser;
-    // In the case of sidebars and chat windows, gBrowser is defined but null,
-    // because no #content element exists.  For these cases, we need to find
-    // the most recent browser window.
-    // In the case of popups, we need to find a non-popup browser window.
-    if (!tabBrowser || !window.toolbar.visible) {
-      // This returns only non-popup browser windows by default.
-      let browserWindow = RecentWindow.getMostRecentBrowserWindow();
-      tabBrowser = browserWindow.gBrowser;
+  let viewInternal = () => {
+    let inTab = Services.prefs.getBoolPref("view_source.tab");
+    if (inTab) {
+      let viewSourceURL = `view-source:${args.URL}`;
+      let tabBrowser = gBrowser;
+      // In the case of sidebars and chat windows, gBrowser is defined but null,
+      // because no #content element exists.  For these cases, we need to find
+      // the most recent browser window.
+      // In the case of popups, we need to find a non-popup browser window.
+      if (!tabBrowser || !window.toolbar.visible) {
+        // This returns only non-popup browser windows by default.
+        let browserWindow = RecentWindow.getMostRecentBrowserWindow();
+        tabBrowser = browserWindow.gBrowser;
+      }
+      let tab = tabBrowser.loadOneTab(viewSourceURL, {
+        relatedToCurrent: true,
+        inBackground: false
+      });
+      args.viewSourceBrowser = tabBrowser.getBrowserForTab(tab);
+      top.gViewSourceUtils.viewSourceInBrowser(args);
+    } else {
+      top.gViewSourceUtils.viewSource(args);
     }
-    let tab = tabBrowser.loadOneTab(viewSourceURL, {
-      relatedToCurrent: true,
-      inBackground: false
+  }
+
+  // Check if external view source is enabled.  If so, try it.  If it fails,
+  // fallback to internal view source.
+  if (Services.prefs.getBoolPref("view_source.editor.external")) {
+    top.gViewSourceUtils
+       .openInExternalEditor(args, null, null, null, result => {
+      if (!result) {
+        viewInternal();
+      }
     });
-    args.viewSourceBrowser = tabBrowser.getBrowserForTab(tab);
-    top.gViewSourceUtils.viewSourceInBrowser(args);
   } else {
-    top.gViewSourceUtils.viewSource(args);
+    // Display using internal view source
+    viewInternal();
   }
 }
 
@@ -6795,14 +6811,6 @@ var gIdentityHandler = {
     delete this._permissionList;
     return this._permissionList = document.getElementById("identity-popup-permission-list");
   },
-  get _permissionSubviewListPageFunctionality () {
-    delete this._permissionSubviewListPageFunctionality;
-    return this._permissionSubviewListPageFunctionality = document.getElementById("permission-subview-list-page-functionality");
-  },
-  get _permissionSubviewListSystemAccess () {
-    delete this._permissionSubviewListSystemAccess;
-    return this._permissionSubviewListSystemAccess = document.getElementById("permission-subview-list-system-access");
-  },
 
   /**
    * Rebuild cache of the elements that may or may not exist depending
@@ -6823,8 +6831,6 @@ var gIdentityHandler = {
     this._identityIcon = document.getElementById("page-proxy-favicon");
     this._permissionsContainer = document.getElementById("identity-popup-permissions");
     this._permissionList = document.getElementById("identity-popup-permission-list");
-    this._permissionSubviewListPageFunctionality = document.getElementById("permission-subview-list-page-functionality");
-    this._permissionSubviewListSystemAccess = document.getElementById("permission-subview-list-system-access");
   },
 
   /**
@@ -7295,33 +7301,19 @@ var gIdentityHandler = {
   },
 
   updateSitePermissions: function () {
-    // Clear all lists and then repopulate them.
-    this._permissionList.textContent = "";
-    this._permissionSubviewListPageFunctionality.textContent = "";
-    this._permissionSubviewListSystemAccess.textContent = "";
+    while (this._permissionList.hasChildNodes())
+      this._permissionList.removeChild(this._permissionList.lastChild);
 
     let uri = gBrowser.currentURI;
 
-    for (let permission of SitePermissions.listPageFunctionalityPermissions()) {
-      let state = SitePermissions.get(uri, permission);
-      let item = this._createPermissionItem(permission, state);
-      this._permissionSubviewListPageFunctionality.appendChild(item);
-    }
-
-    for (let permission of SitePermissions.listSystemAccessPermissions()) {
-      let state = SitePermissions.get(uri, permission);
-      let item = this._createPermissionItem(permission, state);
-      this._permissionSubviewListSystemAccess.appendChild(item);
-    }
-
     for (let permission of SitePermissions.listPermissions()) {
-      // Add to the main view only if there is a known / non-default
-      // value for the permission for this site.
       let state = SitePermissions.get(uri, permission);
-      if (state != SitePermissions.UNKNOWN) {
-        let item = this._createPermissionItem(permission, state);
-        this._permissionList.appendChild(item);
-      }
+
+      if (state == SitePermissions.UNKNOWN)
+        continue;
+
+      let item = this._createPermissionItem(permission, state);
+      this._permissionList.appendChild(item);
     }
 
     this._permissionsContainer.hidden = !this._permissionList.hasChildNodes();
@@ -7340,30 +7332,20 @@ var gIdentityHandler = {
     for (let state of SitePermissions.getAvailableStates(aPermission)) {
       let menuitem = document.createElement("menuitem");
       menuitem.setAttribute("value", state);
-      let label = SitePermissions.getStateLabel(aPermission, state);
-      menuitem.setAttribute("label", label);
-      menuitem.setAttribute("tooltiptext", label);
+      menuitem.setAttribute("label", SitePermissions.getStateLabel(aPermission, state));
       menupopup.appendChild(menuitem);
     }
     menulist.appendChild(menupopup);
-    let value = aState;
-    if (aState == SitePermissions.UNKNOWN) {
-      value = SitePermissions.getDefault(aPermission);
-    }
-    menulist.setAttribute("value", value);
+    menulist.setAttribute("value", aState);
     menulist.setAttribute("oncommand", "gIdentityHandler.setPermission('" +
                                        aPermission + "', this.value)");
     menulist.setAttribute("id", "identity-popup-permission:" + aPermission);
-    menulist.setAttribute("class", "identity-popup-permission");
 
     let label = document.createElement("label");
-    let labelText = SitePermissions.getPermissionLabel(aPermission);
     label.setAttribute("flex", "1");
     label.setAttribute("class", "identity-popup-permission-label");
     label.setAttribute("control", menulist.getAttribute("id"));
-    label.setAttribute("crop", "end");
-    label.setAttribute("value", labelText);
-    label.setAttribute("tooltiptext", labelText);
+    label.setAttribute("value", SitePermissions.getPermissionLabel(aPermission));
 
     let container = document.createElement("hbox");
     container.setAttribute("align", "center");

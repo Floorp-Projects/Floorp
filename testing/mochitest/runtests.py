@@ -1217,7 +1217,6 @@ class Mochitest(MochitestUtilsMixin):
     _active_tests = None
     certdbNew = False
     sslTunnel = None
-    vmwareHelper = None
     DEFAULT_TIMEOUT = 60.0
     mediaDevices = None
 
@@ -1623,37 +1622,6 @@ class Mochitest(MochitestUtilsMixin):
                     dump_screen=not debuggerInfo)
 
         return foundZombie
-
-    def startVMwareRecording(self, options):
-        """ starts recording inside VMware VM using the recording helper dll """
-        assert mozinfo.isWin
-        from ctypes import cdll
-        self.vmwareHelper = cdll.LoadLibrary(self.vmwareHelperPath)
-        if self.vmwareHelper is None:
-            self.log.warning("runtests.py | Failed to load "
-                             "VMware recording helper")
-            return
-        self.log.info("runtests.py | Starting VMware recording.")
-        try:
-            self.vmwareHelper.StartRecording()
-        except Exception as e:
-            self.log.warning("runtests.py | Failed to start "
-                             "VMware recording: (%s)" % str(e))
-            self.vmwareHelper = None
-
-    def stopVMwareRecording(self):
-        """ stops recording inside VMware VM using the recording helper dll """
-        try:
-            assert mozinfo.isWin
-            if self.vmwareHelper is not None:
-                self.log.info("runtests.py | Stopping VMware recording.")
-                self.vmwareHelper.StopRecording()
-        except Exception as e:
-            self.log.warning("runtests.py | Failed to stop "
-                             "VMware recording: (%s)" % str(e))
-            self.log.exception('Error stopping VMWare recording')
-
-        self.vmwareHelper = None
 
     def runApp(self,
                testUrl,
@@ -2242,9 +2210,6 @@ class Mochitest(MochitestUtilsMixin):
             else:
                 timeout = 330.0  # default JS harness timeout is 300 seconds
 
-            if options.vmwareRecording:
-                self.startVMwareRecording(options)
-
             # detect shutdown leaks for m-bc runs
             detectShutdownLeaks = mozinfo.info[
                 "debug"] and options.browserChrome and not options.webapprtChrome
@@ -2276,8 +2241,6 @@ class Mochitest(MochitestUtilsMixin):
                 status = 1
 
         finally:
-            if options.vmwareRecording:
-                self.stopVMwareRecording()
             self.stopServers()
 
         mozleak.process_leak_log(

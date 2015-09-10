@@ -70,12 +70,12 @@
 
     </RelativeLayout>
 
-    <FrameLayout
+    <view class="org.mozilla.gecko.tabs.TabsPanel$TabsLayoutContainer"
           android:id="@+id/tabs_container"
           android:layout_width="match_parent"
           android:layout_height="match_parent">
 
-        <org.mozilla.gecko.tabs.TabsGridLayout
+        <view class="org.mozilla.gecko.tabs.TabsPanel$TabsLayout"
               android:id="@+id/normal_tabs"
               style="@style/TabsLayout"
               android:layout_width="match_parent"
@@ -90,6 +90,6 @@
                 android:layout_height="match_parent"
                 android:visibility="gone"/>
 
-    </FrameLayout>
+    </view>
 
 </merge>

@@ -53,6 +53,8 @@ add_task(function*() {
   isEmptyArray(recording.getAllocations().timestamps, "allocations.timestamps");
   isEmptyArray(recording.getAllocations().frames, "allocations.frames");
   ok(recording.getProfile().threads[0].samples.data.length, "profile data has some samples");
+  checkSystemInfo(recording, "Host");
+  checkSystemInfo(recording, "Client");
 
   yield front.destroy();
   yield closeDebuggerClient(target.client);
@@ -75,4 +77,11 @@ function getTab (url) {
       waitForFocus(() => resolve(tab), content, isBlank);
     });
   });
+}
+
+function checkSystemInfo (recording, type) {
+  let data = recording[`get${type}SystemInfo`]();
+  for (let field of ["appid", "apptype", "vendor", "name", "version"]) {
+    ok(data[field], `get${type}SystemInfo() has ${field} property`);
+  }
 }
