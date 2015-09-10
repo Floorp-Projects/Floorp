@@ -362,9 +362,13 @@ public:
   // Only the first enabled video track is played.
   virtual void AddVideoOutput(VideoFrameContainer* aContainer);
   virtual void RemoveVideoOutput(VideoFrameContainer* aContainer);
-  // Explicitly block. Useful for example if a media element is pausing
-  // and we need to stop its stream emitting its buffered data.
-  virtual void ChangeExplicitBlockerCount(int32_t aDelta);
+  // Explicitly suspend. Useful for example if a media element is pausing
+  // and we need to stop its stream emitting its buffered data. As soon as the
+  // Suspend message reaches the graph, the stream stops processing. It
+  // ignores its inputs and produces silence/no video until Resumed. Its
+  // current time does not advance.
+  virtual void Suspend();
+  virtual void Resume();
   void BlockStreamIfNeeded();
   void UnblockStreamIfNeeded();
   // Events will be dispatched by calling methods of aListener.
