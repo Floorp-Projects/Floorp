@@ -724,6 +724,7 @@ void HTMLMediaElement::AbortExistingLoads()
     EndSrcMediaStreamPlayback();
   }
 
+  RemoveMediaElementFromURITable();
   mLoadingSrc = nullptr;
   mMediaSource = nullptr;
 
@@ -932,6 +933,7 @@ void HTMLMediaElement::SelectResource()
       NS_ASSERTION(!mIsLoadingFromSourceChildren,
         "Should think we're not loading from source children by default");
 
+      RemoveMediaElementFromURITable();
       mLoadingSrc = uri;
       mMediaSource = mSrcMediaSource;
       UpdatePreloadAction();
@@ -1070,6 +1072,7 @@ void HTMLMediaElement::LoadFromSourceChildren()
       continue;
     }
 
+    RemoveMediaElementFromURITable();
     mLoadingSrc = uri;
     mMediaSource = childSrc->GetSrcMediaSource();
     NS_ASSERTION(mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING,
@@ -2002,15 +2005,13 @@ HTMLMediaElement::AddMediaElementToURITable()
 void
 HTMLMediaElement::RemoveMediaElementFromURITable()
 {
-  NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 1,
-    "Before remove, should have a single entry for element in element table");
-  NS_ASSERTION(mDecoder, "Don't call this without decoder!");
-  NS_ASSERTION(mLoadingSrc, "Can't have decoder without source!");
-  if (!gElementTable)
+  if (!mDecoder || !mLoadingSrc || !gElementTable) {
     return;
+  }
   MediaElementSetForURI* entry = gElementTable->GetEntry(mLoadingSrc);
-  if (!entry)
+  if (!entry) {
     return;
+  }
   entry->mElements.RemoveElement(this);
   if (entry->mElements.IsEmpty()) {
     gElementTable->RemoveEntry(mLoadingSrc);
@@ -2026,11 +2027,13 @@ HTMLMediaElement::RemoveMediaElementFromURITable()
 HTMLMediaElement*
 HTMLMediaElement::LookupMediaElementURITable(nsIURI* aURI)
 {
-  if (!gElementTable)
+  if (!gElementTable) {
     return nullptr;
+  }
   MediaElementSetForURI* entry = gElementTable->GetEntry(aURI);
-  if (!entry)
+  if (!entry) {
     return nullptr;
+  }
   for (uint32_t i = 0; i < entry->mElements.Length(); ++i) {
     HTMLMediaElement* elem = entry->mElements[i];
     bool equal;
@@ -3328,6 +3331,7 @@ void HTMLMediaElement::DecodeError()
   if (mDecoder) {
     ShutdownDecoder();
   }
+  RemoveMediaElementFromURITable();
   mLoadingSrc = nullptr;
   mMediaSource = nullptr;
   if (mIsLoadingFromSourceChildren) {
