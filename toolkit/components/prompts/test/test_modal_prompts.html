@@ -3,6 +3,7 @@
 <head>
   <title>Modal Prompts Test</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="prompt_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -770,7 +771,7 @@ function handleDialog(ui, testNum) {
 }
 
 
-function runTests() {
+function* runTests() {
     let ioService = Cc["@mozilla.org/network/io-service;1"].
                     getService(Ci.nsIIOService);
     ok(true, "Running tests (isTabModal=" + isTabModal + ", usePromptService=" + usePromptService + ")");
@@ -808,6 +809,8 @@ function runTests() {
 
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
+
     // ===== test 2 =====
     // AlertCheck (null checkbox label)
     testNum++;
@@ -818,6 +821,7 @@ function runTests() {
     prompter.alertCheck.apply(null, promptArgs);
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
 
     // ===== test 3 =====
     // AlertCheck
@@ -831,6 +835,7 @@ function runTests() {
     ok(didDialog, "handleDialog was invoked");
     is(checkVal.value, true, "checkbox was checked");
 
+    yield Promise.resolve();
 
     // ===== test 4 =====
     // Confirm (ok)
@@ -843,6 +848,8 @@ function runTests() {
     is(isOK, true, "checked expected retval");
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
+
     // ===== test 5 =====
     // Confirm (cancel)
     testNum++;
@@ -854,6 +861,7 @@ function runTests() {
     is(isOK, false, "checked expected retval");
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
 
     // ===== test 6 =====
     // ConfirmCheck (ok, null checkbox label)
@@ -866,6 +874,8 @@ function runTests() {
     is(isOK, true, "checked expected retval");
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
+
     // ===== test 7 =====
     // ConfirmCheck (cancel, null checkbox label)
     testNum++;
@@ -876,6 +886,8 @@ function runTests() {
     isOK = prompter.confirmCheck.apply(null, promptArgs);
     is(isOK, false, "checked expected retval");
     ok(didDialog, "handleDialog was invoked");
+
+    yield Promise.resolve();
 
     // ===== test 8 =====
     // ConfirmCheck (ok)
@@ -890,6 +902,8 @@ function runTests() {
     is(checkVal.value, true, "expected checkbox setting");
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
+
     // ===== test 9 =====
     // ConfirmCheck (cancel)
     testNum++;
@@ -903,6 +917,7 @@ function runTests() {
     is(checkVal.value, true, "expected checkbox setting");
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
 
     // ===== test 10 =====
     // Prompt (ok, no default text)
@@ -917,6 +932,8 @@ function runTests() {
     is(textVal.value, "bacon", "checking expected text value");
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
+
     // ===== test 11 =====
     // Prompt (ok, default text)
     testNum++;
@@ -929,6 +946,8 @@ function runTests() {
     is(isOK, true, "checked expected retval");
     is(textVal.value, "kittens", "checking expected text value");
     ok(didDialog, "handleDialog was invoked");
+
+    yield Promise.resolve();
 
     // ===== test 12 =====
     // Prompt (cancel, default text)
@@ -943,6 +962,8 @@ function runTests() {
     is(textVal.value, "puppies", "checking expected text value");
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
+
     // ===== test 13 =====
     // Prompt (cancel, default text modified)
     testNum++;
@@ -955,6 +976,8 @@ function runTests() {
     is(isOK, false, "checked expected retval");
     is(textVal.value, "puppies", "checking expected text value");
     ok(didDialog, "handleDialog was invoked");
+
+    yield Promise.resolve();
 
     // ===== test 14 =====
     // Prompt (ok, with checkbox)
@@ -971,6 +994,8 @@ function runTests() {
     is(checkVal.value, true, "expected checkbox setting");
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
+
     // ===== test 15 =====
     // Prompt (cancel, with checkbox)
     testNum++;
@@ -986,6 +1011,7 @@ function runTests() {
     is(checkVal.value, false, "expected checkbox setting");
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
 
     // ===== test 16 =====
     // PromptUsernameAndPassword (ok)
@@ -1005,6 +1031,8 @@ function runTests() {
     is(checkVal.value, true, "expected checkbox setting");
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
+
     // ===== test 17 =====
     // PromptUsernameAndPassword (cancel)
     testNum++;
@@ -1022,6 +1050,7 @@ function runTests() {
     is(checkVal.value, false, "expected checkbox setting");
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
 
     // ===== test 18 =====
     // PromptPassword (ok)
@@ -1038,6 +1067,8 @@ function runTests() {
     is(checkVal.value, true, "expected checkbox setting");
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
+
     // ===== test 19 =====
     // PromptPassword (cancel)
     testNum++;
@@ -1053,6 +1084,8 @@ function runTests() {
     is(checkVal.value, false, "expected checkbox setting");
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
+
     // ===== test 20 =====
     // ConfirmEx (ok/cancel, ok)
     testNum++;
@@ -1065,6 +1098,8 @@ function runTests() {
     is(clickedButton, 0, "checked expected button num click");
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
+
     // ===== test 21 =====
     // ConfirmEx (yes/no, cancel)
     testNum++;
@@ -1076,6 +1111,8 @@ function runTests() {
     clickedButton = prompter.confirmEx.apply(null, promptArgs);
     is(clickedButton, 1, "checked expected button num click");
     ok(didDialog, "handleDialog was invoked");
+
+    yield Promise.resolve();
 
     // ===== test 22 =====
     // ConfirmEx (buttons from args, checkbox, ok)
@@ -1094,6 +1131,8 @@ function runTests() {
     is(clickedButton, 0, "checked expected button num click");
     is(checkVal.value, true, "expected checkbox setting");
     ok(didDialog, "handleDialog was invoked");
+
+    yield Promise.resolve();
 
     // ===== test 23 =====
     // ConfirmEx (buttons from args, checkbox, cancel)
@@ -1114,6 +1153,8 @@ function runTests() {
     is(checkVal.value, true, "expected checkbox setting");
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
+
     // ===== test 24 =====
     // ConfirmEx (buttons from args, checkbox, button3)
     testNum++;
@@ -1133,6 +1174,8 @@ function runTests() {
     is(checkVal.value, true, "expected checkbox setting");
     ok(didDialog, "handleDialog was invoked");
 
+    yield Promise.resolve();
+
     // ===== test 25  =====
     // Alert, no window
     // (skipped for tabmodal tests: window is required)
@@ -1146,6 +1189,7 @@ function runTests() {
         ok(didDialog, "handleDialog was invoked");
     }
 
+    yield Promise.resolve();
 
     // ===== test 26 =====
     // ConfirmEx (delay, ok)
@@ -1183,6 +1227,8 @@ function runTests() {
         realm : ""
     };
 
+    yield Promise.resolve();
+
     // ===== test 100 =====
     // promptAuth with empty realm
     // (promptAuth is only accessible from the prompt service)
@@ -1197,6 +1243,8 @@ function runTests() {
         is(checkVal.value, true, "expected checkbox setting");
         ok(didDialog, "handleDialog was invoked");
     }
+
+    yield Promise.resolve();
 
     // ===== test 101 =====
     // promptAuth with long realm
@@ -1230,16 +1278,19 @@ let pollTimer;
  * - 3rd pass: with tab-modal prompts. Can't opt into these via * nsIPromptService.
  */
 
-isTabModal = false; usePromptService = true;
-runTests();
+add_task(function* runPromptTests() {
 
-isTabModal = false; usePromptService = false;
-runTests();
+  isTabModal = false; usePromptService = true;
+  yield* runTests();
 
-if (getTabModalPromptBox(window)) {
-    isTabModal = true; usePromptService = false;
-    runTests();
-}
+  isTabModal = false; usePromptService = false;
+  yield* runTests();
+
+  if (getTabModalPromptBox(window)) {
+      isTabModal = true; usePromptService = false;
+      yield* runTests();
+  }
+});
 
 </script>
 </pre>
