@@ -241,7 +241,7 @@ NS_EVENT_MESSAGE(eQuerySelectionAsTransferable, eQueryContentEventFirst + 7)
 NS_EVENT_MESSAGE(eQueryCharacterAtPoint,        eQueryContentEventFirst + 8)
 // Query if the DOM element under Event::refPoint belongs to our widget
 // or not.
-NS_EVENT_MESSAGE(NS_QUERY_DOM_WIDGET_HITTEST,   eQueryContentEventFirst + 9)
+NS_EVENT_MESSAGE(eQueryDOMWidgetHittest,        eQueryContentEventFirst + 9)
 
 // Video events
 NS_EVENT_MESSAGE(eMediaEventFirst,      3300)
