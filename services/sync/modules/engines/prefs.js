@@ -43,7 +43,7 @@ PrefsEngine.prototype = {
 
   syncPriority: 1,
 
-  getChangedIDs: function getChangedIDs() {
+  getChangedIDs: function () {
     // No need for a proper timestamp (no conflict resolution needed).
     let changedIDs = {};
     if (this._tracker.modified)
@@ -51,12 +51,12 @@ PrefsEngine.prototype = {
     return changedIDs;
   },
 
-  _wipeClient: function _wipeClient() {
+  _wipeClient: function () {
     SyncEngine.prototype._wipeClient.call(this);
     this.justWiped = true;
   },
 
-  _reconcile: function _reconcile(item) {
+  _reconcile: function (item) {
     // Apply the incoming item if we don't care about the local data
     if (this.justWiped) {
       this.justWiped = false;
@@ -78,24 +78,25 @@ PrefStore.prototype = {
 
  __prefs: null,
   get _prefs() {
-    if (!this.__prefs)
+    if (!this.__prefs) {
       this.__prefs = new Preferences();
+    }
     return this.__prefs;
   },
 
-  _getSyncPrefs: function _getSyncPrefs() {
+  _getSyncPrefs: function () {
     let syncPrefs = Cc["@mozilla.org/preferences-service;1"]
                       .getService(Ci.nsIPrefService)
                       .getBranch(PREF_SYNC_PREFS_PREFIX)
                       .getChildList("", {});
     // Also sync preferences that determine which prefs get synced.
-    return syncPrefs.concat(
-      syncPrefs.map(function (pref) { return PREF_SYNC_PREFS_PREFIX + pref; }));
+    let controlPrefs = syncPrefs.map(pref => PREF_SYNC_PREFS_PREFIX + pref);
+    return controlPrefs.concat(syncPrefs);
   },
 
-  _isSynced: function _isSyncedPref(pref) {
-    return (pref.indexOf(PREF_SYNC_PREFS_PREFIX) == 0)
-            || this._prefs.get(PREF_SYNC_PREFS_PREFIX + pref, false);
+  _isSynced: function (pref) {
+    return pref.startsWith(PREF_SYNC_PREFS_PREFIX) ||
+           this._prefs.get(PREF_SYNC_PREFS_PREFIX + pref, false);
   },
 
   _getAllPrefs: function () {
@@ -109,15 +110,21 @@ PrefStore.prototype = {
     return values;
   },
 
-  _setAllPrefs: function PrefStore__setAllPrefs(values) {
+  _setAllPrefs: function (values) {
     let selectedThemeIDPref = "lightweightThemes.selectedThemeID";
     let selectedThemeIDBefore = this._prefs.get(selectedThemeIDPref, null);
 
-    for (let [pref, value] in Iterator(values)) {
-      if (!this._isSynced(pref))
+    // Update 'services.sync.prefs.sync.foo.pref' before 'foo.pref', otherwise
+    // _isSynced returns false when 'foo.pref' doesn't exist (e.g., on a new device).
+    let prefs = Object.keys(values).sort(a => -a.indexOf(PREF_SYNC_PREFS_PREFIX));
+    for (let pref of prefs) {
+      if (!this._isSynced(pref)) {
         continue;
+      }
 
-      // Pref has gone missing, best we can do is reset it.
+      let value = values[pref];
+
+      // Pref has gone missing. The best we can do is reset it.
       if (value == null) {
         this._prefs.reset(pref);
         continue;
@@ -141,22 +148,22 @@ PrefStore.prototype = {
     }
   },
 
-  getAllIDs: function PrefStore_getAllIDs() {
+  getAllIDs: function () {
     /* We store all prefs in just one WBO, with just one GUID */
     let allprefs = {};
     allprefs[PREFS_GUID] = true;
     return allprefs;
   },
 
-  changeItemID: function PrefStore_changeItemID(oldID, newID) {
+  changeItemID: function (oldID, newID) {
     this._log.trace("PrefStore GUID is constant!");
   },
 
-  itemExists: function FormStore_itemExists(id) {
+  itemExists: function (id) {
     return (id === PREFS_GUID);
   },
 
-  createRecord: function createRecord(id, collection) {
+  createRecord: function (id, collection) {
     let record = new PrefRec(collection, id);
 
     if (id == PREFS_GUID) {
@@ -168,15 +175,15 @@ PrefStore.prototype = {
     return record;
   },
 
-  create: function PrefStore_create(record) {
+  create: function (record) {
     this._log.trace("Ignoring create request");
   },
 
-  remove: function PrefStore_remove(record) {
+  remove: function (record) {
     this._log.trace("Ignoring remove request");
   },
 
-  update: function PrefStore_update(record) {
+  update: function (record) {
     // Silently ignore pref updates that are for other apps.
     if (record.id != PREFS_GUID)
       return;
@@ -185,7 +192,7 @@ PrefStore.prototype = {
     this._setAllPrefs(record.value);
   },
 
-  wipe: function PrefStore_wipe() {
+  wipe: function () {
     this._log.trace("Ignoring wipe request");
   }
 };
