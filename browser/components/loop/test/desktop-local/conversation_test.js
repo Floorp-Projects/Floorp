@@ -10,6 +10,7 @@ describe("loop.conversation", function() {
   var TestUtils = React.addons.TestUtils;
   var sharedActions = loop.shared.actions;
   var sharedModels = loop.shared.models;
+  var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var fakeWindow, sandbox, getLoopPrefStub, setLoopPrefStub, mozL10nGet;
 
   beforeEach(function() {
@@ -221,13 +222,20 @@ describe("loop.conversation", function() {
         loop.roomViews.DesktopRoomConversationView);
     });
 
-    it("should display the GenericFailureView for failures", function() {
-      conversationAppStore.setStoreState({windowType: "failed"});
+    it("should display the DirectCallFailureView for failures", function() {
+      conversationAppStore.setStoreState({
+        contact: {},
+        outgoing: false,
+        windowType: "failed"
+      });
+      conversationStore.setStoreState({
+        callStateReason: FAILURE_DETAILS.UNKNOWN
+      });
 
       ccView = mountTestComponent();
 
       TestUtils.findRenderedComponentWithType(ccView,
-        loop.conversationViews.GenericFailureView);
+        loop.conversationViews.DirectCallFailureView);
     });
 
     it("should set the correct title when rendering feedback view", function() {
