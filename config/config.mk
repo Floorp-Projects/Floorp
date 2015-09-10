@@ -381,6 +381,12 @@ ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 #// DLL version of the RTL is used...
 #//
 #//------------------------------------------------------------------------
+ifdef MOZ_ASAN
+# ASAN-instrumented code tries to link against the dynamic CRT, which can't be
+# used in the same link as the static CRT.
+USE_STATIC_LIBS=
+endif # MOZ_ASAN
+
 ifdef USE_STATIC_LIBS
 RTL_FLAGS=-MT          # Statically linked multithreaded RTL
 ifdef MOZ_DEBUG
