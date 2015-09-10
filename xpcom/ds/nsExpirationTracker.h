@@ -360,8 +360,8 @@ private:
     if (!mTimer) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    mTimer->InitWithFuncCallback(TimerCallback, this, mTimerPeriod,
-                                 nsITimer::TYPE_REPEATING_SLACK);
+    mTimer->InitWithNamedFuncCallback(TimerCallback, this, mTimerPeriod,
+                                      nsITimer::TYPE_REPEATING_SLACK, mName);
     return NS_OK;
   }
 };

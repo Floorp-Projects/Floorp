@@ -1424,6 +1424,8 @@ public:
   // fire after it, but no earlier than mTimeoutInsertionPoint, if any.
   void InsertTimeoutIntoList(nsTimeout *aTimeout);
   static void TimerCallback(nsITimer *aTimer, void *aClosure);
+  static void TimerNameCallback(nsITimer* aTimer, void* aClosure, char* aBuf,
+                                size_t aLen);
 
   // Helper Functions
   already_AddRefed<nsIDocShellTreeOwner> GetTreeOwner();

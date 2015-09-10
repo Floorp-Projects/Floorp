@@ -21,6 +21,15 @@
 using namespace mozilla::tasktracer;
 #endif
 
+#ifdef XP_WIN
+#include <process.h>
+#ifndef getpid
+#define getpid _getpid
+#endif
+#else
+#include <unistd.h>
+#endif
+
 using mozilla::Atomic;
 using mozilla::LogLevel;
 using mozilla::TimeDuration;
@@ -29,12 +38,51 @@ using mozilla::TimeStamp;
 static Atomic<int32_t>  gGenerator;
 static TimerThread*     gThread = nullptr;
 
+// This module prints info about the precision of timers.
 PRLogModuleInfo*
 GetTimerLog()
 {
   static PRLogModuleInfo* sLog;
   if (!sLog) {
     sLog = PR_NewLogModule("nsTimerImpl");
+  }
+  return sLog;
+}
+
+// This module prints info about which timers are firing, which is useful for
+// wakeups for the purposes of power profiling. Set the following environment
+// variable before starting the browser.
+//
+//   NSPR_LOG_MODULES=TimerFirings:4
+//
+// Then a line will be printed for every timer that fires. The name used for a
+// |CallbackType::Function| timer depends on the circumstances.
+//
+// - If it was explicitly named (e.g. it was initialized with
+//   InitWithNamedFuncCallback()) then that explicit name will be shown.
+//
+// - Otherwise, if we are on a platform that supports function name lookup
+//   (currently only Mac) then the looked-up name will be shown with a
+//   "[from dladdr]" annotation.
+//
+// - Otherwise, no name will be printed. If many timers hit this case then
+//   you'll need to re-run the workload on a Mac to find out which timers they
+//   are, and then give them explicit names.
+//
+// If you redirect this output to a file called "out", you can then
+// post-process it with a command something like the following.
+//
+//   cat out | grep timer | sort | uniq -c | sort -r -n
+//
+// This will show how often each unique line appears, with the most common ones
+// first.
+//
+PRLogModuleInfo*
+GetTimerFiringsLog()
+{
+  static PRLogModuleInfo* sLog;
+  if (!sLog) {
+    sLog = PR_NewLogModule("TimerFirings");
   }
   return sLog;
 }
@@ -128,6 +176,7 @@ nsTimerImpl::Release(void)
 
 nsTimerImpl::nsTimerImpl() :
   mClosure(nullptr),
+  mName(nsTimerImpl::Nothing),
   mCallbackType(CallbackType::Unknown),
   mFiring(false),
   mArmed(false),
@@ -216,11 +265,12 @@ nsTimerImpl::InitCommon(uint32_t aDelay, uint32_t aType)
   return gThread->AddTimer(this);
 }
 
-NS_IMETHODIMP
-nsTimerImpl::InitWithFuncCallback(nsTimerCallbackFunc aFunc,
-                                  void* aClosure,
-                                  uint32_t aDelay,
-                                  uint32_t aType)
+nsresult
+nsTimerImpl::InitWithFuncCallbackCommon(nsTimerCallbackFunc aFunc,
+                                        void* aClosure,
+                                        uint32_t aDelay,
+                                        uint32_t aType,
+                                        Name aName)
 {
   if (NS_WARN_IF(!aFunc)) {
     return NS_ERROR_INVALID_ARG;
@@ -230,8 +280,41 @@ nsTimerImpl::InitWithFuncCallback(nsTimerCallbackFunc aFunc,
   mCallbackType = CallbackType::Function;
   mCallback.c = aFunc;
   mClosure = aClosure;
+  mName = aName;
 
   return InitCommon(aDelay, aType);
+}
+
+NS_IMETHODIMP
+nsTimerImpl::InitWithFuncCallback(nsTimerCallbackFunc aFunc,
+                                  void* aClosure,
+                                  uint32_t aDelay,
+                                  uint32_t aType)
+{
+  Name name(nsTimerImpl::Nothing);
+  return InitWithFuncCallbackCommon(aFunc, aClosure, aDelay, aType, name);
+}
+
+NS_IMETHODIMP
+nsTimerImpl::InitWithNamedFuncCallback(nsTimerCallbackFunc aFunc,
+                                       void* aClosure,
+                                       uint32_t aDelay,
+                                       uint32_t aType,
+                                       const char* aNameString)
+{
+  Name name(aNameString);
+  return InitWithFuncCallbackCommon(aFunc, aClosure, aDelay, aType, name);
+}
+
+NS_IMETHODIMP
+nsTimerImpl::InitWithNameableFuncCallback(nsTimerCallbackFunc aFunc,
+                                          void* aClosure,
+                                          uint32_t aDelay,
+                                          uint32_t aType,
+                                          nsTimerNameCallbackFunc aNameFunc)
+{
+  Name name(aNameFunc);
+  return InitWithFuncCallbackCommon(aFunc, aClosure, aDelay, aType, name);
 }
 
 NS_IMETHODIMP
@@ -432,6 +515,10 @@ nsTimerImpl::Fire()
   }
   ReleaseCallback();
 
+  if (MOZ_LOG_TEST(GetTimerFiringsLog(), LogLevel::Debug)) {
+    LogFiring(callbackType, callback);
+  }
+
   switch (callbackType) {
     case CallbackType::Function:
       callback.c(this, mClosure);
@@ -484,6 +571,108 @@ nsTimerImpl::Fire()
   }
 }
 
+#if defined(XP_MACOSX)
+#include <cxxabi.h>
+#include <dlfcn.h>
+#endif
+
+// See the big comment above GetTimerFiringsLog() to understand this code.
+void
+nsTimerImpl::LogFiring(CallbackType aCallbackType, CallbackUnion aCallback)
+{
+  const char* typeStr;
+  switch (mType) {
+    case TYPE_ONE_SHOT:                   typeStr = "ONE_SHOT"; break;
+    case TYPE_REPEATING_SLACK:            typeStr = "SLACK   "; break;
+    case TYPE_REPEATING_PRECISE:          /* fall through */
+    case TYPE_REPEATING_PRECISE_CAN_SKIP: typeStr = "PRECISE "; break;
+    default:                              MOZ_CRASH("bad type");
+  }
+
+  switch (aCallbackType) {
+    case CallbackType::Function: {
+      bool needToFreeName = false;
+      const char* annotation = "";
+      const char* name;
+      static const size_t buflen = 1024;
+      char buf[buflen];
+
+      if (mName.is<NameString>()) {
+        name = mName.as<NameString>();
+
+      } else if (mName.is<NameFunc>()) {
+        mName.as<NameFunc>()(this, mClosure, buf, buflen);
+        name = buf;
+
+      } else {
+        MOZ_ASSERT(mName.is<NameNothing>());
+#if defined(XP_MACOSX)
+        annotation = "[from dladdr] ";
+
+        Dl_info info;
+        if (dladdr(reinterpret_cast<void*>(aCallback.c), &info) == 0) {
+          name = "???[dladdr: failed]";
+        } else if (!info.dli_sname) {
+          name = "???[dladdr: no matching symbol]";
+
+        } else {
+          int status;
+          name = abi::__cxa_demangle(info.dli_sname, nullptr, nullptr, &status);
+          if (status == 0) {
+            // Success. Because we didn't pass in a buffer to __cxa_demangle it
+            // allocates its own one with malloc() which we must free() later.
+            MOZ_ASSERT(name);
+            needToFreeName = true;
+          } else if (status == -1) {
+            name = "???[__cxa_demangle: OOM]";
+          } else if (status == -2) {
+            name = "???[__cxa_demangle: invalid mangled name]";
+          } else if (status == -3) {
+            name = "???[__cxa_demangle: invalid argument]";
+          } else {
+            name = "???[__cxa_demangle: unexpected status value]";
+          }
+        }
+#else
+        name = "???[dladdr: unavailable/doesn't work on this platform]";
+#endif
+      }
+
+      MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
+              ("[%d]    fn timer (%s %5d ms): %s%s\n",
+               getpid(), typeStr, mDelay, annotation, name));
+
+      if (needToFreeName) {
+        free(const_cast<char*>(name));
+      }
+
+      break;
+    }
+
+    case CallbackType::Interface: {
+      MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
+              ("[%d] iface timer (%s %5d ms): %p\n",
+               getpid(), typeStr, mDelay, aCallback.i));
+      break;
+    }
+
+    case CallbackType::Observer: {
+      MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
+              ("[%d]   obs timer (%s %5d ms): %p\n",
+               getpid(), typeStr, mDelay, aCallback.o));
+      break;
+    }
+
+    case CallbackType::Unknown:
+    default: {
+      MOZ_LOG(GetTimerFiringsLog(), LogLevel::Debug,
+              ("[%d]   ??? timer (%s, %5d ms)\n",
+               getpid(), typeStr, mDelay));
+      break;
+    }
+  }
+}
+
 void
 nsTimerImpl::SetDelayInternal(uint32_t aDelay)
 {
@@ -510,6 +699,8 @@ nsTimerImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this);
 }
+
+/* static */ const nsTimerImpl::NameNothing nsTimerImpl::Nothing = 0;
 
 #ifdef MOZ_TASK_TRACER
 void
