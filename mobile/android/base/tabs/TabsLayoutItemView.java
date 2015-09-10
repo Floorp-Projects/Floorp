@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.tabs;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
@@ -100,7 +101,9 @@ public class TabsLayoutItemView extends LinearLayout
         mCloseButton = (ImageView) findViewById(R.id.close);
         mThumbnailWrapper = (TabThumbnailWrapper) findViewById(R.id.wrapper);
 
-        growCloseButtonHitArea();
+        if (HardwareUtils.isTablet() || AppConstants.NIGHTLY_BUILD) {
+            growCloseButtonHitArea();
+        }
     }
 
     private void growCloseButtonHitArea() {
