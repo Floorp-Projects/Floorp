@@ -126,26 +126,9 @@ function sendSingleKey (keyToSend, modifiers, document) {
   utils.synthesizeKey(keyCode, modifiers, document);
 }
 
-/**
- * Focus element and, if a textual input field, move the caret to the
- * end of the input field.
- *
- * @param {Element} el
- *     Element to focus.
- */
-function focusElement(el) {
-  let t = el.type;
-  if (t && (t == "text" || t == "textarea")) {
-    let len = el.value.length;
-    el.setSelectionRange(len, len);
-  }
-  el.focus();
-}
-
-function sendKeysToElement(document, element, keysToSend, successCallback, errorCallback, command_id, ignoreVisibility) {
+function sendKeysToElement (document, element, keysToSend, successCallback, errorCallback, command_id, ignoreVisibility) {
   if (ignoreVisibility || checkVisible(element)) {
-    focusElement(element);
-
+    element.focus();
     let modifiers = {
       shiftKey: false,
       ctrlKey: false,
@@ -157,7 +140,6 @@ function sendKeysToElement(document, element, keysToSend, successCallback, error
       var c = value.charAt(i);
       sendSingleKey(c, modifiers, document);
     }
-
     successCallback(command_id);
   } else {
     errorCallback(new ElementNotVisibleError("Element is not visible"), command_id);
