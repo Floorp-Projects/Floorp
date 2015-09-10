@@ -87,6 +87,7 @@ loop.conversation = (function(mozL10n) {
           return (React.createElement(DirectCallFailureView, {
             contact: {}, 
             dispatcher: this.props.dispatcher, 
+            mozLoop: this.props.mozLoop, 
             outgoing: false}));
         }
         default: {

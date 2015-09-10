@@ -351,6 +351,7 @@ describe("loop.conversationViews", function () {
     function mountTestComponent(options) {
       var props = _.extend({
           dispatcher: dispatcher,
+          mozLoop: fakeMozLoop,
           outgoing: true
         }, options);
       return TestUtils.renderIntoDocument(
