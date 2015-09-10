@@ -55,8 +55,44 @@ MacroAssembler::and32(const Address& src, Register dest)
     And(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(scratch32));
 }
 
+void
+MacroAssembler::andPtr(Register src, Register dest)
+{
+    And(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
+}
+
+void
+MacroAssembler::andPtr(Imm32 imm, Register dest)
+{
+    And(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
+
+void
+MacroAssemblerCompat::and64(Imm64 imm, Register64 dest)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    mov(ImmWord(imm.value), scratch);
+    asMasm().andPtr(scratch, dest.reg);
+}
+
+template <typename T>
+void
+MacroAssemblerCompat::andToStackPtr(T t)
+{
+    asMasm().andPtr(t, getStackPointer());
+    syncStackPtr();
+}
+
+template <typename T>
+void
+MacroAssemblerCompat::andStackPtrTo(T t)
+{
+    asMasm().andPtr(getStackPointer(), t);
+}
 
 } // namespace jit
 } // namespace js

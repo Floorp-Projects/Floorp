@@ -1682,18 +1682,6 @@ MacroAssemblerMIPSCompat::orPtr(Register src, Register dest)
 }
 
 void
-MacroAssemblerMIPSCompat::andPtr(Imm32 imm, Register dest)
-{
-    ma_and(dest, imm);
-}
-
-void
-MacroAssemblerMIPSCompat::andPtr(Register src, Register dest)
-{
-    ma_and(dest, src);
-}
-
-void
 MacroAssemblerMIPSCompat::move32(Imm32 imm, Register dest)
 {
     ma_li(dest, imm);
@@ -3110,7 +3098,7 @@ MacroAssemblerMIPSCompat::alignStackPointer()
 {
     movePtr(StackPointer, SecondScratchReg);
     subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
-    andPtr(Imm32(~(ABIStackAlignment - 1)), StackPointer);
+    asMasm().andPtr(Imm32(~(ABIStackAlignment - 1)), StackPointer);
     storePtr(SecondScratchReg, Address(StackPointer, 0));
 }
 
