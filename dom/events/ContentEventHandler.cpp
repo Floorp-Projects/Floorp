@@ -812,7 +812,7 @@ ContentEventHandler::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
       return OnQuerySelectionAsTransferable(aEvent);
     case eQueryCharacterAtPoint:
       return OnQueryCharacterAtPoint(aEvent);
-    case NS_QUERY_DOM_WIDGET_HITTEST:
+    case eQueryDOMWidgetHittest:
       return OnQueryDOMWidgetHittest(aEvent);
     default:
       return NS_ERROR_NOT_IMPLEMENTED;

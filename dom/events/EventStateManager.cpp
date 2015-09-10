@@ -800,7 +800,7 @@ EventStateManager::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
     case eQueryContentState:
     case eQuerySelectionAsTransferable:
     case eQueryCharacterAtPoint:
-    case NS_QUERY_DOM_WIDGET_HITTEST:
+    case eQueryDOMWidgetHittest:
       break;
     default:
       return;
