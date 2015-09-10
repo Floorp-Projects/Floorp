@@ -52,6 +52,11 @@ class PrivateTabsPanel extends FrameLayout implements CloseAllPanelView {
     }
 
     @Override
+    public boolean shouldExpand() {
+        return tabsLayout.shouldExpand();
+    }
+
+    @Override
     public void closeAll() {
         tabsLayout.closeAll();
     }

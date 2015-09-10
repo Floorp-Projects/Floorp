@@ -44,6 +44,10 @@ partial interface HTMLVideoElement {
 
   // True if the video has an audio track available.
   readonly attribute boolean mozHasAudio;
+
+  // True if the video should use a screen wake lock.
+  [Pref="dom.wakelock.enabled", Func="Navigator::HasWakeLockSupport"]
+  attribute boolean mozUseScreenWakeLock;
 };
 
 // https://dvcs.w3.org/hg/html-media/raw-file/default/media-source/media-source.html#idl-def-HTMLVideoElement

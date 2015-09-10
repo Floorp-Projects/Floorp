@@ -6,6 +6,8 @@ PATH=$DIRNAME:$PATH
 
 WORKSPACE=$1
 
+gecko_objdir=/home/worker/objdir-gecko/objdir
+
 ### Check that require variables are defined
 test -d $WORKSPACE
 test $GECKO_HEAD_REPOSITORY # Should be an hg repository url to pull from

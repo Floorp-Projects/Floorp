@@ -8,10 +8,12 @@ task:
     name: '[TC] B2G Flame KK OTA (userdebug)'
   scopes:
     - 'docker-worker:cache:build-flame-kk-ota-debug'
+    - 'docker-worker:cache:build-flame-kk-ota-debug-objdir-gecko-{{project}}'
 
   payload:
     cache:
-        build-flame-kk-ota-debug: /home/worker/workspace
+      build-flame-kk-ota-debug: /home/worker/workspace
+      build-flame-kk-ota-debug-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       VARIANT: userdebug
       B2G_DEBUG: 0

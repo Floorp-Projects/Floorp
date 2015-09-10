@@ -99,12 +99,13 @@ function openContextMenu() {
 
     function checkPosition() {
         var menubox = menu.boxObject;
-        var winbox = win.document.documentElement.boxObject
+        var winbox = win.document.documentElement.boxObject;
+        var platformIsMac = navigator.userAgent.indexOf("Mac") > -1;
 
         var x = menubox.screenX - winbox.screenX;
         var y = menubox.screenY - winbox.screenY;
 
-        if (navigator.userAgent.indexOf("Mac") > -1)
+        if (platformIsMac)
         {
           // This check is alterered slightly for OSX which adds padding to the top
           // and bottom of its context menus. The menu position calculation must
@@ -126,8 +127,17 @@ function openContextMenu() {
         ok(x < mouseX,
            "menu left " + x + " should be left of click point " + mouseX);
         var right = x + menubox.width;
-        ok(right > mouseX,
-           "menu right " + right + " should be right of click point " + mouseX);
+
+        if (platformIsMac) {
+          // Rather than be constrained by the right hand screen edge, OSX menus flip
+          // horizontally and appear to the left of the mouse pointer
+          ok(right < mouseX,
+             "menu right " + right + " should be left of click point " + mouseX);
+        }
+        else {
+          ok(right > mouseX,
+             "menu right " + right + " should be right of click point " + mouseX);
+        }
 
         clearTimeout(timeoutID);
         finish();

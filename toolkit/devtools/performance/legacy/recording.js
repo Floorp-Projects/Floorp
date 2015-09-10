@@ -10,6 +10,9 @@ loader.lazyRequireGetter(this, "PerformanceIO",
   "devtools/toolkit/performance/io");
 loader.lazyRequireGetter(this, "RecordingUtils",
   "devtools/toolkit/performance/utils");
+loader.lazyRequireGetter(this, "PerformanceRecordingCommon",
+  "devtools/toolkit/performance/recording-common", true);
+loader.lazyRequireGetter(this, "merge", "sdk/util/object", true);
 
 /**
  * Model for a wholistic profile, containing the duration, profiling data,
@@ -33,49 +36,10 @@ const LegacyPerformanceRecording = function (options={}) {
   };
 };
 
-LegacyPerformanceRecording.prototype = {
-  // Private fields, only needed when a recording is started or stopped.
-  _console: false,
-  _imported: false,
-  _recording: false,
-  _completed: false,
+LegacyPerformanceRecording.prototype = merge({
   _profilerStartTime: 0,
   _timelineStartTime: 0,
   _memoryStartTime: 0,
-  _configuration: {},
-  _startingBufferStatus: null,
-  _bufferPercent: null,
-
-  // Serializable fields, necessary and sufficient for import and export.
-  _label: "",
-  _duration: 0,
-  _markers: null,
-  _frames: null,
-  _memory: null,
-  _ticks: null,
-  _allocations: null,
-  _profile: null,
-
-  /**
-   * Loads a recording from a file.
-   *
-   * @param nsILocalFile file
-   *        The file to import the data form.
-   */
-  importRecording: Task.async(function *(file) {
-    let recordingData = yield PerformanceIO.loadRecordingFromFile(file);
-
-    this._imported = true;
-    this._label = recordingData.label || "";
-    this._duration = recordingData.duration;
-    this._markers = recordingData.markers;
-    this._frames = recordingData.frames;
-    this._memory = recordingData.memory;
-    this._ticks = recordingData.ticks;
-    this._allocations = recordingData.allocations;
-    this._profile = recordingData.profile;
-    this._configuration = recordingData.configuration || {};
-  }),
 
   /**
    * Saves the current recording to a file.
@@ -107,11 +71,11 @@ LegacyPerformanceRecording.prototype = {
       totalSize: info.totalSize,
       generation: info.generation
     };
-    // initialize the _bufferPercent if the server supports it.
-    this._bufferPercent = info.position !== void 0 ? 0 : null;
 
     this._recording = true;
 
+    this._systemHost = {};
+    this._systemClient = {};
     this._markers = [];
     this._frames = [];
     this._memory = [];
@@ -134,7 +98,7 @@ LegacyPerformanceRecording.prototype = {
    * Sets results available from stopping a recording from PerformanceFront.
    * Should only be called by PerformanceFront.
    */
-  _onStopRecording: Task.async(function *({ profilerEndTime, profile }) {
+  _onStopRecording: Task.async(function *({ profilerEndTime, profile, systemClient, systemHost }) {
     // Update the duration with the accurate profilerEndTime, so we don't have
     // samples outside of the approximate duration set in `_onStoppingRecording`.
     this._duration = profilerEndTime - this._profilerStartTime;
@@ -150,162 +114,17 @@ LegacyPerformanceRecording.prototype = {
     // Markers need to be sorted ascending by time, to be properly displayed
     // in a waterfall view.
     this._markers = this._markers.sort((a, b) => (a.start > b.start));
+
+    this._systemHost = systemHost;
+    this._systemClient = systemClient;
   }),
 
   /**
    * Gets the profile's start time.
    * @return number
    */
-  getProfilerStartTime: function () {
+  _getProfilerStartTime: function () {
     return this._profilerStartTime;
-  },
-
-  /**
-   * Gets the profile's label, from `console.profile(LABEL)`.
-   * @return string
-   */
-  getLabel: function () {
-    return this._label;
-  },
-
-  /**
-   * Gets duration of this recording, in milliseconds.
-   * @return number
-   */
-  getDuration: function () {
-    // Compute an approximate ending time for the current recording if it is
-    // still in progress. This is needed to ensure that the view updates even
-    // when new data is not being generated.
-    if (this._recording) {
-      return Date.now() - this._localStartTime;
-    } else {
-      return this._duration;
-    }
-  },
-
-  /**
-   * Returns configuration object of specifying whether the recording
-   * was started withTicks, withMemory and withAllocations, and other configurations.
-   * @return object
-   */
-  getConfiguration: function () {
-    return this._configuration;
-  },
-
-  /**
-   * Gets the accumulated markers in the current recording.
-   * @return array
-   */
-  getMarkers: function() {
-    return this._markers;
-  },
-
-  /**
-   * Gets the accumulated stack frames in the current recording.
-   * @return array
-   */
-  getFrames: function() {
-    return this._frames;
-  },
-
-  /**
-   * Gets the accumulated memory measurements in this recording.
-   * @return array
-   */
-  getMemory: function() {
-    return this._memory;
-  },
-
-  /**
-   * Gets the accumulated refresh driver ticks in this recording.
-   * @return array
-   */
-  getTicks: function() {
-    return this._ticks;
-  },
-
-  /**
-   * Gets the memory allocations data in this recording.
-   * @return array
-   */
-  getAllocations: function() {
-    return this._allocations;
-  },
-
-  /**
-   * Gets the profiler data in this recording.
-   * @return array
-   */
-  getProfile: function() {
-    return this._profile;
-  },
-
-  /**
-   * Gets all the data in this recording.
-   */
-  getAllData: function() {
-    let label = this.getLabel();
-    let duration = this.getDuration();
-    let markers = this.getMarkers();
-    let frames = this.getFrames();
-    let memory = this.getMemory();
-    let ticks = this.getTicks();
-    let allocations = this.getAllocations();
-    let profile = this.getProfile();
-    let configuration = this.getConfiguration();
-    return { label, duration, markers, frames, memory, ticks, allocations, profile, configuration };
-  },
-
-  /**
-   * Returns a boolean indicating whether or not this recording model
-   * was imported via file.
-   */
-  isImported: function () {
-    return this._imported;
-  },
-
-  /**
-   * Returns a boolean indicating whether or not this recording model
-   * was started via a `console.profile` call.
-   */
-  isConsole: function () {
-    return this._console;
-  },
-
-  /**
-   * Returns a boolean indicating whether or not this recording model
-   * has finished recording.
-   * There is some delay in fetching data between when the recording stops, and
-   * when the recording is considered completed once it has all the profiler and timeline data.
-   */
-  isCompleted: function () {
-    return this._completed || this.isImported();
-  },
-
-  /**
-   * Returns a boolean indicating whether or not this recording model
-   * is recording.
-   * A model may no longer be recording, yet still not have the profiler data. In that
-   * case, use `isCompleted()`.
-   */
-  isRecording: function () {
-    return this._recording;
-  },
-
-  /**
-   * Returns a boolean indicating if this recording is no longer recording, but
-   * not yet completed.
-   */
-  isFinalizing: function () {
-    return !this.isRecording() && !this.isCompleted();
-  },
-
-  /**
-   * Returns the position, generation and totalSize of the profiler
-   * when this recording was started.
-   */
-  getStartingBufferStatus: function () {
-    return this._startingBufferStatus;
   },
 
   /**
@@ -348,6 +167,6 @@ LegacyPerformanceRecording.prototype = {
   },
 
   toString: () => "[object LegacyPerformanceRecording]"
-};
+}, PerformanceRecordingCommon);
 
 exports.LegacyPerformanceRecording = LegacyPerformanceRecording;
