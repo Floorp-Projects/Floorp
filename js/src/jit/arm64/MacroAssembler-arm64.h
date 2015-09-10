@@ -1135,31 +1135,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void andPtr(Register src, Register dest) {
         And(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
     }
-    void and32(Imm32 imm, Register dest) {
-        And(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
-    }
-    void and32(Imm32 imm, Register src, Register dest) {
-        And(ARMRegister(dest, 32), ARMRegister(src, 32), Operand(imm.value));
-    }
-
-    void and32(Register src, Register dest) {
-        And(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(ARMRegister(src, 32)));
-    }
-    void and32(Imm32 mask, Address dest) {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratch32 = temps.AcquireW();
-        MOZ_ASSERT(scratch32.asUnsized() != dest.base);
-        load32(dest, scratch32.asUnsized());
-        And(scratch32, scratch32, Operand(mask.value));
-        store32(scratch32.asUnsized(), dest);
-    }
-    void and32(Address src, Register dest) {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratch32 = temps.AcquireW();
-        MOZ_ASSERT(scratch32.asUnsized() != src.base);
-        load32(src, scratch32.asUnsized());
-        And(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(scratch32));
-    }
     void and64(Imm64 imm, Register64 dest) {
         vixl::UseScratchRegisterScope temps(this);
         const Register scratch = temps.AcquireX().asUnsized();

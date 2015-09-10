@@ -1631,33 +1631,6 @@ MacroAssemblerMIPSCompat::not32(Register reg)
 
 // Logical operations
 void
-MacroAssemblerMIPSCompat::and32(Register src, Register dest)
-{
-    ma_and(dest, dest, src);
-}
-
-void
-MacroAssemblerMIPSCompat::and32(Imm32 imm, Register dest)
-{
-    ma_and(dest, imm);
-}
-
-void
-MacroAssemblerMIPSCompat::and32(Imm32 imm, const Address& dest)
-{
-    load32(dest, SecondScratchReg);
-    ma_and(SecondScratchReg, imm);
-    store32(SecondScratchReg, dest);
-}
-
-void
-MacroAssemblerMIPSCompat::and32(const Address& src, Register dest)
-{
-    load32(src, SecondScratchReg);
-    ma_and(dest, SecondScratchReg);
-}
-
-void
 MacroAssemblerMIPSCompat::or32(Imm32 imm, Register dest)
 {
     ma_or(dest, imm);
