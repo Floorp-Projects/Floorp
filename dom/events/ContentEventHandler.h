@@ -54,7 +54,7 @@ public:
   nsresult OnQueryEditorRect(WidgetQueryContentEvent* aEvent);
   // NS_QUERY_CONTENT_STATE event handler
   nsresult OnQueryContentState(WidgetQueryContentEvent* aEvent);
-  // NS_QUERY_SELECTION_AS_TRANSFERABLE event handler
+  // eQuerySelectionAsTransferable event handler
   nsresult OnQuerySelectionAsTransferable(WidgetQueryContentEvent* aEvent);
   // NS_QUERY_CHARACTER_AT_POINT event handler
   nsresult OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent);
