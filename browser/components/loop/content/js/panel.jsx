@@ -143,35 +143,36 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
+      // XXX https://github.com/facebook/react/issues/310 for === htmlFor
       var cx = React.addons.classSet;
+      var availabilityStatus = cx({
+        "status": true,
+        "status-dnd": this.state.doNotDisturb,
+        "status-available": !this.state.doNotDisturb
+      });
       var availabilityDropdown = cx({
         "dropdown-menu": true,
         "hide": !this.state.showMenu
       });
-      var statusIcon = cx({
-        "status-unavailable": this.state.doNotDisturb,
-        "status-available": !this.state.doNotDisturb
-      });
       var availabilityText = this.state.doNotDisturb ?
-                             mozL10n.get("display_name_dnd_status") :
-                             mozL10n.get("display_name_available_status");
+                              mozL10n.get("display_name_dnd_status") :
+                              mozL10n.get("display_name_available_status");
 
       return (
         <div className="dropdown">
-          <p className="dnd-status">
-            <span className={statusIcon}
-                  onClick={this.toggleDropdownMenu}
-                  ref="menu-button">
-              {availabilityText}
-            </span>
+          <p className="dnd-status" onClick={this.toggleDropdownMenu} ref="menu-button">
+            <span>{availabilityText}</span>
+            <i className={availabilityStatus}></i>
           </p>
           <ul className={availabilityDropdown}>
-            <li className="dropdown-menu-item status-available"
+            <li className="dropdown-menu-item dnd-make-available"
                 onClick={this.changeAvailability("available")}>
+              <i className="status status-available"></i>
               <span>{mozL10n.get("display_name_available_status")}</span>
             </li>
-            <li className="dropdown-menu-item status-unavailable"
+            <li className="dropdown-menu-item dnd-make-unavailable"
                 onClick={this.changeAvailability("do-not-disturb")}>
+              <i className="status status-dnd"></i>
               <span>{mozL10n.get("display_name_dnd_status")}</span>
             </li>
           </ul>
@@ -383,7 +384,7 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         <div className="settings-menu dropdown">
-          <button className="button-settings"
+          <a className="button-settings"
              onClick={this.toggleDropdownMenu}
              ref="menu-button"
              title={mozL10n.get("settings_menu_button_tooltip")} />
@@ -417,37 +418,40 @@ loop.panel = (function(_, mozL10n) {
   /**
    * FxA sign in/up link component.
    */
-  var AccountLink = React.createClass({
+  var AuthLink = React.createClass({
     mixins: [sharedMixins.WindowCloseMixin],
 
-    propTypes: {
-      fxAEnabled: React.PropTypes.bool.isRequired,
-      userProfile: userProfileValidator
-    },
-
-    handleSignInLinkClick: function() {
+    handleSignUpLinkClick: function() {
       navigator.mozLoop.logInToFxA();
       this.closeWindow();
     },
 
     render: function() {
-      if (!this.props.fxAEnabled) {
+      if (!navigator.mozLoop.fxAEnabled || navigator.mozLoop.userProfile) {
         return null;
       }
-
-      if (this.props.userProfile && this.props.userProfile.email) {
-        return (
-          <div className="user-identity">
-            {loop.shared.utils.truncate(this.props.userProfile.email, 24)}
-          </div>
-        );
-      }
-
       return (
         <p className="signin-link">
-          <a href="#" onClick={this.handleSignInLinkClick}>
+          <a href="#" onClick={this.handleSignUpLinkClick}>
             {mozL10n.get("panel_footer_signin_or_signup_link")}
           </a>
+        </p>
+      );
+    }
+  });
+
+  /**
+   * FxA user identity (guest/authenticated) component.
+   */
+  var UserIdentity = React.createClass({
+    propTypes: {
+      displayName: React.PropTypes.string.isRequired
+    },
+
+    render: function() {
+      return (
+        <p className="user-identity">
+          {this.props.displayName}
         </p>
       );
     }
@@ -583,18 +587,6 @@ loop.panel = (function(_, mozL10n) {
     }
   });
 
-  /*
-   * User profile prop can be either an object or null as per mozLoopAPI
-   * and there is no way to express this with React 0.12.2
-   */
-  function userProfileValidator(props, propName, componentName) {
-    if (Object.prototype.toString.call(props[propName]) !== "[object Object]" &&
-        !_.isNull(props[propName])) {
-      return new Error("Required prop `" + propName +
-        "` was not correctly specified in `" + componentName + "`.");
-    }
-  }
-
   /**
    * Room list.
    */
@@ -605,8 +597,7 @@ loop.panel = (function(_, mozL10n) {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       mozLoop: React.PropTypes.object.isRequired,
       store: React.PropTypes.instanceOf(loop.store.RoomStore).isRequired,
-      // Used for room creation, associated with room owner.
-      userProfile: userProfileValidator
+      userDisplayName: React.PropTypes.string.isRequired  // for room creation
     },
 
     getInitialState: function() {
@@ -647,11 +638,6 @@ loop.panel = (function(_, mozL10n) {
       return mozL10n.get("rooms_list_current_conversations", {num: numRooms});
     },
 
-    _getUserDisplayName: function() {
-      return this.props.userProfile && this.props.userProfile.email ||
-        mozL10n.get("display_name_guest");
-    },
-
     render: function() {
       if (this.state.error) {
         // XXX Better end user reporting of errors.
@@ -676,7 +662,7 @@ loop.panel = (function(_, mozL10n) {
             mozLoop={this.props.mozLoop}
             pendingOperation={this.state.pendingCreation ||
               this.state.pendingInitialRetrieval}
-            userDisplayName={this._getUserDisplayName()} />
+            userDisplayName={this.props.userDisplayName} />
         </div>
       );
     }
@@ -804,13 +790,15 @@ loop.panel = (function(_, mozL10n) {
         React.PropTypes.instanceOf(loop.store.RoomStore).isRequired,
       selectedTab: React.PropTypes.string,
       // Used only for unit tests.
-      showTabButtons: React.PropTypes.bool
+      showTabButtons: React.PropTypes.bool,
+      // Mostly used for UI components showcase and unit tests
+      userProfile: React.PropTypes.object
     },
 
     getInitialState: function() {
       return {
         hasEncryptionKey: this.props.mozLoop.hasEncryptionKey,
-        userProfile: this.props.mozLoop.userProfile,
+        userProfile: this.props.userProfile || this.props.mozLoop.userProfile,
         gettingStartedSeen: this.props.mozLoop.getLoopPref("gettingStarted.seen")
       };
     },
@@ -905,6 +893,11 @@ loop.panel = (function(_, mozL10n) {
       window.removeEventListener("UIAction", this._UIActionHandler);
     },
 
+    _getUserDisplayName: function() {
+      return this.state.userProfile && this.state.userProfile.email ||
+             mozL10n.get("display_name_guest");
+    },
+
     render: function() {
       var NotificationListView = sharedViews.NotificationListView;
 
@@ -944,7 +937,7 @@ loop.panel = (function(_, mozL10n) {
               <RoomList dispatcher={this.props.dispatcher}
                         mozLoop={this.props.mozLoop}
                         store={this.props.roomStore}
-                        userProfile={this.state.userProfile} />
+                        userDisplayName={this._getUserDisplayName()} />
             </Tab>
             <Tab name="contacts">
               <ContactsList
@@ -973,11 +966,12 @@ loop.panel = (function(_, mozL10n) {
           </TabView>
           <div className="footer">
             <div className="user-details">
+              <UserIdentity displayName={this._getUserDisplayName()} />
               <AvailabilityDropdown />
             </div>
             <div className="signin-details">
-              <AccountLink fxAEnabled={this.props.mozLoop.fxAEnabled}
-                           userProfile={this.state.userProfile}/>
+              <AuthLink />
+              <div className="footer-signin-separator" />
               <SettingsDropdown mozLoop={this.props.mozLoop}/>
             </div>
           </div>
@@ -1018,17 +1012,18 @@ loop.panel = (function(_, mozL10n) {
   }
 
   return {
-    AccountLink: AccountLink,
+    init: init,
+    AuthLink: AuthLink,
     AvailabilityDropdown: AvailabilityDropdown,
     GettingStartedView: GettingStartedView,
-    init: init,
     NewRoomView: NewRoomView,
     PanelView: PanelView,
     RoomEntry: RoomEntry,
     RoomList: RoomList,
     SettingsDropdown: SettingsDropdown,
     SignInRequestView: SignInRequestView,
-    ToSView: ToSView
+    ToSView: ToSView,
+    UserIdentity: UserIdentity
   };
 })(_, document.mozL10n);
 

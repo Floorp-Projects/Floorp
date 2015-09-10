@@ -15,7 +15,6 @@
 
   // 1. Desktop components
   // 1.1 Panel
-  var AvailabilityDropdown = loop.panel.AvailabilityDropdown;
   var PanelView = loop.panel.PanelView;
   var SignInRequestView = loop.panel.SignInRequestView;
   // 1.2. Conversation Window
@@ -439,17 +438,7 @@
 
   // Local mocks
 
-  var mockMozLoopLoggedIn = _.cloneDeep(navigator.mozLoop);
-  mockMozLoopLoggedIn.userProfile = {
-    email: "text@example.com",
-    uid: "0354b278a381d3cb408bb46ffc01266"
-  };
-
-  var mockMozLoopLoggedInLongEmail = _.cloneDeep(navigator.mozLoop);
-  mockMozLoopLoggedInLongEmail.userProfile = {
-    email: "reallyreallylongtext@example.com",
-    uid: "0354b278a381d3cb408bb46ffc01266"
-  };
+  var mockMozLoopRooms = _.extend({}, navigator.mozLoop);
 
   var mockContact = {
     name: ["Mr Smith"],
@@ -503,8 +492,7 @@
       "10x10": ["close", "close-active", "close-disabled", "dropdown",
         "dropdown-white", "dropdown-active", "dropdown-disabled", "edit",
         "edit-active", "edit-disabled", "edit-white", "expand", "expand-active",
-        "expand-disabled", "minimize", "minimize-active", "minimize-disabled",
-        "settings-cog"
+        "expand-disabled", "minimize", "minimize-active", "minimize-disabled"
       ],
       "14x14": ["audio", "audio-active", "audio-disabled", "facemute",
         "facemute-active", "facemute-disabled", "hangup", "hangup-active",
@@ -521,8 +509,7 @@
         "precall", "precall-hover", "precall-active", "screen-white", "screenmute-white",
         "settings", "settings-hover", "settings-active", "share-darkgrey", "tag",
         "tag-hover", "tag-active", "trash", "unblock", "unblock-hover", "unblock-active",
-        "video", "video-hover", "video-active", "tour", "status-available",
-        "status-unavailable"
+        "video", "video-hover", "video-active", "tour"
       ]
     },
 
@@ -593,7 +580,6 @@
         React.PropTypes.element,
         React.PropTypes.arrayOf(React.PropTypes.element)
       ]).isRequired,
-      cssClass: React.PropTypes.string,
       dashed: React.PropTypes.bool,
       style: React.PropTypes.object,
       summary: React.PropTypes.string.isRequired
@@ -605,14 +591,8 @@
 
     render: function() {
       var cx = React.addons.classSet;
-      var extraCSSClass = {
-        "example": true
-      };
-      if (this.props.cssClass) {
-        extraCSSClass[this.props.cssClass] = true;
-      }
       return (
-        React.createElement("div", {className: cx(extraCSSClass)}, 
+        React.createElement("div", {className: "example"}, 
           React.createElement("h3", {id: this.makeId()}, 
             this.props.summary, 
             React.createElement("a", {href: this.makeId("#")}, " ¶")
@@ -713,31 +693,25 @@
               React.createElement("strong", null, "Note:"), " 332px wide."
             ), 
             React.createElement(Example, {dashed: true, style: {width: "332px"}, summary: "Re-sign-in view"}, 
-              React.createElement(SignInRequestView, {mozLoop: mockMozLoopLoggedIn})
+              React.createElement(SignInRequestView, {mozLoop: mockMozLoopRooms})
             ), 
             React.createElement(Example, {dashed: true, style: {width: "332px"}, summary: "Room list tab"}, 
               React.createElement(PanelView, {client: mockClient, 
                          dispatcher: dispatcher, 
-                         mozLoop: mockMozLoopLoggedIn, 
+                         mozLoop: mockMozLoopRooms, 
                          notifications: notifications, 
                          roomStore: roomStore, 
-                         selectedTab: "rooms"})
+                         selectedTab: "rooms", 
+                         userProfile: {email: "test@example.com"}})
             ), 
             React.createElement(Example, {dashed: true, style: {width: "332px"}, summary: "Contact list tab"}, 
               React.createElement(PanelView, {client: mockClient, 
                          dispatcher: dispatcher, 
-                         mozLoop: mockMozLoopLoggedIn, 
+                         mozLoop: mockMozLoopRooms, 
                          notifications: notifications, 
                          roomStore: roomStore, 
-                         selectedTab: "contacts"})
-            ), 
-            React.createElement(Example, {dashed: true, style: {width: "332px"}, summary: "Contact list tab long email"}, 
-              React.createElement(PanelView, {client: mockClient, 
-                         dispatcher: dispatcher, 
-                         mozLoop: mockMozLoopLoggedInLongEmail, 
-                         notifications: notifications, 
-                         roomStore: roomStore, 
-                         selectedTab: "contacts"})
+                         selectedTab: "contacts", 
+                         userProfile: {email: "test@example.com"}})
             ), 
             React.createElement(Example, {dashed: true, style: {width: "332px"}, summary: "Error Notification"}, 
               React.createElement(PanelView, {client: mockClient, 
@@ -749,38 +723,26 @@
             React.createElement(Example, {dashed: true, style: {width: "332px"}, summary: "Error Notification - authenticated"}, 
               React.createElement(PanelView, {client: mockClient, 
                          dispatcher: dispatcher, 
-                         mozLoop: mockMozLoopLoggedIn, 
+                         mozLoop: navigator.mozLoop, 
                          notifications: errNotifications, 
-                         roomStore: roomStore})
+                         roomStore: roomStore, 
+                         userProfile: {email: "test@example.com"}})
             ), 
             React.createElement(Example, {dashed: true, style: {width: "332px"}, summary: "Contact import success"}, 
               React.createElement(PanelView, {dispatcher: dispatcher, 
-                         mozLoop: mockMozLoopLoggedIn, 
+                         mozLoop: mockMozLoopRooms, 
                          notifications: new loop.shared.models.NotificationCollection([{level: "success", message: "Import success"}]), 
                          roomStore: roomStore, 
-                         selectedTab: "contacts"})
+                         selectedTab: "contacts", 
+                         userProfile: {email: "test@example.com"}})
             ), 
             React.createElement(Example, {dashed: true, style: {width: "332px"}, summary: "Contact import error"}, 
               React.createElement(PanelView, {dispatcher: dispatcher, 
-                         mozLoop: mockMozLoopLoggedIn, 
+                         mozLoop: mockMozLoopRooms, 
                          notifications: new loop.shared.models.NotificationCollection([{level: "error", message: "Import error"}]), 
                          roomStore: roomStore, 
-                         selectedTab: "contacts"})
-            )
-          ), 
-
-          React.createElement(Section, {name: "Availability Dropdown"}, 
-            React.createElement("p", {className: "note"}, 
-              React.createElement("strong", null, "Note:"), " 332px wide."
-            ), 
-            React.createElement(Example, {dashed: true, style: {width: "332px", height: "200px"}, 
-                     summary: "AvailabilityDropdown"}, 
-              React.createElement(AvailabilityDropdown, null)
-            ), 
-            React.createElement(Example, {cssClass: "force-menu-show", dashed: true, 
-                     style: {width: "332px", height: "200px"}, 
-                     summary: "AvailabilityDropdown Expanded"}, 
-              React.createElement(AvailabilityDropdown, null)
+                         selectedTab: "contacts", 
+                         userProfile: {email: "test@example.com"}})
             )
           ), 
 
@@ -791,7 +753,7 @@
                 React.createElement(AcceptCallView, {callType: CALL_TYPES.AUDIO_VIDEO, 
                                 callerId: "Mr Smith", 
                                 dispatcher: dispatcher, 
-                                mozLoop: mockMozLoopLoggedIn})
+                                mozLoop: mockMozLoopRooms})
               )
             ), 
 
@@ -801,7 +763,7 @@
                 React.createElement(AcceptCallView, {callType: CALL_TYPES.AUDIO_ONLY, 
                                 callerId: "Mr Smith", 
                                 dispatcher: dispatcher, 
-                                mozLoop: mockMozLoopLoggedIn})
+                                mozLoop: mockMozLoopRooms})
               )
             )
           ), 
@@ -813,7 +775,7 @@
                 React.createElement(AcceptCallView, {callType: CALL_TYPES.AUDIO_VIDEO, 
                                 callerId: "Mr Smith", 
                                 dispatcher: dispatcher, 
-                                mozLoop: mockMozLoopLoggedIn, 
+                                mozLoop: mockMozLoopRooms, 
                                 showMenu: true})
               )
             )
