@@ -3682,7 +3682,7 @@ nsContentUtils::GetEventMessage(nsIAtom* aName)
     }
   }
 
-  return NS_USER_DEFINED_EVENT;
+  return eUnidentifiedEvent;
 }
 
 // static
@@ -3705,7 +3705,7 @@ nsContentUtils::GetEventMessageAndAtom(const nsAString& aName,
   if (sStringEventTable->Get(aName, &mapping)) {
     *aEventMessage =
       mapping.mEventClassID == aEventClassID ? mapping.mMessage :
-                                               NS_USER_DEFINED_EVENT;
+                                               eUnidentifiedEvent;
     return mapping.mAtom;
   }
 
@@ -3718,11 +3718,11 @@ nsContentUtils::GetEventMessageAndAtom(const nsAString& aName,
     }
   }
 
-  *aEventMessage = NS_USER_DEFINED_EVENT;
+  *aEventMessage = eUnidentifiedEvent;
   nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aName);
   sUserDefinedEvents->AppendObject(atom);
   mapping.mAtom = atom;
-  mapping.mMessage = NS_USER_DEFINED_EVENT;
+  mapping.mMessage = eUnidentifiedEvent;
   mapping.mType = EventNameType_None;
   mapping.mEventClassID = eBasicEventClass;
   sStringEventTable->Put(aName, mapping);
