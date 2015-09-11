@@ -1477,6 +1477,287 @@ class ICUnaryArith_Double : public ICStub
     };
 };
 
+// Compare
+//      JSOP_LT
+//      JSOP_LE
+//      JSOP_GT
+//      JSOP_GE
+//      JSOP_EQ
+//      JSOP_NE
+//      JSOP_STRICTEQ
+//      JSOP_STRICTNE
+
+class ICCompare_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    explicit ICCompare_Fallback(JitCode* stubCode)
+      : ICFallbackStub(ICStub::Compare_Fallback, stubCode) {}
+
+  public:
+    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+
+    static const size_t UNOPTIMIZABLE_ACCESS_BIT = 0;
+    void noteUnoptimizableAccess() {
+        extra_ |= (1u << UNOPTIMIZABLE_ACCESS_BIT);
+    }
+    bool hadUnoptimizableAccess() const {
+        return extra_ & (1u << UNOPTIMIZABLE_ACCESS_BIT);
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler& masm);
+
+      public:
+        explicit Compiler(JSContext* cx, Engine engine)
+          : ICStubCompiler(cx, ICStub::Compare_Fallback, engine) {}
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICCompare_Fallback>(space, getStubCode());
+        }
+    };
+};
+
+class ICCompare_Int32 : public ICStub
+{
+    friend class ICStubSpace;
+
+    explicit ICCompare_Int32(JitCode* stubCode)
+      : ICStub(ICStub::Compare_Int32, stubCode) {}
+
+  public:
+    // Compiler for this stub kind.
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler& masm);
+
+      public:
+        Compiler(JSContext* cx, JSOp op, Engine engine)
+          : ICMultiStubCompiler(cx, ICStub::Compare_Int32, op, engine) {}
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICCompare_Int32>(space, getStubCode());
+        }
+    };
+};
+
+class ICCompare_Double : public ICStub
+{
+    friend class ICStubSpace;
+
+    explicit ICCompare_Double(JitCode* stubCode)
+      : ICStub(ICStub::Compare_Double, stubCode)
+    {}
+
+  public:
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler& masm);
+
+      public:
+        Compiler(JSContext* cx, JSOp op, Engine engine)
+          : ICMultiStubCompiler(cx, ICStub::Compare_Double, op, engine)
+        {}
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICCompare_Double>(space, getStubCode());
+        }
+    };
+};
+
+class ICCompare_NumberWithUndefined : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICCompare_NumberWithUndefined(JitCode* stubCode, bool lhsIsUndefined)
+      : ICStub(ICStub::Compare_NumberWithUndefined, stubCode)
+    {
+        extra_ = lhsIsUndefined;
+    }
+
+  public:
+    bool lhsIsUndefined() {
+        return extra_;
+    }
+
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler& masm);
+
+        bool lhsIsUndefined;
+
+      public:
+        Compiler(JSContext* cx, JSOp op, Engine engine, bool lhsIsUndefined)
+          : ICMultiStubCompiler(cx, ICStub::Compare_NumberWithUndefined, op, engine),
+            lhsIsUndefined(lhsIsUndefined)
+        {}
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(engine_) |
+                  (static_cast<int32_t>(kind) << 1) |
+                  (static_cast<int32_t>(op) << 17) |
+                  (static_cast<int32_t>(lhsIsUndefined) << 25);
+        }
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICCompare_NumberWithUndefined>(space, getStubCode(),
+                                                              lhsIsUndefined);
+        }
+    };
+};
+
+class ICCompare_String : public ICStub
+{
+    friend class ICStubSpace;
+
+    explicit ICCompare_String(JitCode* stubCode)
+      : ICStub(ICStub::Compare_String, stubCode)
+    {}
+
+  public:
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler& masm);
+
+      public:
+        Compiler(JSContext* cx, JSOp op, Engine engine)
+          : ICMultiStubCompiler(cx, ICStub::Compare_String, op, engine)
+        {}
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICCompare_String>(space, getStubCode());
+        }
+    };
+};
+
+class ICCompare_Boolean : public ICStub
+{
+    friend class ICStubSpace;
+
+    explicit ICCompare_Boolean(JitCode* stubCode)
+      : ICStub(ICStub::Compare_Boolean, stubCode)
+    {}
+
+  public:
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler& masm);
+
+      public:
+        Compiler(JSContext* cx, JSOp op, Engine engine)
+          : ICMultiStubCompiler(cx, ICStub::Compare_Boolean, op, engine)
+        {}
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICCompare_Boolean>(space, getStubCode());
+        }
+    };
+};
+
+class ICCompare_Object : public ICStub
+{
+    friend class ICStubSpace;
+
+    explicit ICCompare_Object(JitCode* stubCode)
+      : ICStub(ICStub::Compare_Object, stubCode)
+    {}
+
+  public:
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler& masm);
+
+      public:
+        Compiler(JSContext* cx, JSOp op, Engine engine)
+          : ICMultiStubCompiler(cx, ICStub::Compare_Object, op, engine)
+        {}
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICCompare_Object>(space, getStubCode());
+        }
+    };
+};
+
+class ICCompare_ObjectWithUndefined : public ICStub
+{
+    friend class ICStubSpace;
+
+    explicit ICCompare_ObjectWithUndefined(JitCode* stubCode)
+      : ICStub(ICStub::Compare_ObjectWithUndefined, stubCode)
+    {}
+
+  public:
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler& masm);
+
+        bool lhsIsUndefined;
+        bool compareWithNull;
+
+      public:
+        Compiler(JSContext* cx, JSOp op, Engine engine, bool lhsIsUndefined, bool compareWithNull)
+          : ICMultiStubCompiler(cx, ICStub::Compare_ObjectWithUndefined, op, engine),
+            lhsIsUndefined(lhsIsUndefined),
+            compareWithNull(compareWithNull)
+        {}
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(engine_) |
+                  (static_cast<int32_t>(kind) << 1) |
+                  (static_cast<int32_t>(op) << 17) |
+                  (static_cast<int32_t>(lhsIsUndefined) << 25) |
+                  (static_cast<int32_t>(compareWithNull) << 26);
+        }
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICCompare_ObjectWithUndefined>(space, getStubCode());
+        }
+    };
+};
+
+class ICCompare_Int32WithBoolean : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICCompare_Int32WithBoolean(JitCode* stubCode, bool lhsIsInt32)
+      : ICStub(ICStub::Compare_Int32WithBoolean, stubCode)
+    {
+        extra_ = lhsIsInt32;
+    }
+
+  public:
+    bool lhsIsInt32() const {
+        return extra_;
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        JSOp op_;
+        bool lhsIsInt32_;
+        bool generateStubCode(MacroAssembler& masm);
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(engine_) |
+                  (static_cast<int32_t>(kind) << 1) |
+                  (static_cast<int32_t>(op_) << 17) |
+                  (static_cast<int32_t>(lhsIsInt32_) << 25);
+        }
+
+      public:
+        Compiler(JSContext* cx, JSOp op, Engine engine, bool lhsIsInt32)
+          : ICStubCompiler(cx, ICStub::Compare_Int32WithBoolean, engine),
+            op_(op),
+            lhsIsInt32_(lhsIsInt32)
+        {}
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICCompare_Int32WithBoolean>(space, getStubCode(), lhsIsInt32_);
+        }
+    };
+};
 
 } // namespace jit
 } // namespace js

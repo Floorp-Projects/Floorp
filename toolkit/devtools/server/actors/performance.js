@@ -22,8 +22,6 @@ loader.lazyRequireGetter(this, "normalizePerformanceFeatures",
   "devtools/toolkit/performance/utils", true);
 loader.lazyRequireGetter(this, "LegacyPerformanceFront",
   "devtools/toolkit/performance/legacy/front", true);
-loader.lazyRequireGetter(this, "getSystemInfo",
-  "devtools/toolkit/shared/system", true);
 
 const PIPE_TO_FRONT_EVENTS = new Set([
   "recording-started", "recording-stopping", "recording-stopped",
@@ -99,13 +97,10 @@ let PerformanceActor = exports.PerformanceActor = protocol.ActorClass({
     protocol.Actor.prototype.destroy.call(this);
   },
 
-  connect: method(function (config) {
-    this.bridge.connect({ systemClient: config.systemClient });
-    return { traits: this.traits };
-  }, {
-    request: { options: Arg(0, "nullable:json") },
-    response: RetVal("json")
-  }),
+  connect: method(function () {
+    this.bridge.connect();
+    return this.traits;
+  }, { response: RetVal("json") }),
 
   startRecording: method(Task.async(function *(options={}) {
     let normalizedOptions = normalizePerformanceFeatures(options, this.traits.features);
@@ -187,17 +182,9 @@ const PerformanceFront = exports.PerformanceFront = protocol.FrontClass(Performa
     protocol.Front.prototype.destroy.call(this);
   },
 
-  /**
-   * Conenct to the server, and handle once-off tasks like storing traits
-   * or system info.
-   */
-  connect: custom(Task.async(function *() {
-    let systemClient = yield getSystemInfo();
-    let { traits } = yield this._connect({ systemClient });
-    this._traits = traits;
-
-    return this._traits;
-  }), {
+  connect: custom(function () {
+    return this._connect().then(traits => this._traits = traits);
+  }, {
     impl: "_connect"
   }),
 
@@ -252,8 +239,6 @@ const PerformanceFront = exports.PerformanceFront = protocol.FrontClass(Performa
       model._allocations = recordingData.allocations;
       model._profile = recordingData.profile;
       model._configuration = recordingData.configuration || {};
-      model._systemHost = recordingData.systemHost;
-      model._systemClient = recordingData.systemClient;
       return model;
     });
   },

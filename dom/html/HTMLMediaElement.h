@@ -792,7 +792,7 @@ protected:
    */
   void AddMediaElementToURITable();
   /**
-   * Call this before clearing mLoadingSrc.
+   * Call this before modifying mLoadingSrc.
    */
   void RemoveMediaElementFromURITable();
   /**

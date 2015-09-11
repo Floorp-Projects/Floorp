@@ -1810,7 +1810,7 @@ IMContextWrapper::SetCursorPosition(GtkIMContext* aContext)
     }
 
     WidgetQueryContentEvent charRect(true,
-                                     useCaret ? NS_QUERY_CARET_RECT :
+                                     useCaret ? eQueryCaretRect :
                                                 NS_QUERY_TEXT_RECT,
                                      mLastFocusedWindow);
     if (useCaret) {
@@ -1833,7 +1833,7 @@ IMContextWrapper::SetCursorPosition(GtkIMContext* aContext)
     if (!charRect.mSucceeded) {
         MOZ_LOG(gGtkIMLog, LogLevel::Error,
             ("GTKIM: %p   SetCursorPosition(), FAILED, %s was failed",
-             this, useCaret ? "NS_QUERY_CARET_RECT" : "NS_QUERY_TEXT_RECT"));
+             this, useCaret ? "eQueryCaretRect" : "NS_QUERY_TEXT_RECT"));
         return;
     }
 
@@ -1909,8 +1909,7 @@ IMContextWrapper::GetCurrentParagraph(nsAString& aText,
     }
 
     // Get all text contents of the focused editor
-    WidgetQueryContentEvent queryTextContentEvent(true,
-                                                  NS_QUERY_TEXT_CONTENT,
+    WidgetQueryContentEvent queryTextContentEvent(true, eQueryTextContent,
                                                   mLastFocusedWindow);
     queryTextContentEvent.InitForQueryTextContent(0, UINT32_MAX);
     mLastFocusedWindow->DispatchEvent(&queryTextContentEvent, status);
@@ -2006,8 +2005,7 @@ IMContextWrapper::DeleteText(GtkIMContext* aContext,
     }
 
     // Get all text contents of the focused editor
-    WidgetQueryContentEvent queryTextContentEvent(true,
-                                                  NS_QUERY_TEXT_CONTENT,
+    WidgetQueryContentEvent queryTextContentEvent(true, eQueryTextContent,
                                                   mLastFocusedWindow);
     queryTextContentEvent.InitForQueryTextContent(0, UINT32_MAX);
     mLastFocusedWindow->DispatchEvent(&queryTextContentEvent, status);
@@ -2082,8 +2080,7 @@ IMContextWrapper::DeleteText(GtkIMContext* aContext,
     }
 
     // Delete the selection
-    WidgetContentCommandEvent contentCommandEvent(true,
-                                                  NS_CONTENT_COMMAND_DELETE,
+    WidgetContentCommandEvent contentCommandEvent(true, eContentCommandDelete,
                                                   mLastFocusedWindow);
     mLastFocusedWindow->DispatchEvent(&contentCommandEvent, status);
 
@@ -2152,7 +2149,7 @@ IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString)
     }
 
     nsEventStatus status;
-    WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT,
+    WidgetQueryContentEvent selection(true, eQuerySelectedText,
                                       mLastFocusedWindow);
     InitEvent(selection);
     mLastFocusedWindow->DispatchEvent(&selection, status);
@@ -2201,7 +2198,7 @@ IMContextWrapper::Selection::Assign(const IMENotification& aIMENotification)
 void
 IMContextWrapper::Selection::Assign(const WidgetQueryContentEvent& aEvent)
 {
-    MOZ_ASSERT(aEvent.mMessage == NS_QUERY_SELECTED_TEXT);
+    MOZ_ASSERT(aEvent.mMessage == eQuerySelectedText);
     MOZ_ASSERT(aEvent.mSucceeded);
     mOffset = aEvent.mReply.mOffset;
     mLength = aEvent.mReply.mString.Length();

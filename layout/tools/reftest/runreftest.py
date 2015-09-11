@@ -29,7 +29,7 @@ import mozleak
 import mozprocess
 import mozprofile
 import mozrunner
-from mozrunner.utils import test_environment
+from mozrunner.utils import get_stack_fixer_function, test_environment
 from mozscreenshot import printstatus, dump_screen
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -503,48 +503,9 @@ class RefTest(object):
 
         def stack_fixer(self):
             """
-            return stackFixerFunction, if any, to use on the output lines
+            return get_stack_fixer_function, if any, to use on the output lines
             """
-
-            if not mozinfo.info.get('debug'):
-                return None
-
-            stack_fixer_function = None
-
-            def import_stack_fixer_module(module_name):
-                sys.path.insert(0, self.utilityPath)
-                module = __import__(module_name, globals(), locals(), [])
-                sys.path.pop(0)
-                return module
-
-            if self.symbolsPath and os.path.exists(self.symbolsPath):
-                # Run each line through a function in fix_stack_using_bpsyms.py (uses breakpad symbol files).
-                # This method is preferred for Tinderbox builds, since native
-                # symbols may have been stripped.
-                stack_fixer_module = import_stack_fixer_module(
-                    'fix_stack_using_bpsyms')
-                stack_fixer_function = lambda line: stack_fixer_module.fixSymbols(
-                    line, self.symbolsPath)
-
-            elif mozinfo.isMac:
-                # Run each line through fix_macosx_stack.py (uses atos).
-                # This method is preferred for developer machines, so we don't
-                # have to run "make buildsymbols".
-                stack_fixer_module = import_stack_fixer_module(
-                    'fix_macosx_stack')
-                stack_fixer_function = lambda line: stack_fixer_module.fixSymbols(
-                    line)
-
-            elif mozinfo.isLinux:
-                # Run each line through fix_linux_stack.py (uses addr2line).
-                # This method is preferred for developer machines, so we don't
-                # have to run "make buildsymbols".
-                stack_fixer_module = import_stack_fixer_module(
-                    'fix_linux_stack')
-                stack_fixer_function = lambda line: stack_fixer_module.fixSymbols(
-                    line)
-
-            return stack_fixer_function
+            return get_stack_fixer_function(self.utilityPath, self.symbolsPath)
 
         # output line handlers:
         # these take a line and return a line
@@ -669,7 +630,10 @@ class RefTest(object):
                                  debuggerInfo=debuggerInfo)
             mozleak.process_leak_log(self.leakLogFile,
                                      leak_thresholds=options.leakThresholds,
-                                     log=log)
+                                     log=log,
+                                     stack_fixer=get_stack_fixer_function(options.utilityPath,
+                                                                          options.symbolsPath),
+            )
             log.info("\nREFTEST INFO | runreftest.py | Running tests: end.")
         finally:
             self.cleanup(profileDir)

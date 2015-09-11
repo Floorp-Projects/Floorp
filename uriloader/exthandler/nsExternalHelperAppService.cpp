@@ -402,6 +402,72 @@ static nsresult GetDownloadDirectory(nsIFile **_directory,
   // On all other platforms, we default to the systems temporary directory.
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dir));
   NS_ENSURE_SUCCESS(rv, rv);
+
+#if defined(XP_UNIX)
+  // Ensuring that only the current user can read the file names we end up
+  // creating. Note that Creating directories with specified permission only
+  // supported on Unix platform right now. That's why above if exists.
+
+  PRUint32 permissions;
+  rv = dir->GetPermissions(&permissions);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (permissions != PR_IRWXU) {
+    const char* userName = PR_GetEnv("USERNAME");
+    if (!userName || !*userName) {
+      userName = PR_GetEnv("USER");
+      if (!userName || !*userName) {
+        userName = PR_GetEnv("LOGNAME");
+      }
+      else {
+        userName = "mozillaUser";
+      }
+    }
+
+    nsAutoString userDir;
+    userDir.AssignLiteral("mozilla_");
+    userDir.AppendASCII(userName);
+    userDir.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '_');
+
+    int counter = 0;
+    bool pathExists;
+    nsCOMPtr<nsIFile> finalPath;
+
+    while (true) {
+      nsAutoString countedUserDir(userDir);
+      countedUserDir.AppendInt(counter, 10);
+      dir->Clone(getter_AddRefs(finalPath));
+      finalPath->Append(countedUserDir);
+
+      rv = finalPath->Exists(&pathExists);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (pathExists) {
+        // If this path has the right permissions, use it.
+        rv = finalPath->GetPermissions(&permissions);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (permissions == PR_IRWXU) {
+          dir = finalPath;
+          break;
+        }
+      }
+
+      rv = finalPath->Create(nsIFile::DIRECTORY_TYPE, PR_IRWXU);
+      if (NS_SUCCEEDED(rv)) {
+        dir = finalPath;
+        break;
+      }
+      else if (rv != NS_ERROR_FILE_ALREADY_EXISTS) {
+        // Unexpected error.
+        return rv;
+      }
+
+      counter++;
+    }
+  }
+
+#endif
 #endif
 
   NS_ASSERTION(dir, "Somehow we didn't get a download directory!");

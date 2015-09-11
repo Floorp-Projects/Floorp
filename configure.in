@@ -850,6 +850,8 @@ fi
 MOZ_PATH_PROG(RPMBUILD, rpmbuild, :)
 AC_SUBST(RPMBUILD)
 
+MOZ_PATH_PROG(GENISOIMAGE, genisoimage, :)
+
 if test "$COMPILE_ENVIRONMENT"; then
 
 dnl ========================================================
@@ -8780,6 +8782,7 @@ fi
 AC_SUBST(MOZ_APP_STATIC_INI)
 
 AC_SUBST(MOZ_PKG_SPECIAL)
+AC_SUBST(MOZ_SIMPLE_PACKAGE_NAME)
 
 AC_SUBST(MOZILLA_OFFICIAL)
 
@@ -8984,6 +8987,8 @@ AC_SUBST(SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE)
 
 AC_SUBST(MOZ_ENABLE_SZIP)
 AC_SUBST(MOZ_SZIP_FLAGS)
+
+AC_SUBST(DMG_TOOL)
 
 dnl Host JavaScript runtime, if any, to use during cross compiles.
 AC_SUBST(JS_BINARY)

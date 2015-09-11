@@ -350,12 +350,23 @@ public:
   //   table.Remove(key);
   //
   // If |key|'s entry is found, it is cleared (via table->mOps->clearEntry).
+  // The table's capacity may be reduced afterwards.
   void Remove(const void* aKey);
+
+  // To remove an entry found by a prior search, call:
+  //
+  //   table.RemoveEntry(entry);
+  //
+  // The entry, which must be present and in use, is cleared (via
+  // table->mOps->clearEntry). The table's capacity may be reduced afterwards.
+  void RemoveEntry(PLDHashEntryHdr* aEntry);
 
   // Remove an entry already accessed via Search() or Add().
   //
   // NB: this is a "raw" or low-level method. It does not shrink the table if
-  // it is underloaded. Don't use it unless you know what you are doing.
+  // it is underloaded. Don't use it unless necessary and you know what you are
+  // doing, and if so, please explain in a comment why it is necessary instead
+  // of RemoveEntry().
   void RawRemove(PLDHashEntryHdr* aEntry);
 
   // This function is equivalent to
