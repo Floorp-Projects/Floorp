@@ -146,7 +146,7 @@ NS_EVENT_MESSAGE(eUnidentifiedEvent,    2000)
  
 // composition events
 NS_EVENT_MESSAGE(eCompositionEventFirst, 2200)
-NS_EVENT_MESSAGE(NS_COMPOSITION_START,   eCompositionEventFirst)
+NS_EVENT_MESSAGE(eCompositionStart,      eCompositionEventFirst)
 // NS_COMPOSITION_END is the message for DOM compositionend event.
 // This event should NOT be dispatched from widget if NS_COMPOSITION_COMMIT
 // is available.

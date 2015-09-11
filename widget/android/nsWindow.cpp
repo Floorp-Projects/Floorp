@@ -1827,8 +1827,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 }
 
                 {
-                    WidgetCompositionEvent event(
-                        true, NS_COMPOSITION_START, this);
+                    WidgetCompositionEvent event(true, eCompositionStart, this);
                     InitEvent(event, nullptr);
                     DispatchEvent(&event);
                 }
@@ -1983,8 +1982,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 }
 
                 {
-                    WidgetCompositionEvent event(
-                        true, NS_COMPOSITION_START, this);
+                    WidgetCompositionEvent event(true, eCompositionStart, this);
                     InitEvent(event, nullptr);
                     DispatchEvent(&event);
                 }

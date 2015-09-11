@@ -191,7 +191,7 @@ TextEventDispatcher::StartComposition(nsEventStatus& aStatus)
   }
 
   mIsComposing = true;
-  WidgetCompositionEvent compositionStartEvent(true, NS_COMPOSITION_START,
+  WidgetCompositionEvent compositionStartEvent(true, eCompositionStart,
                                                mWidget);
   InitEvent(compositionStartEvent);
   rv = DispatchEvent(mWidget, compositionStartEvent, aStatus);
