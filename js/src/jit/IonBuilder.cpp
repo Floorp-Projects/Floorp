@@ -4065,10 +4065,11 @@ IonBuilder::processCondSwitchCase(CFGState& state)
     if (bodyBlock != caseBlock) {
         MDefinition* caseOperand = current->pop();
         MDefinition* switchOperand = current->peek(-1);
-        MCompare* cmpResult = MCompare::New(alloc(), switchOperand, caseOperand, JSOP_STRICTEQ);
-        cmpResult->infer(constraints(), inspector, pc);
+
+        if (jsop_compare(JSOP_STRICTEQ, switchOperand, caseOperand))
+            return ControlStatus_Error;
+        MInstruction* cmpResult = current->pop()->toInstruction();
         MOZ_ASSERT(!cmpResult->isEffectful());
-        current->add(cmpResult);
         current->end(newTest(cmpResult, bodyBlock, caseBlock));
 
         // Add last case as predecessor of the body if the body is aliasing
@@ -6696,14 +6697,202 @@ IonBuilder::jsop_compare(JSOp op)
     MDefinition* right = current->pop();
     MDefinition* left = current->pop();
 
+    return jsop_compare(op, left, right);
+}
+
+bool
+IonBuilder::jsop_compare(JSOp op, MDefinition* left, MDefinition* right)
+{
+    bool emitted = false;
+
+    if (!forceInlineCaches()) {
+        if (!compareTrySpecialized(&emitted, op, left, right) || emitted)
+            return emitted;
+        if (!compareTryBitwise(&emitted, op, left, right) || emitted)
+            return emitted;
+        if (!compareTrySpecializedOnBaselineInspector(&emitted, op, left, right) || emitted)
+            return emitted;
+    }
+
+    if (!compareTrySharedStub(&emitted, op, left, right) || emitted)
+        return emitted;
+
+    // Not possible to optimize. Do a slow vm call.
     MCompare* ins = MCompare::New(alloc(), left, right, op);
+    ins->cacheOperandMightEmulateUndefined(constraints());
+
+    current->add(ins);
+    current->push(ins);
+    if (ins->isEffectful() && !resumeAfter(ins))
+        return false;
+    return true;
+}
+
+static bool
+ObjectOrSimplePrimitive(MDefinition* op)
+{
+    // Return true if op is either undefined/null/boolean/int32 or an object.
+    return !op->mightBeType(MIRType_String)
+        && !op->mightBeType(MIRType_Symbol)
+        && !op->mightBeType(MIRType_Double)
+        && !op->mightBeType(MIRType_Float32)
+        && !op->mightBeType(MIRType_MagicOptimizedArguments)
+        && !op->mightBeType(MIRType_MagicHole)
+        && !op->mightBeType(MIRType_MagicIsConstructing);
+}
+
+bool
+IonBuilder::compareTrySpecialized(bool* emitted, JSOp op, MDefinition* left, MDefinition* right)
+{
+    MOZ_ASSERT(*emitted == false);
+
+    // Try to emit an compare based on the input types.
+
+    MCompare::CompareType type = MCompare::determineCompareType(op, left, right);
+    if (type == MCompare::Compare_Unknown)
+        return true;
+
+    MCompare* ins = MCompare::New(alloc(), left, right, op);
+    ins->setCompareType(type);
+    ins->cacheOperandMightEmulateUndefined(constraints());
+
+    // Some compare types need to have the specific type in the rhs.
+    // Swap operands if that is not the case.
+    if (type == MCompare::Compare_StrictString && right->type() != MIRType_String)
+        ins->swapOperands();
+    else if (type == MCompare::Compare_Null && right->type() != MIRType_Null)
+        ins->swapOperands();
+    else if (type == MCompare::Compare_Undefined && right->type() != MIRType_Undefined)
+        ins->swapOperands();
+    else if (type == MCompare::Compare_Boolean && right->type() != MIRType_Boolean)
+        ins->swapOperands();
+
+    // Replace inputs with unsigned variants if needed.
+    if (type == MCompare::Compare_UInt32)
+        ins->replaceWithUnsignedOperands();
+
     current->add(ins);
     current->push(ins);
 
-    ins->infer(constraints(), inspector, pc);
+    MOZ_ASSERT(!ins->isEffectful());
+    *emitted = true;
+    return true;
+}
 
-    if (ins->isEffectful() && !resumeAfter(ins))
+bool
+IonBuilder::compareTryBitwise(bool* emitted, JSOp op, MDefinition* left, MDefinition* right)
+{
+    MOZ_ASSERT(*emitted == false);
+
+    // Try to emit a bitwise compare. Check if a bitwise compare equals the wanted
+    // result for all observed operand types.
+
+    // Onlye allow loose and strict equality.
+    if (op != JSOP_EQ && op != JSOP_NE && op != JSOP_STRICTEQ && op != JSOP_STRICTNE)
+        return true;
+
+    // Only primitive (not double/string) or objects are supported.
+    // I.e. Undefined/Null/Boolean/Int32 and Object
+    if (!ObjectOrSimplePrimitive(left) || !ObjectOrSimplePrimitive(right))
+        return true;
+
+    // Objects that emulate undefined are not supported.
+    if (left->maybeEmulatesUndefined(constraints()) || right->maybeEmulatesUndefined(constraints()))
+        return true;
+
+    // In the loose comparison more values could be the same,
+    // but value comparison reporting otherwise.
+    if (op == JSOP_EQ || op == JSOP_NE) {
+
+        // Undefined compared loosy to Null is not supported,
+        // because tag is different, but value can be the same (undefined == null).
+        if ((left->mightBeType(MIRType_Undefined) && right->mightBeType(MIRType_Null)) ||
+            (left->mightBeType(MIRType_Null) && right->mightBeType(MIRType_Undefined)))
+        {
+            return true;
+        }
+
+        // Int32 compared loosy to Boolean is not supported,
+        // because tag is different, but value can be the same (1 == true).
+        if ((left->mightBeType(MIRType_Int32) && right->mightBeType(MIRType_Boolean)) ||
+            (left->mightBeType(MIRType_Boolean) && right->mightBeType(MIRType_Int32)))
+        {
+            return true;
+        }
+
+        // For loosy comparison of an object with a Boolean/Number/String
+        // the valueOf the object is taken. Therefore not supported.
+        bool simpleLHS = left->mightBeType(MIRType_Boolean) || left->mightBeType(MIRType_Int32);
+        bool simpleRHS = right->mightBeType(MIRType_Boolean) || right->mightBeType(MIRType_Int32);
+        if ((left->mightBeType(MIRType_Object) && simpleRHS) ||
+            (right->mightBeType(MIRType_Object) && simpleLHS))
+        {
+            return true;
+        }
+    }
+
+    MCompare* ins = MCompare::New(alloc(), left, right, op);
+    ins->setCompareType(MCompare::Compare_Bitwise);
+    ins->cacheOperandMightEmulateUndefined(constraints());
+
+    current->add(ins);
+    current->push(ins);
+
+    MOZ_ASSERT(!ins->isEffectful());
+    *emitted = true;
+    return true;
+}
+
+bool
+IonBuilder::compareTrySpecializedOnBaselineInspector(bool* emitted, JSOp op, MDefinition* left,
+                                                     MDefinition* right)
+{
+    MOZ_ASSERT(*emitted == false);
+
+    // Try to specialize based on any baseline caches that have been generated
+    // for the opcode. These will cause the instruction's type policy to insert
+    // fallible unboxes to the appropriate input types.
+
+    MCompare::CompareType type = inspector->expectedCompareType(pc);
+    if (type == MCompare::Compare_Unknown)
+        return true;
+
+    MCompare* ins = MCompare::New(alloc(), left, right, op);
+    ins->setCompareType(type);
+    ins->cacheOperandMightEmulateUndefined(constraints());
+
+    current->add(ins);
+    current->push(ins);
+
+    MOZ_ASSERT(!ins->isEffectful());
+    *emitted = true;
+    return true;
+}
+
+bool
+IonBuilder::compareTrySharedStub(bool* emitted, JSOp op, MDefinition* left, MDefinition* right)
+{
+    MOZ_ASSERT(*emitted == false);
+
+    // Try to emit a shared stub cache.
+
+    if (js_JitOptions.disableSharedStubs)
+        return true;
+
+    if (JSOp(*pc) == JSOP_CASE)
+        return true;
+
+    MBinarySharedStub* stub = MBinarySharedStub::New(alloc(), left, right);
+    current->add(stub);
+    current->push(stub);
+    if (!resumeAfter(stub))
         return false;
+
+    MUnbox* unbox = MUnbox::New(alloc(), current->pop(), MIRType_Boolean, MUnbox::Infallible);
+    current->add(unbox);
+    current->push(unbox);
+
+    *emitted = true;
     return true;
 }
 

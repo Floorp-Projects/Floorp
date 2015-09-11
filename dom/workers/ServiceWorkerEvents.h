@@ -36,6 +36,17 @@ BEGIN_WORKERS_NAMESPACE
 
 class ServiceWorkerClient;
 
+class CancelChannelRunnable final : public nsRunnable
+{
+  nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
+  const nsresult mStatus;
+public:
+  CancelChannelRunnable(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
+                        nsresult aStatus);
+
+  NS_IMETHOD Run() override;
+};
+
 class FetchEvent final : public Event
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;

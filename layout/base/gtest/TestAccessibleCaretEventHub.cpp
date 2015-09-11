@@ -47,7 +47,6 @@ public:
   MOCK_METHOD1(SelectWordOrShortcut, nsresult(const nsPoint& aPoint));
   MOCK_METHOD0(OnScrollStart, void());
   MOCK_METHOD0(OnScrollEnd, void());
-  MOCK_METHOD0(OnScrolling, void());
   MOCK_METHOD0(OnScrollPositionChanged, void());
   MOCK_METHOD0(OnBlur, void());
 };
@@ -635,7 +634,6 @@ TEST_F(AccessibleCaretEventHubTester, TestNoEventAsyncPanZoomScroll)
     EXPECT_CALL(check, Call("1"));
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollStart());
 
-    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrolling()).Times(0);
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(),
                 OnScrollPositionChanged()).Times(0);
 
@@ -734,22 +732,22 @@ TEST_F(AccessibleCaretEventHubTester, TestWheelEventScroll)
 
   check.Call("1");
 
-  HandleEventAndCheckState(CreateWheelEvent(NS_WHEEL_START),
+  HandleEventAndCheckState(CreateWheelEvent(eWheelOperationStart),
                            MockAccessibleCaretEventHub::ScrollState(),
                            nsEventStatus_eIgnore);
 
-  HandleEventAndCheckState(CreateWheelEvent(NS_WHEEL_WHEEL),
+  HandleEventAndCheckState(CreateWheelEvent(eWheel),
                            MockAccessibleCaretEventHub::ScrollState(),
                            nsEventStatus_eIgnore);
 
   mHub->ScrollPositionChanged();
 
-  HandleEventAndCheckState(CreateWheelEvent(NS_WHEEL_STOP),
+  HandleEventAndCheckState(CreateWheelEvent(eWheelOperationEnd),
                            MockAccessibleCaretEventHub::PostScrollState(),
                            nsEventStatus_eIgnore);
 
   // Momentum scroll
-  HandleEventAndCheckState(CreateWheelEvent(NS_WHEEL_WHEEL),
+  HandleEventAndCheckState(CreateWheelEvent(eWheel),
                            MockAccessibleCaretEventHub::PostScrollState(),
                            nsEventStatus_eIgnore);
 

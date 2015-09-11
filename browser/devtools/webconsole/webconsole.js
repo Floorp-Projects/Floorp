@@ -20,6 +20,8 @@ loader.lazyGetter(this, "AutocompletePopup",
                   () => require("devtools/shared/autocomplete-popup").AutocompletePopup);
 loader.lazyGetter(this, "ToolSidebar",
                   () => require("devtools/framework/sidebar").ToolSidebar);
+loader.lazyGetter(this, "NetworkPanel",
+                  () => require("devtools/webconsole/network-panel").NetworkPanel);
 loader.lazyGetter(this, "ConsoleOutput",
                   () => require("devtools/webconsole/console-output").ConsoleOutput);
 loader.lazyGetter(this, "Messages",
@@ -1671,7 +1673,11 @@ WebConsoleFrame.prototype = {
     statusNode.className = "status";
     body.appendChild(statusNode);
 
-    let onClick = () => this.openNetworkPanel(networkInfo.actor);
+    let onClick = () => {
+      if (!messageNode._panelOpen) {
+        this.openNetworkPanel(messageNode, networkInfo);
+      }
+    };
 
     this._addMessageLinkCallback(urlNode, onClick);
     this._addMessageLinkCallback(statusNode, onClick);
@@ -1963,17 +1969,134 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Opens the network monitor and highlights the specified request.
+   * Opens a NetworkPanel.
    *
-   * @param string requestId
-   *        The actor ID of the network request.
+   * @param nsIDOMNode aNode
+   *        The message node you want the panel to be anchored to.
+   * @param object aHttpActivity
+   *        The HTTP activity object that holds network request and response
+   *        information. This object is given to the NetworkPanel constructor.
+   * @return object
+   *         The new NetworkPanel instance.
    */
-  openNetworkPanel: function WCF_openNetworkPanel(requestId)
+  openNetworkPanel: function WCF_openNetworkPanel(aNode, aHttpActivity)
   {
-    let toolbox = gDevTools.getToolbox(this.owner.target);
-    return toolbox.selectTool("netmonitor").then(panel => {
-      return panel.panelWin.NetMonitorController.inspectRequest(requestId);
-    });
+    let actor = aHttpActivity.actor;
+
+    if (actor) {
+      this.webConsoleClient.getRequestHeaders(actor, (aResponse) => {
+        if (aResponse.error) {
+          Cu.reportError("WCF_openNetworkPanel getRequestHeaders:" +
+                         aResponse.error);
+          return;
+        }
+
+        aHttpActivity.request.headers = aResponse.headers;
+
+        this.webConsoleClient.getRequestCookies(actor, onRequestCookies);
+      });
+    }
+
+    let onRequestCookies = (aResponse) => {
+      if (aResponse.error) {
+        Cu.reportError("WCF_openNetworkPanel getRequestCookies:" +
+                       aResponse.error);
+        return;
+      }
+
+      aHttpActivity.request.cookies = aResponse.cookies;
+
+      this.webConsoleClient.getResponseHeaders(actor, onResponseHeaders);
+    };
+
+    let onResponseHeaders = (aResponse) => {
+      if (aResponse.error) {
+        Cu.reportError("WCF_openNetworkPanel getResponseHeaders:" +
+                       aResponse.error);
+        return;
+      }
+
+      aHttpActivity.response.headers = aResponse.headers;
+
+      this.webConsoleClient.getResponseCookies(actor, onResponseCookies);
+    };
+
+    let onResponseCookies = (aResponse) => {
+      if (aResponse.error) {
+        Cu.reportError("WCF_openNetworkPanel getResponseCookies:" +
+                       aResponse.error);
+        return;
+      }
+
+      aHttpActivity.response.cookies = aResponse.cookies;
+
+      this.webConsoleClient.getRequestPostData(actor, onRequestPostData);
+    };
+
+    let onRequestPostData = (aResponse) => {
+      if (aResponse.error) {
+        Cu.reportError("WCF_openNetworkPanel getRequestPostData:" +
+                       aResponse.error);
+        return;
+      }
+
+      aHttpActivity.request.postData = aResponse.postData;
+      aHttpActivity.discardRequestBody = aResponse.postDataDiscarded;
+
+      this.webConsoleClient.getResponseContent(actor, onResponseContent);
+    };
+
+    let onResponseContent = (aResponse) => {
+      if (aResponse.error) {
+        Cu.reportError("WCF_openNetworkPanel getResponseContent:" +
+                       aResponse.error);
+        return;
+      }
+
+      aHttpActivity.response.content = aResponse.content;
+      aHttpActivity.discardResponseBody = aResponse.contentDiscarded;
+
+      this.webConsoleClient.getEventTimings(actor, onEventTimings);
+    };
+
+    let onEventTimings = (aResponse) => {
+      if (aResponse.error) {
+        Cu.reportError("WCF_openNetworkPanel getEventTimings:" +
+                       aResponse.error);
+        return;
+      }
+
+      aHttpActivity.timings = aResponse.timings;
+
+      openPanel();
+    };
+
+    let openPanel = () => {
+      aNode._netPanel = netPanel;
+
+      let panel = netPanel.panel;
+      panel.openPopup(aNode, "after_pointer", 0, 0, false, false);
+      panel.sizeTo(450, 500);
+      panel.setAttribute("hudId", this.hudId);
+
+      panel.addEventListener("popuphiding", function WCF_netPanel_onHide() {
+        panel.removeEventListener("popuphiding", WCF_netPanel_onHide);
+
+        aNode._panelOpen = false;
+        aNode._netPanel = null;
+      });
+
+      aNode._panelOpen = true;
+    };
+
+    let netPanel = new NetworkPanel(this.popupset, aHttpActivity, this);
+    netPanel.linkNode = aNode;
+
+    if (!actor) {
+      openPanel();
+    }
+
+    return netPanel;
   },
 
   /**

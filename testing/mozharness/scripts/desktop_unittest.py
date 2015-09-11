@@ -31,9 +31,8 @@ from mozharness.mozilla.testing.codecoverage import (
     code_coverage_config_options
 )
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
-from mozharness.mozilla.buildbot import TBPL_WARNING
 
-SUITE_CATEGORIES = ['cppunittest', 'jittest', 'mochitest', 'reftest', 'xpcshell', 'mozbase', 'mozmill', 'webapprt']
+SUITE_CATEGORIES = ['gtest', 'cppunittest', 'jittest', 'mochitest', 'reftest', 'xpcshell', 'mozbase', 'mozmill', 'webapprt']
 
 
 # DesktopUnittest {{{1
@@ -78,6 +77,14 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "help": "Specify which cpp unittest suite to run. "
                     "Suites are defined in the config file\n."
                     "Examples: 'cppunittest'"}
+         ],
+        [['--gtest-suite', ], {
+            "action": "extend",
+            "dest": "specified_gtest_suites",
+            "type": "string",
+            "help": "Specify which gtest suite to run. "
+                    "Suites are defined in the config file\n."
+                    "Examples: 'gtest'"}
          ],
         [['--jittest-suite', ], {
             "action": "extend",
@@ -207,6 +214,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         dirs['abs_reftest_dir'] = os.path.join(dirs['abs_test_install_dir'], "reftest")
         dirs['abs_xpcshell_dir'] = os.path.join(dirs['abs_test_install_dir'], "xpcshell")
         dirs['abs_cppunittest_dir'] = os.path.join(dirs['abs_test_install_dir'], "cppunittest")
+        dirs['abs_gtest_dir'] = os.path.join(dirs['abs_test_install_dir'], "gtest")
         dirs['abs_blob_upload_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'blobber_upload_dir')
         dirs['abs_jittest_dir'] = os.path.join(dirs['abs_test_install_dir'], "jit-test", "jit-test")
         dirs['abs_mozbase_dir'] = os.path.join(dirs['abs_test_install_dir'], "mozbase")
@@ -339,7 +347,10 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 'abs_res_dir': abs_res_dir,
                 'raw_log_file': raw_log_file,
                 'error_summary_file': error_summary_file,
+                'gtest_dir': os.path.join(dirs['abs_test_install_dir'],
+                                          'gtest'),
             }
+
             # TestingMixin._download_and_extract_symbols() will set
             # self.symbols_path when downloading/extracting.
             if self.symbols_path:
@@ -468,6 +479,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                                   preflight_run_method=self.preflight_xpcshell)
         self._run_category_suites('cppunittest',
                                   preflight_run_method=self.preflight_cppunittest)
+        self._run_category_suites('gtest',
+                                  preflight_run_method=self.preflight_gtest)
         self._run_category_suites('jittest')
         self._run_category_suites('mozbase')
         self._run_category_suites('mozmill',
@@ -485,24 +498,23 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         abs_res_plugins_dir = os.path.join(abs_res_dir, 'plugins')
         abs_res_extensions_dir = os.path.join(abs_res_dir, 'extensions')
 
-        if suites:  # there are xpcshell suites to run
-            self.mkdir_p(abs_res_plugins_dir)
-            self.info('copying %s to %s' % (os.path.join(dirs['abs_test_bin_dir'],
-                      c['xpcshell_name']), os.path.join(abs_app_dir,
-                                                        c['xpcshell_name'])))
-            shutil.copy2(os.path.join(dirs['abs_test_bin_dir'], c['xpcshell_name']),
-                         os.path.join(abs_app_dir, c['xpcshell_name']))
-            self.copytree(dirs['abs_test_bin_components_dir'],
-                          abs_res_components_dir,
+        self.mkdir_p(abs_res_plugins_dir)
+        self.info('copying %s to %s' % (os.path.join(dirs['abs_test_bin_dir'],
+                  c['xpcshell_name']), os.path.join(abs_app_dir,
+                                                    c['xpcshell_name'])))
+        shutil.copy2(os.path.join(dirs['abs_test_bin_dir'], c['xpcshell_name']),
+                     os.path.join(abs_app_dir, c['xpcshell_name']))
+        self.copytree(dirs['abs_test_bin_components_dir'],
+                      abs_res_components_dir,
+                      overwrite='overwrite_if_exists')
+        self.copytree(dirs['abs_test_bin_plugins_dir'],
+                      abs_res_plugins_dir,
+                      overwrite='overwrite_if_exists')
+        if os.path.isdir(dirs['abs_test_extensions_dir']):
+            self.mkdir_p(abs_res_extensions_dir)
+            self.copytree(dirs['abs_test_extensions_dir'],
+                          abs_res_extensions_dir,
                           overwrite='overwrite_if_exists')
-            self.copytree(dirs['abs_test_bin_plugins_dir'],
-                          abs_res_plugins_dir,
-                          overwrite='overwrite_if_exists')
-            if os.path.isdir(dirs['abs_test_extensions_dir']):
-                self.mkdir_p(abs_res_extensions_dir)
-                self.copytree(dirs['abs_test_extensions_dir'],
-                              abs_res_extensions_dir,
-                              overwrite='overwrite_if_exists')
 
     def preflight_cppunittest(self, suites):
         abs_res_dir = self.query_abs_res_dir()
@@ -515,26 +527,41 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         for f in files:
             self.move(f, abs_res_dir)
 
+    def preflight_gtest(self, suites):
+        abs_res_dir = self.query_abs_res_dir()
+        abs_app_dir = self.query_abs_app_dir()
+        dirs = self.query_abs_dirs()
+        abs_gtest_dir = dirs['abs_gtest_dir']
+        dirs['abs_test_bin_dir'] = os.path.join(dirs['abs_test_install_dir'], 'bin')
+
+        files = glob.glob(os.path.join(dirs['abs_test_bin_plugins_dir'], 'gmp-*'))
+        files.append(os.path.join(abs_gtest_dir, 'dependentlibs.list.gtest'))
+        for f in files:
+            self.move(f, abs_res_dir)
+
+        self.copytree(os.path.join(abs_gtest_dir, 'gtest_bin'),
+                      os.path.join(abs_app_dir))
+
     def preflight_mozmill(self, suites):
         c = self.config
         dirs = self.query_abs_dirs()
         abs_app_dir = self.query_abs_app_dir()
         abs_app_plugins_dir = os.path.join(abs_app_dir, 'plugins')
         abs_app_extensions_dir = os.path.join(abs_app_dir, 'extensions')
-        if suites:  # there are mozmill suites to run
-            self.mkdir_p(abs_app_plugins_dir)
-            self.copytree(dirs['abs_test_bin_plugins_dir'],
-                          abs_app_plugins_dir,
+
+        self.mkdir_p(abs_app_plugins_dir)
+        self.copytree(dirs['abs_test_bin_plugins_dir'],
+                      abs_app_plugins_dir,
+                      overwrite='overwrite_if_exists')
+        if os.path.isdir(dirs['abs_test_extensions_dir']):
+            self.copytree(dirs['abs_test_extensions_dir'],
+                          abs_app_extensions_dir,
                           overwrite='overwrite_if_exists')
-            if os.path.isdir(dirs['abs_test_extensions_dir']):
-                self.copytree(dirs['abs_test_extensions_dir'],
-                              abs_app_extensions_dir,
-                              overwrite='overwrite_if_exists')
-            modules = ['jsbridge', 'mozmill']
-            for module in modules:
-                self.install_module(module=os.path.join(dirs['abs_mozmill_dir'],
-                                                        'resources',
-                                                        module))
+        modules = ['jsbridge', 'mozmill']
+        for module in modules:
+            self.install_module(module=os.path.join(dirs['abs_mozmill_dir'],
+                                                    'resources',
+                                                    module))
 
     def _run_category_suites(self, suite_category, preflight_run_method=None):
         """run suite(s) to a specific category"""
@@ -544,9 +571,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         abs_app_dir = self.query_abs_app_dir()
         abs_res_dir = self.query_abs_res_dir()
 
-        if preflight_run_method:
-            preflight_run_method(suites)
         if suites:
+            if preflight_run_method:
+                preflight_run_method(suites)
             self.info('#### Running %s suites' % suite_category)
             for suite in suites:
                 abs_base_cmd = self._query_abs_base_cmd(suite_category, suite)
@@ -606,7 +633,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 # 3) checking to see if the return code is in success_codes
 
                 success_codes = None
-                if self._is_windows():
+                if self._is_windows() and suite_category != 'gtest':
                     # bug 1120644
                     success_codes = [0, 1]
 

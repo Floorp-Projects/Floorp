@@ -272,7 +272,7 @@ TEST(Tokenizer, HasFailed)
   EXPECT_TRUE(p1.HasFailed());
 
 
-  Tokenizer p2(NS_LITERAL_CSTRING("a b"));
+  Tokenizer p2(NS_LITERAL_CSTRING("a b ?!c"));
 
   EXPECT_FALSE(p2.CheckChar('c'));
   EXPECT_TRUE(p2.HasFailed());
@@ -280,12 +280,21 @@ TEST(Tokenizer, HasFailed)
   EXPECT_FALSE(p2.HasFailed());
   p2.SkipWhites();
   EXPECT_FALSE(p2.HasFailed());
+  EXPECT_FALSE(p2.CheckChar('c'));
+  EXPECT_TRUE(p2.HasFailed());
   EXPECT_TRUE(p2.Next(t));
   EXPECT_FALSE(p2.HasFailed());
   EXPECT_TRUE(p2.Next(t));
   EXPECT_FALSE(p2.HasFailed());
   EXPECT_FALSE(p2.CheckChar('c'));
   EXPECT_TRUE(p2.HasFailed());
+  EXPECT_TRUE(p2.Check(Tokenizer::TOKEN_CHAR, t));
+  EXPECT_FALSE(p2.HasFailed());
+  EXPECT_FALSE(p2.CheckChar('#'));
+  EXPECT_TRUE(p2.HasFailed());
+  t = Tokenizer::Token::Char('!');
+  EXPECT_TRUE(p2.Check(t));
+  EXPECT_FALSE(p2.HasFailed());
 
   while (p2.Next(t) && t.Type() != Tokenizer::TOKEN_CHAR);
   EXPECT_TRUE(p2.HasFailed());
@@ -390,6 +399,110 @@ TEST(Tokenizer, ShortcutChecks)
   EXPECT_TRUE(p.ReadInteger(&integer));
   EXPECT_TRUE(integer == 123);
   EXPECT_TRUE(p.CheckEOF());
+}
+
+static bool ABChar(const char aChar)
+{
+  return aChar == 'a' || aChar == 'b';
+}
+
+TEST(Tokenizer, ReadCharClassified)
+{
+  Tokenizer p("abc");
+
+  char c;
+  EXPECT_TRUE(p.ReadChar(ABChar, &c));
+  EXPECT_TRUE(c == 'a');
+  EXPECT_TRUE(p.ReadChar(ABChar, &c));
+  EXPECT_TRUE(c == 'b');
+  EXPECT_FALSE(p.ReadChar(ABChar, &c));
+  nsDependentCSubstring w;
+  EXPECT_TRUE(p.ReadWord(w));
+  EXPECT_TRUE(w == "c");
+  EXPECT_TRUE(p.CheckEOF());
+}
+
+TEST(Tokenizer, ClaimSubstring)
+{
+  Tokenizer p(" abc ");
+
+  EXPECT_TRUE(p.CheckWhite());
+
+  p.Record();
+  EXPECT_TRUE(p.CheckWord("abc"));
+  nsDependentCSubstring v;
+  p.Claim(v, Tokenizer::INCLUDE_LAST);
+  EXPECT_TRUE(v == "abc");
+  EXPECT_TRUE(p.CheckWhite());
+  EXPECT_TRUE(p.CheckEOF());
+}
+
+TEST(Tokenizer, Fragment)
+{
+  const char str[] = "ab;cd:10 ";
+  Tokenizer p(str);
+  nsDependentCSubstring f;
+
+  Tokenizer::Token t1, t2;
+
+  EXPECT_TRUE(p.Next(t1));
+  EXPECT_TRUE(t1.Type() == Tokenizer::TOKEN_WORD);
+  EXPECT_TRUE(t1.Fragment() == "ab");
+  EXPECT_TRUE(t1.Fragment().BeginReading() == &str[0]);
+
+  p.Rollback();
+  EXPECT_TRUE(p.Check(Tokenizer::TOKEN_WORD, t2));
+  EXPECT_TRUE(t2.Fragment() == "ab");
+  EXPECT_TRUE(t2.Fragment().BeginReading() == &str[0]);
+
+
+  EXPECT_TRUE(p.Next(t1));
+  EXPECT_TRUE(t1.Type() == Tokenizer::TOKEN_CHAR);
+  EXPECT_TRUE(t1.Fragment() == ";");
+  EXPECT_TRUE(t1.Fragment().BeginReading() == &str[2]);
+
+  p.Rollback();
+  EXPECT_TRUE(p.Check(Tokenizer::TOKEN_CHAR, t2));
+  EXPECT_TRUE(t2.Fragment() == ";");
+  EXPECT_TRUE(t2.Fragment().BeginReading() == &str[2]);
+
+
+  EXPECT_TRUE(p.Check(Tokenizer::TOKEN_WORD, t2));
+  EXPECT_TRUE(t2.Fragment() == "cd");
+  EXPECT_TRUE(t2.Fragment().BeginReading() == &str[3]);
+
+  p.Rollback();
+  EXPECT_TRUE(p.Next(t1));
+  EXPECT_TRUE(t1.Type() == Tokenizer::TOKEN_WORD);
+  EXPECT_TRUE(t1.Fragment() == "cd");
+  EXPECT_TRUE(t1.Fragment().BeginReading() == &str[3]);
+
+
+  EXPECT_TRUE(p.Check(Tokenizer::TOKEN_CHAR, t2));
+  EXPECT_TRUE(t2.Fragment() == ":");
+  EXPECT_TRUE(t2.Fragment().BeginReading() == &str[5]);
+
+  p.Rollback();
+  EXPECT_TRUE(p.Next(t1));
+  EXPECT_TRUE(t1.Type() == Tokenizer::TOKEN_CHAR);
+  EXPECT_TRUE(t1.Fragment() == ":");
+  EXPECT_TRUE(t1.Fragment().BeginReading() == &str[5]);
+
+
+  EXPECT_TRUE(p.Next(t1));
+  EXPECT_TRUE(t1.Type() == Tokenizer::TOKEN_INTEGER);
+  EXPECT_TRUE(t1.Fragment() == "10");
+  EXPECT_TRUE(t1.Fragment().BeginReading() == &str[6]);
+
+
+  EXPECT_TRUE(p.Check(Tokenizer::TOKEN_WS, t2));
+  EXPECT_TRUE(t2.Fragment() == " ");
+  EXPECT_TRUE(t2.Fragment().BeginReading() == &str[8]);
+
+
+  EXPECT_TRUE(p.Check(Tokenizer::TOKEN_EOF, t1));
+  EXPECT_TRUE(t1.Fragment() == "");
+  EXPECT_TRUE(t1.Fragment().BeginReading() == &str[9]);
 }
 
 TEST(Tokenizer, SkipWhites)

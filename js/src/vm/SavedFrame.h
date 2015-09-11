@@ -34,15 +34,86 @@ class SavedFrame : public NativeObject {
     static void finalize(FreeOp* fop, JSObject* obj);
 
     // Convenient getters for SavedFrame's reserved slots for use from C++.
-    JSAtom*      getSource();
-    uint32_t     getLine();
-    uint32_t     getColumn();
-    JSAtom*      getFunctionDisplayName();
-    JSAtom*      getAsyncCause();
-    SavedFrame*  getParent();
+    JSAtom*       getSource();
+    uint32_t      getLine();
+    uint32_t      getColumn();
+    JSAtom*       getFunctionDisplayName();
+    JSAtom*       getAsyncCause();
+    SavedFrame*   getParent() const;
     JSPrincipals* getPrincipals();
+    bool          isSelfHosted();
 
-    bool         isSelfHosted();
+    // Iterators for use with C++11 range based for loops, eg:
+    //
+    //     SavedFrame* stack = getSomeSavedFrameStack();
+    //     for (const SavedFrame* frame : *stack) {
+    //         ...
+    //     }
+    //
+    // If you need to keep each frame rooted during iteration, you can use
+    // `SavedFrame::RootedRange`. Each frame yielded by
+    // `SavedFrame::RootedRange` is only a valid handle to a rooted `SavedFrame`
+    // within the loop's block for a single loop iteration. When the next
+    // iteration begins, the value is invalidated.
+    //
+    //     RootedSavedFrame stack(cx, getSomeSavedFrameStack());
+    //     for (HandleSavedFrame frame : SavedFrame::RootedRange(cx, stack)) {
+    //         ...
+    //     }
+
+    class Iterator {
+        SavedFrame* frame_;
+      public:
+        explicit Iterator(SavedFrame* frame) : frame_(frame) { }
+        SavedFrame& operator*() const { MOZ_ASSERT(frame_); return *frame_; }
+        bool operator!=(const Iterator& rhs) const { return rhs.frame_ != frame_; }
+        inline void operator++();
+    };
+
+    Iterator begin() { return Iterator(this); }
+    Iterator end() { return Iterator(nullptr); }
+
+    class ConstIterator {
+        const SavedFrame* frame_;
+      public:
+        explicit ConstIterator(const SavedFrame* frame) : frame_(frame) { }
+        const SavedFrame& operator*() const { MOZ_ASSERT(frame_); return *frame_; }
+        bool operator!=(const ConstIterator& rhs) const { return rhs.frame_ != frame_; }
+        inline void operator++();
+    };
+
+    ConstIterator begin() const { return ConstIterator(this); }
+    ConstIterator end() const { return ConstIterator(nullptr); }
+
+    class RootedRange;
+
+    class MOZ_STACK_CLASS RootedIterator {
+        friend class RootedRange;
+        RootedRange* range_;
+        // For use by RootedRange::end() only.
+        explicit RootedIterator() : range_(nullptr) { }
+
+      public:
+        explicit RootedIterator(RootedRange& range) : range_(&range) { }
+        HandleSavedFrame operator*() { MOZ_ASSERT(range_); return range_->frame_; }
+        bool operator!=(const RootedIterator& rhs) const {
+            // We should only ever compare to the null range, aka we are just
+            // testing if this range is done.
+            MOZ_ASSERT(rhs.range_ == nullptr);
+            return range_->frame_ != nullptr;
+        }
+        inline void operator++();
+    };
+
+    class MOZ_STACK_CLASS RootedRange {
+        friend class RootedIterator;
+        RootedSavedFrame frame_;
+
+      public:
+        RootedRange(JSContext* cx, HandleSavedFrame frame) : frame_(cx, frame) { }
+        RootedIterator begin() { return RootedIterator(*this); }
+        RootedIterator end() { return RootedIterator(); }
+    };
 
     static bool isSavedFrameAndNotProto(JSObject& obj) {
         return obj.is<SavedFrame>() &&
@@ -138,6 +209,25 @@ struct ReconstructedSavedFramePrincipals : public JSPrincipals
         return f.isSystem() ? &IsSystem : &IsNotSystem;
     }
 };
+
+inline void
+SavedFrame::Iterator::operator++()
+{
+    frame_ = frame_->getParent();
+}
+
+inline void
+SavedFrame::ConstIterator::operator++()
+{
+    frame_ = frame_->getParent();
+}
+
+inline void
+SavedFrame::RootedIterator::operator++()
+{
+    MOZ_ASSERT(range_);
+    range_->frame_ = range_->frame_->getParent();
+}
 
 } // namespace js
 

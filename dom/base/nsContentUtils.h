@@ -1101,7 +1101,7 @@ public:
 
   /**
    * Return the event message for the event with the given name. The name is
-   * the event name with the 'on' prefix. Returns NS_USER_DEFINED_EVENT if the
+   * the event name with the 'on' prefix. Returns eUnidentifiedEvent if the
    * event doesn't match a known event name.
    *
    * @param aName the event name to look up
@@ -1120,7 +1120,7 @@ public:
   /**
    * Return the event message and atom for the event with the given name.
    * The name is the event name *without* the 'on' prefix.
-   * Returns NS_USER_DEFINED_EVENT on the aEventID if the
+   * Returns eUnidentifiedEvent on the aEventID if the
    * event doesn't match a known event name in the category.
    *
    * @param aName the event name to look up
