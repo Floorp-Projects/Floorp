@@ -2981,6 +2981,10 @@ if test "$MOZ_MEMORY"; then
   esac
 fi
 AC_SUBST(MOZ_MEMORY)
+AC_SUBST(MOZ_JEMALLOC4)
+if test -n "$MOZ_JEMALLOC4"; then
+  AC_DEFINE(MOZ_JEMALLOC4)
+fi
 AC_SUBST(MOZ_CRT)
 AC_SUBST(MOZ_GLUE_IN_PROGRAM)
 AC_SUBST_LIST(MOZ_GLUE_WRAP_LDFLAGS)
@@ -3829,6 +3833,7 @@ if test -n "$MOZ_BUILD_NSPR"; then
     MOZ_SUBCONFIGURE_NSPR()
 fi
 MOZ_SUBCONFIGURE_FFI()
+MOZ_SUBCONFIGURE_JEMALLOC()
 
 dnl Spit out some output
 dnl ========================================================
