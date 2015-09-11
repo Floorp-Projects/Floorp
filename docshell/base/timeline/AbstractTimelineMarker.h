@@ -9,6 +9,7 @@
 
 #include "TimelineMarkerEnums.h" // for MarkerTracingType
 #include "nsDOMNavigationTiming.h" // for DOMHighResTimeStamp
+#include "mozilla/UniquePtr.h"
 
 struct JSContext;
 
@@ -36,8 +37,11 @@ public:
 
   virtual ~AbstractTimelineMarker();
 
+  virtual UniquePtr<AbstractTimelineMarker> Clone();
+
   virtual bool Equals(const AbstractTimelineMarker& aOther) = 0;
   virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) = 0;
+  virtual JSObject* GetStack() = 0;
 
   const char* GetName() const { return mName; }
   DOMHighResTimeStamp GetTime() const { return mTime; }
