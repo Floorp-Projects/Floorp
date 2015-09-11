@@ -90,6 +90,18 @@ MacroAssembler::or32(Imm32 imm, const Address& dest)
     store32(scratch32.asUnsized(), dest);
 }
 
+void
+MacroAssembler::orPtr(Register src, Register dest)
+{
+    Orr(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
+}
+
+void
+MacroAssembler::orPtr(Imm32 imm, Register dest)
+{
+    Orr(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
