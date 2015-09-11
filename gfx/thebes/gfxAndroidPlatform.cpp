@@ -317,10 +317,11 @@ gfxAndroidPlatform::IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlag
 
 gfxFontGroup *
 gfxAndroidPlatform::CreateFontGroup(const FontFamilyList& aFontFamilyList,
-                                    const gfxFontStyle *aStyle,
+                                    const gfxFontStyle* aStyle,
+                                    gfxTextPerfMetrics* aTextPerf,
                                     gfxUserFontSet* aUserFontSet)
 {
-    return new gfxFontGroup(aFontFamilyList, aStyle, aUserFontSet);
+    return new gfxFontGroup(aFontFamilyList, aStyle, aTextPerf, aUserFontSet);
 }
 
 FT_Library

@@ -1256,7 +1256,7 @@ PrepareSortPattern(FcPattern *aPattern, double aFallbackSize,
 gfxPangoFontGroup::gfxPangoFontGroup(const FontFamilyList& aFontFamilyList,
                                      const gfxFontStyle *aStyle,
                                      gfxUserFontSet *aUserFontSet)
-    : gfxFontGroup(aFontFamilyList, aStyle, aUserFontSet),
+    : gfxFontGroup(aFontFamilyList, aStyle, nullptr, aUserFontSet),
       mPangoLanguage(GuessPangoLanguage(aStyle->language))
 {
     // This language is passed to the font for shaping.

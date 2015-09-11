@@ -109,7 +109,7 @@ TEST(Gfx, WordCache) {
     nsRefPtr<gfxFontGroup> fontGroup =
       gfxPlatform::GetPlatform()->CreateFontGroup(
         NS_LITERAL_STRING("Geneva, MS Sans Serif, Helvetica,serif"), &style,
-        nullptr);
+        nullptr, nullptr);
 
     gfxTextRunFactory::Parameters params = {
       ctx, nullptr, nullptr, nullptr, 0, 60
