@@ -29,8 +29,8 @@ GetEventMessageName(EventMessage aMessage)
   switch (aMessage) {
     case eCompositionStart:
       return "eCompositionStart";
-    case NS_COMPOSITION_END:
-      return "NS_COMPOSITION_END";
+    case eCompositionEnd:
+      return "eCompositionEnd";
     case NS_COMPOSITION_UPDATE:
       return "NS_COMPOSITION_UPDATE";
     case NS_COMPOSITION_CHANGE:

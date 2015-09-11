@@ -147,10 +147,10 @@ NS_EVENT_MESSAGE(eUnidentifiedEvent,    2000)
 // composition events
 NS_EVENT_MESSAGE(eCompositionEventFirst, 2200)
 NS_EVENT_MESSAGE(eCompositionStart,      eCompositionEventFirst)
-// NS_COMPOSITION_END is the message for DOM compositionend event.
+// eCompositionEnd is the message for DOM compositionend event.
 // This event should NOT be dispatched from widget if NS_COMPOSITION_COMMIT
 // is available.
-NS_EVENT_MESSAGE(NS_COMPOSITION_END,     eCompositionEventFirst + 1)
+NS_EVENT_MESSAGE(eCompositionEnd,        eCompositionEventFirst + 1)
 // NS_COMPOSITION_UPDATE is the message for DOM compositionupdate event.
 // This event should NOT be dispatched from widget since it will be dispatched
 // by mozilla::TextComposition automatically if NS_COMPOSITION_CHANGE event
@@ -165,13 +165,13 @@ NS_EVENT_MESSAGE(NS_COMPOSITION_CHANGE,  eCompositionEventFirst + 3)
 // composition string.  TextComposition will commit composition with the
 // last data.  TextComposition will dispatch this event to the DOM tree as
 // NS_COMPOSITION_CHANGE without clause information.  After that,
-// NS_COMPOSITION_END will be dispatched automatically.
+// eCompositionEnd will be dispatched automatically.
 // Its mData and mRanges should be empty and nullptr.
 NS_EVENT_MESSAGE(eCompositionCommitAsIs, eCompositionEventFirst + 4)
 // NS_COMPOSITION_COMMIT is the message for representing a commit of
 // composition string with its mData value.  TextComposition will dispatch this
 // event to the DOM tree as NS_COMPOSITION_CHANGE without clause information.
-// After that, NS_COMPOSITION_END will be dispatched automatically.
+// After that, eCompositionEnd will be dispatched automatically.
 // Its mRanges should be nullptr.
 NS_EVENT_MESSAGE(NS_COMPOSITION_COMMIT,  eCompositionEventFirst + 5)
 
