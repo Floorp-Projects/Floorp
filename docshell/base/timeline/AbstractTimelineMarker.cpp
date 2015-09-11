@@ -28,6 +28,13 @@ AbstractTimelineMarker::AbstractTimelineMarker(const char* aName,
   SetCustomTime(aTime);
 }
 
+UniquePtr<AbstractTimelineMarker>
+AbstractTimelineMarker::Clone()
+{
+  MOZ_ASSERT(false, "Clone method not yet implemented on this marker type.");
+  return nullptr;
+}
+
 AbstractTimelineMarker::~AbstractTimelineMarker()
 {
   MOZ_COUNT_DTOR(AbstractTimelineMarker);

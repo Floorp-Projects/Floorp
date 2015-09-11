@@ -7,7 +7,6 @@
 #ifndef mozilla_TimelineMarker_h_
 #define mozilla_TimelineMarker_h_
 
-#include "nsContentUtils.h"
 #include "AbstractTimelineMarker.h"
 
 namespace mozilla {
@@ -29,8 +28,7 @@ public:
 
   virtual bool Equals(const AbstractTimelineMarker& aOther) override;
   virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) override;
-
-  JSObject* GetStack();
+  virtual JSObject* GetStack() override;
 
 protected:
   void CaptureStack();
