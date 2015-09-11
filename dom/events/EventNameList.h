@@ -825,7 +825,7 @@ NON_IDL_EVENT(gamepadbuttonup,
               EventNameType_None,
               eBasicEventClass)
 NON_IDL_EVENT(gamepadaxismove,
-              NS_GAMEPAD_AXISMOVE,
+              eGamepadAxisMove,
               EventNameType_None,
               eBasicEventClass)
 NON_IDL_EVENT(gamepadconnected,
