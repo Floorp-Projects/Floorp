@@ -90,6 +90,12 @@ MacroAssembler::orPtr(Imm32 imm, Register dest)
     ma_orr(imm, dest);
 }
 
+void
+MacroAssembler::xor32(Imm32 imm, Register dest)
+{
+    ma_eor(imm, dest, SetCC);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
