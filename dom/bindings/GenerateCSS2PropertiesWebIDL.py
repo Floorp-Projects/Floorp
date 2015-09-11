@@ -9,16 +9,7 @@ propList = eval(sys.stdin.read())
 props = ""
 for [name, prop, id, flags, pref] in propList:
     extendedAttrs = ["Throws", "TreatNullAs=EmptyString"]
-    # To limit the overhead of Func= annotations, we only generate them when
-    # necessary, which is when the
-    # CSS_PROPERTY_ALWAYS_ENABLED_IN_CHROME_OR_CERTIFIED_APP flag is set.
-    # Otherwise, we try to get by with just a Pref= annotation or no annotation
-    # at all.
-    if "CSS_PROPERTY_ALWAYS_ENABLED_IN_CHROME_OR_CERTIFIED_APP" in flags:
-        extendedAttrs.append('Func="IsCSSPropertyExposedToJS<eCSSProperty_%s>"' % id)
-    # The following is an 'elif' because it is the responsibility of
-    # IsCSSPropertyExposedToJS to handle the pref if there is one.
-    elif pref is not "":
+    if pref is not "":
         extendedAttrs.append('Pref="%s"' % pref)
     if not prop.startswith("Moz"):
         prop = prop[0].lower() + prop[1:]
