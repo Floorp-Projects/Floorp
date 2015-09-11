@@ -1827,7 +1827,7 @@ pref(layout.css.overflow-clip-box.enabled,true) == 992447.html 992447-ref.html
 pref(layout.css.sticky.enabled,true) == 1005405-1.html 1005405-1-ref.html
 == 1012640-1.html 1012640-1-ref.html
 fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),255,1) == 1013054-1.html 1013054-1-ref.html
-pref(layout.css.will-change.enabled,true) == 1018522-1.html 1018522-1-ref.html
+== 1018522-1.html 1018522-1-ref.html
 == 1021564-1.html 1021564-ref.html
 == 1021564-2.html 1021564-ref.html
 == 1021564-3.html 1021564-ref.html
