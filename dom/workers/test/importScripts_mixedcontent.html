@@ -1,0 +1,46 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<script>
+  function ok(cond, msg) {
+    window.parent.postMessage({status: "ok", data: cond, msg: msg}, "*");
+  }
+  function finish() {
+    window.parent.postMessage({status: "done"}, "*");
+  }
+
+  function testSharedWorker() {
+    var sw = new SharedWorker("importForeignScripts_worker.js");
+    sw.port.onmessage = function(e) {
+      if (e.data == "finish") {
+        finish();
+        return;
+      }
+      ok(e.data === "good", "mixed content for shared workers is correctly blocked");
+    };
+
+    sw.onerror = function() {
+      ok(false, "Error on shared worker ");
+    };
+
+    sw.port.postMessage("start");
+  }
+
+  var worker = new Worker("importForeignScripts_worker.js");
+
+  worker.onmessage = function(e) {
+    if (e.data == "finish") {
+      testSharedWorker();
+      return;
+    }
+    ok(e.data === "good", "mixed content is correctly blocked");
+  }
+
+  worker.onerror = function() {
+    ok(false, "Error on worker");
+  }
+
+  worker.postMessage("start");
+</script>

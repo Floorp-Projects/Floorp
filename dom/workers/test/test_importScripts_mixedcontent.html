@@ -1,0 +1,50 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1198078 - test that we respect mixed content blocking in importScript() inside workers</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1198078">DOM Worker Threads Bug 1198078</a>
+<iframe></iframe>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  onmessage = function(event) {
+    switch (event.data.status) {
+      case "done":
+        SimpleTest.finish();
+        break;
+      case "ok":
+        ok(event.data.data, event.data.msg);
+        break;
+      default:
+        ok(false, "Unexpected message:" + event.data);
+        SimpleTest.finish();
+    }
+  };
+
+  SimpleTest.waitForExplicitFinish();
+  onload = function() {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["dom.workers.sharedWorkers.enabled", true],
+      ["security.mixed_content.block_active_content", false],
+    ]}, function() {
+      var iframe = document.querySelector("iframe");
+      iframe.src = "https://example.com/tests/dom/workers/test/importScripts_mixedcontent.html";
+    });
+  };
+
+</script>
+</pre>
+</body>
+</html>
