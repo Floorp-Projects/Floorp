@@ -307,7 +307,7 @@ EVENT(mozpointerlockchange,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(mozpointerlockerror,
-      NS_POINTERLOCKERROR,
+      ePointerLockError,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(pointerdown,

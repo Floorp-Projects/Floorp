@@ -380,7 +380,7 @@ NS_EVENT_MESSAGE(NS_TOUCH_CANCEL,        NS_TOUCH_EVENT_START + 3)
 // Pointerlock DOM API
 NS_EVENT_MESSAGE(ePointerLockEventFirst, 5300)
 NS_EVENT_MESSAGE(ePointerLockChange,     ePointerLockEventFirst)
-NS_EVENT_MESSAGE(NS_POINTERLOCKERROR,    ePointerLockEventFirst + 1)
+NS_EVENT_MESSAGE(ePointerLockError,      ePointerLockEventFirst + 1)
 
 NS_EVENT_MESSAGE(eWheelEventFirst,       5400)
 // eWheel is the event message of DOM wheel event.
