@@ -24,12 +24,7 @@ function checkEmptyContextMenu() {
 function checkInnerContextMenu() {
   sendContextMenuTo('#inner-link', function onContextMenu(detail) {
     is(detail.systemTargets.length, 1, 'Includes anchor data');
-    is(detail.contextmenu.items.length, 2, 'Inner clicks trigger correct customized menu');
-    is(detail.contextmenu.items[0].label, 'foo', 'Customized menu has a "foo" menu item');
-    is(detail.contextmenu.items[1].label, 'bar', 'Customized menu has a "bar" menu item');
-    is(detail.contextmenu.sysItems.length, 1, 'Inner clicks trigger correct sys cmd menu');
-    is(detail.contextmenu.sysItems[0].id, 'copy-link', '#inner-link has a copy-link menu item');
-
+    is(detail.contextmenu.items.length, 3, 'Inner clicks trigger correct menu');
     var target = detail.systemTargets[0];
     is(target.nodeName, 'A', 'Reports correct nodeName');
     is(target.data.uri, 'foo.html', 'Reports correct uri');
@@ -52,16 +47,9 @@ function checkNestedContextMenu() {
     var innerMenu = detail.contextmenu.items.filter(function(x) {
       return x.type === 'menu';
     });
-    is(detail.systemTargets.length, 2, 'Includes two systemTargets');
-    is(detail.systemTargets[0].nodeName, 'IMG', 'Includes "IMG" node');
-    is(detail.systemTargets[0].data.uri, 'example.png', 'Img data has the correct uri');
-    is(detail.systemTargets[1].nodeName, 'A', 'Includes "A" node');
-    is(detail.systemTargets[1].data.uri, 'bar.html', 'Anchor has the correct uri');
+    is(detail.systemTargets.length, 2, 'Includes anchor and img data');
     ok(innerMenu.length > 0, 'Menu contains a nested menu');
 
-    is(detail.contextmenu.sysItems.length, 2, 'Sys cmd menu has the correct # of menu items')
-    is(detail.contextmenu.sysItems[0].id, 'copy-link', 'Has a copy-link menu item');
-    is(detail.contextmenu.sysItems[1].id, 'copy-image', 'Has a copy-image menu item');
     checkPreviousContextMenuHandler();
   });
 }
@@ -143,8 +131,6 @@ function checkImageContextMenu() {
     var target = detail.systemTargets[0];
     is(target.nodeName, 'IMG', 'Reports correct nodeName');
     is(target.data.uri, 'example.png', 'Reports correct uri');
-    is(detail.contextmenu.sysItems.length, 1, 'Reports correct # of sys cmd menu items');
-    is(detail.contextmenu.sysItems[0].id, 'copy-image', 'IMG has a copy-image menu item');
 
     checkVideoContextMenu();
   }, /* ignorePreventDefault */ true);
