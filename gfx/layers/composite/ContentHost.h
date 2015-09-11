@@ -61,8 +61,6 @@ public:
   virtual void SetPaintWillResample(bool aResample) { mPaintWillResample = aResample; }
   bool PaintWillResample() { return mPaintWillResample; }
 
-  virtual void InvalidateForAnimation(nsIntRegion& aRegion) { }
-
 protected:
   explicit ContentHost(const TextureInfo& aTextureInfo)
     : CompositableHost(aTextureInfo)
