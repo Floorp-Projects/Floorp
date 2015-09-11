@@ -11,26 +11,12 @@ module.metadata = {
 const { Cc, Ci } = require('chrome');
 const system = require('../sdk/system');
 const runtime = require('../sdk/system/runtime');
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
+const oscpu = Cc["@mozilla.org/network/protocol;1?name=http"]
+                 .getService(Ci.nsIHttpProtocolHandler).oscpu;
+const hostname = Cc["@mozilla.org/network/dns-service;1"]
+                 .getService(Ci.nsIDNSService).myHostName;
 const isWindows = system.platform === 'win32';
 const endianness = ((new Uint32Array((new Uint8Array([1,2,3,4])).buffer))[0] === 0x04030201) ? 'LE' : 'BE';
-
-XPCOMUtils.defineLazyGetter(this, "oscpu", () => {
-  try {
-    return Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).oscpu;
-  } catch (e) {
-    return "";
-  }
-});
-
-XPCOMUtils.defineLazyGetter(this, "hostname", () => {
-  try {
-    // On some platforms (Linux according to try), this service does not exist and fails.
-    return Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService).myHostName;
-  } catch (e) {
-    return "";
-  }
-});
 
 /**
  * Returns a path to a temp directory
