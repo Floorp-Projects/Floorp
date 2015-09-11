@@ -73,6 +73,7 @@
 #include "AudioChannelService.h"
 #include "mozilla/dom/DataStoreService.h"
 #include "mozilla/dom/PromiseDebugging.h"
+#include "mozilla/dom/WebCryptoThreadPool.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -322,6 +323,8 @@ nsLayoutStatics::Initialize()
   layers::CompositorLRU::Init();
 
   mozilla::dom::devicestorage::DeviceStorageStatics::Initialize();
+
+  mozilla::dom::WebCryptoThreadPool::Initialize();
 
   return NS_OK;
 }
