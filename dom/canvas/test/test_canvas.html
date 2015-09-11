@@ -3551,59 +3551,6 @@ ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 }
 </script>
 
-<!-- [[[ test_2d.drawImage.outsidesource.html ]]] -->
-
-<p>Canvas test: 2d.drawImage.outsidesource</p>
-<canvas id="c122" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
-<script>
-
-
-
-function test_2d_drawImage_outsidesource() {
-
-var canvas = document.getElementById('c122');
-var ctx = canvas.getContext('2d');
-
-var _thrown_outer = false;
-try {
-
-ctx.drawImage(document.getElementById('green_7.png'), 10.5, 10.5, 89.5, 39.5, 0, 0, 100, 50);
-ctx.drawImage(document.getElementById('green_7.png'), 5.5, 5.5, -5.5, -5.5, 0, 0, 100, 50);
-ctx.drawImage(document.getElementById('green_7.png'), 100, 50, -5, -5, 0, 0, 100, 50);
-var _thrown = undefined; try {
-  ctx.drawImage(document.getElementById('red_11.png'), -0.001, 0, 100, 50, 0, 0, 100, 50);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
-var _thrown = undefined; try {
-  ctx.drawImage(document.getElementById('red_11.png'), 0, -0.001, 100, 50, 0, 0, 100, 50);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
-var _thrown = undefined; try {
-  ctx.drawImage(document.getElementById('red_11.png'), 0, 0, 100.001, 50, 0, 0, 100, 50);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
-var _thrown = undefined; try {
-  ctx.drawImage(document.getElementById('red_11.png'), 0, 0, 100, 50.001, 0, 0, 100, 50);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
-var _thrown = undefined; try {
-  ctx.drawImage(document.getElementById('red_11.png'), 50, 0, 50.001, 50, 0, 0, 100, 50);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
-var _thrown = undefined; try {
-  ctx.drawImage(document.getElementById('red_11.png'), 0, 0, -5, 5, 0, 0, 100, 50);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
-var _thrown = undefined; try {
-  ctx.drawImage(document.getElementById('red_11.png'), 0, 0, 5, -5, 0, 0, 100, 50);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
-todo_isPixel(ctx, 50,25, 0,255,0,255, 2);
-
-} catch (e) {
-    _thrown_outer = true;
-}
-ok(!_thrown_outer, 'should not throw exception');
-
-
-}
-</script>
-<img src="image_green.png" id="green_7.png" class="resource">
-<img src="image_red.png" id="red_11.png" class="resource">
-
 <!-- [[[ test_2d.drawImage.path.html ]]] -->
 
 <p>Canvas test: 2d.drawImage.path</p>
@@ -22123,11 +22070,6 @@ function runTests() {
   test_2d_drawImage_null();
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_2d_drawImage_null");
- }
- try {
-  test_2d_drawImage_outsidesource();
- } catch (e) {
-  ok(false, "unexpected exception thrown in: test_2d_drawImage_outsidesource");
  }
  try {
   test_2d_drawImage_path();
