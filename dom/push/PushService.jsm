@@ -719,6 +719,11 @@ this.PushService = {
       .then(record => this._notifySubscriptionChangeObservers(record));
   },
 
+  updateRecordAndNotifyApp: function(aKeyID, aUpdateFunc) {
+    return this._db.update(aKeyID, aUpdateFunc)
+      .then(record => this._notifySubscriptionChangeObservers(record));
+  },
+
   /**
    * Dispatches an incoming message to a service worker, recalculating the
    * quota for the associated push registration. If the quota is exceeded,
@@ -737,7 +742,7 @@ this.PushService = {
     debug("receivedPushMessage()");
 
     let shouldNotify = false;
-    this.getByKeyID(keyID).then(record => {
+    return this.getByKeyID(keyID).then(record => {
       if (!record) {
         throw new Error("No record for key ID " + keyID);
       }
@@ -761,11 +766,13 @@ this.PushService = {
         return newRecord;
       });
     }).then(record => {
+      var notified = false;
       if (!record) {
-        return null;
+        return notified;
       }
+
       if (shouldNotify) {
-        this._notifyApp(record, message);
+        notified = this._notifyApp(record, message);
       }
       if (record.isExpired()) {
         // Drop the registration in the background. If the user returns to the
@@ -775,6 +782,7 @@ this.PushService = {
           debug("receivedPushMessage: Unregister error: " + error);
         });
       }
+      return notified;
     }).catch(error => {
       debug("receivedPushMessage: Error notifying app: " + error);
     });
@@ -785,7 +793,7 @@ this.PushService = {
         aPushRecord.originAttributes === undefined) {
       debug("notifyApp() something is undefined.  Dropping notification: " +
         JSON.stringify(aPushRecord) );
-      return;
+      return false;
     }
 
     debug("notifyApp() " + aPushRecord.scope);
@@ -807,7 +815,7 @@ this.PushService = {
     // If permission has been revoked, trash the message.
     if (!aPushRecord.hasPermission()) {
       debug("Does not have permission for push.");
-      return;
+      return false;
     }
 
     // TODO data.
@@ -818,6 +826,7 @@ this.PushService = {
     };
 
     this._notifyListeners('push', data);
+    return true;
   },
 
   getByKeyID: function(aKeyID) {
