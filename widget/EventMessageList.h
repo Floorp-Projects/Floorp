@@ -161,13 +161,13 @@ NS_EVENT_MESSAGE(NS_COMPOSITION_UPDATE,       NS_COMPOSITION_EVENT_START + 2)
 // composition string isn't changed but the ranges are changed.  This causes
 // a DOM "text" event which is a non-standard DOM event.
 NS_EVENT_MESSAGE(NS_COMPOSITION_CHANGE,       NS_COMPOSITION_EVENT_START + 3)
-// NS_COMPOSITION_COMMIT_AS_IS is the message for representing a commit of
+// eCompositionCommitAsIs is the message for representing a commit of
 // composition string.  TextComposition will commit composition with the
 // last data.  TextComposition will dispatch this event to the DOM tree as
 // NS_COMPOSITION_CHANGE without clause information.  After that,
 // NS_COMPOSITION_END will be dispatched automatically.
 // Its mData and mRanges should be empty and nullptr.
-NS_EVENT_MESSAGE(NS_COMPOSITION_COMMIT_AS_IS, NS_COMPOSITION_EVENT_START + 4)
+NS_EVENT_MESSAGE(eCompositionCommitAsIs, NS_COMPOSITION_EVENT_START + 4)
 // NS_COMPOSITION_COMMIT is the message for representing a commit of
 // composition string with its mData value.  TextComposition will dispatch this
 // event to the DOM tree as NS_COMPOSITION_CHANGE without clause information.

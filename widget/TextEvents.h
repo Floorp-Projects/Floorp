@@ -436,20 +436,20 @@ public:
   {
     return mMessage == NS_COMPOSITION_CHANGE ||
            mMessage == NS_COMPOSITION_COMMIT ||
-           mMessage == NS_COMPOSITION_COMMIT_AS_IS;
+           mMessage == eCompositionCommitAsIs;
   }
 
   bool CausesDOMCompositionEndEvent() const
   {
     return mMessage == NS_COMPOSITION_END ||
            mMessage == NS_COMPOSITION_COMMIT ||
-           mMessage == NS_COMPOSITION_COMMIT_AS_IS;
+           mMessage == eCompositionCommitAsIs;
   }
 
   bool IsFollowedByCompositionEnd() const
   {
     return mOriginalMessage == NS_COMPOSITION_COMMIT ||
-           mOriginalMessage == NS_COMPOSITION_COMMIT_AS_IS;
+           mOriginalMessage == eCompositionCommitAsIs;
   }
 };
 

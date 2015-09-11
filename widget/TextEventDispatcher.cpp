@@ -269,7 +269,7 @@ TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
   mIsComposing = false;
 
   EventMessage message = aCommitString ? NS_COMPOSITION_COMMIT :
-                                         NS_COMPOSITION_COMMIT_AS_IS;
+                                         eCompositionCommitAsIs;
   WidgetCompositionEvent compositionCommitEvent(true, message, widget);
   InitEvent(compositionCommitEvent);
   if (message == NS_COMPOSITION_COMMIT) {

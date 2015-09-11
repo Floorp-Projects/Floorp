@@ -1686,8 +1686,7 @@ nsWindow::RemoveIMEComposition()
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
     AutoIMEMask selMask(mIMEMaskSelectionUpdate);
 
-    WidgetCompositionEvent compositionCommitEvent(true,
-                                                  NS_COMPOSITION_COMMIT_AS_IS,
+    WidgetCompositionEvent compositionCommitEvent(true, eCompositionCommitAsIs,
                                                   this);
     InitEvent(compositionCommitEvent, nullptr);
     DispatchEvent(&compositionCommitEvent);
@@ -1864,7 +1863,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             // Don't end composition when composing text.
             if (ae->Action() != AndroidGeckoEvent::IME_COMPOSE_TEXT) {
                 WidgetCompositionEvent compositionCommitEvent(
-                        true, NS_COMPOSITION_COMMIT_AS_IS, this);
+                        true, eCompositionCommitAsIs, this);
                 InitEvent(compositionCommitEvent, nullptr);
                 DispatchEvent(&compositionCommitEvent);
             }

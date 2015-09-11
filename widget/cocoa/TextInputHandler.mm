@@ -2740,7 +2740,7 @@ IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitString)
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   EventMessage message =
-    aCommitString ? NS_COMPOSITION_COMMIT : NS_COMPOSITION_COMMIT_AS_IS;
+    aCommitString ? NS_COMPOSITION_COMMIT : eCompositionCommitAsIs;
   WidgetCompositionEvent compositionCommitEvent(true, message, mWidget);
   compositionCommitEvent.time = PR_IntervalNow();
   if (aCommitString) {
