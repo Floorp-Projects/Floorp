@@ -93,7 +93,7 @@ TextComposition::MaybeDispatchCompositionUpdate(
   if (mLastData == aCompositionEvent->mData) {
     return true;
   }
-  CloneAndDispatchAs(aCompositionEvent, NS_COMPOSITION_UPDATE);
+  CloneAndDispatchAs(aCompositionEvent, eCompositionUpdate);
   return IsValidStateForComposition(aCompositionEvent->widget);
 }
 
@@ -120,7 +120,7 @@ TextComposition::CloneAndDispatchAs(
 
   nsEventStatus dummyStatus = nsEventStatus_eConsumeNoDefault;
   nsEventStatus* status = aStatus ? aStatus : &dummyStatus;
-  if (aMessage == NS_COMPOSITION_UPDATE) {
+  if (aMessage == eCompositionUpdate) {
     mLastData = compositionEvent.mData;
   }
   EventDispatcher::Dispatch(mNode, mPresContext,

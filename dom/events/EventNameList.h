@@ -680,7 +680,7 @@ NON_IDL_EVENT(compositionstart,
               EventNameType_XUL,
               eCompositionEventClass)
 NON_IDL_EVENT(compositionupdate,
-              NS_COMPOSITION_UPDATE,
+              eCompositionUpdate,
               EventNameType_XUL,
               eCompositionEventClass)
 NON_IDL_EVENT(compositionend,

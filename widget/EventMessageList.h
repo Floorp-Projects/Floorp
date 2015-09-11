@@ -151,11 +151,11 @@ NS_EVENT_MESSAGE(eCompositionStart,      eCompositionEventFirst)
 // This event should NOT be dispatched from widget if NS_COMPOSITION_COMMIT
 // is available.
 NS_EVENT_MESSAGE(eCompositionEnd,        eCompositionEventFirst + 1)
-// NS_COMPOSITION_UPDATE is the message for DOM compositionupdate event.
+// eCompositionUpdate is the message for DOM compositionupdate event.
 // This event should NOT be dispatched from widget since it will be dispatched
 // by mozilla::TextComposition automatically if NS_COMPOSITION_CHANGE event
 // will change composition string.
-NS_EVENT_MESSAGE(NS_COMPOSITION_UPDATE,  eCompositionEventFirst + 2)
+NS_EVENT_MESSAGE(eCompositionUpdate,     eCompositionEventFirst + 2)
 // NS_COMPOSITION_CHANGE is the message for representing a change of
 // composition string.  This should be dispatched from widget even if
 // composition string isn't changed but the ranges are changed.  This causes
