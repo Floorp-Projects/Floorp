@@ -1143,6 +1143,10 @@
           let isOneOffSelected =
             this.selectedButton &&
             this.selectedButton.classList.contains("searchbar-engine-one-off-item");
+          // Typing de-selects the settings or opensearch buttons at the bottom
+          // of the search panel, as typing shows the user intends to search.
+          if (this.selectedButton && !isOneOffSelected)
+            this.selectedButton = null;
           if (textbox.value) {
             self.removeAttribute("showonlysettings");
             groupText = headerSearchText.previousSibling.value +
