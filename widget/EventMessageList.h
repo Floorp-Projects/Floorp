@@ -129,7 +129,7 @@ NS_EVENT_MESSAGE(eLegacyMouseLineOrPageScroll, eLegacyMouseScrollEventFirst)
 NS_EVENT_MESSAGE(eLegacyMousePixelScroll,      eLegacyMouseScrollEventFirst + 1)
 
 NS_EVENT_MESSAGE(NS_SCROLLPORT_START,     1700)
-NS_EVENT_MESSAGE(NS_SCROLLPORT_UNDERFLOW, NS_SCROLLPORT_START)
+NS_EVENT_MESSAGE(eScrollPortUnderflow,  NS_SCROLLPORT_START)
 NS_EVENT_MESSAGE(eScrollPortOverflow,   NS_SCROLLPORT_START + 1)
 
 NS_EVENT_MESSAGE(eLegacyMutationEventFirst,       1800)
