@@ -49,9 +49,6 @@ add_task(function*() {
   ok(!rec.isRecording(), "on 'recording-stopped', model is still no longer recording");
   ok(rec.isCompleted(), "on 'recording-stopped', model is considered 'complete'");
 
-  checkSystemInfo(rec, "Host");
-  checkSystemInfo(rec, "Client");
-
   // Export and import a rec, and ensure it has the correct state.
   let file = FileUtils.getFile("TmpD", ["tmpprofile.json"]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
@@ -63,17 +60,7 @@ add_task(function*() {
   ok(!importedModel.isRecording(), "All imported recordings should not be recording");
   ok(importedModel.isImported(), "All imported recordings should be considerd imported");
 
-  checkSystemInfo(importedModel, "Host");
-  checkSystemInfo(importedModel, "Client");
-
   yield front.destroy();
   yield closeDebuggerClient(client);
   gBrowser.removeCurrentTab();
 });
-
-function checkSystemInfo (recording, type) {
-  let data = recording[`get${type}SystemInfo`]();
-  for (let field of ["appid", "apptype", "vendor", "name", "version"]) {
-    ok(data[field], `get${type}SystemInfo() has ${field} property`);
-  }
-}
