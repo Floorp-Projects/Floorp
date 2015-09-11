@@ -393,7 +393,16 @@ function prompt(aBrowser, aRequest) {
             allowedDevices.push(videoDevices[0].deviceIndex);
           if (audioDevices.length && micPerm == perms.ALLOW_ACTION)
             allowedDevices.push(audioDevices[0].deviceIndex);
-          let mm = this.browser.messageManager;
+
+          // Remember on which URIs we found persistent permissions so that we
+          // can remove them if the user clicks 'Stop Sharing'. There's no
+          // other way for the stop sharing code to know the hostnames of frames
+          // using devices until bug 1066082 is fixed.
+          let browser = this.browser;
+          browser._devicePermissionURIs = browser._devicePermissionURIs || [];
+          browser._devicePermissionURIs.push(uri);
+
+          let mm = browser.messageManager;
           mm.sendAsyncMessage("webrtc:Allow", {callID: aRequest.callID,
                                                windowID: aRequest.windowID,
                                                devices: allowedDevices});
@@ -532,6 +541,13 @@ function prompt(aBrowser, aRequest) {
         if (!allowedDevices.length) {
           denyRequest(notification.browser, aRequest);
           return;
+        }
+
+        if (aRemember) {
+          // Remember on which URIs we set persistent permissions so that we
+          // can remove them if the user clicks 'Stop Sharing'.
+          aBrowser._devicePermissionURIs = aBrowser._devicePermissionURIs || [];
+          aBrowser._devicePermissionURIs.push(uri);
         }
 
         let mm = notification.browser.messageManager;
@@ -862,15 +878,17 @@ function updateBrowserSpecificIndicator(aBrowser, aState) {
     label: stringBundle.getString("getUserMedia.stopSharing.label"),
     accessKey: stringBundle.getString("getUserMedia.stopSharing.accesskey"),
     callback: function () {
-      let uri = Services.io.newURI(aState.documentURI, null, null);
+      let uris = aBrowser._devicePermissionURIs || [];
+      uris = uris.concat(Services.io.newURI(aState.documentURI, null, null));
       let perms = Services.perms;
-      if (aState.camera &&
-          perms.testExactPermission(uri, "camera") == perms.ALLOW_ACTION)
-        perms.remove(uri, "camera");
-      if (aState.microphone &&
-          perms.testExactPermission(uri, "microphone") == perms.ALLOW_ACTION)
-        perms.remove(uri, "microphone");
-
+      for (let uri of uris) {
+        if (aState.camera &&
+            perms.testExactPermission(uri, "camera") == perms.ALLOW_ACTION)
+          perms.remove(uri, "camera");
+        if (aState.microphone &&
+            perms.testExactPermission(uri, "microphone") == perms.ALLOW_ACTION)
+          perms.remove(uri, "microphone");
+      }
       let mm = notification.browser.messageManager;
       mm.sendAsyncMessage("webrtc:StopSharing", windowId);
     }
@@ -902,12 +920,13 @@ function updateBrowserSpecificIndicator(aBrowser, aState) {
                                         anchorId, mainAction, secondaryActions, options);
   }
   else {
-    removeBrowserNotification(aBrowser,"webRTC-sharingDevices");
+    removeBrowserNotification(aBrowser, "webRTC-sharingDevices");
+    aBrowser._devicePermissionURIs = null;
   }
 
   // Now handle the screen sharing indicator.
   if (!aState.screen) {
-    removeBrowserNotification(aBrowser,"webRTC-sharingScreen");
+    removeBrowserNotification(aBrowser, "webRTC-sharingScreen");
     return;
   }
 
