@@ -883,15 +883,13 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest,
                            nsresult aStatusCode)
 {
   workers::AssertIsOnMainThread();
-  if (NS_FAILED(aStatusCode)) {
-    nsCOMPtr<nsIAsyncOutputStream> outputStream = do_QueryInterface(mPipeOutputStream);
-    if (outputStream) {
-      outputStream->CloseWithStatus(NS_BINDING_FAILED);
-    }
-    // We proceed as usual here, since we've already created a successful response
-    // from OnStartRequest.
-  } else if (mPipeOutputStream) {
+  if (mPipeOutputStream) {
     mPipeOutputStream->Close();
+  }
+
+  if (NS_FAILED(aStatusCode)) {
+    FailWithNetworkError();
+    return aStatusCode;
   }
 
   ContinueHttpFetchAfterNetworkFetch();
