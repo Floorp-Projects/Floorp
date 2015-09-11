@@ -11,6 +11,7 @@ SOURCES += [
     'pkixcheck_CheckKeyUsage_tests.cpp',
     'pkixcheck_CheckSignatureAlgorithm_tests.cpp',
     'pkixcheck_CheckValidity_tests.cpp',
+    'pkixcheck_ParseValidity_tests.cpp',
 
     # The naming conventions are described in ./README.txt.
 
