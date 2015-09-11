@@ -12,6 +12,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/Fetch.h"
+#include "mozilla/dom/FetchUtil.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/URL.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -298,34 +299,21 @@ Request::Constructor(const GlobalObject& aGlobal,
   // Request constructor step 14.
   if (aInit.mMethod.WasPassed()) {
     nsAutoCString method(aInit.mMethod.Value());
-    nsAutoCString upperCaseMethod = method;
-    ToUpperCase(upperCaseMethod);
 
     // Step 14.1. Disallow forbidden methods, and anything that is not a HTTP
     // token, since HTTP states that Method may be any of the defined values or
     // a token (extension method).
-    if (upperCaseMethod.EqualsLiteral("CONNECT") ||
-        upperCaseMethod.EqualsLiteral("TRACE") ||
-        upperCaseMethod.EqualsLiteral("TRACK") ||
-        !NS_IsValidHTTPToken(method)) {
+    nsAutoCString outMethod;
+    nsresult rv = FetchUtil::GetValidRequestMethod(method, outMethod);
+    if (NS_FAILED(rv)) {
       NS_ConvertUTF8toUTF16 label(method);
       aRv.ThrowTypeError(MSG_INVALID_REQUEST_METHOD, &label);
       return nullptr;
     }
 
     // Step 14.2
-    if (upperCaseMethod.EqualsLiteral("DELETE") ||
-        upperCaseMethod.EqualsLiteral("GET") ||
-        upperCaseMethod.EqualsLiteral("HEAD") ||
-        upperCaseMethod.EqualsLiteral("POST") ||
-        upperCaseMethod.EqualsLiteral("PUT") ||
-        upperCaseMethod.EqualsLiteral("OPTIONS")) {
-      request->ClearCreatedByFetchEvent();
-      request->SetMethod(upperCaseMethod);
-    } else {
-      request->ClearCreatedByFetchEvent();
-      request->SetMethod(method);
-    }
+    request->ClearCreatedByFetchEvent();
+    request->SetMethod(outMethod);
   }
 
   nsRefPtr<InternalHeaders> requestHeaders = request->Headers();
