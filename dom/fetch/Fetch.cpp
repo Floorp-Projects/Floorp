@@ -72,7 +72,7 @@ public:
   }
 
   void
-  OnResponseAvailableInternal(InternalResponse* aResponse) override;
+  OnResponseAvailable(InternalResponse* aResponse) override;
 
   void
   OnResponseEnd() override;
@@ -99,7 +99,7 @@ public:
   explicit MainThreadFetchResolver(Promise* aPromise);
 
   void
-  OnResponseAvailableInternal(InternalResponse* aResponse) override;
+  OnResponseAvailable(InternalResponse* aResponse) override;
 
 private:
   ~MainThreadFetchResolver();
@@ -237,7 +237,7 @@ MainThreadFetchResolver::MainThreadFetchResolver(Promise* aPromise)
 }
 
 void
-MainThreadFetchResolver::OnResponseAvailableInternal(InternalResponse* aResponse)
+MainThreadFetchResolver::OnResponseAvailable(InternalResponse* aResponse)
 {
   NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver);
   AssertIsOnMainThread();
@@ -317,7 +317,7 @@ public:
 };
 
 void
-WorkerFetchResolver::OnResponseAvailableInternal(InternalResponse* aResponse)
+WorkerFetchResolver::OnResponseAvailable(InternalResponse* aResponse)
 {
   AssertIsOnMainThread();
 

@@ -32,27 +32,14 @@ class InternalResponse;
 class FetchDriverObserver
 {
 public:
-  FetchDriverObserver() : mGotResponseAvailable(false)
-  { }
-
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchDriverObserver);
-  void OnResponseAvailable(InternalResponse* aResponse)
-  {
-    MOZ_ASSERT(!mGotResponseAvailable);
-    mGotResponseAvailable = true;
-    OnResponseAvailableInternal(aResponse);
-  }
+  virtual void OnResponseAvailable(InternalResponse* aResponse) = 0;
   virtual void OnResponseEnd()
   { };
 
 protected:
   virtual ~FetchDriverObserver()
   { };
-
-  virtual void OnResponseAvailableInternal(InternalResponse* aResponse) = 0;
-
-private:
-  bool mGotResponseAvailable;
 };
 
 class FetchDriver final : public nsIStreamListener,
