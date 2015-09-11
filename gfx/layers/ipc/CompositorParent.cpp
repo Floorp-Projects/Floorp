@@ -1729,7 +1729,6 @@ class CrossProcessCompositorParent final : public PCompositorParent,
 public:
   explicit CrossProcessCompositorParent(Transport* aTransport)
     : mTransport(aTransport)
-    , mCompositorThreadHolder(sCompositorThreadHolder)
     , mNotifyAfterRemotePaint(false)
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -1816,6 +1815,8 @@ public:
 
   void DidComposite(uint64_t aId);
 
+protected:
+  void OnChannelConnected(int32_t pid) override { mCompositorThreadHolder = sCompositorThreadHolder; }
 private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~CrossProcessCompositorParent();
