@@ -759,7 +759,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   case eContentCommandScroll:
     DoContentCommandScrollEvent(aEvent->AsContentCommandEvent());
     break;
-  case NS_COMPOSITION_START:
+  case eCompositionStart:
     if (aEvent->mFlags.mIsTrusted) {
       // If the event is trusted event, set the selected text to data of
       // composition event.

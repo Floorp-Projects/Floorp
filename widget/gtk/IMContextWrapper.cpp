@@ -915,7 +915,7 @@ IMContextWrapper::OnSelectionChange(nsWindow* aCaller,
 
     // The focused editor might have placeholder text with normal text node.
     // In such case, the text node must be removed from a compositionstart
-    // event handler.  So, we're dispatching NS_COMPOSITION_START,
+    // event handler.  So, we're dispatching eCompositionStart,
     // we should ignore selection change notification.
     if (mCompositionState == eCompositionState_CompositionStartDispatched) {
         if (NS_WARN_IF(!mSelection.IsValid())) {
@@ -1303,7 +1303,7 @@ IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext)
         ("GTKIM: %p   DispatchCompositionStart(), FAILED, mCompositionStart=%u",
          this, mCompositionStart));
     mCompositionState = eCompositionState_CompositionStartDispatched;
-    WidgetCompositionEvent compEvent(true, NS_COMPOSITION_START,
+    WidgetCompositionEvent compEvent(true, eCompositionStart,
                                      mLastFocusedWindow);
     InitEvent(compEvent);
     nsCOMPtr<nsIWidget> kungFuDeathGrip = mLastFocusedWindow;

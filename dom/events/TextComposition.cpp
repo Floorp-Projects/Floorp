@@ -412,7 +412,7 @@ TextComposition::NotityUpdateComposition(
   // When compositon start, notify the rect of first offset character.
   // When not compositon start, notify the rect of selected composition
   // string if compositionchange event.
-  if (aCompositionEvent->mMessage == NS_COMPOSITION_START) {
+  if (aCompositionEvent->mMessage == eCompositionStart) {
     nsCOMPtr<nsIWidget> widget = mPresContext->GetRootWidget();
     // Update composition start offset
     WidgetQueryContentEvent selectedTextEvent(true, eQuerySelectedText, widget);
@@ -611,8 +611,8 @@ TextComposition::CompositionEventDispatcher::Run()
   nsRefPtr<nsPresContext> presContext = mTextComposition->mPresContext;
   nsEventStatus status = nsEventStatus_eIgnore;
   switch (mEventMessage) {
-    case NS_COMPOSITION_START: {
-      WidgetCompositionEvent compStart(true, NS_COMPOSITION_START, widget);
+    case eCompositionStart: {
+      WidgetCompositionEvent compStart(true, eCompositionStart, widget);
       WidgetQueryContentEvent selectedText(true, eQuerySelectedText, widget);
       ContentEventHandler handler(presContext);
       handler.OnQuerySelectedText(&selectedText);
