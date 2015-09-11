@@ -31,8 +31,8 @@ GetEventMessageName(EventMessage aMessage)
       return "eCompositionStart";
     case eCompositionEnd:
       return "eCompositionEnd";
-    case NS_COMPOSITION_UPDATE:
-      return "NS_COMPOSITION_UPDATE";
+    case eCompositionUpdate:
+      return "eCompositionUpdate";
     case NS_COMPOSITION_CHANGE:
       return "NS_COMPOSITION_CHANGE";
     case eCompositionCommitAsIs:
