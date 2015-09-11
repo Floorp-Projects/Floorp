@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % webConsoleDTD SYSTEM "chrome://browser/locale/devtools/webConsole.dtd" >
+%webConsoleDTD;
+]>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <link rel="stylesheet" href="chrome://browser/skin/devtools/webconsole_networkpanel.css" type="text/css"/>
+</head>
+<body role="application">
+<table id="header">
+  <tr>
+    <th class="property-name"
+        scope="row">&networkPanel.requestURLColon;</th>
+    <td class="property-value"
+        id="headUrl"></td>
+  </tr>
+  <tr>
+    <th class="property-name"
+        scope="row">&networkPanel.requestMethodColon;</th>
+    <td class="property-value"
+        id="headMethod"></td>
+  </tr>
+  <tr>
+    <th class="property-name"
+        scope="row">&networkPanel.statusCodeColon;</th>
+    <td class="property-value"
+        id="headStatus"></td>
+  </tr>
+</table>
+
+<div class="group">
+  <h1>
+    &networkPanel.requestHeaders;
+    <span id="requestHeadersInfo" class="info"></span>
+  </h1>
+  <table class="property-table" id="requestHeadersContent"></table>
+
+  <div id="requestCookie" style="display:none">
+    <h1>&networkPanel.requestCookie;</h1>
+    <table class="property-table" id="requestCookieContent"></table>
+  </div>
+
+  <div id="requestBody" style="display:none">
+    <h1>&networkPanel.requestBody;</h1>
+    <table class="property-table" id="requestBodyContent"></table>
+  </div>
+  <div id="requestFormData" style="display:none">
+    <h1>&networkPanel.requestFormData;</h1>
+    <table class="property-table" id="requestFormDataContent"></table>
+  </div>
+  <p id="requestBodyFetchLink" style="display:none"></p>
+</div>
+
+<div class="group" id="responseContainer" style="display:none">
+  <h1>
+    &networkPanel.responseHeaders;
+    <span id="responseHeadersInfo" class="info">&Delta;</span>
+  </h1>
+  <table class="property-table" id="responseHeadersContent"></table>
+
+  <div id="responseCookie" style="display:none">
+    <h1>&networkPanel.responseCookie;</h1>
+    <table class="property-table" id="responseCookieContent"></table>
+  </div>
+
+  <div id="responseBody" style="display:none">
+    <h1>
+      &networkPanel.responseBody;
+      <span class="info" id="responseBodyInfo">&Delta;</span>
+    </h1>
+    <table class="property-table" id="responseBodyContent"></table>
+  </div>
+  <div id="responseBodyCached" style="display:none">
+    <h1>
+      &networkPanel.responseBodyCached;
+      <span class="info" id="responseBodyCachedInfo">&Delta;</span>
+    </h1>
+    <table class="property-table" id="responseBodyCachedContent"></table>
+  </div>
+  <div id="responseNoBody" style="display:none">
+    <h1>
+      &networkPanel.responseNoBody;
+      <span id="responseNoBodyInfo" class="info">&Delta;</span>
+    </h1>
+  </div>
+  <div id="responseBodyUnknownType" style="display:none">
+    <h1>
+      &networkPanel.responseBodyUnknownType;
+      <span id="responseBodyUnknownTypeInfo" class="info">&Delta;</span>
+    </h1>
+    <table class="property-table" id="responseBodyUnknownTypeContent"></table>
+  </div>
+  <div id="responseImage" style="display:none">
+    <h1>
+      &networkPanel.responseImage;
+      <span id="responseImageInfo" class="info"></span>
+    </h1>
+    <div id="responseImageNodeDiv">
+      <img id="responseImageNode" />
+    </div>
+  </div>
+  <div id="responseImageCached" style="display:none">
+    <h1>
+      &networkPanel.responseImageCached;
+      <span id="responseImageCachedInfo" class="info"></span>
+    </h1>
+    <div id="responseImageNodeDiv">
+      <img id="responseImageCachedNode" />
+    </div>
+  </div>
+  <p id="responseBodyFetchLink" style="display:none"></p>
+</div>
+</body>
+</html>
