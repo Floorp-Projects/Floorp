@@ -1965,7 +1965,7 @@ TestApp::TestText(void)
    * Bug in eQueryTextContent handler
    * nsTextStore::SetText not calling SetSelection or InsertTextAtSelection
    * Bug in SetSelection or InsertTextAtSelection
-   *  eSetSelection bug or NS_COMPOSITION_* / NS_COMPOSITION_CHANGE bug
+   *  eSetSelection bug or eComposition* / eCompositionChange bug
    */
 
   if (!mMgr->GetFocusedStore()) {

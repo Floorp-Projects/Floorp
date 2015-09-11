@@ -153,24 +153,24 @@ NS_EVENT_MESSAGE(eCompositionStart,      eCompositionEventFirst)
 NS_EVENT_MESSAGE(eCompositionEnd,        eCompositionEventFirst + 1)
 // eCompositionUpdate is the message for DOM compositionupdate event.
 // This event should NOT be dispatched from widget since it will be dispatched
-// by mozilla::TextComposition automatically if NS_COMPOSITION_CHANGE event
+// by mozilla::TextComposition automatically if eCompositionChange event
 // will change composition string.
 NS_EVENT_MESSAGE(eCompositionUpdate,     eCompositionEventFirst + 2)
-// NS_COMPOSITION_CHANGE is the message for representing a change of
+// eCompositionChange is the message for representing a change of
 // composition string.  This should be dispatched from widget even if
 // composition string isn't changed but the ranges are changed.  This causes
 // a DOM "text" event which is a non-standard DOM event.
-NS_EVENT_MESSAGE(NS_COMPOSITION_CHANGE,  eCompositionEventFirst + 3)
+NS_EVENT_MESSAGE(eCompositionChange,     eCompositionEventFirst + 3)
 // eCompositionCommitAsIs is the message for representing a commit of
 // composition string.  TextComposition will commit composition with the
 // last data.  TextComposition will dispatch this event to the DOM tree as
-// NS_COMPOSITION_CHANGE without clause information.  After that,
+// eCompositionChange without clause information.  After that,
 // eCompositionEnd will be dispatched automatically.
 // Its mData and mRanges should be empty and nullptr.
 NS_EVENT_MESSAGE(eCompositionCommitAsIs, eCompositionEventFirst + 4)
 // NS_COMPOSITION_COMMIT is the message for representing a commit of
 // composition string with its mData value.  TextComposition will dispatch this
-// event to the DOM tree as NS_COMPOSITION_CHANGE without clause information.
+// event to the DOM tree as eCompositionChange without clause information.
 // After that, eCompositionEnd will be dispatched automatically.
 // Its mRanges should be nullptr.
 NS_EVENT_MESSAGE(NS_COMPOSITION_COMMIT,  eCompositionEventFirst + 5)

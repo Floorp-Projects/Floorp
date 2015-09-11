@@ -672,7 +672,7 @@ NON_IDL_EVENT(speakerforcedchange,
  // This shouldn't be used by web/xul apps.  "compositionupdate" should be
  // used instead.
 NON_IDL_EVENT(text,
-              NS_COMPOSITION_CHANGE,
+              eCompositionChange,
               EventNameType_XUL,
               eCompositionEventClass)
 NON_IDL_EVENT(compositionstart,

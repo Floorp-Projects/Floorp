@@ -285,7 +285,7 @@ TextComposition::DispatchCompositionEvent(
     nsString* committingData = nullptr;
     switch (aCompositionEvent->mMessage) {
       case eCompositionEnd:
-      case NS_COMPOSITION_CHANGE:
+      case eCompositionChange:
       case eCompositionCommitAsIs:
       case NS_COMPOSITION_COMMIT:
         committingData = &aCompositionEvent->mData;
@@ -309,20 +309,20 @@ TextComposition::DispatchCompositionEvent(
   bool dispatchDOMTextEvent = aCompositionEvent->CausesDOMTextEvent();
 
   // When mIsComposing is false but the committing string is different from
-  // the last data (E.g., previous NS_COMPOSITION_CHANGE event made the
+  // the last data (E.g., previous eCompositionChange event made the
   // composition string empty or didn't have clause information), we don't
   // need to dispatch redundant DOM text event.
   if (dispatchDOMTextEvent &&
-      aCompositionEvent->mMessage != NS_COMPOSITION_CHANGE &&
+      aCompositionEvent->mMessage != eCompositionChange &&
       !mIsComposing && mLastData == aCompositionEvent->mData) {
     dispatchEvent = dispatchDOMTextEvent = false;
   }
 
-  // widget may dispatch redundant NS_COMPOSITION_CHANGE event
+  // widget may dispatch redundant eCompositionChange event
   // which modifies neither composition string, clauses nor caret
   // position.  In such case, we shouldn't dispatch DOM events.
   if (dispatchDOMTextEvent &&
-      aCompositionEvent->mMessage == NS_COMPOSITION_CHANGE &&
+      aCompositionEvent->mMessage == eCompositionChange &&
       mLastData == aCompositionEvent->mData &&
       mRanges && aCompositionEvent->mRanges &&
       mRanges->Equals(*aCompositionEvent->mRanges)) {
@@ -337,13 +337,13 @@ TextComposition::DispatchCompositionEvent(
 
   if (dispatchEvent) {
     // If the composition event should cause a DOM text event, we should
-    // overwrite the event message as NS_COMPOSITION_CHANGE because due to
+    // overwrite the event message as eCompositionChange because due to
     // the limitation of mapping between event messages and DOM event types,
     // we cannot map multiple event messages to a DOM event type.
     if (dispatchDOMTextEvent &&
-        aCompositionEvent->mMessage != NS_COMPOSITION_CHANGE) {
+        aCompositionEvent->mMessage != eCompositionChange) {
       aCompositionEvent->mFlags =
-        CloneAndDispatchAs(aCompositionEvent, NS_COMPOSITION_CHANGE,
+        CloneAndDispatchAs(aCompositionEvent, eCompositionChange,
                            aStatus, aCallBack);
     } else {
       EventDispatcher::Dispatch(mNode, mPresContext,
@@ -625,7 +625,7 @@ TextComposition::CompositionEventDispatcher::Run()
                                                 mIsSynthesizedEvent);
       break;
     }
-    case NS_COMPOSITION_CHANGE:
+    case eCompositionChange:
     case eCompositionCommitAsIs:
     case NS_COMPOSITION_COMMIT: {
       WidgetCompositionEvent compEvent(true, mEventMessage, widget);

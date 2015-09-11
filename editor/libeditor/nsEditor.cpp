@@ -254,7 +254,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIContent *aRoot,
   // recreated with same content. Therefore, we need to forget mIMETextNode,
   // but we need to keep storing mIMETextOffset and mIMETextLength becuase
   // they are necessary to restore IME selection and replacing composing string
-  // when this receives NS_COMPOSITION_CHANGE event next time.
+  // when this receives eCompositionChange event next time.
   if (mIMETextNode && !mIMETextNode->IsInComposedDoc()) {
     mIMETextNode = nullptr;
   }
@@ -5162,7 +5162,7 @@ nsEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
     case eCompositionStart:
     case eCompositionEnd:
     case eCompositionUpdate:
-    case NS_COMPOSITION_CHANGE:
+    case eCompositionChange:
     case eCompositionCommitAsIs:
       // Don't allow composition events whose internal event are not
       // WidgetCompositionEvent.

@@ -33,8 +33,8 @@ GetEventMessageName(EventMessage aMessage)
       return "eCompositionEnd";
     case eCompositionUpdate:
       return "eCompositionUpdate";
-    case NS_COMPOSITION_CHANGE:
-      return "NS_COMPOSITION_CHANGE";
+    case eCompositionChange:
+      return "eCompositionChange";
     case eCompositionCommitAsIs:
       return "eCompositionCommitAsIs";
     case NS_COMPOSITION_COMMIT:
@@ -875,7 +875,7 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
   //     TextComposition must handle following events correctly!
 
   // During REQUEST_TO_COMMIT_COMPOSITION or REQUEST_TO_CANCEL_COMPOSITION,
-  // widget usually sends a NS_COMPOSITION_CHANGE event to finalize or
+  // widget usually sends a eCompositionChange event to finalize or
   // clear the composition, respectively.
   // Because the event will not reach content in time, we intercept it
   // here and pass the text as the DidRequestToCommitOrCancelComposition()
