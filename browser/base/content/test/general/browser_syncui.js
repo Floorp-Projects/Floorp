@@ -34,22 +34,59 @@ function promiseObserver(topic) {
   });
 }
 
+function checkButtonTooltips(stringPrefix) {
+  for (let butId of ["sync-button", "PanelUI-fxa-icon"]) {
+    let text = document.getElementById(butId).getAttribute("tooltiptext");
+    let desc = `Text is "${text}", expecting it to start with "${stringPrefix}"`
+    Assert.ok(text.startsWith(stringPrefix), desc);
+  }
+}
+
 add_task(function* prepare() {
+  // add the Sync button to the toolbar so we can get it!
+  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_NAVBAR);
+  registerCleanupFunction(() => {
+    CustomizableUI.removeWidgetFromArea("sync-button");
+  });
+
   let xps = Components.classes["@mozilla.org/weave/service;1"]
                               .getService(Components.interfaces.nsISupports)
                               .wrappedJSObject;
   yield xps.whenLoaded();
+  // Put Sync and the UI into a known state.
+  Weave.Status.login = Weave.LOGIN_FAILED_NO_USERNAME;
+  Services.obs.notifyObservers(null, "weave:ui:clear-error", null);
+
   checkBroadcasterVisible("sync-setup-state");
+  checkButtonTooltips("Sign In To Sync");
   // mock out the "_needsSetup()" function so we don't short-circuit.
   let oldNeedsSetup = window.gSyncUI._needsSetup;
   window.gSyncUI._needsSetup = () => false;
   registerCleanupFunction(() => {
     window.gSyncUI._needsSetup = oldNeedsSetup;
+    // and an observer to set the state back to what it should be now we've
+    // restored the stub.
+    Services.obs.notifyObservers(null, "weave:ui:clear-error", null);
   });
   // and a notification to have the state change away from "needs setup"
   Services.obs.notifyObservers(null, "weave:ui:clear-error", null);
   checkBroadcasterVisible("sync-syncnow-state");
 });
+
+add_task(function* testSyncNeedsVerification() {
+  Assert.equal(Notifications.notifications.length, 0, "start with no notifications");
+  // mock out the "_needsVerification()" function
+  let oldNeedsVerification = window.gSyncUI._needsVerification;
+  window.gSyncUI._needsVerification = () => true;
+  try {
+    // a notification for the state change
+    Services.obs.notifyObservers(null, "weave:ui:clear-error", null);
+    checkButtonTooltips("Verify");
+  } finally {
+    window.gSyncUI._needsVerification = oldNeedsVerification;
+  }
+});
+
 
 add_task(function* testSyncLoginError() {
   Assert.equal(Notifications.notifications.length, 0, "start with no notifications");
@@ -63,6 +100,8 @@ add_task(function* testSyncLoginError() {
   Assert.equal(Notifications.notifications.length, 0, "no notifications shown on login error");
   // But the menu *should* reflect the login error.
   checkBroadcasterVisible("sync-reauth-state");
+  // The tooltips for the buttons should also reflect it.
+  checkButtonTooltips("Reconnect");
 
   // Now pretend we just had a successful login - the error notification should go away.
   Weave.Status.sync = Weave.STATUS_OK;
@@ -96,27 +135,36 @@ function testButtonActions(startNotification, endNotification) {
   checkButtonsStatus(false);
 }
 
-add_task(function* testButtonActivities() {
-  // add the Sync button to the panel so we can get it!
+function doTestButtonActivities() {
+  testButtonActions("weave:service:login:start", "weave:service:login:finish");
+  testButtonActions("weave:service:login:start", "weave:service:login:error");
+
+  testButtonActions("weave:service:sync:start", "weave:service:sync:finish");
+  testButtonActions("weave:service:sync:start", "weave:service:sync:error");
+
+  // and ensure the counters correctly handle multiple in-flight syncs
+  Services.obs.notifyObservers(null, "weave:service:sync:start", null);
+  checkButtonsStatus(true);
+  // sync stops.
+  Services.obs.notifyObservers(null, "weave:service:sync:finish", null);
+  // Button should not be active.
+  checkButtonsStatus(false);
+}
+
+add_task(function* testButtonActivitiesInNavBar() {
+  // check the button's functionality while the button is in the NavBar - which
+  // it already is.
+  doTestButtonActivities();
+});
+
+add_task(function* testButtonActivitiesInPanel() {
+  // check the button's functionality while the button is in the panel - it's
+  // currently in the NavBar - move it to the panel and open it.
   CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_PANEL);
-  // check the button's functionality
   yield PanelUI.show();
   try {
-    testButtonActions("weave:service:login:start", "weave:service:login:finish");
-    testButtonActions("weave:service:login:start", "weave:service:login:error");
-
-    testButtonActions("weave:service:sync:start", "weave:service:sync:finish");
-    testButtonActions("weave:service:sync:start", "weave:service:sync:error");
-
-    // and ensure the counters correctly handle multiple in-flight syncs
-    Services.obs.notifyObservers(null, "weave:service:sync:start", null);
-    checkButtonsStatus(true);
-    // sync stops.
-    Services.obs.notifyObservers(null, "weave:service:sync:finish", null);
-    // Button should not be active.
-    checkButtonsStatus(false);
+    doTestButtonActivities();
   } finally {
     PanelUI.hide();
-    CustomizableUI.removeWidgetFromArea("sync-button");
   }
 });
