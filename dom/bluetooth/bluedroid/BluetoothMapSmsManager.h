@@ -94,7 +94,7 @@ private:
 
   void HandleNotificationRegistration(const ObexHeaderSet& aHeader);
   void HandleEventReport(const ObexHeaderSet& aHeader);
-  void HandleMessageStatus(const ObexHeaderSet& aHeader);
+  void HandleSetMessageStatus(const ObexHeaderSet& aHeader);
   void HandleSmsMmsFolderListing(const ObexHeaderSet& aHeader);
   void HandleSmsMmsMsgListing(const ObexHeaderSet& aHeader);
   void HandleSmsMmsGetMessage(const ObexHeaderSet& aHeader);
