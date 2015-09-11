@@ -766,6 +766,18 @@ CamerasParent::RecvStopCapture(const int& aCapEngine,
   return SendReplySuccess();
 }
 
+void
+CamerasParent::StopIPC()
+{
+  MOZ_ASSERT(!mDestroyed);
+  // Release shared memory now, it's our last chance
+  mShmemPool.Cleanup(this);
+  // We don't want to receive callbacks or anything if we can't
+  // forward them anymore anyway.
+  mChildIsAlive = false;
+  mDestroyed = true;
+}
+
 bool
 CamerasParent::RecvAllDone()
 {
@@ -791,8 +803,6 @@ void CamerasParent::DoShutdown()
     }
   }
 
-  mShmemPool.Cleanup(this);
-
   mPBackgroundThread = nullptr;
 
   if (mVideoCaptureThread) {
@@ -809,10 +819,7 @@ CamerasParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   // No more IPC from here
   LOG((__PRETTY_FUNCTION__));
-  // We don't want to receive callbacks or anything if we can't
-  // forward them anymore anyway.
-  mChildIsAlive = false;
-  mDestroyed = true;
+  StopIPC();
   CloseEngines();
 }
 
