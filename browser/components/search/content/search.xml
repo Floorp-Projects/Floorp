@@ -727,7 +727,7 @@
 
           let engine;
           let oneOff = this.selectedButton;
-          if (oneOff && !this.selectionFromMouseOver) {
+          if (oneOff) {
             if (!oneOff.engine) {
               oneOff.doCommand();
               this.mEnterEvent = null;
@@ -749,9 +749,6 @@
       <field name="_selectedButton"/>
       <property name="selectedButton" onget="return this._selectedButton;">
         <setter><![CDATA[
-          // Set to true from the mouseover handler right after this setter call.
-          this.selectionFromMouseOver = false;
-
           if (this._selectedButton)
             this._selectedButton.removeAttribute("selected");
 
@@ -1206,6 +1203,10 @@
         while (list.firstChild)
           list.firstChild.remove();
 
+        // Avoid setting the selection based on mouse events before
+        // the 'popupshown' event has fired.
+        this._ignoreMouseEvents = true;
+
         let Preferences =
           Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
         let pref = Preferences.get("browser.search.hiddenOneOffs");
@@ -1297,6 +1298,10 @@
         }
       ]]></handler>
 
+      <handler event="popupshown"><![CDATA[
+        this._ignoreMouseEvents = false;
+      ]]></handler>
+
       <handler event="mousedown"><![CDATA[
         // Required to receive click events from the buttons on Linux.
         event.preventDefault();
@@ -1307,14 +1312,17 @@
         if (target.localName != "button")
           return;
 
+        // We ignore mouse events between the popupshowing and popupshown
+        // events to avoid selecting the button that happens to be under the
+        // mouse when the panel opens.
+        if (this._ignoreMouseEvents)
+          return;
+
         if ((target.classList.contains("searchbar-engine-one-off-item") &&
              !target.classList.contains("dummy")) ||
             target.classList.contains("addengine-item") ||
-            target.classList.contains("search-setting-button")) {
-          let textbox = document.getElementById("searchbar").textbox;
-          textbox.selectedButton = target;
-          textbox.selectionFromMouseOver = true;
-        }
+            target.classList.contains("search-setting-button"))
+          document.getElementById("searchbar").textbox.selectedButton = target;
       ]]></handler>
 
       <handler event="mouseout"><![CDATA[
