@@ -83,7 +83,7 @@ const void *FileFace::get_table_fn(const void* appFaceHandle, unsigned int name,
     if (!TtfUtil::GetTableInfo(name, file_face._header_tbl, file_face._table_dir, tbl_offset, tbl_len))
         return 0;
 
-    if (tbl_offset + tbl_len > file_face._file_len
+    if (tbl_offset > file_face._file_len || tbl_len > file_face._file_len - tbl_offset
             || fseek(file_face._file, tbl_offset, SEEK_SET) != 0)
         return 0;
 

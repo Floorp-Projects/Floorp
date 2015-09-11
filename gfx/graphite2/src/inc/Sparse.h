@@ -56,7 +56,7 @@ private:
         key_type        offset;
     };
 
-    static chunk  empty_chunk;
+    static const chunk  empty_chunk;
     sparse(const sparse &);
     sparse & operator = (const sparse &);
 
@@ -88,7 +88,7 @@ private:
 inline
 sparse::sparse() throw() : m_nchunks(0)
 {
-    m_array.map = &empty_chunk;
+    m_array.map = const_cast<graphite2::sparse::chunk *>(&empty_chunk);
 }
 
 
@@ -113,7 +113,7 @@ sparse::sparse(I attr, const I last)
     }
     if (m_nchunks == 0)
     {
-        m_array.map=&empty_chunk;
+        m_array.map=const_cast<graphite2::sparse::chunk *>(&empty_chunk);
         return;
     }
 

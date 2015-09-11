@@ -40,7 +40,7 @@ using namespace graphite2;
 
 SegCache::SegCache(const SegCacheStore * store, const Features & feats)
 : m_prefixLength(ePrefixLength),
-  m_maxCachedSegLength(eMaxSpliceSize),
+//  m_maxCachedSegLength(eMaxSpliceSize),
   m_segmentCount(0),
   m_features(feats),
   m_totalAccessCount(0l), m_totalMisses(0l),
@@ -84,7 +84,7 @@ SegCacheEntry* SegCache::cache(SegCacheStore * store, const uint16* cmapGlyphs, 
 {
     uint16 pos = 0;
     if (!length) return NULL;
-    assert(length < m_maxCachedSegLength);
+//    assert(length < m_maxCachedSegLength);
     SegCachePrefixArray pArray = m_prefixes;
     while (pos + 1 < m_prefixLength)
     {

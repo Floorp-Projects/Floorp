@@ -144,6 +144,9 @@ inline
 Zones::Zones()
 : _margin_len(0), _margin_weight(0), _pos(0), _posm(0)
 {
+#if !defined GRAPHITE2_NTRACING
+    _dbg = 0;
+#endif
     _exclusions.reserve(8);
 }
 

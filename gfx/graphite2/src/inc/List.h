@@ -105,6 +105,7 @@ void Vector<T>::reserve(size_t n)
     {
         const ptrdiff_t sz = size();
         m_first = static_cast<T*>(realloc(m_first, n*sizeof(T)));
+        if (!m_first)   std::abort();
         m_last  = m_first + sz;
         m_end   = m_first + n;
     }
