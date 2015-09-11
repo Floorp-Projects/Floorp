@@ -1075,12 +1075,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void orPtr(Register src, Register dest) {
         orl(src, dest);
     }
-    void andPtr(Imm32 imm, Register dest) {
-        andl(imm, dest);
-    }
-    void andPtr(Register src, Register dest) {
-        andl(src, dest);
-    }
 
     void loadInstructionPointerAfterCall(Register dest) {
         movl(Operand(StackPointer, 0x0), dest);
