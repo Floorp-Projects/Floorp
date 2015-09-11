@@ -58,7 +58,6 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
   : mMessageLoop(aLoop)
   , mTransport(aTransport)
   , mSetChildThreadPriority(false)
-  , mCompositorThreadHolder(GetCompositorThreadHolder())
 {
   MOZ_ASSERT(NS_IsMainThread());
   sMainLoop = MessageLoop::current();
@@ -383,6 +382,12 @@ ImageBridgeParent::CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds
     }
   }
   return nullptr;
+}
+
+void
+ImageBridgeParent::OnChannelConnected(int32_t aPid)
+{
+  mCompositorThreadHolder = GetCompositorThreadHolder();
 }
 
 bool ImageBridgeParent::IsSameProcess() const
