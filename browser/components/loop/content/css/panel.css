@@ -292,8 +292,8 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
   position: relative;
   top: 50%;
   transform: translateY(-50%);
-  padding-top: 75px;
-  padding-bottom: 10px;
+  padding-top: 11rem;
+  padding-bottom: 1rem;
   background-image: url("../shared/img/empty_conversations.svg");
 }
 
