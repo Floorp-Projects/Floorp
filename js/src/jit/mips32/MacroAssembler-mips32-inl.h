@@ -55,6 +55,26 @@ MacroAssembler::andPtr(Imm32 imm, Register dest)
     ma_and(dest, imm);
 }
 
+void
+MacroAssembler::or32(Register src, Register dest)
+{
+    ma_or(dest, src);
+}
+
+void
+MacroAssembler::or32(Imm32 imm, Register dest)
+{
+    ma_or(dest, imm);
+}
+
+void
+MacroAssembler::or32(Imm32 imm, const Address& dest)
+{
+    load32(dest, SecondScratchReg);
+    ma_or(SecondScratchReg, imm);
+    store32(SecondScratchReg, dest);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
