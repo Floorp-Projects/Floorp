@@ -291,7 +291,7 @@ nsMixedContentBlocker::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     return NS_OK;
   }
 
-  uint32_t contentPolicyType = loadInfo->GetContentPolicyType();
+  nsContentPolicyType contentPolicyType = loadInfo->InternalContentPolicyType();
   nsCOMPtr<nsIPrincipal> requestingPrincipal = loadInfo->LoadingPrincipal();
 
   // Since we are calling shouldLoad() directly on redirects, we don't go through the code
@@ -310,7 +310,7 @@ nsMixedContentBlocker::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   }
 
   int16_t decision = REJECT_REQUEST;
-  rv = ShouldLoad(nsContentUtils::InternalContentPolicyTypeToExternal(contentPolicyType),
+  rv = ShouldLoad(nsContentUtils::InternalContentPolicyTypeToExternalOrScript(contentPolicyType),
                   newUri,
                   requestingLocation,
                   loadInfo->LoadingNode(),
@@ -378,8 +378,16 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // to them.
   MOZ_ASSERT(NS_IsMainThread());
 
-  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
+  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternalOrScript(aContentType),
              "We should only see external content policy types here.");
+
+  // The content policy type that we receive may be an internal type for
+  // scripts.  Let's remember if we have seen a worker type, and reset it to the
+  // external type in all cases right now.
+  bool isWorkerType = aContentType == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
+                      aContentType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER ||
+                      aContentType == nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER;
+  aContentType = nsContentUtils::InternalContentPolicyTypeToExternal(aContentType);
 
   // Assume active (high risk) content and blocked by default
   MixedContentTypes classification = eMixedScript;
@@ -622,6 +630,23 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   }
   if (!parentIsHttps) {
     *aDecision = ACCEPT;
+    return NS_OK;
+  }
+
+  // Disallow mixed content loads for workers, shared workers and service
+  // workers.
+  if (isWorkerType) {
+    // For workers, we can assume that we're mixed content at this point, since
+    // the parent is https, and the protocol associated with aContentLocation
+    // doesn't map to the secure URI flags checked above.  Assert this for
+    // sanity's sake
+#ifdef DEBUG
+    bool isHttpsScheme = false;
+    rv = aContentLocation->SchemeIs("https", &isHttpsScheme);
+    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(!isHttpsScheme);
+#endif
+    *aDecision = REJECT_REQUEST;
     return NS_OK;
   }
 

@@ -116,6 +116,7 @@ InternalRequest::MapContentPolicyTypeToRequestContext(nsContentPolicyType aConte
     context = RequestContext::Internal;
     break;
   case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
+  case nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER:
     context = RequestContext::Script;
     break;
   case nsIContentPolicy::TYPE_INTERNAL_WORKER:
