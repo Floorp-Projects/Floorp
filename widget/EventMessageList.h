@@ -414,14 +414,13 @@ NS_EVENT_MESSAGE(NS_SPEAKERMANAGER_SPEAKERFORCEDCHANGE, NS_SPEAKERMANAGER_EVENT_
 
 #ifdef MOZ_GAMEPAD
 // Gamepad input events
-NS_EVENT_MESSAGE(NS_GAMEPAD_START,        6000)
-NS_EVENT_MESSAGE(eGamepadButtonDown,     NS_GAMEPAD_START)
-NS_EVENT_MESSAGE(eGamepadButtonUp,       NS_GAMEPAD_START + 1)
-NS_EVENT_MESSAGE(eGamepadAxisMove,       NS_GAMEPAD_START + 2)
-NS_EVENT_MESSAGE(eGamepadConnected,      NS_GAMEPAD_START + 3)
-NS_EVENT_MESSAGE(eGamepadDisconnected,   NS_GAMEPAD_START + 4)
-// Keep this defined to the same value as the event above
-NS_EVENT_MESSAGE(NS_GAMEPAD_END,          NS_GAMEPAD_START + 4)
+NS_EVENT_MESSAGE(eGamepadEventFirst,     6000)
+NS_EVENT_MESSAGE(eGamepadButtonDown,     eGamepadEventFirst)
+NS_EVENT_MESSAGE(eGamepadButtonUp,       eGamepadEventFirst + 1)
+NS_EVENT_MESSAGE(eGamepadAxisMove,       eGamepadEventFirst + 2)
+NS_EVENT_MESSAGE(eGamepadConnected,      eGamepadEventFirst + 3)
+NS_EVENT_MESSAGE(eGamepadDisconnected,   eGamepadEventFirst + 4)
+NS_EVENT_MESSAGE(NS_GAMEPAD_END,         eGamepadDisconnected)
 #endif
 
 // input and beforeinput events.
