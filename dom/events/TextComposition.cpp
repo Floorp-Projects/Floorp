@@ -284,7 +284,7 @@ TextComposition::DispatchCompositionEvent(
   if (!aIsSynthesized && (mIsRequestingCommit || mIsRequestingCancel)) {
     nsString* committingData = nullptr;
     switch (aCompositionEvent->mMessage) {
-      case NS_COMPOSITION_END:
+      case eCompositionEnd:
       case NS_COMPOSITION_CHANGE:
       case eCompositionCommitAsIs:
       case NS_COMPOSITION_COMMIT:
@@ -366,8 +366,8 @@ TextComposition::DispatchCompositionEvent(
 
   if (aCompositionEvent->CausesDOMCompositionEndEvent()) {
     // Dispatch a compositionend event if it's necessary.
-    if (aCompositionEvent->mMessage != NS_COMPOSITION_END) {
-      CloneAndDispatchAs(aCompositionEvent, NS_COMPOSITION_END);
+    if (aCompositionEvent->mMessage != eCompositionEnd) {
+      CloneAndDispatchAs(aCompositionEvent, eCompositionEnd);
     }
     MOZ_ASSERT(!mIsComposing, "Why is the editor still composing?");
     MOZ_ASSERT(!HasEditor(), "Why does the editor still keep to hold this?");
