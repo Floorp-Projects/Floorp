@@ -32,15 +32,13 @@ of the License or (at your option) any later version.
 #include "inc/Font.h"
 #include "inc/Position.h"
 
-
-
 namespace graphite2 {
 
 typedef gr_attrCode attrCode;
 
 class GlyphFace;
-class Segment;
 class SegCacheEntry;
+class Segment;
 
 struct SlotJustify
 {
@@ -82,7 +80,7 @@ public:
     uint32 index() const { return m_index; }
     void index(uint32 val) { m_index = val; }
 
-    Slot();
+    Slot(int16 *m_userAttr = NULL);
     void set(const Slot & slot, int charOffset, size_t numUserAttr, size_t justLevels, size_t numChars);
     Slot *next() const { return m_next; }
     void next(Slot *s) { m_next = s; }
@@ -99,7 +97,7 @@ public:
     void after(int ind) { m_after = ind; }
     bool isBase() const { return (!m_parent); }
     void update(int numSlots, int numCharInfo, Position &relpos);
-    Position finalise(const Segment* seg, const Font* font, Position & base, Rect & bbox, uint8 attrLevel, float & clusterMin, bool isFinal);
+    Position finalise(const Segment* seg, const Font* font, Position & base, Rect & bbox, uint8 attrLevel, float & clusterMin, bool rtl, bool isFinal);
     bool isDeleted() const { return (m_flags & DELETED) ? true : false; }
     void markDeleted(bool state) { if (state) m_flags |= DELETED; else m_flags &= ~DELETED; }
     bool isCopied() const { return (m_flags & COPIED) ? true : false; }
@@ -109,6 +107,7 @@ public:
     bool isInsertBefore() const { return !(m_flags & INSERTED); }
     uint8 getBidiLevel() const { return m_bidiLevel; }
     void setBidiLevel(uint8 level) { m_bidiLevel = level; }
+    int8 getBidiClass(const Segment *seg);
     int8 getBidiClass() const { return m_bidiCls; }
     void setBidiClass(int8 cls) { m_bidiCls = cls; }
     int16 *userAttrs() const { return m_userAttr; }
@@ -130,7 +129,7 @@ public:
     bool sibling(Slot *ap);
     bool removeChild(Slot *ap);
     bool removeSibling(Slot *ap);
-    int32 clusterMetric(const Segment* seg, uint8 metric, uint8 attrLevel);
+    int32 clusterMetric(const Segment* seg, uint8 metric, uint8 attrLevel, bool rtl);
     void positionShift(Position a) { m_position += a; }
     void floodShift(Position adj);
     float just() const { return m_just; }

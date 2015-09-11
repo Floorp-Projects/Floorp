@@ -46,7 +46,7 @@ namespace
 enum compression
 {
     NONE,
-    SHRINKER
+    LZ4
 };
 
 }
@@ -125,7 +125,7 @@ bool Face::readGraphite(const Table & silf)
     Error e;
     error_context(EC_READSILF);
     const byte * p = silf;
-    if (e.test(!p, E_NOSILF)) return error(e);
+    if (e.test(!p, E_NOSILF) || e.test(silf.size() < 20, E_BADSIZE)) return error(e);
 
     const uint32 version = be::read<uint32>(p);
     if (e.test(version < 0x00020000, E_TOOOLD)) return error(e);
@@ -173,6 +173,10 @@ bool Face::runGraphite(Segment *seg, const Silf *aSilf) const
     }
 #endif
 
+//    if ((seg->dir() & 1) != aSilf->dir())
+//        seg->reverseSlots();
+    if ((seg->dir() & 3) == 3 && aSilf->bidiPass() == 0xFF)
+        seg->doMirror(aSilf->aMirror());
     bool res = aSilf->runGraphite(seg, 0, aSilf->positionPass(), true);
     if (res)
     {
@@ -185,6 +189,7 @@ bool Face::runGraphite(Segment *seg, const Silf *aSilf) const
 #if !defined GRAPHITE2_NTRACING
     if (dbgout)
 {
+        seg->positionSlots(0, 0, 0, aSilf->dir());
         *dbgout             << json::item
                             << json::close // Close up the passes array
                 << "output" << json::array;
@@ -233,7 +238,9 @@ uint16 Face::getGlyphMetric(uint16 gid, uint8 metric) const
     {
         case kgmetAscent : return m_ascent;
         case kgmetDescent : return m_descent;
-        default: return glyphs().glyph(gid)->getMetric(metric);
+        default: 
+            if (gid > glyphs().numGlyphs()) return 0;
+            return glyphs().glyph(gid)->getMetric(metric);
     }
 }
 
@@ -277,12 +284,20 @@ Face::Table::Table(const Face & face, const Tag n, uint32 version) throw()
     if (!TtfUtil::CheckTable(n, _p, _sz))
     {
         this->~Table();     // Make sure we release the table buffer even if the table filed it's checks
-        _p = 0; _sz = 0;
         return;
     }
 
     if (be::peek<uint32>(_p) >= version)
         decompress();
+}
+
+void Face::Table::releaseBuffers()
+{
+    if (_compressed)
+        free(const_cast<byte *>(_p));
+    else if (_p && _f->m_ops.release_table)
+        (*_f->m_ops.release_table)(_f->m_appFaceHandle, _p);
+    _p = 0; _sz = 0;
 }
 
 Face::Table & Face::Table::operator = (const Table & rhs) throw()
@@ -297,6 +312,8 @@ Face::Table & Face::Table::operator = (const Table & rhs) throw()
 Error Face::Table::decompress()
 {
     Error e;
+    if (e.test(_sz < 2 * sizeof(uint32) + 3, E_BADSIZE))
+        return e;
     byte * uncompressed_table = 0;
     size_t uncompressed_size = 0;
 
@@ -308,25 +325,30 @@ Error Face::Table::decompress()
     switch(compression(hdr >> 27))
     {
     case NONE: return e;
-    case SHRINKER:
+
+    case LZ4:
     {
         uncompressed_size  = hdr & 0x07ffffff;
         uncompressed_table = gralloc<byte>(uncompressed_size);
+        //TODO: Coverty: 1315803: FORWARD_NULL
         if (!e.test(!uncompressed_table, E_OUTOFMEM))
-            e.test(shrinker::decompress(p, _sz - 2*sizeof(uint32), uncompressed_table, uncompressed_size) != signed(uncompressed_size), E_SHRINKERFAILED);
+            //TODO: Coverty: 1315800: CHECKED_RETURN
+            e.test(lz4::decompress(p, _sz - 2*sizeof(uint32), uncompressed_table, uncompressed_size) != signed(uncompressed_size), E_SHRINKERFAILED);
         break;
     }
+
     default:
         e.error(E_BADSCHEME);
     };
 
     // Check the uncompressed version number against the original.
     if (!e)
+        //TODO: Coverty: 1315800: CHECKED_RETURN
         e.test(be::peek<uint32>(uncompressed_table) != version, E_SHRINKERFAILED);
 
     // Tell the provider to release the compressed form since were replacing
     //   it anyway.
-    this->~Table();
+    releaseBuffers();
 
     if (e)
     {

@@ -47,7 +47,6 @@ $(_NS)_SOURCES = \
     $($(_NS)_BASE)/src/gr_segment.cpp \
     $($(_NS)_BASE)/src/gr_slot.cpp \
     $($(_NS)_BASE)/src/json.cpp \
-    $($(_NS)_BASE)/src/Bidi.cpp \
     $($(_NS)_BASE)/src/CachedFace.cpp \
     $($(_NS)_BASE)/src/CmapCache.cpp \
     $($(_NS)_BASE)/src/Code.cpp \
@@ -78,13 +77,12 @@ $(_NS)_PRIVATE_HEADERS = \
     $($(_NS)_BASE)/src/inc/bits.h \
     $($(_NS)_BASE)/src/inc/debug.h \
     $($(_NS)_BASE)/src/inc/json.h \
-    $($(_NS)_BASE)/src/inc/locale2lcid.h \
-    $($(_NS)_BASE)/src/inc/Bidi.h \
     $($(_NS)_BASE)/src/inc/CachedFace.h \
     $($(_NS)_BASE)/src/inc/CharInfo.h \
     $($(_NS)_BASE)/src/inc/CmapCache.h \
     $($(_NS)_BASE)/src/inc/Code.h \
     $($(_NS)_BASE)/src/inc/Collider.h \
+    $($(_NS)_BASE)/src/inc/Compression.h \
     $($(_NS)_BASE)/src/inc/Decompressor.h \
     $($(_NS)_BASE)/src/inc/Endian.h \
     $($(_NS)_BASE)/src/inc/Error.h \
@@ -110,7 +108,6 @@ $(_NS)_PRIVATE_HEADERS = \
     $($(_NS)_BASE)/src/inc/SegCacheEntry.h \
     $($(_NS)_BASE)/src/inc/SegCacheStore.h \
     $($(_NS)_BASE)/src/inc/Segment.h \
-    $($(_NS)_BASE)/src/inc/Shrinker.h \
     $($(_NS)_BASE)/src/inc/Silf.h \
     $($(_NS)_BASE)/src/inc/Slot.h \
     $($(_NS)_BASE)/src/inc/Sparse.h \

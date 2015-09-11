@@ -131,11 +131,12 @@ bool FeatureMap::readFeats(const Face & face)
         const uint16    num_settings = be::read<uint16>(p);
         if (version >= 0x00020000)
             be::skip<uint16>(p);
-        const byte * const feat_setts = feat_start + be::read<uint32>(p);
+        const uint32    settings_offset = be::read<uint32>(p);
         const uint16    flags  = be::read<uint16>(p),
                         uiName = be::read<uint16>(p);
 
-        if (feat_setts + num_settings * FEATURE_SETTING_SIZE > feat_end)
+        if (settings_offset > size_t(feat_end - feat_start) 
+            || settings_offset + num_settings * FEATURE_SETTING_SIZE > size_t(feat_end - feat_start))
         {
             free(defVals);
             return false;
@@ -151,7 +152,7 @@ bool FeatureMap::readFeats(const Face & face)
                 free(defVals);
                 return false;
             }
-            maxVal = readFeatureSettings(feat_setts, uiSet, num_settings);
+            maxVal = readFeatureSettings(feat_start + settings_offset, uiSet, num_settings);
             defVals[i] = uiSet[0].value();
         }
         else
