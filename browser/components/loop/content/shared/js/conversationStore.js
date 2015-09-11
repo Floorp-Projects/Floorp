@@ -223,9 +223,9 @@ loop.store = loop.store || {};
         "mediaConnected",
         "setMute",
         "fetchRoomEmailLink",
-        "localVideoEnabled",
-        "remoteVideoDisabled",
-        "remoteVideoEnabled",
+        "mediaStreamCreated",
+        "mediaStreamDestroyed",
+        "remoteVideoStatus",
         "windowUnload"
       ]);
 
@@ -440,40 +440,51 @@ loop.store = loop.store || {};
     },
 
     /**
-     * Handles when the remote stream has been enabled and is supplied.
+     * Handles a media stream being created. This may be a local or a remote stream.
      *
-     * @param  {sharedActions.RemoteVideoEnabled} actionData
+     * @param {sharedActions.MediaStreamCreated} actionData
      */
-    remoteVideoEnabled: function(actionData) {
+    mediaStreamCreated: function(actionData) {
+      if (actionData.isLocal) {
+        this.setStoreState({
+          localVideoEnabled: actionData.hasVideo,
+          localSrcVideoObject: actionData.srcVideoObject
+        });
+        return;
+      }
+
       this.setStoreState({
-        remoteVideoEnabled: true,
+        remoteVideoEnabled: actionData.hasVideo,
         remoteSrcVideoObject: actionData.srcVideoObject
       });
     },
 
     /**
-     * Handles when the remote stream has been disabled, e.g. due to video mute.
+     * Handles a media stream being destroyed. This may be a local or a remote stream.
      *
-     * @param {sharedActions.RemoteVideoDisabled} actionData
+     * @param {sharedActions.MediaStreamDestroyed} actionData
      */
-    remoteVideoDisabled: function(actionData) {
+    mediaStreamDestroyed: function(actionData) {
+      if (actionData.isLocal) {
+        this.setStoreState({
+          localSrcVideoObject: null
+        });
+        return;
+      }
+
       this.setStoreState({
-        remoteVideoEnabled: false,
-        remoteSrcVideoObject: undefined});
+        remoteSrcVideoObject: null
+      });
     },
 
     /**
-     * Handles when the local stream is supplied.
+     * Handles a remote stream having video enabled or disabled.
      *
-     * XXX should write a localVideoDisabled action in otSdkDriver.js to
-     * positively ensure proper cleanup (handled by window teardown currently)
-     * (see bug 1171978)
-     *
-     * @param  {sharedActions.LocalVideoEnabled} actionData
+     * @param {sharedActions.RemoteVideoStatus} actionData
      */
-    localVideoEnabled: function(actionData) {
+    remoteVideoStatus: function(actionData) {
       this.setStoreState({
-        localSrcVideoObject: actionData.srcVideoObject
+        remoteVideoEnabled: actionData.videoEnabled
       });
     },
 
