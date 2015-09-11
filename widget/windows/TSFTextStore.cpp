@@ -3424,7 +3424,7 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView,
     // offset since there is no inexpensive API to check it strictly.
     // XXX If we retrieve 2 bounding boxes, one is before the offset and
     //     the other is after the offset, we could resolve the offset.
-    //     However, dispatching 2 NS_QUERY_TEXT_RECT may be expensive.
+    //     However, dispatching 2 eQueryTextRect may be expensive.
 
     // So, use tentative offset for now.
     offset = charAtPt.mReply.mTentativeCaretOffset;
@@ -3583,15 +3583,15 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
     return TS_E_NOLAYOUT;
   }
 
-  // use NS_QUERY_TEXT_RECT to get rect in system, screen coordinates
-  WidgetQueryContentEvent event(true, NS_QUERY_TEXT_RECT, mWidget);
+  // use eQueryTextRect to get rect in system, screen coordinates
+  WidgetQueryContentEvent event(true, eQueryTextRect, mWidget);
   mWidget->InitEvent(event);
   event.InitForQueryTextRect(acpStart, acpEnd - acpStart);
   DispatchEvent(event);
   if (!event.mSucceeded) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetTextExt() FAILED due to "
-            "NS_QUERY_TEXT_RECT failure", this));
+            "eQueryTextRect failure", this));
     return TS_E_INVALIDPOS; // but unexpected failure, maybe.
   }
   // IMEs don't like empty rects, fix here
