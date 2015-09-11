@@ -528,7 +528,7 @@ WINDOW_EVENT(unload,
              eBasicEventClass)
 
 WINDOW_ONLY_EVENT(devicemotion,
-                  NS_DEVICE_MOTION,
+                  eDeviceMotion,
                   EventNameType_None,
                   eBasicEventClass)
 WINDOW_ONLY_EVENT(deviceorientation,
