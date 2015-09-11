@@ -32,6 +32,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MediaKeyMessageEvent, Event)
   tmp->mMessage = nullptr;
+  mozilla::DropJSObjects(this);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MediaKeyMessageEvent)
@@ -109,6 +110,7 @@ MediaKeyMessageEvent::GetMessage(JSContext* cx,
 {
   if (!mMessage) {
     mMessage = ArrayBuffer::Create(cx,
+                                   this,
                                    mRawMessage.Length(),
                                    mRawMessage.Elements());
     if (!mMessage) {
