@@ -9,6 +9,20 @@
 
 #include "jit/MacroAssembler.h"
 
+#if defined(JS_CODEGEN_X86)
+# include "jit/x86/MacroAssembler-x86-inl.h"
+#elif defined(JS_CODEGEN_X64)
+# include "jit/x64/MacroAssembler-x64-inl.h"
+#elif defined(JS_CODEGEN_ARM)
+# include "jit/arm/MacroAssembler-arm-inl.h"
+#elif defined(JS_CODEGEN_ARM64)
+# include "jit/arm64/MacroAssembler-arm64-inl.h"
+#elif defined(JS_CODEGEN_MIPS32)
+# include "jit/mips32/MacroAssembler-mips32-inl.h"
+#elif !defined(JS_CODEGEN_NONE)
+# error "Unknown architecture!"
+#endif
+
 namespace js {
 namespace jit {
 
