@@ -19,8 +19,9 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsQueryContentEventResult)
 NS_IMPL_RELEASE(nsQueryContentEventResult)
 
-nsQueryContentEventResult::nsQueryContentEventResult() :
-  mEventID(0), mSucceeded(false)
+nsQueryContentEventResult::nsQueryContentEventResult()
+  : mEventMessage(eVoidEvent)
+  , mSucceeded(false)
 {
 }
 
@@ -54,20 +55,19 @@ nsQueryContentEventResult::GetTentativeCaretOffset(uint32_t* aOffset)
   return NS_OK;
 }
 
-static bool IsRectEnabled(uint32_t aEventID)
+static bool IsRectEnabled(EventMessage aEventMessage)
 {
-  return aEventID == NS_QUERY_CARET_RECT ||
-         aEventID == NS_QUERY_TEXT_RECT ||
-         aEventID == NS_QUERY_EDITOR_RECT ||
-         aEventID == NS_QUERY_CHARACTER_AT_POINT;
+  return aEventMessage == eQueryCaretRect ||
+         aEventMessage == NS_QUERY_TEXT_RECT ||
+         aEventMessage == eQueryEditorRect ||
+         aEventMessage == eQueryCharacterAtPoint;
 }
 
 NS_IMETHODIMP
 nsQueryContentEventResult::GetReversed(bool *aReversed)
 {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_TRUE(mEventID == NS_QUERY_SELECTED_TEXT,
-                 NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mEventMessage == eQuerySelectedText, NS_ERROR_NOT_AVAILABLE);
   *aReversed = mReversed;
   return NS_OK;
 }
@@ -76,7 +76,7 @@ NS_IMETHODIMP
 nsQueryContentEventResult::GetLeft(int32_t *aLeft)
 {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_TRUE(IsRectEnabled(mEventID),
+  NS_ENSURE_TRUE(IsRectEnabled(mEventMessage),
                  NS_ERROR_NOT_AVAILABLE);
   *aLeft = mRect.x;
   return NS_OK;
@@ -86,7 +86,7 @@ NS_IMETHODIMP
 nsQueryContentEventResult::GetWidth(int32_t *aWidth)
 {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_TRUE(IsRectEnabled(mEventID),
+  NS_ENSURE_TRUE(IsRectEnabled(mEventMessage),
                  NS_ERROR_NOT_AVAILABLE);
   *aWidth = mRect.width;
   return NS_OK;
@@ -96,7 +96,7 @@ NS_IMETHODIMP
 nsQueryContentEventResult::GetTop(int32_t *aTop)
 {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_TRUE(IsRectEnabled(mEventID),
+  NS_ENSURE_TRUE(IsRectEnabled(mEventMessage),
                  NS_ERROR_NOT_AVAILABLE);
   *aTop = mRect.y;
   return NS_OK;
@@ -106,7 +106,7 @@ NS_IMETHODIMP
 nsQueryContentEventResult::GetHeight(int32_t *aHeight)
 {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_TRUE(IsRectEnabled(mEventID),
+  NS_ENSURE_TRUE(IsRectEnabled(mEventMessage),
                  NS_ERROR_NOT_AVAILABLE);
   *aHeight = mRect.height;
   return NS_OK;
@@ -116,8 +116,8 @@ NS_IMETHODIMP
 nsQueryContentEventResult::GetText(nsAString &aText)
 {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_TRUE(mEventID == NS_QUERY_SELECTED_TEXT ||
-                 mEventID == NS_QUERY_TEXT_CONTENT,
+  NS_ENSURE_TRUE(mEventMessage == eQuerySelectedText ||
+                 mEventMessage == eQueryTextContent,
                  NS_ERROR_NOT_AVAILABLE);
   aText = mString;
   return NS_OK;
@@ -126,7 +126,7 @@ nsQueryContentEventResult::GetText(nsAString &aText)
 NS_IMETHODIMP
 nsQueryContentEventResult::GetSucceeded(bool *aSucceeded)
 {
-  NS_ENSURE_TRUE(mEventID != 0, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mEventMessage != eVoidEvent, NS_ERROR_NOT_INITIALIZED);
   *aSucceeded = mSucceeded;
   return NS_OK;
 }
@@ -135,8 +135,8 @@ NS_IMETHODIMP
 nsQueryContentEventResult::GetNotFound(bool *aNotFound)
 {
   NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_TRUE(mEventID == NS_QUERY_SELECTED_TEXT ||
-                 mEventID == NS_QUERY_CHARACTER_AT_POINT,
+  NS_ENSURE_TRUE(mEventMessage == eQuerySelectedText ||
+                 mEventMessage == eQueryCharacterAtPoint,
                  NS_ERROR_NOT_AVAILABLE);
   *aNotFound = (mOffset == WidgetQueryContentEvent::NOT_FOUND);
   return NS_OK;
@@ -148,7 +148,7 @@ nsQueryContentEventResult::GetTentativeCaretOffsetNotFound(bool* aNotFound)
   if (NS_WARN_IF(!mSucceeded)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  if (NS_WARN_IF(mEventID != NS_QUERY_CHARACTER_AT_POINT)) {
+  if (NS_WARN_IF(mEventMessage != eQueryCharacterAtPoint)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   *aNotFound = (mTentativeCaretOffset == WidgetQueryContentEvent::NOT_FOUND);
@@ -159,7 +159,7 @@ void
 nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget,
                                           const WidgetQueryContentEvent &aEvent)
 {
-  mEventID = aEvent.mMessage;
+  mEventMessage = aEvent.mMessage;
   mSucceeded = aEvent.mSucceeded;
   mReversed = aEvent.mReply.mReversed;
   mRect = aEvent.mReply.mRect;
@@ -167,7 +167,7 @@ nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget,
   mTentativeCaretOffset = aEvent.mReply.mTentativeCaretOffset;
   mString = aEvent.mReply.mString;
 
-  if (!IsRectEnabled(mEventID) || !aWidget || !mSucceeded) {
+  if (!IsRectEnabled(mEventMessage) || !aWidget || !mSucceeded) {
     return;
   }
 

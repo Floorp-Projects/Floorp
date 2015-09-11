@@ -2243,9 +2243,6 @@ pref("layout.css.clip-path-shapes.enabled", false);
 // Is support for CSS sticky positioning enabled?
 pref("layout.css.sticky.enabled", true);
 
-// Is support for CSS "will-change" enabled?
-pref("layout.css.will-change.enabled", true);
-
 // Is support for DOMPoint enabled?
 pref("layout.css.DOMPoint.enabled", true);
 

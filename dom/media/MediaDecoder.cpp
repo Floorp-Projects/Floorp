@@ -37,14 +37,6 @@ static const int DEFAULT_HEURISTIC_DORMANT_TIMEOUT_MSECS = 60000;
 
 namespace mozilla {
 
-// Number of estimated seconds worth of data we need to have buffered
-// ahead of the current playback position before we allow the media decoder
-// to report that it can play through the entire media without the decode
-// catching up with the download. Having this margin make the
-// MediaDecoder::CanPlayThrough() calculation more stable in the case of
-// fluctuating bitrates.
-static const int64_t CAN_PLAY_THROUGH_MARGIN = 1;
-
 // The amount of instability we tollerate in calls to
 // MediaDecoder::UpdateEstimatedMediaDuration(); changes of duration
 // less than this are ignored, as they're assumed to be the result of
@@ -821,10 +813,10 @@ void MediaDecoder::PlaybackEnded()
   }
 }
 
-MediaDecoder::Statistics
+MediaStatistics
 MediaDecoder::GetStatistics()
 {
-  Statistics result;
+  MediaStatistics result;
 
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   if (mResource) {
@@ -1372,40 +1364,12 @@ void MediaDecoder::UnpinForSeek()
   resource->Unpin();
 }
 
-bool MediaDecoder::CanPlayThrough()
+bool
+MediaDecoder::CanPlayThrough()
 {
-  Statistics stats = GetStatistics();
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE(mDecoderStateMachine, false);
-
-  if (mDecoderStateMachine->IsRealTime() ||
-      (stats.mTotalBytes < 0 && stats.mDownloadRateReliable) ||
-      (stats.mTotalBytes >= 0 && stats.mTotalBytes == stats.mDownloadPosition)) {
-    return true;
-  }
-  if (!stats.mDownloadRateReliable || !stats.mPlaybackRateReliable) {
-    return false;
-  }
-  int64_t bytesToDownload = stats.mTotalBytes - stats.mDownloadPosition;
-  int64_t bytesToPlayback = stats.mTotalBytes - stats.mPlaybackPosition;
-  double timeToDownload = bytesToDownload / stats.mDownloadRate;
-  double timeToPlay = bytesToPlayback / stats.mPlaybackRate;
-
-  if (timeToDownload > timeToPlay) {
-    // Estimated time to download is greater than the estimated time to play.
-    // We probably can't play through without having to stop to buffer.
-    return false;
-  }
-
-  // Estimated time to download is less than the estimated time to play.
-  // We can probably play through without having to buffer, but ensure that
-  // we've got a reasonable amount of data buffered after the current
-  // playback position, so that if the bitrate of the media fluctuates, or if
-  // our download rate or decode rate estimation is otherwise inaccurate,
-  // we don't suddenly discover that we need to buffer. This is particularly
-  // required near the start of the media, when not much data is downloaded.
-  int64_t readAheadMargin =
-    static_cast<int64_t>(stats.mPlaybackRate * CAN_PLAY_THROUGH_MARGIN);
-  return stats.mDownloadPosition > stats.mPlaybackPosition + readAheadMargin;
+  return mDecoderStateMachine->IsRealTime() || GetStatistics().CanPlayThrough();
 }
 
 #ifdef MOZ_EME

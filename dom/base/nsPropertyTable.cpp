@@ -107,7 +107,7 @@ nsPropertyTable::TransferOrDeleteAllPropertiesFor(nsPropertyOwner aObject,
           break;
         }
 
-        PL_DHashTableRawRemove(&prop->mObjectValueMap, entry);
+        prop->mObjectValueMap.RemoveEntry(entry);
       }
     }
     else {
@@ -164,7 +164,7 @@ nsPropertyTable::GetPropertyInternal(nsPropertyOwner aObject,
       propValue = entry->value;
       if (aRemove) {
         // don't call propertyList->mDtorFunc.  That's the caller's job now.
-        PL_DHashTableRawRemove(&propertyList->mObjectValueMap, entry);
+        propertyList->mObjectValueMap.RemoveEntry(entry);
       }
       rv = NS_OK;
     }
@@ -301,7 +301,7 @@ nsPropertyTable::PropertyList::DeletePropertyFor(nsPropertyOwner aObject)
     return false;
 
   void* value = entry->value;
-  PL_DHashTableRawRemove(&mObjectValueMap, entry);
+  mObjectValueMap.RemoveEntry(entry);
 
   if (mDtorFunc)
     mDtorFunc(const_cast<void*>(aObject.get()), mName, value, mDtorData);

@@ -19,7 +19,6 @@
 #include <math.h>
 #include "nsHashKeys.h"
 #include "mozilla/StackWalk.h"
-#include "nsString.h"
 #include "nsThreadUtils.h"
 #include "CodeAddressService.h"
 
@@ -35,6 +34,9 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BlockingResourceBase.h"
 #include "mozilla/PoisonIOInterposer.h"
+
+#include <string>
+#include <vector>
 
 #ifdef HAVE_DLOPEN
 #include <dlfcn.h>
@@ -109,11 +111,24 @@ static FILE* gRefcntsLog = nullptr;
 static FILE* gAllocLog = nullptr;
 static FILE* gCOMPtrLog = nullptr;
 
-struct serialNumberRecord
+static void
+WalkTheStackSavingLocations(std::vector<void*>& aLocations);
+
+struct SerialNumberRecord
 {
+  SerialNumberRecord()
+    : serialNumber(++gNextSerialNumber)
+    , refCount(0)
+    , COMPtrCount(0)
+  {}
+
   intptr_t serialNumber;
   int32_t refCount;
   int32_t COMPtrCount;
+  // We use std:: classes here rather than the XPCOM equivalents because the
+  // XPCOM equivalents do leak-checking, and if you try to leak-check while
+  // leak-checking, you're gonna have a bad time.
+  std::vector<void*> allocationStack;
 };
 
 struct nsTraceRefcntStats
@@ -162,7 +177,7 @@ AssertActivityIsLegal()
 #endif  // DEBUG
 
 // These functions are copied from nsprpub/lib/ds/plhash.c, with changes
-// to the functions not called Default* to free the serialNumberRecord or
+// to the functions not called Default* to free the SerialNumberRecord or
 // the BloatEntry.
 
 static void*
@@ -187,7 +202,7 @@ static void
 SerialNumberFreeEntry(void* aPool, PLHashEntry* aHashEntry, unsigned aFlag)
 {
   if (aFlag == HT_FREE_ENTRY) {
-    PR_Free(reinterpret_cast<serialNumberRecord*>(aHashEntry->value));
+    delete static_cast<SerialNumberRecord*>(aHashEntry->value);
     PR_Free(aHashEntry);
   }
 }
@@ -196,7 +211,7 @@ static void
 TypesToLogFreeEntry(void* aPool, PLHashEntry* aHashEntry, unsigned aFlag)
 {
   if (aFlag == HT_FREE_ENTRY) {
-    free(const_cast<char*>(reinterpret_cast<const char*>(aHashEntry->key)));
+    free(const_cast<char*>(static_cast<const char*>(aHashEntry->key)));
     PR_Free(aHashEntry);
   }
 }
@@ -390,7 +405,7 @@ static void
 BloatViewFreeEntry(void* aPool, PLHashEntry* aHashEntry, unsigned aFlag)
 {
   if (aFlag == HT_FREE_ENTRY) {
-    BloatEntry* entry = reinterpret_cast<BloatEntry*>(aHashEntry->value);
+    BloatEntry* entry = static_cast<BloatEntry*>(aHashEntry->value);
     delete entry;
     PR_Free(aHashEntry);
   }
@@ -448,21 +463,36 @@ GetBloatEntry(const char* aTypeName, uint32_t aInstanceSize)
 static int
 DumpSerialNumbers(PLHashEntry* aHashEntry, int aIndex, void* aClosure)
 {
-  serialNumberRecord* record =
-    reinterpret_cast<serialNumberRecord*>(aHashEntry->value);
+  SerialNumberRecord* record =
+    static_cast<SerialNumberRecord*>(aHashEntry->value);
+  auto* outputFile = static_cast<FILE*>(aClosure);
 #ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
-  fprintf((FILE*)aClosure, "%" PRIdPTR
+  fprintf(outputFile, "%" PRIdPTR
           " @%p (%d references; %d from COMPtrs)\n",
           record->serialNumber,
           NS_INT32_TO_PTR(aHashEntry->key),
           record->refCount,
           record->COMPtrCount);
 #else
-  fprintf((FILE*)aClosure, "%" PRIdPTR
+  fprintf(outputFile, "%" PRIdPTR
           " @%p (%d references)\n",
           record->serialNumber,
           NS_INT32_TO_PTR(aHashEntry->key),
           record->refCount);
+#endif
+#ifdef MOZ_STACKWALKING
+  if (!record->allocationStack.empty()) {
+    static const size_t bufLen = 1024;
+    char buf[bufLen];
+    fprintf(outputFile, "allocation stack:\n");
+    for (size_t i = 0, length = record->allocationStack.size();
+         i < length;
+         ++i) {
+      gCodeAddressService->GetLocation(i, record->allocationStack[i],
+                                       buf, bufLen);
+      fprintf(outputFile, "%s\n", buf);
+    }
+  }
 #endif
   return HT_ENUMERATE_NEXT;
 }
@@ -579,14 +609,12 @@ GetSerialNumber(void* aPtr, bool aCreate)
                                             HashNumber(aPtr),
                                             aPtr);
   if (hep && *hep) {
-    return reinterpret_cast<serialNumberRecord*>((*hep)->value)->serialNumber;
+    return static_cast<SerialNumberRecord*>((*hep)->value)->serialNumber;
   } else if (aCreate) {
-    serialNumberRecord* record = PR_NEW(serialNumberRecord);
-    record->serialNumber = ++gNextSerialNumber;
-    record->refCount = 0;
-    record->COMPtrCount = 0;
+    SerialNumberRecord* record = new SerialNumberRecord();
+    WalkTheStackSavingLocations(record->allocationStack);
     PL_HashTableRawAdd(gSerialNumbers, hep, HashNumber(aPtr),
-                       aPtr, reinterpret_cast<void*>(record));
+                       aPtr, static_cast<void*>(record));
     return gNextSerialNumber;
   }
   return 0;
@@ -599,7 +627,7 @@ GetRefCount(void* aPtr)
                                             HashNumber(aPtr),
                                             aPtr);
   if (hep && *hep) {
-    return &((reinterpret_cast<serialNumberRecord*>((*hep)->value))->refCount);
+    return &(static_cast<SerialNumberRecord*>((*hep)->value)->refCount);
   } else {
     return nullptr;
   }
@@ -613,7 +641,7 @@ GetCOMPtrCount(void* aPtr)
                                             HashNumber(aPtr),
                                             aPtr);
   if (hep && *hep) {
-    return &((reinterpret_cast<serialNumberRecord*>((*hep)->value))->COMPtrCount);
+    return &(static_cast<SerialNumberRecord*>((*hep)->value)->COMPtrCount);
   }
   return nullptr;
 }
@@ -869,6 +897,14 @@ PrintStackFrameCached(uint32_t aFrameNumber, void* aPC, void* aSP,
   fprintf(stream, "    %s\n", buf);
   fflush(stream);
 }
+
+static void
+RecordStackFrame(uint32_t /*aFrameNumber*/, void* aPC, void* /*aSP*/,
+                 void* aClosure)
+{
+  auto locations = static_cast<std::vector<void*>*>(aClosure);
+  locations->push_back(aPC);
+}
 #endif
 
 }
@@ -891,6 +927,22 @@ nsTraceRefcnt::WalkTheStackCached(FILE* aStream)
   }
   MozStackWalk(PrintStackFrameCached, /* skipFrames */ 2, /* maxFrames */ 0,
                aStream, 0, nullptr);
+#endif
+}
+
+static void
+WalkTheStackSavingLocations(std::vector<void*>& aLocations)
+{
+#ifdef MOZ_STACKWALKING
+  if (!gCodeAddressService) {
+    gCodeAddressService = new WalkTheStackCodeAddressService();
+  }
+  static const int kFramesToSkip =
+    0 +                         // this frame gets inlined
+    1 +                         // GetSerialNumber
+    1;                          // NS_LogCtor
+  MozStackWalk(RecordStackFrame, kFramesToSkip, /* maxFrames */ 0,
+               &aLocations, 0, nullptr);
 #endif
 }
 

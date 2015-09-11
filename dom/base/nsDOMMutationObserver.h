@@ -324,6 +324,7 @@ public:
                                     nsMutationReceiverBase* aParent)
   {
     nsMutationReceiver* r = new nsMutationReceiver(aRegisterTarget, aParent);
+    aParent->AddClone(r);
     r->AddObserver();
     return r;
   }
@@ -385,7 +386,6 @@ protected:
   {
     NS_ASSERTION(!static_cast<nsMutationReceiver*>(aParent)->GetParent(),
                  "Shouldn't create deep observer hierarchies!");
-    aParent->AddClone(this);
   }
 
   virtual void AddMutationObserver() override
@@ -409,6 +409,7 @@ public:
                                      nsMutationReceiverBase* aParent)
   {
     nsAnimationReceiver* r = new nsAnimationReceiver(aRegisterTarget, aParent);
+    aParent->AddClone(r);
     r->AddObserver();
     return r;
   }

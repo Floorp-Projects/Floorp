@@ -95,8 +95,8 @@ protected:
 
 
   /**
-   * These two methods are called upon NS_WHEEL_START/NS_WHEEL_STOP events
-   * to show/hide the right scrollbars.
+   * These two methods are called upon eWheelOperationStart/eWheelOperationEnd
+   * events to show/hide the right scrollbars.
    */
   static void TemporarilyActivateAllPossibleScrollTargets(
                 EventStateManager* aESM,

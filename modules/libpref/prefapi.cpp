@@ -584,7 +584,7 @@ PREF_ClearUserPref(const char *pref_name)
         pref->flags &= ~PREF_USERSET;
 
         if (!(pref->flags & PREF_HAS_DEFAULT)) {
-            PL_DHashTableRemove(gHashTable, pref_name);
+            gHashTable->RemoveEntry(pref);
         }
 
         pref_DoCallback(pref_name);

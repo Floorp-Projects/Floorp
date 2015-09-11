@@ -495,7 +495,7 @@ public:
   void InitForQueryTextContent(uint32_t aOffset, uint32_t aLength,
                                bool aUseNativeLineBreak = true)
   {
-    NS_ASSERTION(mMessage == NS_QUERY_TEXT_CONTENT,
+    NS_ASSERTION(mMessage == eQueryTextContent,
                  "wrong initializer is called");
     mInput.mOffset = aOffset;
     mInput.mLength = aLength;
@@ -505,7 +505,7 @@ public:
   void InitForQueryCaretRect(uint32_t aOffset,
                              bool aUseNativeLineBreak = true)
   {
-    NS_ASSERTION(mMessage == NS_QUERY_CARET_RECT,
+    NS_ASSERTION(mMessage == eQueryCaretRect,
                  "wrong initializer is called");
     mInput.mOffset = aOffset;
     mUseNativeLineBreak = aUseNativeLineBreak;
@@ -523,36 +523,36 @@ public:
 
   void InitForQueryDOMWidgetHittest(const mozilla::LayoutDeviceIntPoint& aPoint)
   {
-    NS_ASSERTION(mMessage == NS_QUERY_DOM_WIDGET_HITTEST,
+    NS_ASSERTION(mMessage == eQueryDOMWidgetHittest,
                  "wrong initializer is called");
     refPoint = aPoint;
   }
 
   void RequestFontRanges()
   {
-    NS_ASSERTION(mMessage == NS_QUERY_TEXT_CONTENT,
+    NS_ASSERTION(mMessage == eQueryTextContent,
                  "not querying text content");
     mWithFontRanges = true;
   }
 
   uint32_t GetSelectionStart(void) const
   {
-    NS_ASSERTION(mMessage == NS_QUERY_SELECTED_TEXT,
+    NS_ASSERTION(mMessage == eQuerySelectedText,
                  "not querying selection");
     return mReply.mOffset + (mReply.mReversed ? mReply.mString.Length() : 0);
   }
 
   uint32_t GetSelectionEnd(void) const
   {
-    NS_ASSERTION(mMessage == NS_QUERY_SELECTED_TEXT,
+    NS_ASSERTION(mMessage == eQuerySelectedText,
                  "not querying selection");
     return mReply.mOffset + (mReply.mReversed ? 0 : mReply.mString.Length());
   }
 
   mozilla::WritingMode GetWritingMode(void) const
   {
-    NS_ASSERTION(mMessage == NS_QUERY_SELECTED_TEXT ||
-                 mMessage == NS_QUERY_CARET_RECT ||
+    NS_ASSERTION(mMessage == eQuerySelectedText ||
+                 mMessage == eQueryCaretRect ||
                  mMessage == NS_QUERY_TEXT_RECT,
                  "not querying selection or text rect");
     return mReply.mWritingMode;
@@ -578,7 +578,7 @@ public:
   {
     void* mContentsRoot;
     uint32_t mOffset;
-    // mTentativeCaretOffset is used by only NS_QUERY_CHARACTER_AT_POINT.
+    // mTentativeCaretOffset is used by only eQueryCharacterAtPoint.
     // This is the offset where caret would be if user clicked at the refPoint.
     uint32_t mTentativeCaretOffset;
     nsString mString;
@@ -588,9 +588,9 @@ public:
     nsIWidget* mFocusedWidget;
     // mozilla::WritingMode value at the end (focus) of the selection
     mozilla::WritingMode mWritingMode;
-    // used by NS_QUERY_SELECTION_AS_TRANSFERABLE
+    // Used by eQuerySelectionAsTransferable
     nsCOMPtr<nsITransferable> mTransferable;
-    // used by NS_QUERY_TEXT_CONTENT with font ranges requested
+    // Used by eQueryTextContent with font ranges requested
     nsAutoTArray<mozilla::FontRange, 1> mFontRanges;
     // true if selection is reversed (end < start)
     bool mReversed;

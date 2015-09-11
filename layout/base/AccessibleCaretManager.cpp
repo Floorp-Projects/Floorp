@@ -97,7 +97,7 @@ AccessibleCaretManager::HideCarets()
 }
 
 void
-AccessibleCaretManager::UpdateCarets()
+AccessibleCaretManager::UpdateCarets(UpdateCaretsHint aHint)
 {
   mCaretMode = GetCaretMode();
 
@@ -106,16 +106,16 @@ AccessibleCaretManager::UpdateCarets()
     HideCarets();
     break;
   case CaretMode::Cursor:
-    UpdateCaretsForCursorMode();
+    UpdateCaretsForCursorMode(aHint);
     break;
   case CaretMode::Selection:
-    UpdateCaretsForSelectionMode();
+    UpdateCaretsForSelectionMode(aHint);
     break;
   }
 }
 
 void
-AccessibleCaretManager::UpdateCaretsForCursorMode()
+AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHint aHint)
 {
   AC_LOG("%s, selection: %p", __FUNCTION__, GetSelection());
 
@@ -125,24 +125,10 @@ AccessibleCaretManager::UpdateCaretsForCursorMode()
     return;
   }
 
-  nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
-  Selection* selection = GetSelection();
-  if (!fs || !selection) {
-    HideCarets();
-    return;
-  }
-
-  nsINode* focusNode = selection->GetFocusNode();
-  nsIContent* focusContent = focusNode->AsContent();
-  uint32_t focusOffset = selection->FocusOffset();
-
-  nsIFrame* frame = nullptr;
   int32_t offset = 0;
-  nsresult rv = nsCaret::GetCaretFrameForNodeOffset(
-    fs, focusContent, focusOffset, fs->GetHint(), fs->GetCaretBidiLevel(),
-    &frame, &offset);
+  nsIFrame* frame = nsCaret::GetFrameAndOffset(GetSelection(), nullptr, 0, &offset);
 
-  if (NS_FAILED(rv) || !frame) {
+  if (!frame) {
     HideCarets();
     return;
   }
@@ -153,31 +139,52 @@ AccessibleCaretManager::UpdateCaretsForCursorMode()
     return;
   }
 
-  // No need to consider whether the caret's position is out of scrollport.
-  // According to the spec, we need to explicitly hide it after the scrolling is
-  // ended.
   bool oldSecondCaretVisible = mSecondCaret->IsLogicallyVisible();
-  PositionChangedResult caretResult = mFirstCaret->SetPosition(frame, offset);
-  mFirstCaret->SetSelectionBarEnabled(false);
-  if (nsContentUtils::HasNonEmptyTextContent(
-        editingHost, nsContentUtils::eRecurseIntoChildren)) {
-    mFirstCaret->SetAppearance(Appearance::Normal);
-  } else {
-    mFirstCaret->SetAppearance(Appearance::NormalNotShown);
+  PositionChangedResult result = mFirstCaret->SetPosition(frame, offset);
+
+  switch (result) {
+    case PositionChangedResult::NotChanged:
+      // Do nothing
+      break;
+
+    case PositionChangedResult::Changed:
+      switch (aHint) {
+        case UpdateCaretsHint::Default:
+          if (nsContentUtils::HasNonEmptyTextContent(
+                editingHost, nsContentUtils::eRecurseIntoChildren)) {
+            mFirstCaret->SetAppearance(Appearance::Normal);
+          } else {
+            mFirstCaret->SetAppearance(Appearance::NormalNotShown);
+          }
+          break;
+
+        case UpdateCaretsHint::RespectOldAppearance:
+          // Do nothing to prevent the appearance of the caret being
+          // changed from NormalNotShown to Normal.
+          break;
+      }
+      break;
+
+    case PositionChangedResult::Invisible:
+      mFirstCaret->SetAppearance(Appearance::NormalNotShown);
+      break;
   }
-  LaunchCaretTimeoutTimer();
+
+  mFirstCaret->SetSelectionBarEnabled(false);
   mSecondCaret->SetAppearance(Appearance::None);
 
-  if ((caretResult == PositionChangedResult::Changed ||
-      oldSecondCaretVisible) && !mActiveCaret) {
+  LaunchCaretTimeoutTimer();
+
+  if ((result != PositionChangedResult::NotChanged || oldSecondCaretVisible) &&
+      !mActiveCaret) {
     DispatchCaretStateChangedEvent(CaretChangedReason::Updateposition);
   }
 }
 
 void
-AccessibleCaretManager::UpdateCaretsForSelectionMode()
+AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
 {
-  AC_LOG("%s, selection: %p", __FUNCTION__, GetSelection());
+  AC_LOG("%s: selection: %p", __FUNCTION__, GetSelection());
 
   int32_t startOffset = 0;
   nsIFrame* startFrame = FindFirstNodeWithFrame(false, &startOffset);
@@ -191,21 +198,24 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode()
     return;
   }
 
-  auto updateSingleCaret = [](AccessibleCaret * aCaret, nsIFrame * aFrame,
-                              int32_t aOffset)->PositionChangedResult
+  auto updateSingleCaret = [](AccessibleCaret* aCaret, nsIFrame* aFrame,
+                              int32_t aOffset) -> PositionChangedResult
   {
     PositionChangedResult result = aCaret->SetPosition(aFrame, aOffset);
     aCaret->SetSelectionBarEnabled(true);
+
     switch (result) {
-    case PositionChangedResult::NotChanged:
-      // Do nothing
-      break;
-    case PositionChangedResult::Changed:
-      aCaret->SetAppearance(Appearance::Normal);
-      break;
-    case PositionChangedResult::Invisible:
-      aCaret->SetAppearance(Appearance::NormalNotShown);
-      break;
+      case PositionChangedResult::NotChanged:
+        // Do nothing
+        break;
+
+      case PositionChangedResult::Changed:
+        aCaret->SetAppearance(Appearance::Normal);
+        break;
+
+      case PositionChangedResult::Invisible:
+        aCaret->SetAppearance(Appearance::NormalNotShown);
+        break;
     }
     return result;
   };
@@ -406,30 +416,14 @@ AccessibleCaretManager::OnScrollEnd()
 }
 
 void
-AccessibleCaretManager::OnScrolling()
-{
-  if (mCaretMode != GetCaretMode()) {
-    return;
-  }
-
-  if (GetCaretMode() == CaretMode::Cursor) {
-    AC_LOG("%s: HideCarets()", __FUNCTION__);
-    HideCarets();
-  } else {
-    AC_LOG("%s: UpdateCarets()", __FUNCTION__);
-    UpdateCarets();
-  }
-}
-
-void
 AccessibleCaretManager::OnScrollPositionChanged()
 {
   if (mCaretMode != GetCaretMode()) {
     return;
   }
 
-  AC_LOG("%s: UpdateCarets()", __FUNCTION__);
-  UpdateCarets();
+  AC_LOG("%s: UpdateCarets(RespectOldAppearance)", __FUNCTION__);
+  UpdateCarets(UpdateCaretsHint::RespectOldAppearance);
 }
 
 void

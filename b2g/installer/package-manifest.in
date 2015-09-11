@@ -113,11 +113,6 @@
 #ifdef MOZ_SHARED_MOZGLUE
 @BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
 #endif
-#ifdef MOZ_REPLACE_MALLOC
-#ifndef MOZ_JEMALLOC4
-@BINPATH@/@DLL_PREFIX@replace_jemalloc@DLL_SUFFIX@
-#endif
-#endif
 #ifdef ANDROID
 @RESPATH@/AndroidManifest.xml
 @RESPATH@/resources.arsc
@@ -626,9 +621,6 @@
 #ifdef MOZ_SECUREELEMENT
 @RESPATH@/components/DOMSecureElement.manifest
 @RESPATH@/components/DOMSecureElement.js
-#endif
-#ifdef MOZ_ENABLE_DBUS
-@RESPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
 #endif
 @RESPATH@/components/nsINIProcessor.manifest
 @RESPATH@/components/nsINIProcessor.js
