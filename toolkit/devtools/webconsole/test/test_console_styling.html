@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for console.log styling with %c</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for console.log styling with %c</p>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+let expectedConsoleCalls = [];
+
+function doConsoleCalls(aState)
+{
+  top.console.log("%cOne formatter with no styles");
+  top.console.log("%cOne formatter", "color: red");
+  top.console.log("%cTwo formatters%cEach with an arg",
+    "color: red", "background: red");
+  top.console.log("%c%cTwo formatters next to each other",
+    "color: red", "background: red");
+  top.console.log("%c%c%cThree formatters next to each other",
+    "color: red", "background: red", "font-size: 150%");
+  top.console.log("%c%cTwo formatters%cWith a third separated",
+    "color: red", "background: red", "font-size: 150%");
+  top.console.log("%cOne formatter", "color: red",
+                  "Second arg with no styles");
+  top.console.log("%cOne formatter", "color: red",
+                  "%cSecond formatter is ignored", "background: blue")
+
+  expectedConsoleCalls = [
+    {
+      level: "log",
+      styles: /^$/,
+      arguments: ["%cOne formatter with no styles"],
+    },
+    {
+      level: "log",
+      styles: /^color: red$/,
+      arguments: ["One formatter"],
+    },
+    {
+      level: "log",
+      styles: /^color: red,background: red$/,
+      arguments: ["Two formatters", "Each with an arg"],
+    },
+    {
+      level: "log",
+      styles: /^background: red$/,
+      arguments: ["Two formatters next to each other"],
+    },
+    {
+      level: "log",
+      styles: /^font-size: 150%$/,
+      arguments: ["Three formatters next to each other"],
+    },
+    {
+      level: "log",
+      styles: /^background: red,font-size: 150%$/,
+      arguments: ["Two formatters", "With a third separated"],
+    },
+    {
+      level: "log",
+      styles: /^color: red$/,
+      arguments: ["One formatter", "Second arg with no styles"],
+    },
+    {
+      level: "log",
+      styles: /^color: red$/,
+      arguments: ["One formatter",
+                  "%cSecond formatter is ignored",
+                  "background: blue"],
+    },
+  ];
+}
+
+function startTest()
+{
+  removeEventListener("load", startTest);
+
+  attachConsole(["ConsoleAPI"], onAttach, true);
+}
+
+function onAttach(aState, aResponse)
+{
+  onConsoleAPICall = onConsoleAPICall.bind(null, aState);
+  aState.dbgClient.addListener("consoleAPICall", onConsoleAPICall);
+  doConsoleCalls(aState.actor);
+}
+
+let consoleCalls = [];
+
+function onConsoleAPICall(aState, aType, aPacket)
+{
+  info("received message level: " + aPacket.message.level);
+  is(aPacket.from, aState.actor, "console API call actor");
+
+  consoleCalls.push(aPacket.message);
+  if (consoleCalls.length != expectedConsoleCalls.length) {
+    return;
+  }
+
+  aState.dbgClient.removeListener("consoleAPICall", onConsoleAPICall);
+
+  expectedConsoleCalls.forEach(function(aMessage, aIndex) {
+    info("checking received console call #" + aIndex);
+    checkConsoleAPICall(consoleCalls[aIndex], expectedConsoleCalls[aIndex]);
+  });
+
+
+  consoleCalls = [];
+
+  closeDebugger(aState, function() {
+    SimpleTest.finish();
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>
