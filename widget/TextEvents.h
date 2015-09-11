@@ -441,7 +441,7 @@ public:
 
   bool CausesDOMCompositionEndEvent() const
   {
-    return mMessage == NS_COMPOSITION_END ||
+    return mMessage == eCompositionEnd ||
            mMessage == NS_COMPOSITION_COMMIT ||
            mMessage == eCompositionCommitAsIs;
   }
