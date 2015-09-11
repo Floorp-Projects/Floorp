@@ -46,7 +46,6 @@ function SelectorSearch(aInspector, aInputNode) {
   this._onHTMLSearch = this._onHTMLSearch.bind(this);
   this._onSearchKeypress = this._onSearchKeypress.bind(this);
   this._onListBoxKeypress = this._onListBoxKeypress.bind(this);
-  this._onMarkupMutation = this._onMarkupMutation.bind(this);
 
   // Options for the AutocompletePopup.
   let options = {
@@ -64,7 +63,6 @@ function SelectorSearch(aInspector, aInputNode) {
   // event listeners.
   this.searchBox.addEventListener("command", this._onHTMLSearch, true);
   this.searchBox.addEventListener("keypress", this._onSearchKeypress, true);
-  this.inspector.on("markupmutation", this._onMarkupMutation);
 
   // For testing, we need to be able to wait for the most recent node request
   // to finish.  Tests can watch this promise for that.
@@ -172,7 +170,6 @@ SelectorSearch.prototype = {
     // event listeners.
     this.searchBox.removeEventListener("command", this._onHTMLSearch, true);
     this.searchBox.removeEventListener("keypress", this._onSearchKeypress, true);
-    this.inspector.off("markupmutation", this._onMarkupMutation);
     this.searchPopup.destroy();
     this.searchPopup = null;
     this.searchBox = null;
@@ -424,15 +421,6 @@ SelectorSearch.prototype = {
         break;
     }
     this.emit("processing-done");
-  },
-
-  /**
-   * Reset previous search results on markup-mutations to make sure we search
-   * again after nodes have been added/removed/changed.
-   */
-  _onMarkupMutation: function() {
-    this._searchResults = null;
-    this._lastSearched = null;
   },
 
   /**
