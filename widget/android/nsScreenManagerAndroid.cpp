@@ -8,9 +8,6 @@
 #include "nsScreenManagerAndroid.h"
 #include "nsWindow.h"
 #include "AndroidBridge.h"
-#include "GeneratedJNIWrappers.h"
-#include "AndroidRect.h"
-#include <mozilla/jni/Refs.h>
 
 using namespace mozilla;
 
@@ -32,11 +29,13 @@ nsScreenAndroid::GetId(uint32_t *outId)
 NS_IMETHODIMP
 nsScreenAndroid::GetRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
 {
-    widget::sdk::Rect::LocalRef rect = widget::GeckoAppShell::GetScreenSize();
-    rect->Left(outLeft);
-    rect->Top(outTop);
-    rect->Width(outWidth);
-    rect->Height(outHeight);
+    gfxIntSize sz = nsWindow::GetAndroidScreenBounds();
+
+    *outLeft = 0;
+    *outTop = 0;
+
+    *outWidth = sz.width;
+    *outHeight = sz.height;
 
     return NS_OK;
 }
