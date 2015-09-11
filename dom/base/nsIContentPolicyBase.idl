@@ -24,7 +24,7 @@ typedef unsigned long nsContentPolicyType;
  * by launching a dialog to prompt the user for something).
  */
 
-[scriptable,uuid(20f7b9bf-d7d5-4987-ade8-b7dc0398d44a)]
+[scriptable,uuid(8527ae0d-0c43-4413-bc46-85c0bcb66876)]
 interface nsIContentPolicyBase : nsISupports
 {
   /**
@@ -270,6 +270,15 @@ interface nsIContentPolicyBase : nsISupports
    * This will be mapped to TYPE_DATAREQUEST.
    */
   const nsContentPolicyType TYPE_INTERNAL_EVENTSOURCE = 34;
+
+  /**
+   * Indicates an internal constant for scripts loaded through a service
+   * worker.
+   *
+   * This will be mapped to TYPE_SCRIPT before being passed to content policy
+   * implementations.
+   */
+  const nsContentPolicyType TYPE_INTERNAL_SERVICE_WORKER = 35;
 
   /* When adding new content types, please update nsContentBlocker,
    * NS_CP_ContentTypeName, nsCSPContext, all nsIContentPolicy
