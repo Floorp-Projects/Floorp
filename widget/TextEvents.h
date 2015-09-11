@@ -514,7 +514,7 @@ public:
   void InitForQueryTextRect(uint32_t aOffset, uint32_t aLength,
                             bool aUseNativeLineBreak = true)
   {
-    NS_ASSERTION(mMessage == NS_QUERY_TEXT_RECT,
+    NS_ASSERTION(mMessage == eQueryTextRect,
                  "wrong initializer is called");
     mInput.mOffset = aOffset;
     mInput.mLength = aLength;
@@ -553,7 +553,7 @@ public:
   {
     NS_ASSERTION(mMessage == eQuerySelectedText ||
                  mMessage == eQueryCaretRect ||
-                 mMessage == NS_QUERY_TEXT_RECT,
+                 mMessage == eQueryTextRect,
                  "not querying selection or text rect");
     return mReply.mWritingMode;
   }

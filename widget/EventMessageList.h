@@ -226,7 +226,7 @@ NS_EVENT_MESSAGE(eQueryCaretRect,               eQueryContentEventFirst + 3)
 // Query for the bounding rect of a range of characters. This works on any
 // valid character range given offset and length. Result is relative to top
 // level widget coordinates
-NS_EVENT_MESSAGE(NS_QUERY_TEXT_RECT,            eQueryContentEventFirst + 4)
+NS_EVENT_MESSAGE(eQueryTextRect,                eQueryContentEventFirst + 4)
 // Query for the bounding rect of the current focused frame. Result is relative
 // to top level widget coordinates
 NS_EVENT_MESSAGE(eQueryEditorRect,              eQueryContentEventFirst + 5)
