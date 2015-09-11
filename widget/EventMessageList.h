@@ -333,7 +333,7 @@ NS_EVENT_MESSAGE(eAnimationIteration,   eAnimationEventFirst + 2)
 
 NS_EVENT_MESSAGE(eSMILEventFirst,       4300)
 NS_EVENT_MESSAGE(eSMILBeginEvent,       eSMILEventFirst)
-NS_EVENT_MESSAGE(NS_SMIL_END,           eSMILEventFirst + 1)
+NS_EVENT_MESSAGE(eSMILEndEvent,         eSMILEventFirst + 1)
 NS_EVENT_MESSAGE(NS_SMIL_REPEAT,        eSMILEventFirst + 2)
 
 NS_EVENT_MESSAGE(NS_WEBAUDIO_EVENT_START, 4350)

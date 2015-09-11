@@ -679,7 +679,7 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly)
           }
           mCurrentInterval->FixEnd();
           if (mSeekState == SEEK_NOT_SEEKING) {
-            FireTimeEventAsync(NS_SMIL_END, 0);
+            FireTimeEventAsync(eSMILEndEvent, 0);
           }
           mCurrentRepeatIteration = 0;
           mOldIntervals.AppendElement(mCurrentInterval.forget());
@@ -1518,7 +1518,7 @@ nsSMILTimedElement::DoPostSeek()
   case SEEK_FORWARD_FROM_ACTIVE:
   case SEEK_BACKWARD_FROM_ACTIVE:
     if (mElementState != STATE_ACTIVE) {
-      FireTimeEventAsync(NS_SMIL_END, 0);
+      FireTimeEventAsync(eSMILEndEvent, 0);
     }
     break;
 
