@@ -713,8 +713,22 @@ class Marionette(object):
             self._handle_error(resp)
 
         if key is not None:
-            resp = resp[key]
-        return resp
+            return self._unwrap_response(resp[key])
+        else:
+            return self._unwrap_response(resp)
+
+    def _unwrap_response(self, value):
+        resp = ""
+        if isinstance(value, dict) and \
+        ('ELEMENT' in value or 'element-6066-11e4-a52e-4f735466cecf' in value):
+            if value.get('ELEMENT'):
+                return HTMLElement(self, value.get('ELEMENT'))
+            else:
+                return HTMLElement(self, value.get('element-6066-11e4-a52e-4f735466cecf'))
+        elif isinstance(value, list):
+            return list(self._unwrap_response(item) for item in value)
+        else:
+            return value
 
     def _emulator_cmd(self, id, cmd):
         if not self.emulator:
@@ -1595,9 +1609,7 @@ class Marionette(object):
         body = {"value": target, "using": method}
         if id:
             body["element"] = id
-        el = self._send_message("findElement", body, key="value")
-        ref = el["ELEMENT"]
-        return HTMLElement(self, ref)
+        return self._send_message("findElement", body, key="value")
 
     def find_elements(self, method, target, id=None):
         """Returns a list of all HTMLElement instances that match the
@@ -1622,13 +1634,9 @@ class Marionette(object):
         body = {"value": target, "using": method}
         if id:
             body["element"] = id
-        els = self._send_message(
+        return self._send_message(
             "findElements", body, key="value" if self.protocol == 1 else None)
-        assert(isinstance(els, list))
-        rv = []
-        for el in els:
-            rv.append(HTMLElement(self, el["ELEMENT"]))
-        return rv
+
 
     def get_active_element(self):
         el = self._send_message("getActiveElement", key="value")
