@@ -45,6 +45,18 @@ MacroAssembler::and32(const Address& src, Register dest)
     ma_and(scratch, dest, SetCC);
 }
 
+void
+MacroAssembler::andPtr(Register src, Register dest)
+{
+    ma_and(src, dest);
+}
+
+void
+MacroAssembler::andPtr(Imm32 imm, Register dest)
+{
+    ma_and(imm, dest);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

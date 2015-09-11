@@ -1038,10 +1038,8 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     template <typename T>
     void subStackPtrFrom(T t) { subPtr(getStackPointer(), t); }
 
-    template <typename T>
-    void andToStackPtr(T t) { andPtr(t, getStackPointer()); syncStackPtr(); }
-    template <typename T>
-    void andStackPtrTo(T t) { andPtr(getStackPointer(), t); }
+    template <typename T> void andToStackPtr(T t);
+    template <typename T> void andStackPtrTo(T t);
 
     template <typename T>
     void moveToStackPtr(T t) { movePtr(t, getStackPointer()); syncStackPtr(); }
@@ -1112,12 +1110,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         load32(dest, scratch32.asUnsized());
         Orr(scratch32, scratch32, Operand(imm.value));
         store32(scratch32.asUnsized(), dest);
-    }
-    void andPtr(Imm32 imm, Register dest) {
-        And(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
-    }
-    void andPtr(Register src, Register dest) {
-        And(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
     }
 
     void testPtr(Register lhs, Register rhs) {

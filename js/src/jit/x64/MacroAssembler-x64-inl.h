@@ -17,6 +17,17 @@ namespace jit {
 //{{{ check_macroassembler_style
 // ===============================================================
 
+void
+MacroAssembler::andPtr(Register src, Register dest)
+{
+    andq(src, dest);
+}
+
+void
+MacroAssembler::andPtr(Imm32 imm, Register dest)
+{
+    andq(imm, dest);
+}
 
 //}}} check_macroassembler_style
 // ===============================================================
