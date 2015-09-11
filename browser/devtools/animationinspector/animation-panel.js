@@ -128,14 +128,16 @@ var AnimationsPanel = {
     }
   },
 
-  displayErrorMessage: function() {
-    this.errorMessageEl.style.display = "block";
-    this.playersEl.style.display = "none";
-  },
-
-  hideErrorMessage: function() {
-    this.errorMessageEl.style.display = "none";
-    this.playersEl.style.display = "block";
+  togglePlayers: function(isVisible) {
+    if (isVisible) {
+      document.body.removeAttribute("empty");
+      if (AnimationsController.traits.isNewUI) {
+        document.body.setAttribute("timeline", "true");
+      }
+    } else {
+      document.body.setAttribute("empty", "true");
+      document.body.removeAttribute("timeline");
+    }
   },
 
   onPickerStarted: function() {
@@ -181,7 +183,7 @@ var AnimationsPanel = {
     let done = gInspector.updating("animationspanel");
 
     // Empty the whole panel first.
-    this.hideErrorMessage();
+    this.togglePlayers(true);
     yield this.destroyPlayerWidgets();
 
     // Re-render the timeline component.
@@ -194,7 +196,7 @@ var AnimationsPanel = {
     // If there are no players to show, show the error message instead and
     // return.
     if (!AnimationsController.animationPlayers.length) {
-      this.displayErrorMessage();
+      this.togglePlayers(false);
       this.emit(this.UI_UPDATED_EVENT);
       done();
       return;
