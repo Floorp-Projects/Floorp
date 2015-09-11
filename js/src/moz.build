@@ -467,7 +467,6 @@ elif CONFIG['JS_CODEGEN_ARM64']:
 elif CONFIG['JS_CODEGEN_MIPS32']:
     UNIFIED_SOURCES += [
         'jit/mips-shared/Architecture-mips-shared.cpp',
-        'jit/mips-shared/Assembler-mips-shared.cpp',
     ]
     if CONFIG['JS_CODEGEN_MIPS32']:
         UNIFIED_SOURCES += [
