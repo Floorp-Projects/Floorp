@@ -269,7 +269,7 @@ let gTests = [
 
     let indicator = promiseIndicatorWindow();
     yield promiseMessage("ok", () => {
-      PopupNotifications.panel.firstChild.button.click();
+      activateSecondaryAction(kActionAlways);
     });
     expectObserverCalled("getUserMedia:response:allow");
     expectObserverCalled("recording-device-events");
@@ -278,6 +278,13 @@ let gTests = [
 
     yield indicator;
     yield checkSharingUI({video: true, audio: true});
+
+    let Perms = Services.perms;
+    let uri = Services.io.newURI("https://example.com/", null, null);
+    is(Perms.testExactPermission(uri, "microphone"), Perms.ALLOW_ACTION,
+                                 "microphone persistently allowed");
+    is(Perms.testExactPermission(uri, "camera"), Perms.ALLOW_ACTION,
+                                 "camera persistently allowed");
 
     yield promiseNotificationShown(PopupNotifications.getNotification("webRTC-sharingDevices"));
     activateSecondaryAction(kActionDeny);
@@ -295,6 +302,12 @@ let gTests = [
 
     expectNoObserverCalled();
     yield checkNotSharing();
+
+    // The persistent permissions for the frame should have been removed.
+    is(Perms.testExactPermission(uri, "microphone"), Perms.UNKNOWN_ACTION,
+                                 "microphone not persistently allowed");
+    is(Perms.testExactPermission(uri, "camera"), Perms.UNKNOWN_ACTION,
+                                 "camera not persistently allowed");
 
     // the stream is already closed, but this will do some cleanup anyway
     yield closeStream(global, true);
