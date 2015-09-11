@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <mozilla/CheckedInt.h>
 #include <utils/SharedBuffer.h>
 #include <utils/Atomic.h>
 
@@ -26,7 +27,13 @@ namespace stagefright {
 
 SharedBuffer* SharedBuffer::alloc(size_t size)
 {
-    SharedBuffer* sb = static_cast<SharedBuffer *>(malloc(sizeof(SharedBuffer) + size));
+    mozilla::CheckedInt<size_t> allocSize = size;
+    allocSize += sizeof(SharedBuffer);
+    if (!allocSize.isValid() || allocSize.value() >= SIZE_MAX) {
+        return nullptr;
+    }
+
+    SharedBuffer* sb = static_cast<SharedBuffer*>(malloc(allocSize.value()));
     if (sb) {
         sb->mRefs = 1;
         sb->mSize = size;
@@ -60,11 +67,17 @@ SharedBuffer* SharedBuffer::editResize(size_t newSize) const
     if (onlyOwner()) {
         SharedBuffer* buf = const_cast<SharedBuffer*>(this);
         if (buf->mSize == newSize) return buf;
-        buf = (SharedBuffer*)realloc(buf, sizeof(SharedBuffer) + newSize);
-        if (buf != NULL) {
-            buf->mSize = newSize;
+        mozilla::CheckedInt<size_t> reallocSize = newSize;
+        reallocSize += sizeof(SharedBuffer);
+        if (reallocSize.isValid() && reallocSize.value() < SIZE_MAX) {
+          buf = (SharedBuffer*)realloc(buf, reallocSize.value());
+          if (buf != nullptr) {
+            buf->mSize = reallocSize.value();
             return buf;
+          }
         }
+        // Overflow or allocation failed.
+        return nullptr;
     }
     SharedBuffer* sb = alloc(newSize);
     if (sb) {
