@@ -774,12 +774,12 @@ NON_IDL_EVENT(zoom,
 // Only map the ID to the real event name when MESSAGE_TO_EVENT is defined.
 #ifndef MESSAGE_TO_EVENT
 NON_IDL_EVENT(begin,
-              NS_SMIL_BEGIN,
+              eSMILBeginEvent,
               EventNameType_SMIL,
               eBasicEventClass)
 #endif
 NON_IDL_EVENT(beginEvent,
-              NS_SMIL_BEGIN,
+              eSMILBeginEvent,
               EventNameType_None,
               eSMILTimeEventClass)
 // Only map the ID to the real event name when MESSAGE_TO_EVENT is defined.
