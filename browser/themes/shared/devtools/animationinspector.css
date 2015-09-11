@@ -35,15 +35,30 @@ body {
   color: var(--theme-content-color3);
 }
 
-/* The top toolbar, containing the toggle-all button */
+/* The top toolbar, containing the toggle-all button. And the timeline toolbar,
+   containing playback control buttons, shown only when there are animations
+   displayed in the timeline */
 
-#global-toolbar {
+#global-toolbar,
+#timeline-toolbar {
   border-bottom: 1px solid var(--theme-splitter-color);
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
   height: var(--toolbar-height);
+}
+
+#timeline-toolbar {
+  display: none;
+}
+
+[timeline] #global-toolbar {
+  display: none;
+}
+
+[timeline] #timeline-toolbar {
+  display: flex;
 }
 
 #global-toolbar .label {
@@ -62,6 +77,10 @@ body {
   overflow: auto;
 }
 
+[empty] #players {
+  display: none;
+}
+
 /* The error message, shown when an invalid/unanimated element is selected */
 
 #error-message {
@@ -74,6 +93,9 @@ body {
   display: none;
 }
 
+[empty] #error-message {
+  display: block;
+}
 
 /* Element picker and toggle-all buttons */
 
