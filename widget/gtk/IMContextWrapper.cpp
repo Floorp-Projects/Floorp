@@ -1364,7 +1364,7 @@ IMContextWrapper::DispatchCompositionChangeEvent(
         }
     }
 
-    WidgetCompositionEvent compositionChangeEvent(true, NS_COMPOSITION_CHANGE,
+    WidgetCompositionEvent compositionChangeEvent(true, eCompositionChange,
                                                   mLastFocusedWindow);
     InitEvent(compositionChangeEvent);
 

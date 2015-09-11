@@ -1844,7 +1844,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             }
 
             {
-                WidgetCompositionEvent event(true, NS_COMPOSITION_CHANGE, this);
+                WidgetCompositionEvent event(true, eCompositionChange, this);
                 InitEvent(event, nullptr);
                 event.mData = ae->Characters();
 
@@ -1946,7 +1946,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             const auto composition(GetIMEComposition());
             MOZ_ASSERT(!composition || !composition->IsEditorHandlingEvent());
 
-            WidgetCompositionEvent event(true, NS_COMPOSITION_CHANGE, this);
+            WidgetCompositionEvent event(true, eCompositionChange, this);
             InitEvent(event, nullptr);
 
             event.mRanges = new TextRangeArray();

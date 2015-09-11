@@ -1897,7 +1897,7 @@ IMMHandler::DispatchCompositionChangeEvent(nsWindow* aWindow,
 
   nsIntPoint point(0, 0);
 
-  WidgetCompositionEvent event(true, NS_COMPOSITION_CHANGE, aWindow);
+  WidgetCompositionEvent event(true, eCompositionChange, aWindow);
 
   aWindow->InitEvent(event, &point);
 

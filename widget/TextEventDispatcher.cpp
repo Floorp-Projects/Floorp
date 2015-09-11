@@ -541,7 +541,7 @@ TextEventDispatcher::PendingComposition::Flush(TextEventDispatcher* aDispatcher,
 
   nsRefPtr<TextEventDispatcher> kungFuDeathGrip(aDispatcher);
   nsCOMPtr<nsIWidget> widget(aDispatcher->mWidget);
-  WidgetCompositionEvent compChangeEvent(true, NS_COMPOSITION_CHANGE, widget);
+  WidgetCompositionEvent compChangeEvent(true, eCompositionChange, widget);
   aDispatcher->InitEvent(compChangeEvent);
   compChangeEvent.mData = mString;
   if (mClauses) {

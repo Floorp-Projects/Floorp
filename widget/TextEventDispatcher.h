@@ -112,7 +112,7 @@ public:
 
   /**
    * SetPendingCompositionString() sets new composition string which will be
-   * dispatched with NS_COMPOSITION_CHANGE event by calling Flush().
+   * dispatched with eCompositionChange event by calling Flush().
    *
    * @param aString         New composition string.
    */
@@ -255,7 +255,7 @@ private:
   nsWeakPtr mListener;
 
   // mPendingComposition stores new composition string temporarily.
-  // These values will be used for dispatching NS_COMPOSITION_CHANGE event
+  // These values will be used for dispatching eCompositionChange event
   // in Flush().  When Flush() is called, the members will be cleared
   // automatically.
   class PendingComposition
