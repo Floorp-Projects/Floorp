@@ -52,6 +52,7 @@
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/Move.h"
 #include "mozilla/Services.h"
 #include "mozilla/Snprintf.h"
 #include "nsRefPtrHashtable.h"
@@ -873,23 +874,6 @@ nsBaseWidget::CreateRootContentController()
   return controller.forget();
 }
 
-class ChromeProcessContentReceivedInputBlockCallback : public ContentReceivedInputBlockCallback {
-public:
-  explicit ChromeProcessContentReceivedInputBlockCallback(APZCTreeManager* aTreeManager)
-    : mTreeManager(aTreeManager)
-  {}
-
-  void Run(const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId, bool aPreventDefault) const override {
-    MOZ_ASSERT(NS_IsMainThread());
-    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
-        mTreeManager.get(), &APZCTreeManager::ContentReceivedInputBlock,
-        aInputBlockId, aPreventDefault));
-  }
-
-private:
-  nsRefPtr<APZCTreeManager> mTreeManager;
-};
-
 void nsBaseWidget::ConfigureAPZCTreeManager()
 {
   MOZ_ASSERT(mAPZC);
@@ -897,10 +881,21 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
   ConfigureAPZControllerThread();
 
   mAPZC->SetDPI(GetDPI());
-  mAPZEventState = new APZEventState(this,
-      new ChromeProcessContentReceivedInputBlockCallback(mAPZC));
 
-  nsRefPtr<APZCTreeManager> treeManager = mAPZC;  // for capture by the lambda
+  nsRefPtr<APZCTreeManager> treeManager = mAPZC;  // for capture by the lambdas
+
+  ContentReceivedInputBlockCallback callback(
+      [treeManager](const ScrollableLayerGuid& aGuid,
+                    uint64_t aInputBlockId,
+                    bool aPreventDefault)
+      {
+        MOZ_ASSERT(NS_IsMainThread());
+        APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+            treeManager.get(), &APZCTreeManager::ContentReceivedInputBlock,
+            aInputBlockId, aPreventDefault));
+      });
+  mAPZEventState = new APZEventState(this, mozilla::Move(callback));
+
   mSetAllowedTouchBehaviorCallback = [treeManager](uint64_t aInputBlockId,
                                                    const nsTArray<TouchBehaviorFlags>& aFlags)
   {
