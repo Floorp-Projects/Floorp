@@ -1027,9 +1027,10 @@ gfxWindowsPlatform::GetStandardFamilyName(const nsAString& aFontName, nsAString&
 gfxFontGroup *
 gfxWindowsPlatform::CreateFontGroup(const FontFamilyList& aFontFamilyList,
                                     const gfxFontStyle *aStyle,
+                                    gfxTextPerfMetrics* aTextPerf,
                                     gfxUserFontSet *aUserFontSet)
 {
-    return new gfxFontGroup(aFontFamilyList, aStyle, aUserFontSet);
+    return new gfxFontGroup(aFontFamilyList, aStyle, aTextPerf, aUserFontSet);
 }
 
 gfxFontEntry* 

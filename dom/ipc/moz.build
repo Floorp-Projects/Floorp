@@ -19,6 +19,7 @@ EXPORTS.mozilla.dom.ipc += [
     'BlobParent.h',
     'IdType.h',
     'nsIRemoteBlob.h',
+    'StructuredCloneData.h',
 ]
 
 EXPORTS.mozilla.dom += [
@@ -37,7 +38,6 @@ EXPORTS.mozilla.dom += [
     'NuwaChild.h',
     'NuwaParent.h',
     'PermissionMessageUtils.h',
-    'StructuredCloneIPCHelper.h',
     'TabChild.h',
     'TabContext.h',
     'TabMessageUtils.h',
@@ -70,7 +70,7 @@ UNIFIED_SOURCES += [
     'PreallocatedProcessManager.cpp',
     'ProcessPriorityManager.cpp',
     'ScreenManagerParent.cpp',
-    'StructuredCloneIPCHelper.cpp',
+    'StructuredCloneData.cpp',
     'TabChild.cpp',
     'TabContext.cpp',
     'TabMessageUtils.cpp',

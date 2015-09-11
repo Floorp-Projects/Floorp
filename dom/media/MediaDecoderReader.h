@@ -69,8 +69,8 @@ public:
   };
 
   typedef MozPromise<nsRefPtr<MetadataHolder>, ReadMetadataFailureReason, /* IsExclusive = */ true> MetadataPromise;
-  typedef MozPromise<nsRefPtr<AudioData>, NotDecodedReason, /* IsExclusive = */ true> AudioDataPromise;
-  typedef MozPromise<nsRefPtr<VideoData>, NotDecodedReason, /* IsExclusive = */ true> VideoDataPromise;
+  typedef MozPromise<nsRefPtr<MediaData>, NotDecodedReason, /* IsExclusive = */ true> AudioDataPromise;
+  typedef MozPromise<nsRefPtr<MediaData>, NotDecodedReason, /* IsExclusive = */ true> VideoDataPromise;
   typedef MozPromise<int64_t, nsresult, /* IsExclusive = */ true> SeekPromise;
 
   // Note that, conceptually, WaitForData makes sense in a non-exclusive sense.

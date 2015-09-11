@@ -4151,9 +4151,8 @@ CSS_PROP_DISPLAY(
     will_change,
     WillChange,
     CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
-        CSS_PROPERTY_ALWAYS_ENABLED_IN_CHROME_OR_CERTIFIED_APP,
-    "layout.css.will-change.enabled",
+        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    "",
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,

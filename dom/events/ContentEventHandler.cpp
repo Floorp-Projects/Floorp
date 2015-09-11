@@ -796,23 +796,23 @@ nsresult
 ContentEventHandler::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
 {
   switch (aEvent->mMessage) {
-    case NS_QUERY_SELECTED_TEXT:
+    case eQuerySelectedText:
       return OnQuerySelectedText(aEvent);
-    case NS_QUERY_TEXT_CONTENT:
+    case eQueryTextContent:
       return OnQueryTextContent(aEvent);
-    case NS_QUERY_CARET_RECT:
+    case eQueryCaretRect:
       return OnQueryCaretRect(aEvent);
     case NS_QUERY_TEXT_RECT:
       return OnQueryTextRect(aEvent);
-    case NS_QUERY_EDITOR_RECT:
+    case eQueryEditorRect:
       return OnQueryEditorRect(aEvent);
-    case NS_QUERY_CONTENT_STATE:
+    case eQueryContentState:
       return OnQueryContentState(aEvent);
-    case NS_QUERY_SELECTION_AS_TRANSFERABLE:
+    case eQuerySelectionAsTransferable:
       return OnQuerySelectionAsTransferable(aEvent);
-    case NS_QUERY_CHARACTER_AT_POINT:
+    case eQueryCharacterAtPoint:
       return OnQueryCharacterAtPoint(aEvent);
-    case NS_QUERY_DOM_WIDGET_HITTEST:
+    case eQueryDOMWidgetHittest:
       return OnQueryDOMWidgetHittest(aEvent);
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
@@ -1267,7 +1267,7 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
     NS_ENSURE_TRUE(rootWidget, NS_ERROR_FAILURE);
   }
 
-  WidgetQueryContentEvent eventOnRoot(true, NS_QUERY_CHARACTER_AT_POINT,
+  WidgetQueryContentEvent eventOnRoot(true, eQueryCharacterAtPoint,
                                       rootWidget);
   eventOnRoot.mUseNativeLineBreak = aEvent->mUseNativeLineBreak;
   eventOnRoot.refPoint = aEvent->refPoint;

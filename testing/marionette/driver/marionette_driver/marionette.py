@@ -13,7 +13,6 @@ import warnings
 
 from contextlib import contextmanager
 
-from application_cache import ApplicationCache
 from decorators import do_crash_check
 from keys import Keys
 from marionette_transport import MarionetteTransport
@@ -1765,10 +1764,6 @@ class Marionette(object):
         :returns: A list of cookies for the current domain.
         """
         return self._send_message("getCookies", key="value" if self.protocol == 1 else None)
-
-    @property
-    def application_cache(self):
-        return ApplicationCache(self)
 
     def screenshot(self, element=None, highlights=None, format="base64",
                    full=True):

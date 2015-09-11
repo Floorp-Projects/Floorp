@@ -168,6 +168,16 @@ class nsCaret final : public nsISelectionListener
                                       int32_t   aFrameOffset,
                                       nscoord*  aBidiIndicatorSize);
 
+    // Get the frame and frame offset based on the focus node and focus offset
+    // of aSelection. If aOverrideNode and aOverride are provided, use them
+    // instead.
+    // @param aFrameOffset return the frame offset if non-null.
+    // @return the frame of the focus node.
+    static nsIFrame* GetFrameAndOffset(mozilla::dom::Selection* aSelection,
+                                       nsINode* aOverrideNode,
+                                       int32_t aOverrideOffset,
+                                       int32_t* aFrameOffset);
+
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 protected:

@@ -111,6 +111,10 @@ protected:
   ~AudioBuffer();
 
   bool RestoreJSChannelData(JSContext* aJSContext);
+
+  already_AddRefed<ThreadSharedFloatArrayBufferList>
+  StealJSArrayDataIntoSharedChannels(JSContext* aJSContext);
+
   void ClearJSChannels();
 
   nsWeakPtr mOwnerWindow;

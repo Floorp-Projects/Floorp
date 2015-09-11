@@ -97,14 +97,12 @@ WMFDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
                            aImageContainer,
                            sDXVAEnabled));
 
-  nsRefPtr<MFTDecoder> mft = manager->Init();
-
-  if (!mft) {
+  if (!manager->Init()) {
     return nullptr;
   }
 
   nsRefPtr<MediaDataDecoder> decoder =
-    new WMFMediaDataDecoder(manager.forget(), mft, aVideoTaskQueue, aCallback);
+    new WMFMediaDataDecoder(manager.forget(), aVideoTaskQueue, aCallback);
 
   return decoder.forget();
 }
@@ -115,14 +113,13 @@ WMFDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
                                      MediaDataDecoderCallback* aCallback)
 {
   nsAutoPtr<WMFAudioMFTManager> manager(new WMFAudioMFTManager(aConfig));
-  nsRefPtr<MFTDecoder> mft = manager->Init();
 
-  if (!mft) {
+  if (!manager->Init()) {
     return nullptr;
   }
 
   nsRefPtr<MediaDataDecoder> decoder =
-    new WMFMediaDataDecoder(manager.forget(), mft, aAudioTaskQueue, aCallback);
+    new WMFMediaDataDecoder(manager.forget(), aAudioTaskQueue, aCallback);
   return decoder.forget();
 }
 

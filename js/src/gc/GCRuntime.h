@@ -720,19 +720,19 @@ class GCRuntime
 
     void setAlwaysPreserveCode() { alwaysPreserveCode = true; }
 
-    bool isIncrementalGCAllowed() { return incrementalAllowed; }
+    bool isIncrementalGCAllowed() const { return incrementalAllowed; }
     void disallowIncrementalGC() { incrementalAllowed = false; }
 
-    bool isIncrementalGCEnabled() { return mode == JSGC_MODE_INCREMENTAL && incrementalAllowed; }
-    bool isIncrementalGCInProgress() { return state() != gc::NO_INCREMENTAL; }
+    bool isIncrementalGCEnabled() const { return mode == JSGC_MODE_INCREMENTAL && incrementalAllowed; }
+    bool isIncrementalGCInProgress() const { return state() != gc::NO_INCREMENTAL; }
 
-    bool isGenerationalGCEnabled() { return generationalDisabled == 0; }
+    bool isGenerationalGCEnabled() const { return generationalDisabled == 0; }
     void disableGenerationalGC();
     void enableGenerationalGC();
 
     void disableCompactingGC();
     void enableCompactingGC();
-    bool isCompactingGCEnabled();
+    bool isCompactingGCEnabled() const;
 
     void setGrayRootsTracer(JSTraceDataOp traceOp, void* data);
     bool addBlackRootsTracer(JSTraceDataOp traceOp, void* data);
@@ -898,8 +898,8 @@ class GCRuntime
     bool checkIfGCAllowedInCurrentState(JS::gcreason::Reason reason);
 
     gcstats::ZoneGCStats scanZonesBeforeGC();
-    void collect(bool incremental, SliceBudget budget, JS::gcreason::Reason reason);
-    bool gcCycle(bool incremental, SliceBudget& budget, JS::gcreason::Reason reason);
+    void collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::Reason reason);
+    bool gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::Reason reason);
     void incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason reason);
 
     void pushZealSelectedObjects();

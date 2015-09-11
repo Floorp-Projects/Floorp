@@ -465,6 +465,13 @@ DecodedStream::IsStarted() const
   return mStartTime.isSome();
 }
 
+bool
+DecodedStream::IsPlaying() const
+{
+  AssertOwnerThread();
+  return IsStarted() && mPlaying;
+}
+
 void
 DecodedStream::DestroyData(UniquePtr<DecodedStreamData> aData)
 {

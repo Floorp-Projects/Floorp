@@ -390,12 +390,12 @@ public:
     aCores_J = Joules(mPkes->pp0_energy - mPrevPp0Ticks, joulesPerTick);
     aGpu_J   = mIsGpuSupported
              ? Joules(mPkes->pp1_energy - mPrevPp1Ticks, joulesPerTick)
-             : -kUnsupported_j;
+             : kUnsupported_j;
     aRam_J   = mIsRamSupported
              ? Joules(mPkes->ddr_energy - mPrevDdrTicks,
                       mHasRamUnitsQuirk ? kQuirkyRamJoulesPerTick
                                         : joulesPerTick)
-             : -kUnsupported_j;
+             : kUnsupported_j;
 
     mPrevPkgTicks = mPkes->pkg_energy;
     mPrevPp0Ticks = mPkes->pp0_energy;
@@ -472,7 +472,9 @@ public:
          &config)) {
       // Failure is allowed for optional domains.
       if (aOptional == NonOptional) {
-        Abort("failed to open file for non-optional domain '%s'", aName);
+        Abort("failed to open file for non-optional domain '%s'\n"
+              "- Is your kernel version 3.14 or later, as required? "
+              "Run |uname -r| to see.", aName);
       }
       mIsSupported = false;
       return;
@@ -501,8 +503,8 @@ public:
                           /* group_fd = */ -1, /* flags = */ 0);
     if (mFd < 0) {
       Abort("perf_event_open() failed\n"
-            "Did you run as root or "
-            "set /proc/sys/kernel/perf_event_paranoid to 0?");
+            "- Did you run as root (e.g. with |sudo|) or set\n"
+            "  /proc/sys/kernel/perf_event_paranoid to 0, as required?");
     }
 
     mPrevTicks = 0;
@@ -518,7 +520,7 @@ public:
   double EnergyEstimate()
   {
     if (!mIsSupported) {
-      return -kUnsupported_j;
+      return kUnsupported_j;
     }
 
     uint64_t thisTicks;

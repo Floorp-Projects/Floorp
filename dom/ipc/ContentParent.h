@@ -201,7 +201,7 @@ public:
                                             bool aRunInGlobalScope) override;
     virtual bool DoSendAsyncMessage(JSContext* aCx,
                                     const nsAString& aMessage,
-                                    StructuredCloneIPCHelper& aHelper,
+                                    StructuredCloneData& aData,
                                     JS::Handle<JSObject *> aCpows,
                                     nsIPrincipal* aPrincipal) override;
     virtual bool CheckPermission(const nsAString& aPermission) override;
@@ -591,7 +591,7 @@ private:
                                                InfallibleTArray<nsString>* dictionaries,
                                                ClipboardCapabilities* clipboardCaps,
                                                DomainPolicyClone* domainPolicy,
-                                               StructuredCloneIPCHelper* initialData) override;
+                                               StructuredCloneData* initialData) override;
 
     virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) override;
 
@@ -754,12 +754,12 @@ private:
                                  const ClonedMessageData& aData,
                                  InfallibleTArray<CpowEntry>&& aCpows,
                                  const IPC::Principal& aPrincipal,
-                                 nsTArray<StructuredCloneIPCHelper>* aRetvals) override;
+                                 nsTArray<StructuredCloneData>* aRetvals) override;
     virtual bool RecvRpcMessage(const nsString& aMsg,
                                 const ClonedMessageData& aData,
                                 InfallibleTArray<CpowEntry>&& aCpows,
                                 const IPC::Principal& aPrincipal,
-                                nsTArray<StructuredCloneIPCHelper>* aRetvals) override;
+                                nsTArray<StructuredCloneData>* aRetvals) override;
     virtual bool RecvAsyncMessage(const nsString& aMsg,
                                   const ClonedMessageData& aData,
                                   InfallibleTArray<CpowEntry>&& aCpows,
