@@ -1203,7 +1203,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void addPtr(Register src, Register dest);
     void addPtr(const Address& src, Register dest);
-    void not32(Register reg);
 
     void move32(Imm32 imm, Register dest);
     void move32(Register src, Register dest);

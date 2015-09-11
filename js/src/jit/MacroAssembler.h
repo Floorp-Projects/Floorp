@@ -669,6 +669,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     // ===============================================================
     // Logical instructions
 
+    inline void not32(Register reg) PER_SHARED_ARCH;
+
     inline void and32(Register src, Register dest) PER_SHARED_ARCH;
     inline void and32(Imm32 imm, Register dest) PER_SHARED_ARCH;
     inline void and32(Imm32 imm, Register src, Register dest) DEFINED_ON(arm64);
