@@ -75,9 +75,11 @@ SurfaceDescriptorX11::SurfaceDescriptorX11(gfxXlibSurface* aSurf,
     mFormat = cairo_xlib_surface_get_visual(aSurf->CairoSurface())->visualid;
   }
 
+#ifdef GL_PROVIDER_GLX
   if (aForwardGLX) {
     mGLXPixmap = aSurf->GetGLXPixmap();
   }
+#endif
 }
 
 SurfaceDescriptorX11::SurfaceDescriptorX11(Drawable aDrawable, XID aFormatID,
