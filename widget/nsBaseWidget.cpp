@@ -873,23 +873,6 @@ nsBaseWidget::CreateRootContentController()
   return controller.forget();
 }
 
-class ChromeProcessSetAllowedTouchBehaviorCallback : public SetAllowedTouchBehaviorCallback {
-public:
-  explicit ChromeProcessSetAllowedTouchBehaviorCallback(APZCTreeManager* aTreeManager)
-    : mTreeManager(aTreeManager)
-  {}
-
-  void Run(uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aFlags) const override {
-    MOZ_ASSERT(NS_IsMainThread());
-    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
-        mTreeManager.get(), &APZCTreeManager::SetAllowedTouchBehavior,
-        aInputBlockId, aFlags));
-  }
-
-private:
-  nsRefPtr<APZCTreeManager> mTreeManager;
-};
-
 class ChromeProcessContentReceivedInputBlockCallback : public ContentReceivedInputBlockCallback {
 public:
   explicit ChromeProcessContentReceivedInputBlockCallback(APZCTreeManager* aTreeManager)
@@ -916,7 +899,16 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
   mAPZC->SetDPI(GetDPI());
   mAPZEventState = new APZEventState(this,
       new ChromeProcessContentReceivedInputBlockCallback(mAPZC));
-  mSetAllowedTouchBehaviorCallback = new ChromeProcessSetAllowedTouchBehaviorCallback(mAPZC);
+
+  nsRefPtr<APZCTreeManager> treeManager = mAPZC;  // for capture by the lambda
+  mSetAllowedTouchBehaviorCallback = [treeManager](uint64_t aInputBlockId,
+                                                   const nsTArray<TouchBehaviorFlags>& aFlags)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+        treeManager.get(), &APZCTreeManager::SetAllowedTouchBehavior,
+        aInputBlockId, aFlags));
+  };
 
   nsRefPtr<GeckoContentController> controller = CreateRootContentController();
   if (controller) {

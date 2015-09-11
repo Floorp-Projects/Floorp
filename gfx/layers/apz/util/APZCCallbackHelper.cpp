@@ -787,13 +787,13 @@ APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
         nsIWidget* aWidget,
         const WidgetTouchEvent& aEvent,
         uint64_t aInputBlockId,
-        const nsRefPtr<SetAllowedTouchBehaviorCallback>& aCallback)
+        const SetAllowedTouchBehaviorCallback& aCallback)
 {
   nsTArray<TouchBehaviorFlags> flags;
   for (uint32_t i = 0; i < aEvent.touches.Length(); i++) {
     flags.AppendElement(widget::ContentHelper::GetAllowedTouchBehavior(aWidget, aEvent.touches[i]->mRefPoint));
   }
-  aCallback->Run(aInputBlockId, flags);
+  aCallback(aInputBlockId, flags);
 }
 
 void
