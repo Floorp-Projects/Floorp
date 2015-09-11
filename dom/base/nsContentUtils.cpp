@@ -7908,6 +7908,7 @@ nsContentUtils::InternalContentPolicyTypeToExternal(nsContentPolicyType aType)
   case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
   case nsIContentPolicy::TYPE_INTERNAL_WORKER:
   case nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER:
+  case nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER:
     return nsIContentPolicy::TYPE_SCRIPT;
 
   case nsIContentPolicy::TYPE_INTERNAL_EMBED:
@@ -7929,6 +7930,22 @@ nsContentUtils::InternalContentPolicyTypeToExternal(nsContentPolicyType aType)
 
   default:
     return aType;
+  }
+}
+
+/* static */
+nsContentPolicyType
+nsContentUtils::InternalContentPolicyTypeToExternalOrScript(nsContentPolicyType aType)
+{
+  switch (aType) {
+  case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
+  case nsIContentPolicy::TYPE_INTERNAL_WORKER:
+  case nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER:
+  case nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER:
+    return aType;
+
+  default:
+    return InternalContentPolicyTypeToExternal(aType);
   }
 }
 

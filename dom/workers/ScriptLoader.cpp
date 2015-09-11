@@ -120,21 +120,18 @@ ChannelFromScriptURL(nsIPrincipal* principal,
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
-  // If we're part of a document then check the content load policy.
-  if (parentDoc) {
-    int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(aContentPolicyType, uri,
-                                   principal, parentDoc,
-                                   NS_LITERAL_CSTRING("text/javascript"),
-                                   nullptr, &shouldLoad,
-                                   nsContentUtils::GetContentPolicy(),
-                                   secMan);
-    if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
-      if (NS_FAILED(rv) || shouldLoad != nsIContentPolicy::REJECT_TYPE) {
-        return rv = NS_ERROR_CONTENT_BLOCKED;
-      }
-      return rv = NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
+  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(aContentPolicyType, uri,
+                                 principal, parentDoc,
+                                 NS_LITERAL_CSTRING("text/javascript"),
+                                 nullptr, &shouldLoad,
+                                 nsContentUtils::GetContentPolicy(),
+                                 secMan);
+  if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
+    if (NS_FAILED(rv) || shouldLoad != nsIContentPolicy::REJECT_TYPE) {
+      return rv = NS_ERROR_CONTENT_BLOCKED;
     }
+    return rv = NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
   }
 
   if (aWorkerScriptType == DebuggerScript) {

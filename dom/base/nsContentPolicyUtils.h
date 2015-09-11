@@ -126,6 +126,7 @@ NS_CP_ContentTypeName(uint32_t contentType)
     CASE_RETURN( TYPE_INTERNAL_TRACK          );
     CASE_RETURN( TYPE_INTERNAL_XMLHTTPREQUEST );
     CASE_RETURN( TYPE_INTERNAL_EVENTSOURCE    );
+    CASE_RETURN( TYPE_INTERNAL_SERVICE_WORKER );
    default:
     return "<Unknown Type>";
   }
