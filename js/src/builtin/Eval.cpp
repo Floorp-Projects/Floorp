@@ -183,7 +183,7 @@ ParseEvalStringAsJSON(JSContext* cx, const mozilla::Range<const CharT> chars, Mu
                      ? chars
                      : mozilla::Range<const CharT>(chars.start().get() + 1U, len - 2);
 
-    Rooted<JSONParser<CharT>> parser(cx, JSONParser<CharT>(cx, jsonChars, JSONParserBase::NoError));
+    JSONParser<CharT> parser(cx, jsonChars, JSONParserBase::NoError);
     if (!parser.parse(rval))
         return EvalJSON_Failure;
 
