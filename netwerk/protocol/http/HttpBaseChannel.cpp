@@ -80,6 +80,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mForceNoIntercept(false)
   , mResponseCouldBeSynthesized(false)
   , mSuspendCount(0)
+  , mInitialRwin(0)
   , mProxyResolveFlags(0)
   , mProxyURI(nullptr)
   , mContentDispositionHint(UINT32_MAX)
@@ -2052,6 +2053,24 @@ NS_IMETHODIMP
 HttpBaseChannel::SetResponseTimeoutEnabled(bool aEnable)
 {
   mResponseTimeoutEnabled = aEnable;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetInitialRwin(uint32_t *aRwin)
+{
+  if (NS_WARN_IF(!aRwin)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aRwin = mInitialRwin;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetInitialRwin(uint32_t aRwin)
+{
+  ENSURE_CALLED_BEFORE_CONNECT();
+  mInitialRwin = aRwin;
   return NS_OK;
 }
 
