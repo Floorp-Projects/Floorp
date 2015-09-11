@@ -108,6 +108,18 @@ MacroAssembler::xor32(Imm32 imm, Register dest)
     Eor(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
 }
 
+void
+MacroAssembler::xorPtr(Register src, Register dest)
+{
+    Eor(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
+}
+
+void
+MacroAssembler::xorPtr(Imm32 imm, Register dest)
+{
+    Eor(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
