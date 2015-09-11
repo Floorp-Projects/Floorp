@@ -829,7 +829,7 @@ NON_IDL_EVENT(gamepadaxismove,
               EventNameType_None,
               eBasicEventClass)
 NON_IDL_EVENT(gamepadconnected,
-              NS_GAMEPAD_CONNECTED,
+              eGamepadConnected,
               EventNameType_None,
               eBasicEventClass)
 NON_IDL_EVENT(gamepaddisconnected,
