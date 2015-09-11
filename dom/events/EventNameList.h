@@ -817,7 +817,7 @@ NON_IDL_EVENT(MozScrolledAreaChanged,
 
 #ifdef MOZ_GAMEPAD
 NON_IDL_EVENT(gamepadbuttondown,
-              NS_GAMEPAD_BUTTONDOWN,
+              eGamepadButtonDown,
               EventNameType_None,
               eBasicEventClass)
 NON_IDL_EVENT(gamepadbuttonup,
