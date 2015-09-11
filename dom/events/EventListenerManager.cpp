@@ -318,7 +318,7 @@ EventListenerManager::AddEventListenerInternal(
           kAllMutationBits : MutationBitForEventType(aEventMessage));
     }
   } else if (aTypeAtom == nsGkAtoms::ondeviceorientation) {
-    EnableDevice(NS_DEVICE_ORIENTATION);
+    EnableDevice(eDeviceOrientation);
   } else if (aTypeAtom == nsGkAtoms::ondeviceproximity || aTypeAtom == nsGkAtoms::onuserproximity) {
     EnableDevice(NS_DEVICE_PROXIMITY);
   } else if (aTypeAtom == nsGkAtoms::ondevicelight) {
@@ -419,7 +419,7 @@ bool
 EventListenerManager::IsDeviceType(EventMessage aEventMessage)
 {
   switch (aEventMessage) {
-    case NS_DEVICE_ORIENTATION:
+    case eDeviceOrientation:
     case NS_DEVICE_MOTION:
     case NS_DEVICE_LIGHT:
     case NS_DEVICE_PROXIMITY:
@@ -440,7 +440,7 @@ EventListenerManager::EnableDevice(EventMessage aEventMessage)
   }
 
   switch (aEventMessage) {
-    case NS_DEVICE_ORIENTATION:
+    case eDeviceOrientation:
       window->EnableDeviceSensor(SENSOR_ORIENTATION);
       break;
     case NS_DEVICE_PROXIMITY:
@@ -470,7 +470,7 @@ EventListenerManager::DisableDevice(EventMessage aEventMessage)
   }
 
   switch (aEventMessage) {
-    case NS_DEVICE_ORIENTATION:
+    case eDeviceOrientation:
       window->DisableDeviceSensor(SENSOR_ORIENTATION);
       break;
     case NS_DEVICE_MOTION:
