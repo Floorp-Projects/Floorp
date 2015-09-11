@@ -51,6 +51,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
                                            unsigned int minRSABits,
                                            ValidityCheckingMode validityCheckingMode,
                                            SignatureDigestOption signatureDigestOption,
+                                           CertVerifier::SHA1Mode sha1Mode,
                               /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo,
                               /*optional*/ const char* hostname,
                               /*optional*/ ScopedCERTCertList* builtChain)
@@ -64,6 +65,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
   , mMinRSABits(minRSABits)
   , mValidityCheckingMode(validityCheckingMode)
   , mSignatureDigestOption(signatureDigestOption)
+  , mSHA1Mode(sha1Mode)
   , mPinningTelemetryInfo(pinningTelemetryInfo)
   , mHostname(hostname)
   , mBuiltChain(builtChain)
@@ -813,22 +815,44 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
 
 Result
 NSSCertDBTrustDomain::CheckSignatureDigestAlgorithm(DigestAlgorithm aAlg,
-                                                    EndEntityOrCA endEntityOrCA)
+                                                    EndEntityOrCA endEntityOrCA,
+                                                    Time notBefore)
 {
+  // (new Date("2016-01-01T00:00:00Z")).getTime() / 1000
+  static const Time JANUARY_FIRST_2016 = TimeFromEpochInSeconds(1451606400);
+
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
           ("NSSCertDBTrustDomain: CheckSignatureDigestAlgorithm"));
   if (aAlg == DigestAlgorithm::sha1) {
+    // First check based on SHA1Mode
+    switch (mSHA1Mode) {
+      case CertVerifier::SHA1Mode::Forbidden:
+        MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("SHA-1 certificate rejected"));
+        return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
+      case CertVerifier::SHA1Mode::OnlyBefore2016:
+        if (JANUARY_FIRST_2016 <= notBefore) {
+          MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("Post-2015 SHA-1 certificate rejected"));
+          return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
+        }
+        break;
+      case CertVerifier::SHA1Mode::Allowed:
+      default:
+        break;
+    }
+
+    // Then check the signatureDigestOption values
     if (mSignatureDigestOption == DisableSHA1Everywhere) {
+      MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("SHA-1 certificate rejected"));
       return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
     }
 
     if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
-    MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("CA cert is SHA1"));
+      MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("CA cert is SHA-1"));
       return mSignatureDigestOption == DisableSHA1ForCA
              ? Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED
              : Success;
     } else {
-    MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("EE cert is SHA1"));
+      MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("EE cert is SHA-1"));
       return mSignatureDigestOption == DisableSHA1ForEE
              ? Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED
              : Success;

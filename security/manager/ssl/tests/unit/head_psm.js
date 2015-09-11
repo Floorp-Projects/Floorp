@@ -155,6 +155,20 @@ function getXPCOMStatusFromNSS(statusNSS) {
 
 // certdb implements nsIX509CertDB. See nsIX509CertDB.idl for documentation.
 // In particular, hostname is optional.
+function checkCertErrorGenericAtTime(certdb, cert, expectedError, usage, time,
+                                     /*optional*/ hasEVPolicy,
+                                     /*optional*/ hostname) {
+  do_print(`cert cn=${cert.commonName}`);
+  do_print(`cert issuer cn=${cert.issuerCommonName}`);
+  let verifiedChain = {};
+  let error = certdb.verifyCertAtTime(cert, usage, NO_FLAGS, hostname, time,
+                                      verifiedChain, hasEVPolicy || {});
+  Assert.equal(error, expectedError,
+               "Actual and expected error should match");
+}
+
+// certdb implements nsIX509CertDB. See nsIX509CertDB.idl for documentation.
+// In particular, hostname is optional.
 function checkCertErrorGeneric(certdb, cert, expectedError, usage,
                                /*optional*/ hasEVPolicy,
                                /*optional*/ hostname) {
