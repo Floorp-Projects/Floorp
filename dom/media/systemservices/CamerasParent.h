@@ -117,6 +117,7 @@ protected:
   void CloseEngines();
   bool EnsureInitialized(int aEngine);
   void DoShutdown();
+  void StopIPC();
 
   EngineHelper mEngines[CaptureEngine::MaxEngine];
   nsTArray<CallbackHelper*> mCallbacks;
