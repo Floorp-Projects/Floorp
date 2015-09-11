@@ -383,7 +383,7 @@ EventListenerManager::AddEventListenerInternal(
       window->SetHasMouseEnterLeaveEventListeners();
     }
 #ifdef MOZ_GAMEPAD
-  } else if (aEventMessage >= NS_GAMEPAD_START &&
+  } else if (aEventMessage >= eGamepadEventFirst &&
              aEventMessage <= NS_GAMEPAD_END) {
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (window) {
