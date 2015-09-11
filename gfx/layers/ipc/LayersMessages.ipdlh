@@ -319,7 +319,6 @@ struct TexturedTileDescriptor {
   MaybeTexture textureOnWhite;
   IntRect updateRect;
   TileLock sharedLock;
-  bool wasPlaceholder;
 };
 
 struct PlaceholderTileDescriptor {
@@ -342,7 +341,6 @@ struct SurfaceDescriptorTiles {
   float       resolution;
   float       frameXResolution;
   float       frameYResolution;
-  bool        isProgressive;
 };
 
 struct OpUseTiledLayerBuffer {

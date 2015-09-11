@@ -179,16 +179,5 @@ PaintedLayerComposite::PrintInfo(std::stringstream& aStream, const char* aPrefix
   }
 }
 
-const nsIntRegion
-PaintedLayerComposite::GetInvalidRegion()
-{
-  nsIntRegion region = mInvalidRegion;
-  if (mBuffer) {
-    mBuffer->InvalidateForAnimation(region);
-  }
-  return region;
-}
-
-
 } // namespace layers
 } // namespace mozilla

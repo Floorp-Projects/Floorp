@@ -352,8 +352,6 @@ private:
   DECL_GFX_PREF(Once, "layers.tiled-drawtarget.enabled",       TiledDrawTargetEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.tiles.adjust",                   LayersTilesAdjust, bool, true);
   DECL_GFX_PREF(Once, "layers.tiles.edge-padding",             TileEdgePaddingEnabled, bool, true);
-  DECL_GFX_PREF(Live, "layers.tiles.fade-in.enabled",          LayerTileFadeInEnabled, bool, false);
-  DECL_GFX_PREF(Live, "layers.tiles.fade-in.duration-ms",      LayerTileFadeInDuration, uint32_t, 100);
   DECL_GFX_PREF(Live, "layers.transaction.warning-ms",         LayerTransactionWarning, uint32_t, 200);
   DECL_GFX_PREF(Once, "layers.uniformity-info",                UniformityInfo, bool, false);
   DECL_GFX_PREF(Once, "layers.use-image-offscreen-surfaces",   UseImageOffscreenSurfaces, bool, false);

@@ -1593,7 +1593,7 @@ public:
    * Returns the current area of the layer (in layer-space coordinates)
    * marked as needed to be recomposited.
    */
-  const virtual nsIntRegion GetInvalidRegion() { return mInvalidRegion; }
+  const nsIntRegion& GetInvalidRegion() { return mInvalidRegion; }
   const void SetInvalidRegion(const nsIntRegion& aRect) { mInvalidRegion = aRect; }
 
   /**
