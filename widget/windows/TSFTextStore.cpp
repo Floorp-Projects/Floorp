@@ -1798,11 +1798,11 @@ TSFTextStore::FlushPendingActions()
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
                ("TSF: 0x%p   TSFTextStore::FlushPendingActions(), "
                 "dispatching compositioncommit event...", this));
-        WidgetCompositionEvent compositionCommit(true, NS_COMPOSITION_COMMIT,
+        WidgetCompositionEvent compositionCommit(true, eCompositionCommit,
                                                  mWidget);
         mWidget->InitEvent(compositionCommit);
         compositionCommit.mData = action.mData;
-        // When the NS_COMPOSITION_COMMIT causes a DOM text event,
+        // When the eCompositionCommit causes a DOM text event,
         // the IME will be notified of NOTIFY_IME_OF_COMPOSITION_UPDATE.  In
         // such case, we should not clear the locked content until we notify
         // the IME of the composition update.

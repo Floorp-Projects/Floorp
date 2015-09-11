@@ -435,20 +435,20 @@ public:
   bool CausesDOMTextEvent() const
   {
     return mMessage == eCompositionChange ||
-           mMessage == NS_COMPOSITION_COMMIT ||
+           mMessage == eCompositionCommit ||
            mMessage == eCompositionCommitAsIs;
   }
 
   bool CausesDOMCompositionEndEvent() const
   {
     return mMessage == eCompositionEnd ||
-           mMessage == NS_COMPOSITION_COMMIT ||
+           mMessage == eCompositionCommit ||
            mMessage == eCompositionCommitAsIs;
   }
 
   bool IsFollowedByCompositionEnd() const
   {
-    return mOriginalMessage == NS_COMPOSITION_COMMIT ||
+    return mOriginalMessage == eCompositionCommit ||
            mOriginalMessage == eCompositionCommitAsIs;
   }
 };

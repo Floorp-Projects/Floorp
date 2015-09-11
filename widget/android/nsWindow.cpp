@@ -2053,7 +2053,7 @@ nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
                 nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
                 WidgetCompositionEvent compositionCommitEvent(
-                                         true, NS_COMPOSITION_COMMIT, this);
+                                         true, eCompositionCommit, this);
                 InitEvent(compositionCommitEvent, nullptr);
                 // Dispatch it with empty mData value for canceling the
                 // composition

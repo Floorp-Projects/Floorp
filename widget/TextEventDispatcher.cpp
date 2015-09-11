@@ -268,11 +268,11 @@ TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
   // End current composition and make this free for other IMEs.
   mIsComposing = false;
 
-  EventMessage message = aCommitString ? NS_COMPOSITION_COMMIT :
+  EventMessage message = aCommitString ? eCompositionCommit :
                                          eCompositionCommitAsIs;
   WidgetCompositionEvent compositionCommitEvent(true, message, widget);
   InitEvent(compositionCommitEvent);
-  if (message == NS_COMPOSITION_COMMIT) {
+  if (message == eCompositionCommit) {
     compositionCommitEvent.mData = *aCommitString;
   }
   rv = DispatchEvent(widget, compositionCommitEvent, aStatus);

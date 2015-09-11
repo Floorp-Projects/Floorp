@@ -248,9 +248,9 @@ TextComposition::DispatchCompositionEvent(
     } else {
       aCompositionEvent->mData = mLastData;
     }
-  } else if (aCompositionEvent->mMessage == NS_COMPOSITION_COMMIT) {
+  } else if (aCompositionEvent->mMessage == eCompositionCommit) {
     NS_ASSERTION(!aCompositionEvent->mRanges,
-                 "mRanges of NS_COMPOSITION_COMMIT should be null");
+                 "mRanges of eCompositionCommit should be null");
     aCompositionEvent->mRanges = nullptr;
   }
 
@@ -287,7 +287,7 @@ TextComposition::DispatchCompositionEvent(
       case eCompositionEnd:
       case eCompositionChange:
       case eCompositionCommitAsIs:
-      case NS_COMPOSITION_COMMIT:
+      case eCompositionCommit:
         committingData = &aCompositionEvent->mData;
         break;
       default:
@@ -493,7 +493,7 @@ TextComposition::RequestToCommit(nsIWidget* aWidget, bool aDiscard)
     DispatchCompositionEventRunnable(eCompositionCommitAsIs, EmptyString(),
                                      true);
   } else {
-    DispatchCompositionEventRunnable(NS_COMPOSITION_COMMIT, data, true);
+    DispatchCompositionEventRunnable(eCompositionCommit, data, true);
   }
   return NS_OK;
 }
@@ -627,7 +627,7 @@ TextComposition::CompositionEventDispatcher::Run()
     }
     case eCompositionChange:
     case eCompositionCommitAsIs:
-    case NS_COMPOSITION_COMMIT: {
+    case eCompositionCommit: {
       WidgetCompositionEvent compEvent(true, mEventMessage, widget);
       if (mEventMessage != eCompositionCommitAsIs) {
         compEvent.mData = mData;

@@ -141,7 +141,7 @@ WidgetEvent::HasIMEEventMessage() const
     case eCompositionUpdate:
     case eCompositionChange:
     case eCompositionCommitAsIs:
-    case NS_COMPOSITION_COMMIT:
+    case eCompositionCommit:
       return true;
     default:
       return false;
