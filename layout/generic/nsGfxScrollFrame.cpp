@@ -3753,7 +3753,7 @@ ScrollFrameHelper::FireScrollPortEvent()
   InternalScrollPortEvent event(true,
     (orient == InternalScrollPortEvent::horizontal ? mHorizontalOverflow :
                                                      mVerticalOverflow) ?
-    eScrollPortOverflow : NS_SCROLLPORT_UNDERFLOW, nullptr);
+    eScrollPortOverflow : eScrollPortUnderflow, nullptr);
   event.orient = orient;
   return EventDispatcher::Dispatch(mOuter->GetContent(),
                                    mOuter->PresContext(), &event);
