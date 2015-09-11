@@ -36,7 +36,7 @@
                android:src="@drawable/url_bar_translating_edge"
                android:scaleType="fitXY"/>
 
-    <org.mozilla.gecko.widget.themed.ThemedFrameLayout
+    <org.mozilla.gecko.toolbar.ShapedButtonFrameLayout
             android:id="@+id/menu"
             style="@style/UrlBar.ImageButton"
             android:layout_alignParentRight="true"
@@ -54,7 +54,7 @@
                 android:src="@drawable/menu"
                 android:tint="@color/tabs_tray_icon_grey"/>
 
-    </org.mozilla.gecko.widget.themed.ThemedFrameLayout>
+    </org.mozilla.gecko.toolbar.ShapedButtonFrameLayout>
 
     <org.mozilla.gecko.toolbar.PhoneTabsButton android:id="@+id/tabs"
                                                style="@style/UrlBar.ImageButton"
