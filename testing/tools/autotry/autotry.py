@@ -18,26 +18,28 @@ import ConfigParser
 def arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('paths', nargs='*', help='Paths to search for tests to run on try.')
-    parser.add_argument('-p', dest='platforms', action="append",
-                        help='Platforms to run. (required if not found in the environment)')
-    parser.add_argument('-u', dest='tests', action="append",
-                        help='Test suites to run in their entirety')
     parser.add_argument('-b', dest='builds', default='do',
-                        help='Build types to run (d for debug, o for optimized)')
+                        help='Build types to run (d for debug, o for optimized).')
+    parser.add_argument('-p', dest='platforms', action="append",
+                        help='Platforms to run (required if not found in the environment).')
+    parser.add_argument('-u', dest='tests', action="append",
+                        help='Test suites to run in their entirety.')
+    parser.add_argument('-t', dest="talos", action="append",
+                        help='Talos suites to run.')
     parser.add_argument('--tag', dest='tags', action='append',
-                        help='Restrict tests to the given tag (may be specified multiple times)')
+                        help='Restrict tests to the given tag (may be specified multiple times).')
     parser.add_argument('--and', action='store_true', dest="intersection",
-                        help='When -u and paths are supplied run only the intersection of the tests specified by the two arguments')
+                        help='When -u and paths are supplied run only the intersection of the tests specified by the two arguments.')
     parser.add_argument('--no-push', dest='push', action='store_false',
                         help='Do not push to try as a result of running this command (if '
                         'specified this command will only print calculated try '
                         'syntax and selection info).')
     parser.add_argument('--save', dest="save", action='store',
-                        help="Save the command line arguments for future use with --preset")
+                        help="Save the command line arguments for future use with --preset.")
     parser.add_argument('--preset', dest="load", action='store',
-                        help="Load a saved set of arguments. Additional arguments will override saved ones")
+                        help="Load a saved set of arguments. Additional arguments will override saved ones.")
     parser.add_argument('extra_args', nargs=argparse.REMAINDER,
-                        help='Extra arguments to put in the try push')
+                        help='Extra arguments to put in the try push.')
     parser.add_argument('-v', "--verbose", dest='verbose', action='store_true', default=False,
                         help='Print detailed information about the resulting test selection '
                         'and commands performed.')
@@ -244,8 +246,8 @@ class AutoTry(object):
                 rv[item] = paths_by_flavor[item].copy()
         return rv
 
-    def calc_try_syntax(self, platforms, tests, builds, paths_by_flavor, tags, extra_args,
-                        intersection):
+    def calc_try_syntax(self, platforms, tests, talos, builds, paths_by_flavor, tags,
+                        extra_args, intersection):
         parts = ["try:", "-b", builds, "-p", ",".join(platforms)]
 
         suites = tests if not intersection else {}
@@ -263,7 +265,10 @@ class AutoTry(object):
 
         parts.append("-u")
         parts.append(",".join("%s%s" % (k, "[%s]" % ",".join(v) if v else "")
-                              for k,v in sorted(suites.items())))
+                              for k,v in sorted(suites.items())) if suites else "none")
+
+        parts.append("-t")
+        parts.append(",".join(talos) if talos else "none")
 
         if tags:
             parts.append(' '.join('--tag %s' % t for t in tags))
