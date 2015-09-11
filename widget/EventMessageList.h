@@ -420,7 +420,7 @@ NS_EVENT_MESSAGE(eGamepadButtonUp,       eGamepadEventFirst + 1)
 NS_EVENT_MESSAGE(eGamepadAxisMove,       eGamepadEventFirst + 2)
 NS_EVENT_MESSAGE(eGamepadConnected,      eGamepadEventFirst + 3)
 NS_EVENT_MESSAGE(eGamepadDisconnected,   eGamepadEventFirst + 4)
-NS_EVENT_MESSAGE(NS_GAMEPAD_END,         eGamepadDisconnected)
+NS_EVENT_MESSAGE(eGamepadEventLast,      eGamepadDisconnected)
 #endif
 
 // input and beforeinput events.
