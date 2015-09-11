@@ -39,7 +39,7 @@ of the License or (at your option) any later version.
 #include "inc/Slot.h"
 #include "inc/Position.h"
 #include "inc/List.h"
-#include "inc/Bidi.h"
+//#include "inc/Bidi.h"
 #include "inc/Collider.h"
 
 #define MAX_SEG_GROWTH_FACTOR  256
@@ -48,7 +48,7 @@ namespace graphite2 {
 
 typedef Vector<Features>        FeatureList;
 typedef Vector<Slot *>          SlotRope;
-typedef Vector<int16 *>        AttributeRope;
+typedef Vector<int16 *>         AttributeRope;
 typedef Vector<SlotJustify *>   JustifyRope;
 
 #ifndef GRAPHITE2_NSEGCACHE
@@ -101,7 +101,6 @@ public:
     unsigned int charInfoCount() const { return m_numCharinfo; }
     const CharInfo *charinfo(unsigned int index) const { return index < m_numCharinfo ? m_charinfo + index : NULL; }
     CharInfo *charinfo(unsigned int index) { return index < m_numCharinfo ? m_charinfo + index : NULL; }
-    int8 dir() const { return m_dir; }
 
     Segment(unsigned int numchars, const Face* face, uint32 script, int dir);
     ~Segment();
@@ -124,7 +123,7 @@ public:
     void freeSlot(Slot *);
     SlotJustify *newJustify();
     void freeJustify(SlotJustify *aJustify);
-    Position positionSlots(const Font *font=0, Slot *first=0, Slot *last=0, bool isFinal = true);
+    Position positionSlots(const Font *font=0, Slot *first=0, Slot *last=0, bool isRtl = false, bool isFinal = true);
     void associateChars(int offset, int num);
     void linkClusters(Slot *first, Slot *last);
     uint16 getClassGlyph(uint16 cid, uint16 offset) const { return m_silf->getClassGlyph(cid, offset); }
@@ -138,11 +137,13 @@ public:
             if (val > pFR->maxVal()) val = pFR->maxVal();
             pFR->applyValToFeature(val, m_feats[index]);
         } }
+    int8 dir() const { return m_dir; }
     void dir(int8 val) { m_dir = val; }
+    bool currdir() const { return ((m_dir >> 6) ^ m_dir) & 1; }
     unsigned int passBits() const { return m_passBits; }
     void mergePassBits(const unsigned int val) { m_passBits &= val; }
     int16 glyphAttr(uint16 gid, uint16 gattr) const { const GlyphFace * p = m_face->glyphs().glyphSafe(gid); return p ? p->attrs()[gattr] : 0; }
-    int32 getGlyphMetric(Slot *iSlot, uint8 metric, uint8 attrLevel) const;
+    int32 getGlyphMetric(Slot *iSlot, uint8 metric, uint8 attrLevel, bool rtl) const;
     float glyphAdvance(uint16 gid) const { return m_face->glyphs().glyph(gid)->theAdvance().x; }
     const Rect &theGlyphBBoxTemporary(uint16 gid) const { return m_face->glyphs().glyph(gid)->theBBox(); }   //warning value may become invalid when another glyph is accessed
     Slot *findRoot(Slot *is) const { return is->attachedTo() ? findRoot(is->attachedTo()) : is; }
@@ -150,10 +151,13 @@ public:
     int defaultOriginal() const { return m_defaultOriginal; }
     const Face * getFace() const { return m_face; }
     const Features & getFeatures(unsigned int /*charIndex*/) { assert(m_feats.size() == 1); return m_feats[0]; }
-    void bidiPass(uint8 aBidi, int paradir, uint8 aMirror);
+    void bidiPass(int paradir, uint8 aMirror);
+    int8 getSlotBidiClass(Slot *s) const;
+    void doMirror(uint16 aMirror);
     Slot *addLineEnd(Slot *nSlot);
     void delLineEnd(Slot *s);
     bool hasJustification() const { return m_justifies.size() != 0; }
+    void reverseSlots();
 
     bool isWhitespace(const int cid) const;
     bool hasCollisionInfo() const { return m_collisions != 0; }
@@ -163,7 +167,7 @@ public:
 
 public:       //only used by: GrSegment* makeAndInitialize(const GrFont *font, const GrFace *face, uint32 script, const FeaturesHandle& pFeats/*must not be IsNull*/, encform enc, const void* pStart, size_t nChars, int dir);
     bool read_text(const Face *face, const Features* pFeats/*must not be NULL*/, gr_encform enc, const void*pStart, size_t nChars);
-    void finalise(const Font *font);
+    void finalise(const Font *font, bool reverse=false);
     float justify(Slot *pSlot, const Font *font, float width, enum justFlags flags, Slot *pFirst, Slot *pLast);
     bool initCollisions();
   
@@ -190,24 +194,34 @@ private:
     uint8           m_flags;            // General purpose flags
 };
 
-
+inline
+int8 Segment::getSlotBidiClass(Slot *s) const
+{
+    int8 res = s->getBidiClass();
+    if (res != -1) return res;
+    res = glyphAttr(s->gid(), m_silf->aBidi());
+    s->setBidiClass(res);
+    return res;
+}
 
 inline
-void Segment::finalise(const Font *font)
+void Segment::finalise(const Font *font, bool reverse)
 {
     if (!m_first) return;
 
-    m_advance = positionSlots(font);
+    m_advance = positionSlots(font, m_first, m_last, m_silf->dir(), true);
     //associateChars(0, m_numCharinfo);
+    if (reverse && currdir() != (m_dir & 1))
+        reverseSlots();
     linkClusters(m_first, m_last);
 }
 
 inline
-int32 Segment::getGlyphMetric(Slot *iSlot, uint8 metric, uint8 attrLevel) const {
+int32 Segment::getGlyphMetric(Slot *iSlot, uint8 metric, uint8 attrLevel, bool rtl) const {
     if (attrLevel > 0)
     {
         Slot *is = findRoot(iSlot);
-        return is->clusterMetric(this, metric, attrLevel);
+        return is->clusterMetric(this, metric, attrLevel, rtl);
     }
     else
         return m_face->getGlyphMetric(iSlot->gid(), metric);

@@ -61,6 +61,7 @@ const void * direct_run(const bool          get_table_mode,
                         const byte        * data,
                         Machine::stack_t  * stack,
                         slotref         * & __map,
+                        uint8                _dir,
                         SlotMap           * __smap=0)
 {
     // We need to define and return to opcode table from within this function 
@@ -79,6 +80,7 @@ const void * direct_run(const bool          get_table_mode,
     slotref             is = *__map,
                      * map = __map,
               * const mapb = smap.begin()+smap.context();
+    uint8            dir = _dir;
     int8             flags = 0;
     
     // start the program
@@ -109,7 +111,7 @@ Machine::stack_t  Machine::run(const instr   * program,
     assert(program != 0);
     
     const stack_t *sp = static_cast<const stack_t *>(
-                direct_run(false, program, data, _stack, is, &_map));
+                direct_run(false, program, data, _stack, is, _map.dir(), &_map));
     const stack_t ret = sp == _stack+STACK_GUARD+1 ? *sp-- : 0;
     check_final_stack(sp);
     return ret;

@@ -53,9 +53,10 @@ public:
     
     bool readPass(const byte * pPass, size_t pass_length, size_t subtable_base, Face & face,
         enum passtype pt, uint32 version, Error &e);
-    bool runGraphite(vm::Machine & m, FiniteStateMachine & fsm) const;
+    bool runGraphite(vm::Machine & m, FiniteStateMachine & fsm, bool reverse) const;
     void init(Silf *silf) { m_silf = silf; }
-    byte flags() const { return m_flags; }
+    byte collisionLoops() const { return m_numCollRuns; }
+    bool reverseDir() const { return m_isReverseDir; }
 
     CLASS_NEW_DELETE
 private:
@@ -73,7 +74,7 @@ private:
     uint16  glyphToCol(const uint16 gid) const;
     bool    runFSM(FiniteStateMachine & fsm, Slot * slot) const;
     void    dumpRuleEventConsidered(const FiniteStateMachine & fsm, const RuleEntry & re) const;
-    void    dumpRuleEventOutput(const FiniteStateMachine & fsm, const Rule & r, Slot * os) const;
+    void    dumpRuleEventOutput(const FiniteStateMachine & fsm, vm::Machine & m, const Rule & r, Slot * os) const;
     void    adjustSlot(int delta, Slot * & slot_out, SlotMap &) const;
     bool    collisionShift(Segment *seg, int dir, json * const dbgout) const;
     bool    collisionKern(Segment *seg, int dir, json * const dbgout) const;
@@ -93,7 +94,8 @@ private:
     vm::Machine::Code * m_codes;
     byte              * m_progs;
 
-    byte   m_flags;
+    byte   m_numCollRuns;
+    byte   m_kernColls;
     byte   m_iMaxLoop;
     uint16 m_numGlyphs;
     uint16 m_numRules;
@@ -105,6 +107,7 @@ private:
     byte m_minPreCtxt;
     byte m_maxPreCtxt;
     byte m_colThreshold;
+    bool m_isReverseDir;
     vm::Machine::Code m_cPConstraint;
     
 private:        //defensive

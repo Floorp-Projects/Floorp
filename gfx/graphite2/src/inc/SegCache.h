@@ -263,7 +263,7 @@ private:
                     unsigned long long minAccessCount, unsigned long long oldAccessTime);
 
     uint16 m_prefixLength;
-    uint16 m_maxCachedSegLength;
+//    uint16 m_maxCachedSegLength;
     size_t m_segmentCount;
     SegCachePrefixArray m_prefixes;
     Features m_features;

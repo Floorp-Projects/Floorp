@@ -747,7 +747,7 @@ void resolveWhitespace(int baseLevel, Slot *s)
     for ( ; s; s = s->prev())
     {
         int8 cls = s->getBidiClass();
-        if (cls == WS || cls & WSflag)
+        if (cls == WS || (cls & WSflag))
             s->setBidiLevel(baseLevel);
         else if (cls != BN)
             break;
