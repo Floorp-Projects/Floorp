@@ -473,7 +473,7 @@ WINDOW_EVENT(afterprint,
              EventNameType_XUL | EventNameType_HTMLBodyOrFramesetOnly,
              eBasicEventClass)
 WINDOW_EVENT(beforeprint,
-             NS_BEFOREPRINT,
+             eBeforePrint,
              EventNameType_XUL | EventNameType_HTMLBodyOrFramesetOnly,
              eBasicEventClass)
 BEFOREUNLOAD_EVENT(beforeunload,
