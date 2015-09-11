@@ -1135,11 +1135,15 @@ var gBrowserInit = {
     });
 
     gBrowser.addEventListener("AboutTabCrashedLoad", function(event) {
+      let browser = gBrowser.getBrowserForDocument(event.target);
 #ifdef MOZ_CRASHREPORTER
-      TabCrashReporter.onAboutTabCrashedLoad(gBrowser.getBrowserForDocument(event.target), {
+      TabCrashReporter.onAboutTabCrashedLoad(browser, {
         crashedTabCount: SessionStore.crashedTabCount,
       });
 #endif
+
+      // Reset the zoom for the tabcrashed page.
+      ZoomManager.setZoomForBrowser(browser, 1);
     }, false, true);
 
     gBrowser.addEventListener("AboutTabCrashedMessage", function(event) {
