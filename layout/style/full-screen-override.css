@@ -22,14 +22,5 @@
   transform: initial !important;
   transform-style: initial !important;
   /* FIXME: do we need to worry about 'overflow'? */
+  will-change: initial !important;
 }
-
-/* XXXdholbert This '@supports' wrapper should be removed once we remove
-   support for the pref 'layout.css.will-change.enabled'. (This CSS rule should
-   then be merged with the main rule up above.)  */
-@supports (will-change: initial) {
-  *|*:-moz-full-screen-ancestor {
-    will-change: initial !important;
-  }
-}
-
