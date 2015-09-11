@@ -554,7 +554,7 @@ public:
     void PrepareForForgetSkippable() override;
     void BeginCycleCollectionCallback() override;
     void EndCycleCollectionCallback(mozilla::CycleCollectorResults& aResults) override;
-    void DispatchDeferredDeletion(bool continuation) override;
+    void DispatchDeferredDeletion(bool aContinuation, bool aPurge = false) override;
 
     void CustomGCCallback(JSGCStatus status) override;
     void CustomOutOfMemoryCallback() override;

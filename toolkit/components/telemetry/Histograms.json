@@ -575,8 +575,7 @@
     "high": "1024",
     "n_buckets": 10,
     "extended_statistics_ok": true,
-    "description": "Time(ms) to purge MADV_FREE'd heap pages.",
-    "cpp_guard": "XP_MACOSX"
+    "description": "Time(ms) to purge dirty heap pages."
   },
   "LOW_MEMORY_EVENTS_VIRTUAL": {
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
