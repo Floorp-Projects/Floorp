@@ -98,6 +98,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mContentRead(0)
     , mInvalidResponseBytesRead(0)
     , mPushedStream(nullptr)
+    , mInitialRwin(0)
     , mChunkedDecoder(nullptr)
     , mStatus(NS_OK)
     , mPriority(0)
@@ -269,6 +270,7 @@ nsHttpTransaction::Init(uint32_t caps,
         if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
         }
+        httpChannelInternal->GetInitialRwin(&mInitialRwin);
     }
 
     // create transport event sink proxy. it coalesces all events if and only
@@ -2170,6 +2172,7 @@ NS_IMETHODIMP
 nsHttpTransaction::OnOutputStreamReady(nsIAsyncOutputStream *out)
 {
     if (mConnection) {
+        mConnection->TransactionHasDataToRecv(this);
         nsresult rv = mConnection->ResumeRecv();
         if (NS_FAILED(rv))
             NS_ERROR("ResumeRecv failed");
