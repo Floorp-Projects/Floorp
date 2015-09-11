@@ -14,7 +14,31 @@ namespace jit {
 
 //{{{ check_macroassembler_style
 // ===============================================================
+// Logical instructions
 
+void
+MacroAssembler::and32(Register src, Register dest)
+{
+    andl(src, dest);
+}
+
+void
+MacroAssembler::and32(Imm32 imm, Register dest)
+{
+    andl(imm, dest);
+}
+
+void
+MacroAssembler::and32(Imm32 imm, const Address& dest)
+{
+    andl(imm, Operand(dest));
+}
+
+void
+MacroAssembler::and32(const Address& src, Register dest)
+{
+    andl(Operand(src), dest);
+}
 
 //}}} check_macroassembler_style
 // ===============================================================
