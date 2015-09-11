@@ -558,7 +558,7 @@ WINDOW_ONLY_EVENT(moznetworkupload,
                   EventNameType_None,
                   eBasicEventClass)
 WINDOW_ONLY_EVENT(moznetworkdownload,
-                  NS_NETWORK_DOWNLOAD_EVENT,
+                  eNetworkDownload,
                   EventNameType_None,
                   eBasicEventClass)
 #endif // MOZ_B2G
