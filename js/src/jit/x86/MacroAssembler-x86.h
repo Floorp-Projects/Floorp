@@ -1063,12 +1063,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void lshiftPtr(Imm32 imm, Register dest) {
         shll(imm, dest);
     }
-    void xorPtr(Imm32 imm, Register dest) {
-        xorl(imm, dest);
-    }
-    void xorPtr(Register src, Register dest) {
-        xorl(src, dest);
-    }
 
     void loadInstructionPointerAfterCall(Register dest) {
         movl(Operand(StackPointer, 0x0), dest);

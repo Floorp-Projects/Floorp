@@ -846,12 +846,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void lshiftPtr(Imm32 imm, Register dest) {
         shlq(imm, dest);
     }
-    void xorPtr(Imm32 imm, Register dest) {
-        xorq(imm, dest);
-    }
-    void xorPtr(Register src, Register dest) {
-        xorq(src, dest);
-    }
 
     void splitTag(Register src, Register dest) {
         if (src != dest)
