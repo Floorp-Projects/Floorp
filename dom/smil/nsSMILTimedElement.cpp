@@ -727,7 +727,7 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly)
               mCurrentRepeatIteration != prevRepeatIteration &&
               mCurrentRepeatIteration &&
               mSeekState == SEEK_NOT_SEEKING) {
-              FireTimeEventAsync(NS_SMIL_REPEAT,
+              FireTimeEventAsync(eSMILRepeatEvent,
                             static_cast<int32_t>(mCurrentRepeatIteration));
             }
           }
