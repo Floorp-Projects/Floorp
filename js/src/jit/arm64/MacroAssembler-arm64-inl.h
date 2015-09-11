@@ -14,7 +14,46 @@ namespace jit {
 
 //{{{ check_macroassembler_style
 // ===============================================================
+// Logical instructions
 
+void
+MacroAssembler::and32(Register src, Register dest)
+{
+    And(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(ARMRegister(src, 32)));
+}
+
+void
+MacroAssembler::and32(Imm32 imm, Register dest)
+{
+    And(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
+}
+
+void
+MacroAssembler::and32(Imm32 imm, Register src, Register dest)
+{
+    And(ARMRegister(dest, 32), ARMRegister(src, 32), Operand(imm.value));
+}
+
+void
+MacroAssembler::and32(Imm32 imm, const Address& dest)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch32 = temps.AcquireW();
+    MOZ_ASSERT(scratch32.asUnsized() != dest.base);
+    load32(dest, scratch32.asUnsized());
+    And(scratch32, scratch32, Operand(imm.value));
+    store32(scratch32.asUnsized(), dest);
+}
+
+void
+MacroAssembler::and32(const Address& src, Register dest)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch32 = temps.AcquireW();
+    MOZ_ASSERT(scratch32.asUnsized() != src.base);
+    load32(src, scratch32.asUnsized());
+    And(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(scratch32));
+}
 
 //}}} check_macroassembler_style
 // ===============================================================
