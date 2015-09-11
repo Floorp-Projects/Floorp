@@ -358,7 +358,7 @@ NS_EVENT_MESSAGE(eOpen,                 eOpenCloseEventFirst)
 NS_EVENT_MESSAGE(eDeviceEventFirst,      4900)
 NS_EVENT_MESSAGE(eDeviceOrientation,     eDeviceEventFirst)
 NS_EVENT_MESSAGE(eDeviceMotion,          eDeviceEventFirst + 1)
-NS_EVENT_MESSAGE(NS_DEVICE_PROXIMITY,    eDeviceEventFirst + 2)
+NS_EVENT_MESSAGE(eDeviceProximity,       eDeviceEventFirst + 2)
 NS_EVENT_MESSAGE(NS_USER_PROXIMITY,      eDeviceEventFirst + 3)
 NS_EVENT_MESSAGE(NS_DEVICE_LIGHT,        eDeviceEventFirst + 4)
 
