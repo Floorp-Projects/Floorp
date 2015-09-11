@@ -10,7 +10,6 @@
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/layers/Compositor.h"  // for Compositor
-#include "mozilla/layers/CompositorParent.h"  // for CompositorParent
 #include "mozilla/layers/Effects.h"     // for TexturedEffect, Effect, etc
 #include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
@@ -28,26 +27,6 @@ using namespace gfx;
 namespace layers {
 
 class Layer;
-
-float
-TileHost::GetFadeInOpacity(float aOpacity)
-{
-  TimeStamp now = TimeStamp::Now();
-  if (!gfxPrefs::LayerTileFadeInEnabled() ||
-      mFadeStart.IsNull() ||
-      now < mFadeStart)
-  {
-    return aOpacity;
-  }
-
-  float duration = gfxPrefs::LayerTileFadeInDuration();
-  float elapsed = (now - mFadeStart).ToMilliseconds();
-  if (elapsed > duration) {
-    mFadeStart = TimeStamp();
-    return aOpacity;
-  }
-  return aOpacity * (elapsed / duration);
-}
 
 TiledLayerBufferComposite::TiledLayerBufferComposite()
   : mFrameResolution()
@@ -73,21 +52,6 @@ TiledLayerBufferComposite::SetCompositor(Compositor* aCompositor)
     tile.mTextureHost->SetCompositor(aCompositor);
     if (tile.mTextureHostOnWhite) {
       tile.mTextureHostOnWhite->SetCompositor(aCompositor);
-    }
-  }
-}
-
-void
-TiledLayerBufferComposite::InvalidateForAnimation(nsIntRegion& aRegion)
-{
-  // We need to invalidate rects where we have a tile that is in the
-  // process of fading in.
-  for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
-    if (!mRetainedTiles[i].mFadeStart.IsNull()) {
-      TileIntPoint position = mTiles.TilePosition(i);
-      IntPoint offset = GetTileOffset(position);
-      nsIntRegion tileRegion = IntRect(offset, GetScaledTileSize());
-      aRegion.OrWith(tileRegion);
     }
   }
 }
@@ -269,14 +233,6 @@ public:
     }
   }
 
-  void RecycleTileFading(TileHost& aTile) {
-    for (size_t i = 0; i < mTiles.Length(); i++) {
-      if (mTiles[i].mTextureHost == aTile.mTextureHost) {
-        aTile.mFadeStart = mTiles[i].mFadeStart;
-      }
-    }
-  }
-
 protected:
   nsTArray<TileHost> mTiles;
   size_t mFirstPossibility;
@@ -354,20 +310,6 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
     // If this same tile texture existed in the old tile set then this will move the texture
     // source into our new tile.
     oldRetainedTiles.RecycleTextureSourceForTile(tile);
-
-    // If this tile is in the process of fading, we need to keep that going
-    oldRetainedTiles.RecycleTileFading(tile);
-
-    if (aTiles.isProgressive() &&
-        texturedDesc.wasPlaceholder())
-    {
-      // This is a progressive paint, and the tile used to be a placeholder.
-      // We need to begin fading it in (if enabled via layers.tiles.fade-in.enabled)
-      tile.mFadeStart = TimeStamp::Now();
-
-      aCompositor->CompositeUntil(tile.mFadeStart +
-        TimeDuration::FromMilliseconds(gfxPrefs::LayerTileFadeInDuration()));
-    }
   }
 
   // Step 3, attempt to recycle unused texture sources from the old tile set into new tiles.
@@ -545,8 +487,6 @@ TiledContentHost::RenderTile(TileHost& aTile,
     return;
   }
 
-  float opacity = aTile.GetFadeInOpacity(aOpacity);
-
   aEffectChain.mPrimaryEffect = effect;
 
   nsIntRegionRectIterator it(aScreenRegion);
@@ -559,7 +499,7 @@ TiledContentHost::RenderTile(TileHost& aTile,
                                   textureRect.y / aTextureBounds.height,
                                   textureRect.width / aTextureBounds.width,
                                   textureRect.height / aTextureBounds.height);
-    mCompositor->DrawQuad(graphicsRect, aClipRect, aEffectChain, opacity, aTransform, aVisibleRect);
+    mCompositor->DrawQuad(graphicsRect, aClipRect, aEffectChain, aOpacity, aTransform, aVisibleRect);
   }
   DiagnosticFlags flags = DiagnosticFlags::CONTENT | DiagnosticFlags::TILE;
   if (aTile.mTextureHostOnWhite) {
@@ -693,13 +633,6 @@ TiledContentHost::Dump(std::stringstream& aStream,
 {
   mTiledBuffer.Dump(aStream, aPrefix, aDumpHtml);
 }
-
-void
-TiledContentHost::InvalidateForAnimation(nsIntRegion& aRegion)
-{
-  return mTiledBuffer.InvalidateForAnimation(aRegion);
-}
-
 
 } // namespace layers
 } // namespace mozilla

@@ -275,7 +275,6 @@ struct TileClient
   RefPtr<TextureClientAllocator> mAllocator;
   gfx::IntRect mUpdateRect;
   CompositableClient* mCompositableClient;
-  bool mWasPlaceholder;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   TimeStamp        mLastUpdate;
 #endif
@@ -355,11 +354,6 @@ struct BasicTiledLayerPaintData {
   bool mPaintFinished : 1;
 
   /*
-   * Whether or not there is an async transform animation active
-   */
-  bool mHasTransformAnimation : 1;
-
-  /*
    * Initializes/clears data to prepare for paint action.
    */
   void ResetPaintData();
@@ -413,15 +407,13 @@ public:
     , mCompositableClient(aCompositableClient)
     , mLastPaintContentType(gfxContentType::COLOR)
     , mLastPaintSurfaceMode(SurfaceMode::SURFACE_OPAQUE)
-    , mWasLastPaintProgressive(false)
   {}
 
   virtual void PaintThebes(const nsIntRegion& aNewValidRegion,
                    const nsIntRegion& aPaintRegion,
                    const nsIntRegion& aDirtyRegion,
                    LayerManager::DrawPaintedLayerCallback aCallback,
-                   void* aCallbackData,
-                   bool aIsProgressive = false) = 0;
+                   void* aCallbackData) = 0;
 
   virtual bool SupportsProgressiveUpdate() = 0;
   virtual bool ProgressiveUpdate(nsIntRegion& aValidRegion,
@@ -455,8 +447,6 @@ protected:
   gfxContentType mLastPaintContentType;
   SurfaceMode mLastPaintSurfaceMode;
   CSSToParentLayerScale2D mFrameResolution;
-
-  bool mWasLastPaintProgressive;
 };
 
 class ClientMultiTiledLayerBuffer
@@ -483,8 +473,7 @@ public:
                    const nsIntRegion& aPaintRegion,
                    const nsIntRegion& aDirtyRegion,
                    LayerManager::DrawPaintedLayerCallback aCallback,
-                   void* aCallbackData,
-                   bool aIsProgressive = false) override;
+                   void* aCallbackData) override;
 
   virtual bool SupportsProgressiveUpdate() override { return true; }
   /**

@@ -113,14 +113,6 @@ public:
     CompositableHost::DumpTextureHost(aStream, mTextureHost);
   }
 
-  /**
-   * This does a linear tween of the passed opacity (which is assumed
-   * to be between 0.0 and 1.0). The duration of the fade is controlled
-   * by the 'layers.tiles.fade-in.duration-ms' preference. It is enabled
-   * via 'layers.tiles.fade-in.enabled'
-   */
-  float GetFadeInOpacity(float aOpacity);
-
   RefPtr<gfxSharedReadLock> mSharedLock;
   CompositableTextureHostRef mTextureHost;
   CompositableTextureHostRef mTextureHostOnWhite;
@@ -128,7 +120,6 @@ public:
   mutable CompositableTextureSourceRef mTextureSourceOnWhite;
   // This is not strictly necessary but makes debugging whole lot easier.
   TileIntPoint mTilePosition;
-  TimeStamp mFadeStart;
 };
 
 class TiledLayerBufferComposite
@@ -160,8 +151,6 @@ public:
   // Recycle callback for TextureHost.
   // Used when TiledContentClient is present in client side.
   static void RecycleCallback(TextureHost* textureHost, void* aClosure);
-
-  void InvalidateForAnimation(nsIntRegion& aRegion);
 
 protected:
 
@@ -277,8 +266,6 @@ public:
                     bool aDumpHtml=false) override;
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
-
-  virtual void InvalidateForAnimation(nsIntRegion& aRegion) override;
 
 private:
 
