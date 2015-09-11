@@ -17,6 +17,12 @@ namespace jit {
 // Logical instructions
 
 void
+MacroAssembler::not32(Register reg)
+{
+    ma_not(reg, reg);
+}
+
+void
 MacroAssembler::and32(Register src, Register dest)
 {
     ma_and(dest, dest, src);
