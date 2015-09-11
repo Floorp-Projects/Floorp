@@ -6933,8 +6933,8 @@ var gIdentityHandler = {
 
     // Chrome URIs however get special treatment. Some chrome URIs are
     // whitelisted to provide a positive security signal to the user.
-    let whitelist = /^about:(accounts|addons|app-manager|config|crashes|customizing|downloads|healthreport|home|license|newaddon|permissions|preferences|privatebrowsing|rights|sessionrestore|support|welcomeback)/i;
-    let isChromeUI = uri.schemeIs("about") && whitelist.test(uri.spec);
+    let whitelist = /^(?:accounts|addons|app-manager|cache|config|crashes|customizing|downloads|healthreport|home|license|newaddon|permissions|preferences|privatebrowsing|rights|sessionrestore|support|welcomeback)(?:[?#]|$)/i;
+    let isChromeUI = uri.schemeIs("about") && whitelist.test(uri.path);
     let mode = this.IDENTITY_MODE_UNKNOWN;
 
     if (isChromeUI) {
@@ -7215,11 +7215,17 @@ var gIdentityHandler = {
     // Create a channel for the sole purpose of getting the resolved URI
     // of the request to determine if it's loaded from the file system.
     let chanOptions = {uri, loadUsingSystemPrincipal: true};
-    let resolvedURI = NetUtil.newChannel(chanOptions).URI;
-    if (resolvedURI.schemeIs("jar")) {
-      // Given a URI "jar:<jar-file-uri>!/<jar-entry>"
-      // create a new URI using <jar-file-uri>!/<jar-entry>
-      resolvedURI = NetUtil.newURI(resolvedURI.path);
+    let resolvedURI;
+    try {
+      resolvedURI = NetUtil.newChannel(chanOptions).URI;
+      if (resolvedURI.schemeIs("jar")) {
+        // Given a URI "jar:<jar-file-uri>!/<jar-entry>"
+        // create a new URI using <jar-file-uri>!/<jar-entry>
+        resolvedURI = NetUtil.newURI(resolvedURI.path);
+      }
+    } catch (ex) {
+      // NetUtil's methods will throw for malformed URIs and the like
+      return false;
     }
 
     // Check the URI again after resolving.

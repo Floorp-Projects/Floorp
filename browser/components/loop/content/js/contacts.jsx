@@ -155,7 +155,7 @@ loop.contacts = (function(_, mozL10n) {
   const ContactDropdown = React.createClass({
     propTypes: {
       // If the contact is blocked or not.
-      blocked: React.PropTypes.bool.isRequired,
+      blocked: React.PropTypes.bool,
       canEdit: React.PropTypes.bool,
       handleAction: React.PropTypes.func.isRequired
     },
@@ -175,6 +175,13 @@ loop.contacts = (function(_, mozL10n) {
       let menuNodeRect = menuNode.getBoundingClientRect();
 
       let listNode = document.getElementsByClassName("contact-list")[0];
+      // XXX Workaround the contact-list element not being available in tests.
+      // Assumptions about the embedded DOM are a bad idea, and this needs
+      // reworking. For example, tests use a virtual DOM. Really we should
+      // rework this view with the DropdownMenuMixin, which would save some of this pain.
+      if (!listNode) {
+        return;
+      }
       let listNodeRect = listNode.getBoundingClientRect();
 
       if (menuNodeRect.top + menuNodeRect.height >=
@@ -198,6 +205,22 @@ loop.contacts = (function(_, mozL10n) {
       return (
         <ul className={cx({ "dropdown-menu": true,
                             "dropdown-menu-up": this.state.openDirUp })}>
+          <li className={cx({ "dropdown-menu-item": true,
+                              "disabled": this.props.blocked,
+                              "video-call-item": true })}
+              data-action="video-call"
+              onClick={this.onItemClick}>
+            <i className="icon icon-video-call" />
+            {mozL10n.get("video_call_menu_button")}
+          </li>
+          <li className={cx({ "dropdown-menu-item": true,
+                              "disabled": this.props.blocked,
+                              "audio-call-item": true })}
+              data-action="audio-call"
+              onClick={this.onItemClick}>
+            <i className="icon icon-audio-call" />
+            {mozL10n.get("audio_call_menu_button")}
+          </li>
           <li className={cx({ "dropdown-menu-item": true,
                               "disabled": !this.props.canEdit })}
               data-action="edit"
@@ -308,7 +331,7 @@ loop.contacts = (function(_, mozL10n) {
           <div className="icons">
             <i className="icon icon-contact-video-call"
                onClick={this.handleAction.bind(null, "video-call")} />
-            <i className="icon icon-vertical-ellipsis"
+            <i className="icon icon-vertical-ellipsis icon-contact-menu-button"
                onClick={this.showDropdownMenu} />
           </div>
           {this.state.showMenu
