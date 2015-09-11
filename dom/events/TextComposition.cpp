@@ -234,12 +234,12 @@ TextComposition::DispatchCompositionEvent(
     RemoveControlCharactersFrom(aCompositionEvent->mData,
                                 aCompositionEvent->mRanges);
   }
-  if (aCompositionEvent->mMessage == NS_COMPOSITION_COMMIT_AS_IS) {
+  if (aCompositionEvent->mMessage == eCompositionCommitAsIs) {
     NS_ASSERTION(!aCompositionEvent->mRanges,
-                 "mRanges of NS_COMPOSITION_COMMIT_AS_IS should be null");
+                 "mRanges of eCompositionCommitAsIs should be null");
     aCompositionEvent->mRanges = nullptr;
     NS_ASSERTION(aCompositionEvent->mData.IsEmpty(),
-                 "mData of NS_COMPOSITION_COMMIT_AS_IS should be empty string");
+                 "mData of eCompositionCommitAsIs should be empty string");
     if (mLastData == IDEOGRAPHIC_SPACE) {
       // If the last data is an ideographic space (FullWidth space), it must be
       // a placeholder character of some Chinese IME.  So, committing with
@@ -286,7 +286,7 @@ TextComposition::DispatchCompositionEvent(
     switch (aCompositionEvent->mMessage) {
       case NS_COMPOSITION_END:
       case NS_COMPOSITION_CHANGE:
-      case NS_COMPOSITION_COMMIT_AS_IS:
+      case eCompositionCommitAsIs:
       case NS_COMPOSITION_COMMIT:
         committingData = &aCompositionEvent->mData;
         break;
@@ -490,7 +490,7 @@ TextComposition::RequestToCommit(nsIWidget* aWidget, bool aDiscard)
   // Otherwise, synthesize the commit in content.
   nsAutoString data(aDiscard ? EmptyString() : lastData);
   if (data == mLastData) {
-    DispatchCompositionEventRunnable(NS_COMPOSITION_COMMIT_AS_IS, EmptyString(),
+    DispatchCompositionEventRunnable(eCompositionCommitAsIs, EmptyString(),
                                      true);
   } else {
     DispatchCompositionEventRunnable(NS_COMPOSITION_COMMIT, data, true);
@@ -626,10 +626,10 @@ TextComposition::CompositionEventDispatcher::Run()
       break;
     }
     case NS_COMPOSITION_CHANGE:
-    case NS_COMPOSITION_COMMIT_AS_IS:
+    case eCompositionCommitAsIs:
     case NS_COMPOSITION_COMMIT: {
       WidgetCompositionEvent compEvent(true, mEventMessage, widget);
-      if (mEventMessage != NS_COMPOSITION_COMMIT_AS_IS) {
+      if (mEventMessage != eCompositionCommitAsIs) {
         compEvent.mData = mData;
       }
       compEvent.mFlags.mIsSynthesizedForTests =

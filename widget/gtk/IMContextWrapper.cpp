@@ -1440,7 +1440,7 @@ IMContextWrapper::DispatchCompositionCommitEvent(
     nsRefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
 
     EventMessage message = aCommitString ? NS_COMPOSITION_COMMIT :
-                                           NS_COMPOSITION_COMMIT_AS_IS;
+                                           eCompositionCommitAsIs;
     mCompositionState = eCompositionState_NotComposing;
     mCompositionStart = UINT32_MAX;
     mCompositionTargetRange.Clear();
