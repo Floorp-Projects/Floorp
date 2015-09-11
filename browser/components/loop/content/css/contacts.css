@@ -251,18 +251,10 @@ html[dir="rtl"] .contact-filter {
   width: 100%;
 }
 
-.panel-text-medium,
-.panel-text-large {
+.panel-text-medium{
   margin: 3px;
   color: #4a4a4a;
-}
-
-.panel-text-medium {
-  font-size: 1.2rem;
-}
-
-.panel-text-large {
-  font-size: 2.2rem;
+  font-size: 1.3rem;
 }
 
 .contact > .details > .username {
