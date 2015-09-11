@@ -1330,11 +1330,6 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                 mLastTrack->meta->setCString(kKeyMIMEType, FourCC2MIME(chunk_type));
                 AdjustChannelsAndRate(chunk_type, &num_channels, &sample_rate);
             }
-            ALOGV("*** coding='%s' %d channels, size %d, rate %d\n",
-                   chunk, num_channels, sample_size, sample_rate);
-            mLastTrack->meta->setInt32(kKeyChannelCount, num_channels);
-            mLastTrack->meta->setInt32(kKeySampleSize, sample_size);
-            mLastTrack->meta->setInt32(kKeySampleRate, sample_rate);
 
             uint64_t skip = 0;
             if (qt_version == 1) {
@@ -1364,11 +1359,36 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                     return ERROR_IO;
                 }
                 uint32_t structSize = ntohl(structSize32);
+                // Read SampleRate.
+                uint64_t sample_rate64;
+                if (mDataSource->readAt(
+                            data_offset + 32, &sample_rate64, sizeof(sample_rate64))
+                        < (ssize_t)sizeof(sample_rate64)) {
+                    return ERROR_IO;
+                }
+                uint64_t i_value = ntoh64(sample_rate64);
+                void* v_value = reinterpret_cast<void*>(&i_value);
+                sample_rate = uint32_t(*reinterpret_cast<double*>(v_value));
+                // Read ChannelCount.
+                uint32_t channel_count32;
+                if (mDataSource->readAt(
+                            data_offset + 40, &channel_count32, sizeof(channel_count32))
+                        < (ssize_t)sizeof(channel_count32)) {
+                    return ERROR_IO;
+                }
+                num_channels = ntohl(channel_count32);
+
                 skip += 36;
                 if (structSize > 72) {
                     skip += structSize - 72;
                 }
             }
+            ALOGV("*** coding='%s' %d channels, size %d, rate %d\n",
+                   chunk, num_channels, sample_size, sample_rate);
+            mLastTrack->meta->setInt32(kKeyChannelCount, num_channels);
+            mLastTrack->meta->setInt32(kKeySampleSize, sample_size);
+            mLastTrack->meta->setInt32(kKeySampleRate, sample_rate);
+
             off64_t stop_offset = *offset + chunk_size;
             *offset = data_offset + sizeof(buffer) + skip;
             while (*offset < stop_offset) {
