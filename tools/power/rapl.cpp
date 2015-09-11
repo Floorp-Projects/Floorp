@@ -390,12 +390,12 @@ public:
     aCores_J = Joules(mPkes->pp0_energy - mPrevPp0Ticks, joulesPerTick);
     aGpu_J   = mIsGpuSupported
              ? Joules(mPkes->pp1_energy - mPrevPp1Ticks, joulesPerTick)
-             : -kUnsupported_j;
+             : kUnsupported_j;
     aRam_J   = mIsRamSupported
              ? Joules(mPkes->ddr_energy - mPrevDdrTicks,
                       mHasRamUnitsQuirk ? kQuirkyRamJoulesPerTick
                                         : joulesPerTick)
-             : -kUnsupported_j;
+             : kUnsupported_j;
 
     mPrevPkgTicks = mPkes->pkg_energy;
     mPrevPp0Ticks = mPkes->pp0_energy;
@@ -518,7 +518,7 @@ public:
   double EnergyEstimate()
   {
     if (!mIsSupported) {
-      return -kUnsupported_j;
+      return kUnsupported_j;
     }
 
     uint64_t thisTicks;
