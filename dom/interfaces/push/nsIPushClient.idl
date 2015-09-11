@@ -17,10 +17,13 @@ interface nsIPrincipal;
  * endpoint.
  */
 
-[scriptable, uuid(0bcac389-a3ac-44a4-97fb-b50e41a46146)]
+[scriptable, uuid(dc201064-8e5c-4a26-bd37-d1e33558a903)]
 interface nsIPushEndpointCallback : nsISupports
 {
-  void onPushEndpoint(in nsresult status, in DOMString endpoint);
+  void onPushEndpoint(in nsresult status,
+                      in DOMString endpoint,
+                      in uint32_t keyLen,
+                      [array, size_is(keyLen)] in octet key);
 };
 
 /**
