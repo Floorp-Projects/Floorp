@@ -5159,7 +5159,7 @@ nsEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
       // If events are not created with proper event interface, their message
       // are initialized with eUnidentifiedEvent.  Let's ignore such event.
       return false;
-    case NS_COMPOSITION_START:
+    case eCompositionStart:
     case NS_COMPOSITION_END:
     case NS_COMPOSITION_UPDATE:
     case NS_COMPOSITION_CHANGE:

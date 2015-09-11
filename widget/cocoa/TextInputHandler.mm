@@ -2813,7 +2813,7 @@ IMEInputHandler::InsertTextAsCommittingComposition(
 
     // XXXmnakano Probably, we shouldn't emulate composition in this case.
     // I think that we should just fire DOM3 textInput event if we implement it.
-    WidgetCompositionEvent compStart(true, NS_COMPOSITION_START, mWidget);
+    WidgetCompositionEvent compStart(true, eCompositionStart, mWidget);
     InitCompositionEvent(compStart);
 
     DispatchEvent(compStart);
@@ -2903,7 +2903,7 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
 
     mMarkedRange.location = SelectedRange().location;
 
-    WidgetCompositionEvent compStart(true, NS_COMPOSITION_START, mWidget);
+    WidgetCompositionEvent compStart(true, eCompositionStart, mWidget);
     InitCompositionEvent(compStart);
 
     DispatchEvent(compStart);

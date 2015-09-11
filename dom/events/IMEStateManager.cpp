@@ -137,8 +137,8 @@ static const char*
 GetEventMessageName(EventMessage aMessage)
 {
   switch (aMessage) {
-    case NS_COMPOSITION_START:
-      return "NS_COMPOSITION_START";
+    case eCompositionStart:
+      return "eCompositionStart";
     case NS_COMPOSITION_END:
       return "NS_COMPOSITION_END";
     case NS_COMPOSITION_UPDATE:
@@ -1163,7 +1163,7 @@ IMEStateManager::DispatchCompositionEvent(
     MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::DispatchCompositionEvent(), "
        "adding new TextComposition to the array"));
-    MOZ_ASSERT(aCompositionEvent->mMessage == NS_COMPOSITION_START);
+    MOZ_ASSERT(aCompositionEvent->mMessage == eCompositionStart);
     composition =
       new TextComposition(aPresContext, aEventTargetNode, tabParent,
                           aCompositionEvent);
@@ -1171,7 +1171,7 @@ IMEStateManager::DispatchCompositionEvent(
   }
 #ifdef DEBUG
   else {
-    MOZ_ASSERT(aCompositionEvent->mMessage != NS_COMPOSITION_START);
+    MOZ_ASSERT(aCompositionEvent->mMessage != eCompositionStart);
   }
 #endif // #ifdef DEBUG
 
@@ -1277,7 +1277,7 @@ IMEStateManager::OnCompositionEventDiscarded(
 
   // Ignore compositionstart for now because sTextCompositions may not have
   // been created yet.
-  if (aCompositionEvent->mMessage == NS_COMPOSITION_START) {
+  if (aCompositionEvent->mMessage == eCompositionStart) {
     return;
   }
 

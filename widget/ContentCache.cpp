@@ -27,8 +27,8 @@ static const char*
 GetEventMessageName(EventMessage aMessage)
 {
   switch (aMessage) {
-    case NS_COMPOSITION_START:
-      return "NS_COMPOSITION_START";
+    case eCompositionStart:
+      return "eCompositionStart";
     case NS_COMPOSITION_END:
       return "NS_COMPOSITION_END";
     case NS_COMPOSITION_UPDATE:
@@ -858,7 +858,7 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
      GetBoolName(mRequestedToCommitOrCancelComposition)));
 
   if (!aEvent.CausesDOMTextEvent()) {
-    MOZ_ASSERT(aEvent.mMessage == NS_COMPOSITION_START);
+    MOZ_ASSERT(aEvent.mMessage == eCompositionStart);
     mIsComposing = !aEvent.CausesDOMCompositionEndEvent();
     mCompositionStart = mSelection.StartOffset();
     // XXX What's this case??

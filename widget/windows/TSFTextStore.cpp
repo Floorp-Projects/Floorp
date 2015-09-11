@@ -1705,10 +1705,10 @@ TSFTextStore::FlushPendingActions()
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
                ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
                 "dispatching compositionstart event...", this));
-        WidgetCompositionEvent compositionStart(true, NS_COMPOSITION_START,
+        WidgetCompositionEvent compositionStart(true, eCompositionStart,
                                                 mWidget);
         mWidget->InitEvent(compositionStart);
-        // NS_COMPOSITION_START always causes NOTIFY_IME_OF_COMPOSITION_UPDATE.
+        // eCompositionStart always causes NOTIFY_IME_OF_COMPOSITION_UPDATE.
         // Therefore, we should wait to clear the locked content until it's
         // notified.
         mDeferClearingLockedContent = true;

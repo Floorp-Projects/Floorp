@@ -463,7 +463,7 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
     case NS_COMPOSITION_CHANGE:
       return HandleText(aEvent);
     // compositionstart
-    case NS_COMPOSITION_START:
+    case eCompositionStart:
       return HandleStartComposition(aEvent);
     // compositionend
     case NS_COMPOSITION_END:
