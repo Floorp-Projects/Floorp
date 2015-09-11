@@ -17,3 +17,8 @@ task:
       MOZHARNESS_CONFIG: 'builds/releng_sub_linux_configs/64_stat_and_opt.py balrog/production.py'
       DIST_UPLOADS: ''
       DIST_TARGET_UPLOADS: ''
+
+  extra:
+    treeherder:
+      groupSymbol: "?"
+      symbol: S
