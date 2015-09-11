@@ -1,13 +1,17 @@
 load(libdir + "class.js");
 
 function test_syntax(replacements, check_error, ignore_opts) {
-  function test_reflect(code) {
+  function test_reflect(code, module) {
+    var options = undefined;
+    if (module) {
+      options = {target: "module"};
+    }
     for (var repl of replacements) {
       var cur_code = code.replace(/@/, repl);
 
       var caught = false;
       try {
-        Reflect.parse(cur_code);
+        Reflect.parse(cur_code, options);
       } catch (e) {
         caught = true;
         check_error(e, cur_code, "reflect");
@@ -39,15 +43,16 @@ function test_syntax(replacements, check_error, ignore_opts) {
     let no_strict = "no_strict" in opts && opts.no_strict;
     let no_fun = "no_fun" in opts && opts.no_fun;
     let no_eval = "no_eval" in opts && opts.no_eval;
+    let module = "module" in opts && opts.module;
 
-    test_reflect(code);
+    test_reflect(code, module);
     if (!no_strict) {
-      test_reflect("'use strict'; " + code);
+      test_reflect("'use strict'; " + code, module);
     }
     if (!no_fun) {
-      test_reflect("(function() { " + code);
+      test_reflect("(function() { " + code, module);
       if (!no_strict) {
-        test_reflect("(function() { 'use strict'; " + code);
+        test_reflect("(function() { 'use strict'; " + code, module);
       }
     }
 
@@ -63,14 +68,6 @@ function test_syntax(replacements, check_error, ignore_opts) {
         }
       }
     }
-  }
-
-  function test_no_strict(code) {
-    test(code, { no_strict: true });
-  }
-
-  function test_no_fun_no_eval(code) {
-    test(code, { no_fun: true, no_eval: true });
   }
 
   function test_fun_arg(arg) {
@@ -438,162 +435,163 @@ function test_syntax(replacements, check_error, ignore_opts) {
 
   // export
 
-  test_no_fun_no_eval("export @");
-  test_no_fun_no_eval("export { @");
-  test_no_fun_no_eval("export { x @");
-  test_no_fun_no_eval("export { x, @");
-  test_no_fun_no_eval("export { x, y @");
-  test_no_fun_no_eval("export { x, y as @");
-  test_no_fun_no_eval("export { x, y as z @");
-  test_no_fun_no_eval("export { x, y as z } @");
-  test_no_fun_no_eval("export { x, y as z } from @");
-  test_no_fun_no_eval("export { x, y as z } from 'a' @");
-  test_no_fun_no_eval("export { x, y as z } from 'a'; @");
+  var opts = { no_fun: true, no_eval: true, module: true };
+  test("export @", opts);
+  test("export { @", opts);
+  test("export { x @", opts);
+  test("export { x, @", opts);
+  test("export { x, y @", opts);
+  test("export { x, y as @", opts);
+  test("export { x, y as z @", opts);
+  test("export { x, y as z } @", opts);
+  test("export { x, y as z } from @", opts);
+  test("export { x, y as z } from 'a' @", opts);
+  test("export { x, y as z } from 'a'; @", opts);
 
-  test_no_fun_no_eval("export * @");
-  test_no_fun_no_eval("export * from @");
-  test_no_fun_no_eval("export * from 'a' @");
-  test_no_fun_no_eval("export * from 'a'; @");
+  test("export * @", opts);
+  test("export * from @", opts);
+  test("export * from 'a' @", opts);
+  test("export * from 'a'; @", opts);
 
-  test_no_fun_no_eval("export function @");
-  test_no_fun_no_eval("export function f @");
-  test_no_fun_no_eval("export function f( @");
-  test_no_fun_no_eval("export function f() @");
-  test_no_fun_no_eval("export function f() { @");
-  test_no_fun_no_eval("export function f() {} @");
-  test_no_fun_no_eval("export function f() {}; @");
+  test("export function @", opts);
+  test("export function f @", opts);
+  test("export function f( @", opts);
+  test("export function f() @", opts);
+  test("export function f() { @", opts);
+  test("export function f() {} @", opts);
+  test("export function f() {}; @", opts);
 
-  test_no_fun_no_eval("export var @");
-  test_no_fun_no_eval("export var a @");
-  test_no_fun_no_eval("export var a = @");
-  test_no_fun_no_eval("export var a = 1 @");
-  test_no_fun_no_eval("export var a = 1, @");
-  test_no_fun_no_eval("export var a = 1, b @");
-  test_no_fun_no_eval("export var a = 1, b = @");
-  test_no_fun_no_eval("export var a = 1, b = 2 @");
-  test_no_fun_no_eval("export var a = 1, b = 2; @");
+  test("export var @", opts);
+  test("export var a @", opts);
+  test("export var a = @", opts);
+  test("export var a = 1 @", opts);
+  test("export var a = 1, @", opts);
+  test("export var a = 1, b @", opts);
+  test("export var a = 1, b = @", opts);
+  test("export var a = 1, b = 2 @", opts);
+  test("export var a = 1, b = 2; @", opts);
 
-  test_no_fun_no_eval("export let @");
-  test_no_fun_no_eval("export let a @");
-  test_no_fun_no_eval("export let a = @");
-  test_no_fun_no_eval("export let a = 1 @");
-  test_no_fun_no_eval("export let a = 1, @");
-  test_no_fun_no_eval("export let a = 1, b @");
-  test_no_fun_no_eval("export let a = 1, b = @");
-  test_no_fun_no_eval("export let a = 1, b = 2 @");
-  test_no_fun_no_eval("export let a = 1, b = 2; @");
+  test("export let @", opts);
+  test("export let a @", opts);
+  test("export let a = @", opts);
+  test("export let a = 1 @", opts);
+  test("export let a = 1, @", opts);
+  test("export let a = 1, b @", opts);
+  test("export let a = 1, b = @", opts);
+  test("export let a = 1, b = 2 @", opts);
+  test("export let a = 1, b = 2; @", opts);
 
-  test_no_fun_no_eval("export const @");
-  test_no_fun_no_eval("export const a @");
-  test_no_fun_no_eval("export const a = @");
-  test_no_fun_no_eval("export const a = 1 @");
-  test_no_fun_no_eval("export const a = 1, @");
-  test_no_fun_no_eval("export const a = 1, b @");
-  test_no_fun_no_eval("export const a = 1, b = @");
-  test_no_fun_no_eval("export const a = 1, b = 2 @");
-  test_no_fun_no_eval("export const a = 1, b = 2; @");
+  test("export const @", opts);
+  test("export const a @", opts);
+  test("export const a = @", opts);
+  test("export const a = 1 @", opts);
+  test("export const a = 1, @", opts);
+  test("export const a = 1, b @", opts);
+  test("export const a = 1, b = @", opts);
+  test("export const a = 1, b = 2 @", opts);
+  test("export const a = 1, b = 2; @", opts);
 
   if (classesEnabled()) {
-    test_no_fun_no_eval("export class @");
-    test_no_fun_no_eval("export class Foo @");
-    test_no_fun_no_eval("export class Foo {  @");
-    test_no_fun_no_eval("export class Foo { constructor @");
-    test_no_fun_no_eval("export class Foo { constructor( @");
-    test_no_fun_no_eval("export class Foo { constructor() @");
-    test_no_fun_no_eval("export class Foo { constructor() { @");
-    test_no_fun_no_eval("export class Foo { constructor() {} @");
-    test_no_fun_no_eval("export class Foo { constructor() {} } @");
-    test_no_fun_no_eval("export class Foo { constructor() {} }; @");
+    test("export class @", opts);
+    test("export class Foo @", opts);
+    test("export class Foo {  @", opts);
+    test("export class Foo { constructor @", opts);
+    test("export class Foo { constructor( @", opts);
+    test("export class Foo { constructor() @", opts);
+    test("export class Foo { constructor() { @", opts);
+    test("export class Foo { constructor() {} @", opts);
+    test("export class Foo { constructor() {} } @", opts);
+    test("export class Foo { constructor() {} }; @", opts);
   }
 
-  test_no_fun_no_eval("export default @");
-  test_no_fun_no_eval("export default 1 @");
-  test_no_fun_no_eval("export default 1; @");
+  test("export default @", opts);
+  test("export default 1 @", opts);
+  test("export default 1; @", opts);
 
-  test_no_fun_no_eval("export default function @");
-  test_no_fun_no_eval("export default function() @");
-  test_no_fun_no_eval("export default function() { @");
-  test_no_fun_no_eval("export default function() {} @");
-  test_no_fun_no_eval("export default function() {}; @");
+  test("export default function @", opts);
+  test("export default function() @", opts);
+  test("export default function() { @", opts);
+  test("export default function() {} @", opts);
+  test("export default function() {}; @", opts);
 
-  test_no_fun_no_eval("export default function foo @");
-  test_no_fun_no_eval("export default function foo( @");
-  test_no_fun_no_eval("export default function foo() @");
-  test_no_fun_no_eval("export default function foo() { @");
-  test_no_fun_no_eval("export default function foo() {} @");
-  test_no_fun_no_eval("export default function foo() {}; @");
+  test("export default function foo @", opts);
+  test("export default function foo( @", opts);
+  test("export default function foo() @", opts);
+  test("export default function foo() { @", opts);
+  test("export default function foo() {} @", opts);
+  test("export default function foo() {}; @", opts);
 
   if (classesEnabled()) {
-    test_no_fun_no_eval("export default class @");
-    test_no_fun_no_eval("export default class { @");
-    test_no_fun_no_eval("export default class { constructor @");
-    test_no_fun_no_eval("export default class { constructor( @");
-    test_no_fun_no_eval("export default class { constructor() @");
-    test_no_fun_no_eval("export default class { constructor() { @");
-    test_no_fun_no_eval("export default class { constructor() {} @");
-    test_no_fun_no_eval("export default class { constructor() {} } @");
-    test_no_fun_no_eval("export default class { constructor() {} }; @");
+    test("export default class @", opts);
+    test("export default class { @", opts);
+    test("export default class { constructor @", opts);
+    test("export default class { constructor( @", opts);
+    test("export default class { constructor() @", opts);
+    test("export default class { constructor() { @", opts);
+    test("export default class { constructor() {} @", opts);
+    test("export default class { constructor() {} } @", opts);
+    test("export default class { constructor() {} }; @", opts);
 
-    test_no_fun_no_eval("export default class Foo @");
-    test_no_fun_no_eval("export default class Foo { @");
-    test_no_fun_no_eval("export default class Foo { constructor @");
-    test_no_fun_no_eval("export default class Foo { constructor( @");
-    test_no_fun_no_eval("export default class Foo { constructor() @");
-    test_no_fun_no_eval("export default class Foo { constructor() { @");
-    test_no_fun_no_eval("export default class Foo { constructor() {} @");
-    test_no_fun_no_eval("export default class Foo { constructor() {} } @");
-    test_no_fun_no_eval("export default class Foo { constructor() {} }; @");
+    test("export default class Foo @", opts);
+    test("export default class Foo { @", opts);
+    test("export default class Foo { constructor @", opts);
+    test("export default class Foo { constructor( @", opts);
+    test("export default class Foo { constructor() @", opts);
+    test("export default class Foo { constructor() { @", opts);
+    test("export default class Foo { constructor() {} @", opts);
+    test("export default class Foo { constructor() {} } @", opts);
+    test("export default class Foo { constructor() {} }; @", opts);
   }
 
   // import
 
-  test_no_fun_no_eval("import @");
-  test_no_fun_no_eval("import x @");
-  test_no_fun_no_eval("import x from @");
-  test_no_fun_no_eval("import x from 'a' @");
-  test_no_fun_no_eval("import x from 'a'; @");
+  test("import @", opts);
+  test("import x @", opts);
+  test("import x from @", opts);
+  test("import x from 'a' @", opts);
+  test("import x from 'a'; @", opts);
 
-  test_no_fun_no_eval("import { @");
-  test_no_fun_no_eval("import { x @");
-  test_no_fun_no_eval("import { x, @");
-  test_no_fun_no_eval("import { x, y @");
-  test_no_fun_no_eval("import { x, y } @");
-  test_no_fun_no_eval("import { x, y } from @");
-  test_no_fun_no_eval("import { x, y } from 'a' @");
-  test_no_fun_no_eval("import { x, y } from 'a'; @");
+  test("import { @", opts);
+  test("import { x @", opts);
+  test("import { x, @", opts);
+  test("import { x, y @", opts);
+  test("import { x, y } @", opts);
+  test("import { x, y } from @", opts);
+  test("import { x, y } from 'a' @", opts);
+  test("import { x, y } from 'a'; @", opts);
 
-  test_no_fun_no_eval("import { x as @");
-  test_no_fun_no_eval("import { x as y @");
-  test_no_fun_no_eval("import { x as y } @");
-  test_no_fun_no_eval("import { x as y } from @");
-  test_no_fun_no_eval("import { x as y } from 'a' @");
-  test_no_fun_no_eval("import { x as y } from 'a'; @");
+  test("import { x as @", opts);
+  test("import { x as y @", opts);
+  test("import { x as y } @", opts);
+  test("import { x as y } from @", opts);
+  test("import { x as y } from 'a' @", opts);
+  test("import { x as y } from 'a'; @", opts);
 
-  test_no_fun_no_eval("import 'a' @");
-  test_no_fun_no_eval("import 'a'; @");
+  test("import 'a' @", opts);
+  test("import 'a'; @", opts);
 
-  test_no_fun_no_eval("import * @");
-  test_no_fun_no_eval("import * as @");
-  test_no_fun_no_eval("import * as a @");
-  test_no_fun_no_eval("import * as a from @");
-  test_no_fun_no_eval("import * as a from 'a' @");
-  test_no_fun_no_eval("import * as a from 'a'; @");
+  test("import * @", opts);
+  test("import * as @", opts);
+  test("import * as a @", opts);
+  test("import * as a from @", opts);
+  test("import * as a from 'a' @", opts);
+  test("import * as a from 'a'; @", opts);
 
-  test_no_fun_no_eval("import a @");
-  test_no_fun_no_eval("import a, @");
-  test_no_fun_no_eval("import a, * @");
-  test_no_fun_no_eval("import a, * as @");
-  test_no_fun_no_eval("import a, * as b @");
-  test_no_fun_no_eval("import a, * as b from @");
-  test_no_fun_no_eval("import a, * as b from 'c' @");
-  test_no_fun_no_eval("import a, * as b from 'c'; @");
+  test("import a @", opts);
+  test("import a, @", opts);
+  test("import a, * @", opts);
+  test("import a, * as @", opts);
+  test("import a, * as b @", opts);
+  test("import a, * as b from @", opts);
+  test("import a, * as b from 'c' @", opts);
+  test("import a, * as b from 'c'; @", opts);
 
-  test_no_fun_no_eval("import a, { @");
-  test_no_fun_no_eval("import a, { b @");
-  test_no_fun_no_eval("import a, { b } @");
-  test_no_fun_no_eval("import a, { b } from @");
-  test_no_fun_no_eval("import a, { b } from 'c' @");
-  test_no_fun_no_eval("import a, { b } from 'c'; @");
+  test("import a, { @", opts);
+  test("import a, { b @", opts);
+  test("import a, { b } @", opts);
+  test("import a, { b } from @", opts);
+  test("import a, { b } from 'c' @", opts);
+  test("import a, { b } from 'c'; @", opts);
 
   // label
 
@@ -602,15 +600,16 @@ function test_syntax(replacements, check_error, ignore_opts) {
 
   // with
 
-  test_no_strict("with @");
-  test_no_strict("with (@");
-  test_no_strict("with (x @");
-  test_no_strict("with (x) @");
-  test_no_strict("with (x) { @");
-  test_no_strict("with (x) {} @");
+  opts = { no_strict: true };
+  test("with @", opts);
+  test("with (@", opts);
+  test("with (x @", opts);
+  test("with (x) @", opts);
+  test("with (x) { @", opts);
+  test("with (x) {} @", opts);
 
-  test_no_strict("with (x) x @");
-  test_no_strict("with (x) x; @");
+  test("with (x) x @", opts);
+  test("with (x) x; @", opts);
 
   // ==== Expressions and operators ====
 
