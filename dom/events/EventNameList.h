@@ -303,7 +303,7 @@ EVENT(mozfullscreenerror,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(mozpointerlockchange,
-      NS_POINTERLOCKCHANGE,
+      ePointerLockChange,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(mozpointerlockerror,
