@@ -500,6 +500,7 @@ gbjar.sources += [
     'toolbar/PageActionLayout.java',
     'toolbar/PhoneTabsButton.java',
     'toolbar/ShapedButton.java',
+    'toolbar/ShapedButtonFrameLayout.java',
     'toolbar/SiteIdentityPopup.java',
     'toolbar/TabCounter.java',
     'toolbar/ToolbarDisplayLayout.java',
