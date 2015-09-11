@@ -1078,13 +1078,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void lshiftPtr(Imm32 imm, Register dest) {
         Lsl(ARMRegister(dest, 64), ARMRegister(dest, 64), imm.value);
     }
-    void xorPtr(Imm32 imm, Register dest) {
-        Eor(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
-    }
-
-    void xorPtr(Register src, Register dest) {
-        Eor(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
-    }
 
     void testPtr(Register lhs, Register rhs) {
         Tst(ARMRegister(lhs, 64), Operand(ARMRegister(rhs, 64)));

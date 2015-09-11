@@ -1131,8 +1131,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         }
     }
 
-    void xorPtr(Imm32 imm, Register dest);
-    void xorPtr(Register src, Register dest);
     void addPtr(Register src, Register dest);
     void subPtr(Register src, Register dest);
     void addPtr(const Address& src, Register dest);
