@@ -393,14 +393,6 @@ auto GeckoAppShell::GetScreenOrientationWrapper() -> int16_t
     return mozilla::jni::Method<GetScreenOrientationWrapper_t>::Call(nullptr, nullptr);
 }
 
-constexpr char GeckoAppShell::GetScreenSize_t::name[];
-constexpr char GeckoAppShell::GetScreenSize_t::signature[];
-
-auto GeckoAppShell::GetScreenSize() -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Method<GetScreenSize_t>::Call(nullptr, nullptr);
-}
-
 constexpr char GeckoAppShell::GetShowPasswordSetting_t::name[];
 constexpr char GeckoAppShell::GetShowPasswordSetting_t::signature[];
 

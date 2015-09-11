@@ -24,7 +24,6 @@ sdk_processor := \
 
 # We'd like these to be defined in a future GENERATED_EXPORTS list.
 bindings_exports_FILES := \
-	AndroidRect.h \
   Bundle.h \
   MediaCodec.h \
   SurfaceTexture.h \
