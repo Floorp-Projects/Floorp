@@ -123,15 +123,6 @@ class MacroAssemblerX86Shared : public Assembler
     void move32(Register src, const Operand& dest) {
         movl(src, dest);
     }
-    void or32(Register src, Register dest) {
-        orl(src, dest);
-    }
-    void or32(Imm32 imm, Register dest) {
-        orl(imm, dest);
-    }
-    void or32(Imm32 imm, const Address& dest) {
-        orl(imm, Operand(dest));
-    }
     void neg32(Register reg) {
         negl(reg);
     }
