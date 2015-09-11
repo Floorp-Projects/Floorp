@@ -480,6 +480,7 @@ DumpSerialNumbers(PLHashEntry* aHashEntry, int aIndex, void* aClosure)
           NS_INT32_TO_PTR(aHashEntry->key),
           record->refCount);
 #endif
+#ifdef MOZ_STACKWALKING
   if (!record->allocationStack.empty()) {
     static const size_t bufLen = 1024;
     char buf[bufLen];
@@ -492,6 +493,7 @@ DumpSerialNumbers(PLHashEntry* aHashEntry, int aIndex, void* aClosure)
       fprintf(outputFile, "%s\n", buf);
     }
   }
+#endif
   return HT_ENUMERATE_NEXT;
 }
 
