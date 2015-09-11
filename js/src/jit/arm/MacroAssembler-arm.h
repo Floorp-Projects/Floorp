@@ -1200,7 +1200,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         sub32(src, dest);
         j(cond, label);
     }
-    void xor32(Imm32 imm, Register dest);
 
     void xorPtr(Imm32 imm, Register dest);
     void xorPtr(Register src, Register dest);

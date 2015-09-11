@@ -190,12 +190,6 @@ class MacroAssemblerX86Shared : public Assembler
         sub32(src, dest);
         j(cond, label);
     }
-    void xor32(Imm32 imm, Register dest) {
-        xorl(imm, dest);
-    }
-    void xor32(Register src, Register dest) {
-        xorl(src, dest);
-    }
     void not32(Register reg) {
         notl(reg);
     }

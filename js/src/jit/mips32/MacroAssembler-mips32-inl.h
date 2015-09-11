@@ -87,6 +87,12 @@ MacroAssembler::orPtr(Imm32 imm, Register dest)
     ma_or(dest, imm);
 }
 
+void
+MacroAssembler::xor32(Imm32 imm, Register dest)
+{
+    ma_xor(dest, imm);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

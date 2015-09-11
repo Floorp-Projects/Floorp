@@ -685,6 +685,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void orPtr(Register src, Register dest) PER_ARCH;
     inline void orPtr(Imm32 imm, Register dest) PER_ARCH;
 
+    inline void xor32(Register src, Register dest) DEFINED_ON(x86_shared);
+    inline void xor32(Imm32 imm, Register dest) PER_SHARED_ARCH;
+
     //}}} check_macroassembler_style
   public:
 
