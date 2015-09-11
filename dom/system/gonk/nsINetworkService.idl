@@ -157,7 +157,7 @@ interface nsIDhcpRequestCallback : nsISupports
 /**
  * Provide network services.
  */
-[scriptable, uuid(5d6b1877-890a-4c7f-8403-94d57ceba6cf)]
+[scriptable, uuid(fcd0abd4-8525-469f-a166-12edb4081f3e)]
 interface nsINetworkService : nsISupports
 {
   const long MODIFY_ROUTE_ADD    = 0;
@@ -310,8 +310,6 @@ interface nsINetworkService : nsISupports
    *        Number of elements in gateways.
    * @param gateways
    *        Default gateways for setting default route.
-   * @param oldInterfaceName
-   *        The previous network interface name.
    *
    * @param callback
    *        Callback to notify the result of setting default route.
@@ -319,7 +317,6 @@ interface nsINetworkService : nsISupports
   void setDefaultRoute(in DOMString interfaceName,
                        in unsigned long count,
                        [array, size_is(count)] in wstring gateways,
-                       in DOMString oldInterfaceName,
                        in nsINativeCommandCallback callback);
 
   /**
