@@ -16,7 +16,7 @@ subject:<subject distinguished name specification>
 [validity:<YYYYMMDD-YYYYMMDD|duration in days>]
 [issuerKey:<key specification>]
 [subjectKey:<key specification>]
-[signature:{sha256WithRSAEncryption,ecdsaWithSHA256}]
+[signature:{sha1WithRSAEncryption,sha256WithRSAEncryption,ecdsaWithSHA256}]
 [extension:<extension name:<extension-specific data>>]
 [...]
 
@@ -259,14 +259,22 @@ def stringToAlgorithmIdentifier(string):
     to a representation usable by the pyasn1 package"""
     algorithmIdentifier = rfc2459.AlgorithmIdentifier()
     algorithm = None
-    if string == 'sha256WithRSAEncryption':
+    name = None
+    if string == 'sha1WithRSAEncryption':
+        name = 'SHA-1'
+        algorithm = rfc2459.sha1WithRSAEncryption
+    elif string == 'sha256WithRSAEncryption':
+        name = 'SHA-256'
         algorithm = univ.ObjectIdentifier('1.2.840.113549.1.1.11')
     elif string == 'ecdsaWithSHA256':
+        # Note that this value is only used by pykey.py to tell if
+        # ECDSA is allowed.  It does not conform to the pyECC syntax.
+        name = 'SHA-256'
         algorithm = univ.ObjectIdentifier('1.2.840.10045.4.3.2')
     else:
         raise UnknownAlgorithmTypeError(string)
     algorithmIdentifier.setComponentByName('algorithm', algorithm)
-    return algorithmIdentifier
+    return (algorithmIdentifier, name)
 
 def datetimeToTime(dt):
     """Takes a datetime object and returns an rfc2459.Time object with
@@ -537,7 +545,8 @@ class Certificate:
         return stringToDN(self.subject)
 
     def toDER(self):
-        signatureOID = self.getSignature()
+        (signatureOID, hashAlg) = self.getSignature()
+
         tbsCertificate = rfc2459.TBSCertificate()
         tbsCertificate.setComponentByName('version', self.getVersion())
         tbsCertificate.setComponentByName('serialNumber', self.getSerialNumber())
@@ -559,7 +568,8 @@ class Certificate:
         certificate.setComponentByName('tbsCertificate', tbsCertificate)
         certificate.setComponentByName('signatureAlgorithm', signatureOID)
         tbsDER = encoder.encode(tbsCertificate)
-        certificate.setComponentByName('signatureValue', self.issuerKey.sign(tbsDER))
+
+        certificate.setComponentByName('signatureValue', self.issuerKey.sign(tbsDER, hashAlg))
         return encoder.encode(certificate)
 
     def toPEM(self):

@@ -41,7 +41,8 @@ public:
                               mozilla::pkix::Time time) override;
   virtual Result CheckSignatureDigestAlgorithm(
                    mozilla::pkix::DigestAlgorithm digestAlg,
-                   mozilla::pkix::EndEntityOrCA endEntityOrCA) override;
+                   mozilla::pkix::EndEntityOrCA endEntityOrCA,
+                   mozilla::pkix::Time notBefore) override;
   virtual Result CheckRSAPublicKeyModulusSizeInBits(
                    mozilla::pkix::EndEntityOrCA endEntityOrCA,
                    unsigned int modulusSizeInBits) override;
