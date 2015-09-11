@@ -198,6 +198,12 @@ extern bool gBluetoothDebugFlag;
 #define MAP_GET_MESSAGE_REQ_ID               "mapgetmessagereq"
 
 /**
+ * When receiving a MAP request of 'set message' from a remote device,
+ * we'll dispatch an event.
+ */
+#define MAP_SET_MESSAGE_STATUS_REQ_ID        "mapsetmessagestatusreq"
+
+/**
  * When the value of a characteristic of a remote BLE device changes, we'll
  * dispatch an event
  */
