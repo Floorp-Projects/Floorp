@@ -550,7 +550,7 @@ WINDOW_ONLY_EVENT(devicelight,
 
 #ifdef MOZ_B2G
 WINDOW_ONLY_EVENT(moztimechange,
-                  NS_MOZ_TIME_CHANGE_EVENT,
+                  eTimeChange,
                   EventNameType_None,
                   eBasicEventClass)
 WINDOW_ONLY_EVENT(moznetworkupload,
