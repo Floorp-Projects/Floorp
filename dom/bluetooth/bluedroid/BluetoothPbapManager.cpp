@@ -275,14 +275,14 @@ BluetoothPbapManager::ReceiveSocketData(BluetoothSocket* aSocket,
       // All OBEX request messages shall be sent as one OBEX packet containing
       // all of the headers. I.e. OBEX GET with opcode 0x83 shall always be
       // used. OBEX GET with opcode 0x03 shall never be used.
-      BT_LOGR("PBAP shall always uses OBEX GetFinal instead of Get.");
+      BT_LOGR("PBAP shall always use OBEX GetFinal instead of Get.");
 
       // no break. Treat 'Get' as 'GetFinal' for error tolerance.
     case ObexRequestCode::GetFinal: {
-      // As long as 'mVCardDataStream' requires multiple response packets to
-      // complete, the client should continue to issue GET requests until the
-      // final body information (in an End-of-Body header) arrives, along with
-      // the response code 0xA0 Success.
+      // When |mVCardDataStream| requires multiple response packets to complete,
+      // the client should continue to issue GET requests until the final body
+      // information (i.e., End-of-Body header) arrives, along with
+      // ObexResponseCode::Success
       if (mVCardDataStream) {
         if (!ReplyToGet()) {
           BT_LOGR("Failed to reply to PBAP GET request.");
@@ -731,7 +731,7 @@ BluetoothPbapManager::PackPropertiesMask(uint8_t* aData, int aSize)
                (aData[5] << 16) | (aData[4] << 24);
 
   uint32_t count = 0;
-  while (!x) {
+  while (x) {
     if (x & 1) {
       propSelector.AppendElement(count);
     }
