@@ -39,8 +39,6 @@ task:
       CPLUS_INCLUDE_PATH: ""
       # image paths
       TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
-      DIST_UPLOADS: 'jsshell-mac64.zip'
-      DIST_TARGET_UPLOADS: 'mac64.dmg mac64.json tests.zip crashreporter-symbols.zip'
 
     maxRunTime: 36000
 
