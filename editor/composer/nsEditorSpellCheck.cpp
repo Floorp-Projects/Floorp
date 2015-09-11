@@ -653,6 +653,9 @@ nsEditorSpellCheck::CheckCurrentDictionary()
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (dictList.Length() > 0) {
+    // Use RAII object to prevent content preferences being written during
+    // this call.
+    UpdateDictionaryHolder holder(this);
     rv = SetCurrentDictionary(dictList[0]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
