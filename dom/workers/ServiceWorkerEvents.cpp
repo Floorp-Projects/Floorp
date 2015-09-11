@@ -32,6 +32,22 @@ using namespace mozilla::dom;
 
 BEGIN_WORKERS_NAMESPACE
 
+CancelChannelRunnable::CancelChannelRunnable(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
+                                             nsresult aStatus)
+  : mChannel(aChannel)
+  , mStatus(aStatus)
+{
+}
+
+NS_IMETHODIMP
+CancelChannelRunnable::Run()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsresult rv = mChannel->Cancel(mStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
 FetchEvent::FetchEvent(EventTarget* aOwner)
 : Event(aOwner, nullptr, nullptr)
 , mIsReload(false)
@@ -75,27 +91,6 @@ FetchEvent::Constructor(const GlobalObject& aGlobal,
 }
 
 namespace {
-
-class CancelChannelRunnable final : public nsRunnable
-{
-  nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
-  const nsresult mStatus;
-public:
-  CancelChannelRunnable(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
-                        nsresult aStatus)
-    : mChannel(aChannel)
-    , mStatus(aStatus)
-  {
-  }
-
-  NS_IMETHOD Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    nsresult rv = mChannel->Cancel(mStatus);
-    NS_ENSURE_SUCCESS(rv, rv);
-    return NS_OK;
-  }
-};
 
 class FinishResponse final : public nsRunnable
 {

@@ -242,11 +242,6 @@ endif # WINNT && !GNU_CC
 #
 _ENABLE_PIC=1
 
-# No sense in profiling tools
-ifdef INTERNAL_TOOLS
-NO_PROFILE_GUIDED_OPTIMIZE = 1
-endif
-
 # Don't build SIMPLE_PROGRAMS with PGO, since they don't need it anyway,
 # and we don't have the same build logic to re-link them in the second pass.
 ifdef SIMPLE_PROGRAMS
@@ -386,6 +381,12 @@ ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 #// DLL version of the RTL is used...
 #//
 #//------------------------------------------------------------------------
+ifdef MOZ_ASAN
+# ASAN-instrumented code tries to link against the dynamic CRT, which can't be
+# used in the same link as the static CRT.
+USE_STATIC_LIBS=
+endif # MOZ_ASAN
+
 ifdef USE_STATIC_LIBS
 RTL_FLAGS=-MT          # Statically linked multithreaded RTL
 ifdef MOZ_DEBUG

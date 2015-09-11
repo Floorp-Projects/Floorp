@@ -25,7 +25,7 @@ public:
                      bool aDXVAEnabled);
   ~WMFVideoMFTManager();
 
-  virtual already_AddRefed<MFTDecoder> Init() override;
+  bool Init();
 
   virtual HRESULT Input(MediaRawData* aSample) override;
 
@@ -44,7 +44,7 @@ private:
 
   bool InitializeDXVA(bool aForceD3D9);
 
-  already_AddRefed<MFTDecoder> InitInternal(bool aForceD3D9);
+  bool InitInternal(bool aForceD3D9);
 
   HRESULT ConfigureVideoFrameGeometry();
 
@@ -58,7 +58,7 @@ private:
 
   HRESULT SetDecoderMediaTypes();
 
-  bool MaybeToggleDXVA(IMFMediaType* aType);
+  bool CanUseDXVA(IMFMediaType* aType);
 
   // Video frame geometry.
   VideoInfo mVideoInfo;
@@ -67,14 +67,13 @@ private:
   uint32_t mVideoHeight;
   nsIntRect mPictureRegion;
 
-  RefPtr<MFTDecoder> mDecoder;
   RefPtr<layers::ImageContainer> mImageContainer;
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
 
   RefPtr<IMFSample> mLastInput;
   float mLastDuration;
 
-  const bool mDXVAEnabled;
+  bool mDXVAEnabled;
   const layers::LayersBackend mLayersBackend;
   bool mUseHwAccel;
 

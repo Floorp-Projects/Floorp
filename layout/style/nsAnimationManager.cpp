@@ -239,11 +239,11 @@ CSSAnimation::QueueEvents()
   EventMessage message;
 
   if (!wasActive && isActive) {
-    message = NS_ANIMATION_START;
+    message = eAnimationStart;
   } else if (wasActive && !isActive) {
-    message = NS_ANIMATION_END;
+    message = eAnimationEnd;
   } else if (wasActive && isActive && !isSameIteration) {
-    message = NS_ANIMATION_ITERATION;
+    message = eAnimationIteration;
   } else if (skippedActivePhase) {
     // First notifying for start of 0th iteration by appending an
     // 'animationstart':
@@ -251,24 +251,23 @@ CSSAnimation::QueueEvents()
       std::min(StickyTimeDuration(mEffect->InitialAdvance()),
                computedTiming.mActiveDuration);
     manager->QueueEvent(
-      AnimationEventInfo(owningElement, mAnimationName, NS_ANIMATION_START,
+      AnimationEventInfo(owningElement, mAnimationName, eAnimationStart,
                          elapsedTime, owningPseudoType));
     // Then have the shared code below append an 'animationend':
-    message = NS_ANIMATION_END;
+    message = eAnimationEnd;
   } else {
     return; // No events need to be sent
   }
 
   StickyTimeDuration elapsedTime;
 
-  if (message == NS_ANIMATION_START ||
-      message == NS_ANIMATION_ITERATION) {
+  if (message == eAnimationStart || message == eAnimationIteration) {
     TimeDuration iterationStart = mEffect->Timing().mIterationDuration *
                                     computedTiming.mCurrentIteration;
     elapsedTime = StickyTimeDuration(std::max(iterationStart,
                                               mEffect->InitialAdvance()));
   } else {
-    MOZ_ASSERT(message == NS_ANIMATION_END);
+    MOZ_ASSERT(message == eAnimationEnd);
     elapsedTime = computedTiming.mActiveDuration;
   }
 

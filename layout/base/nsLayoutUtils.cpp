@@ -7810,15 +7810,6 @@ UpdateCompositionBoundsForRCDRSF(ParentLayerRect& aCompBounds,
     return false;
   }
 
-  // On Android, we need to do things a bit differently to get things
-  // right (see bug 983208, bug 988882). We use the bounds of the nearest
-  // widget, but clamp the height to the frame bounds height. This clamping
-  // is done to get correct results for a page where the page is sized to
-  // the screen and thus the dynamic toolbar never disappears. In such a
-  // case, we want the composition bounds to exclude the toolbar height,
-  // but the widget bounds includes it. We don't currently have a good way
-  // of knowing about the toolbar height, but clamping to the frame bounds
-  // height gives the correct answer in the cases we care about.
 #ifdef MOZ_WIDGET_ANDROID
   nsIWidget* widget = rootFrame->GetNearestWidget();
 #else
@@ -7831,15 +7822,6 @@ UpdateCompositionBoundsForRCDRSF(ParentLayerRect& aCompBounds,
     widget->GetBounds(widgetBounds);
     widgetBounds.MoveTo(0, 0);
     aCompBounds = ParentLayerRect(ViewAs<ParentLayerPixel>(widgetBounds));
-#ifdef MOZ_WIDGET_ANDROID
-    ParentLayerRect frameBounds =
-          LayoutDeviceRect::FromAppUnits(aFrameBounds, aPresContext->AppUnitsPerDevPixel())
-        * aCumulativeResolution
-        * LayerToParentLayerScale(1.0);
-    if (frameBounds.height < aCompBounds.height) {
-      aCompBounds.height = frameBounds.height;
-    }
-#endif
     return true;
   }
 

@@ -4,6 +4,9 @@
 
 /* This sheet is added to the style set for documents with script disabled */
 
+/* Until bug 1194856 is fixed, if you update this file you should also update
+   the data: URL in nsLayoutStylesheetCache::NoScriptSheet(). */
+
 noscript {
   display: none !important;
 }

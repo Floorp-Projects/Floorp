@@ -786,9 +786,9 @@ TouchCaret::HandleEvent(WidgetEvent* aEvent)
     case eKeyUp:
     case eKeyDown:
     case eKeyPress:
-    case NS_WHEEL_WHEEL:
-    case NS_WHEEL_START:
-    case NS_WHEEL_STOP:
+    case eWheel:
+    case eWheelOperationStart:
+    case eWheelOperationEnd:
       // Disable touch caret while key/wheel event is received.
       TOUCHCARET_LOG("Receive key/wheel event %d", aEvent->mMessage);
       SetVisibility(false);

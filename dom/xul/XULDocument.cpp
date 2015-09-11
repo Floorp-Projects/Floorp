@@ -839,7 +839,7 @@ XULDocument::RemoveBroadcastListenerFor(Element& aBroadcaster,
                 delete bl;
 
                 if (entry->mListeners.IsEmpty())
-                    PL_DHashTableRemove(mBroadcasterMap, &aBroadcaster);
+                    mBroadcasterMap->RemoveEntry(entry);
 
                 break;
             }

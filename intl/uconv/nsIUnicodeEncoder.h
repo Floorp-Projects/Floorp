@@ -96,6 +96,12 @@ public:
    *                    the first of a surrogate pair.
    *                    NS_ERROR_UENC_NOMAPPING if character without mapping
    *                    was encountered and the behavior was set to "signal".
+   *                    In the case of an unmappable BMP character, aDestLength
+   *                    must indicate that the unmappable character was
+   *                    consumed by the encoder (unlike in the decode API!).
+   *                    In the case of an unmappable astral character,
+   *                    aDestLength must indicate that the high surrogate was
+   *                    consumed by the encoder but the low surrogate was not.
    */
   NS_IMETHOD Convert(const char16_t * aSrc, int32_t * aSrcLength, 
       char * aDest, int32_t * aDestLength) = 0;

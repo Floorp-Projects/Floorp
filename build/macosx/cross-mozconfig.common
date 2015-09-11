@@ -3,8 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOZ_AUTOMATION_L10N_CHECK=0
-#TODO: bug 935237 - fix packaging
-MOZ_AUTOMATION_PACKAGE=0
 #TODO: bug 543111 - fix Breakpad
 MOZ_AUTOMATION_BUILD_SYMBOLS=0
 MOZ_AUTOMATION_UPLOAD_SYMBOLS=0
@@ -37,9 +35,13 @@ export AR=${TOOLCHAIN_PREFIX}ar
 export RANLIB=${TOOLCHAIN_PREFIX}ranlib
 export STRIP=${TOOLCHAIN_PREFIX}strip
 export OTOOL=${TOOLCHAIN_PREFIX}otool
+export GENISOIMAGE=$topsrcdir/genisoimage/genisoimage
+export DMG_TOOL=$topsrcdir/dmg/dmg
 
-export HOST_CC=gcc
-export HOST_CXX=g++
+# The system gcc installed on CentOS 6 is 4.4, which our
+# build system rejects.
+export HOST_CC="$topsrcdir/gcc/bin/gcc"
+export HOST_CXX="$topsrcdir/gcc/bin/g++"
 export HOST_LDFLAGS="-g"
 
 ac_add_options --target=x86_64-apple-darwin

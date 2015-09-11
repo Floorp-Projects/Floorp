@@ -48,6 +48,15 @@ public:
     char mChar;
     uint64_t mInteger;
 
+    // If this token is a result of the parsing process, this member is referencing
+    // a sub-string in the input buffer.  If this is externally created Token this
+    // member is left an empty string.
+    nsDependentCSubstring mFragment;
+
+    friend class Tokenizer;
+    void AssignFragment(nsACString::const_char_iterator begin,
+                        nsACString::const_char_iterator end);
+
   public:
     Token() : mType(TOKEN_UNKNOWN), mChar(0), mInteger(0) {}
     Token(const Token& aOther);
@@ -70,6 +79,8 @@ public:
     char AsChar() const;
     nsDependentCSubstring AsString() const;
     uint64_t AsInteger() const;
+
+    nsDependentCSubstring Fragment() const { return mFragment; }
   };
 
 public:
@@ -199,6 +210,7 @@ public:
    * These are shortcuts to obtain the value immediately when the token type matches.
    */
   bool ReadChar(char* aValue);
+  bool ReadChar(bool (*aClassifier)(const char aChar), char* aValue);
   bool ReadWord(nsACString& aValue);
   bool ReadWord(nsDependentCSubstring& aValue);
 
@@ -273,6 +285,7 @@ public:
    * token.
    */
   void Claim(nsACString& aResult, ClaimInclusion aInclude = EXCLUDE_LAST);
+  void Claim(nsDependentCSubstring& aResult, ClaimInclusion aInclude = EXCLUDE_LAST);
 
 protected:
   // false if we have already read the EOF token.
@@ -290,13 +303,6 @@ protected:
   // TODO - support multiple radix
   bool IsNumber(const char aInput) const;
 
-private:
-  Tokenizer() = delete;
-  Tokenizer(const Tokenizer&) = delete;
-  Tokenizer(Tokenizer&&) = delete;
-  Tokenizer(const Tokenizer&&) = delete;
-  Tokenizer &operator=(const Tokenizer&) = delete;
-
   // true iff we have already read the EOF token
   bool mPastEof;
   // true iff the last Check*() call has returned false, reverts to true on Rollback() call
@@ -312,6 +318,13 @@ private:
   nsACString::const_char_iterator mRollback; // Position of the previous token start
   nsACString::const_char_iterator mCursor; // Position of the current (actually next to read) token start
   nsACString::const_char_iterator mEnd; // End of the input position
+
+private:
+  Tokenizer() = delete;
+  Tokenizer(const Tokenizer&) = delete;
+  Tokenizer(Tokenizer&&) = delete;
+  Tokenizer(const Tokenizer&&) = delete;
+  Tokenizer &operator=(const Tokenizer&) = delete;
 };
 
 } // mozilla

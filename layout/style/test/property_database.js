@@ -3642,6 +3642,14 @@ var gCSSProperties = {
     ],
     quirks_values: { "5": "5px" },
   },
+  "will-change": {
+    domProp: "willChange",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "scroll-position", "contents", "transform", "opacity", "scroll-position, transform", "transform, opacity", "contents, transform", "property-that-doesnt-exist-yet" ],
+    invalid_values: [ "none", "all", "default", "auto, scroll-position", "scroll-position, auto", "transform scroll-position", ",", "trailing,", "will-change", "transform, will-change" ]
+  },
   "word-break": {
     domProp: "wordBreak",
     inherited: true,
@@ -6374,17 +6382,6 @@ if (SpecialPowers.getBoolPref("layout.css.background-blend-mode.enabled")) {
     other_values: [ "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
       "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity" ],
     invalid_values: ["none", "10px", "multiply multiply"]
-  };
-}
-
-if (SpecialPowers.getBoolPref("layout.css.will-change.enabled")) {
-  gCSSProperties["will-change"] = {
-    domProp: "willChange",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: [ "scroll-position", "contents", "transform", "opacity", "scroll-position, transform", "transform, opacity", "contents, transform", "property-that-doesnt-exist-yet" ],
-    invalid_values: [ "none", "all", "default", "auto, scroll-position", "scroll-position, auto", "transform scroll-position", ",", "trailing,", "will-change", "transform, will-change" ]
   };
 }
 

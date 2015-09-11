@@ -92,7 +92,7 @@
 #include "nsSandboxFlags.h"
 #include "mozilla/layers/CompositorChild.h"
 
-#include "mozilla/dom/StructuredCloneIPCHelper.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/WebBrowserPersistLocalDocument.h"
 
 #ifdef MOZ_XUL
@@ -2447,10 +2447,10 @@ public:
   nsAsyncMessageToChild(JSContext* aCx,
                         nsFrameLoader* aFrameLoader,
                         const nsAString& aMessage,
-                        StructuredCloneIPCHelper& aHelper,
+                        StructuredCloneData& aData,
                         JS::Handle<JSObject *> aCpows,
                         nsIPrincipal* aPrincipal)
-    : nsSameProcessAsyncMessageBase(aCx, aMessage, aHelper, aCpows, aPrincipal)
+    : nsSameProcessAsyncMessageBase(aCx, aMessage, aData, aCpows, aPrincipal)
     , mFrameLoader(aFrameLoader)
   {
   }
@@ -2472,7 +2472,7 @@ public:
 bool
 nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
                                   const nsAString& aMessage,
-                                  StructuredCloneIPCHelper& aHelper,
+                                  StructuredCloneData& aData,
                                   JS::Handle<JSObject *> aCpows,
                                   nsIPrincipal* aPrincipal)
 {
@@ -2480,7 +2480,7 @@ nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
   if (tabParent) {
     ClonedMessageData data;
     nsIContentParent* cp = tabParent->Manager();
-    if (!BuildClonedMessageDataForParent(cp, aHelper, data)) {
+    if (!BuildClonedMessageDataForParent(cp, aData, data)) {
       return false;
     }
     InfallibleTArray<mozilla::jsipc::CpowEntry> cpows;
@@ -2494,7 +2494,7 @@ nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
 
   if (mChildMessageManager) {
     nsCOMPtr<nsIRunnable> ev = new nsAsyncMessageToChild(aCx, this, aMessage,
-                                                         aHelper, aCpows,
+                                                         aData, aCpows,
                                                          aPrincipal);
     NS_DispatchToCurrentThread(ev);
     return true;

@@ -42,8 +42,8 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     void visitUnbox(LUnbox* unbox);
     void visitCompareB(LCompareB* lir);
     void visitCompareBAndBranch(LCompareBAndBranch* lir);
-    void visitCompareV(LCompareV* lir);
-    void visitCompareVAndBranch(LCompareVAndBranch* lir);
+    void visitCompareBitwise(LCompareBitwise* lir);
+    void visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir);
     void visitTruncateDToInt32(LTruncateDToInt32* ins);
     void visitTruncateFToInt32(LTruncateFToInt32* ins);
     void visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins);

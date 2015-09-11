@@ -100,6 +100,7 @@ private:
   nsRefPtr<IDirect3DDeviceManager9> mDeviceManager;
   RefPtr<D3D9RecycleAllocator> mTextureClientAllocator;
   nsRefPtr<IDirectXVideoDecoderService> mDecoderService;
+  GUID mDecoderGUID;
   UINT32 mResetToken;
   bool mFirstFrame;
   bool mIsAMDPreUVD4;
@@ -170,6 +171,10 @@ static const GUID DXVA2_ModeH264_E = {
   0x1b81be68, 0xa0c7, 0x11d3, { 0xb9, 0x84, 0x00, 0xc0, 0x4f, 0x2e, 0x73, 0xc5 }
 };
 
+static const GUID DXVA2_Intel_ModeH264_E = {
+  0x604F8E68, 0x4951, 0x4c54, { 0x88, 0xFE, 0xAB, 0xD2, 0x5C, 0x15, 0xB3, 0xD6 }
+};
+
 // This tests if a DXVA video decoder can be created for the given media type/resolution.
 // It uses the same decoder device (DXVA2_ModeH264_E - DXVA2_ModeH264_VLD_NoFGT) as the H264
 // decoder MFT provided by windows (CLSID_CMSH264DecoderMFT) uses, so we can use it to determine
@@ -192,13 +197,13 @@ D3D9DXVA2Manager::SupportsConfig(IMFMediaType* aType, float aFramerate)
 
   UINT configCount;
   DXVA2_ConfigPictureDecode* configs = nullptr;
-  hr = mDecoderService->GetDecoderConfigurations(DXVA2_ModeH264_E, &desc, nullptr, &configCount, &configs);
+  hr = mDecoderService->GetDecoderConfigurations(mDecoderGUID, &desc, nullptr, &configCount, &configs);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   nsRefPtr<IDirect3DSurface9> surface;
   hr = mDecoderService->CreateSurface(desc.SampleWidth, desc.SampleHeight, 0, (D3DFORMAT)MAKEFOURCC('N', 'V', '1', '2'),
-  D3DPOOL_DEFAULT, 0, DXVA2_VideoDecoderRenderTarget,
-  surface.StartAssignment(), NULL);
+                                      D3DPOOL_DEFAULT, 0, DXVA2_VideoDecoderRenderTarget,
+                                      surface.StartAssignment(), NULL);
   if (!SUCCEEDED(hr)) {
     CoTaskMemFree(configs);
     return false;
@@ -207,7 +212,7 @@ D3D9DXVA2Manager::SupportsConfig(IMFMediaType* aType, float aFramerate)
   for (UINT i = 0; i < configCount; i++) {
     nsRefPtr<IDirectXVideoDecoder> decoder;
     IDirect3DSurface9* surfaces = surface;
-    hr = mDecoderService->CreateVideoDecoder(DXVA2_ModeH264_E, &desc, &configs[i], &surfaces, 1, decoder.StartAssignment());
+    hr = mDecoderService->CreateVideoDecoder(mDecoderGUID, &desc, &configs[i], &surfaces, 1, decoder.StartAssignment());
     if (SUCCEEDED(hr) && decoder) {
       CoTaskMemFree(configs);
       return true;
@@ -332,20 +337,31 @@ D3D9DXVA2Manager::Init(nsACString& aFailureReason)
   HANDLE deviceHandle;
   nsRefPtr<IDirectXVideoDecoderService> decoderService;
   hr = deviceManager->OpenDeviceHandle(&deviceHandle);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("IDirect3DDeviceManager9::OpenDeviceHandle failed with error %X", hr);
+    return hr;
+  }
 
   hr = deviceManager->GetVideoService(deviceHandle, IID_PPV_ARGS(decoderService.StartAssignment()));
   deviceManager->CloseDeviceHandle(deviceHandle);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("IDirectXVideoDecoderServer::GetVideoService failed with error %X", hr);
+    return hr;
+  }
 
   UINT deviceCount;
   GUID* decoderDevices = nullptr;
   hr = decoderService->GetDecoderDeviceGuids(&deviceCount, &decoderDevices);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("IDirectXVideoDecoderServer::GetDecoderDeviceGuids failed with error %X", hr);
+    return hr;
+  }
 
   bool found = false;
   for (UINT i = 0; i < deviceCount; i++) {
-    if (decoderDevices[i] == DXVA2_ModeH264_E) {
+    if (decoderDevices[i] == DXVA2_ModeH264_E ||
+        decoderDevices[i] == DXVA2_Intel_ModeH264_E) {
+      mDecoderGUID = decoderDevices[i];
       found = true;
       break;
     }
@@ -353,14 +369,18 @@ D3D9DXVA2Manager::Init(nsACString& aFailureReason)
   CoTaskMemFree(decoderDevices);
 
   if (!found) {
+    aFailureReason.AssignLiteral("Failed to find an appropriate decoder GUID");
     return E_FAIL;
   }
 
   D3DADAPTER_IDENTIFIER9 adapter;
   hr = d3d9Ex->GetAdapterIdentifier(D3DADAPTER_DEFAULT, 0, &adapter);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("IDirect3D9Ex::GetAdapterIdentifier failed with error %X", hr);
+    return hr;
+  }
 
-  if (adapter.VendorId = 0x1022) {
+  if (adapter.VendorId == 0x1022) {
     for (size_t i = 0; i < MOZ_ARRAY_LENGTH(sAMDPreUVD4); i++) {
       if (adapter.DeviceId == sAMDPreUVD4[i]) {
         mIsAMDPreUVD4 = true;
@@ -478,6 +498,7 @@ private:
   RefPtr<IMFDXGIDeviceManager> mDXGIDeviceManager;
   RefPtr<MFTDecoder> mTransform;
   RefPtr<D3D11RecycleAllocator> mTextureClientAllocator;
+  GUID mDecoderGUID;
   uint32_t mWidth;
   uint32_t mHeight;
   UINT mDeviceManagerToken;
@@ -492,7 +513,7 @@ D3D11DXVA2Manager::SupportsConfig(IMFMediaType* aType, float aFramerate)
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   D3D11_VIDEO_DECODER_DESC desc;
-  desc.Guid = DXVA2_ModeH264_E;
+  desc.Guid = mDecoderGUID;
 
   UINT32 width = 0;
   UINT32 height = 0;
@@ -593,42 +614,60 @@ D3D11DXVA2Manager::Init(nsACString& aFailureReason)
 
   RefPtr<ID3D11VideoDevice> videoDevice;
   hr = mDevice->QueryInterface(static_cast<ID3D11VideoDevice**>(byRef(videoDevice)));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("QI to ID3D11VideoDevice failed with code %X", hr);
+    return hr;
+  }
 
   bool found = false;
   UINT profileCount = videoDevice->GetVideoDecoderProfileCount();
   for (UINT i = 0; i < profileCount; i++) {
     GUID id;
     hr = videoDevice->GetVideoDecoderProfile(i, &id);
-    if (SUCCEEDED(hr) && id == DXVA2_ModeH264_E) {
+    if (SUCCEEDED(hr) && (id == DXVA2_ModeH264_E || id == DXVA2_Intel_ModeH264_E)) {
+      mDecoderGUID = id;
       found = true;
       break;
     }
   }
   if (!found) {
+    aFailureReason.AssignLiteral("Failed to find an appropriate decoder GUID");
     return E_FAIL;
   }
 
   BOOL nv12Support = false;
-  hr = videoDevice->CheckVideoDecoderFormat(&DXVA2_ModeH264_E, DXGI_FORMAT_NV12, &nv12Support);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  hr = videoDevice->CheckVideoDecoderFormat(&mDecoderGUID, DXGI_FORMAT_NV12, &nv12Support);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("CheckVideoDecoderFormat failed with code %X", hr);
+    return hr;
+  }
   if (!nv12Support) {
+    aFailureReason.AssignLiteral("Decoder doesn't support NV12 surfaces");
     return E_FAIL;
   }
 
   RefPtr<IDXGIDevice> dxgiDevice;
   hr = mDevice->QueryInterface(static_cast<IDXGIDevice**>(byRef(dxgiDevice)));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("QI to IDXGIDevice failed with code %X", hr);
+    return hr;
+  }
 
   nsRefPtr<IDXGIAdapter> adapter;
   hr = dxgiDevice->GetAdapter(adapter.StartAssignment());
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("IDXGIDevice::GetAdapter failed with code %X", hr);
+    return hr;
+  }
 
   DXGI_ADAPTER_DESC adapterDesc;
   hr = adapter->GetDesc(&adapterDesc);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  if (!SUCCEEDED(hr)) {
+    aFailureReason = nsPrintfCString("IDXGIAdapter::GetDesc failed with code %X", hr);
+    return hr;
+  }
 
-  if (adapterDesc.VendorId = 0x1022) {
+  if (adapterDesc.VendorId == 0x1022) {
     for (size_t i = 0; i < MOZ_ARRAY_LENGTH(sAMDPreUVD4); i++) {
       if (adapterDesc.DeviceId == sAMDPreUVD4[i]) {
         mIsAMDPreUVD4 = true;

@@ -69,10 +69,11 @@ public:
     virtual nsresult GetStandardFamilyName(const nsAString& aFontName,
                                            nsAString& aFamilyName);
 
-    virtual gfxFontGroup*
+    gfxFontGroup*
     CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
                     const gfxFontStyle *aStyle,
-                    gfxUserFontSet* aUserFontSet);
+                    gfxTextPerfMetrics* aTextPerf,
+                    gfxUserFontSet *aUserFontSet) override;
 
     virtual bool FontHintingEnabled() override;
     virtual bool RequiresLinearZoom() override;

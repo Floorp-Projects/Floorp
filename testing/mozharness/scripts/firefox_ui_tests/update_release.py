@@ -215,8 +215,8 @@ class ReleaseFirefoxUIUpdateTests(FirefoxUIUpdateTests):
     @PreScriptAction('run-tests')
     def _pre_run_tests(self, action):
         assert ('release_update_config' in self.config or
-                self.installer_url or self.installer_path),
-                'Either specify --update-verify-config, --installer-url or --installer-path.'
+                self.installer_url or self.installer_path), \
+            'Either specify --update-verify-config, --installer-url or --installer-path.'
 
     def run_tests(self):
         dirs = self.query_abs_dirs()

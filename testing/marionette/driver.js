@@ -447,20 +447,19 @@ GeckoDriver.prototype.registerBrowser = function(id, be) {
 
   this.curBrowser.elementManager.seenItems[reg.id] =
       Cu.getWeakReference(listenerWindow);
+  let flags = {
+    B2G: (this.appName == "B2G"),
+    raisesAccessibilityExceptions:
+      this.sessionCapabilities.raisesAccessibilityExceptions
+  };
   if (nullPrevious && (this.curBrowser.curFrameId !== null)) {
-    this.sendAsync("newSession",
-        {
-          B2G: (this.appName == "B2G"),
-          raisesAccessibilityExceptions:
-              this.sessionCapabilities.raisesAccessibilityExceptions
-        },
-        this.newSessionCommandId);
+    this.sendAsync("newSession", flags, this.newSessionCommandId);
     if (this.curBrowser.isNewSession) {
       this.newSessionCommandId = null;
     }
   }
 
-  return [reg, mainContent];
+  return [reg, mainContent, flags];
 };
 
 GeckoDriver.prototype.registerPromise = function() {

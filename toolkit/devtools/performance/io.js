@@ -153,9 +153,7 @@ function convertLegacyData (legacyData) {
       withMarkers: false,
       withMemory: false,
       withAllocations: false
-    },
-    systemHost: {},
-    systemClient: {},
+    }
   };
 
   return data;

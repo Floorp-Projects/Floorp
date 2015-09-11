@@ -1354,19 +1354,19 @@ NativeKey::HandleAppCommandMessage() const
 
       // Use content command for following commands:
       case APPCOMMAND_COPY:
-        contentCommandMessage = NS_CONTENT_COMMAND_COPY;
+        contentCommandMessage = eContentCommandCopy;
         break;
       case APPCOMMAND_CUT:
-        contentCommandMessage = NS_CONTENT_COMMAND_CUT;
+        contentCommandMessage = eContentCommandCut;
         break;
       case APPCOMMAND_PASTE:
-        contentCommandMessage = NS_CONTENT_COMMAND_PASTE;
+        contentCommandMessage = eContentCommandPaste;
         break;
       case APPCOMMAND_REDO:
-        contentCommandMessage = NS_CONTENT_COMMAND_REDO;
+        contentCommandMessage = eContentCommandRedo;
         break;
       case APPCOMMAND_UNDO:
-        contentCommandMessage = NS_CONTENT_COMMAND_UNDO;
+        contentCommandMessage = eContentCommandUndo;
         break;
     }
 

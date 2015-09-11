@@ -1308,35 +1308,54 @@ AccessibleWrap::GetChildIDFor(Accessible* aAccessible)
 HWND
 AccessibleWrap::GetHWNDFor(Accessible* aAccessible)
 {
-  if (aAccessible) {
-    DocAccessible* document = aAccessible->Document();
-    if(!document)
-      return nullptr;
+  if (!aAccessible) {
+    return nullptr;
+  }
 
-    // Popup lives in own windows, use its HWND until the popup window is
-    // hidden to make old JAWS versions work with collapsed comboboxes (see
-    // discussion in bug 379678).
-    nsIFrame* frame = aAccessible->GetFrame();
-    if (frame) {
-      nsIWidget* widget = frame->GetNearestWidget();
-      if (widget && widget->IsVisible()) {
-        nsIPresShell* shell = document->PresShell();
-        nsViewManager* vm = shell->GetViewManager();
-        if (vm) {
-          nsCOMPtr<nsIWidget> rootWidget;
-          vm->GetRootWidget(getter_AddRefs(rootWidget));
-          // Make sure the accessible belongs to popup. If not then use
-          // document HWND (which might be different from root widget in the
-          // case of window emulation).
-          if (rootWidget != widget)
-            return static_cast<HWND>(widget->GetNativeData(NS_NATIVE_WINDOW));
-        }
-      }
+  // Accessibles in child processes are said to have the HWND of the window
+  // their tab is within.  Popups are always in the parent process, and so
+  // never proxied, which means this is basically correct.
+  if (aAccessible->IsProxy()) {
+    ProxyAccessible* proxy = aAccessible->Proxy();
+    if (!proxy) {
+      return nullptr;
     }
 
-    return static_cast<HWND>(document->GetNativeWindow());
+    Accessible* outerDoc = proxy->OuterDocOfRemoteBrowser();
+    NS_ASSERTION(outerDoc, "no outer doc for accessible remote tab!");
+    if (!outerDoc) {
+      return nullptr;
+    }
+
+    return GetHWNDFor(outerDoc);
   }
-  return nullptr;
+
+  DocAccessible* document = aAccessible->Document();
+  if(!document)
+    return nullptr;
+
+  // Popup lives in own windows, use its HWND until the popup window is
+  // hidden to make old JAWS versions work with collapsed comboboxes (see
+  // discussion in bug 379678).
+  nsIFrame* frame = aAccessible->GetFrame();
+  if (frame) {
+    nsIWidget* widget = frame->GetNearestWidget();
+    if (widget && widget->IsVisible()) {
+      nsIPresShell* shell = document->PresShell();
+      nsViewManager* vm = shell->GetViewManager();
+      if (vm) {
+        nsCOMPtr<nsIWidget> rootWidget;
+        vm->GetRootWidget(getter_AddRefs(rootWidget));
+        // Make sure the accessible belongs to popup. If not then use
+        // document HWND (which might be different from root widget in the
+        // case of window emulation).
+        if (rootWidget != widget)
+          return static_cast<HWND>(widget->GetNativeData(NS_NATIVE_WINDOW));
+      }
+    }
+  }
+
+  return static_cast<HWND>(document->GetNativeWindow());
 }
 
 IDispatch*

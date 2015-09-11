@@ -66,11 +66,6 @@ public:
     aContext->SetState(aContext->ScrollState());
   }
 
-  virtual void OnScrolling(AccessibleCaretEventHub* aContext) override
-  {
-    aContext->mManager->OnScrolling();
-  }
-
   virtual void OnScrollPositionChanged(AccessibleCaretEventHub* aContext) override
   {
     aContext->mManager->OnScrollPositionChanged();
@@ -539,19 +534,19 @@ nsEventStatus
 AccessibleCaretEventHub::HandleWheelEvent(WidgetWheelEvent* aEvent)
 {
   switch (aEvent->mMessage) {
-  case NS_WHEEL_WHEEL:
-    AC_LOGV("NS_WHEEL_WHEEL, isMomentum %d, state: %s", aEvent->isMomentum,
+  case eWheel:
+    AC_LOGV("eWheel, isMomentum %d, state: %s", aEvent->isMomentum,
             mState->Name());
     mState->OnScrolling(this);
     break;
 
-  case NS_WHEEL_START:
-    AC_LOGV("NS_WHEEL_START, state: %s", mState->Name());
+  case eWheelOperationStart:
+    AC_LOGV("eWheelOperationStart, state: %s", mState->Name());
     mState->OnScrollStart(this);
     break;
 
-  case NS_WHEEL_STOP:
-    AC_LOGV("NS_WHEEL_STOP, state: %s", mState->Name());
+  case eWheelOperationEnd:
+    AC_LOGV("eWheelOperationEnd, state: %s", mState->Name());
     mState->OnScrollEnd(this);
     break;
 
@@ -611,8 +606,17 @@ AccessibleCaretEventHub::HandleKeyboardEvent(WidgetKeyboardEvent* aEvent)
 {
   switch (aEvent->mMessage) {
   case eKeyUp:
+    AC_LOGV("eKeyUp, state: %s", mState->Name());
+    mManager->OnKeyboardEvent();
+    break;
+
   case eKeyDown:
+    AC_LOGV("eKeyDown, state: %s", mState->Name());
+    mManager->OnKeyboardEvent();
+    break;
+
   case eKeyPress:
+    AC_LOGV("eKeyPress, state: %s", mState->Name());
     mManager->OnKeyboardEvent();
     break;
 
