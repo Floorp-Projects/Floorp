@@ -8,6 +8,7 @@
 #include "cryptohi.h"
 #include "secerr.h"
 #include "ScopedNSSTypes.h"
+#include "nsNSSComponent.h"
 
 #include "jsapi.h"
 #include "mozilla/Telemetry.h"
@@ -17,6 +18,7 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/dom/WebCryptoTask.h"
+#include "mozilla/dom/WebCryptoThreadPool.h"
 
 namespace mozilla {
 namespace dom {
@@ -286,9 +288,72 @@ CloneData(JSContext* aCx, CryptoBuffer& aDst, JS::Handle<JSObject*> aSrc)
 // Implementation of WebCryptoTask methods
 
 void
-WebCryptoTask::FailWithError(nsresult aRv)
+WebCryptoTask::DispatchWithPromise(Promise* aResultPromise)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  mResultPromise = aResultPromise;
+
+  // Fail if an error was set during the constructor
+  MAYBE_EARLY_FAIL(mEarlyRv)
+
+  // Perform pre-NSS operations, and fail if they fail
+  mEarlyRv = BeforeCrypto();
+  MAYBE_EARLY_FAIL(mEarlyRv)
+
+  // Skip NSS if we're already done, or launch a CryptoTask
+  if (mEarlyComplete) {
+    CallCallback(mEarlyRv);
+    Skip();
+    return;
+  }
+
+  // Ensure that NSS is initialized, since presumably CalculateResult
+  // will use NSS functions
+  if (!EnsureNSSInitializedChromeOrContent()) {
+    mEarlyRv = NS_ERROR_DOM_UNKNOWN_ERR;
+    MAYBE_EARLY_FAIL(mEarlyRv)
+  }
+
+  // Store calling thread and dispatch to thread pool.
+  mOriginalThread = NS_GetCurrentThread();
+  mEarlyRv = WebCryptoThreadPool::Dispatch(this);
+  MAYBE_EARLY_FAIL(mEarlyRv)
+}
+
+NS_IMETHODIMP
+WebCryptoTask::Run()
+{
+  // Run heavy crypto operations on the thread pool, off the original thread.
+  if (!IsOnOriginalThread()) {
+    nsNSSShutDownPreventionLock locker;
+
+    if (isAlreadyShutDown()) {
+      mRv = NS_ERROR_NOT_AVAILABLE;
+    } else {
+      mRv = CalculateResult();
+    }
+
+    // Back to the original thread, i.e. continue below.
+    mOriginalThread->Dispatch(this, NS_DISPATCH_NORMAL);
+    return NS_OK;
+  }
+
+  // We're now back on the calling thread.
+
+  // Release NSS resources now, before calling CallCallback, so that
+  // WebCryptoTasks have consistent behavior regardless of whether NSS is shut
+  // down between CalculateResult being called and CallCallback being called.
+  virtualDestroyNSSReference();
+
+  CallCallback(mRv);
+
+  return NS_OK;
+}
+
+void
+WebCryptoTask::FailWithError(nsresult aRv)
+{
+  MOZ_ASSERT(IsOnOriginalThread());
   Telemetry::Accumulate(Telemetry::WEBCRYPTO_RESOLVED, false);
 
   // Blindly convert nsresult to DOMException
@@ -302,7 +367,7 @@ WebCryptoTask::FailWithError(nsresult aRv)
 nsresult
 WebCryptoTask::CalculateResult()
 {
-  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnOriginalThread());
 
   if (isAlreadyShutDown()) {
     return NS_ERROR_DOM_UNKNOWN_ERR;
@@ -314,7 +379,7 @@ WebCryptoTask::CalculateResult()
 void
 WebCryptoTask::CallCallback(nsresult rv)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IsOnOriginalThread());
   if (NS_FAILED(rv)) {
     FailWithError(rv);
     return;
