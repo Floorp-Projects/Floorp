@@ -796,12 +796,12 @@ NON_IDL_EVENT(endEvent,
 // Only map the ID to the real event name when MESSAGE_TO_EVENT is defined.
 #ifndef MESSAGE_TO_EVENT
 NON_IDL_EVENT(repeat,
-              NS_SMIL_REPEAT,
+              eSMILRepeatEvent,
               EventNameType_SMIL,
               eBasicEventClass)
 #endif
 NON_IDL_EVENT(repeatEvent,
-              NS_SMIL_REPEAT,
+              eSMILRepeatEvent,
               EventNameType_None,
               eSMILTimeEventClass)
 
