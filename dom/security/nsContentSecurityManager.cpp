@@ -179,20 +179,8 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
 
     case nsIContentPolicy::TYPE_WEBSOCKET:
     case nsIContentPolicy::TYPE_CSP_REPORT:
-    case nsIContentPolicy::TYPE_XSLT: {
-      MOZ_ASSERT(false, "contentPolicyType not supported yet");
-      break;
-    }
-
-    case nsIContentPolicy::TYPE_BEACON: {
-      mimeTypeGuess = EmptyCString();
-      requestingContext = aLoadInfo->LoadingNode();
-      MOZ_ASSERT(!requestingContext ||
-                 requestingContext->NodeType() == nsIDOMNode::DOCUMENT_NODE,
-                 "type_beacon requires requestingContext of type Document");
-      break;
-    }
-
+    case nsIContentPolicy::TYPE_XSLT:
+    case nsIContentPolicy::TYPE_BEACON:
     case nsIContentPolicy::TYPE_FETCH:
     case nsIContentPolicy::TYPE_IMAGESET: {
       MOZ_ASSERT(false, "contentPolicyType not supported yet");
