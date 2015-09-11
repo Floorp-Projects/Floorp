@@ -384,7 +384,7 @@ EventListenerManager::AddEventListenerInternal(
     }
 #ifdef MOZ_GAMEPAD
   } else if (aEventMessage >= eGamepadEventFirst &&
-             aEventMessage <= NS_GAMEPAD_END) {
+             aEventMessage <= eGamepadEventLast) {
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (window) {
       window->SetHasGamepadEventListener();
