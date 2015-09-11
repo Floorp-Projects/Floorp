@@ -32,12 +32,6 @@ nsScreenAndroid::GetId(uint32_t *outId)
 NS_IMETHODIMP
 nsScreenAndroid::GetRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
 {
-    if (!mozilla::jni::IsAvailable()) {
-      // xpcshell most likely
-      *outLeft = *outTop = *outWidth = *outHeight = 0;
-      return NS_ERROR_FAILURE;
-    }
-
     widget::sdk::Rect::LocalRef rect = widget::GeckoAppShell::GetScreenSize();
     rect->Left(outLeft);
     rect->Top(outTop);
@@ -59,13 +53,7 @@ nsScreenAndroid::GetAvailRect(int32_t *outLeft, int32_t *outTop, int32_t *outWid
 NS_IMETHODIMP
 nsScreenAndroid::GetPixelDepth(int32_t *aPixelDepth)
 {
-    if (!mozilla::jni::IsAvailable()) {
-      // xpcshell most likely
-      *aPixelDepth = 16;
-      return NS_ERROR_FAILURE;
-    }
-
-    *aPixelDepth = widget::GeckoAppShell::GetScreenDepthWrapper();
+    *aPixelDepth = AndroidBridge::Bridge()->GetScreenDepth();
     return NS_OK;
 }
 
@@ -79,9 +67,7 @@ nsScreenAndroid::GetColorDepth(int32_t *aColorDepth)
 void
 nsScreenAndroid::ApplyMinimumBrightness(uint32_t aBrightness)
 {
-    if (mozilla::jni::IsAvailable()) {
-      widget::GeckoAppShell::SetKeepScreenOn(aBrightness == BRIGHTNESS_FULL);
-    }
+    widget::GeckoAppShell::SetKeepScreenOn(aBrightness == BRIGHTNESS_FULL);
 }
 
 NS_IMPL_ISUPPORTS(nsScreenManagerAndroid, nsIScreenManager)
