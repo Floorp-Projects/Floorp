@@ -609,6 +609,30 @@ MDefinition::justReplaceAllUsesWith(MDefinition* dom)
 }
 
 void
+MDefinition::justReplaceAllUsesWithExcept(MDefinition* dom)
+{
+    MOZ_ASSERT(dom != nullptr);
+    MOZ_ASSERT(dom != this);
+
+    // Move all uses to new dom. Save the use of the dominating instruction.
+    MUse *exceptUse = nullptr;
+    for (MUseIterator i(usesBegin()), e(usesEnd()); i != e; ++i) {
+        if (i->consumer() != dom) {
+            i->setProducerUnchecked(dom);
+        } else {
+            MOZ_ASSERT(!exceptUse);
+            exceptUse = *i;
+        }
+    }
+    dom->uses_.takeElements(uses_);
+
+    // Restore the use to the original definition.
+    dom->uses_.remove(exceptUse);
+    exceptUse->setProducerUnchecked(this);
+    uses_.pushFront(exceptUse);
+}
+
+void
 MDefinition::optimizeOutAllUses(TempAllocator& alloc)
 {
     for (MUseIterator i(usesBegin()), e(usesEnd()); i != e;) {
