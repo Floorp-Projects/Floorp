@@ -57,6 +57,10 @@
 #include "nsExceptionHandler.h"
 #endif
 
+#if defined(MOZ_JEMALLOC4)
+#include "mozmemory.h"
+#endif
+
 using namespace mozilla;
 using namespace xpc;
 using namespace JS;
@@ -146,26 +150,40 @@ public:
               mActive = false;
           }
       } else {
+#if defined(MOZ_JEMALLOC4)
+          if (mPurge) {
+              /* Jemalloc purges dirty pages regularly during free() when the
+               * ratio of dirty pages compared to active pages is higher than
+               * 1 << lg_dirty_mult. A high ratio can have an impact on
+               * performance, so we use the default ratio of 8, but force a
+               * regular purge of all remaining dirty pages, after cycle
+               * collection. */
+              Telemetry::AutoTimer<Telemetry::MEMORY_FREE_PURGED_PAGES_MS> timer;
+              jemalloc_free_dirty_pages();
+          }
+#endif
           mActive = false;
       }
       return NS_OK;
   }
 
-  void Dispatch(bool aContinuation = false)
+  void Dispatch(bool aContinuation = false, bool aPurge = false)
   {
       if (mContinuation) {
           mContinuation = aContinuation;
       }
+      mPurge = aPurge;
       if (!mActive && NS_SUCCEEDED(NS_DispatchToCurrentThread(this))) {
           mActive = true;
       }
   }
 
-  AsyncFreeSnowWhite() : mContinuation(false), mActive(false) {}
+  AsyncFreeSnowWhite() : mContinuation(false), mActive(false), mPurge(false) {}
 
 public:
   bool mContinuation;
   bool mActive;
+  bool mPurge;
 };
 
 namespace xpc {
@@ -630,9 +648,9 @@ XPCJSRuntime::EndCycleCollectionCallback(CycleCollectorResults& aResults)
 }
 
 void
-XPCJSRuntime::DispatchDeferredDeletion(bool aContinuation)
+XPCJSRuntime::DispatchDeferredDeletion(bool aContinuation, bool aPurge)
 {
-    mAsyncSnowWhiteFreer->Dispatch(aContinuation);
+    mAsyncSnowWhiteFreer->Dispatch(aContinuation, aPurge);
 }
 
 void

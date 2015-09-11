@@ -290,7 +290,7 @@ public:
   virtual void PrepareForForgetSkippable() = 0;
   virtual void BeginCycleCollectionCallback() = 0;
   virtual void EndCycleCollectionCallback(CycleCollectorResults& aResults) = 0;
-  virtual void DispatchDeferredDeletion(bool aContinuation) = 0;
+  virtual void DispatchDeferredDeletion(bool aContinuation, bool aPurge = false) = 0;
 
   JSRuntime* Runtime() const
   {
