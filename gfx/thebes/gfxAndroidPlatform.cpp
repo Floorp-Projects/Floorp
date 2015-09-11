@@ -100,7 +100,13 @@ gfxAndroidPlatform::gfxAndroidPlatform()
 
     RegisterStrongMemoryReporter(new FreetypeReporter());
 
-    mOffscreenFormat = GetScreenDepth() == 16
+    nsCOMPtr<nsIScreenManager> screenMgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
+    nsCOMPtr<nsIScreen> screen;
+    screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
+    mScreenDepth = 24;
+    screen->GetColorDepth(&mScreenDepth);
+
+    mOffscreenFormat = mScreenDepth == 16
                        ? gfxImageFormat::RGB16_565
                        : gfxImageFormat::RGB24;
 
@@ -410,6 +416,12 @@ gfxAndroidPlatform::RequiresLinearZoom()
 
     NS_NOTREACHED("oops, what platform is this?");
     return gfxPlatform::RequiresLinearZoom();
+}
+
+int
+gfxAndroidPlatform::GetScreenDepth() const
+{
+    return mScreenDepth;
 }
 
 bool

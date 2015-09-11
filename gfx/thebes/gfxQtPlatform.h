@@ -82,6 +82,8 @@ public:
     static Screen* GetXScreen(QWindow* aWindow = 0);
 #endif
 
+    virtual int GetScreenDepth() const override;
+
     bool AccelerateLayersByDefault() override {
       return true;
     }

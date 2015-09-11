@@ -53,8 +53,8 @@ gfxQtPlatform::gfxQtPlatform()
     if (!sFontconfigUtils)
         sFontconfigUtils = gfxFontconfigUtils::GetFontconfigUtils();
 
-    int32_t depth = GetScreenDepth();
-    if (depth == 16) {
+    mScreenDepth = qApp->primaryScreen()->depth();
+    if (mScreenDepth == 16) {
         sOffscreenFormat = gfxImageFormat::RGB16_565;
     }
     uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO) | BackendTypeBit(BackendType::SKIA);
@@ -193,6 +193,12 @@ gfxImageFormat
 gfxQtPlatform::GetOffscreenFormat()
 {
     return sOffscreenFormat;
+}
+
+int
+gfxQtPlatform::GetScreenDepth() const
+{
+    return mScreenDepth;
 }
 
 already_AddRefed<ScaledFont>

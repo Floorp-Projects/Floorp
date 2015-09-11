@@ -363,6 +363,24 @@ gfxPlatformGtk::GetOffscreenFormat()
     return gfxImageFormat::RGB24;
 }
 
+static int sDepth = 0;
+
+int
+gfxPlatformGtk::GetScreenDepth() const
+{
+    if (!sDepth) {
+        GdkScreen *screen = gdk_screen_get_default();
+        if (screen) {
+            sDepth = gdk_visual_get_depth(gdk_visual_get_system());
+        } else {
+            sDepth = 24;
+        }
+
+    }
+
+    return sDepth;
+}
+
 void
 gfxPlatformGtk::GetPlatformCMSOutputProfile(void *&mem, size_t &size)
 {
