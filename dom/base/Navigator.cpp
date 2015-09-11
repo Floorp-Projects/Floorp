@@ -68,6 +68,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIStringStream.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "TimeManager.h"
 #include "DeviceStorage.h"
 #include "nsIDOMNavigatorSystemMessages.h"
@@ -75,6 +76,8 @@
 #include "nsIAppsService.h"
 #include "mozIApplication.h"
 #include "WidgetUtils.h"
+#include "mozIThirdPartyUtil.h"
+#include "nsINetworkInterceptController.h"
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "mozilla/dom/MediaDevices.h"
@@ -104,6 +107,7 @@
 
 #include "nsIUploadChannel2.h"
 #include "nsFormData.h"
+#include "nsIPrivateBrowsingChannel.h"
 #include "nsIDocShell.h"
 
 #include "WorkerPrivate.h"
@@ -1045,32 +1049,22 @@ class BeaconStreamListener final : public nsIStreamListener
     ~BeaconStreamListener() {}
 
   public:
-    BeaconStreamListener() : mLoadGroup(nullptr) {}
-
-    void SetLoadGroup(nsILoadGroup* aLoadGroup) {
-      mLoadGroup = aLoadGroup;
-    }
+    BeaconStreamListener() {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
-
-  private:
-    nsCOMPtr<nsILoadGroup> mLoadGroup;
-
 };
 
 NS_IMPL_ISUPPORTS(BeaconStreamListener,
                   nsIStreamListener,
                   nsIRequestObserver)
 
+
 NS_IMETHODIMP
 BeaconStreamListener::OnStartRequest(nsIRequest *aRequest,
                                      nsISupports *aContext)
 {
-  // release the loadgroup first
-  mLoadGroup = nullptr;
-
   aRequest->Cancel(NS_ERROR_NET_INTERRUPT);
   return NS_BINDING_ABORTED;
 }
@@ -1127,10 +1121,34 @@ Navigator::SendBeacon(const nsAString& aUrl,
     return false;
   }
 
-  // Explicitly disallow loading data: URIs
-  bool isDataScheme = false;
-  rv = uri->SchemeIs("data", &isDataScheme);
-  if (NS_FAILED(rv) || isDataScheme) {
+  // Check whether this is a sane URI to load
+  // Explicitly disallow things like chrome:, javascript:, and data: URIs
+  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+  nsCOMPtr<nsIScriptSecurityManager> secMan = nsContentUtils::GetSecurityManager();
+  uint32_t flags = nsIScriptSecurityManager::DISALLOW_INHERIT_PRINCIPAL
+                   & nsIScriptSecurityManager::DISALLOW_SCRIPT;
+  rv = secMan->CheckLoadURIWithPrincipal(principal,
+                                         uri,
+                                         flags);
+  if (NS_FAILED(rv)) {
+    // Bad URI
+    aRv.Throw(rv);
+    return false;
+  }
+
+  // Check whether the CSP allows us to load
+  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_BEACON,
+                                 uri,
+                                 principal,
+                                 doc,
+                                 EmptyCString(), //mime guess
+                                 nullptr,         //extra
+                                 &shouldLoad,
+                                 nsContentUtils::GetContentPolicy(),
+                                 nsContentUtils::GetSecurityManager());
+  if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
+    // Disallowed by content policy
     aRv.Throw(NS_ERROR_CONTENT_BLOCKED);
     return false;
   }
@@ -1139,12 +1157,24 @@ Navigator::SendBeacon(const nsAString& aUrl,
   rv = NS_NewChannel(getter_AddRefs(channel),
                      uri,
                      doc,
-                     nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS,
+                     nsILoadInfo::SEC_NORMAL,
                      nsIContentPolicy::TYPE_BEACON);
 
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return false;
+  }
+
+  nsIDocShell* docShell = mWindow->GetDocShell();
+  nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);
+  if (pbChannel) {
+    nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
+    if (loadContext) {
+      rv = pbChannel->SetPrivate(loadContext->UsePrivateBrowsing());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Setting the privacy status on the beacon channel failed");
+      }
+    }
   }
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
@@ -1154,6 +1184,25 @@ Navigator::SendBeacon(const nsAString& aUrl,
     return false;
   }
   httpChannel->SetReferrer(documentURI);
+
+  // Anything that will need to refer to the window during the request
+  // will need to be done now.  For example, detection of whether any
+  // cookies set by this request are foreign.  Note that ThirdPartyUtil
+  // (nsIThirdPartyUtil.isThirdPartyChannel) does a secondary check between
+  // the channel URI and the cookie URI even when forceAllowThirdPartyCookie
+  // is set, so this is safe with regard to redirects.
+  nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal(do_QueryInterface(channel));
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID);
+  if (!httpChannelInternal) {
+    aRv.Throw(NS_ERROR_DOM_BAD_URI);
+    return false;
+  }
+  bool isForeign = true;
+  thirdPartyUtil->IsThirdPartyWindow(mWindow, uri, &isForeign);
+  uint32_t thirdPartyFlags = isForeign ?
+    0 :
+    nsIHttpChannelInternal::THIRD_PARTY_FORCE_ALLOW;
+  httpChannelInternal->SetThirdPartyFlags(thirdPartyFlags);
 
   nsCString mimeType;
   if (!aData.IsNull()) {
@@ -1241,18 +1290,17 @@ Navigator::SendBeacon(const nsAString& aUrl,
     cos->AddClassFlags(nsIClassOfService::Background);
   }
 
-  // The channel needs to have a loadgroup associated with it, so that we can
-  // cancel the channel and any redirected channels it may create.
-  nsCOMPtr<nsILoadGroup> loadGroup = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
-  nsCOMPtr<nsIInterfaceRequestor> callbacks =
-    do_QueryInterface(mWindow->GetDocShell());
-  loadGroup->SetNotificationCallbacks(callbacks);
-  channel->SetLoadGroup(loadGroup);
+  nsRefPtr<nsCORSListenerProxy> cors = new nsCORSListenerProxy(new BeaconStreamListener(),
+                                                               principal,
+                                                               true);
 
-  nsRefPtr<BeaconStreamListener> beaconListener = new BeaconStreamListener();
+  rv = cors->Init(channel, DataURIHandling::Allow);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  nsCOMPtr<nsINetworkInterceptController> interceptController = do_QueryInterface(docShell);
+  cors->SetInterceptController(interceptController);
 
   // Start a preflight if cross-origin and content type is not whitelisted
-  nsCOMPtr<nsIScriptSecurityManager> secMan = nsContentUtils::GetSecurityManager();
   rv = secMan->CheckSameOriginURI(documentURI, uri, false);
   bool crossOrigin = NS_FAILED(rv);
   nsAutoCString contentType, parsedCharset;
@@ -1272,22 +1320,18 @@ Navigator::SendBeacon(const nsAString& aUrl,
     nsTArray<nsCString> unsafeHeaders;
     unsafeHeaders.AppendElement(NS_LITERAL_CSTRING("Content-Type"));
     rv = NS_StartCORSPreflight(channel,
-                               beaconListener,
-                               doc->NodePrincipal(),
+                               cors,
+                               principal,
                                true,
                                unsafeHeaders,
                                getter_AddRefs(preflightChannel));
   } else {
-    rv = channel->AsyncOpen2(beaconListener);
+    rv = channel->AsyncOpen(cors, nullptr);
   }
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return false;
   }
-  // make the beaconListener hold a strong reference to the loadgroup
-  // which is released in ::OnStartRequest
-  beaconListener->SetLoadGroup(loadGroup);
-
   return true;
 }
 
