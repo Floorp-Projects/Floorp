@@ -360,7 +360,7 @@ NS_EVENT_MESSAGE(eDeviceOrientation,     eDeviceEventFirst)
 NS_EVENT_MESSAGE(eDeviceMotion,          eDeviceEventFirst + 1)
 NS_EVENT_MESSAGE(eDeviceProximity,       eDeviceEventFirst + 2)
 NS_EVENT_MESSAGE(eUserProximity,         eDeviceEventFirst + 3)
-NS_EVENT_MESSAGE(NS_DEVICE_LIGHT,        eDeviceEventFirst + 4)
+NS_EVENT_MESSAGE(eDeviceLight,           eDeviceEventFirst + 4)
 
 NS_EVENT_MESSAGE(NS_SHOW_EVENT,          5000)
 
