@@ -732,7 +732,7 @@ NON_IDL_EVENT(draggesture,
               EventNameType_XUL,
               eDragEventClass)
 NON_IDL_EVENT(overflow,
-              NS_SCROLLPORT_OVERFLOW,
+              eScrollPortOverflow,
               EventNameType_XUL,
               eBasicEventClass)
 NON_IDL_EVENT(underflow,
