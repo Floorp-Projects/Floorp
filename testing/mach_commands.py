@@ -481,6 +481,12 @@ class PushToTry(MachCommandBase):
             print("Error parsing -u argument:\n%s" % e.message)
             sys.exit(1)
 
+        try:
+            talos = self.normalise_list(kwargs["talos"]) if kwargs["talos"] else []
+        except ValueError as e:
+            print("Error parsing -t argument:\n%s" % e.message)
+            sys.exit(1)
+
         paths = []
         for p in kwargs["paths"]:
             p = os.path.normpath(os.path.abspath(p))
@@ -500,7 +506,7 @@ class PushToTry(MachCommandBase):
             print("Error parsing --tags argument:\n%s" % e.message)
             sys.exit(1)
 
-        return kwargs["builds"], platforms, tests, paths, tags, kwargs["extra_args"]
+        return kwargs["builds"], platforms, tests, talos, paths, tags, kwargs["extra_args"]
 
 
     @Command('try',
@@ -552,6 +558,7 @@ class PushToTry(MachCommandBase):
         from mozbuild.testing import TestResolver
         from mozbuild.controller.building import BuildDriver
         from autotry import AutoTry
+
         print("mach try is under development, please file bugs blocking 1149670.")
 
         resolver = self._spawn(TestResolver)
@@ -568,7 +575,7 @@ class PushToTry(MachCommandBase):
                 if value in (None, []) and key in defaults:
                     kwargs[key] = defaults[key]
 
-        builds, platforms, tests, paths, tags, extra_args = self.validate_args(**kwargs)
+        builds, platforms, tests, talos, paths, tags, extra_args = self.validate_args(**kwargs)
 
         if kwargs["push"] and at.find_uncommited_changes():
             print('ERROR please commit changes before continuing')
@@ -593,7 +600,7 @@ class PushToTry(MachCommandBase):
             paths_by_flavor = {}
 
         try:
-            msg = at.calc_try_syntax(platforms, tests, builds, paths_by_flavor, tags,
+            msg = at.calc_try_syntax(platforms, tests, talos, builds, paths_by_flavor, tags,
                                      extra_args, kwargs["intersection"])
         except ValueError as e:
             print(e.message)
