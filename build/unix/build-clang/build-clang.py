@@ -15,8 +15,6 @@ import glob
 import errno
 from contextlib import contextmanager
 
-centOS6 = False
-
 
 def check_run(args):
     r = subprocess.call(args)
@@ -180,12 +178,6 @@ if __name__ == "__main__":
     compiler_rt_source_dir = source_dir + "/compiler-rt"
     libcxx_source_dir = source_dir + "/libcxx"
 
-    global centOS6
-    if centOS6:
-        gcc_dir = "/home/worker/workspace/build/src/gcc"
-    else:
-        gcc_dir = "/tools/gcc-4.7.3-0moz1"
-
     if is_darwin():
         os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.7'
 
@@ -233,6 +225,13 @@ if __name__ == "__main__":
     if "python_path" not in config:
         raise ValueError("Config file needs to set python_path")
     python_path = config["python_path"]
+    gcc_dir = None
+    if "gcc_dir" in config:
+        gcc_dir = config["gcc_dir"]
+        if not os.path.exists(gcc_dir):
+            raise ValueError("gcc_dir must point to an existing path")
+    if not is_darwin() and gcc_dir is None:
+        raise ValueError("Config file needs to set gcc_dir")
 
     if not os.path.exists(source_dir):
         os.makedirs(source_dir)
@@ -276,10 +275,10 @@ if __name__ == "__main__":
         cc = gcc_dir + "/bin/gcc"
         cxx = gcc_dir + "/bin/g++"
 
-    if os.environ.has_key('LD_LIBRARY_PATH'):
-        os.environ['LD_LIBRARY_PATH'] = '%s/lib64/:%s' % (gcc_dir, os.environ['LD_LIBRARY_PATH']);
-    else:
-        os.environ['LD_LIBRARY_PATH'] = '%s/lib64/' % gcc_dir
+        if os.environ.has_key('LD_LIBRARY_PATH'):
+            os.environ['LD_LIBRARY_PATH'] = '%s/lib64/:%s' % (gcc_dir, os.environ['LD_LIBRARY_PATH']);
+        else:
+            os.environ['LD_LIBRARY_PATH'] = '%s/lib64/' % gcc_dir
 
     build_one_stage(
         {"CC": cc + " %s" % extra_cflags,
