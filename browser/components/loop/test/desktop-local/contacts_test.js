@@ -8,121 +8,129 @@ describe("loop.contacts", function() {
   var expect = chai.expect;
   var TestUtils = React.addons.TestUtils;
 
+  var CALL_TYPES = loop.shared.utils.CALL_TYPES;
+
   var fakeAddContactButtonText = "Fake Add Contact Button";
   var fakeAddContactTitleText = "Fake Add Contact Title";
   var fakeEditContactButtonText = "Fake Edit Contact";
   var fakeDoneButtonText = "Fake Done";
-  // The fake contacts array is copied each time mozLoop.contacts.getAll() is called.
-  var fakeManyContacts = [{
-    id: 1,
-    _guid: 1,
-    name: ["Ally Avocado"],
-    email: [{
-      "pref": true,
-      "type": ["work"],
-      "value": "ally@mail.com"
-    }],
-    tel: [{
-      "pref": true,
-      "type": ["mobile"],
-      "value": "+31-6-12345678"
-    }],
-    category: ["google"],
-    published: 1406798311748,
-    updated: 1406798311748
-  }, {
-    id: 2,
-    _guid: 2,
-    name: ["Bob Banana"],
-    email: [{
-      "pref": true,
-      "type": ["work"],
-      "value": "bob@gmail.com"
-    }],
-    tel: [{
-      "pref": true,
-      "type": ["mobile"],
-      "value": "+1-214-5551234"
-    }],
-    category: ["local"],
-    published: 1406798311748,
-    updated: 1406798311748
-  }, {
-    id: 3,
-    _guid: 3,
-    name: ["Caitlin Cantaloupe"],
-    email: [{
-      "pref": true,
-      "type": ["work"],
-      "value": "caitlin.cant@hotmail.com"
-    }],
-    category: ["local"],
-    published: 1406798311748,
-    updated: 1406798311748
-  }, {
-    id: 4,
-    _guid: 4,
-    name: ["Dave Dragonfruit"],
-    email: [{
-      "pref": true,
-      "type": ["work"],
-      "value": "dd@dragons.net"
-    }],
-    category: ["google"],
-    published: 1406798311748,
-    updated: 1406798311748
-  }, {
-    id: 5,
-    _guid: 5,
-    name: ["Erin J. Bazile"],
-    email: [{
-      "pref": true,
-      "type": ["work"],
-      "value": "erinjbazile@armyspy.com"
-    }],
-    category: ["google"],
-    published: 1406798311748,
-    updated: 1406798311748
-  }, {
-    id: 6,
-    _guid: 6,
-    name: ["Kelly F. Maldanado"],
-    email: [{
-      "pref": true,
-      "type": ["work"],
-      "value": "kellyfmaldonado@jourrapide.com"
-    }],
-    category: ["google"],
-    published: 1406798311748,
-    updated: 1406798311748
-  }, {
-    id: 7,
-    _guid: 7,
-    name: ["John J. Brown"],
-    email: [{
-      "pref": true,
-      "type": ["work"],
-      "value": "johnjbrow@johndoe.com"
-    }],
-    category: ["google"],
-    published: 1406798311748,
-    updated: 1406798311748,
-    blocked: true
-  }];
-  var fakeFewerContacts = fakeManyContacts.slice(0, 4);
-  var sandbox;
-  var fakeWindow;
-  var notifications;
-  var listView;
+
+  var sandbox, fakeWindow, fakeMozLoop, mozL10nGetSpy, listView, notifications;
+  var fakeManyContacts, fakeFewerContacts;
   var oldMozLoop = navigator.mozLoop;
-  var mozL10nGetSpy;
+
+  // The fake contacts array is copied each time mozLoop.contacts.getAll() is called.
+  function getFakeContacts() {
+    // Return a copy, so that tests that affect it, don't have impact on each other.
+    return [].concat([
+      {
+        id: 1,
+        _guid: 1,
+        name: ["Ally Avocado"],
+        email: [{
+          "pref": true,
+          "type": ["work"],
+          "value": "ally@mail.com"
+        }],
+        tel: [{
+          "pref": true,
+          "type": ["mobile"],
+          "value": "+31-6-12345678"
+        }],
+        category: ["google"],
+        published: 1406798311748,
+        updated: 1406798311748
+      }, {
+        id: 2,
+        _guid: 2,
+        name: ["Bob Banana"],
+        email: [{
+          "pref": true,
+          "type": ["work"],
+          "value": "bob@gmail.com"
+        }],
+        tel: [{
+          "pref": true,
+          "type": ["mobile"],
+          "value": "+1-214-5551234"
+        }],
+        category: ["local"],
+        published: 1406798311748,
+        updated: 1406798311748
+      }, {
+        id: 3,
+        _guid: 3,
+        name: ["Caitlin Cantaloupe"],
+        email: [{
+          "pref": true,
+          "type": ["work"],
+          "value": "caitlin.cant@hotmail.com"
+        }],
+        category: ["local"],
+        published: 1406798311748,
+        updated: 1406798311748
+      }, {
+        id: 4,
+        _guid: 4,
+        name: ["Dave Dragonfruit"],
+        email: [{
+          "pref": true,
+          "type": ["work"],
+          "value": "dd@dragons.net"
+        }],
+        category: ["google"],
+        published: 1406798311748,
+        updated: 1406798311748
+      }, {
+        id: 5,
+        _guid: 5,
+        name: ["Erin J. Bazile"],
+        email: [{
+          "pref": true,
+          "type": ["work"],
+          "value": "erinjbazile@armyspy.com"
+        }],
+        category: ["google"],
+        published: 1406798311748,
+        updated: 1406798311748
+      }, {
+        id: 6,
+        _guid: 6,
+        name: ["Kelly F. Maldanado"],
+        email: [{
+          "pref": true,
+          "type": ["work"],
+          "value": "kellyfmaldonado@jourrapide.com"
+        }],
+        category: ["google"],
+        published: 1406798311748,
+        updated: 1406798311748
+      }, {
+        id: 7,
+        _guid: 7,
+        name: ["John J. Brown"],
+        email: [{
+          "pref": true,
+          "type": ["work"],
+          "value": "johnjbrow@johndoe.com"
+        }],
+        category: ["google"],
+        published: 1406798311748,
+        updated: 1406798311748,
+        blocked: true
+      }
+    ]);
+  }
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
 
     mozL10nGetSpy = sandbox.spy(document.mozL10n, "get");
 
-    navigator.mozLoop = {
+    fakeManyContacts = getFakeContacts();
+    fakeFewerContacts = fakeManyContacts.slice(0, 4);
+
+    fakeMozLoop = navigator.mozLoop = {
       getStrings: function(entityName) {
         var textContentValue = "fakeText";
         if (entityName === "add_contact_title") {
@@ -146,7 +154,7 @@ describe("loop.contacts", function() {
       },
       setLoopPref: sandbox.stub(),
       getUserAvatar: function() {
-        if (navigator.mozLoop.getLoopPref("contacts.gravatars.show")) {
+        if (this.getLoopPref("contacts.gravatars.show")) {
           return "gravatarsEnabled";
         }
         return "gravatarsDisabled";
@@ -159,8 +167,8 @@ describe("loop.contacts", function() {
         on: sandbox.stub()
       },
       calls: {
-        startDirectCall: function() {},
-        clearCallInProgress: function() {}
+        startDirectCall: sinon.stub(),
+        clearCallInProgress: sinon.stub()
       },
       generateUUID: sandbox.stub()
     };
@@ -172,7 +180,7 @@ describe("loop.contacts", function() {
 
     notifications = new loop.shared.models.NotificationCollection();
 
-    document.mozL10n.initialize(navigator.mozLoop);
+    document.mozL10n.initialize(fakeMozLoop);
   });
 
   afterEach(function() {
@@ -197,7 +205,7 @@ describe("loop.contacts", function() {
     it("should show the gravatars promo box", function() {
       listView = TestUtils.renderIntoDocument(
         React.createElement(loop.contacts.ContactsList, {
-          mozLoop: navigator.mozLoop,
+          mozLoop: fakeMozLoop,
           notifications: notifications,
           switchToContactAdd: sandbox.stub(),
           switchToContactEdit: sandbox.stub()
@@ -213,7 +221,7 @@ describe("loop.contacts", function() {
     });
 
     it("should not show the gravatars promo box when the 'contacts.gravatars.promo' pref is set", function() {
-      sandbox.stub(navigator.mozLoop, "getLoopPref", function(pref) {
+      sandbox.stub(fakeMozLoop, "getLoopPref", function(pref) {
         if (pref === "contacts.gravatars.promo") {
           return false;
         } else if (pref === "contacts.gravatars.show") {
@@ -224,7 +232,7 @@ describe("loop.contacts", function() {
 
       listView = TestUtils.renderIntoDocument(
         React.createElement(loop.contacts.ContactsList, {
-          mozLoop: navigator.mozLoop,
+          mozLoop: fakeMozLoop,
           notifications: notifications,
           switchToContactAdd: sandbox.stub(),
           switchToContactEdit: sandbox.stub()
@@ -239,7 +247,7 @@ describe("loop.contacts", function() {
     it("should hide the gravatars promo box when the 'use' button is clicked", function() {
       listView = TestUtils.renderIntoDocument(
         React.createElement(loop.contacts.ContactsList, {
-          mozLoop: navigator.mozLoop,
+          mozLoop: fakeMozLoop,
           notifications: notifications,
           switchToContactAdd: sandbox.stub(),
           switchToContactEdit: sandbox.stub()
@@ -248,7 +256,7 @@ describe("loop.contacts", function() {
       React.addons.TestUtils.Simulate.click(listView.getDOMNode().querySelector(
         ".contacts-gravatar-promo .secondary:last-child"));
 
-      sinon.assert.calledTwice(navigator.mozLoop.setLoopPref);
+      sinon.assert.calledTwice(fakeMozLoop.setLoopPref);
 
       var promo = listView.getDOMNode().querySelector(".contacts-gravatar-promo");
       expect(promo).to.equal(null);
@@ -257,7 +265,7 @@ describe("loop.contacts", function() {
     it("should should set the prefs correctly when the 'use' button is clicked", function() {
       listView = TestUtils.renderIntoDocument(
         React.createElement(loop.contacts.ContactsList, {
-          mozLoop: navigator.mozLoop,
+          mozLoop: fakeMozLoop,
           notifications: notifications,
           switchToContactAdd: sandbox.stub(),
           switchToContactEdit: sandbox.stub()
@@ -266,15 +274,15 @@ describe("loop.contacts", function() {
       React.addons.TestUtils.Simulate.click(listView.getDOMNode().querySelector(
         ".contacts-gravatar-promo .secondary:last-child"));
 
-      sinon.assert.calledTwice(navigator.mozLoop.setLoopPref);
-      sinon.assert.calledWithExactly(navigator.mozLoop.setLoopPref, "contacts.gravatars.promo", false);
-      sinon.assert.calledWithExactly(navigator.mozLoop.setLoopPref, "contacts.gravatars.show", true);
+      sinon.assert.calledTwice(fakeMozLoop.setLoopPref);
+      sinon.assert.calledWithExactly(fakeMozLoop.setLoopPref, "contacts.gravatars.promo", false);
+      sinon.assert.calledWithExactly(fakeMozLoop.setLoopPref, "contacts.gravatars.show", true);
     });
 
     it("should hide the gravatars promo box when the 'close' button is clicked", function() {
       listView = TestUtils.renderIntoDocument(
         React.createElement(loop.contacts.ContactsList, {
-          mozLoop: navigator.mozLoop,
+          mozLoop: fakeMozLoop,
           notifications: notifications,
           switchToContactAdd: sandbox.stub(),
           switchToContactEdit: sandbox.stub()
@@ -290,7 +298,7 @@ describe("loop.contacts", function() {
     it("should set prefs correctly when the 'close' button is clicked", function() {
       listView = TestUtils.renderIntoDocument(
         React.createElement(loop.contacts.ContactsList, {
-          mozLoop: navigator.mozLoop,
+          mozLoop: fakeMozLoop,
           notifications: notifications,
           switchToContactAdd: sandbox.stub(),
           switchToContactEdit: sandbox.stub()
@@ -299,15 +307,15 @@ describe("loop.contacts", function() {
       React.addons.TestUtils.Simulate.click(listView.getDOMNode().querySelector(
         ".contacts-gravatar-promo .secondary:first-child"));
 
-      sinon.assert.calledOnce(navigator.mozLoop.setLoopPref);
-      sinon.assert.calledWithExactly(navigator.mozLoop.setLoopPref,
+      sinon.assert.calledOnce(fakeMozLoop.setLoopPref);
+      sinon.assert.calledWithExactly(fakeMozLoop.setLoopPref,
         "contacts.gravatars.promo", false);
     });
 
     it("should hide the gravatars promo box when the 'close' X button is clicked", function() {
       listView = TestUtils.renderIntoDocument(
         React.createElement(loop.contacts.ContactsList, {
-          mozLoop: navigator.mozLoop,
+          mozLoop: fakeMozLoop,
           notifications: notifications,
           switchToContactAdd: sandbox.stub(),
           switchToContactEdit: sandbox.stub()
@@ -323,7 +331,7 @@ describe("loop.contacts", function() {
     it("should set prefs correctly when the 'close' X button is clicked", function() {
       listView = TestUtils.renderIntoDocument(
         React.createElement(loop.contacts.ContactsList, {
-          mozLoop: navigator.mozLoop,
+          mozLoop: fakeMozLoop,
           notifications: notifications,
           switchToContactAdd: sandbox.stub(),
           switchToContactEdit: sandbox.stub()
@@ -332,8 +340,8 @@ describe("loop.contacts", function() {
       React.addons.TestUtils.Simulate.click(listView.getDOMNode().querySelector(
         ".contacts-gravatar-promo .button-close"));
 
-      sinon.assert.calledOnce(navigator.mozLoop.setLoopPref);
-      sinon.assert.calledWithExactly(navigator.mozLoop.setLoopPref,
+      sinon.assert.calledOnce(fakeMozLoop.setLoopPref);
+      sinon.assert.calledWithExactly(fakeMozLoop.setLoopPref,
         "contacts.gravatars.promo", false);
     });
   });
@@ -345,7 +353,7 @@ describe("loop.contacts", function() {
       view = TestUtils.renderIntoDocument(
         React.createElement(loop.contacts.ContactsControllerView, {
           initialSelectedTabComponent: "contactAdd",
-          mozLoop: navigator.mozLoop,
+          mozLoop: fakeMozLoop,
           notifications: notifications
         }));
     });
@@ -364,7 +372,7 @@ describe("loop.contacts", function() {
       view = TestUtils.renderIntoDocument(
         React.createElement(loop.contacts.ContactsControllerView, {
           initialSelectedTabComponent: "contactEdit",
-          mozLoop: navigator.mozLoop,
+          mozLoop: fakeMozLoop,
           notifications: notifications
         }));
     });
@@ -383,7 +391,7 @@ describe("loop.contacts", function() {
       view = TestUtils.renderIntoDocument(
         React.createElement(loop.contacts.ContactsControllerView, {
           initialSelectedTabComponent: "contactList",
-          mozLoop: navigator.mozLoop,
+          mozLoop: fakeMozLoop,
           notifications: notifications
         }));
     });
@@ -403,19 +411,15 @@ describe("loop.contacts", function() {
 
   describe("ContactsList", function () {
     var node;
-    beforeEach(function() {
-      sandbox.stub(navigator.mozLoop.calls, "startDirectCall");
-      sandbox.stub(navigator.mozLoop.calls, "clearCallInProgress");
-    });
 
     describe("#RenderNoContacts", function() {
       beforeEach(function() {
-        sandbox.stub(navigator.mozLoop.contacts, "getAll", function(cb) {
+        sandbox.stub(fakeMozLoop.contacts, "getAll", function(cb) {
           cb(null, []);
         });
         listView = TestUtils.renderIntoDocument(
           React.createElement(loop.contacts.ContactsList, {
-            mozLoop: navigator.mozLoop,
+            mozLoop: fakeMozLoop,
             notifications: notifications,
             switchToContactAdd: sandbox.stub(),
             switchToContactEdit: sandbox.stub()
@@ -442,12 +446,12 @@ describe("loop.contacts", function() {
 
     describe("#RenderWithContacts", function() {
       beforeEach(function() {
-        sandbox.stub(navigator.mozLoop.contacts, "getAll", function(cb) {
+        sandbox.stub(fakeMozLoop.contacts, "getAll", function(cb) {
           cb(null, [].concat(fakeFewerContacts));
         });
         listView = TestUtils.renderIntoDocument(
           React.createElement(loop.contacts.ContactsList, {
-            mozLoop: navigator.mozLoop,
+            mozLoop: fakeMozLoop,
             notifications: notifications,
             switchToContactAdd: sandbox.stub(),
             switchToContactEdit: sandbox.stub()
@@ -471,7 +475,7 @@ describe("loop.contacts", function() {
 
     describe("ContactsFiltering", function() {
       beforeEach(function() {
-        navigator.mozLoop.contacts = {
+        fakeMozLoop.contacts = {
           getAll: function(callback) {
             callback(null, [].concat(fakeManyContacts));
           },
@@ -479,7 +483,7 @@ describe("loop.contacts", function() {
         };
         listView = TestUtils.renderIntoDocument(
           React.createElement(loop.contacts.ContactsList, {
-            mozLoop: navigator.mozLoop,
+            mozLoop: fakeMozLoop,
             notifications: notifications,
             switchToContactAdd: sandbox.stub(),
             switchToContactEdit: sandbox.stub()
@@ -574,42 +578,12 @@ describe("loop.contacts", function() {
       });
     });
 
-    describe("#handleContactAction", function() {
-      beforeEach(function() {
-        sandbox.stub(navigator.mozLoop.contacts, "getAll", function(cb) {
-          cb(null, []);
-        });
-        listView = TestUtils.renderIntoDocument(
-          React.createElement(loop.contacts.ContactsList, {
-            mozLoop: navigator.mozLoop,
-            notifications: notifications,
-            switchToContactAdd: sandbox.stub(),
-            switchToContactEdit: sandbox.stub()
-          }));
-        node = listView.getDOMNode();
-      });
-
-      it("should call window.close when called with 'video-call' action",
-        function() {
-          listView.handleContactAction({}, "video-call");
-
-          sinon.assert.calledOnce(fakeWindow.close);
-      });
-
-      it("should call window.close when called with 'audio-call' action",
-        function() {
-          listView.handleContactAction({}, "audio-call");
-
-          sinon.assert.calledOnce(fakeWindow.close);
-        });
-    });
-
     describe("#handleContactAddEdit", function() {
 
       beforeEach(function() {
         listView = TestUtils.renderIntoDocument(
           React.createElement(loop.contacts.ContactsList, {
-            mozLoop: navigator.mozLoop,
+            mozLoop: fakeMozLoop,
             notifications: notifications,
             switchToContactAdd: sandbox.stub(),
             switchToContactEdit: sandbox.stub()
@@ -635,12 +609,12 @@ describe("loop.contacts", function() {
 
     describe("#handleImportButtonClick", function() {
       beforeEach(function() {
-        sandbox.stub(navigator.mozLoop.contacts, "getAll", function(cb) {
+        sandbox.stub(fakeMozLoop.contacts, "getAll", function(cb) {
           cb(null, []);
         });
         listView = TestUtils.renderIntoDocument(
           React.createElement(loop.contacts.ContactsList, {
-            mozLoop: navigator.mozLoop,
+            mozLoop: fakeMozLoop,
             notifications: notifications,
             switchToContactAdd: sandbox.stub(),
             switchToContactEdit: sandbox.stub()
@@ -650,7 +624,7 @@ describe("loop.contacts", function() {
 
       it("should notify the end user from a successful import", function() {
         sandbox.stub(notifications, "successL10n");
-        navigator.mozLoop.startImport = function(opts, cb) {
+        fakeMozLoop.startImport = function(opts, cb) {
           cb(null, {success: 42});
         };
 
@@ -665,7 +639,7 @@ describe("loop.contacts", function() {
 
       it("should notify the end user from any encountered error", function() {
         sandbox.stub(notifications, "errorL10n");
-        navigator.mozLoop.startImport = function(opts, cb) {
+        fakeMozLoop.startImport = function(opts, cb) {
           cb(new Error("fake error"));
         };
 
@@ -673,6 +647,92 @@ describe("loop.contacts", function() {
 
         sinon.assert.calledWithExactly(notifications.errorL10n,
                                        "import_contacts_failure_message");
+      });
+    });
+    describe("Individual Contacts", function() {
+      describe("Contact Menu", function() {
+        var view, contactMenu, contact;
+
+        function mountTestComponent(options) {
+          var props = _.extend({
+            mozLoop: fakeMozLoop,
+            notifications: notifications,
+            switchToContactAdd: sandbox.stub(),
+            switchToContactEdit: sandbox.stub()
+          }, options);
+          return TestUtils.renderIntoDocument(
+            React.createElement(loop.contacts.ContactsList, props));
+        }
+
+        beforeEach(function() {
+          contact = fakeFewerContacts[0];
+
+          fakeMozLoop.contacts.getAll = function(callback) {
+            callback(null, [contact]);
+          };
+
+          view = mountTestComponent();
+          node = view.getDOMNode();
+
+          // Open the menu
+          var menuButton = node.querySelector(".icon-contact-menu-button");
+          TestUtils.Simulate.click(menuButton);
+
+          // Get the menu for use in the tests.
+          contactMenu = node.querySelector(".contact > .dropdown-menu");
+        });
+
+        describe("Video Conversation button", function() {
+          it("should call startDirectCall when the button is clicked", function() {
+            TestUtils.Simulate.click(contactMenu.querySelector(".video-call-item"));
+
+            sinon.assert.calledOnce(fakeMozLoop.calls.startDirectCall);
+            sinon.assert.calledWithExactly(fakeMozLoop.calls.startDirectCall,
+              contact,
+              CALL_TYPES.AUDIO_VIDEO);
+          });
+
+          it("should close the window when the button is clicked", function() {
+            TestUtils.Simulate.click(contactMenu.querySelector(".video-call-item"));
+
+            sinon.assert.calledOnce(fakeWindow.close);
+          });
+
+          it("should not do anything if the contact is blocked", function() {
+            contact.blocked = true;
+
+            TestUtils.Simulate.click(contactMenu.querySelector(".video-call-item"));
+
+            sinon.assert.notCalled(fakeMozLoop.calls.startDirectCall);
+            sinon.assert.notCalled(fakeWindow.close);
+          });
+        });
+
+        describe("Audio Conversation button", function() {
+          it("should call startDirectCall when the button is clicked", function() {
+            TestUtils.Simulate.click(contactMenu.querySelector(".audio-call-item"));
+
+            sinon.assert.calledOnce(fakeMozLoop.calls.startDirectCall);
+            sinon.assert.calledWithExactly(fakeMozLoop.calls.startDirectCall,
+              contact,
+              CALL_TYPES.AUDIO_ONLY);
+          });
+
+          it("should close the window when the button is clicked", function() {
+            TestUtils.Simulate.click(contactMenu.querySelector(".audio-call-item"));
+
+            sinon.assert.calledOnce(fakeWindow.close);
+          });
+
+          it("should not do anything if the contact is blocked", function() {
+            contact.blocked = true;
+
+            TestUtils.Simulate.click(contactMenu.querySelector(".audio-call-item"));
+
+            sinon.assert.notCalled(fakeMozLoop.calls.startDirectCall);
+            sinon.assert.notCalled(fakeWindow.close);
+          });
+        });
       });
     });
   });
@@ -687,7 +747,7 @@ describe("loop.contacts", function() {
             React.createElement(loop.contacts.ContactDetailsForm, {
               contactFormData: {},
               mode: "add",
-              mozLoop: navigator.mozLoop,
+              mozLoop: fakeMozLoop,
               switchToInitialView: sandbox.stub()
             }));
         });
@@ -821,7 +881,7 @@ describe("loop.contacts", function() {
             React.createElement(loop.contacts.ContactDetailsForm, {
               contactFormData: {},
               mode: "edit",
-              mozLoop: navigator.mozLoop,
+              mozLoop: fakeMozLoop,
               switchToInitialView: sandbox.stub()
             }));
         });
