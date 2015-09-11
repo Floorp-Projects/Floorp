@@ -36,7 +36,7 @@ addEventListener("DOMContentLoaded", function domContentLoaded(event) {
       return;
     }
     removeEventListener("DOMContentLoaded", iframeLoaded, true);
-    sendAsyncMessage("test:iframe:load", {url: iframe.getAttribute("src")});
+    sendAsyncMessage("test:iframe:load", {url: iframe.contentDocument.location.href});
     // And an event listener for the test responses, which we send to the test
     // via a message.
     iframe.contentWindow.addEventListener("FirefoxAccountsTestResponse", function (event) {
@@ -79,7 +79,7 @@ addMessageListener("test:load-with-mocked-profile-path", function (message) {
       }
       iframe.removeEventListener("load", iframeLoaded, true);
       sendAsyncMessage("test:load-with-mocked-profile-path-response",
-                       {url: iframe.getAttribute("src")});
+                       {url: iframe.contentDocument.location.href});
     }, true);
   });
   let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);

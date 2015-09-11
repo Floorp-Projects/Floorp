@@ -6,3 +6,13 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
+
+function doesNotThrow(f) {
+  try {
+    f();
+  } catch(e) {
+    ok(false, e + e.stack);
+  }
+}
+
+var assert = this;
