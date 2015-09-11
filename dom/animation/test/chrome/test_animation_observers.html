@@ -737,6 +737,72 @@ function assert_records(expected, desc) {
   });
 });
 
+addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
+
+  // Create a tree with two children:
+  //
+  //         div
+  //        /  \
+  //   childA  childB
+  var childA = document.createElement("div");
+  var childB = document.createElement("div");
+
+  div.appendChild(childA);
+  div.appendChild(childB);
+
+  // Start an animation on each (using order: childB, div, childA)
+  //
+  // We include multiple animations on some nodes so that we can test batching
+  // works as expected later in this test.
+  childB.style = "animation: anim 100s";
+  div.style    = "animation: anim 100s, anim 100s, anim 100s";
+  childA.style = "animation: anim 100s, anim 100s";
+
+  var divAnimations = div.getAnimations();
+  var childAAnimations = childA.getAnimations();
+  var childBAnimations = childB.getAnimations();
+
+  // The order in which we get the corresponding records is currently
+  // based on the order we visit these nodes when updating styles.
+  //
+  // That is because we don't do any document-level batching of animation
+  // mutation records when we flush styles. We may introduce that in the
+  // future but for now all we are interested in testing here is that the order
+  // these records are dispatched is consistent between runs.
+  //
+  // We currently expect to get records in order childA, childB, div
+  yield await_frame();
+  assert_records([{ added: childAAnimations, changed: [], removed: [] },
+                  { added: childBAnimations, changed: [], removed: [] },
+                  { added: divAnimations, changed: [], removed: [] }],
+                 "records after simultaneous animation start");
+
+  // The one case where we *do* currently perform document-level (or actually
+  // timeline-level) batching is when animations are updated from a refresh
+  // driver tick. In particular, this means that when animations finish
+  // naturally the removed records should be dispatched according to the
+  // position of the elements in the tree.
+  //
+  // Fast-forward to *just* before the end of the animation.
+  var fastForward = animation => animation.currentTime = 99999;
+  divAnimations.forEach(fastForward);
+  childAAnimations.forEach(fastForward);
+  childBAnimations.forEach(fastForward);
+
+  yield await_event(div, "animationend");
+
+  // We should get records in order div, childA, childB
+  assert_records([{ added: [], changed: [], removed: divAnimations },
+                  { added: [], changed: [], removed: childAAnimations },
+                  { added: [], changed: [], removed: childBAnimations }],
+                 "records after finishing");
+
+  // Clean up
+  div.style = "";
+  childA.remove();
+  childB.remove();
+});
+
 // Run the tests.
 
 SimpleTest.waitForExplicitFinish();
