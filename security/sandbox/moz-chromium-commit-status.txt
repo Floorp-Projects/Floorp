@@ -3,3 +3,5 @@ Chromium Commit                            Directory / File (relative to securit
 df7cc6c04725630dd4460f29d858a77507343b24   chromium
 b533d6533585377edd63ec6500469f6c4fba602a   chromium/sandbox/win/src/sharedmem_ipc_server.cc
 034bd64db1806d85b2ceacc736074ac07722af4a   chromium/sandbox/win/src/service_resolver_64.cc
+de2078cfbbb6770791d32575a1a72a288e6d66a6   chromium/sandbox/win/src/target_services.cc
+de2078cfbbb6770791d32575a1a72a288e6d66a6   chromium/sandbox/win/src/target_services.h

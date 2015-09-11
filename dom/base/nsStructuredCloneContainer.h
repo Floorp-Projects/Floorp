@@ -9,7 +9,7 @@
 
 #include "nsIStructuredCloneContainer.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/StructuredCloneIPCHelper.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 
 #define NS_STRUCTUREDCLONECONTAINER_CONTRACTID \
   "@mozilla.org/docshell/structured-clone-container;1"
@@ -23,7 +23,7 @@
 
 class nsStructuredCloneContainer final
   : public nsIStructuredCloneContainer
-  , public mozilla::dom::StructuredCloneIPCHelper
+  , public mozilla::dom::ipc::StructuredCloneData
 {
   public:
     nsStructuredCloneContainer();

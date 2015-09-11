@@ -615,7 +615,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static bool slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
                                             double when, GlobalObject::DebuggerVector& dbgs);
     static void slowPathPromiseHook(JSContext* cx, Hook hook, HandleObject promise);
-    static void slowPathOnIonCompilation(JSContext* cx, AutoScriptVector& scripts, LSprinter& graph);
+    static void slowPathOnIonCompilation(JSContext* cx, Handle<ScriptVector> scripts,
+                                         LSprinter& graph);
 
     template <typename HookIsEnabledFun /* bool (Debugger*) */,
               typename FireHookFun /* JSTrapStatus (Debugger*) */>
@@ -657,7 +658,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * Receive a "Ion compilation" event from the engine. An Ion compilation with
      * the given summary just got linked.
      */
-    JSTrapStatus fireOnIonCompilationHook(JSContext* cx, AutoScriptVector& scripts,
+    JSTrapStatus fireOnIonCompilationHook(JSContext* cx, Handle<ScriptVector> scripts,
                                           LSprinter& graph);
 
     /*
@@ -778,7 +779,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static inline bool onLogAllocationSite(JSContext* cx, JSObject* obj, HandleSavedFrame frame,
                                            double when);
     static inline bool observesIonCompilation(JSContext* cx);
-    static inline void onIonCompilation(JSContext* cx, AutoScriptVector& scripts, LSprinter& graph);
+    static inline void onIonCompilation(JSContext* cx, Handle<ScriptVector> scripts,
+                                        LSprinter& graph);
     static JSTrapStatus onTrap(JSContext* cx, MutableHandleValue vp);
     static JSTrapStatus onSingleStep(JSContext* cx, MutableHandleValue vp);
     static bool handleBaselineOsr(JSContext* cx, InterpreterFrame* from, jit::BaselineFrame* to);

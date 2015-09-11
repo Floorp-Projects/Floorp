@@ -2942,7 +2942,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ExprMemberInit(p.lastActorIdVar(),
                                [ p.actorIdInit(self.side) ]),
                 ExprMemberInit(p.otherPidVar(),
-                               [ ExprVar('ipc::kInvalidProcessId') ]),
+                               [ ExprVar('mozilla::ipc::kInvalidProcessId') ]),
                 ExprMemberInit(p.lastShmemIdVar(),
                                [ p.shmemIdInit(self.side) ]),
                 ExprMemberInit(p.stateVar(),

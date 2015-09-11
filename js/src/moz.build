@@ -35,7 +35,7 @@ for header in ('GCAPI.h', 'HeapAPI.h', 'RootingAPI.h', 'SliceBudget.h', 'TraceKi
     with Files('../public/' + header):
         BUG_COMPONENT = component_gc
 
-for stlfile in ['jsarray.*', 'jsbool*', 'jsdate.*', 'jsnum.*', 'json.*', 'jsreflect.*', 'jsstr.*']:
+for stlfile in ['jsarray.*', 'jsbool*', 'jsdate.*', 'jsnum.*', 'json.*', 'jsstr.*']:
     with Files(stlfile):
         BUG_COMPONENT = component_stl
 
@@ -400,6 +400,7 @@ elif CONFIG['JS_CODEGEN_X86'] or CONFIG['JS_CODEGEN_X64']:
             'jit/x64/CodeGenerator-x64.cpp',
             'jit/x64/Lowering-x64.cpp',
             'jit/x64/MacroAssembler-x64.cpp',
+            'jit/x64/SharedIC-x64.cpp',
             'jit/x64/Trampoline-x64.cpp',
         ]
     else:
@@ -411,6 +412,7 @@ elif CONFIG['JS_CODEGEN_X86'] or CONFIG['JS_CODEGEN_X64']:
             'jit/x86/CodeGenerator-x86.cpp',
             'jit/x86/Lowering-x86.cpp',
             'jit/x86/MacroAssembler-x86.cpp',
+            'jit/x86/SharedIC-x86.cpp',
             'jit/x86/Trampoline-x86.cpp',
         ]
 elif CONFIG['JS_CODEGEN_ARM']:
@@ -426,6 +428,7 @@ elif CONFIG['JS_CODEGEN_ARM']:
         'jit/arm/Lowering-arm.cpp',
         'jit/arm/MacroAssembler-arm.cpp',
         'jit/arm/MoveEmitter-arm.cpp',
+        'jit/arm/SharedIC-arm.cpp',
         'jit/arm/Trampoline-arm.cpp',
     ]
     if CONFIG['JS_SIMULATOR_ARM']:
@@ -442,6 +445,7 @@ elif CONFIG['JS_CODEGEN_ARM64']:
         'jit/arm64/Lowering-arm64.cpp',
         'jit/arm64/MacroAssembler-arm64.cpp',
         'jit/arm64/MoveEmitter-arm64.cpp',
+        'jit/arm64/SharedIC-arm64.cpp',
         'jit/arm64/Trampoline-arm64.cpp',
         'jit/arm64/vixl/Assembler-vixl.cpp',
         'jit/arm64/vixl/Cpu-vixl.cpp',
@@ -475,6 +479,7 @@ elif CONFIG['JS_CODEGEN_MIPS32']:
             'jit/mips32/Lowering-mips32.cpp',
             'jit/mips32/MacroAssembler-mips32.cpp',
             'jit/mips32/MoveEmitter-mips32.cpp',
+            'jit/mips32/SharedIC-mips32.cpp',
             'jit/mips32/Trampoline-mips32.cpp',
         ]
         if CONFIG['JS_SIMULATOR_MIPS32']:

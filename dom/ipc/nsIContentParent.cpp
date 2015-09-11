@@ -13,9 +13,9 @@
 #include "mozilla/dom/ContentBridgeParent.h"
 #include "mozilla/dom/PTabContext.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
-#include "mozilla/dom/StructuredCloneIPCHelper.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/ipc/BlobParent.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/unused.h"
 
@@ -187,7 +187,7 @@ nsIContentParent::RecvSyncMessage(const nsString& aMsg,
                                   const ClonedMessageData& aData,
                                   InfallibleTArray<CpowEntry>&& aCpows,
                                   const IPC::Principal& aPrincipal,
-                                  nsTArray<StructuredCloneIPCHelper>* aRetvals)
+                                  nsTArray<ipc::StructuredCloneData>* aRetvals)
 {
   // FIXME Permission check in Content process
   nsIPrincipal* principal = aPrincipal;
@@ -201,12 +201,12 @@ nsIContentParent::RecvSyncMessage(const nsString& aMsg,
 
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
-    StructuredCloneIPCHelper helper;
-    ipc::UnpackClonedMessageDataForParent(aData, helper);
+    ipc::StructuredCloneData data;
+    ipc::UnpackClonedMessageDataForParent(aData, data);
 
     CrossProcessCpowHolder cpows(this, aCpows);
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), nullptr,
-                        aMsg, true, &helper, &cpows, aPrincipal, aRetvals);
+                        aMsg, true, &data, &cpows, aPrincipal, aRetvals);
   }
   return true;
 }
@@ -216,7 +216,7 @@ nsIContentParent::RecvRpcMessage(const nsString& aMsg,
                                  const ClonedMessageData& aData,
                                  InfallibleTArray<CpowEntry>&& aCpows,
                                  const IPC::Principal& aPrincipal,
-                                 nsTArray<StructuredCloneIPCHelper>* aRetvals)
+                                 nsTArray<ipc::StructuredCloneData>* aRetvals)
 {
   // FIXME Permission check in Content process
   nsIPrincipal* principal = aPrincipal;
@@ -230,12 +230,12 @@ nsIContentParent::RecvRpcMessage(const nsString& aMsg,
 
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
-    StructuredCloneIPCHelper helper;
-    ipc::UnpackClonedMessageDataForParent(aData, helper);
+    ipc::StructuredCloneData data;
+    ipc::UnpackClonedMessageDataForParent(aData, data);
 
     CrossProcessCpowHolder cpows(this, aCpows);
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), nullptr,
-                        aMsg, true, &helper, &cpows, aPrincipal, aRetvals);
+                        aMsg, true, &data, &cpows, aPrincipal, aRetvals);
   }
   return true;
 }
@@ -258,12 +258,12 @@ nsIContentParent::RecvAsyncMessage(const nsString& aMsg,
 
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
-    StructuredCloneIPCHelper helper;
-    ipc::UnpackClonedMessageDataForParent(aData, helper);
+    ipc::StructuredCloneData data;
+    ipc::UnpackClonedMessageDataForParent(aData, data);
 
     CrossProcessCpowHolder cpows(this, aCpows);
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), nullptr,
-                        aMsg, false, &helper, &cpows, aPrincipal, nullptr);
+                        aMsg, false, &data, &cpows, aPrincipal, nullptr);
   }
   return true;
 }

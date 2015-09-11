@@ -1688,6 +1688,13 @@ CodeGenerator::emitSharedStub(ICStub::Kind kind, LInstruction* lir)
     JSScript* script = lir->mirRaw()->block()->info().script();
     jsbytecode* pc = lir->mirRaw()->toInstruction()->resumePoint()->pc();
 
+#ifdef JS_USE_LINK_REGISTER
+    // Some architectures don't push the return address on the stack but
+    // use the link register. In that case the stack isn't aligned. Push
+    // to make sure we are aligned.
+    masm.Push(Imm32(0));
+#endif
+
     // Create descriptor signifying end of Ion frame.
     uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS);
     masm.Push(Imm32(descriptor));
@@ -1703,14 +1710,18 @@ CodeGenerator::emitSharedStub(ICStub::Kind kind, LInstruction* lir)
 
     // Fix up upon return.
     uint32_t callOffset = masm.currentOffset();
+#ifdef JS_USE_LINK_REGISTER
+    masm.freeStack(sizeof(intptr_t) * 2);
+#else
     masm.freeStack(sizeof(intptr_t));
+#endif
     markSafepointAt(callOffset, lir);
 }
 
 void
 CodeGenerator::visitBinarySharedStub(LBinarySharedStub* lir)
 {
-    JSOp jsop = JSOp(*lir->mir()->resumePoint()->pc());
+    JSOp jsop = JSOp(*lir->mirRaw()->toInstruction()->resumePoint()->pc());
     switch (jsop) {
       case JSOP_ADD:
       case JSOP_SUB:
@@ -1718,6 +1729,16 @@ CodeGenerator::visitBinarySharedStub(LBinarySharedStub* lir)
       case JSOP_DIV:
       case JSOP_MOD:
         emitSharedStub(ICStub::Kind::BinaryArith_Fallback, lir);
+        break;
+      case JSOP_LT:
+      case JSOP_LE:
+      case JSOP_GT:
+      case JSOP_GE:
+      case JSOP_EQ:
+      case JSOP_NE:
+      case JSOP_STRICTEQ:
+      case JSOP_STRICTNE:
+        emitSharedStub(ICStub::Kind::Compare_Fallback, lir);
         break;
       default:
         MOZ_CRASH("Unsupported jsop in shared stubs.");
@@ -7874,6 +7895,11 @@ CodeGenerator::linkSharedStubs(JSContext* cx)
           }
           case ICStub::Kind::UnaryArith_Fallback: {
             ICUnaryArith_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonMonkey);
+            stub = stubCompiler.getStub(&stubSpace_);
+            break;
+          }
+          case ICStub::Kind::Compare_Fallback: {
+            ICCompare_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonMonkey);
             stub = stubCompiler.getStub(&stubSpace_);
             break;
           }

@@ -282,13 +282,13 @@ public:
   /**
    * HandleQueryContentEvent() sets content data to aEvent.mReply.
    *
-   * For NS_QUERY_SELECTED_TEXT, fail if the cache doesn't contain the whole
+   * For eQuerySelectedText, fail if the cache doesn't contain the whole
    *  selected range. (This shouldn't happen because PuppetWidget should have
    *  already sent the whole selection.)
    *
-   * For NS_QUERY_TEXT_CONTENT, fail only if the cache doesn't overlap with
+   * For eQueryTextContent, fail only if the cache doesn't overlap with
    *  the queried range. Note the difference from above. We use
-   *  this behavior because a normal NS_QUERY_TEXT_CONTENT event is allowed to
+   *  this behavior because a normal eQueryTextContent event is allowed to
    *  have out-of-bounds offsets, so that widget can request content without
    *  knowing the exact length of text. It's up to widget to handle cases when
    *  the returned offset/length are different from the queried offset/length.
@@ -296,9 +296,9 @@ public:
    * For NS_QUERY_TEXT_RECT, fail if cached offset/length aren't equals to input.
    *   Cocoa widget always queries selected offset, so it works on it.
    *
-   * For NS_QUERY_CARET_RECT, fail if cached offset isn't equals to input
+   * For eQueryCaretRect, fail if cached offset isn't equals to input
    *
-   * For NS_QUERY_EDITOR_RECT, always success
+   * For eQueryEditorRect, always success
    */
   bool HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
                                nsIWidget* aWidget) const;

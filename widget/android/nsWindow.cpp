@@ -1894,8 +1894,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             int32_t start = ae->Start(), end = ae->End();
 
             if (start < 0 || end < 0) {
-                WidgetQueryContentEvent event(true, NS_QUERY_SELECTED_TEXT,
-                                              this);
+                WidgetQueryContentEvent event(true, eQuerySelectedText, this);
                 InitEvent(event, nullptr);
                 DispatchEvent(&event);
                 MOZ_ASSERT(event.mSucceeded);
@@ -1976,8 +1975,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 }
 
                 {
-                    WidgetQueryContentEvent queryEvent(true,
-                                                       NS_QUERY_SELECTED_TEXT,
+                    WidgetQueryContentEvent queryEvent(true, eQuerySelectedText,
                                                        this);
                     InitEvent(queryEvent, nullptr);
                     DispatchEvent(&queryEvent);
@@ -2210,7 +2208,7 @@ nsWindow::FlushIMEChanges()
             continue;
         }
 
-        WidgetQueryContentEvent event(true, NS_QUERY_TEXT_CONTENT, this);
+        WidgetQueryContentEvent event(true, eQueryTextContent, this);
 
         if (change.mNewEnd != change.mStart) {
             InitEvent(event, nullptr);
@@ -2227,7 +2225,7 @@ nsWindow::FlushIMEChanges()
     mIMETextChanges.Clear();
 
     if (mIMESelectionChanged) {
-        WidgetQueryContentEvent event(true, NS_QUERY_SELECTED_TEXT, this);
+        WidgetQueryContentEvent event(true, eQuerySelectedText, this);
         InitEvent(event, nullptr);
 
         DispatchEvent(&event);

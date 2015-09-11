@@ -1,5 +1,5 @@
 $inherits:
-  from: 'tasks/build.yml'
+  from: 'tasks/builds/firefox_base.yml'
   variables:
     build_name: 'macosx64'
     build_type: 'opt'
@@ -17,18 +17,21 @@ task:
   scopes:
     - 'docker-worker:cache:build-macosx64-workspace'
     - 'docker-worker:cache:tooltool-cache'
+    - 'docker-worker:relengapi-proxy:tooltool.download.internal'
+    - 'docker-worker:relengapi-proxy:tooltool.download.public'
 
   payload:
     image: '{{#docker_image}}desktop-build{{/docker_image}}'
     cache:
       build-macosx64-c6-workspace: '/home/worker/workspace'
       tooltool-cache: '/home/worker/tooltool-cache'
+
     features:
       relengAPIProxy: true
 
     env:
       MOZHARNESS_SCRIPT: 'mozharness/scripts/fx_desktop_build.py'
-      MOZHARNESS_CONFIG: 'builds/releng_base_mac_cross_builds.py balrog/production.py'
+      MOZHARNESS_CONFIG: 'builds/releng_base_mac_64_cross_builds.py balrog/production.py'
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster
       #TODO: bug 1164617 - remove Docker image hacks
@@ -36,8 +39,8 @@ task:
       CPLUS_INCLUDE_PATH: ""
       # image paths
       TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
-      DIST_UPLOADS: 'jsshell-mac.zip'
-      DIST_TARGET_UPLOADS: 'x-test.mac.tar.bz2 mac.dmg mac.json tests.zip crashreporter-symbols.zip'
+      DIST_UPLOADS: 'jsshell-mac64.zip'
+      DIST_TARGET_UPLOADS: 'mac64.dmg mac64.json tests.zip crashreporter-symbols.zip'
 
     maxRunTime: 36000
 
@@ -50,10 +53,10 @@ task:
     treeherder:
       machine:
         # see https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
-        platform: macosx64
+        platform: osx-10-7
     # Rather then enforcing particular conventions we require that all build
     # tasks provide the "build" extra field to specify where the build and tests
     # files are located.
     locations:
-      build: 'public/build/target.mac.dmg'
+      build: 'public/build/target.mac64.dmg'
       tests: 'public/build/target.tests.zip'

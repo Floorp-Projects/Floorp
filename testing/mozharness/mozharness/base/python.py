@@ -160,7 +160,7 @@ class VirtualenvMixin(object):
 
         if log_output:
             self.info("Current package versions:")
-            for package in packages:
+            for package in sorted(packages):
                 self.info("  %s == %s" % (package, packages[package]))
 
         return packages

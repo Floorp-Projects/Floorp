@@ -194,8 +194,9 @@ void MediaSourceReader::DoAudioRequest()
 }
 
 void
-MediaSourceReader::OnAudioDecoded(AudioData* aSample)
+MediaSourceReader::OnAudioDecoded(MediaData* aSample)
 {
+  MOZ_ASSERT(aSample->mType == MediaData::AUDIO_DATA);
   MOZ_DIAGNOSTIC_ASSERT(!IsSeeking());
   mAudioRequest.Complete();
 
@@ -221,7 +222,7 @@ MediaSourceReader::OnAudioDecoded(AudioData* aSample)
 
   // Adjust the sample time into our reference.
   nsRefPtr<AudioData> newSample =
-    AudioData::TransferAndUpdateTimestampAndDuration(aSample,
+    AudioData::TransferAndUpdateTimestampAndDuration(aSample->As<AudioData>(),
                                                      ourTime,
                                                      aSample->mDuration);
   mLastAudioTime = newSample->GetEndTime();
@@ -370,8 +371,9 @@ MediaSourceReader::DoVideoRequest()
 }
 
 void
-MediaSourceReader::OnVideoDecoded(VideoData* aSample)
+MediaSourceReader::OnVideoDecoded(MediaData* aSample)
 {
+  MOZ_ASSERT(aSample->mType == MediaData::VIDEO_DATA);
   MOZ_DIAGNOSTIC_ASSERT(!IsSeeking());
   mVideoRequest.Complete();
 
@@ -396,7 +398,7 @@ MediaSourceReader::OnVideoDecoded(VideoData* aSample)
 
   // Adjust the sample time into our reference.
   nsRefPtr<VideoData> newSample =
-    VideoData::ShallowCopyUpdateTimestampAndDuration(aSample,
+    VideoData::ShallowCopyUpdateTimestampAndDuration(aSample->As<VideoData>(),
                                                      ourTime,
                                                      aSample->mDuration);
 
