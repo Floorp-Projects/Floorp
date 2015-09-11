@@ -165,9 +165,10 @@ gfxGraphiteShaper::ShapeText(gfxContext      *aContext,
     size_t numChars = gr_count_unicode_characters(gr_utf16,
                                                   aText, aText + aLength,
                                                   nullptr);
+    gr_bidirtl grBidi = gr_bidirtl(aShapedText->IsRightToLeft()
+                                   ? (gr_rtl | gr_nobidi) : gr_nobidi);
     gr_segment *seg = gr_make_seg(mGrFont, mGrFace, 0, grFeatures,
-                                  gr_utf16, aText, numChars,
-                                  aShapedText->IsRightToLeft());
+                                  gr_utf16, aText, numChars, grBidi);
 
     gr_featureval_destroy(grFeatures);
 
