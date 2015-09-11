@@ -434,7 +434,7 @@ public:
 
   bool CausesDOMTextEvent() const
   {
-    return mMessage == NS_COMPOSITION_CHANGE ||
+    return mMessage == eCompositionChange ||
            mMessage == NS_COMPOSITION_COMMIT ||
            mMessage == eCompositionCommitAsIs;
   }
