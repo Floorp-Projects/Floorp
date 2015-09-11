@@ -643,7 +643,7 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly)
             mClient->Activate(mCurrentInterval->Begin()->Time().GetMillis());
           }
           if (mSeekState == SEEK_NOT_SEEKING) {
-            FireTimeEventAsync(NS_SMIL_BEGIN, 0);
+            FireTimeEventAsync(eSMILBeginEvent, 0);
           }
           if (HasPlayed()) {
             Reset(); // Apply restart behaviour
@@ -1525,7 +1525,7 @@ nsSMILTimedElement::DoPostSeek()
   case SEEK_FORWARD_FROM_INACTIVE:
   case SEEK_BACKWARD_FROM_INACTIVE:
     if (mElementState == STATE_ACTIVE) {
-      FireTimeEventAsync(NS_SMIL_BEGIN, 0);
+      FireTimeEventAsync(eSMILBeginEvent, 0);
     }
     break;
 
