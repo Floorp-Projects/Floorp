@@ -302,7 +302,7 @@ ContentCacheInChild::QueryCharRect(nsIWidget* aWidget,
   aCharRect.SetEmpty();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetQueryContentEvent textRect(true, NS_QUERY_TEXT_RECT, aWidget);
+  WidgetQueryContentEvent textRect(true, eQueryTextRect, aWidget);
   textRect.InitForQueryTextRect(aOffset, 1);
   aWidget->DispatchEvent(&textRect, status);
   if (NS_WARN_IF(!textRect.mSucceeded)) {
@@ -394,7 +394,7 @@ ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
 
   if (!mSelection.Collapsed()) {
     nsEventStatus status = nsEventStatus_eIgnore;
-    WidgetQueryContentEvent textRect(true, NS_QUERY_TEXT_RECT, aWidget);
+    WidgetQueryContentEvent textRect(true, eQueryTextRect, aWidget);
     textRect.InitForQueryTextRect(mSelection.StartOffset(),
                                   mSelection.Length());
     aWidget->DispatchEvent(&textRect, status);
@@ -583,10 +583,10 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
          this, aEvent.mReply.mOffset, aEvent.mReply.mString.Length()));
       break;
     }
-    case NS_QUERY_TEXT_RECT:
+    case eQueryTextRect:
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
         ("ContentCacheInParent: 0x%p HandleQueryContentEvent("
-         "aEvent={ mMessage=NS_QUERY_TEXT_RECT, mInput={ mOffset=%u, "
+         "aEvent={ mMessage=eQueryTextRect, mInput={ mOffset=%u, "
          "mLength=%u } }, aWidget=0x%p), mText.Length()=%u",
          this, aEvent.mInput.mOffset, aEvent.mInput.mLength, aWidget,
          mText.Length()));

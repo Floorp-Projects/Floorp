@@ -802,7 +802,7 @@ ContentEventHandler::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
       return OnQueryTextContent(aEvent);
     case eQueryCaretRect:
       return OnQueryCaretRect(aEvent);
-    case NS_QUERY_TEXT_RECT:
+    case eQueryTextRect:
       return OnQueryTextRect(aEvent);
     case eQueryEditorRect:
       return OnQueryEditorRect(aEvent);
@@ -1330,7 +1330,7 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
                                 GetLineBreakType(aEvent));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  WidgetQueryContentEvent textRect(true, NS_QUERY_TEXT_RECT, aEvent->widget);
+  WidgetQueryContentEvent textRect(true, eQueryTextRect, aEvent->widget);
   textRect.InitForQueryTextRect(offset, 1, aEvent->mUseNativeLineBreak);
   rv = OnQueryTextRect(&textRect);
   NS_ENSURE_SUCCESS(rv, rv);
