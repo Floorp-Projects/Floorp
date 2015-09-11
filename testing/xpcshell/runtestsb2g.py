@@ -9,15 +9,14 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0]))))
 
 import traceback
-import remotexpcshelltests
-from remotexpcshelltests import RemoteXPCShellTestThread, XPCShellRemote
+from remotexpcshelltests import RemoteXPCShellTestThread, XPCShellRemote, RemoteXPCShellOptions
 from mozdevice import devicemanagerADB, DMError
 from mozlog import commandline
 
 DEVICE_TEST_ROOT = '/data/local/tests'
 
+
 from marionette import Marionette
-from xpcshellcommandline import parser_b2g
 
 class B2GXPCShellTestThread(RemoteXPCShellTestThread):
     # Overridden
@@ -76,19 +75,87 @@ class B2GXPCShellRemote(XPCShellRemote):
                 self.env['LD_LIBRARY_PATH'] = '/system/b2g'
                 self.options.use_device_libs = True
 
-def verifyRemoteOptions(parser, options):
-    if options.b2g_path is None:
-        parser.error("Need to specify a --b2gpath")
+class B2GOptions(RemoteXPCShellOptions):
 
-    if options.geckoPath and not options.emulator:
-        parser.error("You must specify --emulator if you specify --gecko-path")
+    def __init__(self):
+        RemoteXPCShellOptions.__init__(self)
+        defaults = {}
 
-    if options.logdir and not options.emulator:
-        parser.error("You must specify --emulator if you specify --logdir")
-    return remotexpcshelltests.verifyRemoteOptions(parser, options)
+        self.add_option('--b2gpath', action='store',
+                        type='string', dest='b2g_path',
+                        help="Path to B2G repo or qemu dir")
+        defaults['b2g_path'] = None
 
-def run_remote_xpcshell(parser, options, log):
-    options = verifyRemoteOptions(parser, options)
+        self.add_option('--emupath', action='store',
+                        type='string', dest='emu_path',
+                        help="Path to emulator folder (if different "
+                                                      "from b2gpath")
+
+        self.add_option('--no-clean', action='store_false',
+                        dest='clean',
+                        help="Do not clean TESTROOT. Saves [lots of] time")
+        defaults['clean'] = True
+
+        defaults['emu_path'] = None
+
+        self.add_option('--emulator', action='store',
+                        type='string', dest='emulator',
+                        help="Architecture of emulator to use: x86 or arm")
+        defaults['emulator'] = None
+
+        self.add_option('--no-window', action='store_true',
+                        dest='no_window',
+                        help="Pass --no-window to the emulator")
+        defaults['no_window'] = False
+
+        self.add_option('--adbpath', action='store',
+                        type='string', dest='adb_path',
+                        help="Path to adb")
+        defaults['adb_path'] = 'adb'
+
+        self.add_option('--address', action='store',
+                        type='string', dest='address',
+                        help="host:port of running Gecko instance to connect to")
+        defaults['address'] = None
+
+        self.add_option('--use-device-libs', action='store_true',
+                        dest='use_device_libs',
+                        help="Don't push .so's")
+        defaults['use_device_libs'] = False
+        self.add_option("--gecko-path", action="store",
+                        type="string", dest="geckoPath",
+                        help="the path to a gecko distribution that should "
+                        "be installed on the emulator prior to test")
+        defaults["geckoPath"] = None
+        self.add_option("--logdir", action="store",
+                        type="string", dest="logdir",
+                        help="directory to store log files")
+        defaults["logdir"] = None
+        self.add_option('--busybox', action='store',
+                        type='string', dest='busybox',
+                        help="Path to busybox binary to install on device")
+        defaults['busybox'] = None
+
+        defaults["remoteTestRoot"] = DEVICE_TEST_ROOT
+        defaults['dm_trans'] = 'adb'
+        defaults['debugger'] = None
+        defaults['debuggerArgs'] = None
+
+        self.set_defaults(**defaults)
+
+    def verifyRemoteOptions(self, options):
+        if options.b2g_path is None:
+            self.error("Need to specify a --b2gpath")
+
+        if options.geckoPath and not options.emulator:
+            self.error("You must specify --emulator if you specify --gecko-path")
+
+        if options.logdir and not options.emulator:
+            self.error("You must specify --emulator if you specify --logdir")
+        return RemoteXPCShellOptions.verifyRemoteOptions(self, options)
+
+def run_remote_xpcshell(parser, options, args, log):
+    options = parser.verifyRemoteOptions(options)
 
     # Create the Marionette instance
     kwargs = {}
@@ -128,18 +195,16 @@ def run_remote_xpcshell(parser, options, log):
 
     if not options.remoteTestRoot:
         options.remoteTestRoot = dm.deviceRoot
-    xpcsh = B2GXPCShellRemote(dm, options, log)
+    xpcsh = B2GXPCShellRemote(dm, options, args, log)
 
     # we don't run concurrent tests on mobile
     options.sequential = True
 
-    if options.xpcshell is None:
-        options.xpcshell = "xpcshell"
-
     try:
-        if not xpcsh.runTests(testClass=B2GXPCShellTestThread,
-                              mobileArgs=xpcsh.mobileArgs,
-                              **vars(options)):
+        if not xpcsh.runTests(xpcshell='xpcshell', testdirs=args[0:],
+                                 testClass=B2GXPCShellTestThread,
+                                 mobileArgs=xpcsh.mobileArgs,
+                                 **options.__dict__):
             sys.exit(1)
     except:
         print "Automation Error: Exception caught while running tests"
@@ -147,13 +212,13 @@ def run_remote_xpcshell(parser, options, log):
         sys.exit(1)
 
 def main():
-    parser = parser_b2g()
+    parser = B2GOptions()
     commandline.add_logging_group(parser)
-    options = parser.parse_args()
+    options, args = parser.parse_args()
     log = commandline.setup_logging("Remote XPCShell",
                                     options,
                                     {"tbpl": sys.stdout})
-    run_remote_xpcshell(parser, options, log)
+    run_remote_xpcshell(parser, options, args, log)
 
 # You usually run this like :
 # python runtestsb2g.py --emulator arm --b2gpath $B2GPATH --manifest $MANIFEST [--xre-path $MOZ_HOST_BIN
