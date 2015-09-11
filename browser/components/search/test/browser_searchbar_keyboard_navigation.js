@@ -152,23 +152,6 @@ add_task(function* test_arrows() {
      "the textfield value should be back to initial value");
 });
 
-add_task(function* test_typing_clears_button_selection() {
-  is(Services.focus.focusedElement, textbox.inputField,
-     "the search bar should be focused"); // from the previous test.
-  ok(!textbox.selectedButton, "no button should be selected");
-
-  EventUtils.synthesizeKey("VK_UP", {});
-  is(textbox.selectedButton.getAttribute("anonid"), "search-settings",
-     "the settings item should be selected");
-
-  // Type a character.
-  EventUtils.synthesizeKey("a", {});
-  ok(!textbox.selectedButton, "the settings item should be de-selected");
-
-  // Remove the character.
-  EventUtils.synthesizeKey("VK_BACK_SPACE", {});
-});
-
 add_task(function* test_tab() {
   is(Services.focus.focusedElement, textbox.inputField,
      "the search bar should be focused"); // from the previous test.
