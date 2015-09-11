@@ -510,7 +510,7 @@ EventListenerManager::RemoveEventListenerInternal(
   uint32_t typeCount = 0;
   bool deviceType = IsDeviceType(aEventMessage);
 #ifdef MOZ_B2G
-  bool timeChangeEvent = (aEventMessage == NS_MOZ_TIME_CHANGE_EVENT);
+  bool timeChangeEvent = (aEventMessage == eTimeChange);
   bool networkEvent = (aEventMessage == NS_NETWORK_UPLOAD_EVENT ||
                        aEventMessage == NS_NETWORK_DOWNLOAD_EVENT);
 #endif // MOZ_B2G

@@ -395,7 +395,7 @@ NS_EVENT_MESSAGE(eWheelOperationStart,   eWheelEventFirst + 1)
 NS_EVENT_MESSAGE(eWheelOperationEnd,     eWheelEventFirst + 2)
 
 //System time is changed
-NS_EVENT_MESSAGE(NS_MOZ_TIME_CHANGE_EVENT, 5500)
+NS_EVENT_MESSAGE(eTimeChange,            5500)
 
 // Network packet events.
 NS_EVENT_MESSAGE(NS_NETWORK_EVENT_START,    5600)
