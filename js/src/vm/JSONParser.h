@@ -20,7 +20,7 @@ namespace js {
 // JSONParser base class. JSONParser is templatized to work on either Latin1
 // or TwoByte input strings, JSONParserBase holds all state and methods that
 // can be shared between the two encodings.
-class MOZ_STACK_CLASS JSONParserBase
+class MOZ_STACK_CLASS JSONParserBase : private JS::AutoGCRooter
 {
   public:
     enum ErrorHandling { RaiseError, NoError };
@@ -108,7 +108,8 @@ class MOZ_STACK_CLASS JSONParserBase
 #endif
 
     JSONParserBase(JSContext* cx, ErrorHandling errorHandling)
-      : cx(cx),
+      : JS::AutoGCRooter(cx, JSONPARSER),
+        cx(cx),
         errorHandling(errorHandling),
         stack(cx),
         freeElements(cx),
@@ -118,20 +119,6 @@ class MOZ_STACK_CLASS JSONParserBase
 #endif
     {}
     ~JSONParserBase();
-
-    // Allow move construction for use with Rooted.
-    JSONParserBase(JSONParserBase&& other)
-      : v(other.v),
-        cx(other.cx),
-        errorHandling(other.errorHandling),
-        stack(mozilla::Move(other.stack)),
-        freeElements(mozilla::Move(other.freeElements)),
-        freeProperties(mozilla::Move(other.freeProperties))
-#ifdef DEBUG
-      , lastToken(mozilla::Move(other.lastToken))
-#endif
-    {}
-
 
     Value numberValue() const {
         MOZ_ASSERT(lastToken == Number);
@@ -182,16 +169,16 @@ class MOZ_STACK_CLASS JSONParserBase
     bool finishObject(MutableHandleValue vp, PropertyVector& properties);
     bool finishArray(MutableHandleValue vp, ElementVector& elements);
 
+  private:
+    friend void AutoGCRooter::trace(JSTracer* trc);
     void trace(JSTracer* trc);
 
-  private:
     JSONParserBase(const JSONParserBase& other) = delete;
     void operator=(const JSONParserBase& other) = delete;
 };
 
 template <typename CharT>
-class MOZ_STACK_CLASS JSONParser : public JSONParserBase,
-                                   public JS::Traceable
+class MOZ_STACK_CLASS JSONParser : public JSONParserBase
 {
   private:
     typedef mozilla::RangedPtr<const CharT> CharPtr;
@@ -213,14 +200,6 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase,
         MOZ_ASSERT(current <= end);
     }
 
-    /* Allow move construction for use with Rooted. */
-    JSONParser(JSONParser&& other)
-      : JSONParserBase(mozilla::Forward<JSONParser>(other)),
-        current(other.current),
-        begin(other.begin),
-        end(other.end)
-    {}
-
     /*
      * Parse the JSON data specified at construction time.  If it parses
      * successfully, store the prescribed value in *vp and return true.  If an
@@ -232,9 +211,6 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase,
      * represent |undefined|, so the JSON data couldn't have specified it.)
      */
     bool parse(MutableHandleValue vp);
-
-    static void trace(JSONParser<CharT>* parser, JSTracer* trc) { parser->trace(trc); }
-    void trace(JSTracer* trc) { JSONParserBase::trace(trc); }
 
   private:
     template<StringType ST> Token readString();
@@ -255,13 +231,6 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase,
   private:
     JSONParser(const JSONParser& other) = delete;
     void operator=(const JSONParser& other) = delete;
-};
-
-template <typename CharT>
-struct RootedBase<JSONParser<CharT>> {
-    bool parse(MutableHandleValue vp) {
-        return static_cast<Rooted<JSONParser<CharT>>*>(this)->get().parse(vp);
-    }
 };
 
 } /* namespace js */
