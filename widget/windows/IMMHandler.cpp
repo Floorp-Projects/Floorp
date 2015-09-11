@@ -1525,7 +1525,7 @@ IMMHandler::HandleEndComposition(nsWindow* aWindow,
   }
 
   EventMessage message =
-    aCommitString ? NS_COMPOSITION_COMMIT : eCompositionCommitAsIs;
+    aCommitString ? eCompositionCommit : eCompositionCommitAsIs;
   WidgetCompositionEvent compositionCommitEvent(true, message, aWindow);
   nsIntPoint point(0, 0);
   aWindow->InitEvent(compositionCommitEvent, &point);

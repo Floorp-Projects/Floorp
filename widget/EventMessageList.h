@@ -148,7 +148,7 @@ NS_EVENT_MESSAGE(eUnidentifiedEvent,    2000)
 NS_EVENT_MESSAGE(eCompositionEventFirst, 2200)
 NS_EVENT_MESSAGE(eCompositionStart,      eCompositionEventFirst)
 // eCompositionEnd is the message for DOM compositionend event.
-// This event should NOT be dispatched from widget if NS_COMPOSITION_COMMIT
+// This event should NOT be dispatched from widget if eCompositionCommit
 // is available.
 NS_EVENT_MESSAGE(eCompositionEnd,        eCompositionEventFirst + 1)
 // eCompositionUpdate is the message for DOM compositionupdate event.
@@ -168,12 +168,12 @@ NS_EVENT_MESSAGE(eCompositionChange,     eCompositionEventFirst + 3)
 // eCompositionEnd will be dispatched automatically.
 // Its mData and mRanges should be empty and nullptr.
 NS_EVENT_MESSAGE(eCompositionCommitAsIs, eCompositionEventFirst + 4)
-// NS_COMPOSITION_COMMIT is the message for representing a commit of
+// eCompositionCommit is the message for representing a commit of
 // composition string with its mData value.  TextComposition will dispatch this
 // event to the DOM tree as eCompositionChange without clause information.
 // After that, eCompositionEnd will be dispatched automatically.
 // Its mRanges should be nullptr.
-NS_EVENT_MESSAGE(NS_COMPOSITION_COMMIT,  eCompositionEventFirst + 5)
+NS_EVENT_MESSAGE(eCompositionCommit,     eCompositionEventFirst + 5)
 
 // Following events are defined for deprecated DOM events which are using
 // InternalUIEvent class.

@@ -147,8 +147,8 @@ GetEventMessageName(EventMessage aMessage)
       return "eCompositionChange";
     case eCompositionCommitAsIs:
       return "eCompositionCommitAsIs";
-    case NS_COMPOSITION_COMMIT:
-      return "NS_COMPOSITION_COMMIT";
+    case eCompositionCommit:
+      return "eCompositionCommit";
     case eSetSelection:
       return "eSetSelection";
     default:

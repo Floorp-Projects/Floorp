@@ -1439,7 +1439,7 @@ IMContextWrapper::DispatchCompositionCommitEvent(
 
     nsRefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
 
-    EventMessage message = aCommitString ? NS_COMPOSITION_COMMIT :
+    EventMessage message = aCommitString ? eCompositionCommit :
                                            eCompositionCommitAsIs;
     mCompositionState = eCompositionState_NotComposing;
     mCompositionStart = UINT32_MAX;
@@ -1449,7 +1449,7 @@ IMContextWrapper::DispatchCompositionCommitEvent(
     WidgetCompositionEvent compositionCommitEvent(true, message,
                                                   mLastFocusedWindow);
     InitEvent(compositionCommitEvent);
-    if (message == NS_COMPOSITION_COMMIT) {
+    if (message == eCompositionCommit) {
         compositionCommitEvent.mData = *aCommitString;
     }
 
