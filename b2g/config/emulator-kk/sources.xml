@@ -12,10 +12,10 @@
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="e935894ef5f27e2f04b9e929a45a958e6288a223">
+  <project name="platform_build" path="build" remote="b2g" revision="8d83715f08b7849f16a0dfc88f78d5c3a89c0a54">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="676caf58c4de93ba0d6a93add4d0a2ebfaa67764"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="e0bd0ec64986fe7b99699434da502404fb6ae128"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="e9e2923fd6cab93cf88b4b9ada82225e44fe6635"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -129,10 +129,10 @@
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
   <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="8d4018ebd33ac3f1a043b2d54bc578028656a659"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="96f78964a9a317a6c8b494ab71e10e0276d02490"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="b2d449276b015d8fe6cd9ea60c389c7e6975f841"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="f37bd545063039e30a92f2550ae78c0e6e4e2d08"/>
   <project name="platform_external_wpa_supplicant_8" path="external/wpa_supplicant_8" remote="b2g" revision="0c6a6547cd1fd302fa2b0f6e375654df36bf0ec4"/>
-  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="3453472769d6e9b43c84f98b56f8c63afe2b129e"/>
+  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="7132bc11fbc68acfebcd509095562ca04fad5584"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="5f4b68c799927b6e078f987b12722c3a6ccd4a45"/>
   <project name="platform/development" path="development" revision="5968ff4e13e0d696ad8d972281fc27ae5a12829b"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="0951179277915335251c5e11d242e4e1a8c2236f"/>
