@@ -5161,7 +5161,7 @@ nsEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
       return false;
     case eCompositionStart:
     case eCompositionEnd:
-    case NS_COMPOSITION_UPDATE:
+    case eCompositionUpdate:
     case NS_COMPOSITION_CHANGE:
     case eCompositionCommitAsIs:
       // Don't allow composition events whose internal event are not

@@ -141,8 +141,8 @@ GetEventMessageName(EventMessage aMessage)
       return "eCompositionStart";
     case eCompositionEnd:
       return "eCompositionEnd";
-    case NS_COMPOSITION_UPDATE:
-      return "NS_COMPOSITION_UPDATE";
+    case eCompositionUpdate:
+      return "eCompositionUpdate";
     case NS_COMPOSITION_CHANGE:
       return "NS_COMPOSITION_CHANGE";
     case eCompositionCommitAsIs:
@@ -1147,7 +1147,7 @@ IMEStateManager::DispatchCompositionEvent(
     return;
   }
 
-  MOZ_ASSERT(aCompositionEvent->mMessage != NS_COMPOSITION_UPDATE,
+  MOZ_ASSERT(aCompositionEvent->mMessage != eCompositionUpdate,
              "compositionupdate event shouldn't be dispatched manually");
 
   EnsureTextCompositionArray();

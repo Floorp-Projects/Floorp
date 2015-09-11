@@ -138,7 +138,7 @@ WidgetEvent::HasIMEEventMessage() const
   switch (mMessage) {
     case eCompositionStart:
     case eCompositionEnd:
-    case NS_COMPOSITION_UPDATE:
+    case eCompositionUpdate:
     case NS_COMPOSITION_CHANGE:
     case eCompositionCommitAsIs:
     case NS_COMPOSITION_COMMIT:
