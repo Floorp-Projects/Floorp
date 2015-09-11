@@ -199,13 +199,11 @@ nsCSSProps::AddRefTable(void)
 
 #ifdef DEBUG
     {
-      // Assert that if CSS_PROPERTY_ALWAYS_ENABLED_IN_UA_SHEETS or
-      // CSS_PROPERTY_ALWAYS_ENABLED_IN_CHROME_OR_CERTIFIED_APP is used on
-      // a shorthand property that all of its component longhands also
-      // has the flag.
+      // Assert that if CSS_PROPERTY_ALWAYS_ENABLED_IN_UA_SHEETS is used
+      // on a shorthand property that all of its component longhands
+      // also has the flag.
       static uint32_t flagsToCheck[] = {
-        CSS_PROPERTY_ALWAYS_ENABLED_IN_UA_SHEETS,
-        CSS_PROPERTY_ALWAYS_ENABLED_IN_CHROME_OR_CERTIFIED_APP
+        CSS_PROPERTY_ALWAYS_ENABLED_IN_UA_SHEETS
       };
       for (nsCSSProperty shorthand = eCSSProperty_COUNT_no_shorthands;
            shorthand < eCSSProperty_COUNT;
