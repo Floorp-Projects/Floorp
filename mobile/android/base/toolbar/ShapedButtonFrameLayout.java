@@ -14,6 +14,10 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;
 
+/** A FrameLayout with lightweight theme support. Note that {@link ShapedButton}'s lwt support is basically the same so
+ * if you change it here, you should probably change it there. Note also that this doesn't have ShapedButton's path code
+ * so shouldn't have "ShapedButton" in the name, but I wanted to make the connection apparent so I left it.
+ */
 public class ShapedButtonFrameLayout extends ThemedFrameLayout {
 
     public ShapedButtonFrameLayout(Context context, AttributeSet attrs) {
