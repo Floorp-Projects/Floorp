@@ -2478,10 +2478,30 @@ CanvasRenderingContext2D::UpdateFilter()
 // rects
 //
 
+// bug 1074733
+// The canvas spec does not forbid rects with negative w or h, so given
+// corners (x, y), (x+w, y), (x+w, y+h), and (x, y+h) we must generate
+// the appropriate rect by flipping negative dimensions. This prevents
+// draw targets from receiving "empty" rects later on.
+static void
+NormalizeRect(double& aX, double& aY, double& aWidth, double& aHeight)
+{
+  if (aWidth < 0) {
+    aWidth = -aWidth;
+    aX -= aWidth;
+  }
+  if (aHeight < 0) {
+    aHeight = -aHeight;
+    aY -= aHeight;
+  }
+}
+
 void
 CanvasRenderingContext2D::ClearRect(double x, double y, double w,
                                     double h)
 {
+  NormalizeRect(x, y, w, h);
+
   EnsureTarget();
 
   mTarget->ClearRect(mgfx::Rect(x, y, w, h));
@@ -2494,6 +2514,8 @@ CanvasRenderingContext2D::FillRect(double x, double y, double w,
                                    double h)
 {
   const ContextState &state = CurrentState();
+
+  NormalizeRect(x, y, w, h);
 
   if (state.patternStyles[Style::FILL]) {
     CanvasPattern::RepeatMode repeat =
@@ -2568,6 +2590,7 @@ CanvasRenderingContext2D::StrokeRect(double x, double y, double w,
   if (!w && !h) {
     return;
   }
+  NormalizeRect(x, y, w, h);
 
   EnsureTarget();
   if (!IsTargetValid()) {
@@ -4317,6 +4340,11 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& image,
   }
 
   MOZ_ASSERT(optional_argc == 0 || optional_argc == 2 || optional_argc == 6);
+
+  if (optional_argc == 6) {
+    NormalizeRect(sx, sy, sw, sh);
+    NormalizeRect(dx, dy, dw, dh);
+  }
 
   RefPtr<SourceSurface> srcSurf;
   gfx::IntSize imgSize;
