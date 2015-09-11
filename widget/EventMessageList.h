@@ -345,7 +345,7 @@ NS_EVENT_MESSAGE(eAfterScriptExecute,   eScriptEventFirst + 1)
 
 NS_EVENT_MESSAGE(ePrintEventFirst,      4600)
 NS_EVENT_MESSAGE(eBeforePrint,          ePrintEventFirst)
-NS_EVENT_MESSAGE(NS_AFTERPRINT,         ePrintEventFirst + 1)
+NS_EVENT_MESSAGE(eAfterPrint,           ePrintEventFirst + 1)
 
 NS_EVENT_MESSAGE(NS_MESSAGE_EVENT_START, 4700)
 NS_EVENT_MESSAGE(NS_MESSAGE,            NS_MESSAGE_EVENT_START)
