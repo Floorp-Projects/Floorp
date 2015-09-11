@@ -38,6 +38,10 @@ DIRS += [
     'webide',
 ]
 
+# Shim old theme paths used by DevTools add-ons
+if CONFIG['MOZ_BUILD_APP'] == 'browser':
+    DIRS += ['themes/shims']
+
 EXTRA_COMPONENTS += [
     'devtools-clhandler.js',
     'devtools-clhandler.manifest',
