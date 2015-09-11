@@ -59,6 +59,16 @@ task generateCodeAndResources(type:Exec) {
     }
 }
 
+// Skip unit test for all build variants, unless if it was specifically requested by user.
+// The enabled property for the unit test tasks is reset based on the command line task names just before the task execution.
+// I bet there is a easier/cleaner way to do this, but this gets the job done for now.
+gradle.taskGraph.beforeTask {
+    Task task ->
+        if (task.name.startsWith('test') && task.name.endsWith('UnitTest')) {
+            task.enabled = gradle.startParameter.taskNames.contains('test')
+        }
+}
+
 afterEvaluate {
     subprojects {
         if (!hasProperty('android')) {
