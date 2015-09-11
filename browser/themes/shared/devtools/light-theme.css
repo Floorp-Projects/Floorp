@@ -38,6 +38,7 @@
   /* Colors used in Graphs, like performance tools. Similar colors to Chrome's timeline. */
   --theme-graphs-green: #85d175;
   --theme-graphs-blue: #83b7f6;
+  --theme-graphs-bluegrey: #0072ab;
   --theme-graphs-purple: #b693eb;
   --theme-graphs-yellow: #efc052;
   --theme-graphs-red: #e57180;
