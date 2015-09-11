@@ -334,7 +334,7 @@ EventListenerManager::AddEventListenerInternal(
   } else if (aTypeAtom == nsGkAtoms::onmoznetworkupload) {
     nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
     if (window) {
-      window->EnableNetworkEvent(NS_NETWORK_UPLOAD_EVENT);
+      window->EnableNetworkEvent(eNetworkUpload);
     }
   } else if (aTypeAtom == nsGkAtoms::onmoznetworkdownload) {
     nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
@@ -511,7 +511,7 @@ EventListenerManager::RemoveEventListenerInternal(
   bool deviceType = IsDeviceType(aEventMessage);
 #ifdef MOZ_B2G
   bool timeChangeEvent = (aEventMessage == eTimeChange);
-  bool networkEvent = (aEventMessage == NS_NETWORK_UPLOAD_EVENT ||
+  bool networkEvent = (aEventMessage == eNetworkUpload ||
                        aEventMessage == eNetworkDownload);
 #endif // MOZ_B2G
 

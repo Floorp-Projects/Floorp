@@ -399,7 +399,7 @@ NS_EVENT_MESSAGE(eTimeChange,            5500)
 
 // Network packet events.
 NS_EVENT_MESSAGE(NS_NETWORK_EVENT_START,    5600)
-NS_EVENT_MESSAGE(NS_NETWORK_UPLOAD_EVENT,   NS_NETWORK_EVENT_START + 1)
+NS_EVENT_MESSAGE(eNetworkUpload,         NS_NETWORK_EVENT_START + 1)
 NS_EVENT_MESSAGE(eNetworkDownload,       NS_NETWORK_EVENT_START + 2)
 
 // MediaRecorder events.
