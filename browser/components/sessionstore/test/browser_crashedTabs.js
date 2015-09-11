@@ -387,3 +387,33 @@ add_task(function* test_hide_restore_all_button() {
   gBrowser.removeTab(newTab);
   gBrowser.removeTab(newTab2);
 });
+
+add_task(function* test_aboutcrashedtabzoom() {
+  let newTab = gBrowser.addTab();
+  gBrowser.selectedTab = newTab;
+  let browser = newTab.linkedBrowser;
+  ok(browser.isRemoteBrowser, "Should be a remote browser");
+  yield promiseBrowserLoaded(browser);
+
+  browser.loadURI(PAGE_1);
+  yield promiseBrowserLoaded(browser);
+
+  FullZoom.enlarge();
+  let zoomLevel = ZoomManager.getZoomForBrowser(browser);
+  ok(zoomLevel !== 1, "should have enlarged");
+
+  yield TabStateFlusher.flush(browser);
+
+  // Crash the tab
+  yield crashBrowser(browser);
+
+  ok(ZoomManager.getZoomForBrowser(browser) === 1, "zoom should have reset on crash");
+
+  clickButton(browser, "restoreTab");
+  yield promiseTabRestored(newTab);
+
+  ok(ZoomManager.getZoomForBrowser(browser) === zoomLevel, "zoom should have gone back to enlarged");
+  FullZoom.reset();
+
+  gBrowser.removeTab(newTab);
+});
