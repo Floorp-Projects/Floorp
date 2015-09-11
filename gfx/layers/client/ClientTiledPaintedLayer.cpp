@@ -411,9 +411,12 @@ ClientTiledPaintedLayer::RenderLayer()
   void *data = ClientManager()->GetPaintedLayerCallbackData();
 
   if (!mContentClient) {
+#if defined(MOZ_B2G) || defined(XP_MACOSX)
     if (mCreationHint == LayerManager::NONE) {
       mContentClient = new SingleTiledContentClient(this, ClientManager());
-    } else {
+    } else
+#endif
+    {
       mContentClient = new MultiTiledContentClient(this, ClientManager());
     }
 
@@ -557,6 +560,7 @@ ClientTiledPaintedLayer::RenderLayer()
 bool
 ClientTiledPaintedLayer::IsOptimizedFor(LayerManager::PaintedLayerCreationHint aHint)
 {
+#if defined(MOZ_B2G) || defined(XP_MACOSX)
   // The only creation hint is whether the layer is scrollable or not, and this
   // is only respected on B2G and OSX, where it's used to determine whether to
   // use a tiled content client or not.
@@ -564,6 +568,9 @@ ClientTiledPaintedLayer::IsOptimizedFor(LayerManager::PaintedLayerCreationHint a
   // large, scrollable layers, so we want the layer to be recreated in this
   // situation.
   return aHint == GetCreationHint();
+#else
+  return true;
+#endif
 }
 
 void
