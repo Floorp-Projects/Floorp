@@ -398,9 +398,9 @@ NS_EVENT_MESSAGE(eWheelOperationEnd,     eWheelEventFirst + 2)
 NS_EVENT_MESSAGE(eTimeChange,            5500)
 
 // Network packet events.
-NS_EVENT_MESSAGE(NS_NETWORK_EVENT_START,    5600)
-NS_EVENT_MESSAGE(eNetworkUpload,         NS_NETWORK_EVENT_START + 1)
-NS_EVENT_MESSAGE(eNetworkDownload,       NS_NETWORK_EVENT_START + 2)
+NS_EVENT_MESSAGE(eNetworkEventFirst,     5600)
+NS_EVENT_MESSAGE(eNetworkUpload,         eNetworkEventFirst + 1)
+NS_EVENT_MESSAGE(eNetworkDownload,       eNetworkEventFirst + 2)
 
 // MediaRecorder events.
 NS_EVENT_MESSAGE(NS_MEDIARECORDER_EVENT_START, 5700)
