@@ -1103,11 +1103,11 @@ private:
 
 class DebuggerImmediateRunnable : public WorkerRunnable
 {
-  nsRefPtr<Function> mHandler;
+  nsRefPtr<dom::Function> mHandler;
 
 public:
   explicit DebuggerImmediateRunnable(WorkerPrivate* aWorkerPrivate,
-                                     Function& aHandler)
+                                     dom::Function& aHandler)
   : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
     mHandler(&aHandler)
   { }
@@ -5666,7 +5666,7 @@ WorkerPrivate::PostMessageToDebugger(const nsAString& aMessage)
 }
 
 void
-WorkerPrivate::SetDebuggerImmediate(JSContext* aCx, Function& aHandler,
+WorkerPrivate::SetDebuggerImmediate(JSContext* aCx, dom::Function& aHandler,
                                     ErrorResult& aRv)
 {
   AssertIsOnWorkerThread();
@@ -5904,7 +5904,7 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aMessage,
 
 int32_t
 WorkerPrivate::SetTimeout(JSContext* aCx,
-                          Function* aHandler,
+                          dom::Function* aHandler,
                           const nsAString& aStringHandler,
                           int32_t aTimeout,
                           const Sequence<JS::Value>& aArguments,

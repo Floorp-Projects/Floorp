@@ -19,6 +19,7 @@
 
 #include "asmjs/AsmJSLink.h"
 #include "asmjs/AsmJSValidate.h"
+#include "jit/InlinableNatives.h"
 #include "jit/JitFrameIterator.h"
 #include "js/Debug.h"
 #include "js/HashTable.h"
@@ -987,15 +988,30 @@ static bool
 OOMAfterAllocations(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 1) {
+    if (args.length() < 1) {
         JS_ReportError(cx, "count argument required");
         return false;
     }
 
-    uint32_t count;
-    if (!JS::ToUint32(cx, args[0], &count))
+    if (args.length() > 2) {
+        JS_ReportError(cx, "too many arguments");
+        return false;
+    }
+
+    uint32_t targetThread = 0;
+    if (!ToUint32(cx, args.get(1), &targetThread))
         return false;
 
+    if (targetThread >= js::oom::THREAD_TYPE_MAX) {
+        JS_ReportError(cx, "invalid thread type specified");
+        return false;
+    }
+
+    uint32_t count;
+    if (!JS::ToUint32(cx, args.get(0), &count))
+        return false;
+
+    js::oom::targetThread = targetThread;
     OOM_maxAllocations = OOM_counter + count;
     OOM_failAlways = true;
     return true;
@@ -1005,15 +1021,30 @@ static bool
 OOMAtAllocation(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 1) {
+    if (args.length() < 1) {
         JS_ReportError(cx, "count argument required");
         return false;
     }
 
-    uint32_t count;
-    if (!JS::ToUint32(cx, args[0], &count))
+    if (args.length() > 2) {
+        JS_ReportError(cx, "too many arguments");
+        return false;
+    }
+
+    uint32_t targetThread = 0;
+    if (!ToUint32(cx, args.get(1), &targetThread))
         return false;
 
+    if (targetThread >= js::oom::THREAD_TYPE_MAX) {
+        JS_ReportError(cx, "invalid thread type specified");
+        return false;
+    }
+
+    uint32_t count;
+    if (!JS::ToUint32(cx, args.get(0), &count))
+        return false;
+
+    js::oom::targetThread = targetThread;
     OOM_maxAllocations = OOM_counter + count;
     OOM_failAlways = false;
     return true;
@@ -1419,8 +1450,8 @@ GetObjectMetadata(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-bool
-js::testingFunc_bailout(JSContext* cx, unsigned argc, Value* vp)
+static bool
+testingFunc_bailout(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1429,8 +1460,8 @@ js::testingFunc_bailout(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-bool
-js::testingFunc_inJit(JSContext* cx, unsigned argc, Value* vp)
+static bool
+testingFunc_inJit(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1457,8 +1488,8 @@ js::testingFunc_inJit(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-bool
-js::testingFunc_inIon(JSContext* cx, unsigned argc, Value* vp)
+static bool
+testingFunc_inIon(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -2832,15 +2863,17 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Stop capturing the JS stack at every allocation."),
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
-    JS_FN_HELP("oomAfterAllocations", OOMAfterAllocations, 1, 0,
-"oomAfterAllocations(count)",
+    JS_FN_HELP("oomAfterAllocations", OOMAfterAllocations, 2, 0,
+"oomAfterAllocations(count [,threadType])",
 "  After 'count' js_malloc memory allocations, fail every following allocation\n"
-"  (return NULL)."),
+"  (return nullptr). The optional thread type limits the effect to the\n"
+"  specified type of helper thread."),
 
-    JS_FN_HELP("oomAtAllocation", OOMAtAllocation, 1, 0,
-"oomAtAllocation(count)",
+    JS_FN_HELP("oomAtAllocation", OOMAtAllocation, 2, 0,
+"oomAtAllocation(count [,threadType])",
 "  After 'count' js_malloc memory allocations, fail the next allocation\n"
-"  (return NULL)."),
+"  (return nullptr). The optional thread type limits the effect to the\n"
+"  specified type of helper thread."),
 
     JS_FN_HELP("resetOOMFailure", ResetOOMFailure, 0, 0,
 "resetOOMFailure()",
@@ -3027,7 +3060,7 @@ gc::ZealModeHelpText),
 "getObjectMetadata(obj)",
 "  Get the metadata for an object."),
 
-    JS_FN_HELP("bailout", testingFunc_bailout, 0, 0,
+    JS_INLINABLE_FN_HELP("bailout", testingFunc_bailout, 0, 0, TestBailout,
 "bailout()",
 "  Force a bailout out of ionmonkey (if running in ionmonkey)."),
 

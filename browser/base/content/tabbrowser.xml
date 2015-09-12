@@ -1111,7 +1111,6 @@
             // Update the URL bar.
             var loc = this.mCurrentBrowser.currentURI;
 
-            // Bug 666809 - SecurityUI support for e10s
             var webProgress = this.mCurrentBrowser.webProgress;
             var securityUI = this.mCurrentBrowser.securityUI;
 
@@ -1552,6 +1551,16 @@
 
             // Restore the progress listener.
             aBrowser.webProgress.addProgressListener(filter, Ci.nsIWebProgress.NOTIFY_ALL);
+
+            // Restore the securityUI state.
+            let securityUI = aBrowser.securityUI;
+            let state = securityUI ? securityUI.state
+                                   : Ci.nsIWebProgressListener.STATE_IS_INSECURE;
+            // Include the true final argument to indicate that this event is
+            // simulated (instead of being observed by the webProgressListener).
+            this._callProgressListeners(aBrowser, "onSecurityChange",
+                                        [aBrowser.webProgress, null, securityUI.state, true],
+                                        true, false);
 
             if (aShouldBeRemote) {
               // Switching the browser to be remote will connect to a new child

@@ -451,10 +451,17 @@ GlobalObject::warnOnceAbout(JSContext* cx, HandleObject obj, WarnOnceFlag flag,
 
 JSFunction*
 GlobalObject::createConstructor(JSContext* cx, Native ctor, JSAtom* nameArg, unsigned length,
-                                gc::AllocKind kind)
+                                gc::AllocKind kind, const JSJitInfo* jitInfo)
 {
     RootedAtom name(cx, nameArg);
-    return NewNativeConstructor(cx, ctor, length, name, kind);
+    JSFunction* fun = NewNativeConstructor(cx, ctor, length, name, kind);
+    if (!fun)
+        return nullptr;
+
+    if (jitInfo)
+        fun->setJitInfo(jitInfo);
+
+    return fun;
 }
 
 static NativeObject*

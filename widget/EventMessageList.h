@@ -128,9 +128,9 @@ NS_EVENT_MESSAGE(eLegacyMouseScrollEventFirst, 1600)
 NS_EVENT_MESSAGE(eLegacyMouseLineOrPageScroll, eLegacyMouseScrollEventFirst)
 NS_EVENT_MESSAGE(eLegacyMousePixelScroll,      eLegacyMouseScrollEventFirst + 1)
 
-NS_EVENT_MESSAGE(NS_SCROLLPORT_START,     1700)
-NS_EVENT_MESSAGE(NS_SCROLLPORT_UNDERFLOW, NS_SCROLLPORT_START)
-NS_EVENT_MESSAGE(NS_SCROLLPORT_OVERFLOW,  NS_SCROLLPORT_START + 1)
+NS_EVENT_MESSAGE(eScrollPortEventFirst, 1700)
+NS_EVENT_MESSAGE(eScrollPortUnderflow,  eScrollPortEventFirst)
+NS_EVENT_MESSAGE(eScrollPortOverflow,   eScrollPortEventFirst + 1)
 
 NS_EVENT_MESSAGE(eLegacyMutationEventFirst,       1800)
 NS_EVENT_MESSAGE(eLegacySubtreeModified,          eLegacyMutationEventFirst)
@@ -145,35 +145,35 @@ NS_EVENT_MESSAGE(eLegacyMutationEventLast,        eLegacyCharacterDataModified)
 NS_EVENT_MESSAGE(eUnidentifiedEvent,    2000)
  
 // composition events
-NS_EVENT_MESSAGE(NS_COMPOSITION_EVENT_START,  2200)
-NS_EVENT_MESSAGE(NS_COMPOSITION_START,        NS_COMPOSITION_EVENT_START)
-// NS_COMPOSITION_END is the message for DOM compositionend event.
-// This event should NOT be dispatched from widget if NS_COMPOSITION_COMMIT
+NS_EVENT_MESSAGE(eCompositionEventFirst, 2200)
+NS_EVENT_MESSAGE(eCompositionStart,      eCompositionEventFirst)
+// eCompositionEnd is the message for DOM compositionend event.
+// This event should NOT be dispatched from widget if eCompositionCommit
 // is available.
-NS_EVENT_MESSAGE(NS_COMPOSITION_END,          NS_COMPOSITION_EVENT_START + 1)
-// NS_COMPOSITION_UPDATE is the message for DOM compositionupdate event.
+NS_EVENT_MESSAGE(eCompositionEnd,        eCompositionEventFirst + 1)
+// eCompositionUpdate is the message for DOM compositionupdate event.
 // This event should NOT be dispatched from widget since it will be dispatched
-// by mozilla::TextComposition automatically if NS_COMPOSITION_CHANGE event
+// by mozilla::TextComposition automatically if eCompositionChange event
 // will change composition string.
-NS_EVENT_MESSAGE(NS_COMPOSITION_UPDATE,       NS_COMPOSITION_EVENT_START + 2)
-// NS_COMPOSITION_CHANGE is the message for representing a change of
+NS_EVENT_MESSAGE(eCompositionUpdate,     eCompositionEventFirst + 2)
+// eCompositionChange is the message for representing a change of
 // composition string.  This should be dispatched from widget even if
 // composition string isn't changed but the ranges are changed.  This causes
 // a DOM "text" event which is a non-standard DOM event.
-NS_EVENT_MESSAGE(NS_COMPOSITION_CHANGE,       NS_COMPOSITION_EVENT_START + 3)
-// NS_COMPOSITION_COMMIT_AS_IS is the message for representing a commit of
+NS_EVENT_MESSAGE(eCompositionChange,     eCompositionEventFirst + 3)
+// eCompositionCommitAsIs is the message for representing a commit of
 // composition string.  TextComposition will commit composition with the
 // last data.  TextComposition will dispatch this event to the DOM tree as
-// NS_COMPOSITION_CHANGE without clause information.  After that,
-// NS_COMPOSITION_END will be dispatched automatically.
+// eCompositionChange without clause information.  After that,
+// eCompositionEnd will be dispatched automatically.
 // Its mData and mRanges should be empty and nullptr.
-NS_EVENT_MESSAGE(NS_COMPOSITION_COMMIT_AS_IS, NS_COMPOSITION_EVENT_START + 4)
-// NS_COMPOSITION_COMMIT is the message for representing a commit of
+NS_EVENT_MESSAGE(eCompositionCommitAsIs, eCompositionEventFirst + 4)
+// eCompositionCommit is the message for representing a commit of
 // composition string with its mData value.  TextComposition will dispatch this
-// event to the DOM tree as NS_COMPOSITION_CHANGE without clause information.
-// After that, NS_COMPOSITION_END will be dispatched automatically.
+// event to the DOM tree as eCompositionChange without clause information.
+// After that, eCompositionEnd will be dispatched automatically.
 // Its mRanges should be nullptr.
-NS_EVENT_MESSAGE(NS_COMPOSITION_COMMIT,       NS_COMPOSITION_EVENT_START + 5)
+NS_EVENT_MESSAGE(eCompositionCommit,     eCompositionEventFirst + 5)
 
 // Following events are defined for deprecated DOM events which are using
 // InternalUIEvent class.
@@ -226,7 +226,7 @@ NS_EVENT_MESSAGE(eQueryCaretRect,               eQueryContentEventFirst + 3)
 // Query for the bounding rect of a range of characters. This works on any
 // valid character range given offset and length. Result is relative to top
 // level widget coordinates
-NS_EVENT_MESSAGE(NS_QUERY_TEXT_RECT,            eQueryContentEventFirst + 4)
+NS_EVENT_MESSAGE(eQueryTextRect,                eQueryContentEventFirst + 4)
 // Query for the bounding rect of the current focused frame. Result is relative
 // to top level widget coordinates
 NS_EVENT_MESSAGE(eQueryEditorRect,              eQueryContentEventFirst + 5)
@@ -316,12 +316,10 @@ NS_EVENT_MESSAGE(eContentCommandPasteTransferable, eContentCommandEventFirst + 6
 NS_EVENT_MESSAGE(eContentCommandScroll,            eContentCommandEventFirst + 7)
 
 // Event to gesture notification
-NS_EVENT_MESSAGE(NS_GESTURENOTIFY_EVENT_START, 3900)
+NS_EVENT_MESSAGE(eGestureNotify,        3900)
 
-NS_EVENT_MESSAGE(NS_ORIENTATION_EVENT,  4000)
-
-NS_EVENT_MESSAGE(NS_SCROLLAREA_EVENT_START, 4100)
-NS_EVENT_MESSAGE(NS_SCROLLEDAREACHANGED, NS_SCROLLAREA_EVENT_START)
+NS_EVENT_MESSAGE(eScrolledAreaEventFirst, 4100)
+NS_EVENT_MESSAGE(eScrolledAreaChanged,    eScrolledAreaEventFirst)
 
 NS_EVENT_MESSAGE(NS_TRANSITION_EVENT_START, 4200)
 NS_EVENT_MESSAGE(NS_TRANSITION_END,     NS_TRANSITION_EVENT_START)
@@ -331,10 +329,10 @@ NS_EVENT_MESSAGE(eAnimationStart,       eAnimationEventFirst)
 NS_EVENT_MESSAGE(eAnimationEnd,         eAnimationEventFirst + 1)
 NS_EVENT_MESSAGE(eAnimationIteration,   eAnimationEventFirst + 2)
 
-NS_EVENT_MESSAGE(NS_SMIL_TIME_EVENT_START, 4300)
-NS_EVENT_MESSAGE(NS_SMIL_BEGIN,         NS_SMIL_TIME_EVENT_START)
-NS_EVENT_MESSAGE(NS_SMIL_END,           NS_SMIL_TIME_EVENT_START + 1)
-NS_EVENT_MESSAGE(NS_SMIL_REPEAT,        NS_SMIL_TIME_EVENT_START + 2)
+NS_EVENT_MESSAGE(eSMILEventFirst,       4300)
+NS_EVENT_MESSAGE(eSMILBeginEvent,       eSMILEventFirst)
+NS_EVENT_MESSAGE(eSMILEndEvent,         eSMILEventFirst + 1)
+NS_EVENT_MESSAGE(eSMILRepeatEvent,      eSMILEventFirst + 2)
 
 NS_EVENT_MESSAGE(NS_WEBAUDIO_EVENT_START, 4350)
 NS_EVENT_MESSAGE(NS_AUDIO_PROCESS,      NS_WEBAUDIO_EVENT_START)
@@ -345,9 +343,9 @@ NS_EVENT_MESSAGE(eScriptEventFirst,     4500)
 NS_EVENT_MESSAGE(eBeforeScriptExecute,  eScriptEventFirst)
 NS_EVENT_MESSAGE(eAfterScriptExecute,   eScriptEventFirst + 1)
 
-NS_EVENT_MESSAGE(NS_PRINT_EVENT_START,  4600)
-NS_EVENT_MESSAGE(NS_BEFOREPRINT,        NS_PRINT_EVENT_START)
-NS_EVENT_MESSAGE(NS_AFTERPRINT,         NS_PRINT_EVENT_START + 1)
+NS_EVENT_MESSAGE(ePrintEventFirst,      4600)
+NS_EVENT_MESSAGE(eBeforePrint,          ePrintEventFirst)
+NS_EVENT_MESSAGE(eAfterPrint,           ePrintEventFirst + 1)
 
 NS_EVENT_MESSAGE(NS_MESSAGE_EVENT_START, 4700)
 NS_EVENT_MESSAGE(NS_MESSAGE,            NS_MESSAGE_EVENT_START)
@@ -357,12 +355,12 @@ NS_EVENT_MESSAGE(eOpenCloseEventFirst,  4800)
 NS_EVENT_MESSAGE(eOpen,                 eOpenCloseEventFirst)
 
 // Device motion and orientation
-NS_EVENT_MESSAGE(NS_DEVICE_ORIENTATION_START, 4900)
-NS_EVENT_MESSAGE(NS_DEVICE_ORIENTATION,  NS_DEVICE_ORIENTATION_START)
-NS_EVENT_MESSAGE(NS_DEVICE_MOTION,       NS_DEVICE_ORIENTATION_START + 1)
-NS_EVENT_MESSAGE(NS_DEVICE_PROXIMITY,    NS_DEVICE_ORIENTATION_START + 2)
-NS_EVENT_MESSAGE(NS_USER_PROXIMITY,      NS_DEVICE_ORIENTATION_START + 3)
-NS_EVENT_MESSAGE(NS_DEVICE_LIGHT,        NS_DEVICE_ORIENTATION_START + 4)
+NS_EVENT_MESSAGE(eDeviceEventFirst,      4900)
+NS_EVENT_MESSAGE(eDeviceOrientation,     eDeviceEventFirst)
+NS_EVENT_MESSAGE(eDeviceMotion,          eDeviceEventFirst + 1)
+NS_EVENT_MESSAGE(eDeviceProximity,       eDeviceEventFirst + 2)
+NS_EVENT_MESSAGE(eUserProximity,         eDeviceEventFirst + 3)
+NS_EVENT_MESSAGE(eDeviceLight,           eDeviceEventFirst + 4)
 
 NS_EVENT_MESSAGE(NS_SHOW_EVENT,          5000)
 
@@ -378,9 +376,9 @@ NS_EVENT_MESSAGE(NS_TOUCH_END,           NS_TOUCH_EVENT_START + 2)
 NS_EVENT_MESSAGE(NS_TOUCH_CANCEL,        NS_TOUCH_EVENT_START + 3)
 
 // Pointerlock DOM API
-NS_EVENT_MESSAGE(NS_POINTERLOCK_START,   5300)
-NS_EVENT_MESSAGE(NS_POINTERLOCKCHANGE,   NS_POINTERLOCK_START)
-NS_EVENT_MESSAGE(NS_POINTERLOCKERROR,    NS_POINTERLOCK_START + 1)
+NS_EVENT_MESSAGE(ePointerLockEventFirst, 5300)
+NS_EVENT_MESSAGE(ePointerLockChange,     ePointerLockEventFirst)
+NS_EVENT_MESSAGE(ePointerLockError,      ePointerLockEventFirst + 1)
 
 NS_EVENT_MESSAGE(eWheelEventFirst,       5400)
 // eWheel is the event message of DOM wheel event.
@@ -395,12 +393,12 @@ NS_EVENT_MESSAGE(eWheelOperationStart,   eWheelEventFirst + 1)
 NS_EVENT_MESSAGE(eWheelOperationEnd,     eWheelEventFirst + 2)
 
 //System time is changed
-NS_EVENT_MESSAGE(NS_MOZ_TIME_CHANGE_EVENT, 5500)
+NS_EVENT_MESSAGE(eTimeChange,            5500)
 
 // Network packet events.
-NS_EVENT_MESSAGE(NS_NETWORK_EVENT_START,    5600)
-NS_EVENT_MESSAGE(NS_NETWORK_UPLOAD_EVENT,   NS_NETWORK_EVENT_START + 1)
-NS_EVENT_MESSAGE(NS_NETWORK_DOWNLOAD_EVENT, NS_NETWORK_EVENT_START + 2)
+NS_EVENT_MESSAGE(eNetworkEventFirst,     5600)
+NS_EVENT_MESSAGE(eNetworkUpload,         eNetworkEventFirst + 1)
+NS_EVENT_MESSAGE(eNetworkDownload,       eNetworkEventFirst + 2)
 
 // MediaRecorder events.
 NS_EVENT_MESSAGE(NS_MEDIARECORDER_EVENT_START, 5700)
@@ -414,14 +412,13 @@ NS_EVENT_MESSAGE(NS_SPEAKERMANAGER_SPEAKERFORCEDCHANGE, NS_SPEAKERMANAGER_EVENT_
 
 #ifdef MOZ_GAMEPAD
 // Gamepad input events
-NS_EVENT_MESSAGE(NS_GAMEPAD_START,        6000)
-NS_EVENT_MESSAGE(NS_GAMEPAD_BUTTONDOWN,   NS_GAMEPAD_START)
-NS_EVENT_MESSAGE(NS_GAMEPAD_BUTTONUP,     NS_GAMEPAD_START + 1)
-NS_EVENT_MESSAGE(NS_GAMEPAD_AXISMOVE,     NS_GAMEPAD_START + 2)
-NS_EVENT_MESSAGE(NS_GAMEPAD_CONNECTED,    NS_GAMEPAD_START + 3)
-NS_EVENT_MESSAGE(NS_GAMEPAD_DISCONNECTED, NS_GAMEPAD_START + 4)
-// Keep this defined to the same value as the event above
-NS_EVENT_MESSAGE(NS_GAMEPAD_END,          NS_GAMEPAD_START + 4)
+NS_EVENT_MESSAGE(eGamepadEventFirst,     6000)
+NS_EVENT_MESSAGE(eGamepadButtonDown,     eGamepadEventFirst)
+NS_EVENT_MESSAGE(eGamepadButtonUp,       eGamepadEventFirst + 1)
+NS_EVENT_MESSAGE(eGamepadAxisMove,       eGamepadEventFirst + 2)
+NS_EVENT_MESSAGE(eGamepadConnected,      eGamepadEventFirst + 3)
+NS_EVENT_MESSAGE(eGamepadDisconnected,   eGamepadEventFirst + 4)
+NS_EVENT_MESSAGE(eGamepadEventLast,      eGamepadDisconnected)
 #endif
 
 // input and beforeinput events.

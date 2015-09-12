@@ -9,6 +9,7 @@
 #include "APZCCallbackHelper.h"
 #include "gfxPrefs.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/Move.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
@@ -91,10 +92,10 @@ static int32_t sActiveDurationMs = 10;
 static bool sActiveDurationMsSet = false;
 
 APZEventState::APZEventState(nsIWidget* aWidget,
-                             const nsRefPtr<ContentReceivedInputBlockCallback>& aCallback)
+                             ContentReceivedInputBlockCallback&& aCallback)
   : mWidget(nullptr)  // initialized in constructor body
   , mActiveElementManager(new ActiveElementManager())
-  , mContentReceivedInputBlockCallback(aCallback)
+  , mContentReceivedInputBlockCallback(Move(aCallback))
   , mPendingTouchPreventedResponse(false)
   , mPendingTouchPreventedBlockId(0)
   , mEndTouchIsClick(false)
@@ -244,7 +245,7 @@ APZEventState::ProcessLongTap(const nsCOMPtr<nsIPresShell>& aPresShell,
     APZES_LOG("MOZLONGTAP event handled: %d\n", eventHandled);
   }
 
-  mContentReceivedInputBlockCallback->Run(aGuid, aInputBlockId, eventHandled);
+  mContentReceivedInputBlockCallback(aGuid, aInputBlockId, eventHandled);
 }
 
 void
@@ -266,13 +267,13 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
     if (mPendingTouchPreventedResponse) {
       // We can enter here if we get two TOUCH_STARTs in a row and didn't
       // respond to the first one. Respond to it now.
-      mContentReceivedInputBlockCallback->Run(mPendingTouchPreventedGuid,
+      mContentReceivedInputBlockCallback(mPendingTouchPreventedGuid,
           mPendingTouchPreventedBlockId, false);
       sentContentResponse = true;
       mPendingTouchPreventedResponse = false;
     }
     if (isTouchPrevented) {
-      mContentReceivedInputBlockCallback->Run(aGuid, aInputBlockId, isTouchPrevented);
+      mContentReceivedInputBlockCallback(aGuid, aInputBlockId, isTouchPrevented);
       sentContentResponse = true;
     } else {
       mPendingTouchPreventedResponse = true;
@@ -328,7 +329,7 @@ APZEventState::ProcessWheelEvent(const WidgetWheelEvent& aEvent,
   // scroll by setting defaultPrevented to true.
   bool defaultPrevented =
     aEvent.mFlags.mDefaultPrevented || aEvent.TriggersSwipe();
-  mContentReceivedInputBlockCallback->Run(aGuid, aInputBlockId, defaultPrevented);
+  mContentReceivedInputBlockCallback(aGuid, aInputBlockId, defaultPrevented);
 }
 
 void
@@ -408,7 +409,7 @@ bool
 APZEventState::SendPendingTouchPreventedResponse(bool aPreventDefault)
 {
   if (mPendingTouchPreventedResponse) {
-    mContentReceivedInputBlockCallback->Run(mPendingTouchPreventedGuid,
+    mContentReceivedInputBlockCallback(mPendingTouchPreventedGuid,
         mPendingTouchPreventedBlockId, aPreventDefault);
     mPendingTouchPreventedResponse = false;
     return true;

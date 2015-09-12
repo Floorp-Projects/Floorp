@@ -425,13 +425,6 @@ class MacroAssemblerNone : public Assembler
     void rshiftPtr(Imm32, Register) { MOZ_CRASH(); }
     void rshiftPtrArithmetic(Imm32, Register) { MOZ_CRASH(); }
     void lshiftPtr(Imm32, Register) { MOZ_CRASH(); }
-    template <typename T, typename S> void xorPtr(T, S) { MOZ_CRASH(); }
-    template <typename T, typename S> void xor32(T, S) { MOZ_CRASH(); }
-    template <typename T, typename S> void orPtr(T, S) { MOZ_CRASH(); }
-    template <typename T, typename S> void or32(T, S) { MOZ_CRASH(); }
-    template <typename T, typename S> void andPtr(T, S) { MOZ_CRASH(); }
-    template <typename T, typename S> void and32(T, S) { MOZ_CRASH(); }
-    template <typename T> void not32(T) { MOZ_CRASH(); }
     void convertUInt32ToDouble(Register, FloatRegister) { MOZ_CRASH(); }
     void convertUInt32ToFloat32(Register, FloatRegister) { MOZ_CRASH(); }
     void inc64(AbsoluteAddress) { MOZ_CRASH(); }

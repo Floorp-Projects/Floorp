@@ -2714,7 +2714,7 @@ IMEInputHandler::DispatchCompositionChangeEvent(const nsString& aText,
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
-  WidgetCompositionEvent compositionChangeEvent(true, NS_COMPOSITION_CHANGE,
+  WidgetCompositionEvent compositionChangeEvent(true, eCompositionChange,
                                                 mWidget);
   compositionChangeEvent.time = PR_IntervalNow();
   compositionChangeEvent.mData = aText;
@@ -2740,7 +2740,7 @@ IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitString)
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   EventMessage message =
-    aCommitString ? NS_COMPOSITION_COMMIT : NS_COMPOSITION_COMMIT_AS_IS;
+    aCommitString ? eCompositionCommit : eCompositionCommitAsIs;
   WidgetCompositionEvent compositionCommitEvent(true, message, mWidget);
   compositionCommitEvent.time = PR_IntervalNow();
   if (aCommitString) {
@@ -2813,7 +2813,7 @@ IMEInputHandler::InsertTextAsCommittingComposition(
 
     // XXXmnakano Probably, we shouldn't emulate composition in this case.
     // I think that we should just fire DOM3 textInput event if we implement it.
-    WidgetCompositionEvent compStart(true, NS_COMPOSITION_START, mWidget);
+    WidgetCompositionEvent compStart(true, eCompositionStart, mWidget);
     InitCompositionEvent(compStart);
 
     DispatchEvent(compStart);
@@ -2903,7 +2903,7 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
 
     mMarkedRange.location = SelectedRange().location;
 
-    WidgetCompositionEvent compStart(true, NS_COMPOSITION_START, mWidget);
+    WidgetCompositionEvent compStart(true, eCompositionStart, mWidget);
     InitCompositionEvent(compStart);
 
     DispatchEvent(compStart);
@@ -3186,7 +3186,7 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange,
   LayoutDeviceIntRect r;
   bool useCaretRect = (aRange.length == 0);
   if (!useCaretRect) {
-    WidgetQueryContentEvent charRect(true, NS_QUERY_TEXT_RECT, mWidget);
+    WidgetQueryContentEvent charRect(true, eQueryTextRect, mWidget);
     charRect.InitForQueryTextRect(aRange.location, 1);
     DispatchEvent(charRect);
     if (charRect.mSucceeded) {

@@ -739,6 +739,10 @@ class MDefinition : public MNode
     // Like replaceAllUsesWith, but doesn't set UseRemoved on |this|'s operands.
     void justReplaceAllUsesWith(MDefinition* dom);
 
+    // Like justReplaceAllUsesWith, but doesn't replace its own use to the
+    // dominating instruction (which would introduce a circular dependency).
+    void justReplaceAllUsesWithExcept(MDefinition* dom);
+
     // Replace the current instruction by an optimized-out constant in all uses
     // of the current instruction. Note, that optimized-out constant should not
     // be observed, and thus they should not flow in any computation.
@@ -6898,6 +6902,7 @@ class MPhi final
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
     MDefinition* foldsTernary();
+    MDefinition* foldsFilterTypeSet();
 
     bool congruentTo(const MDefinition* ins) const override;
 

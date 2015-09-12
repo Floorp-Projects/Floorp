@@ -69,7 +69,6 @@ public:
     };
 
 private:
-    static byte * local_memory;
     class decoder;
 
     instr *     _code;
@@ -87,22 +86,24 @@ private:
     void failure(const status_t) throw();
 
 public:
+    static size_t estimateCodeDataOut(size_t num_bytecodes);
+
     Code() throw();
     Code(bool is_constraint, const byte * bytecode_begin, const byte * const bytecode_end,
          uint8 pre_context, uint16 rule_length, const Silf &, const Face &,
-         enum passtype pt, byte * & _out = local_memory);
+         enum passtype pt, byte * * const _out = 0);
     Code(const Machine::Code &) throw();
     ~Code() throw();
     
     Code & operator=(const Code &rhs) throw();
-    operator bool () const throw();
-    status_t      status() const throw();
-    bool          constraint() const throw();
-    size_t        dataSize() const throw();
-    size_t        instructionCount() const throw();
-    bool          immutable() const throw();
-    bool          deletes() const throw();
-    size_t        maxRef() const throw();
+    operator bool () const throw()                  { return _code && status() == loaded; }
+    status_t      status() const throw()            { return _status; }
+    bool          constraint() const throw()        { return _constraint; }
+    size_t        dataSize() const throw()          { return _data_size; }
+    size_t        instructionCount() const throw()  { return _instr_count; }
+    bool          immutable() const throw()         { return !(_delete || _modify); }
+    bool          deletes() const throw()           { return _delete; }
+    size_t        maxRef() const throw()            { return _max_ref; }
     void          externalProgramMoved(ptrdiff_t) throw();
 
     int32 run(Machine &m, slotref * & map) const;
@@ -110,10 +111,16 @@ public:
     CLASS_NEW_DELETE;
 };
 
+inline
+size_t  Machine::Code::estimateCodeDataOut(size_t n_bc)
+{
+    return n_bc * (sizeof(instr)+sizeof(byte));
+}
+
 
 inline Machine::Code::Code() throw()
 : _code(0), _data(0), _data_size(0), _instr_count(0), _max_ref(0),
-  _status(loaded), _constraint(false), _modify(false),_delete(false),
+  _status(loaded), _constraint(false), _modify(false), _delete(false),
   _own(false)
 {
 }
@@ -147,41 +154,6 @@ inline Machine::Code & Machine::Code::operator=(const Machine::Code &rhs) throw(
     _own         = rhs._own; 
     rhs._own = false;
     return *this;
-}
-
-inline Machine::Code::operator bool () const throw () {
-    return _code && status() == loaded;
-}
-
-inline Machine::Code::status_t Machine::Code::status() const throw() {
-    return _status;
-}
-
-inline bool Machine::Code::constraint() const throw() {
-    return _constraint;
-}
-
-inline size_t Machine::Code::dataSize() const throw() {
-    return _data_size;
-}
-
-inline size_t Machine::Code::instructionCount() const throw() {
-    return _instr_count;
-}
-
-inline bool Machine::Code::immutable() const throw()
-{
-  return !(_delete || _modify);
-}
-
-inline bool Machine::Code::deletes() const throw()
-{
-  return _delete;
-}
-
-inline size_t Machine::Code::maxRef() const throw()
-{
-    return _max_ref;
 }
 
 inline void Machine::Code::externalProgramMoved(ptrdiff_t dist) throw()

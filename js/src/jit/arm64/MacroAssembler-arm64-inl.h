@@ -1,0 +1,150 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef jit_arm64_MacroAssembler_arm64_inl_h
+#define jit_arm64_MacroAssembler_arm64_inl_h
+
+#include "jit/arm64/MacroAssembler-arm64.h"
+
+namespace js {
+namespace jit {
+
+//{{{ check_macroassembler_style
+// ===============================================================
+// Logical instructions
+
+void
+MacroAssembler::not32(Register reg)
+{
+    Orn(ARMRegister(reg, 32), vixl::wzr, ARMRegister(reg, 32));
+}
+
+void
+MacroAssembler::and32(Register src, Register dest)
+{
+    And(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(ARMRegister(src, 32)));
+}
+
+void
+MacroAssembler::and32(Imm32 imm, Register dest)
+{
+    And(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
+}
+
+void
+MacroAssembler::and32(Imm32 imm, Register src, Register dest)
+{
+    And(ARMRegister(dest, 32), ARMRegister(src, 32), Operand(imm.value));
+}
+
+void
+MacroAssembler::and32(Imm32 imm, const Address& dest)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch32 = temps.AcquireW();
+    MOZ_ASSERT(scratch32.asUnsized() != dest.base);
+    load32(dest, scratch32.asUnsized());
+    And(scratch32, scratch32, Operand(imm.value));
+    store32(scratch32.asUnsized(), dest);
+}
+
+void
+MacroAssembler::and32(const Address& src, Register dest)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch32 = temps.AcquireW();
+    MOZ_ASSERT(scratch32.asUnsized() != src.base);
+    load32(src, scratch32.asUnsized());
+    And(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(scratch32));
+}
+
+void
+MacroAssembler::andPtr(Register src, Register dest)
+{
+    And(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
+}
+
+void
+MacroAssembler::andPtr(Imm32 imm, Register dest)
+{
+    And(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
+}
+
+void
+MacroAssembler::or32(Imm32 imm, Register dest)
+{
+    Orr(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
+}
+
+void
+MacroAssembler::or32(Register src, Register dest)
+{
+    Orr(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(ARMRegister(src, 32)));
+}
+
+void
+MacroAssembler::or32(Imm32 imm, const Address& dest)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch32 = temps.AcquireW();
+    MOZ_ASSERT(scratch32.asUnsized() != dest.base);
+    load32(dest, scratch32.asUnsized());
+    Orr(scratch32, scratch32, Operand(imm.value));
+    store32(scratch32.asUnsized(), dest);
+}
+
+void
+MacroAssembler::orPtr(Register src, Register dest)
+{
+    Orr(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
+}
+
+void
+MacroAssembler::orPtr(Imm32 imm, Register dest)
+{
+    Orr(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
+}
+
+void
+MacroAssembler::xor32(Imm32 imm, Register dest)
+{
+    Eor(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
+}
+
+void
+MacroAssembler::xorPtr(Register src, Register dest)
+{
+    Eor(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
+}
+
+void
+MacroAssembler::xorPtr(Imm32 imm, Register dest)
+{
+    Eor(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
+}
+
+//}}} check_macroassembler_style
+// ===============================================================
+
+template <typename T>
+void
+MacroAssemblerCompat::andToStackPtr(T t)
+{
+    asMasm().andPtr(t, getStackPointer());
+    syncStackPtr();
+}
+
+template <typename T>
+void
+MacroAssemblerCompat::andStackPtrTo(T t)
+{
+    asMasm().andPtr(getStackPointer(), t);
+}
+
+} // namespace jit
+} // namespace js
+
+#endif /* jit_arm64_MacroAssembler_arm64_inl_h */

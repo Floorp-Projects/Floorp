@@ -57,8 +57,8 @@ ToChar(EventMessage aEventMessage)
       return "eQueryTextContent";
     case eQueryCaretRect:
       return "eQueryCaretRect";
-    case NS_QUERY_TEXT_RECT:
-      return "NS_QUERY_TEXT_RECT";
+    case eQueryTextRect:
+      return "eQueryTextRect";
     case eQueryEditorRect:
       return "eQueryEditorRect";
     case eQueryContentState:
