@@ -68,6 +68,16 @@ add_task(function* test1() {
     pushEndpoint: serverURL + '/pushEndpoint',
     pushReceiptEndpoint: serverURL + '/pushReceiptEndpoint',
     scope: 'https://example.com/page',
+    p256dhPublicKey: 'BPCd4gNQkjwRah61LpdALdzZKLLnU5UAwDztQ5_h0QsT26jk0IFbqcK6-JxhHAm-rsHEwy0CyVJjtnfOcqc1tgA',
+    p256dhPrivateKey: {
+      crv: 'P-256',
+      d: '1jUPhzVsRkzV0vIzwL4ZEsOlKdNOWm7TmaTfzitJkgM',
+      ext: true,
+      key_ops: ["deriveBits"],
+      kty: "EC",
+      x: '8J3iA1CSPBFqHrUul0At3NkosudTlQDAPO1Dn-HRCxM',
+      y: '26jk0IFbqcK6-JxhHAm-rsHEwy0CyVJjtnfOcqc1tgA'
+    },
     originAttributes: '',
     quota: Infinity,
   }];

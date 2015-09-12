@@ -2718,23 +2718,23 @@ public:
                 float,
                 float,
                 float,
-                bool,
                 int32_t,
                 int32_t,
                 int32_t,
                 int32_t,
                 float,
-                bool> Args;
+                bool,
+                int32_t> Args;
         static constexpr char name[] = "syncFrameMetrics";
         static constexpr char signature[] =
-                "(FFFFFFFZIIIIFZ)Lorg/mozilla/gecko/gfx/ViewTransform;";
+                "(FFFFFFFIIIIFZI)Lorg/mozilla/gecko/gfx/ViewTransform;";
         static const bool isStatic = false;
         static const bool isMultithreaded = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    auto SyncFrameMetrics(float, float, float, float, float, float, float, bool, int32_t, int32_t, int32_t, int32_t, float, bool) const -> mozilla::jni::Object::LocalRef;
+    auto SyncFrameMetrics(float, float, float, float, float, float, float, int32_t, int32_t, int32_t, int32_t, float, bool, int32_t) const -> mozilla::jni::Object::LocalRef;
 
 public:
     struct SyncViewportInfo_t {

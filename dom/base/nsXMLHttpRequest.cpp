@@ -13,6 +13,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/BlobSet.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FetchUtil.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
@@ -1617,31 +1618,10 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
 
   NS_ENSURE_TRUE(mPrincipal, NS_ERROR_NOT_INITIALIZED);
 
-  // Disallow HTTP/1.1 TRACE method (see bug 302489)
-  // and MS IIS equivalent TRACK (see bug 381264)
-  // and CONNECT
-  if (inMethod.LowerCaseEqualsLiteral("trace") ||
-      inMethod.LowerCaseEqualsLiteral("connect") ||
-      inMethod.LowerCaseEqualsLiteral("track")) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
   nsAutoCString method;
-  // GET, POST, DELETE, HEAD, OPTIONS, PUT methods normalized to upper case
-  if (inMethod.LowerCaseEqualsLiteral("get")) {
-    method.AssignLiteral("GET");
-  } else if (inMethod.LowerCaseEqualsLiteral("post")) {
-    method.AssignLiteral("POST");
-  } else if (inMethod.LowerCaseEqualsLiteral("delete")) {
-    method.AssignLiteral("DELETE");
-  } else if (inMethod.LowerCaseEqualsLiteral("head")) {
-    method.AssignLiteral("HEAD");
-  } else if (inMethod.LowerCaseEqualsLiteral("options")) {
-    method.AssignLiteral("OPTIONS");
-  } else if (inMethod.LowerCaseEqualsLiteral("put")) {
-    method.AssignLiteral("PUT");
-  } else {
-    method = inMethod; // other methods are not normalized
+  nsresult rv = FetchUtil::GetValidRequestMethod(inMethod, method);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   // sync request is not allowed using withCredential or responseType
@@ -1662,7 +1642,6 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
-  nsresult rv;
   nsCOMPtr<nsIURI> uri;
 
   if (mState & (XML_HTTP_REQUEST_OPENED |

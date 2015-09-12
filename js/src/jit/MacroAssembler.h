@@ -591,6 +591,16 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Push the frame descriptor, based on the statically known framePushed.
     inline void pushStaticFrameDescriptor(FrameType type);
 
+    // Push the callee token of a JSFunction which pointer is stored in the
+    // |callee| register. The callee token is packed with a |constructing| flag
+    // which correspond to the fact that the JS function is called with "new" or
+    // not.
+    inline void PushCalleeToken(Register callee, bool constructing);
+
+    // Unpack a callee token located at the |token| address, and return the
+    // JSFunction pointer in the |dest| register.
+    inline void loadFunctionFromCalleeToken(Address token, Register dest);
+
     // This function emulates a call by pushing an exit frame on the stack,
     // except that the fake-function is inlined within the body of the caller.
     //
@@ -654,6 +664,34 @@ class MacroAssembler : public MacroAssemblerSpecific
     // we want to store the JitCode on the stack in order to mark it during a GC.
     // This is a reference to a patch location where the JitCode* will be written.
     CodeOffsetLabel selfReferencePatch_;
+
+  public:
+    // ===============================================================
+    // Logical instructions
+
+    inline void not32(Register reg) PER_SHARED_ARCH;
+
+    inline void and32(Register src, Register dest) PER_SHARED_ARCH;
+    inline void and32(Imm32 imm, Register dest) PER_SHARED_ARCH;
+    inline void and32(Imm32 imm, Register src, Register dest) DEFINED_ON(arm64);
+    inline void and32(Imm32 imm, const Address& dest) PER_SHARED_ARCH;
+    inline void and32(const Address& src, Register dest) PER_SHARED_ARCH;
+
+    inline void andPtr(Register src, Register dest) PER_ARCH;
+    inline void andPtr(Imm32 imm, Register dest) PER_ARCH;
+
+    inline void or32(Register src, Register dest) PER_SHARED_ARCH;
+    inline void or32(Imm32 imm, Register dest) PER_SHARED_ARCH;
+    inline void or32(Imm32 imm, const Address& dest) PER_SHARED_ARCH;
+
+    inline void orPtr(Register src, Register dest) PER_ARCH;
+    inline void orPtr(Imm32 imm, Register dest) PER_ARCH;
+
+    inline void xor32(Register src, Register dest) DEFINED_ON(x86_shared);
+    inline void xor32(Imm32 imm, Register dest) PER_SHARED_ARCH;
+
+    inline void xorPtr(Register src, Register dest) PER_ARCH;
+    inline void xorPtr(Imm32 imm, Register dest) PER_ARCH;
 
     //}}} check_macroassembler_style
   public:
@@ -749,21 +787,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void loadStringLength(Register str, Register dest) {
         load32(Address(str, JSString::offsetOfLength()), dest);
-    }
-
-    void loadFunctionFromCalleeToken(Address token, Register dest) {
-        loadPtr(token, dest);
-        andPtr(Imm32(uint32_t(CalleeTokenMask)), dest);
-    }
-    void PushCalleeToken(Register callee, bool constructing) {
-        if (constructing) {
-            orPtr(Imm32(CalleeToken_FunctionConstructing), callee);
-            Push(callee);
-            andPtr(Imm32(uint32_t(CalleeTokenMask)), callee);
-        } else {
-            static_assert(CalleeToken_Function == 0, "Non-constructing call requires no tagging");
-            Push(callee);
-        }
     }
 
     void loadStringChars(Register str, Register dest);
@@ -1182,20 +1205,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         branchTestClassIsProxy(proxy, scratch, label);
     }
 
-    void branchFunctionKind(Condition cond, JSFunction::FunctionKind kind, Register fun,
-                            Register scratch, Label* label)
-    {
-        // 16-bit loads are slow and unaligned 32-bit loads may be too so
-        // perform an aligned 32-bit load and adjust the bitmask accordingly.
-        MOZ_ASSERT(JSFunction::offsetOfNargs() % sizeof(uint32_t) == 0);
-        MOZ_ASSERT(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2);
-        Address address(fun, JSFunction::offsetOfNargs());
-        int32_t mask = IMM32_16ADJ(JSFunction::FUNCTION_KIND_MASK);
-        int32_t bit = IMM32_16ADJ(kind << JSFunction::FUNCTION_KIND_SHIFT);
-        load32(address, scratch);
-        and32(Imm32(mask), scratch);
-        branch32(cond, scratch, Imm32(bit), label);
-    }
+    inline void branchFunctionKind(Condition cond, JSFunction::FunctionKind kind, Register fun,
+                                   Register scratch, Label* label);
 
   public:
 #ifndef JS_CODEGEN_ARM64

@@ -244,6 +244,9 @@ JS_DefineFunctionsWithHelp(JSContext* cx, HandleObject obj, const JSFunctionSpec
         if (!fun)
             return false;
 
+        if (fs->jitInfo)
+            fun->setJitInfo(fs->jitInfo);
+
         if (fs->usage) {
             if (!DefineHelpProperty(cx, fun, "usage", fs->usage))
                 return false;
