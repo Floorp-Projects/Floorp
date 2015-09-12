@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class=reftest-wait>
+<style>
+.x input:required { color: red; }
+</style>
+<p class=x><span><input required value=hello></input></span></p>
+<script>
+addEventListener("MozReftestInvalidate", function() {
+  document.querySelector("p").classList.toggle("x");
+  document.querySelector("input").required = false;
+  document.documentElement.className = "";
+}, false);
+</script>
