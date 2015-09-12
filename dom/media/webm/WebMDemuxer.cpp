@@ -25,14 +25,19 @@
 #include "vpx/vp8dx.h"
 #include "vpx/vpx_decoder.h"
 
-#define WEBM_DEBUG(arg, ...) MOZ_LOG(gMediaDecoderLog, mozilla::LogLevel::Debug, ("WebMDemuxer(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define WEBM_DEBUG(arg, ...) MOZ_LOG(gWebMDemuxerLog, mozilla::LogLevel::Debug, ("WebMDemuxer(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
 
 using namespace gfx;
 
-extern PRLogModuleInfo* gMediaDecoderLog;
+PRLogModuleInfo* gWebMDemuxerLog = nullptr;
 extern PRLogModuleInfo* gNesteggLog;
+
+// How far ahead will we look when searching future keyframe. In microseconds.
+// This value is based on what appears to be a reasonable value as most webm
+// files encountered appear to have keyframes located < 4s.
+#define MAX_LOOK_AHEAD 10000000
 
 // Functions for reading and seeking using WebMDemuxer required for
 // nestegg_io. The 'user data' passed to these functions is the
@@ -141,6 +146,9 @@ WebMDemuxer::WebMDemuxer(MediaResource* aResource, bool aIsMediaSource)
 {
   if (!gNesteggLog) {
     gNesteggLog = PR_NewLogModule("Nestegg");
+  }
+  if (!gWebMDemuxerLog) {
+    gWebMDemuxerLog = PR_NewLogModule("WebMDemuxer");
   }
 }
 
@@ -659,20 +667,6 @@ WebMDemuxer::DemuxPacket()
   return holder;
 }
 
-int64_t
-WebMDemuxer::GetNextKeyframeTime()
-{
-  EnsureUpToDateIndex();
-  uint64_t keyframeTime;
-  uint64_t lastFrame =
-    media::TimeUnit::FromMicroseconds(mLastVideoFrameTime.refOr(0)).ToNanoseconds();
-  if (!mBufferedState->GetNextKeyframeTime(lastFrame, &keyframeTime) ||
-      keyframeTime <= lastFrame) {
-    return -1;
-  }
-  return media::TimeUnit::FromNanoseconds(keyframeTime).ToMicroseconds();
-}
-
 void
 WebMDemuxer::PushAudioPacket(NesteggPacketHolder* aItem)
 {
@@ -876,33 +870,59 @@ WebMTrackDemuxer::GetSamples(int32_t aNumSamples)
 void
 WebMTrackDemuxer::SetNextKeyFrameTime()
 {
+  if (mType != TrackInfo::kVideoTrack) {
+    return;
+  }
+
   int64_t frameTime = -1;
 
   mNextKeyframeTime.reset();
 
-  if (mType == TrackInfo::kVideoTrack) {
-    MediaRawDataQueue skipSamplesQueue;
-    bool foundKeyframe = false;
-    while (!foundKeyframe && mSamples.GetSize()) {
-      nsRefPtr<MediaRawData> sample(mSamples.PopFront());
-      if (sample->mKeyframe) {
-        frameTime = sample->mTime;
-        foundKeyframe = true;
-      }
-      skipSamplesQueue.PushFront(sample);
+  MediaRawDataQueue skipSamplesQueue;
+  nsRefPtr<MediaRawData> sample;
+  bool foundKeyframe = false;
+  while (!foundKeyframe && mSamples.GetSize()) {
+    sample = mSamples.PopFront();
+    if (sample->mKeyframe) {
+      frameTime = sample->mTime;
+      foundKeyframe = true;
     }
-    while(skipSamplesQueue.GetSize()) {
-      nsRefPtr<MediaRawData> data = skipSamplesQueue.PopFront();
-      mSamples.PushFront(data);
+    skipSamplesQueue.Push(sample);
+  }
+  Maybe<int64_t> startTime;
+  if (skipSamplesQueue.GetSize()) {
+    sample = skipSamplesQueue.PopFront();
+    startTime.emplace(sample->mTimecode);
+    skipSamplesQueue.PushFront(sample);
+  }
+  // Demux and buffer frames until we find a keyframe.
+  while (!foundKeyframe && (sample = NextSample())) {
+    if (sample->mKeyframe) {
+      frameTime = sample->mTime;
+      foundKeyframe = true;
     }
-    if (frameTime == -1) {
-      frameTime = mParent->GetNextKeyframeTime();
+    skipSamplesQueue.Push(sample);
+    if (!startTime) {
+      startTime.emplace(sample->mTimecode);
+    } else if (!foundKeyframe &&
+               sample->mTimecode > startTime.ref() + MAX_LOOK_AHEAD) {
+      WEBM_DEBUG("Couldn't find keyframe in a reasonable time, aborting");
+      break;
     }
   }
+  // We may have demuxed more than intended, so ensure that all frames are kept
+  // in the right order.
+  mSamples.PushFront(skipSamplesQueue);
 
   if (frameTime != -1) {
     mNextKeyframeTime.emplace(media::TimeUnit::FromMicroseconds(frameTime));
-    WEBM_DEBUG("Next Keyframe %f", mNextKeyframeTime.value().ToSeconds());
+    WEBM_DEBUG("Next Keyframe %f (%u queued %.02fs)",
+               mNextKeyframeTime.value().ToSeconds(),
+               uint32_t(mSamples.GetSize()),
+               media::TimeUnit::FromMicroseconds(mSamples.Last()->mTimecode - mSamples.First()->mTimecode).ToSeconds());
+  } else {
+    WEBM_DEBUG("Couldn't determine next keyframe time  (%u queued)",
+               uint32_t(mSamples.GetSize()));
   }
 }
 

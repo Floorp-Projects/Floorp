@@ -3727,7 +3727,7 @@ public:
         }
       }
 
-      rv = httpChannel->VisitRequestHeaders(this);
+      rv = httpChannel->VisitNonDefaultRequestHeaders(this);
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(httpChannel);

@@ -762,6 +762,13 @@ nsViewSourceChannel::VisitRequestHeaders(nsIHttpHeaderVisitor *aVisitor)
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::VisitNonDefaultRequestHeaders(nsIHttpHeaderVisitor *aVisitor)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->VisitNonDefaultRequestHeaders(aVisitor);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::GetAllowPipelining(bool *aAllowPipelining)
 {
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :

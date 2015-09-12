@@ -1595,7 +1595,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         return CodeOffsetJump(load_bo.getOffset(), pe.index());
     }
     CodeOffsetJump backedgeJump(RepatchLabel* label, Label* documentation = nullptr) {
-        return jumpWithPatch(label, documentation);
+        return jumpWithPatch(label, Always, documentation);
     }
     template <typename T>
     CodeOffsetJump branchPtrWithPatch(Condition cond, Register reg, T ptr, RepatchLabel* label) {

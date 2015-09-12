@@ -138,7 +138,8 @@ CollectRestyles(nsISupports* aElement,
   // Unset the restyle bits now, so if they get readded later as we
   // process we won't clobber that adding of the bit.
   element->UnsetFlags(collector->tracker->RestyleBit() |
-                      collector->tracker->RootBit());
+                      collector->tracker->RootBit() |
+                      collector->tracker->ConditionalDescendantsBit());
 
   RestyleEnumerateData** restyleArrayPtr = collector->restyleArrayPtr;
   RestyleEnumerateData* currentRestyle = *restyleArrayPtr;

@@ -455,7 +455,7 @@ class ScriptCounts
 
     inline ScriptCounts();
     inline explicit ScriptCounts(PCCountsVector&& jumpTargets);
-    inline explicit ScriptCounts(ScriptCounts&& src);
+    inline ScriptCounts(ScriptCounts&& src);
     inline ~ScriptCounts();
 
     inline ScriptCounts& operator=(ScriptCounts&& src);
@@ -2363,7 +2363,7 @@ struct ScriptAndCounts
     ScriptCounts scriptCounts;
 
     inline explicit ScriptAndCounts(JSScript* script);
-    inline explicit ScriptAndCounts(ScriptAndCounts&& sac);
+    inline ScriptAndCounts(ScriptAndCounts&& sac);
 
     const PCCounts* maybeGetPCCounts(jsbytecode* pc) const {
         return scriptCounts.maybeGetPCCounts(script->pcToOffset(pc));
