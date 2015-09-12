@@ -2143,7 +2143,7 @@ public:
   FallibleTArray() {}
   explicit FallibleTArray(size_type aCapacity) : base_type(aCapacity) {}
   explicit FallibleTArray(const FallibleTArray<E>& aOther) : base_type(aOther) {}
-  explicit FallibleTArray(FallibleTArray<E>&& aOther)
+  FallibleTArray(FallibleTArray<E>&& aOther)
     : base_type(mozilla::Move(aOther))
   {
   }

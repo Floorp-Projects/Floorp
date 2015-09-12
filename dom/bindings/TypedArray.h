@@ -33,7 +33,7 @@ protected:
   {
   }
 
-  explicit TypedArrayObjectStorage(TypedArrayObjectStorage&& aOther)
+  TypedArrayObjectStorage(TypedArrayObjectStorage&& aOther)
     : mTypedObj(aOther.mTypedObj),
       mWrappedObj(aOther.mWrappedObj)
   {
@@ -75,7 +75,7 @@ struct TypedArray_base : public TypedArrayObjectStorage {
   {
   }
 
-  explicit TypedArray_base(TypedArray_base&& aOther)
+  TypedArray_base(TypedArray_base&& aOther)
     : TypedArrayObjectStorage(Move(aOther)),
       mData(aOther.mData),
       mLength(aOther.mLength),
@@ -150,7 +150,7 @@ public:
     : Base()
   {}
 
-  explicit TypedArray(TypedArray&& aOther)
+  TypedArray(TypedArray&& aOther)
     : Base(Move(aOther))
   {
   }
@@ -204,7 +204,7 @@ public:
   {
   }
 
-  explicit ArrayBufferView_base(ArrayBufferView_base&& aOther)
+  ArrayBufferView_base(ArrayBufferView_base&& aOther)
     : Base(Move(aOther)),
       mType(aOther.mType)
   {

@@ -140,6 +140,7 @@ public:
                               const nsACString& aValue, bool aMerge) override;
   NS_IMETHOD SetEmptyRequestHeader(const nsACString& aHeader) override;
   NS_IMETHOD VisitRequestHeaders(nsIHttpHeaderVisitor *visitor) override;
+  NS_IMETHOD VisitNonDefaultRequestHeaders(nsIHttpHeaderVisitor *visitor) override;
   NS_IMETHOD GetResponseHeader(const nsACString &header, nsACString &value) override;
   NS_IMETHOD SetResponseHeader(const nsACString& header,
                                const nsACString& value, bool merge) override;
