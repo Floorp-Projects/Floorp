@@ -4215,9 +4215,27 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
             handler.addList(pn, pn2);
 
             bool matched;
-            if (!tokenStream.matchToken(&matched, TOK_ASSIGN))
+            // The '=' context after a variable name in a declaration is an
+            // opportunity for ASI, and thus for the next token to start an
+            // ExpressionStatement:
+            //
+            //  var foo   // VariableDeclaration
+            //  /bar/g;   // ExpressionStatement
+            //
+            // Therefore we must get the token here as Operand.
+            if (!tokenStream.matchToken(&matched, TOK_ASSIGN, TokenStream::Operand))
                 return null();
-            if (matched) {
+            if (!matched) {
+                tokenStream.addModifierException(TokenStream::NoneIsOperand);
+
+                if (data.isConst() && location == NotInForInit) {
+                    report(ParseError, false, null(), JSMSG_BAD_CONST_DECL);
+                    return null();
+                }
+
+                if (!data.bind(name, this))
+                    return null();
+            } else {
                 if (psimple)
                     *psimple = false;
 
@@ -4266,14 +4284,6 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
                     if (!handler.finishInitializerAssignment(pn2, init, data.op()))
                         return null();
                 }
-            } else {
-                if (data.isConst() && location == NotInForInit) {
-                    report(ParseError, false, null(), JSMSG_BAD_CONST_DECL);
-                    return null();
-                }
-
-                if (!data.bind(name, this))
-                    return null();
             }
 
             handler.setEndPosition(pn, pn2);
