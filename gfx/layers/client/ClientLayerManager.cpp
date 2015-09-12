@@ -571,6 +571,8 @@ ClientLayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
 void
 ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
 {
+  TimeStamp start = TimeStamp::Now();
+
   if (mForwarder->GetSyncObject()) {
     mForwarder->GetSyncObject()->FinalizeFrame();
   }
@@ -636,6 +638,12 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   // this may result in Layers being deleted, which results in
   // PLayer::Send__delete__() and DeallocShmem()
   mKeepAlive.Clear();
+
+  TabChild* window = mWidget->GetOwningTabChild();
+  if (window) {
+    TimeStamp end = TimeStamp::Now();
+    window->DidRequestComposite(start, end);
+  }
 }
 
 ShadowableLayer*

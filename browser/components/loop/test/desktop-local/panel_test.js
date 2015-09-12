@@ -848,7 +848,9 @@ describe("loop.panel", function() {
       var view = createTestComponent();
 
       sinon.assert.calledWithExactly(document.mozL10n.get,
-                                     "no_conversations_message_heading");
+                                     "no_conversations_message_heading2");
+      sinon.assert.calledWithExactly(document.mozL10n.get,
+                                     "no_conversations_start_message2");
     });
 
     it("should display a loading animation when rooms are pending", function() {
