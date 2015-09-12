@@ -36,7 +36,7 @@ nsPrintOptionsX::SerializeToPrintData(nsIPrintSettings* aSettings,
     // the first one, so we just send the first to save IPC traffic.
     char16_t** docTitles;
     uint32_t titleCount;
-    nsresult rv = aWBP->EnumerateDocumentNames(&titleCount, &docTitles);
+    rv = aWBP->EnumerateDocumentNames(&titleCount, &docTitles);
     if (NS_SUCCEEDED(rv) && titleCount > 0) {
       data->printJobName().Assign(docTitles[0]);
     }
