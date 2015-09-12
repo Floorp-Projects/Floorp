@@ -25,13 +25,13 @@
 #include "vpx/vp8dx.h"
 #include "vpx/vpx_decoder.h"
 
-#define WEBM_DEBUG(arg, ...) MOZ_LOG(gMediaDecoderLog, mozilla::LogLevel::Debug, ("WebMDemuxer(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define WEBM_DEBUG(arg, ...) MOZ_LOG(gWebMDemuxerLog, mozilla::LogLevel::Debug, ("WebMDemuxer(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
 
 using namespace gfx;
 
-extern PRLogModuleInfo* gMediaDecoderLog;
+PRLogModuleInfo* gWebMDemuxerLog = nullptr;
 extern PRLogModuleInfo* gNesteggLog;
 
 // Functions for reading and seeking using WebMDemuxer required for
@@ -141,6 +141,9 @@ WebMDemuxer::WebMDemuxer(MediaResource* aResource, bool aIsMediaSource)
 {
   if (!gNesteggLog) {
     gNesteggLog = PR_NewLogModule("Nestegg");
+  }
+  if (!gWebMDemuxerLog) {
+    gWebMDemuxerLog = PR_NewLogModule("WebMDemuxer");
   }
 }
 
