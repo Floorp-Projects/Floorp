@@ -276,12 +276,18 @@ Telemetry.prototype = {
    *
    * @param String histogramId
    *        Histogram in which the data is to be stored.
+   * @param String key [optional]
+   *        Optional key for a keyed histogram.
    */
-  stopTimer: function(histogramId) {
+  stopTimer: function(histogramId, key) {
     let startTime = this._timers.get(histogramId);
     if (startTime) {
       let time = (new Date() - startTime) / 1000;
-      this.log(histogramId, time);
+      if (!key) {
+        this.log(histogramId, time);
+      } else {
+        this.logKeyed(histogramId, key, time);
+      }
       this._timers.delete(histogramId);
     }
   },
