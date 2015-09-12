@@ -38,7 +38,6 @@
 #include <media/stagefright/MediaSource.h>
 #include <media/stagefright/MetaData.h>
 #include <utils/String8.h>
-#include "nsTArray.h"
 
 static const uint32_t kMAX_ALLOCATION =
     (SIZE_MAX < INT32_MAX ? SIZE_MAX : INT32_MAX) - 128;
@@ -52,7 +51,7 @@ public:
                 const sp<DataSource> &dataSource,
                 int32_t timeScale,
                 const sp<SampleTable> &sampleTable,
-                Vector<SidxEntry> &sidx,
+                nsTArray<SidxEntry> &sidx,
                 MPEG4Extractor::TrackExtends &trackExtends);
 
     virtual status_t start(MetaData *params = NULL);
@@ -76,7 +75,7 @@ private:
     sp<SampleTable> mSampleTable;
     uint32_t mCurrentSampleIndex;
     uint32_t mCurrentFragmentIndex;
-    Vector<SidxEntry> &mSegments;
+    nsTArray<SidxEntry> &mSegments;
     bool mLookedForMoof;
     off64_t mFirstMoofOffset;
     off64_t mCurrentMoofOffset;
@@ -149,12 +148,12 @@ private:
         int32_t ctsOffset;
         uint32_t flags;
         uint8_t iv[16];
-        Vector<uint16_t> clearsizes;
-        Vector<uint32_t> encryptedsizes;
+        nsTArray<uint16_t> clearsizes;
+        nsTArray<uint32_t> encryptedsizes;
 
         bool isSync() const { return !(flags & 0x1010000); }
     };
-    Vector<Sample> mCurrentSamples;
+    nsTArray<Sample> mCurrentSamples;
     MPEG4Extractor::TrackExtends mTrackExtends;
 
     // XXX hack -- demuxer expects a track's trun to be seen before saio or
@@ -164,8 +163,8 @@ private:
         off64_t mStart;
         off64_t mSize;
     };
-    Vector<AuxRange> mDeferredSaiz;
-    Vector<AuxRange> mDeferredSaio;
+    nsTArray<AuxRange> mDeferredSaiz;
+    nsTArray<AuxRange> mDeferredSaio;
 
     MPEG4Source(const MPEG4Source &);
     MPEG4Source &operator=(const MPEG4Source &);
@@ -405,7 +404,7 @@ MPEG4Extractor::~MPEG4Extractor() {
     }
     mFirstSINF = NULL;
 
-    for (size_t i = 0; i < mPssh.size(); i++) {
+    for (size_t i = 0; i < mPssh.Length(); i++) {
         delete [] mPssh[i].data;
     }
 }
@@ -509,13 +508,13 @@ status_t MPEG4Extractor::readMetaData() {
 
     // copy pssh data into file metadata
     int psshsize = 0;
-    for (size_t i = 0; i < mPssh.size(); i++) {
+    for (size_t i = 0; i < mPssh.Length(); i++) {
         psshsize += 20 + mPssh[i].datalen;
     }
     if (psshsize) {
         char *buf = (char*)malloc(psshsize);
         char *ptr = buf;
-        for (size_t i = 0; i < mPssh.size(); i++) {
+        for (size_t i = 0; i < mPssh.Length(); i++) {
             memcpy(ptr, mPssh[i].uuid, 20); // uuid + length
             memcpy(ptr + 20, mPssh[i].data, mPssh[i].datalen);
             ptr += (20 + mPssh[i].datalen);
@@ -695,24 +694,24 @@ status_t MPEG4Extractor::parseDrmSINF(off64_t *offset, off64_t data_offset) {
 }
 
 struct PathAdder {
-    PathAdder(Vector<uint32_t> *path, uint32_t chunkType)
+    PathAdder(nsTArray<uint32_t> *path, uint32_t chunkType)
         : mPath(path) {
-        mPath->push(chunkType);
+        mPath->AppendElement(chunkType);
     }
 
     ~PathAdder() {
-        mPath->pop();
+        mPath->RemoveElementAt(mPath->Length() - 1);
     }
 
 private:
-    Vector<uint32_t> *mPath;
+    nsTArray<uint32_t> *mPath;
 
     PathAdder(const PathAdder &);
     PathAdder &operator=(const PathAdder &);
 };
 
-static bool underMetaDataPath(const Vector<uint32_t> &path) {
-    return path.size() >= 5
+static bool underMetaDataPath(const nsTArray<uint32_t> &path) {
+    return path.Length() >= 5
         && path[0] == FOURCC('m', 'o', 'o', 'v')
         && path[1] == FOURCC('u', 'd', 't', 'a')
         && path[2] == FOURCC('m', 'e', 't', 'a')
@@ -807,7 +806,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
 
     if (chunk_type != FOURCC('c', 'p', 'r', 't')
             && chunk_type != FOURCC('c', 'o', 'v', 'r')
-            && mPath.size() == 5 && underMetaDataPath(mPath)) {
+            && mPath.Length() == 5 && underMetaDataPath(mPath)) {
         off64_t stop_offset = *offset + chunk_size;
         *offset = data_offset;
         while (*offset < stop_offset) {
@@ -1135,7 +1134,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                 return ERROR_IO;
             }
 
-            mPssh.push_back(pssh);
+            mPssh.AppendElement(pssh);
 
             *offset += chunk_size;
             break;
@@ -1691,9 +1690,9 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             mLastTrack->meta->setData(
                     kKeyESDS, kTypeESDS, &buffer[4], chunk_data_size - 4);
 
-            if (mPath.size() >= 2
-                    && (mPath[mPath.size() - 2] == FOURCC('m', 'p', '4', 'a') ||
-                       (mPath[mPath.size() - 2] == FOURCC('e', 'n', 'c', 'a')))) {
+            if (mPath.Length() >= 2
+                    && (mPath[mPath.Length() - 2] == FOURCC('m', 'p', '4', 'a') ||
+                       (mPath[mPath.Length() - 2] == FOURCC('e', 'n', 'c', 'a')))) {
                 // Information from the ESDS must be relied on for proper
                 // setup of sample rate and channel count for MPEG4 Audio.
                 // The generic header appears to only contain generic
@@ -1811,7 +1810,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
         case FOURCC('n', 'a', 'm', 'e'):
         case FOURCC('d', 'a', 't', 'a'):
         {
-            if (mPath.size() == 6 && underMetaDataPath(mPath)) {
+            if (mPath.Length() == 6 && underMetaDataPath(mPath)) {
                 status_t err = parseMetaData(data_offset, chunk_data_size);
 
                 if (err != OK) {
@@ -2175,7 +2174,7 @@ status_t MPEG4Extractor::parseSegmentIndex(off64_t offset, size_t size) {
         SidxEntry se;
         se.mSize = d1 & 0x7fffffff;
         se.mDurationUs = 1000000LL * d2 / timeScale;
-        mSidxEntries.add(se);
+        mSidxEntries.AppendElement(se);
     }
 
     mSidxDuration = total_duration * 1000000 / timeScale;
@@ -2688,7 +2687,7 @@ MPEG4Source::MPEG4Source(
         const sp<DataSource> &dataSource,
         int32_t timeScale,
         const sp<SampleTable> &sampleTable,
-        Vector<SidxEntry> &sidx,
+        nsTArray<SidxEntry> &sidx,
         MPEG4Extractor::TrackExtends &trackExtends)
     : mFormat(format),
       mDataSource(dataSource),
@@ -2925,14 +2924,14 @@ status_t MPEG4Source::parseSampleAuxiliaryInformationSizes(off64_t offset, off64
     ALOGV("parseSampleAuxiliaryInformationSizes");
     // 14496-12 8.7.12
 
-    if (mCurrentSamples.isEmpty()) {
+    if (mCurrentSamples.IsEmpty()) {
         // XXX hack -- we haven't seen trun yet; defer parsing this box until
         // after trun.
         ALOGW("deferring processing of saiz box");
         AuxRange range;
         range.mStart = offset;
         range.mSize = size;
-        mDeferredSaiz.add(range);
+        mDeferredSaiz.AppendElement(range);
         return OK;
     }
 
@@ -2999,14 +2998,14 @@ status_t MPEG4Source::parseSampleAuxiliaryInformationOffsets(off64_t offset, off
     ALOGV("parseSampleAuxiliaryInformationOffsets");
     // 14496-12 8.7.13
 
-    if (mCurrentSamples.isEmpty()) {
+    if (mCurrentSamples.IsEmpty()) {
         // XXX hack -- we haven't seen trun yet; defer parsing this box until
         // after trun.
         ALOGW("deferring processing of saio box");
         AuxRange range;
         range.mStart = offset;
         range.mSize = size;
-        mDeferredSaio.add(range);
+        mDeferredSaio.AppendElement(range);
         return OK;
     }
 
@@ -3067,7 +3066,7 @@ status_t MPEG4Source::parseSampleAuxiliaryInformationOffsets(off64_t offset, off
 
     // read CencSampleAuxiliaryDataFormats
     for (size_t i = 0; i < mCurrentSampleInfoCount; i++) {
-        Sample *smpl = &mCurrentSamples.editItemAt(i);
+        Sample *smpl = &mCurrentSamples[i];
 
         memset(smpl->iv, 0, 16);
         if (mDataSource->readAt(drmoffset, smpl->iv, ivlength) != ivlength) {
@@ -3097,12 +3096,12 @@ status_t MPEG4Source::parseSampleAuxiliaryInformationOffsets(off64_t offset, off
                     return ERROR_IO;
                 }
                 drmoffset += 4;
-                smpl->clearsizes.add(numclear);
-                smpl->encryptedsizes.add(numencrypted);
+                smpl->clearsizes.AppendElement(numclear);
+                smpl->encryptedsizes.AppendElement(numencrypted);
             }
         } else {
-            smpl->clearsizes.add(0);
-            smpl->encryptedsizes.add(smpl->size);
+            smpl->clearsizes.AppendElement(0);
+            smpl->encryptedsizes.AppendElement(smpl->size);
         }
     }
 
@@ -3401,14 +3400,14 @@ status_t MPEG4Source::parseTrackFragmentRun(off64_t offset, off64_t size) {
         tmp.size = sampleSize;
         tmp.duration = sampleDuration;
         tmp.ctsOffset = (int32_t)sampleCtsOffset;
-        mCurrentSamples.add(tmp);
+        mCurrentSamples.AppendElement(tmp);
 
         dataOffset += sampleSize;
     }
 
     mTrackFragmentHeaderInfo.mDataOffset = dataOffset;
 
-    for (size_t i = 0; i < mDeferredSaio.size() && i < mDeferredSaiz.size(); i++) {
+    for (size_t i = 0; i < mDeferredSaio.Length() && i < mDeferredSaiz.Length(); i++) {
         const auto& saio = mDeferredSaio[i];
         const auto& saiz = mDeferredSaiz[i];
         parseSampleAuxiliaryInformationSizes(saiz.mStart, saiz.mSize);
@@ -3658,8 +3657,8 @@ status_t MPEG4Source::read(
             }
 
             if (mSampleTable->hasCencInfo()) {
-                Vector<uint16_t> clearSizes;
-                Vector<uint32_t> cipherSizes;
+                nsTArray<uint16_t> clearSizes;
+                nsTArray<uint32_t> cipherSizes;
                 uint8_t iv[16];
                 status_t err = mSampleTable->getSampleCencInfo(
                         mCurrentSampleIndex, clearSizes, cipherSizes, iv);
@@ -3669,10 +3668,10 @@ status_t MPEG4Source::read(
                 }
 
                 const auto& meta = mBuffer->meta_data();
-                meta->setData(kKeyPlainSizes, 0, clearSizes.array(),
-                              clearSizes.size() * sizeof(uint16_t));
-                meta->setData(kKeyEncryptedSizes, 0, cipherSizes.array(),
-                              cipherSizes.size() * sizeof(uint32_t));
+                meta->setData(kKeyPlainSizes, 0, clearSizes.Elements(),
+                              clearSizes.Length() * sizeof(uint16_t));
+                meta->setData(kKeyEncryptedSizes, 0, cipherSizes.Elements(),
+                              cipherSizes.Length() * sizeof(uint32_t));
                 meta->setData(kKeyCryptoIV, 0, iv, sizeof(iv));
                 meta->setInt32(kKeyCryptoDefaultIVSize, mDefaultIVSize);
                 meta->setInt32(kKeyCryptoMode, mCryptoMode);
@@ -3824,8 +3823,8 @@ status_t MPEG4Source::read(
         }
 
         if (mSampleTable->hasCencInfo()) {
-            Vector<uint16_t> clearSizes;
-            Vector<uint32_t> cipherSizes;
+            nsTArray<uint16_t> clearSizes;
+            nsTArray<uint32_t> cipherSizes;
             uint8_t iv[16];
             status_t err = mSampleTable->getSampleCencInfo(
                     mCurrentSampleIndex, clearSizes, cipherSizes, iv);
@@ -3835,10 +3834,10 @@ status_t MPEG4Source::read(
             }
 
             const auto& meta = mBuffer->meta_data();
-            meta->setData(kKeyPlainSizes, 0, clearSizes.array(),
-                          clearSizes.size() * sizeof(uint16_t));
-            meta->setData(kKeyEncryptedSizes, 0, cipherSizes.array(),
-                          cipherSizes.size() * sizeof(uint32_t));
+            meta->setData(kKeyPlainSizes, 0, clearSizes.Elements(),
+                          clearSizes.Length() * sizeof(uint16_t));
+            meta->setData(kKeyEncryptedSizes, 0, cipherSizes.Elements(),
+                          cipherSizes.Length() * sizeof(uint32_t));
             meta->setData(kKeyCryptoIV, 0, iv, sizeof(iv));
             meta->setInt32(kKeyCryptoDefaultIVSize, mDefaultIVSize);
             meta->setInt32(kKeyCryptoMode, mCryptoMode);
@@ -3856,9 +3855,9 @@ status_t MPEG4Source::read(
 
 status_t MPEG4Source::moveToNextFragment() {
     off64_t nextMoof = mNextMoofOffset;
-    mCurrentSamples.clear();
-    mDeferredSaio.clear();
-    mDeferredSaiz.clear();
+    mCurrentSamples.Clear();
+    mDeferredSaio.Clear();
+    mDeferredSaiz.Clear();
     mCurrentSampleIndex = 0;
     uint32_t hdr[2];
     do {
@@ -3878,7 +3877,7 @@ status_t MPEG4Source::moveToNextFragment() {
         if (ret != OK) {
             return ret;
         }
-    } while (mCurrentSamples.size() == 0);
+    } while (mCurrentSamples.Length() == 0);
     return OK;
 }
 
@@ -3897,7 +3896,7 @@ status_t MPEG4Source::fragmentedRead(
     ReadOptions::SeekMode mode;
     if (options && options->getSeekTo(&seekTimeUs, &mode)) {
 
-        int numSidxEntries = mSegments.size();
+        int numSidxEntries = mSegments.Length();
         if (numSidxEntries != 0) {
             int64_t totalTime = 0;
             off64_t totalOffset = mFirstMoofOffset;
@@ -3919,9 +3918,9 @@ status_t MPEG4Source::fragmentedRead(
                 totalOffset += se->mSize;
             }
             mCurrentMoofOffset = totalOffset;
-            mCurrentSamples.clear();
-            mDeferredSaio.clear();
-            mDeferredSaiz.clear();
+            mCurrentSamples.Clear();
+            mDeferredSaio.Clear();
+            mDeferredSaiz.Clear();
             mCurrentSampleIndex = 0;
             mCurrentTime = totalTime * mTimescale / 1000000ll;
             mNextMoofOffset = totalOffset;
@@ -3936,7 +3935,7 @@ status_t MPEG4Source::fragmentedRead(
                 }
                 uint32_t time = mCurrentTime;
                 int i;
-                for (i = 0; i < mCurrentSamples.size() && time <= seekTime; i++) {
+                for (i = 0; i < mCurrentSamples.Length() && time <= seekTime; i++) {
                     const Sample *smpl = &mCurrentSamples[i];
                     if (smpl->isSync()) {
                         mCurrentSampleIndex = i;
@@ -3944,7 +3943,7 @@ status_t MPEG4Source::fragmentedRead(
                     }
                     time += smpl->duration;
                 }
-                if (i != mCurrentSamples.size()) {
+                if (i != mCurrentSamples.Length()) {
                     break;
                 }
             }
@@ -3970,7 +3969,7 @@ status_t MPEG4Source::fragmentedRead(
     if (mBuffer == NULL) {
         newBuffer = true;
 
-        if (mCurrentSampleIndex >= mCurrentSamples.size()) {
+        if (mCurrentSampleIndex >= mCurrentSamples.Length()) {
             status_t ret = moveToNextFragment();
             if (ret != OK) {
                 return ret;
@@ -3994,12 +3993,12 @@ status_t MPEG4Source::fragmentedRead(
     const Sample *smpl = &mCurrentSamples[mCurrentSampleIndex];
     const sp<MetaData> bufmeta = mBuffer->meta_data();
     bufmeta->clear();
-    if (smpl->encryptedsizes.size()) {
+    if (smpl->encryptedsizes.Length()) {
         // store clear/encrypted lengths in metadata
         bufmeta->setData(kKeyPlainSizes, 0,
-                smpl->clearsizes.array(), smpl->clearsizes.size() * 2);
+                smpl->clearsizes.Elements(), smpl->clearsizes.Length() * 2);
         bufmeta->setData(kKeyEncryptedSizes, 0,
-                smpl->encryptedsizes.array(), smpl->encryptedsizes.size() * 4);
+                smpl->encryptedsizes.Elements(), smpl->encryptedsizes.Length() * 4);
         bufmeta->setData(kKeyCryptoIV, 0, smpl->iv, 16); // use 16 or the actual size?
         bufmeta->setInt32(kKeyCryptoDefaultIVSize, mDefaultIVSize);
         bufmeta->setInt32(kKeyCryptoMode, mCryptoMode);
