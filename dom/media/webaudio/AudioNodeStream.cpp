@@ -53,6 +53,16 @@ AudioNodeStream::~AudioNodeStream()
   MOZ_COUNT_DTOR(AudioNodeStream);
 }
 
+void
+AudioNodeStream::DestroyImpl()
+{
+  // These are graph thread objects, so clean up on graph thread.
+  mInputChunks.Clear();
+  mLastChunks.Clear();
+
+  ProcessedMediaStream::DestroyImpl();
+}
+
 /* static */ already_AddRefed<AudioNodeStream>
 AudioNodeStream::Create(MediaStreamGraph* aGraph, AudioNodeEngine* aEngine,
                         Flags aFlags)

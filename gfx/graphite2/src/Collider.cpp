@@ -39,7 +39,7 @@ of the License or (at your option) any later version.
 
 // Possible rounding error for subbox boundaries: 0.016 = 1/64 = 1/256 * 4 
 // (values in font range from 0..256)
-#define SUBBOX_RND_ERR 0.016
+// #define SUBBOX_RND_ERR 0.016
 
 using namespace graphite2;
 
@@ -543,7 +543,7 @@ bool ShiftCollider::mergeSlot(Segment *seg, Slot *slot, const Position &currShif
         }
     }
     bool res = true;
-    if (cslot && cslot->exclGlyph() > 0 && gc.check(cslot->exclGlyph()) && !isExclusion)
+    if (cslot->exclGlyph() > 0 && gc.check(cslot->exclGlyph()) && !isExclusion)
     {
         // Set up the bogus slot representing the exclusion glyph.
         Slot *exclSlot = seg->newSlot();
@@ -925,6 +925,8 @@ bool KernCollider::initSlot(Segment *seg, Slot *aSlot, const Rect &limit, float 
 bool KernCollider::mergeSlot(Segment *seg, Slot *slot, const Position &currShift, float currSpace, int dir, GR_MAYBE_UNUSED json * const dbgout)
 {
     int rtl = (dir & 1) * 2 - 1;
+    if (!seg->getFace()->glyphs().check(slot->gid()))
+        return false;
     const Rect &bb = seg->theGlyphBBoxTemporary(slot->gid());
     const float sx = slot->origin().x + currShift.x;
     float x = sx + (rtl > 0 ? bb.tr.x : bb.bl.x);
@@ -971,7 +973,6 @@ bool KernCollider::mergeSlot(Segment *seg, Slot *slot, const Position &currShift
 
 
 // Return the amount to kern by.
-// TODO: do we need to make use of marginMin here? Probably not.
 Position KernCollider::resolve(GR_MAYBE_UNUSED Segment *seg, GR_MAYBE_UNUSED Slot *slot,
         int dir, float margin, GR_MAYBE_UNUSED json * const dbgout)
 {

@@ -917,7 +917,7 @@ nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
 
   if (verticalOverflowChanged) {
     InternalScrollPortEvent event(true,
-      mVerticalOverflow ? NS_SCROLLPORT_OVERFLOW : NS_SCROLLPORT_UNDERFLOW,
+      mVerticalOverflow ? eScrollPortOverflow : eScrollPortUnderflow,
       nullptr);
     event.orient = InternalScrollPortEvent::vertical;
     EventDispatcher::Dispatch(content, presContext, &event);
@@ -925,7 +925,7 @@ nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
 
   if (horizontalOverflowChanged) {
     InternalScrollPortEvent event(true,
-      mHorizontalOverflow ? NS_SCROLLPORT_OVERFLOW : NS_SCROLLPORT_UNDERFLOW,
+      mHorizontalOverflow ? eScrollPortOverflow : eScrollPortUnderflow,
       nullptr);
     event.orient = InternalScrollPortEvent::horizontal;
     EventDispatcher::Dispatch(content, presContext, &event);

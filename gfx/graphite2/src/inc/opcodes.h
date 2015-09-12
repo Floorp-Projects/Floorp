@@ -61,6 +61,7 @@ of the License or (at your option) any later version.
 //        isl       = The last positioned slot
 //        ip        = The current instruction pointer
 //        endPos    = Position of advance of last cluster
+//        dir       = writing system directionality of the font
      
 
 // #define NOT_IMPLEMENTED     assert(false)
@@ -313,6 +314,8 @@ STARTOP(insert)
     {
         newSlot->originate(seg.defaultOriginal());
     }
+    if (is == smap.highwater())
+        smap.highpassed(false);
     is = newSlot;
     seg.extendLength(1);
     if (map != &smap[-1]) 
@@ -389,7 +392,7 @@ STARTOP(attr_add)
     const          int  val  = int(pop());
     if ((slat == gr_slatPosX || slat == gr_slatPosY) && (flags & POSITIONED) == 0)
     {
-        seg.positionSlots(0, *smap.begin(), *(smap.end()-1));
+        seg.positionSlots(0, *smap.begin(), *(smap.end()-1), dir);
         flags |= POSITIONED;
     }
     int res = is->getAttr(&seg, slat, 0);
@@ -402,7 +405,7 @@ STARTOP(attr_sub)
     const          int  val  = int(pop());
     if ((slat == gr_slatPosX || slat == gr_slatPosY) && (flags & POSITIONED) == 0)
     {
-        seg.positionSlots(0, *smap.begin(), *(smap.end()-1));
+        seg.positionSlots(0, *smap.begin(), *(smap.end()-1), dir);
         flags |= POSITIONED;
     }
     int res = is->getAttr(&seg, slat, 0);
@@ -431,7 +434,7 @@ STARTOP(push_slot_attr)
     const int           slot_ref = int8(param[1]);
     if ((slat == gr_slatPosX || slat == gr_slatPosY) && (flags & POSITIONED) == 0)
     {
-        seg.positionSlots(0, *smap.begin(), *(smap.end()-1));
+        seg.positionSlots(0, *smap.begin(), *(smap.end()-1), dir);
         flags |= POSITIONED;
     }
     slotref slot = slotat(slot_ref);
@@ -458,7 +461,7 @@ STARTOP(push_glyph_metric)
     const signed int    attr_level  = uint8(param[2]);
     slotref slot = slotat(slot_ref);
     if (slot)
-        push(seg.getGlyphMetric(slot, glyph_attr, attr_level));
+        push(seg.getGlyphMetric(slot, glyph_attr, attr_level, dir));
 ENDOP
 
 STARTOP(push_feat)
@@ -496,7 +499,7 @@ STARTOP(push_att_to_glyph_metric)
     {
         slotref att = slot->attachedTo();
         if (att) slot = att;
-        push(int32(seg.getGlyphMetric(slot, glyph_attr, attr_level)));
+        push(int32(seg.getGlyphMetric(slot, glyph_attr, attr_level, dir)));
     }
 ENDOP
 
@@ -507,7 +510,7 @@ STARTOP(push_islot_attr)
                         idx      = uint8(param[2]);
     if ((slat == gr_slatPosX || slat == gr_slatPosY) && (flags & POSITIONED) == 0)
     {
-        seg.positionSlots(0, *smap.begin(), *(smap.end()-1));
+        seg.positionSlots(0, *smap.begin(), *(smap.end()-1), dir);
         flags |= POSITIONED;
     }
     slotref slot = slotat(slot_ref);
@@ -552,7 +555,7 @@ STARTOP(iattr_add)
     const          int  val  = int(pop());
     if ((slat == gr_slatPosX || slat == gr_slatPosY) && (flags & POSITIONED) == 0)
     {
-        seg.positionSlots(0, *smap.begin(), *(smap.end()-1));
+        seg.positionSlots(0, *smap.begin(), *(smap.end()-1), dir);
         flags |= POSITIONED;
     }
     int res = is->getAttr(&seg, slat, idx);
@@ -566,7 +569,7 @@ STARTOP(iattr_sub)
     const          int  val  = int(pop());
     if ((slat == gr_slatPosX || slat == gr_slatPosY) && (flags & POSITIONED) == 0)
     {
-        seg.positionSlots(0, *smap.begin(), *(smap.end()-1));
+        seg.positionSlots(0, *smap.begin(), *(smap.end()-1), dir);
         flags |= POSITIONED;
     }
     int res = is->getAttr(&seg, slat, idx);

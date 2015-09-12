@@ -62,6 +62,46 @@ JS_Assert(const char* s, const char* file, int ln);
 #if defined JS_USE_CUSTOM_ALLOCATOR
 # include "jscustomallocator.h"
 #else
+
+namespace js {
+namespace oom {
+
+/*
+ * To make testing OOM in certain helper threads more effective,
+ * allow restricting the OOM testing to a certain helper thread
+ * type. This allows us to fail e.g. in off-thread script parsing
+ * without causing an OOM in the main thread first.
+ */
+enum ThreadType {
+    THREAD_TYPE_NONE,           // 0
+    THREAD_TYPE_MAIN,           // 1
+    THREAD_TYPE_ASMJS,          // 2
+    THREAD_TYPE_ION,            // 3
+    THREAD_TYPE_PARSE,          // 4
+    THREAD_TYPE_COMPRESS,       // 5
+    THREAD_TYPE_GCHELPER,       // 6
+    THREAD_TYPE_GCPARALLEL,     // 7
+    THREAD_TYPE_MAX             // Used to check shell function arguments
+};
+
+
+/*
+ * Getter/Setter functions to encapsulate mozilla::ThreadLocal,
+ * implementation is in jsutil.cpp.
+ */
+# if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+extern bool InitThreadType(void);
+extern void SetThreadType(ThreadType);
+extern uint32_t GetThreadType(void);
+# else
+inline bool InitThreadType(void) { return true; }
+inline void SetThreadType(ThreadType t) {};
+inline uint32_t GetThreadType(void) { return 0; }
+# endif
+
+} /* namespace oom */
+} /* namespace js */
+
 # if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 
 /*
@@ -83,16 +123,28 @@ static MOZ_NEVER_INLINE void js_failedAllocBreakpoint() { asm(""); }
 namespace js {
 namespace oom {
 
+extern JS_PUBLIC_DATA(uint32_t) targetThread;
+
+static inline bool
+OOMThreadCheck()
+{
+    return (!js::oom::targetThread 
+            || js::oom::targetThread == js::oom::GetThreadType());
+}
+
 static inline bool
 IsSimulatedOOMAllocation()
 {
-    return OOM_counter == OOM_maxAllocations ||
-           (OOM_counter > OOM_maxAllocations && OOM_failAlways);
+    return OOMThreadCheck() && (OOM_counter == OOM_maxAllocations ||
+           (OOM_counter > OOM_maxAllocations && OOM_failAlways));
 }
 
 static inline bool
 ShouldFailWithOOM()
 {
+    if (!OOMThreadCheck())
+        return false;
+
     OOM_counter++;
     if (IsSimulatedOOMAllocation()) {
         JS_OOM_CALL_BP_FUNC();

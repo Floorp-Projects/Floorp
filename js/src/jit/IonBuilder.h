@@ -842,6 +842,9 @@ class IonBuilder
     IonBuilder::InliningStatus boxSimd(CallInfo& callInfo, MInstruction* ins,
                                        InlineTypedObject* templateObj);
 
+    InliningStatus inlineSimdInt32x4(CallInfo& callInfo, JSNative native);
+    InliningStatus inlineSimdFloat32x4(CallInfo& callInfo, JSNative native);
+
     template <typename T>
     InliningStatus inlineBinarySimd(CallInfo& callInfo, JSNative native,
                                     typename T::Operation op, SimdTypeDescr::Type type);

@@ -1567,103 +1567,6 @@ MacroAssemblerMIPSCompat::subPtr(Register src, Register dest)
 }
 
 void
-MacroAssemblerMIPSCompat::not32(Register reg)
-{
-    ma_not(reg, reg);
-}
-
-// Logical operations
-void
-MacroAssemblerMIPSCompat::and32(Register src, Register dest)
-{
-    ma_and(dest, dest, src);
-}
-
-void
-MacroAssemblerMIPSCompat::and32(Imm32 imm, Register dest)
-{
-    ma_and(dest, imm);
-}
-
-void
-MacroAssemblerMIPSCompat::and32(Imm32 imm, const Address& dest)
-{
-    load32(dest, SecondScratchReg);
-    ma_and(SecondScratchReg, imm);
-    store32(SecondScratchReg, dest);
-}
-
-void
-MacroAssemblerMIPSCompat::and32(const Address& src, Register dest)
-{
-    load32(src, SecondScratchReg);
-    ma_and(dest, SecondScratchReg);
-}
-
-void
-MacroAssemblerMIPSCompat::or32(Imm32 imm, Register dest)
-{
-    ma_or(dest, imm);
-}
-
-
-void
-MacroAssemblerMIPSCompat::or32(Imm32 imm, const Address& dest)
-{
-    load32(dest, SecondScratchReg);
-    ma_or(SecondScratchReg, imm);
-    store32(SecondScratchReg, dest);
-}
-
-void
-MacroAssemblerMIPSCompat::or32(Register src, Register dest)
-{
-    ma_or(dest, src);
-}
-
-void
-MacroAssemblerMIPSCompat::xor32(Imm32 imm, Register dest)
-{
-    ma_xor(dest, imm);
-}
-
-void
-MacroAssemblerMIPSCompat::xorPtr(Imm32 imm, Register dest)
-{
-    ma_xor(dest, imm);
-}
-
-void
-MacroAssemblerMIPSCompat::xorPtr(Register src, Register dest)
-{
-    ma_xor(dest, src);
-}
-
-void
-MacroAssemblerMIPSCompat::orPtr(Imm32 imm, Register dest)
-{
-    ma_or(dest, imm);
-}
-
-void
-MacroAssemblerMIPSCompat::orPtr(Register src, Register dest)
-{
-    ma_or(dest, src);
-}
-
-void
-MacroAssemblerMIPSCompat::andPtr(Imm32 imm, Register dest)
-{
-    ma_and(dest, imm);
-}
-
-void
-MacroAssemblerMIPSCompat::andPtr(Register src, Register dest)
-{
-    ma_and(dest, src);
-}
-
-void
 MacroAssemblerMIPSCompat::move32(Imm32 imm, Register dest)
 {
     ma_li(dest, imm);
@@ -3066,7 +2969,7 @@ MacroAssemblerMIPSCompat::alignStackPointer()
 {
     movePtr(StackPointer, SecondScratchReg);
     subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
-    andPtr(Imm32(~(ABIStackAlignment - 1)), StackPointer);
+    asMasm().andPtr(Imm32(~(ABIStackAlignment - 1)), StackPointer);
     storePtr(SecondScratchReg, Address(StackPointer, 0));
 }
 

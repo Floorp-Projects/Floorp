@@ -3742,6 +3742,12 @@ Tab.prototype = {
   },
 
   setViewport: function(aViewport) {
+    if (AppConstants.MOZ_ANDROID_APZ) {
+      // This should already be getting short-circuited out in GeckoLayerClient,
+      // but this is an extra safety precaution
+      return;
+    }
+
     // Transform coordinates based on zoom
     let x = aViewport.x / aViewport.zoom;
     let y = aViewport.y / aViewport.zoom;
@@ -3761,6 +3767,9 @@ Tab.prototype = {
   },
 
   setResolution: function(aZoom, aForce) {
+    if (AppConstants.MOZ_ANDROID_APZ) {
+      return;
+    }
     // Set zoom level
     if (aForce || !fuzzyEquals(aZoom, this._zoom)) {
       this._zoom = aZoom;
@@ -3834,6 +3843,9 @@ Tab.prototype = {
   },
 
   sendViewportUpdate: function(aPageSizeUpdate) {
+    if (AppConstants.MOZ_ANDROID_APZ) {
+      return;
+    }
     let viewport = this.getViewport();
     let displayPort = Services.androidBridge.getDisplayPort(aPageSizeUpdate, BrowserApp.isBrowserContentDocumentDisplayed(), this.id, viewport);
     if (displayPort != null)

@@ -305,7 +305,7 @@ fails-if(!cocoaWidget||OSX==1006||OSX==1007) != osx-font-smoothing-2.html osx-fo
 
 pref(layout.css.text-align-true-value.enabled,true) == text-align-true.html text-align-true-ref.html
 
-# stray control chars should not be invisible, bug 909344
+# stray control chars should be visible by default, bug 1099557
 != control-chars-01a.html control-chars-01-notref.html
 != control-chars-01b.html control-chars-01-notref.html
 != control-chars-01c.html control-chars-01-notref.html
@@ -313,6 +313,10 @@ pref(layout.css.text-align-true-value.enabled,true) == text-align-true.html text
 != control-chars-02.html control-chars-02-notref.html
 == control-chars-03a.html control-chars-03-ref.html
 == control-chars-03b.html control-chars-03-ref.html
+!= control-chars-04a.html control-chars-04-notref.html
+!= control-chars-04b.html control-chars-04-notref.html
+!= control-chars-04c.html control-chars-04-notref.html
+!= control-chars-04d.html control-chars-04-notref.html
 
 # font fallback for <space> when not supported in the primary font family - bug 970891
 HTTP(..) == space-font-1.html space-font-1-ref.html

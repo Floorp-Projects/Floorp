@@ -3034,8 +3034,8 @@ HTMLInputElement::NeedToInitializeEditorForEvent(
   case eMouseExitFromWidget:
   case eMouseOver:
   case eMouseOut:
-  case NS_SCROLLPORT_UNDERFLOW:
-  case NS_SCROLLPORT_OVERFLOW:
+  case eScrollPortUnderflow:
+  case eScrollPortOverflow:
     return false;
   default:
     return true;

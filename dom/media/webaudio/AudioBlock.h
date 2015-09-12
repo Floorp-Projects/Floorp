@@ -24,9 +24,16 @@ public:
   AudioBlock() {
     mDuration = WEBAUDIO_BLOCK_SIZE;
   }
-  MOZ_IMPLICIT AudioBlock(const AudioChunk& aChunk) {
-    mDuration = WEBAUDIO_BLOCK_SIZE;
-    operator=(aChunk);
+  // No effort is made in constructors to ensure that mBufferIsDownstreamRef
+  // is set because the block is expected to be a temporary and so the
+  // reference will be released before the next iteration.
+  // The custom copy constructor is required so as not to set
+  // mBufferIsDownstreamRef without notifying AudioBlockBuffer.
+  AudioBlock(const AudioBlock& aBlock) : AudioChunk(aBlock.AsAudioChunk()) {}
+  explicit AudioBlock(const AudioChunk& aChunk)
+    : AudioChunk(aChunk)
+  {
+    MOZ_ASSERT(aChunk.mDuration == WEBAUDIO_BLOCK_SIZE);
   }
   ~AudioBlock();
 
@@ -44,7 +51,7 @@ public:
 
   const AudioChunk& AsAudioChunk() const { return *this; }
   AudioChunk* AsMutableChunk() {
-    void ClearDownstreamMark();
+    ClearDownstreamMark();
     return this;
   }
 
@@ -54,12 +61,14 @@ public:
    */
   void AllocateChannels(uint32_t aChannelCount);
 
+  /**
+   * ChannelFloatsForWrite() should only be used when the buffers have been
+   * created with AllocateChannels().
+   */
   float* ChannelFloatsForWrite(size_t aChannel)
   {
     MOZ_ASSERT(mBufferFormat == AUDIO_FORMAT_FLOAT32);
-#if DEBUG
-    AssertNoLastingShares();
-#endif
+    MOZ_ASSERT(CanWrite());
     return static_cast<float*>(const_cast<void*>(mChannelData[aChannel]));
   }
 
@@ -72,6 +81,12 @@ public:
     mBufferFormat = AUDIO_FORMAT_SILENCE;
   }
 
+  AudioBlock& operator=(const AudioBlock& aBlock) {
+    // Instead of just copying, mBufferIsDownstreamRef must be first cleared
+    // if set.  It is set again for the new mBuffer if possible.  This happens
+    // in SetBuffer().
+    return *this = aBlock.AsAudioChunk();
+  }
   AudioBlock& operator=(const AudioChunk& aChunk) {
     MOZ_ASSERT(aChunk.mDuration == WEBAUDIO_BLOCK_SIZE);
     SetBuffer(aChunk.mBuffer);
@@ -103,7 +118,7 @@ public:
 
 private:
   void ClearDownstreamMark();
-  void AssertNoLastingShares();
+  bool CanWrite();
 
   // mBufferIsDownstreamRef is set only when mBuffer references an
   // AudioBlockBuffer created in a different AudioBlock.  That can happen when
