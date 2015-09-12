@@ -586,13 +586,14 @@ AdjustForClip(const Matrix4x4& asyncTransform, Layer* aLayer)
 }
 
 bool
-AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
+AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
+                                                          bool* aOutFoundRoot)
 {
   bool appliedTransform = false;
   for (Layer* child = aLayer->GetFirstChild();
       child; child = child->GetNextSibling()) {
     appliedTransform |=
-      ApplyAsyncContentTransformToTree(child);
+      ApplyAsyncContentTransformToTree(child, aOutFoundRoot);
   }
 
   Matrix4x4 oldTransform = aLayer->GetTransform();
@@ -647,29 +648,30 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     // bug 1036967 removed the (dead) call.
 
 #if defined(MOZ_ANDROID_APZ)
-    bool rootContentLayer = metrics.IsRootContent();
-#ifdef MOZ_B2GDROID
-    // B2GDroid is a special snowflake since it doesn't seem to have any root
-    // content document. However we still need to send a setFirstPaintViewport
-    // message, so we use the root of the layer tree as the root content layer
-    // instead. For the most part this should work fine; the Java code will just
-    // think the root layer is the "main" content, which in a manner of speaking,
-    // it is.
-    rootContentLayer = (aLayer->GetParent() == nullptr);
-#endif // MOZ_B2GDROID
-    if (rootContentLayer) {
-      if (mIsFirstPaint) {
-        CSSToLayerScale geckoZoom = metrics.LayersPixelsPerCSSPixel().ToScaleFactor();
-        LayerIntPoint scrollOffsetLayerPixels = RoundedToInt(metrics.GetScrollOffset() * geckoZoom);
-        mContentRect = metrics.GetScrollableRect();
-        SetFirstPaintViewport(scrollOffsetLayerPixels,
-                              geckoZoom,
-                              mContentRect);
+    // If we find a metrics which is the root content doc, use that. If not, use
+    // the root layer. Since this function recurses on children first we should
+    // only end up using the root layer if the entire tree was devoid of a
+    // root content metrics. This is a temporary solution; in the long term we
+    // should not need the root content metrics at all. See bug 1201529 comment
+    // 6 for details.
+    if (!(*aOutFoundRoot)) {
+      *aOutFoundRoot = metrics.IsRootContent() ||       /* RCD */
+            (aLayer->GetParent() == nullptr &&          /* rootmost metrics */
+             i + 1 >= aLayer->GetFrameMetricsCount());
+      if (*aOutFoundRoot) {
+        if (mIsFirstPaint) {
+          CSSToLayerScale geckoZoom = metrics.LayersPixelsPerCSSPixel().ToScaleFactor();
+          LayerIntPoint scrollOffsetLayerPixels = RoundedToInt(metrics.GetScrollOffset() * geckoZoom);
+          mContentRect = metrics.GetScrollableRect();
+          SetFirstPaintViewport(scrollOffsetLayerPixels,
+                                geckoZoom,
+                                mContentRect);
+        }
+        mIsFirstPaint = false;
+        mLayersUpdated = false;
       }
-      mIsFirstPaint = false;
-      mLayersUpdated = false;
     }
-#endif // MOZ_ANDROID_APZ
+#endif
 
     // Transform the current local clip by this APZC's async transform. If we're
     // using containerful scrolling, then the clip is not part of the scrolled
@@ -1160,7 +1162,12 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
     // its own platform-specific async rendering that is done partially
     // in Gecko and partially in Java.
     wantNextFrame |= SampleAPZAnimations(LayerMetricsWrapper(root), aCurrentFrame);
-    if (!ApplyAsyncContentTransformToTree(root)) {
+    bool foundRoot = false;
+    if (ApplyAsyncContentTransformToTree(root, &foundRoot)) {
+#if defined(MOZ_ANDROID_APZ)
+      MOZ_ASSERT(foundRoot);
+#endif
+    } else {
       nsAutoTArray<Layer*,1> scrollableLayers;
 #ifdef MOZ_WIDGET_ANDROID
       mLayerManager->GetRootScrollableLayers(scrollableLayers);
