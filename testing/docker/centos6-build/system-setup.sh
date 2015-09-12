@@ -250,7 +250,7 @@ EOF
 peep install -r requirements.txt
 
 # TC-VCS
-npm install -g taskcluster-vcs@2.3.8
+npm install -g taskcluster-vcs@2.3.12
 
 # note that TC will replace workspace with a cache mount; there's no sense
 # creating anything inside there
