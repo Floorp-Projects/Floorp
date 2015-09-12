@@ -24,6 +24,7 @@
 #include <media/stagefright/MediaErrors.h>
 #include <utils/RefBase.h>
 #include <utils/threads.h>
+#include <utils/Vector.h>
 
 namespace stagefright {
 
@@ -95,8 +96,8 @@ public:
     bool hasCencInfo() const { return !!mCencInfo; }
 
     status_t getSampleCencInfo(uint32_t aSampleIndex,
-                               nsTArray<uint16_t>& aClearSizes,
-                               nsTArray<uint32_t>& aCipherSizes,
+                               Vector<uint16_t>& aClearSizes,
+                               Vector<uint32_t>& aCipherSizes,
                                uint8_t aIV[]);
 
 protected:
@@ -165,8 +166,8 @@ private:
     uint32_t mCencInfoCount;
 
     uint8_t mCencDefaultSize;
-    FallibleTArray<uint8_t> mCencSizes;
-    FallibleTArray<uint64_t> mCencOffsets;
+    Vector<uint8_t> mCencSizes;
+    Vector<uint64_t> mCencOffsets;
 
     friend struct SampleIterator;
 
