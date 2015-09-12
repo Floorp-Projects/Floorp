@@ -1974,8 +1974,8 @@ Accessible::BindToParent(Accessible* aParent, uint32_t aIndexInParent)
   if (mParent) {
     if (mParent != aParent) {
       NS_ERROR("Adopting child!");
-      mParent->RemoveChild(this);
       mParent->InvalidateChildrenGroupInfo();
+      mParent->RemoveChild(this);
     } else {
       NS_ERROR("Binding to the same parent!");
       return;
