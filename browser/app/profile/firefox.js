@@ -1423,7 +1423,8 @@ pref("devtools.performance.memory.sample-probability", "0.05");
 // Can't go higher than this without causing internal allocation overflows while
 // serializing the allocations data over the RDP.
 pref("devtools.performance.memory.max-log-length", 125000);
-pref("devtools.performance.timeline.hidden-markers", "[\"Composite\"]");
+pref("devtools.performance.timeline.hidden-markers",
+  "[\"Composite\",\"CompositeForwardTransaction\"]");
 pref("devtools.performance.profiler.buffer-size", 10000000);
 pref("devtools.performance.profiler.sample-frequency-khz", 1);
 pref("devtools.performance.ui.invert-call-tree", true);

@@ -1507,6 +1507,12 @@ Console::ProcessArguments(JSContext* aCx,
 
       case 'c':
       {
+        // If there isn't any output but there's already a style, then
+        // discard the previous style and use the next one instead.
+        if (output.IsEmpty() && !aStyles.IsEmpty()) {
+          aStyles.TruncateLength(aStyles.Length() - 1);
+        }
+
         if (!FlushOutput(aCx, aSequence, output)) {
           return false;
         }

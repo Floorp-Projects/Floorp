@@ -293,7 +293,7 @@ public:
    *  knowing the exact length of text. It's up to widget to handle cases when
    *  the returned offset/length are different from the queried offset/length.
    *
-   * For NS_QUERY_TEXT_RECT, fail if cached offset/length aren't equals to input.
+   * For eQueryTextRect, fail if cached offset/length aren't equals to input.
    *   Cocoa widget always queries selected offset, so it works on it.
    *
    * For eQueryCaretRect, fail if cached offset isn't equals to input

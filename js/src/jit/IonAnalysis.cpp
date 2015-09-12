@@ -1166,6 +1166,9 @@ TypeAnalyzer::insertConversions()
                 adjustPhiInputs(phi);
             }
         }
+
+        // AdjustInputs can add/remove/mutate instructions before and after the
+        // current instruction. Only increment the iterator after it is finished.
         for (MInstructionIterator iter(block->begin()); iter != block->end(); iter++) {
             if (!adjustInputs(*iter))
                 return false;

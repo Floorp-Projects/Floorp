@@ -1250,7 +1250,7 @@ IMMHandler::HandleStartComposition(nsWindow* aWindow,
   mCompositionStart = selection.mOffset;
   mCursorPosition = NO_IME_CARET;
 
-  WidgetCompositionEvent event(true, NS_COMPOSITION_START, aWindow);
+  WidgetCompositionEvent event(true, eCompositionStart, aWindow);
   nsIntPoint point(0, 0);
   aWindow->InitEvent(event, &point);
   aWindow->DispatchWindowEvent(&event);
@@ -1525,7 +1525,7 @@ IMMHandler::HandleEndComposition(nsWindow* aWindow,
   }
 
   EventMessage message =
-    aCommitString ? NS_COMPOSITION_COMMIT : NS_COMPOSITION_COMMIT_AS_IS;
+    aCommitString ? eCompositionCommit : eCompositionCommitAsIs;
   WidgetCompositionEvent compositionCommitEvent(true, message, aWindow);
   nsIntPoint point(0, 0);
   aWindow->InitEvent(compositionCommitEvent, &point);
@@ -1897,7 +1897,7 @@ IMMHandler::DispatchCompositionChangeEvent(nsWindow* aWindow,
 
   nsIntPoint point(0, 0);
 
-  WidgetCompositionEvent event(true, NS_COMPOSITION_CHANGE, aWindow);
+  WidgetCompositionEvent event(true, eCompositionChange, aWindow);
 
   aWindow->InitEvent(event, &point);
 
@@ -2165,7 +2165,7 @@ IMMHandler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
   // If there is a caret and retrieving offset is same as the caret offset,
   // we should use the caret rect.
   if (offset != caretOffset) {
-    WidgetQueryContentEvent charRect(true, NS_QUERY_TEXT_RECT, aWindow);
+    WidgetQueryContentEvent charRect(true, eQueryTextRect, aWindow);
     charRect.InitForQueryTextRect(offset, 1);
     aWindow->InitEvent(charRect, &point);
     aWindow->DispatchWindowEvent(&charRect);
