@@ -21,7 +21,7 @@ RUN git config --global user.email "mozilla@example.com" && \
     git config --global user.name "mozilla"
 
 # VCS Tools
-RUN npm install -g taskcluster-vcs@2.3.9
+RUN npm install -g taskcluster-vcs@2.3.12
 
 # TODO enable worker
 # TODO volume mount permissions will be an issue
