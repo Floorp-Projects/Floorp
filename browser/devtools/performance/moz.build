@@ -4,10 +4,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES.devtools.performance += [
+    'events.js',
     'modules/global.js',
     'modules/logic/frame-utils.js',
     'modules/logic/jit.js',
     'modules/logic/marker-utils.js',
+    'modules/logic/telemetry.js',
     'modules/logic/tree-model.js',
     'modules/logic/waterfall-utils.js',
     'modules/markers.js',
