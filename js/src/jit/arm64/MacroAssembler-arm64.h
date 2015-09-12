@@ -853,10 +853,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
         Ldr(dest64, MemOperand(ARMRegister(base, 64), index64, vixl::LSL, scale));
     }
-    void loadPrivate(const Address& src, Register dest) {
-        loadPtr(src, dest);
-        lshiftPtr(Imm32(1), dest);
-    }
+    void loadPrivate(const Address& src, Register dest);
 
     void store8(Register src, const Address& address) {
         Strb(ARMRegister(src, 32), MemOperand(ARMRegister(address.base, 64), address.offset));
@@ -1069,12 +1066,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         branchPtr(cond, lhs, getStackPointer(), label);
     }
 
-    void lshiftPtr(Imm32 imm, Register dest) {
-        Lsl(ARMRegister(dest, 64), ARMRegister(dest, 64), imm.value);
-    }
-    void lshift64(Imm32 imm, Register64 dest) {
-        lshiftPtr(imm, dest.reg);
-    }
+    inline void lshift64(Imm32 imm, Register64 dest);
 
     void testPtr(Register lhs, Register rhs) {
         Tst(ARMRegister(lhs, 64), Operand(ARMRegister(rhs, 64)));
