@@ -152,6 +152,7 @@ body {
 .animation-timeline {
   height: 100%;
   overflow: hidden;
+  position: relative;
   /* The timeline gets its background-image from a canvas element created in
      /browser/devtools/animationinspector/utils.js drawGraphElementBackground
      thanks to document.mozSetImageElement("time-graduations", canvas)
