@@ -77,6 +77,9 @@ ResolvePromiseCallback::Call(JSContext* aCx,
 {
   // Run resolver's algorithm with value and the synchronous flag set.
 
+  JS::ExposeObjectToActiveJS(mGlobal);
+  JS::ExposeValueToActiveJS(aValue);
+
   JSAutoCompartment ac(aCx, mGlobal);
   JS::Rooted<JS::Value> value(aCx, aValue);
   if (!JS_WrapValue(aCx, &value)) {
@@ -135,6 +138,9 @@ RejectPromiseCallback::Call(JSContext* aCx,
                             JS::Handle<JS::Value> aValue)
 {
   // Run resolver's algorithm with value and the synchronous flag set.
+
+  JS::ExposeObjectToActiveJS(mGlobal);
+  JS::ExposeValueToActiveJS(aValue);
 
   JSAutoCompartment ac(aCx, mGlobal);
   JS::Rooted<JS::Value> value(aCx, aValue);
@@ -196,6 +202,9 @@ nsresult
 WrapperPromiseCallback::Call(JSContext* aCx,
                              JS::Handle<JS::Value> aValue)
 {
+  JS::ExposeObjectToActiveJS(mGlobal);
+  JS::ExposeValueToActiveJS(aValue);
+
   JSAutoCompartment ac(aCx, mGlobal);
   JS::Rooted<JS::Value> value(aCx, aValue);
   if (!JS_WrapValue(aCx, &value)) {
@@ -334,6 +343,8 @@ nsresult
 NativePromiseCallback::Call(JSContext* aCx,
                             JS::Handle<JS::Value> aValue)
 {
+  JS::ExposeValueToActiveJS(aValue);
+
   if (mState == Promise::Resolved) {
     mHandler->ResolvedCallback(aCx, aValue);
     return NS_OK;

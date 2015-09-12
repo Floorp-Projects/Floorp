@@ -37,6 +37,7 @@ public:
     gfxFontGroup*
     CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
                     const gfxFontStyle *aStyle,
+                    gfxTextPerfMetrics* aTextPerf,
                     gfxUserFontSet *aUserFontSet) override;
 
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,

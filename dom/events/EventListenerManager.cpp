@@ -55,7 +55,7 @@ using namespace hal;
 
 #define EVENT_TYPE_EQUALS(ls, message, userType, typeString, allEvents) \
   ((ls->mEventMessage == message &&                                     \
-    (ls->mEventMessage != NS_USER_DEFINED_EVENT ||                      \
+    (ls->mEventMessage != eUnidentifiedEvent ||                         \
     (mIsMainThreadELM && ls->mTypeAtom == userType) ||                  \
     (!mIsMainThreadELM && ls->mTypeString.Equals(typeString)))) ||      \
    (allEvents && ls->mAllEvents))
@@ -293,7 +293,7 @@ EventListenerManager::AddEventListenerInternal(
     mMayHaveCapturingListeners = true;
   }
 
-  if (aEventMessage == NS_AFTERPAINT) {
+  if (aEventMessage == eAfterPaint) {
     mMayHavePaintEventListener = true;
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (window) {
@@ -569,13 +569,13 @@ EventListenerManager::ListenerCanHandle(Listener* aListener,
                                         WidgetEvent* aEvent)
 {
   // This is slightly different from EVENT_TYPE_EQUALS in that it returns
-  // true even when aEvent->mMessage == NS_USER_DEFINED_EVENT and
-  // aListener=>mEventMessage != NS_USER_DEFINED_EVENT as long as the atoms are
+  // true even when aEvent->mMessage == eUnidentifiedEvent and
+  // aListener=>mEventMessage != eUnidentifiedEvent as long as the atoms are
   // the same
   if (aListener->mAllEvents) {
     return true;
   }
-  if (aEvent->mMessage == NS_USER_DEFINED_EVENT) {
+  if (aEvent->mMessage == eUnidentifiedEvent) {
     if (mIsMainThreadELM) {
       return aListener->mTypeAtom == aEvent->userType;
     }

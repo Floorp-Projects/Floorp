@@ -46,10 +46,10 @@ public:
     return nullptr;
   }
 
-  // NS_CONTENT_COMMAND_PASTE_TRANSFERABLE
+  // eContentCommandPasteTransferable
   nsCOMPtr<nsITransferable> mTransferable; // [in]
 
-  // NS_CONTENT_COMMAND_SCROLL
+  // eContentCommandScroll
   // for mScroll.mUnit
   enum
   {
@@ -103,7 +103,7 @@ public:
 
   WidgetCommandEvent(bool aIsTrusted, nsIAtom* aEventType,
                      nsIAtom* aCommand, nsIWidget* aWidget)
-    : WidgetGUIEvent(aIsTrusted, NS_USER_DEFINED_EVENT, aWidget,
+    : WidgetGUIEvent(aIsTrusted, eUnidentifiedEvent, aWidget,
                      eCommandEventClass)
     , command(aCommand)
   {

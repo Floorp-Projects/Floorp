@@ -75,10 +75,8 @@ public:
   // Handle scroll-end event.
   virtual void OnScrollEnd();
 
-  // Handle NS_WHEEL_WHEEL event.
-  virtual void OnScrolling();
-
-  // Handle ScrollPositionChanged from nsIScrollObserver.
+  // Handle ScrollPositionChanged from nsIScrollObserver. This might be called
+  // at anytime, not necessary between OnScrollStart and OnScrollEnd.
   virtual void OnScrollPositionChanged();
 
   // Handle reflow event from nsIReflowObserver.
@@ -108,11 +106,20 @@ protected:
   };
   CaretMode GetCaretMode() const;
 
-  void UpdateCarets();
+  enum class UpdateCaretsHint : uint8_t {
+    // Update everything including appearance and position.
+    Default,
+
+    // Update everything while respecting the old appearance. For example, if
+    // the caret in cursor mode is hidden due to timeout, do not change its
+    // appearance to Normal.
+    RespectOldAppearance
+  };
+  void UpdateCarets(UpdateCaretsHint aHint = UpdateCaretsHint::Default);
   void HideCarets();
 
-  void UpdateCaretsForCursorMode();
-  void UpdateCaretsForSelectionMode();
+  void UpdateCaretsForCursorMode(UpdateCaretsHint aHint);
+  void UpdateCaretsForSelectionMode(UpdateCaretsHint aHint);
   void UpdateCaretsForTilt();
 
   // Get the nearest enclosing focusable frame of aFrame.

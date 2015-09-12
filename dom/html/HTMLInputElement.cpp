@@ -2481,6 +2481,10 @@ HTMLInputElement::GetFiles()
     return nullptr;
   }
 
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::directory)) {
+    return nullptr;
+  }
+
   if (!mFileList) {
     mFileList = new FileList(static_cast<nsIContent*>(this));
     UpdateFileList();

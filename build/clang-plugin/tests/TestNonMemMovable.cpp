@@ -5,16 +5,16 @@
   These are a bunch of structs with variable levels of memmovability.
   They will be used as template parameters to the various NeedyTemplates
 */
-struct MOZ_NON_MEMMOVABLE NonMovable {}; // expected-note-re + {{'{{.*}}' is non-memmovable because of the MOZ_NON_MEMMOVABLE annotation on 'NonMovable'}}
+struct MOZ_NON_MEMMOVABLE NonMovable {};
 struct Movable {};
 
 // Subclasses
-struct S_NonMovable : NonMovable {};
+struct S_NonMovable : NonMovable {}; // expected-note 48 {{'S_NonMovable' is a non-memmove()able type because it inherits from a non-memmove()able type 'NonMovable'}}
 struct S_Movable : Movable {};
 
 // Members
 struct W_NonMovable {
-  NonMovable m;
+  NonMovable m; // expected-note 32 {{'W_NonMovable' is a non-memmove()able type because member 'm' is a non-memmove()able type 'NonMovable'}}
 };
 struct W_Movable {
   Movable m;
@@ -22,23 +22,23 @@ struct W_Movable {
 
 // Wrapped Subclasses
 struct WS_NonMovable {
-  S_NonMovable m;
+  S_NonMovable m; // expected-note 32 {{'WS_NonMovable' is a non-memmove()able type because member 'm' is a non-memmove()able type 'S_NonMovable'}}
 };
 struct WS_Movable {
   S_Movable m;
 };
 
 // Combinations of the above
-struct SW_NonMovable : W_NonMovable {};
+struct SW_NonMovable : W_NonMovable {}; // expected-note 16 {{'SW_NonMovable' is a non-memmove()able type because it inherits from a non-memmove()able type 'W_NonMovable'}}
 struct SW_Movable : W_Movable {};
 
-struct SWS_NonMovable : WS_NonMovable {};
+struct SWS_NonMovable : WS_NonMovable {}; // expected-note 16 {{'SWS_NonMovable' is a non-memmove()able type because it inherits from a non-memmove()able type 'WS_NonMovable'}}
 struct SWS_Movable : WS_Movable {};
 
 // Basic templated wrapper
 template <class T>
 struct Template_Inline {
-  T m;
+  T m; // expected-note-re 56 {{'Template_Inline<{{.*}}>' is a non-memmove()able type because member 'm' is a non-memmove()able type '{{.*}}'}}
 };
 
 template <class T>
@@ -50,7 +50,7 @@ template <class T>
 struct Template_Unused {};
 
 template <class T>
-struct MOZ_NON_MEMMOVABLE Template_NonMovable {}; // expected-note-re + {{'{{.*}}' is non-memmovable because of the MOZ_NON_MEMMOVABLE annotation on 'Template_NonMovable<{{.*}}>'}}
+struct MOZ_NON_MEMMOVABLE Template_NonMovable {};
 
 /*
   These tests take the following form:
@@ -499,7 +499,7 @@ struct W_NeedyTemplate6 {
 template <class T>
 struct SW_NeedyTemplate6 : W_NeedyTemplate6<T> {};
 // We create a different NonMovable type here, as NeedyTemplate6 will already be instantiated with NonMovable
-struct MOZ_NON_MEMMOVABLE NonMovable2 {}; // expected-note {{'NonMovable2' is non-memmovable because of the MOZ_NON_MEMMOVABLE annotation on 'NonMovable2'}}
+struct MOZ_NON_MEMMOVABLE NonMovable2 {};
 template <class T = NonMovable2>
 struct Defaulted_SW_NeedyTemplate6 {
   SW_NeedyTemplate6<T> m;
@@ -748,8 +748,8 @@ void good8() {
   instantiate NeedyTemplate.
 */
 
-struct MOZ_NON_MEMMOVABLE SpecializedNonMovable {}; // expected-note 8 {{'S_SpecializedNonMovable' is non-memmovable because of the MOZ_NON_MEMMOVABLE annotation on 'SpecializedNonMovable'}} expected-note 8 {{'Template_Inline<SpecializedNonMovable>' is non-memmovable because of the MOZ_NON_MEMMOVABLE annotation on 'SpecializedNonMovable'}}
-struct S_SpecializedNonMovable : SpecializedNonMovable {};
+struct MOZ_NON_MEMMOVABLE SpecializedNonMovable {};
+struct S_SpecializedNonMovable : SpecializedNonMovable {}; // expected-note 8 {{'S_SpecializedNonMovable' is a non-memmove()able type because it inherits from a non-memmove()able type 'SpecializedNonMovable'}}
 
 // Specialize all of the NeedyTemplates with SpecializedNonMovable.
 template <>

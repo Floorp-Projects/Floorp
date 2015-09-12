@@ -63,7 +63,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
                                               false, false,
                                               NS_LITERAL_STRING(""));
 
-        fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->mFamilies), &style_western_normal_16, nullptr);
+        fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->mFamilies), &style_western_normal_16, nullptr, nullptr);
     }
 
     nsAutoPtr<gfxTextRun> textRun;

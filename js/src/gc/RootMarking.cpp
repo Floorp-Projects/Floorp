@@ -118,12 +118,6 @@ AutoGCRooter::trace(JSTracer* trc)
         return;
       }
 
-      case SCRIPTVECTOR: {
-        AutoScriptVector::VectorImpl& vector = static_cast<AutoScriptVector*>(this)->vector;
-        TraceRootRange(trc, vector.length(), vector.begin(), "js::AutoScriptVector.vector");
-        return;
-      }
-
       case IONMASM: {
         static_cast<js::jit::MacroAssembler::AutoRooter*>(this)->masm()->trace(trc);
         return;

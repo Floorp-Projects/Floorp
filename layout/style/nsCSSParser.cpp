@@ -321,9 +321,6 @@ public:
     if (mUnsafeRulesEnabled) {
       enabledState |= nsCSSProps::eEnabledInUASheets;
     }
-    if (mIsChromeOrCertifiedApp) {
-      enabledState |= nsCSSProps::eEnabledInChromeOrCertifiedApp;
-    }
     return enabledState;
   }
 
@@ -1207,12 +1204,6 @@ protected:
   // True if unsafe rules should be allowed
   bool mUnsafeRulesEnabled : 1;
 
-  // True if we are in parsing rules for Chrome or Certified App content,
-  // in which case CSS properties with the
-  // CSS_PROPERTY_ALWAYS_ENABLED_IN_CHROME_OR_CERTIFIED_APP
-  // flag should be allowed.
-  bool mIsChromeOrCertifiedApp : 1;
-
   // True if viewport units should be allowed.
   bool mViewportUnitsEnabled : 1;
 
@@ -1335,7 +1326,6 @@ CSSParserImpl::CSSParserImpl()
     mHashlessColorQuirk(false),
     mUnitlessLengthQuirk(false),
     mUnsafeRulesEnabled(false),
-    mIsChromeOrCertifiedApp(false),
     mViewportUnitsEnabled(true),
     mHTMLMediaMode(false),
     mParsingCompoundProperty(false),
@@ -1487,9 +1477,6 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
   }
 
   mUnsafeRulesEnabled = aAllowUnsafeRules;
-  mIsChromeOrCertifiedApp =
-    dom::IsChromeURI(aSheetURI) ||
-    aSheetPrincipal->GetAppStatus() == nsIPrincipal::APP_STATUS_CERTIFIED;
 
   nsCSSToken* tk = &mToken;
   for (;;) {
@@ -1513,7 +1500,6 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
   ReleaseScanner();
 
   mUnsafeRulesEnabled = false;
-  mIsChromeOrCertifiedApp = false;
 
   // XXX check for low level errors
   return NS_OK;

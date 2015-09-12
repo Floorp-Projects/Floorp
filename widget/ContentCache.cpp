@@ -177,7 +177,7 @@ ContentCacheInChild::CacheSelection(nsIWidget* aWidget,
   mSelection.Clear();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWidget);
+  WidgetQueryContentEvent selection(true, eQuerySelectedText, aWidget);
   aWidget->DispatchEvent(&selection, status);
   if (NS_WARN_IF(!selection.mSucceeded)) {
     MOZ_LOG(sContentCacheLog, LogLevel::Error,
@@ -219,7 +219,7 @@ ContentCacheInChild::CacheCaret(nsIWidget* aWidget,
   mCaret.mOffset = mSelection.StartOffset();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, aWidget);
+  WidgetQueryContentEvent caretRect(true, eQueryCaretRect, aWidget);
   caretRect.InitForQueryCaretRect(mCaret.mOffset);
   aWidget->DispatchEvent(&caretRect, status);
   if (NS_WARN_IF(!caretRect.mSucceeded)) {
@@ -251,7 +251,7 @@ ContentCacheInChild::CacheEditorRect(nsIWidget* aWidget,
      this, aWidget, GetNotificationName(aNotification)));
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetQueryContentEvent editorRectEvent(true, NS_QUERY_EDITOR_RECT, aWidget);
+  WidgetQueryContentEvent editorRectEvent(true, eQueryEditorRect, aWidget);
   aWidget->DispatchEvent(&editorRectEvent, status);
   if (NS_WARN_IF(!editorRectEvent.mSucceeded)) {
     MOZ_LOG(sContentCacheLog, LogLevel::Error,
@@ -276,7 +276,7 @@ ContentCacheInChild::CacheText(nsIWidget* aWidget,
      this, aWidget, GetNotificationName(aNotification)));
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetQueryContentEvent queryText(true, NS_QUERY_TEXT_CONTENT, aWidget);
+  WidgetQueryContentEvent queryText(true, eQueryTextContent, aWidget);
   queryText.InitForQueryTextContent(0, UINT32_MAX);
   aWidget->DispatchEvent(&queryText, status);
   if (NS_WARN_IF(!queryText.mSucceeded)) {
@@ -516,10 +516,10 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
   aEvent.mReply.mFocusedWidget = aWidget;
 
   switch (aEvent.mMessage) {
-    case NS_QUERY_SELECTED_TEXT:
+    case eQuerySelectedText:
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
         ("ContentCacheInParent: 0x%p HandleQueryContentEvent("
-         "aEvent={ mMessage=NS_QUERY_SELECTED_TEXT }, aWidget=0x%p)",
+         "aEvent={ mMessage=eQuerySelectedText }, aWidget=0x%p)",
          this, aWidget));
       if (NS_WARN_IF(!IsSelectionValid())) {
         // If content cache hasn't been initialized properly, make the query
@@ -557,10 +557,10 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
          GetBoolName(aEvent.mReply.mHasSelection),
          GetWritingModeName(aEvent.mReply.mWritingMode).get()));
       break;
-    case NS_QUERY_TEXT_CONTENT: {
+    case eQueryTextContent: {
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
         ("ContentCacheInParent: 0x%p HandleQueryContentEvent("
-         "aEvent={ mMessage=NS_QUERY_TEXT_CONTENT, mInput={ mOffset=%u, "
+         "aEvent={ mMessage=eQueryTextContent, mInput={ mOffset=%u, "
          "mLength=%u } }, aWidget=0x%p), mText.Length()=%u",
          this, aEvent.mInput.mOffset,
          aEvent.mInput.mLength, aWidget, mText.Length()));
@@ -638,10 +638,10 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
          GetWritingModeName(aEvent.mReply.mWritingMode).get(),
          GetRectText(aEvent.mReply.mRect).get()));
       break;
-    case NS_QUERY_CARET_RECT:
+    case eQueryCaretRect:
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
         ("ContentCacheInParent: 0x%p HandleQueryContentEvent("
-         "aEvent={ mMessage=NS_QUERY_CARET_RECT, mInput={ mOffset=%u } }, "
+         "aEvent={ mMessage=eQueryCaretRect, mInput={ mOffset=%u } }, "
          "aWidget=0x%p), mText.Length()=%u",
          this, aEvent.mInput.mOffset, aWidget, mText.Length()));
       if (NS_WARN_IF(!IsSelectionValid())) {
@@ -665,10 +665,10 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
          "Succeeded, aEvent={ mReply={ mOffset=%u, mRect=%s } }",
          this, aEvent.mReply.mOffset, GetRectText(aEvent.mReply.mRect).get()));
       break;
-    case NS_QUERY_EDITOR_RECT:
+    case eQueryEditorRect:
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
         ("ContentCacheInParent: 0x%p HandleQueryContentEvent("
-         "aEvent={ mMessage=NS_QUERY_EDITOR_RECT }, aWidget=0x%p)",
+         "aEvent={ mMessage=eQueryEditorRect }, aWidget=0x%p)",
          this, aWidget));
       aEvent.mReply.mRect = mEditorRect;
       MOZ_LOG(sContentCacheLog, LogLevel::Info,

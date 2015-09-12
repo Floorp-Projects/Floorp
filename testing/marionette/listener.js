@@ -101,6 +101,9 @@ function registerSelf() {
 
   if (register[0]) {
     let {id, remotenessChange} = register[0][0];
+    let {B2G, raisesAccessibilityExceptions} = register[0][2];
+    isB2G = B2G;
+    accessibility.strict = raisesAccessibilityExceptions;
     listenerId = id;
     if (typeof id != "undefined") {
       // check if we're the main process

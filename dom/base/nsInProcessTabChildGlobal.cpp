@@ -21,14 +21,15 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::dom::ipc;
 
 bool
 nsInProcessTabChildGlobal::DoSendBlockingMessage(JSContext* aCx,
                                                  const nsAString& aMessage,
-                                                 StructuredCloneIPCHelper& aHelper,
+                                                 StructuredCloneData& aData,
                                                  JS::Handle<JSObject *> aCpows,
                                                  nsIPrincipal* aPrincipal,
-                                                 nsTArray<StructuredCloneIPCHelper>* aRetVal,
+                                                 nsTArray<StructuredCloneData>* aRetVal,
                                                  bool aIsSync)
 {
   SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
@@ -38,7 +39,7 @@ nsInProcessTabChildGlobal::DoSendBlockingMessage(JSContext* aCx,
     SameProcessCpowHolder cpows(js::GetRuntime(aCx), aCpows);
     nsRefPtr<nsFrameMessageManager> mm = mChromeMessageManager;
     nsCOMPtr<nsIFrameLoader> fl = GetFrameLoader();
-    mm->ReceiveMessage(mOwner, fl, aMessage, true, &aHelper, &cpows, aPrincipal,
+    mm->ReceiveMessage(mOwner, fl, aMessage, true, &aData, &cpows, aPrincipal,
                        aRetVal);
   }
   return true;
@@ -51,10 +52,10 @@ public:
   nsAsyncMessageToParent(JSContext* aCx,
                          nsInProcessTabChildGlobal* aTabChild,
                          const nsAString& aMessage,
-                         StructuredCloneIPCHelper& aHelper,
+                         StructuredCloneData& aData,
                          JS::Handle<JSObject *> aCpows,
                          nsIPrincipal* aPrincipal)
-    : nsSameProcessAsyncMessageBase(aCx, aMessage, aHelper, aCpows, aPrincipal),
+    : nsSameProcessAsyncMessageBase(aCx, aMessage, aData, aCpows, aPrincipal),
       mTabChild(aTabChild)
   {
   }
@@ -71,13 +72,13 @@ public:
 bool
 nsInProcessTabChildGlobal::DoSendAsyncMessage(JSContext* aCx,
                                               const nsAString& aMessage,
-                                              StructuredCloneIPCHelper& aHelper,
+                                              StructuredCloneData& aData,
                                               JS::Handle<JSObject *> aCpows,
                                               nsIPrincipal* aPrincipal)
 {
   SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
   nsRefPtr<nsAsyncMessageToParent> ev =
-    new nsAsyncMessageToParent(aCx, this, aMessage, aHelper, aCpows, aPrincipal);
+    new nsAsyncMessageToParent(aCx, this, aMessage, aData, aCpows, aPrincipal);
   queue->Push(ev);
   return true;
 }

@@ -39,13 +39,7 @@ const gPropertyTestDecls = {
   "clipPath":    "clip-path: url(#mypath)",
   "filter":      "filter: url(#myfilter)",
   "transform":   "transform: translate(0)",
-// XXXdholbert The "will-change" line in full-screen-override.css is only
-// parsed and honored if "layout.css.will-change.enabled" is turned on
-// *at startup time* (so, flipping it here with SpecialPowers wouldn't be
-// sufficient). So, we won't get the right behavior for 'will-change' here
-// until it's enabled by default (bug 961871). This line can be uncommented
-// when that happens:
-//  "willChange": "will-change: transform"
+  "willChange":  "will-change: transform"
 };
 
 // populated in populateInitialVals

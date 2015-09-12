@@ -207,6 +207,7 @@ destroying the MediaDecoder object.
 #include "MediaEventSource.h"
 #include "MediaMetadataManager.h"
 #include "MediaResource.h"
+#include "MediaStatistics.h"
 #include "MediaStreamGraph.h"
 #include "TimeUnits.h"
 
@@ -716,37 +717,11 @@ public:
   static bool IsAppleMP3Enabled();
 #endif
 
-  struct Statistics {
-    // Estimate of the current playback rate (bytes/second).
-    double mPlaybackRate;
-    // Estimate of the current download rate (bytes/second). This
-    // ignores time that the channel was paused by Gecko.
-    double mDownloadRate;
-    // Total length of media stream in bytes; -1 if not known
-    int64_t mTotalBytes;
-    // Current position of the download, in bytes. This is the offset of
-    // the first uncached byte after the decoder position.
-    int64_t mDownloadPosition;
-    // Current position of decoding, in bytes (how much of the stream
-    // has been consumed)
-    int64_t mDecoderPosition;
-    // Current position of playback, in bytes
-    int64_t mPlaybackPosition;
-    // If false, then mDownloadRate cannot be considered a reliable
-    // estimate (probably because the download has only been running
-    // a short time).
-    bool mDownloadRateReliable;
-    // If false, then mPlaybackRate cannot be considered a reliable
-    // estimate (probably because playback has only been running
-    // a short time).
-    bool mPlaybackRateReliable;
-  };
-
   // Return statistics. This is used for progress events and other things.
   // This can be called from any thread. It's only a snapshot of the
   // current state, since other threads might be changing the state
   // at any time.
-  virtual Statistics GetStatistics();
+  MediaStatistics GetStatistics();
 
   // Frame decoding/painting related performance counters.
   // Threadsafe.

@@ -10,9 +10,9 @@
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
-#include "mozilla/dom/StructuredCloneIPCHelper.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ipc/BlobChild.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 
 #include "nsPrintfCString.h"
@@ -117,12 +117,12 @@ nsIContentChild::RecvAsyncMessage(const nsString& aMsg,
 {
   nsRefPtr<nsFrameMessageManager> cpm = nsFrameMessageManager::GetChildProcessManager();
   if (cpm) {
-    StructuredCloneIPCHelper helper;
-    ipc::UnpackClonedMessageDataForChild(aData, helper);
+    ipc::StructuredCloneData data;
+    ipc::UnpackClonedMessageDataForChild(aData, data);
 
     CrossProcessCpowHolder cpows(this, aCpows);
     cpm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(cpm.get()), nullptr,
-                        aMsg, false, &helper, &cpows, aPrincipal, nullptr);
+                        aMsg, false, &data, &cpows, aPrincipal, nullptr);
   }
   return true;
 }

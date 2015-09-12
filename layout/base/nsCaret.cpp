@@ -410,10 +410,10 @@ nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
   return rect;
 }
 
-static nsIFrame*
-GetFrameAndOffset(Selection* aSelection,
-                  nsINode* aOverrideNode, int32_t aOverrideOffset,
-                  int32_t* aFrameOffset)
+nsIFrame*
+nsCaret::GetFrameAndOffset(Selection* aSelection,
+                           nsINode* aOverrideNode, int32_t aOverrideOffset,
+                           int32_t* aFrameOffset)
 {
   nsINode* focusNode;
   int32_t focusOffset;
