@@ -46,6 +46,13 @@ function run_test() {
 
 add_task(function* test_pushNotifications() {
 
+  // /pushNotifications/subscription1 will send a message with no rs and padding
+  // length 1.
+  // /pushNotifications/subscription2 will send a message with no rs and padding
+  // length 16.
+  // /pushNotifications/subscription3 will send a message with rs equal 24 and
+  // padding length 16.
+
   let db = PushServiceHttp2.newPushDB();
   do_register_cleanup(() => {
     return db.drop().then(_ => db.close());
@@ -58,6 +65,16 @@ add_task(function* test_pushNotifications() {
     pushEndpoint: serverURL + '/pushEndpoint1',
     pushReceiptEndpoint: serverURL + '/pushReceiptEndpoint1',
     scope: 'https://example.com/page/1',
+    p256dhPublicKey: 'BPCd4gNQkjwRah61LpdALdzZKLLnU5UAwDztQ5_h0QsT26jk0IFbqcK6-JxhHAm-rsHEwy0CyVJjtnfOcqc1tgA',
+    p256dhPrivateKey: {
+      crv: 'P-256',
+      d: '1jUPhzVsRkzV0vIzwL4ZEsOlKdNOWm7TmaTfzitJkgM',
+      ext: true,
+      key_ops: ["deriveBits"],
+      kty: "EC",
+      x: '8J3iA1CSPBFqHrUul0At3NkosudTlQDAPO1Dn-HRCxM',
+      y: '26jk0IFbqcK6-JxhHAm-rsHEwy0CyVJjtnfOcqc1tgA'
+    },
     originAttributes: ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
     quota: Infinity,
   }, {
@@ -65,6 +82,16 @@ add_task(function* test_pushNotifications() {
     pushEndpoint: serverURL + '/pushEndpoint2',
     pushReceiptEndpoint: serverURL + '/pushReceiptEndpoint2',
     scope: 'https://example.com/page/2',
+    p256dhPublicKey: 'BPnWyUo7yMnuMlyKtERuLfWE8a09dtdjHSW2lpC9_BqR5TZ1rK8Ldih6ljyxVwnBA-nygQHGRpEmu1jV5K8437E',
+    p256dhPrivateKey: {
+      crv: 'P-256',
+      d: 'lFm4nPsUKYgNGBJb5nXXKxl8bspCSp0bAhCYxbveqT4',
+      ext: true,
+      key_ops: ["deriveBits"],
+      kty: 'EC',
+      x: '-dbJSjvIye4yXIq0RG4t9YTxrT1212MdJbaWkL38GpE',
+      y: '5TZ1rK8Ldih6ljyxVwnBA-nygQHGRpEmu1jV5K8437E'
+    },
     originAttributes: ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
     quota: Infinity,
   }, {
@@ -72,6 +99,16 @@ add_task(function* test_pushNotifications() {
     pushEndpoint: serverURL + '/pushEndpoint3',
     pushReceiptEndpoint: serverURL + '/pushReceiptEndpoint3',
     scope: 'https://example.com/page/3',
+    p256dhPublicKey: 'BDhUHITSeVrWYybFnb7ylVTCDDLPdQWMpf8gXhcWwvaaJa6n3YH8TOcH8narDF6t8mKVvg2ioLW-8MH5O4dzGcI',
+    p256dhPrivateKey: {
+      crv: 'P-256',
+      d: 'Q1_SE1NySTYzjbqgWwPgrYh7XRg3adqZLkQPsy319G8',
+      ext: true,
+      key_ops: ["deriveBits"],
+      kty: 'EC',
+      x: 'OFQchNJ5WtZjJsWdvvKVVMIMMs91BYyl_yBeFxbC9po',
+      y: 'Ja6n3YH8TOcH8narDF6t8mKVvg2ioLW-8MH5O4dzGcI'
+    },
     originAttributes: ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
     quota: Infinity,
   }];
@@ -81,9 +118,27 @@ add_task(function* test_pushNotifications() {
   }
 
   let notifyPromise = Promise.all([
-    promiseObserverNotification('push-notification'),
-    promiseObserverNotification('push-notification'),
-    promiseObserverNotification('push-notification')
+    promiseObserverNotification('push-notification', function(subject, data) {
+      var notification = subject.QueryInterface(Ci.nsIPushObserverNotification);
+      if (notification && (data == "https://example.com/page/1")){
+        equal(subject.data, "Some message", "decoded message is incorrect");
+        return true;
+      }
+    }),
+    promiseObserverNotification('push-notification', function(subject, data) {
+      var notification = subject.QueryInterface(Ci.nsIPushObserverNotification);
+      if (notification && (data == "https://example.com/page/2")){
+        equal(subject.data, "Some message", "decoded message is incorrect");
+        return true;
+      }
+    }),
+    promiseObserverNotification('push-notification', function(subject, data) {
+      var notification = subject.QueryInterface(Ci.nsIPushObserverNotification);
+      if (notification && (data == "https://example.com/page/3")){
+        equal(subject.data, "Some message", "decoded message is incorrect");
+        return true;
+      }
+    })
   ]);
 
   PushService.init({

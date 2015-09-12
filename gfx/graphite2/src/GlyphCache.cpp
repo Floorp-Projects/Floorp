@@ -62,7 +62,7 @@ namespace
         // This is strictly a >= operator. A true == operator could be
         // implemented that test for overlap but it would be more expensive a
         // test.
-        bool operator == (const _glat_iterator<W> & rhs) { return _v >= rhs._e; }
+        bool operator == (const _glat_iterator<W> & rhs) { return _v >= rhs._e - 1; }
         bool operator != (const _glat_iterator<W> & rhs) { return !operator==(rhs); }
 
         value_type          operator * () const {
@@ -78,7 +78,8 @@ namespace
     typedef _glat_iterator<uint16>  glat2_iterator;
 }
 
-const Rect GlyphCache::nullRect = Rect();
+const SlantBox SlantBox::empty = {0,0,0,0};
+
 
 class GlyphCache::Loader
 {
@@ -145,7 +146,7 @@ GlyphCache::GlyphCache(const Face & face, const uint32 face_options)
         }
         else if (numsubs > 0)
         {
-            GlyphBox * boxes = (GlyphBox *)gralloc<char>(_num_glyphs * sizeof(GlyphBox) + (numsubs-1) * 8 * sizeof(float));
+            GlyphBox * boxes = (GlyphBox *)gralloc<char>(_num_glyphs * sizeof(GlyphBox) + numsubs * 8 * sizeof(float));
             GlyphBox * currbox = boxes;
 
             for (uint16 gid = 0; currbox && gid != _num_glyphs; ++gid)
@@ -277,19 +278,20 @@ GlyphCache::Loader::Loader(const Face & face, const bool dumb_font)
         //  subtracting the length of the attribids array (numAttribs long if present)
         //  and dividing by either 2 or 4 depending on shor or lonf format
         _long_fmt              = flags & 1;
-        _num_glyphs_attributes = (m_pGloc.size()
+        int tmpnumgattrs       = (m_pGloc.size()
                                    - (p - m_pGloc)
                                    - sizeof(uint16)*(flags & 0x2 ? _num_attrs : 0))
                                        / (_long_fmt ? sizeof(uint32) : sizeof(uint16)) - 1;
 
-        if (version >= 0x00020000
+        if (version >= 0x00020000 || tmpnumgattrs < 0 || tmpnumgattrs > 65535
             || _num_attrs == 0 || _num_attrs > 0x3000  // is this hard limit appropriate?
-            || _num_glyphs_graphics > _num_glyphs_attributes)
+            || _num_glyphs_graphics > tmpnumgattrs)
         {
             _head = Face::Table();
             return;
         }
 
+        _num_glyphs_attributes = static_cast<unsigned short>(tmpnumgattrs);
         p = m_pGlat;
         version = be::read<uint32>(p);
         if (version >= 0x00040000)       // reject Glat tables that are too new
@@ -347,8 +349,12 @@ const GlyphFace * GlyphCache::Loader::read_glyph(unsigned short glyphid, GlyphFa
             void *pGlyph = TtfUtil::GlyfLookup(_glyf, locidx, _glyf.size());
 
             if (pGlyph && TtfUtil::GlyfBox(pGlyph, xMin, yMin, xMax, yMax))
+            {
+                if ((xMin > xMax) || (yMin > yMax))
+                    return 0;
                 bbox = Rect(Position(static_cast<float>(xMin), static_cast<float>(yMin)),
                     Position(static_cast<float>(xMax), static_cast<float>(yMax)));
+            }
         }
         if (TtfUtil::HorMetrics(glyphid, _hmtx, _hmtx.size(), _hhea, nLsb, nAdvWid))
             advance = Position(static_cast<float>(nAdvWid), 0);
@@ -398,7 +404,8 @@ const GlyphFace * GlyphCache::Loader::read_glyph(unsigned short glyphid, GlyphFa
         else
         {
             if (gloce - glocs < 3*sizeof(uint16)        // can a glyph have no attributes? why not?
-                || gloce - glocs > _num_attrs*3*sizeof(uint16))
+                || gloce - glocs > _num_attrs*3*sizeof(uint16)
+                || glocs > m_pGlat.size() - 2*sizeof(uint16))
                     return 0;
             new (&glyph) GlyphFace(bbox, advance, glat2_iterator(m_pGlat + glocs), glat2_iterator(m_pGlat + gloce));
         }

@@ -4066,7 +4066,7 @@ IonBuilder::processCondSwitchCase(CFGState& state)
         MDefinition* caseOperand = current->pop();
         MDefinition* switchOperand = current->peek(-1);
 
-        if (jsop_compare(JSOP_STRICTEQ, switchOperand, caseOperand))
+        if (!jsop_compare(JSOP_STRICTEQ, switchOperand, caseOperand))
             return ControlStatus_Error;
         MInstruction* cmpResult = current->pop()->toInstruction();
         MOZ_ASSERT(!cmpResult->isEffectful());

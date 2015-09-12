@@ -1812,7 +1812,11 @@ bool DoesRenderTargetViewNeedsRecreating(ID3D11Device *device)
     deviceContext->CopyResource(cpuTexture, offscreenTexture);
 
     D3D11_MAPPED_SUBRESOURCE mapped;
-    deviceContext->Map(cpuTexture, 0, D3D11_MAP_READ, 0, &mapped);
+    hr = deviceContext->Map(cpuTexture, 0, D3D11_MAP_READ, 0, &mapped);
+    if (FAILED(hr)) {
+        gfxCriticalNote << "DoesRecreatingMapFailed " << hexa(hr);
+        return false;
+    }
     int resultColor = *(int*)mapped.pData;
     deviceContext->Unmap(cpuTexture, 0);
     cpuTexture->Release();

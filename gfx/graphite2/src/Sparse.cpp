@@ -30,7 +30,7 @@ of the License or (at your option) any later version.
 
 using namespace graphite2;
 
-sparse::chunk sparse::empty_chunk = {0,0};
+const sparse::chunk sparse::empty_chunk = {0,0};
 
 sparse::~sparse() throw()
 {

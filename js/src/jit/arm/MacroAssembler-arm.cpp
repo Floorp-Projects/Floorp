@@ -1913,12 +1913,6 @@ MacroAssemblerARMCompat::add32(Imm32 imm, Register dest)
 }
 
 void
-MacroAssemblerARMCompat::xor32(Imm32 imm, Register dest)
-{
-    ma_eor(imm, dest, SetCC);
-}
-
-void
 MacroAssemblerARMCompat::add32(Imm32 imm, const Address& dest)
 {
     ScratchRegisterScope scratch(asMasm());
@@ -1940,26 +1934,6 @@ MacroAssemblerARMCompat::sub32(Register src, Register dest)
 }
 
 void
-MacroAssemblerARMCompat::and32(Register src, Register dest)
-{
-    ma_and(src, dest, SetCC);
-}
-
-void
-MacroAssemblerARMCompat::and32(Imm32 imm, Register dest)
-{
-    ma_and(imm, dest, SetCC);
-}
-
-void
-MacroAssemblerARMCompat::and32(const Address& src, Register dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-    load32(src, scratch);
-    ma_and(scratch, dest, SetCC);
-}
-
-void
 MacroAssemblerARMCompat::addPtr(Register src, Register dest)
 {
     ma_add(src, dest);
@@ -1971,78 +1945,6 @@ MacroAssemblerARMCompat::addPtr(const Address& src, Register dest)
     ScratchRegisterScope scratch(asMasm());
     load32(src, scratch);
     ma_add(scratch, dest, SetCC);
-}
-
-void
-MacroAssemblerARMCompat::not32(Register reg)
-{
-    ma_mvn(reg, reg);
-}
-
-void
-MacroAssemblerARMCompat::and32(Imm32 imm, const Address& dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-    load32(dest, scratch);
-    ma_and(imm, scratch);
-    store32(scratch, dest);
-}
-
-void
-MacroAssemblerARMCompat::or32(Imm32 imm, const Address& dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-    load32(dest, scratch);
-    ma_orr(imm, scratch);
-    store32(scratch, dest);
-}
-
-void
-MacroAssemblerARMCompat::or32(Imm32 imm, Register dest)
-{
-    ma_orr(imm, dest);
-}
-
-void
-MacroAssemblerARMCompat::or32(Register src, Register dest)
-{
-    ma_orr(src, dest);
-}
-
-void
-MacroAssemblerARMCompat::xorPtr(Imm32 imm, Register dest)
-{
-    ma_eor(imm, dest);
-}
-
-void
-MacroAssemblerARMCompat::xorPtr(Register src, Register dest)
-{
-    ma_eor(src, dest);
-}
-
-void
-MacroAssemblerARMCompat::orPtr(Imm32 imm, Register dest)
-{
-    ma_orr(imm, dest);
-}
-
-void
-MacroAssemblerARMCompat::orPtr(Register src, Register dest)
-{
-    ma_orr(src, dest);
-}
-
-void
-MacroAssemblerARMCompat::andPtr(Imm32 imm, Register dest)
-{
-    ma_and(imm, dest);
-}
-
-void
-MacroAssemblerARMCompat::andPtr(Register src, Register dest)
-{
-    ma_and(src, dest);
 }
 
 void

@@ -34,15 +34,14 @@ of the License or (at your option) any later version.
 
 using namespace graphite2;
 
-Slot::Slot() :
+Slot::Slot(int16 *user_attrs) :
     m_next(NULL), m_prev(NULL),
     m_glyphid(0), m_realglyphid(0), m_original(0), m_before(0), m_after(0),
     m_index(0), m_parent(NULL), m_child(NULL), m_sibling(NULL),
     m_position(0, 0), m_shift(0, 0), m_advance(0, 0),
     m_attach(0, 0), m_with(0, 0), m_just(0.),
-    m_flags(0), m_attLevel(0), m_bidiCls(-1), m_bidiLevel(0), m_justs(NULL)
-    // Do not set m_userAttr since it is set *before* new is called since this
-    // is used as a positional new to reset the GrSlot
+    m_flags(0), m_attLevel(0), m_bidiCls(-1), m_bidiLevel(0), 
+    m_userAttr(user_attrs), m_justs(NULL)
 {
 }
 
@@ -86,17 +85,17 @@ void Slot::update(int /*numGrSlots*/, int numCharInfo, Position &relpos)
     m_position = m_position + relpos;
 }
 
-Position Slot::finalise(const Segment *seg, const Font *font, Position & base, Rect & bbox, uint8 attrLevel, float & clusterMin, bool isFinal)
+Position Slot::finalise(const Segment *seg, const Font *font, Position & base, Rect & bbox, uint8 attrLevel, float & clusterMin, bool rtl, bool isFinal)
 {
     SlotCollision *coll = NULL;
     if (attrLevel && m_attLevel > attrLevel) return Position(0, 0);
     float scale = font ? font->scale() : 1.0f;
-    Position shift(m_shift.x * ((seg->dir() & 1) * -2 + 1) + m_just, m_shift.y);
+    Position shift(m_shift.x * (rtl * -2 + 1) + m_just, m_shift.y);
     float tAdvance = m_advance.x + m_just;
     if (isFinal && (coll = seg->collisionInfo(this)))
     {
         const Position &collshift = coll->offset();
-        if (!(coll->flags() & SlotCollision::COLL_KERN) || (seg->dir() & 1))
+        if (!(coll->flags() & SlotCollision::COLL_KERN) || rtl)
             shift = shift + collshift;
     }
     const GlyphFace * glyphFace = seg->getFace()->glyphs().glyphSafe(glyph());
@@ -134,13 +133,13 @@ Position Slot::finalise(const Segment *seg, const Font *font, Position & base, R
 
     if (m_child && m_child != this && m_child->attachedTo() == this)
     {
-        Position tRes = m_child->finalise(seg, font, m_position, bbox, attrLevel, clusterMin, isFinal);
+        Position tRes = m_child->finalise(seg, font, m_position, bbox, attrLevel, clusterMin, rtl, isFinal);
         if ((!m_parent || m_advance.x >= 0.5f) && tRes.x > res.x) res = tRes;
     }
 
     if (m_parent && m_sibling && m_sibling != this && m_sibling->attachedTo() == m_parent)
     {
-        Position tRes = m_sibling->finalise(seg, font, base, bbox, attrLevel, clusterMin, isFinal);
+        Position tRes = m_sibling->finalise(seg, font, base, bbox, attrLevel, clusterMin, rtl, isFinal);
         if (tRes.x > res.x) res = tRes;
     }
     
@@ -154,12 +153,14 @@ Position Slot::finalise(const Segment *seg, const Font *font, Position & base, R
     return res;
 }
 
-int32 Slot::clusterMetric(const Segment *seg, uint8 metric, uint8 attrLevel)
+int32 Slot::clusterMetric(const Segment *seg, uint8 metric, uint8 attrLevel, bool rtl)
 {
     Position base;
+    if (glyph() >= seg->getFace()->glyphs().numGlyphs())
+        return 0;
     Rect bbox = seg->theGlyphBBoxTemporary(glyph());
     float clusterMin = 0.;
-    Position res = finalise(seg, NULL, base, bbox, attrLevel, clusterMin, false);
+    Position res = finalise(seg, NULL, base, bbox, attrLevel, clusterMin, rtl, false);
 
     switch (metrics(metric))
     {
@@ -192,7 +193,6 @@ int32 Slot::clusterMetric(const Segment *seg, uint8 metric, uint8 attrLevel)
 
 int Slot::getAttr(const Segment *seg, attrCode ind, uint8 subindex) const
 {
-    if (!this) return 0;
     if (ind == gr_slatUserDefnV1)
     {
         ind = gr_slatUserDefn;
@@ -220,9 +220,7 @@ int Slot::getAttr(const Segment *seg, attrCode ind, uint8 subindex) const
     case gr_slatAttLevel :  return m_attLevel;
     case gr_slatBreak :     return seg->charinfo(m_original)->breakWeight();
     case gr_slatCompRef :   return 0;
-    case gr_slatDir :       if (m_bidiCls == -1)
-                                const_cast<Slot *>(this)->setBidiClass(int8(seg->glyphAttr(gid(), seg->silf()->aBidi())));
-                            return m_bidiCls;
+    case gr_slatDir :       return seg->dir() & 1;
     case gr_slatInsert :    return isInsertBefore();
     case gr_slatPosX :      return int(m_position.x); // but need to calculate it
     case gr_slatPosY :      return int(m_position.y);
@@ -272,7 +270,6 @@ int Slot::getAttr(const Segment *seg, attrCode ind, uint8 subindex) const
 
 void Slot::setAttr(Segment *seg, attrCode ind, uint8 subindex, int16 value, const SlotMap & map)
 {
-    if (!this) return;
     if (ind == gr_slatUserDefnV1)
     {
         ind = gr_slatUserDefn;
@@ -299,7 +296,7 @@ void Slot::setAttr(Segment *seg, attrCode ind, uint8 subindex, int16 value, cons
             if (!other->isChildOf(this) && other->child(this))
             {
                 attachTo(other);
-                if (((seg->dir() & 1) != 0) ^ (idx > subindex))
+                if ((map.dir() != 0) ^ (idx > subindex))
                     m_with = Position(advance(), 0);
                 else        // normal match to previous root
                     m_attach = Position(other->advance(), 0);
@@ -322,7 +319,7 @@ void Slot::setAttr(Segment *seg, attrCode ind, uint8 subindex, int16 value, cons
         seg->charinfo(m_original)->breakWeight(value);
         break;
     case gr_slatCompRef :   break;      // not sure what to do here
-    case gr_slatDir :       m_bidiCls = int8(value); break;
+    case gr_slatDir : break;
     case gr_slatInsert :
         markInsertBefore(value? true : false);
         break;
@@ -450,6 +447,7 @@ bool Slot::removeSibling(Slot *ap)
 void Slot::setGlyph(Segment *seg, uint16 glyphid, const GlyphFace * theGlyph)
 {
     m_glyphid = glyphid;
+    m_bidiCls = -1;
     if (!theGlyph)
     {
         theGlyph = seg->getFace()->glyphs().glyphSafe(glyphid);
@@ -461,6 +459,8 @@ void Slot::setGlyph(Segment *seg, uint16 glyphid, const GlyphFace * theGlyph)
         }
     }
     m_realglyphid = theGlyph->attrs()[seg->silf()->aPseudo()];
+    if (m_realglyphid > seg->getFace()->glyphs().numGlyphs())
+        m_realglyphid = 0;
     const GlyphFace *aGlyph = theGlyph;
     if (m_realglyphid)
     {
