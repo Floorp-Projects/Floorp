@@ -1345,30 +1345,10 @@ Promise::RejectInternal(JSContext* aCx,
 void
 Promise::Settle(JS::Handle<JS::Value> aValue, PromiseState aState)
 {
-#ifdef MOZ_CRASHREPORTER
-  if (!mGlobal && mFullfillmentStack) {
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    JSContext* cx = jsapi.cx();
-    JS::RootedObject stack(cx, mFullfillmentStack);
-    JSAutoCompartment ac(cx, stack);
-    JS::RootedString stackJSString(cx);
-    if (JS::BuildStackString(cx, stack, &stackJSString)) {
-      nsAutoJSString stackString;
-      if (stackString.init(cx, stackJSString)) {
-        // Put the string in the crash report here, since we're about to crash
-        CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("cced_promise_stack"),
-                                           NS_ConvertUTF16toUTF8(stackString));
-      } else {
-        JS_ClearPendingException(cx);
-      }
-    } else {
-      JS_ClearPendingException(cx);
-    }
-  }
-#endif
-
-  if (mGlobal->IsDying()) {
+  MOZ_ASSERT(mGlobal,
+             "We really should have a global here.  Except we sometimes don't "
+             "in the wild for some odd reason");
+  if (!mGlobal || mGlobal->IsDying()) {
     return;
   }
 
