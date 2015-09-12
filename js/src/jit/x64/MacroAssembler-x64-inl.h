@@ -70,6 +70,12 @@ MacroAssembler::xorPtr(Imm32 imm, Register dest)
 // Shift functions
 
 void
+MacroAssembler::lshiftPtr(Imm32 imm, Register dest)
+{
+    shlq(imm, dest);
+}
+
+void
 MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
 {
     shrq(imm, dest);
