@@ -318,13 +318,13 @@ EventListenerManager::AddEventListenerInternal(
           kAllMutationBits : MutationBitForEventType(aEventMessage));
     }
   } else if (aTypeAtom == nsGkAtoms::ondeviceorientation) {
-    EnableDevice(NS_DEVICE_ORIENTATION);
+    EnableDevice(eDeviceOrientation);
   } else if (aTypeAtom == nsGkAtoms::ondeviceproximity || aTypeAtom == nsGkAtoms::onuserproximity) {
-    EnableDevice(NS_DEVICE_PROXIMITY);
+    EnableDevice(eDeviceProximity);
   } else if (aTypeAtom == nsGkAtoms::ondevicelight) {
-    EnableDevice(NS_DEVICE_LIGHT);
+    EnableDevice(eDeviceLight);
   } else if (aTypeAtom == nsGkAtoms::ondevicemotion) {
-    EnableDevice(NS_DEVICE_MOTION);
+    EnableDevice(eDeviceMotion);
 #ifdef MOZ_B2G
   } else if (aTypeAtom == nsGkAtoms::onmoztimechange) {
     nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
@@ -334,12 +334,12 @@ EventListenerManager::AddEventListenerInternal(
   } else if (aTypeAtom == nsGkAtoms::onmoznetworkupload) {
     nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
     if (window) {
-      window->EnableNetworkEvent(NS_NETWORK_UPLOAD_EVENT);
+      window->EnableNetworkEvent(eNetworkUpload);
     }
   } else if (aTypeAtom == nsGkAtoms::onmoznetworkdownload) {
     nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
     if (window) {
-      window->EnableNetworkEvent(NS_NETWORK_DOWNLOAD_EVENT);
+      window->EnableNetworkEvent(eNetworkDownload);
     }
 #endif // MOZ_B2G
   } else if (aTypeAtom == nsGkAtoms::ontouchstart ||
@@ -383,8 +383,8 @@ EventListenerManager::AddEventListenerInternal(
       window->SetHasMouseEnterLeaveEventListeners();
     }
 #ifdef MOZ_GAMEPAD
-  } else if (aEventMessage >= NS_GAMEPAD_START &&
-             aEventMessage <= NS_GAMEPAD_END) {
+  } else if (aEventMessage >= eGamepadEventFirst &&
+             aEventMessage <= eGamepadEventLast) {
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (window) {
       window->SetHasGamepadEventListener();
@@ -419,11 +419,11 @@ bool
 EventListenerManager::IsDeviceType(EventMessage aEventMessage)
 {
   switch (aEventMessage) {
-    case NS_DEVICE_ORIENTATION:
-    case NS_DEVICE_MOTION:
-    case NS_DEVICE_LIGHT:
-    case NS_DEVICE_PROXIMITY:
-    case NS_USER_PROXIMITY:
+    case eDeviceOrientation:
+    case eDeviceMotion:
+    case eDeviceLight:
+    case eDeviceProximity:
+    case eUserProximity:
       return true;
     default:
       break;
@@ -440,17 +440,17 @@ EventListenerManager::EnableDevice(EventMessage aEventMessage)
   }
 
   switch (aEventMessage) {
-    case NS_DEVICE_ORIENTATION:
+    case eDeviceOrientation:
       window->EnableDeviceSensor(SENSOR_ORIENTATION);
       break;
-    case NS_DEVICE_PROXIMITY:
-    case NS_USER_PROXIMITY:
+    case eDeviceProximity:
+    case eUserProximity:
       window->EnableDeviceSensor(SENSOR_PROXIMITY);
       break;
-    case NS_DEVICE_LIGHT:
+    case eDeviceLight:
       window->EnableDeviceSensor(SENSOR_LIGHT);
       break;
-    case NS_DEVICE_MOTION:
+    case eDeviceMotion:
       window->EnableDeviceSensor(SENSOR_ACCELERATION);
       window->EnableDeviceSensor(SENSOR_LINEAR_ACCELERATION);
       window->EnableDeviceSensor(SENSOR_GYROSCOPE);
@@ -470,19 +470,19 @@ EventListenerManager::DisableDevice(EventMessage aEventMessage)
   }
 
   switch (aEventMessage) {
-    case NS_DEVICE_ORIENTATION:
+    case eDeviceOrientation:
       window->DisableDeviceSensor(SENSOR_ORIENTATION);
       break;
-    case NS_DEVICE_MOTION:
+    case eDeviceMotion:
       window->DisableDeviceSensor(SENSOR_ACCELERATION);
       window->DisableDeviceSensor(SENSOR_LINEAR_ACCELERATION);
       window->DisableDeviceSensor(SENSOR_GYROSCOPE);
       break;
-    case NS_DEVICE_PROXIMITY:
-    case NS_USER_PROXIMITY:
+    case eDeviceProximity:
+    case eUserProximity:
       window->DisableDeviceSensor(SENSOR_PROXIMITY);
       break;
-    case NS_DEVICE_LIGHT:
+    case eDeviceLight:
       window->DisableDeviceSensor(SENSOR_LIGHT);
       break;
     default:
@@ -510,9 +510,9 @@ EventListenerManager::RemoveEventListenerInternal(
   uint32_t typeCount = 0;
   bool deviceType = IsDeviceType(aEventMessage);
 #ifdef MOZ_B2G
-  bool timeChangeEvent = (aEventMessage == NS_MOZ_TIME_CHANGE_EVENT);
-  bool networkEvent = (aEventMessage == NS_NETWORK_UPLOAD_EVENT ||
-                       aEventMessage == NS_NETWORK_DOWNLOAD_EVENT);
+  bool timeChangeEvent = (aEventMessage == eTimeChange);
+  bool networkEvent = (aEventMessage == eNetworkUpload ||
+                       aEventMessage == eNetworkDownload);
 #endif // MOZ_B2G
 
   for (uint32_t i = 0; i < count; ++i) {

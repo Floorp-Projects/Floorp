@@ -17,6 +17,7 @@ CppUnitTests([
     'TestEndian',
     'TestEnumSet',
     'TestFloatingPoint',
+    'TestFunction',
     'TestIntegerPrintfMacros',
     'TestIntegerRange',
     'TestJSONWriter',

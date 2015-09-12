@@ -702,7 +702,7 @@ nsThread::HasPendingEvents(bool* aResult)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  *aResult = mEvents->GetEvent(false, nullptr);
+  *aResult = mEvents->HasPendingEvent();
   return NS_OK;
 }
 
