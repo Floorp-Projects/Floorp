@@ -52,12 +52,15 @@ add_task(function* test() {
   }
 
   let win1 = yield BrowserTestUtils.openNewBrowserWindow();
+  yield new Promise(resolve => waitForFocus(resolve, win1));
   yield new Promise(resolve => testPopupBlockerMenuItem(false, win1, resolve));
 
   let win2 = yield BrowserTestUtils.openNewBrowserWindow({private: true});
+  yield new Promise(resolve => waitForFocus(resolve, win2));
   yield new Promise(resolve => testPopupBlockerMenuItem(true, win2, resolve));
 
   let win3 = yield BrowserTestUtils.openNewBrowserWindow();
+  yield new Promise(resolve => waitForFocus(resolve, win3));
   yield new Promise(resolve => testPopupBlockerMenuItem(false, win3, resolve));
 
   // Cleanup
