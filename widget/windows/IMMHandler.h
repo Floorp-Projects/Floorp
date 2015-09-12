@@ -353,7 +353,7 @@ protected:
   bool GetTargetClauseRange(uint32_t *aOffset, uint32_t *aLength = nullptr);
 
   /**
-   * DispatchCompositionChangeEvent() dispatches NS_COMPOSITION_CHANGE event
+   * DispatchCompositionChangeEvent() dispatches eCompositionChange event
    * with clause information (it'll be retrieved by CreateTextRangeArray()).
    * I.e., this should be called only during composing.  If a composition is
    * being committed, only HandleCompositionEnd() should be called.

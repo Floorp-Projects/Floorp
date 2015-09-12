@@ -3408,7 +3408,7 @@ nsStyleText::nsStyleText(void)
   mRubyPosition = NS_STYLE_RUBY_POSITION_OVER;
   mTextSizeAdjust = NS_STYLE_TEXT_SIZE_ADJUST_AUTO;
   mTextCombineUpright = NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE;
-  mControlCharacterVisibility = NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN;
+  mControlCharacterVisibility = NS_STYLE_CONTROL_CHARACTER_VISIBILITY_VISIBLE;
 
   mLetterSpacing.SetNormalValue();
   mLineHeight.SetNormalValue();

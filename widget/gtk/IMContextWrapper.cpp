@@ -915,7 +915,7 @@ IMContextWrapper::OnSelectionChange(nsWindow* aCaller,
 
     // The focused editor might have placeholder text with normal text node.
     // In such case, the text node must be removed from a compositionstart
-    // event handler.  So, we're dispatching NS_COMPOSITION_START,
+    // event handler.  So, we're dispatching eCompositionStart,
     // we should ignore selection change notification.
     if (mCompositionState == eCompositionState_CompositionStartDispatched) {
         if (NS_WARN_IF(!mSelection.IsValid())) {
@@ -1303,7 +1303,7 @@ IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext)
         ("GTKIM: %p   DispatchCompositionStart(), FAILED, mCompositionStart=%u",
          this, mCompositionStart));
     mCompositionState = eCompositionState_CompositionStartDispatched;
-    WidgetCompositionEvent compEvent(true, NS_COMPOSITION_START,
+    WidgetCompositionEvent compEvent(true, eCompositionStart,
                                      mLastFocusedWindow);
     InitEvent(compEvent);
     nsCOMPtr<nsIWidget> kungFuDeathGrip = mLastFocusedWindow;
@@ -1364,7 +1364,7 @@ IMContextWrapper::DispatchCompositionChangeEvent(
         }
     }
 
-    WidgetCompositionEvent compositionChangeEvent(true, NS_COMPOSITION_CHANGE,
+    WidgetCompositionEvent compositionChangeEvent(true, eCompositionChange,
                                                   mLastFocusedWindow);
     InitEvent(compositionChangeEvent);
 
@@ -1439,8 +1439,8 @@ IMContextWrapper::DispatchCompositionCommitEvent(
 
     nsRefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
 
-    EventMessage message = aCommitString ? NS_COMPOSITION_COMMIT :
-                                           NS_COMPOSITION_COMMIT_AS_IS;
+    EventMessage message = aCommitString ? eCompositionCommit :
+                                           eCompositionCommitAsIs;
     mCompositionState = eCompositionState_NotComposing;
     mCompositionStart = UINT32_MAX;
     mCompositionTargetRange.Clear();
@@ -1449,7 +1449,7 @@ IMContextWrapper::DispatchCompositionCommitEvent(
     WidgetCompositionEvent compositionCommitEvent(true, message,
                                                   mLastFocusedWindow);
     InitEvent(compositionCommitEvent);
-    if (message == NS_COMPOSITION_COMMIT) {
+    if (message == eCompositionCommit) {
         compositionCommitEvent.mData = *aCommitString;
     }
 
@@ -1811,7 +1811,7 @@ IMContextWrapper::SetCursorPosition(GtkIMContext* aContext)
 
     WidgetQueryContentEvent charRect(true,
                                      useCaret ? eQueryCaretRect :
-                                                NS_QUERY_TEXT_RECT,
+                                                eQueryTextRect,
                                      mLastFocusedWindow);
     if (useCaret) {
         charRect.InitForQueryCaretRect(mSelection.mOffset);
@@ -1833,7 +1833,7 @@ IMContextWrapper::SetCursorPosition(GtkIMContext* aContext)
     if (!charRect.mSucceeded) {
         MOZ_LOG(gGtkIMLog, LogLevel::Error,
             ("GTKIM: %p   SetCursorPosition(), FAILED, %s was failed",
-             this, useCaret ? "eQueryCaretRect" : "NS_QUERY_TEXT_RECT"));
+             this, useCaret ? "eQueryCaretRect" : "eQueryTextRect"));
         return;
     }
 

@@ -1431,10 +1431,12 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
         allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
       case Getter:
+      case GetterNoExpressionClosure:
         flags = JSFunction::INTERPRETED_GETTER;
         allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
       case Setter:
+      case SetterNoExpressionClosure:
         flags = JSFunction::INTERPRETED_SETTER;
         allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
@@ -1456,7 +1458,7 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
 static bool
 MatchOrInsertSemicolon(TokenStream& ts, TokenStream::Modifier modifier = TokenStream::None)
 {
-    TokenKind tt;
+    TokenKind tt = TOK_EOF;
     if (!ts.peekTokenSameLine(&tt, modifier))
         return false;
     if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
@@ -1860,7 +1862,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
         Node duplicatedArg = null();
         bool disallowDuplicateArgs = kind == Arrow || kind == Method || kind == ClassConstructor;
 
-        if (kind == Getter) {
+        if (IsGetterKind(kind)) {
             report(ParseError, false, null(), JSMSG_ACCESSOR_WRONG_ARGS, "getter", "no", "s");
             return false;
         }
@@ -1926,7 +1928,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
 
               case TOK_TRIPLEDOT:
               {
-                if (kind == Setter) {
+                if (IsSetterKind(kind)) {
                     report(ParseError, false, null(),
                            JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
                     return false;
@@ -2003,7 +2005,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                     return false;
             }
 
-            if (parenFreeArrow || kind == Setter)
+            if (parenFreeArrow || IsSetterKind(kind))
                 break;
 
             if (!tokenStream.matchToken(&matched, TOK_COMMA))
@@ -2017,7 +2019,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
             if (!tokenStream.getToken(&tt))
                 return false;
             if (tt != TOK_RP) {
-                if (kind == Setter) {
+                if (IsSetterKind(kind)) {
                     report(ParseError, false, null(),
                            JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
                     return false;
@@ -2030,7 +2032,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
 
         if (!hasDefaults)
             funbox->length = pc->numArgs() - *hasRest;
-    } else if (kind == Setter) {
+    } else if (IsSetterKind(kind)) {
         report(ParseError, false, null(), JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
         return false;
     }
@@ -2781,7 +2783,9 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(InHandling inHandling,
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return false;
     if (tt != TOK_LC) {
-        if (funbox->isStarGenerator() || kind == Method || IsConstructorKind(kind)) {
+        if (funbox->isStarGenerator() || kind == Method ||
+            kind == GetterNoExpressionClosure || kind == SetterNoExpressionClosure ||
+            IsConstructorKind(kind)) {
             report(ParseError, false, null(), JSMSG_CURLY_BEFORE_BODY);
             return false;
         }
@@ -3083,9 +3087,9 @@ Parser<ParseHandler>::statements(YieldHandling yieldHandling)
     bool canHaveDirectives = pc->atBodyLevel();
     bool afterReturn = false;
     bool warnedAboutStatementsAfterReturn = false;
-    uint32_t statementBegin;
+    uint32_t statementBegin = 0;
     for (;;) {
-        TokenKind tt;
+        TokenKind tt = TOK_EOF;
         if (!tokenStream.peekToken(&tt, TokenStream::Operand)) {
             if (tokenStream.isEOF())
                 isUnexpectedEOF_ = true;
@@ -3161,7 +3165,7 @@ template <typename ParseHandler>
 bool
 Parser<ParseHandler>::matchLabel(YieldHandling yieldHandling, MutableHandle<PropertyName*> label)
 {
-    TokenKind tt;
+    TokenKind tt = TOK_EOF;
     if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
         return false;
 
@@ -5650,7 +5654,7 @@ Parser<ParseHandler>::switchStatement(YieldHandling yieldHandling)
 
         bool afterReturn = false;
         bool warnedAboutStatementsAfterReturn = false;
-        uint32_t statementBegin;
+        uint32_t statementBegin = 0;
         while (true) {
             if (!tokenStream.peekToken(&tt, TokenStream::Operand))
                 return null();
@@ -5813,7 +5817,7 @@ Parser<ParseHandler>::returnStatement(YieldHandling yieldHandling)
     //
     // This is ugly, but we don't want to require a semicolon.
     Node exprNode;
-    TokenKind tt;
+    TokenKind tt = TOK_EOF;
     if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
         return null();
     TokenStream::Modifier modifier = TokenStream::Operand;
@@ -5893,7 +5897,7 @@ Parser<ParseHandler>::yieldExpression(InHandling inHandling)
 
         Node exprNode;
         ParseNodeKind kind = PNK_YIELD;
-        TokenKind tt;
+        TokenKind tt = TOK_EOF;
         if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
             return null();
         switch (tt) {
@@ -5962,7 +5966,7 @@ Parser<ParseHandler>::yieldExpression(InHandling inHandling)
 
         // Legacy generators do not require a value.
         Node exprNode;
-        TokenKind tt;
+        TokenKind tt = TOK_EOF;
         if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
             return null();
         switch (tt) {
@@ -6093,7 +6097,7 @@ Parser<ParseHandler>::throwStatement(YieldHandling yieldHandling)
     uint32_t begin = pos().begin;
 
     /* ECMA-262 Edition 3 says 'throw [no LineTerminator here] Expr'. */
-    TokenKind tt;
+    TokenKind tt = TOK_EOF;
     if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
         return null();
     if (tt == TOK_EOF || tt == TOK_SEMI || tt == TOK_RC) {
@@ -6319,8 +6323,10 @@ JSOpFromPropertyType(PropertyType propType)
 {
     switch (propType) {
       case PropertyType::Getter:
+      case PropertyType::GetterNoExpressionClosure:
         return JSOP_INITPROP_GETTER;
       case PropertyType::Setter:
+      case PropertyType::SetterNoExpressionClosure:
         return JSOP_INITPROP_SETTER;
       case PropertyType::Normal:
       case PropertyType::Method:
@@ -6339,8 +6345,12 @@ FunctionSyntaxKindFromPropertyType(PropertyType propType)
     switch (propType) {
       case PropertyType::Getter:
         return Getter;
+      case PropertyType::GetterNoExpressionClosure:
+        return GetterNoExpressionClosure;
       case PropertyType::Setter:
         return Setter;
+      case PropertyType::SetterNoExpressionClosure:
+        return SetterNoExpressionClosure;
       case PropertyType::Method:
         return Method;
       case PropertyType::GeneratorMethod:
@@ -6474,6 +6484,10 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
             return null();
         }
 
+        if (propType == PropertyType::Getter)
+            propType = PropertyType::GetterNoExpressionClosure;
+        if (propType == PropertyType::Setter)
+            propType = PropertyType::SetterNoExpressionClosure;
         if (!isStatic && propAtom == context->names().constructor) {
             if (propType != PropertyType::Method) {
                 report(ParseError, false, propName, JSMSG_BAD_METHOD_DEF);
@@ -6494,8 +6508,8 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
         // (bug 883377).
         RootedPropertyName funName(context);
         switch (propType) {
-          case PropertyType::Getter:
-          case PropertyType::Setter:
+          case PropertyType::GetterNoExpressionClosure:
+          case PropertyType::SetterNoExpressionClosure:
             funName = nullptr;
             break;
           case PropertyType::Constructor:
@@ -7069,12 +7083,19 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
       case TOK_ARROW: {
         // A line terminator between ArrowParameters and the => should trigger a SyntaxError.
         tokenStream.ungetToken();
-        TokenKind next;
+        TokenKind next = TOK_EOF;
         if (!tokenStream.peekTokenSameLine(&next) || next != TOK_ARROW) {
             report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
                    "expression", TokenKindToDesc(TOK_ARROW));
             return null();
         }
+        tokenStream.consumeKnownToken(TOK_ARROW);
+
+        bool isBlock = false;
+        if (!tokenStream.peekToken(&next, TokenStream::Operand))
+            return null();
+        if (next == TOK_LC)
+            isBlock = true;
 
         tokenStream.seek(start);
         if (!abortIfSyntaxParser())
@@ -7089,7 +7110,40 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
             return null();
         }
 
-        return functionDef(inHandling, yieldHandling, nullptr, Arrow, NotGenerator);
+        Node arrowFunc = functionDef(inHandling, yieldHandling, nullptr, Arrow, NotGenerator);
+        if (!arrowFunc)
+            return null();
+
+        if (isBlock) {
+            // This arrow function could be a non-trailing member of a comma
+            // expression or a semicolon terminating a full expression.  If so,
+            // the next token is that comma/semicolon, gotten with None:
+            //
+            //   a => {}, b; // as if (a => {}), b;
+            //   a => {};
+            //
+            // But if this arrow function ends a statement, ASI permits the
+            // next token to start an expression statement.  In that case the
+            // next token must be gotten as Operand:
+            //
+            //   a => {} // complete expression statement
+            //   /x/g;   // regular expression as a statement, *not* division
+            //
+            // Getting the second case right requires the first token-peek
+            // after the arrow function use Operand, and that peek must occur
+            // before Parser::expr() looks for a comma.  Do so here, then
+            // immediately add the modifier exception needed for the first
+            // case.
+            //
+            // Note that the second case occurs *only* if the arrow function
+            // has block body.  An arrow function not ending in such, ends in
+            // another AssignmentExpression that we can inductively assume was
+            // peeked consistently.
+            if (!tokenStream.peekToken(&ignored, TokenStream::Operand))
+                return null();
+            tokenStream.addModifierException(TokenStream::NoneIsOperand);
+        }
+        return arrowFunc;
       }
 
       default:
@@ -7179,7 +7233,7 @@ Parser<ParseHandler>::reportIfNotValidSimpleAssignmentTarget(Node target, Assign
             return false;
     }
 
-    unsigned errnum;
+    unsigned errnum = 0;
     const char* extra = nullptr;
 
     switch (flavor) {

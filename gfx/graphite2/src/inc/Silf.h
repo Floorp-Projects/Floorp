@@ -94,6 +94,7 @@ public:
     uint8 maxCompPerLig() const { return m_iMaxComp; }
     uint16 numClasses() const { return m_nClass; }
     byte  flags() const { return m_flags; }
+    byte  dir() const { return m_dir; }
     uint8 numJustLevels() const { return m_numJusts; }
     Justinfo *justAttrs() const { return m_justs; }
     uint16 endLineGlyphid() const { return m_gEndLine; }
@@ -113,7 +114,7 @@ private:
     uint8           m_numPasses;
     uint8           m_numJusts;
     uint8           m_sPass, m_pPass, m_jPass, m_bPass,
-                    m_flags;
+                    m_flags, m_dir;
 
     uint8       m_aPseudo, m_aBreak, m_aUser, m_aBidi, m_aMirror, m_aPassBits,
                 m_iMaxComp, m_aCollision;
