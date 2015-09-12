@@ -642,6 +642,23 @@ public class BrowserHealthRecorder extends BroadcastReceiver implements HealthRe
                 try {
                     JSONObject json = message.getJSONObject("json");
                     JSONObject addons = json.getJSONObject("addons");
+
+                    // Treat active experiments as add-ons
+                    if (AppConstants.MOZ_SWITCHBOARD) {
+                        List<String> experiments = SwitchBoard.getActiveExperiments(GeckoAppShell.getContext());
+                        for (String experiment : experiments) {
+                            // Create a fake add-on name
+                            String fakeName = experiment + "@experiments.mozilla.org";
+                            try {
+                                // Create a dummy JSON object for the experiment.
+                                JSONObject fakeAddon = new JSONObject();
+                                fakeAddon.put("type", "experiment");
+                                addons.put(fakeName, fakeAddon);
+                            } catch (JSONException je) {
+                            }
+                        }
+                    }
+
                     Log.i(LOG_TAG, "Persisting " + addons.length() + " add-ons.");
                     profileCache.setJSONForAddons(addons);
 
