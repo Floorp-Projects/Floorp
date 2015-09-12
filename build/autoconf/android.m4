@@ -394,19 +394,6 @@ case "$target" in
     AC_SUBST(ANDROID_PLATFORM_TOOLS)
     AC_SUBST(ANDROID_BUILD_TOOLS)
 
-    MOZ_ANDROID_AAR(support-v4, 22.2.1, android, com/android/support, REQUIRED_INTERNAL_IMPL)
-    MOZ_ANDROID_AAR(recyclerview-v7, 22.2.1, android, com/android/support)
-
-    ANDROID_SUPPORT_ANNOTATIONS_JAR="$ANDROID_SDK_ROOT/extras/android/m2repository/com/android/support/support-annotations/22.2.1/support-annotations-22.2.1.jar"
-    AC_MSG_CHECKING([for support-annotations JAR])
-    if ! test -e $ANDROID_SUPPORT_ANNOTATIONS_JAR ; then
-        AC_MSG_ERROR([You must download the support-annotations lib.  Run the Android SDK tool and install the Android Support Repository under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_SUPPORT_ANNOTATIONS_JAR)])
-    fi
-    AC_MSG_RESULT([$ANDROID_SUPPORT_ANNOTATIONS_JAR])
-    AC_SUBST(ANDROID_SUPPORT_ANNOTATIONS_JAR)
-    ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB=$ANDROID_SUPPORT_ANNOTATIONS_JAR
-    AC_SUBST(ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB)
-
     dnl Google has a history of moving the Android tools around.  We don't
     dnl care where they are, so let's try to find them anywhere we can.
     ALL_ANDROID_TOOLS_PATHS="$ANDROID_TOOLS$all_android_build_tools:$ANDROID_PLATFORM_TOOLS"
@@ -431,6 +418,19 @@ case "$target" in
     if test -z "$ADB" -o "$ADB" = ":"; then
       AC_MSG_ERROR([The program adb was not found.  Use --with-android-sdk={android-sdk-dir}.])
     fi
+
+    MOZ_ANDROID_AAR(support-v4, 22.2.1, android, com/android/support, REQUIRED_INTERNAL_IMPL)
+    MOZ_ANDROID_AAR(recyclerview-v7, 22.2.1, android, com/android/support)
+
+    ANDROID_SUPPORT_ANNOTATIONS_JAR="$ANDROID_SDK_ROOT/extras/android/m2repository/com/android/support/support-annotations/22.2.1/support-annotations-22.2.1.jar"
+    AC_MSG_CHECKING([for support-annotations JAR])
+    if ! test -e $ANDROID_SUPPORT_ANNOTATIONS_JAR ; then
+        AC_MSG_ERROR([You must download the support-annotations lib.  Run the Android SDK tool and install the Android Support Repository under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_SUPPORT_ANNOTATIONS_JAR)])
+    fi
+    AC_MSG_RESULT([$ANDROID_SUPPORT_ANNOTATIONS_JAR])
+    AC_SUBST(ANDROID_SUPPORT_ANNOTATIONS_JAR)
+    ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB=$ANDROID_SUPPORT_ANNOTATIONS_JAR
+    AC_SUBST(ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB)
     ;;
 esac
 
