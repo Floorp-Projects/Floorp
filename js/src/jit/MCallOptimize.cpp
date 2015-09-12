@@ -45,6 +45,13 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return InliningStatus_NotInlined;
     }
 
+    if (!target->jitInfo() || target->jitInfo()->type() != JSJitInfo::InlinableNative) {
+        // Reaching here means we tried to inline a native for which there is no
+        // Ion specialization.
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeNoSpecialization);
+        return InliningStatus_NotInlined;
+    }
+
     // Default failure reason is observing an unsupported type.
     trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadType);
 
@@ -53,13 +60,6 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
     for (size_t i = 0; i < callInfo.argc(); i++) {
         if (shouldAbortOnPreliminaryGroups(callInfo.getArg(i)))
             return InliningStatus_NotInlined;
-    }
-
-    if (!target->jitInfo() || target->jitInfo()->type() != JSJitInfo::InlinableNative) {
-        // Reaching here means we tried to inline a native for which there is no
-        // Ion specialization.
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeNoSpecialization);
-        return InliningStatus_NotInlined;
     }
 
     switch (InlinableNative inlNative = target->jitInfo()->inlinableNative) {
