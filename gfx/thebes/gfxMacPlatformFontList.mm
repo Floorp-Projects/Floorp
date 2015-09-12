@@ -160,7 +160,7 @@ MacOSFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 
     nsRefPtr<gfxCharacterMap> charmap;
     nsresult rv;
-    bool symbolFont;
+    bool symbolFont = false; // currently ignored
 
     if (aFontInfoData && (charmap = GetCMAPFromFontInfo(aFontInfoData,
                                                         mUVSOffset,
@@ -172,7 +172,7 @@ MacOSFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
         AutoTable cmapTable(this, kCMAP);
 
         if (cmapTable) {
-            bool unicodeFont = false, symbolFont = false; // currently ignored
+            bool unicodeFont = false; // currently ignored
             uint32_t cmapLen;
             const uint8_t* cmapData =
                 reinterpret_cast<const uint8_t*>(hb_blob_get_data(cmapTable,
@@ -831,7 +831,7 @@ gfxMacPlatformFontList::GlobalFontFallback(const uint32_t aCh,
 
     CFStringRef str;
     UniChar ch[2];
-    CFIndex len = 1;
+    CFIndex length = 1;
 
     if (IS_IN_BMP(aCh)) {
         ch[0] = aCh;
@@ -845,7 +845,7 @@ gfxMacPlatformFontList::GlobalFontFallback(const uint32_t aCh,
         if (!str) {
             return nullptr;
         }
-        len = 2;
+        length = 2;
     }
 
     // use CoreText to find the fallback family
@@ -860,27 +860,27 @@ gfxMacPlatformFontList::GlobalFontFallback(const uint32_t aCh,
     }
 
     fallback = ::CTFontCreateForString(mDefaultFont, str,
-                                       ::CFRangeMake(0, len));
+                                       ::CFRangeMake(0, length));
 
     if (fallback) {
-        CFStringRef familyName = ::CTFontCopyFamilyName(fallback);
+        CFStringRef familyNameRef = ::CTFontCopyFamilyName(fallback);
         ::CFRelease(fallback);
 
-        if (familyName &&
-            ::CFStringCompare(familyName, CFSTR("LastResort"),
+        if (familyNameRef &&
+            ::CFStringCompare(familyNameRef, CFSTR("LastResort"),
                               kCFCompareCaseInsensitive) != kCFCompareEqualTo)
         {
             nsAutoTArray<UniChar, 1024> buffer;
-            CFIndex len = ::CFStringGetLength(familyName);
-            buffer.SetLength(len+1);
-            ::CFStringGetCharacters(familyName, ::CFRangeMake(0, len),
+            CFIndex familyNameLen = ::CFStringGetLength(familyNameRef);
+            buffer.SetLength(familyNameLen+1);
+            ::CFStringGetCharacters(familyNameRef, ::CFRangeMake(0, familyNameLen),
                                     buffer.Elements());
-            buffer[len] = 0;
-            nsDependentString familyName(reinterpret_cast<char16_t*>(buffer.Elements()), len);
+            buffer[familyNameLen] = 0;
+            nsDependentString familyNameString(reinterpret_cast<char16_t*>(buffer.Elements()), familyNameLen);
 
             bool needsBold;  // ignored in the system fallback case
 
-            gfxFontFamily *family = FindFamily(familyName);
+            gfxFontFamily *family = FindFamily(familyNameString);
             if (family) {
                 fontEntry = family->FindFontForStyle(*aMatchStyle, needsBold);
                 if (fontEntry) {
@@ -894,8 +894,8 @@ gfxMacPlatformFontList::GlobalFontFallback(const uint32_t aCh,
             }
         }
 
-        if (familyName) {
-            ::CFRelease(familyName);
+        if (familyNameRef) {
+            ::CFRelease(familyNameRef);
         }
     }
 
@@ -1102,12 +1102,13 @@ MacFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
                                                   kCTFontTableOptionNoOptions);
 
             if (cmapTable) {
-                bool unicodeFont = false, symbolFont = false; // ignored
                 const uint8_t *cmapData =
                     (const uint8_t*)CFDataGetBytePtr(cmapTable);
                 uint32_t cmapLen = CFDataGetLength(cmapTable);
                 nsRefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
                 uint32_t offset;
+                bool unicodeFont = false; // ignored
+                bool symbolFont = false;
                 nsresult rv;
 
                 rv = gfxFontUtils::ReadCMAP(cmapData, cmapLen, *charmap, offset,

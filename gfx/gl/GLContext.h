@@ -1537,15 +1537,15 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fStencilFunc(GLenum func, GLint ref, GLuint mask) {
+    void fStencilFunc(GLenum func, GLint reference, GLuint mask) {
         BEFORE_GL_CALL;
-        mSymbols.fStencilFunc(func, ref, mask);
+        mSymbols.fStencilFunc(func, reference, mask);
         AFTER_GL_CALL;
     }
 
-    void fStencilFuncSeparate(GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask) {
+    void fStencilFuncSeparate(GLenum frontfunc, GLenum backfunc, GLint reference, GLuint mask) {
         BEFORE_GL_CALL;
-        mSymbols.fStencilFuncSeparate(frontfunc, backfunc, ref, mask);
+        mSymbols.fStencilFuncSeparate(frontfunc, backfunc, reference, mask);
         AFTER_GL_CALL;
     }
 

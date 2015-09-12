@@ -911,19 +911,19 @@ gfxFT2FontList::AppendFacesFromFontFile(const nsCString& aFileName,
                                         StandardFile aStdFile,
                                         FT2FontFamily::Visibility aVisibility)
 {
-    nsCString faceList;
+    nsCString cachedFaceList;
     uint32_t filesize = 0, timestamp = 0;
     if (aCache) {
-        aCache->GetInfoForFile(aFileName, faceList, &timestamp, &filesize);
+        aCache->GetInfoForFile(aFileName, cachedFaceList, &timestamp, &filesize);
     }
 
     struct stat s;
     int statRetval = stat(aFileName.get(), &s);
-    if (!faceList.IsEmpty() && 0 == statRetval &&
+    if (!cachedFaceList.IsEmpty() && 0 == statRetval &&
         s.st_mtime == timestamp && s.st_size == filesize)
     {
         LOG(("using cached font info for %s", aFileName.get()));
-        AppendFacesFromCachedFaceList(aFileName, faceList, aStdFile,
+        AppendFacesFromCachedFaceList(aFileName, cachedFaceList, aStdFile,
                                       aVisibility);
         return;
     }
@@ -932,7 +932,7 @@ gfxFT2FontList::AppendFacesFromFontFile(const nsCString& aFileName,
     FT_Face dummy;
     if (FT_Err_Ok == FT_New_Face(ftLibrary, aFileName.get(), -1, &dummy)) {
         LOG(("reading font info via FreeType for %s", aFileName.get()));
-        nsCString faceList;
+        nsCString newFaceList;
         timestamp = s.st_mtime;
         filesize = s.st_size;
         for (FT_Long i = 0; i < dummy->num_faces; i++) {
@@ -940,12 +940,12 @@ gfxFT2FontList::AppendFacesFromFontFile(const nsCString& aFileName,
             if (FT_Err_Ok != FT_New_Face(ftLibrary, aFileName.get(), i, &face)) {
                 continue;
             }
-            AddFaceToList(aFileName, i, aStdFile, aVisibility, face, faceList);
+            AddFaceToList(aFileName, i, aStdFile, aVisibility, face, newFaceList);
             FT_Done_Face(face);
         }
         FT_Done_Face(dummy);
-        if (aCache && 0 == statRetval && !faceList.IsEmpty()) {
-            aCache->CacheFileInfo(aFileName, faceList, timestamp, filesize);
+        if (aCache && 0 == statRetval && !newFaceList.IsEmpty()) {
+            aCache->CacheFileInfo(aFileName, newFaceList, timestamp, filesize);
         }
     }
 }
