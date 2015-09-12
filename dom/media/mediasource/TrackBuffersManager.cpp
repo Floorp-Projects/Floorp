@@ -1598,10 +1598,8 @@ TrackBuffersManager::CheckNextInsertionIndex(TrackData& aTrackData,
   }
   for (uint32_t i = 0; i < data.Length(); i++) {
     const nsRefPtr<MediaRawData>& sample = data[i];
-    TimeInterval sampleInterval{
-      TimeUnit::FromMicroseconds(sample->mTime),
-      TimeUnit::FromMicroseconds(sample->GetEndTime())};
-    if (target.Intersects(sampleInterval)) {
+    if (sample->mTime >= target.mStart.ToMicroseconds() ||
+        sample->GetEndTime() > target.mStart.ToMicroseconds()) {
       aTrackData.mNextInsertionIndex = Some(size_t(i));
       return;
     }
