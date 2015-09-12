@@ -56,28 +56,6 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
             return InliningStatus_NotInlined;
     }
 
-    if (native == ArrayConstructor)
-        return inlineArray(callInfo);
-
-    if (native == StringConstructor)
-        return inlineStringObject(callInfo);
-
-    // Object natives.
-    if (native == obj_create)
-        return inlineObjectCreate(callInfo);
-
-    // Testing Functions
-    if (native == testingFunc_bailout)
-        return inlineBailout(callInfo);
-    if (native == testingFunc_assertFloat32)
-        return inlineAssertFloat32(callInfo);
-    if (native == testingFunc_assertRecoveredOnBailout)
-        return inlineAssertRecoveredOnBailout(callInfo);
-
-    // Bound function
-    if (native == js::CallOrConstructBoundFunction)
-        return inlineBoundFunction(callInfo, target);
-
     // Simd functions
 #define INLINE_FLOAT32X4_SIMD_ARITH_(OP)                                                         \
     if (native == js::simd_float32x4_##OP)                                                       \
@@ -232,6 +210,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
 
     switch (InlinableNative inlNative = target->jitInfo()->inlinableNative) {
       // Array natives.
+      case InlinableNative::Array:
+        return inlineArray(callInfo);
       case InlinableNative::ArrayIsArray:
         return inlineArrayIsArray(callInfo);
       case InlinableNative::ArrayPop:
@@ -346,6 +326,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineRegExpTest(callInfo);
 
       // String natives.
+      case InlinableNative::String:
+        return inlineStringObject(callInfo);
       case InlinableNative::StringSplit:
         return inlineStringSplit(callInfo);
       case InlinableNative::StringCharCodeAt:
@@ -356,6 +338,22 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineStrCharAt(callInfo);
       case InlinableNative::StringReplace:
         return inlineStrReplace(callInfo);
+
+      // Object natives.
+      case InlinableNative::ObjectCreate:
+        return inlineObjectCreate(callInfo);
+
+      // Bound function.
+      case InlinableNative::CallBoundFunction:
+        return inlineBoundFunction(callInfo, target);
+
+      // Testing functions.
+      case InlinableNative::TestBailout:
+        return inlineBailout(callInfo);
+      case InlinableNative::TestAssertFloat32:
+        return inlineAssertFloat32(callInfo);
+      case InlinableNative::TestAssertRecoveredOnBailout:
+        return inlineAssertRecoveredOnBailout(callInfo);
 
       // Slot intrinsics.
       case InlinableNative::IntrinsicUnsafeSetReservedSlot:
