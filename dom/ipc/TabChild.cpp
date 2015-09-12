@@ -2961,6 +2961,21 @@ TabChild::DidComposite(uint64_t aTransactionId,
 }
 
 void
+TabChild::DidRequestComposite(const TimeStamp& aCompositeReqStart,
+                              const TimeStamp& aCompositeReqEnd)
+{
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  if (!docShell) {
+    return;
+  }
+
+  TimelineConsumers::AddMarkerForDocShell(docShell.get(),
+    "CompositeForwardTransaction", aCompositeReqStart, MarkerTracingType::START);
+  TimelineConsumers::AddMarkerForDocShell(docShell.get(),
+    "CompositeForwardTransaction", aCompositeReqEnd, MarkerTracingType::END);
+}
+
+void
 TabChild::ClearCachedResources()
 {
   MOZ_ASSERT(mPuppetWidget);
