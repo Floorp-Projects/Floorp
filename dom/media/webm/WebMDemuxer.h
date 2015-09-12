@@ -28,8 +28,16 @@ class MediaRawDataQueue {
     mQueue.push_back(aItem);
   }
 
+  void Push(const MediaRawDataQueue& aOther) {
+    mQueue.insert(mQueue.end(), aOther.mQueue.begin(), aOther.mQueue.end());
+  }
+
   void PushFront(MediaRawData* aItem) {
     mQueue.push_front(aItem);
+  }
+
+  void PushFront(const MediaRawDataQueue& aOther) {
+    mQueue.insert(mQueue.begin(), aOther.mQueue.begin(), aOther.mQueue.end());
   }
 
   already_AddRefed<MediaRawData> PopFront() {
@@ -42,6 +50,19 @@ class MediaRawDataQueue {
     while (!mQueue.empty()) {
       mQueue.pop_front();
     }
+  }
+
+  MediaRawDataQueue& operator=(const MediaRawDataQueue& aOther) {
+    mQueue = aOther.mQueue;
+    return *this;
+  }
+
+  const nsRefPtr<MediaRawData>& First() const {
+    return mQueue.front();
+  }
+
+  const nsRefPtr<MediaRawData>& Last() const {
+    return mQueue.back();
   }
 
 private:
@@ -116,8 +137,6 @@ private:
   void EnsureUpToDateIndex();
   media::TimeIntervals GetBuffered();
   virtual nsresult SeekInternal(const media::TimeUnit& aTarget);
-  // Get the timestamp of the next keyframe
-  int64_t GetNextKeyframeTime();
 
   // Read a packet from the nestegg file. Returns nullptr if all packets for
   // the particular track have been read. Pass TrackInfo::kVideoTrack or

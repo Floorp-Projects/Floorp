@@ -91,7 +91,8 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
   , mAnimationGeneration(0)
   , mReframingStyleContexts(nullptr)
   , mPendingRestyles(ELEMENT_HAS_PENDING_RESTYLE |
-                     ELEMENT_IS_POTENTIAL_RESTYLE_ROOT)
+                     ELEMENT_IS_POTENTIAL_RESTYLE_ROOT |
+                     ELEMENT_IS_CONDITIONAL_RESTYLE_ANCESTOR)
 #ifdef DEBUG
   , mIsProcessingRestyles(false)
 #endif

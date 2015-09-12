@@ -106,6 +106,11 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
+  class NoExplicitMoveConstructorChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   ScopeChecker scopeChecker;
   ArithmeticArgChecker arithmeticArgChecker;
   TrivialCtorDtorChecker trivialCtorDtorChecker;
@@ -118,6 +123,7 @@ private:
   NonMemMovableChecker nonMemMovableChecker;
   ExplicitImplicitChecker explicitImplicitChecker;
   NoAutoTypeChecker noAutoTypeChecker;
+  NoExplicitMoveConstructorChecker noExplicitMoveConstructorChecker;
   MatchFinder astMatcher;
 };
 
@@ -675,6 +681,10 @@ AST_MATCHER(QualType, autoNonAutoableType) {
   }
   return false;
 }
+
+AST_MATCHER(CXXConstructorDecl, isExplicitMoveConstructor) {
+  return Node.isExplicit() && Node.isMoveConstructor();
+}
 }
 }
 
@@ -949,6 +959,9 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
 
   astMatcher.addMatcher(varDecl(hasType(autoNonAutoableType())).bind("node"),
                         &noAutoTypeChecker);
+
+  astMatcher.addMatcher(constructorDecl(isExplicitMoveConstructor()).bind("node"),
+                        &noExplicitMoveConstructorChecker);
 }
 
 // These enum variants determine whether an allocation has occured in the code.
@@ -1305,6 +1318,20 @@ void DiagnosticsMatcher::NoAutoTypeChecker::run(
 
   Diag.Report(D->getLocation(), ErrorID) << D->getType();
   Diag.Report(D->getLocation(), NoteID);
+}
+
+void DiagnosticsMatcher::NoExplicitMoveConstructorChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "Move constructors may not be marked explicit");
+
+  // Everything we needed to know was checked in the matcher - we just report
+  // the error here
+  const CXXConstructorDecl *D =
+    Result.Nodes.getNodeAs<CXXConstructorDecl>("node");
+
+  Diag.Report(D->getLocation(), ErrorID);
 }
 
 class MozCheckAction : public PluginASTAction {

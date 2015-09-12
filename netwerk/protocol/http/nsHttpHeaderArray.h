@@ -26,9 +26,15 @@ class nsHttpHeaderArray
 public:
     const char *PeekHeader(nsHttpAtom header) const;
 
+    enum HeaderVariety
+    {
+        eVarietyOverride,
+        eVarietyDefault,
+    };
+
     // Used by internal setters: to set header from network use SetHeaderFromNet
     nsresult SetHeader(nsHttpAtom header, const nsACString &value,
-                       bool merge = false);
+                       bool merge = false, HeaderVariety variety = eVarietyOverride);
 
     // Used by internal setters to set an empty header
     nsresult SetEmptyHeader(nsHttpAtom header);
@@ -53,7 +59,13 @@ public:
         return FindHeaderValue(header, value) != nullptr;
     }
 
-    nsresult VisitHeaders(nsIHttpHeaderVisitor *visitor);
+    enum VisitorFilter
+    {
+        eFilterAll,
+        eFilterSkipDefault,
+    };
+
+    nsresult VisitHeaders(nsIHttpHeaderVisitor *visitor, VisitorFilter filter = eFilterAll);
 
     // parse a header line, return the header atom and a pointer to the
     // header value (the substring of the header line -- do not free).
@@ -76,6 +88,7 @@ public:
     {
         nsHttpAtom header;
         nsCString value;
+        HeaderVariety variety = eVarietyOverride;
 
         struct MatchHeader {
           bool Equals(const nsEntry &entry, const nsHttpAtom &header) const {
@@ -188,6 +201,7 @@ nsHttpHeaderArray::MergeHeader(nsHttpAtom header,
         }
     }
     entry->value.Append(value);
+    entry->variety = eVarietyOverride;
 }
 
 inline bool

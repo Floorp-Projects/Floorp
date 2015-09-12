@@ -166,6 +166,12 @@
             "url": "/_mozilla/service-workers/service-worker/fetch-frame-resource.https.html"
           }
         ],
+        "service-workers/service-worker/fetch-header-visibility.https.html": [
+          {
+            "path": "service-workers/service-worker/fetch-header-visibility.https.html",
+            "url": "/_mozilla/service-workers/service-worker/fetch-header-visibility.https.html"
+          }
+        ],
         "service-workers/service-worker/fetch-mixed-content-to-inscope.https.html": [
           {
             "path": "service-workers/service-worker/fetch-mixed-content-to-inscope.https.html",

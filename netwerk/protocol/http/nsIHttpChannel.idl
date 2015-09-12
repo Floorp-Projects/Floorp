@@ -14,7 +14,7 @@ interface nsIHttpHeaderVisitor;
  * the inspection of the resulting HTTP response status and headers when they
  * become available.
  */
-[builtinclass, scriptable, uuid(182ee0b9-e3c1-4426-9db3-70814ea7ed24)]
+[builtinclass, scriptable, uuid(46ca0df4-bb4d-423a-9b3e-2fb0988cd1f3)]
 interface nsIHttpChannel : nsIChannel
 {
     /**************************************************************************
@@ -152,6 +152,16 @@ interface nsIHttpChannel : nsIChannel
      *        the header visitor instance.
      */
     void visitRequestHeaders(in nsIHttpHeaderVisitor aVisitor);
+
+    /**
+     * Call this method to visit all non-default (UA-provided) request headers.
+     * Calling setRequestHeader while visiting request headers has undefined
+     * behavior. Don't do it!
+     *
+     * @param aVisitor
+     *        the header visitor instance.
+     */
+    void visitNonDefaultRequestHeaders(in nsIHttpHeaderVisitor aVisitor);
 
     /**
      * This attribute is a hint to the channel to indicate whether or not
