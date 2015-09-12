@@ -12,7 +12,7 @@ MOZ_ARG_WITH_STRING(android-ndk,
 
 MOZ_ARG_WITH_STRING(android-toolchain,
 [  --with-android-toolchain=DIR
-                          location of the android toolchain],
+                          location of the Android toolchain],
     android_toolchain=$withval)
 
 MOZ_ARG_WITH_STRING(android-gnu-compiler-version,
@@ -303,118 +303,100 @@ fi
 
 ])
 
+dnl Configure an Android SDK.
+dnl Arg 1: target SDK version, like 22.
+dnl Arg 2: build tools version, like 22.0.1.
 AC_DEFUN([MOZ_ANDROID_SDK],
 [
 
 MOZ_ARG_WITH_STRING(android-sdk,
 [  --with-android-sdk=DIR
-                          location where the Android SDK can be found (base directory, e.g. .../android/platforms/android-6)],
-    android_sdk=$withval)
+                          location where the Android SDK can be found (like ~/.mozbuild/android-sdk-linux)],
+    android_sdk_root=$withval)
 
 android_sdk_root=${withval%/platforms/android-*}
 
 case "$target" in
 *-android*|*-linuxandroid*)
-    if test -z "$android_sdk" ; then
+    if test -z "$android_sdk_root" ; then
         AC_MSG_ERROR([You must specify --with-android-sdk=/path/to/sdk when targeting Android.])
-    else
-        if ! test -e "$android_sdk"/source.properties ; then
-            AC_MSG_ERROR([The path in --with-android-sdk isn't valid (source.properties hasn't been found).])
-        fi
-
-        # Get the api level from "$android_sdk"/source.properties.
-        ANDROID_TARGET_SDK=`$AWK -F = changequote(<<, >>)'<<$>>1 == "AndroidVersion.ApiLevel" {print <<$>>2}'changequote([, ]) "$android_sdk"/source.properties`
-
-        if test -z "$ANDROID_TARGET_SDK" ; then
-            AC_MSG_ERROR([Unexpected error: no AndroidVersion.ApiLevel field has been found in source.properties.])
-        fi
-
-	AC_DEFINE_UNQUOTED(ANDROID_TARGET_SDK,$ANDROID_TARGET_SDK)
-	AC_SUBST(ANDROID_TARGET_SDK)
-
-        if ! test "$ANDROID_TARGET_SDK" -eq "$ANDROID_TARGET_SDK" ; then
-            AC_MSG_ERROR([Unexpected error: the found android api value isn't a number! (found $ANDROID_TARGET_SDK)])
-        fi
-
-        if test $ANDROID_TARGET_SDK -lt $1 ; then
-            AC_MSG_ERROR([The given Android SDK provides API level $ANDROID_TARGET_SDK ($1 or higher required).])
-        fi
     fi
 
-    android_tools="$android_sdk_root"/tools
-    android_platform_tools="$android_sdk_root"/platform-tools
-    if test ! -d "$android_platform_tools" ; then
-        android_platform_tools="$android_sdk"/tools # SDK Tools < r8
+    # We were given an old-style
+    # --with-android-sdk=/path/to/sdk/platforms/android-*.  We could warn, but
+    # we'll get compliance by forcing the issue.
+    if test -e "$withval"/source.properties ; then
+        AC_MSG_ERROR([Including platforms/android-* in --with-android-sdk arguments is deprecated.  Use --with-android-sdk=$android_sdk_root.])
     fi
 
-    dnl The build tools got moved around to different directories in SDK
-    dnl Tools r22. Try to locate them. This is awful, but, from
-    dnl http://stackoverflow.com/a/4495368, the following sorts versions
-    dnl of the form x.y.z.a.b from newest to oldest:
-    dnl sort -t. -k 1,1nr -k 2,2nr -k 3,3nr -k 4,4nr -k 5,5nr
-    dnl We want to favour the newer versions that start with 'android-';
-    dnl that's what the sed is about.
-    dnl We might iterate over directories that aren't build-tools at all;
-    dnl we use the presence of aapt as a marker.
-    AC_MSG_CHECKING([for android build-tools directory])
-    android_build_tools=""
-    for suffix in `ls "$android_sdk_root/build-tools" | sed -e "s,android-,999.," | sort -t. -k 1,1nr -k 2,2nr -k 3,3nr -k 4,4nr -k 5,5nr`; do
-        tools_directory=`echo "$android_sdk_root/build-tools/$suffix" | sed -e "s,999.,android-,"`
-        if test -d "$tools_directory" -a -f "$tools_directory/aapt"; then
-            android_build_tools="$tools_directory"
-            break
-        fi
-    done
-    if test -z "$android_build_tools" ; then
-        android_build_tools="$android_platform_tools" # SDK Tools < r22
+    android_target_sdk=$1
+    AC_MSG_CHECKING([for Android SDK platform version $android_target_sdk])
+    android_sdk=$android_sdk_root/platforms/android-$android_target_sdk
+    if ! test -e "$android_sdk/source.properties" ; then
+        AC_MSG_ERROR([You must download Android SDK platform version $android_target_sdk.  Try |mach bootstrap|.  (Looked for $android_sdk)])
     fi
-    all_android_build_tools=""
-    for suffix in `ls "$android_sdk_root/build-tools" | sed -e "s,android-,999.," | sort -t. -k 1,1nr -k 2,2nr -k 3,3nr -k 4,4nr -k 5,5nr`; do
-        tools_directory=`echo "$android_sdk_root/build-tools/$suffix" | sed -e "s,999.,android-,"`
-        if test -d "$tools_directory" -a -f "$tools_directory/aapt"; then
-            all_android_build_tools="$all_android_build_tools:$tools_directory"
-        fi
-    done
+    AC_MSG_RESULT([$android_sdk])
 
+    android_build_tools="$android_sdk_root"/build-tools/$2
+    AC_MSG_CHECKING([for Android build-tools version $2])
     if test -d "$android_build_tools" -a -f "$android_build_tools/aapt"; then
         AC_MSG_RESULT([$android_build_tools])
     else
-        AC_MSG_ERROR([not found. Please check your SDK for the subdirectory of build-tools. With the current configuration, it should be in $android_sdk_root/build_tools])
+        AC_MSG_ERROR([You must install the Android build-tools version $2.  Try |mach bootstrap|.  (Looked for $android_build_tools)])
     fi
 
+    MOZ_PATH_PROG(ZIPALIGN, zipalign, :, [$android_build_tools])
+    MOZ_PATH_PROG(DX, dx, :, [$android_build_tools])
+    MOZ_PATH_PROG(AAPT, aapt, :, [$android_build_tools])
+    MOZ_PATH_PROG(AIDL, aidl, :, [$android_build_tools])
+    if test -z "$ZIPALIGN" -o "$ZIPALIGN" = ":"; then
+      AC_MSG_ERROR([The program zipalign was not found.  Try |mach bootstrap|.])
+    fi
+    if test -z "$DX" -o "$DX" = ":"; then
+      AC_MSG_ERROR([The program dx was not found.  Try |mach bootstrap|.])
+    fi
+    if test -z "$AAPT" -o "$AAPT" = ":"; then
+      AC_MSG_ERROR([The program aapt was not found.  Try |mach bootstrap|.])
+    fi
+    if test -z "$AIDL" -o "$AIDL" = ":"; then
+      AC_MSG_ERROR([The program aidl was not found.  Try |mach bootstrap|.])
+    fi
+
+    android_platform_tools="$android_sdk_root"/platform-tools
+    AC_MSG_CHECKING([for Android platform-tools])
+    if test -d "$android_platform_tools" -a -f "$android_platform_tools/adb"; then
+        AC_MSG_RESULT([$android_platform_tools])
+    else
+        AC_MSG_ERROR([You must install the Android platform-tools.  Try |mach bootstrap|.  (Looked for $android_platform_tools)])
+    fi
+
+    MOZ_PATH_PROG(ADB, adb, :, [$android_platform_tools])
+    if test -z "$ADB" -o "$ADB" = ":"; then
+      AC_MSG_ERROR([The program adb was not found.  Try |mach bootstrap|.])
+    fi
+
+    android_tools="$android_sdk_root"/tools
+    AC_MSG_CHECKING([for Android tools])
+    if test -d "$android_tools" -a -f "$android_tools/emulator"; then
+        AC_MSG_RESULT([$android_tools])
+    else
+        AC_MSG_ERROR([You must install the Android tools.  Try |mach bootstrap|.  (Looked for $android_tools)])
+    fi
+
+    MOZ_PATH_PROG(EMULATOR, emulator, :, [$android_tools])
+    if test -z "$EMULATOR" -o "$EMULATOR" = ":"; then
+      AC_MSG_ERROR([The program emulator was not found.  Try |mach bootstrap|.])
+    fi
+
+    ANDROID_TARGET_SDK="${android_target_sdk}"
     ANDROID_SDK="${android_sdk}"
     ANDROID_SDK_ROOT="${android_sdk_root}"
-
     ANDROID_TOOLS="${android_tools}"
+    AC_DEFINE_UNQUOTED(ANDROID_TARGET_SDK,$ANDROID_TARGET_SDK)
+    AC_SUBST(ANDROID_TARGET_SDK)
     AC_SUBST(ANDROID_SDK_ROOT)
     AC_SUBST(ANDROID_SDK)
     AC_SUBST(ANDROID_TOOLS)
-
-    dnl Google has a history of moving the Android tools around.  We don't
-    dnl care where they are, so let's try to find them anywhere we can.
-    all_android_tools_paths="$ANDROID_TOOLS:$all_android_build_tools:$android_platform_tools"
-    MOZ_PATH_PROG(ZIPALIGN, zipalign, :, [$all_android_tools_paths])
-    MOZ_PATH_PROG(DX, dx, :, [$all_android_tools_paths])
-    MOZ_PATH_PROG(AAPT, aapt, :, [$all_android_tools_paths])
-    MOZ_PATH_PROG(AIDL, aidl, :, [$all_android_tools_paths])
-    MOZ_PATH_PROG(ADB, adb, :, [$all_android_tools_paths])
-    MOZ_PATH_PROG(EMULATOR, emulator, :, [$all_android_tools_paths])
-
-    if test -z "$ZIPALIGN" -o "$ZIPALIGN" = ":"; then
-      AC_MSG_ERROR([The program zipalign was not found.  Use --with-android-sdk={android-sdk-dir}.])
-    fi
-    if test -z "$DX" -o "$DX" = ":"; then
-      AC_MSG_ERROR([The program dx was not found.  Use --with-android-sdk={android-sdk-dir}.])
-    fi
-    if test -z "$AAPT" -o "$AAPT" = ":"; then
-      AC_MSG_ERROR([The program aapt was not found.  Use --with-android-sdk={android-sdk-dir}.])
-    fi
-    if test -z "$AIDL" -o "$AIDL" = ":"; then
-      AC_MSG_ERROR([The program aidl was not found.  Use --with-android-sdk={android-sdk-dir}.])
-    fi
-    if test -z "$ADB" -o "$ADB" = ":"; then
-      AC_MSG_ERROR([The program adb was not found.  Use --with-android-sdk={android-sdk-dir}.])
-    fi
 
     MOZ_ANDROID_AAR(support-v4, 22.2.1, android, com/android/support, REQUIRED_INTERNAL_IMPL)
     MOZ_ANDROID_AAR(recyclerview-v7, 22.2.1, android, com/android/support)
