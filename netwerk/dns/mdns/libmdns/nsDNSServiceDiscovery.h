@@ -26,8 +26,8 @@ public:
   explicit nsDNSServiceDiscovery() = default;
 
   /*
-  ** The mDNS service is started in this function. However, the function returns
-  ** without waiting. Therefore, all operations before service started will fail
+  ** The mDNS service is started on demand. If no one uses, mDNS service will not
+  ** start. Therefore, all operations before service started will fail
   ** and get error code |kDNSServiceErr_ServiceNotRunning| defined in dns_sd.h.
   **/
   nsresult Init();

@@ -189,6 +189,19 @@ def set_interactive_task(task, interactive):
         payload["features"] = {}
     payload["features"]["interactive"] = True
 
+def remove_caches_from_task(task):
+    r"""Remove all caches but tc-vcs from the task.
+
+    :param task: task definition.
+    """
+    try:
+        caches = task["task"]["payload"]["cache"]
+        for cache in caches.keys():
+            if cache != "tc-vcs":
+                caches.pop(cache)
+    except KeyError:
+        pass
+
 @CommandProvider
 class DecisionTask(object):
     @Command('taskcluster-decision', category="ci",
@@ -364,6 +377,10 @@ class Graph(object):
             build_parameters['build_slugid'] = slugid()
             build_task = templates.load(build['task'], build_parameters)
             set_interactive_task(build_task, interactive)
+
+            # try builds don't use cache
+            if project == "try":
+                remove_caches_from_task(build_task)
 
             if params['revision_hash']:
                 decorate_task_treeherder_routes(build_task['task'],

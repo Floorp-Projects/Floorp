@@ -29,8 +29,8 @@ function TestDescription(aType, aTcpAddress, aTcpPort) {
   this.tcpAddress = Cc["@mozilla.org/array;1"]
                       .createInstance(Ci.nsIMutableArray);
   for (let address of aTcpAddress) {
-    let wrapper = Cc["@mozilla.org/supports-string;1"]
-                    .createInstance(Ci.nsISupportsString);
+    let wrapper = Cc["@mozilla.org/supports-cstring;1"]
+                    .createInstance(Ci.nsISupportsCString);
     wrapper.data = address;
     this.tcpAddress.appendElement(wrapper, false);
   }
@@ -91,7 +91,7 @@ function testPresentationServer() {
           this.status = 'onOffer';
 
           let offer = aOffer.QueryInterface(Ci.nsIPresentationChannelDescription);
-          Assert.strictEqual(offer.tcpAddress.queryElementAt(0,Ci.nsISupportsString).data,
+          Assert.strictEqual(offer.tcpAddress.queryElementAt(0,Ci.nsISupportsCString).data,
                              OFFER_ADDRESS,
                              'expected offer address array');
           Assert.equal(offer.tcpPort, OFFER_PORT, 'expected offer port');
@@ -148,7 +148,7 @@ function testPresentationServer() {
       Assert.equal(this.status, 'opened', '2. presenterControlChannel: get answer, close channel');
 
       let answer = aAnswer.QueryInterface(Ci.nsIPresentationChannelDescription);
-      Assert.strictEqual(answer.tcpAddress.queryElementAt(0,Ci.nsISupportsString).data,
+      Assert.strictEqual(answer.tcpAddress.queryElementAt(0,Ci.nsISupportsCString).data,
                          ANSWER_ADDRESS,
                          'expected answer address array');
       Assert.equal(answer.tcpPort, ANSWER_PORT, 'expected answer port');
