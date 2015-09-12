@@ -1349,9 +1349,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void restoreStackPointer();
     static void calculateAlignedStackPointer(void** stackPointer);
 
-    void rshiftPtr(Imm32 imm, Register dest) {
-        ma_srl(dest, dest, imm);
-    }
     void rshiftPtrArithmetic(Imm32 imm, Register dest) {
         ma_sra(dest, dest, imm);
     }

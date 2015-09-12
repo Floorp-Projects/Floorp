@@ -128,6 +128,15 @@ MacroAssembler::xorPtr(Imm32 imm, Register dest)
     ma_eor(imm, dest);
 }
 
+// ===============================================================
+// Shift functions
+
+void
+MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
+{
+    ma_lsr(imm, dest, dest);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

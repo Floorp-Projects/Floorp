@@ -1069,15 +1069,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         branchPtr(cond, lhs, getStackPointer(), label);
     }
 
-    void rshiftPtr(Imm32 imm, Register dest) {
-        Lsr(ARMRegister(dest, 64), ARMRegister(dest, 64), imm.value);
-    }
-    void rshiftPtr(Imm32 imm, Register src, Register dest) {
-        Lsr(ARMRegister(dest, 64), ARMRegister(src, 64), imm.value);
-    }
-    void rshift64(Imm32 imm, Register64 dest) {
-        rshiftPtr(imm, dest.reg);
-    }
+    inline void rshift64(Imm32 imm, Register64 dest);
 
     void rshiftPtrArithmetic(Imm32 imm, Register dest) {
         Asr(ARMRegister(dest, 64), ARMRegister(dest, 64), imm.value);
