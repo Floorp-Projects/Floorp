@@ -6,6 +6,8 @@
 
 #include "js/UbiNodeCensus.h"
 
+using namespace js;
+
 namespace JS {
 namespace ubi {
 
