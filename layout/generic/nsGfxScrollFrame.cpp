@@ -1108,9 +1108,26 @@ static bool IsFocused(nsIContent* aContent)
 }
 #endif
 
+void
+ScrollFrameHelper::SetZoomableByAPZ(bool aZoomable)
+{
+  if (mZoomableByAPZ != aZoomable) {
+    // We might be changing the result of WantAsyncScroll() so schedule a
+    // paint to make sure we pick up the result of that change.
+    mZoomableByAPZ = aZoomable;
+    mOuter->SchedulePaint();
+  }
+}
+
 bool
 ScrollFrameHelper::WantAsyncScroll() const
 {
+  // If zooming is allowed, and this is a frame that's allowed to zoom, then
+  // we want it to be async-scrollable or zooming will not be permitted.
+  if (mZoomableByAPZ) {
+    return true;
+  }
+
   ScrollbarStyles styles = GetScrollbarStylesFromFrame();
   uint32_t directions = mOuter->GetScrollTargetFrame()->GetPerceivedScrollingDirections();
   bool isVScrollable = !!(directions & nsIScrollableFrame::VERTICAL) &&
@@ -1831,6 +1848,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mIgnoreMomentumScroll(false)
   , mScaleToResolution(false)
   , mTransformingByAPZ(false)
+  , mZoomableByAPZ(false)
   , mVelocityQueue(aOuter->PresContext())
 {
   if (LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0) {
