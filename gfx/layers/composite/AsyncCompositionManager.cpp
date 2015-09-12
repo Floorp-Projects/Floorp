@@ -585,6 +585,29 @@ AdjustForClip(const Matrix4x4& asyncTransform, Layer* aLayer)
   return result;
 }
 
+static void
+ExpandRootClipRect(Layer* aLayer, const ScreenMargin& aFixedLayerMargins)
+{
+  // For Fennec we want to expand the root scrollable layer clip rect based on
+  // the fixed position margins. In particular, we want this while the dynamic
+  // toolbar is in the process of sliding offscreen and the area of the
+  // LayerView visible to the user is larger than the viewport size that Gecko
+  // knows about (and therefore larger than the clip rect). We could also just
+  // clear the clip rect on aLayer entirely but this seems more precise.
+  Maybe<ParentLayerIntRect> rootClipRect = aLayer->AsLayerComposite()->GetShadowClipRect();
+  if (rootClipRect && aFixedLayerMargins != ScreenMargin()) {
+#ifndef MOZ_WIDGET_ANDROID
+    // We should never enter here on anything other than Fennec, since
+    // aFixedLayerMargins should be empty everywhere else.
+    MOZ_ASSERT(false);
+#endif
+    ParentLayerRect rect(rootClipRect.value());
+    rect.Deflate(ViewAs<ParentLayerPixel>(aFixedLayerMargins,
+      PixelCastJustification::ScreenIsParentLayerForRoot));
+    aLayer->AsLayerComposite()->SetShadowClipRect(Some(RoundedOut(rect)));
+  }
+}
+
 bool
 AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
                                                           bool* aOutFoundRoot)
@@ -1105,24 +1128,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   AlignFixedAndStickyLayers(aLayer, aLayer, metrics.GetScrollId(), oldTransform,
                             aLayer->GetLocalTransform(), fixedLayerMargins);
 
-  // For Fennec we want to expand the root scrollable layer clip rect based on
-  // the fixed position margins. In particular, we want this while the dynamic
-  // toolbar is in the process of sliding offscreen and the area of the
-  // LayerView visible to the user is larger than the viewport size that Gecko
-  // knows about (and therefore larger than the clip rect). We could also just
-  // clear the clip rect on aLayer entirely but this seems more precise.
-  Maybe<ParentLayerIntRect> rootClipRect = aLayer->AsLayerComposite()->GetShadowClipRect();
-  if (rootClipRect && fixedLayerMargins != ScreenMargin()) {
-#ifndef MOZ_WIDGET_ANDROID
-    // We should never enter here on anything other than Fennec, since
-    // fixedLayerMargins should be empty everywhere else.
-    MOZ_ASSERT(false);
-#endif
-    ParentLayerRect rect(rootClipRect.value());
-    rect.Deflate(ViewAs<ParentLayerPixel>(fixedLayerMargins,
-      PixelCastJustification::ScreenIsParentLayerForRoot));
-    aLayer->AsLayerComposite()->SetShadowClipRect(Some(RoundedOut(rect)));
-  }
+  ExpandRootClipRect(aLayer, fixedLayerMargins);
 }
 
 void
