@@ -43,12 +43,12 @@ function doTest(aApnSettings, aHaveV4Address, aHaveV6Address) {
       if (aHaveV4Address) {
         ok(ips.value.reduce(function(aFound, aAddress) {
           return aFound || aAddress.indexOf(":") < 0;
-        }), "IPv4 address");
+        }, false), "IPv4 address");
       }
       if (aHaveV6Address) {
         ok(ips.value.reduce(function(aFound, aAddress) {
           return aFound || aAddress.indexOf(":") > 0;
-        }), "IPv6 address");
+        }, false), "IPv6 address");
       }
     })
     .then(() => setDataEnabledAndWait(false));

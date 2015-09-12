@@ -150,7 +150,7 @@ static_assert(JS_STRUCTURED_CLONE_VERSION == 5,
               "Need to update the major schema version.");
 
 // Major schema version. Bump for almost everything.
-const uint32_t kMajorSchemaVersion = 20;
+const uint32_t kMajorSchemaVersion = 21;
 
 // Minor schema version. Should almost always be 0 (maybe bump on release
 // branches if we have to).
@@ -3626,8 +3626,9 @@ UpgradeSchemaFrom18_0To19_0(mozIStorageConnection* aConnection)
   MOZ_ASSERT(aConnection);
 
   nsresult rv;
-  PROFILER_LABEL("IndexedDB", "UpgradeSchemaFrom17_0To18_0",
-    js::ProfileEntry::Category::STORAGE);
+  PROFILER_LABEL("IndexedDB",
+                 "UpgradeSchemaFrom18_0To19_0",
+                 js::ProfileEntry::Category::STORAGE);
 
   rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "ALTER TABLE object_store_index "
@@ -3734,7 +3735,7 @@ UpgradeSchemaFrom19_0To20_0(nsIFile* aFMDirectory,
   MOZ_ASSERT(aConnection);
 
   PROFILER_LABEL("IndexedDB",
-                 "UpgradeSchemaFrom18_0To19_0",
+                 "UpgradeSchemaFrom19_0To20_0",
                  js::ProfileEntry::Category::STORAGE);
 
 #if defined(MOZ_B2G)
@@ -3850,6 +3851,217 @@ UpgradeSchemaFrom19_0To20_0(nsIFile* aFMDirectory,
   }
 
 #endif // MOZ_B2G
+
+  return NS_OK;
+}
+
+class UpgradeIndexDataValuesFunction final
+  : public mozIStorageFunction
+{
+public:
+  UpgradeIndexDataValuesFunction()
+  {
+    AssertIsOnIOThread();
+  }
+
+  NS_DECL_ISUPPORTS
+
+private:
+  ~UpgradeIndexDataValuesFunction()
+  {
+    AssertIsOnIOThread();
+  }
+
+  nsresult
+  ReadOldCompressedIDVFromBlob(const uint8_t* aBlobData,
+                               uint32_t aBlobDataLength,
+                               FallibleTArray<IndexDataValue>& aIndexValues);
+
+  NS_IMETHOD
+  OnFunctionCall(mozIStorageValueArray* aArguments,
+                 nsIVariant** aResult) override;
+};
+
+NS_IMPL_ISUPPORTS(UpgradeIndexDataValuesFunction, mozIStorageFunction)
+
+nsresult
+UpgradeIndexDataValuesFunction::ReadOldCompressedIDVFromBlob(
+                                   const uint8_t* aBlobData,
+                                   uint32_t aBlobDataLength,
+                                   FallibleTArray<IndexDataValue>& aIndexValues)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aBlobData);
+  MOZ_ASSERT(aBlobDataLength);
+  MOZ_ASSERT(aIndexValues.IsEmpty());
+
+  const uint8_t* blobDataIter = aBlobData;
+  const uint8_t* blobDataEnd = aBlobData + aBlobDataLength;
+
+  int64_t indexId;
+  bool unique;
+  bool nextIndexIdAlreadyRead = false;
+
+  while (blobDataIter < blobDataEnd) {
+    if (!nextIndexIdAlreadyRead) {
+      ReadCompressedIndexId(&blobDataIter, blobDataEnd, &indexId, &unique);
+    }
+    nextIndexIdAlreadyRead = false;
+
+    if (NS_WARN_IF(blobDataIter == blobDataEnd)) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_FILE_CORRUPTED;
+    }
+
+    // Read key buffer length.
+    const uint64_t keyBufferLength =
+      ReadCompressedNumber(&blobDataIter, blobDataEnd);
+
+    if (NS_WARN_IF(blobDataIter == blobDataEnd) ||
+        NS_WARN_IF(keyBufferLength > uint64_t(UINT32_MAX)) ||
+        NS_WARN_IF(blobDataIter + keyBufferLength > blobDataEnd)) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_FILE_CORRUPTED;
+    }
+
+    nsCString keyBuffer(reinterpret_cast<const char*>(blobDataIter),
+                        uint32_t(keyBufferLength));
+    blobDataIter += keyBufferLength;
+
+    IndexDataValue idv(indexId, unique, Key(keyBuffer));
+
+    if (blobDataIter < blobDataEnd) {
+      // Read either a sort key buffer length or an index id.
+      uint64_t maybeIndexId = ReadCompressedNumber(&blobDataIter, blobDataEnd);
+
+      // Locale-aware indexes haven't been around long enough to have any users,
+      // we can safely assume all sort key buffer lengths will be zero.
+      if (maybeIndexId != 0) {
+        if (maybeIndexId % 2) {
+          unique = true;
+          maybeIndexId--;
+        } else {
+          unique = false;
+        }
+        indexId = maybeIndexId/2;
+        nextIndexIdAlreadyRead = true;
+      }
+    }
+
+    if (NS_WARN_IF(!aIndexValues.InsertElementSorted(idv, fallible))) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  MOZ_ASSERT(blobDataIter == blobDataEnd);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UpgradeIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
+                                               nsIVariant** aResult)
+{
+  MOZ_ASSERT(aArguments);
+  MOZ_ASSERT(aResult);
+
+  PROFILER_LABEL("IndexedDB",
+                 "UpgradeIndexDataValuesFunction::OnFunctionCall",
+                 js::ProfileEntry::Category::STORAGE);
+
+  uint32_t argc;
+  nsresult rv = aArguments->GetNumEntries(&argc);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (argc != 1) {
+    NS_WARNING("Don't call me with the wrong number of arguments!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  int32_t type;
+  rv = aArguments->GetTypeOfIndex(0, &type);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (type != mozIStorageStatement::VALUE_TYPE_BLOB) {
+    NS_WARNING("Don't call me with the wrong type of arguments!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  const uint8_t* oldBlob;
+  uint32_t oldBlobLength;
+  rv = aArguments->GetSharedBlob(0, &oldBlobLength, &oldBlob);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  AutoFallibleTArray<IndexDataValue, 32> oldIdv;
+  rv = ReadOldCompressedIDVFromBlob(oldBlob, oldBlobLength, oldIdv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  UniqueFreePtr<uint8_t> newIdv;
+  uint32_t newIdvLength;
+  rv = MakeCompressedIndexDataValues(oldIdv, newIdv, &newIdvLength);
+
+  std::pair<uint8_t*, int> data(newIdv.get(), newIdvLength);
+  
+  nsCOMPtr<nsIVariant> result = new storage::AdoptedBlobVariant(data);
+
+  newIdv.release();
+
+  result.forget(aResult);
+  return NS_OK;
+}
+
+nsresult
+UpgradeSchemaFrom20_0To21_0(mozIStorageConnection* aConnection)
+{
+  // This should have been part of the 18 to 19 upgrade, where we changed the
+  // layout of the index_data_values blobs but didn't upgrade the existing data.
+  // See bug 1202788.
+
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aConnection);
+
+  PROFILER_LABEL("IndexedDB",
+                 "UpgradeSchemaFrom20_0To21_0",
+                 js::ProfileEntry::Category::STORAGE);
+
+  nsRefPtr<UpgradeIndexDataValuesFunction> function =
+    new UpgradeIndexDataValuesFunction();
+
+  NS_NAMED_LITERAL_CSTRING(functionName, "upgrade_idv");
+
+  nsresult rv = aConnection->CreateFunction(functionName, 1, function);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE object_data "
+      "SET index_data_values = upgrade_idv(index_data_values) "
+      "WHERE index_data_values IS NOT NULL;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->RemoveFunction(functionName);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->SetSchemaVersion(MakeSchemaVersion(21, 0));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   return NS_OK;
 }
@@ -4346,7 +4558,7 @@ CreateStorageConnection(nsIFile* aDBFile,
       }
     } else  {
       // This logic needs to change next time we change the schema!
-      static_assert(kSQLiteSchemaVersion == int32_t((20 << 4) + 0),
+      static_assert(kSQLiteSchemaVersion == int32_t((21 << 4) + 0),
                     "Upgrade function needed due to schema version increase.");
 
       while (schemaVersion != kSQLiteSchemaVersion) {
@@ -4384,6 +4596,8 @@ CreateStorageConnection(nsIFile* aDBFile,
           rv = UpgradeSchemaFrom18_0To19_0(connection);
         } else if (schemaVersion == MakeSchemaVersion(19, 0)) {
           rv = UpgradeSchemaFrom19_0To20_0(aFMDirectory, connection);
+        } else if (schemaVersion == MakeSchemaVersion(20, 0)) {
+          rv = UpgradeSchemaFrom20_0To21_0(connection);
         } else {
           IDB_WARNING("Unable to open IndexedDB database, no upgrade path is "
                       "available!");
