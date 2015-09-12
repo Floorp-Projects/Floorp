@@ -5092,11 +5092,10 @@ Parser<ParseHandler>::doWhileStatement(YieldHandling yieldHandling)
     //   http://bugzilla.mozilla.org/show_bug.cgi?id=238945
     // ES3 and ES5 disagreed, but ES6 conforms to Web reality:
     //   https://bugs.ecmascript.org/show_bug.cgi?id=157
-    bool matched;
-    if (!tokenStream.matchToken(&matched, TOK_SEMI))
+    // To parse |do {} while (true) false| correctly, use Operand.
+    bool ignored;
+    if (!tokenStream.matchToken(&ignored, TOK_SEMI, TokenStream::Operand))
         return null();
-    if (!matched)
-        tokenStream.addModifierException(TokenStream::OperandIsNone);
     return handler.newDoWhileStatement(body, cond, TokenPos(begin, pos().end));
 }
 
