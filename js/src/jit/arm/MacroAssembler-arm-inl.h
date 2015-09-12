@@ -143,6 +143,14 @@ MacroAssembler::rshiftPtrArithmetic(Imm32 imm, Register dest)
     ma_asr(imm, dest, dest);
 }
 
+void
+MacroAssembler::rshift64(Imm32 imm, Register64 dest)
+{
+    as_mov(dest.low, lsr(dest.low, imm.value));
+    as_orr(dest.low, dest.low, lsl(dest.high, 32 - imm.value));
+    as_mov(dest.high, lsr(dest.high, imm.value));
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

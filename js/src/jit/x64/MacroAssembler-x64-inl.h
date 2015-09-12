@@ -81,6 +81,12 @@ MacroAssembler::rshiftPtrArithmetic(Imm32 imm, Register dest)
     sarq(imm, dest);
 }
 
+void
+MacroAssembler::rshift64(Imm32 imm, Register64 dest)
+{
+    shrq(imm, dest.reg);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

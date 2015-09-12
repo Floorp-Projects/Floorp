@@ -1122,10 +1122,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         }
     }
 
-    void rshift64(Imm32 imm, Register64 dest) {
-        shrdl(imm, dest.high, dest.low);
-        shrl(imm, dest.high);
-    }
     void lshiftPtr(Imm32 imm, Register dest) {
         shll(imm, dest);
     }
