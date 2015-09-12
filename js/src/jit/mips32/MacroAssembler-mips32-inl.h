@@ -135,6 +135,16 @@ MacroAssembler::lshiftPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::lshift64(Imm32 imm, Register64 dest)
+{
+    ScratchRegisterScope scratch(*this);
+    as_sll(dest.high, dest.high, imm.value);
+    as_srl(scratch, dest.low, 32 - imm.value);
+    as_or(dest.high, dest.high, scratch);
+    as_sll(dest.low, dest.low, imm.value);
+}
+
+void
 MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
 {
     ma_srl(dest, dest, imm);

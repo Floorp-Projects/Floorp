@@ -76,6 +76,12 @@ MacroAssembler::lshiftPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::lshift64(Imm32 imm, Register64 dest)
+{
+    shlq(imm, dest.reg);
+}
+
+void
 MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
 {
     shrq(imm, dest);

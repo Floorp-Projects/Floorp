@@ -1122,11 +1122,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         }
     }
 
-    void lshift64(Imm32 imm, Register64 dest) {
-        shldl(imm, dest.low, dest.high);
-        shll(imm, dest.low);
-    }
-
     void loadInstructionPointerAfterCall(Register dest) {
         movl(Operand(StackPointer, 0x0), dest);
     }
