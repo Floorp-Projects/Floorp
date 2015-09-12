@@ -360,6 +360,8 @@ public:
   bool IsTransformingByAPZ() const {
     return mTransformingByAPZ;
   }
+  void SetZoomableByAPZ(bool aZoomable);
+
   bool UsesContainerScrolling() const;
 
   void ScheduleSyntheticMouseMove();
@@ -533,6 +535,9 @@ public:
   // True if the APZ is in the process of async-transforming this scrollframe,
   // (as best as we can tell on the main thread, anyway).
   bool mTransformingByAPZ:1;
+
+  // True if the APZ is allowed to zoom this scrollframe.
+  bool mZoomableByAPZ:1;
 
   mozilla::layout::ScrollVelocityQueue mVelocityQueue;
 
@@ -921,6 +926,9 @@ public:
   }
   bool IsTransformingByAPZ() const override {
     return mHelper.IsTransformingByAPZ();
+  }
+  void SetZoomableByAPZ(bool aZoomable) override {
+    mHelper.SetZoomableByAPZ(aZoomable);
   }
   
 #ifdef DEBUG_FRAME_DUMP
@@ -1329,6 +1337,9 @@ public:
   }
   bool IsTransformingByAPZ() const override {
     return mHelper.IsTransformingByAPZ();
+  }
+  void SetZoomableByAPZ(bool aZoomable) override {
+    mHelper.SetZoomableByAPZ(aZoomable);
   }
 
 #ifdef DEBUG_FRAME_DUMP

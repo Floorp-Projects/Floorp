@@ -1,5 +1,10 @@
 <!DOCTYPE HTML>
 <html reftest-async-zoom="2">
+<!-- There is a bug with MultiTiledContentClient that causes improper painting;
+     bug 1204076 is on file for this issue. As a temporary workaround, we set
+     user-scalable=no here so that WantAsyncZoom() returns false and we don't
+     use a MultiTiledContentClient. Once bug 1204076 is fixed, we can remove this. -->
+<meta name="viewport" content="user-scalable=no">
 <body>
 <div style="position:absolute; top: 0; left: 0; width: 100px; height: 100px; background: red;"></div>
 </body>
