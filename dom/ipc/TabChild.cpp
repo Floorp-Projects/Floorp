@@ -83,7 +83,7 @@
 #include "nsWindowWatcher.h"
 #include "PermissionMessageUtils.h"
 #include "PuppetWidget.h"
-#include "StructuredCloneIPCHelper.h"
+#include "StructuredCloneData.h"
 #include "nsViewportInfo.h"
 #include "nsILoadContext.h"
 #include "ipc/nsGUIEventIPC.h"
@@ -237,13 +237,13 @@ TabChildBase::DispatchMessageManagerMessage(const nsAString& aMessageName,
 {
     AutoSafeJSContext cx;
     JS::Rooted<JS::Value> json(cx, JS::NullValue());
-    StructuredCloneIPCHelper helper;
+    StructuredCloneData data;
     if (JS_ParseJSON(cx,
                       static_cast<const char16_t*>(aJSONData.BeginReading()),
                       aJSONData.Length(),
                       &json)) {
         ErrorResult rv;
-        helper.Write(cx, json, rv);
+        data.Write(cx, json, rv);
         if (NS_WARN_IF(rv.Failed())) {
             return;
         }
@@ -255,7 +255,7 @@ TabChildBase::DispatchMessageManagerMessage(const nsAString& aMessageName,
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
     mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal), nullptr,
-                       aMessageName, false, &helper, nullptr, nullptr, nullptr);
+                       aMessageName, false, &data, nullptr, nullptr, nullptr);
 }
 
 bool
@@ -2459,13 +2459,13 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
 {
   if (mTabChildGlobal) {
     nsCOMPtr<nsIXPConnectJSObjectHolder> kungFuDeathGrip(GetGlobal());
-    StructuredCloneIPCHelper helper;
-    UnpackClonedMessageDataForChild(aData, helper);
+    StructuredCloneData data;
+    UnpackClonedMessageDataForChild(aData, data);
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
     CrossProcessCpowHolder cpows(Manager(), aCpows);
     mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal), nullptr,
-                       aMessage, false, &helper, &cpows, aPrincipal, nullptr);
+                       aMessage, false, &data, &cpows, aPrincipal, nullptr);
   }
   return true;
 }
@@ -2895,14 +2895,14 @@ TabChild::SetTabId(const TabId& aTabId)
 bool
 TabChild::DoSendBlockingMessage(JSContext* aCx,
                                 const nsAString& aMessage,
-                                StructuredCloneIPCHelper& aHelper,
+                                StructuredCloneData& aData,
                                 JS::Handle<JSObject *> aCpows,
                                 nsIPrincipal* aPrincipal,
-                                nsTArray<StructuredCloneIPCHelper>* aRetVal,
+                                nsTArray<StructuredCloneData>* aRetVal,
                                 bool aIsSync)
 {
   ClonedMessageData data;
-  if (!BuildClonedMessageDataForChild(Manager(), aHelper, data)) {
+  if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
     return false;
   }
   InfallibleTArray<CpowEntry> cpows;
@@ -2921,12 +2921,12 @@ TabChild::DoSendBlockingMessage(JSContext* aCx,
 bool
 TabChild::DoSendAsyncMessage(JSContext* aCx,
                              const nsAString& aMessage,
-                             StructuredCloneIPCHelper& aHelper,
+                             StructuredCloneData& aData,
                              JS::Handle<JSObject *> aCpows,
                              nsIPrincipal* aPrincipal)
 {
   ClonedMessageData data;
-  if (!BuildClonedMessageDataForChild(Manager(), aHelper, data)) {
+  if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
     return false;
   }
   InfallibleTArray<CpowEntry> cpows;

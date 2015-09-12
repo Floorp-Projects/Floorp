@@ -12,7 +12,7 @@ task:
 
   payload:
     env:
-      MH_CUSTOM_BUILD_VARIANT_CFG: 'debug'
+      MH_CUSTOM_BUILD_VARIANT_CFG: 'cross-debug'
   extra:
     treeherder:
       groupSymbol: tc

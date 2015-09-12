@@ -1824,7 +1824,7 @@ nsChildView::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
   // the physical direction of the arrow.
   if (aEvent.keyCode >= nsIDOMKeyEvent::DOM_VK_LEFT &&
       aEvent.keyCode <= nsIDOMKeyEvent::DOM_VK_DOWN) {
-    WidgetQueryContentEvent query(true, NS_QUERY_SELECTED_TEXT, this);
+    WidgetQueryContentEvent query(true, eQuerySelectedText, this);
     DispatchWindowEvent(query);
 
     if (query.mSucceeded && query.mReply.mWritingMode.IsVertical()) {
@@ -1910,7 +1910,7 @@ NSView<mozView>* nsChildView::GetEditorView()
   // We need to get editor's view. E.g., when the focus is in the bookmark
   // dialog, the view is <panel> element of the dialog.  At this time, the key
   // events are processed the parent window's view that has native focus.
-  WidgetQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, this);
+  WidgetQueryContentEvent textContent(true, eQueryTextContent, this);
   textContent.InitForQueryTextContent(0, 0);
   DispatchWindowEvent(textContent);
   if (textContent.mSucceeded && textContent.mReply.mFocusedWidget) {
@@ -2755,7 +2755,7 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
     }
   }
 
-  WidgetWheelEvent event(true, NS_WHEEL_WHEEL, this);
+  WidgetWheelEvent event(true, eWheel, this);
 
   if (mAPZC) {
     uint64_t inputBlockId = 0;
@@ -2808,8 +2808,7 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
         MOZ_CRASH("unsupported event type");
         return;
     }
-    if (event.mMessage == NS_WHEEL_WHEEL &&
-        (event.deltaX != 0 || event.deltaY != 0)) {
+    if (event.mMessage == eWheel && (event.deltaX != 0 || event.deltaY != 0)) {
       ProcessUntransformedAPZEvent(&event, guid, inputBlockId, result);
     }
     return;
@@ -2853,8 +2852,7 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
       MOZ_CRASH("unexpected event type");
       return;
   }
-  if (event.mMessage == NS_WHEEL_WHEEL &&
-      (event.deltaX != 0 || event.deltaY != 0)) {
+  if (event.mMessage == eWheel && (event.deltaX != 0 || event.deltaY != 0)) {
     DispatchEvent(&event, status);
   }
 }
@@ -4828,7 +4826,7 @@ static int32_t RoundUp(double aDouble)
 {
   WidgetWheelEvent wheelEvent(true, msg, mGeckoChild);
   [self convertCocoaMouseWheelEvent:theEvent toGeckoEvent:&wheelEvent];
-  mExpectingWheelStop = (msg == NS_WHEEL_START);
+  mExpectingWheelStop = (msg == eWheelOperationStart);
   mGeckoChild->DispatchAPZAwareEvent(wheelEvent.AsInputEvent());
 }
 
@@ -4898,11 +4896,18 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   }
 
   NSEventPhase phase = nsCocoaUtils::EventPhase(theEvent);
-  // Fire NS_WHEEL_START/STOP events when 2 fingers touch/release the touchpad.
+  // Fire eWheelOperationStart/End events when 2 fingers touch/release the
+  // touchpad.
   if (phase & NSEventPhaseMayBegin) {
-    [self sendWheelCondition:YES first:NS_WHEEL_STOP second:NS_WHEEL_START forEvent:theEvent];
+    [self sendWheelCondition:YES
+                       first:eWheelOperationEnd
+                      second:eWheelOperationStart
+                    forEvent:theEvent];
   } else if (phase & (NSEventPhaseEnded | NSEventPhaseCancelled)) {
-    [self sendWheelCondition:NO first:NS_WHEEL_START second:NS_WHEEL_STOP forEvent:theEvent];
+    [self sendWheelCondition:NO
+                       first:eWheelOperationStart
+                      second:eWheelOperationEnd
+                    forEvent:theEvent];
   }
 
   NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(theEvent, [self window]);
@@ -6048,8 +6053,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
 
       // Determine if there is a selection (if sending to the service).
       if (sendType) {
-        WidgetQueryContentEvent event(true, NS_QUERY_CONTENT_STATE,
-                                      mGeckoChild);
+        WidgetQueryContentEvent event(true, eQueryContentState, mGeckoChild);
         // This might destroy our widget (and null out mGeckoChild).
         mGeckoChild->DispatchWindowEvent(event);
         if (!mGeckoChild || !event.mSucceeded || !event.mReply.mHasSelection)
@@ -6059,7 +6063,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
       // Determine if we can paste (if receiving data from the service).
       if (mGeckoChild && returnType) {
         WidgetContentCommandEvent command(true,
-                                          NS_CONTENT_COMMAND_PASTE_TRANSFERABLE,
+                                          eContentCommandPasteTransferable,
                                           mGeckoChild, true);
         // This might possibly destroy our widget (and null out mGeckoChild).
         mGeckoChild->DispatchWindowEvent(command);
@@ -6097,8 +6101,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
     return NO;
 
   // Obtain the current selection.
-  WidgetQueryContentEvent event(true,
-                                NS_QUERY_SELECTION_AS_TRANSFERABLE,
+  WidgetQueryContentEvent event(true, eQuerySelectionAsTransferable,
                                 mGeckoChild);
   mGeckoChild->DispatchWindowEvent(event);
   if (!event.mSucceeded || !event.mReply.mTransferable)
@@ -6158,7 +6161,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   NS_ENSURE_TRUE(mGeckoChild, false);
 
   WidgetContentCommandEvent command(true,
-                                    NS_CONTENT_COMMAND_PASTE_TRANSFERABLE,
+                                    eContentCommandPasteTransferable,
                                     mGeckoChild);
   command.mTransferable = trans;
   mGeckoChild->DispatchWindowEvent(command);

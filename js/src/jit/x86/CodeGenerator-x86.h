@@ -49,8 +49,8 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitValue(LValue* value);
     void visitCompareB(LCompareB* lir);
     void visitCompareBAndBranch(LCompareBAndBranch* lir);
-    void visitCompareV(LCompareV* lir);
-    void visitCompareVAndBranch(LCompareVAndBranch* lir);
+    void visitCompareBitwise(LCompareBitwise* lir);
+    void visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir);
     void visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir);
     void visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32* lir);
     void visitTruncateDToInt32(LTruncateDToInt32* ins);

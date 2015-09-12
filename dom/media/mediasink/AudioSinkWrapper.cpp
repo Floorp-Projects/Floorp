@@ -222,6 +222,13 @@ AudioSinkWrapper::IsStarted() const
   return mIsStarted;
 }
 
+bool
+AudioSinkWrapper::IsPlaying() const
+{
+  AssertOwnerThread();
+  return IsStarted() && !mPlayStartTime.IsNull();
+}
+
 void
 AudioSinkWrapper::OnAudioEnded()
 {

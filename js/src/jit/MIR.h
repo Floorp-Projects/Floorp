@@ -653,6 +653,8 @@ class MDefinition : public MNode
 
     bool mightBeMagicType() const;
 
+    bool maybeEmulatesUndefined(CompilerConstraintList* constraints);
+
     // Float32 specialization operations (see big comment in IonAnalysis before the Float32
     // specialization algorithm).
     virtual bool isFloat32Commutative() const { return false; }
@@ -827,6 +829,7 @@ class MDefinition : public MNode
     bool isEffectful() const {
         return getAliasSet().isStore();
     }
+
 #ifdef DEBUG
     virtual bool needsResumePoint() const {
         // Return whether this instruction should have its own resume point.
@@ -1054,6 +1057,11 @@ class MBinaryInstruction : public MAryInstruction<2>
     MDefinition* rhs() const {
         return getOperand(1);
     }
+    void swapOperands() {
+        MDefinition* temp = getOperand(0);
+        replaceOperand(0, getOperand(1));
+        replaceOperand(1, temp);
+    }
 
   protected:
     HashNumber valueHash() const
@@ -1063,12 +1071,6 @@ class MBinaryInstruction : public MAryInstruction<2>
 
         return op() + lhs->id() + rhs->id();
     }
-    void swapOperands() {
-        MDefinition* temp = getOperand(0);
-        replaceOperand(0, getOperand(1));
-        replaceOperand(1, temp);
-    }
-
     bool binaryCongruentTo(const MDefinition* ins) const
     {
         if (op() != ins->op())
@@ -1103,10 +1105,14 @@ class MBinaryInstruction : public MAryInstruction<2>
                right == insRight;
     }
 
-    // Return true if the operands to this instruction are both unsigned,
-    // in which case any wrapping operands were replaced with the underlying
-    // int32 operands.
-    bool tryUseUnsignedOperands();
+  public:
+    // Return if the operands to this instruction are both unsigned.
+    static bool unsignedOperands(MDefinition* left, MDefinition* right);
+    bool unsignedOperands();
+
+    // Replace any wrapping operands with the underlying int32 operands
+    // in case of unsigned operands.
+    void replaceWithUnsignedOperands();
 };
 
 class MTernaryInstruction : public MAryInstruction<3>
@@ -2737,7 +2743,7 @@ class MTest
     void filtersUndefinedOrNull(bool trueBranch, MDefinition** subject, bool* filtersUndefined,
                                 bool* filtersNull);
 
-    void markOperandCantEmulateUndefined() {
+    void markNoOperandEmulatesUndefined() {
         operandMightEmulateUndefined_ = false;
     }
     bool operandMightEmulateUndefined() const {
@@ -4164,7 +4170,7 @@ class MCompare
         Compare_Object,
 
         // Compare 2 values bitwise
-        Compare_Value,
+        Compare_Bitwise,
 
         // All other possible compares
         Compare_Unknown
@@ -4205,8 +4211,6 @@ class MCompare
     void filtersUndefinedOrNull(bool trueBranch, MDefinition** subject, bool* filtersUndefined,
                                 bool* filtersNull);
 
-    void infer(CompilerConstraintList* constraints,
-               BaselineInspector* inspector, jsbytecode* pc);
     CompareType compareType() const {
         return compareType_;
     }
@@ -4252,7 +4256,7 @@ class MCompare
             return AliasSet::None();
         if (compareType_ == Compare_Unknown)
             return AliasSet::Store(AliasSet::Any);
-        MOZ_ASSERT(compareType_ <= Compare_Value);
+        MOZ_ASSERT(compareType_ <= Compare_Bitwise);
         return AliasSet::None();
     }
 
@@ -4264,6 +4268,9 @@ class MCompare
     bool needTruncation(TruncateKind kind) override;
     void truncate() override;
     TruncateKind operandTruncateKind(size_t index) const override;
+
+    static CompareType determineCompareType(JSOp op, MDefinition* left, MDefinition* right);
+    void cacheOperandMightEmulateUndefined(CompilerConstraintList* constraints);
 
 # ifdef DEBUG
     bool isConsistentFloat32Use(MUse* use) const override {
@@ -7076,6 +7083,7 @@ class MBinarySharedStub
   : public MBinaryInstruction,
     public MixPolicy<BoxPolicy<0>, BoxPolicy<1> >::Data
 {
+  protected:
     explicit MBinarySharedStub(MDefinition* left, MDefinition* right)
       : MBinaryInstruction(left, right)
     {
@@ -8385,7 +8393,7 @@ class MNot
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
 
-    void markOperandCantEmulateUndefined() {
+    void markNoOperandEmulatesUndefined() {
         operandMightEmulateUndefined_ = false;
     }
     bool operandMightEmulateUndefined() const {

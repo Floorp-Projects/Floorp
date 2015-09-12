@@ -964,6 +964,7 @@ NS_INTERFACE_MAP_BEGIN(nsStandardURL)
     NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
     NS_INTERFACE_MAP_ENTRY(nsIMutable)
     NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableURI)
+    NS_INTERFACE_MAP_ENTRY(nsISensitiveInfoHiddenURI)
     // see nsStandardURL::Equals
     if (aIID.Equals(kThisImplCID))
         foundInterface = static_cast<nsIURI *>(this);
@@ -980,6 +981,17 @@ NS_IMETHODIMP
 nsStandardURL::GetSpec(nsACString &result)
 {
     result = mSpec;
+    return NS_OK;
+}
+
+// result may contain unescaped UTF-8 characters
+NS_IMETHODIMP
+nsStandardURL::GetSensitiveInfoHiddenSpec(nsACString &result)
+{
+    result = mSpec;
+    if (mPassword.mLen >= 0) {
+      result.Replace(mPassword.mPos, mPassword.mLen, "****");
+    }
     return NS_OK;
 }
 

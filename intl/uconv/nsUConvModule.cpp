@@ -107,12 +107,8 @@
 #include "nsUnicodeToISO2022JP.h"
 
 // ucvtw
-#include "nsUCvTWCID.h"
-#include "nsUCvTWDll.h"
 #include "nsBIG5ToUnicode.h"
 #include "nsUnicodeToBIG5.h"
-#include "nsBIG5HKSCSToUnicode.h"
-#include "nsUnicodeToBIG5HKSCS.h"
 
 // ucvko
 #include "nsUCvKOCID.h"
@@ -184,7 +180,6 @@ NS_UCONV_REG_UNREG("EUC-JP", NS_EUCJPTOUNICODE_CID, NS_UNICODETOEUCJP_CID)
 
     // ucvtw
 NS_UCONV_REG_UNREG("Big5", NS_BIG5TOUNICODE_CID, NS_UNICODETOBIG5_CID)
-NS_UCONV_REG_UNREG("Big5-HKSCS", NS_BIG5HKSCSTOUNICODE_CID, NS_UNICODETOBIG5HKSCS_CID)
 
     // ucvko
 NS_UCONV_REG_UNREG("EUC-KR", NS_EUCKRTOUNICODE_CID, NS_UNICODETOEUCKR_CID)
@@ -214,6 +209,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsISO2022JPToUnicodeV2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToISO2022JP)
 
 // ucvtw
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBIG5ToUnicode)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToBIG5)
 
 // ucvko
 
@@ -245,23 +242,6 @@ const uint16_t g_uf0208extMapping[] = {
 
 const uint16_t g_ASCIIMappingTable[] = {
   0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
-};
-
-// ucvtw
-const uint16_t g_ufBig5Mapping[] = {
-#include "big5.uf"
-};
-
-const uint16_t g_utBIG5Mapping[] = {
-#include "big5.ut"
-};
-
-const uint16_t g_ufBig5HKSCSMapping[] = {
-#include "hkscs.uf"
-};
-
-const uint16_t g_utBig5HKSCSMapping[] = {
-#include "hkscs.ut"
 };
 
 // ucvko
@@ -377,8 +357,6 @@ NS_DEFINE_NAMED_CID(NS_UNICODETOEUCJP_CID);
 NS_DEFINE_NAMED_CID(NS_UNICODETOISO2022JP_CID);
 NS_DEFINE_NAMED_CID(NS_UNICODETOBIG5_CID);
 NS_DEFINE_NAMED_CID(NS_BIG5TOUNICODE_CID);
-NS_DEFINE_NAMED_CID(NS_UNICODETOBIG5HKSCS_CID);
-NS_DEFINE_NAMED_CID(NS_BIG5HKSCSTOUNICODE_CID);
 NS_DEFINE_NAMED_CID(NS_EUCKRTOUNICODE_CID);
 NS_DEFINE_NAMED_CID(NS_UNICODETOEUCKR_CID);
 NS_DEFINE_NAMED_CID(NS_GBKTOUNICODE_CID);
@@ -481,8 +459,6 @@ static const mozilla::Module::CIDEntry kUConvCIDs[] = {
   { &kNS_UNICODETOISO2022JP_CID, false, nullptr, nsUnicodeToISO2022JPConstructor },
   { &kNS_UNICODETOBIG5_CID, false, nullptr, nsUnicodeToBIG5Constructor },
   { &kNS_BIG5TOUNICODE_CID, false, nullptr, nsBIG5ToUnicodeConstructor },
-  { &kNS_UNICODETOBIG5HKSCS_CID, false, nullptr, nsUnicodeToBIG5HKSCSConstructor },
-  { &kNS_BIG5HKSCSTOUNICODE_CID, false, nullptr, nsBIG5HKSCSToUnicodeConstructor },
   { &kNS_EUCKRTOUNICODE_CID, false, nullptr, nsCP949ToUnicodeConstructor },
   { &kNS_UNICODETOEUCKR_CID, false, nullptr, nsUnicodeToCP949Constructor },
   { &kNS_GBKTOUNICODE_CID, false, nullptr, nsGB18030ToUnicodeConstructor },
@@ -587,8 +563,6 @@ static const mozilla::Module::ContractIDEntry kUConvContracts[] = {
   { NS_UNICODEENCODER_CONTRACTID_BASE "ISO-2022-JP", &kNS_UNICODETOISO2022JP_CID },
   { NS_UNICODEENCODER_CONTRACTID_BASE "Big5", &kNS_UNICODETOBIG5_CID },
   { NS_UNICODEDECODER_CONTRACTID_BASE "Big5", &kNS_BIG5TOUNICODE_CID },
-  { NS_UNICODEENCODER_CONTRACTID_BASE "Big5-HKSCS", &kNS_UNICODETOBIG5HKSCS_CID },
-  { NS_UNICODEDECODER_CONTRACTID_BASE "Big5-HKSCS", &kNS_BIG5HKSCSTOUNICODE_CID },
   { NS_UNICODEDECODER_CONTRACTID_BASE "EUC-KR", &kNS_EUCKRTOUNICODE_CID },
   { NS_UNICODEENCODER_CONTRACTID_BASE "EUC-KR", &kNS_UNICODETOEUCKR_CID },
   { NS_UNICODEDECODER_CONTRACTID_BASE "gbk", &kNS_GBKTOUNICODE_CID },

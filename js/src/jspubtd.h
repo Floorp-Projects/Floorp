@@ -221,7 +221,6 @@ class JS_PUBLIC_API(AutoGCRooter)
         VALVECTOR =   -10, /* js::AutoValueVector */
         IDVECTOR =    -11, /* js::AutoIdVector */
         OBJVECTOR =   -14, /* js::AutoObjectVector */
-        SCRIPTVECTOR =-16, /* js::AutoScriptVector */
         IONMASM =     -19, /* js::jit::MacroAssembler */
         WRAPVECTOR =  -20, /* js::AutoWrapperVector */
         WRAPPER =     -21, /* js::AutoWrapperRooter */
@@ -232,7 +231,6 @@ class JS_PUBLIC_API(AutoGCRooter)
     static ptrdiff_t GetTag(const Value& value) { return VALVECTOR; }
     static ptrdiff_t GetTag(const jsid& id) { return IDVECTOR; }
     static ptrdiff_t GetTag(JSObject* obj) { return OBJVECTOR; }
-    static ptrdiff_t GetTag(JSScript* script) { return SCRIPTVECTOR; }
 
   private:
     AutoGCRooter ** const stackTop;

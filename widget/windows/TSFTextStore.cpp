@@ -2083,14 +2083,14 @@ TSFTextStore::GetCurrentText(nsAString& aTextContent)
          ("TSF: 0x%p   TSFTextStore::GetCurrentText(): "
           "retrieving text from the content...", this));
 
-  WidgetQueryContentEvent queryText(true, NS_QUERY_TEXT_CONTENT, mWidget);
+  WidgetQueryContentEvent queryText(true, eQueryTextContent, mWidget);
   queryText.InitForQueryTextContent(0, UINT32_MAX);
   mWidget->InitEvent(queryText);
   DispatchEvent(queryText);
   if (NS_WARN_IF(!queryText.mSucceeded)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetCurrentText(), FAILED, due to "
-            "NS_QUERY_TEXT_CONTENT failure", this));
+            "eQueryTextContent failure", this));
     aTextContent.Truncate();
     return false;
   }
@@ -2109,8 +2109,7 @@ TSFTextStore::CurrentSelection()
       MOZ_CRASH();
     }
 
-    WidgetQueryContentEvent querySelection(true, NS_QUERY_SELECTED_TEXT,
-                                           mWidget);
+    WidgetQueryContentEvent querySelection(true, eQuerySelectedText, mWidget);
     mWidget->InitEvent(querySelection);
     DispatchEvent(querySelection);
     NS_ENSURE_TRUE(querySelection.mSucceeded, mSelection);
@@ -3365,7 +3364,7 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView,
   // NOTE: Don't check if the point is in the widget since the point can be
   //       outside of the widget if focused editor is in a XUL <panel>.
 
-  WidgetQueryContentEvent charAtPt(true, NS_QUERY_CHARACTER_AT_POINT, mWidget);
+  WidgetQueryContentEvent charAtPt(true, eQueryCharacterAtPoint, mWidget);
   mWidget->InitEvent(charAtPt, &ourPt);
 
   // FYI: WidgetQueryContentEvent may cause flushing pending layout and it
@@ -3375,7 +3374,7 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView,
   if (!mWidget || mWidget->Destroyed()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetACPFromPoint() FAILED due to "
-            "mWidget was destroyed during NS_QUERY_CHARACTER_AT_POINT", this));
+            "mWidget was destroyed during eQueryCharacterAtPoint", this));
     return E_FAIL;
   }
 
@@ -3388,7 +3387,7 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView,
   if (NS_WARN_IF(!charAtPt.mSucceeded)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetACPFromPoint() FAILED due to "
-            "NS_QUERY_CHARACTER_AT_POINT failure", this));
+            "eQueryCharacterAtPoint failure", this));
     return E_FAIL;
   }
 
@@ -3696,13 +3695,13 @@ TSFTextStore::GetScreenExtInternal(RECT& aScreenExt)
          ("TSF: 0x%p   TSFTextStore::GetScreenExtInternal()", this));
 
   // use NS_QUERY_EDITOR_RECT to get rect in system, screen coordinates
-  WidgetQueryContentEvent event(true, NS_QUERY_EDITOR_RECT, mWidget);
+  WidgetQueryContentEvent event(true, eQueryEditorRect, mWidget);
   mWidget->InitEvent(event);
   DispatchEvent(event);
   if (!event.mSucceeded) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetScreenExtInternal() FAILED due to "
-            "NS_QUERY_EDITOR_RECT failure", this));
+            "eQueryEditorRect failure", this));
     return false;
   }
 
@@ -4829,14 +4828,14 @@ TSFTextStore::CreateNativeCaret()
   //     collapsed, is it OK?
   uint32_t caretOffset = currentSel.MaxOffset();
 
-  WidgetQueryContentEvent queryCaretRect(true, NS_QUERY_CARET_RECT, mWidget);
+  WidgetQueryContentEvent queryCaretRect(true, eQueryCaretRect, mWidget);
   queryCaretRect.InitForQueryCaretRect(caretOffset);
   mWidget->InitEvent(queryCaretRect);
   DispatchEvent(queryCaretRect);
   if (!queryCaretRect.mSucceeded) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::CreateNativeCaret() FAILED due to "
-            "NS_QUERY_CARET_RECT failure (offset=%d)", this, caretOffset));
+            "eQueryCaretRect failure (offset=%d)", this, caretOffset));
     return;
   }
 

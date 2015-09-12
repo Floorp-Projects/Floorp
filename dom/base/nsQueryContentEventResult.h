@@ -29,7 +29,7 @@ public:
 protected:
   ~nsQueryContentEventResult();
 
-  uint32_t mEventID;
+  mozilla::EventMessage mEventMessage;
 
   uint32_t mOffset;
   uint32_t mTentativeCaretOffset;

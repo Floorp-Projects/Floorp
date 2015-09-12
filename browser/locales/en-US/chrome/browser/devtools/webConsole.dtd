@@ -11,6 +11,24 @@
 <!ENTITY window.title "Web Console">
 <!ENTITY browserConsole.title "Browser Console">
 
+<!ENTITY networkPanel.requestURLColon             "Request URL:">
+<!ENTITY networkPanel.requestMethodColon          "Request Method:">
+<!ENTITY networkPanel.statusCodeColon             "Status Code:">
+
+<!ENTITY networkPanel.requestHeaders              "Request Headers">
+<!ENTITY networkPanel.requestCookie               "Sent Cookie">
+<!ENTITY networkPanel.requestBody                 "Request Body">
+<!ENTITY networkPanel.requestFormData             "Sent Form Data">
+
+<!ENTITY networkPanel.responseHeaders             "Response Headers">
+<!ENTITY networkPanel.responseCookie              "Received Cookie">
+<!ENTITY networkPanel.responseBody                "Response Body">
+<!ENTITY networkPanel.responseBodyCached          "Cached Data">
+<!ENTITY networkPanel.responseBodyUnknownType     "Unknown Content Type">
+<!ENTITY networkPanel.responseNoBody              "No Response Body">
+<!ENTITY networkPanel.responseImage               "Received Image">
+<!ENTITY networkPanel.responseImageCached         "Cached Image">
+
 <!-- LOCALIZATION NOTE (saveBodies.label): You can see this string in the Web
    - Console context menu. -->
 <!ENTITY saveBodies.label     "Log Request and Response Bodies">

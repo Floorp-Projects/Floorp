@@ -8,7 +8,4 @@ SOURCES += [
     'NormalizationTest.cpp',
 ]
 
-# XXX: We should fix these warnings.
-ALLOW_COMPILER_WARNINGS = True
-
 FINAL_LIBRARY = 'xul-gtest'

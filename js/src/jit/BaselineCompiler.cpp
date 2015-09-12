@@ -1710,7 +1710,7 @@ BaselineCompiler::emitCompare()
     frame.popRegsAndSync(2);
 
     // Call IC.
-    ICCompare_Fallback::Compiler stubCompiler(cx);
+    ICCompare_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::Baseline);
     if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
@@ -1745,7 +1745,7 @@ BaselineCompiler::emit_JSOP_CASE()
     frame.syncStack(0);
 
     // Call IC.
-    ICCompare_Fallback::Compiler stubCompiler(cx);
+    ICCompare_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::Baseline);
     if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
