@@ -514,7 +514,7 @@ SampleTable::setSampleAuxiliaryInformationSizeParams(
         return OK;
     }
 
-    if (!mCencSizes.isEmpty() || mCencDefaultSize) {
+    if (!mCencSizes.IsEmpty() || mCencDefaultSize) {
         ALOGE("duplicate cenc saiz box");
         return ERROR_MALFORMED;
     }
@@ -536,9 +536,11 @@ SampleTable::setSampleAuxiliaryInformationSizeParams(
     data_offset += 4;
 
     if (!mCencDefaultSize) {
-        mCencSizes.insertAt(0, 0, mCencInfoCount);
+        if (!mCencSizes.InsertElementsAt(0, mCencInfoCount, mozilla::fallible)) {
+          return ERROR_IO;
+        }
         if (mDataSource->readAt(
-                    data_offset, mCencSizes.editArray(), mCencInfoCount)
+                    data_offset, mCencSizes.Elements(), mCencInfoCount)
                     < mCencInfoCount) {
             return ERROR_IO;
         }
@@ -568,7 +570,7 @@ SampleTable::setSampleAuxiliaryInformationOffsetParams(
         return OK;
     }
 
-    if (!mCencOffsets.isEmpty()) {
+    if (!mCencOffsets.IsEmpty()) {
         ALOGE("duplicate cenc saio box");
         return ERROR_MALFORMED;
     }
@@ -580,22 +582,29 @@ SampleTable::setSampleAuxiliaryInformationOffsetParams(
     }
     data_offset += 4;
 
-    if (mCencOffsets.setCapacity(cencOffsetCount) < 0) {
+    if (cencOffsetCount >= kMAX_ALLOCATION) {
         return ERROR_MALFORMED;
     }
     if (!version) {
+        if (!mCencOffsets.SetCapacity(cencOffsetCount, mozilla::fallible)) {
+            return ERROR_MALFORMED;
+        }
         for (uint32_t i = 0; i < cencOffsetCount; i++) {
             uint32_t tmp;
             if (!mDataSource->getUInt32(data_offset, &tmp)) {
                 ALOGE("error reading cenc aux info offsets");
                 return ERROR_IO;
             }
-            mCencOffsets.push(tmp);
+            // FIXME: Make this infallible after bug 968520 is done.
+            MOZ_ALWAYS_TRUE(mCencOffsets.AppendElement(tmp, mozilla::fallible));
             data_offset += 4;
         }
     } else {
+        if (!mCencOffsets.SetLength(cencOffsetCount, mozilla::fallible)) {
+          return ERROR_MALFORMED;
+        }
         for (uint32_t i = 0; i < cencOffsetCount; i++) {
-            if (!mDataSource->getUInt64(data_offset, &mCencOffsets.editItemAt(i))) {
+            if (!mDataSource->getUInt64(data_offset, &mCencOffsets[i])) {
                 ALOGE("error reading cenc aux info offsets");
                 return ERROR_IO;
             }
@@ -610,15 +619,15 @@ SampleTable::setSampleAuxiliaryInformationOffsetParams(
 
 status_t
 SampleTable::parseSampleCencInfo() {
-    if ((!mCencDefaultSize && !mCencInfoCount) || mCencOffsets.isEmpty()) {
+    if ((!mCencDefaultSize && !mCencInfoCount) || mCencOffsets.IsEmpty()) {
         // We don't have all the cenc information we need yet. Quietly fail and
         // hope we get the data we need later in the track header.
         ALOGV("Got half of cenc saio/saiz pair. Deferring parse until we get the other half.");
         return OK;
     }
 
-    if (!mCencSizes.isEmpty() && mCencOffsets.size() > 1 &&
-        mCencSizes.size() != mCencOffsets.size()) {
+    if (!mCencSizes.IsEmpty() && mCencOffsets.Length() > 1 &&
+        mCencSizes.IsEmpty() != mCencOffsets.Length()) {
         return ERROR_MALFORMED;
     }
 
@@ -635,7 +644,7 @@ SampleTable::parseSampleCencInfo() {
     uint64_t nextOffset = mCencOffsets[0];
     for (uint32_t i = 0; i < mCencInfoCount; i++) {
         uint8_t size = mCencDefaultSize ? mCencDefaultSize : mCencSizes[i];
-        uint64_t offset = mCencOffsets.size() == 1 ? nextOffset : mCencOffsets[i];
+        uint64_t offset = mCencOffsets.Length() == 1 ? nextOffset : mCencOffsets[i];
         nextOffset = offset + size;
 
         auto& info = mCencInfo[i];
@@ -1096,9 +1105,9 @@ uint32_t SampleTable::getCompositionTimeOffset(uint32_t sampleIndex) {
 
 status_t
 SampleTable::getSampleCencInfo(
-        uint32_t sample_index, Vector<uint16_t>& clear_sizes,
-        Vector<uint32_t>& cipher_sizes, uint8_t iv[]) {
-    CHECK(clear_sizes.isEmpty() && cipher_sizes.isEmpty());
+        uint32_t sample_index, nsTArray<uint16_t>& clear_sizes,
+        nsTArray<uint32_t>& cipher_sizes, uint8_t iv[]) {
+    CHECK(clear_sizes.IsEmpty() && cipher_sizes.IsEmpty());
 
     if (sample_index >= mCencInfoCount) {
         ALOGE("cenc info requested for out of range sample index");
@@ -1106,16 +1115,12 @@ SampleTable::getSampleCencInfo(
     }
 
     auto& info = mCencInfo[sample_index];
-    if (clear_sizes.setCapacity(info.mSubsampleCount) < 0) {
-        return ERROR_MALFORMED;
-    }
-    if (cipher_sizes.setCapacity(info.mSubsampleCount) < 0) {
-        return ERROR_MALFORMED;
-    }
+    clear_sizes.SetCapacity(info.mSubsampleCount);
+    cipher_sizes.SetCapacity(info.mSubsampleCount);
 
     for (uint32_t i = 0; i < info.mSubsampleCount; i++) {
-        clear_sizes.push(info.mSubsamples[i].mClearBytes);
-        cipher_sizes.push(info.mSubsamples[i].mCipherBytes);
+        clear_sizes.AppendElement(info.mSubsamples[i].mClearBytes);
+        cipher_sizes.AppendElement(info.mSubsamples[i].mCipherBytes);
     }
 
     memcpy(iv, info.mIV, IV_BYTES);
