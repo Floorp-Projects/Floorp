@@ -1271,7 +1271,7 @@
                   mediaConnected: true, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   remoteVideoEnabled: true, 
-                  video: { enabled: true, visible: true}})
+                  video: { enabled: false, visible: true}})
               )
             ), 
 
