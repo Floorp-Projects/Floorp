@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1441146756000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1441833117000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -1953,6 +1953,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i998" id="meOYKQEbBBjH5Ml91z0p9Aosgus8P55bjTa4KPfl@jetpack">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i474" id="{906000a4-88d9-4d52-b209-7a772970d91f}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -2169,6 +2175,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i1000" id="jufa098j-LKooapd9jasJ9jliJsd@jetpack">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i44" id="sigma@labs.mozilla">
                           <prefs>
               </prefs>
@@ -2308,6 +2320,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i493" id="12x3q@3244516.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i996" id="9598582LLKmjasieijkaslesae@jetpack">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
@@ -3022,10 +3040,10 @@
                   </versionRange>
                         </pluginItem>
       <pluginItem  blockID="p556">
-                  <match name="filename" exp="npUnity3D32\.dll" />                      <versionRange  minVersion="0" maxVersion="4.3.4.99999999" severity="0" vulnerabilitystatus="1"></versionRange>
+                  <match name="filename" exp="npUnity3D32\.dll" />                      <versionRange  minVersion="0" maxVersion="4.6.6f1" severity="0" vulnerabilitystatus="1"></versionRange>
                         </pluginItem>
       <pluginItem  blockID="p558">
-            <match name="description" exp="^($|Unity Web Player version ([0-3]|(4\.([0-2]|3(\.[0-4])?[^0-9.]))))" />      <match name="filename" exp="Unity Web Player\.plugin" />                      <versionRange  severity="0" vulnerabilitystatus="1"></versionRange>
+            <match name="description" exp="^($|Unity Web Player version ([0-3]|(4\.([0-5]|6(\.([0-5]|6f1)))?[^0-9.])))" />      <match name="filename" exp="Unity Web Player\.plugin" />                      <versionRange  severity="0" vulnerabilitystatus="1"></versionRange>
                         </pluginItem>
       <pluginItem  blockID="p572">
                   <match name="filename" exp="npdjvu\.dll" />                      <versionRange  minVersion="0" maxVersion="6.1.4.27993" severity="0" vulnerabilitystatus="1"></versionRange>
@@ -3159,6 +3177,12 @@
       <match name="name" exp="Java(\(TM\))? Plug-in 11\.45(\.[0-9]+)?([^\d\._]|$)" />            <match name="filename" exp="libnpjp2\.so" />                      <versionRange  severity="0" vulnerabilitystatus="1"></versionRange>
                             <infoURL>https://java.com/</infoURL>
           </pluginItem>
+      <pluginItem  blockID="p1002">
+                  <match name="filename" exp="npUnity3D32\.dll" />                      <versionRange  minVersion="5.0" maxVersion="5.0.3f1" severity="0" vulnerabilitystatus="1"></versionRange>
+                        </pluginItem>
+      <pluginItem  blockID="p1004">
+            <match name="description" exp="^($|Unity Web Player version 5.0(\.([0-2]|3f1))?[^0-9.])" />      <match name="filename" exp="Unity Web Player\.plugin" />                      <versionRange  severity="0" vulnerabilitystatus="1"></versionRange>
+                        </pluginItem>
     </pluginItems>
 
   <gfxItems>
