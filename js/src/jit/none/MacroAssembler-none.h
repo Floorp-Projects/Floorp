@@ -422,7 +422,6 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void storeUnboxedValue(ConstantOrRegister, MIRType, T, MIRType) { MOZ_CRASH(); }
     template <typename T> void storeUnboxedPayload(ValueOperand value, T, size_t) { MOZ_CRASH(); }
 
-    void rshiftPtrArithmetic(Imm32, Register) { MOZ_CRASH(); }
     void lshiftPtr(Imm32, Register) { MOZ_CRASH(); }
     void convertUInt32ToDouble(Register, FloatRegister) { MOZ_CRASH(); }
     void convertUInt32ToFloat32(Register, FloatRegister) { MOZ_CRASH(); }

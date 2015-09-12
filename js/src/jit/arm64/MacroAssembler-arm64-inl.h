@@ -156,6 +156,12 @@ MacroAssembler::rshiftPtr(Imm32 imm, Register src, Register dest)
     Lsr(ARMRegister(dest, 64), ARMRegister(src, 64), imm.value);
 }
 
+void
+MacroAssembler::rshiftPtrArithmetic(Imm32 imm, Register dest)
+{
+    Asr(ARMRegister(dest, 64), ARMRegister(dest, 64), imm.value);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
