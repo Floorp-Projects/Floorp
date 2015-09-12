@@ -101,6 +101,7 @@ config = {
         "mozmill": {
             "options": [
                 "--binary=%(binary_path)s",
+                "--testing-modules-dir=test/modules",
                 "--symbols-path=%(symbols_path)s"
             ],
             "run_filename": "runtestlist.py",
