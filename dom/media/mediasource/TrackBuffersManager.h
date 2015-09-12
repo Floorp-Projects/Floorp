@@ -282,7 +282,7 @@ private:
 
   void CheckSequenceDiscontinuity();
   void ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData);
-  void CheckNextInsertionIndex(TrackData& aTrackData,
+  bool CheckNextInsertionIndex(TrackData& aTrackData,
                                const media::TimeUnit& aSampleTime);
   void InsertFrames(TrackBuffer& aSamples,
                     const media::TimeIntervals& aIntervals,
