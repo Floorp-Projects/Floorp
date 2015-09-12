@@ -16,7 +16,7 @@ interface nsIPresentationChannelDescription: nsISupports
   // Type of transport channel.
   readonly attribute uint8_t type;
 
-  // Addresses for TCP channel.
+  // Addresses for TCP channel (as a list of nsISupportsCString).
   // Should only be used while type == TYPE_TCP.
   readonly attribute nsIArray tcpAddress;
 

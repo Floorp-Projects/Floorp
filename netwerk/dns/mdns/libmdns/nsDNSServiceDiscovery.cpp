@@ -7,6 +7,7 @@
 #include <cutils/properties.h>
 #include "MDNSResponderOperator.h"
 #include "nsICancelable.h"
+#include "nsXULAppAPI.h"
 #include "private/pprio.h"
 
 namespace mozilla {
@@ -14,7 +15,7 @@ namespace net {
 
 namespace {
 
-void
+inline void
 StartService()
 {
   char value[PROPERTY_VALUE_MAX] = { '\0' };
@@ -38,7 +39,39 @@ StopService()
   property_set("ctl.stop", "mdnsd");
 }
 
+class ServiceCounter
+{
+public:
+  static bool IsServiceRunning()
+  {
+    return !!sUseCount;
+  }
+
+private:
+  static uint32_t sUseCount;
+
+protected:
+  ServiceCounter()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (!sUseCount++) {
+      StartService();
+    }
+  }
+
+  virtual ~ServiceCounter()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (!--sUseCount) {
+      StopService();
+    }
+  }
+};
+
+uint32_t ServiceCounter::sUseCount = 0;
+
 class DiscoveryRequest final : public nsICancelable
+                             , private ServiceCounter
 {
 public:
   NS_DECL_ISUPPORTS
@@ -75,6 +108,7 @@ DiscoveryRequest::Cancel(nsresult aReason)
 }
 
 class RegisterRequest final : public nsICancelable
+                            , private ServiceCounter
 {
 public:
   NS_DECL_ISUPPORTS
@@ -124,7 +158,10 @@ nsDNSServiceDiscovery::~nsDNSServiceDiscovery()
 nsresult
 nsDNSServiceDiscovery::Init()
 {
-  StartService();
+  if (!XRE_IsParentProcess()) {
+    MOZ_ASSERT(false, "nsDNSServiceDiscovery can only be used in parent process");
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
@@ -140,6 +177,7 @@ nsDNSServiceDiscovery::StartDiscovery(const nsACString& aServiceType,
     return rv;
   }
 
+  nsCOMPtr<nsICancelable> req = new DiscoveryRequest(this, aListener);
   nsRefPtr<BrowseOperator> browserOp = new BrowseOperator(aServiceType,
                                                           aListener);
   if (NS_WARN_IF(NS_FAILED(rv = browserOp->Start()))) {
@@ -148,7 +186,6 @@ nsDNSServiceDiscovery::StartDiscovery(const nsACString& aServiceType,
 
   mDiscoveryMap.Put(aListener, browserOp);
 
-  nsCOMPtr<nsICancelable> req = new DiscoveryRequest(this, aListener);
   req.forget(aRetVal);
 
   return NS_OK;
@@ -185,6 +222,7 @@ nsDNSServiceDiscovery::RegisterService(nsIDNSServiceInfo* aServiceInfo,
     return rv;
   }
 
+  nsCOMPtr<nsICancelable> req = new RegisterRequest(this, aListener);
   nsRefPtr<RegisterOperator> registerOp = new RegisterOperator(aServiceInfo,
                                                                aListener);
   if (NS_WARN_IF(NS_FAILED(rv = registerOp->Start()))) {
@@ -193,7 +231,6 @@ nsDNSServiceDiscovery::RegisterService(nsIDNSServiceInfo* aServiceInfo,
 
   mRegisterMap.Put(aListener, registerOp);
 
-  nsCOMPtr<nsICancelable> req = new RegisterRequest(this, aListener);
   req.forget(aRetVal);
 
   return NS_OK;
@@ -222,6 +259,10 @@ NS_IMETHODIMP
 nsDNSServiceDiscovery::ResolveService(nsIDNSServiceInfo* aServiceInfo,
                                       nsIDNSServiceResolveListener* aListener)
 {
+  if (!ServiceCounter::IsServiceRunning()) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult rv;
 
   nsRefPtr<ResolveOperator> resolveOp = new ResolveOperator(aServiceInfo,
