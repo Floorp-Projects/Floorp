@@ -137,18 +137,18 @@ static const char*
 GetEventMessageName(EventMessage aMessage)
 {
   switch (aMessage) {
-    case NS_COMPOSITION_START:
-      return "NS_COMPOSITION_START";
-    case NS_COMPOSITION_END:
-      return "NS_COMPOSITION_END";
-    case NS_COMPOSITION_UPDATE:
-      return "NS_COMPOSITION_UPDATE";
-    case NS_COMPOSITION_CHANGE:
-      return "NS_COMPOSITION_CHANGE";
-    case NS_COMPOSITION_COMMIT_AS_IS:
-      return "NS_COMPOSITION_COMMIT_AS_IS";
-    case NS_COMPOSITION_COMMIT:
-      return "NS_COMPOSITION_COMMIT";
+    case eCompositionStart:
+      return "eCompositionStart";
+    case eCompositionEnd:
+      return "eCompositionEnd";
+    case eCompositionUpdate:
+      return "eCompositionUpdate";
+    case eCompositionChange:
+      return "eCompositionChange";
+    case eCompositionCommitAsIs:
+      return "eCompositionCommitAsIs";
+    case eCompositionCommit:
+      return "eCompositionCommit";
     case eSetSelection:
       return "eSetSelection";
     default:
@@ -1147,7 +1147,7 @@ IMEStateManager::DispatchCompositionEvent(
     return;
   }
 
-  MOZ_ASSERT(aCompositionEvent->mMessage != NS_COMPOSITION_UPDATE,
+  MOZ_ASSERT(aCompositionEvent->mMessage != eCompositionUpdate,
              "compositionupdate event shouldn't be dispatched manually");
 
   EnsureTextCompositionArray();
@@ -1163,7 +1163,7 @@ IMEStateManager::DispatchCompositionEvent(
     MOZ_LOG(sISMLog, LogLevel::Debug,
       ("ISM:   IMEStateManager::DispatchCompositionEvent(), "
        "adding new TextComposition to the array"));
-    MOZ_ASSERT(aCompositionEvent->mMessage == NS_COMPOSITION_START);
+    MOZ_ASSERT(aCompositionEvent->mMessage == eCompositionStart);
     composition =
       new TextComposition(aPresContext, aEventTargetNode, tabParent,
                           aCompositionEvent);
@@ -1171,7 +1171,7 @@ IMEStateManager::DispatchCompositionEvent(
   }
 #ifdef DEBUG
   else {
-    MOZ_ASSERT(aCompositionEvent->mMessage != NS_COMPOSITION_START);
+    MOZ_ASSERT(aCompositionEvent->mMessage != eCompositionStart);
   }
 #endif // #ifdef DEBUG
 
@@ -1277,7 +1277,7 @@ IMEStateManager::OnCompositionEventDiscarded(
 
   // Ignore compositionstart for now because sTextCompositions may not have
   // been created yet.
-  if (aCompositionEvent->mMessage == NS_COMPOSITION_START) {
+  if (aCompositionEvent->mMessage == eCompositionStart) {
     return;
   }
 

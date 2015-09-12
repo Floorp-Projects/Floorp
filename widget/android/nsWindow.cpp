@@ -1686,8 +1686,7 @@ nsWindow::RemoveIMEComposition()
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
     AutoIMEMask selMask(mIMEMaskSelectionUpdate);
 
-    WidgetCompositionEvent compositionCommitEvent(true,
-                                                  NS_COMPOSITION_COMMIT_AS_IS,
+    WidgetCompositionEvent compositionCommitEvent(true, eCompositionCommitAsIs,
                                                   this);
     InitEvent(compositionCommitEvent, nullptr);
     DispatchEvent(&compositionCommitEvent);
@@ -1828,8 +1827,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 }
 
                 {
-                    WidgetCompositionEvent event(
-                        true, NS_COMPOSITION_START, this);
+                    WidgetCompositionEvent event(true, eCompositionStart, this);
                     InitEvent(event, nullptr);
                     DispatchEvent(&event);
                 }
@@ -1846,7 +1844,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             }
 
             {
-                WidgetCompositionEvent event(true, NS_COMPOSITION_CHANGE, this);
+                WidgetCompositionEvent event(true, eCompositionChange, this);
                 InitEvent(event, nullptr);
                 event.mData = ae->Characters();
 
@@ -1864,7 +1862,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             // Don't end composition when composing text.
             if (ae->Action() != AndroidGeckoEvent::IME_COMPOSE_TEXT) {
                 WidgetCompositionEvent compositionCommitEvent(
-                        true, NS_COMPOSITION_COMMIT_AS_IS, this);
+                        true, eCompositionCommitAsIs, this);
                 InitEvent(compositionCommitEvent, nullptr);
                 DispatchEvent(&compositionCommitEvent);
             }
@@ -1948,7 +1946,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             const auto composition(GetIMEComposition());
             MOZ_ASSERT(!composition || !composition->IsEditorHandlingEvent());
 
-            WidgetCompositionEvent event(true, NS_COMPOSITION_CHANGE, this);
+            WidgetCompositionEvent event(true, eCompositionChange, this);
             InitEvent(event, nullptr);
 
             event.mRanges = new TextRangeArray();
@@ -1984,8 +1982,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 }
 
                 {
-                    WidgetCompositionEvent event(
-                        true, NS_COMPOSITION_START, this);
+                    WidgetCompositionEvent event(true, eCompositionStart, this);
                     InitEvent(event, nullptr);
                     DispatchEvent(&event);
                 }
@@ -2056,7 +2053,7 @@ nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
                 nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
                 WidgetCompositionEvent compositionCommitEvent(
-                                         true, NS_COMPOSITION_COMMIT, this);
+                                         true, eCompositionCommit, this);
                 InitEvent(compositionCommitEvent, nullptr);
                 // Dispatch it with empty mData value for canceling the
                 // composition

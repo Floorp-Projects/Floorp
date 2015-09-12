@@ -303,11 +303,11 @@ EVENT(mozfullscreenerror,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(mozpointerlockchange,
-      NS_POINTERLOCKCHANGE,
+      ePointerLockChange,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(mozpointerlockerror,
-      NS_POINTERLOCKERROR,
+      ePointerLockError,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(pointerdown,
@@ -469,11 +469,11 @@ FORWARDED_EVENT(scroll,
                 eBasicEventClass)
 
 WINDOW_EVENT(afterprint,
-             NS_AFTERPRINT,
+             eAfterPrint,
              EventNameType_XUL | EventNameType_HTMLBodyOrFramesetOnly,
              eBasicEventClass)
 WINDOW_EVENT(beforeprint,
-             NS_BEFOREPRINT,
+             eBeforePrint,
              EventNameType_XUL | EventNameType_HTMLBodyOrFramesetOnly,
              eBasicEventClass)
 BEFOREUNLOAD_EVENT(beforeunload,
@@ -528,37 +528,37 @@ WINDOW_EVENT(unload,
              eBasicEventClass)
 
 WINDOW_ONLY_EVENT(devicemotion,
-                  NS_DEVICE_MOTION,
+                  eDeviceMotion,
                   EventNameType_None,
                   eBasicEventClass)
 WINDOW_ONLY_EVENT(deviceorientation,
-                  NS_DEVICE_ORIENTATION,
+                  eDeviceOrientation,
                   EventNameType_None,
                   eBasicEventClass)
 WINDOW_ONLY_EVENT(deviceproximity,
-                  NS_DEVICE_PROXIMITY,
+                  eDeviceProximity,
                   EventNameType_None,
                   eBasicEventClass)
 WINDOW_ONLY_EVENT(userproximity,
-                  NS_USER_PROXIMITY,
+                  eUserProximity,
                   EventNameType_None,
                   eBasicEventClass)
 WINDOW_ONLY_EVENT(devicelight,
-                  NS_DEVICE_LIGHT,
+                  eDeviceLight,
                   EventNameType_None,
                   eBasicEventClass)
 
 #ifdef MOZ_B2G
 WINDOW_ONLY_EVENT(moztimechange,
-                  NS_MOZ_TIME_CHANGE_EVENT,
+                  eTimeChange,
                   EventNameType_None,
                   eBasicEventClass)
 WINDOW_ONLY_EVENT(moznetworkupload,
-                  NS_NETWORK_UPLOAD_EVENT,
+                  eNetworkUpload,
                   EventNameType_None,
                   eBasicEventClass)
 WINDOW_ONLY_EVENT(moznetworkdownload,
-                  NS_NETWORK_DOWNLOAD_EVENT,
+                  eNetworkDownload,
                   EventNameType_None,
                   eBasicEventClass)
 #endif // MOZ_B2G
@@ -672,19 +672,19 @@ NON_IDL_EVENT(speakerforcedchange,
  // This shouldn't be used by web/xul apps.  "compositionupdate" should be
  // used instead.
 NON_IDL_EVENT(text,
-              NS_COMPOSITION_CHANGE,
+              eCompositionChange,
               EventNameType_XUL,
               eCompositionEventClass)
 NON_IDL_EVENT(compositionstart,
-              NS_COMPOSITION_START,
+              eCompositionStart,
               EventNameType_XUL,
               eCompositionEventClass)
 NON_IDL_EVENT(compositionupdate,
-              NS_COMPOSITION_UPDATE,
+              eCompositionUpdate,
               EventNameType_XUL,
               eCompositionEventClass)
 NON_IDL_EVENT(compositionend,
-              NS_COMPOSITION_END,
+              eCompositionEnd,
               EventNameType_XUL,
               eCompositionEventClass)
 NON_IDL_EVENT(command,
@@ -732,11 +732,11 @@ NON_IDL_EVENT(draggesture,
               EventNameType_XUL,
               eDragEventClass)
 NON_IDL_EVENT(overflow,
-              NS_SCROLLPORT_OVERFLOW,
+              eScrollPortOverflow,
               EventNameType_XUL,
               eBasicEventClass)
 NON_IDL_EVENT(underflow,
-              NS_SCROLLPORT_UNDERFLOW,
+              eScrollPortUnderflow,
               EventNameType_XUL,
               eBasicEventClass)
 
@@ -774,34 +774,34 @@ NON_IDL_EVENT(zoom,
 // Only map the ID to the real event name when MESSAGE_TO_EVENT is defined.
 #ifndef MESSAGE_TO_EVENT
 NON_IDL_EVENT(begin,
-              NS_SMIL_BEGIN,
+              eSMILBeginEvent,
               EventNameType_SMIL,
               eBasicEventClass)
 #endif
 NON_IDL_EVENT(beginEvent,
-              NS_SMIL_BEGIN,
+              eSMILBeginEvent,
               EventNameType_None,
               eSMILTimeEventClass)
 // Only map the ID to the real event name when MESSAGE_TO_EVENT is defined.
 #ifndef MESSAGE_TO_EVENT
 NON_IDL_EVENT(end,
-              NS_SMIL_END,
+              eSMILEndEvent,
               EventNameType_SMIL,
               eBasicEventClass)
 #endif
 NON_IDL_EVENT(endEvent,
-              NS_SMIL_END,
+              eSMILEndEvent,
               EventNameType_None,
               eSMILTimeEventClass)
 // Only map the ID to the real event name when MESSAGE_TO_EVENT is defined.
 #ifndef MESSAGE_TO_EVENT
 NON_IDL_EVENT(repeat,
-              NS_SMIL_REPEAT,
+              eSMILRepeatEvent,
               EventNameType_SMIL,
               eBasicEventClass)
 #endif
 NON_IDL_EVENT(repeatEvent,
-              NS_SMIL_REPEAT,
+              eSMILRepeatEvent,
               EventNameType_None,
               eSMILTimeEventClass)
 
@@ -811,29 +811,29 @@ NON_IDL_EVENT(MozAfterPaint,
               eBasicEventClass)
 
 NON_IDL_EVENT(MozScrolledAreaChanged,
-              NS_SCROLLEDAREACHANGED,
+              eScrolledAreaChanged,
               EventNameType_None,
               eScrollAreaEventClass)
 
 #ifdef MOZ_GAMEPAD
 NON_IDL_EVENT(gamepadbuttondown,
-              NS_GAMEPAD_BUTTONDOWN,
+              eGamepadButtonDown,
               EventNameType_None,
               eBasicEventClass)
 NON_IDL_EVENT(gamepadbuttonup,
-              NS_GAMEPAD_BUTTONUP,
+              eGamepadButtonUp,
               EventNameType_None,
               eBasicEventClass)
 NON_IDL_EVENT(gamepadaxismove,
-              NS_GAMEPAD_AXISMOVE,
+              eGamepadAxisMove,
               EventNameType_None,
               eBasicEventClass)
 NON_IDL_EVENT(gamepadconnected,
-              NS_GAMEPAD_CONNECTED,
+              eGamepadConnected,
               EventNameType_None,
               eBasicEventClass)
 NON_IDL_EVENT(gamepaddisconnected,
-              NS_GAMEPAD_DISCONNECTED,
+              eGamepadDisconnected,
               EventNameType_None,
               eBasicEventClass)
 #endif

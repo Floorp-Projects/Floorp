@@ -128,8 +128,11 @@ public:
 private:
   void TransformScrollableLayer(Layer* aLayer);
   // Return true if an AsyncPanZoomController content transform was
-  // applied for |aLayer|.
-  bool ApplyAsyncContentTransformToTree(Layer* aLayer);
+  // applied for |aLayer|. |*aOutFoundRoot| is set to true on Android only, if
+  // one of the metrics on one of the layers was determined to be the "root"
+  // and its state was synced to the Java front-end. |aOutFoundRoot| must be
+  // non-null.
+  bool ApplyAsyncContentTransformToTree(Layer* aLayer, bool* aOutFoundRoot);
   /**
    * Update the shadow transform for aLayer assuming that is a scrollbar,
    * so that it stays in sync with the content that is being scrolled by APZ.
@@ -148,12 +151,12 @@ private:
                         CSSToParentLayerScale& aScale,
                         ScreenMargin& aFixedLayerMargins);
   void SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
-                        float aZoom,
+                        const CSSToParentLayerScale& aZoom,
                         const CSSRect& aCssPageRect,
-                        bool aLayersUpdated,
                         const CSSRect& aDisplayPort,
-                        const CSSToLayerScale& aDisplayResolution,
-                        bool aIsFirstPaint,
+                        const CSSToLayerScale& aPaintedResolution,
+                        bool aLayersUpdated,
+                        int32_t aPaintSyncId,
                         ScreenMargin& aFixedLayerMargins);
 
   /**

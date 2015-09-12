@@ -169,6 +169,8 @@ public:
 
 
 protected:
+  virtual void DestroyImpl() override;
+
   void AdvanceOutputSegment();
   void FinishOutput();
   void AccumulateInputChunk(uint32_t aInputIndex, const AudioBlock& aChunk,

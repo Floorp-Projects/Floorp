@@ -56,7 +56,7 @@ class FeatureRef
     static const uint8  SIZEOF_CHUNK = sizeof(chunk_t)*8;
 
 public:
-    FeatureRef() : m_nameValues(0) {}
+    FeatureRef();
     FeatureRef(const Face & face, unsigned short & bits_offset, uint32 max_val,
                uint32 name, uint16 uiName, uint16 flags,
                FeatureSetting *settings, uint16 num_set) throw();
@@ -97,6 +97,16 @@ private:
 private:        //unimplemented
     FeatureRef& operator=(const FeatureRef&);
 };
+
+
+inline
+FeatureRef::FeatureRef()
+: m_pFace(0), m_nameValues(0),
+  m_mask(0), m_max(0), m_id(0),
+  m_nameid(0), m_flags(0), m_numSet(0),
+  m_bits(0), m_index(0)
+{
+}
 
 
 class NameAndFeatureRef

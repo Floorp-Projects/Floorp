@@ -688,17 +688,21 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     @WrapForJNI(allowMultithread = true)
-    public ViewTransform syncFrameMetrics(float offsetX, float offsetY, float zoom,
+    public ViewTransform syncFrameMetrics(float scrollX, float scrollY, float zoom,
                 float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom,
-                boolean layersUpdated, int x, int y, int width, int height, float resolution,
-                boolean isFirstPaint)
+                int dpX, int dpY, int dpWidth, int dpHeight, float paintedResolution,
+                boolean layersUpdated, int paintSyncId)
     {
-        if (isFirstPaint) {
-            setFirstPaintViewport(offsetX, offsetY, zoom,
-                                  cssPageLeft, cssPageTop, cssPageRight, cssPageBottom);
+        // TODO: optimize this so it doesn't create so much garbage - it's a
+        // hot path
+        RectF cssPageRect = new RectF(cssPageLeft, cssPageTop, cssPageRight, cssPageBottom);
+        synchronized (getLock()) {
+            mViewportMetrics = mViewportMetrics.setViewportOrigin(scrollX, scrollY)
+                .setZoomFactor(zoom)
+                .setPageRect(RectUtils.scale(cssPageRect, zoom), cssPageRect);
         }
-
-        return syncViewportInfo(x, y, width, height, resolution, layersUpdated, 0);
+        return syncViewportInfo(dpX, dpY, dpWidth, dpHeight, paintedResolution,
+                    layersUpdated, paintSyncId);
     }
 
     @WrapForJNI(allowMultithread = true)

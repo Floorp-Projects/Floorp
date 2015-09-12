@@ -123,27 +123,6 @@ class MacroAssemblerX86Shared : public Assembler
     void move32(Register src, const Operand& dest) {
         movl(src, dest);
     }
-    void and32(Register src, Register dest) {
-        andl(src, dest);
-    }
-    void and32(const Address& src, Register dest) {
-        andl(Operand(src), dest);
-    }
-    void and32(Imm32 imm, Register dest) {
-        andl(imm, dest);
-    }
-    void and32(Imm32 imm, const Address& dest) {
-        andl(imm, Operand(dest));
-    }
-    void or32(Register src, Register dest) {
-        orl(src, dest);
-    }
-    void or32(Imm32 imm, Register dest) {
-        orl(imm, dest);
-    }
-    void or32(Imm32 imm, const Address& dest) {
-        orl(imm, Operand(dest));
-    }
     void neg32(Register reg) {
         negl(reg);
     }
@@ -210,15 +189,6 @@ class MacroAssemblerX86Shared : public Assembler
     void branchSub32(Condition cond, T src, Register dest, Label* label) {
         sub32(src, dest);
         j(cond, label);
-    }
-    void xor32(Imm32 imm, Register dest) {
-        xorl(imm, dest);
-    }
-    void xor32(Register src, Register dest) {
-        xorl(src, dest);
-    }
-    void not32(Register reg) {
-        notl(reg);
     }
     void atomic_inc32(const Operand& addr) {
         lock_incl(addr);

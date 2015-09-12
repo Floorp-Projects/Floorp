@@ -9,6 +9,20 @@
 
 #include "jit/MacroAssembler.h"
 
+#if defined(JS_CODEGEN_X86)
+# include "jit/x86/MacroAssembler-x86-inl.h"
+#elif defined(JS_CODEGEN_X64)
+# include "jit/x64/MacroAssembler-x64-inl.h"
+#elif defined(JS_CODEGEN_ARM)
+# include "jit/arm/MacroAssembler-arm-inl.h"
+#elif defined(JS_CODEGEN_ARM64)
+# include "jit/arm64/MacroAssembler-arm64-inl.h"
+#elif defined(JS_CODEGEN_MIPS32)
+# include "jit/mips32/MacroAssembler-mips32-inl.h"
+#elif !defined(JS_CODEGEN_NONE)
+# error "Unknown architecture!"
+#endif
+
 namespace js {
 namespace jit {
 
@@ -199,6 +213,35 @@ MacroAssembler::pushStaticFrameDescriptor(FrameType type)
     Push(Imm32(descriptor));
 }
 
+void
+MacroAssembler::PushCalleeToken(Register callee, bool constructing)
+{
+    if (constructing) {
+        orPtr(Imm32(CalleeToken_FunctionConstructing), callee);
+        Push(callee);
+        andPtr(Imm32(uint32_t(CalleeTokenMask)), callee);
+    } else {
+        static_assert(CalleeToken_Function == 0, "Non-constructing call requires no tagging");
+        Push(callee);
+    }
+}
+
+void
+MacroAssembler::loadFunctionFromCalleeToken(Address token, Register dest)
+{
+#ifdef DEBUG
+    Label ok;
+    loadPtr(token, dest);
+    andPtr(Imm32(uint32_t(~CalleeTokenMask)), dest);
+    branchPtr(Assembler::Equal, dest, Imm32(CalleeToken_Function), &ok);
+    branchPtr(Assembler::Equal, dest, Imm32(CalleeToken_FunctionConstructing), &ok);
+    assumeUnreachable("Unexpected CalleeToken tag");
+    bind(&ok);
+#endif
+    loadPtr(token, dest);
+    andPtr(Imm32(uint32_t(CalleeTokenMask)), dest);
+}
+
 uint32_t
 MacroAssembler::buildFakeExitFrame(Register scratch)
 {
@@ -254,6 +297,22 @@ MacroAssembler::hasSelfReference() const
 
 //}}} check_macroassembler_style
 // ===============================================================
+
+void
+MacroAssembler::branchFunctionKind(Condition cond, JSFunction::FunctionKind kind, Register fun,
+                                   Register scratch, Label* label)
+{
+    // 16-bit loads are slow and unaligned 32-bit loads may be too so
+    // perform an aligned 32-bit load and adjust the bitmask accordingly.
+    MOZ_ASSERT(JSFunction::offsetOfNargs() % sizeof(uint32_t) == 0);
+    MOZ_ASSERT(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2);
+    Address address(fun, JSFunction::offsetOfNargs());
+    int32_t mask = IMM32_16ADJ(JSFunction::FUNCTION_KIND_MASK);
+    int32_t bit = IMM32_16ADJ(kind << JSFunction::FUNCTION_KIND_SHIFT);
+    load32(address, scratch);
+    and32(Imm32(mask), scratch);
+    branch32(cond, scratch, Imm32(bit), label);
+}
 
 } // namespace jit
 } // namespace js

@@ -215,6 +215,7 @@ let isElementDisplayedFn = dispatch(isElementDisplayed);
 let getElementValueOfCssPropertyFn = dispatch(getElementValueOfCssProperty);
 let switchToShadowRootFn = dispatch(switchToShadowRoot);
 let getCookiesFn = dispatch(getCookies);
+let singleTapFn = dispatch(singleTap);
 
 /**
  * Start all message listeners
@@ -225,7 +226,7 @@ function startListeners() {
   addMessageListenerId("Marionette:executeScript", executeScript);
   addMessageListenerId("Marionette:executeAsyncScript", executeAsyncScript);
   addMessageListenerId("Marionette:executeJSScript", executeJSScript);
-  addMessageListenerId("Marionette:singleTap", singleTap);
+  addMessageListenerId("Marionette:singleTap", singleTapFn);
   addMessageListenerId("Marionette:actionChain", actionChain);
   addMessageListenerId("Marionette:multiAction", multiAction);
   addMessageListenerId("Marionette:get", get);
@@ -329,7 +330,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:executeScript", executeScript);
   removeMessageListenerId("Marionette:executeAsyncScript", executeAsyncScript);
   removeMessageListenerId("Marionette:executeJSScript", executeJSScript);
-  removeMessageListenerId("Marionette:singleTap", singleTap);
+  removeMessageListenerId("Marionette:singleTap", singleTapFn);
   removeMessageListenerId("Marionette:actionChain", actionChain);
   removeMessageListenerId("Marionette:multiAction", multiAction);
   removeMessageListenerId("Marionette:get", get);
@@ -914,34 +915,27 @@ function checkVisible(el, x, y) {
 /**
  * Function that perform a single tap
  */
-function singleTap(msg) {
-  let command_id = msg.json.command_id;
-  try {
-    let el = elementManager.getKnownElement(msg.json.id, curContainer);
-    let acc = accessibility.getAccessibleObject(el, true);
-    // after this block, the element will be scrolled into view
-    let visible = checkVisible(el, msg.json.corx, msg.json.cory);
-    checkVisibleAccessibility(acc, visible);
-    if (!visible) {
-      sendError(new ElementNotVisibleError("Element is not currently visible and may not be manipulated"), command_id);
-      return;
-    }
-    checkActionableAccessibility(acc);
-    if (!curContainer.frame.document.createTouch) {
-      actions.mouseEventsOnly = true;
-    }
-    let c = coordinates(el, msg.json.corx, msg.json.cory);
-    if (!actions.mouseEventsOnly) {
-      let touchId = actions.nextTouchId++;
-      let touch = createATouch(el, c.x, c.y, touchId);
-      emitTouchEvent('touchstart', touch);
-      emitTouchEvent('touchend', touch);
-    }
-    actions.mouseTap(el.ownerDocument, c.x, c.y);
-    sendOk(command_id);
-  } catch (e) {
-    sendError(e, command_id);
+function singleTap(id, corx, cory) {
+  let el = elementManager.getKnownElement(id, curContainer);
+  // after this block, the element will be scrolled into view
+  let visible = checkVisible(el, corx, cory);
+  if (!visible) {
+    throw new ElementNotVisibleError("Element is not currently visible and may not be manipulated");
   }
+  let acc = accessibility.getAccessibleObject(el, true);
+  checkVisibleAccessibility(acc, el, visible);
+  checkActionableAccessibility(acc, el);
+  if (!curContainer.frame.document.createTouch) {
+    actions.mouseEventsOnly = true;
+  }
+  let c = coordinates(el, corx, cory);
+  if (!actions.mouseEventsOnly) {
+    let touchId = actions.nextTouchId++;
+    let touch = createATouch(el, c.x, c.y, touchId);
+    emitTouchEvent('touchstart', touch);
+    emitTouchEvent('touchend', touch);
+  }
+  actions.mouseTap(el.ownerDocument, c.x, c.y);
 }
 
 /**
@@ -969,16 +963,17 @@ function checkEnabledAccessibility(accesible, element, enabled) {
   } else if (!enabled && !disabledAccessibility) {
     message = 'Element is disabled but enabled via the accessibility API';
   }
-  accessibility.handleErrorMessage(message);
+  accessibility.handleErrorMessage(message, element);
 }
 
 /**
  * Check if the element's visible state corresponds to its accessibility API
  * visibility
  * @param nsIAccessible object
+ * @param WebElement corresponding to nsIAccessible object
  * @param Boolean visible element's visibility state
  */
-function checkVisibleAccessibility(accesible, visible) {
+function checkVisibleAccessibility(accesible, element, visible) {
   if (!accesible) {
     return;
   }
@@ -991,14 +986,15 @@ function checkVisibleAccessibility(accesible, visible) {
     message = 'Element is currently only visible via the accessibility API ' +
       'and can be manipulated by it';
   }
-  accessibility.handleErrorMessage(message);
+  accessibility.handleErrorMessage(message, element);
 }
 
 /**
  * Check if it is possible to activate an element with the accessibility API
  * @param nsIAccessible object
+ * @param WebElement corresponding to nsIAccessible object
  */
-function checkActionableAccessibility(accesible) {
+function checkActionableAccessibility(accesible, element) {
   if (!accesible) {
     return;
   }
@@ -1013,16 +1009,17 @@ function checkActionableAccessibility(accesible) {
   } else if (!accessibility.matchState(accesible, 'STATE_FOCUSABLE')) {
     message = 'Element is not focusable via the accessibility API';
   }
-  accessibility.handleErrorMessage(message);
+  accessibility.handleErrorMessage(message, element);
 }
 
 /**
  * Check if element's selected state corresponds to its accessibility API
  * selected state.
  * @param nsIAccessible object
+ * @param WebElement corresponding to nsIAccessible object
  * @param Boolean selected element's selected state
  */
-function checkSelectedAccessibility(accessible, selected) {
+function checkSelectedAccessibility(accessible, element, selected) {
   if (!accessible) {
     return;
   }
@@ -1039,7 +1036,7 @@ function checkSelectedAccessibility(accessible, selected) {
   } else if (!selected && selectedAccessibility) {
     message = 'Element is not selected but selected via the accessibility API';
   }
-  accessibility.handleErrorMessage(message);
+  accessibility.handleErrorMessage(message, element);
 }
 
 
@@ -1448,15 +1445,16 @@ function getActiveElement() {
  */
 function clickElement(id) {
   let el = elementManager.getKnownElement(id, curContainer);
-  let acc = accessibility.getAccessibleObject(el, true);
   let visible = checkVisible(el);
-  checkVisibleAccessibility(acc, visible);
   if (!visible) {
     throw new ElementNotVisibleError("Element is not visible");
   }
-  checkActionableAccessibility(acc);
+  let acc = accessibility.getAccessibleObject(el, true);
+  checkVisibleAccessibility(acc, el, visible);
+
   if (utils.isElementEnabled(el)) {
     checkEnabledAccessibility(acc, el, true);
+    checkActionableAccessibility(acc, el);
     utils.synthesizeMouseAtCenter(el, {}, el.ownerDocument.defaultView);
   } else {
     throw new InvalidElementStateError("Element is not Enabled");
@@ -1516,7 +1514,8 @@ function getElementTagName(id) {
 function isElementDisplayed(id) {
   let el = elementManager.getKnownElement(id, curContainer);
   let displayed = utils.isElementDisplayed(el);
-  checkVisibleAccessibility(accessibility.getAccessibleObject(el), displayed);
+  checkVisibleAccessibility(
+    accessibility.getAccessibleObject(el), el, displayed);
   return displayed;
 }
 
@@ -1584,7 +1583,8 @@ function isElementEnabled(id) {
 function isElementSelected(id) {
   let el = elementManager.getKnownElement(id, curContainer);
     let selected = utils.isElementSelected(el);
-    checkSelectedAccessibility(accessibility.getAccessibleObject(el), selected);
+    checkSelectedAccessibility(
+      accessibility.getAccessibleObject(el), el, selected);
   return selected;
 }
 
@@ -1599,7 +1599,8 @@ function sendKeysToElement(msg) {
     let el = elementManager.getKnownElement(msg.json.id, curContainer);
     // Element should be actionable from the accessibility standpoint to be able
     // to send keys to it.
-    checkActionableAccessibility(accessibility.getAccessibleObject(el, true));
+    checkActionableAccessibility(
+      accessibility.getAccessibleObject(el, true), el);
     if (el.type == "file") {
       let p = val.join("");
       fileInputElement = el;

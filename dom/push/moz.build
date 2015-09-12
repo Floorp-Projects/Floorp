@@ -20,6 +20,7 @@ EXTRA_JS_MODULES += [
     'PushService.jsm',
     'PushServiceChildPreload.jsm',
     'PushServiceHttp2.jsm',
+    'PushServiceHttp2Crypto.jsm',
 ]
 
 MOCHITEST_MANIFESTS += [
