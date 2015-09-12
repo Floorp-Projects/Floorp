@@ -34,10 +34,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-
 
 /**
  * SwitchBoard is the core class of the KeepSafe Switchboard mobile A/B testing framework.
@@ -69,7 +70,8 @@ public class SwitchBoard {
 	/** Production server for getting the actual config file. http://staging.domain/path_to/SwitchboardDriver.php */
 	private static String DYNAMIC_CONFIG_SERVER_DEFAULT_URL;
 	
-	
+	public static final String ACTION_CONFIG_FETCHED = ".SwitchBoard.CONFIG_FETCHED";
+
 	private static final String kUpdateServerUrl = "updateServerUrl";
 	private static final String kConfigServerUrl = "configServerUrl";
 	
@@ -232,6 +234,10 @@ public class SwitchBoard {
 		} catch (NullPointerException e) {
 			e.printStackTrace();
 		}
+
+		//notify listeners that the config fetch has completed
+		Intent i = new Intent(ACTION_CONFIG_FETCHED);
+		LocalBroadcastManager.getInstance(c).sendBroadcast(i);
 	}
 
 	public static boolean isInBucket(Context c, int low, int high) {
