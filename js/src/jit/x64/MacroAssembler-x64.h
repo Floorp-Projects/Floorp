@@ -850,9 +850,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void store64(Register64 src, Address address) {
         movq(src.reg, Operand(address));
     }
-    void rshiftPtrArithmetic(Imm32 imm, Register dest) {
-        sarq(imm, dest);
-    }
     void rshift64(Imm32 imm, Register64 dest) {
         shrq(imm, dest.reg);
     }

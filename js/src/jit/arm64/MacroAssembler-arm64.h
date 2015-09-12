@@ -1071,9 +1071,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     inline void rshift64(Imm32 imm, Register64 dest);
 
-    void rshiftPtrArithmetic(Imm32 imm, Register dest) {
-        Asr(ARMRegister(dest, 64), ARMRegister(dest, 64), imm.value);
-    }
     void lshiftPtr(Imm32 imm, Register dest) {
         Lsl(ARMRegister(dest, 64), ARMRegister(dest, 64), imm.value);
     }
