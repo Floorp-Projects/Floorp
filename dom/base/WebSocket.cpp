@@ -1546,26 +1546,32 @@ WebSocketImpl::Init(JSContext* aCx,
       !Preferences::GetBool("network.websocket.allowInsecureFromHTTPS",
                             false)) {
     // Confirmed we are opening plain ws:// and want to prevent this from a
-    // secure context (e.g. https). Check the principal's uri to determine if
-    // we were loaded from https.
-    nsCOMPtr<nsIGlobalObject> globalObject(GetEntryGlobal());
-    if (globalObject) {
-      nsCOMPtr<nsIPrincipal> principal(globalObject->PrincipalOrNull());
-      if (principal) {
-        nsCOMPtr<nsIURI> uri;
-        principal->GetURI(getter_AddRefs(uri));
-        if (uri) {
-          bool originIsHttps = false;
-          aRv = uri->SchemeIs("https", &originIsHttps);
-          if (NS_WARN_IF(aRv.Failed())) {
-            return;
-          }
+    // secure context (e.g. https).
+    nsCOMPtr<nsIPrincipal> principal;
+    nsCOMPtr<nsIURI> originURI;
+    if (mWorkerPrivate) {
+      // For workers, retrieve the URI from the WorkerPrivate
+      principal = mWorkerPrivate->GetPrincipal();
+    } else {
+      // Check the principal's uri to determine if we were loaded from https.
+      nsCOMPtr<nsIGlobalObject> globalObject(GetEntryGlobal());
+      if (globalObject) {
+        principal = globalObject->PrincipalOrNull();
+      }
+    }
 
-          if (originIsHttps) {
-            aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-            return;
-          }
-        }
+    if (principal) {
+      principal->GetURI(getter_AddRefs(originURI));
+    }
+    if (originURI) {
+      bool originIsHttps = false;
+      aRv = originURI->SchemeIs("https", &originIsHttps);
+      if (NS_WARN_IF(aRv.Failed())) {
+        return;
+      }
+      if (originIsHttps) {
+        aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        return;
       }
     }
   }
