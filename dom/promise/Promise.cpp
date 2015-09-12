@@ -1339,7 +1339,7 @@ Promise::RejectInternal(JSContext* aCx,
 void
 Promise::Settle(JS::Handle<JS::Value> aValue, PromiseState aState)
 {
-  if (mGlobal->IsDying()) {
+  if (!mGlobal || mGlobal->IsDying()) {
     return;
   }
 
