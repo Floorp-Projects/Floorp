@@ -581,7 +581,7 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
     uint32_t pseudoReturnOffset = currentOffset();
 
     leaveNoPool();
-    return = pseudoReturnOffset;
+    return pseudoReturnOffset;
 }
 
 //}}} check_macroassembler_style
