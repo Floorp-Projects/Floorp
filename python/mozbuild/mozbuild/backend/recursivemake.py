@@ -1100,6 +1100,7 @@ INSTALL_TARGETS += %(prefix)s
         modules = manager.modules
         xpt_modules = sorted(modules.keys())
         xpt_files = set()
+        registered_xpt_files = set()
 
         mk = Makefile()
 
@@ -1131,15 +1132,16 @@ INSTALL_TARGETS += %(prefix)s
         rules = StringIO()
         mk.dump(rules, removal_guard=False)
 
-        # Write out manifests defining interfaces
+        interfaces_manifests = []
         dist_dir = mozpath.join(self.environment.topobjdir, 'dist')
         for manifest, entries in manager.interface_manifests.items():
-            path = mozpath.join(self.environment.topobjdir, manifest)
-            with self._write_file(path) as fh:
-                for xpt in sorted(entries):
-                    fh.write('interfaces %s\n' % xpt)
+            interfaces_manifests.append(mozpath.join('$(DEPTH)', manifest))
+            for xpt in sorted(entries):
+                registered_xpt_files.add(mozpath.join(
+                    '$(DEPTH)', mozpath.dirname(manifest), xpt))
 
             if install_target.startswith('dist/'):
+                path = mozpath.join(self.environment.topobjdir, manifest)
                 path = mozpath.relpath(path, dist_dir)
                 prefix, subpath = path.split('/', 1)
                 key = 'dist_%s' % prefix
@@ -1162,9 +1164,11 @@ INSTALL_TARGETS += %(prefix)s
         obj.config = self.environment
         self._create_makefile(obj, extra=dict(
             chrome_manifests = ' '.join(chrome_manifests),
+            interfaces_manifests = ' '.join(interfaces_manifests),
             xpidl_rules=rules.getvalue(),
             xpidl_modules=' '.join(xpt_modules),
-            xpt_files=' '.join(sorted(xpt_files)),
+            xpt_files=' '.join(sorted(xpt_files - registered_xpt_files)),
+            registered_xpt_files=' '.join(sorted(registered_xpt_files)),
         ))
 
     def _process_program(self, program, backend_file):
