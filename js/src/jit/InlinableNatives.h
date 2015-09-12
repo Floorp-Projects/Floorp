@@ -79,6 +79,9 @@
                                     \
     _(CallBoundFunction)            \
                                     \
+    _(SimdInt32x4)                  \
+    _(SimdFloat32x4)                \
+                                    \
     _(TestBailout)                  \
     _(TestAssertFloat32)            \
     _(TestAssertRecoveredOnBailout) \
