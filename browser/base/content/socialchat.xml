@@ -805,12 +805,7 @@
         let top = Math.min(Math.max(eY, sY.value),
                            sY.value + sHeight.value - winHeight);
 
-        let title = draggedChat.content.getAttribute("title");
-        this.detachChatbox(draggedChat, { screenX: left, screenY: top }).then(
-          chatbox => {
-            chatbox.contentWindow.document.title = title;
-          }
-        );
+        this.detachChatbox(draggedChat, { screenX: left, screenY: top });
         event.stopPropagation();
       ]]></handler>
     </handlers>

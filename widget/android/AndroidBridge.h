@@ -253,9 +253,13 @@ public:
     void SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
                           bool aLayersUpdated, int32_t aPaintSyncId, ParentLayerRect& aScrollRect, CSSToParentLayerScale& aScale,
                           ScreenMargin& aFixedLayerMargins);
-    void SyncFrameMetrics(const ParentLayerPoint& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
-                          bool aLayersUpdated, const CSSRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
-                          bool aIsFirstPaint, ScreenMargin& aFixedLayerMargins);
+    void SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
+                          const CSSToParentLayerScale& aZoom,
+                          const CSSRect& aCssPageRect,
+                          const CSSRect& aDisplayPort,
+                          const CSSToLayerScale& aPaintedResolution,
+                          bool aLayersUpdated, int32_t aPaintSyncId,
+                          ScreenMargin& aFixedLayerMargins);
 
     void AddPluginView(jobject view, const LayoutDeviceRect& rect, bool isFullScreen);
 

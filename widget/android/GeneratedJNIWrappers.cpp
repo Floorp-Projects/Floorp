@@ -1138,7 +1138,7 @@ auto GeckoLayerClient::SetPageRect(float a0, float a1, float a2, float a3) const
 constexpr char GeckoLayerClient::SyncFrameMetrics_t::name[];
 constexpr char GeckoLayerClient::SyncFrameMetrics_t::signature[];
 
-auto GeckoLayerClient::SyncFrameMetrics(float a0, float a1, float a2, float a3, float a4, float a5, float a6, bool a7, int32_t a8, int32_t a9, int32_t a10, int32_t a11, float a12, bool a13) const -> mozilla::jni::Object::LocalRef
+auto GeckoLayerClient::SyncFrameMetrics(float a0, float a1, float a2, float a3, float a4, float a5, float a6, int32_t a7, int32_t a8, int32_t a9, int32_t a10, float a11, bool a12, int32_t a13) const -> mozilla::jni::Object::LocalRef
 {
     return mozilla::jni::Method<SyncFrameMetrics_t>::Call(this, nullptr, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13);
 }

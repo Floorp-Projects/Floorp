@@ -845,8 +845,8 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
   WidgetCompositionEvent* compositionChangeEvent =
     aDOMTextEvent->GetInternalNSEvent()->AsCompositionEvent();
   NS_ENSURE_TRUE(compositionChangeEvent, NS_ERROR_INVALID_ARG);
-  MOZ_ASSERT(compositionChangeEvent->mMessage == NS_COMPOSITION_CHANGE,
-             "The internal event should be NS_COMPOSITION_CHANGE");
+  MOZ_ASSERT(compositionChangeEvent->mMessage == eCompositionChange,
+             "The internal event should be eCompositionChange");
 
   EnsureComposition(compositionChangeEvent);
 

@@ -170,7 +170,8 @@ enum gr_bidirtl {
     /// Underlying paragraph direction is RTL
     gr_rtl = 1,
     /// Set this to not run the bidi pass internally, even if the font asks for it.
-    /// This presumes that the segment is in a single direction.
+    /// This presumes that the segment is in a single direction. Most of the time
+    /// this bit should be set unless you know you are passing full paragraphs of text.
     gr_nobidi = 2,
     /// Disable auto mirroring for rtl text
     gr_nomirror = 4

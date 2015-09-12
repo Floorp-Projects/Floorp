@@ -31,6 +31,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
+#include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
 #include "jit/JitFrameIterator.h"
 #include "js/CallNonGenericMethod.h"
@@ -1277,6 +1278,8 @@ JSFunction::initBoundFunction(JSContext* cx, HandleObject target, HandleValue th
     self->setSlot(JSSLOT_BOUND_FUNCTION_ARGS_COUNT, PrivateUint32Value(argslen));
 
     self->initSlotRange(BOUND_FUNCTION_RESERVED_SLOTS, args, argslen);
+
+    self->setJitInfo(&jit::JitInfo_CallBoundFunction);
 
     return true;
 }

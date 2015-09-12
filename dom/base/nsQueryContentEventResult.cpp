@@ -58,7 +58,7 @@ nsQueryContentEventResult::GetTentativeCaretOffset(uint32_t* aOffset)
 static bool IsRectEnabled(EventMessage aEventMessage)
 {
   return aEventMessage == eQueryCaretRect ||
-         aEventMessage == NS_QUERY_TEXT_RECT ||
+         aEventMessage == eQueryTextRect ||
          aEventMessage == eQueryEditorRect ||
          aEventMessage == eQueryCharacterAtPoint;
 }

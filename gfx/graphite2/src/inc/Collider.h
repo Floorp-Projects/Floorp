@@ -28,7 +28,7 @@ of the License or (at your option) any later version.
 
 #include <utility>
 #include "inc/List.h"
-#include "inc/Slot.h"
+//#include "inc/Slot.h"
 #include "inc/Position.h"
 #include "inc/Intervals.h"
 #include "inc/debug.h"
@@ -118,8 +118,8 @@ private:
 	
 };  // end of class SlotColllision
 
-class BBox;
-class SlantBox;
+struct BBox;
+struct SlantBox;
 
 class ShiftCollider
 {
@@ -128,13 +128,7 @@ public:
     typedef Vector<fpair> vfpairs;
     typedef vfpairs::iterator ivfpairs;
 
-    ShiftCollider(GR_MAYBE_UNUSED json *dbgout)
-    {
-#if !defined GRAPHITE2_NTRACING
-        for (int i = 0; i < 4; ++i)
-            _ranges[i].setdebug(dbgout);
-#endif
-    }
+    ShiftCollider(json *dbgout);
     ~ShiftCollider() throw() { };
 
     bool initSlot(Segment *seg, Slot *aSlot, const Rect &constraint,
@@ -176,10 +170,25 @@ protected:
 
 };	// end of class ShiftCollider
 
+inline
+ShiftCollider::ShiftCollider(GR_MAYBE_UNUSED json *dbgout)
+: _target(0),
+  _margin(0.0),
+  _marginWt(0.0),
+  _seqClass(0),
+  _seqProxClass(0),
+  _seqOrder(0)
+{
+#if !defined GRAPHITE2_NTRACING
+    for (int i = 0; i < 4; ++i)
+        _ranges[i].setdebug(dbgout);
+#endif
+}
+
 class KernCollider
 {
 public:
-    KernCollider(GR_MAYBE_UNUSED json *dbg) : _miny(-1e38f), _maxy(1e38f) { };
+    KernCollider(json *dbg);
     ~KernCollider() throw() { };
     bool initSlot(Segment *seg, Slot *aSlot, const Rect &constraint, float margin,
             const Position &currShift, const Position &offsetPrev, int dir,
@@ -213,8 +222,24 @@ private:
 
 
 inline
-float sqr(float x) { return x * x; }
+float sqr(float x) {
+    return x * x;
+}
 
+inline
+KernCollider::KernCollider(GR_MAYBE_UNUSED json *dbg)
+: _target(0),
+  _margin(0.0f),
+  _miny(-1e38f),
+  _maxy(1e38f),
+  _sliceWidth(0.0f),
+  _mingap(0.0f),
+  _xbound(0.0)
+{
+#if !defined GRAPHITE2_NTRACING
+    _seg = 0;
+#endif
+};
 
 };  // end of namespace graphite2
 

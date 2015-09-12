@@ -5,6 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
 -->
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="user-scalable=no">
   <title>Test for Bug 982141, helper page</title>
   <script type="application/javascript" src="apz_test_utils.js"></script>
   <script type="application/javascript">
@@ -87,7 +88,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
     }
   </script>
 </head>
-<body style="overflow: hidden;"><!-- Make sure the root frame is not scrollable -->
+<body style="overflow: hidden;"><!-- This combined with the user-scalable=no ensures the root frame is not scrollable -->
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=982141">Mozilla Bug 982141</a>
   <!-- A scrollable subframe, with enough content to make it have a nonzero scroll range -->
   <div style="height: 50px; width: 50px; overflow: scroll">

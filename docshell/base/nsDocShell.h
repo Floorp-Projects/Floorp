@@ -282,7 +282,9 @@ private:
   friend void mozilla::TimelineConsumers::AddMarkerForDocShell(
     nsDocShell*, const char*, const TimeStamp&, MarkerTracingType);
   friend void mozilla::TimelineConsumers::AddMarkerForDocShell(
-    nsDocShell*, UniquePtr<TimelineMarker>&&);
+    nsDocShell*, UniquePtr<AbstractTimelineMarker>&&);
+  friend void mozilla::TimelineConsumers::AddOTMTMarkerForDocShell(
+    nsDocShell*, UniquePtr<AbstractTimelineMarker>&);
 
 public:
   // Tell the favicon service that aNewURI has the same favicon as aOldURI.

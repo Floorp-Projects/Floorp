@@ -13,6 +13,7 @@
 
 #include "builtin/Eval.h"
 #include "frontend/BytecodeCompiler.h"
+#include "jit/InlinableNatives.h"
 #include "vm/StringBuffer.h"
 
 #include "jsobjinlines.h"
@@ -1016,7 +1017,7 @@ static const JSFunctionSpec object_static_methods[] = {
     JS_FN("is",                        obj_is,                      2, 0),
     JS_FN("defineProperty",            obj_defineProperty,          3, 0),
     JS_FN("defineProperties",          obj_defineProperties,        2, 0),
-    JS_FN("create",                    obj_create,                  2, 0),
+    JS_INLINABLE_FN("create",          obj_create,                  2, 0, ObjectCreate),
     JS_FN("getOwnPropertyNames",       obj_getOwnPropertyNames,     1, 0),
     JS_FN("getOwnPropertySymbols",     obj_getOwnPropertySymbols,   1, 0),
     JS_SELF_HOSTED_FN("isExtensible",  "ObjectIsExtensible",        1, JSPROP_DEFINE_LATE),

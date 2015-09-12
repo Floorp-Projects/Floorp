@@ -1705,10 +1705,10 @@ TSFTextStore::FlushPendingActions()
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
                ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
                 "dispatching compositionstart event...", this));
-        WidgetCompositionEvent compositionStart(true, NS_COMPOSITION_START,
+        WidgetCompositionEvent compositionStart(true, eCompositionStart,
                                                 mWidget);
         mWidget->InitEvent(compositionStart);
-        // NS_COMPOSITION_START always causes NOTIFY_IME_OF_COMPOSITION_UPDATE.
+        // eCompositionStart always causes NOTIFY_IME_OF_COMPOSITION_UPDATE.
         // Therefore, we should wait to clear the locked content until it's
         // notified.
         mDeferClearingLockedContent = true;
@@ -1763,7 +1763,7 @@ TSFTextStore::FlushPendingActions()
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
                ("TSF: 0x%p   TSFTextStore::FlushPendingActions(), "
                 "dispatching compositionchange event...", this));
-        WidgetCompositionEvent compositionChange(true, NS_COMPOSITION_CHANGE,
+        WidgetCompositionEvent compositionChange(true, eCompositionChange,
                                                  mWidget);
         mWidget->InitEvent(compositionChange);
         compositionChange.mData = action.mData;
@@ -1775,7 +1775,7 @@ TSFTextStore::FlushPendingActions()
           action.mRanges->AppendElement(wholeRange);
         }
         compositionChange.mRanges = action.mRanges;
-        // When the NS_COMPOSITION_CHANGE causes a DOM text event,
+        // When the eCompositionChange causes a DOM text event,
         // the IME will be notified of NOTIFY_IME_OF_COMPOSITION_UPDATE.  In
         // such case, we should not clear the locked content until we notify
         // the IME of the composition update.
@@ -1798,11 +1798,11 @@ TSFTextStore::FlushPendingActions()
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
                ("TSF: 0x%p   TSFTextStore::FlushPendingActions(), "
                 "dispatching compositioncommit event...", this));
-        WidgetCompositionEvent compositionCommit(true, NS_COMPOSITION_COMMIT,
+        WidgetCompositionEvent compositionCommit(true, eCompositionCommit,
                                                  mWidget);
         mWidget->InitEvent(compositionCommit);
         compositionCommit.mData = action.mData;
-        // When the NS_COMPOSITION_COMMIT causes a DOM text event,
+        // When the eCompositionCommit causes a DOM text event,
         // the IME will be notified of NOTIFY_IME_OF_COMPOSITION_UPDATE.  In
         // such case, we should not clear the locked content until we notify
         // the IME of the composition update.
@@ -2476,7 +2476,7 @@ TSFTextStore::RecordCompositionUpdateAction()
   // the attribute, we have to find out all the ranges that have distinct
   // attribute values. Then we query for what the value represents through
   // the display attribute manager and translate that to TextRange to be
-  // sent in NS_COMPOSITION_CHANGE
+  // sent in eCompositionChange
 
   nsRefPtr<ITfProperty> attrPropetry;
   HRESULT hr = mContext->GetProperty(GUID_PROP_ATTRIBUTE,
@@ -2525,7 +2525,7 @@ TSFTextStore::RecordCompositionUpdateAction()
 
   TextRange newRange;
   // No matter if we have display attribute info or not,
-  // we always pass in at least one range to NS_COMPOSITION_CHANGE
+  // we always pass in at least one range to eCompositionChange
   newRange.mStartOffset = 0;
   newRange.mEndOffset = action->mData.Length();
   newRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
@@ -3424,7 +3424,7 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView,
     // offset since there is no inexpensive API to check it strictly.
     // XXX If we retrieve 2 bounding boxes, one is before the offset and
     //     the other is after the offset, we could resolve the offset.
-    //     However, dispatching 2 NS_QUERY_TEXT_RECT may be expensive.
+    //     However, dispatching 2 eQueryTextRect may be expensive.
 
     // So, use tentative offset for now.
     offset = charAtPt.mReply.mTentativeCaretOffset;
@@ -3583,15 +3583,15 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
     return TS_E_NOLAYOUT;
   }
 
-  // use NS_QUERY_TEXT_RECT to get rect in system, screen coordinates
-  WidgetQueryContentEvent event(true, NS_QUERY_TEXT_RECT, mWidget);
+  // use eQueryTextRect to get rect in system, screen coordinates
+  WidgetQueryContentEvent event(true, eQueryTextRect, mWidget);
   mWidget->InitEvent(event);
   event.InitForQueryTextRect(acpStart, acpEnd - acpStart);
   DispatchEvent(event);
   if (!event.mSucceeded) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetTextExt() FAILED due to "
-            "NS_QUERY_TEXT_RECT failure", this));
+            "eQueryTextRect failure", this));
     return TS_E_INVALIDPOS; // but unexpected failure, maybe.
   }
   // IMEs don't like empty rects, fix here
@@ -5435,8 +5435,8 @@ TSFTextStore::Content::ReplaceTextWith(LONG aStart,
     if (mComposition.IsComposing()) {
       // Emulate text insertion during compositions, because during a
       // composition, editor expects the whole composition string to
-      // be sent in NS_COMPOSITION_CHANGE, not just the inserted part.
-      // The actual NS_COMPOSITION_CHANGE will be sent in SetSelection
+      // be sent in eCompositionChange, not just the inserted part.
+      // The actual eCompositionChange will be sent in SetSelection
       // or OnUpdateComposition.
       MOZ_ASSERT(aStart >= mComposition.mStart);
       MOZ_ASSERT(aStart + aLength <= mComposition.EndOffset());

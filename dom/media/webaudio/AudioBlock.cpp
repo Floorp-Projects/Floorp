@@ -124,9 +124,12 @@ AudioBlock::ClearDownstreamMark() {
   }
 }
 
-void
-AudioBlock::AssertNoLastingShares() {
-  MOZ_ASSERT(!mBuffer->AsAudioBlockBuffer()->HasLastingShares());
+bool
+AudioBlock::CanWrite() {
+  // If mBufferIsDownstreamRef is set then the buffer is not ours to use.
+  // It may be in use by another node which is not downstream.
+  return !mBufferIsDownstreamRef &&
+    !mBuffer->AsAudioBlockBuffer()->HasLastingShares();
 }
 
 void

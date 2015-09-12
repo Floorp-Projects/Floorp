@@ -609,6 +609,30 @@ MDefinition::justReplaceAllUsesWith(MDefinition* dom)
 }
 
 void
+MDefinition::justReplaceAllUsesWithExcept(MDefinition* dom)
+{
+    MOZ_ASSERT(dom != nullptr);
+    MOZ_ASSERT(dom != this);
+
+    // Move all uses to new dom. Save the use of the dominating instruction.
+    MUse *exceptUse = nullptr;
+    for (MUseIterator i(usesBegin()), e(usesEnd()); i != e; ++i) {
+        if (i->consumer() != dom) {
+            i->setProducerUnchecked(dom);
+        } else {
+            MOZ_ASSERT(!exceptUse);
+            exceptUse = *i;
+        }
+    }
+    dom->uses_.takeElements(uses_);
+
+    // Restore the use to the original definition.
+    dom->uses_.remove(exceptUse);
+    exceptUse->setProducerUnchecked(this);
+    uses_.pushFront(exceptUse);
+}
+
+void
 MDefinition::optimizeOutAllUses(TempAllocator& alloc)
 {
     for (MUseIterator i(usesBegin()), e(usesEnd()); i != e;) {
@@ -1715,12 +1739,55 @@ MPhi::operandIfRedundant()
 }
 
 MDefinition*
+MPhi::foldsFilterTypeSet()
+{
+    // Fold phi with as operands a combination of 'subject' and
+    // MFilterTypeSet(subject) to 'subject'.
+
+    if (inputs_.length() == 0)
+        return nullptr;
+
+    MDefinition* subject = getOperand(0);
+    if (subject->isFilterTypeSet())
+        subject = subject->toFilterTypeSet()->input();
+
+    // Not same type, don't fold.
+    if (subject->type() != type())
+        return nullptr;
+
+    // Phi is better typed (has typeset). Don't fold.
+    if (resultTypeSet() && !subject->resultTypeSet())
+        return nullptr;
+
+    // Phi is better typed (according to typeset). Don't fold.
+    if (subject->resultTypeSet() && resultTypeSet()) {
+        if (!subject->resultTypeSet()->isSubset(resultTypeSet()))
+            return nullptr;
+    }
+
+    for (size_t i = 1, e = numOperands(); i < e; i++) {
+        MDefinition* op = getOperand(i);
+        if (op == subject)
+            continue;
+        if (op->isFilterTypeSet() && op->toFilterTypeSet()->input() == subject)
+            continue;
+
+        return nullptr;
+    }
+
+    return subject;
+}
+
+MDefinition*
 MPhi::foldsTo(TempAllocator& alloc)
 {
     if (MDefinition* def = operandIfRedundant())
         return def;
 
     if (MDefinition* def = foldsTernary())
+        return def;
+
+    if (MDefinition* def = foldsFilterTypeSet())
         return def;
 
     return this;
