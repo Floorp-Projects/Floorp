@@ -2657,8 +2657,8 @@ case _value: eventName.AssignLiteral(_name) ; break
     _ASSIGN_eventName(eMouseMove,"eMouseMove");
     _ASSIGN_eventName(eLoad,"eLoad");
     _ASSIGN_eventName(ePopState,"ePopState");
-    _ASSIGN_eventName(NS_BEFORE_SCRIPT_EXECUTE,"NS_BEFORE_SCRIPT_EXECUTE");
-    _ASSIGN_eventName(NS_AFTER_SCRIPT_EXECUTE,"NS_AFTER_SCRIPT_EXECUTE");
+    _ASSIGN_eventName(eBeforeScriptExecute,"eBeforeScriptExecute");
+    _ASSIGN_eventName(eAfterScriptExecute,"eAfterScriptExecute");
     _ASSIGN_eventName(eUnload,"eUnload");
     _ASSIGN_eventName(eHashChange,"eHashChange");
     _ASSIGN_eventName(eReadyStateChange,"eReadyStateChange");

@@ -12,7 +12,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/dom/StructuredCloneIPCHelper.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #ifdef XP_WIN
@@ -698,9 +698,9 @@ struct ParamTraits<mozilla::TimeStampValue>
 #endif
 
 template <>
-struct ParamTraits<mozilla::dom::StructuredCloneIPCHelper>
+struct ParamTraits<mozilla::dom::ipc::StructuredCloneData>
 {
-  typedef mozilla::dom::StructuredCloneIPCHelper paramType;
+  typedef mozilla::dom::ipc::StructuredCloneData paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {

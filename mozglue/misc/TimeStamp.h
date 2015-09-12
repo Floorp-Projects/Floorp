@@ -491,13 +491,15 @@ public:
 
   TimeStamp operator+(const TimeDuration& aOther) const
   {
-    MOZ_ASSERT(!IsNull(), "Cannot compute with a null value");
-    return TimeStamp(mValue + aOther.mValue);
+    TimeStamp result = *this;
+    result += aOther;
+    return result;
   }
   TimeStamp operator-(const TimeDuration& aOther) const
   {
-    MOZ_ASSERT(!IsNull(), "Cannot compute with a null value");
-    return TimeStamp(mValue - aOther.mValue);
+    TimeStamp result = *this;
+    result -= aOther;
+    return result;
   }
   TimeStamp& operator+=(const TimeDuration& aOther)
   {

@@ -6,16 +6,34 @@
 #ifndef nsBIG5ToUnicode_h___
 #define nsBIG5ToUnicode_h___
 
-#include "nsISupports.h"
+#include "nsUCSupport.h"
 
-/**
- * A character set converter from BIG5 to Unicode.
- *
- * @created         06/Apr/1999
- * @author  Catalin Rotaru [CATA]
- */
-nsresult
-nsBIG5ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
-                                void **aResult);
+#define NS_BIG5TOUNICODE_CID \
+  { 0xefc323e1, 0xec62, 0x11d2, \
+    { 0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36 } }
+
+#define NS_BIG5TOUNICODE_CONTRACTID \
+  "@mozilla.org/intl/unicode/decoder;1?charset=big5"
+
+class nsBIG5ToUnicode : public nsBasicDecoderSupport
+{
+public:
+  nsBIG5ToUnicode();
+
+  NS_IMETHOD Convert(const char* aSrc,
+                     int32_t* aSrcLength,
+                     char16_t* aDest,
+                     int32_t* aDestLength);
+
+  NS_IMETHOD GetMaxLength(const char* aSrc,
+                          int32_t aSrcLength,
+                          int32_t* aDestLength);
+
+  NS_IMETHOD Reset();
+
+private:
+  char16_t mPendingTrail;
+  uint8_t  mBig5Lead;
+};
 
 #endif /* nsBIG5ToUnicode_h___ */

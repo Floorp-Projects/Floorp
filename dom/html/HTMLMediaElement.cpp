@@ -724,6 +724,7 @@ void HTMLMediaElement::AbortExistingLoads()
     EndSrcMediaStreamPlayback();
   }
 
+  RemoveMediaElementFromURITable();
   mLoadingSrc = nullptr;
   mMediaSource = nullptr;
 
@@ -932,6 +933,7 @@ void HTMLMediaElement::SelectResource()
       NS_ASSERTION(!mIsLoadingFromSourceChildren,
         "Should think we're not loading from source children by default");
 
+      RemoveMediaElementFromURITable();
       mLoadingSrc = uri;
       mMediaSource = mSrcMediaSource;
       UpdatePreloadAction();
@@ -1070,6 +1072,7 @@ void HTMLMediaElement::LoadFromSourceChildren()
       continue;
     }
 
+    RemoveMediaElementFromURITable();
     mLoadingSrc = uri;
     mMediaSource = childSrc->GetSrcMediaSource();
     NS_ASSERTION(mNetworkState == nsIDOMHTMLMediaElement::NETWORK_LOADING,
@@ -1944,26 +1947,43 @@ typedef nsTHashtable<MediaElementSetForURI> MediaElementURITable;
 static MediaElementURITable* gElementTable;
 
 #ifdef DEBUG
+static bool
+URISafeEquals(nsIURI* a1, nsIURI* a2)
+{
+  if (!a1 || !a2) {
+    // Consider two empty URIs *not* equal!
+    return false;
+  }
+  bool equal = false;
+  nsresult rv = a1->Equals(a2, &equal);
+  return NS_SUCCEEDED(rv) && equal;
+}
 // Returns the number of times aElement appears in the media element table
 // for aURI. If this returns other than 0 or 1, there's a bug somewhere!
 static unsigned
 MediaElementTableCount(HTMLMediaElement* aElement, nsIURI* aURI)
 {
-  if (!gElementTable || !aElement || !aURI) {
+  if (!gElementTable || !aElement) {
     return 0;
   }
-  MediaElementSetForURI* entry = gElementTable->GetEntry(aURI);
-  if (!entry) {
-    return 0;
-  }
-  uint32_t count = 0;
-  for (uint32_t i = 0; i < entry->mElements.Length(); ++i) {
-    HTMLMediaElement* elem = entry->mElements[i];
-    if (elem == aElement) {
-      count++;
+  uint32_t uriCount = 0;
+  uint32_t otherCount = 0;
+  for (auto it = gElementTable->ConstIter(); !it.Done(); it.Next()) {
+    MediaElementSetForURI* entry = it.Get();
+    uint32_t count = 0;
+    for (const auto& elem : entry->mElements) {
+      if (elem == aElement) {
+        count++;
+      }
+    }
+    if (URISafeEquals(aURI, entry->GetKey())) {
+      uriCount = count;
+    } else {
+      otherCount += count;
     }
   }
-  return count;
+  NS_ASSERTION(otherCount == 0, "Should not have entries for unknown URIs");
+  return uriCount;
 }
 #endif
 
@@ -1985,15 +2005,13 @@ HTMLMediaElement::AddMediaElementToURITable()
 void
 HTMLMediaElement::RemoveMediaElementFromURITable()
 {
-  NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 1,
-    "Before remove, should have a single entry for element in element table");
-  NS_ASSERTION(mDecoder, "Don't call this without decoder!");
-  NS_ASSERTION(mLoadingSrc, "Can't have decoder without source!");
-  if (!gElementTable)
+  if (!mDecoder || !mLoadingSrc || !gElementTable) {
     return;
+  }
   MediaElementSetForURI* entry = gElementTable->GetEntry(mLoadingSrc);
-  if (!entry)
+  if (!entry) {
     return;
+  }
   entry->mElements.RemoveElement(this);
   if (entry->mElements.IsEmpty()) {
     gElementTable->RemoveEntry(mLoadingSrc);
@@ -2009,11 +2027,13 @@ HTMLMediaElement::RemoveMediaElementFromURITable()
 HTMLMediaElement*
 HTMLMediaElement::LookupMediaElementURITable(nsIURI* aURI)
 {
-  if (!gElementTable)
+  if (!gElementTable) {
     return nullptr;
+  }
   MediaElementSetForURI* entry = gElementTable->GetEntry(aURI);
-  if (!entry)
+  if (!entry) {
     return nullptr;
+  }
   for (uint32_t i = 0; i < entry->mElements.Length(); ++i) {
     HTMLMediaElement* elem = entry->mElements[i];
     bool equal;
@@ -3311,6 +3331,7 @@ void HTMLMediaElement::DecodeError()
   if (mDecoder) {
     ShutdownDecoder();
   }
+  RemoveMediaElementFromURITable();
   mLoadingSrc = nullptr;
   mMediaSource = nullptr;
   if (mIsLoadingFromSourceChildren) {

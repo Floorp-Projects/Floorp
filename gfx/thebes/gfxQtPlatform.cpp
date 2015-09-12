@@ -122,6 +122,7 @@ gfxQtPlatform::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFam
 gfxFontGroup *
 gfxQtPlatform::CreateFontGroup(const FontFamilyList& aFontFamilyList,
                                const gfxFontStyle *aStyle,
+                               gfxTextPerfMetrics* aTextPerf,
                                gfxUserFontSet* aUserFontSet)
 {
     return new gfxPangoFontGroup(aFontFamilyList, aStyle, aUserFontSet);

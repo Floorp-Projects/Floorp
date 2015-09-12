@@ -94,9 +94,6 @@ DEFINES['IMPL_MFBT'] = True
 
 LDFLAGS += CONFIG['MOZ_GLUE_WRAP_LDFLAGS']
 
-if CONFIG['_MSC_VER']:
-    ALLOW_COMPILER_WARNINGS = True
-
 if CONFIG['OS_TARGET'] == 'Darwin':
     # On OSX 10.10.3, a dead lock happens in some cases involving dynamic
     # symbol resolution for symbols that jemalloc itself uses. While it

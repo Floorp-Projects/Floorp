@@ -109,8 +109,8 @@ public:
                            nsEventStatus* aStatus);
 
   /**
-   * DispatchLegacyMouseScrollEvents() dispatches NS_MOUSE_SCROLL event and
-   * NS_MOUSE_PIXEL_SCROLL event for compatiblity with old Gecko.
+   * DispatchLegacyMouseScrollEvents() dispatches eLegacyMouseLineOrPageScroll
+   * event and eLegacyMousePixelScroll event for compatibility with old Gecko.
    */
   void DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
                                        WidgetWheelEvent* aEvent,

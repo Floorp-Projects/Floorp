@@ -336,7 +336,7 @@ AndroidMediaReader::Seek(int64_t aTarget, int64_t aEndTime)
     mVideoSeekTimeUs = aTarget;
 
     nsRefPtr<AndroidMediaReader> self = this;
-    mSeekRequest.Begin(DecodeToFirstVideoData()->Then(OwnerThread(), __func__, [self] (VideoData* v) {
+    mSeekRequest.Begin(DecodeToFirstVideoData()->Then(OwnerThread(), __func__, [self] (MediaData* v) {
       self->mSeekRequest.Complete();
       self->mAudioSeekTimeUs = v->mTime;
       self->mSeekPromise.Resolve(self->mAudioSeekTimeUs, __func__);

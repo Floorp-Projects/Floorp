@@ -94,9 +94,14 @@ EmitBaselineTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t argSize)
 inline void
 EmitIonTailCallVM(JitCode* target, MacroAssembler& masm, uint32_t stackSize)
 {
+    // For tail calls, find the already pushed JitFrame_IonJS signifying the
+    // end of the Ion frame. Retrieve the length of the frame and repush
+    // JitFrame_IonJS with the extra stacksize, rendering the original
+    // JitFrame_IonJS obsolete.
+
     ScratchRegisterScope scratch(masm);
 
-    masm.movq(Operand(esp, stackSize), scratch);
+    masm.loadPtr(Address(esp, stackSize), scratch);
     masm.shrq(Imm32(FRAMESIZE_SHIFT), scratch);
     masm.addq(Imm32(stackSize + JitStubFrameLayout::Size() - sizeof(intptr_t)), scratch);
 

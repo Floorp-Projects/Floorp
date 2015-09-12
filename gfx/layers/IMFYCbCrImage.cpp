@@ -156,6 +156,9 @@ TextureClient*
 IMFYCbCrImage::GetD3D9TextureClient(CompositableClient* aClient)
 {
   IDirect3DDevice9* device = gfxWindowsPlatform::GetPlatform()->GetD3D9Device();
+  if (!device) {
+    return nullptr;
+  }
 
   RefPtr<IDirect3DTexture9> textureY;
   HANDLE shareHandleY = 0;
@@ -219,12 +222,12 @@ IMFYCbCrImage::GetD3D9TextureClient(CompositableClient* aClient)
 TextureClient*
 IMFYCbCrImage::GetTextureClient(CompositableClient* aClient)
 {
+  LayersBackend backend = aClient->GetForwarder()->GetCompositorBackendType();
   ID3D11Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D11ImageBridgeDevice();
-  if (!device ||
-      aClient->GetForwarder()->GetCompositorBackendType() != LayersBackend::LAYERS_D3D11) {
 
-    IDirect3DDevice9* d3d9device = gfxWindowsPlatform::GetPlatform()->GetD3D9Device();
-    if (d3d9device && aClient->GetForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D9) {
+  if (!device || backend != LayersBackend::LAYERS_D3D11) {
+    if (backend == LayersBackend::LAYERS_D3D9 ||
+        backend == LayersBackend::LAYERS_D3D11) {
       return GetD3D9TextureClient(aClient);
     }
     return nullptr;
@@ -270,28 +273,11 @@ IMFYCbCrImage::GetTextureClient(CompositableClient* aClient)
                            mData.mCbCrStride, mData.mCbCrStride * mData.mCbCrSize.height);
   }
 
-  RefPtr<IDXGIResource> resource;
-
-  HANDLE shareHandleY;
-  textureY->QueryInterface((IDXGIResource**)byRef(resource));
-  hr = resource->GetSharedHandle(&shareHandleY);
-
-  HANDLE shareHandleCb;
-  textureCb->QueryInterface((IDXGIResource**)byRef(resource));
-  hr = resource->GetSharedHandle(&shareHandleCb);
-
-  HANDLE shareHandleCr;
-  textureCr->QueryInterface((IDXGIResource**)byRef(resource));
-  hr = resource->GetSharedHandle(&shareHandleCr);
-
   mTextureClient = DXGIYCbCrTextureClient::Create(aClient->GetForwarder(),
                                                   TextureFlags::DEFAULT,
                                                   textureY,
                                                   textureCb,
                                                   textureCr,
-                                                  shareHandleY,
-                                                  shareHandleCb,
-                                                  shareHandleCr,
                                                   GetSize(),
                                                   mData.mYSize,
                                                   mData.mCbCrSize);

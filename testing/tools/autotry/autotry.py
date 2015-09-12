@@ -99,9 +99,11 @@ class AutoTry(object):
 
     def _git_push_to_try(self, msg):
         self._run_git('commit', '--allow-empty', '-m', msg)
-        self._run_git('push', 'hg::ssh://hg.mozilla.org/try',
-                      '+HEAD:refs/heads/branches/default/tip')
-        self._run_git('reset', 'HEAD~')
+        try:
+            self._run_git('push', 'hg::ssh://hg.mozilla.org/try',
+                          '+HEAD:refs/heads/branches/default/tip')
+        finally:
+            self._run_git('reset', 'HEAD~')
 
     def push_to_try(self, msg, verbose):
         if not self._use_git:
@@ -112,7 +114,7 @@ class AutoTry(object):
                 print('ERROR hg command %s returned %s' % (hg_args, e.returncode))
                 print('The "push-to-try" hg extension is required to push from '
                       'hg to try with the autotry command.\n\nIt can be installed '
-                      'by running ./mach mercurial-setup')
+                      'to Mercurial 3.3 or above by running ./mach mercurial-setup')
                 sys.exit(1)
         else:
             try:

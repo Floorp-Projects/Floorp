@@ -786,9 +786,9 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MozEmergencyCbModeEvent", b2g: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "MozInputContext", b2g: true},
+    {name: "MozInputContext", b2g: true, permission: ["input"]},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "MozInputMethodManager", b2g: true},
+    {name: "MozInputMethodManager", b2g: true, permission: ["input"]},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "MozMmsMessage",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -980,11 +980,11 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Selection",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "ServiceWorker", b2g: false, android: false},
+    {name: "ServiceWorker", b2g: false, releaseAndroid: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "ServiceWorkerContainer", b2g: false, android: false},
+    {name: "ServiceWorkerContainer", b2g: false, releaseAndroid: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "ServiceWorkerRegistration", b2g: false, android: false},
+    {name: "ServiceWorkerRegistration", b2g: false, releaseAndroid: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "SettingsLock",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1485,6 +1485,7 @@ function createInterfaceMap(isXBLScope) {
             (entry.linux === !isLinux) ||
             (entry.android === !isAndroid) ||
             (entry.release === !isRelease) ||
+            (entry.releaseAndroid === !(isAndroid && isRelease)) ||
             (entry.permission && !hasPermission(entry.permission)) ||
             entry.disabled) {
           interfaceMap[entry.name] = false;

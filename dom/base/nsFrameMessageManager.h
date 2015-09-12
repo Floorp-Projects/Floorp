@@ -28,7 +28,7 @@
 #include "js/RootingAPI.h"
 #include "nsTObserverArray.h"
 #include "mozilla/dom/SameProcessMessageQueue.h"
-#include "mozilla/dom/StructuredCloneIPCHelper.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/jsipc/CpowHolder.h"
 
 class nsIFrameLoader;
@@ -64,10 +64,10 @@ public:
 
   virtual bool DoSendBlockingMessage(JSContext* aCx,
                                      const nsAString& aMessage,
-                                     StructuredCloneIPCHelper& aHelper,
+                                     StructuredCloneData& aData,
                                      JS::Handle<JSObject*> aCpows,
                                      nsIPrincipal* aPrincipal,
-                                     nsTArray<StructuredCloneIPCHelper>* aRetVal,
+                                     nsTArray<StructuredCloneData>* aRetVal,
                                      bool aIsSync)
   {
     return true;
@@ -75,7 +75,7 @@ public:
 
   virtual bool DoSendAsyncMessage(JSContext* aCx,
                                   const nsAString& aMessage,
-                                  StructuredCloneIPCHelper& aHelper,
+                                  StructuredCloneData& aData,
                                   JS::Handle<JSObject*> aCpows,
                                   nsIPrincipal* aPrincipal)
   {
@@ -110,18 +110,18 @@ public:
 
 protected:
   bool BuildClonedMessageDataForParent(nsIContentParent* aParent,
-                                       StructuredCloneIPCHelper& aHelper,
+                                       StructuredCloneData& aData,
                                        ClonedMessageData& aClonedData);
   bool BuildClonedMessageDataForChild(nsIContentChild* aChild,
-                                      StructuredCloneIPCHelper& aHelper,
+                                      StructuredCloneData& aData,
                                       ClonedMessageData& aClonedData);
 };
 
-void UnpackClonedMessageDataForParent(const ClonedMessageData& aData,
-                                      StructuredCloneIPCHelper& aHelper);
+void UnpackClonedMessageDataForParent(const ClonedMessageData& aClonedData,
+                                      StructuredCloneData& aData);
 
-void UnpackClonedMessageDataForChild(const ClonedMessageData& aData,
-                                     StructuredCloneIPCHelper& aHelper);
+void UnpackClonedMessageDataForChild(const ClonedMessageData& aClonedData,
+                                     StructuredCloneData& aData);
 
 } // namespace ipc
 } // namespace dom
@@ -163,7 +163,7 @@ class nsFrameMessageManager final : public nsIContentFrameMessageManager,
                                     public nsIProcessChecker
 {
   friend class mozilla::dom::MessageManagerReporter;
-  typedef mozilla::dom::StructuredCloneIPCHelper StructuredCloneIPCHelper;
+  typedef mozilla::dom::ipc::StructuredCloneData StructuredCloneData;
 public:
   nsFrameMessageManager(mozilla::dom::ipc::MessageManagerCallback* aCallback,
                         nsFrameMessageManager* aParentManager,
@@ -192,9 +192,9 @@ public:
 
   nsresult ReceiveMessage(nsISupports* aTarget, nsIFrameLoader* aTargetFrameLoader,
                           const nsAString& aMessage,
-                          bool aIsSync, StructuredCloneIPCHelper* aCloneHelper,
+                          bool aIsSync, StructuredCloneData* aCloneData,
                           mozilla::jsipc::CpowHolder* aCpows, nsIPrincipal* aPrincipal,
-                          nsTArray<StructuredCloneIPCHelper>* aRetVal);
+                          nsTArray<StructuredCloneData>* aRetVal);
 
   void AddChildManager(nsFrameMessageManager* aManager);
   void RemoveChildManager(nsFrameMessageManager* aManager)
@@ -219,7 +219,7 @@ public:
                                 uint8_t aArgc);
   nsresult DispatchAsyncMessageInternal(JSContext* aCx,
                                         const nsAString& aMessage,
-                                        StructuredCloneIPCHelper& aHelper,
+                                        StructuredCloneData& aData,
                                         JS::Handle<JSObject*> aCpows,
                                         nsIPrincipal* aPrincipal);
   void RemoveFromParent();
@@ -260,9 +260,9 @@ private:
 
   nsresult ReceiveMessage(nsISupports* aTarget, nsIFrameLoader* aTargetFrameLoader,
                           bool aTargetClosed, const nsAString& aMessage,
-                          bool aIsSync, StructuredCloneIPCHelper* aCloneHelper,
+                          bool aIsSync, StructuredCloneData* aCloneData,
                           mozilla::jsipc::CpowHolder* aCpows, nsIPrincipal* aPrincipal,
-                          nsTArray<StructuredCloneIPCHelper>* aRetVal);
+                          nsTArray<StructuredCloneData>* aRetVal);
 
   NS_IMETHOD LoadScript(const nsAString& aURL,
                         bool aAllowDelayedLoad,
@@ -326,11 +326,11 @@ private:
 class nsSameProcessAsyncMessageBase
 {
 public:
-  typedef mozilla::dom::StructuredCloneIPCHelper StructuredCloneIPCHelper;
+  typedef mozilla::dom::ipc::StructuredCloneData StructuredCloneData;
 
   nsSameProcessAsyncMessageBase(JSContext* aCx,
                                 const nsAString& aMessage,
-                                StructuredCloneIPCHelper& aHelper,
+                                StructuredCloneData& aData,
                                 JS::Handle<JSObject*> aCpows,
                                 nsIPrincipal* aPrincipal);
 
@@ -342,7 +342,7 @@ private:
 
   JSRuntime* mRuntime;
   nsString mMessage;
-  StructuredCloneIPCHelper mHelper;
+  StructuredCloneData mData;
   JS::PersistentRooted<JSObject*> mCpows;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };

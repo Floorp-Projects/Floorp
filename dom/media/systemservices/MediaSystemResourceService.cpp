@@ -235,7 +235,6 @@ MediaSystemResourceService::RemoveRequests(media::MediaSystemResourceManagerPare
   for (it = waitingRequests.begin(); it != waitingRequests.end();) {
     if ((*it).mParent == aParent) {
       it = waitingRequests.erase(it);
-      return;
     } else {
       it++;
     }

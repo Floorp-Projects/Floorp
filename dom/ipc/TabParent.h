@@ -67,7 +67,10 @@ class ClonedMessageData;
 class nsIContentParent;
 class Element;
 class DataTransfer;
-class StructuredCloneIPCHelper;
+
+namespace ipc {
+class StructuredCloneData;
+} // ipc namespace
 
 class TabParent final : public PBrowserParent
                       , public nsIDOMEventListener
@@ -155,12 +158,12 @@ public:
                                  const ClonedMessageData& aData,
                                  InfallibleTArray<CpowEntry>&& aCpows,
                                  const IPC::Principal& aPrincipal,
-                                 nsTArray<StructuredCloneIPCHelper>* aRetVal) override;
+                                 nsTArray<ipc::StructuredCloneData>* aRetVal) override;
     virtual bool RecvRpcMessage(const nsString& aMessage,
                                 const ClonedMessageData& aData,
                                 InfallibleTArray<CpowEntry>&& aCpows,
                                 const IPC::Principal& aPrincipal,
-                                nsTArray<StructuredCloneIPCHelper>* aRetVal) override;
+                                nsTArray<ipc::StructuredCloneData>* aRetVal) override;
     virtual bool RecvAsyncMessage(const nsString& aMessage,
                                   const ClonedMessageData& aData,
                                   InfallibleTArray<CpowEntry>&& aCpows,
@@ -444,10 +447,10 @@ public:
 protected:
     bool ReceiveMessage(const nsString& aMessage,
                         bool aSync,
-                        StructuredCloneIPCHelper* aHelper,
+                        ipc::StructuredCloneData* aData,
                         mozilla::jsipc::CpowHolder* aCpows,
                         nsIPrincipal* aPrincipal,
-                        nsTArray<StructuredCloneIPCHelper>* aJSONRetVal = nullptr);
+                        nsTArray<ipc::StructuredCloneData>* aJSONRetVal = nullptr);
 
     virtual bool RecvAsyncAuthPrompt(const nsCString& aUri,
                                      const nsString& aRealm,

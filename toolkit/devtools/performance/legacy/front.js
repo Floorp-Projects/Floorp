@@ -21,10 +21,6 @@ loader.lazyRequireGetter(this, "normalizePerformanceFeatures",
   "devtools/toolkit/performance/utils", true);
 loader.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/toolkit/DevToolsUtils");
-loader.lazyRequireGetter(this, "getDeviceFront",
-  "devtools/toolkit/server/actors/device", true);
-loader.lazyRequireGetter(this, "getSystemInfo",
-  "devtools/toolkit/shared/system", true);
 loader.lazyRequireGetter(this, "events",
   "sdk/event/core");
 loader.lazyRequireGetter(this, "EventTarget",
@@ -337,7 +333,7 @@ const LegacyPerformanceFront = Class({
     this._recordings.splice(this._recordings.indexOf(model), 1);
 
     let config = model.getConfiguration();
-    let startTime = model._getProfilerStartTime();
+    let startTime = model.getProfilerStartTime();
     let profilerData = yield this._profiler.getProfile({ startTime });
     let timelineEndTime = Date.now();
 
@@ -352,13 +348,6 @@ const LegacyPerformanceFront = Class({
       timelineEndTime = yield this._timeline.stop(config);
     }
 
-    let systemDeferred = promise.defer();
-    this._client.listTabs(form => {
-      systemDeferred.resolve(getDeviceFront(this._client, form).getDescription());
-    });
-    let systemHost = yield systemDeferred.promise;
-    let systemClient = yield getSystemInfo();
-
     // Set the results on the LegacyPerformanceRecording itself.
     model._onStopRecording({
       // Data available only at the end of a recording.
@@ -366,9 +355,7 @@ const LegacyPerformanceFront = Class({
 
       // End times for all the actors.
       profilerEndTime: profilerData.currentTime,
-      timelineEndTime: timelineEndTime,
-      systemHost,
-      systemClient,
+      timelineEndTime: timelineEndTime
     });
 
     events.emit(this, "recording-stopped", model);

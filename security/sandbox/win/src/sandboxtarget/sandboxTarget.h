@@ -45,9 +45,6 @@ public:
     MOZ_ASSERT(aTargetServices);
     MOZ_ASSERT(!mTargetServices,
                "Sandbox TargetServices must only be set once.");
-    // We use process_state_ instead of InitCalled() here due to linking issues.
-    MOZ_ASSERT(aTargetServices->GetState()->process_state_ > 1,
-               "Sandbox TargetServices must already be initialized.");
 
     mTargetServices = aTargetServices;
   }

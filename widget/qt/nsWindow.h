@@ -259,7 +259,7 @@ private:
     void               SetDefaultIcon(void);
 
     nsEventStatus      DispatchCommandEvent(nsIAtom* aCommand);
-    nsEventStatus      DispatchContentCommandEvent(int32_t aMsg);
+    nsEventStatus      DispatchContentCommandEvent(mozilla::EventMessage aMsg);
     void               SetSoftwareKeyboardState(bool aOpen, const InputContextAction& aAction);
     void               ClearCachedResources();
 

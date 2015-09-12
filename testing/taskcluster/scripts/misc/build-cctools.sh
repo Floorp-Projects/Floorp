@@ -9,7 +9,11 @@ UPLOAD_DIR=$WORKSPACE/artifacts
 
 # Repository info
 : CROSSTOOL_NG_REPOSITORY    ${CROSSTOOL_NG_REPOSITORY:=https://github.com/diorcety/crosstool-ng}
-: CROSSTOOL_NG_REV           ${CROSSTOOL_NG_HEAD_REV:=master}
+: CROSSTOOL_NG_REV           ${CROSSTOOL_NG_REV:=master}
+
+# hacky
+ln -s `which gcc` ~/bin/x86_64-linux-gnu-gcc
+export PATH=$PATH:~/bin
 
 # Set some crosstools-ng directories
 CT_TOP_DIR=$WORKSPACE/crosstool-ng-build
@@ -29,10 +33,6 @@ rm -rf $CT_PREFIX_DIR
 mkdir $CT_PREFIX_DIR
 mkdir -p $CT_SRC_DIR
 
-# Work around one of the desktop-build hacks until we undo it.
-mkdir -p /home/worker/workspace/build/src/gcc/bin/
-ln -s `readlink -f /usr/bin/x86_64-linux-gnu-gcc.orig` /home/worker/workspace/build/src/gcc/bin/gcc
-
 # Clone the crosstool-ng repo
 tc-vcs checkout $CT_LIB_DIR $CROSSTOOL_NG_REPOSITORY $CROSSTOOL_NG_REPOSITORY $CROSSTOOL_NG_REV
 
@@ -42,7 +42,10 @@ wget -O tooltool.py https://raw.githubusercontent.com/mozilla/build-tooltool/mas
 chmod +x tooltool.py
 : TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/home/worker/tooltool-cache}
 export TOOLTOOL_CACHE
-sh $WORKSPACE/build/tools/scripts/tooltool/tooltool_wrapper.sh $WORKSPACE/build/src/browser/config/tooltool-manifests/linux64/clang.manifest https://api.pub.build.mozilla.org/tooltool/ setup.sh $WORKSPACE/tooltool.py
+
+wget ${GECKO_HEAD_REPOSITORY}/raw-file/${GECKO_HEAD_REV}/browser/config/tooltool-manifests/linux64/clang.manifest
+
+python tooltool.py -v --manifest=clang.manifest fetch
 
 # Copy clang into the crosstools-ng srcdir
 cp -Rp $CT_LLVM_DIR $CT_SRC_DIR

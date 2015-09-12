@@ -415,9 +415,7 @@ TextComposition::NotityUpdateComposition(
   if (aCompositionEvent->mMessage == NS_COMPOSITION_START) {
     nsCOMPtr<nsIWidget> widget = mPresContext->GetRootWidget();
     // Update composition start offset
-    WidgetQueryContentEvent selectedTextEvent(true,
-                                              NS_QUERY_SELECTED_TEXT,
-                                              widget);
+    WidgetQueryContentEvent selectedTextEvent(true, eQuerySelectedText, widget);
     widget->DispatchEvent(&selectedTextEvent, status);
     if (selectedTextEvent.mSucceeded) {
       mCompositionStartOffset = selectedTextEvent.mReply.mOffset;
@@ -615,8 +613,7 @@ TextComposition::CompositionEventDispatcher::Run()
   switch (mEventMessage) {
     case NS_COMPOSITION_START: {
       WidgetCompositionEvent compStart(true, NS_COMPOSITION_START, widget);
-      WidgetQueryContentEvent selectedText(true, NS_QUERY_SELECTED_TEXT,
-                                           widget);
+      WidgetQueryContentEvent selectedText(true, eQuerySelectedText, widget);
       ContentEventHandler handler(presContext);
       handler.OnQuerySelectedText(&selectedText);
       NS_ASSERTION(selectedText.mSucceeded, "Failed to get selected text");
