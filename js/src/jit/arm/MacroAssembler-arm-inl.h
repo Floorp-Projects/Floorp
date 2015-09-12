@@ -138,6 +138,14 @@ MacroAssembler::lshiftPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::lshift64(Imm32 imm, Register64 dest)
+{
+    as_mov(dest.high, lsl(dest.high, imm.value));
+    as_orr(dest.high, dest.high, lsr(dest.low, 32 - imm.value));
+    as_mov(dest.low, lsl(dest.low, imm.value));
+}
+
+void
 MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
 {
     ma_lsr(imm, dest, dest);
