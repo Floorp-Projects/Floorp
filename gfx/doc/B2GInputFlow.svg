@@ -1,0 +1,349 @@
+<?xml version="1.0"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000" height="800">
+ <title>Touch input event flow on B2G</title>
+ <g id="arrows"></g>
+ <style type="text/css"><![CDATA[
+    text {
+        fill: black;
+        text-anchor: middle;
+        white-space: pre-line;
+        font-size: 14px;
+    }
+    rect {
+        fill: none;
+    }
+    line {
+        stroke: black;
+    }
+    .parentinput rect {
+        stroke: black;
+    }
+    text.parentinput {
+        fill: black;
+        text-anchor: start;
+    }
+    .parentmain rect {
+        stroke: orange;
+    }
+    text.parentmain {
+        fill: orange;
+        text-anchor: start;
+    }
+    .parentcompositor rect {
+        stroke: green;
+    }
+    text.parentcompositor {
+        fill: green;
+        text-anchor: start;
+    }
+    .childmain rect {
+        stroke: red;
+    }
+    text.childmain {
+        fill: red;
+        text-anchor: start;
+    }
+    .bothmain rect {
+        stroke: blue;
+    }
+    text.bothmain {
+        fill: blue;
+        text-anchor: start;
+    }
+ ]]></style>
+ <script type="text/javascript"><![CDATA[
+    var svg = "http://www.w3.org/2000/svg";
+    var maxY = 0;
+
+    function breaks(text) {
+        var count = 0;
+        for (var i = text.length - 1; i >= 0; i--) {
+            if (text.charAt(i) == '\n') {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    function makeAction(text, x, y, thread) {
+        maxY = Math.max(maxY, y);
+        var g = document.createElementNS(svg, "g");
+        g.setAttribute("class", "action " + thread);
+        g.setAttribute("transform", "translate(" + x + ", " + (y + 30) + ")");
+        var r = document.createElementNS(svg, "rect");
+        r.setAttribute("width", "100");
+        r.setAttribute("height", "40");
+        var t = document.createElementNS(svg, "text");
+        t.setAttribute("x", "50");
+        t.setAttribute("y", 25 - (7 * breaks(text)));
+        t.appendChild(document.createTextNode(text));
+        g.appendChild(r);
+        g.appendChild(t);
+        return g;
+    }
+
+    function makeChoice(text, x, y, thread) {
+        maxY = Math.max(maxY, y);
+        var g = document.createElementNS(svg, "g");
+        g.setAttribute("class", "choice " + thread);
+        g.setAttribute("transform", "translate(" + (x + 15) + ", " + (y + 15) + ")");
+        var g2 = document.createElementNS(svg, "g");
+        g2.setAttribute("transform", "rotate(-45, 35, 35)");
+        var r = document.createElementNS(svg, "rect");
+        r.setAttribute("width", "70");
+        r.setAttribute("height", "70");
+        g2.appendChild(r);
+        var t = document.createElementNS(svg, "text");
+        t.setAttribute("x", "35");
+        t.setAttribute("y", 40 - (7 * breaks(text)));
+        t.appendChild(document.createTextNode(text));
+        g.appendChild(g2);
+        g.appendChild(t);
+        return g;
+    }
+
+    function makeLabelChoice(label, point) {
+        var t = document.createElementNS(svg, "text");
+        t.setAttribute("x", point.x);
+        t.setAttribute("y", point.y);
+        t.appendChild(document.createTextNode(label));
+        return t;
+    }
+
+    function makeLine(sx, sy, ex, ey) {
+        maxY = Math.max(maxY, sy, ey);
+        var l = document.createElementNS(svg, "line");
+        l.setAttribute("x1", sx);
+        l.setAttribute("y1", sy);
+        l.setAttribute("x2", ex);
+        l.setAttribute("y2", ey);
+        return l;
+    }
+
+    function makeArrow(start, end) {
+        var g = document.createElementNS(svg, "g");
+        g.appendChild(makeLine(start.x, start.y, end.x, end.y));
+        if (start.x != end.x) {
+            start.x = end.x + (4 * Math.sign(start.x - end.x));
+            g.appendChild(makeLine(start.x, start.y - 4, end.x, end.y));
+            g.appendChild(makeLine(start.x, start.y + 4, end.x, end.y));
+        } else if (start.y != end.y) {
+            start.y = end.y + (4 * Math.sign(start.y - end.y));
+            g.appendChild(makeLine(start.x - 4, start.y, end.x, end.y));
+            g.appendChild(makeLine(start.x + 4, start.y, end.x, end.y));
+        }
+        return g;
+    }
+
+    function makeVHArrow(start, end) {
+        var g = document.createElementNS(svg, "g");
+        g.appendChild(makeLine(start.x, start.y, start.x, end.y));
+        start.y = end.y;
+        g.appendChild(makeArrow(start, end));
+        return g;
+    }
+
+    function makeHVArrow(start, end) {
+        var g = document.createElementNS(svg, "g");
+        g.appendChild(makeLine(start.x, start.y, end.x, start.y));
+        start.x = end.x;
+        g.appendChild(makeArrow(start, end));
+        return g;
+    }
+
+    function makeVHVArrow(start, end, length) {
+        var g = document.createElementNS(svg, "g");
+        g.appendChild(makeLine(start.x, start.y, start.x, start.y + length));
+        start.y += length;
+        g.appendChild(makeLine(start.x, start.y, end.x, start.y));
+        start.x = end.x;
+        g.appendChild(makeArrow(start, end));
+        return g;
+    }
+
+    function makeHVHArrow(start, end, length) {
+        var g = document.createElementNS(svg, "g");
+        g.appendChild(makeLine(start.x, start.y, start.x + length, start.y));
+        start.x += length;
+        g.appendChild(makeLine(start.x, start.y, start.x, end.y));
+        start.y = end.y;
+        g.appendChild(makeArrow(start, end));
+        return g;
+    }
+
+    function translation(group) {
+        var r = new RegExp("translate\\((\\d+), (\\d+)\\)");
+        var result = r.exec(group.getAttribute("transform"));
+        return { x: parseInt(result[1]), y: parseInt(result[2]) };
+    }
+
+    function isAction(group) {
+        return group.classList.contains("action");
+    }
+
+    function isChoice(group) {
+        return group.classList.contains("choice");
+    }
+
+    function offset(point, x, y) {
+        point.x += x;
+        point.y += y;
+        return point;
+    }
+
+    function rightOf(group) {
+        var t = translation(group);
+        if (isAction(group)) {
+            return offset(t, 100, 20);
+        }
+        if (isChoice(group)) {
+            return offset(t, 85, 35);
+        }
+        return t;
+    }
+
+    function leftOf(group) {
+        var t = translation(group);
+        if (isAction(group)) {
+            return offset(t, 0, 20);
+        }
+        if (isChoice(group)) {
+            return offset(t, -15, 35);
+        }
+        return t;
+    }
+
+    function topOf(group) {
+        var t = translation(group);
+        if (isAction(group)) {
+            return offset(t, 50, 0);
+        }
+        if (isChoice(group)) {
+            return offset(t, 35, -15);
+        }
+        return t;
+    }
+
+    function bottomOf(group) {
+        var t = translation(group);
+        if (isAction(group)) {
+            return offset(t, 50, 40);
+        }
+        if (isChoice(group)) {
+            return offset(t, 35, 85);
+        }
+        return t;
+    }
+
+    function midpoint(start, end) {
+        return { x: (start.x + end.x) / 2,
+                 y: (start.y + end.y) / 2 };
+    }
+
+    function makeLegend(label, thread) {
+        var t = document.createElementNS(svg, "text");
+        t.setAttribute("x", "10");
+        t.setAttribute("y", maxY);
+        t.setAttribute("class", thread);
+        maxY += 15;
+        t.appendChild(document.createTextNode(label));
+        return t;
+    }
+
+    var android = makeAction("Android/Gonk", 20, 0, "parentinput");
+    var sendNative = makeAction("DOMWindowUtils\nsendNativeTouchPoint", 20, 100, "parentmain");
+    var apzHitTest = makeAction("APZ hit test", 150, 0, "parentcompositor");
+    var apzUntransform = makeAction("APZ\nuntransform", 300, 0, "parentcompositor");
+    var apzGesture = makeAction("APZ gesture\ndetection", 450, 0, "parentcompositor");
+    var apzTransform = makeAction("APZ transform\nupdate", 600, 0, "parentcompositor");
+    var compositor = makeAction("Compositor", 750, 0, "parentcompositor");
+    var nsAppShell = makeAction("nsAppShell", 150, 100, "parentmain");
+    var rootHitTest = makeAction("Gecko hit test\n(root process)", 300, 100, "parentmain");
+    var rootEsm = makeAction("Gecko ESM\n(root process)", 450, 100, "parentmain");
+    var isEdgeGesture = makeChoice("Edge gesture?", 300, 200, "parentmain");
+    var edgeConsume = makeAction("Consume\nevent block", 150, 200, "parentmain");
+    var bepjsm = makeAction("BEParent.jsm\nsendTouchEvent", 450, 200, "parentmain");
+    var iframeSend = makeAction("HTMLIFrameElement\nsendTouchEvent", 20, 275, "parentmain");
+    var isApzTarget = makeChoice("Target\nhas APZ?", 600, 200, "parentmain");
+    var sendTouchEvent = makeAction("Target\nsendTouchEventToWindow", 750, 100, "parentmain");
+    var injectTouch = makeAction("injectTouchEvent", 750, 200, "parentmain");
+    var targetESM = makeAction("Target window\nESM", 750, 450, "bothmain");
+    var tabParent = makeAction("TabParent", 750, 350, "parentmain");
+    var geckoUntransform = makeAction("Gecko\nuntransform", 600, 350, "parentmain");
+    var tabChild = makeAction("TabChild", 450, 350, "childmain");
+    var isApzcEnabled = makeChoice("APZ\nenabled?", 300, 350, "childmain");
+    var tabGesture = makeAction("TabChild gesture\ndetection", 150, 350, "childmain");
+    var childHitTest = makeAction("Gecko hit test\n(child process)", 300, 450, "childmain");
+    var childEsm = makeAction("Gecko ESM\n(child process)", 450, 450, "childmain");
+    var childContent = makeAction("Content\n(child process)", 600, 450, "childmain");
+
+    document.documentElement.appendChild(android);
+    document.documentElement.appendChild(sendNative);
+    document.documentElement.appendChild(apzHitTest);
+    document.documentElement.appendChild(apzUntransform);
+    document.documentElement.appendChild(apzGesture);
+    document.documentElement.appendChild(apzTransform);
+    document.documentElement.appendChild(compositor);
+    document.documentElement.appendChild(nsAppShell);
+    document.documentElement.appendChild(rootHitTest);
+    document.documentElement.appendChild(rootEsm);
+    document.documentElement.appendChild(isEdgeGesture);
+    document.documentElement.appendChild(edgeConsume);
+    document.documentElement.appendChild(bepjsm);
+    document.documentElement.appendChild(iframeSend);
+    document.documentElement.appendChild(isApzTarget);
+    document.documentElement.appendChild(sendTouchEvent);
+    document.documentElement.appendChild(injectTouch);
+    document.documentElement.appendChild(targetESM);
+    document.documentElement.appendChild(tabParent);
+    document.documentElement.appendChild(geckoUntransform);
+    document.documentElement.appendChild(tabChild);
+    document.documentElement.appendChild(isApzcEnabled);
+    document.documentElement.appendChild(tabGesture);
+    document.documentElement.appendChild(childHitTest);
+    document.documentElement.appendChild(childEsm);
+    document.documentElement.appendChild(childContent);
+
+    document.documentElement.appendChild(makeLabelChoice("Y", offset(leftOf(isEdgeGesture), -5, -5)));
+    document.documentElement.appendChild(makeLabelChoice("N", offset(rightOf(isEdgeGesture), 5, -5)));
+    document.documentElement.appendChild(makeLabelChoice("N", offset(topOf(isApzTarget), 8, -10)));
+    document.documentElement.appendChild(makeLabelChoice("Y", offset(rightOf(isApzTarget), 10, 14)));
+    document.documentElement.appendChild(makeLabelChoice("N", offset(leftOf(isApzcEnabled), -5, -5)));
+    document.documentElement.appendChild(makeLabelChoice("Y", offset(bottomOf(isApzcEnabled), 10, 14)));
+
+    var arrows = document.getElementById('arrows');
+    arrows.appendChild(makeArrow(rightOf(android), leftOf(apzHitTest)));
+    arrows.appendChild(makeVHVArrow(topOf(sendNative), midpoint(rightOf(android), leftOf(apzHitTest)), -20));
+    arrows.appendChild(makeArrow(rightOf(apzHitTest), leftOf(apzUntransform)));
+    arrows.appendChild(makeArrow(rightOf(apzUntransform), leftOf(apzGesture)));
+    arrows.appendChild(makeArrow(rightOf(apzGesture), leftOf(apzTransform)));
+    arrows.appendChild(makeArrow(rightOf(apzTransform), leftOf(compositor)));
+    arrows.appendChild(makeVHVArrow(midpoint(leftOf(apzUntransform), rightOf(apzGesture)), topOf(nsAppShell), 40));
+    arrows.appendChild(makeArrow(rightOf(nsAppShell), leftOf(rootHitTest)));
+    arrows.appendChild(makeArrow(rightOf(rootHitTest), leftOf(rootEsm)));
+    arrows.appendChild(makeVHVArrow(bottomOf(rootEsm), topOf(isEdgeGesture), 15));
+    arrows.appendChild(makeArrow(leftOf(isEdgeGesture), rightOf(edgeConsume)));
+    arrows.appendChild(makeArrow(rightOf(isEdgeGesture), leftOf(bepjsm), 20));
+    arrows.appendChild(makeHVArrow(rightOf(iframeSend), bottomOf(bepjsm)));
+    arrows.appendChild(makeArrow(rightOf(bepjsm), leftOf(isApzTarget)));
+    arrows.appendChild(makeArrow(rightOf(isApzTarget), leftOf(injectTouch)));
+    arrows.appendChild(makeArrow(bottomOf(injectTouch), topOf(tabParent)));
+    arrows.appendChild(makeVHArrow(topOf(isApzTarget), leftOf(sendTouchEvent)));
+    arrows.appendChild(makeHVHArrow(rightOf(sendTouchEvent), rightOf(targetESM), 30));
+    arrows.appendChild(makeArrow(leftOf(tabParent), rightOf(geckoUntransform)));
+    arrows.appendChild(makeArrow(leftOf(geckoUntransform), rightOf(tabChild)));
+    arrows.appendChild(makeArrow(leftOf(tabChild), rightOf(isApzcEnabled)));
+    arrows.appendChild(makeArrow(leftOf(isApzcEnabled), rightOf(tabGesture)));
+    arrows.appendChild(makeArrow(bottomOf(isApzcEnabled), topOf(childHitTest)));
+    arrows.appendChild(makeVHArrow(bottomOf(tabGesture), leftOf(childHitTest)));
+    arrows.appendChild(makeArrow(rightOf(childHitTest), leftOf(childEsm)));
+    arrows.appendChild(makeArrow(rightOf(childEsm), leftOf(childContent)));
+    arrows.appendChild(makeVHVArrow(midpoint(leftOf(apzGesture), rightOf(apzTransform)), topOf(tabChild), 300));
+
+    document.documentElement.appendChild(makeLegend("Main process input thread", "parentinput"));
+    document.documentElement.appendChild(makeLegend("Main process main thread", "parentmain"));
+    document.documentElement.appendChild(makeLegend("Main process compositor thread", "parentcompositor"));
+    document.documentElement.appendChild(makeLegend("Child process main thread", "childmain"));
+    document.documentElement.appendChild(makeLegend("Undetermined process main thread", "bothmain"));
+ ]]></script>
+</svg>
