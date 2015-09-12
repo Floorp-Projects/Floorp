@@ -151,12 +151,12 @@ private:
                         CSSToParentLayerScale& aScale,
                         ScreenMargin& aFixedLayerMargins);
   void SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
-                        float aZoom,
+                        const CSSToParentLayerScale& aZoom,
                         const CSSRect& aCssPageRect,
-                        bool aLayersUpdated,
                         const CSSRect& aDisplayPort,
-                        const CSSToLayerScale& aDisplayResolution,
-                        bool aIsFirstPaint,
+                        const CSSToLayerScale& aPaintedResolution,
+                        bool aLayersUpdated,
+                        int32_t aPaintSyncId,
                         ScreenMargin& aFixedLayerMargins);
 
   /**
