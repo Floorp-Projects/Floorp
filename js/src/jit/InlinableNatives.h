@@ -8,6 +8,7 @@
 #define jit_InlinableNatives_h
 
 #define INLINABLE_NATIVE_LIST(_)    \
+    _(Array)                        \
     _(ArrayIsArray)                 \
     _(ArrayPop)                     \
     _(ArrayShift)                   \
@@ -67,11 +68,20 @@
     _(RegExpExec)                   \
     _(RegExpTest)                   \
                                     \
+    _(String)                       \
     _(StringSplit)                  \
     _(StringCharCodeAt)             \
     _(StringFromCharCode)           \
     _(StringCharAt)                 \
     _(StringReplace)                \
+                                    \
+    _(ObjectCreate)                 \
+                                    \
+    _(CallBoundFunction)            \
+                                    \
+    _(TestBailout)                  \
+    _(TestAssertFloat32)            \
+    _(TestAssertRecoveredOnBailout) \
                                     \
     _(IntrinsicUnsafeSetReservedSlot) \
     _(IntrinsicUnsafeGetReservedSlot) \
