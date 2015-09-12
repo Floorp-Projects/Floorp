@@ -113,9 +113,9 @@ static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
 
   NSPasteboard* dragPBoard = [NSPasteboard pasteboardWithName:NSDragPboard];
 
-  for (uint32_t i = 0; i < count; i++) {
+  for (uint32_t j = 0; j < count; j++) {
     nsCOMPtr<nsISupports> currentTransferableSupports;
-    aTransferableArray->GetElementAt(i, getter_AddRefs(currentTransferableSupports));
+    aTransferableArray->GetElementAt(j, getter_AddRefs(currentTransferableSupports));
     if (!currentTransferableSupports)
       return NS_ERROR_FAILURE;
 
@@ -136,8 +136,8 @@ static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
     // it. Add our wildcard type to the pasteboard to accomplish this.
     [types addObject:kWildcardPboardType]; // we don't increase the count for the loop below on purpose
     [dragPBoard declareTypes:types owner:nil];
-    for (unsigned int i = 0; i < typeCount; i++) {
-      NSString* currentKey = [types objectAtIndex:i];
+    for (unsigned int k = 0; k < typeCount; k++) {
+      NSString* currentKey = [types objectAtIndex:k];
       id currentValue = [pasteboardOutputDict valueForKey:currentKey];
       if (currentKey == NSStringPboardType ||
           currentKey == kCorePboardType_url ||
@@ -425,7 +425,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
       clipboardDataPtr[stringLength] = 0; // null terminate
 
       nsCOMPtr<nsIFile> file;
-      nsresult rv = NS_NewLocalFile(nsDependentString(clipboardDataPtr), true, getter_AddRefs(file));
+      rv = NS_NewLocalFile(nsDependentString(clipboardDataPtr), true, getter_AddRefs(file));
       free(clipboardDataPtr);
       if (NS_FAILED(rv))
         continue;
