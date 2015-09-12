@@ -476,10 +476,30 @@ describe("loop.OTSdkDriver", function () {
     it("should dispatch a DataChannelsAvailable action with available = false", function() {
       driver.disconnectSession();
 
-      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.called(dispatcher.dispatch);
       sinon.assert.calledWithExactly(dispatcher.dispatch,
         new sharedActions.DataChannelsAvailable({
           available: false
+        }));
+    });
+
+    it("should dispatch a MediaStreamDestroyed action with isLocal = false", function() {
+      driver.disconnectSession();
+
+      sinon.assert.called(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.MediaStreamDestroyed({
+          isLocal: false
+        }));
+    });
+
+    it("should dispatch a MediaStreamDestroyed action with isLocal = true", function() {
+      driver.disconnectSession();
+
+      sinon.assert.called(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.MediaStreamDestroyed({
+          isLocal: true
         }));
     });
 
@@ -873,12 +893,27 @@ describe("loop.OTSdkDriver", function () {
           }));
       });
 
-      it("should dispatch a LocalVideoEnabled action", function() {
+      it("should dispatch a MediaStreamCreated action", function() {
         publisher.trigger("streamCreated", { stream: stream });
 
         sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.LocalVideoEnabled({
+          new sharedActions.MediaStreamCreated({
+            hasVideo: true,
+            isLocal: true,
+            srcVideoObject: fakeMockVideo
+          }));
+      });
+
+      it("should dispatch a MediaStreamCreated action with hasVideo false for audio-only streams", function() {
+        stream.hasVideo = false;
+        publisher.trigger("streamCreated", { stream: stream });
+
+        sinon.assert.called(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.MediaStreamCreated({
+            hasVideo: false,
+            isLocal: true,
             srcVideoObject: fakeMockVideo
           }));
       });
@@ -940,8 +975,7 @@ describe("loop.OTSdkDriver", function () {
           sinon.match.func);
       });
 
-      it("should dispatch RemoteVideoEnabled if the stream has video" +
-        " after subscribe is complete", function() {
+      it("should dispatch MediaStreamCreated after subscribe is complete", function() {
         session.subscribe.yieldsOn(driver, null, fakeSubscriberObject,
           videoElement).returns(this.fakeSubscriberObject);
         driver.session = session;
@@ -952,12 +986,14 @@ describe("loop.OTSdkDriver", function () {
 
         sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.RemoteVideoEnabled({
+          new sharedActions.MediaStreamCreated({
+            hasVideo: true,
+            isLocal: false,
             srcVideoObject: videoElement
           }));
       });
 
-      it("should not dispatch RemoteVideoEnabled if the stream is audio-only", function() {
+      it("should dispatch MediaStreamCreated after subscribe with audio-only indication if hasVideo=false", function() {
         session.subscribe.yieldsOn(driver, null, fakeSubscriberObject,
           videoElement);
         fakeStream.connection = fakeConnection;
@@ -966,8 +1002,10 @@ describe("loop.OTSdkDriver", function () {
         session.trigger("streamCreated", { stream: fakeStream });
 
         sinon.assert.called(dispatcher.dispatch);
-        sinon.assert.neverCalledWith(dispatcher.dispatch,
-          new sharedActions.RemoteVideoEnabled({
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.MediaStreamCreated({
+            hasVideo: false,
+            isLocal: false,
             srcVideoObject: videoElement
           }));
       });
@@ -1091,7 +1129,7 @@ describe("loop.OTSdkDriver", function () {
 
         publisher.trigger("streamDestroyed");
 
-        sinon.assert.calledTwice(dispatcher.dispatch);
+        sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.ConnectionStatus({
             event: "Publisher.streamDestroyed",
@@ -1105,10 +1143,20 @@ describe("loop.OTSdkDriver", function () {
       it("should dispatch a DataChannelsAvailable action", function() {
         publisher.trigger("streamDestroyed");
 
-        sinon.assert.calledTwice(dispatcher.dispatch);
+        sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.DataChannelsAvailable({
             available: false
+          }));
+      });
+
+      it("should dispatch a MediaStreamDestroyed action", function() {
+        publisher.trigger("streamDestroyed");
+
+        sinon.assert.called(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.MediaStreamDestroyed({
+            isLocal: true
           }));
       });
     });
@@ -1164,7 +1212,7 @@ describe("loop.OTSdkDriver", function () {
 
         session.trigger("streamDestroyed", { stream: stream });
 
-        sinon.assert.calledTwice(dispatcher.dispatch);
+        sinon.assert.calledThrice(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.DataChannelsAvailable({
             available: false
@@ -1176,6 +1224,27 @@ describe("loop.OTSdkDriver", function () {
 
         sinon.assert.neverCalledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("name", "dataChannelsAvailable"));
+      });
+
+      it("should dispatch a MediaStreamDestroyed action for videoType = camera", function() {
+        stream.videoType = "camera";
+
+        session.trigger("streamDestroyed", { stream: stream });
+
+        sinon.assert.calledThrice(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.MediaStreamDestroyed({
+            isLocal: false
+          }));
+      });
+
+      it("should not dispatch a MediaStreamDestroyed action for videoType = screen", function() {
+        session.trigger("streamDestroyed", { stream: stream });
+
+        sinon.assert.neverCalledWithMatch(dispatcher.dispatch,
+          new sharedActions.MediaStreamDestroyed({
+            isLocal: false
+          }));
       });
     });
 
@@ -1346,7 +1415,7 @@ describe("loop.OTSdkDriver", function () {
     });
 
     describe("videoEnabled", function() {
-      it("should dispatch RemoteVideoEnabled", function() {
+      it("should dispatch a RemoteVideoStatus action", function() {
         session.subscribe.yieldsOn(driver, null, fakeSubscriberObject,
           videoElement).returns(this.fakeSubscriberObject);
         session.trigger("streamCreated", {stream: fakeSubscriberObject.stream});
@@ -1356,12 +1425,14 @@ describe("loop.OTSdkDriver", function () {
 
         sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWith(dispatcher.dispatch,
-          new sharedActions.RemoteVideoEnabled({srcVideoObject: videoElement}));
+          new sharedActions.RemoteVideoStatus({
+            videoEnabled: true
+          }));
       });
     });
 
     describe("videoDisabled", function() {
-      it("should dispatch RemoteVideoDisabled", function() {
+      it("should dispatch a RemoteVideoStatus action", function() {
         session.subscribe.yieldsOn(driver, null, fakeSubscriberObject,
           videoElement).returns(this.fakeSubscriberObject);
         session.trigger("streamCreated", {stream: fakeSubscriberObject.stream});
@@ -1371,7 +1442,9 @@ describe("loop.OTSdkDriver", function () {
 
         sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.RemoteVideoDisabled({}));
+          new sharedActions.RemoteVideoStatus({
+            videoEnabled: false
+          }));
       });
     });
 
