@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class=reftest-wait>
+<style>
+.x .y { background-color: red; }
+</style>
+<p class=x><span><i class=y>hello</i></span></p>
+<script>
+addEventListener("MozReftestInvalidate", function() {
+  document.querySelector("p").classList.toggle("x");
+  document.querySelector("i").classList.toggle("y");
+  document.documentElement.className = "";
+}, false);
+</script>
