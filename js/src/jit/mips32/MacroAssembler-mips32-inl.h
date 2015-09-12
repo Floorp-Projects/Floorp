@@ -140,6 +140,16 @@ MacroAssembler::rshiftPtrArithmetic(Imm32 imm, Register dest)
     ma_sra(dest, dest, imm);
 }
 
+void
+MacroAssembler::rshift64(Imm32 imm, Register64 dest)
+{
+    ScratchRegisterScope scratch(*this);
+    as_srl(dest.low, dest.low, imm.value);
+    as_sll(scratch, dest.high, 32 - imm.value);
+    as_or(dest.low, dest.low, scratch);
+    as_srl(dest.high, dest.high, imm.value);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
