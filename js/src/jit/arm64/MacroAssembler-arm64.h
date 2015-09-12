@@ -1066,8 +1066,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         branchPtr(cond, lhs, getStackPointer(), label);
     }
 
-    inline void lshift64(Imm32 imm, Register64 dest);
-
     void testPtr(Register lhs, Register rhs) {
         Tst(ARMRegister(lhs, 64), Operand(ARMRegister(rhs, 64)));
     }

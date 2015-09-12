@@ -151,6 +151,12 @@ MacroAssembler::lshiftPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::lshift64(Imm32 imm, Register64 dest)
+{
+    lshiftPtr(imm, dest.reg);
+}
+
+void
 MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
 {
     Lsr(ARMRegister(dest, 64), ARMRegister(dest, 64), imm.value);
@@ -176,12 +182,6 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 
 //}}} check_macroassembler_style
 // ===============================================================
-
-void
-MacroAssemblerCompat::lshift64(Imm32 imm, Register64 dest)
-{
-    asMasm().lshiftPtr(imm, dest.reg);
-}
 
 template <typename T>
 void
