@@ -700,6 +700,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     // ===============================================================
     // Shift functions
 
+    inline void lshiftPtr(Imm32 imm, Register dest) PER_ARCH;
+
     inline void rshiftPtr(Imm32 imm, Register dest) PER_ARCH;
     inline void rshiftPtr(Imm32 imm, Register src, Register dest) DEFINED_ON(arm64);
 

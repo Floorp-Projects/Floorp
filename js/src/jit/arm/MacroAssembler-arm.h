@@ -1716,9 +1716,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void checkStackAlignment();
 
-    void lshiftPtr(Imm32 imm, Register dest) {
-        ma_lsl(imm, dest, dest);
-    }
     void lshift64(Imm32 imm, Register64 dest) {
         as_mov(dest.high, lsl(dest.high, imm.value));
         as_orr(dest.high, dest.high, lsr(dest.low, 32 - imm.value));
