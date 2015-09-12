@@ -184,6 +184,16 @@ MacroAssemblerX64::finish()
 }
 
 void
+MacroAssemblerX64::branchPrivatePtr(Condition cond, Address lhs, Register ptr, Label* label)
+{
+    ScratchRegisterScope scratch(asMasm());
+    if (ptr != scratch)
+        movePtr(ptr, scratch);
+    asMasm().rshiftPtr(Imm32(1), scratch);
+    branchPtr(cond, lhs, scratch, label);
+}
+
+void
 MacroAssemblerX64::handleFailureWithHandlerTail(void* handler)
 {
     // Reserve space for exception information.
