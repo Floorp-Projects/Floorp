@@ -13,6 +13,7 @@ EXPORTS.mozilla += [
     'JavascriptTimelineMarker.h',
     'LayerTimelineMarker.h',
     'ObservedDocShell.h',
+    'OTMTMarkerReceiver.h',
     'RestyleTimelineMarker.h',
     'TimelineConsumers.h',
     'TimelineMarker.h',

@@ -549,17 +549,21 @@
  * Marker colors
  */
 
-menuitem.marker-color-graphs-purple:before,
-.marker-color-graphs-purple {
-  background-color: var(--theme-graphs-purple);
-}
-menuitem.marker-color-graphs-grey:before,
-.marker-color-graphs-grey{
-  background-color: var(--theme-graphs-grey);
-}
 menuitem.marker-color-graphs-green:before,
 .marker-color-graphs-green {
   background-color: var(--theme-graphs-green);
+}
+menuitem.marker-color-graphs-blue:before,
+.marker-color-graphs-blue {
+  background-color: var(--theme-graphs-blue);
+}
+menuitem.marker-color-graphs-bluegrey:before,
+.marker-color-graphs-bluegrey {
+  background-color: var(--theme-graphs-bluegrey);
+}
+menuitem.marker-color-graphs-purple:before,
+.marker-color-graphs-purple {
+  background-color: var(--theme-graphs-purple);
 }
 menuitem.marker-color-graphs-yellow:before,
 .marker-color-graphs-yellow {
@@ -569,9 +573,9 @@ menuitem.marker-color-graphs-red:before,
 .marker-color-graphs-red {
   background-color: var(--theme-graphs-red);
 }
-menuitem.marker-color-graphs-blue:before,
-.marker-color-graphs-blue {
-  background-color: var(--theme-graphs-blue);
+menuitem.marker-color-graphs-grey:before,
+.marker-color-graphs-grey{
+  background-color: var(--theme-graphs-grey);
 }
 
 /**

@@ -994,48 +994,124 @@ describe("loop.store.ActiveRoomStore", function () {
     });
   });
 
-  describe("#localVideoEnabled", function() {
-    it("should add a localSrcVideoObject to the store", function() {
-      var fakeVideoElement = {name: "fakeVideoElement"};
-      expect(store.getStoreState()).to.not.have.property("localSrcVideoObject");
-
-      store.localVideoEnabled({srcVideoObject: fakeVideoElement});
-
-      expect(store.getStoreState()).to.have.property("localSrcVideoObject",
-        fakeVideoElement);
-    });
-  });
-
-  describe("#remoteVideoEnabled", function() {
+  describe("#mediaStreamCreated", function() {
     var fakeVideoElement;
 
     beforeEach(function() {
       fakeVideoElement = {name: "fakeVideoElement"};
     });
 
-    it("should add a remoteSrcVideoObject to the store", function() {
+    it("should add a local video object to the store", function() {
+      expect(store.getStoreState()).to.not.have.property("localSrcVideoObject");
+
+      store.mediaStreamCreated(new sharedActions.MediaStreamCreated({
+        hasVideo: false,
+        isLocal: true,
+        srcVideoObject: fakeVideoElement
+      }));
+
+      expect(store.getStoreState().localSrcVideoObject).eql(fakeVideoElement);
       expect(store.getStoreState()).to.not.have.property("remoteSrcVideoObject");
-
-      store.remoteVideoEnabled({srcVideoObject: fakeVideoElement});
-
-      expect(store.getStoreState()).to.have.property("remoteSrcVideoObject",
-        fakeVideoElement);
     });
 
-    it("should set remoteVideoEnabled", function() {
-      store.remoteVideoEnabled({srcVideoObject: fakeVideoElement});
+    it("should set the local video enabled", function() {
+      store.setStoreState({
+        localVideoEnabled: false,
+        remoteVideoEnabled: false
+      });
 
+      store.mediaStreamCreated(new sharedActions.MediaStreamCreated({
+        hasVideo: true,
+        isLocal: true,
+        srcVideoObject: fakeVideoElement
+      }));
+
+      expect(store.getStoreState().localVideoEnabled).eql(true);
+      expect(store.getStoreState().remoteVideoEnabled).eql(false);
+    });
+
+    it("should add a remote video object to the store", function() {
+      expect(store.getStoreState()).to.not.have.property("remoteSrcVideoObject");
+
+      store.mediaStreamCreated(new sharedActions.MediaStreamCreated({
+        hasVideo: false,
+        isLocal: false,
+        srcVideoObject: fakeVideoElement
+      }));
+
+      expect(store.getStoreState()).not.have.property("localSrcVideoObject");
+      expect(store.getStoreState().remoteSrcVideoObject).eql(fakeVideoElement);
+    });
+
+    it("should set the remote video enabled", function() {
+      store.setStoreState({
+        localVideoEnabled: false,
+        remoteVideoEnabled: false
+      });
+
+      store.mediaStreamCreated(new sharedActions.MediaStreamCreated({
+        hasVideo: true,
+        isLocal: false,
+        srcVideoObject: fakeVideoElement
+      }));
+
+      expect(store.getStoreState().localVideoEnabled).eql(false);
       expect(store.getStoreState().remoteVideoEnabled).eql(true);
     });
   });
 
-  describe("#remoteVideoDisabled", function() {
+  describe("#mediaStreamDestroyed", function() {
+    var fakeVideoElement;
+
+    beforeEach(function() {
+      fakeVideoElement = {name: "fakeVideoElement"};
+
+      store.setStoreState({
+        localSrcVideoObject: fakeVideoElement,
+        remoteSrcVideoObject: fakeVideoElement
+      });
+    });
+
+    it("should clear the local video object", function() {
+      store.mediaStreamDestroyed(new sharedActions.MediaStreamDestroyed({
+        isLocal: true
+      }));
+
+      expect(store.getStoreState().localSrcVideoObject).eql(null);
+      expect(store.getStoreState().remoteSrcVideoObject).eql(fakeVideoElement);
+    });
+
+    it("should clear the remote video object", function() {
+      store.mediaStreamDestroyed(new sharedActions.MediaStreamDestroyed({
+        isLocal: false
+      }));
+
+      expect(store.getStoreState().localSrcVideoObject).eql(fakeVideoElement);
+      expect(store.getStoreState().remoteSrcVideoObject).eql(null);
+    });
+  });
+
+  describe("#remoteVideoStatus", function() {
+    it("should set remoteVideoEnabled to true", function() {
+      store.setStoreState({
+        remoteVideoEnabled: false
+      });
+
+      store.remoteVideoStatus(new sharedActions.RemoteVideoStatus({
+        videoEnabled: true
+      }));
+
+      expect(store.getStoreState().remoteVideoEnabled).eql(true);
+    });
+
     it("should set remoteVideoEnabled to false", function() {
       store.setStoreState({
         remoteVideoEnabled: true
       });
 
-      store.remoteVideoDisabled();
+      store.remoteVideoStatus(new sharedActions.RemoteVideoStatus({
+        videoEnabled: false
+      }));
 
       expect(store.getStoreState().remoteVideoEnabled).eql(false);
     });
@@ -1268,6 +1344,16 @@ describe("loop.store.ActiveRoomStore", function () {
       store.remotePeerDisconnected();
 
       expect(store.getStoreState().roomState).eql(ROOM_STATES.SESSION_CONNECTED);
+    });
+
+    it("should clear the mediaConnected state", function() {
+      store.setStoreState({
+        mediaConnected: true
+      });
+
+      store.remotePeerDisconnected();
+
+      expect(store.getStoreState().mediaConnected).eql(false);
     });
 
     it("should clear the remoteSrcVideoObject", function() {

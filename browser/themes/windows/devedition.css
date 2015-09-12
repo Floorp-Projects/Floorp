@@ -250,6 +250,17 @@
   border-right: none !important;
 }
 
+@media (-moz-os-version: windows-vista),
+       (-moz-os-version: windows-win7),
+       (-moz-os-version: windows-win8) {
+  /* And then we add them back on toolbars so that they don't look borderless: */
+  #main-window:not([customizing])[sizemode=normal] #navigator-toolbox::after,
+  #main-window:not([customizing])[sizemode=normal] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
+    border-left: 1px solid hsla(209,67%,12%,0.35);
+    border-right: 1px solid hsla(209,67%,12%,0.35);
+  }
+}
+
 @media (-moz-os-version: windows-win10) {
   /* Always keep draggable space on the sides of tabs since there is no top margin on Win10 */
   #main-window .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {

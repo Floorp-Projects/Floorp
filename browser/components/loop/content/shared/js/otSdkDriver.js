@@ -270,6 +270,12 @@ loop.OTSdkDriver = (function() {
       this.dispatcher.dispatch(new sharedActions.DataChannelsAvailable({
         available: false
       }));
+      this.dispatcher.dispatch(new sharedActions.MediaStreamDestroyed({
+        isLocal: true
+      }));
+      this.dispatcher.dispatch(new sharedActions.MediaStreamDestroyed({
+        isLocal: false
+      }));
 
       if (this.session) {
         this.session.off("sessionDisconnected streamCreated streamDestroyed " +
@@ -592,13 +598,11 @@ loop.OTSdkDriver = (function() {
       sdkSubscriberObject.on("videoEnabled", this._onVideoEnabled.bind(this));
       sdkSubscriberObject.on("videoDisabled", this._onVideoDisabled.bind(this));
 
-      // XXX for some reason, the SDK deliberately suppresses sending the
-      // videoEnabled event after subscribe, in spite of docs claiming
-      // otherwise, so we do it ourselves.
-      if (sdkSubscriberObject.stream.hasVideo) {
-        this.dispatcher.dispatch(new sharedActions.RemoteVideoEnabled({
-          srcVideoObject: sdkSubscriberVideo}));
-      }
+      this.dispatcher.dispatch(new sharedActions.MediaStreamCreated({
+        hasVideo: sdkSubscriberObject.stream[STREAM_PROPERTIES.HAS_VIDEO],
+        isLocal: false,
+        srcVideoObject: sdkSubscriberVideo
+      }));
 
       this._subscribedRemoteStream = true;
       if (this._checkAllStreamsConnected()) {
@@ -757,13 +761,17 @@ loop.OTSdkDriver = (function() {
     _onLocalStreamCreated: function(event) {
       this._notifyMetricsEvent("Publisher.streamCreated");
 
-      if (event.stream[STREAM_PROPERTIES.HAS_VIDEO]) {
+      var sdkLocalVideo = this._mockPublisherEl.querySelector("video");
+      var hasVideo = event.stream[STREAM_PROPERTIES.HAS_VIDEO];
 
-        var sdkLocalVideo = this._mockPublisherEl.querySelector("video");
+      this.dispatcher.dispatch(new sharedActions.MediaStreamCreated({
+        hasVideo: hasVideo,
+        isLocal: true,
+        srcVideoObject: sdkLocalVideo
+      }));
 
-        this.dispatcher.dispatch(new sharedActions.LocalVideoEnabled(
-              {srcVideoObject: sdkLocalVideo}));
-
+      // Only dispatch the video dimensions if we actually have video.
+      if (hasVideo) {
         this.dispatcher.dispatch(new sharedActions.VideoDimensionsChanged({
           isLocal: true,
           videoType: event.stream.videoType,
@@ -836,6 +844,9 @@ loop.OTSdkDriver = (function() {
         this.dispatcher.dispatch(new sharedActions.DataChannelsAvailable({
           available: false
         }));
+        this.dispatcher.dispatch(new sharedActions.MediaStreamDestroyed({
+          isLocal: false
+        }));
         delete this._subscriberChannel;
         delete this._mockSubscribeEl;
         return;
@@ -846,7 +857,6 @@ loop.OTSdkDriver = (function() {
       this.dispatcher.dispatch(new sharedActions.ReceivingScreenShare({
         receiving: false
       }));
-
       delete this._mockScreenShareEl;
     },
 
@@ -857,6 +867,9 @@ loop.OTSdkDriver = (function() {
       this._notifyMetricsEvent("Publisher.streamDestroyed");
       this.dispatcher.dispatch(new sharedActions.DataChannelsAvailable({
         available: false
+      }));
+      this.dispatcher.dispatch(new sharedActions.MediaStreamDestroyed({
+        isLocal: true
       }));
       delete this._publisherChannel;
       delete this._mockPublisherEl;
@@ -952,9 +965,9 @@ loop.OTSdkDriver = (function() {
         console.error("sdkSubscriberVideo unexpectedly falsy!");
       }
 
-      this.dispatcher.dispatch(
-        new sharedActions.RemoteVideoEnabled(
-          {srcVideoObject: sdkSubscriberVideo}));
+      this.dispatcher.dispatch(new sharedActions.RemoteVideoStatus({
+        videoEnabled: true
+      }));
     },
 
     /**
@@ -967,8 +980,9 @@ loop.OTSdkDriver = (function() {
      * @private
      */
     _onVideoDisabled: function(event) {
-      this.dispatcher.dispatch(
-        new sharedActions.RemoteVideoDisabled());
+      this.dispatcher.dispatch(new sharedActions.RemoteVideoStatus({
+        videoEnabled: false
+      }));
     },
 
     /**
