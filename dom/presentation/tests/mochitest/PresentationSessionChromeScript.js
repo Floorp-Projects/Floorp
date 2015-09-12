@@ -100,9 +100,41 @@ const mockedControlChannel = {
     return this._listener;
   },
   sendOffer: function(offer) {
-    sendAsyncMessage('offer-sent');
+    var isValid = false;
+    try {
+      var addresses = offer.tcpAddress;
+      if (addresses.length > 0) {
+        for (var i = 0; i < addresses.length; i++) {
+          // Ensure CString addresses are used. Otherwise, an error will be thrown.
+          addresses.queryElementAt(i, Ci.nsISupportsCString);
+        }
+
+        isValid = true;
+      }
+    } catch (e) {
+      isValid = false;
+    }
+
+    sendAsyncMessage('offer-sent', isValid);
   },
   sendAnswer: function(answer) {
+    var isValid = false;
+    try {
+      var addresses = answer.tcpAddress;
+      if (addresses.length > 0) {
+        for (var i = 0; i < addresses.length; i++) {
+          // Ensure CString addresses are used. Otherwise, an error will be thrown.
+          addresses.queryElementAt(i, Ci.nsISupportsCString);
+        }
+
+        isValid = true;
+      }
+    } catch (e) {
+      isValid = false;
+    }
+
+    sendAsyncMessage('answer-sent', isValid);
+
     this._listener.QueryInterface(Ci.nsIPresentationSessionTransportCallback).notifyTransportReady();
   },
   close: function(reason) {
@@ -119,6 +151,10 @@ const mockedControlChannel = {
   simulateOnAnswer: function() {
     sendAsyncMessage('answer-received');
     this._listener.QueryInterface(Ci.nsIPresentationControlChannelListener).onAnswer(mockedChannelDescription);
+  },
+  simulateNotifyOpened: function() {
+    sendAsyncMessage('control-channel-opened');
+    this._listener.QueryInterface(Ci.nsIPresentationControlChannelListener).notifyOpened();
   },
 };
 
@@ -335,6 +371,10 @@ addMessageListener('trigger-incoming-answer', function() {
 
 addMessageListener('trigger-incoming-transport', function() {
   mockedServerSocket.simulateOnSocketAccepted(mockedServerSocket, mockedSocketTransport);
+});
+
+addMessageListener('trigger-control-channel-open', function(reason) {
+  mockedControlChannel.simulateNotifyOpened();
 });
 
 addMessageListener('trigger-control-channel-close', function(reason) {

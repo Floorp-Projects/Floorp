@@ -76,6 +76,12 @@ function testStartSessionUnexpectedControlChannelCloseBeforeDataTransportInit() 
     gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
       gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
       info("A control channel is established.");
+      gScript.sendAsyncMessage('trigger-control-channel-open');
+    });
+
+    gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler(aReason) {
+      gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
+      info("The control channel is opened.");
     });
 
     gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
@@ -83,9 +89,9 @@ function testStartSessionUnexpectedControlChannelCloseBeforeDataTransportInit() 
       info("The control channel is closed. " + aReason);
     });
 
-    gScript.addMessageListener('offer-sent', function offerSentHandler() {
+    gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
       gScript.removeMessageListener('offer-sent', offerSentHandler);
-      info("An offer is sent out.");
+      ok(aIsValid, "A valid offer is sent out.");
       gScript.sendAsyncMessage('trigger-control-channel-close', SpecialPowers.Cr.NS_ERROR_FAILURE);
     });
 
@@ -113,6 +119,12 @@ function testStartSessionUnexpectedControlChannelCloseBeforeDataTransportReady()
     gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
       gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
       info("A control channel is established.");
+      gScript.sendAsyncMessage('trigger-control-channel-open');
+    });
+
+    gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler(aReason) {
+      gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
+      info("The control channel is opened.");
     });
 
     gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
@@ -120,9 +132,9 @@ function testStartSessionUnexpectedControlChannelCloseBeforeDataTransportReady()
       info("The control channel is closed. " + aReason);
     });
 
-    gScript.addMessageListener('offer-sent', function offerSentHandler() {
+    gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
       gScript.removeMessageListener('offer-sent', offerSentHandler);
-      info("An offer is sent out.");
+      ok(aIsValid, "A valid offer is sent out.");
       gScript.sendAsyncMessage('trigger-incoming-transport');
     });
 
@@ -161,6 +173,12 @@ function testStartSessionUnexpectedDataTransportClose() {
     gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
       gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
       info("A control channel is established.");
+      gScript.sendAsyncMessage('trigger-control-channel-open');
+    });
+
+    gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler(aReason) {
+      gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
+      info("The control channel is opened.");
     });
 
     gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
@@ -168,9 +186,9 @@ function testStartSessionUnexpectedDataTransportClose() {
       info("The control channel is closed. " + aReason);
     });
 
-    gScript.addMessageListener('offer-sent', function offerSentHandler() {
+    gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
       gScript.removeMessageListener('offer-sent', offerSentHandler);
-      info("An offer is sent out.");
+      ok(aIsValid, "A valid offer is sent out.");
       gScript.sendAsyncMessage('trigger-incoming-transport');
     });
 
