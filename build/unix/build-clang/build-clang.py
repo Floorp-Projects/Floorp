@@ -14,17 +14,27 @@ import tempfile
 import glob
 import errno
 from contextlib import contextmanager
+import sys
 
+DEBUG = os.getenv("DEBUG")
 
 def check_run(args):
+    global DEBUG
+    if DEBUG:
+        print >> sys.stderr, ' '.join(args)
     r = subprocess.call(args)
     assert r == 0
 
 
 def run_in(path, args):
     d = os.getcwd()
+    global DEBUG
+    if DEBUG:
+        print >> sys.stderr, 'cd "%s"' % path
     os.chdir(path)
     check_run(args)
+    if DEBUG:
+        print >> sys.stderr, 'cd "%s"' % d
     os.chdir(d)
 
 
@@ -232,6 +242,20 @@ if __name__ == "__main__":
             raise ValueError("gcc_dir must point to an existing path")
     if not is_darwin() and gcc_dir is None:
         raise ValueError("Config file needs to set gcc_dir")
+    cc = None
+    if "cc" in config:
+        cc = config["cc"]
+        if not os.path.exists(cc):
+            raise ValueError("cc must point to an existing path")
+    else:
+        raise ValueError("Config file needs to set cc")
+    cxx = None
+    if "cxx" in config:
+        cxx = config["cxx"]
+        if not os.path.exists(cxx):
+            raise ValueError("cxx must point to an existing path")
+    else:
+        raise ValueError("Config file needs to set cxx")
 
     if not os.path.exists(source_dir):
         os.makedirs(source_dir)
@@ -265,15 +289,11 @@ if __name__ == "__main__":
         extra_cxxflags = "-stdlib=libc++"
         extra_cflags2 = ""
         extra_cxxflags2 = "-stdlib=libc++"
-        cc = "/usr/bin/clang"
-        cxx = "/usr/bin/clang++"
     else:
         extra_cflags = "-static-libgcc"
         extra_cxxflags = "-static-libgcc -static-libstdc++"
         extra_cflags2 = "-fPIC --gcc-toolchain=%s" % gcc_dir
         extra_cxxflags2 = "-fPIC --gcc-toolchain=%s" % gcc_dir
-        cc = gcc_dir + "/bin/gcc"
-        cxx = gcc_dir + "/bin/g++"
 
         if os.environ.has_key('LD_LIBRARY_PATH'):
             os.environ['LD_LIBRARY_PATH'] = '%s/lib64/:%s' % (gcc_dir, os.environ['LD_LIBRARY_PATH']);
