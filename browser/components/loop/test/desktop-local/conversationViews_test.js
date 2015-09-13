@@ -538,7 +538,7 @@ describe("loop.conversationViews", function () {
 
     it("should display the remote video when the stream is enabled", function() {
       conversationStore.setStoreState({
-        remoteSrcVideoObject: { fake: 1 }
+        remoteSrcMediaElement: { fake: 1 }
       });
 
       view = mountTestComponent({
@@ -551,7 +551,7 @@ describe("loop.conversationViews", function () {
 
     it("should display the local video when the stream is enabled", function() {
       conversationStore.setStoreState({
-        localSrcVideoObject: { fake: 1 }
+        localSrcMediaElement: { fake: 1 }
       });
 
       view = mountTestComponent({

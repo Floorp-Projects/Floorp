@@ -1246,7 +1246,7 @@ describe("loop.shared.views", function() {
         mediaType: "local",
         // This doesn't actually get assigned to the video element, but is enough
         // for this test to check display of the video element.
-        srcVideoObject: {
+        srcMediaElement: {
           fake: 1
         }
       });
@@ -1272,7 +1272,7 @@ describe("loop.shared.views", function() {
         view = mountTestComponent({
           displayAvatar: false,
           mediaType: "local",
-          srcVideoObject: {
+          srcMediaElement: {
             fake: 1
           }
         });
@@ -1404,7 +1404,7 @@ describe("loop.shared.views", function() {
 
     it("should not mark the wrapper as showing local streams when not displaying a stream", function() {
       view = mountTestComponent({
-        localSrcVideoObject: null,
+        localSrcMediaElement: null,
         localPosterUrl: null
       });
 
@@ -1414,7 +1414,7 @@ describe("loop.shared.views", function() {
 
     it("should mark the wrapper as showing local streams when displaying a stream", function() {
       view = mountTestComponent({
-        localSrcVideoObject: {},
+        localSrcMediaElement: {},
         localPosterUrl: null
       });
 
@@ -1424,7 +1424,7 @@ describe("loop.shared.views", function() {
 
     it("should mark the wrapper as showing local streams when displaying a poster url", function() {
       view = mountTestComponent({
-        localSrcVideoObject: {},
+        localSrcMediaElement: {},
         localPosterUrl: "fake/url"
       });
 
@@ -1434,7 +1434,7 @@ describe("loop.shared.views", function() {
 
     it("should not mark the wrapper as showing remote streams when not displaying a stream", function() {
       view = mountTestComponent({
-        remoteSrcVideoObject: null,
+        remoteSrcMediaElement: null,
         remotePosterUrl: null
       });
 
@@ -1444,7 +1444,7 @@ describe("loop.shared.views", function() {
 
     it("should mark the wrapper as showing remote streams when displaying a stream", function() {
       view = mountTestComponent({
-        remoteSrcVideoObject: {},
+        remoteSrcMediaElement: {},
         remotePosterUrl: null
       });
 
@@ -1454,7 +1454,7 @@ describe("loop.shared.views", function() {
 
     it("should mark the wrapper as showing remote streams when displaying a poster url", function() {
       view = mountTestComponent({
-        remoteSrcVideoObject: {},
+        remoteSrcMediaElement: {},
         remotePosterUrl: "fake/url"
       });
 

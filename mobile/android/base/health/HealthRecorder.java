@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.health;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 
 import org.json.JSONObject;
@@ -33,7 +34,7 @@ public interface HealthRecorder {
     public void onEnvironmentChanged();
     public void onEnvironmentChanged(final boolean startNewSession, final String sessionEndReason);
 
-    public void close();
+    public void close(final Context context);
 
     public void processDelayed();
 }
