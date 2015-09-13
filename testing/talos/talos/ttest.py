@@ -238,20 +238,12 @@ class TTest(object):
                 )
 
             # add the results from the browser output
-            try:
-                test_results.add(
-                    '\n'.join(pcontext.output),
-                    counter_results=(counter_management.results()
-                                     if counter_management
-                                     else None))
-            except Exception:
-                # Log the exception, but continue. One way to get here
-                # is if the browser hangs, and we'd still like to get
-                # symbolicated profiles in that case.
-                # TODO: the browser can't be hanging here anymore
-                # check if we can remove this, or if we should adjust the
-                # above comment.
-                logging.exception("Unable to add results for cycle %d" % i)
+            test_results.add(
+                '\n'.join(pcontext.output),
+                counter_results=(counter_management.results()
+                                 if counter_management
+                                 else None)
+            )
 
             if setup.sps_profile:
                 setup.sps_profile.symbolicate(i)
