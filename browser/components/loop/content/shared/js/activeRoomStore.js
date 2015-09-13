@@ -106,15 +106,15 @@ loop.store.ActiveRoomStore = (function() {
      */
     _statesToResetOnLeave: [
       "audioMuted",
-      "localSrcVideoObject",
+      "localSrcMediaElement",
       "localVideoDimensions",
       "mediaConnected",
       "receivingScreenShare",
-      "remoteSrcVideoObject",
+      "remoteSrcMediaElement",
       "remoteVideoDimensions",
       "remoteVideoEnabled",
       "screenSharingState",
-      "screenShareVideoObject",
+      "screenShareMediaElement",
       "videoMuted"
     ],
 
@@ -640,14 +640,14 @@ loop.store.ActiveRoomStore = (function() {
       if (actionData.isLocal) {
         this.setStoreState({
           localVideoEnabled: actionData.hasVideo,
-          localSrcVideoObject: actionData.srcVideoObject
+          localSrcMediaElement: actionData.srcMediaElement
         });
         return;
       }
 
       this.setStoreState({
         remoteVideoEnabled: actionData.hasVideo,
-        remoteSrcVideoObject: actionData.srcVideoObject
+        remoteSrcMediaElement: actionData.srcMediaElement
       });
     },
 
@@ -659,13 +659,13 @@ loop.store.ActiveRoomStore = (function() {
     mediaStreamDestroyed: function(actionData) {
       if (actionData.isLocal) {
         this.setStoreState({
-          localSrcVideoObject: null
+          localSrcMediaElement: null
         });
         return;
       }
 
       this.setStoreState({
-        remoteSrcVideoObject: null
+        remoteSrcMediaElement: null
       });
     },
 
@@ -713,13 +713,13 @@ loop.store.ActiveRoomStore = (function() {
         this.setStoreState({
           receivingScreenShare: actionData.receiving,
           remoteVideoDimensions: newDimensions,
-          screenShareVideoObject: null
+          screenShareMediaElement: null
         });
       } else {
         this.setStoreState({
           receivingScreenShare: actionData.receiving,
-          screenShareVideoObject: actionData.srcVideoObject ?
-                                  actionData.srcVideoObject : null
+          screenShareMediaElement: actionData.srcMediaElement ?
+                                  actionData.srcMediaElement : null
         });
       }
     },
@@ -829,7 +829,7 @@ loop.store.ActiveRoomStore = (function() {
         mediaConnected: false,
         participants: participants,
         roomState: ROOM_STATES.SESSION_CONNECTED,
-        remoteSrcVideoObject: null
+        remoteSrcMediaElement: null
       });
     },
 

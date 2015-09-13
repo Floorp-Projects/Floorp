@@ -448,14 +448,14 @@ loop.store = loop.store || {};
       if (actionData.isLocal) {
         this.setStoreState({
           localVideoEnabled: actionData.hasVideo,
-          localSrcVideoObject: actionData.srcVideoObject
+          localSrcMediaElement: actionData.srcMediaElement
         });
         return;
       }
 
       this.setStoreState({
         remoteVideoEnabled: actionData.hasVideo,
-        remoteSrcVideoObject: actionData.srcVideoObject
+        remoteSrcMediaElement: actionData.srcMediaElement
       });
     },
 
@@ -467,13 +467,13 @@ loop.store = loop.store || {};
     mediaStreamDestroyed: function(actionData) {
       if (actionData.isLocal) {
         this.setStoreState({
-          localSrcVideoObject: null
+          localSrcMediaElement: null
         });
         return;
       }
 
       this.setStoreState({
-        remoteSrcVideoObject: null
+        remoteSrcMediaElement: null
       });
     },
 

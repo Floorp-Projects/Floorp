@@ -707,7 +707,7 @@ loop.roomViews = (function(mozL10n) {
      */
     _isLocalLoading: function () {
       return this.state.roomState === ROOM_STATES.MEDIA_WAIT &&
-             !this.state.localSrcVideoObject;
+             !this.state.localSrcMediaElement;
     },
 
     /**
@@ -719,7 +719,7 @@ loop.roomViews = (function(mozL10n) {
      */
     _isRemoteLoading: function() {
       return !!(this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS &&
-                !this.state.remoteSrcVideoObject &&
+                !this.state.remoteSrcMediaElement &&
                 !this.state.mediaConnected);
     },
 
@@ -801,14 +801,14 @@ loop.roomViews = (function(mozL10n) {
                 isRemoteLoading={this._isRemoteLoading()}
                 isScreenShareLoading={false}
                 localPosterUrl={this.props.localPosterUrl}
-                localSrcVideoObject={this.state.localSrcVideoObject}
+                localSrcMediaElement={this.state.localSrcMediaElement}
                 localVideoMuted={this.state.videoMuted}
                 matchMedia={this.state.matchMedia || window.matchMedia.bind(window)}
                 remotePosterUrl={this.props.remotePosterUrl}
-                remoteSrcVideoObject={this.state.remoteSrcVideoObject}
+                remoteSrcMediaElement={this.state.remoteSrcMediaElement}
                 renderRemoteVideo={this.shouldRenderRemoteVideo()}
+                screenShareMediaElement={this.state.screenShareMediaElement}
                 screenSharePosterUrl={null}
-                screenShareVideoObject={this.state.screenShareVideoObject}
                 showContextRoomName={false}
                 useDesktopPaths={true}>
                 <sharedViews.ConversationToolbar

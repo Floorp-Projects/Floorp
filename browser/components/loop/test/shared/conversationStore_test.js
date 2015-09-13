@@ -14,7 +14,7 @@ describe("loop.store.ConversationStore", function () {
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
   var sandbox, dispatcher, client, store, fakeSessionData, sdkDriver;
-  var contact, fakeMozLoop, fakeVideoElement;
+  var contact, fakeMozLoop, fakeStreamElement;
   var connectPromise, resolveConnectPromise, rejectConnectPromise;
   var wsCancelSpy, wsCloseSpy, wsDeclineSpy, wsMediaUpSpy, fakeWebsocket;
 
@@ -95,7 +95,7 @@ describe("loop.store.ConversationStore", function () {
       progressURL: "fakeURL"
     };
 
-    fakeVideoElement = { id: "fakeVideoElement" };
+    fakeStreamElement = { id: "fakeStreamElement" };
 
     var dummySocket = {
       close: sinon.spy(),
@@ -957,16 +957,16 @@ describe("loop.store.ConversationStore", function () {
 
   describe("#mediaStreamCreated", function() {
     it("should add a local video object to the store", function() {
-      expect(store.getStoreState()).to.not.have.property("localSrcVideoObject");
+      expect(store.getStoreState()).to.not.have.property("localSrcMediaElement");
 
       store.mediaStreamCreated(new sharedActions.MediaStreamCreated({
         hasVideo: false,
         isLocal: true,
-        srcVideoObject: fakeVideoElement
+        srcMediaElement: fakeStreamElement
       }));
 
-      expect(store.getStoreState().localSrcVideoObject).eql(fakeVideoElement);
-      expect(store.getStoreState()).to.not.have.property("remoteSrcVideoObject");
+      expect(store.getStoreState().localSrcMediaElement).eql(fakeStreamElement);
+      expect(store.getStoreState()).to.not.have.property("remoteSrcMediaElement");
     });
 
     it("should set the local video enabled", function() {
@@ -978,7 +978,7 @@ describe("loop.store.ConversationStore", function () {
       store.mediaStreamCreated(new sharedActions.MediaStreamCreated({
         hasVideo: true,
         isLocal: true,
-        srcVideoObject: fakeVideoElement
+        srcMediaElement: fakeStreamElement
       }));
 
       expect(store.getStoreState().localVideoEnabled).eql(true);
@@ -986,16 +986,16 @@ describe("loop.store.ConversationStore", function () {
     });
 
     it("should add a remote video object to the store", function() {
-      expect(store.getStoreState()).to.not.have.property("remoteSrcVideoObject");
+      expect(store.getStoreState()).to.not.have.property("remoteSrcMediaElement");
 
       store.mediaStreamCreated(new sharedActions.MediaStreamCreated({
         hasVideo: false,
         isLocal: false,
-        srcVideoObject: fakeVideoElement
+        srcMediaElement: fakeStreamElement
       }));
 
-      expect(store.getStoreState()).not.have.property("localSrcVideoObject");
-      expect(store.getStoreState().remoteSrcVideoObject).eql(fakeVideoElement);
+      expect(store.getStoreState()).not.have.property("localSrcMediaElement");
+      expect(store.getStoreState().remoteSrcMediaElement).eql(fakeStreamElement);
     });
 
     it("should set the remote video enabled", function() {
@@ -1007,7 +1007,7 @@ describe("loop.store.ConversationStore", function () {
       store.mediaStreamCreated(new sharedActions.MediaStreamCreated({
         hasVideo: true,
         isLocal: false,
-        srcVideoObject: fakeVideoElement
+        srcMediaElement: fakeStreamElement
       }));
 
       expect(store.getStoreState().localVideoEnabled).eql(false);
@@ -1018,8 +1018,8 @@ describe("loop.store.ConversationStore", function () {
   describe("#mediaStreamDestroyed", function() {
     beforeEach(function() {
       store.setStoreState({
-        localSrcVideoObject: fakeVideoElement,
-        remoteSrcVideoObject: fakeVideoElement
+        localSrcMediaElement: fakeStreamElement,
+        remoteSrcMediaElement: fakeStreamElement
       });
     });
 
@@ -1028,8 +1028,8 @@ describe("loop.store.ConversationStore", function () {
         isLocal: true
       }));
 
-      expect(store.getStoreState().localSrcVideoObject).eql(null);
-      expect(store.getStoreState().remoteSrcVideoObject).eql(fakeVideoElement);
+      expect(store.getStoreState().localSrcMediaElement).eql(null);
+      expect(store.getStoreState().remoteSrcMediaElement).eql(fakeStreamElement);
     });
 
     it("should clear the remote video object", function() {
@@ -1037,8 +1037,8 @@ describe("loop.store.ConversationStore", function () {
         isLocal: false
       }));
 
-      expect(store.getStoreState().localSrcVideoObject).eql(fakeVideoElement);
-      expect(store.getStoreState().remoteSrcVideoObject).eql(null);
+      expect(store.getStoreState().localSrcMediaElement).eql(fakeStreamElement);
+      expect(store.getStoreState().remoteSrcMediaElement).eql(null);
     });
   });
 
