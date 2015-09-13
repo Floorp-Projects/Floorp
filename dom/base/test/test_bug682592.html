@@ -39,6 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=682592
 */
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(2);
 if (navigator.platform.startsWith("Linux arm")) { /* bugs 982875, 999429 */
   SimpleTest.expectAssertions(0, 4);
 }
