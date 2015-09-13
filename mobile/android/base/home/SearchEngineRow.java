@@ -244,12 +244,6 @@ class SearchEngineRow extends AnimatedHeightLayout {
     }
 
     private int updateFromSearchEngine(boolean animate, int recycledSuggestionCount) {
-        // Set the search engine icon (e.g., Google) for the row.
-        mIconView.updateAndScaleImage(mSearchEngine.getIcon(), mSearchEngine.getEngineIdentifier());
-
-        // Set the initial content description.
-        setDescriptionOnSuggestion(mUserEnteredTextView, mUserEnteredTextView.getText().toString());
-
         int suggestionCounter = 0;
         // Apply Search Engine's suggestions
         for (String suggestion : mSearchEngine.getSuggestions()) {
@@ -270,6 +264,10 @@ class SearchEngineRow extends AnimatedHeightLayout {
     public void updateSuggestions(boolean suggestionsEnabled, SearchEngine searchEngine, String searchTerm, boolean animate) {
         // Update search engine reference. Even if the user has not seen the prompt, we need to set the engine for the mSearchTerm suggestion
         mSearchEngine = searchEngine;
+        // Set the search engine icon (e.g., Google) for the row.
+        mIconView.updateAndScaleImage(mSearchEngine.getIcon(), mSearchEngine.getEngineIdentifier());
+        // Set the initial content description.
+        setDescriptionOnSuggestion(mUserEnteredTextView, mUserEnteredTextView.getText().toString());
         // This can be called before the opt-in permission prompt is shown or set. Check first.
         if (suggestionsEnabled) {
             final int recycledSuggestionCount = mSuggestionView.getChildCount();
