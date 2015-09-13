@@ -493,7 +493,7 @@ bool
 DoublePolicy<Op>::staticAdjustInputs(TempAllocator& alloc, MInstruction* def)
 {
     MDefinition* in = def->getOperand(Op);
-    if (in->type() == MIRType_Double)
+    if (in->type() == MIRType_Double || in->type() == MIRType_SinCosDouble)
         return true;
 
     MToDouble* replace = MToDouble::New(alloc, in);

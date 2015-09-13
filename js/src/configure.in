@@ -2402,6 +2402,7 @@ fi
 dnl Checks for math functions.
 dnl ========================================================
 AC_CHECK_LIB(m, sin)
+AC_CHECK_LIB(m, __sincos, AC_DEFINE(HAVE_SINCOS))
 AC_CHECK_FUNCS([log2 log1p expm1 sqrt1pm1 acosh asinh atanh cbrt])
 
 

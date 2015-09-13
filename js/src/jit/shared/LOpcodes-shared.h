@@ -162,6 +162,7 @@
     _(Concat)                       \
     _(CharCodeAt)                   \
     _(FromCharCode)                 \
+    _(SinCos)                       \
     _(StringSplit)                  \
     _(Int32ToDouble)                \
     _(Float32ToDouble)              \
