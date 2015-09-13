@@ -42,6 +42,7 @@ TEST_HARNESS_FILES.gtest += [
     '../test/gizmo-frag.mp4',
     '../test/gizmo.mp4',
     'dash_dashinit.mp4',
+    'id3v2header.mp3',
     'mediasource_test.mp4',
     'noise.mp3',
     'noise_vbr.mp3',

@@ -111,6 +111,49 @@ protected:
 
     {
       MP3Resource res;
+      // This file trips up the MP3 demuxer if ID3v2 tags aren't properly skipped. If skipping is
+      // not properly implemented, depending on the strictness of the MPEG frame parser a false
+      // sync will be detected somewhere within the metadata at or after 112087, or failing
+      // that, at the artificially added extraneous header at 114532.
+      res.mFilePath = "id3v2header.mp3";
+      res.mIsVBR = false;
+      res.mFileSize = 191302;
+      res.mMPEGLayer = 3;
+      res.mMPEGVersion = 1;
+      res.mID3MajorVersion = 3;
+      res.mID3MinorVersion = 0;
+      res.mID3Flags = 0;
+      res.mID3Size = 115304;
+      res.mDuration = 3160816;
+      res.mDurationError = 0.001f;
+      res.mSeekError = 0.02f;
+      res.mSampleRate = 44100;
+      res.mSamplesPerFrame = 1152;
+      res.mNumSamples = 139392;
+      res.mNumTrailingFrames = 0;
+      res.mBitrate = 192000;
+      res.mSlotSize = 1;
+      res.mPrivate = 1;
+      const int syncs[] = { 115314, 115941, 116568, 117195, 117822, 118449 };
+      res.mSyncOffsets.insert(res.mSyncOffsets.begin(), syncs, syncs + 6);
+
+      // No content length can be estimated for CBR stream resources.
+      MP3Resource streamRes = res;
+      streamRes.mFileSize = -1;
+      streamRes.mDuration = -1;
+      streamRes.mDurationError = 0.0f;
+
+      res.mResource = new MockMP3MediaResource(res.mFilePath);
+      res.mDemuxer = new MP3TrackDemuxer(res.mResource);
+      mTargets.push_back(res);
+
+      streamRes.mResource = new MockMP3StreamMediaResource(streamRes.mFilePath);
+      streamRes.mDemuxer = new MP3TrackDemuxer(streamRes.mResource);
+      mTargets.push_back(streamRes);
+    }
+
+    {
+      MP3Resource res;
       res.mFilePath = "noise_vbr.mp3";
       res.mIsVBR = true;
       res.mFileSize = 583679;
