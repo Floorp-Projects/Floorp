@@ -1075,7 +1075,7 @@ loop.shared.views = (function(_, mozL10n) {
    * instead of the video, and attaching a video stream to the video element.
    */
   var MediaView = React.createClass({displayName: "MediaView",
-    // srcVideoObject should be ok for a shallow comparison, so we are safe
+    // srcMediaElement should be ok for a shallow comparison, so we are safe
     // to use the pure render mixin here.
     mixins: [React.addons.PureRenderMixin],
 
@@ -1085,18 +1085,18 @@ loop.shared.views = (function(_, mozL10n) {
       mediaType: React.PropTypes.string.isRequired,
       posterUrl: React.PropTypes.string,
       // Expecting "local" or "remote".
-      srcVideoObject: React.PropTypes.object
+      srcMediaElement: React.PropTypes.object
     },
 
     componentDidMount: function() {
       if (!this.props.displayAvatar) {
-        this.attachVideo(this.props.srcVideoObject);
+        this.attachVideo(this.props.srcMediaElement);
       }
     },
 
     componentDidUpdate: function() {
       if (!this.props.displayAvatar) {
-        this.attachVideo(this.props.srcVideoObject);
+        this.attachVideo(this.props.srcMediaElement);
       }
     },
 
@@ -1104,14 +1104,14 @@ loop.shared.views = (function(_, mozL10n) {
      * Attaches a video stream from a donor video element to this component's
      * video element if the component is displaying one.
      *
-     * @param {Object} srcVideoObject The src video object to clone the stream
+     * @param {Object} srcMediaElement The src video object to clone the stream
      *                                from.
      *
      * XXX need to have a corresponding detachVideo or change this to syncVideo
      * to protect from leaks (bug 1171978)
      */
-    attachVideo: function(srcVideoObject) {
-      if (!srcVideoObject) {
+    attachVideo: function(srcMediaElement) {
+      if (!srcMediaElement) {
         // Not got anything to display.
         return;
       }
@@ -1141,8 +1141,8 @@ loop.shared.views = (function(_, mozL10n) {
       }
 
       // If the object hasn't changed it, then don't reattach it.
-      if (videoElement[attrName] !== srcVideoObject[attrName]) {
-        videoElement[attrName] = srcVideoObject[attrName];
+      if (videoElement[attrName] !== srcMediaElement[attrName]) {
+        videoElement[attrName] = srcMediaElement[attrName];
       }
       videoElement.play();
     },
@@ -1156,7 +1156,7 @@ loop.shared.views = (function(_, mozL10n) {
         return React.createElement(AvatarView, null);
       }
 
-      if (!this.props.srcVideoObject && !this.props.posterUrl) {
+      if (!this.props.srcMediaElement && !this.props.posterUrl) {
         return React.createElement("div", {className: "no-video"});
       }
 
@@ -1192,16 +1192,16 @@ loop.shared.views = (function(_, mozL10n) {
       isScreenShareLoading: React.PropTypes.bool.isRequired,
       // The poster URLs are for UI-showcase testing and development.
       localPosterUrl: React.PropTypes.string,
-      localSrcVideoObject: React.PropTypes.object,
+      localSrcMediaElement: React.PropTypes.object,
       localVideoMuted: React.PropTypes.bool.isRequired,
       // Passing in matchMedia, allows it to be overriden for ui-showcase's
       // benefit. We expect either the override or window.matchMedia.
       matchMedia: React.PropTypes.func.isRequired,
       remotePosterUrl: React.PropTypes.string,
-      remoteSrcVideoObject: React.PropTypes.object,
+      remoteSrcMediaElement: React.PropTypes.object,
       renderRemoteVideo: React.PropTypes.bool.isRequired,
+      screenShareMediaElement: React.PropTypes.object,
       screenSharePosterUrl: React.PropTypes.string,
-      screenShareVideoObject: React.PropTypes.object,
       showContextRoomName: React.PropTypes.bool.isRequired,
       useDesktopPaths: React.PropTypes.bool.isRequired
     },
@@ -1255,7 +1255,7 @@ loop.shared.views = (function(_, mozL10n) {
             isLoading: this.props.isLocalLoading, 
             mediaType: "local", 
             posterUrl: this.props.localPosterUrl, 
-            srcVideoObject: this.props.localSrcVideoObject})
+            srcMediaElement: this.props.localSrcMediaElement})
         )
       );
     },
@@ -1274,9 +1274,9 @@ loop.shared.views = (function(_, mozL10n) {
       var mediaWrapperClasses = React.addons.classSet({
         "media-wrapper": true,
         "receiving-screen-share": this.props.displayScreenShare,
-        "showing-local-streams": this.props.localSrcVideoObject ||
+        "showing-local-streams": this.props.localSrcMediaElement ||
           this.props.localPosterUrl,
-        "showing-remote-streams": this.props.remoteSrcVideoObject ||
+        "showing-remote-streams": this.props.remoteSrcMediaElement ||
           this.props.remotePosterUrl || this.props.isRemoteLoading
       });
 
@@ -1291,7 +1291,7 @@ loop.shared.views = (function(_, mozL10n) {
                 isLoading: this.props.isRemoteLoading, 
                 mediaType: "remote", 
                 posterUrl: this.props.remotePosterUrl, 
-                srcVideoObject: this.props.remoteSrcVideoObject}), 
+                srcMediaElement: this.props.remoteSrcMediaElement}), 
                this.state.localMediaAboslutelyPositioned ?
                 this.renderLocalVideo() : null, 
                this.props.children
@@ -1302,7 +1302,7 @@ loop.shared.views = (function(_, mozL10n) {
                 isLoading: this.props.isScreenShareLoading, 
                 mediaType: "screen-share", 
                 posterUrl: this.props.screenSharePosterUrl, 
-                srcVideoObject: this.props.screenShareVideoObject})
+                srcMediaElement: this.props.screenShareMediaElement})
             ), 
             React.createElement(loop.shared.views.chat.TextChatView, {
               dispatcher: this.props.dispatcher, 

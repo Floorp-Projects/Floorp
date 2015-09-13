@@ -34,8 +34,9 @@ public class ProfileInformationCache implements ProfileInformationProvider {
    *   1: Add versioning (Bug 878670).
    *   2: Bump to regenerate add-on set after landing Bug 900694 (Bug 901622).
    *   3: Add distribution, osLocale, appLocale.
+   *   4: Add experiments as add-ons.
    */
-  public static final int FORMAT_VERSION = 3;
+  public static final int FORMAT_VERSION = 4;
 
   protected boolean initialized = false;
   protected boolean needsWrite = false;
