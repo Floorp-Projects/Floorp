@@ -56,36 +56,6 @@ static const Time FUTURE_TIME(YMDHMS(2025, 12, 31, 12, 23, 56));
 
 class pkixcheck_CheckValidity : public ::testing::Test { };
 
-TEST_F(pkixcheck_CheckValidity, BothEmptyNull)
-{
-  static const uint8_t DER[] = {
-    0x17/*UTCTime*/, 0/*length*/,
-    0x17/*UTCTime*/, 0/*length*/,
-  };
-  static const Input validity(DER);
-  ASSERT_EQ(Result::ERROR_INVALID_DER_TIME, CheckValidity(validity, NOW));
-}
-
-TEST_F(pkixcheck_CheckValidity, NotBeforeEmptyNull)
-{
-  static const uint8_t DER[] = {
-    0x17/*UTCTime*/, 0x00/*length*/,
-    NEWER_UTCTIME
-  };
-  static const Input validity(DER);
-  ASSERT_EQ(Result::ERROR_INVALID_DER_TIME, CheckValidity(validity, NOW));
-}
-
-TEST_F(pkixcheck_CheckValidity, NotAfterEmptyNull)
-{
-  static const uint8_t DER[] = {
-    NEWER_UTCTIME,
-    0x17/*UTCTime*/, 0x00/*length*/,
-  };
-  static const Input validity(DER);
-  ASSERT_EQ(Result::ERROR_INVALID_DER_TIME, CheckValidity(validity, NOW));
-}
-
 static const uint8_t OLDER_UTCTIME_NEWER_UTCTIME_DATA[] = {
   OLDER_UTCTIME,
   NEWER_UTCTIME,
@@ -95,7 +65,10 @@ OLDER_UTCTIME_NEWER_UTCTIME(OLDER_UTCTIME_NEWER_UTCTIME_DATA);
 
 TEST_F(pkixcheck_CheckValidity, Valid_UTCTIME_UTCTIME)
 {
-  ASSERT_EQ(Success, CheckValidity(OLDER_UTCTIME_NEWER_UTCTIME, NOW));
+  static Time notBefore(Time::uninitialized);
+  static Time notAfter(Time::uninitialized);
+  ASSERT_EQ(Success, ParseValidity(OLDER_UTCTIME_NEWER_UTCTIME, &notBefore, &notAfter));
+  ASSERT_EQ(Success, CheckValidity(NOW, notBefore, notAfter));
 }
 
 TEST_F(pkixcheck_CheckValidity, Valid_GENERALIZEDTIME_GENERALIZEDTIME)
@@ -105,7 +78,10 @@ TEST_F(pkixcheck_CheckValidity, Valid_GENERALIZEDTIME_GENERALIZEDTIME)
     NEWER_GENERALIZEDTIME,
   };
   static const Input validity(DER);
-  ASSERT_EQ(Success, CheckValidity(validity, NOW));
+  static Time notBefore(Time::uninitialized);
+  static Time notAfter(Time::uninitialized);
+  ASSERT_EQ(Success, ParseValidity(validity, &notBefore, &notAfter));
+  ASSERT_EQ(Success, CheckValidity(NOW, notBefore, notAfter));
 }
 
 TEST_F(pkixcheck_CheckValidity, Valid_GENERALIZEDTIME_UTCTIME)
@@ -115,7 +91,10 @@ TEST_F(pkixcheck_CheckValidity, Valid_GENERALIZEDTIME_UTCTIME)
     NEWER_UTCTIME,
   };
   static const Input validity(DER);
-  ASSERT_EQ(Success, CheckValidity(validity, NOW));
+  static Time notBefore(Time::uninitialized);
+  static Time notAfter(Time::uninitialized);
+  ASSERT_EQ(Success, ParseValidity(validity, &notBefore, &notAfter));
+  ASSERT_EQ(Success, CheckValidity(NOW, notBefore, notAfter));
 }
 
 TEST_F(pkixcheck_CheckValidity, Valid_UTCTIME_GENERALIZEDTIME)
@@ -125,27 +104,24 @@ TEST_F(pkixcheck_CheckValidity, Valid_UTCTIME_GENERALIZEDTIME)
     NEWER_GENERALIZEDTIME,
   };
   static const Input validity(DER);
-  ASSERT_EQ(Success, CheckValidity(validity, NOW));
+  static Time notBefore(Time::uninitialized);
+  static Time notAfter(Time::uninitialized);
+  ASSERT_EQ(Success, ParseValidity(validity, &notBefore, &notAfter));
+  ASSERT_EQ(Success, CheckValidity(NOW, notBefore, notAfter));
 }
 
 TEST_F(pkixcheck_CheckValidity, InvalidBeforeNotBefore)
 {
-  ASSERT_EQ(Result::ERROR_NOT_YET_VALID_CERTIFICATE,
-            CheckValidity(OLDER_UTCTIME_NEWER_UTCTIME, PAST_TIME));
+  static Time notBefore(Time::uninitialized);
+  static Time notAfter(Time::uninitialized);
+  ASSERT_EQ(Success, ParseValidity(OLDER_UTCTIME_NEWER_UTCTIME, &notBefore, &notAfter));
+  ASSERT_EQ(Result::ERROR_NOT_YET_VALID_CERTIFICATE, CheckValidity(PAST_TIME, notBefore, notAfter));
 }
 
 TEST_F(pkixcheck_CheckValidity, InvalidAfterNotAfter)
 {
-  ASSERT_EQ(Result::ERROR_EXPIRED_CERTIFICATE,
-            CheckValidity(OLDER_UTCTIME_NEWER_UTCTIME, FUTURE_TIME));
-}
-
-TEST_F(pkixcheck_CheckValidity, InvalidNotAfterBeforeNotBefore)
-{
-  static const uint8_t DER[] = {
-    NEWER_UTCTIME,
-    OLDER_UTCTIME,
-  };
-  static const Input validity(DER);
-  ASSERT_EQ(Result::ERROR_INVALID_DER_TIME, CheckValidity(validity, NOW));
+  static Time notBefore(Time::uninitialized);
+  static Time notAfter(Time::uninitialized);
+  ASSERT_EQ(Success, ParseValidity(OLDER_UTCTIME_NEWER_UTCTIME, &notBefore, &notAfter));
+  ASSERT_EQ(Result::ERROR_EXPIRED_CERTIFICATE, CheckValidity(FUTURE_TIME, notBefore, notAfter));
 }

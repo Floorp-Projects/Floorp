@@ -10,6 +10,7 @@
 #include "nsCORSListenerProxy.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelChild.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsError.h"
 #include "nsContentUtils.h"
@@ -39,6 +40,7 @@
 #include "nsIDOMWindow.h"
 #include "nsINetworkInterceptController.h"
 #include "nsNullPrincipal.h"
+#include "nsICorsPreflightCallback.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -500,15 +502,24 @@ nsCORSListenerProxy::OnStartRequest(nsIRequest* aRequest,
   nsresult rv = CheckRequestApproved(aRequest);
   mRequestApproved = NS_SUCCEEDED(rv);
   if (!mRequestApproved) {
-    if (sPreflightCache) {
-      nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-      if (channel) {
-        nsCOMPtr<nsIURI> uri;
-        NS_GetFinalChannelURI(channel, getter_AddRefs(uri));
-        if (uri) {
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+    if (channel) {
+      nsCOMPtr<nsIURI> uri;
+      NS_GetFinalChannelURI(channel, getter_AddRefs(uri));
+      if (uri) {
+        if (sPreflightCache) {
           // OK to use mRequestingPrincipal since preflights never get
           // redirected.
           sPreflightCache->RemoveEntries(uri, mRequestingPrincipal);
+        } else {
+          nsCOMPtr<nsIHttpChannelChild> httpChannelChild =
+            do_QueryInterface(channel);
+          if (httpChannelChild) {
+            rv = httpChannelChild->RemoveCorsPreflightCacheEntry(uri, mRequestingPrincipal);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
+          }
         }
       }
     }
@@ -731,13 +742,22 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
       !NS_IsHSTSUpgradeRedirect(aOldChannel, aNewChannel, aFlags)) {
     rv = CheckRequestApproved(aOldChannel);
     if (NS_FAILED(rv)) {
-      if (sPreflightCache) {
-        nsCOMPtr<nsIURI> oldURI;
-        NS_GetFinalChannelURI(aOldChannel, getter_AddRefs(oldURI));
-        if (oldURI) {
+      nsCOMPtr<nsIURI> oldURI;
+      NS_GetFinalChannelURI(aOldChannel, getter_AddRefs(oldURI));
+      if (oldURI) {
+        if (sPreflightCache) {
           // OK to use mRequestingPrincipal since preflights never get
           // redirected.
           sPreflightCache->RemoveEntries(oldURI, mRequestingPrincipal);
+        } else {
+          nsCOMPtr<nsIHttpChannelChild> httpChannelChild =
+            do_QueryInterface(aOldChannel);
+          if (httpChannelChild) {
+            rv = httpChannelChild->RemoveCorsPreflightCacheEntry(oldURI, mRequestingPrincipal);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
+          }
         }
       }
       aOldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
@@ -1045,11 +1065,11 @@ public:
                           nsIStreamListener* aOuterListener,
                           nsISupports* aOuterContext,
                           nsIPrincipal* aReferrerPrincipal,
-                          const nsACString& aRequestMethod,
+                          nsICorsPreflightCallback* aCallback,
                           bool aWithCredentials)
    : mOuterChannel(aOuterChannel), mOuterListener(aOuterListener),
      mOuterContext(aOuterContext), mReferrerPrincipal(aReferrerPrincipal),
-     mRequestMethod(aRequestMethod), mWithCredentials(aWithCredentials)
+     mCallback(aCallback), mWithCredentials(aWithCredentials)
   { }
 
   NS_DECL_ISUPPORTS
@@ -1067,7 +1087,7 @@ private:
   nsCOMPtr<nsIStreamListener> mOuterListener;
   nsCOMPtr<nsISupports> mOuterContext;
   nsCOMPtr<nsIPrincipal> mReferrerPrincipal;
-  nsCString mRequestMethod;
+  nsCOMPtr<nsICorsPreflightCallback> mCallback;
   bool mWithCredentials;
 };
 
@@ -1203,35 +1223,12 @@ nsCORSPreflightListener::OnStartRequest(nsIRequest *aRequest,
     // Everything worked, try to cache and then fire off the actual request.
     AddResultToCache(aRequest);
 
-    nsCOMPtr<nsILoadInfo> loadInfo = mOuterChannel->GetLoadInfo();
-    MOZ_ASSERT(loadInfo, "can not perform CORS preflight without a loadInfo");
-    if (!loadInfo) {
-      return NS_ERROR_FAILURE;
-    }
-    nsSecurityFlags securityMode = loadInfo->GetSecurityMode();
-
-    MOZ_ASSERT(securityMode == 0 ||
-               securityMode == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS,
-               "how did we end up here?");
-
-    if (securityMode == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) {
-      MOZ_ASSERT(!mOuterContext, "AsyncOpen(2) does not take context as a second arg");
-      rv = mOuterChannel->AsyncOpen2(mOuterListener);
-    }
-    else {
-      rv = mOuterChannel->AsyncOpen(mOuterListener, mOuterContext);
-    }
+    mCallback->OnPreflightSucceeded();
+  } else {
+    mCallback->OnPreflightFailed(rv);
   }
 
-  if (NS_FAILED(rv)) {
-    mOuterChannel->Cancel(rv);
-    mOuterListener->OnStartRequest(mOuterChannel, mOuterContext);
-    mOuterListener->OnStopRequest(mOuterChannel, mOuterContext, rv);
-    
-    return rv;
-  }
-
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1242,6 +1239,7 @@ nsCORSPreflightListener::OnStopRequest(nsIRequest *aRequest,
   mOuterChannel = nullptr;
   mOuterListener = nullptr;
   mOuterContext = nullptr;
+  mCallback = nullptr;
   return NS_OK;
 }
 
@@ -1279,13 +1277,24 @@ nsCORSPreflightListener::GetInterface(const nsIID & aIID, void **aResult)
   return QueryInterface(aIID, aResult);
 }
 
+void
+nsCORSListenerProxy::RemoveFromCorsPreflightCache(nsIURI* aURI,
+                                                  nsIPrincipal* aRequestingPrincipal)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (sPreflightCache) {
+    sPreflightCache->RemoveEntries(aURI, aRequestingPrincipal);
+  }
+}
+
 nsresult
-NS_StartCORSPreflight(nsIChannel* aRequestChannel,
-                      nsIStreamListener* aListener,
-                      nsIPrincipal* aPrincipal,
-                      bool aWithCredentials,
-                      nsTArray<nsCString>& aUnsafeHeaders,
-                      nsIChannel** aPreflightChannel)
+nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
+                                        nsIStreamListener* aListener,
+                                        nsIPrincipal* aPrincipal,
+                                        nsICorsPreflightCallback* aCallback,
+                                        bool aWithCredentials,
+                                        nsTArray<nsCString>& aUnsafeHeaders,
+                                        nsIChannel** aPreflightChannel)
 {
   *aPreflightChannel = nullptr;
 
@@ -1316,11 +1325,8 @@ NS_StartCORSPreflight(nsIChannel* aRequestChannel,
     nullptr;
 
   if (entry && entry->CheckRequest(method, aUnsafeHeaders)) {
-    // We have a cached preflight result, just start the original channel
-    if (securityMode == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) {
-      return aRequestChannel->AsyncOpen2(aListener);
-    }
-    return aRequestChannel->AsyncOpen(aListener, nullptr);
+    aCallback->OnPreflightSucceeded();
+    return NS_OK;
   }
 
   // Either it wasn't cached or the cached result has expired. Build a
@@ -1363,7 +1369,7 @@ NS_StartCORSPreflight(nsIChannel* aRequestChannel,
   // Set up listener which will start the original channel
   nsCOMPtr<nsIStreamListener> preflightListener =
     new nsCORSPreflightListener(aRequestChannel, aListener, nullptr, aPrincipal,
-                                method, aWithCredentials);
+                                aCallback, aWithCredentials);
   NS_ENSURE_TRUE(preflightListener, NS_ERROR_OUT_OF_MEMORY);
 
   // Start preflight

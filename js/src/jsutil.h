@@ -168,7 +168,7 @@ ImplicitCast(U& u)
 }
 
 template<typename T>
-class AutoScopedAssign
+class MOZ_RAII AutoScopedAssign
 {
   public:
     AutoScopedAssign(T* addr, const T& value

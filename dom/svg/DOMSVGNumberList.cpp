@@ -80,7 +80,7 @@ DOMSVGNumberList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 // Helper class: AutoChangeNumberListNotifier
 // Stack-based helper class to pair calls to WillChangeNumberList and
 // DidChangeNumberList.
-class MOZ_STACK_CLASS AutoChangeNumberListNotifier
+class MOZ_RAII AutoChangeNumberListNotifier
 {
 public:
   explicit AutoChangeNumberListNotifier(DOMSVGNumberList* aNumberList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)

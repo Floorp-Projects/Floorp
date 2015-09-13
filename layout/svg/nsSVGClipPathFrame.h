@@ -104,7 +104,7 @@ public:
   // automatically sets and clears the mInUse flag on the clip path frame
   // (to prevent nasty reference loops). It's easy to mess this up
   // and break things, so this helper makes the code far more robust.
-  class MOZ_STACK_CLASS AutoClipPathReferencer
+  class MOZ_RAII AutoClipPathReferencer
   {
   public:
     explicit AutoClipPathReferencer(nsSVGClipPathFrame *aFrame

@@ -75,7 +75,7 @@ class IonSpewer
     }
 };
 
-class AutoLockIonSpewerOutput
+class MOZ_RAII AutoLockIonSpewerOutput
 {
   private:
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER

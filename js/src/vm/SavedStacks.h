@@ -181,7 +181,7 @@ class SavedStacks {
     // Similar to mozilla::ReentrancyGuard, but instead of asserting against
     // reentrancy, just change the behavior of SavedStacks::saveCurrentStack to
     // return a nullptr SavedFrame.
-    struct MOZ_STACK_CLASS AutoReentrancyGuard {
+    struct MOZ_RAII AutoReentrancyGuard {
         MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
         SavedStacks& stacks;
 

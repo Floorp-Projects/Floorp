@@ -643,7 +643,6 @@ protected:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIDocument> mResponseXML;
-  nsCOMPtr<nsIChannel> mCORSPreflightChannel;
   nsTArray<nsCString> mCORSUnsafeHeaders;
 
   nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;

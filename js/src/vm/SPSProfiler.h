@@ -227,7 +227,7 @@ class AutoSPSLock
  * This class is used to suppress profiler sampling during
  * critical sections where stack state is not valid.
  */
-class AutoSuppressProfilerSampling
+class MOZ_RAII AutoSuppressProfilerSampling
 {
   public:
     explicit AutoSuppressProfilerSampling(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
@@ -260,7 +260,7 @@ SPSProfiler::stringsReset()
  * that we're about to enter JS function calls. This is the only time in which a
  * valid stack pointer is pushed to the sampling stack.
  */
-class SPSEntryMarker
+class MOZ_RAII SPSEntryMarker
 {
   public:
     explicit SPSEntryMarker(JSRuntime* rt,
@@ -279,7 +279,7 @@ class SPSEntryMarker
  * being entered via OSR.  It marks the current top pseudostack entry as
  * OSR-ed
  */
-class SPSBaselineOSRMarker
+class MOZ_RAII SPSBaselineOSRMarker
 {
   public:
     explicit SPSBaselineOSRMarker(JSRuntime* rt, bool hasSPSFrame

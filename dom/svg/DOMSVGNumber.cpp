@@ -53,7 +53,7 @@ NS_INTERFACE_MAP_END
 // Helper class: AutoChangeNumberNotifier
 // Stack-based helper class to pair calls to WillChangeNumberList and
 // DidChangeNumberList.
-class MOZ_STACK_CLASS AutoChangeNumberNotifier
+class MOZ_RAII AutoChangeNumberNotifier
 {
 public:
   explicit AutoChangeNumberNotifier(DOMSVGNumber* aNumber MOZ_GUARD_OBJECT_NOTIFIER_PARAM)

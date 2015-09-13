@@ -97,13 +97,13 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
         break;
       }
       case JSOP_BITOR:
-        masm.ma_or(R0.payloadReg() , R0.payloadReg(), R1.payloadReg());
+        masm.as_or(R0.payloadReg() , R0.payloadReg(), R1.payloadReg());
         break;
       case JSOP_BITXOR:
-        masm.ma_xor(R0.payloadReg() , R0.payloadReg(), R1.payloadReg());
+        masm.as_xor(R0.payloadReg() , R0.payloadReg(), R1.payloadReg());
         break;
       case JSOP_BITAND:
-        masm.ma_and(R0.payloadReg() , R0.payloadReg(), R1.payloadReg());
+        masm.as_and(R0.payloadReg() , R0.payloadReg(), R1.payloadReg());
         break;
       case JSOP_LSH:
         // MIPS will only use 5 lowest bits in R1 as shift offset.

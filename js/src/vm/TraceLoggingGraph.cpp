@@ -24,7 +24,7 @@ using mozilla::NativeEndian;
 
 TraceLoggerGraphState* traceLoggerGraphState = nullptr;
 
-class AutoTraceLoggerGraphStateLock
+class MOZ_RAII AutoTraceLoggerGraphStateLock
 {
   TraceLoggerGraphState* graph;
 
