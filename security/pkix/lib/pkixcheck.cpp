@@ -35,6 +35,7 @@ namespace mozilla { namespace pkix {
 Result
 CheckSignatureAlgorithm(TrustDomain& trustDomain,
                         EndEntityOrCA endEntityOrCA,
+                        Time notBefore,
                         const der::SignedDataWithSignature& signedData,
                         Input signatureValue)
 {
@@ -91,7 +92,8 @@ CheckSignatureAlgorithm(TrustDomain& trustDomain,
   // more generally it short-circuits any path building with them (which, of
   // course, is even slower).
 
-  rv = trustDomain.CheckSignatureDigestAlgorithm(digestAlg, endEntityOrCA);
+  rv = trustDomain.CheckSignatureDigestAlgorithm(digestAlg, endEntityOrCA,
+                                                 notBefore);
   if (rv != Success) {
     return rv;
   }
@@ -125,7 +127,7 @@ CheckSignatureAlgorithm(TrustDomain& trustDomain,
 // 4.1.2.5 Validity
 
 Result
-CheckValidity(Input encodedValidity, Time time,
+ParseValidity(Input encodedValidity,
               /*optional out*/ Time* notBeforeOut,
               /*optional out*/ Time* notAfterOut)
 {
@@ -148,6 +150,19 @@ CheckValidity(Input encodedValidity, Time time,
     return Result::ERROR_INVALID_DER_TIME;
   }
 
+  if (notBeforeOut) {
+    *notBeforeOut = notBefore;
+  }
+  if (notAfterOut) {
+    *notAfterOut = notAfter;
+  }
+
+  return Success;
+}
+
+Result
+CheckValidity(Time time, Time notBefore, Time notAfter)
+{
   if (time < notBefore) {
     return Result::ERROR_NOT_YET_VALID_CERTIFICATE;
   }
@@ -156,12 +171,6 @@ CheckValidity(Input encodedValidity, Time time,
     return Result::ERROR_EXPIRED_CERTIFICATE;
   }
 
-  if (notBeforeOut) {
-    *notBeforeOut = notBefore;
-  }
-  if (notAfterOut) {
-    *notAfterOut = notAfter;
-  }
   return Success;
 }
 
@@ -844,6 +853,17 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
     return rv;
   }
 
+  // IMPORTANT: We parse the validity interval here, so that we can use the
+  // notBefore and notAfter values in checks for things that might be deprecated
+  // over time. However, we must not fail for semantic errors until the end of
+  // this method, in order to preserve error ranking.
+  Time notBefore(Time::uninitialized);
+  Time notAfter(Time::uninitialized);
+  rv = ParseValidity(cert.GetValidity(), &notBefore, &notAfter);
+  if (rv != Success) {
+    return rv;
+  }
+
   if (trustLevel == TrustLevel::TrustAnchor &&
       endEntityOrCA == EndEntityOrCA::MustBeEndEntity &&
       requiredEKUIfPresent == KeyPurposeId::id_kp_OCSPSigning) {
@@ -856,7 +876,7 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
 
   switch (trustLevel) {
     case TrustLevel::InheritsTrust:
-      rv = CheckSignatureAlgorithm(trustDomain, endEntityOrCA,
+      rv = CheckSignatureAlgorithm(trustDomain, endEntityOrCA, notBefore,
                                    cert.GetSignedData(), cert.GetSignature());
       if (rv != Success) {
         return rv;
@@ -945,11 +965,9 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
   // 4.2.1.14. Inhibit anyPolicy is implicitly supported; see the documentation
   //           about policy enforcement in pkix.h.
 
-  // IMPORTANT: This check must come after the other checks in order for error
-  // ranking to work correctly.
-  Time notBefore(Time::uninitialized);
-  Time notAfter(Time::uninitialized);
-  rv = CheckValidity(cert.GetValidity(), time, &notBefore, &notAfter);
+  // IMPORTANT: Even though we parse validity above, we wait until this point to
+  // check it, so that error ranking works correctly.
+  rv = CheckValidity(time, notBefore, notAfter);
   if (rv != Success) {
     return rv;
   }

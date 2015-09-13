@@ -946,13 +946,20 @@ mozInlineSpellChecker::ReplaceWord(nsIDOMNode *aNode, int32_t aOffset,
 
   if (range)
   {
+    // This range was retrieved from the spellchecker selection. As
+    // ranges cannot be shared between selections, we must clone it
+    // before adding it to the editor's selection.
+    nsCOMPtr<nsIDOMRange> editorRange;
+    res = range->CloneRange(getter_AddRefs(editorRange));
+    NS_ENSURE_SUCCESS(res, res);
+
     nsAutoPlaceHolderBatch phb(editor, nullptr);
   
     nsCOMPtr<nsISelection> selection;
     res = editor->GetSelection(getter_AddRefs(selection));
     NS_ENSURE_SUCCESS(res, res);
     selection->RemoveAllRanges();
-    selection->AddRange(range);
+    selection->AddRange(editorRange);
     editor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
 
     nsCOMPtr<nsIPlaintextEditor> textEditor(do_QueryReferent(mEditor));

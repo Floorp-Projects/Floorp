@@ -277,7 +277,7 @@ private:
 
 namespace {
 
-class MOZ_STACK_CLASS MaybeScriptBlocker {
+class MOZ_RAII MaybeScriptBlocker {
 public:
     explicit MaybeScriptBlocker(MessageChannel *aChannel, bool aBlock
                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)

@@ -29,7 +29,7 @@ namespace mozilla {
 //       cc->Collect();
 //       ...
 //     }
-class MOZ_STACK_CLASS AutoGlobalTimelineMarker
+class MOZ_RAII AutoGlobalTimelineMarker
 {
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 

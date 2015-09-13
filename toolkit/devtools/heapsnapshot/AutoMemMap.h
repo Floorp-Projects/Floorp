@@ -28,7 +28,7 @@ namespace devtools {
 //       doStuffWithMappedMemory(mm.address());
 //     }
 //     // The memory is automatically unmapped when the AutoMemMap leaves scope.
-class MOZ_STACK_CLASS AutoMemMap
+class MOZ_RAII AutoMemMap
 {
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 

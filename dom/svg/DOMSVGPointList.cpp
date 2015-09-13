@@ -73,7 +73,7 @@ NS_INTERFACE_MAP_END
 // Helper class: AutoChangePointListNotifier
 // Stack-based helper class to pair calls to WillChangePointList and
 // DidChangePointList.
-class MOZ_STACK_CLASS AutoChangePointListNotifier
+class MOZ_RAII AutoChangePointListNotifier
 {
 public:
   explicit AutoChangePointListNotifier(DOMSVGPointList* aPointList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)

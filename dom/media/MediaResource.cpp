@@ -562,37 +562,16 @@ nsresult ChannelMediaResource::OpenChannel(nsIStreamListener** aStreamListener)
     nsresult rv = mChannel->SetNotificationCallbacks(mListener.get());
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIStreamListener> listener = mListener.get();
-
-    // Ensure that if we're loading cross domain, that the server is sending
-    // an authorizing Access-Control header.
-    MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
-    NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
-    dom::HTMLMediaElement* element = owner->GetMediaElement();
-    NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
-    if (element->ShouldCheckAllowOrigin()) {
-      nsRefPtr<nsCORSListenerProxy> crossSiteListener =
-        new nsCORSListenerProxy(mListener,
-                                element->NodePrincipal(),
-                                false);
-      NS_ENSURE_TRUE(crossSiteListener, NS_ERROR_OUT_OF_MEMORY);
-      rv = crossSiteListener->Init(mChannel, DataURIHandling::Allow);
-      NS_ENSURE_SUCCESS(rv, rv);
-      listener = crossSiteListener;
-    } else {
-      rv = nsContentUtils::GetSecurityManager()->
-        CheckLoadURIWithPrincipal(element->NodePrincipal(),
-                                  mURI,
-                                  nsIScriptSecurityManager::STANDARD);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
     rv = SetupChannelHeaders();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mChannel->AsyncOpen(listener, nullptr);
+    rv = mChannel->AsyncOpen2(mListener);
     NS_ENSURE_SUCCESS(rv, rv);
+    
     // Tell the media element that we are fetching data from a channel.
+    MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
+    NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
+    dom::HTMLMediaElement* element = owner->GetMediaElement();
     element->DownloadResumed(true);
   }
 
@@ -869,14 +848,9 @@ ChannelMediaResource::RecreateChannel()
   nsCOMPtr<nsILoadGroup> loadGroup = element->GetDocumentLoadGroup();
   NS_ENSURE_TRUE(loadGroup, NS_ERROR_NULL_POINTER);
 
-  nsSecurityFlags securityFlags = nsILoadInfo::SEC_NORMAL;
-  if (nsContentUtils::ChannelShouldInheritPrincipal(element->NodePrincipal(),
-                                                    mURI,
-                                                    false, // aInheritForAboutBlank
-                                                    false // aForceInherit
-                                                    )) {
-    securityFlags = nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
-  }
+  nsSecurityFlags securityFlags = element->ShouldCheckAllowOrigin()
+                                  ? nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS
+                                  : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
 
   MOZ_ASSERT(element->IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video));
   nsContentPolicyType contentPolicyType = element->IsHTMLElement(nsGkAtoms::audio) ?
@@ -1374,20 +1348,16 @@ nsresult FileMediaResource::Open(nsIStreamListener** aStreamListener)
       rv = NS_GetStreamForBlobURI(mURI, getter_AddRefs(mInput));
     }
   } else {
-    // Ensure that we never load a local file from some page on a
-    // web server.
-    MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
-    NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
-    dom::HTMLMediaElement* element = owner->GetMediaElement();
-    NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
 
-    rv = nsContentUtils::GetSecurityManager()->
-           CheckLoadURIWithPrincipal(element->NodePrincipal(),
-                                     mURI,
-                                     nsIScriptSecurityManager::STANDARD);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mChannel->Open(getter_AddRefs(mInput));
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
+      MOZ_ASSERT((loadInfo->GetSecurityMode() &
+                 nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) == 0,
+                 "can not enforce CORS when calling Open2()");
+    }
+#endif
+    rv = mChannel->Open2(getter_AddRefs(mInput));
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1451,14 +1421,9 @@ already_AddRefed<MediaResource> FileMediaResource::CloneData(MediaDecoder* aDeco
   nsCOMPtr<nsILoadGroup> loadGroup = element->GetDocumentLoadGroup();
   NS_ENSURE_TRUE(loadGroup, nullptr);
 
-  nsSecurityFlags securityFlags = nsILoadInfo::SEC_NORMAL;
-  if (nsContentUtils::ChannelShouldInheritPrincipal(element->NodePrincipal(),
-                                                    mURI,
-                                                    false, // aInheritForAboutBlank
-                                                    false // aForceInherit
-                                                    )) {
-    securityFlags = nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
-  }
+  nsSecurityFlags securityFlags = element->ShouldCheckAllowOrigin()
+                                  ? nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS
+                                  : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
 
   MOZ_ASSERT(element->IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video));
   nsContentPolicyType contentPolicyType = element->IsHTMLElement(nsGkAtoms::audio) ?

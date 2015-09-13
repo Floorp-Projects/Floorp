@@ -814,6 +814,7 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
       case eFormReset:
       case eResize:
       case eScroll:
+      case NS_SELECT_START:
         stopEvent = true;
         break;
       case eUnidentifiedEvent:
@@ -827,8 +828,7 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
               eventType.EqualsLiteral("load") ||
               eventType.EqualsLiteral("reset") ||
               eventType.EqualsLiteral("resize") ||
-              eventType.EqualsLiteral("scroll") ||
-              eventType.EqualsLiteral("selectstart")) {
+              eventType.EqualsLiteral("scroll")) {
             stopEvent = true;
           }
         }

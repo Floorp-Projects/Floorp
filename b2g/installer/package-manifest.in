@@ -32,7 +32,7 @@
 @APPNAME@/Contents/Info.plist
 @APPNAME@/Contents/PkgInfo
 @APPNAME@/Contents/Plug-Ins/
-@RESPATH@/b2g.icns
+@RESPATH@/@MOZ_APP_NAME@.icns
 @RESPATH@/@LPROJ_ROOT@.lproj/*
 #endif
 

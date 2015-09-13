@@ -110,19 +110,16 @@ class MacroAssemblerMIPS : public Assembler
 
     // and
     void ma_and(Register rd, Register rs);
-    void ma_and(Register rd, Register rs, Register rt);
     void ma_and(Register rd, Imm32 imm);
     void ma_and(Register rd, Register rs, Imm32 imm);
 
     // or
     void ma_or(Register rd, Register rs);
-    void ma_or(Register rd, Register rs, Register rt);
     void ma_or(Register rd, Imm32 imm);
     void ma_or(Register rd, Register rs, Imm32 imm);
 
     // xor
     void ma_xor(Register rd, Register rs);
-    void ma_xor(Register rd, Register rs, Register rt);
     void ma_xor(Register rd, Imm32 imm);
     void ma_xor(Register rd, Register rs, Imm32 imm);
 
@@ -143,14 +140,12 @@ class MacroAssemblerMIPS : public Assembler
     // arithmetic based ops
     // add
     void ma_addu(Register rd, Register rs, Imm32 imm);
-    void ma_addu(Register rd, Register rs, Register rt);
     void ma_addu(Register rd, Register rs);
     void ma_addu(Register rd, Imm32 imm);
     void ma_addTestOverflow(Register rd, Register rs, Register rt, Label* overflow);
     void ma_addTestOverflow(Register rd, Register rs, Imm32 imm, Label* overflow);
 
     // subtract
-    void ma_subu(Register rd, Register rs, Register rt);
     void ma_subu(Register rd, Register rs, Imm32 imm);
     void ma_subu(Register rd, Imm32 imm);
     void ma_subTestOverflow(Register rd, Register rs, Register rt, Label* overflow);

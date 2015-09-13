@@ -46,7 +46,7 @@ interface nsIVerifySignedManifestCallback : nsISupports
  * This represents a service to access and manipulate
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(c9fdec46-5c4c-4b1d-a0ca-c2bc10151b69)]
+[scriptable, uuid(3fe3702b-766b-47dd-8f77-c08c3a339a74)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -385,11 +385,20 @@ interface nsIX509CertDB : nsISupports {
    *  @param aUsage a integer representing the usage from NSS
    *  @param aFlags flags as described above
    *  @param aHostname the (optional) hostname to verify for
+   *  @param aTime the time at which to verify, in seconds since the epoch
    *  @param aVerifiedChain chain of verification up to the root if success
    *  @param aHasEVPolicy bool that signified that the cert was an EV cert
    *  @return 0 if success or the value or the error code for the verification
    *          failure
    */
+  int32_t /*PRErrorCode*/
+    verifyCertAtTime(in nsIX509Cert aCert,
+                     in int64_t /*SECCertificateUsage*/ aUsage,
+                     in uint32_t aFlags,
+                     in string aHostname,
+                     in uint64_t aTime,
+                     out nsIX509CertList aVerifiedChain,
+                     out bool aHasEVPolicy);
   int32_t /*PRErrorCode*/
     verifyCertNow(in nsIX509Cert aCert,
                   in int64_t /*SECCertificateUsage*/ aUsage,

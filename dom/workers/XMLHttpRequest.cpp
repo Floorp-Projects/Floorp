@@ -543,7 +543,7 @@ class EventRunnable final : public MainThreadProxyRunnable
   nsresult mResponseResult;
 
 public:
-  class StateDataAutoRooter : private JS::CustomAutoRooter
+  class MOZ_RAII StateDataAutoRooter : private JS::CustomAutoRooter
   {
     XMLHttpRequest::StateData* mStateData;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER

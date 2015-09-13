@@ -33,12 +33,14 @@ CertVerifier::CertVerifier(OcspDownloadConfig odc,
                            OcspStrictConfig osc,
                            OcspGetConfig ogc,
                            uint32_t certShortLifetimeInDays,
-                           PinningMode pinningMode)
+                           PinningMode pinningMode,
+                           SHA1Mode sha1Mode)
   : mOCSPDownloadConfig(odc)
   , mOCSPStrict(osc == ocspStrict)
   , mOCSPGETEnabled(ogc == ocspGetEnabled)
   , mCertShortLifetimeInDays(certShortLifetimeInDays)
   , mPinningMode(pinningMode)
+  , mSHA1Mode(sha1Mode)
 {
 }
 
@@ -213,8 +215,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
                                        ValidityCheckingMode::CheckingOff,
-                                       AcceptAllAlgorithms, nullptr, nullptr,
-                                       builtChain);
+                                       AcceptAllAlgorithms, SHA1Mode::Allowed,
+                                       nullptr, nullptr, builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::digitalSignature,
@@ -273,8 +275,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                       mOCSPCache, pinArg, ocspGETConfig,
                       mCertShortLifetimeInDays, mPinningMode, MIN_RSA_BITS,
                       ValidityCheckingMode::CheckForEV,
-                      digestAlgorithmOptions[i], pinningTelemetryInfo, hostname,
-                      builtChain);
+                      digestAlgorithmOptions[i], mSHA1Mode,
+                      pinningTelemetryInfo, hostname, builtChain);
         rv = BuildCertChainForOneKeyUsage(trustDomain, certDER, time,
                                           KeyUsage::digitalSignature,// (EC)DHE
                                           KeyUsage::keyEncipherment, // RSA
@@ -328,13 +330,19 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
             pinningTelemetryInfo->Reset();
           }
 
+          // If we're not going to do SHA-1 in any case, don't try
+          if (mSHA1Mode == SHA1Mode::Forbidden &&
+              digestAlgorithmOptions[i] != DisableSHA1Everywhere) {
+            continue;
+          }
+
           NSSCertDBTrustDomain trustDomain(trustSSL, defaultOCSPFetching,
                                            mOCSPCache, pinArg, ocspGETConfig,
                                            mCertShortLifetimeInDays,
                                            mPinningMode, keySizeOptions[i],
                                            ValidityCheckingMode::CheckingOff,
                                            digestAlgorithmOptions[j],
-                                           pinningTelemetryInfo,
+                                           mSHA1Mode, pinningTelemetryInfo,
                                            hostname, builtChain);
           rv = BuildCertChainForOneKeyUsage(trustDomain, certDER, time,
                                             KeyUsage::digitalSignature,//(EC)DHE
@@ -356,13 +364,19 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       }
 
       if (rv == Success) {
+        // If SHA-1 is forbidden by preference, don't accumulate SHA-1
+        // telemetry, to avoid skewing the results.
+        if (sigDigestStatus && mSHA1Mode == SHA1Mode::Forbidden) {
+          *sigDigestStatus = SignatureDigestStatus::NeverChecked;
+        }
+
         break;
       }
 
       if (keySizeStatus) {
         *keySizeStatus = KeySizeStatus::AlreadyBad;
       }
-      if (sigDigestStatus) {
+      if (sigDigestStatus && mSHA1Mode != SHA1Mode::Forbidden) {
         *sigDigestStatus = SignatureDigestStatus::AlreadyBad;
       }
 
@@ -375,8 +389,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
                                        ValidityCheckingMode::CheckingOff,
-                                       AcceptAllAlgorithms, nullptr, nullptr,
-                                       builtChain);
+                                       AcceptAllAlgorithms, mSHA1Mode,
+                                       nullptr, nullptr, builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeCA, KeyUsage::keyCertSign,
                           KeyPurposeId::id_kp_serverAuth,
@@ -390,8 +404,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
                                        ValidityCheckingMode::CheckingOff,
-                                       AcceptAllAlgorithms, nullptr, nullptr,
-                                       builtChain);
+                                       AcceptAllAlgorithms, SHA1Mode::Allowed,
+                                       nullptr, nullptr, builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::digitalSignature,
@@ -416,8 +430,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
                                        ValidityCheckingMode::CheckingOff,
-                                       AcceptAllAlgorithms, nullptr, nullptr,
-                                       builtChain);
+                                       AcceptAllAlgorithms, SHA1Mode::Allowed,
+                                       nullptr, nullptr, builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::keyEncipherment, // RSA
@@ -439,8 +453,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
                                        ValidityCheckingMode::CheckingOff,
-                                       AcceptAllAlgorithms, nullptr, nullptr,
-                                       builtChain);
+                                       AcceptAllAlgorithms, SHA1Mode::Allowed,
+                                       nullptr, nullptr, builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::digitalSignature,
@@ -471,8 +485,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                     pinArg, ocspGETConfig, mCertShortLifetimeInDays,
                                     pinningDisabled, MIN_RSA_BITS_WEAK,
                                     ValidityCheckingMode::CheckingOff,
-                                    AcceptAllAlgorithms, nullptr, nullptr,
-                                    builtChain);
+                                    AcceptAllAlgorithms, SHA1Mode::Allowed,
+                                    nullptr, nullptr, builtChain);
       rv = BuildCertChain(sslTrust, certDER, time, endEntityOrCA,
                           keyUsage, eku, CertPolicyId::anyPolicy,
                           stapledOCSPResponse);
@@ -482,8 +496,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                         mCertShortLifetimeInDays,
                                         pinningDisabled, MIN_RSA_BITS_WEAK,
                                         ValidityCheckingMode::CheckingOff,
-                                        AcceptAllAlgorithms, nullptr, nullptr,
-                                        builtChain);
+                                        AcceptAllAlgorithms, SHA1Mode::Allowed,
+                                        nullptr, nullptr, builtChain);
         rv = BuildCertChain(emailTrust, certDER, time, endEntityOrCA,
                             keyUsage, eku, CertPolicyId::anyPolicy,
                             stapledOCSPResponse);
@@ -495,7 +509,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                                   pinningDisabled,
                                                   MIN_RSA_BITS_WEAK,
                                                   ValidityCheckingMode::CheckingOff,
-                                                  AcceptAllAlgorithms,
+                                                  AcceptAllAlgorithms, SHA1Mode::Allowed,
                                                   nullptr, nullptr, builtChain);
           rv = BuildCertChain(objectSigningTrust, certDER, time,
                               endEntityOrCA, keyUsage, eku,

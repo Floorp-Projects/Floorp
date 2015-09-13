@@ -327,7 +327,7 @@ class TypedArrayCreator
 
 // A class for rooting an existing TypedArray struct
 template<typename ArrayType>
-class MOZ_STACK_CLASS TypedArrayRooter : private JS::CustomAutoRooter
+class MOZ_RAII TypedArrayRooter : private JS::CustomAutoRooter
 {
 public:
   TypedArrayRooter(JSContext* cx,
@@ -349,7 +349,7 @@ private:
 // And a specialization for dealing with nullable typed arrays
 template<typename Inner> struct Nullable;
 template<typename ArrayType>
-class MOZ_STACK_CLASS TypedArrayRooter<Nullable<ArrayType> > :
+class MOZ_RAII TypedArrayRooter<Nullable<ArrayType> > :
     private JS::CustomAutoRooter
 {
 public:
@@ -373,8 +373,8 @@ private:
 
 // Class for easily setting up a rooted typed array object on the stack
 template<typename ArrayType>
-class MOZ_STACK_CLASS RootedTypedArray : public ArrayType,
-                                         private TypedArrayRooter<ArrayType>
+class MOZ_RAII RootedTypedArray : public ArrayType,
+                                  private TypedArrayRooter<ArrayType>
 {
 public:
   explicit RootedTypedArray(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :

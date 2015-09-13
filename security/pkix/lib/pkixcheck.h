@@ -45,9 +45,15 @@ Result CheckNameConstraints(Input encodedNameConstraints,
                             const BackCert& firstChild,
                             KeyPurposeId requiredEKUIfPresent);
 
-Result CheckValidity(Input encodedValidity, Time time,
+// ParseValidity and CheckValidity are usually used together.  First you parse
+// the dates from the DER Validity sequence, then you compare them to the time
+// at which you are validating.  They are separate so that the notBefore and
+// notAfter times can be used for other things before they are checked against
+// the time of validation.
+Result ParseValidity(Input encodedValidity,
                      /*optional out*/ Time* notBeforeOut = nullptr,
                      /*optional out*/ Time* notAfterOut = nullptr);
+Result CheckValidity(Time time, Time notBefore, Time notAfter);
 
 } } // namespace mozilla::pkix
 
