@@ -594,11 +594,11 @@ describe("loop.roomViews", function () {
         sinon.assert.calledOnce(onCallTerminatedStub);
       });
 
-      it("should display loading spinner when localSrcVideoObject is null",
+      it("should display loading spinner when localSrcMediaElement is null",
          function() {
            activeRoomStore.setStoreState({
              roomState: ROOM_STATES.MEDIA_WAIT,
-             localSrcVideoObject: null
+             localSrcMediaElement: null
            });
 
            view = mountTestComponent();
@@ -611,7 +611,7 @@ describe("loop.roomViews", function () {
          function() {
            activeRoomStore.setStoreState({
              roomState: ROOM_STATES.MEDIA_WAIT,
-             localSrcVideoObject: { fake: "video" }
+             localSrcMediaElement: { fake: "video" }
            });
 
            view = mountTestComponent();
@@ -624,7 +624,7 @@ describe("loop.roomViews", function () {
          function() {
            activeRoomStore.setStoreState({
              roomState: ROOM_STATES.HAS_PARTICIPANTS,
-             remoteSrcVideoObject: null
+             remoteSrcMediaElement: null
            });
 
            view = mountTestComponent();
@@ -637,7 +637,7 @@ describe("loop.roomViews", function () {
          function() {
            activeRoomStore.setStoreState({
              roomState: ROOM_STATES.HAS_PARTICIPANTS,
-             remoteSrcVideoObject: { fake: "video" }
+             remoteSrcMediaElement: { fake: "video" }
            });
 
            view = mountTestComponent();
@@ -664,7 +664,7 @@ describe("loop.roomViews", function () {
           roomState: ROOM_STATES.HAS_PARTICIPANTS,
           mediaConnected: true,
           remoteVideoEnabled: true,
-          remoteSrcVideoObject: { fake: 1 }
+          remoteSrcMediaElement: { fake: 1 }
         });
 
         view = mountTestComponent();
@@ -684,7 +684,7 @@ describe("loop.roomViews", function () {
 
       it("should display the local video when the stream is enabled", function() {
         activeRoomStore.setStoreState({
-          localSrcVideoObject: { fake: 1 },
+          localSrcMediaElement: { fake: 1 },
           videoMuted: false
         });
 
