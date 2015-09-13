@@ -1539,7 +1539,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                         mLastTrack->meta->findInt32(kKeyHeight, &height)) {
                     mLastTrack->meta->setInt32(kKeyMaxInputSize, width * height * 3 / 2);
                 } else {
-                    ALOGE("No width or height, assuming worst case 1080p");
+                    ALOGV("No width or height, assuming worst case 1080p");
                     mLastTrack->meta->setInt32(kKeyMaxInputSize, 3110400);
                 }
             }
