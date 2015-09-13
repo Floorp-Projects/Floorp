@@ -601,7 +601,7 @@ loop.OTSdkDriver = (function() {
       this.dispatcher.dispatch(new sharedActions.MediaStreamCreated({
         hasVideo: sdkSubscriberObject.stream[STREAM_PROPERTIES.HAS_VIDEO],
         isLocal: false,
-        srcVideoObject: sdkSubscriberVideo
+        srcMediaElement: sdkSubscriberVideo
       }));
 
       this._subscribedRemoteStream = true;
@@ -635,7 +635,7 @@ loop.OTSdkDriver = (function() {
       // _handleRemoteScreenShareCreated.  Maybe these should be separate
       // actions.  But even so, this shouldn't be necessary....
       this.dispatcher.dispatch(new sharedActions.ReceivingScreenShare({
-        receiving: true, srcVideoObject: sdkSubscriberVideo
+        receiving: true, srcMediaElement: sdkSubscriberVideo
       }));
 
     },
@@ -767,7 +767,7 @@ loop.OTSdkDriver = (function() {
       this.dispatcher.dispatch(new sharedActions.MediaStreamCreated({
         hasVideo: hasVideo,
         isLocal: true,
-        srcVideoObject: sdkLocalVideo
+        srcMediaElement: sdkLocalVideo
       }));
 
       // Only dispatch the video dimensions if we actually have video.
