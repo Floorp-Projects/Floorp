@@ -233,9 +233,9 @@ public:
   int32_t id() const { return id_; }
 
   // Optional call to connect the thread name with this loop.
-  void set_thread_name(const std::string& thread_name) {
+  void set_thread_name(const std::string& aThreadName) {
     DCHECK(thread_name_.empty()) << "Should not rename this thread!";
-    thread_name_ = thread_name;
+    thread_name_ = aThreadName;
   }
   const std::string& thread_name() const { return thread_name_; }
 
@@ -324,8 +324,8 @@ public:
     int sequence_num;                  // Secondary sort key for run time.
     bool nestable;                     // OK to dispatch from a nested loop.
 
-    PendingTask(Task* task, bool nestable)
-        : task(task), sequence_num(0), nestable(nestable) {
+    PendingTask(Task* aTask, bool aNestable)
+        : task(aTask), sequence_num(0), nestable(aNestable) {
     }
 
     // Used to support sorting.
@@ -463,7 +463,7 @@ public:
 //
 class MessageLoopForUI : public MessageLoop {
  public:
-  explicit MessageLoopForUI(Type type=TYPE_UI) : MessageLoop(type) {
+  explicit MessageLoopForUI(Type aType=TYPE_UI) : MessageLoop(aType) {
   }
 
   // Returns the MessageLoopForUI of the current thread.

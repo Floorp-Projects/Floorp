@@ -42,7 +42,7 @@ Message::Message()
 }
 
 Message::Message(int32_t routing_id, msgid_t type, PriorityValue priority,
-                 MessageCompression compression, const char* const name)
+                 MessageCompression compression, const char* const aName)
     : Pickle(sizeof(Header)) {
   header()->routing = routing_id;
   header()->type = type;
@@ -65,7 +65,7 @@ Message::Message(int32_t routing_id, msgid_t type, PriorityValue priority,
   header()->parent_task_id = 0;
   header()->source_event_type = SourceEventType::Unknown;
 #endif
-  InitLoggingVariables(name);
+  InitLoggingVariables(aName);
 }
 
 Message::Message(const char* data, int data_len) : Pickle(data, data_len) {
@@ -96,8 +96,8 @@ Message::Message(Message&& other) : Pickle(mozilla::Move(other)) {
 #endif
 }
 
-void Message::InitLoggingVariables(const char* const name) {
-  name_ = name;
+void Message::InitLoggingVariables(const char* const aName) {
+  name_ = aName;
 }
 
 Message& Message::operator=(const Message& other) {
