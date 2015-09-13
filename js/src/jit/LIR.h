@@ -422,6 +422,7 @@ class LDefinition
         DOUBLE,     // 64-bit floating-point value (FPU).
         INT32X4,    // SIMD data containing four 32-bit integers (FPU).
         FLOAT32X4,  // SIMD data containing four 32-bit floats (FPU).
+        SINCOS,
 #ifdef JS_NUNBOX32
         // A type virtual register must be followed by a payload virtual
         // register, as both will be tracked as a single gcthing.
@@ -562,6 +563,8 @@ class LDefinition
           case MIRType_Value:
             return LDefinition::BOX;
 #endif
+          case MIRType_SinCosDouble:
+            return LDefinition::SINCOS;
           case MIRType_Slots:
           case MIRType_Elements:
             return LDefinition::SLOTS;
