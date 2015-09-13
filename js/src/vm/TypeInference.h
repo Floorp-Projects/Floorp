@@ -66,7 +66,7 @@ enum : uint32_t {
     /* Mask containing all primitives */
     TYPE_FLAG_PRIMITIVE = TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL | TYPE_FLAG_BOOLEAN |
                           TYPE_FLAG_INT32 | TYPE_FLAG_DOUBLE | TYPE_FLAG_STRING |
-                          TYPE_FLAG_SYMBOL | TYPE_FLAG_LAZYARGS,
+                          TYPE_FLAG_SYMBOL,
 
     /* Mask/shift for the number of objects in objectSet */
     TYPE_FLAG_OBJECT_COUNT_MASK     = 0x3e00,
@@ -483,10 +483,11 @@ class TypeSet
      */
     bool isSubset(const TypeSet* other) const;
 
-    // Return whether this is a subset of other, ignoring primitive or object
-    // types respectively.
+    /*
+     * Get whether the objects in this TypeSet are a subset of the objects
+     * in other.
+     */
     bool objectsAreSubset(TypeSet* other);
-    bool primitivesAreSubset(TypeSet* other);
 
     /* Whether this TypeSet contains exactly the same types as other. */
     bool equals(const TypeSet* other) const {
