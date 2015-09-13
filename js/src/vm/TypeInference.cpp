@@ -399,13 +399,6 @@ TypeSet::objectsAreSubset(TypeSet* other)
 }
 
 bool
-TypeSet::primitivesAreSubset(TypeSet* other)
-{
-    uint32_t primitiveFlags = baseFlags() & TYPE_FLAG_PRIMITIVE;
-    return (primitiveFlags & other->baseFlags()) == primitiveFlags;
-}
-
-bool
 TypeSet::isSubset(const TypeSet* other) const
 {
     if ((baseFlags() & other->baseFlags()) != baseFlags())
