@@ -25,7 +25,7 @@ MacroAssembler::not32(Register reg)
 void
 MacroAssembler::and32(Register src, Register dest)
 {
-    ma_and(dest, dest, src);
+    as_and(dest, dest, src);
 }
 
 void
