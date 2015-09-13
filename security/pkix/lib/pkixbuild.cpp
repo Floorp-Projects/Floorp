@@ -226,9 +226,9 @@ PathBuildingStep::Check(Input potentialIssuerDER,
                   subject.GetSerialNumber());
     Time notBefore(Time::uninitialized);
     Time notAfter(Time::uninitialized);
-    // This should never fail. If we're here, we've already checked that the
-    // given time is in the certificate's validity period.
-    rv = CheckValidity(subject.GetValidity(), time, &notBefore, &notAfter);
+    // This should never fail. If we're here, we've already parsed the validity
+    // and checked that the given time is in the certificate's validity period.
+    rv = ParseValidity(subject.GetValidity(), &notBefore, &notAfter);
     if (rv != Success) {
       return rv;
     }

@@ -486,7 +486,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLHttpRequest,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChannel)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResponseXML)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCORSPreflightChannel)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mXMLParserStreamListener)
 
@@ -508,7 +507,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXMLHttpRequest,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChannel)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mResponseXML)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCORSPreflightChannel)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mXMLParserStreamListener)
 
@@ -1209,9 +1207,6 @@ nsXMLHttpRequest::CloseRequestWithError(const nsAString& aType,
 {
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
-  }
-  if (mCORSPreflightChannel) {
-    mCORSPreflightChannel->Cancel(NS_BINDING_ABORTED);
   }
   if (mTimeoutTimer) {
     mTimeoutTimer->Cancel();
@@ -2347,7 +2342,6 @@ nsXMLHttpRequest::ChangeStateToDone()
     // methods/members will not throw.
     // This matches what IE does.
     mChannel = nullptr;
-    mCORSPreflightChannel = nullptr;
   }
 }
 
@@ -2891,36 +2885,33 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     // Check to see if this initial OPTIONS request has already been cached
     // in our special Access Control Cache.
 
-    rv = NS_StartCORSPreflight(mChannel, listener,
-                               mPrincipal, withCredentials,
-                               mCORSUnsafeHeaders,
-                               getter_AddRefs(mCORSPreflightChannel));
+    rv = internalHttpChannel->SetCorsPreflightParameters(mCORSUnsafeHeaders,
+                                                         withCredentials, mPrincipal);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  else {
-    mIsMappedArrayBuffer = false;
-    if (mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER &&
-        Preferences::GetBool("dom.mapped_arraybuffer.enabled", false)) {
-      nsCOMPtr<nsIURI> uri;
-      nsAutoCString scheme;
 
-      rv = mChannel->GetURI(getter_AddRefs(uri));
-      if (NS_SUCCEEDED(rv)) {
-        uri->GetScheme(scheme);
-        if (scheme.LowerCaseEqualsLiteral("app") ||
-            scheme.LowerCaseEqualsLiteral("jar")) {
-          mIsMappedArrayBuffer = true;
-        }
+  mIsMappedArrayBuffer = false;
+  if (mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER &&
+      Preferences::GetBool("dom.mapped_arraybuffer.enabled", false)) {
+    nsCOMPtr<nsIURI> uri;
+    nsAutoCString scheme;
+
+    rv = mChannel->GetURI(getter_AddRefs(uri));
+    if (NS_SUCCEEDED(rv)) {
+      uri->GetScheme(scheme);
+      if (scheme.LowerCaseEqualsLiteral("app") ||
+          scheme.LowerCaseEqualsLiteral("jar")) {
+        mIsMappedArrayBuffer = true;
       }
     }
-    // Start reading from the channel
-    rv = mChannel->AsyncOpen(listener, nullptr);
   }
 
-  if (NS_FAILED(rv)) {
+  // Start reading from the channel
+  rv = mChannel->AsyncOpen(listener, nullptr);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     // Drop our ref to the channel to avoid cycles
     mChannel = nullptr;
-    mCORSPreflightChannel = nullptr;
     return rv;
   }
 
@@ -3011,19 +3002,6 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
   // Make sure we don't store an invalid header name in mCORSUnsafeHeaders
   if (!NS_IsValidHTTPToken(header)) {
     return NS_ERROR_DOM_SYNTAX_ERR;
-  }
-
-  // Check that we haven't already opened the channel. We can't rely on
-  // the channel throwing from mChannel->SetRequestHeader since we might
-  // still be waiting for mCORSPreflightChannel to actually open mChannel
-  if (mCORSPreflightChannel) {
-    bool pending;
-    nsresult rv = mCORSPreflightChannel->IsPending(&pending);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    if (pending) {
-      return NS_ERROR_IN_PROGRESS;
-    }
   }
 
   if (!mChannel)             // open() initializes mChannel, and open()

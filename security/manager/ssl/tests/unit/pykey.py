@@ -66,6 +66,12 @@ class UnknownKeySpecificationError(UnknownBaseError):
         UnknownBaseError.__init__(self, value)
         self.category = 'key specification'
 
+class ParameterError(UnknownBaseError):
+    """Exception type indicating that the key was misconfigured"""
+
+    def __init__(self, value):
+        UnknownBaseError.__init__(self, value)
+        self.category = 'key parameter'
 
 class RSAPublicKey(univ.Sequence):
     """Helper type for encoding an RSA public key"""
@@ -554,12 +560,12 @@ class RSAKey:
         spki.setComponentByName('subjectPublicKey', subjectPublicKey)
         return spki
 
-    def sign(self, data):
+    def sign(self, data, digest):
         """Returns a hexified bit string representing a
         signature by this key over the specified data.
         Intended for use with pyasn1.type.univ.BitString"""
         rsaPrivateKey = rsa.PrivateKey(self.RSA_N, self.RSA_E, self.RSA_D, self.RSA_P, self.RSA_Q)
-        signature = rsa.sign(data, rsaPrivateKey, 'SHA-256')
+        signature = rsa.sign(data, rsaPrivateKey, digest)
         return byteStringToHexifiedBitString(signature)
 
 
@@ -665,10 +671,14 @@ class ECCKey:
         spki.setComponentByName('subjectPublicKey', subjectPublicKey)
         return spki
 
-    def sign(self, data):
+    def sign(self, data, digest):
         """Returns a hexified bit string representing a
         signature by this key over the specified data.
         Intended for use with pyasn1.type.univ.BitString"""
+        # This should really only be used with SHA-256
+        if digest != "SHA-256":
+            raise ParameterError(digest)
+
         # There is some non-determinism in ECDSA signatures. Work around
         # this by patching ecc.ecdsa.urandom to not be random.
         with mock.patch('ecc.ecdsa.urandom', side_effect=notRandom):

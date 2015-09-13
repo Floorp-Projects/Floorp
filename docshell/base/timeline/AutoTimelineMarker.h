@@ -28,7 +28,7 @@ namespace mozilla {
 //       nsresult rv = ParseTheCSSFile(mFile);
 //       ...
 //     }
-class MOZ_STACK_CLASS AutoTimelineMarker
+class MOZ_RAII AutoTimelineMarker
 {
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 

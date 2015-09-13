@@ -126,7 +126,8 @@ public:
   }
 
   Result CheckSignatureDigestAlgorithm(DigestAlgorithm,
-                                       EndEntityOrCA) override
+                                       EndEntityOrCA,
+                                       Time) override
   {
     ADD_FAILURE();
     return NotReached("CheckSignatureDigestAlgorithm should not be called",
@@ -179,7 +180,8 @@ class DefaultCryptoTrustDomain : public EverythingFailsByDefaultTrustDomain
     return TestDigestBuf(item, digestAlg, digestBuf, digestBufLen);
   }
 
-  Result CheckSignatureDigestAlgorithm(DigestAlgorithm, EndEntityOrCA) override
+  Result CheckSignatureDigestAlgorithm(DigestAlgorithm, EndEntityOrCA, Time)
+                                       override
   {
     return Success;
   }

@@ -375,7 +375,7 @@ namespace js {
 // All mutable state is stored in `Runtime::stopwatch` (per-process
 // performance stats and logistics) and in `PerformanceGroup` (per
 // group performance stats).
-class AutoStopwatch final
+class MOZ_RAII AutoStopwatch final
 {
     // The context with which this object was initialized.
     // Non-null.

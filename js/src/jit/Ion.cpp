@@ -518,7 +518,7 @@ FinishAllOffThreadCompilations(JSCompartment* comp)
     }
 }
 
-class AutoLazyLinkExitFrame
+class MOZ_RAII AutoLazyLinkExitFrame
 {
     JitActivation* jitActivation_;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER

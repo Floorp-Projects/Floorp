@@ -439,7 +439,7 @@ inline void TraceLogStopEventPrivate(TraceLoggerThread* logger, uint32_t id) {
 }
 
 // Automatic logging at the start and end of function call.
-class AutoTraceLog
+class MOZ_RAII AutoTraceLog
 {
 #ifdef JS_TRACE_LOGGING
     TraceLoggerThread* logger;

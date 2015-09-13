@@ -134,6 +134,13 @@ pref("dom.permissions.enabled", true);
 pref("dom.permissions.enabled", false);
 #endif
 
+// Whether or not selection events are enabled
+#ifdef NIGHTLY_BUILD
+pref("dom.select_events.enabled", true);
+#else
+pref("dom.select_events.enabled", false);
+#endif
+
 // Whether or not Web Workers are enabled.
 pref("dom.workers.enabled", true);
 // The number of workers per domain allowed to run concurrently.

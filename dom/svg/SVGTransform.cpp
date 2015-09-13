@@ -71,7 +71,7 @@ SVGTransform::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 // Helper class: AutoChangeTransformNotifier
 // Stack-based helper class to pair calls to WillChangeTransformList
 // and DidChangeTransformList.
-class MOZ_STACK_CLASS AutoChangeTransformNotifier
+class MOZ_RAII AutoChangeTransformNotifier
 {
 public:
   explicit AutoChangeTransformNotifier(SVGTransform* aTransform MOZ_GUARD_OBJECT_NOTIFIER_PARAM)

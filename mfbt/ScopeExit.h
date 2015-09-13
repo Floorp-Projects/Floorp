@@ -86,7 +86,7 @@
 namespace mozilla {
 
 template <typename ExitFunction>
-class ScopeExit {
+class MOZ_STACK_CLASS ScopeExit {
   ExitFunction mExitFunction;
   bool mExecuteOnDestruction;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER

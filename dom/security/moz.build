@@ -18,12 +18,10 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS += [
     'nsContentSecurityManager.h',
-    'nsCORSListenerProxy.h'
 ]
 
 UNIFIED_SOURCES += [
     'nsContentSecurityManager.cpp',
-    'nsCORSListenerProxy.cpp',
     'nsCSPContext.cpp',
     'nsCSPParser.cpp',
     'nsCSPService.cpp',

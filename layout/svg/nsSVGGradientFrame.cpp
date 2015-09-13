@@ -24,7 +24,7 @@ using namespace mozilla::dom;
 //----------------------------------------------------------------------
 // Helper classes
 
-class MOZ_STACK_CLASS nsSVGGradientFrame::AutoGradientReferencer
+class MOZ_RAII nsSVGGradientFrame::AutoGradientReferencer
 {
 public:
   explicit AutoGradientReferencer(nsSVGGradientFrame *aFrame

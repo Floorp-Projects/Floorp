@@ -102,6 +102,12 @@ public:
     pinningEnforceTestMode = 3
   };
 
+  enum class SHA1Mode {
+    Allowed = 0,
+    Forbidden = 1,
+    OnlyBefore2016 = 2
+  };
+
   enum OcspDownloadConfig {
     ocspOff = 0,
     ocspOn = 1,
@@ -112,7 +118,7 @@ public:
 
   CertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc,
                OcspGetConfig ogc, uint32_t certShortLifetimeInDays,
-               PinningMode pinningMode);
+               PinningMode pinningMode, SHA1Mode sha1Mode);
   ~CertVerifier();
 
   void ClearOCSPCache() { mOCSPCache.Clear(); }
@@ -122,6 +128,7 @@ public:
   const bool mOCSPGETEnabled;
   const uint32_t mCertShortLifetimeInDays;
   const PinningMode mPinningMode;
+  const SHA1Mode mSHA1Mode;
 
 private:
   OCSPCache mOCSPCache;

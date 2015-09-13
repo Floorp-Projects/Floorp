@@ -331,7 +331,7 @@ struct Statistics
     double computeMMU(int64_t resolution) const;
 };
 
-struct AutoGCSlice
+struct MOZ_RAII AutoGCSlice
 {
     AutoGCSlice(Statistics& stats, const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
                 SliceBudget budget, JS::gcreason::Reason reason
@@ -347,7 +347,7 @@ struct AutoGCSlice
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-struct AutoPhase
+struct MOZ_RAII AutoPhase
 {
     AutoPhase(Statistics& stats, Phase phase
               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
@@ -391,7 +391,7 @@ struct AutoPhase
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-struct AutoSCC
+struct MOZ_RAII AutoSCC
 {
     AutoSCC(Statistics& stats, unsigned scc
             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
