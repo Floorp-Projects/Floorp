@@ -654,7 +654,7 @@ loop.conversationViews = (function(mozL10n) {
      * @private
      */
     _isLocalLoading: function () {
-      return !this.state.localSrcVideoObject && !this.props.localPosterUrl;
+      return !this.state.localSrcMediaElement && !this.props.localPosterUrl;
     },
 
     /**
@@ -665,7 +665,7 @@ loop.conversationViews = (function(mozL10n) {
      * @private
      */
     _isRemoteLoading: function() {
-      return !!(!this.state.remoteSrcVideoObject &&
+      return !!(!this.state.remoteSrcMediaElement &&
                 !this.props.remotePosterUrl &&
                 !this.state.mediaConnected);
     },
@@ -702,14 +702,14 @@ loop.conversationViews = (function(mozL10n) {
             isRemoteLoading: this._isRemoteLoading(), 
             isScreenShareLoading: false, 
             localPosterUrl: this.props.localPosterUrl, 
-            localSrcVideoObject: this.state.localSrcVideoObject, 
+            localSrcMediaElement: this.state.localSrcMediaElement, 
             localVideoMuted: !this.props.video.enabled, 
             matchMedia: this.state.matchMedia || window.matchMedia.bind(window), 
             remotePosterUrl: this.props.remotePosterUrl, 
-            remoteSrcVideoObject: this.state.remoteSrcVideoObject, 
+            remoteSrcMediaElement: this.state.remoteSrcMediaElement, 
             renderRemoteVideo: this.shouldRenderRemoteVideo(), 
+            screenShareMediaElement: this.state.screenShareMediaElement, 
             screenSharePosterUrl: null, 
-            screenShareVideoObject: this.state.screenShareVideoObject, 
             showContextRoomName: false, 
             useDesktopPaths: true}, 
             React.createElement(loop.shared.views.ConversationToolbar, {
@@ -822,7 +822,7 @@ loop.conversationViews = (function(mozL10n) {
             dispatcher: this.props.dispatcher, 
             mediaConnected: this.state.mediaConnected, 
             mozLoop: this.props.mozLoop, 
-            remoteSrcVideoObject: this.state.remoteSrcVideoObject, 
+            remoteSrcMediaElement: this.state.remoteSrcMediaElement, 
             remoteVideoEnabled: this.state.remoteVideoEnabled, 
             video: { enabled: !this.state.videoMuted, visible: true}})
           );

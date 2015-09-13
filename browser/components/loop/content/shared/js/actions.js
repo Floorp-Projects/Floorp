@@ -233,7 +233,7 @@ loop.shared.actions = (function() {
     MediaStreamCreated: Action.define("mediaStreamCreated", {
       hasVideo: Boolean,
       isLocal: Boolean,
-      srcVideoObject: Object
+      srcMediaElement: Object
     }),
 
     /**
@@ -294,7 +294,7 @@ loop.shared.actions = (function() {
      */
     ReceivingScreenShare: Action.define("receivingScreenShare", {
       receiving: Boolean
-      // srcVideoObject: Object (only present if receiving is true)
+      // srcMediaElement: Object (only present if receiving is true)
     }),
 
     /**

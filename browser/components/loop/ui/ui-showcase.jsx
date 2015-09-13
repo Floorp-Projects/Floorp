@@ -205,7 +205,7 @@
   var loadingRemoteVideoRoomStore = makeActiveRoomStore({
     mediaConnected: false,
     roomState: ROOM_STATES.HAS_PARTICIPANTS,
-    remoteSrcVideoObject: false
+    remoteSrcMediaElement: false
   });
 
   var readyRoomStore = makeActiveRoomStore({
@@ -246,7 +246,7 @@
     mediaConnected: false,
     receivingScreenShare: true,
     roomState: ROOM_STATES.HAS_PARTICIPANTS,
-    remoteSrcVideoObject: false
+    remoteSrcMediaElement: false
   });
   var loadingScreenSharingRoomStore = makeActiveRoomStore({
     receivingScreenShare: true,
@@ -256,11 +256,11 @@
   /* Set up the stores for pending screen sharing */
   loadingScreenSharingRoomStore.receivingScreenShare({
     receiving: true,
-    srcVideoObject: false
+    srcMediaElement: false
   });
   loadingRemoteLoadingScreenStore.receivingScreenShare({
     receiving: true,
-    srcVideoObject: false
+    srcMediaElement: false
   });
 
   var fullActiveRoomStore = makeActiveRoomStore({
@@ -295,7 +295,7 @@
     activeRoomStore: makeActiveRoomStore({
       roomState: ROOM_STATES.HAS_PARTICIPANTS,
       mediaConnected: false,
-      remoteSrcVideoObject: false
+      remoteSrcMediaElement: false
     })
   });
 
