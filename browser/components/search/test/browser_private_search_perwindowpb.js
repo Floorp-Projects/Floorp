@@ -57,7 +57,9 @@ function test() {
   }
 
   function testOnWindow(aIsPrivate, aCallback) {
-    let win = whenNewWindowLoaded({ private: aIsPrivate }, aCallback);
+    let win = whenNewWindowLoaded({ private: aIsPrivate }, function() {
+      waitForFocus(aCallback, win);
+    });
     windowsToClose.push(win);
   }
 
