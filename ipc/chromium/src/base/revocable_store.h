@@ -20,9 +20,9 @@ class RevocableStore {
   class StoreRef final {
    public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StoreRef)
-    explicit StoreRef(RevocableStore* store) : store_(store) { }
+    explicit StoreRef(RevocableStore* aStore) : store_(aStore) { }
 
-    void set_store(RevocableStore* store) { store_ = store; }
+    void set_store(RevocableStore* aStore) { store_ = aStore; }
     RevocableStore* store() const { return store_; }
 
    protected:

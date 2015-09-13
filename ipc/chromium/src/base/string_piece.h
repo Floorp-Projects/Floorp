@@ -54,14 +54,14 @@ class StringPiece {
   bool empty() const { return length_ == 0; }
 
   void clear() { ptr_ = NULL; length_ = 0; }
-  void set(const char* data, size_type len) { ptr_ = data; length_ = len; }
+  void set(const char* aData, size_type aLen) { ptr_ = aData; length_ = aLen; }
   void set(const char* str) {
     ptr_ = str;
     length_ = str ? strlen(str) : 0;
   }
-  void set(const void* data, size_type len) {
-    ptr_ = reinterpret_cast<const char*>(data);
-    length_ = len;
+  void set(const void* aData, size_type aLen) {
+    ptr_ = reinterpret_cast<const char*>(aData);
+    length_ = aLen;
   }
 
   char operator[](size_type i) const { return ptr_[i]; }
