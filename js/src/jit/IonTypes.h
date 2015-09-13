@@ -717,7 +717,20 @@ enum ABIFunctionType
     Args_Double_DoubleDoubleDouble = Args_Double_DoubleDouble | (ArgType_Double << (ArgType_Shift * 3)),
 
     // double f(double, double, double, double)
-    Args_Double_DoubleDoubleDoubleDouble = Args_Double_DoubleDoubleDouble | (ArgType_Double << (ArgType_Shift * 4))
+    Args_Double_DoubleDoubleDoubleDouble = Args_Double_DoubleDoubleDouble | (ArgType_Double << (ArgType_Shift * 4)),
+
+    // int f(double, int, int)
+    Args_Int_DoubleIntInt = Args_General0 |
+       (ArgType_General << (ArgType_Shift * 1)) |
+       (ArgType_General << (ArgType_Shift * 2)) |
+       (ArgType_Double  << (ArgType_Shift * 3)),
+
+    // int f(int, double, int, int)
+    Args_Int_IntDoubleIntInt = Args_General0 |
+        (ArgType_General << (ArgType_Shift * 1)) |
+        (ArgType_General << (ArgType_Shift * 2)) |
+        (ArgType_Double  << (ArgType_Shift * 3)) |
+        (ArgType_General << (ArgType_Shift * 4))
 
 };
 
