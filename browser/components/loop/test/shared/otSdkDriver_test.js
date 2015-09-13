@@ -901,7 +901,7 @@ describe("loop.OTSdkDriver", function () {
           new sharedActions.MediaStreamCreated({
             hasVideo: true,
             isLocal: true,
-            srcVideoObject: fakeMockVideo
+            srcMediaElement: fakeMockVideo
           }));
       });
 
@@ -914,7 +914,7 @@ describe("loop.OTSdkDriver", function () {
           new sharedActions.MediaStreamCreated({
             hasVideo: false,
             isLocal: true,
-            srcVideoObject: fakeMockVideo
+            srcMediaElement: fakeMockVideo
           }));
       });
 
@@ -989,7 +989,7 @@ describe("loop.OTSdkDriver", function () {
           new sharedActions.MediaStreamCreated({
             hasVideo: true,
             isLocal: false,
-            srcVideoObject: videoElement
+            srcMediaElement: videoElement
           }));
       });
 
@@ -1006,7 +1006,7 @@ describe("loop.OTSdkDriver", function () {
           new sharedActions.MediaStreamCreated({
             hasVideo: false,
             isLocal: false,
-            srcVideoObject: videoElement
+            srcMediaElement: videoElement
           }));
       });
 

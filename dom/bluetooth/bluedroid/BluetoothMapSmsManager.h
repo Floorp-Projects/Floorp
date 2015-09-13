@@ -98,6 +98,8 @@ private:
   void HandleSmsMmsFolderListing(const ObexHeaderSet& aHeader);
   void HandleSmsMmsMsgListing(const ObexHeaderSet& aHeader);
   void HandleSmsMmsGetMessage(const ObexHeaderSet& aHeader);
+  void HandleSmsMmsPushMessage(const ObexHeaderSet& aHeader);
+
   void AppendBtNamedValueByTagId(const ObexHeaderSet& aHeader,
     InfallibleTArray<BluetoothNamedValue>& aValues,
     const Map::AppParametersTagId aTagId);

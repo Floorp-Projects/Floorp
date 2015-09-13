@@ -513,7 +513,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
      */
     _isLocalLoading: function () {
       return this.state.roomState === ROOM_STATES.MEDIA_WAIT &&
-             !this.state.localSrcVideoObject;
+             !this.state.localSrcMediaElement;
     },
 
     /**
@@ -525,7 +525,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
      */
     _isRemoteLoading: function() {
       return !!(this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS &&
-                !this.state.remoteSrcVideoObject &&
+                !this.state.remoteSrcMediaElement &&
                 !this.state.mediaConnected);
     },
 
@@ -538,7 +538,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
      */
     _isScreenShareLoading: function() {
       return this.state.receivingScreenShare &&
-             !this.state.screenShareVideoObject &&
+             !this.state.screenShareMediaElement &&
              !this.props.screenSharePosterUrl;
     },
 
@@ -557,14 +557,14 @@ loop.standaloneRoomViews = (function(mozL10n) {
             isRemoteLoading: this._isRemoteLoading(), 
             isScreenShareLoading: this._isScreenShareLoading(), 
             localPosterUrl: this.props.localPosterUrl, 
-            localSrcVideoObject: this.state.localSrcVideoObject, 
+            localSrcMediaElement: this.state.localSrcMediaElement, 
             localVideoMuted: this.state.videoMuted, 
             matchMedia: this.state.matchMedia || window.matchMedia.bind(window), 
             remotePosterUrl: this.props.remotePosterUrl, 
-            remoteSrcVideoObject: this.state.remoteSrcVideoObject, 
+            remoteSrcMediaElement: this.state.remoteSrcMediaElement, 
             renderRemoteVideo: this.shouldRenderRemoteVideo(), 
+            screenShareMediaElement: this.state.screenShareMediaElement, 
             screenSharePosterUrl: this.props.screenSharePosterUrl, 
-            screenShareVideoObject: this.state.screenShareVideoObject, 
             showContextRoomName: true, 
             useDesktopPaths: false}, 
             React.createElement(StandaloneRoomInfoArea, {activeRoomStore: this.props.activeRoomStore, 

@@ -486,10 +486,10 @@ describe("loop.standaloneRoomViews", function() {
 
       describe("screenShare", function() {
         it("should show a loading screen if receivingScreenShare is true " +
-           "but no screenShareVideoObject is present", function() {
+           "but no screenShareMediaElement is present", function() {
           view.setState({
             "receivingScreenShare": true,
-            "screenShareVideoObject": null
+            "screenShareMediaElement": null
           });
 
           expect(view.getDOMNode().querySelector(".screen .loading-stream"))
@@ -497,23 +497,23 @@ describe("loop.standaloneRoomViews", function() {
         });
 
         it("should not show loading screen if receivingScreenShare is false " +
-           "and screenShareVideoObject is null", function() {
+           "and screenShareMediaElement is null", function() {
              view.setState({
                "receivingScreenShare": false,
-               "screenShareVideoObject": null
+               "screenShareMediaElement": null
              });
 
              expect(view.getDOMNode().querySelector(".screen .loading-stream"))
                  .eql(null);
         });
 
-        it("should not show a loading screen if screenShareVideoObject is set",
+        it("should not show a loading screen if screenShareMediaElement is set",
            function() {
              var videoElement = document.createElement("video");
 
              view.setState({
                "receivingScreenShare": true,
-               "screenShareVideoObject": videoElement
+               "screenShareMediaElement": videoElement
              });
 
              expect(view.getDOMNode().querySelector(".screen .loading-stream"))
@@ -531,7 +531,7 @@ describe("loop.standaloneRoomViews", function() {
         it("should render local video when video_muted is false", function() {
           activeRoomStore.setStoreState({
             roomState: ROOM_STATES.HAS_PARTICIPANTS,
-            localSrcVideoObject: videoElement,
+            localSrcMediaElement: videoElement,
             videoMuted: false
           });
 
@@ -547,33 +547,33 @@ describe("loop.standaloneRoomViews", function() {
           expect(view.getDOMNode().querySelector(".local .avatar")).eql(null);
         });
 
-        it("should render local loading screen when no srcVideoObject",
+        it("should render local loading screen when no srcMediaElement",
            function() {
              activeRoomStore.setStoreState({
                roomState: ROOM_STATES.MEDIA_WAIT,
-               remoteSrcVideoObject: null
+               remoteSrcMediaElement: null
              });
 
              expect(view.getDOMNode().querySelector(".local .loading-stream"))
                  .not.eql(null);
         });
 
-        it("should not render local loading screen when srcVideoObject is set",
+        it("should not render local loading screen when srcMediaElement is set",
            function() {
              activeRoomStore.setStoreState({
                roomState: ROOM_STATES.MEDIA_WAIT,
-               localSrcVideoObject: videoElement
+               localSrcMediaElement: videoElement
              });
 
              expect(view.getDOMNode().querySelector(".local .loading-stream"))
                   .eql(null);
         });
 
-        it("should not render remote loading screen when srcVideoObject is set",
+        it("should not render remote loading screen when srcMediaElement is set",
            function() {
              activeRoomStore.setStoreState({
                roomState: ROOM_STATES.HAS_PARTICIPANTS,
-               remoteSrcVideoObject: videoElement
+               remoteSrcMediaElement: videoElement
              });
 
              expect(view.getDOMNode().querySelector(".remote .loading-stream"))
@@ -584,7 +584,7 @@ describe("loop.standaloneRoomViews", function() {
           " remoteVideoEnabled is true", function() {
           activeRoomStore.setStoreState({
             roomState: ROOM_STATES.HAS_PARTICIPANTS,
-            remoteSrcVideoObject: videoElement,
+            remoteSrcMediaElement: videoElement,
             remoteVideoEnabled: true
           });
 
@@ -595,7 +595,7 @@ describe("loop.standaloneRoomViews", function() {
           " remoteVideoEnabled is true", function() {
           activeRoomStore.setStoreState({
             roomState: ROOM_STATES.HAS_PARTICIPANTS,
-            remoteSrcVideoObject: videoElement,
+            remoteSrcMediaElement: videoElement,
             remoteVideoEnabled: true
           });
 
@@ -606,7 +606,7 @@ describe("loop.standaloneRoomViews", function() {
           " remoteVideoEnabled is false, and mediaConnected is true", function() {
           activeRoomStore.setStoreState({
             roomState: ROOM_STATES.HAS_PARTICIPANTS,
-            remoteSrcVideoObject: videoElement,
+            remoteSrcMediaElement: videoElement,
             mediaConnected: true,
             remoteVideoEnabled: false
           });
@@ -618,7 +618,7 @@ describe("loop.standaloneRoomViews", function() {
           " and both remoteVideoEnabled and mediaConnected are false", function() {
           activeRoomStore.setStoreState({
             roomState: ROOM_STATES.HAS_PARTICIPANTS,
-            remoteSrcVideoObject: videoElement,
+            remoteSrcMediaElement: videoElement,
             mediaConnected: false,
             remoteVideoEnabled: false
           });
@@ -629,7 +629,7 @@ describe("loop.standaloneRoomViews", function() {
         it("should not render a remote avatar when the room is in MEDIA_WAIT", function() {
           activeRoomStore.setStoreState({
             roomState: ROOM_STATES.MEDIA_WAIT,
-            remoteSrcVideoObject: videoElement,
+            remoteSrcMediaElement: videoElement,
             remoteVideoEnabled: false
           });
 
@@ -640,7 +640,7 @@ describe("loop.standaloneRoomViews", function() {
           " remoteVideoEnabled is false", function() {
           activeRoomStore.setStoreState({
             roomState: ROOM_STATES.CLOSING,
-            remoteSrcVideoObject: videoElement,
+            remoteSrcMediaElement: videoElement,
             remoteVideoEnabled: false
           });
 
@@ -651,7 +651,7 @@ describe("loop.standaloneRoomViews", function() {
           "remoteVideoEnabled is false, and mediaConnected is true", function() {
           activeRoomStore.setStoreState({
             roomState: ROOM_STATES.HAS_PARTICIPANTS,
-            remoteSrcVideoObject: videoElement,
+            remoteSrcMediaElement: videoElement,
             remoteVideoEnabled: false,
             mediaConnected: true
           });
@@ -660,10 +660,10 @@ describe("loop.standaloneRoomViews", function() {
         });
 
         it("should render a remote avatar when the room HAS_PARTICIPANTS, " +
-          "remoteSrcVideoObject is false, mediaConnected is true", function() {
+          "remoteSrcMediaElement is false, mediaConnected is true", function() {
           activeRoomStore.setStoreState({
             roomState: ROOM_STATES.HAS_PARTICIPANTS,
-            remoteSrcVideoObject: null,
+            remoteSrcMediaElement: null,
             remoteVideoEnabled: false,
             mediaConnected: true
           });

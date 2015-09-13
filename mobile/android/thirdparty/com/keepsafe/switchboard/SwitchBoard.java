@@ -22,6 +22,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.UUID;
@@ -31,10 +34,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-
 
 /**
  * SwitchBoard is the core class of the KeepSafe Switchboard mobile A/B testing framework.
@@ -66,7 +70,8 @@ public class SwitchBoard {
 	/** Production server for getting the actual config file. http://staging.domain/path_to/SwitchboardDriver.php */
 	private static String DYNAMIC_CONFIG_SERVER_DEFAULT_URL;
 	
-	
+	public static final String ACTION_CONFIG_FETCHED = ".SwitchBoard.CONFIG_FETCHED";
+
 	private static final String kUpdateServerUrl = "updateServerUrl";
 	private static final String kConfigServerUrl = "configServerUrl";
 	
@@ -229,6 +234,10 @@ public class SwitchBoard {
 		} catch (NullPointerException e) {
 			e.printStackTrace();
 		}
+
+		//notify listeners that the config fetch has completed
+		Intent i = new Intent(ACTION_CONFIG_FETCHED);
+		LocalBroadcastManager.getInstance(c).sendBroadcast(i);
 	}
 
 	public static boolean isInBucket(Context c, int low, int high) {
@@ -288,6 +297,37 @@ public class SwitchBoard {
 		
 	}
 	
+	/**
+	 * @returns a list of all active experiments.
+	 */
+	public static List<String> getActiveExperiments(Context c) {
+		ArrayList<String> returnList = new ArrayList<String>();
+
+		// lookup experiment in config
+		String config = Preferences.getDynamicConfigJson(c);
+
+		// if it does not exist
+		if (config == null) {
+			return returnList;
+		}
+
+		try {
+			JSONObject experiments = new JSONObject(config);
+			Iterator<?> iter = experiments.keys();
+			while (iter.hasNext()) {
+				String key = (String)iter.next();
+				JSONObject experiment = experiments.getJSONObject(key);
+				if (experiment.getBoolean(IS_EXPERIMENT_ACTIVE)) {
+					returnList.add(key);
+				}
+			}
+		} catch (JSONException e) {
+			// Something went wrong!
+		}
+
+		return returnList;
+	}
+
 	/**
 	 * Checks if a certain experiment exists. 
 	 * @param c ApplicationContext

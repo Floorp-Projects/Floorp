@@ -2114,7 +2114,7 @@ public abstract class GeckoApp
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
-                    rec.close();
+                    rec.close(GeckoApp.this);
                 }
             });
         }
