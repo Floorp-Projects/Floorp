@@ -334,6 +334,8 @@ BluetoothMapSmsManager::MasDataHandler(UnixSocketBuffer* aMessage)
           HandleEventReport(pktHeaders);
         } else if (type.EqualsLiteral("x-bt/messageStatus")) {
           HandleSetMessageStatus(pktHeaders);
+        } else if (type.EqualsLiteral("x-bt/message")) {
+          HandleSmsMmsPushMessage(pktHeaders);
         }
       }
       break;
@@ -819,6 +821,23 @@ BluetoothMapSmsManager::AppendBtNamedValueByTagId(
                        static_cast<uint32_t>(statusValue));
       break;
     }
+    case Map::AppParametersTagId::Transparent: {
+      uint8_t transparent = *((uint8_t *)buf);
+      // convert big endian to little endian
+      transparent = (transparent >> 8) | (transparent << 8);
+      BT_LOGR("msg filter statusvalue: %d", transparent);
+      AppendNamedValue(aValues, "transparent",
+                       static_cast<uint32_t>(transparent));
+      break;
+    }
+    case Map::AppParametersTagId::Retry: {
+      uint8_t retry = *((uint8_t *)buf);
+      // convert big endian to little endian
+      retry = (retry >> 8) | (retry << 8);
+      BT_LOGR("msg filter retry: %d", retry);
+      AppendNamedValue(aValues, "retry", static_cast<uint32_t>(retry));
+      break;
+    }
     default:
       BT_LOGR("Unsupported AppParameterTag: %x", aTagId);
       break;
@@ -977,6 +996,28 @@ BluetoothMapSmsManager::HandleSetMessageStatus(const ObexHeaderSet& aHeader)
                             Map::AppParametersTagId::StatusValue);
 
   bs->DistributeSignal(NS_LITERAL_STRING(MAP_SET_MESSAGE_STATUS_REQ_ID),
+                       NS_LITERAL_STRING(KEY_ADAPTER), data);
+}
+
+void
+BluetoothMapSmsManager::HandleSmsMmsPushMessage(const ObexHeaderSet& aHeader)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  InfallibleTArray<BluetoothNamedValue> data;
+  nsString name;
+  aHeader.GetName(name);
+  AppendNamedValue(data, "folderName", name);
+
+  AppendBtNamedValueByTagId(aHeader, data,
+                            Map::AppParametersTagId::Transparent);
+  AppendBtNamedValueByTagId(aHeader, data, Map::AppParametersTagId::Retry);
+  AppendBtNamedValueByTagId(aHeader, data, Map::AppParametersTagId::Charset);
+
+  bs->DistributeSignal(NS_LITERAL_STRING(MAP_PUSH_MESSAGE_REQ_ID),
                        NS_LITERAL_STRING(KEY_ADAPTER), data);
 }
 
