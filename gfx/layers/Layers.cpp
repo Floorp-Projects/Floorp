@@ -700,6 +700,13 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
     return currentClip;
   }
 
+  if (GetVisibleRegion().IsEmpty()) {
+    // When our visible region is empty, our parent may not have created the
+    // intermediate surface that we would require for correct clipping; however,
+    // this does not matter since we are invisible.
+    return RenderTargetIntRect(currentClip.TopLeft(), RenderTargetIntSize(0, 0));
+  }
+
   const RenderTargetIntRect clipRect =
     ViewAs<RenderTargetPixel>(*GetEffectiveClipRect(),
                               PixelCastJustification::RenderTargetIsParentLayerForRoot);
