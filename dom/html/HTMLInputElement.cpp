@@ -3289,7 +3289,7 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
       textControl = numberControlFrame->GetAnonTextControl();
     }
     if (textControl && aVisitor.mEvent->originalTarget == textControl) {
-      if (aVisitor.mEvent->mMessage == NS_EDITOR_INPUT) {
+      if (aVisitor.mEvent->mMessage == eEditorInput) {
         // Propogate the anon text control's new value to our HTMLInputElement:
         nsAutoString value;
         numberControlFrame->GetValueOfAnonTextControl(value);
