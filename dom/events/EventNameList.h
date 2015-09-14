@@ -589,7 +589,7 @@ DOCUMENT_ONLY_EVENT(readystatechange,
                     EventNameType_HTMLXUL,
                     eBasicEventClass)
 DOCUMENT_ONLY_EVENT(selectionchange,
-                    NS_SELECTION_CHANGE,
+                    eSelectionChange,
                     EventNameType_HTMLXUL,
                     eBasicEventClass)
 
