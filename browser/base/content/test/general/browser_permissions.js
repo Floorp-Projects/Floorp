@@ -18,21 +18,15 @@ add_task(function* testMainViewVisible() {
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   yield promiseTabLoadEvent(tab, PERMISSIONS_PAGE);
 
-  // Retrieve the label that's shown when the user didn't grant the page any
-  // special permissions.
-  let emptyLabel = document.querySelector("#identity-popup-permission-list + description");
-
   gIdentityHandler._identityBox.click();
-  ok(!is_hidden(emptyLabel), "List of permissions is empty");
+  ok(is_hidden(gIdentityHandler._permissionsContainer), "The container is hidden");
   gIdentityHandler._identityPopup.hidden = true;
 
   gIdentityHandler.setPermission("install", 1);
 
   gIdentityHandler._identityBox.click();
-  ok(is_hidden(emptyLabel), "List of permissions is not empty");
-
-  let permissionsList = document.getElementById("identity-popup-permission-list");
-  let menulists = permissionsList.querySelectorAll("menulist");
+  ok(!is_hidden(gIdentityHandler._permissionsContainer), "The container is visible");
+  let menulists = gIdentityHandler._permissionsContainer.querySelectorAll("menulist");
   is(menulists.length, 1, "One permission visible in main view");
   is(menulists[0].id, "identity-popup-permission:install", "Install permission visible");
   is(menulists[0].value, "1", "Correct value on install menulist");
@@ -41,6 +35,6 @@ add_task(function* testMainViewVisible() {
   gIdentityHandler.setPermission("install", SitePermissions.getDefault("install"));
 
   gIdentityHandler._identityBox.click();
-  ok(!is_hidden(emptyLabel), "List of permissions is empty");
+  ok(is_hidden(gIdentityHandler._permissionsContainer), "The container is hidden");
   gIdentityHandler._identityPopup.hidden = true;
 });
