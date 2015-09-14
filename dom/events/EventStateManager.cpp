@@ -1154,7 +1154,7 @@ CrossProcessSafeEvent(const WidgetEvent& aEvent)
   case eTouchEventClass:
     switch (aEvent.mMessage) {
     case eTouchStart:
-    case NS_TOUCH_MOVE:
+    case eTouchMove:
     case NS_TOUCH_END:
     case NS_TOUCH_CANCEL:
       return true;

@@ -710,7 +710,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
             }
         }
         case AndroidMotionEvent::ACTION_MOVE: {
-            type = NS_TOUCH_MOVE;
+            type = eTouchMove;
             break;
         }
         case AndroidMotionEvent::ACTION_HOVER_EXIT: {
