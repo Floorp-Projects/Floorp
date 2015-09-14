@@ -3515,6 +3515,10 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
 
   destroy: function () {
     protocol.Actor.prototype.destroy.call(this);
+    this._highlighterPromise = null;
+    this._pageStylePromise = null;
+    this._walkerPromise = null;
+    this.walker = null;
   },
 
   // Forces destruction of the actor and all its children
@@ -3570,7 +3574,9 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
     }
 
     this._pageStylePromise = this.getWalker().then(walker => {
-      return PageStyleActor(this);
+      let pageStyle = PageStyleActor(this);
+      this.manage(pageStyle);
+      return pageStyle;
     });
     return this._pageStylePromise;
   }, {
