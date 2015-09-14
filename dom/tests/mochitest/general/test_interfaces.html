@@ -990,11 +990,11 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Selection",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "ServiceWorker", b2g: false, releaseAndroid: false},
+    {name: "ServiceWorker", b2g: false, nightlyAndroid: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "ServiceWorkerContainer", b2g: false, releaseAndroid: false},
+    {name: "ServiceWorkerContainer", b2g: false, nightlyAndroid: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "ServiceWorkerRegistration", b2g: false, releaseAndroid: false},
+    {name: "ServiceWorkerRegistration", b2g: false, nightlyAndroid: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "SettingsLock",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1487,6 +1487,7 @@ function createInterfaceMap(isXBLScope) {
       } else {
         ok(!("pref" in entry), "Bogus pref annotation for " + entry.name);
         if ((entry.nightly === !isNightly) ||
+            (entry.nightlyAndroid === !(isAndroid && isNightly)) ||
             (entry.xbl === !isXBLScope) ||
             (entry.desktop === !isDesktop) ||
             (entry.b2g === !isB2G) ||
@@ -1495,7 +1496,6 @@ function createInterfaceMap(isXBLScope) {
             (entry.linux === !isLinux) ||
             (entry.android === !isAndroid) ||
             (entry.release === !isRelease) ||
-            (entry.releaseAndroid === !(isAndroid && isRelease)) ||
             (entry.permission && !hasPermission(entry.permission)) ||
             entry.disabled) {
           interfaceMap[entry.name] = false;
