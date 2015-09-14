@@ -185,9 +185,9 @@ let WebAudioEditorController = {
    * Called when a new node is created. Creates an `AudioNodeView` instance
    * for tracking throughout the editor.
    */
-  _onCreateNode: Task.async(function* (nodeActor) {
-    yield gAudioNodes.add(nodeActor);
-  }),
+  _onCreateNode: function (nodeActor) {
+    gAudioNodes.add(nodeActor);
+  },
 
   /**
    * Called on `destroy-node` when an AudioNode is GC'd. Removes
