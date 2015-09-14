@@ -75,7 +75,7 @@ EXTRA_JS_MODULES += [
     'TelemetryTimestamps.jsm',
     'Timer.jsm',
     'Troubleshoot.jsm',
-    'UpdateChannel.jsm',
+    'UpdateUtils.jsm',
     'WebChannel.jsm',
     'WindowDraggingUtils.jsm',
     'ZipUtils.jsm',

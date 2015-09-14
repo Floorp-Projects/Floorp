@@ -8,7 +8,7 @@ const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/services/datareporting/policy.jsm");
 Cu.import("resource://testing-common/services/datareporting/mocks.jsm");
-Cu.import("resource://gre/modules/UpdateChannel.jsm");
+Cu.import("resource://gre/modules/UpdateUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 function getPolicy(name,
@@ -23,7 +23,7 @@ function getPolicy(name,
                                            , defaultBranch: true });
   defaultPolicyPrefs.set("currentPolicyVersion", aCurrentPolicyVersion);
   defaultPolicyPrefs.set("minimumPolicyVersion", aMinimumPolicyVersion);
-  let branchOverridePrefName = "minimumPolicyVersion.channel-" + UpdateChannel.get(false);
+  let branchOverridePrefName = "minimumPolicyVersion.channel-" + UpdateUtils.getUpdateChannel(false);
   if (aBranchMinimumVersionOverride !== undefined)
     defaultPolicyPrefs.set(branchOverridePrefName, aBranchMinimumVersionOverride);
   else
