@@ -21,7 +21,6 @@
 namespace mozilla {
 
 class MediaDecoderReader;
-class SharedDecoderManager;
 
 struct WaitForDataRejectValue
 {
@@ -103,7 +102,6 @@ public:
   // Release media resources they should be released in dormant state
   // The reader can be made usable again by calling ReadMetadata().
   virtual void ReleaseMediaResources() {};
-  virtual void SetSharedDecoderManager(SharedDecoderManager* aManager) {}
   // Breaks reference-counted cycles. Called during shutdown.
   // WARNING: If you override this, you must call the base implementation
   // in your override.
