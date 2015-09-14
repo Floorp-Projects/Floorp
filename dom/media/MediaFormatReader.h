@@ -61,7 +61,6 @@ public:
     return mSeekable;
   }
 
-  int64_t GetEvictionOffset(double aTime) override;
 protected:
   void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) override;
 public:
