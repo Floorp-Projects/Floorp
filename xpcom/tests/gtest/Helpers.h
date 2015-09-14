@@ -7,6 +7,7 @@
 #ifndef __Helpers_h
 #define __Helpers_h
 
+#include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsString.h"
 #include <stdint.h>
@@ -49,6 +50,22 @@ private:
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOUTPUTSTREAMCALLBACK
+};
+
+class InputStreamCallback final : public nsIInputStreamCallback
+{
+public:
+  InputStreamCallback();
+
+  bool Called() const { return mCalled; }
+
+private:
+  ~InputStreamCallback();
+
+  bool mCalled;
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIINPUTSTREAMCALLBACK
 };
 
 } // namespace testing

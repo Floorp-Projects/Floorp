@@ -112,4 +112,22 @@ OutputStreamCallback::OnOutputStreamReady(nsIAsyncOutputStream* aStream)
   return NS_OK;
 }
 
+NS_IMPL_ISUPPORTS(InputStreamCallback, nsIInputStreamCallback);
+
+InputStreamCallback::InputStreamCallback()
+  : mCalled(false)
+{
+}
+
+InputStreamCallback::~InputStreamCallback()
+{
+}
+
+NS_IMETHODIMP
+InputStreamCallback::OnInputStreamReady(nsIAsyncInputStream* aStream)
+{
+  mCalled = true;
+  return NS_OK;
+}
+
 } // namespace testing
