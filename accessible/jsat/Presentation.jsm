@@ -691,6 +691,7 @@ this.Presentation = { // jshint ignore:line
   get displayedAccessibles() {
     delete this.displayedAccessibles;
     this.displayedAccessibles = new WeakMap();
+    return this.displayedAccessibles;
   },
 
   pivotChanged: function Presentation_pivotChanged(
