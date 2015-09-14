@@ -552,6 +552,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     bool isUnexpectedEOF() const { return isUnexpectedEOF_; }
 
+    bool checkUnescapedName(const Token& token);
+
   private:
     Parser* thisForCtor() { return this; }
 
