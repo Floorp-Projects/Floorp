@@ -396,7 +396,7 @@ nsBaseDragService::EndDragSession(bool aDoneDrag)
 }
 
 NS_IMETHODIMP
-nsBaseDragService::FireDragEventAtSource(uint32_t aMsg)
+nsBaseDragService::FireDragEventAtSource(EventMessage aEventMessage)
 {
   if (mSourceNode && !mSuppressLevel) {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(mSourceDocument);
@@ -404,9 +404,9 @@ nsBaseDragService::FireDragEventAtSource(uint32_t aMsg)
       nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
       if (presShell) {
         nsEventStatus status = nsEventStatus_eIgnore;
-        WidgetDragEvent event(true, static_cast<EventMessage>(aMsg), nullptr);
+        WidgetDragEvent event(true, aEventMessage, nullptr);
         event.inputSource = mInputSource;
-        if (aMsg == eDragEnd) {
+        if (aEventMessage == eDragEnd) {
           event.refPoint.x = mEndDragPoint.x;
           event.refPoint.y = mEndDragPoint.y;
           event.userCancelled = mUserCancelled;
