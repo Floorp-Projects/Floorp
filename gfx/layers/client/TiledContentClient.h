@@ -591,8 +591,10 @@ private:
 class TiledContentClient : public CompositableClient
 {
 public:
-  TiledContentClient(ClientLayerManager* aManager)
+  TiledContentClient(ClientLayerManager* aManager,
+                     const char* aName = "")
     : CompositableClient(aManager->AsShadowForwarder())
+    , mName(aName)
   {}
 
 protected:
@@ -620,6 +622,9 @@ public:
     LOW_PRECISION_TILED_BUFFER
   };
   virtual void UpdatedBuffer(TiledBufferType aType) = 0;
+
+private:
+  const char* mName;
 };
 
 /**
