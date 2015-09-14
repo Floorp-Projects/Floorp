@@ -280,7 +280,6 @@ public:
 
   // Notify the reader that data from the resource was evicted (MediaSource only)
   virtual void NotifyDataRemoved() {}
-  virtual int64_t GetEvictionOffset(double aTime) { return -1; }
 
   virtual MediaQueue<AudioData>& AudioQueue() { return mAudioQueue; }
   virtual MediaQueue<VideoData>& VideoQueue() { return mVideoQueue; }

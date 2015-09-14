@@ -98,7 +98,6 @@ public:
   Seek(int64_t aTime, int64_t aEndTime) override;
 
   virtual media::TimeIntervals GetBuffered() override;
-  virtual int64_t GetEvictionOffset(double aTime) override;
 
   virtual bool IsMediaSeekable() override;
 
