@@ -336,7 +336,7 @@ NS_EVENT_MESSAGE(eSMILRepeatEvent,      eSMILEventFirst + 2)
 
 NS_EVENT_MESSAGE(eAudioEventFirst,      4350)
 NS_EVENT_MESSAGE(eAudioProcess,         eAudioEventFirst)
-NS_EVENT_MESSAGE(NS_AUDIO_COMPLETE,     eAudioEventFirst + 1)
+NS_EVENT_MESSAGE(eAudioComplete,        eAudioEventFirst + 1)
 
 // script notification events
 NS_EVENT_MESSAGE(eScriptEventFirst,     4500)
