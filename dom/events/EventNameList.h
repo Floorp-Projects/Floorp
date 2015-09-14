@@ -896,7 +896,7 @@ NON_IDL_EVENT(MozTapGesture,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozPressTapGesture,
-              NS_SIMPLE_GESTURE_PRESSTAP,
+              ePressTapGesture,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozEdgeUIStarted,

@@ -403,12 +403,10 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam,
     break;
 
     case GID_PRESSANDTAP:
-    {
       // Two finger right click. Defaults to right click if it falls through.
-      evt.mMessage = NS_SIMPLE_GESTURE_PRESSTAP;
+      evt.mMessage = ePressTapGesture;
       evt.clickCount = 1;
-    }
-    break;
+      break;
   }
 
   return true;
