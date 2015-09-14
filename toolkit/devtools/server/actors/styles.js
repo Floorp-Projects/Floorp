@@ -153,6 +153,19 @@ let PageStyleActor = protocol.ActorClass({
     events.on(this.inspector.tabActor, "will-navigate", this.onFrameUnload);
   },
 
+  destroy: function () {
+    if (!this.walker) {
+      return;
+    }
+    protocol.Actor.prototype.destroy.call(this);
+    events.off(this.inspector.tabActor, "will-navigate", this.onFrameUnload);
+    this.inspector = null;
+    this.walker = null;
+    this.refMap = null;
+    this.cssLogic = null;
+    this._styleElement = null;
+  },
+
   get conn() {
     return this.inspector.conn;
   },
@@ -1023,6 +1036,17 @@ let StyleRuleActor = protocol.ActorClass({
 
   get conn() {
     return this.pageStyle.conn;
+  },
+
+  destroy: function () {
+    if (!this.rawStyle) {
+      return;
+    }
+    protocol.Actor.prototype.destroy.call(this);
+    this.rawStyle = null;
+    this.pageStyle = null;
+    this.rawNode = null;
+    this.rawRule = null;
   },
 
   // Objects returned by this actor are owned by the PageStyleActor

@@ -1345,24 +1345,44 @@ var WalkerActor = protocol.ActorClass({
   },
 
   destroy: function() {
+    if (this._destroyed) {
+      return;
+    }
+    this._destroyed = true;
+    protocol.Actor.prototype.destroy.call(this);
     try {
-      this._destroyed = true;
-
       this.clearPseudoClassLocks();
       this._activePseudoClassLocks = null;
 
       this._hoveredNode = null;
+      this.rootWin = null;
       this.rootDoc = null;
+      this.rootNode = null;
+      this.layoutHelpers = null;
+      this._orphaned = null;
+      this._retainedOrphans = null;
+      this._refMap = null;
+
+      events.off(this.tabActor, "will-navigate", this.onFrameUnload);
+      events.off(this.tabActor, "navigate", this.onFrameLoad);
+
+      this.onFrameLoad = null;
+      this.onFrameUnload = null;
 
       this.reflowObserver.off("reflows", this._onReflows);
       this.reflowObserver = null;
+      this._onReflows = null;
       releaseLayoutChangesObserver(this.tabActor);
+
+      this.onMutations = null;
+
+      this.tabActor = null;
 
       events.emit(this, "destroyed");
     } catch(e) {
       console.error(e);
     }
-    protocol.Actor.prototype.destroy.call(this);
+
   },
 
   release: method(function() {}, { release: true }),
@@ -3519,6 +3539,7 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
     this._pageStylePromise = null;
     this._walkerPromise = null;
     this.walker = null;
+    this.tabActor = null;
   },
 
   // Forces destruction of the actor and all its children
