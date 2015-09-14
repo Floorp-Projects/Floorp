@@ -175,12 +175,12 @@ SwipeTracker::WillRefresh(mozilla::TimeStamp aTime)
 void
 SwipeTracker::CancelSwipe()
 {
-  SendSwipeEvent(NS_SIMPLE_GESTURE_SWIPE_END, 0, 0.0);
+  SendSwipeEvent(eSwipeGestureEnd, 0, 0.0);
 }
 
 void SwipeTracker::SwipeFinished()
 {
-  SendSwipeEvent(NS_SIMPLE_GESTURE_SWIPE_END, 0, 0.0);
+  SendSwipeEvent(eSwipeGestureEnd, 0, 0.0);
   mWidget.SwipeFinished();
 }
 
