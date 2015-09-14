@@ -496,7 +496,7 @@ WINDOW_EVENT(languagechange,
 // need a different macro to flag things like that (IDL, but not content
 // attributes on body/frameset), or is just using EventNameType_None enough?
 WINDOW_EVENT(message,
-             NS_MESSAGE,
+             eMessage,
              EventNameType_None,
              eBasicEventClass)
 WINDOW_EVENT(offline,
