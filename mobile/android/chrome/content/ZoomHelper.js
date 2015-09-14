@@ -5,7 +5,6 @@
 
 var ZoomHelper = {
   zoomOut: function() {
-    BrowserEventHandler.resetMaxLineBoxWidth();
     Messaging.sendRequest({ type: "Browser:ZoomToPageWidth" });
   },
 
@@ -106,10 +105,6 @@ var ZoomHelper = {
       if ((aRect.height > rect.h) && (cssTapY > rect.y + (rect.h * 1.2))) {
         rect.y = cssTapY - (rect.h / 2);
       }
-    }
-
-    if (rect.w > viewport.cssWidth || rect.h > viewport.cssHeight) {
-      BrowserEventHandler.resetMaxLineBoxWidth();
     }
 
     Messaging.sendRequest(rect);
