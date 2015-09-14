@@ -362,7 +362,7 @@ NS_EVENT_MESSAGE(eDeviceProximity,       eDeviceEventFirst + 2)
 NS_EVENT_MESSAGE(eUserProximity,         eDeviceEventFirst + 3)
 NS_EVENT_MESSAGE(eDeviceLight,           eDeviceEventFirst + 4)
 
-NS_EVENT_MESSAGE(NS_SHOW_EVENT,          5000)
+NS_EVENT_MESSAGE(eShow,                  5000)
 
 // Fullscreen DOM API
 NS_EVENT_MESSAGE(eFullscreenEventFirst,  5100)
