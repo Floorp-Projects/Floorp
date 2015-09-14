@@ -78,7 +78,6 @@ class MochitestArguments(ArgumentContainer):
           "help": "Override the default binary used to run tests with the path provided, e.g "
                   "/usr/bin/firefox. If you have run ./mach package beforehand, you can "
                   "specify 'dist' to run tests against the distribution bundle's binary.",
-          "suppress": build_obj is not None,
           }],
         [["--utility-path"],
          {"dest": "utilityPath",
