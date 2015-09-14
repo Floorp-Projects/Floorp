@@ -436,13 +436,6 @@ private:
 
   nsRefPtr<SharedDecoderManager> mSharedDecoderManager;
 
-  // Main thread objects
-  // Those are only used to calculate our buffered range on the main thread.
-  // The cached buffered range is calculated one when required.
-  nsRefPtr<MediaDataDemuxer> mMainThreadDemuxer;
-  nsRefPtr<MediaTrackDemuxer> mAudioTrackDemuxer;
-  nsRefPtr<MediaTrackDemuxer> mVideoTrackDemuxer;
-
 #if defined(READER_DORMANT_HEURISTIC)
   const bool mDormantEnabled;
 #endif

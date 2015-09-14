@@ -137,17 +137,6 @@ MediaFormatReader::Shutdown()
 
   mDemuxer = nullptr;
 
-  // shutdown main thread demuxer and track demuxers.
-  if (mAudioTrackDemuxer) {
-    mAudioTrackDemuxer->BreakCycles();
-    mAudioTrackDemuxer = nullptr;
-  }
-  if (mVideoTrackDemuxer) {
-    mVideoTrackDemuxer->BreakCycles();
-    mVideoTrackDemuxer = nullptr;
-  }
-  mMainThreadDemuxer = nullptr;
-
   mPlatform = nullptr;
 
   return MediaDecoderReader::Shutdown();
@@ -358,37 +347,9 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
 
   mSeekable = mDemuxer->IsSeekable();
 
-  // Create demuxer object for main thread.
-  if (mDemuxer->IsThreadSafe()) {
-    mMainThreadDemuxer = mDemuxer;
-  } else {
-    mMainThreadDemuxer = mDemuxer->Clone();
-  }
-  if (!mMainThreadDemuxer) {
-    mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
-    NS_WARNING("Unable to clone current MediaDataDemuxer");
-    return;
-  }
-
   if (!videoActive && !audioActive) {
     mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
     return;
-  }
-  if (videoActive) {
-    mVideoTrackDemuxer =
-      mMainThreadDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
-    if (!mVideoTrackDemuxer) {
-      mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
-      return;
-    }
-  }
-  if (audioActive) {
-    mAudioTrackDemuxer =
-      mMainThreadDemuxer->GetTrackDemuxer(TrackInfo::kAudioTrack, 0);
-    if (!mAudioTrackDemuxer) {
-      mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
-      return;
-    }
   }
 
   if (IsWaitingOnCDMResource()) {
@@ -1702,15 +1663,6 @@ MediaFormatReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
     return;
   }
 
-  MOZ_ASSERT(mMainThreadDemuxer);
-
-  // Queue a task to notify our main thread demuxer.
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableMethodWithArgs<uint32_t, int64_t>(
-      mMainThreadDemuxer, &MediaDataDemuxer::NotifyDataArrived,
-      aLength, aOffset);
-  AbstractThread::MainThread()->Dispatch(task.forget());
-
   NotifyDemuxer(aLength, aOffset);
 }
 
@@ -1722,14 +1674,6 @@ MediaFormatReader::NotifyDataRemoved()
   if (!mInitDone || mShutdown) {
     return;
   }
-
-  MOZ_ASSERT(mMainThreadDemuxer);
-
-  // Queue a task to notify our main thread demuxer.
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableMethod(
-      mMainThreadDemuxer, &MediaDataDemuxer::NotifyDataRemoved);
-  AbstractThread::MainThread()->Dispatch(task.forget());
 
   NotifyDemuxer(0, 0);
 }
