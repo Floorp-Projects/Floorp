@@ -8,14 +8,13 @@
 
 #include "nsTArray.h"
 #include "MediaDataDemuxer.h"
+#include "NesteggPacketHolder.h"
 
 typedef struct nestegg nestegg;
 
 namespace mozilla {
 
-class NesteggPacketHolder;
 class WebMBufferedState;
-class WebMPacketQueue;
 
 // Queue for holding MediaRawData samples
 class MediaRawDataQueue {
