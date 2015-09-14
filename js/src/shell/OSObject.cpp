@@ -125,7 +125,7 @@ FileAsTypedArray(JSContext* cx, const char* pathname)
         JS_ReportError(cx, "can't open %s: %s", pathname, strerror(errno));
         return nullptr;
     }
-    AutoCloseInputFile autoClose(file);
+    AutoCloseFile autoClose(file);
 
     RootedObject obj(cx);
     if (fseek(file, 0, SEEK_END) != 0) {
@@ -211,6 +211,50 @@ osfile_readRelativeToScript(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+osfile_writeTypedArrayToFile(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 2 ||
+        !args[0].isString() ||
+        !args[1].isObject() ||
+        !args[1].toObject().is<TypedArrayObject>())
+    {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
+                             JSSMSG_INVALID_ARGS, "writeTypedArrayToFile");
+        return false;
+    }
+
+    RootedString givenPath(cx, args[0].toString());
+    RootedString str(cx, ResolvePath(cx, givenPath, RootRelative));
+    if (!str)
+        return false;
+
+    JSAutoByteString filename(cx, str);
+    if (!filename)
+        return false;
+
+    FILE* file = fopen(filename.ptr(), "wb");
+    if (!file) {
+        JS_ReportError(cx, "can't open %s: %s", filename.ptr(), strerror(errno));
+        return false;
+    }
+    AutoCloseFile autoClose(file);
+
+    TypedArrayObject* obj = &args[1].toObject().as<TypedArrayObject>();
+
+    if (fwrite(obj->viewData(), obj->bytesPerElement(), obj->length(), file) != obj->length() ||
+        !autoClose.release())
+    {
+        JS_ReportError(cx, "can't write %s", filename.ptr());
+        return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
 Redirect(JSContext* cx, FILE* fp, HandleString relFilename)
 {
     RootedString filename(cx, ResolvePath(cx, relFilename, RootRelative));
@@ -271,6 +315,10 @@ static const JSFunctionSpecWithHelp osfile_functions[] = {
 };
 
 static const JSFunctionSpecWithHelp osfile_unsafe_functions[] = {
+    JS_FN_HELP("writeTypedArrayToFile", osfile_writeTypedArrayToFile, 2, 0,
+"writeTypedArrayToFile(filename, data)",
+"  Write the contents of a typed array to the named file."),
+
     JS_FN_HELP("redirect", osfile_redirect, 2, 0,
 "redirect(stdoutFilename[, stderrFilename])",
 "  Redirect stdout and/or stderr to the named file. Pass undefined to avoid\n"

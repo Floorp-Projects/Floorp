@@ -41,6 +41,3 @@ include('/ipc/chromium/chromium-config.mozbuild')
 LOCAL_INCLUDES += [
     '/dom/base',
 ]
-
-if CONFIG['CLANG_CXX']:
-    ALLOW_COMPILER_WARNINGS = True
