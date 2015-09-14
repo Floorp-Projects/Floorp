@@ -90,6 +90,7 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
                                         MostRecentRefresh())
   , mAnimationGeneration(0)
   , mReframingStyleContexts(nullptr)
+  , mAnimationsWithDestroyedFrame(nullptr)
   , mPendingRestyles(ELEMENT_HAS_PENDING_RESTYLE |
                      ELEMENT_IS_POTENTIAL_RESTYLE_ROOT |
                      ELEMENT_IS_CONDITIONAL_RESTYLE_ANCESTOR)
@@ -1081,6 +1082,44 @@ RestyleManager::ReframingStyleContexts::~ReframingStyleContexts()
   mRestyleManager->mPresContext->FrameConstructor()->CreateNeededFrames();
 }
 
+RestyleManager::AnimationsWithDestroyedFrame::AnimationsWithDestroyedFrame(
+                                          RestyleManager* aRestyleManager)
+  : mRestyleManager(aRestyleManager)
+  , mRestorePointer(mRestyleManager->mAnimationsWithDestroyedFrame)
+{
+  MOZ_ASSERT(!mRestyleManager->mAnimationsWithDestroyedFrame,
+             "shouldn't construct recursively");
+  mRestyleManager->mAnimationsWithDestroyedFrame = this;
+}
+
+void
+RestyleManager::AnimationsWithDestroyedFrame::StopAnimationsForElementsWithoutFrames()
+{
+  StopAnimationsWithoutFrame(mContents,
+    nsCSSPseudoElements::ePseudo_NotPseudoElement);
+  StopAnimationsWithoutFrame(mBeforeContents,
+    nsCSSPseudoElements::ePseudo_before);
+  StopAnimationsWithoutFrame(mAfterContents,
+    nsCSSPseudoElements::ePseudo_after);
+}
+
+void
+RestyleManager::AnimationsWithDestroyedFrame::StopAnimationsWithoutFrame(
+  nsTArray<nsRefPtr<nsIContent>>& aArray,
+  nsCSSPseudoElements::Type aPseudoType)
+{
+  nsAnimationManager* animationManager =
+    mRestyleManager->PresContext()->AnimationManager();
+  for (nsIContent* content : aArray) {
+    if (content->GetPrimaryFrame()) {
+      continue;
+    }
+    dom::Element* element = content->AsElement();
+
+    animationManager->StopAnimationsForElement(element, aPseudoType);
+  }
+}
+
 static inline dom::Element*
 ElementForStyleContext(nsIContent* aParentContent,
                        nsIFrame* aFrame,
@@ -1779,6 +1818,10 @@ void
 RestyleManager::EndProcessingRestyles()
 {
   FlushOverflowChangedTracker();
+
+  MOZ_ASSERT(mAnimationsWithDestroyedFrame);
+  mAnimationsWithDestroyedFrame->
+    StopAnimationsForElementsWithoutFrames();
 
   // Set mInStyleRefresh to false now, since the EndUpdate call might
   // add more restyles.
