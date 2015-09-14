@@ -710,9 +710,7 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t
     if (!gHashTable)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    PrefHashEntry* pref = static_cast<PrefHashEntry*>
-        (PL_DHashTableAdd(gHashTable, key, fallible));
-
+    auto pref = static_cast<PrefHashEntry*>(gHashTable->Add(key, fallible));
     if (!pref)
         return NS_ERROR_OUT_OF_MEMORY;
 

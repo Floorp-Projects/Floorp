@@ -565,8 +565,7 @@ void RuleHash::AppendRuleToTable(PLDHashTable* aTable, const void* aKey,
                                  const RuleSelectorPair& aRuleInfo)
 {
   // Get a new or existing entry.
-  RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
-    (PL_DHashTableAdd(aTable, aKey, fallible));
+  auto entry = static_cast<RuleHashTableEntry*>(aTable->Add(aKey, fallible));
   if (!entry)
     return;
   entry->mRules.AppendElement(RuleValue(aRuleInfo, mRuleCount++, mQuirksMode));
@@ -577,8 +576,7 @@ AppendRuleToTagTable(PLDHashTable* aTable, nsIAtom* aKey,
                      const RuleValue& aRuleInfo)
 {
   // Get a new or exisiting entry
-  RuleHashTagTableEntry *entry = static_cast<RuleHashTagTableEntry*>
-    (PL_DHashTableAdd(aTable, aKey, fallible));
+  auto entry = static_cast<RuleHashTagTableEntry*>(aTable->Add(aKey, fallible));
   if (!entry)
     return;
 
@@ -1003,9 +1001,8 @@ RuleCascadeData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 nsTArray<SelectorPair>*
 RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
 {
-  AtomSelectorEntry *entry =
-    static_cast<AtomSelectorEntry*>
-               (PL_DHashTableAdd(&mAttributeSelectors, aAttribute, fallible));
+  auto entry = static_cast<AtomSelectorEntry*>
+                          (mAttributeSelectors.Add(aAttribute, fallible));
   if (!entry)
     return nullptr;
   return &entry->mSelectors;
@@ -3320,8 +3317,8 @@ AddSelector(RuleCascadeData* aCascade,
     if (negation == aSelectorInTopLevel) {
       for (nsAtomList* curID = negation->mIDList; curID;
            curID = curID->mNext) {
-        AtomSelectorEntry *entry = static_cast<AtomSelectorEntry*>
-          (PL_DHashTableAdd(&aCascade->mIdSelectors, curID->mAtom, fallible));
+        auto entry = static_cast<AtomSelectorEntry*>
+          (aCascade->mIdSelectors.Add(curID->mAtom, fallible));
         if (entry) {
           entry->mSelectors.AppendElement(SelectorPair(aSelectorInTopLevel,
                                                        aRightmostSelector));
@@ -3335,9 +3332,8 @@ AddSelector(RuleCascadeData* aCascade,
     if (negation == aSelectorInTopLevel) {
       for (nsAtomList* curClass = negation->mClassList; curClass;
            curClass = curClass->mNext) {
-        AtomSelectorEntry *entry = static_cast<AtomSelectorEntry*>
-          (PL_DHashTableAdd(&aCascade->mClassSelectors, curClass->mAtom,
-                            fallible));
+        auto entry = static_cast<AtomSelectorEntry*>
+          (aCascade->mClassSelectors.Add(curClass->mAtom, fallible));
         if (entry) {
           entry->mSelectors.AppendElement(SelectorPair(aSelectorInTopLevel,
                                                        aRightmostSelector));
@@ -3661,9 +3657,8 @@ CascadeRuleEnumFunc(css::Rule* aRule, void* aData)
     for (nsCSSSelectorList *sel = styleRule->Selector();
          sel; sel = sel->mNext) {
       int32_t weight = sel->mWeight;
-      RuleByWeightEntry *entry = static_cast<RuleByWeightEntry*>(
-        PL_DHashTableAdd(&data->mRulesByWeight, NS_INT32_TO_PTR(weight),
-                         fallible));
+      auto entry = static_cast<RuleByWeightEntry*>
+        (data->mRulesByWeight.Add(NS_INT32_TO_PTR(weight), fallible));
       if (!entry)
         return false;
       entry->data.mWeight = weight;

@@ -143,16 +143,15 @@ public:
    */
   EntryType* PutEntry(KeyType aKey)
   {
-    return static_cast<EntryType*>  // infallible add
-      (PL_DHashTableAdd(&mTable, EntryType::KeyToPointer(aKey)));
+    // infallible add
+    return static_cast<EntryType*>(mTable.Add(EntryType::KeyToPointer(aKey)));
   }
 
   MOZ_WARN_UNUSED_RESULT
   EntryType* PutEntry(KeyType aKey, const fallible_t&)
   {
-    return static_cast<EntryType*>
-      (PL_DHashTableAdd(&mTable, EntryType::KeyToPointer(aKey),
-                        mozilla::fallible));
+    return static_cast<EntryType*>(mTable.Add(EntryType::KeyToPointer(aKey),
+                                              mozilla::fallible));
   }
 
   /**

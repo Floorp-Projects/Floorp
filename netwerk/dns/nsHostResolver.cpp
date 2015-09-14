@@ -759,8 +759,7 @@ nsHostResolver::ResolveHost(const char            *host,
             // callback, and proceed to do the lookup.
 
             nsHostKey key = { host, flags, af, netInterface };
-            nsHostDBEnt *he = static_cast<nsHostDBEnt *>
-                (PL_DHashTableAdd(&mDB, &key, fallible));
+            auto he = static_cast<nsHostDBEnt*>(mDB.Add(&key, fallible));
 
             // if the record is null, the hash table OOM'd.
             if (!he) {
