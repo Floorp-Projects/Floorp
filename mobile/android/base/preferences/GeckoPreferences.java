@@ -136,6 +136,7 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_TRACKING_PROTECTION_PRIVATE_BROWSING = "privacy.trackingprotection.pbmode.enabled";
     private static final String PREFS_TRACKING_PROTECTION_LEARN_MORE = NON_PREF_PREFIX + "trackingprotection.learn_more";
     private static final String PREFS_CATEGORY_PRIVATE_DATA = NON_PREF_PREFIX + "category_private_data";
+    public static final String PREFS_HOMEPAGE = NON_PREF_PREFIX + "homepage";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = AppConstants.ANDROID_PACKAGE_NAME + ".STUMBLER_PREF";
 

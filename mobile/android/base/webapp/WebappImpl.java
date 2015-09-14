@@ -185,7 +185,7 @@ public class WebappImpl extends GeckoApp implements InstallCallback {
     }
 
     @Override
-    protected void loadStartupTabWithAboutHome(final int flags) {
+    protected void loadStartupTab(final int flags) {
         loadStartupTab(null, null, flags);
     }
 
