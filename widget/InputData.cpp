@@ -36,7 +36,7 @@ MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
              "Can only copy from WidgetTouchEvent on main thread");
 
   switch (aTouchEvent.mMessage) {
-    case NS_TOUCH_START:
+    case eTouchStart:
       mType = MULTITOUCH_START;
       break;
     case NS_TOUCH_MOVE:
@@ -84,7 +84,7 @@ MultiTouchInput::ToWidgetTouchEvent(nsIWidget* aWidget) const
   EventMessage touchEventMessage = eVoidEvent;
   switch (mType) {
   case MULTITOUCH_START:
-    touchEventMessage = NS_TOUCH_START;
+    touchEventMessage = eTouchStart;
     break;
   case MULTITOUCH_MOVE:
     touchEventMessage = NS_TOUCH_MOVE;

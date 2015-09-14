@@ -569,10 +569,10 @@ AccessibleCaretEventHub::HandleTouchEvent(WidgetTouchEvent* aEvent)
   nsPoint point = GetTouchEventPosition(aEvent, id);
 
   switch (aEvent->mMessage) {
-  case NS_TOUCH_START:
-    AC_LOGV("Before NS_TOUCH_START, state: %s", mState->Name());
+  case eTouchStart:
+    AC_LOGV("Before eTouchStart, state: %s", mState->Name());
     rv = mState->OnPress(this, point, id);
-    AC_LOGV("After NS_TOUCH_START, state: %s, consume: %d", mState->Name(), rv);
+    AC_LOGV("After eTouchStart, state: %s, consume: %d", mState->Name(), rv);
     break;
 
   case NS_TOUCH_MOVE:

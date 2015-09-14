@@ -204,11 +204,11 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
   nsPoint ptInRoot =
     nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, movePoint, rootFrame);
 
-  if (aEvent->mMessage == NS_TOUCH_START ||
+  if (aEvent->mMessage == eTouchStart ||
       (aEvent->mMessage == eMouseDown &&
        mouseEvent->button == WidgetMouseEvent::eLeftButton)) {
     // If having a active touch, ignore other touch down event
-    if (aEvent->mMessage == NS_TOUCH_START && mActiveTouchId >= 0) {
+    if (aEvent->mMessage == eTouchStart && mActiveTouchId >= 0) {
       return nsEventStatus_eConsumeNoDefault;
     }
 

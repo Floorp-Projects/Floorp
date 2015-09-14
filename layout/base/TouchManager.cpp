@@ -102,7 +102,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
                              nsCOMPtr<nsIContent>& aCurrentEventContent)
 {
   switch (aEvent->mMessage) {
-    case NS_TOUCH_START: {
+    case eTouchStart: {
       aIsHandlingUserInput = true;
       WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
       // if there is only one touch in this touchstart event, assume that it is

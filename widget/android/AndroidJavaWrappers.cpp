@@ -701,7 +701,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
         }
         case AndroidMotionEvent::ACTION_DOWN:
         case AndroidMotionEvent::ACTION_POINTER_DOWN: {
-            type = NS_TOUCH_START;
+            type = eTouchStart;
             break;
         }
         case AndroidMotionEvent::ACTION_HOVER_MOVE: {

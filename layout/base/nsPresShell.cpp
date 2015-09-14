@@ -6683,7 +6683,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
     case NS_TOUCH_END:
       pointerMessage = ePointerUp;
       break;
-    case NS_TOUCH_START:
+    case eTouchStart:
       pointerMessage = ePointerDown;
       break;
     case NS_TOUCH_CANCEL:
@@ -7285,8 +7285,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     }
 
     // all touch events except for touchstart use a captured target
-    if (aEvent->mClass == eTouchEventClass &&
-        aEvent->mMessage != NS_TOUCH_START) {
+    if (aEvent->mClass == eTouchEventClass && aEvent->mMessage != eTouchStart) {
       captureRetarget = true;
     }
 
@@ -7302,7 +7301,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     if (!captureRetarget && !isWindowLevelMouseExit) {
       nsPoint eventPoint;
       uint32_t flags = 0;
-      if (aEvent->mMessage == NS_TOUCH_START) {
+      if (aEvent->mMessage == eTouchStart) {
         flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
         WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
         // if this is a continuing session, ensure that all these events are
@@ -8063,7 +8062,7 @@ PresShell::DispatchTouchEventToDOM(WidgetEvent* aEvent,
   // calling preventDefault on touchstart or the first touchmove for a
   // point prevents mouse events. calling it on the touchend should
   // prevent click dispatching.
-  bool canPrevent = (aEvent->mMessage == NS_TOUCH_START) ||
+  bool canPrevent = (aEvent->mMessage == eTouchStart) ||
                     (aEvent->mMessage == NS_TOUCH_MOVE && aTouchIsNew) ||
                     (aEvent->mMessage == NS_TOUCH_END);
   bool preventDefault = false;

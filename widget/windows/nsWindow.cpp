@@ -6403,7 +6403,7 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam)
           ModifierKeyState modifierKeyState;
           touchInput.modifiers = modifierKeyState.GetModifiers();
         }
-        // Pres shell expects this event to be a NS_TOUCH_START
+        // Pres shell expects this event to be a eTouchStart
         // if any new contact points have been added since the last event sent.
         if (pInputs[i].dwFlags & TOUCHEVENTF_DOWN) {
           touchInput.mType = MultiTouchInput::MULTITOUCH_START;

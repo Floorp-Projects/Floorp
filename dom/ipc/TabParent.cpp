@@ -2989,7 +2989,7 @@ TabParent::InjectTouchEvent(const nsAString& aType,
 {
   EventMessage msg;
   nsContentUtils::GetEventMessageAndAtom(aType, eTouchEventClass, &msg);
-  if (msg != NS_TOUCH_START && msg != NS_TOUCH_MOVE &&
+  if (msg != eTouchStart && msg != NS_TOUCH_MOVE &&
       msg != NS_TOUCH_END && msg != NS_TOUCH_CANCEL) {
     return NS_ERROR_FAILURE;
   }
