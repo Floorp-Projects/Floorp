@@ -92,6 +92,8 @@
 
         Task.spawn(function* () {
 
+          Services.prefs.setBoolPref("devtools.webide.sidebars", false);
+
           ok(!Devices.helperAddonInstalled, "Helper not installed");
 
           let win = yield openWebIDE(true);

@@ -286,8 +286,6 @@
         });
 
         Task.spawn(function*() {
-          Services.prefs.setBoolPref("devtools.webide.sidebars", true);
-
           if (!DebuggerServer.initialized) {
             DebuggerServer.init();
             DebuggerServer.addBrowserActors();

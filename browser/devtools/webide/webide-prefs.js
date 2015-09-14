@@ -32,4 +32,4 @@ pref("devtools.webide.widget.inNavbarByDefault", false);
 #endif
 pref("devtools.webide.zoom", "1");
 pref("devtools.webide.busyTimeout", 10000);
-pref("devtools.webide.sidebars", false);
+pref("devtools.webide.sidebars", true);

@@ -42,6 +42,7 @@
         }
 
         Task.spawn(function* () {
+          Services.prefs.setBoolPref("devtools.webide.sidebars", false);
 
           let win = yield openWebIDE(false);
 
