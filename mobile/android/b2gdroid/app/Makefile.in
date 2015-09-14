@@ -5,6 +5,7 @@
 ANDROID_MANIFEST_FILE := src/main/AndroidManifest.xml
 
 JAVAFILES := \
+  src/main/java/org/mozilla/b2gdroid/Apps.java \
   src/main/java/org/mozilla/b2gdroid/Launcher.java \
   src/main/java/org/mozilla/b2gdroid/ScreenStateObserver.java \
   $(NULL)
