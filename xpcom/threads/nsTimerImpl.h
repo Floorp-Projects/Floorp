@@ -77,7 +77,7 @@ private:
   };
 
   ~nsTimerImpl();
-  nsresult InitCommon(uint32_t aType, uint32_t aDelay);
+  nsresult InitCommon(uint32_t aDelay, uint32_t aType);
 
   void ReleaseCallback()
   {
