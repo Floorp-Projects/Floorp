@@ -99,7 +99,7 @@ this.AndroidUtils = {
         // Wait for all apps to be installed.
         return Promise.all(promises);
       }
-    ).then(appsRegistry._saveApps);
+    ).then(appsRegistry._saveApps.bind(appsRegistry));
   },
 
   observe: function(aSubject, aTopic, aData) {
