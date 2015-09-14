@@ -4,7 +4,7 @@
 
 toolkit.jar:
 *  res/ua.css    (ua.css)
-   res/html.css    (html.css)
+*  res/html.css    (html.css)
    res/quirk.css    (quirk.css)
    res/full-screen-override.css    (full-screen-override.css)
    res/plaintext.css     (plaintext.css)

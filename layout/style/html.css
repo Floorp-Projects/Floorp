@@ -811,7 +811,12 @@ marquee[direction="up"], marquee[direction="down"] {
     white-space: nowrap;
     font-size: 50%;
     line-height: 1;
+%ifndef XP_WIN
+    /* The widely-used Windows font Meiryo doesn't work fine with this
+     * setting, so disable this on Windows. We should re-enable it once
+     * Microsoft fixes this issue. See bug 1164279. */
     font-variant-east-asian: ruby;
+%endif
   }
   @supports (text-emphasis: none) {
     rtc, rt {
