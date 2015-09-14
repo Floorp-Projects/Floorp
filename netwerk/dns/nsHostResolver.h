@@ -14,6 +14,7 @@
 #include "mozilla/Mutex.h"
 #include "nsISupportsImpl.h"
 #include "nsIDNSListener.h"
+#include "nsIDNSService.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "GetAddrInfo.h"
@@ -279,15 +280,15 @@ public:
      *       to the flags defined on nsIDNSService.
      */
     enum {
-        RES_BYPASS_CACHE = 1 << 0,
-        RES_CANON_NAME   = 1 << 1,
-        RES_PRIORITY_MEDIUM   = 1 << 2,
-        RES_PRIORITY_LOW  = 1 << 3,
-        RES_SPECULATE     = 1 << 4,
-        //RES_DISABLE_IPV6 = 1 << 5, // Not used
-        RES_OFFLINE       = 1 << 6,
-        //RES_DISABLE_IPv4 = 1 << 7, // Not Used
-        RES_ALLOW_NAME_COLLISION = 1 << 8
+        RES_BYPASS_CACHE = nsIDNSService::RESOLVE_BYPASS_CACHE,
+        RES_CANON_NAME = nsIDNSService::RESOLVE_CANONICAL_NAME,
+        RES_PRIORITY_MEDIUM = nsIDNSService::RESOLVE_PRIORITY_MEDIUM,
+        RES_PRIORITY_LOW = nsIDNSService::RESOLVE_PRIORITY_LOW,
+        RES_SPECULATE = nsIDNSService::RESOLVE_SPECULATE,
+        //RES_DISABLE_IPV6 = nsIDNSService::RESOLVE_DISABLE_IPV6, // Not used
+        RES_OFFLINE = nsIDNSService::RESOLVE_OFFLINE,
+        //RES_DISABLE_IPv4 = nsIDNSService::RESOLVE_DISABLE_IPV4, // Not Used
+        RES_ALLOW_NAME_COLLISION = nsIDNSService::RESOLVE_ALLOW_NAME_COLLISION
     };
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
