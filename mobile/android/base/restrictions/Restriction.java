@@ -54,8 +54,9 @@ public enum Restriction {
 
     DISALLOW_MASTER_PASSWORD(18, "no_master_password", R.string.restriction_disallow_master_password_title),
 
-    DISALLOW_GUEST_BROWSING(19, "no_guest_browsing",  R.string.restriction_disallow_guest_browsing_title);
+    DISALLOW_GUEST_BROWSING(19, "no_guest_browsing",  R.string.restriction_disallow_guest_browsing_title),
 
+    DISALLOW_DEFAULT_THEME(20, "no_default_theme", 0);
 
     public final int id;
     public final String name;
