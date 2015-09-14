@@ -147,6 +147,8 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["privacy.trackingprotection.enabled", {what: RECORD_PREF_VALUE}],
   ["privacy.donottrackheader.enabled", {what: RECORD_PREF_VALUE}],
   ["services.sync.serverURL", {what: RECORD_PREF_STATE}],
+  ["security.mixed_content.block_active_content", {what: RECORD_PREF_VALUE}],
+  ["security.mixed_content.block_display_content", {what: RECORD_PREF_VALUE}],
   ["xpinstall.signatures.required", {what: RECORD_PREF_VALUE}],
 ]);
 
