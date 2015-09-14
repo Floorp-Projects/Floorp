@@ -140,6 +140,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["privacy.trackingprotection.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["privacy.donottrackheader.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
   ["services.sync.serverURL", TelemetryEnvironment.RECORD_PREF_STATE],
+  ["xpinstall.signatures.required", TelemetryEnvironment.RECORD_PREF_STATE],
 ]);
 
 const LOGGER_NAME = "Toolkit.Telemetry";
