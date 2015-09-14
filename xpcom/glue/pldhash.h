@@ -620,9 +620,6 @@ PL_DHashClearEntryStub(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 const PLDHashTableOps*
 PL_DHashGetStubOps(void);
 
-void PL_DHASH_FASTCALL
-PL_DHashTableRemove(PLDHashTable* aTable, const void* aKey);
-
 void
 PL_DHashTableRawRemove(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 

@@ -1755,7 +1755,7 @@ NPObjWrapper_Finalize(js::FreeOp *fop, JSObject *obj)
   NPObject *npobj = (NPObject *)::JS_GetPrivate(obj);
   if (npobj) {
     if (sNPObjWrappers) {
-      PL_DHashTableRemove(sNPObjWrappers, npobj);
+      sNPObjWrappers->Remove(npobj);
     }
   }
 

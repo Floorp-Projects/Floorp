@@ -3948,7 +3948,7 @@ nsDocument::SetSubDocumentFor(Element* aElement, nsIDocument* aSubDoc)
     // aSubDoc is nullptr, remove the mapping
 
     if (mSubDocuments) {
-      PL_DHashTableRemove(mSubDocuments, aElement);
+      mSubDocuments->Remove(aElement);
     }
   } else {
     if (!mSubDocuments) {

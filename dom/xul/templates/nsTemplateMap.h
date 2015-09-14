@@ -37,7 +37,7 @@ public:
 
     void
     Remove(nsIContent* aContent) {
-        PL_DHashTableRemove(&mTable, aContent);
+        mTable.Remove(aContent);
 
         for (nsIContent* child = aContent->GetFirstChild();
              child;
