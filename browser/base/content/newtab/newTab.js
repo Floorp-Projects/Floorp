@@ -18,8 +18,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Rect",
   "resource://gre/modules/Geometry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
-  "resource://gre/modules/UpdateChannel.jsm");
 
 var {
   links: gLinks,
