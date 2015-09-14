@@ -4339,8 +4339,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   case eGestureState_MagnifyGesture:
     {
       // Setup the "magnify" event.
-      WidgetSimpleGestureEvent geckoEvent(true, NS_SIMPLE_GESTURE_MAGNIFY,
-                                          mGeckoChild);
+      WidgetSimpleGestureEvent geckoEvent(true, eMagnifyGesture, mGeckoChild);
       geckoEvent.delta = mCumulativeMagnification;
       [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
 
