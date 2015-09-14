@@ -1320,9 +1320,9 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
     msg = NS_SIMPLE_GESTURE_ROTATE;
   else if (aType.EqualsLiteral("MozTapGesture"))
     msg = NS_SIMPLE_GESTURE_TAP;
-  else if (aType.EqualsLiteral("MozPressTapGesture"))
-    msg = NS_SIMPLE_GESTURE_PRESSTAP;
-  else if (aType.EqualsLiteral("MozEdgeUIStarted")) {
+  else if (aType.EqualsLiteral("MozPressTapGesture")) {
+    msg = ePressTapGesture;
+  } else if (aType.EqualsLiteral("MozEdgeUIStarted")) {
     msg = eEdgeUIStarted;
   } else if (aType.EqualsLiteral("MozEdgeUICanceled")) {
     msg = eEdgeUICanceled;
