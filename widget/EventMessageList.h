@@ -423,7 +423,7 @@ NS_EVENT_MESSAGE(eGamepadEventLast,      eGamepadDisconnected)
 
 // input and beforeinput events.
 NS_EVENT_MESSAGE(NS_EDITOR_EVENT_START,   6100)
-NS_EVENT_MESSAGE(NS_EDITOR_INPUT,         NS_EDITOR_EVENT_START)
+NS_EVENT_MESSAGE(eEditorInput,           NS_EDITOR_EVENT_START)
 
 // selection events
 NS_EVENT_MESSAGE(eSelectEventFirst,      6200)

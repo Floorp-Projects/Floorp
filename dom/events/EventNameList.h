@@ -219,7 +219,7 @@ EVENT(ended,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(input,
-      NS_EDITOR_INPUT,
+      eEditorInput,
       EventNameType_HTMLXUL,
       eEditorInputEventClass)
 EVENT(invalid,
