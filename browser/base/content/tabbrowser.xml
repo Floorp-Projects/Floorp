@@ -2472,6 +2472,9 @@
             if (!remoteBrowser._beginRemoveTab(aOtherTab, true, true))
               return;
 
+            let ourBrowser = this.getBrowserForTab(aOurTab);
+            let otherBrowser = aOtherTab.linkedBrowser;
+
             let modifiedAttrs = [];
             if (aOtherTab.hasAttribute("muted")) {
               aOurTab.setAttribute("muted", "true");
@@ -2482,9 +2485,6 @@
               aOurTab.setAttribute("soundplaying", "true");
               modifiedAttrs.push("soundplaying");
             }
-
-            let ourBrowser = this.getBrowserForTab(aOurTab);
-            let otherBrowser = aOtherTab.linkedBrowser;
 
             // If the other tab is pending (i.e. has not been restored, yet)
             // then do not switch docShells but retrieve the other tab's state
