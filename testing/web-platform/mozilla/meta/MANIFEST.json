@@ -232,10 +232,10 @@
             "url": "/_mozilla/service-workers/service-worker/getregistration.https.html"
           }
         ],
-        "service-workers/service-worker/getregistrations.sub.html": [
+        "service-workers/service-worker/getregistrations.https.html": [
           {
-            "path": "service-workers/service-worker/getregistrations.sub.html",
-            "url": "/_mozilla/service-workers/service-worker/getregistrations.sub.html"
+            "path": "service-workers/service-worker/getregistrations.https.html",
+            "url": "/_mozilla/service-workers/service-worker/getregistrations.https.html"
           }
         ],
         "service-workers/service-worker/indexeddb.https.html": [
