@@ -348,7 +348,7 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam,
       else {
         // Send a zoom intermediate event, the delta is the change
         // in touch points.
-        evt.mMessage = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
+        evt.mMessage = eMagnifyGestureUpdate;
         // (positive for a "zoom in")
         evt.delta = -1.0 * (mZoomIntermediate - (float)gi.ullArguments);
         mZoomIntermediate = (float)gi.ullArguments;
