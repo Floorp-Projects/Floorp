@@ -121,8 +121,7 @@ private:
   void MaybeNotifyIMEOfFocusSet();
   void PostTextChangeNotification(const TextChangeDataBase& aTextChangeData);
   void MaybeNotifyIMEOfTextChange(const TextChangeDataBase& aTextChangeData);
-  void PostSelectionChangeNotification(bool aCausedByComposition,
-                                       bool aCausedBySelectionEvent);
+  void PostSelectionChangeNotification();
   void MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition,
                                        bool aCausedBySelectionEvent);
   void PostPositionChangeNotification();
@@ -223,9 +222,9 @@ private:
 
   TextChangeData mTextChangeData;
 
-  // mSelectionData is the last selection data which was notified.  This is
-  // modified by UpdateSelectionCache().  Note that mCausedBy* are always
-  // false.  Do NOT refer them.
+  // mSelectionData is the last selection data which was notified.  The
+  // selection information is modified by UpdateSelectionCache().  The reason
+  // of the selection change is modified by MaybeNotifyIMEOfSelectionChange().
   SelectionChangeData mSelectionData;
 
   EventStateManager* mESM;
@@ -239,8 +238,6 @@ private:
   bool mIMEHasFocus;
   bool mIsFocusEventPending;
   bool mIsSelectionChangeEventPending;
-  bool mSelectionChangeCausedOnlyByComposition;
-  bool mSelectionChangeCausedOnlyBySelectionEvent;
   bool mIsPositionChangeEventPending;
   bool mIsFlushingPendingNotifications;
 
@@ -296,21 +293,11 @@ private:
   class SelectionChangeEvent : public AChangeEvent
   {
   public:
-    SelectionChangeEvent(IMEContentObserver* aIMEContentObserver,
-                         bool aCausedByComposition,
-                         bool aCausedBySelectionEvent)
+    explicit SelectionChangeEvent(IMEContentObserver* aIMEContentObserver)
       : AChangeEvent(eChangeEventType_Selection, aIMEContentObserver)
-      , mCausedByComposition(aCausedByComposition)
-      , mCausedBySelectionEvent(aCausedBySelectionEvent)
     {
-      aIMEContentObserver->mSelectionChangeCausedOnlyByComposition = false;
-      aIMEContentObserver->mSelectionChangeCausedOnlyBySelectionEvent = false;
     }
     NS_IMETHOD Run() override;
-
-  private:
-    bool mCausedByComposition;
-    bool mCausedBySelectionEvent;
   };
 
   class TextChangeEvent : public AChangeEvent
