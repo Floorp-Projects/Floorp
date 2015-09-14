@@ -127,7 +127,7 @@ SwipeTracker::ProcessEvent(const PanGestureInput& aEvent)
     bool didSwipeSucceed = SwipingInAllowedDirection() && ComputeSwipeSuccess();
     double targetValue = 0.0;
     if (didSwipeSucceed) {
-      SendSwipeEvent(NS_SIMPLE_GESTURE_SWIPE, mSwipeDirection, 0.0);
+      SendSwipeEvent(eSwipeGesture, mSwipeDirection, 0.0);
       targetValue = SwipeSuccessTargetValue();
     }
     StartAnimating(targetValue);
