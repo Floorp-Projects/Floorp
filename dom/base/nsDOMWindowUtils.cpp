@@ -966,7 +966,7 @@ nsDOMWindowUtils::SendTouchEventCommon(const nsAString& aType,
   } else if (aType.EqualsLiteral("touchmove")) {
     msg = eTouchMove;
   } else if (aType.EqualsLiteral("touchend")) {
-    msg = NS_TOUCH_END;
+    msg = eTouchEnd;
   } else if (aType.EqualsLiteral("touchcancel")) {
     msg = NS_TOUCH_CANCEL;
   } else {

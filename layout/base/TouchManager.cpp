@@ -56,7 +56,7 @@ EvictTouchPoint(nsRefPtr<dom::Touch>& aTouch,
           nsPoint pt(aTouch->mRefPoint.x, aTouch->mRefPoint.y);
           nsCOMPtr<nsIWidget> widget = frame->GetView()->GetNearestWidget(&pt);
           if (widget) {
-            WidgetTouchEvent event(true, NS_TOUCH_END, widget);
+            WidgetTouchEvent event(true, eTouchEnd, widget);
             event.widget = widget;
             event.time = PR_IntervalNow();
             event.touches.AppendElement(aTouch);
@@ -190,7 +190,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
       }
       break;
     }
-    case NS_TOUCH_END:
+    case eTouchEnd:
       aIsHandlingUserInput = true;
       // Fall through to touchcancel code
     case NS_TOUCH_CANCEL: {

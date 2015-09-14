@@ -493,7 +493,7 @@ public:
       nsIFrame* frame = mPresShell->GetCurrentEventFrame();
       if (!frame &&
           (aVisitor.mEvent->mMessage == eMouseUp ||
-           aVisitor.mEvent->mMessage == NS_TOUCH_END)) {
+           aVisitor.mEvent->mMessage == eTouchEnd)) {
         // Redirect BUTTON_UP and TOUCH_END events to the root frame to ensure
         // that capturing is released.
         frame = mPresShell->GetRootFrame();
@@ -6680,7 +6680,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
     case eTouchMove:
       pointerMessage = ePointerMove;
       break;
-    case NS_TOUCH_END:
+    case eTouchEnd:
       pointerMessage = ePointerUp;
       break;
     case eTouchStart:
@@ -7480,7 +7480,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     switch (aEvent->mMessage) {
       case eTouchMove:
       case NS_TOUCH_CANCEL:
-      case NS_TOUCH_END: {
+      case eTouchEnd: {
         // get the correct shell to dispatch to
         WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
         for (dom::Touch* touch : touchEvent->touches) {
@@ -8064,7 +8064,7 @@ PresShell::DispatchTouchEventToDOM(WidgetEvent* aEvent,
   // prevent click dispatching.
   bool canPrevent = (aEvent->mMessage == eTouchStart) ||
                     (aEvent->mMessage == eTouchMove && aTouchIsNew) ||
-                    (aEvent->mMessage == NS_TOUCH_END);
+                    (aEvent->mMessage == eTouchEnd);
   bool preventDefault = false;
   nsEventStatus tmpStatus = nsEventStatus_eIgnore;
   WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();

@@ -1838,7 +1838,8 @@ Accessible::DispatchClickEvent(nsIContent *aContent, uint32_t aActionIndex)
                                   presShell, widget);
   nsCoreUtils::DispatchMouseEvent(eMouseDown, x, y, aContent, frame,
                                   presShell, widget);
-  nsCoreUtils::DispatchTouchEvent(NS_TOUCH_END, x, y, aContent, frame, presShell, widget);
+  nsCoreUtils::DispatchTouchEvent(eTouchEnd, x, y, aContent, frame,
+                                  presShell, widget);
   nsCoreUtils::DispatchMouseEvent(eMouseUp, x, y, aContent, frame,
                                   presShell, widget);
 }
