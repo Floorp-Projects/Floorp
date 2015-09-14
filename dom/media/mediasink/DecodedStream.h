@@ -26,16 +26,11 @@ class MediaData;
 class MediaInputPort;
 class MediaStream;
 class MediaStreamGraph;
-class OutputStreamListener;
 class OutputStreamManager;
 class ProcessedMediaStream;
 class TimeStamp;
 
 template <class T> class MediaQueue;
-
-namespace layers {
-class Image;
-} // namespace layers
 
 class OutputStreamData {
 public:
@@ -47,9 +42,6 @@ public:
   // Disconnect mStream from its input stream.
   // Return false is mStream is already destroyed, otherwise true.
   bool Disconnect();
-  // Called by OutputStreamListener to remove self from the output streams
-  // managed by OutputStreamManager.
-  void Remove();
   // Return true if aStream points to the same object as mStream.
   // Used by OutputStreamManager to remove an output stream.
   bool Equals(MediaStream* aStream)
@@ -64,7 +56,6 @@ private:
   nsRefPtr<ProcessedMediaStream> mStream;
   // mPort connects our mStream to an input stream.
   nsRefPtr<MediaInputPort> mPort;
-  nsRefPtr<OutputStreamListener> mListener;
 };
 
 class OutputStreamManager {

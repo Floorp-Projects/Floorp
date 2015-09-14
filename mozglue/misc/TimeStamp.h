@@ -504,13 +504,27 @@ public:
   TimeStamp& operator+=(const TimeDuration& aOther)
   {
     MOZ_ASSERT(!IsNull(), "Cannot compute with a null value");
-    mValue += aOther.mValue;
+    TimeStampValue value = mValue + aOther.mValue;
+    // Check for underflow.
+    // (We don't check for overflow because it's not obvious what the error
+    //  behavior should be in that case.)
+    if (aOther.mValue < 0 && value > mValue) {
+      value = 0;
+    }
+    mValue = value;
     return *this;
   }
   TimeStamp& operator-=(const TimeDuration& aOther)
   {
     MOZ_ASSERT(!IsNull(), "Cannot compute with a null value");
-    mValue -= aOther.mValue;
+    TimeStampValue value = mValue - aOther.mValue;
+    // Check for underflow.
+    // (We don't check for overflow because it's not obvious what the error
+    //  behavior should be in that case.)
+    if (aOther.mValue > 0 && value > mValue) {
+      value = 0;
+    }
+    mValue = value;
     return *this;
   }
 
