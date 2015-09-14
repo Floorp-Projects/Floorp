@@ -19,6 +19,7 @@
         SimpleTest.waitForExplicitFinish();
 
         Task.spawn(function* () {
+          Services.prefs.setBoolPref("devtools.webide.sidebars", false);
           let win = yield openWebIDE();
           let packagedAppLocation = getTestFilePath("app");
           let hostedAppManifest = TEST_BASE + "hosted_app.manifest";
