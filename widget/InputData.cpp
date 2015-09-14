@@ -42,7 +42,7 @@ MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
     case eTouchMove:
       mType = MULTITOUCH_MOVE;
       break;
-    case NS_TOUCH_END:
+    case eTouchEnd:
       mType = MULTITOUCH_END;
       break;
     case NS_TOUCH_CANCEL:
@@ -90,7 +90,7 @@ MultiTouchInput::ToWidgetTouchEvent(nsIWidget* aWidget) const
     touchEventMessage = eTouchMove;
     break;
   case MULTITOUCH_END:
-    touchEventMessage = NS_TOUCH_END;
+    touchEventMessage = eTouchEnd;
     break;
   case MULTITOUCH_CANCEL:
     touchEventMessage = NS_TOUCH_CANCEL;

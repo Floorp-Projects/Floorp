@@ -231,7 +231,7 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
       mActiveTouchId = -1;
       LaunchLongTapDetector();
     }
-  } else if (aEvent->mMessage == NS_TOUCH_END ||
+  } else if (aEvent->mMessage == eTouchEnd ||
              aEvent->mMessage == NS_TOUCH_CANCEL ||
              aEvent->mMessage == eMouseUp) {
     CancelLongTapDetector();

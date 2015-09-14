@@ -804,7 +804,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
           abuse = openControlled;
         }
         break;
-      case NS_TOUCH_END :
+      case eTouchEnd:
         if (PopupAllowedForEvent("touchend")) {
           abuse = openControlled;
         }

@@ -224,7 +224,7 @@ private:
     if (!mGeckoChild)
         return;
 
-    [self sendTouchEvent:NS_TOUCH_END touches:touches widget:mGeckoChild];
+    [self sendTouchEvent:eTouchEnd touches:touches widget:mGeckoChild];
     for (UITouch* touch : touches) {
         CFDictionaryRemoveValue(mTouches, touch);
     }
