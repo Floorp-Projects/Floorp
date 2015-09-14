@@ -161,10 +161,9 @@ WebMDemuxer::~WebMDemuxer()
 nsRefPtr<WebMDemuxer::InitPromise>
 WebMDemuxer::Init()
 {
-  if (InitBufferedState() != NS_OK) {
-    return InitPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA, __func__);
-  }
-  if (ReadMetadata() != NS_OK) {
+  InitBufferedState();
+
+  if (NS_FAILED(ReadMetadata())) {
     return InitPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
   }
 
@@ -176,23 +175,19 @@ WebMDemuxer::Init()
   return InitPromise::CreateAndResolve(NS_OK, __func__);
 }
 
-nsresult
+void
 WebMDemuxer::InitBufferedState()
 {
-  if(!mBufferedState) {
-    mBufferedState = new WebMBufferedState;
-  }
-  EnsureUpToDateIndex();
-  return NS_OK;
+  MOZ_ASSERT(!mBufferedState);
+  mBufferedState = new WebMBufferedState;
 }
 
 already_AddRefed<MediaDataDemuxer>
 WebMDemuxer::Clone() const
 {
   nsRefPtr<WebMDemuxer> demuxer = new WebMDemuxer(mResource.GetResource());
-  demuxer->mInitData = mInitData;
-  if (demuxer->InitBufferedState() != NS_OK ||
-      demuxer->ReadMetadata() != NS_OK) {
+  demuxer->InitBufferedState();
+  if (NS_FAILED(demuxer->ReadMetadata())) {
     NS_WARNING("Couldn't recreate WebMDemuxer");
     return nullptr;
   }
@@ -271,12 +266,26 @@ WebMDemuxer::ReadMetadata()
   io.seek = webmdemux_seek;
   io.tell = webmdemux_tell;
   io.userdata = this;
-  int64_t maxOffset = mBufferedState->GetInitEndOffset();
-  if (maxOffset == -1) {
-    maxOffset = mResource.GetLength();
-  }
-  int r = nestegg_init(&mContext, io, &webmdemux_log, maxOffset);
+  int r = nestegg_init(&mContext, io, &webmdemux_log,
+                       IsMediaSource() ? mResource.GetLength() : -1);
   if (r == -1) {
+    return NS_ERROR_FAILURE;
+  }
+  {
+    // Check how much data nestegg read and force feed it to BufferedState.
+    nsRefPtr<MediaByteBuffer> buffer = mResource.MediaReadAt(0, mResource.Tell());
+    if (!buffer) {
+      return NS_ERROR_FAILURE;
+    }
+    mBufferedState->NotifyDataArrived(buffer->Elements(), buffer->Length(), 0);
+    if (mBufferedState->GetInitEndOffset() < 0) {
+      return NS_ERROR_FAILURE;
+    }
+    MOZ_ASSERT(mBufferedState->GetInitEndOffset() <= mResource.Tell());
+  }
+  mInitData = mResource.MediaReadAt(0, mBufferedState->GetInitEndOffset());
+  if (!mInitData ||
+      mInitData->Length() != size_t(mBufferedState->GetInitEndOffset())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -443,11 +452,8 @@ WebMDemuxer::IsSeekable() const
 void
 WebMDemuxer::EnsureUpToDateIndex()
 {
-  if (!mNeedReIndex) {
+  if (!mNeedReIndex || !mInitData) {
     return;
-  }
-  if (mInitData && mBufferedState->GetInitEndOffset() == -1) {
-    mBufferedState->NotifyDataArrived(mInitData->Elements(), mInitData->Length(), 0);
   }
   AutoPinned<MediaResource> resource(mResource.GetResource());
   nsTArray<MediaByteRange> byteRanges;
@@ -456,9 +462,7 @@ WebMDemuxer::EnsureUpToDateIndex()
     return;
   }
   mBufferedState->UpdateIndex(byteRanges, resource);
-  if (!mInitData && mBufferedState->GetInitEndOffset() != -1) {
-    mInitData = mResource.MediaReadAt(0, mBufferedState->GetInitEndOffset());
-  }
+
   mNeedReIndex = false;
 
   if (!mIsMediaSource) {
@@ -479,6 +483,9 @@ void
 WebMDemuxer::NotifyDataRemoved()
 {
   mBufferedState->Reset();
+  if (mInitData) {
+    mBufferedState->NotifyDataArrived(mInitData->Elements(), mInitData->Length(), 0);
+  }
   mNeedReIndex = true;
 }
 
@@ -492,6 +499,7 @@ bool
 WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSamples)
 {
   if (mIsMediaSource) {
+    // To ensure mLastWebMBlockOffset is properly up to date.
     EnsureUpToDateIndex();
   }
 
