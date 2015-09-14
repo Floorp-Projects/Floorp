@@ -849,16 +849,6 @@ void WebMReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
   mBufferedState->NotifyDataArrived(bytes->Elements(), aLength, aOffset);
 }
 
-int64_t WebMReader::GetEvictionOffset(double aTime)
-{
-  int64_t offset;
-  if (!mBufferedState->GetOffsetForTime(aTime * NS_PER_S, &offset)) {
-    return -1;
-  }
-
-  return offset;
-}
-
 int WebMReader::GetVideoCodec()
 {
   return mVideoCodec;
