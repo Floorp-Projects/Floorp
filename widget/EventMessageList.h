@@ -426,6 +426,6 @@ NS_EVENT_MESSAGE(NS_EDITOR_EVENT_START,   6100)
 NS_EVENT_MESSAGE(NS_EDITOR_INPUT,         NS_EDITOR_EVENT_START)
 
 // selection events
-NS_EVENT_MESSAGE(NS_SELECT_EVENT_START,   6200)
-NS_EVENT_MESSAGE(eSelectStart,           NS_SELECT_EVENT_START)
-NS_EVENT_MESSAGE(eSelectionChange,       NS_SELECT_EVENT_START + 1)
+NS_EVENT_MESSAGE(eSelectEventFirst,      6200)
+NS_EVENT_MESSAGE(eSelectStart,           eSelectEventFirst)
+NS_EVENT_MESSAGE(eSelectionChange,       eSelectEventFirst + 1)
