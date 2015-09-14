@@ -8,7 +8,6 @@ onfetch = function(e) {
     e.respondWith(fetch(url, {
       method: e.request.method,
       headers: e.request.headers,
-      body: e.request.body,
       mode: e.request.mode,
       credentials: e.request.credentials,
       cache: e.request.cache,
