@@ -224,7 +224,6 @@ void
 TextureClient::RecycleTexture(TextureFlags aFlags)
 {
   MOZ_ASSERT(GetFlags() & TextureFlags::RECYCLE);
-  MOZ_ASSERT(!HasRecycleCallback());
 
   mAddedToCompositableClient = false;
   if (mFlags != aFlags) {
