@@ -1004,7 +1004,7 @@ nsWindow::OnContextmenuEvent(AndroidGeckoEvent *ae)
     // triggering further element behaviour such as link-clicks.
     if (contextMenuStatus == nsEventStatus_eConsumeNoDefault) {
         WidgetTouchEvent canceltouchEvent = ae->MakeTouchEvent(this);
-        canceltouchEvent.mMessage = NS_TOUCH_CANCEL;
+        canceltouchEvent.mMessage = eTouchCancel;
         DispatchEvent(&canceltouchEvent);
         return true;
     }

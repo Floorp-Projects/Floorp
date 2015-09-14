@@ -580,7 +580,7 @@ TOUCH_EVENT(touchmove,
             EventNameType_All,
             eTouchEventClass )
 TOUCH_EVENT(touchcancel,
-            NS_TOUCH_CANCEL,
+            eTouchCancel,
             EventNameType_All,
             eTouchEventClass)
 

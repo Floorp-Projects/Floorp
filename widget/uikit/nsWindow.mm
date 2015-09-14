@@ -209,7 +209,7 @@ private:
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
 {
     ALOG("[ChildView[%p] touchesCancelled", self);
-    [self sendTouchEvent:NS_TOUCH_CANCEL touches:touches widget:mGeckoChild];
+    [self sendTouchEvent:eTouchCancel touches:touches widget:mGeckoChild];
     for (UITouch* touch : touches) {
         CFDictionaryRemoveValue(mTouches, touch);
     }

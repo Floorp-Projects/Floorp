@@ -289,7 +289,7 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
       mEndTouchIsClick = false;
     }
     // fall through
-  case NS_TOUCH_CANCEL:
+  case eTouchCancel:
     mActiveElementManager->HandleTouchEndEvent(mEndTouchIsClick);
     // fall through
   case eTouchMove: {
@@ -308,8 +308,8 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
         aApzResponse == nsEventStatus_eConsumeDoDefault &&
         gfxPrefs::PointerEventsEnabled()) {
     WidgetTouchEvent cancelEvent(aEvent);
-    cancelEvent.mMessage = NS_TOUCH_CANCEL;
-    cancelEvent.mFlags.mCancelable = false; // mMessage != NS_TOUCH_CANCEL;
+    cancelEvent.mMessage = eTouchCancel;
+    cancelEvent.mFlags.mCancelable = false; // mMessage != eTouchCancel;
     for (uint32_t i = 0; i < cancelEvent.touches.Length(); ++i) {
       if (mozilla::dom::Touch* touch = cancelEvent.touches[i]) {
         touch->convertToPointer = true;
