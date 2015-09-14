@@ -10,18 +10,207 @@ import traceback
 
 # We need to know our current directory so that we can serve our test files from it.
 here = os.path.abspath(os.path.dirname(__file__))
-if here not in sys.path:
-    sys.path.insert(0, here)
 
 from automation import Automation
 from b2gautomation import B2GRemoteAutomation
 from b2g_desktop import run_desktop_reftests
-from remotereftest import RemoteReftestResolver, ReftestServer
 from runreftest import RefTest
-import reftestcommandline
+from runreftest import ReftestOptions
+from remotereftest import ReftestServer
 
 from mozdevice import DeviceManagerADB, DMError
 from marionette import Marionette
+import moznetwork
+
+class B2GOptions(ReftestOptions):
+
+    def __init__(self, **kwargs):
+        defaults = {}
+        ReftestOptions.__init__(self)
+        # This is only used for procName in run_remote_reftests.
+        defaults["app"] = Automation.DEFAULT_APP
+
+        self.add_option("--browser-arg", action="store",
+                    type = "string", dest = "browser_arg",
+                    help = "Optional command-line arg to pass to the browser")
+        defaults["browser_arg"] = None
+
+        self.add_option("--b2gpath", action="store",
+                    type = "string", dest = "b2gPath",
+                    help = "path to B2G repo or qemu dir")
+        defaults["b2gPath"] = None
+
+        self.add_option("--marionette", action="store",
+                    type = "string", dest = "marionette",
+                    help = "host:port to use when connecting to Marionette")
+        defaults["marionette"] = None
+
+        self.add_option("--emulator", action="store",
+                    type="string", dest = "emulator",
+                    help = "Architecture of emulator to use: x86 or arm")
+        defaults["emulator"] = None
+        self.add_option("--emulator-res", action="store",
+                    type="string", dest = "emulator_res",
+                    help = "Emulator resolution of the format '<width>x<height>'")
+        defaults["emulator_res"] = None
+
+        self.add_option("--no-window", action="store_true",
+                    dest = "noWindow",
+                    help = "Pass --no-window to the emulator")
+        defaults["noWindow"] = False
+
+        self.add_option("--adbpath", action="store",
+                    type = "string", dest = "adb_path",
+                    help = "path to adb")
+        defaults["adb_path"] = "adb"
+
+        self.add_option("--deviceIP", action="store",
+                    type = "string", dest = "deviceIP",
+                    help = "ip address of remote device to test")
+        defaults["deviceIP"] = None
+
+        self.add_option("--devicePort", action="store",
+                    type = "string", dest = "devicePort",
+                    help = "port of remote device to test")
+        defaults["devicePort"] = 20701
+
+        self.add_option("--remote-logfile", action="store",
+                    type = "string", dest = "remoteLogFile",
+                    help = "Name of log file on the device relative to the device root.  PLEASE ONLY USE A FILENAME.")
+        defaults["remoteLogFile"] = None
+
+        self.add_option("--remote-webserver", action = "store",
+                    type = "string", dest = "remoteWebServer",
+                    help = "ip address where the remote web server is hosted at")
+        defaults["remoteWebServer"] = None
+
+        self.add_option("--http-port", action = "store",
+                    type = "string", dest = "httpPort",
+                    help = "ip address where the remote web server is hosted at")
+        defaults["httpPort"] = None
+
+        self.add_option("--ssl-port", action = "store",
+                    type = "string", dest = "sslPort",
+                    help = "ip address where the remote web server is hosted at")
+        defaults["sslPort"] = None
+
+        self.add_option("--pidfile", action = "store",
+                    type = "string", dest = "pidFile",
+                    help = "name of the pidfile to generate")
+        defaults["pidFile"] = ""
+        self.add_option("--gecko-path", action="store",
+                        type="string", dest="geckoPath",
+                        help="the path to a gecko distribution that should "
+                        "be installed on the emulator prior to test")
+        defaults["geckoPath"] = None
+        self.add_option("--logdir", action="store",
+                        type="string", dest="logdir",
+                        help="directory to store log files")
+        defaults["logdir"] = None
+        self.add_option('--busybox', action='store',
+                        type='string', dest='busybox',
+                        help="Path to busybox binary to install on device")
+        defaults['busybox'] = None
+        self.add_option("--httpd-path", action = "store",
+                    type = "string", dest = "httpdPath",
+                    help = "path to the httpd.js file")
+        defaults["httpdPath"] = None
+        self.add_option("--profile", action="store",
+                    type="string", dest="profile",
+                    help="for desktop testing, the path to the "
+                         "gaia profile to use")
+        defaults["profile"] = None
+        self.add_option("--desktop", action="store_true",
+                        dest="desktop",
+                        help="Run the tests on a B2G desktop build")
+        defaults["desktop"] = False
+        self.add_option("--mulet", action="store_true",
+                        dest="mulet",
+                        help="Run the tests on a B2G desktop build")
+        defaults["mulet"] = False
+        self.add_option("--enable-oop", action="store_true",
+                        dest="oop",
+                        help="Run the tests out of process")
+        defaults["oop"] = False
+        defaults["remoteTestRoot"] = None
+        defaults["logFile"] = "reftest.log"
+        defaults["autorun"] = True
+        defaults["closeWhenDone"] = True
+        defaults["testPath"] = ""
+        defaults["runTestsInParallel"] = False
+
+        self.set_defaults(**defaults)
+
+    def verifyRemoteOptions(self, options, auto):
+        if options.runTestsInParallel:
+            self.error("Cannot run parallel tests here")
+
+        if not options.remoteTestRoot:
+            options.remoteTestRoot = auto._devicemanager.deviceRoot + "/reftest"
+
+        options.remoteProfile = options.remoteTestRoot + "/profile"
+
+        productRoot = options.remoteTestRoot + "/" + auto._product
+        if options.utilityPath is None:
+            options.utilityPath = productRoot + "/bin"
+
+        if options.remoteWebServer == None:
+            if os.name != "nt":
+                options.remoteWebServer = moznetwork.get_ip()
+            else:
+                print "ERROR: you must specify a --remote-webserver=<ip address>\n"
+                return None
+
+        options.webServer = options.remoteWebServer
+
+        if not options.httpPort:
+            options.httpPort = auto.DEFAULT_HTTP_PORT
+
+        if not options.sslPort:
+            options.sslPort = auto.DEFAULT_SSL_PORT
+
+        if options.geckoPath and not options.emulator:
+            self.error("You must specify --emulator if you specify --gecko-path")
+
+        if options.logdir and not options.emulator:
+            self.error("You must specify --emulator if you specify --logdir")
+
+        #if not options.emulator and not options.deviceIP:
+        #    print "ERROR: you must provide a device IP"
+        #    return None
+
+        if options.remoteLogFile == None:
+            options.remoteLogFile = "reftest.log"
+
+        options.localLogName = options.remoteLogFile
+        options.remoteLogFile = options.remoteTestRoot + '/' + options.remoteLogFile
+
+        # Ensure that the options.logfile (which the base class uses) is set to
+        # the remote setting when running remote. Also, if the user set the
+        # log file name there, use that instead of reusing the remotelogfile as above.
+        if (options.logFile):
+            # If the user specified a local logfile name use that
+            options.localLogName = options.logFile
+        options.logFile = options.remoteLogFile
+
+        # Only reset the xrePath if it wasn't provided
+        if options.xrePath == None:
+            options.xrePath = options.utilityPath
+        options.xrePath = os.path.abspath(options.xrePath)
+
+        if options.pidFile != "":
+            f = open(options.pidFile, 'w')
+            f.write("%s" % os.getpid())
+            f.close()
+
+        # httpd-path is specified by standard makefile targets and may be specified
+        # on the command line to select a particular version of httpd.js. If not
+        # specified, try to select the one from from the xre bundle, as required in bug 882932.
+        if not options.httpdPath:
+            options.httpdPath = os.path.join(options.xrePath, "components")
+
+        return options
+
 
 class ProfileConfigParser(ConfigParser.RawConfigParser):
     """Subclass of RawConfigParser that outputs .ini files in the exact
@@ -54,7 +243,6 @@ class B2GRemoteReftest(RefTest):
     localProfile = None
     remoteApp = ''
     profile = None
-    resolver_cls = RemoteReftestResolver
 
     def __init__(self, automation, devicemanager, options, scriptDir):
         RefTest.__init__(self)
@@ -230,9 +418,10 @@ class B2GRemoteReftest(RefTest):
             pass
 
 
-    def createReftestProfile(self, options, manifests):
-        profile = RefTest.createReftestProfile(self, options, manifests,
-                                               server=options.remoteWebServer)
+    def createReftestProfile(self, options, reftestlist):
+        profile = RefTest.createReftestProfile(self, options, reftestlist,
+                                               server=options.remoteWebServer,
+                                               special_powers=False)
         profileDir = profile.profile
 
         prefs = {}
@@ -248,7 +437,7 @@ class B2GRemoteReftest(RefTest):
         prefs["network.dns.localDomains"] = "app://test-container.gaiamobile.org"
         prefs["reftest.browser.iframe.enabled"] = False
         prefs["reftest.remote"] = True
-
+        prefs["reftest.uri"] = "%s" % reftestlist
         # Set a future policy version to avoid the telemetry prompt.
         prefs["toolkit.telemetry.prompted"] = 999
         prefs["toolkit.telemetry.notifiedOptOut"] = 999
@@ -306,6 +495,9 @@ class B2GRemoteReftest(RefTest):
             print "Automation Error: Failed to copy extra files to device"
             raise
 
+    def getManifestPath(self, path):
+        return path
+
     def environment(self, **kwargs):
      return self.automation.environment(**kwargs)
 
@@ -324,7 +516,7 @@ class B2GRemoteReftest(RefTest):
         return status
 
 
-def run_remote_reftests(parser, options):
+def run_remote_reftests(parser, options, args):
     auto = B2GRemoteAutomation(None, "fennec", context_chrome=True)
 
     # create our Marionette instance
@@ -367,7 +559,11 @@ def run_remote_reftests(parser, options):
         dm = DeviceManagerADB(**kwargs)
     auto.setDeviceManager(dm)
 
-    parser.validate_remote(options, auto)
+    options = parser.verifyRemoteOptions(options, auto)
+
+    if (options == None):
+        print "ERROR: Invalid options specified, use --help for a list of valid options"
+        sys.exit(1)
 
     # TODO fix exception
     if not options.ignoreWindowSize:
@@ -384,7 +580,7 @@ def run_remote_reftests(parser, options):
     auto.logFinish = "REFTEST TEST-START | Shutdown"
 
     reftest = B2GRemoteReftest(auto, dm, options, here)
-    parser.validate(options, reftest)
+    options = parser.verifyCommonOptions(options, reftest)
 
     logParent = os.path.dirname(options.remoteLogFile)
     dm.mkDir(logParent);
@@ -394,6 +590,16 @@ def run_remote_reftests(parser, options):
     # Hack in a symbolic link for jsreftest
     os.system("ln -s %s %s" % (os.path.join('..', 'jsreftest'), os.path.join(here, 'jsreftest')))
 
+    # Dynamically build the reftest URL if possible, beware that args[0] should exist 'inside' the webroot
+    manifest = args[0]
+    if os.path.exists(os.path.join(here, args[0])):
+        manifest = "http://%s:%s/%s" % (options.remoteWebServer, options.httpPort, args[0])
+    elif os.path.exists(args[0]):
+        manifestPath = os.path.abspath(args[0]).split(here)[1].strip('/')
+        manifest = "http://%s:%s/%s" % (options.remoteWebServer, options.httpPort, manifestPath)
+    else:
+        print "ERROR: Could not find test manifest '%s'" % manifest
+        return 1
 
     # Start the webserver
     retVal = 1
@@ -405,7 +611,11 @@ def run_remote_reftests(parser, options):
         if (dm.processExist(procName)):
             dm.killProcess(procName)
 
-        retVal = reftest.runTests(options.tests, options)
+        cmdlineArgs = ["-reftest", manifest]
+        if getattr(options, 'bootstrap', False):
+            cmdlineArgs = []
+
+        retVal = reftest.runTests(manifest, options, cmdlineArgs)
     except:
         print "Automation Error: Exception caught while running tests"
         traceback.print_exc()
@@ -419,21 +629,13 @@ def run_remote_reftests(parser, options):
     reftest.stopWebServer(options)
     return retVal
 
-def run_remote(**kwargs):
-    # Tests need to be served from a subdirectory of the server. Symlink
-    # topsrcdir here to get around this.
-    parser = reftestcommandline.B2GArgumentParser()
-    parser.set_defaults(**kwargs)
-    options = parser.parse_args(kwargs["tests"])
-    return run_remote_reftests(parser, options)
-
-def main():
-    parser = reftestcommandline.B2GArgumentParser()
-    options = parser.parse_args()
+def main(args=sys.argv[1:]):
+    parser = B2GOptions()
+    options, args = parser.parse_args(args)
 
     if options.desktop or options.mulet:
-        return run_desktop_reftests(parser, options)
-    return run_remote_reftests(parser, options)
+        return run_desktop_reftests(parser, options, args)
+    return run_remote_reftests(parser, options, args)
 
 
 if __name__ == "__main__":
