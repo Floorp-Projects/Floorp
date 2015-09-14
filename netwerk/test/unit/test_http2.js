@@ -45,6 +45,8 @@ Http2CheckListener.prototype = {
   onDataAvailableFired: false,
   isHttp2Connection: false,
   shouldBeHttp2 : true,
+  accum : 0,
+  expected: -1,
 
   onStartRequest: function testOnStartRequest(request, ctx) {
     this.onStartRequestFired = true;
@@ -59,7 +61,7 @@ Http2CheckListener.prototype = {
   onDataAvailable: function testOnDataAvailable(request, ctx, stream, off, cnt) {
     this.onDataAvailableFired = true;
     this.isHttp2Connection = checkIsHttp2(request);
-
+    this.accum += cnt;
     read_stream(stream, cnt);
   },
 
@@ -68,6 +70,9 @@ Http2CheckListener.prototype = {
     do_check_true(Components.isSuccessCode(status));
     do_check_true(this.onDataAvailableFired);
     do_check_true(this.isHttp2Connection == this.shouldBeHttp2);
+    if (this.expected != -1) {
+      do_check_eq(this.accum, this.expected);
+    }
 
     run_next_test();
     do_test_finished();
@@ -279,6 +284,62 @@ function makeChan(url) {
                              Ci.nsIContentPolicy.TYPE_OTHER).QueryInterface(Ci.nsIHttpChannel);
 
   return chan;
+}
+
+var ResumeStalledChannelListener = function() {};
+
+ResumeStalledChannelListener.prototype = {
+  onStartRequestFired: false,
+  onDataAvailableFired: false,
+  isHttp2Connection: false,
+  shouldBeHttp2 : true,
+  resumable : null,
+
+  onStartRequest: function testOnStartRequest(request, ctx) {
+    this.onStartRequestFired = true;
+    if (!Components.isSuccessCode(request.status))
+      do_throw("Channel should have a success code! (" + request.status + ")");
+
+    do_check_true(request instanceof Components.interfaces.nsIHttpChannel);
+    do_check_eq(request.responseStatus, 200);
+    do_check_eq(request.requestSucceeded, true);
+  },
+
+  onDataAvailable: function testOnDataAvailable(request, ctx, stream, off, cnt) {
+    this.onDataAvailableFired = true;
+    this.isHttp2Connection = checkIsHttp2(request);
+    read_stream(stream, cnt);
+  },
+
+  onStopRequest: function testOnStopRequest(request, ctx, status) {
+    do_check_true(this.onStartRequestFired);
+    do_check_true(Components.isSuccessCode(status));
+    do_check_true(this.onDataAvailableFired);
+    do_check_true(this.isHttp2Connection == this.shouldBeHttp2);
+    this.resumable.resume();
+  }
+};
+
+// test a large download that creates stream flow control and
+// confirm we can do another independent stream while the download
+// stream is stuck
+function test_http2_blocking_download() {
+  var chan = makeChan("https://localhost:" + serverPort + "/bigdownload");
+  var internalChannel = chan.QueryInterface(Ci.nsIHttpChannelInternal);
+  internalChannel.initialRwin = 500000; // make the stream.suspend push back in h2
+  var listener = new Http2CheckListener();
+  listener.expected = 3 * 1024 * 1024;
+  chan.asyncOpen(listener, null);
+  chan.suspend();
+  // wait 5 seconds so that stream flow control kicks in and then see if we
+  // can do a basic transaction (i.e. session not blocked). afterwards resume
+  // channel
+  do_timeout(5000, function() {
+      var simpleChannel = makeChan("https://localhost:" + serverPort + "/");
+      var sl = new ResumeStalledChannelListener();
+      sl.resumable = chan;
+      simpleChannel.asyncOpen(sl, null);
+  });
 }
 
 // Make sure we make a HTTP2 connection and both us and the server mark it as such
@@ -781,6 +842,7 @@ var tests = [ test_http2_post_big
             , test_http2_patch
             , test_http2_pushapi_1
             , test_http2_continuations
+            , test_http2_blocking_download
             // Add new tests above here - best to add new tests before h1
             // streams get too involved
             // These next two must always come in this order
@@ -796,6 +858,7 @@ var current_test = 0;
 
 function run_next_test() {
   if (current_test < tests.length) {
+    dump("starting test number " + current_test + "\n");	
     tests[current_test]();
     current_test++;
     do_test_pending();
