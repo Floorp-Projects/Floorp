@@ -587,10 +587,10 @@ AccessibleCaretEventHub::HandleTouchEvent(WidgetTouchEvent* aEvent)
     AC_LOGV("After eTouchEnd, state: %s, consume: %d", mState->Name(), rv);
     break;
 
-  case NS_TOUCH_CANCEL:
-    AC_LOGV("Before NS_TOUCH_CANCEL, state: %s", mState->Name());
+  case eTouchCancel:
+    AC_LOGV("Before eTouchCancel, state: %s", mState->Name());
     rv = mState->OnRelease(this);
-    AC_LOGV("After NS_TOUCH_CANCEL, state: %s, consume: %d", mState->Name(),
+    AC_LOGV("After eTouchCancel, state: %s, consume: %d", mState->Name(),
             rv);
     break;
 
