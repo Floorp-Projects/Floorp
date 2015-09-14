@@ -244,8 +244,7 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
       }
       return nsEventStatus_eConsumeNoDefault;
     }
-  } else if (aEvent->mMessage == NS_TOUCH_MOVE ||
-             aEvent->mMessage == eMouseMove) {
+  } else if (aEvent->mMessage == eTouchMove || aEvent->mMessage == eMouseMove) {
     if (mDragMode == START_FRAME || mDragMode == END_FRAME) {
       if (mActiveTouchId == nowTouchId) {
         ptInRoot.y += mCaretCenterToDownPointOffsetY;

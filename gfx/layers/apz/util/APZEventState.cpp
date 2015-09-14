@@ -292,7 +292,7 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
   case NS_TOUCH_CANCEL:
     mActiveElementManager->HandleTouchEndEvent(mEndTouchIsClick);
     // fall through
-  case NS_TOUCH_MOVE: {
+  case eTouchMove: {
     if (mPendingTouchPreventedResponse) {
       MOZ_ASSERT(aGuid == mPendingTouchPreventedGuid);
     }

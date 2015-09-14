@@ -478,7 +478,7 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
   if (isDraggingThumb())
   {
     switch (aEvent->mMessage) {
-    case NS_TOUCH_MOVE:
+    case eTouchMove:
     case eMouseMove: {
       nsPoint eventPoint;
       if (!GetEventPoint(aEvent, eventPoint)) {

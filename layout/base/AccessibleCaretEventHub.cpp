@@ -575,10 +575,10 @@ AccessibleCaretEventHub::HandleTouchEvent(WidgetTouchEvent* aEvent)
     AC_LOGV("After eTouchStart, state: %s, consume: %d", mState->Name(), rv);
     break;
 
-  case NS_TOUCH_MOVE:
-    AC_LOGV("Before NS_TOUCH_MOVE, state: %s", mState->Name());
+  case eTouchMove:
+    AC_LOGV("Before eTouchMove, state: %s", mState->Name());
     rv = mState->OnMove(this, point);
-    AC_LOGV("After NS_TOUCH_MOVE, state: %s, consume: %d", mState->Name(), rv);
+    AC_LOGV("After eTouchMove, state: %s, consume: %d", mState->Name(), rv);
     break;
 
   case NS_TOUCH_END:

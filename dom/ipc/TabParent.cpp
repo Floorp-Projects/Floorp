@@ -1856,7 +1856,7 @@ bool TabParent::SendRealTouchEvent(WidgetTouchEvent& event)
     event.touches[i]->mRefPoint += offset;
   }
 
-  return (event.mMessage == NS_TOUCH_MOVE) ?
+  return (event.mMessage == eTouchMove) ?
     PBrowserParent::SendRealTouchMoveEvent(event, guid, blockId, apzResponse) :
     PBrowserParent::SendRealTouchEvent(event, guid, blockId, apzResponse);
 }
@@ -2989,7 +2989,7 @@ TabParent::InjectTouchEvent(const nsAString& aType,
 {
   EventMessage msg;
   nsContentUtils::GetEventMessageAndAtom(aType, eTouchEventClass, &msg);
-  if (msg != eTouchStart && msg != NS_TOUCH_MOVE &&
+  if (msg != eTouchStart && msg != eTouchMove &&
       msg != NS_TOUCH_END && msg != NS_TOUCH_CANCEL) {
     return NS_ERROR_FAILURE;
   }

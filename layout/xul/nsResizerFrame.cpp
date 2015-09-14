@@ -143,7 +143,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
   }
   break;
 
-  case NS_TOUCH_MOVE:
+  case eTouchMove:
   case eMouseMove: {
     if (mTrackingMouseMove)
     {
