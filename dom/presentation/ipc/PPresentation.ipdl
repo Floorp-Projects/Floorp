@@ -30,7 +30,7 @@ struct TerminateRequest
   nsString sessionId;
 };
 
-union PresentationRequest
+union PresentationIPCRequest
 {
   StartSessionRequest;
   SendSessionMessageRequest;
@@ -56,7 +56,7 @@ parent:
   RegisterSessionHandler(nsString aSessionId);
   UnregisterSessionHandler(nsString aSessionId);
 
-  PPresentationRequest(PresentationRequest aRequest);
+  PPresentationRequest(PresentationIPCRequest aRequest);
 
   NotifyReceiverReady(nsString aSessionId);
 };

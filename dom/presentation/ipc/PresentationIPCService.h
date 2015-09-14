@@ -16,7 +16,7 @@ class nsIDocShell;
 namespace mozilla {
 namespace dom {
 
-class PresentationRequest;
+class PresentationIPCRequest;
 class PresentationResponderLoadingCallback;
 
 class PresentationIPCService final : public nsIPresentationService
@@ -43,7 +43,7 @@ public:
 private:
   virtual ~PresentationIPCService();
   nsresult SendRequest(nsIPresentationServiceCallback* aCallback,
-                       const PresentationRequest& aRequest);
+                       const PresentationIPCRequest& aRequest);
 
   nsTObserverArray<nsCOMPtr<nsIPresentationListener> > mListeners;
   nsRefPtrHashtable<nsStringHashKey, nsIPresentationSessionListener> mSessionListeners;

@@ -32,10 +32,10 @@ public:
 
   virtual bool
   RecvPPresentationRequestConstructor(PPresentationRequestParent* aActor,
-                                      const PresentationRequest& aRequest) override;
+                                      const PresentationIPCRequest& aRequest) override;
 
   virtual PPresentationRequestParent*
-  AllocPPresentationRequestParent(const PresentationRequest& aRequest) override;
+  AllocPPresentationRequestParent(const PresentationIPCRequest& aRequest) override;
 
   virtual bool
   DeallocPPresentationRequestParent(PPresentationRequestParent* aActor) override;
