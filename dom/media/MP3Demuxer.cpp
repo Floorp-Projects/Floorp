@@ -339,11 +339,6 @@ MP3TrackDemuxer::GetBuffered() {
 }
 
 int64_t
-MP3TrackDemuxer::GetEvictionOffset(TimeUnit aTime) {
-  return 0;
-}
-
-int64_t
 MP3TrackDemuxer::StreamLength() const {
   return mSource.GetLength();
 }
