@@ -2044,7 +2044,7 @@ TabChild::UpdateTapState(const WidgetTouchEvent& aEvent, nsEventStatus aStatus)
   LayoutDevicePoint currentPoint = LayoutDevicePoint(trackedTouch->mRefPoint.x, trackedTouch->mRefPoint.y);
   int64_t time = aEvent.time;
   switch (aEvent.mMessage) {
-  case NS_TOUCH_MOVE:
+  case eTouchMove:
     if (std::abs(currentPoint.x - mGestureDownPoint.x) > sDragThreshold.width ||
         std::abs(currentPoint.y - mGestureDownPoint.y) > sDragThreshold.height) {
       CancelTapTracking();

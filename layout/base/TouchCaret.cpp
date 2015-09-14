@@ -772,7 +772,7 @@ TouchCaret::HandleEvent(WidgetEvent* aEvent)
     case eMouseUp:
       status = HandleMouseUpEvent(aEvent->AsMouseEvent());
       break;
-    case NS_TOUCH_MOVE:
+    case eTouchMove:
       status = HandleTouchMoveEvent(aEvent->AsTouchEvent());
       break;
     case eMouseMove:
@@ -895,7 +895,7 @@ TouchCaret::HandleTouchMoveEvent(WidgetTouchEvent* aEvent)
       break;
 
     case TOUCHCARET_TOUCHDRAG_INACTIVE:
-      // Consume NS_TOUCH_MOVE event in TOUCHCARET_TOUCHDRAG_INACTIVE state.
+      // Consume eTouchMove event in TOUCHCARET_TOUCHDRAG_INACTIVE state.
       status = nsEventStatus_eConsumeNoDefault;
       break;
   }

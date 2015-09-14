@@ -239,7 +239,9 @@ private:
     if (!mGeckoChild)
         return;
 
-    [self sendTouchEvent:NS_TOUCH_MOVE touches:[event allTouches] widget:mGeckoChild];
+    [self sendTouchEvent:eTouchMove
+                 touches:[event allTouches]
+                  widget:mGeckoChild];
 }
 
 - (void)setNeedsDisplayInRect:(CGRect)aRect

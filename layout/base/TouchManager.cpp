@@ -128,7 +128,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
       }
       break;
     }
-    case NS_TOUCH_MOVE: {
+    case eTouchMove: {
       // Check for touches that changed. Mark them add to queue
       WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
       WidgetTouchEvent::TouchArray& touches = touchEvent->touches;

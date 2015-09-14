@@ -4119,7 +4119,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor)
     } break;
 
     case eMouseMove:
-    case NS_TOUCH_MOVE:
+    case eTouchMove:
       if (!mIsDraggingRange) {
         break;
       }

@@ -576,7 +576,7 @@ TOUCH_EVENT(touchend,
             EventNameType_All,
             eTouchEventClass)
 TOUCH_EVENT(touchmove,
-            NS_TOUCH_MOVE,
+            eTouchMove,
             EventNameType_All,
             eTouchEventClass )
 TOUCH_EVENT(touchcancel,
