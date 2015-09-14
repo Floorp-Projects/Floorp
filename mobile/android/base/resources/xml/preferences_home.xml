@@ -4,9 +4,16 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-                  xmlns:gecko="http://schemas.android.com/apk/res-auto"
                   android:title="@string/pref_category_home"
                   android:enabled="false">
+
+    <PreferenceCategory android:title="@string/pref_category_home_homepage">
+
+        <org.mozilla.gecko.preferences.SetHomepagePreference
+                android:key="android.not_a_preference.homepage"
+                android:title="@string/home_homepage_title" />
+
+    </PreferenceCategory>
 
     <org.mozilla.gecko.preferences.PanelsPreferenceCategory
         android:title="@string/pref_category_home_panels"/>

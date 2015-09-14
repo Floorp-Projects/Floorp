@@ -5,16 +5,7 @@
 
 package org.mozilla.gecko.preferences;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
-import android.os.Build;
-
-import org.json.JSONObject;
+import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserApp;
@@ -43,8 +34,8 @@ import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
-import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.InputOptionsUtils;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.FloatingHintEditText;
 
 import android.app.ActionBar;
@@ -60,6 +51,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
@@ -84,6 +76,14 @@ import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 public class GeckoPreferences
 extends PreferenceActivity
@@ -670,7 +670,7 @@ OnSharedPreferenceChangeListener
       */
     private void setupPreferences(PreferenceGroup preferences, ArrayList<String> prefs) {
         for (int i = 0; i < preferences.getPreferenceCount(); i++) {
-            Preference pref = preferences.getPreference(i);
+            final Preference pref = preferences.getPreference(i);
 
             // Eliminate locale switching if necessary.
             // This logic will need to be extended when
@@ -878,6 +878,16 @@ OnSharedPreferenceChangeListener
                         i--;
                         continue;
                     }
+                } else if (PREFS_HOMEPAGE.equals(key)) {
+                    String setUrl = GeckoSharedPrefs.forProfile(getBaseContext()).getString(PREFS_HOMEPAGE, AboutPages.HOME);
+                    setHomePageSummary(pref, setUrl);
+                    pref.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+                        @Override
+                        public boolean onPreferenceChange(final Preference preference, final Object newValue) {
+                            setHomePageSummary(pref, String.valueOf(newValue));
+                            return true;
+                        }
+                    });
                 }
 
                 // Some Preference UI elements are not actually preferences,
@@ -890,6 +900,14 @@ OnSharedPreferenceChangeListener
                     prefs.add(key);
                 }
             }
+        }
+    }
+
+    private void setHomePageSummary(Preference pref, String value) {
+        if (!TextUtils.isEmpty(value)) {
+            pref.setSummary(value);
+        } else {
+            pref.setSummary(AboutPages.HOME);
         }
     }
 
