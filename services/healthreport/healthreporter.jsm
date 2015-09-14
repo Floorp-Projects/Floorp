@@ -30,8 +30,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryController",
                                   "resource://gre/modules/TelemetryController.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
-                                  "resource://gre/modules/UpdateChannel.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
+                                  "resource://gre/modules/UpdateUtils.jsm");
 
 // Oldest year to allow in date preferences. This module was implemented in
 // 2012 and no dates older than that should be encountered.
@@ -1103,7 +1103,7 @@ AbstractHealthReporter.prototype = Object.freeze({
     }
 
     try {
-      out["updateChannel"] = UpdateChannel.get();
+      out["updateChannel"] = UpdateUtils.UpdateChannel;
     } catch (ex) {
       this._log.warn("Could not obtain update channel: " +
                      CommonUtils.exceptionStr(ex));
