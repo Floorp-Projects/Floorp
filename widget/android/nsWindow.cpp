@@ -1126,7 +1126,7 @@ nsWindow::OnNativeGestureEvent(AndroidGeckoEvent *ae)
 
     switch (ae->Action()) {
         case AndroidMotionEvent::ACTION_MAGNIFY_START:
-            msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
+            msg = eMagnifyGestureStart;
             mStartDist = delta;
             mLastDist = delta;
             break;

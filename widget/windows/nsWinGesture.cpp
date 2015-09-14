@@ -334,7 +334,7 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam,
         // The low 32 bits are the distance in pixels.
         mZoomIntermediate = (float)gi.ullArguments;
 
-        evt.mMessage = NS_SIMPLE_GESTURE_MAGNIFY_START;
+        evt.mMessage = eMagnifyGestureStart;
         evt.delta = 0.0;
       }
       else if (gi.dwFlags & GF_END) {
