@@ -857,6 +857,17 @@ NS_FillArray(FallibleTArray<char>& aDest, nsIInputStream* aInput,
   return rv;
 }
 
+bool
+NS_InputStreamIsCloneable(nsIInputStream* aSource)
+{
+  if (!aSource) {
+    return false;
+  }
+
+  nsCOMPtr<nsICloneableInputStream> cloneable = do_QueryInterface(aSource);
+  return cloneable && cloneable->GetCloneable();
+}
+
 nsresult
 NS_CloneInputStream(nsIInputStream* aSource, nsIInputStream** aCloneOut,
                     nsIInputStream** aReplacementOut)
