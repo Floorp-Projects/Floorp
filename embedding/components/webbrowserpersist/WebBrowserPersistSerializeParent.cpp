@@ -7,6 +7,7 @@
 #include "WebBrowserPersistSerializeParent.h"
 
 #include "nsReadableUtils.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 
@@ -74,7 +75,14 @@ WebBrowserPersistSerializeParent::ActorDestroy(ActorDestroyReason aWhy)
 {
     if (mFinish) {
         MOZ_ASSERT(aWhy != Deletion);
-        mFinish->OnFinish(mDocument, mStream, EmptyCString(), NS_ERROR_FAILURE);
+        // See comment in WebBrowserPersistDocumentParent::ActorDestroy
+        // (or bug 1202887) for why this is deferred.
+        nsCOMPtr<nsIRunnable> errorLater = NS_NewRunnableMethodWithArgs
+            <nsCOMPtr<nsIWebBrowserPersistDocument>, nsCOMPtr<nsIOutputStream>,
+             nsCString, nsresult>
+            (mFinish, &nsIWebBrowserPersistWriteCompletion::OnFinish,
+             mDocument, mStream, EmptyCString(), NS_ERROR_FAILURE);
+        NS_DispatchToCurrentThread(errorLater);
         mFinish = nullptr;
     }
 }

@@ -37,7 +37,16 @@ WebBrowserPersistDocumentParent::ActorDestroy(ActorDestroyReason aWhy)
         mReflection = nullptr;
     }
     if (mOnReady) {
-        mOnReady->OnError(NS_ERROR_FAILURE);
+        // Bug 1202887: If this is part of a subtree destruction, then
+        // anything which could cause another actor in that subtree to
+        // be Send__delete__()ed will cause use-after-free -- such as
+        // dropping the last reference to another document's
+        // WebBrowserPersistRemoteDocument.  To avoid that, defer the
+        // callback until after the entire subtree is destroyed.
+        nsCOMPtr<nsIRunnable> errorLater = NS_NewRunnableMethodWithArg
+            <nsresult>(mOnReady, &nsIWebBrowserPersistDocumentReceiver::OnError,
+                       NS_ERROR_FAILURE);
+        NS_DispatchToCurrentThread(errorLater);
         mOnReady = nullptr;
     }
 }
