@@ -1,0 +1,146 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1203680 - Test interception of file blob uploads</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  var registration;
+  var iframe;
+  function start() {
+    return navigator.serviceWorker.register("empty.js",
+                                            { scope: "./sw_clients/" })
+      .then((swr) => registration = swr);
+  }
+
+  function unregister() {
+    if (iframe) {
+      iframe.remove();
+      iframe = null;
+    }
+
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    }, function(e) {
+      ok(false, "Unregistering the SW failed with " + e + "\n");
+    });
+  }
+
+  function withFrame() {
+    var content = document.getElementById("content");
+    ok(content, "Parent exists.");
+
+    iframe = document.createElement("iframe");
+    iframe.setAttribute('src', "sw_clients/file_blob_upload_frame.html");
+    content.appendChild(iframe);
+
+    return new Promise(function(resolve, reject) {
+      window.addEventListener('message', function readyCallback(evt) {
+        window.removeEventListener('message', readyCallback);
+        if (evt.data.status === 'READY') {
+          resolve();
+        } else {
+          reject(evt.data.result);
+        }
+      });
+    });
+  }
+
+  function postBlob(body) {
+    return new Promise(function(resolve, reject) {
+      window.addEventListener('message', function postBlobCallback(evt) {
+        window.removeEventListener('message', postBlobCallback);
+        if (evt.data.status === 'OK') {
+          is(JSON.stringify(body), JSON.stringify(evt.data.result),
+             'body echoed back correctly');
+          resolve();
+        } else {
+          reject(evt.data.result);
+        }
+      });
+
+      iframe.contentWindow.postMessage({ type: 'TEST', body: body }, '*');
+    });
+  }
+
+  function generateMessage(length) {
+
+    var lorem =
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis egestas '
+      'vehicula tortor eget ultrices. Sed et luctus est. Nunc eu orci ligula. '
+      'In vel ornare eros, eget lacinia diam. Praesent vel metus mattis, '
+      'cursus nulla sit amet, rhoncus diam. Aliquam nulla tortor, aliquet et '
+      'viverra non, dignissim vel tellus. Praesent sed ex in dolor aliquet '
+      'aliquet. In at facilisis sem, et aliquet eros. Maecenas feugiat nisl '
+      'quis elit blandit posuere. Duis viverra odio sed eros consectetur, '
+      'viverra mattis ligula volutpat.';
+
+    var result = '';
+
+    while (result.length < length) {
+      var remaining = length - result.length;
+      if (remaining < lorem.length) {
+        result += lorem.slice(0, remaining);
+      } else {
+        result += lorem;
+      }
+    }
+
+    return result;
+  }
+
+  var smallBody = generateMessage(64);
+  var mediumBody = generateMessage(1024);
+
+  // TODO: Test large bodies over the default pipe size.  Currently stalls
+  //       due to bug 1134372.
+  //var largeBody = generateMessage(100 * 1024);
+
+  function runTest() {
+    start()
+      .then(withFrame)
+      .then(function() {
+        return postBlob({ hops: 0, message: smallBody });
+      })
+      .then(function() {
+        return postBlob({ hops: 1, message: smallBody });
+      })
+      .then(function() {
+        return postBlob({ hops: 10, message: smallBody });
+      })
+      .then(function() {
+        return postBlob({ hops: 0, message: mediumBody });
+      })
+      .then(function() {
+        return postBlob({ hops: 1, message: mediumBody });
+      })
+      .then(function() {
+        return postBlob({ hops: 10, message: mediumBody });
+      })
+      .then(unregister)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+      }).then(SimpleTest.finish);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.interception.enabled", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+
