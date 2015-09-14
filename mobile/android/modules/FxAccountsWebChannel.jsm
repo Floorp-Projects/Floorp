@@ -18,6 +18,7 @@ Cu.import("resource://gre/modules/Notifications.jsm"); /*global Notifications */
 Cu.import("resource://gre/modules/Prompt.jsm"); /*global Prompt */
 Cu.import("resource://gre/modules/Services.jsm"); /*global Services */
 Cu.import("resource://gre/modules/WebChannel.jsm"); /*global WebChannel */
+Cu.import("resource://gre/modules/XPCOMUtils.jsm"); /*global XPCOMUtils */
 
 const log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.bind("FxAccounts");
 
@@ -27,6 +28,59 @@ const COMMAND_LOADED               = "fxaccounts:loaded";
 const COMMAND_CAN_LINK_ACCOUNT     = "fxaccounts:can_link_account";
 const COMMAND_LOGIN                = "fxaccounts:login";
 const COMMAND_CHANGE_PASSWORD      = "fxaccounts:change_password";
+
+const PREF_LAST_FXA_USER           = "identity.fxaccounts.lastSignedInUserHash";
+
+XPCOMUtils.defineLazyGetter(this, "strings",
+                            () => Services.strings.createBundle("chrome://browser/locale/aboutAccounts.properties")); /*global strings */
+
+Object.defineProperty(this, "NativeWindow",
+                      { get: () => Services.wm.getMostRecentWindow("navigator:browser").NativeWindow }); /*global NativeWindow */
+
+this.FxAccountsWebChannelHelpers = function() {
+};
+
+this.FxAccountsWebChannelHelpers.prototype = {
+  /**
+   * Get the hash of account name of the previously signed in account.
+   */
+  getPreviousAccountNameHashPref() {
+    try {
+      return Services.prefs.getComplexValue(PREF_LAST_FXA_USER, Ci.nsISupportsString).data;
+    } catch (_) {
+      return "";
+    }
+  },
+
+  /**
+   * Given an account name, set the hash of the previously signed in account.
+   *
+   * @param acctName the account name of the user's account.
+   */
+  setPreviousAccountNameHashPref(acctName) {
+    let string = Cc["@mozilla.org/supports-string;1"]
+                 .createInstance(Ci.nsISupportsString);
+    string.data = this.sha256(acctName);
+    Services.prefs.setComplexValue(PREF_LAST_FXA_USER, Ci.nsISupportsString, string);
+  },
+
+  /**
+   * Given a string, returns the SHA265 hash in base64.
+   */
+  sha256(str) {
+    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                      .createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    // Data is an array of bytes.
+    let data = converter.convertToByteArray(str, {});
+    let hasher = Cc["@mozilla.org/security/hash;1"]
+                   .createInstance(Ci.nsICryptoHash);
+    hasher.init(hasher.SHA256);
+    hasher.update(data, data.length);
+
+    return hasher.finish(true);
+  },
+};
 
 /**
  * Create a new FxAccountsWebChannel to listen for account updates.
@@ -54,6 +108,9 @@ this.FxAccountsWebChannel = function(options) {
     throw new Error("Missing 'channel_id' option");
   }
   this._webChannelId = options.channel_id;
+
+  // options.helpers is only specified by tests.
+  this._helpers = options.helpers || new FxAccountsWebChannelHelpers(options);
 
   this._setupChannel();
 };
@@ -93,7 +150,7 @@ this.FxAccountsWebChannel.prototype = {
       this._webChannelOrigin = Services.io.newURI(this._contentUri, null, null);
       this._registerChannel();
     } catch (e) {
-      log.e(e);
+      log.e(e.toString());
       throw e;
     }
   },
@@ -148,8 +205,59 @@ this.FxAccountsWebChannel.prototype = {
             break;
 
           case COMMAND_CAN_LINK_ACCOUNT:
-            // Temporarily accept any login.
-            respond({ ok: true });
+            Accounts.getFirefoxAccount().then(account => {
+              if (account) {
+                // If we /have/ an Android Account, we never allow the user to
+                // login to a different account.  They need to manually delete
+                // the first Android Account and then create a new one.
+                if (account.email == data.email) {
+                  // In future, we should use a UID for this comparison.
+                  log.d("Relinking existing Android Account: email addresses agree.");
+                  respond({ok: true});
+                } else {
+                  log.w("Not relinking existing Android Account: email addresses disagree!");
+                  let message = strings.GetStringFromName("relinkDenied.message");
+                  let buttonLabel = strings.GetStringFromName("relinkDenied.openPrefs");
+                  NativeWindow.toast.show(message, "long", {
+                    button: {
+                      icon: "drawable://switch_button_icon",
+                      label: buttonLabel,
+                      callback: () => {
+                        // We have an account, so this opens Sync native preferences.
+                        Accounts.launchSetup();
+                      },
+                    }
+                  });
+                  respond({ok: false});
+                }
+              } else {
+                // If we /don't have/ an Android Account, we warn if we're
+                // connecting to a new Account.  This is to minimize surprise;
+                // we never did this when changing accounts via the native UI.
+                let prevAcctHash = this._helpers.getPreviousAccountNameHashPref();
+                let shouldShowWarning = prevAcctHash && (prevAcctHash != this._helpers.sha256(data.email));
+
+                if (shouldShowWarning) {
+                  log.w("Warning about creating a new Android Account: previously linked to different email address!");
+                  let message = strings.formatStringFromName("relinkVerify.message", [data.email], 1);
+                  new Prompt({
+                    title: strings.GetStringFromName("relinkVerify.title"),
+                    message: message,
+                    buttons: [
+                      // This puts Cancel on the right.
+                      strings.GetStringFromName("relinkVerify.cancel"),
+                      strings.GetStringFromName("relinkVerify.continue"),
+                    ],
+                  }).show(result => respond({ok: result && result.button == 1}));
+                } else {
+                  log.d("Not warning about creating a new Android Account: no previously linked email address.");
+                  respond({ok: true});
+                }
+              }
+            }).catch(e => {
+              log.e(e.toString());
+              respond({ok: false});
+            });
             break;
 
           case COMMAND_LOGIN:
@@ -177,6 +285,10 @@ this.FxAccountsWebChannel.prototype = {
               if (!success) {
                 throw new Error("Could not create or update Firefox Account!");
               }
+
+              // Remember who it is so we can show a relink warning when appropriate.
+              this._helpers.setPreviousAccountNameHashPref(data.email);
+
               log.i("Created or updated Firefox Account.");
             })
             .catch(e => {
