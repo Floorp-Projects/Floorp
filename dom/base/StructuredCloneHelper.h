@@ -238,6 +238,16 @@ public:
                                     JS::TransferableOwnership aOwnership,
                                     void* aContent,
                                     uint64_t aExtraData) override;
+
+  static JSObject* ReadFullySerializableObjects(JSContext* aCx,
+                                                JSStructuredCloneReader* aReader,
+                                                uint32_t aTag,
+                                                uint32_t aIndex);
+
+  static bool  WriteFullySerializableObjects(JSContext* aCx,
+                                             JSStructuredCloneWriter* aWriter,
+                                             JS::Handle<JSObject*> aObj);
+
 protected:
   // If you receive a buffer from IPC, you can use this method to retrieve a
   // JS::Value. It can happen that you want to pre-populate the array of Blobs
