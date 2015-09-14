@@ -884,7 +884,7 @@ NON_IDL_EVENT(MozRotateGestureStart,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozRotateGestureUpdate,
-              NS_SIMPLE_GESTURE_ROTATE_UPDATE,
+              eRotateGestureUpdate,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozRotateGesture,

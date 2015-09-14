@@ -4293,7 +4293,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     break;
 
   case eGestureState_RotateGesture:
-    msg = NS_SIMPLE_GESTURE_ROTATE_UPDATE;
+    msg = eRotateGestureUpdate;
     break;
 
   case eGestureState_None:
