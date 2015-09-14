@@ -78,7 +78,7 @@ PresentationIPCService::Terminate(const nsAString& aSessionId)
 
 nsresult
 PresentationIPCService::SendRequest(nsIPresentationServiceCallback* aCallback,
-                                    const PresentationRequest& aRequest)
+                                    const PresentationIPCRequest& aRequest)
 {
   if (sPresentationChild) {
     PresentationRequestChild* actor = new PresentationRequestChild(aCallback);

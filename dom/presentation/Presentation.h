@@ -8,44 +8,49 @@
 #define mozilla_dom_Presentation_h
 
 #include "mozilla/DOMEventTargetHelper.h"
-#include "nsIPresentationListener.h"
 
 namespace mozilla {
 namespace dom {
 
 class Promise;
+class PresentationRequest;
 class PresentationSession;
 
 class Presentation final : public DOMEventTargetHelper
-                         , public nsIPresentationListener
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Presentation,
                                            DOMEventTargetHelper)
-  NS_DECL_NSIPRESENTATIONLISTENER
 
   static already_AddRefed<Presentation> Create(nsPIDOMWindow* aWindow);
-  virtual JSObject*
-    WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL (public APIs)
-  already_AddRefed<Promise> StartSession(const nsAString& aUrl,
-                                         const Optional<nsAString>& aId,
-                                         ErrorResult& aRv);
-  already_AddRefed<PresentationSession> GetSession() const;
-  bool CachedAvailable() const;
-  IMPL_EVENT_HANDLER(availablechange);
+  void SetDefaultRequest(PresentationRequest* aRequest);
+
+  already_AddRefed<PresentationRequest> GetDefaultRequest() const;
+
+  already_AddRefed<Promise> GetSession(ErrorResult& aRv);
+
+  already_AddRefed<Promise> GetSessions(ErrorResult& aRv) const;
+
+  IMPL_EVENT_HANDLER(sessionavailable);
 
 private:
   explicit Presentation(nsPIDOMWindow* aWindow);
+
   ~Presentation();
 
   bool Init();
+
   void Shutdown();
 
-  bool mAvailable;
-  nsRefPtr<PresentationSession> mSession;
+  nsRefPtr<PresentationRequest> mDefaultRequest;
+  nsTArray<nsRefPtr<PresentationSession>> mSessions;
+  nsTArray<nsRefPtr<Promise>> mPendingGetSessionPromises;
 };
 
 } // namespace dom

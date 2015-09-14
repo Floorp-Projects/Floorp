@@ -4,17 +4,18 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString typeArg,
- optional PresentationAvailableEventInit eventInitDict),
- Pref="dom.presentation.enabled",
+[Pref="dom.presentation.enabled",
  CheckAnyPermissions="presentation",
  AvailableIn="PrivilegedApps"]
-interface PresentationAvailableEvent : Event
-{
-  readonly attribute boolean available;
-};
+interface PresentationAvailability : EventTarget {
+  /*
+   * If there is at least one device discovered by UA, the value is |true|.
+   * Otherwise, its value should be |false|.
+   */
+  readonly attribute boolean value;
 
-dictionary PresentationAvailableEventInit : EventInit
-{
-  boolean available = false;
+  /*
+   * It is called when device availability changes.
+   */
+  attribute EventHandler onchange;
 };

@@ -26,7 +26,7 @@ public:
   ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual PPresentationRequestChild*
-  AllocPPresentationRequestChild(const PresentationRequest& aRequest) override;
+  AllocPPresentationRequestChild(const PresentationIPCRequest& aRequest) override;
 
   virtual bool
   DeallocPPresentationRequestChild(PPresentationRequestChild* aActor) override;
