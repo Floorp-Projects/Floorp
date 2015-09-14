@@ -842,8 +842,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding-top: calc(var(--toolbarbutton-vertical-inner-padding) + 6px);
+  padding-bottom: calc(var(--toolbarbutton-vertical-inner-padding) + 6px);
 }
 
 #nav-bar .toolbaritem-combined-buttons {
