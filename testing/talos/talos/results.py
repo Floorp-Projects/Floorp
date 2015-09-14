@@ -158,15 +158,6 @@ class Results(object):
                 else:
                     remaining_filters.append(f)
 
-            # calculate common numbers with the raw data
-            data_summary = {
-                'min': min(data),
-                'max': max(data),
-                'mean': filter.mean(data),
-                'median': filter.median(data),
-                'std': filter.stddev(data)
-            }
-
             # apply the summarization filters
             for f in remaining_filters:
                 if f.func.__name__ == "v8_subtest":
@@ -174,13 +165,14 @@ class Results(object):
                     data = filter.v8_subtest(data, page)
                 else:
                     data = f.apply(data)
-            data_summary['filtered'] = data
 
-            # special case for dromaeo_dom and v8_7
-            if testname == 'dromaeo_dom' or testname.startswith('v8_7'):
-                data_summary['value'] = data
+            summary = {
+                'filtered': data, # for backwards compatibility with perfherder
+                'value': data
+            }
 
-            retval.append([data_summary, page])
+            retval.append([summary, page])
+
         return retval
 
     def raw_values(self):

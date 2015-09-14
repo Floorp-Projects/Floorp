@@ -171,7 +171,7 @@ class GraphserverOutput(Output):
                 for result in test.results:
                     filtered_val = result.values(testname,
                                                  test.test_config['filters'])
-                    vals.extend([[i['filtered'], j] for i, j in filtered_val])
+                    vals.extend([[i['value'], j] for i, j in filtered_val])
                 result_strings.append(self.construct_results(vals,
                                                              testname=testname,
                                                              **info_dict))
@@ -515,7 +515,7 @@ class PerfherderOutput(Output):
                     filtered_results = \
                         result.values(test_result['testrun']['suite'],
                                       test.test_config['filters'])
-                    vals.extend([[i['filtered'], j] for i, j in filtered_results])
+                    vals.extend([[i['value'], j] for i, j in filtered_results])
                     for val, page in filtered_results:
                         if page == 'NULL':
                             summary['subtests'][test.name()] = val
