@@ -394,7 +394,7 @@ EVENT(select,
       EventNameType_HTMLXUL,
       eBasicEventClass)
 EVENT(show,
-      NS_SHOW_EVENT,
+      eShow,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(stalled,
