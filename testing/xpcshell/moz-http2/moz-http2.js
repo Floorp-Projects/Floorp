@@ -97,6 +97,25 @@ runlater.prototype = {
   }
 };
 
+var moreData = function() {};
+moreData.prototype = {
+  req : null,
+  resp : null,
+  iter: 3,
+
+  onTimeout : function onTimeout() {
+    // 1mb of data
+    content = generateContent(1024*1024);
+    this.resp.write(content); // 1mb chunk
+    this.iter--;
+      if (!this.iter) {
+	  this.resp.end();
+      } else {
+	  setTimeout(executeRunLater, 1, this);
+      }
+  }
+};
+
 function executeRunLater(arg) {
   arg.onTimeout();
 }
@@ -315,6 +334,18 @@ function handleRequest(req, res) {
       res.stream.reset('HTTP_1_1_REQUIRED');
       return;
     }
+  }
+
+  else if (u.pathname === "/bigdownload") {
+
+    res.setHeader('Content-Type', 'text/html');
+    res.writeHead(200);
+
+    var rl = new moreData();
+    rl.req = req;
+    rl.resp = res;
+    setTimeout(executeRunLater, 1, rl);
+    return;
   }
 
   else if (u.pathname === "/h11required_session") {
