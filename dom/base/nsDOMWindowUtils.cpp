@@ -1324,9 +1324,9 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
     msg = NS_SIMPLE_GESTURE_PRESSTAP;
   else if (aType.EqualsLiteral("MozEdgeUIStarted"))
     msg = NS_SIMPLE_GESTURE_EDGE_STARTED;
-  else if (aType.EqualsLiteral("MozEdgeUICanceled"))
-    msg = NS_SIMPLE_GESTURE_EDGE_CANCELED;
-  else if (aType.EqualsLiteral("MozEdgeUICompleted")) {
+  else if (aType.EqualsLiteral("MozEdgeUICanceled")) {
+    msg = eEdgeUICanceled;
+  } else if (aType.EqualsLiteral("MozEdgeUICompleted")) {
     msg = eEdgeUICompleted;
   } else {
     return NS_ERROR_FAILURE;
