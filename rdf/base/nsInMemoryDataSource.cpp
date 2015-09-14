@@ -323,7 +323,7 @@ public:
             }
         }
         else {
-            PL_DHashTableRemove(&mForwardArcs, u);
+            mForwardArcs.Remove(u);
         }
     }
 
@@ -338,7 +338,7 @@ public:
             }
         }
         else {
-            PL_DHashTableRemove(&mReverseArcs, v);
+            mReverseArcs.Remove(v);
         }
     }
 

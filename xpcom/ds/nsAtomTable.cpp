@@ -397,7 +397,7 @@ AtomImpl::~AtomImpl()
   // |AtomTableClearEntry|.
   if (!IsPermanentInDestructor()) {
     AtomTableKey key(mString, mLength, mHash);
-    PL_DHashTableRemove(gAtomTable, &key);
+    gAtomTable->Remove(&key);
     if (gAtomTable->EntryCount() == 0) {
       delete gAtomTable;
       gAtomTable = nullptr;

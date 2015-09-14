@@ -143,7 +143,7 @@ public:
                    "nsISupports identity! This will most likely cause serious "
                    "problems!");
 #endif
-        PL_DHashTableRemove(mTable, wrapper->GetIdentityObject());
+        mTable->Remove(wrapper->GetIdentityObject());
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
@@ -198,7 +198,7 @@ public:
     inline void Remove(nsXPCWrappedJSClass* clazz)
     {
         NS_PRECONDITION(clazz,"bad param");
-        PL_DHashTableRemove(mTable, &clazz->GetIID());
+        mTable->Remove(&clazz->GetIID());
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
@@ -251,7 +251,7 @@ public:
     inline void Remove(XPCNativeInterface* iface)
     {
         NS_PRECONDITION(iface,"bad param");
-        PL_DHashTableRemove(mTable, iface->GetIID());
+        mTable->Remove(iface->GetIID());
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
@@ -304,7 +304,7 @@ public:
     inline void Remove(nsIClassInfo* info)
     {
         NS_PRECONDITION(info,"bad param");
-        PL_DHashTableRemove(mTable, info);
+        mTable->Remove(info);
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
@@ -360,7 +360,7 @@ public:
     inline void Remove(nsIClassInfo* info)
     {
         NS_PRECONDITION(info,"bad param");
-        PL_DHashTableRemove(mTable, info);
+        mTable->Remove(info);
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
@@ -428,7 +428,7 @@ public:
         NS_PRECONDITION(set,"bad param");
 
         XPCNativeSetKey key(set, nullptr, 0);
-        PL_DHashTableRemove(mTable, &key);
+        mTable->Remove(&key);
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
@@ -489,7 +489,7 @@ public:
 
     inline void Remove(REFNSIID iid)
     {
-        PL_DHashTableRemove(mTable, &iid);
+        mTable->Remove(&iid);
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
@@ -563,7 +563,7 @@ public:
     inline void Remove(XPCWrappedNativeProto* proto)
     {
         NS_PRECONDITION(proto,"bad param");
-        PL_DHashTableRemove(mTable, proto);
+        mTable->Remove(proto);
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }

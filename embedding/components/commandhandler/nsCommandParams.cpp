@@ -200,7 +200,7 @@ nsCommandParams::SetISupportsValue(const char* aName, nsISupports* aValue)
 NS_IMETHODIMP
 nsCommandParams::RemoveValue(const char* aName)
 {
-  PL_DHashTableRemove(&mValuesHash, (void*)aName);
+  mValuesHash.Remove((void*)aName);
   return NS_OK;
 }
 

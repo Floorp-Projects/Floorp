@@ -148,7 +148,7 @@ void
 nsScriptNameSpaceManager::RemoveFromHash(PLDHashTable *aTable,
                                          const nsAString *aKey)
 {
-  PL_DHashTableRemove(aTable, aKey);
+  aTable->Remove(aKey);
 }
 
 nsGlobalNameStruct*
