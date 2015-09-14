@@ -53,6 +53,11 @@ public class RestrictionProvider extends BroadcastReceiver {
         ArrayList<RestrictionEntry> entries = new ArrayList<RestrictionEntry>();
 
         for (Restriction restriction : RestrictedProfileConfiguration.DEFAULT_RESTRICTIONS) {
+            if (restriction == Restriction.DISALLOW_DEFAULT_THEME) {
+                // This restriction is not configurable
+                continue;
+            }
+
             RestrictionEntry entry = createRestrictionEntryWithDefaultValue(context, restriction,
                     oldRestrictions.getBoolean(restriction.name, true));
             entries.add(entry);
