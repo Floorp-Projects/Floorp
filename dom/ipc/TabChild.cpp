@@ -2051,7 +2051,7 @@ TabChild::UpdateTapState(const WidgetTouchEvent& aEvent, nsEventStatus aStatus)
     }
     return;
 
-  case NS_TOUCH_END:
+  case eTouchEnd:
     if (!TouchManager::gPreventMouseEvents) {
       APZCCallbackHelper::DispatchSynthesizedMouseEvent(
         eMouseMove, time, currentPoint, 0, mPuppetWidget);

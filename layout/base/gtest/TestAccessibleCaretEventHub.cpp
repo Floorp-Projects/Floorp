@@ -173,7 +173,7 @@ public:
 
   static UniquePtr<WidgetEvent> CreateTouchReleaseEvent(nscoord aX, nscoord aY)
   {
-    return CreateTouchEvent(NS_TOUCH_END, aX, aY);
+    return CreateTouchEvent(eTouchEnd, aX, aY);
   }
 
   static UniquePtr<WidgetEvent> CreateWheelEvent(EventMessage aMessage)

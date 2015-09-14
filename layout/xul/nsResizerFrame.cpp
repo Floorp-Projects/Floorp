@@ -128,7 +128,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
     }
     break;
 
-  case NS_TOUCH_END:
+  case eTouchEnd:
   case eMouseUp: {
     if (aEvent->mClass == eTouchEventClass ||
         (aEvent->mClass == eMouseEventClass &&
