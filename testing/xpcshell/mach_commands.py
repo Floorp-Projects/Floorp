@@ -25,7 +25,8 @@ from mach.decorators import (
     Command,
 )
 
-from xpcshellcommandline import parser_desktop, parser_remote, parser_b2g
+_parser = argparse.ArgumentParser()
+structured.commandline.add_logging_group(_parser)
 
 ADB_NOT_FOUND = '''
 The %s command requires the adb binary to be on your path.
@@ -39,7 +40,6 @@ BUSYBOX_URLS = {
     'x86': 'http://www.busybox.net/downloads/binaries/latest/busybox-i686'
 }
 
-here = os.path.abspath(os.path.dirname(__file__))
 
 if sys.version_info[0] < 3:
     unicode_type = unicode
@@ -55,9 +55,20 @@ class InvalidTestPathError(Exception):
 class XPCShellRunner(MozbuildObject):
     """Run xpcshell tests."""
     def run_suite(self, **kwargs):
-        return self._run_xpcshell_harness(**kwargs)
+        from manifestparser import TestManifest
+        manifest = TestManifest(manifests=[os.path.join(self.topobjdir,
+            '_tests', 'xpcshell', 'xpcshell.ini')])
 
-    def run_test(self, **kwargs):
+        return self._run_xpcshell_harness(manifest=manifest, **kwargs)
+
+    def run_test(self, test_paths, interactive=False,
+                 keep_going=False, sequential=False, shuffle=False,
+                 debugger=None, debuggerArgs=None, debuggerInteractive=None,
+                 jsDebugger=False, jsDebuggerPort=None,
+                 rerun_failures=False, test_objects=None, verbose=False,
+                 log=None, test_tags=None, dump_tests=None,
+                 # ignore parameters from other platforms' options
+                 **kwargs):
         """Runs an individual xpcshell test."""
         from mozbuild.testing import TestResolver
         from manifestparser import TestManifest
@@ -71,14 +82,64 @@ class XPCShellRunner(MozbuildObject):
         if os.path.isdir(src_build_path):
             sys.path.append(src_build_path)
 
-        self.run_suite(**kwargs)
+        if test_paths == 'all':
+            self.run_suite(interactive=interactive,
+                           keep_going=keep_going, shuffle=shuffle, sequential=sequential,
+                           debugger=debugger, debuggerArgs=debuggerArgs,
+                           debuggerInteractive=debuggerInteractive,
+                           jsDebugger=jsDebugger, jsDebuggerPort=jsDebuggerPort,
+                           rerun_failures=rerun_failures,
+                           verbose=verbose, log=log, test_tags=test_tags, dump_tests=dump_tests)
+            return
+        elif test_paths:
+            test_paths = [self._wrap_path_argument(p).relpath() for p in test_paths]
 
+        if test_objects:
+            tests = test_objects
+        else:
+            resolver = self._spawn(TestResolver)
+            tests = list(resolver.resolve_tests(paths=test_paths,
+                flavor='xpcshell'))
 
-    def _run_xpcshell_harness(self, **kwargs):
+        if not tests:
+            raise InvalidTestPathError('We could not find an xpcshell test '
+                'for the passed test path. Please select a path that is '
+                'a test file or is a directory containing xpcshell tests.')
+
+        # Dynamically write out a manifest holding all the discovered tests.
+        manifest = TestManifest()
+        manifest.tests.extend(tests)
+
+        args = {
+            'interactive': interactive,
+            'keep_going': keep_going,
+            'shuffle': shuffle,
+            'sequential': sequential,
+            'debugger': debugger,
+            'debuggerArgs': debuggerArgs,
+            'debuggerInteractive': debuggerInteractive,
+            'jsDebugger': jsDebugger,
+            'jsDebuggerPort': jsDebuggerPort,
+            'rerun_failures': rerun_failures,
+            'manifest': manifest,
+            'verbose': verbose,
+            'log': log,
+            'test_tags': test_tags,
+            'dump_tests': dump_tests,
+        }
+
+        return self._run_xpcshell_harness(**args)
+
+    def _run_xpcshell_harness(self, manifest,
+                              test_path=None, shuffle=False, interactive=False,
+                              keep_going=False, sequential=False,
+                              debugger=None, debuggerArgs=None, debuggerInteractive=None,
+                              jsDebugger=False, jsDebuggerPort=None,
+                              rerun_failures=False, verbose=False, log=None, test_tags=None,
+                              dump_tests=None):
+
         # Obtain a reference to the xpcshell test runner.
         import runxpcshelltests
-
-        log = kwargs.pop("log")
 
         xpcshell = runxpcshelltests.XPCShellTests(log=log)
         self.log_manager.enable_unstructured()
@@ -87,41 +148,60 @@ class XPCShellRunner(MozbuildObject):
         modules_dir = os.path.join(self.topobjdir, '_tests', 'modules')
         # We want output from the test to be written immediately if we are only
         # running a single test.
-        single_test = (kwargs["testPaths"] is not None or
+        single_test = (test_path is not None or
                        (manifest and len(manifest.test_paths())==1))
-        sequential = kwargs["sequential"] or single_test
+        sequential = sequential or single_test
 
-        if kwargs["xpcshell"] is None:
-            kwargs["xpcshell"] = self.get_binary_path('xpcshell')
+        args = {
+            'manifest': manifest,
+            'xpcshell': self.get_binary_path('xpcshell'),
+            'mozInfo': os.path.join(self.topobjdir, 'mozinfo.json'),
+            'symbolsPath': os.path.join(self.distdir, 'crashreporter-symbols'),
+            'interactive': interactive,
+            'keepGoing': keep_going,
+            'logfiles': False,
+            'sequential': sequential,
+            'shuffle': shuffle,
+            'testsRootDir': tests_dir,
+            'testingModulesDir': modules_dir,
+            'profileName': 'firefox',
+            'verbose': verbose or single_test,
+            'xunitFilename': os.path.join(self.statedir, 'xpchsell.xunit.xml'),
+            'xunitName': 'xpcshell',
+            'pluginsPath': os.path.join(self.distdir, 'plugins'),
+            'debugger': debugger,
+            'debuggerArgs': debuggerArgs,
+            'debuggerInteractive': debuggerInteractive,
+            'jsDebugger': jsDebugger,
+            'jsDebuggerPort': jsDebuggerPort,
+            'test_tags': test_tags,
+            'dump_tests': dump_tests,
+            'utility_path': self.bindir,
+        }
 
-        if kwargs["mozInfo"] is None:
-            kwargs["mozInfo"] = os.path.join(self.topobjdir, 'mozinfo.json')
+        if test_path is not None:
+            args['testPath'] = test_path
 
-        if kwargs["symbolsPath"] is None:
-            kwargs["symbolsPath"] = os.path.join(self.distdir, 'crashreporter-symbols')
-
-        if kwargs["logfiles"] is None:
-            kwargs["logfiles"] = False
-
-        if kwargs["profileName"] is None:
-            kwargs["profileName"] = "firefox"
-
-        if kwargs["pluginsPath"] is None:
-            kwargs['pluginsPath'] = os.path.join(self.distdir, 'plugins')
-
-        if kwargs["utility_path"] is None:
-            kwargs['utility_path'] = self.bindir
-
-        if kwargs["manifest"] is None:
-            kwargs["manifest"] = os.path.join(tests_dir, "xpcshell.ini")
-
-        if kwargs["failure_manifest"] is None:
-            kwargs["failure_manifest"] = os.path.join(self.statedir, 'xpcshell.failures.ini')
+        # A failure manifest is written by default. If --rerun-failures is
+        # specified and a prior failure manifest is found, the prior manifest
+        # will be run. A new failure manifest is always written over any
+        # prior failure manifest.
+        failure_manifest_path = os.path.join(self.statedir, 'xpcshell.failures.ini')
+        rerun_manifest_path = os.path.join(self.statedir, 'xpcshell.rerun.ini')
+        if os.path.exists(failure_manifest_path) and rerun_failures:
+            shutil.move(failure_manifest_path, rerun_manifest_path)
+            args['manifest'] = rerun_manifest_path
+        elif os.path.exists(failure_manifest_path):
+            os.remove(failure_manifest_path)
+        elif rerun_failures:
+            print("No failures were found to re-run.")
+            return 0
+        args['failureManifest'] = failure_manifest_path
 
         # Python through 2.7.2 has issues with unicode in some of the
         # arguments. Work around that.
         filtered_args = {}
-        for k, v in kwargs.iteritems():
+        for k, v in args.items():
             if isinstance(v, unicode_type):
                 v = v.encode('utf-8')
 
@@ -157,7 +237,12 @@ class AndroidXPCShellRunner(MozbuildObject):
         return dm
 
     """Run Android xpcshell tests."""
-    def run_test(self, **kwargs):
+    def run_test(self,
+                 test_paths, keep_going,
+                 devicemanager, ip, port, remote_test_root, no_setup, local_apk,
+                 test_objects=None, log=None,
+                 # ignore parameters from other platforms' options
+                 **kwargs):
         # TODO Bug 794506 remove once mach integrates with virtualenv.
         build_path = os.path.join(self.topobjdir, 'build')
         if build_path not in sys.path:
@@ -165,53 +250,60 @@ class AndroidXPCShellRunner(MozbuildObject):
 
         import remotexpcshelltests
 
-        dm = self.get_devicemanager(kwargs["dm_trans"], kwargs["deviceIP"], kwargs["devicePort"],
-                                    kwargs["remoteTestRoot"])
+        dm = self.get_devicemanager(devicemanager, ip, port, remote_test_root)
 
-        log = kwargs.pop("log")
-        self.log_manager.enable_unstructured()
-
-        if kwargs["xpcshell"] is None:
-            kwargs["xpcshell"] = "xpcshell"
-
-        if not kwargs["objdir"]:
-            kwargs["objdir"] = self.topobjdir
-
-        if not kwargs["localLib"]:
-            kwargs["localLib"] = os.path.join(self.topobjdir, 'dist/fennec')
-
-        if not kwargs["localBin"]:
-            kwargs["localBin"] = os.path.join(self.topobjdir, 'dist/bin')
-
-        if not kwargs["testingModulesDir"]:
-            kwargs["testingModulesDir"] = os.path.join(self.topobjdir, '_tests/modules')
-
-        if not kwargs["mozInfo"]:
-            kwargs["mozInfo"] = os.path.join(self.topobjdir, 'mozinfo.json')
-
-        if not kwargs["manifest"]:
-            kwargs["manifest"] = os.path.join(self.topobjdir, '_tests/xpcshell/xpcshell.ini')
-
-        if not kwargs["symbolsPath"]:
-            kwargs["symbolsPath"] = os.path.join(self.distdir, 'crashreporter-symbols')
-
-        if not kwargs["localAPK"]:
-            for file_name in os.listdir(os.path.join(kwargs["objdir"], "dist")):
-                if file_name.endswith(".apk") and file_name.startswith("fennec"):
-                    kwargs["localAPK"] = os.path.join(kwargs["objdir"], "dist", file_name)
-                    print ("using APK: %s" % kwargs["localAPK"])
+        options = remotexpcshelltests.RemoteXPCShellOptions()
+        options.shuffle = False
+        options.sequential = True
+        options.interactive = False
+        options.debugger = None
+        options.debuggerArgs = None
+        options.setup = not no_setup
+        options.keepGoing = keep_going
+        options.objdir = self.topobjdir
+        options.localLib = os.path.join(self.topobjdir, 'dist/fennec')
+        options.localBin = os.path.join(self.topobjdir, 'dist/bin')
+        options.testingModulesDir = os.path.join(self.topobjdir, '_tests/modules')
+        options.mozInfo = os.path.join(self.topobjdir, 'mozinfo.json')
+        options.manifest = os.path.join(self.topobjdir, '_tests/xpcshell/xpcshell.ini')
+        options.symbolsPath = os.path.join(self.distdir, 'crashreporter-symbols')
+        if local_apk:
+            options.localAPK = local_apk
+        else:
+            for file in os.listdir(os.path.join(options.objdir, "dist")):
+                if file.endswith(".apk") and file.startswith("fennec"):
+                    options.localAPK = os.path.join(options.objdir, "dist")
+                    options.localAPK = os.path.join(options.localAPK, file)
+                    print ("using APK: " + options.localAPK)
                     break
             else:
                 raise Exception("You must specify an APK")
 
-        options = argparse.Namespace(**kwargs)
-        xpcshell = remotexpcshelltests.XPCShellRemote(dm, options, log)
+        if test_paths == 'all':
+            testdirs = []
+            options.testPath = None
+            options.verbose = False
+        elif test_objects:
+            if len(test_objects) > 1:
+                print('Warning: only the first test will be used.')
+            testdirs = test_objects[0]['dir_relpath']
+            options.testPath = test_objects[0]['path']
+            options.verbose = True
+        else:
+            if len(test_paths) > 1:
+                print('Warning: only the first test path argument will be used.')
+            testdirs = test_paths[0]
+            options.testPath = test_paths[0]
+            options.verbose = True
 
-        result = xpcshell.runTests(testClass=remotexpcshelltests.RemoteXPCShellTestThread,
-                                   mobileArgs=xpcshell.mobileArgs,
-                                   **vars(options))
+        xpcshell = remotexpcshelltests.XPCShellRemote(dm, options, testdirs, log)
 
-        self.log_manager.disable_unstructured()
+        result = xpcshell.runTests(xpcshell='xpcshell',
+                      testClass=remotexpcshelltests.RemoteXPCShellTestThread,
+                      testdirs=testdirs,
+                      mobileArgs=xpcshell.mobileArgs,
+                      **options.__dict__)
+
 
         return int(not result)
 
@@ -258,66 +350,57 @@ class B2GXPCShellRunner(MozbuildObject):
             f.write(data.read())
         return busybox_path
 
-    def run_test(self, **kwargs):
+    def run_test(self, test_paths, b2g_home=None, busybox=None, device_name=None,
+                 test_objects=None, log=None,
+                 # ignore parameters from other platforms' options
+                 **kwargs):
         try:
             import which
             which.which('adb')
         except which.WhichError:
             # TODO Find adb automatically if it isn't on the path
-            print(ADB_NOT_FOUND % ('mochitest-remote', kwargs["b2g_home"]))
+            print(ADB_NOT_FOUND % ('mochitest-remote', b2g_home))
             sys.exit(1)
 
+        test_path = None
+        if test_objects:
+            if len(test_objects) > 1:
+                print('Warning: Only the first test will be used.')
+
+            test_path = self._wrap_path_argument(test_objects[0]['path'])
+        elif test_paths:
+            if len(test_paths) > 1:
+                print('Warning: Only the first test path will be used.')
+
+            test_path = self._wrap_path_argument(test_paths[0]).relpath()
+
         import runtestsb2g
+        parser = runtestsb2g.B2GOptions()
+        options, args = parser.parse_args([])
 
-        log = kwargs.pop("log")
-        self.log_manager.enable_unstructured()
+        options.b2g_path = b2g_home
+        options.busybox = busybox or os.environ.get('BUSYBOX')
+        options.localLib = self.bin_dir
+        options.localBin = self.bin_dir
+        options.logdir = self.xpcshell_dir
+        options.manifest = os.path.join(self.xpcshell_dir, 'xpcshell.ini')
+        options.mozInfo = os.path.join(self.topobjdir, 'mozinfo.json')
+        options.objdir = self.topobjdir
+        options.symbolsPath = os.path.join(self.distdir, 'crashreporter-symbols'),
+        options.testingModulesDir = os.path.join(self.tests_dir, 'modules')
+        options.testsRootDir = self.xpcshell_dir
+        options.testPath = test_path
+        options.use_device_libs = True
 
-        if kwargs["xpcshell"] is None:
-            kwargs["xpcshell"] = "xpcshell"
-        if kwargs["b2g_path"] is None:
-            kwargs["b2g_path"] = kwargs["b2g_home"]
-        if kwargs["busybox"] is None:
-            kwargs["busybox"] = os.environ.get('BUSYBOX')
-        if kwargs["busybox"] is None:
-            kwargs["busybox"] = self._download_busybox(kwargs["b2g_home"], kwargs["emulator"])
+        options.emulator = 'arm'
+        if device_name.startswith('emulator'):
+            if 'x86' in device_name:
+                options.emulator = 'x86'
 
-        if kwargs["localLib"] is None:
-            kwargs["localLib"] = self.bin_dir
-        if kwargs["localBin"] is None:
-            kwargs["localBin"] = self.bin_dir
-        if kwargs["logdir"] is None:
-            kwargs["logdir"] = self.xpcshell_dir
-        if kwargs["manifest"] is None:
-            kwargs["manifest"] = os.path.join(self.xpcshell_dir, 'xpcshell.ini')
-        if kwargs["mozInfo"] is None:
-            kwargs["mozInfo"] = os.path.join(self.topobjdir, 'mozinfo.json')
-        if kwargs["objdir"] is None:
-            kwargs["objdir"] = self.topobjdir
-        if kwargs["symbolsPath"] is None:
-            kwargs["symbolsPath"] = os.path.join(self.distdir, 'crashreporter-symbols')
-        if kwargs["testingModulesDir"] is None:
-            kwargs["testingModulesDir"] = os.path.join(self.tests_dir, 'modules')
-        if kwargs["use_device_libs"] is None:
-            kwargs["use_device_libs"] = True
+        if not options.busybox:
+            options.busybox = self._download_busybox(b2g_home, options.emulator)
 
-        if kwargs["device_name"].startswith('emulator') and 'x86' in kwargs["device_name"]:
-            kwargs["emulator"] = 'x86'
-
-        parser = parser_b2g()
-        options = argparse.Namespace(**kwargs)
-        rv = runtestsb2g.run_remote_xpcshell(parser, options, log)
-
-        self.log_manager.disable_unstructured()
-        return rv
-
-def get_parser():
-    build_obj = MozbuildObject.from_environment(cwd=here)
-    if conditions.is_android(build_obj):
-        return parser_remote()
-    elif conditions.is_b2g(build_obj):
-        return parser_b2g()
-    else:
-        return parser_desktop()
+        return runtestsb2g.run_remote_xpcshell(parser, options, args, log)
 
 @CommandProvider
 class MachCommands(MachCommandBase):
@@ -328,10 +411,61 @@ class MachCommands(MachCommandBase):
             setattr(self, attr, getattr(context, attr, None))
 
     @Command('xpcshell-test', category='testing',
-             description='Run XPCOM Shell tests (API direct unit testing)',
-             conditions=[lambda *args: True],
-             parser=get_parser)
-
+        description='Run XPCOM Shell tests (API direct unit testing)',
+        conditions=[lambda *args: True],
+        parser=_parser)
+    @CommandArgument('test_paths', default='all', nargs='*', metavar='TEST',
+        help='Test to run. Can be specified as a single JS file, a directory, '
+             'or omitted. If omitted, the entire test suite is executed.')
+    @CommandArgument('--verbose', '-v', action='store_true',
+        help='Provide full output from each test process.')
+    @CommandArgument("--debugger", default=None, metavar='DEBUGGER',
+                     help = "Run xpcshell under the given debugger.")
+    @CommandArgument("--debugger-args", default=None, metavar='ARGS', type=str,
+                     dest = "debuggerArgs",
+                     help = "pass the given args to the debugger _before_ "
+                            "the application on the command line")
+    @CommandArgument("--debugger-interactive", action = "store_true",
+                     dest = "debuggerInteractive",
+                     help = "prevents the test harness from redirecting "
+                            "stdout and stderr for interactive debuggers")
+    @CommandArgument("--jsdebugger", dest="jsDebugger", action="store_true",
+                     help="Waits for a devtools JS debugger to connect before "
+                          "starting the test.")
+    @CommandArgument("--jsdebugger-port", dest="jsDebuggerPort",
+                     type=int, default=6000,
+                     help="The port to listen on for a debugger connection if "
+                          "--jsdebugger is specified (default=6000).")
+    @CommandArgument('--interactive', '-i', action='store_true',
+        help='Open an xpcshell prompt before running tests.')
+    @CommandArgument('--keep-going', '-k', action='store_true',
+        help='Continue running tests after a SIGINT is received.')
+    @CommandArgument('--sequential', action='store_true',
+        help='Run the tests sequentially.')
+    @CommandArgument('--shuffle', '-s', action='store_true',
+        help='Randomize the execution order of tests.')
+    @CommandArgument('--rerun-failures', action='store_true',
+        help='Reruns failures from last time.')
+    @CommandArgument('--tag', action='append', dest='test_tags',
+        help='Filter out tests that don\'t have the given tag. Can be used '
+             'multiple times in which case the test must contain at least one '
+             'of the given tags.')
+    @CommandArgument('--dump-tests', default=None, type=str, dest='dump_tests',
+        help='Specify path to a filename to dump all the tests that will be run')
+    @CommandArgument('--devicemanager', default='adb', type=str,
+        help='(Android) Type of devicemanager to use for communication: adb or sut')
+    @CommandArgument('--ip', type=str, default=None,
+        help='(Android) IP address of device')
+    @CommandArgument('--port', type=int, default=20701,
+        help='(Android) Port of device')
+    @CommandArgument('--remote_test_root', type=str, default=None,
+        help='(Android) Remote test root such as /mnt/sdcard or /data/local')
+    @CommandArgument('--no-setup', action='store_true',
+        help='(Android) Do not copy files to device')
+    @CommandArgument('--local-apk', type=str, default=None,
+        help='(Android) Use specified Fennec APK')
+    @CommandArgument('--busybox', type=str, default=None,
+        help='(B2G) Path to busybox binary (speeds up installation of tests).')
     def run_xpcshell_test(self, **params):
         from mozbuild.controller.building import BuildDriver
 
