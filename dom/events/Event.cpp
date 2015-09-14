@@ -799,7 +799,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
   case eTouchEventClass:
     if (aEvent->mFlags.mIsTrusted) {
       switch (aEvent->mMessage) {
-      case NS_TOUCH_START :
+      case eTouchStart:
         if (PopupAllowedForEvent("touchstart")) {
           abuse = openControlled;
         }

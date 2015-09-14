@@ -977,7 +977,7 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
     // TODO: Eventually we'll be able to move the SendSetTargetAPZCNotification
     // call into APZEventState::Process*Event() as well.
     if (WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent()) {
-      if (touchEvent->mMessage == NS_TOUCH_START) {
+      if (touchEvent->mMessage == eTouchStart) {
         if (gfxPrefs::TouchActionEnabled()) {
           APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(this, *touchEvent,
               aInputBlockId, mSetAllowedTouchBehaviorCallback);

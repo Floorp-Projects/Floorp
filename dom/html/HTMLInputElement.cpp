@@ -4087,7 +4087,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor)
   switch (aVisitor.mEvent->mMessage)
   {
     case eMouseDown:
-    case NS_TOUCH_START: {
+    case eTouchStart: {
       if (mIsDraggingRange) {
         break;
       }
