@@ -8,6 +8,7 @@ let suggestedLink = {
   imageURI: "data:image/png;base64,helloWORLD3",
   title: "title2",
   type: "affiliate",
+  adgroup_name: "Technology",
   frecent_sites: ["classroom.google.com", "codeacademy.org", "codecademy.com", "codeschool.com", "codeyear.com", "elearning.ut.ac.id", "how-to-build-websites.com", "htmlcodetutorial.com", "htmldog.com", "htmlplayground.com", "learn.jquery.com", "quackit.com", "roseindia.net", "teamtreehouse.com", "tizag.com", "tutorialspoint.com", "udacity.com", "w3schools.com", "webdevelopersnotes.com"]
 };
 
@@ -139,7 +140,7 @@ function runTests() {
   is(type, "affiliate", "suggested link is affiliate");
   is(enhanced, "", "suggested link has no enhanced image");
   is(title, "title2");
-  ok(suggested.indexOf("Suggested for <strong> webdev education </strong> visitors") > -1, "Suggested for 'webdev education'");
+  ok(suggested.indexOf("Suggested for <strong> Technology </strong> visitors") > -1, "Suggested for 'Technology'");
 
   // Enhanced history link shows up second
   ({type, enhanced, title, suggested} = getData(1));
@@ -152,8 +153,7 @@ function runTests() {
 
 
 
-  // Test override category/adgroup name.
-  suggestedLink.adgroup_name = "Technology";
+  // Test no override category/adgroup name.
   Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE,
     "data:application/json," + JSON.stringify({"suggested": [suggestedLink]}));
   yield watchLinksChangeOnce().then(TestRunner.next);
@@ -176,8 +176,8 @@ function runTests() {
   ok(suggested.indexOf("Suggested for <strong> Technology </strong> enthusiasts who visit sites like <strong> classroom.google.com </strong>") > -1, "Suggested for 'Technology' enthusiasts");
 
 
-  // Test server provided explanation string without category override.
-  delete suggestedLink.adgroup_name;
+  // Test server provided explanation string with category override.
+  suggestedLink.adgroup_name = "webdev education";
   Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE,
     "data:application/json," + encodeURIComponent(JSON.stringify({"suggested": [suggestedLink]})));
   yield watchLinksChangeOnce().then(TestRunner.next);
