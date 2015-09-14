@@ -282,7 +282,7 @@ public:
    */
   void MarkImmutable()
   {
-    PL_DHashMarkTableImmutable(&mTable);
+    mTable.MarkImmutable();
   }
 #endif
 

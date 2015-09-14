@@ -853,16 +853,10 @@ PLDHashTable::Iterator::Remove()
 }
 
 #ifdef DEBUG
-MOZ_ALWAYS_INLINE void
+void
 PLDHashTable::MarkImmutable()
 {
   mChecker.SetNonWritable();
-}
-
-void
-PL_DHashMarkTableImmutable(PLDHashTable* aTable)
-{
-  aTable->MarkImmutable();
 }
 #endif
 
