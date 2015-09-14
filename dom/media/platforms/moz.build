@@ -9,7 +9,6 @@ EXPORTS += [
     'agnostic/VorbisDecoder.h',
     'agnostic/VPXDecoder.h',
     'PlatformDecoderModule.h',
-    'SharedDecoderManager.h',
     'wrappers/FuzzingWrapper.h',
     'wrappers/H264Converter.h'
 ]
@@ -20,7 +19,6 @@ UNIFIED_SOURCES += [
     'agnostic/VorbisDecoder.cpp',
     'agnostic/VPXDecoder.cpp',
     'PlatformDecoderModule.cpp',
-    'SharedDecoderManager.cpp',
     'wrappers/FuzzingWrapper.cpp',
     'wrappers/H264Converter.cpp'
 ]
