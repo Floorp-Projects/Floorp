@@ -1198,8 +1198,16 @@ let Front = Class({
         throw ex;
       }
       if (event.pre) {
-        event.pre.forEach((pre) => pre.apply(this, args));
+        let results = event.pre.map(pre => pre.apply(this, args));
+
+        // Check to see if any of the preEvents returned a promise -- if so,
+        // wait for their resolution before emitting. Otherwise, emit synchronously.
+        if (results.some(result => result && typeof result.then === "function")) {
+          promise.all(results).then(() => events.emit.apply(null, [this, event.name].concat(args)));
+          return;
+        }
       }
+
       events.emit.apply(null, [this, event.name].concat(args));
       return;
     }

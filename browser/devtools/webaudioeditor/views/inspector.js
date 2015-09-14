@@ -88,7 +88,7 @@ let InspectorView = {
     else {
       $("#web-audio-editor-details-pane-empty").setAttribute("hidden", "true");
       $("#web-audio-editor-tabs").removeAttribute("hidden");
-      yield this._buildToolbar();
+      this._buildToolbar();
       window.emit(EVENTS.UI_INSPECTOR_NODE_SET, this._currentNode.id);
     }
   }),
@@ -111,11 +111,11 @@ let InspectorView = {
     this.hideImmediately();
   },
 
-  _buildToolbar: Task.async(function* () {
+  _buildToolbar: function () {
     let node = this.getCurrentAudioNode();
 
     let bypassable = node.bypassable;
-    let bypassed = yield node.isBypassed();
+    let bypassed = node.isBypassed();
     let button = $("#audio-node-toolbar .bypass");
 
     if (!bypassable) {
@@ -129,7 +129,7 @@ let InspectorView = {
     } else {
       button.setAttribute("checked", true);
     }
-  }),
+  },
 
   /**
    * Event handlers
