@@ -1300,9 +1300,9 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
     msg = NS_SIMPLE_GESTURE_SWIPE_MAY_START;
   else if (aType.EqualsLiteral("MozSwipeGestureStart"))
     msg = NS_SIMPLE_GESTURE_SWIPE_START;
-  else if (aType.EqualsLiteral("MozSwipeGestureUpdate"))
-    msg = NS_SIMPLE_GESTURE_SWIPE_UPDATE;
-  else if (aType.EqualsLiteral("MozSwipeGestureEnd")) {
+  else if (aType.EqualsLiteral("MozSwipeGestureUpdate")) {
+    msg = eSwipeGestureUpdate;
+  } else if (aType.EqualsLiteral("MozSwipeGestureEnd")) {
     msg = eSwipeGestureEnd;
   } else if (aType.EqualsLiteral("MozSwipeGesture")) {
     msg = eSwipeGesture;
