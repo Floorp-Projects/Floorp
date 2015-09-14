@@ -2943,6 +2943,17 @@ IsEscapeFreeStringLiteral(const TokenPos& pos, JSAtom* str)
     return pos.begin + str->length() + 2 == pos.end;
 }
 
+template <typename ParseHandler>
+bool
+Parser<ParseHandler>::checkUnescapedName(const Token& token)
+{
+    if (!token.nameContainsEscape())
+        return true;
+
+    reportWithOffset(ParseError, false, token.pos.begin, JSMSG_ESCAPED_KEYWORD);
+    return false;
+}
+
 template <>
 bool
 Parser<SyntaxParseHandler>::asmJS(Node list)
@@ -4528,10 +4539,11 @@ Parser<FullParseHandler>::namedImportsOrNamespaceImport(TokenKind tt, Node impor
             if (!importName)
                 return false;
 
-            if (!tokenStream.getToken(&tt))
+            bool foundAs;
+            if (!tokenStream.matchContextualKeyword(&foundAs, context->names().as))
                 return false;
 
-            if (tt == TOK_NAME && tokenStream.currentName() == context->names().as) {
+            if (foundAs) {
                 MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_BINDING_NAME);
             } else {
                 // Keywords cannot be bound to themselves, so an import name
@@ -4545,7 +4557,6 @@ Parser<FullParseHandler>::namedImportsOrNamespaceImport(TokenKind tt, Node impor
                     report(ParseError, false, null(), JSMSG_AS_AFTER_RESERVED_WORD, bytes.ptr());
                     return false;
                 }
-                tokenStream.ungetToken();
             }
 
             Node bindingName = newBoundImportForCurrentName();
@@ -4578,6 +4589,9 @@ Parser<FullParseHandler>::namedImportsOrNamespaceImport(TokenKind tt, Node impor
             report(ParseError, false, null(), JSMSG_AS_AFTER_IMPORT_STAR);
             return false;
         }
+
+        if (!checkUnescapedName(tokenStream.currentToken()))
+            return false;
 
         MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_BINDING_NAME);
 
@@ -4674,6 +4688,9 @@ Parser<ParseHandler>::importDeclaration()
             report(ParseError, false, null(), JSMSG_FROM_AFTER_IMPORT_CLAUSE);
             return null();
         }
+
+        if (!checkUnescapedName(tokenStream.currentToken()))
+            return null();
 
         MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
     } else if (tt == TOK_STRING) {
@@ -4772,18 +4789,18 @@ Parser<FullParseHandler>::exportDeclaration()
             if (!bindingName)
                 return null();
 
-            if (!tokenStream.getToken(&tt))
+            bool foundAs;
+            if (!tokenStream.matchContextualKeyword(&foundAs, context->names().as))
                 return null();
-            if (tt == TOK_NAME && tokenStream.currentName() == context->names().as) {
+            if (foundAs) {
                 if (!tokenStream.getToken(&tt, TokenStream::KeywordIsName))
                     return null();
                 if (tt != TOK_NAME) {
                     report(ParseError, false, null(), JSMSG_NO_EXPORT_NAME);
                     return null();
                 }
-            } else {
-                tokenStream.ungetToken();
             }
+
             Node exportName = newName(tokenStream.currentName());
             if (!exportName)
                 return null();
@@ -4806,9 +4823,28 @@ Parser<FullParseHandler>::exportDeclaration()
 
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_RC_AFTER_EXPORT_SPEC_LIST);
 
-        if (!tokenStream.getToken(&tt))
+        // Careful!  If |from| follows, even on a new line, it must start a
+        // FromClause:
+        //
+        //   export { x }
+        //   from "foo"; // a single ExportDeclaration
+        //
+        // But if it doesn't, we might have an ASI opportunity in Operand
+        // context, so simply matching a contextual keyword won't work:
+        //
+        //   export { x }   // ExportDeclaration, terminated by ASI
+        //   fro\u006D      // ExpressionStatement, the name "from"
+        //
+        // In that case let MatchOrInsertSemicolon sort out ASI or any
+        // necessary error.
+        TokenKind tt;
+        if (!tokenStream.getToken(&tt, TokenStream::Operand))
             return null();
-        if (tt == TOK_NAME && tokenStream.currentName() == context->names().from) {
+
+        if (tt == TOK_NAME &&
+            tokenStream.currentToken().name() == context->names().from &&
+            !tokenStream.currentToken().nameContainsEscape())
+        {
             MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
 
             Node moduleSpec = stringLiteral();
@@ -4823,7 +4859,7 @@ Parser<FullParseHandler>::exportDeclaration()
             tokenStream.ungetToken();
         }
 
-        if (!MatchOrInsertSemicolon(tokenStream))
+        if (!MatchOrInsertSemicolon(tokenStream, TokenStream::Operand))
             return null();
         break;
       }
@@ -4844,6 +4880,9 @@ Parser<FullParseHandler>::exportDeclaration()
         if (!tokenStream.getToken(&tt))
             return null();
         if (tt == TOK_NAME && tokenStream.currentName() == context->names().from) {
+            if (!checkUnescapedName(tokenStream.currentToken()))
+                return null();
+
             MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
 
             Node moduleSpec = stringLiteral();
@@ -5085,8 +5124,12 @@ Parser<ParseHandler>::matchInOrOf(bool* isForInp, bool* isForOfp)
         return false;
     *isForInp = tt == TOK_IN;
     *isForOfp = tt == TOK_NAME && tokenStream.currentToken().name() == context->names().of;
-    if (!*isForInp && !*isForOfp)
+    if (!*isForInp && !*isForOfp) {
         tokenStream.ungetToken();
+    } else {
+        if (tt == TOK_NAME && !checkUnescapedName(tokenStream.currentToken()))
+            return false;
+    }
     return true;
 }
 
@@ -6485,6 +6528,9 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
             if (!tokenStream.peekToken(&tt, TokenStream::KeywordIsName))
                 return null();
             if (tt != TOK_LP) {
+                if (!checkUnescapedName(tokenStream.currentToken()))
+                    return null();
+
                 isStatic = true;
             } else {
                 tokenStream.addModifierException(TokenStream::NoneIsKeywordIsName);
@@ -8879,16 +8925,24 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
         *propType = propAtom.get() == context->names().get ? PropertyType::Getter
                                                            : PropertyType::Setter;
 
+        Token getSetToken = tokenStream.currentToken();
+
         // We have parsed |get| or |set|. Look for an accessor property
         // name next.
         TokenKind tt;
         if (!tokenStream.getToken(&tt, TokenStream::KeywordIsName))
             return null();
         if (tt == TOK_NAME) {
+            if (!checkUnescapedName(getSetToken))
+                return null();
+
             propAtom.set(tokenStream.currentName());
             return handler.newObjectLiteralPropertyName(propAtom, pos());
         }
         if (tt == TOK_STRING) {
+            if (!checkUnescapedName(getSetToken))
+                return null();
+
             propAtom.set(tokenStream.currentToken().atom());
 
             uint32_t index;
@@ -8901,13 +8955,20 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
             return stringLiteral();
         }
         if (tt == TOK_NUMBER) {
+            if (!checkUnescapedName(getSetToken))
+                return null();
+
             propAtom.set(DoubleToAtom(context, tokenStream.currentToken().number()));
             if (!propAtom.get())
                 return null();
             return newNumber(tokenStream.currentToken());
         }
-        if (tt == TOK_LB)
+        if (tt == TOK_LB) {
+            if (!checkUnescapedName(getSetToken))
+                return null();
+
             return computedPropertyName(yieldHandling, propList);
+        }
 
         // Not an accessor property after all.
         tokenStream.ungetToken();
@@ -9144,6 +9205,9 @@ Parser<ParseHandler>::tryNewTarget(Node &newTarget)
                "target", TokenKindToDesc(next));
         return false;
     }
+
+    if (!checkUnescapedName(tokenStream.currentToken()))
+        return false;
 
     if (!pc->sc->allowNewTarget()) {
         reportWithOffset(ParseError, false, begin, JSMSG_BAD_NEWTARGET);
