@@ -37,6 +37,7 @@
 
 #include "asmjs/AsmJSValidate.h"
 #include "jit/arm/Assembler-arm.h"
+#include "jit/arm/disasm/Constants-arm.h"
 #include "vm/Runtime.h"
 
 extern "C" {
@@ -2516,7 +2517,7 @@ Simulator::decodeType01(SimInstruction* instr)
                         MOZ_CRASH();
                 }
             } else {
-                if (instr->bit(23)) {
+                if (instr->bits(disasm::ExclusiveOpHi, disasm::ExclusiveOpLo) == disasm::ExclusiveOpcode) {
                     // Load-exclusive / store-exclusive.
                     //
                     // Bare-bones simulation: the store always succeeds, and we
@@ -2529,46 +2530,44 @@ Simulator::decodeType01(SimInstruction* instr)
                     // implement atomic doubleword read and write.
                     //
                     // Also see DMB/DSB/ISB below.
-                    if (instr->bit(20)) {
-                        // Load-exclusive.
+                    if (instr->bit(disasm::ExclusiveLoad)) {
                         int rn = instr->rnValue();
                         int rt = instr->rtValue();
                         int32_t address = get_register(rn);
-                        switch (instr->bits(22,21)) {
-                          case 0:
+                        switch (instr->bits(disasm::ExclusiveSizeHi, disasm::ExclusiveSizeLo)) {
+                          case disasm::ExclusiveWord:
                             set_register(rt, readW(address, instr));
                             break;
-                          case 1:
+                          case disasm::ExclusiveDouble:
                             set_dw_register(rt, readDW(address));
                             break;
-                          case 2:
+                          case disasm::ExclusiveByte:
                             set_register(rt, readBU(address));
                             break;
-                          case 3:
+                          case disasm::ExclusiveHalf:
                             set_register(rt, readHU(address, instr));
                             break;
                         }
                     } else {
-                        // Store-exclusive.
                         int rn = instr->rnValue();
                         int rd = instr->rdValue();
                         int rt = instr->bits(3,0);
                         int32_t address = get_register(rn);
                         int32_t value = get_register(rt);
-                        switch (instr->bits(22,21)) {
-                          case 0:
+                        switch (instr->bits(disasm::ExclusiveSizeHi, disasm::ExclusiveSizeLo)) {
+                          case disasm::ExclusiveWord:
                             writeW(address, value, instr);
                             break;
-                          case 1: {
+                          case disasm::ExclusiveDouble: {
                               MOZ_ASSERT((rt % 2) == 0);
                               int32_t value2 = get_register(rt+1);
                               writeDW(address, value, value2);
                               break;
                           }
-                          case 2:
+                          case disasm::ExclusiveByte:
                             writeB(address, (uint8_t)value);
                             break;
-                          case 3:
+                          case disasm::ExclusiveHalf:
                             writeH(address, (uint16_t)value, instr);
                             break;
                         }

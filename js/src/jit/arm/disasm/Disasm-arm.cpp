@@ -798,7 +798,44 @@ Decoder::DecodeType01(Instruction* instr)
                     Format(instr, "'um'al'cond's 'rd, 'rn, 'rm, 'rs");
                 }
             } else {
-                Unknown(instr);  // not used by V8
+                if (instr->Bits(ExclusiveOpHi, ExclusiveOpLo) == ExclusiveOpcode) {
+                    if (instr->Bit(ExclusiveLoad) == 1) {
+                        switch (instr->Bits(ExclusiveSizeHi, ExclusiveSizeLo)) {
+                          case ExclusiveWord:
+                            Format(instr, "ldrex'cond 'rt, ['rn]");
+                            break;
+                          case ExclusiveDouble:
+                            Format(instr, "ldrexd'cond 'rt, ['rn]");
+                            break;
+                          case ExclusiveByte:
+                            Format(instr, "ldrexb'cond 'rt, ['rn]");
+                            break;
+                          case ExclusiveHalf:
+                            Format(instr, "ldrexh'cond 'rt, ['rn]");
+                            break;
+                        }
+                    } else {
+                        // The documentation names the low four bits of the
+                        // store-exclusive instructions "Rt" but canonically
+                        // for disassembly they are really "Rm".
+                        switch (instr->Bits(ExclusiveSizeHi, ExclusiveSizeLo)) {
+                          case ExclusiveWord:
+                            Format(instr, "strex'cond 'rd, 'rm, ['rn]");
+                            break;
+                          case ExclusiveDouble:
+                            Format(instr, "strexd'cond 'rd, 'rm, ['rn]");
+                            break;
+                          case ExclusiveByte:
+                            Format(instr, "strexb'cond 'rd, 'rm, ['rn]");
+                            break;
+                          case ExclusiveHalf:
+                            Format(instr, "strexh'cond 'rd, 'rm, ['rn]");
+                            break;
+                        }
+                    }
+                } else {
+                    Unknown(instr);
+                }
             }
         } else if ((instr->Bit(20) == 0) && ((instr->Bits(7, 4) & 0xd) == 0xd)) {
             // ldrd, strd
@@ -1840,6 +1877,33 @@ Decoder::DecodeSpecialCondition(Instruction* instr)
         }
         break;
       case 0xA:
+        if (instr->Bits(22, 20) == 7) {
+            const char* option = "?";
+            switch (instr->Bits(3, 0)) {
+              case  2: option = "oshst"; break;
+              case  3: option = "osh";   break;
+              case  6: option = "nshst"; break;
+              case  7: option = "nsh";   break;
+              case 10: option = "ishst"; break;
+              case 11: option = "ish";   break;
+              case 14: option = "st";    break;
+              case 15: option = "sy";    break;
+            }
+            switch (instr->Bits(7, 4)) {
+              case 4:
+                out_buffer_pos_ += SNPrintF(out_buffer_ + out_buffer_pos_,
+                                            "dsb %s", option);
+                break;
+              case 5:
+                out_buffer_pos_ += SNPrintF(out_buffer_ + out_buffer_pos_,
+                                            "dmb %s", option);
+                break;
+              default:
+                Unknown(instr);
+            }
+            break;
+        }
+        // else fall through
       case 0xB:
         if ((instr->Bits(22, 20) == 5) && (instr->Bits(15, 12) == 0xf)) {
             int Rn = instr->Bits(19, 16);
