@@ -54,23 +54,23 @@ PresentationParent::ActorDestroy(ActorDestroyReason aWhy)
 bool
 PresentationParent::RecvPPresentationRequestConstructor(
   PPresentationRequestParent* aActor,
-  const PresentationRequest& aRequest)
+  const PresentationIPCRequest& aRequest)
 {
   PresentationRequestParent* actor = static_cast<PresentationRequestParent*>(aActor);
 
   nsresult rv = NS_ERROR_FAILURE;
   switch (aRequest.type()) {
-    case PresentationRequest::TStartSessionRequest:
+    case PresentationIPCRequest::TStartSessionRequest:
       rv = actor->DoRequest(aRequest.get_StartSessionRequest());
       break;
-    case PresentationRequest::TSendSessionMessageRequest:
+    case PresentationIPCRequest::TSendSessionMessageRequest:
       rv = actor->DoRequest(aRequest.get_SendSessionMessageRequest());
       break;
-    case PresentationRequest::TTerminateRequest:
+    case PresentationIPCRequest::TTerminateRequest:
       rv = actor->DoRequest(aRequest.get_TerminateRequest());
       break;
     default:
-      MOZ_CRASH("Unknown PresentationRequest type");
+      MOZ_CRASH("Unknown PresentationIPCRequest type");
   }
 
   return NS_WARN_IF(NS_FAILED(rv)) ? false : true;
@@ -78,7 +78,7 @@ PresentationParent::RecvPPresentationRequestConstructor(
 
 PPresentationRequestParent*
 PresentationParent::AllocPPresentationRequestParent(
-  const PresentationRequest& aRequest)
+  const PresentationIPCRequest& aRequest)
 {
   MOZ_ASSERT(mService);
   nsRefPtr<PresentationRequestParent> actor = new PresentationRequestParent(mService);
