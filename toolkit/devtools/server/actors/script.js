@@ -20,7 +20,7 @@ const xpcInspector = require("xpcInspector");
 const ScriptStore = require("./utils/ScriptStore");
 const { DevToolsWorker } = require("devtools/toolkit/shared/worker.js");
 
-const { defer, resolve, reject, all } = require("devtools/toolkit/deprecated-sync-thenables");
+const { defer, resolve, reject, all } = promise;
 
 loader.lazyGetter(this, "Debugger", () => {
   let Debugger = require("Debugger");
