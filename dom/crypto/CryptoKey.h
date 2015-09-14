@@ -127,7 +127,7 @@ public:
   static bool IsRecognizedUsage(const nsString& aUsage);
   static bool AllUsagesRecognized(const Sequence<nsString>& aUsages);
 
-  void SetSymKey(const CryptoBuffer& aSymKey);
+  nsresult SetSymKey(const CryptoBuffer& aSymKey);
   void SetPrivateKey(SECKEYPrivateKey* aPrivateKey);
   void SetPublicKey(SECKEYPublicKey* aPublicKey);
 

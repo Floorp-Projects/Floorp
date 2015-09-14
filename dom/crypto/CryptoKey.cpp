@@ -385,9 +385,13 @@ CryptoKey::AllUsagesRecognized(const Sequence<nsString>& aUsages)
   return true;
 }
 
-void CryptoKey::SetSymKey(const CryptoBuffer& aSymKey)
+nsresult CryptoKey::SetSymKey(const CryptoBuffer& aSymKey)
 {
-  mSymKey = aSymKey;
+  if (!mSymKey.Assign(aSymKey)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
 }
 
 void
@@ -1268,8 +1272,8 @@ CryptoKey::ReadStructuredClone(JSStructuredCloneReader* aReader)
     return false;
   }
 
-  if (sym.Length() > 0)  {
-    mSymKey = sym;
+  if (sym.Length() > 0 && !mSymKey.Assign(sym))  {
+    return false;
   }
   if (priv.Length() > 0) {
     mPrivateKey = CryptoKey::PrivateKeyFromPkcs8(priv, locker);
