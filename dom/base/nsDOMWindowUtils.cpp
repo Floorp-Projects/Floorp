@@ -1316,9 +1316,9 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
     msg = NS_SIMPLE_GESTURE_ROTATE_START;
   else if (aType.EqualsLiteral("MozRotateGestureUpdate"))
     msg = NS_SIMPLE_GESTURE_ROTATE_UPDATE;
-  else if (aType.EqualsLiteral("MozRotateGesture"))
-    msg = NS_SIMPLE_GESTURE_ROTATE;
-  else if (aType.EqualsLiteral("MozTapGesture")) {
+  else if (aType.EqualsLiteral("MozRotateGesture")) {
+    msg = eRotateGesture;
+  } else if (aType.EqualsLiteral("MozTapGesture")) {
     msg = eTapGesture;
   } else if (aType.EqualsLiteral("MozPressTapGesture")) {
     msg = ePressTapGesture;
