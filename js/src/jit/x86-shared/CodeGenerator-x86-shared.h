@@ -241,6 +241,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual void visitUDivOrModConstant(LUDivOrModConstant *ins);
     virtual void visitAsmJSPassStackArg(LAsmJSPassStackArg* ins);
     virtual void visitMemoryBarrier(LMemoryBarrier* ins);
+    virtual void visitAtomicTypedArrayElementBinop(LAtomicTypedArrayElementBinop* lir);
+    virtual void visitAtomicTypedArrayElementBinopForEffect(LAtomicTypedArrayElementBinopForEffect* lir);
 
     void visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds* ool);
     void visitOffsetBoundsCheck(OffsetBoundsCheck* oolCheck);
@@ -289,6 +291,15 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool);
     void visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIntCheck* ool);
     void generateInvalidateEpilogue();
+
+    // Generating a result.
+    template<typename S, typename T>
+    void atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value,
+                                    const T& mem, Register temp1, Register temp2, AnyRegister output);
+
+    // Generating no result.
+    template<typename S, typename T>
+    void atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value, const T& mem);
 };
 
 // An out-of-line bailout thunk.
