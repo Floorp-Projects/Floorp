@@ -127,9 +127,9 @@ public:
   static bool IsRecognizedUsage(const nsString& aUsage);
   static bool AllUsagesRecognized(const Sequence<nsString>& aUsages);
 
-  void SetSymKey(const CryptoBuffer& aSymKey);
-  void SetPrivateKey(SECKEYPrivateKey* aPrivateKey);
-  void SetPublicKey(SECKEYPublicKey* aPublicKey);
+  nsresult SetSymKey(const CryptoBuffer& aSymKey);
+  nsresult SetPrivateKey(SECKEYPrivateKey* aPrivateKey);
+  nsresult SetPublicKey(SECKEYPublicKey* aPublicKey);
 
   // Accessors for the keys themselves
   // Note: GetPrivateKey and GetPublicKey return copies of the internal
