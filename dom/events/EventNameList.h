@@ -868,7 +868,7 @@ NON_IDL_EVENT(MozSwipeGesture,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozMagnifyGestureStart,
-              NS_SIMPLE_GESTURE_MAGNIFY_START,
+              eMagnifyGestureStart,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozMagnifyGestureUpdate,

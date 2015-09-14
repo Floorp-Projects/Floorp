@@ -4222,7 +4222,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   EventMessage msg;
   switch (mGestureState) {
   case eGestureState_StartGesture:
-    msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
+    msg = eMagnifyGestureStart;
     mGestureState = eGestureState_MagnifyGesture;
     break;
 
