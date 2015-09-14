@@ -394,26 +394,32 @@ nsresult CryptoKey::SetSymKey(const CryptoBuffer& aSymKey)
   return NS_OK;
 }
 
-void
+nsresult
 CryptoKey::SetPrivateKey(SECKEYPrivateKey* aPrivateKey)
 {
   nsNSSShutDownPreventionLock locker;
+
   if (!aPrivateKey || isAlreadyShutDown()) {
     mPrivateKey = nullptr;
-    return;
+    return NS_OK;
   }
+
   mPrivateKey = SECKEY_CopyPrivateKey(aPrivateKey);
+  return mPrivateKey ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-void
+nsresult
 CryptoKey::SetPublicKey(SECKEYPublicKey* aPublicKey)
 {
   nsNSSShutDownPreventionLock locker;
+
   if (!aPublicKey || isAlreadyShutDown()) {
     mPublicKey = nullptr;
-    return;
+    return NS_OK;
   }
+
   mPublicKey = SECKEY_CopyPublicKey(aPublicKey);
+  return mPublicKey ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 const CryptoBuffer&
