@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Test AudioNode#isSource()
+ * Test AudioNode#source
  */
 
 add_task(function*() {
@@ -12,15 +12,15 @@ add_task(function*() {
     getN(front, "create-node", 14)
   ]);
 
-  let actualTypes = yield Promise.all(nodes.map(node => node.getType()));
-  let isSourceResult = yield Promise.all(nodes.map(node => node.isSource()));
+  let actualTypes = nodes.map(node => node.type);
+  let isSourceResult = nodes.map(node => node.source);
 
   actualTypes.forEach((type, i) => {
     let shouldBeSource = type === "AudioBufferSourceNode" || type === "OscillatorNode";
     if (shouldBeSource)
-      is(isSourceResult[i], true, type + "'s isSource() yields into `true`");
+      is(isSourceResult[i], true, type + "'s `source` is `true`");
     else
-      is(isSourceResult[i], false, type + "'s isSource() yields into `false`");
+      is(isSourceResult[i], false, type + "'s `source` is `false`");
   });
 
   yield removeTab(target.tab);
