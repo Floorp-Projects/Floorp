@@ -10,7 +10,6 @@
 #include "MediaData.h"
 #include "MediaSourceDemuxer.h"
 #include "MediaSourceUtils.h"
-#include "TrackBuffer.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Preferences.h"
@@ -72,11 +71,7 @@ SourceBuffer::SetMode(SourceBufferAppendMode aMode, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  if (!mIsUsingFormatReader && aMode == SourceBufferAppendMode::Sequence) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return;
-  }
-  if (mIsUsingFormatReader && mAttributes->mGenerateTimestamps &&
+  if (mAttributes->mGenerateTimestamps &&
       aMode == SourceBufferAppendMode::Segments) {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
@@ -85,13 +80,12 @@ SourceBuffer::SetMode(SourceBufferAppendMode aMode, ErrorResult& aRv)
   if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
     mMediaSource->SetReadyState(MediaSourceReadyState::Open);
   }
-  if (mIsUsingFormatReader &&
-      mContentManager->GetAppendState() == AppendState::PARSING_MEDIA_SEGMENT){
+  if (mContentManager->GetAppendState() == AppendState::PARSING_MEDIA_SEGMENT){
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
-  if (mIsUsingFormatReader && aMode == SourceBufferAppendMode::Sequence) {
+  if (aMode == SourceBufferAppendMode::Sequence) {
     // Will set GroupStartTimestamp to GroupEndTimestamp.
     mContentManager->RestartGroupStartTimestamp();
   }
@@ -114,14 +108,12 @@ SourceBuffer::SetTimestampOffset(double aTimestampOffset, ErrorResult& aRv)
   if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
     mMediaSource->SetReadyState(MediaSourceReadyState::Open);
   }
-  if (mIsUsingFormatReader &&
-      mContentManager->GetAppendState() == AppendState::PARSING_MEDIA_SEGMENT){
+  if (mContentManager->GetAppendState() == AppendState::PARSING_MEDIA_SEGMENT){
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
   mAttributes->SetApparentTimestampOffset(aTimestampOffset);
-  if (mIsUsingFormatReader &&
-      mAttributes->GetAppendMode() == SourceBufferAppendMode::Sequence) {
+  if (mAttributes->GetAppendMode() == SourceBufferAppendMode::Sequence) {
     mContentManager->SetGroupStartTimestamp(mAttributes->GetTimestampOffset());
   }
 }
@@ -281,10 +273,8 @@ SourceBuffer::Detach()
   AbortBufferAppend();
   if (mContentManager) {
     mContentManager->Detach();
-    if (mIsUsingFormatReader) {
-      mMediaSource->GetDecoder()->GetDemuxer()->DetachSourceBuffer(
-        static_cast<mozilla::TrackBuffersManager*>(mContentManager.get()));
-    }
+    mMediaSource->GetDecoder()->GetDemuxer()->DetachSourceBuffer(
+      static_cast<mozilla::TrackBuffersManager*>(mContentManager.get()));
   }
   mContentManager = nullptr;
   mMediaSource = nullptr;
@@ -329,18 +319,14 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   MSE_DEBUG("Create mContentManager=%p",
             mContentManager.get());
 
-  mIsUsingFormatReader =
-    Preferences::GetBool("media.mediasource.format-reader", false);
   ErrorResult dummy;
   if (mAttributes->mGenerateTimestamps) {
     SetMode(SourceBufferAppendMode::Sequence, dummy);
   } else {
     SetMode(SourceBufferAppendMode::Segments, dummy);
   }
-  if (mIsUsingFormatReader) {
-    mMediaSource->GetDecoder()->GetDemuxer()->AttachSourceBuffer(
-      static_cast<mozilla::TrackBuffersManager*>(mContentManager.get()));
-  }
+  mMediaSource->GetDecoder()->GetDemuxer()->AttachSourceBuffer(
+    static_cast<mozilla::TrackBuffersManager*>(mContentManager.get()));
 }
 
 SourceBuffer::~SourceBuffer()
@@ -441,9 +427,6 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
 
   StartUpdating();
 
-  MOZ_ASSERT(mIsUsingFormatReader ||
-             mAttributes->GetAppendMode() == SourceBufferAppendMode::Segments,
-             "We don't handle timestampOffset for sequence mode yet");
   nsCOMPtr<nsIRunnable> task = new BufferAppendRunnable(this, mUpdateID);
   NS_DispatchToMainThread(task);
 }
@@ -483,13 +466,10 @@ SourceBuffer::AppendDataCompletedWithSuccess(bool aHasActiveTracks)
     if (!mActive) {
       mActive = true;
       mMediaSource->SourceBufferIsActive(this);
-      mMediaSource->QueueInitializationEvent();
-      if (mIsUsingFormatReader) {
-        mMediaSource->GetDecoder()->NotifyWaitingForResourcesStatusChanged();
-      }
+      mMediaSource->GetDecoder()->NotifyWaitingForResourcesStatusChanged();
     }
   }
-  if (mActive && mIsUsingFormatReader) {
+  if (mActive) {
     // Tell our parent decoder that we have received new data.
     // The information provided do not matter much so long as it is monotonically
     // increasing.
@@ -591,10 +571,7 @@ SourceBuffer::PrepareAppend(const uint8_t* aData, uint32_t aLength, ErrorResult&
   // See if we have enough free space to append our new data.
   // As we can only evict once we have playable data, we must give a chance
   // to the DASH player to provide a complete media segment.
-  if (aLength > mEvictionThreshold || evicted == Result::BUFFER_FULL ||
-      ((!mIsUsingFormatReader &&
-        mContentManager->GetSize() > mEvictionThreshold - aLength) &&
-       evicted != Result::CANT_EVICT)) {
+  if (aLength > mEvictionThreshold || evicted == Result::BUFFER_FULL) {
     aRv.Throw(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR);
     return nullptr;
   }
