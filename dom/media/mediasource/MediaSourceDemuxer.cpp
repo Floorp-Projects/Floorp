@@ -317,13 +317,6 @@ MediaSourceTrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThresh
                      aTimeThreshold);
 }
 
-int64_t
-MediaSourceTrackDemuxer::GetEvictionOffset(media::TimeUnit aTime)
-{
-  // Unused.
-  return 0;
-}
-
 media::TimeIntervals
 MediaSourceTrackDemuxer::GetBuffered()
 {

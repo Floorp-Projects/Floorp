@@ -207,8 +207,6 @@ public:
 
   virtual media::TimeIntervals GetBuffered() = 0;
 
-  virtual int64_t GetEvictionOffset(media::TimeUnit aTime) = 0;
-
   // If the MediaTrackDemuxer and MediaDataDemuxer hold cross references.
   // BreakCycles must be overridden.
   virtual void BreakCycles()
