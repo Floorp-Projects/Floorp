@@ -1,0 +1,77 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>test file blob upload with SW interception</title>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+if (!parent) {
+  dump("sw_clients/file_blob_upload_frame.html shouldn't be launched directly!");
+}
+
+function makeFileBlob(obj) {
+  return new Promise(function(resolve, reject) {
+
+    var request = indexedDB.open(window.location.pathname, 1);
+    request.onerror = reject;
+    request.onupgradeneeded = function(evt) {
+      var db = evt.target.result;
+      db.onerror = reject;
+
+      var objectStore = db.createObjectStore('test', { autoIncrement: true });
+      var index = objectStore.createIndex('test', 'index');
+    };
+
+    request.onsuccess = function(evt) {
+      var db = evt.target.result;
+      db.onerror = reject;
+
+      var blob = new Blob([JSON.stringify(obj)],
+                          { type: 'application/json' });
+      var data = { blob: blob, index: 5 };
+
+      objectStore = db.transaction('test', 'readwrite').objectStore('test');
+      objectStore.add(data).onsuccess = function(evt) {
+        var key = evt.target.result;
+        objectStore = db.transaction('test').objectStore('test');
+        objectStore.get(key).onsuccess = function(evt) {
+          resolve(evt.target.result.blob);
+        };
+      };
+    };
+  });
+}
+
+navigator.serviceWorker.ready.then(function() {
+  parent.postMessage({ status: 'READY' }, '*');
+});
+
+var URL = '/tests/dom/workers/test/serviceworkers/redirect_post.sjs';
+
+addEventListener('message', function(evt) {
+  if (evt.data.type = 'TEST') {
+    makeFileBlob(evt.data.body).then(function(blob) {
+      return fetch(URL, { method: 'POST', body: blob });
+    }).then(function(response) {
+      return response.json();
+    }).then(function(result) {
+      parent.postMessage({ status: 'OK', result: result }, '*');
+    }).catch(function(e) {
+      parent.postMessage({ status: 'ERROR', result: e.toString() }, '*');
+    });
+  }
+});
+
+</script>
+</pre>
+</body>
+</html>
+
