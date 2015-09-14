@@ -161,7 +161,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
         mUserEnteredTextView.setText(searchTerm);
 
         // mSearchEngine is not set in the first call to this method; the content description
-        // is instead initially set in updateFromSearchEngine.
+        // is instead initially set in updateSuggestions().
         if (mSearchEngine != null) {
             setDescriptionOnSuggestion(mUserEnteredTextView, searchTerm);
         }
@@ -243,16 +243,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
         hideRecycledSuggestions(suggestionCounter, recycledSuggestionCount);
     }
 
-    private int updateFromSearchEngine(SearchEngine searchEngine, boolean animate, int recycledSuggestionCount) {
-        // Update search engine reference.
-        mSearchEngine = searchEngine;
-
-        // Set the search engine icon (e.g., Google) for the row.
-        mIconView.updateAndScaleImage(mSearchEngine.getIcon(), mSearchEngine.getEngineIdentifier());
-
-        // Set the initial content description.
-        setDescriptionOnSuggestion(mUserEnteredTextView, mUserEnteredTextView.getText().toString());
-
+    private int updateFromSearchEngine(boolean animate, int recycledSuggestionCount) {
         int suggestionCounter = 0;
         // Apply Search Engine's suggestions
         for (String suggestion : mSearchEngine.getSuggestions()) {
@@ -271,10 +262,16 @@ class SearchEngineRow extends AnimatedHeightLayout {
     }
 
     public void updateSuggestions(boolean suggestionsEnabled, SearchEngine searchEngine, String searchTerm, boolean animate) {
+        // Update search engine reference. Even if the user has not seen the prompt, we need to set the engine for the mSearchTerm suggestion
+        mSearchEngine = searchEngine;
+        // Set the search engine icon (e.g., Google) for the row.
+        mIconView.updateAndScaleImage(mSearchEngine.getIcon(), mSearchEngine.getEngineIdentifier());
+        // Set the initial content description.
+        setDescriptionOnSuggestion(mUserEnteredTextView, mUserEnteredTextView.getText().toString());
         // This can be called before the opt-in permission prompt is shown or set. Check first.
         if (suggestionsEnabled) {
             final int recycledSuggestionCount = mSuggestionView.getChildCount();
-            final int suggestionViewCount = updateFromSearchEngine(searchEngine, animate, recycledSuggestionCount);
+            final int suggestionViewCount = updateFromSearchEngine(animate, recycledSuggestionCount);
             if (AppConstants.NIGHTLY_BUILD) {
                 updateFromSavedSearches(searchTerm, animate, suggestionViewCount, recycledSuggestionCount);
             }
