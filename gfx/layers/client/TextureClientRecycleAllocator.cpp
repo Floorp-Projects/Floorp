@@ -53,24 +53,6 @@ TextureClientRecycleAllocator::SetMaxPoolSize(uint32_t aMax)
   mMaxPooledSize = aMax;
 }
 
-class TextureClientRecycleTask : public Task
-{
-public:
-  explicit TextureClientRecycleTask(TextureClient* aClient, TextureFlags aFlags)
-    : mTextureClient(aClient)
-    , mFlags(aFlags)
-  {}
-
-  virtual void Run() override
-  {
-    mTextureClient->RecycleTexture(mFlags);
-  }
-
-private:
-  mozilla::RefPtr<TextureClient> mTextureClient;
-  TextureFlags mFlags;
-};
-
 already_AddRefed<TextureClient>
 TextureClientRecycleAllocator::CreateOrRecycle(gfx::SurfaceFormat aFormat,
                                                gfx::IntSize aSize,
@@ -92,18 +74,17 @@ TextureClientRecycleAllocator::CreateOrRecycle(gfx::SurfaceFormat aFormat,
     if (!mPooledClients.empty()) {
       textureHolder = mPooledClients.top();
       mPooledClients.pop();
-      Task* task = nullptr;
       // If a pooled TextureClient is not compatible, release it.
       if (textureHolder->GetTextureClient()->GetFormat() != aFormat ||
           textureHolder->GetTextureClient()->GetSize() != aSize) {
-        // Release TextureClient.
-        task = new TextureClientReleaseTask(textureHolder->GetTextureClient());
+        TextureClientReleaseTask* task = new TextureClientReleaseTask(textureHolder->GetTextureClient());
         textureHolder->ClearTextureClient();
         textureHolder = nullptr;
+        // Release TextureClient.
+        mSurfaceAllocator->GetMessageLoop()->PostTask(FROM_HERE, task);
       } else {
-        task = new TextureClientRecycleTask(textureHolder->GetTextureClient(), aTextureFlags);
+        textureHolder->GetTextureClient()->RecycleTexture(aTextureFlags);
       }
-      mSurfaceAllocator->GetMessageLoop()->PostTask(FROM_HERE, task);
     }
   }
 
