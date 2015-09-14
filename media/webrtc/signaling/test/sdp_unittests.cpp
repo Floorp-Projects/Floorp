@@ -265,7 +265,7 @@ class SdpTest : public ::testing::Test {
 
 static const std::string kVideoSdp =
   "v=0\r\n"
-  "o=- 137331303 2 IN IP4 127.0.0.1\r\n"
+  "o=- 4294967296 2 IN IP4 127.0.0.1\r\n"
   "s=SIP Call\r\n"
   "c=IN IP4 198.51.100.7\r\n"
   "t=0 0\r\n"
@@ -813,7 +813,7 @@ TEST_F(SdpTest, addFmtpMaxFsFr) {
 
 static const std::string kBrokenFmtp =
   "v=0\r\n"
-  "o=- 137331303 2 IN IP4 127.0.0.1\r\n"
+  "o=- 4294967296 2 IN IP4 127.0.0.1\r\n"
   "s=SIP Call\r\n"
   "t=0 0\r\n"
   "m=video 56436 RTP/SAVPF 120\r\n"
@@ -846,7 +846,7 @@ TEST_F(SdpTest, addIceLite) {
 TEST_F(SdpTest, parseIceLite) {
     std::string sdp =
         "v=0\r\n"
-        "o=- 137331303 2 IN IP4 127.0.0.1\r\n"
+        "o=- 4294967296 2 IN IP4 127.0.0.1\r\n"
         "s=SIP Call\r\n"
         "t=0 0\r\n"
         "a=ice-lite\r\n";
@@ -1006,7 +1006,7 @@ TEST_P(NewSdpTest, CheckOriginGetUsername) {
 
 TEST_P(NewSdpTest, CheckOriginGetSessionId) {
   ParseSdp(kVideoSdp);
-  ASSERT_EQ(137331303U, mSdp->GetOrigin().GetSessionId())
+  ASSERT_EQ(4294967296U, mSdp->GetOrigin().GetSessionId())
     << "Wrong session id in origin";
 }
 
@@ -1036,7 +1036,7 @@ TEST_P(NewSdpTest, CheckGetMissingBandwidth) {
 
 TEST_P(NewSdpTest, CheckGetBandwidth) {
   ParseSdp("v=0" CRLF
-           "o=- 137331303 2 IN IP4 127.0.0.1" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
            "s=SIP Call" CRLF
            "c=IN IP4 198.51.100.7" CRLF
            "b=CT:5000" CRLF
@@ -1104,7 +1104,7 @@ TEST_P(NewSdpTest, CheckMediaSectionGetMissingBandwidth) {
 
 TEST_P(NewSdpTest, CheckMediaSectionGetBandwidth) {
   ParseSdp("v=0\r\n"
-           "o=- 137331303 2 IN IP4 127.0.0.1\r\n"
+           "o=- 4294967296 2 IN IP4 127.0.0.1\r\n"
            "c=IN IP4 198.51.100.7\r\n"
            "t=0 0\r\n"
            "m=video 56436 RTP/SAVPF 120\r\n"
