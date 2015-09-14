@@ -109,8 +109,8 @@ nsHTMLEntities::AddRefTable(void)
         entry->node = node;
     }
 #ifdef DEBUG
-    PL_DHashMarkTableImmutable(gUnicodeToEntity);
-    PL_DHashMarkTableImmutable(gEntityToUnicode);
+    gUnicodeToEntity->MarkImmutable();
+    gEntityToUnicode->MarkImmutable();
 #endif
   }
   ++gTableRefCnt;

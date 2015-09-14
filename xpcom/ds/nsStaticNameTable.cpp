@@ -147,7 +147,7 @@ nsStaticCaseInsensitiveNameTable::nsStaticCaseInsensitiveNameTable(
     entry->mIndex = index;
   }
 #ifdef DEBUG
-  PL_DHashMarkTableImmutable(&mNameTable);
+  mNameTable.MarkImmutable();
 #endif
 }
 
