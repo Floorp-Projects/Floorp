@@ -19,7 +19,7 @@ protected:
     PLDHashTable mTable;
 
 public:
-    nsTemplateMap() : mTable(PL_DHashGetStubOps(), sizeof(Entry)) { }
+    nsTemplateMap() : mTable(PLDHashTable::StubOps(), sizeof(Entry)) { }
 
     ~nsTemplateMap() { }
 

@@ -161,7 +161,7 @@ Assertion::Assertion(nsIRDFResource* aSource)
     NS_ADDREF(mSource);
 
     u.hash.mPropertyHash =
-        new PLDHashTable(PL_DHashGetStubOps(), sizeof(Entry));
+        new PLDHashTable(PLDHashTable::StubOps(), sizeof(Entry));
 }
 
 Assertion::Assertion(nsIRDFResource* aSource,
@@ -734,8 +734,8 @@ NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResu
 
 
 InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
-    : mForwardArcs(PL_DHashGetStubOps(), sizeof(Entry))
-    , mReverseArcs(PL_DHashGetStubOps(), sizeof(Entry))
+    : mForwardArcs(PLDHashTable::StubOps(), sizeof(Entry))
+    , mReverseArcs(PLDHashTable::StubOps(), sizeof(Entry))
     , mNumObservers(0)
     , mReadCount(0)
 {

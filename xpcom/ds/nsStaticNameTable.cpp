@@ -64,7 +64,7 @@ matchNameKeysCaseInsensitive(PLDHashTable*, const PLDHashEntryHdr* aHdr,
 }
 
 /*
- * caseInsensitiveHashKey is just like PL_DHashStringKey except it
+ * caseInsensitiveHashKey is just like PLDHashTable::HashStringKey except it
  * uses (*s & ~0x20) instead of simply *s.  This means that "aFOO" and
  * "afoo" and "aFoo" will all hash to the same thing.  It also means
  * that some strings that aren't case-insensensitively equal will hash
@@ -96,8 +96,8 @@ caseInsensitiveStringHashKey(PLDHashTable* aTable, const void* aKey)
 static const struct PLDHashTableOps nametable_CaseInsensitiveHashTableOps = {
   caseInsensitiveStringHashKey,
   matchNameKeysCaseInsensitive,
-  PL_DHashMoveEntryStub,
-  PL_DHashClearEntryStub,
+  PLDHashTable::MoveEntryStub,
+  PLDHashTable::ClearEntryStub,
   nullptr,
 };
 

@@ -85,8 +85,8 @@ StringCompare(PLDHashTable *table, const PLDHashEntryHdr *entry,
 static const PLDHashTableOps ops = {
     StringHash,
     StringCompare,
-    PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
+    PLDHashTable::MoveEntryStub,
+    PLDHashTable::ClearEntryStub,
     nullptr
 };
 

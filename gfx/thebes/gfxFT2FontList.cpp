@@ -630,7 +630,7 @@ public:
             StringHash,
             HashMatchEntry,
             MoveEntry,
-            PL_DHashClearEntryStub,
+            PLDHashTable::ClearEntryStub,
             nullptr
         };
 
