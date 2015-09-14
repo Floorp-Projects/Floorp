@@ -1223,7 +1223,7 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
         as = next;
 
         if (first) {
-            PL_DHashTableRawRemove(root->u.hash.mPropertyHash, hdr);
+            root->u.hash.mPropertyHash->RawRemove(hdr);
 
             if (next && next->mNext) {
                 PLDHashEntryHdr* hdr =
@@ -1858,7 +1858,7 @@ InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
 
                 // Wow, it was the _only_ one. Unhash it.
                 if (! rentry->mAssertions) {
-                    PL_DHashTableRawRemove(aInfo->mReverseArcs, hdr);
+                    aInfo->mReverseArcs->RawRemove(hdr);
                 }
 
                 // add to the list of assertions to unassert
