@@ -403,7 +403,7 @@ NS_EVENT_MESSAGE(eNetworkDownload,       eNetworkEventFirst + 2)
 // MediaRecorder events.
 NS_EVENT_MESSAGE(eMediaRecorderEventFirst,    5700)
 NS_EVENT_MESSAGE(eMediaRecorderDataAvailable, eMediaRecorderEventFirst + 1)
-NS_EVENT_MESSAGE(NS_MEDIARECORDER_WARNING,       eMediaRecorderEventFirst + 2)
+NS_EVENT_MESSAGE(eMediaRecorderWarning,       eMediaRecorderEventFirst + 2)
 NS_EVENT_MESSAGE(NS_MEDIARECORDER_STOP,          eMediaRecorderEventFirst + 3)
 
 // SpeakerManager events
