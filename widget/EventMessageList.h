@@ -369,11 +369,11 @@ NS_EVENT_MESSAGE(eFullscreenEventFirst,  5100)
 NS_EVENT_MESSAGE(eFullscreenChange,      eFullscreenEventFirst)
 NS_EVENT_MESSAGE(eFullscreenError,       eFullscreenEventFirst + 1)
 
-NS_EVENT_MESSAGE(NS_TOUCH_EVENT_START,   5200)
-NS_EVENT_MESSAGE(NS_TOUCH_START,         NS_TOUCH_EVENT_START)
-NS_EVENT_MESSAGE(NS_TOUCH_MOVE,          NS_TOUCH_EVENT_START + 1)
-NS_EVENT_MESSAGE(NS_TOUCH_END,           NS_TOUCH_EVENT_START + 2)
-NS_EVENT_MESSAGE(NS_TOUCH_CANCEL,        NS_TOUCH_EVENT_START + 3)
+NS_EVENT_MESSAGE(eTouchEventFirst,       5200)
+NS_EVENT_MESSAGE(NS_TOUCH_START,         eTouchEventFirst)
+NS_EVENT_MESSAGE(NS_TOUCH_MOVE,          eTouchEventFirst + 1)
+NS_EVENT_MESSAGE(NS_TOUCH_END,           eTouchEventFirst + 2)
+NS_EVENT_MESSAGE(NS_TOUCH_CANCEL,        eTouchEventFirst + 3)
 
 // Pointerlock DOM API
 NS_EVENT_MESSAGE(ePointerLockEventFirst, 5300)
