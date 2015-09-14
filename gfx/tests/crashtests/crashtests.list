@@ -111,6 +111,7 @@ load 893572-1.html
 load 893572-2.html
 load 893572-3.html
 load 893572-4.html
+pref(layers.force-active,true) load 914457-1.html
 load 944579.svg
 load 944579.html
 pref(security.fileuri.strict_origin_policy,false) load 950000.html
