@@ -892,7 +892,7 @@ NON_IDL_EVENT(MozRotateGesture,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozTapGesture,
-              NS_SIMPLE_GESTURE_TAP,
+              eTapGesture,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozPressTapGesture,

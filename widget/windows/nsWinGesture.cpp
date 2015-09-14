@@ -394,13 +394,11 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam,
     break;
 
     case GID_TWOFINGERTAP:
-    {
-      // Normally maps to "restore" from whatever you may have recently changed. A simple
-      // double click.
-      evt.mMessage = NS_SIMPLE_GESTURE_TAP;
+      // Normally maps to "restore" from whatever you may have recently changed.
+      // A simple double click.
+      evt.mMessage = eTapGesture;
       evt.clickCount = 1;
-    }
-    break;
+      break;
 
     case GID_PRESSANDTAP:
       // Two finger right click. Defaults to right click if it falls through.
