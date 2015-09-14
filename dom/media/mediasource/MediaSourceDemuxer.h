@@ -29,14 +29,6 @@ public:
 
   nsRefPtr<InitPromise> Init() override;
 
-  bool IsThreadSafe() override { return true; }
-
-  already_AddRefed<MediaDataDemuxer> Clone() const override
-  {
-    MOZ_CRASH("Shouldn't be called");
-    return nullptr;
-  }
-
   bool HasTrackType(TrackInfo::TrackType aType) const override;
 
   uint32_t GetNumberTracks(TrackInfo::TrackType aType) const override;

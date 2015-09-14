@@ -19,7 +19,6 @@ public:
   // MediaDataDemuxer interface.
   explicit MP3Demuxer(MediaResource* aSource);
   nsRefPtr<InitPromise> Init() override;
-  already_AddRefed<MediaDataDemuxer> Clone() const override;
   bool HasTrackType(TrackInfo::TrackType aType) const override;
   uint32_t GetNumberTracks(TrackInfo::TrackType aType) const override;
   already_AddRefed<MediaTrackDemuxer> GetTrackDemuxer(

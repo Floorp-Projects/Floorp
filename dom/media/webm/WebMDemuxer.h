@@ -80,8 +80,6 @@ public:
   
   nsRefPtr<InitPromise> Init() override;
 
-  already_AddRefed<MediaDataDemuxer> Clone() const override;
-
   bool HasTrackType(TrackInfo::TrackType aType) const override;
 
   uint32_t GetNumberTracks(TrackInfo::TrackType aType) const override;
