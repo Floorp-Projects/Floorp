@@ -173,7 +173,7 @@ public:
    */
   void RawRemoveEntry(EntryType* aEntry)
   {
-    PL_DHashTableRawRemove(&mTable, aEntry);
+    mTable.RawRemove(aEntry);
   }
 
   // This is an iterator that also allows entry removal. Example usage:
