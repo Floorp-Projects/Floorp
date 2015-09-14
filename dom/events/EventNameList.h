@@ -935,7 +935,7 @@ NON_IDL_EVENT(audioprocess,
               eBasicEventClass)
 
 NON_IDL_EVENT(complete,
-              NS_AUDIO_COMPLETE,
+              eAudioComplete,
               EventNameType_None,
               eBasicEventClass)
 
