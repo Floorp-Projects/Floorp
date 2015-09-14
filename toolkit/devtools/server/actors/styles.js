@@ -332,7 +332,9 @@ let PageStyleActor = protocol.ActorClass({
 
       // If this font comes from a @font-face rule
       if (font.rule) {
-        fontFace.rule = StyleRuleActor(this, font.rule);
+        let styleActor = StyleRuleActor(this, font.rule);
+        this.manage(styleActor);
+        fontFace.rule = styleActor;
         fontFace.ruleText = font.rule.cssText;
       }
 
