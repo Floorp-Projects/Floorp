@@ -254,7 +254,7 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
                                  uint64_t aInputBlockId,
                                  nsEventStatus aApzResponse)
 {
-  if (aEvent.mMessage == NS_TOUCH_START && aEvent.touches.Length() > 0) {
+  if (aEvent.mMessage == eTouchStart && aEvent.touches.Length() > 0) {
     mActiveElementManager->SetTargetElement(aEvent.touches[0]->GetTarget());
   }
 
@@ -262,7 +262,7 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
       aEvent.mFlags.mMultipleActionsPrevented;
   bool sentContentResponse = false;
   switch (aEvent.mMessage) {
-  case NS_TOUCH_START: {
+  case eTouchStart: {
     mTouchEndCancelled = false;
     if (mPendingTouchPreventedResponse) {
       // We can enter here if we get two TOUCH_STARTs in a row and didn't

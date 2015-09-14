@@ -1049,7 +1049,7 @@ bool
 nsSliderFrame::ShouldScrollForEvent(WidgetGUIEvent* aEvent)
 {
   switch (aEvent->mMessage) {
-    case NS_TOUCH_START:
+    case eTouchStart:
     case NS_TOUCH_END:
       return true;
     case eMouseDown:
@@ -1076,7 +1076,7 @@ nsSliderFrame::ShouldScrollToClickForEvent(WidgetGUIEvent* aEvent)
     return false;
   }
 
-  if (aEvent->mMessage == NS_TOUCH_START) {
+  if (aEvent->mMessage == eTouchStart) {
     return GetScrollToClick();
   }
 

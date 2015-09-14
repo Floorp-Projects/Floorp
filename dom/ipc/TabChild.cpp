@@ -2003,7 +2003,7 @@ TabChild::UpdateTapState(const WidgetTouchEvent& aEvent, nsEventStatus aStatus)
   }
 
   bool currentlyTrackingTouch = (mActivePointerId >= 0);
-  if (aEvent.mMessage == NS_TOUCH_START) {
+  if (aEvent.mMessage == eTouchStart) {
     if (currentlyTrackingTouch || aEvent.touches.Length() > 1) {
       // We're tracking a possible tap for another point, or we saw a
       // touchstart for a later pointer after we canceled tracking of
@@ -2128,7 +2128,7 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
   APZCCallbackHelper::ApplyCallbackTransform(localEvent, aGuid,
       mPuppetWidget->GetDefaultScale());
 
-  if (localEvent.mMessage == NS_TOUCH_START && AsyncPanZoomEnabled()) {
+  if (localEvent.mMessage == eTouchStart && AsyncPanZoomEnabled()) {
     if (gfxPrefs::TouchActionEnabled()) {
       APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(mPuppetWidget,
           localEvent, aInputBlockId, mSetAllowedTouchBehaviorCallback);

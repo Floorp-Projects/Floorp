@@ -370,7 +370,7 @@ NS_EVENT_MESSAGE(eFullscreenChange,      eFullscreenEventFirst)
 NS_EVENT_MESSAGE(eFullscreenError,       eFullscreenEventFirst + 1)
 
 NS_EVENT_MESSAGE(eTouchEventFirst,       5200)
-NS_EVENT_MESSAGE(NS_TOUCH_START,         eTouchEventFirst)
+NS_EVENT_MESSAGE(eTouchStart,            eTouchEventFirst)
 NS_EVENT_MESSAGE(NS_TOUCH_MOVE,          eTouchEventFirst + 1)
 NS_EVENT_MESSAGE(NS_TOUCH_END,           eTouchEventFirst + 2)
 NS_EVENT_MESSAGE(NS_TOUCH_CANCEL,        eTouchEventFirst + 3)

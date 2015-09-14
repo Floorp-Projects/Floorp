@@ -1064,7 +1064,7 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
         // from running.
         preventDefaultActions = (status == nsEventStatus_eConsumeNoDefault ||
                                 event.mFlags.mMultipleActionsPrevented);
-        isDownEvent = (event.mMessage == NS_TOUCH_START);
+        isDownEvent = (event.mMessage == eTouchStart);
     }
 
     if (isDownEvent && event.touches.Length() == 1) {

@@ -201,7 +201,9 @@ private:
         CFDictionaryAddValue(mTouches, touch, (void*)mNextTouchID);
         mNextTouchID++;
     }
-    [self sendTouchEvent:NS_TOUCH_START touches:[event allTouches] widget:mGeckoChild];
+    [self sendTouchEvent:eTouchStart
+                 touches:[event allTouches]
+                  widget:mGeckoChild];
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event

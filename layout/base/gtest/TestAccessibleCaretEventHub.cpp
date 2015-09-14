@@ -163,7 +163,7 @@ public:
 
   static UniquePtr<WidgetEvent> CreateTouchPressEvent(nscoord aX, nscoord aY)
   {
-    return CreateTouchEvent(NS_TOUCH_START, aX, aY);
+    return CreateTouchEvent(eTouchStart, aX, aY);
   }
 
   static UniquePtr<WidgetEvent> CreateTouchMoveEvent(nscoord aX, nscoord aY)
