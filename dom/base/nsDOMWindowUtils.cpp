@@ -1310,9 +1310,9 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
     msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
   else if (aType.EqualsLiteral("MozMagnifyGestureUpdate"))
     msg = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
-  else if (aType.EqualsLiteral("MozMagnifyGesture"))
-    msg = NS_SIMPLE_GESTURE_MAGNIFY;
-  else if (aType.EqualsLiteral("MozRotateGestureStart")) {
+  else if (aType.EqualsLiteral("MozMagnifyGesture")) {
+    msg = eMagnifyGesture;
+  } else if (aType.EqualsLiteral("MozRotateGestureStart")) {
     msg = eRotateGestureStart;
   } else if (aType.EqualsLiteral("MozRotateGestureUpdate")) {
     msg = eRotateGestureUpdate;

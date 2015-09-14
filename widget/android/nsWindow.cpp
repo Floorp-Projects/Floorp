@@ -1136,7 +1136,7 @@ nsWindow::OnNativeGestureEvent(AndroidGeckoEvent *ae)
             mLastDist += delta;
             break;
         case AndroidMotionEvent::ACTION_MAGNIFY_END:
-            msg = NS_SIMPLE_GESTURE_MAGNIFY;
+            msg = eMagnifyGesture;
             delta -= mStartDist;
             break;
         default:
