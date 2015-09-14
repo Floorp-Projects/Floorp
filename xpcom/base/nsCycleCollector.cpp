@@ -917,8 +917,7 @@ CCGraph::AddNodeToMap(void* aPtr)
     return nullptr;
   }
 
-  PtrToNodeEntry* e = static_cast<PtrToNodeEntry*>
-    (PL_DHashTableAdd(&mPtrToNodeMap, aPtr, fallible));
+  auto e = static_cast<PtrToNodeEntry*>(mPtrToNodeMap.Add(aPtr, fallible));
   if (!e) {
     mOutOfMemory = true;
     MOZ_ASSERT(false, "Ran out of memory while building cycle collector graph");

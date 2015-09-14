@@ -220,10 +220,9 @@ NS_GetContentList(nsINode* aRootNode,
       new PLDHashTable(&hash_table_ops, sizeof(ContentListHashEntry));
   }
 
-  ContentListHashEntry *entry = nullptr;
   // First we look in our hashtable.  Then we create a content list if needed
-  entry = static_cast<ContentListHashEntry *>
-    (PL_DHashTableAdd(gContentListHashTable, &hashKey, fallible));
+  auto entry = static_cast<ContentListHashEntry*>
+                          (gContentListHashTable->Add(&hashKey, fallible));
   if (entry)
     list = entry->mContentList;
 
@@ -329,8 +328,8 @@ GetFuncStringContentList(nsINode* aRootNode,
   if (gFuncStringContentListHashTable) {
     nsFuncStringCacheKey hashKey(aRootNode, aFunc, aString);
 
-    entry = static_cast<FuncStringContentListHashEntry *>
-      (PL_DHashTableAdd(gFuncStringContentListHashTable, &hashKey, fallible));
+    entry = static_cast<FuncStringContentListHashEntry*>
+      (gFuncStringContentListHashTable->Add(&hashKey, fallible));
     if (entry) {
       list = entry->mContentList;
 #ifdef DEBUG

@@ -541,7 +541,7 @@ GetAtomHashEntry(const char* aString, uint32_t aLength, uint32_t* aHashOut)
   EnsureTableExists();
   AtomTableKey key(aString, aLength, aHashOut);
   // This is an infallible add.
-  return static_cast<AtomTableEntry*>(PL_DHashTableAdd(gAtomTable, &key));
+  return static_cast<AtomTableEntry*>(gAtomTable->Add(&key));
 }
 
 static inline AtomTableEntry*
@@ -551,7 +551,7 @@ GetAtomHashEntry(const char16_t* aString, uint32_t aLength, uint32_t* aHashOut)
   EnsureTableExists();
   AtomTableKey key(aString, aLength, aHashOut);
   // This is an infallible add.
-  return static_cast<AtomTableEntry*>(PL_DHashTableAdd(gAtomTable, &key));
+  return static_cast<AtomTableEntry*>(gAtomTable->Add(&key));
 }
 
 class CheckStaticAtomSizes

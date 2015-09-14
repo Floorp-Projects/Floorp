@@ -1140,7 +1140,7 @@ RDFServiceImpl::RegisterResource(nsIRDFResource* aResource, bool aReplace)
                 aResource, (const char*) uri));
     }
     else {
-        hdr = PL_DHashTableAdd(&mResources, uri, fallible);
+        hdr = mResources.Add(uri, fallible);
         if (! hdr)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1376,7 +1376,7 @@ RDFServiceImpl::RegisterLiteral(nsIRDFLiteral* aLiteral)
 
     NS_ASSERTION(!mLiterals.Search(value), "literal already registered");
 
-    PLDHashEntryHdr *hdr = PL_DHashTableAdd(&mLiterals, value, fallible);
+    PLDHashEntryHdr *hdr = mLiterals.Add(value, fallible);
     if (! hdr)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1426,7 +1426,7 @@ RDFServiceImpl::RegisterInt(nsIRDFInt* aInt)
 
     NS_ASSERTION(!mInts.Search(&value), "int already registered");
 
-    PLDHashEntryHdr *hdr = PL_DHashTableAdd(&mInts, &value, fallible);
+    PLDHashEntryHdr *hdr = mInts.Add(&value, fallible);
     if (! hdr)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1476,7 +1476,7 @@ RDFServiceImpl::RegisterDate(nsIRDFDate* aDate)
 
     NS_ASSERTION(!mDates.Search(&value), "date already registered");
 
-    PLDHashEntryHdr *hdr = PL_DHashTableAdd(&mDates, &value, fallible);
+    PLDHashEntryHdr *hdr = mDates.Add(&value, fallible);
     if (! hdr)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1521,7 +1521,7 @@ RDFServiceImpl::RegisterBlob(BlobImpl *aBlob)
 {
     NS_ASSERTION(!mBlobs.Search(&aBlob->mData), "blob already registered");
 
-    PLDHashEntryHdr *hdr = PL_DHashTableAdd(&mBlobs, &aBlob->mData, fallible);
+    PLDHashEntryHdr *hdr = mBlobs.Add(&aBlob->mData, fallible);
     if (! hdr)
         return NS_ERROR_OUT_OF_MEMORY;
 

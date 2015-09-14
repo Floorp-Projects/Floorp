@@ -206,8 +206,8 @@ nsPropertyTable::SetPropertyInternal(nsPropertyOwner     aObject,
   // The current property value (if there is one) is replaced and the current
   // value is destroyed
   nsresult result = NS_OK;
-  PropertyListMapEntry *entry = static_cast<PropertyListMapEntry*>
-    (PL_DHashTableAdd(&propertyList->mObjectValueMap, aObject, mozilla::fallible));
+  auto entry = static_cast<PropertyListMapEntry*>
+    (propertyList->mObjectValueMap.Add(aObject, mozilla::fallible));
   if (!entry)
     return NS_ERROR_OUT_OF_MEMORY;
   // A nullptr entry->key is the sign that the entry has just been allocated

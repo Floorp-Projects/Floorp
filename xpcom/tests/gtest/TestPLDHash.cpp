@@ -167,9 +167,9 @@ static const PLDHashTableOps trivialOps = {
 TEST(PLDHashTableTest, MoveSemantics)
 {
   PLDHashTable t1(&trivialOps, sizeof(PLDHashEntryStub));
-  PL_DHashTableAdd(&t1, (const void*)88);
+  t1.Add((const void*)88);
   PLDHashTable t2(&trivialOps, sizeof(PLDHashEntryStub));
-  PL_DHashTableAdd(&t2, (const void*)99);
+  t2.Add((const void*)99);
 
   t1 = mozilla::Move(t1);   // self-move
 
@@ -177,13 +177,13 @@ TEST(PLDHashTableTest, MoveSemantics)
 
   PLDHashTable t3(&trivialOps, sizeof(PLDHashEntryStub));
   PLDHashTable t4(&trivialOps, sizeof(PLDHashEntryStub));
-  PL_DHashTableAdd(&t3, (const void*)88);
+  t3.Add((const void*)88);
 
   t3 = mozilla::Move(t4);   // non-empty overwritten with empty
 
   PLDHashTable t5(&trivialOps, sizeof(PLDHashEntryStub));
   PLDHashTable t6(&trivialOps, sizeof(PLDHashEntryStub));
-  PL_DHashTableAdd(&t6, (const void*)88);
+  t6.Add((const void*)88);
 
   t5 = mozilla::Move(t6);   // empty overwritten with non-empty
 
@@ -191,7 +191,7 @@ TEST(PLDHashTableTest, MoveSemantics)
   PLDHashTable t8(mozilla::Move(t7));  // new table constructed with uninited
 
   PLDHashTable t9(&trivialOps, sizeof(PLDHashEntryStub));
-  PL_DHashTableAdd(&t9, (const void*)88);
+  t9.Add((const void*)88);
   PLDHashTable t10(mozilla::Move(t9));  // new table constructed with inited
 }
 
@@ -205,19 +205,19 @@ TEST(PLDHashTableTest, Clear)
   t1.ClearAndPrepareForLength(100);
   ASSERT_EQ(t1.EntryCount(), 0u);
 
-  PL_DHashTableAdd(&t1, (const void*)77);
-  PL_DHashTableAdd(&t1, (const void*)88);
-  PL_DHashTableAdd(&t1, (const void*)99);
+  t1.Add((const void*)77);
+  t1.Add((const void*)88);
+  t1.Add((const void*)99);
   ASSERT_EQ(t1.EntryCount(), 3u);
 
   t1.Clear();
   ASSERT_EQ(t1.EntryCount(), 0u);
 
-  PL_DHashTableAdd(&t1, (const void*)55);
-  PL_DHashTableAdd(&t1, (const void*)66);
-  PL_DHashTableAdd(&t1, (const void*)77);
-  PL_DHashTableAdd(&t1, (const void*)88);
-  PL_DHashTableAdd(&t1, (const void*)99);
+  t1.Add((const void*)55);
+  t1.Add((const void*)66);
+  t1.Add((const void*)77);
+  t1.Add((const void*)88);
+  t1.Add((const void*)99);
   ASSERT_EQ(t1.EntryCount(), 5u);
 
   t1.ClearAndPrepareForLength(8192);
@@ -243,9 +243,9 @@ TEST(PLDHashTableTest, Iterator)
   }
 
   // Add three entries.
-  PL_DHashTableAdd(&t, (const void*)77);
-  PL_DHashTableAdd(&t, (const void*)88);
-  PL_DHashTableAdd(&t, (const void*)99);
+  t.Add((const void*)77);
+  t.Add((const void*)88);
+  t.Add((const void*)99);
 
   // Check the iterator goes through each entry once.
   bool saw77 = false, saw88 = false, saw99 = false;
@@ -270,7 +270,7 @@ TEST(PLDHashTableTest, Iterator)
   // First, we insert 64 items, which results in a capacity of 128, and a load
   // factor of 50%.
   for (intptr_t i = 0; i < 64; i++) {
-    PL_DHashTableAdd(&t, (const void*)i);
+    t.Add((const void*)i);
   }
   ASSERT_EQ(t.EntryCount(), 64u);
   ASSERT_EQ(t.Capacity(), 128u);
@@ -326,7 +326,7 @@ TEST(PLDHashTableTest, GrowToMaxCapacity)
   // Keep inserting elements until failure occurs because the table is full.
   size_t numInserted = 0;
   while (true) {
-    if (!PL_DHashTableAdd(t, (const void*)numInserted, mozilla::fallible)) {
+    if (!t->Add((const void*)numInserted, mozilla::fallible)) {
       break;
     }
     numInserted++;
