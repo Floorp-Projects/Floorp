@@ -852,7 +852,7 @@ NON_IDL_EVENT(MozSwipeGestureMayStart,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozSwipeGestureStart,
-              NS_SIMPLE_GESTURE_SWIPE_START,
+              eSwipeGestureStart,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozSwipeGestureUpdate,
