@@ -160,8 +160,6 @@ public:
     return DOMNode.forget();
   }
   nsIContent* GetContent() const { return mContent; }
-  mozilla::dom::Element* Elm() const
-    { return mContent->IsElement() ? mContent->AsElement() : nullptr; }
 
   /**
    * Return node type information of DOM node associated with the accessible.
@@ -902,19 +900,6 @@ public:
   }
 
   /**
-   * Get/set repositioned bit indicating that the accessible was moved in
-   * the accessible tree, i.e. the accessible tree structure differs from DOM.
-   */
-  bool IsRepositioned() const { return mStateFlags & eRepositioned; }
-  void SetRepositioned(bool aRepositioned)
-  {
-    if (aRepositioned)
-      mStateFlags |= eRepositioned;
-    else
-      mStateFlags &= ~eRepositioned;
-  }
-
-  /**
    * Return true if this accessible has a parent whose name depends on this
    * accessible.
    */
@@ -929,6 +914,7 @@ public:
   void SetARIAHidden(bool aIsDefined);
 
 protected:
+
   virtual ~Accessible();
 
   /**
@@ -1004,9 +990,8 @@ protected:
     eSubtreeMutating = 1 << 6, // subtree is being mutated
     eIgnoreDOMUIEvent = 1 << 7, // don't process DOM UI events for a11y events
     eSurvivingInUpdate = 1 << 8, // parent drops children to recollect them
-    eRepositioned = 1 << 9, // accessible was moved in tree
 
-    eLastStateFlag = eRepositioned
+    eLastStateFlag = eSurvivingInUpdate
   };
 
   /**
@@ -1121,7 +1106,7 @@ protected:
   int32_t mIndexInParent;
 
   static const uint8_t kChildrenFlagsBits = 2;
-  static const uint8_t kStateFlagsBits = 10;
+  static const uint8_t kStateFlagsBits = 9;
   static const uint8_t kContextFlagsBits = 2;
   static const uint8_t kTypeBits = 6;
   static const uint8_t kGenericTypesBits = 14;

@@ -250,8 +250,7 @@ protected:
 class AccHideEvent: public AccMutationEvent
 {
 public:
-  AccHideEvent(Accessible* aTarget, nsINode* aTargetNode,
-               bool aNeedsShutdown = true);
+  AccHideEvent(Accessible* aTarget, nsINode* aTargetNode);
 
   // Event
   static const EventGroup kEventGroup = eHideEvent;
@@ -264,10 +263,8 @@ public:
   Accessible* TargetParent() const { return mParent; }
   Accessible* TargetNextSibling() const { return mNextSibling; }
   Accessible* TargetPrevSibling() const { return mPrevSibling; }
-  bool NeedsShutdown() const { return mNeedsShutdown; }
 
 protected:
-  bool mNeedsShutdown;
   nsRefPtr<Accessible> mNextSibling;
   nsRefPtr<Accessible> mPrevSibling;
 
