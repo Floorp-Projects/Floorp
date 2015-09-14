@@ -321,8 +321,8 @@ NS_EVENT_MESSAGE(eGestureNotify,        3900)
 NS_EVENT_MESSAGE(eScrolledAreaEventFirst, 4100)
 NS_EVENT_MESSAGE(eScrolledAreaChanged,    eScrolledAreaEventFirst)
 
-NS_EVENT_MESSAGE(NS_TRANSITION_EVENT_START, 4200)
-NS_EVENT_MESSAGE(NS_TRANSITION_END,     NS_TRANSITION_EVENT_START)
+NS_EVENT_MESSAGE(eTransitionEventFirst, 4200)
+NS_EVENT_MESSAGE(NS_TRANSITION_END,     eTransitionEventFirst)
 
 NS_EVENT_MESSAGE(eAnimationEventFirst,  4250)
 NS_EVENT_MESSAGE(eAnimationStart,       eAnimationEventFirst)
