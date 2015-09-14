@@ -25,8 +25,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageMetadata",
                                         "resource://gre/modules/PageMetadata.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                         "resource://gre/modules/PluralForm.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
-                                        "resource://gre/modules/UpdateChannel.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
+                                        "resource://gre/modules/UpdateUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITour",
                                         "resource:///modules/UITour.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Social",
@@ -810,7 +810,7 @@ function injectLoopAPI(targetWindow) {
           // which doesn't have what we need, so log an error.
           try {
             appVersionInfo = Cu.cloneInto({
-              channel: UpdateChannel.get(),
+              channel: UpdateUtils.UpdateChannel,
               version: appInfo.version,
               OS: appInfo.OS
             }, targetWindow);
