@@ -51,6 +51,11 @@ function makeSettingsServiceRequest(aCallback, aName, aValue) {
   };
 };
 
+const kLockListeners = ["Settings:Get:OK", "Settings:Get:KO",
+                        "Settings:Clear:OK", "Settings:Clear:KO",
+                        "Settings:Set:OK", "Settings:Set:KO",
+                        "Settings:Finalize:OK", "Settings:Finalize:KO"];
+
 function SettingsServiceLock(aSettingsService, aTransactionCallback) {
   if (VERBOSE) debug("settingsServiceLock constr!");
   this._open = true;
@@ -64,14 +69,7 @@ function SettingsServiceLock(aSettingsService, aTransactionCallback) {
     this.runOrFinalizeQueries();
   }.bind(this);
 
-  let msgs =   ["Settings:Get:OK", "Settings:Get:KO",
-                "Settings:Clear:OK", "Settings:Clear:KO",
-                "Settings:Set:OK", "Settings:Set:KO",
-                "Settings:Finalize:OK", "Settings:Finalize:KO"];
-
-  for (let msg in msgs) {
-    cpmm.addMessageListener(msgs[msg], this);
-  }
+  this.addListeners();
 
   let createLockPayload = {
     lockID: this._id,
@@ -87,6 +85,18 @@ function SettingsServiceLock(aSettingsService, aTransactionCallback) {
 SettingsServiceLock.prototype = {
   get closed() {
     return !this._open;
+  },
+
+  addListeners: function() {
+    for (let msg of kLockListeners) {
+      cpmm.addMessageListener(msg, this);
+    }
+  },
+
+  removeListeners: function() {
+    for (let msg of kLockListeners) {
+      cpmm.removeMessageListener(msg, this);
+    }
   },
 
   returnMessage: function(aMessage, aData) {
@@ -306,6 +316,7 @@ SettingsService.prototype = {
     if (lock_index != -1) {
       if (VERBOSE) debug("Unregistering lock " + aLockID);
       this._locks.splice(lock_index, 1);
+      this._serviceLocks[aLockID].removeListeners();
       this._serviceLocks[aLockID] = null;
       delete this._serviceLocks[aLockID];
       this._unregisteredLocks++;
