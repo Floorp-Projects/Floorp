@@ -193,7 +193,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
     case eTouchEnd:
       aIsHandlingUserInput = true;
       // Fall through to touchcancel code
-    case NS_TOUCH_CANCEL: {
+    case eTouchCancel: {
       // Remove the changed touches
       // need to make sure we only remove touches that are ending here
       WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();

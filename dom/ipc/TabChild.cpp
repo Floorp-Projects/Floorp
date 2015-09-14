@@ -2061,7 +2061,7 @@ TabChild::UpdateTapState(const WidgetTouchEvent& aEvent, nsEventStatus aStatus)
         eMouseUp, time, currentPoint, 0, mPuppetWidget);
     }
     // fall through
-  case NS_TOUCH_CANCEL:
+  case eTouchCancel:
     CancelTapTracking();
     return;
 

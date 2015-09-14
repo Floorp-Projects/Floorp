@@ -232,7 +232,7 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
       LaunchLongTapDetector();
     }
   } else if (aEvent->mMessage == eTouchEnd ||
-             aEvent->mMessage == NS_TOUCH_CANCEL ||
+             aEvent->mMessage == eTouchCancel ||
              aEvent->mMessage == eMouseUp) {
     CancelLongTapDetector();
     if (mDragMode != NONE) {

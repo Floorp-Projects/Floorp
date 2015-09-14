@@ -45,7 +45,7 @@ MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
     case eTouchEnd:
       mType = MULTITOUCH_END;
       break;
-    case NS_TOUCH_CANCEL:
+    case eTouchCancel:
       mType = MULTITOUCH_CANCEL;
       break;
     default:
@@ -93,7 +93,7 @@ MultiTouchInput::ToWidgetTouchEvent(nsIWidget* aWidget) const
     touchEventMessage = eTouchEnd;
     break;
   case MULTITOUCH_CANCEL:
-    touchEventMessage = NS_TOUCH_CANCEL;
+    touchEventMessage = eTouchCancel;
     break;
   default:
     MOZ_ASSERT_UNREACHABLE("Did not assign a type to WidgetTouchEvent in MultiTouchInput");

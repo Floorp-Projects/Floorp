@@ -729,7 +729,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
         }
         case AndroidMotionEvent::ACTION_OUTSIDE:
         case AndroidMotionEvent::ACTION_CANCEL: {
-            type = NS_TOUCH_CANCEL;
+            type = eTouchCancel;
             break;
         }
     }
