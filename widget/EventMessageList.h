@@ -7,6 +7,18 @@
  * This header file lists up all event messages and their values.
  * Before including this header file, you should define
  * NS_EVENT_MESSAGE(aMessage, aValue)
+ *
+ * Naming rules of the event messages:
+ * 0. Starting with "e" prefix and use camelcase.
+ * 1. Basically, use same name as the DOM name which is fired at dispatching
+ *    the event.
+ * 2. If the event message name becomes too generic, e.g., "eInvalid", that may
+ *    conflict with another enum's item name, append something after the "e"
+ *    prefix, e.g., "eFormInvalid".
+ * 3. When you need to define a group of event messages, you should define
+ *    the special enum name messages as starting with "e" prefix, appending the
+ *    generic event name, e.g., "Pointer" with "Event" and "First" or "Last"
+ *    such as "ePointerEventFirst" and "ePointerEventLast".
  */
 
 NS_EVENT_MESSAGE(eVoidEvent,            0)
