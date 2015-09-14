@@ -34,6 +34,7 @@
 #include "nsPerformance.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsContentSecurityManager.h"
+#include "nsIDeprecationWarner.h"
 
 #ifdef OS_POSIX
 #include "chrome/common/file_descriptor_set_posix.h"
@@ -2317,6 +2318,18 @@ HttpChannelChild::ForceIntercepted()
 {
   mShouldParentIntercept = true;
   return NS_OK;
+}
+
+bool
+HttpChannelChild::RecvIssueDeprecationWarning(const uint32_t& warning,
+                                              const bool& asError)
+{
+  nsCOMPtr<nsIDeprecationWarner> warner;
+  GetCallback(warner);
+  if (warner) {
+    warner->IssueWarning(warning, asError);
+  }
+  return true;
 }
 
 } // namespace net

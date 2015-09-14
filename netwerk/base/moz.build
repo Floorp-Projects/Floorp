@@ -38,6 +38,7 @@ XPIDL_SOURCES += [
     'nsICryptoHMAC.idl',
     'nsIDashboard.idl',
     'nsIDashboardEventNotifier.idl',
+    'nsIDeprecationWarner.idl',
     'nsIDivertableChannel.idl',
     'nsIDownloader.idl',
     'nsIEncodedChannel.idl',
