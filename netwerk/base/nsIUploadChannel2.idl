@@ -6,9 +6,8 @@
 #include "nsISupports.idl"
 
 interface nsIInputStream;
-interface nsIRunnable;
 
-[scriptable, uuid(2f712b52-19c5-4e0c-9e8f-b5c7c3b67049)]
+[scriptable, uuid(62e6529a-5cf6-491a-82ef-b3a8273cdd19)]
 interface nsIUploadChannel2 : nsISupports
 {
     /**
@@ -48,19 +47,7 @@ interface nsIUploadChannel2 : nsISupports
     readonly attribute boolean uploadStreamHasHeaders;
 
     /**
-     * Ensure the upload stream, if any, is cloneable.  This may involve
-     * async copying, so a callback runnable must be provided.  It will
-     * invoked on the current thread when the upload stream is ready
-     * for cloning.  If the stream is already cloneable, then the callback
-     * will be invoked synchronously.
-     */
-    [noscript]
-    void ensureUploadStreamIsCloneable(in nsIRunnable aCallback);
-
-    /**
-     * Clones the upload stream.  May return failure if the upload stream
-     * is not cloneable.  If this is not acceptable, use the
-     * ensureUploadStreamIsCloneable() method first.
+     * Clones the upload stream and returns an equivalent stream.
      */
     [noscript]
     nsIInputStream cloneUploadStream();
