@@ -59,16 +59,6 @@ MP3Demuxer::Init() {
   return InitPromise::CreateAndResolve(NS_OK, __func__);
 }
 
-already_AddRefed<MediaDataDemuxer>
-MP3Demuxer::Clone() const {
-  nsRefPtr<MP3Demuxer> demuxer = new MP3Demuxer(mSource);
-  if (!demuxer->InitInternal()) {
-    NS_WARNING("Couldn't recreate MP3Demuxer");
-    return nullptr;
-  }
-  return demuxer.forget();
-}
-
 bool
 MP3Demuxer::HasTrackType(TrackInfo::TrackType aType) const {
   return aType == TrackInfo::kAudioTrack;

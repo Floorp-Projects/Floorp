@@ -51,19 +51,6 @@ public:
   // again to retry once more data has been received.
   virtual nsRefPtr<InitPromise> Init() = 0;
 
-  // MediaFormatReader ensures that calls to the MediaDataDemuxer are thread-safe.
-  // This is done by having multiple demuxers, created with Clone(), one per
-  // running thread.
-  // However, should the MediaDataDemuxer object guaranteed to be thread-safe
-  // such cloning is unecessary and only one demuxer will be used across
-  // all threads.
-  virtual bool IsThreadSafe() { return false; }
-
-  // Clone the demuxer and return a new initialized demuxer.
-  // This can only be called once Init() has succeeded.
-  // The new demuxer can be immediately use to retrieve the track demuxers.
-  virtual already_AddRefed<MediaDataDemuxer> Clone() const = 0;
-
   // Returns true if a aType track type is available.
   virtual bool HasTrackType(TrackInfo::TrackType aType) const = 0;
 
