@@ -293,7 +293,7 @@ AtomTableInitEntry(PLDHashEntryHdr* aEntry, const void* aKey)
 static const PLDHashTableOps AtomTableOps = {
   AtomTableGetHash,
   AtomTableMatchKey,
-  PL_DHashMoveEntryStub,
+  PLDHashTable::MoveEntryStub,
   AtomTableClearEntry,
   AtomTableInitEntry
 };

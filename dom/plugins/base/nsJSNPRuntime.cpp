@@ -400,7 +400,7 @@ CreateNPObjWrapperTable()
   }
 
   sNPObjWrappers =
-    new PLDHashTable(PL_DHashGetStubOps(), sizeof(NPObjWrapperHashEntry));
+    new PLDHashTable(PLDHashTable::StubOps(), sizeof(NPObjWrapperHashEntry));
   return true;
 }
 

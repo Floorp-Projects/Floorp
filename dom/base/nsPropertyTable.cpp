@@ -265,7 +265,7 @@ nsPropertyTable::PropertyList::PropertyList(nsIAtom            *aName,
                                             void               *aDtorData,
                                             bool                aTransfer)
   : mName(aName),
-    mObjectValueMap(PL_DHashGetStubOps(), sizeof(PropertyListMapEntry)),
+    mObjectValueMap(PLDHashTable::StubOps(), sizeof(PropertyListMapEntry)),
     mDtorFunc(aDtorFunc),
     mDtorData(aDtorData),
     mTransfer(aTransfer),

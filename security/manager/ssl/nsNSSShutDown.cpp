@@ -29,10 +29,10 @@ ObjectSetInitEntry(PLDHashEntryHdr *hdr, const void *key)
 }
 
 static const PLDHashTableOps gSetOps = {
-  PL_DHashVoidPtrKeyStub,
+  PLDHashTable::HashVoidPtrKeyStub,
   ObjectSetMatchEntry,
-  PL_DHashMoveEntryStub,
-  PL_DHashClearEntryStub,
+  PLDHashTable::MoveEntryStub,
+  PLDHashTable::ClearEntryStub,
   ObjectSetInitEntry
 };
 
