@@ -189,7 +189,7 @@ struct TransitionEventInfo {
                       TimeDuration aDuration,
                       nsCSSPseudoElements::Type aPseudoType)
     : mElement(aElement)
-    , mEvent(true, NS_TRANSITION_END)
+    , mEvent(true, eTransitionEnd)
   {
     // XXX Looks like nobody initialize WidgetEvent::time
     mEvent.propertyName =
@@ -202,7 +202,7 @@ struct TransitionEventInfo {
   // to ourselves in order to work with nsTArray
   TransitionEventInfo(const TransitionEventInfo &aOther)
     : mElement(aOther.mElement)
-    , mEvent(true, NS_TRANSITION_END)
+    , mEvent(true, eTransitionEnd)
   {
     mEvent.AssignTransitionEventData(aOther.mEvent, false);
   }
