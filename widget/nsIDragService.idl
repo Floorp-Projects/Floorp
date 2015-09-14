@@ -16,6 +16,8 @@ interface nsIDOMDataTransfer;
 interface nsISelection;
 
 %{C++
+#include "mozilla/EventForwards.h"
+
 namespace mozilla {
 namespace dom {
 class ContentParent;
@@ -24,8 +26,9 @@ class ContentParent;
 %}
 
 [ptr] native ContentParentPtr(mozilla::dom::ContentParent);
+native EventMessage(mozilla::EventMessage);
 
-[scriptable, uuid(009d4489-4568-4896-9442-19717dd00f15), builtinclass]
+[scriptable, uuid(ebd6b3a2-af16-43af-a698-3091a087dd62), builtinclass]
 interface nsIDragService : nsISupports
 {
   const long DRAGDROP_ACTION_NONE = 0;
@@ -114,7 +117,7 @@ interface nsIDragService : nsISupports
   /**
    * Fire a drag event at the source of the drag
    */
-  void fireDragEventAtSource ( in unsigned long aMsg );
+  [noscript] void fireDragEventAtSource(in EventMessage aEventMessage);
 
   /**
    * Increase/decrease dragging suppress level by one.
