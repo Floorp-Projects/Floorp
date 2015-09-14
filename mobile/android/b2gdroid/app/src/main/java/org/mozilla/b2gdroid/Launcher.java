@@ -4,6 +4,9 @@
 
 package org.mozilla.b2gdroid;
 
+import java.io.ByteArrayOutputStream;
+import java.util.Iterator;
+
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.KeyguardManager;
@@ -11,12 +14,24 @@ import android.app.KeyguardManager.KeyguardLock;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 
 import org.json.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import org.mozilla.gecko.BaseGeckoInterface;
 import org.mozilla.gecko.ContactService;
@@ -30,7 +45,6 @@ import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.util.GeckoEventListener;
 
 import org.mozilla.b2gdroid.ScreenStateObserver;
-import org.mozilla.b2gdroid.Apps;
 
 public class Launcher extends Activity
                       implements GeckoEventListener, ContextGetter {
@@ -38,7 +52,6 @@ public class Launcher extends Activity
 
     private ContactService      mContactService;
     private ScreenStateObserver mScreenStateObserver;
-    private Apps                mApps;
 
     /** ContextGetter */
     public Context getContext() {
@@ -55,7 +68,6 @@ public class Launcher extends Activity
 
         GeckoBatteryManager.getInstance().start(this);
         mContactService = new ContactService(EventDispatcher.getInstance(), this);
-        mApps = new Apps(this);
     }
 
     private void hideSplashScreen() {
@@ -111,7 +123,6 @@ public class Launcher extends Activity
             "Launcher:Ready");
 
         mContactService.destroy();
-        mApps.destroy();
     }
 
     @Override
