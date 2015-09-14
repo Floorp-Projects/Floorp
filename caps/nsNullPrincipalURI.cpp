@@ -274,12 +274,11 @@ NS_IMETHODIMP
 nsNullPrincipalURI::Equals(nsIURI *aOther, bool *_equals)
 {
   *_equals = false;
-  nsNullPrincipalURI *otherURI;
+  nsRefPtr<nsNullPrincipalURI> otherURI;
   nsresult rv = aOther->QueryInterface(kNullPrincipalURIImplementationCID,
-                                       (void **)&otherURI);
+                                       getter_AddRefs(otherURI));
   if (NS_SUCCEEDED(rv)) {
     *_equals = mPath == otherURI->mPath;
-    NS_RELEASE(otherURI);
   }
   return NS_OK;
 }
