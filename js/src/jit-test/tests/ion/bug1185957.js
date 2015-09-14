@@ -11,5 +11,8 @@ class test {
 })();
 `;
 
+// Throw, even if we cannot run the test
 if (classesEnabled())
     eval(test);
+else
+    throw new TypeError();
