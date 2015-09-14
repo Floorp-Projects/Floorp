@@ -384,9 +384,9 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam,
       else if (evt.delta < 0)
         evt.direction = nsIDOMSimpleGestureEvent::ROTATION_CLOCKWISE;
 
-      if (gi.dwFlags & GF_BEGIN)
-        evt.mMessage = NS_SIMPLE_GESTURE_ROTATE_START;
-      else if (gi.dwFlags & GF_END) {
+      if (gi.dwFlags & GF_BEGIN) {
+        evt.mMessage = eRotateGestureStart;
+      } else if (gi.dwFlags & GF_END) {
         evt.mMessage = eRotateGesture;
       } else {
         evt.mMessage = eRotateGestureUpdate;
