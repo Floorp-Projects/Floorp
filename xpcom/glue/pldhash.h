@@ -620,9 +620,6 @@ PL_DHashClearEntryStub(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 const PLDHashTableOps*
 PL_DHashGetStubOps(void);
 
-void
-PL_DHashTableRawRemove(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
-
 #ifdef DEBUG
 void
 PL_DHashMarkTableImmutable(PLDHashTable* aTable);

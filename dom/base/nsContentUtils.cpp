@@ -4192,7 +4192,7 @@ nsContentUtils::RemoveListenerManager(nsINode *aNode)
       listenerManager.swap(entry->mListenerManager);
       // Remove the entry and *then* do operations that could cause further
       // modification of sEventListenerManagersHash.  See bug 334177.
-      PL_DHashTableRawRemove(sEventListenerManagersHash, entry);
+      sEventListenerManagersHash->RawRemove(entry);
       if (listenerManager) {
         listenerManager->Disconnect();
       }
