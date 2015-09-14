@@ -30,8 +30,6 @@ public:
 
   virtual nsRefPtr<InitPromise> Init() override;
 
-  virtual already_AddRefed<MediaDataDemuxer> Clone() const override;
-
   virtual bool HasTrackType(TrackInfo::TrackType aType) const override;
 
   virtual uint32_t GetNumberTracks(TrackInfo::TrackType aType) const override;
