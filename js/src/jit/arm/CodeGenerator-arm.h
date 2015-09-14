@@ -221,11 +221,13 @@ class CodeGeneratorARM : public CodeGeneratorShared
     // Generating a result.
     template<typename S, typename T>
     void atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value,
-                                    const T& mem, Register temp1, Register temp2, AnyRegister output);
+                                    const T& mem, Register flagTemp, Register outTemp,
+                                    AnyRegister output);
 
     // Generating no result.
     template<typename S, typename T>
-    void atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value, const T& mem);
+    void atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value,
+                                    const T& mem, Register flagTemp);
 
   protected:
     void visitEffectiveAddress(LEffectiveAddress* ins);
