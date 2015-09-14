@@ -322,7 +322,7 @@ NS_EVENT_MESSAGE(eScrolledAreaEventFirst, 4100)
 NS_EVENT_MESSAGE(eScrolledAreaChanged,    eScrolledAreaEventFirst)
 
 NS_EVENT_MESSAGE(eTransitionEventFirst, 4200)
-NS_EVENT_MESSAGE(NS_TRANSITION_END,     eTransitionEventFirst)
+NS_EVENT_MESSAGE(eTransitionEnd,        eTransitionEventFirst)
 
 NS_EVENT_MESSAGE(eAnimationEventFirst,  4250)
 NS_EVENT_MESSAGE(eAnimationStart,       eAnimationEventFirst)
