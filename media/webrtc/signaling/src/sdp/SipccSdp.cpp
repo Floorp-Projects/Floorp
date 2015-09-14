@@ -74,8 +74,8 @@ bool
 SipccSdp::LoadOrigin(sdp_t* sdp, SdpErrorHolder& errorHolder)
 {
   std::string username = sdp_get_owner_username(sdp);
-  uint64_t sessId = strtoul(sdp_get_owner_sessionid(sdp), nullptr, 10);
-  uint64_t sessVer = strtoul(sdp_get_owner_version(sdp), nullptr, 10);
+  uint64_t sessId = strtoull(sdp_get_owner_sessionid(sdp), nullptr, 10);
+  uint64_t sessVer = strtoull(sdp_get_owner_version(sdp), nullptr, 10);
 
   sdp_nettype_e type = sdp_get_owner_network_type(sdp);
   if (type != SDP_NT_INTERNET) {
