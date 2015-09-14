@@ -31,8 +31,8 @@ SpanningCellSorter::~SpanningCellSorter()
 SpanningCellSorter::HashTableOps = {
     HashTableHashKey,
     HashTableMatchEntry,
-    PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
+    PLDHashTable::MoveEntryStub,
+    PLDHashTable::ClearEntryStub,
     nullptr
 };
 

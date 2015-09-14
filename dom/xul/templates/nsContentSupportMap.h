@@ -21,7 +21,7 @@
  */
 class nsContentSupportMap {
 public:
-    nsContentSupportMap() : mMap(PL_DHashGetStubOps(), sizeof(Entry)) { }
+    nsContentSupportMap() : mMap(PLDHashTable::StubOps(), sizeof(Entry)) { }
     ~nsContentSupportMap() { }
 
     nsresult Put(nsIContent* aElement, nsTemplateMatch* aMatch) {

@@ -141,8 +141,8 @@ struct ResourceHashEntry : public PLDHashEntryHdr {
 static const PLDHashTableOps gResourceTableOps = {
     ResourceHashEntry::HashKey,
     ResourceHashEntry::MatchEntry,
-    PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
+    PLDHashTable::MoveEntryStub,
+    PLDHashTable::ClearEntryStub,
     nullptr
 };
 
@@ -176,8 +176,8 @@ struct LiteralHashEntry : public PLDHashEntryHdr {
 static const PLDHashTableOps gLiteralTableOps = {
     LiteralHashEntry::HashKey,
     LiteralHashEntry::MatchEntry,
-    PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
+    PLDHashTable::MoveEntryStub,
+    PLDHashTable::ClearEntryStub,
     nullptr
 };
 
@@ -210,8 +210,8 @@ struct IntHashEntry : public PLDHashEntryHdr {
 static const PLDHashTableOps gIntTableOps = {
     IntHashEntry::HashKey,
     IntHashEntry::MatchEntry,
-    PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
+    PLDHashTable::MoveEntryStub,
+    PLDHashTable::ClearEntryStub,
     nullptr
 };
 
@@ -248,8 +248,8 @@ struct DateHashEntry : public PLDHashEntryHdr {
 static const PLDHashTableOps gDateTableOps = {
     DateHashEntry::HashKey,
     DateHashEntry::MatchEntry,
-    PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
+    PLDHashTable::MoveEntryStub,
+    PLDHashTable::ClearEntryStub,
     nullptr
 };
 
@@ -365,8 +365,8 @@ struct BlobHashEntry : public PLDHashEntryHdr {
 static const PLDHashTableOps gBlobTableOps = {
     BlobHashEntry::HashKey,
     BlobHashEntry::MatchEntry,
-    PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
+    PLDHashTable::MoveEntryStub,
+    PLDHashTable::ClearEntryStub,
     nullptr
 };
 
