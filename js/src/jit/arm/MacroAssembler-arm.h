@@ -1349,31 +1349,35 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     template<typename T>
     void atomicFetchOpARMv6(int nbytes, bool signExtend, AtomicOp op, const Register& value,
-                            const T& mem, Register temp, Register output);
+                            const T& mem, Register flagTemp, Register output);
 
     template<typename T>
     void atomicFetchOpARMv7(int nbytes, bool signExtend, AtomicOp op, const Register& value,
-                            const T& mem, Register output);
+                            const T& mem, Register flagTemp, Register output);
 
     template<typename T>
     void atomicFetchOp(int nbytes, bool signExtend, AtomicOp op, const Imm32& value,
-                       const T& address, Register temp, Register output);
+                       const T& address, Register flagTemp, Register output);
 
     template<typename T>
     void atomicFetchOp(int nbytes, bool signExtend, AtomicOp op, const Register& value,
-                       const T& address, Register temp, Register output);
+                       const T& address, Register flagTemp, Register output);
 
     template<typename T>
-    void atomicEffectOpARMv6(int nbytes, AtomicOp op, const Register& value, const T& address);
+    void atomicEffectOpARMv6(int nbytes, AtomicOp op, const Register& value, const T& address,
+                             Register flagTemp);
 
     template<typename T>
-    void atomicEffectOpARMv7(int nbytes, AtomicOp op, const Register& value, const T& address);
+    void atomicEffectOpARMv7(int nbytes, AtomicOp op, const Register& value, const T& address,
+                             Register flagTemp);
 
     template<typename T>
-    void atomicEffectOp(int nbytes, AtomicOp op, const Imm32& value, const T& address);
+    void atomicEffectOp(int nbytes, AtomicOp op, const Imm32& value, const T& address,
+                             Register flagTemp);
 
     template<typename T>
-    void atomicEffectOp(int nbytes, AtomicOp op, const Register& value, const T& address);
+    void atomicEffectOp(int nbytes, AtomicOp op, const Register& value, const T& address,
+                             Register flagTemp);
 
   public:
     // T in {Address,BaseIndex}
@@ -1450,16 +1454,16 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         atomicFetchOp(4, false, AtomicFetchAddOp, value, mem, temp, output);
     }
     template <typename T, typename S>
-    void atomicAdd8(const S& value, const T& mem) {
-        atomicEffectOp(1, AtomicFetchAddOp, value, mem);
+    void atomicAdd8(const S& value, const T& mem, Register flagTemp) {
+        atomicEffectOp(1, AtomicFetchAddOp, value, mem, flagTemp);
     }
     template <typename T, typename S>
-    void atomicAdd16(const S& value, const T& mem) {
-        atomicEffectOp(2, AtomicFetchAddOp, value, mem);
+    void atomicAdd16(const S& value, const T& mem, Register flagTemp) {
+        atomicEffectOp(2, AtomicFetchAddOp, value, mem, flagTemp);
     }
     template <typename T, typename S>
-    void atomicAdd32(const S& value, const T& mem) {
-        atomicEffectOp(4, AtomicFetchAddOp, value, mem);
+    void atomicAdd32(const S& value, const T& mem, Register flagTemp) {
+        atomicEffectOp(4, AtomicFetchAddOp, value, mem, flagTemp);
     }
 
     template<typename T, typename S>
@@ -1483,16 +1487,16 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         atomicFetchOp(4, false, AtomicFetchSubOp, value, mem, temp, output);
     }
     template <typename T, typename S>
-    void atomicSub8(const S& value, const T& mem) {
-        atomicEffectOp(1, AtomicFetchSubOp, value, mem);
+    void atomicSub8(const S& value, const T& mem, Register flagTemp) {
+        atomicEffectOp(1, AtomicFetchSubOp, value, mem, flagTemp);
     }
     template <typename T, typename S>
-    void atomicSub16(const S& value, const T& mem) {
-        atomicEffectOp(2, AtomicFetchSubOp, value, mem);
+    void atomicSub16(const S& value, const T& mem, Register flagTemp) {
+        atomicEffectOp(2, AtomicFetchSubOp, value, mem, flagTemp);
     }
     template <typename T, typename S>
-    void atomicSub32(const S& value, const T& mem) {
-        atomicEffectOp(4, AtomicFetchSubOp, value, mem);
+    void atomicSub32(const S& value, const T& mem, Register flagTemp) {
+        atomicEffectOp(4, AtomicFetchSubOp, value, mem, flagTemp);
     }
 
     template<typename T, typename S>
@@ -1516,16 +1520,16 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         atomicFetchOp(4, false, AtomicFetchAndOp, value, mem, temp, output);
     }
     template <typename T, typename S>
-    void atomicAnd8(const S& value, const T& mem) {
-        atomicEffectOp(1, AtomicFetchAndOp, value, mem);
+    void atomicAnd8(const S& value, const T& mem, Register flagTemp) {
+        atomicEffectOp(1, AtomicFetchAndOp, value, mem, flagTemp);
     }
     template <typename T, typename S>
-    void atomicAnd16(const S& value, const T& mem) {
-        atomicEffectOp(2, AtomicFetchAndOp, value, mem);
+    void atomicAnd16(const S& value, const T& mem, Register flagTemp) {
+        atomicEffectOp(2, AtomicFetchAndOp, value, mem, flagTemp);
     }
     template <typename T, typename S>
-    void atomicAnd32(const S& value, const T& mem) {
-        atomicEffectOp(4, AtomicFetchAndOp, value, mem);
+    void atomicAnd32(const S& value, const T& mem, Register flagTemp) {
+        atomicEffectOp(4, AtomicFetchAndOp, value, mem, flagTemp);
     }
 
     template<typename T, typename S>
@@ -1549,16 +1553,16 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         atomicFetchOp(4, false, AtomicFetchOrOp, value, mem, temp, output);
     }
     template <typename T, typename S>
-    void atomicOr8(const S& value, const T& mem) {
-        atomicEffectOp(1, AtomicFetchOrOp, value, mem);
+    void atomicOr8(const S& value, const T& mem, Register flagTemp) {
+        atomicEffectOp(1, AtomicFetchOrOp, value, mem, flagTemp);
     }
     template <typename T, typename S>
-    void atomicOr16(const S& value, const T& mem) {
-        atomicEffectOp(2, AtomicFetchOrOp, value, mem);
+    void atomicOr16(const S& value, const T& mem, Register flagTemp) {
+        atomicEffectOp(2, AtomicFetchOrOp, value, mem, flagTemp);
     }
     template <typename T, typename S>
-    void atomicOr32(const S& value, const T& mem) {
-        atomicEffectOp(4, AtomicFetchOrOp, value, mem);
+    void atomicOr32(const S& value, const T& mem, Register flagTemp) {
+        atomicEffectOp(4, AtomicFetchOrOp, value, mem, flagTemp);
     }
 
     template<typename T, typename S>
@@ -1582,16 +1586,16 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         atomicFetchOp(4, false, AtomicFetchXorOp, value, mem, temp, output);
     }
     template <typename T, typename S>
-    void atomicXor8(const S& value, const T& mem) {
-        atomicEffectOp(1, AtomicFetchXorOp, value, mem);
+    void atomicXor8(const S& value, const T& mem, Register flagTemp) {
+        atomicEffectOp(1, AtomicFetchXorOp, value, mem, flagTemp);
     }
     template <typename T, typename S>
-    void atomicXor16(const S& value, const T& mem) {
-        atomicEffectOp(2, AtomicFetchXorOp, value, mem);
+    void atomicXor16(const S& value, const T& mem, Register flagTemp) {
+        atomicEffectOp(2, AtomicFetchXorOp, value, mem, flagTemp);
     }
     template <typename T, typename S>
-    void atomicXor32(const S& value, const T& mem) {
-        atomicEffectOp(4, AtomicFetchXorOp, value, mem);
+    void atomicXor32(const S& value, const T& mem, Register flagTemp) {
+        atomicEffectOp(4, AtomicFetchXorOp, value, mem, flagTemp);
     }
 
     void clampIntToUint8(Register reg) {
