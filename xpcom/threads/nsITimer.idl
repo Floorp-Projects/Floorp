@@ -98,10 +98,10 @@ interface nsITimer : nsISupports
 
   /**
    * Initialize a timer that will fire after the said delay.
-   * A user must keep a reference to this timer till it is 
+   * A user must keep a reference to this timer till it is
    * is no longer needed or has been cancelled.
    *
-   * @param aObserver   the callback object that observes the 
+   * @param aObserver   the callback object that observes the
    *                    ``timer-callback'' topic with the subject being
    *                    the timer itself when the timer fires:
    *
@@ -112,7 +112,7 @@ interface nsITimer : nsISupports
    * @param aDelay      delay in milliseconds for timer to fire
    * @param aType       timer type per TYPE* consts defined above
    */
-  void init(in nsIObserver aObserver, in unsigned long aDelay, 
+  void init(in nsIObserver aObserver, in unsigned long aDelay,
             in unsigned long aType);
 
 
@@ -128,7 +128,7 @@ interface nsITimer : nsISupports
    */
   [noscript] void initWithFuncCallback(in nsTimerCallbackFunc aCallback,
                                        in voidPtr aClosure,
-                                       in unsigned long aDelay, 
+                                       in unsigned long aDelay,
                                        in unsigned long aType);
 
   /**
@@ -140,7 +140,7 @@ interface nsITimer : nsISupports
    * @param aType      Timer type per TYPE* consts defined above
    */
   void initWithCallback(in nsITimerCallback aCallback,
-                        in unsigned long aDelay, 
+                        in unsigned long aDelay,
                         in unsigned long aType);
 
   /**
@@ -150,7 +150,7 @@ interface nsITimer : nsISupports
    * by conserving one timer instance).
    */
   void cancel();
-  
+
   /**
    * The millisecond delay of the timeout.
    *
@@ -159,15 +159,15 @@ interface nsITimer : nsISupports
    * a one-shot timer.
    */
   attribute unsigned long delay;
-  
+
   /**
    * The timer type - one of the above TYPE_* constants.
-   */  
+   */
   attribute unsigned long type;
 
   /**
    * The opaque pointer pass to initWithFuncCallback.
-   */  
+   */
   [noscript] readonly attribute voidPtr closure;
 
   /**
@@ -178,7 +178,7 @@ interface nsITimer : nsISupports
   /**
    * The nsIEventTarget where the callback will be dispatched. Note that this
    * target may only be set before the call to one of the init methods above.
-   * 
+   *
    * By default the target is the thread that created the timer.
    */
   attribute nsIEventTarget target;
