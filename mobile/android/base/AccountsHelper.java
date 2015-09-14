@@ -6,6 +6,11 @@
 package org.mozilla.gecko;
 
 import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.accounts.AccountManagerCallback;
+import android.accounts.AccountManagerFuture;
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
@@ -22,6 +27,7 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
@@ -48,6 +54,7 @@ public class AccountsHelper implements NativeEventListener {
                 "Accounts:CreateFirefoxAccountFromJSON",
                 "Accounts:UpdateFirefoxAccountFromJSON",
                 "Accounts:Create",
+                "Accounts:DeleteFirefoxAccount",
                 "Accounts:Exist");
     }
 
@@ -61,11 +68,12 @@ public class AccountsHelper implements NativeEventListener {
                 "Accounts:CreateFirefoxAccountFromJSON",
                 "Accounts:UpdateFirefoxAccountFromJSON",
                 "Accounts:Create",
+                "Accounts:DeleteFirefoxAccount",
                 "Accounts:Exist");
     }
 
     @Override
-    public void handleMessage(String event, NativeJSObject message, EventCallback callback) {
+    public void handleMessage(String event, NativeJSObject message, final EventCallback callback) {
         if ("Accounts:CreateFirefoxAccountFromJSON".equals(event)) {
             AndroidFxAccount fxAccount = null;
             try {
@@ -156,6 +164,43 @@ public class AccountsHelper implements NativeEventListener {
                 intent.putExtra("extras", extras.toString());
             }
             mContext.startActivity(intent);
+
+        } else if ("Accounts:DeleteFirefoxAccount".equals(event)) {
+            try {
+                final Account account = FirefoxAccounts.getFirefoxAccount(mContext);
+                if (account == null) {
+                    Log.w(LOGTAG, "Could not delete Firefox Account since none exists!");
+                    if (callback != null) {
+                        callback.sendError("Could not delete Firefox Account since none exists");
+                    }
+                    return;
+                }
+
+                final AccountManagerCallback<Boolean> accountManagerCallback = new AccountManagerCallback<Boolean>() {
+                    @Override
+                    public void run(AccountManagerFuture<Boolean> future) {
+                        try {
+                            final boolean result = future.getResult();
+                            Log.i(LOGTAG, "Account named like " + Utils.obfuscateEmail(account.name) + " removed: " + result);
+                            if (callback != null) {
+                                callback.sendSuccess(result);
+                            }
+                        } catch (OperationCanceledException | IOException | AuthenticatorException e) {
+                            if (callback != null) {
+                                callback.sendError("Could not delete Firefox Account: " + e.toString());
+                            }
+                        }
+                    }
+                };
+
+                AccountManager.get(mContext).removeAccount(account, accountManagerCallback, null);
+            } catch (Exception e) {
+                Log.w(LOGTAG, "Got exception updating Firefox Account from JSON; ignoring.", e);
+                if (callback != null) {
+                    callback.sendError("Could not update Firefox Account from JSON: " + e.toString());
+                    return;
+                }
+            }
 
         } else if ("Accounts:Exist".equals(event)) {
             if (callback == null) {

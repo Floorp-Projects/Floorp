@@ -131,5 +131,18 @@ let Accounts = Object.freeze({
       delete data.exists;
       return data;
     });
+  },
+
+  /**
+   * Delete an existing Android Firefox Account.
+   *
+   * It is an error if no Android Account exists.
+   *
+   * Returns a Promise that resolves to a boolean indicating success.
+   */
+  deleteFirefoxAccount: function () {
+    return Messaging.sendRequestForResult({
+      type: "Accounts:DeleteFirefoxAccount",
+    });
   }
 });
