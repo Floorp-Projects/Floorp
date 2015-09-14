@@ -737,7 +737,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
     // nsPresShell::HandleEventInternal() for details.
     if (EventStateManager::IsHandlingUserInput()) {
       switch(aEvent->mMessage) {
-      case NS_EDITOR_INPUT:
+      case eEditorInput:
         if (PopupAllowedForEvent("input")) {
           abuse = openControlled;
         }
