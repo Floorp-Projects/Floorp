@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm")
+Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
 do_get_profile();
 
@@ -490,7 +491,7 @@ function* test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
                 "1.1");
     do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_PLUGIN_ABI, "",
                                       gmpAddon.id),
-                GMPScope.GMPUtils.ABI());
+                UpdateUtils.ABI);
     // Make sure it reports as being installed
     do_check_true(gmpAddon.isInstalled);
 
