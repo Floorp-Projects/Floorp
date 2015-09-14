@@ -347,8 +347,8 @@ NS_EVENT_MESSAGE(ePrintEventFirst,      4600)
 NS_EVENT_MESSAGE(eBeforePrint,          ePrintEventFirst)
 NS_EVENT_MESSAGE(eAfterPrint,           ePrintEventFirst + 1)
 
-NS_EVENT_MESSAGE(NS_MESSAGE_EVENT_START, 4700)
-NS_EVENT_MESSAGE(eMessage,              NS_MESSAGE_EVENT_START)
+NS_EVENT_MESSAGE(eMessageEventFirst,    4700)
+NS_EVENT_MESSAGE(eMessage,              eMessageEventFirst)
 
 // Open and close events
 NS_EVENT_MESSAGE(eOpenCloseEventFirst,  4800)
