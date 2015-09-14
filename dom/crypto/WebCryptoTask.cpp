@@ -1288,7 +1288,11 @@ public:
 
   void SetKeyData(const CryptoBuffer& aKeyData)
   {
-    mKeyData = aKeyData;
+    if (!mKeyData.Assign(aKeyData)) {
+      mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
+      return;
+    }
+
     mDataIsJwk = false;
 
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
@@ -1468,7 +1472,10 @@ public:
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
 
-    mKey->SetSymKey(mKeyData);
+    if (NS_FAILED(mKey->SetSymKey(mKeyData))) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
     mKey->SetType(CryptoKey::SECRET);
 
     if (mDataIsJwk && !JwkCompatible(mJwk, mKey)) {
@@ -2153,8 +2160,11 @@ private:
 
   virtual void Resolve() override
   {
-    mKey->SetSymKey(mKeyData);
-    mResultPromise->MaybeResolve(mKey);
+    if (NS_SUCCEEDED(mKey->SetSymKey(mKeyData))) {
+      mResultPromise->MaybeResolve(mKey);
+    } else {
+      mResultPromise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+    }
   }
 
   virtual void Cleanup() override
