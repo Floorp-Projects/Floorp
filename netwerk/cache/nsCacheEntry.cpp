@@ -459,7 +459,7 @@ nsCacheEntryHashTable::RemoveEntry( nsCacheEntry *cacheEntry)
     nsCacheEntry *check = GetEntry(&(cacheEntry->mKey));
     NS_ASSERTION(check == cacheEntry, "### Attempting to remove unknown cache entry!!!");
 #endif
-    PL_DHashTableRemove(&table, &(cacheEntry->mKey));
+    table.Remove(&(cacheEntry->mKey));
 }
 
 PLDHashTable::Iterator

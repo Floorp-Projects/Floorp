@@ -650,7 +650,7 @@ PLDHashTable::Add(const void* aKey)
   return entry;
 }
 
-MOZ_ALWAYS_INLINE void
+void
 PLDHashTable::Remove(const void* aKey)
 {
 #ifdef DEBUG
@@ -676,12 +676,6 @@ PLDHashTable::RemoveEntry(PLDHashEntryHdr* aEntry)
 
   RawRemove(aEntry);
   ShrinkIfAppropriate();
-}
-
-void PL_DHASH_FASTCALL
-PL_DHashTableRemove(PLDHashTable* aTable, const void* aKey)
-{
-  aTable->Remove(aKey);
 }
 
 MOZ_ALWAYS_INLINE void

@@ -69,7 +69,7 @@ void nsNSSShutDownList::forget(nsNSSShutDownObject *o)
   
   PR_ASSERT(o);
   MutexAutoLock lock(singleton->mListLock);
-  PL_DHashTableRemove(&singleton->mObjects, o);
+  singleton->mObjects.Remove(o);
 }
 
 void nsNSSShutDownList::remember(nsOnPK11LogoutCancelObject *o)
@@ -89,7 +89,7 @@ void nsNSSShutDownList::forget(nsOnPK11LogoutCancelObject *o)
   
   PR_ASSERT(o);
   MutexAutoLock lock(singleton->mListLock);
-  PL_DHashTableRemove(&singleton->mPK11LogoutCancelObjects, o);
+  singleton->mPK11LogoutCancelObjects.Remove(o);
 }
 
 void nsNSSShutDownList::trackSSLSocketCreate()

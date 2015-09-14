@@ -197,8 +197,7 @@ nsFrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame
   NS_PRECONDITION(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
                   "unexpected frame type");
 
-  PL_DHashTableRemove(&mPlaceholderMap,
-                      aPlaceholderFrame->GetOutOfFlowFrame());
+  mPlaceholderMap.Remove(aPlaceholderFrame->GetOutOfFlowFrame());
 }
 
 void

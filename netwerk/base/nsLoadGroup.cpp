@@ -528,7 +528,7 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
                 // the damage...
                 //
 
-                PL_DHashTableRemove(&mRequests, request);
+                mRequests.Remove(request);
 
                 rv = NS_OK;
 

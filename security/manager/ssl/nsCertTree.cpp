@@ -193,7 +193,7 @@ nsCertTree::getCacheEntry(void *cache, void *aCert)
 
 void nsCertTree::RemoveCacheEntry(void *key)
 {
-  PL_DHashTableRemove(&mCompareCache, key);
+  mCompareCache.Remove(key);
 }
 
 // CountOrganizations

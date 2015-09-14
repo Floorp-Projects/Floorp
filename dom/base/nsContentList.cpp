@@ -971,7 +971,7 @@ nsContentList::RemoveFromHashtable()
   if (!gContentListHashTable)
     return;
 
-  PL_DHashTableRemove(gContentListHashTable, &key);
+  gContentListHashTable->Remove(&key);
 
   if (gContentListHashTable->EntryCount() == 0) {
     delete gContentListHashTable;
@@ -1012,7 +1012,7 @@ nsCacheableFuncStringContentList::RemoveFromFuncStringHashtable()
   }
 
   nsFuncStringCacheKey key(mRootNode, mFunc, mString);
-  PL_DHashTableRemove(gFuncStringContentListHashTable, &key);
+  gFuncStringContentListHashTable->Remove(&key);
 
   if (gFuncStringContentListHashTable->EntryCount() == 0) {
     delete gFuncStringContentListHashTable;
