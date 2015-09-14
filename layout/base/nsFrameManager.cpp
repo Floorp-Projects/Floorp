@@ -179,9 +179,8 @@ nsFrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
   NS_PRECONDITION(aPlaceholderFrame, "null param unexpected");
   NS_PRECONDITION(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
                   "unexpected frame type");
-  PlaceholderMapEntry *entry = static_cast<PlaceholderMapEntry*>
-    (PL_DHashTableAdd(&mPlaceholderMap,
-                      aPlaceholderFrame->GetOutOfFlowFrame(), fallible));
+  auto entry = static_cast<PlaceholderMapEntry*>
+    (mPlaceholderMap.Add(aPlaceholderFrame->GetOutOfFlowFrame(), fallible));
   if (!entry)
     return NS_ERROR_OUT_OF_MEMORY;
 

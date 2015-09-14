@@ -27,8 +27,7 @@ public:
     Put(nsIContent* aContent, nsIContent* aTemplate) {
         NS_ASSERTION(!mTable.Search(aContent), "aContent already in map");
 
-        Entry* entry = static_cast<Entry*>
-            (PL_DHashTableAdd(&mTable, aContent, fallible));
+        auto entry = static_cast<Entry*>(mTable.Add(aContent, fallible));
 
         if (entry) {
             entry->mContent = aContent;

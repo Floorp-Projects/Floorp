@@ -115,8 +115,8 @@ nsHttp::CreateAtomTable()
     };
 
     for (int i = 0; atoms[i]; ++i) {
-        PLDHashEntryStub *stub = reinterpret_cast<PLDHashEntryStub *>
-            (PL_DHashTableAdd(sAtomTable, atoms[i], fallible));
+        auto stub = static_cast<PLDHashEntryStub*>
+                               (sAtomTable->Add(atoms[i], fallible));
         if (!stub)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -160,8 +160,7 @@ nsHttp::ResolveAtom(const char *str)
 
     MutexAutoLock lock(*sLock);
 
-    PLDHashEntryStub *stub = reinterpret_cast<PLDHashEntryStub *>
-        (PL_DHashTableAdd(sAtomTable, str, fallible));
+    auto stub = static_cast<PLDHashEntryStub*>(sAtomTable->Add(str, fallible));
     if (!stub)
         return atom;  // out of memory
 

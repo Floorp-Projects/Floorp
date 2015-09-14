@@ -68,9 +68,8 @@ SpanningCellSorter::AddCell(int32_t aColSpan, int32_t aRow, int32_t aCol)
         i->next = mArray[index];
         mArray[index] = i;
     } else {
-        HashTableEntry *entry = static_cast<HashTableEntry*>
-            (PL_DHashTableAdd(&mHashTable, NS_INT32_TO_PTR(aColSpan),
-                              fallible));
+        auto entry = static_cast<HashTableEntry*>
+            (mHashTable.Add(NS_INT32_TO_PTR(aColSpan), fallible));
         NS_ENSURE_TRUE(entry, false);
 
         NS_ASSERTION(entry->mColSpan == 0 || entry->mColSpan == aColSpan,

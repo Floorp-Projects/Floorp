@@ -315,8 +315,8 @@ public:
     void
     SetForwardArcs(nsIRDFResource* u, Assertion* as) {
         if (as) {
-            Entry* entry = static_cast<Entry*>
-                (PL_DHashTableAdd(&mForwardArcs, u, mozilla::fallible));
+            auto entry =
+                static_cast<Entry*>(mForwardArcs.Add(u, mozilla::fallible));
             if (entry) {
                 entry->mNode = u;
                 entry->mAssertions = as;
@@ -330,8 +330,8 @@ public:
     void
     SetReverseArcs(nsIRDFNode* v, Assertion* as) {
         if (as) {
-            Entry* entry = static_cast<Entry*>
-                (PL_DHashTableAdd(&mReverseArcs, v, mozilla::fallible));
+            auto entry =
+                static_cast<Entry*>(mReverseArcs.Add(v, mozilla::fallible));
             if (entry) {
                 entry->mNode = v;
                 entry->mAssertions = as;
@@ -1118,8 +1118,7 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
         }
         else
         {
-            hdr = PL_DHashTableAdd(next->u.hash.mPropertyHash, aProperty,
-                                   mozilla::fallible);
+            hdr = next->u.hash.mPropertyHash->Add(aProperty, mozilla::fallible);
             if (hdr)
             {
                 Entry* entry = static_cast<Entry*>(hdr);
@@ -1228,8 +1227,8 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
 
             if (next && next->mNext) {
                 PLDHashEntryHdr* hdr =
-                    PL_DHashTableAdd(root->u.hash.mPropertyHash, aProperty,
-                                     mozilla::fallible);
+                    root->u.hash.mPropertyHash->Add(aProperty,
+                                                    mozilla::fallible);
                 if (hdr) {
                     Entry* entry = static_cast<Entry*>(hdr);
                     entry->mNode = aProperty;
@@ -1664,8 +1663,7 @@ InMemoryDataSource::EnsureFastContainment(nsIRDFResource* aSource)
             val->mNext = first;
         }
         else {
-            PLDHashEntryHdr* hdr = PL_DHashTableAdd(table, prop,
-                                                    mozilla::fallible);
+            PLDHashEntryHdr* hdr = table->Add(prop, mozilla::fallible);
             if (hdr) {
                 Entry* entry = static_cast<Entry*>(hdr);
                 entry->mNode = prop;

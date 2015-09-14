@@ -136,8 +136,7 @@ nsStaticCaseInsensitiveNameTable::nsStaticCaseInsensitiveNameTable(
 
     NameTableKey key(strPtr);
 
-    NameTableEntry* entry = static_cast<NameTableEntry*>
-      (PL_DHashTableAdd(&mNameTable, &key, fallible));
+    auto entry = static_cast<NameTableEntry*>(mNameTable.Add(&key, fallible));
     if (!entry) {
       continue;
     }

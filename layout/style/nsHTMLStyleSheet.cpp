@@ -471,9 +471,8 @@ nsHTMLStyleSheet::SetVisitedLinkColor(nscolor aColor)
 already_AddRefed<nsMappedAttributes>
 nsHTMLStyleSheet::UniqueMappedAttributes(nsMappedAttributes* aMapped)
 {
-  MappedAttrTableEntry *entry =
-    static_cast<MappedAttrTableEntry*>
-               (PL_DHashTableAdd(&mMappedAttrTable, aMapped, fallible));
+  auto entry = static_cast<MappedAttrTableEntry*>
+                          (mMappedAttrTable.Add(aMapped, fallible));
   if (!entry)
     return nullptr;
   if (!entry->mAttributes) {
@@ -501,8 +500,8 @@ nsHTMLStyleSheet::DropMappedAttributes(nsMappedAttributes* aMapped)
 nsIStyleRule*
 nsHTMLStyleSheet::LangRuleFor(const nsString& aLanguage)
 {
-  LangRuleTableEntry *entry = static_cast<LangRuleTableEntry*>
-    (PL_DHashTableAdd(&mLangRuleTable, &aLanguage, fallible));
+  auto entry =
+    static_cast<LangRuleTableEntry*>(mLangRuleTable.Add(&aLanguage, fallible));
   if (!entry) {
     NS_ASSERTION(false, "out of memory");
     return nullptr;

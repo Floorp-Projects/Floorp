@@ -25,8 +25,7 @@ public:
     ~nsContentSupportMap() { }
 
     nsresult Put(nsIContent* aElement, nsTemplateMatch* aMatch) {
-        PLDHashEntryHdr* hdr =
-            PL_DHashTableAdd(&mMap, aElement, mozilla::fallible);
+        PLDHashEntryHdr* hdr = mMap.Add(aElement, mozilla::fallible);
         if (!hdr)
             return NS_ERROR_OUT_OF_MEMORY;
 
