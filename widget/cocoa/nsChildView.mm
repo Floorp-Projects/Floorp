@@ -4227,7 +4227,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     break;
 
   case eGestureState_MagnifyGesture:
-    msg = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
+    msg = eMagnifyGestureUpdate;
     break;
 
   case eGestureState_None:
