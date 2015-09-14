@@ -14,7 +14,6 @@
 #include "MediaInfo.h"
 #include "MediaFormatReader.h"
 #include "MediaResource.h"
-#include "SharedDecoderManager.h"
 #include "mozilla/SharedThreadPool.h"
 #include "VideoUtils.h"
 
@@ -441,33 +440,17 @@ MediaFormatReader::EnsureDecodersCreated()
                    false);
 
     mVideo.mDecoderInitialized = false;
-    // If we've disabled hardware acceleration for this reader, then we can't use
-    // the shared decoder.
-    if (mSharedDecoderManager &&
-        mPlatform->SupportsSharedDecoders(mInfo.mVideo) &&
-        !mHardwareAccelerationDisabled) {
-      mVideo.mDecoder =
-        mSharedDecoderManager->CreateVideoDecoder(mPlatform,
-                                                  mVideo.mInfo ?
-                                                    *mVideo.mInfo->GetAsVideoInfo() :
-                                                    mInfo.mVideo,
-                                                  mLayersBackendType,
-                                                  mDecoder->GetImageContainer(),
-                                                  mVideo.mTaskQueue,
-                                                  mVideo.mCallback);
-    } else {
-      // Decoders use the layers backend to decide if they can use hardware decoding,
-      // so specify LAYERS_NONE if we want to forcibly disable it.
-      mVideo.mDecoder =
-        mPlatform->CreateDecoder(mVideo.mInfo ?
-                                   *mVideo.mInfo->GetAsVideoInfo() :
-                                   mInfo.mVideo,
-                                 mVideo.mTaskQueue,
-                                 mVideo.mCallback,
-                                 mHardwareAccelerationDisabled ? LayersBackend::LAYERS_NONE :
-                                                                 mLayersBackendType,
-                                 mDecoder->GetImageContainer());
-    }
+    // Decoders use the layers backend to decide if they can use hardware decoding,
+    // so specify LAYERS_NONE if we want to forcibly disable it.
+    mVideo.mDecoder =
+      mPlatform->CreateDecoder(mVideo.mInfo ?
+                                 *mVideo.mInfo->GetAsVideoInfo() :
+                                 mInfo.mVideo,
+                               mVideo.mTaskQueue,
+                               mVideo.mCallback,
+                               mHardwareAccelerationDisabled ? LayersBackend::LAYERS_NONE :
+                                                               mLayersBackendType,
+                               mDecoder->GetImageContainer());
     NS_ENSURE_TRUE(mVideo.mDecoder != nullptr, false);
   }
 
@@ -1604,22 +1587,6 @@ void MediaFormatReader::ReleaseMediaResources()
     mVideo.mDecoder->Shutdown();
     mVideo.mDecoder = nullptr;
   }
-}
-
-void
-MediaFormatReader::SetIdle()
-{
-  if (mSharedDecoderManager && mVideo.mDecoder) {
-    mSharedDecoderManager->SetIdle(mVideo.mDecoder);
-  }
-}
-
-void
-MediaFormatReader::SetSharedDecoderManager(SharedDecoderManager* aManager)
-{
-#if !defined(MOZ_WIDGET_ANDROID)
-  mSharedDecoderManager = aManager;
-#endif
 }
 
 bool

@@ -71,10 +71,7 @@ public:
   virtual bool ForceZeroStartTime() const override;
 
   // For Media Resource Management
-  void SetIdle() override;
   void ReleaseMediaResources() override;
-  void SetSharedDecoderManager(SharedDecoderManager* aManager)
-    override;
 
   nsresult ResetDecode() override;
 
@@ -433,8 +430,6 @@ private:
 #ifdef MOZ_EME
   nsRefPtr<CDMProxy> mCDMProxy;
 #endif
-
-  nsRefPtr<SharedDecoderManager> mSharedDecoderManager;
 
 #if defined(READER_DORMANT_HEURISTIC)
   const bool mDormantEnabled;
