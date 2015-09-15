@@ -21,7 +21,9 @@ function PC_LOCAL_SET_LOCAL_DESCRIPTION_SYNC(test) {
 
 function PC_REMOTE_SET_REMOTE_DESCRIPTION_SYNC(test) {
   test.pcRemote.onsignalingstatechange = function() {};
-  test.pcRemote._pc.setRemoteDescription(test._local_offer);
+  test.pcRemote._pc.setRemoteDescription(test._local_offer,
+    test.pcRemote.releaseIceCandidates,
+    generateErrorCallback("pcRemote._pc.setRemoteDescription() sync failed"));
 }
 function PC_REMOTE_SET_LOCAL_DESCRIPTION_SYNC(test) {
   test.pcRemote.onsignalingstatechange = function() {};
@@ -29,7 +31,9 @@ function PC_REMOTE_SET_LOCAL_DESCRIPTION_SYNC(test) {
 }
 function PC_LOCAL_SET_REMOTE_DESCRIPTION_SYNC(test) {
   test.pcLocal.onsignalingstatechange = function() {};
-  test.pcLocal._pc.setRemoteDescription(test._remote_answer);
+  test.pcLocal._pc.setRemoteDescription(test._remote_answer,
+    test.pcLocal.releaseIceCandidates,
+    generateErrorCallback("pcLocal._pc.setRemoteDescription() sync failed"));
 }
 
 runNetworkTest(() => {
