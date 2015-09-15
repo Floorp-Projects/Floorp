@@ -9914,6 +9914,8 @@ CheckHeapLengthCondition(ModuleValidator& m, ParseNode* cond, PropertyName* newB
     ParseNode* maskNode = BitwiseRight(cond1);
     if (!IsLiteralInt(m, maskNode, mask))
         return m.fail(maskNode, "expecting integer literal mask");
+    if (*mask == UINT32_MAX)
+        return m.fail(maskNode, "invalid mask value");
     if ((*mask & 0xffffff) != 0xffffff)
         return m.fail(maskNode, "mask value must have the bits 0xffffff set");
 
