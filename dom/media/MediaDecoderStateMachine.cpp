@@ -2498,7 +2498,7 @@ bool MediaDecoderStateMachine::CheckFrameValidity(VideoData* aData)
 
   // Update corrupt-frames statistics
   if (aData->mImage && !aData->mImage->IsValid()) {
-    MediaDecoder::FrameStatistics& frameStats = mDecoder->GetFrameStatistics();
+    FrameStatistics& frameStats = mDecoder->GetFrameStatistics();
     frameStats.NotifyCorruptFrame();
     // If more than 10% of the last 30 frames have been corrupted, then try disabling
     // hardware acceleration. We use 10 as the corrupt value because RollingMean<>
@@ -2635,7 +2635,7 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
     VideoQueue().PushFront(currentFrame);
     if (framesRemoved > 0) {
       mVideoFrameEndTime = currentFrame->GetEndTime();
-      MediaDecoder::FrameStatistics& frameStats = mDecoder->GetFrameStatistics();
+      FrameStatistics& frameStats = mDecoder->GetFrameStatistics();
       frameStats.NotifyPresentedFrame();
     }
   }
