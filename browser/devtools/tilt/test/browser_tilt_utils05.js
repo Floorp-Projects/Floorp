@@ -55,11 +55,11 @@ function test() {
       iframe.contentWindow.innerHeight,
       "The content window height wasn't calculated correctly.");
 
-    let lh = new LayoutHelpers(gBrowser.contentWindow);
-    let nodeCoordinates = lh.getRect(
+    let nodeCoordinates = getRect(
+      gBrowser.contentWindow,
       iframe.contentDocument.getElementById("test-div"), iframe.contentWindow);
 
-    let frameOffset = lh.getIframeContentOffset(iframe);
+    let frameOffset = getIframeContentOffset(iframe);
     let frameRect = iframe.getBoundingClientRect();
 
     is(nodeCoordinates.top, frameRect.top + frameOffset[0] + 98,

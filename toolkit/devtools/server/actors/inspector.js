@@ -68,9 +68,15 @@ const {
   CustomHighlighterActor,
   isTypeRegistered,
 } = require("devtools/server/actors/highlighter");
+const {
+  isAnonymous,
+  isNativeAnonymous,
+  isXBLAnonymous,
+  isShadowAnonymous,
+  getFrameElement
+} = require("devtools/toolkit/layout/utils");
 const {getLayoutChangesObserver, releaseLayoutChangesObserver} =
   require("devtools/server/actors/layout");
-const LayoutHelpers = require("devtools/toolkit/layout-helpers");
 
 const {EventParsers} = require("devtools/toolkit/event-parsers");
 
@@ -264,10 +270,10 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
       attrs: this.writeAttrs(),
       isBeforePseudoElement: this.isBeforePseudoElement,
       isAfterPseudoElement: this.isAfterPseudoElement,
-      isAnonymous: LayoutHelpers.isAnonymous(this.rawNode),
-      isNativeAnonymous: LayoutHelpers.isNativeAnonymous(this.rawNode),
-      isXBLAnonymous: LayoutHelpers.isXBLAnonymous(this.rawNode),
-      isShadowAnonymous: LayoutHelpers.isShadowAnonymous(this.rawNode),
+      isAnonymous: isAnonymous(this.rawNode),
+      isNativeAnonymous: isNativeAnonymous(this.rawNode),
+      isXBLAnonymous: isXBLAnonymous(this.rawNode),
+      isShadowAnonymous: isShadowAnonymous(this.rawNode),
       pseudoClassLocks: this.writePseudoClassLocks(),
 
       isDisplayed: this.isDisplayed,
@@ -1290,8 +1296,6 @@ var WalkerActor = protocol.ActorClass({
     this._activePseudoClassLocks = new Set();
     this.showAllAnonymousContent = options.showAllAnonymousContent;
 
-    this.layoutHelpers = new LayoutHelpers(this.rootWin);
-
     // Nodes which have been removed from the client's known
     // ownership tree are considered "orphaned", and stored in
     // this set.
@@ -1491,7 +1495,7 @@ var WalkerActor = protocol.ActorClass({
         // If an anonymous node was passed in and we aren't supposed to know
         // about it, then consult with the document walker as the source of
         // truth about which elements exist.
-        if (!this.showAllAnonymousContent && LayoutHelpers.isAnonymous(node)) {
+        if (!this.showAllAnonymousContent && isAnonymous(node)) {
           node = this.getDocumentWalker(node).currentNode;
         }
 
@@ -2878,7 +2882,7 @@ var WalkerActor = protocol.ActorClass({
       });
       return;
     }
-    let frame = this.layoutHelpers.getFrameElement(window);
+    let frame = getFrameElement(window);
     let frameActor = this._refMap.get(frame);
     if (!frameActor) {
       return;
@@ -2905,7 +2909,7 @@ var WalkerActor = protocol.ActorClass({
       if (win === window) {
         return true;
       }
-      win = this.layoutHelpers.getFrameElement(win);
+      win = getFrameElement(win);
     }
     return false;
   },
@@ -3906,8 +3910,8 @@ function standardTreeWalkerFilter(aNode) {
   }
 
   // Ignore all native and XBL anonymous content inside a non-XUL document
-  if (!isInXULDocument(aNode) && (LayoutHelpers.isXBLAnonymous(aNode) ||
-                                  LayoutHelpers.isNativeAnonymous(aNode))) {
+  if (!isInXULDocument(aNode) && (isXBLAnonymous(aNode) ||
+                                  isNativeAnonymous(aNode))) {
     // Note: this will skip inspecting the contents of feedSubscribeLine since
     // that's XUL content injected in an HTML document, but we need to because
     // this also skips many other elements that need to be skipped - like form
