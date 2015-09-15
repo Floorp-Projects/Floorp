@@ -15,14 +15,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
 
-PRLogModuleInfo* GetAppleMediaLog() {
-  static PRLogModuleInfo* log = nullptr;
-  if (!log) {
-    log = PR_NewLogModule("AppleMedia");
-  }
-  return log;
-}
-
 namespace mozilla {
 
 bool AppleDecoderModule::sInitialized = false;
