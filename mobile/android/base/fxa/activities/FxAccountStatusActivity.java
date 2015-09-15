@@ -4,15 +4,6 @@
 
 package org.mozilla.gecko.fxa.activities;
 
-import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.Locales.LocaleAwareFragmentActivity;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.background.fxa.FxAccountUtils;
-import org.mozilla.gecko.fxa.FirefoxAccounts;
-import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
-import org.mozilla.gecko.sync.Utils;
-
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
@@ -32,6 +23,15 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.Locales.LocaleAwareFragmentActivity;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.fxa.FxAccountUtils;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.sync.Utils;
 
 /**
  * Activity which displays account status.
@@ -85,7 +85,7 @@ public class FxAccountStatusActivity extends LocaleAwareFragmentActivity {
       Logger.warn(LOG_TAG, "Could not get Firefox Account.");
 
       // Gracefully redirect to get started.
-      Intent intent = new Intent(this, FxAccountGetStartedActivity.class);
+      final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
       // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
       // the soft keyboard not being shown for the started activity. Why, Android, why?
       intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);

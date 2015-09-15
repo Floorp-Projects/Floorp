@@ -4,22 +4,19 @@
 
 package org.mozilla.gecko.home;
 
-import java.util.EnumSet;
-import java.util.Locale;
-
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.fxa.FirefoxAccounts;
-import org.mozilla.gecko.fxa.activities.FxAccountCreateAccountActivity;
-import org.mozilla.gecko.fxa.activities.FxAccountFinishMigratingActivity;
-import org.mozilla.gecko.fxa.activities.FxAccountUpdateCredentialsActivity;
-import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
+
+import java.util.EnumSet;
+import java.util.Locale;
 
 /**
  * A <code>HomeFragment</code> which displays one of a small set of static views
@@ -102,8 +99,7 @@ public class RemoteTabsStaticFragment extends HomeFragment implements OnClickLis
         final int id = v.getId();
         if (id == R.id.remote_tabs_setup_get_started) {
             // This Activity will redirect to the correct Activity as needed.
-            final Intent intent = new Intent(getActivity(), FxAccountCreateAccountActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
             startActivity(intent);
         } else if (id == R.id.remote_tabs_setup_old_sync_link) {
             final String url = FirefoxAccounts.getOldSyncUpgradeURL(getResources(), Locale.getDefault());
@@ -118,11 +114,11 @@ public class RemoteTabsStaticFragment extends HomeFragment implements OnClickLis
             final EnumSet<OnUrlOpenListener.Flags> flags = EnumSet.noneOf(OnUrlOpenListener.Flags.class);
             mUrlOpenListener.onUrlOpen(CONFIRM_ACCOUNT_SUPPORT_URL, flags);
         } else if (id == R.id.remote_tabs_needs_password_sign_in) {
-            final Intent intent = new Intent(getActivity(), FxAccountUpdateCredentialsActivity.class);
+            final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_UPDATE_CREDENTIALS);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         } else if (id == R.id.remote_tabs_needs_finish_migrating_sign_in) {
-            final Intent intent = new Intent(getActivity(), FxAccountFinishMigratingActivity.class);
+            final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_FINISH_MIGRATING);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         }

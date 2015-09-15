@@ -4,9 +4,15 @@
 
 package org.mozilla.gecko.fxa.activities;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.common.telemetry.TelemetryWrapper;
@@ -18,6 +24,7 @@ import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClient
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.fxa.PasswordStretcher;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.Engaged;
 import org.mozilla.gecko.fxa.login.State;
@@ -25,15 +32,8 @@ import org.mozilla.gecko.fxa.tasks.FxAccountSignInTask;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 import org.mozilla.gecko.sync.telemetry.TelemetryContract;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.AutoCompleteTextView;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ProgressBar;
-import android.widget.TextView;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * Abstract activity which displays a screen for updating the local password.
@@ -109,7 +109,7 @@ public abstract class FxAccountAbstractUpdateCredentialsActivity extends FxAccou
         final State state = fxAccount.getState();
         fxAccount.setState(state.makeDoghouseState());
         // The status activity will say that the user needs to upgrade.
-        redirectToActivity(FxAccountStatusActivity.class);
+        redirectToAction(FxAccountConstants.ACTION_FXA_STATUS);
         return;
       }
       showRemoteError(e, R.string.fxaccount_update_credentials_unknown_error);
