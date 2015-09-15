@@ -1826,6 +1826,9 @@ typedef double (*Prototype_Double_None)();
 typedef double (*Prototype_Double_Double)(double arg0);
 typedef double (*Prototype_Double_Int)(int32_t arg0);
 typedef int32_t (*Prototype_Int_Double)(double arg0);
+typedef int32_t (*Prototype_Int_DoubleIntInt)(double arg0, int32_t arg1, int32_t arg2);
+typedef int32_t (*Prototype_Int_IntDoubleIntInt)(int32_t arg0, double arg1, int32_t arg2,
+                                                 int32_t arg3);
 typedef float (*Prototype_Float32_Float32)(float arg0);
 
 typedef double (*Prototype_DoubleInt)(double arg0, int32_t arg1);
@@ -1942,6 +1945,20 @@ Simulator::softwareInterrupt(SimInstruction* instr)
             getFpArgs(&dval0, &dval1, &ival);
             Prototype_Int_Double target = reinterpret_cast<Prototype_Int_Double>(external);
             int32_t res = target(dval0);
+            setRegister(v0, res);
+            break;
+          }
+          case Args_Int_DoubleIntInt: {
+            double dval = getFpuRegisterDouble(12);
+            Prototype_Int_DoubleIntInt target = reinterpret_cast<Prototype_Int_DoubleIntInt>(external);
+            int32_t res = target(dval, arg2, arg3);
+            setRegister(v0, res);
+            break;
+          }
+          case Args_Int_IntDoubleIntInt: {
+            double dval = getDoubleFromRegisterPair(a2);
+            Prototype_Int_IntDoubleIntInt target = reinterpret_cast<Prototype_Int_IntDoubleIntInt>(external);
+            int32_t res = target(arg0, dval, arg4, arg5);
             setRegister(v0, res);
             break;
           }

@@ -175,3 +175,7 @@ CSS_PROP_ALIAS(-moz-border-start-width,
                border_inline_start_width,
                MozBorderStartWidth,
                "")
+CSS_PROP_ALIAS(-moz-hyphens,
+               hyphens,
+               MozHyphens,
+               "")

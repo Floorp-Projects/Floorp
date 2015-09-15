@@ -35,6 +35,7 @@ OptimizationInfo::initNormalOptimizationInfo()
     loopUnrolling_ = true;
     reordering_ = true;
     autoTruncate_ = true;
+    sincos_ = true;
     sink_ = true;
     registerAllocator_ = RegisterAllocator_Backtracking;
 
@@ -66,6 +67,7 @@ OptimizationInfo::initAsmjsOptimizationInfo()
     edgeCaseAnalysis_ = false;
     eliminateRedundantChecks_ = false;
     autoTruncate_ = false;
+    sincos_ = false;
     sink_ = false;
     registerAllocator_ = RegisterAllocator_Backtracking;
     scalarReplacement_ = false;        // AsmJS has no objects.

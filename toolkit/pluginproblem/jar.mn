@@ -1,0 +1,10 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit.jar:
+% content pluginproblem %pluginproblem/ contentaccessible=yes
+  pluginproblem/pluginProblem.xml                 (content/pluginProblem.xml)
+  pluginproblem/pluginProblemContent.css          (content/pluginProblemContent.css)
+  pluginproblem/pluginProblemBinding.css          (content/pluginProblemBinding.css)
+  pluginproblem/pluginFinderBinding.css           (content/pluginFinderBinding.css)

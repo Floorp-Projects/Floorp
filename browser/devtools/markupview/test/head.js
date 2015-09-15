@@ -51,6 +51,7 @@ registerCleanupFunction(function*() {
 const TEST_URL_ROOT = "http://mochi.test:8888/browser/browser/devtools/markupview/test/";
 const CHROME_BASE = "chrome://mochitests/content/browser/browser/devtools/markupview/test/";
 const COMMON_FRAME_SCRIPT_URL = "chrome://browser/content/devtools/frame-script-utils.js";
+const MARKUPVIEW_FRAME_SCRIPT_URL = CHROME_BASE + "frame-script-utils.js";
 
 /**
  * Add a new test tab in the browser and load the given url.
@@ -71,6 +72,7 @@ function addTab(url) {
 
   info("Loading the helper frame script " + COMMON_FRAME_SCRIPT_URL);
   linkedBrowser.messageManager.loadFrameScript(COMMON_FRAME_SCRIPT_URL, false);
+  linkedBrowser.messageManager.loadFrameScript(MARKUPVIEW_FRAME_SCRIPT_URL, false);
 
   linkedBrowser.addEventListener("load", function onload() {
     linkedBrowser.removeEventListener("load", onload, true);

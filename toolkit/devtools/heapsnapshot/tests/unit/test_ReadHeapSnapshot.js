@@ -9,10 +9,7 @@ if (typeof Debugger != "function") {
 }
 
 function run_test() {
-  const filePath = getFilePath("core-dump-" + Math.random() + ".tmp", true, true);
-  ok(filePath, "Should get a file path");
-
-  ChromeUtils.saveHeapSnapshot(filePath, { globals: [this] });
+  const filePath = ChromeUtils.saveHeapSnapshot({ globals: [this] });
   ok(true, "Should be able to save a snapshot.");
 
   const snapshot = ChromeUtils.readHeapSnapshot(filePath);

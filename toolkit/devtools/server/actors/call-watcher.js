@@ -55,6 +55,8 @@ let FunctionCallActor = protocol.ActorClass({
    *        The called function's name.
    * @param array stack
    *        The called function's stack, as a list of { name, file, line } objects.
+   * @param number timestamp
+   *        The timestamp of draw-related functions
    * @param array args
    *        The called function's arguments.
    * @param any result
@@ -63,13 +65,14 @@ let FunctionCallActor = protocol.ActorClass({
    *        Determines whether or not FunctionCallActor stores a weak reference
    *        to the underlying objects.
    */
-  initialize: function(conn, [window, global, caller, type, name, stack, args, result], holdWeak) {
+  initialize: function(conn, [window, global, caller, type, name, stack, timestamp, args, result], holdWeak) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
     this.details = {
       type: type,
       name: name,
       stack: stack,
+      timestamp: timestamp
     };
 
     // Store a weak reference to all objects so we don't
@@ -87,7 +90,8 @@ let FunctionCallActor = protocol.ActorClass({
         window: { get: () => weakRefs.window.get() },
         caller: { get: () => weakRefs.caller.get() },
         result: { get: () => weakRefs.result.get() },
-        args: { get: () => weakRefs.args.get() }
+        args: { get: () => weakRefs.args.get() },
+        timestamp: { get: () => weakRefs.timestamp.get() },
       });
     }
     // Otherwise, hold strong references to the objects.
@@ -96,6 +100,7 @@ let FunctionCallActor = protocol.ActorClass({
       this.details.caller = caller;
       this.details.result = result;
       this.details.args = args;
+      this.details.timestamp = timestamp;
     }
 
     this.meta = {
@@ -128,6 +133,7 @@ let FunctionCallActor = protocol.ActorClass({
       name: this.details.name,
       file: this.details.stack[0].file,
       line: this.details.stack[0].line,
+      timestamp: this.details.timestamp,
       callerPreview: this.meta.previews.caller,
       argsPreview: this.meta.previews.args
     };
@@ -138,7 +144,7 @@ let FunctionCallActor = protocol.ActorClass({
    * available on the Front instance.
    */
   getDetails: method(function() {
-    let { type, name, stack } = this.details;
+    let { type, name, stack, timestamp } = this.details;
 
     // Since not all calls on the stack have corresponding owner files (e.g.
     // callbacks of a requestAnimationFrame etc.), there's no benefit in
@@ -156,7 +162,8 @@ let FunctionCallActor = protocol.ActorClass({
     return {
       type: type,
       name: name,
-      stack: stack
+      stack: stack,
+      timestamp: timestamp
     };
   }, {
     response: { info: RetVal("call-details") }
@@ -243,6 +250,7 @@ let FunctionCallFront = protocol.FrontClass(FunctionCallActor, {
     this.name = form.name;
     this.file = form.file;
     this.line = form.line;
+    this.timestamp = form.timestamp;
     this.callerPreview = form.callerPreview;
     this.argsPreview = form.argsPreview;
   }
@@ -331,6 +339,13 @@ let CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
     return this._recording;
   }, {
     response: RetVal("boolean")
+  }),
+
+  /**
+   * Initialize frame start timestamp for measuring
+   */
+  initFrameStartTimestamp: method(function() {
+    this._frameStartTimestamp = this.tabActor.window.performance.now();
   }),
 
   /**
@@ -424,9 +439,10 @@ let CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
         }
 
         if (self._recording) {
+          let timestamp = self.tabActor.window.performance.now() - self._frameStartTimestamp;
           let stack = getStack(name);
           let type = CallWatcherFront.METHOD_FUNCTION;
-          callback(unwrappedWindow, global, this, type, name, stack, args, result);
+          callback(unwrappedWindow, global, this, type, name, stack, timestamp, args, result);
         }
         return result;
       }, target, { defineAs: name });
@@ -453,9 +469,10 @@ let CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
           let result = Cu.waiveXrays(originalGetter.apply(this, args));
 
           if (self._recording) {
+            let timestamp = self.tabActor.window.performance.now() - self._frameStartTimestamp;
             let stack = getStack(name);
             let type = CallWatcherFront.GETTER_FUNCTION;
-            callback(unwrappedWindow, global, this, type, name, stack, args, result);
+            callback(unwrappedWindow, global, this, type, name, stack, timestamp, args, result);
           }
           return result;
         },
@@ -464,9 +481,10 @@ let CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
           originalSetter.apply(this, args);
 
           if (self._recording) {
+            let timestamp = self.tabActor.window.performance.now() - self._frameStartTimestamp;
             let stack = getStack(name);
             let type = CallWatcherFront.SETTER_FUNCTION;
-            callback(unwrappedWindow, global, this, type, name, stack, args, undefined);
+            callback(unwrappedWindow, global, this, type, name, stack, timestamp, args, undefined);
           }
         },
         configurable: descriptor.configurable,

@@ -3,6 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
-%   content xbl-marquee %content/xbl-marquee/
+%   content xbl-marquee %content/xbl-marquee/ contentaccessible=yes
     content/xbl-marquee/xbl-marquee.xml
     content/xbl-marquee/xbl-marquee.css

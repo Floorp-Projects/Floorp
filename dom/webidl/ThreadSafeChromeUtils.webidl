@@ -14,13 +14,15 @@ interface ThreadSafeChromeUtils {
    * Serialize a snapshot of the heap graph, as seen by |JS::ubi::Node| and
    * restricted by |boundaries|, and write it to the provided file path.
    *
-   * @param filePath          The file path to write the heap snapshot to.
-   *
    * @param boundaries        The portion of the heap graph to write.
+   *
+   * @returns                 The path to the file the heap snapshot was written
+   *                          to. This is guaranteed to be within the temp
+   *                          directory and its file name will match the regexp
+   *                          `\d+(\-\d+)?\.fxsnapshot`.
    */
   [Throws]
-  static void saveHeapSnapshot(DOMString filePath,
-                               optional HeapSnapshotBoundaries boundaries);
+  static DOMString saveHeapSnapshot(optional HeapSnapshotBoundaries boundaries);
 
   /**
    * Deserialize a core dump into a HeapSnapshot.

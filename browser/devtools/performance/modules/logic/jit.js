@@ -269,23 +269,13 @@ const IMPLEMENTATION_NAMES = Object.keys(IMPLEMENTATION_MAP);
  * @param {Array<number>} sampleTimes
  *                        An array of every sample time within the range we're counting.
  *                        From a ThreadNode's `sampleTimes` property.
- * @param {number} op.startTime
- *                 The start time of the first sample.
- * @param {number} op.endTime
- *                 The end time of the last sample.
- * @param {number} op.resolution
- *                 The maximum amount of possible data points returned.
- *                 Also determines the size in milliseconds of each bucket
- *                 via `(endTime - startTime) / resolution`
+ * @param {number} bucketSize
+ *                 Size of each bucket in milliseconds.
+ *                 `duration / resolution = bucketSize` in OptimizationsGraph.
  * @return {?Array<object>}
  */
-function createTierGraphDataFromFrameNode (frameNode, sampleTimes, { startTime, endTime, resolution }) {
-  if (!frameNode.hasOptimizations()) {
-    return;
-  }
-
-  let tierData = frameNode.getOptimizationTierData();
-  let duration = endTime - startTime;
+function createTierGraphDataFromFrameNode (frameNode, sampleTimes, bucketSize) {
+  let tierData = frameNode.getTierData();
   let stringTable = frameNode._stringTable;
   let output = [];
   let implEnum;
@@ -297,8 +287,9 @@ function createTierGraphDataFromFrameNode (frameNode, sampleTimes, { startTime, 
   let samplesInCurrentBucket = 0;
   let currentBucketStartTime = sampleTimes[0];
   let bucket = [];
-  // Size of each bucket in milliseconds
-  let bucketSize = Math.ceil(duration / resolution);
+
+  // Store previous data point so we can have straight vertical lines
+  let previousValues;
 
   // Iterate one after the samples, so we can finalize the last bucket
   for (let i = 0; i <= sampleTimes.length; i++) {
@@ -310,19 +301,30 @@ function createTierGraphDataFromFrameNode (frameNode, sampleTimes, { startTime, 
         i >= sampleTimes.length) {
 
       let dataPoint = {};
-      dataPoint.ys = [];
-      dataPoint.x = currentBucketStartTime;
+      dataPoint.values = [];
+      dataPoint.delta = currentBucketStartTime;
 
       // Map the opt site counts as a normalized percentage (0-1)
       // of its count in context of total samples this bucket
       for (let j = 0; j < IMPLEMENTATION_NAMES.length; j++) {
-        dataPoint.ys[j] = (bucket[j] || 0) / (samplesInCurrentBucket || 1);
+        dataPoint.values[j] = (bucket[j] || 0) / (samplesInCurrentBucket || 1);
       }
+
+      // Push the values from the previous bucket to the same time
+      // as the current bucket so we get a straight vertical line.
+      if (previousValues) {
+        let data = Object.create(null);
+        data.values = previousValues;
+        data.delta = currentBucketStartTime;
+        output.push(data);
+      }
+
       output.push(dataPoint);
 
       // Set the new start time of this bucket and reset its count
       currentBucketStartTime += bucketSize;
       samplesInCurrentBucket = 0;
+      previousValues = dataPoint.values;
       bucket = [];
     }
 

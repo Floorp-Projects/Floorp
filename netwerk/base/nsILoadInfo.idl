@@ -22,7 +22,7 @@ typedef unsigned long nsSecurityFlags;
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(99abb145-29d2-4a0a-8bca-213fa6211cc9)]
+[scriptable, builtinclass, uuid(ef0080f3-33f5-475f-a3d6-9fd3be0612e3)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -121,6 +121,11 @@ interface nsILoadInfo : nsISupports
    * Inherit the Principal for about:blank.
    */
   const unsigned long SEC_ABOUT_BLANK_INHERITS = (1<<8);
+
+  /**
+   * Allow chrome: to bypass security checks.
+   */
+  const unsigned long SEC_ALLOW_CHROME = (1<<9);
 
   /**
    * The loadingPrincipal is the principal that is responsible for the load.
@@ -236,6 +241,12 @@ interface nsILoadInfo : nsISupports
    * the principal.
    */
   [infallible] readonly attribute boolean aboutBlankInherits;
+
+  /**
+   * If allowChrome is true, then use nsIScriptSecurityManager::ALLOW_CHROME
+   * when calling CheckLoadURIWithPrincipal().
+   */
+  [infallible] readonly attribute boolean allowChrome;
 
   /**
    * The external contentPolicyType of the channel, used for security checks

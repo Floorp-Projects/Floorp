@@ -457,6 +457,13 @@ LazyIdleThread::GetPRThread(PRThread** aPRThread)
 }
 
 NS_IMETHODIMP
+LazyIdleThread::AsyncShutdown()
+{
+  ASSERT_OWNING_THREAD();
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 LazyIdleThread::Shutdown()
 {
   ASSERT_OWNING_THREAD();

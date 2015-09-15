@@ -38,6 +38,7 @@
 #include <unistd.h>
 #include <utils/Timers.h>
 
+#undef LOG
 #define LOG(args...)                                            \
   __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
 

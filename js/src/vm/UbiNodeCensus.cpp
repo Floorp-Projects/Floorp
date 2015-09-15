@@ -6,6 +6,10 @@
 
 #include "js/UbiNodeCensus.h"
 
+#include "jscntxt.h"
+#include "jscompartment.h"
+#include "jsobjinlines.h"
+
 using namespace js;
 
 namespace JS {

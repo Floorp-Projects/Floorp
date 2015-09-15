@@ -59,6 +59,7 @@ struct JitOptions
     bool disableRangeAnalysis;
     bool disableScalarReplacement;
     bool disableSharedStubs;
+    bool disableSincos;
     bool disableSink;
     bool eagerCompilation;
     bool forceInlineCaches;

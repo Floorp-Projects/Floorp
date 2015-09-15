@@ -19,6 +19,3 @@ UNIFIED_SOURCES += [
 LOCAL_INCLUDES += [
     '..',
 ]
-
-if not CONFIG['GNU_CXX']:
-    ALLOW_COMPILER_WARNINGS = True
