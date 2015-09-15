@@ -58,7 +58,7 @@ relativesrcdir toolkit/locales:
   locale/@AB_CD@/browser/overrides/search/search.properties        (%chrome/search/search.properties)
   locale/@AB_CD@/browser/overrides/update/updates.properties       (%chrome/mozapps/update/updates.properties)
 # plugins
-  locale/@AB_CD@/browser/overrides/plugins/plugins.dtd             (%chrome/mozapps/plugins/plugins.dtd)
+  locale/@AB_CD@/browser/overrides/plugins/pluginproblem.dtd       (%chrome/pluginproblem/pluginproblem.dtd)
 # about:support
   locale/@AB_CD@/browser/overrides/global/aboutSupport.dtd         (%chrome/global/aboutSupport.dtd)
   locale/@AB_CD@/browser/overrides/global/aboutSupport.properties  (%chrome/global/aboutSupport.properties)
@@ -85,7 +85,7 @@ relativesrcdir toolkit/locales:
 % override chrome://passwordmgr/locale/passwordmgr.properties chrome://browser/locale/overrides/passwordmgr/passwordmgr.properties
 % override chrome://global/locale/search/search.properties chrome://browser/locale/overrides/search/search.properties
 % override chrome://mozapps/locale/update/updates.properties chrome://browser/locale/overrides/update/updates.properties
-% override chrome://mozapps/locale/plugins/plugins.dtd chrome://browser/locale/overrides/plugins/plugins.dtd
+% override chrome://pluginproblem/locale/pluginproblem.dtd chrome://browser/locale/overrides/plugins/pluginproblem.dtd
 % override chrome://global/locale/aboutSupport.dtd chrome://browser/locale/overrides/global/aboutSupport.dtd
 % override chrome://global/locale/aboutSupport.properties chrome://browser/locale/overrides/global/aboutSupport.properties
 % override chrome://global/locale/crashes.dtd chrome://browser/locale/overrides/crashreporter/crashes.dtd
