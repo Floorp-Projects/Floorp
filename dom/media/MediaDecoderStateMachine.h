@@ -93,6 +93,7 @@ hardware (via AudioStream).
 #include "MediaDecoderOwner.h"
 #include "MediaEventSource.h"
 #include "MediaMetadataManager.h"
+#include "MediaStatistics.h"
 #include "MediaTimer.h"
 #include "ImageContainer.h"
 
@@ -207,6 +208,8 @@ private:
   void StartBuffering();
 
   bool CanPlayThrough();
+
+  MediaStatistics GetStatistics();
 
 public:
   void DispatchStartBuffering()
@@ -979,6 +982,9 @@ private:
   // on decoded video data.
   int64_t mDecodedVideoEndTime;
 
+  // Current playback position in the stream in bytes.
+  int64_t mPlaybackOffset;
+
   // Playback rate. 1.0 : normal speed, 0.5 : two times slower.
   double mPlaybackRate;
 
@@ -1282,6 +1288,15 @@ private:
   // True if the media is same-origin with the element. Data can only be
   // passed to MediaStreams when this is true.
   Mirror<bool> mSameOriginMedia;
+
+  // Estimate of the current playback rate (bytes/second).
+  Mirror<double> mPlaybackBytesPerSecond;
+
+  // True if mPlaybackBytesPerSecond is a reliable estimate.
+  Mirror<bool> mPlaybackRateReliable;
+
+  // Current decoding position in the stream.
+  Mirror<int64_t> mDecoderPosition;
 
   // Duration of the media. This is guaranteed to be non-null after we finish
   // decoding the first frame.
