@@ -88,11 +88,10 @@ namespace {
 enum TrickleMode { TRICKLE_NONE, TRICKLE_SIMULATE, TRICKLE_REAL };
 
 const unsigned int ICE_TEST_PEER_OFFERER = (1 << 0);
-const unsigned int ICE_TEST_PEER_SET_PRIORITIES = (1 << 1);
-const unsigned int ICE_TEST_PEER_ALLOW_LOOPBACK = (1 << 2);
-const unsigned int ICE_TEST_PEER_ENABLED_TCP = (1 << 3);
-const unsigned int ICE_TEST_PEER_ALLOW_LINK_LOCAL = (1 << 4);
-const unsigned int ICE_TEST_PEER_HIDE_NON_DEFAULT = (1 << 5);
+const unsigned int ICE_TEST_PEER_ALLOW_LOOPBACK = (1 << 1);
+const unsigned int ICE_TEST_PEER_ENABLED_TCP = (1 << 2);
+const unsigned int ICE_TEST_PEER_ALLOW_LINK_LOCAL = (1 << 3);
+const unsigned int ICE_TEST_PEER_HIDE_NON_DEFAULT = (1 << 4);
 
 typedef std::string (*CandidateFilter)(const std::string& candidate);
 
@@ -259,11 +258,11 @@ class IceTestPeer : public sigslot::has_slots<> {
  public:
   // TODO(ekr@rtfm.com): Convert to flags when NrIceCtx::Create() does.
   // Bug 1193437.
-  IceTestPeer(const std::string& name, bool offerer, bool set_priorities,
+  IceTestPeer(const std::string& name, bool offerer,
               bool allow_loopback = false, bool enable_tcp = true,
               bool allow_link_local = false, bool hide_non_default = false) :
       name_(name),
-      ice_ctx_(NrIceCtx::Create(name, offerer, set_priorities, allow_loopback,
+      ice_ctx_(NrIceCtx::Create(name, offerer, allow_loopback,
                                 enable_tcp, allow_link_local, hide_non_default)),
       streams_(),
       candidates_(),
@@ -1160,7 +1159,6 @@ class IceGatherTest : public ::testing::Test {
     if (!peer_) {
       peer_ = new IceTestPeer("P1",
                               flags & ICE_TEST_PEER_OFFERER,
-                              flags & ICE_TEST_PEER_SET_PRIORITIES,
                               flags & ICE_TEST_PEER_ALLOW_LOOPBACK,
                               flags & ICE_TEST_PEER_ENABLED_TCP,
                               flags & ICE_TEST_PEER_ALLOW_LINK_LOCAL,
@@ -1329,7 +1327,7 @@ class IceConnectTest : public ::testing::Test {
   }
 
   void AddStream(const std::string& name, int components) {
-    Init(false, false, false);
+    Init(false, false);
     p1_->AddStream(components);
     p2_->AddStream(components);
   }
@@ -1339,12 +1337,11 @@ class IceConnectTest : public ::testing::Test {
     p2_->RemoveStream(index);
   }
 
-  void Init(bool set_priorities, bool allow_loopback, bool enable_tcp,
-            bool default_only = false) {
+  void Init(bool allow_loopback, bool enable_tcp, bool default_only = false) {
     if (!initted_) {
-      p1_ = new IceTestPeer("P1", true, set_priorities, allow_loopback,
+      p1_ = new IceTestPeer("P1", true, allow_loopback,
                             enable_tcp, false, default_only);
-      p2_ = new IceTestPeer("P2", false, set_priorities, allow_loopback,
+      p2_ = new IceTestPeer("P2", false, allow_loopback,
                             enable_tcp, false, default_only);
     }
     initted_ = true;
@@ -1352,7 +1349,7 @@ class IceConnectTest : public ::testing::Test {
 
   bool Gather(unsigned int waitTime = kDefaultTimeout,
               bool setupStunServers = true) {
-    Init(false, false, false);
+    Init(false, false);
     if (use_nat_) {
       // If we enable nat simulation, but still use a real STUN server somewhere
       // on the internet, we will see failures if there is a real NAT in
@@ -1706,7 +1703,7 @@ TEST_F(IceGatherTest, TestGatherStunServerIpAddressDefaultRouteOnly) {
     return;
   }
 
-  peer_ = new IceTestPeer("P1", true, false, false, false, false, true);
+  peer_ = new IceTestPeer("P1", true, false, false, false, true);
   peer_->AddStream(1);
   peer_->SetStunServer(g_stun_server_address, kDefaultStunServerPort);
   peer_->SetFakeResolver();
@@ -1895,7 +1892,7 @@ TEST_F(IceGatherTest, TestGatherVerifyNoLoopback) {
 
 TEST_F(IceGatherTest, TestGatherAllowLoopback) {
   // Set up peer with loopback allowed.
-  peer_ = new IceTestPeer("P1", true, false, true);
+  peer_ = new IceTestPeer("P1", true, true);
   peer_->AddStream(1);
   Gather();
   ASSERT_TRUE(StreamHasMatchingCandidate(0, "127.0.0.1"));
@@ -1903,7 +1900,7 @@ TEST_F(IceGatherTest, TestGatherAllowLoopback) {
 
 TEST_F(IceGatherTest, TestGatherTcpDisabled) {
   // Set up peer with tcp disabled.
-  peer_ = new IceTestPeer("P1", true, false, false, false);
+  peer_ = new IceTestPeer("P1", true, false, false);
   peer_->AddStream(1);
   Gather();
   ASSERT_FALSE(StreamHasMatchingCandidate(0, " TCP "));
@@ -2007,7 +2004,7 @@ TEST_F(IceGatherTest, TestStunServerTrickle) {
 // Test default route only with our fake STUN server and
 // apparently NATted.
 TEST_F(IceGatherTest, TestFakeStunServerNatedDefaultRouteOnly) {
-  peer_ = new IceTestPeer("P1", true, false, false, false, false, true);
+  peer_ = new IceTestPeer("P1", true, false, false, false, true);
   peer_->AddStream(1);
   UseFakeStunUdpServerWithResponse("192.0.2.1", 3333);
   Gather(0);
@@ -2025,7 +2022,7 @@ TEST_F(IceGatherTest, TestFakeStunServerNatedDefaultRouteOnly) {
 // Test default route only with our fake STUN server and
 // apparently non-NATted.
 TEST_F(IceGatherTest, TestFakeStunServerNoNatDefaultRouteOnly) {
-  peer_ = new IceTestPeer("P1", true, false, false, false, false, true);
+  peer_ = new IceTestPeer("P1", true, false, false, false, true);
   peer_->AddStream(1);
   UseTestStunServer();
   Gather(0);
@@ -2065,13 +2062,13 @@ TEST_F(IceConnectTest, TestGather) {
 }
 
 TEST_F(IceConnectTest, TestGatherTcp) {
-  Init(false, false, true);
+  Init(false, true);
   AddStream("first", 1);
   ASSERT_TRUE(Gather());
 }
 
 TEST_F(IceConnectTest, TestGatherAutoPrioritize) {
-  Init(false, false, false);
+  Init(false, false);
   AddStream("first", 1);
   ASSERT_TRUE(Gather());
 }
@@ -2084,7 +2081,7 @@ TEST_F(IceConnectTest, TestConnect) {
 }
 
 TEST_F(IceConnectTest, TestConnectTcp) {
-  Init(false, false, true);
+  Init(false, true);
   AddStream("first", 1);
   ASSERT_TRUE(Gather());
   SetCandidateFilter(IsTcpCandidate);
@@ -2096,7 +2093,7 @@ TEST_F(IceConnectTest, TestConnectTcp) {
 //TCP SO tests works on localhost only with delay applied:
 //  tc qdisc add dev lo root netem delay 10ms
 TEST_F(IceConnectTest, DISABLED_TestConnectTcpSo) {
-  Init(false, false, true);
+  Init(false, true);
   AddStream("first", 1);
   ASSERT_TRUE(Gather());
   SetCandidateFilter(IsTcpSoCandidate);
@@ -2107,7 +2104,7 @@ TEST_F(IceConnectTest, DISABLED_TestConnectTcpSo) {
 
 // Disabled because this breaks with hairpinning.
 TEST_F(IceConnectTest, DISABLED_TestConnectDefaultRouteOnly) {
-  Init(false, false, false, true);
+  Init(false, false, true);
   AddStream("first", 1);
   ASSERT_TRUE(Gather());
   SetExpectedTypes(NrIceCandidate::Type::ICE_SERVER_REFLEXIVE,
@@ -2116,7 +2113,7 @@ TEST_F(IceConnectTest, DISABLED_TestConnectDefaultRouteOnly) {
 }
 
 TEST_F(IceConnectTest, TestLoopbackOnlySortOf) {
-  Init(false, true, false);
+  Init(true, false);
   AddStream("first", 1);
   SetCandidateFilter(IsLoopbackCandidate);
   ASSERT_TRUE(Gather());
@@ -2199,7 +2196,7 @@ TEST_F(IceConnectTest, TestGatherFullCone) {
 }
 
 TEST_F(IceConnectTest, TestGatherFullConeAutoPrioritize) {
-  Init(false, true, false);
+  Init(true, false);
   AddStream("first", 1);
   UseNat();
   SetFilteringType(TestNat::ENDPOINT_INDEPENDENT);
@@ -2220,7 +2217,7 @@ TEST_F(IceConnectTest, TestConnectFullCone) {
 }
 
 TEST_F(IceConnectTest, TestConnectNoNatRouteOnly) {
-  Init(false, false, false, true);
+  Init(false, false, true);
   AddStream("first", 1);
   UseTestStunServer();
   // Because we are connecting from our host candidate to the
@@ -2233,7 +2230,7 @@ TEST_F(IceConnectTest, TestConnectNoNatRouteOnly) {
 }
 
 TEST_F(IceConnectTest, TestConnectFullConeDefaultRouteOnly) {
-  Init(false, false, false, true);
+  Init(false, false, true);
   AddStream("first", 1);
   UseNat();
   SetFilteringType(TestNat::ENDPOINT_INDEPENDENT);
@@ -2406,7 +2403,7 @@ TEST_F(IceConnectTest, TestConnectP2ThenP1TrickleTwoComponents) {
 }
 
 TEST_F(IceConnectTest, TestConnectAutoPrioritize) {
-  Init(false, false, false);
+  Init(false, false);
   AddStream("first", 1);
   ASSERT_TRUE(Gather());
   Connect();
@@ -2589,7 +2586,7 @@ TEST_F(IceConnectTest, TestSendReceive) {
 }
 
 TEST_F(IceConnectTest, TestSendReceiveTcp) {
-  Init(false, false, true);
+  Init(false, true);
   AddStream("first", 1);
   ASSERT_TRUE(Gather());
   SetCandidateFilter(IsTcpCandidate);
@@ -2602,7 +2599,7 @@ TEST_F(IceConnectTest, TestSendReceiveTcp) {
 //TCP SO tests works on localhost only with delay applied:
 //  tc qdisc add dev lo root netem delay 10ms
 TEST_F(IceConnectTest, DISABLED_TestSendReceiveTcpSo) {
-  Init(false, false, true);
+  Init(false, true);
   AddStream("first", 1);
   ASSERT_TRUE(Gather());
   SetCandidateFilter(IsTcpSoCandidate);

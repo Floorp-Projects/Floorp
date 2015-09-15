@@ -79,6 +79,7 @@ private:
     struct UploadData;
     struct URIData;
     struct WalkData;
+    struct URIFixupData;
 
     class OnWalk;
     class OnWrite;
@@ -90,7 +91,7 @@ private:
     void Cleanup();
     void CleanupLocalFiles();
     nsresult GetValidURIFromObject(nsISupports *aObject, nsIURI **aURI) const;
-    nsresult GetLocalFileFromURI(nsIURI *aURI, nsIFile **aLocalFile) const;
+    static nsresult GetLocalFileFromURI(nsIURI *aURI, nsIFile **aLocalFile);
     static nsresult AppendPathToURI(nsIURI *aURI, const nsAString & aPath);
     nsresult MakeAndStoreLocalFilenameInURIMap(
         nsIURI *aURI, bool aNeedsPersisting, URIData **aData);

@@ -150,6 +150,12 @@ this.AppConstants = Object.freeze({
            Services.vc.compare(platformVersion, version) >= 0;
   },
 
+  isPlatformAndVersionAtMost(platform, version) {
+    let platformVersion = Services.sysinfo.getProperty("version");
+    return platform == this.platform &&
+           Services.vc.compare(platformVersion, version) <= 0;
+  },
+
   MOZ_CRASHREPORTER:
 #ifdef MOZ_CRASHREPORTER
   true,

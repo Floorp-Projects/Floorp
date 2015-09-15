@@ -230,14 +230,4 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIJSArgArray, NS_IJSARGARRAY_IID)
 
-JSObject* NS_DOMReadStructuredClone(JSContext* cx,
-                                    JSStructuredCloneReader* reader, uint32_t tag,
-                                    uint32_t data, void* closure);
-
-bool NS_DOMWriteStructuredClone(JSContext* cx,
-                                JSStructuredCloneWriter* writer,
-                                JS::Handle<JSObject*> obj, void *closure);
-
-void NS_DOMStructuredCloneError(JSContext* cx, uint32_t errorid);
-
 #endif /* nsJSEnvironment_h */

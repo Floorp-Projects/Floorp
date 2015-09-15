@@ -760,25 +760,25 @@ TouchCaret::HandleEvent(WidgetEvent* aEvent)
   nsEventStatus status = nsEventStatus_eIgnore;
 
   switch (aEvent->mMessage) {
-    case NS_TOUCH_START:
+    case eTouchStart:
       status = HandleTouchDownEvent(aEvent->AsTouchEvent());
       break;
     case eMouseDown:
       status = HandleMouseDownEvent(aEvent->AsMouseEvent());
       break;
-    case NS_TOUCH_END:
+    case eTouchEnd:
       status = HandleTouchUpEvent(aEvent->AsTouchEvent());
       break;
     case eMouseUp:
       status = HandleMouseUpEvent(aEvent->AsMouseEvent());
       break;
-    case NS_TOUCH_MOVE:
+    case eTouchMove:
       status = HandleTouchMoveEvent(aEvent->AsTouchEvent());
       break;
     case eMouseMove:
       status = HandleMouseMoveEvent(aEvent->AsMouseEvent());
       break;
-    case NS_TOUCH_CANCEL:
+    case eTouchCancel:
       mTouchesId.Clear();
       SetState(TOUCHCARET_NONE);
       LaunchExpirationTimer();
@@ -895,7 +895,7 @@ TouchCaret::HandleTouchMoveEvent(WidgetTouchEvent* aEvent)
       break;
 
     case TOUCHCARET_TOUCHDRAG_INACTIVE:
-      // Consume NS_TOUCH_MOVE event in TOUCHCARET_TOUCHDRAG_INACTIVE state.
+      // Consume eTouchMove event in TOUCHCARET_TOUCHDRAG_INACTIVE state.
       status = nsEventStatus_eConsumeNoDefault;
       break;
   }
@@ -1095,7 +1095,7 @@ TouchCaret::HandleTouchDownEvent(WidgetTouchEvent* aEvent)
     case TOUCHCARET_MOUSEDRAG_ACTIVE:
     case TOUCHCARET_TOUCHDRAG_ACTIVE:
     case TOUCHCARET_TOUCHDRAG_INACTIVE:
-      // Consume NS_TOUCH_START event.
+      // Consume eTouchStart event.
       status = nsEventStatus_eConsumeNoDefault;
       break;
   }

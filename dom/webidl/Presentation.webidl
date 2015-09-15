@@ -8,57 +8,37 @@
  CheckAnyPermissions="presentation",
  AvailableIn="PrivilegedApps"]
 interface Presentation : EventTarget {
+ /*
+  * This should be used by the UA as the default presentation request for the
+  * controller. When the UA wishes to initiate a PresentationSession on the
+  * controller's behalf, it MUST start a presentation session using the default
+  * presentation request (as if the controller had called |defaultRequest.start()|).
+  *
+  * Only used by controlling browsing context (senders).
+  */
+  attribute PresentationRequest? defaultRequest;
+
   /*
-   * A requesting page use startSession() to start a new session, and the
-   * session will be returned with the promise. UA may show a prompt box with a
-   * list of available devices and ask the user to grant permission, choose a
-   * device, or cancel the operation.
+   * Get the first connected presentation session in a presenting browsing
+   * context.
    *
-   * @url: The URL of presenting page.
-   * @sessionId: Optional. If it's not specified, a random alphanumeric value of
-   *             at least 16 characters drawn from the character [A-Za-z0-9] is
-   *             automatically generated as the id of the session.
-   *
-   * The promise is resolved when the presenting page is successfully loaded and
-   * the communication channel is established, i.e., the session state is
-   * "connected".
-   *
-   * The promise may be rejected duo to one of the following reasons:
-   * - "InternalError":        Unexpected internal error occurs.
-   * - "NoDeviceAvailable":    No available device.
-   * - "PermissionDenied":     User dismiss the device prompt box.
-   * - "ControlChannelFailed": Failed to establish control channel.
-   * - "NoApplicationFound":  app:// scheme is supported on Firefox OS, but no
-   *                           corresponding application is found on remote side.
-   * - "PageLoadTimeout":      Presenting page takes too long to load.
-   * - "DataChannelFailed":    Failed to establish data channel.
+   * Only used by presenting browsing context (receivers).
    */
   [Throws]
-  Promise<PresentationSession> startSession(DOMString url,
-                                            optional DOMString sessionId);
+  Promise<PresentationSession> getSession();
 
   /*
-   * This attribute is only available on the presenting page. It should be
-   * created when loading the presenting page, and it's ready to be used after
-   * 'onload' event is dispatched.
+   * Get all connected presentation sessions in a presenting browsing context.
+   *
+   * Only used by presenting browsing context (receivers).
    */
-  [Pure]
-  readonly attribute PresentationSession? session;
-
- /*
-  * Device availability. If there is more than one device discovered by UA,
-  * the value is |true|. Otherwise, its value should be |false|.
-  *
-  * UA triggers device discovery mechanism periodically and cache the latest
-  * result in this attribute. Thus, it may be out-of-date when we're not in
-  * discovery mode, however, it is still useful to give the developers an idea
-  * that whether there are devices nearby some time ago.
-  */
-  readonly attribute boolean cachedAvailable;
+  [Throws]
+  Promise<sequence<PresentationSession>> getSessions();
 
   /*
-   * It is called when device availability changes. New value is dispatched with
-   * the event.
+   * It is called when an incoming session is connecting.
+   *
+   * Only used by presenting browsing context (receivers).
    */
-  attribute EventHandler onavailablechange;
+  attribute EventHandler onsessionavailable;
 };
