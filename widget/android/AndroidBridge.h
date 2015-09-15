@@ -309,6 +309,8 @@ public:
     static nsresult GetExternalPublicDirectory(const nsAString& aType, nsAString& aPath);
 
 protected:
+    static nsDataHashtable<nsStringHashKey, nsString> sStoragePaths;
+
     static pthread_t sJavaUiThread;
     static AndroidBridge* sBridge;
     nsTArray<nsCOMPtr<nsIMobileMessageCallback> > mSmsRequests;
