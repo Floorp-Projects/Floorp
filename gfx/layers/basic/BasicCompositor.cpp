@@ -527,11 +527,11 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   }
 
   if (mTarget) {
-    // If we have a copy target, then we don't have a widget-provided mDrawTarget (currently). Create a dummy
+    // If we have a copy target, then we don't have a widget-provided mDrawTarget (currently). Use a dummy
     // placeholder so that CreateRenderTarget() works.
-    mDrawTarget = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(1,1), SurfaceFormat::B8G8R8A8);
+    mDrawTarget = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
   } else {
-    mDrawTarget = mWidget->StartRemoteDrawing();
+    mDrawTarget = mWidget->StartRemoteDrawingInRegion(mInvalidRegion);
   }
   if (!mDrawTarget) {
     return;

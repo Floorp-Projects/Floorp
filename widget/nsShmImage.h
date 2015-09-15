@@ -15,8 +15,8 @@
 
 #ifdef MOZ_HAVE_SHMIMAGE
 
+#include "mozilla/gfx/2D.h"
 #include "nsIWidget.h"
-#include "gfxTypes.h"
 #include "nsAutoPtr.h"
 
 #include "mozilla/X11Util.h"
@@ -24,15 +24,10 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/XShm.h>
 
-#if defined(MOZ_WIDGET_GTK)
-#define DISPLAY gdk_x11_get_default_xdisplay
-#elif defined(MOZ_WIDGET_QT)
-#define DISPLAY mozilla::DefaultXDisplay
-#endif
-
+#ifdef MOZ_WIDGET_QT
 class QRect;
 class QWindow;
-class gfxASurface;
+#endif
 
 class nsShmImage {
     // bug 1168843, compositor thread may create shared memory instances that are destroyed by main thread on shutdown, so this must use thread-safe RC to avoid hitting assertion
@@ -41,31 +36,31 @@ class nsShmImage {
     typedef mozilla::ipc::SharedMemorySysV SharedMemorySysV;
 
 public:
-    typedef gfxImageFormat Format;
-
     static bool UseShm();
     static already_AddRefed<nsShmImage>
-        Create(const gfxIntSize& aSize, Visual* aVisual, unsigned int aDepth);
-    static already_AddRefed<gfxASurface>
-        EnsureShmImage(const gfxIntSize& aSize, Visual* aVisual, unsigned int aDepth,
+        Create(const gfxIntSize& aSize,
+               Display* aDisplay, Visual* aVisual, unsigned int aDepth);
+    static already_AddRefed<mozilla::gfx::DrawTarget>
+        EnsureShmImage(const gfxIntSize& aSize,
+                       Display* aDisplay, Visual* aVisual, unsigned int aDepth,
                        nsRefPtr<nsShmImage>& aImage);
 
 private:
     ~nsShmImage() {
         if (mImage) {
-            mozilla::FinishX(DISPLAY());
+            mozilla::FinishX(mDisplay);
             if (mXAttached) {
-                XShmDetach(DISPLAY(), &mInfo);
+                XShmDetach(mDisplay, &mInfo);
             }
             XDestroyImage(mImage);
         }
     }
 
 public:
-    already_AddRefed<gfxASurface> AsSurface();
+    already_AddRefed<mozilla::gfx::DrawTarget> CreateDrawTarget();
 
 #ifdef MOZ_WIDGET_GTK
-    void Put(GdkWindow* aWindow, const nsIntRegion& aRegion);
+    void Put(Display* aDisplay, Drawable aWindow, const nsIntRegion& aRegion);
 #elif defined(MOZ_WIDGET_QT)
     void Put(QWindow* aWindow, QRect& aRect);
 #endif
@@ -75,14 +70,17 @@ public:
 private:
     nsShmImage()
         : mImage(nullptr)
+        , mDisplay(nullptr)
+        , mFormat(mozilla::gfx::SurfaceFormat::UNKNOWN)
         , mXAttached(false)
     { mInfo.shmid = SharedMemorySysV::NULLHandle(); }
 
     nsRefPtr<SharedMemorySysV>   mSegment;
     XImage*                      mImage;
+    Display*                     mDisplay;
     XShmSegmentInfo              mInfo;
     gfxIntSize                   mSize;
-    Format                       mFormat;
+    mozilla::gfx::SurfaceFormat  mFormat;
     bool                         mXAttached;
 };
 
