@@ -12,6 +12,10 @@
     <style name="GeckoBase" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
+
+        <!-- AppCompat sets this to transparent by default:
+             http://stackoverflow.com/a/31777488 -->
+        <item name="android:panelBackground">@color/gingerbread_menu_background_color</item>
     </style>
 
     <style name="GeckoDialogBase" parent="@android:style/Theme.Dialog">
