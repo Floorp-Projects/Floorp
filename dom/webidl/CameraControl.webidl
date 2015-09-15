@@ -110,11 +110,10 @@ dictionary CameraStartRecordingOptions
      support this setting, it will be ignored. */
   boolean autoEnableLowLightTorch = false;
 
-  /* If given, a poster JPG will be created from the recording and saved
-     at the given path. PosterCreated or PosterFailed recording state
+  /* If true, a poster JPG will be created from the recording and issued
+     via the poster event. PosterCreated or PosterFailed recording state
      changes will indicate whether or not it was created. */
-  DOMString posterFilepath = "";
-  DeviceStorage? posterStorageArea = null;
+  boolean createPoster = false;
 };
 
 /*
@@ -263,6 +262,10 @@ interface CameraControl : MediaStream
              'MediaRecorderFailed' if failed due to local error
              'MediaServerFailed' if failed due to media server */
   attribute EventHandler    onrecorderstatechange;
+
+  /* the event dispatched when a poster is successfully captured; it is of the
+     type BlobEvent, where the data attribute contains the poster. */
+  attribute EventHandler    onposter;
 
   /* the event dispatched when the viewfinder stops or starts,
      useful for synchronizing other UI elements.

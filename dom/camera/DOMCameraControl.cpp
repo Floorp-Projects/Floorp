@@ -131,44 +131,6 @@ StartRecordingHelper::HandleEvent(nsIDOMEvent* aEvent)
 
 NS_IMPL_ISUPPORTS(mozilla::StartRecordingHelper, nsIDOMEventListener)
 
-class mozilla::RecorderPosterHelper : public nsIDOMEventListener
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMEVENTLISTENER
-
-  explicit RecorderPosterHelper(nsDOMCameraControl* aDOMCameraControl)
-    : mDOMCameraControl(aDOMCameraControl)
-    , mState(CameraControlListener::kPosterFailed)
-  {
-    MOZ_COUNT_CTOR(RecorderPosterHelper);
-  }
-
-protected:
-  virtual ~RecorderPosterHelper()
-  {
-    MOZ_COUNT_DTOR(RecorderPosterHelper);
-    mDOMCameraControl->OnRecorderStateChange(mState, 0, 0);
-  }
-
-protected:
-  nsRefPtr<nsDOMCameraControl> mDOMCameraControl;
-  CameraControlListener::RecorderState mState;
-};
-
-NS_IMETHODIMP
-RecorderPosterHelper::HandleEvent(nsIDOMEvent* aEvent)
-{
-  nsString eventType;
-  aEvent->GetType(eventType);
-  if (eventType.EqualsLiteral("success")) {
-    mState = CameraControlListener::kPosterCreated;
-  }
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS(mozilla::RecorderPosterHelper, nsIDOMEventListener)
-
 nsDOMCameraControl::DOMCameraConfiguration::DOMCameraConfiguration()
   : CameraConfiguration()
   , mMaxFocusAreas(0)
@@ -797,18 +759,11 @@ nsDOMCameraControl::StartRecording(const CameraStartRecordingOptions& aOptions,
     return nullptr;
   }
 
-  // Must supply both the poster path and storage area or neither
-  if (aOptions.mPosterFilepath.IsEmpty() ==
-      static_cast<bool>(aOptions.mPosterStorageArea.get())) {
-    promise->MaybeReject(NS_ERROR_ILLEGAL_VALUE);
-    return promise.forget();
-  }
-
   // If we are trying to start recording, already recording or are still
   // waiting for a poster to be created/fail, we need to wait
   if (mStartRecordingPromise || mRecording ||
       mRecordingStoppedDeferred ||
-      !mOptions.mPosterFilepath.IsEmpty()) {
+      mOptions.mCreatePoster) {
     promise->MaybeReject(NS_ERROR_IN_PROGRESS);
     return promise.forget();
   }
@@ -851,8 +806,7 @@ nsDOMCameraControl::OnCreatedFileDescriptor(bool aSucceeded)
     // Race condition where StopRecording comes in before we issue
     // the start recording request to Gonk
     rv = NS_ERROR_ABORT;
-    mOptions.mPosterFilepath.Truncate();
-    mOptions.mPosterStorageArea = nullptr;
+    mOptions.mCreatePoster = false;
   } else if (aSucceeded && mDSFileDescriptor->mFileDescriptor.IsValid()) {
     ICameraControl::StartRecordingOptions o;
 
@@ -860,7 +814,7 @@ nsDOMCameraControl::OnCreatedFileDescriptor(bool aSucceeded)
     o.maxFileSizeBytes = mOptions.mMaxFileSizeBytes;
     o.maxVideoLengthMs = mOptions.mMaxVideoLengthMs;
     o.autoEnableLowLightTorch = mOptions.mAutoEnableLowLightTorch;
-    o.createPoster = !mOptions.mPosterFilepath.IsEmpty();
+    o.createPoster = mOptions.mCreatePoster;
     rv = mCameraControl->StartRecording(mDSFileDescriptor.get(), &o);
     if (NS_SUCCEEDED(rv)) {
       return;
@@ -1346,31 +1300,23 @@ nsDOMCameraControl::OnPoster(BlobImpl* aPoster)
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mOptions.mPosterFilepath.IsEmpty());
-
-  // Destructor will trigger an error notification if any step fails
-  nsRefPtr<RecorderPosterHelper> listener = new RecorderPosterHelper(this);
-  if (NS_WARN_IF(!aPoster)) {
-    return;
-  }
+  MOZ_ASSERT(mOptions.mCreatePoster);
 
   nsRefPtr<Blob> blob = Blob::Create(GetParentObject(), aPoster);
   if (NS_WARN_IF(!blob)) {
+    OnRecorderStateChange(CameraControlListener::kPosterFailed, 0, 0);
     return;
   }
 
-  if (NS_WARN_IF(!mOptions.mPosterStorageArea)) {
-    return;
-  }
+  BlobEventInit eventInit;
+  eventInit.mData = blob;
 
-  ErrorResult rv;
-  nsRefPtr<DOMRequest> request =
-    mOptions.mPosterStorageArea->AddNamed(blob, mOptions.mPosterFilepath, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return;
-  }
+  nsRefPtr<BlobEvent> event = BlobEvent::Constructor(this,
+                                                     NS_LITERAL_STRING("poster"),
+                                                     eventInit);
 
-  RegisterStorageRequestEvents(request, listener);
+  DispatchTrustedEvent(event);
+  OnRecorderStateChange(CameraControlListener::kPosterCreated, 0, 0);
 }
 
 void
@@ -1397,7 +1343,7 @@ nsDOMCameraControl::OnRecorderStateChange(CameraControlListener::RecorderState a
       break;
 
     case CameraControlListener::kRecorderStopped:
-      if (!mOptions.mPosterFilepath.IsEmpty()) {
+      if (mOptions.mCreatePoster) {
         mRecordingStoppedDeferred = true;
         return;
       }
@@ -1408,14 +1354,12 @@ nsDOMCameraControl::OnRecorderStateChange(CameraControlListener::RecorderState a
 
     case CameraControlListener::kPosterCreated:
       state = NS_LITERAL_STRING("PosterCreated");
-      mOptions.mPosterFilepath.Truncate();
-      mOptions.mPosterStorageArea = nullptr;
+      mOptions.mCreatePoster = false;
       break;
 
     case CameraControlListener::kPosterFailed:
       state = NS_LITERAL_STRING("PosterFailed");
-      mOptions.mPosterFilepath.Truncate();
-      mOptions.mPosterStorageArea = nullptr;
+      mOptions.mCreatePoster = false;
       break;
 
     case CameraControlListener::kRecorderPaused:
@@ -1459,7 +1403,7 @@ nsDOMCameraControl::OnRecorderStateChange(CameraControlListener::RecorderState a
 
   DispatchStateEvent(NS_LITERAL_STRING("recorderstatechange"), state);
 
-  if (mRecordingStoppedDeferred && mOptions.mPosterFilepath.IsEmpty()) {
+  if (mRecordingStoppedDeferred && !mOptions.mCreatePoster) {
     mRecordingStoppedDeferred = false;
     OnRecorderStateChange(CameraControlListener::kRecorderStopped, 0, 0);
   }
