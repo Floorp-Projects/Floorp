@@ -654,10 +654,6 @@ public:
   // position.
   int64_t GetDownloadPosition();
 
-  // Updates the approximate byte offset which playback has reached. This is
-  // used to calculate the readyState transitions.
-  void UpdatePlaybackOffset(int64_t aOffset);
-
   // Provide access to the state machine object
   MediaDecoderStateMachine* GetStateMachine() const;
 
@@ -881,12 +877,6 @@ protected:
   // Whether the decoder implementation supports dormant mode.
   bool mDormantSupported;
 
-  // Current playback position in the stream. This is (approximately)
-  // where we're up to playing back the stream. This is not adjusted
-  // during decoder seek operations, but it's updated at the end when we
-  // start playing back again.
-  int64_t mPlaybackPosition;
-
   // The logical playback position of the media resource in units of
   // seconds. This corresponds to the "official position" in HTML5. Note that
   // we need to store this as a double, rather than an int64_t (like
@@ -1047,6 +1037,12 @@ protected:
 
   // Duration of the media resource according to the state machine.
   Mirror<media::NullableTimeUnit> mStateMachineDuration;
+
+  // Current playback position in the stream. This is (approximately)
+  // where we're up to playing back the stream. This is not adjusted
+  // during decoder seek operations, but it's updated at the end when we
+  // start playing back again.
+  Mirror<int64_t> mPlaybackPosition;
 
   // Volume of playback.  0.0 = muted. 1.0 = full volume.
   Canonical<double> mVolume;

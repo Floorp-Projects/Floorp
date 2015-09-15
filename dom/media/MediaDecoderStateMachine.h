@@ -982,9 +982,6 @@ private:
   // on decoded video data.
   int64_t mDecodedVideoEndTime;
 
-  // Current playback position in the stream in bytes.
-  int64_t mPlaybackOffset;
-
   // Playback rate. 1.0 : normal speed, 0.5 : two times slower.
   double mPlaybackRate;
 
@@ -1314,6 +1311,9 @@ private:
   // playback position.
   Canonical<int64_t> mCurrentPosition;
 
+  // Current playback position in the stream in bytes.
+  Canonical<int64_t> mPlaybackOffset;
+
 public:
   AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() {
     return mReader->CanonicalBuffered();
@@ -1329,6 +1329,9 @@ public:
   }
   AbstractCanonical<int64_t>* CanonicalCurrentPosition() {
     return &mCurrentPosition;
+  }
+  AbstractCanonical<int64_t>* CanonicalPlaybackOffset() {
+    return &mPlaybackOffset;
   }
 };
 
