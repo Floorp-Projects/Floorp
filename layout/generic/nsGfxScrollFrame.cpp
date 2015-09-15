@@ -2821,9 +2821,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // layers, so don't apply clipping again.
     mAddClipRectToLayer = false;
 
-    // If we are a root scroll frame that has a display port we want to add
-    // scrollbars, they will be children of the scrollable layer, but they get
-    // adjusted by the APZC automatically.
     bool usingDisplayPort = aBuilder->IsPaintingToWindow() &&
         nsLayoutUtils::GetDisplayPort(mOuter->GetContent());
 
@@ -2834,6 +2831,9 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       mIsScrollableLayerInRootContainer = true;
     }
 
+    // If we are a root scroll frame that has a display port we want to add
+    // scrollbars, they will be children of the scrollable layer, but they get
+    // adjusted by the APZC automatically.
     bool addScrollBars = mIsRoot && usingDisplayPort && !aBuilder->IsForEventDelivery();
 
     if (addScrollBars) {
