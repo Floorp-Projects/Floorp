@@ -6,10 +6,10 @@
 "use strict";
 
 const {Cc, Ci, Cu} = require("chrome");
+const {getRect} = require("devtools/toolkit/layout/utils");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-let LayoutHelpers = require("devtools/toolkit/layout-helpers");
 
 const STACK_THICKNESS = 15;
 
@@ -405,9 +405,8 @@ TiltUtils.DOM = {
    */
   getNodePosition: function TUD_getNodePosition(aContentWindow, aNode,
                                                 aParentPosition) {
-    let lh = new LayoutHelpers(aContentWindow);
     // get the x, y, width and height coordinates of the node
-    let coord = lh.getRect(aNode, aContentWindow);
+    let coord = getRect(aContentWindow, aNode, aContentWindow);
     if (!coord) {
       return null;
     }
