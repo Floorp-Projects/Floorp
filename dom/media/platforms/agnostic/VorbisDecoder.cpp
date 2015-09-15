@@ -12,11 +12,10 @@
 #include "nsAutoPtr.h"
 
 #undef LOG
-#define LOG(type, msg) MOZ_LOG(gMediaDecoderLog, type, msg)
+extern PRLogModuleInfo* GetPDMLog();
+#define LOG(type, msg) MOZ_LOG(GetPDMLog(), type, msg)
 
 namespace mozilla {
-
-extern PRLogModuleInfo* gMediaDecoderLog;
 
 ogg_packet InitVorbisPacket(const unsigned char* aData, size_t aLength,
                          bool aBOS, bool aEOS,
