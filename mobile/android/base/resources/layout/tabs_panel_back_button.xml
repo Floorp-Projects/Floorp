@@ -12,6 +12,6 @@
                                            android:src="@drawable/tabs_panel_nav_back"
                                            android:contentDescription="@string/back"
                                            android:background="@drawable/action_bar_button_inverse"
-                                           gecko:dividerVerticalPadding="@dimen/tablet_tab_panel_divider_vertical_padding"
+                                           gecko:dividerVerticalPadding="@dimen/tab_panel_divider_vertical_padding"
                                            gecko:rightDivider="@drawable/tab_indicator_divider"/>
 
