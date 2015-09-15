@@ -37,9 +37,6 @@ CXXFLAGS += CONFIG['TK_CFLAGS']
 CFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 CFLAGS += CONFIG['TK_CFLAGS']
 
-if CONFIG['_MSC_VER']:
-    ALLOW_COMPILER_WARNINGS = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

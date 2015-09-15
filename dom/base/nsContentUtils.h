@@ -1367,38 +1367,6 @@ public:
   static void NotifyInstalledMenuKeyboardListener(bool aInstalling);
 
   /**
-   * Do security checks before loading a resource. Does the following checks:
-   *   nsIScriptSecurityManager::CheckLoadURIWithPrincipal
-   *   NS_CheckContentLoadPolicy
-   *   nsIScriptSecurityManager::CheckSameOriginURI
-   *
-   * You will still need to do at least SameOrigin checks before on redirects.
-   *
-   * @param aURIToLoad         URI that is getting loaded.
-   * @param aLoadingPrincipal  Principal of the resource that is initiating
-   *                           the load
-   * @param aCheckLoadFlags    Flags to be passed to
-   *                           nsIScriptSecurityManager::CheckLoadURIWithPrincipal
-   *                           NOTE: If this contains ALLOW_CHROME the
-   *                                 CheckSameOriginURI check will be skipped if
-   *                                 aURIToLoad is a chrome uri.
-   * @param aAllowData         Set to true to skip CheckSameOriginURI check when
-                               aURIToLoad is a data uri.
-   * @param aContentPolicyType Type     \
-   * @param aContext           Context   |- to be passed to
-   * @param aMimeGuess         Mimetype  |      NS_CheckContentLoadPolicy
-   * @param aExtra             Extra    /
-   */
-  static nsresult CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
-                                          nsIPrincipal* aLoadingPrincipal,
-                                          uint32_t aCheckLoadFlags,
-                                          bool aAllowData,
-                                          uint32_t aContentPolicyType,
-                                          nsISupports* aContext,
-                                          const nsAFlatCString& aMimeGuess = EmptyCString(),
-                                          nsISupports* aExtra = nullptr);
-
-  /**
    * Returns true if aPrincipal is the system principal.
    */
   static bool IsSystemPrincipal(nsIPrincipal* aPrincipal);

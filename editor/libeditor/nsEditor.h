@@ -249,6 +249,9 @@ public:
 
   void SwitchTextDirectionTo(uint32_t aDirection);
 
+  void StartWatchingDictionaryChanges();
+  void StopWatchingDictionaryChanges();
+
 protected:
   nsresult DetermineCurrentDirection();
   void FireInputEvent();
@@ -891,6 +894,7 @@ protected:
   bool mDispatchInputEvent;
   bool mIsInEditAction;   // true while the instance is handling an edit action
   bool mHidingCaret;      // whether caret is hidden forcibly.
+  bool mObservingDictionaryUpdates;  // whether the editor is observing dictionary changes.
 
   friend bool NSCanUnload(nsISupports* serviceMgr);
   friend class nsAutoTxnsConserveSelection;

@@ -237,7 +237,7 @@ void PeriodicWave::createBandLimitedTables(const float* realData, const float* i
 
 void PeriodicWave::generateBasicWaveform(OscillatorType shape)
 {
-    const float piFloat = M_PI;
+    const float piFloat = float(M_PI);
     unsigned fftSize = periodicWaveSize();
     unsigned halfSize = fftSize / 2;
 
