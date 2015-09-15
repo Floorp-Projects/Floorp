@@ -2881,7 +2881,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // For a root frame in a container, just get the value of the existing
       // display port if any.
       usingDisplayport = nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
-    } else if (mIsRoot) {
+    } else {
       // Override the value of the display port base rect, and possibly create a
       // display port if there isn't one already.
       nsRect displayportBase = dirtyRect;
@@ -2891,14 +2891,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       }
       usingDisplayport = nsLayoutUtils::GetOrMaybeCreateDisplayPort(
             *aBuilder, mOuter, displayportBase, &displayPort);
-    } else {
-      // For a non-root scroll frame, override the value of the display port
-      // base rect, and possibly create a display port if there isn't one
-      // already. For root scroll frame, nsLayoutUtils::PaintFrame or
-      // nsSubDocumentFrame::BuildDisplayList takes care of this.
-      nsRect displayportBase = dirtyRect;
-      usingDisplayport = nsLayoutUtils::GetOrMaybeCreateDisplayPort(
-          *aBuilder, mOuter, displayportBase, &displayPort);
     }
 
     // Override the dirty rectangle if the displayport has been set.
