@@ -1158,6 +1158,10 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayerTransactionChild* aShadowManag
                                             bool* aAllowRetaining)
 {
   if (!mLayerManager) {
+    if (!mShutdownObserver) {
+      // We are shutting down, do not try to re-create a LayerManager
+      return nullptr;
+    }
     // Try to use an async compositor first, if possible
     if (ShouldUseOffMainThreadCompositing()) {
       // e10s uses the parameter to pass in the shadow manager from the TabChild

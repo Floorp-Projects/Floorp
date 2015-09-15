@@ -6415,6 +6415,11 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
                           LayerManagerPersistence aPersistence,
                           bool* aAllowRetaining)
 {
+    if (mIsDestroyed) {
+      // Prevent external code from triggering the re-creation of the LayerManager/Compositor
+      // during shutdown. Just return what we currently have, which is most likely null.
+      return mLayerManager;
+    }
     if (!mLayerManager && eTransparencyTransparent == GetTransparencyMode()) {
         mLayerManager = CreateBasicLayerManager();
     }
