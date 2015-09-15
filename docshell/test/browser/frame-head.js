@@ -5,8 +5,8 @@
 // timeline tests.
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-let { Promise } = Cu.import('resource://gre/modules/Promise.jsm', {});
+var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+var { Promise } = Cu.import('resource://gre/modules/Promise.jsm', {});
 
 Cu.import("resource://gre/modules/Timer.jsm");
 

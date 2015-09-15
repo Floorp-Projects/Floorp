@@ -16,8 +16,8 @@ const DATA_URL_INLINE_STYLE_COLLAPSED='color: red; background: url("data:image/p
 const DATA_URL_ATTRIBUTE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z/dAAAAM0lEQVR4nGP4/5/h/1+G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC";
 const DATA_URL_ATTRIBUTE_COLLAPSED = "data:image/png;base64,iVBORw0K\u20269/AFGGFyjOXZtQAAAAAElFTkSuQmCC";
 
-let TEST_URL = "data:text/html,<div>markup-view attributes addition test</div>";
-let TEST_DATA = [{
+var TEST_URL = "data:text/html,<div>markup-view attributes addition test</div>";
+var TEST_DATA = [{
   desc: "Add an attribute value containing < > &uuml; \" & '",
   text: 'src="somefile.html?param1=<a>&param2=&uuml;&param3=\'&quot;\'"',
   expectedAttributes: {

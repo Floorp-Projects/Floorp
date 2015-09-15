@@ -6,7 +6,7 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "Chat",
                                   "resource:///modules/Chat.jsm");
-let openChatOrig = Chat.open;
+var openChatOrig = Chat.open;
 
 const contact = {
   name: [ "Mr Smith" ],

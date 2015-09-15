@@ -4,8 +4,8 @@
 
 "use strict";
 
-let { components, Cc, Ci, Cu } = require("chrome");
-let Services = require("Services");
+var { components, Cc, Ci, Cu } = require("chrome");
+var Services = require("Services");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -20,9 +20,9 @@ const {fetch} = require("devtools/toolkit/DevToolsUtils");
 
 loader.lazyGetter(this, "CssLogic", () => require("devtools/styleinspector/css-logic").CssLogic);
 
-let TRANSITION_CLASS = "moz-styleeditor-transitioning";
-let TRANSITION_DURATION_MS = 500;
-let TRANSITION_RULE = "\
+var TRANSITION_CLASS = "moz-styleeditor-transitioning";
+var TRANSITION_DURATION_MS = 500;
+var TRANSITION_RULE = "\
 :root.moz-styleeditor-transitioning, :root.moz-styleeditor-transitioning * {\
 transition-duration: " + TRANSITION_DURATION_MS + "ms !important; \
 transition-delay: 0ms !important;\
@@ -30,7 +30,7 @@ transition-timing-function: ease-out !important;\
 transition-property: all !important;\
 }";
 
-let LOAD_ERROR = "error-load";
+var LOAD_ERROR = "error-load";
 
 types.addActorType("old-stylesheet");
 
@@ -38,7 +38,7 @@ types.addActorType("old-stylesheet");
  * Creates a StyleEditorActor. StyleEditorActor provides remote access to the
  * stylesheets of a document.
  */
-let StyleEditorActor = exports.StyleEditorActor = protocol.ActorClass({
+var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClass({
   typeName: "styleeditor",
 
   /**
@@ -244,7 +244,7 @@ let StyleEditorActor = exports.StyleEditorActor = protocol.ActorClass({
 /**
  * The corresponding Front object for the StyleEditorActor.
  */
-let StyleEditorFront = protocol.FrontClass(StyleEditorActor, {
+var StyleEditorFront = protocol.FrontClass(StyleEditorActor, {
   initialize: function(client, tabForm) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.styleEditorActor;
@@ -270,7 +270,7 @@ let StyleEditorFront = protocol.FrontClass(StyleEditorActor, {
 /**
  * A StyleSheetActor represents a stylesheet on the server.
  */
-let OldStyleSheetActor = protocol.ActorClass({
+var OldStyleSheetActor = protocol.ActorClass({
   typeName: "old-stylesheet",
 
   events: {

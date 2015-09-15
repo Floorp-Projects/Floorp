@@ -371,7 +371,7 @@ ConsoleOutput.prototype = {
  * Message objects container.
  * @type object
  */
-let Messages = {};
+var Messages = {};
 
 /**
  * The BaseMessage object is used for all types of messages. Every kind of
@@ -2041,7 +2041,7 @@ Messages.ConsoleTable.prototype = Heritage.extend(Messages.Extended.prototype,
   _renderRepeatNode: function() { },
 }); // Messages.ConsoleTable.prototype
 
-let Widgets = {};
+var Widgets = {};
 
 /**
  * The base widget class.

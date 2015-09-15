@@ -15,7 +15,7 @@ const Telemetry = require("devtools/shared/telemetry");
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 
-let ProjectList;
+var ProjectList;
 
 module.exports = ProjectList = function(win, parentWindow) {
   EventEmitter.decorate(this);

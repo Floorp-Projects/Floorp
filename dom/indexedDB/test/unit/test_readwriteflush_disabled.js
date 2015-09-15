@@ -3,9 +3,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let disableWorkerTest = "Need a way to set temporary prefs from a worker";
+var disableWorkerTest = "Need a way to set temporary prefs from a worker";
 
-let testGenerator = testSteps();
+var testGenerator = testSteps();
 
 function testSteps()
 {

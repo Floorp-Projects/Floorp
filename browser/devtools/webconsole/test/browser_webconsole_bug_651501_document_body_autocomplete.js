@@ -11,9 +11,9 @@
 const TEST_URI = "data:text/html;charset=utf-8,Web Console autocompletion " +
                  "bug in document.body";
 
-let gHUD;
+var gHUD;
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield loadTab(TEST_URI);
 
   gHUD = yield openConsole();

@@ -17,13 +17,13 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 // Register resource://app/ URI
-let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-let resHandler = ios.getProtocolHandler("resource")
+var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+var resHandler = ios.getProtocolHandler("resource")
                  .QueryInterface(Ci.nsIResProtocolHandler);
-let mozDir = Cc["@mozilla.org/file/directory_service;1"]
+var mozDir = Cc["@mozilla.org/file/directory_service;1"]
              .getService(Ci.nsIProperties)
              .get("CurProcD", Ci.nsILocalFile);
-let mozDirURI = ios.newFileURI(mozDir);
+var mozDirURI = ios.newFileURI(mozDir);
 resHandler.setSubstitution("app", mozDirURI);
 
 Cu.import("resource://gre/modules/Services.jsm");

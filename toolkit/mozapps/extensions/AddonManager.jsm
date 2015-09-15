@@ -97,9 +97,9 @@ Cu.import("resource://gre/modules/Log.jsm");
 // Configure a logger at the parent 'addons' level to format
 // messages for all the modules under addons.*
 const PARENT_LOGGER_ID = "addons";
-let parentLogger = Log.repository.getLogger(PARENT_LOGGER_ID);
+var parentLogger = Log.repository.getLogger(PARENT_LOGGER_ID);
 parentLogger.level = Log.Level.Warn;
-let formatter = new Log.BasicFormatter();
+var formatter = new Log.BasicFormatter();
 // Set parent logger (and its children) to append to
 // the Javascript section of the Browser Console
 parentLogger.addAppender(new Log.ConsoleAppender(formatter));
@@ -110,7 +110,7 @@ parentLogger.addAppender(new Log.DumpAppender(formatter));
 // Create a new logger (child of 'addons' logger)
 // for use by the Addons Manager
 const LOGGER_ID = "addons.manager";
-let logger = Log.repository.getLogger(LOGGER_ID);
+var logger = Log.repository.getLogger(LOGGER_ID);
 
 // Provide the ability to enable/disable logging
 // messages at runtime.

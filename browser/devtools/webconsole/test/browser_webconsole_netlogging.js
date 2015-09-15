@@ -26,9 +26,9 @@ const TEST_IMG = "http://example.com/browser/browser/devtools/webconsole/" +
 const TEST_DATA_JSON_CONTENT =
   '{ id: "test JSON data", myArray: [ "foo", "bar", "baz", "biff" ] }';
 
-let lastRequest = null;
-let requestCallback = null;
-let browser, hud;
+var lastRequest = null;
+var requestCallback = null;
+var browser, hud;
 
 function test() {
   loadTab(TEST_URI).then((tab) => {

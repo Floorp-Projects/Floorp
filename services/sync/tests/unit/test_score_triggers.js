@@ -12,13 +12,13 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 
 Service.engineManager.clear();
 Service.engineManager.register(RotaryEngine);
-let engine = Service.engineManager.get("rotary");
-let tracker = engine._tracker;
+var engine = Service.engineManager.get("rotary");
+var tracker = engine._tracker;
 engine.enabled = true;
 
 // Tracking info/collections.
-let collectionsHelper = track_collections_helper();
-let upd = collectionsHelper.with_updated_collection;
+var collectionsHelper = track_collections_helper();
+var upd = collectionsHelper.with_updated_collection;
 
 function sync_httpd_setup() {
   let handlers = {};

@@ -8,7 +8,7 @@ this.EXPORTED_SYMBOLS = ["TransientPrefs"];
 
 Components.utils.import("resource://gre/modules/Preferences.jsm");
 
-let prefVisibility = new Map;
+var prefVisibility = new Map;
 
 /* Use for preferences that should only be visible when they've been modified.
    When reset to their default state, they remain visible until restarting the

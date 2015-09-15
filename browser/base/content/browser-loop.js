@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // the "exported" symbols
-let LoopUI;
+var LoopUI;
 
 (function() {
   const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";

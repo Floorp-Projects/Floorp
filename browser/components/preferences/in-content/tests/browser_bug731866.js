@@ -9,7 +9,7 @@ function test() {
   open_preferences(runTest);
 }
 
-let gElements;
+var gElements;
 
 function checkElements(expectedPane) {
   for (let element of gElements) {

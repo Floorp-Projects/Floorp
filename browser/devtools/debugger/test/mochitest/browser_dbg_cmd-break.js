@@ -6,7 +6,7 @@
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_cmd-break.html";
-let TAB_URL_ACTOR;
+var TAB_URL_ACTOR;
 
 function test() {
   let gPanel, gDebugger, gThreadClient, gSources;

@@ -11,9 +11,9 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/osfile.jsm")
 
-let XULStore = null;
-let browserURI = "chrome://browser/content/browser.xul";
-let aboutURI = "about:config";
+var XULStore = null;
+var browserURI = "chrome://browser/content/browser.xul";
+var aboutURI = "about:config";
 
 function run_test() {
   do_get_profile();

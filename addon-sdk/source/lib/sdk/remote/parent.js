@@ -30,7 +30,7 @@ const loaderModule = require('toolkit/loader');
 const { getTabForBrowser } = require('../tabs/utils');
 
 // Chose the right function for resolving relative a module id
-let moduleResolve;
+var moduleResolve;
 if (options.isNative) {
   moduleResolve = (id, requirer) => loaderModule.nodeResolve(id, requirer, { rootURI: options.rootURI });
 }
@@ -38,13 +38,13 @@ else {
   moduleResolve = loaderModule.resolve;
 }
 // Build the sorted path mapping structure that resolveURI requires
-let pathMapping = Object.keys(options.paths)
+var pathMapping = Object.keys(options.paths)
                         .sort((a, b) => b.length - a.length)
                         .map(p => [p, options.paths[p]]);
 
 // Load the scripts in the child processes
-let { getNewLoaderID } = require('../../framescript/FrameScriptManager.jsm');
-let PATH = options.paths[''];
+var { getNewLoaderID } = require('../../framescript/FrameScriptManager.jsm');
+var PATH = options.paths[''];
 
 const childOptions = omit(options, ['modules', 'globals', 'resolve', 'load']);
 childOptions.modules = {};
@@ -66,7 +66,7 @@ const gmm = Cc['@mozilla.org/globalmessagemanager;1'].
 
 const ns = Namespace();
 
-let processMap = new Map();
+var processMap = new Map();
 
 function processMessageReceived({ target, data }) {
   if (data.loaderID != loaderID)
@@ -141,9 +141,9 @@ const Processes = Class({
     return processMap.get(id);
   }
 });
-let processes = exports.processes = new Processes();
+var processes = exports.processes = new Processes();
 
-let frameMap = new Map();
+var frameMap = new Map();
 
 function frameMessageReceived({ target, data }) {
   if (data.loaderID != loaderID)
@@ -241,7 +241,7 @@ const FrameList = Class({
     return null;
   },
 });
-let frames = exports.frames = new FrameList();
+var frames = exports.frames = new FrameList();
 
 // Create the module loader in any existing processes
 ppmm.broadcastAsyncMessage('sdk/remote/process/load', {
@@ -284,7 +284,7 @@ function processStarted({ target, data: { modulePath } }) {
   });
 }
 
-let pendingFrames = new Map();
+var pendingFrames = new Map();
 
 // A new frame has been created in the remote process
 function frameAttached({ target, data }) {
@@ -321,7 +321,7 @@ when(reason => {
   ppmm.broadcastAsyncMessage('sdk/remote/process/unload', { loaderID, reason });
 });
 
-let remoteModules = new Set();
+var remoteModules = new Set();
 
 // Ensures a module is loaded in every child process. It is safe to send 
 // messages to this module immediately after calling this.

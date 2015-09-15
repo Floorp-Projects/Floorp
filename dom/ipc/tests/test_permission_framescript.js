@@ -1,5 +1,5 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
-let cm = Services.crashmanager;
+var cm = Services.crashmanager;
 var cpIdList = [];
 
 var shutdownObs = {

@@ -6,8 +6,8 @@
  * Tests debug button for addons in list view
  */
 
-let { Promise } = Components.utils.import("resource://gre/modules/Promise.jsm", {});
-let { Task } = Components.utils.import("resource://gre/modules/Task.jsm", {});
+var { Promise } = Components.utils.import("resource://gre/modules/Promise.jsm", {});
+var { Task } = Components.utils.import("resource://gre/modules/Task.jsm", {});
 
 const getDebugButton = node =>
     node.ownerDocument.getAnonymousElementByAttribute(node, "anonid", "debug-btn");

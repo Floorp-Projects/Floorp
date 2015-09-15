@@ -4,7 +4,7 @@
 
 // Test the top-level window UI for social.
 
-let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
+var SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
 // This function should "reset" Social such that the next time Social.init()
 // is called (eg, when a new window is opened), it re-performs all
@@ -16,7 +16,7 @@ function resetSocial() {
   SocialService._providerListeners.clear();
 }
 
-let createdWindows = [];
+var createdWindows = [];
 
 function openWindowAndWaitForInit(parentWin, callback) {
   // this notification tells us SocialUI.init() has been run...
@@ -51,14 +51,14 @@ function postTestCleanup(cb) {
   closeOneWindow(cb);
 }
 
-let manifest = { // normal provider
+var manifest = { // normal provider
   name: "provider 1",
   origin: "https://example.com",
   sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",
   workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
   iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
 };
-let manifest2 = { // used for testing install
+var manifest2 = { // used for testing install
   name: "provider test1",
   origin: "https://test1.example.com",
   workerURL: "https://test1.example.com/browser/browser/base/content/test/social/social_worker.js",
@@ -72,7 +72,7 @@ function test() {
   runSocialTests(tests, undefined, postTestCleanup);
 }
 
-let tests = {
+var tests = {
   // check when social is totally disabled at startup (ie, no providers enabled)
   testInactiveStartup: function(cbnext) {
     is(Social.providers.length, 0, "needs zero providers to start this test.");

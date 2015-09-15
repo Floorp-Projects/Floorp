@@ -17,7 +17,7 @@ add_task(function () {
   equal(output.toSource(), EXPECTED_OUTPUT.toSource(), "The output is correct.");
 });
 
-let TEST_DATA = {
+var TEST_DATA = {
   sites: [0, 0, 1, 2, 3],
   timestamps: [50, 100, 150, 200, 250],
   sizes: [0, 0, 100, 200, 300],
@@ -44,7 +44,7 @@ let TEST_DATA = {
   ]
 };
 
-let EXPECTED_OUTPUT = {
+var EXPECTED_OUTPUT = {
   name: "allocations",
   samples: {
     "schema": {

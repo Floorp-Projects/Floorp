@@ -7,11 +7,11 @@
  */
 
 // Define some shared uris and titles (each page needs its own uri)
-let kURIs = [
+var kURIs = [
   "http://site/",
   "http://happytimes/",
 ];
-let kTitles = [
+var kTitles = [
   "title",
 ];
 
@@ -21,7 +21,7 @@ addPageBook(1, 0);
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
-let gTests = [
+var gTests = [
   ["0: Searching for h matches site and not http://",
    "h", [1]],
 ];

@@ -8,7 +8,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebRequest",
                                   "resource://gre/modules/WebRequest.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
-let {
+var {
   SingletonEventManager,
   runSafe,
 } = ExtensionUtils;

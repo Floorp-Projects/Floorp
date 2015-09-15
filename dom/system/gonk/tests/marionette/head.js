@@ -32,12 +32,12 @@ const networkTypes = [
   NETWORK_TYPE_MOBILE_FOTA
 ];
 
-let Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
+var Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
 
-let ril = Cc["@mozilla.org/ril;1"].getService(Ci.nsIRadioInterfaceLayer);
+var ril = Cc["@mozilla.org/ril;1"].getService(Ci.nsIRadioInterfaceLayer);
 ok(ril, "ril.constructor is " + ril.constructor);
 
-let radioInterface = ril.getRadioInterface(0);
+var radioInterface = ril.getRadioInterface(0);
 ok(radioInterface, "radioInterface.constructor is " + radioInterface.constrctor);
 
 /**

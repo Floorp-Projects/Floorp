@@ -25,7 +25,7 @@ exports.localJSM  = require('./dir/test.jsm');
 exports.promisejsm = require('modules/Promise.jsm').Promise;
 exports.require = require;
 
-let math = require('test-math');
+var math = require('test-math');
 exports.areModulesCached = (math === exports.math);
 
 // Added noise to test AST walker

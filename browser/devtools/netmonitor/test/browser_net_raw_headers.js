@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let gPanelWin;
-let gPanelDoc;
+var gPanelWin;
+var gPanelDoc;
 
 /**
  * Tests if showing raw headers works.

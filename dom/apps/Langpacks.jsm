@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
 
 this.EXPORTED_SYMBOLS = ["Langpacks"];
 
-let debug;
+var debug;
 function debugPrefObserver() {
   debug = Services.prefs.getBoolPref("dom.mozApps.debug")
             ? (aMsg) => {

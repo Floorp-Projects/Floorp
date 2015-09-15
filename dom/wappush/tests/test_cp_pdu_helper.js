@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let CP = {};
+var CP = {};
 subscriptLoader.loadSubScript("resource://gre/modules/CpPduHelper.jsm", CP);
 CP.debug = do_print;
 
@@ -30,7 +30,7 @@ function test_hmac(rawDataArray, mac, key, expectResult) {
 /*
  * Test data from OMA-TS-WAP_ProvCont-V1_1-2009 0421-C.pdf, clause 6.1
  */
-let text_data_array = new Uint8Array([
+var text_data_array = new Uint8Array([
   0x3C, 0x3F, 0x78, 0x6D, 0x6C, 0x20, 0x76, 0x65,
   0x72, 0x73, 0x69, 0x6F, 0x6E, 0x3D, 0x22, 0x31,
   0x2E, 0x30, 0x22, 0x3F, 0x3E, 0x3C, 0x21, 0x44,
@@ -288,7 +288,7 @@ let text_data_array = new Uint8Array([
 /*
  * Test data from OMA-TS-WAP_ProvCont-V1_1-20090421-C.pdf, Appendix C
  */
-let wbxml_data_array = new Uint8Array([
+var wbxml_data_array = new Uint8Array([
   // WBXML version 1.3
   0x03,
   // The Public Identifier for "-//WAPFORUM//DTD PROV 1.0//EN"
@@ -444,7 +444,7 @@ let wbxml_data_array = new Uint8Array([
 /*
  * Test data from CHT CP, with code page change
  */
-let wbxml_code_page_data_array = new Uint8Array([
+var wbxml_code_page_data_array = new Uint8Array([
   0x03, 0x0B, 0x6A, 0x00, 0x45, 0xC6, 0x56, 0x01,
   0x87, 0x07, 0x06, 0x03, 0x43, 0x48, 0x54, 0x5F,
   0x65, 0x6D, 0x6F, 0x6D, 0x65, 0x00, 0x01, 0x01,
@@ -513,11 +513,11 @@ let wbxml_code_page_data_array = new Uint8Array([
 /*
  * Test data from OMA-TS-WAP_ProvCont-V1_1-20090421-C.pdf, clause 6.1
  */
-let xml_header =
+var xml_header =
   "<?xml version=\"1.0\"?>" +
   "<!DOCTYPE wap-provisioningdoc PUBLIC \"-//WAPFORUM//DTD PROV 1.0//EN\" \"http://www.wapforum.org/DTD/prov.dtd\">";
 
-let xml_body =
+var xml_body =
   "<wap-provisioningdoc version=\"1.0\">" +
     "<characteristic type=\"PXLOGICAL\">" +
       "<parm name=\"PROXY-ID\" value=\"170.187.51.4\"/>" +
@@ -572,7 +572,7 @@ let xml_body =
     "</characteristic>" +
   "</wap-provisioningdoc>";
 
-let wbxml_code_page_content =
+var wbxml_code_page_content =
     "<wap-provisioningdoc>" +
     "<characteristic type=\"BOOTSTRAP\">" +
       "<parm name=\"NAME\" value=\"CHT_emome\"/>" +

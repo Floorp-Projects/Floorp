@@ -38,8 +38,8 @@ MARIONETTE_HEAD_JS = 'head.js';
 
 const EXPECTED_NUMBER_OF_REMOTE_DEVICES = 1;
 
-let hasReceivedUuidsChanged = false;
-let originalUuids;
+var hasReceivedUuidsChanged = false;
+var originalUuids;
 
 startBluetoothTest(true, function testCaseMain(aAdapter) {
   log("Checking adapter attributes ...");

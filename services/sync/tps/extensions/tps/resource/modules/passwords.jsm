@@ -14,7 +14,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://tps/logger.jsm");
 
-let nsLoginInfo = new Components.Constructor(
+var nsLoginInfo = new Components.Constructor(
                       "@mozilla.org/login-manager/loginInfo;1",
                       Ci.nsILoginInfo,
                       "init");

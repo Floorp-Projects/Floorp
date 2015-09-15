@@ -6,7 +6,7 @@
 "use strict";
 
 // Check that server log appears in the console panel - bug 1168872
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console-server-logging.sjs";
 
   yield loadTab(TEST_URI);

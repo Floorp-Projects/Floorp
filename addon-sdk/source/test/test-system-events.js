@@ -10,7 +10,7 @@ const { Loader, LoaderWithHookedConsole2 } = require("sdk/test/loader");
 const nsIObserverService = Cc["@mozilla.org/observer-service;1"].
                            getService(Ci.nsIObserverService);
 
-let isConsoleEvent = (topic) =>
+var isConsoleEvent = (topic) =>
   !!~["console-api-log-event", "console-storage-cache-event"].indexOf(topic)
 
 exports["test basic"] = function(assert) {

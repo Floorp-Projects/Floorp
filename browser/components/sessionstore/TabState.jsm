@@ -56,7 +56,7 @@ this.TabState = Object.freeze({
   }
 });
 
-let TabStateInternal = {
+var TabStateInternal = {
   // A map (xul:browser -> handler) that maps a tab to the
   // synchronous collection handler object for that tab.
   // See SyncHandler in content-sessionStore.js.

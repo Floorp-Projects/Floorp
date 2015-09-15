@@ -126,4 +126,4 @@ function* iterateNodes(baseNode) {
 /**
  * Returns the root element for the given view, rule or computed.
  */
-let rootElement = view => (view.element) ? view.element : view.styleDocument;
+var rootElement = view => (view.element) ? view.element : view.styleDocument;

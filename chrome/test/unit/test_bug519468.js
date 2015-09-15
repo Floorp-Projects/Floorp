@@ -11,7 +11,7 @@ Components.utils.import("resource://testing-common/MockRegistrar.jsm");
 // Stub in the locale service so we can control what gets returned as the OS locale setting
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let stubOSLocale = null;
+var stubOSLocale = null;
 
 StubLocaleService = {
   QueryInterface:   XPCOMUtils.generateQI([Ci.nsILocaleService, Ci.nsISupports]),

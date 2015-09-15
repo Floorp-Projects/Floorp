@@ -113,7 +113,7 @@ const PSEUDO_SELECTORS = [
   ["::selection", 0]
 ];
 
-let HELPER_SHEET = ".__fx-devtools-hide-shortcut__ { visibility: hidden !important } ";
+var HELPER_SHEET = ".__fx-devtools-hide-shortcut__ { visibility: hidden !important } ";
 HELPER_SHEET += ":-moz-devtools-highlighted { outline: 2px dashed #F06!important; outline-offset: -2px!important } ";
 
 loader.lazyRequireGetter(this, "DevToolsUtils",
@@ -758,7 +758,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
  * the parent node from clients, but the `children` request should be used
  * to traverse children.
  */
-let NodeFront = protocol.FrontClass(NodeActor, {
+var NodeFront = protocol.FrontClass(NodeActor, {
   initialize: function(conn, form, detail, ctx) {
     this._parent = null; // The parent node
     this._child = null;  // The first child of this node.
@@ -1219,7 +1219,7 @@ var NodeListFront = exports.NodeListFront = protocol.FrontClass(NodeListActor, {
 
 // Some common request/response templates for the dom walker
 
-let nodeArrayMethod = {
+var nodeArrayMethod = {
   request: {
     node: Arg(0, "domnode"),
     maxNodes: Option(1),
@@ -1232,7 +1232,7 @@ let nodeArrayMethod = {
   }))
 };
 
-let traversalMethod = {
+var traversalMethod = {
   request: {
     node: Arg(0, "domnode"),
     whatToShow: Option(1)
@@ -3997,7 +3997,7 @@ function ensureImageLoaded(image, timeout) {
  *
  * If something goes wrong, the promise is rejected.
  */
-let imageToImageData = Task.async(function* (node, maxDim) {
+var imageToImageData = Task.async(function* (node, maxDim) {
   let { HTMLCanvasElement, HTMLImageElement } = node.ownerDocument.defaultView;
 
   let isImg = node instanceof HTMLImageElement;

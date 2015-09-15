@@ -6,8 +6,8 @@
  * Tests Places views (menu, toolbar, tree) for liveupdate.
  */
 
-let toolbar = document.getElementById("PersonalToolbar");
-let wasCollapsed = toolbar.collapsed;
+var toolbar = document.getElementById("PersonalToolbar");
+var wasCollapsed = toolbar.collapsed;
 
 function test() {
   waitForExplicitFinish();

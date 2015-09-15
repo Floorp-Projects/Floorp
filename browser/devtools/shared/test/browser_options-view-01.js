@@ -10,8 +10,8 @@ const BRANCH = "devtools.debugger.";
 const BLACK_BOX_PREF = "auto-black-box";
 const PRETTY_PRINT_PREF = "auto-pretty-print";
 
-let originalBlackBox = Services.prefs.getBoolPref(BRANCH + BLACK_BOX_PREF);
-let originalPrettyPrint = Services.prefs.getBoolPref(BRANCH + PRETTY_PRINT_PREF);
+var originalBlackBox = Services.prefs.getBoolPref(BRANCH + BLACK_BOX_PREF);
+var originalPrettyPrint = Services.prefs.getBoolPref(BRANCH + PRETTY_PRINT_PREF);
 
 add_task(function*() {
   info("Setting a couple of preferences");

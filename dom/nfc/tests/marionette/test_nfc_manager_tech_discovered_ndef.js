@@ -4,12 +4,12 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
-let tnf = NDEF.TNF_WELL_KNOWN;
-let type = "U";
-let id = "";
-let payload = "https://www.example.com";
+var tnf = NDEF.TNF_WELL_KNOWN;
+var type = "U";
+var id = "";
+var payload = "https://www.example.com";
 
-let ndef = null;
+var ndef = null;
 
 function handleSnep(msg) {
   ok(msg.records != null, "msg.records should have values");
@@ -35,7 +35,7 @@ function testReceiveNDEF() {
   toggleNFC(true).then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0));
 }
 
-let tests = [
+var tests = [
   testReceiveNDEF
 ];
 

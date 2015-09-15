@@ -3,7 +3,7 @@
 
 // Tests that toggling prefs immediately (de)activates the relevant menuitem
 
-let gItemsToTest = {
+var gItemsToTest = {
   "menu_devToolbar": "devtools.toolbar.enabled",
   "menu_browserToolbox": ["devtools.chrome.enabled", "devtools.debugger.remote-enabled"],
   "javascriptConsole": "devtools.errorconsole.enabled",

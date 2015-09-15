@@ -1,5 +1,5 @@
 // The main test function.
-let test = function (isContent) {
+var test = function (isContent) {
   SimpleTest.waitForExplicitFinish();
 
   let { ww } = SpecialPowers.Services;

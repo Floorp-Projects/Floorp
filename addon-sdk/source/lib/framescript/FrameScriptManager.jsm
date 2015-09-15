@@ -13,7 +13,7 @@ const PATH = __URI__.replace('framescript/FrameScriptManager.jsm', '');
 
 // Builds a unique loader ID for this runtime. We prefix with the SDK path so
 // overriden versions of the SDK don't conflict
-let LOADER_ID = 0;
+var LOADER_ID = 0;
 this.getNewLoaderID = () => {
   return PATH + ":" + LOADER_ID++;
 }

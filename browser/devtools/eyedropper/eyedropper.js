@@ -55,7 +55,7 @@ const HSL_BOX_WIDTH = 158;
  * Manage instances of eyedroppers for windows. Registering here isn't
  * necessary for creating an eyedropper, but can be used for testing.
  */
-let EyedropperManager = {
+var EyedropperManager = {
   _instances: new WeakMap(),
 
   getInstance: function(chromeWindow) {

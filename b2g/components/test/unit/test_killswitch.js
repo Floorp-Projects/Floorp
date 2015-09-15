@@ -13,7 +13,7 @@ add_test(function test_ksm_ok() {
   run_next_test();
 });
 
-let aMessageNoPerm = {
+var aMessageNoPerm = {
   name: "KillSwitch:Enable",
   target: {
     assertPermission: function() {
@@ -23,7 +23,7 @@ let aMessageNoPerm = {
   }
 };
 
-let aMessageWithPerm = {
+var aMessageWithPerm = {
   name: "KillSwitch:Enable",
   target: {
     assertPermission: function() {
@@ -51,7 +51,7 @@ add_test(function test_sendMessageWithPerm() {
   run_next_test();
 });
 
-let uMessage = {
+var uMessage = {
   name: "KillSwitch:WTF",
   target: {
     assertPermission: function() {
@@ -71,7 +71,7 @@ add_test(function test_sendUnknownMessage() {
   run_next_test();
 });
 
-let fakeLibcUtils = {
+var fakeLibcUtils = {
   _props_: {},
   property_set: function(name, value) {
     dump("property_set('" + name + "', '" + value+ "' [" + (typeof value) + "]);\n");

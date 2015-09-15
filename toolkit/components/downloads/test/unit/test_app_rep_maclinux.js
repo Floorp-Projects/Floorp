@@ -22,9 +22,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 
 const gAppRep = Cc["@mozilla.org/downloads/application-reputation-service;1"].
                   getService(Ci.nsIApplicationReputationService);
-let gStillRunning = true;
-let gTables = {};
-let gHttpServer = null;
+var gStillRunning = true;
+var gTables = {};
+var gHttpServer = null;
 
 function readFileToString(aFilename) {
   let f = do_get_file(aFilename);

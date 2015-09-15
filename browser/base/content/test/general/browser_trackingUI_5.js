@@ -6,9 +6,9 @@
 
 const PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/general/trackingPage.html";
-let TrackingProtection = null;
-let browser = null;
-let {UrlClassifierTestUtils} = Cu.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
+var TrackingProtection = null;
+var browser = null;
+var {UrlClassifierTestUtils} = Cu.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
 registerCleanupFunction(function() {
   TrackingProtection = browser = null;

@@ -1,9 +1,9 @@
 // Bug 380852 - Delete permission manager entries in Clear Recent History
 
-let tempScope = {};
+var tempScope = {};
 Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
                                            .loadSubScript("chrome://browser/content/sanitize.js", tempScope);
-let Sanitizer = tempScope.Sanitizer;
+var Sanitizer = tempScope.Sanitizer;
 
 function countPermissions() {
   let result = 0;

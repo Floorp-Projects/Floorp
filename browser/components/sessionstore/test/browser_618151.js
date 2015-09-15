@@ -20,7 +20,7 @@ function test() {
 }
 
 // Just a subset of tests from bug 615394 that causes a timeout.
-let tests = [test_setup, test_hang];
+var tests = [test_setup, test_hang];
 function runNextTest() {
   // set an empty state & run the next test, or finish
   if (tests.length) {

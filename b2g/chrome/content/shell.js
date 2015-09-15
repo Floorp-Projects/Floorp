@@ -752,13 +752,13 @@ Services.obs.addObserver(function(subject, topic, data) {
   shell.sendCustomEvent('mozmemorypressure');
 }, 'memory-pressure', false);
 
-let permissionMap = new Map([
+var permissionMap = new Map([
   ['unknown', Services.perms.UNKNOWN_ACTION],
   ['allow', Services.perms.ALLOW_ACTION],
   ['deny', Services.perms.DENY_ACTION],
   ['prompt', Services.perms.PROMPT_ACTION],
 ]);
-let permissionMapRev = new Map(Array.from(permissionMap.entries()).reverse());
+var permissionMapRev = new Map(Array.from(permissionMap.entries()).reverse());
 
 var CustomEventManager = {
   init: function custevt_init() {
@@ -825,7 +825,7 @@ var CustomEventManager = {
   }
 }
 
-let DoCommandHelper = {
+var DoCommandHelper = {
   _event: null,
   setEvent: function docommand_setEvent(evt) {
     this._event = evt;
@@ -926,7 +926,7 @@ var WebappsHelper = {
   }
 }
 
-let KeyboardHelper = {
+var KeyboardHelper = {
   handleEvent: function keyboard_handleEvent(detail) {
     switch (detail.type) {
       case 'inputmethod-update-layouts':
@@ -942,7 +942,7 @@ let KeyboardHelper = {
   }
 };
 
-let SystemAppMozBrowserHelper = {
+var SystemAppMozBrowserHelper = {
   handleEvent: function systemAppMozBrowser_handleEvent(detail) {
     let request;
     let name;

@@ -7,7 +7,7 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_terminate-on-tab-close.html";
 
-let gTab, gDebugger, gPanel;
+var gTab, gDebugger, gPanel;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

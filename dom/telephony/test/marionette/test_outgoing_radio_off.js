@@ -6,7 +6,7 @@ MARIONETTE_HEAD_JS = 'head.js';
 
 const normalNumber = "0912345678";
 const emergencyNumber = "112";
-let outCall;
+var outCall;
 
 function testDial_NormalNumber() {
   return gSetRadioEnabledAll(false)

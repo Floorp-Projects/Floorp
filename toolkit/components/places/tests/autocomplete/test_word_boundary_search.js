@@ -14,11 +14,11 @@
  * make sure "can match" matches anywhere.
  */
 
-let katakana = ["\u30a8", "\u30c9"]; // E, Do
-let ideograph = ["\u4efb", "\u5929", "\u5802"]; // Nin Ten Do
+var katakana = ["\u30a8", "\u30c9"]; // E, Do
+var ideograph = ["\u4efb", "\u5929", "\u5802"]; // Nin Ten Do
 
 // Define some shared uris and titles (each page needs its own uri)
-let kURIs = [
+var kURIs = [
   "http://matchme/",
   "http://dontmatchme/",
   "http://title/1",
@@ -30,7 +30,7 @@ let kURIs = [
   "http://ideograph/",
   "http://camel/pleaseMatchMe/",
 ];
-let kTitles = [
+var kTitles = [
   "title1",
   "matchme2",
   "dontmatchme3",
@@ -59,7 +59,7 @@ addPageBook(9, 0);
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
-let gTests = [
+var gTests = [
   // Tests after this one will match only on word boundaries
   ["0: Match 'match' at the beginning or after / or on a CamelCase",
    "match", [0,2,4,9],

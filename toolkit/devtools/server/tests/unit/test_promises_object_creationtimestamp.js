@@ -9,7 +9,7 @@
 
 const { PromisesFront } = require("devtools/server/actors/promises");
 
-let events = require("sdk/event/core");
+var events = require("sdk/event/core");
 
 add_task(function*() {
   let client = yield startTestDebuggerServer("promises-object-test");

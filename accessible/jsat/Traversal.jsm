@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetter(this, 'States',  // jshint ignore:line
 XPCOMUtils.defineLazyModuleGetter(this, 'Prefilters',  // jshint ignore:line
   'resource://gre/modules/accessibility/Constants.jsm');
 
-let gSkipEmptyImages = new PrefCache('accessibility.accessfu.skip_empty_images');
+var gSkipEmptyImages = new PrefCache('accessibility.accessfu.skip_empty_images');
 
 function BaseTraversalRule(aRoles, aMatchFunc, aPreFilter, aContainerRule) {
   this._explicitMatchRoles = new Set(aRoles);

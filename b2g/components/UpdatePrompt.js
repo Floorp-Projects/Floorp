@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/WebappsUpdater.jsm");
 
 const VERBOSE = 1;
-let log =
+var log =
   VERBOSE ?
   function log_dump(msg) { dump("UpdatePrompt: "+ msg +"\n"); } :
   function log_noop(msg) { };

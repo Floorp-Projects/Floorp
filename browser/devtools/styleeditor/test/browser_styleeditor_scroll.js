@@ -79,7 +79,7 @@ add_task(function* () {
  * @param {StyleEditorUI} ui
  *        The StyleEditorUI the editor belongs to.
  */
-let waitForEditorToBeSelected = Task.async(function* (editor, ui) {
+var waitForEditorToBeSelected = Task.async(function* (editor, ui) {
   info(`Waiting for ${editor.friendlyName} to be selected.`);
   let selected = yield ui.once("editor-selected");
   while (selected != editor) {

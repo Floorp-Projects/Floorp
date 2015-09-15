@@ -10,7 +10,7 @@
 
 // The pixel values we get on Windows are sometimes +/- 1 value compared to
 // other platforms, so we need to skip some image content tests.
-let isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
+var isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 
 /**
  * Checks the conversion of the given test image file.

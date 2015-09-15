@@ -15,8 +15,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
 
-let paymentTabs = {};
-let cancelTabCallbacks = {};
+var paymentTabs = {};
+var cancelTabCallbacks = {};
 
 function PaymentUI() {
 }

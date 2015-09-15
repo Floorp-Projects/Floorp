@@ -10,7 +10,7 @@
  */
 
 // Define some shared uris and titles (each page needs its own uri)
-let kURIs = [
+var kURIs = [
   "http://download/bookmarked",
   "http://embed/bookmarked",
   "http://framed/bookmarked",
@@ -18,7 +18,7 @@ let kURIs = [
   "http://embed",
   "http://framed",
 ];
-let kTitles = [
+var kTitles = [
   "download-bookmark",
   "embed-bookmark",
   "framed-bookmark",
@@ -37,7 +37,7 @@ addPageBook(5, 5, undefined, undefined, undefined, TRANSITION_FRAMED_LINK);
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
-let gTests = [
+var gTests = [
   ["0: Searching for bookmarked download uri matches",
    kTitles[0], [0]],
   ["1: Searching for bookmarked embed uri matches",

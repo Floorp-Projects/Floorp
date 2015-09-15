@@ -1,10 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let activeTab;
-let testTab;
-let testGroup;
-let contentWindow;
+var activeTab;
+var testTab;
+var testGroup;
+var contentWindow;
 
 function test() {
   waitForExplicitFinish();

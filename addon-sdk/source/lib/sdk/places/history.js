@@ -39,7 +39,7 @@ const {
  */
 const HISTORY_QUERY = 0;
 
-let search = function query (queries, options) {
+var search = function query (queries, options) {
   queries = [].concat(queries);
   let emitter = EventTarget();
   let queryObjs = queries.map(createQuery.bind(null, HISTORY_QUERY));

@@ -6,7 +6,7 @@ Cu.importGlobalProperties(['btoa']);
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://services-common/utils.js");
 
-let {bytesAsHex: b2h} = CommonUtils;
+var {bytesAsHex: b2h} = CommonUtils;
 
 function run_test() {
   run_next_test();

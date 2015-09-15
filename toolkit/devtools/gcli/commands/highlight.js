@@ -22,7 +22,7 @@ const MAX_HIGHLIGHTED_ELEMENTS = 100;
 
 // Store the environment object used to create highlighters so it can be
 // destroyed later.
-let highlighterEnv;
+var highlighterEnv;
 
 // Stores the highlighters instances so they can be destroyed later.
 // also export them so tests can access those and assert they got created

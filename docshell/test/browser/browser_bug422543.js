@@ -45,8 +45,8 @@ SHistoryListener.prototype = {
                                          Ci.nsISupportsWeakReference])
 };
 
-let gFirstListener = new SHistoryListener();
-let gSecondListener = new SHistoryListener();
+var gFirstListener = new SHistoryListener();
+var gSecondListener = new SHistoryListener();
 
 function test() {
   TestRunner.run();
@@ -153,7 +153,7 @@ function whenPageShown(aBrowser, aCallback) {
   }, true);
 }
 
-let TestRunner = {
+var TestRunner = {
   run: function () {
     waitForExplicitFinish();
     this._iter = runTests();

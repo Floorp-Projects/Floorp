@@ -38,7 +38,7 @@ const LOGGER_ID = "addons.weblistener";
 
 // Create a new logger for use by the Addons Web Listener
 // (Requires AddonManager.jsm)
-let logger = Log.repository.getLogger(LOGGER_ID);
+var logger = Log.repository.getLogger(LOGGER_ID);
 
 function notifyObservers(aTopic, aBrowser, aUri, aInstalls) {
   let info = {

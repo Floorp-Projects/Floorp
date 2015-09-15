@@ -4,10 +4,10 @@
 /**
  * Test simple requests using the protocol helpers.
  */
-let protocol = require("devtools/server/protocol");
-let {method, preEvent, types, Arg, Option, RetVal} = protocol;
+var protocol = require("devtools/server/protocol");
+var {method, preEvent, types, Arg, Option, RetVal} = protocol;
 
-let events = require("sdk/event/core");
+var events = require("sdk/event/core");
 
 function simpleHello() {
   return {
@@ -17,13 +17,13 @@ function simpleHello() {
   }
 }
 
-let testTypes = {};
+var testTypes = {};
 
 // Predeclaring the actor type so that it can be used in the
 // implementation of the child actor.
 types.addActorType("childActor");
 
-let ChildActor = protocol.ActorClass({
+var ChildActor = protocol.ActorClass({
   typeName: "childActor",
 
   // Actors returned by this actor should be owned by the root actor.
@@ -136,7 +136,7 @@ let ChildActor = protocol.ActorClass({
   }
 });
 
-let ChildFront = protocol.FrontClass(ChildActor, {
+var ChildFront = protocol.FrontClass(ChildActor, {
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
   },
@@ -170,8 +170,8 @@ types.addDictType("manyChildrenDict", {
 
 types.addLifetime("temp", "_temporaryHolder");
 
-let rootActor = null;
-let RootActor = protocol.ActorClass({
+var rootActor = null;
+var RootActor = protocol.ActorClass({
   typeName: "root",
 
   toString: function() { return "[root actor]"; },
@@ -248,7 +248,7 @@ let RootActor = protocol.ActorClass({
   })
 });
 
-let RootFront = protocol.FrontClass(RootActor, {
+var RootFront = protocol.FrontClass(RootActor, {
   toString: function() { return "[root front]"; },
   initialize: function(client) {
     this.actorID = "root";

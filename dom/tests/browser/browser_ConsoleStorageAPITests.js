@@ -4,7 +4,7 @@
 const TEST_URI = "http://example.com/browser/dom/tests/browser/test-console-api.html";
 const TEST_URI_NAV = "http://example.com/browser/dom/tests/browser/";
 
-let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
+var ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
                           .getService(Ci.nsIConsoleAPIStorage);
 
 var apiCallCount;

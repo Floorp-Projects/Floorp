@@ -8,9 +8,9 @@ const TOPICDATA_BROWSERGLUE_TEST = "force-ui-migration";
 const DEFAULT_BEHAVIOR_PREF = "browser.urlbar.default.behavior";
 const AUTOCOMPLETE_PREF = "browser.urlbar.autocomplete.enabled";
 
-let gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"]
+var gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"]
                      .getService(Ci.nsIObserver);
-let gGetBoolPref = Services.prefs.getBoolPref;
+var gGetBoolPref = Services.prefs.getBoolPref;
 
 function run_test() {
   run_next_test();

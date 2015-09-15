@@ -6,7 +6,7 @@
 
 try {
 
-let chromeGlobal = this;
+var chromeGlobal = this;
 
 // Encapsulate in its own scope to allows loading this frame script
 // more than once.

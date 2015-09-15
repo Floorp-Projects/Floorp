@@ -66,7 +66,7 @@ function runTests() {
   yield;
 }
 
-let runTaskifiedTests = Task.async(function* () {
+var runTaskifiedTests = Task.async(function* () {
   let oldCurrentEngine = Services.search.currentEngine;
 
   yield addNewTabPageTabPromise();
@@ -282,7 +282,7 @@ function blobToBase64(blob) {
   });
 }
 
-let checkCurrentEngine = Task.async(function* ({name: basename, logoPrefix1x, logoPrefix2x}) {
+var checkCurrentEngine = Task.async(function* ({name: basename, logoPrefix1x, logoPrefix2x}) {
   let engine = Services.search.currentEngine;
   ok(engine.name.includes(basename),
      "Sanity check: current engine: engine.name=" + engine.name +

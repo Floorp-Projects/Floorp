@@ -4,7 +4,7 @@
 
 "use strict";
 
-let {Class} = require("sdk/core/heritage");
+var {Class} = require("sdk/core/heritage");
 
 /**
  * A helper class that stores stack frame objects.  Each frame is
@@ -12,7 +12,7 @@ let {Class} = require("sdk/core/heritage");
  * index is used.  Users of the class can get an array of all frames
  * that have been added.
  */
-let StackFrameCache = Class({
+var StackFrameCache = Class({
   /**
    * Initialize this object.
    */

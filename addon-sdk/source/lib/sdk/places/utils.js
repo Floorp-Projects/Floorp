@@ -26,7 +26,7 @@ const bmsrv = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
  * TreeNodes are used to construct dependency trees
  * for BookmarkItems
  */
-let TreeNode = Class({
+var TreeNode = Class({
   initialize: function (value) {
     this.value = value;
     this.children = [];

@@ -7,8 +7,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_scope-variable-4.html";
 
-let gTab, gPanel, gDebugger;
-let gBreakpoints, gSources, gVariables;
+var gTab, gPanel, gDebugger;
+var gBreakpoints, gSources, gVariables;
 
 function test() {
   // Debug test slaves are a bit slow at this test.

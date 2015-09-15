@@ -12,7 +12,7 @@ const { events } = require("sdk/tab/events");
 const { on, off } = require("sdk/event/core");
 const { resolve, defer } = require("sdk/core/promise");
 
-let isFennec = require("sdk/system/xul-app").is("Fennec");
+var isFennec = require("sdk/system/xul-app").is("Fennec");
 
 function test(options) {
   return function(assert, done) {

@@ -2,13 +2,13 @@
 
 const { interfaces: Ci, classes: Cc, utils: Cu, results: Cr } = Components;
 
-let {WebRequest} = Cu.import("resource://gre/modules/WebRequest.jsm", {});
+var {WebRequest} = Cu.import("resource://gre/modules/WebRequest.jsm", {});
 
 const BASE = "http://example.com/browser/toolkit/modules/tests/browser";
 const URL = BASE + "/WebRequest_dynamic.sjs";
 
-let countBefore = 0;
-let countAfter = 0;
+var countBefore = 0;
+var countAfter = 0;
 
 function onBeforeSendHeaders(details)
 {

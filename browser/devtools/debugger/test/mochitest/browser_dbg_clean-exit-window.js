@@ -5,7 +5,7 @@
  * Test that closing a window with the debugger in a paused state exits cleanly.
  */
 
-let gDebuggee, gPanel, gDebugger, gWindow;
+var gDebuggee, gPanel, gDebugger, gWindow;
 
 const TAB_URL = EXAMPLE_URL + "doc_inline-debugger-statement.html";
 

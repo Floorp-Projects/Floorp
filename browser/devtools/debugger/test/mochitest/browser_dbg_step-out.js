@@ -7,8 +7,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_step-out.html";
 
-let gTab, gPanel, gDebugger;
-let gVars;
+var gTab, gPanel, gDebugger;
+var gVars;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

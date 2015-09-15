@@ -6,7 +6,7 @@
 
 // Tests the interaction of includeHidden and searchTerms search options.
 
-let timeInMicroseconds = Date.now() * 1000;
+var timeInMicroseconds = Date.now() * 1000;
 
 const VISITS = [
   { isVisit: true,

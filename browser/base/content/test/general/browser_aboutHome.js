@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AboutHomeUtils",
   "resource:///modules/AboutHome.jsm");
 
 const TEST_CONTENT_HELPER = "chrome://mochitests/content/browser/browser/base/content/test/general/aboutHome_content_script.js";
-let gRightsVersion = Services.prefs.getIntPref("browser.rights.version");
+var gRightsVersion = Services.prefs.getIntPref("browser.rights.version");
 
 registerCleanupFunction(function() {
   // Ensure we don't pollute prefs for next tests.
@@ -28,7 +28,7 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref("browser.rights." + gRightsVersion + ".shown");
 });
 
-let gTests = [
+var gTests = [
 
 {
   desc: "Check that clearing cookies does not clear storage",
@@ -634,7 +634,7 @@ function promiseWaitForEvent(node, type, capturing) {
   });
 }
 
-let promisePrefsOpen = Task.async(function*() {
+var promisePrefsOpen = Task.async(function*() {
   info("Waiting for the preferences tab to open...");
   let event = yield promiseWaitForEvent(gBrowser.tabContainer, "TabOpen", true);
   let tab = event.target;

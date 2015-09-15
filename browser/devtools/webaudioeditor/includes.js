@@ -12,8 +12,8 @@ Cu.import("resource:///modules/devtools/gDevTools.jsm");
 
 const { loader, require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
-let { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-let { EventTarget } = require("sdk/event/target");
+var { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+var { EventTarget } = require("sdk/event/target");
 
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const { Class } = require("sdk/core/heritage");
@@ -29,7 +29,7 @@ loader.lazyRequireGetter(this, "LineGraphWidget",
 
 // `AUDIO_NODE_DEFINITION` defined in the controller's initialization,
 // which describes all the properties of an AudioNode
-let AUDIO_NODE_DEFINITION;
+var AUDIO_NODE_DEFINITION;
 
 // Override DOM promises with Promise.jsm helpers
 const { defer, all } = require("promise");
@@ -78,7 +78,7 @@ const EVENTS = {
 /**
  * The current target and the Web Audio Editor front, set by this tool's host.
  */
-let gToolbox, gTarget, gFront;
+var gToolbox, gTarget, gFront;
 
 /**
  * Convenient way of emitting events from the panel window.

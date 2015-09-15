@@ -7,9 +7,9 @@
  * complete.
  */
 
-let protocol = require("devtools/server/protocol");
-let {method, Arg, Option, RetVal} = protocol;
-let events = require("sdk/event/core");
+var protocol = require("devtools/server/protocol");
+var {method, Arg, Option, RetVal} = protocol;
+var events = require("sdk/event/core");
 
 function simpleHello() {
   return {
@@ -19,7 +19,7 @@ function simpleHello() {
   }
 }
 
-let RootActor = protocol.ActorClass({
+var RootActor = protocol.ActorClass({
   typeName: "root",
   initialize: function(conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
@@ -79,7 +79,7 @@ let RootActor = protocol.ActorClass({
   })
 });
 
-let RootFront = protocol.FrontClass(RootActor, {
+var RootFront = protocol.FrontClass(RootActor, {
   initialize: function(client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);

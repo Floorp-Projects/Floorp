@@ -39,7 +39,7 @@ XPCOMUtils.defineLazyGetter(this, 'log', function() {
 });
 
 // FxAccountsCommon.js doesn't use a "namespace", so create one here.
-let fxAccountsCommon = {};
+var fxAccountsCommon = {};
 Cu.import("resource://gre/modules/FxAccountsCommon.js", fxAccountsCommon);
 
 const OBSERVER_TOPICS = [

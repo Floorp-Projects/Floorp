@@ -8,7 +8,7 @@
 
 const WAIT_TIME = 1000;
 
-let test = Task.async(function*() {
+var test = Task.async(function*() {
   let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL, "performance", {
     TEST_PERFORMANCE_LEGACY_FRONT: true
   });

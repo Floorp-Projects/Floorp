@@ -13,7 +13,7 @@ const PHONE_2_NET = "5555215502";
 const PHONE_3 = "+15555215503";
 const PHONE_3_NET = "5555215503";
 const EMAIL_1 = "foo@bar.com";
-let deliveryInfo = [
+var deliveryInfo = [
   { receiver: PHONE_1 },
   { receiver: PHONE_2 },
   { receiver: PHONE_1 },

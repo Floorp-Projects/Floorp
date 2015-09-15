@@ -7,8 +7,8 @@
 "use strict";
 
 const {Cu, Ci} = require("chrome");
-let EventEmitter = require("devtools/toolkit/event-emitter");
-let LayoutHelpers = require("devtools/toolkit/layout-helpers");
+var EventEmitter = require("devtools/toolkit/event-emitter");
+var LayoutHelpers = require("devtools/toolkit/layout-helpers");
 
 /**
  * API

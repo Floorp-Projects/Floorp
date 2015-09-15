@@ -7,8 +7,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
-let gTab, gPanel, gDebugger;
-let gView, gEditor, gL10N;
+var gTab, gPanel, gDebugger;
+var gView, gEditor, gL10N;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

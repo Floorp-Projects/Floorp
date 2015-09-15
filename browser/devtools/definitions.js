@@ -52,7 +52,7 @@ loader.lazyGetter(this, "netMonitorStrings", () => Services.strings.createBundle
 loader.lazyGetter(this, "storageStrings", () => Services.strings.createBundle(storageProps));
 loader.lazyGetter(this, "scratchpadStrings", () => Services.strings.createBundle(scratchpadProps));
 
-let Tools = {};
+var Tools = {};
 exports.Tools = Tools;
 
 // Definitions
@@ -399,7 +399,7 @@ Tools.scratchpad = {
   }
 };
 
-let defaultTools = [
+var defaultTools = [
   Tools.options,
   Tools.webConsole,
   Tools.inspector,

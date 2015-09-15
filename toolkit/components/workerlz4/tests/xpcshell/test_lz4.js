@@ -3,7 +3,7 @@
 
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
-let WORKER_SOURCE_URI = "chrome://test_lz4/content/worker_lz4.js";
+var WORKER_SOURCE_URI = "chrome://test_lz4/content/worker_lz4.js";
 do_load_manifest("data/chrome.manifest");
 
 function run_test() {

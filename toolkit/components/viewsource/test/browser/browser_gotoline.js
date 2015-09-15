@@ -4,7 +4,7 @@
 
 Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
 
-let content = "line 1\nline 2\nline 3";
+var content = "line 1\nline 2\nline 3";
 
 add_task(function*() {
   // First test with text with the text/html mimetype.
@@ -17,7 +17,7 @@ add_task(function*() {
   yield BrowserTestUtils.closeWindow(win);
 });
 
-let checkViewSource = Task.async(function* (aWindow) {
+var checkViewSource = Task.async(function* (aWindow) {
   is(aWindow.gBrowser.contentDocument.body.textContent, content, "Correct content loaded");
   let selection = aWindow.gBrowser.contentWindow.getSelection();
   let statusPanel = aWindow.document.getElementById("statusbar-line-col");

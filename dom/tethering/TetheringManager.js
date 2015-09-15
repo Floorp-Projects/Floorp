@@ -82,7 +82,7 @@ TetheringManager.prototype = {
 this.NSGetFactory =
   XPCOMUtils.generateNSGetFactory([TetheringManager]);
 
-let debug;
+var debug;
 if (DEBUG) {
   debug = function (s) {
     dump("-*- TetheringManager component: " + s + "\n");

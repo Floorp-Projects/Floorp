@@ -4,7 +4,7 @@
 
 const CHROME_URL = "chrome://mochitests/content/browser/browser/devtools/framework/test/";
 
-let toolbox;
+var toolbox;
 
 function test()
 {

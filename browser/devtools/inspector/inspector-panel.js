@@ -8,10 +8,10 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-let promise = require("promise");
-let EventEmitter = require("devtools/toolkit/event-emitter");
-let clipboard = require("sdk/clipboard");
-let {HostType} = require("devtools/framework/toolbox").Toolbox;
+var promise = require("promise");
+var EventEmitter = require("devtools/toolkit/event-emitter");
+var clipboard = require("sdk/clipboard");
+var {HostType} = require("devtools/framework/toolbox").Toolbox;
 
 loader.lazyGetter(this, "MarkupView", () => require("devtools/markupview/markup-view").MarkupView);
 loader.lazyGetter(this, "HTMLBreadcrumbs", () => require("devtools/inspector/breadcrumbs").HTMLBreadcrumbs);

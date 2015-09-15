@@ -108,6 +108,6 @@ nsDownloadManagerUI.prototype = {
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
 
-let components = [nsDownloadManagerUI];
+var components = [nsDownloadManagerUI];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
 

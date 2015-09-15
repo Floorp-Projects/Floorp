@@ -3,15 +3,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 
-let gTab = null;
-let gListener = null;
+var gTab = null;
+var gListener = null;
 const kURL = "data:text/html;charset=utf-8,Caret browsing is fun.<input id='in'>";
 
 const kPrefShortcutEnabled = "accessibility.browsewithcaret_shortcut.enabled";
 const kPrefWarnOnEnable    = "accessibility.warn_on_browsewithcaret";
 const kPrefCaretBrowsingOn = "accessibility.browsewithcaret";
 
-let oldPrefs = {};
+var oldPrefs = {};
 for (let pref of [kPrefShortcutEnabled, kPrefWarnOnEnable, kPrefCaretBrowsingOn]) {
   oldPrefs[pref] = Services.prefs.getBoolPref(pref);
 }

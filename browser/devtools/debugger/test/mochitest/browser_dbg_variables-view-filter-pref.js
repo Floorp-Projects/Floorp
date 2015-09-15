@@ -7,8 +7,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_with-frame.html";
 
-let gTab, gPanel, gDebugger;
-let gPrefs, gOptions, gVariables;
+var gTab, gPanel, gDebugger;
+var gPrefs, gOptions, gVariables;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

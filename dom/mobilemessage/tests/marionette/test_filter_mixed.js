@@ -9,11 +9,11 @@ const NUM_THREADS = 10;
 SpecialPowers.addPermission("sms", true, document);
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
 
-let manager = window.navigator.mozMobileMessage;
+var manager = window.navigator.mozMobileMessage;
 ok(manager instanceof MozMobileMessageManager,
    "manager is instance of " + manager.constructor);
 
-let pendingEmulatorCmdCount = 0;
+var pendingEmulatorCmdCount = 0;
 function sendSmsToEmulator(from, text) {
   ++pendingEmulatorCmdCount;
 
@@ -25,7 +25,7 @@ function sendSmsToEmulator(from, text) {
   });
 }
 
-let tasks = {
+var tasks = {
   // List of test fuctions. Each of them should call |tasks.next()| when
   // completed or |tasks.finish()| to jump to the last one.
   _tasks: [],
@@ -117,7 +117,7 @@ tasks.push(deleteAllMessages);
  *   send    to   "+15555315559"
  *   receive from "5555315559", count = 10
  */
-let threadIds = [];
+var threadIds = [];
 tasks.push(function populateMessages() {
   let count = 0;
 
@@ -167,10 +167,10 @@ tasks.push(function populateMessages() {
   sendMessage(count);
 });
 
-let INVALID_NUMBER = "12345";
-let INVALID_NUMBER2 = "6789";
+var INVALID_NUMBER = "12345";
+var INVALID_NUMBER2 = "6789";
 
-let INVALID_THREAD_ID;
+var INVALID_THREAD_ID;
 tasks.push(function assignInvalidThreadID() {
   INVALID_THREAD_ID = threadIds[threadIds.length - 1] + 1;
   log("Set INVALID_THREAD_ID to be " + INVALID_THREAD_ID);

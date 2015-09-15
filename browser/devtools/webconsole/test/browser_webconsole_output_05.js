@@ -18,9 +18,9 @@ const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis",
 // > Lisp eval function could be implemented in machine code. The result was a
 // > working Lisp interpreter which could be used to run Lisp programs, or more
 // > properly, 'evaluate Lisp expressions.'
-let testDate = -310435200000;
+var testDate = -310435200000;
 
-let inputTests = [
+var inputTests = [
   // 0
   {
     input: "/foo?b*\\s\"ar/igym",

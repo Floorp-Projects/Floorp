@@ -14,7 +14,7 @@
  * - EXPIRE_MONTHS: annotation would be expired after 180 days
  */
 
-let as = Cc["@mozilla.org/browser/annotation-service;1"].
+var as = Cc["@mozilla.org/browser/annotation-service;1"].
          getService(Ci.nsIAnnotationService);
 
 /**
@@ -27,7 +27,7 @@ let as = Cc["@mozilla.org/browser/annotation-service;1"].
  * @param aAgeInDays Age in days of the annotation.
  * @param [optional] aLastModifiedAgeInDays Age in days of the annotation, for lastModified.
  */
-let now = Date.now();
+var now = Date.now();
 function add_old_anno(aIdentifier, aName, aValue, aExpirePolicy,
                       aAgeInDays, aLastModifiedAgeInDays) {
   let expireDate = (now - (aAgeInDays * 86400 * 1000)) * 1000;

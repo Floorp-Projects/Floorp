@@ -12,7 +12,7 @@ const PREF_GETADDONS_BYIDS            = "extensions.getAddons.get.url";
 const PREF_MIN_PLATFORM_COMPAT        = "extensions.minCompatiblePlatformVersion";
 const PREF_METADATA_LASTUPDATE        = "extensions.getAddons.cache.lastUpdate";
 
-let repo = {};
+var repo = {};
 Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm", repo);
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
@@ -33,16 +33,16 @@ Components.utils.import("resource://gre/modules/Promise.jsm", this);
  */
 
 // describe the addons
-let ao1 = { file: "browser_bug557956_1", id: "addon1@tests.mozilla.org"};
-let ao2 = { file: "browser_bug557956_2", id: "addon2@tests.mozilla.org"};
-let ao3 = { file: "browser_bug557956_3", id: "addon3@tests.mozilla.org"};
-let ao4 = { file: "browser_bug557956_4", id: "addon4@tests.mozilla.org"};
-let ao5 = { file: "browser_bug557956_5", id: "addon5@tests.mozilla.org"};
-let ao6 = { file: "browser_bug557956_6", id: "addon6@tests.mozilla.org"};
-let ao7 = { file: "browser_bug557956_7", id: "addon7@tests.mozilla.org"};
-let ao8 = { file: "browser_bug557956_8_1", id: "addon8@tests.mozilla.org"};
-let ao9 = { file: "browser_bug557956_9_1", id: "addon9@tests.mozilla.org"};
-let ao10 = { file: "browser_bug557956_10", id: "addon10@tests.mozilla.org"};
+var ao1 = { file: "browser_bug557956_1", id: "addon1@tests.mozilla.org"};
+var ao2 = { file: "browser_bug557956_2", id: "addon2@tests.mozilla.org"};
+var ao3 = { file: "browser_bug557956_3", id: "addon3@tests.mozilla.org"};
+var ao4 = { file: "browser_bug557956_4", id: "addon4@tests.mozilla.org"};
+var ao5 = { file: "browser_bug557956_5", id: "addon5@tests.mozilla.org"};
+var ao6 = { file: "browser_bug557956_6", id: "addon6@tests.mozilla.org"};
+var ao7 = { file: "browser_bug557956_7", id: "addon7@tests.mozilla.org"};
+var ao8 = { file: "browser_bug557956_8_1", id: "addon8@tests.mozilla.org"};
+var ao9 = { file: "browser_bug557956_9_1", id: "addon9@tests.mozilla.org"};
+var ao10 = { file: "browser_bug557956_10", id: "addon10@tests.mozilla.org"};
 
 // Return a promise that resolves after the specified delay in MS
 function delayMS(aDelay) {
@@ -210,7 +210,7 @@ function get_list_names(aList) {
 }
 
 // These add-ons became inactive during the upgrade
-let inactiveAddonIds = [
+var inactiveAddonIds = [
   ao5.id,
   ao6.id,
   ao7.id,

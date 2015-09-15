@@ -119,7 +119,7 @@ function* spawnTest() {
   }
 }
 
-let gUniqueStacks = new RecordingUtils.UniqueStacks();
+var gUniqueStacks = new RecordingUtils.UniqueStacks();
 
 function uniqStr(s) {
   return gUniqueStacks.getOrAddStringIndex(s);
@@ -128,7 +128,7 @@ function uniqStr(s) {
 // Since deflateThread doesn't handle deflating optimization info, use
 // placeholder names A_O1, B_O2, and B_O3, which will be used to manually
 // splice deduped opts into the profile.
-let gThread = RecordingUtils.deflateThread({
+var gThread = RecordingUtils.deflateThread({
   samples: [{
     time: 0,
     frames: [
@@ -169,7 +169,7 @@ let gThread = RecordingUtils.deflateThread({
 }, gUniqueStacks);
 
 // 3 RawOptimizationSites
-let gRawSite1 = {
+var gRawSite1 = {
   _testFrameInfo: { name: "A", line: "12", file: "@baz" },
   line: 12,
   column: 2,
@@ -198,7 +198,7 @@ let gRawSite1 = {
   }
 };
 
-let gRawSite2 = {
+var gRawSite2 = {
   _testFrameInfo: { name: "B", line: "10", file: "@boo" },
   line: 40,
   types: [{
@@ -218,7 +218,7 @@ let gRawSite2 = {
   }
 };
 
-let gRawSite3 = {
+var gRawSite3 = {
   _testFrameInfo: { name: "B", line: "10", file: "@boo" },
   line: 34,
   types: [{

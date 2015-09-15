@@ -53,7 +53,7 @@ function b2gStart() {
   webNav.loadURI(url, null, null, null, null);
 }
 
-let TabDestroyObserver = {
+var TabDestroyObserver = {
   outstanding: new Set(),
   promiseResolver: null,
 

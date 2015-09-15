@@ -10,7 +10,7 @@
 XPCOMUtils.defineLazyModuleGetter(this,  "OSCrypto",
                                   "resource://gre/modules/OSCrypto.jsm");
 
-let crypto = new OSCrypto();
+var crypto = new OSCrypto();
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests

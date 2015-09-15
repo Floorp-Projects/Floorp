@@ -5,10 +5,10 @@
 
 const KEY_UPDATE_ARCHIVE_DIR = "UpdArchD"
 
-let gActiveUpdate;
-let gDirService;
-let gDirProvider;
-let gOldProviders;
+var gActiveUpdate;
+var gDirService;
+var gDirProvider;
+var gOldProviders;
 
 function run_test() {
   setupTestCommon();

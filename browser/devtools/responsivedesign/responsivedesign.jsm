@@ -15,12 +15,12 @@ Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
                                   "resource://gre/modules/SystemAppProxy.jsm");
 
-let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let Telemetry = require("devtools/shared/telemetry");
-let { showDoorhanger } = require("devtools/shared/doorhanger");
-let { TouchEventSimulator } = require("devtools/toolkit/touch/simulator");
-let { Task } = require("resource://gre/modules/Task.jsm");
-let promise = require("promise");
+var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var Telemetry = require("devtools/shared/telemetry");
+var { showDoorhanger } = require("devtools/shared/doorhanger");
+var { TouchEventSimulator } = require("devtools/toolkit/touch/simulator");
+var { Task } = require("resource://gre/modules/Task.jsm");
+var promise = require("promise");
 
 this.EXPORTED_SYMBOLS = ["ResponsiveUIManager"];
 
@@ -37,7 +37,7 @@ const INPUT_PARSER = /(\d+)[^\d]+(\d+)/;
 
 const SHARED_L10N = new ViewHelpers.L10N("chrome://browser/locale/devtools/shared.properties");
 
-let ActiveTabs = new Map();
+var ActiveTabs = new Map();
 
 this.ResponsiveUIManager = {
   /**
@@ -107,7 +107,7 @@ this.ResponsiveUIManager = {
 
 EventEmitter.decorate(ResponsiveUIManager);
 
-let presets = [
+var presets = [
   // Phones
   {key: "320x480", width: 320, height: 480},    // iPhone, B2G, with <meta viewport>
   {key: "360x640", width: 360, height: 640},    // Android 4, phones, with <meta viewport>

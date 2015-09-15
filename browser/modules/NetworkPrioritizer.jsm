@@ -34,8 +34,8 @@ const PRIORITY_DELTA = -10;
 
 
 // Variables
-let _lastFocusedWindow = null;
-let _windows = [];
+var _lastFocusedWindow = null;
+var _windows = [];
 
 
 // Exported symbol
@@ -64,7 +64,7 @@ function _handleEvent(aEvent) {
 
 
 // Methods that impact a browser. Put into single object for organization.
-let BrowserHelper = {
+var BrowserHelper = {
   onOpen: function NP_BH_onOpen(aBrowser) {
     // If the tab is in the focused window, leave priority as it is
     if (aBrowser.ownerDocument.defaultView != _lastFocusedWindow)
@@ -91,7 +91,7 @@ let BrowserHelper = {
 
 
 // Methods that impact a window. Put into single object for organization.
-let WindowHelper = {
+var WindowHelper = {
   addWindow: function NP_WH_addWindow(aWindow) {
     // Build internal data object
     _windows.push({ window: aWindow, lastSelectedBrowser: null });

@@ -8,8 +8,8 @@
 const TAB_URL_1 = EXAMPLE_URL + "doc_recursion-stack.html";
 const TAB_URL_2 = EXAMPLE_URL + "doc_iframes.html";
 
-let gTab, gDebuggee, gPanel, gDebugger;
-let gEditor, gSources, gFrames;
+var gTab, gDebuggee, gPanel, gDebugger;
+var gEditor, gSources, gFrames;
 
 function test() {
   initDebugger(TAB_URL_1).then(([aTab, aDebuggee, aPanel]) => {

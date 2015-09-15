@@ -8,14 +8,14 @@ self.postMessage(["equal", document.title, "Page Worker test",
             "Correct page title accessed directly"]);
 
 // get <p> directly
-let p = document.getElementById("paragraph");
+var p = document.getElementById("paragraph");
 self.postMessage(["ok", !!p, "<p> can be accessed directly"]);
 self.postMessage(["equal", p.firstChild.nodeValue,
             "Lorem ipsum dolor sit amet.",
             "Correct text node expected"]);
 
 // Modify page
-let div = document.createElement("div");
+var div = document.createElement("div");
 div.setAttribute("id", "block");
 div.appendChild(document.createTextNode("Test text created"));
 document.body.appendChild(div);

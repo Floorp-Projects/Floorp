@@ -49,7 +49,7 @@ function waitForRequest() {
   return deferred.promise;
 }
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   let { browser } = yield loadTab(INIT_URI);
 
   let hud = yield openConsole();

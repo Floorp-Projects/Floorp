@@ -54,7 +54,7 @@ const DEFAULT_EDITOR_CONFIG = {
 /**
  * The current target and the WebGL Editor front, set by this tool's host.
  */
-let gToolbox, gTarget, gFront;
+var gToolbox, gTarget, gFront;
 
 /**
  * Initializes the shader editor controller and views.
@@ -81,7 +81,7 @@ function shutdownShaderEditor() {
 /**
  * Functions handling target-related lifetime events.
  */
-let EventsHandler = {
+var EventsHandler = {
   /**
    * Listen for events emitted by the current tab target.
    */
@@ -196,7 +196,7 @@ let EventsHandler = {
 /**
  * Functions handling the sources UI.
  */
-let ShadersListView = Heritage.extend(WidgetMethods, {
+var ShadersListView = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the tool is started.
    */
@@ -363,7 +363,7 @@ let ShadersListView = Heritage.extend(WidgetMethods, {
 /**
  * Functions handling the editors displaying the vertex and fragment shaders.
  */
-let ShadersEditorsView = {
+var ShadersEditorsView = {
   /**
    * Initialization function, called when the tool is started.
    */
@@ -621,7 +621,7 @@ let ShadersEditorsView = {
 /**
  * Localization convenience methods.
  */
-let L10N = new ViewHelpers.L10N(STRINGS_URI);
+var L10N = new ViewHelpers.L10N(STRINGS_URI);
 
 /**
  * Convenient way of emitting events from the panel window.
@@ -631,4 +631,4 @@ EventEmitter.decorate(this);
 /**
  * DOM query helper.
  */
-let $ = (selector, target = document) => target.querySelector(selector);
+var $ = (selector, target = document) => target.querySelector(selector);

@@ -17,7 +17,7 @@ const UUID_CONTRACT_ID = "@mozilla.org/uuid-generator;1";
 const PREF_DISCOVERY = "dom.presentation.discovery.enabled";
 const PREF_DISCOVERABLE = "dom.presentation.discoverable";
 
-let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
+var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 
 function MockFactory(aClass) {
   this._cls = aClass;

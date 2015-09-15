@@ -15,9 +15,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadError",
 ////////////////////////////////////////////////////////////////////////////////
 //// Execution of common tests
 
-let gUseLegacySaver = false;
+var gUseLegacySaver = false;
 
-let scriptFile = do_get_file("common_test_Download.js");
+var scriptFile = do_get_file("common_test_Download.js");
 Services.scriptloader.loadSubScript(NetUtil.newURI(scriptFile).spec);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,5 +91,5 @@ add_task(function test_DownloadError()
 ////////////////////////////////////////////////////////////////////////////////
 //// Termination
 
-let tailFile = do_get_file("tail.js");
+var tailFile = do_get_file("tail.js");
 Services.scriptloader.loadSubScript(NetUtil.newURI(tailFile).spec);

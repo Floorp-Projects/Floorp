@@ -4,7 +4,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const PERMISSIONS_PAGE = "http://example.com/browser/browser/base/content/test/general/permissions.html";
-let {SitePermissions} = Cu.import("resource:///modules/SitePermissions.jsm", {});
+var {SitePermissions} = Cu.import("resource:///modules/SitePermissions.jsm", {});
 
 registerCleanupFunction(function() {
   SitePermissions.remove(gBrowser.currentURI, "install");

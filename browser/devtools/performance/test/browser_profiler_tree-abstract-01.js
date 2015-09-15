@@ -6,8 +6,8 @@
  * works as advertised.
  */
 
-let { AbstractTreeItem } = Cu.import("resource:///modules/devtools/AbstractTreeItem.jsm", {});
-let { Heritage } = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
+var { AbstractTreeItem } = Cu.import("resource:///modules/devtools/AbstractTreeItem.jsm", {});
+var { Heritage } = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
 
 function* spawnTest() {
   let container = document.createElement("vbox");
@@ -165,7 +165,7 @@ MyCustomTreeItem.prototype = Heritage.extend(AbstractTreeItem.prototype, {
   }
 });
 
-let gDataSrc = {
+var gDataSrc = {
   label: "root",
   children: [{
     label: "foo",

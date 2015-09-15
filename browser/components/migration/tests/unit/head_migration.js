@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "MigrationUtils",
                                   "resource:///modules/MigrationUtils.jsm");
 
 // Initialize profile.
-let gProfD = do_get_profile();
+var gProfD = do_get_profile();
 
 Cu.import("resource://testing-common/AppInfo.jsm");
 updateAppInfo();

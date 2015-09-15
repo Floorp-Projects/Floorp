@@ -3,9 +3,9 @@
 
 MARIONETTE_TIMEOUT = 10000;
 
-let battery = window.navigator.battery;
-let fromStatus = "unknown";
-let fromCharging = false;
+var battery = window.navigator.battery;
+var fromStatus = "unknown";
+var fromCharging = false;
 
 function verifyInitialState() {
   ok(battery, "battery");

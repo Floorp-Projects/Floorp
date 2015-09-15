@@ -19,10 +19,10 @@ function iQ(selector, context) {
 
 // A simple way to check for HTML strings or ID strings
 // (both of which we optimize for)
-let quickExpr = /^[^<]*(<[\w\W]+>)[^>]*$|^#([\w-]+)$/;
+var quickExpr = /^[^<]*(<[\w\W]+>)[^>]*$|^#([\w-]+)$/;
 
 // Match a standalone tag
-let rsingleTag = /^<(\w+)\s*\/?>(?:<\/\1>)?$/;
+var rsingleTag = /^<(\w+)\s*\/?>(?:<\/\1>)?$/;
 
 // ##########
 // Class: iQClass
@@ -739,7 +739,7 @@ iQClass.prototype = {
 
 // ----------
 // Create various event aliases
-let events = [
+var events = [
   'keyup',
   'keydown',
   'keypress',

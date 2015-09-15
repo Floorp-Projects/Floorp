@@ -15,11 +15,11 @@ Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 
-let {Path, File, Constants} = OS;
+var {Path, File, Constants} = OS;
 
-let PATH;
-let PATH_TMP;
-let terminator;
+var PATH;
+var PATH_TMP;
+var terminator;
 
 add_task(function* init() {
   do_get_profile();
@@ -35,7 +35,7 @@ add_task(function* init() {
   terminator.observe(null, "profile-after-change", null);
 });
 
-let promiseShutdownDurationData = Task.async(function*() {
+var promiseShutdownDurationData = Task.async(function*() {
   // Wait until PATH exists.
   // Timeout if it is never created.
   do_print("Waiting for file creation: " + PATH);

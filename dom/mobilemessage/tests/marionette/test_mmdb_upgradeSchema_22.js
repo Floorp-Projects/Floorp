@@ -6,10 +6,10 @@ MARIONETTE_HEAD_JS = 'mmdb_head.js';
 
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
-let RIL = {};
+var RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
-let MMS = {};
+var MMS = {};
 Cu.import("resource://gre/modules/MmsPduHelper.jsm", MMS);
 
 const DBNAME = "test_mmdb_upgradeSchema_22:" + newUUID();
@@ -40,7 +40,7 @@ const FILTER_READ_READ = 1;
 
 const DISABLE_MMS_GROUPING_FOR_RECEIVING = true;
 
-let LEGACY = {
+var LEGACY = {
   saveRecord: function(aMessageRecord, aAddresses, aCallback) {
     if (DEBUG) debug("Going to store " + JSON.stringify(aMessageRecord));
 

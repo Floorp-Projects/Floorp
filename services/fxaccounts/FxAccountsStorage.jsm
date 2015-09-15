@@ -589,7 +589,7 @@ LoginManagerStorage.prototype = {
 // exist on b2g. Defined here as the use of preprocessor directives skews line
 // numbers in the runtime, meaning stack-traces etc end up off by a few lines.
 // Doing it at the end of the file makes that less of a pita.
-let haveLoginManager =
+var haveLoginManager =
 #if defined(MOZ_B2G)
                        false;
 #else

@@ -26,8 +26,8 @@ CatapultEngine.prototype = {
 
 Service.engineManager.register(CatapultEngine);
 
-let scheduler = new SyncScheduler(Service);
-let clientsEngine = Service.clientsEngine;
+var scheduler = new SyncScheduler(Service);
+var clientsEngine = Service.clientsEngine;
 
 function sync_httpd_setup() {
   let global = new ServerWBO("global", {

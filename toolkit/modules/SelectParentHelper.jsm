@@ -8,7 +8,7 @@ this.EXPORTED_SYMBOLS = [
   "SelectParentHelper"
 ];
 
-let currentBrowser = null;
+var currentBrowser = null;
 
 this.SelectParentHelper = {
   populate: function(menulist, items, selectedIndex, zoom) {

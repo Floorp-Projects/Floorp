@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "SettingsService",
                                    "@mozilla.org/settingsService;1",
                                    "nsISettingsService");
 
-let tests = [
+var tests = [
       /* Callback tests */
       function() {
         let callbackCount = 10;

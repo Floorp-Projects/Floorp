@@ -5,7 +5,7 @@
 
 const { 'classes': Cc, 'interfaces': Ci, 'utils': Cu } = Components;
 
-let testGenerator = testSteps();
+var testGenerator = testSteps();
 
 if (!window.runTest) {
   window.runTest = function()

@@ -12,9 +12,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Globals and Constants
 
-let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
           getService(Ci.nsINavHistoryService);
-let ac = Cc["@mozilla.org/autocomplete/search;1?name=history"].
+var ac = Cc["@mozilla.org/autocomplete/search;1?name=history"].
          getService(Ci.nsIAutoCompleteSearch);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ function test_stopSearch()
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
-let tests = [
+var tests = [
   test_stopSearch,
 ];
 function run_test()

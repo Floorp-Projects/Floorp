@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
 // Some of these functions are already implemented in other parts of the source
 // tree, see bug 946708 about sharing more code.
 
-let TestUtils = {
+var TestUtils = {
   /**
    * Waits for at least one tick of the event loop.  This means that all pending
    * events at the time of this call will have been processed.  Other events may
@@ -150,7 +150,7 @@ let TestUtils = {
 
 /* --- Local helpers --- */
 
-let FormAutofillTest = {
+var FormAutofillTest = {
   /**
    * Stores the response that the next call to the mock requestAutocomplete UI
    * will return to the requester, or null to enable displaying the default UI.
@@ -188,7 +188,7 @@ let FormAutofillTest = {
   }),
 };
 
-let TestData = {
+var TestData = {
   /**
    * Autofill UI request for the e-mail field only.
    */

@@ -3,7 +3,7 @@
 
 // Tests find bar auto-close behavior
 
-let newTab, iframe;
+var newTab, iframe;
 
 function test() {
   waitForExplicitFinish();

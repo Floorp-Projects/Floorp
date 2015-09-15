@@ -6,15 +6,15 @@
 
 waitForExplicitFinish();
 
-let kUrlSource = "http://mochi.test:8888/";
-let kDataSource = "data:text/html,";
+var kUrlSource = "http://mochi.test:8888/";
+var kDataSource = "data:text/html,";
 
-let gOldPref;
-let gWin, gWin1, gWin2;
-let gTab, gTab1, gTab2;
-let gLock, gLock1, gLock2;
-let gCurStepIndex = -1;
-let gSteps = [
+var gOldPref;
+var gWin, gWin1, gWin2;
+var gTab, gTab1, gTab2;
+var gLock, gLock1, gLock2;
+var gCurStepIndex = -1;
+var gSteps = [
   function basicWakeLock() {
     gTab = gBrowser.addTab(kUrlSource);
     gWin = gBrowser.getBrowserForTab(gTab).contentWindow;

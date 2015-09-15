@@ -12,7 +12,7 @@ function test() {
   goNext();
 }
 
-let tests = [
+var tests = [
   // Test notification is removed when dismissed if removeOnDismissal is true
   { id: "Test#1",
     run: function () {

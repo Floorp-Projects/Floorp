@@ -59,9 +59,9 @@ function BannerMessage(options) {
 
 // We need this object to have access to the HomeBanner
 // private members without leaking it outside Home.jsm.
-let HomeBannerMessageHandlers;
+var HomeBannerMessageHandlers;
 
-let HomeBanner = (function () {
+var HomeBanner = (function () {
   // Whether there is a "HomeBanner:Get" request we couldn't fulfill.
   let _pendingRequest = false;
 
@@ -190,9 +190,9 @@ let HomeBanner = (function () {
 
 // We need this object to have access to the HomePanels
 // private members without leaking it outside Home.jsm.
-let HomePanelsMessageHandlers;
+var HomePanelsMessageHandlers;
 
-let HomePanels = (function () {
+var HomePanels = (function () {
   // Functions used to handle messages sent from Java.
   HomePanelsMessageHandlers = {
 

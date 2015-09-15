@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let four = require("./modules/exportsEquals");
+var four = require("./modules/exportsEquals");
 exports.testExportsEquals = function(assert) {
   assert.equal(four, 4);
 };
 
 /* TODO: Discuss idea of dropping support for this feature that was alternative
          to `module.exports = ..` that failed.
-let five = require("./modules/setExports");
+var five = require("./modules/setExports");
 exports.testSetExports = function(assert) {
   assert.equal(five, 5);
 }

@@ -1,9 +1,9 @@
-let urifixup = Cc["@mozilla.org/docshell/urifixup;1"].
+var urifixup = Cc["@mozilla.org/docshell/urifixup;1"].
                getService(Ci.nsIURIFixup);
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-let prefList = ["browser.fixup.typo.scheme", "keyword.enabled",
+var prefList = ["browser.fixup.typo.scheme", "keyword.enabled",
                 "browser.fixup.domainwhitelist.whitelisted"];
 for (let pref of prefList) {
   Services.prefs.setBoolPref(pref, true);
@@ -14,10 +14,10 @@ const kSearchEngineURL = "http://www.example.org/?search={searchTerms}";
 Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get",
                                      kSearchEngineURL);
 
-let oldDefaultEngine = Services.search.defaultEngine;
+var oldDefaultEngine = Services.search.defaultEngine;
 Services.search.defaultEngine = Services.search.getEngineByName(kSearchEngineID);
 
-let selectedName = Services.search.defaultEngine.name;
+var selectedName = Services.search.defaultEngine.name;
 do_check_eq(selectedName, kSearchEngineID);
 
 const kForceHostLookup = "browser.fixup.dns_first_for_single_words";
@@ -34,7 +34,7 @@ do_register_cleanup(function() {
   Services.prefs.clearUserPref(kForceHostLookup);
 });
 
-let flagInputs = [
+var flagInputs = [
   urifixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP,
   urifixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI,
   urifixup.FIXUP_FLAG_FIX_SCHEME_TYPOS,
@@ -59,7 +59,7 @@ flagInputs.concat([
     affectedByDNSForSingleHosts: false, // Whether the input host could be a host, but is normally assumed to be a keyword query
   }
 */
-let testcases = [ {
+var testcases = [ {
     input: "http://www.mozilla.org",
     fixedURI: "http://www.mozilla.org/",
   }, {
@@ -518,7 +518,7 @@ function sanitize(input) {
 }
 
 
-let gSingleWordHostLookup = false;
+var gSingleWordHostLookup = false;
 function run_test() {
   // Only keywordlookup things should be affected by requiring a DNS lookup for single-word hosts:
   do_print("Check only keyword lookup testcases should be affected by requiring DNS for single hosts");

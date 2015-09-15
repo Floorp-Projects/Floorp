@@ -125,7 +125,7 @@ types.addDictType("fontface", {
  * The PageStyle actor lets the client look at the styles on a page, as
  * they are applied to a given node.
  */
-let PageStyleActor = protocol.ActorClass({
+var PageStyleActor = protocol.ActorClass({
   typeName: "pagestyle",
 
   /**
@@ -944,7 +944,7 @@ exports.PageStyleActor = PageStyleActor;
 /**
  * Front object for the PageStyleActor
  */
-let PageStyleFront = protocol.FrontClass(PageStyleActor, {
+var PageStyleFront = protocol.FrontClass(PageStyleActor, {
   initialize: function(conn, form, ctx, detail) {
     protocol.Front.prototype.initialize.call(this, conn, form, ctx, detail);
     this.inspector = this.parent();
@@ -1005,7 +1005,7 @@ let PageStyleFront = protocol.FrontClass(PageStyleActor, {
  * (which have a CSSStyle but no CSSRule) we create a StyleRuleActor
  * with a special rule type (100).
  */
-let StyleRuleActor = protocol.ActorClass({
+var StyleRuleActor = protocol.ActorClass({
   typeName: "domstylerule",
   initialize: function(pageStyle, item) {
     protocol.Actor.prototype.initialize.call(this, null);
@@ -1324,7 +1324,7 @@ let StyleRuleActor = protocol.ActorClass({
 /**
  * Front for the StyleRule actor.
  */
-let StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
+var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
   initialize: function(client, form, ctx, detail) {
     protocol.Front.prototype.initialize.call(this, client, form, ctx, detail);
   },
@@ -1479,7 +1479,7 @@ let StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
  * The modifications are processed in the order in which they are
  * added to the RuleModificationList.
  */
-let RuleModificationList = Class({
+var RuleModificationList = Class({
   /**
    * Initialize a RuleModificationList.
    * @param {StyleRuleFront} rule the associated rule

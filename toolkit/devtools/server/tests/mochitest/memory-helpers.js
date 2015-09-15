@@ -1,6 +1,6 @@
-let Cu = Components.utils;
-let Cc = Components.classes;
-let Ci = Components.interfaces;
+var Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -11,11 +11,11 @@ SimpleTest.registerCleanupFunction(function() {
 });
 
 Cu.import("resource://gre/modules/Task.jsm");
-let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let { DebuggerClient } = require("devtools/toolkit/client/main");
-let { DebuggerServer } = require("devtools/server/main");
+var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var { DebuggerClient } = require("devtools/toolkit/client/main");
+var { DebuggerServer } = require("devtools/server/main");
 
-let { MemoryFront } = require("devtools/server/actors/memory");
+var { MemoryFront } = require("devtools/server/actors/memory");
 
 function startServerAndGetSelectedTabMemory() {
   DebuggerServer.init();

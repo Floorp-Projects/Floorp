@@ -11,11 +11,11 @@ const TESTCASE_URI_CSS = TEST_BASE_HTTP + "simple.css";
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-let tempScope = {};
+var tempScope = {};
 Components.utils.import("resource://gre/modules/FileUtils.jsm", tempScope);
 Components.utils.import("resource://gre/modules/NetUtil.jsm", tempScope);
-let FileUtils = tempScope.FileUtils;
-let NetUtil = tempScope.NetUtil;
+var FileUtils = tempScope.FileUtils;
+var NetUtil = tempScope.NetUtil;
 
 add_task(function* () {
   let htmlFile = yield copy(TESTCASE_URI_HTML, "simple.html");

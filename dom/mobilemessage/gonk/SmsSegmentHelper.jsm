@@ -6,7 +6,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-let RIL = {};
+var RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
 /**

@@ -4,8 +4,8 @@
 var testPath = "http://mochi.test:8888/browser/dom/html/test/";
 var popup;
 
-let {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", null);
-let {Services} = Cu.import("resource://gre/modules/Services.jsm", null);
+var {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", null);
+var {Services} = Cu.import("resource://gre/modules/Services.jsm", null);
 
 function checkCache(url, inMemory, shouldExist, cb)
 {

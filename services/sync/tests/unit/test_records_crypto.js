@@ -10,7 +10,7 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-let cryptoWrap;
+var cryptoWrap;
 
 function crypted_resource_handler(metadata, response) {
   let obj = {id: "resource",

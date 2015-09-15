@@ -4,7 +4,7 @@
 // Test parseAttribute from node-attribute-parser.js
 
 const Cu = Components.utils;
-let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {parseAttribute} = require("devtools/shared/node-attribute-parser");
 
 const TEST_DATA = [{

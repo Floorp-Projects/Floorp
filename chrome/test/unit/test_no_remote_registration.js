@@ -4,14 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let manifests = [
+var manifests = [
   do_get_file("data/test_no_remote_registration.manifest"),
 ];
 registerManifests(manifests);
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let XULAppInfo = {
+var XULAppInfo = {
   vendor: "Mozilla",
   name: "XPCShell",
   ID: "{39885e5f-f6b4-4e2a-87e5-6259ecf79011}",
@@ -29,7 +29,7 @@ let XULAppInfo = {
   ])
 };
 
-let XULAppInfoFactory = {
+var XULAppInfoFactory = {
   // These two are used when we register all our factories (and unregister)
   CID: XULAPPINFO_CID,
   scheme: "XULAppInfo",
@@ -70,7 +70,7 @@ ProtocolHandler.prototype =
   ])
 };
 
-let testProtocols = [
+var testProtocols = [
   // It doesn't matter if it has this flag - the only flag we accept is
   // URI_IS_LOCAL_RESOURCE.
   {scheme: "moz-protocol-ui-resource",

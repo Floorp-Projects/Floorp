@@ -314,7 +314,7 @@ function handleFile(win, file) {
   return testURLs;
 }
 
-let observer = {
+var observer = {
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "tabswitch-do-test") {
       test(aSubject);

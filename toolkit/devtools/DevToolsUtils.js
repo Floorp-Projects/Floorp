@@ -707,7 +707,7 @@ exports.settleAll = values => {
  * When the testing flag is set, various behaviors may be altered from
  * production mode, typically to enable easier testing or enhanced debugging.
  */
-let testing = false;
+var testing = false;
 Object.defineProperty(exports, "testing", {
   get: function() {
     return testing;

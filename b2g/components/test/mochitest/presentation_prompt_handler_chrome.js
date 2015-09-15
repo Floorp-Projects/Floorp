@@ -65,7 +65,7 @@ addMessageListener('setup', function(device_options) {
   sendAsyncMessage('setup-complete');
 });
 
-let eventHandler = function(evt) {
+var eventHandler = function(evt) {
   if (!evt.detail || evt.detail.type !== 'presentation-select-device') {
     return;
   }

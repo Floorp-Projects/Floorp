@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "volumeService",
                                    "@mozilla.org/telephony/volume-service;1",
                                    "nsIVolumeService");
 
-let sdcard;
+var sdcard;
 
 function setup_logshake_mocks() {
   do_get_profile();

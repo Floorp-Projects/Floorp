@@ -19,7 +19,7 @@ const { setTimeout, clearTimeout } = require("sdk/timers");
 loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
 loader.lazyImporter(this, "Sqlite", "resource://gre/modules/Sqlite.jsm");
 
-let gTrackedMessageManager = new Map();
+var gTrackedMessageManager = new Map();
 
 // Maximum number of cookies/local storage key-value-pairs that can be sent
 // over the wire to the client in one request.
@@ -31,7 +31,7 @@ const BATCH_DELAY = 200;
 // A RegExp for characters that cannot appear in a file/directory name. This is
 // used to sanitize the host name for indexed db to lookup whether the file is
 // present in <profileDir>/storage/default/ location
-let illegalFileNameCharacters = [
+var illegalFileNameCharacters = [
   "[",
   // Control characters \001 to \036
   "\\x00-\\x24",
@@ -39,10 +39,10 @@ let illegalFileNameCharacters = [
   "/:*?\\\"<>|\\\\",
   "]"
 ].join("");
-let ILLEGAL_CHAR_REGEX = new RegExp(illegalFileNameCharacters, "g");
+var ILLEGAL_CHAR_REGEX = new RegExp(illegalFileNameCharacters, "g");
 
 // Holder for all the registered storage actors.
-let storageTypePool = new Map();
+var storageTypePool = new Map();
 
 /**
  * Gets an accumulated list of all storage actors registered to be used to
@@ -137,7 +137,7 @@ types.addDictType("storeUpdateObject", {
 });
 
 // Helper methods to create a storage actor.
-let StorageActors = {};
+var StorageActors = {};
 
 /**
  * Creates a default object with the common methods required by all storage
@@ -683,7 +683,7 @@ StorageActors.createActor({
   },
 });
 
-let cookieHelpers = {
+var cookieHelpers = {
   getCookiesFromHost: function(host) {
     // Local files have no host.
     if (host.startsWith("file:///")) {
@@ -1276,7 +1276,7 @@ StorageActors.createActor({
   },
 });
 
-let indexedDBHelpers = {
+var indexedDBHelpers = {
   backToChild: function(...args) {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"]
                .getService(Ci.nsIMessageListenerManager);
@@ -1626,7 +1626,7 @@ exports.setupParentProcessForIndexedDB = function({mm, prefix}) {
 /**
  * The main Storage Actor.
  */
-let StorageActor = exports.StorageActor = protocol.ActorClass({
+var StorageActor = exports.StorageActor = protocol.ActorClass({
   typeName: "storage",
 
   get window() {
@@ -1969,7 +1969,7 @@ let StorageActor = exports.StorageActor = protocol.ActorClass({
 /**
  * Front for the Storage Actor.
  */
-let StorageFront = exports.StorageFront = protocol.FrontClass(StorageActor, {
+var StorageFront = exports.StorageFront = protocol.FrontClass(StorageActor, {
   initialize: function(client, tabForm) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.storageActor;

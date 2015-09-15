@@ -16,7 +16,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 this.DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -33,7 +33,7 @@ Cu.import("chrome://marionette/content/simpletest.js");
 loader.loadSubScript("chrome://marionette/content/common.js");
 
 // preserve this import order:
-let utils = {};
+var utils = {};
 loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/atoms.js", utils);
@@ -57,14 +57,14 @@ const globalMessageManager = Cc["@mozilla.org/globalmessagemanager;1"]
 // API's are ready; see bug 792647.  This assumes that marionette-server.js
 // will be loaded before the 'system-message-listener-ready' message
 // is fired.  If this stops being true, this approach will have to change.
-let systemMessageListenerReady = false;
+var systemMessageListenerReady = false;
 Services.obs.addObserver(function() {
   systemMessageListenerReady = true;
 }, "system-message-listener-ready", false);
 
 // This is used on desktop to prevent newSession from returning before a page
 // load initiated by the Firefox command line has completed.
-let delayedBrowserStarted = false;
+var delayedBrowserStarted = false;
 Services.obs.addObserver(function () {
   delayedBrowserStarted = true;
 }, BROWSER_STARTUP_FINISHED, false);
@@ -3034,7 +3034,7 @@ GeckoDriver.prototype.commands = {
  * @param {GeckoDriver} driver
  *     Reference to the driver the browser is attached to.
  */
-let BrowserObj = function(win, driver) {
+var BrowserObj = function(win, driver) {
   this.browser = undefined;
   this.window = win;
   this.driver = driver;

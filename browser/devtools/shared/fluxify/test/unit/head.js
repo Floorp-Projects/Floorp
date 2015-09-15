@@ -18,7 +18,7 @@ const services = {
 const Services = require("Services");
 const { waitForTick, waitForTime } = require("devtools/toolkit/DevToolsUtils");
 
-let loadSubScript = Cc[
+var loadSubScript = Cc[
   '@mozilla.org/moz/jssubscript-loader;1'
 ].getService(Ci.mozIJSSubScriptLoader).loadSubScript;
 

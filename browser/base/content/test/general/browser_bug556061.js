@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let testURL = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
-let testActionURL = "moz-action:switchtab," + JSON.stringify({url: testURL});
+var testURL = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+var testActionURL = "moz-action:switchtab," + JSON.stringify({url: testURL});
 testURL = gURLBar.trimValue(testURL);
-let testTab;
+var testTab;
 
 function runNextTest() {
   if (tests.length) {
@@ -25,7 +25,7 @@ function cleanup() {
   finish();
 }
 
-let tests = [
+var tests = [
   {
     expected: testURL,
     setup: function() {

@@ -17,7 +17,7 @@ const TEST_URI = `
   Test the css transform highlighter
 `;
 
-let TYPE = "CssTransformHighlighter";
+var TYPE = "CssTransformHighlighter";
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));

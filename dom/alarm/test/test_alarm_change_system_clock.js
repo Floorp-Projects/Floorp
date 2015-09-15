@@ -15,8 +15,8 @@ const ALARM_OFFSET = 10000; // 10 seconds.
 const CLOCK_OFFSET = 20000; // 20 seconds.
 const MANIFEST_URL = "http://dummyurl.com/manifest.webapp";
 
-let alarmDate;
-let alarmFired;
+var alarmDate;
+var alarmFired;
 function alarmCb() {
   alarmFired = true;
 };

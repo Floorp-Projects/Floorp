@@ -13,7 +13,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 this.EXPORTED_SYMBOLS = ["OSCrypto"];
 
-let OSCrypto = {};
+var OSCrypto = {};
 
 if (AppConstants.platform == "win") {
   Services.scriptloader.loadSubScript("resource://gre/modules/OSCrypto_win.js", this);

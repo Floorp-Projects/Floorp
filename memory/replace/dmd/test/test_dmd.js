@@ -11,9 +11,9 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
 // The xpcshell test harness sets PYTHON so we can read it here.
-let gEnv = Cc["@mozilla.org/process/environment;1"]
+var gEnv = Cc["@mozilla.org/process/environment;1"]
              .getService(Ci.nsIEnvironment);
-let gPythonName = gEnv.get("PYTHON");
+var gPythonName = gEnv.get("PYTHON");
 
 // If we're testing locally, the executable file is in "CurProcD". Otherwise,
 // it is in another location that we have to find.
@@ -30,13 +30,13 @@ function getExecutable(aFilename) {
   return file;
 }
 
-let gIsWindows = Cc["@mozilla.org/xre/app-info;1"]
+var gIsWindows = Cc["@mozilla.org/xre/app-info;1"]
                  .getService(Ci.nsIXULRuntime).OS === "WINNT";
-let gDmdTestFile = getExecutable("SmokeDMD" + (gIsWindows ? ".exe" : ""));
+var gDmdTestFile = getExecutable("SmokeDMD" + (gIsWindows ? ".exe" : ""));
 
-let gDmdScriptFile = getExecutable("dmd.py");
+var gDmdScriptFile = getExecutable("dmd.py");
 
-let gScanTestFile = FileUtils.getFile("CurWorkD", ["scan-test.py"]);
+var gScanTestFile = FileUtils.getFile("CurWorkD", ["scan-test.py"]);
 
 function readFile(aFile) {
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"]

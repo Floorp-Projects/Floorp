@@ -20,7 +20,7 @@ function inheritsFrom(t, baseName)
   return false;
 }  
 
-let output = [];
+var output = [];
 
 function process_type(t)
 {
@@ -48,14 +48,14 @@ function process_type(t)
   }
 }
 
-let frameIIDRE = /::kFrameIID$/;
-let queryFrameRE = /^do_QueryFrame::operator/;
+var frameIIDRE = /::kFrameIID$/;
+var queryFrameRE = /^do_QueryFrame::operator/;
 
 /* A list of class names T that have do_QueryFrame<T> used */
-let needIDs = [];
+var needIDs = [];
 
 /* A map of class names that have a kFrameIID declared */
-let haveIDs = {};
+var haveIDs = {};
 
 // We match up needIDs with haveIDs at the end because static variables are
 // not present in the .members array of a type

@@ -5,7 +5,7 @@
  * Tests that a chrome debugger can be created in a new process.
  */
 
-let gProcess;
+var gProcess;
 
 function test() {
   // Windows XP and 8.1 test slaves are terribly slow at this test.

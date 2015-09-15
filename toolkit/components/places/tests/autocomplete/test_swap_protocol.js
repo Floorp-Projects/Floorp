@@ -12,7 +12,7 @@
  */
 
 // Define some shared uris and titles (each page needs its own uri)
-let kURIs = [
+var kURIs = [
   "http://www.site/",
   "http://site/",
   "ftp://ftp.site/",
@@ -22,7 +22,7 @@ let kURIs = [
   "http://woohoo/",
   "http://wwwwwwacko/",
 ];
-let kTitles = [
+var kTitles = [
   "title",
 ];
 
@@ -36,11 +36,11 @@ addPageBook(5, 0);
 addPageBook(6, 0);
 addPageBook(7, 0);
 
-let allSite = [0,1,2,3,4,5];
+var allSite = [0,1,2,3,4,5];
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
-let gTests = [
+var gTests = [
   ["0: http://www.site matches all site", "http://www.site", allSite],
   ["1: http://site matches all site", "http://site", allSite],
   ["2: ftp://ftp.site matches itself", "ftp://ftp.site", [2]],

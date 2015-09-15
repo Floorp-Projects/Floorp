@@ -4,7 +4,7 @@
 
 "use strict";
 
-let originalWindowWidth;
+var originalWindowWidth;
 
 // Drag to overflow chevron should open the overflow panel.
 add_task(function*() {

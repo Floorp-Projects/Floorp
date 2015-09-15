@@ -7,7 +7,7 @@ Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 
-let collectionKeys = new CollectionKeyManager();
+var collectionKeys = new CollectionKeyManager();
 
 function sha256HMAC(message, key) {
   let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256, key);

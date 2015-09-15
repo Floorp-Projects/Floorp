@@ -5,7 +5,7 @@
  * Tests if the performance tool can import profiler data from the
  * original profiler tool (Performance Recording v1, and Profiler data v2) and the correct views and graphs are loaded.
  */
-let TICKS_DATA = (function () {
+var TICKS_DATA = (function () {
   let ticks = [];
   for (let i = 0; i < 100; i++) {
     ticks.push(i * 10);
@@ -13,7 +13,7 @@ let TICKS_DATA = (function () {
   return ticks;
 })();
 
-let PROFILER_DATA = (function () {
+var PROFILER_DATA = (function () {
   let data = {};
   let threads = data.threads = [];
   let thread = {};
@@ -68,7 +68,7 @@ let PROFILER_DATA = (function () {
   return data;
 })();
 
-let test = Task.async(function*() {
+var test = Task.async(function*() {
   let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
   let { $, EVENTS, PerformanceController, DetailsView, OverviewView, JsCallTreeView } = panel.panelWin;
 

@@ -24,7 +24,7 @@ function test() {
   runTests(tests);
 }
 
-let tests = {
+var tests = {
   testSimple: function(cbnext) {
     let run = function() {
       onconnect = function(e) {

@@ -47,7 +47,7 @@ const CELLBROADCASTETWSINFO_CID =
 
 const NS_XPCOM_SHUTDOWN_OBSERVER_ID = "xpcom-shutdown";
 
-let DEBUG;
+var DEBUG;
 function debug(s) {
   dump("CellBroadcastService: " + s);
 }

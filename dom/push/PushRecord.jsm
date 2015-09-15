@@ -196,7 +196,7 @@ PushRecord.prototype = {
 
 // Define lazy getters for the principal and scope URI. IndexedDB can't store
 // `nsIPrincipal` objects, so we keep them in a private weak map.
-let principals = new WeakMap();
+var principals = new WeakMap();
 Object.defineProperties(PushRecord.prototype, {
   principal: {
     get() {

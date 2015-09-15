@@ -97,7 +97,7 @@ nsUnknownContentTypeDialogProgressListener.prototype = {
 const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
 const nsITimer = Components.interfaces.nsITimer;
 
-let downloadModule = {};
+var downloadModule = {};
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/DownloadLastDir.jsm", downloadModule);
 Components.utils.import("resource://gre/modules/DownloadPaths.jsm");

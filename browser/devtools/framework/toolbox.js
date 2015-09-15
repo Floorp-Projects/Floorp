@@ -17,12 +17,12 @@ const OS_HISTOGRAM = "DEVTOOLS_OS_ENUMERATED_PER_USER";
 const OS_IS_64_BITS = "DEVTOOLS_OS_IS_64_BITS_PER_USER";
 const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
 
-let {Cc, Ci, Cu} = require("chrome");
-let promise = require("promise");
-let EventEmitter = require("devtools/toolkit/event-emitter");
-let Telemetry = require("devtools/shared/telemetry");
-let HUDService = require("devtools/webconsole/hudservice");
-let sourceUtils = require("devtools/shared/source-utils");
+var {Cc, Ci, Cu} = require("chrome");
+var promise = require("promise");
+var EventEmitter = require("devtools/toolkit/event-emitter");
+var Telemetry = require("devtools/shared/telemetry");
+var HUDService = require("devtools/webconsole/hudservice");
+var sourceUtils = require("devtools/shared/source-utils");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");

@@ -5,7 +5,7 @@
 // the 'min' and 'max' tooltip is too small.
 
 const TEST_DATA = [{ delta: 100, value: 60 }, { delta: 200, value: 59.9 }];
-let LineGraphWidget = require("devtools/shared/widgets/LineGraphWidget");
+var LineGraphWidget = require("devtools/shared/widgets/LineGraphWidget");
 
 add_task(function*() {
   yield promiseTab("about:blank");

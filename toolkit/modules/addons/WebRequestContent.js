@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
 XPCOMUtils.defineLazyModuleGetter(this, "WebRequestCommon",
                                   "resource://gre/modules/WebRequestCommon.jsm");
 
-let ContentPolicy = {
+var ContentPolicy = {
   _classDescription: "WebRequest content policy",
   _classID: Components.ID("938e5d24-9ccc-4b55-883e-c252a41f7ce9"),
   _contractID: "@mozilla.org/webrequest/policy;1",

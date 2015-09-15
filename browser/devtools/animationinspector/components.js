@@ -556,7 +556,7 @@ AnimationTargetNode.prototype = {
  * Whenever a new animation is added to the panel, addAnimation(state) should be
  * called. reset() can be called to start over.
  */
-let TimeScale = {
+var TimeScale = {
   minStartTime: Infinity,
   maxEndTime: 0,
 

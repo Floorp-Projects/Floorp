@@ -11,17 +11,17 @@ Cu.import("resource://services-sync/util.js");
 
 const HTTP_PORT = 8888;
 
-let prefs = new Preferences();
+var prefs = new Preferences();
 
 prefs.set("extensions.getAddons.get.url", "http://localhost:8888/search/guid:%IDS%");
 loadAddonTestFunctions();
 startupManager();
 
 Service.engineManager.register(AddonsEngine);
-let engine     = Service.engineManager.get("addons");
-let tracker    = engine._tracker;
-let store      = engine._store;
-let reconciler = engine._reconciler;
+var engine     = Service.engineManager.get("addons");
+var tracker    = engine._tracker;
+var store      = engine._store;
+var reconciler = engine._reconciler;
 
 /**
  * Create a AddonsRec for this application with the fields specified.

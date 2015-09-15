@@ -74,8 +74,8 @@ const TEST_LOGINS = [
   },
 ];
 
-let crypto = new OSCrypto();
-let dbConn;
+var crypto = new OSCrypto();
+var dbConn;
 
 function promiseSetPassword(login) {
   return new Promise((resolve, reject) => {

@@ -53,11 +53,11 @@ const roomsPushNotification = function(version, channelID) {
 // room objects that are retrieved from the server, this is list may become out
 // of date. The Push server may notify us of this event, which will set the global
 // 'dirty' flag to TRUE.
-let gDirty = true;
+var gDirty = true;
 // Global variable that keeps track of the currently used account.
-let gCurrentUser = null;
+var gCurrentUser = null;
 // Global variable that keeps track of the room cache.
-let gRoomsCache = null;
+var gRoomsCache = null;
 
 /**
  * Extend a `target` object with the properties defined in `source`.
@@ -131,7 +131,7 @@ const checkForParticipantsUpdate = function(room, updatedRoom) {
  * These are wrappers which can be overriden by tests to allow us to manually
  * handle the timeouts.
  */
-let timerHandlers = {
+var timerHandlers = {
   /**
    * Wrapper for setTimeout.
    *
@@ -151,7 +151,7 @@ let timerHandlers = {
  * callback Function. MozLoopAPI will cause things to break if this invariant is
  * violated. You'll notice this as well in the documentation for each method.
  */
-let LoopRoomsInternal = {
+var LoopRoomsInternal = {
   /**
    * @var {Map} rooms Collection of rooms currently in cache.
    */

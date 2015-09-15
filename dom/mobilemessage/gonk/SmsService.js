@@ -9,7 +9,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-let RIL = {};
+var RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
 const GONK_SMSSERVICE_CONTRACTID = "@mozilla.org/sms/gonksmsservice;1";
@@ -119,7 +119,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSmsMessenger",
                                    "@mozilla.org/ril/system-messenger-helper;1",
                                    "nsISmsMessenger");
 
-let DEBUG = RIL.DEBUG_RIL;
+var DEBUG = RIL.DEBUG_RIL;
 function debug(s) {
   dump("SmsService: " + s);
 }

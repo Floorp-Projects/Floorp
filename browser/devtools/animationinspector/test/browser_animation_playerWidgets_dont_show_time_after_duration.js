@@ -8,7 +8,7 @@
 // slider don't show values bigger than the animation duration (which would
 // happen if the local requestAnimationFrame loop didn't stop correctly).
 
-let L10N = new ViewHelpers.L10N();
+var L10N = new ViewHelpers.L10N();
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");

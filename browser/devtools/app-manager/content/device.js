@@ -42,7 +42,7 @@ window.addEventListener("unload", function onUnload() {
   UI.destroy();
 });
 
-let UI = {
+var UI = {
   init: function() {
     this.showFooterIfNeeded();
     this.setTab("apps");

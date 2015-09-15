@@ -33,7 +33,7 @@ function deprecationFunctionCustomCallstack () {
   return true;
 }
 
-let tests = [
+var tests = [
 // Test deprecation warning without passing the callstack.
 {
   deprecatedFunction: basicDeprecatedFunction,
@@ -84,7 +84,7 @@ let tests = [
 }];
 
 // Which test are we running now?
-let idx = -1;
+var idx = -1;
 
 function test() {
   waitForExplicitFinish();

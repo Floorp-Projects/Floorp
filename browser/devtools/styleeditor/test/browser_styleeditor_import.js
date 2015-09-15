@@ -8,9 +8,9 @@
 // http rather than chrome to improve coverage
 const TESTCASE_URI = TEST_BASE_HTTP + "simple.html";
 
-let tempScope = {};
+var tempScope = {};
 Components.utils.import("resource://gre/modules/FileUtils.jsm", tempScope);
-let FileUtils = tempScope.FileUtils;
+var FileUtils = tempScope.FileUtils;
 
 const FILENAME = "styleeditor-import-test.css";
 const SOURCE = "body{background:red;}";

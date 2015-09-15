@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "prefService",
                                    "@mozilla.org/preferences-service;1",
                                    "nsIPrefService");
 
-let PaymentManager =  {
+var PaymentManager =  {
   init: function init() {
     // Payment providers data are stored as a preference.
     this.registeredProviders = null;

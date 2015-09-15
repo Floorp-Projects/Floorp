@@ -514,14 +514,14 @@ DevTools.prototype = {
  * It is an instance of a DevTools class that holds a set of tools. It has the
  * same lifetime as the browser.
  */
-let gDevTools = new DevTools();
+var gDevTools = new DevTools();
 this.gDevTools = gDevTools;
 
 /**
  * gDevToolsBrowser exposes functions to connect the gDevTools instance with a
  * Firefox instance.
  */
-let gDevToolsBrowser = {
+var gDevToolsBrowser = {
   /**
    * A record of the windows whose menus we altered, so we can undo the changes
    * as the window is closed

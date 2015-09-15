@@ -8,9 +8,9 @@
 const TAB_URL = EXAMPLE_URL + "doc_function-search.html";
 const TOTAL_SOURCES = 4;
 
-let gTab, gDebuggee, gPanel, gDebugger;
-let gEditor, gSources, gControllerSources;
-let gPrevLabelsCache, gPrevGroupsCache;
+var gTab, gDebuggee, gPanel, gDebugger;
+var gEditor, gSources, gControllerSources;
+var gPrevLabelsCache, gPrevGroupsCache;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {

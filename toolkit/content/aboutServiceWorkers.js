@@ -15,8 +15,8 @@ const bundle = Services.strings.createBundle(
 const brandBundle = Services.strings.createBundle(
   "chrome://branding/locale/brand.properties");
 
-let gSWM;
-let gSWCount = 0;
+var gSWM;
+var gSWCount = 0;
 
 function init() {
   let enabled = Services.prefs.getBoolPref("dom.serviceWorkers.enabled");

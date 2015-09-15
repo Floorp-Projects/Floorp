@@ -40,7 +40,7 @@ const CHANGE_THROTTLE_INTERVAL_MS = 5 * 60 * 1000;
 /**
  * This is a policy object used to override behavior for testing.
  */
-let Policy = {
+var Policy = {
   now: () => new Date(),
 };
 

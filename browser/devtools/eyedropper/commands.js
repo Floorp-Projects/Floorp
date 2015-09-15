@@ -6,7 +6,7 @@ const l10n = require("gcli/l10n");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const eventEmitter = new EventEmitter();
 
-let { Eyedropper, EyedropperManager } = require("devtools/eyedropper/eyedropper");
+var { Eyedropper, EyedropperManager } = require("devtools/eyedropper/eyedropper");
 
 /**
  * 'eyedropper' command

@@ -5,4 +5,4 @@
 
 const URL = "http://mochi.test:8888/browser/docshell/test/browser/timelineMarkers-04.html";
 
-let test = makeTimelineTest("browser_timelineMarkers-frame-04.js", URL);
+var test = makeTimelineTest("browser_timelineMarkers-frame-04.js", URL);

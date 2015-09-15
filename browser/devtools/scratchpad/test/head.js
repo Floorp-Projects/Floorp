@@ -13,7 +13,7 @@ const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const promise = require("promise");
 
 
-let gScratchpadWindow; // Reference to the Scratchpad chrome window object
+var gScratchpadWindow; // Reference to the Scratchpad chrome window object
 
 DevToolsUtils.testing = true;
 SimpleTest.registerCleanupFunction(() => {

@@ -7,7 +7,7 @@
 this.EXPORTED_SYMBOLS = ["FolderCache"];
 
 // Cache for bookmarks folder heirarchy.
-let FolderCache = function () {
+var FolderCache = function () {
   this.cache = new Map();
 }
 

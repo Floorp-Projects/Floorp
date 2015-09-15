@@ -40,20 +40,20 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
 
 // Counts the number of created connections per database basename(). This is
 // used for logging to distinguish connection instances.
-let connectionCounters = new Map();
+var connectionCounters = new Map();
 
 // Tracks identifiers of wrapped connections, that are Storage connections
 // opened through mozStorage and then wrapped by Sqlite.jsm to use its syntactic
 // sugar API.  Since these connections have an unknown origin, we use this set
 // to differentiate their behavior.
-let wrappedConnections = new Set();
+var wrappedConnections = new Set();
 
 /**
  * Once `true`, reject any attempt to open or close a database.
  */
-let isClosed = false;
+var isClosed = false;
 
-let Debugging = {
+var Debugging = {
   // Tests should fail if a connection auto closes.  The exception is
   // when finalization itself is tested, in which case this flag
   // should be set to false.

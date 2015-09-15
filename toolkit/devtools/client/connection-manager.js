@@ -82,7 +82,7 @@ const REMOTE_TIMEOUT = "devtools.debugger.remote-timeout";
  *
  */
 
-let ConnectionManager = {
+var ConnectionManager = {
   _connections: new Set(),
   createConnection: function(host, port) {
     let c = new Connection(host, port);
@@ -114,7 +114,7 @@ let ConnectionManager = {
 
 EventEmitter.decorate(ConnectionManager);
 
-let lastID = -1;
+var lastID = -1;
 
 function Connection(host, port) {
   EventEmitter.decorate(this);

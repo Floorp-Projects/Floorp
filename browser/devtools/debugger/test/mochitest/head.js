@@ -4,27 +4,27 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 // Disable logging for faster test runs. Set this pref to true if you want to
 // debug a test in your try runs. Both the debugger server and frontend will
 // be affected by this pref.
-let gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
+var gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.setBoolPref("devtools.debugger.log", false);
 
-let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-let { Promise: promise } = Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js", {});
-let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-let { BrowserToolboxProcess } = Cu.import("resource:///modules/devtools/ToolboxProcess.jsm", {});
-let { DebuggerServer } = require("devtools/server/main");
-let { DebuggerClient, ObjectClient } = require("devtools/toolkit/client/main");
-let { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
-let EventEmitter = require("devtools/toolkit/event-emitter");
+var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+var { Promise: promise } = Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js", {});
+var { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var { BrowserToolboxProcess } = Cu.import("resource:///modules/devtools/ToolboxProcess.jsm", {});
+var { DebuggerServer } = require("devtools/server/main");
+var { DebuggerClient, ObjectClient } = require("devtools/toolkit/client/main");
+var { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
+var EventEmitter = require("devtools/toolkit/event-emitter");
 const { promiseInvoke } = require("devtools/async-utils");
-let { TargetFactory } = require("devtools/framework/target");
-let { Toolbox } = require("devtools/framework/toolbox")
+var { TargetFactory } = require("devtools/framework/target");
+var { Toolbox } = require("devtools/framework/toolbox")
 
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/debugger/test/mochitest/";
 const FRAME_SCRIPT_URL = getRootDirectory(gTestPath) + "code_frame-script.js";
@@ -59,10 +59,10 @@ registerCleanupFunction(function* () {
 });
 
 // Import the GCLI test helper
-let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
+var testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 testDir = testDir.replace(/\/\//g, '/');
 testDir = testDir.replace("chrome:/mochitest", "chrome://mochitest");
-let helpersjs = testDir + "/../../../commandline/test/helpers.js";
+var helpersjs = testDir + "/../../../commandline/test/helpers.js";
 Services.scriptloader.loadSubScript(helpersjs, this);
 
 // Redeclare dbg_assert with a fatal behavior.
@@ -958,7 +958,7 @@ function getSourceForm(aSources, aURL) {
   return item.attachment.source;
 }
 
-let nextId = 0;
+var nextId = 0;
 
 function jsonrpc(tab, method, params) {
   return new Promise(function (resolve, reject) {

@@ -4,7 +4,7 @@
 
 const TEST_URL = "http://www.example.com/";
 
-let promiseAsyncGetBookmarkIds = Task.async(function* (url) {
+var promiseAsyncGetBookmarkIds = Task.async(function* (url) {
   yield PlacesTestUtils.promiseAsyncUpdates();
   return new Promise(resolve => {
     PlacesUtils.asyncGetBookmarkIds(url, (itemIds, uri) => {

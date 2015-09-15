@@ -12,7 +12,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr, manager: Cm} = Compo
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
-let logger = Log.repository.getLogger("MockRegistrar");
+var logger = Log.repository.getLogger("MockRegistrar");
 
 this.MockRegistrar = Object.freeze({
   _registeredComponents: new Map(),

@@ -15,7 +15,7 @@ const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
 const TEST_URI2 = "http://example.com/browser/browser/devtools/webconsole/" +
                   "test/test-bug-601177-log-levels.html";
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   Services.prefs.setBoolPref("javascript.options.strict", true);
 
   yield loadTab(TEST_URI);

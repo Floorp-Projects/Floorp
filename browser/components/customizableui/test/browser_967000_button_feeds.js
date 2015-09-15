@@ -7,8 +7,8 @@
 const TEST_PAGE = "http://mochi.test:8888/browser/browser/components/customizableui/test/support/feeds_test_page.html";
 const TEST_FEED = "http://mochi.test:8888/browser/browser/components/customizableui/test/support/test-feed.xml"
 
-let newTab = null;
-let initialLocation = gBrowser.currentURI.spec;
+var newTab = null;
+var initialLocation = gBrowser.currentURI.spec;
 
 add_task(function() {
   info("Check Subscribe button functionality");

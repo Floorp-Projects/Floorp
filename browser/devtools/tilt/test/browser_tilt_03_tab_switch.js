@@ -2,8 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-let tab0, tab1, tab2;
-let testStep = -1;
+var tab0, tab1, tab2;
+var testStep = -1;
 
 function test() {
   // This test relies on a timeout to indicate pass or fail. All tests need at
@@ -59,7 +59,7 @@ function createTab2() {
   });
 }
 
-let testSteps = [
+var testSteps = [
   function step0() {
     gBrowser.selectedTab = tab1;
   },

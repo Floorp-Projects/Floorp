@@ -1,7 +1,7 @@
 SimpleTest.waitForExplicitFinish();
 
 // The main testing function.
-let test = function (isContent) {
+var test = function (isContent) {
   // Each definition is [eventType, prefSetting]
   // Where we are setting the "privacy.resistFingerprinting" pref.
   let eventDefs = [["mousedown", true],

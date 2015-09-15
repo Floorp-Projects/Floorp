@@ -27,7 +27,7 @@ add_task(function* () {
   yield PlacesTestUtils.clearHistory();
 });
 
-let testForgetThisSiteVisibility = Task.async(function* (selectionCount) {
+var testForgetThisSiteVisibility = Task.async(function* (selectionCount) {
   let organizer = yield promiseLibrary();
 
   // Select History in the left pane.

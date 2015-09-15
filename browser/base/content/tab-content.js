@@ -5,7 +5,7 @@
 
 /* This content script contains code that requires a tab browser. */
 
-let {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -97,7 +97,7 @@ addMessageListener("SecondScreen:tab-mirror", function(message) {
   }
 });
 
-let AboutHomeListener = {
+var AboutHomeListener = {
   init: function(chromeGlobal) {
     chromeGlobal.addEventListener('AboutHomeLoad', this, false, true);
   },
@@ -227,7 +227,7 @@ let AboutHomeListener = {
 };
 AboutHomeListener.init(this);
 
-let AboutPrivateBrowsingListener = {
+var AboutPrivateBrowsingListener = {
   init(chromeGlobal) {
     chromeGlobal.addEventListener("AboutPrivateBrowsingOpenWindow", this,
                                   false, true);
@@ -255,7 +255,7 @@ let AboutPrivateBrowsingListener = {
 };
 AboutPrivateBrowsingListener.init(this);
 
-let AboutReaderListener = {
+var AboutReaderListener = {
 
   _articlePromise: null,
 
@@ -373,7 +373,7 @@ let AboutReaderListener = {
 AboutReaderListener.init();
 
 
-let ContentSearchMediator = {
+var ContentSearchMediator = {
 
   whitelist: new Set([
     "about:home",
@@ -428,7 +428,7 @@ let ContentSearchMediator = {
 };
 ContentSearchMediator.init(this);
 
-let PageStyleHandler = {
+var PageStyleHandler = {
   init: function() {
     addMessageListener("PageStyle:Switch", this);
     addMessageListener("PageStyle:Disable", this);
@@ -525,7 +525,7 @@ let PageStyleHandler = {
 PageStyleHandler.init();
 
 // Keep a reference to the translation content handler to avoid it it being GC'ed.
-let trHandler = null;
+var trHandler = null;
 if (Services.prefs.getBoolPref("browser.translation.detectLanguage")) {
   Cu.import("resource:///modules/translation/TranslationContentHandler.jsm");
   trHandler = new TranslationContentHandler(global, docShell);
@@ -564,7 +564,7 @@ addMessageListener("Browser:AppTab", function(message) {
   }
 });
 
-let WebBrowserChrome = {
+var WebBrowserChrome = {
   onBeforeLinkTraversal: function(originalTarget, linkURI, linkNode, isAppTab) {
     return BrowserUtils.onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab);
   },
@@ -587,7 +587,7 @@ if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
 }
 
 
-let DOMFullscreenHandler = {
+var DOMFullscreenHandler = {
   _fullscreenDoc: null,
 
   init: function() {

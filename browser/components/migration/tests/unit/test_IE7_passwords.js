@@ -169,8 +169,8 @@ const TESTED_URLS = [
   "https://c.bar.com",
 ];
 
-let nsIWindowsRegKey = Ci.nsIWindowsRegKey;
-let Storage2Key;
+var nsIWindowsRegKey = Ci.nsIWindowsRegKey;
+var Storage2Key;
 
 /*
  * If the key value exists, it's going to be backed up and replaced, so the value could be restored.

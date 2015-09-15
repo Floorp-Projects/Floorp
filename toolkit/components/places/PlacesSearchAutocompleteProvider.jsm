@@ -182,7 +182,7 @@ SearchSuggestionControllerWrapper.prototype = {
   },
 };
 
-let gInitializationPromise = null;
+var gInitializationPromise = null;
 
 this.PlacesSearchAutocompleteProvider = Object.freeze({
   /**

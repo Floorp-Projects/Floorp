@@ -41,7 +41,7 @@ XPCOMUtils.defineLazyGetter(this, "gExtStorage", function dp_gExtStorage() {
 const gUseSDCard = true;
 
 const VERBOSE = 1;
-let log =
+var log =
   VERBOSE ?
   function log_dump(msg) { dump("DirectoryProvider: " + msg + "\n"); } :
   function log_noop(msg) { };

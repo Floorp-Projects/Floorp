@@ -14,8 +14,8 @@ function log(msg) {
   // Services.console.logStringMessage(msg);
 }
 
-let _notificationsMap = {};
-let _handlersMap = {};
+var _notificationsMap = {};
+var _handlersMap = {};
 
 function Notification(aId, aOptions) {
   this._id = aId;
@@ -155,7 +155,7 @@ Notification.prototype = {
   }
 }
 
-let Notifications = {
+var Notifications = {
   get idService() {
     delete this.idService;
     return this.idService = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);

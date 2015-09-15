@@ -34,7 +34,7 @@ const TRANSITIONS = [
   TRANSITION_DOWNLOAD,
 ];
 
-let gRunner;
+var gRunner;
 function run_test()
 {
   do_test_pending();

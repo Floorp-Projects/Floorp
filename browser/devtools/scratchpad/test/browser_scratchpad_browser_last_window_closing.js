@@ -57,7 +57,7 @@ function runTests({ Scratchpad })
 }
 
 
-let CloseObserver = {
+var CloseObserver = {
   expectedValue: null,
   init: function()
   {

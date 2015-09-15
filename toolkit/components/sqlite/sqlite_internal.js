@@ -16,11 +16,11 @@
 
 importScripts("resource://gre/modules/workers/require.js");
 
-let SharedAll = require(
+var SharedAll = require(
   "resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
 
 // Open the sqlite3 library.
-let path;
+var path;
 if (SharedAll.Constants.Sys.Name === "Android") {
   path = ctypes.libraryName("sqlite3");
 } else if (SharedAll.Constants.Win) {
@@ -29,16 +29,16 @@ if (SharedAll.Constants.Sys.Name === "Android") {
   path = SharedAll.Constants.Path.libxul;
 }
 
-let lib;
+var lib;
 try {
   lib = ctypes.open(path);
 } catch (ex) {
   throw new Error("Could not open system library: " + ex.message);
 }
 
-let declareLazyFFI = SharedAll.declareLazyFFI;
+var declareLazyFFI = SharedAll.declareLazyFFI;
 
-let Type = Object.create(SharedAll.Type);
+var Type = Object.create(SharedAll.Type);
 
 /**
  * Opaque Structure |sqlite3_ptr|.
@@ -73,7 +73,7 @@ Type.sqlite3_int64 = Type.int64_t.withName("sqlite3_int64");
 /**
  * Sqlite3 constants.
  */
-let Constants = {};
+var Constants = {};
 
 /**
  * |SQLITE_STATIC| a special value for the destructor that is passed as an
@@ -109,7 +109,7 @@ Constants.SQLITE_ROW = 100;
  */
 Constants.SQLITE_DONE = 101;
 
-let Sqlite3 = {
+var Sqlite3 = {
   Constants: Constants,
   Type: Type
 };

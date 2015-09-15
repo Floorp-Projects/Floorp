@@ -20,11 +20,11 @@ if (arguments.length != 3) {
 
 const { 'classes': Cc, 'interfaces': Ci, 'utils': Cu, 'results': Cr } = Components;
 
-let { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-let { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
-let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+var { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
+var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
-let gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
+var gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
                 .getService(Ci.nsIX509CertDB);
 
 const BUILT_IN_NICK_PREFIX = "Builtin Object Token:";
@@ -67,13 +67,13 @@ const PINSETDEF = "/* Pinsets are each an ordered list by the actual value of th
   "};\n\n";
 
 // Command-line arguments
-let gStaticPins = parseJson(arguments[0]);
-let gTestCertFile = arguments[1];
+var gStaticPins = parseJson(arguments[0]);
+var gTestCertFile = arguments[1];
 
 // Open the output file.
-let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
 file.initWithPath(arguments[2]);
-let gFileOutputStream = FileUtils.openSafeFileOutputStream(file);
+var gFileOutputStream = FileUtils.openSafeFileOutputStream(file);
 
 function writeString(string) {
   gFileOutputStream.write(string, string.length);
@@ -598,12 +598,12 @@ function loadExtraCertificates(certStringList) {
   return constructedCerts;
 }
 
-let extraCertificates = loadExtraCertificates(gStaticPins.extra_certificates);
-let [ certNameToSKD, certSKDToName ] = loadNSSCertinfo(gTestCertFile,
+var extraCertificates = loadExtraCertificates(gStaticPins.extra_certificates);
+var [ certNameToSKD, certSKDToName ] = loadNSSCertinfo(gTestCertFile,
                                                        extraCertificates);
-let [ chromeNameToHash, chromeNameToMozName ] = downloadAndParseChromeCerts(
+var [ chromeNameToHash, chromeNameToMozName ] = downloadAndParseChromeCerts(
   gStaticPins.chromium_data.cert_file_url, certSKDToName);
-let [ chromeImportedPinsets, chromeImportedEntries ] =
+var [ chromeImportedPinsets, chromeImportedEntries ] =
   downloadAndParseChromePins(gStaticPins.chromium_data.json_file_url,
     chromeNameToHash, chromeNameToMozName, certNameToSKD, certSKDToName);
 

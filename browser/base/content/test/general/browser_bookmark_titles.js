@@ -4,7 +4,7 @@
 
 // This file is tests for the default titles that new bookmarks get.
 
-let tests = [
+var tests = [
     // Common page.
     ['http://example.com/browser/browser/base/content/test/general/dummy_page.html',
      'Dummy test page'],

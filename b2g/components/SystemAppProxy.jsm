@@ -11,7 +11,7 @@ Cu.import('resource://gre/modules/Services.jsm');
 
 this.EXPORTED_SYMBOLS = ['SystemAppProxy'];
 
-let SystemAppProxy = {
+var SystemAppProxy = {
   _frame: null,
   _isReady: false,
   _pendingEvents: [],

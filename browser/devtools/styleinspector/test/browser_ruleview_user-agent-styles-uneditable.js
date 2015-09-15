@@ -15,7 +15,7 @@ const TEST_URI = `
   </blockquote>
 `;
 
-let PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
+var PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 
 add_task(function*() {
   info("Starting the test with the pref set to true before toolbox is opened");

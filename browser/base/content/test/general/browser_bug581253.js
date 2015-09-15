@@ -2,9 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let testURL = "data:text/plain,nothing but plain text";
-let testTag = "581253_tag";
-let timerID = -1;
+var testURL = "data:text/plain,nothing but plain text";
+var testTag = "581253_tag";
+var timerID = -1;
 
 function test() {
   registerCleanupFunction(function() {

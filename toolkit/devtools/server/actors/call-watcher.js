@@ -33,7 +33,7 @@ protocol.types.addDictType("call-details", {
  * This actor contains information about a function call, like the function
  * type, name, stack, arguments, returned value etc.
  */
-let FunctionCallActor = protocol.ActorClass({
+var FunctionCallActor = protocol.ActorClass({
   typeName: "function-call",
 
   /**
@@ -235,7 +235,7 @@ let FunctionCallActor = protocol.ActorClass({
 /**
  * The corresponding Front object for the FunctionCallActor.
  */
-let FunctionCallFront = protocol.FrontClass(FunctionCallActor, {
+var FunctionCallFront = protocol.FrontClass(FunctionCallActor, {
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
   },
@@ -259,7 +259,7 @@ let FunctionCallFront = protocol.FrontClass(FunctionCallActor, {
 /**
  * This actor observes function calls on certain objects or globals.
  */
-let CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
+var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
   typeName: "call-watcher",
   initialize: function(conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
@@ -579,7 +579,7 @@ let CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
 /**
  * The corresponding Front object for the CallWatcherActor.
  */
-let CallWatcherFront = exports.CallWatcherFront = protocol.FrontClass(CallWatcherActor, {
+var CallWatcherFront = exports.CallWatcherFront = protocol.FrontClass(CallWatcherActor, {
   initialize: function(client, { callWatcherActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: callWatcherActor });
     this.manage(this);

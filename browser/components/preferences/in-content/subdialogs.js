@@ -4,7 +4,7 @@
 
 "use strict";
 
-let gSubDialog = {
+var gSubDialog = {
   _closingCallback: null,
   _closingEvent: null,
   _isClosing: false,

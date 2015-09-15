@@ -4,8 +4,8 @@
 
 "use strict";
 
-let initialLocation = gBrowser.currentURI.spec;
-let globalClipboard;
+var initialLocation = gBrowser.currentURI.spec;
+var globalClipboard;
 
 add_task(function() {
   info("Check copy button existence and functionality");

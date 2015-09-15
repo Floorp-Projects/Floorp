@@ -14,7 +14,7 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
 const HISTORY_BACK = -1;
 const HISTORY_FORWARD = 1;
 
-let test = asyncTest(function*() {
+var test = asyncTest(function*() {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
   hud.jsterm.clearOutput();

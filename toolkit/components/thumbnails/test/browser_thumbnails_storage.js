@@ -61,7 +61,7 @@ function runTests() {
   });
 }
 
-let promiseClearFile = Task.async(function*(aFile, aURL) {
+var promiseClearFile = Task.async(function*(aFile, aURL) {
   if (!aFile.exists()) {
     return;
   }

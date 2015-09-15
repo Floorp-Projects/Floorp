@@ -18,22 +18,22 @@
  */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-let {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
+var {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
                                   "resource://gre/modules/FormHistory.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 
-let tempScope = {};
+var tempScope = {};
 Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
                                            .loadSubScript("chrome://browser/content/sanitize.js", tempScope);
-let Sanitizer = tempScope.Sanitizer;
+var Sanitizer = tempScope.Sanitizer;
 
 const kMsecPerMin = 60 * 1000;
 const kUsecPerMin = 60 * 1000000;
 
-let formEntries, downloadIDs, olderDownloadIDs;
+var formEntries, downloadIDs, olderDownloadIDs;
 
 // Add tests here.  Each is a function that's called by doNextTest().
 var gAllTests = [
@@ -661,8 +661,8 @@ var gAllTests = [
 // test run.  See doNextTest().
 var gCurrTest = 0;
 
-let now_mSec = Date.now();
-let now_uSec = now_mSec * 1000;
+var now_mSec = Date.now();
+var now_uSec = now_mSec * 1000;
 
 ///////////////////////////////////////////////////////////////////////////////
 

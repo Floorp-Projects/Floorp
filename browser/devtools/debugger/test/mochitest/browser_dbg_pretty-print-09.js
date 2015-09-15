@@ -8,7 +8,7 @@ var gClient;
 var gThreadClient;
 var gSource;
 
-let gTab, gPanel, gClient, gThreadClient, gSource;
+var gTab, gPanel, gClient, gThreadClient, gSource;
 
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print-2.html";
 

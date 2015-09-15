@@ -1,4 +1,4 @@
-let bookmarkData = [
+var bookmarkData = [
   { uri: uri("http://www.toastytech.com"),
     title: "Nathan's Toasty Technology Page",
     tags: ["technology", "personal", "retro"] },

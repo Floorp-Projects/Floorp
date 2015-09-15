@@ -16,9 +16,9 @@
 
 const TEST_URI = "data:text/html;charset=utf8,test for bug 585237";
 
-let outputNode;
+var outputNode;
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

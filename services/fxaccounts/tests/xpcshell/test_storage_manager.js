@@ -311,7 +311,7 @@ add_task(function* checkLockedUpdates() {
 // A helper for our queued tests. It creates a StorageManager and then queues
 // an unresolved promise. The tests then do additional setup and checks, then
 // resolves or rejects the blocked promise.
-let setupStorageManagerForQueueTest = Task.async(function* () {
+var setupStorageManagerForQueueTest = Task.async(function* () {
   let sm = new FxAccountsStorageManager();
   sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"})
   sm.secureStorage = new MockedSecureStorage({kA: "kA"});

@@ -16,9 +16,9 @@
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
                  "bug 804845 and bug 619598";
 
-let jsterm, inputNode;
+var jsterm, inputNode;
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

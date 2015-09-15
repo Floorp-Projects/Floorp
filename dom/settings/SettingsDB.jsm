@@ -4,17 +4,17 @@
 
 "use strict";
 
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-let Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
 
 Cu.importGlobalProperties(['Blob', 'File']);
 Cu.import("resource://gre/modules/Services.jsm");
 
 this.EXPORTED_SYMBOLS = ["SettingsDB", "SETTINGSDB_NAME", "SETTINGSSTORE_NAME"];
 
-let DEBUG = false;
-let VERBOSE = false;
+var DEBUG = false;
+var VERBOSE = false;
 
 try {
   DEBUG   =

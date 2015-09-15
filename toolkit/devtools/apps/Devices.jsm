@@ -8,7 +8,7 @@ Components.utils.import("resource://gre/modules/devtools/event-emitter.js");
 
 const EXPORTED_SYMBOLS = ["Devices"];
 
-let addonInstalled = false;
+var addonInstalled = false;
 
 const Devices = {
   _devices: {},

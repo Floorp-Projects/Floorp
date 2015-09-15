@@ -13,7 +13,7 @@ const evrootnick = "evroot";
 
 // This is the list of certificates needed for the test
 // The certificates prefixed by 'int-' are intermediates
-let certList = [
+var certList = [
   // Test for successful EV validation
   'int-ev-valid',
   'ev-valid',

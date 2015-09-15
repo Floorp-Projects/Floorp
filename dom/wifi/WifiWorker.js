@@ -1778,7 +1778,7 @@ function isWepHexKey(s) {
 }
 
 
-let WifiNetworkInterface = {
+var WifiNetworkInterface = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINetworkInterface]),
 
@@ -1845,8 +1845,8 @@ function WifiScanResult() {}
 
 // TODO Make the difference between a DOM-based network object and our
 // networks objects much clearer.
-let netToDOM;
-let netFromDOM;
+var netToDOM;
+var netFromDOM;
 
 function WifiWorker() {
   var self = this;
@@ -3899,7 +3899,7 @@ WifiWorker.prototype = {
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WifiWorker]);
 
-let debug;
+var debug;
 function updateDebug() {
   if (DEBUG) {
     debug = function (s) {

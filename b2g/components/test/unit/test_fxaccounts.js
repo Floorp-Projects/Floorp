@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsManager",
 
 // At end of test, restore original state
 const ORIGINAL_AUTH_URI = Services.prefs.getCharPref("identity.fxaccounts.auth.uri");
-let { SystemAppProxy } = Cu.import("resource://gre/modules/FxAccountsMgmtService.jsm");
+var { SystemAppProxy } = Cu.import("resource://gre/modules/FxAccountsMgmtService.jsm");
 const ORIGINAL_SENDCUSTOM = SystemAppProxy._sendCustomEvent;
 do_register_cleanup(function() {
   Services.prefs.setCharPref("identity.fxaccounts.auth.uri", ORIGINAL_AUTH_URI);
@@ -30,7 +30,7 @@ do_register_cleanup(function() {
 do_get_profile();
 
 // Mock the system app proxy; make message passing possible
-let mockSendCustomEvent = function(aEventName, aMsg) {
+var mockSendCustomEvent = function(aEventName, aMsg) {
   Services.obs.notifyObservers({wrappedJSObject: aMsg}, aEventName, null);
 };
 

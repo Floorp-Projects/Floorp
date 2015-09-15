@@ -8,8 +8,8 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "UITour", "resource:///modules/UITour.jsm");
 
-let initialLocation = gBrowser.currentURI.spec;
-let newTab = null;
+var initialLocation = gBrowser.currentURI.spec;
+var newTab = null;
 
 function openAboutAccountsFromMenuPanel(entryPoint) {
   info("Check Sync button functionality");

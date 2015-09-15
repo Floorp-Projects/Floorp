@@ -11,7 +11,7 @@ const searchIcon = document.getAnonymousElementByAttribute(searchbar, "anonid",
 
 const diacritic_engine = "Foo \u2661";
 
-let Preferences =
+var Preferences =
   Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
 
 // Get an array of the one-off buttons.

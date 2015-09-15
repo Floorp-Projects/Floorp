@@ -4,7 +4,7 @@
 
 "use strict";
 
-let tempElements = [];
+var tempElements = [];
 
 function insertTempItemsIntoMenu(parentMenu) {
   // Last element is null to insert at the end:

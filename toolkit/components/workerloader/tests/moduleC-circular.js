@@ -8,7 +8,7 @@
 // in D.
 exports.enteredC = true;
 
-let D = require("chrome://mochitests/content/chrome/toolkit/components/workerloader/tests/moduleD-circular.js");
+var D = require("chrome://mochitests/content/chrome/toolkit/components/workerloader/tests/moduleD-circular.js");
 
 // The following values are set after importing D.
 // copiedFromD.copiedFromC should have only one field |enteredC|

@@ -7,11 +7,11 @@
 
 const {Cu, Ci, ChromeWorker} = require("chrome");
 
-let TiltGL = require("devtools/tilt/tilt-gl");
-let TiltUtils = require("devtools/tilt/tilt-utils");
-let TiltVisualizerStyle = require("devtools/tilt/tilt-visualizer-style");
-let {EPSILON, TiltMath, vec3, mat4, quat4} = require("devtools/tilt/tilt-math");
-let {TargetFactory} = require("devtools/framework/target");
+var TiltGL = require("devtools/tilt/tilt-gl");
+var TiltUtils = require("devtools/tilt/tilt-utils");
+var TiltVisualizerStyle = require("devtools/tilt/tilt-visualizer-style");
+var {EPSILON, TiltMath, vec3, mat4, quat4} = require("devtools/tilt/tilt-math");
+var {TargetFactory} = require("devtools/framework/target");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");

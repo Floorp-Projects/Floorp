@@ -33,7 +33,7 @@ XPCOMUtils.defineLazyGetter(this, "SE", function() {
 });
 
 // set to true in se_consts.js to see debug messages
-let DEBUG = SE.DEBUG_CONNECTOR;
+var DEBUG = SE.DEBUG_CONNECTOR;
 function debug(s) {
   if (DEBUG) {
     dump("-*- UiccConnector: " + s + "\n");
