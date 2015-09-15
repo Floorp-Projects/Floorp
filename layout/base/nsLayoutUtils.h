@@ -2386,8 +2386,8 @@ public:
     return sFontSizeInflationDisabledInMasterProcess;
   }
 
-  static bool SVGTransformOriginEnabled() {
-    return sSVGTransformOriginEnabled;
+  static bool SVGTransformBoxEnabled() {
+    return sSVGTransformBoxEnabled;
   }
 
   /**
@@ -2782,7 +2782,7 @@ private:
   static bool sInvalidationDebuggingIsEnabled;
   static bool sCSSVariablesEnabled;
   static bool sInterruptibleReflowEnabled;
-  static bool sSVGTransformOriginEnabled;
+  static bool sSVGTransformBoxEnabled;
 
   /**
    * Helper function for LogTestDataForPaint().

@@ -2571,9 +2571,9 @@ pref("svg.marker-improvements.enabled", true);
 pref("svg.new-getBBox.enabled", false);
 
 #ifdef RELEASE_BUILD
-pref("svg.transform-origin.enabled", false);
+pref("svg.transform-box.enabled", false);
 #else
-pref("svg.transform-origin.enabled", true);
+pref("svg.transform-box.enabled", true);
 #endif // RELEASE_BUILD
 
 // Default font types and sizes by locale

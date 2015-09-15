@@ -5337,7 +5337,7 @@ if (SpecialPowers.getBoolPref("svg.paint-order.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("svg.transform-origin.enabled")) {
+if (SpecialPowers.getBoolPref("svg.transform-box.enabled")) {
   gCSSProperties["transform-box"] = {
     domProp: "transformBox",
     inherited: false,
