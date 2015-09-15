@@ -239,7 +239,7 @@ private:
     bool                   mServeMultipleEventsPerPollIter;
     mozilla::Atomic<bool>  mServingPendingQueue;
     int32_t                mMaxTimePerPollIter;
-    bool                   mTelemetryEnabledPref;
+    mozilla::Atomic<bool, mozilla::Relaxed>  mTelemetryEnabledPref;
 
     void OnKeepaliveEnabledPrefChange();
     void NotifyKeepaliveEnabledPrefChange(SocketContext *sock);

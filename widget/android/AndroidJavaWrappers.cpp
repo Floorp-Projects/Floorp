@@ -701,7 +701,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
         }
         case AndroidMotionEvent::ACTION_DOWN:
         case AndroidMotionEvent::ACTION_POINTER_DOWN: {
-            type = NS_TOUCH_START;
+            type = eTouchStart;
             break;
         }
         case AndroidMotionEvent::ACTION_HOVER_MOVE: {
@@ -710,7 +710,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
             }
         }
         case AndroidMotionEvent::ACTION_MOVE: {
-            type = NS_TOUCH_MOVE;
+            type = eTouchMove;
             break;
         }
         case AndroidMotionEvent::ACTION_HOVER_EXIT: {
@@ -720,7 +720,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
         }
         case AndroidMotionEvent::ACTION_UP:
         case AndroidMotionEvent::ACTION_POINTER_UP: {
-            type = NS_TOUCH_END;
+            type = eTouchEnd;
             // for pointer-up events we only want the data from
             // the one pointer that went up
             startIndex = PointerIndex();
@@ -729,7 +729,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
         }
         case AndroidMotionEvent::ACTION_OUTSIDE:
         case AndroidMotionEvent::ACTION_CANCEL: {
-            type = NS_TOUCH_CANCEL;
+            type = eTouchCancel;
             break;
         }
     }

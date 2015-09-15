@@ -196,8 +196,6 @@ IMEContentObserver::IMEContentObserver()
   , mIMEHasFocus(false)
   , mIsFocusEventPending(false)
   , mIsSelectionChangeEventPending(false)
-  , mSelectionChangeCausedOnlyByComposition(false)
-  , mSelectionChangeCausedOnlyBySelectionEvent(false)
   , mIsPositionChangeEventPending(false)
   , mIsFlushingPendingNotifications(false)
 {
@@ -1024,27 +1022,14 @@ IMEContentObserver::PostTextChangeNotification(
 }
 
 void
-IMEContentObserver::PostSelectionChangeNotification(
-                      bool aCausedByComposition,
-                      bool aCausedBySelectionEvent)
+IMEContentObserver::PostSelectionChangeNotification()
 {
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
-    ("IMECO: 0x%p IMEContentObserver::PostSelectionChangeNotification("
-     "aCausedByComposition=%s, aCausedBySelectionEvent=%s)",
-     this, ToChar(aCausedByComposition), ToChar(aCausedBySelectionEvent)));
+    ("IMECO: 0x%p IMEContentObserver::PostSelectionChangeNotification(), "
+     "mSelectionData={ mCausedByComposition=%s, mCausedBySelectionEvent=%s }",
+     this, ToChar(mSelectionData.mCausedByComposition),
+     ToChar(mSelectionData.mCausedBySelectionEvent)));
 
-  if (!mIsSelectionChangeEventPending) {
-    mSelectionChangeCausedOnlyByComposition = aCausedByComposition;
-  } else {
-    mSelectionChangeCausedOnlyByComposition =
-      mSelectionChangeCausedOnlyByComposition && aCausedByComposition;
-  }
-  if (!mSelectionChangeCausedOnlyBySelectionEvent) {
-    mSelectionChangeCausedOnlyBySelectionEvent = aCausedBySelectionEvent;
-  } else {
-    mSelectionChangeCausedOnlyBySelectionEvent =
-      mSelectionChangeCausedOnlyBySelectionEvent && aCausedBySelectionEvent;
-  }
   mIsSelectionChangeEventPending = true;
 }
 
@@ -1081,8 +1066,9 @@ IMEContentObserver::MaybeNotifyIMEOfSelectionChange(
      "aCausedByComposition=%s, aCausedBySelectionEvent=%s)",
      this, ToChar(aCausedByComposition), ToChar(aCausedBySelectionEvent)));
 
-  PostSelectionChangeNotification(aCausedByComposition,
-                                  aCausedBySelectionEvent);
+  mSelectionData.AssignReason(aCausedByComposition,
+                              aCausedBySelectionEvent);
+  PostSelectionChangeNotification();
   FlushMergeableNotifications();
 }
 
@@ -1104,7 +1090,7 @@ IMEContentObserver::UpdateSelectionCache()
     return false;
   }
 
-  mSelectionData.Clear();
+  mSelectionData.ClearSelectionData();
 
   // XXX Cannot we cache some information for reducing the cost to compute
   //     selection offset and writing mode?
@@ -1120,8 +1106,8 @@ IMEContentObserver::UpdateSelectionCache()
   *mSelectionData.mString = selection.mReply.mString;
   mSelectionData.SetWritingMode(selection.GetWritingMode());
   mSelectionData.mReversed = selection.mReply.mReversed;
-  mSelectionData.mCausedByComposition = false;
-  mSelectionData.mCausedBySelectionEvent = false;
+
+  // WARNING: Don't modify the reason of selection change here.
 
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("IMECO: 0x%p IMEContentObserver::UpdateSelectionCache(), "
@@ -1248,9 +1234,7 @@ IMEContentObserver::FlushMergeableNotifications()
       ("IMECO: 0x%p IMEContentObserver::FlushMergeableNotifications(), "
        "creating SelectionChangeEvent...", this));
     mIsSelectionChangeEventPending = false;
-    nsContentUtils::AddScriptRunner(
-      new SelectionChangeEvent(this, mSelectionChangeCausedOnlyByComposition,
-                               mSelectionChangeCausedOnlyBySelectionEvent));
+    nsContentUtils::AddScriptRunner(new SelectionChangeEvent(this));
   }
 
   if (mIsPositionChangeEventPending) {
@@ -1385,8 +1369,7 @@ IMEContentObserver::SelectionChangeEvent::Run()
     MOZ_LOG(sIMECOLog, LogLevel::Debug,
       ("IMECO: 0x%p   IMEContentObserver::SelectionChangeEvent::Run(), "
        "retrying to send NOTIFY_IME_OF_SELECTION_CHANGE...", this));
-    mIMEContentObserver->PostSelectionChangeNotification(
-                           mCausedByComposition, mCausedBySelectionEvent);
+    mIMEContentObserver->PostSelectionChangeNotification();
     return NS_OK;
   }
 
@@ -1400,7 +1383,8 @@ IMEContentObserver::SelectionChangeEvent::Run()
 
   // If the IME doesn't want selection change notifications caused by
   // composition, we should do nothing anymore.
-  if (mCausedByComposition &&
+  SelectionChangeData& newSelChangeData = mIMEContentObserver->mSelectionData;
+  if (newSelChangeData.mCausedByComposition &&
       !mIMEContentObserver->
         mUpdatePreference.WantChangesCausedByComposition()) {
     return NS_OK;
@@ -1416,7 +1400,6 @@ IMEContentObserver::SelectionChangeEvent::Run()
 
   // If the selection isn't changed actually, we shouldn't notify IME of
   // selection change.
-  SelectionChangeData& newSelChangeData = mIMEContentObserver->mSelectionData;
   if (lastSelChangeData.IsValid() &&
       lastSelChangeData.mOffset == newSelChangeData.mOffset &&
       lastSelChangeData.String() == newSelChangeData.String() &&
@@ -1435,8 +1418,7 @@ IMEContentObserver::SelectionChangeEvent::Run()
      this, SelectionChangeDataToString(newSelChangeData).get()));
 
   IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
-  notification.SetData(mIMEContentObserver->mSelectionData,
-                       mCausedByComposition, mCausedBySelectionEvent);
+  notification.SetData(mIMEContentObserver->mSelectionData);
   IMEStateManager::NotifyIME(notification, mIMEContentObserver->mWidget);
 
   MOZ_LOG(sIMECOLog, LogLevel::Debug,

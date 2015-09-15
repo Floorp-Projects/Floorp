@@ -106,7 +106,7 @@ class HangMonitorChild
  private:
   void ShutdownOnThread();
 
-  static HangMonitorChild* sInstance;
+  static Atomic<HangMonitorChild*> sInstance;
 
   const nsRefPtr<ProcessHangMonitor> mHangMonitor;
   Monitor mMonitor;
@@ -124,7 +124,7 @@ class HangMonitorChild
   bool mIPCOpen;
 };
 
-HangMonitorChild* HangMonitorChild::sInstance;
+Atomic<HangMonitorChild*> HangMonitorChild::sInstance;
 
 /* Parent process objects */
 

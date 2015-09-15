@@ -112,29 +112,6 @@ AssemblerMIPSShared::asAsm()
     return *static_cast<Assembler*>(this);
 }
 
-class RelocationIterator
-{
-    CompactBufferReader reader_;
-    // offset in bytes
-    uint32_t offset_;
-
-  public:
-    RelocationIterator(CompactBufferReader& reader)
-      : reader_(reader)
-    { }
-
-    bool read() {
-        if (!reader_.more())
-            return false;
-        offset_ = reader_.readUnsigned();
-        return true;
-    }
-
-    uint32_t offset() const {
-        return offset_;
-    }
-};
-
 void
 AssemblerMIPSShared::copyJumpRelocationTable(uint8_t* dest)
 {
