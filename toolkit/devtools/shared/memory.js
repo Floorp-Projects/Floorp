@@ -139,8 +139,7 @@ let Memory = exports.Memory = Class({
    * @returns {String} The snapshot id.
    */
   saveHeapSnapshot: expectState("attached", function () {
-    const path = HeapSnapshotFileUtils.getNewUniqueHeapSnapshotTempFilePath();
-    ThreadSafeChromeUtils.saveHeapSnapshot(path, { debugger: this.dbg });
+    const path = ThreadSafeChromeUtils.saveHeapSnapshot({ debugger: this.dbg });
     return HeapSnapshotFileUtils.getSnapshotIdFromPath(path);
   }, "saveHeapSnapshot"),
 

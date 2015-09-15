@@ -607,6 +607,111 @@ add_test(function test_update_icc_contact() {
 });
 
 /**
+ * Verify ICCContactHelper.updateICCContact with appType is CARD_APPTYPE_USIM and
+ * insufficient space to store Type 2 USIM contact fields.
+ */
+add_test(function test_update_icc_contact_full_email_and_anr_field() {
+  const ADN_RECORD_ID   = 100;
+  const ADN_SFI         = 1;
+  const IAP_FILE_ID     = 0x4f17;
+  const EMAIL_FILE_ID   = 0x4f50;
+  const EMAIL_RECORD_ID = 20;
+  const ANR0_FILE_ID    = 0x4f11;
+  const ANR0_RECORD_ID  = 30;
+
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let recordHelper = context.ICCRecordHelper;
+  let contactHelper = context.ICCContactHelper;
+  let ril = context.RIL;
+
+  function do_test(aSimType, aContactType, aContact, aPin2) {
+    ril.appType = CARD_APPTYPE_USIM;
+    ril.iccInfoPrivate.sst = [0x2, 0x0, 0x0, 0x0, 0x0];
+
+    recordHelper.readPBR = function(onsuccess, onerror) {
+      onsuccess([{
+        adn:   {fileId: ICC_EF_ADN,
+                sfi: ADN_SFI},
+        iap:   {fileId: IAP_FILE_ID},
+        email: {fileId: EMAIL_FILE_ID,
+                fileType: ICC_USIM_TYPE2_TAG,
+                indexInIAP: 0},
+        anr0:  {fileId: ANR0_FILE_ID,
+                fileType: ICC_USIM_TYPE2_TAG,
+                indexInIAP: 1}
+      }]);
+    };
+
+    recordHelper.updateADNLike = function(fileId, contact, pin2, onsuccess, onerror) {
+      if (aContactType === GECKO_CARDCONTACT_TYPE_ADN) {
+        equal(fileId, ICC_EF_ADN);
+      }
+      equal(pin2, aPin2);
+      equal(contact.alphaId, aContact.alphaId);
+      equal(contact.number, aContact.number);
+      onsuccess({alphaId: contact.alphaId,
+                  number: contact.number});
+    };
+
+    recordHelper.readIAP = function(fileId, recordNumber, onsuccess, onerror) {
+      equal(fileId, IAP_FILE_ID);
+      equal(recordNumber, ADN_RECORD_ID);
+      onsuccess([0xff, 0xff]);
+    };
+
+    recordHelper.updateIAP = function(fileId, recordNumber, iap, onsuccess, onerror) {
+      equal(fileId, IAP_FILE_ID);
+      equal(recordNumber, ADN_RECORD_ID);
+      onsuccess();
+    };
+
+    recordHelper.findFreeRecordId = function(fileId, onsuccess, onerror) {
+      let recordId = 0;
+      // emulate email and anr don't have free record.
+      if (fileId === EMAIL_FILE_ID || fileId === ANR0_FILE_ID) {
+        onerror(CONTACT_ERR_NO_FREE_RECORD_FOUND);
+      } else {
+        onsuccess(recordId);
+      }
+    };
+
+    let isSuccess = false;
+    let onsuccess = function onsuccess(updatedContact) {
+      equal(ADN_RECORD_ID, updatedContact.recordId);
+      equal(aContact.alphaId, updatedContact.alphaId);
+      equal(updatedContact.email, null);
+      equal(updatedContact.anr, null);
+
+      do_print("updateICCContact success");
+      isSuccess = true;
+    };
+
+    let onerror = function onerror(errorMsg) {
+      do_print("updateICCContact failed: " + errorMsg);
+    };
+
+    contactHelper.updateICCContact(aSimType, aContactType, aContact, aPin2, onsuccess, onerror);
+    ok(isSuccess);
+  }
+
+  let contact = {
+      pbrIndex: 0,
+      recordId: ADN_RECORD_ID,
+      alphaId:  "test",
+      number:   "123456",
+      email:    "test@mail.com",
+      anr:      ["+654321"]
+    };
+
+  // USIM
+  do_print("Test update USIM adn contacts");
+  do_test(CARD_APPTYPE_USIM, GECKO_CARDCONTACT_TYPE_ADN, contact, null);
+
+  run_next_test();
+});
+
+/**
  * Verify updateICCContact with removal of anr and email with File Type 1.
  */
 add_test(function test_update_icc_contact_with_remove_type1_attr() {

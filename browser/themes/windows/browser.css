@@ -52,13 +52,13 @@
 }
 
 #nav-bar[brighttext] {
-  --toolbarbutton-hover-background: rgba(255,255,255,.1);
-  --toolbarbutton-hover-bordercolor: rgba(255,255,255,.1);
+  --toolbarbutton-hover-background: rgba(255,255,255,.15);
+  --toolbarbutton-hover-bordercolor: rgba(255,255,255,.15);
   --toolbarbutton-hover-boxshadow: none;
 
-  --toolbarbutton-active-background: rgba(255,255,255,.15);
-  --toolbarbutton-active-bordercolor: rgba(255,255,255,.15);
-  --toolbarbutton-active-boxshadow: 0 0 0 1px rgba(255,255,255,.15) inset;
+  --toolbarbutton-active-background: rgba(255,255,255,.3);
+  --toolbarbutton-active-bordercolor: rgba(255,255,255,.3);
+  --toolbarbutton-active-boxshadow: 0 0 0 1px rgba(255,255,255,.3) inset;
 }
 
 #menubar-items {
@@ -842,8 +842,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding-top: calc(var(--toolbarbutton-vertical-inner-padding) + 6px);
+  padding-bottom: calc(var(--toolbarbutton-vertical-inner-padding) + 6px);
 }
 
 #nav-bar .toolbaritem-combined-buttons {

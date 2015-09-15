@@ -6,8 +6,6 @@ console.log("Initializing worker.");
 self.onmessage = e => {
   console.log("Starting test.");
   try {
-    const { filePath } = e.data;
-
     ok(typeof ChromeUtils === "undefined",
        "Should not have access to ChromeUtils in a worker.");
     ok(ThreadSafeChromeUtils,
@@ -15,7 +13,7 @@ self.onmessage = e => {
     ok(HeapSnapshot,
        "Should have access to HeapSnapshot in a worker.");
 
-    ThreadSafeChromeUtils.saveHeapSnapshot(filePath, { globals: [this] });
+    const filePath = ThreadSafeChromeUtils.saveHeapSnapshot({ globals: [this] });
     ok(true, "Should be able to save a snapshot.");
 
     const snapshot = ThreadSafeChromeUtils.readHeapSnapshot(filePath);
