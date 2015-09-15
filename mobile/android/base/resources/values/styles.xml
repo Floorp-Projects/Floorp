@@ -730,7 +730,8 @@
 
     <style name="GeckoActionBar.Button.MenuButton">
         <item name="android:scaleType">center</item>
-        <item name="android:src">@drawable/menu_light</item>
+        <item name="android:src">@drawable/menu</item>
+        <item name="android:tint">@color/toolbar_icon_grey</item>
         <item name="android:contentDescription">@string/actionbar_menu</item>
         <item name="android:background">@android:color/transparent</item>
     </style>
