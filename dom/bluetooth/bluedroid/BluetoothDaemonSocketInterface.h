@@ -15,15 +15,13 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 using mozilla::ipc::DaemonSocketPDU;
 using mozilla::ipc::DaemonSocketPDUHeader;
-using mozilla::ipc::DaemonSocketResultHandler;
 
 class BluetoothDaemonSocketModule
 {
 public:
   static const int MAX_NUM_CLIENTS;
 
-  virtual nsresult Send(DaemonSocketPDU* aPDU,
-                        DaemonSocketResultHandler* aRes) = 0;
+  virtual nsresult Send(DaemonSocketPDU* aPDU, void* aUserData) = 0;
 
   // Commands
   //
@@ -47,7 +45,9 @@ public:
 protected:
 
   void HandleSvc(const DaemonSocketPDUHeader& aHeader,
-                 DaemonSocketPDU& aPDU, DaemonSocketResultHandler* aRes);
+                 DaemonSocketPDU& aPDU, void* aUserData);
+
+  nsresult Send(DaemonSocketPDU* aPDU, BluetoothSocketResultHandler* aRes);
 
 private:
   class AcceptWatcher;

@@ -34,8 +34,7 @@ static const int sRetryInterval = 100; // ms
 class BluetoothDaemonSetupModule
 {
 public:
-  virtual nsresult Send(DaemonSocketPDU* aPDU,
-                        DaemonSocketResultHandler* aRes) = 0;
+  virtual nsresult Send(DaemonSocketPDU* aPDU, void* aUserData) = 0;
 
   // Commands
   //
@@ -108,7 +107,7 @@ protected:
   // Called to handle PDUs with Service field equal to 0x00, which
   // contains internal operations for setup and configuration.
   void HandleSvc(const DaemonSocketPDUHeader& aHeader,
-                 DaemonSocketPDU& aPDU, DaemonSocketResultHandler* aRes)
+                 DaemonSocketPDU& aPDU, void* aUserData)
   {
     static void (BluetoothDaemonSetupModule::* const HandleRsp[])(
       const DaemonSocketPDUHeader&,
@@ -126,13 +125,25 @@ protected:
     }
 
     nsRefPtr<BluetoothSetupResultHandler> res =
-      static_cast<BluetoothSetupResultHandler*>(aRes);
+      already_AddRefed<BluetoothSetupResultHandler>(
+        static_cast<BluetoothSetupResultHandler*>(aUserData));
 
-    if (!aRes) {
+    if (!res) {
       return; // Return early if no result handler has been set
     }
 
     (this->*(HandleRsp[aHeader.mOpcode]))(aHeader, aPDU, res);
+  }
+
+  nsresult Send(DaemonSocketPDU* aPDU, BluetoothSetupResultHandler* aRes)
+  {
+    nsRefPtr<BluetoothSetupResultHandler> res(aRes);
+    nsresult rv = Send(aPDU, static_cast<void*>(res.get()));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    unused << res.forget(); // Keep reference for response
+    return NS_OK;
   }
 
 private:
@@ -200,8 +211,7 @@ public:
 
   static const int MAX_NUM_CLIENTS;
 
-  virtual nsresult Send(DaemonSocketPDU* aPDU,
-                        DaemonSocketResultHandler* aRes) = 0;
+  virtual nsresult Send(DaemonSocketPDU* aPDU, void* aUserData) = 0;
 
   nsresult EnableCmd(BluetoothResultHandler* aRes)
   {
@@ -590,18 +600,28 @@ public:
 protected:
 
   void HandleSvc(const DaemonSocketPDUHeader& aHeader,
-                 DaemonSocketPDU& aPDU, DaemonSocketResultHandler* aRes)
+                 DaemonSocketPDU& aPDU, void* aUserData)
   {
     static void (BluetoothDaemonCoreModule::* const HandleOp[])(
-      const DaemonSocketPDUHeader&, DaemonSocketPDU&,
-      DaemonSocketResultHandler*) = {
+      const DaemonSocketPDUHeader&, DaemonSocketPDU&, void*) = {
       [0] = &BluetoothDaemonCoreModule::HandleRsp,
       [1] = &BluetoothDaemonCoreModule::HandleNtf
     };
 
     MOZ_ASSERT(!NS_IsMainThread());
 
-    (this->*(HandleOp[!!(aHeader.mOpcode & 0x80)]))(aHeader, aPDU, aRes);
+    (this->*(HandleOp[!!(aHeader.mOpcode & 0x80)]))(aHeader, aPDU, aUserData);
+  }
+
+  nsresult Send(DaemonSocketPDU* aPDU, BluetoothResultHandler* aRes)
+  {
+    nsRefPtr<BluetoothResultHandler> res(aRes);
+    nsresult rv = Send(aPDU, static_cast<void*>(res.get()));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    unused << res.forget(); // Keep reference for response
+    return NS_OK;
   }
 
 private:
@@ -805,7 +825,7 @@ private:
   }
 
   void HandleRsp(const DaemonSocketPDUHeader& aHeader,
-                 DaemonSocketPDU& aPDU, DaemonSocketResultHandler* aRes)
+                 DaemonSocketPDU& aPDU, void* aUserData)
   {
     static void (BluetoothDaemonCoreModule::* const HandleRsp[])(
       const DaemonSocketPDUHeader&,
@@ -842,7 +862,8 @@ private:
     }
 
     nsRefPtr<BluetoothResultHandler> res =
-      static_cast<BluetoothResultHandler*>(aRes);
+      already_AddRefed<BluetoothResultHandler>(
+        static_cast<BluetoothResultHandler*>(aUserData));
 
     if (!res) {
       return; // Return early if no result handler has been set for response
@@ -1324,7 +1345,7 @@ private:
   }
 
   void HandleNtf(const DaemonSocketPDUHeader& aHeader,
-                 DaemonSocketPDU& aPDU, DaemonSocketResultHandler* aRes)
+                 DaemonSocketPDU& aPDU, void* aUserData)
   {
     static void (BluetoothDaemonCoreModule::* const HandleNtf[])(
       const DaemonSocketPDUHeader&, DaemonSocketPDU&) = {
@@ -1432,44 +1453,35 @@ public:
   // Outgoing PDUs
   //
 
-  nsresult Send(DaemonSocketPDU* aPDU,
-                DaemonSocketResultHandler* aRes) override;
+  nsresult Send(DaemonSocketPDU* aPDU, void* aUserData) override;
 
-  void StoreResultHandler(const DaemonSocketPDU& aPDU) override;
+  void StoreUserData(const DaemonSocketPDU& aPDU) override;
 
   // Incoming PUDs
   //
 
   void Handle(DaemonSocketPDU& aPDU) override;
 
-  already_AddRefed<DaemonSocketResultHandler> FetchResultHandler(
-    const DaemonSocketPDUHeader& aHeader);
+  void* FetchUserData(const DaemonSocketPDUHeader& aHeader);
 
 private:
   void HandleSetupSvc(const DaemonSocketPDUHeader& aHeader,
-                      DaemonSocketPDU& aPDU,
-                      DaemonSocketResultHandler* aRes);
+                      DaemonSocketPDU& aPDU, void* aUserData);
   void HandleCoreSvc(const DaemonSocketPDUHeader& aHeader,
-                     DaemonSocketPDU& aPDU,
-                     DaemonSocketResultHandler* aRes);
+                     DaemonSocketPDU& aPDU, void* aUserData);
   void HandleSocketSvc(const DaemonSocketPDUHeader& aHeader,
-                       DaemonSocketPDU& aPDU,
-                       DaemonSocketResultHandler* aRes);
+                       DaemonSocketPDU& aPDU, void* aUserData);
   void HandleHandsfreeSvc(const DaemonSocketPDUHeader& aHeader,
-                          DaemonSocketPDU& aPDU,
-                          DaemonSocketResultHandler* aRes);
+                          DaemonSocketPDU& aPDU, void* aUserData);
   void HandleA2dpSvc(const DaemonSocketPDUHeader& aHeader,
-                     DaemonSocketPDU& aPDU,
-                     DaemonSocketResultHandler* aUserData);
+                     DaemonSocketPDU& aPDU, void* aUserData);
   void HandleAvrcpSvc(const DaemonSocketPDUHeader& aHeader,
-                      DaemonSocketPDU& aPDU,
-                      DaemonSocketResultHandler* aRes);
+                      DaemonSocketPDU& aPDU, void* aUserData);
   void HandleGattSvc(const DaemonSocketPDUHeader& aHeader,
-                     DaemonSocketPDU& aPDU,
-                     DaemonSocketResultHandler* aRes);
+                     DaemonSocketPDU& aPDU, void* aUserData);
 
   DaemonSocket* mConnection;
-  nsTArray<nsRefPtr<DaemonSocketResultHandler>> mResQ;
+  nsTArray<void*> mUserDataQ;
 };
 
 BluetoothDaemonProtocol::BluetoothDaemonProtocol()
@@ -1498,14 +1510,13 @@ BluetoothDaemonProtocol::UnregisterModule(uint8_t aId,
 }
 
 nsresult
-BluetoothDaemonProtocol::Send(DaemonSocketPDU* aPDU,
-                              DaemonSocketResultHandler* aRes)
+BluetoothDaemonProtocol::Send(DaemonSocketPDU* aPDU, void* aUserData)
 {
   MOZ_ASSERT(mConnection);
   MOZ_ASSERT(aPDU);
 
   aPDU->SetConsumer(this);
-  aPDU->SetResultHandler(aRes);
+  aPDU->SetUserData(aUserData);
   aPDU->UpdateHeader();
 
   if (mConnection->GetConnectionStatus() == SOCKET_DISCONNECTED) {
@@ -1521,65 +1532,64 @@ BluetoothDaemonProtocol::Send(DaemonSocketPDU* aPDU,
 void
 BluetoothDaemonProtocol::HandleSetupSvc(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  DaemonSocketResultHandler* aRes)
+  void* aUserData)
 {
-  BluetoothDaemonSetupModule::HandleSvc(aHeader, aPDU, aRes);
+  BluetoothDaemonSetupModule::HandleSvc(aHeader, aPDU, aUserData);
 }
 
 void
 BluetoothDaemonProtocol::HandleCoreSvc(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  DaemonSocketResultHandler* aRes)
+  void* aUserData)
 {
-  BluetoothDaemonCoreModule::HandleSvc(aHeader, aPDU, aRes);
+  BluetoothDaemonCoreModule::HandleSvc(aHeader, aPDU, aUserData);
 }
 
 void
 BluetoothDaemonProtocol::HandleSocketSvc(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  DaemonSocketResultHandler* aRes)
+  void* aUserData)
 {
-  BluetoothDaemonSocketModule::HandleSvc(aHeader, aPDU, aRes);
+  BluetoothDaemonSocketModule::HandleSvc(aHeader, aPDU, aUserData);
 }
 
 void
 BluetoothDaemonProtocol::HandleHandsfreeSvc(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  DaemonSocketResultHandler* aRes)
+  void* aUserData)
 {
-  BluetoothDaemonHandsfreeModule::HandleSvc(aHeader, aPDU, aRes);
+  BluetoothDaemonHandsfreeModule::HandleSvc(aHeader, aPDU, aUserData);
 }
 
 void
 BluetoothDaemonProtocol::HandleA2dpSvc(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  DaemonSocketResultHandler* aRes)
+  void* aUserData)
 {
-  BluetoothDaemonA2dpModule::HandleSvc(aHeader, aPDU, aRes);
+  BluetoothDaemonA2dpModule::HandleSvc(aHeader, aPDU, aUserData);
 }
 
 void
 BluetoothDaemonProtocol::HandleAvrcpSvc(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  DaemonSocketResultHandler* aRes)
+  void* aUserData)
 {
-  BluetoothDaemonAvrcpModule::HandleSvc(aHeader, aPDU, aRes);
+  BluetoothDaemonAvrcpModule::HandleSvc(aHeader, aPDU, aUserData);
 }
 
 void
 BluetoothDaemonProtocol::HandleGattSvc(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  DaemonSocketResultHandler* aRes)
+  void* aUserData)
 {
-  BluetoothDaemonGattModule::HandleSvc(aHeader, aPDU, aRes);
+  BluetoothDaemonGattModule::HandleSvc(aHeader, aPDU, aUserData);
 }
 
 void
 BluetoothDaemonProtocol::Handle(DaemonSocketPDU& aPDU)
 {
   static void (BluetoothDaemonProtocol::* const HandleSvc[])(
-    const DaemonSocketPDUHeader&, DaemonSocketPDU&,
-    DaemonSocketResultHandler*) = {
+    const DaemonSocketPDUHeader&, DaemonSocketPDU&, void*) = {
     [0x00] = &BluetoothDaemonProtocol::HandleSetupSvc,
     [0x01] = &BluetoothDaemonProtocol::HandleCoreSvc,
     [0x02] = &BluetoothDaemonProtocol::HandleSocketSvc,
@@ -1604,22 +1614,19 @@ BluetoothDaemonProtocol::Handle(DaemonSocketPDU& aPDU)
     return;
   }
 
-  nsRefPtr<DaemonSocketResultHandler> res = FetchResultHandler(header);
-
-  (this->*(HandleSvc[header.mService]))(header, aPDU, res);
+  (this->*(HandleSvc[header.mService]))(header, aPDU, FetchUserData(header));
 }
 
 void
-BluetoothDaemonProtocol::StoreResultHandler(const DaemonSocketPDU& aPDU)
+BluetoothDaemonProtocol::StoreUserData(const DaemonSocketPDU& aPDU)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  mResQ.AppendElement(aPDU.GetResultHandler());
+  mUserDataQ.AppendElement(aPDU.GetUserData());
 }
 
-already_AddRefed<DaemonSocketResultHandler>
-BluetoothDaemonProtocol::FetchResultHandler(
-  const DaemonSocketPDUHeader& aHeader)
+void*
+BluetoothDaemonProtocol::FetchUserData(const DaemonSocketPDUHeader& aHeader)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -1627,10 +1634,10 @@ BluetoothDaemonProtocol::FetchResultHandler(
     return nullptr; // Ignore notifications
   }
 
-  nsRefPtr<DaemonSocketResultHandler> userData = mResQ.ElementAt(0);
-  mResQ.RemoveElementAt(0);
+  void* userData = mUserDataQ.ElementAt(0);
+  mUserDataQ.RemoveElementAt(0);
 
-  return userData.forget();
+  return userData;
 }
 
 //
