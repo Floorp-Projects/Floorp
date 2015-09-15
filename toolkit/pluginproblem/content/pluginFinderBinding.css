@@ -14,5 +14,5 @@ applet:-moz-type-unsupported-platform,
 object:-moz-type-unsupported-platform {
     display: inline-block;
     overflow: hidden;
-    -moz-binding: url('chrome://mozapps/content/plugins/pluginProblem.xml#pluginProblem') !important;
+    -moz-binding: url('chrome://pluginproblem/content/pluginProblem.xml#pluginProblem') !important;
 }
