@@ -12,12 +12,11 @@
 #include <stdint.h>
 #include <inttypes.h>  // For PRId64
 
-#define OPUS_DEBUG(arg, ...) MOZ_LOG(gMediaDecoderLog, mozilla::LogLevel::Debug, \
+extern PRLogModuleInfo* GetPDMLog();
+#define OPUS_DEBUG(arg, ...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, \
     ("OpusDataDecoder(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
-
-extern PRLogModuleInfo* gMediaDecoderLog;
 
 OpusDataDecoder::OpusDataDecoder(const AudioInfo& aConfig,
                                  FlushableTaskQueue* aTaskQueue,
