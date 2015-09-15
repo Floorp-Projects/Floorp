@@ -715,6 +715,9 @@ auto GeckoJavaSampler::GetFrameNameJavaProfilingWrapper(int32_t a0, int32_t a1, 
     return mozilla::jni::Method<GetFrameNameJavaProfilingWrapper_t>::Call(nullptr, nullptr, a0, a1, a2);
 }
 
+constexpr char GeckoJavaSampler::GetProfilerTime_t::name[];
+constexpr char GeckoJavaSampler::GetProfilerTime_t::signature[];
+
 constexpr char GeckoJavaSampler::GetSampleTimeJavaProfiling_t::name[];
 constexpr char GeckoJavaSampler::GetSampleTimeJavaProfiling_t::signature[];
 
