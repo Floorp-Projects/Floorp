@@ -127,7 +127,7 @@ extensions.registerAPI((extension, context) => {
           }
         };
 
-        WindowListManager.addOpenListener(windowListener, false);
+        WindowListManager.addOpenListener(windowListener);
         AllWindowEvents.addListener("TabOpen", listener);
         return () => {
           WindowListManager.removeOpenListener(windowListener);
@@ -195,7 +195,9 @@ extensions.registerAPI((extension, context) => {
             let tab = gBrowser.getTabForBrowser(browser);
             let tabId = TabManager.getId(tab);
             let [needed, changeInfo] = sanitize(extension, {status});
-            fire(tabId, changeInfo, TabManager.convert(extension, tab));
+            if (needed) {
+              fire(tabId, changeInfo, TabManager.convert(extension, tab));
+            }
           },
 
           onLocationChange(browser, webProgress, request, locationURI, flags) {

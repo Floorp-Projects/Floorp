@@ -424,7 +424,7 @@ global.WindowListManager = {
     }
   },
 
-  addOpenListener(listener, fireOnExisting = true) {
+  addOpenListener(listener) {
     if (this._openListeners.length == 0 && this._closeListeners.length == 0) {
       Services.ww.registerNotification(this);
     }
@@ -433,8 +433,6 @@ global.WindowListManager = {
     for (let window of this.browserWindows(true)) {
       if (window.document.readyState != "complete") {
         window.addEventListener("load", this);
-      } else if (fireOnExisting) {
-        listener(window);
       }
     }
   },
@@ -462,7 +460,7 @@ global.WindowListManager = {
 
   handleEvent(event) {
     let window = event.target.defaultView;
-    window.removeEventListener("load", this.loadListener);
+    window.removeEventListener("load", this);
     if (window.document.documentElement.getAttribute("windowtype") != "navigator:browser") {
       return;
     }
@@ -504,7 +502,9 @@ global.AllWindowEvents = {
       return WindowListManager.addCloseListener(listener);
     }
 
-    let needOpenListener = this._listeners.size == 0;
+    if (this._listeners.size == 0) {
+      WindowListManager.addOpenListener(this.openListener);
+    }
 
     if (!this._listeners.has(type)) {
       this._listeners.set(type, new Set());
@@ -512,10 +512,7 @@ global.AllWindowEvents = {
     let list = this._listeners.get(type);
     list.add(listener);
 
-    if (needOpenListener) {
-      WindowListManager.addOpenListener(this.openListener, false);
-    }
-
+    // Register listener on all existing windows.
     for (let window of WindowListManager.browserWindows()) {
       this.addWindowListener(window, type, listener);
     }
@@ -537,6 +534,7 @@ global.AllWindowEvents = {
       }
     }
 
+    // Unregister listener from all existing windows.
     for (let window of WindowListManager.browserWindows()) {
       if (type == "progress") {
         window.gBrowser.removeTabsProgressListener(listener);
