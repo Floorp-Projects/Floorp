@@ -241,6 +241,12 @@ tests:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_gaia_unit.yml
+      tasks/builds/mulet_linux.yml:
+        task: tasks/tests/mulet_gaia_unit.yml
+  gaia-unit-oop:
+    allowed_build_tasks:
+      tasks/builds/mulet_linux.yml:
+        task: tasks/tests/mulet_gaia_unit_oop.yml
   marionette:
     allowed_build_tasks:
       tasks/builds/b2g_emulator_x86_kk_opt.yml:
