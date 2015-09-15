@@ -252,5 +252,20 @@ promise_test(function(t) {
 }, 'isRunningOnCompositor remains true in requestAnimationFrameCallback for ' +
    'overflow animation');
 
+promise_test(function(t) {
+  var div = addDiv(t, { style: 'transition: opacity 100s; opacity: 1' });
+
+  getComputedStyle(div).opacity;
+
+  div.style.opacity = 0;
+  var animation = div.getAnimations()[0];
+
+  return animation.ready.then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+       'Transition reports that it is running on the compositor'
+       + ' during playback for opacity transition');
+  }));
+}, 'isRunningOnCompositor for transitions');
+
 </script>
 </body>
