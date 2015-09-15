@@ -73,6 +73,12 @@ GetErrorMessage(void* aUserRef, const unsigned aErrorNumber)
   return &ErrorFormatString[aErrorNumber];
 }
 
+uint16_t
+GetErrorArgCount(const ErrNum aErrorNumber)
+{
+  return GetErrorMessage(nullptr, aErrorNumber)->argCount;
+}
+
 bool
 ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, ...)
 {
@@ -171,7 +177,7 @@ ErrorResult::ThrowErrorWithMessage(va_list ap, const dom::ErrNum errorNumber,
   mResult = errorType;
   Message* message = new Message();
   message->mErrorNumber = errorNumber;
-  uint16_t argCount = dom::GetErrorMessage(nullptr, errorNumber)->argCount;
+  uint16_t argCount = dom::GetErrorArgCount(errorNumber);
   while (argCount--) {
     message->mArgs.AppendElement(*va_arg(ap, const nsAString*));
   }
