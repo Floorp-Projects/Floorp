@@ -467,6 +467,9 @@ typedef int64_t (*Prototype_General8)(int64_t arg0, int64_t arg1, int64_t arg2, 
 
 typedef int64_t (*Prototype_Int_Double)(double arg0);
 typedef int64_t (*Prototype_Int_IntDouble)(int32_t arg0, double arg1);
+typedef int64_t (*Prototype_Int_DoubleIntInt)(double arg0, uint64_t arg1, uint64_t arg2);
+typedef int64_t (*Prototype_Int_IntDoubleIntInt)(uint64_t arg0, double arg1,
+                                                 uint64_t arg2, uint64_t arg3);
 
 typedef float (*Prototype_Float32_Float32)(float arg0);
 
@@ -588,6 +591,18 @@ Simulator::VisitCallRedirection(const Instruction* instr)
     }
     case js::jit::Args_Int_IntDouble: {
       int64_t ret = reinterpret_cast<Prototype_Int_IntDouble>(nativeFn)(x0, d0);
+      setGPR64Result(ret);
+      break;
+    }
+
+    case js::jit::Args_Int_IntDoubleIntInt: {
+      int64_t ret = reinterpret_cast<Prototype_Int_IntDoubleIntInt>(nativeFn)(x0, d0, x1, x2);
+      setGPR64Result(ret);
+      break;
+    }
+
+    case js::jit::Args_Int_DoubleIntInt: {
+      int64_t ret = reinterpret_cast<Prototype_Int_DoubleIntInt>(nativeFn)(d0, x0, x1);
       setGPR64Result(ret);
       break;
     }

@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsContentSecurityManager.h"
 #include "nsSecCheckWrapChannel.h"
 #include "nsHttpChannel.h"
 #include "nsCOMPtr.h"
@@ -28,6 +29,8 @@ NS_INTERFACE_MAP_BEGIN(nsSecCheckWrapChannelBase)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
   NS_INTERFACE_MAP_ENTRY(nsIChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIUploadChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIUploadChannel2)
   NS_INTERFACE_MAP_ENTRY(nsISecCheckWrapChannel)
 NS_INTERFACE_MAP_END
 
@@ -40,6 +43,8 @@ nsSecCheckWrapChannelBase::nsSecCheckWrapChannelBase(nsIChannel* aChannel)
  , mHttpChannel(do_QueryInterface(aChannel))
  , mHttpChannelInternal(do_QueryInterface(aChannel))
  , mRequest(do_QueryInterface(aChannel))
+ , mUploadChannel(do_QueryInterface(aChannel))
+ , mUploadChannel2(do_QueryInterface(aChannel))
 {
   MOZ_ASSERT(mChannel, "can not create a channel wrapper without a channel");
 }
@@ -101,4 +106,22 @@ nsSecCheckWrapChannel::SetLoadInfo(nsILoadInfo* aLoadInfo)
   CHANNELWRAPPERLOG(("nsSecCheckWrapChannel::SetLoadInfo() [%p]", this));
   mLoadInfo = aLoadInfo;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSecCheckWrapChannel::AsyncOpen2(nsIStreamListener *aListener)
+{
+  nsCOMPtr<nsIStreamListener> listener = aListener;
+  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return AsyncOpen(listener, nullptr);
+}
+
+NS_IMETHODIMP
+nsSecCheckWrapChannel::Open2(nsIInputStream** aStream)
+{
+  nsCOMPtr<nsIStreamListener> listener;
+  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return Open(aStream);
 }

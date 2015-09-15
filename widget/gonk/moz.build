@@ -77,9 +77,6 @@ SOURCES += [
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-# XXX: We should fix these warnings.
-ALLOW_COMPILER_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [

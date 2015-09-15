@@ -337,6 +337,7 @@ public class GeckoAccessibility {
                                 info.addAction(AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT);
                                 info.setMovementGranularities(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER |
                                                               AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD |
+                                                              AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE |
                                                               AccessibilityNodeInfo.MOVEMENT_GRANULARITY_PARAGRAPH);
                                 break;
                             }
@@ -390,7 +391,12 @@ public class GeckoAccessibility {
                             } else if (action == AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY &&
                                        virtualViewId == VIRTUAL_CURSOR_POSITION) {
                                 // XXX: Self brailling gives this action with a bogus argument instead of an actual click action;
-                                // the argument value is the BRAILLE_CLICK_BASE_INDEX - the index of the routing key that was hit
+                                // the argument value is the BRAILLE_CLICK_BASE_INDEX - the index of the routing key that was hit.
+                                // Other negative values are used by ChromeVox, but we don't support them.
+                                // FAKE_GRANULARITY_READ_CURRENT = -1
+                                // FAKE_GRANULARITY_READ_TITLE = -2
+                                // FAKE_GRANULARITY_STOP_SPEECH = -3
+                                // FAKE_GRANULARITY_CHANGE_SHIFTER = -4
                                 int granularity = arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT);
                                 if (granularity <= BRAILLE_CLICK_BASE_INDEX) {
                                     int keyIndex = BRAILLE_CLICK_BASE_INDEX - granularity;
@@ -402,7 +408,7 @@ public class GeckoAccessibility {
                                     }
                                     GeckoAppShell.
                                         sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:ActivateObject", activationData.toString()));
-                                } else {
+                                } else if (granularity > 0) {
                                     JSONObject movementData = new JSONObject();
                                     try {
                                         movementData.put("direction", "Next");
@@ -417,14 +423,17 @@ public class GeckoAccessibility {
                             } else if (action == AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY &&
                                        virtualViewId == VIRTUAL_CURSOR_POSITION) {
                                 JSONObject movementData = new JSONObject();
+                                int granularity = arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT);
                                 try {
                                     movementData.put("direction", "Previous");
-                                    movementData.put("granularity", arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT));
+                                    movementData.put("granularity", granularity);
                                 } catch (JSONException e) {
                                     return true;
                                 }
-                                GeckoAppShell.
-                                    sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:MoveByGranularity", movementData.toString()));
+                                if (granularity > 0) {
+                                    GeckoAppShell.
+                                      sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:MoveByGranularity", movementData.toString()));
+                                }
                                 return true;
                             }
                             return host.performAccessibilityAction(action, arguments);

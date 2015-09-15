@@ -28,6 +28,23 @@ const BACKOFF_MAX = 8 * 60 * 60 * 1000;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+// Log only if browser.safebrowsing.debug is true
+function log(...stuff) {
+  let logging = null;
+  try {
+    logging = Services.prefs.getBoolPref("browser.safebrowsing.debug");
+  } catch(e) {
+    return;
+  }
+  if (!logging) {
+    return;
+  }
+
+  var d = new Date();
+  let msg = "hashcompleter: " + d.toTimeString() + ": " + stuff.join(" ");
+  dump(msg + "\n");
+}
+
 function HashCompleter() {
   // The current HashCompleterRequest in flight. Once it is started, it is set
   // to null. It may be used by multiple calls to |complete| in succession to
@@ -275,6 +292,7 @@ HashCompleterRequest.prototype = {
     body = PARTIAL_LENGTH + ":" + (PARTIAL_LENGTH * prefixes.length) +
            "\n" + prefixes.join("");
 
+    log('Requesting completions for ' + prefixes.length + ' ' + PARTIAL_LENGTH + '-byte prefixes: ' + body);
     return body;
   },
 
@@ -299,6 +317,7 @@ HashCompleterRequest.prototype = {
       return;
     }
 
+    log('Response: ' + this._response);
     let start = 0;
 
     let length = this._response.length;
@@ -328,6 +347,7 @@ HashCompleterRequest.prototype = {
     let addChunk = parseInt(entries[1]);
     let dataLength = parseInt(entries[2]);
 
+    log('Response includes add chunks for ' + list + ': ' + addChunk);
     if (dataLength % COMPLETE_LENGTH != 0 ||
         dataLength == 0 ||
         dataLength > body.length - (newlineIndex + 1)) {
@@ -414,6 +434,7 @@ HashCompleterRequest.prototype = {
         aStatusCode = Cr.NS_ERROR_ABORT;
       }
     }
+    log('Received a ' + httpStatus + ' status code from the gethash server.');
 
     let success = Components.isSuccessCode(aStatusCode);
     // Notify the RequestBackoff once a response is received.

@@ -25,5 +25,5 @@ object:-moz-handler-vulnerable-no-update {
     display: inline-block;
     overflow: hidden;
     opacity: 1 !important;
-    -moz-binding: url('chrome://mozapps/content/plugins/pluginProblem.xml#pluginProblem') !important;
+    -moz-binding: url('chrome://pluginproblem/content/pluginProblem.xml#pluginProblem') !important;
 }

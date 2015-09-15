@@ -2062,6 +2062,9 @@ typedef double (*Prototype_Double_None)();
 typedef double (*Prototype_Double_Double)(double arg0);
 typedef double (*Prototype_Double_Int)(int32_t arg0);
 typedef int32_t (*Prototype_Int_Double)(double arg0);
+typedef int32_t (*Prototype_Int_DoubleIntInt)(double arg0, int32_t arg1, int32_t arg2);
+typedef int32_t (*Prototype_Int_IntDoubleIntInt)(int32_t arg0, double arg1, int32_t arg2,
+                                                 int32_t arg3);
 typedef float (*Prototype_Float32_Float32)(float arg0);
 
 typedef double (*Prototype_DoubleInt)(double arg0, int32_t arg1);
@@ -2289,6 +2292,36 @@ Simulator::softwareInterrupt(SimInstruction* instr)
                 dval0 = get_double_from_register_pair(2);
             Prototype_Int_IntDouble target = reinterpret_cast<Prototype_Int_IntDouble>(external);
             int32_t result = target(ival, dval0);
+            scratchVolatileRegisters(/* scratchFloat = true */);
+            set_register(r0, result);
+            break;
+          }
+          case Args_Int_DoubleIntInt: {
+            double dval;
+            int32_t result;
+            Prototype_Int_DoubleIntInt target = reinterpret_cast<Prototype_Int_DoubleIntInt>(external);
+            if (UseHardFpABI()) {
+                dval = get_double_from_d_register(0);
+                result = target(dval, arg0, arg1);
+            } else {
+                dval = get_double_from_register_pair(0);
+                result = target(dval, arg2, arg3);
+            }
+            scratchVolatileRegisters(/* scratchFloat = true */);
+            set_register(r0, result);
+            break;
+          }
+          case Args_Int_IntDoubleIntInt: {
+            double dval;
+            int32_t result;
+            Prototype_Int_IntDoubleIntInt target = reinterpret_cast<Prototype_Int_IntDoubleIntInt>(external);
+            if (UseHardFpABI()) {
+                dval = get_double_from_d_register(0);
+                result = target(arg0, dval, arg1, arg2);
+            } else {
+                dval = get_double_from_register_pair(2);
+                result = target(arg0, dval, arg4, arg5);
+            }
             scratchVolatileRegisters(/* scratchFloat = true */);
             set_register(r0, result);
             break;

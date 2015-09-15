@@ -67,8 +67,11 @@ class ProfileEntry
         // into baseline.
         OSR = 0x08,
 
+        // Union of all flags.
+        ALL = IS_CPP_ENTRY|FRAME_LABEL_COPY|BEGIN_PSEUDO_JS|OSR,
+
         // Mask for removing all flags except the category information.
-        CATEGORY_MASK = ~IS_CPP_ENTRY & ~FRAME_LABEL_COPY & ~BEGIN_PSEUDO_JS & ~OSR
+        CATEGORY_MASK = ~ALL
     };
 
     // Keep these in sync with browser/devtools/performance/modules/global.js
@@ -86,6 +89,9 @@ class ProfileEntry
         FIRST    = OTHER,
         LAST     = EVENTS
     };
+
+    static_assert((static_cast<int>(Category::FIRST) & Flags::ALL) == 0,
+                  "The category bitflags should not intersect with the other flags!");
 
     // All of these methods are marked with the 'volatile' keyword because SPS's
     // representation of the stack is stored such that all ProfileEntry

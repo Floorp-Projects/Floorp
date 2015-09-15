@@ -858,11 +858,12 @@ var Input = {
   },
 
   moveByGranularity: function moveByGranularity(aDetails) {
-    const MOVEMENT_GRANULARITY_PARAGRAPH = 8;
+    const GRANULARITY_PARAGRAPH = 8;
+    const GRANULARITY_LINE = 4;
 
     if (!this.editState.editing) {
-      if (aDetails.granularity === MOVEMENT_GRANULARITY_PARAGRAPH) {
-        this.moveCursor('move' + aDetails.direction, 'Paragraph', 'gesture');
+      if (aDetails.granularity & (GRANULARITY_PARAGRAPH | GRANULARITY_LINE)) {
+        this.moveCursor('move' + aDetails.direction, 'Simple', 'gesture');
         return;
       }
     } else {
