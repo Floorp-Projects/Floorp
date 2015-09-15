@@ -33,6 +33,7 @@ makeShaderVS LayerQuadVS
 makeShaderPS SolidColorShader
 makeShaderPS RGBShader
 makeShaderPS RGBAShader
+makeShaderPS RGBAShaderPremul
 makeShaderPS ComponentAlphaShader
 makeShaderPS YCbCrShader
 makeShaderVS LayerQuadMaskVS
@@ -40,7 +41,9 @@ makeShaderVS LayerQuadMask3DVS
 makeShaderPS SolidColorShaderMask
 makeShaderPS RGBShaderMask
 makeShaderPS RGBAShaderMask
+makeShaderPS RGBAShaderMaskPremul
 makeShaderPS RGBAShaderMask3D
+makeShaderPS RGBAShaderMask3DPremul
 makeShaderPS YCbCrShaderMask
 makeShaderPS ComponentAlphaShaderMask
 
