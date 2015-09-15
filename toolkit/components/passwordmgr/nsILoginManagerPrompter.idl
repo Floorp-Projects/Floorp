@@ -41,8 +41,8 @@ interface nsILoginManagerPrompter : nsISupports {
   void promptToSavePassword(in nsILoginInfo aLogin);
 
   /**
-   * Ask the user if they want to change a login's password. If the
-   * user consents, modifyLogin() will be called.
+   * Ask the user if they want to change a login's password or username.
+   * If the user consents, modifyLogin() will be called.
    *
    * @param aOldLogin
    *        The existing login (with the old password).

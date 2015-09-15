@@ -246,11 +246,12 @@ function checkTest() {
         break;
 
       case 13:
-        // Check for no notification popup when existing pw-only login matches form.
+        // Check for update popup when existing pw-only login matches form.
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
-        popup = getPopup(popupNotifications, "password-save");
-        ok(!popup, "checking for no notification popup");
+        popup = getPopup(popupNotifications, "password-change");
+        ok(popup, "checking for notification popup");
+        popup.remove();
         pwmgr.removeLogin(login2);
 
         // Add login for the next test
