@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const NAME = "@@service/waitUntil";
-
 /**
  * A middleware which acts like a service, because it is stateful
  * and "long-running" in the background. It provides the ability
@@ -13,7 +11,7 @@ const NAME = "@@service/waitUntil";
  * it as a thunk that blocks until the condition is met. Example:
  *
  * ```js
- * const services = { WAIT_UNTIL: require('waitUntilService').name };
+ * const services = { WAIT_UNTIL: require('wait-service').NAME };
  *
  * { type: services.WAIT_UNTIL,
  *   predicate: action => action.type === constants.ADD_ITEM,
@@ -25,6 +23,8 @@ const NAME = "@@service/waitUntil";
  * }
  * ```
  */
+const NAME = exports.NAME = "@@service/waitUntil";
+
 function waitUntilService({ dispatch, getState }) {
   let pending = [];
 
@@ -62,8 +62,4 @@ function waitUntilService({ dispatch, getState }) {
     }
   }
 }
-
-module.exports = {
-  service: waitUntilService,
-  name: NAME
-};
+exports.waitUntilService = waitUntilService;

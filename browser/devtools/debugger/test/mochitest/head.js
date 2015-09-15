@@ -1192,10 +1192,10 @@ function source(sourceClient) {
   return rdpInvoke(sourceClient, sourceClient.source);
 }
 
-function afterDispatch(dispatcher, type) {
+function afterDispatch(store, type) {
   info("Waiting on dispatch: " + type);
   return new Promise(resolve => {
-    dispatcher.dispatch({
+    store.dispatch({
       // Normally we would use `services.WAIT_UNTIL`, but use the
       // internal name here so tests aren't forced to always pass it
       // in

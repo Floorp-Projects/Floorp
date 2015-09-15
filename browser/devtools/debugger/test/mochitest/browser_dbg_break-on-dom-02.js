@@ -13,7 +13,7 @@ function test() {
     let gDebugger = aPanel.panelWin;
     let gView = gDebugger.DebuggerView;
     let gEvents = gView.EventListeners;
-    let gDispatcher = gDebugger.dispatcher;
+    let gStore = gDebugger.store;
     let constants = gDebugger.require('./content/constants');
 
     Task.spawn(function*() {
@@ -26,7 +26,7 @@ function test() {
 
     function testFetchOnFocus() {
       return Task.spawn(function*() {
-        let fetched = afterDispatch(gDispatcher, constants.FETCH_EVENT_LISTENERS);
+        let fetched = afterDispatch(gStore, constants.FETCH_EVENT_LISTENERS);
 
         gView.toggleInstrumentsPane({ visible: true, animated: false }, 1);
         is(gView.instrumentsPaneHidden, false,
@@ -45,7 +45,7 @@ function test() {
 
     function testFetchOnReloadWhenFocused() {
       return Task.spawn(function*() {
-        let fetched = afterDispatch(gDispatcher, constants.FETCH_EVENT_LISTENERS);
+        let fetched = afterDispatch(gStore, constants.FETCH_EVENT_LISTENERS);
 
         let reloading = once(gDebugger.gTarget, "will-navigate");
         let reloaded = waitForSourcesAfterReload();
@@ -76,7 +76,7 @@ function test() {
 
     function testFetchOnReloadWhenNotFocused() {
       return Task.spawn(function*() {
-        gDispatcher.dispatch({
+        gStore.dispatch({
           type: gDebugger.services.WAIT_UNTIL,
           predicate: action => {
             return (action.type === constants.FETCH_EVENT_LISTENERS ||

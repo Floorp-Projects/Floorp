@@ -15,14 +15,14 @@ function test() {
     let gView = gDebugger.DebuggerView;
     let gController = gDebugger.DebuggerController
     let gEvents = gView.EventListeners;
-    let gDispatcher = gDebugger.dispatcher;
-    let getState = gDispatcher.getState;
+    let gStore = gDebugger.store;
+    let getState = gStore.getState;
     let constants = gDebugger.require('./content/constants');
 
     Task.spawn(function*() {
       yield waitForSourceShown(aPanel, ".html");
 
-      let fetched = afterDispatch(gDispatcher, constants.FETCH_EVENT_LISTENERS);
+      let fetched = afterDispatch(gStore, constants.FETCH_EVENT_LISTENERS);
       gView.toggleInstrumentsPane({ visible: true, animated: false }, 1);
       yield fetched;
 
@@ -35,7 +35,7 @@ function test() {
       testEventGroup("mouseEvents", false);
       testEventArrays("change,click,keydown,keyup", "");
 
-      let updated = afterDispatch(gDispatcher, constants.UPDATE_EVENT_BREAKPOINTS);
+      let updated = afterDispatch(gStore, constants.UPDATE_EVENT_BREAKPOINTS);
       EventUtils.sendMouseEvent({ type: "click" }, getGroupCheckboxNode("interactionEvents"), gDebugger);
       yield updated;
 
@@ -48,7 +48,7 @@ function test() {
       testEventGroup("mouseEvents", false);
       testEventArrays("change,click,keydown,keyup", "change");
 
-      updated = afterDispatch(gDispatcher, constants.UPDATE_EVENT_BREAKPOINTS);
+      updated = afterDispatch(gStore, constants.UPDATE_EVENT_BREAKPOINTS);
       EventUtils.sendMouseEvent({ type: "click" }, getGroupCheckboxNode("interactionEvents"), gDebugger);
       yield updated;
 
@@ -61,7 +61,7 @@ function test() {
       testEventGroup("mouseEvents", false);
       testEventArrays("change,click,keydown,keyup", "");
 
-      updated = afterDispatch(gDispatcher, constants.UPDATE_EVENT_BREAKPOINTS);
+      updated = afterDispatch(gStore, constants.UPDATE_EVENT_BREAKPOINTS);
       EventUtils.sendMouseEvent({ type: "click" }, getGroupCheckboxNode("keyboardEvents"), gDebugger);
       yield updated;
 
@@ -74,7 +74,7 @@ function test() {
       testEventGroup("mouseEvents", false);
       testEventArrays("change,click,keydown,keyup", "keydown,keyup");
 
-      updated = afterDispatch(gDispatcher, constants.UPDATE_EVENT_BREAKPOINTS);
+      updated = afterDispatch(gStore, constants.UPDATE_EVENT_BREAKPOINTS);
       EventUtils.sendMouseEvent({ type: "click" }, getGroupCheckboxNode("keyboardEvents"), gDebugger);
       yield updated;
 

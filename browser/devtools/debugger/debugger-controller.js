@@ -1280,7 +1280,7 @@ SourceScripts.prototype = {
 
     // Make sure the events listeners are up to date.
     if (DebuggerView.instrumentsPaneTab == "events-tab") {
-      dispatcher.dispatch(actions.fetchEventListeners());
+      store.dispatch(actions.fetchEventListeners());
     }
 
     // Signal that a new source has been added.
@@ -2055,6 +2055,7 @@ var Prefs = new ViewHelpers.Prefs("devtools", {
  * Convenient way of emitting events from the panel window.
  */
 EventEmitter.decorate(this);
+EventEmitter.decorate(DebuggerController);
 
 /**
  * Preliminary setup for the DebuggerController object.

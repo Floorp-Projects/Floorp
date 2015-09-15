@@ -18,9 +18,13 @@ EXTRA_JS_MODULES.devtools.debugger.content.views += [
     'content/views/event-listeners-view.js'
 ]
 
-EXTRA_JS_MODULES.devtools.debugger.content.stores += [
-    'content/stores/event-listeners.js',
-    'content/stores/index.js'
+EXTRA_JS_MODULES.devtools.debugger.content.reducers += [
+    'content/reducers/event-listeners.js',
+    'content/reducers/index.js'
+]
+
+EXTRA_JS_MODULES.devtools.debugger.content.actions += [
+    'content/actions/event-listeners.js',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['test/mochitest/browser.ini']
