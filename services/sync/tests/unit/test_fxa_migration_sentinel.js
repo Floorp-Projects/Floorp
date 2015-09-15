@@ -26,7 +26,7 @@ function promiseStopServer(server) {
   });
 }
 
-let numServerRequests = 0;
+var numServerRequests = 0;
 
 // Helpers
 function configureLegacySync() {

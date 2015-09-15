@@ -9,9 +9,9 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-error.html";
 
-let getItemForAttachment;
-let Sources;
-let getItemInvoked = false;
+var getItemForAttachment;
+var Sources;
+var getItemInvoked = false;
 
 add_task(function*() {
   yield loadTab(TEST_URI);

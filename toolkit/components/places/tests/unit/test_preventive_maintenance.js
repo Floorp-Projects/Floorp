@@ -16,18 +16,18 @@ Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
 const FINISHED_MAINTENANCE_NOTIFICATION_TOPIC = "places-maintenance-finished";
 
 // Get services and database connection
-let hs = PlacesUtils.history;
-let bs = PlacesUtils.bookmarks;
-let ts = PlacesUtils.tagging;
-let as = PlacesUtils.annotations;
-let fs = PlacesUtils.favicons;
+var hs = PlacesUtils.history;
+var bs = PlacesUtils.bookmarks;
+var ts = PlacesUtils.tagging;
+var as = PlacesUtils.annotations;
+var fs = PlacesUtils.favicons;
 
-let mDBConn = hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
+var mDBConn = hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
 
 //------------------------------------------------------------------------------
 // Helpers
 
-let defaultBookmarksMaxId = 0;
+var defaultBookmarksMaxId = 0;
 function cleanDatabase() {
   mDBConn.executeSimpleSQL("DELETE FROM moz_places");
   mDBConn.executeSimpleSQL("DELETE FROM moz_historyvisits");
@@ -70,7 +70,7 @@ function addBookmark(aPlaceId, aType, aParent, aKeywordId, aFolderType, aTitle) 
 //------------------------------------------------------------------------------
 // Tests
 
-let tests = [];
+var tests = [];
 
 //------------------------------------------------------------------------------
 

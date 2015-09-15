@@ -20,7 +20,7 @@ Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm", "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageListenerManager");
 
-let ContactService = {
+var ContactService = {
   init: function() {
     if (DEBUG) debug("Init");
     this._requestMessages = {};

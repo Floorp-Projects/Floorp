@@ -12,13 +12,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Execution of common tests
 
-let gUseLegacySaver = true;
+var gUseLegacySaver = true;
 
-let scriptFile = do_get_file("common_test_Download.js");
+var scriptFile = do_get_file("common_test_Download.js");
 Services.scriptloader.loadSubScript(NetUtil.newURI(scriptFile).spec);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Termination
 
-let tailFile = do_get_file("tail.js");
+var tailFile = do_get_file("tail.js");
 Services.scriptloader.loadSubScript(NetUtil.newURI(tailFile).spec);

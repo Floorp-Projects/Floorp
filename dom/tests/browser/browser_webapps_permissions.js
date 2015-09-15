@@ -15,7 +15,7 @@ function log()
   }
 }
 
-let scope = {};
+var scope = {};
 Cu.import("resource://gre/modules/PermissionSettings.jsm", scope);
 
 var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"]

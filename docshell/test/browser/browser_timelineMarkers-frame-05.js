@@ -36,7 +36,7 @@ function resolvePromise(resolver) {
   resolver(23);
 }
 
-let TESTS = [{
+var TESTS = [{
   desc: "Stack trace on sync reflow",
   searchFor: "Reflow",
   setup: function(docShell) {

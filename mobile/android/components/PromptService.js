@@ -552,7 +552,7 @@ InternalPrompt.prototype = {
   }
 };
 
-let PromptUtils = {
+var PromptUtils = {
   getLocaleString: function pu_getLocaleString(aKey, aService) {
     if (aService == "passwdmgr")
       return this.cleanUpLabel(this.passwdBundle.GetStringFromName(aKey));

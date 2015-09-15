@@ -15,7 +15,7 @@ const BASE_URI = "http://mochi.test:8888/browser/browser/devtools/fontinspector/
  * promise
  * @return a promise that resolves when the inspector is ready
  */
-let openInspector = Task.async(function*(cb) {
+var openInspector = Task.async(function*(cb) {
   info("Opening the inspector");
   let target = TargetFactory.forTab(gBrowser.selectedTab);
 
@@ -69,7 +69,7 @@ let openInspector = Task.async(function*(cb) {
  *    fontInspector
  *  }
  */
-let openFontInspectorForURL = Task.async(function* (url) {
+var openFontInspectorForURL = Task.async(function* (url) {
   info("Opening tab " + url);
   yield addTab(url);
 
@@ -107,7 +107,7 @@ let openFontInspectorForURL = Task.async(function* (url) {
 /**
  * Select a node in the inspector given its selector.
  */
-let selectNode = Task.async(function*(selector, inspector, reason="test") {
+var selectNode = Task.async(function*(selector, inspector, reason="test") {
   info("Selecting the node for '" + selector + "'");
   let nodeFront = yield getNodeFront(selector, inspector);
   let updated = inspector.once("inspector-updated");

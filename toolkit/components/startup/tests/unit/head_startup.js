@@ -6,7 +6,7 @@ const XULRUNTIME_CID = Components.ID("7685dac8-3637-4660-a544-928c5ec0e714}");
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let gAppInfo = null;
+var gAppInfo = null;
 
 function createAppInfo(id, name, version, platformVersion) {
   gAppInfo = {

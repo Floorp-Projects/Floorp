@@ -13,7 +13,7 @@ const { DevToolsLoader } = Cu.import("resource://gre/modules/devtools/Loader.jsm
 
 this.EXPORTED_SYMBOLS = ["init"];
 
-let started = false;
+var started = false;
 
 function init(msg) {
   if (started) {

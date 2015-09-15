@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const CHROMEUTILS_URL = "chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js";
-let ChromeUtils = {};
+var ChromeUtils = {};
 
 Services.scriptloader.loadSubScript(CHROMEUTILS_URL, ChromeUtils);
 

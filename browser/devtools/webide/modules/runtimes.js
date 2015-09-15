@@ -84,7 +84,7 @@ const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/
 
 /* SCANNER REGISTRY */
 
-let RuntimeScanners = {
+var RuntimeScanners = {
 
   _enabledCount: 0,
   _scanners: new Set(),
@@ -193,7 +193,7 @@ exports.RuntimeScanners = RuntimeScanners;
 
 /* SCANNERS */
 
-let SimulatorScanner = {
+var SimulatorScanner = {
 
   _runtimes: [],
 
@@ -242,7 +242,7 @@ RuntimeScanners.add(SimulatorScanner);
  * not actually connect (since the |DeprecatedUSBRuntime| assumes a Firefox OS
  * device).
  */
-let DeprecatedAdbScanner = {
+var DeprecatedAdbScanner = {
 
   _runtimes: [],
 
@@ -298,7 +298,7 @@ exports.DeprecatedAdbScanner = DeprecatedAdbScanner;
  * ADB Helper 0.8.0 and later wait until these signals are received before
  * starting ADB polling.  For earlier versions, they have no effect.
  */
-let LazyAdbScanner = {
+var LazyAdbScanner = {
 
   enable() {
     Devices.emit("adb-start-polling");
@@ -321,7 +321,7 @@ let LazyAdbScanner = {
 EventEmitter.decorate(LazyAdbScanner);
 RuntimeScanners.add(LazyAdbScanner);
 
-let WiFiScanner = {
+var WiFiScanner = {
 
   _runtimes: [],
 
@@ -394,7 +394,7 @@ WiFiScanner.init();
 
 exports.WiFiScanner = WiFiScanner;
 
-let StaticScanner = {
+var StaticScanner = {
   enable() {},
   disable() {},
   scan() { return promise.resolve(); },
@@ -414,7 +414,7 @@ RuntimeScanners.add(StaticScanner);
 
 // These type strings are used for logging events to Telemetry.
 // You must update Histograms.json if new types are added.
-let RuntimeTypes = exports.RuntimeTypes = {
+var RuntimeTypes = exports.RuntimeTypes = {
   USB: "USB",
   WIFI: "WIFI",
   SIMULATOR: "SIMULATOR",
@@ -615,7 +615,7 @@ SimulatorRuntime.prototype = {
 // For testing use only
 exports._SimulatorRuntime = SimulatorRuntime;
 
-let gLocalRuntime = {
+var gLocalRuntime = {
   type: RuntimeTypes.LOCAL,
   connect: function(connection) {
     if (!DebuggerServer.initialized) {
@@ -639,7 +639,7 @@ let gLocalRuntime = {
 // For testing use only
 exports._gLocalRuntime = gLocalRuntime;
 
-let gRemoteRuntime = {
+var gRemoteRuntime = {
   type: RuntimeTypes.REMOTE,
   connect: function(connection) {
     let win = Services.wm.getMostRecentWindow("devtools:webide");

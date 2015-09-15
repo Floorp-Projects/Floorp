@@ -40,7 +40,7 @@ function fakeStorageQuota(aArchiveQuota) {
  *                    type: <string>,
  *                    size: <integer> }
  */
-let getArchivedPingsInfo = Task.async(function*() {
+var getArchivedPingsInfo = Task.async(function*() {
   let dirIterator = new OS.File.DirectoryIterator(gPingsArchivePath);
   let subdirs = (yield dirIterator.nextBatch()).filter(e => e.isDir);
   let archivedPings = [];

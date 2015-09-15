@@ -4,8 +4,8 @@
 
 "use strict";
 
-let navbar;
-let skippedItem;
+var navbar;
+var skippedItem;
 
 // Attempting to drag a skipintoolbarset item should work.
 add_task(function() {

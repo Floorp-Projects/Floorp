@@ -12,8 +12,8 @@ testFile.append("DeferredSaveTest");
 
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
-let DSContext = Components.utils.import("resource://gre/modules/DeferredSave.jsm", {});
-let DeferredSave = DSContext.DeferredSave;
+var DSContext = Components.utils.import("resource://gre/modules/DeferredSave.jsm", {});
+var DeferredSave = DSContext.DeferredSave;
 
 // Test wrapper to let us do promise/task based testing of DeferredSave
 function DeferredSaveTester(aDataProvider) {
@@ -454,7 +454,7 @@ add_task(function flush_writing_dirty() {
 // with the error and (b) make sure the provider is only
 // called once in case of error
 const expectedDataError = "Failed to serialize data";
-let badDataError = null;
+var badDataError = null;
 function badDataProvider() {
   let err = new Error(badDataError);
   badDataError = "badDataProvider called twice";

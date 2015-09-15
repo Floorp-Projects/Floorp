@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 
-let debug = Services.prefs.getBoolPref("dom.system_update.debug")
+var debug = Services.prefs.getBoolPref("dom.system_update.debug")
               ? (aMsg) => dump("-*- SystemUpdateManager.js : " + aMsg + "\n")
               : (aMsg) => {};
 

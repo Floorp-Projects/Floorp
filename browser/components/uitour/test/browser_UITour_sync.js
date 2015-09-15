@@ -3,9 +3,9 @@
 
 "use strict";
 
-let gTestTab;
-let gContentAPI;
-let gContentWindow;
+var gTestTab;
+var gContentAPI;
+var gContentWindow;
 
 function test() {
   registerCleanupFunction(function() {
@@ -14,7 +14,7 @@ function test() {
   UITourTest();
 }
 
-let tests = [
+var tests = [
   function test_checkSyncSetup_disabled(done) {
     function callback(result) {
       is(result.setup, false, "Sync shouldn't be setup by default");

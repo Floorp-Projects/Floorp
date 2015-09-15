@@ -4,8 +4,8 @@
 // Tests that the text displayed is the function name, file name and line number
 // if applicable.
 
-let {FlameGraphUtils} = require("devtools/shared/widgets/FlameGraph");
-let {PALLETTE_SIZE} = require("devtools/shared/widgets/FlameGraph");
+var {FlameGraphUtils} = require("devtools/shared/widgets/FlameGraph");
+var {PALLETTE_SIZE} = require("devtools/shared/widgets/FlameGraph");
 
 add_task(function*() {
   yield promiseTab("about:blank");
@@ -45,7 +45,7 @@ function* performTest() {
   }
 }
 
-let TEST_DATA = synthesizeProfileForTest([{
+var TEST_DATA = synthesizeProfileForTest([{
   frames: [{
     location: "A (http://path/to/file.js:10:5)"
   }, {
@@ -54,7 +54,7 @@ let TEST_DATA = synthesizeProfileForTest([{
   time: 50,
 }]);
 
-let EXPECTED_OUTPUT = [{
+var EXPECTED_OUTPUT = [{
   blocks: []
 }, {
   blocks: []

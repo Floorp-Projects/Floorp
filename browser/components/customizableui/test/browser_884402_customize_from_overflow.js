@@ -1,10 +1,10 @@
 "use strict";
 
-let overflowPanel = document.getElementById("widget-overflow");
+var overflowPanel = document.getElementById("widget-overflow");
 
 const isOSX = (Services.appinfo.OS === "Darwin");
 
-let originalWindowWidth;
+var originalWindowWidth;
 registerCleanupFunction(function() {
   overflowPanel.removeAttribute("animate");
   window.resizeTo(originalWindowWidth, window.outerHeight);

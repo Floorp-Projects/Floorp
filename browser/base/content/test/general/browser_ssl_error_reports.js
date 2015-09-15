@@ -1,12 +1,12 @@
 "use strict";
 
-let badChainURL = "https://badchain.include-subdomains.pinning.example.com";
-let noCertURL = "https://fail-handshake.example.com";
-let enabledPref = false;
-let automaticPref = false;
-let urlPref = "security.ssl.errorReporting.url";
-let enforcement_level = 1;
-let ROOT = getRootDirectory(gTestPath);
+var badChainURL = "https://badchain.include-subdomains.pinning.example.com";
+var noCertURL = "https://fail-handshake.example.com";
+var enabledPref = false;
+var automaticPref = false;
+var urlPref = "security.ssl.errorReporting.url";
+var enforcement_level = 1;
+var ROOT = getRootDirectory(gTestPath);
 
 SimpleTest.requestCompleteLog();
 
@@ -99,7 +99,7 @@ add_task(function* test_set_automatic() {
 });
 
 // test that manual report sending (with button clicks) works
-let testSendReportManual = function*(testURL, suffix) {
+var testSendReportManual = function*(testURL, suffix) {
   setup();
   Services.prefs.setBoolPref("security.ssl.errorReporting.enabled", true);
   Services.prefs.setCharPref("security.ssl.errorReporting.url",

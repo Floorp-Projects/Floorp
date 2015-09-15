@@ -699,7 +699,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 // ##########
 // Class: TabItems
 // Singleton for managing <TabItem>s
-let TabItems = {
+var TabItems = {
   minTabWidth: 40,
   tabWidth: 160,
   tabHeight: 120,

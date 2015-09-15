@@ -8,11 +8,11 @@
  */
 
 // Define some shared uris and titles (each page needs its own uri)
-let kURIs = [
+var kURIs = [
   "http://abc/def",
   "javascript:5",
 ];
-let kTitles = [
+var kTitles = [
   "Title with javascript:",
 ];
 
@@ -22,7 +22,7 @@ addPageBook(1, 0, 0, undefined, undefined, undefined, true);
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
-let gTests = [
+var gTests = [
   ["0: Match non-javascript: with plain search",
    "a", [0]],
   ["1: Match non-javascript: with almost javascript:",

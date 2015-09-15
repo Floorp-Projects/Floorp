@@ -67,7 +67,7 @@ function continue_test() {
   });
 }
 
-let gOnSearchComplete = null;
+var gOnSearchComplete = null;
 function waitForSearchComplete(aCallback) {
   info("Waiting for onSearchComplete");
   if (!gOnSearchComplete) {

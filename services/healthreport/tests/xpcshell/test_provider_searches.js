@@ -7,7 +7,7 @@ const {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-let bsp = Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
+var bsp = Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
 
 const DEFAULT_ENGINES = [
   {name: "Amazon.com",    identifier: "amazondotcom"},

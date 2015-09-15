@@ -1,16 +1,16 @@
 
-let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
+var SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
-let baseURL = "https://example.com/browser/browser/base/content/test/social/";
+var baseURL = "https://example.com/browser/browser/base/content/test/social/";
 
-let manifest = { // normal provider
+var manifest = { // normal provider
   name: "provider 1",
   origin: "https://example.com",
   workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
   iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png",
   shareURL: "https://example.com/browser/browser/base/content/test/social/share.html"
 };
-let activationPage = "https://example.com/browser/browser/base/content/test/social/share_activate.html";
+var activationPage = "https://example.com/browser/browser/base/content/test/social/share_activate.html";
 
 function sendActivationEvent(subframe) {
   // hack Social.lastEventReceived so we don't hit the "too many events" check.
@@ -53,7 +53,7 @@ function test() {
   });
 }
 
-let corpus = [
+var corpus = [
   {
     url: baseURL+"opengraph/opengraph.html",
     options: {

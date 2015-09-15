@@ -10,10 +10,10 @@ SpecialPowers.addPermission("sms", true, document);
 const SENDER = "15555215554"; // the emulator's number
 const RECEIVER = "5551117777"; // the destination number
 
-let manager = window.navigator.mozMobileMessage;
-let msgText = "Mozilla Firefox OS!";
-let gotSmsOnsent = false;
-let gotReqOnsuccess = false;
+var manager = window.navigator.mozMobileMessage;
+var msgText = "Mozilla Firefox OS!";
+var gotSmsOnsent = false;
+var gotReqOnsuccess = false;
 
 function verifyInitialState() {
   log("Verifying initial state.");

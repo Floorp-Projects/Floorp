@@ -3,9 +3,9 @@
 
 // Tests if platform frames are removed from the flame graph data.
 
-let {FlameGraphUtils} = require("devtools/shared/widgets/FlameGraph");
-let {PALLETTE_SIZE} = require("devtools/shared/widgets/FlameGraph");
-let {FrameNode} = require("devtools/performance/tree-model");
+var {FlameGraphUtils} = require("devtools/shared/widgets/FlameGraph");
+var {PALLETTE_SIZE} = require("devtools/shared/widgets/FlameGraph");
+var {FrameNode} = require("devtools/performance/tree-model");
 
 add_task(function*() {
   yield promiseTab("about:blank");
@@ -45,7 +45,7 @@ function* performTest() {
   }
 }
 
-let TEST_DATA = synthesizeProfileForTest([{
+var TEST_DATA = synthesizeProfileForTest([{
   frames: [{
     location: "http://A"
   }, {
@@ -61,7 +61,7 @@ let TEST_DATA = synthesizeProfileForTest([{
 }]);
 
 
-let EXPECTED_OUTPUT = [{
+var EXPECTED_OUTPUT = [{
   blocks: []
 }, {
   blocks: []

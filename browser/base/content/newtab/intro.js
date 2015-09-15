@@ -7,7 +7,7 @@
 const PREF_INTRO_SHOWN = "browser.newtabpage.introShown";
 const PREF_NEWTAB_ENHANCED = "browser.newtabpage.enhanced";
 
-let gIntro = {
+var gIntro = {
   _nodeIDSuffixes: [
     "mask",
     "modal",

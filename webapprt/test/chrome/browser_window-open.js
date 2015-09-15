@@ -1,6 +1,6 @@
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://webapprt/modules/WebappRT.jsm");
-let { DOMApplicationRegistry } =
+var { DOMApplicationRegistry } =
   Cu.import("resource://gre/modules/Webapps.jsm", {});
 
 function test() {

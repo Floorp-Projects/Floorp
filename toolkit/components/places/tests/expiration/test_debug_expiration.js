@@ -8,7 +8,7 @@
  * only expire orphan entries, unless -1 is passed as limit.
  */
 
-let gNow = getExpirablePRTime();
+var gNow = getExpirablePRTime();
 
 add_task(function* test_expire_orphans()
 {

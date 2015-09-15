@@ -128,7 +128,7 @@ exports.register = register;
 /**
  * The HighlighterActor class
  */
-let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
+var HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
   typeName: "highlighter",
 
   initialize: function(inspector, autohide) {
@@ -425,7 +425,7 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
   })
 });
 
-let HighlighterFront = protocol.FrontClass(HighlighterActor, {
+var HighlighterFront = protocol.FrontClass(HighlighterActor, {
   // Update the object given a form representation off the wire.
   form: function(json) {
     this.actorID = json.actor;
@@ -438,7 +438,7 @@ let HighlighterFront = protocol.FrontClass(HighlighterActor, {
  * A generic highlighter actor class that instantiate a highlighter given its
  * type name and allows to show/hide it.
  */
-let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClass({
+var CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClass({
   typeName: "customhighlighter",
 
   /**
@@ -546,7 +546,7 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
   })
 });
 
-let CustomHighlighterFront = protocol.FrontClass(CustomHighlighterActor, {});
+var CustomHighlighterFront = protocol.FrontClass(CustomHighlighterActor, {});
 
 /**
  * Every highlighters should insert their markup content into the document's
@@ -1767,7 +1767,7 @@ function CssTransformHighlighter(highlighterEnv) {
     this._buildMarkup.bind(this));
 }
 
-let MARKER_COUNTER = 1;
+var MARKER_COUNTER = 1;
 
 CssTransformHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype, {
   typeName: "CssTransformHighlighter",
@@ -2157,7 +2157,7 @@ exports.RectHighlighter = RectHighlighter;
  * Element geometry properties helper that gives names of position and size
  * properties.
  */
-let GeoProp = {
+var GeoProp = {
   SIDES: ["top", "right", "bottom", "left"],
   SIZES: ["width", "height"],
 
@@ -3082,7 +3082,7 @@ function isNodeValid(node) {
 /**
  * Inject a helper stylesheet in the window.
  */
-let installedHelperSheets = new WeakMap();
+var installedHelperSheets = new WeakMap();
 function installHelperSheet(win, source, type="agent") {
   if (installedHelperSheets.has(win.document)) {
     return;

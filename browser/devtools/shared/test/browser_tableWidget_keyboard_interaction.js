@@ -15,9 +15,9 @@ const TEST_URI = "data:text/xml;charset=UTF-8,<?xml version='1.0'?>" +
 const TEST_OPT = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
 const {TableWidget} = require("devtools/shared/widgets/TableWidget");
-let {Task} = require("resource://gre/modules/Task.jsm");
+var {Task} = require("resource://gre/modules/Task.jsm");
 
-let doc, table;
+var doc, table;
 
 function test() {
   waitForExplicitFinish();
@@ -52,7 +52,7 @@ function endTests() {
   finish();
 }
 
-let startTests = Task.async(function*() {
+var startTests = Task.async(function*() {
   populateTable();
   yield testKeyboardInteraction();
   endTests();
@@ -133,7 +133,7 @@ function click(node, button = 0) {
 /**
  * Tests if pressing navigation keys on the table items does the expected behavior
  */
-let testKeyboardInteraction = Task.async(function*() {
+var testKeyboardInteraction = Task.async(function*() {
   info("Testing keyboard interaction with the table");
   info("clicking on first row");
   let node = table.tbody.firstChild.firstChild.children[1];

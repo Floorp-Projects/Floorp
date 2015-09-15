@@ -7,8 +7,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_watch-expressions.html";
 
-let gTab, gPanel, gDebugger;
-let gL10N, gEditor, gVars, gWatch;
+var gTab, gPanel, gDebugger;
+var gL10N, gEditor, gVars, gWatch;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

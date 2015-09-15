@@ -12,7 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Constants
 
-let dm = Cc["@mozilla.org/download-manager;1"].
+var dm = Cc["@mozilla.org/download-manager;1"].
          getService(Ci.nsIDownloadManager);
 
 const START_TIME = Date.now() * 1000;
@@ -35,7 +35,7 @@ const REMOVED_TOPIC = "download-manager-remove-download";
  *        Indicates if the new download's end time should be in range.
  * @returns the inserted id.
  */
-let id = 1;
+var id = 1;
 function add_download_to_db(aStartTimeInRange, aEndTimeInRange, aState)
 {
   let db = dm.DBConnection;
@@ -144,7 +144,7 @@ function test_observer_dispatched()
   os.removeObserver(observer, REMOVED_TOPIC);
 }
 
-let tests = [
+var tests = [
   test_download_start_in_range,
   test_download_end_in_range,
   test_multiple_downloads_in_range,

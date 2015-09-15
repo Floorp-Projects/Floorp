@@ -19,14 +19,14 @@ const { events: windowEvents } = require("sdk/window/events");
 // it's not observable reliably since it's not always triggered
 // when closing tabs. Implementation can be imrpoved once that
 // event will be necessary.
-let TYPES = ["DOMContentLoaded", "load", "pageshow", "pagehide"];
+var TYPES = ["DOMContentLoaded", "load", "pageshow", "pagehide"];
 
-let insert = observe("document-element-inserted");
-let windowCreate = merge([
+var insert = observe("document-element-inserted");
+var windowCreate = merge([
   observe("content-document-global-created"),
   observe("chrome-document-global-created")
 ]);
-let create = map(windowCreate, function({target, data, type}) {
+var create = map(windowCreate, function({target, data, type}) {
   return { target: target.document, type: type, data: data }
 });
 
@@ -45,13 +45,13 @@ function streamEventsFrom({document}) {
 }
 exports.streamEventsFrom = streamEventsFrom;
 
-let opened = windows(null, { includePrivate: true });
-let state = merge(opened.map(streamEventsFrom));
+var opened = windows(null, { includePrivate: true });
+var state = merge(opened.map(streamEventsFrom));
 
 
-let futureReady = filter(windowEvents, function({type})
+var futureReady = filter(windowEvents, function({type})
                                         type === "DOMContentLoaded");
-let futureWindows = map(futureReady, function({target}) target);
-let futureState = expand(futureWindows, streamEventsFrom);
+var futureWindows = map(futureReady, function({target}) target);
+var futureState = expand(futureWindows, streamEventsFrom);
 
 exports.events = merge([insert, create, state, futureState]);

@@ -1,6 +1,6 @@
 "use strict";
 const TEST_PAGE = "http://mochi.test:8888/browser/browser/base/content/test/general/file_double_close_tab.html";
-let testTab;
+var testTab;
 
 function waitForDialog(callback) {
   function onTabModalDialogLoaded(node) {

@@ -5,15 +5,15 @@
  * Check regression when opening two tabs
  */
 
-let { DebuggerServer } = require("devtools/server/main");
-let { DebuggerClient } = require("devtools/toolkit/client/main");
+var { DebuggerServer } = require("devtools/server/main");
+var { DebuggerClient } = require("devtools/toolkit/client/main");
 
 const TAB_URL_1 = "data:text/html;charset=utf-8,foo";
 const TAB_URL_2 = "data:text/html;charset=utf-8,bar";
 
-let gClient;
-let gTab1, gTab2;
-let gTabActor1, gTabActor2;
+var gClient;
+var gTab1, gTab2;
+var gTabActor1, gTabActor2;
 
 function test() {
   waitForExplicitFinish();

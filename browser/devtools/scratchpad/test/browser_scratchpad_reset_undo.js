@@ -3,28 +3,28 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 /* Bug 684546 */
 
-let tempScope = {};
+var tempScope = {};
 Cu.import("resource://gre/modules/NetUtil.jsm", tempScope);
 Cu.import("resource://gre/modules/FileUtils.jsm", tempScope);
-let NetUtil = tempScope.NetUtil;
-let FileUtils = tempScope.FileUtils;
+var NetUtil = tempScope.NetUtil;
+var FileUtils = tempScope.FileUtils;
 
 // Reference to the Scratchpad chrome window object.
-let gScratchpadWindow;
+var gScratchpadWindow;
 
 // Reference to the Scratchpad object.
-let gScratchpad;
+var gScratchpad;
 
 // Reference to the temporary nsIFile we will work with.
-let gFileA;
-let gFileB;
+var gFileA;
+var gFileB;
 
 // The temporary file content.
-let gFileAContent = "// File A ** Hello World!";
-let gFileBContent = "// File B ** Goodbye All";
+var gFileAContent = "// File A ** Hello World!";
+var gFileBContent = "// File B ** Goodbye All";
 
 // Help track if one or both files are saved
-let gFirstFileSaved = false;
+var gFirstFileSaved = false;
 
 function test()
 {

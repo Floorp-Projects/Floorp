@@ -74,7 +74,7 @@ const CAPTURE_LOGS_START_EVENT = "capture-logs-start";
 const CAPTURE_LOGS_ERROR_EVENT = "capture-logs-error";
 const CAPTURE_LOGS_SUCCESS_EVENT = "capture-logs-success";
 
-let LogShake = {
+var LogShake = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
   /**

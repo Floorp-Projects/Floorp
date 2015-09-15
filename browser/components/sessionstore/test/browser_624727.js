@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let TEST_STATE = { windows: [{ tabs: [{ url: "about:blank" }] }] };
+var TEST_STATE = { windows: [{ tabs: [{ url: "about:blank" }] }] };
 
 add_task(function* () {
   function assertNumberOfTabs(num, msg) {

@@ -11,7 +11,7 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-bug-869003-top-window.html";
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   // This test is slightly more involved: it opens the web console, then the
   // variables view for a given object, it updates a property in the view and
   // checks the result. We can get a timeout with debug builds on slower

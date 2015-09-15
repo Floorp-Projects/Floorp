@@ -29,8 +29,8 @@ const kWhitelist = [
    errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i},
 ];
 
-let moduleLocation = gTestPath.replace(/\/[^\/]*$/i, "/parsingTestHelpers.jsm");
-let {generateURIsFromDirTree} = Cu.import(moduleLocation, {});
+var moduleLocation = gTestPath.replace(/\/[^\/]*$/i, "/parsingTestHelpers.jsm");
+var {generateURIsFromDirTree} = Cu.import(moduleLocation, {});
 
 /**
  * Check if an error should be ignored due to matching one of the whitelist

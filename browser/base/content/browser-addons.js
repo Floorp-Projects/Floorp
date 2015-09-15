@@ -650,7 +650,7 @@ var LightWeightThemeWebInstaller = {
 /*
  * Listen for Lightweight Theme styling changes and update the browser's theme accordingly.
  */
-let LightweightThemeListener = {
+var LightweightThemeListener = {
   _modifiedStyles: [],
 
   init: function () {

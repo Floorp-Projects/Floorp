@@ -106,7 +106,7 @@ const GO_DHCP_SERVER_IP_RANGE = {
   endIp:   "192.168.2.30"
 };
 
-let gDebug = false;
+var gDebug = false;
 
 // Device Capability bitmap
 const DEVICE_CAPAB_SERVICE_DISCOVERY         = 1;

@@ -22,7 +22,7 @@ this.DocShellCapabilities = Object.freeze({
 /**
  * Internal functionality to save and restore the docShell.allow* properties.
  */
-let DocShellCapabilitiesInternal = {
+var DocShellCapabilitiesInternal = {
   // List of docShell capabilities to (re)store. These are automatically
   // retrieved from a given docShell if not already collected before.
   // This is made so they're automatically in sync with all nsIDocShell.allow*

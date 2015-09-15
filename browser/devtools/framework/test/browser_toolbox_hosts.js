@@ -4,9 +4,9 @@
 
 "use strict";
 
-let {Toolbox} = require("devtools/framework/toolbox");
-let {SIDE, BOTTOM, WINDOW} = Toolbox.HostType;
-let toolbox, target;
+var {Toolbox} = require("devtools/framework/toolbox");
+var {SIDE, BOTTOM, WINDOW} = Toolbox.HostType;
+var toolbox, target;
 
 const URL = "data:text/html;charset=utf8,test for opening toolbox in different hosts";
 

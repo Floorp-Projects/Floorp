@@ -4,15 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let gTabRestrictChar = "%";
+var gTabRestrictChar = "%";
 prefs.setCharPref("browser.urlbar.restrict.openpage", gTabRestrictChar);
 do_register_cleanup(() => {
   prefs.clearUserPref("browser.urlbar.restrict.openpage");
 });
 
-let kSearchParam = "enable-actions";
+var kSearchParam = "enable-actions";
 
-let kURIs = [
+var kURIs = [
   "http://abc.com/",
   "moz-action:switchtab,http://abc.com/",
   "http://xyz.net/",
@@ -23,7 +23,7 @@ let kURIs = [
   "moz-action:switchtab,data:text/html,test"
 ];
 
-let kTitles = [
+var kTitles = [
   "ABC rocks",
   "xyz.net - we're better than ABC",
   "about:mozilla",
@@ -43,7 +43,7 @@ gPages[5] = [5, 2];
 addOpenPages(6, 1);
 gPages[7] = [7, 3];
 
-let gTests = [
+var gTests = [
   ["0: single result, that is also a tab match",
    "abc.com", [1]],
   ["1: two results, one tab match",

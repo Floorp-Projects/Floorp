@@ -4,7 +4,7 @@
 
 var testnum = 0;
 
-let iter;
+var iter;
 
 function run_test()
 {

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let provider;
+var provider;
 
 function test() {
   waitForExplicitFinish();
@@ -27,7 +27,7 @@ function test() {
   });
 }
 
-let tests = {
+var tests = {
   testProfile: function(next) {
     let expect = {
       portrait: "https://example.com/portrait.jpg",

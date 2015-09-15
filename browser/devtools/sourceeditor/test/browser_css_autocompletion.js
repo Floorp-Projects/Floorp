@@ -70,12 +70,12 @@ const TEST_URI = "data:text/html;charset=UTF-8," + encodeURIComponent(
    " </html>"
   ].join("\n"));
 
-let doc = null;
-let index = 0;
-let completer = null;
-let progress;
-let progressDiv;
-let inspector;
+var doc = null;
+var index = 0;
+var completer = null;
+var progress;
+var progressDiv;
+var inspector;
 
 function test() {
   waitForExplicitFinish();

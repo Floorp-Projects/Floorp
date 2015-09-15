@@ -116,7 +116,7 @@ add_task(function test() {
     "The 'A > B > C > D > E > F > G' node has the correct number of youngestFrameSamples.");
 });
 
-let gThread = synthesizeProfileForTest([{
+var gThread = synthesizeProfileForTest([{
   time: 5,
   frames: [
     { location: "(root)" },

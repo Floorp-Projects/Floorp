@@ -19,7 +19,7 @@ const HTTP_PATH = "http://example.com";
 const HTTP_ENDPOINT = "/browser/browser/base/content/test/general/browser_fxa_oauth.html";
 const HTTP_ENDPOINT_WITH_KEYS = "/browser/browser/base/content/test/general/browser_fxa_oauth_with_keys.html";
 
-let gTests = [
+var gTests = [
   {
     desc: "FxA OAuth - should open a new tab, complete OAuth flow",
     run: function () {

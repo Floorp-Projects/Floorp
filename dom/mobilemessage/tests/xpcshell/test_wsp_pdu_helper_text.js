@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let WSP = {};
+var WSP = {};
 subscriptLoader.loadSubScript("resource://gre/modules/WspPduHelper.jsm", WSP);
 WSP.debug = do_print;
 
@@ -81,7 +81,7 @@ add_test(function test_NullTerminatedTexts_encode() {
 // Test target: Token
 //
 
-let TOKEN_SEPS = "()<>@,;:\\\"/[]?={} \t";
+var TOKEN_SEPS = "()<>@,;:\\\"/[]?={} \t";
 
 //// Token.decode ////
 

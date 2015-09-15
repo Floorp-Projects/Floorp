@@ -121,7 +121,7 @@ function populateReportList() {
   }
 }
 
-let clearReports = Task.async(function*() {
+var clearReports = Task.async(function*() {
   let bundle = Services.strings.createBundle("chrome://global/locale/crashes.properties");
 
   if (!Services.

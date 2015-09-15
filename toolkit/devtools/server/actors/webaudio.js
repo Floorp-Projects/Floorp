@@ -46,7 +46,7 @@ const NODE_ROUTING_METHODS = [
  * Audio Context graph.
  */
 types.addActorType("audionode");
-let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
+var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
   typeName: "audionode",
 
   /**
@@ -456,7 +456,7 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
 /**
  * The corresponding Front object for the AudioNodeActor.
  */
-let AudioNodeFront = protocol.FrontClass(AudioNodeActor, {
+var AudioNodeFront = protocol.FrontClass(AudioNodeActor, {
   initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
     // if we were manually passed a form, this was created manually and
@@ -472,7 +472,7 @@ let AudioNodeFront = protocol.FrontClass(AudioNodeActor, {
  * high-level methods. After instantiating this actor, you'll need to set it
  * up by calling setup().
  */
-let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
+var WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
   typeName: "webaudio",
   initialize: function(conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
@@ -860,7 +860,7 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
 /**
  * The corresponding Front object for the WebAudioActor.
  */
-let WebAudioFront = exports.WebAudioFront = protocol.FrontClass(WebAudioActor, {
+var WebAudioFront = exports.WebAudioFront = protocol.FrontClass(WebAudioActor, {
   initialize: function(client, { webaudioActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: webaudioActor });
     this.manage(this);

@@ -10,9 +10,9 @@
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: Assert is null");
 
 
-let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
+var SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
-let tabsToRemove = [];
+var tabsToRemove = [];
 
 
 function removeAllProviders(callback) {
@@ -163,8 +163,8 @@ function activateOneProvider(manifest, finishActivation, aCallback) {
   });
 }
 
-let gTestDomains = ["https://example.com", "https://test1.example.com", "https://test2.example.com"];
-let gProviders = [
+var gTestDomains = ["https://example.com", "https://test1.example.com", "https://test2.example.com"];
+var gProviders = [
   {
     name: "provider 1",
     origin: "https://example.com",

@@ -24,7 +24,7 @@ Cu.import("resource://gre/modules/Services.jsm");
  * This object handles channel registration, origin validation and message multiplexing.
  */
 
-let WebChannelBroker = Object.create({
+var WebChannelBroker = Object.create({
   /**
    * Register a new channel that callbacks messages
    * based on proper origin and channel name

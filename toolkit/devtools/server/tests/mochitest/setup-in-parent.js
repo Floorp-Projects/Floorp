@@ -1,5 +1,5 @@
-let {Ci} = require("chrome");
-let Services = require("Services");
+var {Ci} = require("chrome");
+var Services = require("Services");
 
 exports.setupParent = function ({mm, prefix}) {
   let args = [

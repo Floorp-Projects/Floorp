@@ -5,7 +5,7 @@
  * Test basic functionality of PerformanceFront without a mock Timeline actor.
  */
 
-let WAIT_TIME = 100;
+var WAIT_TIME = 100;
 
 const { TargetFactory } = require("devtools/framework/target");
 const { LegacyPerformanceFront } = require("devtools/toolkit/performance/legacy/front");

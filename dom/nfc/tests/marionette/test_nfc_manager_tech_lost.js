@@ -26,7 +26,7 @@ function testTechLost() {
   toggleNFC(true).then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0));
 }
 
-let tests = [
+var tests = [
   testTechLost
 ];
 

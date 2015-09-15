@@ -18,9 +18,9 @@ XPCOMUtils.defineLazyServiceGetter(this,
                                    "@mozilla.org/serviceworkers/manager;1",
                                    "nsIServiceWorkerManager");
 
-let processType = Cc["@mozilla.org/xre/app-info;1"]
+var processType = Cc["@mozilla.org/xre/app-info;1"]
                     .getService(Ci.nsIXULRuntime).processType;
-let isParent = processType === Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+var isParent = processType === Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 
 Services.cpmm.addMessageListener("push", function (aMessage) {
   swm.sendPushEvent(aMessage.data.originAttributes,

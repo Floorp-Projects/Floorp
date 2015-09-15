@@ -23,7 +23,7 @@ Object.defineProperty(this, "WebConsoleUtils", {
 });
 
 const STRINGS_URI = "chrome://global/locale/security/security.properties";
-let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
+var l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 
 this.InsecurePasswordUtils = {
 

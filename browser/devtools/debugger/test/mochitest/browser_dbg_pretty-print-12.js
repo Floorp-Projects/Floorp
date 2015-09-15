@@ -8,8 +8,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_blackboxing.html";
 
-let gTab, gPanel, gDebugger;
-let gEditor, gSources;
+var gTab, gPanel, gDebugger;
+var gEditor, gSources;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

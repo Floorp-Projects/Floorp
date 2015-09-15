@@ -386,7 +386,7 @@ Preferences.prototype = Preferences;
  * in this object by their complete pref name, not just their name relative to
  * the root branch of the Preferences object with which they were created.
  */
-let observers = [];
+var observers = [];
 
 function PrefObserver(prefName, callback, thisObject) {
   this.prefName = prefName;

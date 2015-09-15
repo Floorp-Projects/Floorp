@@ -8,7 +8,7 @@
 const TAB1_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
 const TAB2_URL = EXAMPLE_URL + "doc_empty-tab-02.html";
 
-let gTab1, gTab1Actor, gTab2, gTab2Actor, gClient;
+var gTab1, gTab1Actor, gTab2, gTab2Actor, gClient;
 
 function test() {
   if (!DebuggerServer.initialized) {

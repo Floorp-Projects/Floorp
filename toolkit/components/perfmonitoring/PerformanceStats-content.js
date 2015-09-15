@@ -31,12 +31,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
  *
  * In the parent, this is always an empty monitor.
  */
-let gMonitor = PerformanceStats.getMonitor([]);
+var gMonitor = PerformanceStats.getMonitor([]);
 
 /**
  * `true` if this is a content process, `false` otherwise.
  */
-let isContent = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
+var isContent = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 
 /**
  * Handle message `performance-stats-service-acquire`: ensure that the global

@@ -492,7 +492,7 @@ ChromiumProfileMigrator.prototype.classDescription = "Chromium Profile Migrator"
 ChromiumProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=chromium";
 ChromiumProfileMigrator.prototype.classID = Components.ID("{8cece922-9720-42de-b7db-7cef88cb07ca}");
 
-let componentsArray = [ChromeProfileMigrator, ChromiumProfileMigrator];
+var componentsArray = [ChromeProfileMigrator, ChromiumProfileMigrator];
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
 /**

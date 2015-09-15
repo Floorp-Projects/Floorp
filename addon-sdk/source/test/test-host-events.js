@@ -11,7 +11,7 @@ const { send } = require('sdk/addon/events');
 const { filter } = require('sdk/event/utils');
 const { on, emit, off } = require('sdk/event/core');
 
-let stream = filter(request, (data) => /sdk-x-test/.test(data.event));
+var stream = filter(request, (data) => /sdk-x-test/.test(data.event));
 
 exports.testSend = function (assert, done) {
   on(stream, 'data', handle);

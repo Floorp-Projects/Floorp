@@ -4,9 +4,9 @@
 
 "use strict";
 
-let kWidgetId = "test-removable-widget-default";
+var kWidgetId = "test-removable-widget-default";
 const kNavBar = CustomizableUI.AREA_NAVBAR;
-let widgetCounter = 0;
+var widgetCounter = 0;
 
 registerCleanupFunction(removeCustomToolbars);
 

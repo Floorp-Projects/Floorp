@@ -6,8 +6,8 @@ MARIONETTE_TIMEOUT = 60000;
 SpecialPowers.addPermission("sms", true, document);
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
 
-let manager = window.navigator.mozMobileMessage;
-let smsId;
+var manager = window.navigator.mozMobileMessage;
+var smsId;
 
 function verifyInitialState() {
   log("Verifying initial state.");

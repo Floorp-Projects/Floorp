@@ -3,7 +3,7 @@ const PREF_DNT = "privacy.donottrackheader.enabled";
 const PREF_TP = "privacy.trackingprotection.enabled";
 const PREF_TPUI = "privacy.trackingprotection.ui.enabled";
 
-let prefs = [PREF_DNT, PREF_TP, PREF_TPUI];
+var prefs = [PREF_DNT, PREF_TP, PREF_TPUI];
 
 function spinEventLoop() {
   return new Promise((resolve) => executeSoon(resolve));

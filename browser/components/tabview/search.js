@@ -24,7 +24,7 @@
 //
 // A collection of helper functions for dealing with both <TabItem>s and
 // <xul:tab>s without having to worry which one is which.
-let TabUtils = {
+var TabUtils = {
   // ----------
   // Function: toString
   // Prints [TabUtils] for debug use.
@@ -274,7 +274,7 @@ TabMatcher.prototype = {
 // Class: TabHandlers
 // 
 // A object that handles all of the event handlers.
-let TabHandlers = {
+var TabHandlers = {
   _mouseDownLocation: null,
 
   // ---------
@@ -370,7 +370,7 @@ let TabHandlers = {
 // Class: Search
 // 
 // A object that handles the search feature.
-let Search = {
+var Search = {
   _initiatedBy: "",
   _blockClick: false,
   _currentHandler: null,

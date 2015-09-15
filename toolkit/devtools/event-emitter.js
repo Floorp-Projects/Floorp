@@ -25,7 +25,7 @@ module.exports = EventEmitter;
 const { Cu, components } = require("chrome");
 const Services = require("Services");
 const promise = require("promise");
-let loggingEnabled = true;
+var loggingEnabled = true;
 
 if (!isWorker) {
   loggingEnabled = Services.prefs.getBoolPref("devtools.dump.emit");

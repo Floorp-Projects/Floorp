@@ -11,7 +11,7 @@
 const TEST_URI = "data:text/html;charset=utf8,<title>bug870220</title>\n" +
                  "<p>hello world\n<p>native getters!";
 
-let test = asyncTest(function*() {
+var test = asyncTest(function*() {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
   let jsterm = hud.jsterm;

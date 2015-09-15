@@ -9,7 +9,7 @@ const MARKER_DETAILS_WIDTH = 200;
 /**
  * Waterfall view containing the timeline markers, controlled by DetailsView.
  */
-let WaterfallView = Heritage.extend(DetailsSubview, {
+var WaterfallView = Heritage.extend(DetailsSubview, {
 
   // Smallest unit of time between two markers. Larger by 10x^3 than Number.EPSILON.
   MARKER_EPSILON: 0.000000000001,

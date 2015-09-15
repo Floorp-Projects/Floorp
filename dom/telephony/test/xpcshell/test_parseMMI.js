@@ -1,10 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let TS = {};
+var TS = {};
 subscriptLoader.loadSubScript("resource://gre/components/TelephonyService.js", TS);
 
-let NS = {};
+var NS = {};
 subscriptLoader.loadSubScript("resource://gre/modules/DialNumberUtils.jsm", NS);
 
 function run_test() {

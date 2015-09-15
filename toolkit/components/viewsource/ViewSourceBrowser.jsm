@@ -21,7 +21,7 @@ this.EXPORTED_SYMBOLS = ["ViewSourceBrowser"];
 
 // Keep a set of browsers we've seen before, so we can load our frame script as
 // needed into any new ones.
-let gKnownBrowsers = new WeakSet();
+var gKnownBrowsers = new WeakSet();
 
 /**
  * ViewSourceBrowser manages the view source <browser> from the chrome side.

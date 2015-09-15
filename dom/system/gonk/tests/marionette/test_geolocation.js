@@ -3,7 +3,7 @@
 
 MARIONETTE_TIMEOUT = 10000;
 
-let geolocation = window.navigator.geolocation;
+var geolocation = window.navigator.geolocation;
 ok(geolocation);
 
 var sample = [];

@@ -541,7 +541,7 @@ function isUSTimezone() {
 // If this succeeds and we are using an en-US locale, we set the pref used by
 // the hacky method above, so isUS() can avoid the hacky timezone method.
 // If it fails we don't touch that pref so isUS() does its normal thing.
-let ensureKnownCountryCode = Task.async(function* () {
+var ensureKnownCountryCode = Task.async(function* () {
   // If we have a country-code already stored in our prefs we trust it.
   let countryCode;
   try {
@@ -758,7 +758,7 @@ function fetchCountryCode() {
 // This promise may take up to 100s to resolve, it's the caller's
 // responsibility to ensure with a timer that we are not going to
 // block the async init for too long.
-let fetchRegionDefault = () => new Promise(resolve => {
+var fetchRegionDefault = () => new Promise(resolve => {
   let urlTemplate = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF)
                             .getCharPref("geoSpecificDefaults.url");
   let endpoint = Services.urlFormatter.formatURL(urlTemplate);
@@ -1185,7 +1185,7 @@ function getMozParamPref(prefName)
  *
  * @see nsIBrowserSearchService.idl
  */
-let gInitialized = false;
+var gInitialized = false;
 function notifyAction(aEngine, aVerb) {
   if (gInitialized) {
     LOG("NOTIFY: Engine: \"" + aEngine.name + "\"; Verb: \"" + aVerb + "\"");

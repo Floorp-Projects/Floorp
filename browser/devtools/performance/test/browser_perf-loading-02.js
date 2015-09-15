@@ -8,7 +8,7 @@
  * stopped isn't the active one.
  */
 
-let test = Task.async(function*() {
+var test = Task.async(function*() {
   // This test seems to take a long time to cleanup.
   requestLongerTimeout(2);
 

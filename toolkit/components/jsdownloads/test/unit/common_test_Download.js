@@ -120,7 +120,7 @@ function promisePartFileReady(aDownload) {
  * @resolves When the properties have been verified.
  * @rejects JavaScript exception.
  */
-let promiseVerifyTarget = Task.async(function* (downloadTarget,
+var promiseVerifyTarget = Task.async(function* (downloadTarget,
                                                 expectedContents) {
   yield promiseVerifyContents(downloadTarget.path, expectedContents);
   do_check_true(downloadTarget.exists);
@@ -1631,7 +1631,7 @@ add_task(function test_getSha256Hash()
  * @resolves The reputation blocked download.
  * @rejects JavaScript exception.
  */
-let promiseBlockedDownload = Task.async(function* (options) {
+var promiseBlockedDownload = Task.async(function* (options) {
   function cleanup() {
     DownloadIntegration.shouldBlockInTestForApplicationReputation = false;
     DownloadIntegration.shouldKeepBlockedDataInTest = false;

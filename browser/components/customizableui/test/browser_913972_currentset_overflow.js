@@ -4,7 +4,7 @@
 
 "use strict";
 
-let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
+var navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
 
 // Resize to a small window, resize back, shouldn't affect currentSet
 add_task(function() {

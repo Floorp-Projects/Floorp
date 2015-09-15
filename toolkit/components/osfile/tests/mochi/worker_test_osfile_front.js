@@ -4,7 +4,7 @@
 importScripts('worker_test_osfile_shared.js');
 importScripts("resource://gre/modules/workers/require.js");
 
-let SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
+var SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
 SharedAll.Config.DEBUG = true;
 
 function should_throw(f) {

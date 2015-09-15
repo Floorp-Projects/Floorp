@@ -207,13 +207,13 @@ exports.unregister = unregister;
 const isRegistered = component => has(components, component);
 exports.isRegistered = isRegistered;
 
-let tabSelect = events.filter(tabEvents, e => e.type === 'TabSelect');
-let tabClose = events.filter(tabEvents, e => e.type === 'TabClose');
-let windowOpen = events.filter(browserEvents, e => e.type === 'load');
-let windowClose = events.filter(browserEvents, e => e.type === 'close');
+var tabSelect = events.filter(tabEvents, e => e.type === 'TabSelect');
+var tabClose = events.filter(tabEvents, e => e.type === 'TabClose');
+var windowOpen = events.filter(browserEvents, e => e.type === 'load');
+var windowClose = events.filter(browserEvents, e => e.type === 'close');
 
-let close = events.merge([tabClose, windowClose]);
-let activate = events.merge([windowOpen, tabSelect]);
+var close = events.merge([tabClose, windowClose]);
+var activate = events.merge([windowOpen, tabSelect]);
 
 on(activate, 'data', ({target}) => {
   let [window, tab] = isWindow(target)

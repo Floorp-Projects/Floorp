@@ -345,7 +345,7 @@ BingRequest.prototype = {
 /**
  * Authentication Token manager for the API
  */
-let BingTokenManager = {
+var BingTokenManager = {
   _currentToken: null,
   _currentExpiryTime: 0,
   _pendingRequest: null,

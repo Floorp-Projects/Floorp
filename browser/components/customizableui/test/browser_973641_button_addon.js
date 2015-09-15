@@ -5,7 +5,7 @@
 "use strict";
 
 const kButton = "test_button_for_addon";
-let initialLocation = gBrowser.currentURI.spec;
+var initialLocation = gBrowser.currentURI.spec;
 
 add_task(function() {
   info("Check addon button functionality");

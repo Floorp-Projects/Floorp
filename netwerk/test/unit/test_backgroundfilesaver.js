@@ -242,7 +242,7 @@ function promisePumpToSaver(aSourceString, aSaverStreamListener,
   return deferred.promise;
 }
 
-let gStillRunning = true;
+var gStillRunning = true;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests

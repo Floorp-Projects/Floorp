@@ -2,14 +2,14 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-let {require} = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
-let TiltManager = require("devtools/tilt/tilt").TiltManager;
-let TiltGL = require("devtools/tilt/tilt-gl");
-let {EPSILON, TiltMath, vec3, mat3, mat4, quat4} = require("devtools/tilt/tilt-math");
-let TiltUtils = require("devtools/tilt/tilt-utils");
-let {TiltVisualizer} = require("devtools/tilt/tilt-visualizer");
-let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-let LayoutHelpers = require("devtools/toolkit/layout-helpers");
+var {require} = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
+var TiltManager = require("devtools/tilt/tilt").TiltManager;
+var TiltGL = require("devtools/tilt/tilt-gl");
+var {EPSILON, TiltMath, vec3, mat3, mat4, quat4} = require("devtools/tilt/tilt-math");
+var TiltUtils = require("devtools/tilt/tilt-utils");
+var {TiltVisualizer} = require("devtools/tilt/tilt-visualizer");
+var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var LayoutHelpers = require("devtools/toolkit/layout-helpers");
 
 
 const DEFAULT_HTML = "data:text/html," +
@@ -38,7 +38,7 @@ const DEFAULT_HTML = "data:text/html," +
     "<body>" +
   "</html>";
 
-let Tilt = TiltManager.getTiltForBrowser(window);
+var Tilt = TiltManager.getTiltForBrowser(window);
 
 const STARTUP = Tilt.NOTIFICATIONS.STARTUP;
 const INITIALIZING = Tilt.NOTIFICATIONS.INITIALIZING;

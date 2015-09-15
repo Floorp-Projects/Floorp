@@ -5,12 +5,12 @@
 "use strict";
 
 const Cu = Components.utils;
-let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-let {TargetFactory} = require("devtools/framework/target");
-let promise = require("promise");
-let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+var {TargetFactory} = require("devtools/framework/target");
+var promise = require("promise");
+var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 // All test are asynchronous
 waitForExplicitFinish();
@@ -128,7 +128,7 @@ function selectNode(nodeOrSelector, inspector, reason="test") {
  * Open the toolbox, with the inspector tool visible.
  * @return a promise that resolves when the inspector is ready
  */
-let openInspector = Task.async(function*() {
+var openInspector = Task.async(function*() {
   info("Opening the inspector");
   let target = TargetFactory.forTab(gBrowser.selectedTab);
 
@@ -206,7 +206,7 @@ function hasSideBarTab(inspector, id) {
  * @return a promise that resolves when the inspector is ready and the layout
  * view is visible and ready
  */
-let openLayoutView = Task.async(function*() {
+var openLayoutView = Task.async(function*() {
   let {toolbox, inspector} = yield openInspector();
 
   if (!hasSideBarTab(inspector, "layoutview")) {
@@ -250,7 +250,7 @@ function addTest(message, func) {
   TESTS.push([message, Task.async(func)])
 }
 
-let runTests = Task.async(function*(...args) {
+var runTests = Task.async(function*(...args) {
   for (let [message, test] of TESTS) {
     info("Running new test case: " + message);
     yield test.apply(null, args);

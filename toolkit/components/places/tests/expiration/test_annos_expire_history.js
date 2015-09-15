@@ -12,7 +12,7 @@
  * This expiration policy is only valid for page annotations.
  */
 
-let as = Cc["@mozilla.org/browser/annotation-service;1"].
+var as = Cc["@mozilla.org/browser/annotation-service;1"].
          getService(Ci.nsIAnnotationService);
 
 function run_test() {

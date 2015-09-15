@@ -4,7 +4,7 @@
 // Tests that changing preferences in the options panel updates the prefs
 // and toggles appropriate things in the toolbox.
 
-let doc = null, toolbox = null, panelWin = null, modifiedPrefs = [];
+var doc = null, toolbox = null, panelWin = null, modifiedPrefs = [];
 
 add_task(function*() {
   const URL = "data:text/html;charset=utf8,test for dynamically registering and unregistering tools";

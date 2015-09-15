@@ -105,8 +105,8 @@ const TESTS = [ {
 
 const DEBUG_TEST = false;
 
-let gUTM;
-let gNextFunc;
+var gUTM;
+var gNextFunc;
 
 XPCOMUtils.defineLazyServiceGetter(this, "gPref",
                                    "@mozilla.org/preferences-service;1",

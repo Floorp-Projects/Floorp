@@ -7,11 +7,11 @@
   * listed symbols will exposed on import, and only when and where imported.
   */
 
-let EXPORTED_SYMBOLS = ["ACTIONS", "TPS"];
+var EXPORTED_SYMBOLS = ["ACTIONS", "TPS"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-let module = this;
+var module = this;
 
 // Global modules
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -89,7 +89,7 @@ const OBSERVER_TOPICS = ["fxaccounts:onlogin",
                          "weave:service:sync:start"
                         ];
 
-let TPS = {
+var TPS = {
   _currentAction: -1,
   _currentPhase: -1,
   _enabledEngines: null,

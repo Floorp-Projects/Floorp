@@ -11,7 +11,7 @@ this.EXPORTED_SYMBOLS = [
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 // Set to true to see debug messages.
-let DEBUG = false;
+var DEBUG = false;
 
 /**
  * Constructor of Sntp.
@@ -324,7 +324,7 @@ Sntp.prototype = {
   _updateTimer: null
 };
 
-let debug;
+var debug;
 if (DEBUG) {
   debug = function (s) {
     dump("-*- Sntp: " + s + "\n");

@@ -13,7 +13,7 @@ function getMinidumpDirectory() {
 
 // This observer is needed so we can clean up all evidence of the crash so
 // the testrunner thinks things are peachy.
-let CrashObserver = {
+var CrashObserver = {
   observe: function(subject, topic, data) {
     is(topic, 'ipc:content-shutdown', 'Received correct observer topic.');
     ok(subject instanceof Ci.nsIPropertyBag2,
@@ -82,7 +82,7 @@ function isBrowserAppTab(browser) {
 }
 
 // Restarts the child process by crashing it then reloading the tab
-let restart = Task.async(function*(browser) {
+var restart = Task.async(function*(browser) {
   // If the tab isn't remote this would crash the main process so skip it
   if (!browser.isRemoteBrowser)
     return browser;

@@ -16,8 +16,8 @@ var IOService = Cc["@mozilla.org/network/io-service;1"]
 
 
 Service.engineManager.register(BookmarksEngine);
-let engine = Service.engineManager.get("bookmarks");
-let store = engine._store;
+var engine = Service.engineManager.get("bookmarks");
+var store = engine._store;
 
 // Clean up after other tests. Only necessary in XULRunner.
 store.wipe();

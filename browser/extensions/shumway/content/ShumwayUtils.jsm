@@ -19,10 +19,10 @@ const PREF_PREFIX = 'shumway.';
 const PREF_DISABLED = PREF_PREFIX + 'disabled';
 const PREF_WHITELIST = PREF_PREFIX + 'swf.whitelist';
 
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-let Cm = Components.manager;
-let Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cm = Components.manager;
+var Cu = Components.utils;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
@@ -39,7 +39,7 @@ function log(str) {
   dump(str + '\n');
 }
 
-let ShumwayUtils = {
+var ShumwayUtils = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
   _registered: false,
 

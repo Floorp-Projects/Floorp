@@ -12,8 +12,8 @@ function triggerExpiration() {
   Services.obs.notifyObservers(null, "formhistory-expire-now", null);
 }
 
-let checkExists = function(num) { do_check_true(num > 0); next_test(); }
-let checkNotExists = function(num) { do_check_true(!num); next_test(); }
+var checkExists = function(num) { do_check_true(num > 0); next_test(); }
+var checkNotExists = function(num) { do_check_true(!num); next_test(); }
 
 var TestObserver = {
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
@@ -35,7 +35,7 @@ function test_finished() {
   do_test_finished();
 }
 
-let iter = tests();
+var iter = tests();
 
 function run_test()
 {

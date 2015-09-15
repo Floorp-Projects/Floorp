@@ -3,13 +3,13 @@
 
 // Tests that text metrics in the flame graph widget work properly.
 
-let HTML_NS = "http://www.w3.org/1999/xhtml";
-let {ViewHelpers} = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
-let {FlameGraph} = require("devtools/shared/widgets/FlameGraph");
-let {FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE} = require("devtools/shared/widgets/FlameGraph");
-let {FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY} = require("devtools/shared/widgets/FlameGraph");
+var HTML_NS = "http://www.w3.org/1999/xhtml";
+var {ViewHelpers} = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
+var {FlameGraph} = require("devtools/shared/widgets/FlameGraph");
+var {FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE} = require("devtools/shared/widgets/FlameGraph");
+var {FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY} = require("devtools/shared/widgets/FlameGraph");
 
-let L10N = new ViewHelpers.L10N();
+var L10N = new ViewHelpers.L10N();
 
 add_task(function*() {
   yield promiseTab("about:blank");

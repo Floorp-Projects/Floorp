@@ -14,8 +14,8 @@
 
 loadHelperScript("helper_attributes_test_runner.js");
 
-let TEST_URL = "data:text/html,<div>markup-view attributes addition test</div>";
-let TEST_DATA = [{
+var TEST_URL = "data:text/html,<div>markup-view attributes addition test</div>";
+var TEST_DATA = [{
   desc: "Mixed single and double quotes",
   text: "name=\"hi\" maxlength='not a number'",
   expectedAttributes: {

@@ -19,13 +19,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
                                   "resource://gre/modules/ProfileAge.jsm");
 
 // The webserver hosting the addons.
-let gHttpServer = null;
+var gHttpServer = null;
 // The URL of the webserver root.
-let gHttpRoot = null;
+var gHttpRoot = null;
 // The URL of the data directory, on the webserver.
-let gDataRoot = null;
+var gDataRoot = null;
 
-let gNow = new Date(2010, 1, 1, 12, 0, 0);
+var gNow = new Date(2010, 1, 1, 12, 0, 0);
 fakeNow(gNow);
 
 const PLATFORM_VERSION = "1.9.2";
@@ -96,13 +96,13 @@ PluginTag.prototype = {
 };
 
 // A container for the plugins handled by the fake plugin host.
-let gInstalledPlugins = [
+var gInstalledPlugins = [
   new PluginTag("Java", "A mock Java plugin", "1.0", false /* Disabled */),
   new PluginTag(FLASH_PLUGIN_NAME, FLASH_PLUGIN_DESC, FLASH_PLUGIN_VERSION, true),
 ];
 
 // A fake plugin host for testing plugin telemetry environment.
-let PluginHost = {
+var PluginHost = {
   getPluginTags: function(countRef) {
     countRef.value = gInstalledPlugins.length;
     return gInstalledPlugins;

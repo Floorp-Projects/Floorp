@@ -5,7 +5,7 @@ Cu.import("resource://services-common/async.js");
 Cu.import("resource://testing-common/services/common/utils.js");
 Cu.import("resource://testing-common/PlacesTestUtils.jsm");
 
-let provider = {
+var provider = {
   getFile: function(prop, persistent) {
     persistent.value = true;
     switch (prop) {
@@ -20,7 +20,7 @@ let provider = {
 Services.dirsvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 
 // This is needed for loadAddonTestFunctions().
-let gGlobalScope = this;
+var gGlobalScope = this;
 
 function ExtensionsTestPath(path) {
   if (path[0] != "/") {

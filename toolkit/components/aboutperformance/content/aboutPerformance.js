@@ -94,7 +94,7 @@ function findTabFromWindow(windowId) {
 /**
  * Utilities for dealing with PerformanceDiff
  */
-let Delta = {
+var Delta = {
   compare: function(a, b) {
     // By definition, if either `a` or `b` has CPOW time and the other
     // doesn't, it is larger.
@@ -153,7 +153,7 @@ let Delta = {
 /**
  * Utilities for dealing with state
  */
-let State = {
+var State = {
   _monitor: PerformanceStats.getMonitor([
     "jank", "cpow", "ticks",
   ]),
@@ -380,7 +380,7 @@ let State = {
   }),
 };
 
-let View = {
+var View = {
   /**
    * A cache for all the per-item DOM elements that are reused across refreshes.
    *
@@ -709,7 +709,7 @@ let View = {
   },
 };
 
-let Control = {
+var Control = {
   init: function() {
     this._initAutorefresh();
     this._initDisplayMode();
@@ -792,7 +792,7 @@ let Control = {
   _displayMode: MODE_GLOBAL,
 };
 
-let go = Task.async(function*() {
+var go = Task.async(function*() {
   Control.init();
 
   // Setup a hook to allow tests to configure and control this page

@@ -11,15 +11,15 @@ const EventEmitter = require("devtools/toolkit/event-emitter");
 
 const ADDONS_URL = "devtools.webide.addonsURL";
 
-let SIMULATOR_LINK = Services.prefs.getCharPref("devtools.webide.simulatorAddonsURL");
-let ADB_LINK = Services.prefs.getCharPref("devtools.webide.adbAddonURL");
-let ADAPTERS_LINK = Services.prefs.getCharPref("devtools.webide.adaptersAddonURL");
-let SIMULATOR_ADDON_ID = Services.prefs.getCharPref("devtools.webide.simulatorAddonID");
-let ADB_ADDON_ID = Services.prefs.getCharPref("devtools.webide.adbAddonID");
-let ADAPTERS_ADDON_ID = Services.prefs.getCharPref("devtools.webide.adaptersAddonID");
+var SIMULATOR_LINK = Services.prefs.getCharPref("devtools.webide.simulatorAddonsURL");
+var ADB_LINK = Services.prefs.getCharPref("devtools.webide.adbAddonURL");
+var ADAPTERS_LINK = Services.prefs.getCharPref("devtools.webide.adaptersAddonURL");
+var SIMULATOR_ADDON_ID = Services.prefs.getCharPref("devtools.webide.simulatorAddonID");
+var ADB_ADDON_ID = Services.prefs.getCharPref("devtools.webide.adbAddonID");
+var ADAPTERS_ADDON_ID = Services.prefs.getCharPref("devtools.webide.adaptersAddonID");
 
-let platform = Services.appShell.hiddenDOMWindow.navigator.platform;
-let OS = "";
+var platform = Services.appShell.hiddenDOMWindow.navigator.platform;
+var OS = "";
 if (platform.indexOf("Win") != -1) {
   OS = "win32";
 } else if (platform.indexOf("Mac") != -1) {
@@ -32,7 +32,7 @@ if (platform.indexOf("Win") != -1) {
   }
 }
 
-let addonsListener = {};
+var addonsListener = {};
 addonsListener.onEnabled =
 addonsListener.onDisabled =
 addonsListener.onInstalled =
@@ -47,8 +47,8 @@ addonsListener.onUninstalled = (updatedAddon) => {
 }
 AddonManager.addAddonListener(addonsListener);
 
-let GetAvailableAddons_promise = null;
-let GetAvailableAddons = exports.GetAvailableAddons = function() {
+var GetAvailableAddons_promise = null;
+var GetAvailableAddons = exports.GetAvailableAddons = function() {
   if (!GetAvailableAddons_promise) {
     let deferred = promise.defer();
     GetAvailableAddons_promise = deferred.promise;

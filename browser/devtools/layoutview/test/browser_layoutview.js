@@ -8,7 +8,7 @@
 // the node's style is changed
 
 // Expected values:
-let res1 = [
+var res1 = [
       {selector: "#element-size",              value: "160" + "\u00D7" + "160.117"},
       {selector: ".size > span",               value: "100" + "\u00D7" + "100.117"},
       {selector: ".margin.top > span",         value: 30},
@@ -25,7 +25,7 @@ let res1 = [
       {selector: ".border.right > span",       value: 10},
 ];
 
-let res2 = [
+var res2 = [
       {selector: "#element-size",              value: "190" + "\u00D7" + "210"},
       {selector: ".size > span",               value: "100" + "\u00D7" + "150"},
       {selector: ".margin.top > span",         value: 30},

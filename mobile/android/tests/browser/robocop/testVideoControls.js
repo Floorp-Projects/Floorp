@@ -11,16 +11,16 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/SimpleServiceDiscovery.jsm");
 
 // The chrome window
-let chromeWin;
+var chromeWin;
 
 // Track the <browser> where the tests are happening
-let browser;
+var browser;
 
 // The document of the video_controls web content
-let contentDocument;
+var contentDocument;
 
 // The <video> we will be testing
-let video;
+var video;
 
 add_test(function setup_browser() {
   chromeWin = Services.wm.getMostRecentWindow("navigator:browser");

@@ -3,7 +3,7 @@
 
 const promise = require("promise");
 
-let gAppId = "actor-test";
+var gAppId = "actor-test";
 const APP_ORIGIN = "app://" + gAppId;
 
 add_test(function testLaunchInexistantApp() {
@@ -115,8 +115,8 @@ add_test(function testCloseApp() {
 // The 128px icon is a single red pixel and the 64px one is a blue one
 // bug 899177: there is a bug with xhr and app:// and jar:// uris
 // that ends up forcing the content type to application/xml
-let red1px =  "data:application/xml;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4z8AAAAMBAQAY3Y2wAAAAAElFTkSuQmCC";
-let blue1px = "data:application/xml;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12MwZDgHAAFlAQBDpjhLAAAAAElFTkSuQmCC";
+var red1px =  "data:application/xml;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4z8AAAAMBAQAY3Y2wAAAAAElFTkSuQmCC";
+var blue1px = "data:application/xml;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12MwZDgHAAFlAQBDpjhLAAAAAElFTkSuQmCC";
 
 add_test(function testGetIcon() {
   let manifestURL = APP_ORIGIN + "/manifest.webapp";

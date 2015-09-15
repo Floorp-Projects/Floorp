@@ -35,7 +35,7 @@ const kIntlProperties = "chrome://global/locale/intl.properties";
 // These are the available plural functions that give the appropriate index
 // based on the plural rule number specified. The first element is the number
 // of plural forms and the second is the function to figure out the index.
-let gFunctions = [
+var gFunctions = [
   // 0: Chinese
   [1, (n) => 0],
   // 1: English

@@ -8,7 +8,7 @@
  * Manages the addon-sdk loader instance used to load the developer tools.
  */
 
-let { Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu } = Components;
+var { Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -17,8 +17,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil", "resource://gre/modules/NetUt
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
-let { Loader } = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
-let promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+var { Loader } = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
+var promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 
 this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
                          "SrcdirProvider", "require", "loader"];
@@ -27,7 +27,7 @@ this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
  * Providers are different strategies for loading the devtools.
  */
 
-let loaderModules = {
+var loaderModules = {
   "Services": Object.create(Services),
   "toolkit/loader": Loader,
   PromiseDebugging,
@@ -65,7 +65,7 @@ XPCOMUtils.defineLazyGetter(loaderModules, "indexedDB", () => {
   }
 });
 
-let sharedGlobalBlacklist = ["sdk/indexed-db"];
+var sharedGlobalBlacklist = ["sdk/indexed-db"];
 
 // Used when the tools should be loaded from the Firefox package itself (the default)
 function BuiltinProvider() {}

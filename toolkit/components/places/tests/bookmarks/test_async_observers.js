@@ -6,7 +6,7 @@
 
 const NOW = Date.now() * 1000;
 
-let observer = {
+var observer = {
   bookmarks: [],
   observedBookmarks: 0,
   observedVisitId: 0,

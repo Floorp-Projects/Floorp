@@ -7,9 +7,9 @@ Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 
-let logger;
+var logger;
 
-let fetched = false;
+var fetched = false;
 function server_open(metadata, response) {
   let body;
   if (metadata.method == "GET") {
@@ -45,7 +45,7 @@ function server_404(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
-let pacFetched = false;
+var pacFetched = false;
 function server_pac(metadata, response) {
   _("Invoked PAC handler.");
   pacFetched = true;
@@ -55,7 +55,7 @@ function server_pac(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
-let sample_data = {
+var sample_data = {
   some: "sample_data",
   injson: "format",
   number: 42
@@ -148,7 +148,7 @@ function server_headers(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
-let quotaValue;
+var quotaValue;
 Observers.add("weave:service:quota:remaining",
               function (subject) { quotaValue = subject; });
 
@@ -221,7 +221,7 @@ add_test(function test_new_channel() {
 });
 
 
-let server;
+var server;
 
 add_test(function setup() {
   server = httpd_setup({

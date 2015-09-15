@@ -4,7 +4,7 @@
 // Test that domain eviction occurs when the cookies per base domain limit is
 // reached, and that expired cookies are evicted before live cookies.
 
-let test_generator = do_run_test();
+var test_generator = do_run_test();
 
 function run_test()
 {

@@ -43,7 +43,7 @@ const Services = require("Services");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const LayoutHelpers = require("devtools/toolkit/layout-helpers");
 
-let pseudos = new Set([
+var pseudos = new Set([
   ":after",
   ":before",
   ":first-letter",

@@ -5,7 +5,7 @@
 
 const { setTimeout } = require('sdk/timers');
 
-let mainStarted = false;
+var mainStarted = false;
 
 exports.main = function main(options, callbacks) {
   mainStarted = true;

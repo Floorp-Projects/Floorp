@@ -148,7 +148,7 @@ function pushAll (dest, src) {
 /**
  * Cache used in `RecordingUtils.getProfileThreadFromAllocations`.
  */
-let gProfileThreadFromAllocationCache = new WeakMap();
+var gProfileThreadFromAllocationCache = new WeakMap();
 
 /**
  * Converts allocation data from the memory actor to something that follows

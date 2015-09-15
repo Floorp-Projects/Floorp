@@ -1,12 +1,12 @@
 waitForExplicitFinish();
 
-let pageSource =
+var pageSource =
   '<html><body>' +
     '<img id="testImg" src="' + TESTROOT + 'big.png">' +
   '</body></html>';
 
-let oldDiscardingPref, oldTab, newTab;
-let prefBranch = Cc["@mozilla.org/preferences-service;1"]
+var oldDiscardingPref, oldTab, newTab;
+var prefBranch = Cc["@mozilla.org/preferences-service;1"]
                    .getService(Ci.nsIPrefService)
                    .getBranch('image.mem.');
 

@@ -27,7 +27,7 @@ const kMozSettingsChangedObserverTopic = "mozsettings-changed";
 const kRilDefaultDataServiceId = "ril.data.defaultServiceId";
 const kRilDefaultPaymentServiceId = "ril.payment.defaultServiceId";
 
-let _debug;
+var _debug;
 try {
   _debug = Services.prefs.getPrefType(PREF_DEBUG) == Ci.nsIPrefBranch.PREF_BOOL
            && Services.prefs.getBoolPref(PREF_DEBUG);

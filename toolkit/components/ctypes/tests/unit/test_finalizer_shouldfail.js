@@ -5,7 +5,7 @@ try {
 } catch(e) {
 }
 
-let acquire, dispose, null_dispose, compare, dispose_64;
+var acquire, dispose, null_dispose, compare, dispose_64;
 
 function run_test()
 {

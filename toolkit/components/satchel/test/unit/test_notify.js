@@ -33,7 +33,7 @@ var TestObserver = {
   }
 };
 
-let testIterator = null;
+var testIterator = null;
 
 function run_test() {
   do_test_pending();

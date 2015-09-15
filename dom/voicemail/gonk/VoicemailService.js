@@ -31,7 +31,7 @@ const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
 const kPrefDefaultServiceId = "dom.voicemail.defaultServiceId";
 
-let DEBUG;
+var DEBUG;
 function debug(s) {
   dump("VoicemailService: " + s);
 }

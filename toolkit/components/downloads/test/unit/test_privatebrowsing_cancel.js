@@ -11,7 +11,7 @@ Components.utils.import("resource://testing-common/MockRegistrar.jsm");
 
 const Cm = Components.manager;
 
-let promptService = {
+var promptService = {
   _buttonChoice: 0,
   _called: false,
   wasCalled: function() {
@@ -42,7 +42,7 @@ let promptService = {
   }
 };
 
-let mockCID =
+var mockCID =
   MockRegistrar.register("@mozilla.org/embedcomp/prompt-service;1",
                          promptService);
 

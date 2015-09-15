@@ -2123,7 +2123,7 @@ XPCOMUtils.defineLazyGetter(this, "gAsyncDBWrapperPromised",
  * Keywords are associated with URLs and can have POST data.
  * A single URL can have multiple keywords, provided they differ by POST data.
  */
-let Keywords = {
+var Keywords = {
   /**
    * Fetches a keyword entry based on keyword or URL.
    *
@@ -2298,7 +2298,7 @@ let Keywords = {
 
 // Set by the keywords API to distinguish notifications fired by the old API.
 // Once the old API will be gone, we can remove this and stop observing.
-let gIgnoreKeywordNotifications = false;
+var gIgnoreKeywordNotifications = false;
 
 XPCOMUtils.defineLazyGetter(this, "gKeywordsCachePromise", () =>
   PlacesUtils.withConnectionWrapper("PlacesUtils: gKeywordsCachePromise",
@@ -2405,7 +2405,7 @@ XPCOMUtils.defineLazyGetter(this, "gKeywordsCachePromise", () =>
 // working with GUIDs.  So, until it does, this helper object accesses the
 // Places database directly in order to switch between GUIDs and itemIds, and
 // "restore" GUIDs on items re-created items.
-let GuidHelper = {
+var GuidHelper = {
   // Cache for GUID<->itemId paris.
   guidsForIds: new Map(),
   idsForGuids: new Map(),

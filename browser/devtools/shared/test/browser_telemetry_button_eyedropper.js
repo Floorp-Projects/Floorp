@@ -4,7 +4,7 @@
 const TEST_URI = "data:text/html;charset=utf-8," +
   "<p>browser_telemetry_button_eyedropper.js</p><div>test</div>";
 
-let {EyedropperManager} = require("devtools/eyedropper/eyedropper");
+var {EyedropperManager} = require("devtools/eyedropper/eyedropper");
 
 add_task(function*() {
   yield promiseTab(TEST_URI);

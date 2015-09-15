@@ -8,11 +8,11 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 
-let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
-let Heritage = require("sdk/core/heritage");
-let {TargetFactory} = require("devtools/framework/target");
-let {Tools} = require("definitions");
-let promise = require("promise");
+var WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
+var Heritage = require("sdk/core/heritage");
+var {TargetFactory} = require("devtools/framework/target");
+var {Tools} = require("definitions");
+var promise = require("promise");
 
 loader.lazyGetter(this, "Telemetry", () => require("devtools/shared/telemetry"));
 loader.lazyGetter(this, "WebConsoleFrame", () => require("devtools/webconsole/webconsole").WebConsoleFrame);
@@ -24,14 +24,14 @@ loader.lazyGetter(this, "showDoorhanger", () => require("devtools/shared/doorhan
 loader.lazyRequireGetter(this, "sourceUtils", "devtools/shared/source-utils");
 
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
-let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
+var l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 
 const BROWSER_CONSOLE_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
 // The preference prefix for all of the Browser Console filters.
 const BROWSER_CONSOLE_FILTER_PREFS_PREFIX = "devtools.browserconsole.filter.";
 
-let gHudId = 0;
+var gHudId = 0;
 
 ///////////////////////////////////////////////////////////////////////////
 //// The HUD service

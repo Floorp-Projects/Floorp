@@ -10,8 +10,8 @@ const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 const FIRST_URL = EXAMPLE_URL + "code_script-switching-01.js";
 const SECOND_URL = EXAMPLE_URL + "code_script-switching-02.js";
 
-let gTab, gPanel, gDebugger;
-let gSources;
+var gTab, gPanel, gDebugger;
+var gSources;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

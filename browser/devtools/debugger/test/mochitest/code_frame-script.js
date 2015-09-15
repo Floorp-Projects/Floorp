@@ -9,7 +9,7 @@ loadSubScript("chrome://marionette/content/EventUtils.js", EventUtils);
 
 dump("Frame script loaded.\n");
 
-let workers = {}
+var workers = {}
 
 this.call = function (name, args) {
   dump("Calling function with name " + name + ".\n");

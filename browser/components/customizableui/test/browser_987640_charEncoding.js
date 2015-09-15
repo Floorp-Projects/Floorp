@@ -5,7 +5,7 @@
 "use strict";
 
 const TEST_PAGE = "http://mochi.test:8888/browser/browser/components/customizableui/test/support/test_967000_charEncoding_page.html";
-let newTab = null;
+var newTab = null;
 
 add_task(function() {
   info("Check Character Encoding panel functionality");

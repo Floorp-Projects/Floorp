@@ -5,19 +5,19 @@
  * Make sure the root actor's live tab list implementation works as specified.
  */
 
-let { BrowserTabList } = require("devtools/server/actors/webbrowser");
+var { BrowserTabList } = require("devtools/server/actors/webbrowser");
 
-let gTestPage = "data:text/html;charset=utf-8," + encodeURIComponent(
+var gTestPage = "data:text/html;charset=utf-8," + encodeURIComponent(
   "<title>JS Debugger BrowserTabList test page</title><body>Yo.</body>");
 
 // The tablist object whose behavior we observe.
-let gTabList;
-let gFirstActor, gActorA;
-let gTabA, gTabB, gTabC;
-let gNewWindow;
+var gTabList;
+var gFirstActor, gActorA;
+var gTabA, gTabB, gTabC;
+var gNewWindow;
 
 // Stock onListChanged handler.
-let onListChangedCount = 0;
+var onListChangedCount = 0;
 function onListChangedHandler() {
   onListChangedCount++;
 }

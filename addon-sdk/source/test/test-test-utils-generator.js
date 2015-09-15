@@ -11,8 +11,8 @@ const { defer: async } = require('sdk/lang/functional');
 const { before, after } = require('sdk/test/utils');
 const { resolve } = require("sdk/core/promise");
 
-let AFTER_RUN = 0;
-let BEFORE_RUN = 0;
+var AFTER_RUN = 0;
+var BEFORE_RUN = 0;
 
 /*
  * Tests are dependent on ordering, as the before and after functions

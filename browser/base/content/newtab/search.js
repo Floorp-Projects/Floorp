@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #endif
 
-let gSearch = {
+var gSearch = {
   init: function () {
     document.getElementById("newtab-search-submit")
             .addEventListener("click", e => this._contentSearchController.search(e));

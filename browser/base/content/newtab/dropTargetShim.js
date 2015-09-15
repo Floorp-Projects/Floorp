@@ -9,7 +9,7 @@
  * the default DnD target detection relies on the cursor's position. We want
  * to pick a drop target based on the dragged site's position.
  */
-let gDropTargetShim = {
+var gDropTargetShim = {
   /**
    * Cache for the position of all cells, cleaned after drag finished.
    */

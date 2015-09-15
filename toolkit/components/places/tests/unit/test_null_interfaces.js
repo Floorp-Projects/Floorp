@@ -6,11 +6,11 @@
  * Test bug 489872 to make sure passing nulls to nsNavHistory doesn't crash.
  */
 
-let Cr = Components.results;
+var Cr = Components.results;
 
 // Make an array of services to test, each specifying a class id, interface
 // and an array of function names that don't throw when passed nulls
-let testServices = [
+var testServices = [
   ["browser/nav-history-service;1", "nsINavHistoryService",
     ["queryStringToQueries", "removePagesByTimeframe", "removePagesFromHost",
      "removeVisitsByTimeframe", "getObservers"]],

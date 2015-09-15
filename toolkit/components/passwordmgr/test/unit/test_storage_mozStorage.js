@@ -231,7 +231,7 @@ storage = reloadStorage(OUTDIR, "signons-v2.sqlite");
 
 // Check to see that we added the correct encType to the logins.
 do_check_eq(CURRENT_SCHEMA, dbConnection.schemaVersion);
-let encTypes = [ENCTYPE_BASE64, ENCTYPE_SDR, ENCTYPE_BASE64, ENCTYPE_BASE64];
+var encTypes = [ENCTYPE_BASE64, ENCTYPE_SDR, ENCTYPE_BASE64, ENCTYPE_BASE64];
 for (let i = 0; i < encTypes.length; i++)
     do_check_eq(encTypes[i], getEncTypeForID(dbConnection, i + 1));
 dbConnection.close();

@@ -7,8 +7,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print.html";
 
-let gTab, gPanel, gDebugger;
-let gSearchBox;
+var gTab, gPanel, gDebugger;
+var gSearchBox;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

@@ -9,9 +9,9 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
 Service.engineManager.register(BookmarksEngine);
-let engine = Service.engineManager.get("bookmarks");
-let store  = engine._store;
-let tracker = engine._tracker;
+var engine = Service.engineManager.get("bookmarks");
+var store  = engine._store;
+var tracker = engine._tracker;
 
 store.wipe();
 tracker.persistChangedIDs = false;

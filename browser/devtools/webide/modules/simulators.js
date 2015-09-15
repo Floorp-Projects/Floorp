@@ -18,7 +18,7 @@ const LocaleCompare = (a, b) => {
   return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
 };
 
-let Simulators = {
+var Simulators = {
 
   // The list of simulator configurations.
   _simulators: [],

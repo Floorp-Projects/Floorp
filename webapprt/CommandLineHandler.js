@@ -106,5 +106,5 @@ CommandLineHandler.prototype = {
   helpInfo : "",
 };
 
-let components = [CommandLineHandler];
+var components = [CommandLineHandler];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

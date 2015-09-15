@@ -796,7 +796,7 @@ function test_readInputStreamToString_invalid_sequence()
   test_readInputStreamToString_with_charset,
   test_readInputStreamToString_invalid_sequence,
 ].forEach(add_test);
-let index = 0;
+var index = 0;
 
 function run_test()
 {

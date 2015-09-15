@@ -7,7 +7,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 const PREF_EM_HOTFIX_ID = "extensions.hotfix.id";
 
-let gMenuButton = null;
+var gMenuButton = null;
 try {
   gMenuButton = Services.wm.getMostRecentWindow("navigator:browser")
                         .document.getElementById("PanelUI-menu-button");

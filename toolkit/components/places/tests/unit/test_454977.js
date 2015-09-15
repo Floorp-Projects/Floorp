@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Cache actual visit_count value, filled by add_visit, used by check_results
-let visit_count = 0;
+var visit_count = 0;
 
 // Returns the Place ID corresponding to an added visit.
 function task_add_visit(aURI, aVisitType)

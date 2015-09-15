@@ -13,7 +13,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Messaging.jsm");
 
-let Scope = Object.freeze({
+var Scope = Object.freeze({
   APP:          "app",
   PROFILE:      "profile",
   GLOBAL:       "global"
@@ -22,7 +22,7 @@ let Scope = Object.freeze({
 /**
  * Public API to getting a SharedPreferencesImpl instance. These scopes mirror GeckoSharedPrefs.
  */
-let SharedPreferences = {
+var SharedPreferences = {
   forApp: function() {
     return new SharedPreferencesImpl({ scope: Scope.APP });
   },

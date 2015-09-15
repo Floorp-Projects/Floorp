@@ -10,9 +10,9 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-bug_923281_console_log_filter.html";
 
-let hud;
+var hud;
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield loadTab(TEST_URI);
 
   hud = yield openConsole();

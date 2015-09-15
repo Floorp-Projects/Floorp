@@ -81,12 +81,12 @@ const BRANCH_NAME = "devtools.performance.ui.";
 /**
  * The current target, toolbox and PerformanceFront, set by this tool's host.
  */
-let gToolbox, gTarget, gFront;
+var gToolbox, gTarget, gFront;
 
 /**
  * Initializes the profiler controller and views.
  */
-let startupPerformance = Task.async(function*() {
+var startupPerformance = Task.async(function*() {
   yield PerformanceController.initialize();
   yield PerformanceView.initialize();
 });
@@ -94,7 +94,7 @@ let startupPerformance = Task.async(function*() {
 /**
  * Destroys the profiler controller and views.
  */
-let shutdownPerformance = Task.async(function*() {
+var shutdownPerformance = Task.async(function*() {
   yield PerformanceController.destroy();
   yield PerformanceView.destroy();
 });
@@ -103,7 +103,7 @@ let shutdownPerformance = Task.async(function*() {
  * Functions handling target-related lifetime events and
  * UI interaction.
  */
-let PerformanceController = {
+var PerformanceController = {
   _recordings: [],
   _currentRecording: null,
 

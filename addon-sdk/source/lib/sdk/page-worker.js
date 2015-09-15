@@ -44,7 +44,7 @@ function pageFor(view) pages.get(view)
 function viewFor(page) views.get(page)
 function isDisposed (page) !views.get(page, false)
 
-let pageContract = contract(merge({
+var pageContract = contract(merge({
   allow: {
     is: ['object', 'undefined', 'null'],
     map: function (allow) { return { script: !allow || allow.script !== false }}
@@ -156,12 +156,12 @@ const Page = Class({
 
 exports.Page = Page;
 
-let pageEvents = streamMerge([events, streamEventsFrom(window)]);
-let readyEvents = filter(pageEvents, isReadyEvent);
-let formattedEvents = map(readyEvents, function({target, type}) {
+var pageEvents = streamMerge([events, streamEventsFrom(window)]);
+var readyEvents = filter(pageEvents, isReadyEvent);
+var formattedEvents = map(readyEvents, function({target, type}) {
   return { type: type, page: pageFromDoc(target) };
 });
-let pageReadyEvents = filter(formattedEvents, function({page, type}) {
+var pageReadyEvents = filter(formattedEvents, function({page, type}) {
   return getAttachEventType(page) === type});
 on(pageReadyEvents, 'data', injectWorker);
 

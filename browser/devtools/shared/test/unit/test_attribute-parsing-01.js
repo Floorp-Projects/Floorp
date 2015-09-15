@@ -4,7 +4,7 @@
 // Test splitBy from node-attribute-parser.js
 
 const Cu = Components.utils;
-let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {splitBy} = require("devtools/shared/node-attribute-parser");
 
 const TEST_DATA = [{

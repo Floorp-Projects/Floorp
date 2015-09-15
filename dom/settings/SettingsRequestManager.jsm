@@ -18,9 +18,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PermissionsTable.jsm");
 
-let DEBUG = false;
-let VERBOSE = false;
-let TRACK = false;
+var DEBUG = false;
+var VERBOSE = false;
+var TRACK = false;
 
 try {
   DEBUG   =
@@ -31,7 +31,7 @@ try {
     Services.prefs.getBoolPref("dom.mozSettings.trackTasksUsage");
 } catch (ex) { }
 
-let allowForceReadOnly = false;
+var allowForceReadOnly = false;
 try {
   allowForceReadOnly = Services.prefs.getBoolPref("dom.mozSettings.allowForceReadOnly");
 } catch (ex) { }
@@ -40,7 +40,7 @@ function debug(s) {
   dump("-*- SettingsRequestManager: " + s + "\n");
 }
 
-let inParent = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
+var inParent = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
                   .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 
 const kXpcomShutdownObserverTopic      = "xpcom-shutdown";
@@ -60,7 +60,7 @@ const kSomeSettingsReadPermission      = "settings-api" + kSettingsReadSuffix;
 const kSomeSettingsWritePermission     = "settings-api" + kSettingsWriteSuffix;
 
 // Time, in seconds, to consider the API is starting to jam
-let kSoftLockupDelta = 30;
+var kSoftLockupDelta = 30;
 try {
   kSoftLockupDelta = Services.prefs.getIntPref("dom.mozSettings.softLockupDelta");
 } catch (ex) { }
@@ -78,7 +78,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
                                    "@mozilla.org/settingsService;1",
                                    "nsISettingsService");
 
-let SettingsPermissions = {
+var SettingsPermissions = {
   checkPermission: function(aPrincipal, aPerm) {
     if (!aPrincipal) {
       Cu.reportError("SettingsPermissions.checkPermission was passed a null principal. Denying all permissions.");
@@ -208,7 +208,7 @@ function SettingsLockInfo(aDB, aMsgMgr, aPrincipal, aLockID, aIsServiceLock, aWi
   };
 }
 
-let SettingsRequestManager = {
+var SettingsRequestManager = {
   // Access to the settings DB
   settingsDB: new SettingsDB(),
   // Remote messages to listen for from child

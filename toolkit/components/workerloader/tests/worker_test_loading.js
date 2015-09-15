@@ -9,9 +9,9 @@ info("Test suite configured");
 importScripts("resource://gre/modules/workers/require.js");
 info("Loader imported");
 
-let PATH = "chrome://mochitests/content/chrome/toolkit/components/workerloader/tests/";
-let tests = [];
-let add_test = function(test) {
+var PATH = "chrome://mochitests/content/chrome/toolkit/components/workerloader/tests/";
+var tests = [];
+var add_test = function(test) {
   tests.push(test);
 };
 

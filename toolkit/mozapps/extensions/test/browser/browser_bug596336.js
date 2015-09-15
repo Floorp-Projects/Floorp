@@ -41,7 +41,7 @@ function install_addon(aXpi) {
   });
 }
 
-let check_addon = Task.async(function*(aAddon, aVersion) {
+var check_addon = Task.async(function*(aAddon, aVersion) {
   is(get_list_item_count(), 1, "Should be one item in the list");
   is(aAddon.version, aVersion, "Add-on should have the right version");
 

@@ -21,12 +21,12 @@ const OPEN_H264_ID  = "gmp-gmpopenh264";
 const EME_ADOBE_ID  = "gmp-eme-adobe";
 const GMP_PLUGIN_IDS = [ OPEN_H264_ID, EME_ADOBE_ID ];
 
-let GMPPluginUnsupportedReason = {
+var GMPPluginUnsupportedReason = {
   NOT_WINDOWS: 1,
   WINDOWS_VERSION: 2,
 };
 
-let GMPPluginHiddenReason = {
+var GMPPluginHiddenReason = {
   UNSUPPORTED: 1,
   EME_DISABLED: 2,
 };

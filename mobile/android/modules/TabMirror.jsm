@@ -9,14 +9,14 @@ Cu.import("resource://gre/modules/Messaging.jsm");
 
 const CONFIG = { iceServers: [{ "urls": ["stun:stun.services.mozilla.com"] }] };
 
-let log = Cu.import("resource://gre/modules/AndroidLog.jsm",
+var log = Cu.import("resource://gre/modules/AndroidLog.jsm",
                     {}).AndroidLog.d.bind(null, "TabMirror");
 
-let failure = function(x) {
+var failure = function(x) {
   log("ERROR: " + JSON.stringify(x));
 };
 
-let TabMirror = function(deviceId, window) {
+var TabMirror = function(deviceId, window) {
 
   this.deviceId = deviceId;
   // Save mozRTCSessionDescription and mozRTCIceCandidate for later when the window object is not available.

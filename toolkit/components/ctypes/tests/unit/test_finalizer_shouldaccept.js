@@ -5,7 +5,7 @@ try {
 } catch(e) {
 }
 
-let acquire, dispose, reset_errno, dispose_errno,
+var acquire, dispose, reset_errno, dispose_errno,
   acquire_ptr, dispose_ptr,
   acquire_void_ptr, dispose_void_ptr,
   acquire_string, dispose_string;

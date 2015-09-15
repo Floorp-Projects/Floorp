@@ -3,11 +3,11 @@
 
 // Tests that the pref commands work
 
-let prefBranch = Cc["@mozilla.org/preferences-service;1"]
+var prefBranch = Cc["@mozilla.org/preferences-service;1"]
                     .getService(Ci.nsIPrefService).getBranch(null)
                     .QueryInterface(Ci.nsIPrefBranch2);
 
-let supportsString = Cc["@mozilla.org/supports-string;1"]
+var supportsString = Cc["@mozilla.org/supports-string;1"]
                       .createInstance(Ci.nsISupportsString);
 
 const TEST_URI = "data:text/html;charset=utf-8,gcli-settings";

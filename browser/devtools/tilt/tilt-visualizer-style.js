@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-let {TiltMath} = require("devtools/tilt/tilt-math");
-let rgba = TiltMath.hex2rgba;
+var {TiltMath} = require("devtools/tilt/tilt-math");
+var rgba = TiltMath.hex2rgba;
 
 /**
  * Various colors and style settings used throughout Tilt.

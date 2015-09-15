@@ -19,7 +19,7 @@
  *                 it changes the sidebar's visibility.
  *  - group        this attribute must be set to "sidebar".
  */
-let SidebarUI = {
+var SidebarUI = {
   browser: null,
 
   _box: null,

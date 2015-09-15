@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 // Tests installing an unsigned add-on through an InstallTrigger call in web
 // content.
-let expectedTab = null;
+var expectedTab = null;
 
 function test() {
   Harness.installConfirmCallback = confirm_install;

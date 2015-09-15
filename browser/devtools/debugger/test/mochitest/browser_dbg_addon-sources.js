@@ -5,7 +5,7 @@
 // addon itself, or the SDK, with proper groups and labels.
 
 const ADDON_URL = EXAMPLE_URL + "addon3.xpi";
-let gClient;
+var gClient;
 
 function test() {
   Task.spawn(function*() {

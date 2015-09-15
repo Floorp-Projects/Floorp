@@ -1,8 +1,8 @@
 Cu.import("resource://webapprt/modules/WebappRT.jsm");
-let { AllPossiblePermissions } =
+var { AllPossiblePermissions } =
   Cu.import("resource://gre/modules/PermissionsInstaller.jsm", {});
-let { AppsUtils } = Cu.import("resource://gre/modules/AppsUtils.jsm", {});
-let { DOMApplicationRegistry } =
+var { AppsUtils } = Cu.import("resource://gre/modules/AppsUtils.jsm", {});
+var { DOMApplicationRegistry } =
   Cu.import("resource://gre/modules/Webapps.jsm", {});
 
 function test() {

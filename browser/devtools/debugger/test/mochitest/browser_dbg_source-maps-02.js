@@ -8,8 +8,8 @@
 const TAB_URL = EXAMPLE_URL + "doc_binary_search.html";
 const JS_URL = EXAMPLE_URL + "code_binary_search.js";
 
-let gTab, gPanel, gDebugger, gEditor;
-let gSources, gFrames, gPrefs, gOptions;
+var gTab, gPanel, gDebugger, gEditor;
+var gSources, gFrames, gPrefs, gOptions;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

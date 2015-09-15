@@ -6,7 +6,7 @@
 "use strict";
 
 // Don't modify this, instead set services.push.debug.
-let gDebuggingEnabled = false;
+var gDebuggingEnabled = false;
 
 function debug(s) {
   if (gDebuggingEnabled)

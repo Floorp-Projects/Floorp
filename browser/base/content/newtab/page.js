@@ -11,7 +11,7 @@ const SCHEDULE_UPDATE_TIMEOUT_MS = 1000;
  * This singleton represents the whole 'New Tab Page' and takes care of
  * initializing all its components.
  */
-let gPage = {
+var gPage = {
   /**
    * Initializes the page.
    */

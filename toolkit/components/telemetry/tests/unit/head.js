@@ -26,8 +26,8 @@ const HAS_DATAREPORTINGSERVICE = "@mozilla.org/datareporting/service;1" in Cc;
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-let gOldAppInfo = null;
-let gGlobalScope = this;
+var gOldAppInfo = null;
+var gGlobalScope = this;
 
 const PingServer = {
   _httpServer: null,

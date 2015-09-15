@@ -4,8 +4,8 @@
 
 "use strict";
 
-let { components, Cc, Ci, Cu } = require("chrome");
-let Services = require("Services");
+var { components, Cc, Ci, Cu } = require("chrome");
+var Services = require("Services");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -23,19 +23,19 @@ const {SourceMapConsumer} = require("source-map");
 
 loader.lazyGetter(this, "CssLogic", () => require("devtools/styleinspector/css-logic").CssLogic);
 
-let TRANSITION_CLASS = "moz-styleeditor-transitioning";
-let TRANSITION_DURATION_MS = 500;
-let TRANSITION_BUFFER_MS = 1000;
-let TRANSITION_RULE_SELECTOR =
+var TRANSITION_CLASS = "moz-styleeditor-transitioning";
+var TRANSITION_DURATION_MS = 500;
+var TRANSITION_BUFFER_MS = 1000;
+var TRANSITION_RULE_SELECTOR =
 ".moz-styleeditor-transitioning:root, .moz-styleeditor-transitioning:root *";
-let TRANSITION_RULE = TRANSITION_RULE_SELECTOR + " {\
+var TRANSITION_RULE = TRANSITION_RULE_SELECTOR + " {\
 transition-duration: " + TRANSITION_DURATION_MS + "ms !important; \
 transition-delay: 0ms !important;\
 transition-timing-function: ease-out !important;\
 transition-property: all !important;\
 }";
 
-let LOAD_ERROR = "error-load";
+var LOAD_ERROR = "error-load";
 
 types.addActorType("stylesheet");
 types.addActorType("originalsource");
@@ -44,7 +44,7 @@ types.addActorType("originalsource");
  * Creates a StyleSheetsActor. StyleSheetsActor provides remote access to the
  * stylesheets of a document.
  */
-let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
+var StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
   typeName: "stylesheets",
 
   /**
@@ -240,7 +240,7 @@ let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
 /**
  * The corresponding Front object for the StyleSheetsActor.
  */
-let StyleSheetsFront = protocol.FrontClass(StyleSheetsActor, {
+var StyleSheetsFront = protocol.FrontClass(StyleSheetsActor, {
   initialize: function(client, tabForm) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.styleSheetsActor;
@@ -252,7 +252,7 @@ let StyleSheetsFront = protocol.FrontClass(StyleSheetsActor, {
  * A MediaRuleActor lives on the server and provides access to properties
  * of a DOM @media rule and emits events when it changes.
  */
-let MediaRuleActor = protocol.ActorClass({
+var MediaRuleActor = protocol.ActorClass({
   typeName: "mediarule",
 
   events: {
@@ -331,7 +331,7 @@ let MediaRuleActor = protocol.ActorClass({
 /**
  * Cooresponding client-side front for a MediaRuleActor.
  */
-let MediaRuleFront = protocol.FrontClass(MediaRuleActor, {
+var MediaRuleFront = protocol.FrontClass(MediaRuleActor, {
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
 
@@ -375,7 +375,7 @@ let MediaRuleFront = protocol.FrontClass(MediaRuleActor, {
 /**
  * A StyleSheetActor represents a stylesheet on the server.
  */
-let StyleSheetActor = protocol.ActorClass({
+var StyleSheetActor = protocol.ActorClass({
   typeName: "stylesheet",
 
   events: {
@@ -988,7 +988,7 @@ var StyleSheetFront = protocol.FrontClass(StyleSheetActor, {
  * Actor representing an original source of a style sheet that was specified
  * in a source map.
  */
-let OriginalSourceActor = protocol.ActorClass({
+var OriginalSourceActor = protocol.ActorClass({
   typeName: "originalsource",
 
   initialize: function(aUrl, aSourceMap, aParentActor) {
@@ -1046,7 +1046,7 @@ let OriginalSourceActor = protocol.ActorClass({
 /**
  * The client-side counterpart for an OriginalSourceActor.
  */
-let OriginalSourceFront = protocol.FrontClass(OriginalSourceActor, {
+var OriginalSourceFront = protocol.FrontClass(OriginalSourceActor, {
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
 

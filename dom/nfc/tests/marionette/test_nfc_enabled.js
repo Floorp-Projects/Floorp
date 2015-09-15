@@ -40,7 +40,7 @@ function testStopPollNFC() {
   });
 }
 
-let tests = [
+var tests = [
   testEnableNFC,
   testStopPollNFC,
   testDisableNFC

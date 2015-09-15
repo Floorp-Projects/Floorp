@@ -4,4 +4,4 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});

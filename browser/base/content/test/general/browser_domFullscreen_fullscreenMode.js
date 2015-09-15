@@ -1,6 +1,6 @@
 "use strict";
 
-let gMessageManager;
+var gMessageManager;
 
 function frameScript() {
   addMessageListener("Test:RequestFullscreen", () => {
@@ -96,7 +96,7 @@ function waitForFullscreenChanges(aFlags) {
   });
 }
 
-let gTests = [
+var gTests = [
   {
     desc: "document method",
     affectsFullscreenMode: false,

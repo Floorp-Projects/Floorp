@@ -31,7 +31,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsProfile",
   "resource://gre/modules/FxAccountsProfile.jsm");
 
 // All properties exposed by the public FxAccounts API.
-let publicProperties = [
+var publicProperties = [
   "accountStatus",
   "getAccountsClient",
   "getAccountsSignInURI",
@@ -72,7 +72,7 @@ let publicProperties = [
 // }
 // If the state has changed between the function being called and the promise
 // being resolved, the .resolve() call will actually be rejected.
-let AccountState = this.AccountState = function(storageManager) {
+var AccountState = this.AccountState = function(storageManager) {
   this.storageManager = storageManager;
   this.promiseInitialized = this.storageManager.getAccountData().then(data => {
     this.oauthTokens = data && data.oauthTokens ? data.oauthTokens : {};

@@ -7,8 +7,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_inline-script.html";
 
-let gTab, gPanel, gDebugger;
-let gTarget, gToolbox;
+var gTab, gPanel, gDebugger;
+var gTarget, gToolbox;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

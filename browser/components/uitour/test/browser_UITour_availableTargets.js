@@ -3,13 +3,13 @@
 
 "use strict";
 
-let gTestTab;
-let gContentAPI;
-let gContentWindow;
+var gTestTab;
+var gContentAPI;
+var gContentWindow;
 
-let hasWebIDE = Services.prefs.getBoolPref("devtools.webide.widget.enabled");
+var hasWebIDE = Services.prefs.getBoolPref("devtools.webide.widget.enabled");
 
-let hasPocket = false;
+var hasPocket = false;
 if (Services.prefs.getBoolPref("browser.pocket.enabled")) {
   let isEnabledForLocale = true;
   if (Services.prefs.getBoolPref("browser.pocket.useLocaleList")) {
@@ -41,7 +41,7 @@ function searchEngineTargets() {
           if (engine.identifier)];
 }
 
-let tests = [
+var tests = [
   function test_availableTargets(done) {
     gContentAPI.getConfiguration("availableTargets", (data) => {
       ok_targets(data, [

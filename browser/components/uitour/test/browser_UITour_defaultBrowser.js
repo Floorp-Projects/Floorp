@@ -1,9 +1,9 @@
 "use strict";
 
-let gTestTab;
-let gContentAPI;
-let gContentWindow;
-let setDefaultBrowserCalled = false;
+var gTestTab;
+var gContentAPI;
+var gContentWindow;
+var setDefaultBrowserCalled = false;
 
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
@@ -32,7 +32,7 @@ MockShellService.prototype = {
   defaultFeedReader: 0,
 };
 
-let mockShellService = new MockObjectRegisterer("@mozilla.org/browser/shell-service;1",
+var mockShellService = new MockObjectRegisterer("@mozilla.org/browser/shell-service;1",
                                                 MockShellService);
 
 // Temporarily disabled, see note at test_setDefaultBrowser.
@@ -42,7 +42,7 @@ function test() {
   UITourTest();
 }
 
-let tests = [
+var tests = [
 
   /* This test is disabled (bug 1180714) since the MockObjectRegisterer
      is not actually replacing the original ShellService.

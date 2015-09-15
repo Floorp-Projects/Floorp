@@ -3,12 +3,12 @@
 
 "use strict";
 
-let tmp = {};
+var tmp = {};
 Cu.import("resource:///modules/translation/Translation.jsm", tmp);
-let {Translation, TranslationTelemetry} = tmp;
+var {Translation, TranslationTelemetry} = tmp;
 const Telemetry = Services.telemetry;
 
-let MetricsChecker = {
+var MetricsChecker = {
   HISTOGRAMS: {
     OPPORTUNITIES         : Services.telemetry.getHistogramById("TRANSLATION_OPPORTUNITIES"),
     OPPORTUNITIES_BY_LANG : Services.telemetry.getKeyedHistogramById("TRANSLATION_OPPORTUNITIES_BY_LANGUAGE"),
@@ -91,7 +91,7 @@ function getInfobarElement(browser, anonid) {
   return notif._getAnonElt(anonid);
 }
 
-let offerTranslationFor = Task.async(function*(text, from) {
+var offerTranslationFor = Task.async(function*(text, from) {
   // Create some content to translate.
   const dataUrl = "data:text/html;charset=utf-8," + text;
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, dataUrl);
@@ -106,13 +106,13 @@ let offerTranslationFor = Task.async(function*(text, from) {
   return tab;
 });
 
-let acceptTranslationOffer = Task.async(function*(tab) {
+var acceptTranslationOffer = Task.async(function*(tab) {
   let browser = tab.linkedBrowser;
   getInfobarElement(browser, "translate").doCommand();
   yield waitForMessage(browser, "Translation:Finished");
 });
 
-let translate = Task.async(function*(text, from, closeTab = true) {
+var translate = Task.async(function*(text, from, closeTab = true) {
   let tab = yield offerTranslationFor(text, from);
   yield acceptTranslationOffer(tab);
   if (closeTab) {

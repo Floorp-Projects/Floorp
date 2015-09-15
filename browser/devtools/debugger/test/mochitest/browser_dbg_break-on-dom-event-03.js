@@ -7,7 +7,7 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_event-listeners-04.html";
 
-let gClient, gThreadClient;
+var gClient, gThreadClient;
 
 function test() {
   if (!DebuggerServer.initialized) {

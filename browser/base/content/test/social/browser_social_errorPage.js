@@ -9,7 +9,7 @@ function gc() {
   wu.garbageCollect();
 }
 
-let openChatWindow = Cu.import("resource://gre/modules/MozSocialAPI.jsm", {}).openChatWindow;
+var openChatWindow = Cu.import("resource://gre/modules/MozSocialAPI.jsm", {}).openChatWindow;
 
 function openPanel(url, panelCallback, loadCallback) {
   // open a flyout
@@ -43,7 +43,7 @@ function onSidebarLoad(callback) {
   }, true);
 }
 
-let manifest = { // normal provider
+var manifest = { // normal provider
   name: "provider 1",
   origin: "https://example.com",
   sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar_empty.html",

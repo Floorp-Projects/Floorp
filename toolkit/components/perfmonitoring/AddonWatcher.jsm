@@ -32,7 +32,7 @@ const FILTERS = [
 const WAKEUP_IS_SURPRISINGLY_SLOW_FACTOR = 2;
 const THREAD_TAKES_LOTS_OF_CPU_FACTOR = .75;
 
-let AddonWatcher = {
+var AddonWatcher = {
   _previousPerformanceIndicators: {},
 
   /**

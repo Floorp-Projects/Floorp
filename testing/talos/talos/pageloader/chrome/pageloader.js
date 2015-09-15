@@ -282,7 +282,7 @@ function plPageFlags() {
   return pages[pageIndex].flags;
 }
 
-let ContentListener = {
+var ContentListener = {
   receiveMessage: function(message) {
     switch (message.name) {
       case 'PageLoader:LoadEvent': return plLoadHandlerMessage(message);
@@ -421,7 +421,7 @@ function loadFail() {
   }
 }
 
-let plNextPage = Task.async(function*() {
+var plNextPage = Task.async(function*() {
   var doNextPage = false;
   if (pageCycle < numPageCycles) {
     pageCycle++;

@@ -8,19 +8,19 @@ module.metadata = {
   'stability': 'experimental'
 };
 
-let { request: hostReq, response: hostRes } = require('./host');
-let { defer: async } = require('../lang/functional');
-let { defer } = require('../core/promise');
-let { emit: emitSync, on, off } = require('../event/core');
-let { uuid } = require('../util/uuid');
-let emit = async(emitSync);
+var { request: hostReq, response: hostRes } = require('./host');
+var { defer: async } = require('../lang/functional');
+var { defer } = require('../core/promise');
+var { emit: emitSync, on, off } = require('../event/core');
+var { uuid } = require('../util/uuid');
+var emit = async(emitSync);
 
 // Map of IDs to deferreds
-let requests = new Map();
+var requests = new Map();
 
 // May not be necessary to wrap this in `async`
 // once promises are async via bug 881047
-let receive = async(function ({data, id, error}) {
+var receive = async(function ({data, id, error}) {
   let request = requests.get(id);
   if (request) {
     if (error) request.reject(error);

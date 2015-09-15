@@ -55,7 +55,7 @@ const PROPERTIES_META = [...PROPERTIES_META_IMMUTABLE, "windowId", "title", "nam
 // How long we wait for children processes to respond.
 const MAX_WAIT_FOR_CHILD_PROCESS_MS = 5000;
 
-let isContent = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
+var isContent = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 /**
  * Access to a low-level performance probe.
  *
@@ -180,7 +180,7 @@ function lastNonZero(array) {
 /**
  * The actual Probes implemented by SpiderMonkey.
  */
-let Probes = {
+var Probes = {
   /**
    * A probe measuring jank.
    *
@@ -667,7 +667,7 @@ function Snapshot({xpcom, childProcesses, probes}) {
 /**
  * Communication with other processes
  */
-let Process = {
+var Process = {
   // a counter used to match responses to requests
   _idcounter: 0,
   _loader: null,

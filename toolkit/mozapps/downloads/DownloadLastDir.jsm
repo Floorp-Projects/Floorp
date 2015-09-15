@@ -34,7 +34,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-let observer = {
+var observer = {
   QueryInterface: function (aIID) {
     if (aIID.equals(Components.interfaces.nsIObserver) ||
         aIID.equals(Components.interfaces.nsISupports) ||
@@ -63,7 +63,7 @@ let observer = {
   }
 };
 
-let os = Components.classes["@mozilla.org/observer-service;1"]
+var os = Components.classes["@mozilla.org/observer-service;1"]
                    .getService(Components.interfaces.nsIObserverService);
 os.addObserver(observer, "last-pb-context-exited", true);
 os.addObserver(observer, "browser:purge-session-history", true);
@@ -86,7 +86,7 @@ function isContentPrefEnabled() {
   }
 }
 
-let gDownloadLastDirFile = readLastDirPref();
+var gDownloadLastDirFile = readLastDirPref();
 
 this.DownloadLastDir = function DownloadLastDir(aWindow) {
   let loadContext = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)

@@ -12,7 +12,7 @@ const TEST_URL = TEST_URL_ROOT + "doc_inspector_search.html";
 // suggestions is an array of suggestions that should be shown in the popup.
 // Suggestion is an object with label of the entry and optional count
 // (defaults to 1)
-let TEST_DATA = [
+var TEST_DATA = [
   {
     key: "d",
     suggestions: [

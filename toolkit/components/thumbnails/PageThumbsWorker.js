@@ -13,12 +13,12 @@
 
 importScripts("resource://gre/modules/osfile.jsm");
 
-let PromiseWorker = require("resource://gre/modules/workers/PromiseWorker.js");
+var PromiseWorker = require("resource://gre/modules/workers/PromiseWorker.js");
 
-let File = OS.File;
-let Type = OS.Shared.Type;
+var File = OS.File;
+var Type = OS.Shared.Type;
 
-let worker = new PromiseWorker.AbstractWorker();
+var worker = new PromiseWorker.AbstractWorker();
 worker.dispatch = function(method, args = []) {
   return Agent[method](...args);
 };
@@ -32,7 +32,7 @@ worker.close = function() {
 self.addEventListener("message", msg => worker.handleMessage(msg));
 
 
-let Agent = {
+var Agent = {
   // Checks if the specified file exists and has an age less than as
   // specifed (in seconds).
   isFileRecent: function Agent_isFileRecent(path, maxAge) {

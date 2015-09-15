@@ -221,7 +221,7 @@ function onFocus(window) {
 }
 exports.onFocus = onFocus;
 
-let isFocused = dispatcher("window-isFocused");
+var isFocused = dispatcher("window-isFocused");
 isFocused.when(x => x instanceof Ci.nsIDOMWindow, (window) => {
   const FM = Cc["@mozilla.org/focus-manager;1"].
                 getService(Ci.nsIFocusManager);

@@ -10,11 +10,11 @@ Components.utils.import("resource://testing-common/MockRegistrar.jsm");
 "use strict";
 
 // Only need to stub the methods actually called by nsSearchService
-let promptService = {
+var promptService = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptService]),
   confirmEx: function() {}
 };
-let prompt = {
+var prompt = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
   alert: function() {}
 };

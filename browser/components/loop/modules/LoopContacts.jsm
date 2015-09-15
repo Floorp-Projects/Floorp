@@ -323,7 +323,7 @@ LoopStorage.on("upgrade", function(e, db) {
  * callback Function. MozLoopAPI will cause things to break if this invariant is
  * violated. You'll notice this as well in the documentation for each method.
  */
-let LoopContactsInternal = Object.freeze({
+var LoopContactsInternal = Object.freeze({
   /**
    * Map of contact importer names to instances
    */

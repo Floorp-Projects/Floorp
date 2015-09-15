@@ -1,4 +1,4 @@
-let headVar = "I'm a var in head file";
+var headVar = "I'm a var in head file";
 
 function headMethod() {
   return true;

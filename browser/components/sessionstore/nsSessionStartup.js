@@ -63,7 +63,7 @@ consoleMsg.init(aMsg, aException.fileName, null, aException.lineNumber, 0, Ci.ns
   Services.console.logMessage(consoleMsg);
 }
 
-let gOnceInitializedDeferred = (function () {
+var gOnceInitializedDeferred = (function () {
   let deferred = {};
 
   deferred.promise = new Promise((resolve, reject) => {

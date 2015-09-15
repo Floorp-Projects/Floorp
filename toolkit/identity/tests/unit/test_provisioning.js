@@ -225,7 +225,7 @@ function test_get_assertion_after_provision() {
 
 }
 
-let TESTS = [];
+var TESTS = [];
 
 TESTS.push(test_begin_provisioning);
 TESTS.push(test_raise_provisioning_failure);

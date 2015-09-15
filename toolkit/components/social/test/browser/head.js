@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let SocialService = Components.utils.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
-let MockRegistrar = Components.utils.import("resource://testing-common/MockRegistrar.jsm", {}).MockRegistrar;
+var SocialService = Components.utils.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
+var MockRegistrar = Components.utils.import("resource://testing-common/MockRegistrar.jsm", {}).MockRegistrar;
 
 // A helper to run a suite of tests.
 // The "test object" should be an object with function names as keys and a
@@ -95,7 +95,7 @@ MockAlertsService.prototype = {
     }
 };
 
-let originalAlertsServiceCID;
+var originalAlertsServiceCID;
 function replaceAlertsService() {
   originalAlertsServiceCID =
     MockRegistrar.register(ALERTS_SERVICE_CONTRACT_ID, MockAlertsService);

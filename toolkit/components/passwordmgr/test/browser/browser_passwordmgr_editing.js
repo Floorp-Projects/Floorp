@@ -2,10 +2,10 @@ const { ContentTaskUtils } = Cu.import("resource://testing-common/ContentTaskUti
 const TIME_INTERVAL = 500;
 const PWMGR_DLG = "chrome://passwordmgr/content/passwordManager.xul";
 
-let doc;
-let pwmgr;
-let pwmgrdlg;
-let signonsTree;
+var doc;
+var pwmgr;
+var pwmgrdlg;
+var signonsTree;
 
 function addLogin(site, username, password) {
   let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",

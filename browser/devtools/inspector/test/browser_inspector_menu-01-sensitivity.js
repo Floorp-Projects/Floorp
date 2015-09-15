@@ -157,7 +157,7 @@ const TEST_CASES = [
   }
 ];
 
-let clipboard = require("sdk/clipboard");
+var clipboard = require("sdk/clipboard");
 registerCleanupFunction(() => {
   clipboard = null;
 });

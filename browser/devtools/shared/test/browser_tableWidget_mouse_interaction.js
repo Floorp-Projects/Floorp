@@ -17,7 +17,7 @@ const TEST_OPT = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 const {TableWidget} = require("devtools/shared/widgets/TableWidget");
 const Promise = require("promise");
 
-let doc, table;
+var doc, table;
 
 function test() {
   waitForExplicitFinish();
@@ -52,7 +52,7 @@ function endTests() {
   finish();
 }
 
-let startTests = Task.async(function*() {
+var startTests = Task.async(function*() {
   populateTable();
   yield testMouseInteraction();
   endTests();
@@ -133,7 +133,7 @@ function click(node, button = 0) {
 /**
  * Tests if clicking the table items does the expected behavior
  */
-let testMouseInteraction = Task.async(function*() {
+var testMouseInteraction = Task.async(function*() {
   info("Testing mouse interaction with the table");
   ok(!table.selectedRow, "Nothing should be selected beforehand");
 

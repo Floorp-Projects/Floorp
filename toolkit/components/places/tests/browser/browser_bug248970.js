@@ -6,7 +6,7 @@
 // https://wiki.mozilla.org/Firefox3.1/PrivateBrowsing/TestPlan#History
 // http://developer.mozilla.org/en/Using_the_Places_history_service
 
-let visitedURIs = [
+var visitedURIs = [
   "http://www.test-link.com/",
   "http://www.test-typed.com/",
   "http://www.test-bookmark.com/",

@@ -4,8 +4,8 @@
 
 "use strict";
 
-let initialLocation = gBrowser.currentURI.spec;
-let newTab = null;
+var initialLocation = gBrowser.currentURI.spec;
+var newTab = null;
 
 add_task(function() {
   info("Check addons button existence and functionality");

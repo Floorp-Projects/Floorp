@@ -94,7 +94,7 @@ function run_test()
 /**
  * HttpServer object initialized before tests start.
  */
-let gHttpServer;
+var gHttpServer;
 
 /**
  * Given a file name, returns a string containing an URI that points to the file
@@ -109,7 +109,7 @@ function httpUrl(aFileName) {
 // used, on Windows these might still be pending deletion on the physical file
 // system.  Thus, start from a new base number every time, to make a collision
 // with a file that is still pending deletion highly unlikely.
-let gFileCounter = Math.floor(Math.random() * 1000000);
+var gFileCounter = Math.floor(Math.random() * 1000000);
 
 /**
  * Returns a reference to a temporary file, that is guaranteed not to exist, and
@@ -587,7 +587,7 @@ function startFakeServer()
 /**
  * This is an internal reference that should not be used directly by tests.
  */
-let _gDeferResponses = Promise.defer();
+var _gDeferResponses = Promise.defer();
 
 /**
  * Ensures that all the interruptible requests started after this function is
@@ -672,7 +672,7 @@ function isValidDate(aDate) {
  * Position of the first byte served by the "interruptible_resumable.txt"
  * handler during the most recent response.
  */
-let gMostRecentFirstBytePos;
+var gMostRecentFirstBytePos;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Initialization functions common to all tests

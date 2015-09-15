@@ -15,7 +15,7 @@ const PROPNAME_MAX_LENGTH = 4;
  * @see browser/devtools/performance/modules/logic/jit.js
  */
 
-let OptimizationsListView = {
+var OptimizationsListView = {
 
   _currentFrame: null,
 

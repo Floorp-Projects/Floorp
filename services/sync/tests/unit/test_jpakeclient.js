@@ -38,8 +38,8 @@ function new_channel() {
   return cid;
 }
 
-let server;
-let channels = {};  // Map channel -> ServerChannel object
+var server;
+var channels = {};  // Map channel -> ServerChannel object
 function server_new_channel(request, response) {
   check_headers(request);
   let cid = new_channel();
@@ -48,7 +48,7 @@ function server_new_channel(request, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
-let error_report;
+var error_report;
 function server_report(request, response) {
   check_headers(request);
 
@@ -68,7 +68,7 @@ function server_report(request, response) {
 }
 
 // Hook for test code.
-let hooks = {};
+var hooks = {};
 function initHooks() {
   hooks.onGET = function onGET(request) {};
 }
@@ -146,7 +146,7 @@ ServerChannel.prototype = {
 /**
  * Controller that throws for everything.
  */
-let BaseController = {
+var BaseController = {
   displayPIN: function displayPIN() {
     do_throw("displayPIN() shouldn't have been called!");
   },

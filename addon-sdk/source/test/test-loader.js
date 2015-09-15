@@ -3,13 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
-let {
+var {
   Loader, main, unload, parseStack, generateMap, resolve, join,
   Require, Module
 } = require('toolkit/loader');
-let { readURI } = require('sdk/net/url');
+var { readURI } = require('sdk/net/url');
 
-let root = module.uri.substr(0, module.uri.lastIndexOf('/'));
+var root = module.uri.substr(0, module.uri.lastIndexOf('/'));
 
 const app = require('sdk/system/xul-app');
 

@@ -6,7 +6,7 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 // using a dynamic port in the addon metadata
 Components.utils.import("resource://testing-common/httpd.js");
-let gServer = new HttpServer();
+var gServer = new HttpServer();
 gServer.start(-1);
 gPort = gServer.identity.primaryPort;
 

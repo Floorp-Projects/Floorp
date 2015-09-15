@@ -4,7 +4,7 @@
 // Test if the view menu items "Larger Font" and "Smaller Font" are disabled
 // when the font size reaches the maximum/minimum values.
 
-let {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+var {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 
 function test() {
   const options = {
@@ -25,7 +25,7 @@ const MAXIMUM_FONT_SIZE = 96;
 const MINIMUM_FONT_SIZE = 6;
 const NORMAL_FONT_SIZE = 12;
 
-let testMaximumFontSize = Task.async(function* (win, sp) {
+var testMaximumFontSize = Task.async(function* (win, sp) {
   let doc = win.document;
 
   Services.prefs.clearUserPref('devtools.scratchpad.editorFontSize');
@@ -45,7 +45,7 @@ let testMaximumFontSize = Task.async(function* (win, sp) {
   ok(cmd.hasAttribute('disabled') === false, 'Command "sp-cmd-larger-font" is enabled.');
 });
 
-let testMinimumFontSize = Task.async(function* (win, sp) {
+var testMinimumFontSize = Task.async(function* (win, sp) {
   let doc = win.document;
 
   let menu = doc.getElementById('sp-menu-smaller-font');

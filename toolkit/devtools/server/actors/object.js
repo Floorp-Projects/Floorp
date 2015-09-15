@@ -1693,9 +1693,9 @@ function stringify(obj) {
 }
 
 // Used to prevent infinite recursion when an array is found inside itself.
-let seen = null;
+var seen = null;
 
-let stringifiers = {
+var stringifiers = {
   Error: errorStringify,
   EvalError: errorStringify,
   RangeError: errorStringify,

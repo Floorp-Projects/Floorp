@@ -110,7 +110,7 @@ const INADJACENCY_SOURCE = "chrome://browser/content/newtab/newTab.inadjacent.js
  * Directory links are a hard-coded set of links shown if a user's link
  * inventory is empty.
  */
-let DirectoryLinksProvider = {
+var DirectoryLinksProvider = {
 
   __linksURL: null,
 

@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
 
 const CHROME_BASE = "chrome://mochitests/content/browser/browser/base/content/test/general/";
 // Preference helpers.
-let changedPrefs = new Set();
+var changedPrefs = new Set();
 
 function setPref(name, value) {
   changedPrefs.add(name);
@@ -34,7 +34,7 @@ registerCleanupFunction(function() {
   }
 });
 
-let gTests = [
+var gTests = [
 {
   desc: "Test the remote commands",
   teardown: function* () {

@@ -6,7 +6,7 @@
  * when it is opened with the legacy front.
  */
 
-let WAIT_TIME = 10;
+var WAIT_TIME = 10;
 
 function* spawnTest() {
   let { target, toolbox, console } = yield initConsole(SIMPLE_URL, { TEST_PERFORMANCE_LEGACY_FRONT: true });

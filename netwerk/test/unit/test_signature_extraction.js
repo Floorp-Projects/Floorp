@@ -115,7 +115,7 @@ function promiseCopyToSaver(aSourceString, aSaverOutputStream, aCloseWhenDone) {
   return deferred.promise;
 }
 
-let gStillRunning = true;
+var gStillRunning = true;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests

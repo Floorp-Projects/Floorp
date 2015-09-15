@@ -8,7 +8,7 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_breakpoints-reload.html";
 
-let test = Task.async(function* () {
+var test = Task.async(function* () {
   requestLongerTimeout(4);
 
   const [tab,, panel] = yield initDebugger(TAB_URL);

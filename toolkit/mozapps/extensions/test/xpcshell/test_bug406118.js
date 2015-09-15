@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-let addonIDs = ["test_bug393285_1@tests.mozilla.org",
+var addonIDs = ["test_bug393285_1@tests.mozilla.org",
                 "test_bug393285_2@tests.mozilla.org",
                 "test_bug393285_3a@tests.mozilla.org",
                 "test_bug393285_4@tests.mozilla.org"];

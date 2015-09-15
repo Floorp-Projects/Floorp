@@ -1,6 +1,6 @@
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-let shutdownOrder = [];
+var shutdownOrder = [];
 
 function mockAddonProvider(name) {
   let mockProvider = {

@@ -40,7 +40,7 @@ this.SessionHistory = Object.freeze({
 /**
  * The internal API for the SessionHistory module.
  */
-let SessionHistoryInternal = {
+var SessionHistoryInternal = {
   /**
    * Returns whether the given docShell's session history is empty.
    *

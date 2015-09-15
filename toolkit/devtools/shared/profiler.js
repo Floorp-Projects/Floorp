@@ -26,7 +26,7 @@ loader.lazyGetter(this, "nsIProfilerModule", () => {
   return Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
 });
 
-let DEFAULT_PROFILER_OPTIONS = {
+var DEFAULT_PROFILER_OPTIONS = {
   // When using the DevTools Performance Tools, this will be overridden
   // by the pref `devtools.performance.profiler.buffer-size`.
   entries: Math.pow(10, 7),
@@ -376,7 +376,7 @@ const ProfilerManager = (function () {
 /**
  * The profiler actor provides remote access to the built-in nsIProfiler module.
  */
-let Profiler = exports.Profiler = Class({
+var Profiler = exports.Profiler = Class({
   extends: EventTarget,
 
   initialize: function () {

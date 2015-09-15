@@ -132,7 +132,7 @@ SSLExceptions.prototype = {
   }
 };
 
-let ErrorPage = {
+var ErrorPage = {
   _addCertException: function(aMessage) {
     let frameLoaderOwner = aMessage.target.QueryInterface(Ci.nsIFrameLoaderOwner);
     let win = frameLoaderOwner.ownerDocument.defaultView;
