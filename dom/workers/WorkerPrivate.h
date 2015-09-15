@@ -50,6 +50,8 @@ struct RuntimeStats;
 namespace mozilla {
 namespace dom {
 class Function;
+class MessagePort;
+class MessagePortIdentifier;
 class StructuredCloneHelper;
 } // namespace dom
 namespace ipc {
@@ -64,7 +66,6 @@ class ReportDebuggerErrorRunnable;
 BEGIN_WORKERS_NAMESPACE
 
 class AutoSyncLoopHolder;
-class MessagePort;
 class SharedWorker;
 class ServiceWorkerClientInfo;
 class WorkerControlRunnable;
@@ -177,10 +178,9 @@ private:
 
   // Only touched on the parent thread (currently this is always the main
   // thread as SharedWorkers are always top-level).
-  nsDataHashtable<nsUint64HashKey, SharedWorker*> mSharedWorkers;
+  nsTArray<SharedWorker*> mSharedWorkers;
 
   uint64_t mBusyCount;
-  uint64_t mMessagePortSerial;
   Status mParentStatus;
   bool mParentFrozen;
   bool mIsChromeWorker;
@@ -226,7 +226,6 @@ private:
   void
   PostMessageInternal(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                       const Optional<Sequence<JS::Value>>& aTransferable,
-                      bool aToMessagePort, uint64_t aMessagePortSerial,
                       ServiceWorkerClientInfo* aClientInfo,
                       ErrorResult& aRv);
 
@@ -328,7 +327,7 @@ public:
               const Optional<Sequence<JS::Value> >& aTransferable,
               ErrorResult& aRv)
   {
-    PostMessageInternal(aCx, aMessage, aTransferable, false, 0, nullptr, aRv);
+    PostMessageInternal(aCx, aMessage, aTransferable, nullptr, aRv);
   }
 
   void
@@ -336,19 +335,6 @@ public:
                              const Optional<Sequence<JS::Value>>& aTransferable,
                              nsAutoPtr<ServiceWorkerClientInfo>& aClientInfo,
                              ErrorResult& aRv);
-
-  void
-  PostMessageToMessagePort(JSContext* aCx,
-                           uint64_t aMessagePortSerial,
-                           JS::Handle<JS::Value> aMessage,
-                           const Optional<Sequence<JS::Value> >& aTransferable,
-                           ErrorResult& aRv);
-
-  bool
-  DispatchMessageEventToMessagePort(
-                               JSContext* aCx,
-                               uint64_t aMessagePortSerial,
-                               StructuredCloneHelper& aHelper);
 
   void
   UpdateRuntimeOptions(JSContext* aCx,
@@ -379,7 +365,8 @@ public:
   OfflineStatusChangeEvent(JSContext* aCx, bool aIsOffline);
 
   bool
-  RegisterSharedWorker(JSContext* aCx, SharedWorker* aSharedWorker);
+  RegisterSharedWorker(JSContext* aCx, SharedWorker* aSharedWorker,
+                       MessagePort* aPort);
 
   void
   UnregisterSharedWorker(JSContext* aCx, SharedWorker* aSharedWorker);
@@ -758,13 +745,6 @@ public:
     return mSharedWorkerName;
   }
 
-  uint64_t
-  NextMessagePortSerial()
-  {
-    AssertIsOnMainThread();
-    return mMessagePortSerial++;
-  }
-
   bool
   IsStorageAllowed() const
   {
@@ -952,8 +932,6 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 
   nsRefPtr<MemoryReporter> mMemoryReporter;
 
-  nsRefPtrHashtable<nsUint64HashKey, MessagePort> mWorkerPorts;
-
   // fired on the main thread if the worker script fails to load
   nsCOMPtr<nsIRunnable> mLoadFailedRunnable;
 
@@ -1076,13 +1054,12 @@ public:
                       const Optional<Sequence<JS::Value>>& aTransferable,
                       ErrorResult& aRv)
   {
-    PostMessageToParentInternal(aCx, aMessage, aTransferable, false, 0, aRv);
+    PostMessageToParentInternal(aCx, aMessage, aTransferable, aRv);
   }
 
   void
   PostMessageToParentMessagePort(
                              JSContext* aCx,
-                             uint64_t aMessagePortSerial,
                              JS::Handle<JS::Value> aMessage,
                              const Optional<Sequence<JS::Value>>& aTransferable,
                              ErrorResult& aRv);
@@ -1239,13 +1216,7 @@ public:
   }
 
   bool
-  ConnectMessagePort(JSContext* aCx, uint64_t aMessagePortSerial);
-
-  void
-  DisconnectMessagePort(uint64_t aMessagePortSerial);
-
-  MessagePort*
-  GetMessagePort(uint64_t aMessagePortSerial);
+  ConnectMessagePort(JSContext* aCx, MessagePortIdentifier& aIdentifier);
 
   WorkerGlobalScope*
   GetOrCreateGlobalScope(JSContext* aCx);
@@ -1445,8 +1416,6 @@ private:
   PostMessageToParentInternal(JSContext* aCx,
                               JS::Handle<JS::Value> aMessage,
                               const Optional<Sequence<JS::Value>>& aTransferable,
-                              bool aToMessagePort,
-                              uint64_t aMessagePortSerial,
                               ErrorResult& aRv);
 
   void

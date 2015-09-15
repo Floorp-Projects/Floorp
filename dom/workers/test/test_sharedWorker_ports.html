@@ -1,0 +1,42 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test for MessagePort and SharedWorkers</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  </head>
+  <body>
+    <script class="testbody" type="text/javascript">
+
+SpecialPowers.pushPrefEnv({ set: [["dom.workers.sharedWorkers.enabled", true]]},
+function() {
+  var sw1 = new SharedWorker('sharedWorker_ports.js');
+  sw1.port.onmessage = function(event) {
+    if (event.data.type == "connected") {
+      ok(true, "The SharedWorker is alive.");
+
+      var sw2 = new SharedWorker('sharedWorker_ports.js');
+      sw1.port.postMessage("Port from the main-thread!", [sw2.port]);
+      return;
+    }
+
+    if (event.data.type == "status") {
+      ok(event.data.test, event.data.msg);
+      return;
+    }
+
+    if (event.data.type == "finish") {
+      SimpleTest.finish();
+    }
+  }
+});
+
+SimpleTest.waitForExplicitFinish();
+    </script>
+  </body>
+</html>
+
