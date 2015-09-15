@@ -11,7 +11,6 @@
 #include "nsIInputStream.h"
 #include "nsILineInputStream.h"
 #include "nsIObserverService.h"
-#include "nsIOutputStream.h"
 #include "nsISafeOutputStream.h"
 
 #include "MainThreadUtils.h"
