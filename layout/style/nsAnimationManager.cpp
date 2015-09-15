@@ -244,7 +244,7 @@ CSSAnimation::QueueEvents()
     // First notifying for start of 0th iteration by appending an
     // 'animationstart':
     StickyTimeDuration elapsedTime =
-      std::min(StickyTimeDuration(mEffect->InitialAdvance()),
+      std::min(StickyTimeDuration(InitialAdvance()),
                computedTiming.mActiveDuration);
     manager->QueueEvent(
       AnimationEventInfo(owningElement, mAnimationName, eAnimationStart,
@@ -261,7 +261,7 @@ CSSAnimation::QueueEvents()
     TimeDuration iterationStart = mEffect->Timing().mIterationDuration *
                                     computedTiming.mCurrentIteration;
     elapsedTime = StickyTimeDuration(std::max(iterationStart,
-                                              mEffect->InitialAdvance()));
+                                              InitialAdvance()));
   } else {
     MOZ_ASSERT(message == eAnimationEnd);
     elapsedTime = computedTiming.mActiveDuration;

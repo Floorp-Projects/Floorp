@@ -165,6 +165,17 @@ protected:
   void UpdateTiming(SeekFlag aSeekFlag,
                     SyncNotifyFlag aSyncNotifyFlag) override;
 
+  // Returns the duration from the start of the animation's source effect's
+  // active interval to the point where the animation actually begins playback.
+  // This is zero unless the animation's source effect has a negative delay in
+  // which // case it is the absolute value of that delay.
+  // This is used for setting the elapsedTime member of CSS AnimationEvents.
+  TimeDuration InitialAdvance() const {
+    return mEffect ?
+           std::max(TimeDuration(), mEffect->Timing().mDelay * -1) :
+           TimeDuration();
+  }
+
   nsString mAnimationName;
 
   // The (pseudo-)element whose computed animation-name refers to this
