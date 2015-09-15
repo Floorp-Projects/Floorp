@@ -10,12 +10,12 @@
 
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/SharedWorkerBinding.h"
 #include "nsContentUtils.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIDOMEvent.h"
 
+#include "MessagePort.h"
 #include "RuntimeService.h"
 #include "WorkerPrivate.h"
 
@@ -26,14 +26,16 @@ using namespace mozilla;
 USING_WORKERS_NAMESPACE
 
 SharedWorker::SharedWorker(nsPIDOMWindow* aWindow,
-                           WorkerPrivate* aWorkerPrivate,
-                           MessagePort* aMessagePort)
-: DOMEventTargetHelper(aWindow), mWorkerPrivate(aWorkerPrivate)
-, mMessagePort(aMessagePort)
-, mFrozen(false)
+                           WorkerPrivate* aWorkerPrivate)
+: DOMEventTargetHelper(aWindow), mWorkerPrivate(aWorkerPrivate),
+  mFrozen(false)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aWorkerPrivate);
+
+  mSerial = aWorkerPrivate->NextMessagePortSerial();
+
+  mMessagePort = new MessagePort(aWindow, this, mSerial);
 }
 
 SharedWorker::~SharedWorker()
@@ -74,11 +76,13 @@ SharedWorker::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
   return sharedWorker.forget();
 }
 
-MessagePort*
+already_AddRefed<mozilla::dom::workers::MessagePort>
 SharedWorker::Port()
 {
   AssertIsOnMainThread();
-  return mMessagePort;
+
+  nsRefPtr<MessagePort> messagePort = mMessagePort;
+  return messagePort.forget();
 }
 
 void
@@ -153,7 +157,8 @@ SharedWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   MOZ_ASSERT(mWorkerPrivate);
   MOZ_ASSERT(mMessagePort);
 
-  mMessagePort->PostMessage(aCx, aMessage, aTransferable, aRv);
+  mWorkerPrivate->PostMessageToMessagePort(aCx, mMessagePort->Serial(),
+                                           aMessage, aTransferable, aRv);
 }
 
 void

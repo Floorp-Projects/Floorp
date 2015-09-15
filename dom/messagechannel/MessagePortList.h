@@ -29,7 +29,7 @@ public:
 
 public:
   MessagePortList(nsISupports* aOwner,
-                  const nsTArray<nsRefPtr<MessagePort>>& aPorts)
+                  const nsTArray<nsRefPtr<MessagePortBase>>& aPorts)
     : mOwner(aOwner)
     , mPorts(aPorts)
   {
@@ -50,13 +50,13 @@ public:
     return mPorts.Length();
   }
 
-  MessagePort*
+  MessagePortBase*
   Item(uint32_t aIndex)
   {
     return mPorts.SafeElementAt(aIndex);
   }
 
-  MessagePort*
+  MessagePortBase*
   IndexedGetter(uint32_t aIndex, bool &aFound)
   {
     aFound = aIndex < mPorts.Length();
@@ -68,7 +68,7 @@ public:
 
 public:
   nsCOMPtr<nsISupports> mOwner;
-  nsTArray<nsRefPtr<MessagePort>> mPorts;
+  nsTArray<nsRefPtr<MessagePortBase>> mPorts;
 };
 
 } // namespace dom
