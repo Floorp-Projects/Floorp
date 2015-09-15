@@ -33,6 +33,9 @@ class WorkerPrivate;
 bool
 ServiceWorkerRegistrationVisible(JSContext* aCx, JSObject* aObj);
 
+bool
+ServiceWorkerNotificationAPIVisible(JSContext* aCx, JSObject* aObj);
+
 // This class exists solely so that we can satisfy some WebIDL Func= attribute
 // constraints. Func= converts the function name to a header file to include, in
 // this case "ServiceWorkerRegistration.h".
