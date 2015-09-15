@@ -70,8 +70,8 @@ typedef ucontext_t tickcontext_t;
 pid_t gettid();
 #endif
 
-#if defined(SPS_ARCH_arm) && defined(MOZ_WIDGET_GONK)
- // Should also work on other Android and ARM Linux, but not tested there yet.
+#if defined(__arm__) && defined(ANDROID)
+ // Should also work on ARM Linux, but not tested there yet.
  #define USE_EHABI_STACKWALK
 #endif
 #ifdef USE_EHABI_STACKWALK
