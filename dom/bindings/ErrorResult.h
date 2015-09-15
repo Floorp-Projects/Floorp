@@ -43,6 +43,25 @@ GetErrorArgCount(const ErrNum aErrorNumber);
 bool
 ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, ...);
 
+struct StringArrayAppender
+{
+  static void Append(nsTArray<nsString>& aArgs, uint16_t aCount)
+  {
+    MOZ_RELEASE_ASSERT(aCount == 0, "Must give at least as many string arguments as are required by the ErrNum.");
+  }
+
+  template<typename... Ts>
+  static void Append(nsTArray<nsString>& aArgs, uint16_t aCount, const nsAString* aFirst, Ts... aOtherArgs)
+  {
+    if (aCount == 0) {
+      MOZ_ASSERT(false, "There should not be more string arguments provided than are required by the ErrNum.");
+      return;
+    }
+    aArgs.AppendElement(*aFirst);
+    Append(aArgs, aCount - 1, aOtherArgs...);
+  }
+};
+
 } // namespace dom
 
 class ErrorResult {
@@ -95,22 +114,16 @@ public:
     return rv;
   }
 
-  void
-  ThrowTypeError(const dom::ErrNum errorNumber, ...)
+  template<typename... Ts>
+  void ThrowTypeError(const dom::ErrNum errorNumber, Ts... messageArgs)
   {
-    va_list ap;
-    va_start(ap, errorNumber);
-    ThrowErrorWithMessage(ap, errorNumber, NS_ERROR_TYPE_ERR);
-    va_end(ap);
+    ThrowErrorWithMessage(errorNumber, NS_ERROR_TYPE_ERR, messageArgs...);
   }
 
-  void
-  ThrowRangeError(const dom::ErrNum errorNumber, ...)
+  template<typename... Ts>
+  void ThrowRangeError(const dom::ErrNum errorNumber, Ts... messageArgs)
   {
-    va_list ap;
-    va_start(ap, errorNumber);
-    ThrowErrorWithMessage(ap, errorNumber, NS_ERROR_RANGE_ERR);
-    va_end(ap);
+    ThrowErrorWithMessage(errorNumber, NS_ERROR_RANGE_ERR, messageArgs...);
   }
 
   void ReportErrorWithMessage(JSContext* cx);
@@ -198,8 +211,8 @@ private:
   // and returns the arguments array from that Message.
   nsTArray<nsString>& CreateErrorMessageHelper(const dom::ErrNum errorNumber, nsresult errorType);
 
-  void
-  ThrowErrorWithMessage(va_list ap, const dom::ErrNum errorNumber, nsresult errorType)
+  template<typename... Ts>
+  void ThrowErrorWithMessage(const dom::ErrNum errorNumber, nsresult errorType, Ts... messageArgs)
   {
     if (IsJSException()) {
       // We have rooted our mJSException, and we don't have the info
@@ -210,9 +223,7 @@ private:
     }
     nsTArray<nsString>& messageArgsArray = CreateErrorMessageHelper(errorNumber, errorType);
     uint16_t argCount = dom::GetErrorArgCount(errorNumber);
-    while (argCount--) {
-      messageArgsArray.AppendElement(*va_arg(ap, const nsAString*));
-    }
+    dom::StringArrayAppender::Append(messageArgsArray, argCount, messageArgs...);
 #ifdef DEBUG
     mHasMessage = true;
 #endif
