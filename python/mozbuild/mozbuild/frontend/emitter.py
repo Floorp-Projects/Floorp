@@ -63,7 +63,6 @@ from .data import (
     PreprocessedTestWebIDLFile,
     PreprocessedWebIDLFile,
     Program,
-    ReaderSummary,
     Resources,
     SharedLibrary,
     SimpleProgram,
@@ -94,6 +93,8 @@ from .context import (
     SubContext,
     TemplateContext,
 )
+
+from mozbuild.base import ExecutionSummary
 
 
 class TreeMetadataEmitter(LoggingMixin):
@@ -136,19 +137,27 @@ class TreeMetadataEmitter(LoggingMixin):
         # Add security/nss manually, since it doesn't have a subconfigure.
         self._external_paths.add('security/nss')
 
+        self._emitter_time = 0.0
+        self._object_count = 0
+
+    def summary(self):
+        return ExecutionSummary(
+            'Processed into {object_count:d} build config descriptors in '
+            '{execution_time:.2f}s',
+            execution_time=self._emitter_time,
+            object_count=self._object_count)
+
     def emit(self, output):
         """Convert the BuildReader output into data structures.
 
         The return value from BuildReader.read_topsrcdir() (a generator) is
         typically fed into this function.
         """
-        file_count = 0
-        sandbox_execution_time = 0.0
-        emitter_time = 0.0
         contexts = {}
 
         def emit_objs(objs):
             for o in objs:
+                self._object_count += 1
                 yield o
                 if not o._ack:
                     raise Exception('Unhandled object of type %s' % type(o))
@@ -166,13 +175,9 @@ class TreeMetadataEmitter(LoggingMixin):
                 start = time.time()
                 # We need to expand the generator for the timings to work.
                 objs = list(self.emit_from_context(out))
-                emitter_time += time.time() - start
+                self._emitter_time += time.time() - start
 
                 for o in emit_objs(objs): yield o
-
-                # Update the stats.
-                file_count += len(out.all_paths)
-                sandbox_execution_time += out.execution_time
 
             else:
                 raise Exception('Unhandled output type: %s' % type(out))
@@ -182,11 +187,9 @@ class TreeMetadataEmitter(LoggingMixin):
         if self.config.substs.get('COMPILE_ENVIRONMENT', True):
             start = time.time()
             objs = list(self._emit_libs_derived(contexts))
-            emitter_time += time.time() - start
+            self._emitter_time += time.time() - start
 
             for o in emit_objs(objs): yield o
-
-        yield ReaderSummary(file_count, sandbox_execution_time, emitter_time)
 
     def _emit_libs_derived(self, contexts):
         # First do FINAL_LIBRARY linkage.

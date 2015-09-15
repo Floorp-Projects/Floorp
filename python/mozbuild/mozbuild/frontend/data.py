@@ -43,17 +43,6 @@ class TreeMetadata(object):
         self._ack = True
 
 
-class ReaderSummary(TreeMetadata):
-    """A summary of what the reader did."""
-
-    def __init__(self, total_file_count, total_sandbox_execution_time,
-        total_emitter_execution_time):
-        TreeMetadata.__init__(self)
-        self.total_file_count = total_file_count
-        self.total_sandbox_execution_time = total_sandbox_execution_time
-        self.total_emitter_execution_time = total_emitter_execution_time
-
-
 class ContextDerived(TreeMetadata):
     """Build object derived from a single Context instance.
 
