@@ -360,6 +360,7 @@ protected:
 
   bool IsPossiblyOrphanedPendingAnimation() const;
   StickyTimeDuration EffectEnd() const;
+  TimeStamp AnimationTimeToTimeStamp(const StickyTimeDuration& aTime) const;
 
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
