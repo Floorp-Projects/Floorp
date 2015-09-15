@@ -59,7 +59,7 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
   // mProperties[0].mSegments[0].mFromValue, except when this transition
   // started as the reversal of another in-progress transition.
   // Needed so we can handle two reverses in a row.
-  mozilla::StyleAnimationValue mStartForReversingTest;
+  StyleAnimationValue mStartForReversingTest;
   // Likewise, the portion (in value space) of the "full" reversed
   // transition that we're actually covering.  For example, if a :hover
   // effect has a transition that moves the element 10px to the right
@@ -195,12 +195,13 @@ protected:
 } // namespace dom
 
 struct TransitionEventInfo {
-  nsCOMPtr<nsIContent> mElement;
+  nsRefPtr<dom::Element> mElement;
   InternalTransitionEvent mEvent;
 
-  TransitionEventInfo(nsIContent *aElement, nsCSSProperty aProperty,
-                      TimeDuration aDuration,
-                      nsCSSPseudoElements::Type aPseudoType)
+  TransitionEventInfo(dom::Element* aElement,
+                      nsCSSPseudoElements::Type aPseudoType,
+                      nsCSSProperty aProperty,
+                      TimeDuration aDuration)
     : mElement(aElement)
     , mEvent(true, eTransitionEnd)
   {
@@ -213,7 +214,7 @@ struct TransitionEventInfo {
 
   // InternalTransitionEvent doesn't support copy-construction, so we need
   // to ourselves in order to work with nsTArray
-  TransitionEventInfo(const TransitionEventInfo &aOther)
+  TransitionEventInfo(const TransitionEventInfo& aOther)
     : mElement(aOther.mElement)
     , mEvent(true, eTransitionEnd)
   {

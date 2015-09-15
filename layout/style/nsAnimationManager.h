@@ -26,15 +26,16 @@ class Promise;
 } /* namespace dom */
 
 struct AnimationEventInfo {
-  nsRefPtr<mozilla::dom::Element> mElement;
-  mozilla::InternalAnimationEvent mEvent;
+  nsRefPtr<dom::Element> mElement;
+  InternalAnimationEvent mEvent;
 
-  AnimationEventInfo(mozilla::dom::Element *aElement,
-                     const nsSubstring& aAnimationName,
+  AnimationEventInfo(dom::Element* aElement,
+                     nsCSSPseudoElements::Type aPseudoType,
                      EventMessage aMessage,
-                     const mozilla::StickyTimeDuration& aElapsedTime,
-                     nsCSSPseudoElements::Type aPseudoType)
-    : mElement(aElement), mEvent(true, aMessage)
+                     const nsSubstring& aAnimationName,
+                     const StickyTimeDuration& aElapsedTime)
+    : mElement(aElement)
+    , mEvent(true, aMessage)
   {
     // XXX Looks like nobody initialize WidgetEvent::time
     mEvent.animationName = aAnimationName;
@@ -44,7 +45,7 @@ struct AnimationEventInfo {
 
   // InternalAnimationEvent doesn't support copy-construction, so we need
   // to ourselves in order to work with nsTArray
-  AnimationEventInfo(const AnimationEventInfo &aOther)
+  AnimationEventInfo(const AnimationEventInfo& aOther)
     : mElement(aOther.mElement)
     , mEvent(true, aOther.mEvent.mMessage)
   {
