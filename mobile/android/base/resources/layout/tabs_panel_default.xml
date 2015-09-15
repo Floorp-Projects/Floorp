@@ -18,15 +18,10 @@
               android:layout_height="@dimen/browser_toolbar_height"
               android:background="@color/text_and_tabs_tray_grey">
 
-            <org.mozilla.gecko.tabs.TabPanelBackButton android:id="@+id/nav_back"
-                                                       android:layout_width="@dimen/tabs_panel_button_width"
-                                                       android:layout_height="match_parent"
-                                                       android:minWidth="@dimen/tabs_panel_button_width"
-                                                       android:src="@drawable/tabs_panel_nav_back"
-                                                       android:contentDescription="@string/back"
-                                                       android:background="@drawable/action_bar_button_inverse"
-                                                       gecko:dividerVerticalPadding="@dimen/tab_panel_divider_vertical_padding"
-                                                       gecko:rightDivider="@drawable/tab_indicator_divider"/>
+            <ViewStub android:id="@+id/nav_back_stub"
+                      android:layout="@layout/tabs_panel_back_button"
+                      android:layout_width="wrap_content"
+                      android:layout_height="match_parent"/>
 
             <org.mozilla.gecko.widget.IconTabWidget android:id="@+id/tab_widget"
                                                     android:layout_width="wrap_content"
