@@ -27,6 +27,7 @@ class Promise;
 
 struct AnimationEventInfo {
   nsRefPtr<dom::Element> mElement;
+  nsRefPtr<dom::Animation> mAnimation;
   InternalAnimationEvent mEvent;
   TimeStamp mTimeStamp;
 
@@ -35,8 +36,10 @@ struct AnimationEventInfo {
                      EventMessage aMessage,
                      const nsSubstring& aAnimationName,
                      const StickyTimeDuration& aElapsedTime,
-                     const TimeStamp& aTimeStamp)
+                     const TimeStamp& aTimeStamp,
+                     dom::Animation* aAnimation)
     : mElement(aElement)
+    , mAnimation(aAnimation)
     , mEvent(true, aMessage)
     , mTimeStamp(aTimeStamp)
   {
@@ -50,6 +53,7 @@ struct AnimationEventInfo {
   // to ourselves in order to work with nsTArray
   AnimationEventInfo(const AnimationEventInfo& aOther)
     : mElement(aOther.mElement)
+    , mAnimation(aOther.mAnimation)
     , mEvent(true, aOther.mEvent.mMessage)
     , mTimeStamp(aOther.mTimeStamp)
   {
