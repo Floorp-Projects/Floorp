@@ -7,7 +7,10 @@ gcc_bt_patch=${this_path}/gcc-bt.patch
 gcc_pr55650_patch=${this_path}/gcc48-pr55650.patch
 make_flags='-j12'
 
-root_dir=$(mktemp -d)
+root_dir="$1"
+if [ -z "$root_dir" -o ! -d "$root_dir" ]; then
+  root_dir=$(mktemp -d)
+fi
 cd $root_dir
 
 if test -z $TMPDIR; then
@@ -18,7 +21,7 @@ wget -c -P $TMPDIR ftp://ftp.gnu.org/gnu/binutils/binutils-$binutils_version.tar
 tar xjf $TMPDIR/binutils-$binutils_version.tar.bz2
 mkdir binutils-objdir
 cd binutils-objdir
-../binutils-$binutils_version/configure --prefix /tools/gcc/ --enable-gold  --enable-plugins --disable-nls || exit 1
+../binutils-$binutils_version/configure --prefix /tools/gcc/ --disable-gold --enable-plugins --disable-nls || exit 1
 make $make_flags || exit 1
 make install $make_flags DESTDIR=$root_dir || exit 1
 cd ..
