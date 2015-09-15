@@ -63,6 +63,7 @@ public:
     , mAnimationName(aAnimationName)
     , mIsStylePaused(false)
     , mPauseShouldStick(false)
+    , mNeedsNewAnimationIndexWhenRun(false)
     , mPreviousPhaseOrIteration(PREVIOUS_PHASE_BEFORE)
   {
     // We might need to drop this assertion once we add a script-accessible
@@ -222,6 +223,10 @@ protected:
   // they don't represent valid states.)
   bool mIsStylePaused;
   bool mPauseShouldStick;
+
+  // When true, indicates that when this animation next leaves the idle state,
+  // its animation index should be updated.
+  bool mNeedsNewAnimationIndexWhenRun;
 
   enum {
     PREVIOUS_PHASE_BEFORE = uint64_t(-1),
