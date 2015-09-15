@@ -894,12 +894,6 @@ const KTableValue nsCSSProps::kBoxSizingKTable[] = {
 };
 
 const KTableValue nsCSSProps::kCaptionSideKTable[] = {
-  eCSSKeyword_block_start,          NS_STYLE_CAPTION_SIDE_BSTART,
-  eCSSKeyword_block_end,            NS_STYLE_CAPTION_SIDE_BEND,
-  eCSSKeyword_inline_start,         NS_STYLE_CAPTION_SIDE_ISTART,
-  eCSSKeyword_inline_end,           NS_STYLE_CAPTION_SIDE_IEND,
-  eCSSKeyword_block_start_outside,  NS_STYLE_CAPTION_SIDE_BSTART_OUTSIDE,
-  eCSSKeyword_block_end_outside,    NS_STYLE_CAPTION_SIDE_BEND_OUTSIDE,
   eCSSKeyword_top,                  NS_STYLE_CAPTION_SIDE_TOP,
   eCSSKeyword_right,                NS_STYLE_CAPTION_SIDE_RIGHT,
   eCSSKeyword_bottom,               NS_STYLE_CAPTION_SIDE_BOTTOM,
