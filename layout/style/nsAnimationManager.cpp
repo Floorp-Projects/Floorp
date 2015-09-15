@@ -246,9 +246,9 @@ CSSAnimation::QueueEvents()
     StickyTimeDuration elapsedTime =
       std::min(StickyTimeDuration(InitialAdvance()),
                computedTiming.mActiveDuration);
-    manager->QueueEvent(
-      AnimationEventInfo(owningElement, mAnimationName, eAnimationStart,
-                         elapsedTime, owningPseudoType));
+    manager->QueueEvent(AnimationEventInfo(owningElement, owningPseudoType,
+                                           eAnimationStart, mAnimationName,
+                                           elapsedTime));
     // Then have the shared code below append an 'animationend':
     message = eAnimationEnd;
   } else {
@@ -267,9 +267,8 @@ CSSAnimation::QueueEvents()
     elapsedTime = computedTiming.mActiveDuration;
   }
 
-  manager->QueueEvent(
-    AnimationEventInfo(owningElement, mAnimationName, message, elapsedTime,
-                       owningPseudoType));
+  manager->QueueEvent(AnimationEventInfo(owningElement, owningPseudoType,
+                                         message, mAnimationName, elapsedTime));
 }
 
 bool
