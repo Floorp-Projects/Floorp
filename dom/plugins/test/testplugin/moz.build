@@ -8,8 +8,5 @@ DIRS += ['secondplugin', 'javaplugin', 'thirdplugin', 'flashplugin']
 
 SharedLibrary('nptest')
 
-if CONFIG['_MSC_VER']:
-    ALLOW_COMPILER_WARNINGS = True
-
 relative_path = '.'
 include('testplugin.mozbuild')
