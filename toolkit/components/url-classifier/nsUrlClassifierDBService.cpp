@@ -33,6 +33,7 @@
 #include "nsString.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/ErrorNames.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
@@ -516,6 +517,8 @@ nsUrlClassifierDBServiceWorker::FinishStream()
     mTableUpdates.AppendElements(mProtocolParser->GetTableUpdates());
     mProtocolParser->ForgetTableUpdates();
   } else {
+    LOG(("nsUrlClassifierDBService::FinishStream Failed to parse the stream "
+         "using mProtocolParser."));
     mUpdateStatus = mProtocolParser->Status();
   }
   mUpdateObserver->StreamFinished(mProtocolParser->Status(), 0);
@@ -540,6 +543,9 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
 
   if (NS_SUCCEEDED(mUpdateStatus)) {
     mUpdateStatus = ApplyUpdate();
+  } else {
+    LOG(("nsUrlClassifierDBServiceWorker::FinishUpdate() Not running "
+         "ApplyUpdate() since the update has already failed."));
   }
 
   mMissCache.Clear();
@@ -548,7 +554,12 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
     LOG(("Notifying success: %d", mUpdateWait));
     mUpdateObserver->UpdateSuccess(mUpdateWait);
   } else {
-    LOG(("Notifying error: %d", mUpdateStatus));
+    if (LOG_ENABLED()) {
+      nsAutoCString errorName;
+      mozilla::GetErrorName(mUpdateStatus, errorName);
+      LOG(("Notifying error: %s (%d)", errorName.get(), mUpdateStatus));
+    }
+
     mUpdateObserver->UpdateError(mUpdateStatus);
     /*
      * mark the tables as spoiled, we don't want to block hosts
