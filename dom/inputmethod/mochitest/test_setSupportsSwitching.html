@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1197682
+-->
+<head>
+  <title>Test inputcontext#inputType and MozInputMethodManager#supportsSwitching()</title>
+  <script type="application/javascript;version=1.7" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.7" src="inputmethod_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1197682">Mozilla Bug 1197682</a>
+<p id="display"></p>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+inputmethod_setup(function() {
+  runTest();
+});
+
+let appFrameScript = function appFrameScript() {
+  let input = content.document.body.firstElementChild;
+
+  let i = 1;
+
+  input.focus();
+
+  addMessageListener('test:next', function() {
+    i++;
+    switch (i) {
+      case 2:
+        content.document.body.children[1].focus();
+        i++; // keep the same count with the parent frame.
+
+        break;
+
+      case 4:
+        content.document.body.lastElementChild.focus();
+        i++; // keep the same count with the parent frame.
+
+        break;
+
+      case 6:
+        content.document.body.lastElementChild.blur();
+
+        break;
+    }
+  });
+};
+
+function runTest() {
+  let im = navigator.mozInputMethod;
+
+  let i = 0;
+  im.oninputcontextchange = function(evt) {
+    var inputcontext = navigator.mozInputMethod.inputcontext;
+
+    i++;
+    switch (i) {
+      case 1:
+        ok(!!inputcontext, '1) Receving the input context');
+        is(inputcontext.inputType, 'text', '1) input type');
+        is(im.mgmt.supportsSwitching(), true, '1) supports switching');
+
+        mm.sendAsyncMessage('test:next');
+        break;
+
+      case 2:
+        is(inputcontext, null, '2) Receving null inputcontext');
+
+        break;
+
+      case 3:
+        ok(!!inputcontext, '3) Receving the input context');
+        is(inputcontext.inputType, 'number', '3) input type');
+        is(im.mgmt.supportsSwitching(), false, '3) supports switching');
+
+        mm.sendAsyncMessage('test:next');
+        break;
+
+      case 4:
+        is(inputcontext, null, '4) Receving null inputcontext');
+
+        break;
+
+      case 5:
+        ok(!!inputcontext, '5) Receving the input context');
+        is(inputcontext.inputType, 'password', '5) input type');
+        is(im.mgmt.supportsSwitching(), true, '5) supports switching');
+
+        mm.sendAsyncMessage('test:next');
+        break;
+
+      case 6:
+        is(inputcontext, null, '6) Receving null inputcontext');
+        is(im.mgmt.supportsSwitching(), false, '6) supports switching');
+
+        inputmethod_cleanup();
+        break;
+
+      default:
+        ok(false, 'Receving extra inputcontextchange calls');
+        inputmethod_cleanup();
+
+        break;
+    }
+  };
+
+  // Set current page as an input method.
+  SpecialPowers.wrap(im).setActive(true);
+  // Set text and password inputs as supports switching (and not supported for number type)
+  im.mgmt.setSupportsSwitchingTypes(['text', 'password']);
+
+  let iframe = document.createElement('iframe');
+  iframe.src = 'data:text/html,<html><body>' +
+    '<input type="text">' +
+    '<input type="number">' +
+    '<input type="password">' +
+    '</body></html>';
+  iframe.setAttribute('mozbrowser', true);
+  document.body.appendChild(iframe);
+
+  let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+
+  iframe.addEventListener('mozbrowserloadend', function() {
+    mm.loadFrameScript('data:,(' + encodeURIComponent(appFrameScript.toString()) + ')();', false);
+  });
+}
+
+</script>
+</pre>
+</body>
+</html>

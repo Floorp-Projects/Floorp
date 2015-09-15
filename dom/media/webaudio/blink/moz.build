@@ -30,6 +30,3 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/dom/media/webaudio',
 ]
-
-if not CONFIG['GNU_CXX']:
-    ALLOW_COMPILER_WARNINGS = True

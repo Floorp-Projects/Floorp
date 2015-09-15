@@ -1592,11 +1592,15 @@ void MultiTouchMotionAccumulator::clearSlots(int32_t initialSlot) {
 
 void MultiTouchMotionAccumulator::process(const RawEvent* rawEvent) {
     if (rawEvent->type == EV_ABS) {
+#if DEBUG_POINTERS
         bool newSlot = false;
+#endif
         if (mUsingSlotsProtocol) {
             if (rawEvent->code == ABS_MT_SLOT) {
                 mCurrentSlot = rawEvent->value;
+#if DEBUG_POINTERS
                 newSlot = true;
+#endif
             }
         } else if (mCurrentSlot < 0) {
             mCurrentSlot = 0;
@@ -4650,18 +4654,15 @@ bool TouchInputMapper::preparePointerGestures(nsecs_t when,
     // Otherwise choose an arbitrary remaining pointer.
     // This guarantees we always have an active touch id when there is at least one pointer.
     // We keep the same active touch id for as long as possible.
-    bool activeTouchChanged = false;
     int32_t lastActiveTouchId = mPointerGesture.activeTouchId;
     int32_t activeTouchId = lastActiveTouchId;
     if (activeTouchId < 0) {
         if (!mCurrentFingerIdBits.isEmpty()) {
-            activeTouchChanged = true;
             activeTouchId = mPointerGesture.activeTouchId =
                     mCurrentFingerIdBits.firstMarkedBit();
             mPointerGesture.firstTouchTime = when;
         }
     } else if (!mCurrentFingerIdBits.hasBit(activeTouchId)) {
-        activeTouchChanged = true;
         if (!mCurrentFingerIdBits.isEmpty()) {
             activeTouchId = mPointerGesture.activeTouchId =
                     mCurrentFingerIdBits.firstMarkedBit();
@@ -4757,7 +4758,6 @@ bool TouchInputMapper::preparePointerGestures(nsecs_t when,
             }
             if (bestId >= 0 && bestId != activeTouchId) {
                 mPointerGesture.activeTouchId = activeTouchId = bestId;
-                activeTouchChanged = true;
 #if DEBUG_GESTURES
                 ALOGD("Gestures: BUTTON_CLICK_OR_DRAG switched pointers, "
                         "bestId=%d, bestSpeed=%0.3f", bestId, bestSpeed);

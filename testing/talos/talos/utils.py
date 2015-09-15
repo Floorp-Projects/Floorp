@@ -39,16 +39,6 @@ def startLogger(levelChoice):
                         level=log_levels[levelChoice])
 
 
-def stamped_msg(msg_title, msg_action):
-    """Prints a message to the console with a time stamp
-    """
-    time_format = "%a, %d %b %Y %H:%M:%S"
-    msg_format = "%s: \n\t\t%s %s"
-    print msg_format % (msg_title, msg_action,
-                        time.strftime(time_format, time.localtime()))
-    sys.stdout.flush()
-
-
 class TalosError(Exception):
     "Errors found while running the talos harness."
 

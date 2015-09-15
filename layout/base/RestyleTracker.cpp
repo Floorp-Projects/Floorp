@@ -225,6 +225,12 @@ RestyleTracker::DoProcessRestyles()
     docShell->GetRecordProfileTimelineMarkers(&isTimelineRecording);
   }
 
+  // Create a AnimationsWithDestroyedFrame during restyling process to
+  // stop animations on elements that have no frame at the end of the
+  // restyling process.
+  RestyleManager::AnimationsWithDestroyedFrame
+    animationsWithDestroyedFrame(mRestyleManager);
+
   // Create a ReframingStyleContexts struct on the stack and put it in our
   // mReframingStyleContexts for almost all of the remaining scope of
   // this function.

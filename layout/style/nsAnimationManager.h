@@ -290,6 +290,12 @@ public:
   void DispatchEvents()  { mEventDispatcher.DispatchEvents(mPresContext); }
   void ClearEventQueue() { mEventDispatcher.ClearEventQueue(); }
 
+  // Stop animations on the element. This method takes the real element
+  // rather than the element for the generated content for animations on
+  // ::before and ::after.
+  void StopAnimationsForElement(mozilla::dom::Element* aElement,
+                                nsCSSPseudoElements::Type aPseudoType);
+
 protected:
   virtual ~nsAnimationManager() {}
 

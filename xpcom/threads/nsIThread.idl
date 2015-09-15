@@ -17,7 +17,7 @@
  *
  * See nsIThreadManager for the API used to create and locate threads.
  */
-[scriptable, uuid(9c889946-a73a-4af3-ae9a-ea64f7d4e3ca)]
+[scriptable, uuid(594feb13-6164-4054-b5a1-ad62e10ea15d)]
 interface nsIThread : nsIEventTarget
 {
   /**
@@ -82,4 +82,26 @@ interface nsIThread : nsIEventTarget
    *   not the current thread.
    */
   boolean processNextEvent(in boolean mayWait);
+
+  /**
+   * Shutdown the thread asynchronously.  This method immediately prevents
+   * further dispatch of events to the thread, and it causes any pending events
+   * to run to completion before this thread joins with the current thread.
+   *
+   * UNLIKE shutdown() this does not process events on the current thread.
+   * Instead it merely ensures that the current thread continues running until
+   * this thread has shut down.
+   *
+   * This method MAY NOT be executed from the thread itself.  Instead, it is
+   * meant to be executed from another thread (usually the thread that created
+   * this thread or the main application thread).  When this function returns,
+   * the thread will continue running until it exhausts its event queue.
+   *
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that this method was erroneously called when this thread was
+   *   the current thread, that this thread was not created with a call to
+   *   nsIThreadManager::NewThread, or if this method was called more than once
+   *   on the thread object.
+   */
+  void asyncShutdown();
 };
