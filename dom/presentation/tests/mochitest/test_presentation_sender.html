@@ -15,16 +15,27 @@
 'use strict';
 
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
-var presentation;
+var request;
 var session;
 
 function testSetup() {
   return new Promise(function(aResolve, aReject) {
-    presentation.onavailablechange = function(aIsAvailable) {
-      presentation.onavailablechange = null;
-      ok(aIsAvailable, "Device should be available.");
-      aResolve();
-    };
+    request = new PresentationRequest("http://example.com");
+
+    request.getAvailability().then(
+      function(aAvailability) {
+        aAvailability.onchange = function() {
+          aAvailability.onchange = null;
+          ok(aAvailability.value, "Device should be available.");
+          aResolve();
+        }
+      },
+      function(aError) {
+        ok(false, "Error occurred when getting availability: " + aError);
+        teardown();
+        aReject();
+      }
+    );
 
     gScript.sendAsyncMessage('trigger-device-add');
   });
@@ -76,13 +87,29 @@ function testStartSession() {
       info("Data notification is enabled for data transport channel.");
     });
 
-    presentation.startSession("http://example.com").then(
+    var sessionFromEvent;
+    request.onsessionconnect = function(aEvent) {
+      request.onsessionconnect = null;
+      sessionFromEvent = aEvent.session;
+      ok(sessionFromEvent, "|sessionconnect| event is fired with a session.");
+
+      if (session) {
+        is(session, sessionFromEvent, "The session from promise and the one from |sessionconnect| event should be the same.");
+        aResolve();
+      }
+    };
+
+    request.start().then(
       function(aSession) {
         session = aSession;
         ok(session, "Session should be availlable.");
         ok(session.id, "Session ID should be set.");
         is(session.state, "connected", "Session state at sender side should be connected by default.");
-        aResolve();
+
+        if (sessionFromEvent) {
+          is(session, sessionFromEvent, "The session from promise and the one from |sessionconnect| event should be the same.");
+          aResolve();
+        }
       },
       function(aError) {
         ok(false, "Error occurred when starting session: " + aError);
@@ -149,8 +176,7 @@ function teardown() {
 }
 
 function runTests() {
-  ok(navigator.presentation, "navigator.presentation should be available.");
-  presentation = navigator.presentation;
+  ok(window.PresentationRequest, "PresentationRequest should be available.");
 
   testSetup().
   then(testStartSession).

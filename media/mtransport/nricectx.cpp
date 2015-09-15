@@ -378,7 +378,6 @@ void NrIceCtx::trickle_cb(void *arg, nr_ice_ctx *ice_ctx,
 
 RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
                                   bool offerer,
-                                  bool set_interface_priorities,
                                   bool allow_loopback,
                                   bool tcp_enabled,
                                   bool allow_link_local,
@@ -403,33 +402,6 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
     NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_PEER_RFLX_TCP, 109);
     NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_HOST_TCP, 125);
     NR_reg_set_uchar((char *)NR_ICE_REG_PREF_TYPE_RELAYED_TCP, 0);
-
-    if (set_interface_priorities) {
-      NR_reg_set_uchar((char *)"ice.pref.interface.rl0", 255);
-      NR_reg_set_uchar((char *)"ice.pref.interface.wi0", 254);
-      NR_reg_set_uchar((char *)"ice.pref.interface.lo0", 253);
-      NR_reg_set_uchar((char *)"ice.pref.interface.en1", 252);
-      NR_reg_set_uchar((char *)"ice.pref.interface.en0", 251);
-      NR_reg_set_uchar((char *)"ice.pref.interface.eth0", 252);
-      NR_reg_set_uchar((char *)"ice.pref.interface.eth1", 251);
-      NR_reg_set_uchar((char *)"ice.pref.interface.eth2", 249);
-      NR_reg_set_uchar((char *)"ice.pref.interface.ppp", 250);
-      NR_reg_set_uchar((char *)"ice.pref.interface.ppp0", 249);
-      NR_reg_set_uchar((char *)"ice.pref.interface.en2", 248);
-      NR_reg_set_uchar((char *)"ice.pref.interface.en3", 247);
-      NR_reg_set_uchar((char *)"ice.pref.interface.em0", 251);
-      NR_reg_set_uchar((char *)"ice.pref.interface.em1", 252);
-      NR_reg_set_uchar((char *)"ice.pref.interface.vmnet0", 240);
-      NR_reg_set_uchar((char *)"ice.pref.interface.vmnet1", 241);
-      NR_reg_set_uchar((char *)"ice.pref.interface.vmnet3", 239);
-      NR_reg_set_uchar((char *)"ice.pref.interface.vmnet4", 238);
-      NR_reg_set_uchar((char *)"ice.pref.interface.vmnet5", 237);
-      NR_reg_set_uchar((char *)"ice.pref.interface.vmnet6", 236);
-      NR_reg_set_uchar((char *)"ice.pref.interface.vmnet7", 235);
-      NR_reg_set_uchar((char *)"ice.pref.interface.vmnet8", 234);
-      NR_reg_set_uchar((char *)"ice.pref.interface.virbr0", 233);
-      NR_reg_set_uchar((char *)"ice.pref.interface.wlan0", 232);
-    }
 
     int32_t stun_client_maximum_transmits = 7;
     int32_t ice_trickle_grace_period = 5000;
@@ -507,7 +479,6 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
     return nullptr;
   }
 
-#ifdef USE_INTERFACE_PRIORITIZER
   nr_interface_prioritizer *prioritizer = CreateInterfacePrioritizer();
   if (!prioritizer) {
     MOZ_MTLOG(LogLevel::Error, "Couldn't create interface prioritizer.");
@@ -519,7 +490,6 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
     MOZ_MTLOG(LogLevel::Error, "Couldn't set interface prioritizer.");
     return nullptr;
   }
-#endif  // USE_INTERFACE_PRIORITIZER
 
   if (ctx->generating_trickle()) {
     r = nr_ice_ctx_set_trickle_cb(ctx->ctx_, &NrIceCtx::trickle_cb, ctx);

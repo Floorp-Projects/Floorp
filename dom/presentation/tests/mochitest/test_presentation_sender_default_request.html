@@ -1,0 +1,150 @@
+<!DOCTYPE HTML>
+<html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<head>
+  <meta charset="utf-8">
+  <title>Test default request for B2G Presentation API at sender side</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069230">Test default request for B2G Presentation API at sender side</a>
+<script type="application/javascript;version=1.8">
+
+'use strict';
+
+var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
+var session;
+
+function testSetup() {
+  return new Promise(function(aResolve, aReject) {
+    navigator.presentation.defaultRequest = new PresentationRequest("http://example.com");
+
+    navigator.presentation.defaultRequest.getAvailability().then(
+      function(aAvailability) {
+        aAvailability.onchange = function() {
+          aAvailability.onchange = null;
+          ok(aAvailability.value, "Device should be available.");
+          aResolve();
+        }
+      },
+      function(aError) {
+        ok(false, "Error occurred when getting availability: " + aError);
+        teardown();
+        aReject();
+      }
+    );
+
+    gScript.sendAsyncMessage('trigger-device-add');
+  });
+}
+
+function testStartSession() {
+  return new Promise(function(aResolve, aReject) {
+    gScript.addMessageListener('device-prompt', function devicePromptHandler() {
+      gScript.removeMessageListener('device-prompt', devicePromptHandler);
+      info("Device prompt is triggered.");
+      gScript.sendAsyncMessage('trigger-device-prompt-select');
+    });
+
+    gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
+      gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
+      info("A control channel is established.");
+      gScript.sendAsyncMessage('trigger-control-channel-open');
+    });
+
+    gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler(aReason) {
+      gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
+      info("The control channel is opened.");
+    });
+
+    gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
+      gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
+      info("The control channel is closed. " + aReason);
+    });
+
+    gScript.addMessageListener('offer-sent', function offerSentHandler() {
+      gScript.removeMessageListener('offer-sent', offerSentHandler);
+      info("An offer is sent out.");
+      gScript.sendAsyncMessage('trigger-incoming-transport');
+    });
+
+    gScript.addMessageListener('answer-received', function answerReceivedHandler() {
+      gScript.removeMessageListener('answer-received', answerReceivedHandler);
+      info("An answer is received.");
+    });
+
+    gScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
+      gScript.removeMessageListener('data-transport-initialized', dataTransportInitializedHandler);
+      info("Data transport channel is initialized.");
+      gScript.sendAsyncMessage('trigger-incoming-answer');
+    });
+
+    navigator.presentation.defaultRequest.onsessionconnect = function(aEvent) {
+      navigator.presentation.defaultRequest.onsessionconnect = null;
+      session = aEvent.session;
+      ok(session, "|sessionconnect| event is fired with a session.");
+      ok(session.id, "Session ID should be set.");
+      is(session.state, "connected", "Session state at sender side should be connected by default.");
+      aResolve();
+    };
+
+    // Simulate the UA triggers |start()| of the default request.
+    navigator.presentation.defaultRequest.start();
+  });
+}
+
+function testCloseSession() {
+  return new Promise(function(aResolve, aReject) {
+    gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
+      gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
+      info("The data transport is closed. " + aReason);
+    });
+
+    session.onstatechange = function() {
+      session.onstatechange = null;
+      is(session.state, "terminated", "Session should be terminated.");
+      aResolve();
+    };
+
+    session.close();
+  });
+}
+
+function teardown() {
+  gScript.addMessageListener('teardown-complete', function teardownCompleteHandler() {
+    gScript.removeMessageListener('teardown-complete', teardownCompleteHandler);
+    gScript.destroy();
+    SimpleTest.finish();
+  });
+
+  gScript.sendAsyncMessage('teardown');
+}
+
+function runTests() {
+  ok(window.PresentationRequest, "PresentationRequest should be available.");
+  ok(navigator.presentation, "navigator.presentation should be available.");
+
+  testSetup().
+  then(testStartSession).
+  then(testCloseSession).
+  then(teardown);
+}
+
+SimpleTest.expectAssertions(0, 5);
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPermissions([
+  {type: 'presentation-device-manage', allow: false, context: document},
+  {type: 'presentation', allow: true, context: document},
+], function() {
+  SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
+                                      ["dom.ignore_webidl_scope_checks", true],
+                                      ["dom.presentation.test.enabled", true],
+                                      ["dom.presentation.test.stage", 0]]},
+                            runTests);
+});
+
+</script>
+</body>
+</html>
