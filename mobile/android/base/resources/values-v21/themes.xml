@@ -14,14 +14,23 @@
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:actionBarStyle">@style/GeckoActionBar</item>
+        <item name="android:actionBarTheme">@style/ActionBarTheme</item>
         <item name="android:colorAccent">@color/action_orange</item>
+    </style>
+
+    <style name="GeckoPreferencesBase" parent="GeckoBase">
+        <item name="android:windowActionBar">true</item>
+        <item name="android:windowNoTitle">false</item>
+        <item name="android:actionBarStyle">@style/ActionBar.GeckoPreferences</item>
     </style>
 
     <style name="ActionBar.FxAccountStatusActivity" parent="@android:style/Widget.Material.ActionBar.Solid">
         <item name="android:displayOptions">homeAsUp|showTitle</item>
+        <item name="android:titleTextStyle">@style/ActionBarTitleTextStyle</item>
     </style>
 
     <style name="ActionBar.GeckoPreferences" parent="@android:style/Widget.Material.ActionBar.Solid">
+        <item name="android:titleTextStyle">@style/ActionBarTitleTextStyle</item>
     </style>
 
     <style name="GeckoAppBase" parent="Gecko">
