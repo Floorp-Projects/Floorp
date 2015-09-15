@@ -253,14 +253,6 @@ public:
   // owning animation.
   void SetTiming(const AnimationTiming& aTiming, Animation& aOwningAnimtion);
 
-  // Return the duration from the start the active interval to the point where
-  // the animation begins playback. This is zero unless the animation has
-  // a negative delay in which case it is the absolute value of the delay.
-  // This is used for setting the elapsedTime member of CSS AnimationEvents.
-  TimeDuration InitialAdvance() const {
-    return std::max(TimeDuration(), mTiming.mDelay * -1);
-  }
-
   Nullable<TimeDuration> GetLocalTime() const {
     // Since the *animation* start time is currently always zero, the local
     // time is equal to the parent time.
