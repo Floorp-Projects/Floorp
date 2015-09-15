@@ -60,6 +60,12 @@ JSErrorFormatString ErrorFormatString[] = {
 #undef MSG_DEF
 };
 
+#define MSG_DEF(_name, _argc, _exn, _str) \
+  static_assert(_argc < JS::MaxNumErrorArguments, \
+                #_name " must only have as many error arguments as the JS engine can support");
+#include "mozilla/dom/Errors.msg"
+#undef MSG_DEF
+
 const JSErrorFormatString*
 GetErrorMessage(void* aUserRef, const unsigned aErrorNumber)
 {
@@ -166,8 +172,6 @@ ErrorResult::ThrowErrorWithMessage(va_list ap, const dom::ErrNum errorNumber,
   Message* message = new Message();
   message->mErrorNumber = errorNumber;
   uint16_t argCount = dom::GetErrorMessage(nullptr, errorNumber)->argCount;
-  MOZ_ASSERT(argCount <= 10);
-  argCount = std::min<uint16_t>(argCount, 10);
   while (argCount--) {
     message->mArgs.AppendElement(*va_arg(ap, const nsAString*));
   }
@@ -230,7 +234,7 @@ ErrorResult::ReportErrorWithMessage(JSContext* aCx)
 
   Message* message = mMessage;
   const uint32_t argCount = message->mArgs.Length();
-  const char16_t* args[11];
+  const char16_t* args[JS::MaxNumErrorArguments + 1];
   for (uint32_t i = 0; i < argCount; ++i) {
     args[i] = message->mArgs.ElementAt(i).get();
   }
