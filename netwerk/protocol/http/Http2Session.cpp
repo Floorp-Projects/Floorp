@@ -95,6 +95,7 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t versio
   , mCleanShutdown(false)
   , mTLSProfileConfirmed(false)
   , mGoAwayReason(NO_HTTP_ERROR)
+  , mPeerGoAwayReason(UNASSIGNED)
   , mGoAwayID(0)
   , mOutgoingGoAwayID(0)
   , mConcurrent(0)
@@ -192,6 +193,7 @@ Http2Session::~Http2Session()
   Telemetry::Accumulate(Telemetry::SPDY_REQUEST_PER_CONN, (mNextStreamID - 1) / 2);
   Telemetry::Accumulate(Telemetry::SPDY_SERVER_INITIATED_STREAMS,
                         mServerPushedResources);
+  Telemetry::Accumulate(Telemetry::SPDY_GOAWAY_PEER, mPeerGoAwayReason);
 }
 
 void
@@ -1817,7 +1819,7 @@ Http2Session::RecvGoAway(Http2Session *self)
       self->mInputFrameBuffer.get() + kFrameHeaderBytes);
   self->mGoAwayID &= 0x7fffffff;
   self->mCleanShutdown = true;
-  uint32_t statusCode = NetworkEndian::readUint32(
+  self->mPeerGoAwayReason = NetworkEndian::readUint32(
       self->mInputFrameBuffer.get() + kFrameHeaderBytes + 4);
 
   // Find streams greater than the last-good ID and mark them for deletion
@@ -1831,7 +1833,7 @@ Http2Session::RecvGoAway(Http2Session *self)
     Http2Stream *stream =
       static_cast<Http2Stream *>(self->mGoAwayStreamsToRestart.PopFront());
 
-    if (statusCode == HTTP_1_1_REQUIRED) {
+    if (self->mPeerGoAwayReason == HTTP_1_1_REQUIRED) {
       stream->Transaction()->DisableSpdy();
     }
     self->CloseStream(stream, NS_ERROR_NET_RESET);
@@ -1849,7 +1851,7 @@ Http2Session::RecvGoAway(Http2Session *self)
       static_cast<Http2Stream *>(self->mQueuedStreams.PopFront());
     MOZ_ASSERT(stream->Queued());
     stream->SetQueued(false);
-    if (statusCode == HTTP_1_1_REQUIRED) {
+    if (self->mPeerGoAwayReason == HTTP_1_1_REQUIRED) {
       stream->Transaction()->DisableSpdy();
     }
     self->CloseStream(stream, NS_ERROR_NET_RESET);
@@ -1857,7 +1859,7 @@ Http2Session::RecvGoAway(Http2Session *self)
   }
 
   LOG3(("Http2Session::RecvGoAway %p GOAWAY Last-Good-ID 0x%X status 0x%X "
-        "live streams=%d\n", self, self->mGoAwayID, statusCode,
+        "live streams=%d\n", self, self->mGoAwayID, self->mPeerGoAwayReason,
         self->mStreamTransactionHash.Count()));
 
   self->ResetDownstreamState();
