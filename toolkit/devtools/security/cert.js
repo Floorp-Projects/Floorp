@@ -6,9 +6,9 @@
 
 "use strict";
 
-let { Ci, Cc } = require("chrome");
-let promise = require("promise");
-let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var { Ci, Cc } = require("chrome");
+var promise = require("promise");
+var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 DevToolsUtils.defineLazyGetter(this, "localCertService", () => {
   // Ensure PSM is initialized to support TLS sockets
   Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);

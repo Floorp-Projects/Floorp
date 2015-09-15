@@ -31,7 +31,7 @@ const PASTE_ADJACENT_HTML_DATA = [
 ];
 
 
-let clipboard = require("sdk/clipboard");
+var clipboard = require("sdk/clipboard");
 registerCleanupFunction(() => {
   clipboard = null;
 });

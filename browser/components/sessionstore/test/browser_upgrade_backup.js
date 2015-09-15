@@ -15,7 +15,7 @@ const PREF_MAX_UPGRADE_BACKUPS = "browser.sessionstore.upgradeBackup.maxUpgradeB
  * build where the last backup was created and creating arbitrary JSON data
  * for a new backup.
  */
-let prepareTest = Task.async(function* () {
+var prepareTest = Task.async(function* () {
   let result = {};
 
   result.buildID = Services.appinfo.platformBuildID;
@@ -28,7 +28,7 @@ let prepareTest = Task.async(function* () {
 /**
  * Retrieves all upgrade backups and returns them in an array.
  */
-let getUpgradeBackups = Task.async(function* () {
+var getUpgradeBackups = Task.async(function* () {
   let iterator;
   let backups = [];
   let upgradeBackupPrefix = Paths.upgradeBackupPrefix;

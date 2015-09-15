@@ -7,14 +7,14 @@
 /* exported run_test */
 
 Components.utils.import("resource://gre/modules/SEUtils.jsm");
-let GP = {};
+var GP = {};
 Components.utils.import("resource://gre/modules/gp_consts.js", GP);
 
 const VALID_HEX_STR = "0123456789ABCDEF";
 const VALID_BYTE_ARR = [0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF];
 
 // This set should be what the actual ACE uses.
-let containerTags = [
+var containerTags = [
   GP.TAG_SEQUENCE,
   GP.TAG_FCP,
   GP.TAG_GPD_AID,

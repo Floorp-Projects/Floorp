@@ -45,7 +45,7 @@ function* spawnTest() {
   finish();
 };
 
-let gProfile = {
+var gProfile = {
   meta: { version: 2 },
   threads: [{
     samples: [{

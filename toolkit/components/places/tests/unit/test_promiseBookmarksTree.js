@@ -163,7 +163,7 @@ function* compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
   return nodesCount;
 }
 
-let itemsCount = 0;
+var itemsCount = 0;
 function* new_bookmark(aInfo) {
   let currentItem = ++itemsCount;
   if (!("url" in aInfo))

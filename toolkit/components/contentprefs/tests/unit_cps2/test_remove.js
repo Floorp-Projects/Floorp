@@ -6,7 +6,7 @@ function run_test() {
   runAsyncTests(tests);
 }
 
-let tests = [
+var tests = [
 
   function nonexistent() {
     yield set("a.com", "foo", 1);

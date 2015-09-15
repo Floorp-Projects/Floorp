@@ -8,7 +8,7 @@
 
 "use strict";
 
-let test = asyncTest(function*() {
+var test = asyncTest(function*() {
   const PREF = "devtools.webconsole.persistlog";
   const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
                    "test/test-console.html";

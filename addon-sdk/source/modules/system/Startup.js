@@ -26,11 +26,11 @@ var Startup = {
 };
 var exports = Startup;
 
-let gOnceInitializedDeferred = defer();
+var gOnceInitializedDeferred = defer();
 exports.onceInitialized = gOnceInitializedDeferred.promise;
 
 // Set 'final-ui-startup' as default topic for unknown applications
-let appStartup = 'final-ui-startup';
+var appStartup = 'final-ui-startup';
 
 if (Startup.initialized) {
   gOnceInitializedDeferred.resolve()

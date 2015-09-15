@@ -18,18 +18,18 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 
-let sharedUrl = "chrome://mochitests/content/chrome/" +
+var sharedUrl = "chrome://mochitests/content/chrome/" +
                 "toolkit/components/formautofill/test/chrome/loader_common.js";
 Services.scriptloader.loadSubScript(sharedUrl, this);
 
 // Define output functions so they look the same across all frameworks.  Since
 // we don't have an output function available here, we report as TEST-PASS.
-let Output = {
+var Output = {
   print: message => assert.ok(true, message),
 };
 
 // Define assertion functions so they look the same across all frameworks.
-let Assert = {
+var Assert = {
   ok: assert.ok,
   equal: assert.equal,
 };
@@ -51,13 +51,13 @@ function add_task_in_parent_process(taskFn, taskIdOverride) {
     });
   });
 }
-let add_task = function () {};
-let add_task_in_child_process = function () {};
-let add_task_in_both_processes = add_task_in_parent_process;
+var add_task = function () {};
+var add_task_in_child_process = function () {};
+var add_task_in_both_processes = add_task_in_parent_process;
 
 // We need to wait for the child process to send us the path of the test file
 // to load before we can actually start loading it.
-let context = this;
+var context = this;
 addMessageListener("start_load_in_parent", function (message) {
   Output.print("Starting loading infrastructure in parent process.");
   let headUrl = "chrome://mochitests/content/chrome/" +

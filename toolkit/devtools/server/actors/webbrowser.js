@@ -6,16 +6,16 @@
 
 "use strict";
 
-let { Ci, Cu } = require("chrome");
-let Services = require("Services");
-let promise = require("promise");
-let { ActorPool, createExtraActors, appendExtraActors } = require("devtools/server/actors/common");
-let { DebuggerServer } = require("devtools/server/main");
-let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-let { dbg_assert } = DevToolsUtils;
-let { TabSources } = require("./utils/TabSources");
-let makeDebugger = require("./utils/make-debugger");
-let { WorkerActorList } = require("devtools/server/actors/worker");
+var { Ci, Cu } = require("chrome");
+var Services = require("Services");
+var promise = require("promise");
+var { ActorPool, createExtraActors, appendExtraActors } = require("devtools/server/actors/common");
+var { DebuggerServer } = require("devtools/server/main");
+var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var { dbg_assert } = DevToolsUtils;
+var { TabSources } = require("./utils/TabSources");
+var makeDebugger = require("./utils/make-debugger");
+var { WorkerActorList } = require("devtools/server/actors/worker");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 

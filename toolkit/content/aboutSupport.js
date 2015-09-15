@@ -32,7 +32,7 @@ window.addEventListener("load", function onload(event) {
 // Each property in this object corresponds to a property in Troubleshoot.jsm's
 // snapshot data.  Each function is passed its property's corresponding data,
 // and it's the function's job to update the page with it.
-let snapshotFormatters = {
+var snapshotFormatters = {
 
   application: function application(data) {
     $("application-box").textContent = data.name;
@@ -399,7 +399,7 @@ let snapshotFormatters = {
 #endif
 };
 
-let $ = document.getElementById.bind(document);
+var $ = document.getElementById.bind(document);
 
 $.new = function $_new(tag, textContentOrChildren, className, attributes) {
   let elt = document.createElement(tag);

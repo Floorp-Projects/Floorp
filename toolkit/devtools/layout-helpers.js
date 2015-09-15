@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let {Ci} = require("chrome")
+var {Ci} = require("chrome")
 
-let LayoutHelpers = function(aTopLevelWindow) {
+var LayoutHelpers = function(aTopLevelWindow) {
   this._topDocShell = aTopLevelWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                                      .getInterface(Ci.nsIWebNavigation)
                                      .QueryInterface(Ci.nsIDocShell);
@@ -569,7 +569,7 @@ LayoutHelpers.isShadowAnonymous = function(node) {
  * calculated, or its owner window.
  * @return {Number}
  */
-let windowUtils = new WeakMap;
+var windowUtils = new WeakMap;
 LayoutHelpers.getCurrentZoom = function(node) {
   let win = node.self === node ? node : node.ownerDocument.defaultView;
   let utils = windowUtils.get(win);

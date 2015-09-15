@@ -11,7 +11,7 @@ const { DebuggerServer } = require("devtools/server/main");
 const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 
-let gClient, gActor;
+var gClient, gActor;
 
 function connect(onDone) {
 
@@ -133,7 +133,7 @@ addMessageListener("getAppActor", function (aMessage) {
   });
 });
 
-let Frames = [];
+var Frames = [];
 addMessageListener("addFrame", function (aMessage) {
   let win = Services.wm.getMostRecentWindow("navigator:browser");
   let doc = win.document;
@@ -171,7 +171,7 @@ addMessageListener("cleanup", function () {
   });
 });
 
-let FramesMock = {
+var FramesMock = {
   list: function () {
     return Frames;
   },

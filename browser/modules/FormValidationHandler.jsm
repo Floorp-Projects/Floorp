@@ -8,15 +8,15 @@
 
 "use strict";
 
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-let Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = [ "FormValidationHandler" ];
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-let FormValidationHandler =
+var FormValidationHandler =
 {
   _panel: null,
   _anchor: null,

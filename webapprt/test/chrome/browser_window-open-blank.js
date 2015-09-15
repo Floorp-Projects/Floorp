@@ -1,6 +1,6 @@
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let HandlerService = {
+var HandlerService = {
   classID: Components.ID("{b4ed9fab-fd39-435a-8e3e-edc3e689e72e}"),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory,

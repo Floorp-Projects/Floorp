@@ -4,7 +4,7 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
-let settings = [
+var settings = [
   // "gsm/wcdma"
   {tech: "gsm",   mask: "gsm/wcdma"},
   {tech: "wcdma", mask: "gsm/wcdma"},

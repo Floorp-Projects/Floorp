@@ -73,7 +73,7 @@ const DELAY_WARNING_MS = 10 * 1000;
 // Crash the process if shutdown is really too long
 // (allowing for sleep).
 const PREF_DELAY_CRASH_MS = "toolkit.asyncshutdown.crash_timeout";
-let DELAY_CRASH_MS = 60 * 1000; // One minute
+var DELAY_CRASH_MS = 60 * 1000; // One minute
 try {
   DELAY_CRASH_MS = Services.prefs.getIntPref(PREF_DELAY_CRASH_MS);
 } catch (ex) {
@@ -197,7 +197,7 @@ function log(msg, prefix = "", error = null) {
   }
 }
 const PREF_DEBUG_LOG = "toolkit.asyncshutdown.log";
-let DEBUG_LOG = false;
+var DEBUG_LOG = false;
 try {
   DEBUG_LOG = Services.prefs.getBoolPref(PREF_DEBUG_LOG);
 } catch (ex) {
@@ -335,7 +335,7 @@ this.EXPORTED_SYMBOLS = ["AsyncShutdown"];
 /**
  * {string} topic -> phase
  */
-let gPhases = new Map();
+var gPhases = new Map();
 
 this.AsyncShutdown = {
   /**

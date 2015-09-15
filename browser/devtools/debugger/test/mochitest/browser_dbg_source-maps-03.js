@@ -8,8 +8,8 @@
 const TAB_URL = EXAMPLE_URL + "doc_minified.html";
 const JS_URL = EXAMPLE_URL + "code_math.js";
 
-let gTab, gPanel, gDebugger;
-let gEditor, gSources, gFrames;
+var gTab, gPanel, gDebugger;
+var gEditor, gSources, gFrames;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

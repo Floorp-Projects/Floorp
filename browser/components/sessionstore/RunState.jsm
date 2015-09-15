@@ -17,7 +17,7 @@ const STATE_CLOSING = 3;
 const STATE_CLOSED = 4;
 
 // We're initially stopped.
-let state = STATE_STOPPED;
+var state = STATE_STOPPED;
 
 function observer(subj, topic) {
   Services.obs.removeObserver(observer, topic);

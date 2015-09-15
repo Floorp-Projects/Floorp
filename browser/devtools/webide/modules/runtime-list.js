@@ -15,7 +15,7 @@ const utils = require("devtools/webide/utils");
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 
-let RuntimeList;
+var RuntimeList;
 
 module.exports = RuntimeList = function(window, parentWindow) {
   EventEmitter.decorate(this);

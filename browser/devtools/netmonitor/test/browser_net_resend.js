@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let gPanelWin;
-let gPanelDoc;
+var gPanelWin;
+var gPanelDoc;
 
 const ADD_QUERY = "t1=t2";
 const ADD_HEADER = "Test-header: true";

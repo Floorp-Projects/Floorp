@@ -39,13 +39,13 @@ add_task(function*() {
   yield testLink(6, true, false);
 });
 
-let waitForPageLoad = Task.async(function*(browser, linkLocation) {
+var waitForPageLoad = Task.async(function*(browser, linkLocation) {
   yield waitForDocLoadComplete();
 
   is(browser.contentDocument.location.href, linkLocation, "Link should not open in a new tab");
 });
 
-let waitForTabOpen = Task.async(function*() {
+var waitForTabOpen = Task.async(function*() {
   let event = yield promiseWaitForEvent(gBrowser.tabContainer, "TabOpen", true);
   ok(true, "Link should open a new tab");
 
@@ -55,7 +55,7 @@ let waitForTabOpen = Task.async(function*() {
   gBrowser.removeCurrentTab();
 });
 
-let testLink = Task.async(function*(aLinkIndex, pinTab, expectNewTab, testSubFrame) {
+var testLink = Task.async(function*(aLinkIndex, pinTab, expectNewTab, testSubFrame) {
   let appTab = gBrowser.addTab(TEST_URL, {skipAnimation: true});
   if (pinTab)
     gBrowser.pinTab(appTab);

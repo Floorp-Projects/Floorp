@@ -8,7 +8,7 @@ const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { DevToolsWorker } = require("devtools/toolkit/shared/worker.js");
 
 const WORKER_URL = "resource://gre/modules/devtools/heapsnapshot/HeapAnalysesWorker.js";
-let workerCounter = 0;
+var workerCounter = 0;
 
 /**
  * A HeapAnalysesClient instance provides a developer-friendly interface for

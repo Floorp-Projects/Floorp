@@ -12,9 +12,9 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
 const COMMAND_NAME = "consoleCmd_openURL";
 const CONTEXT_MENU_ID = "#menu_openURL";
 
-let HUD = null, outputNode = null, contextMenu = null;
+var HUD = null, outputNode = null, contextMenu = null;
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo", true);
 
   yield loadTab(TEST_URI);

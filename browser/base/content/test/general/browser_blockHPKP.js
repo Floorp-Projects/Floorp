@@ -58,7 +58,7 @@ function loadPinningPage() {
 
 // After the site is pinned try to load with a subdomain site that should
 // fail to validate
-let successfulPinningPageListener = {
+var successfulPinningPageListener = {
   handleEvent: function() {
     gBrowser.selectedBrowser.removeEventListener("load", this, true);
     gBrowser.addProgressListener(certErrorProgressListener);
@@ -68,7 +68,7 @@ let successfulPinningPageListener = {
 
 // The browser should load about:neterror, when this happens, proceed
 // to load the pinning domain again, this time removing the pinning information
-let certErrorProgressListener = {
+var certErrorProgressListener = {
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
       let textElement = content.document.getElementById("errorShortDescText");
@@ -86,7 +86,7 @@ let certErrorProgressListener = {
 
 // After the pinning information has been removed (successful load) proceed
 // to load again with the invalid pin domain.
-let successfulPinningRemovalPageListener = {
+var successfulPinningRemovalPageListener = {
   handleEvent: function() {
     gBrowser.selectedBrowser.removeEventListener("load", this, true);
     gBrowser.selectedBrowser.addEventListener("load",
@@ -99,7 +99,7 @@ let successfulPinningRemovalPageListener = {
 
 // Finally, we should successfully load
 // https://bad.include-subdomains.pinning-dynamic.example.com.
-let successfulLoadListener = {
+var successfulLoadListener = {
   handleEvent: function() {
     gBrowser.selectedBrowser.removeEventListener("load", this, true);
     gBrowser.removeTab(gBrowser.selectedTab);

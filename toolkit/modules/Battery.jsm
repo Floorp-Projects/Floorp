@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
 // Values for the fake battery. See the documentation of Navigator.battery for the meaning of each field.
-let gFakeBattery = {
+var gFakeBattery = {
   charging: false,
   chargingTime: 0,
   dischargingTime: Infinity,

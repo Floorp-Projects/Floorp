@@ -378,7 +378,7 @@ MdnDocsWidget.prototype = {
 function L10N() {}
 L10N.prototype = {};
 
-let l10n = new L10N();
+var l10n = new L10N();
 
 loader.lazyGetter(L10N.prototype, "strings", () => {
   return Services.strings.createBundle(

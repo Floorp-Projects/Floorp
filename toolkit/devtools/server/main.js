@@ -10,17 +10,17 @@
  * Toolkit glue for the remote debugging protocol, loaded into the
  * debugging global.
  */
-let { Ci, Cc, CC, Cu, Cr } = require("chrome");
-let Services = require("Services");
-let { ActorPool, OriginalLocation, RegisteredActorFactory,
+var { Ci, Cc, CC, Cu, Cr } = require("chrome");
+var Services = require("Services");
+var { ActorPool, OriginalLocation, RegisteredActorFactory,
       ObservedActorFactory } = require("devtools/server/actors/common");
-let { LocalDebuggerTransport, ChildDebuggerTransport, WorkerDebuggerTransport } =
+var { LocalDebuggerTransport, ChildDebuggerTransport, WorkerDebuggerTransport } =
   require("devtools/toolkit/transport/transport");
-let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-let { dumpn, dumpv, dbg_assert } = DevToolsUtils;
-let EventEmitter = require("devtools/toolkit/event-emitter");
-let Debugger = require("Debugger");
-let Promise = require("promise");
+var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var { dumpn, dumpv, dbg_assert } = DevToolsUtils;
+var EventEmitter = require("devtools/toolkit/event-emitter");
+var Debugger = require("Debugger");
+var Promise = require("promise");
 
 DevToolsUtils.defineLazyGetter(this, "DebuggerSocket", () => {
   let { DebuggerSocket } = require("devtools/toolkit/security/socket");
@@ -84,7 +84,7 @@ function loadSubScript(aURL)
 
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 
-let {defer, resolve, reject, all} = require("devtools/toolkit/deprecated-sync-thenables");
+var {defer, resolve, reject, all} = require("devtools/toolkit/deprecated-sync-thenables");
 this.defer = defer;
 this.resolve = resolve;
 this.reject = reject;
@@ -1270,7 +1270,7 @@ this.OriginalLocation = OriginalLocation;
 // When using DebuggerServer.addActors, some symbols are expected to be in
 // the scope of the added actor even before the corresponding modules are
 // loaded, so let's explicitly bind the expected symbols here.
-let includes = ["Components", "Ci", "Cu", "require", "Services", "DebuggerServer",
+var includes = ["Components", "Ci", "Cu", "require", "Services", "DebuggerServer",
                 "ActorPool", "DevToolsUtils"];
 includes.forEach(name => {
   DebuggerServer[name] = this[name];

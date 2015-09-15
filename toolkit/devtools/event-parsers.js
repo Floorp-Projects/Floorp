@@ -14,7 +14,7 @@ loader.lazyGetter(this, "eventListenerService", () => {
            .getService(Ci.nsIEventListenerService);
 });
 
-let parsers = [
+var parsers = [
   {
     id: "jQuery events",
     getListeners: function(node) {

@@ -68,7 +68,7 @@ proxy.toListener = function(mmFn, sendAsyncFn) {
  * @param {function(string, Object, number)} sendAsyncFn
  *     Callback for sending async messages to the current listener.
  */
-let ContentSender = function(mmFn, sendAsyncFn) {
+var ContentSender = function(mmFn, sendAsyncFn) {
   this.curId = null;
   this.sendAsync = sendAsyncFn;
   this.mmFn_ = mmFn;

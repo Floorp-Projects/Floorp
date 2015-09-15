@@ -53,7 +53,7 @@ function createTCPError(aWindow, aErrorName, aErrorType) {
  * Debug logging function
  */
 
-let debug = false;
+var debug = false;
 function LOG(msg) {
   if (debug)
     dump("TCPSocket: " + msg + "\n");

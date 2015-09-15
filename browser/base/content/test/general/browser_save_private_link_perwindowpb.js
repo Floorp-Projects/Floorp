@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", null);
+var {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", null);
 
 function test() {
   // initialization

@@ -24,11 +24,11 @@ const formatString = strings.formatStringFromName;
 const LOGFILE_NAME_DEFAULT = "aboutWebrtc.html";
 const WEBRTC_TRACE_ALL = 65535;
 
-let reportsRetrieved = new Promise(resolve =>
+var reportsRetrieved = new Promise(resolve =>
   WebrtcGlobalInformation.getAllStats(stats => resolve(stats))
 );
 
-let logRetrieved = new Promise(resolve =>
+var logRetrieved = new Promise(resolve =>
   WebrtcGlobalInformation.getLogging("", log => resolve(log))
 );
 
@@ -62,7 +62,7 @@ function onLoad() {
     });
 }
 
-let ControlSet = {
+var ControlSet = {
   render: function() {
     let controls = document.createElement("div");
     let control = document.createElement("div");
@@ -273,7 +273,7 @@ AecLogging.prototype.onClick = function () {
   this.update();
 };
 
-let AboutWebRTC = {
+var AboutWebRTC = {
   _reports: [],
   _log: [],
 

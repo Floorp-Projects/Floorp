@@ -15,7 +15,7 @@ function checkWrapper(id) {
   is(document.querySelectorAll("#wrapper-" + id).length, 1, "There should be exactly 1 wrapper for " + id + " in the customizing window.");
 }
 
-let move = {
+var move = {
   "drag": function(id, target) {
     let targetNode = document.getElementById(target);
     if (targetNode.customizationTarget) {
@@ -141,7 +141,7 @@ function checkPalette(id, method) {
   checkWrapper(id);
 }
 
-let otherWin;
+var otherWin;
 
 // Moving widgets in two windows, one with customize mode and one without, should work.
 add_task(function MoveWidgetsInTwoWindows() {

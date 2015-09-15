@@ -11,7 +11,7 @@
  * Part B tests this when the columns do *not* match, so the DB is reset.
  */
 
-let iter = tests();
+var iter = tests();
 
 function run_test()
 {

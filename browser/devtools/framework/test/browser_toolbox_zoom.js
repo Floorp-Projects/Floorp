@@ -1,11 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let modifiers = {
+var modifiers = {
   accelKey: true
 };
 
-let toolbox;
+var toolbox;
 
 function test() {
   addTab("about:blank").then(openToolbox);

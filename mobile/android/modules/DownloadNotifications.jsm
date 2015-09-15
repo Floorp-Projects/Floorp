@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Serv
 XPCOMUtils.defineLazyServiceGetter(this, "ParentalControls",
   "@mozilla.org/parental-controls-service;1", "nsIParentalControlsService");
 
-let Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.i.bind(null, "DownloadNotifications"); 
+var Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.i.bind(null, "DownloadNotifications"); 
 
 XPCOMUtils.defineLazyGetter(this, "strings",
                             () => Services.strings.createBundle("chrome://browser/locale/browser.properties"));
@@ -39,7 +39,7 @@ const kButtons = {
                                          "alertDownloadsCancel")
 };
 
-let notifications = new Map();
+var notifications = new Map();
 
 var DownloadNotifications = {
   _notificationKey: "downloads",
@@ -251,7 +251,7 @@ DownloadNotification.prototype = {
   },
 };
 
-let ConfirmCancelPrompt = {
+var ConfirmCancelPrompt = {
   show: function (download) {
     // Open a prompt that offers a choice to cancel the download
     let title = strings.GetStringFromName("downloadCancelPromptTitle");

@@ -10,9 +10,9 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-console-output-regexp.html";
 
-let dateNow = Date.now();
+var dateNow = Date.now();
 
-let inputTests = [
+var inputTests = [
   // 0
   {
     input: "/foo/igym",

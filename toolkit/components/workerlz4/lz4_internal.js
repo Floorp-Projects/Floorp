@@ -11,11 +11,11 @@ if (!module || !exports) {
   throw new Error("Please load this module with require()");
 }
 
-let SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
-let libxul = new SharedAll.Library("libxul", SharedAll.Constants.Path.libxul);
-let Type = SharedAll.Type;
+var SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
+var libxul = new SharedAll.Library("libxul", SharedAll.Constants.Path.libxul);
+var Type = SharedAll.Type;
 
-let Primitives = {};
+var Primitives = {};
 
 libxul.declareLazyFFI(Primitives, "compress",
   "workerlz4_compress",

@@ -45,7 +45,7 @@ this.TabStateFlusher = Object.freeze({
   }
 });
 
-let TabStateFlusherInternal = {
+var TabStateFlusherInternal = {
   // Stores the last request ID.
   _lastRequestID: 0,
 

@@ -8,7 +8,7 @@
  * customization mode by handling customizationstarting and customizationending
  * events.
  */
-let CustomizationHandler = {
+var CustomizationHandler = {
   handleEvent: function(aEvent) {
     switch(aEvent.type) {
       case "customizationstarting":

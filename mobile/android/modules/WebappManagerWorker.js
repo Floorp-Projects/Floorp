@@ -4,11 +4,11 @@
 
 importScripts("resource://gre/modules/osfile.jsm");
 importScripts("resource://gre/modules/workers/require.js");
-let Log = require("resource://gre/modules/AndroidLog.jsm");
+var Log = require("resource://gre/modules/AndroidLog.jsm");
 
 // Define the "log" function as a binding of the Log.d function so it specifies
 // the "debug" priority and a log tag.
-let log = Log.d.bind(null, "WebappManagerWorker");
+var log = Log.d.bind(null, "WebappManagerWorker");
 
 // (eslint-disable: see bug 1177901)
 onmessage = function(event) { // eslint-disable-line no-undef

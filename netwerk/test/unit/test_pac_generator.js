@@ -5,15 +5,15 @@
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-let ios = Cc["@mozilla.org/network/io-service;1"]
+var ios = Cc["@mozilla.org/network/io-service;1"]
              .getService(Components.interfaces.nsIIOService);
 
-let pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
+var pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
 
-let prefs = Cc["@mozilla.org/preferences-service;1"]
+var prefs = Cc["@mozilla.org/preferences-service;1"]
                .getService(Components.interfaces.nsIPrefBranch);
 
-let pgen = Cc["@mozilla.org/pac-generator;1"]
+var pgen = Cc["@mozilla.org/pac-generator;1"]
               .getService(Components.interfaces.nsIPACGenerator);
 
 const TARGET_HOST ="www.mozilla.org";

@@ -42,8 +42,8 @@ static const char* const kIntolerantFallbackList[] =
 
 const FILE_FOOTER = "};\n";
 
-let errorTable = {};
-let errorWithoutFallbacks = {};
+var errorTable = {};
+var errorWithoutFallbacks = {};
 
 try {
 

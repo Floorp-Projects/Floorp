@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let contentWindow;
-let pinnedTab;
+var contentWindow;
+var pinnedTab;
 
 function test() {
   waitForExplicitFinish();

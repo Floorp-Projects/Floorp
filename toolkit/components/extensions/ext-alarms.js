@@ -1,16 +1,16 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
-let {
+var {
   EventManager,
   ignoreEvent,
 } = ExtensionUtils;
 
 // WeakMap[Extension -> Set[Alarm]]
-let alarmsMap = new WeakMap();
+var alarmsMap = new WeakMap();
 
 // WeakMap[Extension -> callback]
-let alarmCallbacksMap = new WeakMap();
+var alarmCallbacksMap = new WeakMap();
 
 // Manages an alarm created by the extension (alarms API).
 function Alarm(extension, name, alarmInfo)

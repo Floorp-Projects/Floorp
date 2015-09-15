@@ -6,7 +6,7 @@
 /**
  * Functions handling the recorded animation frame snapshots UI.
  */
-let SnapshotsListView = Heritage.extend(WidgetMethods, {
+var SnapshotsListView = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the tool is started.
    */

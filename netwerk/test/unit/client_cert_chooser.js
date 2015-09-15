@@ -6,7 +6,7 @@
 const { utils: Cu, interfaces: Ci } = Components;
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
-let Prompter = {
+var Prompter = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
   alert: function() {} // Do nothing when asked to show an alert
 };

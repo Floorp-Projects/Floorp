@@ -6,15 +6,15 @@
 
 // Checks that the expected default node is selected after a page navigation or
 // a reload.
-let PAGE_1 = TEST_URL_ROOT + "doc_inspector_select-last-selected-01.html";
-let PAGE_2 = TEST_URL_ROOT + "doc_inspector_select-last-selected-02.html";
+var PAGE_1 = TEST_URL_ROOT + "doc_inspector_select-last-selected-01.html";
+var PAGE_2 = TEST_URL_ROOT + "doc_inspector_select-last-selected-02.html";
 
 // An array of test cases with following properties:
 // - url: URL to navigate to. If URL == content.location, reload instead.
 // - nodeToSelect: a selector for a node to select before navigation. If null,
 //                 whatever is selected stays selected.
 // - selectedNode: a selector for a node that is selected after navigation.
-let TEST_DATA = [
+var TEST_DATA = [
   {
     url: PAGE_1,
     nodeToSelect: "#id1",

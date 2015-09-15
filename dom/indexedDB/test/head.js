@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let gActiveListeners = {};
+var gActiveListeners = {};
 
 function registerPopupEventHandler(eventName, callback) {
   gActiveListeners[eventName] = function (event) {

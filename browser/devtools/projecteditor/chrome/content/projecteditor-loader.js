@@ -15,7 +15,7 @@ const SAMPLE_ICON = "chrome://browser/skin/devtools/tool-debugger.svg";
  * chrome://browser/content/devtools/projecteditor-loader.xul.
  * This emulates the integration points that the app manager uses.
  */
-let appManagerEditor;
+var appManagerEditor;
 
 // Log a message to the project overview URL to make development easier
 function log(msg) {

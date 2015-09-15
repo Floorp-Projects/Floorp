@@ -3,13 +3,13 @@
 
 MARIONETTE_CONTEXT = "chrome";
 
-let Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
+var Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
 
 /**
  * Name space for MobileMessageDB.jsm.  Only initialized after first call to
  * newMobileMessageDB.
  */
-let MMDB;
+var MMDB;
 
 /**
  * Create a new MobileMessageDB instance.
@@ -359,7 +359,7 @@ function createThreadCursor(aMmdb) {
 }
 
 // A reference to a nsIUUIDGenerator service.
-let _uuidGenerator;
+var _uuidGenerator;
 
 /**
  * Generate a new UUID.

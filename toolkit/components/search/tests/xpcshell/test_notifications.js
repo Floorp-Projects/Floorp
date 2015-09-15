@@ -3,7 +3,7 @@
 
 "use strict";
 
-let gTestLog = [];
+var gTestLog = [];
 
 /**
  * The order of notifications expected for this test is:
@@ -16,7 +16,7 @@ let gTestLog = [];
  *  - engine-loaded (the search service's observer is garanteed to fire first, which is what causes engine-added to fire)
  *  - engine-removed (due to the removal schedule above)
  */
-let expectedLog = [
+var expectedLog = [
   "engine-changed", // XXX bug 606886
   "engine-added",
   "engine-default",

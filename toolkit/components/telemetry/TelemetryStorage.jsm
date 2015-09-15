@@ -103,7 +103,7 @@ PingParseError.prototype.constructor = PingParseError;
 /**
  * This is a policy object used to override behavior for testing.
  */
-let Policy = {
+var Policy = {
   now: () => new Date(),
   getArchiveQuota: () => ARCHIVE_QUOTA_BYTES,
   getPendingPingsQuota: () => (AppConstants.platform in ["android", "gonk"])
@@ -544,7 +544,7 @@ SaveSerializer.prototype = {
   },
 };
 
-let TelemetryStorageImpl = {
+var TelemetryStorageImpl = {
   _logger: null,
   // Used to serialize aborted session ping writes to disk.
   _abortedSessionSerializer: new SaveSerializer(),
@@ -1643,7 +1643,7 @@ function getArchivedPingPath(aPingId, aDate, aType) {
  * Get the size of the ping file on the disk.
  * @return {Integer} The file size, in bytes, of the ping file or 0 on errors.
  */
-let getArchivedPingSize = Task.async(function*(aPingId, aDate, aType) {
+var getArchivedPingSize = Task.async(function*(aPingId, aDate, aType) {
   const path = getArchivedPingPath(aPingId, aDate, aType);
   let filePaths = [ path + "lz4", path ];
 
@@ -1661,7 +1661,7 @@ let getArchivedPingSize = Task.async(function*(aPingId, aDate, aType) {
  * Get the size of the pending ping file on the disk.
  * @return {Integer} The file size, in bytes, of the ping file or 0 on errors.
  */
-let getPendingPingSize = Task.async(function*(aPingId) {
+var getPendingPingSize = Task.async(function*(aPingId) {
   const path = OS.Path.join(TelemetryStorage.pingDirectoryPath, aPingId)
   try {
     return (yield OS.File.stat(path)).size;

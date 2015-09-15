@@ -3,9 +3,9 @@
 
 "use strict";
 
-let dummyCallback = () => {};
-let mockWebSocket = new MockWebSocketChannel();
-let pushServerRequestCount = 0;
+var dummyCallback = () => {};
+var mockWebSocket = new MockWebSocketChannel();
+var pushServerRequestCount = 0;
 
 add_test(function test_initalize_offline() {
   Services.io.offline = true;

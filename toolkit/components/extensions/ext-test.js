@@ -1,9 +1,9 @@
 Components.utils.import("resource://gre/modules/ExtensionUtils.jsm");
-let {
+var {
   EventManager,
 } = ExtensionUtils;
 
-let messageHandlers = new WeakMap();
+var messageHandlers = new WeakMap();
 
 extensions.on("test-message", (type, extension, ...args) => {
   let fire = messageHandlers.get(extension);

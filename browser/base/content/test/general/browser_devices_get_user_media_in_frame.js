@@ -223,7 +223,7 @@ function getFrameGlobal(aFrameId) {
 
 const permissionError = "error: PermissionDeniedError: The user did not grant permission for the operation.";
 
-let gTests = [
+var gTests = [
 
 {
   desc: "getUserMedia audio+video",

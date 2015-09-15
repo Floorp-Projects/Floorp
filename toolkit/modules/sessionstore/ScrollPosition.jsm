@@ -27,7 +27,7 @@ this.ScrollPosition = Object.freeze({
 /**
  * This module's internal API.
  */
-let ScrollPositionInternal = {
+var ScrollPositionInternal = {
   /**
    * Collects scroll position data for any given |frame| in the frame hierarchy.
    *

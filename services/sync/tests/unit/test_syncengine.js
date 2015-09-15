@@ -10,7 +10,7 @@ function makeSteamEngine() {
   return new SyncEngine('Steam', Service);
 }
 
-let server;
+var server;
 
 function test_url_attributes() {
   _("SyncEngine url attributes");

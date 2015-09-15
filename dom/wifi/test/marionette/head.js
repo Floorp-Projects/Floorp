@@ -43,7 +43,7 @@ const HOSTAPD_CONFIG_LIST = [
   },
 ];
 
-let gTestSuite = (function() {
+var gTestSuite = (function() {
   let suite = {};
 
   // Private member variables of the returned object |suite|.

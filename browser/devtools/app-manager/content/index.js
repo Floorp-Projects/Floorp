@@ -12,7 +12,7 @@ const prefs = require("sdk/preferences/service");
 const Services = require("Services");
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/app-manager.properties");
 
-let UI = {
+var UI = {
   _toolboxTabCursor: 0,
   _handledTargets: new Map(),
 

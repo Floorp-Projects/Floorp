@@ -47,7 +47,7 @@ function test() {
 }
 
 
-let tests = [
+var tests = [
   test_setTabState,
   test_duplicateTab,
   test_undoCloseTab,

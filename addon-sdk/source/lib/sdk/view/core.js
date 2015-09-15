@@ -14,7 +14,7 @@ var method = require("../../method/core");
 // the given `value`. If `value` has no view associated
 // it returns `null`. You can implement this method for
 // this type to define what the result should be for it.
-let getNodeView = method("getNodeView");
+var getNodeView = method("getNodeView");
 getNodeView.define(x =>
                      x instanceof Ci.nsIDOMNode ? x :
                      x instanceof Ci.nsIDOMWindow ? x :
@@ -22,5 +22,5 @@ getNodeView.define(x =>
 exports.getNodeView = getNodeView;
 exports.viewFor = getNodeView;
 
-let getActiveView = method("getActiveView");
+var getActiveView = method("getActiveView");
 exports.getActiveView = getActiveView;

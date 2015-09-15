@@ -4,10 +4,10 @@
 
 // tests the translation infobar, using a fake 'Translation' implementation.
 
-let tmp = {};
+var tmp = {};
 Cu.import("resource:///modules/translation/Translation.jsm", tmp);
 Cu.import("resource://gre/modules/Promise.jsm", tmp);
-let {Translation, Promise} = tmp;
+var {Translation, Promise} = tmp;
 
 const kLanguagesPref = "browser.translation.neverForLanguages";
 const kShowUIPref = "browser.translation.ui.show";
@@ -101,7 +101,7 @@ function waitForWindowLoad(aWin) {
 }
 
 
-let gTests = [
+var gTests = [
 
 {
   desc: "clean exception lists at startup",

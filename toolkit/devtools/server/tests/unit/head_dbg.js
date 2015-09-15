@@ -31,7 +31,7 @@ const { addDebuggerToGlobal } = Cu.import("resource://gre/modules/jsdebugger.jsm
 
 const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
 
-let loadSubScript = Cc[
+var loadSubScript = Cc[
   '@mozilla.org/moz/jssubscript-loader;1'
 ].getService(Ci.mozIJSSubScriptLoader).loadSubScript;
 
@@ -210,8 +210,8 @@ function dbg_assert(cond, e) {
 
 // Register a console listener, so console messages don't just disappear
 // into the ether.
-let errorCount = 0;
-let listener = {
+var errorCount = 0;
+var listener = {
   observe: function (aMessage) {
     try {
       errorCount++;
@@ -257,7 +257,7 @@ let listener = {
   }
 };
 
-let consoleService = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
+var consoleService = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
 consoleService.registerListener(listener);
 
 function check_except(func)
@@ -548,28 +548,28 @@ function executeSoon(aFunc) {
 //
 // TODO: Remove this once bug 906232 is resolved
 //
-let do_check_true_old = do_check_true;
-let do_check_true = function (condition) {
+var do_check_true_old = do_check_true;
+var do_check_true = function (condition) {
   do_check_true_old(condition);
 };
 
-let do_check_false_old = do_check_false;
-let do_check_false = function (condition) {
+var do_check_false_old = do_check_false;
+var do_check_false = function (condition) {
   do_check_false_old(condition);
 };
 
-let do_check_eq_old = do_check_eq;
-let do_check_eq = function (left, right) {
+var do_check_eq_old = do_check_eq;
+var do_check_eq = function (left, right) {
   do_check_eq_old(left, right);
 };
 
-let do_check_neq_old = do_check_neq;
-let do_check_neq = function (left, right) {
+var do_check_neq_old = do_check_neq;
+var do_check_neq = function (left, right) {
   do_check_neq_old(left, right);
 };
 
-let do_check_matches_old = do_check_matches;
-let do_check_matches = function (pattern, value) {
+var do_check_matches_old = do_check_matches;
+var do_check_matches = function (pattern, value) {
   do_check_matches_old(pattern, value);
 };
 

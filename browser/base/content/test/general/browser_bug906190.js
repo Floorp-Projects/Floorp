@@ -55,14 +55,14 @@ const PREF_ACTIVE = "security.mixed_content.block_active_content";
 const gHttpTestRoot1 = "https://test1.example.com/browser/browser/base/content/test/general/";
 const gHttpTestRoot2 = "https://test2.example.com/browser/browser/base/content/test/general/";
 
-let origBlockActive;
-let gTestWin = null;
-let mainTab = null;
-let curClickHandler = null;
-let curContextMenu = null;
-let curTestFunc = null;
-let curTestName = null;
-let curChildTabLink = null;
+var origBlockActive;
+var gTestWin = null;
+var mainTab = null;
+var curClickHandler = null;
+var curContextMenu = null;
+var curTestFunc = null;
+var curTestName = null;
+var curChildTabLink = null;
 
 //------------------------ Helper Functions ---------------------
 
@@ -96,7 +96,7 @@ function waitForCondition(condition, nextTest, errorMsg) {
 // The purpose of this function is to simulate |CTRL+CLICK|.
 // The clickHandler intercepts simulated user clicks and performs
 // the |contentAreaClick| which dispatches to handleLinkClick.
-let clickHandler = function (aEvent, aFunc) {
+var clickHandler = function (aEvent, aFunc) {
   gTestWin.gBrowser.removeEventListener("click", curClickHandler, true);
   gTestWin.contentAreaClick(aEvent, true);
   waitForSomeTabToLoad(aFunc);
@@ -107,7 +107,7 @@ let clickHandler = function (aEvent, aFunc) {
 // The purpose of this function is to simulate |RIGHT-CLICK|->|OPEN LINK IN TAB|
 // Once the contextmenu opens, this functions selects 'open link in tab'
 // from the contextmenu which dispatches to the function openLinkInTab.
-let contextMenuOpenHandler = function(aEvent, aFunc) {
+var contextMenuOpenHandler = function(aEvent, aFunc) {
   gTestWin.document.removeEventListener("popupshown", curContextMenu, false);
   waitForSomeTabToLoad(aFunc);
   var openLinkInTabCommand = gTestWin.document.getElementById("context-openlinkintab");

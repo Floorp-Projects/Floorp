@@ -16,7 +16,7 @@ function run_test() {
 }
 
 // https://wiki.mozilla.org/Identity/AttachedServices/KeyServerProtocol#.2Faccount.2Fkeys
-let ACCOUNT_KEYS = {
+var ACCOUNT_KEYS = {
   keyFetch:     h("8081828384858687 88898a8b8c8d8e8f"+
                   "9091929394959697 98999a9b9c9d9e9f"),
 

@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource:///modules/PlacesUIUtils.jsm");
 Cu.import("resource://services-common/utils.js");
 
-let PlacesQueries = function () {
+var PlacesQueries = function () {
 }
 
 PlacesQueries.prototype = {
@@ -30,7 +30,7 @@ PlacesQueries.prototype = {
   }
 };
 
-let PlacesWrapper = function () {
+var PlacesWrapper = function () {
 }
 
 PlacesWrapper.prototype = {

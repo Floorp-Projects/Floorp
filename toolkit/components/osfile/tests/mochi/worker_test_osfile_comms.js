@@ -7,7 +7,7 @@ importScripts('worker_test_osfile_shared.js');
 
 // The set of samples for communications test. Declare as a global
 // variable to prevent this from being garbage-collected too early.
-let samples;
+var samples;
 
 self.onmessage = function(msg) {
   info("Initializing");

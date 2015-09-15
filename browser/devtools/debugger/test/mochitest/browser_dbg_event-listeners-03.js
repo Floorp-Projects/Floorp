@@ -8,8 +8,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_native-event-handler.html";
 
-let gClient;
-let gTab;
+var gClient;
+var gTab;
 
 function test() {
   if (!DebuggerServer.initialized) {

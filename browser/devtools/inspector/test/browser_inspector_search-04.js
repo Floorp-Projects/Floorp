@@ -15,7 +15,7 @@ const TEST_URL = "data:text/html;charset=utf-8," +
 // suggestions is an array of suggestions that should be shown in the popup.
 // Suggestion is an object with label of the entry and optional count
 // (defaults to 1)
-let TEST_DATA = [
+var TEST_DATA = [
   {
     key: "d",
     suggestions: [

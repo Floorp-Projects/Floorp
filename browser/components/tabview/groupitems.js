@@ -1905,7 +1905,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 // ##########
 // Class: GroupItems
 // Singleton for managing all <GroupItem>s.
-let GroupItems = {
+var GroupItems = {
   groupItems: [],
   nextID: 1,
   _inited: false,

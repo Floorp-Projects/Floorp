@@ -27,8 +27,8 @@ function eventsFor(window) {
 
 // In addition to observing windows that are open we also observe windows
 // that are already already opened in case they're in process of loading.
-let opened = windows(null, { includePrivate: true });
-let currentEvents = merge(opened.map(eventsFor));
+var opened = windows(null, { includePrivate: true });
+var currentEvents = merge(opened.map(eventsFor));
 
 // Register system event listeners for top level window open / close.
 function rename({type, target, data}) {
@@ -37,10 +37,10 @@ function rename({type, target, data}) {
 rename.domwindowopened = "open";
 rename.domwindowclosed = "close";
 
-let openEvents = map(observe("domwindowopened"), rename);
-let closeEvents = map(observe("domwindowclosed"), rename);
-let futureEvents = expand(openEvents, function({target}) eventsFor(target));
+var openEvents = map(observe("domwindowopened"), rename);
+var closeEvents = map(observe("domwindowclosed"), rename);
+var futureEvents = expand(openEvents, function({target}) eventsFor(target));
 
-let channel = merge([currentEvents, futureEvents,
+var channel = merge([currentEvents, futureEvents,
                      openEvents, closeEvents]);
 exports.events = channel;

@@ -27,7 +27,7 @@ const {ProjectBuilding} = require("./build");
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 
-let AppManager = exports.AppManager = {
+var AppManager = exports.AppManager = {
 
   // FIXME: will break when devtools/app-manager will be removed:
   DEFAULT_PROJECT_ICON: "chrome://browser/skin/devtools/app-manager/default-app-icon.png",

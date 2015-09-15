@@ -7,8 +7,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_function-search.html";
 
-let gTab, gPanel, gDebugger;
-let gEditor, gSources, gSearchBox, gFilteredFunctions;
+var gTab, gPanel, gDebugger;
+var gEditor, gSources, gSearchBox, gFilteredFunctions;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

@@ -323,7 +323,7 @@ PingMonitor.prototype = {
  * We don't have push notifications on desktop currently, so this is a
  * workaround to get them going for us.
  */
-let MozLoopPushHandler = {
+var MozLoopPushHandler = {
   // This is the uri of the push server.
   pushServerUri: undefined,
   // Records containing the registration and notification callbacks indexed by channelID.

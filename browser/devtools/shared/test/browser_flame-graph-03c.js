@@ -3,13 +3,13 @@
 
 // Tests that vertical panning in the flame graph widget works properly.
 
-let TEST_DATA = [{ color: "#f00", blocks: [{ x: 0, y: 0, width: 50, height: 20, text: "FOO" }, { x: 50, y: 0, width: 100, height: 20, text: "BAR" }] }, { color: "#00f", blocks: [{ x: 0, y: 30, width: 30, height: 20, text: "BAZ" }] }];
-let TEST_BOUNDS = { startTime: 0, endTime: 150 };
-let TEST_WIDTH = 200;
-let TEST_HEIGHT = 100;
-let TEST_DPI_DENSITIY = 2;
+var TEST_DATA = [{ color: "#f00", blocks: [{ x: 0, y: 0, width: 50, height: 20, text: "FOO" }, { x: 50, y: 0, width: 100, height: 20, text: "BAR" }] }, { color: "#00f", blocks: [{ x: 0, y: 30, width: 30, height: 20, text: "BAZ" }] }];
+var TEST_BOUNDS = { startTime: 0, endTime: 150 };
+var TEST_WIDTH = 200;
+var TEST_HEIGHT = 100;
+var TEST_DPI_DENSITIY = 2;
 
-let {FlameGraph} = require("devtools/shared/widgets/FlameGraph");
+var {FlameGraph} = require("devtools/shared/widgets/FlameGraph");
 
 add_task(function*() {
   yield promiseTab("about:blank");

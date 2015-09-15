@@ -1,4 +1,4 @@
-let testVar;
+var testVar;
 
 registerCleanupFunction(function() {
   ok(true, "I'm a cleanup function in test file");

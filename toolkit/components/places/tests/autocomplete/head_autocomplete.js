@@ -24,7 +24,7 @@ Cu.import("resource://gre/modules/Services.jsm");
  * titles, tags and tests that a given search term matches certain pages.
  */
 
-let current_test = 0;
+var current_test = 0;
 
 function AutoCompleteInput(aSearches) {
   this.searches = aSearches;
@@ -55,7 +55,7 @@ function toURI(aSpec) {
   return uri(aSpec);
 }
 
-let appendTags = true;
+var appendTags = true;
 // Helper to turn off tag matching in results
 function ignoreTags()
 {
@@ -157,12 +157,12 @@ var prefs = Cc["@mozilla.org/preferences-service;1"].
             getService(Ci.nsIPrefBranch);
 
 // Some date not too long ago
-let gDate = new Date(Date.now() - 1000 * 60 * 60) * 1000;
+var gDate = new Date(Date.now() - 1000 * 60 * 60) * 1000;
 // Store the page info for each uri
-let gPages = [];
+var gPages = [];
 
 // Initialization tasks to be run before the next test
-let gNextTestSetupTasks = [];
+var gNextTestSetupTasks = [];
 
 /**
  * Adds a page, and creates various properties for it depending on the

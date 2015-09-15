@@ -3,9 +3,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-let Ci = Components.interfaces;
-let Cu = Components.utils;
-let Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
+var Cc = Components.classes;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NotificationDB.jsm");
@@ -251,7 +251,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
   "resource:///modules/ReaderParent.jsm");
 
-let gInitialPages = [
+var gInitialPages = [
   "about:blank",
   "about:newtab",
   "about:home",
@@ -2593,7 +2593,7 @@ function PageProxyClickHandler(aEvent)
     middleMousePaste(aEvent);
 }
 
-let gMenuButtonBadgeManager = {
+var gMenuButtonBadgeManager = {
   BADGEID_APPUPDATE: "update",
   BADGEID_FXA: "fxa",
 
@@ -2655,7 +2655,7 @@ let gMenuButtonBadgeManager = {
 };
 
 // Setup the hamburger button badges for updates, if enabled.
-let gMenuButtonUpdateBadge = {
+var gMenuButtonUpdateBadge = {
   enabled: false,
   badgeWaitTime: 0,
   timer: null,
@@ -2762,7 +2762,7 @@ const TLS_ERROR_REPORT_TELEMETRY_AUTO_SEND      = 5;
  * or from about:newtab or from remote error pages that invoke
  * us via async messaging.
  */
-let BrowserOnClick = {
+var BrowserOnClick = {
   init: function () {
     let mm = window.messageManager;
     mm.addMessageListener("Browser:CertExceptionError", this);
@@ -7383,7 +7383,7 @@ function getTabModalPromptBox(aWindow) {
 function getBrowser() gBrowser;
 function getNavToolbox() gNavToolbox;
 
-let gPrivateBrowsingUI = {
+var gPrivateBrowsingUI = {
   init: function PBUI_init() {
     // Do nothing for normal windows
     if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
@@ -7440,7 +7440,7 @@ let gPrivateBrowsingUI = {
   }
 };
 
-let gRemoteTabsUI = {
+var gRemoteTabsUI = {
   init: function() {
     if (window.location.href != getBrowserURL() &&
         // Also check hidden window for the Mac no-window case
@@ -7575,7 +7575,7 @@ function switchToTabHavingURI(aURI, aOpenNew, aOpenParams={}) {
   return false;
 }
 
-let RestoreLastSessionObserver = {
+var RestoreLastSessionObserver = {
   init: function () {
     if (SessionStore.canRestoreLastSession &&
         !PrivateBrowsingUtils.isWindowPrivate(window)) {
@@ -7881,7 +7881,7 @@ function BrowserOpenNewTabOrWindow(event) {
   }
 }
 
-let ToolbarIconColor = {
+var ToolbarIconColor = {
   init: function () {
     this._initialized = true;
 
@@ -7957,7 +7957,7 @@ let ToolbarIconColor = {
   }
 }
 
-let PanicButtonNotifier = {
+var PanicButtonNotifier = {
   init: function() {
     this._initialized = true;
     if (window.PanicButtonNotifierShouldNotify) {
@@ -7988,7 +7988,7 @@ let PanicButtonNotifier = {
   },
 };
 
-let AboutPrivateBrowsingListener = {
+var AboutPrivateBrowsingListener = {
   init: function () {
     window.messageManager.addMessageListener(
       "AboutPrivateBrowsing:OpenPrivateWindow",

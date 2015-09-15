@@ -31,7 +31,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
  *     }
  *   );
  */
-let Accounts = Object.freeze({
+var Accounts = Object.freeze({
   _accountsExist: function (kind) {
     return Messaging.sendRequestForResult({
       type: "Accounts:Exist",

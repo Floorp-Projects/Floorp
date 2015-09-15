@@ -12,7 +12,7 @@
 
 const TEST_URI = "http://example.com/";
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();
@@ -20,7 +20,7 @@ let test = asyncTest(function* () {
   performTestsAfterOutput(hud);
 });
 
-let testSelectionWhenMovingBetweenBoxes = Task.async(function*(hud) {
+var testSelectionWhenMovingBetweenBoxes = Task.async(function*(hud) {
   let jsterm = hud.jsterm;
 
   // Fill the console with some output.

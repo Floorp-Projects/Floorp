@@ -5,9 +5,9 @@
 const Ci = Components.interfaces;
 const gDeviceSizeWasPageSize = docShell.deviceSizeIsPageSize;
 const gFloatingScrollbarsStylesheet = Services.io.newURI("chrome://browser/skin/devtools/floating-scrollbars.css", null, null);
-let gRequiresFloatingScrollbars;
+var gRequiresFloatingScrollbars;
 
-let active = false;
+var active = false;
 
 addMessageListener("ResponsiveMode:Start", startResponsiveMode);
 addMessageListener("ResponsiveMode:Stop", stopResponsiveMode);
@@ -112,7 +112,7 @@ function screenshot() {
   sendAsyncMessage("ResponsiveMode:RequestScreenshot:Done", canvas.toDataURL());
 }
 
-let WebProgressListener = {
+var WebProgressListener = {
   onLocationChange(webProgress, request, URI, flags) {
     if (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
       return;

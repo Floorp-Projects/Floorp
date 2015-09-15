@@ -4,7 +4,7 @@
 
 const nsIQuotaManager = Components.interfaces.nsIQuotaManager;
 
-let gURI = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService).newURI("http://localhost", null, null);
+var gURI = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService).newURI("http://localhost", null, null);
 
 function onUsageCallback(principal, usage, fileUsage) {}
 

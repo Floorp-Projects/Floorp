@@ -10,8 +10,8 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
 
-let scheduler = Service.scheduler;
-let clientsEngine = Service.clientsEngine;
+var scheduler = Service.scheduler;
+var clientsEngine = Service.clientsEngine;
 
 function promiseStopServer(server) {
   let deferred = Promise.defer();

@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Weave",
   "resource://services-sync/main.js");
 
 // FxAccountsCommon.js doesn't use a "namespace", so create one here.
-let fxAccountsCommon = {};
+var fxAccountsCommon = {};
 Cu.import("resource://gre/modules/FxAccountsCommon.js", fxAccountsCommon);
 
 // We send this notification whenever the "user" migration state changes.
@@ -563,4 +563,4 @@ Migrator.prototype = {
 
 // We expose a singleton
 this.EXPORTED_SYMBOLS = ["fxaMigrator"];
-let fxaMigrator = new Migrator();
+var fxaMigrator = new Migrator();

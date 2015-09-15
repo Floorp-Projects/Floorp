@@ -8,11 +8,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CloudSync",
                                   "resource://gre/modules/CloudSync.jsm");
 #else
-let CloudSync = null;
+var CloudSync = null;
 #endif
 
 // gSyncUI handles updating the tools menu and displaying notifications.
-let gSyncUI = {
+var gSyncUI = {
   _obs: ["weave:service:sync:start",
          "weave:service:sync:finish",
          "weave:service:sync:error",

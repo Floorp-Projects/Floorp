@@ -78,7 +78,7 @@ const acorn = require("acorn/acorn");
 
 */
 
-let js_beautify = function js_beautify(js_source_text, options) {
+var js_beautify = function js_beautify(js_source_text, options) {
     var beautifier = new Beautifier(js_source_text, options);
     return beautifier.beautify();
 };

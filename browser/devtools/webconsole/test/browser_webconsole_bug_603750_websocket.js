@@ -15,7 +15,7 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
 const TEST_URI2 = "data:text/html;charset=utf-8,Web Console test for " +
                   "bug 603750: Web Socket errors";
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield loadTab(TEST_URI2);
 
   let hud = yield openConsole();

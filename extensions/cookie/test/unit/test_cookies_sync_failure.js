@@ -18,9 +18,9 @@
 //    c) Schema 3: the 'creationTime' column already exists; or the
 //       'moz_uniqueid' index already exists.
 
-let COOKIE_DATABASE_SCHEMA_CURRENT = 5;
+var COOKIE_DATABASE_SCHEMA_CURRENT = 5;
 
-let test_generator = do_run_test();
+var test_generator = do_run_test();
 
 function run_test() {
   do_test_pending();

@@ -7,12 +7,12 @@ const prefs = require("sdk/preferences/service");
 
 const QUOTA_PREF = "extensions.addon-sdk.simple-storage.quota";
 
-let {Cc,Ci} = require("chrome");
+var {Cc,Ci} = require("chrome");
 
 const { Loader } = require("sdk/test/loader");
 const { id } = require("sdk/self");
 
-let storeFile = Cc["@mozilla.org/file/directory_service;1"].
+var storeFile = Cc["@mozilla.org/file/directory_service;1"].
                 getService(Ci.nsIProperties).
                 get("ProfD", Ci.nsIFile);
 storeFile.append("jetpack");
@@ -20,7 +20,7 @@ storeFile.append(id);
 storeFile.append("simple-storage");
 file.mkpath(storeFile.path);
 storeFile.append("store.json");
-let storeFilename = storeFile.path;
+var storeFilename = storeFile.path;
 
 function manager(loader) loader.sandbox("sdk/simple-storage").manager;
 

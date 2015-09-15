@@ -1,6 +1,6 @@
-let gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
-let gTestBrowser = null;
-let gConsoleErrors = 0;
+var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+var gTestBrowser = null;
+var gConsoleErrors = 0;
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;

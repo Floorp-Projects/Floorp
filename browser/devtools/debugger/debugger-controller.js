@@ -137,7 +137,7 @@ Object.defineProperty(this, "NetworkHelper", {
 /**
  * Object defining the debugger controller components.
  */
-let DebuggerController = {
+var DebuggerController = {
   /**
    * Initializes the debugger controller.
    */
@@ -2028,12 +2028,12 @@ Object.defineProperty(Breakpoints.prototype, "_addedOrDisabled", {
 /**
  * Localization convenience methods.
  */
-let L10N = new ViewHelpers.L10N(DBG_STRINGS_URI);
+var L10N = new ViewHelpers.L10N(DBG_STRINGS_URI);
 
 /**
  * Shortcuts for accessing various debugger preferences.
  */
-let Prefs = new ViewHelpers.Prefs("devtools", {
+var Prefs = new ViewHelpers.Prefs("devtools", {
   workersAndSourcesWidth: ["Int", "debugger.ui.panes-workers-and-sources-width"],
   instrumentsWidth: ["Int", "debugger.ui.panes-instruments-width"],
   panesVisibleOnStartup: ["Bool", "debugger.ui.panes-visible-on-startup"],
@@ -2113,4 +2113,4 @@ function dumpn(str) {
   }
 }
 
-let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
+var wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");

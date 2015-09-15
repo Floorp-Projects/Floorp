@@ -13,13 +13,13 @@
  */
 
 // Define some shared uris and titles (each page needs its own uri)
-let kURIs = [
+var kURIs = [
   "http://a.b.c/d-e_f/h/t/p",
   "http://d.e.f/g-h_i/h/t/p",
   "http://g.h.i/j-k_l/h/t/p",
   "http://j.k.l/m-n_o/h/t/p",
 ];
-let kTitles = [
+var kTitles = [
   "f(o)o b<a>r",
   "b(a)r b<a>z",
 ];
@@ -33,7 +33,7 @@ addPageBook(3, 0, 1);
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
-let gTests = [
+var gTests = [
   ["0: Match 2 terms all in url",
    "c d", [0]],
   ["1: Match 1 term in url and 1 term in title",

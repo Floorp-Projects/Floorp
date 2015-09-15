@@ -5,17 +5,17 @@
 "use strict";
 
 const Cu = Components.utils;
-let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let {TargetFactory} = require("devtools/framework/target");
-let {CssComputedView} = require("devtools/styleinspector/computed-view");
-let {CssRuleView, _ElementStyle} = require("devtools/styleinspector/rule-view");
-let {CssLogic, CssSelector} = require("devtools/styleinspector/css-logic");
-let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-let promise = require("promise");
-let {editableField, getInplaceEditorForSpan: inplaceEditor} =
+var {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var {TargetFactory} = require("devtools/framework/target");
+var {CssComputedView} = require("devtools/styleinspector/computed-view");
+var {CssRuleView, _ElementStyle} = require("devtools/styleinspector/rule-view");
+var {CssLogic, CssSelector} = require("devtools/styleinspector/css-logic");
+var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var promise = require("promise");
+var {editableField, getInplaceEditorForSpan: inplaceEditor} =
   require("devtools/shared/inplace-editor");
-let {console} =
+var {console} =
   Components.utils.import("resource://gre/modules/devtools/Console.jsm", {});
 
 // All tests are asynchronous
@@ -158,7 +158,7 @@ function getNodeFront(selector, {walker}) {
  *        The instance of InspectorPanel currently loaded in the toolbox
  * @return {Promise} Resolves when the inspector is updated with the new node
  */
-let selectAndHighlightNode = Task.async(function*(selector, inspector) {
+var selectAndHighlightNode = Task.async(function*(selector, inspector) {
   info("Highlighting and selecting the node for " + selector);
 
   let nodeFront = yield getNodeFront(selector, inspector);
@@ -180,7 +180,7 @@ let selectAndHighlightNode = Task.async(function*(selector, inspector) {
  *        to highlight the node upon selection
  * @return {Promise} Resolves when the inspector is updated with the new node
  */
-let selectNode = Task.async(function*(data, inspector, reason="test") {
+var selectNode = Task.async(function*(data, inspector, reason="test") {
   info("Selecting the node for '" + data + "'");
   let nodeFront = data;
   if (!data._form) {
@@ -210,7 +210,7 @@ function clearCurrentNodeSelection(inspector) {
  *
  * @return a promise that resolves when the inspector is ready
  */
-let openInspector = Task.async(function*() {
+var openInspector = Task.async(function*() {
   info("Opening the inspector");
   let target = TargetFactory.forTab(gBrowser.selectedTab);
 
@@ -266,7 +266,7 @@ function waitForToolboxFrameFocus(toolbox) {
  * @return a promise that resolves when the inspector is ready and the sidebar
  * view is visible and ready
  */
-let openInspectorSideBar = Task.async(function*(id) {
+var openInspectorSideBar = Task.async(function*(id) {
   let {toolbox, inspector} = yield openInspector();
 
   if (!hasSideBarTab(inspector, id)) {
@@ -451,7 +451,7 @@ function* waitForComputedStyleProperty(selector, pseudo, name, expected) {
  *
  * @return a promise that resolves to the inplace-editor element when ready
  */
-let focusEditableField = Task.async(function*(ruleView, editable, xOffset=1,
+var focusEditableField = Task.async(function*(ruleView, editable, xOffset=1,
     yOffset=1, options={}) {
   let onFocus = once(editable.parentNode, "focus", true);
   info("Clicking on editable field to turn to edit mode");
@@ -542,7 +542,7 @@ function waitForWindow() {
  *
  * @return a promise that resolves to the tab object
  */
-let waitForTab = Task.async(function*() {
+var waitForTab = Task.async(function*() {
   info("Waiting for a tab to open");
   yield once(gBrowser.tabContainer, "TabOpen");
   let tab = gBrowser.selectedTab;
@@ -646,7 +646,7 @@ function hasSideBarTab(inspector, id) {
  *        The NodeActor that will used to retrieve the dataURL for the
  *        font family tooltip contents.
  */
-let getFontFamilyDataURL = Task.async(function*(font, nodeFront) {
+var getFontFamilyDataURL = Task.async(function*(font, nodeFront) {
   let fillStyle = (Services.prefs.getCharPref("devtools.theme") === "light") ?
       "black" : "white";
 
@@ -796,7 +796,7 @@ function getRuleViewSelectorHighlighterIcon(view, selectorText) {
  *          - {String} value The expected style value
  * The style will be checked like so: getComputedStyle(element)[name] === value
  */
-let simulateColorPickerChange = Task.async(function*(ruleView, colorPicker,
+var simulateColorPickerChange = Task.async(function*(ruleView, colorPicker,
     newRgba, expectedChange) {
   let onRuleViewChanged = ruleView.once("ruleview-changed");
   info("Getting the spectrum colorpicker object");
@@ -871,7 +871,7 @@ function getRuleViewRuleEditor(view, childrenIndex, nodeIndex) {
  * @return a promise that resolves to the newly created editor when ready and
  * focused
  */
-let focusNewRuleViewProperty = Task.async(function*(ruleEditor) {
+var focusNewRuleViewProperty = Task.async(function*(ruleEditor) {
   info("Clicking on a close ruleEditor brace to start editing a new property");
   ruleEditor.closeBrace.scrollIntoView();
   let editor = yield focusEditableField(ruleEditor.ruleView,
@@ -896,7 +896,7 @@ let focusNewRuleViewProperty = Task.async(function*(ruleEditor) {
  * @return a promise that resolves when the new property name has been entered
  * and once the value field is focused
  */
-let createNewRuleViewProperty = Task.async(function*(ruleEditor, inputValue) {
+var createNewRuleViewProperty = Task.async(function*(ruleEditor, inputValue) {
   info("Creating a new property editor");
   let editor = yield focusNewRuleViewProperty(ruleEditor);
 
@@ -920,7 +920,7 @@ let createNewRuleViewProperty = Task.async(function*(ruleEditor, inputValue) {
  * @return a promise that resolves when the rule-view is filtered for the
  * search term
  */
-let setSearchFilter = Task.async(function*(view, searchValue) {
+var setSearchFilter = Task.async(function*(view, searchValue) {
   info("Setting filter text to \"" + searchValue + "\"");
   let win = view.styleWindow;
   let searchField = view.searchField;
@@ -995,7 +995,7 @@ function getComputedViewPropertyView(view, name) {
  * @return {Promise} A promise that resolves to the property matched rules
  * container
  */
-let getComputedViewMatchedRules = Task.async(function*(view, name) {
+var getComputedViewMatchedRules = Task.async(function*(view, name) {
   let expander;
   let propertyContent;
   for (let property of view.styleDocument.querySelectorAll(".property-view")) {

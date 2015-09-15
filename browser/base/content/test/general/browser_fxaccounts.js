@@ -1,10 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let {Log} = Cu.import("resource://gre/modules/Log.jsm", {});
-let {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-let {fxAccounts} = Cu.import("resource://gre/modules/FxAccounts.jsm", {});
-let FxAccountsCommon = {};
+var {Log} = Cu.import("resource://gre/modules/Log.jsm", {});
+var {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+var {fxAccounts} = Cu.import("resource://gre/modules/FxAccounts.jsm", {});
+var FxAccountsCommon = {};
 Cu.import("resource://gre/modules/FxAccountsCommon.js", FxAccountsCommon);
 
 const TEST_ROOT = "http://example.com/browser/browser/base/content/test/general/";
@@ -44,7 +44,7 @@ const TEST_ROOT = "http://example.com/browser/browser/base/content/test/general/
 })();
 
 // Other setup/cleanup
-let newTab;
+var newTab;
 
 Services.prefs.setCharPref("identity.fxaccounts.remote.signup.uri",
                            TEST_ROOT + "accounts_testRemoteCommands.html");
@@ -64,9 +64,9 @@ add_task(function* initialize() {
 });
 
 // The elements we care about.
-let panelUILabel = document.getElementById("PanelUI-fxa-label");
-let panelUIStatus = document.getElementById("PanelUI-fxa-status");
-let panelUIFooter = document.getElementById("PanelUI-footer-fxa");
+var panelUILabel = document.getElementById("PanelUI-fxa-label");
+var panelUIStatus = document.getElementById("PanelUI-fxa-status");
+var panelUIFooter = document.getElementById("PanelUI-footer-fxa");
 
 // The tests
 add_task(function* test_nouser() {
@@ -203,7 +203,7 @@ function promiseWaitForEvent(node, type, capturing) {
   });
 }
 
-let promiseTabOpen = Task.async(function*(urlBase) {
+var promiseTabOpen = Task.async(function*(urlBase) {
   info("Waiting for tab to open...");
   let event = yield promiseWaitForEvent(gBrowser.tabContainer, "TabOpen", true);
   let tab = event.target;
@@ -247,7 +247,7 @@ function setSignedInUser(verified) {
   return fxAccounts.setSignedInUser(data);
 }
 
-let signOut = Task.async(function* () {
+var signOut = Task.async(function* () {
   // This test needs to make sure that any updates for the logout have
   // completed before starting the next test, or we see the observer
   // notifications get out of sync.

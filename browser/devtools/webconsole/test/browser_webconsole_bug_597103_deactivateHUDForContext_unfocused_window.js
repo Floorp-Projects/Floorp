@@ -13,8 +13,8 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-console.html";
 
-let tab1, tab2, win1, win2;
-let noErrors = true;
+var tab1, tab2, win1, win2;
+var noErrors = true;
 
 function tab1Loaded() {
   win2 = OpenBrowserWindow();

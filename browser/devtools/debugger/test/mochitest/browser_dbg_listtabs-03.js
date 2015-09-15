@@ -7,7 +7,7 @@
 
 const TAB1_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
 
-let gTab1, gTab1Actor, gTab2, gTab2Actor, gClient;
+var gTab1, gTab1Actor, gTab2, gTab2Actor, gClient;
 
 function listTabs() {
   let deferred = promise.defer();

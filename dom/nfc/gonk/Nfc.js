@@ -36,9 +36,9 @@ Cu.import("resource://gre/modules/systemlibs.js");
 const NFC_ENABLED = libcutils.property_get("ro.moz.nfc.enabled", "false") === "true";
 
 // set to true in nfc_consts.js to see debug messages
-let DEBUG = NFC.DEBUG_NFC;
+var DEBUG = NFC.DEBUG_NFC;
 
-let debug;
+var debug;
 function updateDebug() {
   if (DEBUG || NFC.DEBUG_NFC) {
     debug = function (s) {
@@ -459,7 +459,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
   };
 });
 
-let SessionHelper = {
+var SessionHelper = {
   tokenMap: {},
 
   registerSession: function registerSession(id, isP2P) {

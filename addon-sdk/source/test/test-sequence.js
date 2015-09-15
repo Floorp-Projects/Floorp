@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-let { seq, iterate, filter, map, reductions, reduce, count,
+var { seq, iterate, filter, map, reductions, reduce, count,
       isEmpty, every, isEvery, some, take, takeWhile, drop,
       dropWhile, concat, first, rest, nth, last, dropLast,
       distinct, remove, mapcat, fromEnumerator, string,

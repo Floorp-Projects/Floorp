@@ -2,12 +2,12 @@
  * This test checks that window activation state is set properly with multiple tabs.
  */
 
-let testPage = "data:text/html,<body><style>:-moz-window-inactive { background-color: red; }</style><div id='area'></div></body>";
+var testPage = "data:text/html,<body><style>:-moz-window-inactive { background-color: red; }</style><div id='area'></div></body>";
 
-let colorChangeNotifications = 0;
-let otherWindow;
+var colorChangeNotifications = 0;
+var otherWindow;
 
-let browser1, browser2;
+var browser1, browser2;
 
 function test() {
   waitForExplicitFinish();

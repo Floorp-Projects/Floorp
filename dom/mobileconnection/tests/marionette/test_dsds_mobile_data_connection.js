@@ -6,9 +6,9 @@ MARIONETTE_HEAD_JS = "head.js";
 
 const SETTINGS_KEY_DATA_DEFAULT_ID = "ril.data.defaultServiceId";
 
-let connections;
-let numOfRadioInterfaces;
-let currentDataDefaultId = 0;
+var connections;
+var numOfRadioInterfaces;
+var currentDataDefaultId = 0;
 
 function muxModem(id) {
   return runEmulatorCmdSafe("mux modem " + id);

@@ -1,8 +1,8 @@
 Components.utils.import("resource://gre/modules/ctypes.jsm");
 
 // Scope used to relaunch the tests with |ctypes| opened in a limited scope.
-let scope = {};
-let ctypes = ctypes;
+var scope = {};
+var ctypes = ctypes;
 
 function run_test()
 {

@@ -74,7 +74,7 @@ const {DeferredTask} = Cu.import("resource://gre/modules/DeferredTask.jsm", {});
 /**
  * Object defining the network monitor view components.
  */
-let NetMonitorView = {
+var NetMonitorView = {
   /**
    * Initializes the network monitor view.
    */
@@ -3403,8 +3403,8 @@ PerformanceStatisticsView.prototype = {
 /**
  * DOM query helper.
  */
-let $ = (aSelector, aTarget = document) => aTarget.querySelector(aSelector);
-let $all = (aSelector, aTarget = document) => aTarget.querySelectorAll(aSelector);
+var $ = (aSelector, aTarget = document) => aTarget.querySelector(aSelector);
+var $all = (aSelector, aTarget = document) => aTarget.querySelectorAll(aSelector);
 
 /**
  * Parse text representation of multiple HTTP headers.

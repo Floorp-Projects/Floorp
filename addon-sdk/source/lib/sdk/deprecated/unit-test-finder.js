@@ -127,7 +127,7 @@ const makeFilters = function makeFilters(options) {
 }
 exports.makeFilters = makeFilters;
 
-let loader = Loader(module);
+var loader = Loader(module);
 const NOT_TESTS = ['setup', 'teardown'];
 
 var TestFinder = exports.TestFinder = function TestFinder(options) {

@@ -7,7 +7,7 @@ Cu.import("resource:///modules/experiments/Experiments.jsm");
 const SEC_IN_ONE_DAY  = 24 * 60 * 60;
 const MS_IN_ONE_DAY   = SEC_IN_ONE_DAY * 1000;
 
-let cacheData = {
+var cacheData = {
   _enabled: true,
   _manifestData: {
     id: "foobartestid",

@@ -8,7 +8,7 @@ const { Ci } = require("chrome");
 loader.lazyRequireGetter(this, "getOuterId", "sdk/window/utils", true);
 loader.lazyRequireGetter(this, "getBrowserForTab", "sdk/tabs/utils", true);
 
-let telemetry;
+var telemetry;
 try {
   const Telemetry = require("devtools/shared/telemetry");
   telemetry = new Telemetry();

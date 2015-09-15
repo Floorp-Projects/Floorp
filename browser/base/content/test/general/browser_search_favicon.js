@@ -1,10 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let gOriginalEngine;
-let gEngine;
-let gUnifiedCompletePref = "browser.urlbar.unifiedcomplete";
-let gRestyleSearchesPref = "browser.urlbar.restyleSearches";
+var gOriginalEngine;
+var gEngine;
+var gUnifiedCompletePref = "browser.urlbar.unifiedcomplete";
+var gRestyleSearchesPref = "browser.urlbar.restyleSearches";
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref(gUnifiedCompletePref);

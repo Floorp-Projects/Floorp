@@ -6,15 +6,15 @@
 
 "use strict";
 
-let { Ci, Cc, CC, Cr, Cu } = require("chrome");
+var { Ci, Cc, CC, Cr, Cu } = require("chrome");
 
 // Ensure PSM is initialized to support TLS sockets
 Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
-let Services = require("Services");
-let promise = require("promise");
-let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-let { dumpn, dumpv } = DevToolsUtils;
+var Services = require("Services");
+var promise = require("promise");
+var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var { dumpn, dumpv } = DevToolsUtils;
 loader.lazyRequireGetter(this, "DebuggerTransport",
   "devtools/toolkit/transport/transport", true);
 loader.lazyRequireGetter(this, "DebuggerServer",
@@ -52,7 +52,7 @@ DevToolsUtils.defineLazyGetter(this, "nssErrorsService", () => {
 DevToolsUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 
-let DebuggerSocket = {};
+var DebuggerSocket = {};
 
 /**
  * Connects to a debugger server socket.
@@ -111,7 +111,7 @@ DebuggerSocket.connect = Task.async(function*(settings) {
  * @return s nsISocketTransport
  *         Underlying socket transport, in case more details are needed.
  */
-let _getTransport = Task.async(function*(settings) {
+var _getTransport = Task.async(function*(settings) {
   let { host, port, encryption } = settings;
   let attempt = yield _attemptTransport(settings);
   if (attempt.transport) {
@@ -159,7 +159,7 @@ let _getTransport = Task.async(function*(settings) {
  * @return s nsISocketTransport
  *         Underlying socket transport, in case more details are needed.
  */
-let _attemptTransport = Task.async(function*(settings) {
+var _attemptTransport = Task.async(function*(settings) {
   let { authenticator } = settings;
   // _attemptConnect only opens the streams.  Any failures at that stage
   // aborts the connection process immedidately.
@@ -217,7 +217,7 @@ let _attemptTransport = Task.async(function*(settings) {
  * @return output nsIAsyncOutputStream
  *         The socket's output stream.
  */
-let _attemptConnect = Task.async(function*({ host, port, encryption }) {
+var _attemptConnect = Task.async(function*({ host, port, encryption }) {
   let s;
   if (encryption) {
     s = socketTransportService.createTransport(["ssl"], 1, host, port, null);

@@ -44,7 +44,7 @@ SteamEngine.prototype = {
   }
 };
 
-let engineObserver = {
+var engineObserver = {
   topics: [],
 
   observe: function(subject, topic, data) {

@@ -68,12 +68,12 @@ function ensureThrows(func) {
   };
 }
 
-let store = new HistoryEngine(Service)._store;
+var store = new HistoryEngine(Service)._store;
 function applyEnsureNoFailures(records) {
   do_check_eq(store.applyIncomingBatch(records).length, 0);
 }
 
-let fxuri, fxguid, tburi, tbguid;
+var fxuri, fxguid, tburi, tbguid;
 
 function run_test() {
   initTestLogging("Trace");

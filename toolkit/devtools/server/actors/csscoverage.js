@@ -74,7 +74,7 @@ const l10n = exports.l10n = {
  *       }, ...
  *     });
  */
-let CSSUsageActor = protocol.ActorClass({
+var CSSUsageActor = protocol.ActorClass({
   typeName: "cssUsage",
 
   events: {
@@ -744,10 +744,10 @@ const sheetToUrl = exports.sheetToUrl = function(stylesheet) {
  * and it isn't particularly useful, and it's confusing from a notification POV
  * so we only allow one.
  */
-let isRunning = false;
-let notification;
-let target;
-let chromeWindow;
+var isRunning = false;
+var notification;
+var target;
+var chromeWindow;
 
 /**
  * Front for CSSUsageActor

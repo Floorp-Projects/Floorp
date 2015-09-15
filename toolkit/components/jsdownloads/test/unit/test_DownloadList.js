@@ -568,5 +568,5 @@ add_task(function test_DownloadSummary_notifications()
 ////////////////////////////////////////////////////////////////////////////////
 //// Termination
 
-let tailFile = do_get_file("tail.js");
+var tailFile = do_get_file("tail.js");
 Services.scriptloader.loadSubScript(NetUtil.newURI(tailFile).spec);

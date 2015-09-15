@@ -17,7 +17,7 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 // to make async tests easier, push them into here and call nextStep
 // when a test finishes
-let tests = [];
+var tests = [];
 function generatorTest() {
   while (tests.length > 0) {
     tests.shift()();
@@ -233,7 +233,7 @@ tests.push(function test_interestingColorPreferenceNotTooLenient() {
   }, 0xFF0000, "interestingColorPreferenceNotTooLenient analysis returns red");
 });
 
-let maxPixels = 144; // see ColorAnalyzer MAXIMUM_PIXELS const
+var maxPixels = 144; // see ColorAnalyzer MAXIMUM_PIXELS const
 
 // make sure that images larger than maxPixels*maxPixels fail
 tests.push(function test_imageTooLarge() {
@@ -247,7 +247,7 @@ tests.push(function test_imageTooLarge() {
 // these next tests are for performance (and also to make sure concurrency
 // doesn't break anything)
 
-let maxColor = Math.pow(2, 24) - 1;
+var maxColor = Math.pow(2, 24) - 1;
 
 function getRandomColor() {
   let randomColor = (Math.ceil(Math.random() * maxColor)).toString(16);

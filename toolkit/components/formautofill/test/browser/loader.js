@@ -15,25 +15,25 @@
 Services.scriptloader.loadSubScript(getRootDirectory(gTestPath) +
                                     "loader_common.js", this);
 
-let ChromeUtils = {};
+var ChromeUtils = {};
 Services.scriptloader.loadSubScript(
   "chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js", ChromeUtils);
 
 // Define output functions so they look the same across all frameworks.
-let Output = {
+var Output = {
   print: info,
 };
 
 // Define assertion functions so they look the same across all frameworks.
-let Assert = {
+var Assert = {
   ok: _mochitestAssert.ok,
   equal: _mochitestAssert.equal,
 };
 
 // Define task registration functions, see description in "loader_common.js".
-let add_task_in_parent_process = add_task;
-let add_task_in_child_process = function () {};
-let add_task_in_both_processes = add_task;
+var add_task_in_parent_process = add_task;
+var add_task_in_child_process = function () {};
+var add_task_in_both_processes = add_task;
 
 Services.scriptloader.loadSubScript(getRootDirectory(gTestPath) +
                                     "head_common.js", this);

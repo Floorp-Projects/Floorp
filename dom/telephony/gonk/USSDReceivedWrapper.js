@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
 
-let DEBUG;
+var DEBUG;
 function debug(s) {
   dump("USSDReceivedWrapper: " + s + "\n");
 }

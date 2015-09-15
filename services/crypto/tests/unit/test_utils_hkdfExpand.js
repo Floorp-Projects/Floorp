@@ -8,7 +8,7 @@ Cu.import("resource://services-crypto/utils.js");
 
 // Test case 1
 
-let tc1 = {
+var tc1 = {
    IKM:  "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
    salt: "000102030405060708090a0b0c",
    info: "f0f1f2f3f4f5f6f7f8f9",
@@ -22,7 +22,7 @@ let tc1 = {
 
 // Test case 2
 
-let tc2 = {
+var tc2 = {
    IKM:  "000102030405060708090a0b0c0d0e0f" +
          "101112131415161718191a1b1c1d1e1f" +
          "202122232425262728292a2b2c2d2e2f" +
@@ -51,7 +51,7 @@ let tc2 = {
 
 // Test case 3
 
-let tc3 = {
+var tc3 = {
    IKM:  "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
    salt: "",
    info: "",

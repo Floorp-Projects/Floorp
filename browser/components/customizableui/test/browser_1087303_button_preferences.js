@@ -4,7 +4,7 @@
 
 "use strict";
 
-let newTab = null;
+var newTab = null;
 
 add_task(function() {
   info("Check preferences button existence and functionality");

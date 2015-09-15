@@ -9,9 +9,9 @@
 
 const TEST_URI = "data:text/html;charset=utf8,<p>test code completion";
 
-let jsterm;
+var jsterm;
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

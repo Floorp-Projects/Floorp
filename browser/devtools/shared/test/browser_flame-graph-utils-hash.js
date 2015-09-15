@@ -3,9 +3,9 @@
 
 // Tests if (idle) nodes are added when necessary in the flame graph data.
 
-let {FlameGraphUtils} = require("devtools/shared/widgets/FlameGraph");
+var {FlameGraphUtils} = require("devtools/shared/widgets/FlameGraph");
 
-let test = Task.async(function*() {
+var test = Task.async(function*() {
   let hash1 = FlameGraphUtils._getStringHash("abc");
   let hash2 = FlameGraphUtils._getStringHash("acb");
   let hash3 = FlameGraphUtils._getStringHash(Array.from(Array(100000)).join("a"));

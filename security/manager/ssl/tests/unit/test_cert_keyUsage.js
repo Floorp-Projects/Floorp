@@ -6,19 +6,19 @@
 "use strict";
 
 do_get_profile(); // must be called before getting nsIX509CertDB
-let certdb = Cc["@mozilla.org/security/x509certdb;1"]
+var certdb = Cc["@mozilla.org/security/x509certdb;1"]
                .getService(Ci.nsIX509CertDB);
 
-let caList = ["ca-no-keyUsage-extension", "ca-missing-keyCertSign",
+var caList = ["ca-no-keyUsage-extension", "ca-missing-keyCertSign",
               "ca-all-usages"];
-let eeList = ["ee-no-keyUsage-extension", "ee-keyCertSign-only",
+var eeList = ["ee-no-keyUsage-extension", "ee-keyCertSign-only",
               "ee-keyEncipherment-only", "ee-keyCertSign-and-keyEncipherment"];
 
-let caUsage = "SSL CA";
-let allEEUsages = "Client,Server,Sign,Encrypt,Object Signer";
-let serverEEUsages = "Server,Encrypt";
+var caUsage = "SSL CA";
+var allEEUsages = "Client,Server,Sign,Encrypt,Object Signer";
+var serverEEUsages = "Server,Encrypt";
 
-let expectedUsagesMap = {
+var expectedUsagesMap = {
   "ca-no-keyUsage-extension": caUsage,
   "ca-missing-keyCertSign": "",
   "ca-all-usages": caUsage,

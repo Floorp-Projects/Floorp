@@ -9,7 +9,7 @@ const RECEIVER = "15555215554"; // the emulator's number
 const MSG_TEXT = "Mozilla Firefox OS!";
 const SMS_NUMBER = 100;
 
-let SmsList = [];
+var SmsList = [];
 
 function sendAllSms() {
   log("Send " + SMS_NUMBER + " SMS");

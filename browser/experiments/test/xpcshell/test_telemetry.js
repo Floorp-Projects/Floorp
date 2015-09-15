@@ -5,7 +5,7 @@
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/TelemetryLog.jsm");
-let bsp = Cu.import("resource:///modules/experiments/Experiments.jsm");
+var bsp = Cu.import("resource:///modules/experiments/Experiments.jsm");
 
 
 const FILE_MANIFEST            = "experiments.manifest";
@@ -15,17 +15,17 @@ const SEC_IN_ONE_DAY  = 24 * 60 * 60;
 const MS_IN_ONE_DAY   = SEC_IN_ONE_DAY * 1000;
 
 
-let gProfileDir          = null;
-let gHttpServer          = null;
-let gHttpRoot            = null;
-let gDataRoot            = null;
-let gPolicy              = null;
-let gManifestObject      = null;
-let gManifestHandlerURI  = null;
+var gProfileDir          = null;
+var gHttpServer          = null;
+var gHttpRoot            = null;
+var gDataRoot            = null;
+var gPolicy              = null;
+var gManifestObject      = null;
+var gManifestHandlerURI  = null;
 
 const TLOG = bsp.TELEMETRY_LOG;
 
-let gGlobalScope = this;
+var gGlobalScope = this;
 function loadAddonManager() {
   let ns = {};
   Cu.import("resource://gre/modules/Services.jsm", ns);

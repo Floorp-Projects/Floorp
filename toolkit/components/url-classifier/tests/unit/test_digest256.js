@@ -5,16 +5,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 // Global test server for serving safebrowsing updates.
-let gHttpServ = null;
+var gHttpServ = null;
 // Global nsIUrlClassifierDBService
-let gDbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
+var gDbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
   .getService(Ci.nsIUrlClassifierDBService);
 // Security manager for creating nsIPrincipals from URIs
-let gSecMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+var gSecMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
   .getService(Ci.nsIScriptSecurityManager);
 
 // A map of tables to arrays of update redirect urls.
-let gTables = {};
+var gTables = {};
 
 // Construct an update from a file.
 function readFileToString(aFilename) {

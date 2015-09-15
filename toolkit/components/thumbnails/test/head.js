@@ -1,19 +1,19 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let tmp = {};
+var tmp = {};
 Cu.import("resource://gre/modules/PageThumbs.jsm", tmp);
 Cu.import("resource://gre/modules/BackgroundPageThumbs.jsm", tmp);
 Cu.import("resource://gre/modules/NewTabUtils.jsm", tmp);
 Cu.import("resource:///modules/sessionstore/SessionStore.jsm", tmp);
 Cu.import("resource://gre/modules/FileUtils.jsm", tmp);
 Cu.import("resource://gre/modules/osfile.jsm", tmp);
-let {PageThumbs, BackgroundPageThumbs, NewTabUtils, PageThumbsStorage, SessionStore, FileUtils, OS} = tmp;
+var {PageThumbs, BackgroundPageThumbs, NewTabUtils, PageThumbsStorage, SessionStore, FileUtils, OS} = tmp;
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
   "resource://testing-common/PlacesTestUtils.jsm");
 
-let oldEnabledPref = Services.prefs.getBoolPref("browser.pagethumbnails.capturing_disabled");
+var oldEnabledPref = Services.prefs.getBoolPref("browser.pagethumbnails.capturing_disabled");
 Services.prefs.setBoolPref("browser.pagethumbnails.capturing_disabled", false);
 
 registerCleanupFunction(function () {
@@ -32,7 +32,7 @@ function test() {
 /**
  * The test runner that controls the execution flow of our tests.
  */
-let TestRunner = {
+var TestRunner = {
   /**
    * Starts the test runner.
    */

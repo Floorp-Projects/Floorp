@@ -6,7 +6,7 @@ function run_test() {
   runAsyncTests(tests);
 }
 
-let tests = [
+var tests = [
 
   function observerForName_set() {
     yield set("a.com", "foo", 1);

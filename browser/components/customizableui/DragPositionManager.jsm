@@ -6,7 +6,7 @@
 
 Components.utils.import("resource:///modules/CustomizableUI.jsm");
 
-let gManagers = new WeakMap();
+var gManagers = new WeakMap();
 
 const kPaletteId = "customization-palette";
 const kPlaceholderClass = "panel-customization-placeholder";
@@ -378,7 +378,7 @@ AreaPositionManager.prototype = {
   }
 }
 
-let DragPositionManager = {
+var DragPositionManager = {
   start: function(aWindow) {
     let areas = CustomizableUI.areas.filter((area) => CustomizableUI.getAreaType(area) != "toolbar");
     areas = areas.map((area) => CustomizableUI.getCustomizeTargetForArea(area, aWindow));

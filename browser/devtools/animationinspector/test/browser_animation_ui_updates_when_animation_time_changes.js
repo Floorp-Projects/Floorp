@@ -7,7 +7,7 @@
 // Test that setting an animation's currentTime via the WebAnimations API (from
 // content), actually changes the time in the corresponding widget too.
 
-let L10N = new ViewHelpers.L10N();
+var L10N = new ViewHelpers.L10N();
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");

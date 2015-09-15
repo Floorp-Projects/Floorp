@@ -104,7 +104,7 @@ function test_no_append(mode) {
   }
 }
 
-let test_flags = [
+var test_flags = [
   {},
   {create:true},
   {trunc:true}

@@ -4,7 +4,7 @@
 const STATE_CHANGED_TOPIC = "fxa-migration:state-changed";
 const NOTIFICATION_TITLE = "fxa-migration";
 
-let imports = {};
+var imports = {};
 Cu.import("resource://services-sync/FxaMigrator.jsm", imports);
 
 add_task(function* test() {

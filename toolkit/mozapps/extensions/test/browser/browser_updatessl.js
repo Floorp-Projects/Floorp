@@ -2,9 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let tempScope = {};
+var tempScope = {};
 Components.utils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm", tempScope);
-let AddonUpdateChecker = tempScope.AddonUpdateChecker;
+var AddonUpdateChecker = tempScope.AddonUpdateChecker;
 
 const updaterdf = RELATIVE_DIR + "browser_updatessl.rdf";
 const redirect = RELATIVE_DIR + "redirect.sjs?";

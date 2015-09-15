@@ -888,5 +888,5 @@ FormHistory.prototype = {
     }
 };
 
-let component = [FormHistory];
+var component = [FormHistory];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);

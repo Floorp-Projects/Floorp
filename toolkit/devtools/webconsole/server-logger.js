@@ -38,7 +38,7 @@ const acceptableHeaders = ["x-chromelogger-data"];
  * A listeners for "http-on-examine-response" is registered when
  * the listener starts and removed when destroy is executed.
  */
-let ServerLoggingListener = Class({
+var ServerLoggingListener = Class({
   /**
    * Initialization of the listener. The main step during the initialization
    * process is registering a listener for "http-on-examine-response" event.

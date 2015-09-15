@@ -154,7 +154,7 @@ function add_test_receiving_sms(expected, pdu) {
   });
 }
 
-let test_receiving_7bit_alphabets__worker;
+var test_receiving_7bit_alphabets__worker;
 function test_receiving_7bit_alphabets(lst, sst) {
   if (!test_receiving_7bit_alphabets__worker) {
     test_receiving_7bit_alphabets__worker = newWriteHexOctetAsUint8Worker();
@@ -213,7 +213,7 @@ function test_receiving_ucs2_alphabets(text) {
   }
 }
 
-let ucs2str = "";
+var ucs2str = "";
 for (let lst = 0; lst < PDU_NL_LOCKING_SHIFT_TABLES.length; lst++) {
   ucs2str += PDU_NL_LOCKING_SHIFT_TABLES[lst];
   for (let sst = 0; sst < PDU_NL_SINGLE_SHIFT_TABLES.length; sst++) {

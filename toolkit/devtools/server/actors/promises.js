@@ -24,7 +24,7 @@ types.addType("ObjectActor", {
  * The Promises Actor provides support for getting the list of live promises and
  * observing changes to their settlement state.
  */
-let PromisesActor = protocol.ActorClass({
+var PromisesActor = protocol.ActorClass({
   typeName: "promises",
 
   events: {

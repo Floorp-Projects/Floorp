@@ -1,4 +1,4 @@
-let TEST_SIZE = 100;
+var TEST_SIZE = 100;
 
 function run_test()
 {

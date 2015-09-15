@@ -3,9 +3,9 @@
 
 "use strict";
 
-let gTestTab;
-let gContentAPI;
-let gContentWindow;
+var gTestTab;
+var gContentAPI;
+var gContentWindow;
 
 requestLongerTimeout(2);
 
@@ -13,7 +13,7 @@ function test() {
   UITourTest();
 }
 
-let tests = [
+var tests = [
   taskify(function* test_info_icon() {
     let popup = document.getElementById("UITourTooltip");
     let title = document.getElementById("UITourTooltipTitle");

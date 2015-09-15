@@ -11,8 +11,8 @@ Cu.import("resource://gre/modules/FormHistory.jsm");
 Cu.import("resource://gre/modules/SearchSuggestionController.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 
-let httpServer = new HttpServer();
-let getEngine, postEngine, unresolvableEngine;
+var httpServer = new HttpServer();
+var getEngine, postEngine, unresolvableEngine;
 
 function run_test() {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);

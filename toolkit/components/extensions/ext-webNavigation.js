@@ -10,7 +10,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebNavigation",
                                   "resource://gre/modules/WebNavigation.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
-let {
+var {
   SingletonEventManager,
   ignoreEvent,
   runSafe,

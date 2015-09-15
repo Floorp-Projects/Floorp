@@ -12,7 +12,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
-let fakeServer = new SyncServer();
+var fakeServer = new SyncServer();
 fakeServer.start();
 
 do_register_cleanup(function() {
@@ -21,7 +21,7 @@ do_register_cleanup(function() {
   });
 });
 
-let fakeServerUrl = "http://localhost:" + fakeServer.port;
+var fakeServerUrl = "http://localhost:" + fakeServer.port;
 
 const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
 
@@ -50,12 +50,12 @@ CatapultEngine.prototype = {
   }
 };
 
-let engineManager = Service.engineManager;
+var engineManager = Service.engineManager;
 engineManager.register(CatapultEngine);
 
 // This relies on Service/ErrorHandler being a singleton. Fixing this will take
 // a lot of work.
-let errorHandler = Service.errorHandler;
+var errorHandler = Service.errorHandler;
 
 function run_test() {
   initTestLogging("Trace");

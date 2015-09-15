@@ -19,9 +19,9 @@ loader.lazyGetter(this, "Debugger", () => {
   return global.Debugger;
 });
 
-let debuggers = [];
-let chromeDebuggers = [];
-let sandboxes = [];
+var debuggers = [];
+var chromeDebuggers = [];
+var sandboxes = [];
 
 exports.items = [
   {

@@ -32,7 +32,7 @@ function shouldDevEditionPromoShow () {
          LOCALE === "en-US";
 }
 
-let TYPES = {
+var TYPES = {
   // The Developer Edition promo doorhanger, called by
   // opening the toolbox, browser console, WebIDE, or responsive design mode
   // in Beta releases. Only displayed once per profile.
@@ -47,7 +47,7 @@ let TYPES = {
   }
 };
 
-let panelAttrs = {
+var panelAttrs = {
   orient: "vertical",
   hidden: "false",
   consumeoutsideclicks: "true",

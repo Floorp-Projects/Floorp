@@ -35,9 +35,9 @@ const TEST_FILE_NAME_1 = "test-backgroundfilesaver-1.txt";
 
 const gAppRep = Cc["@mozilla.org/downloads/application-reputation-service;1"].
                   getService(Ci.nsIApplicationReputationService);
-let gStillRunning = true;
-let gTables = {};
-let gHttpServer = null;
+var gStillRunning = true;
+var gTables = {};
+var gHttpServer = null;
 
 /**
  * Returns a reference to a temporary file.  If the file is then created, it

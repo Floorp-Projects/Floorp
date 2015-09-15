@@ -39,7 +39,7 @@ function apply_umask(mode) {
 
 // Sequence of setPermission parameters and expected file mode.  The first test
 // checks the permissions when the file is first created.
-let testSequence = [
+var testSequence = [
   [null,                                        apply_umask(0o600)],
   [{ unixMode: 0o4777 },                        apply_umask(0o4777)],
   [{ unixMode: 0o4777, unixHonorUmask: false }, 0o4777],

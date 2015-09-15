@@ -29,7 +29,7 @@ const MOUSE_ID = 'mouse';
 // Synthesized touch ID.
 const SYNTH_ID = -1;
 
-let PointerRelay = { // jshint ignore:line
+var PointerRelay = { // jshint ignore:line
   /**
    * A mapping of events we should be intercepting. Entries with a value of
    * |true| are used for compiling high-level gesture events. Entries with a

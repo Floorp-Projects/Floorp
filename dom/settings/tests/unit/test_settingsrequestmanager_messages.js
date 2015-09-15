@@ -9,8 +9,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
 
-let principal = Services.scriptSecurityManager.getSystemPrincipal();
-let lockID = "{435d2192-4f21-48d4-90b7-285f147a56be}";
+var principal = Services.scriptSecurityManager.getSystemPrincipal();
+var lockID = "{435d2192-4f21-48d4-90b7-285f147a56be}";
 
 // Helper to start the Settings Request Manager
 function startSettingsRequestManager() {

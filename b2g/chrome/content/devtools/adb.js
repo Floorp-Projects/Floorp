@@ -15,7 +15,7 @@ var debug = function(str) {
   dump("AdbController: " + str + "\n");
 }
 
-let AdbController = {
+var AdbController = {
   locked: undefined,
   remoteDebuggerEnabled: undefined,
   lockEnabled: undefined,

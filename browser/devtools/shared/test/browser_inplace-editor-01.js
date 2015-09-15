@@ -4,8 +4,8 @@
 
 "use strict";
 
-let promise = require("promise");
-let {editableField, getInplaceEditorForSpan: inplaceEditor} = require("devtools/shared/inplace-editor");
+var promise = require("promise");
+var {editableField, getInplaceEditorForSpan: inplaceEditor} = require("devtools/shared/inplace-editor");
 
 // Test the inplace-editor behavior.
 

@@ -6,7 +6,7 @@
  * successfully switch between them, even when one of them is in progress.
  */
 
-let test = Task.async(function*() {
+var test = Task.async(function*() {
   let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceController, RecordingsView } = panel.panelWin;
 

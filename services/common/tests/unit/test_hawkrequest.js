@@ -8,7 +8,7 @@ Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-common/hawkrequest.js");
 
 // https://github.com/mozilla/fxa-auth-server/wiki/onepw-protocol#wiki-use-session-certificatesign-etc
-let SESSION_KEYS = {
+var SESSION_KEYS = {
   sessionToken: h("a0a1a2a3a4a5a6a7 a8a9aaabacadaeaf"+
                   "b0b1b2b3b4b5b6b7 b8b9babbbcbdbebf"),
 

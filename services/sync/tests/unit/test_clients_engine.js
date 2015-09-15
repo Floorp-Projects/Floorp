@@ -12,7 +12,7 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 const MORE_THAN_CLIENTS_TTL_REFRESH = 691200; // 8 days
 const LESS_THAN_CLIENTS_TTL_REFRESH = 86400;  // 1 day
 
-let engine = Service.clientsEngine;
+var engine = Service.clientsEngine;
 
 /**
  * Unpack the record with this ID, and verify that it has the same version that

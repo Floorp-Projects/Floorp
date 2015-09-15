@@ -6,14 +6,14 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-let WSP = {};
+var WSP = {};
 Cu.import("resource://gre/modules/WspPduHelper.jsm", WSP);
 
 Cu.import("resource://gre/modules/mms_consts.js");
 
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
-let DEBUG; // set to true to see debug messages
+var DEBUG; // set to true to see debug messages
 
 this.MMS_VERSION = (function() {
   Cu.import("resource://gre/modules/Services.jsm");
@@ -1660,7 +1660,7 @@ const MMS_WELL_KNOWN_PARAMS = (function() {
   return params;
 })();
 
-let debug;
+var debug;
 if (DEBUG) {
   debug = function(s) {
     dump("-$- MmsPduHelper: " + s + "\n");

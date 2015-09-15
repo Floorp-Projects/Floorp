@@ -12,7 +12,7 @@ const { Heritage, ViewHelpers, WidgetMethods } = require("resource:///modules/de
 /**
  * The current target, toolbox and MemoryFront, set by this tool's host.
  */
-let gToolbox, gTarget, gFront;
+var gToolbox, gTarget, gFront;
 
 /**
  * Initializes the profiler controller and views.

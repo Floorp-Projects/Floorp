@@ -4,7 +4,7 @@
 
 const Ci = Components.interfaces;
 
-let tab, browser;
+var tab, browser;
 
 function test () {
   waitForExplicitFinish();

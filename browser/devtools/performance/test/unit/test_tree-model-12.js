@@ -41,7 +41,7 @@ add_task(function () {
         "Y > X has the correct self count");
 });
 
-let gThread = synthesizeProfileForTest([{
+var gThread = synthesizeProfileForTest([{
   time: 5,
   frames: [
     { location: "(root)" },

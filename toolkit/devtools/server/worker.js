@@ -21,21 +21,21 @@ this.rpc = function (method, ...params) {
 
 loadSubScript("resource://gre/modules/devtools/worker-loader.js");
 
-let Promise = worker.require("promise");
-let { ActorPool } = worker.require("devtools/server/actors/common");
-let { ThreadActor } = worker.require("devtools/server/actors/script");
-let { TabSources } = worker.require("devtools/server/actors/utils/TabSources");
-let makeDebugger = worker.require("devtools/server/actors/utils/make-debugger");
-let { DebuggerServer } = worker.require("devtools/server/main");
+var Promise = worker.require("promise");
+var { ActorPool } = worker.require("devtools/server/actors/common");
+var { ThreadActor } = worker.require("devtools/server/actors/script");
+var { TabSources } = worker.require("devtools/server/actors/utils/TabSources");
+var makeDebugger = worker.require("devtools/server/actors/utils/make-debugger");
+var { DebuggerServer } = worker.require("devtools/server/main");
 
 DebuggerServer.init();
 DebuggerServer.createRootActor = function () {
   throw new Error("Should never get here!");
 };
 
-let connections = Object.create(null);
-let nextId = 0;
-let rpcDeferreds = [];
+var connections = Object.create(null);
+var nextId = 0;
+var rpcDeferreds = [];
 
 this.addEventListener("message",  function (event) {
   let packet = JSON.parse(event.data);

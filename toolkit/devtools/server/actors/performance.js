@@ -40,7 +40,7 @@ const RECORDING_STATE_CHANGE_EVENTS = new Set([
  *
  * @see toolkit/devtools/shared/performance.js for documentation.
  */
-let PerformanceActor = exports.PerformanceActor = protocol.ActorClass({
+var PerformanceActor = exports.PerformanceActor = protocol.ActorClass({
   typeName: "performance",
 
   traits: {

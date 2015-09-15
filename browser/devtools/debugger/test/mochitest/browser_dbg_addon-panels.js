@@ -6,8 +6,8 @@
 
 const ADDON_URL = EXAMPLE_URL + "addon3.xpi";
 
-let gAddon, gClient, gThreadClient, gDebugger, gSources;
-let PREFS = [
+var gAddon, gClient, gThreadClient, gDebugger, gSources;
+var PREFS = [
   "devtools.canvasdebugger.enabled",
   "devtools.shadereditor.enabled",
   "devtools.performance.enabled",

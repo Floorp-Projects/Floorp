@@ -7,8 +7,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_recursion-stack.html";
 
-let gTab, gPanel, gDebugger;
-let gFrames, gClassicFrames;
+var gTab, gPanel, gDebugger;
+var gFrames, gClassicFrames;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

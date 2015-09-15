@@ -236,7 +236,7 @@ function test_logout() {
   });
 }
 
-let TESTS = [
+var TESTS = [
   test_watch_loggedin_ready,
   test_watch_loggedin_login,
   test_watch_loggedin_logout,

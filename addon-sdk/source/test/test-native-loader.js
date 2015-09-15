@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
-let {
+var {
   Loader, main, unload, parseStack, generateMap, resolve, nodeResolve
 } = require('toolkit/loader');
-let { readURI } = require('sdk/net/url');
-let { all } = require('sdk/core/promise');
-let testOptions = require('@test/options');
+var { readURI } = require('sdk/net/url');
+var { all } = require('sdk/core/promise');
+var testOptions = require('@test/options');
 
-let root = module.uri.substr(0, module.uri.lastIndexOf('/'))
+var root = module.uri.substr(0, module.uri.lastIndexOf('/'))
 // The following adds Debugger constructor to the global namespace.
 const { Cu } = require('chrome');
 const { addDebuggerToGlobal } = Cu.import('resource://gre/modules/jsdebugger.jsm', {});

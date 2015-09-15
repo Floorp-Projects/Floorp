@@ -331,7 +331,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
   }
 };
 
-let singleton;
+var singleton;
 // The entry-point for this module, which ensures only one of our channels is
 // ever created - we require this because the WebChannel is global in scope
 // (eg, it uses the observer service to tell interested parties of interesting

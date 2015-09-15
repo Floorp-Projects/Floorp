@@ -4,7 +4,7 @@
 
 "use strict";
 
-let {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 /**
  * This frame script is only loaded for sessionstore mochitests. It contains

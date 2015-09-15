@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let Ci = Components.interfaces;
-let Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cc = Components.classes;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let unsafeAboutModule = {
+var unsafeAboutModule = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
   newChannel: function (aURI, aLoadInfo) {
     var uri = Services.io.newURI("about:blank", null, null);
@@ -21,7 +21,7 @@ let unsafeAboutModule = {
   }
 };
 
-let factory = {
+var factory = {
   createInstance: function(aOuter, aIID) {
     if (aOuter)
       throw Components.results.NS_ERROR_NO_AGGREGATION;

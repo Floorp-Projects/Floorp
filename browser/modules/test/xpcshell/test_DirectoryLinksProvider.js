@@ -61,9 +61,9 @@ const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
                               "nsIBinaryInputStream",
                               "setInputStream");
 
-let gLastRequestPath;
+var gLastRequestPath;
 
-let suggestedTile1 = {
+var suggestedTile1 = {
   url: "http://turbotax.com",
   type: "affiliate",
   lastVisitDate: 4,
@@ -75,7 +75,7 @@ let suggestedTile1 = {
     "taxslayer.com"
   ]
 };
-let suggestedTile2 = {
+var suggestedTile2 = {
   url: "http://irs.gov",
   type: "affiliate",
   lastVisitDate: 3,
@@ -87,7 +87,7 @@ let suggestedTile2 = {
     "taxslayer.com"
   ]
 };
-let suggestedTile3 = {
+var suggestedTile3 = {
   url: "http://hrblock.com",
   type: "affiliate",
   lastVisitDate: 2,
@@ -99,7 +99,7 @@ let suggestedTile3 = {
     "taxslayer.com"
   ]
 };
-let suggestedTile4 = {
+var suggestedTile4 = {
   url: "http://sponsoredtile.com",
   type: "sponsored",
   lastVisitDate: 1,
@@ -108,7 +108,7 @@ let suggestedTile4 = {
     "sponsoredtarget.com"
   ]
 }
-let suggestedTile5 = {
+var suggestedTile5 = {
   url: "http://eviltile.com",
   type: "affiliate",
   lastVisitDate: 5,
@@ -118,7 +118,7 @@ let suggestedTile5 = {
     "eviltarget.com"
   ]
 }
-let someOtherSite = {url: "http://someothersite.com", title: "Not_A_Suggested_Site"};
+var someOtherSite = {url: "http://someothersite.com", title: "Not_A_Suggested_Site"};
 
 function getHttpHandler(path) {
   let code = 200;

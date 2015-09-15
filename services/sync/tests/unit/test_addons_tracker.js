@@ -15,10 +15,10 @@ Svc.Prefs.set("addons.ignoreRepositoryChecking", true);
 Svc.Prefs.set("engine.addons", true);
 
 Service.engineManager.register(AddonsEngine);
-let engine     = Service.engineManager.get("addons");
-let reconciler = engine._reconciler;
-let store      = engine._store;
-let tracker    = engine._tracker;
+var engine     = Service.engineManager.get("addons");
+var reconciler = engine._reconciler;
+var store      = engine._store;
+var tracker    = engine._tracker;
 
 // Don't write out by default.
 tracker.persistChangedIDs = false;

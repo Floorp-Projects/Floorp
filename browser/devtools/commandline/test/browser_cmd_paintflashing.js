@@ -12,7 +12,7 @@ function test() {
   return Task.spawn(testTask).then(finish, helpers.handleError);
 }
 
-let tests = {
+var tests = {
   testInput: function(options) {
     let toggleCommand = options.requisition.system.commands.get("paintflashing toggle");
 

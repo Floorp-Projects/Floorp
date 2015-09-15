@@ -9,7 +9,7 @@
 
 const TEST_URI = "data:text/html;charset=utf8,<p>hello";
 
-let test = asyncTest(function*() {
+var test = asyncTest(function*() {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
   hud.jsterm.clearOutput();

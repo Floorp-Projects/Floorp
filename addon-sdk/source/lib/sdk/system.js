@@ -52,7 +52,7 @@ exports.env = require('./system/environment').env;
  * 'success' code 0. To exit with failure use `1`.
  * TODO: Improve platform to actually quit with an exit code.
  */
-let forcedExit = false;
+var forcedExit = false;
 exports.exit = function exit(code) {
   if (forcedExit) {
     // a forced exit was already tried
@@ -91,7 +91,7 @@ exports.exit = function exit(code) {
 
 // Adapter for nodejs's stdout & stderr:
 // http://nodejs.org/api/process.html#process_process_stdout
-let stdout = Object.freeze({ write: dump, end: dump });
+var stdout = Object.freeze({ write: dump, end: dump });
 exports.stdout = stdout;
 exports.stderr = stdout;
 

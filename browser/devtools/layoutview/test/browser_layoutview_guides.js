@@ -14,7 +14,7 @@ const STYLE = "div { position: absolute; top: 50px; left: 50px; height: 10px; " 
 const HTML = "<style>" + STYLE + "</style><div></div>";
 const TEST_URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 
-let highlightedNodeFront, highlighterOptions;
+var highlightedNodeFront, highlighterOptions;
 
 add_task(function*() {
   yield addTab(TEST_URL);

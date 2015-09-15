@@ -10,7 +10,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "IDService",
 
 const WELL_KNOWN_PATH = "/.well-known/browserid";
 
-let SERVER_PORT = 8080;
+var SERVER_PORT = 8080;
 
 // valid IDP
 function test_well_known_1() {
@@ -81,7 +81,7 @@ function test_well_known_invalid_1() {
   IDService._fetchWellKnownFile(hostPort, check_well_known_invalid_1, "http");
 }
 
-let TESTS = [test_well_known_1, test_well_known_404, test_well_known_invalid_1];
+var TESTS = [test_well_known_1, test_well_known_404, test_well_known_invalid_1];
 
 TESTS.forEach(add_test);
 

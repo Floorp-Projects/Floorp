@@ -18,7 +18,7 @@ const TEST_HTTPS_URI = "https://example.com/browser/browser/devtools/" +
 const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Security/" +
                        "MixedContent";
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   Services.prefs.setBoolPref("security.mixed_content.block_display_content",
                              false);
   Services.prefs.setBoolPref("security.mixed_content.block_active_content",
@@ -34,7 +34,7 @@ let test = asyncTest(function* () {
   Services.prefs.clearUserPref("security.mixed_content.block_active_content");
 });
 
-let testMixedContent = Task.async(function*(hud) {
+var testMixedContent = Task.async(function*(hud) {
   content.location = TEST_HTTPS_URI;
 
   let results = yield waitForMessages({

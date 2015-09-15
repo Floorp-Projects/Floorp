@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
+var SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 XPCOMUtils.defineLazyModuleGetter(this, "AboutHomeUtils",
   "resource:///modules/AboutHome.jsm");
 
-let snippet =
+var snippet =
 '     <script>' +
 '       var manifest = {' +
 '         "name": "Demo Social Service",' +
@@ -33,7 +33,7 @@ let snippet =
 '     </div>';
 
 // enable one-click activation
-let snippet2 =
+var snippet2 =
 '     <script>' +
 '       var manifest = {' +
 '         "name": "Demo Social Service",' +
@@ -55,7 +55,7 @@ let snippet2 =
 '     <img src="chrome://branding/content/icon32.png"></img>' +
 '     </div>';
 
-let gTests = [
+var gTests = [
 
 {
   desc: "Test activation with enable panel",
