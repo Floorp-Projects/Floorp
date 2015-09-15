@@ -46,6 +46,13 @@ const FLOAT sBlendFactor[] = { 0, 0, 0, 0 };
 
 struct DeviceAttachmentsD3D11
 {
+  DeviceAttachmentsD3D11(ID3D11Device* device)
+   : mDevice(device),
+     mInitOkay(true)
+  {}
+
+  bool CreateShaders();
+
   typedef EnumeratedArray<MaskType, MaskType::NumMaskTypes, RefPtr<ID3D11VertexShader>>
           VertexShaderArray;
   typedef EnumeratedArray<MaskType, MaskType::NumMaskTypes, RefPtr<ID3D11PixelShader>>
@@ -93,6 +100,34 @@ struct DeviceAttachmentsD3D11
   RefPtr<ID3D11Buffer> mVRDistortionVertices[2]; // one for each eye
   RefPtr<ID3D11Buffer> mVRDistortionIndices[2];
   uint32_t mVRDistortionIndexCount[2];
+
+private:
+  void InitVertexShader(const ShaderBytes& aShader, VertexShaderArray& aArray, MaskType aMaskType) {
+    InitVertexShader(aShader, byRef(aArray[aMaskType]));
+  }
+  void InitPixelShader(const ShaderBytes& aShader, PixelShaderArray& aArray, MaskType aMaskType) {
+    InitPixelShader(aShader, byRef(aArray[aMaskType]));
+  }
+  void InitVertexShader(const ShaderBytes& aShader, ID3D11VertexShader** aOut) {
+    if (!mInitOkay) {
+      return;
+    }
+    if (FAILED(mDevice->CreateVertexShader(aShader.mData, aShader.mLength, nullptr, aOut))) {
+      mInitOkay = false;
+    }
+  }
+  void InitPixelShader(const ShaderBytes& aShader, ID3D11PixelShader** aOut) {
+    if (!mInitOkay) {
+      return;
+    }
+    if (FAILED(mDevice->CreatePixelShader(aShader.mData, aShader.mLength, nullptr, aOut))) {
+      mInitOkay = false;
+    }
+  }
+
+  // Only used during initialization.
+  RefPtr<ID3D11Device> mDevice;
+  bool mInitOkay;
 };
 
 CompositorD3D11::CompositorD3D11(nsIWidget* aWidget)
@@ -171,7 +206,7 @@ CompositorD3D11::Initialize()
   if (FAILED(mDevice->GetPrivateData(sDeviceAttachmentsD3D11,
                                      &size,
                                      &mAttachments))) {
-    mAttachments = new DeviceAttachmentsD3D11;
+    mAttachments = new DeviceAttachmentsD3D11(mDevice);
     mDevice->SetPrivateData(sDeviceAttachmentsD3D11,
                             sizeof(mAttachments),
                             &mAttachments);
@@ -202,7 +237,7 @@ CompositorD3D11::Initialize()
       return false;
     }
 
-    if (!CreateShaders()) {
+    if (!mAttachments->CreateShaders()) {
       return false;
     }
 
@@ -1236,86 +1271,34 @@ CompositorD3D11::UpdateRenderTarget()
 }
 
 bool
-CompositorD3D11::CreateShaders()
+DeviceAttachmentsD3D11::CreateShaders()
 {
-  HRESULT hr;
+  InitVertexShader(sLayerQuadVS, mVSQuadShader, MaskType::MaskNone);
+  InitVertexShader(sLayerQuadMaskVS, mVSQuadShader, MaskType::Mask2d);
+  InitVertexShader(sLayerQuadMask3DVS, mVSQuadShader, MaskType::Mask3d);
 
-  hr = mDevice->CreateVertexShader(LayerQuadVS,
-                                   sizeof(LayerQuadVS),
-                                   nullptr,
-                                   byRef(mAttachments->mVSQuadShader[MaskType::MaskNone]));
-  if (FAILED(hr)) {
-    return false;
-  }
-
-  hr = mDevice->CreateVertexShader(LayerQuadMaskVS,
-                                   sizeof(LayerQuadMaskVS),
-                                   nullptr,
-                                   byRef(mAttachments->mVSQuadShader[MaskType::Mask2d]));
-  if (FAILED(hr)) {
-    return false;
-  }
-
-  hr = mDevice->CreateVertexShader(LayerQuadMask3DVS,
-                                   sizeof(LayerQuadMask3DVS),
-                                   nullptr,
-                                   byRef(mAttachments->mVSQuadShader[MaskType::Mask3d]));
-  if (FAILED(hr)) {
-    return false;
-  }
-
-#define LOAD_PIXEL_SHADER(x) hr = mDevice->CreatePixelShader(x, sizeof(x), nullptr, byRef(mAttachments->m##x[MaskType::MaskNone])); \
-  if (FAILED(hr)) { \
-    return false; \
-  } \
-  hr = mDevice->CreatePixelShader(x##Mask, sizeof(x##Mask), nullptr, byRef(mAttachments->m##x[MaskType::Mask2d])); \
-  if (FAILED(hr)) { \
-    return false; \
-  }
-
-  LOAD_PIXEL_SHADER(SolidColorShader);
-  LOAD_PIXEL_SHADER(RGBShader);
-  LOAD_PIXEL_SHADER(RGBAShader);
-  LOAD_PIXEL_SHADER(YCbCrShader);
+  InitPixelShader(sSolidColorShader, mSolidColorShader, MaskType::MaskNone);
+  InitPixelShader(sSolidColorShaderMask, mSolidColorShader, MaskType::Mask2d);
+  InitPixelShader(sRGBShader, mRGBShader, MaskType::MaskNone);
+  InitPixelShader(sRGBShaderMask, mRGBShader, MaskType::Mask2d);
+  InitPixelShader(sRGBAShader, mRGBAShader, MaskType::MaskNone);
+  InitPixelShader(sRGBAShaderMask, mRGBAShader, MaskType::Mask2d);
+  InitPixelShader(sRGBAShaderMask3D, mRGBAShader, MaskType::Mask3d);
+  InitPixelShader(sYCbCrShader, mYCbCrShader, MaskType::MaskNone);
+  InitPixelShader(sYCbCrShaderMask, mYCbCrShader, MaskType::Mask2d);
   if (gfxPrefs::ComponentAlphaEnabled()) {
-    LOAD_PIXEL_SHADER(ComponentAlphaShader);
+    InitPixelShader(sComponentAlphaShader, mComponentAlphaShader, MaskType::MaskNone);
+    InitPixelShader(sComponentAlphaShaderMask, mComponentAlphaShader, MaskType::Mask2d);
   }
 
-#undef LOAD_PIXEL_SHADER
-
-  hr = mDevice->CreatePixelShader(RGBAShaderMask3D,
-                                  sizeof(RGBAShaderMask3D),
-                                  nullptr,
-                                  byRef(mAttachments->mRGBAShader[MaskType::Mask3d]));
-  if (FAILED(hr)) {
-    return false;
-  }
-
-
-  /* VR stuff */
-
-  hr = mDevice->CreateVertexShader(Oculus050VRDistortionVS,
-                                   sizeof(Oculus050VRDistortionVS),
-                                   nullptr,
-                                   byRef(mAttachments->mVRDistortionVS[VRHMDType::Oculus050]));
-  if (FAILED(hr)) {
-    return false;
-  }
-
-  hr = mDevice->CreatePixelShader(Oculus050VRDistortionPS,
-                                  sizeof(Oculus050VRDistortionPS),
-                                  nullptr,
-                                  byRef(mAttachments->mVRDistortionPS[VRHMDType::Oculus050]));
-  if (FAILED(hr)) {
-    return false;
-  }
+  InitVertexShader(sOculus050VRDistortionVS, byRef(mVRDistortionVS[VRHMDType::Oculus050]));
+  InitPixelShader(sOculus050VRDistortionPS, byRef(mVRDistortionPS[VRHMDType::Oculus050]));
 
   // These are shared
   // XXX rename Oculus050 shaders to something more generic
-  mAttachments->mVRDistortionVS[VRHMDType::Cardboard] = mAttachments->mVRDistortionVS[VRHMDType::Oculus050];
-  mAttachments->mVRDistortionPS[VRHMDType::Cardboard] = mAttachments->mVRDistortionPS[VRHMDType::Oculus050];
-
-  return true;
+  mVRDistortionVS[VRHMDType::Cardboard] = mVRDistortionVS[VRHMDType::Oculus050];
+  mVRDistortionPS[VRHMDType::Cardboard] = mVRDistortionPS[VRHMDType::Oculus050];
+  return mInitOkay;
 }
 
 bool
