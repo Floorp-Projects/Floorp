@@ -1135,6 +1135,29 @@ public:
     return mMargin.TopBottom();
   }
 
+  /*
+   * Return margin values for line-relative sides, as defined in
+   * http://www.w3.org/TR/css-writing-modes-3/#line-directions:
+   *
+   * line-left
+   *     Nominally the side from which LTR text would start.
+   * line-right
+   *     Nominally the side from which RTL text would start. (Opposite of
+   *     line-left.)
+   */
+  nscoord LineLeft(WritingMode aWritingMode) const
+  {
+    // We don't need to CHECK_WRITING_MODE here because the IStart or IEnd
+    // accessor that we call will do it.
+    return aWritingMode.IsBidiLTR()
+           ? IStart(aWritingMode) : IEnd(aWritingMode);
+  }
+  nscoord LineRight(WritingMode aWritingMode) const
+  {
+    return aWritingMode.IsBidiLTR()
+           ? IEnd(aWritingMode) : IStart(aWritingMode);
+  }
+
   /**
    * Return a LogicalSize representing the total size of the inline-
    * and block-dimension margins.
@@ -1889,43 +1912,6 @@ nsStylePosition::MaxBSizeDependsOnContainer(mozilla::WritingMode aWM) const
 {
   return aWM.IsVertical() ? MaxWidthDependsOnContainer()
                           : MaxHeightDependsOnContainer();
-}
-
-inline uint8_t
-nsStyleTableBorder::LogicalCaptionSide(mozilla::WritingMode aWM) const
-{
-  // sanity-check that constants we're using have the expected relationships
-  static_assert(NS_STYLE_CAPTION_SIDE_BSTART == mozilla::eLogicalSideBStart &&
-                NS_STYLE_CAPTION_SIDE_BEND == mozilla::eLogicalSideBEnd &&
-                NS_STYLE_CAPTION_SIDE_ISTART == mozilla::eLogicalSideIStart &&
-                NS_STYLE_CAPTION_SIDE_IEND == mozilla::eLogicalSideIEnd,
-                "bad logical caption-side values");
-  static_assert((NS_STYLE_CAPTION_SIDE_TOP - NS_SIDE_TOP ==
-                 NS_STYLE_CAPTION_SIDE_BOTTOM - NS_SIDE_BOTTOM) &&
-                (NS_STYLE_CAPTION_SIDE_LEFT - NS_SIDE_LEFT ==
-                 NS_STYLE_CAPTION_SIDE_RIGHT - NS_SIDE_RIGHT) &&
-                (NS_STYLE_CAPTION_SIDE_LEFT - NS_SIDE_LEFT ==
-                 NS_STYLE_CAPTION_SIDE_TOP - NS_SIDE_TOP),
-                "mismatch between caption-side and side values");
-  switch (mCaptionSide) {
-    case NS_STYLE_CAPTION_SIDE_TOP:
-    case NS_STYLE_CAPTION_SIDE_RIGHT:
-    case NS_STYLE_CAPTION_SIDE_BOTTOM:
-    case NS_STYLE_CAPTION_SIDE_LEFT: {
-      uint8_t side = mCaptionSide - (NS_STYLE_CAPTION_SIDE_TOP - NS_SIDE_TOP);
-      return aWM.LogicalSideForPhysicalSide(mozilla::css::Side(side));
-    }
-
-    case NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE:
-      return aWM.IsVertical() ? aWM.LogicalSideForPhysicalSide(NS_SIDE_TOP)
-                              : NS_STYLE_CAPTION_SIDE_BSTART_OUTSIDE;
-
-    case NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE:
-      return aWM.IsVertical() ? aWM.LogicalSideForPhysicalSide(NS_SIDE_BOTTOM)
-                              : NS_STYLE_CAPTION_SIDE_BEND_OUTSIDE;
-  }
-  MOZ_ASSERT(mCaptionSide <= NS_STYLE_CAPTION_SIDE_BEND_OUTSIDE);
-  return mCaptionSide;
 }
 
 #endif // WritingModes_h_
