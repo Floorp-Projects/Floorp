@@ -669,20 +669,16 @@ class MOZ_RAII Rooted : public js::RootedBase<T>
 
   public:
     template <typename RootingContext>
-    explicit Rooted(const RootingContext& cx
-                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    explicit Rooted(const RootingContext& cx)
       : ptr(js::GCMethods<T>::initial())
     {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         registerWithRootLists(js::RootListsForRootingContext(cx));
     }
 
     template <typename RootingContext, typename S>
-    Rooted(const RootingContext& cx, S&& initial
-           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    Rooted(const RootingContext& cx, S&& initial)
       : ptr(mozilla::Forward<S>(initial))
     {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         registerWithRootLists(js::RootListsForRootingContext(cx));
     }
 
@@ -729,8 +725,6 @@ class MOZ_RAII Rooted : public js::RootedBase<T>
         js::DispatchWrapper<T>,
         T>::Type;
     MaybeWrapped ptr;
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     Rooted(const Rooted&) = delete;
 };
@@ -781,20 +775,10 @@ class MOZ_RAII FakeRooted : public RootedBase<T>
 {
   public:
     template <typename CX>
-    explicit FakeRooted(CX* cx
-                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(GCMethods<T>::initial())
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
+    explicit FakeRooted(CX* cx) : ptr(GCMethods<T>::initial()) {}
 
     template <typename CX>
-    explicit FakeRooted(CX* cx, T initial
-                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(initial)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
+    FakeRooted(CX* cx, T initial) : ptr(initial) {}
 
     DECLARE_POINTER_COMPARISON_OPS(T);
     DECLARE_POINTER_CONSTREF_OPS(T);
@@ -808,8 +792,6 @@ class MOZ_RAII FakeRooted : public RootedBase<T>
     void set(const T& value) {
         ptr = value;
     }
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     FakeRooted(const FakeRooted&) = delete;
 };

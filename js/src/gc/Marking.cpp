@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ReentrancyGuard.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/TypeTraits.h"
 
 #include "jsgc.h"
@@ -1248,14 +1249,9 @@ bool
 GCMarker::drainMarkStack(SliceBudget& budget)
 {
 #ifdef DEBUG
-    struct AutoCheckCompartment {
-        bool& flag;
-        explicit AutoCheckCompartment(bool& comparmentCheckFlag) : flag(comparmentCheckFlag) {
-            MOZ_ASSERT(!flag);
-            flag = true;
-        }
-        ~AutoCheckCompartment() { flag = false; }
-    } acc(strictCompartmentChecking);
+    MOZ_ASSERT(!strictCompartmentChecking);
+    strictCompartmentChecking = true;
+    auto acc = mozilla::MakeScopeExit([&] {strictCompartmentChecking = false;});
 #endif
 
     if (budget.isOverBudget())
