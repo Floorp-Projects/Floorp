@@ -22,7 +22,6 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 
-import java.io.IOError;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
@@ -109,7 +108,7 @@ public class AccountsHelper implements NativeEventListener {
                 final Account account = FirefoxAccounts.getFirefoxAccount(mContext);
                 if (account == null) {
                     if (callback != null) {
-                        callback.sendError("Could not update Firefox Account since non exists");
+                        callback.sendError("Could not update Firefox Account since none exists");
                     }
                     return;
                 }
@@ -117,6 +116,17 @@ public class AccountsHelper implements NativeEventListener {
                 final NativeJSObject json = message.getObject("json");
                 final String email = json.getString("email");
                 final String uid = json.getString("uid");
+
+                // Protect against cross-connecting accounts.
+                if (account.name == null || !account.name.equals(email)) {
+                    final String errorMessage = "Cannot update Firefox Account from JSON: datum has different email address!";
+                    Log.e(LOGTAG, errorMessage);
+                    if (callback != null) {
+                        callback.sendError(errorMessage);
+                    }
+                    return;
+                }
+
                 final boolean verified = json.optBoolean("verified", false);
                 final byte[] unwrapkB = Utils.hex2Byte(json.getString("unwrapBKey"));
                 final byte[] sessionToken = Utils.hex2Byte(json.getString("sessionToken"));
@@ -129,7 +139,7 @@ public class AccountsHelper implements NativeEventListener {
                 if (callback != null) {
                     callback.sendSuccess(true);
                 }
-            } catch (Exception e) {
+            } catch (NativeJSObject.InvalidPropertyException e) {
                 Log.w(LOGTAG, "Got exception updating Firefox Account from JSON; ignoring.", e);
                 if (callback != null) {
                     callback.sendError("Could not update Firefox Account from JSON: " + e.toString());

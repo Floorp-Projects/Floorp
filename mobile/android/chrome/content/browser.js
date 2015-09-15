@@ -546,6 +546,16 @@ var BrowserApp = {
       InitLater(() => AccessFu.attach(window), window, "AccessFu");
     }
 
+    if (!AppConstants.MOZ_ANDROID_NATIVE_ACCOUNT_UI) {
+      // We can't delay registering WebChannel listeners: if the first page is
+      // about:accounts, which can happen when starting the Firefox Account flow
+      // from the first run experience, or via the Firefox Account Status
+      // Activity, we can and do miss messages from the fxa-content-server.
+      console.log("browser.js: loading Firefox Accounts WebChannel");
+      Cu.import("resource://gre/modules/FxAccountsWebChannel.jsm");
+      EnsureFxAccountsWebChannel();
+    }
+
     // Notify Java that Gecko has loaded.
     Messaging.sendRequest({ type: "Gecko:Ready" });
 
