@@ -987,8 +987,8 @@ private:
   {
     MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
 
-    (void)mPlaces.SwapElements(aPlaces);
-    (void)mReferrers.SetLength(mPlaces.Length());
+    mPlaces.SwapElements(aPlaces);
+    mReferrers.SetLength(mPlaces.Length());
 
     for (nsTArray<VisitData>::size_type i = 0; i < mPlaces.Length(); i++) {
       mReferrers[i].spec = mPlaces[i].referrerSpec;
