@@ -134,27 +134,10 @@ public:
     mAnimationIndex = aIndex;
   }
 
-  // Returns the element or pseudo-element whose transition-property property
-  // this CSSTransition corresponds to (if any). This is used for determining
-  // the relative composite order of transitions generated from CSS markup.
-  //
-  // Typically this will be the same as the target element of the keyframe
-  // effect associated with this transition. However, it can differ in the
-  // following circumstances:
-  //
-  // a) If script removes or replaces the effect of this transition,
-  // b) If this transition is cancelled (e.g. by updating the
-  //    transition-property or removing the owning element from the document),
-  // c) If this object is generated from script using the CSSTransition
-  //    constructor.
-  //
-  // For (b) and (c) the returned owning element will return !IsSet().
-  const OwningElementRef& OwningElement() const { return mOwningElement; }
-
   // Sets the owning element which is used for determining the composite
   // oder of CSSTransition objects generated from CSS markup.
   //
-  // @see OwningElement()
+  // @see mOwningElement
   void SetOwningElement(const OwningElementRef& aElement)
   {
     mOwningElement = aElement;
@@ -174,6 +157,21 @@ protected:
 
   // The (pseudo-)element whose computed transition-property refers to this
   // transition (if any).
+  //
+  // This is used for determining the relative composite order of transitions
+  // generated from CSS markup.
+  //
+  // Typically this will be the same as the target element of the keyframe
+  // effect associated with this transition. However, it can differ in the
+  // following circumstances:
+  //
+  // a) If script removes or replaces the effect of this transition,
+  // b) If this transition is cancelled (e.g. by updating the
+  //    transition-property or removing the owning element from the document),
+  // c) If this object is generated from script using the CSSTransition
+  //    constructor.
+  //
+  // For (b) and (c) the owning element will return !IsSet().
   OwningElementRef mOwningElement;
 
   bool mWasFinishedOnLastTick;

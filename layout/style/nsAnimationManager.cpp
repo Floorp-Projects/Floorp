@@ -154,11 +154,11 @@ CSSAnimation::HasLowerCompositeOrderThan(const Animation& aOther) const
   }
 
   // 3. Sort by document order
-  MOZ_ASSERT(mOwningElement.IsSet() && otherAnimation->OwningElement().IsSet(),
+  MOZ_ASSERT(mOwningElement.IsSet() && otherAnimation->mOwningElement.IsSet(),
              "Animations using custom composite order should have an "
              "owning element");
-  if (!mOwningElement.Equals(otherAnimation->OwningElement())) {
-    return mOwningElement.LessThan(otherAnimation->OwningElement());
+  if (!mOwningElement.Equals(otherAnimation->mOwningElement)) {
+    return mOwningElement.LessThan(otherAnimation->mOwningElement);
   }
 
   // 4. (Same element and pseudo): Sort by position in animation-name
