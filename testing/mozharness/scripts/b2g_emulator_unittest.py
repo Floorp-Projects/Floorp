@@ -281,11 +281,6 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
                 option = option % str_format_values
                 if not option.endswith('None'):
                     cmd.append(option)
-
-        tests = self.config["suite_definitions"][suite].get("tests", [])
-        if tests:
-            cmd.extend(tests)
-
         return cmd
 
     def _query_adb(self):
@@ -341,9 +336,8 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
             self.fatal("Don't know how to run --test-suite '%s'!" % suite)
 
         cmd = self._query_abs_base_cmd(suite)
-        cmd = self.append_harness_extra_args(cmd)
-
         cwd = dirs['abs_%s_dir' % suite]
+        cmd = self.append_harness_extra_args(cmd)
 
         # TODO we probably have to move some of the code in
         # scripts/desktop_unittest.py and scripts/marionette.py to
