@@ -162,7 +162,7 @@ CSSAnimation::HasLowerCompositeOrderThan(const Animation& aOther) const
   }
 
   // 4. (Same element and pseudo): Sort by position in animation-name
-  return mSequenceNum < otherAnimation->mSequenceNum;
+  return mAnimationIndex < otherAnimation->mAnimationIndex;
 }
 
 void
