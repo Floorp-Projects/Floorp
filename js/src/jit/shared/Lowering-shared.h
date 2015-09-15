@@ -142,6 +142,10 @@ class LIRGeneratorShared : public MDefinitionVisitor
     inline void defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps>* lir, MDefinition* mir,
                           LDefinition::Policy policy = LDefinition::REGISTER);
 
+    template <size_t Ops, size_t Temps>
+    inline void defineSinCos(LInstructionHelper<2, Ops, Temps> *lir, MDefinition *mir,
+                             LDefinition::Policy policy = LDefinition::REGISTER);
+
     inline void defineSharedStubReturn(LInstruction* lir, MDefinition* mir);
     inline void defineReturn(LInstruction* lir, MDefinition* mir);
 
@@ -162,6 +166,9 @@ class LIRGeneratorShared : public MDefinitionVisitor
     // Rather than defining a new virtual register, sets |ins| to have the same
     // virtual register as |as|.
     inline void redefine(MDefinition* ins, MDefinition* as);
+
+    // Redefine a sin/cos call to sincos.
+    inline void redefine(MDefinition* def, MDefinition* as, MMathFunction::Function func);
 
     TempAllocator& alloc() const {
         return graph.alloc();

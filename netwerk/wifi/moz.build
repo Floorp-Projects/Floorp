@@ -25,10 +25,6 @@ else:
         'nsWifiMonitor.cpp',
     ]
 
-# osx_corewlan.mm has warnings I don't understand.
-if CONFIG['OS_ARCH'] == 'Darwin':
-    ALLOW_COMPILER_WARNINGS = True
-
 if CONFIG['OS_ARCH'] == 'Darwin':
     UNIFIED_SOURCES += [
         'nsWifiScannerMac.cpp',

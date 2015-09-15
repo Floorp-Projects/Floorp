@@ -4,7 +4,7 @@
 
 "use strict";
 
-const DEBUG = true;
+const DEBUG = false;
 function debug(s) { dump("-*- NotificationStorage.js: " + s + "\n"); }
 
 const Cc = Components.classes;

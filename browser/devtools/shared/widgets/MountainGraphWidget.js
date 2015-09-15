@@ -12,7 +12,7 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 const GRAPH_DAMPEN_VALUES_FACTOR = 0.9;
 
 const GRAPH_BACKGROUND_COLOR = "#ddd";
-const GRAPH_STROKE_WIDTH = 2; // px
+const GRAPH_STROKE_WIDTH = 1; // px
 const GRAPH_STROKE_COLOR = "rgba(255,255,255,0.9)";
 const GRAPH_HELPER_LINES_DASH = [5]; // px
 const GRAPH_HELPER_LINES_WIDTH = 1; // px
@@ -125,8 +125,8 @@ MountainGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
 
     let totalSections = this.format.length;
     let totalTicks = this._data.length;
-    let firstTick = this._data[0].delta;
-    let lastTick = this._data[totalTicks - 1].delta;
+    let firstTick = totalTicks ? this._data[0].delta : 0;
+    let lastTick = totalTicks ? this._data[totalTicks - 1].delta : 0;
 
     let duration = this.dataDuration || lastTick;
     let dataScaleX = this.dataScaleX = width / (duration - this.dataOffsetX);

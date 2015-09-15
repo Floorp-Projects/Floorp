@@ -379,6 +379,7 @@ enum MIRType
     MIRType_MagicIsConstructing,       // JS_IS_CONSTRUCTING magic value.
     MIRType_MagicUninitializedLexical, // JS_UNINITIALIZED_LEXICAL magic value.
     MIRType_Value,
+    MIRType_SinCosDouble,              // Optimizing a sin/cos to sincos.
     MIRType_ObjectOrNull,
     MIRType_None,                      // Invalid, used as a placeholder.
     MIRType_Slots,                     // A slots vector
@@ -492,6 +493,8 @@ StringFromMIRType(MIRType type)
       return "MagicUninitializedLexical";
     case MIRType_Value:
       return "Value";
+    case MIRType_SinCosDouble:
+      return "SinCosDouble";
     case MIRType_ObjectOrNull:
       return "ObjectOrNull";
     case MIRType_None:
@@ -717,7 +720,20 @@ enum ABIFunctionType
     Args_Double_DoubleDoubleDouble = Args_Double_DoubleDouble | (ArgType_Double << (ArgType_Shift * 3)),
 
     // double f(double, double, double, double)
-    Args_Double_DoubleDoubleDoubleDouble = Args_Double_DoubleDoubleDouble | (ArgType_Double << (ArgType_Shift * 4))
+    Args_Double_DoubleDoubleDoubleDouble = Args_Double_DoubleDoubleDouble | (ArgType_Double << (ArgType_Shift * 4)),
+
+    // int f(double, int, int)
+    Args_Int_DoubleIntInt = Args_General0 |
+       (ArgType_General << (ArgType_Shift * 1)) |
+       (ArgType_General << (ArgType_Shift * 2)) |
+       (ArgType_Double  << (ArgType_Shift * 3)),
+
+    // int f(int, double, int, int)
+    Args_Int_IntDoubleIntInt = Args_General0 |
+        (ArgType_General << (ArgType_Shift * 1)) |
+        (ArgType_General << (ArgType_Shift * 2)) |
+        (ArgType_Double  << (ArgType_Shift * 3)) |
+        (ArgType_General << (ArgType_Shift * 4))
 
 };
 

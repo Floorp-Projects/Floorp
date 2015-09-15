@@ -687,6 +687,17 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
     }
   }
 
+  if (nsLayoutUtils::HasCurrentAnimations(static_cast<nsIFrame*>(this))) {
+    // If no new frame for this element is created by the end of the
+    // restyling process, stop animations for this frame
+    RestyleManager::AnimationsWithDestroyedFrame* adf =
+      presContext->RestyleManager()->GetAnimationsWithDestroyedFrame();
+    // AnimationsWithDestroyedFrame only lives during the restyling process.
+    if (adf) {
+      adf->Put(mContent, mStyleContext);
+    }
+  }
+
   shell->NotifyDestroyingFrame(this);
 
   if (mState & NS_FRAME_EXTERNAL_REFERENCE) {

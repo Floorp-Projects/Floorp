@@ -75,6 +75,7 @@
 #include "mozilla/layers/CompositorParent.h"
 #include "GeckoTouchDispatcher.h"
 
+#undef LOG
 #define LOG(args...)                                            \
     __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
 #ifdef VERBOSE_LOG_ENABLED
