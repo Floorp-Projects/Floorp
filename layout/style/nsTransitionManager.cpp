@@ -113,6 +113,18 @@ CSSTransition::GetAnimationManager() const
 }
 
 void
+CSSTransition::UpdateTiming(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag)
+{
+  if (mNeedsNewAnimationIndexWhenRun &&
+      PlayState() != AnimationPlayState::Idle) {
+    mAnimationIndex = sNextAnimationIndex++;
+    mNeedsNewAnimationIndexWhenRun = false;
+  }
+
+  Animation::UpdateTiming(aSeekFlag, aSyncNotifyFlag);
+}
+
+void
 CSSTransition::QueueEvents()
 {
   AnimationPlayState playState = PlayState();

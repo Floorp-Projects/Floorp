@@ -98,8 +98,21 @@ public:
   void CancelFromStyle() override
   {
     mOwningElement = OwningElementRef();
+
+    // When an animation is disassociated with style it enters an odd state
+    // where its composite order is undefined until it first transitions
+    // out of the idle state.
+    //
+    // Even if the composite order isn't defined we don't want it to be random
+    // in case we need to determine the order to dispatch events associated
+    // with an animation in this state. To solve this we treat the animation as
+    // if it had been added to the end of the global animation list so that
+    // its sort order is defined. We'll update this index again once the
+    // animation leaves the idle state.
+    mAnimationIndex = sNextAnimationIndex++;
+    mNeedsNewAnimationIndexWhenRun = true;
+
     Animation::CancelFromStyle();
-    MOZ_ASSERT(mAnimationIndex == kNoIndex);
   }
 
   void Tick() override;
@@ -148,7 +161,11 @@ protected:
     MOZ_ASSERT(!mOwningElement.IsSet(), "Owning element should be cleared "
                                         "before a CSS animation is destroyed");
   }
-  virtual CommonAnimationManager* GetAnimationManager() const override;
+
+  // Animation overrides
+  CommonAnimationManager* GetAnimationManager() const override;
+  void UpdateTiming(SeekFlag aSeekFlag,
+                    SyncNotifyFlag aSyncNotifyFlag) override;
 
   nsString mAnimationName;
 

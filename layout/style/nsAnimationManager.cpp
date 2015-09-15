@@ -302,6 +302,18 @@ CSSAnimation::GetAnimationManager() const
   return context->AnimationManager();
 }
 
+void
+CSSAnimation::UpdateTiming(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag)
+{
+  if (mNeedsNewAnimationIndexWhenRun &&
+      PlayState() != AnimationPlayState::Idle) {
+    mAnimationIndex = sNextAnimationIndex++;
+    mNeedsNewAnimationIndexWhenRun = false;
+  }
+
+  Animation::UpdateTiming(aSeekFlag, aSyncNotifyFlag);
+}
+
 ////////////////////////// nsAnimationManager ////////////////////////////
 
 NS_IMPL_CYCLE_COLLECTION(nsAnimationManager, mEventDispatcher)
