@@ -34,6 +34,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/EventTargetBinding.h"
+#include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -2493,8 +2494,8 @@ RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
   nsCOMPtr<nsPIDOMWindow> window = aLoadInfo->mWindow;
 
   bool created = false;
+  ErrorResult rv;
   if (!workerPrivate) {
-    ErrorResult rv;
     workerPrivate =
       WorkerPrivate::Constructor(aCx, aScriptURL, false,
                                  aType, aName, aLoadInfo, rv);
@@ -2508,9 +2509,18 @@ RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
     workerPrivate->UpdateOverridenLoadGroup(aLoadInfo->mLoadGroup);
   }
 
-  nsRefPtr<SharedWorker> sharedWorker = new SharedWorker(window, workerPrivate);
+  // We don't actually care about this MessageChannel, but we use it to 'steal'
+  // its 2 connected ports.
+  nsRefPtr<MessageChannel> channel = MessageChannel::Constructor(window, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
 
-  if (!workerPrivate->RegisterSharedWorker(aCx, sharedWorker)) {
+  nsRefPtr<SharedWorker> sharedWorker = new SharedWorker(window, workerPrivate,
+                                                         channel->Port1());
+
+  if (!workerPrivate->RegisterSharedWorker(aCx, sharedWorker,
+                                           channel->Port2())) {
     NS_WARNING("Worker is unreachable, this shouldn't happen!");
     sharedWorker->Close();
     return NS_ERROR_FAILURE;
