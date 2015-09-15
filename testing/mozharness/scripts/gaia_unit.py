@@ -7,6 +7,9 @@
 
 import os
 import sys
+import glob
+import subprocess
+import json
 
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
@@ -41,12 +44,47 @@ class GaiaUnitTest(GaiaTest):
         cmd = [python, '-u', os.path.join(dirs['abs_runner_dir'],
                                           'gaia_unit_test',
                                           'main.py')]
-        binary = os.path.join(os.path.dirname(self.binary_path), 'b2g-bin')
+        executable = 'firefox'
+        if 'b2g' in self.binary_path:
+                executable = 'b2g-bin'
+
+        profile = os.path.join(dirs['abs_gaia_dir'], 'profile-debug')
+        binary = os.path.join(os.path.dirname(self.binary_path), executable)
         cmd.extend(self._build_arg('--binary', binary))
-        cmd.extend(self._build_arg('--profile', os.path.join(dirs['abs_gaia_dir'],
-                                                             'profile-debug')))
+        cmd.extend(self._build_arg('--profile', profile))
         cmd.extend(self._build_arg('--symbols-path', self.symbols_path))
         cmd.extend(self._build_arg('--browser-arg', self.config.get('browser_arg')))
+
+        # Add support for chunking
+        if self.config.get('total_chunks') and self.config.get('this_chunk'):
+                chunker = [ os.path.join(dirs['abs_gaia_dir'], 'bin', 'chunk'),
+                            self.config.get('total_chunks'), self.config.get('this_chunk') ]
+
+                disabled_tests = []
+                disabled_manifest = os.path.join(dirs['abs_runner_dir'],
+                                                 'gaia_unit_test',
+                                                 'disabled.json')
+                with open(disabled_manifest, 'r') as m:
+                    try:
+                        disabled_tests = json.loads(m.read())
+                    except:
+                        print "Error while decoding disabled.json; please make sure this file has valid JSON syntax."
+                        sys.exit(1)
+
+                # Construct a list of all tests
+                unit_tests  = []
+                for path in ('apps', 'tv_apps'):
+                    test_root    = os.path.join(dirs['abs_gaia_dir'], path)
+                    full_paths   = glob.glob(os.path.join(test_root, '*/test/unit/*_test.js'))
+                    unit_tests  += map(lambda x: os.path.relpath(x, test_root), full_paths)
+
+                # Remove the tests that are disabled
+                active_unit_tests = filter(lambda x: x not in disabled_tests, unit_tests)
+
+                # Chunk the list as requested
+                tests_to_run = subprocess.check_output(chunker + active_unit_tests).strip().split(' ')
+
+                cmd.extend(tests_to_run)
 
         output_parser = TestSummaryOutputParserHelper(config=self.config,
                                                       log_obj=self.log_obj,
