@@ -98,7 +98,9 @@ this.AutoCompleteE10S = {
     this.popup.style.direction = direction;
 
     this.x = rect.left;
-    this.y = rect.top + rect.height;
+    this.y = rect.top;
+    this.width = rect.width;
+    this.height = rect.height;
   },
 
   _showPopup: function(results) {
@@ -125,7 +127,7 @@ this.AutoCompleteE10S = {
       this.popup.mInput = null;
       this.popup.showCommentColumn = false;
       this.popup.showImageColumn = false;
-      this.popup.openPopupAtScreen(this.x, this.y, true);
+      this.popup.openPopupAtScreenRect("after_start", this.x, this.y, this.width, this.height, false, false);
     } else {
       this.popup.closePopup();
     }

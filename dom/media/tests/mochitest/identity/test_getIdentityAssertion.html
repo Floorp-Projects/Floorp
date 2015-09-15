@@ -38,6 +38,16 @@ function theTest() {
               e => ok(e, 'should fail without provider'));
     },
 
+    function PC_LOCAL_IDENTITY_ASSERTION_FAILS_WITH_BAD_PROVIDER(t) {
+      t.pcLocal._pc.setIdentityProvider('example.com', 'idp-bad.js', '');
+      return t.pcLocal._pc.getIdentityAssertion()
+        .then(a => ok(false, 'should fail with bad provider'),
+              e => {
+                is(e.name, 'IdpError', 'should fail with bad provider');
+                ok(e.message, 'should include a nice message');
+              });
+    },
+
     function PC_LOCAL_GET_TWO_ASSERTIONS(t) {
       return Promise.all([
         getAssertion(t, ''),

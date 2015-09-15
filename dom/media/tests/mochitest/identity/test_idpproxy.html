@@ -26,7 +26,7 @@ function test_domain_sandbox() {
                   '', 12, null, diabolical, true ];
   domains.forEach(function(domain) {
     try {
-      var idp = new IdpSandbox(domain, undefined, window.document);
+      var idp = new IdpSandbox(domain, undefined, window);
       ok(false, 'IdpSandbox allowed a bad domain: ' + domain);
     } catch (e) {
       var str = (typeof domain === 'string') ? domain : typeof domain;
@@ -40,7 +40,7 @@ function test_protocol_sandbox() {
                  '\\evil', '%5cevil', 12, true, {} ];
   protos.forEach(function(proto) {
     try {
-      var idp = new IdpSandbox('example.com', proto, window.document);
+      var idp = new IdpSandbox('example.com', proto, window);
       ok(false, 'IdpSandbox allowed a bad protocol: ' + proto);
     } catch (e) {
       var str = (typeof proto === 'string') ? proto : typeof proto;
@@ -56,7 +56,7 @@ function idpName(hash) {
 function makeSandbox(js) {
   var name = js || idpName();
   info('Creating a sandbox for the protocol: ' + name);
-  var sandbox = new IdpSandbox('example.com', name, window.document);
+  var sandbox = new IdpSandbox('example.com', name, window);
   return sandbox.start().then(idp => SpecialPowers.wrap(idp));
 }
 
@@ -126,6 +126,12 @@ function test_redirect_fail(from) {
   };
 }
 
+function test_bad_js() {
+  return makeSandbox('idp-bad.js')
+    .then(() => ok(false, 'Bad JS should not load'),
+          e => ok(e, 'Bad JS should not load'));
+}
+
 function run_all_tests() {
   [
     test_domain_sandbox,
@@ -151,7 +157,9 @@ function run_all_tests() {
     // A redirect to HTTP is not-cool
     test_redirect_fail('idp-redirect-http.js'),
     // Also catch tricks like https->http->https
-    test_redirect_fail('idp-redirect-http-trick.js')
+    test_redirect_fail('idp-redirect-http-trick.js'),
+
+    test_bad_js
   ].reduce((p, test) => {
     return p.then(test)
       .catch(e => ok(false, test.name + ' failed: ' +

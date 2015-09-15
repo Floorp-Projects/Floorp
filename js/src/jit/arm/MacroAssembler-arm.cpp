@@ -4496,7 +4496,7 @@ js::jit::MacroAssemblerARMCompat::atomicExchange(int nbytes, bool signExtend,
 template<typename T>
 void
 MacroAssemblerARMCompat::atomicFetchOp(int nbytes, bool signExtend, AtomicOp op, const Imm32& value,
-                                       const T& mem, Register temp, Register output)
+                                       const T& mem, Register flagTemp, Register output)
 {
     // The Imm32 case is not needed yet because lowering always forces
     // the value into a register at present (bug 1077317).
@@ -4513,8 +4513,8 @@ MacroAssemblerARMCompat::atomicFetchOp(int nbytes, bool signExtend, AtomicOp op,
 // L0  ldrex* output, [ptr]
 //     sxt*   output, output, 0   ; sign-extend if applicable
 //     OP     tmp, output, value  ; compute value to store
-//     strex* tmp, tmp, [ptr]
-//     cmp    tmp, 1
+//     strex* tmp2, tmp, [ptr]    ; tmp2 required by strex
+//     cmp    tmp2, 1
 //     beq    L0                  ; failed - location is dirty, retry
 //     dmb                        ; ordering barrier required
 //
@@ -4528,25 +4528,26 @@ MacroAssemblerARMCompat::atomicFetchOp(int nbytes, bool signExtend, AtomicOp op,
 template<typename T>
 void
 MacroAssemblerARMCompat::atomicFetchOp(int nbytes, bool signExtend, AtomicOp op,
-                                       const Register& value, const T& mem, Register temp,
+                                       const Register& value, const T& mem, Register flagTemp,
                                        Register output)
 {
     // Fork for non-word operations on ARMv6.
     //
     // Bug 1077321: We may further optimize for ARMv8 (AArch32) here.
-    if (nbytes < 4 && !HasLDSTREXBHD()) {
-        atomicFetchOpARMv6(nbytes, signExtend, op, value, mem, temp, output);
-    } else {
-        MOZ_ASSERT(temp == InvalidReg);
-        atomicFetchOpARMv7(nbytes, signExtend, op, value, mem, output);
-    }
+    if (nbytes < 4 && !HasLDSTREXBHD())
+        atomicFetchOpARMv6(nbytes, signExtend, op, value, mem, flagTemp, output);
+    else
+        atomicFetchOpARMv7(nbytes, signExtend, op, value, mem, flagTemp, output);
 }
 
 template<typename T>
 void
 MacroAssemblerARMCompat::atomicFetchOpARMv7(int nbytes, bool signExtend, AtomicOp op,
-                                            const Register& value, const T& mem, Register output)
+                                            const Register& value, const T& mem, Register flagTemp,
+                                            Register output)
 {
+    MOZ_ASSERT(flagTemp != InvalidReg);
+
     Label again;
 
     AutoRegisterScope scratch2(asMasm(), secondScratchReg_);
@@ -4590,18 +4591,19 @@ MacroAssemblerARMCompat::atomicFetchOpARMv7(int nbytes, bool signExtend, AtomicO
         as_eor(scratch, output, O2Reg(value));
         break;
     }
+    // Rd must differ from the two other arguments to strex.
     switch (nbytes) {
       case 1:
-        as_strexb(scratch, scratch, ptr);
+        as_strexb(flagTemp, scratch, ptr);
         break;
       case 2:
-        as_strexh(scratch, scratch, ptr);
+        as_strexh(flagTemp, scratch, ptr);
         break;
       case 4:
-        as_strex(scratch, scratch, ptr);
+        as_strex(flagTemp, scratch, ptr);
         break;
     }
-    as_cmp(scratch, Imm8(1));
+    as_cmp(flagTemp, Imm8(1));
     as_b(&again, Equal);
     ma_dmb();
 }
@@ -4609,7 +4611,7 @@ MacroAssemblerARMCompat::atomicFetchOpARMv7(int nbytes, bool signExtend, AtomicO
 template<typename T>
 void
 MacroAssemblerARMCompat::atomicFetchOpARMv6(int nbytes, bool signExtend, AtomicOp op,
-                                            const Register& value, const T& mem, Register temp,
+                                            const Register& value, const T& mem, Register flagTemp,
                                             Register output)
 {
     // Bug 1077318: Must use read-modify-write with LDREX / STREX.
@@ -4620,21 +4622,21 @@ MacroAssemblerARMCompat::atomicFetchOpARMv6(int nbytes, bool signExtend, AtomicO
 template<typename T>
 void
 MacroAssemblerARMCompat::atomicEffectOp(int nbytes, AtomicOp op, const Register& value,
-                                        const T& mem)
+                                        const T& mem, Register flagTemp)
 {
     // Fork for non-word operations on ARMv6.
     //
     // Bug 1077321: We may further optimize for ARMv8 (AArch32) here.
     if (nbytes < 4 && !HasLDSTREXBHD())
-        atomicEffectOpARMv6(nbytes, op, value, mem);
+        atomicEffectOpARMv6(nbytes, op, value, mem, flagTemp);
     else
-        atomicEffectOpARMv7(nbytes, op, value, mem);
+        atomicEffectOpARMv7(nbytes, op, value, mem, flagTemp);
 }
 
 template<typename T>
 void
 MacroAssemblerARMCompat::atomicEffectOp(int nbytes, AtomicOp op, const Imm32& value,
-                                        const T& mem)
+                                        const T& mem, Register flagTemp)
 {
     // The Imm32 case is not needed yet because lowering always forces
     // the value into a register at present (bug 1077317).
@@ -4644,22 +4646,25 @@ MacroAssemblerARMCompat::atomicEffectOp(int nbytes, AtomicOp op, const Imm32& va
     MOZ_CRASH("NYI");
 }
 
-// Uses both scratch registers, one for the address and one for the temp:
+// Uses both scratch registers, one for the address and one for a temp,
+// but needs two temps for strex:
 //
 //     ...    ptr, <addr>         ; compute address of item
 //     dmb
 // L0  ldrex* temp, [ptr]
 //     OP     temp, temp, value   ; compute value to store
-//     strex* temp, temp, [ptr]
-//     cmp    temp, 1
+//     strex* temp2, temp, [ptr]
+//     cmp    temp2, 1
 //     beq    L0                  ; failed - location is dirty, retry
 //     dmb                        ; ordering barrier required
 
 template<typename T>
 void
 MacroAssemblerARMCompat::atomicEffectOpARMv7(int nbytes, AtomicOp op, const Register& value,
-                                             const T& mem)
+                                             const T& mem, Register flagTemp)
 {
+    MOZ_ASSERT(flagTemp != InvalidReg);
+
     Label again;
 
     AutoRegisterScope scratch2(asMasm(), secondScratchReg_);
@@ -4698,18 +4703,19 @@ MacroAssemblerARMCompat::atomicEffectOpARMv7(int nbytes, AtomicOp op, const Regi
         as_eor(scratch, scratch, O2Reg(value));
         break;
     }
+    // Rd must differ from the two other arguments to strex.
     switch (nbytes) {
       case 1:
-        as_strexb(scratch, scratch, ptr);
+        as_strexb(flagTemp, scratch, ptr);
         break;
       case 2:
-        as_strexh(scratch, scratch, ptr);
+        as_strexh(flagTemp, scratch, ptr);
         break;
       case 4:
-        as_strex(scratch, scratch, ptr);
+        as_strex(flagTemp, scratch, ptr);
         break;
     }
-    as_cmp(scratch, Imm8(1));
+    as_cmp(flagTemp, Imm8(1));
     as_b(&again, Equal);
     ma_dmb();
 }
@@ -4717,7 +4723,7 @@ MacroAssemblerARMCompat::atomicEffectOpARMv7(int nbytes, AtomicOp op, const Regi
 template<typename T>
 void
 MacroAssemblerARMCompat::atomicEffectOpARMv6(int nbytes, AtomicOp op, const Register& value,
-                                             const T& mem)
+                                             const T& mem, Register flagTemp)
 {
     // Bug 1077318: Must use read-modify-write with LDREX / STREX.
     MOZ_ASSERT(nbytes == 1 || nbytes == 2);
@@ -4727,32 +4733,32 @@ MacroAssemblerARMCompat::atomicEffectOpARMv6(int nbytes, AtomicOp op, const Regi
 template void
 js::jit::MacroAssemblerARMCompat::atomicFetchOp(int nbytes, bool signExtend, AtomicOp op,
                                                 const Imm32& value, const Address& mem,
-                                                Register temp, Register output);
+                                                Register flagTemp, Register output);
 template void
 js::jit::MacroAssemblerARMCompat::atomicFetchOp(int nbytes, bool signExtend, AtomicOp op,
                                                 const Imm32& value, const BaseIndex& mem,
-                                                Register temp, Register output);
+                                                Register flagTemp, Register output);
 template void
 js::jit::MacroAssemblerARMCompat::atomicFetchOp(int nbytes, bool signExtend, AtomicOp op,
                                                 const Register& value, const Address& mem,
-                                                Register temp, Register output);
+                                                Register flagTemp, Register output);
 template void
 js::jit::MacroAssemblerARMCompat::atomicFetchOp(int nbytes, bool signExtend, AtomicOp op,
                                                 const Register& value, const BaseIndex& mem,
-                                                Register temp, Register output);
+                                                Register flagTemp, Register output);
 
 template void
 js::jit::MacroAssemblerARMCompat::atomicEffectOp(int nbytes, AtomicOp op, const Imm32& value,
-                                                 const Address& mem);
+                                                 const Address& mem, Register flagTemp);
 template void
 js::jit::MacroAssemblerARMCompat::atomicEffectOp(int nbytes, AtomicOp op, const Imm32& value,
-                                                 const BaseIndex& mem);
+                                                 const BaseIndex& mem, Register flagTemp);
 template void
 js::jit::MacroAssemblerARMCompat::atomicEffectOp(int nbytes, AtomicOp op, const Register& value,
-                                                 const Address& mem);
+                                                 const Address& mem, Register flagTemp);
 template void
 js::jit::MacroAssemblerARMCompat::atomicEffectOp(int nbytes, AtomicOp op, const Register& value,
-                                                 const BaseIndex& mem);
+                                                 const BaseIndex& mem, Register flagTemp);
 
 void
 MacroAssemblerARMCompat::profilerEnterFrame(Register framePtr, Register scratch)

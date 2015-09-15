@@ -26,6 +26,7 @@
 
 namespace mozilla {
 namespace a11y {
+class DocProxyAccessibleWrap;
 
 class AccessibleWrap : public Accessible,
                        public ia2Accessible,
@@ -176,12 +177,22 @@ public: // construction, destruction
 
   static IDispatch* NativeAccessible(Accessible* aAccessible);
 
+#ifdef _WIN64
+  uint32_t GetExistingID() const { return mID; }
+  static const uint32_t kNoID = 0;
+#endif
+
 protected:
   virtual ~AccessibleWrap();
 
 #ifdef _WIN64
   uint32_t mID;
 #endif
+
+  /**
+   * Return the wrapper for the document's proxy.
+   */
+  DocProxyAccessibleWrap* DocProxyWrapper() const;
 
   /**
    * Creates ITypeInfo for LIBID_Accessibility if it's needed and returns it.

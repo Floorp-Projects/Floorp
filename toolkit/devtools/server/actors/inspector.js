@@ -224,6 +224,19 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
            this.rawNode.ownerDocument.documentElement === this.rawNode;
   },
 
+  destroy: function () {
+    protocol.Actor.prototype.destroy.call(this);
+
+    if (this.mutationObserver) {
+      if (!Cu.isDeadWrapper(this.mutationObserver)) {
+        this.mutationObserver.disconnect();
+      }
+      this.mutationObserver = null;
+    }
+    this.rawNode = null;
+    this.walker = null;
+  },
+
   // Returns the JSON representation of this object over the wire.
   form: function(detail) {
     if (detail === "actorid") {
@@ -294,6 +307,25 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
     });
 
     return form;
+  },
+
+  /**
+   * Watch the given document node for mutations using the DOM observer
+   * API.
+   */
+  watchDocument: function(callback) {
+    let node = this.rawNode;
+    // Create the observer on the node's actor.  The node will make sure
+    // the observer is cleaned up when the actor is released.
+    let observer = new node.defaultView.MutationObserver(callback);
+    observer.mergeAttributeRecords = true;
+    observer.observe(node, {
+      attributes: true,
+      characterData: true,
+      childList: true,
+      subtree: true
+    });
+    this.mutationObserver = observer;
   },
 
   get isBeforePseudoElement() {
@@ -741,12 +773,6 @@ let NodeFront = protocol.FrontClass(NodeActor, {
    * is being destroyed.
    */
   destroy: function() {
-    // If an observer was added on this node, shut it down.
-    if (this.observer) {
-      this.observer.disconnect();
-      this.observer = null;
-    }
-
     protocol.Front.prototype.destroy.call(this);
   },
 
@@ -1319,24 +1345,44 @@ var WalkerActor = protocol.ActorClass({
   },
 
   destroy: function() {
+    if (this._destroyed) {
+      return;
+    }
+    this._destroyed = true;
+    protocol.Actor.prototype.destroy.call(this);
     try {
-      this._destroyed = true;
-
       this.clearPseudoClassLocks();
       this._activePseudoClassLocks = null;
 
       this._hoveredNode = null;
+      this.rootWin = null;
       this.rootDoc = null;
+      this.rootNode = null;
+      this.layoutHelpers = null;
+      this._orphaned = null;
+      this._retainedOrphans = null;
+      this._refMap = null;
+
+      events.off(this.tabActor, "will-navigate", this.onFrameUnload);
+      events.off(this.tabActor, "navigate", this.onFrameLoad);
+
+      this.onFrameLoad = null;
+      this.onFrameUnload = null;
 
       this.reflowObserver.off("reflows", this._onReflows);
       this.reflowObserver = null;
+      this._onReflows = null;
       releaseLayoutChangesObserver(this.tabActor);
+
+      this.onMutations = null;
+
+      this.tabActor = null;
 
       events.emit(this, "destroyed");
     } catch(e) {
       console.error(e);
     }
-    protocol.Actor.prototype.destroy.call(this);
+
   },
 
   release: method(function() {}, { release: true }),
@@ -1368,7 +1414,7 @@ var WalkerActor = protocol.ActorClass({
     this._refMap.set(node, actor);
 
     if (node.nodeType === Ci.nsIDOMNode.DOCUMENT_NODE) {
-      this._watchDocument(actor);
+      actor.watchDocument(this.onMutations);
     }
     return actor;
   },
@@ -1462,24 +1508,6 @@ var WalkerActor = protocol.ActorClass({
       nodes: nodeActors,
       newParents: [...newParents]
     };
-  },
-
-  /**
-   * Watch the given document node for mutations using the DOM observer
-   * API.
-   */
-  _watchDocument: function(actor) {
-    let node = actor.rawNode;
-    // Create the observer on the node's actor.  The node will make sure
-    // the observer is cleaned up when the actor is released.
-    actor.observer = new actor.rawNode.defaultView.MutationObserver(this.onMutations);
-    actor.observer.mergeAttributeRecords = true;
-    actor.observer.observe(node, {
-      attributes: true,
-      characterData: true,
-      childList: true,
-      subtree: true
-    });
   },
 
   /**
@@ -3507,6 +3535,11 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
 
   destroy: function () {
     protocol.Actor.prototype.destroy.call(this);
+    this._highlighterPromise = null;
+    this._pageStylePromise = null;
+    this._walkerPromise = null;
+    this.walker = null;
+    this.tabActor = null;
   },
 
   // Forces destruction of the actor and all its children
@@ -3562,7 +3595,9 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
     }
 
     this._pageStylePromise = this.getWalker().then(walker => {
-      return PageStyleActor(this);
+      let pageStyle = PageStyleActor(this);
+      this.manage(pageStyle);
+      return pageStyle;
     });
     return this._pageStylePromise;
   }, {

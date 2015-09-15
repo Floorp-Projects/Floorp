@@ -113,14 +113,14 @@ function createLocationFromURI(uri) {
  *
  * @param domain (string) the domain of the IdP
  * @param protocol (string?) the protocol of the IdP [default: 'default']
- * @param doc (obj) the current document
+ * @param win (obj) the current window
  * @throws if the domain or protocol aren't valid
  */
-function IdpSandbox(domain, protocol, doc) {
+function IdpSandbox(domain, protocol, win) {
   this.source = IdpSandbox.createIdpUri(domain, protocol || "default");
   this.active = null;
   this.sandbox = null;
-  this.document = doc;
+  this.window = win;
 }
 
 IdpSandbox.checkDomain = function(domain) {
@@ -181,7 +181,7 @@ IdpSandbox.prototype = {
 
   start: function() {
     if (!this.active) {
-      this.active = ResourceLoader.load(this.source, this.document)
+      this.active = ResourceLoader.load(this.source, this.window.document)
         .then(result => this._createSandbox(result));
     }
     return this.active;
@@ -218,14 +218,40 @@ IdpSandbox.prototype = {
     // have to use the ultimate URI, not the starting one to avoid
     // that origin stealing from the one that redirected to it
     this._populateSandbox(result.request.URI);
-    // putting a javascript version of 1.8 here seems fragile
-    Cu.evalInSandbox(result.data, this.sandbox,
-                     '1.8', result.request.URI.spec, 1);
+    try {
+      Cu.evalInSandbox(result.data, this.sandbox,
+                       'latest', result.request.URI.spec, 1);
+    } catch (e) {
+      // These can be passed straight on, because they are explicitly labelled
+      // as being IdP errors by the IdP and we drop line numbers as a result.
+      if (e.name === 'IdpError' || e.name === 'IdpLoginError') {
+        throw e;
+      }
+      this._logError(e);
+      throw new Error('Error in IdP, check console for details');
+    }
 
     if (!registrar.idp) {
       throw new Error('IdP failed to call rtcIdentityProvider.register()');
     }
     return registrar;
+  },
+
+  // Capture all the details from the error and log them to the console.  This
+  // can't rethrow anything else because that could leak information about the
+  // internal workings of the IdP across origins.
+  _logError: function(e) {
+    let winID = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+    let scriptError = Cc["@mozilla.org/scripterror;1"]
+        .createInstance(Ci.nsIScriptError);
+    scriptError.initWithWindowID(e.message, e.fileName, null,
+                                 e.lineNumber, e.columnNumber,
+                                 Ci.nsIScriptError.errorFlag,
+                                 "content javascript", winID);
+    let consoleService = Cc['@mozilla.org/consoleservice;1']
+        .getService(Ci.nsIConsoleService);
+    consoleService.logMessage(scriptError);
   },
 
   stop: function() {

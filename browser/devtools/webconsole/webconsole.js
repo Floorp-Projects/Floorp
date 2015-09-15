@@ -1971,6 +1971,10 @@ WebConsoleFrame.prototype = {
   openNetworkPanel: function WCF_openNetworkPanel(requestId)
   {
     let toolbox = gDevTools.getToolbox(this.owner.target);
+    // The browser console doesn't have a toolbox.
+    if (!toolbox) {
+      return;
+    }
     return toolbox.selectTool("netmonitor").then(panel => {
       return panel.panelWin.NetMonitorController.inspectRequest(requestId);
     });

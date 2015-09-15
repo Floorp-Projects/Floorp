@@ -6,6 +6,10 @@
 
 #include "jit/mips32/Assembler-mips32.h"
 
+#include "mozilla/DebugOnly.h"
+
+using mozilla::DebugOnly;
+
 using namespace js;
 using namespace js::jit;
 
@@ -171,9 +175,8 @@ CodeFromJump(Instruction* jump)
 void
 Assembler::TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader)
 {
-    RelocationIterator iter(reader);
-    while (iter.read()) {
-        JitCode* child = CodeFromJump((Instruction*)(code->raw() + iter.offset()));
+    while (reader.more()) {
+        JitCode* child = CodeFromJump((Instruction*)(code->raw() + reader.readUnsigned()));
         TraceManuallyBarrieredEdge(trc, &child, "rel32");
     }
 }

@@ -296,6 +296,36 @@ this.TraversalRules = { // jshint ignore:line
       }
     }),
 
+  /* For TalkBack's "Control" granularity. Form conrols and links */
+  Control: new BaseTraversalRule(
+    [Roles.PUSHBUTTON,
+     Roles.SPINBUTTON,
+     Roles.TOGGLE_BUTTON,
+     Roles.BUTTONDROPDOWN,
+     Roles.BUTTONDROPDOWNGRID,
+     Roles.COMBOBOX,
+     Roles.LISTBOX,
+     Roles.ENTRY,
+     Roles.PASSWORD_TEXT,
+     Roles.PAGETAB,
+     Roles.RADIOBUTTON,
+     Roles.RADIO_MENU_ITEM,
+     Roles.SLIDER,
+     Roles.CHECKBUTTON,
+     Roles.CHECK_MENU_ITEM,
+     Roles.SWITCH,
+     Roles.LINK,
+     Roles.MENUITEM],
+    function Control_match(aAccessible)
+    {
+      // We want to ignore anchors, only focus real links.
+      if (aAccessible.role == Roles.LINK &&
+          !Utils.getState(aAccessible).contains(States.LINKED)) {
+        return Filters.IGNORE;
+      }
+      return Filters.MATCH;
+    }),
+
   List: new BaseTraversalRule(
     [Roles.LIST,
      Roles.DEFINITION_LIST],

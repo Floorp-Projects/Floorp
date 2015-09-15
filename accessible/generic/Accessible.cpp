@@ -1834,10 +1834,12 @@ Accessible::DispatchClickEvent(nsIContent *aContent, uint32_t aActionIndex)
   int32_t y = presContext->AppUnitsToDevPixels(point.y + size.height / 2);
 
   // Simulate a touch interaction by dispatching touch events with mouse events.
-  nsCoreUtils::DispatchTouchEvent(NS_TOUCH_START, x, y, aContent, frame, presShell, widget);
+  nsCoreUtils::DispatchTouchEvent(eTouchStart, x, y, aContent, frame,
+                                  presShell, widget);
   nsCoreUtils::DispatchMouseEvent(eMouseDown, x, y, aContent, frame,
                                   presShell, widget);
-  nsCoreUtils::DispatchTouchEvent(NS_TOUCH_END, x, y, aContent, frame, presShell, widget);
+  nsCoreUtils::DispatchTouchEvent(eTouchEnd, x, y, aContent, frame,
+                                  presShell, widget);
   nsCoreUtils::DispatchMouseEvent(eMouseUp, x, y, aContent, frame,
                                   presShell, widget);
 }

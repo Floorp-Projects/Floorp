@@ -319,6 +319,23 @@ fetch(new Request('body-blob', {method: 'POST', body: new Blob(new String('my bo
   finish();
 });
 
+expectAsyncResult();
+fetch('interrupt.sjs')
+.then(function(res) {
+  my_ok(true, "interrupted fetch succeeded");
+  res.text().then(function(body) {
+    my_ok(false, "interrupted fetch shouldn't have complete body");
+    finish();
+  },
+  function() {
+    my_ok(true, "interrupted fetch shouldn't have complete body");
+    finish();
+  })
+}, function(e) {
+  my_ok(false, "interrupted fetch failed");
+  finish();
+});
+
 ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'POST', 'PUT'].forEach(function(method) {
   fetchXHRWithMethod('xhr-method-test.txt', method, function(xhr) {
     my_ok(xhr.status == 200, method + " load should be successful");
