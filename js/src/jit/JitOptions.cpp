@@ -110,6 +110,14 @@ JitOptions::JitOptions()
     // Toggles whether shared stubs are used in Ionmonkey.
     SET_DEFAULT(disableSharedStubs, true);
 
+    // Toggles whether sincos optimization is globally disabled.
+    // See bug984018: The MacOS is the only one that has the sincos fast.
+    #if defined(XP_MACOSX)
+        SET_DEFAULT(disableSincos, false);
+    #else
+        SET_DEFAULT(disableSincos, true);
+    #endif
+
     // Toggles whether sink code motion is globally disabled.
     SET_DEFAULT(disableSink, true);
 

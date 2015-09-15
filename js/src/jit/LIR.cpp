@@ -350,6 +350,7 @@ static const char * const TypeChars[] =
     "d",            // DOUBLE
     "i32x4",        // INT32X4
     "f32x4",        // FLOAT32X4
+    "sincos",       // SINCOS
 #ifdef JS_NUNBOX32
     "t",            // TYPE
     "p"             // PAYLOAD

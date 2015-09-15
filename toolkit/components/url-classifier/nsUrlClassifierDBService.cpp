@@ -33,6 +33,7 @@
 #include "nsString.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/ErrorNames.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
@@ -516,6 +517,8 @@ nsUrlClassifierDBServiceWorker::FinishStream()
     mTableUpdates.AppendElements(mProtocolParser->GetTableUpdates());
     mProtocolParser->ForgetTableUpdates();
   } else {
+    LOG(("nsUrlClassifierDBService::FinishStream Failed to parse the stream "
+         "using mProtocolParser."));
     mUpdateStatus = mProtocolParser->Status();
   }
   mUpdateObserver->StreamFinished(mProtocolParser->Status(), 0);
@@ -540,6 +543,9 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
 
   if (NS_SUCCEEDED(mUpdateStatus)) {
     mUpdateStatus = ApplyUpdate();
+  } else {
+    LOG(("nsUrlClassifierDBServiceWorker::FinishUpdate() Not running "
+         "ApplyUpdate() since the update has already failed."));
   }
 
   mMissCache.Clear();
@@ -548,7 +554,12 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
     LOG(("Notifying success: %d", mUpdateWait));
     mUpdateObserver->UpdateSuccess(mUpdateWait);
   } else {
-    LOG(("Notifying error: %d", mUpdateStatus));
+    if (LOG_ENABLED()) {
+      nsAutoCString errorName;
+      mozilla::GetErrorName(mUpdateStatus, errorName);
+      LOG(("Notifying error: %s (%d)", errorName.get(), mUpdateStatus));
+    }
+
     mUpdateObserver->UpdateError(mUpdateStatus);
     /*
      * mark the tables as spoiled, we don't want to block hosts
@@ -803,6 +814,8 @@ nsUrlClassifierLookupCallback::LookupComplete(nsTArray<LookupResult>* results)
       NS_ENSURE_SUCCESS(rv, rv);
       rv = listManager->GetGethashUrl(result.mTableName, gethashUrl);
       NS_ENSURE_SUCCESS(rv, rv);
+      LOG(("The match from %s needs to be completed at %s",
+           result.mTableName.get(), gethashUrl.get()));
       // gethashUrls may be empty in 2 cases: test tables, and on startup where
       // we may have found a prefix in an existing table before the listmanager
       // has registered the table. In the second case we should not call
@@ -825,6 +838,8 @@ nsUrlClassifierLookupCallback::LookupComplete(nsTArray<LookupResult>* results)
         // in 45 minutes.
         if (result.Complete()) {
           result.mFresh = true;
+          LOG(("Skipping completion in a table without a valid completer (%s).",
+               result.mTableName.get()));
         } else {
           NS_WARNING("Partial match in a table without a valid completer, ignoring partial match.");
         }
@@ -911,8 +926,11 @@ nsUrlClassifierLookupCallback::HandleResults()
     // Leave out results that weren't confirmed, as their existence on
     // the list can't be verified.  Also leave out randomly-generated
     // noise.
-    if (!result.Confirmed() || result.mNoise) {
-      LOG(("Skipping result from table %s", result.mTableName.get()));
+    if (!result.Confirmed()) {
+      LOG(("Skipping result from table %s (not confirmed)", result.mTableName.get()));
+      continue;
+    } else if (result.mNoise) {
+      LOG(("Skipping result from table %s (noise)", result.mTableName.get()));
       continue;
     }
 

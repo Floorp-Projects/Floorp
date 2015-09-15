@@ -99,6 +99,7 @@ namespace jit {
     _(Concat)                                                               \
     _(CharCodeAt)                                                           \
     _(FromCharCode)                                                         \
+    _(SinCos)                                                               \
     _(StringSplit)                                                          \
     _(Substr)                                                               \
     _(Return)                                                               \

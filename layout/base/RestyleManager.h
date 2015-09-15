@@ -49,6 +49,8 @@ private:
   {
     MOZ_ASSERT(!mReframingStyleContexts,
                "temporary member should be nulled out before destruction");
+    MOZ_ASSERT(!mAnimationsWithDestroyedFrame,
+               "leaving dangling pointers from AnimationsWithDestroyedFrame");
   }
 
 public:
@@ -246,6 +248,65 @@ public:
   TryStartingTransition(nsPresContext* aPresContext, nsIContent* aContent,
                         nsStyleContext* aOldStyleContext,
                         nsRefPtr<nsStyleContext>* aNewStyleContext /* inout */);
+
+  // AnimationsWithDestroyedFrame is used to stop animations on elements that
+  // have no frame at the end of the restyling process.
+  // It only lives during the restyling process.
+  class MOZ_STACK_CLASS AnimationsWithDestroyedFrame final {
+  public:
+    // Construct a AnimationsWithDestroyedFrame object.  The caller must
+    // ensure that aRestyleManager lives at least as long as the
+    // object.  (This is generally easy since the caller is typically a
+    // method of RestyleManager.)
+    explicit AnimationsWithDestroyedFrame(RestyleManager* aRestyleManager);
+    ~AnimationsWithDestroyedFrame()
+    {
+    }
+
+    // This method takes the content node for the generated content for
+    // animation on ::before and ::after, rather than the content node for
+    // the real element.
+    void Put(nsIContent* aContent, nsStyleContext* aStyleContext) {
+      MOZ_ASSERT(aContent);
+      nsCSSPseudoElements::Type pseudoType = aStyleContext->GetPseudoType();
+      if (pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+        mContents.AppendElement(aContent);
+      } else if (pseudoType == nsCSSPseudoElements::ePseudo_before) {
+        MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentbefore);
+        mBeforeContents.AppendElement(aContent->GetParent());
+      } else if (pseudoType == nsCSSPseudoElements::ePseudo_after) {
+        MOZ_ASSERT(aContent->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentafter);
+        mAfterContents.AppendElement(aContent->GetParent());
+      }
+    }
+
+    void StopAnimationsForElementsWithoutFrames();
+
+  private:
+    void StopAnimationsWithoutFrame(nsTArray<nsRefPtr<nsIContent>>& aArray,
+                                    nsCSSPseudoElements::Type aPseudoType);
+
+    RestyleManager* mRestyleManager;
+    AutoRestore<AnimationsWithDestroyedFrame*> mRestorePointer;
+
+    // Below three arrays might include elements that have already had their
+    // animations stopped.
+    //
+    // mBeforeContents and mAfterContents hold the real element rather than
+    // the content node for the generated content (which might change during
+    // a reframe)
+    nsTArray<nsRefPtr<nsIContent>> mContents;
+    nsTArray<nsRefPtr<nsIContent>> mBeforeContents;
+    nsTArray<nsRefPtr<nsIContent>> mAfterContents;
+  };
+
+  /**
+   * Return the current AnimationsWithDestroyedFrame struct, or null if we're
+   * not currently in a restyling operation.
+   */
+  AnimationsWithDestroyedFrame* GetAnimationsWithDestroyedFrame() {
+    return mAnimationsWithDestroyedFrame;
+  }
 
 private:
   void RestyleForEmptyChange(Element* aContainer);
@@ -491,6 +552,7 @@ private:
   uint64_t mAnimationGeneration;
 
   ReframingStyleContexts* mReframingStyleContexts;
+  AnimationsWithDestroyedFrame* mAnimationsWithDestroyedFrame;
 
   RestyleTracker mPendingRestyles;
 

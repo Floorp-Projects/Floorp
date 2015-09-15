@@ -104,4 +104,6 @@ interface mozISpellCheckingEngine : nsISupports {
 
 #define SPELLCHECK_DICTIONARY_UPDATE_NOTIFICATION \
   "spellcheck-dictionary-update"
+#define SPELLCHECK_DICTIONARY_REMOVE_NOTIFICATION \
+  "spellcheck-dictionary-remove"
 %}

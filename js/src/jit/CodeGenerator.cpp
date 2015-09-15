@@ -6400,6 +6400,42 @@ CodeGenerator::visitFromCharCode(LFromCharCode* lir)
     masm.bind(ool->rejoin());
 }
 
+void
+CodeGenerator::visitSinCos(LSinCos *lir)
+{
+    Register temp = ToRegister(lir->temp());
+    Register params = ToRegister(lir->temp2());
+    FloatRegister input = ToFloatRegister(lir->input());
+    FloatRegister outputSin = ToFloatRegister(lir->outputSin());
+    FloatRegister outputCos = ToFloatRegister(lir->outputCos());
+
+    masm.reserveStack(sizeof(double) * 2);
+    masm.movePtr(masm.getStackPointer(), params);
+
+    const MathCache* mathCache = lir->mir()->cache();
+
+    masm.setupUnalignedABICall(temp);
+    if (mathCache) {
+        masm.movePtr(ImmPtr(mathCache), temp);
+        masm.passABIArg(temp);
+    }
+
+#define MAYBE_CACHED_(fcn) (mathCache ? (void*)fcn ## _impl : (void*)fcn ## _uncached)
+
+    masm.passABIArg(input, MoveOp::DOUBLE);
+    masm.passABIArg(MoveOperand(params, sizeof(double), MoveOperand::EFFECTIVE_ADDRESS),
+                                MoveOp::GENERAL);
+    masm.passABIArg(MoveOperand(params, 0, MoveOperand::EFFECTIVE_ADDRESS),
+                                MoveOp::GENERAL);
+
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, MAYBE_CACHED_(js::math_sincos)));
+#undef MAYBE_CACHED_
+
+    masm.loadDouble(Address(masm.getStackPointer(), 0), outputCos);
+    masm.loadDouble(Address(masm.getStackPointer(), sizeof(double)), outputSin);
+    masm.freeStack(sizeof(double) * 2);
+}
+
 typedef JSObject* (*StringSplitFn)(JSContext*, HandleObjectGroup, HandleString, HandleString);
 static const VMFunction StringSplitInfo = FunctionInfo<StringSplitFn>(js::str_split_string);
 

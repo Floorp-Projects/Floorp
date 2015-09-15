@@ -4779,55 +4779,6 @@ static bool SchemeIs(nsIURI* aURI, const char* aScheme)
   return NS_SUCCEEDED(baseURI->SchemeIs(aScheme, &isScheme)) && isScheme;
 }
 
-/* static */
-nsresult
-nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
-                                        nsIPrincipal* aLoadingPrincipal,
-                                        uint32_t aCheckLoadFlags,
-                                        bool aAllowData,
-                                        uint32_t aContentPolicyType,
-                                        nsISupports* aContext,
-                                        const nsAFlatCString& aMimeGuess,
-                                        nsISupports* aExtra)
-{
-  NS_PRECONDITION(aLoadingPrincipal, "Must have a loading principal here");
-
-  if (aLoadingPrincipal == sSystemPrincipal) {
-    return NS_OK;
-  }
-  
-  // XXXbz do we want to fast-path skin stylesheets loading XBL here somehow?
-  // CheckLoadURIWithPrincipal
-  nsresult rv = sSecurityManager->
-    CheckLoadURIWithPrincipal(aLoadingPrincipal, aURIToLoad, aCheckLoadFlags);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Content Policy
-  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(aContentPolicyType,
-                                 aURIToLoad,
-                                 aLoadingPrincipal,
-                                 aContext,
-                                 aMimeGuess,
-                                 aExtra,
-                                 &shouldLoad,
-                                 GetContentPolicy(),
-                                 sSecurityManager);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (NS_CP_REJECTED(shouldLoad)) {
-    return NS_ERROR_CONTENT_BLOCKED;
-  }
-
-  // Same Origin
-  if ((aAllowData && SchemeIs(aURIToLoad, "data")) ||
-      ((aCheckLoadFlags & nsIScriptSecurityManager::ALLOW_CHROME) &&
-       SchemeIs(aURIToLoad, "chrome"))) {
-    return NS_OK;
-  }
-
-  return aLoadingPrincipal->CheckMayLoad(aURIToLoad, true, false);
-}
-
 bool
 nsContentUtils::IsSystemPrincipal(nsIPrincipal* aPrincipal)
 {

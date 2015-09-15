@@ -1,0 +1,75 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<style>
+@keyframes move {
+  100% {
+    transform: translateX(100px);
+  }
+}
+
+</style>
+<body>
+<script>
+'use strict';
+
+test(function(t) {
+  var div = addDiv(t, { style: 'animation: move 100s infinite' });
+  assert_equals(div.getAnimations().length, 1,
+                'display:initial element has animations');
+
+  div.style.display = 'none';
+  assert_equals(div.getAnimations().length, 0,
+                'display:none element has no animations');
+}, 'Animation stops playing when the element style display is set to "none"');
+
+test(function(t) {
+  var parentElement = addDiv(t);
+  var div = addDiv(t, { style: 'animation: move 100s infinite' });
+  parentElement.appendChild(div);
+  assert_equals(div.getAnimations().length, 1,
+                'display:initial element has animations');
+
+  parentElement.style.display = 'none';
+  assert_equals(div.getAnimations().length, 0,
+                'Element in display:none subtree has no animations');
+}, 'Animation stops playing when its parent element style display is set ' +
+   'to "none"');
+
+test(function(t) {
+  var div = addDiv(t, { style: 'animation: move 100s infinite' });
+  assert_equals(div.getAnimations().length, 1,
+                'display:initial element has animations');
+
+  div.style.display = 'none';
+  assert_equals(div.getAnimations().length, 0,
+                'display:none element has no animations');
+
+  div.style.display = '';
+  assert_equals(div.getAnimations().length, 1,
+                'Element which is no longer display:none has animations ' +
+                'again');
+}, 'Animation starts playing when the element gets shown from ' +
+   '"display:none" state');
+
+test(function(t) {
+  var parentElement = addDiv(t);
+  var div = addDiv(t, { style: 'animation: move 100s infinite' });
+  parentElement.appendChild(div);
+  assert_equals(div.getAnimations().length, 1,
+                'display:initial element has animations');
+
+  parentElement.style.display = 'none';
+  assert_equals(div.getAnimations().length, 0,
+                'Element in display:none subtree has no animations');
+
+  parentElement.style.display = '';
+  assert_equals(div.getAnimations().length, 1,
+                'Element which is no longer in display:none subtree has ' +
+                'animations again');
+}, 'Animation starts playing when its parent element is shown from ' +
+   '"display:none" state');
+
+done();
+</script>
+</body>

@@ -136,7 +136,7 @@ function MozInputMethodManager(win) {
 }
 
 MozInputMethodManager.prototype = {
-  _supportsSwitching: false,
+  supportsSwitchingForCurrentInputContext: false,
   _window: null,
 
   classID: Components.ID("{7e9d7280-ef86-11e2-b778-0800200c9a66}"),
@@ -161,7 +161,7 @@ MozInputMethodManager.prototype = {
     if (!WindowMap.isActive(this._window)) {
       return false;
     }
-    return this._supportsSwitching;
+    return this.supportsSwitchingForCurrentInputContext;
   },
 
   hide: function() {
@@ -169,6 +169,12 @@ MozInputMethodManager.prototype = {
       return;
     }
     cpmmSendAsyncMessageWithKbID(this, 'Keyboard:RemoveFocus', {});
+  },
+
+  setSupportsSwitchingTypes: function(types) {
+    cpmm.sendAsyncMessage('System:SetSupportsSwitchingTypes', {
+      types: types
+    });
   }
 };
 
@@ -184,7 +190,7 @@ MozInputMethod.prototype = {
 
   _inputcontext: null,
   _wrappedInputContext: null,
-  _layouts: {},
+  _supportsSwitchingTypes: [],
   _window: null,
 
   classID: Components.ID("{4607330d-e7d2-40a4-9eb8-43967eae0142}"),
@@ -208,7 +214,7 @@ MozInputMethod.prototype = {
     cpmm.addWeakMessageListener('Keyboard:Blur', this);
     cpmm.addWeakMessageListener('Keyboard:SelectionChange', this);
     cpmm.addWeakMessageListener('Keyboard:GetContext:Result:OK', this);
-    cpmm.addWeakMessageListener('Keyboard:LayoutsChange', this);
+    cpmm.addWeakMessageListener('Keyboard:SupportsSwitchingTypesChange', this);
     cpmm.addWeakMessageListener('InputRegistry:Result:OK', this);
     cpmm.addWeakMessageListener('InputRegistry:Result:Error', this);
   },
@@ -221,7 +227,7 @@ MozInputMethod.prototype = {
     cpmm.removeWeakMessageListener('Keyboard:Blur', this);
     cpmm.removeWeakMessageListener('Keyboard:SelectionChange', this);
     cpmm.removeWeakMessageListener('Keyboard:GetContext:Result:OK', this);
-    cpmm.removeWeakMessageListener('Keyboard:LayoutsChange', this);
+    cpmm.removeWeakMessageListener('Keyboard:SupportsSwitchingTypesChange', this);
     cpmm.removeWeakMessageListener('InputRegistry:Result:OK', this);
     cpmm.removeWeakMessageListener('InputRegistry:Result:Error', this);
     this.setActive(false);
@@ -253,8 +259,8 @@ MozInputMethod.prototype = {
       case 'Keyboard:GetContext:Result:OK':
         this.setInputContext(data);
         break;
-      case 'Keyboard:LayoutsChange':
-        this._layouts = data;
+      case 'Keyboard:SupportsSwitchingTypesChange':
+        this._supportsSwitchingTypes = data.types;
         break;
 
       case 'InputRegistry:Result:OK':
@@ -299,13 +305,12 @@ MozInputMethod.prototype = {
       this._inputcontext.destroy();
       this._inputcontext = null;
       this._wrappedInputContext = null;
-      this._mgmt._supportsSwitching = false;
+      this._mgmt.supportsSwitchingForCurrentInputContext = false;
     }
 
     if (data) {
-      this._mgmt._supportsSwitching = this._layouts[data.inputType] ?
-        this._layouts[data.inputType] > 1 :
-        false;
+      this._mgmt.supportsSwitchingForCurrentInputContext =
+        (this._supportsSwitchingTypes.indexOf(data.inputType) !== -1);
 
       this._inputcontext = new MozInputContext(data);
       this._inputcontext.init(this._window);

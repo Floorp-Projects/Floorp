@@ -108,7 +108,6 @@
   locale/@AB_CD@/mozapps/extensions/newaddon.properties           (%chrome/mozapps/extensions/newaddon.properties)
   locale/@AB_CD@/mozapps/handling/handling.dtd                    (%chrome/mozapps/handling/handling.dtd)
   locale/@AB_CD@/mozapps/handling/handling.properties             (%chrome/mozapps/handling/handling.properties)
-  locale/@AB_CD@/mozapps/plugins/plugins.dtd                      (%chrome/mozapps/plugins/plugins.dtd)
   locale/@AB_CD@/mozapps/preferences/changemp.dtd                 (%chrome/mozapps/preferences/changemp.dtd)
   locale/@AB_CD@/mozapps/preferences/removemp.dtd                 (%chrome/mozapps/preferences/removemp.dtd)
   locale/@AB_CD@/mozapps/preferences/preferences.properties       (%chrome/mozapps/preferences/preferences.properties)
@@ -120,6 +119,8 @@
   locale/@AB_CD@/mozapps/update/history.dtd                       (%chrome/mozapps/update/history.dtd)
   locale/@AB_CD@/mozapps/xpinstall/xpinstallConfirm.dtd           (%chrome/mozapps/extensions/xpinstallConfirm.dtd)
   locale/@AB_CD@/mozapps/xpinstall/xpinstallConfirm.properties    (%chrome/mozapps/extensions/xpinstallConfirm.properties)
+% locale pluginproblem @AB_CD@ %locale/@AB_CD@/pluginproblem/
+  locale/@AB_CD@/pluginproblem/pluginproblem.dtd                  (%chrome/pluginproblem/pluginproblem.dtd)
 % locale alerts @AB_CD@ %locale/@AB_CD@/alerts/
   locale/@AB_CD@/alerts/alert.dtd                                (%chrome/alerts/alert.dtd)
   locale/@AB_CD@/alerts/notificationNames.properties             (%chrome/alerts/notificationNames.properties)

@@ -43,8 +43,8 @@ static OrientationMapping sOrientationMappings[] = {
   {nsIScreen::ROTATION_270_DEG, eScreenOrientation_LandscapeSecondary},
 };
 
-const static int sDefaultLandscape = 2;
-const static int sDefaultPortrait = 0;
+const static uint32_t sDefaultLandscape = 2;
+const static uint32_t sDefaultPortrait = 0;
 
 static uint32_t sOrientationOffset = 0;
 
@@ -108,7 +108,7 @@ DetectDefaultOrientation()
 static nsresult
 ConvertToScreenRotation(ScreenOrientationInternal aOrientation, uint32_t *aResult)
 {
-  for (int i = 0; i < ArrayLength(sOrientationMappings); i++) {
+  for (uint32_t i = 0; i < ArrayLength(sOrientationMappings); i++) {
     if (aOrientation & sOrientationMappings[i].mDomOrientation) {
       // Shift the mappings in sOrientationMappings so devices with default
       // landscape orientation map landscape-primary to 0 degree and so forth.
@@ -134,7 +134,7 @@ ConvertToScreenRotation(ScreenOrientationInternal aOrientation, uint32_t *aResul
 nsresult
 ConvertToDomOrientation(uint32_t aRotation, ScreenOrientationInternal *aResult)
 {
-  for (int i = 0; i < ArrayLength(sOrientationMappings); i++) {
+  for (uint32_t i = 0; i < ArrayLength(sOrientationMappings); i++) {
     if (aRotation == sOrientationMappings[i].mScreenRotation) {
       // Shift the mappings in sOrientationMappings so devices with default
       // landscape orientation map 0 degree to landscape-primary and so forth.
@@ -213,7 +213,7 @@ OrientationObserver::Notify(const hal::SensorData& aSensorData)
   }
 
   int rotation = mOrientation->OnSensorChanged(aSensorData, static_cast<int>(currRotation));
-  if (rotation < 0 || rotation == currRotation) {
+  if (rotation < 0 || uint32_t(rotation) == currRotation) {
     return;
   }
 

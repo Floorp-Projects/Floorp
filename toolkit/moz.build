@@ -16,8 +16,8 @@ DIRS += [
     'mozapps/extensions',
     'mozapps/handling',
     'mozapps/preferences',
-    'mozapps/plugins',
     'obsolete',
+    'pluginproblem',
     'profile',
     'themes',
     'webapps',
@@ -68,7 +68,7 @@ elif CONFIG['MOZ_ENABLE_PROFILER_SPS']:
 with Files('mozapps/installer/windows/*'):
     BUG_COMPONENT = ('Toolkit', 'NSIS Installer')
 
-with Files('mozapps/plugins/*'):
+with Files('pluginproblem/*'):
     BUG_COMPONENT = ('Core', 'Plug-ins')
 
 with Files('mozapps/preferences/*'):

@@ -8890,6 +8890,125 @@
     "keyed": "true",
     "description": "Number of warnings, keyed by appName."
   },
+  "DEVTOOLS_HUD_APP_STARTUP_TIME_CONTENTINTERACTIVE": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": "true",
+    "description": "The duration in ms between application launch and the 'contentInteractive' performance mark, keyed by appName.",
+    "high": "2000",
+    "n_buckets": 10
+  },
+  "DEVTOOLS_HUD_APP_STARTUP_TIME_NAVIGATIONINTERACTIVE": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": "true",
+    "description": "The duration in ms between application launch and the 'navigationInteractive' performance mark, keyed by appName.",
+    "high": "3000",
+    "n_buckets": 10
+  },
+  "DEVTOOLS_HUD_APP_STARTUP_TIME_NAVIGATIONLOADED": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": "true",
+    "description": "The duration in ms between application launch and the 'navigationLoaded' performance mark, keyed by appName.",
+    "high": "4000",
+    "n_buckets": 10
+  },
+  "DEVTOOLS_HUD_APP_STARTUP_TIME_VISUALLYLOADED": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": "true",
+    "description": "The duration in ms between application launch and the 'visuallyLoaded' performance mark, keyed by appName.",
+    "high": "5000",
+    "n_buckets": 10
+  },
+  "DEVTOOLS_HUD_APP_STARTUP_TIME_MEDIAENUMERATED": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": "true",
+    "description": "The duration in ms between application launch and the 'mediaEnumerated' performance mark, keyed by appName.",
+    "high": "5000",
+    "n_buckets": 10
+  },
+  "DEVTOOLS_HUD_APP_STARTUP_TIME_FULLYLOADED": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": "true",
+    "description": "The duration in ms between application launch and the 'fullyLoaded' performance mark, keyed by appName.",
+    "high": "30000",
+    "n_buckets": 30
+  },
+  "DEVTOOLS_HUD_APP_STARTUP_TIME_SCANEND": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": "true",
+    "description": "The duration in ms between application launch and the 'scanEnd' performance mark, keyed by appName.",
+    "high": "30000",
+    "n_buckets": 30
+  },
+  "DEVTOOLS_HUD_APP_MEMORY_CONTENTINTERACTIVE": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": "true",
+    "description": "The USS memory consumed by an application at the time of the 'contentInteractive' performance mark, keyed by appName.",
+    "low": "2000000",
+    "high": "3000000",
+    "n_buckets": 10
+  },
+  "DEVTOOLS_HUD_APP_MEMORY_NAVIGATIONINTERACTIVE": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": "true",
+    "description": "The USS memory consumed by an application at the time of the 'navigationInteractive' performance mark, keyed by appName.",
+    "low": "2000000",
+    "high": "3000000",
+    "n_buckets": 10
+  },
+  "DEVTOOLS_HUD_APP_MEMORY_NAVIGATIONLOADED": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": "true",
+    "description": "The USS memory consumed by an application at the time of the 'navigationLoaded' performance mark, keyed by appName.",
+    "low": "2000000",
+    "high": "3000000",
+    "n_buckets": 10
+  },
+  "DEVTOOLS_HUD_APP_MEMORY_VISUALLYLOADED": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": "true",
+    "description": "The USS memory consumed by an application at the time of the 'visuallyLoaded' performance mark, keyed by appName.",
+    "low": "2000000",
+    "high": "3000000",
+    "n_buckets": 10
+  },
+  "DEVTOOLS_HUD_APP_MEMORY_MEDIAENUMERATED": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": "true",
+    "description": "The USS memory consumed by an application at the time of the 'mediaEnumerated' performance mark, keyed by appName.",
+    "low": "2000000",
+    "high": "3000000",
+    "n_buckets": 10
+  },
+  "DEVTOOLS_HUD_APP_MEMORY_FULLYLOADED": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": "true",
+    "description": "The USS memory consumed by an application at the time of the 'fullyLoaded' performance mark, keyed by appName.",
+    "low": "2000000",
+    "high": "4000000",
+    "n_buckets": 20
+  },
+  "DEVTOOLS_HUD_APP_MEMORY_SCANEND": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": "true",
+    "description": "The USS memory consumed by an application at the time of the 'scanEnd' performance mark, keyed by appName.",
+    "low": "2000000",
+    "high": "4000000",
+    "n_buckets": 20
+  },
   "GRAPHICS_SANITY_TEST_REASON": {
     "alert_emails": ["danderson@mozilla.com"],
     "expires_in_version": "43",

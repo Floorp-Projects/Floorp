@@ -85,6 +85,9 @@ class OptimizationInfo
     // Toggles whether Truncation based on Range Analysis is used.
     bool autoTruncate_;
 
+    // Toggles whether sincos is used.
+    bool sincos_;
+
     // Toggles whether sink is used.
     bool sink_;
 
@@ -184,6 +187,10 @@ class OptimizationInfo
 
     bool autoTruncateEnabled() const {
         return autoTruncate_ && rangeAnalysisEnabled();
+    }
+
+    bool sincosEnabled() const {
+        return sincos_ && !js_JitOptions.disableSincos;
     }
 
     bool sinkEnabled() const {
