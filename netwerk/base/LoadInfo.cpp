@@ -212,6 +212,14 @@ LoadInfo::GetAboutBlankInherits(bool* aResult)
 }
 
 NS_IMETHODIMP
+LoadInfo::GetAllowChrome(bool* aResult)
+{
+  *aResult =
+    (mSecurityFlags & nsILoadInfo::SEC_ALLOW_CHROME);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 LoadInfo::GetContentPolicyType(nsContentPolicyType* aResult)
 {
   *aResult = nsContentUtils::InternalContentPolicyTypeToExternal(mContentPolicyType);
