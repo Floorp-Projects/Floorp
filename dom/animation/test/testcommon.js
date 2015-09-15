@@ -30,6 +30,18 @@ function addDiv(t, attrs) {
 }
 
 /**
+ * Some tests cause animations to continue to exist even after their target
+ * element has been removed from the document tree. To ensure that these
+ * animations do not impact other tests we should cancel them when the test
+ * is complete.
+ */
+function cancelAllAnimationsOnEnd(t) {
+  t.add_cleanup(function() {
+    document.timeline.getAnimations().forEach(animation => animation.cancel());
+  });
+}
+
+/**
  * Promise wrapper for requestAnimationFrame.
  */
 function waitForFrame() {
