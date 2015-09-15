@@ -85,6 +85,7 @@ public:
  explicit CSSTransition(nsIGlobalObject* aGlobal)
     : dom::Animation(aGlobal)
     , mWasFinishedOnLastTick(false)
+    , mNeedsNewAnimationIndexWhenRun(false)
   {
   }
 
@@ -175,6 +176,10 @@ protected:
   OwningElementRef mOwningElement;
 
   bool mWasFinishedOnLastTick;
+
+  // When true, indicates that when this transition next leaves the idle state,
+  // its animation index should be updated.
+  bool mNeedsNewAnimationIndexWhenRun;
 };
 
 } // namespace dom
