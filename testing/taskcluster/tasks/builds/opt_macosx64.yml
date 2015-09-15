@@ -34,9 +34,6 @@ task:
       MOZHARNESS_CONFIG: 'builds/releng_base_mac_64_cross_builds.py balrog/production.py'
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster
-      #TODO: bug 1164617 - remove Docker image hacks
-      LIBRARY_PATH: ""
-      CPLUS_INCLUDE_PATH: ""
       # image paths
       TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
 
@@ -56,5 +53,5 @@ task:
     # tasks provide the "build" extra field to specify where the build and tests
     # files are located.
     locations:
-      build: 'public/build/target.mac64.dmg'
+      build: 'public/build/target.dmg'
       tests: 'public/build/target.tests.zip'
