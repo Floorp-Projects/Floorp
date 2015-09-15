@@ -349,7 +349,6 @@ bool MediaDecoder::IsInfinite()
 MediaDecoder::MediaDecoder() :
   mWatchManager(this, AbstractThread::MainThread()),
   mDormantSupported(false),
-  mPlaybackPosition(0),
   mLogicalPosition(0.0),
   mDuration(std::numeric_limits<double>::quiet_NaN()),
   mMediaSeekable(true),
@@ -383,6 +382,8 @@ MediaDecoder::MediaDecoder() :
                    "MediaDecoder::mCurrentPosition (Mirror)"),
   mStateMachineDuration(AbstractThread::MainThread(), NullableTimeUnit(),
                         "MediaDecoder::mStateMachineDuration (Mirror)"),
+  mPlaybackPosition(AbstractThread::MainThread(), 0,
+                    "MediaDecoder::mPlaybackPosition (Mirror)"),
   mVolume(AbstractThread::MainThread(), 0.0,
           "MediaDecoder::mVolume (Canonical)"),
   mPlaybackRate(AbstractThread::MainThread(), 1.0,
@@ -1183,12 +1184,6 @@ void MediaDecoder::SetLoadInBackground(bool aLoadInBackground)
   }
 }
 
-void MediaDecoder::UpdatePlaybackOffset(int64_t aOffset)
-{
-  GetReentrantMonitor().AssertCurrentThreadIn();
-  mPlaybackPosition = aOffset;
-}
-
 bool MediaDecoder::OnStateMachineTaskQueue() const
 {
   return mDecoderStateMachine->OnTaskQueue();
@@ -1236,12 +1231,14 @@ MediaDecoder::SetStateMachine(MediaDecoderStateMachine* aStateMachine)
     mStateMachineIsShutdown.Connect(mDecoderStateMachine->CanonicalIsShutdown());
     mNextFrameStatus.Connect(mDecoderStateMachine->CanonicalNextFrameStatus());
     mCurrentPosition.Connect(mDecoderStateMachine->CanonicalCurrentPosition());
+    mPlaybackPosition.Connect(mDecoderStateMachine->CanonicalPlaybackOffset());
   } else {
     mStateMachineDuration.DisconnectIfConnected();
     mBuffered.DisconnectIfConnected();
     mStateMachineIsShutdown.DisconnectIfConnected();
     mNextFrameStatus.DisconnectIfConnected();
     mCurrentPosition.DisconnectIfConnected();
+    mPlaybackPosition.DisconnectIfConnected();
   }
 }
 
