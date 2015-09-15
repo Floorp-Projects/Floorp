@@ -9,7 +9,6 @@
 
 #include "mozilla/FileUtils.h"
 #include "mozilla/ipc/SocketBase.h"
-#include "mozilla/ipc/DaemonSocketMessageHandlers.h"
 
 namespace mozilla {
 namespace ipc {
@@ -56,14 +55,14 @@ public:
     mConsumer = aConsumer;
   }
 
-  void SetResultHandler(DaemonSocketResultHandler* aRes)
+  void SetUserData(void* aUserData)
   {
-    mRes = aRes;
+    mUserData = aUserData;
   }
 
-  DaemonSocketResultHandler* GetResultHandler() const
+  void* GetUserData() const
   {
-    return mRes;
+    return mUserData;
   }
 
   void GetHeader(uint8_t& aService, uint8_t& aOpcode,
@@ -81,7 +80,7 @@ private:
   void OnError(const char* aFunction, int aErrno);
 
   DaemonSocketIOConsumer* mConsumer;
-  nsRefPtr<DaemonSocketResultHandler> mRes;
+  void* mUserData;
   ScopedClose mReceivedFd;
 };
 

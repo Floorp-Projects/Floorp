@@ -28,14 +28,25 @@ BluetoothDaemonGattModule::SetNotificationHandler(
   sNotificationHandler = aNotificationHandler;
 }
 
+nsresult
+BluetoothDaemonGattModule::Send(DaemonSocketPDU* aPDU,
+                                BluetoothGattResultHandler* aRes)
+{
+  nsRefPtr<BluetoothGattResultHandler> res(aRes);
+  nsresult rv = Send(aPDU, static_cast<void*>(res.get()));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  unused << res.forget(); // Keep reference for response
+  return NS_OK;
+}
+
 void
 BluetoothDaemonGattModule::HandleSvc(const DaemonSocketPDUHeader& aHeader,
-                                     DaemonSocketPDU& aPDU,
-                                     DaemonSocketResultHandler* aRes)
+                                     DaemonSocketPDU& aPDU, void* aUserData)
 {
   static void (BluetoothDaemonGattModule::* const HandleOp[])(
-    const DaemonSocketPDUHeader&, DaemonSocketPDU&,
-    DaemonSocketResultHandler*) = {
+    const DaemonSocketPDUHeader&, DaemonSocketPDU&, void*) = {
     [0] = &BluetoothDaemonGattModule::HandleRsp,
     [1] = &BluetoothDaemonGattModule::HandleNtf
   };
@@ -45,7 +56,7 @@ BluetoothDaemonGattModule::HandleSvc(const DaemonSocketPDUHeader& aHeader,
   // Negate twice to map bit to 0/1
   unsigned long isNtf = !!(aHeader.mOpcode & 0x80);
 
-  (this->*(HandleOp[isNtf]))(aHeader, aPDU, aRes);
+  (this->*(HandleOp[isNtf]))(aHeader, aPDU, aUserData);
 }
 
 // Commands
@@ -1394,7 +1405,7 @@ BluetoothDaemonGattModule::ServerSendResponseRsp(
 void
 BluetoothDaemonGattModule::HandleRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  DaemonSocketResultHandler* aRes)
+  void* aUserData)
 {
   static void (BluetoothDaemonGattModule::* const HandleRsp[])(
     const DaemonSocketPDUHeader&,
@@ -1482,7 +1493,8 @@ BluetoothDaemonGattModule::HandleRsp(
   }
 
   nsRefPtr<BluetoothGattResultHandler> res =
-    static_cast<BluetoothGattResultHandler*>(aRes);
+    already_AddRefed<BluetoothGattResultHandler>(
+      static_cast<BluetoothGattResultHandler*>(aUserData));
 
   if (!res) {
     return;
@@ -2140,7 +2152,7 @@ BluetoothDaemonGattModule::ServerResponseConfirmationNtf(
 void
 BluetoothDaemonGattModule::HandleNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  DaemonSocketResultHandler* aRes)
+  void* aUserData)
 {
   static void (BluetoothDaemonGattModule::* const HandleNtf[])(
     const DaemonSocketPDUHeader&, DaemonSocketPDU&) = {
