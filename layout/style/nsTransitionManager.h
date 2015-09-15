@@ -304,6 +304,7 @@ public:
   }
 
   void DispatchEvents()  { mEventDispatcher.DispatchEvents(mPresContext); }
+  void SortEvents()      { mEventDispatcher.SortEvents(); }
   void ClearEventQueue() { mEventDispatcher.ClearEventQueue(); }
 
 protected:

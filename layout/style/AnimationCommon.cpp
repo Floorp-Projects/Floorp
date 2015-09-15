@@ -373,7 +373,7 @@ CommonAnimationManager::FlushAnimations()
 
     MOZ_ASSERT(collection->mElement->GetComposedDoc() ==
                  mPresContext->Document(),
-               "Should not have a transition/animations collection for an "
+               "Should not have a transition/animation collection for an "
                "element that is not part of the document tree");
 
     collection->RequestRestyle(AnimationCollection::RestyleType::Standard);
