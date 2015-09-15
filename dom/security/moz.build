@@ -29,6 +29,8 @@ UNIFIED_SOURCES += [
     'nsMixedContentBlocker.cpp',
 ]
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'
@@ -36,7 +38,3 @@ LOCAL_INCLUDES += [
     '/caps',
     '/netwerk/base',
 ]
-
-if CONFIG['GNU_CC']:
-    CFLAGS += ['-Wshadow']
-    CXXFLAGS += ['-Wshadow']
