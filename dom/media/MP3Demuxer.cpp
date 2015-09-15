@@ -52,7 +52,7 @@ MP3Demuxer::Init() {
     MP3DEMUXER_LOG("MP3Demuxer::Init() failure: waiting for data");
 
     return InitPromise::CreateAndReject(
-      DemuxerFailureReason::WAITING_FOR_DATA, __func__);
+      DemuxerFailureReason::DEMUXER_ERROR, __func__);
   }
 
   MP3DEMUXER_LOG("MP3Demuxer::Init() successful");

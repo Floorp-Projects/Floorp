@@ -42,6 +42,8 @@ public:
 
   bool ShouldComputeStartTime() const override { return false; }
 
+  void NotifyDataArrived(uint32_t aLength, int64_t aOffset) override;
+
   /* interface for TrackBuffersManager */
   void AttachSourceBuffer(TrackBuffersManager* aSourceBuffer);
   void DetachSourceBuffer(TrackBuffersManager* aSourceBuffer);
@@ -70,6 +72,9 @@ private:
   nsTArray<nsRefPtr<MediaSourceTrackDemuxer>> mDemuxers;
 
   nsTArray<nsRefPtr<TrackBuffersManager>> mSourceBuffers;
+
+  MozPromiseHolder<InitPromise> mInitPromise;
+  bool mInitDone;
 
   // Monitor to protect members below across multiple threads.
   mutable Monitor mMonitor;
