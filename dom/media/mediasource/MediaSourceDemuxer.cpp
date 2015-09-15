@@ -27,6 +27,7 @@ using media::TimeIntervals;
 MediaSourceDemuxer::MediaSourceDemuxer()
   : mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
                              /* aSupportsTailDispatch = */ true))
+  , mInitDone(false)
   , mMonitor("MediaSourceDemuxer")
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -45,10 +46,30 @@ MediaSourceDemuxer::AttemptInit()
   MOZ_ASSERT(OnTaskQueue());
 
   if (ScanSourceBuffersForContent()) {
+    mInitDone = true;
     return InitPromise::CreateAndResolve(NS_OK, __func__);
   }
-  return InitPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA,
-                                      __func__);
+
+  nsRefPtr<InitPromise> p = mInitPromise.Ensure(__func__);
+
+  return p;
+}
+
+void MediaSourceDemuxer::NotifyDataArrived(uint32_t aLength, int64_t aOffset)
+{
+  nsRefPtr<MediaSourceDemuxer> self = this;
+  nsCOMPtr<nsIRunnable> task =
+    NS_NewRunnableFunction([self] () {
+      if (self->mInitDone) {
+        return;
+      }
+      MOZ_ASSERT(!self->mInitPromise.IsEmpty());
+      if (self->ScanSourceBuffersForContent()) {
+        self->mInitDone = true;
+        self->mInitPromise.ResolveIfExists(NS_OK, __func__);
+      }
+    });
+  GetTaskQueue()->Dispatch(task.forget());
 }
 
 bool
@@ -213,6 +234,7 @@ MediaSourceDemuxer::GetManager(TrackType aTrack)
 
 MediaSourceDemuxer::~MediaSourceDemuxer()
 {
+  mInitPromise.RejectIfExists(DemuxerFailureReason::SHUTDOWN, __func__);
   mTaskQueue->BeginShutdown();
   mTaskQueue = nullptr;
 }

@@ -80,7 +80,7 @@ MP4Demuxer::Init()
 
   // Check that we have enough data to read the metadata.
   if (!mp4_demuxer::MP4Metadata::HasCompleteMetadata(stream)) {
-    return InitPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA, __func__);
+    return InitPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
   }
 
   mInitData = mp4_demuxer::MP4Metadata::Metadata(stream);

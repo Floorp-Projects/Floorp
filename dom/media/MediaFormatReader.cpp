@@ -375,11 +375,7 @@ void
 MediaFormatReader::OnDemuxerInitFailed(DemuxerFailureReason aFailure)
 {
   mDemuxerInitRequest.Complete();
-  if (aFailure == DemuxerFailureReason::WAITING_FOR_DATA) {
-    mMetadataPromise.Reject(ReadMetadataFailureReason::WAITING_FOR_RESOURCES, __func__);
-  } else {
-    mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
-  }
+  mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
 }
 
 bool
@@ -1601,7 +1597,7 @@ MediaFormatReader::NotifyDemuxer(uint32_t aLength, int64_t aOffset)
   MOZ_ASSERT(OnTaskQueue());
 
   LOGV("aLength=%u, aOffset=%lld", aLength, aOffset);
-  if (mShutdown) {
+  if (mShutdown || !mDemuxer) {
     return;
   }
 
@@ -1609,6 +1605,9 @@ MediaFormatReader::NotifyDemuxer(uint32_t aLength, int64_t aOffset)
     mDemuxer->NotifyDataArrived(aLength, aOffset);
   } else {
     mDemuxer->NotifyDataRemoved();
+  }
+  if (!mInitDone) {
+    return;
   }
   if (HasVideo()) {
     mVideo.mReceivedNewData = true;
@@ -1626,10 +1625,6 @@ MediaFormatReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(aLength);
 
-  if (!mInitDone || mShutdown) {
-    return;
-  }
-
   NotifyDemuxer(aLength, aOffset);
 }
 
@@ -1637,10 +1632,6 @@ void
 MediaFormatReader::NotifyDataRemoved()
 {
   MOZ_ASSERT(OnTaskQueue());
-
-  if (!mInitDone || mShutdown) {
-    return;
-  }
 
   NotifyDemuxer(0, 0);
 }
