@@ -327,9 +327,10 @@ public:
    * |aOverscrollHandoffChainIndex| is the next position in the overscroll
    *   handoff chain that should be scrolled.
    *
-   * Returns true iff. some APZC accepted the scroll and scrolled.
-   * This is to allow the sending APZC to go into an overscrolled state if
-   * no APZC further up in the handoff chain accepted the overscroll.
+   * aStartPoint and aEndPoint will be modified depending on how much of the
+   * scroll each APZC consumes. This is to allow the sending APZC to go into
+   * an overscrolled state if no APZC further up in the handoff chain accepted
+   * the entire scroll.
    *
    * The way this method works is best illustrated with an example.
    * Consider three nested APZCs, A, B, and C, with C being the innermost one.
@@ -352,9 +353,9 @@ public:
    * Note: this should be used for panning only. For handing off overscroll for
    *       a fling, use DispatchFling().
    */
-  bool DispatchScroll(AsyncPanZoomController* aApzc,
-                      ParentLayerPoint aStartPoint,
-                      ParentLayerPoint aEndPoint,
+  void DispatchScroll(AsyncPanZoomController* aApzc,
+                      ParentLayerPoint& aStartPoint,
+                      ParentLayerPoint& aEndPoint,
                       OverscrollHandoffState& aOverscrollHandoffState);
 
   /**
@@ -374,12 +375,13 @@ public:
    *                 start a fling (in this case the fling is given to the
    *                 first APZC in the chain)
    *
-   * Returns true iff. an APZC accepted the fling. In the case of fling handoff,
-   * the caller uses this return value to determine whether it should consume
-   * the excess fling itself by going into an overscroll fling.
+   * aVelocity will be modified depending on how much of that velocity has
+   * been consumed by APZCs in the overscroll hand-off chain. The caller can
+   * use this value to determine whether it should consume the excess velocity
+   * by going into an overscroll fling.
    */
-  bool DispatchFling(AsyncPanZoomController* aApzc,
-                     ParentLayerPoint aVelocity,
+  void DispatchFling(AsyncPanZoomController* aApzc,
+                     ParentLayerPoint& aVelocity,
                      nsRefPtr<const OverscrollHandoffChain> aOverscrollHandoffChain,
                      bool aHandoff);
 
