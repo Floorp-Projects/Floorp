@@ -87,7 +87,7 @@ ClientPaintedLayer::PaintThebes()
     ClientManager()->GetPaintedLayerCallback()(this,
                                               ctx,
                                               iter.mDrawRegion,
-                                              nullptr,
+                                              iter.mDrawRegion,
                                               state.mClip,
                                               state.mRegionToInvalidate,
                                               ClientManager()->GetPaintedLayerCallbackData());
