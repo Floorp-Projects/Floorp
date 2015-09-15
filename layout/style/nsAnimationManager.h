@@ -125,28 +125,10 @@ public:
     mAnimationIndex = aOther.mAnimationIndex;
   }
 
-  // Returns the element or pseudo-element whose animation-name property
-  // this CSSAnimation corresponds to (if any). This is used for determining
-  // the relative composite order of animations generated from CSS markup.
-  //
-  // Typically this will be the same as the target element of the keyframe
-  // effect associated with this animation. However, it can differ in the
-  // following circumstances:
-  //
-  // a) If script removes or replaces the effect of this animation,
-  // b) If this animation is cancelled (e.g. by updating the
-  //    animation-name property or removing the owning element from the
-  //    document),
-  // c) If this object is generated from script using the CSSAnimation
-  //    constructor.
-  //
-  // For (b) and (c) the returned owning element will return !IsSet().
-  const OwningElementRef& OwningElement() const { return mOwningElement; }
-
   // Sets the owning element which is used for determining the composite
   // order of CSSAnimation objects generated from CSS markup.
   //
-  // @see OwningElement()
+  // @see mOwningElement
   void SetOwningElement(const OwningElementRef& aElement)
   {
     mOwningElement = aElement;
@@ -171,6 +153,22 @@ protected:
 
   // The (pseudo-)element whose computed animation-name refers to this
   // animation (if any).
+  //
+  // This is used for determining the relative composite order of animations
+  // generated from CSS markup.
+  //
+  // Typically this will be the same as the target element of the keyframe
+  // effect associated with this animation. However, it can differ in the
+  // following circumstances:
+  //
+  // a) If script removes or replaces the effect of this animation,
+  // b) If this animation is cancelled (e.g. by updating the
+  //    animation-name property or removing the owning element from the
+  //    document),
+  // c) If this object is generated from script using the CSSAnimation
+  //    constructor.
+  //
+  // For (b) and (c) the owning element will return !IsSet().
   OwningElementRef mOwningElement;
 
   // When combining animation-play-state with play() / pause() the following
