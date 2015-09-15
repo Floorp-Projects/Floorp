@@ -2365,8 +2365,8 @@ var gCSSProperties = {
     domProp: "captionSide",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "block-start" ],
-    other_values: [ "block-end", "inline-start", "inline-end", "block-start-outside", "block-end-outside", "top", "bottom", "left", "right", "top-outside", "bottom-outside" ],
+    initial_values: [ "top" ],
+    other_values: [ "bottom", "left", "right", "top-outside", "bottom-outside" ],
     invalid_values: []
   },
   "clear": {

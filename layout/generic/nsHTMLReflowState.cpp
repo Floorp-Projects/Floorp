@@ -2071,9 +2071,9 @@ IsSideCaption(nsIFrame* aFrame, const nsStyleDisplay* aStyleDisplay,
   if (aStyleDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CAPTION) {
     return false;
   }
-  uint8_t captionSide = aFrame->StyleTableBorder()->LogicalCaptionSide(aWM);
-  return captionSide == NS_STYLE_CAPTION_SIDE_ISTART ||
-         captionSide == NS_STYLE_CAPTION_SIDE_IEND;
+  uint8_t captionSide = aFrame->StyleTableBorder()->mCaptionSide;
+  return captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
+         captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;
 }
 
 static nsFlexContainerFrame*

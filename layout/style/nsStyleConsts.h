@@ -906,18 +906,16 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_TABLE_EMPTY_CELLS_HIDE            0
 #define NS_STYLE_TABLE_EMPTY_CELLS_SHOW            1
 
-#define NS_STYLE_CAPTION_SIDE_BSTART            0 // matches eLogicalSideBStart
-#define NS_STYLE_CAPTION_SIDE_BEND              1 // matches eLogicalSideBEnd
-#define NS_STYLE_CAPTION_SIDE_ISTART            2 // matches eLogicalSideIStart
-#define NS_STYLE_CAPTION_SIDE_IEND              3 // matches eLogicalSideIEnd
-#define NS_STYLE_CAPTION_SIDE_BSTART_OUTSIDE    4
-#define NS_STYLE_CAPTION_SIDE_BEND_OUTSIDE      5
-#define NS_STYLE_CAPTION_SIDE_TOP               6
-#define NS_STYLE_CAPTION_SIDE_RIGHT             7
-#define NS_STYLE_CAPTION_SIDE_BOTTOM            8
-#define NS_STYLE_CAPTION_SIDE_LEFT              9
-#define NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE       10
-#define NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE    11
+// Constants for the caption-side property. Note that despite having "physical"
+// names, these are actually interpreted according to the table's writing-mode:
+// TOP and BOTTOM are treated as block-start and -end respectively, and LEFT
+// and RIGHT are treated as line-left and -right.
+#define NS_STYLE_CAPTION_SIDE_TOP               0
+#define NS_STYLE_CAPTION_SIDE_RIGHT             1
+#define NS_STYLE_CAPTION_SIDE_BOTTOM            2
+#define NS_STYLE_CAPTION_SIDE_LEFT              3
+#define NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE       4
+#define NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE    5
 
 // constants for cell "scope" attribute
 #define NS_STYLE_CELL_SCOPE_ROW                 0
