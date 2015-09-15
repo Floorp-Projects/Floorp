@@ -9,6 +9,7 @@ EXPORTS.mozilla.ipc += [
     'DaemonSocket.h',
     'DaemonSocketConnector.h',
     'DaemonSocketConsumer.h',
+    'DaemonSocketMessageHandlers.h',
     'DaemonSocketPDU.h',
     'DaemonSocketPDUHelpers.h'
 ]
