@@ -3,7 +3,7 @@
 // Send these sites a custom user-agent. Bugs should be included with an entry.
 {
   // bug 826347, msn.com
-  "msn.com": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
+  "msn.com": "\\(Mobile#(Android 4.4.4; Mobile",
   // bug 826353, itau.com.br
   "itau.com.br": "\\(Mobile#(Android; Mobile",
   // bug 826510, r7.com
@@ -12,12 +12,8 @@
   "bing.com": "\\(Mobile#(Android; Mobile",
   // bug 827626, magazineluiza.com.br
   "magazineluiza.com.br": "\\(Mobile#(Android; Mobile",
-  // bug 827633, hao123.com
-  "hao123.com": "\\(Mobile#(Android; Mobile",
   // bug 827670, elpais.com.co
-  "elpais.com.co": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
-  // bug 827674, avianca.com
-  "avianca.com": "\\(Mobile#(Android; Mobile",
+  "elpais.com.co": "\\(Mobile#(Android 4.4.4; Mobile",
   // bug 828416, loteriasyapuestas.es
   "loteriasyapuestas.es": "\\(Mobile#(Android; Mobile",
   // bug 828418, bbva.es

@@ -844,7 +844,8 @@ CompositorOGL::GetShaderConfigFor(Effect *aEffect,
                   source->GetFormat() == gfx::SurfaceFormat::R5G6B5);
     config = ShaderConfigFromTargetAndFormat(source->GetTextureTarget(),
                                              source->GetFormat());
-    if (aOp == gfx::CompositionOp::OP_MULTIPLY &&
+    if ((aOp == gfx::CompositionOp::OP_MULTIPLY ||
+         aOp == gfx::CompositionOp::OP_SCREEN) &&
         !texturedEffect->mPremultiplied) {
       // We can do these blend modes just using glBlendFunc but we need the data
       // to be premultiplied first.
@@ -913,7 +914,9 @@ static bool SetBlendMode(GLContext* aGL, gfx::CompositionOp aBlendMode, bool aIs
       dstBlend = LOCAL_GL_ONE_MINUS_SRC_ALPHA;
       break;
     case gfx::CompositionOp::OP_SCREEN:
-      srcBlend = aIsPremultiplied ? LOCAL_GL_ONE : LOCAL_GL_SRC_ALPHA;
+      // If the source data was un-premultiplied we should have already
+      // asked the fragment shader to fix that.
+      srcBlend = LOCAL_GL_ONE;
       dstBlend = LOCAL_GL_ONE_MINUS_SRC_COLOR;
       break;
     case gfx::CompositionOp::OP_MULTIPLY:

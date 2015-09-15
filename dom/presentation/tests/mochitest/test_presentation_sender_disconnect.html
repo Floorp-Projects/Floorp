@@ -15,16 +15,27 @@
 'use strict';
 
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
-var presentation;
+var request;
 var session;
 
 function testSetup() {
   return new Promise(function(aResolve, aReject) {
-    presentation.onavailablechange = function(aIsAvailable) {
-      presentation.onavailablechange = null;
-      ok(aIsAvailable, "Device should be available.");
-      aResolve();
-    };
+    request = new PresentationRequest("http://example.com");
+
+    request.getAvailability().then(
+      function(aAvailability) {
+        aAvailability.onchange = function() {
+          aAvailability.onchange = null;
+          ok(aAvailability.value, "Device should be available.");
+          aResolve();
+        }
+      },
+      function(aError) {
+        ok(false, "Error occurred when getting availability: " + aError);
+        teardown();
+        aReject();
+      }
+    );
 
     gScript.sendAsyncMessage('trigger-device-add');
   });
@@ -76,7 +87,7 @@ function testStartSession() {
       info("Data notification is enabled for data transport channel.");
     });
 
-    presentation.startSession("http://example.com").then(
+    request.start().then(
       function(aSession) {
         session = aSession;
         ok(session, "Session should be availlable.");
@@ -133,8 +144,7 @@ function teardown() {
 }
 
 function runTests() {
-  ok(navigator.presentation, "navigator.presentation should be available.");
-  presentation = navigator.presentation;
+  ok(window.PresentationRequest, "PresentationRequest should be available.");
 
   testSetup().
   then(testStartSession).

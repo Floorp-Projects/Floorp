@@ -34,6 +34,7 @@
 #include "mozilla/dom/IDBMutableFileBinding.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
+#include "mozilla/dom/StructuredCloneHelper.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
 #include "mozilla/dom/ipc/BlobChild.h"
@@ -366,14 +367,7 @@ StructuredCloneWriteCallback(JSContext* aCx,
     }
   }
 
-  // Try using the runtime callbacks
-  const JSStructuredCloneCallbacks* runtimeCallbacks =
-    js::GetContextStructuredCloneCallbacks(aCx);
-  if (runtimeCallbacks) {
-    return runtimeCallbacks->write(aCx, aWriter, aObj, nullptr);
-  }
-
-  return false;
+  return StructuredCloneHelper::WriteFullySerializableObjects(aCx, aWriter, aObj);
 }
 
 nsresult
@@ -899,14 +893,8 @@ CommonStructuredCloneReadCallback(JSContext* aCx,
     return result;
   }
 
-  const JSStructuredCloneCallbacks* runtimeCallbacks =
-    js::GetContextStructuredCloneCallbacks(aCx);
-
-  if (runtimeCallbacks) {
-    return runtimeCallbacks->read(aCx, aReader, aTag, aData, nullptr);
-  }
-
-  return nullptr;
+  return StructuredCloneHelper::ReadFullySerializableObjects(aCx, aReader,
+                                                             aTag, aData);
 }
 
 // static
