@@ -27,6 +27,7 @@ from ..frontend.data import (
     Sources,
     UnifiedSources,
 )
+from mozbuild.base import ExecutionSummary
 
 
 MSBUILD_NAMESPACE = 'http://schemas.microsoft.com/developer/msbuild/2003'
@@ -101,12 +102,12 @@ class VisualStudioBackend(CommonBackend):
         self._paths_to_configs = {}
         self._libs_to_paths = {}
 
-        def detailed(summary):
-            return 'Generated Visual Studio solution at %s' % (
-                os.path.join(self._out_dir, 'mozilla.sln'))
-
-        self.summary.backend_detailed_summary = types.MethodType(detailed,
-            self.summary)
+    def summary(self):
+        return ExecutionSummary(
+            'VisualStudio backend executed in {execution_time:.2f}s\n'
+            'Generated Visual Studio solution at {path:s}',
+            execution_time=self._execution_time,
+            path=os.path.join(self._out_dir, 'mozilla.sln'))
 
     def consume_object(self, obj):
         # Just acknowledge everything.

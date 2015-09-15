@@ -15,6 +15,7 @@ from .common import CommonBackend
 from ..frontend.data import (
     Defines,
 )
+from mozbuild.base import ExecutionSummary
 
 # TODO Have ./mach eclipse generate the workspace and index it:
 # /Users/bgirard/mozilla/eclipse/eclipse/eclipse/eclipse -application org.eclipse.cdt.managedbuilder.core.headlessbuild -data $PWD/workspace -importAll $PWD/eclipse
@@ -41,15 +42,15 @@ class CppEclipseBackend(CommonBackend):
         # Note: We need the C Pre Processor (CPP) flags, not the CXX flags
         self._cppflags = self.environment.substs.get('CPPFLAGS', '')
 
-        def detailed(summary):
-            return ('Generated Cpp Eclipse workspace in "%s".\n' + \
-                   'If missing, import the project using File > Import > General > Existing Project into workspace\n' + \
-                   '\n' + \
-                   'Run with: eclipse -data %s\n') \
-                   % (self._workspace_dir, self._workspace_dir)
-
-        self.summary.backend_detailed_summary = types.MethodType(detailed,
-            self.summary)
+    def summary(self):
+        return ExecutionSummary(
+            'CppEclipse backend executed in {execution_time:.2f}s\n'
+            'Generated Cpp Eclipse workspace in "{workspace:s}".\n'
+            'If missing, import the project using File > Import > General > Existing Project into workspace\n'
+            '\n'
+            'Run with: eclipse -data {workspace:s}\n',
+            execution_time=self._execution_time,
+            workspace=self._workspace_dir)
 
     def _get_workspace_path(self):
         return CppEclipseBackend.get_workspace_path(self.environment.topsrcdir, self.environment.topobjdir)
