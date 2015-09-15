@@ -248,7 +248,9 @@ CSSAnimation::QueueEvents()
                computedTiming.mActiveDuration);
     manager->QueueEvent(AnimationEventInfo(owningElement, owningPseudoType,
                                            eAnimationStart, mAnimationName,
-                                           elapsedTime));
+                                           elapsedTime,
+                                           ElapsedTimeToTimeStamp(
+                                             elapsedTime)));
     // Then have the shared code below append an 'animationend':
     message = eAnimationEnd;
   } else {
@@ -268,7 +270,8 @@ CSSAnimation::QueueEvents()
   }
 
   manager->QueueEvent(AnimationEventInfo(owningElement, owningPseudoType,
-                                         message, mAnimationName, elapsedTime));
+                                         message, mAnimationName, elapsedTime,
+                                         ElapsedTimeToTimeStamp(elapsedTime)));
 }
 
 bool
