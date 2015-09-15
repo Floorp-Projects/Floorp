@@ -1,17 +1,18 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* globals LayoutHelpers, DOMUtils, CssLogic, setIgnoreLayoutChanges */
+/* globals DOMUtils, CssLogic, setIgnoreLayoutChanges */
 
 "use strict";
 
-const {Cu, Cc, Ci} = require("chrome");
-const protocol = require("devtools/server/protocol");
-const {Arg, Option, method, RetVal} = protocol;
-const events = require("sdk/event/core");
-const Heritage = require("sdk/core/heritage");
+const { Cu, Cc, Ci } = require("chrome");
+const { extend } = require("sdk/core/heritage");
+const { getCurrentZoom, getAdjustedQuads, getNodeBounds, getRootBindingParent,
+  isWindowIncluded } = require("devtools/toolkit/layout/utils");
 const EventEmitter = require("devtools/toolkit/event-emitter");
-const LayoutHelpers = require("devtools/toolkit/layout-helpers");
+const events = require("sdk/event/core");
+const protocol = require("devtools/server/protocol");
+const { Arg, Option, method, RetVal } = protocol;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 loader.lazyRequireGetter(this, "CssLogic",
@@ -145,7 +146,6 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
     this._highlighterHidden = this._highlighterHidden.bind(this);
     this._onNavigate = this._onNavigate.bind(this);
 
-    this._layoutHelpers = new LayoutHelpers(this._tabActor.window);
     this._createHighlighter();
 
     // Listen to navigation events to switch from the BoxModelHighlighter to the
@@ -218,7 +218,6 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
     this._inspector = null;
     this._walker = null;
     this._tabActor = null;
-    this._layoutHelpers = null;
   },
 
   /**
@@ -258,6 +257,26 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
   }),
 
   /**
+   * Returns `true` if the event was dispatched from a window included in
+   * the current highlighter environment; or if the highlighter environment has
+   * chrome privileges
+   *
+   * The method is specifically useful on B2G, where we do not want the events
+   * from the app or main process to be processed when we're inspecting the
+   * content.
+   *
+   * @param {Event} event
+   *          The event to allow
+   * @return {Boolean}
+   */
+  _isEventAllowed: function({view}) {
+    let { window } = this._highlighterEnv;
+
+    return window instanceof Ci.nsIDOMChromeWindow ||
+          isWindowIncluded(window, view);
+  },
+
+  /**
    * Pick a node on click, and highlight hovered nodes in the process.
    *
    * This method doesn't respond anything interesting, however, it starts
@@ -284,6 +303,11 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
 
     this._onPick = event => {
       this._preventContentEvent(event);
+
+      if (!this._isEventAllowed(event)) {
+        return;
+      }
+
       this._stopPickerListeners();
       this._isPicking = false;
       if (this._autohide) {
@@ -299,6 +323,11 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
 
     this._onHovered = event => {
       this._preventContentEvent(event);
+
+      if (!this._isEventAllowed(event)) {
+        return;
+      }
+
       this._currentNode = this._findAndAttachElement(event);
       if (this._hoveredNode !== this._currentNode.node) {
         this._highlighter.show(this._currentNode.node.rawNode);
@@ -313,6 +342,11 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
       }
 
       this._preventContentEvent(event);
+
+      if (!this._isEventAllowed(event)) {
+        return;
+      }
+
       let currentNode = this._currentNode.node.rawNode;
 
       /**
@@ -842,7 +876,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
    * @param {String} id The ID of the root element inserted with this API.
    */
   scaleRootElement: function(node, id) {
-    let zoom = LayoutHelpers.getCurrentZoom(node);
+    let zoom = getCurrentZoom(node);
     let value = "position:absolute;width:100%;height:100%;";
 
     if (zoom !== 1) {
@@ -883,8 +917,6 @@ function AutoRefreshHighlighter(highlighterEnv) {
 
   this.currentNode = null;
   this.currentQuads = {};
-
-  this.layoutHelpers = new LayoutHelpers(this.win);
 
   this.update = this.update.bind(this);
 }
@@ -964,7 +996,8 @@ AutoRefreshHighlighter.prototype = {
    */
   _updateAdjustedQuads: function() {
     for (let region of BOX_MODEL_REGIONS) {
-      this.currentQuads[region] = this.layoutHelpers.getAdjustedQuads(
+      this.currentQuads[region] = getAdjustedQuads(
+        this.win,
         this.currentNode, region);
     }
   },
@@ -1034,7 +1067,6 @@ AutoRefreshHighlighter.prototype = {
     this.highlighterEnv = null;
     this.win = null;
     this.currentNode = null;
-    this.layoutHelpers = null;
   }
 };
 
@@ -1114,7 +1146,7 @@ function BoxModelHighlighter(highlighterEnv) {
   this._currentNode = null;
 }
 
-BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype, {
+BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   typeName: "BoxModelHighlighter",
 
   ID_CLASS_PREFIX: "box-model-",
@@ -1706,8 +1738,8 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
    */
   _moveInfobar: function() {
     let bounds = this._getOuterBounds();
-    let winHeight = this.win.innerHeight * LayoutHelpers.getCurrentZoom(this.win);
-    let winWidth = this.win.innerWidth * LayoutHelpers.getCurrentZoom(this.win);
+    let winHeight = this.win.innerHeight * getCurrentZoom(this.win);
+    let winWidth = this.win.innerWidth * getCurrentZoom(this.win);
 
     // Ensure that containerBottom and containerTop are at least zero to avoid
     // showing tooltips outside the viewport.
@@ -1769,7 +1801,7 @@ function CssTransformHighlighter(highlighterEnv) {
 
 let MARKER_COUNTER = 1;
 
-CssTransformHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype, {
+CssTransformHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   typeName: "CssTransformHighlighter",
 
   ID_CLASS_PREFIX: "css-transform-",
@@ -1946,7 +1978,7 @@ CssTransformHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.proto
     let [quad] = quads;
 
     // Getting the points for the untransformed shape
-    let untransformedQuad = this.layoutHelpers.getNodeBounds(this.currentNode);
+    let untransformedQuad = getNodeBounds(this.win, this.currentNode);
 
     this._setPolygonPoints(quad, "transformed");
     this._setPolygonPoints(untransformedQuad, "untransformed");
@@ -2064,7 +2096,6 @@ exports.SelectorHighlighter = SelectorHighlighter;
  */
 function RectHighlighter(highlighterEnv) {
   this.win = highlighterEnv.window;
-  this.layoutHelpers = new LayoutHelpers(this.win);
   this.markup = new CanvasFrameAnonymousContentHelper(highlighterEnv,
     this._buildMarkup.bind(this));
 }
@@ -2085,7 +2116,6 @@ RectHighlighter.prototype = {
 
   destroy: function() {
     this.win = null;
-    this.layoutHelpers = null;
     this.markup.destroy();
   },
 
@@ -2121,7 +2151,7 @@ RectHighlighter.prototype = {
     let contextNode = node.ownerDocument.documentElement;
 
     // Caculate the absolute rect based on the context node's adjusted quads.
-    let quads = this.layoutHelpers.getAdjustedQuads(contextNode);
+    let quads = getAdjustedQuads(this.win, contextNode);
     if (!quads.length) {
       this.hide();
       return false;
@@ -2242,7 +2272,7 @@ function GeometryEditorHighlighter(highlighterEnv) {
     this._buildMarkup.bind(this));
 }
 
-GeometryEditorHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype, {
+GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   typeName: "GeometryEditorHighlighter",
 
   ID_CLASS_PREFIX: "geometry-editor-",
@@ -2537,8 +2567,8 @@ GeometryEditorHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.pro
     // Get the offsetParent, if any.
     this.offsetParent = getOffsetParent(this.currentNode);
     // And the offsetParent quads.
-    this.parentQuads = this.layoutHelpers
-                      .getAdjustedQuads(this.offsetParent.element, "padding");
+    this.parentQuads = getAdjustedQuads(
+        this.win, this.offsetParent.element, "padding");
 
     let el = this.getElement("offset-parent");
 
@@ -2939,7 +2969,7 @@ RulersHighlighter.prototype = {
 
     setIgnoreLayoutChanges(true);
 
-    let zoom = LayoutHelpers.getCurrentZoom(window);
+    let zoom = getCurrentZoom(window);
     let isZoomChanged = zoom !== this._zoom;
 
     if (isZoomChanged) {
@@ -3071,7 +3101,7 @@ function isNodeValid(node) {
 
   // Is the node connected to the document? Using getBindingParent adds
   // support for anonymous elements generated by a node in the document.
-  let bindingParent = LayoutHelpers.getRootBindingParent(node);
+  let bindingParent = getRootBindingParent(node);
   if (!doc.documentElement.contains(bindingParent)) {
     return false;
   }

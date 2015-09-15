@@ -13,7 +13,7 @@ const {LongStringActor} = require("devtools/server/actors/string");
 const {DebuggerServer} = require("devtools/server/main");
 const Services = require("Services");
 const promise = require("promise");
-const LayoutHelpers = require("devtools/toolkit/layout-helpers");
+const {isWindowIncluded} = require("devtools/toolkit/layout/utils");
 const { setTimeout, clearTimeout } = require("sdk/timers");
 
 loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
@@ -1693,16 +1693,11 @@ let StorageActor = exports.StorageActor = protocol.ActorClass({
 
     this.destroyed = false;
     this.boundUpdate = {};
-
-    // Layout helper for window.parent and window.top helper methods that work
-    // accross devices.
-    this.layoutHelper = new LayoutHelpers(this.window);
   },
 
   destroy: function() {
     clearTimeout(this.batchTimer);
     this.batchTimer = null;
-    this.layoutHelper = null;
     // Remove observers
     Services.obs.removeObserver(this, "content-document-global-created", false);
     Services.obs.removeObserver(this, "inner-window-destroyed", false);
@@ -1751,7 +1746,7 @@ let StorageActor = exports.StorageActor = protocol.ActorClass({
   },
 
   isIncludedInTopLevelWindow: function(window) {
-    return this.layoutHelper.isIncludedInTopLevelWindow(window);
+    return isWindowIncluded(this.window, window);
   },
 
   getWindowFromInnerWindowID: function(innerID) {

@@ -7,7 +7,7 @@
 // A helper actor for brower/devtools/inspector tests.
 
 let { Cc, Ci, Cu, Cr } = require("chrome");
-const LayoutHelpers = require("devtools/toolkit/layout-helpers");
+const {getElementFromPoint, getAdjustedQuads} = require("devtools/toolkit/layout/utils");
 const promise = require("promise");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 let DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
@@ -239,8 +239,7 @@ const TestActor = exports.TestActor = protocol.ActorClass({
   }),
 
   assertElementAtPoint: protocol.method(function (x, y, selector) {
-    let helper = new LayoutHelpers(this.content);
-    let elementAtPoint = helper.getElementFromPoint(this.content.document, x, y);
+    let elementAtPoint = getElementFromPoint(this.content.document, x, y);
     if (!elementAtPoint) {
       throw new Error("Unable to find element at (" + x + ", " + y + ")");
     }
@@ -266,10 +265,9 @@ const TestActor = exports.TestActor = protocol.ActorClass({
    */
   getAllAdjustedQuads: protocol.method(function(selector) {
     let regions = {};
-    let helper = new LayoutHelpers(this.content);
     let node = this._querySelector(selector);
     for (let boxType of ["content", "padding", "border", "margin"]) {
-      regions[boxType] = helper.getAdjustedQuads(node, boxType);
+      regions[boxType] = getAdjustedQuads(this.content, node, boxType);
     }
 
     return regions;

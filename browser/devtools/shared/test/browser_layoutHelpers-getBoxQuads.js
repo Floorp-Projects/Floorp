@@ -1,45 +1,42 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests that LayoutHelpers.getAdjustedQuads works properly in a variety of use
-// cases including iframes, scroll and zoom
+// Tests getAdjustedQuads works properly in a variety of use cases including
+// iframes, scroll and zoom
 
 const {utils: Cu} = Components;
-const LayoutHelpers = require("devtools/toolkit/layout-helpers");
+let {getAdjustedQuads} = require("devtools/toolkit/layout/utils");
 
 const TEST_URI = TEST_URI_ROOT + "browser_layoutHelpers-getBoxQuads.html";
 
 function test() {
   addTab(TEST_URI, function(browser, tab) {
     let doc = browser.contentDocument;
-    let win = doc.defaultView;
 
-    info("Creating a new LayoutHelpers instance for the test window");
-    let helper = new LayoutHelpers(win);
-    ok(helper.getAdjustedQuads, "getAdjustedQuads is defined");
+    ok(typeof getAdjustedQuads === "function", "getAdjustedQuads is defined");
 
     info("Running tests");
 
-    returnsTheRightDataStructure(doc, helper);
-    isEmptyForMissingNode(doc, helper);
-    isEmptyForHiddenNodes(doc, helper);
-    defaultsToBorderBoxIfNoneProvided(doc, helper);
-    returnsLikeGetBoxQuadsInSimpleCase(doc, helper);
-    takesIframesOffsetsIntoAccount(doc, helper);
-    takesScrollingIntoAccount(doc, helper);
-    takesZoomIntoAccount(doc, helper);
-    returnsMultipleItemsForWrappingInlineElements(doc, helper);
+    returnsTheRightDataStructure(doc);
+    isEmptyForMissingNode(doc);
+    isEmptyForHiddenNodes(doc);
+    defaultsToBorderBoxIfNoneProvided(doc);
+    returnsLikeGetBoxQuadsInSimpleCase(doc);
+    takesIframesOffsetsIntoAccount(doc);
+    takesScrollingIntoAccount(doc);
+    takesZoomIntoAccount(doc);
+    returnsMultipleItemsForWrappingInlineElements(doc);
 
     gBrowser.removeCurrentTab();
     finish();
   });
 }
 
-function returnsTheRightDataStructure(doc, helper) {
+function returnsTheRightDataStructure(doc) {
   info("Checks that the returned data contains bounds and 4 points");
 
   let node = doc.querySelector("body");
-  let [res] = helper.getAdjustedQuads(node, "content");
+  let [res] = getAdjustedQuads(doc.defaultView, node, "content");
 
   ok("bounds" in res, "The returned data has a bounds property");
   ok("p1" in res, "The returned data has a p1 property");
@@ -59,33 +56,33 @@ function returnsTheRightDataStructure(doc, helper) {
   }
 }
 
-function isEmptyForMissingNode(doc, helper) {
+function isEmptyForMissingNode(doc) {
   info("Checks that null is returned for invalid nodes");
 
   for (let input of [null, undefined, "", 0]) {
-    is(helper.getAdjustedQuads(input).length, 0, "A 0-length array is returned" +
+    is(getAdjustedQuads(doc.defaultView, input).length, 0, "A 0-length array is returned" +
       "for input " + input);
   }
 }
 
-function isEmptyForHiddenNodes(doc, helper) {
+function isEmptyForHiddenNodes(doc) {
   info("Checks that null is returned for nodes that aren't rendered");
 
   let style = doc.querySelector("#styles");
-  is(helper.getAdjustedQuads(style).length, 0,
+  is(getAdjustedQuads(doc.defaultView, style).length, 0,
     "null is returned for a <style> node");
 
   let hidden = doc.querySelector("#hidden-node");
-  is(helper.getAdjustedQuads(hidden).length, 0,
+  is(getAdjustedQuads(doc.defaultView, hidden).length, 0,
     "null is returned for a hidden node");
 }
 
-function defaultsToBorderBoxIfNoneProvided(doc, helper) {
+function defaultsToBorderBoxIfNoneProvided(doc) {
   info("Checks that if no boxtype is passed, then border is the default one");
 
   let node = doc.querySelector("#simple-node-with-margin-padding-border");
-  let [withBoxType] = helper.getAdjustedQuads(node, "border");
-  let [withoutBoxType] = helper.getAdjustedQuads(node);
+  let [withBoxType] = getAdjustedQuads(doc.defaultView, node, "border");
+  let [withoutBoxType] = getAdjustedQuads(doc.defaultView, node);
 
   for (let boundProp of
     ["bottom", "top", "right", "left", "width", "height", "x", "y"]) {
@@ -102,7 +99,7 @@ function defaultsToBorderBoxIfNoneProvided(doc, helper) {
   }
 }
 
-function returnsLikeGetBoxQuadsInSimpleCase(doc, helper) {
+function returnsLikeGetBoxQuadsInSimpleCase(doc) {
   info("Checks that for an element in the main frame, without scroll nor zoom" +
     "that the returned value is similar to the returned value of getBoxQuads");
 
@@ -112,7 +109,7 @@ function returnsLikeGetBoxQuadsInSimpleCase(doc, helper) {
     let expected = node.getBoxQuads({
       box: region
     })[0];
-    let [actual] = helper.getAdjustedQuads(node, region);
+    let [actual] = getAdjustedQuads(doc.defaultView, node, region);
 
     for (let boundProp of
       ["bottom", "top", "right", "left", "width", "height", "x", "y"]) {
@@ -131,7 +128,7 @@ function returnsLikeGetBoxQuadsInSimpleCase(doc, helper) {
   }
 }
 
-function takesIframesOffsetsIntoAccount(doc, helper) {
+function takesIframesOffsetsIntoAccount(doc) {
   info("Checks that the quad returned for a node inside iframes that have " +
     "margins takes those offsets into account");
 
@@ -139,7 +136,7 @@ function takesIframesOffsetsIntoAccount(doc, helper) {
   let subIframe = rootIframe.contentDocument.querySelector("iframe");
   let innerNode = subIframe.contentDocument.querySelector("#inner-node");
 
-  let [quad] = helper.getAdjustedQuads(innerNode, "content");
+  let [quad] = getAdjustedQuads(doc.defaultView, innerNode, "content");
 
   //rootIframe margin + subIframe margin + node margin + node border + node padding
   let p1x = 10 + 10 + 10 + 10 + 10;
@@ -150,7 +147,7 @@ function takesIframesOffsetsIntoAccount(doc, helper) {
   is(quad.p2.x, p2x, "The inner node's p2 x position is correct");
 }
 
-function takesScrollingIntoAccount(doc, helper) {
+function takesScrollingIntoAccount(doc) {
   info("Checks that the quad returned for a node inside multiple scrolled " +
     "containers takes the scroll values into account");
 
@@ -164,7 +161,7 @@ function takesScrollingIntoAccount(doc, helper) {
   subScrolledNode.scrollTop = 200;
   let innerNode = doc.querySelector("#inner-scrolled-node");
 
-  let [quad] = helper.getAdjustedQuads(innerNode, "content");
+  let [quad] = getAdjustedQuads(doc.defaultView, innerNode, "content");
   is(quad.p1.x, 0, "p1.x of the scrolled node is correct after scrolling down");
   is(quad.p1.y, -300, "p1.y of the scrolled node is correct after scrolling down");
 
@@ -172,12 +169,12 @@ function takesScrollingIntoAccount(doc, helper) {
   scrolledNode.scrollTop = 0;
   subScrolledNode.scrollTop = 0;
 
-  [quad] = helper.getAdjustedQuads(innerNode, "content");
+  [quad] = getAdjustedQuads(doc.defaultView, innerNode, "content");
   is(quad.p1.x, 0, "p1.x of the scrolled node is correct after scrolling up");
   is(quad.p1.y, 0, "p1.y of the scrolled node is correct after scrolling up");
 }
 
-function takesZoomIntoAccount(doc, helper) {
+function takesZoomIntoAccount(doc) {
   info("Checks that if the page is zoomed in/out, the quad returned is correct");
 
   // Hard-coding coordinates in this zoom test is a bad idea as it can vary
@@ -185,11 +182,11 @@ function takesZoomIntoAccount(doc, helper) {
   // bigger quad and zooming out produces a smaller quad
 
   let node = doc.querySelector("#simple-node-with-margin-padding-border");
-  let [defaultQuad] = helper.getAdjustedQuads(node);
+  let [defaultQuad] = getAdjustedQuads(doc.defaultView, node);
 
   info("Zoom in");
   window.FullZoom.enlarge();
-  let [zoomedInQuad] = helper.getAdjustedQuads(node);
+  let [zoomedInQuad] = getAdjustedQuads(doc.defaultView, node);
 
   ok(zoomedInQuad.bounds.width > defaultQuad.bounds.width,
     "The zoomed in quad is bigger than the default one");
@@ -199,7 +196,7 @@ function takesZoomIntoAccount(doc, helper) {
   info("Zoom out");
   window.FullZoom.reset();
   window.FullZoom.reduce();
-  let [zoomedOutQuad] = helper.getAdjustedQuads(node);
+  let [zoomedOutQuad] = getAdjustedQuads(doc.defaultView, node);
 
   ok(zoomedOutQuad.bounds.width < defaultQuad.bounds.width,
     "The zoomed out quad is smaller than the default one");
@@ -209,11 +206,11 @@ function takesZoomIntoAccount(doc, helper) {
   window.FullZoom.reset();
 }
 
-function returnsMultipleItemsForWrappingInlineElements(doc, helper) {
+function returnsMultipleItemsForWrappingInlineElements(doc) {
   info("Checks that several quads are returned for inline elements that span line-breaks");
 
   let node = doc.querySelector("#inline");
-  let quads = helper.getAdjustedQuads(node, "content");
+  let quads = getAdjustedQuads(doc.defaultView, node, "content");
   // At least 3 because of the 2 <br />, maybe more depending on the window size.
   ok(quads.length >= 3, "Multiple quads were returned");
 
