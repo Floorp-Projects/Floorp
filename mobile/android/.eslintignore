@@ -21,4 +21,3 @@ modules/WebappManager.jsm
 
 # Non-standard `(catch ex if ...)`
 components/Snippets.js
-modules/MatchstickApp.jsm

@@ -17,7 +17,6 @@ EXTRA_JS_MODULES += [
     'JavaAddonManager.jsm',
     'JNI.jsm',
     'LightweightThemeConsumer.jsm',
-    'MatchstickApp.jsm',
     'MediaPlayerApp.jsm',
     'Messaging.jsm',
     'MulticastDNS.jsm',
