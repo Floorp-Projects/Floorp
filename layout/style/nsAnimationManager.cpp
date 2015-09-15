@@ -141,22 +141,18 @@ CSSAnimation::HasLowerCompositeOrderThan(const Animation& aOther) const
     return false;
   }
 
-  // 2. CSS animations using custom composite ordering (i.e. those that
-  //    correspond to an animation-name property) sort lower than other CSS
-  //    animations (e.g. those created or kept-alive by script).
-  if (!IsUsingCustomCompositeOrder()) {
-    return !aOther.IsUsingCustomCompositeOrder() ?
+  // 2. CSS animations that correspond to an animation-name property sort lower
+  //    than other CSS animations (e.g. those created or kept-alive by script).
+  if (!IsTiedToMarkup()) {
+    return !otherAnimation->IsTiedToMarkup() ?
            Animation::HasLowerCompositeOrderThan(aOther) :
            false;
   }
-  if (!aOther.IsUsingCustomCompositeOrder()) {
+  if (!otherAnimation->IsTiedToMarkup()) {
     return true;
   }
 
   // 3. Sort by document order
-  MOZ_ASSERT(mOwningElement.IsSet() && otherAnimation->mOwningElement.IsSet(),
-             "Animations using custom composite order should have an "
-             "owning element");
   if (!mOwningElement.Equals(otherAnimation->mOwningElement)) {
     return mOwningElement.LessThan(otherAnimation->mOwningElement);
   }
