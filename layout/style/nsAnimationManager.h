@@ -330,6 +330,7 @@ public:
    * contexts are created.
    */
   void DispatchEvents()  { mEventDispatcher.DispatchEvents(mPresContext); }
+  void SortEvents()      { mEventDispatcher.SortEvents(); }
   void ClearEventQueue() { mEventDispatcher.ClearEventQueue(); }
 
   // Stop animations on the element. This method takes the real element

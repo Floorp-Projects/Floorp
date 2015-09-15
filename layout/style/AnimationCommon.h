@@ -6,12 +6,14 @@
 #ifndef mozilla_css_AnimationCommon_h
 #define mozilla_css_AnimationCommon_h
 
+#include <algorithm> // For <std::stable_sort>
 #include "nsIStyleRuleProcessor.h"
 #include "nsIStyleRule.h"
 #include "nsRefreshDriver.h"
 #include "nsChangeHint.h"
 #include "nsCSSProperty.h"
 #include "nsDisplayList.h" // For nsDisplayItem::Type
+#include "mozilla/AnimationComparator.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
@@ -502,23 +504,49 @@ template <class EventInfo>
 class DelayedEventDispatcher
 {
 public:
+  DelayedEventDispatcher() : mIsSorted(true) { }
+
   void QueueEvent(EventInfo&& aEventInfo)
   {
-    mPendingEvents.AppendElement(mozilla::Forward<EventInfo>(aEventInfo));
+    mPendingEvents.AppendElement(Forward<EventInfo>(aEventInfo));
+    mIsSorted = false;
+  }
+
+  // This is exposed as a separate method so that when we are dispatching
+  // *both* transition events and animation events we can sort both lists
+  // once using the current state of the document before beginning any
+  // dispatch.
+  void SortEvents()
+  {
+    if (mIsSorted) {
+      return;
+    }
+
+    // FIXME: Replace with mPendingEvents.StableSort when bug 1147091 is
+    // fixed.
+    std::stable_sort(mPendingEvents.begin(), mPendingEvents.end(),
+                     EventInfoLessThan());
+    mIsSorted = true;
   }
 
   // Takes a reference to the owning manager's pres context so it can
   // detect if the pres context is destroyed while dispatching one of
   // the events.
+  //
+  // This will call SortEvents automatically if it has not already been
+  // called.
   void DispatchEvents(nsPresContext* const & aPresContext)
   {
     if (!aPresContext || mPendingEvents.IsEmpty()) {
       return;
     }
 
+    SortEvents();
+
     EventArray events;
     mPendingEvents.SwapElements(events);
-    // FIXME: Sort events here in timeline order, then document order
+    // mIsSorted will be set to true by SortEvents above, and we leave it
+    // that way since mPendingEvents is now empty
     for (EventInfo& info : events) {
       EventDispatcher::Dispatch(info.mElement, aPresContext, &info.mEvent);
 
@@ -528,7 +556,11 @@ public:
     }
   }
 
-  void ClearEventQueue() { mPendingEvents.Clear(); }
+  void ClearEventQueue()
+  {
+    mPendingEvents.Clear();
+    mIsSorted = true;
+  }
   bool HasQueuedEvents() const { return !mPendingEvents.IsEmpty(); }
 
   // Methods for supporting cycle-collection
@@ -540,12 +572,31 @@ public:
       ImplCycleCollectionTraverse(*aCallback, info.mAnimation, aName);
     }
   }
-  void Unlink() { mPendingEvents.Clear(); }
+  void Unlink() { ClearEventQueue(); }
 
 protected:
-  typedef nsTArray<EventInfo> EventArray;
+  class EventInfoLessThan
+  {
+  public:
+    bool operator()(const EventInfo& a, const EventInfo& b) const
+    {
+      if (a.mTimeStamp != b.mTimeStamp) {
+        // Null timestamps sort first
+        if (a.mTimeStamp.IsNull() || b.mTimeStamp.IsNull()) {
+          return a.mTimeStamp.IsNull();
+        } else {
+          return a.mTimeStamp < b.mTimeStamp;
+        }
+      }
 
+      AnimationPtrComparator<nsRefPtr<dom::Animation>> comparator;
+      return comparator.LessThan(a.mAnimation, b.mAnimation);
+    }
+  };
+
+  typedef nsTArray<EventInfo> EventArray;
   EventArray mPendingEvents;
+  bool mIsSorted;
 };
 
 template <class EventInfo>
