@@ -282,7 +282,9 @@ function getOSCPU() {
   if (oscpu.includes("Linux")) {
     return 6;
   }
-
+  if (oscpu.includes("NT 10.")) {
+    return 7;
+  }
   // Other OS.
   return 12;
 }
