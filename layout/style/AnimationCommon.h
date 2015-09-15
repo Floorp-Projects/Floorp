@@ -537,6 +537,7 @@ public:
   {
     for (EventInfo& info : mPendingEvents) {
       ImplCycleCollectionTraverse(*aCallback, info.mElement, aName);
+      ImplCycleCollectionTraverse(*aCallback, info.mAnimation, aName);
     }
   }
   void Unlink() { mPendingEvents.Clear(); }
