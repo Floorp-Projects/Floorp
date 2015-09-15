@@ -2471,7 +2471,7 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
   if (mOuter->ChildrenHavePerspective()) {
     // The overflow areas of descendants may depend on the scroll position,
     // so ensure they get updated.
-    mOuter->RecomputePerspectiveChildrenOverflow(mOuter->StyleContext(), nullptr);
+    mOuter->RecomputePerspectiveChildrenOverflow(mOuter, nullptr);
   }
 
   ScheduleSyntheticMouseMove();

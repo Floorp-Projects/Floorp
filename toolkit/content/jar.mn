@@ -16,8 +16,11 @@ toolkit.jar:
    content/global/about.xhtml                 (about.xhtml)
    content/global/aboutAbout.js               (aboutAbout.js)
    content/global/aboutAbout.xhtml            (aboutAbout.xhtml)
-   content/global/aboutRights.xhtml           (aboutRights.xhtml)
-   content/global/aboutRights-unbranded.xhtml (aboutRights-unbranded.xhtml)
+#ifdef MOZILLA_OFFICIAL
+   content/global/aboutRights.xhtml
+#else
+   content/global/aboutRights.xhtml           (aboutRights-unbranded.xhtml)
+#endif
    content/global/aboutNetworking.js
    content/global/aboutNetworking.xhtml
    content/global/aboutServiceWorkers.js

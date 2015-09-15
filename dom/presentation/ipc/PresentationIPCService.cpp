@@ -7,6 +7,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PPresentation.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/URIUtils.h"
 #include "nsIPresentationListener.h"
 #include "PresentationCallbacks.h"
 #include "PresentationChild.h"
@@ -14,6 +15,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::ipc;
 
 namespace {
 
@@ -36,7 +38,7 @@ PresentationIPCService::PresentationIPCService()
 /* virtual */
 PresentationIPCService::~PresentationIPCService()
 {
-  mListeners.Clear();
+  mAvailabilityListeners.Clear();
   mSessionListeners.Clear();
   mRespondingSessionIds.Clear();
   mRespondingWindowIds.Clear();
@@ -78,7 +80,7 @@ PresentationIPCService::Terminate(const nsAString& aSessionId)
 
 nsresult
 PresentationIPCService::SendRequest(nsIPresentationServiceCallback* aCallback,
-                                    const PresentationRequest& aRequest)
+                                    const PresentationIPCRequest& aRequest)
 {
   if (sPresentationChild) {
     PresentationRequestChild* actor = new PresentationRequestChild(aCallback);
@@ -88,27 +90,27 @@ PresentationIPCService::SendRequest(nsIPresentationServiceCallback* aCallback,
 }
 
 NS_IMETHODIMP
-PresentationIPCService::RegisterListener(nsIPresentationListener* aListener)
+PresentationIPCService::RegisterAvailabilityListener(nsIPresentationAvailabilityListener* aListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aListener);
 
-  mListeners.AppendElement(aListener);
+  mAvailabilityListeners.AppendElement(aListener);
   if (sPresentationChild) {
-    NS_WARN_IF(!sPresentationChild->SendRegisterHandler());
+    NS_WARN_IF(!sPresentationChild->SendRegisterAvailabilityHandler());
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PresentationIPCService::UnregisterListener(nsIPresentationListener* aListener)
+PresentationIPCService::UnregisterAvailabilityListener(nsIPresentationAvailabilityListener* aListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aListener);
 
-  mListeners.RemoveElement(aListener);
+  mAvailabilityListeners.RemoveElement(aListener);
   if (sPresentationChild) {
-    NS_WARN_IF(!sPresentationChild->SendUnregisterHandler());
+    NS_WARN_IF(!sPresentationChild->SendUnregisterAvailabilityHandler());
   }
   return NS_OK;
 }
@@ -141,6 +143,31 @@ PresentationIPCService::UnregisterSessionListener(const nsAString& aSessionId)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PresentationIPCService::RegisterRespondingListener(uint64_t aWindowId,
+                                                   nsIPresentationRespondingListener* aListener)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mRespondingListeners.Put(aWindowId, aListener);
+  if (sPresentationChild) {
+    NS_WARN_IF(!sPresentationChild->SendRegisterRespondingHandler(aWindowId));
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresentationIPCService::UnregisterRespondingListener(uint64_t aWindowId)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mRespondingListeners.Remove(aWindowId);
+  if (sPresentationChild) {
+    NS_WARN_IF(!sPresentationChild->SendUnregisterRespondingHandler(aWindowId));
+  }
+  return NS_OK;
+}
+
 nsresult
 PresentationIPCService::NotifySessionStateChange(const nsAString& aSessionId,
                                                  uint16_t aState)
@@ -166,11 +193,23 @@ PresentationIPCService::NotifyMessage(const nsAString& aSessionId,
 }
 
 nsresult
+PresentationIPCService::NotifySessionConnect(uint64_t aWindowId,
+                                             const nsAString& aSessionId)
+{
+  nsCOMPtr<nsIPresentationRespondingListener> listener;
+  if (NS_WARN_IF(!mRespondingListeners.Get(aWindowId, getter_AddRefs(listener)))) {
+    return NS_OK;
+  }
+
+  return listener->NotifySessionConnect(aWindowId, aSessionId);
+}
+
+nsresult
 PresentationIPCService::NotifyAvailableChange(bool aAvailable)
 {
-  nsTObserverArray<nsCOMPtr<nsIPresentationListener> >::ForwardIterator iter(mListeners);
+  nsTObserverArray<nsCOMPtr<nsIPresentationAvailabilityListener>>::ForwardIterator iter(mAvailabilityListeners);
   while (iter.HasMore()) {
-    nsIPresentationListener* listener = iter.GetNext();
+    nsIPresentationAvailabilityListener* listener = iter.GetNext();
     NS_WARN_IF(NS_FAILED(listener->NotifyAvailableChange(aAvailable)));
   }
 

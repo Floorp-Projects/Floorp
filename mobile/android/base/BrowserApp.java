@@ -2161,6 +2161,12 @@ public class BrowserApp extends GeckoApp
     }
 
     @Override
+    public String getHomepage() {
+        final SharedPreferences prefs = GeckoSharedPrefs.forProfile(getContext());
+        return prefs.getString(GeckoPreferences.PREFS_HOMEPAGE, null);
+    }
+
+    @Override
     public void onTabsLayoutChange(int width, int height) {
         int animationLength = TABS_ANIMATION_DURATION;
 

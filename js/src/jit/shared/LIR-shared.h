@@ -5237,17 +5237,19 @@ class LAtomicTypedArrayElementBinop : public LInstructionHelper<1, 3, 2>
 };
 
 // Atomic binary operation where the result is discarded.
-class LAtomicTypedArrayElementBinopForEffect : public LInstructionHelper<0, 3, 0>
+class LAtomicTypedArrayElementBinopForEffect : public LInstructionHelper<0, 3, 1>
 {
   public:
     LIR_HEADER(AtomicTypedArrayElementBinopForEffect)
 
     LAtomicTypedArrayElementBinopForEffect(const LAllocation& elements, const LAllocation& index,
-                                           const LAllocation& value)
+                                           const LAllocation& value,
+                                           const LDefinition& flagTemp = LDefinition::BogusTemp())
     {
         setOperand(0, elements);
         setOperand(1, index);
         setOperand(2, value);
+        setTemp(0, flagTemp);
     }
 
     const LAllocation* elements() {
@@ -5258,6 +5260,11 @@ class LAtomicTypedArrayElementBinopForEffect : public LInstructionHelper<0, 3, 0
     }
     const LAllocation* value() {
         return getOperand(2);
+    }
+
+    // Temp that may be used on LL/SC platforms for the flag result of the store.
+    const LDefinition* flagTemp() {
+        return getTemp(0);
     }
 
     const MAtomicTypedArrayElementBinop* mir() const {
@@ -6695,7 +6702,7 @@ class LAsmJSAtomicExchangeHeap : public LInstructionHelper<1, 2, 1>
     }
 };
 
-class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 2, 2>
+class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 2, 3>
 {
   public:
     LIR_HEADER(AsmJSAtomicBinopHeap);
@@ -6703,12 +6710,14 @@ class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 2, 2>
     static const int32_t valueOp = 1;
 
     LAsmJSAtomicBinopHeap(const LAllocation& ptr, const LAllocation& value,
-                          const LDefinition& temp)
+                          const LDefinition& temp,
+                          const LDefinition& flagTemp = LDefinition::BogusTemp())
     {
         setOperand(0, ptr);
         setOperand(1, value);
         setTemp(0, temp);
         setTemp(1, LDefinition::BogusTemp());
+        setTemp(2, flagTemp);
     }
     const LAllocation* ptr() {
         return getOperand(0);
@@ -6720,12 +6729,18 @@ class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 2, 2>
     const LDefinition* temp() {
         return getTemp(0);
     }
+
+    // Temp that may be used on some platforms to hold a computed address.
     const LDefinition* addrTemp() {
         return getTemp(1);
     }
-
     void setAddrTemp(const LDefinition& addrTemp) {
         setTemp(1, addrTemp);
+    }
+
+    // Temp that may be used on LL/SC platforms for the flag result of the store.
+    const LDefinition* flagTemp() {
+        return getTemp(2);
     }
 
     MAsmJSAtomicBinopHeap* mir() const {
@@ -6734,15 +6749,17 @@ class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 2, 2>
 };
 
 // Atomic binary operation where the result is discarded.
-class LAsmJSAtomicBinopHeapForEffect : public LInstructionHelper<0, 2, 1>
+class LAsmJSAtomicBinopHeapForEffect : public LInstructionHelper<0, 2, 2>
 {
   public:
     LIR_HEADER(AsmJSAtomicBinopHeapForEffect);
-    LAsmJSAtomicBinopHeapForEffect(const LAllocation& ptr, const LAllocation& value)
+    LAsmJSAtomicBinopHeapForEffect(const LAllocation& ptr, const LAllocation& value,
+                                   const LDefinition& flagTemp = LDefinition::BogusTemp())
     {
         setOperand(0, ptr);
         setOperand(1, value);
         setTemp(0, LDefinition::BogusTemp());
+        setTemp(1, flagTemp);
     }
     const LAllocation* ptr() {
         return getOperand(0);
@@ -6750,15 +6767,18 @@ class LAsmJSAtomicBinopHeapForEffect : public LInstructionHelper<0, 2, 1>
     const LAllocation* value() {
         return getOperand(1);
     }
-    const LDefinition* temp() {
-        return getTemp(0);
-    }
+
+    // Temp that may be used on some platforms to hold a computed address.
     const LDefinition* addrTemp() {
         return getTemp(0);
     }
-
     void setAddrTemp(const LDefinition& addrTemp) {
         setTemp(0, addrTemp);
+    }
+
+    // Temp that may be used on LL/SC platforms for the flag result of the store.
+    const LDefinition* flagTemp() {
+        return getTemp(1);
     }
 
     MAsmJSAtomicBinopHeap* mir() const {

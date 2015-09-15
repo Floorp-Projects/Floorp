@@ -56,7 +56,7 @@ PeerConnectionIdp.prototype = {
       }
       this._idp.stop();
     }
-    this._idp = new IdpSandbox(provider, protocol, this._win.document);
+    this._idp = new IdpSandbox(provider, protocol, this._win);
   },
 
   // start the IdP and do some error fixup

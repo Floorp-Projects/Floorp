@@ -19,6 +19,8 @@ class nsIURI;
 namespace mozilla {
 namespace dom {
 
+class PresentationRespondingInfo;
+
 class PresentationService final : public nsIPresentationService
                                 , public nsIObserver
 {
@@ -50,8 +52,16 @@ private:
   bool IsAppInstalled(nsIURI* aUri);
 
   bool mIsAvailable;
+  nsTObserverArray<nsCOMPtr<nsIPresentationAvailabilityListener>> mAvailabilityListeners;
+
+  // Store the responding listener based on the window ID of the (in-process or
+  // OOP) receiver page.
+  // TODO Bug 1195605 - Support many-to-one session.
+  // So far responding listeners are registered but |notifySessionConnect| hasn't
+  // been called in any place until many-to-one session becomes supported.
+  nsRefPtrHashtable<nsUint64HashKey, nsIPresentationRespondingListener> mRespondingListeners;
+
   nsRefPtrHashtable<nsStringHashKey, PresentationSessionInfo> mSessionInfo;
-  nsTObserverArray<nsCOMPtr<nsIPresentationListener>> mListeners;
 
   // Store the mapping between the window ID of the in-process page and the ID
   // of the responding session. It's used for an in-process receiver page to

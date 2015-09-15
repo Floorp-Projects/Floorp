@@ -89,7 +89,7 @@ namespace layers {
 
 MultiTiledContentClient::MultiTiledContentClient(ClientTiledPaintedLayer* aPaintedLayer,
                                                  ClientLayerManager* aManager)
-  : TiledContentClient(aManager)
+  : TiledContentClient(aManager, "Multi")
 {
   MOZ_COUNT_CTOR(MultiTiledContentClient);
 
@@ -1669,7 +1669,7 @@ void
 TiledContentClient::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
   aStream << aPrefix;
-  aStream << nsPrintfCString("TiledContentClient (0x%p)", this).get();
+  aStream << nsPrintfCString("%sTiledContentClient (0x%p)", mName, this).get();
 
   if (profiler_feature_active("displaylistdump")) {
     nsAutoCString pfx(aPrefix);

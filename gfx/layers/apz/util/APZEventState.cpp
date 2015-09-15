@@ -254,7 +254,7 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
                                  uint64_t aInputBlockId,
                                  nsEventStatus aApzResponse)
 {
-  if (aEvent.mMessage == NS_TOUCH_START && aEvent.touches.Length() > 0) {
+  if (aEvent.mMessage == eTouchStart && aEvent.touches.Length() > 0) {
     mActiveElementManager->SetTargetElement(aEvent.touches[0]->GetTarget());
   }
 
@@ -262,7 +262,7 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
       aEvent.mFlags.mMultipleActionsPrevented;
   bool sentContentResponse = false;
   switch (aEvent.mMessage) {
-  case NS_TOUCH_START: {
+  case eTouchStart: {
     mTouchEndCancelled = false;
     if (mPendingTouchPreventedResponse) {
       // We can enter here if we get two TOUCH_STARTs in a row and didn't
@@ -283,16 +283,16 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
     break;
   }
 
-  case NS_TOUCH_END:
+  case eTouchEnd:
     if (isTouchPrevented) {
       mTouchEndCancelled = true;
       mEndTouchIsClick = false;
     }
     // fall through
-  case NS_TOUCH_CANCEL:
+  case eTouchCancel:
     mActiveElementManager->HandleTouchEndEvent(mEndTouchIsClick);
     // fall through
-  case NS_TOUCH_MOVE: {
+  case eTouchMove: {
     if (mPendingTouchPreventedResponse) {
       MOZ_ASSERT(aGuid == mPendingTouchPreventedGuid);
     }
@@ -308,8 +308,8 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
         aApzResponse == nsEventStatus_eConsumeDoDefault &&
         gfxPrefs::PointerEventsEnabled()) {
     WidgetTouchEvent cancelEvent(aEvent);
-    cancelEvent.mMessage = NS_TOUCH_CANCEL;
-    cancelEvent.mFlags.mCancelable = false; // mMessage != NS_TOUCH_CANCEL;
+    cancelEvent.mMessage = eTouchCancel;
+    cancelEvent.mFlags.mCancelable = false; // mMessage != eTouchCancel;
     for (uint32_t i = 0; i < cancelEvent.touches.Length(); ++i) {
       if (mozilla::dom::Touch* touch = cancelEvent.touches[i]) {
         touch->convertToPointer = true;

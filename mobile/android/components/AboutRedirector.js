@@ -36,7 +36,7 @@ let modules = {
   rights: {
     uri: AppConstants.MOZ_OFFICIAL_BRANDING ?
       "chrome://browser/content/aboutRights.xhtml" :
-      "chrome://global/content/aboutRights-unbranded.xhtml",
+      "chrome://global/content/aboutRights.xhtml",
     privileged: false
   },
   blocked: {

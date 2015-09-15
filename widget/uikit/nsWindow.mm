@@ -201,13 +201,15 @@ private:
         CFDictionaryAddValue(mTouches, touch, (void*)mNextTouchID);
         mNextTouchID++;
     }
-    [self sendTouchEvent:NS_TOUCH_START touches:[event allTouches] widget:mGeckoChild];
+    [self sendTouchEvent:eTouchStart
+                 touches:[event allTouches]
+                  widget:mGeckoChild];
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
 {
     ALOG("[ChildView[%p] touchesCancelled", self);
-    [self sendTouchEvent:NS_TOUCH_CANCEL touches:touches widget:mGeckoChild];
+    [self sendTouchEvent:eTouchCancel touches:touches widget:mGeckoChild];
     for (UITouch* touch : touches) {
         CFDictionaryRemoveValue(mTouches, touch);
     }
@@ -222,7 +224,7 @@ private:
     if (!mGeckoChild)
         return;
 
-    [self sendTouchEvent:NS_TOUCH_END touches:touches widget:mGeckoChild];
+    [self sendTouchEvent:eTouchEnd touches:touches widget:mGeckoChild];
     for (UITouch* touch : touches) {
         CFDictionaryRemoveValue(mTouches, touch);
     }
@@ -237,7 +239,9 @@ private:
     if (!mGeckoChild)
         return;
 
-    [self sendTouchEvent:NS_TOUCH_MOVE touches:[event allTouches] widget:mGeckoChild];
+    [self sendTouchEvent:eTouchMove
+                 touches:[event allTouches]
+                  widget:mGeckoChild];
 }
 
 - (void)setNeedsDisplayInRect:(CGRect)aRect

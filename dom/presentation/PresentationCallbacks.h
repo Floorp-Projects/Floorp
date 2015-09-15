@@ -16,11 +16,11 @@
 
 class nsIDocShell;
 class nsIWebProgress;
-class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
 
+class PresentationRequest;
 class Promise;
 
 class PresentationRequesterCallback final : public nsIPresentationServiceCallback
@@ -29,7 +29,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONSERVICECALLBACK
 
-  PresentationRequesterCallback(nsPIDOMWindow* aWindow,
+  PresentationRequesterCallback(PresentationRequest* aRequest,
                                 const nsAString& aUrl,
                                 const nsAString& aSessionId,
                                 Promise* aPromise);
@@ -37,7 +37,7 @@ public:
 private:
   ~PresentationRequesterCallback();
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsRefPtr<PresentationRequest> mRequest;
   nsString mSessionId;
   nsRefPtr<Promise> mPromise;
 };

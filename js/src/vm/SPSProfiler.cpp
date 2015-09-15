@@ -260,7 +260,8 @@ SPSProfiler::beginPseudoJS(const char* string, void* sp)
 }
 
 void
-SPSProfiler::push(const char* string, void* sp, JSScript* script, jsbytecode* pc, bool copy)
+SPSProfiler::push(const char* string, void* sp, JSScript* script, jsbytecode* pc, bool copy,
+                  ProfileEntry::Category category)
 {
     MOZ_ASSERT_IF(sp != nullptr, script == nullptr && pc == nullptr);
     MOZ_ASSERT_IF(sp == nullptr, script != nullptr && pc != nullptr);
@@ -274,6 +275,7 @@ SPSProfiler::push(const char* string, void* sp, JSScript* script, jsbytecode* pc
     if (current < max_) {
         volatile ProfileEntry& entry = stack[current];
         entry.setLabel(string);
+        entry.setCategory(category);
 
         if (sp != nullptr) {
             entry.setCppFrame(sp, 0);
@@ -382,6 +384,30 @@ SPSEntryMarker::~SPSEntryMarker()
     profiler->pop();
     profiler->endPseudoJS();
     MOZ_ASSERT(size_before == *profiler->size_);
+}
+
+AutoSPSEntry::AutoSPSEntry(JSRuntime* rt, const char* label, ProfileEntry::Category category
+                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+    : profiler_(&rt->spsProfiler)
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    if (!profiler_->installed()) {
+        profiler_ = nullptr;
+        return;
+    }
+    sizeBefore_ = *profiler_->size_;
+    profiler_->beginPseudoJS(label, this);
+    profiler_->push(label, this, nullptr, nullptr, /* copy = */ false, category);
+}
+
+AutoSPSEntry::~AutoSPSEntry()
+{
+    if (!profiler_)
+        return;
+
+    profiler_->pop();
+    profiler_->endPseudoJS();
+    MOZ_ASSERT(sizeBefore_ == *profiler_->size_);
 }
 
 SPSBaselineOSRMarker::SPSBaselineOSRMarker(JSRuntime* rt, bool hasSPSFrame

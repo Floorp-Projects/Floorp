@@ -962,13 +962,13 @@ nsDOMWindowUtils::SendTouchEventCommon(const nsAString& aType,
   }
   EventMessage msg;
   if (aType.EqualsLiteral("touchstart")) {
-    msg = NS_TOUCH_START;
+    msg = eTouchStart;
   } else if (aType.EqualsLiteral("touchmove")) {
-    msg = NS_TOUCH_MOVE;
+    msg = eTouchMove;
   } else if (aType.EqualsLiteral("touchend")) {
-    msg = NS_TOUCH_END;
+    msg = eTouchEnd;
   } else if (aType.EqualsLiteral("touchcancel")) {
-    msg = NS_TOUCH_CANCEL;
+    msg = eTouchCancel;
   } else {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1296,41 +1296,42 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
     return NS_ERROR_FAILURE;
 
   EventMessage msg;
-  if (aType.EqualsLiteral("MozSwipeGestureMayStart"))
-    msg = NS_SIMPLE_GESTURE_SWIPE_MAY_START;
-  else if (aType.EqualsLiteral("MozSwipeGestureStart"))
-    msg = NS_SIMPLE_GESTURE_SWIPE_START;
-  else if (aType.EqualsLiteral("MozSwipeGestureUpdate"))
-    msg = NS_SIMPLE_GESTURE_SWIPE_UPDATE;
-  else if (aType.EqualsLiteral("MozSwipeGestureEnd"))
-    msg = NS_SIMPLE_GESTURE_SWIPE_END;
-  else if (aType.EqualsLiteral("MozSwipeGesture"))
-    msg = NS_SIMPLE_GESTURE_SWIPE;
-  else if (aType.EqualsLiteral("MozMagnifyGestureStart"))
-    msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
-  else if (aType.EqualsLiteral("MozMagnifyGestureUpdate"))
-    msg = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
-  else if (aType.EqualsLiteral("MozMagnifyGesture"))
-    msg = NS_SIMPLE_GESTURE_MAGNIFY;
-  else if (aType.EqualsLiteral("MozRotateGestureStart"))
-    msg = NS_SIMPLE_GESTURE_ROTATE_START;
-  else if (aType.EqualsLiteral("MozRotateGestureUpdate"))
-    msg = NS_SIMPLE_GESTURE_ROTATE_UPDATE;
-  else if (aType.EqualsLiteral("MozRotateGesture"))
-    msg = NS_SIMPLE_GESTURE_ROTATE;
-  else if (aType.EqualsLiteral("MozTapGesture"))
-    msg = NS_SIMPLE_GESTURE_TAP;
-  else if (aType.EqualsLiteral("MozPressTapGesture"))
-    msg = NS_SIMPLE_GESTURE_PRESSTAP;
-  else if (aType.EqualsLiteral("MozEdgeUIStarted"))
-    msg = NS_SIMPLE_GESTURE_EDGE_STARTED;
-  else if (aType.EqualsLiteral("MozEdgeUICanceled"))
-    msg = NS_SIMPLE_GESTURE_EDGE_CANCELED;
-  else if (aType.EqualsLiteral("MozEdgeUICompleted"))
-    msg = NS_SIMPLE_GESTURE_EDGE_COMPLETED;
-  else
+  if (aType.EqualsLiteral("MozSwipeGestureMayStart")) {
+    msg = eSwipeGestureMayStart;
+  } else if (aType.EqualsLiteral("MozSwipeGestureStart")) {
+    msg = eSwipeGestureStart;
+  } else if (aType.EqualsLiteral("MozSwipeGestureUpdate")) {
+    msg = eSwipeGestureUpdate;
+  } else if (aType.EqualsLiteral("MozSwipeGestureEnd")) {
+    msg = eSwipeGestureEnd;
+  } else if (aType.EqualsLiteral("MozSwipeGesture")) {
+    msg = eSwipeGesture;
+  } else if (aType.EqualsLiteral("MozMagnifyGestureStart")) {
+    msg = eMagnifyGestureStart;
+  } else if (aType.EqualsLiteral("MozMagnifyGestureUpdate")) {
+    msg = eMagnifyGestureUpdate;
+  } else if (aType.EqualsLiteral("MozMagnifyGesture")) {
+    msg = eMagnifyGesture;
+  } else if (aType.EqualsLiteral("MozRotateGestureStart")) {
+    msg = eRotateGestureStart;
+  } else if (aType.EqualsLiteral("MozRotateGestureUpdate")) {
+    msg = eRotateGestureUpdate;
+  } else if (aType.EqualsLiteral("MozRotateGesture")) {
+    msg = eRotateGesture;
+  } else if (aType.EqualsLiteral("MozTapGesture")) {
+    msg = eTapGesture;
+  } else if (aType.EqualsLiteral("MozPressTapGesture")) {
+    msg = ePressTapGesture;
+  } else if (aType.EqualsLiteral("MozEdgeUIStarted")) {
+    msg = eEdgeUIStarted;
+  } else if (aType.EqualsLiteral("MozEdgeUICanceled")) {
+    msg = eEdgeUICanceled;
+  } else if (aType.EqualsLiteral("MozEdgeUICompleted")) {
+    msg = eEdgeUICompleted;
+  } else {
     return NS_ERROR_FAILURE;
- 
+  }
+
   WidgetSimpleGestureEvent event(true, msg, widget);
   event.modifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
   event.direction = aDirection;

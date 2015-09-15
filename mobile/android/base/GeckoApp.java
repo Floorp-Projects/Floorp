@@ -1447,17 +1447,19 @@ public abstract class GeckoApp
 
     /**
      * Loads the initial tab at Fennec startup. If we don't restore tabs, this
-     * tab will be about:home. If we restore tabs, we don't need to create a new tab.
+     * tab will be about:home, or the homepage if the use has set one.
+     * If we restore tabs, we don't need to create a new tab.
      */
-    protected void loadStartupTabWithAboutHome(final int flags) {
+    protected void loadStartupTab(final int flags) {
         if (!mShouldRestore) {
-            Tabs.getInstance().loadUrl(AboutPages.HOME, flags);
+            final String homepage = getHomepage();
+            Tabs.getInstance().loadUrl(!TextUtils.isEmpty(homepage) ? homepage : AboutPages.HOME, flags);
         }
     }
 
     /**
      * Loads the initial tab at Fennec startup. This tab will load with the given
-     * external URL. If that URL is invalid, about:home will be loaded.
+     * external URL. If that URL is invalid, a startup tab will be loaded.
      *
      * @param url    External URL to load.
      * @param intent External intent whose extras modify the request
@@ -1466,11 +1468,15 @@ public abstract class GeckoApp
     protected void loadStartupTab(final String url, final SafeIntent intent, final int flags) {
         // Invalid url
         if (url == null) {
-            loadStartupTabWithAboutHome(flags);
+            loadStartupTab(flags);
             return;
         }
 
         Tabs.getInstance().loadUrlWithIntentExtras(url, intent, flags);
+    }
+
+    public String getHomepage() {
+        return null;
     }
 
     private void initialize() {
@@ -1538,7 +1544,7 @@ public abstract class GeckoApp
             });
         } else {
             if (!mIsRestoringActivity) {
-                loadStartupTabWithAboutHome(Tabs.LOADURL_NEW_TAB);
+                loadStartupTab(Tabs.LOADURL_NEW_TAB);
             }
 
             Tabs.getInstance().notifyListeners(null, Tabs.TabEvents.RESTORED);

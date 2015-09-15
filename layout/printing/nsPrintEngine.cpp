@@ -2484,7 +2484,12 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
         // temporarily creating rendering context
         // which is needed to find the selection frames
         // mPrintDC must have positive width and height for this call
-        nsRenderingContext rc(mPrt->mPrintDC->CreateRenderingContext());
+
+        // CreateRenderingContext can fail for large dimensions
+        nsRefPtr<gfxContext> gCtx = mPrt->mPrintDC->CreateRenderingContext();
+        NS_ENSURE_TRUE(gCtx, NS_ERROR_OUT_OF_MEMORY);
+
+        nsRenderingContext rc(gCtx);
 
         // find the starting and ending page numbers
         // via the selection

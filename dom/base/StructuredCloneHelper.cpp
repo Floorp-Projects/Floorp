@@ -9,6 +9,7 @@
 #include "ImageContainer.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/CryptoKey.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileList.h"
 #include "mozilla/dom/FileListBinding.h"
@@ -22,14 +23,24 @@
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/StructuredCloneTags.h"
+#include "mozilla/dom/SubtleCryptoBinding.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "MultipartBlobImpl.h"
 #include "nsFormData.h"
 #include "nsIRemoteBlob.h"
 #include "nsQueryObject.h"
+
+#ifdef MOZ_NFC
+#include "mozilla/dom/MozNDEFRecord.h"
+#endif // MOZ_NFC
+#ifdef MOZ_WEBRTC
+#include "mozilla/dom/RTCCertificate.h"
+#include "mozilla/dom/RTCCertificateBinding.h"
+#endif
 
 using namespace mozilla::ipc;
 
@@ -366,6 +377,217 @@ StructuredCloneHelper::FreeBuffer(uint64_t* aBuffer,
   MOZ_ASSERT(aBufferLength);
 
   JS_ClearStructuredClone(aBuffer, aBufferLength, &gCallbacks, this, false);
+}
+
+/* static */ JSObject*
+StructuredCloneHelper::ReadFullySerializableObjects(JSContext* aCx,
+                                                    JSStructuredCloneReader* aReader,
+                                                    uint32_t aTag,
+                                                    uint32_t aIndex)
+{
+  if (aTag == SCTAG_DOM_IMAGEDATA) {
+    return ReadStructuredCloneImageData(aCx, aReader);
+  }
+
+  if (aTag == SCTAG_DOM_WEBCRYPTO_KEY) {
+    if (!NS_IsMainThread()) {
+      return nullptr;
+    }
+
+    nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+    if (!global) {
+      return nullptr;
+    }
+
+    // Prevent the return value from being trashed by a GC during ~nsRefPtr.
+    JS::Rooted<JSObject*> result(aCx);
+    {
+      nsRefPtr<CryptoKey> key = new CryptoKey(global);
+      if (!key->ReadStructuredClone(aReader)) {
+        result = nullptr;
+      } else {
+        result = key->WrapObject(aCx, nullptr);
+      }
+    }
+    return result;
+  }
+
+  if (aTag == SCTAG_DOM_NULL_PRINCIPAL ||
+      aTag == SCTAG_DOM_SYSTEM_PRINCIPAL ||
+      aTag == SCTAG_DOM_CONTENT_PRINCIPAL) {
+    if (!NS_IsMainThread()) {
+      return nullptr;
+    }
+
+    mozilla::ipc::PrincipalInfo info;
+    if (aTag == SCTAG_DOM_SYSTEM_PRINCIPAL) {
+      info = mozilla::ipc::SystemPrincipalInfo();
+    } else if (aTag == SCTAG_DOM_NULL_PRINCIPAL) {
+      info = mozilla::ipc::NullPrincipalInfo();
+    } else {
+      uint32_t appId = aIndex;
+
+      uint32_t isInBrowserElement, specLength;
+      if (!JS_ReadUint32Pair(aReader, &isInBrowserElement, &specLength)) {
+        return nullptr;
+      }
+
+      nsAutoCString spec;
+      spec.SetLength(specLength);
+      if (!JS_ReadBytes(aReader, spec.BeginWriting(), specLength)) {
+        return nullptr;
+      }
+
+      info = mozilla::ipc::ContentPrincipalInfo(appId, isInBrowserElement,
+                                                spec);
+    }
+
+    nsresult rv;
+    nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(info, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
+      return nullptr;
+    }
+
+    JS::RootedValue result(aCx);
+    rv = nsContentUtils::WrapNative(aCx, principal, &NS_GET_IID(nsIPrincipal),
+                                    &result);
+    if (NS_FAILED(rv)) {
+      xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
+      return nullptr;
+    }
+
+    return result.toObjectOrNull();
+  }
+
+#ifdef MOZ_NFC
+  if (aTag == SCTAG_DOM_NFC_NDEF) {
+    if (!NS_IsMainThread()) {
+      return nullptr;
+    }
+
+    nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+    if (!global) {
+      return nullptr;
+    }
+
+    // Prevent the return value from being trashed by a GC during ~nsRefPtr.
+    JS::Rooted<JSObject*> result(aCx);
+    {
+      nsRefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(global);
+      result = ndefRecord->ReadStructuredClone(aCx, aReader) ?
+               ndefRecord->WrapObject(aCx, nullptr) : nullptr;
+    }
+    return result;
+  }
+#endif
+
+#ifdef MOZ_WEBRTC
+  if (aTag == SCTAG_DOM_RTC_CERTIFICATE) {
+    if (!NS_IsMainThread()) {
+      return nullptr;
+    }
+
+    nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+    if (!global) {
+      return nullptr;
+    }
+
+    // Prevent the return value from being trashed by a GC during ~nsRefPtr.
+    JS::Rooted<JSObject*> result(aCx);
+    {
+      nsRefPtr<RTCCertificate> cert = new RTCCertificate(global);
+      if (!cert->ReadStructuredClone(aReader)) {
+        result = nullptr;
+      } else {
+        result = cert->WrapObject(aCx, nullptr);
+      }
+    }
+    return result;
+  }
+#endif
+
+  // Don't know what this is. Bail.
+  xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
+  return nullptr;
+}
+
+/* static */ bool
+StructuredCloneHelper::WriteFullySerializableObjects(JSContext* aCx,
+                                                     JSStructuredCloneWriter* aWriter,
+                                                     JS::Handle<JSObject*> aObj)
+{
+  // See if this is a ImageData object.
+  {
+    ImageData* imageData = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageData, aObj, imageData))) {
+      return WriteStructuredCloneImageData(aCx, aWriter, imageData);
+    }
+  }
+
+  // Handle Key cloning
+  {
+    CryptoKey* key;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(CryptoKey, aObj, key))) {
+      MOZ_ASSERT(NS_IsMainThread());
+      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_WEBCRYPTO_KEY, 0) &&
+             key->WriteStructuredClone(aWriter);
+    }
+  }
+
+#ifdef MOZ_WEBRTC
+  {
+    // Handle WebRTC Certificate cloning
+    RTCCertificate* cert;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(RTCCertificate, aObj, cert))) {
+      MOZ_ASSERT(NS_IsMainThread());
+      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_RTC_CERTIFICATE, 0) &&
+             cert->WriteStructuredClone(aWriter);
+    }
+  }
+#endif
+
+  if (NS_IsMainThread() && xpc::IsReflector(aObj)) {
+    nsCOMPtr<nsISupports> base = xpc::UnwrapReflectorToISupports(aObj);
+    nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(base);
+    if (principal) {
+      mozilla::ipc::PrincipalInfo info;
+      if (NS_WARN_IF(NS_FAILED(PrincipalToPrincipalInfo(principal, &info)))) {
+        xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
+        return false;
+      }
+
+      if (info.type() == mozilla::ipc::PrincipalInfo::TNullPrincipalInfo) {
+        return JS_WriteUint32Pair(aWriter, SCTAG_DOM_NULL_PRINCIPAL, 0);
+      }
+      if (info.type() == mozilla::ipc::PrincipalInfo::TSystemPrincipalInfo) {
+        return JS_WriteUint32Pair(aWriter, SCTAG_DOM_SYSTEM_PRINCIPAL, 0);
+      }
+
+      MOZ_ASSERT(info.type() == mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);
+      const mozilla::ipc::ContentPrincipalInfo& cInfo = info;
+      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_CONTENT_PRINCIPAL,
+                                cInfo.appId()) &&
+             JS_WriteUint32Pair(aWriter, cInfo.isInBrowserElement(),
+                                cInfo.spec().Length()) &&
+             JS_WriteBytes(aWriter, cInfo.spec().get(), cInfo.spec().Length());
+    }
+  }
+
+#ifdef MOZ_NFC
+  {
+    MozNDEFRecord* ndefRecord;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(MozNDEFRecord, aObj, ndefRecord))) {
+      MOZ_ASSERT(NS_IsMainThread());
+      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_NFC_NDEF, 0) &&
+             ndefRecord->WriteStructuredClone(aCx, aWriter);
+    }
+  }
+#endif // MOZ_NFC
+
+  // Don't know what this is
+  xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
+  return false;
 }
 
 namespace {
@@ -731,10 +953,6 @@ StructuredCloneHelper::ReadCallback(JSContext* aCx,
     return ReadFileList(aCx, aReader, aIndex, this);
   }
 
-  if (aTag == SCTAG_DOM_IMAGEDATA) {
-    return ReadStructuredCloneImageData(aCx, aReader);
-  }
-
   if (aTag == SCTAG_DOM_FORMDATA) {
     return ReadFormData(aCx, aReader, aIndex, this);
   }
@@ -743,15 +961,15 @@ StructuredCloneHelper::ReadCallback(JSContext* aCx,
     MOZ_ASSERT(mContext == SameProcessSameThread ||
                mContext == SameProcessDifferentThread);
 
-     // Get the current global object.
-     // This can be null.
-     nsCOMPtr<nsIGlobalObject> parent = do_QueryInterface(mParent);
-     // aIndex is the index of the cloned image.
-     return ImageBitmap::ReadStructuredClone(aCx, aReader,
-                                             parent, GetImages(), aIndex);
+    // Get the current global object.
+    // This can be null.
+    nsCOMPtr<nsIGlobalObject> parent = do_QueryInterface(mParent);
+    // aIndex is the index of the cloned image.
+    return ImageBitmap::ReadStructuredClone(aCx, aReader,
+                                            parent, GetImages(), aIndex);
    }
 
-  return NS_DOMReadStructuredClone(aCx, aReader, aTag, aIndex, nullptr);
+  return ReadFullySerializableObjects(aCx, aReader, aTag, aIndex);
 }
 
 bool
@@ -779,14 +997,6 @@ StructuredCloneHelper::WriteCallback(JSContext* aCx,
     }
   }
 
-  // See if this is a ImageData object.
-  {
-    ImageData* imageData = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageData, aObj, imageData))) {
-      return WriteStructuredCloneImageData(aCx, aWriter, imageData);
-    }
-  }
-
   // See if this is a FormData object.
   {
     nsFormData* formData = nullptr;
@@ -806,7 +1016,7 @@ StructuredCloneHelper::WriteCallback(JSContext* aCx,
     }
   }
 
-  return NS_DOMWriteStructuredClone(aCx, aWriter, aObj, nullptr);
+  return WriteFullySerializableObjects(aCx, aWriter, aObj);
 }
 
 bool

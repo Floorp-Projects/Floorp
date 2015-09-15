@@ -734,19 +734,19 @@ CodeGeneratorX86::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
 
     Address memAddr(addrTemp, mir->offset());
     if (value->isConstant()) {
-        masm.atomicBinopToTypedIntArray(op, accessType == Scalar::Uint32 ? Scalar::Int32 : accessType,
-                                        Imm32(ToInt32(value)),
-                                        memAddr,
-                                        temp,
-                                        InvalidReg,
-                                        ToAnyRegister(ins->output()));
+        atomicBinopToTypedIntArray(op, accessType == Scalar::Uint32 ? Scalar::Int32 : accessType,
+                                   Imm32(ToInt32(value)),
+                                   memAddr,
+                                   temp,
+                                   InvalidReg,
+                                   ToAnyRegister(ins->output()));
     } else {
-        masm.atomicBinopToTypedIntArray(op, accessType == Scalar::Uint32 ? Scalar::Int32 : accessType,
-                                        ToRegister(value),
-                                        memAddr,
-                                        temp,
-                                        InvalidReg,
-                                        ToAnyRegister(ins->output()));
+        atomicBinopToTypedIntArray(op, accessType == Scalar::Uint32 ? Scalar::Int32 : accessType,
+                                   ToRegister(value),
+                                   memAddr,
+                                   temp,
+                                   InvalidReg,
+                                   ToAnyRegister(ins->output()));
     }
 }
 
@@ -767,9 +767,9 @@ CodeGeneratorX86::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEff
 
     Address memAddr(addrTemp, mir->offset());
     if (value->isConstant())
-        masm.atomicBinopToTypedIntArray(op, accessType, Imm32(ToInt32(value)), memAddr);
+        atomicBinopToTypedIntArray(op, accessType, Imm32(ToInt32(value)), memAddr);
     else
-        masm.atomicBinopToTypedIntArray(op, accessType, ToRegister(value), memAddr);
+        atomicBinopToTypedIntArray(op, accessType, ToRegister(value), memAddr);
 }
 
 void
