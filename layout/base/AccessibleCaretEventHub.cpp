@@ -569,28 +569,28 @@ AccessibleCaretEventHub::HandleTouchEvent(WidgetTouchEvent* aEvent)
   nsPoint point = GetTouchEventPosition(aEvent, id);
 
   switch (aEvent->mMessage) {
-  case NS_TOUCH_START:
-    AC_LOGV("Before NS_TOUCH_START, state: %s", mState->Name());
+  case eTouchStart:
+    AC_LOGV("Before eTouchStart, state: %s", mState->Name());
     rv = mState->OnPress(this, point, id);
-    AC_LOGV("After NS_TOUCH_START, state: %s, consume: %d", mState->Name(), rv);
+    AC_LOGV("After eTouchStart, state: %s, consume: %d", mState->Name(), rv);
     break;
 
-  case NS_TOUCH_MOVE:
-    AC_LOGV("Before NS_TOUCH_MOVE, state: %s", mState->Name());
+  case eTouchMove:
+    AC_LOGV("Before eTouchMove, state: %s", mState->Name());
     rv = mState->OnMove(this, point);
-    AC_LOGV("After NS_TOUCH_MOVE, state: %s, consume: %d", mState->Name(), rv);
+    AC_LOGV("After eTouchMove, state: %s, consume: %d", mState->Name(), rv);
     break;
 
-  case NS_TOUCH_END:
-    AC_LOGV("Before NS_TOUCH_END, state: %s", mState->Name());
+  case eTouchEnd:
+    AC_LOGV("Before eTouchEnd, state: %s", mState->Name());
     rv = mState->OnRelease(this);
-    AC_LOGV("After NS_TOUCH_END, state: %s, consume: %d", mState->Name(), rv);
+    AC_LOGV("After eTouchEnd, state: %s, consume: %d", mState->Name(), rv);
     break;
 
-  case NS_TOUCH_CANCEL:
-    AC_LOGV("Before NS_TOUCH_CANCEL, state: %s", mState->Name());
+  case eTouchCancel:
+    AC_LOGV("Before eTouchCancel, state: %s", mState->Name());
     rv = mState->OnRelease(this);
-    AC_LOGV("After NS_TOUCH_CANCEL, state: %s, consume: %d", mState->Name(),
+    AC_LOGV("After eTouchCancel, state: %s, consume: %d", mState->Name(),
             rv);
     break;
 

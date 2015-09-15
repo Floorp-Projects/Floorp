@@ -10,7 +10,8 @@
 
 bool nsRegion::Contains(const nsRegion& aRgn) const
 {
-  // XXX this could be made faster
+  // XXX this could be made faster by iterating over
+  // both regions at the same time some how
   nsRegionRectIterator iter(aRgn);
   while (const nsRect* r = iter.Next()) {
     if (!Contains (*r)) {
@@ -22,7 +23,7 @@ bool nsRegion::Contains(const nsRegion& aRgn) const
 
 bool nsRegion::Intersects(const nsRect& aRect) const
 {
-  // XXX this could be made faster
+  // XXX this could be made faster by using pixman_region32_contains_rect
   nsRegionRectIterator iter(*this);
   while (const nsRect* r = iter.Next()) {
     if (r->Intersects(aRect)) {

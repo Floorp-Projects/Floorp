@@ -194,6 +194,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void visitNegF(LNegF* lir);
     void visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins);
     void visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins);
+    void visitAtomicTypedArrayElementBinop(LAtomicTypedArrayElementBinop* lir);
+    void visitAtomicTypedArrayElementBinopForEffect(LAtomicTypedArrayElementBinopForEffect* lir);
     void visitAsmJSCall(LAsmJSCall* ins);
     void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);
     void visitAsmJSStoreHeap(LAsmJSStoreHeap* ins);
@@ -215,6 +217,17 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void generateInvalidateEpilogue();
 
     void visitRandom(LRandom* ins);
+
+    // Generating a result.
+    template<typename S, typename T>
+    void atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value,
+                                    const T& mem, Register flagTemp, Register outTemp,
+                                    AnyRegister output);
+
+    // Generating no result.
+    template<typename S, typename T>
+    void atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value,
+                                    const T& mem, Register flagTemp);
 
   protected:
     void visitEffectiveAddress(LEffectiveAddress* ins);

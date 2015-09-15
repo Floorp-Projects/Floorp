@@ -126,8 +126,13 @@ class ProfileEntry
     uint32_t flags() const volatile {
         return flags_;
     }
+
     uint32_t category() const volatile {
         return flags_ & CATEGORY_MASK;
+    }
+    void setCategory(Category c) volatile {
+        flags_ &= ~CATEGORY_MASK;
+        setFlag(static_cast<uint32_t>(c));
     }
 
     void setOSR() volatile {

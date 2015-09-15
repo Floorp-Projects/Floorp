@@ -9,6 +9,9 @@ if (!("oomAtAllocation" in this && "resetOOMFailure" in this))
 if ("gczeal" in this)
     gczeal(0);
 
+// Test out of memory handing by calling a function f() while causing successive
+// memory allocations to fail.  Repeat until f() finishes without reaching the
+// failing allocation.
 function oomTest(f) {
     var i = 1;
     var more;
@@ -18,10 +21,11 @@ function oomTest(f) {
         try {
             oomAtAllocation(i);
             f();
+            more = resetOOMFailure();
         } catch (e) {
             // Ignore exceptions.
+            more = resetOOMFailure();
         }
-        more = resetOOMFailure();
         i++;
     } while(more);
 

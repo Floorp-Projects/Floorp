@@ -316,7 +316,6 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
   // Looks like a bug in the NrIceCtx API.
   mIceCtx = NrIceCtx::Create("PC:" + mParentName,
                              true, // Offerer
-                             true, // Explicitly set priorities
                              mParent->GetAllowIceLoopback(),
                              ice_tcp,
                              mParent->GetAllowIceLinkLocal(),

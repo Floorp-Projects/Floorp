@@ -56,7 +56,7 @@ EvictTouchPoint(nsRefPtr<dom::Touch>& aTouch,
           nsPoint pt(aTouch->mRefPoint.x, aTouch->mRefPoint.y);
           nsCOMPtr<nsIWidget> widget = frame->GetView()->GetNearestWidget(&pt);
           if (widget) {
-            WidgetTouchEvent event(true, NS_TOUCH_END, widget);
+            WidgetTouchEvent event(true, eTouchEnd, widget);
             event.widget = widget;
             event.time = PR_IntervalNow();
             event.touches.AppendElement(aTouch);
@@ -102,7 +102,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
                              nsCOMPtr<nsIContent>& aCurrentEventContent)
 {
   switch (aEvent->mMessage) {
-    case NS_TOUCH_START: {
+    case eTouchStart: {
       aIsHandlingUserInput = true;
       WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
       // if there is only one touch in this touchstart event, assume that it is
@@ -128,7 +128,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
       }
       break;
     }
-    case NS_TOUCH_MOVE: {
+    case eTouchMove: {
       // Check for touches that changed. Mark them add to queue
       WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
       WidgetTouchEvent::TouchArray& touches = touchEvent->touches;
@@ -190,10 +190,10 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
       }
       break;
     }
-    case NS_TOUCH_END:
+    case eTouchEnd:
       aIsHandlingUserInput = true;
       // Fall through to touchcancel code
-    case NS_TOUCH_CANCEL: {
+    case eTouchCancel: {
       // Remove the changed touches
       // need to make sure we only remove touches that are ending here
       WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
