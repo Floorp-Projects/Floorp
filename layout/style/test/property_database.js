@@ -3681,8 +3681,8 @@ var gCSSProperties = {
     other_values: [ "break-word" ],
     invalid_values: []
   },
-  "-moz-hyphens": {
-    domProp: "MozHyphens",
+  "hyphens": {
+    domProp: "hyphens",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "manual" ],
@@ -4556,6 +4556,16 @@ var gCSSProperties = {
     initial_values: [ "normal" ],
     other_values: [ "'ENG'", "'TRK'", "\"TRK\"", "'N\\'Ko'" ],
     invalid_values: [ "TRK", "ja" ]
+  },
+  "-moz-hyphens": {
+    domProp: "MozHyphens",
+    inherited: true,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "hyphens",
+    subproperties: [ "hyphens" ],
+    initial_values: [ "manual" ],
+    other_values: [ "none", "auto" ],
+    invalid_values: []
   }
 }
 

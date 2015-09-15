@@ -21,6 +21,7 @@
 #include "nsIClassInfoImpl.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsQueryObject.h"
 #include "pratom.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/Logging.h"
@@ -238,27 +239,42 @@ private:
 
 struct nsThreadShutdownContext
 {
+  // NB: This will be the last reference.
+  nsRefPtr<nsThread> terminatingThread;
   nsThread* joiningThread;
-  bool      shutdownAck;
+  bool      awaitingShutdownAck;
 };
 
 // This event is responsible for notifying nsThread::Shutdown that it is time
-// to call PR_JoinThread.
-class nsThreadShutdownAckEvent : public nsRunnable
+// to call PR_JoinThread. It implements nsICancelableRunnable so that it can
+// run on a DOM Worker thread (where all events must implement
+// nsICancelableRunnable.)
+class nsThreadShutdownAckEvent : public nsRunnable,
+                                 public nsICancelableRunnable
 {
 public:
   explicit nsThreadShutdownAckEvent(nsThreadShutdownContext* aCtx)
     : mShutdownContext(aCtx)
   {
   }
-  NS_IMETHOD Run()
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_IMETHOD Run() override
   {
-    mShutdownContext->shutdownAck = true;
+    mShutdownContext->terminatingThread->ShutdownComplete(mShutdownContext);
     return NS_OK;
   }
+  NS_IMETHOD Cancel() override
+  {
+    return Run();
+  }
 private:
+  virtual ~nsThreadShutdownAckEvent() { }
+
   nsThreadShutdownContext* mShutdownContext;
 };
+
+NS_IMPL_ISUPPORTS_INHERITED(nsThreadShutdownAckEvent, nsRunnable,
+                            nsICancelableRunnable)
 
 // This event is responsible for setting mShutdownContext
 class nsThreadShutdownEvent : public nsRunnable
@@ -369,8 +385,15 @@ nsThread::ThreadFunc(void* aArg)
     // mEventsAreDoomed atomically with the removal of the last event. The key
     // invariant here is that we will never permit PutEvent to succeed if the
     // event would be left in the queue after our final call to
-    // NS_ProcessPendingEvents.
+    // NS_ProcessPendingEvents. We also have to keep processing events as long
+    // as we have outstanding mRequestedShutdownContexts.
     while (true) {
+      // Check and see if we're waiting on any threads.
+      while (self->mRequestedShutdownContexts.Length()) {
+        // We can't stop accepting events just yet.  Block and check again.
+        NS_ProcessNextEvent(self, true);
+      }
+
       {
         MutexAutoLock lock(self->mLock);
         if (!self->mEvents->HasPendingEvent()) {
@@ -394,7 +417,8 @@ nsThread::ThreadFunc(void* aArg)
   nsThreadManager::get()->UnregisterCurrentThread(self);
 
   // Dispatch shutdown ACK
-  event = new nsThreadShutdownAckEvent(self->mShutdownContext);
+  MOZ_ASSERT(self->mShutdownContext->terminatingThread == self);
+  event = do_QueryObject(new nsThreadShutdownAckEvent(self->mShutdownContext));
   self->mShutdownContext->joiningThread->Dispatch(event, NS_DISPATCH_NORMAL);
 
   // Release any observer of the thread here.
@@ -631,9 +655,9 @@ nsThread::GetPRThread(PRThread** aResult)
 }
 
 NS_IMETHODIMP
-nsThread::Shutdown()
+nsThread::AsyncShutdown()
 {
-  LOG(("THRD(%p) shutdown\n", this));
+  LOG(("THRD(%p) async shutdown\n", this));
 
   // XXX If we make this warn, then we hit that warning at xpcom shutdown while
   //     shutting down a thread in a thread pool.  That happens b/c the thread
@@ -642,37 +666,61 @@ nsThread::Shutdown()
     return NS_OK;
   }
 
+  return !!ShutdownInternal(/* aSync = */ false) ? NS_OK : NS_ERROR_UNEXPECTED;
+}
+
+nsThreadShutdownContext*
+nsThread::ShutdownInternal(bool aSync)
+{
+  MOZ_ASSERT(mThread);
+
   if (NS_WARN_IF(mThread == PR_GetCurrentThread())) {
-    return NS_ERROR_UNEXPECTED;
+    return nullptr;
   }
 
   // Prevent multiple calls to this method
   {
     MutexAutoLock lock(mLock);
     if (!mShutdownRequired) {
-      return NS_ERROR_UNEXPECTED;
+      return nullptr;
     }
     mShutdownRequired = false;
   }
 
-  nsThreadShutdownContext context;
-  context.joiningThread = nsThreadManager::get()->GetCurrentThread();
-  context.shutdownAck = false;
+  nsThread* currentThread = nsThreadManager::get()->GetCurrentThread();
+  MOZ_ASSERT(currentThread);
+
+  nsAutoPtr<nsThreadShutdownContext>& context =
+    *currentThread->mRequestedShutdownContexts.AppendElement();
+  context = new nsThreadShutdownContext();
+
+  context->terminatingThread = this;
+  context->joiningThread = currentThread;
+  context->awaitingShutdownAck = aSync;
 
   // Set mShutdownContext and wake up the thread in case it is waiting for
   // events to process.
-  nsCOMPtr<nsIRunnable> event = new nsThreadShutdownEvent(this, &context);
+  nsCOMPtr<nsIRunnable> event = new nsThreadShutdownEvent(this, context);
   // XXXroc What if posting the event fails due to OOM?
   PutEvent(event.forget(), nullptr);
 
   // We could still end up with other events being added after the shutdown
   // task, but that's okay because we process pending events in ThreadFunc
   // after setting mShutdownContext just before exiting.
+  return context;
+}
 
-  // Process events on the current thread until we receive a shutdown ACK.
-  // Allows waiting; ensure no locks are held that would deadlock us!
-  while (!context.shutdownAck) {
-    NS_ProcessNextEvent(context.joiningThread, true);
+void
+nsThread::ShutdownComplete(nsThreadShutdownContext* aContext)
+{
+  MOZ_ASSERT(mThread);
+  MOZ_ASSERT(aContext->terminatingThread == this);
+
+  if (aContext->awaitingShutdownAck) {
+    // We're in a synchronous shutdown, so tell whatever is up the stack that
+    // we're done and unwind the stack so it can call us again.
+    aContext->awaitingShutdownAck = false;
+    return;
   }
 
   // Now, it should be safe to join without fear of dead-locking.
@@ -691,6 +739,34 @@ nsThread::Shutdown()
     MOZ_ASSERT(!mObserver, "Should have been cleared at shutdown!");
   }
 #endif
+
+  // Delete aContext.
+  MOZ_ALWAYS_TRUE(
+    aContext->joiningThread->mRequestedShutdownContexts.RemoveElement(aContext));
+}
+
+NS_IMETHODIMP
+nsThread::Shutdown()
+{
+  LOG(("THRD(%p) sync shutdown\n", this));
+
+  // XXX If we make this warn, then we hit that warning at xpcom shutdown while
+  //     shutting down a thread in a thread pool.  That happens b/c the thread
+  //     in the thread pool is already shutdown by the thread manager.
+  if (!mThread) {
+    return NS_OK;
+  }
+
+  nsThreadShutdownContext* context = ShutdownInternal(/* aSync = */ true);
+  NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
+
+  // Process events on the current thread until we receive a shutdown ACK.
+  // Allows waiting; ensure no locks are held that would deadlock us!
+  while (context->awaitingShutdownAck) {
+    NS_ProcessNextEvent(context->joiningThread, true);
+  }
+
+  ShutdownComplete(context);
 
   return NS_OK;
 }

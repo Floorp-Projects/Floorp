@@ -17,78 +17,50 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=379959
     message.
   </p>
   <div id="content" style="display: none"></div>
-  <iframe id="f"></iframe>
+  <iframe id="dataFrame"></iframe>
+  <iframe id="originFrame"></iframe>
 
   <pre id="test">
     <script class="testbody" type="application/javascript;version=1.7">
+
 SimpleTest.waitForExplicitFinish();
 
-var messages = 0;
+var seenData = false;
+var seenSameOrigin = false;
+var seenCrossOrign = false;
 
 function receiveMessage(e) {
   is(e.origin, "http://mochi.test:8888", "wrong sender!");
-  messages++;
 
-  switch (messages) {
-    case 1:
-      receiveMessage1(e.data);
-      break;
-    case 2:
-      receiveMessage2(e.data);
-      break;
-    case 3:
-      receiveMessage3(e.data);
-      break;
-    case 4:
-      receiveMessage4(e.data);
-      break;
-    default:
-      ok(false, "should not be reached");
-      Simpletest.finish();
+  if (e.data.test === "dataIsAllowed") {
+    is(e.data.result, 1, "data-url load should have succeeded");
+    seenData = true;
+  }
+  else if (e.data.test === "sameOriginIsAllowed") {
+    is(e.data.result, 1, "same site load should have succeeded");
+    seenSameOrigin = true;
+  }
+  else if (e.data.test === "crossOriginIsBlocked") {
+    is(e.data.result, 0, "cross site load should have failed");
+    seenCrossOrign = true;
+  }
+  else {
+    ok (false, "unrecognized test");
+  }
+
+  if (seenData && seenSameOrigin && seenCrossOrign) {
+    window.removeEventListener("message", receiveMessage, false);
+    SimpleTest.finish();
   }
 }
 
 window.addEventListener("message", receiveMessage, false);
 
-var iframe = document.getElementById('f');
-
 function runTest() {
-  // Test with data-urls off
-  SpecialPowers.pushPrefEnv({"set": [["layout.debug.enable_data_xbl", false]]}, runTest1);
-}
-
-function runTest1() {
-  iframe.src = "file_bug379959_data.html";
-}
-
-function receiveMessage1(aData) {
-  is(aData, 0, "data-url load should have failed");
-  // Test with data-urls on
-  SpecialPowers.pushPrefEnv({"set": [["layout.debug.enable_data_xbl", true]]}, runTest2);
-}
-
-function runTest2() {
-  iframe.src = "file_bug379959_data.html";
-}
-
-function receiveMessage2(aData) {
-  is(aData, 1, "data-url load should have been successful");
-  // Try a cross-site load
-  iframe.src = "file_bug379959_cross.html";
-}
-
-function receiveMessage3(aData) {
-  is(aData, 1, "same site load should have succeeded");
-}
-
-function receiveMessage4(aData) {
-  is(aData, 0, "cross site load should have failed");
-
-  // Check that we got the right number of messages to make sure that
-  // the right message has aligned with the right test
-  is(messages, 4, "wrong number of messages");
-
-  SimpleTest.finish();
+  // make sure data: is allowed
+  document.getElementById('dataFrame').src = "file_bug379959_data.html";
+  // make sure same-origin is allowed but cross site is blocked
+  document.getElementById('originFrame').src = "file_bug379959_cross.html";
 }
 
     </script>

@@ -9,6 +9,8 @@
 
 #include "mozilla/Move.h"
 
+#include "jsapi.h"
+
 #include "js/UbiNode.h"
 #include "js/UbiNodeTraverse.h"
 
