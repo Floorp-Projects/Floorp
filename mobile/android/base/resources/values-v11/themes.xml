@@ -9,7 +9,7 @@
         Base application theme. This could be overridden by GeckoBaseTheme
         in other res/values-XXX/themes.xml.
     -->
-    <style name="GeckoBase" parent="@android:style/Theme.Holo.Light">
+    <style name="GeckoBase" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
