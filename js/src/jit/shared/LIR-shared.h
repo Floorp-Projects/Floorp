@@ -3311,6 +3311,38 @@ class LFromCharCode : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Calculates sincos(x) and returns two values (sin/cos).
+class LSinCos : public LCallInstructionHelper<2, 1, 2>
+{
+  public:
+    LIR_HEADER(SinCos)
+
+    LSinCos(const LAllocation &input, const LDefinition &temp, const LDefinition &temp2)
+    {
+        setOperand(0, input);
+        setTemp(0, temp);
+        setTemp(1, temp2);
+    }
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LDefinition *outputSin() {
+        return getDef(0);
+    }
+    const LDefinition *outputCos() {
+        return getDef(1);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    const LDefinition *temp2() {
+        return getTemp(1);
+    }
+    const MSinCos *mir() const {
+        return mir_->toSinCos();
+    }
+};
+
 class LStringSplit : public LCallInstructionHelper<1, 2, 0>
 {
   public:

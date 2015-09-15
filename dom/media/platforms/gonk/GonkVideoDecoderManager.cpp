@@ -483,7 +483,7 @@ GonkVideoDecoderManager::codecReserved()
   sp<Surface> surface;
   status_t rv = OK;
   // Fixed values
-  GVDM_LOG("Configure video mime type: %s, widht:%d, height:%d", mMimeType.get(), mVideoWidth, mVideoHeight);
+  GVDM_LOG("Configure video mime type: %s, width:%d, height:%d", mMimeType.get(), mVideoWidth, mVideoHeight);
   format->setString("mime", mMimeType.get());
   format->setInt32("width", mVideoWidth);
   format->setInt32("height", mVideoHeight);

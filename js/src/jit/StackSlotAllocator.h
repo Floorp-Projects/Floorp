@@ -97,6 +97,7 @@ class StackSlotAllocator
           case LDefinition::PAYLOAD:
 #endif
           case LDefinition::DOUBLE:    return 8;
+          case LDefinition::SINCOS:
           case LDefinition::FLOAT32X4:
           case LDefinition::INT32X4:   return 16;
         }

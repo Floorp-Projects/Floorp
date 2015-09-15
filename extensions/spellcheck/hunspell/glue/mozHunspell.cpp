@@ -604,5 +604,11 @@ NS_IMETHODIMP mozHunspell::RemoveDirectory(nsIFile *aDir)
 {
   mDynamicDirectories.RemoveObject(aDir);
   LoadDictionaryList(true);
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(nullptr,
+                         SPELLCHECK_DICTIONARY_REMOVE_NOTIFICATION,
+                         nullptr);
+  }
   return NS_OK;
 }

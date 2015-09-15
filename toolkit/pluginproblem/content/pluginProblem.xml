@@ -3,10 +3,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <!DOCTYPE bindings [
-  <!ENTITY % pluginsDTD SYSTEM "chrome://mozapps/locale/plugins/plugins.dtd">
+  <!ENTITY % pluginproblemDTD SYSTEM "chrome://pluginproblem/locale/pluginproblem.dtd">
   <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
-  %pluginsDTD;
+  %pluginproblemDTD;
   %globalDTD;
   %brandDTD;
 ]>
@@ -17,7 +17,7 @@
               xmlns:html="http://www.w3.org/1999/xhtml">
 <binding id="pluginProblem" inheritstyle="false" chromeOnlyContent="true" bindToUntrustedContent="true">
     <resources>
-        <stylesheet src="chrome://mozapps/content/plugins/pluginProblemContent.css"/>
+        <stylesheet src="chrome://pluginproblem/content/pluginProblemContent.css"/>
         <stylesheet src="chrome://mozapps/skin/plugins/pluginProblem.css"/>
     </resources>
 
