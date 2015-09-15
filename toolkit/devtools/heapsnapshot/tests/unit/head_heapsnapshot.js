@@ -106,13 +106,10 @@ function getFilePath(aName, aAllowMissing=false, aUsePlatformPathSeparator=false
   return path;
 }
 
-function saveNewHeapSnapshot(fileName=`core-dump-${Math.random()}.tmp`) {
-  const filePath = getFilePath(fileName, true, true);
+function saveNewHeapSnapshot() {
+  const filePath = ChromeUtils.saveHeapSnapshot({ runtime: true });
   ok(filePath, "Should get a file path to save the core dump to.");
-
-  ChromeUtils.saveHeapSnapshot(filePath, { runtime: true });
   ok(true, "Saved a heap snapshot to " + filePath);
-
   return filePath;
 }
 
@@ -135,16 +132,10 @@ function saveNewHeapSnapshot(fileName=`core-dump-${Math.random()}.tmp`) {
  *
  * @returns Census
  */
-function saveHeapSnapshotAndTakeCensus(dbg=null, censusOptions=undefined,
-                                       // Add the Math.random() so that parallel
-                                       // tests are less likely to mess with
-                                       // each other.
-                                       fileName="core-dump-" + (Math.random()) + ".tmp") {
-  const filePath = getFilePath(fileName, true, true);
-  ok(filePath, "Should get a file path to save the core dump to.");
-
+function saveHeapSnapshotAndTakeCensus(dbg=null, censusOptions=undefined) {
   const snapshotOptions = dbg ? { debugger: dbg } : { runtime: true };
-  ChromeUtils.saveHeapSnapshot(filePath, snapshotOptions);
+  const filePath = ChromeUtils.saveHeapSnapshot(snapshotOptions);
+  ok(filePath, "Should get a file path to save the core dump to.");
   ok(true, "Should have saved a heap snapshot to " + filePath);
 
   const snapshot = ChromeUtils.readHeapSnapshot(filePath);

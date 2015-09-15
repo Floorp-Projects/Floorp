@@ -316,6 +316,7 @@ let CanvasActor = exports.CanvasActor = protocol.ActorClass({
 
     this._recordingContainsDrawCall = false;
     this._callWatcher.eraseRecording();
+    this._callWatcher.initFrameStartTimestamp();
     this._callWatcher.resumeRecording();
 
     let deferred = this._currentAnimationFrameSnapshot = promise.defer();

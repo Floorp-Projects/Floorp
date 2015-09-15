@@ -28,10 +28,12 @@
 #include "jsapi.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCRTGlue.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIFile.h"
 #include "nsIOutputStream.h"
 #include "nsISupportsImpl.h"
 #include "nsNetUtil.h"
-#include "nsIFile.h"
+#include "nsPrintfCString.h"
 #include "prerror.h"
 #include "prio.h"
 #include "prtypes.h"
@@ -815,11 +817,45 @@ namespace dom {
 using namespace JS;
 using namespace devtools;
 
+static unsigned long
+msSinceProcessCreation(const TimeStamp& now)
+{
+  bool ignored;
+  auto duration = now - TimeStamp::ProcessCreation(ignored);
+  return (unsigned long) duration.ToMilliseconds();
+}
+
+// Creates the `$TEMP_DIR/XXXXXX-XXX.fxsnapshot` core dump file that heap
+// snapshots are serialized into.
+static already_AddRefed<nsIFile>
+createUniqueCoreDumpFile(ErrorResult& rv, const TimeStamp& now, nsAString& outFilePath)
+{
+  nsCOMPtr<nsIFile> file;
+  rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(file));
+  if (NS_WARN_IF(rv.Failed()))
+    return nullptr;
+
+  auto ms = msSinceProcessCreation(now);
+  rv = file->AppendNative(nsPrintfCString("%lu.fxsnapshot", ms));
+  if (NS_WARN_IF(rv.Failed()))
+    return nullptr;
+
+  rv = file->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0666);
+  if (NS_WARN_IF(rv.Failed()))
+    return nullptr;
+
+  rv = file->GetPath(outFilePath);
+  if (NS_WARN_IF(rv.Failed()))
+    return nullptr;
+
+  return file.forget();
+}
+
 /* static */ void
 ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
                                         JSContext* cx,
-                                        const nsAString& filePath,
                                         const HeapSnapshotBoundaries& boundaries,
+                                        nsAString& outFilePath,
                                         ErrorResult& rv)
 {
   auto start = TimeStamp::Now();
@@ -829,8 +865,7 @@ ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
   uint32_t nodeCount = 0;
   uint32_t edgeCount = 0;
 
-  nsCOMPtr<nsIFile> file;
-  rv = NS_NewLocalFile(filePath, false, getter_AddRefs(file));
+  nsCOMPtr<nsIFile> file = createUniqueCoreDumpFile(rv, start, outFilePath);
   if (NS_WARN_IF(rv.Failed()))
     return;
 

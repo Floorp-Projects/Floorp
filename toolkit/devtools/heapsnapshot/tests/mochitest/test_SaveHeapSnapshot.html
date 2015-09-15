@@ -15,13 +15,7 @@ Bug 1024774 - Sanity test that we can take a heap snapshot in a web window.
 SimpleTest.waitForExplicitFinish();
 window.onload = function() {
   ok(ChromeUtils, "The ChromeUtils interface should be exposed in chrome windows.");
-
-  var file = Components.classes["@mozilla.org/file/directory_service;1"]
-    .getService(Components.interfaces.nsIProperties)
-    .get("CurWorkD", Components.interfaces.nsILocalFile);
-  file.append("core-dump.tmp");
-
-  ChromeUtils.saveHeapSnapshot(file.path, { runtime: true });
+  ChromeUtils.saveHeapSnapshot({ runtime: true });
   ok(true, "Should save a heap snapshot and shouldn't throw.");
   SimpleTest.finish();
 };
