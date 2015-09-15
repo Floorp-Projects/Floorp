@@ -1726,7 +1726,7 @@ public class BrowserApp extends GeckoApp
 
         } else if ("Accounts:Create".equals(event)) {
             // Do exactly the same thing as if you tapped 'Sync' in Settings.
-            final Intent intent = new Intent(getContext(), FxAccountGetStartedActivity.class);
+            final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             final NativeJSObject extras = message.optObject("extras", null);
             if (extras != null) {

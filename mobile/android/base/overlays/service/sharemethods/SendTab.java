@@ -6,7 +6,6 @@ package org.mozilla.gecko.overlays.service.sharemethods;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -15,7 +14,6 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserDB;
@@ -23,8 +21,6 @@ import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.db.TabsAccessor;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
-import org.mozilla.gecko.fxa.activities.FxAccountStatusActivity;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.overlays.OverlayConstants;
@@ -159,7 +155,7 @@ public class SendTab extends ShareMethod {
                 Log.w(LOGTAG, "Firefox Account named like " + fxAccount.getObfuscatedEmail() +
                               " needs action before it can send a tab; redirecting to status activity.");
 
-                setOverrideIntent(FxAccountStatusActivity.class);
+                setOverrideIntentAction(FxAccountConstants.ACTION_FXA_STATUS);
                 return;
             }
 
@@ -184,7 +180,7 @@ public class SendTab extends ShareMethod {
         }
 
         // Have registered UIs offer to set up a Firefox Account.
-        setOverrideIntent(FxAccountGetStartedActivity.class);
+        setOverrideIntentAction(FxAccountConstants.ACTION_FXA_GET_STARTED);
     }
 
     /**
@@ -206,7 +202,7 @@ public class SendTab extends ShareMethod {
         if (validGUIDs.isEmpty()) {
             // Guess we'd better override. We have no clients.
             // This does the broadcast for us.
-            setOverrideIntent(FxAccountGetStartedActivity.class);
+            setOverrideIntentAction(FxAccountConstants.ACTION_FXA_GET_STARTED);
             return;
         }
 
@@ -223,10 +219,10 @@ public class SendTab extends ShareMethod {
      * dispatch this intent instead of attempting to share with this ShareMethod whenever it is
      * non-null.
      *
-     * @param activityClass The class of the activity we wish to launch instead of invoking a share.
+     * @param action to launch instead of invoking a share.
      */
-    protected void setOverrideIntent(Class<? extends Activity> activityClass) {
-        Intent intent = new Intent(context, activityClass);
+    protected void setOverrideIntentAction(final String action) {
+        Intent intent = new Intent(action);
         // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
         // the soft keyboard not being shown for the started activity. Why, Android, why?
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
