@@ -683,8 +683,15 @@ Cookies.prototype = {
           host = "." + host;
       }
 
-      let expireTime = this.ctypesKernelHelpers.fileTimeToSecondsSinceEpoch(Number(expireTimeHi),
-                                                                            Number(expireTimeLo));
+      // Fallback: expire in 1h
+      let expireTime = (Date.now() + 3600 * 1000) * 1000;
+      try {
+        expireTime = this.ctypesKernelHelpers.fileTimeToSecondsSinceEpoch(Number(expireTimeHi),
+                                                                          Number(expireTimeLo));
+      } catch (ex) {
+        Cu.reportError("Failed to get expiry time for cookie for " + host);
+      }
+
       Services.cookies.add(host,
                            path,
                            name,
@@ -696,6 +703,69 @@ Cookies.prototype = {
     }
   }
 };
+
+function getTypedURLs(registryKeyPath) {
+  // The list of typed URLs is a sort of annotation stored in the registry.
+  // The number of entries stored is not UI-configurable, but has changed
+  // between different Windows versions. We just keep reading up to the first
+  // non-existing entry to support different limits / states of the registry.
+  let typedURLs = new Map();
+  let typedURLKey = Cc["@mozilla.org/windows-registry-key;1"].
+                    createInstance(Ci.nsIWindowsRegKey);
+  let typedURLTimeKey = Cc["@mozilla.org/windows-registry-key;1"].
+                        createInstance(Ci.nsIWindowsRegKey);
+  let cTypes = new CtypesKernelHelpers();
+  try {
+    typedURLKey.open(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                     registryKeyPath + "\\TypedURLs",
+                     Ci.nsIWindowsRegKey.ACCESS_READ);
+    try {
+      typedURLTimeKey.open(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                           registryKeyPath + "\\TypedURLsTime",
+                           Ci.nsIWindowsRegKey.ACCESS_READ);
+    } catch (ex) {
+      typedURLTimeKey = null;
+    }
+    let entryName;
+    for (let entry = 1; typedURLKey.hasValue((entryName = "url" + entry)); entry++) {
+      let url = typedURLKey.readStringValue(entryName);
+      let timeTyped = 0;
+      if (typedURLTimeKey && typedURLTimeKey.hasValue(entryName)) {
+        let urlTime = "";
+        try {
+          urlTime = typedURLTimeKey.readBinaryValue(entryName);
+        } catch (ex) {
+          Cu.reportError("Couldn't read url time for " + entryName);
+        }
+        if (urlTime.length == 8) {
+          let urlTimeHex = [];
+          for (let i = 0; i < 8; i++) {
+            let c = urlTime.charCodeAt(i).toString(16);
+            if (c.length == 1)
+              c = "0" + c;
+            urlTimeHex.unshift(c);
+          }
+          try {
+            let hi = parseInt(urlTimeHex.slice(0, 4).join(''), 16);
+            let lo = parseInt(urlTimeHex.slice(4, 8).join(''), 16);
+            timeTyped = cTypes.fileTimeToSecondsSinceEpoch(hi, lo);
+            // Callers expect PRTime, which is microseconds since epoch:
+            timeTyped *= 1000 * 1000;
+          } catch (ex) {}
+        }
+      }
+      typedURLs.set(url, timeTyped);
+    }
+  } catch (ex) {
+    Cu.reportError("Error reading typed URL history: " + ex);
+  } finally {
+    typedURLKey.close();
+    typedURLTimeKey.close();
+    cTypes.finalize();
+  }
+  return typedURLs;
+}
+
 
 // Migrator for form passwords on Windows 8 and higher.
 function WindowsVaultFormPasswords () {
@@ -847,4 +917,5 @@ let MSMigrationUtils = {
   getWindowsVaultFormPasswordsMigrator() {
     return new WindowsVaultFormPasswords();
   },
+  getTypedURLs,
 };
