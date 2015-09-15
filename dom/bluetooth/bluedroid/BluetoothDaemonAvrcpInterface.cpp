@@ -28,14 +28,25 @@ BluetoothDaemonAvrcpModule::SetNotificationHandler(
   sNotificationHandler = aNotificationHandler;
 }
 
+nsresult
+BluetoothDaemonAvrcpModule::Send(DaemonSocketPDU* aPDU,
+                                 BluetoothAvrcpResultHandler* aRes)
+{
+  nsRefPtr<BluetoothAvrcpResultHandler> res(aRes);
+  nsresult rv = Send(aPDU, static_cast<void*>(res.get()));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  unused << res.forget(); // Keep reference for response
+  return NS_OK;
+}
+
 void
 BluetoothDaemonAvrcpModule::HandleSvc(const DaemonSocketPDUHeader& aHeader,
-                                      DaemonSocketPDU& aPDU,
-                                      DaemonSocketResultHandler* aRes)
+                                      DaemonSocketPDU& aPDU, void* aUserData)
 {
   static void (BluetoothDaemonAvrcpModule::* const HandleOp[])(
-    const DaemonSocketPDUHeader&, DaemonSocketPDU&,
-    DaemonSocketResultHandler*) = {
+    const DaemonSocketPDUHeader&, DaemonSocketPDU&, void*) = {
     [0] = &BluetoothDaemonAvrcpModule::HandleRsp,
     [1] = &BluetoothDaemonAvrcpModule::HandleNtf
   };
@@ -44,7 +55,7 @@ BluetoothDaemonAvrcpModule::HandleSvc(const DaemonSocketPDUHeader& aHeader,
 
   unsigned int isNtf = !!(aHeader.mOpcode & 0x80);
 
-  (this->*(HandleOp[isNtf]))(aHeader, aPDU, aRes);
+  (this->*(HandleOp[isNtf]))(aHeader, aPDU, aUserData);
 }
 
 // Commands
@@ -410,7 +421,7 @@ BluetoothDaemonAvrcpModule::SetVolumeRsp(
 void
 BluetoothDaemonAvrcpModule::HandleRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  DaemonSocketResultHandler* aRes)
+  void* aUserData)
 {
   static void (BluetoothDaemonAvrcpModule::* const HandleRsp[])(
     const DaemonSocketPDUHeader&,
@@ -448,7 +459,8 @@ BluetoothDaemonAvrcpModule::HandleRsp(
   }
 
   nsRefPtr<BluetoothAvrcpResultHandler> res =
-    static_cast<BluetoothAvrcpResultHandler*>(aRes);
+    already_AddRefed<BluetoothAvrcpResultHandler>(
+      static_cast<BluetoothAvrcpResultHandler*>(aUserData));
 
   if (!res) {
     return; // Return early if no result handler has been set for response
@@ -780,7 +792,7 @@ BluetoothDaemonAvrcpModule::PassthroughCmdNtf(
 void
 BluetoothDaemonAvrcpModule::HandleNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  DaemonSocketResultHandler* aRes)
+  void* aUserData)
 {
   static void (BluetoothDaemonAvrcpModule::* const HandleNtf[])(
     const DaemonSocketPDUHeader&, DaemonSocketPDU&) = {

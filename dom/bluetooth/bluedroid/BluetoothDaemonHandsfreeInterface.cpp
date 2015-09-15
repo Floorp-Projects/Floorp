@@ -31,14 +31,25 @@ BluetoothDaemonHandsfreeModule::SetNotificationHandler(
   sNotificationHandler = aNotificationHandler;
 }
 
+nsresult
+BluetoothDaemonHandsfreeModule::Send(DaemonSocketPDU* aPDU,
+                                     BluetoothHandsfreeResultHandler* aRes)
+{
+  nsRefPtr<BluetoothHandsfreeResultHandler> res(aRes);
+  nsresult rv = Send(aPDU, static_cast<void*>(res.get()));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  unused << res.forget(); // Keep reference for response
+  return NS_OK;
+}
+
 void
 BluetoothDaemonHandsfreeModule::HandleSvc(
-  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  DaemonSocketResultHandler* aRes)
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU, void* aUserData)
 {
   static void (BluetoothDaemonHandsfreeModule::* const HandleOp[])(
-    const DaemonSocketPDUHeader&, DaemonSocketPDU&,
-    DaemonSocketResultHandler*) = {
+    const DaemonSocketPDUHeader&, DaemonSocketPDU&, void*) = {
     [0] = &BluetoothDaemonHandsfreeModule::HandleRsp,
     [1] = &BluetoothDaemonHandsfreeModule::HandleNtf
   };
@@ -48,7 +59,7 @@ BluetoothDaemonHandsfreeModule::HandleSvc(
   // Negate twice to map bit to 0/1
   unsigned long isNtf = !!(aHeader.mOpcode & 0x80);
 
-  (this->*(HandleOp[isNtf]))(aHeader, aPDU, aRes);
+  (this->*(HandleOp[isNtf]))(aHeader, aPDU, aUserData);
 }
 
 // Commands
@@ -668,7 +679,7 @@ BluetoothDaemonHandsfreeModule::ConfigureWbsRsp(
 void
 BluetoothDaemonHandsfreeModule::HandleRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  DaemonSocketResultHandler* aRes)
+  void* aUserData)
 {
   static void (BluetoothDaemonHandsfreeModule::* const HandleRsp[])(
     const DaemonSocketPDUHeader&,
@@ -716,7 +727,8 @@ BluetoothDaemonHandsfreeModule::HandleRsp(
   }
 
   nsRefPtr<BluetoothHandsfreeResultHandler> res =
-    static_cast<BluetoothHandsfreeResultHandler*>(aRes);
+    already_AddRefed<BluetoothHandsfreeResultHandler>(
+      static_cast<BluetoothHandsfreeResultHandler*>(aUserData));
 
   if (!res) {
     return; // Return early if no result handler has been set for response
@@ -1451,7 +1463,7 @@ BluetoothDaemonHandsfreeModule::WbsNtf(
 void
 BluetoothDaemonHandsfreeModule::HandleNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  DaemonSocketResultHandler* aRes)
+  void* aUserData)
 {
   static void (BluetoothDaemonHandsfreeModule::* const HandleNtf[])(
     const DaemonSocketPDUHeader&, DaemonSocketPDU&) = {
