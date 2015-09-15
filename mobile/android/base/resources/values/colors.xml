@@ -154,4 +154,7 @@
 
   <color name="private_active_text">#FFFFFF</color>
 
+  <!-- This color is from a 2.3 Samsung device. -->
+  <color name="gingerbread_menu_background_color">#1b1b1b</color>
+
 </resources>
