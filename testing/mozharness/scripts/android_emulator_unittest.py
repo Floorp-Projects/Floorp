@@ -483,15 +483,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                 continue
             cmd.append(arg)
 
-        tests = None
-        if "tests" in self.test_suite_definitions[self.test_suite]:
-            tests = self.test_suite_definitions[self.test_suite]["tests"]
-        elif "tests" in self.config["suite_definitions"][suite_category]:
-            tests = self.config["suite_definitions"][suite_category]["tests"]
-
-        if tests:
-            cmd.extend(tests)
-
         return cmd
 
     def _tooltool_fetch(self, url):

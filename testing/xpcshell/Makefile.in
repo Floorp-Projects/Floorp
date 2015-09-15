@@ -10,7 +10,6 @@ TEST_HARNESS_FILES := \
   runxpcshelltests.py \
   remotexpcshelltests.py \
   runtestsb2g.py \
-  xpcshellcommandline.py \
   head.js \
   node-spdy \
   moz-spdy \
