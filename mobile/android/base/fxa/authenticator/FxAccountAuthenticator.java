@@ -4,10 +4,14 @@
 
 package org.mozilla.gecko.fxa.authenticator;
 
-import java.security.NoSuchAlgorithmException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
+import android.accounts.AbstractAccountAuthenticator;
+import android.accounts.Account;
+import android.accounts.AccountAuthenticatorResponse;
+import android.accounts.AccountManager;
+import android.accounts.NetworkErrorException;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountClient;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
@@ -19,7 +23,6 @@ import org.mozilla.gecko.background.fxa.oauth.FxAccountOAuthClient10.Authorizati
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.JSONWebTokenUtils;
 import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
 import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine;
 import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine.LoginStateMachineDelegate;
 import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.Transition;
@@ -30,14 +33,9 @@ import org.mozilla.gecko.fxa.login.StateFactory;
 import org.mozilla.gecko.fxa.sync.FxAccountNotificationManager;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncAdapter;
 
-import android.accounts.AbstractAccountAuthenticator;
-import android.accounts.Account;
-import android.accounts.AccountAuthenticatorResponse;
-import android.accounts.AccountManager;
-import android.accounts.NetworkErrorException;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
+import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
   public static final String LOG_TAG = FxAccountAuthenticator.class.getSimpleName();
@@ -71,7 +69,7 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
       return res;
     }
 
-    Intent intent = new Intent(context, FxAccountGetStartedActivity.class);
+    final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
     res.putParcelable(AccountManager.KEY_INTENT, intent);
     return res;
   }
