@@ -890,6 +890,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 
 .urlbar-history-dropmarker {
   -moz-appearance: toolbarbutton-dropdown;
+  transition: opacity 0.15s ease;
+}
+
+#urlbar:not(:hover) > .urlbar-textbox-container > .urlbar-history-dropmarker {
+  opacity: 0;
 }
 
 #urlbar-container {
