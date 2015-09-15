@@ -268,14 +268,6 @@ public:
    * Returns true if this Animation has a lower composite order than aOther.
    */
   virtual bool HasLowerCompositeOrderThan(const Animation& aOther) const;
-  /**
-   * Returns true if this Animation is involved in some sort of
-   * custom composite ordering (such as the ordering defined for CSS
-   * animations or CSS transitions).
-   *
-   * When this is true, this class will not update the sequence number.
-   */
-  virtual bool IsUsingCustomCompositeOrder() const { return false; }
 
   void SetIsRunningOnCompositor() { mIsRunningOnCompositor = true; }
   void ClearIsRunningOnCompositor() { mIsRunningOnCompositor = false; }

@@ -122,20 +122,15 @@ public:
   bool IsStylePaused() const { return mIsStylePaused; }
 
   bool HasLowerCompositeOrderThan(const Animation& aOther) const override;
-  bool IsUsingCustomCompositeOrder() const override
-  {
-    return mOwningElement.IsSet();
-  }
 
   void SetAnimationIndex(uint64_t aIndex)
   {
-    MOZ_ASSERT(IsUsingCustomCompositeOrder());
+    MOZ_ASSERT(IsTiedToMarkup());
     mAnimationIndex = aIndex;
   }
   void CopyAnimationIndex(const CSSAnimation& aOther)
   {
-    MOZ_ASSERT(IsUsingCustomCompositeOrder() &&
-               aOther.IsUsingCustomCompositeOrder());
+    MOZ_ASSERT(IsTiedToMarkup() && aOther.IsTiedToMarkup());
     mAnimationIndex = aOther.mAnimationIndex;
   }
 
@@ -147,6 +142,9 @@ public:
   {
     mOwningElement = aElement;
   }
+  // True for animations that are generated from CSS markup and continue to
+  // reflect changes to that markup.
+  bool IsTiedToMarkup() const { return mOwningElement.IsSet(); }
 
   // Is this animation currently in effect for the purposes of computing
   // mWinsInCascade.  (In general, this can be computed from the timing

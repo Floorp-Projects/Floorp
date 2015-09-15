@@ -199,19 +199,16 @@ CSSTransition::HasLowerCompositeOrderThan(const Animation& aOther) const
 
   // 2. CSS transitions that correspond to a transition-property property sort
   // lower than CSS transitions owned by script.
-  if (!IsUsingCustomCompositeOrder()) {
-    return !aOther.IsUsingCustomCompositeOrder() ?
+  if (!IsTiedToMarkup()) {
+    return !otherTransition->IsTiedToMarkup() ?
            Animation::HasLowerCompositeOrderThan(aOther) :
            false;
   }
-  if (!aOther.IsUsingCustomCompositeOrder()) {
+  if (!otherTransition->IsTiedToMarkup()) {
     return true;
   }
 
   // 3. Sort by document order
-  MOZ_ASSERT(mOwningElement.IsSet() && otherTransition->mOwningElement.IsSet(),
-             "Transitions using custom composite order should have an owning "
-             "element");
   if (!mOwningElement.Equals(otherTransition->mOwningElement)) {
     return mOwningElement.LessThan(otherTransition->mOwningElement);
   }
