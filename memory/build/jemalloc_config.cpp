@@ -121,7 +121,7 @@ private:
       reinterpret_cast<uintptr_t>(chunk) + static_cast<uintptr_t>(offset));
 
     if (!VirtualAlloc(addr, length, MEM_COMMIT, PAGE_READWRITE))
-      MOZ_CRASH();
+      return true;
 
     return false;
   }
