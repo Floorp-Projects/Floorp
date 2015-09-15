@@ -46,9 +46,10 @@ public:
   // Initializes the demuxer. Other methods cannot be called unless
   // initialization has completed and succeeded.
   // Typically a demuxer will wait to parse the metadata before resolving the
-  // promise. The promise will be rejected with WAITING_FOR_DATA should
-  // insufficient data be available at the time. Init() would have to be called
-  // again to retry once more data has been received.
+  // promise. The promise must not be resolved until sufficient data is
+  // supplied. For example, an incomplete metadata would cause the promise to be
+  // rejected should no more data be coming, while the demuxer would wait
+  // otherwise.
   virtual nsRefPtr<InitPromise> Init() = 0;
 
   // Returns true if a aType track type is available.
