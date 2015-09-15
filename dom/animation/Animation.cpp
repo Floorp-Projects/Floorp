@@ -22,7 +22,7 @@ namespace mozilla {
 namespace dom {
 
 // Static members
-uint64_t Animation::sNextSequenceNum = 0;
+uint64_t Animation::sNextAnimationIndex = 0;
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(Animation, DOMEventTargetHelper,
                                    mTimeline,
@@ -518,14 +518,14 @@ bool
 Animation::HasLowerCompositeOrderThan(const Animation& aOther) const
 {
   // We only ever sort non-idle animations so we don't ever expect
-  // mSequenceNum to be set to kUnsequenced
-  MOZ_ASSERT(mSequenceNum != kUnsequenced &&
-             aOther.mSequenceNum != kUnsequenced,
+  // mAnimationIndex to be set to kNoIndex
+  MOZ_ASSERT(mAnimationIndex != kNoIndex &&
+             aOther.mAnimationIndex != kNoIndex,
              "Animations to compare should not be idle");
-  MOZ_ASSERT(mSequenceNum != aOther.mSequenceNum || &aOther == this,
-             "Sequence numbers should be unique");
+  MOZ_ASSERT(mAnimationIndex != aOther.mAnimationIndex || &aOther == this,
+             "Animation indices should be unique");
 
-  return mSequenceNum < aOther.mSequenceNum;
+  return mAnimationIndex < aOther.mAnimationIndex;
 }
 
 bool
@@ -842,13 +842,13 @@ Animation::PauseAt(const TimeDuration& aReadyTime)
 void
 Animation::UpdateTiming(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag)
 {
-  // Update the sequence number each time we transition in or out of the
+  // Update the animation index each time we transition in or out of the
   // idle state
   if (!IsUsingCustomCompositeOrder()) {
     if (PlayState() == AnimationPlayState::Idle) {
-      mSequenceNum = kUnsequenced;
-    } else if (mSequenceNum == kUnsequenced) {
-      mSequenceNum = sNextSequenceNum++;
+      mAnimationIndex = kNoIndex;
+    } else if (mAnimationIndex == kNoIndex) {
+      mAnimationIndex = sNextAnimationIndex++;
     }
   }
 

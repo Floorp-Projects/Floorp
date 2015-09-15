@@ -205,8 +205,8 @@ CSSTransition::HasLowerCompositeOrderThan(const Animation& aOther) const
   }
 
   // 4. (Same element and pseudo): Sort by transition generation
-  if (mSequenceNum != otherTransition->mSequenceNum) {
-    return mSequenceNum < otherTransition->mSequenceNum;
+  if (mAnimationIndex != otherTransition->mAnimationIndex) {
+    return mAnimationIndex < otherTransition->mAnimationIndex;
   }
 
   // 5. (Same transition generation): Sort by transition property

@@ -57,7 +57,7 @@ public:
     : DOMEventTargetHelper(aGlobal)
     , mPlaybackRate(1.0)
     , mPendingState(PendingState::NotPending)
-    , mSequenceNum(kUnsequenced)
+    , mAnimationIndex(kNoIndex)
     , mIsRunningOnCompositor(false)
     , mFinishedAtLastComposeStyle(false)
     , mIsRelevant(false)
@@ -405,13 +405,17 @@ protected:
   enum class PendingState { NotPending, PlayPending, PausePending };
   PendingState mPendingState;
 
-  static uint64_t sNextSequenceNum;
-  static const uint64_t kUnsequenced = UINT64_MAX;
+  static uint64_t sNextAnimationIndex;
+  static const uint64_t kNoIndex = UINT64_MAX;
 
-  // The sequence number assigned to this animation. This is kUnsequenced
-  // while the animation is in the idle state and is updated each time
-  // the animation transitions out of the idle state.
-  uint64_t mSequenceNum;
+  // The relative position of this animation within the global animation list.
+  // This is kNoIndex while the animation is in the idle state and is updated
+  // each time the animation transitions out of the idle state.
+  //
+  // Note that subclasses such as CSSTransition and CSSAnimation may repurpose
+  // this member to implement their own brand of sorting. As a result, it is
+  // possible for two different objects to have the same index.
+  uint64_t mAnimationIndex;
 
   bool mIsRunningOnCompositor;
   bool mFinishedAtLastComposeStyle;
