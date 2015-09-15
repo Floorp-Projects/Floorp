@@ -243,7 +243,6 @@ static int32_t toggleLockedMetaState(int32_t mask, bool down, int32_t oldMetaSta
 }
 
 int32_t updateMetaState(int32_t keyCode, bool down, int32_t oldMetaState) {
-    int32_t mask;
     switch (keyCode) {
     case AKEYCODE_ALT_LEFT:
         return setEphemeralMetaState(AMETA_ALT_LEFT_ON, down, oldMetaState);
