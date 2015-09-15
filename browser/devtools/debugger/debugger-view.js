@@ -35,16 +35,19 @@ const RESIZE_REFRESH_RATE = 50; // ms
 const PROMISE_DEBUGGER_URL =
   "chrome://browser/content/devtools/promisedebugger/promise-debugger.xhtml";
 
-const createDispatcher = require('devtools/shared/create-dispatcher')();
-const stores = require('./content/stores/index');
-const dispatcher = createDispatcher(stores);
-const waitUntilService = require('devtools/shared/fluxify/waitUntilService');
+const debuggerControllerEmit = DebuggerController.emit.bind(DebuggerController);
+const createStore = require("devtools/shared/redux/create-store")();
+const { combineEmittingReducers } = require("devtools/shared/redux/reducers");
+const reducers = require("./content/reducers/index");
+const store = createStore(combineEmittingReducers(reducers, debuggerControllerEmit));
+const { NAME: WAIT_UNTIL_NAME } = require("devtools/shared/redux/middleware/wait-service");
+
 const services = {
-  WAIT_UNTIL: waitUntilService.name
+  WAIT_UNTIL: WAIT_UNTIL_NAME
 };
 
 const EventListenersView = require('./content/views/event-listeners-view');
-const actions = require('./content/stores/event-listeners').actions;
+const actions = require('./content/actions/event-listeners');
 
 /**
  * Object defining the debugger view components.
@@ -626,7 +629,7 @@ var DebuggerView = {
    */
   _onInstrumentsPaneTabSelect: function() {
     if (this._instrumentsPane.selectedTab.id == "events-tab") {
-      dispatcher.dispatch(actions.fetchEventListeners());
+      store.dispatch(actions.fetchEventListeners());
     }
   },
 
@@ -928,4 +931,4 @@ ResultsPanelContainer.prototype = Heritage.extend(WidgetMethods, {
   top: 0
 });
 
-DebuggerView.EventListeners = new EventListenersView(dispatcher, DebuggerController);
+DebuggerView.EventListeners = new EventListenersView(store, DebuggerController);
