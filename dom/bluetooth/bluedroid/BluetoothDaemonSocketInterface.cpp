@@ -160,7 +160,7 @@ BluetoothDaemonSocketModule::CloseCmd(BluetoothSocketResultHandler* aRes)
 void
 BluetoothDaemonSocketModule::HandleSvc(const DaemonSocketPDUHeader& aHeader,
                                        DaemonSocketPDU& aPDU,
-                                       void* aUserData)
+                                       DaemonSocketResultHandler* aRes)
 {
   static void (BluetoothDaemonSocketModule::* const HandleRsp[])(
     const DaemonSocketPDUHeader&,
@@ -177,27 +177,13 @@ BluetoothDaemonSocketModule::HandleSvc(const DaemonSocketPDUHeader& aHeader,
   }
 
   nsRefPtr<BluetoothSocketResultHandler> res =
-    already_AddRefed<BluetoothSocketResultHandler>(
-      static_cast<BluetoothSocketResultHandler*>(aUserData));
+    static_cast<BluetoothSocketResultHandler*>(aRes);
 
   if (!res) {
     return; // Return early if no result handler has been set
   }
 
   (this->*(HandleRsp[aHeader.mOpcode]))(aHeader, aPDU, res);
-}
-
-nsresult
-BluetoothDaemonSocketModule::Send(DaemonSocketPDU* aPDU,
-                                  BluetoothSocketResultHandler* aRes)
-{
-  nsRefPtr<BluetoothSocketResultHandler> res(aRes);
-  nsresult rv = Send(aPDU, static_cast<void*>(res.get()));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  unused << res.forget(); // Keep reference for response
-  return NS_OK;
 }
 
 uint8_t
