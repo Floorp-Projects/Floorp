@@ -78,6 +78,9 @@ from .context import (
     TemplateContext,
 )
 
+from mozbuild.base import ExecutionSummary
+
+
 if sys.version_info.major == 2:
     text_type = unicode
     type_type = types.TypeType
@@ -869,6 +872,16 @@ class BuildReader(object):
         self._execution_stack = []
         self._finder = finder
 
+        self._execution_time = 0.0
+        self._file_count = 0
+
+    def summary(self):
+        return ExecutionSummary(
+            'Finished reading {file_count:d} moz.build files in '
+            '{execution_time:.2f}s',
+            file_count=self._file_count,
+            execution_time=self._execution_time)
+
     def read_topsrcdir(self):
         """Read the tree of linked moz.build files.
 
@@ -1103,7 +1116,8 @@ class BuildReader(object):
         sandbox = MozbuildSandbox(context, metadata=metadata,
                                   finder=self._finder)
         sandbox.exec_file(path)
-        context.execution_time = time.time() - time_start
+        self._execution_time += time.time() - time_start
+        self._file_count += len(context.all_paths)
 
         # Yield main context before doing any processing. This gives immediate
         # consumers an opportunity to change state before our remaining
@@ -1141,6 +1155,7 @@ class BuildReader(object):
                     raise SandboxValidationError('Cannot find %s.' % source,
                         context)
                 non_unified_sources.add(source)
+            time_start = time.time()
             for gyp_context in read_from_gyp(context.config,
                                              mozpath.join(curdir, gyp_dir.input),
                                              mozpath.join(context.objdir,
@@ -1149,6 +1164,8 @@ class BuildReader(object):
                                              non_unified_sources = non_unified_sources):
                 gyp_context.update(gyp_dir.sandbox_vars)
                 gyp_contexts.append(gyp_context)
+                self._file_count += len(gyp_context.all_paths)
+            self._execution_time += time.time() - time_start
 
         for gyp_context in gyp_contexts:
             context['DIRS'].append(mozpath.relpath(gyp_context.objdir, context.objdir))

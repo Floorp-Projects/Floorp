@@ -843,3 +843,22 @@ class PathArgument(object):
 
     def objdir_path(self):
         return mozpath.join(self.topobjdir, self.relpath())
+
+
+class ExecutionSummary(dict):
+    """Helper for execution summaries."""
+
+    def __init__(self, summary_format, **data):
+        self._summary_format = ''
+        assert 'execution_time' in data
+        self.extend(summary_format, **data)
+
+    def extend(self, summary_format, **data):
+        self._summary_format += summary_format
+        self.update(data)
+
+    def __str__(self):
+        return self._summary_format.format(**self)
+
+    def __getattr__(self, key):
+        return self[key]

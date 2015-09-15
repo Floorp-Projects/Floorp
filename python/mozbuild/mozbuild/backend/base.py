@@ -21,102 +21,9 @@ import mozpack.path as mozpath
 from ..preprocessor import Preprocessor
 from ..pythonutil import iter_modules_in_path
 from ..util import FileAvoidWrite
-from ..frontend.data import (
-    ContextDerived,
-    ReaderSummary,
-)
+from ..frontend.data import ContextDerived
 from .configenvironment import ConfigEnvironment
-
-
-class BackendConsumeSummary(object):
-    """Holds state about what a backend did.
-
-    This is used primarily to print a summary of what the backend did
-    so people know what's going on.
-    """
-    def __init__(self):
-        # How many moz.build files were read. This includes included files.
-        self.mozbuild_count = 0
-
-        # The number of derived objects from the read moz.build files.
-        self.object_count = 0
-
-        # The number of backend files created.
-        self.created_count = 0
-
-        # The number of backend files updated.
-        self.updated_count = 0
-
-        # The number of unchanged backend files.
-        self.unchanged_count = 0
-
-        # The number of deleted backend files.
-        self.deleted_count = 0
-
-        # The total wall time this backend spent consuming objects. If
-        # the iterable passed into consume() is a generator, this includes the
-        # time spent to read moz.build files.
-        self.wall_time = 0.0
-
-        # CPU time spent by during the interval captured by wall_time.
-        self.cpu_time = 0.0
-
-        # The total wall time spent executing moz.build files. This is just
-        # the read and execute time. It does not cover consume time.
-        self.mozbuild_execution_time = 0.0
-
-        # The total wall time spent emitting objects from sandboxes.
-        self.emitter_execution_time = 0.0
-
-        # The total wall time spent in the backend. This counts the time the
-        # backend writes out files, etc.
-        self.backend_execution_time = 0.0
-
-        # How much wall time the system spent doing other things. This is
-        # wall_time - mozbuild_execution_time - emitter_execution_time -
-        # backend_execution_time.
-        self.other_time = 0.0
-
-        # Mapping of changed file paths to diffs of the changes.
-        self.file_diffs = {}
-
-    @property
-    def reader_summary(self):
-        return 'Finished reading {:d} moz.build files in {:.2f}s'.format(
-            self.mozbuild_count,
-            self.mozbuild_execution_time)
-
-    @property
-    def emitter_summary(self):
-        return 'Processed into {:d} build config descriptors in {:.2f}s'.format(
-            self.object_count, self.emitter_execution_time)
-
-    @property
-    def backend_summary(self):
-        return 'Backend executed in {:.2f}s'.format(self.backend_execution_time)
-
-    def backend_detailed_summary(self):
-        """Backend summary to be supplied by BuildBackend implementations."""
-        return None
-
-    @property
-    def total_summary(self):
-        efficiency_value = self.cpu_time / self.wall_time if self.wall_time else 100
-        return 'Total wall time: {:.2f}s; CPU time: {:.2f}s; Efficiency: ' \
-            '{:.0%}; Untracked: {:.2f}s'.format(
-                self.wall_time, self.cpu_time, efficiency_value,
-                self.other_time)
-
-    def summaries(self):
-        yield self.reader_summary
-        yield self.emitter_summary
-        yield self.backend_summary
-
-        detailed = self.backend_detailed_summary()
-        if detailed:
-            yield detailed
-
-        yield self.total_summary
+from mozbuild.base import ExecutionSummary
 
 
 class BuildBackend(LoggingMixin):
@@ -135,7 +42,6 @@ class BuildBackend(LoggingMixin):
         self.populate_logger()
 
         self.environment = environment
-        self.summary = BackendConsumeSummary()
 
         # Files whose modification should cause a new read and backend
         # generation.
@@ -155,7 +61,43 @@ class BuildBackend(LoggingMixin):
         self._environments = {}
         self._environments[environment.topobjdir] = environment
 
+        # The number of backend files created.
+        self._created_count = 0
+
+        # The number of backend files updated.
+        self._updated_count = 0
+
+        # The number of unchanged backend files.
+        self._unchanged_count = 0
+
+        # The number of deleted backend files.
+        self._deleted_count = 0
+
+        # The total wall time spent in the backend. This counts the time the
+        # backend writes out files, etc.
+        self._execution_time = 0.0
+
+        # Mapping of changed file paths to diffs of the changes.
+        self.file_diffs = {}
+
         self._init()
+
+    def summary(self):
+        return ExecutionSummary(
+            self.__class__.__name__.replace('Backend', '') +
+            ' backend executed in {execution_time:.2f}s\n  '
+            '{total:d} total backend files; '
+            '{created:d} created; '
+            '{updated:d} updated; '
+            '{unchanged:d} unchanged; '
+            '{deleted:d} deleted',
+            execution_time=self._execution_time,
+            total=self._created_count + self._updated_count +
+            self._unchanged_count,
+            created=self._created_count,
+            updated=self._updated_count,
+            unchanged=self._unchanged_count,
+            deleted=self._deleted_count)
 
     def _init():
         """Hook point for child classes to perform actions during __init__.
@@ -173,23 +115,13 @@ class BuildBackend(LoggingMixin):
         base class consumes objects and calls methods (possibly) implemented by
         child classes.
         """
-        cpu_start = time.clock()
-        time_start = time.time()
-        backend_time = 0.0
-
         for obj in objs:
-            self.summary.object_count += 1
             obj_start = time.time()
             self.consume_object(obj)
-            backend_time += time.time() - obj_start
+            self._execution_time += time.time() - obj_start
 
             if isinstance(obj, ContextDerived):
                 self.backend_input_files |= obj.context_all_paths
-
-            if isinstance(obj, ReaderSummary):
-                self.summary.mozbuild_count = obj.total_file_count
-                self.summary.mozbuild_execution_time = obj.total_sandbox_execution_time
-                self.summary.emitter_execution_time = obj.total_emitter_execution_time
 
         # Pull in all loaded Python as dependencies so any Python changes that
         # could influence our output result in a rescan.
@@ -198,14 +130,14 @@ class BuildBackend(LoggingMixin):
 
         finished_start = time.time()
         self.consume_finished()
-        backend_time += time.time() - finished_start
+        self._execution_time += time.time() - finished_start
 
         # Purge backend files created in previous run, but not created anymore
         delete_files = self._backend_output_list - self._backend_output_files
         for path in delete_files:
             try:
                 os.unlink(mozpath.join(self.environment.topobjdir, path))
-                self.summary.deleted_count += 1
+                self._deleted_count += 1
             except OSError:
                 pass
         # Remove now empty directories
@@ -216,23 +148,13 @@ class BuildBackend(LoggingMixin):
                 pass
 
         # Write out the list of backend files generated, if it changed.
-        if self.summary.deleted_count or self.summary.created_count or \
+        if self._deleted_count or self._created_count or \
                 not os.path.exists(self._backend_output_list_file):
             with open(self._backend_output_list_file, 'w') as fh:
                 fh.write('\n'.join(sorted(self._backend_output_files)))
-        elif self.summary.updated_count:
+        elif self._updated_count:
             with open(self._backend_output_list_file, 'a'):
                 os.utime(self._backend_output_list_file, None)
-
-        self.summary.cpu_time = time.clock() - cpu_start
-        self.summary.wall_time = time.time() - time_start
-        self.summary.backend_execution_time = backend_time
-        self.summary.other_time = self.summary.wall_time - \
-            self.summary.mozbuild_execution_time - \
-            self.summary.emitter_execution_time - \
-            self.summary.backend_execution_time
-
-        return self.summary
 
     @abstractmethod
     def consume_object(self, obj):
@@ -250,7 +172,7 @@ class BuildBackend(LoggingMixin):
         """Context manager to write a file.
 
         This is a glorified wrapper around FileAvoidWrite with integration to
-        update the BackendConsumeSummary on this instance.
+        update the summary data on this instance.
 
         Example usage:
 
@@ -276,13 +198,13 @@ class BuildBackend(LoggingMixin):
         self._backend_output_files.add(mozpath.relpath(fh.name, self.environment.topobjdir))
         existed, updated = fh.close()
         if not existed:
-            self.summary.created_count += 1
+            self._created_count += 1
         elif updated:
-            self.summary.updated_count += 1
+            self._updated_count += 1
             if fh.diff:
-                self.summary.file_diffs[fh.name] = fh.diff
+                self.file_diffs[fh.name] = fh.diff
         else:
-            self.summary.unchanged_count += 1
+            self._unchanged_count += 1
 
     @contextmanager
     def _get_preprocessor(self, obj):
