@@ -19,20 +19,23 @@ window.onload = function() {
   Task.spawn(function* () {
     var { memory, client } = yield startServerAndGetSelectedTabMemory();
 
-    var objects = [];
-    for (var i = 0; i < 1000; i++) {
-      var o = {};
-      o[Math.random] = 1;
-      objects.push(o);
-    }
+    do {
+      var objects = [];
+      for (var i = 0; i < 1000; i++) {
+        var o = {};
+        o[Math.random()] = 1;
+        objects.push(o);
+      }
 
-    objects = null;
-    var { total: beforeGC } = yield memory.measure();
+      objects = null;
 
-    yield memory.forceGarbageCollection();
-    var { total: afterGC } = yield memory.measure();
+      var { total: beforeGC } = yield memory.measure();
 
-    ok(beforeGC > afterGC);
+      yield memory.forceGarbageCollection();
+      var { total: afterGC } = yield memory.measure();
+    } while(beforeGC < afterGC);
+
+    ok(true, "The amount of memory after GC should eventually decrease");
 
     destroyServerAndFinish(client);
   });

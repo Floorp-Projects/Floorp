@@ -16,7 +16,10 @@ using namespace mozilla::dom;
  * Implementation of PresentationParent
  */
 
-NS_IMPL_ISUPPORTS(PresentationParent, nsIPresentationListener, nsIPresentationSessionListener)
+NS_IMPL_ISUPPORTS(PresentationParent,
+                  nsIPresentationAvailabilityListener,
+                  nsIPresentationSessionListener,
+                  nsIPresentationRespondingListener)
 
 PresentationParent::PresentationParent()
   : mActorDestroyed(false)
@@ -47,30 +50,30 @@ PresentationParent::ActorDestroy(ActorDestroyReason aWhy)
   }
   mSessionIds.Clear();
 
-  mService->UnregisterListener(this);
+  mService->UnregisterAvailabilityListener(this);
   mService = nullptr;
 }
 
 bool
 PresentationParent::RecvPPresentationRequestConstructor(
   PPresentationRequestParent* aActor,
-  const PresentationRequest& aRequest)
+  const PresentationIPCRequest& aRequest)
 {
   PresentationRequestParent* actor = static_cast<PresentationRequestParent*>(aActor);
 
   nsresult rv = NS_ERROR_FAILURE;
   switch (aRequest.type()) {
-    case PresentationRequest::TStartSessionRequest:
+    case PresentationIPCRequest::TStartSessionRequest:
       rv = actor->DoRequest(aRequest.get_StartSessionRequest());
       break;
-    case PresentationRequest::TSendSessionMessageRequest:
+    case PresentationIPCRequest::TSendSessionMessageRequest:
       rv = actor->DoRequest(aRequest.get_SendSessionMessageRequest());
       break;
-    case PresentationRequest::TTerminateRequest:
+    case PresentationIPCRequest::TTerminateRequest:
       rv = actor->DoRequest(aRequest.get_TerminateRequest());
       break;
     default:
-      MOZ_CRASH("Unknown PresentationRequest type");
+      MOZ_CRASH("Unknown PresentationIPCRequest type");
   }
 
   return NS_WARN_IF(NS_FAILED(rv)) ? false : true;
@@ -78,7 +81,7 @@ PresentationParent::RecvPPresentationRequestConstructor(
 
 PPresentationRequestParent*
 PresentationParent::AllocPPresentationRequestParent(
-  const PresentationRequest& aRequest)
+  const PresentationIPCRequest& aRequest)
 {
   MOZ_ASSERT(mService);
   nsRefPtr<PresentationRequestParent> actor = new PresentationRequestParent(mService);
@@ -101,18 +104,18 @@ PresentationParent::Recv__delete__()
 }
 
 bool
-PresentationParent::RecvRegisterHandler()
+PresentationParent::RecvRegisterAvailabilityHandler()
 {
   MOZ_ASSERT(mService);
-  NS_WARN_IF(NS_FAILED(mService->RegisterListener(this)));
+  NS_WARN_IF(NS_FAILED(mService->RegisterAvailabilityListener(this)));
   return true;
 }
 
 bool
-PresentationParent::RecvUnregisterHandler()
+PresentationParent::RecvUnregisterAvailabilityHandler()
 {
   MOZ_ASSERT(mService);
-  NS_WARN_IF(NS_FAILED(mService->UnregisterListener(this)));
+  NS_WARN_IF(NS_FAILED(mService->UnregisterAvailabilityListener(this)));
   return true;
 }
 
@@ -142,6 +145,22 @@ PresentationParent::RecvUnregisterSessionHandler(const nsString& aSessionId)
   return true;
 }
 
+/* virtual */ bool
+PresentationParent::RecvRegisterRespondingHandler(const uint64_t& aWindowId)
+{
+  MOZ_ASSERT(mService);
+  NS_WARN_IF(NS_FAILED(mService->RegisterRespondingListener(aWindowId, this)));
+  return true;
+}
+
+/* virtual */ bool
+PresentationParent::RecvUnregisterRespondingHandler(const uint64_t& aWindowId)
+{
+  MOZ_ASSERT(mService);
+  NS_WARN_IF(NS_FAILED(mService->UnregisterRespondingListener(aWindowId)));
+  return true;
+}
+
 NS_IMETHODIMP
 PresentationParent::NotifyAvailableChange(bool aAvailable)
 {
@@ -168,6 +187,17 @@ PresentationParent::NotifyMessage(const nsAString& aSessionId,
 {
   if (NS_WARN_IF(mActorDestroyed ||
                  !SendNotifyMessage(nsAutoString(aSessionId), nsAutoCString(aData)))) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresentationParent::NotifySessionConnect(uint64_t aWindowId,
+                                         const nsAString& aSessionId)
+{
+  if (NS_WARN_IF(mActorDestroyed ||
+                 !SendNotifySessionConnect(aWindowId, nsAutoString(aSessionId)))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

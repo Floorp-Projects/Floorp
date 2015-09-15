@@ -7,6 +7,18 @@
  * This header file lists up all event messages and their values.
  * Before including this header file, you should define
  * NS_EVENT_MESSAGE(aMessage, aValue)
+ *
+ * Naming rules of the event messages:
+ * 0. Starting with "e" prefix and use camelcase.
+ * 1. Basically, use same name as the DOM name which is fired at dispatching
+ *    the event.
+ * 2. If the event message name becomes too generic, e.g., "eInvalid", that may
+ *    conflict with another enum's item name, append something after the "e"
+ *    prefix, e.g., "eFormInvalid".
+ * 3. When you need to define a group of event messages, you should define
+ *    the special enum name messages as starting with "e" prefix, appending the
+ *    generic event name, e.g., "Pointer" with "Event" and "First" or "Last"
+ *    such as "ePointerEventFirst" and "ePointerEventLast".
  */
 
 NS_EVENT_MESSAGE(eVoidEvent,            0)
@@ -271,23 +283,23 @@ NS_EVENT_MESSAGE(ePaintEventFirst,      3400)
 NS_EVENT_MESSAGE(eAfterPaint,           ePaintEventFirst)
 
 // Simple gesture events
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_EVENT_START,    3500)
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_SWIPE_MAY_START,NS_SIMPLE_GESTURE_EVENT_START)
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_SWIPE_START,    NS_SIMPLE_GESTURE_EVENT_START + 1)
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_SWIPE_UPDATE,   NS_SIMPLE_GESTURE_EVENT_START + 2)
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_SWIPE_END,      NS_SIMPLE_GESTURE_EVENT_START + 3)
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_SWIPE,          NS_SIMPLE_GESTURE_EVENT_START + 4)
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_MAGNIFY_START,  NS_SIMPLE_GESTURE_EVENT_START + 5)
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_MAGNIFY_UPDATE, NS_SIMPLE_GESTURE_EVENT_START + 6)
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_MAGNIFY,        NS_SIMPLE_GESTURE_EVENT_START + 7)
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_ROTATE_START,   NS_SIMPLE_GESTURE_EVENT_START + 8)
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_ROTATE_UPDATE,  NS_SIMPLE_GESTURE_EVENT_START + 9)
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_ROTATE,         NS_SIMPLE_GESTURE_EVENT_START + 10)
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_TAP,            NS_SIMPLE_GESTURE_EVENT_START + 11)
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_PRESSTAP,       NS_SIMPLE_GESTURE_EVENT_START + 12)
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_EDGE_STARTED,   NS_SIMPLE_GESTURE_EVENT_START + 13)
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_EDGE_CANCELED,  NS_SIMPLE_GESTURE_EVENT_START + 14)
-NS_EVENT_MESSAGE(NS_SIMPLE_GESTURE_EDGE_COMPLETED, NS_SIMPLE_GESTURE_EVENT_START + 15)
+NS_EVENT_MESSAGE(eSimpleGestureEventFirst, 3500)
+NS_EVENT_MESSAGE(eSwipeGestureMayStart,    eSimpleGestureEventFirst)
+NS_EVENT_MESSAGE(eSwipeGestureStart,       eSimpleGestureEventFirst + 1)
+NS_EVENT_MESSAGE(eSwipeGestureUpdate,      eSimpleGestureEventFirst + 2)
+NS_EVENT_MESSAGE(eSwipeGestureEnd,         eSimpleGestureEventFirst + 3)
+NS_EVENT_MESSAGE(eSwipeGesture,            eSimpleGestureEventFirst + 4)
+NS_EVENT_MESSAGE(eMagnifyGestureStart,     eSimpleGestureEventFirst + 5)
+NS_EVENT_MESSAGE(eMagnifyGestureUpdate,    eSimpleGestureEventFirst + 6)
+NS_EVENT_MESSAGE(eMagnifyGesture,          eSimpleGestureEventFirst + 7)
+NS_EVENT_MESSAGE(eRotateGestureStart,      eSimpleGestureEventFirst + 8)
+NS_EVENT_MESSAGE(eRotateGestureUpdate,     eSimpleGestureEventFirst + 9)
+NS_EVENT_MESSAGE(eRotateGesture,           eSimpleGestureEventFirst + 10)
+NS_EVENT_MESSAGE(eTapGesture,              eSimpleGestureEventFirst + 11)
+NS_EVENT_MESSAGE(ePressTapGesture,         eSimpleGestureEventFirst + 12)
+NS_EVENT_MESSAGE(eEdgeUIStarted,           eSimpleGestureEventFirst + 13)
+NS_EVENT_MESSAGE(eEdgeUICanceled,          eSimpleGestureEventFirst + 14)
+NS_EVENT_MESSAGE(eEdgeUICompleted,         eSimpleGestureEventFirst + 15)
 
 // These are used to send native events to plugins.
 NS_EVENT_MESSAGE(ePluginEventFirst,     3600)
@@ -321,8 +333,8 @@ NS_EVENT_MESSAGE(eGestureNotify,        3900)
 NS_EVENT_MESSAGE(eScrolledAreaEventFirst, 4100)
 NS_EVENT_MESSAGE(eScrolledAreaChanged,    eScrolledAreaEventFirst)
 
-NS_EVENT_MESSAGE(NS_TRANSITION_EVENT_START, 4200)
-NS_EVENT_MESSAGE(NS_TRANSITION_END,     NS_TRANSITION_EVENT_START)
+NS_EVENT_MESSAGE(eTransitionEventFirst, 4200)
+NS_EVENT_MESSAGE(eTransitionEnd,        eTransitionEventFirst)
 
 NS_EVENT_MESSAGE(eAnimationEventFirst,  4250)
 NS_EVENT_MESSAGE(eAnimationStart,       eAnimationEventFirst)
@@ -334,9 +346,9 @@ NS_EVENT_MESSAGE(eSMILBeginEvent,       eSMILEventFirst)
 NS_EVENT_MESSAGE(eSMILEndEvent,         eSMILEventFirst + 1)
 NS_EVENT_MESSAGE(eSMILRepeatEvent,      eSMILEventFirst + 2)
 
-NS_EVENT_MESSAGE(NS_WEBAUDIO_EVENT_START, 4350)
-NS_EVENT_MESSAGE(NS_AUDIO_PROCESS,      NS_WEBAUDIO_EVENT_START)
-NS_EVENT_MESSAGE(NS_AUDIO_COMPLETE,     NS_WEBAUDIO_EVENT_START + 1)
+NS_EVENT_MESSAGE(eAudioEventFirst,      4350)
+NS_EVENT_MESSAGE(eAudioProcess,         eAudioEventFirst)
+NS_EVENT_MESSAGE(eAudioComplete,        eAudioEventFirst + 1)
 
 // script notification events
 NS_EVENT_MESSAGE(eScriptEventFirst,     4500)
@@ -347,8 +359,8 @@ NS_EVENT_MESSAGE(ePrintEventFirst,      4600)
 NS_EVENT_MESSAGE(eBeforePrint,          ePrintEventFirst)
 NS_EVENT_MESSAGE(eAfterPrint,           ePrintEventFirst + 1)
 
-NS_EVENT_MESSAGE(NS_MESSAGE_EVENT_START, 4700)
-NS_EVENT_MESSAGE(NS_MESSAGE,            NS_MESSAGE_EVENT_START)
+NS_EVENT_MESSAGE(eMessageEventFirst,    4700)
+NS_EVENT_MESSAGE(eMessage,              eMessageEventFirst)
 
 // Open and close events
 NS_EVENT_MESSAGE(eOpenCloseEventFirst,  4800)
@@ -362,18 +374,18 @@ NS_EVENT_MESSAGE(eDeviceProximity,       eDeviceEventFirst + 2)
 NS_EVENT_MESSAGE(eUserProximity,         eDeviceEventFirst + 3)
 NS_EVENT_MESSAGE(eDeviceLight,           eDeviceEventFirst + 4)
 
-NS_EVENT_MESSAGE(NS_SHOW_EVENT,          5000)
+NS_EVENT_MESSAGE(eShow,                  5000)
 
 // Fullscreen DOM API
 NS_EVENT_MESSAGE(eFullscreenEventFirst,  5100)
 NS_EVENT_MESSAGE(eFullscreenChange,      eFullscreenEventFirst)
 NS_EVENT_MESSAGE(eFullscreenError,       eFullscreenEventFirst + 1)
 
-NS_EVENT_MESSAGE(NS_TOUCH_EVENT_START,   5200)
-NS_EVENT_MESSAGE(NS_TOUCH_START,         NS_TOUCH_EVENT_START)
-NS_EVENT_MESSAGE(NS_TOUCH_MOVE,          NS_TOUCH_EVENT_START + 1)
-NS_EVENT_MESSAGE(NS_TOUCH_END,           NS_TOUCH_EVENT_START + 2)
-NS_EVENT_MESSAGE(NS_TOUCH_CANCEL,        NS_TOUCH_EVENT_START + 3)
+NS_EVENT_MESSAGE(eTouchEventFirst,       5200)
+NS_EVENT_MESSAGE(eTouchStart,            eTouchEventFirst)
+NS_EVENT_MESSAGE(eTouchMove,             eTouchEventFirst + 1)
+NS_EVENT_MESSAGE(eTouchEnd,              eTouchEventFirst + 2)
+NS_EVENT_MESSAGE(eTouchCancel,           eTouchEventFirst + 3)
 
 // Pointerlock DOM API
 NS_EVENT_MESSAGE(ePointerLockEventFirst, 5300)
@@ -401,14 +413,14 @@ NS_EVENT_MESSAGE(eNetworkUpload,         eNetworkEventFirst + 1)
 NS_EVENT_MESSAGE(eNetworkDownload,       eNetworkEventFirst + 2)
 
 // MediaRecorder events.
-NS_EVENT_MESSAGE(NS_MEDIARECORDER_EVENT_START, 5700)
-NS_EVENT_MESSAGE(NS_MEDIARECORDER_DATAAVAILABLE, NS_MEDIARECORDER_EVENT_START + 1)
-NS_EVENT_MESSAGE(NS_MEDIARECORDER_WARNING,       NS_MEDIARECORDER_EVENT_START + 2)
-NS_EVENT_MESSAGE(NS_MEDIARECORDER_STOP,          NS_MEDIARECORDER_EVENT_START + 3)
+NS_EVENT_MESSAGE(eMediaRecorderEventFirst,    5700)
+NS_EVENT_MESSAGE(eMediaRecorderDataAvailable, eMediaRecorderEventFirst + 1)
+NS_EVENT_MESSAGE(eMediaRecorderWarning,       eMediaRecorderEventFirst + 2)
+NS_EVENT_MESSAGE(eMediaRecorderStop,          eMediaRecorderEventFirst + 3)
 
 // SpeakerManager events
-NS_EVENT_MESSAGE(NS_SPEAKERMANAGER_EVENT_START, 5800)
-NS_EVENT_MESSAGE(NS_SPEAKERMANAGER_SPEAKERFORCEDCHANGE, NS_SPEAKERMANAGER_EVENT_START + 1)
+NS_EVENT_MESSAGE(eSpeakerManagerEventFirst, 5800)
+NS_EVENT_MESSAGE(eSpeakerForcedChange,      eSpeakerManagerEventFirst + 1)
 
 #ifdef MOZ_GAMEPAD
 // Gamepad input events
@@ -422,10 +434,10 @@ NS_EVENT_MESSAGE(eGamepadEventLast,      eGamepadDisconnected)
 #endif
 
 // input and beforeinput events.
-NS_EVENT_MESSAGE(NS_EDITOR_EVENT_START,   6100)
-NS_EVENT_MESSAGE(NS_EDITOR_INPUT,         NS_EDITOR_EVENT_START)
+NS_EVENT_MESSAGE(eEditorEventFirst,      6100)
+NS_EVENT_MESSAGE(eEditorInput,           eEditorEventFirst)
 
 // selection events
-NS_EVENT_MESSAGE(NS_SELECT_EVENT_START,   6200)
-NS_EVENT_MESSAGE(NS_SELECT_START,         NS_SELECT_EVENT_START)
-NS_EVENT_MESSAGE(NS_SELECTION_CHANGE,     NS_SELECT_EVENT_START + 1)
+NS_EVENT_MESSAGE(eSelectEventFirst,      6200)
+NS_EVENT_MESSAGE(eSelectStart,           eSelectEventFirst)
+NS_EVENT_MESSAGE(eSelectionChange,       eSelectEventFirst + 1)

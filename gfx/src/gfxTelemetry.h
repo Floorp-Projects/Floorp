@@ -21,6 +21,9 @@ enum class FeatureStatus
   // the operating system.
   Unavailable,
 
+  // This feature crashed immediately when we tried to initialize it.
+  Crashed,
+
   // This feature was blocked for reasons outside the blacklist, such as a
   // runtime test failing.
   Blocked,

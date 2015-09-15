@@ -2275,18 +2275,21 @@ Assembler::as_ldrexb(Register rt, Register rn, Condition c)
 BufferOffset
 Assembler::as_strex(Register rd, Register rt, Register rn, Condition c)
 {
+    MOZ_ASSERT(rd != rn && rd != rt); // True restriction on Cortex-A7 (RPi2)
     return writeInst(0x01800f90 | (int)c | RD(rd) | RN(rn) | rt.code());
 }
 
 BufferOffset
 Assembler::as_strexh(Register rd, Register rt, Register rn, Condition c)
 {
+    MOZ_ASSERT(rd != rn && rd != rt); // True restriction on Cortex-A7 (RPi2)
     return writeInst(0x01e00f90 | (int)c | RD(rd) | RN(rn) | rt.code());
 }
 
 BufferOffset
 Assembler::as_strexb(Register rd, Register rt, Register rn, Condition c)
 {
+    MOZ_ASSERT(rd != rn && rd != rt); // True restriction on Cortex-A7 (RPi2)
     return writeInst(0x01c00f90 | (int)c | RD(rd) | RN(rn) | rt.code());
 }
 

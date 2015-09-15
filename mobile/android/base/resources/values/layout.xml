@@ -9,5 +9,4 @@
          for the resource ID to be found (and thus compilation to succeed), we
          provide dummy values below. -->
     <item type="layout" name="tab_strip">@null</item>
-    <item type="layout" name="tabs_panel_back_button">@null</item>
 </resources>

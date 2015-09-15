@@ -106,16 +106,16 @@
 
 namespace js {
 
-class ProfileEntry;
-
 typedef HashMap<JSScript*, const char*, DefaultHasher<JSScript*>, SystemAllocPolicy>
         ProfileStringMap;
 
+class AutoSPSEntry;
 class SPSEntryMarker;
 class SPSBaselineOSRMarker;
 
 class SPSProfiler
 {
+    friend class AutoSPSEntry;
     friend class SPSEntryMarker;
     friend class SPSBaselineOSRMarker;
 
@@ -130,7 +130,8 @@ class SPSProfiler
     void                (*eventMarker_)(const char*);
 
     const char* allocProfileString(JSScript* script, JSFunction* function);
-    void push(const char* string, void* sp, JSScript* script, jsbytecode* pc, bool copy);
+    void push(const char* string, void* sp, JSScript* script, jsbytecode* pc, bool copy,
+              ProfileEntry::Category category = ProfileEntry::Category::JS);
     void pop();
 
   public:
@@ -271,6 +272,25 @@ class MOZ_RAII SPSEntryMarker
   private:
     SPSProfiler* profiler;
     mozilla::DebugOnly<uint32_t> size_before;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+/*
+ * RAII class to automatically add SPS psuedo frame entries.
+ *
+ * NB: The `label` string must be statically allocated.
+ */
+class MOZ_NONHEAP_CLASS AutoSPSEntry
+{
+  public:
+    explicit AutoSPSEntry(JSRuntime* rt, const char* label,
+                          ProfileEntry::Category category = ProfileEntry::Category::JS
+                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~AutoSPSEntry();
+
+  private:
+    SPSProfiler* profiler_;
+    mozilla::DebugOnly<uint32_t> sizeBefore_;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

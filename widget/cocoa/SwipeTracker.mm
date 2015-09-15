@@ -51,7 +51,7 @@ SwipeTracker::SwipeTracker(nsChildView& aWidget,
   , mEventsHaveStartedNewGesture(false)
   , mRegisteredWithRefreshDriver(false)
 {
-  SendSwipeEvent(NS_SIMPLE_GESTURE_SWIPE_START, 0, 0.0);
+  SendSwipeEvent(eSwipeGestureStart, 0, 0.0);
   ProcessEvent(aSwipeStartEvent);
 }
 
@@ -116,7 +116,7 @@ SwipeTracker::ProcessEvent(const PanGestureInput& aEvent)
     delta /= kRubberBandResistanceFactor;
   }
   mGestureAmount = ClampToAllowedRange(mGestureAmount + delta);
-  SendSwipeEvent(NS_SIMPLE_GESTURE_SWIPE_UPDATE, 0, mGestureAmount);
+  SendSwipeEvent(eSwipeGestureUpdate, 0, mGestureAmount);
 
   if (aEvent.mType != PanGestureInput::PANGESTURE_END) {
     double elapsedSeconds = std::max(0.008, (aEvent.mTimeStamp - mLastEventTimeStamp).ToSeconds());
@@ -127,7 +127,7 @@ SwipeTracker::ProcessEvent(const PanGestureInput& aEvent)
     bool didSwipeSucceed = SwipingInAllowedDirection() && ComputeSwipeSuccess();
     double targetValue = 0.0;
     if (didSwipeSucceed) {
-      SendSwipeEvent(NS_SIMPLE_GESTURE_SWIPE, mSwipeDirection, 0.0);
+      SendSwipeEvent(eSwipeGesture, mSwipeDirection, 0.0);
       targetValue = SwipeSuccessTargetValue();
     }
     StartAnimating(targetValue);
@@ -164,7 +164,7 @@ SwipeTracker::WillRefresh(mozilla::TimeStamp aTime)
 
   bool isFinished = mAxis.IsFinished(1.0 / kWholePagePixelSize);
   mGestureAmount = (isFinished ? mAxis.GetDestination() : mAxis.GetPosition());
-  SendSwipeEvent(NS_SIMPLE_GESTURE_SWIPE_UPDATE, 0, mGestureAmount);
+  SendSwipeEvent(eSwipeGestureUpdate, 0, mGestureAmount);
 
   if (isFinished) {
     UnregisterFromRefreshDriver();
@@ -175,12 +175,12 @@ SwipeTracker::WillRefresh(mozilla::TimeStamp aTime)
 void
 SwipeTracker::CancelSwipe()
 {
-  SendSwipeEvent(NS_SIMPLE_GESTURE_SWIPE_END, 0, 0.0);
+  SendSwipeEvent(eSwipeGestureEnd, 0, 0.0);
 }
 
 void SwipeTracker::SwipeFinished()
 {
-  SendSwipeEvent(NS_SIMPLE_GESTURE_SWIPE_END, 0, 0.0);
+  SendSwipeEvent(eSwipeGestureEnd, 0, 0.0);
   mWidget.SwipeFinished();
 }
 

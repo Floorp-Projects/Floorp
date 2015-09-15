@@ -18,6 +18,7 @@ from mach.decorators import (
 )
 
 from mozbuild.base import MachCommandBase
+from mozbuild.base import MachCommandConditions as conditions
 from argparse import ArgumentParser
 
 
@@ -293,30 +294,76 @@ class MachCommands(MachCommandBase):
     def run_cppunit_test(self, **params):
         import mozinfo
         from mozlog import commandline
-        import runcppunittests as cppunittests
-
         log = commandline.setup_logging("cppunittest",
                                         {},
                                         {"tbpl": sys.stdout})
-
-        if len(params['test_files']) == 0:
-            testdir = os.path.join(self.distdir, 'cppunittests')
-            manifest = os.path.join(self.topsrcdir, 'testing', 'cppunittest.ini')
-            tests = cppunittests.extract_unittests_from_args([testdir], mozinfo.info, manifest)
-        else:
-            tests = cppunittests.extract_unittests_from_args(params['test_files'], mozinfo.info, None)
 
         # See if we have crash symbols
         symbols_path = os.path.join(self.distdir, 'crashreporter-symbols')
         if not os.path.isdir(symbols_path):
             symbols_path = None
 
-        tester = cppunittests.CPPUnitTests()
+        # If no tests specified, run all tests in main manifest
+        tests = params['test_files']
+        if len(tests) == 0:
+            tests = [os.path.join(self.distdir, 'cppunittests')]
+            manifest_path = os.path.join(self.topsrcdir, 'testing', 'cppunittest.ini')
+        else:
+            manifest_path = None
+
+        if conditions.is_android(self):
+            from mozrunner.devices.android_device import verify_android_device
+            verify_android_device(self, install=False)
+            return self.run_android_test(tests, symbols_path, manifest_path, log)
+
+        return self.run_desktop_test(tests, symbols_path, manifest_path, log)
+
+    def run_desktop_test(self, tests, symbols_path, manifest_path, log):
+        import runcppunittests as cppunittests
+        from mozlog import commandline
+
+        parser = cppunittests.CPPUnittestOptions()
+        commandline.add_logging_group(parser)
+        options, args = parser.parse_args()
+
+        options.symbols_path = symbols_path
+        options.manifest_path = manifest_path
+        options.xre_path = self.bindir
+
         try:
-            result = tester.run_tests(tests, self.bindir, symbols_path, interactive=True)
+            result = cppunittests.run_test_harness(options, tests)
         except Exception as e:
             log.error("Caught exception running cpp unit tests: %s" % str(e))
             result = False
+            raise
+
+        return 0 if result else 1
+
+    def run_android_test(self, tests, symbols_path, manifest_path, log):
+        import remotecppunittests as remotecppunittests
+        from mozlog import commandline
+
+        parser = remotecppunittests.RemoteCPPUnittestOptions()
+        commandline.add_logging_group(parser)
+        options, args = parser.parse_args()
+
+        options.symbols_path = symbols_path
+        options.manifest_path = manifest_path
+        options.xre_path = self.bindir
+        options.dm_trans = "adb"
+        options.local_lib = self.bindir.replace('bin', 'fennec')
+        for file in os.listdir(os.path.join(self.topobjdir, "dist")):
+            if file.endswith(".apk") and file.startswith("fennec"):
+                options.local_apk = os.path.join(self.topobjdir, "dist", file)
+                log.info("using APK: " + options.local_apk)
+                break
+
+        try:
+            result = remotecppunittests.run_test_harness(options, tests)
+        except Exception as e:
+            log.error("Caught exception running cpp unit tests: %s" % str(e))
+            result = False
+            raise
 
         return 0 if result else 1
 

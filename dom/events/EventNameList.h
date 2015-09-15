@@ -219,7 +219,7 @@ EVENT(ended,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(input,
-      NS_EDITOR_INPUT,
+      eEditorInput,
       EventNameType_HTMLXUL,
       eEditorInputEventClass)
 EVENT(invalid,
@@ -351,7 +351,7 @@ EVENT(lostpointercapture,
       EventNameType_All,
       ePointerEventClass)
 EVENT(selectstart,
-      NS_SELECT_START,
+      eSelectStart,
       EventNameType_HTMLXUL,
       eBasicEventClass)
 
@@ -394,7 +394,7 @@ EVENT(select,
       EventNameType_HTMLXUL,
       eBasicEventClass)
 EVENT(show,
-      NS_SHOW_EVENT,
+      eShow,
       EventNameType_HTML,
       eBasicEventClass)
 EVENT(stalled,
@@ -496,7 +496,7 @@ WINDOW_EVENT(languagechange,
 // need a different macro to flag things like that (IDL, but not content
 // attributes on body/frameset), or is just using EventNameType_None enough?
 WINDOW_EVENT(message,
-             NS_MESSAGE,
+             eMessage,
              EventNameType_None,
              eBasicEventClass)
 WINDOW_EVENT(offline,
@@ -568,19 +568,19 @@ WINDOW_ONLY_EVENT(moznetworkdownload,
 #endif // MOZ_B2G
 
 TOUCH_EVENT(touchstart,
-            NS_TOUCH_START,
+            eTouchStart,
             EventNameType_All,
             eTouchEventClass)
 TOUCH_EVENT(touchend,
-            NS_TOUCH_END,
+            eTouchEnd,
             EventNameType_All,
             eTouchEventClass)
 TOUCH_EVENT(touchmove,
-            NS_TOUCH_MOVE,
+            eTouchMove,
             EventNameType_All,
             eTouchEventClass )
 TOUCH_EVENT(touchcancel,
-            NS_TOUCH_CANCEL,
+            eTouchCancel,
             EventNameType_All,
             eTouchEventClass)
 
@@ -589,7 +589,7 @@ DOCUMENT_ONLY_EVENT(readystatechange,
                     EventNameType_HTMLXUL,
                     eBasicEventClass)
 DOCUMENT_ONLY_EVENT(selectionchange,
-                    NS_SELECTION_CHANGE,
+                    eSelectionChange,
                     EventNameType_HTMLXUL,
                     eBasicEventClass)
 
@@ -655,22 +655,22 @@ NON_IDL_EVENT(open,
               eBasicEventClass)
 
 NON_IDL_EVENT(dataavailable,
-              NS_MEDIARECORDER_DATAAVAILABLE,
+              eMediaRecorderDataAvailable,
               EventNameType_None,
               eBasicEventClass)
 
 NON_IDL_EVENT(stop,
-              NS_MEDIARECORDER_STOP,
+              eMediaRecorderStop,
               EventNameType_None,
               eBasicEventClass)
 
 NON_IDL_EVENT(warning,
-              NS_MEDIARECORDER_WARNING,
+              eMediaRecorderWarning,
               EventNameType_None,
               eBasicEventClass)
 
 NON_IDL_EVENT(speakerforcedchange,
-              NS_SPEAKERMANAGER_SPEAKERFORCEDCHANGE,
+              eSpeakerForcedChange,
               EventNameType_None,
               eBasicEventClass)
 
@@ -848,72 +848,72 @@ NON_IDL_EVENT(gamepaddisconnected,
 
 // Simple gesture events
 NON_IDL_EVENT(MozSwipeGestureMayStart,
-              NS_SIMPLE_GESTURE_SWIPE_MAY_START,
+              eSwipeGestureMayStart,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozSwipeGestureStart,
-              NS_SIMPLE_GESTURE_SWIPE_START,
+              eSwipeGestureStart,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozSwipeGestureUpdate,
-              NS_SIMPLE_GESTURE_SWIPE_UPDATE,
+              eSwipeGestureUpdate,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozSwipeGestureEnd,
-              NS_SIMPLE_GESTURE_SWIPE_END,
+              eSwipeGestureEnd,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozSwipeGesture,
-              NS_SIMPLE_GESTURE_SWIPE,
+              eSwipeGesture,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozMagnifyGestureStart,
-              NS_SIMPLE_GESTURE_MAGNIFY_START,
+              eMagnifyGestureStart,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozMagnifyGestureUpdate,
-              NS_SIMPLE_GESTURE_MAGNIFY_UPDATE,
+              eMagnifyGestureUpdate,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozMagnifyGesture,
-              NS_SIMPLE_GESTURE_MAGNIFY,
+              eMagnifyGesture,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozRotateGestureStart,
-              NS_SIMPLE_GESTURE_ROTATE_START,
+              eRotateGestureStart,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozRotateGestureUpdate,
-              NS_SIMPLE_GESTURE_ROTATE_UPDATE,
+              eRotateGestureUpdate,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozRotateGesture,
-              NS_SIMPLE_GESTURE_ROTATE,
+              eRotateGesture,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozTapGesture,
-              NS_SIMPLE_GESTURE_TAP,
+              eTapGesture,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozPressTapGesture,
-              NS_SIMPLE_GESTURE_PRESSTAP,
+              ePressTapGesture,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozEdgeUIStarted,
-              NS_SIMPLE_GESTURE_EDGE_STARTED,
+              eEdgeUIStarted,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozEdgeUICanceled,
-              NS_SIMPLE_GESTURE_EDGE_CANCELED,
+              eEdgeUICanceled,
               EventNameType_None,
               eSimpleGestureEventClass)
 NON_IDL_EVENT(MozEdgeUICompleted,
-              NS_SIMPLE_GESTURE_EDGE_COMPLETED,
+              eEdgeUICompleted,
               EventNameType_None,
               eSimpleGestureEventClass)
 
 NON_IDL_EVENT(transitionend,
-              NS_TRANSITION_END,
+              eTransitionEnd,
               EventNameType_None,
               eTransitionEventClass)
 NON_IDL_EVENT(animationstart,
@@ -930,12 +930,12 @@ NON_IDL_EVENT(animationiteration,
               eAnimationEventClass)
 
 NON_IDL_EVENT(audioprocess,
-              NS_AUDIO_PROCESS,
+              eAudioProcess,
               EventNameType_None,
               eBasicEventClass)
 
 NON_IDL_EVENT(complete,
-              NS_AUDIO_COMPLETE,
+              eAudioComplete,
               EventNameType_None,
               eBasicEventClass)
 

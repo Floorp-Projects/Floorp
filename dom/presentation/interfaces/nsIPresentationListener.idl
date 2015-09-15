@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 
 [scriptable, uuid(0105f837-4279-4715-9d5b-2dc3f8b65353)]
-interface nsIPresentationListener : nsISupports
+interface nsIPresentationAvailabilityListener : nsISupports
 {
   /*
    * Called when device availability changes.
@@ -31,4 +31,14 @@ interface nsIPresentationSessionListener : nsISupports
    */
   void notifyMessage(in DOMString sessionId,
                      in ACString data);
+};
+
+[scriptable, uuid(27f101d7-9ed1-429e-b4f8-43b00e8e111c)]
+interface nsIPresentationRespondingListener : nsISupports
+{
+  /*
+   * Called when an incoming session connects.
+   */
+  void notifySessionConnect(in uint64_t windowId,
+                            in DOMString sessionId);
 };

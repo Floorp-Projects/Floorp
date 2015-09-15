@@ -220,12 +220,13 @@ class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
         self.add_option("--remoteTestRoot", action = "store",
                     type = "string", dest = "remote_test_root",
                     help = "remote directory to use as test root (eg. /data/local/tests)")
-        self.add_option("--with-b2g-emulator", action = "store",
-                    type = "string", dest = "with_b2g_emulator",
-                    help = "Start B2G Emulator (specify path to b2g home)")
         # /data/local/tests is used because it is usually not possible to set +x permissions
         # on binaries on /mnt/sdcard
         defaults["remote_test_root"] = "/data/local/tests"
+
+        self.add_option("--with-b2g-emulator", action = "store",
+                    type = "string", dest = "with_b2g_emulator",
+                    help = "Start B2G Emulator (specify path to b2g home)")
 
         self.add_option("--addEnv", action = "append",
                     type = "string", dest = "add_env",
@@ -234,22 +235,7 @@ class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
 
         self.set_defaults(**defaults)
 
-def main():
-    parser = RemoteCPPUnittestOptions()
-    mozlog.commandline.add_logging_group(parser)
-    options, args = parser.parse_args()
-    if not args:
-        print >>sys.stderr, """Usage: %s <test binary> [<test binary>...]""" % sys.argv[0]
-        sys.exit(1)
-    if options.local_lib is not None and not os.path.isdir(options.local_lib):
-        print >>sys.stderr, """Error: --localLib directory %s not found""" % options.local_lib
-        sys.exit(1)
-    if options.local_apk is not None and not os.path.isfile(options.local_apk):
-        print >>sys.stderr, """Error: --apk file %s not found""" % options.local_apk
-        sys.exit(1)
-    if not options.xre_path:
-        print >>sys.stderr, """Error: --xre-path is required"""
-        sys.exit(1)
+def run_test_harness(options, args):
     if options.with_b2g_emulator:
         from mozrunner import B2GEmulatorRunner
         runner = B2GEmulatorRunner(b2g_home=options.with_b2g_emulator)
@@ -277,9 +263,6 @@ def main():
             print "Error: you must provide a device IP to connect to via the --deviceIP option"
             sys.exit(1)
 
-    log = mozlog.commandline.setup_logging("remotecppunittests", options,
-                                           {"tbpl": sys.stdout})
-
     options.xre_path = os.path.abspath(options.xre_path)
     cppunittests.update_mozinfo()
     progs = cppunittests.extract_unittests_from_args(args,
@@ -288,12 +271,36 @@ def main():
     tester = RemoteCPPUnitTests(dm, options, [item[0] for item in progs])
     try:
         result = tester.run_tests(progs, options.xre_path, options.symbols_path)
+    finally:
+        if options.with_b2g_emulator:
+            runner.cleanup()
+            runner.wait()
+    return result
+
+def main():
+    parser = RemoteCPPUnittestOptions()
+    mozlog.commandline.add_logging_group(parser)
+    options, args = parser.parse_args()
+    if not args:
+        print >>sys.stderr, """Usage: %s <test binary> [<test binary>...]""" % sys.argv[0]
+        sys.exit(1)
+    if options.local_lib is not None and not os.path.isdir(options.local_lib):
+        print >>sys.stderr, """Error: --localLib directory %s not found""" % options.local_lib
+        sys.exit(1)
+    if options.local_apk is not None and not os.path.isfile(options.local_apk):
+        print >>sys.stderr, """Error: --apk file %s not found""" % options.local_apk
+        sys.exit(1)
+    if not options.xre_path:
+        print >>sys.stderr, """Error: --xre-path is required"""
+        sys.exit(1)
+
+    log = mozlog.commandline.setup_logging("remotecppunittests", options,
+                                           {"tbpl": sys.stdout})
+    try:
+        result = run_test_harness(options, args)
     except Exception, e:
         log.error(str(e))
         result = False
-    if options.with_b2g_emulator:
-        runner.cleanup()
-        runner.wait()
     sys.exit(0 if result else 1)
 
 if __name__ == '__main__':

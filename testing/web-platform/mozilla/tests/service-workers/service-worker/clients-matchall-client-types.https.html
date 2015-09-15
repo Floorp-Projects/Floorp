@@ -62,13 +62,13 @@ promise_test(function(t) {
       .then(function() {
           return test_matchall(frame, expected_with_window, {type:'window'});
         })
-      .then(function() {
-          return test_matchall(frame, expected_with_shared_worker,
-                               {type:'sharedworker'});
-        })
-      .then(function() {
-          return test_matchall(frame, expected_with_all, {type:'all'});
-        })
+      //.then(function() {
+      //    return test_matchall(frame, expected_with_shared_worker,
+      //                         {type:'sharedworker'});
+      //  })
+      //.then(function() {
+      //    return test_matchall(frame, expected_with_all, {type:'all'});
+      //  })
       .then(function() {
           frame.remove();
           return service_worker_unregister_and_done(t, scope);

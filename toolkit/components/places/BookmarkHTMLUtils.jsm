@@ -517,6 +517,7 @@ BookmarkImporter.prototype = {
     let generatedTitle = this._safeTrim(aElt.getAttribute("generated_title"));
     let dateAdded = this._safeTrim(aElt.getAttribute("add_date"));
     let lastModified = this._safeTrim(aElt.getAttribute("last_modified"));
+    let tags = this._safeTrim(aElt.getAttribute("tags"));
 
     // For feeds, get the feed URL.  If it is invalid, mPreviousFeed will be
     // NULL and we'll create it as a normal bookmark.
@@ -573,6 +574,15 @@ BookmarkImporter.prototype = {
       try {
         PlacesUtils.bookmarks.setItemDateAdded(frame.previousId,
           this._convertImportedDateToInternalDate(dateAdded));
+      } catch(e) {
+      }
+    }
+
+    // Adds tags to the URI, if there are any.
+    if (tags) {
+      try {
+        let tagsArray = tags.split(",");
+        PlacesUtils.tagging.tagURI(frame.previousLink, tagsArray);
       } catch(e) {
       }
     }

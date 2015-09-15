@@ -14,7 +14,7 @@ namespace layers {
 
 SingleTiledContentClient::SingleTiledContentClient(ClientTiledPaintedLayer* aPaintedLayer,
                                                    ClientLayerManager* aManager)
-  : TiledContentClient(aManager)
+  : TiledContentClient(aManager, "Single")
 {
   MOZ_COUNT_CTOR(SingleTiledContentClient);
 

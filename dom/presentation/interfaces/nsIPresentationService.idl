@@ -5,7 +5,8 @@
 #include "nsISupports.idl"
 
 interface nsIInputStream;
-interface nsIPresentationListener;
+interface nsIPresentationAvailabilityListener;
+interface nsIPresentationRespondingListener;
 interface nsIPresentationSessionListener;
 
 %{C++
@@ -32,7 +33,7 @@ interface nsIPresentationServiceCallback : nsISupports
   void notifyError(in nsresult error);
 };
 
-[scriptable, uuid(731af98a-2760-4e7f-bb59-c7cf6665f26f)]
+[scriptable, uuid(5a254519-45c3-4229-9b16-f58c05b78fc6)]
 interface nsIPresentationService : nsISupports
 {
   /*
@@ -69,17 +70,17 @@ interface nsIPresentationService : nsISupports
   void terminate(in DOMString sessionId);
 
   /*
-   * Register a listener. Must be called from the main thread.
+   * Register an availability listener. Must be called from the main thread.
    *
    * @param listener: The listener to register.
    */
-  void registerListener(in nsIPresentationListener listener);
+  void registerAvailabilityListener(in nsIPresentationAvailabilityListener listener);
 
   /*
-   * Unregister a listener. Must be called from the main thread.
+   * Unregister an availability listener. Must be called from the main thread.
    * @param listener: The listener to unregister.
    */
-  void unregisterListener(in nsIPresentationListener listener);
+  void unregisterAvailabilityListener(in nsIPresentationAvailabilityListener listener);
 
   /*
    * Register a session listener. Must be called from the main thread.
@@ -96,6 +97,21 @@ interface nsIPresentationService : nsISupports
    * @param sessionId: An ID to identify presentation session.
    */
   void unregisterSessionListener(in DOMString sessionId);
+
+  /*
+   * Register a responding listener. Must be called from the main thread.
+   *
+   * @param windowId: The window ID associated with the listener.
+   * @param listener: The listener to register.
+   */
+  void registerRespondingListener(in uint64_t windowId,
+                                  in nsIPresentationRespondingListener listener);
+
+  /*
+   * Unregister a responding listener. Must be called from the main thread.
+   * @param windowId: The window ID associated with the listener.
+   */
+  void unregisterRespondingListener(in uint64_t windowId);
 
   /*
    * Check if the presentation instance has an existent session ID at launch.

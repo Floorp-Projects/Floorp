@@ -40,7 +40,6 @@ else:
 
 if CONFIG['OS_TARGET'] == 'Linux':
     DEFINES['LINUX'] = True
-    DEFINES['USE_INTERFACE_PRIORITIZER'] = True
     LOCAL_INCLUDES += [
         '/media/mtransport/third_party/nrappkit/src/port/linux/include',
     ]

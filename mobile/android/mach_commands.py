@@ -136,7 +136,7 @@ class MachCommands(MachCommandBase):
         # Test code.
         srcdir('app/src/robocop_harness/org/mozilla/gecko', 'build/mobile/robocop')
         srcdir('app/src/robocop/org/mozilla/gecko/tests', 'mobile/android/tests/browser/robocop')
-        srcdir('app/src/background/org/mozilla/gecko', 'mobile/android/tests/background/junit3/src')
+        srcdir('app/src/background/org/mozilla/gecko/background', 'mobile/android/tests/background/junit3/src')
         srcdir('app/src/browser', 'mobile/android/tests/browser/junit3/src')
         srcdir('app/src/javaaddons', 'mobile/android/tests/javaaddons/src')
         # Test libraries.
@@ -155,6 +155,9 @@ class MachCommands(MachCommandBase):
         srcdir('base/src/main/res', 'mobile/android/base/resources')
         srcdir('base/src/main/assets', 'mobile/android/app/assets')
         srcdir('base/src/crashreporter/res', 'mobile/android/base/crashreporter/res')
+        # JUnit 4 test code.
+        srcdir('base/src/background_junit4', 'mobile/android/tests/background/junit4/src')
+        srcdir('base/resources/background_junit4', 'mobile/android/tests/background/junit4/resources')
 
         manifest_path = os.path.join(self.topobjdir, 'mobile', 'android', 'gradle.manifest')
         with FileAvoidWrite(manifest_path) as f:
