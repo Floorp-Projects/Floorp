@@ -3,17 +3,22 @@
 <meta charset=utf-8>
 <title>Bug 1045994 - Add a chrome-only property to inspect if an animation is
        running on the compositor or not</title>
-<script type="application/javascript"
-  src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-<script type="application/javascript"
-  src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
-<script type="application/javascript"
-  src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-<link rel="stylesheet" type="text/css"
-  href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+<script type="application/javascript" src="../testharness.js"></script>
+<script type="application/javascript" src="../testharnessreport.js"></script>
+<script type="application/javascript" src="../testcommon.js"></script>
 <style>
 @keyframes anim {
   to { transform: translate(100px) }
+}
+@keyframes background_and_translate {
+  to { background-color: red; transform: translate(100px); }
+}
+@keyframes background {
+  to { background-color: red; }
+}
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 div {
   /* Element needs geometry to be eligible for layerization */
@@ -26,47 +31,226 @@ div {
 <body>
 <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1045994"
   target="_blank">Mozilla Bug 1045994</a>
+<div id="log"></div>
 <script>
 'use strict';
 
 /** Test for bug 1045994 - Add a chrome-only property to inspect if an
     animation is running on the compositor or not **/
 
-function addDiv(attrs) {
-  var div = document.createElement('div');
-  if (attrs) {
-    for (var attrName in attrs) {
-      div.setAttribute(attrName, attrs[attrName]);
-    }
-  }
-  document.body.appendChild(div);
-  return div;
-}
-
 const OMTAPrefKey = 'layers.offmainthreadcomposition.async-animations';
 var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
                   SpecialPowers.getBoolPref(OMTAPrefKey);
 
-add_task(function* play_and_pause_from_style() {
+promise_test(function(t) {
   // FIXME: When we implement Element.animate, use that here instead of CSS
   // so that we remove any dependency on the CSS mapping.
-  var div = addDiv({ style: 'animation: anim 100s' });
+  var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
-  yield animation.ready;
+  return animation.ready.then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+       'Animation reports that it is running on the compositor'
+       + ' during playback');
 
-  is(animation.isRunningOnCompositor, omtaEnabled,
-     'Animation reports that it is running on the compositor'
-     + ' during playback');
+    div.style.animationPlayState = 'paused';
 
-  div.style.animationPlayState = 'paused';
+    return animation.ready;
+  })).then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, false,
+       'Animation reports that it is NOT running on the compositor'
+       + ' when paused');
+  }));
+}, '');
 
-  yield animation.ready;
+promise_test(function(t) {
+  var div = addDiv(t, { style: 'animation: background 100s' });
+  var animation = div.getAnimations()[0];
 
-  is(animation.isRunningOnCompositor, false,
-     'Animation reports that it is NOT running on the compositor'
-     + ' when paused');
-  div.parentNode.removeChild(div);
-});
+  return animation.ready.then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, false,
+       'Animation reports that it is NOT running on the compositor'
+       + ' for animation of "background"');
+  }));
+}, 'isRunningOnCompositor is false for animation of "background"');
+
+promise_test(function(t) {
+  var div = addDiv(t, { style: 'animation: background_and_translate 100s' });
+  var animation = div.getAnimations()[0];
+
+  return animation.ready.then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+       'Animation reports that it is running on the compositor'
+        + ' when the animation has two properties, where one can run'
+        + ' on the compositor, the other cannot');
+  }));
+}, 'isRunningOnCompositor is true if the animation has at least one ' +
+   'property can run on compositor');
+
+promise_test(function(t) {
+  var div = addDiv(t, { style: 'animation: anim 100s' });
+  var animation = div.getAnimations()[0];
+
+  return animation.ready.then(t.step_func(function() {
+    animation.pause();
+    return animation.ready;
+  })).then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, false,
+       'Animation reports that it is NOT running on the compositor'
+       + ' when animation.pause() is called');
+  }));
+}, 'isRunningOnCompositor is false when the animation.pause() is called');
+
+promise_test(function(t) {
+  var div = addDiv(t, { style: 'animation: anim 100s' });
+  var animation = div.getAnimations()[0];
+
+  return animation.ready.then(t.step_func(function() {
+    animation.finish();
+    // We need to wait for two frames here to ensure isRunningOnCompositor
+    // flag is cleared. The first frame is for waking root refresh driver up,
+    // the second one is for clearing the flag.
+    // In most cases root refresh driver has been dormant because there is
+    // nothing to do for the root refresh driver (e.g. nothing change on
+    // chrome window). In the first frame document's refresh driver wakes the
+    // root refresh driver up as a result of animation's style changes.
+    // In the second frame the root refresh driver clears the flag as a
+    // result of a paint.
+    return waitForAnimationFrames(2);
+  })).then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, false,
+       'Animation reports that it is NOT running on the compositor'
+       + ' when animation.finish() is called');
+  }));
+}, 'isRunningOnCompositor is false when the animation.finish() is called');
+
+promise_test(function(t) {
+  var div = addDiv(t, { style: 'animation: anim 100s' });
+  var animation = div.getAnimations()[0];
+
+  return animation.ready.then(t.step_func(function() {
+    animation.currentTime = 100000; // 100s
+    // We need to wait for up to two frames here to ensure the "is running on
+    // compositor" flag is cleared.
+    // See the description in the 'isRunningOnCompositor is false when the
+    // animation.finish() is called' test for the rationale.
+    return waitForAnimationFrames(2);
+  })).then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, false,
+       'Animation reports that it is NOT running on the compositor'
+       + ' when manually seeking the animation to the end');
+  }));
+}, 'isRunningOnCompositor is false when manually seeking the animation to ' +
+   'the end');
+
+promise_test(function(t) {
+  var div = addDiv(t, { style: 'animation: anim 100s' });
+  var animation = div.getAnimations()[0];
+
+  return animation.ready.then(t.step_func(function() {
+    animation.cancel();
+    // We need to wait for up to two frames here to ensure the "is running on
+    // compositor" flag is cleared.
+    // See the description in the 'isRunningOnCompositor is false when the
+    // animation.finish() is called' test for the rationale.
+    return waitForAnimationFrames(2);
+  })).then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, false,
+       'Animation reports that it is NOT running on the compositor'
+       + ' when animation.cancel() is called');
+  }));
+}, 'isRunningOnCompositor is false when animation.cancel() is called');
+
+promise_test(function(t) {
+  var div = addDiv(t, { style: 'animation: anim 100s 100s' });
+  var animation = div.getAnimations()[0];
+
+  return animation.ready.then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, false,
+       'Animation reports that it is NOT running on the compositor'
+       + ' while in the delay phase');
+  }));
+}, 'isRunningOnCompositor is false while in the delay phase');
+
+// This is to test that we don't simply clobber the flag when ticking
+// animations and then set it again during painting.
+promise_test(function(t) {
+  var div = addDiv(t, { style: 'animation: anim 100s' });
+  var animation = div.getAnimations()[0];
+
+  return animation.ready.then(t.step_func(function() {
+    return new Promise(t.step_func(function(resolve) {
+      window.requestAnimationFrame(t.step_func(function() {
+        assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+           'Animation reports that it is running on the compositor'
+            + ' in requestAnimationFrame callback');
+        resolve();
+      }));
+    }));
+  }));
+}, 'isRunningOnCompositor is true in requestAnimationFrame callback');
+
+promise_test(function(t) {
+  var div = addDiv(t, { style: 'animation: anim 100s' });
+  var animation = div.getAnimations()[0];
+
+  return animation.ready.then(t.step_func(function() {
+    return new Promise(t.step_func(function(resolve) {
+      var observer = new MutationObserver(t.step_func(function(records) {
+        var changedAnimation;
+        records.forEach(function(record) {
+          changedAnimation =
+            record.changedAnimations.find(function(changedAnim) {
+              return changedAnim == animation;
+            });
+        });
+        assert_true(!!changedAnimation, 'The animation should be recorded '
+          + 'as one of the changedAnimations');
+        assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+          'Animation reports that it is running on the compositor'
+           + ' in MutationObserver callback');
+        resolve();
+      }));
+      observer.observe(div, { animations: true, subtree: false });
+      div.style.animationDuration = "200s";
+    }));
+  }));
+}, 'isRunningOnCompositor is true in MutationObserver callback');
+
+// This is to test that we don't temporarily clear the flag when forcing
+// an unthrottled sample.
+promise_test(function(t) {
+  return new Promise(function(resolve) {
+    // Needs scrollbars to cause overflow.
+    SpecialPowers.pushPrefEnv({ set: [["ui.showHideScrollbars", 1]] },
+                              resolve);
+  }).then(t.step_func(function() {
+    var div = addDiv(t, { style: 'animation: rotate 100s' });
+    var animation = div.getAnimations()[0];
+
+    return animation.ready.then(t.step_func(function() {
+      return new Promise(t.step_func(function(resolve) {
+        var timeAtStart = window.performance.now();
+        function handleFrame() {
+          assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+             'Animation reports that it is running on the compositor'
+              + ' in requestAnimationFrame callback');
+
+          // we have to wait at least 200ms because this animation is
+          // unthrottled on every 200ms.
+          // See http://hg.mozilla.org/mozilla-central/file/cafb1c90f794/layout/style/AnimationCommon.cpp#l863
+          if (window.performance.now() - timeAtStart > 200) {
+            resolve();
+            return;
+          }
+          window.requestAnimationFrame(handleFrame);
+        }
+        window.requestAnimationFrame(handleFrame);
+      }));
+    }));
+  }));
+}, 'isRunningOnCompositor remains true in requestAnimationFrameCallback for ' +
+   'overflow animation');
+
 </script>
 </body>
