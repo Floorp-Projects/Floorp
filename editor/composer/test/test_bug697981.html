@@ -29,11 +29,6 @@ var de_DE;
 var hunspell;
 
 /** Test for Bug 697981 **/
-/*
- * Note the hack: This test fails of there are content preferences left behind from previous tests.
- * That's why this test resides in a file "test_abug697981.html" so it runs first.
- * We will fix this later.
- */
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
