@@ -207,7 +207,7 @@ public:
                                                gpointer         aData);
 
     virtual already_AddRefed<mozilla::gfx::DrawTarget>
-                       StartRemoteDrawing() override;
+                       StartRemoteDrawingInRegion(nsIntRegion& aInvalidRegion) override;
     virtual void       EndRemoteDrawingInRegion(mozilla::gfx::DrawTarget* aDrawTarget,
                                                 nsIntRegion& aInvalidRegion) override;
 
@@ -300,7 +300,7 @@ public:
    virtual nsresult    ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
    nsresult            UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                             uint8_t* aAlphas, int32_t aStride);
-    virtual gfxASurface *GetThebesSurface();
+    virtual already_AddRefed<mozilla::gfx::DrawTarget> GetDrawTarget(const nsIntRegion& aRegion);
 
 #if (MOZ_WIDGET_GTK == 2)
     static already_AddRefed<gfxASurface> GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
@@ -395,11 +395,17 @@ private:
     guint32             mLastScrollEventTime;
 #endif
 
+#ifdef MOZ_X11
+    Display*            mXDisplay;
+    Drawable            mXWindow;
+    Visual*             mXVisual;
+    int                 mXDepth;
+#endif
+
 #ifdef MOZ_HAVE_SHMIMAGE
-    // If we're using xshm rendering, mThebesSurface wraps mShmImage
+    // If we're using xshm rendering
     nsRefPtr<nsShmImage>  mShmImage;
 #endif
-    nsRefPtr<gfxASurface> mThebesSurface;
 
 #ifdef ACCESSIBILITY
     nsRefPtr<mozilla::a11y::Accessible> mRootAccessible;

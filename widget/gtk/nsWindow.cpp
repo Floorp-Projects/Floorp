@@ -423,6 +423,11 @@ nsWindow::nsWindow()
 
 #ifdef MOZ_X11
     mOldFocusWindow      = 0;
+
+    mXDisplay = nullptr;
+    mXWindow  = None;
+    mXVisual  = nullptr;
+    mXDepth   = 0;
 #endif /* MOZ_X11 */
     mPluginType          = PluginType_NONE;
 
@@ -721,10 +726,6 @@ nsWindow::Destroy(void)
         gPluginFocusWindow->LoseNonXEmbedPluginFocus();
     }
 #endif /* MOZ_X11 && MOZ_WIDGET_GTK2 */
-  
-    // Destroy thebes surface now. Badness can happen if we destroy
-    // the surface after its X Window.
-    mThebesSurface = nullptr;
 
     GtkWidget *owningWidget = GetMozContainerWidget();
     if (mShell) {
@@ -2171,7 +2172,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         return TRUE;
     }
 
-    RefPtr<DrawTarget> dt = StartRemoteDrawing();
+    RefPtr<DrawTarget> dt = GetDrawTarget(region);
     if(!dt) {
         return FALSE;
     }
@@ -2250,7 +2251,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     }
 #  ifdef MOZ_HAVE_SHMIMAGE
     if (mShmImage && MOZ_LIKELY(!mIsDestroyed)) {
-        mShmImage->Put(mGdkWindow, region);
+      mShmImage->Put(mXDisplay, mXWindow, region);
     }
 #  endif  // MOZ_HAVE_SHMIMAGE
 #endif // MOZ_X11
@@ -3828,9 +3829,12 @@ nsWindow::Create(nsIWidget        *aParent,
 
 #ifdef MOZ_X11
     if (mGdkWindow) {
-      // force creation of native window via internal call to gdk_window_ensure_native
-      // in case it was not created already
-      gdk_x11_window_get_xid(mGdkWindow);
+      mXDisplay = GDK_WINDOW_XDISPLAY(mGdkWindow);
+      mXWindow = gdk_x11_window_get_xid(mGdkWindow);
+
+      GdkVisual* gdkVisual = gdk_window_get_visual(mGdkWindow);
+      mXVisual = gdk_x11_visual_get_xvisual(gdkVisual);
+      mXDepth = gdk_visual_get_depth(gdkVisual);
     }
 #endif
 
@@ -6309,31 +6313,43 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
 #endif
 
 already_AddRefed<DrawTarget>
-nsWindow::StartRemoteDrawing()
+nsWindow::GetDrawTarget(const nsIntRegion& aRegion)
 {
-  gfxASurface *surf = GetThebesSurface();
-  if (!surf) {
+  if (!mGdkWindow) {
     return nullptr;
   }
 
-  nsIntSize size = surf->GetSize();
+  nsIntRect bounds = aRegion.GetBounds();
+  IntSize size(bounds.XMost(), bounds.YMost());
   if (size.width <= 0 || size.height <= 0) {
     return nullptr;
   }
 
-  gfxPlatform *platform = gfxPlatform::GetPlatform();
-  if (platform->SupportsAzureContentForType(BackendType::CAIRO) ||
-      surf->GetType() == gfxSurfaceType::Xlib) {
-    return platform->CreateDrawTargetForSurface(surf, size);
-  } else if (platform->SupportsAzureContentForType(BackendType::SKIA) &&
-             surf->GetType() == gfxSurfaceType::Image) {
-    gfxImageSurface* imgSurf = static_cast<gfxImageSurface*>(surf);
-    SurfaceFormat format = ImageFormatToSurfaceFormat(imgSurf->Format());
-    return platform->CreateDrawTargetForData(
-                     imgSurf->Data(), size, imgSurf->Stride(), format);
-  } else {
-    return nullptr;
+  RefPtr<DrawTarget> dt;
+
+#ifdef MOZ_X11
+#  ifdef MOZ_HAVE_SHMIMAGE
+  if (nsShmImage::UseShm()) {
+    dt = nsShmImage::EnsureShmImage(size,
+                                    mXDisplay, mXVisual, mXDepth,
+                                    mShmImage);
   }
+#  endif  // MOZ_HAVE_SHMIMAGE
+  if (!dt) {
+    RefPtr<gfxXlibSurface> surf = new gfxXlibSurface(mXDisplay, mXWindow, mXVisual, size);
+    if (!surf->CairoStatus()) {
+      dt = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf.get(), surf->GetSize());
+    }
+  }
+#endif // MOZ_X11
+
+  return dt.forget();
+}
+
+already_AddRefed<DrawTarget>
+nsWindow::StartRemoteDrawingInRegion(nsIntRegion& aInvalidRegion)
+{
+  return GetDrawTarget(aInvalidRegion);
 }
 
 void
@@ -6345,71 +6361,9 @@ nsWindow::EndRemoteDrawingInRegion(DrawTarget* aDrawTarget, nsIntRegion& aInvali
     return;
   }
 
-  if (mThebesSurface) {
-    aInvalidRegion.AndWith(nsIntRect(nsIntPoint(0, 0), mThebesSurface->GetSize()));
-  }
-
-  mShmImage->Put(mGdkWindow, aInvalidRegion);
-
+  mShmImage->Put(mXDisplay, mXWindow, aInvalidRegion);
 #  endif // MOZ_HAVE_SHMIMAGE
 #endif // MOZ_X11
-}
-
-// return the gfxASurface for rendering to this widget
-gfxASurface*
-nsWindow::GetThebesSurface()
-{
-    if (!mGdkWindow)
-        return nullptr;
-
-#ifdef MOZ_X11
-    gint width, height;
-
-#if (MOZ_WIDGET_GTK == 2)
-    gdk_drawable_get_size(GDK_DRAWABLE(mGdkWindow), &width, &height);
-#else
-    width = GdkCoordToDevicePixels(gdk_window_get_width(mGdkWindow));
-    height = GdkCoordToDevicePixels(gdk_window_get_height(mGdkWindow));
-#endif
-
-    // Owen Taylor says this is the right thing to do!
-    width = std::min(32767, width);
-    height = std::min(32767, height);
-    gfxIntSize size(width, height);
-
-    GdkVisual *gdkVisual = gdk_window_get_visual(mGdkWindow);
-    Visual* visual = gdk_x11_visual_get_xvisual(gdkVisual);
-
-#  ifdef MOZ_HAVE_SHMIMAGE
-    bool usingShm = false;
-    if (nsShmImage::UseShm()) {
-        // EnsureShmImage() is a dangerous interface, but we guarantee
-        // that the thebes surface and the shmimage have the same
-        // lifetime
-        mThebesSurface =
-            nsShmImage::EnsureShmImage(size,
-                                       visual, gdk_visual_get_depth(gdkVisual),
-                                       mShmImage);
-        usingShm = mThebesSurface != nullptr;
-    }
-    if (!usingShm)
-#  endif  // MOZ_HAVE_SHMIMAGE
-    {
-        mThebesSurface = new gfxXlibSurface
-            (GDK_WINDOW_XDISPLAY(mGdkWindow),
-             gdk_x11_window_get_xid(mGdkWindow),
-             visual,
-             size);
-    }
-#endif // MOZ_X11
-
-    // if the surface creation is reporting an error, then
-    // we don't have a surface to give back
-    if (mThebesSurface && mThebesSurface->CairoStatus() != 0) {
-        mThebesSurface = nullptr;
-    }
-
-    return mThebesSurface;
 }
 
 // Code shared begin BeginMoveDrag and BeginResizeDrag
