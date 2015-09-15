@@ -64,6 +64,7 @@ struct DeviceAttachmentsD3D11
   VertexShaderArray mVSQuadShader;
   PixelShaderArray mSolidColorShader;
   PixelShaderArray mRGBAShader;
+  PixelShaderArray mRGBAShaderPremul;
   PixelShaderArray mRGBShader;
   PixelShaderArray mYCbCrShader;
   PixelShaderArray mComponentAlphaShader;
@@ -74,6 +75,8 @@ struct DeviceAttachmentsD3D11
   RefPtr<ID3D11SamplerState> mPointSamplerState;
   RefPtr<ID3D11BlendState> mPremulBlendState;
   RefPtr<ID3D11BlendState> mNonPremulBlendState;
+  RefPtr<ID3D11BlendState> mPremulBlendMultiplyState;
+  RefPtr<ID3D11BlendState> mPremulBlendScreenState;
   RefPtr<ID3D11BlendState> mComponentBlendState;
   RefPtr<ID3D11BlendState> mDisabledBlendState;
   RefPtr<IDXGIResource> mSyncTexture;
@@ -291,6 +294,30 @@ CompositorD3D11::Initialize()
       return false;
     }
 
+    D3D11_RENDER_TARGET_BLEND_DESC rtBlendMultiplyPremul = {
+      TRUE,
+      D3D11_BLEND_DEST_COLOR, D3D11_BLEND_INV_SRC_ALPHA, D3D11_BLEND_OP_ADD,
+      D3D11_BLEND_ONE, D3D11_BLEND_INV_SRC_ALPHA, D3D11_BLEND_OP_ADD,
+      D3D11_COLOR_WRITE_ENABLE_ALL
+    };
+    blendDesc.RenderTarget[0] = rtBlendMultiplyPremul;
+    hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mPremulBlendMultiplyState));
+    if (FAILED(hr)) {
+      return false;
+    }
+
+    D3D11_RENDER_TARGET_BLEND_DESC rtBlendScreenPremul = {
+      TRUE,
+      D3D11_BLEND_ONE, D3D11_BLEND_INV_SRC_COLOR, D3D11_BLEND_OP_ADD,
+      D3D11_BLEND_ONE, D3D11_BLEND_INV_SRC_ALPHA, D3D11_BLEND_OP_ADD,
+      D3D11_COLOR_WRITE_ENABLE_ALL
+    };
+    blendDesc.RenderTarget[0] = rtBlendScreenPremul;
+    hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mPremulBlendScreenState));
+    if (FAILED(hr)) {
+      return false;
+    }
+
     D3D11_RENDER_TARGET_BLEND_DESC rtBlendNonPremul = {
       TRUE,
       D3D11_BLEND_SRC_ALPHA, D3D11_BLEND_INV_SRC_ALPHA, D3D11_BLEND_OP_ADD,
@@ -455,6 +482,8 @@ CompositorD3D11::GetTextureFactoryIdentifier()
       MOZ_CRASH();
     }
   }
+  ident.mSupportedBlendModes += gfx::CompositionOp::OP_SCREEN;
+  ident.mSupportedBlendModes += gfx::CompositionOp::OP_MULTIPLY;
   return ident;
 }
 
@@ -596,14 +625,6 @@ CompositorD3D11::SetPSForEffect(Effect* aEffect, MaskType aMaskType, gfx::Surfac
   case EffectTypes::SOLID_COLOR:
     mContext->PSSetShader(mAttachments->mSolidColorShader[aMaskType], nullptr, 0);
     return;
-  case EffectTypes::RENDER_TARGET:
-    mContext->PSSetShader(mAttachments->mRGBAShader[aMaskType], nullptr, 0);
-    return;
-  case EffectTypes::RGB:
-    mContext->PSSetShader((aFormat == SurfaceFormat::B8G8R8A8 || aFormat == SurfaceFormat::R8G8B8A8)
-                          ? mAttachments->mRGBAShader[aMaskType]
-                          : mAttachments->mRGBShader[aMaskType], nullptr, 0);
-    return;
   case EffectTypes::YCBCR:
     mContext->PSSetShader(mAttachments->mYCbCrShader[aMaskType], nullptr, 0);
     return;
@@ -611,6 +632,7 @@ CompositorD3D11::SetPSForEffect(Effect* aEffect, MaskType aMaskType, gfx::Surfac
     mContext->PSSetShader(mAttachments->mComponentAlphaShader[aMaskType], nullptr, 0);
     return;
   default:
+    // Note: the RGB and RENDER_TARGET cases are handled in-line in DrawQuad().
     NS_WARNING("No shader to load");
     return;
   }
@@ -877,6 +899,11 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
 
   const Rect* pTexCoordRect = nullptr;
 
+  gfx::CompositionOp blendMode = gfx::CompositionOp::OP_OVER;
+  if (Effect* effect = aEffectChain.mSecondaryEffects[EffectTypes::BLEND_MODE].get()) {
+    blendMode = static_cast<EffectBlendMode*>(effect)->mBlendMode;
+  }
+
   switch (aEffectChain.mPrimaryEffect->mType) {
   case EffectTypes::SOLID_COLOR: {
       SetPSForEffect(aEffectChain.mPrimaryEffect, maskType, SurfaceFormat::UNKNOWN);
@@ -887,6 +914,8 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
       mPSConstants.layerColor[1] = color.g * color.a * aOpacity;
       mPSConstants.layerColor[2] = color.b * color.a * aOpacity;
       mPSConstants.layerColor[3] = color.a * aOpacity;
+
+      restoreBlendMode = SetBlendMode(blendMode);
     }
     break;
   case EffectTypes::RGB:
@@ -904,15 +933,27 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
         return;
       }
 
-      SetPSForEffect(aEffectChain.mPrimaryEffect, maskType, texturedEffect->mTexture->GetFormat());
+      SurfaceFormat format = texturedEffect->mTexture->GetFormat();
+      bool useRGBAShader = (format == SurfaceFormat::B8G8R8A8 || format == SurfaceFormat::R8G8B8A8) ||
+                           (texturedEffect->mType == EffectTypes::RENDER_TARGET);
+
+      bool premultiplied = texturedEffect->mPremultiplied;
+      if (!premultiplied && useRGBAShader &&
+          (blendMode == CompositionOp::OP_MULTIPLY ||
+           blendMode == CompositionOp::OP_SCREEN))
+      {
+        mContext->PSSetShader(mAttachments->mRGBAShaderPremul[maskType], nullptr, 0);
+        premultiplied = true;
+      } else if (useRGBAShader) {
+        mContext->PSSetShader(mAttachments->mRGBAShader[maskType], nullptr, 0);
+      } else {
+        mContext->PSSetShader(mAttachments->mRGBShader[maskType], nullptr, 0);
+      }
 
       ID3D11ShaderResourceView* srView = source->GetShaderResourceView();
       mContext->PSSetShaderResources(0, 1, &srView);
 
-      if (!texturedEffect->mPremultiplied) {
-        mContext->OMSetBlendState(mAttachments->mNonPremulBlendState, sBlendFactor, 0xFFFFFFFF);
-        restoreBlendMode = true;
-      }
+      restoreBlendMode = SetBlendMode(blendMode, premultiplied);
 
       SetSamplerForFilter(texturedEffect->mFilter);
     }
@@ -949,6 +990,8 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
                                                sourceCb->GetShaderResourceView(),
                                                sourceCr->GetShaderResourceView() };
       mContext->PSSetShaderResources(0, 3, srViews);
+
+      restoreBlendMode = SetBlendMode(blendMode);
     }
     break;
   case EffectTypes::COMPONENT_ALPHA:
@@ -976,6 +1019,7 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
                                                sourceOnWhite->GetShaderResourceView() };
       mContext->PSSetShaderResources(0, 2, srViews);
 
+      // Note: component alpha is never used in blend containers.
       mContext->OMSetBlendState(mAttachments->mComponentBlendState, sBlendFactor, 0xFFFFFFFF);
       restoreBlendMode = true;
     }
@@ -1015,6 +1059,39 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
   if (restoreBlendMode) {
     mContext->OMSetBlendState(mAttachments->mPremulBlendState, sBlendFactor, 0xFFFFFFFF);
   }
+}
+
+bool
+CompositorD3D11::SetBlendMode(gfx::CompositionOp aOp, bool aPremultiplied)
+{
+  if (aOp == gfx::CompositionOp::OP_OVER && aPremultiplied) {
+    return false;
+  }
+
+  ID3D11BlendState* blendState = nullptr;
+
+  switch (aOp) {
+    case gfx::CompositionOp::OP_OVER:
+      MOZ_ASSERT(!aPremultiplied);
+      blendState = mAttachments->mNonPremulBlendState;
+      break;
+    case gfx::CompositionOp::OP_MULTIPLY:
+      // Premultiplication is handled in the shader.
+      MOZ_ASSERT(aPremultiplied);
+      blendState = mAttachments->mPremulBlendMultiplyState;
+      break;
+    case gfx::CompositionOp::OP_SCREEN:
+      // Premultiplication is handled in the shader.
+      MOZ_ASSERT(aPremultiplied);
+      blendState = mAttachments->mPremulBlendScreenState;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported blend mode!");
+      return false;
+  }
+
+  mContext->OMSetBlendState(blendState, sBlendFactor, 0xFFFFFFFF);
+  return true;
 }
 
 void
@@ -1284,6 +1361,9 @@ DeviceAttachmentsD3D11::CreateShaders()
   InitPixelShader(sRGBAShader, mRGBAShader, MaskType::MaskNone);
   InitPixelShader(sRGBAShaderMask, mRGBAShader, MaskType::Mask2d);
   InitPixelShader(sRGBAShaderMask3D, mRGBAShader, MaskType::Mask3d);
+  InitPixelShader(sRGBAShaderPremul, mRGBAShaderPremul, MaskType::MaskNone);
+  InitPixelShader(sRGBAShaderMaskPremul, mRGBAShaderPremul, MaskType::Mask2d);
+  InitPixelShader(sRGBAShaderMask3DPremul, mRGBAShaderPremul, MaskType::Mask3d);
   InitPixelShader(sYCbCrShader, mYCbCrShader, MaskType::MaskNone);
   InitPixelShader(sYCbCrShaderMask, mYCbCrShader, MaskType::Mask2d);
   if (gfxPrefs::ComponentAlphaEnabled()) {
