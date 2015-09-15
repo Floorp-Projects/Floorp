@@ -164,7 +164,6 @@ private:
   void EnsureSize();
   bool VerifyBufferSize();
   void UpdateRenderTarget();
-  bool CreateShaders();
   bool UpdateConstantBuffers();
   void SetSamplerForFilter(gfx::Filter aFilter);
   void SetPSForEffect(Effect *aEffect, MaskType aMaskType, gfx::SurfaceFormat aFormat);
