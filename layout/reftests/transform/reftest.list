@@ -45,12 +45,12 @@ random == rotate-1f.html rotate-1-ref.html
 # to look the same.
 == rotate-2a.html rotate-2-ref.html
 == rotate-2b.html rotate-2-ref.html
-# -moz-transform-origin: We should NOT get the same images when using different
-# -moz-transform-origins.
+# -transform-origin: We should NOT get the same images when using different
+# -transform-origins.
 != origin-1a.html origin-1-ref.html
 != origin-1b.html origin-1-ref.html
-# -moz-transform-origin: We should get the same images when using equivalent
-# -moz-transform-origins.
+# -transform-origin: We should get the same images when using equivalent
+# -transform-origins.
 == origin-2a.html origin-2-ref.html
 == origin-2b.html origin-2-ref.html
 == origin-2c.html origin-2-ref.html
@@ -124,14 +124,14 @@ skip-if(B2G||Mulet) == stresstest-1.html stresstest-1-ref.html # bug 773482 # In
 == table-2b.html table-2-ref.html
 # Bug 722463
 == inline-1a.html inline-1-ref.html
-pref(svg.transform-origin.enabled,true) == transform-box-svg-1a.svg transform-box-svg-1-ref.svg
-pref(svg.transform-origin.enabled,true) == transform-box-svg-1b.svg transform-box-svg-1-ref.svg
-pref(svg.transform-origin.enabled,true) == transform-box-svg-2a.svg transform-box-svg-2-ref.svg
-pref(svg.transform-origin.enabled,true) == transform-box-svg-2b.svg transform-box-svg-2-ref.svg
-pref(svg.transform-origin.enabled,true) == transform-origin-svg-1a.svg transform-origin-svg-1-ref.svg
-pref(svg.transform-origin.enabled,true) == transform-origin-svg-1b.svg transform-origin-svg-1-ref.svg
-pref(svg.transform-origin.enabled,true) == transform-origin-svg-2a.svg transform-origin-svg-2-ref.svg
-pref(svg.transform-origin.enabled,true) == transform-origin-svg-2b.svg transform-origin-svg-2-ref.svg
+pref(svg.transform-box.enabled,true) == transform-box-svg-1a.svg transform-box-svg-1-ref.svg
+pref(svg.transform-box.enabled,true) == transform-box-svg-1b.svg transform-box-svg-1-ref.svg
+pref(svg.transform-box.enabled,true) == transform-box-svg-2a.svg transform-box-svg-2-ref.svg
+pref(svg.transform-box.enabled,true) == transform-box-svg-2b.svg transform-box-svg-2-ref.svg
+== transform-origin-svg-1a.svg transform-origin-svg-1-ref.svg
+== transform-origin-svg-1b.svg transform-origin-svg-1-ref.svg
+== transform-origin-svg-2a.svg transform-origin-svg-2-ref.svg
+== transform-origin-svg-2b.svg transform-origin-svg-2-ref.svg
 # Bug 1122526
 == animate-layer-scale-inherit-1.html animate-layer-scale-inherit-1-ref.html
 == animate-layer-scale-inherit-2.html animate-layer-scale-inherit-2-ref.html
