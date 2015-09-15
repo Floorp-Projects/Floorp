@@ -88,6 +88,7 @@ struct SafebrowsingHash
     PL_Base64Encode((char*)buf, sHashSize, aStr.BeginWriting());
     aStr.BeginWriting()[len] = '\0';
   }
+#endif
 
   void ToHexString(nsACString& aStr) const {
     static const char* const lut = "0123456789ABCDEF";
@@ -101,7 +102,7 @@ struct SafebrowsingHash
       aStr.Append(lut[c & 15]);
     }
   }
-#endif
+
   uint32_t ToUint32() const {
       return *((uint32_t*)buf);
   }

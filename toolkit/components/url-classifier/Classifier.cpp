@@ -251,14 +251,12 @@ Classifier::Check(const nsACString& aSpec,
       continue;
     }
 
-#if DEBUG
     if (LOG_ENABLED()) {
       nsAutoCString checking;
       lookupHash.ToHexString(checking);
       LOG(("Checking fragment %s, hash %s (%X)", fragments[i].get(),
            checking.get(), lookupHash.ToUint32()));
     }
-#endif
 
     for (uint32_t i = 0; i < cacheArray.Length(); i++) {
       LookupCache *cache = cacheArray[i];
