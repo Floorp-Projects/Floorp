@@ -22,6 +22,9 @@ from mozrunner import B2GEmulatorRunner
 import geckoinstance
 import errors
 
+WEBELEMENT_KEY = "ELEMENT"
+W3C_WEBELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"
+
 class HTMLElement(object):
     """
     Represents a DOM Element.
@@ -713,18 +716,17 @@ class Marionette(object):
             self._handle_error(resp)
 
         if key is not None:
-            return self._unwrap_response(resp[key])
+            return self._unwrap_response(resp.get(key))
         else:
             return self._unwrap_response(resp)
 
     def _unwrap_response(self, value):
-        resp = ""
         if isinstance(value, dict) and \
-        ('ELEMENT' in value or 'element-6066-11e4-a52e-4f735466cecf' in value):
-            if value.get('ELEMENT'):
-                return HTMLElement(self, value.get('ELEMENT'))
+        (WEBELEMENT_KEY in value or W3C_WEBELEMENT_KEY in value):
+            if value.get(WEBELEMENT_KEY):
+                return HTMLElement(self, value.get(WEBELEMENT_KEY))
             else:
-                return HTMLElement(self, value.get('element-6066-11e4-a52e-4f735466cecf'))
+                return HTMLElement(self, value.get(W3C_WEBELEMENT_KEY))
         elif isinstance(value, list):
             return list(self._unwrap_response(item) for item in value)
         else:
@@ -1410,8 +1412,8 @@ class Marionette(object):
             for arg in args:
                 wrapped[arg] = self.wrapArguments(args[arg])
         elif type(args) == HTMLElement:
-            wrapped = {"element-6066-11e4-a52e-4f735466cecf": args.id,
-                       "ELEMENT": args.id}
+            wrapped = {W3C_WEBELEMENT_KEY: args.id,
+                       WEBELEMENT_KEY: args.id}
         elif (isinstance(args, bool) or isinstance(args, basestring) or
               isinstance(args, int) or isinstance(args, float) or args is None):
             wrapped = args
@@ -1425,10 +1427,10 @@ class Marionette(object):
         elif isinstance(value, dict):
             unwrapped = {}
             for key in value:
-                if key == "element-6066-11e4-a52e-4f735466cecf":
+                if key == W3C_WEBELEMENT_KEY:
                     unwrapped = HTMLElement(self, value[key])
                     break
-                elif key == "ELEMENT":
+                elif key == WEBELEMENT_KEY:
                     unwrapped = HTMLElement(self, value[key])
                     break
                 else:
