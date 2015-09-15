@@ -93,6 +93,7 @@ hardware (via AudioStream).
 #include "MediaDecoderOwner.h"
 #include "MediaEventSource.h"
 #include "MediaMetadataManager.h"
+#include "MediaStatistics.h"
 #include "MediaTimer.h"
 #include "ImageContainer.h"
 
@@ -207,6 +208,8 @@ private:
   void StartBuffering();
 
   bool CanPlayThrough();
+
+  MediaStatistics GetStatistics();
 
 public:
   void DispatchStartBuffering()
@@ -1283,6 +1286,15 @@ private:
   // passed to MediaStreams when this is true.
   Mirror<bool> mSameOriginMedia;
 
+  // Estimate of the current playback rate (bytes/second).
+  Mirror<double> mPlaybackBytesPerSecond;
+
+  // True if mPlaybackBytesPerSecond is a reliable estimate.
+  Mirror<bool> mPlaybackRateReliable;
+
+  // Current decoding position in the stream.
+  Mirror<int64_t> mDecoderPosition;
+
   // Duration of the media. This is guaranteed to be non-null after we finish
   // decoding the first frame.
   Canonical<media::NullableTimeUnit> mDuration;
@@ -1299,6 +1311,9 @@ private:
   // playback position.
   Canonical<int64_t> mCurrentPosition;
 
+  // Current playback position in the stream in bytes.
+  Canonical<int64_t> mPlaybackOffset;
+
 public:
   AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() {
     return mReader->CanonicalBuffered();
@@ -1314,6 +1329,9 @@ public:
   }
   AbstractCanonical<int64_t>* CanonicalCurrentPosition() {
     return &mCurrentPosition;
+  }
+  AbstractCanonical<int64_t>* CanonicalPlaybackOffset() {
+    return &mPlaybackOffset;
   }
 };
 

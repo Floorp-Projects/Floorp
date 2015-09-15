@@ -551,6 +551,22 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
   return GetAnimationRule(aElement, aStyleContext->GetPseudoType());
 }
 
+void
+nsAnimationManager::StopAnimationsForElement(
+  mozilla::dom::Element* aElement,
+  nsCSSPseudoElements::Type aPseudoType)
+{
+  MOZ_ASSERT(aElement);
+  AnimationCollection* collection =
+    GetAnimations(aElement, aPseudoType, false);
+  if (!collection) {
+    return;
+  }
+
+  nsAutoAnimationMutationBatch mb(aElement->OwnerDoc());
+  collection->Destroy();
+}
+
 struct KeyframeData {
   float mKey;
   uint32_t mIndex; // store original order since sort algorithm is not stable

@@ -12376,11 +12376,11 @@ CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
     if (!CheckModuleGlobals(m))
         return false;
 
+    m.startFunctionBodies();
+
 #if !defined(ENABLE_SHARED_ARRAY_BUFFER)
     MOZ_ASSERT(!m.module().hasArrayView() || !m.module().isSharedView());
 #endif
-
-    m.startFunctionBodies();
 
     ScopedJSDeletePtr<ModuleCompileResults> mcd;
     if (!CheckFunctions(m, &mcd))

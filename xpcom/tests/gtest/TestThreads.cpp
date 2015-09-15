@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsXPCOM.h"
+#include "mozilla/Monitor.h"
 #include "gtest/gtest.h"
 
 class nsRunner final : public nsIRunnable {
@@ -122,6 +123,116 @@ TEST(Threads, Stress)
         }
         delete [] array;
     }
+}
+
+mozilla::Monitor* gAsyncShutdownReadyMonitor;
+mozilla::Monitor* gBeginAsyncShutdownMonitor;
+
+class AsyncShutdownPreparer : public nsIRunnable {
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+    NS_IMETHOD Run() override {
+        EXPECT_FALSE(mWasRun);
+        mWasRun = true;
+
+        mozilla::MonitorAutoLock lock(*gAsyncShutdownReadyMonitor);
+        lock.Notify();
+
+        return NS_OK;
+    }
+
+    explicit AsyncShutdownPreparer() : mWasRun(false) {}
+
+private:
+    virtual ~AsyncShutdownPreparer() {
+        EXPECT_TRUE(mWasRun);
+    }
+
+protected:
+    bool mWasRun;
+};
+
+NS_IMPL_ISUPPORTS(AsyncShutdownPreparer, nsIRunnable)
+
+class AsyncShutdownWaiter : public nsIRunnable {
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+    NS_IMETHOD Run() override {
+        EXPECT_FALSE(mWasRun);
+        mWasRun = true;
+
+        nsCOMPtr<nsIThread> t;
+        nsresult rv;
+
+        {
+          mozilla::MonitorAutoLock lock(*gBeginAsyncShutdownMonitor);
+
+          rv = NS_NewThread(getter_AddRefs(t), new AsyncShutdownPreparer());
+          EXPECT_TRUE(NS_SUCCEEDED(rv));
+
+          lock.Wait();
+        }
+
+        rv = t->AsyncShutdown();
+        EXPECT_TRUE(NS_SUCCEEDED(rv));
+
+        return NS_OK;
+    }
+
+    explicit AsyncShutdownWaiter() : mWasRun(false) {}
+
+private:
+    virtual ~AsyncShutdownWaiter() {
+        EXPECT_TRUE(mWasRun);
+    }
+
+protected:
+    bool mWasRun;
+};
+
+NS_IMPL_ISUPPORTS(AsyncShutdownWaiter, nsIRunnable)
+
+class SameThreadSentinel : public nsIRunnable {
+public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD Run() override {
+        mozilla::MonitorAutoLock lock(*gBeginAsyncShutdownMonitor);
+        lock.Notify();
+        return NS_OK;
+    }
+
+private:
+    virtual ~SameThreadSentinel() {}
+};
+
+NS_IMPL_ISUPPORTS(SameThreadSentinel, nsIRunnable)
+
+TEST(Threads, AsyncShutdown)
+{
+  gAsyncShutdownReadyMonitor = new mozilla::Monitor("gAsyncShutdownReady");
+  gBeginAsyncShutdownMonitor = new mozilla::Monitor("gBeginAsyncShutdown");
+
+  nsCOMPtr<nsIThread> t;
+  nsresult rv;
+
+  {
+    mozilla::MonitorAutoLock lock(*gAsyncShutdownReadyMonitor);
+
+    rv = NS_NewThread(getter_AddRefs(t), new AsyncShutdownWaiter());
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
+
+    lock.Wait();
+  }
+
+  NS_DispatchToCurrentThread(new SameThreadSentinel());
+  rv = t->Shutdown();
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+
+  delete gAsyncShutdownReadyMonitor;
+  delete gBeginAsyncShutdownMonitor;
 }
 
 static void threadProc(void *arg)

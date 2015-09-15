@@ -194,10 +194,15 @@ def remove_caches_from_task(task):
 
     :param task: task definition.
     """
+    whitelist = [
+        "tc-vcs",
+        "tc-vcs-public-source",
+        "tooltool-cache",
+    ]
     try:
         caches = task["task"]["payload"]["cache"]
         for cache in caches.keys():
-            if cache != "tc-vcs":
+            if cache not in whitelist:
                 caches.pop(cache)
     except KeyError:
         pass
