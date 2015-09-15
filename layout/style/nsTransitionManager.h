@@ -196,6 +196,7 @@ protected:
 
 struct TransitionEventInfo {
   nsRefPtr<dom::Element> mElement;
+  nsRefPtr<dom::Animation> mAnimation;
   InternalTransitionEvent mEvent;
   TimeStamp mTimeStamp;
 
@@ -203,8 +204,10 @@ struct TransitionEventInfo {
                       nsCSSPseudoElements::Type aPseudoType,
                       nsCSSProperty aProperty,
                       TimeDuration aDuration,
-                      const TimeStamp& aTimeStamp)
+                      const TimeStamp& aTimeStamp,
+                      dom::Animation* aAnimation)
     : mElement(aElement)
+    , mAnimation(aAnimation)
     , mEvent(true, eTransitionEnd)
     , mTimeStamp(aTimeStamp)
   {
@@ -219,6 +222,7 @@ struct TransitionEventInfo {
   // to ourselves in order to work with nsTArray
   TransitionEventInfo(const TransitionEventInfo& aOther)
     : mElement(aOther.mElement)
+    , mAnimation(aOther.mAnimation)
     , mEvent(true, eTransitionEnd)
     , mTimeStamp(aOther.mTimeStamp)
   {

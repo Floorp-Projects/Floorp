@@ -151,8 +151,8 @@ CSSTransition::QueueEvents()
                                           TransitionProperty(),
                                           mEffect->Timing()
                                             .mIterationDuration,
-                                          AnimationTimeToTimeStamp(
-                                            EffectEnd())));
+                                          AnimationTimeToTimeStamp(EffectEnd()),
+                                          this));
 }
 
 bool
