@@ -8,14 +8,14 @@
 #define mozilla_dom_bluetooth_bluedroid_BluetoothDaemonSetupInterface_h
 
 #include "BluetoothCommon.h"
-#include "mozilla/ipc/DaemonSocketMessageHandlers.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothSetupResultHandler
-  : public mozilla::ipc::DaemonSocketResultHandler
 {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothSetupResultHandler)
+
   virtual void OnError(BluetoothStatus aStatus);
   virtual void RegisterModule();
   virtual void UnregisterModule();
