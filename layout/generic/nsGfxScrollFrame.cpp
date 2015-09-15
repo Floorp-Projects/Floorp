@@ -2903,13 +2903,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
           *aBuilder, mOuter, displayportBase, &displayPort);
     }
 
-    bool usingLowPrecision = gfxPrefs::UseLowPrecisionBuffer();
-    if (usingDisplayport && usingLowPrecision) {
-      // If we have low-res painting enabled we should check the critical displayport too
-      nsRect critDp;
-      nsLayoutUtils::GetCriticalDisplayPort(mOuter->GetContent(), &critDp);
-    }
-
     // Override the dirty rectangle if the displayport has been set.
     if (usingDisplayport) {
       dirtyRect = displayPort;
