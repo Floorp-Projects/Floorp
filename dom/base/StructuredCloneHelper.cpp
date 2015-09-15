@@ -1072,14 +1072,16 @@ StructuredCloneHelper::WriteTransferCallback(JSContext* aCx,
   }
 
   {
-    MessagePort* port = nullptr;
+    MessagePortBase* port = nullptr;
     nsresult rv = UNWRAP_OBJECT(MessagePort, aObj, port);
     if (NS_SUCCEEDED(rv)) {
       // We use aExtraData to store the index of this new port identifier.
       *aExtraData = mPortIdentifiers.Length();
       MessagePortIdentifier* identifier = mPortIdentifiers.AppendElement();
 
-      port->CloneAndDisentangle(*identifier);
+      if (!port->CloneAndDisentangle(*identifier)) {
+        return false;
+      }
 
       *aTag = SCTAG_DOM_MAP_MESSAGEPORT;
       *aOwnership = JS::SCTAG_TMO_CUSTOM;

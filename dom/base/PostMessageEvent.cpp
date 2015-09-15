@@ -114,7 +114,8 @@ PostMessageEvent::Run()
                           false /*cancelable */, messageData, mCallerOrigin,
                           EmptyString(), mSource);
 
-  nsTArray<nsRefPtr<MessagePort>> ports = TakeTransferredPorts();
+  nsTArray<nsRefPtr<MessagePortBase>> ports;
+  TakeTransferredPorts(ports);
 
   event->SetPorts(new MessagePortList(static_cast<dom::Event*>(event.get()),
                                       ports));

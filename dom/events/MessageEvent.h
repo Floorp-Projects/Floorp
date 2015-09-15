@@ -17,6 +17,7 @@ namespace dom {
 
 struct MessageEventInit;
 class MessagePort;
+class MessagePortBase;
 class MessagePortList;
 class OwningWindowProxyOrMessagePortOrClient;
 
@@ -93,7 +94,7 @@ private:
   nsString mOrigin;
   nsString mLastEventId;
   nsCOMPtr<nsIDOMWindow> mWindowSource;
-  nsRefPtr<MessagePort> mPortSource;
+  nsRefPtr<MessagePortBase> mPortSource;
   nsRefPtr<workers::ServiceWorkerClient> mClientSource;
   nsRefPtr<MessagePortList> mPorts;
 };

@@ -31,7 +31,41 @@ namespace workers {
 class WorkerFeature;
 } // namespace workers
 
-class MessagePort final : public DOMEventTargetHelper
+class MessagePortBase : public DOMEventTargetHelper
+{
+protected:
+  explicit MessagePortBase(nsPIDOMWindow* aWindow);
+  MessagePortBase();
+
+public:
+
+  virtual void
+  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+              const Optional<Sequence<JS::Value>>& aTransferable,
+              ErrorResult& aRv) = 0;
+
+  virtual void
+  Start() = 0;
+
+  virtual void
+  Close() = 0;
+
+  // The 'message' event handler has to call |Start()| method, so we
+  // cannot use IMPL_EVENT_HANDLER macro here.
+  virtual EventHandlerNonNull*
+  GetOnmessage() = 0;
+
+  virtual void
+  SetOnmessage(EventHandlerNonNull* aCallback) = 0;
+
+  // Duplicate this message port. This method is used by the Structured Clone
+  // Algorithm and populates a MessagePortIdentifier object with the information
+  // useful to create new MessagePort.
+  virtual bool
+  CloneAndDisentangle(MessagePortIdentifier& aIdentifier) = 0;
+};
+
+class MessagePort final : public MessagePortBase
                         , public nsIIPCBackgroundChildCreateCallback
                         , public nsIObserver
 {
@@ -42,7 +76,7 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MessagePort,
-                                           DOMEventTargetHelper)
+                                           MessagePortBase)
 
   static already_AddRefed<MessagePort>
   Create(nsPIDOMWindow* aWindow, const nsID& aUUID,
@@ -58,24 +92,24 @@ public:
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  void
+  virtual void
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
               const Optional<Sequence<JS::Value>>& aTransferable,
-              ErrorResult& aRv);
+              ErrorResult& aRv) override;
 
-  void Start();
+  virtual void Start() override;
 
-  void Close();
+  virtual void Close() override;
 
-  EventHandlerNonNull* GetOnmessage();
+  virtual EventHandlerNonNull* GetOnmessage() override;
 
-  void SetOnmessage(EventHandlerNonNull* aCallback);
+  virtual void SetOnmessage(EventHandlerNonNull* aCallback) override;
 
   // Non WebIDL methods
 
   void UnshippedEntangle(MessagePort* aEntangledPort);
 
-  void CloneAndDisentangle(MessagePortIdentifier& aIdentifier);
+  virtual bool CloneAndDisentangle(MessagePortIdentifier& aIdentifier) override;
 
   // These methods are useful for MessagePortChild
 
