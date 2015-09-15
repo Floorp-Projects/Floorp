@@ -1,9 +1,13 @@
 $inherits:
   from: 'tasks/builds/b2g_phone_base.yml'
 task:
+  scopes:
+    - 'docker-worker:cache:tooltool-cache'
   workerType: flame-kk
 
   payload:
+    cache:
+      tooltool-cache: '/home/worker/tooltool-cache'
     env:
       DEBUG: 0
       VARIANT: eng
