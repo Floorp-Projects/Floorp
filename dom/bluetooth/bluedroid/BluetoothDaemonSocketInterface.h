@@ -100,17 +100,17 @@ public:
               const nsAString& aServiceName,
               const uint8_t aServiceUuid[16],
               int aChannel, bool aEncrypt, bool aAuth,
-              BluetoothSocketResultHandler* aRes);
+              BluetoothSocketResultHandler* aRes) override;
 
   void Connect(const nsAString& aBdAddr,
                BluetoothSocketType aType,
                const uint8_t aUuid[16],
                int aChannel, bool aEncrypt, bool aAuth,
-               BluetoothSocketResultHandler* aRes);
+               BluetoothSocketResultHandler* aRes) override;
 
-  void Accept(int aFd, BluetoothSocketResultHandler* aRes);
+  void Accept(int aFd, BluetoothSocketResultHandler* aRes) override;
 
-  void Close(BluetoothSocketResultHandler* aRes);
+  void Close(BluetoothSocketResultHandler* aRes) override;
 
 private:
   void DispatchError(BluetoothSocketResultHandler* aRes,
