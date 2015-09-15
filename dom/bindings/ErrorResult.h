@@ -18,6 +18,7 @@
 #include "nsStringGlue.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Move.h"
+#include "nsTArray.h"
 
 namespace IPC {
 class Message;
@@ -35,6 +36,9 @@ enum ErrNum {
 #undef MSG_DEF
   Err_Limit
 };
+
+uint16_t
+GetErrorArgCount(const ErrNum aErrorNumber);
 
 bool
 ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, ...);
@@ -91,8 +95,24 @@ public:
     return rv;
   }
 
-  void ThrowTypeError(const dom::ErrNum errorNumber, ...);
-  void ThrowRangeError(const dom::ErrNum errorNumber, ...);
+  void
+  ThrowTypeError(const dom::ErrNum errorNumber, ...)
+  {
+    va_list ap;
+    va_start(ap, errorNumber);
+    ThrowErrorWithMessage(ap, errorNumber, NS_ERROR_TYPE_ERR);
+    va_end(ap);
+  }
+
+  void
+  ThrowRangeError(const dom::ErrNum errorNumber, ...)
+  {
+    va_list ap;
+    va_start(ap, errorNumber);
+    ThrowErrorWithMessage(ap, errorNumber, NS_ERROR_RANGE_ERR);
+    va_end(ap);
+  }
+
   void ReportErrorWithMessage(JSContext* cx);
   bool IsErrorWithMessage() const { return ErrorCode() == NS_ERROR_TYPE_ERR || ErrorCode() == NS_ERROR_RANGE_ERR; }
 
@@ -178,8 +198,25 @@ private:
   // and returns the arguments array from that Message.
   nsTArray<nsString>& CreateErrorMessageHelper(const dom::ErrNum errorNumber, nsresult errorType);
 
-  void ThrowErrorWithMessage(va_list ap, const dom::ErrNum errorNumber,
-                             nsresult errorType);
+  void
+  ThrowErrorWithMessage(va_list ap, const dom::ErrNum errorNumber, nsresult errorType)
+  {
+    if (IsJSException()) {
+      // We have rooted our mJSException, and we don't have the info
+      // needed to unroot here, so just bail.
+      MOZ_ASSERT(false,
+                 "Ignoring ThrowErrorWithMessage call because we have a JS exception");
+      return;
+    }
+    nsTArray<nsString>& messageArgsArray = CreateErrorMessageHelper(errorNumber, errorType);
+    uint16_t argCount = dom::GetErrorArgCount(errorNumber);
+    while (argCount--) {
+      messageArgsArray.AppendElement(*va_arg(ap, const nsAString*));
+    }
+#ifdef DEBUG
+    mHasMessage = true;
+#endif
+  }
 
   void AssignErrorCode(nsresult aRv) {
     MOZ_ASSERT(aRv != NS_ERROR_TYPE_ERR, "Use ThrowTypeError()");
