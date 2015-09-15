@@ -165,6 +165,19 @@ struct ErrorResult::Message {
   }
 };
 
+nsTArray<nsString>&
+ErrorResult::CreateErrorMessageHelper(const dom::ErrNum errorNumber, nsresult errorType)
+{
+  if (IsErrorWithMessage()) {
+    delete mMessage;
+  }
+  mResult = errorType;
+
+  mMessage = new Message();
+  mMessage->mErrorNumber = errorNumber;
+  return mMessage->mArgs;
+}
+
 void
 ErrorResult::ThrowErrorWithMessage(va_list ap, const dom::ErrNum errorNumber,
                                    nsresult errorType)
@@ -176,17 +189,11 @@ ErrorResult::ThrowErrorWithMessage(va_list ap, const dom::ErrNum errorNumber,
                "Ignoring ThrowErrorWithMessage call because we have a JS exception");
     return;
   }
-  if (IsErrorWithMessage()) {
-    delete mMessage;
-  }
-  mResult = errorType;
-  Message* message = new Message();
-  message->mErrorNumber = errorNumber;
+  nsTArray<nsString>& messageArgsArray = CreateErrorMessageHelper(errorNumber, errorType);
   uint16_t argCount = dom::GetErrorArgCount(errorNumber);
   while (argCount--) {
-    message->mArgs.AppendElement(*va_arg(ap, const nsAString*));
+    messageArgsArray.AppendElement(*va_arg(ap, const nsAString*));
   }
-  mMessage = message;
 #ifdef DEBUG
   mHasMessage = true;
 #endif
