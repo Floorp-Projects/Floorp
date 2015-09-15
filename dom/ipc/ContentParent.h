@@ -898,6 +898,8 @@ private:
     virtual bool RecvProfile(const nsCString& aProfile) override;
     virtual bool RecvGetGraphicsDeviceInitData(DeviceInitData* aOut) override;
 
+    virtual bool RecvGetDeviceStorageLocation(const nsString& aType,
+                                              nsString* aPath) override;
     // If you add strong pointers to cycle collected objects here, be sure to
     // release these objects in ShutDownProcess.  See the comment there for more
     // details.
