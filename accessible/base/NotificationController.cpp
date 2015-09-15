@@ -109,9 +109,6 @@ NotificationController::ScheduleContentInsertion(Accessible* aContainer,
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// NotificationCollector: protected
-
 void
 NotificationController::ScheduleProcessing()
 {
@@ -122,6 +119,9 @@ NotificationController::ScheduleProcessing()
       mObservingState = eRefreshObserving;
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// NotificationCollector: protected
 
 bool
 NotificationController::IsUpdatePending()
