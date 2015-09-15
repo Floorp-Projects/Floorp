@@ -98,7 +98,7 @@ public:
   {
     mOwningElement = OwningElementRef();
     Animation::CancelFromStyle();
-    MOZ_ASSERT(mSequenceNum == kUnsequenced);
+    MOZ_ASSERT(mAnimationIndex == kNoIndex);
   }
 
   void Tick() override;
@@ -116,13 +116,13 @@ public:
   void SetAnimationIndex(uint64_t aIndex)
   {
     MOZ_ASSERT(IsUsingCustomCompositeOrder());
-    mSequenceNum = aIndex;
+    mAnimationIndex = aIndex;
   }
   void CopyAnimationIndex(const CSSAnimation& aOther)
   {
     MOZ_ASSERT(IsUsingCustomCompositeOrder() &&
                aOther.IsUsingCustomCompositeOrder());
-    mSequenceNum = aOther.mSequenceNum;
+    mAnimationIndex = aOther.mAnimationIndex;
   }
 
   // Returns the element or pseudo-element whose animation-name property

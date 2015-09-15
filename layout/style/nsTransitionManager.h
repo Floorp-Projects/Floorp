@@ -115,7 +115,7 @@ public:
   {
     mOwningElement = OwningElementRef();
     Animation::CancelFromStyle();
-    MOZ_ASSERT(mSequenceNum == kUnsequenced);
+    MOZ_ASSERT(mAnimationIndex == kNoIndex);
   }
 
   void Tick() override;
@@ -131,7 +131,7 @@ public:
   void SetCreationSequence(uint64_t aIndex)
   {
     MOZ_ASSERT(IsUsingCustomCompositeOrder());
-    mSequenceNum = aIndex;
+    mAnimationIndex = aIndex;
   }
 
   // Returns the element or pseudo-element whose transition-property property
