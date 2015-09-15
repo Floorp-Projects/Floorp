@@ -1086,6 +1086,9 @@ parent:
     sync GetGraphicsDeviceInitData()
         returns (DeviceInitData aData);
 
+    sync GetDeviceStorageLocation(nsString type)
+        returns (nsString path);
+
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData,
                   CpowEntry[] aCpows, Principal aPrincipal);
