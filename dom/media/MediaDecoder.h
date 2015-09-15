@@ -568,13 +568,15 @@ public:
   // Records activity stopping on the channel.
   void DispatchPlaybackStopped() {
     nsRefPtr<MediaDecoder> self = this;
-    nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableFunction([self] () { self->mPlaybackStatistics->Stop(); });
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () {
+      self->mPlaybackStatistics->Stop();
+      self->ComputePlaybackRate();
+    });
     AbstractThread::MainThread()->Dispatch(r.forget());
   }
 
   // The actual playback rate computation. The monitor must be held.
-  virtual double ComputePlaybackRate(bool* aReliable);
+  void ComputePlaybackRate();
 
   // Returns true if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.
@@ -879,11 +881,6 @@ protected:
   // Whether the decoder implementation supports dormant mode.
   bool mDormantSupported;
 
-  // Current decoding position in the stream. This is where the decoder
-  // is up to consuming the stream. This is not adjusted during decoder
-  // seek operations, but it's updated at the end when we start playing
-  // back again.
-  int64_t mDecoderPosition;
   // Current playback position in the stream. This is (approximately)
   // where we're up to playing back the stream. This is not adjusted
   // during decoder seek operations, but it's updated at the end when we
@@ -1088,6 +1085,18 @@ protected:
   // passed to MediaStreams when this is true.
   Canonical<bool> mSameOriginMedia;
 
+  // Estimate of the current playback rate (bytes/second).
+  Canonical<double> mPlaybackBytesPerSecond;
+
+  // True if mPlaybackBytesPerSecond is a reliable estimate.
+  Canonical<bool> mPlaybackRateReliable;
+
+  // Current decoding position in the stream. This is where the decoder
+  // is up to consuming the stream. This is not adjusted during decoder
+  // seek operations, but it's updated at the end when we start playing
+  // back again.
+  Canonical<int64_t> mDecoderPosition;
+
 public:
   AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull() override;
   AbstractCanonical<double>* CanonicalVolume() {
@@ -1116,6 +1125,15 @@ public:
   }
   AbstractCanonical<bool>* CanonicalSameOriginMedia() {
     return &mSameOriginMedia;
+  }
+  AbstractCanonical<double>* CanonicalPlaybackBytesPerSecond() {
+    return &mPlaybackBytesPerSecond;
+  }
+  AbstractCanonical<bool>* CanonicalPlaybackRateReliable() {
+    return &mPlaybackRateReliable;
+  }
+  AbstractCanonical<int64_t>* CanonicalDecoderPosition() {
+    return &mDecoderPosition;
   }
 };
 
