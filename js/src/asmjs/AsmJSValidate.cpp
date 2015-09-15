@@ -11041,7 +11041,7 @@ CheckFunctions(ModuleValidator& m, ScopedJSDeletePtr<ModuleCompileResults>* resu
 
         // If failure was triggered by a helper thread, report error.
         if (void* maybeFunc = HelperThreadState().maybeAsmJSFailedFunction()) {
-            ModuleValidator::Func* func = reinterpret_cast<ModuleValidator::Func*>(maybeFunc);
+            AsmFunction* func = reinterpret_cast<AsmFunction*>(maybeFunc);
             return m.failOffset(func->srcBegin(), "allocation failure during compilation");
         }
 
