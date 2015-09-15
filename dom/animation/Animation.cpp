@@ -517,11 +517,11 @@ Animation::UpdateRelevance()
 bool
 Animation::HasLowerCompositeOrderThan(const Animation& aOther) const
 {
-  // We only ever sort non-idle animations so we don't ever expect
-  // mAnimationIndex to be set to kNoIndex
-  MOZ_ASSERT(mAnimationIndex != kNoIndex &&
-             aOther.mAnimationIndex != kNoIndex,
-             "Animations to compare should not be idle");
+  // Due to the way subclasses of this repurpose the mAnimationIndex to
+  // implement their own brand of composite ordering it is possible for
+  // two animations to have an identical mAnimationIndex member.
+  // However, these subclasses override this method so we shouldn't see
+  // identical animation indices here.
   MOZ_ASSERT(mAnimationIndex != aOther.mAnimationIndex || &aOther == this,
              "Animation indices should be unique");
 
@@ -842,16 +842,6 @@ Animation::PauseAt(const TimeDuration& aReadyTime)
 void
 Animation::UpdateTiming(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag)
 {
-  // Update the animation index each time we transition in or out of the
-  // idle state
-  if (!IsUsingCustomCompositeOrder()) {
-    if (PlayState() == AnimationPlayState::Idle) {
-      mAnimationIndex = kNoIndex;
-    } else if (mAnimationIndex == kNoIndex) {
-      mAnimationIndex = sNextAnimationIndex++;
-    }
-  }
-
   // We call UpdateFinishedState before UpdateEffect because the former
   // can change the current time, which is used by the latter.
   UpdateFinishedState(aSeekFlag, aSyncNotifyFlag);

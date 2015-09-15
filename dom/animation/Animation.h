@@ -57,7 +57,7 @@ public:
     : DOMEventTargetHelper(aGlobal)
     , mPlaybackRate(1.0)
     , mPendingState(PendingState::NotPending)
-    , mAnimationIndex(kNoIndex)
+    , mAnimationIndex(sNextAnimationIndex++)
     , mIsRunningOnCompositor(false)
     , mFinishedAtLastComposeStyle(false)
     , mIsRelevant(false)
@@ -346,8 +346,8 @@ protected:
     Async
   };
 
-  void UpdateTiming(SeekFlag aSeekFlag,
-                    SyncNotifyFlag aSyncNotifyFlag);
+  virtual void UpdateTiming(SeekFlag aSeekFlag,
+                            SyncNotifyFlag aSyncNotifyFlag);
   void UpdateFinishedState(SeekFlag aSeekFlag,
                            SyncNotifyFlag aSyncNotifyFlag);
   void UpdateEffect();
@@ -406,7 +406,6 @@ protected:
   PendingState mPendingState;
 
   static uint64_t sNextAnimationIndex;
-  static const uint64_t kNoIndex = UINT64_MAX;
 
   // The relative position of this animation within the global animation list.
   // This is kNoIndex while the animation is in the idle state and is updated

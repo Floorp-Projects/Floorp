@@ -115,8 +115,17 @@ public:
   void CancelFromStyle() override
   {
     mOwningElement = OwningElementRef();
+
+    // The animation index to use for compositing will be established when
+    // this transition next transitions out of the idle state but we still
+    // update it now so that the sort order of this transition remains
+    // defined until that moment.
+    //
+    // See longer explanation in CSSAnimation::CancelFromStyle.
+    mAnimationIndex = sNextAnimationIndex++;
+    mNeedsNewAnimationIndexWhenRun = true;
+
     Animation::CancelFromStyle();
-    MOZ_ASSERT(mAnimationIndex == kNoIndex);
   }
 
   void Tick() override;
@@ -151,7 +160,10 @@ protected:
                                         "before a CSS transition is destroyed");
   }
 
-  virtual CommonAnimationManager* GetAnimationManager() const override;
+  // Animation overrides
+  CommonAnimationManager* GetAnimationManager() const override;
+  void UpdateTiming(SeekFlag aSeekFlag,
+                    SyncNotifyFlag aSyncNotifyFlag) override;
 
   void QueueEvents();
   bool HasEndEventToQueue() const override;
