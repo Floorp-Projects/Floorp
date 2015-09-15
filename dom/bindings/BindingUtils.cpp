@@ -179,27 +179,6 @@ ErrorResult::CreateErrorMessageHelper(const dom::ErrNum errorNumber, nsresult er
 }
 
 void
-ErrorResult::ThrowErrorWithMessage(va_list ap, const dom::ErrNum errorNumber,
-                                   nsresult errorType)
-{
-  if (IsJSException()) {
-    // We have rooted our mJSException, and we don't have the info
-    // needed to unroot here, so just bail.
-    MOZ_ASSERT(false,
-               "Ignoring ThrowErrorWithMessage call because we have a JS exception");
-    return;
-  }
-  nsTArray<nsString>& messageArgsArray = CreateErrorMessageHelper(errorNumber, errorType);
-  uint16_t argCount = dom::GetErrorArgCount(errorNumber);
-  while (argCount--) {
-    messageArgsArray.AppendElement(*va_arg(ap, const nsAString*));
-  }
-#ifdef DEBUG
-  mHasMessage = true;
-#endif
-}
-
-void
 ErrorResult::SerializeMessage(IPC::Message* aMsg) const
 {
   using namespace IPC;
@@ -228,24 +207,6 @@ ErrorResult::DeserializeMessage(const IPC::Message* aMsg, void** aIter)
   mHasMessage = true;
 #endif
   return true;
-}
-
-void
-ErrorResult::ThrowTypeError(const dom::ErrNum errorNumber, ...)
-{
-  va_list ap;
-  va_start(ap, errorNumber);
-  ThrowErrorWithMessage(ap, errorNumber, NS_ERROR_TYPE_ERR);
-  va_end(ap);
-}
-
-void
-ErrorResult::ThrowRangeError(const dom::ErrNum errorNumber, ...)
-{
-  va_list ap;
-  va_start(ap, errorNumber);
-  ThrowErrorWithMessage(ap, errorNumber, NS_ERROR_RANGE_ERR);
-  va_end(ap);
 }
 
 void
