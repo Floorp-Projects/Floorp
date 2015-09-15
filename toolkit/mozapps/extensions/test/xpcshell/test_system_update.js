@@ -9,7 +9,9 @@ Components.utils.import("resource://testing-common/httpd.js");
 const { computeHash } = Components.utils.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
 
 // Enable signature checks for these tests
-//Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
+Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
+
+BootstrapMonitor.init();
 
 const featureDir = FileUtils.getDir("ProfD", ["features"]);
 
@@ -142,6 +144,8 @@ function* check_installed(inProfile, ...versions) {
     let addon = yield promiseAddonByID(id);
 
     if (versions[i]) {
+      do_print(`Checking state of add-on ${id}, expecting version ${versions[i]}`);
+
       // Add-on should be installed
       do_check_neq(addon, null);
       do_check_eq(addon.version, versions[i]);
@@ -159,13 +163,14 @@ function* check_installed(inProfile, ...versions) {
       do_check_true(uri instanceof AM_Ci.nsIFileURL);
       do_check_eq(uri.file.path, file.path);
 
-      //do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_SYSTEM);
+      do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_SYSTEM);
 
       // Verify the add-on actually started
-      let installed = Services.prefs.getCharPref("bootstraptest." + id + ".active_version");
-      do_check_eq(installed, versions[i]);
+      BootstrapMonitor.checkAddonStarted(id, versions[i]);
     }
     else {
+      do_print(`Checking state of add-on ${id}, expecting it to be missing`);
+
       if (inProfile) {
         // Add-on should not be installed
         do_check_eq(addon, null);
@@ -175,12 +180,12 @@ function* check_installed(inProfile, ...versions) {
         do_check_true(!addon || !addon.isActive);
       }
 
-      try {
-        Services.prefs.getCharPref("bootstraptest." + id + ".active_version");
-        do_throw("Expected pref to be missing");
-      }
-      catch (e) {
-      }
+      BootstrapMonitor.checkAddonNotStarted(id);
+
+      if (addon)
+        BootstrapMonitor.checkAddonInstalled(id);
+      else
+        BootstrapMonitor.checkAddonNotInstalled(id);
     }
   }
 }
@@ -328,9 +333,9 @@ const TESTS = {
   // Correct sizes and hashes should work
   checkSizeHash: {
     updateList: [
-      { id: "system2@tests.mozilla.org", version: "3.0", path: "system2_3.xpi", size: 858 },
-      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi", hashFunction: "sha1", hashValue: "105a4c49bd513ebd30594e380c19e86bba1f83e2" },
-      { id: "system5@tests.mozilla.org", version: "1.0", path: "system5_1.xpi", size: 857, hashFunction: "sha1", hashValue: "664e9218be3c9acbb9029e715c1e5d2fbb4ea2cc" }
+      { id: "system2@tests.mozilla.org", version: "3.0", path: "system2_3.xpi", size: 4672 },
+      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi", hashFunction: "sha1", hashValue: "2df604b37b13766c0e04f1b7f59800e038f46cd5" },
+      { id: "system5@tests.mozilla.org", version: "1.0", path: "system5_1.xpi", size: 4671, hashFunction: "sha1", hashValue: "f13dcaa8bfacaa222189bcbb0074972c05ceb621" }
     ],
     finalState: [true, null, "3.0", "3.0", null, "1.0"]
   },
