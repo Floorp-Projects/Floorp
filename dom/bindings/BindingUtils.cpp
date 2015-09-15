@@ -158,6 +158,11 @@ ThrowNoSetterArg(JSContext* aCx, prototypes::ID aProtoId)
 struct ErrorResult::Message {
   nsTArray<nsString> mArgs;
   dom::ErrNum mErrorNumber;
+
+  bool HasCorrectNumberOfArguments()
+  {
+    return GetErrorArgCount(mErrorNumber) == mArgs.Length();
+  }
 };
 
 void
@@ -206,6 +211,10 @@ ErrorResult::DeserializeMessage(const IPC::Message* aMsg, void** aIter)
       !ReadParam(aMsg, aIter, &readMessage->mErrorNumber)) {
     return false;
   }
+  if (!readMessage->HasCorrectNumberOfArguments()) {
+    return false;
+  }
+
   MOZ_ASSERT(!mHasMessage);
   mMessage = readMessage.forget();
 #ifdef DEBUG
@@ -239,6 +248,7 @@ ErrorResult::ReportErrorWithMessage(JSContext* aCx)
   MOZ_ASSERT(mHasMessage);
 
   Message* message = mMessage;
+  MOZ_RELEASE_ASSERT(message->HasCorrectNumberOfArguments());
   const uint32_t argCount = message->mArgs.Length();
   const char16_t* args[JS::MaxNumErrorArguments + 1];
   for (uint32_t i = 0; i < argCount; ++i) {
