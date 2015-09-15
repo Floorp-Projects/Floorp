@@ -29,6 +29,7 @@ runNetworkTest(() => {
      null, "test.chain.replace works");
   is(catcher(() => test.chain.replace("FOO", TEST)),
      "Unknown test: FOO", "test.chain.replace catches typos");
+  networkTestFinished();
 });
 
 </script>
