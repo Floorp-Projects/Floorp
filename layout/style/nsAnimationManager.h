@@ -28,14 +28,17 @@ class Promise;
 struct AnimationEventInfo {
   nsRefPtr<dom::Element> mElement;
   InternalAnimationEvent mEvent;
+  TimeStamp mTimeStamp;
 
   AnimationEventInfo(dom::Element* aElement,
                      nsCSSPseudoElements::Type aPseudoType,
                      EventMessage aMessage,
                      const nsSubstring& aAnimationName,
-                     const StickyTimeDuration& aElapsedTime)
+                     const StickyTimeDuration& aElapsedTime,
+                     const TimeStamp& aTimeStamp)
     : mElement(aElement)
     , mEvent(true, aMessage)
+    , mTimeStamp(aTimeStamp)
   {
     // XXX Looks like nobody initialize WidgetEvent::time
     mEvent.animationName = aAnimationName;
@@ -48,6 +51,7 @@ struct AnimationEventInfo {
   AnimationEventInfo(const AnimationEventInfo& aOther)
     : mElement(aOther.mElement)
     , mEvent(true, aOther.mEvent.mMessage)
+    , mTimeStamp(aOther.mTimeStamp)
   {
     mEvent.AssignAnimationEventData(aOther.mEvent, false);
   }

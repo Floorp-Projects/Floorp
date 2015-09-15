@@ -197,13 +197,16 @@ protected:
 struct TransitionEventInfo {
   nsRefPtr<dom::Element> mElement;
   InternalTransitionEvent mEvent;
+  TimeStamp mTimeStamp;
 
   TransitionEventInfo(dom::Element* aElement,
                       nsCSSPseudoElements::Type aPseudoType,
                       nsCSSProperty aProperty,
-                      TimeDuration aDuration)
+                      TimeDuration aDuration,
+                      const TimeStamp& aTimeStamp)
     : mElement(aElement)
     , mEvent(true, eTransitionEnd)
+    , mTimeStamp(aTimeStamp)
   {
     // XXX Looks like nobody initialize WidgetEvent::time
     mEvent.propertyName =
@@ -217,6 +220,7 @@ struct TransitionEventInfo {
   TransitionEventInfo(const TransitionEventInfo& aOther)
     : mElement(aOther.mElement)
     , mEvent(true, eTransitionEnd)
+    , mTimeStamp(aOther.mTimeStamp)
   {
     mEvent.AssignTransitionEventData(aOther.mEvent, false);
   }
