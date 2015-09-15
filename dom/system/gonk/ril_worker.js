@@ -14460,7 +14460,16 @@ ICCContactHelperObject.prototype = {
       this.updateContactField(pbr, contact, field, (fieldEntry) => {
         contactField = Object.assign(contactField, fieldEntry);
         updateField.call(this);
-      }, onerror);
+      }, (errorMsg) => {
+        // Bug 1194149, there are some sim cards without sufficient
+        // Type 2 USIM contact fields record. We allow user continue
+        // importing contacts.
+        if (errorMsg === CONTACT_ERR_NO_FREE_RECORD_FOUND) {
+          updateField.call(this);
+          return;
+        }
+        onerror(errorMsg);
+      });
     }).call(this);
   },
 

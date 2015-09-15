@@ -130,6 +130,10 @@ function _setAppProperties(aObj, aApp) {
   aObj.kind = aApp.kind;
   aObj.enabled = aApp.enabled !== undefined ? aApp.enabled : true;
   aObj.sideloaded = aApp.sideloaded;
+#ifdef MOZ_B2GDROID
+  aObj.android_packagename = aApp.android_packagename;
+  aObj.android_classname = aApp.android_classname;
+#endif
 }
 
 this.AppsUtils = {
