@@ -36,16 +36,16 @@ MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
              "Can only copy from WidgetTouchEvent on main thread");
 
   switch (aTouchEvent.mMessage) {
-    case NS_TOUCH_START:
+    case eTouchStart:
       mType = MULTITOUCH_START;
       break;
-    case NS_TOUCH_MOVE:
+    case eTouchMove:
       mType = MULTITOUCH_MOVE;
       break;
-    case NS_TOUCH_END:
+    case eTouchEnd:
       mType = MULTITOUCH_END;
       break;
-    case NS_TOUCH_CANCEL:
+    case eTouchCancel:
       mType = MULTITOUCH_CANCEL;
       break;
     default:
@@ -84,16 +84,16 @@ MultiTouchInput::ToWidgetTouchEvent(nsIWidget* aWidget) const
   EventMessage touchEventMessage = eVoidEvent;
   switch (mType) {
   case MULTITOUCH_START:
-    touchEventMessage = NS_TOUCH_START;
+    touchEventMessage = eTouchStart;
     break;
   case MULTITOUCH_MOVE:
-    touchEventMessage = NS_TOUCH_MOVE;
+    touchEventMessage = eTouchMove;
     break;
   case MULTITOUCH_END:
-    touchEventMessage = NS_TOUCH_END;
+    touchEventMessage = eTouchEnd;
     break;
   case MULTITOUCH_CANCEL:
-    touchEventMessage = NS_TOUCH_CANCEL;
+    touchEventMessage = eTouchCancel;
     break;
   default:
     MOZ_ASSERT_UNREACHABLE("Did not assign a type to WidgetTouchEvent in MultiTouchInput");

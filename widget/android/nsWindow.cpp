@@ -1004,7 +1004,7 @@ nsWindow::OnContextmenuEvent(AndroidGeckoEvent *ae)
     // triggering further element behaviour such as link-clicks.
     if (contextMenuStatus == nsEventStatus_eConsumeNoDefault) {
         WidgetTouchEvent canceltouchEvent = ae->MakeTouchEvent(this);
-        canceltouchEvent.mMessage = NS_TOUCH_CANCEL;
+        canceltouchEvent.mMessage = eTouchCancel;
         DispatchEvent(&canceltouchEvent);
         return true;
     }
@@ -1064,7 +1064,7 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
         // from running.
         preventDefaultActions = (status == nsEventStatus_eConsumeNoDefault ||
                                 event.mFlags.mMultipleActionsPrevented);
-        isDownEvent = (event.mMessage == NS_TOUCH_START);
+        isDownEvent = (event.mMessage == eTouchStart);
     }
 
     if (isDownEvent && event.touches.Length() == 1) {
@@ -1126,17 +1126,17 @@ nsWindow::OnNativeGestureEvent(AndroidGeckoEvent *ae)
 
     switch (ae->Action()) {
         case AndroidMotionEvent::ACTION_MAGNIFY_START:
-            msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
+            msg = eMagnifyGestureStart;
             mStartDist = delta;
             mLastDist = delta;
             break;
         case AndroidMotionEvent::ACTION_MAGNIFY:
-            msg = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
+            msg = eMagnifyGestureUpdate;
             delta -= mLastDist;
             mLastDist += delta;
             break;
         case AndroidMotionEvent::ACTION_MAGNIFY_END:
-            msg = NS_SIMPLE_GESTURE_MAGNIFY;
+            msg = eMagnifyGesture;
             delta -= mStartDist;
             break;
         default:
