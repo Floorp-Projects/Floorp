@@ -199,7 +199,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDecodedAudioEndTime(-1),
   mVideoFrameEndTime(-1),
   mDecodedVideoEndTime(-1),
-  mPlaybackOffset(0),
   mPlaybackRate(1.0),
   mLowAudioThresholdUsecs(detail::LOW_AUDIO_USECS),
   mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_USECS),
@@ -257,7 +256,9 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mNextFrameStatus(mTaskQueue, MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED,
                    "MediaDecoderStateMachine::mNextFrameStatus (Canonical)"),
   mCurrentPosition(mTaskQueue, 0,
-                   "MediaDecoderStateMachine::mCurrentPosition (Canonical)")
+                   "MediaDecoderStateMachine::mCurrentPosition (Canonical)"),
+  mPlaybackOffset(mTaskQueue, 0,
+                  "MediaDecoderStateMachine::mPlaybackOffset (Canonical)")
 {
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -695,8 +696,7 @@ MediaDecoderStateMachine::OnAudioPopped(const nsRefPtr<MediaData>& aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  mPlaybackOffset = std::max(mPlaybackOffset, aSample->mOffset);
-  mDecoder->UpdatePlaybackOffset(mPlaybackOffset);
+  mPlaybackOffset = std::max(mPlaybackOffset.Ref(), aSample->mOffset);
   UpdateNextFrameStatus();
   DispatchAudioDecodeTaskIfNeeded();
 }
@@ -706,8 +706,7 @@ MediaDecoderStateMachine::OnVideoPopped(const nsRefPtr<MediaData>& aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  mPlaybackOffset = std::max(mPlaybackOffset, aSample->mOffset);
-  mDecoder->UpdatePlaybackOffset(mPlaybackOffset);
+  mPlaybackOffset = std::max(mPlaybackOffset.Ref(), aSample->mOffset);
   UpdateNextFrameStatus();
   DispatchVideoDecodeTaskIfNeeded();
 }
@@ -2212,6 +2211,7 @@ MediaDecoderStateMachine::FinishShutdown()
   mIsShutdown.DisconnectAll();
   mNextFrameStatus.DisconnectAll();
   mCurrentPosition.DisconnectAll();
+  mPlaybackOffset.DisconnectAll();
 
   // Shut down the watch manager before shutting down our task queue.
   mWatchManager.Shutdown();
@@ -2449,7 +2449,6 @@ MediaDecoderStateMachine::Reset()
   mSeekRequest.DisconnectIfExists();
 
   mPlaybackOffset = 0;
-  mDecoder->UpdatePlaybackOffset(mPlaybackOffset);
 
   nsCOMPtr<nsIRunnable> resetTask =
     NS_NewRunnableMethod(mReader, &MediaDecoderReader::ResetDecode);
