@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<org.mozilla.gecko.tabs.TabPanelBackButton xmlns:android="http://schemas.android.com/apk/res/android"
+                                           xmlns:gecko="http://schemas.android.com/apk/res-auto"
+                                           android:id="@+id/nav_back"
+                                           android:layout_width="@dimen/tabs_panel_button_width"
+                                           android:layout_height="match_parent"
+                                           android:minWidth="@dimen/tabs_panel_button_width"
+                                           android:src="@drawable/tabs_panel_nav_back"
+                                           android:contentDescription="@string/back"
+                                           android:background="@drawable/action_bar_button_inverse"
+                                           gecko:dividerVerticalPadding="@dimen/tablet_tab_panel_divider_vertical_padding"
+                                           gecko:rightDivider="@drawable/tab_indicator_divider"/>
+
