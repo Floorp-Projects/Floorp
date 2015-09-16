@@ -65,11 +65,6 @@ body {
   padding: 1px 4px;
 }
 
-#toggle-all {
-  border-width: 0 0 0 1px;
-  min-height: var(--toolbar-height);
-}
-
 /* The main animations container */
 
 #players {
@@ -97,15 +92,19 @@ body {
   display: block;
 }
 
-/* Element picker and toggle-all buttons */
+/* Element picker, toggle-all buttons, timeline pause button, ... */
 
-#element-picker,
-#toggle-all {
+#global-toolbar .devtools-button,
+#timeline-toolbar .devtools-button {
+  border-width: 0 0 0 1px;
+  min-height: var(--toolbar-height);
+}
+
+.devtools-button {
   position: relative;
 }
 
-#element-picker::before,
-#toggle-all::before {
+.devtools-button::before {
   content: "";
   display: block;
   width: 16px;
@@ -114,10 +113,13 @@ body {
   left: 50%;
   top: 50%;
   margin: -8px 0 0 -8px;
+}
+
+#element-picker::before {
   background-image: url("chrome://browser/skin/devtools/command-pick.png");
 }
 
-#toggle-all::before {
+.pause-button::before {
   background-image: url("debugger-pause.png");
 }
 
@@ -126,7 +128,7 @@ body {
   filter: none; /* Icon is blue when checked, don't invert for light theme */
 }
 
-#toggle-all.paused::before {
+.pause-button.paused::before {
   background-image: url("debugger-play.png");
 }
 
@@ -136,11 +138,11 @@ body {
     background-size: 64px;
   }
 
-  #toggle-all::before {
+  .pause-button::before {
     background-image: url("debugger-pause@2x.png");
   }
 
-  #toggle-all.paused::before {
+  .pause-button.paused::before {
     background-image: url("debugger-play@2x.png");
   }
 }
