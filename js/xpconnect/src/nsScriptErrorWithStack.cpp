@@ -16,6 +16,28 @@
 #include "nsGlobalWindow.h"
 #include "nsCycleCollectionParticipant.h"
 
+
+namespace {
+
+static nsCString
+FormatStackString(JSContext* cx, HandleObject aStack) {
+    JS::RootedString formattedStack(cx);
+
+    if (!JS::BuildStackString(cx, aStack, &formattedStack)) {
+        return nsCString();
+    }
+
+    nsAutoJSString stackJSString;
+    if (!stackJSString.init(cx, formattedStack)) {
+        return nsCString();
+    }
+
+    return NS_ConvertUTF16toUTF8(stackJSString.get());
+}
+
+}
+
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsScriptErrorWithStack)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsScriptErrorWithStack)
@@ -65,5 +87,33 @@ nsScriptErrorWithStack::Init(const nsAString& message,
 NS_IMETHODIMP
 nsScriptErrorWithStack::GetStack(JS::MutableHandleValue aStack) {
     aStack.setObjectOrNull(mStack);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptErrorWithStack::ToString(nsACString& /*UTF8*/ aResult)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsCString message;
+    nsresult rv = nsScriptErrorBase::ToString(message);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!mStack) {
+        aResult.Assign(message);
+        return NS_OK;
+    }
+
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(mStack)) {
+        return NS_ERROR_FAILURE;
+    }
+
+    JSContext* cx = jsapi.cx();
+    RootedObject stack(cx, mStack);
+    nsCString stackString = FormatStackString(cx, stack);
+    nsCString combined = message + NS_LITERAL_CSTRING("\n") + stackString;
+    aResult.Assign(combined);
+
     return NS_OK;
 }
