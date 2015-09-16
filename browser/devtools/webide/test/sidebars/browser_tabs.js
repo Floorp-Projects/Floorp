@@ -11,8 +11,6 @@ function test() {
   Task.spawn(function*() {
     const { DebuggerServer } = require("devtools/server/main");
 
-    Services.prefs.setBoolPref("devtools.webide.sidebars", true);
-
     // Since we test the connections set below, destroy the server in case it
     // was left open.
     DebuggerServer.destroy();

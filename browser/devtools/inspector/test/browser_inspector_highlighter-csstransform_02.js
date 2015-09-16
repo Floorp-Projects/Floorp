@@ -9,7 +9,7 @@ Bug 1014547 - CSS transforms highlighter
 Test that the highlighter elements created have the right size and coordinates.
 
 Note that instead of hard-coding values here, the assertions are made by
-comparing with the result of LayoutHelpers.getAdjustedQuads.
+comparing with the result of getAdjustedQuads.
 
 There's a separate test for checking that getAdjustedQuads actually returns
 sensible values

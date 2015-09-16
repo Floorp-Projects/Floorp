@@ -29,7 +29,6 @@
 
         Task.spawn(function* () {
           const { DebuggerServer } = require("devtools/server/main");
-          Services.prefs.setBoolPref("devtools.webide.sidebars", true);
           let win = yield openWebIDE();
           let docProject = getProjectDocument(win);
           let docRuntime = getRuntimeDocument(win);

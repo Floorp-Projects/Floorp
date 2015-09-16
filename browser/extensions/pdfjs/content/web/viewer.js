@@ -104,6 +104,12 @@ var CustomStyle = (function CustomStyleClosure() {
   return CustomStyle;
 })();
 
+var NullCharactersRegExp = /\x00/g;
+
+function removeNullCharacters(str) {
+  return str.replace(NullCharactersRegExp, '');
+}
+
 function getFileName(url) {
   var anchor = url.indexOf('#');
   var query = url.indexOf('?');
@@ -5373,6 +5379,10 @@ var PDFThumbnailView = (function PDFThumbnailViewClosure() {
         this.canvas.height = 0;
         delete this.canvas;
       }
+      if (this.image) {
+        this.image.removeAttribute('src');
+        delete this.image;
+      }
     },
 
     update: function PDFThumbnailView_update(rotation) {
@@ -5393,26 +5403,51 @@ var PDFThumbnailView = (function PDFThumbnailViewClosure() {
     _getPageDrawContext:
         function PDFThumbnailView_getPageDrawContext(noCtxScale) {
       var canvas = document.createElement('canvas');
-      canvas.id = this.renderingId;
-
-      canvas.className = 'thumbnailImage';
-      canvas.setAttribute('aria-label', mozL10n.get('thumb_page_canvas',
-        {page: this.id}, 'Thumbnail of Page {{page}}'));
-
       this.canvas = canvas;
-      this.div.setAttribute('data-loaded', true);
-      this.ring.appendChild(canvas);
 
       var ctx = canvas.getContext('2d');
       var outputScale = getOutputScale(ctx);
+
       canvas.width = (this.canvasWidth * outputScale.sx) | 0;
       canvas.height = (this.canvasHeight * outputScale.sy) | 0;
       canvas.style.width = this.canvasWidth + 'px';
       canvas.style.height = this.canvasHeight + 'px';
+
       if (!noCtxScale && outputScale.scaled) {
         ctx.scale(outputScale.sx, outputScale.sy);
       }
+
+      var image = document.createElement('img');
+      this.image = image;
+
+      image.id = this.renderingId;
+      image.className = 'thumbnailImage';
+      image.setAttribute('aria-label', mozL10n.get('thumb_page_canvas',
+        { page: this.id }, 'Thumbnail of Page {{page}}'));
+
+      image.style.width = canvas.style.width;
+      image.style.height = canvas.style.height;
+
       return ctx;
+    },
+
+    /**
+     * @private
+     */
+    _convertCanvasToImage: function PDFThumbnailView_convertCanvasToImage() {
+      if (!this.canvas) {
+        return;
+      }
+      this.image.src = this.canvas.toDataURL();
+
+      this.div.setAttribute('data-loaded', true);
+      this.ring.appendChild(this.image);
+
+      // Zeroing the width and height causes Firefox to release graphics
+      // resources immediately, which can greatly reduce memory consumption.
+      this.canvas.width = 0;
+      this.canvas.height = 0;
+      delete this.canvas;
     },
 
     draw: function PDFThumbnailView_draw() {
@@ -5444,6 +5479,7 @@ var PDFThumbnailView = (function PDFThumbnailViewClosure() {
           return;
         }
         self.renderingState = RenderingStates.FINISHED;
+        self._convertCanvasToImage();
 
         if (!error) {
           resolveRenderPromise(undefined);
@@ -5501,6 +5537,7 @@ var PDFThumbnailView = (function PDFThumbnailViewClosure() {
       if (img.width <= 2 * canvas.width) {
         ctx.drawImage(img, 0, 0, img.width, img.height,
                       0, 0, canvas.width, canvas.height);
+        this._convertCanvasToImage();
         return;
       }
       // drawImage does an awful job of rescaling the image, doing it gradually.
@@ -5525,6 +5562,7 @@ var PDFThumbnailView = (function PDFThumbnailViewClosure() {
       }
       ctx.drawImage(reducedImage, 0, 0, reducedWidth, reducedHeight,
                     0, 0, canvas.width, canvas.height);
+      this._convertCanvasToImage();
     }
   };
 
@@ -5736,6 +5774,7 @@ var PDFOutlineView = (function PDFOutlineViewClosure() {
     this.container = options.container;
     this.outline = options.outline;
     this.linkService = options.linkService;
+    this.lastToggleIsShow = true;
   }
 
   PDFOutlineView.prototype = {
@@ -5744,6 +5783,7 @@ var PDFOutlineView = (function PDFOutlineViewClosure() {
       while (container.firstChild) {
         container.removeChild(container.firstChild);
       }
+      this.lastToggleIsShow = true;
     },
 
     /**
@@ -5769,6 +5809,51 @@ var PDFOutlineView = (function PDFOutlineViewClosure() {
       };
     },
 
+    /**
+     * Prepend a button before an outline item which allows the user to toggle
+     * the visibility of all outline items at that level.
+     *
+     * @private
+     */
+    _addToggleButton: function PDFOutlineView_addToggleButton(div) {
+      var toggler = document.createElement('div');
+      toggler.className = 'outlineItemToggler';
+      toggler.onclick = function(event) {
+        event.stopPropagation();
+        toggler.classList.toggle('outlineItemsHidden');
+
+        if (event.shiftKey) {
+          var shouldShowAll = !toggler.classList.contains('outlineItemsHidden');
+          this._toggleOutlineItem(div, shouldShowAll);
+        }
+      }.bind(this);
+      div.insertBefore(toggler, div.firstChild);
+    },
+
+    /**
+     * Toggle the visibility of the subtree of an outline item.
+     *
+     * @param {Element} root - the root of the outline (sub)tree.
+     * @param {boolean} state - whether to show the outline (sub)tree. If false,
+     *   the outline subtree rooted at |root| will be collapsed.
+     *
+     * @private
+     */
+    _toggleOutlineItem: function PDFOutlineView_toggleOutlineItem(root, show) {
+      this.lastToggleIsShow = show;
+      var togglers = root.querySelectorAll('.outlineItemToggler');
+      for (var i = 0, ii = togglers.length; i < ii; ++i) {
+        togglers[i].classList[show ? 'remove' : 'add']('outlineItemsHidden');
+      }
+    },
+
+    /**
+     * Collapse or expand all subtrees of the outline.
+     */
+    toggleOutlineTree: function PDFOutlineView_toggleOutlineTree() {
+      this._toggleOutlineItem(this.container, !this.lastToggleIsShow);
+    },
+
     render: function PDFOutlineView_render() {
       var outline = this.outline;
       var outlineCount = 0;
@@ -5780,7 +5865,9 @@ var PDFOutlineView = (function PDFOutlineViewClosure() {
         return;
       }
 
-      var queue = [{ parent: this.container, items: this.outline }];
+      var fragment = document.createDocumentFragment();
+      var queue = [{ parent: fragment, items: this.outline }];
+      var hasAnyNesting = false;
       while (queue.length > 0) {
         var levelData = queue.shift();
         for (var i = 0, len = levelData.items.length; i < len; i++) {
@@ -5789,10 +5876,13 @@ var PDFOutlineView = (function PDFOutlineViewClosure() {
           div.className = 'outlineItem';
           var element = document.createElement('a');
           this._bindLink(element, item);
-          element.textContent = item.title;
+          element.textContent = removeNullCharacters(item.title);
           div.appendChild(element);
 
           if (item.items.length > 0) {
+            hasAnyNesting = true;
+            this._addToggleButton(div);
+
             var itemsDiv = document.createElement('div');
             itemsDiv.className = 'outlineItems';
             div.appendChild(itemsDiv);
@@ -5803,6 +5893,11 @@ var PDFOutlineView = (function PDFOutlineViewClosure() {
           outlineCount++;
         }
       }
+      if (hasAnyNesting) {
+        this.container.classList.add('outlineWithDeepNesting');
+      }
+
+      this.container.appendChild(fragment);
 
       this._dispatchEvent(outlineCount);
     }
@@ -5885,7 +5980,7 @@ var PDFAttachmentView = (function PDFAttachmentViewClosure() {
         div.className = 'attachmentsItem';
         var button = document.createElement('button');
         this._bindLink(button, item.content, filename);
-        button.textContent = filename;
+        button.textContent = removeNullCharacters(filename);
         div.appendChild(button);
         this.container.appendChild(div);
       }
@@ -6082,6 +6177,12 @@ var PDFViewerApplication = {
           return;
         }
         PDFJS.disableRange = value;
+      }),
+      Preferences.get('disableStream').then(function resolved(value) {
+        if (PDFJS.disableStream === true) {
+          return;
+        }
+        PDFJS.disableStream = value;
       }),
       Preferences.get('disableAutoFetch').then(function resolved(value) {
         PDFJS.disableAutoFetch = value;
@@ -7070,6 +7171,11 @@ function webViewerInitialized() {
   document.getElementById('viewOutline').addEventListener('click',
     function() {
       PDFViewerApplication.switchSidebarView('outline');
+    });
+
+  document.getElementById('viewOutline').addEventListener('dblclick',
+    function() {
+      PDFViewerApplication.outline.toggleOutlineTree();
     });
 
   document.getElementById('viewAttachments').addEventListener('click',

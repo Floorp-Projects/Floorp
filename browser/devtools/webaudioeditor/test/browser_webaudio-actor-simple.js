@@ -14,13 +14,9 @@ add_task(function*() {
     get2(front, "connect-node")
   ]);
 
-  let destType = yield destNode.getType();
-  let oscType = yield oscNode.getType();
-  let gainType = yield gainNode.getType();
-
-  is(destType, "AudioDestinationNode", "WebAudioActor:create-node returns AudioNodeActor for AudioDestination");
-  is(oscType, "OscillatorNode", "WebAudioActor:create-node returns AudioNodeActor");
-  is(gainType, "GainNode", "WebAudioActor:create-node returns AudioNodeActor");
+  is(destNode.type, "AudioDestinationNode", "WebAudioActor:create-node returns AudioNodeActor for AudioDestination");
+  is(oscNode.type, "OscillatorNode", "WebAudioActor:create-node returns AudioNodeActor");
+  is(gainNode.type, "GainNode", "WebAudioActor:create-node returns AudioNodeActor");
 
   let { source, dest } = connect1;
   is(source.actorID, oscNode.actorID, "WebAudioActor:connect-node returns correct actor with ID on source (osc->gain)");

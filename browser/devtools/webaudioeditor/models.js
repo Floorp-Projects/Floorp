@@ -24,35 +24,11 @@ const AudioNodeModel = Class({
   initialize: function (actor) {
     this.actor = actor;
     this.id = actor.actorID;
+    this.type = actor.type;
+    this.bypassable = actor.bypassable;
+    this._bypassed = false;
     this.connections = [];
   },
-
-  /**
-   * After instantiating the AudioNodeModel, calling `setup` caches values
-   * from the actor onto the model. In this case, only the type of audio node.
-   *
-   * @return promise
-   */
-  setup: Task.async(function* () {
-    yield this.getType();
-
-    // Query bypass status on start up
-    this._bypassed = yield this.isBypassed();
-
-    // Store whether or not this node is bypassable in the first place
-    this.bypassable = !AUDIO_NODE_DEFINITION[this.type].unbypassable;
-  }),
-
-  /**
-   * A proxy for the underlying AudioNodeActor to fetch its type
-   * and subsequently assign the type to the instance.
-   *
-   * @return Promise->String
-   */
-  getType: Task.async(function* () {
-    this.type = yield this.actor.getType();
-    return this.type;
-  }),
 
   /**
    * Stores connection data inside this instance of this audio node connecting
@@ -84,10 +60,10 @@ const AudioNodeModel = Class({
   /**
    * Gets the bypass status of the audio node.
    *
-   * @return Promise->Boolean
+   * @return Boolean
    */
   isBypassed: function () {
-    return this.actor.isBypassed();
+    return this._bypassed;
   },
 
   /**
@@ -162,7 +138,9 @@ const AudioNodeModel = Class({
 
       graph.addEdge(null, this.id, edge.destination, options);
     }
-  }
+  },
+
+  toString: () => "[object AudioNodeModel]",
 });
 
 
@@ -200,25 +178,21 @@ const AudioNodesCollection = Class({
    * constructor, and adds the model to the internal collection store of this
    * instance.
    *
-   * Also calls `setup` on the model itself, and sets up event piping, so that
-   * events emitted on each model propagate to the collection itself.
-   *
    * Emits "add" event on instance when completed.
    *
    * @param Object obj
-   * @return Promise->AudioNodeModel
+   * @return AudioNodeModel
    */
-  add: Task.async(function* (obj) {
+  add: function (obj) {
     let node = new this.model(obj);
     node.collection = this;
-    yield node.setup();
 
     this.models.add(node);
 
     node.on("*", this._onModelEvent);
     coreEmit(this, "add", node);
     return node;
-  }),
+  },
 
   /**
    * Removes an AudioNodeModel from the internal collection. Calls `delete` method
@@ -308,5 +282,7 @@ const AudioNodesCollection = Class({
       // Pipe the event to the collection
       coreEmit(this, eventName, node, ...args);
     }
-  }
+  },
+
+  toString: () => "[object AudioNodeCollection]",
 });

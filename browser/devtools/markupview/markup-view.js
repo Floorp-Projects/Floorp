@@ -32,7 +32,7 @@ const {setTimeout, clearTimeout, setInterval, clearInterval} = require("sdk/time
 const {parseAttribute} = require("devtools/shared/node-attribute-parser");
 const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
 const {Task} = require("resource://gre/modules/Task.jsm");
-const LayoutHelpers = require("devtools/toolkit/layout-helpers");
+const {scrollIntoViewIfNeeded} = require("devtools/toolkit/layout/utils");
 
 Cu.import("resource://gre/modules/devtools/Templater.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -74,8 +74,6 @@ function MarkupView(aInspector, aFrame, aControllerWindow) {
   this.doc = this._frame.contentDocument;
   this._elt = this.doc.querySelector("#root");
   this.htmlEditor = new HTMLEditor(this.doc);
-
-  this.layoutHelpers = new LayoutHelpers(this.doc.defaultView);
 
   try {
     this.maxChildren = Services.prefs.getIntPref("devtools.markup.pagesize");
@@ -940,7 +938,7 @@ MarkupView.prototype = {
       }
       return this._ensureVisible(aNode);
     }).then(() => {
-      this.layoutHelpers.scrollIntoViewIfNeeded(this.getContainer(aNode).editor.elt, centered);
+      scrollIntoViewIfNeeded(this.getContainer(aNode).editor.elt, centered);
     }, e => {
       // Only report this rejection as an error if the panel hasn't been
       // destroyed in the meantime.

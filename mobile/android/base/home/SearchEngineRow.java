@@ -14,6 +14,7 @@ import org.mozilla.gecko.home.BrowserSearch.OnEditSuggestionListener;
 import org.mozilla.gecko.home.BrowserSearch.OnSearchListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.util.StringUtils;
+import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.AnimatedHeightLayout;
 import org.mozilla.gecko.widget.FaviconView;
 import org.mozilla.gecko.widget.FlowLayout;
@@ -64,6 +65,10 @@ class SearchEngineRow extends AnimatedHeightLayout {
     // Selected suggestion view
     private int mSelectedView;
 
+    // Maximums for suggestions based on form factor
+    private static final int TABLET_MAX = 4;
+    private static final int PHONE_MAX = 2;
+
     public SearchEngineRow(Context context) {
         this(context, null);
     }
@@ -93,8 +98,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
                     if (v == mUserEnteredView) {
                         Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.SUGGESTION, "user");
                     } else {
-                        final String extras = "engine." + (String) v.getTag();
-                        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.SUGGESTION, extras);
+                        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.SUGGESTION, (String) v.getTag());
                     }
                     mSearchListener.onSearch(mSearchEngine, suggestion);
                 }
@@ -139,7 +143,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
 
     private void setSuggestionOnView(View v, String suggestion, boolean isUserSavedSearch) {
         final ImageView historyIcon = (ImageView) v.findViewById(R.id.suggestion_item_icon);
-        historyIcon.setVisibility(isUserSavedSearch ? View.VISIBLE: View.GONE);
+        historyIcon.setVisibility(isUserSavedSearch ? View.VISIBLE : View.GONE);
 
         final TextView suggestionText = (TextView) v.findViewById(R.id.suggestion_text);
         suggestionText.setText(suggestion);
@@ -179,7 +183,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
         mEditSuggestionListener = listener;
     }
 
-    private void bindSuggestionView(String suggestion, boolean animate, int recycledSuggestionCount, Integer previousSuggestionChildIndex, boolean isUserSavedSearch){
+    private void bindSuggestionView(String suggestion, boolean animate, int recycledSuggestionCount, Integer previousSuggestionChildIndex, boolean isUserSavedSearch, String telemetryTag){
         final View suggestionItem;
 
         // Reuse suggestion views from recycled view, if possible.
@@ -192,8 +196,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
             suggestionItem.setOnClickListener(mClickListener);
             suggestionItem.setOnLongClickListener(mLongClickListener);
 
-            // Store the position of the suggestion for telemetry.
-            suggestionItem.setTag(String.valueOf(previousSuggestionChildIndex));
+            suggestionItem.setTag(telemetryTag);
 
             mSuggestionView.addView(suggestionItem);
         }
@@ -215,25 +218,20 @@ class SearchEngineRow extends AnimatedHeightLayout {
         }
     }
 
-    private void updateFromSavedSearches(String searchTerm, boolean animate, int suggestionCounter, int recycledSuggestionCount) {
-        final ContentResolver cr = getContext().getContentResolver();
-
-        String[] columns = new String[] { SearchHistory.QUERY };
-        String actualQuery = SearchHistory.QUERY + " LIKE ?";
-        String[] queryArgs = new String[] { '%' + searchTerm + '%' };
-        String sortOrderAndLimit = SearchHistory.DATE + " DESC LIMIT 4";
-
-        final Cursor c = cr.query(SearchHistory.CONTENT_URI, columns, actualQuery, queryArgs, sortOrderAndLimit);
-
+    private void updateFromSavedSearches(Cursor c, boolean animate, int suggestionCounter, int recycledSuggestionCount) {
         if (c == null) {
             return;
         }
         try {
             if (c.moveToFirst()) {
                 final int searchColumn = c.getColumnIndexOrThrow(SearchHistory.QUERY);
+                final int historyStartIndex = suggestionCounter;
                 do {
                     final String savedSearch = c.getString(searchColumn);
-                    bindSuggestionView(savedSearch, animate, recycledSuggestionCount, suggestionCounter, true);
+                    // suggestionCounter counts all suggestions (from history and the search engine)
+                    // but we want the relative position of the history item in telemetry
+                    String telemetryTag = "history." + (suggestionCounter - historyStartIndex);
+                    bindSuggestionView(savedSearch, animate, recycledSuggestionCount, suggestionCounter, true, telemetryTag);
                     ++suggestionCounter;
                 } while (c.moveToNext());
             }
@@ -243,11 +241,40 @@ class SearchEngineRow extends AnimatedHeightLayout {
         hideRecycledSuggestions(suggestionCounter, recycledSuggestionCount);
     }
 
-    private int updateFromSearchEngine(boolean animate, int recycledSuggestionCount) {
+    private Cursor getSavedSearches(String searchTerm, boolean isTablet) {
+        if (!AppConstants.NIGHTLY_BUILD) {
+            return null;
+        }
+        final ContentResolver cr = getContext().getContentResolver();
+
+        String[] columns = new String[] { SearchHistory.QUERY };
+        String actualQuery = SearchHistory.QUERY + " LIKE ?";
+        String[] queryArgs = new String[] { '%' + searchTerm + '%' };
+        final int limit = isTablet ? TABLET_MAX : PHONE_MAX;
+
+        String sortOrderAndLimit = SearchHistory.DATE +" DESC LIMIT "+limit;
+        return cr.query(SearchHistory.CONTENT_URI, columns, actualQuery, queryArgs, sortOrderAndLimit);
+    }
+
+    private int updateFromSearchEngine(boolean animate, int recycledSuggestionCount, boolean isTablet, int savedCount) {
+
+        // Remove this default limit value in Bug 1201325
+        int limit = TABLET_MAX;
+        if (AppConstants.NIGHTLY_BUILD) {
+            limit = isTablet ? TABLET_MAX : PHONE_MAX;
+            // If there are less than max saved searches on phones, fill the space with more search engine suggestions
+            if (!isTablet && savedCount < PHONE_MAX) {
+                    limit += PHONE_MAX - savedCount;
+            }
+        }
         int suggestionCounter = 0;
-        // Apply Search Engine's suggestions
         for (String suggestion : mSearchEngine.getSuggestions()) {
-            bindSuggestionView(suggestion, animate, recycledSuggestionCount, suggestionCounter, false);
+            if (suggestionCounter == limit) {
+                break;
+            }
+            // Since the search engine suggestions are listed first, we can use suggestionCounter to get their relative positions for telemetry
+            String telemetryTag = "engine." + suggestionCounter;
+            bindSuggestionView(suggestion, animate, recycledSuggestionCount, suggestionCounter, false, telemetryTag);
             ++suggestionCounter;
         }
 
@@ -271,9 +298,21 @@ class SearchEngineRow extends AnimatedHeightLayout {
         // This can be called before the opt-in permission prompt is shown or set. Check first.
         if (suggestionsEnabled) {
             final int recycledSuggestionCount = mSuggestionView.getChildCount();
-            final int suggestionViewCount = updateFromSearchEngine(animate, recycledSuggestionCount);
             if (AppConstants.NIGHTLY_BUILD) {
-                updateFromSavedSearches(searchTerm, animate, suggestionViewCount, recycledSuggestionCount);
+
+                final boolean isTablet = HardwareUtils.isTablet();
+                final Cursor c = getSavedSearches(searchTerm, isTablet);
+                try {
+                    final int savedSearchCount = (c != null) ? c.getCount(): 0;
+                    final int suggestionViewCount = updateFromSearchEngine(animate, recycledSuggestionCount, isTablet, savedSearchCount);
+                    updateFromSavedSearches(c, animate, suggestionViewCount, recycledSuggestionCount);
+                } finally {
+                    if (c != null) {
+                        c.close();
+                    }
+                }
+            } else {
+                updateFromSearchEngine(animate, recycledSuggestionCount, true, 0);
             }
         }
     }
