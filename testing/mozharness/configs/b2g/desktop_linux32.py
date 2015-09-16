@@ -40,6 +40,7 @@ config = {
         ('/tools/tooltool.py', '/builds/tooltool.py'),
         ('/builds/mozilla-desktop-geoloc-api.key', '/builds/mozilla-desktop-geoloc-api.key'),
         ('/builds/crash-stats-api.token', '/builds/crash-stats-api.token'),
+        ('/usr/local/lib/hgext', '/usr/local/lib/hgext'),
     ],
     'enable_ccache': True,
     'vcs_share_base': '/builds/hg-shared',
