@@ -429,7 +429,8 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
           FxAccountUtils.pii(LOG_TAG, "Failed age check!");
           FxAccountAgeLockoutHelper.lockOut(SystemClock.elapsedRealtime());
           setResult(RESULT_CANCELED);
-          redirectToActivity(FxAccountCreateAccountNotAllowedActivity.class);
+          launchActivity(FxAccountCreateAccountNotAllowedActivity.class);
+          finish();
         }
       }
     });
