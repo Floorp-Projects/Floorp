@@ -94,6 +94,19 @@ function run_test() {
   var simplePrin = ssm.getSimpleCodebasePrincipal(makeURI('http://example.com'));
   try { simplePrin.origin; do_check_true(false); } catch (e) { do_check_true(true); }
 
+  // Make sure we don't crash when serializing them either.
+  try {
+    let binaryStream = Cc["@mozilla.org/binaryoutputstream;1"].
+                       createInstance(Ci.nsIObjectOutputStream);
+    let pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
+    pipe.init(false, false, 0, 0xffffffff, null);
+    binaryStream.setOutputStream(pipe.outputStream);
+    binaryStream.writeCompoundObject(simplePrin, Ci.nsISupports, true);
+    binaryStream.close();
+  } catch (e) {
+    do_check_true(true);
+  }
+
   // Check that all of the above are cross-origin.
   checkCrossOrigin(exampleOrg_app, exampleOrg);
   checkCrossOrigin(exampleOrg_app, nullPrin_app);
