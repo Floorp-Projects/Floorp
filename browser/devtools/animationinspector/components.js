@@ -661,8 +661,8 @@ exports.TimeScale = TimeScale;
  * Animations are organized by lines, with a left margin containing the preview
  * of the target DOM element the animation applies to.
  * The current time play head can be moved by clicking/dragging in the header.
- * when this happens, the component emits "current-time-changed" events with the
- * new time.
+ * when this happens, the component emits "current-data-changed" events with the
+ * new time and state of the timeline.
  *
  * @param {InspectorPanel} inspector.
  */
@@ -793,7 +793,12 @@ AnimationsTimeline.prototype = {
 
     let time = TimeScale.distanceToRelativeTime(offset,
       this.timeHeaderEl.offsetWidth);
-    this.emit("current-time-changed", time);
+
+    this.emit("timeline-data-changed", {
+      isPaused: true,
+      isMoving: false,
+      time: time
+    });
   },
 
   render: function(animations, documentCurrentTime) {
@@ -868,11 +873,27 @@ AnimationsTimeline.prototype = {
 
     if (time < TimeScale.minStartTime ||
         time > TimeScale.maxEndTime) {
+      this.stopAnimatingScrubber();
+      this.emit("timeline-data-changed", {
+        isPaused: false,
+        isMoving: false,
+        time: TimeScale.distanceToRelativeTime(x, this.timeHeaderEl.offsetWidth)
+      });
       return;
     }
 
+    this.emit("timeline-data-changed", {
+      isPaused: false,
+      isMoving: true,
+      time: TimeScale.distanceToRelativeTime(x, this.timeHeaderEl.offsetWidth)
+    });
+
     let now = this.win.performance.now();
     this.rafID = this.win.requestAnimationFrame(() => {
+      if (!this.rafID) {
+        // In case the scrubber was stopped in the meantime.
+        return;
+      }
       this.startAnimatingScrubber(time + this.win.performance.now() - now);
     });
   },
@@ -880,6 +901,7 @@ AnimationsTimeline.prototype = {
   stopAnimatingScrubber: function() {
     if (this.rafID) {
       this.win.cancelAnimationFrame(this.rafID);
+      this.rafID = null;
     }
   },
 
