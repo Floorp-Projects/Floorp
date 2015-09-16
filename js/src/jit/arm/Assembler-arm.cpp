@@ -1410,6 +1410,17 @@ Assembler::bytesNeeded() const
 
 #ifdef JS_DISASM_ARM
 
+void
+Assembler::spewInst(Instruction* i)
+{
+    disasm::NameConverter converter;
+    disasm::Disassembler dasm(converter);
+    disasm::EmbeddedVector<char, disasm::ReasonableBufferSize> buffer;
+    uint8_t* loc = reinterpret_cast<uint8_t*>(const_cast<uint32_t*>(i->raw()));
+    dasm.InstructionDecode(buffer, loc);
+    printf("   %08x  %s\n", reinterpret_cast<uint32_t>(loc), buffer.start());
+}
+
 // Labels are named as they are encountered by adding names to a
 // table, using the Label address as the key.  This is made tricky by
 // the (memory for) Label objects being reused, but reused label
