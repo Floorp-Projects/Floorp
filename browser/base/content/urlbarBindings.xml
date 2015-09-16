@@ -665,6 +665,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               case "userMadeSearchSuggestionsChoice":
                 this._userMadeSearchSuggestionsChoice =
                   this._prefs.getBoolPref(aData);
+                // Make sure the urlbar is focused.  It won't be, for example,
+                // if the user used an accesskey to make an opt-in choice.
+                // mIgnoreFocus prevents the text from being selected.
+                this.mIgnoreFocus = true;
+                this.focus();
+                this.mIgnoreFocus = false;
                 this.popup.searchSuggestionsNotificationWasDismissed(
                   this._prefs.getBoolPref("suggest.searches")
                 );
