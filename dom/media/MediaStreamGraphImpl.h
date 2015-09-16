@@ -304,14 +304,6 @@ public:
    */
   void RecomputeBlocking(GraphTime aEndBlockingDecisions);
 
-  // The following methods are used to help RecomputeBlocking.
-  /**
-   * If aStream isn't already in aStreams, add it and recursively call
-   * AddBlockingRelatedStreamsToSet on all the streams whose blocking
-   * status could depend on or affect the state of aStream.
-   */
-  void AddBlockingRelatedStreamsToSet(nsTArray<MediaStream*>* aStreams,
-                                      MediaStream* aStream);
   /**
    * Mark a stream blocked at time aTime. If this results in decisions that need
    * to be revisited at some point in the future, *aEnd will be reduced to the
@@ -324,7 +316,7 @@ public:
    * in the future, *aEnd will be reduced to the first time in the future to
    * recompute those decisions.
    */
-  void RecomputeBlockingAt(const nsTArray<MediaStream*>& aStreams,
+  void RecomputeBlockingAt(MediaStream* aStream,
                            GraphTime aTime, GraphTime aEndBlockingDecisions,
                            GraphTime* aEnd);
   /**
