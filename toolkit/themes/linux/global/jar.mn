@@ -8,7 +8,6 @@ toolkit.jar:
 +  skin/classic/global/checkbox.css
 +  skin/classic/global/colorpicker.css
 +  skin/classic/global/commonDialog.css
-+  skin/classic/global/config.css                              (../../shared/config.css)
 +  skin/classic/global/dropmarker.css
 +  skin/classic/global/filepicker.css
 +  skin/classic/global/Filepicker.png                          (filepicker/Filepicker.png)
@@ -50,18 +49,8 @@ toolkit.jar:
 +  skin/classic/global/icons/panelarrow-vertical.svg           (icons/panelarrow-vertical.svg)
 +  skin/classic/global/icons/resizer.png                       (icons/resizer.png)
 +  skin/classic/global/icons/sslWarning.png                    (icons/sslWarning.png)
-+  skin/classic/global/icons/warning.svg                       (../../shared/incontent-icons/warning.svg)
 +  skin/classic/global/icons/webapps-16.png                    (icons/webapps-16.png)
 +  skin/classic/global/icons/webapps-64.png                    (icons/webapps-64.png)
-   skin/classic/global/menu/shared-menu-check.png              (../../shared/menu-check.png)
-   skin/classic/global/menu/shared-menu-check-active.svg       (../../shared/menu-check-active.svg)
-   skin/classic/global/menu/shared-menu-check-black.svg        (../../shared/menu-check-black.svg)
-   skin/classic/global/menu/shared-menu-check-hover.svg        (../../shared/menu-check-hover.svg)
 *  skin/classic/global/in-content/common.css                   (in-content/common.css)
 *  skin/classic/global/in-content/info-pages.css               (in-content/info-pages.css)
-   skin/classic/global/in-content/check.svg                    (../../shared/in-content/check.svg)
-   skin/classic/global/in-content/check-partial.svg            (../../shared/in-content/check-partial.svg)
-   skin/classic/global/in-content/dropdown.svg                 (../../shared/in-content/dropdown.svg)
-   skin/classic/global/in-content/help-glyph.svg               (../../shared/in-content/help-glyph.svg)
-   skin/classic/global/in-content/radio.svg                    (../../shared/in-content/radio.svg)
 +  skin/classic/global/toolbar/spring.png                      (toolbar/spring.png)
