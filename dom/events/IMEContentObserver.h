@@ -258,6 +258,9 @@ private:
   // FlushMergeableNotifications() creates IMENotificationSender and
   // IMENotificationSender sent all pending notifications.
   bool mIsFlushingPendingNotifications;
+  // mIsHandlingQueryContentEvent is true when IMEContentObserver is handling
+  // WidgetQueryContentEvent with ContentEventHandler.
+  bool mIsHandlingQueryContentEvent;
 
 
   /**
