@@ -194,8 +194,7 @@ A suggested link has additional values:
   %2$S is replaced by the triggering site.
 - ``frecent_sites`` - array of strings of the sites that can trigger showing a
   Suggested Tile if the user has the site in one of the top 100 most-frecent
-  pages. Only preapproved array of strings that are hardcoded into the
-  DirectoryLinksProvider module are allowed.
+  pages.
 - ``frequency_caps`` - an object consisting of daily and total frequency caps
   that limit the number of times a Suggested Tile can be shown in the new tab
   per day and overall.
