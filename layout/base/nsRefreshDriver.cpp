@@ -78,7 +78,6 @@ using namespace mozilla::layout;
 static PRLogModuleInfo *gLog = nullptr;
 #define LOG(...) MOZ_LOG(gLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
-#define DEFAULT_FRAME_RATE 60
 #define DEFAULT_THROTTLED_FRAME_RATE 1
 #define DEFAULT_RECOMPUTE_VISIBILITY_INTERVAL_MS 1000
 // after 10 minutes, stop firing off inactive timers
@@ -765,7 +764,7 @@ nsRefreshDriver::Shutdown()
 /* static */ int32_t
 nsRefreshDriver::DefaultInterval()
 {
-  return NSToIntRound(1000.0 / DEFAULT_FRAME_RATE);
+  return NSToIntRound(1000.0 / gfxPlatform::GetDefaultFrameRate());
 }
 
 // Compute the interval to use for the refresh driver timer, in milliseconds.
@@ -781,7 +780,7 @@ nsRefreshDriver::GetRegularTimerInterval(bool *outIsDefault) const
 {
   int32_t rate = Preferences::GetInt("layout.frame_rate", -1);
   if (rate < 0) {
-    rate = DEFAULT_FRAME_RATE;
+    rate = gfxPlatform::GetDefaultFrameRate();
     if (outIsDefault) {
       *outIsDefault = true;
     }
