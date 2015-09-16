@@ -5366,6 +5366,17 @@ ContentParent::RecvEndDriverCrashGuard(const uint32_t& aGuardType)
   return true;
 }
 
+bool
+ContentParent::RecvGetDeviceStorageLocation(const nsString& aType,
+                                            nsString* aPath) {
+#ifdef MOZ_WIDGET_ANDROID
+  mozilla::AndroidBridge::GetExternalPublicDirectory(aType, *aPath);
+  return true;
+#else
+  return false;
+#endif
+}
+
 } // namespace dom
 } // namespace mozilla
 
