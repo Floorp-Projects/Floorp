@@ -9,7 +9,7 @@
 interface nsIDOMDOMRequest;
 interface nsIFrameLoader;
 
-[scriptable, function, uuid(c0c2dd9b-41ef-42dd-a4c1-e456619c1941)]
+[scriptable, function, uuid(00d0e19d-bd67-491f-8e85-b9905224d3bb)]
 interface nsIBrowserElementNextPaintListener : nsISupports
 {
   void recvNextPaint();
@@ -26,7 +26,7 @@ interface nsIBrowserElementNextPaintListener : nsISupports
  * Interface to the BrowserElementParent implementation. All methods
  * but setFrameLoader throw when the remote process is dead.
  */
-[scriptable, uuid(56bd3e12-4a8b-422a-89fc-6dc25aa30aa2)]
+[scriptable, uuid(1e098c3a-7d65-452d-a2b2-9ffd1b6e04bb)]
 interface nsIBrowserElementAPI : nsISupports
 {
   const long FIND_CASE_SENSITIVE = 0;
@@ -100,4 +100,6 @@ interface nsIBrowserElementAPI : nsISupports
   void setNFCFocus(in boolean isFocus);
 
   nsIDOMDOMRequest executeScript(in DOMString script, in jsval options);
+
+  nsIDOMDOMRequest getWebManifest();
 };
