@@ -1197,16 +1197,12 @@ IMEContentObserver::FlushMergeableNotifications()
     return;
   }
 
-  if (!mIsFocusEventPending && !mIsTextChangeEventPending &&
-      !mIsSelectionChangeEventPending && !mIsPositionChangeEventPending) {
+  if (!NeedsToNotifyIMEOfSomething()) {
     MOZ_LOG(sIMECOLog, LogLevel::Debug,
       ("IMECO: 0x%p   IMEContentObserver::FlushMergeableNotifications(), "
        "FAILED, due to no pending notifications", this));
     return;
   }
-
-  AutoRestore<bool> flusing(mIsFlushingPendingNotifications);
-  mIsFlushingPendingNotifications = true;
 
   // NOTE: Reset each pending flag because sending notification may cause
   //       another change.
@@ -1215,6 +1211,7 @@ IMEContentObserver::FlushMergeableNotifications()
     ("IMECO: 0x%p IMEContentObserver::FlushMergeableNotifications(), "
      "creating IMENotificationSender...", this));
 
+  mIsFlushingPendingNotifications = true;
   nsContentUtils::AddScriptRunner(new IMENotificationSender(this));
 
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
@@ -1278,6 +1275,8 @@ IMEContentObserver::AChangeEvent::IsSafeToNotifyIME(
 NS_IMETHODIMP
 IMEContentObserver::IMENotificationSender::Run()
 {
+  MOZ_ASSERT(mIMEContentObserver->mIsFlushingPendingNotifications);
+
   // NOTE: Reset each pending flag because sending notification may cause
   //       another change.
 
@@ -1287,6 +1286,7 @@ IMEContentObserver::IMENotificationSender::Run()
     // This is the first notification to IME. So, we don't need to notify
     // anymore since IME starts to query content after it gets focus.
     mIMEContentObserver->ClearPendingNotifications();
+    mIMEContentObserver->mIsFlushingPendingNotifications = false;
     return NS_OK;
   }
 
@@ -1308,10 +1308,10 @@ IMEContentObserver::IMENotificationSender::Run()
     SendPositionChange();
   }
 
-  // If notifications may cause new change, we should notify them now.
-  if (mIMEContentObserver->mIsTextChangeEventPending ||
-      mIMEContentObserver->mIsSelectionChangeEventPending ||
-      mIMEContentObserver->mIsPositionChangeEventPending) {
+  // If notifications caused some new change, we should notify them now.
+  mIMEContentObserver->mIsFlushingPendingNotifications =
+    mIMEContentObserver->NeedsToNotifyIMEOfSomething();
+  if (mIMEContentObserver->mIsFlushingPendingNotifications) {
     MOZ_LOG(sIMECOLog, LogLevel::Debug,
       ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::Run(), "
        "posting AsyncMergeableNotificationsFlusher to current thread", this));

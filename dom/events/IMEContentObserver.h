@@ -146,6 +146,13 @@ private:
     mIsPositionChangeEventPending = false;
     mTextChangeData.Clear();
   }
+  bool NeedsToNotifyIMEOfSomething() const
+  {
+    return mIsFocusEventPending ||
+           mIsTextChangeEventPending ||
+           mIsSelectionChangeEventPending ||
+           mIsPositionChangeEventPending;
+  }
 
   /**
    * UpdateSelectionCache() updates mSelectionData with the latest selection.
@@ -241,6 +248,9 @@ private:
   bool mIsTextChangeEventPending;
   bool mIsSelectionChangeEventPending;
   bool mIsPositionChangeEventPending;
+  // mIsFlushingPendingNotifications is true between
+  // FlushMergeableNotifications() creates IMENotificationSender and
+  // IMENotificationSender sent all pending notifications.
   bool mIsFlushingPendingNotifications;
 
 
