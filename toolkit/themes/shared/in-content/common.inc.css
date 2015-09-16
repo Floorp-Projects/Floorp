@@ -181,7 +181,7 @@ html|button {
 xul|colorpicker[type="button"],
 xul|menulist {
   -moz-appearance: none;
-  height: 30px;
+  min-height: 30px;
   color: var(--in-content-text-color);
   border: 1px solid var(--in-content-box-border-color);
   -moz-border-top-colors: none !important;
