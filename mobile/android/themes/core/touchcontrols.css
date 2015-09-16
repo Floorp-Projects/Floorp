@@ -220,3 +220,17 @@
   text-align: center;
 }
 
+/* Overlay Play button */
+.clickToPlay {
+  width: 64px;
+  height: 64px;
+  -moz-box-pack: center;
+  -moz-box-align: center;
+  opacity: 0.7;
+  background-image: url(chrome://global/skin/media/clicktoplay-bgtexture.png),
+                    url(chrome://global/skin/media/videoClickToPlayButton.svg);
+  background-repeat: repeat, no-repeat;
+  background-position: center, center;
+  background-size: auto, 64px 64px;
+  background-color: hsla(0,0%,10%,.5);
+}
