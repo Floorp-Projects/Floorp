@@ -59,7 +59,7 @@ JS_FOR_EACH_TRACEKIND(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS);
 template <typename S>
 struct DoCallbackFunctor : public IdentityDefaultAdaptor<S> {
     template <typename T> S operator()(T* t, JS::CallbackTracer* trc, const char* name) {
-        return js::gc::RewrapValueOrId<S, T*>::wrap(DoCallback(trc, &t, name));
+        return js::gc::RewrapTaggedPointer<S, T*>::wrap(DoCallback(trc, &t, name));
     }
 };
 
@@ -77,6 +77,14 @@ DoCallback<jsid>(JS::CallbackTracer* trc, jsid* idp, const char* name)
 {
     *idp = DispatchIdTyped(DoCallbackFunctor<jsid>(), *idp, trc, name);
     return *idp;
+}
+
+template <>
+TaggedProto
+DoCallback<TaggedProto>(JS::CallbackTracer* trc, TaggedProto* protop, const char* name)
+{
+    *protop = DispatchTaggedProtoTyped(DoCallbackFunctor<TaggedProto>(), *protop, trc, name);
+    return *protop;
 }
 
 void
