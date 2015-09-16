@@ -841,6 +841,24 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
   }),
 
   /**
+   * Toggle (play/pause) several animations at the same time.
+   * @param {Array} players A list of AnimationPlayerActor objects.
+   * @param {Boolean} shouldPause If set to true, the players will be paused,
+   * otherwise they will be played.
+   */
+  toggleSeveral: method(function(players, shouldPause) {
+    return promise.all(players.map(player => {
+      return shouldPause ? player.pause() : player.play();
+    }));
+  }, {
+    request: {
+      players: Arg(0, "array:animationplayer"),
+      shouldPause: Arg(1, "boolean")
+    },
+    response: {}
+  }),
+
+  /**
    * Set the current time of several animations at the same time.
    * @param {Array} players A list of AnimationPlayerActor.
    * @param {Number} time The new currentTime.
