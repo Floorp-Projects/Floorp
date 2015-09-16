@@ -391,9 +391,13 @@ protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~APZCTreeManager();
 
-  // Hook for gtests subclass
+  // Protected hooks for gtests subclass
   virtual AsyncPanZoomController* MakeAPZCInstance(uint64_t aLayersId,
-                                                   GeckoContentController* aController);
+                                                   GeckoContentController* aController,
+                                                   TaskThrottler& aPaintThrottler);
+public:
+  // Public hooks for gtests subclass
+  virtual TimeStamp GetFrameTime();
 
 public:
   /* Some helper functions to find an APZC given some identifying input. These functions
