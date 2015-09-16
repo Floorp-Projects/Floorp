@@ -13,8 +13,11 @@
 #include "mozilla/RollingMean.h"        // for RollingMean
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "mozilla/UniquePtr.h"          // for UniquePtr
+#include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsISupportsImpl.h"            // for NS_INLINE_DECL_THREADSAFE_REFCOUNTING
 #include "nsTArray.h"                   // for nsTArray
+
+class nsITimer;
 
 namespace tracked_objects {
 class Location;
@@ -110,8 +113,10 @@ private:
   TimeStamp mStartTime;
   TimeDuration mMaxWait;
   RollingMean<TimeDuration, TimeDuration> mMean;
+  nsCOMPtr<nsITimer> mTimer;
 
   ~TaskThrottler();
+  void RunQueuedTask(const TimeStamp& aTimeStamp);
 };
 
 } // namespace layers
