@@ -215,8 +215,6 @@ def test_environment(xrePath, env=None, crashreporter=True, debugger=False,
                     log.info("WARNING | runtests.py | LSan suppressions file"
                              " does not exist! " + suppressionsFile)
                 env["LSAN_OPTIONS"] = ':'.join(lsanOptions)
-                # Run shutdown GCs and CCs to avoid spurious leaks.
-                env['MOZ_CC_RUN_DURING_SHUTDOWN'] = '1'
 
             if len(asanOptions):
                 env['ASAN_OPTIONS'] = ':'.join(asanOptions)
