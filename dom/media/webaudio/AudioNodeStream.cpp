@@ -654,8 +654,8 @@ AudioNodeStream::FractionalTicksFromDestinationTime(AudioNodeStream* aDestinatio
   double offset = destinationFractionalTicks - destinationStreamTime;
 
   GraphTime graphTime =
-    aDestination->StreamTimeToGraphTimeWithBlocking(destinationStreamTime);
-  StreamTime thisStreamTime = GraphTimeToStreamTimeOptimistic(graphTime);
+    aDestination->StreamTimeToGraphTime(destinationStreamTime);
+  StreamTime thisStreamTime = GraphTimeToStreamTime(graphTime);
   double thisFractionalTicks = thisStreamTime + offset;
   MOZ_ASSERT(thisFractionalTicks >= 0.0);
   return thisFractionalTicks;
@@ -680,8 +680,9 @@ AudioNodeStream::DestinationTimeFromTicks(AudioNodeStream* aDestination,
                                           StreamTime aPosition)
 {
   MOZ_ASSERT(SampleRate() == aDestination->SampleRate());
-  GraphTime graphTime = StreamTimeToGraphTimeWithBlocking(aPosition);
-  StreamTime destinationTime = aDestination->GraphTimeToStreamTimeOptimistic(graphTime);
+
+  GraphTime graphTime = StreamTimeToGraphTime(aPosition);
+  StreamTime destinationTime = aDestination->GraphTimeToStreamTime(graphTime);
   return StreamTimeToSeconds(destinationTime);
 }
 
