@@ -25,13 +25,13 @@
 
 extern char *program;
 
-extern void fail(char *format, ...);
+extern void fail(const char *format, ...);
 extern char *getcomponent(char *path, char *name);
 extern char *ino2name(ino_t ino);
 extern void *xmalloc(size_t size);
 extern char *xstrdup(char *s);
 extern char *xbasename(char *path);
-extern void xchdir(char *dir);
+extern void xchdir(const char *dir);
 
 /* Relate absolute pathnames from and to returning the result in outpath. */
 extern int relatepaths(char *from, char *to, char *outpath);
