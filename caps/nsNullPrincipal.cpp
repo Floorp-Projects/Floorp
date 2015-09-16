@@ -173,6 +173,9 @@ nsNullPrincipal::Read(nsIObjectInputStream* aStream)
 NS_IMETHODIMP
 nsNullPrincipal::Write(nsIObjectOutputStream* aStream)
 {
+  NS_ENSURE_TRUE(mOriginAttributes.mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
+                 NS_ERROR_INVALID_ARG);
+
   nsAutoCString suffix;
   OriginAttributesRef().CreateSuffix(suffix);
 
