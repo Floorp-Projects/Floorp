@@ -23,7 +23,7 @@ public:
   virtual ~DaemonSocketIOConsumer();
 
   virtual void Handle(DaemonSocketPDU& aPDU) = 0;
-  virtual void StoreUserData(const DaemonSocketPDU& aPDU) = 0;
+  virtual void StoreResultHandler(const DaemonSocketPDU& aPDU) = 0;
 
 protected:
   DaemonSocketIOConsumer();

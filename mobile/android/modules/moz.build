@@ -11,6 +11,7 @@ EXTRA_JS_MODULES += [
     'dbg-browser-actors.js',
     'DelayedInit.jsm',
     'DownloadNotifications.jsm',
+    'FxAccountsWebChannel.jsm',
     'HelperApps.jsm',
     'Home.jsm',
     'HomeProvider.jsm',

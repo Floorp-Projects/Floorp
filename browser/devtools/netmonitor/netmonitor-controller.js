@@ -338,9 +338,16 @@ var NetMonitorController = {
     let inspector = function() {
       let predicate = i => i.value === requestId;
       request = NetMonitorView.RequestsMenu.getItemForPredicate(predicate);
+      if (!request) {
+        // Reset filters so that the request is visible.
+        NetMonitorView.RequestsMenu.filterOn("all");
+        request = NetMonitorView.RequestsMenu.getItemForPredicate(predicate);
+      }
+
+      // If the request was found, select it. Otherwise this function will be
+      // called again once new requests arrive.
       if (request) {
         window.off(EVENTS.REQUEST_ADDED, inspector);
-        NetMonitorView.RequestsMenu.filterOn("all");
         NetMonitorView.RequestsMenu.selectedItem = request;
         deferred.resolve();
       }

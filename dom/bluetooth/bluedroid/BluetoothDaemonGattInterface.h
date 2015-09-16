@@ -15,6 +15,7 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 using mozilla::ipc::DaemonSocketPDU;
 using mozilla::ipc::DaemonSocketPDUHeader;
+using mozilla::ipc::DaemonSocketResultHandler;
 
 class BluetoothSetupResultHandler;
 
@@ -67,7 +68,8 @@ public:
 
   static const int MAX_NUM_CLIENTS;
 
-  virtual nsresult Send(DaemonSocketPDU* aPDU, void* aUserData) = 0;
+  virtual nsresult Send(DaemonSocketPDU* aPDU,
+                        DaemonSocketResultHandler* aRes) = 0;
 
   virtual nsresult RegisterModule(uint8_t aId, uint8_t aMode,
                                   uint32_t aMaxNumClients,
@@ -300,11 +302,8 @@ public:
   // TODO: Add L support
 
 protected:
-  nsresult Send(DaemonSocketPDU* aPDU,
-                BluetoothGattResultHandler* aRes);
-
   void HandleSvc(const DaemonSocketPDUHeader& aHeader,
-                 DaemonSocketPDU& aPDU, void* aUserData);
+                 DaemonSocketPDU& aPDU, DaemonSocketResultHandler* aRes);
 
   //
   // Responses
@@ -471,7 +470,7 @@ protected:
 
   void HandleRsp(const DaemonSocketPDUHeader& aHeader,
                  DaemonSocketPDU& aPDU,
-                 void* aUserData);
+                 DaemonSocketResultHandler* aRes);
 
   //
   // Notifications
@@ -770,7 +769,7 @@ protected:
 
   void HandleNtf(const DaemonSocketPDUHeader& aHeader,
                  DaemonSocketPDU& aPDU,
-                 void* aUserData);
+                 DaemonSocketResultHandler* aRes);
 
   static BluetoothGattNotificationHandler* sNotificationHandler;
 };
@@ -786,81 +785,81 @@ public:
   ~BluetoothDaemonGattInterface();
 
   void Init(BluetoothGattNotificationHandler* aNotificationHandler,
-            BluetoothGattResultHandler* aRes);
-  void Cleanup(BluetoothGattResultHandler* aRes);
+            BluetoothGattResultHandler* aRes) override;
+  void Cleanup(BluetoothGattResultHandler* aRes) override;
 
   /* Register / Unregister */
   void RegisterClient(const BluetoothUuid& aUuid,
-                      BluetoothGattResultHandler* aRes);
+                      BluetoothGattResultHandler* aRes) override;
   void UnregisterClient(int aClientIf,
-                        BluetoothGattResultHandler* aRes);
+                        BluetoothGattResultHandler* aRes) override;
 
   /* Start / Stop LE Scan */
   void Scan(int aClientIf, bool aStart,
-            BluetoothGattResultHandler* aRes);
+            BluetoothGattResultHandler* aRes) override;
 
   /* Connect / Disconnect */
   void Connect(int aClientIf,
                const nsAString& aBdAddr,
                bool aIsDirect, /* auto connect */
                BluetoothTransport aTransport,
-               BluetoothGattResultHandler* aRes);
+               BluetoothGattResultHandler* aRes) override;
   void Disconnect(int aClientIf,
                   const nsAString& aBdAddr,
                   int aConnId,
-                  BluetoothGattResultHandler* aRes);
+                  BluetoothGattResultHandler* aRes) override;
 
   /* Start / Stop advertisements to listen for incoming connections */
   void Listen(int aClientIf,
               bool aIsStart,
-              BluetoothGattResultHandler* aRes);
+              BluetoothGattResultHandler* aRes) override;
 
   /* Clear the attribute cache for a given device*/
   void Refresh(int aClientIf,
                const nsAString& aBdAddr,
-               BluetoothGattResultHandler* aRes);
+               BluetoothGattResultHandler* aRes) override;
 
   /* Enumerate Attributes */
   void SearchService(int aConnId,
                      bool aSearchAll,
                      const BluetoothUuid& aUuid,
-                     BluetoothGattResultHandler* aRes);
+                     BluetoothGattResultHandler* aRes) override;
   void GetIncludedService(int aConnId,
                           const BluetoothGattServiceId& aServiceId,
                           bool aFirst,
                           const BluetoothGattServiceId& aStartServiceId,
-                          BluetoothGattResultHandler* aRes);
+                          BluetoothGattResultHandler* aRes) override;
   void GetCharacteristic(int aConnId,
                          const BluetoothGattServiceId& aServiceId,
                          bool aFirst,
                          const BluetoothGattId& aStartCharId,
-                         BluetoothGattResultHandler* aRes);
+                         BluetoothGattResultHandler* aRes) override;
   void GetDescriptor(int aConnId,
                      const BluetoothGattServiceId& aServiceId,
                      const BluetoothGattId& aCharId,
                      bool aFirst,
                      const BluetoothGattId& aDescriptorId,
-                     BluetoothGattResultHandler* aRes);
+                     BluetoothGattResultHandler* aRes) override;
 
   /* Read / Write An Attribute */
   void ReadCharacteristic(int aConnId,
                           const BluetoothGattServiceId& aServiceId,
                           const BluetoothGattId& aCharId,
                           BluetoothGattAuthReq aAuthReq,
-                          BluetoothGattResultHandler* aRes);
+                          BluetoothGattResultHandler* aRes) override;
   void WriteCharacteristic(int aConnId,
                            const BluetoothGattServiceId& aServiceId,
                            const BluetoothGattId& aCharId,
                            BluetoothGattWriteType aWriteType,
                            BluetoothGattAuthReq aAuthReq,
                            const nsTArray<uint8_t>& aValue,
-                           BluetoothGattResultHandler* aRes);
+                           BluetoothGattResultHandler* aRes) override;
   void ReadDescriptor(int aConnId,
                       const BluetoothGattServiceId& aServiceId,
                       const BluetoothGattId& aCharId,
                       const BluetoothGattId& aDescriptorId,
                       BluetoothGattAuthReq aAuthReq,
-                      BluetoothGattResultHandler* aRes);
+                      BluetoothGattResultHandler* aRes) override;
   void WriteDescriptor(int aConnId,
                        const BluetoothGattServiceId& aServiceId,
                        const BluetoothGattId& aCharId,
@@ -868,12 +867,12 @@ public:
                        BluetoothGattWriteType aWriteType,
                        BluetoothGattAuthReq aAuthReq,
                        const nsTArray<uint8_t>& aValue,
-                       BluetoothGattResultHandler* aRes);
+                       BluetoothGattResultHandler* aRes) override;
 
   /* Execute / Abort Prepared Write*/
   void ExecuteWrite(int aConnId,
                     int aIsExecute,
-                    BluetoothGattResultHandler* aRes);
+                    BluetoothGattResultHandler* aRes) override;
 
 
   /* Register / Deregister Characteristic Notifications or Indications */
@@ -881,19 +880,19 @@ public:
                             const nsAString& aBdAddr,
                             const BluetoothGattServiceId& aServiceId,
                             const BluetoothGattId& aCharId,
-                            BluetoothGattResultHandler* aRes);
+                            BluetoothGattResultHandler* aRes) override;
   void DeregisterNotification(int aClientIf,
                               const nsAString& aBdAddr,
                               const BluetoothGattServiceId& aServiceId,
                               const BluetoothGattId& aCharId,
-                              BluetoothGattResultHandler* aRes);
+                              BluetoothGattResultHandler* aRes) override;
 
   void ReadRemoteRssi(int aClientIf,
                       const nsAString& aBdAddr,
-                      BluetoothGattResultHandler* aRes);
+                      BluetoothGattResultHandler* aRes) override;
 
   void GetDeviceType(const nsAString& aBdAddr,
-                     BluetoothGattResultHandler* aRes);
+                     BluetoothGattResultHandler* aRes) override;
 
   /* Set advertising data or scan response data */
   void SetAdvData(int aServerIf,
@@ -906,61 +905,61 @@ public:
                   uint16_t aManufacturerLen, char* aManufacturerData,
                   uint16_t aServiceDataLen, char* aServiceData,
                   uint16_t aServiceUuidLen, char* aServiceUuid,
-                  BluetoothGattResultHandler* aRes);
+                  BluetoothGattResultHandler* aRes) override;
 
   void TestCommand(int aCommand,
                    const BluetoothGattTestParam& aTestParam,
-                   BluetoothGattResultHandler* aRes);
+                   BluetoothGattResultHandler* aRes) override;
 
   /* Register / Unregister */
   void RegisterServer(const BluetoothUuid& aUuid,
-                      BluetoothGattResultHandler* aRes);
+                      BluetoothGattResultHandler* aRes) override;
   void UnregisterServer(int aServerIf,
-                        BluetoothGattResultHandler* aRes);
+                        BluetoothGattResultHandler* aRes) override;
 
   /* Connect / Disconnect */
   void ConnectPeripheral(int aServerIf,
                          const nsAString& aBdAddr,
                          bool aIsDirect, /* auto connect */
                          BluetoothTransport aTransport,
-                         BluetoothGattResultHandler* aRes);
+                         BluetoothGattResultHandler* aRes) override;
   void DisconnectPeripheral(int aServerIf,
                             const nsAString& aBdAddr,
                             int aConnId,
-                            BluetoothGattResultHandler* aRes);
+                            BluetoothGattResultHandler* aRes) override;
 
   /* Add a services / a characteristic / a descriptor */
   void AddService(int aServerIf,
                   const BluetoothGattServiceId& aServiceId,
                   int aNumHandles,
-                  BluetoothGattResultHandler* aRes);
+                  BluetoothGattResultHandler* aRes) override;
   void AddIncludedService(int aServerIf,
                           int aServiceHandle,
                           int aIncludedServiceHandle,
-                          BluetoothGattResultHandler* aRes);
+                          BluetoothGattResultHandler* aRes) override;
   void AddCharacteristic(int aServerIf,
                          int aServiceHandle,
                          const BluetoothUuid& aUuid,
                          BluetoothGattCharProp aProperties,
                          BluetoothGattAttrPerm aPermissions,
-                         BluetoothGattResultHandler* aRes);
+                         BluetoothGattResultHandler* aRes) override;
   void AddDescriptor(int aServerIf,
                      int aServiceHandle,
                      const BluetoothUuid& aUuid,
                      BluetoothGattAttrPerm aPermissions,
-                     BluetoothGattResultHandler* aRes);
+                     BluetoothGattResultHandler* aRes) override;
 
   /* Start / Stop / Delete a service */
   void StartService(int aServerIf,
                     int aServiceHandle,
                     BluetoothTransport aTransport,
-                    BluetoothGattResultHandler* aRes);
+                    BluetoothGattResultHandler* aRes) override;
   void StopService(int aServerIf,
                    int aServiceHandle,
-                   BluetoothGattResultHandler* aRes);
+                   BluetoothGattResultHandler* aRes) override;
   void DeleteService(int aServerIf,
                      int aServiceHandle,
-                     BluetoothGattResultHandler* aRes);
+                     BluetoothGattResultHandler* aRes) override;
 
   /* Send an indication or a notification */
   void SendIndication(
@@ -969,14 +968,14 @@ public:
     int aConnId,
     const nsTArray<uint8_t>& aValue,
     bool aConfirm, /* true: indication, false: notification */
-    BluetoothGattResultHandler* aRes);
+    BluetoothGattResultHandler* aRes) override;
 
   /* Send a response for an incoming indication */
   void SendResponse(int aConnId,
                     int aTransId,
                     BluetoothGattStatus aStatus,
                     const BluetoothGattResponse& aResponse,
-                    BluetoothGattResultHandler* aRes);
+                    BluetoothGattResultHandler* aRes) override;
 
 private:
   void DispatchError(BluetoothGattResultHandler* aRes,
