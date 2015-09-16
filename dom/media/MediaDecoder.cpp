@@ -1117,7 +1117,7 @@ void MediaDecoder::SetMediaSeekable(bool aMediaSeekable) {
 bool
 MediaDecoder::IsTransportSeekable()
 {
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  MOZ_ASSERT(NS_IsMainThread());
   return GetResource()->IsTransportSeekable();
 }
 
