@@ -265,7 +265,9 @@ private:
                                              uint32_t aFlags);
 
   Pair<DrawResult, RefPtr<gfx::SourceSurface>>
-    GetFrameInternal(uint32_t aWhichFrame, uint32_t aFlags);
+    GetFrameInternal(const gfx::IntSize& aSize,
+                     uint32_t aWhichFrame,
+                     uint32_t aFlags);
 
   LookupResult LookupFrameInternal(uint32_t aFrameNum,
                                    const gfx::IntSize& aSize,
