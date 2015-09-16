@@ -2567,35 +2567,70 @@
     "n_buckets": 1000,
     "description": "Time spent blocked in PR_ConnectContinue when the offline state has changed in the last 60s (ms)."
   },
-  "PRCLOSE_BLOCKING_TIME_NORMAL": {
+  "PRCLOSE_TCP_BLOCKING_TIME_NORMAL": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 1000,
     "description": "Time spent blocked in PR_Close when we are not shutting down and there has been niether a network nor an offline state change in the last 60s (ms)."
   },
-  "PRCLOSE_BLOCKING_TIME_SHUTDOWN": {
+  "PRCLOSE_TCP_BLOCKING_TIME_SHUTDOWN": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 1000,
     "description": "Time spent blocked in PR_Close during a shutdown (ms)."
   },
-  "PRCLOSE_BLOCKING_TIME_CONNECTIVITY_CHANGE": {
+  "PRCLOSE_TCP_BLOCKING_TIME_CONNECTIVITY_CHANGE": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 1000,
     "description": "Time spent blocked in PR_Close when there has been the connectivity change in the last 60s (ms)."
   },
-  "PRCLOSE_BLOCKING_TIME_LINK_CHANGE": {
+  "PRCLOSE_TCP_BLOCKING_TIME_LINK_CHANGE": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 1000,
     "description": "Time spent blocked in PR_Close when there has been a link change in the last 60s (ms)."
   },
-  "PRCLOSE_BLOCKING_TIME_OFFLINE": {
+  "PRCLOSE_TCP_BLOCKING_TIME_OFFLINE": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 1000,
+    "description": "Time spent blocked in PR_Close when the offline state has changed in the last 60s (ms)."
+  },
+  "PRCLOSE_UDP_BLOCKING_TIME_NORMAL": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 1000,
+    "description": "Time spent blocked in PR_Close when we are not shutting down and there has been niether a network nor an offline state change in the last 60s (ms)."
+  },
+  "PRCLOSE_UDP_BLOCKING_TIME_SHUTDOWN": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 1000,
+    "description": "Time spent blocked in PR_Close during a shutdown (ms)."
+  },
+  "PRCLOSE_UDP_BLOCKING_TIME_CONNECTIVITY_CHANGE": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 1000,
+    "description": "Time spent blocked in PR_Close when there has been the connectivity change in the last 60s (ms)."
+  },
+  "PRCLOSE_UDP_BLOCKING_TIME_LINK_CHANGE": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 1000,
+    "description": "Time spent blocked in PR_Close when there has been a link change in the last 60s (ms)."
+  },
+  "PRCLOSE_UDP_BLOCKING_TIME_OFFLINE": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "60000",
@@ -8686,20 +8721,6 @@
     "expires_in_version": "never",
     "kind": "count",
     "description": "Count plugin hang notices in e10s"
-  },
-  "UDP_SOCKET_PARALLEL_CLOSE_COUNT": {
-    "expires_in_version": "41",
-    "kind": "linear",
-    "high": "20",
-    "n_buckets": 19,
-    "description": "Number of concurrent UDP socket closing threads"
-  },
-  "UDP_SOCKET_CLOSE_TIME": {
-    "expires_in_version": "45",
-    "kind": "exponential",
-    "high": "60000",
-    "n_buckets": 30,
-    "description": "Time PR_Close of a UDP socket taken (ms)"
   },
   "SERVICE_WORKER_SPAWN_ATTEMPTS": {
     "expires_in_version": "50",
