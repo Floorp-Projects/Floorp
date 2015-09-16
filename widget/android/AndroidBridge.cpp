@@ -47,6 +47,8 @@
 #include "SurfaceTexture.h"
 #include "GLContextProvider.h"
 
+#include "mozilla/dom/ContentChild.h"
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::jni;
@@ -55,6 +57,7 @@ using namespace mozilla::widget;
 AndroidBridge* AndroidBridge::sBridge = nullptr;
 pthread_t AndroidBridge::sJavaUiThread;
 static jobject sGlobalContext = nullptr;
+nsDataHashtable<nsStringHashKey, nsString> AndroidBridge::sStoragePaths;
 
 // This is a dummy class that can be used in the template for android::sp
 class AndroidRefable {
@@ -2121,6 +2124,30 @@ nsresult AndroidBridge::InputStreamRead(Object::Param obj, char *aBuf, uint32_t 
 }
 
 nsresult AndroidBridge::GetExternalPublicDirectory(const nsAString& aType, nsAString& aPath) {
+    if (XRE_IsContentProcess()) {
+        nsString key(aType);
+        nsAutoString path;
+        if (AndroidBridge::sStoragePaths.Get(key, &path)) {
+            aPath = path;
+            return NS_OK;
+        }
+
+        // Lazily get the value from the parent.
+        dom::ContentChild* child = dom::ContentChild::GetSingleton();
+        if (child) {
+          nsAutoString type(aType);
+          child->SendGetDeviceStorageLocation(type, &path);
+          if (!path.IsEmpty()) {
+            AndroidBridge::sStoragePaths.Put(key, path);
+            return NS_OK;
+          }
+        }
+
+        ALOG_BRIDGE("AndroidBridge::GetExternalPublicDirectory no cache for %s",
+              NS_ConvertUTF16toUTF8(aType).get());
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
     auto path = GeckoAppShell::GetExternalPublicDirectory(aType);
     if (!path) {
         return NS_ERROR_NOT_AVAILABLE;

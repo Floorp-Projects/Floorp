@@ -48,6 +48,10 @@ this.MessagesBridge = {
                                          data: { type: "url",
                                                  url: data.url } });
         break;
+      case "home-key":
+        window.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Home" }));
+        window.dispatchEvent(new window.KeyboardEvent("keyup", { key: "Home" }));
+        break;
     }
   }
 }
