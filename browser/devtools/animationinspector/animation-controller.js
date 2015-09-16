@@ -80,6 +80,8 @@ var getServerTraits = Task.async(function*(target) {
   let config = [
     { name: "hasToggleAll", actor: "animations",
       method: "toggleAll" },
+    { name: "hasToggleSeveral", actor: "animations",
+      method: "toggleSeveral" },
     { name: "hasSetCurrentTime", actor: "animationplayer",
       method: "setCurrentTime" },
     { name: "hasMutationEvents", actor: "animations",
@@ -246,10 +248,31 @@ var AnimationsController = {
   },
 
   /**
+   * Similar to toggleAll except that it only plays/pauses the currently known
+   * animations (those listed in this.animationPlayers).
+   * @param {Boolean} shouldPause True if the animations should be paused, false
+   * if they should be played.
+   * @return {Promise} Resolves when the playState has been changed.
+   */
+  toggleCurrentAnimations: Task.async(function*(shouldPause) {
+    if (this.traits.hasToggleSeveral) {
+      yield this.animationsFront.toggleSeveral(this.animationPlayers,
+                                               shouldPause);
+    } else {
+      // Fall back to pausing/playing the players one by one, which is bound to
+      // introduce some de-synchronization.
+      for (let player of this.animationPlayers) {
+        if (shouldPause) {
+          yield player.pause();
+        } else {
+          yield player.play();
+        }
+      }
+    }
+  }),
+
+  /**
    * Set all known animations' currentTimes to the provided time.
-   * Note that depending on the server's capabilities, this might resolve in
-   * either one packet, or as many packets as there are animations. In the
-   * latter case, some time deltas might be introduced.
    * @param {Number} time.
    * @param {Boolean} shouldPause Should the animations be paused too.
    * @return {Promise} Resolves when the current time has been set.
@@ -259,6 +282,8 @@ var AnimationsController = {
       yield this.animationsFront.setCurrentTimes(this.animationPlayers, time,
                                                  shouldPause);
     } else {
+      // Fall back to pausing and setting the current time on each player, one
+      // by one, which is bound to introduce some de-synchronization.
       for (let animation of this.animationPlayers) {
         if (shouldPause) {
           yield animation.pause();
