@@ -28,7 +28,7 @@ let dumpn = msg => {
  * highlighter actor.
  * The instance provides methods to get/set attributes/text/style on nodes of
  * the highlighter, inserted into the nsCanvasFrame.
- * @see /toolkit/devtools/server/actors/highlighter.js
+ * @see /toolkit/devtools/server/actors/highlighters.js
  * @param {String} actorID
  */
 function getHighlighterCanvasFrameHelper(conn, actorID) {
