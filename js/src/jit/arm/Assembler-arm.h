@@ -1260,6 +1260,7 @@ class Assembler : public AssemblerShared
     }
 
 #ifdef JS_DISASM_ARM
+    static void spewInst(Instruction* i);
     void spew(Instruction* i);
     void spewBranch(Instruction* i, Label* target);
     void spewData(BufferOffset addr, size_t numInstr, bool loadToPC);
