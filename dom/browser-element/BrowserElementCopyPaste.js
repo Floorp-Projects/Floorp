@@ -72,7 +72,8 @@ var CopyPasteAssistent = {
       collapsed: e.collapsed,
       caretVisible: e.caretVisible,
       selectionVisible: e.selectionVisible,
-      selectionEditable: e.selectionEditable
+      selectionEditable: e.selectionEditable,
+      selectedTextContent: e.selectedTextContent
     };
 
     // Get correct geometry information if we have nested iframe.

@@ -459,6 +459,8 @@ BrowserElementParent.prototype = {
   //  - caretVisible: Indicate the caret visiibility.
   //  - selectionVisible: Indicate current selection is visible or not.
   //  - selectionEditable: Indicate current selection is editable or not.
+  //  - selectedTextContent: Contains current selected text content, which is
+  //                         equivalent to the string returned by Selection.toString().
   _handleCaretStateChanged: function(data) {
     let evt = this._createEvent('caretstatechanged', data.json,
                                 /* cancelable = */ false);
