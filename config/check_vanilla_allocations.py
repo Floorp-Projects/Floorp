@@ -75,8 +75,8 @@ def main():
     # Run |nm|.  Options:
     # -u: show only undefined symbols
     # -C: demangle symbol names
-    # -l: show a filename and line number for each undefined symbol
-    cmd = ['nm', '-u', '-C', '-l', args.file]
+    # -A: show an object filename for each undefined symbol
+    cmd = ['nm', '-u', '-C', '-A', args.file]
     lines = subprocess.check_output(cmd, universal_newlines=True,
                                     stderr=subprocess.PIPE).split('\n')
 
@@ -112,26 +112,30 @@ def main():
     # This regexp matches the relevant lines in the output of |nm|, which look
     # like the following.
     #
-    #   U malloc  /path/to/objdir/dist/include/js/Utility.h:142
+    #   js/src/libjs_static.a:jsutil.o:              U malloc
     #
-    alloc_fns_re = r'U (' + r'|'.join(alloc_fns) + r').*\/([\w\.]+):(\d+)$'
+    alloc_fns_re = r'([^:/ ]+):\s+U (' + r'|'.join(alloc_fns) + r')'
 
     # This tracks which allocation/free functions have been seen in jsutil.cpp.
     jsutil_cpp = set([])
+
+    # Would it be helpful to emit detailed line number information after a failure?
+    emit_line_info = False
 
     for line in lines:
         m = re.search(alloc_fns_re, line)
         if m is None:
             continue
 
-        fn = m.group(1)
-        filename = m.group(2)
-        linenum = m.group(3)
-        if filename == 'jsutil.cpp':
+        filename = m.group(1)
+        fn = m.group(2)
+        if filename == 'jsutil.o':
             jsutil_cpp.add(fn)
         else:
             # An allocation is present in a non-special file.  Fail!
-            fail("'" + fn + "' present at " + filename + ':' + linenum)
+            fail("'" + fn + "' present in " + filename)
+            # Try to give more precise information about the offending code.
+            emit_line_info = True
 
 
     # Check that all functions we expect are used in jsutil.cpp.  (This will
@@ -146,6 +150,34 @@ def main():
     if jsutil_cpp:
         fail('unexpected allocation fns used in jsutil.cpp: ' +
              ', '.join(jsutil_cpp))
+
+    # If we found any improper references to allocation functions, try to use
+    # DWARF debug info to get more accurate line number information about the
+    # bad calls. This is a lot slower than 'nm -A', and it is not always
+    # precise when building with --enable-optimized.
+    if emit_line_info:
+        print('check_vanilla_allocations.py: Source lines with allocation calls:')
+        print('check_vanilla_allocations.py: Accurate in unoptimized builds; jsutil.cpp expected.')
+
+        # Run |nm|.  Options:
+        # -u: show only undefined symbols
+        # -C: demangle symbol names
+        # -l: show line number information for each undefined symbol
+        cmd = ['nm', '-u', '-C', '-l', args.file]
+        lines = subprocess.check_output(cmd, universal_newlines=True,
+                                        stderr=subprocess.PIPE).split('\n')
+
+        # This regexp matches the relevant lines in the output of |nm -l|,
+        # which look like the following.
+        #
+        #       U malloc jsutil.cpp:117
+        #
+        alloc_lines_re = r'U ((' + r'|'.join(alloc_fns) + r').*)\s+(\S+:\d+)$'
+
+        for line in lines:
+            m = re.search(alloc_lines_re, line)
+            if m:
+                print('check_vanilla_allocations.py:', m.group(1), 'called at', m.group(3))
 
     if has_failed:
         sys.exit(1)
