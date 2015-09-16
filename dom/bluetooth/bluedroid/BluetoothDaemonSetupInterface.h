@@ -17,19 +17,6 @@ using mozilla::ipc::DaemonSocketPDU;
 using mozilla::ipc::DaemonSocketPDUHeader;
 using mozilla::ipc::DaemonSocketResultHandler;
 
-class BluetoothSetupResultHandler
-  : public mozilla::ipc::DaemonSocketResultHandler
-{
-public:
-  virtual void OnError(BluetoothStatus aStatus);
-  virtual void RegisterModule();
-  virtual void UnregisterModule();
-  virtual void Configuration();
-
-protected:
-  virtual ~BluetoothSetupResultHandler();
-};
-
 class BluetoothDaemonSetupModule
 {
 public:
