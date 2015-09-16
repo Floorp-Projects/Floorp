@@ -24,10 +24,14 @@ BluetoothDaemonSetupModule::HandleSvc(const DaemonSocketPDUHeader& aHeader,
     const DaemonSocketPDUHeader&,
     DaemonSocketPDU&,
     BluetoothSetupResultHandler*) = {
-    [0x00] = &BluetoothDaemonSetupModule::ErrorRsp,
-    [0x01] = &BluetoothDaemonSetupModule::RegisterModuleRsp,
-    [0x02] = &BluetoothDaemonSetupModule::UnregisterModuleRsp,
-    [0x03] = &BluetoothDaemonSetupModule::ConfigurationRsp
+    [OPCODE_ERROR] =
+      &BluetoothDaemonSetupModule::ErrorRsp,
+    [OPCODE_REGISTER_MODULE] =
+      &BluetoothDaemonSetupModule::RegisterModuleRsp,
+    [OPCODE_UNREGISTER_MODULE] =
+      &BluetoothDaemonSetupModule::UnregisterModuleRsp,
+    [OPCODE_CONFIGURATION] =
+      &BluetoothDaemonSetupModule::ConfigurationRsp
   };
 
   if (NS_WARN_IF(aHeader.mOpcode >= MOZ_ARRAY_LENGTH(HandleRsp)) ||
@@ -55,7 +59,9 @@ BluetoothDaemonSetupModule::RegisterModuleCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x00, 0x01, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_REGISTER_MODULE,
+                        0));
 
 #if ANDROID_VERSION >= 21
   nsresult rv = PackPDU(aId, aMode, aMaxNumClients, *pdu);
@@ -79,7 +85,9 @@ BluetoothDaemonSetupModule::UnregisterModuleCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x00, 0x02, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_UNREGISTER_MODULE,
+                        0));
 
   nsresult rv = PackPDU(aId, *pdu);
   if (NS_FAILED(rv)) {
@@ -100,7 +108,9 @@ BluetoothDaemonSetupModule::ConfigurationCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x00, 0x03, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_CONFIGURATION,
+                        0));
 
   nsresult rv = PackPDU(
     aLen, PackArray<BluetoothConfigurationParameter>(aParam, aLen), *pdu);

@@ -1419,7 +1419,8 @@ BluetoothDaemonProtocol::Handle(DaemonSocketPDU& aPDU)
   static void (BluetoothDaemonProtocol::* const HandleSvc[])(
     const DaemonSocketPDUHeader&, DaemonSocketPDU&,
     DaemonSocketResultHandler*) = {
-    [0x00] = &BluetoothDaemonProtocol::HandleSetupSvc,
+    [BluetoothDaemonSetupModule::SERVICE_ID] =
+      &BluetoothDaemonProtocol::HandleSetupSvc,
     [0x01] = &BluetoothDaemonProtocol::HandleCoreSvc,
     [0x02] = &BluetoothDaemonProtocol::HandleSocketSvc,
     [0x03] = nullptr, // HID host
