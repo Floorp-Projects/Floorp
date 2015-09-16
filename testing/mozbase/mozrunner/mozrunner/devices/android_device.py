@@ -2,11 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import glob
 import os
+import platform
 import psutil
 import re
 import shutil
 import signal
+import sys
 import telnetlib
 import time
 import urllib2
@@ -18,6 +21,12 @@ from mozprocess import ProcessHandler
 EMULATOR_HOME_DIR = os.path.join(os.path.expanduser('~'), '.mozbuild', 'android-device')
 
 TOOLTOOL_URL = 'https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py'
+
+TRY_URL = 'https://hg.mozilla.org/try/raw-file/default'
+
+MANIFEST_URL = '%s/testing/config/tooltool-manifests' % TRY_URL
+
+verbose_logging = False
 
 class AvdInfo(object):
     """
@@ -70,13 +79,16 @@ AVD_DICT = {
                    20701, 20700)
 }
 
-def verify_android_device(build_obj, install=False):
+def verify_android_device(build_obj, install=False, xre=False):
     """
        Determine if any Android device is connected via adb.
        If no device is found, prompt to start an emulator.
        If a device is found or an emulator started and 'install' is
        specified, also check whether Firefox is installed on the
        device; if not, prompt to install Firefox.
+       If 'xre' is specified, also check with MOZ_HOST_BIN is set
+       to a valid xre/host-utils directory; if not, prompt to set
+       one up.
        Returns True if the emulator was started or another device was
        already connected.
     """
@@ -90,9 +102,9 @@ def verify_android_device(build_obj, install=False):
             "No Android devices connected. Start an emulator? (Y/n) ").strip()
         if response.lower().startswith('y') or response == '':
             if not emulator.check_avd():
-                print("Fetching AVD. This may take a while...")
+                _log_info("Fetching AVD. This may take a while...")
                 emulator.update_avd()
-            print("Starting emulator running %s..." %
+            _log_info("Starting emulator running %s..." %
                 emulator.get_avd_description())
             emulator.start()
             emulator.wait_for_start()
@@ -118,9 +130,58 @@ def verify_android_device(build_obj, install=False):
                 "It looks like Firefox is not installed on this device.\n"
                 "Install Firefox? (Y/n) ").strip()
             if response.lower().startswith('y') or response == '':
-                print("Installing Firefox. This may take a while...")
+                _log_info("Installing Firefox. This may take a while...")
                 build_obj._run_make(directory=".", target='install',
                     ensure_exit_code=False)
+
+    if device_verified and xre:
+        # Check whether MOZ_HOST_BIN has been set to a valid xre; if not,
+        # prompt to install one.
+        xre_path = os.environ.get('MOZ_HOST_BIN')
+        err = None
+        if not xre_path:
+            err = 'environment variable MOZ_HOST_BIN is not set to a directory containing host xpcshell'
+        elif not os.path.isdir(xre_path):
+            err = '$MOZ_HOST_BIN does not specify a directory'
+        elif not os.path.isfile(os.path.join(xre_path, 'xpcshell')):
+            err = '$MOZ_HOST_BIN/xpcshell does not exist'
+        if err:
+            xre_path = glob.glob(os.path.join(EMULATOR_HOME_DIR, 'host-utils*'))
+            for path in xre_path:
+                if os.path.isdir(path) and os.path.isfile(os.path.join(path, 'xpcshell')):
+                    os.environ['MOZ_HOST_BIN'] = path
+                    err = None
+                    break
+        if err:
+            _log_info("Host utilities not found: %s" % err)
+            response = raw_input(
+                "Download and setup your host utilities? (Y/n) ").strip()
+            if response.lower().startswith('y') or response == '':
+                _log_info("Installing host utilities. This may take a while...")
+                _download_file(TOOLTOOL_URL, 'tooltool.py', EMULATOR_HOME_DIR)
+                if 'darwin' in str(sys.platform).lower():
+                    plat = 'macosx64'
+                elif 'linux' in str(sys.platform).lower():
+                    if '64' in platform.architecture()[0]:
+                        plat = 'linux64'
+                    else:
+                        plat = 'linux32'
+                else:
+                    plat = None
+                    _log_warning("Unable to install host utilities -- your platform is not supported!")
+                if plat:
+                    url = '%s/%s/hostutils.manifest' % (MANIFEST_URL, plat)
+                    _download_file(url, 'releng.manifest', EMULATOR_HOME_DIR)
+                    _tooltool_fetch()
+                    xre_path = glob.glob(os.path.join(EMULATOR_HOME_DIR, 'host-utils*'))
+                    for path in xre_path:
+                        if os.path.isdir(path) and os.path.isfile(os.path.join(path, 'xpcshell')):
+                            os.environ['MOZ_HOST_BIN'] = path
+                            err = None
+                            break
+                    if err:
+                        _log_warning("Unable to install host utilities.")
+
     return device_verified
 
 
@@ -142,9 +203,10 @@ class AndroidEmulator(object):
     """
 
     def __init__(self, avd_type='4.3', verbose=False, substs=None):
+        global verbose_logging
         self.emulator_log = None
         self.emulator_path = 'emulator'
-        self.verbose = verbose
+        verbose_logging = verbose
         self.substs = substs
         self.avd_type = self._get_avd_type(avd_type)
         self.avd_info = AVD_DICT[self.avd_type]
@@ -153,7 +215,7 @@ class AndroidEmulator(object):
             adb_path = 'adb'
         self.dm = DeviceManagerADB(autoconnect=False, adbPath=adb_path, retryLimit=1)
         self.dm.default_timeout = 10
-        self._log_debug("Emulator created with type %s" % self.avd_type)
+        _log_debug("Emulator created with type %s" % self.avd_type)
 
     def __del__(self):
         if self.emulator_log:
@@ -196,7 +258,7 @@ class AndroidEmulator(object):
         if force and os.path.exists(avd):
             shutil.rmtree(avd)
         if os.path.exists(avd):
-            self._log_debug("AVD found at %s" % avd)
+            _log_debug("AVD found at %s" % avd)
             return True
         return False
 
@@ -215,9 +277,10 @@ class AndroidEmulator(object):
         if force and os.path.exists(avd):
             shutil.rmtree(avd)
         if not os.path.exists(avd):
-            self._fetch_tooltool()
-            self._fetch_tooltool_manifest()
-            self._tooltool_fetch()
+            _download_file(TOOLTOOL_URL, 'tooltool.py', EMULATOR_HOME_DIR)
+            url = '%s/%s' % (TRY_URL, self.avd_info.tooltool_manifest)
+            _download_file(url, 'releng.manifest', EMULATOR_HOME_DIR)
+            _tooltool_fetch()
             self._update_avd_paths()
 
     def start(self):
@@ -234,15 +297,15 @@ class AndroidEmulator(object):
             command += self.avd_info.extra_args
         log_path = os.path.join(EMULATOR_HOME_DIR, 'emulator.log')
         self.emulator_log = open(log_path, 'w')
-        self._log_debug("Starting the emulator with this command: %s" %
+        _log_debug("Starting the emulator with this command: %s" %
                         ' '.join(command))
-        self._log_debug("Emulator output will be written to '%s'" %
+        _log_debug("Emulator output will be written to '%s'" %
                         log_path)
         self.proc = ProcessHandler(
             command, storeOutput=False, processOutputLine=outputHandler,
             env=env)
         self.proc.run()
-        self._log_debug("Emulator started with pid %d" %
+        _log_debug("Emulator started with pid %d" %
                         int(self.proc.proc.pid))
 
     def wait_for_start(self):
@@ -251,20 +314,20 @@ class AndroidEmulator(object):
            to adb, and Android has booted.
         """
         if not self.proc:
-            self._log_warning("Emulator not started!")
+            _log_warning("Emulator not started!")
             return False
         if self.proc.proc.poll() is not None:
-            self._log_warning("Emulator has already completed!")
+            _log_warning("Emulator has already completed!")
             return False
-        self._log_debug("Waiting for device status...")
+        _log_debug("Waiting for device status...")
         while(('emulator-5554', 'device') not in self.dm.devices()):
             time.sleep(10)
             if self.proc.proc.poll() is not None:
-                self._log_warning("Emulator has already completed!")
+                _log_warning("Emulator has already completed!")
                 return False
-        self._log_debug("Device status verified.")
+        _log_debug("Device status verified.")
 
-        self._log_debug("Checking that Android has booted...")
+        _log_debug("Checking that Android has booted...")
         complete = False
         while(not complete):
             output = ''
@@ -279,9 +342,9 @@ class AndroidEmulator(object):
             else:
                 time.sleep(10)
                 if self.proc.proc.poll() is not None:
-                    self._log_warning("Emulator has already completed!")
+                    _log_warning("Emulator has already completed!")
                     return False
-        self._log_debug("Android boot status verified.")
+        _log_debug("Android boot status verified.")
 
         if not self._verify_emulator():
             return False
@@ -313,35 +376,6 @@ class AndroidEmulator(object):
         """
         return self.avd_info.description
 
-    def _log_debug(self, text):
-        if self.verbose:
-            print "DEBUG: %s" % text
-
-    def _log_warning(self, text):
-        print "WARNING: %s" % text
-
-    def _fetch_tooltool(self):
-        self._download_file(TOOLTOOL_URL, 'tooltool.py', EMULATOR_HOME_DIR)
-
-    def _fetch_tooltool_manifest(self):
-        url = 'https://hg.mozilla.org/%s/raw-file/%s/%s' % (
-            "try", "default", self.avd_info.tooltool_manifest)
-        self._download_file(url, 'releng.manifest', EMULATOR_HOME_DIR)
-
-    def _tooltool_fetch(self):
-        def outputHandler(line):
-            self._log_debug(line)
-        command = ['python', 'tooltool.py', 'fetch', '-m', 'releng.manifest']
-        proc = ProcessHandler(
-            command, processOutputLine=outputHandler, storeOutput=False,
-            cwd=EMULATOR_HOME_DIR)
-        proc.run()
-        try:
-            proc.wait()
-        except:
-            if proc.poll() is None:
-                proc.kill(signal.SIGTERM)
-
     def _update_avd_paths(self):
         avd_path = os.path.join(EMULATOR_HOME_DIR, "avd")
         ini_file = os.path.join(avd_path, "test-1.ini")
@@ -351,20 +385,6 @@ class AndroidEmulator(object):
         avd_dir_new = os.path.join(avd_path, self.avd_info.name + ".avd")
         os.rename(avd_dir, avd_dir_new)
         self._replace_ini_contents(ini_file_new)
-
-    def _download_file(self, url, filename, path):
-        f = urllib2.urlopen(url)
-        if not os.path.isdir(path):
-            try:
-                os.makedirs(path)
-            except Exception, e:
-                self._log_warning(str(e))
-                return False
-        local_file = open(os.path.join(path, filename), 'wb')
-        local_file.write(f.read())
-        local_file.close()
-        self._log_debug("Downloaded %s to %s/%s" % (url, path, filename))
-        return True
 
     def _replace_ini_contents(self, path):
         with open(path, "r") as f:
@@ -381,10 +401,10 @@ class AndroidEmulator(object):
                     f.write(line)
 
     def _telnet_cmd(self, telnet, command):
-        self._log_debug(">>> " + command)
+        _log_debug(">>> " + command)
         telnet.write('%s\n' % command)
         result = telnet.read_until('OK', 10)
-        self._log_debug("<<< " + result)
+        _log_debug("<<< " + result)
         return result
 
     def _verify_emulator(self):
@@ -411,16 +431,16 @@ class AndroidEmulator(object):
                     tn.read_all()
                     telnet_ok = True
                 else:
-                    self._log_warning("Unable to connect to port %d" % port)
+                    _log_warning("Unable to connect to port %d" % port)
             except:
-                self._log_warning("Trying again after unexpected exception")
+                _log_warning("Trying again after unexpected exception")
             finally:
                 if tn is not None:
                     tn.close()
             if not telnet_ok:
                 time.sleep(10)
                 if self.proc.proc.poll() is not None:
-                    self._log_warning("Emulator has already completed!")
+                    _log_warning("Emulator has already completed!")
                     return False
         return telnet_ok
 
@@ -430,25 +450,25 @@ class AndroidEmulator(object):
             try:
                 tn = telnetlib.Telnet('localhost', self.avd_info.sut_port, 10)
                 if tn is not None:
-                    self._log_debug(
+                    _log_debug(
                         "Connected to port %d" % self.avd_info.sut_port)
                     res = tn.read_until('$>', 10)
                     if res.find('$>') == -1:
-                        self._log_debug("Unexpected SUT response: %s" % res)
+                        _log_debug("Unexpected SUT response: %s" % res)
                     else:
-                        self._log_debug("SUT response: %s" % res)
+                        _log_debug("SUT response: %s" % res)
                         sut_ok = True
                     tn.write('quit\n')
                     tn.read_all()
             except:
-                self._log_debug("Caught exception while verifying sutagent")
+                _log_debug("Caught exception while verifying sutagent")
             finally:
                 if tn is not None:
                     tn.close()
             if not sut_ok:
                 time.sleep(10)
                 if self.proc.proc.poll() is not None:
-                    self._log_warning("Emulator has already completed!")
+                    _log_warning("Emulator has already completed!")
                     return False
         return sut_ok
 
@@ -480,10 +500,10 @@ class AndroidEmulator(object):
             if os.path.exists(exe_path):
                 found = True
             else:
-                self._log_debug(
+                _log_debug(
                     "Unable to find executable at %s" % exe_path)
         except KeyError:
-            self._log_debug("ANDROID_SDK_ROOT not set")
+            _log_debug("ANDROID_SDK_ROOT not set")
 
         if not found and self.substs:
             # Can exe be found in ANDROID_TOOLS/ANDROID_PLATFORM_TOOLS?
@@ -493,10 +513,10 @@ class AndroidEmulator(object):
                 if os.path.exists(exe_path):
                     found = True
                 else:
-                    self._log_debug(
+                    _log_debug(
                         "Unable to find executable at %s" % exe_path)
             except KeyError:
-                self._log_debug("%s not set" % var)
+                _log_debug("%s not set" % var)
 
         if not found:
             # Can exe be found in the default bootstrap location?
@@ -507,7 +527,7 @@ class AndroidEmulator(object):
             if os.path.exists(exe_path):
                 found = True
             else:
-                self._log_debug(
+                _log_debug(
                     "Unable to find executable at %s" % exe_path)
 
         if not found:
@@ -516,10 +536,48 @@ class AndroidEmulator(object):
             if exe_path:
                 found = True
             else:
-                self._log_debug("Unable to find executable on PATH")
+                _log_debug("Unable to find executable on PATH")
 
         if found:
-            self._log_debug("%s found at %s" % (exe, exe_path))
+            _log_debug("%s found at %s" % (exe, exe_path))
         else:
             exe_path = None
         return exe_path
+
+def _log_debug(text):
+    if verbose_logging:
+        print "DEBUG: %s" % text
+
+def _log_warning(text):
+    print "WARNING: %s" % text
+
+def _log_info(text):
+    print "%s" % text
+
+def _download_file(url, filename, path):
+    f = urllib2.urlopen(url)
+    if not os.path.isdir(path):
+        try:
+            os.makedirs(path)
+        except Exception, e:
+            _log_warning(str(e))
+            return False
+    local_file = open(os.path.join(path, filename), 'wb')
+    local_file.write(f.read())
+    local_file.close()
+    _log_debug("Downloaded %s to %s/%s" % (url, path, filename))
+    return True
+
+def _tooltool_fetch():
+    def outputHandler(line):
+        _log_debug(line)
+    command = ['python', 'tooltool.py', 'fetch', '-o', '-m', 'releng.manifest']
+    proc = ProcessHandler(
+        command, processOutputLine=outputHandler, storeOutput=False,
+        cwd=EMULATOR_HOME_DIR)
+    proc.run()
+    try:
+        proc.wait()
+    except:
+        if proc.poll() is None:
+            proc.kill(signal.SIGTERM)

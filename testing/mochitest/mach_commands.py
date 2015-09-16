@@ -426,7 +426,7 @@ def setup_argument_parser():
         # be done in this admittedly awkward place because
         # MochitestArgumentParser initialization fails if no device is found.
         from mozrunner.devices.android_device import verify_android_device
-        verify_android_device(build_obj, install=True)
+        verify_android_device(build_obj, install=True, xre=True)
 
     return MochitestArgumentParser()
 
