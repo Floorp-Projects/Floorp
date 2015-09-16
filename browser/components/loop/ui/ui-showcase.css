@@ -2,15 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-body {
-  /* Override the hidden in common.css. Very important otherwise you can't
-   * scroll the showcase.
+html[dir="rtl"]:not(.outer-html) {
+  /* Temporary work around and visual hack -
+   * Scope the root body overflow visible to remove the scroll bars that appear
+   * inside an iFrame. Can remove this rule after core layout fix for
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=1204680 has landed.
    */
-  overflow: visible;
+  overflow: hidden;
 }
 
-.overflow-hidden {
-  overflow: hidden;
+body {
+  /* Override the "overflow: hidden" rule on the body in common.css.
+   * Very important; otherwise you can't scroll the showcase.
+   */
+  overflow: visible;
 }
 
 .showcase {
