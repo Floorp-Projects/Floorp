@@ -8171,6 +8171,11 @@
     "kind": "boolean",
     "description": "Whether or not a session has tracking protection enabled"
   },
+  "TRACKING_PROTECTION_PBM_DISABLED": {
+    "expires_in_version": "60",
+    "kind": "boolean",
+    "description": "Is the tracking protection in private browsing mode disabled?"
+  },
   "TRACKING_PROTECTION_SHIELD": {
     "expires_in_version": "never",
     "kind": "enumerated",
