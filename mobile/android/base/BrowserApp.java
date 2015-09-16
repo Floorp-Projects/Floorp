@@ -741,17 +741,12 @@ public class BrowserApp extends GeckoApp
 
             // Looks at the server if there are changes in the server URL that should be used in the future
             Log.d(LOGTAG, "update server urls from remote");
-            SwitchBoard.updateConfigServerUrl(this);
             new AsyncConfigLoader(this, AsyncConfigLoader.UPDATE_SERVER).execute();
 
             // Loads the actual config. This can be done on app start or on app onResume() depending
             // how often you want to update the config.
             Log.d(LOGTAG, "update app config");
-            // TODO: Make this NON-SYNCHRONOUS
-            SwitchBoard.loadConfig(this);
-            final AsyncConfigLoader loader = new AsyncConfigLoader(this, AsyncConfigLoader.CONFIG_SERVER);
-            loader.execute();
-
+            new AsyncConfigLoader(this, AsyncConfigLoader.CONFIG_SERVER).execute();
         }
 
         mBrowserChrome = (ViewGroup) findViewById(R.id.browser_chrome);
