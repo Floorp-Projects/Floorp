@@ -9342,6 +9342,16 @@
     "releaseChannelCollection": "opt-out",
     "description": "Reason for reporting the Adobe CDM to be unsupported. (1 = NOT_WINDOWS; 2 = WINDOWS_VERSION)"
   },
+  "CONTENT_DOCUMENTS_DESTROYED": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Number of content documents destroyed; used in conjunction with use counter histograms"
+  },
+  "TOP_LEVEL_CONTENT_DOCUMENTS_DESTROYED": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Number of top-level content documents destroyed; used in conjunction with use counter histograms"
+  },
   "FXA_CONFIGURED": {
     "alert_emails": ["fx-team@mozilla.com"],
     "expires_in_version": "45",
