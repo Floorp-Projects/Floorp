@@ -393,9 +393,9 @@ protected:
   virtual ~APZCTreeManager();
 
   // Protected hooks for gtests subclass
-  virtual AsyncPanZoomController* MakeAPZCInstance(uint64_t aLayersId,
-                                                   GeckoContentController* aController,
-                                                   TaskThrottler* aPaintThrottler);
+  virtual AsyncPanZoomController* NewAPZCInstance(uint64_t aLayersId,
+                                                  GeckoContentController* aController,
+                                                  TaskThrottler* aPaintThrottler);
 public:
   // Public hooks for gtests subclass
   virtual TimeStamp GetFrameTime();
