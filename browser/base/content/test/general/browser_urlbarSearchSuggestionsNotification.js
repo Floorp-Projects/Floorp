@@ -214,13 +214,13 @@ function suggestionsPresent() {
   let present = false;
   for (let i = 0; i < matchCount; i++) {
     let url = controller.getValueAt(i);
-    let [, type, paramStr] = url.match(/^moz-action:([^,]+),(.*)$/);
-    let params = {};
-    try {
-      params = JSON.parse(paramStr);
-    } catch (err) {}
-    if (type == "searchengine" && "searchSuggestion" in params) {
-      return true;
+    let mozActionMatch = url.match(/^moz-action:([^,]+),(.*)$/);
+    if (mozActionMatch) {
+      let [, type, paramStr] = mozActionMatch;
+      let params = JSON.parse(paramStr);
+      if (type == "searchengine" && "searchSuggestion" in params) {
+        return true;
+      }
     }
   }
   return false;
