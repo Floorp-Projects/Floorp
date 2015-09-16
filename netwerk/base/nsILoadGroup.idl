@@ -15,7 +15,7 @@ typedef unsigned long nsLoadFlags;
 /**
  * A load group maintains a collection of nsIRequest objects. 
  */
-[scriptable, uuid(ff6a41f9-0bbf-44ca-9c71-f76c1da2b114)]
+[scriptable, uuid(f0c87725-7a35-463c-9ceb-2c07f23406cc)]
 interface nsILoadGroup : nsIRequest
 {
     /**
@@ -79,7 +79,7 @@ interface nsILoadGroup : nsIRequest
      * Context for managing things like js/css connection blocking,
      * and per-tab connection grouping.
      */
-    readonly attribute nsID schedulingContextID;
+    [noscript] readonly attribute nsID schedulingContextID;
 
     /**
      * The set of load flags that will be added to all new requests added to
