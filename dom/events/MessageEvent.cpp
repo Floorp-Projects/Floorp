@@ -167,7 +167,7 @@ MessageEvent::Constructor(EventTarget* aEventTarget,
   }
 
   if (aParam.mPorts.WasPassed() && !aParam.mPorts.Value().IsNull()) {
-    nsTArray<nsRefPtr<MessagePortBase>> ports;
+    nsTArray<nsRefPtr<MessagePort>> ports;
     for (uint32_t i = 0, len = aParam.mPorts.Value().Value().Length(); i < len; ++i) {
       ports.AppendElement(aParam.mPorts.Value().Value()[i].get());
     }

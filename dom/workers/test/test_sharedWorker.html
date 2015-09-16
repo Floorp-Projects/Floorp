@@ -48,8 +48,10 @@
                "MessageEvent has correct 'target' property");
             is(event.data, sentMessage, "Got correct message");
             ok(receivedMessage === undefined, "Haven't gotten message yet");
-            ok(receivedError === undefined, "Haven't gotten error yet");
             receivedMessage = event.data;
+            if (receivedError) {
+              SimpleTest.finish();
+            }
           };
 
           worker.onerror = function(event) {
@@ -58,11 +60,12 @@
             is(event.filename, errorFilename, "Got correct filename");
             is(event.lineno, errorLine, "Got correct lineno");
             is(event.colno, errorColumn, "Got correct column");
-            ok(receivedMessage !== undefined, "Got message already");
             ok(receivedError === undefined, "Haven't gotten error yet");
             receivedError = event.message;
             event.preventDefault();
-            SimpleTest.finish();
+            if (receivedMessage) {
+              SimpleTest.finish();
+            }
           };
 
           worker.port.postMessage(sentMessage);
