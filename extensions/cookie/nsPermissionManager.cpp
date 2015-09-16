@@ -2636,12 +2636,12 @@ nsPermissionManager::ImportDefaults()
   rv = NS_NewChannel(getter_AddRefs(channel),
                      defaultsURI,
                      nsContentUtils::GetSystemPrincipal(),
-                     nsILoadInfo::SEC_NORMAL,
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                      nsIContentPolicy::TYPE_OTHER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIInputStream> inputStream;
-  rv = channel->Open(getter_AddRefs(inputStream));
+  rv = channel->Open2(getter_AddRefs(inputStream));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = _DoImport(inputStream, nullptr);
