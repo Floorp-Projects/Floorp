@@ -1808,6 +1808,11 @@ public class BrowserApp extends GeckoApp
             if (Versions.feature16Plus) {
                 Telemetry.addToHistogram("BROWSER_IS_ASSIST_DEFAULT", (isDefaultBrowser(Intent.ACTION_ASSIST) ? 1 : 0));
             }
+
+            final SharedPreferences sharedPrefs = GeckoSharedPrefs.forApp(BrowserApp.this);
+            if (sharedPrefs.getBoolean(GeckoPreferences.PREFS_OPEN_URLS_IN_PRIVATE, false)) {
+                Telemetry.addToHistogram("FENNEC_OPEN_URLS_IN_PRIVATE", 1);
+            }
         } else if ("Updater:Launch".equals(event)) {
             handleUpdaterLaunch();
         } else {

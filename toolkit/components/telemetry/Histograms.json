@@ -8921,6 +8921,12 @@
     "kind": "boolean",
     "description": "Has the tab queue functionality been enabled."
   },
+  "FENNEC_OPEN_URLS_IN_PRIVATE": {
+    "alert_emails": ["margaret@mozilla.com"],
+    "expires_in_version": "44",
+    "kind": "flag",
+    "description": "Reports the state of the open external links in private tabs preference"
+  },
   "VIDEO_EME_DISABLED": {
     "alert_emails": ["edwin@mozilla.com"],
     "expires_in_version": "45",
