@@ -4,13 +4,6 @@
 
 package org.mozilla.gecko.fxa.activities;
 
-import org.mozilla.gecko.Locales.LocaleAwareActivity;
-import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
-import org.mozilla.gecko.fxa.FirefoxAccounts;
-import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
-import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
-
 import android.accounts.Account;
 import android.app.Activity;
 import android.content.Intent;
@@ -18,6 +11,13 @@ import android.os.SystemClock;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
+import org.mozilla.gecko.Locales.LocaleAwareActivity;
+import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
 public abstract class FxAccountAbstractActivity extends LocaleAwareActivity {
   private static final String LOG_TAG = FxAccountAbstractActivity.class.getSimpleName();
@@ -43,26 +43,30 @@ public abstract class FxAccountAbstractActivity extends LocaleAwareActivity {
    * exists or if account creation is locked out due to an age verification
    * check failing (getting started, create account, sign in). This function
    * redirects as appropriate.
+   *
+   * @return true if redirected.
    */
-  protected void redirectIfAppropriate() {
+  protected boolean redirectIfAppropriate() {
     if (cannotResumeWhenAccountsExist || cannotResumeWhenNoAccountsExist) {
       final Account account = FirefoxAccounts.getFirefoxAccount(this);
       if (cannotResumeWhenAccountsExist && account != null) {
-        redirectToActivity(FxAccountStatusActivity.class);
-        return;
+        redirectToAction(FxAccountConstants.ACTION_FXA_STATUS);
+        return true;
       }
       if (cannotResumeWhenNoAccountsExist && account == null) {
-        redirectToActivity(FxAccountGetStartedActivity.class);
-        return;
+        redirectToAction(FxAccountConstants.ACTION_FXA_GET_STARTED);
+        return true;
       }
     }
     if (cannotResumeWhenLockedOut) {
       if (FxAccountAgeLockoutHelper.isLockedOut(SystemClock.elapsedRealtime())) {
         this.setResult(RESULT_CANCELED);
-        redirectToActivity(FxAccountCreateAccountNotAllowedActivity.class);
-        return;
+        launchActivity(FxAccountCreateAccountNotAllowedActivity.class);
+        finish();
+        return true;
       }
     }
+    return false;
   }
 
   @Override
@@ -85,8 +89,12 @@ public abstract class FxAccountAbstractActivity extends LocaleAwareActivity {
     startActivity(intent);
   }
 
-  protected void redirectToActivity(Class<? extends Activity> activityClass) {
-    launchActivity(activityClass);
+  protected void redirectToAction(final String action) {
+    final Intent intent = new Intent(action);
+    // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
+    // the soft keyboard not being shown for the started activity. Why, Android, why?
+    intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+    startActivity(intent);
     finish();
   }
 

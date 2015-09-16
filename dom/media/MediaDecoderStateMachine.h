@@ -522,6 +522,10 @@ protected:
   // Must be called with the decode monitor held.
   void MaybeStartPlayback();
 
+  // Check to see if we don't have enough data to play up to the next frame.
+  // If we don't, switch to buffering mode.
+  void MaybeStartBuffering();
+
   // Moves the decoder into decoding state. Called on the state machine
   // thread. The decoder monitor must be held.
   void StartDecoding();

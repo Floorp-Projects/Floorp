@@ -13,7 +13,7 @@ import android.view.ViewGroup;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
+import org.mozilla.gecko.fxa.FxAccountConstants;
 
 public class WelcomePanel extends FirstrunPanel {
     public static final int TITLE_RES = R.string.firstrun_panel_title_welcome;
@@ -26,8 +26,9 @@ public class WelcomePanel extends FirstrunPanel {
             public void onClick(View v) {
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-sync");
 
-                final Intent accountIntent = new Intent(getActivity(), FxAccountGetStartedActivity.class);
-                startActivity(accountIntent);
+                final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                startActivity(intent);
 
                 close();
             }

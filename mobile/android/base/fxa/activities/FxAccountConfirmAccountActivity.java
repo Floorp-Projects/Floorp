@@ -4,18 +4,6 @@
 
 package org.mozilla.gecko.fxa.activities;
 
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.fxa.FirefoxAccounts;
-import org.mozilla.gecko.fxa.SyncStatusListener;
-import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
-import org.mozilla.gecko.fxa.login.Engaged;
-import org.mozilla.gecko.fxa.login.State;
-import org.mozilla.gecko.fxa.login.State.Action;
-import org.mozilla.gecko.fxa.sync.FxAccountSyncStatusHelper;
-import org.mozilla.gecko.fxa.tasks.FxAccountCodeResender;
-import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
-
 import android.accounts.Account;
 import android.app.Activity;
 import android.content.Context;
@@ -24,6 +12,18 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.SyncStatusListener;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.fxa.login.Engaged;
+import org.mozilla.gecko.fxa.login.State;
+import org.mozilla.gecko.fxa.login.State.Action;
+import org.mozilla.gecko.fxa.sync.FxAccountSyncStatusHelper;
+import org.mozilla.gecko.fxa.tasks.FxAccountCodeResender;
+import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
 /**
  * Activity which displays account created successfully screen to the user, and
@@ -146,7 +146,7 @@ public class FxAccountConfirmAccountActivity extends FxAccountAbstractActivity i
       Logger.warn(LOG_TAG, "No need to verify Firefox Account that needs action " + neededAction.toString() +
           " (in state " + state.getStateLabel() + ").");
       setResult(RESULT_CANCELED);
-      this.redirectToActivity(FxAccountStatusActivity.class);
+      redirectToAction(FxAccountConstants.ACTION_FXA_STATUS);
       return;
     }
 
