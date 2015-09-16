@@ -236,7 +236,6 @@ private:
     // True if TCP keepalive is enabled globally.
     bool        mKeepaliveEnabledPref;
 
-    bool                   mServeMultipleEventsPerPollIter;
     mozilla::Atomic<bool>  mServingPendingQueue;
     int32_t                mMaxTimePerPollIter;
     mozilla::Atomic<bool, mozilla::Relaxed>  mTelemetryEnabledPref;

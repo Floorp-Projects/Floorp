@@ -4,24 +4,22 @@
 
 package org.mozilla.gecko.fxa.sync;
 
-import org.mozilla.gecko.BrowserLocaleManager;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.background.common.telemetry.TelemetryWrapper;
-import org.mozilla.gecko.background.fxa.FxAccountUtils;
-import org.mozilla.gecko.fxa.activities.FxAccountFinishMigratingActivity;
-import org.mozilla.gecko.fxa.activities.FxAccountStatusActivity;
-import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
-import org.mozilla.gecko.fxa.login.State;
-import org.mozilla.gecko.fxa.login.State.Action;
-import org.mozilla.gecko.sync.telemetry.TelemetryContract;
-
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationCompat.Builder;
+import org.mozilla.gecko.BrowserLocaleManager;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.common.telemetry.TelemetryWrapper;
+import org.mozilla.gecko.background.fxa.FxAccountUtils;
+import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.fxa.login.State;
+import org.mozilla.gecko.fxa.login.State.Action;
+import org.mozilla.gecko.sync.telemetry.TelemetryContract;
 
 /**
  * Abstraction that manages notifications shown or hidden for a Firefox Account.
@@ -89,11 +87,11 @@ public class FxAccountNotificationManager {
 
       title = context.getResources().getString(R.string.fxaccount_sync_finish_migrating_notification_title);
       text = context.getResources().getString(R.string.fxaccount_sync_finish_migrating_notification_text, state.email);
-      notificationIntent = new Intent(context, FxAccountFinishMigratingActivity.class);
+      notificationIntent = new Intent(FxAccountConstants.ACTION_FXA_FINISH_MIGRATING);
     } else {
       title = context.getResources().getString(R.string.fxaccount_sync_sign_in_error_notification_title);
       text = context.getResources().getString(R.string.fxaccount_sync_sign_in_error_notification_text, state.email);
-      notificationIntent = new Intent(context, FxAccountStatusActivity.class);
+      notificationIntent = new Intent(FxAccountConstants.ACTION_FXA_STATUS);
     }
     Logger.info(LOG_TAG, "State " + state.getStateLabel() + " needs action; offering notification with title: " + title);
     FxAccountUtils.pii(LOG_TAG, "And text: " + text);

@@ -44,7 +44,6 @@ PRThread                 *gSocketThread           = nullptr;
 #define SOCKET_LIMIT_TARGET 550U
 #define SOCKET_LIMIT_MIN     50U
 #define BLIP_INTERVAL_PREF "network.activity.blipIntervalMilliseconds"
-#define SERVE_MULTIPLE_EVENTS_PREF "network.sts.serve_multiple_events_per_poll_iteration"
 #define MAX_TIME_BETWEEN_TWO_POLLS "network.sts.max_time_for_events_between_two_polls"
 #define TELEMETRY_PREF "toolkit.telemetry.enabled"
 
@@ -106,7 +105,6 @@ nsSocketTransportService::nsSocketTransportService()
     , mKeepaliveRetryIntervalS(1)
     , mKeepaliveProbeCount(kDefaultTCPKeepCount)
     , mKeepaliveEnabledPref(false)
-    , mServeMultipleEventsPerPollIter(true)
     , mServingPendingQueue(false)
     , mMaxTimePerPollIter(100)
     , mTelemetryEnabledPref(false)
@@ -543,7 +541,6 @@ nsSocketTransportService::Init()
         tmpPrefService->AddObserver(KEEPALIVE_IDLE_TIME_PREF, this, false);
         tmpPrefService->AddObserver(KEEPALIVE_RETRY_INTERVAL_PREF, this, false);
         tmpPrefService->AddObserver(KEEPALIVE_PROBE_COUNT_PREF, this, false);
-        tmpPrefService->AddObserver(SERVE_MULTIPLE_EVENTS_PREF, this, false);
         tmpPrefService->AddObserver(MAX_TIME_BETWEEN_TWO_POLLS, this, false);
         tmpPrefService->AddObserver(TELEMETRY_PREF, this, false);
     }
@@ -885,57 +882,51 @@ nsSocketTransportService::Run()
             }
 
             if (pendingEvents) {
-                if (mServeMultipleEventsPerPollIter) {
-                    if (!mServingPendingQueue) {
-                        nsresult rv = Dispatch(NS_NewRunnableMethod(this,
-                            &nsSocketTransportService::MarkTheLastElementOfPendingQueue),
-                            nsIEventTarget::DISPATCH_NORMAL);
-                        if (NS_FAILED(rv)) {
-                            NS_WARNING("Could not dispatch a new event on the "
-                                       "socket thread.");
-                        } else {
-                            mServingPendingQueue = true;
-                        }
-
-                        if (mTelemetryEnabledPref) {
-                            startOfIteration = startOfNextIteration;
-                            // Everything that comes after this point will
-                            // be served in the next iteration. If no even
-                            // arrives, startOfNextIteration will be reset at the
-                            // beginning of each for-loop.
-                            startOfNextIteration = TimeStamp::NowLoRes();
-                        }
+                if (!mServingPendingQueue) {
+                    nsresult rv = Dispatch(NS_NewRunnableMethod(this,
+                        &nsSocketTransportService::MarkTheLastElementOfPendingQueue),
+                        nsIEventTarget::DISPATCH_NORMAL);
+                    if (NS_FAILED(rv)) {
+                        NS_WARNING("Could not dispatch a new event on the "
+                                   "socket thread.");
+                    } else {
+                        mServingPendingQueue = true;
                     }
-                    TimeStamp eventQueueStart = TimeStamp::NowLoRes();
-                    do {
-                        NS_ProcessNextEvent(thread);
-                        numberOfPendingEvents++;
-                        pendingEvents = false;
-                        thread->HasPendingEvents(&pendingEvents);
-                    } while (pendingEvents && mServingPendingQueue &&
-                             ((TimeStamp::NowLoRes() -
-                               eventQueueStart).ToMilliseconds() <
-                              mMaxTimePerPollIter));
 
-                    if (mTelemetryEnabledPref && !mServingPendingQueue &&
-                        !startOfIteration.IsNull()) {
-                        Telemetry::AccumulateTimeDelta(
-                            Telemetry::STS_POLL_AND_EVENTS_CYCLE,
-                            startOfIteration + pollDuration,
-                            TimeStamp::NowLoRes());
-
-                        Telemetry::Accumulate(
-                            Telemetry::STS_NUMBER_OF_PENDING_EVENTS,
-                            numberOfPendingEvents);
-
-                        numberOfPendingEventsLastCycle += numberOfPendingEvents;
-                        numberOfPendingEvents = 0;
-                        pollDuration = 0;
+                    if (mTelemetryEnabledPref) {
+                        startOfIteration = startOfNextIteration;
+                        // Everything that comes after this point will
+                        // be served in the next iteration. If no even
+                        // arrives, startOfNextIteration will be reset at the
+                        // beginning of each for-loop.
+                        startOfNextIteration = TimeStamp::NowLoRes();
                     }
-                } else {
+                }
+                TimeStamp eventQueueStart = TimeStamp::NowLoRes();
+                do {
                     NS_ProcessNextEvent(thread);
+                    numberOfPendingEvents++;
                     pendingEvents = false;
                     thread->HasPendingEvents(&pendingEvents);
+                } while (pendingEvents && mServingPendingQueue &&
+                         ((TimeStamp::NowLoRes() -
+                           eventQueueStart).ToMilliseconds() <
+                          mMaxTimePerPollIter));
+
+                if (mTelemetryEnabledPref && !mServingPendingQueue &&
+                    !startOfIteration.IsNull()) {
+                    Telemetry::AccumulateTimeDelta(
+                        Telemetry::STS_POLL_AND_EVENTS_CYCLE,
+                        startOfIteration + pollDuration,
+                        TimeStamp::NowLoRes());
+
+                    Telemetry::Accumulate(
+                        Telemetry::STS_NUMBER_OF_PENDING_EVENTS,
+                        numberOfPendingEvents);
+
+                    numberOfPendingEventsLastCycle += numberOfPendingEvents;
+                    numberOfPendingEvents = 0;
+                    pollDuration = 0;
                 }
             }
         } while (pendingEvents);
@@ -1204,13 +1195,6 @@ nsSocketTransportService::UpdatePrefs()
         if (NS_SUCCEEDED(rv) && keepaliveEnabled != mKeepaliveEnabledPref) {
             mKeepaliveEnabledPref = keepaliveEnabled;
             OnKeepaliveEnabledPrefChange();
-        }
-
-        bool serveMultiplePref = false;
-        rv = tmpPrefService->GetBoolPref(SERVE_MULTIPLE_EVENTS_PREF,
-                                         &serveMultiplePref);
-        if (NS_SUCCEEDED(rv)) {
-            mServeMultipleEventsPerPollIter = serveMultiplePref;
         }
 
         int32_t maxTimePref;

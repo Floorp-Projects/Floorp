@@ -39,12 +39,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                       allowevents="true"
                       xbl:inherits="tooltiptext=inputtooltiptext,value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey"/>
         </xul:hbox>
+        <xul:dropmarker anonid="historydropmarker"
+                        class="autocomplete-history-dropmarker urlbar-history-dropmarker"
+                        allowevents="true"
+                        xbl:inherits="open,enablehistory,parentfocused=focused"/>
         <children includes="hbox"/>
       </xul:hbox>
-      <xul:dropmarker anonid="historydropmarker"
-                      class="autocomplete-history-dropmarker urlbar-history-dropmarker"
-                      allowevents="true"
-                      xbl:inherits="open,enablehistory,parentfocused=focused"/>
       <xul:popupset anonid="popupset"
                     class="autocomplete-result-popupset"/>
       <children includes="toolbarbutton"/>

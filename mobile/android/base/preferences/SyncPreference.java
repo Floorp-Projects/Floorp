@@ -5,18 +5,16 @@
 
 package org.mozilla.gecko.preferences;
 
-import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.TelemetryContract.Method;
-import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
-import org.mozilla.gecko.sync.setup.SyncAccounts;
-import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
-import org.mozilla.gecko.util.HardwareUtils;
-
 import android.content.Context;
 import android.content.Intent;
 import android.preference.Preference;
 import android.util.AttributeSet;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.TelemetryContract.Method;
+import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.sync.setup.SyncAccounts;
+import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 
 class SyncPreference extends Preference {
     private static final boolean DEFAULT_TO_FXA = true;
@@ -41,13 +39,9 @@ class SyncPreference extends Preference {
     }
 
     private void launchFxASetup() {
-        Intent intent = new Intent(mContext, FxAccountGetStartedActivity.class);
+        final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        if (HardwareUtils.IS_KINDLE_DEVICE) {
-            intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        }
-
+        intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         mContext.startActivity(intent);
     }
 
