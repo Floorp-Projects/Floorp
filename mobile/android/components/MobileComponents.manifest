@@ -45,6 +45,12 @@ contract @mozilla.org/content-permission/prompt;1 {C6E8C44D-9F39-4AF7-BCC0-76E38
 component {8f7002cb-e959-4f0a-a2e8-563232564385} WebappsUpdateTimer.js
 contract @mozilla.org/webapps-update-timer;1 {8f7002cb-e959-4f0a-a2e8-563232564385}
 category update-timer WebappsUpdateTimer @mozilla.org/webapps-update-timer;1,getService,webapp-background-update-timer,browser.webapps.updateInterval,86400
+
+# PromptService.js
+component {9a61149b-2276-4a0a-b79c-be994ad106cf} PromptService.js
+contract @mozilla.org/prompter;1 {9a61149b-2276-4a0a-b79c-be994ad106cf}
+contract @mozilla.org/embedcomp/prompt-service;1 {9a61149b-2276-4a0a-b79c-be994ad106cf}
+category wakeup-request PromptService @mozilla.org/embedcomp/prompt-service;1,nsIPromptService,getService,Prompt:Call
 #endif
 
 # XPIDialogService.js
@@ -54,12 +60,6 @@ contract @mozilla.org/addons/web-install-prompt;1 {c1242012-27d8-477e-a0f1-0b098
 # HelperAppDialog.js
 component {e9d277a0-268a-4ec2-bb8c-10fdf3e44611} HelperAppDialog.js
 contract @mozilla.org/helperapplauncherdialog;1 {e9d277a0-268a-4ec2-bb8c-10fdf3e44611}
-
-# PromptService.js
-component {9a61149b-2276-4a0a-b79c-be994ad106cf} PromptService.js
-contract @mozilla.org/prompter;1 {9a61149b-2276-4a0a-b79c-be994ad106cf}
-contract @mozilla.org/embedcomp/prompt-service;1 {9a61149b-2276-4a0a-b79c-be994ad106cf}
-category wakeup-request PromptService @mozilla.org/embedcomp/prompt-service;1,nsIPromptService,getService,Prompt:Call
 
 # BrowserCLH.js
 component {be623d20-d305-11de-8a39-0800200c9a66} BrowserCLH.js application={aa3c5121-dab2-40e2-81ca-7ea25febc110}
