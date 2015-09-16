@@ -257,6 +257,13 @@ CheckTracedThing<jsid>(JSTracer* trc, jsid id)
     DispatchIdTyped(CheckTracedFunctor<jsid>(), id, trc);
 }
 
+template <>
+void
+CheckTracedThing<TaggedProto>(JSTracer* trc, TaggedProto proto)
+{
+    DispatchTaggedProtoTyped(CheckTracedFunctor<TaggedProto>(), proto, trc);
+}
+
 #define IMPL_CHECK_TRACED_THING(_, type, __) \
     template void CheckTracedThing<type*>(JSTracer*, type*);
 JS_FOR_EACH_TRACEKIND(IMPL_CHECK_TRACED_THING);
@@ -384,7 +391,8 @@ AssertRootMarkingPhase(JSTracer* trc)
     D(JS::Symbol*) \
     D(js::ObjectGroup*) \
     D(Value) \
-    D(jsid)
+    D(jsid) \
+    D(TaggedProto)
 
 // The second parameter to BaseGCType is derived automatically based on T. The
 // relation here is that for any T, the TraceKind will automatically,
@@ -421,6 +429,7 @@ JS_FOR_EACH_TRACEKIND(IMPL_BASE_GC_TYPE);
 template <typename T> struct PtrBaseGCType {};
 template <> struct PtrBaseGCType<Value> { typedef Value type; };
 template <> struct PtrBaseGCType<jsid> { typedef jsid type; };
+template <> struct PtrBaseGCType<TaggedProto> { typedef TaggedProto type; };
 template <typename T> struct PtrBaseGCType<T*> { typedef typename BaseGCType<T>::type* type; };
 
 template <typename T>
@@ -593,7 +602,8 @@ DispatchToTracer(JSTracer* trc, T* thingp, const char* name)
     static_assert(
             JS_FOR_EACH_TRACEKIND(IS_SAME_TYPE_OR)
             mozilla::IsSame<T, JS::Value>::value ||
-            mozilla::IsSame<T, jsid>::value,
+            mozilla::IsSame<T, jsid>::value ||
+            mozilla::IsSame<T, TaggedProto>::value,
             "Only the base cell layout types are allowed into marking/tracing internals");
 #undef IS_SAME_TYPE_OR
     if (trc->isMarkingTracer())
@@ -754,6 +764,14 @@ void
 DoMarking<jsid>(GCMarker* gcmarker, jsid id)
 {
     DispatchIdTyped(DoMarkingFunctor<jsid>(), id, gcmarker);
+}
+
+template <>
+void
+DoMarking<TaggedProto>(GCMarker* gcmarker, TaggedProto proto)
+{
+    if (proto.isObject())
+        DoMarking<JSObject*>(gcmarker, proto.toObject());
 }
 
 // The simplest traversal calls out to the fully generic traceChildren function
@@ -1099,7 +1117,7 @@ js::ObjectGroup::traceChildren(JSTracer* trc)
     }
 
     if (proto().isObject())
-        TraceEdge(trc, &protoRaw(), "group_proto");
+        TraceEdge(trc, &proto(), "group_proto");
 
     if (newScript())
         newScript()->trace(trc);
@@ -1901,6 +1919,18 @@ TenuringTracer::traverse(Value* valp)
     valp->setObject(*obj);
 }
 
+template <>
+void
+TenuringTracer::traverse(TaggedProto* protop)
+{
+    if (!protop->isObject())
+        return;
+
+    JSObject *obj = protop->toObject();
+    traverse(&obj);
+    *protop = TaggedProto(obj);
+}
+
 template <> void js::TenuringTracer::traverse(js::BaseShape**) {}
 template <> void js::TenuringTracer::traverse(js::jit::JitCode**) {}
 template <> void js::TenuringTracer::traverse(JSScript**) {}
@@ -2289,7 +2319,7 @@ template <typename S>
 struct IsMarkedFunctor : public IdentityDefaultAdaptor<S> {
     template <typename T> S operator()(T* t, bool* rv) {
         *rv = IsMarkedInternal(&t);
-        return js::gc::RewrapValueOrId<S, T*>::wrap(t);
+        return js::gc::RewrapTaggedPointer<S, T*>::wrap(t);
     }
 };
 
@@ -2308,6 +2338,15 @@ IsMarkedInternal<jsid>(jsid* idp)
 {
     bool rv = true;
     *idp = DispatchIdTyped(IsMarkedFunctor<jsid>(), *idp, &rv);
+    return rv;
+}
+
+template <>
+bool
+IsMarkedInternal<TaggedProto>(TaggedProto* protop)
+{
+    bool rv = true;
+    *protop = DispatchTaggedProtoTyped(IsMarkedFunctor<TaggedProto>(), *protop, &rv);
     return rv;
 }
 
@@ -2349,7 +2388,7 @@ template <typename S>
 struct IsAboutToBeFinalizedFunctor : public IdentityDefaultAdaptor<S> {
     template <typename T> S operator()(T* t, bool* rv) {
         *rv = IsAboutToBeFinalizedInternal(&t);
-        return js::gc::RewrapValueOrId<S, T*>::wrap(t);
+        return js::gc::RewrapTaggedPointer<S, T*>::wrap(t);
     }
 };
 
@@ -2368,6 +2407,15 @@ IsAboutToBeFinalizedInternal<jsid>(jsid* idp)
 {
     bool rv = false;
     *idp = DispatchIdTyped(IsAboutToBeFinalizedFunctor<jsid>(), *idp, &rv);
+    return rv;
+}
+
+template <>
+bool
+IsAboutToBeFinalizedInternal<TaggedProto>(TaggedProto* protop)
+{
+    bool rv = false;
+    *protop = DispatchTaggedProtoTyped(IsAboutToBeFinalizedFunctor<TaggedProto>(), *protop, &rv);
     return rv;
 }
 
