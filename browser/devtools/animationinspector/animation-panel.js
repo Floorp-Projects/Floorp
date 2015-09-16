@@ -39,6 +39,7 @@ var AnimationsPanel = {
     this.errorMessageEl = document.querySelector("#error-message");
     this.pickerButtonEl = document.querySelector("#element-picker");
     this.toggleAllButtonEl = document.querySelector("#toggle-all");
+    this.playTimelineButtonEl = document.querySelector("#pause-resume-timeline");
 
     // If the server doesn't support toggling all animations at once, hide the
     // whole global toolbar.
@@ -46,14 +47,14 @@ var AnimationsPanel = {
       document.querySelector("#global-toolbar").style.display = "none";
     }
 
+    // Binding functions that need to be called in scope.
+    for (let functionName of ["onPickerStarted", "onPickerStopped",
+      "refreshAnimations", "toggleAll", "onTabNavigated",
+      "onTimelineDataChanged"]) {
+      this[functionName] = this[functionName].bind(this);
+    }
     let hUtils = gToolbox.highlighterUtils;
     this.togglePicker = hUtils.togglePicker.bind(hUtils);
-    this.onPickerStarted = this.onPickerStarted.bind(this);
-    this.onPickerStopped = this.onPickerStopped.bind(this);
-    this.refreshAnimations = this.refreshAnimations.bind(this);
-    this.toggleAll = this.toggleAll.bind(this);
-    this.onTabNavigated = this.onTabNavigated.bind(this);
-    this.onTimelineTimeChanged = this.onTimelineTimeChanged.bind(this);
 
     if (AnimationsController.traits.isNewUI) {
       this.animationsTimelineComponent = new AnimationsTimeline(gInspector);
@@ -90,6 +91,7 @@ var AnimationsPanel = {
 
     this.playersEl = this.errorMessageEl = null;
     this.toggleAllButtonEl = this.pickerButtonEl = null;
+    this.playTimelineButtonEl = null;
 
     this.destroyed.resolve();
   }),
@@ -106,8 +108,8 @@ var AnimationsPanel = {
     gToolbox.target.on("navigate", this.onTabNavigated);
 
     if (this.animationsTimelineComponent) {
-      this.animationsTimelineComponent.on("current-time-changed",
-        this.onTimelineTimeChanged);
+      this.animationsTimelineComponent.on("timeline-data-changed",
+        this.onTimelineDataChanged);
     }
   },
 
@@ -123,8 +125,8 @@ var AnimationsPanel = {
     gToolbox.target.off("navigate", this.onTabNavigated);
 
     if (this.animationsTimelineComponent) {
-      this.animationsTimelineComponent.off("current-time-changed",
-        this.onTimelineTimeChanged);
+      this.animationsTimelineComponent.off("timeline-data-changed",
+        this.onTimelineDataChanged);
     }
   },
 
@@ -174,9 +176,22 @@ var AnimationsPanel = {
     this.toggleAllButtonEl.classList.remove("paused");
   },
 
-  onTimelineTimeChanged: function(e, time) {
-    AnimationsController.setCurrentTimeAll(time, true)
-                        .catch(error => console.error(error));
+  onTimelineDataChanged: function(e, data) {
+    this.timelineData = data;
+    let {isPaused, isMoving, time} = data;
+
+    this.playTimelineButtonEl.classList.toggle("paused", !isMoving);
+
+    // Pause all animations and set their currentTimes (but only do this after
+    // the previous currentTime setting is done, as this gets called many times
+    // when users drag the scrubber with the mouse, and we want the server-side
+    // requests to be sequenced).
+    if (isPaused && !this.setCurrentTimeAllPromise) {
+      this.setCurrentTimeAllPromise =
+        AnimationsController.setCurrentTimeAll(time, true)
+                            .catch(error => console.error(error))
+                            .then(() => this.setCurrentTimeAllPromise = null);
+    }
   },
 
   refreshAnimations: Task.async(function*() {
