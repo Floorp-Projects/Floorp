@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/mips32/BaselineCompiler-mips32.h"
+#include "jit/mips-shared/BaselineCompiler-mips-shared.h"
 
 using namespace js;
 using namespace js::jit;
 
-BaselineCompilerMIPS::BaselineCompilerMIPS(JSContext* cx, TempAllocator& alloc,
-                                           JSScript* script)
-  : BaselineCompilerMIPSShared(cx, alloc, script)
+BaselineCompilerMIPSShared::BaselineCompilerMIPSShared(JSContext* cx, TempAllocator& alloc,
+                                                       JSScript* script)
+  : BaselineCompilerShared(cx, alloc, script)
 {
 }
