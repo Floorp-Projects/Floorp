@@ -7,7 +7,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include "nsIOService.h"
-#include "nsIDOMNode.h"
 #include "nsIProtocolHandler.h"
 #include "nsIFileProtocolHandler.h"
 #include "nscore.h"
@@ -21,7 +20,6 @@
 #include "nsIProxiedProtocolHandler.h"
 #include "nsIProxyInfo.h"
 #include "nsEscape.h"
-#include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsCRT.h"
 #include "nsSecCheckWrapChannel.h"
@@ -44,7 +42,6 @@
 #include "nsThreadUtils.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/net/NeckoCommon.h"
-#include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/net/DNS.h"
 #include "CaptivePortalService.h"

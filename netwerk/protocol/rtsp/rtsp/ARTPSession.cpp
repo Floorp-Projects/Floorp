@@ -34,7 +34,6 @@
 #include "prnetdb.h"
 #include "prerr.h"
 #include "NetworkActivityMonitor.h"
-#include "ClosingService.h"
 
 using namespace mozilla::net;
 
@@ -110,7 +109,6 @@ void ARTPSession::MakeUDPSocket(PRFileDesc **s, unsigned port) {
     }
 
     NetworkActivityMonitor::AttachIOLayer(*s);
-    ClosingService::AttachIOLayer(*s);
 
     PRNetAddr addr;
     addr.inet.family = PR_AF_INET;
