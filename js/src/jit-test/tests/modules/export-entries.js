@@ -1,3 +1,5 @@
+load(libdir + "class.js");
+
 // Test localExportEntries property
 
 function testArrayContents(actual, expected) {
@@ -30,9 +32,11 @@ testLocalExportEntries(
     'export const x = 1;',
     [{exportName: 'x', moduleRequest: null, importName: null, localName: 'x'}]);
 
-testLocalExportEntries(
-    'export class foo { constructor() {} };',
-    [{exportName: 'foo', moduleRequest: null, importName: null, localName: 'foo'}]);
+if (classesEnabled()) {
+    testLocalExportEntries(
+        'export class foo { constructor() {} };',
+        [{exportName: 'foo', moduleRequest: null, importName: null, localName: 'foo'}]);
+}
 
 testLocalExportEntries(
     'export default function f() {};',
