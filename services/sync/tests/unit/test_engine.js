@@ -25,8 +25,8 @@ SteamTracker.prototype = {
   __proto__: Tracker.prototype
 };
 
-function SteamEngine(service) {
-  Engine.call(this, "Steam", service);
+function SteamEngine(name, service) {
+  Engine.call(this, name, service);
   this.wasReset = false;
   this.wasSynced = false;
 }
@@ -69,7 +69,7 @@ function run_test() {
 
 add_test(function test_members() {
   _("Engine object members");
-  let engine = new SteamEngine(Service);
+  let engine = new SteamEngine("Steam", Service);
   do_check_eq(engine.Name, "Steam");
   do_check_eq(engine.prefName, "steam");
   do_check_true(engine._store instanceof SteamStore);
@@ -79,7 +79,7 @@ add_test(function test_members() {
 
 add_test(function test_score() {
   _("Engine.score corresponds to tracker.score and is readonly");
-  let engine = new SteamEngine(Service);
+  let engine = new SteamEngine("Steam", Service);
   do_check_eq(engine.score, 0);
   engine._tracker.score += 5;
   do_check_eq(engine.score, 5);
@@ -97,7 +97,7 @@ add_test(function test_score() {
 
 add_test(function test_resetClient() {
   _("Engine.resetClient calls _resetClient");
-  let engine = new SteamEngine(Service);
+  let engine = new SteamEngine("Steam", Service);
   do_check_false(engine.wasReset);
 
   engine.resetClient();
@@ -112,7 +112,7 @@ add_test(function test_resetClient() {
 
 add_test(function test_invalidChangedIDs() {
   _("Test that invalid changed IDs on disk don't end up live.");
-  let engine = new SteamEngine(Service);
+  let engine = new SteamEngine("Steam", Service);
   let tracker = engine._tracker;
   tracker.changedIDs = 5;
   tracker.saveChangedIDs(function onSaved() {
@@ -127,7 +127,7 @@ add_test(function test_invalidChangedIDs() {
 
 add_test(function test_wipeClient() {
   _("Engine.wipeClient calls resetClient, wipes store, clears changed IDs");
-  let engine = new SteamEngine(Service);
+  let engine = new SteamEngine("Steam", Service);
   do_check_false(engine.wasReset);
   do_check_false(engine._store.wasWiped);
   do_check_true(engine._tracker.addChangedID("a-changed-id"));
@@ -150,7 +150,7 @@ add_test(function test_wipeClient() {
 
 add_test(function test_enabled() {
   _("Engine.enabled corresponds to preference");
-  let engine = new SteamEngine(Service);
+  let engine = new SteamEngine("Steam", Service);
   try {
     do_check_false(engine.enabled);
     Svc.Prefs.set("engine.steam", true);
@@ -165,7 +165,7 @@ add_test(function test_enabled() {
 });
 
 add_test(function test_sync() {
-  let engine = new SteamEngine(Service);
+  let engine = new SteamEngine("Steam", Service);
   try {
     _("Engine.sync doesn't call _sync if it's not enabled");
     do_check_false(engine.enabled);
@@ -189,7 +189,7 @@ add_test(function test_sync() {
 
 add_test(function test_disabled_no_track() {
   _("When an engine is disabled, its tracker is not tracking.");
-  let engine = new SteamEngine(Service);
+  let engine = new SteamEngine("Steam", Service);
   let tracker = engine._tracker;
   do_check_eq(engine, tracker.engine);
 

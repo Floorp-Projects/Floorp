@@ -410,6 +410,9 @@ add_task(function test_getTokenErrors() {
                        "should reject due to 401");
   Assert.equal(Status.login, LOGIN_FAILED_LOGIN_REJECTED, "login was rejected");
 
+  let keyFetchErrorCount = sumHistogram("WEAVE_FXA_KEY_FETCH_ERRORS");
+  Assert.equal(keyFetchErrorCount, 1, "Should record key fetch error for rejected logins");
+
   // XXX - other interesting responses to return?
 
   // And for good measure, some totally "unexpected" errors - we generally
@@ -425,6 +428,9 @@ add_task(function test_getTokenErrors() {
   yield Assert.rejects(browseridManager.whenReadyToAuthenticate.promise,
                        "should reject due to non-JSON response");
   Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "login state is LOGIN_FAILED_NETWORK_ERROR");
+
+  keyFetchErrorCount = sumHistogram("WEAVE_FXA_KEY_FETCH_ERRORS");
+  Assert.equal(keyFetchErrorCount, 1, "Should record key fetch errors for invalid responses");
 });
 
 add_task(function test_getTokenErrorWithRetry() {
@@ -451,6 +457,9 @@ add_task(function test_getTokenErrorWithRetry() {
   // Sync will have the value in ms with some slop - so check it is at least that.
   Assert.ok(Status.backoffInterval >= 100000);
 
+  let keyFetchErrorCount = sumHistogram("WEAVE_FXA_KEY_FETCH_ERRORS");
+  Assert.equal(keyFetchErrorCount, 1, "Should record key fetch errors for 503 from FxA");
+
   _("Arrange for a 200 with an X-Backoff header.");
   Status.backoffInterval = 0;
   initializeIdentityWithTokenServerResponse({
@@ -467,6 +476,9 @@ add_task(function test_getTokenErrorWithRetry() {
 
   // The observer should have fired - check it got the value in the response.
   Assert.ok(Status.backoffInterval >= 200000);
+
+  keyFetchErrorCount = sumHistogram("WEAVE_FXA_KEY_FETCH_ERRORS");
+  Assert.equal(keyFetchErrorCount, 1, "Should record key fetch errors for backoff response from FxA");
 });
 
 add_task(function test_getKeysErrorWithBackoff() {
@@ -501,6 +513,9 @@ add_task(function test_getKeysErrorWithBackoff() {
   Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "login was rejected");
   // Sync will have the value in ms with some slop - so check it is at least that.
   Assert.ok(Status.backoffInterval >= 100000);
+
+  let keyFetchErrorCount = sumHistogram("WEAVE_FXA_KEY_FETCH_ERRORS");
+  Assert.equal(keyFetchErrorCount, 1, "Should record key fetch errors for 503 from FxA");
 });
 
 add_task(function test_getKeysErrorWithRetry() {
@@ -535,6 +550,9 @@ add_task(function test_getKeysErrorWithRetry() {
   Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "login was rejected");
   // Sync will have the value in ms with some slop - so check it is at least that.
   Assert.ok(Status.backoffInterval >= 100000);
+
+  let keyFetchErrorCount = sumHistogram("WEAVE_FXA_KEY_FETCH_ERRORS");
+  Assert.equal(keyFetchErrorCount, 1, "Should record key fetch errors for 503 from FxA");
 });
 
 add_task(function test_getHAWKErrors() {
@@ -553,6 +571,9 @@ add_task(function test_getHAWKErrors() {
   });
   Assert.equal(Status.login, LOGIN_FAILED_LOGIN_REJECTED, "login was rejected");
 
+  let keyFetchErrorCount = sumHistogram("WEAVE_FXA_KEY_FETCH_ERRORS");
+  Assert.equal(keyFetchErrorCount, 1, "Should record key fetch errors for 401 from FxA");
+
   // XXX - other interesting responses to return?
 
   // And for good measure, some totally "unexpected" errors - we generally
@@ -568,6 +589,9 @@ add_task(function test_getHAWKErrors() {
     }
   });
   Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "login state is LOGIN_FAILED_NETWORK_ERROR");
+
+  keyFetchErrorCount = sumHistogram("WEAVE_FXA_KEY_FETCH_ERRORS");
+  Assert.equal(keyFetchErrorCount, 1, "Should record key fetch errors for invalid response from FxA");
 });
 
 add_task(function test_getGetKeysFailing401() {
@@ -589,6 +613,9 @@ add_task(function test_getGetKeysFailing401() {
     }
   });
   Assert.equal(Status.login, LOGIN_FAILED_LOGIN_REJECTED, "login was rejected");
+
+  let keyFetchErrorCount = sumHistogram("WEAVE_FXA_KEY_FETCH_ERRORS");
+  Assert.equal(keyFetchErrorCount, 1, "Should record key fetch errors for 401 from FxA");
 });
 
 add_task(function test_getGetKeysFailing503() {
@@ -610,6 +637,9 @@ add_task(function test_getGetKeysFailing503() {
     }
   });
   Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "state reflects network error");
+
+  let keyFetchErrorCount = sumHistogram("WEAVE_FXA_KEY_FETCH_ERRORS");
+  Assert.equal(keyFetchErrorCount, 1, "Should record key fetch errors for 503 from FxA");
 });
 
 add_task(function test_getKeysMissing() {
@@ -664,6 +694,44 @@ add_task(function test_getKeysMissing() {
   }
 
   Assert.ok(ex.message.indexOf("missing kA or kB") >= 0);
+});
+
+add_task(function* test_signedInUserMissing() {
+  _("BrowserIDManager detects getSignedInUser returning incomplete account data");
+
+  let browseridManager = new BrowserIDManager();
+  let config = makeIdentityConfig();
+  // Delete stored keys and the key fetch token.
+  delete identityConfig.fxaccount.user.kA;
+  delete identityConfig.fxaccount.user.kB;
+  delete identityConfig.fxaccount.user.keyFetchToken;
+
+  configureFxAccountIdentity(browseridManager, identityConfig);
+
+  let fxa = new FxAccounts({
+    fetchAndUnwrapKeys: function () {
+      return Promise.resolve({});
+    },
+    fxAccountsClient: new MockFxAccountsClient(),
+    newAccountState(credentials) {
+      // We only expect this to be called with null indicating the (mock)
+      // storage should be read.
+      if (credentials) {
+        throw new Error("Not expecting to have credentials passed");
+      }
+      let storageManager = new MockFxaStorageManager();
+      storageManager.initialize(identityConfig.fxaccount.user);
+      return new AccountState(storageManager);
+    },
+  });
+
+  browseridManager._fxaService = fxa;
+
+  let status = yield browseridManager.unlockAndVerifyAuthState();
+  Assert.equal(status, LOGIN_FAILED_LOGIN_REJECTED);
+
+  let canFetchKeysCount = sumHistogram("WEAVE_CAN_FETCH_KEYS");
+  Assert.equal(canFetchKeysCount, 0);
 });
 
 // End of tests

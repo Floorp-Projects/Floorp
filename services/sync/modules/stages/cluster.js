@@ -56,14 +56,14 @@ ClusterManager.prototype = {
           this._log.trace("_findCluster successfully returning " + node);
           return node;
         default:
-          this.service.errorHandler.checkServerError(node);
+          this.service.errorHandler.checkServerError(node, "node/weave");
           fail = "Unexpected response code: " + node.status;
           break;
       }
     } catch (e) {
       this._log.debug("Network error on findCluster");
       this.service.status.login = LOGIN_FAILED_NETWORK_ERROR;
-      this.service.errorHandler.checkServerError(e);
+      this.service.errorHandler.checkServerError(e, "node/weave");
       fail = e;
     }
     throw fail;
