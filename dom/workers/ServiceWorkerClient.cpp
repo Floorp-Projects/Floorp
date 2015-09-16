@@ -138,8 +138,7 @@ private:
       return NS_ERROR_FAILURE;
     }
 
-    nsTArray<nsRefPtr<MessagePortBase>> ports;
-    TakeTransferredPorts(ports);
+    nsTArray<nsRefPtr<MessagePort>> ports = TakeTransferredPorts();
 
     nsRefPtr<MessagePortList> portList =
       new MessagePortList(static_cast<dom::Event*>(event.get()),
