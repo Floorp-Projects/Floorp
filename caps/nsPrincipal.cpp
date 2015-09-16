@@ -427,6 +427,8 @@ NS_IMETHODIMP
 nsPrincipal::Write(nsIObjectOutputStream* aStream)
 {
   NS_ENSURE_STATE(mCodebase);
+  NS_ENSURE_TRUE(mOriginAttributes.mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
+                 NS_ERROR_INVALID_ARG);
 
   nsresult rv = NS_WriteOptionalCompoundObject(aStream, mCodebase, NS_GET_IID(nsIURI),
                                                true);
