@@ -12,7 +12,6 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsNetCID.h"
-#include "mozilla/Preferences.h"
 #include "prnetdb.h"
 
 using namespace mozilla;
