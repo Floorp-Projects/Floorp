@@ -5,17 +5,17 @@ toolkit.jar:
 # provide the nsTransferable in nsDragAndDrop.js to extensions that have to
 # work with Geckos from before 1.9, when there was a separate file
 %  override chrome://global/content/nsTransferable.js chrome://global/content/nsDragAndDrop.js
-*  content/global/license.html                (license.html)
-   content/global/XPCNativeWrapper.js         (XPCNativeWrapper.js)
-   content/global/minimal-xul.css             (minimal-xul.css)
-*  content/global/xul.css                     (xul.css)
-   content/global/textbox.css                 (textbox.css)
-   content/global/menulist.css                (menulist.css)
-   content/global/autocomplete.css            (autocomplete.css)
-   content/global/about.js                    (about.js)
-   content/global/about.xhtml                 (about.xhtml)
-   content/global/aboutAbout.js               (aboutAbout.js)
-   content/global/aboutAbout.xhtml            (aboutAbout.xhtml)
+*  content/global/license.html
+   content/global/XPCNativeWrapper.js
+   content/global/minimal-xul.css
+*  content/global/xul.css
+   content/global/textbox.css
+   content/global/menulist.css
+   content/global/autocomplete.css
+   content/global/about.js
+   content/global/about.xhtml
+   content/global/aboutAbout.js
+   content/global/aboutAbout.xhtml
 #ifdef MOZILLA_OFFICIAL
    content/global/aboutRights.xhtml
 #else
@@ -32,35 +32,35 @@ toolkit.jar:
 *  content/global/aboutSupport.xhtml
    content/global/aboutTelemetry.js
    content/global/aboutTelemetry.xhtml
-   content/global/aboutTelemetry.css          (aboutTelemetry.css)
+   content/global/aboutTelemetry.css
    content/global/directionDetector.html
    content/global/plugins.html
    content/global/plugins.css
-   content/global/browser-child.js            (browser-child.js)
-   content/global/browser-content.js          (browser-content.js)
-*+  content/global/buildconfig.html            (buildconfig.html)
-*  content/global/contentAreaUtils.js         (contentAreaUtils.js)
-   content/global/customizeToolbar.css        (customizeToolbar.css)
-*  content/global/customizeToolbar.js         (customizeToolbar.js)
-   content/global/customizeToolbar.xul        (customizeToolbar.xul)
-   content/global/devicestorage.properties    (devicestorage.properties)
-   content/global/editMenuOverlay.js          (editMenuOverlay.js)
-*+ content/global/editMenuOverlay.xul         (editMenuOverlay.xul)
-   content/global/finddialog.js               (finddialog.js)
-*+ content/global/finddialog.xul              (finddialog.xul)
-   content/global/findUtils.js                (findUtils.js)
-   content/global/filepicker.properties       (filepicker.properties)
-*+ content/global/globalOverlay.js            (globalOverlay.js)
-+  content/global/mozilla.xhtml               (mozilla.xhtml)
-   content/global/nsDragAndDrop.js            (nsDragAndDrop.js)
-   content/global/process-content.js          (process-content.js)
-   content/global/resetProfile.css            (resetProfile.css)
-   content/global/resetProfile.js             (resetProfile.js)
-   content/global/resetProfile.xul            (resetProfile.xul)
-   content/global/resetProfileProgress.xul    (resetProfileProgress.xul)
-   content/global/select-child.js             (select-child.js)
-   content/global/treeUtils.js                (treeUtils.js)
-   content/global/viewZoomOverlay.js          (viewZoomOverlay.js)
+   content/global/browser-child.js
+   content/global/browser-content.js
+*+  content/global/buildconfig.html
+*  content/global/contentAreaUtils.js
+   content/global/customizeToolbar.css
+*  content/global/customizeToolbar.js
+   content/global/customizeToolbar.xul
+   content/global/devicestorage.properties
+   content/global/editMenuOverlay.js
+*+ content/global/editMenuOverlay.xul
+   content/global/finddialog.js
+*+ content/global/finddialog.xul
+   content/global/findUtils.js
+   content/global/filepicker.properties
+*+ content/global/globalOverlay.js
++  content/global/mozilla.xhtml
+   content/global/nsDragAndDrop.js
+   content/global/process-content.js
+   content/global/resetProfile.css
+   content/global/resetProfile.js
+   content/global/resetProfile.xul
+   content/global/resetProfileProgress.xul
+   content/global/select-child.js
+   content/global/treeUtils.js
+   content/global/viewZoomOverlay.js
 *+ content/global/bindings/autocomplete.xml    (widgets/autocomplete.xml)
    content/global/bindings/browser.xml         (widgets/browser.xml)
    content/global/bindings/button.xml          (widgets/button.xml)
@@ -102,6 +102,6 @@ toolkit.jar:
    content/global/bindings/videocontrols.css   (widgets/videocontrols.css)
 *+ content/global/bindings/wizard.xml          (widgets/wizard.xml)
 #ifdef XP_MACOSX
-   content/global/macWindowMenu.js             (macWindowMenu.js)
+   content/global/macWindowMenu.js
 #endif
    content/global/svg/svgBindings.xml          (/layout/svg/resources/content/svgBindings.xml)
