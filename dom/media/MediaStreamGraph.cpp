@@ -480,7 +480,6 @@ MediaStreamGraphImpl::UpdateStreamOrder()
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     MediaStream* stream = mStreams[i];
     stream->mIsConsumed = false;
-    stream->mInBlockingSet = false;
 #ifdef MOZ_WEBRTC
     if (stream->AsSourceStream() &&
         stream->AsSourceStream()->NeedsMixing()) {
@@ -716,19 +715,11 @@ MediaStreamGraphImpl::RecomputeBlocking(GraphTime aEndBlockingDecisions)
   STREAM_LOG(LogLevel::Verbose, ("Media graph %p computing blocking for time %f",
                               this, MediaTimeToSeconds(mStateComputedTime)));
   for (MediaStream* stream : AllStreams()) {
-    if (!stream->mInBlockingSet) {
-      // Compute a partition of the streams containing 'stream' such that we
-      // can
-      // compute the blocking status of each subset independently.
-      nsAutoTArray<MediaStream*, 10> streamSet;
-      AddBlockingRelatedStreamsToSet(&streamSet, stream);
-
-      GraphTime end;
-      for (GraphTime t = mStateComputedTime;
-           t < aEndBlockingDecisions; t = end) {
-        end = GRAPH_TIME_MAX;
-        RecomputeBlockingAt(streamSet, t, aEndBlockingDecisions, &end);
-      }
+    GraphTime end;
+    for (GraphTime t = mStateComputedTime;
+         t < aEndBlockingDecisions; t = end) {
+      end = GRAPH_TIME_MAX;
+      RecomputeBlockingAt(stream, t, aEndBlockingDecisions, &end);
     }
   }
   STREAM_LOG(LogLevel::Verbose, ("Media graph %p computed blocking for interval %f to %f",
@@ -744,16 +735,6 @@ MediaStreamGraphImpl::RecomputeBlocking(GraphTime aEndBlockingDecisions)
 }
 
 void
-MediaStreamGraphImpl::AddBlockingRelatedStreamsToSet(nsTArray<MediaStream*>* aStreams,
-                                                     MediaStream* aStream)
-{
-  if (aStream->mInBlockingSet)
-    return;
-  aStream->mInBlockingSet = true;
-  aStreams->AppendElement(aStream);
-}
-
-void
 MediaStreamGraphImpl::MarkStreamBlocking(MediaStream* aStream)
 {
   if (aStream->mBlockInThisPhase)
@@ -762,65 +743,58 @@ MediaStreamGraphImpl::MarkStreamBlocking(MediaStream* aStream)
 }
 
 void
-MediaStreamGraphImpl::RecomputeBlockingAt(const nsTArray<MediaStream*>& aStreams,
+MediaStreamGraphImpl::RecomputeBlockingAt(MediaStream* aStream,
                                           GraphTime aTime,
                                           GraphTime aEndBlockingDecisions,
                                           GraphTime* aEnd)
 {
-  for (uint32_t i = 0; i < aStreams.Length(); ++i) {
-    MediaStream* stream = aStreams[i];
-    stream->mBlockInThisPhase = false;
-  }
+  aStream->mBlockInThisPhase = false;
 
-  for (uint32_t i = 0; i < aStreams.Length(); ++i) {
-    MediaStream* stream = aStreams[i];
-
-    if (stream->mFinished) {
-      GraphTime endTime = StreamTimeToGraphTime(stream,
-         stream->GetStreamBuffer().GetAllTracksEnd());
+  do {
+    if (aStream->mFinished) {
+      GraphTime endTime = StreamTimeToGraphTime(aStream,
+          aStream->GetStreamBuffer().GetAllTracksEnd());
       if (endTime <= aTime) {
-        STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to being finished", stream));
+        STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to being finished", aStream));
         // We'll block indefinitely
-        MarkStreamBlocking(stream);
+        MarkStreamBlocking(aStream);
         *aEnd = std::min(*aEnd, aEndBlockingDecisions);
         continue;
       } else {
         STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is finished, but not blocked yet (end at %f, with blocking at %f)",
-                                    stream, MediaTimeToSeconds(stream->GetBufferEnd()),
-                                    MediaTimeToSeconds(endTime)));
+            aStream, MediaTimeToSeconds(aStream->GetBufferEnd()),
+            MediaTimeToSeconds(endTime)));
         *aEnd = std::min(*aEnd, endTime);
       }
     }
 
     GraphTime end;
-    bool explicitBlock = stream->mExplicitBlockerCount.GetAt(aTime, &end) > 0;
+    bool explicitBlock = aStream->mExplicitBlockerCount.GetAt(aTime, &end) > 0;
     *aEnd = std::min(*aEnd, end);
     if (explicitBlock) {
-      STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to explicit blocker", stream));
-      MarkStreamBlocking(stream);
+      STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to explicit blocker", aStream));
+      MarkStreamBlocking(aStream);
       continue;
     }
 
-    if (stream->IsSuspended()) {
-      STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to being suspended", stream));
-      MarkStreamBlocking(stream);
+    if (aStream->IsSuspended()) {
+      STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to being suspended", aStream));
+      MarkStreamBlocking(aStream);
       continue;
     }
 
-    bool underrun = WillUnderrun(stream, aTime, aEndBlockingDecisions, aEnd);
+    bool underrun = WillUnderrun(aStream, aTime, aEndBlockingDecisions, aEnd);
     if (underrun) {
       // We'll block indefinitely
-      MarkStreamBlocking(stream);
+      MarkStreamBlocking(aStream);
       *aEnd = std::min(*aEnd, aEndBlockingDecisions);
       continue;
     }
-  }
+  } while (false);
+
   NS_ASSERTION(*aEnd > aTime, "Failed to advance!");
 
-  for (uint32_t i = 0; i < aStreams.Length(); ++i) {
-    MediaStream* stream = aStreams[i];
-    stream->mBlocked.SetAtAndAfter(aTime, stream->mBlockInThisPhase);
-  }
+  aStream->mBlocked.SetAtAndAfter(aTime, aStream->mBlockInThisPhase);
 }
 
 void
@@ -3177,7 +3151,6 @@ MediaStreamGraphImpl::DecrementSuspendCount(MediaStream* aStream)
     if (ps) {
       ps->mCycleMarker = NOT_VISITED;
       ps->mIsConsumed = false;
-      ps->mInBlockingSet = false;
     }
     SetStreamOrderDirty();
   }

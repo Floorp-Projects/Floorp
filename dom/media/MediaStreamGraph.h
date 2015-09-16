@@ -717,10 +717,6 @@ protected:
   // True if the stream is being consumed (i.e. has track data being played,
   // or is feeding into some stream that is being consumed).
   bool mIsConsumed;
-  // Temporary data for computing blocking status of streams
-  // True if we've added this stream to the set of streams we're computing
-  // blocking for.
-  bool mInBlockingSet;
   // True if this stream should be blocked in this phase.
   bool mBlockInThisPhase;
 
