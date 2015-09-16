@@ -167,6 +167,7 @@ enum class GLRenderer {
     AdrenoTM200,
     AdrenoTM205,
     AdrenoTM320,
+    AdrenoTM420,
     SGX530,
     SGX540,
     Tegra,
@@ -2291,6 +2292,11 @@ public:
             }
         }
 
+        // Avoid crash by flushing before glDeleteFramebuffers. See bug 1194923.
+        if (mNeedsFlushBeforeDeleteFB) {
+            fFlush();
+        }
+
         if (n == 1 && *names == 0) {
             // Deleting framebuffer 0 causes hangs on the DROID. See bug 623228.
         } else {
@@ -3623,6 +3629,7 @@ protected:
     GLint mMaxViewportDims[2];
     GLsizei mMaxSamples;
     bool mNeedsTextureSizeChecks;
+    bool mNeedsFlushBeforeDeleteFB;
     bool mWorkAroundDriverBugs;
 
     bool IsTextureSizeSafeToPassToDriver(GLenum target, GLsizei width, GLsizei height) const {
