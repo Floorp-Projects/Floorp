@@ -33,15 +33,22 @@ function getPopupNotifications(aWindow) {
 }
 
 
-/*
- * getPopup
+/**
+ * Checks if we have a password popup notification
+ * of the right type and with the right label.
  *
+ * @returns the found password popup notification.
  */
 function getPopup(aPopupNote, aKind) {
     ok(true, "Looking for " + aKind + " popup notification");
     var notification = aPopupNote.getNotification("password");
     if (notification) {
-      is(notification.options.passwordNotificationType, aKind);
+      is(notification.options.passwordNotificationType, aKind, "Notification type matches.");
+      if (aKind == "password-change") {
+        is(notification.mainAction.label, "Update", "Main action label matches update doorhanger.");
+      } else if (aKind == "password-save") {
+        is(notification.mainAction.label, "Remember", "Main action label matches save doorhanger.");
+      }
     }
     return notification;
 }

@@ -8,13 +8,14 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 const Services = require("Services");
 
 const events = require("sdk/event/core");
+const promise = require("promise");
 const { on: systemOn, off: systemOff } = require("sdk/system/events");
 const protocol = require("devtools/server/protocol");
 const { CallWatcherActor, CallWatcherFront } = require("devtools/server/actors/call-watcher");
 const { createValueGrip } = require("devtools/server/actors/object");
 const AutomationTimeline = require("./utils/automation-timeline");
 const { on, once, off, emit } = events;
-const { types, method, Arg, Option, RetVal } = protocol;
+const { types, method, Arg, Option, RetVal, preEvent } = protocol;
 const AUDIO_NODE_DEFINITION = require("devtools/server/actors/utils/audionodes.json");
 const ENABLE_AUTOMATION = false;
 const AUTOMATION_GRANULARITY = 2000;
@@ -49,6 +50,19 @@ types.addActorType("audionode");
 let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
   typeName: "audionode",
 
+  form: function (detail) {
+    if (detail === "actorid") {
+      return this.actorID;
+    }
+
+    return {
+      actor: this.actorID, // actorID is set when this is added to a pool
+      type: this.type,
+      source: this.source,
+      bypassable: this.bypassable,
+    };
+  },
+
   /**
    * Create the Audio Node actor.
    *
@@ -75,6 +89,9 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
       this.type = "";
     }
 
+    this.source = !!AUDIO_NODE_DEFINITION[this.type].source;
+    this.bypassable = !AUDIO_NODE_DEFINITION[this.type].unbypassable;
+
     // Create automation timelines for all AudioParams
     Object.keys(AUDIO_NODE_DEFINITION[this.type].properties || {})
       .filter(isAudioParam.bind(null, node))
@@ -84,24 +101,13 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
   },
 
   /**
-   * Returns the name of the audio type.
-   * Examples: "OscillatorNode", "MediaElementAudioSourceNode"
+   * Returns the string name of the audio type.
+   *
+   * DEPRECATED: Use `audionode.type` instead, left here for legacy reasons.
    */
   getType: method(function () {
     return this.type;
-  }, {
-    response: { type: RetVal("string") }
-  }),
-
-  /**
-   * Returns a boolean indicating if the node is a source node,
-   * like BufferSourceNode, MediaElementAudioSourceNode, OscillatorNode, etc.
-   */
-  isSource: method(function () {
-    return !!~this.type.indexOf("Source") || this.type === "OscillatorNode";
-  }, {
-    response: { source: RetVal("boolean") }
-  }),
+  }, { response: { type: RetVal("string") }}),
 
   /**
    * Returns a boolean indicating if the AudioNode has been "bypassed",
@@ -139,8 +145,7 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
       return;
     }
 
-    let bypassable = !AUDIO_NODE_DEFINITION[this.type].unbypassable;
-    if (bypassable) {
+    if (this.bypassable) {
       node.passThrough = enable;
     }
 
@@ -455,8 +460,29 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
 
 /**
  * The corresponding Front object for the AudioNodeActor.
+ *
+ * @attribute {String} type
+ *            The type of audio node, like "OscillatorNode", "MediaElementAudioSourceNode"
+ * @attribute {Boolean} source
+ *            Boolean indicating if the node is a source node, like BufferSourceNode,
+ *            MediaElementAudioSourceNode, OscillatorNode, etc.
+ * @attribute {Boolean} bypassable
+ *            Boolean indicating if the audio node is bypassable (splitter,
+ *            merger and destination nodes, for example, are not)
  */
 let AudioNodeFront = protocol.FrontClass(AudioNodeActor, {
+  form: function (form, detail) {
+    if (detail === "actorid") {
+      this.actorID = form;
+      return;
+    }
+
+    this.actorID = form.actor;
+    this.type = form.type;
+    this.source = form.source;
+    this.bypassable = form.bypassable;
+  },
+
   initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
     // if we were manually passed a form, this was created manually and
@@ -864,7 +890,22 @@ let WebAudioFront = exports.WebAudioFront = protocol.FrontClass(WebAudioActor, {
   initialize: function(client, { webaudioActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: webaudioActor });
     this.manage(this);
-  }
+  },
+
+  /**
+   * If connecting to older geckos (<Fx43), where audio node actor's do not
+   * contain `type`, `source` and `bypassable` properties, fetch
+   * them manually here.
+   */
+  _onCreateNode: preEvent("create-node", function (audionode) {
+    if (!audionode.type) {
+      return audionode.getType().then(type => {
+        audionode.type = type;
+        audionode.source = !!AUDIO_NODE_DEFINITION[type].source;
+        audionode.bypassable = !AUDIO_NODE_DEFINITION[type].unbypassable;
+      });
+    }
+  }),
 });
 
 WebAudioFront.AUTOMATION_METHODS = new Set(AUTOMATION_METHODS);

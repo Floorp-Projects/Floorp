@@ -18,6 +18,8 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
+        Services.prefs.setBoolPref("devtools.webide.sidebars", false);
+
         let win;
 
         SimpleTest.registerCleanupFunction(() => {

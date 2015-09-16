@@ -3,9 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
-    content/browser/extension.svg (extension.svg)
-    content/browser/ext-utils.js (ext-utils.js)
-    content/browser/ext-contextMenus.js (ext-contextMenus.js)
-    content/browser/ext-browserAction.js (ext-browserAction.js)
-    content/browser/ext-tabs.js (ext-tabs.js)
-    content/browser/ext-windows.js (ext-windows.js)
+    content/browser/extension.svg
+    content/browser/ext-utils.js
+    content/browser/ext-contextMenus.js
+    content/browser/ext-browserAction.js
+    content/browser/ext-tabs.js
+    content/browser/ext-windows.js

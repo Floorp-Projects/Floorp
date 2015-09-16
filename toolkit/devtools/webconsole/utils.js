@@ -7,6 +7,7 @@
 "use strict";
 
 const {Cc, Ci, Cu, components} = require("chrome");
+const {isWindowIncluded} = require("devtools/toolkit/layout/utils");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -16,7 +17,6 @@ loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 // Note that these are only used in WebConsoleCommands, see $0 and pprint().
 loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-const LayoutHelpers = require("devtools/toolkit/layout-helpers");
 
 // Match the function name from the result of toString() or toSource().
 //
@@ -1201,9 +1201,6 @@ function ConsoleServiceListener(aWindow, aListener)
 {
   this.window = aWindow;
   this.listener = aListener;
-  if (this.window) {
-    this.layoutHelpers = new LayoutHelpers(this.window);
-  }
 }
 exports.ConsoleServiceListener = ConsoleServiceListener;
 
@@ -1252,8 +1249,8 @@ ConsoleServiceListener.prototype =
         return;
       }
 
-      let errorWindow = Services.wm.getOuterWindowWithId(aMessage.outerWindowID);
-      if (!errorWindow || !this.layoutHelpers.isIncludedInTopLevelWindow(errorWindow)) {
+      let errorWindow = Services.wm.getOuterWindowWithId(aMessage .outerWindowID);
+      if (!errorWindow || !isWindowIncluded(this.window, errorWindow)) {
         return;
       }
     }
@@ -1378,9 +1375,6 @@ function ConsoleAPIListener(aWindow, aOwner, aConsoleID)
   this.window = aWindow;
   this.owner = aOwner;
   this.consoleID = aConsoleID;
-  if (this.window) {
-    this.layoutHelpers = new LayoutHelpers(this.window);
-  }
 }
 exports.ConsoleAPIListener = ConsoleAPIListener;
 
@@ -1441,7 +1435,7 @@ ConsoleAPIListener.prototype =
     let apiMessage = aMessage.wrappedJSObject;
     if (this.window && CONSOLE_WORKER_IDS.indexOf(apiMessage.innerID) == -1) {
       let msgWindow = Services.wm.getCurrentInnerWindowWithId(apiMessage.innerID);
-      if (!msgWindow || !this.layoutHelpers.isIncludedInTopLevelWindow(msgWindow)) {
+      if (!msgWindow || !isWindowIncluded(this.window, msgWindow)) {
         // Not the same window!
         return;
       }

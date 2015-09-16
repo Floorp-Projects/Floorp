@@ -37,7 +37,6 @@ EXTRA_JS_MODULES.devtools += [
     'DevToolsUtils.js',
     'event-emitter.js',
     'event-parsers.js',
-    'layout-helpers.js',
     'output-parser.js',
     'path.js',
     'worker-loader.js',
@@ -49,5 +48,13 @@ EXTRA_JS_MODULES.devtools += [
 ]
 
 EXTRA_JS_MODULES.devtools.server.actors += [
-    'server/actors/highlighter.css'
+    'server/actors/highlighters.css'
+]
+
+EXTRA_JS_MODULES.devtools.layout += [
+    'layout/utils.js'
+]
+
+EXTRA_JS_MODULES.devtools.layout += [
+    'layout/utils.js'
 ]

@@ -9,7 +9,7 @@ let {EPSILON, TiltMath, vec3, mat3, mat4, quat4} = require("devtools/tilt/tilt-m
 let TiltUtils = require("devtools/tilt/tilt-utils");
 let {TiltVisualizer} = require("devtools/tilt/tilt-visualizer");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-let LayoutHelpers = require("devtools/toolkit/layout-helpers");
+let {getRect, getIframeContentOffset} = require("devtools/toolkit/layout/utils");
 
 
 const DEFAULT_HTML = "data:text/html," +

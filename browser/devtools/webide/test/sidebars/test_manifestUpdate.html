@@ -21,7 +21,6 @@
         let {TextDecoder, OS}  = Cu.import("resource://gre/modules/osfile.jsm", {});
 
         Task.spawn(function* () {
-            Services.prefs.setBoolPref("devtools.webide.sidebars", true);
             let win = yield openWebIDE();
             let AppManager = win.AppManager;
 
