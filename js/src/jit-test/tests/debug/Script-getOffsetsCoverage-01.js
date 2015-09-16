@@ -1,5 +1,3 @@
-// |jit-test| --code-coverage;
-
 // Currently the Jit integration has a few issues, let's keep this test
 // case deterministic.
 //
@@ -20,7 +18,7 @@ if (getJitCompilerOptions()["baseline.warmup.trigger"] != 10)
  *
  * [1]  http://ltp.sourceforge.net/coverage/lcov/geninfo.1.php
  */
-function checkLcov(fun) {
+function checkGetOffsetsCoverage(fun) {
   var keys = [ "TN", "SF", "FN", "FNDA", "FNF", "FNH", "BRDA", "BRF", "BRH", "DA", "LF", "LH" ];
   function startsWithKey(s) {
     for (k of keys) {
@@ -34,42 +32,111 @@ function checkLcov(fun) {
   var source = fun.toSource();
   source = source.slice(source.indexOf('{') + 1, source.lastIndexOf('}'));
 
-  // Extract comment starting with the previous keys, as a reference of the
-  // output expected from getLcovInfo.
+  // Extract comment starting with the previous keys, as a reference.
   var lcovRef = [];
   var currLine = 0;
-  var currFun = "<badfunction>";
+  var currFun = [{name: "top-level", braces: 1}];
   for (var line of source.split('\n')) {
     currLine++;
+
     for (var comment of line.split("//").slice(1)) {
       if (!startsWithKey(comment))
         continue;
       comment = comment.trim();
       if (comment.startsWith("FN:"))
-        currFun = comment.split(',')[1];
-      comment = comment.replace('$', currLine);
-      comment = comment.replace('%', currFun);
+        currFun.push({ name: comment.split(',')[1], braces: 0 });
+      var name = currFun[currFun.length - 1].name;
+      if (!comment.startsWith("DA:"))
+        continue;
+      comment = {
+        offset: null,
+        lineNumber: currLine,
+        columnNumber: null,
+        count: comment.split(",")[1] | 0,
+        script: (name == "top-level" ? undefined : name)
+      };
       lcovRef.push(comment);
     }
+
+    var deltaBraces = line.split('{').length - line.split('}').length;
+    currFun[currFun.length - 1].braces += deltaBraces;
+    if (currFun[currFun.length - 1].braces == 0)
+      currFun.pop();
   }
 
-  // Evaluate the code, and generate the Lcov result from the execution.
+  // Create a new global and instrument it with a debugger, to find all scripts,
+  // created in the current global.
   var g = newGlobal();
+  var dbg = Debugger(g);
+  dbg.collectCoverageInfo = true;
+
+  var topLevel = null;
+  dbg.onNewScript = function (s) {
+    topLevel = s;
+    dbg.onNewScript = function () {};
+  };
+
+  // Evaluate the code, and collect the hit counts for each scripts / lines.
   g.eval(source);
-  var lcovResRaw = getLcovInfo(g);
+
+  var coverageRes = [];
+  function collectCoverage(s) {
+    var res = s.getOffsetsCoverage();
+    if (res == null)
+      res = [{
+        offset: null,
+        lineNumber: null,
+        columnNumber: null,
+        script: s.displayName,
+        count: 0
+      }];
+    else {
+      res.map(function (e) {
+        e.script = s.displayName;
+        return e;
+      });
+    }
+    coverageRes.push(res);
+    s.getChildScripts().forEach(collectCoverage);
+  };
+  collectCoverage(topLevel);
+  coverageRes = [].concat(...coverageRes);
 
   // Check that all the lines are present the result.
-  var lcovRes = lcovResRaw.split('\n');
+  function match(ref) {
+    return function (entry) {
+      return ref.lineNumber == entry.lineNumber && ref.script == entry.script;
+    }
+  }
+  function ppObj(entry) {
+    var str = "{";
+    for (var k in entry) {
+      if (entry[k] != null)
+        str += " '" + k + "': " + entry[k] + ",";
+    }
+    str += "}";
+    return str;
+  }
   for (ref of lcovRef) {
-    if (lcovRes.indexOf(ref) == -1) {
-      print("Cannot find `" + ref + "` in the following Lcov result:\n", lcovResRaw);
+    var res = coverageRes.find(match(ref));
+    if (!res) {
+      // getOffsetsCoverage returns null if we have no result for the
+      // script. We added a fake entry with an undefined lineNumber, which is
+      // used to match against the modified reference.
+      var missRef = Object.create(ref);
+      missRef.lineNumber = null;
+      res = coverageRes.find(match(missRef));
+    }
+
+    if (!res || res.count != ref.count) {
+      print("Cannot find `" + ppObj(ref) + "` in the following results:\n", coverageRes.map(ppObj).join("\n"));
       print("In the following source:\n", source);
       assertEq(true, false);
     }
   }
 }
 
-checkLcov(function () { //FN:$,top-level //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   ",".split(','); //DA:$,1
   //FNF:1
   //FNH:1
@@ -77,7 +144,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //LH:1
 });
 
-checkLcov(function () { //FN:$,top-level //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   function f() {    //FN:$,f
     ",".split(','); //DA:$,0
   }
@@ -88,7 +155,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //LH:1
 });
 
-checkLcov(function () { //FN:$,top-level //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   function f() {    //FN:$,f //FNDA:1,%
     ",".split(','); //DA:$,1
   }
@@ -99,7 +166,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //LH:2
 });
 
-checkLcov(function () { //FN:$,top-level //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
   if (l.length == 3)      //DA:$,1
     l.push('');           //DA:$,0
@@ -113,7 +180,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //BRH:1
 });
 
-checkLcov(function () { //FN:$,top-level //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
   if (l.length == 2)      //DA:$,1
     l.push('');           //DA:$,1
@@ -127,7 +194,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //BRH:1
 });
 
-checkLcov(function () { //FN:$,top-level //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
   if (l.length == 2)      //DA:$,1
     l.push('');           //DA:$,1
@@ -143,7 +210,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //BRH:1
 });
 
-checkLcov(function () { //FN:$,top-level //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   function f(i) { //FN:$,f //FNDA:2,%
     var x = 0;    //DA:$,2
     while (i--) { // Currently OSR wrongly count the loop header twice.
@@ -162,7 +229,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //FNH:2
 });
 
-checkLcov(function () { //FN:$,top-level //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   try {                     //DA:$,1
     var l = ",".split(','); //DA:$,1
     if (l.length == 2) {    //DA:$,1 // BRDA:$,0
@@ -182,7 +249,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //BRH:1
 });
 
-checkLcov(function () { //FN:$,top-level //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(',');   //DA:$,1
   try {                     //DA:$,1
     try {                   //DA:$,1
@@ -204,7 +271,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //BRH:1
 });
 
-checkLcov(function () { //FN:$,top-level //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   function f() {            //FN:$,f //FNDA:1,%
     throw 1;                //DA:$,1
     f();                    //DA:$,0
@@ -224,4 +291,4 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 });
 
 // If you add a test case here, do the same in
-// jit-test/tests/debug/Script-getOffsetsCoverage-01.js
+// jit-test/tests/coverage/simple.js
