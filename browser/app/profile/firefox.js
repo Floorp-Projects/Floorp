@@ -1940,10 +1940,10 @@ pref("view_source.tab", true);
 #endif
 
 // Enable ServiceWorkers for Push API consumers.
-// Interception is still disabled.
+// Interception is still disabled on beta and release.
 pref("dom.serviceWorkers.enabled", true);
 
-#ifdef NIGHTLY_BUILD
+#ifndef RELEASE_BUILD
 pref("dom.serviceWorkers.interception.enabled", true);
 #endif
 
