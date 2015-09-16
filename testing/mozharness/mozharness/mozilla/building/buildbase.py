@@ -826,15 +826,18 @@ or run without that action (ie: --no-{action})"
         mach_env = {}
         if c.get('upload_env'):
             mach_env.update(c['upload_env'])
-            mach_env['UPLOAD_HOST'] = mach_env['UPLOAD_HOST'] % {
-                'stage_server': c['stage_server']
-            }
-            mach_env['UPLOAD_USER'] = mach_env['UPLOAD_USER'] % {
-                'stage_username': c['stage_username']
-            }
-            mach_env['UPLOAD_SSH_KEY'] = mach_env['UPLOAD_SSH_KEY'] % {
-                'stage_ssh_key': c['stage_ssh_key']
-            }
+            if 'UPLOAD_HOST' in mach_env:
+                mach_env['UPLOAD_HOST'] = mach_env['UPLOAD_HOST'] % {
+                    'stage_server': c['stage_server']
+                }
+            if 'UPLOAD_USER' in mach_env:
+                mach_env['UPLOAD_USER'] = mach_env['UPLOAD_USER'] % {
+                    'stage_username': c['stage_username']
+                }
+            if 'UPLOAD_SSH_KEY' in mach_env:
+                mach_env['UPLOAD_SSH_KEY'] = mach_env['UPLOAD_SSH_KEY'] % {
+                    'stage_ssh_key': c['stage_ssh_key']
+                }
 
         if self.query_is_nightly():
             mach_env['LATEST_MAR_DIR'] = c['latest_mar_dir'] % {
