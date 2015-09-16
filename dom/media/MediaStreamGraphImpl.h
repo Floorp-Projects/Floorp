@@ -310,9 +310,9 @@ public:
    * in the future, *aEnd will be reduced to the first time in the future to
    * recompute those decisions.
    */
-  void RecomputeBlockingAt(MediaStream* aStream,
-                           GraphTime aTime, GraphTime aEndBlockingDecisions,
-                           GraphTime* aEnd);
+  GraphTime ComputeStreamBlockTime(MediaStream* aStream,
+                                   GraphTime aTime,
+                                   GraphTime aEndBlockingDecisions);
   /**
    * Returns smallest value of t such that t is a multiple of
    * WEBAUDIO_BLOCK_SIZE and t > aTime.
@@ -329,13 +329,11 @@ public:
                                          GraphTime aFrom,
                                          GraphTime aTo);
   /**
-   * Returns true if aStream will underrun at aTime for its own playback.
-   * aEndBlockingDecisions is when we plan to stop making blocking decisions.
-   * *aEnd will be reduced to the first time in the future to recompute these
-   * decisions.
+   * If aStream will underrun between aTime, and aEndBlockingDecisions, returns
+   * the time at which the underrun will start. Otherwise return
+   * aEndBlockingDecisions.
    */
-  bool WillUnderrun(MediaStream* aStream, GraphTime aTime,
-                    GraphTime aEndBlockingDecisions, GraphTime* aEnd);
+  GraphTime WillUnderrun(MediaStream* aStream, GraphTime aEndBlockingDecisions);
 
   /**
    * Given a graph time aTime, convert it to a stream time taking into
