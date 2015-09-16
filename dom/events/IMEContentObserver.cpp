@@ -229,6 +229,7 @@ IMEContentObserver::IMEContentObserver()
   , mIsSelectionChangeEventPending(false)
   , mIsPositionChangeEventPending(false)
   , mIsFlushingPendingNotifications(false)
+  , mIsHandlingQueryContentEvent(false)
 {
 #ifdef DEBUG
   mTextChangeData.Test();
@@ -592,10 +593,6 @@ IMEContentObserver::ReflowInterruptible(DOMHighResTimeStamp aStart,
 nsresult
 IMEContentObserver::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
 {
-  MOZ_LOG(sIMECOLog, LogLevel::Debug,
-    ("IMECO: 0x%p IMEContentObserver::HandleQueryContentEvent(aEvent={ "
-     "mMessage=%s })", this, ToChar(aEvent->mMessage)));
-
   // If the instance has cache, it should use the cached selection which was
   // sent to the widget.
   if (aEvent->mMessage == eQuerySelectedText && aEvent->mUseNativeLineBreak &&
@@ -613,6 +610,12 @@ IMEContentObserver::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
     return NS_OK;
   }
 
+  MOZ_LOG(sIMECOLog, LogLevel::Debug,
+    ("IMECO: 0x%p IMEContentObserver::HandleQueryContentEvent(aEvent={ "
+     "mMessage=%s })", this, ToChar(aEvent->mMessage)));
+
+  AutoRestore<bool> handling(mIsHandlingQueryContentEvent);
+  mIsHandlingQueryContentEvent = true;
   ContentEventHandler handler(GetPresContext());
   nsresult rv = handler.HandleQueryContentEvent(aEvent);
   if (aEvent->mSucceeded) {
@@ -1103,6 +1106,18 @@ IMEContentObserver::MaybeNotifyIMEOfPositionChange()
 {
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("IMECO: 0x%p IMEContentObserver::MaybeNotifyIMEOfPositionChange()", this));
+  // If reflow is caused by ContentEventHandler during PositionChangeEvent
+  // sending NOTIFY_IME_OF_POSITION_CHANGE, we don't need to notify IME of it
+  // again since ContentEventHandler returns the result including this reflow's
+  // result.
+  if (mIsHandlingQueryContentEvent &&
+      mSendingNotification == NOTIFY_IME_OF_POSITION_CHANGE) {
+    MOZ_LOG(sIMECOLog, LogLevel::Debug,
+      ("IMECO: 0x%p   IMEContentObserver::MaybeNotifyIMEOfPositionChange(), "
+       "ignored since caused by ContentEventHandler during sending "
+       "NOTIY_IME_OF_POSITION_CHANGE", this));
+    return;
+  }
   PostPositionChangeNotification();
   FlushMergeableNotifications();
 }
