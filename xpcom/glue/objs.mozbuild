@@ -29,7 +29,7 @@ xpcom_glue_src_lcppsrcs = [
     'nsTObserverArray.cpp',
     'nsVersionComparator.cpp',
     'nsWeakReference.cpp',
-    'pldhash.cpp',
+    'PLDHashTable.cpp',
 ]
 
 xpcom_glue_src_cppsrcs = [

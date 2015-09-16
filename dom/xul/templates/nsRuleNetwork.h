@@ -34,7 +34,7 @@
 #include "nsIAtom.h"
 #include "nsIDOMNode.h"
 #include "plhash.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "nsIRDFNode.h"
 
 class nsXULTemplateResultSetRDF;
