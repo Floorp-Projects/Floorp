@@ -9,6 +9,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsCRT.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 
 #import <Cocoa/Cocoa.h>
@@ -17,6 +18,9 @@
 #define NETWORK_NOTIFY_CHANGED_PREF "network.notify.changed"
 
 using namespace mozilla;
+
+static PRLogModuleInfo *gNotifyAddrLog = nullptr;
+#define LOG(args) MOZ_LOG(gNotifyAddrLog, mozilla::LogLevel::Debug, args)
 
 // If non-successful, extract the error code and return it.  This
 // error code dance is inspired by
@@ -120,6 +124,9 @@ nsresult
 nsNetworkLinkService::Init(void)
 {
     nsresult rv;
+
+    if (!gNotifyAddrLog)
+        gNotifyAddrLog = PR_NewLogModule("nsNotifyAddr");
 
     nsCOMPtr<nsIObserverService> observerService =
         do_GetService("@mozilla.org/observer-service;1", &rv);
@@ -309,6 +316,7 @@ nsNetworkLinkService::SendEvent(bool aNetworkChanged)
         event = mLinkUp ? NS_NETWORK_LINK_DATA_UP
             : NS_NETWORK_LINK_DATA_DOWN;
     }
+    LOG(("SendEvent: network is '%s'\n", event));
 
     observerService->NotifyObservers(static_cast<nsINetworkLinkService*>(this),
                                      NS_NETWORK_LINK_TOPIC,
