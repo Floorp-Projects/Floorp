@@ -269,7 +269,7 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       } else if (InMutedCycle()) {
         segment->AppendNullData(ticks);
       } else {
-        if (GraphImpl()->StreamSuspended(source)) {
+        if (source->IsSuspended()) {
           segment->AppendNullData(aTo - aFrom);
         } else {
           MOZ_ASSERT(outputTrack->GetEnd() == GraphTimeToStreamTime(interval.mStart),

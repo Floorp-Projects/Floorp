@@ -175,10 +175,7 @@ public:
     return mSampleRate;
   }
 
-  AudioContextId Id() const
-  {
-    return mId;
-  }
+  bool ShouldSuspendNewStream() const { return mSuspendCalled; }
 
   double CurrentTime() const;
 
@@ -345,6 +342,8 @@ private:
 
   bool CheckClosed(ErrorResult& aRv);
 
+  nsTArray<MediaStream*> GetAllStreams() const;
+
 private:
   // Each AudioContext has an id, that is passed down the MediaStreams that
   // back the AudioNodes, so we can easily compute the set of all the
@@ -377,6 +376,8 @@ private:
   bool mIsShutDown;
   // Close has been called, reject suspend and resume call.
   bool mCloseCalled;
+  // Suspend has been called with no following resume.
+  bool mSuspendCalled;
 };
 
 static const dom::AudioContext::AudioContextId NO_AUDIO_CONTEXT = 0;

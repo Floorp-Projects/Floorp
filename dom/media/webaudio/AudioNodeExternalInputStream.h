@@ -25,8 +25,7 @@ public:
   Create(MediaStreamGraph* aGraph, AudioNodeEngine* aEngine);
 
 protected:
-  AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate,
-                               uint32_t aContextId);
+  AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate);
   ~AudioNodeExternalInputStream();
 
 public:
