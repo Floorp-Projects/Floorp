@@ -58,9 +58,6 @@ if CONFIG['HOST_OS_ARCH'] == 'WINNT':
         'ws2_32',
     ]
 
-# XXX: We should fix these warnings.
-ALLOW_COMPILER_WARNINGS = True
-
 HOST_DEFINES['NO_SIGN_VERIFY'] = True
 
 if CONFIG['CROSS_COMPILE'] and CONFIG['HOST_NSPR_MDCPUCFG']:
