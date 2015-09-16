@@ -31,6 +31,14 @@
 #ifndef V8_REGEXP_AST_H_
 #define V8_REGEXP_AST_H_
 
+// Prevent msvc build failures as indicated in bug 1205328
+#ifdef min
+# undef min
+#endif
+#ifdef max
+# undef max
+#endif
+
 #include "irregexp/RegExpEngine.h"
 
 namespace js {
