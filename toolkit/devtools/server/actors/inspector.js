@@ -67,7 +67,7 @@ const {
   HighlighterActor,
   CustomHighlighterActor,
   isTypeRegistered,
-} = require("devtools/server/actors/highlighter");
+} = require("devtools/server/actors/highlighters");
 const {
   isAnonymous,
   isNativeAnonymous,

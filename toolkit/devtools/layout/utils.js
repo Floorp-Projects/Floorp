@@ -7,6 +7,11 @@
 const { Ci } = require("chrome");
 const { memoize } = require("sdk/lang/functional");
 
+loader.lazyRequireGetter(this, "setIgnoreLayoutChanges",
+  "devtools/server/actors/layout", true);
+exports.setIgnoreLayoutChanges = (...args) =>
+  this.setIgnoreLayoutChanges(...args);
+
 /**
  * Returns the `DOMWindowUtils` for the window given.
  *
