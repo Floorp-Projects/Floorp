@@ -691,8 +691,10 @@ var errsrc = "none";
 try {
   container = imgTools.decodeImage(istream, inMimeType);
 
-  // We should never hit this - decodeImage throws an assertion because the
-  // image decoded doesn't have enough frames.
+  // We expect to hit an error during encoding because the ICO header of the
+  // image is fine, but the actual resources are corrupt. Since decodeImage()
+  // only performs a metadata decode, it doesn't decode far enough to realize
+  // this, but we'll find out when we do a full decode during encodeImage().
   try {
       istream = imgTools.encodeImage(container, "image/png");
   } catch (e) {
@@ -704,7 +706,7 @@ try {
   errsrc = "decode";
 }
 
-do_check_eq(errsrc, "decode");
+do_check_eq(errsrc, "encode");
 checkExpectedError(/NS_ERROR_FAILURE/, err);
 
 
