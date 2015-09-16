@@ -324,12 +324,6 @@ public:
    * account the time during which aStream is scheduled to be blocked.
    */
   StreamTime GraphTimeToStreamTimeWithBlocking(MediaStream* aStream, GraphTime aTime);
-  /**
-   * Given a graph time aTime, convert it to a stream time taking into
-   * account the time during which aStream is scheduled to be blocked, and
-   * when we don't know whether it's blocked or not, we assume it's not blocked.
-   */
-  StreamTime GraphTimeToStreamTimeOptimistic(MediaStream* aStream, GraphTime aTime);
   enum
   {
     INCLUDE_TRAILING_BLOCKED_INTERVAL = 0x01

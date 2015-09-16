@@ -503,11 +503,19 @@ public:
    */
   StreamTime GraphTimeToStreamTimeWithBlocking(GraphTime aTime);
   /**
-   * Convert graph time to stream time. aTime can be > mStateComputedTime,
-   * in which case we optimistically assume the stream will not be blocked
-   * after mStateComputedTime.
+   * Convert graph time to stream time. This assumes there is no blocking time
+   * to take account of, which is always true except between a stream
+   * having its blocking time calculated in UpdateGraph and its blocking time
+   * taken account of in UpdateCurrentTimeForStreams.
    */
-  StreamTime GraphTimeToStreamTimeOptimistic(GraphTime aTime);
+  StreamTime GraphTimeToStreamTime(GraphTime aTime);
+  /**
+   * Convert stream time to graph time. This assumes there is no blocking time
+   * to take account of, which is always true except between a stream
+   * having its blocking time calculated in UpdateGraph and its blocking time
+   * taken account of in UpdateCurrentTimeForStreams.
+   */
+  GraphTime StreamTimeToGraphTime(StreamTime aTime);
   /**
    * Convert stream time to graph time. The result can be > mStateComputedTime,
    * in which case we did the conversion optimistically assuming the stream
