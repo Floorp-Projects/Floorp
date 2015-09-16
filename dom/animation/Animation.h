@@ -58,7 +58,6 @@ public:
     , mPlaybackRate(1.0)
     , mPendingState(PendingState::NotPending)
     , mAnimationIndex(sNextAnimationIndex++)
-    , mIsRunningOnCompositor(false)
     , mFinishedAtLastComposeStyle(false)
     , mIsRelevant(false)
     , mFinishedIsResolved(false)
@@ -109,7 +108,7 @@ public:
   virtual void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior);
   virtual void Pause(ErrorResult& aRv);
   virtual void Reverse(ErrorResult& aRv);
-  bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
+  bool IsRunningOnCompositor() const;
   IMPL_EVENT_HANDLER(finish);
   IMPL_EVENT_HANDLER(cancel);
 
@@ -269,8 +268,6 @@ public:
    */
   virtual bool HasLowerCompositeOrderThan(const Animation& aOther) const;
 
-  void SetIsRunningOnCompositor() { mIsRunningOnCompositor = true; }
-  void ClearIsRunningOnCompositor() { mIsRunningOnCompositor = false; }
   /**
    * Returns true if this animation does not currently need to update
    * style on the main thread (e.g. because it is empty, or is
@@ -409,7 +406,6 @@ protected:
   // possible for two different objects to have the same index.
   uint64_t mAnimationIndex;
 
-  bool mIsRunningOnCompositor;
   bool mFinishedAtLastComposeStyle;
   // Indicates that the animation should be exposed in an element's
   // getAnimations() list.

@@ -443,6 +443,7 @@ public:
     Layer* GetLayer() { return mLayer; }
     nsDisplayItemGeometry* GetGeometry() const { return mGeometry.get(); }
     void Invalidate() { mIsInvalid = true; }
+    void ClearAnimationCompositorState();
 
   private:
     DisplayItemData(LayerManagerData* aParent,
