@@ -5,11 +5,11 @@
    removeEventListener */
 "use strict";
 
-let { interfaces: Ci, utils: Cu } = Components;
+var { interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-let systemAppOrigin = (function() {
+var systemAppOrigin = (function() {
   let systemOrigin = "_";
   try {
     systemOrigin = Services.io.newURI(
@@ -21,14 +21,14 @@ let systemAppOrigin = (function() {
   return systemOrigin;
 })();
 
-let threshold = 25;
+var threshold = 25;
 try {
   threshold = Services.prefs.getIntPref("ui.dragThresholdX");
 } catch(e) {
   // Fall back to default value
 }
 
-let delay = 500;
+var delay = 500;
 try {
   delay = Services.prefs.getIntPref("ui.click_hold_context_menus.delay");
 } catch(e) {
@@ -39,7 +39,7 @@ try {
  * Simulate touch events for platforms where they aren't generally available.
  * This frame script is managed by `simulator.js`.
  */
-let simulator = {
+var simulator = {
   events: [
     "mousedown",
     "mousemove",

@@ -15,7 +15,7 @@ const {DebuggerClient} = require("devtools/toolkit/client/main");
 const {DebuggerServer} = require("devtools/server/main");
 const {AppActorFront} = require("devtools/app-actor-front");
 
-let gClient, gActor, gActorFront;
+var gClient, gActor, gActorFront;
 
 function connect(onDone) {
   // Initialize a loopback remote protocol connection

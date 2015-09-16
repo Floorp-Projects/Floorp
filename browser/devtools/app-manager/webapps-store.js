@@ -9,7 +9,7 @@ const {Connection} = require("devtools/client/connection-manager");
 const {Cu} = require("chrome");
 const _knownWebappsStores = new WeakMap();
 
-let WebappsStore;
+var WebappsStore;
 
 module.exports = WebappsStore = function(connection) {
   // If we already know about this connection,

@@ -20,19 +20,19 @@
 Cu.import("resource://gre/modules/Services.jsm");
 
 ////////////////////////////////////////////////////////////////
-let gIoService = Cc["@mozilla.org/network/io-service;1"]
+var gIoService = Cc["@mozilla.org/network/io-service;1"]
                    .getService(Ci.nsIIOService);
 
-let gPrefs = Cc["@mozilla.org/preferences-service;1"]
+var gPrefs = Cc["@mozilla.org/preferences-service;1"]
                .getService(Components.interfaces.nsIPrefBranch);
 
-let gVerifier = Cc["@mozilla.org/network/packaged-app-verifier;1"]
+var gVerifier = Cc["@mozilla.org/network/packaged-app-verifier;1"]
                   .createInstance(Ci.nsIPackagedAppVerifier);
 
-let gCacheStorageService = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
+var gCacheStorageService = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
                              .getService(Ci.nsICacheStorageService);;
 
-let gLoadContextInfoFactory =
+var gLoadContextInfoFactory =
   Cu.import("resource://gre/modules/LoadContextInfo.jsm", {}).LoadContextInfo;
 
 const kUriIdx                 = 0;

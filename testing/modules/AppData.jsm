@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
 // Reference needed in order for fake app dir provider to be active.
-let gFakeAppDirectoryProvider;
+var gFakeAppDirectoryProvider;
 
 /**
  * Installs a fake UAppData directory.

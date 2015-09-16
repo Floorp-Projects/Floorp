@@ -800,7 +800,7 @@ Item.prototype = {
 // ##########
 // Class: Items
 // Keeps track of all Items.
-let Items = {
+var Items = {
   // ----------
   // Function: toString
   // Prints [Items] for debug use

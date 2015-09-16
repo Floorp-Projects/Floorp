@@ -46,9 +46,9 @@ function Deferred()  {
   Object.freeze(this);
 }
 
-let bluetoothManager;
+var bluetoothManager;
 
-let pendingEmulatorCmdCount = 0;
+var pendingEmulatorCmdCount = 0;
 
 /**
  * Push required permissions and test if |navigator.mozBluetooth| exists.

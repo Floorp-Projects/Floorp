@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let SL = {};
+var SL = {};
 subscriptLoader.loadSubScript("resource://gre/modules/SlPduHelper.jsm", SL);
 SL.debug = do_print;
 

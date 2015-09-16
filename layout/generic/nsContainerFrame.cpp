@@ -922,13 +922,13 @@ nsContainerFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
     AutoMaybeDisableFontInflation an(this);
 
     WritingMode tableWM = GetParent()->GetWritingMode();
-    uint8_t captionSide = StyleTableBorder()->LogicalCaptionSide(tableWM);
+    uint8_t captionSide = StyleTableBorder()->mCaptionSide;
 
     if (aWM.IsOrthogonalTo(tableWM)) {
-      if (captionSide == NS_STYLE_CAPTION_SIDE_BSTART ||
-          captionSide == NS_STYLE_CAPTION_SIDE_BSTART_OUTSIDE ||
-          captionSide == NS_STYLE_CAPTION_SIDE_BEND ||
-          captionSide == NS_STYLE_CAPTION_SIDE_BEND_OUTSIDE) {
+      if (captionSide == NS_STYLE_CAPTION_SIDE_TOP ||
+          captionSide == NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE ||
+          captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM ||
+          captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE) {
         // For an orthogonal caption on a block-dir side of the table,
         // shrink-wrap to min-isize.
         result.ISize(aWM) = GetMinISize(aRenderingContext);
@@ -944,11 +944,11 @@ nsContainerFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
         }
       }
     } else {
-      if (captionSide == NS_STYLE_CAPTION_SIDE_ISTART ||
-          captionSide == NS_STYLE_CAPTION_SIDE_IEND) {
+      if (captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
+          captionSide == NS_STYLE_CAPTION_SIDE_RIGHT) {
         result.ISize(aWM) = GetMinISize(aRenderingContext);
-      } else if (captionSide == NS_STYLE_CAPTION_SIDE_BSTART ||
-                 captionSide == NS_STYLE_CAPTION_SIDE_BEND) {
+      } else if (captionSide == NS_STYLE_CAPTION_SIDE_TOP ||
+                 captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
         // The outer frame constrains our available isize to the isize of
         // the table.  Grow if our min-isize is bigger than that, but not
         // larger than the containing block isize.  (It would really be nice

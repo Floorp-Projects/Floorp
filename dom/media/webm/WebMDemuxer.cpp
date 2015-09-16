@@ -182,18 +182,6 @@ WebMDemuxer::InitBufferedState()
   mBufferedState = new WebMBufferedState;
 }
 
-already_AddRefed<MediaDataDemuxer>
-WebMDemuxer::Clone() const
-{
-  nsRefPtr<WebMDemuxer> demuxer = new WebMDemuxer(mResource.GetResource());
-  demuxer->InitBufferedState();
-  if (NS_FAILED(demuxer->ReadMetadata())) {
-    NS_WARNING("Couldn't recreate WebMDemuxer");
-    return nullptr;
-  }
-  return demuxer.forget();
-}
-
 bool
 WebMDemuxer::HasTrackType(TrackInfo::TrackType aType) const
 {
@@ -996,17 +984,6 @@ WebMTrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold)
     SkipFailureHolder failure(DemuxerFailureReason::END_OF_STREAM, parsed);
     return SkipAccessPointPromise::CreateAndReject(Move(failure), __func__);
   }
-}
-
-int64_t
-WebMTrackDemuxer::GetEvictionOffset(media::TimeUnit aTime)
-{
-  int64_t offset;
-  if (!mParent->GetOffsetForTime(aTime.ToNanoseconds(), &offset)) {
-    return 0;
-  }
-
-  return offset;
 }
 
 media::TimeIntervals

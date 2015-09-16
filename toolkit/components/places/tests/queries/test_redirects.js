@@ -4,7 +4,7 @@
 
 // Array of visits we will add to the database, will be populated later
 // in the test.
-let visits = [];
+var visits = [];
 
 /**
  * Takes a sequence of query options, and compare query results obtained through

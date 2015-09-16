@@ -8,7 +8,7 @@ var testnum = 0;
 var fac;
 var prefs;
 
-let numRecords, timeGroupingSize, now;
+var numRecords, timeGroupingSize, now;
 
 const DEFAULT_EXPIRE_DAYS = 180;
 
@@ -211,7 +211,7 @@ add_test(function test11() {
     });
 });
 
-let syncValues = ["sync1", "sync1a", "sync2", "sync3"]
+var syncValues = ["sync1", "sync1a", "sync2", "sync3"]
 
 add_test(function test12() {
     do_log_info("Check old synchronous api");

@@ -22,8 +22,8 @@ const { fromIterator } = require("../util/array");
 
 // This cache is used to access friend properties between functions
 // without exposing them on the public API.
-let cache = new Set();
-let elements = new WeakMap();
+var cache = new Set();
+var elements = new WeakMap();
 
 function contentLoaded(target) {
   var deferred = defer();

@@ -8,13 +8,13 @@ Components.utils.import("resource://gre/modules/Services.jsm", this);
 Services.prefs.setBoolPref("toolkit.osfile.test.syslib_necessary", false);
   // We don't need libc/kernel32.dll for this test
 
-let ImportWin = {};
-let ImportUnix = {};
+var ImportWin = {};
+var ImportUnix = {};
 Components.utils.import("resource://gre/modules/osfile/ospath_win.jsm", ImportWin);
 Components.utils.import("resource://gre/modules/osfile/ospath_unix.jsm", ImportUnix);
 
-let Win = ImportWin;
-let Unix = ImportUnix;
+var Win = ImportWin;
+var Unix = ImportUnix;
 
 function do_check_fail(f)
 {

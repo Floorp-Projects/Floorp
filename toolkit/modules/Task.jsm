@@ -100,13 +100,13 @@ const ERRORS_TO_REPORT = ["EvalError", "RangeError", "ReferenceError", "TypeErro
 /**
  * The Task currently being executed
  */
-let gCurrentTask = null;
+var gCurrentTask = null;
 
 /**
  * If `true`, capture stacks whenever entering a Task and rewrite the
  * stack any exception thrown through a Task.
  */
-let gMaintainStack = false;
+var gMaintainStack = false;
 
 
 /**

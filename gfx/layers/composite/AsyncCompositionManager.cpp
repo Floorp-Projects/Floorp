@@ -209,12 +209,12 @@ TranslateShadowLayer(Layer* aLayer,
 
   if (aAdjustClipRect) {
     TransformClipRect(aLayer, Matrix4x4::Translation(aTranslation.x, aTranslation.y, 0));
-  }
 
-  // If a fixed- or sticky-position layer has a mask layer, that mask should
-  // move along with the layer, so apply the translation to the mask layer too.
-  if (Layer* maskLayer = aLayer->GetMaskLayer()) {
-    TranslateShadowLayer(maskLayer, aTranslation, false);
+    // If a fixed- or sticky-position layer has a mask layer, that mask should
+    // move along with the layer, so apply the translation to the mask layer too.
+    if (Layer* maskLayer = aLayer->GetMaskLayer()) {
+      TranslateShadowLayer(maskLayer, aTranslation, false);
+    }
   }
 }
 
@@ -284,13 +284,10 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   bool isFixedOrSticky = (isRootFixedForSubtree || isStickyForSubtree);
 
   // We want to process all the fixed and sticky children of
-  // aTransformedSubtreeRoot. Also, once we do encounter such a child, we don't
-  // need to recurse any deeper because the fixed layers are relative to their
-  // nearest scrollable layer.
+  // aTransformedSubtreeRoot. Once we do encounter such a child, we don't
+  // need to recurse any deeper because the adjustment to the fixed or sticky
+  // layer will apply to its subtree.
   if (!isFixedOrSticky) {
-    // ApplyAsyncContentTransformToTree will call this function again for
-    // nested scrollable layers, so we don't need to recurse if the layer is
-    // scrollable.
     for (Layer* child = aLayer->GetFirstChild(); child; child = child->GetNextSibling()) {
       AlignFixedAndStickyLayers(child, aTransformedSubtreeRoot, aTransformScrollId,
                                 aPreviousTransformForRoot,
@@ -371,8 +368,12 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   // fixed/sticky layer is the same as aTransformedSubtreeRoot, then the clip
   // rect is not affected by the scroll-induced async scroll transform anyway
   // (since the clip is applied post-transform) so we don't need to make the
-  // adjustment.
-  TranslateShadowLayer(aLayer, ThebesPoint(translation), aLayer != aTransformedSubtreeRoot);
+  // adjustment. Also, some layers want async scrolling to move their clip rect
+  // (IsClipFixed() = false), so we don't make a compensating adjustment for
+  // those.
+  bool adjustClipRect = aLayer != aTransformedSubtreeRoot &&
+                        aLayer->IsClipFixed();
+  TranslateShadowLayer(aLayer, ThebesPoint(translation), adjustClipRect);
 }
 
 static void

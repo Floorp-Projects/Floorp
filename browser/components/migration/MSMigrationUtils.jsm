@@ -132,7 +132,7 @@ function hostIsIPAddress(aHost) {
   return false;
 }
 
-let gEdgeDir;
+var gEdgeDir;
 function getEdgeLocalDataFolder() {
   if (gEdgeDir) {
     return gEdgeDir.clone();
@@ -548,7 +548,7 @@ Cookies.prototype = {
 };
 
 
-let MSMigrationUtils = {
+var MSMigrationUtils = {
   MIGRATION_TYPE_IE: 1,
   MIGRATION_TYPE_EDGE: 2,
   CtypesHelpers: CtypesHelpers,

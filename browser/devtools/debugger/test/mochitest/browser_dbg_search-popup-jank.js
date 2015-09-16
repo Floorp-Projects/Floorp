@@ -7,8 +7,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_editor-mode.html";
 
-let gTab, gPanel, gDebugger;
-let gSearchBox;
+var gTab, gPanel, gDebugger;
+var gSearchBox;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

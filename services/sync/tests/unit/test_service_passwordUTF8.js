@@ -11,13 +11,13 @@ const APPLES = "\uf8ff\uf8ff\uf8ff\uf8ff";
 const LOWBYTES = "\xff\xff\xff\xff";
 
 // Poor man's /etc/passwd.  Static since there's no btoa()/atob() in xpcshell.
-let basicauth = {};
+var basicauth = {};
 basicauth[LOWBYTES] = "Basic am9obmRvZTr/////";
 basicauth[Utils.encodeUTF8(JAPANESE)] = "Basic am9obmRvZTrjk7/jl7/jm7/jn78=";
 
 // Global var for the server password, read by info_collections(),
 // modified by change_password().
-let server_password;
+var server_password;
 
 function login_handling(handler) {
   return function (request, response) {

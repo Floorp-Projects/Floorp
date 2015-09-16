@@ -21,17 +21,17 @@ const globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
 /**
  * Keeps track of whether the frame script was already loaded.
  */
-let gFrameScriptLoaded = false;
+var gFrameScriptLoaded = false;
 
 /**
  * Mapping from message id to associated promise.
  */
-let gPromises = new Map();
+var gPromises = new Map();
 
 /**
  * Incrementing integer to generate unique message id.
  */
-let gMessageID = 1;
+var gMessageID = 1;
 
 /**
  * This object provides the public module functions.
@@ -82,7 +82,7 @@ this.ContentTask = {
   },
 };
 
-let ContentMessageListener = {
+var ContentMessageListener = {
   receiveMessage(aMessage) {
     let id = aMessage.data.id
     let deferred = gPromises.get(id);

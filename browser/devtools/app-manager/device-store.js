@@ -10,7 +10,7 @@ const {Cu} = require("chrome");
 
 const _knownDeviceStores = new WeakMap();
 
-let DeviceStore;
+var DeviceStore;
 
 module.exports = DeviceStore = function(connection) {
   // If we already know about this connection,

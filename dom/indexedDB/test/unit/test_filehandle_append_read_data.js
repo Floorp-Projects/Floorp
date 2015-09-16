@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let disableWorkerTest = "FileHandle doesn't work in workers yet";
+var disableWorkerTest = "FileHandle doesn't work in workers yet";
 
 var testGenerator = testSteps();
 

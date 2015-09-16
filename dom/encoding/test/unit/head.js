@@ -79,7 +79,7 @@ function assert_throws(ex, func) {
                    Components.stack.caller, false);
 }
 
-let tests = [];
+var tests = [];
 
 function test(func, msg) {
   tests.push({msg: msg, func: func,

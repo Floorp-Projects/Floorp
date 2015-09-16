@@ -4,9 +4,9 @@
 
 // tests the translation infobar, using a fake 'Translation' implementation.
 
-let tmp = {};
+var tmp = {};
 Cu.import("resource:///modules/translation/Translation.jsm", tmp);
-let {Translation} = tmp;
+var {Translation} = tmp;
 
 const kShowUIPref = "browser.translation.ui.show";
 

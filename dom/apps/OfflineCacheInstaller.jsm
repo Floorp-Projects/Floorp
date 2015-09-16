@@ -15,15 +15,15 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
-let Namespace = CC('@mozilla.org/network/application-cache-namespace;1',
+var Namespace = CC('@mozilla.org/network/application-cache-namespace;1',
                    'nsIApplicationCacheNamespace',
                    'init');
-let makeFile = CC('@mozilla.org/file/local;1',
+var makeFile = CC('@mozilla.org/file/local;1',
                 'nsIFile',
                 'initWithPath');
-let MutableArray = CC('@mozilla.org/array;1', 'nsIMutableArray');
+var MutableArray = CC('@mozilla.org/array;1', 'nsIMutableArray');
 
-let {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
+var {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
 
 const nsICacheStorage = Ci.nsICacheStorage;
 const nsIApplicationCache = Ci.nsIApplicationCache;

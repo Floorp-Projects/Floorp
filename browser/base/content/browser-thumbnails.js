@@ -7,7 +7,7 @@
 /**
  * Keeps thumbnails of open web pages up-to-date.
  */
-let gBrowserThumbnails = {
+var gBrowserThumbnails = {
   /**
    * Pref that controls whether we can store SSL content on disk
    */

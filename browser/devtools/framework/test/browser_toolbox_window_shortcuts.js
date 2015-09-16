@@ -3,9 +3,9 @@
 
 "use strict";
 
-let {Toolbox} = require("devtools/framework/toolbox");
+var {Toolbox} = require("devtools/framework/toolbox");
 
-let toolbox, toolIDs, idIndex, modifiedPrefs = [];
+var toolbox, toolIDs, idIndex, modifiedPrefs = [];
 
 function test() {
   addTab("about:blank").then(function() {

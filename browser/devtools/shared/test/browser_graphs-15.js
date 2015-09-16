@@ -11,7 +11,7 @@ const FRAMES= [FAST_FPS, FAST_FPS, FAST_FPS, SLOW_FPS, FAST_FPS];
 const TEST_DATA = [];
 const INTERVAL = 100;
 const DURATION = 5000; // 5s
-let t = 0;
+var t = 0;
 for (let frameRate of FRAMES) {
   for (let i = 0; i < frameRate; i++) {
     let delta = Math.floor(1000 / frameRate); // Duration between frames at this rate
@@ -20,7 +20,7 @@ for (let frameRate of FRAMES) {
   }
 }
 
-let LineGraphWidget = require("devtools/shared/widgets/LineGraphWidget");
+var LineGraphWidget = require("devtools/shared/widgets/LineGraphWidget");
 
 add_task(function*() {
   yield promiseTab("about:blank");

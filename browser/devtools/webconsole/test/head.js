@@ -5,20 +5,20 @@
 
 "use strict";
 
-let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-let {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let promise = require("promise");
-let {TargetFactory} = require("devtools/framework/target");
-let {Utils: WebConsoleUtils} = require("devtools/toolkit/webconsole/utils");
-let {Messages} = require("devtools/webconsole/console-output");
-let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+var {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+var {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var promise = require("promise");
+var {TargetFactory} = require("devtools/framework/target");
+var {Utils: WebConsoleUtils} = require("devtools/toolkit/webconsole/utils");
+var {Messages} = require("devtools/webconsole/console-output");
+var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const asyncStorage = require("devtools/toolkit/shared/async-storage");
 
 // Services.prefs.setBoolPref("devtools.debugger.log", true);
 
-let gPendingOutputTest = 0;
+var gPendingOutputTest = 0;
 
 // The various categories of messages.
 const CATEGORY_NETWORK = 0;
@@ -41,7 +41,7 @@ const GROUP_INDENT = 12;
 
 const WEBCONSOLE_STRINGS_URI = "chrome://browser/locale/devtools/" +
                                "webconsole.properties";
-let WCUL10n = new WebConsoleUtils.l10n(WEBCONSOLE_STRINGS_URI);
+var WCUL10n = new WebConsoleUtils.l10n(WEBCONSOLE_STRINGS_URI);
 
 DevToolsUtils.testing = true;
 
@@ -179,7 +179,7 @@ function findLogEntry(str) {
  * @return object
  *         A promise that is resolved once the web console is open.
  */
-let openConsole = function(tab) {
+var openConsole = function(tab) {
   let webconsoleOpened = promise.defer();
   let target = TargetFactory.forTab(tab || gBrowser.selectedTab);
   gDevTools.showToolbox(target, "webconsole").then(toolbox => {
@@ -202,7 +202,7 @@ let openConsole = function(tab) {
  * @return object
  *         A promise that is resolved once the web console is closed.
  */
-let closeConsole = Task.async(function* (tab) {
+var closeConsole = Task.async(function* (tab) {
   let target = TargetFactory.forTab(tab || gBrowser.selectedTab);
   let toolbox = gDevTools.getToolbox(target);
   if (toolbox) {
@@ -262,7 +262,7 @@ function waitForContextMenu(popup, button, onShown, onHidden) {
  * does and completes the load event.
  * @return a promise that resolves to the tab object
  */
-let waitForTab = Task.async(function*() {
+var waitForTab = Task.async(function*() {
   info("Waiting for a tab to open");
   yield once(gBrowser.tabContainer, "TabOpen");
   let tab = gBrowser.selectedTab;
@@ -317,7 +317,7 @@ function dumpMessageElement(message) {
                 "text", text);
 }
 
-let finishTest = Task.async(function* () {
+var finishTest = Task.async(function* () {
   dumpConsoles();
 
   let browserConsole = HUDService.getBrowserConsole();
@@ -402,7 +402,7 @@ function waitForSuccess(options) {
   return deferred.promise;
 }
 
-let openInspector = Task.async(function* (tab = gBrowser.selectedTab) {
+var openInspector = Task.async(function* (tab = gBrowser.selectedTab) {
   let target = TargetFactory.forTab(tab);
   let toolbox = yield gDevTools.showToolbox(target, "inspector");
   return toolbox.getCurrentPanel();
@@ -730,7 +730,7 @@ function variablesViewExpandTo(options) {
  * @return object
  *         A Promise object that is resolved once the property is updated.
  */
-let updateVariablesViewProperty = Task.async(function* (options) {
+var updateVariablesViewProperty = Task.async(function* (options) {
   let view = options.property._variablesView;
   view.window.focus();
   options.property.focus();

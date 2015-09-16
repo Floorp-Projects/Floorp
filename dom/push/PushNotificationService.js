@@ -12,7 +12,7 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-let isParent = Cc["@mozilla.org/xre/runtime;1"]
+var isParent = Cc["@mozilla.org/xre/runtime;1"]
                  .getService(Ci.nsIXULRuntime)
                  .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 

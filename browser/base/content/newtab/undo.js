@@ -8,7 +8,7 @@
  * Dialog allowing to undo the removal of single site or to completely restore
  * the grid's original state.
  */
-let gUndoDialog = {
+var gUndoDialog = {
   /**
    * The undo dialog's timeout in miliseconds.
    */

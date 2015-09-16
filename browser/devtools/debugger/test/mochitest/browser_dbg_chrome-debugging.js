@@ -7,16 +7,16 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_inline-debugger-statement.html";
 
-let gClient, gThreadClient;
-let gAttached = promise.defer();
-let gNewGlobal = promise.defer()
-let gNewChromeSource = promise.defer()
+var gClient, gThreadClient;
+var gAttached = promise.defer();
+var gNewGlobal = promise.defer()
+var gNewChromeSource = promise.defer()
 
-let { DevToolsLoader } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let loader = new DevToolsLoader();
+var { DevToolsLoader } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var loader = new DevToolsLoader();
 loader.invisibleToDebugger = true;
 loader.main("devtools/server/main");
-let DebuggerServer = loader.DebuggerServer;
+var DebuggerServer = loader.DebuggerServer;
 
 function test() {
   if (!DebuggerServer.initialized) {

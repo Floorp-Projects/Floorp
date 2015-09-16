@@ -52,7 +52,7 @@ this.SessionStorage = Object.freeze({
   }
 });
 
-let SessionStorageInternal = {
+var SessionStorageInternal = {
   /**
    * Reads all session storage data from the given docShell.
    * @param docShell

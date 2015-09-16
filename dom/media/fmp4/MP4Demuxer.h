@@ -30,8 +30,6 @@ public:
 
   virtual nsRefPtr<InitPromise> Init() override;
 
-  virtual already_AddRefed<MediaDataDemuxer> Clone() const override;
-
   virtual bool HasTrackType(TrackInfo::TrackType aType) const override;
 
   virtual uint32_t GetNumberTracks(TrackInfo::TrackType aType) const override;
@@ -76,8 +74,6 @@ public:
   nsRefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold) override;
 
   virtual media::TimeIntervals GetBuffered() override;
-
-  virtual int64_t GetEvictionOffset(media::TimeUnit aTime) override;
 
   virtual void BreakCycles() override;
 

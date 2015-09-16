@@ -11,7 +11,7 @@ const TEST_URI = "data:text/html;charset=utf8,Web Console weak crypto " +
 const TEST_URI_PATH = "/browser/browser/devtools/webconsole/test/" +
                       "test-certificate-messages.html";
 
-let gWebconsoleTests = [
+var gWebconsoleTests = [
   {url: "https://sha1ee.example.com" + TEST_URI_PATH,
    name: "SHA1 warning displayed successfully",
    warning: ["SHA-1"], nowarning: ["SSL 3.0", "RC4"]},
@@ -29,8 +29,8 @@ let gWebconsoleTests = [
 ];
 const TRIGGER_MSG = "If you haven't seen ssl warnings yet, you won't";
 
-let gHud = undefined, gContentBrowser;
-let gCurrentTest;
+var gHud = undefined, gContentBrowser;
+var gCurrentTest;
 
 function test() {
   registerCleanupFunction(function() {

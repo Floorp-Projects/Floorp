@@ -17,9 +17,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Bookmarks",
 XPCOMUtils.defineLazyModuleGetter(this, "Tabs",
                                   "resource://gre/modules/CloudSyncTabs.jsm");
 
-let API_VERSION = 1;
+var API_VERSION = 1;
 
-let _CloudSync = function () {
+var _CloudSync = function () {
 };
 
 _CloudSync.prototype = {
@@ -78,7 +78,7 @@ Object.defineProperty(CloudSync, "ready", {
   }
 });
 
-let _cloudSyncInternal = {
+var _cloudSyncInternal = {
   instance: null,
   ready: false,
 };

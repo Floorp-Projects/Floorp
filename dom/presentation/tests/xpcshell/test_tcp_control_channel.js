@@ -9,7 +9,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
 
-let tps;
+var tps;
 
 // Call |run_next_test| if all functions in |names| are called
 function makeJointSuccess(names) {

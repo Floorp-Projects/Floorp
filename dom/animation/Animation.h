@@ -57,7 +57,7 @@ public:
     : DOMEventTargetHelper(aGlobal)
     , mPlaybackRate(1.0)
     , mPendingState(PendingState::NotPending)
-    , mSequenceNum(kUnsequenced)
+    , mAnimationIndex(sNextAnimationIndex++)
     , mIsRunningOnCompositor(false)
     , mFinishedAtLastComposeStyle(false)
     , mIsRelevant(false)
@@ -268,14 +268,6 @@ public:
    * Returns true if this Animation has a lower composite order than aOther.
    */
   virtual bool HasLowerCompositeOrderThan(const Animation& aOther) const;
-  /**
-   * Returns true if this Animation is involved in some sort of
-   * custom composite ordering (such as the ordering defined for CSS
-   * animations or CSS transitions).
-   *
-   * When this is true, this class will not update the sequence number.
-   */
-  virtual bool IsUsingCustomCompositeOrder() const { return false; }
 
   void SetIsRunningOnCompositor() { mIsRunningOnCompositor = true; }
   void ClearIsRunningOnCompositor() { mIsRunningOnCompositor = false; }
@@ -346,8 +338,8 @@ protected:
     Async
   };
 
-  void UpdateTiming(SeekFlag aSeekFlag,
-                    SyncNotifyFlag aSyncNotifyFlag);
+  virtual void UpdateTiming(SeekFlag aSeekFlag,
+                            SyncNotifyFlag aSyncNotifyFlag);
   void UpdateFinishedState(SeekFlag aSeekFlag,
                            SyncNotifyFlag aSyncNotifyFlag);
   void UpdateEffect();
@@ -368,6 +360,7 @@ protected:
 
   bool IsPossiblyOrphanedPendingAnimation() const;
   StickyTimeDuration EffectEnd() const;
+  TimeStamp AnimationTimeToTimeStamp(const StickyTimeDuration& aTime) const;
 
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
@@ -405,13 +398,16 @@ protected:
   enum class PendingState { NotPending, PlayPending, PausePending };
   PendingState mPendingState;
 
-  static uint64_t sNextSequenceNum;
-  static const uint64_t kUnsequenced = UINT64_MAX;
+  static uint64_t sNextAnimationIndex;
 
-  // The sequence number assigned to this animation. This is kUnsequenced
-  // while the animation is in the idle state and is updated each time
-  // the animation transitions out of the idle state.
-  uint64_t mSequenceNum;
+  // The relative position of this animation within the global animation list.
+  // This is kNoIndex while the animation is in the idle state and is updated
+  // each time the animation transitions out of the idle state.
+  //
+  // Note that subclasses such as CSSTransition and CSSAnimation may repurpose
+  // this member to implement their own brand of sorting. As a result, it is
+  // possible for two different objects to have the same index.
+  uint64_t mAnimationIndex;
 
   bool mIsRunningOnCompositor;
   bool mFinishedAtLastComposeStyle;

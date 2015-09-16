@@ -10,7 +10,7 @@ const kAutoStartPref = "browser.privatebrowsing.autostart";
 
 // This will be set to true when the PB mode is autostarted from the command
 // line for the current session.
-let gTemporaryAutoStartMode = false;
+var gTemporaryAutoStartMode = false;
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;

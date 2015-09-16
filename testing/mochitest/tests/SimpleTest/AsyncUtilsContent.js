@@ -6,7 +6,7 @@
 // Set up a dummy environment so that EventUtils works. We need to be careful to
 // pass a window object into each EventUtils method we call rather than having
 // it rely on the |window| global.
-let EventUtils = {};
+var EventUtils = {};
 EventUtils.window = {};
 EventUtils.parent = EventUtils.window;
 EventUtils._EU_Ci = Components.interfaces;

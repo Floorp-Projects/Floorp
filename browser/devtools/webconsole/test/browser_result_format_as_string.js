@@ -9,7 +9,7 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-result-format-as-string.html";
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

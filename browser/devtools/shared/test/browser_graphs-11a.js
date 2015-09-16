@@ -3,7 +3,7 @@
 
 // Tests that bar graph create a legend as expected.
 
-let BarGraphWidget = require("devtools/shared/widgets/BarGraphWidget");
+var BarGraphWidget = require("devtools/shared/widgets/BarGraphWidget");
 
 const CATEGORIES = [
   { color: "#46afe3", label: "Foo" },

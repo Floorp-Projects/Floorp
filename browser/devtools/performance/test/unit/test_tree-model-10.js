@@ -69,7 +69,7 @@ function compareFrameInfo (root, parent) {
   }
 }
 
-let gThread = synthesizeProfileForTest([{
+var gThread = synthesizeProfileForTest([{
   time: 5,
   frames: [
     { location: "(root)" },

@@ -13,9 +13,9 @@
  * See Task documentation at https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Task.jsm.
  */
 
-let {Cu} = require("chrome");
-let {Task} = require("resource://gre/modules/Task.jsm");
-let Promise = require("promise");
+var {Cu} = require("chrome");
+var {Task} = require("resource://gre/modules/Task.jsm");
+var Promise = require("promise");
 
 /**
  * Create an async function from a generator function.

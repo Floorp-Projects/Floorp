@@ -221,7 +221,7 @@ this.PhoneNumberUtils = {
   }
 };
 
-let inParent = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
+var inParent = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
                  .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 if (inParent) {
   XPCOMUtils.defineLazyModuleGetter(this, "PhoneNumber",

@@ -8,7 +8,7 @@
  * This singleton provides functionality to update the current grid to a new
  * set of pinned and blocked sites. It adds, moves and removes sites.
  */
-let gUpdater = {
+var gUpdater = {
   /**
    * Updates the current grid according to its pinned and blocked sites.
    * This removes old, moves existing and creates new sites to fill gaps.

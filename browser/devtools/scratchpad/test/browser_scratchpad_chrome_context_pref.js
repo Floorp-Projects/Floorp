@@ -3,7 +3,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 /* Bug 646070 */
 
-let DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
+var DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
 
 function test()
 {

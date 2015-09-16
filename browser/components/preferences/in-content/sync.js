@@ -29,7 +29,7 @@ const FXA_LOGIN_UNVERIFIED = 1;
 // We are logged in locally, but the server rejected our credentials.
 const FXA_LOGIN_FAILED = 2;
 
-let gSyncPane = {
+var gSyncPane = {
   prefArray: ["engine.bookmarks", "engine.passwords", "engine.prefs",
               "engine.tabs", "engine.history"],
 

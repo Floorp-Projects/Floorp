@@ -260,6 +260,9 @@ if CONFIG['ENABLE_INTL_API']:
         'icu',
     ]
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']
+
 if CONFIG['_MSC_VER']:
     ALLOW_COMPILER_WARNINGS = True
 

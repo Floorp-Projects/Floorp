@@ -19,7 +19,7 @@
 
 "use strict";
 
-let SharedAll;
+var SharedAll;
 if (typeof Components != "undefined") {
   let Cu = Components.utils;
   // Module is opened as a jsm module
@@ -35,18 +35,18 @@ if (typeof Components != "undefined") {
   throw new Error("Please open this module with Component.utils.import or with require()");
 }
 
-let LOG = SharedAll.LOG.bind(SharedAll, "Win", "allthreads");
-let Const = SharedAll.Constants.Win;
+var LOG = SharedAll.LOG.bind(SharedAll, "Win", "allthreads");
+var Const = SharedAll.Constants.Win;
 
 // Open libc
-let libc = new SharedAll.Library("libc", "kernel32.dll");
+var libc = new SharedAll.Library("libc", "kernel32.dll");
 exports.libc = libc;
 
 // Define declareFFI
-let declareFFI = SharedAll.declareFFI.bind(null, libc);
+var declareFFI = SharedAll.declareFFI.bind(null, libc);
 exports.declareFFI = declareFFI;
 
-let Scope = {};
+var Scope = {};
 
 // Define Error
 libc.declareLazy(Scope, "FormatMessage",
@@ -85,7 +85,7 @@ libc.declareLazy(Scope, "FormatMessage",
  * @constructor
  * @extends {OS.Shared.Error}
  */
-let OSError = function OSError(operation = "unknown operation",
+var OSError = function OSError(operation = "unknown operation",
                                lastError = ctypes.winLastError, path = "") {
   operation = operation;
   SharedAll.OSError.call(this, operation, path);
@@ -208,7 +208,7 @@ exports.Error = OSError;
  *
  * @constructor
  */
-let AbstractInfo = function AbstractInfo(path, isDir, isSymLink, size,
+var AbstractInfo = function AbstractInfo(path, isDir, isSymLink, size,
                                          winBirthDate,
                                          lastAccessDate, lastWriteDate,
                                          winAttributes) {
@@ -305,7 +305,7 @@ exports.AbstractInfo = AbstractInfo;
  *
  * @constructor
  */
-let AbstractEntry = function AbstractEntry(isDir, isSymLink, name,
+var AbstractEntry = function AbstractEntry(isDir, isSymLink, name,
                                            winCreationDate, winLastWriteDate,
                                            winLastAccessDate, path) {
   this._isDir = isDir;
@@ -376,7 +376,7 @@ exports.POS_END = Const.FILE_END;
 
 // Special types that need to be defined for communication
 // between threads
-let Type = Object.create(SharedAll.Type);
+var Type = Object.create(SharedAll.Type);
 exports.Type = Type;
 
 /**
@@ -404,7 +404,7 @@ OSError.invalidArgument = function invalidArgument(operation) {
   return new OSError(operation, Const.ERROR_NOT_SUPPORTED);
 };
 
-let EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "declareFFI",
   "libc",
   "Error",

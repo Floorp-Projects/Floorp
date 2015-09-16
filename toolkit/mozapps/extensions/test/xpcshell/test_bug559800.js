@@ -10,7 +10,7 @@ profileDir.append("extensions");
 
 // getting an unused port
 Components.utils.import("resource://testing-common/httpd.js");
-let gServer = new HttpServer();
+var gServer = new HttpServer();
 gServer.start(-1);
 gPort = gServer.identity.primaryPort;
 

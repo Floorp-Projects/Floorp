@@ -6,7 +6,7 @@
  * and requires deflating, and has an extra thread that's a string. Not sure
  * what causes this.
  */
-let STRINGED_THREAD = (function () {
+var STRINGED_THREAD = (function () {
   let thread = {};
 
   thread.libs = [{
@@ -27,7 +27,7 @@ let STRINGED_THREAD = (function () {
   return JSON.stringify(thread);
 })();
 
-let PROFILER_DATA = (function () {
+var PROFILER_DATA = (function () {
   let data = {};
   let threads = data.threads = [];
   let thread = {};
@@ -83,7 +83,7 @@ let PROFILER_DATA = (function () {
   return data;
 })();
 
-let test = Task.async(function*() {
+var test = Task.async(function*() {
   let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
   let { $, EVENTS, PerformanceController, DetailsView, JsCallTreeView } = panel.panelWin;
 

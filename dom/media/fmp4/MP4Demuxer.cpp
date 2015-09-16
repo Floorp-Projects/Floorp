@@ -80,7 +80,7 @@ MP4Demuxer::Init()
 
   // Check that we have enough data to read the metadata.
   if (!mp4_demuxer::MP4Metadata::HasCompleteMetadata(stream)) {
-    return InitPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA, __func__);
+    return InitPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
   }
 
   mInitData = mp4_demuxer::MP4Metadata::Metadata(stream);
@@ -100,22 +100,6 @@ MP4Demuxer::Init()
   }
 
   return InitPromise::CreateAndResolve(NS_OK, __func__);
-}
-
-already_AddRefed<MediaDataDemuxer>
-MP4Demuxer::Clone() const
-{
-  nsRefPtr<MP4Demuxer> demuxer = new MP4Demuxer(mResource);
-  demuxer->mInitData = mInitData;
-  nsRefPtr<mp4_demuxer::BufferStream> bufferstream =
-    new mp4_demuxer::BufferStream(mInitData);
-  demuxer->mMetadata = MakeUnique<mp4_demuxer::MP4Metadata>(bufferstream);
-  if (!mMetadata->GetNumberTracks(mozilla::TrackInfo::kAudioTrack) &&
-      !mMetadata->GetNumberTracks(mozilla::TrackInfo::kVideoTrack)) {
-    NS_WARNING("Couldn't recreate MP4Demuxer");
-    return nullptr;
-  }
-  return demuxer.forget();
 }
 
 bool
@@ -380,15 +364,6 @@ MP4TrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold)
     SkipFailureHolder failure(DemuxerFailureReason::END_OF_STREAM, parsed);
     return SkipAccessPointPromise::CreateAndReject(Move(failure), __func__);
   }
-}
-
-int64_t
-MP4TrackDemuxer::GetEvictionOffset(media::TimeUnit aTime)
-{
-  EnsureUpToDateIndex();
-  MonitorAutoLock mon(mMonitor);
-  uint64_t offset = mIndex->GetEvictionOffset(aTime.ToMicroseconds());
-  return int64_t(offset == std::numeric_limits<uint64_t>::max() ? 0 : offset);
 }
 
 media::TimeIntervals

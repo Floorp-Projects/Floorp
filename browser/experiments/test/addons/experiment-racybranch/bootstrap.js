@@ -1,8 +1,8 @@
-let {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource:///modules/experiments/Experiments.jsm");
 
-let gStarted = false;
+var gStarted = false;
 
 function startup(data, reasonCode) {
   if (gStarted) {

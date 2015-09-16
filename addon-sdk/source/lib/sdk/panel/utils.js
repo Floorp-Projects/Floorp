@@ -411,7 +411,7 @@ function style(panel) {
 }
 exports.style = style;
 
-let getContentFrame = panel =>
+var getContentFrame = panel =>
     (isOpen(panel) || isOpening(panel)) ?
     panel.firstChild :
     panel.backgroundFrame

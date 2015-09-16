@@ -3,16 +3,16 @@
 
 /* Tests for bug 537013 to ensure proper tab-sequestration of find bar. */
 
-let tabs = [];
-let texts = [
+var tabs = [];
+var texts = [
   "This side up.",
   "The world is coming to an end. Please log off.",
   "Klein bottle for sale. Inquire within.",
   "To err is human; to forgive is not company policy."
 ];
 
-let Clipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
-let HasFindClipboard = Clipboard.supportsFindClipboard();
+var Clipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
+var HasFindClipboard = Clipboard.supportsFindClipboard();
 
 function addTabWithText(aText, aCallback) {
   let newTab = gBrowser.addTab("data:text/html;charset=utf-8,<h1 id='h1'>" +
@@ -29,7 +29,7 @@ function setFindString(aString) {
   is(gFindBar._findField.value, aString, "Set the field correctly!");
 }
 
-let newWindow;
+var newWindow;
 
 function test() {
   waitForExplicitFinish();

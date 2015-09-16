@@ -49,7 +49,7 @@ AboutModule.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule])
 };
 
-let AboutModuleFactory = {
+var AboutModuleFactory = {
   createInstance: function(aOuter, aIID) {
     if (aOuter)
       throw Components.results.NS_ERROR_NO_AGGREGATION;

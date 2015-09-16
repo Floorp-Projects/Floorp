@@ -5,12 +5,12 @@
 "use strict";
 
 // Avoid leaks by using tmp for imports...
-let tmp = {};
+var tmp = {};
 Cu.import("resource://gre/modules/Promise.jsm", tmp);
 Cu.import("resource:///modules/CustomizableUI.jsm", tmp);
-let {Promise, CustomizableUI} = tmp;
+var {Promise, CustomizableUI} = tmp;
 
-let ChromeUtils = {};
+var ChromeUtils = {};
 Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js", ChromeUtils);
 
 Services.prefs.setBoolPref("browser.uiCustomization.skipSourceNodeCheck", true);
@@ -21,7 +21,7 @@ registerCleanupFunction(() => Services.prefs.clearUserPref("browser.uiCustomizat
 CustomizableUI.destroyWidget("e10s-button");
 CustomizableUI.removeWidgetFromArea("e10s-button");
 
-let {synthesizeDragStart, synthesizeDrop} = ChromeUtils;
+var {synthesizeDragStart, synthesizeDrop} = ChromeUtils;
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kTabEventFailureTimeoutInMs = 20000;
@@ -35,7 +35,7 @@ function createDummyXULButton(id, label) {
   return btn;
 }
 
-let gAddedToolbars = new Set();
+var gAddedToolbars = new Set();
 
 function createToolbarWithPlacements(id, placements = []) {
   gAddedToolbars.add(id);

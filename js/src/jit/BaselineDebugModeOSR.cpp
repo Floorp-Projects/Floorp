@@ -8,6 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jit/BaselineIC.h"
 #include "jit/JitcodeMap.h"
 #include "jit/Linker.h"
 #include "jit/PerfSpewer.h"

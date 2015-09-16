@@ -188,5 +188,5 @@ stringEnumerator.prototype = {
     }
 };
 
-let component = [INIProcessorFactory];
+var component = [INIProcessorFactory];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);

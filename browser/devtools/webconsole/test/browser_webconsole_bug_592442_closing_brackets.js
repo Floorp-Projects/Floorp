@@ -17,7 +17,7 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,test for bug 592442";
 
-let test = asyncTest(function*() {
+var test = asyncTest(function*() {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
   hud.jsterm.clearOutput();

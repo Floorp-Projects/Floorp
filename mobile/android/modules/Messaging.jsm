@@ -27,7 +27,7 @@ function sendMessageToJava(aMessage, aCallback) {
   }
 }
 
-let Messaging = {
+var Messaging = {
   /**
    * Add a listener for the given message.
    *
@@ -151,7 +151,7 @@ let Messaging = {
   })
 };
 
-let requestHandler = {
+var requestHandler = {
   _listeners: {},
 
   addListener: function (aListener, aMessage) {

@@ -8,7 +8,7 @@
 // locally) with and without OCSP stapling enabled to determine that good
 // things happen and bad things don't.
 
-let gExpectOCSPRequest;
+var gExpectOCSPRequest;
 
 function add_ocsp_test(aHost, aExpectedResult, aStaplingEnabled) {
   add_connection_test(aHost, aExpectedResult,

@@ -17,20 +17,20 @@ const CC = Components.Constructor;
 // Uncomment this pref to dump all devtools emitted events to the console.
 // Services.prefs.setBoolPref("devtools.dump.emit", true);
 
-let TEST_URL_ROOT = "http://example.com/browser/browser/devtools/inspector/test/";
-let ROOT_TEST_DIR = getRootDirectory(gTestPath);
+var TEST_URL_ROOT = "http://example.com/browser/browser/devtools/inspector/test/";
+var ROOT_TEST_DIR = getRootDirectory(gTestPath);
 
 // All test are asynchronous
 waitForExplicitFinish();
 
-let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let {TargetFactory} = require("devtools/framework/target");
-let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-let promise = require("promise");
+var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var {TargetFactory} = require("devtools/framework/target");
+var {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var promise = require("promise");
 
 // Import the GCLI test helper
-let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
+var testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers.js", this);
 
 // Import helpers registering the test-actor in remote targets
@@ -66,7 +66,7 @@ registerCleanupFunction(function*() {
  * @param {String} url The url to be loaded in the new tab
  * @return a promise that resolves to the tab object when the url is loaded
  */
-let addTab = Task.async(function* (url) {
+var addTab = Task.async(function* (url) {
   info("Adding a new tab with URL: '" + url + "'");
 
   window.focus();
@@ -80,7 +80,7 @@ let addTab = Task.async(function* (url) {
   return tab;
 });
 
-let navigateTo = function (toolbox, url) {
+var navigateTo = function (toolbox, url) {
   let activeTab = toolbox.target.activeTab;
   return activeTab.navigateTo(url);
 };
@@ -145,7 +145,7 @@ function selectAndHighlightNode(selector, inspector) {
  * to highlight the node upon selection
  * @return {Promise} Resolves when the inspector is updated with the new node
  */
-let selectNode = Task.async(function*(selector, inspector, reason="test") {
+var selectNode = Task.async(function*(selector, inspector, reason="test") {
   info("Selecting the node for '" + selector + "'");
   let nodeFront = yield getNodeFront(selector, inspector);
   let updated = inspector.once("inspector-updated");
@@ -160,7 +160,7 @@ let selectNode = Task.async(function*(selector, inspector, reason="test") {
  * @return A promise that is resolved once the tab and inspector have loaded
  *         with an object: { tab, toolbox, inspector }.
  */
-let openInspectorForURL = Task.async(function*(url, hostType) {
+var openInspectorForURL = Task.async(function*(url, hostType) {
   let tab = yield addTab(url);
   let { inspector, toolbox, testActor } = yield openInspector(null, hostType);
   return { tab, inspector, toolbox, testActor };
@@ -174,7 +174,7 @@ let openInspectorForURL = Task.async(function*(url, hostType) {
  * @param {String} hostType Optional hostType, as defined in Toolbox.HostType
  * @return a promise that resolves when the inspector is ready
  */
-let openInspector = Task.async(function*(cb, hostType) {
+var openInspector = Task.async(function*(cb, hostType) {
   info("Opening the inspector");
   let target = TargetFactory.forTab(gBrowser.selectedTab);
 
@@ -249,7 +249,7 @@ function getNodeFront(selector, {walker}) {
  * to highlight the node upon selection
  * @return {Promise} Resolves when the inspector is updated with the new node
  */
-let getNodeFrontInFrame = Task.async(function*(selector, frameSelector,
+var getNodeFrontInFrame = Task.async(function*(selector, frameSelector,
                                                inspector, reason="test") {
   let iframe = yield getNodeFront(frameSelector, inspector);
   let {nodes} = yield inspector.walker.children(iframe);
@@ -283,7 +283,7 @@ function synthesizeKeyFromKeyTag(aKeyId, aDocument = null) {
   EventUtils.synthesizeKey(name, modifiers);
 }
 
-let focusSearchBoxUsingShortcut = Task.async(function* (panelWin, callback) {
+var focusSearchBoxUsingShortcut = Task.async(function* (panelWin, callback) {
   info("Focusing search box");
   let searchBox = panelWin.document.getElementById("inspector-searchbox");
   let focused = once(searchBox, "focus");
@@ -318,7 +318,7 @@ function getContainerForNodeFront(nodeFront, {markup}) {
  * loaded in the toolbox
  * @return {MarkupContainer}
  */
-let getContainerForSelector = Task.async(function*(selector, inspector) {
+var getContainerForSelector = Task.async(function*(selector, inspector) {
   info("Getting the markup-container for node " + selector);
   let nodeFront = yield getNodeFront(selector, inspector);
   let container = getContainerForNodeFront(nodeFront, inspector);
@@ -335,7 +335,7 @@ let getContainerForSelector = Task.async(function*(selector, inspector) {
  * @return {Promise} Resolves when the container is hovered and the higlighter
  * is shown on the corresponding node
  */
-let hoverContainer = Task.async(function*(selector, inspector) {
+var hoverContainer = Task.async(function*(selector, inspector) {
   info("Hovering over the markup-container for node " + selector);
 
   let nodeFront = yield getNodeFront(selector, inspector);
@@ -355,7 +355,7 @@ let hoverContainer = Task.async(function*(selector, inspector) {
  * loaded in the toolbox
  * @return {Promise} Resolves when the node has been selected.
  */
-let clickContainer = Task.async(function*(selector, inspector) {
+var clickContainer = Task.async(function*(selector, inspector) {
   info("Clicking on the markup-container for node " + selector);
 
   let nodeFront = yield getNodeFront(selector, inspector);

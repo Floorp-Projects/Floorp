@@ -5,8 +5,8 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/Task.jsm");
-let {require} = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
-let promise = require("promise");
+var {require} = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
+var promise = require("promise");
 
 const TESTCASE_URI_HTML = TEST_BASE_HTTP + "sourcemaps-watching.html";
 const TESTCASE_URI_CSS = TEST_BASE_HTTP + "sourcemap-css/sourcemaps.css";
@@ -22,11 +22,11 @@ const CSS_TEXT = "* { color: blue }";
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-let tempScope = {};
+var tempScope = {};
 Components.utils.import("resource://gre/modules/FileUtils.jsm", tempScope);
 Components.utils.import("resource://gre/modules/NetUtil.jsm", tempScope);
-let FileUtils = tempScope.FileUtils;
-let NetUtil = tempScope.NetUtil;
+var FileUtils = tempScope.FileUtils;
+var NetUtil = tempScope.NetUtil;
 
 function test() {
   waitForExplicitFinish();

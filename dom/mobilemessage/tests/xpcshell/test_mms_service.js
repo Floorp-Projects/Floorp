@@ -7,7 +7,7 @@ function newMmsTransactionHelper() {
   MMS_Service.debug = do_print;
   return MMS_Service.gMmsTransactionHelper;
 }
-let CallFunc = newMmsTransactionHelper();
+var CallFunc = newMmsTransactionHelper();
 function run_test() {
   run_next_test();
 }

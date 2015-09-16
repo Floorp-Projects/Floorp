@@ -2,17 +2,17 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-let Cu = Components.utils;
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-let Cr = Components.results;
+var Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 
-let asyncShutdownService = Cc["@mozilla.org/async-shutdown-service;1"].
+var asyncShutdownService = Cc["@mozilla.org/async-shutdown-service;1"].
   getService(Ci.nsIAsyncShutdownService);
 
 

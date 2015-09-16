@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let mDBConn = DBConn();
+var mDBConn = DBConn();
 
 function promiseOnClearHistoryObserved() {
   let deferred = Promise.defer();
@@ -35,7 +35,7 @@ function promiseOnClearHistoryObserved() {
 // upon in the first asynchronous test.  It is resolved when the
 // "places-init-complete" notification is received. We cannot initialize it in
 // the asynchronous test, because then it's too late to register the observer.
-let promiseInit;
+var promiseInit;
 
 function run_test() {
   // places-init-complete is notified after run_test, and it will

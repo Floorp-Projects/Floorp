@@ -84,7 +84,7 @@ add_task(function* test_remote() {
 });
 
 // The set of page transitions
-let TESTS = [
+var TESTS = [
   [
     "chrome -> chrome",
     CHROME, false,
@@ -118,7 +118,7 @@ let TESTS = [
 ];
 
 // The different ways to transition from one page to another
-let TRANSITIONS = [
+var TRANSITIONS = [
 // Loads the new page by calling browser.loadURI directly
 function* loadURI(browser, uri) {
   info("Calling browser.loadURI");

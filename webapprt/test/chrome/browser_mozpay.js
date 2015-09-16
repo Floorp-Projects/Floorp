@@ -1,5 +1,5 @@
 Cu.import("resource://gre/modules/Services.jsm");
-let { PaymentManager } = Cu.import("resource://gre/modules/Payment.jsm", {});
+var { PaymentManager } = Cu.import("resource://gre/modules/Payment.jsm", {});
 Cu.import("resource://webapprt/modules/WebappRT.jsm");
 
 function test() {

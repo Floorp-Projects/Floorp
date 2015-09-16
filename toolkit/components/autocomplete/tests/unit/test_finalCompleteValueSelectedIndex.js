@@ -4,7 +4,7 @@ function AutoCompleteResult(aResultValues) {
 }
 AutoCompleteResult.prototype = Object.create(AutoCompleteResultBase.prototype);
 
-let selectByWasCalled = false;
+var selectByWasCalled = false;
 function AutoCompleteInput(aSearches) {
   this.searches = aSearches;
   this.popup.selectedIndex = 0;

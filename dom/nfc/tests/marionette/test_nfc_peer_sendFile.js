@@ -4,7 +4,7 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
-let MANIFEST_URL = "app://system.gaiamobile.org/manifest.webapp";
+var MANIFEST_URL = "app://system.gaiamobile.org/manifest.webapp";
 
 function sendFile(msg) {
   log("sendFile msg="+JSON.stringify(msg));
@@ -36,7 +36,7 @@ function testSendFile() {
   toggleNFC(true).then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0));
 }
 
-let tests = [
+var tests = [
   testSendFile
 ];
 

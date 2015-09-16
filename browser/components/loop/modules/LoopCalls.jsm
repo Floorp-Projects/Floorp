@@ -192,7 +192,7 @@ CallProgressSocket.prototype = {
  * and register with the push server. Then we need to take the result of that
  * and register with the Loop server.
  */
-let LoopCallsInternal = {
+var LoopCallsInternal = {
   mocks: {
     webSocket: undefined
   },

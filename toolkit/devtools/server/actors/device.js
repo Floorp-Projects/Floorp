@@ -13,7 +13,7 @@ const {getSystemInfo, getSetting} = require("devtools/toolkit/shared/system");
 
 Cu.import("resource://gre/modules/PermissionsTable.jsm")
 
-let DeviceActor = exports.DeviceActor = protocol.ActorClass({
+var DeviceActor = exports.DeviceActor = protocol.ActorClass({
   typeName: "device",
 
   _desc: null,
@@ -70,7 +70,7 @@ let DeviceActor = exports.DeviceActor = protocol.ActorClass({
   }, {request: {},response: { value: RetVal("json")}})
 });
 
-let DeviceFront = protocol.FrontClass(DeviceActor, {
+var DeviceFront = protocol.FrontClass(DeviceActor, {
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = form.deviceActor;

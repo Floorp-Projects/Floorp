@@ -104,7 +104,7 @@ function test_params_gets_async()
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
-let tests = [
+var tests = [
   test_params_enumerate,
   test_params_prototype,
   test_row_prototype,

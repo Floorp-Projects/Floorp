@@ -5,7 +5,7 @@
 
 // Common code shared by browser_toolbox_options_disable_cache-*.js
 const TEST_URI = URL_ROOT + "browser_toolbox_options_disable_cache.sjs";
-let tabs = [
+var tabs = [
 {
   title: "Tab 0",
   desc: "Toggles cache on.",

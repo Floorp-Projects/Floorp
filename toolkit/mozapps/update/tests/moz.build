@@ -57,6 +57,3 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     USE_STATIC_LIBS = True
     if CONFIG['GNU_CC']:
         WIN32_EXE_LDFLAGS += ['-municode']
-
-# XXX: We should fix these warnings
-ALLOW_COMPILER_WARNINGS = True

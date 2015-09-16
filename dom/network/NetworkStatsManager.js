@@ -15,8 +15,8 @@ Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 
 // Ensure NetworkStatsService and NetworkStatsDB are loaded in the parent process
 // to receive messages from the child processes.
-let appInfo = Cc["@mozilla.org/xre/app-info;1"];
-let isParentProcess = !appInfo || appInfo.getService(Ci.nsIXULRuntime)
+var appInfo = Cc["@mozilla.org/xre/app-info;1"];
+var isParentProcess = !appInfo || appInfo.getService(Ci.nsIXULRuntime)
                         .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 if (isParentProcess) {
   Cu.import("resource://gre/modules/NetworkStatsService.jsm");

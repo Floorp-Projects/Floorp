@@ -329,7 +329,7 @@ function reset_preferences(win) {
     pref.value = gPrefCache.get(pref.name);
 }
 
-let testRunner;
+var testRunner;
 function run_test_subset(subset) {
   Services.prefs.setBoolPref("browser.preferences.instantApply", true);
   dump("subset: " + [x.name for (x of subset)].join(",") + "\n");

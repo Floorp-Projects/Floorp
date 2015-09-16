@@ -9,8 +9,8 @@
 const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 const PREFERRED_URL = EXAMPLE_URL + "code_script-switching-02.js";
 
-let gTab, gDebuggee, gPanel, gDebugger;
-let gSources;
+var gTab, gDebuggee, gPanel, gDebugger;
+var gSources;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {

@@ -64,7 +64,7 @@ function setupPingArchive() {
   }
 }
 
-let gTests = [
+var gTests = [
 
 {
   desc: "Test the remote commands",

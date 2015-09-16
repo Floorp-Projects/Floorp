@@ -97,7 +97,7 @@ OptionsStore.prototype = {
 /**
  * The low level structure of a tooltip is a XUL element (a <panel>).
  */
-let PanelFactory = {
+var PanelFactory = {
   /**
    * Get a new XUL panel instance.
    * @param {XULDocument} doc
@@ -1714,7 +1714,7 @@ SwatchFilterTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototy
 function L10N() {}
 L10N.prototype = {};
 
-let l10n = new L10N();
+var l10n = new L10N();
 
 loader.lazyGetter(L10N.prototype, "strings", () => {
   return Services.strings.createBundle(

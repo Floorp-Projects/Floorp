@@ -9,7 +9,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 
-let fxAccountsCommon = {};
+var fxAccountsCommon = {};
 Cu.import("resource://gre/modules/FxAccountsCommon.js", fxAccountsCommon);
 
 // for master-password utilities
@@ -102,7 +102,7 @@ function updateDisplayedEmail(user) {
   }
 }
 
-let wrapper = {
+var wrapper = {
   iframe: null,
 
   init: function (url, urlParams) {

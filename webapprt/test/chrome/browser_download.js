@@ -1,5 +1,5 @@
 Cu.import("resource://gre/modules/Services.jsm");
-let { Downloads } = Cu.import("resource://gre/modules/Downloads.jsm", {});
+var { Downloads } = Cu.import("resource://gre/modules/Downloads.jsm", {});
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
@@ -21,13 +21,13 @@ function getFile(aFilename) {
   return file;
 }
 
-let fileDownloaded = false;
+var fileDownloaded = false;
 
-let download = new DummyDownload("download.test");
+var download = new DummyDownload("download.test");
 download.state = 1;
 download.percentComplete = 100;
 
-let winObserver = function(win, topic) {
+var winObserver = function(win, topic) {
   if (topic == "domwindowopened") {
     win.addEventListener("load", function onLoadWindow() {
       win.removeEventListener("load", onLoadWindow, false);
@@ -57,7 +57,7 @@ let winObserver = function(win, topic) {
 
 Services.ww.registerNotification(winObserver);
 
-let MockFilePicker = SpecialPowers.MockFilePicker;
+var MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 MockFilePicker.returnFiles = [download.file];
 MockFilePicker.showCallback = function() {
@@ -65,7 +65,7 @@ MockFilePicker.showCallback = function() {
   return MockFilePicker.returnOK;
 }
 
-let downloadListener = {
+var downloadListener = {
   onDownloadAdded: function(aDownload) {
     if (aDownload.succeeded) {
       let downloadedFile = getFile(aDownload.target.path);
@@ -93,7 +93,7 @@ let downloadListener = {
   },
 };
 
-let downloadList;
+var downloadList;
 
 registerCleanupFunction(function() {
   Services.wm.getMostRecentWindow("Download:Manager").close();

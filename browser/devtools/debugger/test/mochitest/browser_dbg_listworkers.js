@@ -1,6 +1,6 @@
-let TAB_URL = EXAMPLE_URL + "doc_listworkers-tab.html";
-let WORKER1_URL = "code_listworkers-worker1.js";
-let WORKER2_URL = "code_listworkers-worker2.js";
+var TAB_URL = EXAMPLE_URL + "doc_listworkers-tab.html";
+var WORKER1_URL = "code_listworkers-worker1.js";
+var WORKER2_URL = "code_listworkers-worker2.js";
 
 function test() {
   Task.spawn(function* () {

@@ -7,7 +7,7 @@
  * FlameGraph view containing a pyramid-like visualization of a profile,
  * controlled by DetailsView.
  */
-let JsFlameGraphView = Heritage.extend(DetailsSubview, {
+var JsFlameGraphView = Heritage.extend(DetailsSubview, {
 
   shouldUpdateWhileMouseIsActive: true,
 

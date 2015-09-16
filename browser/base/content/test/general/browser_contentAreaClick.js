@@ -14,7 +14,7 @@
  * correctly prevent default events, and follows the correct code path.
  */
 
-let gTests = [
+var gTests = [
 
   {
     desc: "Simple left click",
@@ -160,7 +160,7 @@ let gTests = [
 ];
 
 // Array of method names that will be replaced in the new window.
-let gReplacedMethods = [
+var gReplacedMethods = [
   "middleMousePaste",
   "urlSecurityCheck",
   "loadURI",
@@ -171,13 +171,13 @@ let gReplacedMethods = [
 ];
 
 // Reference to the new window.
-let gTestWin = null;
+var gTestWin = null;
 
 // List of methods invoked by a specific call to contentAreaClick.
-let gInvokedMethods = [];
+var gInvokedMethods = [];
 
 // The test currently running.
-let gCurrentTest = null;
+var gCurrentTest = null;
 
 function test() {
   waitForExplicitFinish();
@@ -198,7 +198,7 @@ function test() {
 }
 
 // Click handler used to steal click events.
-let gClickHandler = {
+var gClickHandler = {
   handleEvent: function (event) {
     let linkId = event.target.id || event.target.localName;
     is(event.type, "click",

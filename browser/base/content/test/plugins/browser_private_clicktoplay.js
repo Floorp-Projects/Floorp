@@ -1,15 +1,15 @@
-let rootDir = getRootDirectory(gTestPath);
+var rootDir = getRootDirectory(gTestPath);
 const gTestRoot = rootDir;
 const gHttpTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 
-let gTestBrowser = null;
-let gNextTest = null;
-let gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
+var gTestBrowser = null;
+var gNextTest = null;
+var gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-let gPrivateWindow = null;
-let gPrivateBrowser = null;
+var gPrivateWindow = null;
+var gPrivateBrowser = null;
 
 function pageLoad(aEvent) {
   // The plugin events are async dispatched and can come after the load event

@@ -7,8 +7,8 @@ Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
-let engine = new BookmarksEngine(Service);
-let store = engine._store;
+var engine = new BookmarksEngine(Service);
+var store = engine._store;
 
 function run_test() {
   initTestLogging("Trace");

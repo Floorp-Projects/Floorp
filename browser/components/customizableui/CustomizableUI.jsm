@@ -53,43 +53,43 @@ const kSubviewEvents = [
  * The current version. We can use this to auto-add new default widgets as necessary.
  * (would be const but isn't because of testing purposes)
  */
-let kVersion = 4;
+var kVersion = 4;
 
 /**
  * gPalette is a map of every widget that CustomizableUI.jsm knows about, keyed
  * on their IDs.
  */
-let gPalette = new Map();
+var gPalette = new Map();
 
 /**
  * gAreas maps area IDs to Sets of properties about those areas. An area is a
  * place where a widget can be put.
  */
-let gAreas = new Map();
+var gAreas = new Map();
 
 /**
  * gPlacements maps area IDs to Arrays of widget IDs, indicating that the widgets
  * are placed within that area (either directly in the area node, or in the
  * customizationTarget of the node).
  */
-let gPlacements = new Map();
+var gPlacements = new Map();
 
 /**
  * gFuturePlacements represent placements that will happen for areas that have
  * not yet loaded (due to lazy-loading). This can occur when add-ons register
  * widgets.
  */
-let gFuturePlacements = new Map();
+var gFuturePlacements = new Map();
 
 //XXXunf Temporary. Need a nice way to abstract functions to build widgets
 //       of these types.
-let gSupportedWidgetTypes = new Set(["button", "view", "custom"]);
+var gSupportedWidgetTypes = new Set(["button", "view", "custom"]);
 
 /**
  * gPanelsForWindow is a list of known panels in a window which we may need to close
  * should command events fire which target them.
  */
-let gPanelsForWindow = new WeakMap();
+var gPanelsForWindow = new WeakMap();
 
 /**
  * gSeenWidgets remembers which widgets the user has seen for the first time
@@ -97,7 +97,7 @@ let gPanelsForWindow = new WeakMap();
  * before, it can be put in its default location. Otherwise, it remains in the
  * palette.
  */
-let gSeenWidgets = new Set();
+var gSeenWidgets = new Set();
 
 /**
  * gDirtyAreaCache is a set of area IDs for areas where items have been added,
@@ -105,48 +105,48 @@ let gSeenWidgets = new Set();
  * optimize building of toolbars in the default case where no toolbars should
  * be "dirty".
  */
-let gDirtyAreaCache = new Set();
+var gDirtyAreaCache = new Set();
 
 /**
  * gPendingBuildAreas is a map from area IDs to map from build nodes to their
  * existing children at the time of node registration, that are waiting
  * for the area to be registered
  */
-let gPendingBuildAreas = new Map();
+var gPendingBuildAreas = new Map();
 
-let gSavedState = null;
-let gRestoring = false;
-let gDirty = false;
-let gInBatchStack = 0;
-let gResetting = false;
-let gUndoResetting = false;
+var gSavedState = null;
+var gRestoring = false;
+var gDirty = false;
+var gInBatchStack = 0;
+var gResetting = false;
+var gUndoResetting = false;
 
 /**
  * gBuildAreas maps area IDs to actual area nodes within browser windows.
  */
-let gBuildAreas = new Map();
+var gBuildAreas = new Map();
 
 /**
  * gBuildWindows is a map of windows that have registered build areas, mapped
  * to a Set of known toolboxes in that window.
  */
-let gBuildWindows = new Map();
+var gBuildWindows = new Map();
 
-let gNewElementCount = 0;
-let gGroupWrapperCache = new Map();
-let gSingleWrapperCache = new WeakMap();
-let gListeners = new Set();
+var gNewElementCount = 0;
+var gGroupWrapperCache = new Map();
+var gSingleWrapperCache = new WeakMap();
+var gListeners = new Set();
 
-let gUIStateBeforeReset = {
+var gUIStateBeforeReset = {
   uiCustomizationState: null,
   drawInTitlebar: null,
   gUIStateBeforeReset: null,
 };
 
-let gModuleName = "[CustomizableUI]";
+var gModuleName = "[CustomizableUI]";
 #include logging.js
 
-let CustomizableUIInternal = {
+var CustomizableUIInternal = {
   initialize: function() {
     LOG("Initializing");
 

@@ -13,9 +13,9 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-console.html";
 
-let HUD, outputNode;
+var HUD, outputNode;
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

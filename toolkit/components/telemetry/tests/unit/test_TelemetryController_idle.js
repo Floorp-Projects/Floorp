@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 const PREF_ENABLED = "toolkit.telemetry.enabled";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
-let gHttpServer = null;
+var gHttpServer = null;
 
 function run_test() {
   do_test_pending();

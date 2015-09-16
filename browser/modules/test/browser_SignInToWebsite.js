@@ -19,8 +19,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "IdentityService",
 const TEST_ORIGIN = "https://example.com";
 const TEST_EMAIL = "user@example.com";
 
-let gTestIndex = 0;
-let outerWinId = gBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+var gTestIndex = 0;
+var outerWinId = gBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
 
 function NotificationBase(aNotId) {
@@ -43,7 +43,7 @@ NotificationBase.prototype = {
   },
 };
 
-let tests = [
+var tests = [
   {
     name: "test_request_required_typed",
 
@@ -337,9 +337,9 @@ function cleanUp() {
   Services.prefs.clearUserPref("toolkit.identity.debug");
 }
 
-let gActiveListeners = {};
-let gActiveObservers = {};
-let gShownState = {};
+var gActiveListeners = {};
+var gActiveObservers = {};
+var gShownState = {};
 
 function runNextTest() {
   let nextTest = tests[gTestIndex];

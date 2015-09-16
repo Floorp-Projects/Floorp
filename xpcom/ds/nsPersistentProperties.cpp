@@ -51,10 +51,10 @@ ArenaStrdup(const nsAFlatCString& aString, PLArenaPool* aArena)
 }
 
 static const struct PLDHashTableOps property_HashTableOps = {
-  PL_DHashStringKey,
-  PL_DHashMatchStringKey,
-  PL_DHashMoveEntryStub,
-  PL_DHashClearEntryStub,
+  PLDHashTable::HashStringKey,
+  PLDHashTable::MatchStringKey,
+  PLDHashTable::MoveEntryStub,
+  PLDHashTable::ClearEntryStub,
   nullptr,
 };
 
@@ -523,8 +523,8 @@ nsPersistentProperties::SetStringProperty(const nsACString& aKey,
                                           nsAString& aOldValue)
 {
   const nsAFlatCString&  flatKey = PromiseFlatCString(aKey);
-  PropertyTableEntry* entry = static_cast<PropertyTableEntry*>(
-    PL_DHashTableAdd(&mTable, flatKey.get(), mozilla::fallible));
+  auto entry = static_cast<PropertyTableEntry*>
+                          (mTable.Add(flatKey.get(), mozilla::fallible));
 
   if (entry->mKey) {
     aOldValue = entry->mValue;
@@ -552,9 +552,7 @@ nsPersistentProperties::GetStringProperty(const nsACString& aKey,
 {
   const nsAFlatCString&  flatKey = PromiseFlatCString(aKey);
 
-  PropertyTableEntry* entry = static_cast<PropertyTableEntry*>(
-    PL_DHashTableSearch(&mTable, flatKey.get()));
-
+  auto entry = static_cast<PropertyTableEntry*>(mTable.Search(flatKey.get()));
   if (!entry) {
     return NS_ERROR_FAILURE;
   }
@@ -612,7 +610,7 @@ nsPersistentProperties::Undefine(const char* aProp)
 NS_IMETHODIMP
 nsPersistentProperties::Has(const char* aProp, bool* aResult)
 {
-  *aResult = !!PL_DHashTableSearch(&mTable, aProp);
+  *aResult = !!mTable.Search(aProp);
   return NS_OK;
 }
 

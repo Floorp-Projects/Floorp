@@ -2,9 +2,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let tab1;
-let tab2;
-let sp;
+var tab1;
+var tab2;
+var sp;
 
 function test()
 {

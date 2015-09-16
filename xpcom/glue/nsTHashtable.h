@@ -125,8 +125,7 @@ public:
   EntryType* GetEntry(KeyType aKey) const
   {
     return static_cast<EntryType*>(
-      PL_DHashTableSearch(const_cast<PLDHashTable*>(&mTable),
-                          EntryType::KeyToPointer(aKey)));
+      const_cast<PLDHashTable*>(&mTable)->Search(EntryType::KeyToPointer(aKey)));
   }
 
   /**
@@ -144,16 +143,15 @@ public:
    */
   EntryType* PutEntry(KeyType aKey)
   {
-    return static_cast<EntryType*>  // infallible add
-      (PL_DHashTableAdd(&mTable, EntryType::KeyToPointer(aKey)));
+    // infallible add
+    return static_cast<EntryType*>(mTable.Add(EntryType::KeyToPointer(aKey)));
   }
 
   MOZ_WARN_UNUSED_RESULT
   EntryType* PutEntry(KeyType aKey, const fallible_t&)
   {
-    return static_cast<EntryType*>
-      (PL_DHashTableAdd(&mTable, EntryType::KeyToPointer(aKey),
-                        mozilla::fallible));
+    return static_cast<EntryType*>(mTable.Add(EntryType::KeyToPointer(aKey),
+                                              mozilla::fallible));
   }
 
   /**
@@ -162,8 +160,7 @@ public:
    */
   void RemoveEntry(KeyType aKey)
   {
-    PL_DHashTableRemove(&mTable,
-                        EntryType::KeyToPointer(aKey));
+    mTable.Remove(EntryType::KeyToPointer(aKey));
   }
 
   /**
@@ -176,7 +173,7 @@ public:
    */
   void RawRemoveEntry(EntryType* aEntry)
   {
-    PL_DHashTableRawRemove(&mTable, aEntry);
+    mTable.RawRemove(aEntry);
   }
 
   // This is an iterator that also allows entry removal. Example usage:
@@ -285,7 +282,7 @@ public:
    */
   void MarkImmutable()
   {
-    PL_DHashMarkTableImmutable(&mTable);
+    mTable.MarkImmutable();
   }
 #endif
 
@@ -348,7 +345,7 @@ nsTHashtable<EntryType>::Ops()
   {
     s_HashKey,
     s_MatchEntry,
-    EntryType::ALLOW_MEMMOVE ? ::PL_DHashMoveEntryStub : s_CopyEntry,
+    EntryType::ALLOW_MEMMOVE ? PLDHashTable::MoveEntryStub : s_CopyEntry,
     s_ClearEntry,
     s_InitEntry
   };

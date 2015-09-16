@@ -142,7 +142,7 @@ function testCompositor(win, ctx) {
   return testPassed;
 }
 
-let listener = {
+var listener = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
   win: null,

@@ -8,8 +8,8 @@
 // A content script we inject into one of our browsers
 const TEST_CONTENT_HELPER = "chrome://mochitests/content/browser/browser/base/content/test/social/social_crash_content_helper.js";
 
-let {getFrameWorkerHandle} = Cu.import("resource://gre/modules/FrameWorker.jsm", {});
-let {Promise} = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+var {getFrameWorkerHandle} = Cu.import("resource://gre/modules/FrameWorker.jsm", {});
+var {Promise} = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 
 function test() {
   waitForExplicitFinish();
@@ -28,7 +28,7 @@ function test() {
   });
 }
 
-let gProviders = [
+var gProviders = [
   {
     name: "provider 1",
     origin: "https://example.com",
@@ -113,7 +113,7 @@ function ensureWorkerLoaded(manifest, callback) {
 
 // This observer is needed so we can clean up all evidence of the crash so
 // the testrunner thinks things are peachy.
-let crashObserver = function(callback) {
+var crashObserver = function(callback) {
   this.callback = callback;
 }
 crashObserver.prototype = {

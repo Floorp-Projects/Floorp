@@ -14,7 +14,7 @@ const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-u
 loader.lazyRequireGetter(this, "Task", "resource://gre/modules/Task.jsm", true);
 loader.lazyRequireGetter(this, "uuid", "sdk/util/uuid", true);
 
-let mm = null;
+var mm = null;
 
 exports.consoleMethod = function (...args) {
   if (!mm) {

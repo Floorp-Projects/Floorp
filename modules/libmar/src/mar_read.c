@@ -337,7 +337,7 @@ int get_mar_file_info_fp(FILE *fp,
     }
   }
 
-  if (ftell(fp) == offsetToContent) {
+  if ((int64_t)ftell(fp) == (int64_t)offsetToContent) {
     *hasAdditionalBlocks = 0;
   } else {
     if (numAdditionalBlocks) {

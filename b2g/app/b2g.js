@@ -226,10 +226,6 @@ pref("dom.max_script_run_time", 0);
 pref("dom.max_chrome_script_run_time", 0);
 pref("dom.max_child_script_run_time", 0);
 
-// Temporarily disable support for offsetX/Y to work around Google Maps bug
-// (bug 1150284)
-pref("dom.mouseEvent.offsetXY.enabled", false);
-
 // plugins
 pref("plugin.disable", true);
 pref("dom.ipc.plugins.enabled", true);

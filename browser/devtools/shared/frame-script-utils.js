@@ -9,7 +9,7 @@ const promise = require("promise");
 loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm", "Task");
 const subScriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                           .getService(Ci.mozIJSSubScriptLoader);
-let EventUtils = {};
+var EventUtils = {};
 subScriptLoader.loadSubScript("chrome://marionette/content/EventUtils.js", EventUtils);
 loader.lazyGetter(this, "nsIProfilerModule", () => {
   return Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);

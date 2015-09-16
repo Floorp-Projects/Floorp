@@ -22,7 +22,7 @@ const {CSSProperties, CSSValues} = getCSSKeywords();
 //     entered: 1 if the suggestion is inserted and finalized
 //   }
 // ]
-let TEST_CASES = [
+var TEST_CASES = [
   ["VK_RIGHT"],
   ["VK_RIGHT"],
   ["VK_RIGHT"],

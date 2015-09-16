@@ -11,10 +11,10 @@
  * onDeleteVisits notification.
  */
 
-let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
          getService(Ci.nsINavHistoryService);
 
-let tests = [
+var tests = [
 
   { desc: "Add 1 bookmarked page.",
     addPages: 1,

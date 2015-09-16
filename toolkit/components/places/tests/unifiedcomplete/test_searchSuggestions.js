@@ -6,8 +6,8 @@ const SUGGEST_PREF = "browser.urlbar.suggest.searches";
 const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
 const SUGGEST_RESTRICT_TOKEN = "$";
 
-let suggestionsFn;
-let previousSuggestionsFn;
+var suggestionsFn;
+var previousSuggestionsFn;
 
 function setSuggestionsFn(fn) {
   previousSuggestionsFn = suggestionsFn;

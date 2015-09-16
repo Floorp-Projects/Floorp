@@ -23,7 +23,7 @@ window.addEventListener("unload", function onUnload() {
   UI.destroy();
 });
 
-let UI = {
+var UI = {
   init: function() {
     this.useFloatingScrollbarsIfNeeded();
     let connections = ConnectionManager.connections;

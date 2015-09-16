@@ -39,7 +39,7 @@ const kMessages = [
   "Notification:GetAllCrossOrigin"
 ];
 
-let NotificationDB = {
+var NotificationDB = {
 
   // Ensure we won't call init() while xpcom-shutdown is performed
   _shutdownInProgress: false,

@@ -15,7 +15,7 @@ const Cu = Components.utils;
  * are relative to process startup. The overall goal is to produce a basic
  * timeline of the startup process.
  */
-let timeStamps = {};
+var timeStamps = {};
 
 this.TelemetryTimestamps = {
   /**

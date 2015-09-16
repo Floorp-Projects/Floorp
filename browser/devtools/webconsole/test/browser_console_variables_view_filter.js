@@ -20,7 +20,7 @@ function assertAttrs(view, expected, message) {
   is(props(view).join(","), expected, message);
 }
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield loadTab("data:text/html;charset=utf-8,webconsole-filter");
 
   let hud = yield openConsole();

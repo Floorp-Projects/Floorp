@@ -41,7 +41,7 @@ const sidebarNS = ns();
 
 const WEB_PANEL_BROWSER_ID = 'web-panels-browser';
 
-let sidebars = {};
+var sidebars = {};
 
 const Sidebar = Class({
   implements: [ Disposable ],

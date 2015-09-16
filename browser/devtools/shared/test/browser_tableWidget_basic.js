@@ -16,7 +16,7 @@ const TEST_OPT = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
 const {TableWidget} = require("devtools/shared/widgets/TableWidget");
 
-let doc, table;
+var doc, table;
 
 function test() {
   waitForExplicitFinish();

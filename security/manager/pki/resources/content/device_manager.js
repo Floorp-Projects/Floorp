@@ -16,7 +16,7 @@ const nsDialogParamBlock = "@mozilla.org/embedcomp/dialogparam;1";
 const nsIPKCS11 = Components.interfaces.nsIPKCS11;
 const nsPKCS11ContractID = "@mozilla.org/security/pkcs11;1";
 
-let { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
+var { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
 
 var bundle;
 var secmoddb;

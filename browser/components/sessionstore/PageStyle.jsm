@@ -24,7 +24,7 @@ this.PageStyle = Object.freeze({
 // Signifies that author style level is disabled for the page.
 const NO_STYLE = "_nostyle";
 
-let PageStyleInternal = {
+var PageStyleInternal = {
   /**
    * Collects the selected style sheet sets for all reachable frames.
    */

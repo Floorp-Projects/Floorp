@@ -334,43 +334,34 @@ struct Statistics
 struct MOZ_RAII AutoGCSlice
 {
     AutoGCSlice(Statistics& stats, const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
-                SliceBudget budget, JS::gcreason::Reason reason
-                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+                SliceBudget budget, JS::gcreason::Reason reason)
       : stats(stats)
     {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         stats.beginSlice(zoneStats, gckind, budget, reason);
     }
     ~AutoGCSlice() { stats.endSlice(); }
 
     Statistics& stats;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 struct MOZ_RAII AutoPhase
 {
-    AutoPhase(Statistics& stats, Phase phase
-              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    AutoPhase(Statistics& stats, Phase phase)
       : stats(stats), task(nullptr), phase(phase), enabled(true)
     {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         stats.beginPhase(phase);
     }
 
-    AutoPhase(Statistics& stats, bool condition, Phase phase
-              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    AutoPhase(Statistics& stats, bool condition, Phase phase)
       : stats(stats), task(nullptr), phase(phase), enabled(condition)
     {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         if (enabled)
             stats.beginPhase(phase);
     }
 
-    AutoPhase(Statistics& stats, const GCParallelTask& task, Phase phase
-              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    AutoPhase(Statistics& stats, const GCParallelTask& task, Phase phase)
       : stats(stats), task(&task), phase(phase), enabled(true)
     {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         if (enabled)
             stats.beginPhase(phase);
     }
@@ -388,16 +379,13 @@ struct MOZ_RAII AutoPhase
     const GCParallelTask* task;
     Phase phase;
     bool enabled;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 struct MOZ_RAII AutoSCC
 {
-    AutoSCC(Statistics& stats, unsigned scc
-            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    AutoSCC(Statistics& stats, unsigned scc)
       : stats(stats), scc(scc)
     {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         start = stats.beginSCC();
     }
     ~AutoSCC() {
@@ -407,7 +395,6 @@ struct MOZ_RAII AutoSCC
     Statistics& stats;
     unsigned scc;
     int64_t start;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 const char* ExplainInvocationKind(JSGCInvocationKind gckind);

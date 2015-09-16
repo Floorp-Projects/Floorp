@@ -45,7 +45,7 @@ const prefs = new Preferences("dom.push.");
 this.EXPORTED_SYMBOLS = ["PushServiceWebSocket"];
 
 // Don't modify this, instead set dom.push.debug.
-let gDebuggingEnabled = true;
+var gDebuggingEnabled = true;
 
 function debug(s) {
   if (gDebuggingEnabled) {
@@ -1200,7 +1200,7 @@ this.PushServiceWebSocket = {
   },
 };
 
-let PushNetworkInfo = {
+var PushNetworkInfo = {
   /**
    * Returns information about MCC-MNC and the IP of the current connection.
    */

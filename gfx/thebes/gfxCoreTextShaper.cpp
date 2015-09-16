@@ -299,7 +299,6 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
                                                   nullptr, nullptr, nullptr);
 
     nsAutoTArray<gfxShapedText::DetailedGlyph,1> detailedGlyphs;
-    gfxShapedText::CompressedGlyph g;
     gfxShapedText::CompressedGlyph *charGlyphs =
         aShapedText->GetCharacterGlyphs() + aOffset;
 
@@ -521,19 +520,20 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
                 advance = int32_t(toNextGlyph * appUnitsPerDevUnit);
             }
 
-            gfxTextRun::CompressedGlyph g;
-            g.SetComplex(charGlyphs[baseCharIndex].IsClusterStart(),
-                         true, detailedGlyphs.Length());
-            aShapedText->SetGlyphs(aOffset + baseCharIndex, g, detailedGlyphs.Elements());
+            gfxTextRun::CompressedGlyph textRunGlyph;
+            textRunGlyph.SetComplex(charGlyphs[baseCharIndex].IsClusterStart(),
+                                    true, detailedGlyphs.Length());
+            aShapedText->SetGlyphs(aOffset + baseCharIndex, textRunGlyph,
+                                   detailedGlyphs.Elements());
 
             detailedGlyphs.Clear();
         }
 
         // the rest of the chars in the group are ligature continuations, no associated glyphs
         while (++baseCharIndex != endCharIndex && baseCharIndex < wordLength) {
-            gfxShapedText::CompressedGlyph &g = charGlyphs[baseCharIndex];
-            NS_ASSERTION(!g.IsSimpleGlyph(), "overwriting a simple glyph");
-            g.SetComplex(inOrder && g.IsClusterStart(), false, 0);
+            gfxShapedText::CompressedGlyph &shapedTextGlyph = charGlyphs[baseCharIndex];
+            NS_ASSERTION(!shapedTextGlyph.IsSimpleGlyph(), "overwriting a simple glyph");
+            shapedTextGlyph.SetComplex(inOrder && shapedTextGlyph.IsClusterStart(), false, 0);
         }
 
         glyphStart = glyphEnd;

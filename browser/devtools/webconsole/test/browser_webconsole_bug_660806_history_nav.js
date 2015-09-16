@@ -7,7 +7,7 @@
 const TEST_URI = "data:text/html;charset=utf-8,<p>bug 660806 - history " +
                  "navigation must not show the autocomplete popup";
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

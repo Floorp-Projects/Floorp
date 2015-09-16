@@ -11,8 +11,8 @@ const kWhitelist = new Set([
 ]);
 
 
-let moduleLocation = gTestPath.replace(/\/[^\/]*$/i, "/parsingTestHelpers.jsm");
-let {generateURIsFromDirTree} = Cu.import(moduleLocation, {});
+var moduleLocation = gTestPath.replace(/\/[^\/]*$/i, "/parsingTestHelpers.jsm");
+var {generateURIsFromDirTree} = Cu.import(moduleLocation, {});
 
 // Normally we would use reflect.jsm to get Reflect.parse. However, if
 // we do that, then all the AST data is allocated in reflect.jsm's

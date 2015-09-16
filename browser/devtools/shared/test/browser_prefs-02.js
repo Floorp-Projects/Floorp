@@ -3,7 +3,7 @@
 
 // Tests that ViewHelpers.Prefs work properly with custom types of Float and Json.
 
-let {ViewHelpers} = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
+var {ViewHelpers} = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
 
 function test() {
   let originalJson = Services.prefs.getCharPref("devtools.performance.timeline.hidden-markers");

@@ -4,7 +4,7 @@
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
                                   "resource://testing-common/PlacesTestUtils.jsm");
 
-let PERMISSIONS_FILE_NAME = "permissions.sqlite";
+var PERMISSIONS_FILE_NAME = "permissions.sqlite";
 
 function GetPermissionsFile(profile)
 {

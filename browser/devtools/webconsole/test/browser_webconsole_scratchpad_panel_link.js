@@ -7,9 +7,9 @@
 const TEST_URI = "data:text/html;charset=utf8,<p>test Scratchpad panel " +
                  "linking</p>";
 
-let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-let { Tools } = require("main");
-let { isTargetSupported } = Tools.scratchpad;
+var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+var { Tools } = require("main");
+var { isTargetSupported } = Tools.scratchpad;
 
 Tools.scratchpad.isTargetSupported = () => true;
 

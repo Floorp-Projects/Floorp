@@ -19,7 +19,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-let gEMEUIObserver = function(subject, topic, data) {
+var gEMEUIObserver = function(subject, topic, data) {
   let win = subject.top;
   let mm = getMessageManagerForWindow(win);
   if (mm) {

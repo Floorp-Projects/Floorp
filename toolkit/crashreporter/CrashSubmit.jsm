@@ -23,9 +23,9 @@ const SUCCESS = "success";
 const FAILED  = "failed";
 const SUBMITTING = "submitting";
 
-let reportURL = null;
-let strings = null;
-let myListener = null;
+var reportURL = null;
+var strings = null;
+var myListener = null;
 
 function parseINIStrings(file) {
   var factory = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].

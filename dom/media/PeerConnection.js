@@ -227,7 +227,7 @@ GlobalPCList.prototype = {
     this._lifecycleobservers[winID] = cb;
   },
 };
-let _globalPCList = new GlobalPCList();
+var _globalPCList = new GlobalPCList();
 
 function RTCIceCandidate() {
   this.candidate = this.sdpMid = this.sdpMLineIndex = null;

@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let cps = new ContentPrefInstance(null);
+var cps = new ContentPrefInstance(null);
 
 function run_test() {
   testCacheWorks("test1.example.com", "test-pref1");

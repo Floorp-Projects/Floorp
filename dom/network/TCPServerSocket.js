@@ -21,7 +21,7 @@ const ServerSocket = CC(
  * Debug logging function
  */
 
-let debug = true;
+var debug = true;
 function LOG(msg) {
   if (debug) {
     dump("TCPServerSocket: " + msg + "\n");

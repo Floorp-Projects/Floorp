@@ -145,6 +145,54 @@ test(function(t) {
 }, 'Order of CSS Animations - across and within elements');
 
 test(function(t) {
+  cancelAllAnimationsOnEnd(t);
+
+  var div = addDiv(t, { style: 'animation: animLeft 100s, animTop 100s' });
+  var animLeft = document.timeline.getAnimations()[0];
+  assert_equals(animLeft.animationName, 'animLeft',
+                'Originally, animLeft animation comes first');
+
+  // Disassociate animLeft from markup and restart
+  div.style.animation = 'animTop 100s';
+  animLeft.play();
+
+  var animations = document.timeline.getAnimations();
+  assert_equals(animations.length, 2,
+                'getAnimations returns markup-bound and free animations');
+  assert_equals(animations[0].animationName, 'animTop',
+                'Markup-bound animations come first');
+  assert_equals(animations[1], animLeft, 'Free animations come last');
+}, 'Order of CSS Animations - markup-bound vs free animations');
+
+test(function(t) {
+  cancelAllAnimationsOnEnd(t);
+
+  var div = addDiv(t, { style: 'animation: animLeft 100s, animTop 100s' });
+  var animLeft = document.timeline.getAnimations()[0];
+  var animTop  = document.timeline.getAnimations()[1];
+
+  // Disassociate both animations from markup and restart in opposite order
+  div.style.animation = '';
+  animTop.play();
+  animLeft.play();
+
+  var animations = document.timeline.getAnimations();
+  assert_equals(animations.length, 2,
+                'getAnimations returns free animations');
+  assert_equals(animations[0], animTop,
+                'Free animations are returned in the order they are started');
+  assert_equals(animations[1], animLeft,
+                'Animations started later are returned later');
+
+  // Restarting an animation should have no effect
+  animTop.cancel();
+  animTop.play();
+  assert_equals(document.timeline.getAnimations()[0], animTop,
+                'After restarting, the ordering of free animations' +
+                ' does not change');
+}, 'Order of CSS Animations - free animations');
+
+test(function(t) {
   // Add an animation first
   var div = addDiv(t, { style: 'animation: animLeft 100s' });
   div.style.top = '0px';
@@ -191,6 +239,8 @@ test(function(t) {
 }, 'CSS Animations cancelled via the API are not returned');
 
 test(function(t) {
+  cancelAllAnimationsOnEnd(t);
+
   var div = addDiv(t, { style: 'animation: animLeft 100s' });
   var anim = div.getAnimations()[0];
   anim.cancel();

@@ -43,7 +43,7 @@ function test_socket_conn_drops_after_too_long_header() {
   return test_helper(rawPacket + ':');
 }
 
-let test_helper = Task.async(function*(payload) {
+var test_helper = Task.async(function*(payload) {
   let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
   let authenticator = new AuthenticatorType.Server();
   authenticator.allowConnection = () => {

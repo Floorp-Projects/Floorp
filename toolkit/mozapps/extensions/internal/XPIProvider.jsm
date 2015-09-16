@@ -259,7 +259,7 @@ const LOGGER_ID = "addons.xpi";
 
 // Create a new logger for use by all objects in this Addons XPI Provider module
 // (Requires AddonManager.jsm)
-let logger = Log.repository.getLogger(LOGGER_ID);
+var logger = Log.repository.getLogger(LOGGER_ID);
 
 const LAZY_OBJECTS = ["XPIDatabase", "XPIDatabaseReconcile"];
 
@@ -1161,7 +1161,7 @@ function defineSyncGUID(aAddon) {
  * @return an AddonInternal object
  * @throws if the directory does not contain a valid install manifest
  */
-let loadManifestFromDir = Task.async(function* loadManifestFromDir(aDir, aInstallLocation) {
+var loadManifestFromDir = Task.async(function* loadManifestFromDir(aDir, aInstallLocation) {
   function getFileSize(aFile) {
     if (aFile.isSymlink())
       return 0;
@@ -1231,7 +1231,7 @@ let loadManifestFromDir = Task.async(function* loadManifestFromDir(aDir, aInstal
  * @return an AddonInternal object
  * @throws if the XPI file does not contain a valid install manifest
  */
-let loadManifestFromZipReader = Task.async(function* loadManifestFromZipReader(aZipReader, aInstallLocation) {
+var loadManifestFromZipReader = Task.async(function* loadManifestFromZipReader(aZipReader, aInstallLocation) {
   function loadFromRDF(aStream) {
     let uri = buildJarURI(aZipReader.file, FILE_RDF_MANIFEST);
     let addon = loadManifestFromRDF(uri, aStream);
@@ -1294,7 +1294,7 @@ let loadManifestFromZipReader = Task.async(function* loadManifestFromZipReader(a
  * @return an AddonInternal object
  * @throws if the XPI file does not contain a valid install manifest
  */
-let loadManifestFromZipFile = Task.async(function* loadManifestFromZipFile(aXPIFile, aInstallLocation) {
+var loadManifestFromZipFile = Task.async(function* loadManifestFromZipFile(aXPIFile, aInstallLocation) {
   let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
                   createInstance(Ci.nsIZipReader);
   try {
@@ -7525,7 +7525,7 @@ Object.defineProperty(this, "REQUIRE_SIGNING", {
 #endif
 });
 
-let addonTypes = [
+var addonTypes = [
   new AddonManagerPrivate.AddonType("extension", URI_EXTENSION_STRINGS,
                                     STRING_TYPE_NAME,
                                     AddonManager.VIEW_TYPE_LIST, 4000),

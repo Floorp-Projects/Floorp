@@ -117,7 +117,7 @@ Prompter.prototype = {
 
 
 // Common utils not specific to a particular prompter style.
-let PromptUtilsTemp = {
+var PromptUtilsTemp = {
     __proto__ : PromptUtils,
 
     getLocalizedString : function (key, formatArgs) {

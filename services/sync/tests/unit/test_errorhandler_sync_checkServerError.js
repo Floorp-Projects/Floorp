@@ -13,7 +13,7 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 
 initTestLogging("Trace");
 
-let engineManager = Service.engineManager;
+var engineManager = Service.engineManager;
 engineManager.clear();
 
 function promiseStopServer(server) {

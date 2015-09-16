@@ -1,7 +1,7 @@
 Cu.import("resource://gre/modules/Services.jsm");
-let { WebappOSUtils } = Cu.import("resource://gre/modules/WebappOSUtils.jsm", {});
+var { WebappOSUtils } = Cu.import("resource://gre/modules/WebappOSUtils.jsm", {});
 
-let url = "http://test/webapprtChrome/webapprt/test/chrome/sample.webapp";
+var url = "http://test/webapprtChrome/webapprt/test/chrome/sample.webapp";
 
 function test() {
   waitForExplicitFinish();

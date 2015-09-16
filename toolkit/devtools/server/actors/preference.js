@@ -15,7 +15,7 @@ exports.register = function(handle) {
 exports.unregister = function(handle) {
 };
 
-let PreferenceActor = exports.PreferenceActor = protocol.ActorClass({
+var PreferenceActor = exports.PreferenceActor = protocol.ActorClass({
   typeName: "preference",
 
   getBoolPref: method(function(name) {
@@ -104,7 +104,7 @@ let PreferenceActor = exports.PreferenceActor = protocol.ActorClass({
   }),
 });
 
-let PreferenceFront = protocol.FrontClass(PreferenceActor, {
+var PreferenceFront = protocol.FrontClass(PreferenceActor, {
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = form.preferenceActor;

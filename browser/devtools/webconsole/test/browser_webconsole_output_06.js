@@ -13,7 +13,7 @@ const testStrIn = "SHOW\\nALL\\nOF\\nTHIS\\nON\\nA\\nSINGLE" +
                   "\\nLINE ONLY. ESCAPE ALL NEWLINE";
 const testStrOut = "SHOW ALL OF THIS ON A SINGLE LINE O" + ELLIPSIS;
 
-let inputTests = [
+var inputTests = [
   // 1 - array with empty slots only
   {
     input: "Array(5)",

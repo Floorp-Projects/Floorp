@@ -55,7 +55,7 @@ const validate = contract({
 
 // Toolbars is a mapping between `toolbar.id` & `toolbar` instances,
 // which is used to find intstance for dispatching events.
-let toolbars = new Map();
+var toolbars = new Map();
 
 const Toolbar = Class({
   extends: EventTarget,

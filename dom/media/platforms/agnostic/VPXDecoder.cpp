@@ -13,14 +13,13 @@
 #include <algorithm>
 
 #undef LOG
-#define LOG(arg, ...) MOZ_LOG(gMediaDecoderLog, mozilla::LogLevel::Debug, ("VPXDecoder(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+extern PRLogModuleInfo* GetPDMLog();
+#define LOG(arg, ...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, ("VPXDecoder(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
 
 using namespace gfx;
 using namespace layers;
-
-extern PRLogModuleInfo* gMediaDecoderLog;
 
 VPXDecoder::VPXDecoder(const VideoInfo& aConfig,
                        ImageContainer* aImageContainer,

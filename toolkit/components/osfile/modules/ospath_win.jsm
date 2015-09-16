@@ -38,7 +38,7 @@ if (typeof Components != "undefined") {
   throw new Error("Please load this module using require()");
 }
 
-let EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "basename",
   "dirname",
   "join",
@@ -54,7 +54,7 @@ let EXPORTED_SYMBOLS = [
  * Return the final part of the path.
  * The final part of the path is everything after the last "\\".
  */
-let basename = function(path) {
+var basename = function(path) {
   if (path.startsWith("\\\\")) {
     // UNC-style path
     let index = path.lastIndexOf("\\");
@@ -84,7 +84,7 @@ exports.basename = basename;
  * of this function. This implementation supports the following options:
  *  - |winNoDrive| If |true|, also remove the letter from the path name.
  */
-let dirname = function(path, options) {
+var dirname = function(path, options) {
   let noDrive = (options && options.winNoDrive);
 
   // Find the last occurrence of "\\"
@@ -139,7 +139,7 @@ exports.dirname = dirname;
  * Empty components are ignored, i.e. `OS.Path.join("foo", "", "bar)` is the
  * same as `OS.Path.join("foo", "bar")`.
  */
-let join = function(...path) {
+var join = function(...path) {
   let paths = [];
   let root;
   let absolute = false;
@@ -187,7 +187,7 @@ exports.join = join;
  * name includes the ":") or "\\\\DriveName..." (the returned drive name
  * includes "\\\\").
  */
-let winGetDrive = function(path) {
+var winGetDrive = function(path) {
   if (path == null) {
     throw new TypeError("path is invalid");
   }
@@ -216,7 +216,7 @@ exports.winGetDrive = winGetDrive;
  * We consider that a path is absolute if it starts with "\\"
  * or "driveletter:\\".
  */
-let winIsAbsolute = function(path) {
+var winIsAbsolute = function(path) {
   let index = path.indexOf(":");
   return path.length > index + 1 && path[index + 1] == "\\";
 };
@@ -226,7 +226,7 @@ exports.winIsAbsolute = winIsAbsolute;
  * Normalize a path by removing any unneeded ".", "..", "\\".
  * Also convert any "/" to a "\\".
  */
-let normalize = function(path) {
+var normalize = function(path) {
   let stack = [];
 
   if (!path.startsWith("\\\\")) {
@@ -293,7 +293,7 @@ exports.normalize = normalize;
  *
  * Other implementations may add additional OS-specific informations.
  */
-let split = function(path) {
+var split = function(path) {
   return {
     absolute: this.winIsAbsolute(path),
     winDrive: this.winGetDrive(path),
@@ -306,8 +306,8 @@ exports.split = split;
  * Return the file:// URI file path of the given local file path.
  */
 // The case of %3b is designed to match Services.io, but fundamentally doesn't matter.
-let toFileURIExtraEncodings = {';': '%3b', '?': '%3F', '#': '%23'};
-let toFileURI = function toFileURI(path) {
+var toFileURIExtraEncodings = {';': '%3b', '?': '%3F', '#': '%23'};
+var toFileURI = function toFileURI(path) {
   // URI-escape forward slashes and convert backward slashes to forward
   path = this.normalize(path).replace(/[\\\/]/g, m => (m=='\\')? '/' : '%2F');
   let uri = encodeURI(path);
@@ -329,7 +329,7 @@ exports.toFileURI = toFileURI;
 /**
  * Returns the local file path from a given file URI.
  */
-let fromFileURI = function fromFileURI(uri) {
+var fromFileURI = function fromFileURI(uri) {
   let url = new URL(uri);
   if (url.protocol != 'file:') {
     throw new Error("fromFileURI expects a file URI");
@@ -357,7 +357,7 @@ exports.fromFileURI = fromFileURI;
 * Utility function: Remove any leading/trailing backslashes
 * from a string.
 */
-let trimBackslashes = function trimBackslashes(string) {
+var trimBackslashes = function trimBackslashes(string) {
   return string.replace(/^\\+|\\+$/g,'');
 };
 

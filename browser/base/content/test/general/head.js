@@ -484,7 +484,7 @@ function waitForDocLoadComplete(aBrowser=gBrowser) {
 waitForDocLoadComplete.listeners = new Set();
 registerCleanupFunction(() => waitForDocLoadComplete.listeners.clear());
 
-let FullZoomHelper = {
+var FullZoomHelper = {
 
   selectTabAndWaitForLocationChange: function selectTabAndWaitForLocationChange(tab) {
     if (!tab)

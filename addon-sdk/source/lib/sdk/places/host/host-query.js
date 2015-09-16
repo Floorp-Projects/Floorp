@@ -155,7 +155,7 @@ function normalize (historyObj) {
  * Hook into host
  */
 
-let reqStream = filter(request, function (data) /sdk-places-query/.test(data.event));
+var reqStream = filter(request, function (data) /sdk-places-query/.test(data.event));
 on(reqStream, 'data', function (e) {
   if (EVENT_MAP[e.event]) EVENT_MAP[e.event](e);
 });

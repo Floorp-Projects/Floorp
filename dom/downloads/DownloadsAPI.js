@@ -221,7 +221,7 @@ DOMDownloadManagerImpl.prototype = {
 /**
   * Keep track of download objects per window.
   */
-let downloadsCache = {
+var downloadsCache = {
   init: function() {
     this.cache = new WeakMap();
   },

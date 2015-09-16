@@ -7,8 +7,8 @@ module.metadata = {
   "stability": "unstable"
 };
 
-let usingJSON = false;
-let hash = {}, bestMatchingLocale = null;
+var usingJSON = false;
+var hash = {}, bestMatchingLocale = null;
 try {
   let data = require("@l10n/data");
   hash = data.hash;

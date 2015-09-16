@@ -6,7 +6,7 @@
 // Test that the docShell profile timeline API returns the right
 // markers for XMLHttpRequest events.
 
-let TESTS = [{
+var TESTS = [{
   desc: "Event dispatch from XMLHttpRequest",
   searchFor: function(markers) {
     return markers.filter(m => m.name == "DOMEvent").length >= 5;

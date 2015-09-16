@@ -11,7 +11,7 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-eval-in-stackframe.html";
-let test = asyncTest(function*() {
+var test = asyncTest(function*() {
   yield loadTab(TEST_URI);
 
   info("open the web console");

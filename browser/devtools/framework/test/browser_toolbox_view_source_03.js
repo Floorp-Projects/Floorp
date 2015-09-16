@@ -6,8 +6,8 @@
  * yet opened.
  */
 
-let URL = `${URL_ROOT}doc_viewsource.html`;
-let CSS_URL = `${URL_ROOT}doc_theme.css`;
+var URL = `${URL_ROOT}doc_viewsource.html`;
+var CSS_URL = `${URL_ROOT}doc_theme.css`;
 
 function *viewSource() {
   let toolbox = yield loadToolbox(URL);

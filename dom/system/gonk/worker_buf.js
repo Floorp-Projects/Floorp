@@ -16,7 +16,7 @@
  * every time a parcel is sent.
  */
 
-let Buf = {
+var Buf = {
   INT32_MAX: 2147483647,
   UINT8_SIZE: 1,
   UINT16_SIZE: 2,

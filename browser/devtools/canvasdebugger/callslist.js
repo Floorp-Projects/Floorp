@@ -7,7 +7,7 @@
  * Functions handling details about a single recorded animation frame snapshot
  * (the calls list, rendering preview, thumbnails filmstrip etc.).
  */
-let CallsListView = Heritage.extend(WidgetMethods, {
+var CallsListView = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the tool is started.
    */

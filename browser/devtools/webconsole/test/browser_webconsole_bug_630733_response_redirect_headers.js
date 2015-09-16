@@ -14,10 +14,10 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for " +
 const TEST_URI2 = "http://example.com/browser/browser/devtools/webconsole/" +
                   "test/test-bug-630733-response-redirect-headers.sjs";
 
-let lastFinishedRequests = {};
-let webConsoleClient;
+var lastFinishedRequests = {};
+var webConsoleClient;
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

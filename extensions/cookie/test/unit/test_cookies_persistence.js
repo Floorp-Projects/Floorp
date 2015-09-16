@@ -5,7 +5,7 @@
 // 1) network.cookie.lifetimePolicy = 0 (expire naturally)
 // 2) network.cookie.lifetimePolicy = 2 (expire at end of session)
 
-let test_generator = do_run_test();
+var test_generator = do_run_test();
 
 function run_test() {
   do_test_pending();

@@ -3,7 +3,7 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/Task.jsm");
-let promise = require("promise");
+var promise = require("promise");
 
 function test() {
   if (!isTiltEnabled()) {

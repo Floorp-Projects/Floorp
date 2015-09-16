@@ -533,7 +533,7 @@ this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
   MozWifiConnectionInfo
 ]);
 
-let debug;
+var debug;
 if (DEBUG) {
   debug = function (s) {
     dump("-*- DOMWifiManager component: " + s + "\n");

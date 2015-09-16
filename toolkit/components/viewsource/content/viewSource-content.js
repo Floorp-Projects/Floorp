@@ -23,13 +23,13 @@ const BUNDLE_URL = "chrome://global/locale/viewSource.properties";
 const MARK_SELECTION_START = "\uFDD0";
 const MARK_SELECTION_END = "\uFDEF";
 
-let global = this;
+var global = this;
 
 /**
  * ViewSourceContent should be loaded in the <xul:browser> of the
  * view source window, and initialized as soon as it has loaded.
  */
-let ViewSourceContent = {
+var ViewSourceContent = {
   /**
    * We'll act as an nsISelectionListener as well so that we can send
    * updates to the view source window's status bar.

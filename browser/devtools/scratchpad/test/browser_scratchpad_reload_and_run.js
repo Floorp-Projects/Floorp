@@ -3,8 +3,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 /* Bug 740948 */
 
-let DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
-let EDITOR_TEXT = [
+var DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
+var EDITOR_TEXT = [
   "var evt = new CustomEvent('foo', { bubbles: true });",
   "document.body.innerHTML = 'Modified text';",
   "window.dispatchEvent(evt);"

@@ -49,17 +49,17 @@ ExtensionManagement.registerScript("chrome://extensions/content/ext-storage.js")
 ExtensionManagement.registerScript("chrome://extensions/content/ext-test.js");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
-let {
+var {
   MessageBroker,
   Messenger,
   injectAPI,
   flushJarCache,
 } = ExtensionUtils;
 
-let scriptScope = this;
+var scriptScope = this;
 
 // This object loads the ext-*.js scripts that define the extension API.
-let Management = {
+var Management = {
   initialized: false,
   scopes: [],
   apis: [],
@@ -154,7 +154,7 @@ let Management = {
 
 // A MessageBroker that's used to send and receive messages for
 // extension pages (which run in the chrome process).
-let globalBroker = new MessageBroker([Services.mm, Services.ppmm]);
+var globalBroker = new MessageBroker([Services.mm, Services.ppmm]);
 
 // An extension page is an execution context for any extension content
 // that runs in the chrome process. It's used for background pages
@@ -223,7 +223,7 @@ ExtensionPage.prototype = {
 };
 
 // Responsible for loading extension APIs into the right globals.
-let GlobalManager = {
+var GlobalManager = {
   // Number of extensions currently enabled.
   count: 0,
 

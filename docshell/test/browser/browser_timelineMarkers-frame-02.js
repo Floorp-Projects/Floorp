@@ -11,7 +11,7 @@ function rectangleContains(rect, x, y, width, height) {
     rect.height >= height;
 }
 
-let TESTS = [{
+var TESTS = [{
   desc: "Changing the width of the test element",
   searchFor: "Paint",
   setup: function(docShell) {

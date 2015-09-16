@@ -11,7 +11,7 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-autocomplete-in-stackframe.html";
 
-let testDriver, gStackframes;
+var testDriver, gStackframes;
 
 function test() {
   requestLongerTimeout(2);

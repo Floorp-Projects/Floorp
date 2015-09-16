@@ -67,7 +67,7 @@ const gNSURLStore = new Map();
  * Most of the following functions have been taken from the Firebug source. They
  * have been modified to match the Firefox coding rules.
  */
-let NetworkHelper = {
+var NetworkHelper = {
   /**
    * Converts aText with a given aCharset to unicode.
    *

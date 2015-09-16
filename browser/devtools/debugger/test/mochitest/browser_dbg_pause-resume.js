@@ -7,8 +7,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_pause-exceptions.html";
 
-let gTab, gPanel, gDebugger;
-let gResumeButton, gResumeKey, gFrames;
+var gTab, gPanel, gDebugger;
+var gResumeButton, gResumeKey, gFrames;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

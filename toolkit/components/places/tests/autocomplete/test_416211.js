@@ -7,13 +7,13 @@
  * title instead of the page title.
  */
 
-let theTag = "superTag";
+var theTag = "superTag";
 
 // Define some shared uris and titles (each page needs its own uri)
-let kURIs = [
+var kURIs = [
   "http://theuri/",
 ];
-let kTitles = [
+var kTitles = [
   "Page title",
   "Bookmark title",
   theTag,
@@ -24,7 +24,7 @@ addPageBook(0, 0, 1, [2]);
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
-let gTests = [
+var gTests = [
   ["0: Make sure the tag match gives the bookmark title",
    theTag, [0]],
 ];

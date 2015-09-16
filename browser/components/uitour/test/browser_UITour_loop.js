@@ -3,11 +3,11 @@
 
 "use strict";
 
-let gTestTab;
-let gContentAPI;
-let gContentWindow;
-let loopButton;
-let loopPanel = document.getElementById("loop-notification-panel");
+var gTestTab;
+var gContentAPI;
+var gContentWindow;
+var loopButton;
+var loopPanel = document.getElementById("loop-notification-panel");
 
 const { LoopRooms } = Components.utils.import("resource:///modules/loop/LoopRooms.jsm", {});
 const { MozLoopServiceInternal } = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
@@ -26,7 +26,7 @@ function runOffline(fun) {
   }
 }
 
-let tests = [
+var tests = [
   taskify(function* test_gettingStartedClicked_linkOpenedWithExpectedParams() {
     Services.prefs.setBoolPref("loop.gettingStarted.seen", false);
     Services.prefs.setCharPref("loop.gettingStarted.url", "http://example.com");

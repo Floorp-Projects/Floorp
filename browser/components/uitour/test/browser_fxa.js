@@ -8,9 +8,9 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
                                   "resource://gre/modules/FxAccounts.jsm");
 
-let gTestTab;
-let gContentAPI;
-let gContentWindow;
+var gTestTab;
+var gContentAPI;
+var gContentWindow;
 
 function test() {
   UITourTest();
@@ -21,7 +21,7 @@ registerCleanupFunction(function*() {
   gFxAccounts.updateAppMenuItem();
 });
 
-let tests = [
+var tests = [
   taskify(function* test_highlight_accountStatus_loggedOut() {
     let userData = yield fxAccounts.getSignedInUser();
     is(userData, null, "Not logged in initially");

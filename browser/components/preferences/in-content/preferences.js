@@ -12,9 +12,9 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-let gLastHash = "";
+var gLastHash = "";
 
-let gCategoryInits = new Map();
+var gCategoryInits = new Map();
 function init_category_if_required(category) {
   let categoryInfo = gCategoryInits.get(category);
   if (!categoryInfo) {

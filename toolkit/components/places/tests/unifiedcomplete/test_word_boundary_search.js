@@ -14,8 +14,8 @@
  * make sure "can match" matches anywhere.
  */
 
-let katakana = ["\u30a8", "\u30c9"]; // E, Do
-let ideograph = ["\u4efb", "\u5929", "\u5802"]; // Nin Ten Do
+var katakana = ["\u30a8", "\u30c9"]; // E, Do
+var ideograph = ["\u4efb", "\u5929", "\u5802"]; // Nin Ten Do
 
 add_task(function* test_escape() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", false);

@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let disableWorkerTest = "This test uses SpecialPowers";
+var disableWorkerTest = "This test uses SpecialPowers";
 
 var testGenerator = testSteps();
 

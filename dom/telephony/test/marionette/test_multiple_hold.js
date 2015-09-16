@@ -6,11 +6,11 @@ MARIONETTE_HEAD_JS = 'head.js';
 
 const outNumber = "5555551111";
 const outInfo = gOutCallStrPool(outNumber);
-let outCall;
+var outCall;
 
 const inNumber = "5555552222";
 const inInfo = gInCallStrPool(inNumber);
-let inCall;
+var inCall;
 
 startTest(function() {
   gRemoteDial(inNumber)

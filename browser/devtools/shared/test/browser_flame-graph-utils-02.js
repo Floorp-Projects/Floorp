@@ -3,8 +3,8 @@
 
 // Tests consecutive duplicate frames are removed from the flame graph data.
 
-let {FlameGraphUtils} = require("devtools/shared/widgets/FlameGraph");
-let {PALLETTE_SIZE} = require("devtools/shared/widgets/FlameGraph");
+var {FlameGraphUtils} = require("devtools/shared/widgets/FlameGraph");
+var {PALLETTE_SIZE} = require("devtools/shared/widgets/FlameGraph");
 
 add_task(function*() {
   yield promiseTab("about:blank");
@@ -44,7 +44,7 @@ function* performTest() {
   }
 }
 
-let TEST_DATA = synthesizeProfileForTest([{
+var TEST_DATA = synthesizeProfileForTest([{
   frames: [{
     location: "A"
   }, {
@@ -61,7 +61,7 @@ let TEST_DATA = synthesizeProfileForTest([{
   time: 50,
 }]);
 
-let EXPECTED_OUTPUT = [{
+var EXPECTED_OUTPUT = [{
   blocks: []
 }, {
   blocks: []

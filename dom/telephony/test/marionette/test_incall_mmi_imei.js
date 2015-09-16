@@ -5,7 +5,7 @@ MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
 const number = "0900000001";
-let outCall;
+var outCall;
 
 function getIMEI() {
   log("Test *#06# ...");

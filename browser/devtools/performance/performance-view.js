@@ -6,7 +6,7 @@
 /**
  * Master view handler for the performance tool.
  */
-let PerformanceView = {
+var PerformanceView = {
 
   _state: null,
 

@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 const nsIDM = Ci.nsIDownloadManager;
 
-let gTestTargetFile = FileUtils.getFile("TmpD", ["dm-ui-test.file"]);
+var gTestTargetFile = FileUtils.getFile("TmpD", ["dm-ui-test.file"]);
 gTestTargetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 registerCleanupFunction(function () {
   gTestTargetFile.remove(false);

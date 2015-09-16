@@ -4,14 +4,14 @@
 
 "use strict";
 
-let {Cu} = require("chrome");
-let {DebuggerServer} = require("devtools/server/main");
+var {Cu} = require("chrome");
+var {DebuggerServer} = require("devtools/server/main");
 
-let promise = require("promise");
-let {Class} = require("sdk/core/heritage");
+var promise = require("promise");
+var {Class} = require("sdk/core/heritage");
 
-let protocol = require("devtools/server/protocol");
-let {method, Arg, Option, RetVal} = protocol;
+var protocol = require("devtools/server/protocol");
+var {method, Arg, Option, RetVal} = protocol;
 
 exports.LongStringActor = protocol.ActorClass({
   typeName: "longstractor",
@@ -117,7 +117,7 @@ exports.LongStringFront = protocol.FrontClass(exports.LongStringActor, {
 // The long string actor needs some custom marshalling, because it is sometimes
 // returned as a primitive rather than a complete form.
 
-let stringActorType = protocol.types.getType("longstractor");
+var stringActorType = protocol.types.getType("longstractor");
 protocol.types.addType("longstring", {
   _actor: true,
   write: (value, context, detail) => {

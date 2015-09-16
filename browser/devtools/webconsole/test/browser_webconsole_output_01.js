@@ -15,17 +15,17 @@ thisTestLeaksUncaughtRejectionsAndShouldBeFixed("null");
 
 const TEST_URI = "data:text/html;charset=utf8,test for console output - 01";
 
-let {DebuggerServer} = require("devtools/server/main");
+var {DebuggerServer} = require("devtools/server/main");
 
-let LONG_STRING_LENGTH = DebuggerServer.LONG_STRING_LENGTH;
-let LONG_STRING_INITIAL_LENGTH = DebuggerServer.LONG_STRING_INITIAL_LENGTH;
+var LONG_STRING_LENGTH = DebuggerServer.LONG_STRING_LENGTH;
+var LONG_STRING_INITIAL_LENGTH = DebuggerServer.LONG_STRING_INITIAL_LENGTH;
 DebuggerServer.LONG_STRING_LENGTH = 100;
 DebuggerServer.LONG_STRING_INITIAL_LENGTH = 50;
 
-let longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 4)).join("a");
-let initialString = longString.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH);
+var longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 4)).join("a");
+var initialString = longString.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH);
 
-let inputTests = [
+var inputTests = [
   // 0
   {
     input: "'hello \\nfrom \\rthe \\\"string world!'",

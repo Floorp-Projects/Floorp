@@ -51,7 +51,7 @@ this.__defineGetter__("gDecimalSymbol", function() {
       return this.gDecimalSymbol = Number(5.4).toLocaleString().match(/\D/);
 });
 
-let localeNumberFormatCache = new Map();
+var localeNumberFormatCache = new Map();
 function getLocaleNumberFormat(fractionDigits) {
   // Backward compatibility: don't use localized digits
   let locale = Intl.NumberFormat().resolvedOptions().locale +
@@ -69,7 +69,7 @@ function getLocaleNumberFormat(fractionDigits) {
 const kDownloadProperties =
   "chrome://mozapps/locale/downloads/downloads.properties";
 
-let gStr = {
+var gStr = {
   statusFormat: "statusFormat3",
   statusFormatInfiniteRate: "statusFormatInfiniteRate",
   statusFormatNoRate: "statusFormatNoRate",
@@ -102,7 +102,7 @@ this.__defineGetter__("gBundle", function() {
 // Keep track of at most this many second/lastSec pairs so that multiple calls
 // to getTimeLeft produce the same time left
 const kCachedLastMaxSize = 10;
-let gCachedLast = [];
+var gCachedLast = [];
 
 this.DownloadUtils = {
   /**

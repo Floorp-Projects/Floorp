@@ -89,7 +89,7 @@ const OVERDUE_PING_FILE_AGE = 7 * 24 * 60 * MS_IN_A_MINUTE; // 1 week
  * Tests override properties on this object to allow for control of behavior
  * that would otherwise be very hard to cover.
  */
-let Policy = {
+var Policy = {
   now: () => new Date(),
   midnightPingFuzzingDelay: () => MIDNIGHT_FUZZING_DELAY_MS,
   setSchedulerTickTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
@@ -256,7 +256,7 @@ this.TelemetrySend = {
   },
 };
 
-let CancellableTimeout = {
+var CancellableTimeout = {
   _deferred: null,
   _timer: null,
 
@@ -297,7 +297,7 @@ let CancellableTimeout = {
 /**
  * SendScheduler implements the timer & scheduling behavior for ping sends.
  */
-let SendScheduler = {
+var SendScheduler = {
   // Whether any ping sends failed since the last tick. If yes, we start with our exponential
   // backoff timeout.
   _sendsFailed: false,
@@ -519,7 +519,7 @@ let SendScheduler = {
   },
  };
 
-let TelemetrySendImpl = {
+var TelemetrySendImpl = {
   _sendingEnabled: false,
   _logger: null,
   // This tracks all pending ping requests to the server.

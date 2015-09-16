@@ -50,7 +50,7 @@ function makeCancelListener() {
 }
 
 // Set up the HTTP server so that we can control when it responds
-let httpReceived = Promise.defer();
+var httpReceived = Promise.defer();
 function dataHandler(aRequest, aResponse) {
   asyncResponse = aResponse;
   aResponse.processAsync();

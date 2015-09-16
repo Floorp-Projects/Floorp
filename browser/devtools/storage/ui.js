@@ -51,7 +51,7 @@ const HIDDEN_COLUMNS = [
  * @param {Window} panelWin
  *        Window of the toolbox panel to populate UI in.
  */
-let StorageUI = this.StorageUI = function StorageUI(front, target, panelWin) {
+var StorageUI = this.StorageUI = function StorageUI(front, target, panelWin) {
   EventEmitter.decorate(this);
 
   this._target = target;

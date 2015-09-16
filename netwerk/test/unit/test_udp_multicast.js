@@ -19,7 +19,7 @@ const ua = Cc["@mozilla.org/network/protocol;1?name=http"]
            .getService(Ci.nsIHttpProtocolHandler).userAgent;
 const isWinXP = ua.indexOf("Windows NT 5.1") != -1;
 
-let gConverter;
+var gConverter;
 
 function run_test() {
   setup();

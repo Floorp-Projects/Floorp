@@ -1003,7 +1003,7 @@ FlameGraph.prototype = {
  * A collection of utility functions converting various data sources
  * into a format drawable by the FlameGraph.
  */
-let FlameGraphUtils = {
+var FlameGraphUtils = {
   _cache: new WeakMap(),
 
   /**

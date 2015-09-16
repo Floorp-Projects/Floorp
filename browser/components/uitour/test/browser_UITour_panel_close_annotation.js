@@ -7,11 +7,11 @@
 
 "use strict";
 
-let gTestTab;
-let gContentAPI;
-let gContentWindow;
-let highlight = document.getElementById("UITourHighlight");
-let tooltip = document.getElementById("UITourTooltip");
+var gTestTab;
+var gContentAPI;
+var gContentWindow;
+var highlight = document.getElementById("UITourHighlight");
+var tooltip = document.getElementById("UITourTooltip");
 
 function test() {
   registerCleanupFunction(() => {
@@ -21,7 +21,7 @@ function test() {
   UITourTest();
 }
 
-let tests = [
+var tests = [
   function test_highlight_move_outside_panel(done) {
     gContentAPI.showInfo("urlbar", "test title", "test text");
     gContentAPI.showHighlight("customize");

@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let prefsBranch;
-let currentActiveGroupItemId;
+var prefsBranch;
+var currentActiveGroupItemId;
 
 function test() {
   waitForExplicitFinish();

@@ -11,7 +11,7 @@
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Task.jsm");
-let { loader, require } = Cu.import("resource://gre/modules/devtools/Loader.jsm");
+var { loader, require } = Cu.import("resource://gre/modules/devtools/Loader.jsm");
 Cu.import("resource://gre/modules/devtools/Console.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
@@ -26,13 +26,13 @@ const L10N = new ViewHelpers.L10N(STRINGS_URI);
 const V3_UI_PREF = "devtools.inspector.animationInspectorV3";
 
 // Global toolbox/inspector, set when startup is called.
-let gToolbox, gInspector;
+var gToolbox, gInspector;
 
 /**
  * Startup the animationinspector controller and view, called by the sidebar
  * widget when loading/unloading the iframe into the tab.
  */
-let startup = Task.async(function*(inspector) {
+var startup = Task.async(function*(inspector) {
   gInspector = inspector;
   gToolbox = inspector.toolbox;
 
@@ -53,7 +53,7 @@ let startup = Task.async(function*(inspector) {
  * Shutdown the animationinspector controller and view, called by the sidebar
  * widget when loading/unloading the iframe into the tab.
  */
-let shutdown = Task.async(function*() {
+var shutdown = Task.async(function*() {
   yield AnimationsController.destroy();
   // Don't assume that AnimationsPanel is defined here, it's in another file.
   if (typeof AnimationsPanel !== "undefined") {
@@ -76,7 +76,7 @@ function destroy() {
  * @param {Target} target The current toolbox target.
  * @return {Object} An object with boolean properties.
  */
-let getServerTraits = Task.async(function*(target) {
+var getServerTraits = Task.async(function*(target) {
   let config = [
     { name: "hasToggleAll", actor: "animations",
       method: "toggleAll" },
@@ -124,7 +124,7 @@ let getServerTraits = Task.async(function*(target) {
  *   }
  * }
  */
-let AnimationsController = {
+var AnimationsController = {
   PLAYERS_UPDATED_EVENT: "players-updated",
 
   initialize: Task.async(function*() {

@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/Log.jsm");
 
 this.EXPORTED_SYMBOLS = ["CardDavImporter"];
 
-let log = Log.repository.getLogger("Loop.Importer.CardDAV");
+var log = Log.repository.getLogger("Loop.Importer.CardDAV");
 log.level = Log.Level.Debug;
 log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 

@@ -12,7 +12,7 @@ Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
 // The hack, it burns. This could go away if extensions code exposed its
 // test environment setup functions as a testing-only JSM. See similar
 // code in Sync's head_helpers.js.
-let gGlobalScope = this;
+var gGlobalScope = this;
 function loadAddonManager() {
   let ns = {};
   Cu.import("resource://gre/modules/Services.jsm", ns);

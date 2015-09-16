@@ -6,7 +6,7 @@
 const { setTimeout } = require('sdk/timers');
 const tabs = require('sdk/tabs');
 
-let closeEvents = 0;
+var closeEvents = 0;
 const closeEventDetector = _ => closeEvents++;
 
 exports.testNoTabCloseOnStartup = function(assert, done) {

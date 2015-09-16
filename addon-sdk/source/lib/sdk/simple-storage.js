@@ -180,7 +180,7 @@ JsonStore.prototype = {
 // This manages a JsonStore singleton and tailors its use to simple storage.
 // The root of the JsonStore is lazy-loaded:  The backing file is only read the
 // first time the root's gotten.
-let manager = ({
+var manager = ({
   jsonStore: null,
 
   // The filename of the store, based on the profile dir and extension ID.

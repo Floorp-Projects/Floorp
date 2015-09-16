@@ -10,11 +10,11 @@ module.metadata = {
 
 const { Ci } = require("chrome");
 
-let { emit } = require("./core");
-let { when: unload } = require("../system/unload");
-let listeners = new Map();
+var { emit } = require("./core");
+var { when: unload } = require("../system/unload");
+var listeners = new Map();
 
-let getWindowFrom = x =>
+var getWindowFrom = x =>
                     x instanceof Ci.nsIDOMWindow ? x :
                     x instanceof Ci.nsIDOMDocument ? x.defaultView :
                     x instanceof Ci.nsIDOMNode ? x.ownerDocument.defaultView :

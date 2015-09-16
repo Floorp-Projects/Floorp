@@ -93,7 +93,7 @@ add_task(function* () {
   yield PlacesUtils.bookmarks.remove(folderA.guid);
 });
 
-let populate = Task.async(function* (parentFolder) {
+var populate = Task.async(function* (parentFolder) {
   let folder = yield PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     parentGuid: parentFolder.guid,

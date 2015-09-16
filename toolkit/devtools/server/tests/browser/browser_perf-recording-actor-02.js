@@ -5,8 +5,8 @@
  * Test that buffer status is correctly updated in recording models.
  */
 
-let BUFFER_SIZE = 20000;
-let config = { bufferSize: BUFFER_SIZE };
+var BUFFER_SIZE = 20000;
+var config = { bufferSize: BUFFER_SIZE };
 
 const { PerformanceFront } = require("devtools/server/actors/performance");
 

@@ -3,7 +3,7 @@
 
 const PRELOAD_PREF = "browser.newtab.preload";
 
-let suggestedLink = {
+var suggestedLink = {
   url: "http://example1.com/2",
   imageURI: "data:image/png;base64,helloWORLD3",
   title: "title2",

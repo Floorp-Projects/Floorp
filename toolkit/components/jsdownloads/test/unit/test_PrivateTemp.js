@@ -27,6 +27,6 @@ add_task(function test_private_temp() {
 ////////////////////////////////////////////////////////////////////////////////
 //// Termination
 
-let tailFile = do_get_file("tail.js");
+var tailFile = do_get_file("tail.js");
 Services.scriptloader.loadSubScript(NetUtil.newURI(tailFile).spec);
 

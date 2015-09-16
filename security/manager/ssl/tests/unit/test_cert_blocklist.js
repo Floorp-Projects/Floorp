@@ -11,14 +11,14 @@
 // * it does a sanity check to ensure other cert verifier behavior is
 //   unmodified
 
-let { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+var { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
 // First, we need to setup appInfo for the blocklist service to work
-let id = "xpcshell@tests.mozilla.org";
-let appName = "XPCShell";
-let version = "1";
-let platformVersion = "1.9.2";
-let appInfo = {
+var id = "xpcshell@tests.mozilla.org";
+var appName = "XPCShell";
+var version = "1";
+var platformVersion = "1.9.2";
+var appInfo = {
   // nsIXULAppInfo
   vendor: "Mozilla",
   name: appName,
@@ -50,7 +50,7 @@ let appInfo = {
                                          Ci.nsISupports])
 };
 
-let XULAppInfoFactory = {
+var XULAppInfoFactory = {
   createInstance: function (outer, iid) {
     appInfo.QueryInterface(iid);
     if (outer != null) {
@@ -60,7 +60,7 @@ let XULAppInfoFactory = {
   }
 };
 
-let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
 const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
 registrar.registerFactory(XULAPPINFO_CID, "XULAppInfo",
@@ -68,21 +68,21 @@ registrar.registerFactory(XULAPPINFO_CID, "XULAppInfo",
 
 // we need to ensure we setup revocation data before certDB, or we'll start with
 // no revocation.txt in the profile
-let profile = do_get_profile();
-let revocations = profile.clone();
+var profile = do_get_profile();
+var revocations = profile.clone();
 revocations.append("revocations.txt");
 if (!revocations.exists()) {
   let existing = do_get_file("test_onecrl/sample_revocations.txt", false);
   existing.copyTo(profile,"revocations.txt");
 }
 
-let certDB = Cc["@mozilla.org/security/x509certdb;1"]
+var certDB = Cc["@mozilla.org/security/x509certdb;1"]
                .getService(Ci.nsIX509CertDB);
 
 // set up a test server to serve the blocklist.xml
-let testserver = new HttpServer();
+var testserver = new HttpServer();
 
-let blocklist_contents =
+var blocklist_contents =
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
     "<blocklist xmlns=\"http://www.mozilla.org/2006/addons-blocklist\">" +
     // test with some bad data ...
@@ -123,15 +123,15 @@ testserver.registerPathHandler("/push_blocked_cert/",
 
 // start the test server
 testserver.start(-1);
-let port = testserver.identity.primaryPort;
+var port = testserver.identity.primaryPort;
 
 // Setup the addonManager
-let addonManager = Cc["@mozilla.org/addons/integration;1"]
+var addonManager = Cc["@mozilla.org/addons/integration;1"]
                      .getService(Ci.nsIObserver)
                      .QueryInterface(Ci.nsITimerCallback);
 addonManager.observe(null, "addons-startup", null);
 
-let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                   .createInstance(Ci.nsIScriptableUnicodeConverter);
 converter.charset = "UTF-8";
 

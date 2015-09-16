@@ -19,9 +19,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "BookmarkHTMLUtils",
                                   "resource://gre/modules/BookmarkHTMLUtils.jsm");
 
-let gMigrators = null;
-let gProfileStartup = null;
-let gMigrationBundle = null;
+var gMigrators = null;
+var gProfileStartup = null;
+var gMigrationBundle = null;
 
 function getMigrationBundle() {
   if (!gMigrationBundle) {

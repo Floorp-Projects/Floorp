@@ -3,16 +3,16 @@
 
 "use strict";
 
-let customName;
-let customValue;
-let customValueType;
-let customBtn;
-let newField;
-let change;
-let doc;
-let iframe;
-let resetBtn;
-let found = false;
+var customName;
+var customValue;
+var customValueType;
+var customBtn;
+var newField;
+var change;
+var doc;
+var iframe;
+var resetBtn;
+var found = false;
 
 function setDocument(frame) {
   iframe = frame;
@@ -109,7 +109,7 @@ function addNewFieldInteger() {
   is(customValue.value, "", "Custom integer value reset");
 }
 
-let editFieldInteger = Task.async(function*() {
+var editFieldInteger = Task.async(function*() {
   // Edit existing custom integer preference
   newField.value = 3;
   newField.click();
@@ -130,7 +130,7 @@ let editFieldInteger = Task.async(function*() {
   }
 });
 
-let resetExistingField = Task.async(function*(id) {
+var resetExistingField = Task.async(function*(id) {
   let existing = doc.getElementById(id);
   existing.click();
   is(existing.checked, true, "Existing boolean value is correct");
@@ -143,7 +143,7 @@ let resetExistingField = Task.async(function*(id) {
   is(existing.checked, true, "Existing field reset");
 });
 
-let resetNewField = Task.async(function*(id) {
+var resetNewField = Task.async(function*(id) {
   let custom = doc.getElementById(id);
   custom.click();
   is(custom.value, "test", "New string value is correct");

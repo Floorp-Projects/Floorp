@@ -200,7 +200,7 @@ exports.getChildren = getChildren;
  * Hook into host
  */
 
-let reqStream = filter(request, (data) => /sdk-places-bookmarks/.test(data.event));
+var reqStream = filter(request, (data) => /sdk-places-bookmarks/.test(data.event));
 on(reqStream, 'data', ({ event, id, data }) => {
   if (!EVENT_MAP[event]) return;
 

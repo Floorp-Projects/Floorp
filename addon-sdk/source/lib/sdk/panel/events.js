@@ -14,7 +14,7 @@ module.metadata = {
 const events = require("../system/events");
 const { emit } = require("../event/core");
 
-let channel = {};
+var channel = {};
 
 function forward({ subject, type, data })
   emit(channel, "data", { target: subject, type: type, data: data });

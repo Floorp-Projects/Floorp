@@ -24,7 +24,7 @@ const { remoteRequire, processes, frames } = require('../remote/parent');
 remoteRequire('sdk/content/worker-child');
 
 const workers = new WeakMap();
-let modelFor = (worker) => workers.get(worker);
+var modelFor = (worker) => workers.get(worker);
 
 const ERR_DESTROYED = "Couldn't find the worker to receive this message. " +
   "The script may not be initialized yet, or may already have been unloaded.";

@@ -62,32 +62,32 @@ public:
 
 #endif
 
-PLDHashNumber
-PL_DHashStringKey(PLDHashTable* aTable, const void* aKey)
+/* static */ PLDHashNumber
+PLDHashTable::HashStringKey(PLDHashTable* aTable, const void* aKey)
 {
   return HashString(static_cast<const char*>(aKey));
 }
 
-PLDHashNumber
-PL_DHashVoidPtrKeyStub(PLDHashTable* aTable, const void* aKey)
+/* static */ PLDHashNumber
+PLDHashTable::HashVoidPtrKeyStub(PLDHashTable* aTable, const void* aKey)
 {
   return (PLDHashNumber)(ptrdiff_t)aKey >> 2;
 }
 
-bool
-PL_DHashMatchEntryStub(PLDHashTable* aTable,
-                       const PLDHashEntryHdr* aEntry,
-                       const void* aKey)
+/* static */ bool
+PLDHashTable::MatchEntryStub(PLDHashTable* aTable,
+                             const PLDHashEntryHdr* aEntry,
+                             const void* aKey)
 {
   const PLDHashEntryStub* stub = (const PLDHashEntryStub*)aEntry;
 
   return stub->key == aKey;
 }
 
-bool
-PL_DHashMatchStringKey(PLDHashTable* aTable,
-                       const PLDHashEntryHdr* aEntry,
-                       const void* aKey)
+/* static */ bool
+PLDHashTable::MatchStringKey(PLDHashTable* aTable,
+                             const PLDHashEntryHdr* aEntry,
+                             const void* aKey)
 {
   const PLDHashEntryStub* stub = (const PLDHashEntryStub*)aEntry;
 
@@ -97,45 +97,32 @@ PL_DHashMatchStringKey(PLDHashTable* aTable,
           strcmp((const char*)stub->key, (const char*)aKey) == 0);
 }
 
-MOZ_ALWAYS_INLINE void
-PLDHashTable::MoveEntryStub(const PLDHashEntryHdr* aFrom,
+/* static */ void
+PLDHashTable::MoveEntryStub(PLDHashTable* aTable,
+                            const PLDHashEntryHdr* aFrom,
                             PLDHashEntryHdr* aTo)
 {
-  memcpy(aTo, aFrom, mEntrySize);
+  memcpy(aTo, aFrom, aTable->mEntrySize);
 }
 
-void
-PL_DHashMoveEntryStub(PLDHashTable* aTable,
-                      const PLDHashEntryHdr* aFrom,
-                      PLDHashEntryHdr* aTo)
+/* static */ void
+PLDHashTable::ClearEntryStub(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
-  aTable->MoveEntryStub(aFrom, aTo);
+  memset(aEntry, 0, aTable->mEntrySize);
 }
 
-MOZ_ALWAYS_INLINE void
-PLDHashTable::ClearEntryStub(PLDHashEntryHdr* aEntry)
-{
-  memset(aEntry, 0, mEntrySize);
-}
-
-void
-PL_DHashClearEntryStub(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
-{
-  aTable->ClearEntryStub(aEntry);
-}
-
-static const PLDHashTableOps stub_ops = {
-  PL_DHashVoidPtrKeyStub,
-  PL_DHashMatchEntryStub,
-  PL_DHashMoveEntryStub,
-  PL_DHashClearEntryStub,
+static const PLDHashTableOps gStubOps = {
+  PLDHashTable::HashVoidPtrKeyStub,
+  PLDHashTable::MatchEntryStub,
+  PLDHashTable::MoveEntryStub,
+  PLDHashTable::ClearEntryStub,
   nullptr
 };
 
-const PLDHashTableOps*
-PL_DHashGetStubOps(void)
+/* static */ const PLDHashTableOps*
+PLDHashTable::StubOps()
 {
-  return &stub_ops;
+  return &gStubOps;
 }
 
 static bool
@@ -554,7 +541,7 @@ PLDHashTable::ComputeKeyHash(const void* aKey)
   return keyHash;
 }
 
-MOZ_ALWAYS_INLINE PLDHashEntryHdr*
+PLDHashEntryHdr*
 PLDHashTable::Search(const void* aKey)
 {
 #ifdef DEBUG
@@ -568,7 +555,7 @@ PLDHashTable::Search(const void* aKey)
   return entry;
 }
 
-MOZ_ALWAYS_INLINE PLDHashEntryHdr*
+PLDHashEntryHdr*
 PLDHashTable::Add(const void* aKey, const mozilla::fallible_t&)
 {
 #ifdef DEBUG
@@ -629,7 +616,7 @@ PLDHashTable::Add(const void* aKey, const mozilla::fallible_t&)
   return entry;
 }
 
-MOZ_ALWAYS_INLINE PLDHashEntryHdr*
+PLDHashEntryHdr*
 PLDHashTable::Add(const void* aKey)
 {
   PLDHashEntryHdr* entry = Add(aKey, fallible);
@@ -650,7 +637,7 @@ PLDHashTable::Add(const void* aKey)
   return entry;
 }
 
-MOZ_ALWAYS_INLINE void
+void
 PLDHashTable::Remove(const void* aKey)
 {
 #ifdef DEBUG
@@ -678,32 +665,7 @@ PLDHashTable::RemoveEntry(PLDHashEntryHdr* aEntry)
   ShrinkIfAppropriate();
 }
 
-PLDHashEntryHdr* PL_DHASH_FASTCALL
-PL_DHashTableSearch(PLDHashTable* aTable, const void* aKey)
-{
-  return aTable->Search(aKey);
-}
-
-PLDHashEntryHdr* PL_DHASH_FASTCALL
-PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey,
-                 const fallible_t& aFallible)
-{
-  return aTable->Add(aKey, aFallible);
-}
-
-PLDHashEntryHdr* PL_DHASH_FASTCALL
-PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey)
-{
-  return aTable->Add(aKey);
-}
-
-void PL_DHASH_FASTCALL
-PL_DHashTableRemove(PLDHashTable* aTable, const void* aKey)
-{
-  aTable->Remove(aKey);
-}
-
-MOZ_ALWAYS_INLINE void
+void
 PLDHashTable::RawRemove(PLDHashEntryHdr* aEntry)
 {
   // Unfortunately, we can only do weak checking here. That's because
@@ -725,12 +687,6 @@ PLDHashTable::RawRemove(PLDHashEntryHdr* aEntry)
     MarkEntryFree(aEntry);
   }
   mEntryCount--;
-}
-
-void
-PL_DHashTableRawRemove(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
-{
-  aTable->RawRemove(aEntry);
 }
 
 // Shrink or compress if a quarter or more of all entries are removed, or if the
@@ -884,16 +840,10 @@ PLDHashTable::Iterator::Remove()
 }
 
 #ifdef DEBUG
-MOZ_ALWAYS_INLINE void
+void
 PLDHashTable::MarkImmutable()
 {
   mChecker.SetNonWritable();
-}
-
-void
-PL_DHashMarkTableImmutable(PLDHashTable* aTable)
-{
-  aTable->MarkImmutable();
 }
 #endif
 

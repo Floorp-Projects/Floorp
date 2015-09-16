@@ -12,7 +12,7 @@ function test() {
   goNext();
 }
 
-let tests = [
+var tests = [
   // Test optional params
   { id: "Test#1",
     run: function () {

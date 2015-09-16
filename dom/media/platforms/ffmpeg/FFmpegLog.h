@@ -7,7 +7,7 @@
 #ifndef __FFmpegLog_h__
 #define __FFmpegLog_h__
 
-extern PRLogModuleInfo* GetFFmpegDecoderLog();
-#define FFMPEG_LOG(...) MOZ_LOG(GetFFmpegDecoderLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
+extern PRLogModuleInfo* GetPDMLog();
+#define FFMPEG_LOG(...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 #endif // __FFmpegLog_h__

@@ -249,7 +249,7 @@ function updateBlocklist(aCallback) {
   blocklistNotifier.notify(null);
 }
 
-let _originalTestBlocklistURL = null;
+var _originalTestBlocklistURL = null;
 function setAndUpdateBlocklist(aURL, aCallback) {
   if (!_originalTestBlocklistURL) {
     _originalTestBlocklistURL = Services.prefs.getCharPref("extensions.blocklist.url");

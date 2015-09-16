@@ -6,7 +6,7 @@
 /**
  * A base class from which all detail views inherit.
  */
-let DetailsSubview = {
+var DetailsSubview = {
   /**
    * Sets up the view with event binding.
    */

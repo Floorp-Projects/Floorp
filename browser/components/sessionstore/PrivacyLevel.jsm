@@ -50,7 +50,7 @@ function getCurrentLevel(isPinned) {
 /**
  * The external API as exposed by this module.
  */
-let PrivacyLevel = Object.freeze({
+var PrivacyLevel = Object.freeze({
   /**
    * Checks whether we're allowed to save data for a specific site.
    *

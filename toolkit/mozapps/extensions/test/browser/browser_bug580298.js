@@ -48,7 +48,7 @@ function open_details(aList, aItem, aCallback) {
   return new Promise(resolve => wait_for_view_load(gManagerWindow, resolve));
 }
 
-let check_addon_has_version = Task.async(function*(aList, aName, aVersion) {
+var check_addon_has_version = Task.async(function*(aList, aName, aVersion) {
   for (let i = 0; i < aList.itemCount; i++) {
     let item = aList.getItemAtIndex(i);
     if (get_node(item, "name").value === aName) {

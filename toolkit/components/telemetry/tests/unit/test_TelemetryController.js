@@ -35,7 +35,7 @@ const PREF_FHR_SERVICE_ENABLED = "datareporting.healthreport.service.enabled";
 const PREF_UNIFIED = PREF_BRANCH + "unified";
 const PREF_OPTOUT_SAMPLE = PREF_BRANCH + "optoutSample";
 
-let gClientID = null;
+var gClientID = null;
 
 function sendPing(aSendClientId, aSendEnvironment) {
   if (PingServer.started) {

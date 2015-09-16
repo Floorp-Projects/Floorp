@@ -51,8 +51,8 @@ function frameScript() {
   });
 }
 
-let gTabAboutPerformance = null;
-let gTabContent = null;
+var gTabAboutPerformance = null;
+var gTabContent = null;
 
 add_task(function* init() {
   info("Setting up about:performance");
@@ -64,7 +64,7 @@ add_task(function* init() {
   yield ContentTask.spawn(gTabContent.linkedBrowser, null, frameScript);
 });
 
-let promiseExpectContent = Task.async(function*(options) {
+var promiseExpectContent = Task.async(function*(options) {
   let title = "Testing about:performance " + Math.random();
   for (let i = 0; i < 30; ++i) {
     yield promiseContentResponse(gTabContent.linkedBrowser, "aboutperformance-test:setTitle", title);

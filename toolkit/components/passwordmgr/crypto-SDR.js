@@ -203,5 +203,5 @@ XPCOMUtils.defineLazyGetter(this.LoginManagerCrypto_SDR.prototype, "log", () => 
   return logger.log.bind(logger);
 });
 
-let component = [LoginManagerCrypto_SDR];
+var component = [LoginManagerCrypto_SDR];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);

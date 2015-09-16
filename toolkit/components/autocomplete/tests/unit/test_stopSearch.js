@@ -108,7 +108,7 @@ function unregisterAutoCompleteSearch(aSearch) {
 }
 
 
-let gTests = [
+var gTests = [
   function(controller) {
     print("handleText");
     controller.input.textValue = "hel";
@@ -144,8 +144,8 @@ let gTests = [
 ];
 
 
-let gSearch;
-let gCurrentTest;
+var gSearch;
+var gCurrentTest;
 function run_test() {
   // Make an AutoCompleteSearch that always returns nothing
   gSearch = new AutoCompleteSearch("test");

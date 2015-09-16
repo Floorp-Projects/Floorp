@@ -1,6 +1,6 @@
-let gTestBrowser = null;
-let gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
-let gChromeRoot = getRootDirectory(gTestPath);
+var gTestBrowser = null;
+var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+var gChromeRoot = getRootDirectory(gTestPath);
 
 add_task(function* () {
   registerCleanupFunction(Task.async(function*() {

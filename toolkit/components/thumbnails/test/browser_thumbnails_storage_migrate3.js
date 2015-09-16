@@ -7,11 +7,11 @@ const URL3 = URL + "#3";
 const THUMBNAIL_DIRECTORY = "thumbnails";
 const PREF_STORAGE_VERSION = "browser.pagethumbnails.storage_version";
 
-let tmp = {};
+var tmp = {};
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
   .loadSubScript("resource://gre/modules/PageThumbs.jsm", tmp);
-let {PageThumbsStorageMigrator} = tmp;
+var {PageThumbsStorageMigrator} = tmp;
 
 XPCOMUtils.defineLazyServiceGetter(this, "gDirSvc",
   "@mozilla.org/file/directory_service;1", "nsIProperties");

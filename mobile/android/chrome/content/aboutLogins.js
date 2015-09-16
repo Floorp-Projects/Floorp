@@ -2,7 +2,7 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
+var Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Messaging.jsm");
 Cu.import("resource://gre/modules/Services.jsm")
@@ -21,9 +21,9 @@ XPCOMUtils.defineLazyGetter(window, "gChromeWin", function()
 XPCOMUtils.defineLazyModuleGetter(this, "Prompt",
                                   "resource://gre/modules/Prompt.jsm");
 
-let debug = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.d.bind(null, "AboutLogins");
+var debug = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.d.bind(null, "AboutLogins");
 
-let gStringBundle = Services.strings.createBundle("chrome://browser/locale/aboutLogins.properties");
+var gStringBundle = Services.strings.createBundle("chrome://browser/locale/aboutLogins.properties");
 
 function copyStringAndToast(string, notifyString) {
   try {
@@ -44,7 +44,7 @@ const LOGIN_VIEWED = 1;
 const LOGIN_EDITED = 2;
 const LOGIN_PW_TOGGLED = 3;
 
-let Logins = {
+var Logins = {
   _logins: [],
   _filterTimer: null,
   _selectedLogin: null,

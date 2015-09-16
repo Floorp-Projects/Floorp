@@ -6,14 +6,14 @@
 
 this.EXPORTED_SYMBOLS = ["RemoteDebugger"];
 
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-let Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let { DebuggerServer } = require("devtools/server/main");
+var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var { DebuggerServer } = require("devtools/server/main");
 
 this.RemoteDebugger = {
   init: function(port) {

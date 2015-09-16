@@ -40,5 +40,5 @@ LOCAL_INCLUDES += [
 ]
 
 if CONFIG['GNU_CC']:
-    CFLAGS += ['-Wformat-security']
-    CXXFLAGS += ['-Wformat-security']
+    CFLAGS += ['-Wshadow', '-Wformat-security']
+    CXXFLAGS += ['-Wshadow', '-Wformat-security']

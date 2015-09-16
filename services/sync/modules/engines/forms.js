@@ -30,7 +30,7 @@ FormRec.prototype = {
 Utils.deferGetSet(FormRec, "cleartext", ["name", "value"]);
 
 
-let FormWrapper = {
+var FormWrapper = {
   _log: Log.repository.getLogger("Sync.Engine.Forms"),
 
   _getEntryCols: ["fieldname", "value"],

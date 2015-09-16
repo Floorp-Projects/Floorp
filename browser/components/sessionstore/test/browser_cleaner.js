@@ -34,7 +34,7 @@ function getClosedState() {
   return Cu.cloneInto(CLOSED_STATE, {});
 }
 
-let CLOSED_STATE;
+var CLOSED_STATE;
 
 add_task(function* init() {
   forgetClosedWindows();

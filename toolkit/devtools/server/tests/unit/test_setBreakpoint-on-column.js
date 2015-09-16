@@ -1,6 +1,6 @@
 "use strict";
 
-let SOURCE_URL = getFileUrl("setBreakpoint-on-column.js");
+var SOURCE_URL = getFileUrl("setBreakpoint-on-column.js");
 
 function run_test() {
   return Task.spawn(function* () {

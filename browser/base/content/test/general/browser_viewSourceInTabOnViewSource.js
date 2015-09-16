@@ -14,7 +14,7 @@ function wait_while_tab_is_busy() {
 
 // This function waits for the tab to stop being busy instead of waiting for it
 // to load, since the canViewSource change happens at that time.
-let with_new_tab_opened = Task.async(function* (options, taskFn) {
+var with_new_tab_opened = Task.async(function* (options, taskFn) {
   let busyPromise = wait_while_tab_is_busy();
   let tab = yield BrowserTestUtils.openNewForegroundTab(options.gBrowser, options.url, false);
   yield busyPromise;

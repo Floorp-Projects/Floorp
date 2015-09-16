@@ -3,15 +3,15 @@
 
 const Cu = SpecialPowers.Cu;
 
-let Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
-let nfc = window.navigator.mozNfc;
+var Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
+var nfc = window.navigator.mozNfc;
 
 SpecialPowers.addPermission("nfc-manager", true, document);
 
 /**
  * Emulator helper.
  */
-let emulator = (function() {
+var emulator = (function() {
   let pendingCmdCount = 0;
   let originalRunEmulatorCmd = runEmulatorCmd;
 
@@ -43,7 +43,7 @@ let emulator = (function() {
   };
 }());
 
-let sysMsgHelper = (function() {
+var sysMsgHelper = (function() {
   function techDiscovered(msg) {
     log("system message nfc-manager-tech-discovered");
     let discovered = mDiscovered.shift();
@@ -90,7 +90,7 @@ let sysMsgHelper = (function() {
   };
 }());
 
-let NCI = (function() {
+var NCI = (function() {
   function activateRE(re) {
     let deferred = Promise.defer();
     let cmd = 'nfc nci rf_intf_activated_ntf ' + re;
@@ -137,7 +137,7 @@ let NCI = (function() {
   };
 }());
 
-let TAG = (function() {
+var TAG = (function() {
   function setData(re, flag, tnf, type, payload) {
     let deferred = Promise.defer();
     let tnfNum = NDEF.getTNFNum(tnf);
@@ -168,7 +168,7 @@ let TAG = (function() {
   };
 }());
 
-let SNEP = (function() {
+var SNEP = (function() {
   function put(dsap, ssap, flags, tnf, type, id, payload) {
     let deferred = Promise.defer();
     let tnfNum = NDEF.getTNFNum(tnf);

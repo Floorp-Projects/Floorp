@@ -3,7 +3,7 @@
 
 // Tests that each nsINavBookmarksObserver method gets the correct input.
 
-let gBookmarksObserver = {
+var gBookmarksObserver = {
   expected: [],
   validate: function (aMethodName, aArguments) {
     do_check_eq(this.expected[0].name, aMethodName);

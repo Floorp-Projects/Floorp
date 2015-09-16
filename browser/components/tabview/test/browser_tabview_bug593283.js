@@ -3,7 +3,7 @@
 
 const DUMMY_PAGE_URL = "http://example.com/";
 
-let state = {
+var state = {
   windows: [{
     tabs: [{
       entries: [{ url: DUMMY_PAGE_URL }],

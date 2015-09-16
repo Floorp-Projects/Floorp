@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyModuleGetter(this, 'States', // jshint ignore:line
 
 this.EXPORTED_SYMBOLS = ['UtteranceGenerator', 'BrailleGenerator']; // jshint ignore:line
 
-let OutputGenerator = {
+var OutputGenerator = {
 
   defaultOutputOrder: OUTPUT_DESC_LAST,
 

@@ -5,7 +5,7 @@
 
 const { merge, extend, has, each } = require('sdk/util/object');
 
-let o = {
+var o = {
   'paper': 0,
   'rock': 1,
   'scissors': 2

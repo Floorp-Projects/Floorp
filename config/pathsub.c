@@ -34,7 +34,7 @@
 char *program;
 
 void
-fail(char *format, ...)
+fail(const char *format, ...)
 {
     int error;
     va_list ap;
@@ -143,7 +143,7 @@ xbasename(char *path)
 }
 
 void
-xchdir(char *dir)
+xchdir(const char *dir)
 {
     if (chdir(dir) < 0)
 	fail("cannot change directory to %s", dir);

@@ -3,9 +3,9 @@
 
 const {Cc: Cc, Ci: Ci, Cr: Cr, Cu: Cu} = SpecialPowers;
 
-let Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
+var Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
 
-let _pendingEmulatorCmdCount = 0;
+var _pendingEmulatorCmdCount = 0;
 
 /**
  * Send emulator command with safe guard.

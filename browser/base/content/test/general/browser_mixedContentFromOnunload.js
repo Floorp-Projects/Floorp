@@ -13,7 +13,7 @@ const gHttpsTestRoot1 = "https://test1.example.com/browser/browser/base/content/
 const gHttpTestRoot2 = "http://example.net/browser/browser/base/content/test/general/";
 const gHttpsTestRoot2 = "https://test2.example.com/browser/browser/base/content/test/general/";
 
-let gTestBrowser = null;
+var gTestBrowser = null;
 
 function SecStateTestsCompleted() {
   gBrowser.removeCurrentTab();

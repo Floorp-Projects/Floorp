@@ -91,7 +91,7 @@ add_test(function test_getDir_shouldCreate() {
   run_next_test();
 });
 
-let openFileOutputStream_defaultFlags = function (aKind, aFileName) {
+var openFileOutputStream_defaultFlags = function (aKind, aFileName) {
   let file = FileUtils.getFile("ProfD", [aFileName]);
   let fos;
   do_check_true(aKind == "atomic" || aKind == "safe" || aKind == "");
@@ -127,7 +127,7 @@ let openFileOutputStream_defaultFlags = function (aKind, aFileName) {
   run_next_test();
 };
 
-let openFileOutputStream_modeFlags = function(aKind, aFileName) {
+var openFileOutputStream_modeFlags = function(aKind, aFileName) {
   let file = FileUtils.getFile("ProfD", [aFileName]);
   let fos;
   do_check_true(aKind == "atomic" || aKind == "safe" || aKind == "");
@@ -147,7 +147,7 @@ let openFileOutputStream_modeFlags = function(aKind, aFileName) {
   run_next_test();
 };
 
-let closeFileOutputStream = function(aKind, aFileName) {
+var closeFileOutputStream = function(aKind, aFileName) {
   let file = FileUtils.getFile("ProfD", [aFileName]);
   let fos;
   do_check_true(aKind == "atomic" || aKind == "safe");

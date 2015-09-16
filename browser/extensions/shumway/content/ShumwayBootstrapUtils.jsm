@@ -24,15 +24,15 @@ const PREF_WHITELIST = PREF_PREFIX + 'swf.whitelist';
 const SWF_CONTENT_TYPE = 'application/x-shockwave-flash';
 const PLUGIN_HANLDER_URI = 'chrome://shumway/content/content.html';
 
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-let Cm = Components.manager;
-let Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cm = Components.manager;
+var Cu = Components.utils;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
 
-let Ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+var Ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 
 function getBoolPref(pref, def) {
   try {

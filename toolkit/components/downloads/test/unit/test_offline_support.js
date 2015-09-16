@@ -11,7 +11,7 @@
  * Used to indicate if we should error out or not.  See bug 431745 for more
  * details.
  */
-let doNotError = false;
+var doNotError = false;
 
 const nsIF = Ci.nsIFile;
 const nsIDM = Ci.nsIDownloadManager;

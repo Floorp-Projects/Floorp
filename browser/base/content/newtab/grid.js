@@ -14,7 +14,7 @@ const SPONSORED_TAG_BUFFER = 2; // 2px buffer to clip off top of sponsored tag
 /**
  * This singleton represents the grid that contains all sites.
  */
-let gGrid = {
+var gGrid = {
   /**
    * The DOM node of the grid.
    */

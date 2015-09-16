@@ -7,8 +7,8 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 
-let TiltUtils = require("devtools/tilt/tilt-utils");
-let {TiltMath, mat4} = require("devtools/tilt/tilt-math");
+var TiltUtils = require("devtools/tilt/tilt-utils");
+var {TiltMath, mat4} = require("devtools/tilt/tilt-math");
 
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -18,7 +18,7 @@ const WEBGL_CONTEXT_NAME = "experimental-webgl";
 /**
  * Module containing thin wrappers around low-level WebGL functions.
  */
-let TiltGL = {};
+var TiltGL = {};
 module.exports = TiltGL;
 
 /**

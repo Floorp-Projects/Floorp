@@ -36,19 +36,19 @@ const { number, boolean, object } = require('./deprecated/api-utils');
 const { Style } = require("./stylesheet/style");
 const { attach, detach } = require("./content/mod");
 
-let isRect = ({top, right, bottom, left}) => [top, right, bottom, left].
+var isRect = ({top, right, bottom, left}) => [top, right, bottom, left].
   some(value => isNumber(value) && !isNaN(value));
 
-let isSDKObj = obj => obj instanceof Class;
+var isSDKObj = obj => obj instanceof Class;
 
-let rectContract = contract({
+var rectContract = contract({
   top: number,
   right: number,
   bottom: number,
   left: number
 });
 
-let position = {
+var position = {
   is: object,
   map: v => (isNil(v) || isSDKObj(v) || !isObject(v)) ? v : rectContract(v),
   ok: v => isNil(v) || isSDKObj(v) || (isObject(v) && isRect(v)),
@@ -57,14 +57,14 @@ let position = {
         'values: top, right, bottom, left.'
 }
 
-let displayContract = contract({
+var displayContract = contract({
   width: number,
   height: number,
   focus: boolean,
   position: position
 });
 
-let panelContract = contract(merge({
+var panelContract = contract(merge({
   // contentStyle* / contentScript* are sharing the same validation constraints,
   // so they can be mostly reused, except for the messages.
   contentStyle: merge(Object.create(loaderContract.rules.contentScript), {
@@ -79,11 +79,11 @@ let panelContract = contract(merge({
 
 function isDisposed(panel) !views.has(panel);
 
-let panels = new WeakMap();
-let models = new WeakMap();
-let views = new WeakMap();
-let workers = new WeakMap();
-let styles = new WeakMap();
+var panels = new WeakMap();
+var models = new WeakMap();
+var views = new WeakMap();
+var workers = new WeakMap();
+var styles = new WeakMap();
 
 const viewFor = (panel) => views.get(panel);
 const modelFor = (panel) => models.get(panel);
@@ -93,7 +93,7 @@ const styleFor = (panel) => styles.get(panel);
 
 // Utility function takes `panel` instance and makes sure it will be
 // automatically hidden as soon as other panel is shown.
-let setupAutoHide = new function() {
+var setupAutoHide = new function() {
   let refs = new WeakMap();
 
   return function setupAutoHide(panel) {
@@ -280,27 +280,27 @@ exports.Panel = Panel;
 getActiveView.define(Panel, viewFor);
 
 // Filter panel events to only panels that are create by this module.
-let panelEvents = filter(events, ({target}) => panelFor(target));
+var panelEvents = filter(events, ({target}) => panelFor(target));
 
 // Panel events emitted after panel has being shown.
-let shows = filter(panelEvents, ({type}) => type === "popupshown");
+var shows = filter(panelEvents, ({type}) => type === "popupshown");
 
 // Panel events emitted after panel became hidden.
-let hides = filter(panelEvents, ({type}) => type === "popuphidden");
+var hides = filter(panelEvents, ({type}) => type === "popuphidden");
 
 // Panel events emitted after content inside panel is ready. For different
 // panels ready may mean different state based on `contentScriptWhen` attribute.
 // Weather given event represents readyness is detected by `getAttachEventType`
 // helper function.
-let ready = filter(panelEvents, ({type, target}) =>
+var ready = filter(panelEvents, ({type, target}) =>
   getAttachEventType(modelFor(panelFor(target))) === type);
 
 // Panel event emitted when the contents of the panel has been loaded.
-let readyToShow = filter(panelEvents, ({type}) => type === "DOMContentLoaded");
+var readyToShow = filter(panelEvents, ({type}) => type === "DOMContentLoaded");
 
 // Styles should be always added as soon as possible, and doesn't makes them
 // depends on `contentScriptWhen`
-let start = filter(panelEvents, ({type}) => type === "document-element-inserted");
+var start = filter(panelEvents, ({type}) => type === "document-element-inserted");
 
 // Forward panel show / hide events to panel's own event listeners.
 on(shows, "data", ({target}) => {

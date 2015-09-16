@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let stateBackup = JSON.parse(ss.getBrowserState());
+var stateBackup = JSON.parse(ss.getBrowserState());
 
 function test() {
   /** Test for Bug 600545 **/

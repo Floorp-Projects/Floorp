@@ -14,7 +14,7 @@ const utils = require("devtools/webide/utils");
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 
-let SimulatorEditor = {
+var SimulatorEditor = {
 
   // Available Firefox OS Simulator addons (key: `addon.id`).
   _addons: {},

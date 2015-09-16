@@ -4,7 +4,7 @@
 
 const NUM_TABS = 12;
 
-let stateBackup = ss.getBrowserState();
+var stateBackup = ss.getBrowserState();
 
 function test() {
   /** Test for Bug 590268 - Provide access to sessionstore tab data sooner **/
