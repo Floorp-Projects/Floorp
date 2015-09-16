@@ -406,8 +406,8 @@ CXXFLAGS += [
     ]
 ]
 
-MOCHITEST_MANIFESTS += ['apz/test/mochitest.ini']
-MOCHITEST_CHROME_MANIFESTS += ['apz/test/chrome.ini']
+MOCHITEST_MANIFESTS += ['apz/test/mochitest/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['apz/test/mochitest/chrome.ini']
 
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 CXXFLAGS += CONFIG['TK_CFLAGS']
