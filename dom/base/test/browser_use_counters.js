@@ -104,8 +104,8 @@ function grabHistogramsFromContent(browser, use_counter_middlefix) {
       return telemetry.getHistogramById(name).snapshot();
     }
 
-    let histogram_page_name = "USE_COUNTER_" + arg.middlefix + "_PAGE";
-    let histogram_document_name = "USE_COUNTER_" + arg.middlefix + "_DOCUMENT";
+    let histogram_page_name = "USE_COUNTER2_" + arg.middlefix + "_PAGE";
+    let histogram_document_name = "USE_COUNTER2_" + arg.middlefix + "_DOCUMENT";
     let histogram_page = snapshot_histogram(histogram_page_name);
     let histogram_document = snapshot_histogram(histogram_document_name);
     return [histogram_page.sum, histogram_document.sum];
