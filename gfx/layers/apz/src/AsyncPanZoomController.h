@@ -103,6 +103,7 @@ public:
                          APZCTreeManager* aTreeManager,
                          const nsRefPtr<InputQueue>& aInputQueue,
                          GeckoContentController* aController,
+                         TaskThrottler* aPaintThrottler,
                          GestureBehavior aGestures = DEFAULT_GESTURES);
 
   // --------------------------------------------------------------------------
@@ -648,7 +649,7 @@ protected:
 
   uint64_t mLayersId;
   nsRefPtr<CompositorParent> mCompositorParent;
-  TaskThrottler mPaintThrottler;
+  nsRefPtr<TaskThrottler> mPaintThrottler;
 
   /* Access to the following two fields is protected by the mRefPtrMonitor,
      since they are accessed on the UI thread but can be cleared on the
