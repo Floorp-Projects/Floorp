@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const TEST_URI = "http://example.com/browser/dom/tests/browser/browser_frame_elements.html";
-let gWindow;
+var gWindow;
 
 function test() {
   waitForExplicitFinish();

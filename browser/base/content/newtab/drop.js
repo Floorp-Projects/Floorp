@@ -11,7 +11,7 @@ const DELAY_REARRANGE_MS = 100;
 /**
  * This singleton implements site dropping functionality.
  */
-let gDrop = {
+var gDrop = {
   /**
    * The last drop target.
    */

@@ -9,16 +9,16 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const gAppRep = Cc["@mozilla.org/downloads/application-reputation-service;1"].
                   getService(Ci.nsIApplicationReputationService);
-let gHttpServ = null;
-let gTables = {};
+var gHttpServ = null;
+var gTables = {};
 
-let ALLOW_LIST = 0;
-let BLOCK_LIST = 1;
-let NO_LIST = 2;
+var ALLOW_LIST = 0;
+var BLOCK_LIST = 1;
+var NO_LIST = 2;
 
-let whitelistedURI = createURI("http://foo:bar@whitelisted.com/index.htm#junk");
-let exampleURI = createURI("http://user:password@example.com/i.html?foo=bar");
-let blocklistedURI = createURI("http://baz:qux@blocklisted.com?xyzzy");
+var whitelistedURI = createURI("http://foo:bar@whitelisted.com/index.htm#junk");
+var exampleURI = createURI("http://user:password@example.com/i.html?foo=bar");
+var blocklistedURI = createURI("http://baz:qux@blocklisted.com?xyzzy");
 
 function readFileToString(aFilename) {
   let f = do_get_file(aFilename);

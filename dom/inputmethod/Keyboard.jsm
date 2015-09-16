@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyGetter(this, "appsService", function() {
   return Cc["@mozilla.org/AppsService;1"].getService(Ci.nsIAppsService);
 });
 
-let Utils = {
+var Utils = {
   getMMFromMessage: function u_getMMFromMessage(msg) {
     let mm;
     try {

@@ -12,7 +12,7 @@ const FRAME_SCRIPTS = [
   ROOT + "content-forms.js"
 ];
 
-let mm = Cc["@mozilla.org/globalmessagemanager;1"]
+var mm = Cc["@mozilla.org/globalmessagemanager;1"]
            .getService(Ci.nsIMessageListenerManager);
 
 for (let script of FRAME_SCRIPTS) {
@@ -268,7 +268,7 @@ function promiseRecoveryFileContents() {
   });
 }
 
-let promiseForEachSessionRestoreFile = Task.async(function*(cb) {
+var promiseForEachSessionRestoreFile = Task.async(function*(cb) {
   for (let key of SessionFile.Paths.loadOrder) {
     let data = "";
     try {
@@ -312,7 +312,7 @@ function BrowserWindowIterator() {
   }
 }
 
-let gWebProgressListener = {
+var gWebProgressListener = {
   _callback: null,
 
   setCallback: function (aCallback) {
@@ -343,7 +343,7 @@ registerCleanupFunction(function () {
   gWebProgressListener.unsetCallback();
 });
 
-let gProgressListener = {
+var gProgressListener = {
   _callback: null,
 
   setCallback: function (callback) {

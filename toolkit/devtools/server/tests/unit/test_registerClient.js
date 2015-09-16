@@ -3,7 +3,7 @@
 
 // Test the DebuggerClient.registerClient API
 
-let EventEmitter = require("devtools/toolkit/event-emitter");
+var EventEmitter = require("devtools/toolkit/event-emitter");
 
 var gClient;
 var gActors;

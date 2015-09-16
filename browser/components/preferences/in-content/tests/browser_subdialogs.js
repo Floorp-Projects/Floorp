@@ -7,7 +7,7 @@
  * Tests for the sub-dialog infrastructure, not for actual sub-dialog functionality.
  */
 
-let gTeardownAfterClose = false;
+var gTeardownAfterClose = false;
 const gDialogURL = getRootDirectory(gTestPath) + "subdialog.xul";
 
 function test() {
@@ -28,7 +28,7 @@ function test() {
   });
 }
 
-let gTests = [{
+var gTests = [{
   desc: "Check titlebar, focus, return value, title changes, and accepting",
   run: function* () {
     let rv = { acceptCount: 0 };

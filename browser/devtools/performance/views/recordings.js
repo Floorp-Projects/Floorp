@@ -6,7 +6,7 @@
 /**
  * Functions handling the recordings UI.
  */
-let RecordingsView = Heritage.extend(WidgetMethods, {
+var RecordingsView = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the tool is started.
    */

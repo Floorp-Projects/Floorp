@@ -22,7 +22,7 @@ const INSECURE_IFRAME_MSG = "Password fields present on an insecure " +
 const INSECURE_PASSWORDS_URI = "https://developer.mozilla.org/docs/Security/" +
                  "InsecurePasswords";
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

@@ -245,7 +245,9 @@ int NS_main(int argc, NS_tchar **argv)
       NS_tfputs(NS_T("test"), file);
       fclose(file);
     }
-    symlink(path, argv[5]);
+    if (symlink(path, argv[5]) != 0) {
+      return 1;
+    }
     NS_tsnprintf(path, sizeof(path)/sizeof(path[0]),
                  NS_T("%s/%s"), NS_T("/tmp"), argv[2]);
     if (argc > 6 && !NS_tstrcmp(argv[6], NS_T("change-perm"))) {

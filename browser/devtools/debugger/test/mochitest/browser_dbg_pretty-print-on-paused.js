@@ -8,7 +8,7 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print-on-paused.html";
 
-let gTab, gPanel, gDebugger, gThreadClient, gSources;
+var gTab, gPanel, gDebugger, gThreadClient, gSources;
 
 const SECOND_SOURCE_VALUE = EXAMPLE_URL + "code_ugly-2.js";
 

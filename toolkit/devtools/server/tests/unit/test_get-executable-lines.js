@@ -6,9 +6,9 @@
  * Test if getExecutableLines return correct information
  */
 
-let gDebuggee;
-let gClient;
-let gThreadClient;
+var gDebuggee;
+var gClient;
+var gThreadClient;
 
 const SOURCE_MAPPED_FILE = getFileUrl("sourcemapped.js");
 

@@ -84,4 +84,4 @@ function* testShowAndHideMdnTooltip(view) {
 /**
  * Returns the root element for the rule view.
  */
-let rootElement = view => (view.element) ? view.element : view.styleDocument;
+var rootElement = view => (view.element) ? view.element : view.styleDocument;

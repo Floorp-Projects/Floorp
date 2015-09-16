@@ -114,9 +114,9 @@ function UpdateDetectorMenu(event) {
   }
 }
 
-let gDetectorInfoCache, gCharsetInfoCache, gPinnedInfoCache;
+var gDetectorInfoCache, gCharsetInfoCache, gPinnedInfoCache;
 
-let CharsetMenu = {
+var CharsetMenu = {
   build: function(parent, showAccessKeys=true, showDetector=true) {
     function createDOMNode(doc, nodeInfo) {
       let node = doc.createElement("menuitem");

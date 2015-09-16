@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let bs = PlacesUtils.bookmarks;
-let hs = PlacesUtils.history;
-let anno = PlacesUtils.annotations;
+var bs = PlacesUtils.bookmarks;
+var hs = PlacesUtils.history;
+var anno = PlacesUtils.annotations;
 
 
-let bookmarksObserver = {
+var bookmarksObserver = {
   onBeginUpdateBatch: function() {
     this._beginUpdateBatch = true;
   },
@@ -71,9 +71,9 @@ let bookmarksObserver = {
 
 
 // Get bookmarks menu folder id.
-let root = bs.bookmarksMenuFolder;
+var root = bs.bookmarksMenuFolder;
 // Index at which items should begin.
-let bmStartIndex = 0;
+var bmStartIndex = 0;
 
 
 function run_test() {

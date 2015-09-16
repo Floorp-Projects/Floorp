@@ -9,10 +9,10 @@ function writeLine(aLine, aOutputStream) {
   aOutputStream.write(aLine, aLine.length);
 }
 
-let gSSService = null;
+var gSSService = null;
 
-let profileDir = do_get_profile();
-let certdb;
+var profileDir = do_get_profile();
+var certdb;
 
 function certFromFile(cert_name) {
   return constructCertFromFile("test_pinning_dynamic/" + cert_name + ".pem");

@@ -12,8 +12,8 @@
 const TEST_PAGE_URL = TEST_URL_ROOT + "doc_markup_events_form.html";
 const TEST_ACTOR_URL = CHROME_BASE + "actor_events_form.js";
 
-let {ActorRegistryFront} = require("devtools/server/actors/actor-registry");
-let {EventsFormFront} = require(TEST_ACTOR_URL);
+var {ActorRegistryFront} = require("devtools/server/actors/actor-registry");
+var {EventsFormFront} = require(TEST_ACTOR_URL);
 
 add_task(function*() {
   info("Opening the Toolbox");

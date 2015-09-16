@@ -1,6 +1,6 @@
 "use strict";
 
-let SOURCE_URL = getFileUrl("setBreakpoint-on-line-with-no-offests-in-gcd-script.js");
+var SOURCE_URL = getFileUrl("setBreakpoint-on-line-with-no-offests-in-gcd-script.js");
 
 function run_test() {
   return Task.spawn(function* () {

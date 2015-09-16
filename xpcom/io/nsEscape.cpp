@@ -12,7 +12,8 @@
 #include "nsCRT.h"
 #include "plstr.h"
 
-static const char hexChars[] = "0123456789ABCDEF";
+static const char hexCharsUpper[] = "0123456789ABCDEF";
+static const char hexCharsUpperLower[] = "0123456789ABCDEFabcdef";
 
 static const int netCharType[256] =
 /*  Bit 0       xalpha      -- the alphas
@@ -51,8 +52,8 @@ AppendPercentHex(char* aBuffer, unsigned char aChar)
 {
   uint32_t i = 0;
   aBuffer[i++] = '%';
-  aBuffer[i++] = hexChars[aChar >> 4]; // high nibble
-  aBuffer[i++] = hexChars[aChar & 0xF]; // low nibble
+  aBuffer[i++] = hexCharsUpper[aChar >> 4]; // high nibble
+  aBuffer[i++] = hexCharsUpper[aChar & 0xF]; // low nibble
   return i;
 }
 
@@ -63,11 +64,11 @@ AppendPercentHex(char16_t* aBuffer, char16_t aChar)
   aBuffer[i++] = '%';
   if (aChar & 0xff00) {
     aBuffer[i++] = 'u';
-    aBuffer[i++] = hexChars[aChar >> 12]; // high-byte high nibble
-    aBuffer[i++] = hexChars[(aChar >> 8) & 0xF]; // high-byte low nibble
+    aBuffer[i++] = hexCharsUpper[aChar >> 12]; // high-byte high nibble
+    aBuffer[i++] = hexCharsUpper[(aChar >> 8) & 0xF]; // high-byte low nibble
   }
-  aBuffer[i++] = hexChars[(aChar >> 4) & 0xF]; // low-byte high nibble
-  aBuffer[i++] = hexChars[aChar & 0xF]; // low-byte low nibble
+  aBuffer[i++] = hexCharsUpper[(aChar >> 4) & 0xF]; // low-byte high nibble
+  aBuffer[i++] = hexCharsUpper[aChar & 0xF]; // low-byte low nibble
   return i;
 }
 
@@ -124,8 +125,8 @@ nsEscapeCount(const char* aStr, nsEscapeMask aFlags, size_t* aOutLen)
         *dst++ = '+';  /* convert spaces to pluses */
       } else {
         *dst++ = HEX_ESCAPE;
-        *dst++ = hexChars[c >> 4];  /* high nibble */
-        *dst++ = hexChars[c & 0x0f];  /* low nibble */
+        *dst++ = hexCharsUpper[c >> 4];  /* high nibble */
+        *dst++ = hexCharsUpper[c & 0x0f];  /* low nibble */
       }
     }
   } else {
@@ -135,8 +136,8 @@ nsEscapeCount(const char* aStr, nsEscapeMask aFlags, size_t* aOutLen)
         *dst++ = c;
       } else {
         *dst++ = HEX_ESCAPE;
-        *dst++ = hexChars[c >> 4];  /* high nibble */
-        *dst++ = hexChars[c & 0x0f];  /* low nibble */
+        *dst++ = hexCharsUpper[c >> 4];  /* high nibble */
+        *dst++ = hexCharsUpper[c & 0x0f];  /* low nibble */
       }
     }
   }
@@ -175,7 +176,6 @@ nsUnescapeCount(char* aStr)
 {
   char* src = aStr;
   char* dst = aStr;
-  static const char hexChars[] = "0123456789ABCDEFabcdef";
 
   char c1[] = " ";
   char c2[] = " ";
@@ -197,8 +197,8 @@ nsUnescapeCount(char* aStr)
       c2[0] = *(src + 2);
     }
 
-    if (*src != HEX_ESCAPE || PL_strpbrk(pc1, hexChars) == 0 ||
-        PL_strpbrk(pc2, hexChars) == 0) {
+    if (*src != HEX_ESCAPE || PL_strpbrk(pc1, hexCharsUpperLower) == 0 ||
+        PL_strpbrk(pc2, hexCharsUpperLower) == 0) {
       *dst++ = *src++;
     } else {
       src++; /* walk over escape */
@@ -498,7 +498,7 @@ NS_EscapeURL(const nsAFlatString& aStr, const nsTArray<char16_t>& aForbidden,
              nsSubstring& aResult)
 {
   bool didEscape = false;
-  for (size_t i = 0, len = aStr.Length(); i < len; ) {
+  for (size_t i = 0, strLen = aStr.Length(); i < strLen; ) {
     size_t j;
     if (MOZ_UNLIKELY(FindFirstMatchFrom(aStr, i, aForbidden, &j))) {
       if (i == 0) {
@@ -511,14 +511,14 @@ NS_EscapeURL(const nsAFlatString& aStr, const nsTArray<char16_t>& aForbidden,
         aResult.Append(nsDependentSubstring(aStr, i, j - i));
       }
       char16_t buffer[ENCODE_MAX_LEN];
-      uint32_t len = ::AppendPercentHex(buffer, aStr[j]);
-      MOZ_ASSERT(len <= ENCODE_MAX_LEN, "buffer overflow");
-      aResult.Append(buffer, len);
+      uint32_t bufferLen = ::AppendPercentHex(buffer, aStr[j]);
+      MOZ_ASSERT(bufferLen <= ENCODE_MAX_LEN, "buffer overflow");
+      aResult.Append(buffer, bufferLen);
       i = j + 1;
     } else {
       if (MOZ_UNLIKELY(didEscape)) {
         // The tail of the string that needs no escaping.
-        aResult.Append(nsDependentSubstring(aStr, i, len - i));
+        aResult.Append(nsDependentSubstring(aStr, i, strLen - i));
       }
       break;
     }
@@ -529,7 +529,7 @@ NS_EscapeURL(const nsAFlatString& aStr, const nsTArray<char16_t>& aForbidden,
   return aStr;
 }
 
-#define ISHEX(c) memchr(hexChars, c, sizeof(hexChars)-1)
+#define ISHEX(c) memchr(hexCharsUpperLower, c, sizeof(hexCharsUpperLower)-1)
 
 bool
 NS_UnescapeURL(const char* aStr, int32_t aLen, uint32_t aFlags,
@@ -548,8 +548,6 @@ NS_UnescapeURL(const char* aStr, int32_t aLen, uint32_t aFlags,
   bool ignoreAscii = !!(aFlags & esc_OnlyNonASCII);
   bool writing = !!(aFlags & esc_AlwaysCopy);
   bool skipControl = !!(aFlags & esc_SkipControl);
-
-  static const char hexChars[] = "0123456789ABCDEFabcdef";
 
   const char* last = aStr;
   const char* p = aStr;

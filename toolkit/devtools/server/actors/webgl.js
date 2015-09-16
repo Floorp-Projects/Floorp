@@ -23,7 +23,7 @@ const PROGRAM_HIGHLIGHT_TRAIT = 2;
  * You can either retrieve, or compile the source of a shader, which will
  * automatically inflict the necessary changes to the WebGL state.
  */
-let ShaderActor = protocol.ActorClass({
+var ShaderActor = protocol.ActorClass({
   typeName: "gl-shader",
 
   /**
@@ -84,7 +84,7 @@ let ShaderActor = protocol.ActorClass({
 /**
  * The corresponding Front object for the ShaderActor.
  */
-let ShaderFront = protocol.FrontClass(ShaderActor, {
+var ShaderFront = protocol.FrontClass(ShaderActor, {
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
   }
@@ -94,7 +94,7 @@ let ShaderFront = protocol.FrontClass(ShaderActor, {
  * A WebGL program is composed (at the moment, analogue to OpenGL ES 2.0)
  * of two shaders: a vertex shader and a fragment shader.
  */
-let ProgramActor = protocol.ActorClass({
+var ProgramActor = protocol.ActorClass({
   typeName: "gl-program",
 
   /**
@@ -208,7 +208,7 @@ let ProgramActor = protocol.ActorClass({
 /**
  * The corresponding Front object for the ProgramActor.
  */
-let ProgramFront = protocol.FrontClass(ProgramActor, {
+var ProgramFront = protocol.FrontClass(ProgramActor, {
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
   }
@@ -219,7 +219,7 @@ let ProgramFront = protocol.FrontClass(ProgramActor, {
  * high-level methods. After instantiating this actor, you'll need to set it
  * up by calling setup().
  */
-let WebGLActor = exports.WebGLActor = protocol.ActorClass({
+var WebGLActor = exports.WebGLActor = protocol.ActorClass({
   typeName: "webgl",
   initialize: function(conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
@@ -403,7 +403,7 @@ let WebGLActor = exports.WebGLActor = protocol.ActorClass({
 /**
  * The corresponding Front object for the WebGLActor.
  */
-let WebGLFront = exports.WebGLFront = protocol.FrontClass(WebGLActor, {
+var WebGLFront = exports.WebGLFront = protocol.FrontClass(WebGLActor, {
   initialize: function(client, { webglActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: webglActor });
     this.manage(this);
@@ -413,7 +413,7 @@ let WebGLFront = exports.WebGLFront = protocol.FrontClass(WebGLActor, {
 /**
  * Instruments a HTMLCanvasElement with the appropriate inspection methods.
  */
-let WebGLInstrumenter = {
+var WebGLInstrumenter = {
   /**
    * Overrides the getContext method in the HTMLCanvasElement prototype.
    *

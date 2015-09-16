@@ -1,20 +1,20 @@
-let AddonManager = Cu.import("resource://gre/modules/AddonManager.jsm", {}).AddonManager;
-let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
+var AddonManager = Cu.import("resource://gre/modules/AddonManager.jsm", {}).AddonManager;
+var SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
-let manifest = {
+var manifest = {
   name: "provider 1",
   origin: "https://example.com",
   sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar_empty.html",
   iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
 };
-let manifest2 = { // used for testing install
+var manifest2 = { // used for testing install
   name: "provider 2",
   origin: "https://test1.example.com",
   sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar_empty.html",
   iconURL: "https://test1.example.com/browser/browser/base/content/test/general/moz.png",
   version: 1
 };
-let manifestUpgrade = { // used for testing install
+var manifestUpgrade = { // used for testing install
   name: "provider 3",
   origin: "https://test2.example.com",
   sidebarURL: "https://test2.example.com/browser/browser/base/content/test/social/social_sidebar.html",

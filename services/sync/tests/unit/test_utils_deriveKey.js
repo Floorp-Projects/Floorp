@@ -1,7 +1,7 @@
 Cu.import("resource://services-crypto/WeaveCrypto.js");
 Cu.import("resource://services-sync/util.js");
 
-let cryptoSvc = new WeaveCrypto();
+var cryptoSvc = new WeaveCrypto();
 
 function run_test() {
   if (this.gczeal) {

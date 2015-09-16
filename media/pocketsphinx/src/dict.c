@@ -703,8 +703,12 @@ dict_add_g2p_word(dict_t *dict, char const *word)
     phones = dict_g2p(word, dict->ngram_g2p_model);
     if (phones == NULL)
         return 0;
+    if (0 == strlen(phones)) {
+        ckd_free(phones);
+        return 0;
+    }
 
-    E_INFO("Adding phone %s for word %s \n",  phones, word);
+    E_INFO("Adding phone '%s' for word '%s' \n",  phones, word);
     tmp = ckd_salloc(phones);
     np = str2words(tmp, NULL, 0);
     phonestr = ckd_calloc(np, sizeof(*phonestr));

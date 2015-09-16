@@ -9914,6 +9914,8 @@ CheckHeapLengthCondition(ModuleValidator& m, ParseNode* cond, PropertyName* newB
     ParseNode* maskNode = BitwiseRight(cond1);
     if (!IsLiteralInt(m, maskNode, mask))
         return m.fail(maskNode, "expecting integer literal mask");
+    if (*mask == UINT32_MAX)
+        return m.fail(maskNode, "invalid mask value");
     if ((*mask & 0xffffff) != 0xffffff)
         return m.fail(maskNode, "mask value must have the bits 0xffffff set");
 
@@ -11039,7 +11041,7 @@ CheckFunctions(ModuleValidator& m, ScopedJSDeletePtr<ModuleCompileResults>* resu
 
         // If failure was triggered by a helper thread, report error.
         if (void* maybeFunc = HelperThreadState().maybeAsmJSFailedFunction()) {
-            ModuleValidator::Func* func = reinterpret_cast<ModuleValidator::Func*>(maybeFunc);
+            AsmFunction* func = reinterpret_cast<AsmFunction*>(maybeFunc);
             return m.failOffset(func->srcBegin(), "allocation failure during compilation");
         }
 

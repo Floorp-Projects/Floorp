@@ -35,7 +35,7 @@ const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/
  */
 
 // Local devices catalog that addons can add to.
-let localDevices = {};
+var localDevices = {};
 
 // Add a device to the local catalog.
 function AddDevice(device, type = "phones") {

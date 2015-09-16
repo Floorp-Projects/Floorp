@@ -4,25 +4,25 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-let { Preferences } = Cu.import("resource://gre/modules/Preferences.jsm", {});
-let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-let { console } = require("resource://gre/modules/devtools/Console.jsm");
-let { TargetFactory } = require("devtools/framework/target");
-let Promise = require("promise");
-let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-let { DebuggerServer } = require("devtools/server/main");
-let { merge } = require("sdk/util/object");
-let { createPerformanceFront } = require("devtools/server/actors/performance");
-let RecordingUtils = require("devtools/toolkit/performance/utils");
-let {
+var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+var { Preferences } = Cu.import("resource://gre/modules/Preferences.jsm", {});
+var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+var { console } = require("resource://gre/modules/devtools/Console.jsm");
+var { TargetFactory } = require("devtools/framework/target");
+var Promise = require("promise");
+var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var { DebuggerServer } = require("devtools/server/main");
+var { merge } = require("sdk/util/object");
+var { createPerformanceFront } = require("devtools/server/actors/performance");
+var RecordingUtils = require("devtools/toolkit/performance/utils");
+var {
   PMM_loadFrameScripts, PMM_isProfilerActive, PMM_stopProfiler,
   sendProfilerCommand, consoleMethod
 } = require("devtools/toolkit/performance/process-communication");
 
-let mm = null;
+var mm = null;
 
 const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-utils.js"
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/performance/test/";
@@ -52,7 +52,7 @@ waitForExplicitFinish();
 
 DevToolsUtils.testing = true;
 
-let DEFAULT_PREFS = [
+var DEFAULT_PREFS = [
   "devtools.debugger.log",
   "devtools.performance.ui.invert-call-tree",
   "devtools.performance.ui.flatten-tree-recursion",

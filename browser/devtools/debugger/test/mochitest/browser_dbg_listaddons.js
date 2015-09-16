@@ -7,7 +7,7 @@
 const ADDON1_URL = EXAMPLE_URL + "addon1.xpi";
 const ADDON2_URL = EXAMPLE_URL + "addon2.xpi";
 
-let gAddon1, gAddon1Actor, gAddon2, gAddon2Actor, gClient;
+var gAddon1, gAddon1Actor, gAddon2, gAddon2Actor, gClient;
 
 function test() {
   if (!DebuggerServer.initialized) {

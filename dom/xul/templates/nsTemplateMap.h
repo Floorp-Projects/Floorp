@@ -19,17 +19,15 @@ protected:
     PLDHashTable mTable;
 
 public:
-    nsTemplateMap() : mTable(PL_DHashGetStubOps(), sizeof(Entry)) { }
+    nsTemplateMap() : mTable(PLDHashTable::StubOps(), sizeof(Entry)) { }
 
     ~nsTemplateMap() { }
 
     void
     Put(nsIContent* aContent, nsIContent* aTemplate) {
-        NS_ASSERTION(!PL_DHashTableSearch(&mTable, aContent),
-                     "aContent already in map");
+        NS_ASSERTION(!mTable.Search(aContent), "aContent already in map");
 
-        Entry* entry = static_cast<Entry*>
-            (PL_DHashTableAdd(&mTable, aContent, fallible));
+        auto entry = static_cast<Entry*>(mTable.Add(aContent, fallible));
 
         if (entry) {
             entry->mContent = aContent;
@@ -39,7 +37,7 @@ public:
 
     void
     Remove(nsIContent* aContent) {
-        PL_DHashTableRemove(&mTable, aContent);
+        mTable.Remove(aContent);
 
         for (nsIContent* child = aContent->GetFirstChild();
              child;
@@ -51,9 +49,7 @@ public:
 
     void
     GetTemplateFor(nsIContent* aContent, nsIContent** aResult) {
-        Entry* entry =
-            static_cast<Entry*>(PL_DHashTableSearch(&mTable, aContent));
-
+        auto entry = static_cast<Entry*>(mTable.Search(aContent));
         if (entry)
             NS_IF_ADDREF(*aResult = entry->mTemplate);
         else

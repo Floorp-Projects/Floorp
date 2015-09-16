@@ -12,7 +12,7 @@
 
 const TEST_URI = "http://example.com/";
 
-let test = asyncTest(function*() {
+var test = asyncTest(function*() {
   yield loadTab(TEST_URI);
   Services.prefs.setIntPref("devtools.webconsole.fontSize", 10);
   let hud = yield HUDService.toggleBrowserConsole();

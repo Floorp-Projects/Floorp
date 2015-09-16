@@ -40,25 +40,25 @@ function tabEventsFor(window) {
 }
 
 // Filter DOMContentLoaded events from all the browser events.
-let readyEvents = filter(events, function(e) e.type === "DOMContentLoaded");
+var readyEvents = filter(events, function(e) e.type === "DOMContentLoaded");
 // Map DOMContentLoaded events to it's target browser windows.
-let futureWindows = map(readyEvents, function(e) e.target);
+var futureWindows = map(readyEvents, function(e) e.target);
 // Expand all browsers that will become interactive to supported tab events
 // on these windows. Result will be a tab events from all tabs of all windows
 // that will become interactive.
-let eventsFromFuture = expand(futureWindows, tabEventsFor);
+var eventsFromFuture = expand(futureWindows, tabEventsFor);
 
 // Above covers only windows that will become interactive in a future, but some
 // windows may already be interactive so we pick those and expand to supported
 // tab events for them too.
-let interactiveWindows = windows("navigator:browser", { includePrivate: true }).
+var interactiveWindows = windows("navigator:browser", { includePrivate: true }).
                          filter(isInteractive);
-let eventsFromInteractive = merge(interactiveWindows.map(tabEventsFor));
+var eventsFromInteractive = merge(interactiveWindows.map(tabEventsFor));
 
 
 // Finally merge stream of tab events from future windows and current windows
 // to cover all tab events on all windows that will open.
-let allEvents = merge([eventsFromInteractive, eventsFromFuture]);
+var allEvents = merge([eventsFromInteractive, eventsFromFuture]);
 
 // Map events to Fennec format if necessary
 exports.events = map(allEvents, function (event) {

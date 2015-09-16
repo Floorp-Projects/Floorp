@@ -19,7 +19,7 @@ function netErrorURL() {
   return netErrorURL.spec;
 }
 
-let modules = {
+var modules = {
   certerror: {
     uri: "chrome://b2g/content/aboutCertError.xhtml",
     privileged: false,

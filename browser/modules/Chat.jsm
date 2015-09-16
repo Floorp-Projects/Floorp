@@ -49,7 +49,7 @@ function getChromeWindow(contentWin) {
  * The exported Chat object
  */
 
-let Chat = {
+var Chat = {
 
   /**
    * Iterator of <chatbox> elements from this module in all windows.

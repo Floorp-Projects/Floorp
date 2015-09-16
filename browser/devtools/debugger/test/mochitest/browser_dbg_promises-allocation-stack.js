@@ -9,7 +9,7 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_promise-get-allocation-stack.html";
 const { PromisesFront } = require("devtools/server/actors/promises");
-let events = require("sdk/event/core");
+var events = require("sdk/event/core");
 
 function test() {
   Task.spawn(function* () {

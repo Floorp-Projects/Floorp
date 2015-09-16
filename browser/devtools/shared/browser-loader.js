@@ -3,7 +3,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const loaders = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
 const devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
 const { joinURI } = devtools.require("devtools/toolkit/path");
-let appConstants;
+var appConstants;
 
 // Some of the services that the system module requires is not
 // available in xpcshell tests. This is ok, we can easily polyfill the

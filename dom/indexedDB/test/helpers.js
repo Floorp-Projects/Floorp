@@ -44,7 +44,7 @@ function clearAllDatabases(callback) {
   SpecialPowers.clearStorageForURI(document.documentURI, callback, appId, inBrowser);
 }
 
-let testHarnessGenerator = testHarnessSteps();
+var testHarnessGenerator = testHarnessSteps();
 testHarnessGenerator.next();
 
 function testHarnessSteps() {

@@ -32,7 +32,7 @@ Cu.import("resource://gre/modules/PermissionsTable.jsm");
 var permissionManager = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
 var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
 
-let permissionSpecificChecker = {};
+var permissionSpecificChecker = {};
 
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "TelephonyService",

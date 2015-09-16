@@ -3,10 +3,10 @@
 
 "use strict";
 
-let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
-let {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js",
+var {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+var {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js",
                          {});
-let {OutputParser} = require("devtools/output-parser");
+var {OutputParser} = require("devtools/output-parser");
 
 add_task(function*() {
   yield promiseTab("about:blank");
@@ -26,7 +26,7 @@ function* performTest() {
 }
 
 // Class name used in color swatch.
-let COLOR_TEST_CLASS = "test-class";
+var COLOR_TEST_CLASS = "test-class";
 
 // Create a new CSS color-parsing test.  |name| is the name of the CSS
 // property.  |value| is the CSS text to use.  |segments| is an array

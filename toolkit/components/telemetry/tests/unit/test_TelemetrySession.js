@@ -55,7 +55,7 @@ const PR_TRUNCATE = 0x20;
 const RW_OWNER = parseInt("0600", 8);
 
 const NUMBER_OF_THREADS_TO_LAUNCH = 30;
-let gNumberOfThreadsLaunched = 0;
+var gNumberOfThreadsLaunched = 0;
 
 const MS_IN_ONE_HOUR  = 60 * 60 * 1000;
 const MS_IN_ONE_DAY   = 24 * MS_IN_ONE_HOUR;
@@ -74,7 +74,7 @@ XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR);
 });
 
-let gClientID = null;
+var gClientID = null;
 
 function generateUUID() {
   let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
@@ -100,7 +100,7 @@ function sendPing() {
   }
 }
 
-let clearPendingPings = Task.async(function*() {
+var clearPendingPings = Task.async(function*() {
   const pending = yield TelemetryStorage.loadPendingPingList();
   for (let p of pending) {
     yield TelemetryStorage.removePendingPing(p.id);

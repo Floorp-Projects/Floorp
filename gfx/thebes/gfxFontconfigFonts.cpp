@@ -1005,13 +1005,13 @@ gfxFcFontSet::SortPreferredFonts(bool &aWaitForUserFont)
         // Aliases seem to often end up occurring more than once, but
         // duplicate families can't be removed from the sort pattern without
         // knowing whether duplicates have the same binding.
-        gfxFontconfigUtils::DepFcStrEntry *entry =
+        gfxFontconfigUtils::DepFcStrEntry *familyEntry =
             existingFamilies.PutEntry(family);
-        if (entry) {
-            if (entry->mKey) // old entry
+        if (familyEntry) {
+            if (familyEntry->mKey) // old entry
                 continue;
 
-            entry->mKey = family; // initialize new entry
+            familyEntry->mKey = family; // initialize new entry
         }
 
         for (uint32_t f = 0; f < familyFonts->Length(); ++f) {
@@ -1032,10 +1032,10 @@ gfxFcFontSet::SortPreferredFonts(bool &aWaitForUserFont)
                 continue;
 
             for (uint32_t r = 0; r < requiredLangs.Length(); ++r) {
-                const LangSupportEntry& entry = requiredLangs[r];
+                const LangSupportEntry& langEntry = requiredLangs[r];
                 FcLangResult support =
-                    gfxFontconfigUtils::GetLangSupport(font, entry.mLang);
-                if (support <= entry.mBestSupport) { // lower is better
+                    gfxFontconfigUtils::GetLangSupport(font, langEntry.mLang);
+                if (support <= langEntry.mBestSupport) { // lower is better
                     requiredLangs.RemoveElementAt(r);
                     --r;
                 }
@@ -2158,4 +2158,3 @@ gfxFcFont::GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams)
   return mozilla::gfx::Factory::CreateCairoGlyphRenderingOptions(hinting, false, aaMode);
 }
 #endif
-

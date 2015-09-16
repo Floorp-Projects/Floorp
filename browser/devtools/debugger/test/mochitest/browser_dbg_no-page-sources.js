@@ -7,8 +7,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_no-page-sources.html";
 
-let gTab, gDebuggee, gPanel, gDebugger;
-let gEditor, gSources;
+var gTab, gDebuggee, gPanel, gDebugger;
+var gEditor, gSources;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {

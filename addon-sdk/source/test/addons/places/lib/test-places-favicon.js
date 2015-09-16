@@ -216,24 +216,24 @@ exports.testRejects = function*(assert) {
     .then(invalidResolve(assert), validReject(assert, 'Array'));
 };
 
-let invalidResolve = (assert) => () => assert.fail('Promise should not be resolved successfully');
-let validReject = (assert, name) => () => assert.pass(name + ' correctly rejected');
+var invalidResolve = (assert) => () => assert.fail('Promise should not be resolved successfully');
+var validReject = (assert, name) => () => assert.pass(name + ' correctly rejected');
 
-let makeServer = (name) => serve({
+var makeServer = (name) => serve({
   name: name,
   favicon: binFavicon,
   port: port,
   host: host
 });
 
-let waitAndExpire = (url) => new Promise(resolve => {
+var waitAndExpire = (url) => new Promise(resolve => {
   onFaviconChange(url).then(() => {
     once('places-favicons-expired', resolve);
     faviconService.expireAllFavicons();
   });
 });
 
-let complete = (tab, srv) => new Promise(resolve => {
+var complete = (tab, srv) => new Promise(resolve => {
   tab.close(() => {
     resetPlaces(() => {
       srv.stop(resolve);

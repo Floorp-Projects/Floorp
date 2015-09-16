@@ -9,8 +9,8 @@
 const TAB_URL_1 = EXAMPLE_URL + "doc_script-switching-01.html";
 const TAB_URL_2 = EXAMPLE_URL + "doc_recursion-stack.html";
 
-let gTab, gDebuggee, gPanel, gDebugger;
-let gSources;
+var gTab, gDebuggee, gPanel, gDebugger;
+var gSources;
 
 const test = Task.async(function* () {
   info("Starting browser_dbg_bfcache.js's `test`.");

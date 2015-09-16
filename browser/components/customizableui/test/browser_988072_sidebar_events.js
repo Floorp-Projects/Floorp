@@ -4,10 +4,10 @@
 
 "use strict";
 
-let gSidebarMenu = document.getElementById("viewSidebarMenu");
-let gTestSidebarItem = null;
+var gSidebarMenu = document.getElementById("viewSidebarMenu");
+var gTestSidebarItem = null;
 
-let EVENTS = {
+var EVENTS = {
   click: 0, command: 0,
   onclick: 0, oncommand: 0
 };
@@ -78,7 +78,7 @@ function compareList(original, displayed) {
   }
 }
 
-let showSidebarPopup = Task.async(function*() {
+var showSidebarPopup = Task.async(function*() {
   let button = document.getElementById("sidebar-button");
   let subview = document.getElementById("PanelUI-sidebar");
 

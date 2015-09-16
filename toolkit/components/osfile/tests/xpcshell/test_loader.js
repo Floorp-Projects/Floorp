@@ -7,7 +7,7 @@
  * Test that OS.File can be loaded using the CommonJS loader.
  */
 
-let { Loader } = Components.utils.import('resource://gre/modules/commonjs/toolkit/loader.js', {});
+var { Loader } = Components.utils.import('resource://gre/modules/commonjs/toolkit/loader.js', {});
 
 function run_test() {
   run_next_test();

@@ -7,7 +7,7 @@
 /**
  * This singleton implements site dragging functionality.
  */
-let gDrag = {
+var gDrag = {
   /**
    * The site offset to the drag start point.
    */

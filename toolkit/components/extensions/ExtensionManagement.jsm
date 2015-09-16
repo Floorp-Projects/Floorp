@@ -24,7 +24,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 // that top-level windows have a frame ID of 0. So we need to keep
 // track of which windows are top-level. This code listens to messages
 // from ExtensionContent to do that.
-let Frames = {
+var Frames = {
   // Window IDs of top-level content windows.
   topWindowIds: new Set(),
 
@@ -85,7 +85,7 @@ let Frames = {
 Frames.init();
 
 // Manage the collection of ext-*.js scripts that define the extension API.
-let Scripts = {
+var Scripts = {
   scripts: new Set(),
 
   register(script) {
@@ -106,7 +106,7 @@ let Scripts = {
 // on. This is easier and more secure than using the extension ID,
 // since it makes it slightly harder to fingerprint for extensions if
 // each user uses different URIs for the extension.
-let Service = {
+var Service = {
   initialized: false,
 
   // Map[uuid -> extension].

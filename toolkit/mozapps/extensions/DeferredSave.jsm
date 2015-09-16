@@ -12,7 +12,7 @@ Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
 // Make it possible to mock out timers for testing
-let MakeTimer = () => Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+var MakeTimer = () => Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
 this.EXPORTED_SYMBOLS = ["DeferredSave"];
 
@@ -23,9 +23,9 @@ Cu.import("resource://gre/modules/Log.jsm");
 //Configure a logger at the parent 'DeferredSave' level to format
 //messages for all the modules under DeferredSave.*
 const DEFERREDSAVE_PARENT_LOGGER_ID = "DeferredSave";
-let parentLogger = Log.repository.getLogger(DEFERREDSAVE_PARENT_LOGGER_ID);
+var parentLogger = Log.repository.getLogger(DEFERREDSAVE_PARENT_LOGGER_ID);
 parentLogger.level = Log.Level.Warn;
-let formatter = new Log.BasicFormatter();
+var formatter = new Log.BasicFormatter();
 //Set parent logger (and its children) to append to
 //the Javascript section of the Browser Console
 parentLogger.addAppender(new Log.ConsoleAppender(formatter));

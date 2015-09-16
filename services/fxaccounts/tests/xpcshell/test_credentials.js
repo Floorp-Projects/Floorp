@@ -6,14 +6,14 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-crypto/utils.js");
 
-let {hexToBytes: h2b,
+var {hexToBytes: h2b,
      hexAsString: h2s,
      stringAsHex: s2h,
      bytesAsHex: b2h} = CommonUtils;
 
 // Test vectors for the "onepw" protocol:
 // https://github.com/mozilla/fxa-auth-server/wiki/onepw-protocol#wiki-test-vectors
-let vectors = {
+var vectors = {
   "client stretch-KDF": {
     email:
       h("616e6472c3a94065 78616d706c652e6f 7267"),

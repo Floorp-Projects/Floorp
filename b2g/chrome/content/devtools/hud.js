@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyGetter(this, 'MemoryFront', function() {
 
 Cu.import('resource://gre/modules/Frames.jsm');
 
-let _telemetryDebug = true;
+var _telemetryDebug = true;
 
 function telemetryDebug(...args) {
   if (_telemetryDebug) {
@@ -50,7 +50,7 @@ function telemetryDebug(...args) {
  * showing visual debug information about apps. Each widget corresponds to a
  * metric as tracked by a metric watcher (e.g. consoleWatcher).
  */
-let developerHUD = {
+var developerHUD = {
 
   _targets: new Map(),
   _histograms: new Set(),
@@ -433,7 +433,7 @@ Target.prototype = {
  * The Console Watcher tracks the following metrics in apps: reflows, warnings,
  * and errors, with security errors reported separately.
  */
-let consoleWatcher = {
+var consoleWatcher = {
 
   _client: null,
   _targets: new Map(),
@@ -695,7 +695,7 @@ let consoleWatcher = {
 developerHUD.registerWatcher(consoleWatcher);
 
 
-let eventLoopLagWatcher = {
+var eventLoopLagWatcher = {
   _client: null,
   _fronts: new Map(),
   _active: false,
@@ -760,7 +760,7 @@ developerHUD.registerWatcher(eventLoopLagWatcher);
  * to the app-launch epoch and emits an "app-start-time-<performance mark name>"
  * event containing the delta.
  */
-let performanceEntriesWatcher = {
+var performanceEntriesWatcher = {
   _client: null,
   _fronts: new Map(),
   _appLaunchName: null,
@@ -865,7 +865,7 @@ developerHUD.registerWatcher(performanceEntriesWatcher);
 /**
  * The Memory Watcher uses devtools actors to track memory usage.
  */
-let memoryWatcher = {
+var memoryWatcher = {
 
   _client: null,
   _fronts: new Map(),

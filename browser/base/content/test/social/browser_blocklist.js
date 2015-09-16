@@ -4,19 +4,19 @@
 
 // a place for miscellaneous social tests
 
-let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
+var SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
-let blocklistURL = "http://example.com/browser/browser/base/content/test/social/blocklist.xml";
+var blocklistURL = "http://example.com/browser/browser/base/content/test/social/blocklist.xml";
 
-let manifest = { // normal provider
+var manifest = { // normal provider
   name: "provider ok",
   origin: "https://example.com",
   sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",
   workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
   iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
 };
-let manifest_bad = { // normal provider
+var manifest_bad = { // normal provider
   name: "provider blocked",
   origin: "https://test1.example.com",
   sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar.html",

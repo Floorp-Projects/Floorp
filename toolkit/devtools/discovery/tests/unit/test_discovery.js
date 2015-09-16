@@ -24,7 +24,7 @@ function log(msg) {
 }
 
 // Global map of actively listening ports to TestTransport instances
-let gTestTransports = {};
+var gTestTransports = {};
 
 /**
  * Implements the same API as Transport in discovery.js.  Here, no UDP sockets

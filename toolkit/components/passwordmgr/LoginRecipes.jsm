@@ -182,7 +182,7 @@ LoginRecipesParent.prototype = {
 };
 
 
-let LoginRecipesContent = {
+var LoginRecipesContent = {
   /**
    * @param {Set} aRecipes - Possible recipes that could apply to the form
    * @param {FormLike} aForm - We use a form instead of just a URL so we can later apply

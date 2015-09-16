@@ -8,7 +8,7 @@
 const TAB1_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
 const TAB2_URL = EXAMPLE_URL + "doc_empty-tab-02.html";
 
-let gClient;
+var gClient;
 
 function test() {
   if (!DebuggerServer.initialized) {

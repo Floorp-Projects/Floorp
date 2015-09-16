@@ -6,7 +6,7 @@
 
 // Tests that the rule view shows expanders for properties with computed lists.
 
-let TEST_URI = `
+var TEST_URI = `
   <style type="text/css">
     #testid {
       margin: 4px;

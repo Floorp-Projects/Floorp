@@ -603,11 +603,11 @@ xptiInterfaceEntry::GetInterfaceIsArgNumberForParam(uint16_t methodIndex,
     return NS_OK;
 }
 
-nsresult 
-xptiInterfaceEntry::IsIID(const nsIID * IID, bool *_retval)
+nsresult
+xptiInterfaceEntry::IsIID(const nsIID * iid, bool *_retval)
 {
     // It is not necessary to Resolve because this info is read from manifest.
-    *_retval = mIID.Equals(*IID);
+    *_retval = mIID.Equals(*iid);
     return NS_OK;
 }
 

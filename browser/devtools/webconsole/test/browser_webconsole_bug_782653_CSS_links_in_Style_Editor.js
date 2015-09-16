@@ -9,9 +9,9 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test" +
                  "/test-bug-782653-css-errors.html";
 
-let nodes, hud, StyleEditorUI;
+var nodes, hud, StyleEditorUI;
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield loadTab(TEST_URI);
 
   hud = yield openConsole();

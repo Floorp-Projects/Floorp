@@ -14,7 +14,7 @@ loader.lazyRequireGetter(this, "StorageFront",
 loader.lazyRequireGetter(this, "StorageUI",
                          "devtools/storage/ui", true);
 
-let StoragePanel = this.StoragePanel =
+var StoragePanel = this.StoragePanel =
 function StoragePanel(panelWin, toolbox) {
   EventEmitter.decorate(this);
 

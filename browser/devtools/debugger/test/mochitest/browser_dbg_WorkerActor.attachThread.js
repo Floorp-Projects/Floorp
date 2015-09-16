@@ -1,5 +1,5 @@
-let TAB_URL = EXAMPLE_URL + "doc_WorkerActor.attachThread-tab.html";
-let WORKER_URL = "code_WorkerActor.attachThread-worker.js";
+var TAB_URL = EXAMPLE_URL + "doc_WorkerActor.attachThread-tab.html";
+var WORKER_URL = "code_WorkerActor.attachThread-worker.js";
 
 function test() {
   Task.spawn(function* () {

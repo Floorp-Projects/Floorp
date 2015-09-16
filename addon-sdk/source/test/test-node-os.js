@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-let os = require("node/os");
-let system = require("sdk/system");
+var os = require("node/os");
+var system = require("sdk/system");
 
 exports["test os"] = function (assert) {
   assert.equal(os.tmpdir(), system.pathFor("TmpD"), "os.tmpdir() matches temp dir");

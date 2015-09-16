@@ -1,6 +1,6 @@
 Cu.import("resource://services-crypto/WeaveCrypto.js");
 
-let cryptoSvc = new WeaveCrypto();
+var cryptoSvc = new WeaveCrypto();
 
 function run_test() {
   

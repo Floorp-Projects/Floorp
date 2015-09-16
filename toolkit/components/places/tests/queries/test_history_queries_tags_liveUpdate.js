@@ -4,8 +4,8 @@
 // This test ensures that tags changes are correctly live-updated in a history
 // query.
 
-let gNow = Date.now();
-let gTestData = [
+var gNow = Date.now();
+var gTestData = [
   {
     isVisit: true,
     uri: "http://example.com/1/",

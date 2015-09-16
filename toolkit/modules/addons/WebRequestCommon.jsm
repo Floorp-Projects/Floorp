@@ -9,7 +9,7 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-let WebRequestCommon = {
+var WebRequestCommon = {
   typeForPolicyType(type) {
     switch (type) {
       case Ci.nsIContentPolicy.TYPE_DOCUMENT: return "main_frame";

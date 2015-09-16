@@ -135,7 +135,7 @@ BookmarkSeparator.prototype = {
 Utils.deferGetSet(BookmarkSeparator, "cleartext", "pos");
 
 
-let kSpecialIds = {
+var kSpecialIds = {
 
   // Special IDs. Note that mobile can attempt to create a record on
   // dereference; special accessors are provided to prevent recursion within

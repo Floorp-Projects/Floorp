@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyGetter(this, "SE", function() {
   return obj;
 });
 
-let DEBUG = SE.DEBUG_ACE;
+var DEBUG = SE.DEBUG_ACE;
 function debug(msg) {
   if (DEBUG) {
     dump("ACEservice: " + msg + "\n");

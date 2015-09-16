@@ -324,6 +324,7 @@ AsyncResource.prototype = {
     }
 
     let ret     = new String(data);
+    ret.url     = channel.URI.spec;
     ret.status  = status;
     ret.success = success;
     ret.headers = headers;

@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="50">
+<body style="overflow:hidden; height:3000px; margin:0;">
+  <div style="margin-top: 100px; height: 100px;
+              background-image:url(repeatable-diagonal-gradient.png);
+              background-attachment:fixed;
+              background-repeat:no-repeat;
+              background-position:top left;
+              border-radius:50px;">
+  </div>
+  <!-- test that the clip of a background-attachment:fixed background of a
+       child element moves correctly during async scrolling -->
+</body>
+</html>

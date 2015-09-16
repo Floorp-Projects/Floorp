@@ -71,7 +71,7 @@ const IOService = Cc["@mozilla.org/network/io-service;1"]
  * This function creates the document in which those dummy elements
  * will be created.
  */
-let gDummyPromise;
+var gDummyPromise;
 function createDummyDocument() {
   if (gDummyPromise) {
     return gDummyPromise;

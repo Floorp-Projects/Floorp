@@ -4,12 +4,12 @@
 
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
-let tmp = {};
+var tmp = {};
 Components.utils.import("resource://gre/modules/AddonManager.jsm", tmp);
 Components.utils.import("resource://gre/modules/Log.jsm", tmp);
-let AddonManager = tmp.AddonManager;
-let AddonManagerPrivate = tmp.AddonManagerPrivate;
-let Log = tmp.Log;
+var AddonManager = tmp.AddonManager;
+var AddonManagerPrivate = tmp.AddonManagerPrivate;
+var Log = tmp.Log;
 
 var pathParts = gTestPath.split("/");
 // Drop the test filename
@@ -117,16 +117,16 @@ function checkOpenWindows(aWindowID) {
 
 // Tools to disable and re-enable the background update and blocklist timers
 // so that tests can protect themselves from unwanted timer events.
-let gCatMan = Components.classes["@mozilla.org/categorymanager;1"]
+var gCatMan = Components.classes["@mozilla.org/categorymanager;1"]
                            .getService(Components.interfaces.nsICategoryManager);
 // Default values from toolkit/mozapps/extensions/extensions.manifest, but disable*UpdateTimer()
 // records the actual value so we can put it back in enable*UpdateTimer()
-let backgroundUpdateConfig = "@mozilla.org/addons/integration;1,getService,addon-background-update-timer,extensions.update.interval,86400";
-let blocklistUpdateConfig = "@mozilla.org/extensions/blocklist;1,getService,blocklist-background-update-timer,extensions.blocklist.interval,86400";
+var backgroundUpdateConfig = "@mozilla.org/addons/integration;1,getService,addon-background-update-timer,extensions.update.interval,86400";
+var blocklistUpdateConfig = "@mozilla.org/extensions/blocklist;1,getService,blocklist-background-update-timer,extensions.blocklist.interval,86400";
 
-let UTIMER = "update-timer";
-let AMANAGER = "addonManager";
-let BLOCKLIST = "nsBlocklistService";
+var UTIMER = "update-timer";
+var AMANAGER = "addonManager";
+var BLOCKLIST = "nsBlocklistService";
 
 function disableBackgroundUpdateTimer() {
   info("Disabling " + UTIMER + " " + AMANAGER);
@@ -227,7 +227,7 @@ function run_next_test() {
   executeSoon(() => log_exceptions(test));
 }
 
-let get_tooltip_info = Task.async(function*(addon) {
+var get_tooltip_info = Task.async(function*(addon) {
   let managerWindow = addon.ownerDocument.defaultView;
 
   // The popup code uses a triggering event's target to set the

@@ -1,12 +1,12 @@
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 
-let tagData = [
+var tagData = [
   { uri: uri("http://slint.us"), tags: ["indie", "kentucky", "music"] },
   { uri: uri("http://en.wikipedia.org/wiki/Diplodocus"), tags: ["dinosaur", "dj", "rad word"] }
 ];
 
-let bookmarkData = [
+var bookmarkData = [
   { uri: uri("http://slint.us"), title: "indie, kentucky, music" },
   { uri: uri("http://en.wikipedia.org/wiki/Diplodocus"), title: "dinosaur, dj, rad word" }
 ];

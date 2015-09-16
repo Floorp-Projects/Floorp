@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-let isMulet = "ResponsiveUI" in browserWindow;
+var browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+var isMulet = "ResponsiveUI" in browserWindow;
 
 // Enable touch event shim on desktop that translates mouse events
 // into touch ones

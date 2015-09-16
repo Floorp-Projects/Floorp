@@ -5,7 +5,7 @@
 "use strict";
 
 const {StorageFront} = require("devtools/server/actors/storage");
-let gFront, gWindow;
+var gFront, gWindow;
 
 const beforeReload = {
   cookies: {

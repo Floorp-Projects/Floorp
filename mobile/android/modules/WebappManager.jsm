@@ -63,8 +63,8 @@ function getFormattedPluralForm(stringName, formatterArgs, pluralNum) {
   return unescapedString;
 }
 
-let Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog;
-let debug = Log.d.bind(null, "WebappManager");
+var Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog;
+var debug = Log.d.bind(null, "WebappManager");
 
 this.WebappManager = {
   __proto__: DOMRequestIpcHelper.prototype,

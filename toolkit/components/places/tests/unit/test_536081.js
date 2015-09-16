@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
          getService(Ci.nsINavHistoryService);
-let bh = hs.QueryInterface(Ci.nsIBrowserHistory);
-let db = hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
+var bh = hs.QueryInterface(Ci.nsIBrowserHistory);
+var db = hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
 
 const URLS = [
   { u: "http://www.google.com/search?q=testing%3Bthis&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:unofficial&client=firefox-a",

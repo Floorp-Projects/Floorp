@@ -49,7 +49,7 @@ function isHostInMozHosts(aURI, aTyped, aPrefix)
   return result;
 }
 
-let urls = [{uri: NetUtil.newURI("http://visit1.mozilla.org"),
+var urls = [{uri: NetUtil.newURI("http://visit1.mozilla.org"),
              expected: "visit1.mozilla.org",
              typed: 0,
              prefix: null

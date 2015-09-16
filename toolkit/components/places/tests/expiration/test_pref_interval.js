@@ -25,9 +25,9 @@ Cu.import("resource://testing-common/MockRegistrar.jsm");
 // Provide a mock timer implementation, so there is no need to wait seconds to
 // achieve test results.
 const TIMER_CONTRACT_ID = "@mozilla.org/timer;1";
-let mockCID;
+var mockCID;
 
-let mockTimerImpl = {
+var mockTimerImpl = {
   initWithCallback: function MTI_initWithCallback(aCallback, aDelay, aType) {
     print("Checking timer delay equals expected interval value");
     if (!currentTest)
@@ -61,7 +61,7 @@ do_register_cleanup(function() {
 });
 
 
-let tests = [
+var tests = [
 
   // This test should be the first, so the interval won't be influenced by
   // status of history.
@@ -87,7 +87,7 @@ let tests = [
 
 ];
 
-let currentTest;
+var currentTest;
 
 function run_test() {
   // The pref should not exist by default.

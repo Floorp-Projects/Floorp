@@ -239,7 +239,7 @@ ActivitiesDb.prototype = {
   }
 }
 
-let Activities = {
+var Activities = {
   messages: [
     // ActivityProxy.js
     "Activity:Start",

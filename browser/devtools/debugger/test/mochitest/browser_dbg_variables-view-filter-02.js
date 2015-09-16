@@ -7,8 +7,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_with-frame.html";
 
-let gTab, gPanel, gDebugger;
-let gVariables, gSearchBox;
+var gTab, gPanel, gDebugger;
+var gVariables, gSearchBox;
 
 function test() {
   // Debug test slaves are quite slow at this test.

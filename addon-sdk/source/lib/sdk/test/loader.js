@@ -9,7 +9,7 @@ const { ensure } = require('../system/unload');
 const addonWindow = require('../addon/window');
 const { PlainTextConsole } = require('sdk/console/plain-text');
 
-let defaultGlobals = override(require('../system/globals'), {
+var defaultGlobals = override(require('../system/globals'), {
   console: console
 });
 

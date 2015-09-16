@@ -12,7 +12,7 @@ const JS_URL = EXAMPLE_URL + "code_math_bogus_map.js";
 // logs, so we are disabling that here.
 DevToolsUtils.reportingDisabled = true;
 
-let gPanel, gDebugger, gFrames, gSources, gPrefs, gOptions;
+var gPanel, gDebugger, gFrames, gSources, gPrefs, gOptions;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

@@ -5,7 +5,7 @@
 
 Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
 
-let histograms = {
+var histograms = {
   PLACES_PAGES_COUNT: function (val) do_check_eq(val, 1),
   PLACES_BOOKMARKS_COUNT: function (val) do_check_eq(val, 1),
   PLACES_TAGS_COUNT: function (val) do_check_eq(val, 1),

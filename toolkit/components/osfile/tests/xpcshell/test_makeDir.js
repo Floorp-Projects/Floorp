@@ -7,8 +7,8 @@
 Components.utils.import("resource://gre/modules/osfile.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-let Path = OS.Path;
-let profileDir;
+var Path = OS.Path;
+var profileDir;
 
 do_register_cleanup(function() {
   Services.prefs.setBoolPref("toolkit.osfile.log", false);

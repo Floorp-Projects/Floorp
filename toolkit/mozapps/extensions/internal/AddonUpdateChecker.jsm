@@ -49,7 +49,7 @@ const LOGGER_ID = "addons.update-checker";
 
 // Create a new logger for use by the Addons Update Checker
 // (Requires AddonManager.jsm)
-let logger = Log.repository.getLogger(LOGGER_ID);
+var logger = Log.repository.getLogger(LOGGER_ID);
 
 /**
  * A serialisation method for RDF data that produces an identical string

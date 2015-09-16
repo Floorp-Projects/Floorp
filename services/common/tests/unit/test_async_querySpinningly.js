@@ -9,7 +9,7 @@ _("Make sure querySpinningly will synchronously fetch rows for a query asyncly")
 
 const SQLITE_CONSTRAINT_VIOLATION = 19;  // http://www.sqlite.org/c3ref/c_abort.html
 
-let Svc = {};
+var Svc = {};
 XPCOMUtils.defineLazyServiceGetter(Svc, "Form",
                                    "@mozilla.org/satchel/form-history;1",
                                    "nsIFormHistory2");

@@ -7,7 +7,7 @@ const {Connection} = require("devtools/client/connection-manager");
 
 const _knownConnectionStores = new WeakMap();
 
-let ConnectionStore;
+var ConnectionStore;
 
 module.exports = ConnectionStore = function(connection) {
   // If we already know about this connection,

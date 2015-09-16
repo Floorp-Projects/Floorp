@@ -1,10 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let contentWindow;
-let appTab;
-let originalTab;
-let exitButton;
+var contentWindow;
+var appTab;
+var originalTab;
+var exitButton;
 
 // ----------
 function test() {

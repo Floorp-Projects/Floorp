@@ -100,7 +100,7 @@ function test_parse_bogus_emails() {
   run_next_test();
 }
 
-let TESTS = [test_overall, test_mock_doc];
+var TESTS = [test_overall, test_mock_doc];
 
 TESTS.push(test_add_identity);
 TESTS.push(test_select_identity);

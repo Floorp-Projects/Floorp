@@ -3,9 +3,9 @@
 
 "use strict";
 
-let gTestTab;
-let gContentAPI;
-let gContentWindow;
+var gTestTab;
+var gContentAPI;
+var gContentWindow;
 
 Components.utils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
 
@@ -13,7 +13,7 @@ function test() {
   UITourTest();
 }
 
-let tests = [
+var tests = [
   function test_untrusted_host(done) {
     loadUITourTestPage(function() {
       let bookmarksMenu = document.getElementById("bookmarks-menu-button");

@@ -101,14 +101,14 @@ const DAY_IN_MS  = 86400000; // 1 day in milliseconds
 const MAX_SEARCH_TOKENS = 10;
 const NOOP = function noop() {};
 
-let supportsDeletedTable =
+var supportsDeletedTable =
 #ifdef ANDROID
   true;
 #else
   false;
 #endif
 
-let Prefs = {
+var Prefs = {
   initialized: false,
 
   get debug() { this.ensureInitialized(); return this._debug; },
@@ -371,7 +371,7 @@ function generateGUID() {
  * Database creation and access
  */
 
-let _dbConnection = null;
+var _dbConnection = null;
 XPCOMUtils.defineLazyGetter(this, "dbConnection", function() {
   let dbFile;
 
@@ -392,7 +392,7 @@ XPCOMUtils.defineLazyGetter(this, "dbConnection", function() {
 });
 
 
-let dbStmts = new Map();
+var dbStmts = new Map();
 
 /*
  * dbCreateAsyncStatement

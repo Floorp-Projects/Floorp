@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 
-let gSystemScrollbarWidth = null;
+var gSystemScrollbarWidth = null;
 
 this.ScrollbarSampler = {
   getSystemScrollbarWidth: function() {

@@ -34,12 +34,12 @@ const REASON = [ 'unknown', 'startup', 'shutdown', 'enable', 'disable',
 
 const bind = Function.call.bind(Function.bind);
 
-let loader = null;
-let unload = null;
-let cuddlefishSandbox = null;
-let nukeTimer = null;
+var loader = null;
+var unload = null;
+var cuddlefishSandbox = null;
+var nukeTimer = null;
 
-let resourceDomains = [];
+var resourceDomains = [];
 function setResourceSubstitution(domain, uri) {
   resourceDomains.push(domain);
   resourceHandler.setSubstitution(domain, uri);

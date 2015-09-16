@@ -24,7 +24,7 @@ loader.lazyRequireGetter(this, "PerformanceRecordingCommon",
  *
  * @see toolkit/devtools/shared/performance.js for documentation.
  */
-let PerformanceRecordingActor = exports.PerformanceRecordingActor = protocol.ActorClass(merge({
+var PerformanceRecordingActor = exports.PerformanceRecordingActor = protocol.ActorClass(merge({
   typeName: "performance-recording",
 
   form: function(detail) {
@@ -156,7 +156,7 @@ let PerformanceRecordingActor = exports.PerformanceRecordingActor = protocol.Act
  * This can be used on older Profiler implementations, but the methods cannot
  * be changed -- you must introduce a new method, and detect the server.
  */
-let PerformanceRecordingFront = exports.PerformanceRecordingFront = protocol.FrontClass(PerformanceRecordingActor, merge({
+var PerformanceRecordingFront = exports.PerformanceRecordingFront = protocol.FrontClass(PerformanceRecordingActor, merge({
 
   form: function(form, detail) {
     if (detail === "actorid") {

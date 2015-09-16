@@ -180,7 +180,7 @@ function waitUntil (predicate, delay) {
 }
 exports.waitUntil = waitUntil;
 
-let cleanUI = function cleanUI() {
+var cleanUI = function cleanUI() {
   let { promise, resolve } = defer();
 
   let windows = getWindows(null, { includePrivate: true });

@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
 
 const PREF_DEBUG = "dom.payment.debug";
 
-let _debug;
+var _debug;
 try {
   _debug = Services.prefs.getPrefType(PREF_DEBUG) == Ci.nsIPrefBranch.PREF_BOOL
            && Services.prefs.getBoolPref(PREF_DEBUG);

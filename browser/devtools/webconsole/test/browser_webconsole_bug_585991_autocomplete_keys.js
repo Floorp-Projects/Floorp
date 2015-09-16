@@ -7,9 +7,9 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,<p>bug 585991 - autocomplete " +
                  "popup keyboard usage test";
-let HUD, popup, jsterm, inputNode, completeNode;
+var HUD, popup, jsterm, inputNode, completeNode;
 
-let test = asyncTest(function*() {
+var test = asyncTest(function*() {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
 
@@ -25,7 +25,7 @@ let test = asyncTest(function*() {
   HUD = popup = jsterm = inputNode = completeNode = null;
 });
 
-let consoleOpened = Task.async(function*(aHud) {
+var consoleOpened = Task.async(function*(aHud) {
   let deferred = promise.defer();
   HUD = aHud;
   info("web console opened");

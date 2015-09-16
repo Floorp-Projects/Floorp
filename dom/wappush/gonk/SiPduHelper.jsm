@@ -6,13 +6,13 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-let WSP = {};
+var WSP = {};
 Cu.import("resource://gre/modules/WspPduHelper.jsm", WSP);
-let WBXML = {};
+var WBXML = {};
 Cu.import("resource://gre/modules/WbxmlPduHelper.jsm", WBXML);
 
 // set to true to see debug messages
-let DEBUG = WBXML.DEBUG_ALL | false;
+var DEBUG = WBXML.DEBUG_ALL | false;
 
 /**
  * Public identifier for SI

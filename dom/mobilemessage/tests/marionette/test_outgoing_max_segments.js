@@ -6,10 +6,10 @@ MARIONETTE_TIMEOUT = 60000;
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
 SpecialPowers.addPermission("sms", true, document);
 
-let manager = window.navigator.mozMobileMessage;
+var manager = window.navigator.mozMobileMessage;
 // https://developer.mozilla.org/en-US/docs/DOM/SmsManager
-let maxCharsPerSms = 160;
-let maxSegments = 10; // 10 message segments concatenated into 1 multipart SMS
+var maxCharsPerSms = 160;
+var maxSegments = 10; // 10 message segments concatenated into 1 multipart SMS
 
 function verifyInitialState() {
   log("Verifying initial state.");

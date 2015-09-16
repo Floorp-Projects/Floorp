@@ -7,12 +7,12 @@ module.metadata = {
   'stability': 'unstable'
 };
 
-let { merge } = require('../util/object');
-let { data } = require('../self');
-let assetsURI = data.url();
-let isArray = Array.isArray;
-let method = require('../../method/core');
-let { uuid } = require('../util/uuid');
+var { merge } = require('../util/object');
+var { data } = require('../self');
+var assetsURI = data.url();
+var isArray = Array.isArray;
+var method = require('../../method/core');
+var { uuid } = require('../util/uuid');
 
 const isAddonContent = ({ contentURL }) =>
   contentURL && data.url(contentURL).startsWith(assetsURI);
@@ -43,16 +43,16 @@ function getAttachEventType(model) {
 }
 exports.getAttachEventType = getAttachEventType;
 
-let attach = method('worker-attach');
+var attach = method('worker-attach');
 exports.attach = attach;
 
-let connect = method('worker-connect');
+var connect = method('worker-connect');
 exports.connect = connect;
 
-let detach = method('worker-detach');
+var detach = method('worker-detach');
 exports.detach = detach;
 
-let destroy = method('worker-destroy');
+var destroy = method('worker-destroy');
 exports.destroy = destroy;
 
 function WorkerHost (workerFor) {

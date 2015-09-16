@@ -10,7 +10,7 @@
 const { PromisesFront } = require("devtools/server/actors/promises");
 const { setTimeout } = require("sdk/timers");
 
-let events = require("sdk/event/core");
+var events = require("sdk/event/core");
 
 add_task(function*() {
   let client = yield startTestDebuggerServer("test-promises-timetosettle");

@@ -14,7 +14,7 @@ const INIT_URI = "data:text/plain;charset=utf8,hello world";
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-bug-599725-response-headers.sjs";
 
-let loads = 0;
+var loads = 0;
 function performTest(request, console) {
   let deferred = promise.defer();
 
@@ -69,7 +69,7 @@ function waitForRequest() {
   return deferred.promise;
 }
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   let { browser } = yield loadTab(INIT_URI);
 
   yield openConsole();

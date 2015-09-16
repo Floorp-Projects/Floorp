@@ -8,9 +8,9 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+var {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
-let nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
+var nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
                                      "initWithPath");
 
 const MSG_JAR_FLUSH = "AddonJarFlush";

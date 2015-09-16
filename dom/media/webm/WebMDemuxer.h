@@ -8,14 +8,13 @@
 
 #include "nsTArray.h"
 #include "MediaDataDemuxer.h"
+#include "NesteggPacketHolder.h"
 
 typedef struct nestegg nestegg;
 
 namespace mozilla {
 
-class NesteggPacketHolder;
 class WebMBufferedState;
-class WebMPacketQueue;
 
 // Queue for holding MediaRawData samples
 class MediaRawDataQueue {
@@ -80,8 +79,6 @@ public:
   WebMDemuxer(MediaResource* aResource, bool aIsMediaSource);
   
   nsRefPtr<InitPromise> Init() override;
-
-  already_AddRefed<MediaDataDemuxer> Clone() const override;
 
   bool HasTrackType(TrackInfo::TrackType aType) const override;
 
@@ -217,8 +214,6 @@ public:
   nsRefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold) override;
 
   media::TimeIntervals GetBuffered() override;
-
-  int64_t GetEvictionOffset(media::TimeUnit aTime) override;
 
   void BreakCycles() override;
 

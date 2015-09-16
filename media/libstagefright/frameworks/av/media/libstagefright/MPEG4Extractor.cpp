@@ -1732,7 +1732,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
 
         case FOURCC('a', 'v', 'c', 'C'):
         {
-            if (chunk_data_size <= 7) {
+            if (chunk_data_size < 7) {
               ALOGE("short avcC chunk (%d bytes)", chunk_data_size);
               return ERROR_MALFORMED;
             }

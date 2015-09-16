@@ -47,7 +47,7 @@ function on(target, type, listener) {
 exports.on = on;
 
 
-let onceWeakMap = new WeakMap();
+var onceWeakMap = new WeakMap();
 
 
 /**

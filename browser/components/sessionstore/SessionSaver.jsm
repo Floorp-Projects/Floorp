@@ -59,9 +59,9 @@ function stopWatch(method) {
   };
 }
 
-let stopWatchStart = stopWatch("start");
-let stopWatchCancel = stopWatch("cancel");
-let stopWatchFinish = stopWatch("finish");
+var stopWatchStart = stopWatch("start");
+var stopWatchCancel = stopWatch("cancel");
+var stopWatchFinish = stopWatch("finish");
 
 /**
  * The external API implemented by the SessionSaver module.
@@ -102,7 +102,7 @@ this.SessionSaver = Object.freeze({
 /**
  * The internal API.
  */
-let SessionSaverInternal = {
+var SessionSaverInternal = {
   /**
    * The timeout ID referencing an active timer for a delayed save. When no
    * save is pending, this is null.

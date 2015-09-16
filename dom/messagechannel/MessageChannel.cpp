@@ -49,7 +49,12 @@ MessageChannel::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
   // window can be null in workers.
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  return Constructor(window, aRv);
+}
 
+/* static */ already_AddRefed<MessageChannel>
+MessageChannel::Constructor(nsPIDOMWindow* aWindow, ErrorResult& aRv)
+{
   nsID portUUID1;
   aRv = nsContentUtils::GenerateUUIDInPlace(portUUID1);
   if (aRv.Failed()) {
@@ -62,14 +67,14 @@ MessageChannel::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<MessageChannel> channel = new MessageChannel(window);
+  nsRefPtr<MessageChannel> channel = new MessageChannel(aWindow);
 
-  channel->mPort1 = MessagePort::Create(window, portUUID1, portUUID2, aRv);
+  channel->mPort1 = MessagePort::Create(aWindow, portUUID1, portUUID2, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  channel->mPort2 = MessagePort::Create(window, portUUID2, portUUID1, aRv);
+  channel->mPort2 = MessagePort::Create(aWindow, portUUID2, portUUID1, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

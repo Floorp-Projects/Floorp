@@ -2,8 +2,8 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 
-let testnum = 0;
-let factory;
+var testnum = 0;
+var factory;
 
 function parserForFile(filename) {
     let parser = null;
@@ -70,7 +70,7 @@ function getParserOutput(parser) {
 function run_test() {
 try {
 
-let testdata = [
+var testdata = [
     { filename: "data/iniparser01.ini", reference: {} },
     { filename: "data/iniparser02.ini", reference: {} },
     { filename: "data/iniparser03.ini", reference: {} },
@@ -197,13 +197,13 @@ while (testnum < testdata.length) {
 dump("INFO | test #" + ++testnum + "\n");
 
 // test writing to a new file.
-let newfile = do_get_file("data/");
+var newfile = do_get_file("data/");
 newfile.append("nonexistent-file.ini");
 if (newfile.exists())
     newfile.remove(false);
 do_check_false(newfile.exists());
 
-let parser = factory.createINIParser(newfile);
+var parser = factory.createINIParser(newfile);
 do_check_true(!!parser);
 do_check_true(parser instanceof Ci.nsIINIParserWriter);
 checkParserOutput(parser, {});
@@ -234,7 +234,7 @@ checkParserOutput(parser, {section1: {name1: "value2"} });
 dump("INFO | test #" + ++testnum + "\n");
 
 // test trying to set illegal characters
-let caughtError;
+var caughtError;
 caughtError = false;
 checkParserOutput(parser, {section1: {name1: "value2"} });
 

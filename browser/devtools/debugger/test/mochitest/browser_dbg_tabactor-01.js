@@ -9,7 +9,7 @@ const CHROME_URL = "chrome://mochitests/content/browser/browser/devtools/debugge
 const ACTORS_URL = CHROME_URL + "testactors.js";
 const TAB_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
 
-let gClient;
+var gClient;
 
 function test() {
   if (!DebuggerServer.initialized) {

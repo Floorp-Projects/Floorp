@@ -3,9 +3,9 @@
 
 // test cookie database asynchronous read operation.
 
-let test_generator = do_run_test();
+var test_generator = do_run_test();
 
-let CMAX = 1000;    // # of cookies to create
+var CMAX = 1000;    // # of cookies to create
 
 function run_test() {
   do_test_pending();

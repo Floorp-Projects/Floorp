@@ -2,16 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
+var SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
-let manifest = { // builtin provider
+var manifest = { // builtin provider
   name: "provider example.com",
   origin: "https://example.com",
   sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",
   workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
   iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
 };
-let manifest2 = { // used for testing install
+var manifest2 = { // used for testing install
   name: "provider test1",
   origin: "https://test1.example.com",
   workerURL: "https://test1.example.com/browser/browser/base/content/test/social/social_worker.js",
@@ -19,7 +19,7 @@ let manifest2 = { // used for testing install
   iconURL: "https://test1.example.com/browser/browser/base/content/test/general/moz.png",
   version: 1
 };
-let manifest3 = { // used for testing install
+var manifest3 = { // used for testing install
   name: "provider test2",
   origin: "https://test2.example.com",
   sidebarURL: "https://test2.example.com/browser/browser/base/content/test/social/social_sidebar.html",

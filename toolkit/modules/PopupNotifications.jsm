@@ -21,8 +21,8 @@ const ICON_ANCHOR_ATTRIBUTE = "popupnotificationanchor";
 
 const PREF_SECURITY_DELAY = "security.notification_enable_delay";
 
-let popupNotificationsMap = new WeakMap();
-let gNotificationParents = new WeakMap;
+var popupNotificationsMap = new WeakMap();
+var gNotificationParents = new WeakMap;
 
 function getAnchorFromBrowser(aBrowser, aAnchorID) {
   let attrPrefix = aAnchorID ? aAnchorID.replace("notification-icon", "") : "";

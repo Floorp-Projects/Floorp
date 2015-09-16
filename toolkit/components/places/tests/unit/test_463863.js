@@ -11,7 +11,7 @@
  * appear but TRANSITION_EMBED and TRANSITION_FRAMED_LINK ones.
  */
 
-let transitions = [
+var transitions = [
   TRANSITION_LINK
 , TRANSITION_TYPED
 , TRANSITION_BOOKMARK

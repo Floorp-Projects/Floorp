@@ -2426,6 +2426,7 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
       const LogicalRect gridCB(wm, 0, 0,
                                aContentArea.ISize(wm) + pad.IStartEnd(wm),
                                aContentArea.BSize(wm) + pad.BStartEnd(wm));
+      const nsSize gridCBPhysicalSize = gridCB.Size(wm).GetPhysicalSize(wm);
       size_t i = 0;
       for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next(), ++i) {
         nsIFrame* child = e.get();
@@ -2441,7 +2442,7 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
           cb = new nsRect;
           child->Properties().Set(GridItemContainingBlockRect(), cb);
         }
-        *cb = itemCB.GetPhysicalRect(wm, containerSize);
+        *cb = itemCB.GetPhysicalRect(wm, gridCBPhysicalSize);
       }
       // This rect isn't used at all for layout so we use it to optimize
       // away the virtual GetType() call in the callee in most cases.

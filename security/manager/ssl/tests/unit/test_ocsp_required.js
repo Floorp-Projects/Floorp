@@ -9,7 +9,7 @@
 // response with a bad signature. With security.OCSP.require set to true,
 // this should fail (but it also shouldn't cause assertion failures).
 
-let gOCSPRequestCount = 0;
+var gOCSPRequestCount = 0;
 
 function run_test() {
   do_get_profile();

@@ -124,7 +124,7 @@ const ATTRIBUTE_TYPES = [
   // {namespaceURI: SVG_NS, attributeName: "xlink:href", tagName: "*", type: }
 ];
 
-let parsers = {
+var parsers = {
   [TYPE_URI]: function(attributeValue) {
     return [{
       type: TYPE_URI,

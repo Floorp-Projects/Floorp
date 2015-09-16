@@ -370,7 +370,7 @@ gfxFontconfigFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 
     nsRefPtr<gfxCharacterMap> charmap;
     nsresult rv;
-    bool symbolFont;
+    bool symbolFont = false; // currently ignored
 
     if (aFontInfoData && (charmap = GetCMAPFromFontInfo(aFontInfoData,
                                                         mUVSOffset,
@@ -382,7 +382,7 @@ gfxFontconfigFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
         AutoTable cmapTable(this, kCMAP);
 
         if (cmapTable) {
-            bool unicodeFont = false, symbolFont = false; // currently ignored
+            bool unicodeFont = false; // currently ignored
             uint32_t cmapLen;
             const uint8_t* cmapData =
                 reinterpret_cast<const uint8_t*>(hb_blob_get_data(cmapTable,
@@ -1509,5 +1509,3 @@ ApplyGdkScreenFontOptions(FcPattern *aPattern)
 }
 
 #endif // MOZ_WIDGET_GTK2
-
-

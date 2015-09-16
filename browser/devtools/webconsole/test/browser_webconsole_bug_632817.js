@@ -18,9 +18,9 @@ const TEST_DATA_JSON_CONTENT =
 const TEST_URI = "data:text/html;charset=utf-8,Web Console network logging " +
                  "tests";
 
-let lastRequest = null;
-let requestCallback = null;
-let hud, browser;
+var lastRequest = null;
+var requestCallback = null;
+var hud, browser;
 
 function test() {
   const PREF = "devtools.webconsole.persistlog";

@@ -97,7 +97,7 @@ const FAKE_EXPERIMENTS_2 = [
   },
 ];
 
-let gAppInfo = null;
+var gAppInfo = null;
 
 function removeCacheFile() {
   let path = OS.Path.join(OS.Constants.Path.profileDir, "experiments.json");
@@ -125,7 +125,7 @@ function dateToSeconds(date) {
   return date.getTime() / 1000;
 }
 
-let gGlobalScope = this;
+var gGlobalScope = this;
 function loadAddonManager() {
   let ns = {};
   Cu.import("resource://gre/modules/Services.jsm", ns);

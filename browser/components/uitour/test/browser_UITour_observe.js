@@ -1,15 +1,15 @@
 "use strict";
 
-let gTestTab;
-let gContentAPI;
-let gContentWindow;
+var gTestTab;
+var gContentAPI;
+var gContentWindow;
 
 function test() {
   requestLongerTimeout(2);
   UITourTest();
 }
 
-let tests = [
+var tests = [
   function test_no_params(done) {
     function listener(event, params) {
       is(event, "test-event-1", "Correct event name");

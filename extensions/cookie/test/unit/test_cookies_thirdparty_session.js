@@ -5,7 +5,7 @@
 // 1) network.cookie.thirdparty.sessionOnly = false
 // 2) network.cookie.thirdparty.sessionOnly = true
 
-let test_generator = do_run_test();
+var test_generator = do_run_test();
 
 function run_test() {
   do_test_pending();

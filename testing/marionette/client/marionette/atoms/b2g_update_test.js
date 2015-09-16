@@ -37,12 +37,12 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const APPLY_TIMEOUT = 10;
 
-let browser = Services.wm.getMostRecentWindow("navigator:browser");
+var browser = Services.wm.getMostRecentWindow("navigator:browser");
 if (!browser) {
   log("Warning: No content browser");
 }
 
-let shell = browser.shell;
+var shell = browser.shell;
 function getContentWindow() {
   return shell.contentBrowser.contentWindow;
 }
@@ -76,7 +76,7 @@ function createUpdatePrompt() {
          createInstance(Ci.nsIUpdatePrompt);
 }
 
-let oldPrefs = {};
+var oldPrefs = {};
 
 function getPrefByType(pref, prefType) {
   // The value may not exist, so swallow errors here
@@ -238,7 +238,7 @@ function runUpdateTest(stage) {
   }
 }
 
-let updateArgs;
+var updateArgs;
 if (__marionetteParams) {
   updateArgs = __marionetteParams[0];
 }

@@ -6,9 +6,9 @@
 // Trivial worker definition
 
 importScripts("resource://gre/modules/workers/require.js");
-let PromiseWorker = require("resource://gre/modules/workers/PromiseWorker.js");
+var PromiseWorker = require("resource://gre/modules/workers/PromiseWorker.js");
 
-let worker = new PromiseWorker.AbstractWorker();
+var worker = new PromiseWorker.AbstractWorker();
 worker.dispatch = function(method, args = []) {
   return Agent[method](...args);
 },
@@ -23,7 +23,7 @@ worker.log = function(...args) {
 };
 self.addEventListener("message", msg => worker.handleMessage(msg));
 
-let Agent = {
+var Agent = {
   bounce: function(...args) {
     return args;
   }

@@ -14,10 +14,10 @@ const { defer } = require("../core/promise");
 const { when: unload } = require("../system/unload");
 const cfxArgs = require("../test/options");
 
-let addonPrincipal = Cc["@mozilla.org/systemprincipal;1"].
+var addonPrincipal = Cc["@mozilla.org/systemprincipal;1"].
                      createInstance(Ci.nsIPrincipal);
 
-let hiddenWindow = getHiddenWindow();
+var hiddenWindow = getHiddenWindow();
 
 if (cfxArgs.parseable) {
   console.info("hiddenWindow document.documentURI:" +
@@ -29,14 +29,14 @@ if (cfxArgs.parseable) {
 // Once Bug 565388 is fixed and shipped we'll be able to make invisible,
 // permanent docShells. Meanwhile we create hidden top level window and
 // use it's docShell.
-let frame = makeFrame(hiddenWindow.document, {
+var frame = makeFrame(hiddenWindow.document, {
   nodeName: "iframe",
   namespaceURI: "http://www.w3.org/1999/xhtml",
   allowJavascript: true,
   allowPlugins: true
 })
-let docShell = getDocShell(frame);
-let eventTarget = docShell.chromeEventHandler;
+var docShell = getDocShell(frame);
+var eventTarget = docShell.chromeEventHandler;
 
 // We need to grant docShell system principals in order to load XUL document
 // from data URI into it.
@@ -45,12 +45,12 @@ docShell.createAboutBlankContentViewer(addonPrincipal);
 // Get a reference to the DOM window of the given docShell and load
 // such document into that would allow us to create XUL iframes, that
 // are necessary for hidden frames etc..
-let window = docShell.contentViewer.DOMDocument.defaultView;
+var window = docShell.contentViewer.DOMDocument.defaultView;
 window.location = "data:application/vnd.mozilla.xul+xml;charset=utf-8,<window/>";
 
 // Create a promise that is delivered once add-on window is interactive,
 // used by add-on runner to defer add-on loading until window is ready.
-let { promise, resolve } = defer();
+var { promise, resolve } = defer();
 eventTarget.addEventListener("DOMContentLoaded", function handler(event) {
   eventTarget.removeEventListener("DOMContentLoaded", handler, false);
   resolve();

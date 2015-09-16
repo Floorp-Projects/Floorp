@@ -7,8 +7,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
-let gTab, gPanel, gDebugger;
-let gSources, gSearchView, gSearchBox;
+var gTab, gPanel, gDebugger;
+var gSources, gSearchView, gSearchBox;
 
 function test() {
   // Debug test slaves are a bit slow at this test.

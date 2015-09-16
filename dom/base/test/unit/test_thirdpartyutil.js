@@ -4,14 +4,14 @@
 
 // Test ThirdPartyUtil methods. See mozIThirdPartyUtil.
 
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-let Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-let NS_ERROR_INVALID_ARG = Components.results.NS_ERROR_INVALID_ARG;
+var NS_ERROR_INVALID_ARG = Components.results.NS_ERROR_INVALID_ARG;
 
 function do_check_throws(f, result, stack)
 {

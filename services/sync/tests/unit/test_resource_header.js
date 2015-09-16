@@ -11,7 +11,7 @@ function run_test() {
   run_next_test();
 }
 
-let httpServer = new HttpServer();
+var httpServer = new HttpServer();
 httpServer.registerPathHandler("/content", contentHandler);
 httpServer.start(-1);
 
@@ -20,8 +20,8 @@ const TEST_URL = "http://localhost:" + HTTP_PORT + "/content";
 const BODY = "response body";
 
 // Keep headers for later inspection.
-let auth = null;
-let foo  = null;
+var auth = null;
+var foo  = null;
 function contentHandler(metadata, response) {
   _("Handling request.");
   auth = metadata.getHeader("Authorization");

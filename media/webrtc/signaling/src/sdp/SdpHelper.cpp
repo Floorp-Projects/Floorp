@@ -118,7 +118,7 @@ SdpHelper::MsectionIsDisabled(const SdpMediaSection& msection) const
 }
 
 void
-SdpHelper::DisableMsection(Sdp* sdp, SdpMediaSection* msection) const
+SdpHelper::DisableMsection(Sdp* sdp, SdpMediaSection* msection)
 {
   // Make sure to remove the mid from any group attributes
   if (msection->GetAttributeList().HasAttribute(SdpAttribute::kMidAttribute)) {
@@ -552,28 +552,6 @@ SdpHelper::FindMsectionByMid(Sdp& sdp,
     }
   }
   return nullptr;
-}
-
-void
-SdpHelper::SetSsrcs(const std::vector<uint32_t>& ssrcs,
-                    const std::string& cname,
-                    SdpMediaSection* msection) const
-{
-  if (ssrcs.empty()) {
-    msection->GetAttributeList().RemoveAttribute(SdpAttribute::kSsrcAttribute);
-    return;
-  }
-
-  UniquePtr<SdpSsrcAttributeList> ssrcAttr(new SdpSsrcAttributeList);
-  for (auto ssrc : ssrcs) {
-    // When using ssrc attributes, we are required to at least have a cname.
-    // (See https://tools.ietf.org/html/rfc5576#section-6.1)
-    std::string cnameAttr("cname:");
-    cnameAttr += cname;
-    ssrcAttr->PushEntry(ssrc, cnameAttr);
-  }
-
-  msection->GetAttributeList().SetAttribute(ssrcAttr.release());
 }
 
 nsresult

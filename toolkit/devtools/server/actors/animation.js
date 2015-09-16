@@ -56,7 +56,7 @@ const ANIMATION_TYPES = {
  *
  * This actor also allows playing, pausing and seeking the animation.
  */
-let AnimationPlayerActor = ActorClass({
+var AnimationPlayerActor = ActorClass({
   typeName: "animationplayer",
 
   events: {
@@ -412,7 +412,7 @@ let AnimationPlayerActor = ActorClass({
   })
 });
 
-let AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
+var AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
   AUTO_REFRESH_EVENT: "updated-state",
 
   initialize: function(conn, form, detail, ctx) {
@@ -577,7 +577,7 @@ types.addDictType("animationMutationChange", {
 /**
  * The Animations actor lists animation players for a given node.
  */
-let AnimationsActor = exports.AnimationsActor = ActorClass({
+var AnimationsActor = exports.AnimationsActor = ActorClass({
   typeName: "animations",
 
   events: {
@@ -861,7 +861,7 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
   })
 });
 
-let AnimationsFront = exports.AnimationsFront = FrontClass(AnimationsActor, {
+var AnimationsFront = exports.AnimationsFront = FrontClass(AnimationsActor, {
   initialize: function(client, {animationsActor}) {
     Front.prototype.initialize.call(this, client, {actor: animationsActor});
     this.manage(this);

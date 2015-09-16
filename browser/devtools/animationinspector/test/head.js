@@ -121,7 +121,7 @@ function getNodeFront(selector, {walker}) {
  *        to highlight the node upon selection
  * @return {Promise} Resolves when the inspector is updated with the new node
  */
-let selectNode = Task.async(function*(data, inspector, reason="test") {
+var selectNode = Task.async(function*(data, inspector, reason="test") {
   info("Selecting the node for '" + data + "'");
   let nodeFront = data;
   if (!data._form) {
@@ -166,7 +166,7 @@ function assertAnimationsDisplayed(panel, nbAnimations, msg="") {
  * @param {InspectorPanel} inspector
  * @return {Promise}
  */
-let waitForAnimationInspectorReady = Task.async(function*(inspector) {
+var waitForAnimationInspectorReady = Task.async(function*(inspector) {
   let win = inspector.sidebar.getWindowForTab(TAB_NAME);
   let updated = inspector.once("inspector-updated");
 
@@ -186,7 +186,7 @@ let waitForAnimationInspectorReady = Task.async(function*(inspector) {
  * sidebar selected.
  * @return a promise that resolves when the inspector is ready.
  */
-let openAnimationInspector = Task.async(function*() {
+var openAnimationInspector = Task.async(function*() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
 
   info("Opening the toolbox with the inspector selected");
@@ -243,7 +243,7 @@ function openAnimationInspectorNewUI() {
  * Close the toolbox.
  * @return a promise that resolves when the toolbox has closed.
  */
-let closeAnimationInspector = Task.async(function*() {
+var closeAnimationInspector = Task.async(function*() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   yield gDevTools.closeToolbox(target);
 });
@@ -257,7 +257,7 @@ let closeAnimationInspector = Task.async(function*() {
  * closed and before it is opened again.
  * @return a promise that resolves when the animation inspector is ready.
  */
-let closeAnimationInspectorAndRestartWithNewUI = Task.async(function*(reload) {
+var closeAnimationInspectorAndRestartWithNewUI = Task.async(function*(reload) {
   info("Close the toolbox and test again with the new UI");
   yield closeAnimationInspector();
   if (reload) {
@@ -373,7 +373,7 @@ function onceNextPlayerRefresh(player) {
 /**
  * Simulate a click on the playPause button of a playerWidget.
  */
-let togglePlayPauseButton = Task.async(function*(widget) {
+var togglePlayPauseButton = Task.async(function*(widget) {
   let nextState = widget.player.state.playState === "running"
                   ? "paused"
                   : "running";
@@ -406,7 +406,7 @@ let togglePlayPauseButton = Task.async(function*(widget) {
  * time the state is refreshed, until the condition passes.
  * @return {Promise} Resolves when the condition passes.
  */
-let waitForStateCondition = Task.async(function*(player, conditionCheck, desc="") {
+var waitForStateCondition = Task.async(function*(player, conditionCheck, desc="") {
   if (desc) {
     desc = "(" + desc + ")";
   }
@@ -443,7 +443,7 @@ function waitForPlayState(player, playState) {
  * @param {Numer} time.
  * @return {Promise} Resolves when the animation is paused and tests have ran.
  */
-let checkPausedAt = Task.async(function*(widget, time) {
+var checkPausedAt = Task.async(function*(widget, time) {
   info("Wait for the next auto-refresh");
 
   yield waitForStateCondition(widget.player, state => {
@@ -459,7 +459,7 @@ let checkPausedAt = Task.async(function*(widget, time) {
 /**
  * Get the current playState of an animation player on a given node.
  */
-let getAnimationPlayerState = Task.async(function*(selector, animationIndex=0) {
+var getAnimationPlayerState = Task.async(function*(selector, animationIndex=0) {
   let playState = yield executeInContent("Test:GetAnimationPlayerState",
                                          {selector, animationIndex});
   return playState;
@@ -480,7 +480,7 @@ function isNodeVisible(node) {
  * @param {AnimationsPanel} panel
  * @return {Array} all AnimationTargetNode instances
  */
-let waitForAllAnimationTargets = Task.async(function*(panel) {
+var waitForAllAnimationTargets = Task.async(function*(panel) {
   let targets = [];
   if (panel.animationsTimelineComponent) {
     targets = targets.concat(panel.animationsTimelineComponent.targetNodes);

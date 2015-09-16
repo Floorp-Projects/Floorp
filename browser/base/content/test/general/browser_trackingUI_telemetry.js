@@ -11,7 +11,7 @@ const {UrlClassifierTestUtils} = Cu.import("resource://testing-common/UrlClassif
 /**
  * Enable local telemetry recording for the duration of the tests.
  */
-let oldCanRecord = Services.telemetry.canRecordExtended;
+var oldCanRecord = Services.telemetry.canRecordExtended;
 Services.telemetry.canRecordExtended = true;
 Services.prefs.setBoolPref(PREF, false);
 Services.telemetry.getHistogramById("TRACKING_PROTECTION_ENABLED").clear();

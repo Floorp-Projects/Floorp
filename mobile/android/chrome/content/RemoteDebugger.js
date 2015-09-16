@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyGetter(this, "DebuggerServer", () => {
   return DebuggerServer;
 });
 
-let RemoteDebugger = {
+var RemoteDebugger = {
   init() {
     USBRemoteDebugger.init();
     WiFiRemoteDebugger.init();
@@ -183,7 +183,7 @@ RemoteDebugger.allowConnection =
 RemoteDebugger.receiveOOB =
   RemoteDebugger.receiveOOB.bind(RemoteDebugger);
 
-let USBRemoteDebugger = {
+var USBRemoteDebugger = {
 
   init() {
     Services.prefs.addObserver("devtools.", this, false);
@@ -263,7 +263,7 @@ let USBRemoteDebugger = {
 
 };
 
-let WiFiRemoteDebugger = {
+var WiFiRemoteDebugger = {
 
   init() {
     Services.prefs.addObserver("devtools.", this, false);

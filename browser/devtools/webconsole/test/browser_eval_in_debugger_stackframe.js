@@ -11,8 +11,8 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-eval-in-stackframe.html";
 
-let gWebConsole, gJSTerm, gDebuggerWin, gThread, gDebuggerController;
-let gStackframes;
+var gWebConsole, gJSTerm, gDebuggerWin, gThread, gDebuggerController;
+var gStackframes;
 
 function test() {
   loadTab(TEST_URI).then(() => {

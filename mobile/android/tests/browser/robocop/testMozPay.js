@@ -3,23 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-let Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
 
 Components.utils.import("resource://gre/modules/SharedPreferences.jsm");
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
-let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
-let deferred = 0;
-let shouldPass = true;
-let reqId = 0;
+var ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
+var deferred = 0;
+var shouldPass = true;
+var reqId = 0;
 function getRequestId(increment) {
   reqId += increment;
   return "Request" + reqId;
 }
 
-let paymentSuccess = {
+var paymentSuccess = {
   receiveMessage: function(aMsg) {
     let msg = aMsg.json;
     if (shouldPass) {
@@ -31,7 +31,7 @@ let paymentSuccess = {
   }
 }
 
-let paymentFailed = {
+var paymentFailed = {
   receiveMessage: function(aMsg) {
     let msg = aMsg.json;
     if (shouldPass) {

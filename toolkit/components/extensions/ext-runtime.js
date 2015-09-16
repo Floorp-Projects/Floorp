@@ -1,7 +1,7 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
-let {
+var {
   EventManager,
   ignoreEvent,
 } = ExtensionUtils;

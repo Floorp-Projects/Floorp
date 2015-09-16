@@ -3,7 +3,7 @@
 
 "use strict";
 
-let HiddenFrame = Cu.import("resource:///modules/HiddenFrame.jsm", {}).HiddenFrame;
+var HiddenFrame = Cu.import("resource:///modules/HiddenFrame.jsm", {}).HiddenFrame;
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";

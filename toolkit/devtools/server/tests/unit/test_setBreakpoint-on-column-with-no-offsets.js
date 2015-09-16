@@ -1,6 +1,6 @@
 "use strict";
 
-let SOURCE_URL = getFileUrl("setBreakpoint-on-column-with-no-offsets.js");
+var SOURCE_URL = getFileUrl("setBreakpoint-on-column-with-no-offsets.js");
 
 function run_test() {
   return Task.spawn(function* () {

@@ -1,4 +1,4 @@
-let gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 
 // Returns the chrome side nsIPluginTag for this plugin
 function getTestPlugin(aName) {

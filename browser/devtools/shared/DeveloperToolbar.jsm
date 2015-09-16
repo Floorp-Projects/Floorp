@@ -65,7 +65,7 @@ Object.defineProperty(this, "ConsoleServiceListener", {
 /**
  * A collection of utilities to help working with commands
  */
-let CommandUtils = {
+var CommandUtils = {
   /**
    * Utility to ensure that things are loaded in the correct order
    */
@@ -306,7 +306,7 @@ Object.defineProperty(DeveloperToolbar.prototype, "visible", {
   enumerable: true
 });
 
-let _gSequenceId = 0;
+var _gSequenceId = 0;
 
 /**
  * Getter for a unique ID.

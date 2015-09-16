@@ -23,9 +23,9 @@ const TEST_URI = `
   <div id="testid2">Styled Node</div>
 `;
 
-let BACKGROUND_IMAGE_URL = 'url("' + TEST_URL_ROOT + 'doc_test_image.png")';
+var BACKGROUND_IMAGE_URL = 'url("' + TEST_URL_ROOT + 'doc_test_image.png")';
 
-let TEST_DATA = [
+var TEST_DATA = [
   { name: "border-color", value: "red", isValid: true },
   { name: "background-image", value: BACKGROUND_IMAGE_URL, isValid: true },
   { name: "border", value: "solid 1px foo", isValid: false },

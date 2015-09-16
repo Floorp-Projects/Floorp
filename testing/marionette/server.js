@@ -21,7 +21,7 @@ Cu.import("chrome://marionette/content/simpletest.js");
 loader.loadSubScript("resource://gre/modules/devtools/transport/transport.js");
 
 // Preserve this import order:
-let events = {};
+var events = {};
 loader.loadSubScript("chrome://marionette/content/EventUtils.js", events);
 loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", events);
 loader.loadSubScript("chrome://marionette/content/frame-manager.js");

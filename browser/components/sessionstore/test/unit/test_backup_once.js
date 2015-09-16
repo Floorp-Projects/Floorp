@@ -3,17 +3,17 @@
 
 "use strict";
 
-let {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
-let {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
-let {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-let {SessionWorker} = Cu.import("resource:///modules/sessionstore/SessionWorker.jsm", {});
+var {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
+var {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+var {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+var {SessionWorker} = Cu.import("resource:///modules/sessionstore/SessionWorker.jsm", {});
 
-let File = OS.File;
-let Paths;
-let SessionFile;
+var File = OS.File;
+var Paths;
+var SessionFile;
 
 // We need a XULAppInfo to initialize SessionFile
-let XULAppInfo = {
+var XULAppInfo = {
   vendor: "Mozilla",
   name: "SessionRestoreTest",
   ID: "{230de50e-4cd1-11dc-8314-0800200c9a66}",
@@ -32,14 +32,14 @@ let XULAppInfo = {
   ])
 };
 
-let XULAppInfoFactory = {
+var XULAppInfoFactory = {
   createInstance: function (outer, iid) {
     if (outer != null)
       throw Cr.NS_ERROR_NO_AGGREGATION;
     return XULAppInfo.QueryInterface(iid);
   }
 };
-let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 registrar.registerFactory(Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}"),
                           "XULAppInfo", "@mozilla.org/xre/app-info;1",
                           XULAppInfoFactory);
@@ -62,9 +62,9 @@ add_task(function* init() {
   yield SessionFile.read();
 });
 
-let pathStore;
-let pathBackup;
-let decoder;
+var pathStore;
+var pathBackup;
+var decoder;
 
 function promise_check_exist(path, shouldExist) {
   return Task.spawn(function*() {

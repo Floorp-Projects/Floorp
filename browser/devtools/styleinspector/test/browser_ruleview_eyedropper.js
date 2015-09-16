@@ -5,7 +5,7 @@
 "use strict";
 
 // So we can test collecting telemetry on the eyedropper
-let oldCanRecord = Services.telemetry.canRecordExtended;
+var oldCanRecord = Services.telemetry.canRecordExtended;
 Services.telemetry.canRecordExtended = true;
 registerCleanupFunction(function() {
   Services.telemetry.canRecordExtended = oldCanRecord;

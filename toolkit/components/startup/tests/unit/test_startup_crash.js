@@ -8,8 +8,8 @@ const Ci = Components.interfaces;
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "10.0");
 
-let prefService = Services.prefs;
-let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
+var prefService = Services.prefs;
+var appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
                  getService(Ci.nsIAppStartup);
 
 const pref_last_success = "toolkit.startup.last_success";

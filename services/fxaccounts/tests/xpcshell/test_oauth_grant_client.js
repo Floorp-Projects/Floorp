@@ -19,7 +19,7 @@ const STATUS_SUCCESS = 200;
  *        Mocked raw response from the server
  * @returns {Function}
  */
-let mockResponse = function (response) {
+var mockResponse = function (response) {
   return function () {
     return {
       setHeader: function () {},
@@ -37,7 +37,7 @@ let mockResponse = function (response) {
  *        Error object
  * @returns {Function}
  */
-let mockResponseError = function (error) {
+var mockResponseError = function (error) {
   return function () {
     return {
       setHeader: function () {},

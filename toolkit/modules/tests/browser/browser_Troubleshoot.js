@@ -27,7 +27,7 @@ registerCleanupFunction(function () {
   delete window.Troubleshoot;
 });
 
-let tests = [
+var tests = [
 
   function snapshotSchema(done) {
     Troubleshoot.snapshot(function (snapshot) {

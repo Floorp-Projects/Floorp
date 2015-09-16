@@ -21,7 +21,7 @@ const PREF_LOG_LEVEL_DUMP = "identity.fxaccounts.log.appender.dump";
 // identifiable info, credentials, etc) will be logged.
 const PREF_LOG_SENSITIVE_DETAILS = "identity.fxaccounts.log.sensitive";
 
-let exports = Object.create(null);
+var exports = Object.create(null);
 
 XPCOMUtils.defineLazyGetter(exports, 'log', function() {
   let log = Log.repository.getLogger("FirefoxAccounts");

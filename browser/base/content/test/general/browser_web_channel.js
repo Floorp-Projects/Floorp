@@ -14,7 +14,7 @@ const HTTP_ENDPOINT = "/browser/browser/base/content/test/general/browser_web_ch
 // Keep this synced with /mobile/android/tests/browser/robocop/testWebChannel.js
 // as much as possible.  (We only have that since we can't run browser chrome
 // tests on Android.  Yet?)
-let gTests = [
+var gTests = [
   {
     desc: "WebChannel generic message",
     run: function* () {

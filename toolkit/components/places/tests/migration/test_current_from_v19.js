@@ -3,7 +3,7 @@
 
 const ANNO_LEGACYGUID = "placesInternal/GUID";
 
-let getTotalGuidAnnotationsCount = Task.async(function* (db) {
+var getTotalGuidAnnotationsCount = Task.async(function* (db) {
   let rows = yield db.execute(
     `SELECT count(*)
      FROM moz_items_annos a

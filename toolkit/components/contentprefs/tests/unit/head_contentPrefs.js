@@ -135,7 +135,7 @@ var ContentPrefTest = {
 
 };
 
-let gInPrivateBrowsing = false;
+var gInPrivateBrowsing = false;
 function enterPBMode() {
   gInPrivateBrowsing = true;
 }

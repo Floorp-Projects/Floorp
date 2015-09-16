@@ -26,7 +26,7 @@ const KEY_CODE_ENTER = 13;
  * watch for click events on.
  */
 
-let handlers = {};
+var handlers = {};
 
 function NetErrorHelper(browser) {
   browser.addEventListener("click", this.handleClick, true);

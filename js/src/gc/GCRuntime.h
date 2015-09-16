@@ -9,6 +9,7 @@
 
 #include "mozilla/Atomics.h"
 
+#include "jsfriendapi.h"
 #include "jsgc.h"
 
 #include "gc/Heap.h"
@@ -985,6 +986,8 @@ class GCRuntime
     GCSchedulingTunables tunables;
     GCSchedulingState schedulingState;
 
+    MemProfiler mMemProfiler;
+
   private:
     // When empty, chunks reside in the emptyChunks pool and are re-used as
     // needed or eventually expired if not re-used. The emptyChunks pool gets
@@ -1313,7 +1316,7 @@ class GCRuntime
 };
 
 /* Prevent compartments and zones from being collected during iteration. */
-class AutoEnterIteration {
+class MOZ_RAII AutoEnterIteration {
     GCRuntime* gc;
 
   public:

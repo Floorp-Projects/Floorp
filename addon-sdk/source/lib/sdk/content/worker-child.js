@@ -130,7 +130,7 @@ function exceptions(key, value) {
 }
 
 // workers for windows in this tab
-let keepAlive = new Map();
+var keepAlive = new Map();
 
 process.port.on('sdk/worker/create', (process, options) => {
   options.window = getByInnerId(options.windowId);

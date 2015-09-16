@@ -55,7 +55,7 @@ const kProperty = "persist.moz.killswitch";
 const kUserValues =
   OS.Path.join(OS.Constants.Path.profileDir, "killswitch.json");
 
-let inParent = Cc["@mozilla.org/xre/app-info;1"]
+var inParent = Cc["@mozilla.org/xre/app-info;1"]
                  .getService(Ci.nsIXULRuntime)
                  .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 

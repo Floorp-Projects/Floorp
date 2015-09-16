@@ -107,7 +107,7 @@ NfcCallback.prototype = {
 };
 
 // Should be mapped to the NFCTagType defined in MozNFCTag.webidl.
-let TagType = {
+var TagType = {
   TYPE1: "Type1",
   TYPE2: "Type2",
   TYPE3: "Type3",
@@ -314,7 +314,7 @@ MozNFCPeerImpl.prototype = {
 };
 
 // Should be mapped to the RFState defined in WebIDL.
-let RFState = {
+var RFState = {
   IDLE: "idle",
   LISTEN: "listen",
   DISCOVERY: "discovery"

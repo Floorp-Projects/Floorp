@@ -61,7 +61,7 @@ const CONNECTION_TYPE_NONE      = 5;
 const PROXY_TYPE_MANUAL = Ci.nsIProtocolProxyService.PROXYCONFIG_MANUAL;
 const PROXY_TYPE_PAC    = Ci.nsIProtocolProxyService.PROXYCONFIG_PAC;
 
-let debug;
+var debug;
 function updateDebug() {
   let debugPref = false; // set default value here.
   try {
@@ -1079,7 +1079,7 @@ NetworkManager.prototype = {
   },
 };
 
-let CaptivePortalDetectionHelper = (function() {
+var CaptivePortalDetectionHelper = (function() {
 
   const EVENT_CONNECT = "Connect";
   const EVENT_DISCONNECT = "Disconnect";

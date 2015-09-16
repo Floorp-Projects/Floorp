@@ -1,6 +1,6 @@
 Components.utils.import("resource://gre/modules/Messaging.jsm");
 
-let java = new JavaBridge(this);
+var java = new JavaBridge(this);
 
 do_register_cleanup(() => {
   java.disconnect();

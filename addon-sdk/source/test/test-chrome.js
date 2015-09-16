@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
-let chrome = require('chrome');
+var chrome = require('chrome');
 
 const FIXTURES_URL = module.uri.substr(0, module.uri.lastIndexOf('/') + 1) +
                      'fixtures/chrome-worker/'

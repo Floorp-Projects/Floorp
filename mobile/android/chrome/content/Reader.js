@@ -7,7 +7,7 @@
 
 /*globals MAX_URI_LENGTH, MAX_TITLE_LENGTH */
 
-let Reader = {
+var Reader = {
   // These values should match those defined in BrowserContract.java.
   STATUS_UNFETCHED: 0,
   STATUS_FETCH_FAILED_TEMPORARY: 1,

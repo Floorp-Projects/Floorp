@@ -40,7 +40,7 @@ const DEFAULT_TIMELINE_DATA_PULL_TIMEOUT = 200; // ms
 /**
  * The timeline actor pops and forwards timeline markers registered in docshells.
  */
-let Timeline = exports.Timeline = Class({
+var Timeline = exports.Timeline = Class({
   extends: EventTarget,
 
   /**

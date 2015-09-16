@@ -27,13 +27,13 @@ this.EXPORTED_SYMBOLS = ["Chart"];
 /**
  * Localization convenience methods.
  */
-let L10N = new ViewHelpers.L10N(NET_STRINGS_URI);
+var L10N = new ViewHelpers.L10N(NET_STRINGS_URI);
 
 /**
  * A factory for creating charts.
  * Example usage: let myChart = Chart.Pie(document, { ... });
  */
-let Chart = {
+var Chart = {
   Pie: createPieChart,
   Table: createTableChart,
   PieTable: createPieTableChart

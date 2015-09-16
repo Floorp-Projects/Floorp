@@ -6,7 +6,7 @@
 const TEST_URI = "https://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-bug-837351-security-errors.html";
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield pushPrefEnv();
 
   yield loadTab(TEST_URI);

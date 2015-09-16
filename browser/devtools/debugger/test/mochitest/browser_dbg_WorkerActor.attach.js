@@ -1,9 +1,9 @@
-let MAX_TOTAL_VIEWERS = "browser.sessionhistory.max_total_viewers";
+var MAX_TOTAL_VIEWERS = "browser.sessionhistory.max_total_viewers";
 
-let TAB1_URL = EXAMPLE_URL + "doc_WorkerActor.attach-tab1.html";
-let TAB2_URL = EXAMPLE_URL + "doc_WorkerActor.attach-tab2.html";
-let WORKER1_URL = "code_WorkerActor.attach-worker1.js";
-let WORKER2_URL = "code_WorkerActor.attach-worker2.js";
+var TAB1_URL = EXAMPLE_URL + "doc_WorkerActor.attach-tab1.html";
+var TAB2_URL = EXAMPLE_URL + "doc_WorkerActor.attach-tab2.html";
+var WORKER1_URL = "code_WorkerActor.attach-worker1.js";
+var WORKER2_URL = "code_WorkerActor.attach-worker2.js";
 
 function test() {
   Task.spawn(function* () {

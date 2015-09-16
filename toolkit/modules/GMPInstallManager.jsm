@@ -15,7 +15,7 @@ const DOWNLOAD_INTERVAL  = 0;
 // 1 day default
 const DEFAULT_SECONDS_BETWEEN_CHECKS = 60 * 60 * 24;
 
-let GMPInstallFailureReason = {
+var GMPInstallFailureReason = {
   GMP_INVALID: 1,
   GMP_HIDDEN: 2,
   GMP_DISABLED: 3,

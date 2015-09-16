@@ -225,7 +225,7 @@ function promiseSaveGlobalMetadata(globalData) {
   }));
 }
 
-let forceExpiration = Task.async(function* () {
+var forceExpiration = Task.async(function* () {
   let metadata = yield promiseGlobalMetadata();
 
   // Make the current geodefaults expire 1s ago.
@@ -365,7 +365,7 @@ if (!isChild) {
  * After useHttpServer() is called, this string contains the URL of the "data"
  * directory, including the final slash.
  */
-let gDataUrl;
+var gDataUrl;
 
 /**
  * Initializes the HTTP server and ensures that it is terminated when tests end.
@@ -397,7 +397,7 @@ function useHttpServer() {
  *                   except for the engine name.  Alternative to xmlFileName.
  *        }
  */
-let addTestEngines = Task.async(function* (aItems) {
+var addTestEngines = Task.async(function* (aItems) {
   if (!gDataUrl) {
     do_throw("useHttpServer must be called before addTestEngines.");
   }

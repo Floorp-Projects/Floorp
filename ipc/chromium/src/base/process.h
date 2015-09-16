@@ -29,8 +29,8 @@ typedef pid_t ProcessId;
 class Process {
  public:
   Process() : process_(0), last_working_set_size_(0) {}
-  explicit Process(ProcessHandle handle) :
-    process_(handle), last_working_set_size_(0) {}
+  explicit Process(ProcessHandle aHandle) :
+    process_(aHandle), last_working_set_size_(0) {}
 
   // A handle to the current process.
   static Process Current();
@@ -38,7 +38,7 @@ class Process {
   // Get/Set the handle for this process. The handle will be 0 if the process
   // is no longer running.
   ProcessHandle handle() const { return process_; }
-  void set_handle(ProcessHandle handle) { process_ = handle; }
+  void set_handle(ProcessHandle aHandle) { process_ = aHandle; }
 
   // Get the PID for this process.
   ProcessId pid() const;

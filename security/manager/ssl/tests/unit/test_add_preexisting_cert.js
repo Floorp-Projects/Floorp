@@ -9,7 +9,7 @@
 // in the new trust bits being ignored.
 
 do_get_profile();
-let certDB = Cc["@mozilla.org/security/x509certdb;1"]
+var certDB = Cc["@mozilla.org/security/x509certdb;1"]
                .getService(Ci.nsIX509CertDB);
 
 function load_cert(cert, trust) {

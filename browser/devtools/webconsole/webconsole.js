@@ -35,7 +35,7 @@ loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.j
 loader.lazyGetter(this, "Timers", () => require("sdk/timers"));
 
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
-let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
+var l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 

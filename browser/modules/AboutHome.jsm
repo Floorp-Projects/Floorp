@@ -4,9 +4,9 @@
 
 "use strict";
 
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-let Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = [ "AboutHomeUtils", "AboutHome" ];
 
@@ -89,7 +89,7 @@ XPCOMUtils.defineLazyGetter(AboutHomeUtils, "snippetsURL", function() {
  * about:home needs to do something chrome-privileged, it sends a
  * message that's handled here.
  */
-let AboutHome = {
+var AboutHome = {
   MESSAGES: [
     "AboutHome:RestorePreviousSession",
     "AboutHome:Downloads",

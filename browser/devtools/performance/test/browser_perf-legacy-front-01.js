@@ -9,7 +9,7 @@
 
 const WAIT_TIME = 100;
 
-let test = Task.async(function*() {
+var test = Task.async(function*() {
   yield testMockMemory();
   yield testMockMemoryAndTimeline();
   finish();

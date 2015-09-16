@@ -49,8 +49,8 @@ const TEST_DATA_PARTIAL_LENGTH = TEST_DATA_REPLACEMENT.length;
 // is seen when expected.
 const MAXBYTES_IN_DB = TEST_DATA_LENGTH - 10;
 
-let gDownloadsRowToImport;
-let gDownloadsRowNonImportable;
+var gDownloadsRowToImport;
+var gDownloadsRowNonImportable;
 
 /**
  * Creates a database with an empty moz_downloads table and leaves an

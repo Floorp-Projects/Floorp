@@ -1,9 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
-let { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-let Pipe = CC("@mozilla.org/pipe;1", "nsIPipe", "init");
+var { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
+var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+var Pipe = CC("@mozilla.org/pipe;1", "nsIPipe", "init");
 
 function run_test() {
   DebuggerServer.registerModule("xpcshell-test/testactors-no-bulk");
@@ -21,7 +21,7 @@ function run_test() {
 
 /*** Tests ***/
 
-let test_bulk_send_error = Task.async(function*(transportFactory) {
+var test_bulk_send_error = Task.async(function*(transportFactory) {
   let deferred = promise.defer();
   let transport = yield transportFactory();
 

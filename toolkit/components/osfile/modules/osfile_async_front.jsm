@@ -24,18 +24,18 @@ this.EXPORTED_SYMBOLS = ["OS"];
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 
-let SharedAll = {};
+var SharedAll = {};
 Cu.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 
 
 // Boilerplate, to simplify the transition to require()
-let LOG = SharedAll.LOG.bind(SharedAll, "Controller");
-let isTypedArray = SharedAll.isTypedArray;
+var LOG = SharedAll.LOG.bind(SharedAll, "Controller");
+var isTypedArray = SharedAll.isTypedArray;
 
 // The constructor for file errors.
-let SysAll = {};
+var SysAll = {};
 if (SharedAll.Constants.Win) {
   Cu.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm", SysAll);
 } else if (SharedAll.Constants.libc) {
@@ -43,10 +43,10 @@ if (SharedAll.Constants.Win) {
 } else {
   throw new Error("I am neither under Windows nor under a Posix system");
 }
-let OSError = SysAll.Error;
-let Type = SysAll.Type;
+var OSError = SysAll.Error;
+var Type = SysAll.Type;
 
-let Path = {};
+var Path = {};
 Cu.import("resource://gre/modules/osfile/ospath.jsm", Path);
 
 // The library of promises.
@@ -58,7 +58,7 @@ Cu.import("resource://gre/modules/PromiseWorker.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
-let Native = Cu.import("resource://gre/modules/osfile/osfile_native.jsm", {});
+var Native = Cu.import("resource://gre/modules/osfile/osfile_native.jsm", {});
 
 
 // It's possible for osfile.jsm to get imported before the profile is
@@ -103,7 +103,7 @@ for (let [constProp, dirKey] of [
 /**
  * Return a shallow clone of the enumerable properties of an object.
  */
-let clone = SharedAll.clone;
+var clone = SharedAll.clone;
 
 /**
  * Extract a shortened version of an object, fit for logging.
@@ -149,7 +149,7 @@ function summarizeObject(obj) {
 // In order to expose Scheduler to the unfiltered Cu.import return value variant
 // on B2G we need to save it to `this`.  This does not make it public;
 // EXPORTED_SYMBOLS still controls that in all cases.
-let Scheduler = this.Scheduler = {
+var Scheduler = this.Scheduler = {
 
   /**
    * |true| once we have sent at least one message to the worker.
@@ -512,7 +512,7 @@ SharedAll.Config.TEST = readDebugPref(PREF_OSFILE_LOG_REDIRECT, false);
  * If |true|, use the native implementaiton of OS.File methods
  * whenever possible. Otherwise, force the use of the JS version.
  */
-let nativeWheneverAvailable = true;
+var nativeWheneverAvailable = true;
 const PREF_OSFILE_NATIVE = "toolkit.osfile.native";
 Services.prefs.addObserver(PREF_OSFILE_NATIVE,
   function prefObserver(aSubject, aTopic, aData) {
@@ -584,7 +584,7 @@ Services.prefs.addObserver(PREF_OSFILE_TEST_SHUTDOWN_OBSERVER,
  *
  * @constructor
  */
-let File = function File(fdmsg) {
+var File = function File(fdmsg) {
   // FIXME: At the moment, |File| does not close on finalize
   // (see bug 777715)
   this._fdmsg = fdmsg;
@@ -1230,7 +1230,7 @@ File.GET_DEBUG = function GET_DEBUG() {
  *
  * @constructor
  */
-let DirectoryIterator = function DirectoryIterator(path, options) {
+var DirectoryIterator = function DirectoryIterator(path, options) {
   /**
    * Open the iterator on the worker thread
    *
@@ -1462,7 +1462,7 @@ Object.defineProperty(OS.File, "queue", {
 /**
  * Shutdown barriers, to let clients register to be informed during shutdown.
  */
-let Barriers = {
+var Barriers = {
   profileBeforeChange: new AsyncShutdown.Barrier("OS.File: Waiting for clients before profile-before-shutdown"),
   shutdown: new AsyncShutdown.Barrier("OS.File: Waiting for clients before full shutdown"),
   /**

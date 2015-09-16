@@ -119,7 +119,7 @@ const TEST_URI = "data:text/html;charset=UTF-8," + encodeURIComponent(
    " </html>"
   ].join("\n"));
 
-let doc = null;
+var doc = null;
 function test() {
   waitForExplicitFinish();
   gBrowser.selectedTab = gBrowser.addTab();

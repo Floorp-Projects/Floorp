@@ -16,9 +16,9 @@ const INIT_URI = "data:text/html;charset=utf-8,Web Console test for " +
 const TEST_URI = "http://example.com/browser/browser/devtools/" +
                  "webconsole/test/test-bug-644419-log-limits.html";
 
-let hud, outputNode;
+var hud, outputNode;
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   let { browser } = yield loadTab(INIT_URI);
 
   hud = yield openConsole();
@@ -136,7 +136,7 @@ function testJsLimits2() {
   });
 }
 
-let gCounter, gImage;
+var gCounter, gImage;
 
 function testNetLimits() {
   Services.prefs.setIntPref("devtools.hud.loglimit.network", 10);

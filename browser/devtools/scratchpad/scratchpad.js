@@ -86,10 +86,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Reflect",
 
 // Because we have no constructor / destructor where we can log metrics we need
 // to do so here.
-let telemetry = new Telemetry();
+var telemetry = new Telemetry();
 telemetry.toolOpened("scratchpad");
 
-let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
+var WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
 
 /**
  * The scratchpad object handles the Scratchpad window functionality.
@@ -2076,7 +2076,7 @@ function ScratchpadTab(aTab)
   this._tab = aTab;
 }
 
-let scratchpadTargets = new WeakMap();
+var scratchpadTargets = new WeakMap();
 
 /**
  * Returns the object containing the DebuggerClient and WebConsoleClient for a

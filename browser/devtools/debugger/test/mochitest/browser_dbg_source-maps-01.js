@@ -9,8 +9,8 @@
 const TAB_URL = EXAMPLE_URL + "doc_binary_search.html";
 const COFFEE_URL = EXAMPLE_URL + "code_binary_search.coffee";
 
-let gTab, gPanel, gDebugger;
-let gEditor, gSources;
+var gTab, gPanel, gDebugger;
+var gEditor, gSources;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

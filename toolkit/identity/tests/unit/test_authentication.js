@@ -147,7 +147,7 @@ function test_complete_authentication_flow() {
 
 }
 
-let TESTS = [];
+var TESTS = [];
 
 TESTS.push(test_begin_authentication_flow);
 TESTS.push(test_complete_authentication_flow);

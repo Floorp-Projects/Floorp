@@ -58,8 +58,8 @@ const PREF_DISPLAY = "security.mixed_content.block_display_content";
 const gHttpsTestRoot = "https://example.com/browser/browser/base/content/test/general/";
 const gHttpTestRoot = "http://example.com/browser/browser/base/content/test/general/";
 
-let origBlockActive;
-let origBlockDisplay;
+var origBlockActive;
+var origBlockDisplay;
 var gTestBrowser = null;
 
 //------------------------ Helper Functions ---------------------

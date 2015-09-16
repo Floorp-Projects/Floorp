@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy", "resource://gre/module
 
 this.EXPORTED_SYMBOLS = ['Screenshot'];
 
-let Screenshot = {
+var Screenshot = {
   get: function screenshot_get() {
     let systemAppFrame = SystemAppProxy.getFrame();
     let window = systemAppFrame.ownerDocument.defaultView;

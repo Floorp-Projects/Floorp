@@ -48,13 +48,13 @@ add_task(function test() {
   equal(Copts.length, 1, "C() always youngest frame, so has optimization data");
 });
 
-let gUniqueStacks = new RecordingUtils.UniqueStacks();
+var gUniqueStacks = new RecordingUtils.UniqueStacks();
 
 function uniqStr(s) {
   return gUniqueStacks.getOrAddStringIndex(s);
 }
 
-let gThread = RecordingUtils.deflateThread({
+var gThread = RecordingUtils.deflateThread({
   samples: [{
     time: 0,
     frames: [
@@ -93,7 +93,7 @@ let gThread = RecordingUtils.deflateThread({
   markers: []
 }, gUniqueStacks);
 
-let gRawSite1 = {
+var gRawSite1 = {
   line: 12,
   column: 2,
   types: [{
@@ -121,7 +121,7 @@ let gRawSite1 = {
   }
 };
 
-let gRawSite2 = {
+var gRawSite2 = {
   line: 22,
   types: [{
     mirType: uniqStr("Int32"),

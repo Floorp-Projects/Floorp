@@ -21,17 +21,17 @@ Services.scriptloader.loadSubScript(
   Services.io.newFileURI(do_get_file("loader_common.js")).spec, this);
 
 // Define output functions so they look the same across all frameworks.
-let Output = {
+var Output = {
   print: do_print,
 };
 
-let executeSoon = do_execute_soon;
-let setTimeout = (fn, delay) => do_timeout(delay, fn);
+var executeSoon = do_execute_soon;
+var setTimeout = (fn, delay) => do_timeout(delay, fn);
 
 // Define task registration functions, see description in "loader_common.js".
-let add_task_in_parent_process = add_task;
-let add_task_in_child_process = function () {};
-let add_task_in_both_processes = add_task;
+var add_task_in_parent_process = add_task;
+var add_task_in_child_process = function () {};
+var add_task_in_both_processes = add_task;
 
 Services.scriptloader.loadSubScript(
   Services.io.newFileURI(do_get_file("head_common.js")).spec, this);

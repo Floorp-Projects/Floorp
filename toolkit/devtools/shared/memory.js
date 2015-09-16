@@ -28,7 +28,7 @@ loader.lazyRequireGetter(this, "HeapSnapshotFileUtils",
  * send information over RDP, and TimelineActor for using more light-weight
  * utilities like GC events and measuring memory consumption.
  */
-let Memory = exports.Memory = Class({
+var Memory = exports.Memory = Class({
   extends: EventTarget,
 
   /**

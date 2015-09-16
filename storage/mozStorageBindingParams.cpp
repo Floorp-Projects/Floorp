@@ -110,7 +110,7 @@ BindingParams::BindingParams(mozIStorageBindingParamsArray *aOwningArray,
 , mOwningStatement(aOwningStatement)
 {
   (void)mOwningStatement->GetParameterCount(&mParamCount);
-  (void)mParameters.SetCapacity(mParamCount);
+  mParameters.SetCapacity(mParamCount);
 }
 
 BindingParams::BindingParams(mozIStorageBindingParamsArray *aOwningArray)

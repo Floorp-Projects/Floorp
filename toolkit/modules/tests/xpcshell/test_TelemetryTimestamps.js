@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
 Cu.import("resource://testing-common/AppInfo.jsm");
 updateAppInfo();
 
-let gGlobalScope = this;
+var gGlobalScope = this;
 function loadAddonManager() {
   let ns = {};
   Cu.import("resource://gre/modules/Services.jsm", ns);

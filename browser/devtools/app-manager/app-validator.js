@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-let {Ci,Cu,CC} = require("chrome");
+var {Ci,Cu,CC} = require("chrome");
 const promise = require("devtools/toolkit/deprecated-sync-thenables");
 
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-let XMLHttpRequest = CC("@mozilla.org/xmlextras/xmlhttprequest;1");
-let strings = Services.strings.createBundle("chrome://browser/locale/devtools/app-manager.properties");
+var XMLHttpRequest = CC("@mozilla.org/xmlextras/xmlhttprequest;1");
+var strings = Services.strings.createBundle("chrome://browser/locale/devtools/app-manager.properties");
 
 function AppValidator({ type, location }) {
   this.type = type;

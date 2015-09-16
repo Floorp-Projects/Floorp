@@ -31,7 +31,7 @@ const CSP_REPORT_MSG = "Content Security Policy: The page\'s settings " +
                        "(\"script-src http://example.com\"). A CSP report is " +
                        "being sent.";
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   let { browser } = yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

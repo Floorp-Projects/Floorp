@@ -4,7 +4,7 @@
 
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
-let chatbar = document.getElementById("pinnedchats");
+var chatbar = document.getElementById("pinnedchats");
 
 add_chat_task(function* testOpenCloseChat() {
   let chatbox = yield promiseOpenChat("http://example.com");

@@ -7,7 +7,7 @@
  * Details view containing call trees, flamegraphs and markers waterfall.
  * Manages subviews and toggles visibility between them.
  */
-let DetailsView = {
+var DetailsView = {
   /**
    * Name to (node id, view object, actor requirements, pref killswitch)
    * mapping of subviews.

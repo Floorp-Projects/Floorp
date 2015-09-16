@@ -200,7 +200,7 @@ class JS_PUBLIC_API(CallbackTracer) : public JSTracer
 };
 
 // Set the name portion of the tracer's context for the current edge.
-class AutoTracingName
+class MOZ_RAII AutoTracingName
 {
     CallbackTracer* trc_;
     const char* prior_;
@@ -217,7 +217,7 @@ class AutoTracingName
 };
 
 // Set the index portion of the tracer's context for the current range.
-class AutoTracingIndex
+class MOZ_RAII AutoTracingIndex
 {
     CallbackTracer* trc_;
 
@@ -246,7 +246,7 @@ class AutoTracingIndex
 
 // Set a context callback for the trace callback to use, if it needs a detailed
 // edge description.
-class AutoTracingDetails
+class MOZ_RAII AutoTracingDetails
 {
     CallbackTracer* trc_;
 

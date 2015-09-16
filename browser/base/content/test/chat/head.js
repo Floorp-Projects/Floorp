@@ -4,7 +4,7 @@
 
 // Utility functions for Chat tests.
 
-let Chat = Cu.import("resource:///modules/Chat.jsm", {}).Chat;
+var Chat = Cu.import("resource:///modules/Chat.jsm", {}).Chat;
 
 function promiseOpenChat(url, mode, focus) {
   let uri = Services.io.newURI(url, null, null);

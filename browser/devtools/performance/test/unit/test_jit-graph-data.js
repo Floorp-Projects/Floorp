@@ -74,7 +74,7 @@ add_task(function test() {
   }
 });
 
-let gUniqueStacks = new RecordingUtils.UniqueStacks();
+var gUniqueStacks = new RecordingUtils.UniqueStacks();
 
 function uniqStr(s) {
   return gUniqueStacks.getOrAddStringIndex(s);
@@ -123,7 +123,7 @@ function createSample (i, frames) {
   return sample;
 }
 
-let SAMPLES = (function () {
+var SAMPLES = (function () {
   let samples = [];
 
   for (let i = 0; i < SAMPLE_COUNT;) {
@@ -137,9 +137,9 @@ let SAMPLES = (function () {
   return samples;
 })();
 
-let gThread = RecordingUtils.deflateThread({ samples: SAMPLES, markers: [] }, gUniqueStacks);
+var gThread = RecordingUtils.deflateThread({ samples: SAMPLES, markers: [] }, gUniqueStacks);
 
-let gRawSite1 = {
+var gRawSite1 = {
   line: 12,
   column: 2,
   types: [{

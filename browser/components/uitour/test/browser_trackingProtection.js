@@ -8,7 +8,7 @@ const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/
 const TOOLTIP_PANEL = document.getElementById("UITourTooltip");
 const TOOLTIP_ANCHOR = document.getElementById("tracking-protection-icon");
 
-let {UrlClassifierTestUtils} = Cu.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
+var {UrlClassifierTestUtils} = Cu.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
 registerCleanupFunction(function() {
   UrlClassifierTestUtils.cleanupTestTrackers();

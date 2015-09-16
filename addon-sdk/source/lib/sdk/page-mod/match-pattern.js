@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  "use strict";
 
-let { deprecateUsage } = require("../util/deprecate");
+var { deprecateUsage } = require("../util/deprecate");
 
 deprecateUsage("Module 'sdk/page-mod/match-pattern' is deprecated use 'sdk/util/match-pattern' instead");
 

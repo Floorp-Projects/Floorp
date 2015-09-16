@@ -7,8 +7,8 @@
 const kButtonId = "test-886323-removable-moved-node";
 const kLazyAreaId = "test-886323-lazy-area-for-removability-testing";
 
-let gNavBar = document.getElementById(CustomizableUI.AREA_NAVBAR);
-let gLazyArea;
+var gNavBar = document.getElementById(CustomizableUI.AREA_NAVBAR);
+var gLazyArea;
 
 // Removable nodes shouldn't be moved by buildArea
 add_task(function() {

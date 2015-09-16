@@ -7,7 +7,7 @@
 // Check that user agent styles are inspectable via rule view if
 // it is preffed on.
 
-let PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
+var PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 const { PrefObserver } = require("devtools/styleeditor/utils");
 
 const TEST_URI = `

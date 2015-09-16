@@ -2,8 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let plaintextURL = "data:text/plain,hello+world";
-let htmlURL = "about:mozilla";
+var plaintextURL = "data:text/plain,hello+world";
+var htmlURL = "about:mozilla";
 
 add_task(function* setup() {
   registerCleanupFunction(function() {
@@ -18,7 +18,7 @@ add_task(function*() {
   yield exercisePrefs(htmlURL, true);
 });
 
-let exercisePrefs = Task.async(function* (source, highlightable) {
+var exercisePrefs = Task.async(function* (source, highlightable) {
   let win = yield loadViewSourceWindow(source);
   let wrapMenuItem = win.document.getElementById("menu_wrapLongLines");
   let syntaxMenuItem = win.document.getElementById("menu_highlightSyntax");
@@ -114,7 +114,7 @@ function simulateClick(aMenuItem) {
   aMenuItem.click();
 }
 
-let checkStyle = Task.async(function* (win, styleProperty, expected) {
+var checkStyle = Task.async(function* (win, styleProperty, expected) {
   let browser = win.gBrowser;
   let value = yield ContentTask.spawn(browser, styleProperty, function* (styleProperty) {
     let style = content.getComputedStyle(content.document.body, null);
@@ -123,7 +123,7 @@ let checkStyle = Task.async(function* (win, styleProperty, expected) {
   is(value, expected, "Correct value of " + styleProperty);
 });
 
-let checkHighlight = Task.async(function* (win, expected) {
+var checkHighlight = Task.async(function* (win, expected) {
   let browser = win.gBrowser;
   let highlighted = yield ContentTask.spawn(browser, {}, function* () {
     let spans = content.document.getElementsByTagName("span");

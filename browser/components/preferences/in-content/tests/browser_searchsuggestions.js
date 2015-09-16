@@ -1,4 +1,4 @@
-let original = Services.prefs.getBoolPref("browser.search.suggest.enabled");
+var original = Services.prefs.getBoolPref("browser.search.suggest.enabled");
 
 registerCleanupFunction(() => {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", original);

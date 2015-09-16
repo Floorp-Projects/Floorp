@@ -129,18 +129,36 @@ Please upgrade to Mercurial %s or newer to use this extension.
 '''.strip()
 
 MISSING_BUGZILLA_CREDENTIALS = '''
-You do not have your Bugzilla credentials defined in your Mercurial config.
+You do not have your Bugzilla API Key defined in your Mercurial config.
 
-Various extensions make use of your Bugzilla credentials to interface with
+Various extensions make use of a Bugzilla API Key to interface with
 Bugzilla to enrich your development experience.
 
-Bugzilla credentials are optional. If you do not provide them, associated
+The Bugzilla API Key is optional. If you do not provide one, associated
 functionality will not be enabled, we will attempt to find a Bugzilla cookie
 from a Firefox profile, or you will be prompted for your Bugzilla credentials
 when they are needed.
 
-Your Bugzilla credentials will be stored in *PLAIN TEXT* in your hgrc config
-file. If this is not wanted, do not enter your credentials.
+You should only need to configure a Bugzilla API Key once.
+'''.lstrip()
+
+BUGZILLA_API_KEY_INSTRUCTIONS = '''
+Bugzilla API Keys can only be obtained through the Bugzilla web interface.
+
+Please perform the following steps:
+
+  1) Open https://bugzilla.mozilla.org/userprefs.cgi?tab=apikey
+  2) Generate a new API Key
+  3) Copy the generated key and paste it here
+'''.lstrip()
+
+LEGACY_BUGZILLA_CREDENTIALS_DETECTED = '''
+Your existing Mercurial config uses a legacy method for defining Bugzilla
+credentials. Bugzilla API Keys are the most secure and preferred method
+for defining Bugzilla credentials. Bugzilla API Keys are also required
+if you have enabled 2 Factor Authentication in Bugzilla.
+
+All consumers formerly looking at these options should support API Keys.
 '''.lstrip()
 
 BZPOST_MINIMUM_VERSION = LooseVersion('3.1')
@@ -367,22 +385,33 @@ class MercurialSetupWizard(object):
                     print('')
 
         if 'reviewboard' in c.extensions or 'bzpost' in c.extensions:
-            bzuser, bzpass, bzuserid, bzcookie = c.get_bugzilla_credentials()
+            bzuser, bzpass, bzuserid, bzcookie, bzapikey = c.get_bugzilla_credentials()
 
-            if (not bzuser or not bzpass) and (not bzuserid or not bzcookie):
+            if not bzuser or not bzapikey:
                 print(MISSING_BUGZILLA_CREDENTIALS)
 
-            # Don't prompt for username if cookie is set.
-            if not bzuser and not bzuserid:
+            if not bzuser:
                 bzuser = self._prompt('What is your Bugzilla email address? (optional)',
                     allow_empty=True)
 
-            if bzuser and not bzpass:
-                bzpass = self._prompt('What is your Bugzilla password? (optional)',
+            if bzuser and not bzapikey:
+                print(BUGZILLA_API_KEY_INSTRUCTIONS)
+                bzapikey = self._prompt('Please enter a Bugzilla API Key: (optional)',
                     allow_empty=True)
 
-            if bzuser or bzpass:
-                c.set_bugzilla_credentials(bzuser, bzpass)
+            if bzuser or bzapikey:
+                c.set_bugzilla_credentials(bzuser, bzapikey)
+
+            if bzpass or bzuserid or bzcookie:
+                print(LEGACY_BUGZILLA_CREDENTIALS_DETECTED)
+
+                # Clear legacy credentials automatically if an API Key is
+                # found as it supercedes all other credentials.
+                if bzapikey:
+                    print('The legacy credentials have been removed.\n')
+                    c.clear_legacy_bugzilla_credentials()
+                elif self._prompt_yn('Remove legacy credentials'):
+                    c.clear_legacy_bugzilla_credentials()
 
         # Look for and clean up old extensions.
         for ext in {'bzexport', 'qimportbz', 'mqext'}:

@@ -33,7 +33,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "etld",
  */
 
 // Internal helper methods and state
-let SocialServiceInternal = {
+var SocialServiceInternal = {
   get enabled() this.providerArray.length > 0,
 
   get providerArray() {
@@ -165,7 +165,7 @@ function getOriginActivationType(origin) {
   return "foreign";
 }
 
-let ActiveProviders = {
+var ActiveProviders = {
   get _providers() {
     delete this._providers;
     this._providers = {};

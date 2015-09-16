@@ -6,7 +6,7 @@
  * Test conversion between nsIPropertyBag and JS values.
  */
 
-let PropertyBagConverter = asyncShutdownService.wrappedJSObject._propertyBagConverter;
+var PropertyBagConverter = asyncShutdownService.wrappedJSObject._propertyBagConverter;
 
 function run_test() {
   test_conversions();

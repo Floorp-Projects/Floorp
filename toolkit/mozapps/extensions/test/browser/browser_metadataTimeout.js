@@ -13,13 +13,13 @@ const PREF_METADATA_LASTUPDATE        = "extensions.getAddons.cache.lastUpdate";
 
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
-let repo = {};
-let ARContext = Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm", repo);
+var repo = {};
+var ARContext = Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm", repo);
 
 // Mock out the XMLHttpRequest factory for AddonRepository so
 // we can reply with a timeout
-let pXHRStarted = Promise.defer();
-let oldXHRConstructor = ARContext.XHRequest;
+var pXHRStarted = Promise.defer();
+var oldXHRConstructor = ARContext.XHRequest;
 ARContext.XHRequest = function() {
   this._handlers = new Map();
   this.mozBackgroundRequest = false;

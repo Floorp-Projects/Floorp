@@ -4,7 +4,7 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
-let url = "https://www.example.com";
+var url = "https://www.example.com";
 
 function sendNDEF(peer) {
   let tnf = NDEF.TNF_WELL_KNOWN;
@@ -41,7 +41,7 @@ function testOnPeerReadyRE0() {
   toggleNFC(true).then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0));
 }
 
-let tests = [
+var tests = [
   testOnPeerReadyRE0
 ];
 

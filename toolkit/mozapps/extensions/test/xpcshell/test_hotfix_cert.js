@@ -25,7 +25,7 @@ Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 Services.prefs.setBoolPref(PREF_EM_CERT_CHECKATTRIBUTES, true);
 Services.prefs.setCharPref(PREF_EM_HOTFIX_URL, "http://localhost:" + gPort + "/hotfix.rdf");
 // Clear out all hotfix cert prefs to make sure only the test prefs apply.
-let defaults = Services.prefs.getDefaultBranch("");
+var defaults = Services.prefs.getDefaultBranch("");
 defaults.deleteBranch(PREF_EM_HOTFIX_CERTS);
 
 /*
@@ -78,7 +78,7 @@ function promiseFailedInstall() {
     });
 }
 
-let tryInstallHotfix = Task.async(function*(id, file, installListener) {
+var tryInstallHotfix = Task.async(function*(id, file, installListener) {
   Services.prefs.setCharPref(PREF_EM_HOTFIX_ID, id);
 
   testserver.registerPathHandler("/hotfix.rdf", function(request, response) {

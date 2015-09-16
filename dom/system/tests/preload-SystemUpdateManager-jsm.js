@@ -54,7 +54,7 @@ TestUpdateProvider.prototype = {
   },
 };
 
-let factory = {
+var factory = {
   createInstance: function(outer, iid) {
     if (outer) {
       throw Components.results.NS_ERROR_NO_AGGREGATION;
@@ -70,7 +70,7 @@ let factory = {
 
 Cm.nsIComponentRegistrar.registerFactory(Components.ID(cid), '', contractId, factory);
 
-let cm = Cc['@mozilla.org/categorymanager;1'].getService(Ci.nsICategoryManager);
+var cm = Cc['@mozilla.org/categorymanager;1'].getService(Ci.nsICategoryManager);
 cm.addCategoryEntry('system-update-provider', 'DummyProvider',
                     contractId + ',' + cid, false, true);
 

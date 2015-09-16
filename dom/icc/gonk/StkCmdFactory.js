@@ -8,7 +8,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let RIL = {};
+var RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
 const GONK_STKCMDFACTORY_CONTRACTID = "@mozilla.org/icc/stkcmdfactory;1";
@@ -933,7 +933,7 @@ StkTimerMessage.prototype = Object.create(StkCommandMessage.prototype);
 /**
  * Command Prototype Mappings.
  */
-let CmdPrototypes = {};
+var CmdPrototypes = {};
 CmdPrototypes[RIL.STK_CMD_REFRESH] = StkProactiveCommand;
 CmdPrototypes[RIL.STK_CMD_POLL_INTERVAL] = StkPollIntervalCmd;
 CmdPrototypes[RIL.STK_CMD_POLL_OFF] = StkProactiveCommand;
@@ -961,7 +961,7 @@ CmdPrototypes[RIL.STK_CMD_RECEIVE_DATA] = StkTextMessageCmd;
 /**
  * Message Prototype Mappings.
  */
-let MsgPrototypes = {};
+var MsgPrototypes = {};
 MsgPrototypes[RIL.STK_CMD_REFRESH] = StkCommandMessage;
 MsgPrototypes[RIL.STK_CMD_POLL_INTERVAL] = StkPollIntervalMessage;
 MsgPrototypes[RIL.STK_CMD_POLL_OFF] = StkCommandMessage;
@@ -989,7 +989,7 @@ MsgPrototypes[RIL.STK_CMD_RECEIVE_DATA] = StkTextMessage;
 /**
  * QueryInterface Mappings.
  */
-let QueriedIFs = {};
+var QueriedIFs = {};
 QueriedIFs[RIL.STK_CMD_REFRESH] = Ci.nsIStkProactiveCmd;
 QueriedIFs[RIL.STK_CMD_POLL_INTERVAL] = Ci.nsIStkPollIntervalCmd;
 QueriedIFs[RIL.STK_CMD_POLL_OFF] = Ci.nsIStkProactiveCmd;
@@ -1398,7 +1398,7 @@ StkBrowserTerminationEventMessage.prototype = Object.create(StkEventMessage.prot
 /**
  * Event Prototype Mappings.
  */
-let EventPrototypes = {};
+var EventPrototypes = {};
 EventPrototypes[RIL.STK_EVENT_TYPE_USER_ACTIVITY] = StkDownloadEvent;
 EventPrototypes[RIL.STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE] = StkDownloadEvent;
 EventPrototypes[RIL.STK_EVENT_TYPE_MT_CALL] = StkCallEvent;
@@ -1411,7 +1411,7 @@ EventPrototypes[RIL.STK_EVENT_TYPE_BROWSER_TERMINATION] = StkBrowserTerminationE
 /**
  * Event Message Prototype Mappings.
  */
-let EventMsgPrototypes = {};
+var EventMsgPrototypes = {};
 EventMsgPrototypes[RIL.STK_EVENT_TYPE_USER_ACTIVITY] = StkEventMessage;
 EventMsgPrototypes[RIL.STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE] = StkEventMessage;
 EventMsgPrototypes[RIL.STK_EVENT_TYPE_MT_CALL] = StkCallEventMessage;
@@ -1424,7 +1424,7 @@ EventMsgPrototypes[RIL.STK_EVENT_TYPE_BROWSER_TERMINATION] = StkBrowserTerminati
 /**
  * Event QueryInterface Mappings.
  */
-let QueriedEventIFs = {};
+var QueriedEventIFs = {};
 QueriedEventIFs[RIL.STK_EVENT_TYPE_USER_ACTIVITY] = Ci.nsIStkDownloadEvent;
 QueriedEventIFs[RIL.STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE] = Ci.nsIStkDownloadEvent;
 QueriedEventIFs[RIL.STK_EVENT_TYPE_MT_CALL] = Ci.nsIStkCallEvent;

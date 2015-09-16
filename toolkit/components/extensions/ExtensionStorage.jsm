@@ -16,8 +16,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/osfile.jsm")
 Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 
-let Path = OS.Path;
-let profileDir = OS.Constants.Path.profileDir;
+var Path = OS.Path;
+var profileDir = OS.Constants.Path.profileDir;
 
 this.ExtensionStorage = {
   cache: new Map(),

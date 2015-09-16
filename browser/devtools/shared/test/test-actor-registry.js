@@ -5,17 +5,17 @@
 
 (function (exports) {
 
-let Cu = Components.utils;
-let Ci = Components.interfaces;
-let Cc = Components.classes;
-let CC = Components.Constructor;
+var Cu = Components.utils;
+var Ci = Components.interfaces;
+var Cc = Components.classes;
+var CC = Components.Constructor;
 
-let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-let promise = require("promise");
+var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+var promise = require("promise");
 
-let TEST_URL_ROOT = "http://example.com/browser/browser/devtools/shared/test/";
-let ACTOR_URL = TEST_URL_ROOT + "test-actor.js";
+var TEST_URL_ROOT = "http://example.com/browser/browser/devtools/shared/test/";
+var ACTOR_URL = TEST_URL_ROOT + "test-actor.js";
 
 // Register a test actor that can operate on the remote document
 exports.registerTestActor = Task.async(function* (client) {
@@ -39,7 +39,7 @@ exports.registerTestActor = Task.async(function* (client) {
 
 // Load the test actor in a custom sandbox
 // as we can't use SDK module loader with URIs
-let loadFront = Task.async(function* () {
+var loadFront = Task.async(function* () {
   let sourceText = yield request(ACTOR_URL);
   const principal = CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")();
   const sandbox = Cu.Sandbox(principal);
@@ -51,7 +51,7 @@ let loadFront = Task.async(function* () {
 
 // Ensure fetching a live TabActor form for the targeted app
 // (helps fetching the test actor registered dynamically)
-let getUpdatedForm = function (client, tab) {
+var getUpdatedForm = function (client, tab) {
   return client.getTab({tab: tab})
                .then(response => response.tab);
 };
@@ -85,7 +85,7 @@ exports.getTestActorWithoutToolbox = Task.async(function* (tab) {
 });
 
 // Fetch the content of a URI
-let request = function (uri) {
+var request = function (uri) {
   let deferred = promise.defer();
   try {
     uri = Services.io.newURI(uri, null, null);
@@ -109,7 +109,7 @@ let request = function (uri) {
   return deferred.promise;
 }
 
-let getTestActor = Task.async(function* (client, tab, toolbox) {
+var getTestActor = Task.async(function* (client, tab, toolbox) {
   // We may have to update the form in order to get the dynamically registered
   // test actor.
   let form = yield getUpdatedForm(client, tab);

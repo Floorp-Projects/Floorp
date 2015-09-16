@@ -46,8 +46,8 @@ StirlingEngine.prototype = {
 Service.engineManager.register(StirlingEngine);
 
 // Tracking info/collections.
-let collectionsHelper = track_collections_helper();
-let upd = collectionsHelper.with_updated_collection;
+var collectionsHelper = track_collections_helper();
+var upd = collectionsHelper.with_updated_collection;
 
 function sync_httpd_setup(handlers) {
 

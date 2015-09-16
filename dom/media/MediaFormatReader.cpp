@@ -14,7 +14,6 @@
 #include "MediaInfo.h"
 #include "MediaFormatReader.h"
 #include "MediaResource.h"
-#include "SharedDecoderManager.h"
 #include "mozilla/SharedThreadPool.h"
 #include "VideoUtils.h"
 
@@ -136,17 +135,6 @@ MediaFormatReader::Shutdown()
   MOZ_ASSERT(mVideo.mPromise.IsEmpty());
 
   mDemuxer = nullptr;
-
-  // shutdown main thread demuxer and track demuxers.
-  if (mAudioTrackDemuxer) {
-    mAudioTrackDemuxer->BreakCycles();
-    mAudioTrackDemuxer = nullptr;
-  }
-  if (mVideoTrackDemuxer) {
-    mVideoTrackDemuxer->BreakCycles();
-    mVideoTrackDemuxer = nullptr;
-  }
-  mMainThreadDemuxer = nullptr;
 
   mPlatform = nullptr;
 
@@ -358,37 +346,9 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
 
   mSeekable = mDemuxer->IsSeekable();
 
-  // Create demuxer object for main thread.
-  if (mDemuxer->IsThreadSafe()) {
-    mMainThreadDemuxer = mDemuxer;
-  } else {
-    mMainThreadDemuxer = mDemuxer->Clone();
-  }
-  if (!mMainThreadDemuxer) {
-    mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
-    NS_WARNING("Unable to clone current MediaDataDemuxer");
-    return;
-  }
-
   if (!videoActive && !audioActive) {
     mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
     return;
-  }
-  if (videoActive) {
-    mVideoTrackDemuxer =
-      mMainThreadDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
-    if (!mVideoTrackDemuxer) {
-      mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
-      return;
-    }
-  }
-  if (audioActive) {
-    mAudioTrackDemuxer =
-      mMainThreadDemuxer->GetTrackDemuxer(TrackInfo::kAudioTrack, 0);
-    if (!mAudioTrackDemuxer) {
-      mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
-      return;
-    }
   }
 
   if (IsWaitingOnCDMResource()) {
@@ -415,11 +375,7 @@ void
 MediaFormatReader::OnDemuxerInitFailed(DemuxerFailureReason aFailure)
 {
   mDemuxerInitRequest.Complete();
-  if (aFailure == DemuxerFailureReason::WAITING_FOR_DATA) {
-    mMetadataPromise.Reject(ReadMetadataFailureReason::WAITING_FOR_RESOURCES, __func__);
-  } else {
-    mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
-  }
+  mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
 }
 
 bool
@@ -480,33 +436,17 @@ MediaFormatReader::EnsureDecodersCreated()
                    false);
 
     mVideo.mDecoderInitialized = false;
-    // If we've disabled hardware acceleration for this reader, then we can't use
-    // the shared decoder.
-    if (mSharedDecoderManager &&
-        mPlatform->SupportsSharedDecoders(mInfo.mVideo) &&
-        !mHardwareAccelerationDisabled) {
-      mVideo.mDecoder =
-        mSharedDecoderManager->CreateVideoDecoder(mPlatform,
-                                                  mVideo.mInfo ?
-                                                    *mVideo.mInfo->GetAsVideoInfo() :
-                                                    mInfo.mVideo,
-                                                  mLayersBackendType,
-                                                  mDecoder->GetImageContainer(),
-                                                  mVideo.mTaskQueue,
-                                                  mVideo.mCallback);
-    } else {
-      // Decoders use the layers backend to decide if they can use hardware decoding,
-      // so specify LAYERS_NONE if we want to forcibly disable it.
-      mVideo.mDecoder =
-        mPlatform->CreateDecoder(mVideo.mInfo ?
-                                   *mVideo.mInfo->GetAsVideoInfo() :
-                                   mInfo.mVideo,
-                                 mVideo.mTaskQueue,
-                                 mVideo.mCallback,
-                                 mHardwareAccelerationDisabled ? LayersBackend::LAYERS_NONE :
-                                                                 mLayersBackendType,
-                                 mDecoder->GetImageContainer());
-    }
+    // Decoders use the layers backend to decide if they can use hardware decoding,
+    // so specify LAYERS_NONE if we want to forcibly disable it.
+    mVideo.mDecoder =
+      mPlatform->CreateDecoder(mVideo.mInfo ?
+                                 *mVideo.mInfo->GetAsVideoInfo() :
+                                 mInfo.mVideo,
+                               mVideo.mTaskQueue,
+                               mVideo.mCallback,
+                               mHardwareAccelerationDisabled ? LayersBackend::LAYERS_NONE :
+                                                               mLayersBackendType,
+                               mDecoder->GetImageContainer());
     NS_ENSURE_TRUE(mVideo.mDecoder != nullptr, false);
   }
 
@@ -1585,22 +1525,6 @@ MediaFormatReader::OnAudioSeekCompleted(media::TimeUnit aTime)
   mSeekPromise.Resolve(aTime.ToMicroseconds(), __func__);
 }
 
-int64_t
-MediaFormatReader::GetEvictionOffset(double aTime)
-{
-  int64_t audioOffset;
-  int64_t videoOffset;
-  if (NS_IsMainThread()) {
-    audioOffset = HasAudio() ? mAudioTrackDemuxer->GetEvictionOffset(media::TimeUnit::FromSeconds(aTime)) : INT64_MAX;
-    videoOffset = HasVideo() ? mVideoTrackDemuxer->GetEvictionOffset(media::TimeUnit::FromSeconds(aTime)) : INT64_MAX;
-  } else {
-    MOZ_ASSERT(OnTaskQueue());
-    audioOffset = HasAudio() ? mAudio.mTrackDemuxer->GetEvictionOffset(media::TimeUnit::FromSeconds(aTime)) : INT64_MAX;
-    videoOffset = HasVideo() ? mVideo.mTrackDemuxer->GetEvictionOffset(media::TimeUnit::FromSeconds(aTime)) : INT64_MAX;
-  }
-  return std::min(audioOffset, videoOffset);
-}
-
 media::TimeIntervals
 MediaFormatReader::GetBuffered()
 {
@@ -1661,22 +1585,6 @@ void MediaFormatReader::ReleaseMediaResources()
   }
 }
 
-void
-MediaFormatReader::SetIdle()
-{
-  if (mSharedDecoderManager && mVideo.mDecoder) {
-    mSharedDecoderManager->SetIdle(mVideo.mDecoder);
-  }
-}
-
-void
-MediaFormatReader::SetSharedDecoderManager(SharedDecoderManager* aManager)
-{
-#if !defined(MOZ_WIDGET_ANDROID)
-  mSharedDecoderManager = aManager;
-#endif
-}
-
 bool
 MediaFormatReader::VideoIsHardwareAccelerated() const
 {
@@ -1689,7 +1597,7 @@ MediaFormatReader::NotifyDemuxer(uint32_t aLength, int64_t aOffset)
   MOZ_ASSERT(OnTaskQueue());
 
   LOGV("aLength=%u, aOffset=%lld", aLength, aOffset);
-  if (mShutdown) {
+  if (mShutdown || !mDemuxer) {
     return;
   }
 
@@ -1697,6 +1605,9 @@ MediaFormatReader::NotifyDemuxer(uint32_t aLength, int64_t aOffset)
     mDemuxer->NotifyDataArrived(aLength, aOffset);
   } else {
     mDemuxer->NotifyDataRemoved();
+  }
+  if (!mInitDone) {
+    return;
   }
   if (HasVideo()) {
     mVideo.mReceivedNewData = true;
@@ -1714,19 +1625,6 @@ MediaFormatReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(aLength);
 
-  if (!mInitDone || mShutdown) {
-    return;
-  }
-
-  MOZ_ASSERT(mMainThreadDemuxer);
-
-  // Queue a task to notify our main thread demuxer.
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableMethodWithArgs<uint32_t, int64_t>(
-      mMainThreadDemuxer, &MediaDataDemuxer::NotifyDataArrived,
-      aLength, aOffset);
-  AbstractThread::MainThread()->Dispatch(task.forget());
-
   NotifyDemuxer(aLength, aOffset);
 }
 
@@ -1734,18 +1632,6 @@ void
 MediaFormatReader::NotifyDataRemoved()
 {
   MOZ_ASSERT(OnTaskQueue());
-
-  if (!mInitDone || mShutdown) {
-    return;
-  }
-
-  MOZ_ASSERT(mMainThreadDemuxer);
-
-  // Queue a task to notify our main thread demuxer.
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableMethod(
-      mMainThreadDemuxer, &MediaDataDemuxer::NotifyDataRemoved);
-  AbstractThread::MainThread()->Dispatch(task.forget());
 
   NotifyDemuxer(0, 0);
 }

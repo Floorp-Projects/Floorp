@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let imported = Components.utils.import("resource://gre/modules/Battery.jsm", this);
+var imported = Components.utils.import("resource://gre/modules/Battery.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 
 function test() {

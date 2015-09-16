@@ -49,7 +49,7 @@ function asyncCallback(ctx, func, args) {
   CommonUtils.nextTick(invoke);
 }
 
-let Record = function (params) {
+var Record = function (params) {
   this.id = params.guid;
   this.parent = params.parent || null;
   this.index = params.position;
@@ -95,7 +95,7 @@ Record.prototype = {
   version: DATA_VERSION,
 };
 
-let Bookmarks = function () {
+var Bookmarks = function () {
   let createRootFolder = function (name) {
     let ROOT_FOLDER_ANNO = "cloudsync/rootFolder/" + name;
     let ROOT_SHORTCUT_ANNO = "cloudsync/rootShortcut/" + name;
@@ -221,7 +221,7 @@ let Bookmarks = function () {
 
 this.Bookmarks = Bookmarks;
 
-let RootFolder = function (rootId, rootName) {
+var RootFolder = function (rootId, rootName) {
   let suspended = true;
   let ignoreAll = false;
 

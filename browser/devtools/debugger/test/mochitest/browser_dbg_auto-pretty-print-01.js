@@ -5,13 +5,13 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_auto-pretty-print-01.html";
 
-let gTab, gPanel, gDebugger;
-let gEditor, gSources, gPrefs, gOptions, gView;
+var gTab, gPanel, gDebugger;
+var gEditor, gSources, gPrefs, gOptions, gView;
 
-let gFirstSourceLabel = "code_ugly-5.js";
-let gSecondSourceLabel = "code_ugly-6.js";
+var gFirstSourceLabel = "code_ugly-5.js";
+var gSecondSourceLabel = "code_ugly-6.js";
 
-let gOriginalPref = Services.prefs.getBoolPref("devtools.debugger.auto-pretty-print");
+var gOriginalPref = Services.prefs.getBoolPref("devtools.debugger.auto-pretty-print");
 Services.prefs.setBoolPref("devtools.debugger.auto-pretty-print", true);
 
 function test(){

@@ -3,7 +3,7 @@
 
 /* Ensure that clicking the button in the Offline mode neterror page makes the browser go online. See bug 435325. */
 
-let proxyPrefValue;
+var proxyPrefValue;
 
 function test() {
   waitForExplicitFinish();

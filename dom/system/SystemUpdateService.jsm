@@ -17,7 +17,7 @@ const PROVIDER_ACTIVITY_CHECKING = 1;
 const PROVIDER_ACTIVITY_DOWNLOADING = 1 << 1;
 const PROVIDER_ACTIVITY_APPLYING = 1 << 2;
 
-let debug = Services.prefs.getBoolPref("dom.system_update.debug")
+var debug = Services.prefs.getBoolPref("dom.system_update.debug")
               ? (aMsg) => dump("-*- SystemUpdateService.jsm : " + aMsg + "\n")
               : (aMsg) => {};
 

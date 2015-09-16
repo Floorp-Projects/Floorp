@@ -21,7 +21,7 @@ const DELAY_BUFFER       = 500;  // Buffer for timers on different OS platforms.
 const PROLONGED_ERROR_DURATION =
   (Svc.Prefs.get('errorhandler.networkFailureReportTimeout') * 2) * 1000;
 
-let errorHandler = Service.errorHandler;
+var errorHandler = Service.errorHandler;
 
 function setLastSync(lastSyncValue) {
   Svc.Prefs.set("lastSync", (new Date(Date.now() - lastSyncValue)).toString());

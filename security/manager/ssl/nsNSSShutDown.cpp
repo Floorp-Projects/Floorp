@@ -29,10 +29,10 @@ ObjectSetInitEntry(PLDHashEntryHdr *hdr, const void *key)
 }
 
 static const PLDHashTableOps gSetOps = {
-  PL_DHashVoidPtrKeyStub,
+  PLDHashTable::HashVoidPtrKeyStub,
   ObjectSetMatchEntry,
-  PL_DHashMoveEntryStub,
-  PL_DHashClearEntryStub,
+  PLDHashTable::MoveEntryStub,
+  PLDHashTable::ClearEntryStub,
   ObjectSetInitEntry
 };
 
@@ -59,7 +59,7 @@ void nsNSSShutDownList::remember(nsNSSShutDownObject *o)
   
   PR_ASSERT(o);
   MutexAutoLock lock(singleton->mListLock);
-  PL_DHashTableAdd(&singleton->mObjects, o, fallible);
+  singleton->mObjects.Add(o, fallible);
 }
 
 void nsNSSShutDownList::forget(nsNSSShutDownObject *o)
@@ -69,7 +69,7 @@ void nsNSSShutDownList::forget(nsNSSShutDownObject *o)
   
   PR_ASSERT(o);
   MutexAutoLock lock(singleton->mListLock);
-  PL_DHashTableRemove(&singleton->mObjects, o);
+  singleton->mObjects.Remove(o);
 }
 
 void nsNSSShutDownList::remember(nsOnPK11LogoutCancelObject *o)
@@ -79,7 +79,7 @@ void nsNSSShutDownList::remember(nsOnPK11LogoutCancelObject *o)
   
   PR_ASSERT(o);
   MutexAutoLock lock(singleton->mListLock);
-  PL_DHashTableAdd(&singleton->mPK11LogoutCancelObjects, o, fallible);
+  singleton->mPK11LogoutCancelObjects.Add(o, fallible);
 }
 
 void nsNSSShutDownList::forget(nsOnPK11LogoutCancelObject *o)
@@ -89,7 +89,7 @@ void nsNSSShutDownList::forget(nsOnPK11LogoutCancelObject *o)
   
   PR_ASSERT(o);
   MutexAutoLock lock(singleton->mListLock);
-  PL_DHashTableRemove(&singleton->mPK11LogoutCancelObjects, o);
+  singleton->mPK11LogoutCancelObjects.Remove(o);
 }
 
 void nsNSSShutDownList::trackSSLSocketCreate()

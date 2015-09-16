@@ -20,7 +20,7 @@ function getMinidumpDirectory() {
 
 // This observer is needed so we can clean up all evidence of the crash so
 // the testrunner thinks things are peachy.
-let CrashObserver = {
+var CrashObserver = {
   observe: function(subject, topic, data) {
     is(topic, 'ipc:content-shutdown', 'Received correct observer topic.');
     ok(subject instanceof Ci.nsIPropertyBag2,
@@ -118,7 +118,7 @@ function remoteResolveURI(uri) {
   });
 }
 
-let loadTestTab = Task.async(function*() {
+var loadTestTab = Task.async(function*() {
   gBrowser.selectedTab = gBrowser.addTab(TEST_URL);
   let browser = gBrowser.selectedBrowser;
   yield waitForEvent(browser, "load", true);
@@ -127,7 +127,7 @@ let loadTestTab = Task.async(function*() {
 });
 
 // Restarts the child process by crashing it then reloading the tab
-let restart = Task.async(function*() {
+var restart = Task.async(function*() {
   let browser = gBrowser.selectedBrowser;
   // If the tab isn't remote this would crash the main process so skip it
   if (browser.getAttribute("remote") != "true")

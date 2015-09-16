@@ -79,10 +79,10 @@ class ChildProcessInfo {
   }
 
  protected:
-  void set_type(ProcessType type) { type_ = type; }
-  void set_name(const std::wstring& name) { name_ = name; }
-  void set_handle(base::ProcessHandle handle) {
-    process_.set_handle(handle);
+  void set_type(ProcessType aType) { type_ = aType; }
+  void set_name(const std::wstring& aName) { name_ = aName; }
+  void set_handle(base::ProcessHandle aHandle) {
+    process_.set_handle(aHandle);
     pid_ = -1;
   }
 

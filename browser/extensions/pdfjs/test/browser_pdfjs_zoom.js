@@ -54,7 +54,7 @@ const TESTS = [
   }
 ];
 
-let initialWidth; // the initial width of the PDF document
+var initialWidth; // the initial width of the PDF document
 var previousWidth; // the width of the PDF document at previous step/test
 
 function test() {

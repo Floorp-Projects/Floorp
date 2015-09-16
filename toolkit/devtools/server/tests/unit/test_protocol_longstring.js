@@ -4,10 +4,10 @@
 /**
  * Test simple requests using the protocol helpers.
  */
-let protocol = require("devtools/server/protocol");
-let {method, RetVal, Arg, Option} = protocol;
-let events = require("sdk/event/core");
-let {LongStringActor} = require("devtools/server/actors/string");
+var protocol = require("devtools/server/protocol");
+var {method, RetVal, Arg, Option} = protocol;
+var events = require("sdk/event/core");
+var {LongStringActor} = require("devtools/server/actors/string");
 
 function simpleHello() {
   return {
@@ -19,12 +19,12 @@ function simpleHello() {
 
 DebuggerServer.LONG_STRING_LENGTH = DebuggerServer.LONG_STRING_INITIAL_LENGTH = DebuggerServer.LONG_STRING_READ_LENGTH = 5;
 
-let SHORT_STR = "abc";
-let LONG_STR = "abcdefghijklmnop";
+var SHORT_STR = "abc";
+var LONG_STR = "abcdefghijklmnop";
 
-let rootActor = null;
+var rootActor = null;
 
-let RootActor = protocol.ActorClass({
+var RootActor = protocol.ActorClass({
   typeName: "root",
 
   initialize: function(conn) {
@@ -68,7 +68,7 @@ let RootActor = protocol.ActorClass({
   }
 });
 
-let RootFront = protocol.FrontClass(RootActor, {
+var RootFront = protocol.FrontClass(RootActor, {
   initialize: function(client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);

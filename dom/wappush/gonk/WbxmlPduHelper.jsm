@@ -6,7 +6,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-let WSP = {};
+var WSP = {};
 Cu.import("resource://gre/modules/WspPduHelper.jsm", WSP);
 
 /**

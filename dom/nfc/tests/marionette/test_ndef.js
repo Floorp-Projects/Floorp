@@ -49,7 +49,7 @@ function testConstructNDEF() {
   runNextTest();
 }
 
-let tests = [
+var tests = [
   testConstructNDEF
 ];
 

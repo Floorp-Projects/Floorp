@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
-let { Loader } = require('sdk/test/loader');
+var { Loader } = require('sdk/test/loader');
 
 exports.testReady = function(assert, done) {
   let loader = Loader(module);

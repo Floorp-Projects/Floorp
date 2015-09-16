@@ -8,7 +8,7 @@
 const PERMISSIONS_RWUSR = 0x180;
 
 // Weave should always exist before before this file gets included.
-let gSyncUtils = {
+var gSyncUtils = {
   get bundle() {
     delete this.bundle;
     return this.bundle = Services.strings.createBundle("chrome://browser/locale/syncSetup.properties");

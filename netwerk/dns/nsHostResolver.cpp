@@ -619,7 +619,7 @@ nsHostResolver::FlushCache()
             nsHostRecord *rec = static_cast<nsHostRecord *>(node);
             node = node->next;
             PR_REMOVE_AND_INIT_LINK(rec);
-            PL_DHashTableRemove(&mDB, (nsHostKey *) rec);
+            mDB.Remove((nsHostKey *) rec);
             NS_RELEASE(rec);
         }
     }
@@ -759,8 +759,7 @@ nsHostResolver::ResolveHost(const char            *host,
             // callback, and proceed to do the lookup.
 
             nsHostKey key = { host, flags, af, netInterface };
-            nsHostDBEnt *he = static_cast<nsHostDBEnt *>
-                (PL_DHashTableAdd(&mDB, &key, fallible));
+            auto he = static_cast<nsHostDBEnt*>(mDB.Add(&key, fallible));
 
             // if the record is null, the hash table OOM'd.
             if (!he) {
@@ -838,8 +837,8 @@ nsHostResolver::ResolveHost(const char            *host,
                     // First, search for an entry with AF_UNSPEC
                     const nsHostKey unspecKey = { host, flags, PR_AF_UNSPEC,
                                                   netInterface };
-                    nsHostDBEnt *unspecHe = static_cast<nsHostDBEnt *>
-                        (PL_DHashTableSearch(&mDB, &unspecKey));
+                    auto unspecHe =
+                        static_cast<nsHostDBEnt*>(mDB.Search(&unspecKey));
                     NS_ASSERTION(!unspecHe ||
                                  (unspecHe && unspecHe->rec),
                                 "Valid host entries should contain a record");
@@ -977,8 +976,7 @@ nsHostResolver::DetachCallback(const char            *host,
         MutexAutoLock lock(mLock);
 
         nsHostKey key = { host, flags, af, netInterface };
-        nsHostDBEnt *he = static_cast<nsHostDBEnt *>
-                                     (PL_DHashTableSearch(&mDB, &key));
+        auto he = static_cast<nsHostDBEnt*>(mDB.Search(&key));
         if (he) {
             // walk list looking for |callback|... we cannot assume
             // that it will be there!
@@ -1268,7 +1266,7 @@ nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status, AddrInfo* r
                 nsHostRecord *head =
                     static_cast<nsHostRecord *>(PR_LIST_HEAD(&mEvictionQ));
                 PR_REMOVE_AND_INIT_LINK(head);
-                PL_DHashTableRemove(&mDB, (nsHostKey *) head);
+                mDB.Remove((nsHostKey *) head);
 
                 if (!head->negative) {
                     // record the age of the entry upon eviction.
@@ -1323,8 +1321,7 @@ nsHostResolver::CancelAsyncRequest(const char            *host,
 
     // Lookup the host record associated with host, flags & address family
     nsHostKey key = { host, flags, af, netInterface };
-    nsHostDBEnt *he = static_cast<nsHostDBEnt *>
-                      (PL_DHashTableSearch(&mDB, &key));
+    auto he = static_cast<nsHostDBEnt*>(mDB.Search(&key));
     if (he) {
         nsHostRecord* recPtr = nullptr;
         PRCList *node = he->rec->callbacks.next;
@@ -1345,7 +1342,7 @@ nsHostResolver::CancelAsyncRequest(const char            *host,
 
         // If there are no more callbacks, remove the hash table entry
         if (recPtr && PR_CLIST_IS_EMPTY(&recPtr->callbacks)) {
-            PL_DHashTableRemove(&mDB, (nsHostKey *)recPtr);
+            mDB.Remove((nsHostKey *)recPtr);
             // If record is on a Queue, remove it and then deref it
             if (recPtr->next != recPtr) {
                 PR_REMOVE_LINK(recPtr);

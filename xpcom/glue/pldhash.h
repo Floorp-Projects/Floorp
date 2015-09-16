@@ -398,9 +398,24 @@ public:
   void MarkImmutable();
 #endif
 
-  void MoveEntryStub(const PLDHashEntryHdr* aFrom, PLDHashEntryHdr* aTo);
+  // If you use PLDHashEntryStub or a subclass of it as your entry struct, and
+  // if your entries move via memcpy and clear via memset(0), you can use these
+  // stub operations.
+  static const PLDHashTableOps* StubOps();
 
-  void ClearEntryStub(PLDHashEntryHdr* aEntry);
+  // The individual stub operations in StubOps().
+  static PLDHashNumber HashVoidPtrKeyStub(PLDHashTable* aTable,
+                                          const void* aKey);
+  static bool MatchEntryStub(PLDHashTable* aTable,
+                             const PLDHashEntryHdr* aEntry, const void* aKey);
+  static void MoveEntryStub(PLDHashTable* aTable, const PLDHashEntryHdr* aFrom,
+                            PLDHashEntryHdr* aTo);
+  static void ClearEntryStub(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
+
+  // Hash/match operations for tables holding C strings.
+  static PLDHashNumber HashStringKey(PLDHashTable* aTable, const void* aKey);
+  static bool MatchStringKey(PLDHashTable* aTable,
+                             const PLDHashEntryHdr* aEntry, const void* aKey);
 
   // This is an iterator for PLDHashtable. Assertions will detect some, but not
   // all, mid-iteration table modifications that might invalidate (e.g.
@@ -582,66 +597,10 @@ struct PLDHashTableOps
   PLDHashInitEntry    initEntry;
 };
 
-// Default implementations for the above mOps.
-
-PLDHashNumber
-PL_DHashStringKey(PLDHashTable* aTable, const void* aKey);
-
-// A minimal entry is a subclass of PLDHashEntryHdr and has void key pointer.
+// A minimal entry is a subclass of PLDHashEntryHdr and has a void* key pointer.
 struct PLDHashEntryStub : public PLDHashEntryHdr
 {
   const void* key;
 };
-
-PLDHashNumber
-PL_DHashVoidPtrKeyStub(PLDHashTable* aTable, const void* aKey);
-
-bool
-PL_DHashMatchEntryStub(PLDHashTable* aTable,
-                       const PLDHashEntryHdr* aEntry,
-                       const void* aKey);
-
-bool
-PL_DHashMatchStringKey(PLDHashTable* aTable,
-                       const PLDHashEntryHdr* aEntry,
-                       const void* aKey);
-
-void
-PL_DHashMoveEntryStub(PLDHashTable* aTable,
-                      const PLDHashEntryHdr* aFrom,
-                      PLDHashEntryHdr* aTo);
-
-void
-PL_DHashClearEntryStub(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
-
-// If you use PLDHashEntryStub or a subclass of it as your entry struct, and
-// if your entries move via memcpy and clear via memset(0), you can use these
-// stub operations.
-const PLDHashTableOps*
-PL_DHashGetStubOps(void);
-
-// The following function are deprecated. Use the equivalent class methods
-// instead: PLDHashTable::Search() instead of PL_DHashTableSearch(), etc.
-
-PLDHashEntryHdr* PL_DHASH_FASTCALL
-PL_DHashTableSearch(PLDHashTable* aTable, const void* aKey);
-
-PLDHashEntryHdr* PL_DHASH_FASTCALL
-PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey,
-                 const mozilla::fallible_t&);
-
-PLDHashEntryHdr* PL_DHASH_FASTCALL
-PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey);
-
-void PL_DHASH_FASTCALL
-PL_DHashTableRemove(PLDHashTable* aTable, const void* aKey);
-
-void
-PL_DHashTableRawRemove(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
-
-#ifdef DEBUG
-void
-PL_DHashMarkTableImmutable(PLDHashTable* aTable);
-#endif
 
 #endif /* pldhash_h___ */

@@ -5,7 +5,7 @@
 // Test basic pretty printing functionality. Would be an xpcshell test, except
 // for bug 921252.
 
-let gTab, gPanel, gClient, gThreadClient, gSource;
+var gTab, gPanel, gClient, gThreadClient, gSource;
 
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print-2.html";
 
