@@ -183,6 +183,19 @@ add_task(function* multipleWindows() {
   yield BrowserTestUtils.closeWindow(win3);
 });
 
+add_task(function* enableOutsideNotification() {
+  // Setting the suggest.searches pref outside the notification (e.g., by
+  // ticking the checkbox in the preferences window) should hide it.
+  Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
+  Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, false);
+  yield setUserMadeChoicePref(false);
+
+  Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
+  gURLBar.focus();
+  yield promiseAutocompleteResultPopup("foo");
+  assertVisible(false);
+});
+
 /**
  * Setting the choice pref triggers a pref observer in the urlbar, which hides
  * the notification if it's present.  This function returns a promise that's

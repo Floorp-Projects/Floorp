@@ -66,9 +66,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this.timeout = this._prefs.getIntPref("delay");
         this._formattingEnabled = this._prefs.getBoolPref("formatting.enabled");
         this._mayTrimURLs = this._prefs.getBoolPref("trimURLs");
-        this._userMadeSearchSuggestionsChoice =
-          this._prefs.getBoolPref("userMadeSearchSuggestionsChoice");
-
+        this._cacheUserMadeSearchSuggestionsChoice();
         this.inputField.controllers.insertControllerAt(0, this._copyCutController);
         this.inputField.addEventListener("paste", this, false);
         this.inputField.addEventListener("mousedown", this, false);
@@ -663,17 +661,19 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 this._formattingEnabled = this._prefs.getBoolPref(aData);
                 break;
               case "userMadeSearchSuggestionsChoice":
-                this._userMadeSearchSuggestionsChoice =
-                  this._prefs.getBoolPref(aData);
+              case "suggest.searches":
+                this._cacheUserMadeSearchSuggestionsChoice();
                 // Make sure the urlbar is focused.  It won't be, for example,
                 // if the user used an accesskey to make an opt-in choice.
                 // mIgnoreFocus prevents the text from being selected.
                 this.mIgnoreFocus = true;
                 this.focus();
                 this.mIgnoreFocus = false;
-                this.popup.searchSuggestionsNotificationWasDismissed(
-                  this._prefs.getBoolPref("suggest.searches")
-                );
+                if (this._userMadeSearchSuggestionsChoice) {
+                  this.popup.searchSuggestionsNotificationWasDismissed(
+                    this._prefs.getBoolPref("suggest.searches")
+                  );
+                }
                 break;
               case "trimURLs":
                 this._mayTrimURLs = this._prefs.getBoolPref(aData);
@@ -929,6 +929,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <field name="_userMadeSearchSuggestionsChoice"><![CDATA[
         false
       ]]></field>
+
+      <method name="_cacheUserMadeSearchSuggestionsChoice">
+        <body><![CDATA[
+          this._userMadeSearchSuggestionsChoice =
+            this._prefs.getBoolPref("userMadeSearchSuggestionsChoice") ||
+            this._prefs.getBoolPref("suggest.searches");
+        ]]></body>
+      </method>
 
       <property name="shouldShowSearchSuggestionsNotification" readonly="true">
         <getter><![CDATA[
