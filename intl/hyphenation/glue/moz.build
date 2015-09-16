@@ -17,17 +17,10 @@ UNIFIED_SOURCES += [
 # These files cannot be built in unified mode because they include hnjalloc.h.
 SOURCES += [
     'hnjstdio.cpp',
-    'hyphen.c',
+]
+
+LOCAL_INCLUDES += [
+    '../hyphen',
 ]
 
 FINAL_LIBRARY = 'xul'
-
-# Suppress warnings in third-party code.
-if CONFIG['GNU_CC']:
-    CFLAGS += [
-        '-Wno-sign-compare',
-        '-Wno-type-limits',
-    ]
-
-if not CONFIG['GNU_CXX']:
-    ALLOW_COMPILER_WARNINGS = True

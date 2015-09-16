@@ -13,7 +13,7 @@ gfx/ots/
 gfx/qcms/
 gfx/skia/
 gfx/ycbcr/
-intl/hyphenation/
+intl/hyphenation/hyphen/
 intl/icu/
 ipc/chromium/
 js/src/ctypes/libffi/
