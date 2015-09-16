@@ -1295,17 +1295,28 @@ IMEContentObserver::IMENotificationSender::Run()
     SendTextChange();
   }
 
-  // Be aware, PuppetWidget depends on the order of this. A selection change
-  // notification should not be sent before a text change notification because
-  // PuppetWidget shouldn't query new text content every selection change.
-  if (mIMEContentObserver->mIsSelectionChangeEventPending) {
-    mIMEContentObserver->mIsSelectionChangeEventPending = false;
-    SendSelectionChange();
+  // If a text change notification causes another text change again, we should
+  // notify IME of that before sending a selection change notification.
+  if (!mIMEContentObserver->mIsTextChangeEventPending) {
+    // Be aware, PuppetWidget depends on the order of this. A selection change
+    // notification should not be sent before a text change notification because
+    // PuppetWidget shouldn't query new text content every selection change.
+    if (mIMEContentObserver->mIsSelectionChangeEventPending) {
+      mIMEContentObserver->mIsSelectionChangeEventPending = false;
+      SendSelectionChange();
+    }
   }
 
-  if (mIMEContentObserver->mIsPositionChangeEventPending) {
-    mIMEContentObserver->mIsPositionChangeEventPending = false;
-    SendPositionChange();
+  // If a text change notification causes another text change again or a
+  // selection change notification causes either a text change or another
+  // selection change, we should notify IME of those before sending a position
+  // change notification.
+  if (!mIMEContentObserver->mIsTextChangeEventPending &&
+      !mIMEContentObserver->mIsSelectionChangeEventPending) {
+    if (mIMEContentObserver->mIsPositionChangeEventPending) {
+      mIMEContentObserver->mIsPositionChangeEventPending = false;
+      SendPositionChange();
+    }
   }
 
   // If notifications caused some new change, we should notify them now.
