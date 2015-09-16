@@ -924,10 +924,8 @@ public class Tabs implements GeckoEventListener {
             selectTab(tabToSelect.getId());
         }
 
-        // TODO: surely we could just fetch *any* cached icon?
+        // Load favicon instantly for about:home page because it's already cached
         if (AboutPages.isBuiltinIconPage(url)) {
-            Log.d(LOGTAG, "Setting about: tab favicon inline.");
-            tabToSelect.addFavicon(url, Favicons.browserToolbarFaviconSize, "");
             tabToSelect.loadFavicon();
         }
 
