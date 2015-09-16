@@ -30,6 +30,7 @@ var TrackingProtection = {
       gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip");
 
     this.enabledHistogramAdd(this.enabledGlobally);
+    this.disabledPBMHistogramAdd(!this.enabledInPrivateWindows);
   },
 
   uninit() {
@@ -60,6 +61,13 @@ var TrackingProtection = {
       return;
     }
     Services.telemetry.getHistogramById("TRACKING_PROTECTION_ENABLED").add(value);
+  },
+
+  disabledPBMHistogramAdd(value) {
+    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+      return;
+    }
+    Services.telemetry.getHistogramById("TRACKING_PROTECTION_PBM_DISABLED").add(value);
   },
 
   eventsHistogramAdd(value) {
