@@ -10,11 +10,14 @@
 // This makes sure the 'domnode' protocol actor type is known when importing
 // highlighter.
 require("devtools/server/actors/inspector");
-const {
-  CanvasFrameAnonymousContentHelper,
-  HighlighterEnvironment
-} = require("devtools/server/actors/highlighter");
 const events = require("sdk/event/core");
+
+const {HighlighterEnvironment} = require("devtools/server/actors/highlighters");
+
+const {
+  CanvasFrameAnonymousContentHelper
+} = require("devtools/server/actors/highlighters/utils/markup");
+
 const TEST_URL_1 = "data:text/html;charset=utf-8,CanvasFrameAnonymousContentHelper test 1";
 const TEST_URL_2 = "data:text/html;charset=utf-8,CanvasFrameAnonymousContentHelper test 2";
 
