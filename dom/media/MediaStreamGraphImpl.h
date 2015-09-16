@@ -304,15 +304,13 @@ public:
    */
   GraphTime RoundUpToNextAudioBlock(GraphTime aTime);
   /**
-   * Produce data for all streams >= aStreamIndex for the given time interval.
+   * Produce data for all streams >= aStreamIndex for the current time interval.
    * Advances block by block, each iteration producing data for all streams
    * for a single block.
    * This is called whenever we have an AudioNodeStream in the graph.
    */
   void ProduceDataForStreamsBlockByBlock(uint32_t aStreamIndex,
-                                         TrackRate aSampleRate,
-                                         GraphTime aFrom,
-                                         GraphTime aTo);
+                                         TrackRate aSampleRate);
   /**
    * If aStream will underrun between aTime, and aEndBlockingDecisions, returns
    * the time at which the underrun will start. Otherwise return

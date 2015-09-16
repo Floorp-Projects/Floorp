@@ -978,14 +978,12 @@ MediaStreamGraphImpl::RoundUpToNextAudioBlock(GraphTime aTime)
 
 void
 MediaStreamGraphImpl::ProduceDataForStreamsBlockByBlock(uint32_t aStreamIndex,
-                                                        TrackRate aSampleRate,
-                                                        GraphTime aFrom,
-                                                        GraphTime aTo)
+                                                        TrackRate aSampleRate)
 {
   MOZ_ASSERT(aStreamIndex <= mFirstCycleBreaker,
              "Cycle breaker is not AudioNodeStream?");
-  GraphTime t = aFrom;
-  while (t < aTo) {
+  GraphTime t = mProcessedTime;
+  while (t < mStateComputedTime) {
     GraphTime next = RoundUpToNextAudioBlock(t);
     for (uint32_t i = mFirstCycleBreaker; i < mStreams.Length(); ++i) {
       auto ns = static_cast<AudioNodeStream*>(mStreams[i]);
@@ -995,12 +993,14 @@ MediaStreamGraphImpl::ProduceDataForStreamsBlockByBlock(uint32_t aStreamIndex,
     for (uint32_t i = aStreamIndex; i < mStreams.Length(); ++i) {
       ProcessedMediaStream* ps = mStreams[i]->AsProcessedStream();
       if (ps) {
-        ps->ProcessInput(t, next, (next == aTo) ? ProcessedMediaStream::ALLOW_FINISH : 0);
+        ps->ProcessInput(t, next,
+            (next == mStateComputedTime) ? ProcessedMediaStream::ALLOW_FINISH : 0);
       }
     }
     t = next;
   }
-  NS_ASSERTION(t == aTo, "Something went wrong with rounding to block boundaries");
+  NS_ASSERTION(t == mStateComputedTime,
+               "Something went wrong with rounding to block boundaries");
 }
 
 bool
@@ -1115,8 +1115,7 @@ MediaStreamGraphImpl::Process()
 #endif
           // Since an AudioNodeStream is present, go ahead and
           // produce audio block by block for all the rest of the streams.
-          ProduceDataForStreamsBlockByBlock(i, n->SampleRate(),
-              mProcessedTime, mStateComputedTime);
+          ProduceDataForStreamsBlockByBlock(i, n->SampleRate());
           doneAllProducing = true;
         } else {
           ps->ProcessInput(mProcessedTime, mStateComputedTime,
