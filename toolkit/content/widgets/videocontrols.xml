@@ -1805,4 +1805,128 @@
     </handlers>
 
   </binding>
+
+  <binding id="noControls">
+
+    <resources>
+        <stylesheet src="chrome://global/content/bindings/videocontrols.css"/>
+        <stylesheet src="chrome://global/skin/media/videocontrols.css"/>
+    </resources>
+
+    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="mediaControlsFrame">
+        <vbox flex="1" class="statusOverlay" hidden="true">
+            <box flex="1">
+                <box class="clickToPlay" flex="1"/>
+            </box>
+        </vbox>
+    </xbl:content>
+
+    <implementation>
+        <constructor>
+          <![CDATA[
+          this.randomID = 0;
+          this.Utils = {
+            randomID : 0,
+            videoEvents : ["play",
+                           "playing"],
+            controlListeners: [],
+            terminateEventListeners : function () {
+              for each (let event in this.videoEvents)
+                this.video.removeEventListener(event, this, false);
+
+              for each(let element in this.controlListeners)
+                element.item.removeEventListener(element.event, element.func, false);
+
+              delete this.controlListeners;
+            },
+
+            hasError : function () {
+              return (this.video.error != null || this.video.networkState == this.video.NETWORK_NO_SOURCE);
+            },
+
+            handleEvent : function (aEvent) {
+              // If the binding is detached (or has been replaced by a
+              // newer instance of the binding), nuke our event-listeners.
+              if (this.binding.randomID != this.randomID) {
+                this.terminateEventListeners();
+                return;
+              }
+
+              switch (aEvent.type) {
+                case "play":
+                  this.noControlsOverlay.hidden = true;
+                  break;
+                case "playing":
+                  this.noControlsOverlay.hidden = true;
+                  break;
+                default:
+                  //this.log("!!! event " + aEvent.type + " not handled!");
+              }
+            },
+
+            blockedVideoHandler : function () {
+              if (this.binding.randomID != this.randomID) {
+                this.terminateEventListeners();
+                return;
+              } else if (this.hasError()) {
+                this.noControlsOverlay.hidden = true;
+                return;
+              }
+              this.noControlsOverlay.hidden = false;
+            },
+
+            clickToPlayClickHandler : function (e) {
+              if (this.binding.randomID != this.randomID) {
+                  this.terminateEventListeners();
+                  return;
+              } else if (e.button != 0) {
+                  return;
+              }
+
+              this.noControlsOverlay.hidden = true;
+              this.video.play();
+            },
+
+            init : function (binding) {
+              this.binding = binding;
+              this.randomID = Math.random();
+              this.binding.randomID = this.randomID;
+              this.video = binding.parentNode;
+              this.clickToPlay       = document.getAnonymousElementByAttribute(binding, "class", "clickToPlay");
+              this.noControlsOverlay = document.getAnonymousElementByAttribute(binding, "class", "statusOverlay");
+
+              let self = this;
+              function addListener(elem, eventName, func) {
+                let boundFunc = func.bind(self);
+                self.controlListeners.push({ item: elem, event: eventName, func: boundFunc });
+                elem.addEventListener(eventName, boundFunc, false);
+              }
+              addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
+              addListener(this.video, "MozNoControlsBlockedVideo", this.blockedVideoHandler);
+
+              for each (let event in this.videoEvents) {
+                this.video.addEventListener(event, this, false);
+              }
+
+              if (this.video.autoplay && !this.video.mozAutoplayEnabled) {
+                this.blockedVideoHandler();
+              }
+            }
+          };
+          this.Utils.init(this);
+          this.Utils.video.dispatchEvent(new CustomEvent("MozNoControlsVideoBindingAttached"));
+          ]]>
+      </constructor>
+      <destructor>
+          <![CDATA[
+          // randomID used to be a <field>, which meant that the XBL machinery
+          // undefined the property when the element was unbound. The code in
+          // this file actually depends on this, so now that randomID is an
+          // expando, we need to make sure to explicitly delete it.
+          delete this.randomID;
+          ]]>
+      </destructor>
+    </implementation>
+  </binding>
+
 </bindings>

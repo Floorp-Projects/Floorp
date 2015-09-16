@@ -304,6 +304,12 @@ select:disabled > button {
   -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#touchControls");
 }
 
+/* display click to play when autoplay is blocked for videos */
+video:not([controls]) > xul|videocontrols {
+  visibility: visible;
+  -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#noControls");
+}
+
 *:-moz-any-link:active,
 *[role=button]:active,
 button:not(:disabled):active,
