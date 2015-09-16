@@ -13054,9 +13054,9 @@ nsDocument::ReportUseCounters()
           }
           printf(": %d\n", value);
         }
-      }
 
-      Telemetry::Accumulate(id, value);
+        Telemetry::Accumulate(id, 1);
+      }
 
       if (IsTopLevelContentDocument()) {
         id = static_cast<Telemetry::ID>(Telemetry::HistogramFirstUseCounter +
@@ -13073,9 +13073,9 @@ nsDocument::ReportUseCounters()
             }
             printf(": %d\n", value);
           }
-        }
 
-        Telemetry::Accumulate(id, value);
+          Telemetry::Accumulate(id, 1);
+        }
       }
     }
   }
