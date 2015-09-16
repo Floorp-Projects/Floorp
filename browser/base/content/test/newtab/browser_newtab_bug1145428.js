@@ -15,6 +15,7 @@ gDirectorySource = "data:application/json," + JSON.stringify({
     enhancedImageURI: "data:image/png;base64,helloWORLD2",
     title: "title",
     type: "affiliate",
+    adgroup_name: "example",
     frecent_sites: ["example0.com"],
   }]
 });
