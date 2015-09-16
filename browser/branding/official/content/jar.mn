@@ -4,15 +4,15 @@
 
 browser.jar:
 % content branding %content/branding/ contentaccessible=yes
-  content/branding/about.png                     (about.png)
-  content/branding/about-logo.png                (about-logo.png)
-  content/branding/about-logo@2x.png             (about-logo@2x.png)
-  content/branding/about-wordmark.svg            (about-wordmark.svg)
-  content/branding/icon48.png                    (icon48.png)
-  content/branding/icon64.png                    (icon64.png)
+  content/branding/about.png
+  content/branding/about-logo.png
+  content/branding/about-logo@2x.png
+  content/branding/about-wordmark.svg
+  content/branding/icon48.png
+  content/branding/icon64.png
   content/branding/icon16.png                    (../default16.png)
   content/branding/icon32.png                    (../default32.png)
   content/branding/icon128.png                   (../mozicon128.png)
-  content/branding/identity-icons-brand.svg      (identity-icons-brand.svg)
-  content/branding/silhouette-40.svg             (silhouette-40.svg)
-  content/branding/aboutDialog.css               (aboutDialog.css)
+  content/branding/identity-icons-brand.svg
+  content/branding/silhouette-40.svg
+  content/branding/aboutDialog.css
