@@ -423,8 +423,15 @@ URL::GetPathname(nsAString& aPathname, ErrorResult& aRv) const
 
   nsCOMPtr<nsIURL> url(do_QueryInterface(mURI));
   if (!url) {
-    // Do not throw!  Not having a valid URI or URL should result in an empty
-    // string.
+    nsAutoCString path;
+    nsresult rv = mURI->GetPath(path);
+    if (NS_FAILED(rv)){
+      // Do not throw!  Not having a valid URI or URL should result in an empty
+      // string.
+      return;
+    }
+
+    CopyUTF8toUTF16(path, aPathname);
     return;
   }
 
