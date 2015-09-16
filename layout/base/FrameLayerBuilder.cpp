@@ -231,6 +231,24 @@ FrameLayerBuilder::DisplayItemData::~DisplayItemData()
   }
 }
 
+void
+FrameLayerBuilder::DisplayItemData::ClearAnimationCompositorState()
+{
+  if (mDisplayItemKey != nsDisplayItem::TYPE_TRANSFORM &&
+      mDisplayItemKey != nsDisplayItem::TYPE_OPACITY) {
+    return;
+  }
+
+  for (nsIFrame* frame : mFrameList) {
+    nsCSSProperty prop = mDisplayItemKey == nsDisplayItem::TYPE_TRANSFORM ?
+      eCSSProperty_transform : eCSSProperty_opacity;
+    frame->PresContext()->AnimationManager()->
+      ClearIsRunningOnCompositor(frame, prop);
+    frame->PresContext()->TransitionManager()->
+      ClearIsRunningOnCompositor(frame, prop);
+  }
+}
+
 const nsTArray<nsIFrame*>&
 FrameLayerBuilder::DisplayItemData::GetFrameListChanges()
 {
@@ -1782,6 +1800,7 @@ FrameLayerBuilder::WillEndTransaction()
                                       GetLastPaintOffset(t));
       }
 
+      data->ClearAnimationCompositorState();
       iter.Remove();
     } else {
       ComputeGeometryChangeForItem(data);
