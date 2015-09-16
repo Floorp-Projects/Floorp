@@ -4,6 +4,7 @@ $inherits:
     build_name: 'nexus-4-user'
     build_type: 'opt'
 task:
+  workerType: flame-kk
   scopes:
     - 'docker-worker:cache:build-nexus-4-user'
   metadata:
@@ -15,11 +16,19 @@ task:
     env:
       TARGET: 'nexus-4'
       DEBUG: 0
+    command:
+      - >
+        checkout-gecko workspace &&
+        cd ./workspace/gecko/testing/taskcluster/scripts/phone-builder &&
+        buildbot_step 'Build' ./build-phone.sh $HOME/workspace
   extra:
+    treeherderEnv:
+      - production
+      - staging
     treeherder:
       symbol: B
-      groupSymbol: Nexus4
-      groupName: Nexus4 Device Image
+      groupSymbol: Nexus 4
+      groupName: Nexus 4 Device Image
       machine:
         platform: b2g-device-image
     locations:
