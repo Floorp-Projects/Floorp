@@ -195,6 +195,7 @@ IMEContentObserver::IMEContentObserver()
   , mIsObserving(false)
   , mIMEHasFocus(false)
   , mIsFocusEventPending(false)
+  , mIsTextChangeEventPending(false)
   , mIsSelectionChangeEventPending(false)
   , mIsPositionChangeEventPending(false)
   , mIsFlushingPendingNotifications(false)
@@ -1003,22 +1004,16 @@ IMEContentObserver::PostFocusSetNotification()
 }
 
 void
-IMEContentObserver::PostTextChangeNotification(
-                      const TextChangeDataBase& aTextChangeData)
+IMEContentObserver::PostTextChangeNotification()
 {
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("IMECO: 0x%p IMEContentObserver::PostTextChangeNotification("
-     "aTextChangeData=%s)",
-     this, TextChangeDataToString(aTextChangeData).get()));
-
-  mTextChangeData += aTextChangeData;
-  MOZ_ASSERT(mTextChangeData.IsValid(),
-             "mTextChangeData must have text change data");
-
-  MOZ_LOG(sIMECOLog, LogLevel::Debug,
-    ("IMECO: 0x%p IMEContentObserver::PostTextChangeNotification(), "
      "mTextChangeData=%s)",
      this, TextChangeDataToString(mTextChangeData).get()));
+
+  MOZ_ASSERT(mTextChangeData.IsValid(),
+             "mTextChangeData must have text change data");
+  mIsTextChangeEventPending = true;
 }
 
 void
@@ -1052,7 +1047,8 @@ IMEContentObserver::MaybeNotifyIMEOfTextChange(
      "aTextChangeData=%s)",
      this, TextChangeDataToString(aTextChangeData).get()));
 
-  PostTextChangeNotification(aTextChangeData);
+  mTextChangeData += aTextChangeData;
+  PostTextChangeNotification();
   FlushMergeableNotifications();
 }
 
@@ -1219,11 +1215,12 @@ IMEContentObserver::FlushMergeableNotifications()
     return;
   }
 
-  if (mTextChangeData.IsValid()) {
+  if (mIsTextChangeEventPending) {
     MOZ_LOG(sIMECOLog, LogLevel::Debug,
       ("IMECO: 0x%p IMEContentObserver::FlushMergeableNotifications(), "
        "creating TextChangeEvent...", this));
-    nsContentUtils::AddScriptRunner(new TextChangeEvent(this, mTextChangeData));
+    mIsTextChangeEventPending = false;
+    nsContentUtils::AddScriptRunner(new TextChangeEvent(this));
   }
 
   // Be aware, PuppetWidget depends on the order of this. A selection change
@@ -1246,7 +1243,7 @@ IMEContentObserver::FlushMergeableNotifications()
   }
 
   // If notifications may cause new change, we should notify them now.
-  if (mTextChangeData.IsValid() ||
+  if (mIsTextChangeEventPending ||
       mIsSelectionChangeEventPending ||
       mIsPositionChangeEventPending) {
     MOZ_LOG(sIMECOLog, LogLevel::Debug,
@@ -1445,17 +1442,19 @@ IMEContentObserver::TextChangeEvent::Run()
     MOZ_LOG(sIMECOLog, LogLevel::Debug,
       ("IMECO: 0x%p   IMEContentObserver::TextChangeEvent::Run(), retrying to "
        "send NOTIFY_IME_OF_TEXT_CHANGE...", this));
-    mIMEContentObserver->PostTextChangeNotification(mTextChangeData);
+    mIMEContentObserver->PostTextChangeNotification();
     return NS_OK;
   }
 
   MOZ_LOG(sIMECOLog, LogLevel::Info,
     ("IMECO: 0x%p IMEContentObserver::TextChangeEvent::Run(), "
-     "sending NOTIFY_IME_OF_TEXT_CHANGE... mTextChangeData=%s",
-     this, TextChangeDataToString(mTextChangeData).get()));
+     "sending NOTIFY_IME_OF_TEXT_CHANGE... mIMEContentObserver={ "
+     "mTextChangeData=%s }",
+     this, TextChangeDataToString(mIMEContentObserver->mTextChangeData).get()));
 
   IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
-  notification.SetData(mTextChangeData);
+  notification.SetData(mIMEContentObserver->mTextChangeData);
+  mIMEContentObserver->mTextChangeData.Clear();
   IMEStateManager::NotifyIME(notification, mIMEContentObserver->mWidget);
 
   MOZ_LOG(sIMECOLog, LogLevel::Debug,

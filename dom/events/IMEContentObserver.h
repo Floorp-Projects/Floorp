@@ -119,7 +119,7 @@ private:
 
   void PostFocusSetNotification();
   void MaybeNotifyIMEOfFocusSet();
-  void PostTextChangeNotification(const TextChangeDataBase& aTextChangeData);
+  void PostTextChangeNotification();
   void MaybeNotifyIMEOfTextChange(const TextChangeDataBase& aTextChangeData);
   void PostSelectionChangeNotification();
   void MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition,
@@ -141,6 +141,7 @@ private:
   void ClearPendingNotifications()
   {
     mIsFocusEventPending = false;
+    mIsTextChangeEventPending = false;
     mIsSelectionChangeEventPending = false;
     mIsPositionChangeEventPending = false;
     mTextChangeData.Clear();
@@ -237,6 +238,7 @@ private:
   bool mIsObserving;
   bool mIMEHasFocus;
   bool mIsFocusEventPending;
+  bool mIsTextChangeEventPending;
   bool mIsSelectionChangeEventPending;
   bool mIsPositionChangeEventPending;
   bool mIsFlushingPendingNotifications;
@@ -303,19 +305,12 @@ private:
   class TextChangeEvent : public AChangeEvent
   {
   public:
-    TextChangeEvent(IMEContentObserver* aIMEContentObserver,
-                    TextChangeDataBase& aTextChangeData)
+    explicit TextChangeEvent(IMEContentObserver* aIMEContentObserver)
       : AChangeEvent(eChangeEventType_Text, aIMEContentObserver)
-      , mTextChangeData(aTextChangeData)
     {
-      MOZ_ASSERT(mTextChangeData.IsValid());
-      // Reset aTextChangeData because this now consumes the data.
-      aTextChangeData.Clear();
+      MOZ_ASSERT(aIMEContentObserver->mTextChangeData.IsValid());
     }
     NS_IMETHOD Run() override;
-
-  private:
-    TextChangeDataBase mTextChangeData;
   };
 
   class PositionChangeEvent final : public AChangeEvent
