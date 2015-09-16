@@ -516,8 +516,10 @@ nsCORSListenerProxy::OnStartRequest(nsIRequest* aRequest,
             do_QueryInterface(channel);
           if (httpChannelChild) {
             rv = httpChannelChild->RemoveCorsPreflightCacheEntry(uri, mRequestingPrincipal);
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              return rv;
+            if (NS_FAILED(rv)) {
+              // Only warn here to ensure we fall through the request Cancel()
+              // and outer listener OnStartRequest() calls.
+              NS_WARNING("Failed to remove CORS preflight cache entry!");
             }
           }
         }

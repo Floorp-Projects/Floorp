@@ -460,7 +460,15 @@ nsStorageInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
         goto out;
       }
 
-      mSegmentNum++;
+      // We have data in the stream, but if mSegmentEnd is zero, then we
+      // were likely constructed prior to any data being written into
+      // the stream.  Therefore, if mSegmentEnd is non-zero, we should
+      // move into the next segment; otherwise, we should stay in this
+      // segment so our input state can be updated and we can properly
+      // perform the initial read.
+      if (mSegmentEnd > 0) {
+        mSegmentNum++;
+      }
       mReadCursor = 0;
       mSegmentEnd = XPCOM_MIN(mSegmentSize, available);
       availableInSegment = mSegmentEnd;

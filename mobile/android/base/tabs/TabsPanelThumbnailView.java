@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.tabs;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ThumbnailHelper;
 import org.mozilla.gecko.widget.CropImageView;
@@ -34,7 +35,11 @@ public class TabsPanelThumbnailView extends CropImageView {
 
     @Override
     protected float getAspectRatio() {
-        return ThumbnailHelper.TABS_PANEL_THUMBNAIL_ASPECT_RATIO;
+        if (AppConstants.NIGHTLY_BUILD) {
+            return ThumbnailHelper.TABS_PANEL_THUMBNAIL_ASPECT_RATIO;
+        } else {
+            return ThumbnailHelper.TOP_SITES_THUMBNAIL_ASPECT_RATIO;
+        }
     }
 
     @Override

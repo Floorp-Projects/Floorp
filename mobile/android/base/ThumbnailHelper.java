@@ -32,7 +32,7 @@ public final class ThumbnailHelper {
 
     public static final float TABS_PANEL_THUMBNAIL_ASPECT_RATIO = 0.8333333f;
     public static final float TOP_SITES_THUMBNAIL_ASPECT_RATIO = 0.571428571f;  // this is a 4:7 ratio (as per UX decision)
-    private static final float THUMBNAIL_ASPECT_RATIO;
+    public static final float THUMBNAIL_ASPECT_RATIO;
 
     static {
       // As we only want to generate one thumbnail for each tab, we calculate the
