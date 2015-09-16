@@ -269,6 +269,10 @@ public: /* Necko internal use only... */
     nsresult DoApplyContentConversions(nsIStreamListener *aNextListener,
                                        nsIStreamListener **aNewNextListener);
 
+    // Callback on main thread when NS_AsyncCopy() is finished populating
+    // the new mUploadStream.
+    void EnsureUploadStreamIsCloneableComplete(nsresult aStatus);
+
 protected:
   nsCOMArray<nsISecurityConsoleMessage> mSecurityConsoleMessages;
 
@@ -329,6 +333,7 @@ protected:
 
   nsHttpRequestHead                 mRequestHead;
   nsCOMPtr<nsIInputStream>          mUploadStream;
+  nsCOMPtr<nsIRunnable>             mUploadCloneableCallback;
   nsAutoPtr<nsHttpResponseHead>     mResponseHead;
   nsRefPtr<nsHttpConnectionInfo>    mConnectionInfo;
   nsCOMPtr<nsIProxyInfo>            mProxyInfo;

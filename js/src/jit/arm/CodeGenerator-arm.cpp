@@ -2450,12 +2450,26 @@ CodeGeneratorARM::visitUDiv(LUDiv* ins)
 
     masm.ma_udiv(lhs, rhs, output);
 
+    // Check for large unsigned result - represent as double.
     if (!ins->mir()->isTruncated()) {
+        MOZ_ASSERT(ins->mir()->fallible());
         masm.ma_cmp(output, Imm32(0));
         bailoutIf(Assembler::LessThan, ins->snapshot());
     }
 
-    masm.bind(&done);
+    // Check for non-zero remainder if not truncating to int.
+    if (!ins->mir()->canTruncateRemainder()) {
+        MOZ_ASSERT(ins->mir()->fallible());
+        {
+            ScratchRegisterScope scratch(masm);
+            masm.ma_mul(rhs, output, scratch);
+            masm.ma_cmp(scratch, lhs);
+        }
+        bailoutIf(Assembler::NotEqual, ins->snapshot());
+    }
+
+    if (done.used())
+        masm.bind(&done);
 }
 
 void
@@ -2470,12 +2484,15 @@ CodeGeneratorARM::visitUMod(LUMod* ins)
 
     masm.ma_umod(lhs, rhs, output);
 
+    // Check for large unsigned result - represent as double.
     if (!ins->mir()->isTruncated()) {
+        MOZ_ASSERT(ins->mir()->fallible());
         masm.ma_cmp(output, Imm32(0));
         bailoutIf(Assembler::LessThan, ins->snapshot());
     }
 
-    masm.bind(&done);
+    if (done.used())
+        masm.bind(&done);
 }
 
 template<class T>

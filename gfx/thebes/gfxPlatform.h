@@ -608,6 +608,21 @@ public:
     static bool IsInLayoutAsapMode();
 
     /**
+     * Returns the software vsync rate to use.
+     */
+    static int GetSoftwareVsyncRate();
+
+    /**
+     * Returns whether or not a custom vsync rate is set.
+     */
+    static bool ForceSoftwareVsync();
+
+    /**
+     * Returns the default frame rate for the refresh driver / software vsync.
+     */
+    static int GetDefaultFrameRate();
+
+    /**
      * Used to test which input types are handled via APZ.
      */
     virtual bool SupportsApzWheelInput() const {
