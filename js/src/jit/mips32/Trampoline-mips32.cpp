@@ -13,7 +13,7 @@
 #include "jit/JitFrames.h"
 #include "jit/JitSpewer.h"
 #include "jit/Linker.h"
-#include "jit/mips32/Bailouts-mips32.h"
+#include "jit/mips-shared/Bailouts-mips-shared.h"
 #include "jit/mips32/SharedICHelpers-mips32.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"

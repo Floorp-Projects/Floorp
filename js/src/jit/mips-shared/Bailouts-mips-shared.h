@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_mips32_Bailouts_mips32_h
-#define jit_mips32_Bailouts_mips32_h
+#ifndef jit_mips_shared_Bailouts_mips_shared_h
+#define jit_mips_shared_Bailouts_mips_shared_h
 
 #include "jit/Bailouts.h"
 #include "jit/JitCompartment.h"
@@ -74,4 +74,4 @@ class BailoutStack
 } // namespace jit
 } // namespace js
 
-#endif /* jit_mips32_Bailouts_mips32_h */
+#endif /* jit_mips_shared_Bailouts_mips_shared_h */
