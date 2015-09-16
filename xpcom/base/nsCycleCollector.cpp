@@ -3829,7 +3829,7 @@ nsCycleCollector::Shutdown()
   // Always delete snow white objects.
   FreeSnowWhite(true);
 
-#ifndef DEBUG
+#ifndef NS_FREE_PERMANENT_DATA
   if (PR_GetEnv("MOZ_CC_RUN_DURING_SHUTDOWN"))
 #endif
   {
