@@ -256,13 +256,6 @@ public:
   static void MarkConsumed(MediaStream* aStream);
 
   /**
-   * Given the Id of an AudioContext, return the set of all MediaStreams that
-   * are part of this context.
-   */
-  void StreamSetForAudioContext(dom::AudioContext::AudioContextId aAudioContextId,
-                                mozilla::LinkedList<MediaStream>& aStreamSet);
-
-  /**
    * Called when a suspend/resume/close operation has been completed, on the
    * graph thread.
    */
@@ -274,7 +267,8 @@ public:
    * Apply and AudioContext operation (suspend/resume/closed), on the graph
    * thread.
    */
-  void ApplyAudioContextOperationImpl(AudioNodeStream* aStream,
+  void ApplyAudioContextOperationImpl(MediaStream* aDestinationStream,
+                                      const nsTArray<MediaStream*>& aStreams,
                                       dom::AudioContextOperation aOperation,
                                       void* aPromise);
 
@@ -282,20 +276,14 @@ public:
    * Move streams from the mStreams to mSuspendedStream if suspending/closing an
    * AudioContext, or the inverse when resuming an AudioContext.
    */
-  void MoveStreams(dom::AudioContextOperation aAudioContextOperation,
-                   mozilla::LinkedList<MediaStream>& aStreamSet);
+  void SuspendOrResumeStreams(dom::AudioContextOperation aAudioContextOperation,
+                              const nsTArray<MediaStream*>& aStreamSet);
 
   /*
    * Reset some state about the streams before suspending them, or resuming
    * them.
    */
   void ResetVisitedStreamState();
-
-  /*
-   * True if a stream is suspended, that is, is not in mStreams, but in
-   * mSuspendedStream.
-   */
-  bool StreamSuspended(MediaStream* aStream);
 
   /**
    * Sort mStreams so that every stream not in a cycle is after any streams
@@ -605,6 +593,10 @@ public:
    * and are therefore not doing any processing.
    */
   nsTArray<MediaStream*> mSuspendedStreams;
+  /**
+   * Suspended AudioContext IDs
+   */
+  nsTHashtable<nsUint64HashKey> mSuspendedContexts;
   /**
    * Streams from mFirstCycleBreaker to the end of mStreams produce output
    * before they receive input.  They correspond to DelayNodes that are in

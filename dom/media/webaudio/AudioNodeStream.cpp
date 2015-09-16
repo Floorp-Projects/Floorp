@@ -27,12 +27,10 @@ namespace mozilla {
 
 AudioNodeStream::AudioNodeStream(AudioNodeEngine* aEngine,
                                  Flags aFlags,
-                                 TrackRate aSampleRate,
-                                 AudioContext::AudioContextId aContextId)
+                                 TrackRate aSampleRate)
   : ProcessedMediaStream(nullptr),
     mEngine(aEngine),
     mSampleRate(aSampleRate),
-    mAudioContextId(aContextId),
     mFlags(aFlags),
     mNumberOfInputChannels(2),
     mMarkAsFinishedAfterThisBlock(false),
@@ -74,17 +72,15 @@ AudioNodeStream::Create(AudioContext* aCtx, AudioNodeEngine* aEngine,
   MediaStreamGraph* graph = aGraph ? aGraph : aCtx->Graph();
   MOZ_ASSERT(graph->GraphRate() == aCtx->SampleRate());
 
-  dom::AudioContext::AudioContextId contextIdForStream = node ? node->Context()->Id() :
-                                                                NO_AUDIO_CONTEXT;
   nsRefPtr<AudioNodeStream> stream =
-    new AudioNodeStream(aEngine, aFlags, graph->GraphRate(),
-                        contextIdForStream);
-  if (aEngine->HasNode()) {
-    stream->SetChannelMixingParametersImpl(aEngine->NodeMainThread()->ChannelCount(),
-                                           aEngine->NodeMainThread()->ChannelCountModeValue(),
-                                           aEngine->NodeMainThread()->ChannelInterpretationValue());
+    new AudioNodeStream(aEngine, aFlags, graph->GraphRate());
+  if (node) {
+    stream->SetChannelMixingParametersImpl(node->ChannelCount(),
+                                           node->ChannelCountModeValue(),
+                                           node->ChannelInterpretationValue());
   }
-  graph->AddStream(stream);
+  graph->AddStream(stream,
+    aCtx->ShouldSuspendNewStream() ? MediaStreamGraph::ADD_STREAM_SUSPENDED : 0);
   return stream.forget();
 }
 

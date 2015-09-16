@@ -319,7 +319,6 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStream)
 
   explicit MediaStream(DOMMediaStream* aWrapper);
-  virtual dom::AudioContext::AudioContextId AudioContextId() const { return 0; }
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():
@@ -583,6 +582,14 @@ public:
   void SetAudioChannelType(dom::AudioChannel aType) { mAudioChannelType = aType; }
   dom::AudioChannel AudioChannelType() const { return mAudioChannelType; }
 
+  bool IsSuspended() { return mSuspendedCount > 0; }
+  void IncrementSuspendCount() { ++mSuspendedCount; }
+  void DecrementSuspendCount()
+  {
+    NS_ASSERTION(mSuspendedCount > 0, "Suspend count underrun");
+    --mSuspendedCount;
+  }
+
 protected:
   void AdvanceTimeVaryingValuesToCurrentTime(GraphTime aCurrentTime, GraphTime aBlockedTime)
   {
@@ -669,6 +676,12 @@ protected:
     TrackID mTrackID;
   };
   nsTArray<AudioOutputStream> mAudioOutputStreams;
+
+  /**
+   * Number of outstanding suspend operations on this stream. Stream is
+   * suspended when this is > 0.
+   */
+  int32_t mSuspendedCount;
 
   /**
    * When true, this means the stream will be finished once all
@@ -1253,25 +1266,31 @@ public:
    */
   ProcessedMediaStream* CreateAudioCaptureStream(DOMMediaStream* aWrapper);
 
+  enum {
+    ADD_STREAM_SUSPENDED = 0x01
+  };
   /**
    * Add a new stream to the graph.  Main thread.
    */
-  void AddStream(MediaStream* aStream);
+  void AddStream(MediaStream* aStream, uint32_t aFlags = 0);
 
   /* From the main thread, ask the MSG to send back an event when the graph
    * thread is running, and audio is being processed. */
   void NotifyWhenGraphStarted(AudioNodeStream* aNodeStream);
   /* From the main thread, suspend, resume or close an AudioContext.
-   * aNodeStream is the stream of the DestinationNode of the AudioContext.
+   * aStreams are the streams of all the AudioNodes of the AudioContext that
+   * need to be suspended or resumed. This can be empty if this is a second
+   * consecutive suspend call and all the nodes are already suspended.
    *
    * This can possibly pause the graph thread, releasing system resources, if
    * all streams have been suspended/closed.
    *
    * When the operation is complete, aPromise is resolved.
    */
-  void ApplyAudioContextOperation(AudioNodeStream* aNodeStream,
+  void ApplyAudioContextOperation(MediaStream* aDestinationStream,
+                                  const nsTArray<MediaStream*>& aStreams,
                                   dom::AudioContextOperation aState,
-                                  void * aPromise);
+                                  void* aPromise);
 
   bool IsNonRealtime() const;
   /**
