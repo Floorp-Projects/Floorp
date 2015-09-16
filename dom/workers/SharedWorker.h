@@ -10,7 +10,6 @@
 #include "Workers.h"
 
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/workers/bindings/MessagePort.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
 class nsIDOMEvent;
@@ -18,17 +17,19 @@ class nsPIDOMWindow;
 
 namespace mozilla {
 class EventChainPreVisitor;
+
+namespace dom {
+class MessagePort;
+}
 } // namespace mozilla
 
 BEGIN_WORKERS_NAMESPACE
 
-class MessagePort;
 class RuntimeService;
 class WorkerPrivate;
 
 class SharedWorker final : public DOMEventTargetHelper
 {
-  friend class MessagePort;
   friend class RuntimeService;
 
   typedef mozilla::ErrorResult ErrorResult;
@@ -37,7 +38,6 @@ class SharedWorker final : public DOMEventTargetHelper
   nsRefPtr<WorkerPrivate> mWorkerPrivate;
   nsRefPtr<MessagePort> mMessagePort;
   nsTArray<nsCOMPtr<nsIDOMEvent>> mFrozenEvents;
-  uint64_t mSerial;
   bool mFrozen;
 
 public:
@@ -46,14 +46,8 @@ public:
               const nsAString& aScriptURL, const Optional<nsAString>& aName,
               ErrorResult& aRv);
 
-  already_AddRefed<mozilla::dom::workers::MessagePort>
+  MessagePort*
   Port();
-
-  uint64_t
-  Serial() const
-  {
-    return mSerial;
-  }
 
   bool
   IsFrozen() const
@@ -93,7 +87,8 @@ public:
 private:
   // This class can only be created from the RuntimeService.
   SharedWorker(nsPIDOMWindow* aWindow,
-               WorkerPrivate* aWorkerPrivate);
+               WorkerPrivate* aWorkerPrivate,
+               MessagePort* aMessagePort);
 
   // This class is reference-counted and will be destroyed from Release().
   ~SharedWorker();
