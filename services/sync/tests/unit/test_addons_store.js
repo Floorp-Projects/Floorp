@@ -8,6 +8,7 @@ Cu.import("resource://services-sync/addonutils.js");
 Cu.import("resource://services-sync/engines/addons.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 const HTTP_PORT = 8888;
 
@@ -394,6 +395,7 @@ add_test(function test_create_missing_search() {
   let failed = store.applyIncomingBatch([record]);
   do_check_eq(1, failed.length);
   do_check_eq(guid, failed[0]);
+  do_check_eq(sumHistogram("WEAVE_ENGINE_APPLY_FAILURES", { key: "addons" }), 1);
 
   let addon = getAddonFromAddonManagerByID(id);
   do_check_eq(null, addon);
@@ -414,6 +416,7 @@ add_test(function test_create_bad_install() {
   let failed = store.applyIncomingBatch([record]);
   do_check_eq(1, failed.length);
   do_check_eq(guid, failed[0]);
+  do_check_eq(sumHistogram("WEAVE_ENGINE_APPLY_FAILURES", { key: "addons" }), 1);
 
   let addon = getAddonFromAddonManagerByID(id);
   do_check_eq(null, addon);

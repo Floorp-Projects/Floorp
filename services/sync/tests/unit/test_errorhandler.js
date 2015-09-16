@@ -181,6 +181,9 @@ add_identity_test(this, function test_401_logout() {
       _("Got weave:service:login:error in second sync.");
       Svc.Obs.remove("weave:service:login:error", onLoginError);
 
+      let errorCount = sumHistogram("WEAVE_STORAGE_AUTH_ERRORS", { key: "info/collections" });
+      do_check_eq(errorCount, 2);
+
       do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
       do_check_false(Service.isLoggedIn);
 
@@ -1801,6 +1804,10 @@ add_task(function test_sync_engine_generic_fail() {
       do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
 
       clean();
+
+      let syncErrors = sumHistogram("WEAVE_ENGINE_SYNC_ERRORS", { key: "catapult" });
+      do_check_true(syncErrors, 1);
+
       server.stop(deferred.resolve);
     });
   });

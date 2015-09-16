@@ -226,6 +226,9 @@ add_task(function test_get_signed_in_user_initially_unset() {
   do_check_eq(result, null);
 
   yield account.setSignedInUser(credentials);
+  let histogram = Services.telemetry.getHistogramById("FXA_CONFIGURED");
+  do_check_eq(histogram.snapshot().sum, 1);
+  histogram.clear();
 
   result = yield account.getSignedInUser();
   do_check_eq(result.email, credentials.email);

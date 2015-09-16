@@ -489,6 +489,7 @@ FxAccountsInternal.prototype = {
       // really something we should commit to? Why not let the write happen in
       // the background? Already does for updateAccountData ;)
       return currentAccountState.promiseInitialized.then(() => {
+        Services.telemetry.getHistogramById("FXA_CONFIGURED").add(1);
         this.notifyObservers(ONLOGIN_NOTIFICATION);
         if (!this.isUserEmailVerified(credentials)) {
           this.startVerifiedCheck(credentials);
@@ -899,8 +900,11 @@ FxAccountsInternal.prototype = {
     let currentState = this.currentAccountState;
     return currentState.getUserAccountData()
       .then(data => {
-        if (data && !this.isUserEmailVerified(data)) {
-          this.pollEmailStatus(currentState, data.sessionToken, "start");
+        if (data) {
+          Services.telemetry.getHistogramById("FXA_CONFIGURED").add(1);
+          if (!this.isUserEmailVerified(data)) {
+            this.pollEmailStatus(currentState, data.sessionToken, "start");
+          }
         }
         return data;
       });
