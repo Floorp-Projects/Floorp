@@ -312,6 +312,10 @@ ImageHost::Composite(LayerComposite* aLayer,
       return;
     }
 
+    if (!GetCompositor()->SupportsEffect(effect->mType)) {
+      return;
+    }
+
     if (mLastFrameID != img->mFrameID || mLastProducerID != img->mProducerID) {
       if (mImageContainer) {
         aLayer->GetLayerManager()->

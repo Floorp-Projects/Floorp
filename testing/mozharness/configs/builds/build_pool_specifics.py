@@ -38,9 +38,13 @@ config = {
     "taskcluster": {
         'graph_server': 'graphs.mozilla.org',
         'symbol_server_host': "symbolpush.mozilla.org",
-        'stage_server': 'stage.mozilla.org',
+        'stage_server': 'ignored',
         # use the relengapi proxy to talk to tooltool
         "tooltool_servers": ['http://relengapi/tooltool/'],
         "tooltool_url": 'http://relengapi/tooltool/',
+        'upload_env': {
+            'UPLOAD_HOST': 'localhost',
+            'UPLOAD_PATH': '/home/worker/artifacts',
+        },
     },
 }

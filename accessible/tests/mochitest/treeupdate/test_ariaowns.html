@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>@aria-owns attribute testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+    ////////////////////////////////////////////////////////////////////////////
+
+    function removeARIAOwns()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getNode("t2_checkbox")),
+        new invokerChecker(EVENT_HIDE, getNode("t2_button")),
+        new invokerChecker(EVENT_SHOW, getNode("t2_button")),
+        new invokerChecker(EVENT_SHOW, getNode("t2_checkbox")),
+        new invokerChecker(EVENT_REORDER, getNode("container2"))
+      ];
+
+      this.invoke = function removeARIAOwns_invoke()
+      {
+        // children are swapped
+        var tree =
+          { SECTION: [
+              { CHECKBUTTON: [
+                { SECTION: [] }
+              ] },
+              { PUSHBUTTON: [ ] }
+          ] };
+        testAccessibleTree("container2", tree);
+
+        getNode("container2").removeAttribute("aria-owns");
+      }
+
+      this.finalCheck = function removeARIAOwns_finalCheck()
+      {
+        // children follow the DOM order
+        var tree =
+          { SECTION: [
+              { PUSHBUTTON: [ ] },
+              { CHECKBUTTON: [
+                  { SECTION: [] }
+              ] }
+          ] };
+        testAccessibleTree("container2", tree);
+      }
+
+      this.getID = function removeARIAOwns_getID()
+      {
+        return "Remove @aria-owns attribute";
+      }
+    }
+
+    function setARIAOwns()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getNode("t2_button")),
+        new invokerChecker(EVENT_SHOW, getNode("t2_button")),
+        new invokerChecker(EVENT_HIDE, getNode("t2_subdiv")),
+        new invokerChecker(EVENT_SHOW, getNode("t2_subdiv")),
+        new invokerChecker(EVENT_REORDER, getNode("container2"))
+      ];
+
+      this.invoke = function setARIAOwns_invoke()
+      {
+        getNode("container2").setAttribute("aria-owns", "t2_button t2_subdiv");
+      }
+
+      this.finalCheck = function setARIAOwns_finalCheck()
+      {
+        // children are swapped again, button and subdiv are appended to
+        // the children.
+        var tree =
+          { SECTION: [
+              { CHECKBUTTON: [ ] }, // div
+              { PUSHBUTTON: [ ] }, // button
+              { SECTION: [ ] } // subdiv
+          ] };
+        testAccessibleTree("container2", tree);
+      }
+
+      this.getID = function setARIAOwns_getID()
+      {
+        return "Set @aria-owns attribute";
+      }
+    }
+
+    function appendEl()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, getNode, "child3"),
+        new invokerChecker(EVENT_REORDER, getNode("container2"))
+      ];
+
+      this.invoke = function appendEl_invoke()
+      {
+        var div = document.createElement("div");
+        div.setAttribute("id", "child3");
+        div.setAttribute("role", "radio")
+        getNode("container2").appendChild(div);
+      }
+
+      this.finalCheck = function appendEl_finalCheck()
+      {
+        // children are invalidated, they includes aria-owns swapped kids and
+        // newly inserted child.
+        var tree =
+          { SECTION: [
+              { CHECKBUTTON: [ ] },
+              { RADIOBUTTON: [ ] },
+              { PUSHBUTTON: [ ] }, // ARIA owned
+              { SECTION: [ ] } // ARIA owned
+          ] };
+        testAccessibleTree("container2", tree);
+      }
+
+      this.getID = function appendEl_getID()
+      {
+        return "Append child under @aria-owns element";
+      }
+    }
+
+    function removeEl()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getNode, "t2_checkbox"),
+        new invokerChecker(EVENT_SHOW, getNode, "t2_checkbox"),
+        new invokerChecker(EVENT_REORDER, getNode("container2"))
+      ];
+
+      this.invoke = function removeEl_invoke()
+      {
+        // remove a container of t2_subdiv
+        getNode("t2_span").parentNode.removeChild(getNode("t2_span"));
+      }
+
+      this.finalCheck = function removeEl_finalCheck()
+      {
+        // subdiv should go away
+        var tree =
+          { SECTION: [
+              { CHECKBUTTON: [ ] },
+              { RADIOBUTTON: [ ] },
+              { PUSHBUTTON: [ ] } // ARIA owned
+          ] };
+        testAccessibleTree("container2", tree);
+      }
+
+      this.getID = function removeEl_getID()
+      {
+        return "Remove a container of ARIA ownded element";
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+    ////////////////////////////////////////////////////////////////////////////
+
+    gA11yEventDumpToConsole = true;
+    enableLogging("tree"); // debug stuff
+
+    var gQueue = null;
+
+    function doTest()
+    {
+      // nested and recursive aria-owns
+      var tree =
+        { SECTION: [ // container
+          { SECTION: [ // child
+            { SECTION: [ // mid div
+              { SECTION: [] } // grandchild
+            ] }
+          ] }
+        ] };
+      testAccessibleTree("container", tree);
+
+      // dynamic tests
+      gQueue = new eventQueue();
+
+      gQueue.push(new removeARIAOwns());
+      gQueue.push(new setARIAOwns());
+      gQueue.push(new appendEl());
+      gQueue.push(new removeEl());
+
+      gQueue.invoke(); // SimpleTest.finish() will be called in the end
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+
+  </script>
+</head>
+
+<body>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="container" aria-owns="child" aria-label="container"></div>
+  <div id="child" aria-label="child">
+    <div aria-owns="grandchild" aria-label="midchild"></div>
+  </div>
+  <div id="grandchild" aria-owns="container" aria-label="grandchild"></div>
+
+  <div id="container2" aria-owns="t2_checkbox t2_button">
+    <div role="button" id="t2_button"></div>
+    <div role="checkbox" id="t2_checkbox">
+      <span id="t2_span">
+        <div id="t2_subdiv"></div>
+      </span>
+    </div>
+  </div>
+
+</body>
+
+</html>
