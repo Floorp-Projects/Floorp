@@ -13051,14 +13051,16 @@ nsDocument::ReportUseCounters()
         static_cast<Telemetry::ID>(Telemetry::HistogramFirstUseCounter + uc * 2);
       bool value = GetUseCounter(uc);
 
-      if (sDebugUseCounters && value) {
-        const char* name = Telemetry::GetHistogramName(id);
-        if (name) {
-          printf("  %s", name);
-        } else {
-          printf("  #%d", id);
+      if (value) {
+        if (sDebugUseCounters) {
+          const char* name = Telemetry::GetHistogramName(id);
+          if (name) {
+            printf("  %s", name);
+          } else {
+            printf("  #%d", id);
+          }
+          printf(": %d\n", value);
         }
-        printf(": %d\n", value);
       }
 
       Telemetry::Accumulate(id, value);
@@ -13068,14 +13070,16 @@ nsDocument::ReportUseCounters()
                                         uc * 2 + 1);
         value = GetUseCounter(uc) || GetChildDocumentUseCounter(uc);
 
-        if (sDebugUseCounters && value) {
-          const char* name = Telemetry::GetHistogramName(id);
-          if (name) {
-            printf("  %s", name);
-          } else {
-            printf("  #%d", id);
+        if (value) {
+          if (sDebugUseCounters) {
+            const char* name = Telemetry::GetHistogramName(id);
+            if (name) {
+              printf("  %s", name);
+            } else {
+              printf("  #%d", id);
+            }
+            printf(": %d\n", value);
           }
-          printf(": %d\n", value);
         }
 
         Telemetry::Accumulate(id, value);
