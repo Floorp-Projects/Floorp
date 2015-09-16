@@ -1534,7 +1534,7 @@ pref("network.IDN_show_punycode", false);
 // "network.IDN_show_punycode" is false. In other words, all IDNs will be shown
 // in punycode if "network.IDN_show_punycode" is true.
 pref("network.IDN.restriction_profile", "moderate");
-pref("network.IDN.use_whitelist", true);
+pref("network.IDN.use_whitelist", false);
 
 // ccTLDs
 pref("network.IDN.whitelist.ac", true);
