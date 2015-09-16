@@ -12,8 +12,8 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-AudioNodeExternalInputStream::AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate, uint32_t aContextId)
-  : AudioNodeStream(aEngine, NO_STREAM_FLAGS, aSampleRate, aContextId)
+AudioNodeExternalInputStream::AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate)
+  : AudioNodeStream(aEngine, NO_STREAM_FLAGS, aSampleRate)
 {
   MOZ_COUNT_CTOR(AudioNodeExternalInputStream);
 }
@@ -27,13 +27,14 @@ AudioNodeExternalInputStream::~AudioNodeExternalInputStream()
 AudioNodeExternalInputStream::Create(MediaStreamGraph* aGraph,
                                      AudioNodeEngine* aEngine)
 {
+  AudioContext* ctx = aEngine->NodeMainThread()->Context();
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aGraph->GraphRate() == aEngine->NodeMainThread()->Context()->SampleRate());
+  MOZ_ASSERT(aGraph->GraphRate() == ctx->SampleRate());
 
   nsRefPtr<AudioNodeExternalInputStream> stream =
-    new AudioNodeExternalInputStream(aEngine, aGraph->GraphRate(),
-                                     aEngine->NodeMainThread()->Context()->Id());
-  aGraph->AddStream(stream);
+    new AudioNodeExternalInputStream(aEngine, aGraph->GraphRate());
+  aGraph->AddStream(stream,
+    ctx->ShouldSuspendNewStream() ? MediaStreamGraph::ADD_STREAM_SUSPENDED : 0);
   return stream.forget();
 }
 

@@ -102,6 +102,7 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
   , mIsStarted(!aIsOffline)
   , mIsShutDown(false)
   , mCloseCalled(false)
+  , mSuspendCalled(false)
 {
   bool mute = aWindow->AddAudioContext(this);
 
@@ -824,6 +825,19 @@ AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState)
   mAudioContextState = aNewState;
 }
 
+nsTArray<MediaStream*>
+AudioContext::GetAllStreams() const
+{
+  nsTArray<MediaStream*> streams;
+  for (auto iter = mAllNodes.ConstIter(); !iter.Done(); iter.Next()) {
+    MediaStream* s = iter.Get()->GetKey()->GetStream();
+    if (s) {
+      streams.AppendElement(s);
+    }
+  }
+  return streams;
+}
+
 already_AddRefed<Promise>
 AudioContext::Suspend(ErrorResult& aRv)
 {
@@ -852,8 +866,20 @@ AudioContext::Suspend(ErrorResult& aRv)
   Destination()->Suspend();
 
   mPromiseGripArray.AppendElement(promise);
+
+  nsTArray<MediaStream*> streams;
+  // If mSuspendCalled is true then we already suspended all our streams,
+  // so don't suspend them again (since suspend(); suspend(); resume(); should
+  // cancel both suspends). But we still need to do ApplyAudioContextOperation
+  // to ensure our new promise is resolved.
+  if (!mSuspendCalled) {
+    streams = GetAllStreams();
+  }
   Graph()->ApplyAudioContextOperation(DestinationStream()->AsAudioNodeStream(),
+                                      streams,
                                       AudioContextOperation::Suspend, promise);
+
+  mSuspendCalled = true;
 
   return promise.forget();
 }
@@ -886,9 +912,20 @@ AudioContext::Resume(ErrorResult& aRv)
 
   Destination()->Resume();
 
+  nsTArray<MediaStream*> streams;
+  // If mSuspendCalled is false then we already resumed all our streams,
+  // so don't resume them again (since suspend(); resume(); resume(); should
+  // be OK). But we still need to do ApplyAudioContextOperation
+  // to ensure our new promise is resolved.
+  if (mSuspendCalled) {
+    streams = GetAllStreams();
+  }
   mPromiseGripArray.AppendElement(promise);
   Graph()->ApplyAudioContextOperation(DestinationStream()->AsAudioNodeStream(),
+                                      streams,
                                       AudioContextOperation::Resume, promise);
+
+  mSuspendCalled = false;
 
   return promise.forget();
 }
@@ -913,8 +950,6 @@ AudioContext::Close(ErrorResult& aRv)
     return promise.forget();
   }
 
-  mCloseCalled = true;
-
   if (Destination()) {
     Destination()->DestroyAudioChannelAgent();
   }
@@ -925,9 +960,18 @@ AudioContext::Close(ErrorResult& aRv)
   // this point, so we need extra null-checks.
   MediaStream* ds = DestinationStream();
   if (ds) {
-    Graph()->ApplyAudioContextOperation(ds->AsAudioNodeStream(),
+    nsTArray<MediaStream*> streams;
+    // If mSuspendCalled or mCloseCalled are true then we already suspended
+    // all our streams, so don't suspend them again. But we still need to do
+    // ApplyAudioContextOperation to ensure our new promise is resolved.
+    if (!mSuspendCalled && !mCloseCalled) {
+      streams = GetAllStreams();
+    }
+    Graph()->ApplyAudioContextOperation(ds->AsAudioNodeStream(), streams,
                                         AudioContextOperation::Close, promise);
   }
+  mCloseCalled = true;
+
   return promise.forget();
 }
 
