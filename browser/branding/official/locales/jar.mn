@@ -8,4 +8,4 @@
 % locale branding @AB_CD@ %locale/branding/
   locale/branding/brand.dtd        (%brand.dtd)
 * locale/branding/brand.properties (%brand.properties)
-* locale/branding/browserconfig.properties (browserconfig.properties)
+* locale/branding/browserconfig.properties
