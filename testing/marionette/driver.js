@@ -221,7 +221,12 @@ GeckoDriver.prototype.sendAsync = function(name, msg, cmdId) {
 
   if (curRemoteFrame === null) {
     this.curBrowser.executeWhenReady(() => {
-      this.mm.broadcastAsyncMessage(name + this.curBrowser.curFrameId, msg);
+      if (this.curBrowser.curFrameId) {
+          this.mm.broadcastAsyncMessage(name + this.curBrowser.curFrameId, msg);
+      }
+      else {
+          throw new WebDriverError("Can not send call to listener as it doesnt exist");
+      }
     });
   } else {
     let remoteFrameId = curRemoteFrame.targetFrameId;
