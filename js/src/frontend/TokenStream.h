@@ -223,7 +223,7 @@ struct Token
 
     PropertyName* name() const {
         MOZ_ASSERT(type == TOK_NAME);
-        return u.name->asPropertyName(); // poor-man's type verification
+        return u.name->JSAtom::asPropertyName(); // poor-man's type verification
     }
 
     bool nameContainsEscape() const {
