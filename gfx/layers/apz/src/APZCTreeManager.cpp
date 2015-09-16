@@ -114,6 +114,12 @@ APZCTreeManager::MakeAPZCInstance(uint64_t aLayersId,
     aController, AsyncPanZoomController::USE_GESTURE_DETECTOR);
 }
 
+TimeStamp
+APZCTreeManager::GetFrameTime()
+{
+  return TimeStamp::Now();
+}
+
 void
 APZCTreeManager::SetAllowedTouchBehavior(uint64_t aInputBlockId,
                                          const nsTArray<TouchBehaviorFlags> &aValues)
