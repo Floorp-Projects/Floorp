@@ -238,7 +238,7 @@ public:
   /**
    * Do all the processing and play the audio and video, ffrom aFrom to aTo.
    */
-  void Process(GraphTime aFrom, GraphTime aTo);
+  void Process(GraphTime aTo);
   /**
    * Update the consumption state of aStream to reflect whether its data
    * is needed or not.
@@ -340,12 +340,12 @@ public:
    * If aStream needs an audio stream but doesn't have one, create it.
    * If aStream doesn't need an audio stream but has one, destroy it.
    */
-  void CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTime, MediaStream* aStream);
+  void CreateOrDestroyAudioStreams(MediaStream* aStream);
   /**
    * Queue audio (mix of stream audio and silence for blocked intervals)
    * to the audio output stream. Returns the number of frames played.
    */
-  StreamTime PlayAudio(MediaStream* aStream, GraphTime aFrom, GraphTime aTo);
+  StreamTime PlayAudio(MediaStream* aStream, GraphTime aTo);
   /**
    * Set the correct current video frame for stream aStream.
    */
