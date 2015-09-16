@@ -5,7 +5,7 @@
 
 #include "mozilla/gfx/2D.h"
 #include "nsTArray.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "nsExpirationTracker.h"
 #include "nsClassHashtable.h"
 #include "mozilla/Telemetry.h"
