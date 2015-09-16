@@ -46,9 +46,13 @@ const uint16_t kProxyPort = 9999;
 const std::string kHelloMessage = "HELLO";
 const std::string kGarbageMessage = "xxxxxxxxxx";
 
-std::string connect_message(const std::string &host, uint16_t port, const std::string &tail = "") {
+std::string connect_message(const std::string &host, uint16_t port, const std::string &alpn, const std::string &tail) {
   std::stringstream ss;
-  ss << "CONNECT " << host << ":" << port << " HTTP/1.0\r\n\r\n" << tail;
+  ss << "CONNECT " << host << ":" << port << " HTTP/1.0\r\n";
+  if (!alpn.empty()) {
+    ss << "ALPN: " << alpn << "\r\n";
+  }
+  ss << "\r\n" << tail;
   return ss.str();
 }
 
@@ -116,8 +120,6 @@ class ProxyTunnelSocketTest : public ::testing::Test {
   }
 
   void SetUp() {
-    nsRefPtr<DummySocket> dummy(new DummySocket());
-
     nr_resolver_ = resolver_impl_.get_nr_resolver();
 
     int r = nr_str_port_to_transport_addr(
@@ -132,13 +134,34 @@ class ProxyTunnelSocketTest : public ::testing::Test {
     nr_proxy_tunnel_config_set_resolver(config_, nr_resolver_);
     nr_proxy_tunnel_config_set_proxy(config_, kProxyAddr.c_str(), kProxyPort);
 
-    r = nr_socket_proxy_tunnel_create(
+    Configure();
+  }
+
+  // This reconfigures the socket with the updated information in config_.
+  void Configure() {
+    if (nr_socket_) {
+      EXPECT_EQ(0, nr_socket_destroy(&nr_socket_));
+      EXPECT_EQ(nullptr, nr_socket_);
+    }
+
+    nsRefPtr<DummySocket> dummy(new DummySocket());
+    int r = nr_socket_proxy_tunnel_create(
         config_,
         dummy->get_nr_socket(),
         &nr_socket_);
     ASSERT_EQ(0, r);
 
     socket_impl_ = dummy.forget();  // Now owned by nr_socket_.
+  }
+
+  void Connect(int expectedReturn = 0) {
+    int r = nr_socket_connect(nr_socket_, &remote_addr_);
+    EXPECT_EQ(expectedReturn, r);
+
+    size_t written = 0;
+    r = nr_socket_write(nr_socket_, kHelloMessage.c_str(), kHelloMessage.size(), &written, 0);
+    EXPECT_EQ(0, r);
+    EXPECT_EQ(kHelloMessage.size(), written);
   }
 
   nr_socket *socket() { return nr_socket_; }
@@ -166,56 +189,67 @@ TEST_F(ProxyTunnelSocketTest, TestConnectProxyAddress) {
 }
 
 TEST_F(ProxyTunnelSocketTest, TestConnectProxyRequest) {
-  int r = nr_socket_connect(nr_socket_, &remote_addr_);
-  ASSERT_EQ(0, r);
+  Connect();
 
-  size_t written = 0;
-  r = nr_socket_write(nr_socket_, kHelloMessage.c_str(), kHelloMessage.size(), &written, 0);
-  ASSERT_EQ(0, r);
+  std::string msg = connect_message(kRemoteAddr, kRemotePort, "", kHelloMessage);
+  socket_impl_->CheckWriteBuffer(reinterpret_cast<const uint8_t *>(msg.c_str()), msg.size());
+}
 
-  std::string msg = connect_message(kRemoteAddr, kRemotePort, kHelloMessage);
+TEST_F(ProxyTunnelSocketTest, TestAlpnConnect) {
+  const std::string alpn = "this,is,alpn";
+  int r = nr_proxy_tunnel_config_set_alpn(config_, alpn.c_str());
+  EXPECT_EQ(0, r);
+
+  Configure();
+  Connect();
+
+  std::string msg = connect_message(kRemoteAddr, kRemotePort, alpn, kHelloMessage);
+  socket_impl_->CheckWriteBuffer(reinterpret_cast<const uint8_t *>(msg.c_str()), msg.size());
+}
+
+TEST_F(ProxyTunnelSocketTest, TestNullAlpnConnect) {
+  int r = nr_proxy_tunnel_config_set_alpn(config_, nullptr);
+  EXPECT_EQ(0, r);
+
+  Configure();
+  Connect();
+
+  std::string msg = connect_message(kRemoteAddr, kRemotePort, "", kHelloMessage);
   socket_impl_->CheckWriteBuffer(reinterpret_cast<const uint8_t *>(msg.c_str()), msg.size());
 }
 
 TEST_F(ProxyTunnelSocketTest, TestConnectProxyHostRequest) {
-  int r = nr_socket_destroy(&nr_socket_);
-  ASSERT_EQ(0, r);
-
-  nsRefPtr<DummySocket> dummy(new DummySocket());
-
   nr_proxy_tunnel_config_set_proxy(config_, kProxyHost.c_str(), kProxyPort);
+  Configure();
+  // Because kProxyHost is a domain name and not an IP address,
+  // nr_socket_connect will need to resolve an IP address before continuing.  It
+  // does that, and assumes that resolving the IP will take some time, so it
+  // returns R_WOULDBLOCK.
+  //
+  // However, In this test setup, the resolution happens inline immediately, so
+  // nr_socket_connect is called recursively on the inner socket in
+  // nr_socket_proxy_tunnel_resolved_cb.  That also completes.  Thus, the socket
+  // is actually successfully connected after this call, even though
+  // nr_socket_connect reports an error.
+  //
+  // Arguably nr_socket_proxy_tunnel_connect() is busted, because it shouldn't
+  // report an error when it doesn't need any further assistance from the
+  // calling code, but that's pretty minor.
+  Connect(R_WOULDBLOCK);
 
-  r = nr_socket_proxy_tunnel_create(
-      config_,
-      dummy->get_nr_socket(),
-      &nr_socket_);
-  ASSERT_EQ(0, r);
-
-  socket_impl_ = dummy.forget();  // Now owned by nr_socket_.
-
-  r = nr_socket_connect(nr_socket_, &remote_addr_);
-  ASSERT_EQ(R_WOULDBLOCK, r);
-
-  size_t written = 0;
-  r = nr_socket_write(nr_socket_, kHelloMessage.c_str(), kHelloMessage.size(), &written, 0);
-  ASSERT_EQ(0, r);
-
-  std::string msg = connect_message(kRemoteAddr, kRemotePort, kHelloMessage);
+  std::string msg = connect_message(kRemoteAddr, kRemotePort, "", kHelloMessage);
   socket_impl_->CheckWriteBuffer(reinterpret_cast<const uint8_t *>(msg.c_str()), msg.size());
 }
 
 TEST_F(ProxyTunnelSocketTest, TestConnectProxyWrite) {
-  int r = nr_socket_connect(nr_socket_, &remote_addr_);
-  ASSERT_EQ(0, r);
-
-  size_t written = 0;
-  r = nr_socket_write(nr_socket_, kHelloMessage.c_str(), kHelloMessage.size(), &written, 0);
-  ASSERT_EQ(0, r);
+  Connect();
 
   socket_impl_->ClearWriteBuffer();
 
-  r = nr_socket_write(nr_socket_, kHelloMessage.c_str(), kHelloMessage.size(), &written, 0);
-  ASSERT_EQ(0, r);
+  size_t written = 0;
+  int r = nr_socket_write(nr_socket_, kHelloMessage.c_str(), kHelloMessage.size(), &written, 0);
+  EXPECT_EQ(0, r);
+  EXPECT_EQ(kHelloMessage.size(), written);
 
   socket_impl_->CheckWriteBuffer(reinterpret_cast<const uint8_t *>(kHelloMessage.c_str()),
       kHelloMessage.size());

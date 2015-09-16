@@ -29,16 +29,22 @@
 # include <stdio.h>
 # include <stdarg.h>
 
-# define F_OK 00
-# define W_OK 02
-# define R_OK 04
+# ifndef F_OK
+#   define F_OK 00
+# endif
+# ifndef W_OK
+#   define W_OK 02
+# endif
+# ifndef R_OK
+#   define R_OK 04
+# endif
 # define S_ISDIR(s) (((s) & _S_IFMT) == _S_IFDIR)
 # define S_ISREG(s) (((s) & _S_IFMT) == _S_IFREG)
 
 # define access _access
 
 # define putenv _putenv
-# if _MSC_VER < 1900
+# if defined(_MSC_VER) && _MSC_VER < 1900
 #  define stat _stat
 # endif
 # define DELETE_DIR L"tobedeleted"

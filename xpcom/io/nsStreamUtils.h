@@ -265,6 +265,12 @@ NS_FillArray(FallibleTArray<char>& aDest, nsIInputStream* aInput,
              uint32_t aKeep, uint32_t* aNewBytes);
 
 /**
+ * Return true if the given stream can be directly cloned.
+ */
+extern bool
+NS_InputStreamIsCloneable(nsIInputStream* aSource);
+
+/**
  * Clone the provided source stream in the most efficient way possible.  This
  * first attempts to QI to nsICloneableInputStream to use Clone().  If that is
  * not supported or its cloneable attribute is false, then a fallback clone is

@@ -164,11 +164,11 @@ private:
   void EnsureSize();
   bool VerifyBufferSize();
   void UpdateRenderTarget();
-  bool CreateShaders();
   bool UpdateConstantBuffers();
   void SetSamplerForFilter(gfx::Filter aFilter);
   void SetPSForEffect(Effect *aEffect, MaskType aMaskType, gfx::SurfaceFormat aFormat);
   void PaintToTarget();
+  bool SetBlendMode(gfx::CompositionOp aOp, bool aPremultipled = true);
 
   virtual gfx::IntSize GetWidgetSize() const override { return mSize; }
 

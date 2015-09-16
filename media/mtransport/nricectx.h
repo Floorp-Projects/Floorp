@@ -174,20 +174,21 @@ class NrIceTurnServer : public NrIceStunServer {
 
 class NrIceProxyServer {
  public:
-  NrIceProxyServer() :
-    host_(), port_(0) {
+  NrIceProxyServer(const std::string& host, uint16_t port,
+                   const std::string& alpn) :
+    host_(host), port_(port), alpn_(alpn) {
   }
 
-  NrIceProxyServer(const std::string& host, uint16_t port) :
-    host_(host), port_(port) {
-  }
+  NrIceProxyServer() : NrIceProxyServer("", 0, "") {}
 
   const std::string& host() const { return host_; }
   uint16_t port() const { return port_; }
+  const std::string& alpn() const { return alpn_; }
 
  private:
   std::string host_;
   uint16_t port_;
+  std::string alpn_;
 };
 
 
