@@ -108,9 +108,9 @@ APZCTreeManager::~APZCTreeManager()
 }
 
 AsyncPanZoomController*
-APZCTreeManager::MakeAPZCInstance(uint64_t aLayersId,
-                                  GeckoContentController* aController,
-                                  TaskThrottler* aPaintThrottler)
+APZCTreeManager::NewAPZCInstance(uint64_t aLayersId,
+                                 GeckoContentController* aController,
+                                 TaskThrottler* aPaintThrottler)
 {
   return new AsyncPanZoomController(aLayersId, this, mInputQueue,
     aController, aPaintThrottler, AsyncPanZoomController::USE_GESTURE_DETECTOR);
@@ -430,8 +430,8 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
             GetFrameTime(), TimeDuration::FromMilliseconds(500));
       }
 
-      apzc = MakeAPZCInstance(aLayersId, state->mController,
-                              throttlerInsertResult.first->second);
+      apzc = NewAPZCInstance(aLayersId, state->mController,
+                             throttlerInsertResult.first->second);
       apzc->SetCompositorParent(aState.mCompositor);
       if (state->mCrossProcessParent != nullptr) {
         apzc->ShareFrameMetricsAcrossProcesses();

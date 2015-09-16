@@ -154,9 +154,9 @@ public:
   }
 
 protected:
-  AsyncPanZoomController* MakeAPZCInstance(uint64_t aLayersId,
-                                           GeckoContentController* aController,
-                                           TaskThrottler* aPaintThrottler) override;
+  AsyncPanZoomController* NewAPZCInstance(uint64_t aLayersId,
+                                          GeckoContentController* aController,
+                                          TaskThrottler* aPaintThrottler) override;
 
   TimeStamp GetFrameTime() override {
     return mcc->Time();
@@ -261,9 +261,9 @@ private:
 };
 
 AsyncPanZoomController*
-TestAPZCTreeManager::MakeAPZCInstance(uint64_t aLayersId,
-                                      GeckoContentController* aController,
-                                      TaskThrottler* aPaintThrottler)
+TestAPZCTreeManager::NewAPZCInstance(uint64_t aLayersId,
+                                     GeckoContentController* aController,
+                                     TaskThrottler* aPaintThrottler)
 {
   MockContentControllerDelayed* mcc = static_cast<MockContentControllerDelayed*>(aController);
   return new TestAsyncPanZoomController(aLayersId, mcc, this, aPaintThrottler,
