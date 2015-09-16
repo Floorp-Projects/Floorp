@@ -691,7 +691,6 @@ class MarionetteTestCase(CommonTestCase):
 
     def tearDown(self):
         if not self.marionette.check_for_crash():
-           self.marionette.set_context("content")
            self.marionette.clear_imported_scripts()
            self.marionette.execute_script("log('TEST-END: %s:%s')" %
                                           (self.filepath.replace('\\', '\\\\'), self.methodName))
