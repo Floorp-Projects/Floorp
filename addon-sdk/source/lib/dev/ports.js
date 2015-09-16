@@ -15,7 +15,7 @@ module.metadata = {
 const { add, iterator } = require("../sdk/lang/weak-set");
 const { curry } = require("../sdk/lang/functional");
 
-let id = 0;
+var id = 0;
 const ports = new WeakMap();
 
 // Takes `nsIFrameMessageManager` and `MessagePort` instances

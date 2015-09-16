@@ -2,8 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let secureURL = "https://example.com/browser/browser/base/content/test/general/browser_star_hsts.sjs";
-let unsecureURL = "http://example.com/browser/browser/base/content/test/general/browser_star_hsts.sjs";
+var secureURL = "https://example.com/browser/browser/base/content/test/general/browser_star_hsts.sjs";
+var unsecureURL = "http://example.com/browser/browser/base/content/test/general/browser_star_hsts.sjs";
 
 add_task(function* test_star_redirect() {
   registerCleanupFunction(function() {

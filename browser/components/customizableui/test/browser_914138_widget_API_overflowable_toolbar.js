@@ -4,8 +4,8 @@
 
 "use strict";
 
-let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
-let overflowList = document.getElementById(navbar.getAttribute("overflowtarget"));
+var navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
+var overflowList = document.getElementById(navbar.getAttribute("overflowtarget"));
 
 const kTestBtn1 = "test-addWidgetToArea-overflow";
 const kTestBtn2 = "test-removeWidgetFromArea-overflow";
@@ -15,7 +15,7 @@ const kDownloadsBtn = "downloads-button";
 const kSearchBox = "search-container";
 const kStarBtn = "bookmarks-menu-button";
 
-let originalWindowWidth;
+var originalWindowWidth;
 
 // Adding a widget should add it next to the widget it's being inserted next to.
 add_task(function() {

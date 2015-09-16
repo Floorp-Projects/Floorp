@@ -7,7 +7,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 
-let sessionCheckpointsPath;
+var sessionCheckpointsPath;
 
 /**
  * Start the tasks of the different tests

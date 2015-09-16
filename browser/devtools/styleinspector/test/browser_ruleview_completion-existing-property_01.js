@@ -16,7 +16,7 @@ const MAX_ENTRIES = 10;
 //    selectedIndex of the popup,
 //    total items in the popup
 //  ]
-let testData = [
+var testData = [
   ["VK_RIGHT", "font", -1, 0],
   ["-", "font-family", 0, MAX_ENTRIES],
   ["f", "font-family", 0, 2],

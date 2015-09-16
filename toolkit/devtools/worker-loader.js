@@ -317,13 +317,13 @@ this.WorkerDebuggerLoader = WorkerDebuggerLoader;
 // does not provide alternative definitions for them. Consequently, they are
 // stubbed out both on the main thread and worker threads.
 
-let PromiseDebugging = {
+var PromiseDebugging = {
   getState: function () {
     throw new Error("PromiseDebugging is not available in workers!");
   }
 };
 
-let chrome = {
+var chrome = {
   CC: undefined,
   Cc: undefined,
   ChromeWorker: undefined,
@@ -334,7 +334,7 @@ let chrome = {
   components: undefined
 };
 
-let loader = {
+var loader = {
   lazyGetter: function (object, name, lambda) {
     Object.defineProperty(object, name, {
       get: function () {
@@ -364,7 +364,7 @@ let loader = {
 // object to implement them. On worker threads, we use the APIs provided by
 // the worker debugger.
 
-let {
+var {
   Debugger,
   createSandbox,
   dump,

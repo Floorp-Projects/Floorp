@@ -5,7 +5,7 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/commandline/" +
                  "test/browser_cmd_screenshot.html";
 
-let FileUtils = (Cu.import("resource://gre/modules/FileUtils.jsm", {})).FileUtils;
+var FileUtils = (Cu.import("resource://gre/modules/FileUtils.jsm", {})).FileUtils;
 
 function test() {
   return Task.spawn(spawnTest).then(finish, helpers.handleError);

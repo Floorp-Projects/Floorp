@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let gPort;
-let gExtraListener;
+var gPort;
+var gExtraListener;
 
 function run_test()
 {

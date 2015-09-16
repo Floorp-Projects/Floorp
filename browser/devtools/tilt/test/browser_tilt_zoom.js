@@ -4,7 +4,7 @@
 
 const ZOOM = 2;
 const RESIZE = 50;
-let tiltOpened = false;
+var tiltOpened = false;
 
 function test() {
   if (!isTiltEnabled()) {

@@ -2,10 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let source = "data:text/html,text<link%20href='http://example.com/'%20/>more%20text<a%20href='mailto:abc@def.ghi'>email</a>";
-let gViewSourceWindow, gContextMenu, gCopyLinkMenuItem, gCopyEmailMenuItem;
+var source = "data:text/html,text<link%20href='http://example.com/'%20/>more%20text<a%20href='mailto:abc@def.ghi'>email</a>";
+var gViewSourceWindow, gContextMenu, gCopyLinkMenuItem, gCopyEmailMenuItem;
 
-let expectedData = [];
+var expectedData = [];
 
 add_task(function *() {
   let newWindow = yield loadViewSourceWindow(source);

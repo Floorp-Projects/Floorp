@@ -108,8 +108,8 @@ function makeFrameEventListener(frame, callback) {
   return callback.bind(frame);
 }
 
-let FRAME_ID = 0;
-let tabMap = new Map();
+var FRAME_ID = 0;
+var tabMap = new Map();
 
 function frameMessageReceived({ data }) {
   if (data.loaderID != loaderID)
@@ -257,7 +257,7 @@ const FrameList = Class({
       frame.removeEventListener(...listener.args);
   }
 });
-let frames = exports.frames = new FrameList();
+var frames = exports.frames = new FrameList();
 
 function registerContentFrame(contentFrame) {
   let frame = new Frame(contentFrame);

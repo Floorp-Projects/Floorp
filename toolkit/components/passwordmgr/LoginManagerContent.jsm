@@ -1230,7 +1230,7 @@ UserAutoCompleteResult.prototype = {
  * A factory to generate FormLike objects that represent a set of login fields
  * which aren't necessarily marked up with a <form> element.
  */
-let FormLikeFactory = {
+var FormLikeFactory = {
   _propsFromForm: [
     "autocomplete",
     "ownerDocument",

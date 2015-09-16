@@ -4,7 +4,7 @@
 // Tests that there is a transform being applied to the tabs as they zoom in
 // and out.
 
-let tab, frontChanged, transformChanged;
+var tab, frontChanged, transformChanged;
 
 function test() {
   waitForExplicitFinish();

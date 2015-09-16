@@ -1,7 +1,7 @@
 // This test is used to check copy and paste in editable areas to ensure that non-text
 // types (html and images) are copied to and pasted from the clipboard properly.
 
-let testPage = "<body style='margin: 0'><img id='img' tabindex='1' src='http://example.org/browser/browser/base/content/test/general/moz.png'>" +
+var testPage = "<body style='margin: 0'><img id='img' tabindex='1' src='http://example.org/browser/browser/base/content/test/general/moz.png'>" +
                "  <div id='main' contenteditable='true'>Test <b>Bold</b> After Text</div>" +
                "</body>";
 

@@ -5,7 +5,7 @@
 
 const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
-let userAgentID = '5ab1d1df-7a3d-4024-a469-b9e1bb399fad';
+var userAgentID = '5ab1d1df-7a3d-4024-a469-b9e1bb399fad';
 
 function run_test() {
   do_get_profile();

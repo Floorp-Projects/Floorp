@@ -69,10 +69,10 @@ PlaceholderMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
 }
 
 static const PLDHashTableOps PlaceholderMapOps = {
-  PL_DHashVoidPtrKeyStub,
+  PLDHashTable::HashVoidPtrKeyStub,
   PlaceholderMapMatchEntry,
-  PL_DHashMoveEntryStub,
-  PL_DHashClearEntryStub,
+  PLDHashTable::MoveEntryStub,
+  PLDHashTable::ClearEntryStub,
   nullptr
 };
 
@@ -164,9 +164,8 @@ nsFrameManager::GetPlaceholderFrameFor(const nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "null param unexpected");
 
-  PlaceholderMapEntry *entry = static_cast<PlaceholderMapEntry*>
-                                          (PL_DHashTableSearch(const_cast<PLDHashTable*>(&mPlaceholderMap),
-                              aFrame));
+  auto entry = static_cast<PlaceholderMapEntry*>
+    (const_cast<PLDHashTable*>(&mPlaceholderMap)->Search(aFrame));
   if (entry) {
     return entry->placeholderFrame;
   }
@@ -180,9 +179,8 @@ nsFrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
   NS_PRECONDITION(aPlaceholderFrame, "null param unexpected");
   NS_PRECONDITION(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
                   "unexpected frame type");
-  PlaceholderMapEntry *entry = static_cast<PlaceholderMapEntry*>
-    (PL_DHashTableAdd(&mPlaceholderMap,
-                      aPlaceholderFrame->GetOutOfFlowFrame(), fallible));
+  auto entry = static_cast<PlaceholderMapEntry*>
+    (mPlaceholderMap.Add(aPlaceholderFrame->GetOutOfFlowFrame(), fallible));
   if (!entry)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -199,8 +197,7 @@ nsFrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame
   NS_PRECONDITION(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
                   "unexpected frame type");
 
-  PL_DHashTableRemove(&mPlaceholderMap,
-                      aPlaceholderFrame->GetOutOfFlowFrame());
+  mPlaceholderMap.Remove(aPlaceholderFrame->GetOutOfFlowFrame());
 }
 
 void

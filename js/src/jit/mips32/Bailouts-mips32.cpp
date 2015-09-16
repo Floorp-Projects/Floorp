@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/mips32/Bailouts-mips32.h"
-
 #include "jscntxt.h"
 #include "jscompartment.h"
+
+#include "jit/mips-shared/Bailouts-mips-shared.h"
 
 using namespace js;
 using namespace js::jit;
@@ -45,18 +45,4 @@ BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
     MOZ_ASSERT(bailoutId < BAILOUT_TABLE_SIZE);
 
     snapshotOffset_ = topIonScript_->bailoutToSnapshot(bailoutId);
-}
-
-BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
-                                   InvalidationBailoutStack* bailout)
-  : machine_(bailout->machine())
-{
-    framePointer_ = (uint8_t*) bailout->fp();
-    topFrameSize_ = framePointer_ - bailout->sp();
-    topIonScript_ = bailout->ionScript();
-    attachOnJitActivation(activations);
-
-    uint8_t* returnAddressToFp_ = bailout->osiPointReturnAddress();
-    const OsiIndex* osiIndex = topIonScript_->getOsiIndex(returnAddressToFp_);
-    snapshotOffset_ = osiIndex->snapshotOffset();
 }

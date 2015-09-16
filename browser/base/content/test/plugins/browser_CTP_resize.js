@@ -1,6 +1,6 @@
-let rootDir = getRootDirectory(gTestPath);
+var rootDir = getRootDirectory(gTestPath);
 const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
-let gTestBrowser = null;
+var gTestBrowser = null;
 
 add_task(function* () {
   registerCleanupFunction(function () {

@@ -14,8 +14,8 @@ const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 const TEST_URL_ROOT = "http://mochi.test:8888/browser/browser/devtools/projecteditor/test/";
 const SAMPLE_WEBAPP_URL = TEST_URL_ROOT + "/helper_homepage.html";
-let TEMP_PATH;
-let TEMP_FOLDER_NAME = "ProjectEditor" + (new Date().getTime());
+var TEMP_PATH;
+var TEMP_FOLDER_NAME = "ProjectEditor" + (new Date().getTime());
 
 // All test are asynchronous
 waitForExplicitFinish();

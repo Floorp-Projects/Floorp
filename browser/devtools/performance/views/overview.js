@@ -25,7 +25,7 @@ const GRAPH_REQUIREMENTS = {
  * View handler for the overview panel's time view, displaying
  * framerate, timeline and memory over time.
  */
-let OverviewView = {
+var OverviewView = {
 
   /**
    * How frequently we attempt to render the graphs. Overridden

@@ -1,0 +1,552 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1183461
+-->
+<!--
+  This test is similar to those in test_animations.html with the exception
+  that those tests interact with a single element at a time. The tests in this
+  file are specifically concerned with testing the ordering of events between
+  elements for which most of the utilities in animation_utils.js are not
+  suited.
+-->
+<head>
+  <meta charset=utf-8>
+  <title>Test for CSS Animation and Transition event ordering
+         (Bug 1183461)</title>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/SimpleTest.js"></script>
+  <!-- We still need animation_utils.js for advance_clock -->
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  @keyframes anim  { to { margin-left: 100px } }
+  @keyframes animA { to { margin-left: 100px } }
+  @keyframes animB { to { margin-left: 100px } }
+  @keyframes animC { to { margin-left: 100px } }
+  </style>
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=1183461">Mozilla Bug
+  1183461</a>
+<div id="display"></div>
+<pre id="test">
+<script type="application/javascript">
+'use strict';
+
+// Take over the refresh driver right from the start.
+advance_clock(0);
+
+// Common test scaffolding
+
+var gEventsReceived = [];
+var gDisplay = document.getElementById('display');
+
+[ 'animationstart',
+  'animationiteration',
+  'animationend',
+  'transitionend' ]
+  .forEach(event =>
+             gDisplay.addEventListener(event,
+                                       event => gEventsReceived.push(event),
+                                       false));
+
+function checkEventOrder(...args) {
+  // Argument format:
+  // Arguments     = ExpectedEvent*, desc
+  // ExpectedEvent =
+  //       [ target|animationName|transitionProperty, (pseudo,) message ]
+  var expectedEvents  = args.slice(0, -1);
+  var desc            = args[args.length - 1];
+  var isTestingNameOrProperty = expectedEvents.length &&
+                                typeof expectedEvents[0][0] == 'string';
+
+  var formatEvent = (target, nameOrProperty, pseudo, message) =>
+    isTestingNameOrProperty ?
+    `${nameOrProperty}${pseudo}:${message}` :
+    `${target.id}${pseudo}:${message}`;
+
+  var actual = gEventsReceived.map(
+      event => formatEvent(event.target,
+                           event.animationName || event.propertyName,
+                           event.pseudoElement, event.type)
+    ).join(';');
+  var expected = expectedEvents.map(
+      event => event.length == 3 ?
+               formatEvent(event[0], event[0], event[1], event[2]) :
+               formatEvent(event[0], event[0], '', event[1])
+    ).join(';');
+  is(actual, expected, desc);
+  gEventsReceived = [];
+}
+
+// 1. TESTS FOR SORTING BY TREE ORDER
+
+// 1a. Test that simultaneous events are sorted by tree order (siblings)
+
+var divs = [ document.createElement('div'),
+             document.createElement('div'),
+             document.createElement('div') ];
+divs.forEach((div, i) => {
+  gDisplay.appendChild(div);
+  div.setAttribute('style', 'animation: anim 10s');
+  div.setAttribute('id', 'div' + i);
+});
+
+advance_clock(0);
+checkEventOrder([ divs[0], 'animationstart' ],
+                [ divs[1], 'animationstart' ],
+                [ divs[2], 'animationstart' ],
+                'Simultaneous start on siblings');
+
+divs.forEach(div => div.remove());
+divs = [];
+
+// 1b. Test that simultaneous events are sorted by tree order (children)
+
+divs = [ document.createElement('div'),
+         document.createElement('div'),
+         document.createElement('div') ];
+
+// Create the following arrangement:
+//
+//      display
+//       /   \
+//    div[0] div[1]
+//     /
+//   div[2]
+
+gDisplay.appendChild(divs[0]);
+gDisplay.appendChild(divs[1]);
+divs[0].appendChild(divs[2]);
+
+divs.forEach((div, i) => {
+  div.setAttribute('style', 'animation: anim 10s');
+  div.setAttribute('id', 'div' + i);
+});
+
+advance_clock(0);
+checkEventOrder([ divs[0], 'animationstart' ],
+                [ divs[2], 'animationstart' ],
+                [ divs[1], 'animationstart' ],
+                'Simultaneous start on children');
+
+divs.forEach(div => div.remove());
+divs = [];
+
+// 1c. Test that simultaneous events are sorted by tree order (pseudos)
+
+divs = [ document.createElement('div'),
+         document.createElement('div') ];
+
+// Create the following arrangement:
+//
+//      display
+//         |
+//       div[0]
+//     ::before,
+//     ::after
+//        |
+//      div[1]
+
+gDisplay.appendChild(divs[0]);
+divs[0].appendChild(divs[1]);
+
+divs.forEach((div, i) => {
+  div.setAttribute('style', 'animation: anim 10s');
+  div.setAttribute('id', 'div' + i);
+});
+
+var extraStyle = document.createElement('style');
+document.head.appendChild(extraStyle);
+var sheet = extraStyle.sheet;
+sheet.insertRule('#div0::after { animation: anim 10s }', 0);
+sheet.insertRule('#div0::before { animation: anim 10s }', 1);
+
+advance_clock(0);
+checkEventOrder([ divs[0], 'animationstart' ],
+                [ divs[0], '::before', 'animationstart' ],
+                [ divs[0], '::after', 'animationstart' ],
+                [ divs[1], 'animationstart' ],
+                'Simultaneous start on pseudo-elements');
+
+divs.forEach(div => div.remove());
+divs = [];
+
+sheet = undefined;
+extraStyle.remove();
+extraStyle = undefined;
+
+// 2. TESTS FOR SORTING BY TIME
+
+// 2a. Test that events are sorted by time
+
+divs = [ document.createElement('div'),
+         document.createElement('div') ];
+divs.forEach((div, i) => {
+  gDisplay.appendChild(div);
+  div.setAttribute('style', 'animation: anim 10s');
+  div.setAttribute('id', 'div' + i);
+});
+
+divs[0].style.animationDelay = '5s';
+
+advance_clock(0);
+advance_clock(20000);
+
+checkEventOrder([ divs[1], 'animationstart' ],
+                [ divs[0], 'animationstart' ],
+                [ divs[1], 'animationend' ],
+                [ divs[0], 'animationend' ],
+                'Sorting of start and end events by time');
+
+divs.forEach(div => div.remove());
+divs = [];
+
+// 2b. Test different events within the one element
+
+var div = document.createElement('div');
+gDisplay.appendChild(div);
+div.style.animation = 'anim 4s 2, ' +   // Repeat at t=4s
+                      'anim 10s 5s, ' + // Start at t=5s
+                      'anim 3s';        // End at t=3s
+div.setAttribute('id', 'div');
+
+advance_clock(0);
+advance_clock(5000);
+
+checkEventOrder([ div, 'animationstart' ],
+                [ div, 'animationstart' ],
+                [ div, 'animationend' ],
+                [ div, 'animationiteration' ],
+                [ div, 'animationstart' ],
+                'Sorting of different events by time within an element');
+
+div.remove();
+div = undefined;
+
+// 2c. Test negative delay is sorted equal to zero delay but before
+//     positive delay
+
+divs = [ document.createElement('div'),
+         document.createElement('div'),
+         document.createElement('div') ];
+divs.forEach((div, i) => {
+  gDisplay.appendChild(div);
+  div.setAttribute('id', 'div' + i);
+});
+
+divs[0].style.animation = 'anim 20s 5s';  // Positive delay, sorts last
+divs[1].style.animation = 'anim 20s';     // 0s delay
+divs[2].style.animation = 'anim 20s -5s'; // Negative delay, sorts same as
+                                          // 0s delay, i.e. use document
+                                          // position
+
+advance_clock(0);
+advance_clock(5000);
+checkEventOrder([ divs[1], 'animationstart' ],
+                [ divs[2], 'animationstart' ],
+                [ divs[0], 'animationstart' ],
+                'Sorting of events including negative delay');
+
+divs.forEach(div => div.remove());
+divs = [];
+
+// 3. TESTS FOR SORTING BY animation-name POSITION
+
+// 3a. Test animation-name position
+
+div = document.createElement('div');
+gDisplay.appendChild(div);
+div.style.animation = 'animA 10s, animB 5s, animC 5s 2';
+div.setAttribute('id', 'div');
+
+advance_clock(0);
+
+checkEventOrder([ 'animA', 'animationstart' ],
+                [ 'animB', 'animationstart' ],
+                [ 'animC', 'animationstart' ],
+                'Sorting of simultaneous animationstart events by ' +
+                'animation-name');
+
+advance_clock(5000);
+
+checkEventOrder([ 'animB', 'animationend' ],
+                [ 'animC', 'animationiteration' ],
+                'Sorting of different types of events by animation-name');
+
+div.remove();
+div = undefined;
+
+// 3b. Test time trumps animation-name position
+
+div = document.createElement('div');
+gDisplay.appendChild(div);
+div.style.animation = 'animA 10s 2s, animB 10s 1s';
+div.setAttribute('id', 'div');
+
+advance_clock(0);
+advance_clock(3000);
+
+checkEventOrder([ 'animB', 'animationstart' ],
+                [ 'animA', 'animationstart' ],
+                'Events are sorted by time first, before animation-position');
+
+div.remove();
+div = undefined;
+
+// 4. TESTS FOR TRANSITIONS
+
+// 4a. Test sorting transitions by document position
+
+divs = [ document.createElement('div'),
+         document.createElement('div') ];
+divs.forEach((div, i) => {
+  gDisplay.appendChild(div);
+  div.style.marginLeft = '0px';
+  div.style.transition = 'margin-left 10s';
+  div.setAttribute('id', 'div' + i);
+});
+
+getComputedStyle(divs[0]).marginLeft;
+divs.forEach(div => div.style.marginLeft = '100px');
+getComputedStyle(divs[0]).marginLeft;
+
+advance_clock(0);
+advance_clock(10000);
+
+checkEventOrder([ divs[0], 'transitionend' ],
+                [ divs[1], 'transitionend' ],
+                'Simultaneous transitionend on siblings');
+
+divs.forEach(div => div.remove());
+divs = [];
+
+// 4b. Test sorting transitions by document position (children)
+
+divs = [ document.createElement('div'),
+         document.createElement('div'),
+         document.createElement('div') ];
+
+// Create the following arrangement:
+//
+//      display
+//       /   \
+//    div[0] div[1]
+//     /
+//   div[2]
+
+gDisplay.appendChild(divs[0]);
+gDisplay.appendChild(divs[1]);
+divs[0].appendChild(divs[2]);
+
+divs.forEach((div, i) => {
+  div.style.marginLeft = '0px';
+  div.style.transition = 'margin-left 10s';
+  div.setAttribute('id', 'div' + i);
+});
+
+getComputedStyle(divs[0]).marginLeft;
+divs.forEach(div => div.style.marginLeft = '100px');
+getComputedStyle(divs[0]).marginLeft;
+
+advance_clock(0);
+advance_clock(10000);
+
+checkEventOrder([ divs[0], 'transitionend' ],
+                [ divs[2], 'transitionend' ],
+                [ divs[1], 'transitionend' ],
+                'Simultaneous transitionend on children');
+
+divs.forEach(div => div.remove());
+divs = [];
+
+// 4c. Test sorting transitions by document position (pseudos)
+
+divs = [ document.createElement('div'),
+         document.createElement('div') ];
+
+// Create the following arrangement:
+//
+//      display
+//         |
+//       div[0]
+//     ::before,
+//     ::after
+//        |
+//      div[1]
+
+gDisplay.appendChild(divs[0]);
+divs[0].appendChild(divs[1]);
+
+divs.forEach((div, i) => {
+  div.setAttribute('id', 'div' + i);
+});
+
+extraStyle = document.createElement('style');
+document.head.appendChild(extraStyle);
+sheet = extraStyle.sheet;
+sheet.insertRule('div, #div0::after, #div0::before { ' +
+                 ' transition: margin-left 10s; ' +
+                 ' margin-left: 0px }', 0);
+sheet.insertRule('div.active, #div0.active::after, #div0.active::before { ' +
+                 ' margin-left: 100px }', 1);
+sheet.insertRule('#div0::after, #div0::before { ' +
+                 ' content: " " }', 2);
+
+getComputedStyle(divs[0]).marginLeft;
+divs.forEach(div => div.classList.add('active'));
+getComputedStyle(divs[0]).marginLeft;
+
+advance_clock(0);
+advance_clock(10000);
+
+checkEventOrder([ divs[0], 'transitionend' ],
+                [ divs[0], '::before', 'transitionend' ],
+                [ divs[0], '::after', 'transitionend' ],
+                [ divs[1], 'transitionend' ],
+                'Simultaneous transitionend on pseudo-elements');
+
+divs.forEach(div => div.remove());
+divs = [];
+
+sheet = undefined;
+extraStyle.remove();
+extraStyle = undefined;
+
+// 4d. Test sorting transitions by time
+
+divs = [ document.createElement('div'),
+         document.createElement('div') ];
+divs.forEach((div, i) => {
+  gDisplay.appendChild(div);
+  div.style.marginLeft = '0px';
+  div.setAttribute('id', 'div' + i);
+});
+
+divs[0].style.transition = 'margin-left 10s';
+divs[1].style.transition = 'margin-left 5s';
+
+getComputedStyle(divs[0]).marginLeft;
+divs.forEach(div => div.style.marginLeft = '100px');
+getComputedStyle(divs[0]).marginLeft;
+
+advance_clock(0);
+advance_clock(10000);
+
+checkEventOrder([ divs[1], 'transitionend' ],
+                [ divs[0], 'transitionend' ],
+                'Sorting of transitionend events by time');
+
+divs.forEach(div => div.remove());
+divs = [];
+
+// 4e. Test sorting transitions by time (with delay)
+
+divs = [ document.createElement('div'),
+         document.createElement('div') ];
+divs.forEach((div, i) => {
+  gDisplay.appendChild(div);
+  div.style.marginLeft = '0px';
+  div.setAttribute('id', 'div' + i);
+});
+
+divs[0].style.transition = 'margin-left 5s 5s';
+divs[1].style.transition = 'margin-left 5s';
+
+getComputedStyle(divs[0]).marginLeft;
+divs.forEach(div => div.style.marginLeft = '100px');
+getComputedStyle(divs[0]).marginLeft;
+
+advance_clock(0);
+advance_clock(10000);
+
+checkEventOrder([ divs[1], 'transitionend' ],
+                [ divs[0], 'transitionend' ],
+                'Sorting of transitionend events by time (including delay)');
+
+divs.forEach(div => div.remove());
+divs = [];
+
+// 4f. Test sorting transitions by transition-property
+
+div = document.createElement('div');
+gDisplay.appendChild(div);
+div.style.opacity = '0';
+div.style.marginLeft = '0px';
+div.style.transition = 'all 5s';
+
+getComputedStyle(div).marginLeft;
+div.style.opacity = '1';
+div.style.marginLeft = '100px';
+getComputedStyle(div).marginLeft;
+
+advance_clock(0);
+advance_clock(10000);
+
+checkEventOrder([ 'margin-left', 'transitionend' ],
+                [ 'opacity', 'transitionend' ],
+                'Sorting of transitionend events by transition-property');
+
+div.remove();
+div = undefined;
+
+// 4g. Test document position beats transition-property
+
+divs = [ document.createElement('div'),
+         document.createElement('div') ];
+divs.forEach((div, i) => {
+  gDisplay.appendChild(div);
+  div.style.marginLeft = '0px';
+  div.style.opacity = '0';
+  div.style.transition = 'all 10s';
+  div.setAttribute('id', 'div' + i);
+});
+
+getComputedStyle(divs[0]).marginLeft;
+divs[0].style.opacity = '1';
+divs[1].style.marginLeft = '100px';
+getComputedStyle(divs[0]).marginLeft;
+
+advance_clock(0);
+advance_clock(10000);
+
+checkEventOrder([ divs[0], 'transitionend' ],
+                [ divs[1], 'transitionend' ],
+                'Transition events are sorted by document position first, ' +
+                'before transition-property');
+
+divs.forEach(div => div.remove());
+divs = [];
+
+// 4h. Test time beats transition-property
+
+div = document.createElement('div');
+gDisplay.appendChild(div);
+div.style.opacity = '0';
+div.style.marginLeft = '0px';
+div.style.transition = 'margin-left 10s, opacity 5s';
+
+getComputedStyle(div).marginLeft;
+div.style.opacity = '1';
+div.style.marginLeft = '100px';
+getComputedStyle(div).marginLeft;
+
+advance_clock(0);
+advance_clock(10000);
+
+checkEventOrder([ 'opacity', 'transitionend' ],
+                [ 'margin-left', 'transitionend' ],
+                'Transition events are sorted by time first, before ' +
+                'transition-property');
+
+div.remove();
+div = undefined;
+
+
+SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+
+</script>
+</body>
+</html>

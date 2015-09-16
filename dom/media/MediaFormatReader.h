@@ -61,7 +61,6 @@ public:
     return mSeekable;
   }
 
-  int64_t GetEvictionOffset(double aTime) override;
 protected:
   void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) override;
 public:
@@ -72,10 +71,7 @@ public:
   virtual bool ForceZeroStartTime() const override;
 
   // For Media Resource Management
-  void SetIdle() override;
   void ReleaseMediaResources() override;
-  void SetSharedDecoderManager(SharedDecoderManager* aManager)
-    override;
 
   nsresult ResetDecode() override;
 
@@ -434,15 +430,6 @@ private:
 #ifdef MOZ_EME
   nsRefPtr<CDMProxy> mCDMProxy;
 #endif
-
-  nsRefPtr<SharedDecoderManager> mSharedDecoderManager;
-
-  // Main thread objects
-  // Those are only used to calculate our buffered range on the main thread.
-  // The cached buffered range is calculated one when required.
-  nsRefPtr<MediaDataDemuxer> mMainThreadDemuxer;
-  nsRefPtr<MediaTrackDemuxer> mAudioTrackDemuxer;
-  nsRefPtr<MediaTrackDemuxer> mVideoTrackDemuxer;
 
 #if defined(READER_DORMANT_HEURISTIC)
   const bool mDormantEnabled;

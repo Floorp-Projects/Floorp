@@ -1,7 +1,7 @@
 "use strict";
 
-let {OS: {File, Path, Constants}} = Components.utils.import("resource://gre/modules/osfile.jsm", {});
-let {Services} = Components.utils.import("resource://gre/modules/Services.jsm", {});
+var {OS: {File, Path, Constants}} = Components.utils.import("resource://gre/modules/osfile.jsm", {});
+var {Services} = Components.utils.import("resource://gre/modules/Services.jsm", {});
 
 // Ensure that we have a profile but that the OS.File worker is not launched
 add_task(function* init() {

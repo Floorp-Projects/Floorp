@@ -22,7 +22,7 @@ const MAX_ENTRIES = 9;
 const URL = "http://example.com/#";
 
 // We need a XULAppInfo to initialize SessionFile
-let XULAppInfo = {
+var XULAppInfo = {
   vendor: "Mozilla",
   name: "SessionRestoreTest",
   ID: "{230de50e-4cd1-11dc-8314-0800200c9a66}",
@@ -41,7 +41,7 @@ let XULAppInfo = {
   ])
 };
 
-let XULAppInfoFactory = {
+var XULAppInfoFactory = {
   createInstance: function (outer, iid) {
     if (outer != null)
       throw Cr.NS_ERROR_NO_AGGREGATION;
@@ -49,7 +49,7 @@ let XULAppInfoFactory = {
   }
 };
 
-let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 registrar.registerFactory(Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}"),
                           "XULAppInfo", "@mozilla.org/xre/app-info;1",
                           XULAppInfoFactory);

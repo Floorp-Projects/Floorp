@@ -27,12 +27,12 @@ this.EXPORTED_SYMBOLS = ["LoopStorage"];
 
 const kDatabasePrefix = "loop-";
 const kDefaultDatabaseName = "default";
-let gDatabaseName = kDatabasePrefix + kDefaultDatabaseName;
+var gDatabaseName = kDatabasePrefix + kDefaultDatabaseName;
 const kDatabaseVersion = 1;
 
-let gWaitForOpenCallbacks = new Set();
-let gDatabase = null;
-let gClosed = false;
+var gWaitForOpenCallbacks = new Set();
+var gDatabase = null;
+var gClosed = false;
 
 /**
  * Properly shut the database instance down. This is done on application shutdown.

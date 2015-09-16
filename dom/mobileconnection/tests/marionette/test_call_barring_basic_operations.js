@@ -7,11 +7,11 @@ MARIONETTE_HEAD_JS = "head.js";
 const AO = MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING;
 const OI = MozMobileConnection.CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL;
 const OX = MozMobileConnection.CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL_EXCEPT_HOME;
-let outgoingPrograms = [null, AO, OI, OX];
+var outgoingPrograms = [null, AO, OI, OX];
 
 const AI = MozMobileConnection.CALL_BARRING_PROGRAM_ALL_INCOMING;
 const IR = MozMobileConnection.CALL_BARRING_PROGRAM_INCOMING_ROAMING;
-let incomingPrograms = [null, AI, IR];
+var incomingPrograms = [null, AI, IR];
 
 const SERVICE_CLASS_VOICE = MozMobileConnection.ICC_SERVICE_CLASS_VOICE;
 

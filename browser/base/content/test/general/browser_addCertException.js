@@ -22,7 +22,7 @@ function loadBadCertPage() {
 
 // The browser should load about:certerror. When This happens, click the
 // button to open the certificate exception dialog.
-let certErrorProgressListener = {
+var certErrorProgressListener = {
   buttonClicked: false,
 
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
@@ -47,7 +47,7 @@ let certErrorProgressListener = {
 // When the certificate exception dialog has opened, click the button to add
 // an exception.
 const EXCEPTION_DIALOG_URI = "chrome://pippki/content/exceptionDialog.xul";
-let certExceptionDialogObserver = {
+var certExceptionDialogObserver = {
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "cert-exception-ui-ready") {
       Services.obs.removeObserver(this, "cert-exception-ui-ready");
@@ -64,7 +64,7 @@ let certExceptionDialogObserver = {
 };
 
 // Finally, we should successfully load https://expired.example.com.
-let successfulLoadListener = {
+var successfulLoadListener = {
   handleEvent: function() {
     gBrowser.selectedBrowser.removeEventListener("load", this, true);
     let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]

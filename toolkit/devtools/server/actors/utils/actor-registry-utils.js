@@ -6,7 +6,7 @@
 
 "use strict";
 
-let { Cu, CC, Ci, Cc } = require("chrome");
+var { Cu, CC, Ci, Cc } = require("chrome");
 
 const { DebuggerServer } = require("devtools/server/main");
 

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let {WebChannel} = Cu.import("resource://gre/modules/WebChannel.jsm", {});
+var {WebChannel} = Cu.import("resource://gre/modules/WebChannel.jsm", {});
 
 const TEST_URL_TAIL = "example.com/browser/browser/base/content/test/general/test_remoteTroubleshoot.html"
 const TEST_URI_GOOD = Services.io.newURI("https://" + TEST_URL_TAIL, null, null);

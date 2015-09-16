@@ -5,10 +5,10 @@
 
 //Basic tests to verify that MacWebAppUtils works
 
-let Ci = Components.interfaces;
-let Cc = Components.classes;
-let Cu = Components.utils;
-let Cr = Components.results;
+var Ci = Components.interfaces;
+var Cc = Components.classes;
+var Cu = Components.utils;
+var Cr = Components.results;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");

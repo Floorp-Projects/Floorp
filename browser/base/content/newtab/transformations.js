@@ -9,7 +9,7 @@
  * in the DOM and by showing or hiding the node. It additionally provides
  * convenience methods to work with a site's DOM node.
  */
-let gTransformation = {
+var gTransformation = {
   /**
    * Returns the width of the left and top border of a cell. We need to take it
    * into account when measuring and comparing site and cell positions.

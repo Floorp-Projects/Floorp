@@ -2,10 +2,10 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-let tab0, tab1, tab2;
-let testStep = -1;
+var tab0, tab1, tab2;
+var testStep = -1;
 
-let expected = [];
+var expected = [];
 function expect(notification, win) {
   expected.push({ notification: notification, window: win });
 }
@@ -63,7 +63,7 @@ function test() {
 function createTab2() {
 }
 
-let testSteps = [
+var testSteps = [
   function step0() {
     tab1 = createTab(function() {
       expect(STARTUP, tab1.linkedBrowser.contentWindow);

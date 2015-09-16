@@ -8,8 +8,8 @@ Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://testing-common/services/common/logging.js");
 Cu.import("resource://testing-common/MockRegistrar.jsm");
 
-let btoa = Cu.import("resource://gre/modules/Log.jsm").btoa;
-let atob = Cu.import("resource://gre/modules/Log.jsm").atob;
+var btoa = Cu.import("resource://gre/modules/Log.jsm").btoa;
+var atob = Cu.import("resource://gre/modules/Log.jsm").atob;
 
 function do_check_empty(obj) {
   do_check_attribute_count(obj, 0);
@@ -65,7 +65,7 @@ function do_check_throws_message(aFunc, aResult) {
  * @usage _("Hello World") -> prints "Hello World"
  * @usage _(1, 2, 3) -> prints "1 2 3"
  */
-let _ = function(some, debug, text, to) {
+var _ = function(some, debug, text, to) {
   print(Array.slice(arguments).join(" "));
 };
 
@@ -134,7 +134,7 @@ function ensureThrows(func) {
 /**
  * Fake a PAC to prompt a channel replacement.
  */
-let PACSystemSettings = {
+var PACSystemSettings = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISystemProxySettings]),
 
   // Replace this URI for each test to avoid caching. We want to ensure that
@@ -146,7 +146,7 @@ let PACSystemSettings = {
   }
 };
 
-let fakePACCID;
+var fakePACCID;
 function installFakePAC() {
   _("Installing fake PAC.");
   fakePACCID = MockRegistrar.register("@mozilla.org/system-proxy-settings;1",

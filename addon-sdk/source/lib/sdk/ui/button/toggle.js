@@ -84,14 +84,14 @@ getNodeView.define(ToggleButton, button =>
   view.nodeFor(toWidgetId(button.id))
 );
 
-let toggleButtonStateEvents = events.filter(stateEvents,
+var toggleButtonStateEvents = events.filter(stateEvents,
   e => e.target instanceof ToggleButton);
 
-let toggleButtonViewEvents = events.filter(viewEvents,
+var toggleButtonViewEvents = events.filter(viewEvents,
   e => buttons.has(e.target));
 
-let clickEvents = events.filter(toggleButtonViewEvents, e => e.type === 'click');
-let updateEvents = events.filter(toggleButtonViewEvents, e => e.type === 'update');
+var clickEvents = events.filter(toggleButtonViewEvents, e => e.type === 'click');
+var updateEvents = events.filter(toggleButtonViewEvents, e => e.type === 'update');
 
 on(toggleButtonStateEvents, 'data', ({target, window, state}) => {
   let id = toWidgetId(target.id);

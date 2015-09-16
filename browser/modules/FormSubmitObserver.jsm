@@ -9,14 +9,14 @@
 
 "use strict";
 
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-let Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
 
-let HTMLInputElement = Ci.nsIDOMHTMLInputElement;
-let HTMLTextAreaElement = Ci.nsIDOMHTMLTextAreaElement;
-let HTMLSelectElement = Ci.nsIDOMHTMLSelectElement;
-let HTMLButtonElement = Ci.nsIDOMHTMLButtonElement;
+var HTMLInputElement = Ci.nsIDOMHTMLInputElement;
+var HTMLTextAreaElement = Ci.nsIDOMHTMLTextAreaElement;
+var HTMLSelectElement = Ci.nsIDOMHTMLSelectElement;
+var HTMLButtonElement = Ci.nsIDOMHTMLButtonElement;
 
 this.EXPORTED_SYMBOLS = [ "FormSubmitObserver" ];
 

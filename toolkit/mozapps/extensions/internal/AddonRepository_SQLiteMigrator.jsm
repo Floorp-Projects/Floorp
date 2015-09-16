@@ -30,7 +30,7 @@ const LOGGER_ID = "addons.repository.sqlmigrator";
 
 // Create a new logger for use by the Addons Repository SQL Migrator
 // (Requires AddonManager.jsm)
-let logger = Log.repository.getLogger(LOGGER_ID);
+var logger = Log.repository.getLogger(LOGGER_ID);
 
 this.EXPORTED_SYMBOLS = ["AddonRepository_SQLiteMigrator"];
 

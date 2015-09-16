@@ -4,25 +4,25 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
-let gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
+var gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 // To enable logging for try runs, just set the pref to true.
 Services.prefs.setBoolPref("devtools.debugger.log", false);
 
-let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+var { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
-let promise = require("promise");
-let { DebuggerClient } = require("devtools/toolkit/client/main");
-let { DebuggerServer } = require("devtools/server/main");
-let { WebGLFront } = require("devtools/server/actors/webgl");
-let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-let TiltGL = require("devtools/tilt/tilt-gl");
-let {TargetFactory} = require("devtools/framework/target");
-let {Toolbox} = require("devtools/framework/toolbox");
-let mm = null;
+var promise = require("promise");
+var { DebuggerClient } = require("devtools/toolkit/client/main");
+var { DebuggerServer } = require("devtools/server/main");
+var { WebGLFront } = require("devtools/server/actors/webgl");
+var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var TiltGL = require("devtools/tilt/tilt-gl");
+var {TargetFactory} = require("devtools/framework/target");
+var {Toolbox} = require("devtools/framework/toolbox");
+var mm = null;
 
 const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-utils.js"
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/shadereditor/test/";
@@ -35,7 +35,7 @@ const BLENDED_GEOMETRY_CANVAS_URL = EXAMPLE_URL + "doc_blended-geometry.html";
 // All tests are asynchronous.
 waitForExplicitFinish();
 
-let gToolEnabled = Services.prefs.getBoolPref("devtools.shadereditor.enabled");
+var gToolEnabled = Services.prefs.getBoolPref("devtools.shadereditor.enabled");
 
 DevToolsUtils.testing = true;
 

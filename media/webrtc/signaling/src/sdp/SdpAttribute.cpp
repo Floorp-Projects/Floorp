@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "signaling/src/sdp/SdpAttribute.h"
+#include "signaling/src/sdp/SdpHelper.h"
 
 #include <iomanip>
 
@@ -939,6 +940,29 @@ SdpSimulcastAttribute::Version::Parse(std::istream& is, std::string* error)
   } while (SkipChar(is, ',', error));
 
   return true;
+}
+
+void
+SdpSimulcastAttribute::Version::AppendAsStrings(
+    std::vector<std::string>* formats) const
+{
+  for (uint16_t pt : choices) {
+    std::ostringstream os;
+    os << pt;
+    formats->push_back(os.str());
+  }
+}
+
+void
+SdpSimulcastAttribute::Version::AddChoice(const std::string& pt)
+{
+  uint16_t ptAsInt;
+  if (!SdpHelper::GetPtAsInt(pt, &ptAsInt)) {
+    MOZ_ASSERT(false);
+    return;
+  }
+
+  choices.push_back(ptAsInt);
 }
 
 void

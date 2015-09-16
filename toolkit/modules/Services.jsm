@@ -58,7 +58,7 @@ XPCOMUtils.defineLazyGetter(Services, "ppmm", () => {
            .QueryInterface(Ci.nsIProcessScriptLoader);
 });
 
-let initTable = [
+var initTable = [
   ["androidBridge", "@mozilla.org/android/bridge;1", "nsIAndroidBridge",
    AppConstants.platform == "android"],
   ["appShell", "@mozilla.org/appshell/appShellService;1", "nsIAppShellService"],

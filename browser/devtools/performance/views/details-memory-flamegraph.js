@@ -7,7 +7,7 @@
  * FlameGraph view containing a pyramid-like visualization of memory allocation
  * sites, controlled by DetailsView.
  */
-let MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
+var MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
 
   shouldUpdateWhileMouseIsActive: true,
 

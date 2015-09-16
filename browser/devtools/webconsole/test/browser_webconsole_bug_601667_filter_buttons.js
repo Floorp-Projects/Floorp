@@ -8,10 +8,10 @@
 const TEST_URI = "http://example.com/";
 const FILTER_PREF_DOMAIN = "devtools.webconsole.filter.";
 
-let hud, hudId, hudBox;
-let prefs = {};
+var hud, hudId, hudBox;
+var prefs = {};
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield loadTab(TEST_URI);
 
   hud = yield openConsole();

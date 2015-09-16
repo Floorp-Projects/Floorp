@@ -33,7 +33,7 @@ const Cc = typeof Components != "undefined" ? Components.classes : undefined;
  *
  * @constructor
  */
-let Meta;
+var Meta;
 if (typeof Components != "undefined") {
   // Global definition of |exports|, to keep everybody happy.
   // In non-main thread, |exports| is provided by the module
@@ -47,7 +47,7 @@ if (typeof Components != "undefined") {
   Meta = require("resource://gre/modules/workers/PromiseWorker.js").Meta;
 }
 
-let EXPORTED_SYMBOLS = [
+var EXPORTED_SYMBOLS = [
   "LOG",
   "clone",
   "Config",
@@ -69,7 +69,7 @@ let EXPORTED_SYMBOLS = [
 
 ////////////////////// Configuration of OS.File
 
-let Config = {
+var Config = {
   /**
    * If |true|, calls to |LOG| are shown. Otherwise, they are hidden.
    *
@@ -99,7 +99,7 @@ exports.Constants = OS.Constants;
 ///////////////////// Utilities
 
 // Define a lazy getter for a property
-let defineLazyGetter = function defineLazyGetter(object, name, getter) {
+var defineLazyGetter = function defineLazyGetter(object, name, getter) {
   Object.defineProperty(object, name, {
     configurable: true,
     get: function lazy() {
@@ -122,7 +122,7 @@ exports.defineLazyGetter = defineLazyGetter;
  *
  * The choice of logger can be overridden with Config.TEST.
  */
-let gLogger;
+var gLogger;
 if (typeof window != "undefined" && window.console && console.log) {
   gLogger = console.log.bind(console, "OS");
 } else {
@@ -139,7 +139,7 @@ if (typeof window != "undefined" && window.console && console.log) {
  * @param {*} arg An argument to be stringified if possible.
  * @return {string} A stringified version of |arg|.
  */
-let stringifyArg = function stringifyArg(arg) {
+var stringifyArg = function stringifyArg(arg) {
   if (typeof arg === "string") {
     return arg;
   }
@@ -170,7 +170,7 @@ let stringifyArg = function stringifyArg(arg) {
   return arg;
 };
 
-let LOG = function (...args) {
+var LOG = function (...args) {
   if (!Config.DEBUG) {
     // If logging is deactivated, don't log
     return;
@@ -204,7 +204,7 @@ exports.LOG = LOG;
  * @param {Array} refs An optional array of field names to be passed by
  * reference instead of copying.
  */
-let clone = function (object, refs = []) {
+var clone = function (object, refs = []) {
   let result = {};
   // Make a reference between result[key] and object[key].
   let refer = function refer(result, key, object) {
@@ -407,7 +407,7 @@ Type.prototype = {
 /**
  * Utility function used to determine whether an object is a typed array
  */
-let isTypedArray = function isTypedArray(obj) {
+var isTypedArray = function isTypedArray(obj) {
   return obj != null && typeof obj == "object"
     && "byteOffset" in obj;
 };
@@ -416,7 +416,7 @@ exports.isTypedArray = isTypedArray;
 /**
  * Utility function used to determine whether an object is an ArrayBuffer.
  */
-let isArrayBuffer = function(obj) {
+var isArrayBuffer = function(obj) {
   return obj != null && typeof obj == "object" &&
     obj.constructor.name == "ArrayBuffer";
 };
@@ -511,7 +511,7 @@ exports.Type = Type;
  * therefore project them to regular numbers whenever possible.
  */
 
-let projectLargeInt = function projectLargeInt(x) {
+var projectLargeInt = function projectLargeInt(x) {
   let str = x.toString();
   let rv = parseInt(str, 10);
   if (rv.toString() !== str) {
@@ -519,10 +519,10 @@ let projectLargeInt = function projectLargeInt(x) {
   }
   return rv;
 };
-let projectLargeUInt = function projectLargeUInt(x) {
+var projectLargeUInt = function projectLargeUInt(x) {
   return projectLargeInt(x);
 };
-let projectValue = function projectValue(x) {
+var projectValue = function projectValue(x) {
   if (!(x instanceof ctypes.CData)) {
     return x;
   }
@@ -1070,7 +1070,7 @@ exports.Library = Library;
  * it does not exist), or a JavaScript wrapper performing the call to C
  * and any type conversion required.
  */
-let declareFFI = function declareFFI(lib, symbol, abi,
+var declareFFI = function declareFFI(lib, symbol, abi,
                                      returnType /*, argTypes ...*/) {
   LOG("Attempting to declare FFI ", symbol);
   // We guard agressively, to avoid any late surprise

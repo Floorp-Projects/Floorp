@@ -5,18 +5,18 @@
 // Each test will wait for a write to the Session Store
 // before executing.
 
-let OS = Cu.import("resource://gre/modules/osfile.jsm", {}).OS;
-let {File, Constants, Path} = OS;
+var OS = Cu.import("resource://gre/modules/osfile.jsm", {}).OS;
+var {File, Constants, Path} = OS;
 
 const PREF_SS_INTERVAL = "browser.sessionstore.interval";
 const Paths = SessionFile.Paths;
 
 // A text decoder.
-let gDecoder = new TextDecoder();
+var gDecoder = new TextDecoder();
 // Global variables that contain sessionstore.js and sessionstore.bak data for
 // comparison between tests.
-let gSSData;
-let gSSBakData;
+var gSSData;
+var gSSBakData;
 
 function promiseRead(path) {
   return File.read(path, {encoding: "utf-8"});
@@ -84,7 +84,7 @@ add_task(function* test_creation() {
   yield SessionFile.wipe();
 });
 
-let promiseSource = Task.async(function*(name) {
+var promiseSource = Task.async(function*(name) {
   let URL = "http://example.com/?atomic_backup_test_recovery=" + Math.random() + "&name=" + name;
   let tab = gBrowser.addTab(URL);
 

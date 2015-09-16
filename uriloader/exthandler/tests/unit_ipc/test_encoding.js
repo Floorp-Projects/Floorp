@@ -11,7 +11,7 @@ Cu.import("resource://testing-common/MockRegistrar.js");
 
 do_get_profile();
 
-let DownloadListener = {
+var DownloadListener = {
   init: function () {
     let obs = Services.obs;
     obs.addObserver(this, "dl-done", true);
@@ -126,7 +126,7 @@ function runChildTestSet(set)
 }
 
 var httpserver = null;
-let currentTest = 0;
+var currentTest = 0;
 function runNextTest()
 {
   if (currentTest == tests.length) {
@@ -215,7 +215,7 @@ function finishTest3(subject, topic, data) {
   do_check_matches(str, decodedBody);
 }
 
-let tests = [
+var tests = [
   [ "/test1.gz", testResponse1, finishTest1 ],
   [ "/test2.gz", testResponse2, finishTest2 ],
   [ "/test3.txt", testResponse3, finishTest3 ],

@@ -6,7 +6,7 @@
 Components.utils.import("resource://gre/modules/OrderedBroadcast.jsm");
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
-let _observerId = 0;
+var _observerId = 0;
 
 function makeObserver() {
   let deferred = Promise.defer();

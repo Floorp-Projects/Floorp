@@ -9,7 +9,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let RSM = {};
+var RSM = {};
 Cu.import("resource://gre/modules/RILSystemMessenger.jsm", RSM);
 
 const RILSYSTEMMESSENGERHELPER_CONTRACTID =
@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gStkCmdFactory",
                                    "@mozilla.org/icc/stkcmdfactory;1",
                                    "nsIStkCmdFactory");
 
-let DEBUG = false;
+var DEBUG = false;
 function debug(s) {
   dump("-@- RILSystemMessenger: " + s + "\n");
 };

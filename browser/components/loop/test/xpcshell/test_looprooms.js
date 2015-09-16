@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 
 timerHandlers.startTimer = callback => callback();
 
-let openChatOrig = Chat.open;
+var openChatOrig = Chat.open;
 
 const kKey = "uGIs-kGbYt1hBBwjyW7MLQ";
 
@@ -211,12 +211,12 @@ const compareRooms = function(room1, room2) {
 };
 
 // LoopRooms emits various events. Test if they work as expected here.
-let gExpectedAdds = [];
-let gExpectedUpdates = [];
-let gExpectedDeletes = [];
-let gExpectedJoins = {};
-let gExpectedLeaves = {};
-let gExpectedRefresh = false;
+var gExpectedAdds = [];
+var gExpectedUpdates = [];
+var gExpectedDeletes = [];
+var gExpectedJoins = {};
+var gExpectedLeaves = {};
+var gExpectedRefresh = false;
 
 const onRoomAdded = function(e, room) {
   let expectedIds = gExpectedAdds.map(expectedRoom => expectedRoom.roomToken);

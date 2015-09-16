@@ -161,7 +161,7 @@ Assertion::Assertion(nsIRDFResource* aSource)
     NS_ADDREF(mSource);
 
     u.hash.mPropertyHash =
-        new PLDHashTable(PL_DHashGetStubOps(), sizeof(Entry));
+        new PLDHashTable(PLDHashTable::StubOps(), sizeof(Entry));
 }
 
 Assertion::Assertion(nsIRDFResource* aSource,
@@ -302,43 +302,43 @@ public:
     // Implementation methods
     Assertion*
     GetForwardArcs(nsIRDFResource* u) {
-        PLDHashEntryHdr* hdr = PL_DHashTableSearch(&mForwardArcs, u);
+        PLDHashEntryHdr* hdr = mForwardArcs.Search(u);
         return hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
     }
 
     Assertion*
     GetReverseArcs(nsIRDFNode* v) {
-        PLDHashEntryHdr* hdr = PL_DHashTableSearch(&mReverseArcs, v);
+        PLDHashEntryHdr* hdr = mReverseArcs.Search(v);
         return hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
     }
 
     void
     SetForwardArcs(nsIRDFResource* u, Assertion* as) {
         if (as) {
-            Entry* entry = static_cast<Entry*>
-                (PL_DHashTableAdd(&mForwardArcs, u, mozilla::fallible));
+            auto entry =
+                static_cast<Entry*>(mForwardArcs.Add(u, mozilla::fallible));
             if (entry) {
                 entry->mNode = u;
                 entry->mAssertions = as;
             }
         }
         else {
-            PL_DHashTableRemove(&mForwardArcs, u);
+            mForwardArcs.Remove(u);
         }
     }
 
     void
     SetReverseArcs(nsIRDFNode* v, Assertion* as) {
         if (as) {
-            Entry* entry = static_cast<Entry*>
-                (PL_DHashTableAdd(&mReverseArcs, v, mozilla::fallible));
+            auto entry =
+                static_cast<Entry*>(mReverseArcs.Add(v, mozilla::fallible));
             if (entry) {
                 entry->mNode = v;
                 entry->mAssertions = as;
             }
         }
         else {
-            PL_DHashTableRemove(&mReverseArcs, v);
+            mReverseArcs.Remove(v);
         }
     }
 
@@ -421,8 +421,7 @@ InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
         if (mNextAssertion && mNextAssertion->mHashEntry) {
             // its our magical HASH_ENTRY forward hash for assertions
             PLDHashEntryHdr* hdr =
-                PL_DHashTableSearch(mNextAssertion->u.hash.mPropertyHash,
-                                    aProperty);
+                mNextAssertion->u.hash.mPropertyHash->Search(aProperty);
             mNextAssertion =
                 hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         }
@@ -735,8 +734,8 @@ NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResu
 
 
 InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
-    : mForwardArcs(PL_DHashGetStubOps(), sizeof(Entry))
-    , mReverseArcs(PL_DHashGetStubOps(), sizeof(Entry))
+    : mForwardArcs(PLDHashTable::StubOps(), sizeof(Entry))
+    , mReverseArcs(PLDHashTable::StubOps(), sizeof(Entry))
     , mNumObservers(0)
     , mReadCount(0)
 {
@@ -917,8 +916,7 @@ InMemoryDataSource::GetTarget(nsIRDFResource* source,
 
     Assertion *as = GetForwardArcs(source);
     if (as && as->mHashEntry) {
-        PLDHashEntryHdr* hdr =
-            PL_DHashTableSearch(as->u.hash.mPropertyHash, property);
+        PLDHashEntryHdr* hdr = as->u.hash.mPropertyHash->Search(property);
         Assertion* val = hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         while (val) {
             if (tv == val->u.as.mTruthValue) {
@@ -962,8 +960,7 @@ InMemoryDataSource::HasAssertion(nsIRDFResource* source,
 
     Assertion *as = GetForwardArcs(source);
     if (as && as->mHashEntry) {
-        PLDHashEntryHdr* hdr =
-            PL_DHashTableSearch(as->u.hash.mPropertyHash, property);
+        PLDHashEntryHdr* hdr = as->u.hash.mPropertyHash->Search(property);
         Assertion* val = hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         while (val) {
             if ((val->u.as.mTarget == target) && (tv == (val->u.as.mTruthValue))) {
@@ -1072,8 +1069,7 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
 
     bool    haveHash = (next) ? next->mHashEntry : false;
     if (haveHash) {
-        PLDHashEntryHdr* hdr =
-            PL_DHashTableSearch(next->u.hash.mPropertyHash, aProperty);
+        PLDHashEntryHdr* hdr = next->u.hash.mPropertyHash->Search(aProperty);
         Assertion* val = hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         while (val) {
             if (val->u.as.mTarget == aTarget) {
@@ -1112,8 +1108,7 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
 
     if (haveHash)
     {
-        PLDHashEntryHdr* hdr =
-            PL_DHashTableSearch(next->u.hash.mPropertyHash, aProperty);
+        PLDHashEntryHdr* hdr = next->u.hash.mPropertyHash->Search(aProperty);
         Assertion *asRef =
             hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         if (asRef)
@@ -1123,8 +1118,7 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
         }
         else
         {
-            hdr = PL_DHashTableAdd(next->u.hash.mPropertyHash, aProperty,
-                                   mozilla::fallible);
+            hdr = next->u.hash.mPropertyHash->Add(aProperty, mozilla::fallible);
             if (hdr)
             {
                 Entry* entry = static_cast<Entry*>(hdr);
@@ -1211,8 +1205,7 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
 
     bool    haveHash = (next) ? next->mHashEntry : false;
     if (haveHash) {
-        PLDHashEntryHdr* hdr =
-            PL_DHashTableSearch(next->u.hash.mPropertyHash, aProperty);
+        PLDHashEntryHdr* hdr = next->u.hash.mPropertyHash->Search(aProperty);
         prev = next = hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         bool first = true;
         while (next) {
@@ -1230,12 +1223,12 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
         as = next;
 
         if (first) {
-            PL_DHashTableRawRemove(root->u.hash.mPropertyHash, hdr);
+            root->u.hash.mPropertyHash->RawRemove(hdr);
 
             if (next && next->mNext) {
                 PLDHashEntryHdr* hdr =
-                    PL_DHashTableAdd(root->u.hash.mPropertyHash, aProperty,
-                                     mozilla::fallible);
+                    root->u.hash.mPropertyHash->Add(aProperty,
+                                                    mozilla::fallible);
                 if (hdr) {
                     Entry* entry = static_cast<Entry*>(hdr);
                     entry->mNode = aProperty;
@@ -1513,8 +1506,7 @@ InMemoryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, boo
 {
     Assertion* ass = GetForwardArcs(aSource);
     if (ass && ass->mHashEntry) {
-        PLDHashEntryHdr* hdr =
-            PL_DHashTableSearch(ass->u.hash.mPropertyHash, aArc);
+        PLDHashEntryHdr* hdr = ass->u.hash.mPropertyHash->Search(aArc);
         Assertion* val = hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         if (val) {
             *result = true;
@@ -1664,15 +1656,14 @@ InMemoryDataSource::EnsureFastContainment(nsIRDFResource* aSource)
         nextRef = first->mNext;
         nsIRDFResource *prop = first->u.as.mProperty;
 
-        PLDHashEntryHdr* hdr = PL_DHashTableSearch(table, prop);
+        PLDHashEntryHdr* hdr = table->Search(prop);
         Assertion* val = hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         if (val) {
             first->mNext = val->mNext;
             val->mNext = first;
         }
         else {
-            PLDHashEntryHdr* hdr = PL_DHashTableAdd(table, prop,
-                                                    mozilla::fallible);
+            PLDHashEntryHdr* hdr = table->Add(prop, mozilla::fallible);
             if (hdr) {
                 Entry* entry = static_cast<Entry*>(hdr);
                 entry->mNode = prop;
@@ -1727,8 +1718,7 @@ InMemoryDataSource::Mark(nsIRDFResource* aSource,
 
     Assertion *as = GetForwardArcs(aSource);
     if (as && as->mHashEntry) {
-        PLDHashEntryHdr* hdr =
-            PL_DHashTableSearch(as->u.hash.mPropertyHash, aProperty);
+        PLDHashEntryHdr* hdr = as->u.hash.mPropertyHash->Search(aProperty);
         Assertion* val = hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         while (val) {
             if ((val->u.as.mTarget == aTarget) &&
@@ -1844,7 +1834,7 @@ InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
 
                 // remove from the reverse arcs
                 PLDHashEntryHdr* hdr =
-                    PL_DHashTableSearch(aInfo->mReverseArcs, as->u.as.mTarget);
+                    aInfo->mReverseArcs->Search(as->u.as.mTarget);
                 NS_ASSERTION(hdr, "no assertion in reverse arcs");
 
                 Entry* rentry = static_cast<Entry*>(hdr);
@@ -1868,7 +1858,7 @@ InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
 
                 // Wow, it was the _only_ one. Unhash it.
                 if (! rentry->mAssertions) {
-                    PL_DHashTableRawRemove(aInfo->mReverseArcs, hdr);
+                    aInfo->mReverseArcs->RawRemove(hdr);
                 }
 
                 // add to the list of assertions to unassert

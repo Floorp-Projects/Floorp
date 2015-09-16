@@ -14,7 +14,7 @@ function checkPopupHide()
      "[Test " + testId + "] The invalid form popup should not be shown");
 }
 
-let gObserver = {
+var gObserver = {
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver]),
 
   notifyInvalidSubmit : function (aFormElement, aInvalidElements)

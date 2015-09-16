@@ -11,7 +11,7 @@
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
                  "bug 664131: Expand console object with group methods";
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

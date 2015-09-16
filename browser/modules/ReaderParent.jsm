@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "UITour", "resource:///modules/UITour.js
 
 const gStringBundle = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
-let ReaderParent = {
+var ReaderParent = {
   _readerModeInfoPanelOpen: false,
 
   MESSAGES: [

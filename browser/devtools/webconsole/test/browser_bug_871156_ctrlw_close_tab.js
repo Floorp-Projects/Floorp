@@ -8,7 +8,7 @@
 
 "use strict";
 
-let test = asyncTest(function* () {
+var test = asyncTest(function* () {
   const TEST_URI = "data:text/html;charset=utf8,<title>bug871156</title>\n" +
                    "<p>hello world";
   let firstTab = gBrowser.selectedTab;

@@ -58,10 +58,10 @@ window.addEventListener("unload", function onUnload() {
   UI.destroy();
 });
 
-let projectList;
-let runtimeList;
+var projectList;
+var runtimeList;
 
-let UI = {
+var UI = {
   init: function() {
     this._telemetry = new Telemetry();
     this._telemetry.toolOpened("webide");
@@ -1100,7 +1100,7 @@ let UI = {
 
 EventEmitter.decorate(UI);
 
-let Cmds = {
+var Cmds = {
   quit: function() {
     if (UI.canCloseProject()) {
       window.close();

@@ -1,4 +1,4 @@
-let tab = null;
+var tab = null;
 
 function test() {
   waitForExplicitFinish();

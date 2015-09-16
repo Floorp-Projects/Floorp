@@ -2,9 +2,9 @@ Cu.import("resource://gre/modules/CrashSubmit.jsm", this);
 
 const SERVER_URL = "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs";
 
-let gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
-let gTestBrowser = null;
-let config = {};
+var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+var gTestBrowser = null;
+var config = {};
 
 add_task(function* () {
   // The test harness sets MOZ_CRASHREPORTER_NO_REPORT, which disables plugin

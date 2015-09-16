@@ -9,8 +9,8 @@
 const TAB_URL = EXAMPLE_URL + "doc_blackboxing.html";
 const BLACKBOXME_URL = EXAMPLE_URL + "code_blackboxing_blackboxme.js"
 
-let gTab, gPanel, gDebugger;
-let gFrames;
+var gTab, gPanel, gDebugger;
+var gFrames;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

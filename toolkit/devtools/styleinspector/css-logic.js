@@ -43,7 +43,7 @@ const Services = require("Services");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { getRootBindingParent } = require("devtools/toolkit/layout/utils");
 
-let pseudos = new Set([
+var pseudos = new Set([
   ":after",
   ":before",
   ":first-letter",

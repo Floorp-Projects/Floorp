@@ -1,11 +1,11 @@
 // Test that having two frames that request installs at the same time doesn't
 // cause callback ID conflicts (discussed in bug 926712)
 
-let {Promise} = Cu.import("resource://gre/modules/Promise.jsm");
+var {Promise} = Cu.import("resource://gre/modules/Promise.jsm");
 
-let gConcurrentTabs = [];
-let gQueuedForInstall = [];
-let gResults = [];
+var gConcurrentTabs = [];
+var gQueuedForInstall = [];
+var gResults = [];
 
 function frame_script() {
   addMessageListener("Test:StartInstall", () => {
@@ -21,7 +21,7 @@ function frame_script() {
   }, true);
 }
 
-let gAddonAndWindowListener = {
+var gAddonAndWindowListener = {
   onOpenWindow: function(win) {
     var window = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
     info("Window opened");

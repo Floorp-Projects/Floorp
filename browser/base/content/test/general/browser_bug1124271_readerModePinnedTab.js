@@ -8,7 +8,7 @@ const PREF = "reader.parse-on-load.enabled";
 
 const TEST_PATH = "http://example.com/browser/browser/base/content/test/general/";
 
-let readerButton = document.getElementById("reader-mode-button");
+var readerButton = document.getElementById("reader-mode-button");
 
 add_task(function* () {
   registerCleanupFunction(function() {

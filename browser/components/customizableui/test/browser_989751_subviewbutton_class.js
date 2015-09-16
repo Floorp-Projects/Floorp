@@ -5,7 +5,7 @@
 "use strict";
 
 const kCustomClass = "acustomclassnoonewilluse";
-let tempElement = null;
+var tempElement = null;
 
 function insertClassNameToMenuChildren(parentMenu) {
   let el = parentMenu.querySelector("menuitem:first-of-type");

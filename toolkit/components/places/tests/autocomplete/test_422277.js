@@ -8,10 +8,10 @@
  */
 
 // Define some shared uris and titles (each page needs its own uri)
-let kURIs = [
+var kURIs = [
   "http://site/%EAid",
 ];
-let kTitles = [
+var kTitles = [
   "title",
 ];
 
@@ -19,7 +19,7 @@ addPageBook(0, 0);
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
-let gTests = [
+var gTests = [
   ["0: Bad escaped uri stays escaped",
    "site", [0]],
 ];

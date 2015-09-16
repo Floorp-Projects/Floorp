@@ -23,12 +23,12 @@ loader.lazyRequireGetter(this, "PromisesFront",
   "devtools/server/actors/promises", true);
 
 // Global toolbox, set when startup is called.
-let gToolbox;
+var gToolbox;
 
 /**
  * Initialize the promise debugger controller and view upon loading the iframe.
  */
-let startup = Task.async(function*(toolbox) {
+var startup = Task.async(function*(toolbox) {
   gToolbox = toolbox;
 
   yield PromisesController.initialize(toolbox);
@@ -38,7 +38,7 @@ let startup = Task.async(function*(toolbox) {
 /**
  * Destroy the promise debugger controller and view when unloading the iframe.
  */
-let shutdown = Task.async(function*() {
+var shutdown = Task.async(function*() {
   yield PromisesController.destroy();
   yield PromisesPanel.destroy();
 
@@ -58,7 +58,7 @@ function destroy() {
  * The promisedebugger controller's job is to retrieve PromisesFronts from the
  * server.
  */
-let PromisesController = {
+var PromisesController = {
   initialize: Task.async(function*() {
     if (this.initialized) {
       return this.initialized.promise;

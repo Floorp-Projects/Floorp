@@ -852,6 +852,7 @@ add_test(function test_processIncoming_applyIncomingBatchSize_smaller() {
     do_check_eq(engine.previousFailed.length, 2);
     do_check_eq(engine.previousFailed[0], "record-no-0");
     do_check_eq(engine.previousFailed[1], "record-no-8");
+    do_check_eq(sumHistogram("WEAVE_ENGINE_APPLY_NEW_FAILURES", { key: "rotary" }), 2);
 
   } finally {
     cleanAndGo(server);
@@ -905,6 +906,7 @@ add_test(function test_processIncoming_applyIncomingBatchSize_multiple() {
     // Records have been applied in 3 batches.
     do_check_eq(batchCalls, 3);
     do_check_attribute_count(engine._store.items, APPLY_BATCH_SIZE * 3);
+    do_check_eq(sumHistogram("WEAVE_ENGINE_APPLY_NEW_FAILURES", { key: "rotary" }), 3);
 
   } finally {
     cleanAndGo(server);
@@ -980,6 +982,9 @@ add_test(function test_processIncoming_notify_count() {
     do_check_eq(counts.newFailed, 3);
     do_check_eq(counts.succeeded, 12);
 
+    // Make sure we recorded telemetry for the failed records.
+    do_check_eq(sumHistogram("WEAVE_ENGINE_APPLY_NEW_FAILURES", { key: "rotary" }), 3);
+
     // Sync again, 1 of the failed items are the same, the rest didn't fail.
     engine._processIncoming();
 
@@ -993,6 +998,8 @@ add_test(function test_processIncoming_notify_count() {
     do_check_eq(counts.applied, 3);
     do_check_eq(counts.newFailed, 0);
     do_check_eq(counts.succeeded, 2);
+
+    do_check_eq(sumHistogram("WEAVE_ENGINE_APPLY_NEW_FAILURES", { key: "rotary" }), 0);
 
     Svc.Obs.remove("weave:engine:sync:applied", onApplied);
   } finally {
@@ -1075,6 +1082,7 @@ add_test(function test_processIncoming_previousFailed() {
     do_check_eq(engine.previousFailed[1], "record-no-1");
     do_check_eq(engine.previousFailed[2], "record-no-8");
     do_check_eq(engine.previousFailed[3], "record-no-9");
+    do_check_eq(sumHistogram("WEAVE_ENGINE_APPLY_NEW_FAILURES", { key: "rotary" }), 8);
 
     // Refetched items that didn't fail the second time are in engine._store.items.
     do_check_eq(engine._store.items['record-no-4'], "Record No. 4");
@@ -1188,6 +1196,7 @@ add_test(function test_processIncoming_failed_records() {
     do_check_eq(observerData, engine.name);
     do_check_eq(observerSubject.failed, BOGUS_RECORDS.length);
     do_check_eq(observerSubject.newFailed, BOGUS_RECORDS.length);
+    do_check_eq(sumHistogram("WEAVE_ENGINE_APPLY_NEW_FAILURES", { key: "rotary" }), BOGUS_RECORDS.length);
 
     // Testing batching of failed item fetches.
     // Try to sync again. Ensure that we split the request into chunks to avoid

@@ -31,7 +31,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 
 function nsTerminatorTelemetry() {}
 
-let HISTOGRAMS = {
+var HISTOGRAMS = {
   "quit-application": "SHUTDOWN_PHASE_DURATION_TICKS_QUIT_APPLICATION",
   "profile-change-teardown": "SHUTDOWN_PHASE_DURATION_TICKS_PROFILE_CHANGE_TEARDOWN",
   "profile-before-change":  "SHUTDOWN_PHASE_DURATION_TICKS_PROFILE_BEFORE_CHANGE",

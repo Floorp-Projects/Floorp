@@ -29,7 +29,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
-let {
+var {
   runSafeWithoutClone,
   MessageBroker,
   Messenger,
@@ -48,7 +48,7 @@ function isWhenBeforeOrSame(when1, when2)
 
 // This is the fairly simple API that we inject into content
 // scripts.
-let api = context => { return {
+var api = context => { return {
   runtime: {
     connect: function(extensionId, connectInfo) {
       let name = connectInfo && connectInfo.name || "";
@@ -259,7 +259,7 @@ ExtensionContext.prototype = {
 
 // Responsible for creating ExtensionContexts and injecting content
 // scripts into them when new documents are created.
-let DocumentManager = {
+var DocumentManager = {
   extensionCount: 0,
 
   // WeakMap[window -> Map[extensionId -> ExtensionContext]]
@@ -454,7 +454,7 @@ BrowserExtensionContent.prototype = {
   },
 };
 
-let ExtensionManager = {
+var ExtensionManager = {
   // Map[extensionId, BrowserExtensionContent]
   extensions: new Map(),
 

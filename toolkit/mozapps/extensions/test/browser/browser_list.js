@@ -4,9 +4,9 @@
 
 // Tests the list view
 
-let tempScope = {};
+var tempScope = {};
 Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", tempScope);
-let LightweightThemeManager = tempScope.LightweightThemeManager;
+var LightweightThemeManager = tempScope.LightweightThemeManager;
 
 var gProvider;
 var gManagerWindow;
@@ -17,7 +17,7 @@ var gVersion = Services.appinfo.version;
 var gBlocklistURL = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
 var gPluginURL = Services.urlFormatter.formatURLPref("plugins.update.url");
 var gDate = new Date(2010, 7, 16);
-let infoURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
+var infoURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
 
 const EXPECTED_ADDONS = 13;
 

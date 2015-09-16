@@ -5,7 +5,7 @@ MARIONETTE_TIMEOUT = 10000;
 
 SpecialPowers.addPermission("fmradio", true, document);
 
-let FMRadio = window.navigator.mozFMRadio;
+var FMRadio = window.navigator.mozFMRadio;
 
 function verifyInitialState() {
   log("Verifying initial state.");

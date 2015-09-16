@@ -5,11 +5,11 @@
 /**
  * Tests PersonalToolbar migration path.
  */
-let bg = Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver);
-let gOriginalMigrationVersion;
+var bg = Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver);
+var gOriginalMigrationVersion;
 const BROWSER_URL = getBrowserURL();
 
-let localStore = {
+var localStore = {
   get xulStore() Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore),
 
   getValue: function getValue(aProperty)
@@ -27,7 +27,7 @@ let localStore = {
   }
 };
 
-let gTests = [
+var gTests = [
 
 function test_explicitly_collapsed_toolbar()
 {

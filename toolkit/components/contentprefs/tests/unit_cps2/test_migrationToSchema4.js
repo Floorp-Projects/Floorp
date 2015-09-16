@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dump of version we migrate from
-let schema_version3 = `
+var schema_version3 = `
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
   CREATE TABLE groups (id INTEGER PRIMARY KEY, name TEXT NOT NULL);
@@ -54,7 +54,7 @@ function run_test() {
 // WARNING: Database will reset after every test. This limitation comes from
 // the fact that we ContentPrefService constructor is run only once per test file
 // and so migration will be run only once.
-let tests = [
+var tests = [
   function testMigration() {
     // Test migrated db content.
     schemaVersionIs(4);

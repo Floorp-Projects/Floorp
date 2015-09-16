@@ -10,7 +10,7 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-bug_1050691_click_function_to_source.html";
 
-let test = asyncTest(function*() {
+var test = asyncTest(function*() {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
 
@@ -44,7 +44,7 @@ function synthesizeClick(clickable, hud) {
   EventUtils.synthesizeMouse(clickable, 2, 2, {}, hud.iframeWindow);
 }
 
-let printFunction = Task.async(function* (hud) {
+var printFunction = Task.async(function* (hud) {
   hud.jsterm.clearOutput();
   content.wrappedJSObject.foo();
   let [result] = yield waitForMessages({

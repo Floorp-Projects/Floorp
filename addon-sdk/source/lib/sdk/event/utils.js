@@ -7,7 +7,7 @@ module.metadata = {
   "stability": "unstable"
 };
 
-let { emit, on, once, off, EVENT_TYPE_PATTERN } = require("./core");
+var { emit, on, once, off, EVENT_TYPE_PATTERN } = require("./core");
 
 // This module provides set of high order function for working with event
 // streams (streams in a NodeJS style that dispatch data, end and error
@@ -17,7 +17,7 @@ let { emit, on, once, off, EVENT_TYPE_PATTERN } = require("./core");
 // (non property references) it keeps. This basically allows defining
 // references between objects without storing the explicitly. See transform for
 // more details.
-let refs = (function() {
+var refs = (function() {
   let refSets = new WeakMap();
   return function refs(target) {
     if (!refSets.has(target)) refSets.set(target, new Set());

@@ -7,8 +7,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_script-switching-02.html";
 
-let gTab, gPanel, gDebugger;
-let gEditor, gSources;
+var gTab, gPanel, gDebugger;
+var gEditor, gSources;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
@@ -32,9 +32,9 @@ function test() {
   });
 }
 
-let gLabel1 = "code_script-switching-01.js";
-let gLabel2 = "code_script-switching-02.js";
-let gParams = "?foo=bar,baz|lol";
+var gLabel1 = "code_script-switching-01.js";
+var gLabel2 = "code_script-switching-02.js";
+var gParams = "?foo=bar,baz|lol";
 
 function testSourcesDisplay() {
   let deferred = promise.defer();

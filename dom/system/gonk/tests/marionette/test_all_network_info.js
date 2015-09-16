@@ -4,12 +4,12 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
-let networkManager =
+var networkManager =
   Cc["@mozilla.org/network/manager;1"].getService(Ci.nsINetworkManager);
 ok(networkManager,
    "networkManager.constructor is " + networkManager.constructor);
 
-let wifiManager = window.navigator.mozWifiManager;
+var wifiManager = window.navigator.mozWifiManager;
 ok(wifiManager, "wifiManager.constructor is " + wifiManager.constructor);
 
 function setEmulatorAPN() {

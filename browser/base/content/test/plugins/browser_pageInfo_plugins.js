@@ -1,13 +1,13 @@
-let gHttpTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
-let gPageInfo = null;
-let gNextTest = null;
-let gTestBrowser = null;
-let gPluginHost = Components.classes["@mozilla.org/plugin/host;1"]
+var gHttpTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+var gPageInfo = null;
+var gNextTest = null;
+var gTestBrowser = null;
+var gPluginHost = Components.classes["@mozilla.org/plugin/host;1"]
                     .getService(Components.interfaces.nsIPluginHost);
-let gPermissionManager = Components.classes["@mozilla.org/permissionmanager;1"]
+var gPermissionManager = Components.classes["@mozilla.org/permissionmanager;1"]
                            .getService(Components.interfaces.nsIPermissionManager);
-let gTestPermissionString = gPluginHost.getPermissionStringForType("application/x-test");
-let gSecondTestPermissionString = gPluginHost.getPermissionStringForType("application/x-second-test");
+var gTestPermissionString = gPluginHost.getPermissionStringForType("application/x-test");
+var gSecondTestPermissionString = gPluginHost.getPermissionStringForType("application/x-second-test");
 
 function doOnPageLoad(url, continuation) {
   gNextTest = continuation;

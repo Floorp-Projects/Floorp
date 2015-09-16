@@ -9,7 +9,7 @@ this.EXPORTED_SYMBOLS = ["Windows8WindowFrameColor"];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-let Registry = Cu.import("resource://gre/modules/WindowsRegistry.jsm").WindowsRegistry;
+var Registry = Cu.import("resource://gre/modules/WindowsRegistry.jsm").WindowsRegistry;
 
 const Windows8WindowFrameColor = {
   _windowFrameColor: null,

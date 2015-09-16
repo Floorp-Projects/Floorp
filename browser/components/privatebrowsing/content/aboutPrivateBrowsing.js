@@ -11,11 +11,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const FAVICON_QUESTION = "chrome://global/skin/icons/question-16.png";
 const FAVICON_PRIVACY = "chrome://browser/skin/Privacy-16.png";
 
-let stringBundle = Services.strings.createBundle(
+var stringBundle = Services.strings.createBundle(
                      "chrome://browser/locale/aboutPrivateBrowsing.properties");
 
-let prefBranch = Services.prefs.getBranch("privacy.trackingprotection.");
-let prefObserver = {
+var prefBranch = Services.prefs.getBranch("privacy.trackingprotection.");
+var prefObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
   observe: function () {

@@ -18,7 +18,7 @@ const DEFAULT_LOG_LEVEL = "error";
 const ADDON_LOG_LEVEL_PREF = "extensions." + self.id + ".sdk.console.logLevel";
 const SDK_LOG_LEVEL_PREF = "extensions.sdk.console.logLevel";
 
-let logLevel = DEFAULT_LOG_LEVEL;
+var logLevel = DEFAULT_LOG_LEVEL;
 function setLogLevel() {
   logLevel = prefs.get(ADDON_LOG_LEVEL_PREF,
                            prefs.get(SDK_LOG_LEVEL_PREF,
@@ -26,7 +26,7 @@ function setLogLevel() {
 }
 setLogLevel();
 
-let logLevelObserver = {
+var logLevelObserver = {
   QueryInterface: function(iid) {
     if (!iid.equals(Ci.nsIObserver) &&
         !iid.equals(Ci.nsISupportsWeakReference) &&
@@ -38,7 +38,7 @@ let logLevelObserver = {
     setLogLevel();
   }
 };
-let branch = Cc["@mozilla.org/preferences-service;1"].
+var branch = Cc["@mozilla.org/preferences-service;1"].
              getService(Ci.nsIPrefService).
              getBranch(null);
 branch.addObserver(ADDON_LOG_LEVEL_PREF, logLevelObserver, true);

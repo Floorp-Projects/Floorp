@@ -5,12 +5,12 @@
 // **********
 // Title: ui.js
 
-let Keys = { meta: false };
+var Keys = { meta: false };
 
 // ##########
 // Class: UI
 // Singleton top-level UI manager.
-let UI = {
+var UI = {
   // Variable: _frameInitialized
   // True if the Tab View UI frame has been initialized.
   _frameInitialized: false,

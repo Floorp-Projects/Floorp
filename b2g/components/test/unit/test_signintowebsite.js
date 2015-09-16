@@ -301,7 +301,7 @@ function test_options_pass_through() {
   MinimalIDService.RP.watch(mockedDoc, {});
 }
 
-let TESTS = [
+var TESTS = [
   test_overall,
   test_mock_doc,
   test_object_contains,

@@ -43,6 +43,7 @@ public:
   typedef widget::IMENotification::SelectionChangeData SelectionChangeData;
   typedef widget::IMENotification::TextChangeData TextChangeData;
   typedef widget::IMENotification::TextChangeDataBase TextChangeDataBase;
+  typedef widget::IMEMessage IMEMessage;
 
   IMEContentObserver();
 
@@ -119,7 +120,7 @@ private:
 
   void PostFocusSetNotification();
   void MaybeNotifyIMEOfFocusSet();
-  void PostTextChangeNotification(const TextChangeDataBase& aTextChangeData);
+  void PostTextChangeNotification();
   void MaybeNotifyIMEOfTextChange(const TextChangeDataBase& aTextChangeData);
   void PostSelectionChangeNotification();
   void MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition,
@@ -140,10 +141,18 @@ private:
   void FlushMergeableNotifications();
   void ClearPendingNotifications()
   {
-    mIsFocusEventPending = false;
-    mIsSelectionChangeEventPending = false;
-    mIsPositionChangeEventPending = false;
+    mNeedsToNotifyIMEOfFocusSet = false;
+    mNeedsToNotifyIMEOfTextChange = false;
+    mNeedsToNotifyIMEOfSelectionChange = false;
+    mNeedsToNotifyIMEOfPositionChange = false;
     mTextChangeData.Clear();
+  }
+  bool NeedsToNotifyIMEOfSomething() const
+  {
+    return mNeedsToNotifyIMEOfFocusSet ||
+           mNeedsToNotifyIMEOfTextChange ||
+           mNeedsToNotifyIMEOfSelectionChange ||
+           mNeedsToNotifyIMEOfPositionChange;
   }
 
   /**
@@ -234,12 +243,24 @@ private:
   uint32_t mSuppressNotifications;
   int64_t mPreCharacterDataChangeLength;
 
+  // mSendingNotification is a notification which is now sending from
+  // IMENotificationSender.  When the value is NOTIFY_IME_OF_NOTHING, it's
+  // not sending any notification.
+  IMEMessage mSendingNotification;
+
   bool mIsObserving;
   bool mIMEHasFocus;
-  bool mIsFocusEventPending;
-  bool mIsSelectionChangeEventPending;
-  bool mIsPositionChangeEventPending;
+  bool mNeedsToNotifyIMEOfFocusSet;
+  bool mNeedsToNotifyIMEOfTextChange;
+  bool mNeedsToNotifyIMEOfSelectionChange;
+  bool mNeedsToNotifyIMEOfPositionChange;
+  // mIsFlushingPendingNotifications is true between
+  // FlushMergeableNotifications() creates IMENotificationSender and
+  // IMENotificationSender sent all pending notifications.
   bool mIsFlushingPendingNotifications;
+  // mIsHandlingQueryContentEvent is true when IMEContentObserver is handling
+  // WidgetQueryContentEvent with ContentEventHandler.
+  bool mIsHandlingQueryContentEvent;
 
 
   /**
@@ -258,74 +279,39 @@ private:
       eChangeEventType_FlushPendingEvents
     };
 
-    AChangeEvent(ChangeEventType aChangeEventType,
-                 IMEContentObserver* aIMEContentObserver)
+    explicit AChangeEvent(IMEContentObserver* aIMEContentObserver)
       : mIMEContentObserver(aIMEContentObserver)
-      , mChangeEventType(aChangeEventType)
     {
       MOZ_ASSERT(mIMEContentObserver);
     }
 
     nsRefPtr<IMEContentObserver> mIMEContentObserver;
-    ChangeEventType mChangeEventType;
 
     /**
      * CanNotifyIME() checks if mIMEContentObserver can and should notify IME.
      */
-    bool CanNotifyIME() const;
+    bool CanNotifyIME(ChangeEventType aChangeEventType) const;
 
     /**
      * IsSafeToNotifyIME() checks if it's safe to noitify IME.
      */
-    bool IsSafeToNotifyIME() const;
+    bool IsSafeToNotifyIME(ChangeEventType aChangeEventType) const;
   };
 
-  class FocusSetEvent: public AChangeEvent
+  class IMENotificationSender: public AChangeEvent
   {
   public:
-    explicit FocusSetEvent(IMEContentObserver* aIMEContentObserver)
-      : AChangeEvent(eChangeEventType_Focus, aIMEContentObserver)
+    explicit IMENotificationSender(IMEContentObserver* aIMEContentObserver)
+      : AChangeEvent(aIMEContentObserver)
     {
-    }
-    NS_IMETHOD Run() override;
-  };
-
-  class SelectionChangeEvent : public AChangeEvent
-  {
-  public:
-    explicit SelectionChangeEvent(IMEContentObserver* aIMEContentObserver)
-      : AChangeEvent(eChangeEventType_Selection, aIMEContentObserver)
-    {
-    }
-    NS_IMETHOD Run() override;
-  };
-
-  class TextChangeEvent : public AChangeEvent
-  {
-  public:
-    TextChangeEvent(IMEContentObserver* aIMEContentObserver,
-                    TextChangeDataBase& aTextChangeData)
-      : AChangeEvent(eChangeEventType_Text, aIMEContentObserver)
-      , mTextChangeData(aTextChangeData)
-    {
-      MOZ_ASSERT(mTextChangeData.IsValid());
-      // Reset aTextChangeData because this now consumes the data.
-      aTextChangeData.Clear();
     }
     NS_IMETHOD Run() override;
 
   private:
-    TextChangeDataBase mTextChangeData;
-  };
-
-  class PositionChangeEvent final : public AChangeEvent
-  {
-  public:
-    explicit PositionChangeEvent(IMEContentObserver* aIMEContentObserver)
-      : AChangeEvent(eChangeEventType_Position, aIMEContentObserver)
-    {
-    }
-    NS_IMETHOD Run() override;
+    void SendFocusSet();
+    void SendSelectionChange();
+    void SendTextChange();
+    void SendPositionChange();
   };
 
   class AsyncMergeableNotificationsFlusher : public AChangeEvent
@@ -333,7 +319,7 @@ private:
   public:
     explicit AsyncMergeableNotificationsFlusher(
       IMEContentObserver* aIMEContentObserver)
-      : AChangeEvent(eChangeEventType_FlushPendingEvents, aIMEContentObserver)
+      : AChangeEvent(aIMEContentObserver)
     {
     }
     NS_IMETHOD Run() override;

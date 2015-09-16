@@ -6,7 +6,7 @@
 /**
  * CallTree view containing profiler call tree, controlled by DetailsView.
  */
-let JsCallTreeView = Heritage.extend(DetailsSubview, {
+var JsCallTreeView = Heritage.extend(DetailsSubview, {
 
   rerenderPrefs: [
     "invert-call-tree",

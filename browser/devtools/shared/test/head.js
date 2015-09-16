@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let {TargetFactory} = require("devtools/framework/target");
-let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var {TargetFactory} = require("devtools/framework/target");
+var {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+var {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 const {DOMHelpers} = Cu.import("resource:///modules/devtools/DOMHelpers.jsm", {});
 const {Hosts} = require("devtools/framework/toolbox-hosts");
 const {defer} = require("promise");
@@ -144,7 +144,7 @@ function oneTimeObserve(name, callback) {
   Services.obs.addObserver(func, name, false);
 }
 
-let createHost = Task.async(function*(type = "bottom", src = "data:text/html;charset=utf-8,") {
+var createHost = Task.async(function*(type = "bottom", src = "data:text/html;charset=utf-8,") {
   let host = new Hosts[type](gBrowser.selectedTab);
   let iframe = yield host.create();
 
@@ -302,7 +302,7 @@ function showFilterPopupPresets(widget) {
  * @param  {string} value
  * @return {Promise}
  */
-let showFilterPopupPresetsAndCreatePreset = Task.async(function*(widget, name, value) {
+var showFilterPopupPresetsAndCreatePreset = Task.async(function*(widget, name, value) {
   yield showFilterPopupPresets(widget);
 
   let onRender = widget.once("render");

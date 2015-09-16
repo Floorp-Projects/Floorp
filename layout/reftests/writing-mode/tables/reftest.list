@@ -74,10 +74,6 @@ fuzzy-if(winWidget,48,600) fuzzy-if(cocoaWidget,19,97) HTTP(../..) == wm-row-pro
 fuzzy-if(winWidget,48,600) fuzzy-if(cocoaWidget,19,97) HTTP(../..) == wm-row-progression-006.xht multicol-count-002-ref.xht
 fuzzy-if(winWidget,48,600) fuzzy-if(cocoaWidget,19,97) HTTP(../..) == wm-row-progression-007.xht multicol-count-002-ref.xht
 
-fuzzy-if(Android,255,38) == table-caption-block-start-1.html table-caption-block-start-1-ref.html
-fuzzy-if(Android,255,38) == table-caption-block-end-1.html table-caption-block-end-1-ref.html
-== table-caption-inline-start-1.html table-caption-inline-start-1-ref.html
-== table-caption-inline-end-1.html table-caption-inline-end-1-ref.html
 fuzzy-if(Android,255,38) == table-caption-top-1.html table-caption-top-1-ref.html
 fuzzy-if(Android,255,38) == table-caption-bottom-1.html table-caption-bottom-1-ref.html
 == table-caption-left-1.html table-caption-left-1-ref.html

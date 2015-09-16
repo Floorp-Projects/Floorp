@@ -8,10 +8,10 @@
 
 dump("###################################### forms.js loaded\n");
 
-let Ci = Components.interfaces;
-let Cc = Components.classes;
-let Cu = Components.utils;
-let Cr = Components.results;
+var Ci = Components.interfaces;
+var Cc = Components.classes;
+var Cu = Components.utils;
+var Cr = Components.results;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyServiceGetter(Services, "fm",
 /*
  * A WeakMap to map window to objects keeping it's TextInputProcessor instance.
  */
-let WindowMap = {
+var WindowMap = {
   // WeakMap of <window, object> pairs.
   _map: null,
 
@@ -72,15 +72,15 @@ const RESIZE_SCROLL_DELAY = 20;
 // the selection range any more.
 const MAX_BLOCKED_COUNT = 20;
 
-let HTMLDocument = Ci.nsIDOMHTMLDocument;
-let HTMLHtmlElement = Ci.nsIDOMHTMLHtmlElement;
-let HTMLBodyElement = Ci.nsIDOMHTMLBodyElement;
-let HTMLIFrameElement = Ci.nsIDOMHTMLIFrameElement;
-let HTMLInputElement = Ci.nsIDOMHTMLInputElement;
-let HTMLTextAreaElement = Ci.nsIDOMHTMLTextAreaElement;
-let HTMLSelectElement = Ci.nsIDOMHTMLSelectElement;
-let HTMLOptGroupElement = Ci.nsIDOMHTMLOptGroupElement;
-let HTMLOptionElement = Ci.nsIDOMHTMLOptionElement;
+var HTMLDocument = Ci.nsIDOMHTMLDocument;
+var HTMLHtmlElement = Ci.nsIDOMHTMLHtmlElement;
+var HTMLBodyElement = Ci.nsIDOMHTMLBodyElement;
+var HTMLIFrameElement = Ci.nsIDOMHTMLIFrameElement;
+var HTMLInputElement = Ci.nsIDOMHTMLInputElement;
+var HTMLTextAreaElement = Ci.nsIDOMHTMLTextAreaElement;
+var HTMLSelectElement = Ci.nsIDOMHTMLSelectElement;
+var HTMLOptGroupElement = Ci.nsIDOMHTMLOptGroupElement;
+var HTMLOptionElement = Ci.nsIDOMHTMLOptionElement;
 
 function guessKeyNameFromKeyCode(KeyboardEvent, aKeyCode) {
   switch (aKeyCode) {
@@ -227,7 +227,7 @@ function guessKeyNameFromKeyCode(KeyboardEvent, aKeyCode) {
   }
 }
 
-let FormVisibility = {
+var FormVisibility = {
   /**
    * Searches upwards in the DOM for an element that has been scrolled.
    *
@@ -371,7 +371,7 @@ let FormVisibility = {
 };
 
 // This object implements nsITextInputProcessorCallback
-let textInputProcessorCallback = {
+var textInputProcessorCallback = {
   onNotify: function(aTextInputProcessor, aNotification) {
     try {
       switch (aNotification.type) {
@@ -405,7 +405,7 @@ let textInputProcessorCallback = {
   }
 };
 
-let FormAssistant = {
+var FormAssistant = {
   init: function fa_init() {
     addEventListener("focus", this, true, false);
     addEventListener("blur", this, true, false);
@@ -1491,7 +1491,7 @@ function replaceSurroundingText(element, text, offset, length) {
   return true;
 }
 
-let CompositionManager =  {
+var CompositionManager =  {
   _isStarted: false,
   _tip: null,
   _KeyboardEventForWin: null,

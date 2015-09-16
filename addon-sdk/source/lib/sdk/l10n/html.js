@@ -10,7 +10,7 @@ module.metadata = {
 const { processes, remoteRequire } = require("../remote/parent");
 remoteRequire("sdk/content/l10n-html");
 
-let enabled = false;
+var enabled = false;
 function enable() {
   if (!enabled) {
     processes.port.emit("sdk/l10n/html/enable");

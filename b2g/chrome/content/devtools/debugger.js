@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyGetter(this, "B2GTabList", function() {
 // that only happens once DevTools is enabled.
 devtools.require("devtools/toolkit/discovery/discovery");
 
-let RemoteDebugger = {
+var RemoteDebugger = {
   _listening: false,
 
   /**
@@ -232,7 +232,7 @@ RemoteDebugger.allowConnection =
 RemoteDebugger.receiveOOB =
   RemoteDebugger.receiveOOB.bind(RemoteDebugger);
 
-let USBRemoteDebugger = {
+var USBRemoteDebugger = {
 
   get isDebugging() {
     if (!this._listener) {
@@ -286,7 +286,7 @@ let USBRemoteDebugger = {
 
 };
 
-let WiFiRemoteDebugger = {
+var WiFiRemoteDebugger = {
 
   start: function() {
     if (this._listener) {

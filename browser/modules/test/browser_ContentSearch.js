@@ -379,7 +379,7 @@ function addTab() {
   return deferred.promise;
 }
 
-let currentStateObj = Task.async(function* () {
+var currentStateObj = Task.async(function* () {
   let state = {
     engines: [],
     currentEngine: yield currentEngineObj(),
@@ -394,7 +394,7 @@ let currentStateObj = Task.async(function* () {
   return state;
 });
 
-let currentEngineObj = Task.async(function* () {
+var currentEngineObj = Task.async(function* () {
   let engine = Services.search.currentEngine;
   let uri1x = engine.getIconURLBySize(65, 26);
   let uri2x = engine.getIconURLBySize(130, 52);

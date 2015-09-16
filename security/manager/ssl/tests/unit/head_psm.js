@@ -6,14 +6,14 @@
 
 const { 'classes': Cc, 'interfaces': Ci, 'utils': Cu, 'results': Cr } = Components;
 
-let { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-let { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
-let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-let { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
-let { HttpServer } = Cu.import("resource://testing-common/httpd.js", {});
-let { ctypes } = Cu.import("resource://gre/modules/ctypes.jsm");
+var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+var { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
+var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+var { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
+var { HttpServer } = Cu.import("resource://testing-common/httpd.js", {});
+var { ctypes } = Cu.import("resource://gre/modules/ctypes.jsm");
 
-let gIsWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
+var gIsWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 
 const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"]
                        .getService(Ci.nsIDebug2).isDebugBuild;
@@ -613,7 +613,7 @@ function startOCSPResponder(serverPort, identity, invalidIdentities,
 }
 
 // A prototype for a fake, error-free sslstatus
-let FakeSSLStatus = function(certificate) {
+var FakeSSLStatus = function(certificate) {
   this.serverCert = certificate;
 };
 

@@ -25,6 +25,7 @@
 #include "gc/Rooting.h"
 #include "js/Vector.h"
 #include "vm/Debugger.h"
+#include "vm/SavedFrame.h"
 #include "vm/StringBuffer.h"
 #include "vm/Time.h"
 #include "vm/WrapperObject.h"
@@ -1401,7 +1402,7 @@ ConcreteStackFrame<SavedFrame>::isSystem() const
 {
     auto trustedPrincipals = get().runtimeFromAnyThread()->trustedPrincipals();
     return get().getPrincipals() == trustedPrincipals ||
-           get().getPrincipals() == &ReconstructedSavedFramePrincipals::IsSystem;
+           get().getPrincipals() == &js::ReconstructedSavedFramePrincipals::IsSystem;
 }
 
 bool
@@ -1451,13 +1452,13 @@ bool ConstructSavedFrameStackSlow(JSContext* cx, JS::ubi::StackFrame& frame,
     while (ubiFrame.get()) {
         // Convert the source and functionDisplayName strings to atoms.
 
-        RootedAtom source(cx);
+        js::RootedAtom source(cx);
         AtomizingMatcher atomizer(cx, ubiFrame.get().sourceLength());
         source = ubiFrame.get().source().match(atomizer);
         if (!source)
             return false;
 
-        RootedAtom functionDisplayName(cx);
+        js::RootedAtom functionDisplayName(cx);
         auto nameLength = ubiFrame.get().functionDisplayNameLength();
         if (nameLength > 0) {
             AtomizingMatcher atomizer(cx, nameLength);
@@ -1479,7 +1480,7 @@ bool ConstructSavedFrameStackSlow(JSContext* cx, JS::ubi::StackFrame& frame,
         ubiFrame = ubiFrame.get().parent();
     }
 
-    RootedSavedFrame parentFrame(cx);
+    js::RootedSavedFrame parentFrame(cx);
     for (size_t i = stackChain->length(); i != 0; i--) {
         SavedFrame::HandleLookup lookup = stackChain[i-1];
         lookup->parent = parentFrame;

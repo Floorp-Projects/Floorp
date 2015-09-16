@@ -78,9 +78,9 @@ NS_STATUS_REPORTER_IMPLEMENT(StatusReporter, "StatusReporter State", getStatus)
   do { \
     const char* s2 = (s); \
     uint32_t dummy; \
-    nsresult rv = (o)->Write((s2), strlen(s2), &dummy); \
-    if (NS_WARN_IF(NS_FAILED(rv))) \
-      return rv; \
+    nsresult rvDump = (o)->Write((s2), strlen(s2), &dummy); \
+    if (NS_WARN_IF(NS_FAILED(rvDump))) \
+      return rvDump; \
   } while (0)
 
 static nsresult

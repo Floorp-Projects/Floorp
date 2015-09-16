@@ -8,7 +8,7 @@ const Cu = Components.utils;
 const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const ProjectList = require("devtools/webide/project-list");
 
-let projectList = new ProjectList(window, window.parent);
+var projectList = new ProjectList(window, window.parent);
 
 window.addEventListener("load", function onLoad() {
   window.removeEventListener("load", onLoad, true);

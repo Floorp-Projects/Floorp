@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "DynamicResizeWatcher", "resource:///mod
 const PANEL_MIN_HEIGHT = 100;
 const PANEL_MIN_WIDTH = 330;
 
-let PanelFrameInternal = {
+var PanelFrameInternal = {
   /**
    * Helper function to get and hold a single instance of a DynamicResizeWatcher.
    */
@@ -96,7 +96,7 @@ let PanelFrameInternal = {
 /**
  * The exported PanelFrame object
  */
-let PanelFrame = {
+var PanelFrame = {
   /**
    * Shows a popup in a pop-up panel, or in a sliding panel view in the application menu.
    * It will move the iframe to different DOM locations depending on where it needs to be

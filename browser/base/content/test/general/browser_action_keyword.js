@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let gOnSearchComplete = null;
+var gOnSearchComplete = null;
 
 function* promise_first_result(inputText) {
   yield promiseAutocompleteResultPopup(inputText);

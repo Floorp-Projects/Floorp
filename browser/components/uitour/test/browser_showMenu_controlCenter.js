@@ -4,15 +4,15 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const CONTROL_CENTER_PANEL = gIdentityHandler._identityPopup;
 const CONTROL_CENTER_MENU_NAME = "controlCenter";
 
-let gTestTab;
-let gContentAPI;
-let gContentWindow;
+var gTestTab;
+var gContentAPI;
+var gContentWindow;
 
 function test() {
   UITourTest();
 }
 
-let tests = [
+var tests = [
   taskify(function* test_showMenu() {
     is_element_hidden(CONTROL_CENTER_PANEL, "Panel should initially be hidden");
     yield showMenuPromise(CONTROL_CENTER_MENU_NAME);

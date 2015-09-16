@@ -4,9 +4,9 @@
 // Test that the fix for bug 687710 isn't too aggressive -- shentries which are
 // cousins should be able to share bfcache entries.
 
-let stateBackup = ss.getBrowserState();
+var stateBackup = ss.getBrowserState();
 
-let state = {entries:[
+var state = {entries:[
   {
     docIdentifier: 1,
     url: "http://example.com?1",

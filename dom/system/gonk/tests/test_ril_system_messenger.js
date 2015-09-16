@@ -5,7 +5,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let RIL = {};
+var RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
 XPCOMUtils.defineLazyServiceGetter(this, "gStkCmdFactory",
@@ -16,10 +16,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gStkCmdFactory",
  * Name space for RILSystemMessenger.jsm. Only initialized after first call to
  * newRILSystemMessenger.
  */
-let RSM;
+var RSM;
 
-let gReceivedMsgType = null;
-let gReceivedMessage = null;
+var gReceivedMsgType = null;
+var gReceivedMessage = null;
 
 /**
  * Create a new RILSystemMessenger instance.

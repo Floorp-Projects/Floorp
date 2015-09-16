@@ -388,6 +388,11 @@ TokenServerClient.prototype = {
         error.cause = "unknown-service";
       }
 
+      if (response.status == 401 || response.status == 403) {
+        Services.telemetry.getKeyedHistogramById(
+          "TOKENSERVER_AUTH_ERRORS").add(error.cause || "unknown");
+      }
+
       // A Retry-After header should theoretically only appear on a 503, but
       // we'll look for it on any error response.
       this._maybeNotifyBackoff(response, "retry-after");

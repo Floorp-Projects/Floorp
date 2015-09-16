@@ -7,8 +7,8 @@ function test() {
   showTabView(onTabViewWindowLoaded);
 }
 
-let originalGroupItem = null;
-let originalTab = null;
+var originalGroupItem = null;
+var originalTab = null;
 
 function onTabViewWindowLoaded() {
   ok(TabView.isVisible(), "Tab View is visible");

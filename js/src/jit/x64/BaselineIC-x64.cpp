@@ -6,6 +6,7 @@
 
 #include "jit/BaselineIC.h"
 #include "jit/SharedICHelpers.h"
+#include "jit/MacroAssembler-inl.h"
 
 using namespace js;
 using namespace js::jit;

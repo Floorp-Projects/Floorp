@@ -2,7 +2,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "NewTabURL",
                                   "resource:///modules/NewTabURL.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
-let {
+var {
   EventManager,
   ignoreEvent,
   runSafe,
@@ -35,7 +35,7 @@ function getSender(context, target, sender)
 }
 
 // WeakMap[ExtensionPage -> {tab, parentWindow}]
-let pageDataMap = new WeakMap();
+var pageDataMap = new WeakMap();
 
 // This listener fires whenever an extension page opens in a tab
 // (either initiated by the extension or the user). Its job is to fill

@@ -13,7 +13,7 @@ const kAuth = {
 
 
 // "pid" for "provider ID"
-let vcards = [
+var vcards = [
     "VERSION:3.0\n" +
     "N:Smith;John;;;\n" +
     "FN:John Smith\n" +

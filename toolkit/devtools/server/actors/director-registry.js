@@ -109,7 +109,7 @@ const DirectorRegistry = exports.DirectorRegistry = {
  * E10S parent/child setup helpers
  */
 
-let gTrackedMessageManager = new Set();
+var gTrackedMessageManager = new Set();
 
 exports.setupParentProcess = function setupParentProcess({mm, prefix}) {
   // prevents multiple subscriptions on the same messagemanager

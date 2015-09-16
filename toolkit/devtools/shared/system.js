@@ -30,7 +30,7 @@ const APP_MAP = {
   "{a23983c0-fd0e-11dc-95ff-0800200c9a66}": "mobile/xul"
 };
 
-let CACHED_INFO = null;
+var CACHED_INFO = null;
 
 function *getSystemInfo() {
   if (CACHED_INFO) {

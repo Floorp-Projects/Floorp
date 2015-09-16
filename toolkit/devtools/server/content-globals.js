@@ -6,7 +6,7 @@
 const { Ci } = require("chrome");
 const Services = require("Services");
 
-let globalsCache = {};
+var globalsCache = {};
 
 exports.addContentGlobal = function(options) {
   if (!options || !options.global || !options['inner-window-id']) {

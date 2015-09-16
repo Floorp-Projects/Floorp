@@ -83,7 +83,7 @@ function dirContainsOnly(dir, expectedFiles) {
   });
 }
 
-let dirSize = Task.async(function*(aDir) {
+var dirSize = Task.async(function*(aDir) {
   let iterator = new OS.File.DirectoryIterator(aDir);
 
   let entries;
@@ -515,13 +515,13 @@ function confirmNextPopup() {
   }, false);
 }
 
-let readJSON = Task.async(function*(aPath) {
+var readJSON = Task.async(function*(aPath) {
   let decoder = new TextDecoder();
   let data = yield OS.File.read(aPath);
   return JSON.parse(decoder.decode(data));
 });
 
-let setMacRootInstallDir = Task.async(function*(aPath) {
+var setMacRootInstallDir = Task.async(function*(aPath) {
   let oldRootInstallDir = NativeApp.prototype._rootInstallDir;
 
   NativeApp.prototype._rootInstallDir = OS.Path.join(OS.Constants.Path.homeDir,
@@ -534,7 +534,7 @@ let setMacRootInstallDir = Task.async(function*(aPath) {
   });
 });
 
-let writeToFile = Task.async(function*(aPath, aData) {
+var writeToFile = Task.async(function*(aPath, aData) {
   let data = new TextEncoder().encode(aData);
 
   let file;
@@ -553,7 +553,7 @@ const CID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).
 const ALERTS_SERVICE_CONTRACT_ID = "@mozilla.org/alerts-service;1";
 const ALERTS_SERVICE_CID = Components.ID(Cc[ALERTS_SERVICE_CONTRACT_ID].number);
 
-let AlertsService = {
+var AlertsService = {
   classID: Components.ID(CID),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory,

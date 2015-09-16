@@ -8,7 +8,7 @@ const { setTimeout } = require('sdk/timers');
 const { prefixURI, name } = require('@loader/options');
 const addonPromiseURI = prefixURI + name + '/lib/sdk/core/promise.js';
 const builtPromiseURI = 'resource://gre/modules/commonjs/sdk/core/promise.js';
-let { Promise, defer, resolve, reject, all, promised } = require('sdk/core/promise');
+var { Promise, defer, resolve, reject, all, promised } = require('sdk/core/promise');
 
 exports['test all observers are notified'] = function(assert, done) {
   let expected = 'Taram pam param!';

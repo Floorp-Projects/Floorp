@@ -15,11 +15,11 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-let gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
+var gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
                 .getService(Ci.nsIX509CertDB);
 
-let { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const HEADER = "// This Source Code Form is subject to the terms of the Mozilla Public\n" +
 "// License, v. 2.0. If a copy of the MPL was not distributed with this\n" +
@@ -236,10 +236,10 @@ if (arguments.length != 2) {
 }
 
 Services.prefs.setIntPref("security.OCSP.enabled", 0);
-let intermediatesFile = pathToFile(arguments[0]);
-let intermediates = loadIntermediates(intermediatesFile);
-let certFile = pathToFile(arguments[1]);
-let { certs, lastValidTime, invalidCerts } = loadCertificates(certFile);
+var intermediatesFile = pathToFile(arguments[0]);
+var intermediates = loadIntermediates(intermediatesFile);
+var certFile = pathToFile(arguments[1]);
+var { certs, lastValidTime, invalidCerts } = loadCertificates(certFile);
 
 dump("The following certificates were not included due to overlong validity periods:\n");
 for (let cert of invalidCerts) {
@@ -250,11 +250,11 @@ for (let cert of invalidCerts) {
 certs.sort(compareCertificatesByHash);
 
 // Write the output file.
-let outFile = relativePathToFile("CNNICHashWhitelist.inc");
+var outFile = relativePathToFile("CNNICHashWhitelist.inc");
 if (!outFile.exists()) {
   outFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
 }
-let outStream = Cc["@mozilla.org/network/file-output-stream;1"]
+var outStream = Cc["@mozilla.org/network/file-output-stream;1"]
                   .createInstance(Ci.nsIFileOutputStream);
 outStream.init(outFile, -1, 0, 0);
 writeHashes(certs, lastValidTime, outStream);

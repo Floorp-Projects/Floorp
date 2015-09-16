@@ -13,7 +13,7 @@ addMessageListener(TEST_MSG, msg => {
   messageHandlers[msg.data.type](msg.data.data);
 });
 
-let messageHandlers = {
+var messageHandlers = {
 
   init: function() {
     Services.search.currentEngine = Services.search.getEngineByName(ENGINE_NAME);

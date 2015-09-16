@@ -37,7 +37,7 @@ const NETD_COMMAND_UNSOLICITED  = 600;
 
 const WIFI_CTRL_INTERFACE = "wl0.1";
 
-let debug;
+var debug;
 function updateDebug() {
   let debugPref = false; // set default value here.
   try {

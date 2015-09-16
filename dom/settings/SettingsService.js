@@ -12,8 +12,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import('resource://gre/modules/SettingsRequestManager.jsm');
 
 /* static functions */
-let DEBUG = false;
-let VERBOSE = false;
+var DEBUG = false;
+var VERBOSE = false;
 
 try {
   DEBUG   =

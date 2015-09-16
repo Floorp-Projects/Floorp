@@ -6,7 +6,7 @@
  * Listeners for the DevEdition theme.  This adds an extra stylesheet
  * to browser.xul if a pref is set and no other themes are applied.
  */
-let DevEdition = {
+var DevEdition = {
   _devtoolsThemePrefName: "devtools.theme",
   styleSheetLocation: "chrome://browser/skin/devedition.css",
   styleSheet: null,

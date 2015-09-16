@@ -7,55 +7,23 @@
 #ifndef jit_mips32_MoveEmitter_mips32_h
 #define jit_mips32_MoveEmitter_mips32_h
 
-#include "jit/MacroAssembler.h"
-#include "jit/MoveResolver.h"
+#include "jit/mips-shared/MoveEmitter-mips-shared.h"
 
 namespace js {
 namespace jit {
 
-class MoveEmitterMIPS
+class MoveEmitterMIPS : public MoveEmitterMIPSShared
 {
-    uint32_t inCycle_;
-    MacroAssembler& masm;
-
-    // Original stack push value.
-    uint32_t pushedAtStart_;
-
-    // These store stack offsets to spill locations, snapshotting
-    // codegen->framePushed_ at the time they were allocated. They are -1 if no
-    // stack space has been allocated for that particular spill.
-    int32_t pushedAtCycle_;
-    int32_t pushedAtSpill_;
-
-    // These are registers that are available for temporary use. They may be
-    // assigned InvalidReg. If no corresponding spill space has been assigned,
-    // then these registers do not need to be spilled.
-    Register spilledReg_;
-    FloatRegister spilledFloatReg_;
-
-    void assertDone();
-    Register tempReg();
-    FloatRegister tempFloatReg();
-    Address cycleSlot(uint32_t slot, uint32_t subslot) const;
-    int32_t getAdjustedOffset(const MoveOperand& operand);
-    Address getAdjustedAddress(const MoveOperand& operand);
-
-    void emitMove(const MoveOperand& from, const MoveOperand& to);
-    void emitFloat32Move(const MoveOperand& from, const MoveOperand& to);
     void emitDoubleMove(const MoveOperand& from, const MoveOperand& to);
     void breakCycle(const MoveOperand& from, const MoveOperand& to,
                     MoveOp::Type type, uint32_t slot);
     void completeCycle(const MoveOperand& from, const MoveOperand& to,
                        MoveOp::Type type, uint32_t slot);
-    void emit(const MoveOp& move);
 
   public:
-    MoveEmitterMIPS(MacroAssembler& masm);
-    ~MoveEmitterMIPS();
-    void emit(const MoveResolver& moves);
-    void finish();
-
-    void setScratchRegister(Register reg) {}
+    MoveEmitterMIPS(MacroAssembler& masm)
+      : MoveEmitterMIPSShared(masm)
+    { }
 };
 
 typedef MoveEmitterMIPS MoveEmitter;

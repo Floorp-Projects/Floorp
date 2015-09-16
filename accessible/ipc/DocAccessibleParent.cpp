@@ -106,6 +106,13 @@ DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID)
 
   MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
 
+  // We shouldn't actually need this because mAccessibles shouldn't have an
+  // entry for the document itself, but it doesn't hurt to be explicit.
+  if (!aRootID) {
+    NS_ERROR("trying to hide entire document?");
+    return false;
+  }
+
   ProxyEntry* rootEntry = mAccessibles.GetEntry(aRootID);
   if (!rootEntry) {
     NS_ERROR("invalid root being removed!");

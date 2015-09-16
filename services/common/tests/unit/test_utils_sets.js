@@ -14,10 +14,10 @@ const BCD = new Set(["b", "c", "d"]);
 const FGH = new Set(["f", "g", "h"]);
 const BCDFGH = new Set(["b", "c", "d", "f", "g", "h"]);
 
-let union = CommonUtils.union;
-let difference = CommonUtils.difference;
-let intersection = CommonUtils.intersection;
-let setEqual = CommonUtils.setEqual;
+var union = CommonUtils.union;
+var difference = CommonUtils.difference;
+var intersection = CommonUtils.intersection;
+var setEqual = CommonUtils.setEqual;
 
 function do_check_setEqual(a, b) {
   do_check_true(setEqual(a, b));

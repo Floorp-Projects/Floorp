@@ -72,7 +72,7 @@ function compareFrameInfo (root, parent) {
   }
 }
 
-let TEST_DATA = {
+var TEST_DATA = {
   sites: [0, 1, 2, 3],
   timestamps: [0, 150, 200, 250],
   sizes: [0, 100, 200, 700],

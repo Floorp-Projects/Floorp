@@ -8,8 +8,7 @@
 
 const { Cu, Ci } = require("chrome");
 const { getRootBindingParent } = require("devtools/toolkit/layout/utils");
-
-let EventEmitter = require("devtools/toolkit/event-emitter");
+var EventEmitter = require("devtools/toolkit/event-emitter");
 
 /**
  * API

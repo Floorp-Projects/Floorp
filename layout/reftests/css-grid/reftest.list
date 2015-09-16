@@ -13,6 +13,14 @@ fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-track-sizing-001.html grid-track-sizing-001-ref.html
 == grid-abspos-items-001.html grid-abspos-items-001-ref.html
 == grid-abspos-items-002.html grid-abspos-items-002-ref.html
+== grid-abspos-items-003.html grid-abspos-items-003-ref.html
+== grid-abspos-items-004.html grid-abspos-items-004-ref.html
+== grid-abspos-items-005.html grid-abspos-items-005-ref.html
+== grid-abspos-items-006.html grid-abspos-items-006-ref.html
+== grid-abspos-items-007.html grid-abspos-items-007-ref.html
+== grid-abspos-items-008.html grid-abspos-items-008-ref.html
+== grid-abspos-items-009.html grid-abspos-items-009-ref.html
+== grid-abspos-items-010.html grid-abspos-items-010-ref.html
 == grid-order-abspos-items-001.html grid-order-abspos-items-001-ref.html
 == grid-order-placement-auto-001.html grid-order-placement-auto-001-ref.html
 == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html

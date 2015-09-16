@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let gTabRestrictChar = "%";
+var gTabRestrictChar = "%";
 
 add_task(function* test_tab_matches() {
   let uri1 = NetUtil.newURI("http://abc.com/");

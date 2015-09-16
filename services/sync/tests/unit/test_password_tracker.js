@@ -8,9 +8,9 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
 Service.engineManager.register(PasswordEngine);
-let engine = Service.engineManager.get("passwords");
-let store  = engine._store;
-let tracker = engine._tracker;
+var engine = Service.engineManager.get("passwords");
+var store  = engine._store;
+var tracker = engine._tracker;
 
 // Don't do asynchronous writes.
 tracker.persistChangedIDs = false;

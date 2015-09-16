@@ -7,8 +7,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_editor-mode.html";
 
-let gTab, gPanel, gDebugger;
-let gSources, gSourceUtils, gSearchView, gSearchBox;
+var gTab, gPanel, gDebugger;
+var gSources, gSourceUtils, gSearchView, gSearchBox;
 
 function test() {
   // Debug test slaves are a bit slow at this test.

@@ -58,15 +58,15 @@ const ANDROID_LOG_ERROR = 6;
 // itself and other android.util.Log methods don't seem to mind longer tags).
 const MAX_TAG_LENGTH = 18;
 
-let liblog = ctypes.open("liblog.so"); // /system/lib/liblog.so
-let __android_log_write = liblog.declare("__android_log_write",
+var liblog = ctypes.open("liblog.so"); // /system/lib/liblog.so
+var __android_log_write = liblog.declare("__android_log_write",
                                          ctypes.default_abi,
                                          ctypes.int, // return value: num bytes logged
                                          ctypes.int, // priority (ANDROID_LOG_* constant)
                                          ctypes.char.ptr, // tag
                                          ctypes.char.ptr); // message
 
-let AndroidLog = {
+var AndroidLog = {
   MAX_TAG_LENGTH: MAX_TAG_LENGTH,
   v: (tag, msg) => __android_log_write(ANDROID_LOG_VERBOSE, "Gecko" + tag.substring(0, MAX_TAG_LENGTH), msg),
   d: (tag, msg) => __android_log_write(ANDROID_LOG_DEBUG, "Gecko" + tag.substring(0, MAX_TAG_LENGTH), msg),

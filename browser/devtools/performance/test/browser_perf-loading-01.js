@@ -6,7 +6,7 @@
  * recording, and once the record has loaded.
  */
 
-let test = Task.async(function*() {
+var test = Task.async(function*() {
   // This test seems to take a long time to cleanup.
   requestLongerTimeout(2);
 

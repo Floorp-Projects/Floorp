@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let disableWorkerTest = "Need to implement a gc() function for worker tests";
+var disableWorkerTest = "Need to implement a gc() function for worker tests";
 
 if (!this.window) {
   this.runTest = function() {

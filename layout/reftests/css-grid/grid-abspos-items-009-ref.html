@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: abs pos areas</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1204585">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+separator { clear:both; display:block; height:6px; }
+
+.grid {
+  display: block;
+  float: left;
+  position: relative;
+  border-style: solid;
+  border-width: 1px 3px 5px 7px;
+  padding: 1px;
+  border-block-start-color: blue;
+  border-inline-start-color: lime;
+  inline-size: 55px;
+  block-size: 43px;
+  margin-right: 4px;
+  block-size: 57px;
+}
+
+abs1 {
+  position: absolute;
+  top:0;left:0;bottom:0;right:0;
+  background: grey;
+}
+
+.hl { writing-mode: horizontal-tb; direction:ltr; }
+.hr { writing-mode: horizontal-tb; direction:rtl; }
+.vl { writing-mode: vertical-lr; }
+.vr { writing-mode: vertical-rl; }
+.vlr { writing-mode: vertical-lr; direction:rtl; }
+.vrl { writing-mode: vertical-rl; direction:ltr; }
+
+</style>
+</head>
+<body>
+
+<script>
+var wm = [ "hl", "hr", "vl", "vr", "vlr", "vrl" ];
+for (var i = 0; i < wm.length; ++i) {
+  for (var j = 0; j < wm.length; ++j) {
+    var div = document.createElement("div");
+    div.className = "grid " + wm[i];
+    div.appendChild(document.createElement("abs1"));
+    document.body.appendChild(div)
+  }
+  document.body.appendChild(document.createElement("separator"));
+}
+</script>
+
+
+</body>
+</html>

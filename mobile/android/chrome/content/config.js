@@ -13,8 +13,8 @@ const PAGE_SCROLL_TRIGGER = 200;     // Triggers additional getPrefsBuffer() on 
 const FILTER_CHANGE_TRIGGER = 200;     // Delay between responses to filterInput changes
 const INNERHTML_VALUE_DELAY = 100;    // Delay before providing prefs innerHTML value
 
-let gStringBundle = Services.strings.createBundle("chrome://browser/locale/config.properties");
-let gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+var gStringBundle = Services.strings.createBundle("chrome://browser/locale/config.properties");
+var gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
 
 
 /* ============================== NewPrefDialog ==============================

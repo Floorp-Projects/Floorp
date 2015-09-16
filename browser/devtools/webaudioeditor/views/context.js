@@ -31,7 +31,7 @@ const GRAPH_REDRAW_EVENTS = ["add", "connect", "disconnect", "remove"];
 /**
  * Functions handling the graph UI.
  */
-let ContextView = {
+var ContextView = {
   /**
    * Initialization function, called when the tool is started.
    */

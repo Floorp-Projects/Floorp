@@ -202,7 +202,7 @@ function test_childProcessShutdown() {
   MinimalIDService.RP.watch(mockedDoc);
 }
 
-let TESTS = [
+var TESTS = [
   test_overall,
   test_mock_doc,
   test_watch,

@@ -8,14 +8,14 @@
 "use strict";
 
 // Metadata to write to search-metadata.json for the test.
-let gMetadata = {"[profile]/test-search-engine.xml":{"used":true}};
+var gMetadata = {"[profile]/test-search-engine.xml":{"used":true}};
 
 /**
  * Gets a directory from the directory service.
  * @param aKey
  *        The directory service key indicating the directory to get.
  */
-let _dirSvc = null;
+var _dirSvc = null;
 function getDir(aKey, aIFace) {
   if (!aKey) {
     FAIL("getDir requires a directory key!");
@@ -32,7 +32,7 @@ function makeURI(uri) {
   return Services.io.newURI(uri, null, null);
 }
 
-let cacheTemplate, appPluginsPath, profPlugins;
+var cacheTemplate, appPluginsPath, profPlugins;
 
 /**
  * Test reading from search.json
@@ -230,7 +230,7 @@ add_test(function test_cache_write() {
   });
 });
 
-let EXPECTED_ENGINE = {
+var EXPECTED_ENGINE = {
   engine: {
     name: "Test search engine",
     alias: null,

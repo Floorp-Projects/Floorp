@@ -37,11 +37,11 @@ const Cu = Components.utils;
 
 Cu["import"]("resource://gre/modules/Services.jsm", this);
 
-let eventListenerService = Cc["@mozilla.org/eventlistenerservice;1"]
+var eventListenerService = Cc["@mozilla.org/eventlistenerservice;1"]
                              .getService(Ci.nsIEventListenerService);
-let focusManager         = Cc["@mozilla.org/focus-manager;1"]
+var focusManager         = Cc["@mozilla.org/focus-manager;1"]
                              .getService(Ci.nsIFocusManager);
-let windowMediator       = Cc['@mozilla.org/appshell/window-mediator;1']
+var windowMediator       = Cc['@mozilla.org/appshell/window-mediator;1']
                              .getService(Ci.nsIWindowMediator);
 
 // Debug helpers:

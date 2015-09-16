@@ -1,8 +1,8 @@
 Cu.import("resource://gre/modules/Services.jsm");
-let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let { DebuggerServer } = require("devtools/server/main");
-let { DebuggerClient } = require("devtools/toolkit/client/main");
-let { RemoteDebugger } = Cu.import("resource://webapprt/modules/RemoteDebugger.jsm", {});
+var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var { DebuggerServer } = require("devtools/server/main");
+var { DebuggerClient } = require("devtools/toolkit/client/main");
+var { RemoteDebugger } = Cu.import("resource://webapprt/modules/RemoteDebugger.jsm", {});
 
 function test() {
   waitForExplicitFinish();

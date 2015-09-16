@@ -8,8 +8,8 @@
 const TAB_URL = EXAMPLE_URL + "doc_included-script.html";
 const JS_URL = EXAMPLE_URL + "code_location-changes.js";
 
-let gTab, gPanel, gDebugger, gClient;
-let gEditor, gSources, gControllerSources, gPrettyPrinted;
+var gTab, gPanel, gDebugger, gClient;
+var gEditor, gSources, gControllerSources, gPrettyPrinted;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

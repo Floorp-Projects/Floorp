@@ -39,8 +39,8 @@ const TEST_MESSAGES = [
     origin: "SIM1", expectedResult: true }
 ];
 
-let HCIEvtTransactionConfigurator = null;
-let aceAccessAllowed = true;
+var HCIEvtTransactionConfigurator = null;
+var aceAccessAllowed = true;
 
 function setMockServices(manifest) {
   XPCOMUtils.defineLazyServiceGetter = (obj, service) => {

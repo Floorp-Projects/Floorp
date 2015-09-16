@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "appsService",
                                    "nsIAppsService");
 
 // Limit the number of pending messages for a given page.
-let kMaxPendingMessages;
+var kMaxPendingMessages;
 try {
   kMaxPendingMessages =
     Services.prefs.getIntPref("dom.messages.maxPendingMessages");
@@ -54,7 +54,7 @@ function debug(aMsg) {
 }
 
 
-let defaultMessageConfigurator = {
+var defaultMessageConfigurator = {
   get mustShowRunningApp() {
     return false;
   }

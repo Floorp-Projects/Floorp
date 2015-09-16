@@ -48,7 +48,7 @@ function log2() {
   logbase.apply(window, arguments);
 }
 
-let reportError = log;
+var reportError = log;
 
 /*
  * wsBorder class

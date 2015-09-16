@@ -9,13 +9,13 @@ const { LoopCallsInternal } = Cu.import("resource:///modules/loop/LoopCalls.jsm"
 XPCOMUtils.defineLazyModuleGetter(this, "Chat",
                                   "resource:///modules/Chat.jsm");
 
-let actionReceived = false;
-let openChatOrig = Chat.open;
+var actionReceived = false;
+var openChatOrig = Chat.open;
 
 const firstCallId = 4444333221;
 const secondCallId = 1001100101;
 
-let msgHandler = function(msg) {
+var msgHandler = function(msg) {
   if (msg.messageType &&
       msg.messageType === "action" &&
       msg.event === "terminate" &&

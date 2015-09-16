@@ -104,7 +104,7 @@ public:
 
   void RemoveAccessible(ProxyAccessible* aAccessible)
   {
-    MOZ_ASSERT(mAccessibles.GetEntry(aAccessible->ID()));
+    MOZ_DIAGNOSTIC_ASSERT(mAccessibles.GetEntry(aAccessible->ID()));
     mAccessibles.RemoveEntry(aAccessible->ID());
   }
 

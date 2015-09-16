@@ -9,7 +9,7 @@ do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb  = Cc["@mozilla.org/security/x509certdb;1"]
                   .getService(Ci.nsIX509CertDB);
 
-let certList = [
+var certList = [
   'ee',
   'int',
   'ca',

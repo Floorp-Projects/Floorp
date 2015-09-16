@@ -7,7 +7,7 @@
 // Tests that the rule view computed lists can be expanded/collapsed,
 // and contain the right subproperties.
 
-let TEST_URI = `
+var TEST_URI = `
   <style type="text/css">
     #testid {
       margin: 0px 1px 2px 3px;

@@ -98,7 +98,7 @@ protocol.types.addDictType("snapshot-overview", {
  * all the corresponding canvas' context methods invoked in that frame,
  * thumbnails for each draw call and a screenshot of the end result.
  */
-let FrameSnapshotActor = protocol.ActorClass({
+var FrameSnapshotActor = protocol.ActorClass({
   typeName: "frame-snapshot",
 
   /**
@@ -186,7 +186,7 @@ let FrameSnapshotActor = protocol.ActorClass({
 /**
  * The corresponding Front object for the FrameSnapshotActor.
  */
-let FrameSnapshotFront = protocol.FrontClass(FrameSnapshotActor, {
+var FrameSnapshotFront = protocol.FrontClass(FrameSnapshotActor, {
   initialize: function(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
     this._animationFrameEndScreenshot = null;
@@ -232,7 +232,7 @@ let FrameSnapshotFront = protocol.FrontClass(FrameSnapshotActor, {
  * of a 2D or WebGL context, to provide information regarding all the calls
  * made when drawing frame inside an animation loop.
  */
-let CanvasActor = exports.CanvasActor = protocol.ActorClass({
+var CanvasActor = exports.CanvasActor = protocol.ActorClass({
   // Reset for each recording, boolean indicating whether or not
   // any draw calls were called for a recording.
   _animationContainsDrawCall: false,
@@ -482,7 +482,7 @@ let CanvasActor = exports.CanvasActor = protocol.ActorClass({
 /**
  * A collection of methods for manipulating canvas contexts.
  */
-let ContextUtils = {
+var ContextUtils = {
   /**
    * WebGL contexts are sensitive to how they're queried. Use this function
    * to make sure the right context is always retrieved, if available.
@@ -825,7 +825,7 @@ let ContextUtils = {
 /**
  * The corresponding Front object for the CanvasActor.
  */
-let CanvasFront = exports.CanvasFront = protocol.FrontClass(CanvasActor, {
+var CanvasFront = exports.CanvasFront = protocol.FrontClass(CanvasActor, {
   initialize: function(client, { canvasActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: canvasActor });
     this.manage(this);

@@ -1,11 +1,11 @@
 Cu.import("resource://gre/modules/Services.jsm");
 
-let list = MockDownloadsModule();
+var list = MockDownloadsModule();
 
-let download = new DummyDownload("test");
-let removedDownload = new DummyDownload("removed");
+var download = new DummyDownload("test");
+var removedDownload = new DummyDownload("removed");
 
-let winObserver = function(win, topic) {
+var winObserver = function(win, topic) {
   if (topic == "domwindowopened") {
     win.addEventListener("load", function onLoadWindow() {
       win.removeEventListener("load", onLoadWindow, false);

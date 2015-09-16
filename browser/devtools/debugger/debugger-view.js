@@ -49,7 +49,7 @@ const actions = require('./content/stores/event-listeners').actions;
 /**
  * Object defining the debugger view components.
  */
-let DebuggerView = {
+var DebuggerView = {
   /**
    * Initializes the debugger view.
    *

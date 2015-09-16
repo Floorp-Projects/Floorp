@@ -4,7 +4,7 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
-let outCall;
+var outCall;
 
 function testEmergencyNumber() {
   return gDialEmergency("911")

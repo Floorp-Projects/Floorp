@@ -13,11 +13,11 @@ function check_clear_visible(tab, aVisible) {
 }
 
 // each test here has a setup (run before loading about:crashes) and onload (run after about:crashes loads)
-let _tests = [{setup: null, onload: function(tab) { check_clear_visible(tab, false); }},
+var _tests = [{setup: null, onload: function(tab) { check_clear_visible(tab, false); }},
               {setup: function(crD) { add_fake_crashes(crD, 1); },
                onload: function(tab) { check_clear_visible(tab, true); }}
               ];
-let _current_test = 0;
+var _current_test = 0;
 
 function run_test_setup(crD) {
   if (_tests[_current_test].setup) {

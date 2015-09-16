@@ -117,7 +117,7 @@ const Observer = {
 
 };
 
-let Frames = this.Frames = {
+var Frames = this.Frames = {
 
   list: () => SystemAppProxy.getFrames(),
 

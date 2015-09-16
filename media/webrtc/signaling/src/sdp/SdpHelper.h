@@ -36,7 +36,7 @@ class SdpHelper {
                                     size_t level);
 
     bool MsectionIsDisabled(const SdpMediaSection& msection) const;
-    void DisableMsection(Sdp* sdp, SdpMediaSection* msection) const;
+    static void DisableMsection(Sdp* sdp, SdpMediaSection* msection);
 
     // Maps each mid to the m-section that is the master of its bundle.
     // Mids that do not appear in an a=group:BUNDLE do not appear here.
@@ -81,9 +81,6 @@ class SdpHelper {
                            Sdp* sdp) const;
 
     std::string GetCNAME(const SdpMediaSection& msection) const;
-    void SetSsrcs(const std::vector<uint32_t>& ssrcs,
-                  const std::string& cname,
-                  SdpMediaSection* msection) const;
 
     SdpMediaSection* FindMsectionByMid(Sdp& sdp,
                                        const std::string& mid) const;

@@ -4,11 +4,11 @@
 
 "use strict";
 
-let { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let { TargetFactory } = require("devtools/framework/target");
-let promise = require("promise");
-let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var { TargetFactory } = require("devtools/framework/target");
+var promise = require("promise");
+var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 const SPLIT_CONSOLE_PREF = "devtools.toolbox.splitconsoleEnabled";
 const STORAGE_PREF = "devtools.storage.enabled";
@@ -21,7 +21,7 @@ const ALT_DOMAIN_SECURED = "https://sectest1.example.org:443/" + PATH;
 
 waitForExplicitFinish();
 
-let gToolbox, gPanelWindow, gWindow, gUI;
+var gToolbox, gPanelWindow, gWindow, gUI;
 
 // Services.prefs.setBoolPref(DUMPEMIT_PREF, true);
 // Services.prefs.setBoolPref(DEBUGGERLOG_PREF, true);
@@ -124,7 +124,7 @@ function* openTabAndSetupStorage(url) {
  *
  * @return {Promise} a promise that resolves when the storage inspector is ready
  */
-let openStoragePanel = Task.async(function*(cb) {
+var openStoragePanel = Task.async(function*(cb) {
   info("Opening the storage inspector");
   let target = TargetFactory.forTab(gBrowser.selectedTab);
 

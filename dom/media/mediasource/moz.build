@@ -9,7 +9,6 @@ EXPORTS += [
     'AsyncEventRunner.h',
     'MediaSourceDecoder.h',
     'MediaSourceDemuxer.h',
-    'MediaSourceReader.h',
     'SourceBufferContentManager.h',
 ]
 
@@ -24,15 +23,12 @@ UNIFIED_SOURCES += [
     'MediaSource.cpp',
     'MediaSourceDecoder.cpp',
     'MediaSourceDemuxer.cpp',
-    'MediaSourceReader.cpp',
     'MediaSourceUtils.cpp',
     'ResourceQueue.cpp',
     'SourceBuffer.cpp',
     'SourceBufferContentManager.cpp',
-    'SourceBufferDecoder.cpp',
     'SourceBufferList.cpp',
     'SourceBufferResource.cpp',
-    'TrackBuffer.cpp',
     'TrackBuffersManager.cpp',
 ]
 

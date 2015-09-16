@@ -30,7 +30,7 @@
 //                used when |multipleCompletions| is set to true.
 
 // Basic prefixes with 2/3 completions.
-let basicCompletionSet = [
+var basicCompletionSet = [
   {
     hash: "abcdefgh",
     expectCompletion: true,
@@ -50,7 +50,7 @@ let basicCompletionSet = [
 ];
 
 // 3 prefixes with 0 completions to test HashCompleter handling a 204 status.
-let falseCompletionSet = [
+var falseCompletionSet = [
   {
     hash: "1234",
     expectCompletion: false,
@@ -67,7 +67,7 @@ let falseCompletionSet = [
 
 // The current implementation (as of Mar 2011) sometimes sends duplicate
 // entries to HashCompleter and even expects responses for duplicated entries.
-let dupedCompletionSet = [
+var dupedCompletionSet = [
   {
     hash: "1234",
     expectCompletion: true,
@@ -96,7 +96,7 @@ let dupedCompletionSet = [
 
 // It is possible for a hash completion request to return with multiple
 // completions, the HashCompleter should return all of these.
-let multipleResponsesCompletionSet = [
+var multipleResponsesCompletionSet = [
   {
     hash: "1234",
     expectCompletion: true,
@@ -165,28 +165,28 @@ function getRandomCompletionSet(forceServerError) {
   return completionSet;
 }
 
-let completionSets = [basicCompletionSet, falseCompletionSet,
+var completionSets = [basicCompletionSet, falseCompletionSet,
                       dupedCompletionSet, multipleResponsesCompletionSet];
-let currentCompletionSet = -1;
-let finishedCompletions = 0;
+var currentCompletionSet = -1;
+var finishedCompletions = 0;
 
 const SERVER_PORT = 8080;
 const SERVER_PATH = "/hash-completer";
-let server;
+var server;
 
 // Completion hashes are automatically right-padded with null chars to have a
 // length of COMPLETE_LENGTH.
 // Taken from nsUrlClassifierDBService.h
 const COMPLETE_LENGTH = 32;
 
-let completer = Cc["@mozilla.org/url-classifier/hashcompleter;1"].
+var completer = Cc["@mozilla.org/url-classifier/hashcompleter;1"].
                   getService(Ci.nsIUrlClassifierHashCompleter);
 
-let gethashUrl;
+var gethashUrl;
 
 // Expected highest completion set for which the server sends a response.
-let expectedMaxServerCompletionSet = 0;
-let maxServerCompletionSet = 0;
+var expectedMaxServerCompletionSet = 0;
+var maxServerCompletionSet = 0;
 
 function run_test() {
   // Generate a random completion set that return successful responses.

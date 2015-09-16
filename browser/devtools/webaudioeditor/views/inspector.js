@@ -13,7 +13,7 @@ const COLLAPSE_INSPECTOR_STRING = L10N.getStr("collapseInspector");
  * Functions handling the audio node inspector UI.
  */
 
-let InspectorView = {
+var InspectorView = {
   _currentNode: null,
 
   // Set up config for view toggling

@@ -7,7 +7,7 @@
 const {classes: Cc, interfaces: Ci} = Components;
 const subScriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                           .getService(Ci.mozIJSSubScriptLoader);
-let EventUtils = {};
+var EventUtils = {};
 subScriptLoader.loadSubScript("chrome://marionette/content/EventUtils.js", EventUtils);
 
 /**

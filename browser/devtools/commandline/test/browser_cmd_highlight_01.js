@@ -6,7 +6,7 @@
 // Tests the various highlight command parameters and options
 
 // Creating a test page with many elements to test the --showall option
-let TEST_PAGE = "data:text/html;charset=utf-8,<body><ul>";
+var TEST_PAGE = "data:text/html;charset=utf-8,<body><ul>";
 for (let i = 0; i < 200; i ++) {
   TEST_PAGE += "<li class='item'>" + i + "</li>";
 }

@@ -33,7 +33,7 @@ XPCOMUtils.defineLazyGetter(this, "SE", () => {
 });
 
 // set to true in se_consts.js to see debug messages
-let DEBUG = SE.DEBUG_SE;
+var DEBUG = SE.DEBUG_SE;
 function debug(s) {
   if (DEBUG) {
     dump("-*- SecureElement: " + s + "\n");

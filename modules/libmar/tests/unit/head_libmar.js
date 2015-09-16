@@ -8,7 +8,7 @@ const isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
 const refMARPrefix = (isWindows ? "win_" : "");
 const BIN_SUFFIX = (isWindows ? ".exe" : "");
 
-let tempDir = do_get_tempdir();
+var tempDir = do_get_tempdir();
 
 /**
  * Compares binary data of 2 arrays and throws if they aren't the same.

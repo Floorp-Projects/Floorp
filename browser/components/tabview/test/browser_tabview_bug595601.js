@@ -1,14 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+var ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
 const TAB_STATE_NEEDS_RESTORE = 1;
 const TAB_STATE_RESTORING = 2;
 
-let stateBackup = ss.getBrowserState();
+var stateBackup = ss.getBrowserState();
 
-let state = {windows:[{tabs:[
+var state = {windows:[{tabs:[
   // first group
   {entries:[{url:"http://example.com#1"}],extData:{"tabview-tab":"{\"bounds\":{\"left\":20,\"top\":20,\"width\":20,\"height\":20},\"url\":\"http://example.com#1\",\"groupID\":2}"}},
   {entries:[{url:"http://example.com#2"}],extData:{"tabview-tab":"{\"bounds\":{\"left\":20,\"top\":20,\"width\":20,\"height\":20},\"url\":\"http://example.com#2\",\"groupID\":2}"}},
@@ -121,7 +121,7 @@ function countTabs() {
   return [needsRestore, isRestoring];
 }
 
-let TabsProgressListener = {
+var TabsProgressListener = {
   init: function () {
     gBrowser.addTabsProgressListener(this);
   },

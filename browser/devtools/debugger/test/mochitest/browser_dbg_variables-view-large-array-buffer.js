@@ -8,8 +8,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_large-array-buffer.html";
 
-let gTab, gPanel, gDebugger;
-let gVariables, gEllipsis;
+var gTab, gPanel, gDebugger;
+var gVariables, gEllipsis;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

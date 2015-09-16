@@ -8,7 +8,7 @@
 
 Services.prefs.setBoolPref(INVERT_PREF, false);
 Services.prefs.setBoolPref(PLATFORM_DATA_PREF, false);
-let { CATEGORY_MASK } = require("devtools/performance/global");
+var { CATEGORY_MASK } = require("devtools/performance/global");
 
 function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
@@ -66,13 +66,13 @@ function* spawnTest() {
   }
 }
 
-let gUniqueStacks = new RecordingUtils.UniqueStacks();
+var gUniqueStacks = new RecordingUtils.UniqueStacks();
 
 function uniqStr(s) {
   return gUniqueStacks.getOrAddStringIndex(s);
 }
 
-let gThread = RecordingUtils.deflateThread({
+var gThread = RecordingUtils.deflateThread({
   samples: [{
     time: 0,
     frames: [
@@ -96,7 +96,7 @@ let gThread = RecordingUtils.deflateThread({
 }, gUniqueStacks);
 
 // 3 RawOptimizationSites
-let gRawSite1 = {
+var gRawSite1 = {
   line: 12,
   column: 2,
   types: [{
@@ -124,7 +124,7 @@ let gRawSite1 = {
   }
 };
 
-let gRawSite2 = {
+var gRawSite2 = {
   line: 22,
   types: [{
     mirType: uniqStr("Int32"),

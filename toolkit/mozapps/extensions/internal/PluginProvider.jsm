@@ -23,7 +23,7 @@ const LOGGER_ID = "addons.plugins";
 
 // Create a new logger for use by the Addons Plugin Provider
 // (Requires AddonManager.jsm)
-let logger = Log.repository.getLogger(LOGGER_ID);
+var logger = Log.repository.getLogger(LOGGER_ID);
 
 function getIDHashForString(aStr) {
   // return the two-digit hexadecimal code for a byte

@@ -61,11 +61,11 @@ const OVERFLOW_MENU_CLASS = "addon-content-menu-overflow-menu";
 const OVERFLOW_POPUP_CLASS = "addon-content-menu-overflow-popup";
 
 // Holds private properties for API objects
-let internal = ns();
+var internal = ns();
 
 // A little hacky but this is the last process ID that last opened the context
 // menu
-let lastContextProcessId = null;
+var lastContextProcessId = null;
 
 function uuid() {
   return require('./util/uuid').uuid().toString();
@@ -80,7 +80,7 @@ function getScheme(spec) {
   }
 }
 
-let Context = Class({
+var Context = Class({
   initialize: function() {
     internal(this).id = uuid();
   },
@@ -98,7 +98,7 @@ let Context = Class({
 
 // Matches when the context-clicked node doesn't have any of
 // NON_PAGE_CONTEXT_ELTS in its ancestors
-let PageContext = Class({
+var PageContext = Class({
   extends: Context,
 
   serialize: function() {
@@ -112,7 +112,7 @@ let PageContext = Class({
 exports.PageContext = PageContext;
 
 // Matches when there is an active selection in the window
-let SelectionContext = Class({
+var SelectionContext = Class({
   extends: Context,
 
   serialize: function() {
@@ -127,7 +127,7 @@ exports.SelectionContext = SelectionContext;
 
 // Matches when the context-clicked node or any of its ancestors matches the
 // selector given
-let SelectorContext = Class({
+var SelectorContext = Class({
   extends: Context,
 
   initialize: function initialize(selector) {
@@ -152,7 +152,7 @@ let SelectorContext = Class({
 exports.SelectorContext = SelectorContext;
 
 // Matches when the page url matches any of the patterns given
-let URLContext = Class({
+var URLContext = Class({
   extends: Context,
 
   initialize: function initialize(patterns) {
@@ -183,7 +183,7 @@ let URLContext = Class({
 exports.URLContext = URLContext;
 
 // Matches when the user-supplied predicate returns true
-let PredicateContext = Class({
+var PredicateContext = Class({
   extends: Context,
 
   initialize: function initialize(predicate) {
@@ -219,7 +219,7 @@ function removeItemFromArray(array, item) {
 function stringOrNull(val) val ? String(val) : val;
 
 // Shared option validation rules for Item, Menu, and Separator
-let baseItemRules = {
+var baseItemRules = {
   parentMenu: {
     is: ["object", "undefined"],
     ok: function (v) {
@@ -247,7 +247,7 @@ let baseItemRules = {
   contentScriptFile: loaderContract.rules.contentScriptFile
 };
 
-let labelledItemRules =  mix(baseItemRules, {
+var labelledItemRules =  mix(baseItemRules, {
   label: {
     map: stringOrNull,
     is: ["string"],
@@ -278,7 +278,7 @@ let labelledItemRules =  mix(baseItemRules, {
 });
 
 // Additional validation rules for Item
-let itemRules = mix(labelledItemRules, {
+var itemRules = mix(labelledItemRules, {
   data: {
     map: stringOrNull,
     is: ["string", "undefined", "null"]
@@ -286,7 +286,7 @@ let itemRules = mix(labelledItemRules, {
 });
 
 // Additional validation rules for Menu
-let menuRules = mix(labelledItemRules, {
+var menuRules = mix(labelledItemRules, {
   items: {
     is: ["array", "undefined"],
     ok: function (v) {
@@ -360,7 +360,7 @@ function serializeItem(item) {
 }
 
 // All things that appear in the context menu extend this
-let BaseItem = Class({
+var BaseItem = Class({
   initialize: function initialize() {
     internal(this).id = uuid();
 
@@ -453,7 +453,7 @@ function workerMessageReceived(process, id, args) {
 }
 
 // All things that have a label on the context menu extend this
-let LabelledItem = Class({
+var LabelledItem = Class({
   extends: BaseItem,
   implements: [ EventTarget ],
 
@@ -513,7 +513,7 @@ let LabelledItem = Class({
   }
 });
 
-let Item = Class({
+var Item = Class({
   extends: LabelledItem,
 
   initialize: function initialize(options) {
@@ -538,7 +538,7 @@ let Item = Class({
 });
 exports.Item = Item;
 
-let ItemContainer = Class({
+var ItemContainer = Class({
   initialize: function initialize() {
     internal(this).children = [];
   },
@@ -607,7 +607,7 @@ let ItemContainer = Class({
   },
 });
 
-let Menu = Class({
+var Menu = Class({
   extends: LabelledItem,
   implements: [ItemContainer],
 
@@ -634,7 +634,7 @@ let Menu = Class({
 });
 exports.Menu = Menu;
 
-let Separator = Class({
+var Separator = Class({
   extends: BaseItem,
 
   initialize: function initialize(options) {
@@ -650,7 +650,7 @@ let Separator = Class({
 exports.Separator = Separator;
 
 // Holds items for the content area context menu
-let contentContextMenu = ItemContainer();
+var contentContextMenu = ItemContainer();
 exports.contentContextMenu = contentContextMenu;
 
 function getContainerItems(container) {
@@ -691,7 +691,7 @@ function countVisibleItems(nodes) {
   }, 0);
 }
 
-let MenuWrapper = Class({
+var MenuWrapper = Class({
   initialize: function initialize(winWrapper, items, contextMenu) {
     this.winWrapper = winWrapper;
     this.window = winWrapper.window;
@@ -1081,7 +1081,7 @@ let MenuWrapper = Class({
 });
 
 // This wraps every window that we've seen
-let WindowWrapper = Class({
+var WindowWrapper = Class({
   initialize: function initialize(window) {
     this.window = window;
     this.menus = [
@@ -1108,7 +1108,7 @@ let WindowWrapper = Class({
   }
 });
 
-let MenuManager = {
+var MenuManager = {
   windowMap: new Map(),
 
   get overflowThreshold() {

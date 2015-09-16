@@ -18,6 +18,7 @@
 #include "nsStringGlue.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Move.h"
+#include "nsTArray.h"
 
 namespace IPC {
 class Message;
@@ -36,8 +37,30 @@ enum ErrNum {
   Err_Limit
 };
 
+uint16_t
+GetErrorArgCount(const ErrNum aErrorNumber);
+
 bool
 ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, ...);
+
+struct StringArrayAppender
+{
+  static void Append(nsTArray<nsString>& aArgs, uint16_t aCount)
+  {
+    MOZ_RELEASE_ASSERT(aCount == 0, "Must give at least as many string arguments as are required by the ErrNum.");
+  }
+
+  template<typename... Ts>
+  static void Append(nsTArray<nsString>& aArgs, uint16_t aCount, const nsAString* aFirst, Ts... aOtherArgs)
+  {
+    if (aCount == 0) {
+      MOZ_ASSERT(false, "There should not be more string arguments provided than are required by the ErrNum.");
+      return;
+    }
+    aArgs.AppendElement(*aFirst);
+    Append(aArgs, aCount - 1, aOtherArgs...);
+  }
+};
 
 } // namespace dom
 
@@ -91,8 +114,18 @@ public:
     return rv;
   }
 
-  void ThrowTypeError(const dom::ErrNum errorNumber, ...);
-  void ThrowRangeError(const dom::ErrNum errorNumber, ...);
+  template<typename... Ts>
+  void ThrowTypeError(const dom::ErrNum errorNumber, Ts... messageArgs)
+  {
+    ThrowErrorWithMessage(errorNumber, NS_ERROR_TYPE_ERR, messageArgs...);
+  }
+
+  template<typename... Ts>
+  void ThrowRangeError(const dom::ErrNum errorNumber, Ts... messageArgs)
+  {
+    ThrowErrorWithMessage(errorNumber, NS_ERROR_RANGE_ERR, messageArgs...);
+  }
+
   void ReportErrorWithMessage(JSContext* cx);
   bool IsErrorWithMessage() const { return ErrorCode() == NS_ERROR_TYPE_ERR || ErrorCode() == NS_ERROR_RANGE_ERR; }
 
@@ -174,8 +207,27 @@ private:
   void SerializeMessage(IPC::Message* aMsg) const;
   bool DeserializeMessage(const IPC::Message* aMsg, void** aIter);
 
-  void ThrowErrorWithMessage(va_list ap, const dom::ErrNum errorNumber,
-                             nsresult errorType);
+  // Helper method that creates a new Message for this ErrorResult,
+  // and returns the arguments array from that Message.
+  nsTArray<nsString>& CreateErrorMessageHelper(const dom::ErrNum errorNumber, nsresult errorType);
+
+  template<typename... Ts>
+  void ThrowErrorWithMessage(const dom::ErrNum errorNumber, nsresult errorType, Ts... messageArgs)
+  {
+    if (IsJSException()) {
+      // We have rooted our mJSException, and we don't have the info
+      // needed to unroot here, so just bail.
+      MOZ_ASSERT(false,
+                 "Ignoring ThrowErrorWithMessage call because we have a JS exception");
+      return;
+    }
+    nsTArray<nsString>& messageArgsArray = CreateErrorMessageHelper(errorNumber, errorType);
+    uint16_t argCount = dom::GetErrorArgCount(errorNumber);
+    dom::StringArrayAppender::Append(messageArgsArray, argCount, messageArgs...);
+#ifdef DEBUG
+    mHasMessage = true;
+#endif
+  }
 
   void AssignErrorCode(nsresult aRv) {
     MOZ_ASSERT(aRv != NS_ERROR_TYPE_ERR, "Use ThrowTypeError()");

@@ -8,8 +8,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print.html";
 
-let gTab, gPanel, gDebugger;
-let gEditor, gContextMenu;
+var gTab, gPanel, gDebugger;
+var gEditor, gContextMenu;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {

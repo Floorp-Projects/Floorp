@@ -3,7 +3,7 @@ const { interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 
 // WeakMap[Extension -> BackgroundPage]
-let backgroundPagesMap = new WeakMap();
+var backgroundPagesMap = new WeakMap();
 
 // Responsible for the background_page section of the manifest.
 function BackgroundPage(options, extension)

@@ -7,7 +7,7 @@ const {Ci,Cu,Cc} = require("chrome");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const Services = require("Services");
-let {setTimeout,clearTimeout} = require("sdk/timers");
+var {setTimeout,clearTimeout} = require("sdk/timers");
 
 function MonitorActor(aConnection) {
   this.conn = aConnection;
@@ -109,7 +109,7 @@ MonitorActor.prototype.requestTypes = {
 
 exports.MonitorActor = MonitorActor;
 
-let USSAgent = {
+var USSAgent = {
   _mgr: null,
   _timeout: null,
   _packet: {

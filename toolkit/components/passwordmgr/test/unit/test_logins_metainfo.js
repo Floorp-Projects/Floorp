@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
-let gLooksLikeUUIDRegex = /^\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$/;
+var gLooksLikeUUIDRegex = /^\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$/;
 
 /**
  * Retrieves the only login among the current data that matches the hostname of
@@ -53,17 +53,17 @@ function assertMetaInfoEqual(aActual, aExpected)
 /**
  * nsILoginInfo instances with or without nsILoginMetaInfo properties.
  */
-let gLoginInfo1;
-let gLoginInfo2;
-let gLoginInfo3;
+var gLoginInfo1;
+var gLoginInfo2;
+var gLoginInfo3;
 
 /**
  * nsILoginInfo instances reloaded with all the nsILoginMetaInfo properties.
  * These are often used to provide the reference values to test against.
  */
-let gLoginMetaInfo1;
-let gLoginMetaInfo2;
-let gLoginMetaInfo3;
+var gLoginMetaInfo1;
+var gLoginMetaInfo2;
+var gLoginMetaInfo3;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests

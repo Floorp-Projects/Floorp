@@ -21,8 +21,8 @@ function makeGetterFor(Type) {
   }
 }
 
-let getLookupFor = makeGetterFor(WeakMap);
-let getRefsFor = makeGetterFor(Set);
+var getLookupFor = makeGetterFor(WeakMap);
+var getRefsFor = makeGetterFor(Set);
 
 function add(target, value) {
   if (has(target, value))

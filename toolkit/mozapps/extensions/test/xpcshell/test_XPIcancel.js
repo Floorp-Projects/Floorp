@@ -4,8 +4,8 @@
 
 // Test the cancellable doing/done/cancelAll API in XPIProvider
 
-let scope = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm");
-let XPIProvider = scope.XPIProvider;
+var scope = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm");
+var XPIProvider = scope.XPIProvider;
 
 function run_test() {
   // Check that cancelling with nothing in progress doesn't blow up

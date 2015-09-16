@@ -6,7 +6,7 @@ const PREF_NEWTAB_DIRECTORYSOURCE = "browser.newtabpage.directory.source";
 
 Services.prefs.setBoolPref(PREF_NEWTAB_ENABLED, true);
 
-let tmp = {};
+var tmp = {};
 Cu.import("resource://gre/modules/Promise.jsm", tmp);
 Cu.import("resource://gre/modules/NewTabUtils.jsm", tmp);
 Cu.import("resource:///modules/DirectoryLinksProvider.jsm", tmp);
@@ -15,23 +15,23 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
   .loadSubScript("chrome://browser/content/sanitize.js", tmp);
 Cu.import("resource://gre/modules/Timer.jsm", tmp);
-let {Promise, NewTabUtils, Sanitizer, clearTimeout, setTimeout, DirectoryLinksProvider, PlacesTestUtils} = tmp;
+var {Promise, NewTabUtils, Sanitizer, clearTimeout, setTimeout, DirectoryLinksProvider, PlacesTestUtils} = tmp;
 
-let uri = Services.io.newURI("about:newtab", null, null);
-let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+var uri = Services.io.newURI("about:newtab", null, null);
+var principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
 
-let isMac = ("nsILocalFileMac" in Ci);
-let isLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc);
-let isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
-let gWindow = window;
+var isMac = ("nsILocalFileMac" in Ci);
+var isLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc);
+var isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
+var gWindow = window;
 
 // Default to dummy/empty directory links
-let gDirectorySource = 'data:application/json,{"test":1}';
-let gOrigDirectorySource;
+var gDirectorySource = 'data:application/json,{"test":1}';
+var gOrigDirectorySource;
 
 // The tests assume all 3 rows and all 3 columns of sites are shown, but the
 // window may be too small to actually show everything.  Resize it if necessary.
-let requiredSize = {};
+var requiredSize = {};
 requiredSize.innerHeight =
   40 + 32 + // undo container + bottom margin
   44 + 32 + // search bar + bottom margin
@@ -41,7 +41,7 @@ requiredSize.innerWidth =
   (3 * (290 + 20)) + // 3 cols * (tile width + side margins)
   100; // breathing room
 
-let oldSize = {};
+var oldSize = {};
 Object.keys(requiredSize).forEach(prop => {
   info([prop, gBrowser.contentWindow[prop], requiredSize[prop]]);
   if (gBrowser.contentWindow[prop] < requiredSize[prop]) {
@@ -52,8 +52,8 @@ Object.keys(requiredSize).forEach(prop => {
   }
 });
 
-let screenHeight = {};
-let screenWidth = {};
+var screenHeight = {};
+var screenWidth = {};
 Cc["@mozilla.org/gfx/screenmanager;1"].
   getService(Ci.nsIScreenManager).
   primaryScreen.
@@ -133,7 +133,7 @@ function test() {
 /**
  * The test runner that controls the execution flow of our tests.
  */
-let TestRunner = {
+var TestRunner = {
   /**
    * Starts the test runner.
    */

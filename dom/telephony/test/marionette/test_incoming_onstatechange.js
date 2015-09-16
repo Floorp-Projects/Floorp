@@ -6,7 +6,7 @@ MARIONETTE_TIMEOUT = 60000;
 
 const inNumber = "5555552222";
 const inInfo = gInCallStrPool(inNumber);
-let inCall;
+var inCall;
 
 startTest(function() {
   gRemoteDial(inNumber)

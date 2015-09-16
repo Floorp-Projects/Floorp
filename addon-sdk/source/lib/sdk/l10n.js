@@ -13,7 +13,7 @@ const properties = require("./l10n/properties/core");
 const { getRulesForLocale } = require("./l10n/plural-rules");
 
 // Retrieve the plural mapping function
-let pluralMappingFunction = getRulesForLocale(json.language()) ||
+var pluralMappingFunction = getRulesForLocale(json.language()) ||
                             getRulesForLocale("en");
 
 exports.get = function get(k) {

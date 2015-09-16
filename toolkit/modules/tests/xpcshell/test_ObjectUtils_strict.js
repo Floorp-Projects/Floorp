@@ -1,7 +1,7 @@
 "use strict";
 
-let {ObjectUtils} = Components.utils.import("resource://gre/modules/ObjectUtils.jsm", {});
-let {Promise} = Components.utils.import("resource://gre/modules/Promise.jsm", {});
+var {ObjectUtils} = Components.utils.import("resource://gre/modules/ObjectUtils.jsm", {});
+var {Promise} = Components.utils.import("resource://gre/modules/Promise.jsm", {});
 
 add_task(function* init() {
   // The code will cause uncaught rejections on purpose.

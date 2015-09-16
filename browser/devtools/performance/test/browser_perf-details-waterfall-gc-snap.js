@@ -126,7 +126,7 @@ function injectGCMarkers (controller, waterfall) {
   }
 }
 
-let GC_MARKERS = [
+var GC_MARKERS = [
   { causeName: "TOO_MUCH_MALLOC", cycle: 1 },
   { causeName: "TOO_MUCH_MALLOC", cycle: 1 },
   { causeName: "TOO_MUCH_MALLOC", cycle: 1 },

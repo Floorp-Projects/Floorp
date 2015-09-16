@@ -41,7 +41,7 @@ try {
   this.LOG_LEVEL = Log.Level.Error;
 }
 
-let log = Log.repository.getLogger("Identity.FxAccounts");
+var log = Log.repository.getLogger("Identity.FxAccounts");
 log.level = LOG_LEVEL;
 log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 

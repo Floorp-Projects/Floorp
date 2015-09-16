@@ -161,7 +161,7 @@ this.WapPushManager = {
   },
 };
 
-let debug;
+var debug;
 if (DEBUG) {
   debug = function (s) {
     dump("-*- WapPushManager: " + s + "\n");

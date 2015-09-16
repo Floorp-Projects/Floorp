@@ -4,7 +4,7 @@
 
 "use strict";
 
-let helperEditData = [
+var helperEditData = [
   {
     basename: "styles.css",
     path: "css/styles.css",

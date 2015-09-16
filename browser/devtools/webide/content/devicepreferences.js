@@ -8,7 +8,7 @@ const {AppManager} = require("devtools/webide/app-manager");
 const {Connection} = require("devtools/client/connection-manager");
 const ConfigView = require("devtools/webide/config-view");
 
-let configView = new ConfigView(window);
+var configView = new ConfigView(window);
 
 window.addEventListener("load", function onLoad() {
   window.removeEventListener("load", onLoad);
@@ -62,7 +62,7 @@ function SearchField(event) {
   configView.search(event);
 }
 
-let getAllPrefs; // Used by tests
+var getAllPrefs; // Used by tests
 function BuildUI() {
   configView.resetTable();
 

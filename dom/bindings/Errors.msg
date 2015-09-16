@@ -5,7 +5,7 @@
 /*
  * The format for each error message is:
  *
- * MSG_DEF(<SYMBOLIC_NAME>, <ARGUMENT_COUNT>, <FORMAT_STRING>)
+ * MSG_DEF(<SYMBOLIC_NAME>, <ARGUMENT_COUNT>, <JS_EXN_TYPE>, <FORMAT_STRING>)
  *
  * where
  *
@@ -13,6 +13,9 @@
  *
  * <ARGUMENT_COUNT> is an integer literal specifying the total number of
  * replaceable arguments in the following format string.
+ *
+ * <JS_EXN_TYPE> is a JSExnType which specifies which kind of error the JS
+ * engine should throw.
  *
  * <FORMAT_STRING> is a string literal, containing <ARGUMENT_COUNT> sequences
  * {X} where X  is an integer representing the argument number that will

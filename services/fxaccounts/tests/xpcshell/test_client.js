@@ -16,7 +16,7 @@ function run_test() {
 }
 
 // https://wiki.mozilla.org/Identity/AttachedServices/KeyServerProtocol#.2Faccount.2Fkeys
-let ACCOUNT_KEYS = {
+var ACCOUNT_KEYS = {
   keyFetch:     h("8081828384858687 88898a8b8c8d8e8f"+
                   "9091929394959697 98999a9b9c9d9e9f"),
 
@@ -602,6 +602,91 @@ add_task(function test_accountExists() {
   } catch(unexpectedError) {
     do_check_eq(unexpectedError.code, 500);
   }
+
+  yield deferredStop(server);
+});
+
+add_task(function* test_client_metrics() {
+  ["FXA_UNVERIFIED_ACCOUNT_ERRORS", "FXA_HAWK_ERRORS", "FXA_SERVER_ERRORS"].forEach(name => {
+    let histogram = Services.telemetry.getKeyedHistogramById(name);
+    histogram.clear();
+  });
+
+  function writeResp(response, msg) {
+    if (typeof msg === "object") {
+      msg = JSON.stringify(msg);
+    }
+    response.bodyOutputStream.write(msg, msg.length);
+  }
+  function assertSnapshot(name, key, message) {
+    let histogram = Services.telemetry.getKeyedHistogramById(name);
+    let snapshot = histogram.snapshot(key);
+    do_check_eq(snapshot.sum, 1, message);
+    histogram.clear();
+  }
+
+  let server = httpd_setup(
+    {
+      "/account/keys": function(request, response) {
+        response.setHeader("Content-Type", "application/json; charset=utf-8");
+        response.setStatusLine(request.httpVersion, 400, "Bad Request");
+        writeResp(response, {
+          error: "unverified account",
+          code: 400,
+          errno: 104,
+        });
+      },
+      "/session/destroy": function(request, response) {
+        response.setHeader("Content-Type", "application/json; charset=utf-8");
+        response.setStatusLine(request.httpVersion, 401, "Unauthorized");
+        writeResp(response, {
+          error: "invalid authentication timestamp",
+          code: 401,
+          errno: 111,
+        });
+      },
+      "/recovery_email/status": function(request, response) {
+        response.setHeader("Content-Type", "application/json; charset=utf-8");
+        response.setStatusLine(request.httpVersion, 401, "Unauthorized");
+        writeResp(response, {
+          error: " invalid request signature",
+          code: 401,
+          errno: 109,
+        });
+      },
+      "/recovery_email/resend_code": function(request, response) {
+        response.setHeader("Content-Type", "text/html");
+        response.setStatusLine(request.httpVersion, 504, "Sad Server");
+        writeResp(response, "<!doctype html><title>Simulated proxy error</title>");
+      },
+    }
+  );
+
+  let client = new FxAccountsClient(server.baseURI);
+
+  yield rejects(client.accountKeys(ACCOUNT_KEYS.keyFetch), function(err) {
+    return err.errno == 104;
+  });
+  assertSnapshot("FXA_UNVERIFIED_ACCOUNT_ERRORS", "/account/keys",
+    "Should report unverified account errors");
+
+  yield rejects(client.signOut(FAKE_SESSION_TOKEN), function(err) {
+    return err.errno == 111;
+  });
+  assertSnapshot("FXA_HAWK_ERRORS", "/session/destroy",
+    "Should report Hawk authentication errors");
+
+  yield rejects(client.recoveryEmailStatus(FAKE_SESSION_TOKEN), function(err) {
+    return err.errno == 109;
+  });
+  assertSnapshot("FXA_SERVER_ERRORS", "/recovery_email/status",
+    "Should report 400-class errors");
+
+  yield rejects(client.resendVerificationEmail(FAKE_SESSION_TOKEN), function(err) {
+    return err.code == 504;
+  });
+  assertSnapshot("FXA_SERVER_ERRORS", "/recovery_email/resend_code",
+    "Should report 500-class errors");
 
   yield deferredStop(server);
 });

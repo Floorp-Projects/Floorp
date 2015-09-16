@@ -9,8 +9,8 @@ Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
 
 // handlers for our server.
-let numTokenFetches;
-let activeTokens;
+var numTokenFetches;
+var activeTokens;
 
 function authorize(request, response) {
   response.setStatusLine("1.1", 200, "OK");

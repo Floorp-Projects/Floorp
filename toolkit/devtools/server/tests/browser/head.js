@@ -27,7 +27,7 @@ waitForExplicitFinish();
  * @param {String} url The url to be loaded in the new tab
  * @return a promise that resolves to the document when the url is loaded
  */
-let addTab = Task.async(function* (url) {
+var addTab = Task.async(function* (url) {
   info("Adding a new tab with URL: '" + url + "'");
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   let loaded = once(gBrowser.selectedBrowser, "load", true);

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let pm;
+var pm;
 
 // Create a principal based on the { origin, appId, browserElement }.
 function createPrincipal(aOrigin, aAppId, aBrowserElement)

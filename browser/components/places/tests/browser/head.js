@@ -6,8 +6,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
   "resource://testing-common/PlacesTestUtils.jsm");
 
 // We need to cache this before test runs...
-let cachedLeftPaneFolderIdGetter;
-let getter = PlacesUIUtils.__lookupGetter__("leftPaneFolderId");
+var cachedLeftPaneFolderIdGetter;
+var getter = PlacesUIUtils.__lookupGetter__("leftPaneFolderId");
 if (!cachedLeftPaneFolderIdGetter && typeof(getter) == "function") {
   cachedLeftPaneFolderIdGetter = getter;
 }
@@ -288,7 +288,7 @@ function isToolbarVisible(aToolbar) {
  * @param task
  *        the task to execute once the dialog is open
  */
-let withBookmarksDialog = Task.async(function* (autoCancel, openFn, taskFn) {
+var withBookmarksDialog = Task.async(function* (autoCancel, openFn, taskFn) {
   let closed = false;
   let dialogPromise = new Promise(resolve => {
     Services.ww.registerNotification(function winObserver(subject, topic, data) {
@@ -343,7 +343,7 @@ let withBookmarksDialog = Task.async(function* (autoCancel, openFn, taskFn) {
  *        Valid selector syntax
  * @return the target DOM node.
  */
-let openContextMenuForContentSelector = Task.async(function* (browser, selector) {
+var openContextMenuForContentSelector = Task.async(function* (browser, selector) {
   info("wait for the context menu");
   let contextPromise = BrowserTestUtils.waitForEvent(document.getElementById("contentAreaContextMenu"),
                                                      "popupshown");
@@ -377,7 +377,7 @@ let openContextMenuForContentSelector = Task.async(function* (browser, selector)
  *        Error message to use if the condition has not been satisfied after a
  *        meaningful amount of tries.
  */
-let waitForCondition = Task.async(function* (conditionFn, errorMsg) {
+var waitForCondition = Task.async(function* (conditionFn, errorMsg) {
   for (let tries = 0; tries < 100; ++tries) {
     if ((yield conditionFn()))
       return;
@@ -433,7 +433,7 @@ function fillBookmarkTextField(id, text, win, blur = true) {
  *        The task to execute once the sidebar is ready. Will get the Places
  *        tree view as input.
  */
-let withSidebarTree = Task.async(function* (type, taskFn) {
+var withSidebarTree = Task.async(function* (type, taskFn) {
   let sidebar = document.getElementById("sidebar");
   info("withSidebarTree: waiting sidebar load");
   let sidebarLoadedPromise = new Promise(resolve => {

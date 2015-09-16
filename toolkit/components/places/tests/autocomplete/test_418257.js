@@ -9,13 +9,13 @@
  */
 
 // Define some shared uris and titles (each page needs its own uri)
-let kURIs = [
+var kURIs = [
   "http://page1",
   "http://page2",
   "http://page3",
   "http://page4",
 ];
-let kTitles = [
+var kTitles = [
   "tag1",
   "tag2",
   "tag3",
@@ -29,7 +29,7 @@ addPageBook(3, 0, 0, [0,1,2]);
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
-let gTests = [
+var gTests = [
   ["0: Make sure tags come back in the title when matching tags",
    "page1 tag", [0]],
   ["1: Check tags in title for page2",

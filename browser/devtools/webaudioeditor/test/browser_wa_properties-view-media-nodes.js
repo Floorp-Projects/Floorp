@@ -6,7 +6,7 @@
  * correctly, with default values and correct types.
  */
 
-let MEDIA_PERMISSION = "media.navigator.permission.disabled";
+var MEDIA_PERMISSION = "media.navigator.permission.disabled";
 
 function waitForDeviceClosed() {
   info("Checking that getUserMedia streams are no longer in use.");

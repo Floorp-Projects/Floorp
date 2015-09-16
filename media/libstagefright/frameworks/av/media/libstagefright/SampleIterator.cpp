@@ -177,7 +177,7 @@ status_t SampleIterator::findChunkRange(uint32_t sampleIndex) {
             mStopChunkSampleIndex =
                 mFirstChunkSampleIndex
                     + (mStopChunk - mFirstChunk) * mSamplesPerChunk;
-        } else {
+        } else if (mSamplesPerChunk) {
             mStopChunk = 0xffffffff;
             mStopChunkSampleIndex = 0xffffffff;
         }

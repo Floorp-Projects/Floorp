@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Log",
 
 this.EXPORTED_SYMBOLS = ["GoogleImporter"];
 
-let log = Log.repository.getLogger("Loop.Importer.Google");
+var log = Log.repository.getLogger("Loop.Importer.Google");
 log.level = Log.Level.Debug;
 log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 
@@ -114,7 +114,7 @@ const getUrlParam = function(paramValue, prefName, encode = true) {
   return encode ? encodeURIComponent(paramValue) : paramValue;
 };
 
-let gAuthWindow, gProfileId;
+var gAuthWindow, gProfileId;
 const kAuthWindowSize = {
   width: 420,
   height: 460

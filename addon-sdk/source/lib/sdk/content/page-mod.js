@@ -32,10 +32,10 @@ const { frames, process } = require('../remote/child');
 
 const pagemods = new Map();
 const styles = new WeakMap();
-let styleFor = (mod) => styles.get(mod);
+var styleFor = (mod) => styles.get(mod);
 
 // Helper functions
-let modMatchesURI = (mod, uri) => mod.include.matchesAny(uri) && !mod.exclude.matchesAny(uri);
+var modMatchesURI = (mod, uri) => mod.include.matchesAny(uri) && !mod.exclude.matchesAny(uri);
 
 /**
  * PageMod constructor (exported below).

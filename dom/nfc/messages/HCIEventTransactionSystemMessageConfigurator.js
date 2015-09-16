@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyGetter(this, "SE", () => {
   return obj;
 });
 
-let DEBUG = SE.DEBUG_SE;
+var DEBUG = SE.DEBUG_SE;
 function debug(aMsg) {
   if (DEBUG) {
     dump("-*- HCIEventTransaction: " + aMsg);

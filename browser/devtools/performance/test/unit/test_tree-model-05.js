@@ -6,9 +6,9 @@
  * array.
  */
 
-let time = 1;
+var time = 1;
 
-let gThread = synthesizeProfileForTest([{
+var gThread = synthesizeProfileForTest([{
   time: time++,
   frames: [
     { location: "(root)" },

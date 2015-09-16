@@ -7,7 +7,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-let imports = {};
+var imports = {};
 
 Cu.import("resource://gre/modules/ContactDB.jsm", imports);
 Cu.import("resource://gre/modules/ContactService.jsm", imports);
@@ -28,7 +28,7 @@ Object.defineProperty(this, "Promise", {
   value: imports.Promise, writable: false, configurable: false
 });
 
-let DEBUG = false;
+var DEBUG = false;
 function debug(str) {
   if (DEBUG){
     dump("-*- TestMigrationChromeScript: " + str + "\n");

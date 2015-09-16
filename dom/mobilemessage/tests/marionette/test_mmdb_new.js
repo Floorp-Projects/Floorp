@@ -5,7 +5,7 @@ MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'mmdb_head.js';
 
 const DBNAME = "test_mmdb_new:" + newUUID();
-let dbVersion = 0;
+var dbVersion = 0;
 
 function check(aMmdb) {
   is(aMmdb.dbName, DBNAME, "dbName");

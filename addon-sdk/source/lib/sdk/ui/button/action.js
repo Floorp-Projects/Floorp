@@ -83,14 +83,14 @@ getNodeView.define(ActionButton, button =>
   view.nodeFor(toWidgetId(button.id))
 );
 
-let actionButtonStateEvents = events.filter(stateEvents,
+var actionButtonStateEvents = events.filter(stateEvents,
   e => e.target instanceof ActionButton);
 
-let actionButtonViewEvents = events.filter(viewEvents,
+var actionButtonViewEvents = events.filter(viewEvents,
   e => buttons.has(e.target));
 
-let clickEvents = events.filter(actionButtonViewEvents, e => e.type === 'click');
-let updateEvents = events.filter(actionButtonViewEvents, e => e.type === 'update');
+var clickEvents = events.filter(actionButtonViewEvents, e => e.type === 'click');
+var updateEvents = events.filter(actionButtonViewEvents, e => e.type === 'update');
 
 on(clickEvents, 'data', ({target: id, window}) => {
   let button = buttons.get(id);

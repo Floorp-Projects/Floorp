@@ -391,7 +391,7 @@ add_test(function test_async_throw_on_function_in_place_of_promise()
 
 // Backup Task.Debuggin.maintainStack.
 // Will be restored by `exit_stack_tests`.
-let maintainStack;
+var maintainStack;
 add_test(function enter_stack_tests() {
   maintainStack = Task.Debugging.maintainStack;
   Task.Debugging.maintainStack = true;

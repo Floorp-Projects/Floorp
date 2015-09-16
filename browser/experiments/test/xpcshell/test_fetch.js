@@ -8,10 +8,10 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource:///modules/experiments/Experiments.jsm");
 
-let gProfileDir = null;
-let gHttpServer = null;
-let gHttpRoot   = null;
-let gPolicy     = new Experiments.Policy();
+var gProfileDir = null;
+var gHttpServer = null;
+var gHttpRoot   = null;
+var gPolicy     = new Experiments.Policy();
 
 function run_test() {
   loadAddonManager();

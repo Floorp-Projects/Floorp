@@ -3,7 +3,7 @@
 
 // Tests that ViewHelpers.Prefs work properly.
 
-let {ViewHelpers} = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
+var {ViewHelpers} = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
 
 function test() {
   let l10n = new ViewHelpers.L10N();

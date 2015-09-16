@@ -74,7 +74,7 @@ const l10n = exports.l10n = {
  *       }, ...
  *     });
  */
-let CSSUsageActor = protocol.ActorClass({
+var CSSUsageActor = protocol.ActorClass({
   typeName: "cssUsage",
 
   events: {
@@ -595,7 +595,7 @@ const deconstructRuleId = exports.deconstructRuleId = function(ruleId) {
  */
 const getURL = exports.getURL = function(document) {
   let url = new document.defaultView.URL(document.documentURI);
-  return '' + url.origin + url.pathname;
+  return url == 'about:blank' ? '' : '' + url.origin + url.pathname;
 };
 
 /**
@@ -744,10 +744,10 @@ const sheetToUrl = exports.sheetToUrl = function(stylesheet) {
  * and it isn't particularly useful, and it's confusing from a notification POV
  * so we only allow one.
  */
-let isRunning = false;
-let notification;
-let target;
-let chromeWindow;
+var isRunning = false;
+var notification;
+var target;
+var chromeWindow;
 
 /**
  * Front for CSSUsageActor

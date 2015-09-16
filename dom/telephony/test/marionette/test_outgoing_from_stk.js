@@ -6,7 +6,7 @@ MARIONETTE_HEAD_JS = 'head.js';
 
 const outNumber = "5555552222";
 const outInfo = gOutCallStrPool(outNumber);
-let outCall;
+var outCall;
 
 // Basic functions
 

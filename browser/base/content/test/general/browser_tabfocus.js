@@ -2,25 +2,25 @@
  * This test checks that focus is adjusted properly when switching tabs.
  */
 
-let testPage1 = "<html id='html1'><body id='body1'><button id='button1'>Tab 1</button></body></html>";
-let testPage2 = "<html id='html2'><body id='body2'><button id='button2'>Tab 2</button></body></html>";
-let testPage3 = "<html id='html3'><body id='body3'><button id='button3'>Tab 3</button></body></html>";
+var testPage1 = "<html id='html1'><body id='body1'><button id='button1'>Tab 1</button></body></html>";
+var testPage2 = "<html id='html2'><body id='body2'><button id='button2'>Tab 2</button></body></html>";
+var testPage3 = "<html id='html3'><body id='body3'><button id='button3'>Tab 3</button></body></html>";
 
 const fm = Services.focus;
 
-let tab1 = null;
-let tab2 = null;
-let browser1 = null;
-let browser2 = null;
-let _browser_tabfocus_test_lastfocus;
-let _browser_tabfocus_test_lastfocuswindow = null;
-let actualEvents = [];
-let expectedEvents = [];
-let currentTestName = "";
-let _expectedElement = null;
-let _expectedWindow = null;
+var tab1 = null;
+var tab2 = null;
+var browser1 = null;
+var browser2 = null;
+var _browser_tabfocus_test_lastfocus;
+var _browser_tabfocus_test_lastfocuswindow = null;
+var actualEvents = [];
+var expectedEvents = [];
+var currentTestName = "";
+var _expectedElement = null;
+var _expectedWindow = null;
 
-let currentPromiseResolver = null;
+var currentPromiseResolver = null;
 
 function* getFocusedElementForBrowser(browser, dontCheckExtraFocus = false)
 {

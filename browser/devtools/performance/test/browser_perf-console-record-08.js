@@ -6,9 +6,9 @@
  * recordings (via `console.profile` and clicking the record button).
  */
 
-let C = 1; // is console
-let R = 2; // is recording
-let S = 4; // is selected
+var C = 1; // is console
+var R = 2; // is recording
+var S = 4; // is selected
 
 function testRecordings (win, expected) {
   let recordings = win.PerformanceController.getRecordings();

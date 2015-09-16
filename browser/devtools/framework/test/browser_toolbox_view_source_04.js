@@ -5,7 +5,7 @@
  * Tests that Toolbox#viewSourceInScratchpad works.
  */
 
-let URL = `${URL_ROOT}doc_viewsource.html`;
+var URL = `${URL_ROOT}doc_viewsource.html`;
 
 function *viewSource() {
   let toolbox = yield loadToolbox(URL);

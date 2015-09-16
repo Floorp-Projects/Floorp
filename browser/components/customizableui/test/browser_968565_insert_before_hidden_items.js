@@ -7,7 +7,7 @@
 const kHidden1Id = "test-hidden-button-1";
 const kHidden2Id = "test-hidden-button-2";
 
-let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
+var navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
 
 // When we drag an item onto a customizable area, and not over a specific target, we
 // should assume that we're appending them to the area. If doing so, we should scan

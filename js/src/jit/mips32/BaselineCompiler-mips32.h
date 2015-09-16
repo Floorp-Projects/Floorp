@@ -7,12 +7,12 @@
 #ifndef jit_mips32_BaselineCompiler_mips32_h
 #define jit_mips32_BaselineCompiler_mips32_h
 
-#include "jit/shared/BaselineCompiler-shared.h"
+#include "jit/mips-shared/BaselineCompiler-mips-shared.h"
 
 namespace js {
 namespace jit {
 
-class BaselineCompilerMIPS : public BaselineCompilerShared
+class BaselineCompilerMIPS : public BaselineCompilerMIPSShared
 {
   protected:
     BaselineCompilerMIPS(JSContext* cx, TempAllocator& alloc, JSScript* script);

@@ -15,7 +15,7 @@ const protocol = require("devtools/server/protocol");
 const {method, Arg, RetVal} = protocol;
 const events = require("sdk/event/core");
 
-let EventLoopLagActor = exports.EventLoopLagActor = protocol.ActorClass({
+var EventLoopLagActor = exports.EventLoopLagActor = protocol.ActorClass({
 
   typeName: "eventLoopLag",
 

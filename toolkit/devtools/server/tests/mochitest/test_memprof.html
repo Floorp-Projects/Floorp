@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1123237 - Test profiling memory allocations.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Memory profiler actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="memprof-helpers.js" type="application/javascript;version=1.8"></script>
+<script>
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  Task.spawn(function* () {
+    var { memprof, client } = yield startServerAndGetSelectedTabMemprof();
+    yield memprof.startProfiler();
+    ok(true, "Can start profiling allocations");
+
+    // Allocate some objects.
+
+    var alloc;
+    (function memprof_test_outer() {
+      (function memprof_test_middle() {
+        (function memprof_test_inner() {
+          for (i = 0; i < 65535; ++i) {
+            alloc = {};
+          }
+        }());
+      }());
+    }());
+
+    yield memprof.stopProfiler();
+    ok(true, "Can stop profiling allocations");
+
+    var results = yield memprof.getResults();
+    ok(true, "Can get results");
+
+    function isTestAllocation(name) {
+      return /memprof_test_inner/.test(name)
+        || /memprof_test_middle/.test(name)
+        || /memprof_test_outer/.test(name)
+    }
+
+    var testAllocations = results.names.filter(isTestAllocation);
+    ok(testAllocations.length >= 3, "Should find our 3 test allocations");
+
+    // Ensure the allocation traces has the correct index
+    var inner = results.traces.find(
+      trace => /memprof_test_inner/.test(results.names[trace.nameIdx]));
+    ok(inner, "Find the inner most frame");
+    var middle = results.traces[inner.parentIdx];
+    ok(/memprof_test_middle/.test(results.names[middle.nameIdx]),
+       "Find the middle frame");
+    var outer = results.traces[middle.parentIdx];
+    ok(/memprof_test_outer/.test(results.names[outer.nameIdx]),
+       "Find the outer frame");
+
+    yield memprof.resetProfiler();
+
+    destroyServerAndFinish(client);
+  });
+};
+</script>
+</pre>
+</body>
+</html>
