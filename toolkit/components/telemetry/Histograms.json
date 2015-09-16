@@ -9459,5 +9459,15 @@
     "kind": "count",
     "releaseChannelCollection": "opt-out",
     "description": "Sync cryptoKeys collection HMAC mismatches."
+  },
+  "CONTENT_DOCUMENTS_DESTROYED": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Number of content documents destroyed; used in conjunction with use counter histograms"
+  },
+  "TOP_LEVEL_CONTENT_DOCUMENTS_DESTROYED": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Number of top-level content documents destroyed; used in conjunction with use counter histograms"
   }
 }
