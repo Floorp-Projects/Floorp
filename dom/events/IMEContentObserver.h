@@ -141,18 +141,18 @@ private:
   void FlushMergeableNotifications();
   void ClearPendingNotifications()
   {
-    mIsFocusEventPending = false;
-    mIsTextChangeEventPending = false;
-    mIsSelectionChangeEventPending = false;
-    mIsPositionChangeEventPending = false;
+    mNeedsToNotifyIMEOfFocusSet = false;
+    mNeedsToNotifyIMEOfTextChange = false;
+    mNeedsToNotifyIMEOfSelectionChange = false;
+    mNeedsToNotifyIMEOfPositionChange = false;
     mTextChangeData.Clear();
   }
   bool NeedsToNotifyIMEOfSomething() const
   {
-    return mIsFocusEventPending ||
-           mIsTextChangeEventPending ||
-           mIsSelectionChangeEventPending ||
-           mIsPositionChangeEventPending;
+    return mNeedsToNotifyIMEOfFocusSet ||
+           mNeedsToNotifyIMEOfTextChange ||
+           mNeedsToNotifyIMEOfSelectionChange ||
+           mNeedsToNotifyIMEOfPositionChange;
   }
 
   /**
@@ -250,10 +250,10 @@ private:
 
   bool mIsObserving;
   bool mIMEHasFocus;
-  bool mIsFocusEventPending;
-  bool mIsTextChangeEventPending;
-  bool mIsSelectionChangeEventPending;
-  bool mIsPositionChangeEventPending;
+  bool mNeedsToNotifyIMEOfFocusSet;
+  bool mNeedsToNotifyIMEOfTextChange;
+  bool mNeedsToNotifyIMEOfSelectionChange;
+  bool mNeedsToNotifyIMEOfPositionChange;
   // mIsFlushingPendingNotifications is true between
   // FlushMergeableNotifications() creates IMENotificationSender and
   // IMENotificationSender sent all pending notifications.

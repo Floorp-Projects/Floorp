@@ -224,10 +224,10 @@ IMEContentObserver::IMEContentObserver()
   , mSendingNotification(NOTIFY_IME_OF_NOTHING)
   , mIsObserving(false)
   , mIMEHasFocus(false)
-  , mIsFocusEventPending(false)
-  , mIsTextChangeEventPending(false)
-  , mIsSelectionChangeEventPending(false)
-  , mIsPositionChangeEventPending(false)
+  , mNeedsToNotifyIMEOfFocusSet(false)
+  , mNeedsToNotifyIMEOfTextChange(false)
+  , mNeedsToNotifyIMEOfSelectionChange(false)
+  , mNeedsToNotifyIMEOfPositionChange(false)
   , mIsFlushingPendingNotifications(false)
   , mIsHandlingQueryContentEvent(false)
 {
@@ -1033,7 +1033,7 @@ IMEContentObserver::PostFocusSetNotification()
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("IMECO: 0x%p IMEContentObserver::PostFocusSetNotification()", this));
 
-  mIsFocusEventPending = true;
+  mNeedsToNotifyIMEOfFocusSet = true;
 }
 
 void
@@ -1046,7 +1046,7 @@ IMEContentObserver::PostTextChangeNotification()
 
   MOZ_ASSERT(mTextChangeData.IsValid(),
              "mTextChangeData must have text change data");
-  mIsTextChangeEventPending = true;
+  mNeedsToNotifyIMEOfTextChange = true;
 }
 
 void
@@ -1058,7 +1058,7 @@ IMEContentObserver::PostSelectionChangeNotification()
      this, ToChar(mSelectionData.mCausedByComposition),
      ToChar(mSelectionData.mCausedBySelectionEvent)));
 
-  mIsSelectionChangeEventPending = true;
+  mNeedsToNotifyIMEOfSelectionChange = true;
 }
 
 void
@@ -1164,7 +1164,7 @@ IMEContentObserver::PostPositionChangeNotification()
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("IMECO: 0x%p IMEContentObserver::PostPositionChangeNotification()", this));
 
-  mIsPositionChangeEventPending = true;
+  mNeedsToNotifyIMEOfPositionChange = true;
 }
 
 bool
@@ -1335,8 +1335,8 @@ IMEContentObserver::IMENotificationSender::Run()
   // NOTE: Reset each pending flag because sending notification may cause
   //       another change.
 
-  if (mIMEContentObserver->mIsFocusEventPending) {
-    mIMEContentObserver->mIsFocusEventPending = false;
+  if (mIMEContentObserver->mNeedsToNotifyIMEOfFocusSet) {
+    mIMEContentObserver->mNeedsToNotifyIMEOfFocusSet = false;
     SendFocusSet();
     // This is the first notification to IME. So, we don't need to notify
     // anymore since IME starts to query content after it gets focus.
@@ -1345,19 +1345,19 @@ IMEContentObserver::IMENotificationSender::Run()
     return NS_OK;
   }
 
-  if (mIMEContentObserver->mIsTextChangeEventPending) {
-    mIMEContentObserver->mIsTextChangeEventPending = false;
+  if (mIMEContentObserver->mNeedsToNotifyIMEOfTextChange) {
+    mIMEContentObserver->mNeedsToNotifyIMEOfTextChange = false;
     SendTextChange();
   }
 
   // If a text change notification causes another text change again, we should
   // notify IME of that before sending a selection change notification.
-  if (!mIMEContentObserver->mIsTextChangeEventPending) {
+  if (!mIMEContentObserver->mNeedsToNotifyIMEOfTextChange) {
     // Be aware, PuppetWidget depends on the order of this. A selection change
     // notification should not be sent before a text change notification because
     // PuppetWidget shouldn't query new text content every selection change.
-    if (mIMEContentObserver->mIsSelectionChangeEventPending) {
-      mIMEContentObserver->mIsSelectionChangeEventPending = false;
+    if (mIMEContentObserver->mNeedsToNotifyIMEOfSelectionChange) {
+      mIMEContentObserver->mNeedsToNotifyIMEOfSelectionChange = false;
       SendSelectionChange();
     }
   }
@@ -1366,10 +1366,10 @@ IMEContentObserver::IMENotificationSender::Run()
   // selection change notification causes either a text change or another
   // selection change, we should notify IME of those before sending a position
   // change notification.
-  if (!mIMEContentObserver->mIsTextChangeEventPending &&
-      !mIMEContentObserver->mIsSelectionChangeEventPending) {
-    if (mIMEContentObserver->mIsPositionChangeEventPending) {
-      mIMEContentObserver->mIsPositionChangeEventPending = false;
+  if (!mIMEContentObserver->mNeedsToNotifyIMEOfTextChange &&
+      !mIMEContentObserver->mNeedsToNotifyIMEOfSelectionChange) {
+    if (mIMEContentObserver->mNeedsToNotifyIMEOfPositionChange) {
+      mIMEContentObserver->mNeedsToNotifyIMEOfPositionChange = false;
       SendPositionChange();
     }
   }
