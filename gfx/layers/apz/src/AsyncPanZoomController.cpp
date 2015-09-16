@@ -2844,7 +2844,14 @@ Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
     * mLastContentPaintMetrics.GetDevPixelsPerCSSPixel()
     * mLastContentPaintMetrics.GetCumulativeResolution();
 
-  gfxSize zoomChange = mLastContentPaintMetrics.GetZoom() / mLastDispatchedPaintMetrics.GetZoom();
+  // We're interested in the async zoom change. Factor out the content scale
+  // that may change when dragging the window to a monitor with a different
+  // content scale.
+  LayoutDeviceToParentLayerScale2D lastContentZoom =
+    mLastContentPaintMetrics.GetZoom() / mLastContentPaintMetrics.GetDevPixelsPerCSSPixel();
+  LayoutDeviceToParentLayerScale2D lastDispatchedZoom =
+    mLastDispatchedPaintMetrics.GetZoom() / mLastDispatchedPaintMetrics.GetDevPixelsPerCSSPixel();
+  gfxSize zoomChange = lastContentZoom / lastDispatchedZoom;
 
   return Matrix4x4::Translation(scrollChange.x, scrollChange.y, 0).
            PostScale(zoomChange.width, zoomChange.height, 1);
