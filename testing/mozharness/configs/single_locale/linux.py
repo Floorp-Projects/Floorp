@@ -117,6 +117,7 @@ config = {
         ('/builds/gapi.data', '/builds/gapi.data'),
         ('/builds/relengapi.tok', '/builds/relengapi.tok'),
         ('/tools/tooltool.py', '/builds/tooltool.py'),
+        ('/usr/local/lib/hgext', '/usr/local/lib/hgext'),
     ],
     'exes': {
         'hgtool.py': os.path.join(
