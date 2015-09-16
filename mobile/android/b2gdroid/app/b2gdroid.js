@@ -1022,3 +1022,5 @@ pref("dom.ipc.systemMessageCPULockTimeoutSec", 30);
 pref("dom.wakelock.enabled", true);
 
 pref("dom.webcomponents.enabled", true);
+
+pref("layout.css.scroll-snap.enabled", true);
