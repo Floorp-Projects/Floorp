@@ -221,7 +221,7 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
 
 StreamTime
 MediaStreamGraphImpl::GraphTimeToStreamTimeWithBlocking(MediaStream* aStream,
-                                            GraphTime aTime)
+                                                        GraphTime aTime)
 {
   MOZ_ASSERT(aTime <= mStateComputedTime,
              "Don't ask about times where we haven't made blocking decisions yet");
@@ -229,18 +229,9 @@ MediaStreamGraphImpl::GraphTimeToStreamTimeWithBlocking(MediaStream* aStream,
       std::min(aTime, aStream->mStartBlocking) - aStream->mBufferStartTime);
 }
 
-StreamTime
-MediaStreamGraphImpl::GraphTimeToStreamTimeOptimistic(MediaStream* aStream,
-                                                      GraphTime aTime)
-{
-  GraphTime computedUpToTime = std::min(mStateComputedTime, aTime);
-  StreamTime s = GraphTimeToStreamTimeWithBlocking(aStream, computedUpToTime);
-  return s + (aTime - computedUpToTime);
-}
-
 GraphTime
 MediaStreamGraphImpl::StreamTimeToGraphTimeWithBlocking(MediaStream* aStream,
-                                            StreamTime aTime, uint32_t aFlags)
+    StreamTime aTime, uint32_t aFlags)
 {
   // Avoid overflows
   if (aTime >= STREAM_TIME_MAX) {
@@ -1700,15 +1691,25 @@ MediaStream::SetGraphImpl(MediaStreamGraph* aGraph)
 }
 
 StreamTime
-MediaStream::GraphTimeToStreamTimeWithBlocking(GraphTime aTime)
+MediaStream::GraphTimeToStreamTime(GraphTime aTime)
 {
-  return GraphImpl()->GraphTimeToStreamTimeWithBlocking(this, aTime);
+  NS_ASSERTION(mStartBlocking == GraphImpl()->mStateComputedTime,
+               "Don't call this when there's pending blocking time!");
+  return aTime - mBufferStartTime;
+}
+
+GraphTime
+MediaStream::StreamTimeToGraphTime(StreamTime aTime)
+{
+  NS_ASSERTION(mStartBlocking == GraphImpl()->mStateComputedTime,
+               "Don't call this when there's pending blocking time!");
+  return aTime + mBufferStartTime;
 }
 
 StreamTime
-MediaStream::GraphTimeToStreamTimeOptimistic(GraphTime aTime)
+MediaStream::GraphTimeToStreamTimeWithBlocking(GraphTime aTime)
 {
-  return GraphImpl()->GraphTimeToStreamTimeOptimistic(this, aTime);
+  return GraphImpl()->GraphTimeToStreamTimeWithBlocking(this, aTime);
 }
 
 GraphTime
