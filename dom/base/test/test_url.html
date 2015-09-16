@@ -209,6 +209,14 @@
       error: false,
       protocol: 'foo:',
     },
+
+    { url: 'about:blank',
+      base: undefined,
+      error: false,
+      protocol: 'about:',
+      pathname: 'blank',
+      skip_setters: false,
+    },
   ];
 
   while(tests.length) {
@@ -242,6 +250,11 @@
     if ('pathname' in test) is(url.pathname, test.pathname, "pathname");
     if ('search' in test) is(url.search, test.search, "search");
     if ('hash' in test) is(url.hash, test.hash, "hash");
+
+    if ('skip_setters' in test && test.skip_setters == false) {
+      info("Skip setter methods for URL: " + test);
+      continue;
+    }
 
     url = new URL('https://www.example.net/what#foo?bar');
     ok(url, "Url exists!");
