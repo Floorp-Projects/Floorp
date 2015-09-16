@@ -1,0 +1,22 @@
+$inherits:
+  from: 'tasks/builds/opt_macosx64_clobber.yml'
+  variables:
+    build_name: 'macosx64'
+    build_type: 'dbg'
+task:
+  metadata:
+      name: '[TC] MacOSX64 Dbg'
+      description: 'MacOSX64 Dbg'
+
+  workerType: dbg-macosx64
+
+  payload:
+    env:
+      MH_CUSTOM_BUILD_VARIANT_CFG: 'cross-debug'
+  extra:
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
+      symbol: B
+      collection:
+        debug: true
