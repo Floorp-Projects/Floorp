@@ -3374,6 +3374,12 @@ nsDOMDeviceStorage::IsRemovable()
   return mIsRemovable;
 }
 
+bool
+nsDOMDeviceStorage::LowDiskSpace()
+{
+  return DeviceStorageStatics::LowDiskSpace();
+}
+
 already_AddRefed<Promise>
 nsDOMDeviceStorage::GetRoot(ErrorResult& aRv)
 {
