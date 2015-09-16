@@ -202,6 +202,7 @@ methods of other kinds of objects.
      { lineNumber: 1, columnNumber: 5, offset: 5 },
      { lineNumber: 1, columnNumber: 10, offset: 20 },
      { lineNumber: 3, columnNumber: 4, offset: 10 }]
+    ```
 
 <code>getLineOffsets(<i>line</i>)</code>
 :   Return an array of bytecode instruction offsets representing the entry
@@ -211,6 +212,23 @@ methods of other kinds of objects.
 <code>getOffsetLine(<i>offset</i>)</code>
 :   Return the source code line responsible for the bytecode at
     <i>offset</i> in this script.
+
+`getOffsetsCoverage()`:
+:   Return `null` or an array which contains informations about the coverage of
+    all opcodes. The elements of the array are objects, each of which describes
+    a single opcode, and contains the following properties:
+
+    * lineNumber: the line number of the current opcode.
+
+    * columnNumber: the column number of the current opcode.
+
+    * offset: the bytecode instruction offset of the current opcode.
+
+    * count: the number of times the current opcode got executed.
+
+    If this script has no coverage, or if it is not instrumented, then this
+    function will return `null`. To ensure that the debuggee is instrumented,
+    the flag `Debugger.collectCoverageInfo` should be set to `true`.
 
 `getChildScripts()`
 :   Return a new array whose elements are Debugger.Script objects for each
