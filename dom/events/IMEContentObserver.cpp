@@ -74,6 +74,35 @@ ToChar(EventMessage aEventMessage)
   }
 }
 
+static const char*
+ToChar(IMEMessage aIMEMessage)
+{
+  switch (aIMEMessage) {
+    case NOTIFY_IME_OF_NOTHING:
+      return "NOTIFY_IME_OF_NOTHING";
+    case NOTIFY_IME_OF_FOCUS:
+      return "NOTIFY_IME_OF_FOCUS";
+    case NOTIFY_IME_OF_BLUR:
+      return "NOTIFY_IME_OF_BLUR";
+    case NOTIFY_IME_OF_SELECTION_CHANGE:
+      return "NOTIFY_IME_OF_SELECTION_CHANGE";
+    case NOTIFY_IME_OF_TEXT_CHANGE:
+      return "NOTIFY_IME_OF_TEXT_CHANGE";
+    case NOTIFY_IME_OF_COMPOSITION_UPDATE:
+      return "NOTIFY_IME_OF_COMPOSITION_UPDATE";
+    case NOTIFY_IME_OF_POSITION_CHANGE:
+      return "NOTIFY_IME_OF_POSITION_CHANGE";
+    case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
+      return "NOTIFY_IME_OF_MOUSE_BUTTON_EVENT";
+    case REQUEST_TO_COMMIT_COMPOSITION:
+      return "REQUEST_TO_COMMIT_COMPOSITION";
+    case REQUEST_TO_CANCEL_COMPOSITION:
+      return "REQUEST_TO_CANCEL_COMPOSITION";
+    default:
+      return "Unexpected value";
+  }
+}
+
 class WritingModeToString final : public nsAutoCString
 {
 public:
@@ -192,6 +221,7 @@ IMEContentObserver::IMEContentObserver()
   : mESM(nullptr)
   , mSuppressNotifications(0)
   , mPreCharacterDataChangeLength(-1)
+  , mSendingNotification(NOTIFY_IME_OF_NOTHING)
   , mIsObserving(false)
   , mIMEHasFocus(false)
   , mIsFocusEventPending(false)
@@ -1257,6 +1287,16 @@ IMEContentObserver::AChangeEvent::IsSafeToNotifyIME(
   if (NS_WARN_IF(!nsContentUtils::IsSafeToRunScript())) {
     return false;
   }
+  // While we're sending a notification, we shouldn't send another notification
+  // recursively.
+  if (mIMEContentObserver->mSendingNotification != NOTIFY_IME_OF_NOTHING) {
+    MOZ_LOG(sIMECOLog, LogLevel::Debug,
+      ("IMECO: 0x%p   IMEContentObserver::AChangeEvent::IsSafeToNotifyIME(), "
+       "putting off sending notification due to detecting recursive call, "
+       "mIMEContentObserver={ mSendingNotification=%s }",
+       this, ToChar(mIMEContentObserver->mSendingNotification)));
+    return false;
+  }
   State state = mIMEContentObserver->GetState();
   if (aChangeEventType == eChangeEventType_Focus) {
     if (NS_WARN_IF(state != eState_Initializing && state != eState_Observing)) {
@@ -1363,8 +1403,12 @@ IMEContentObserver::IMENotificationSender::SendFocusSet()
     ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::"
      "SendFocusSet(), sending NOTIFY_IME_OF_FOCUS...", this));
 
+  MOZ_RELEASE_ASSERT(mIMEContentObserver->mSendingNotification ==
+                       NOTIFY_IME_OF_NOTHING);
+  mIMEContentObserver->mSendingNotification = NOTIFY_IME_OF_FOCUS;
   IMEStateManager::NotifyIME(IMENotification(NOTIFY_IME_OF_FOCUS),
                              mIMEContentObserver->mWidget);
+  mIMEContentObserver->mSendingNotification = NOTIFY_IME_OF_NOTHING;
 
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::"
@@ -1440,7 +1484,12 @@ IMEContentObserver::IMENotificationSender::SendSelectionChange()
 
   IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
   notification.SetData(mIMEContentObserver->mSelectionData);
+
+  MOZ_RELEASE_ASSERT(mIMEContentObserver->mSendingNotification ==
+                       NOTIFY_IME_OF_NOTHING);
+  mIMEContentObserver->mSendingNotification = NOTIFY_IME_OF_SELECTION_CHANGE;
   IMEStateManager::NotifyIME(notification, mIMEContentObserver->mWidget);
+  mIMEContentObserver->mSendingNotification = NOTIFY_IME_OF_NOTHING;
 
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::"
@@ -1476,7 +1525,12 @@ IMEContentObserver::IMENotificationSender::SendTextChange()
   IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
   notification.SetData(mIMEContentObserver->mTextChangeData);
   mIMEContentObserver->mTextChangeData.Clear();
+
+  MOZ_RELEASE_ASSERT(mIMEContentObserver->mSendingNotification ==
+                       NOTIFY_IME_OF_NOTHING);
+  mIMEContentObserver->mSendingNotification = NOTIFY_IME_OF_TEXT_CHANGE;
   IMEStateManager::NotifyIME(notification, mIMEContentObserver->mWidget);
+  mIMEContentObserver->mSendingNotification = NOTIFY_IME_OF_NOTHING;
 
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::"
@@ -1507,8 +1561,12 @@ IMEContentObserver::IMENotificationSender::SendPositionChange()
     ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::"
      "SendPositionChange(), sending NOTIFY_IME_OF_POSITION_CHANGE...", this));
 
+  MOZ_RELEASE_ASSERT(mIMEContentObserver->mSendingNotification ==
+                       NOTIFY_IME_OF_NOTHING);
+  mIMEContentObserver->mSendingNotification = NOTIFY_IME_OF_POSITION_CHANGE;
   IMEStateManager::NotifyIME(IMENotification(NOTIFY_IME_OF_POSITION_CHANGE),
                              mIMEContentObserver->mWidget);
+  mIMEContentObserver->mSendingNotification = NOTIFY_IME_OF_NOTHING;
 
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::"

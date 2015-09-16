@@ -43,6 +43,7 @@ public:
   typedef widget::IMENotification::SelectionChangeData SelectionChangeData;
   typedef widget::IMENotification::TextChangeData TextChangeData;
   typedef widget::IMENotification::TextChangeDataBase TextChangeDataBase;
+  typedef widget::IMEMessage IMEMessage;
 
   IMEContentObserver();
 
@@ -241,6 +242,11 @@ private:
   uint32_t mPreAttrChangeLength;
   uint32_t mSuppressNotifications;
   int64_t mPreCharacterDataChangeLength;
+
+  // mSendingNotification is a notification which is now sending from
+  // IMENotificationSender.  When the value is NOTIFY_IME_OF_NOTHING, it's
+  // not sending any notification.
+  IMEMessage mSendingNotification;
 
   bool mIsObserving;
   bool mIMEHasFocus;
