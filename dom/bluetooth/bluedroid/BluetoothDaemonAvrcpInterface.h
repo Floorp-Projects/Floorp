@@ -17,8 +17,6 @@ using mozilla::ipc::DaemonSocketPDU;
 using mozilla::ipc::DaemonSocketPDUHeader;
 using mozilla::ipc::DaemonSocketResultHandler;
 
-class BluetoothSetupResultHandler;
-
 class BluetoothDaemonAvrcpModule
 {
 public:
