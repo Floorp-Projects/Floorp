@@ -6,8 +6,8 @@ self.addEventListener("install", function(event) {
       .then(c => {
         return Promise.all(
           [
-            c.add(prefix + 'index.sjs'),
-            c.add(prefix + 'index-to-https.sjs')
+            c.add(new Request(prefix + 'index.sjs', {redirect: "manual"})),
+            c.add(new Request(prefix + 'index-to-https.sjs', {redirect: "manual"}))
           ]
         );
       })
