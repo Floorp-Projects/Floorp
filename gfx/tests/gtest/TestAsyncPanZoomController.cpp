@@ -154,7 +154,9 @@ public:
   }
 
 protected:
-  AsyncPanZoomController* MakeAPZCInstance(uint64_t aLayersId, GeckoContentController* aController) override;
+  AsyncPanZoomController* MakeAPZCInstance(uint64_t aLayersId,
+                                           GeckoContentController* aController,
+                                           TaskThrottler* aPaintThrottler) override;
 
   TimeStamp GetFrameTime() override {
     return mcc->Time();
@@ -168,8 +170,10 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
 public:
   TestAsyncPanZoomController(uint64_t aLayersId, MockContentControllerDelayed* aMcc,
                              TestAPZCTreeManager* aTreeManager,
+                             TaskThrottler* aPaintThrottler,
                              GestureBehavior aBehavior = DEFAULT_GESTURES)
-    : AsyncPanZoomController(aLayersId, aTreeManager, aTreeManager->GetInputQueue(), aMcc, aBehavior)
+    : AsyncPanZoomController(aLayersId, aTreeManager, aTreeManager->GetInputQueue(),
+        aMcc, aPaintThrottler, aBehavior)
     , mWaitForMainThread(false)
     , mcc(aMcc)
   {}
@@ -257,10 +261,12 @@ private:
 };
 
 AsyncPanZoomController*
-TestAPZCTreeManager::MakeAPZCInstance(uint64_t aLayersId, GeckoContentController* aController)
+TestAPZCTreeManager::MakeAPZCInstance(uint64_t aLayersId,
+                                      GeckoContentController* aController,
+                                      TaskThrottler* aPaintThrottler)
 {
   MockContentControllerDelayed* mcc = static_cast<MockContentControllerDelayed*>(aController);
-  return new TestAsyncPanZoomController(aLayersId, mcc, this,
+  return new TestAsyncPanZoomController(aLayersId, mcc, this, aPaintThrottler,
       AsyncPanZoomController::USE_GESTURE_DETECTOR);
 }
 
@@ -292,8 +298,9 @@ protected:
     APZThreadUtils::SetControllerThread(MessageLoop::current());
 
     mcc = new NiceMock<MockContentControllerDelayed>();
+    mPaintThrottler = new TaskThrottler(mcc->Time(), TimeDuration::FromMilliseconds(500));
     tm = new TestAPZCTreeManager(mcc);
-    apzc = new TestAsyncPanZoomController(0, mcc, tm, mGestureBehavior);
+    apzc = new TestAsyncPanZoomController(0, mcc, tm, mPaintThrottler, mGestureBehavior);
     apzc->SetFrameMetrics(TestFrameMetrics());
   }
 
@@ -376,6 +383,7 @@ protected:
 
   AsyncPanZoomController::GestureBehavior mGestureBehavior;
   nsRefPtr<MockContentControllerDelayed> mcc;
+  nsRefPtr<TaskThrottler> mPaintThrottler;
   nsRefPtr<TestAPZCTreeManager> tm;
   nsRefPtr<TestAsyncPanZoomController> apzc;
 };
@@ -970,7 +978,7 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   // sides.
 
   nsRefPtr<TestAsyncPanZoomController> childApzc =
-      new TestAsyncPanZoomController(0, mcc, tm);
+      new TestAsyncPanZoomController(0, mcc, tm, mPaintThrottler);
 
   const char* layerTreeSyntax = "c(c)";
   // LayerID                     0 1
@@ -3239,7 +3247,7 @@ public:
   APZTaskThrottlerTester()
   {
     now = TimeStamp::Now();
-    throttler = MakeUnique<TaskThrottler>(now, TimeDuration::FromMilliseconds(100));
+    throttler = new TaskThrottler(now, TimeDuration::FromMilliseconds(100));
   }
 
 protected:
@@ -3255,7 +3263,7 @@ protected:
   }
 
   TimeStamp now;
-  UniquePtr<TaskThrottler> throttler;
+  nsRefPtr<TaskThrottler> throttler;
   TaskRunMetrics metrics;
 };
 
