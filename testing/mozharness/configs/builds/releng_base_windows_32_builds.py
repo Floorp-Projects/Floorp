@@ -30,16 +30,10 @@ config = {
                 os.getcwd(), 'build', 'tools', 'buildfarm', 'utils', 'hgtool.py'
             )
         ],
-        "buildbot": {
-            'gpo_location': [
-                sys.executable,
-                'c:\\mozilla-build\\buildbotve\\scripts\\buildbot'
-            ],
-            'puppet_location': [
-                'c:\\mozilla-build\\buildbot-0.8.4-pre-moz6\\Scripts\\python.exe',
-                'c:\\mozilla-build\\buildbot-0.8.4-pre-moz6\\scripts\\buildbot'
-            ]
-        },
+        "buildbot": [
+            sys.executable,
+            'c:\\mozilla-build\\buildbotve\\scripts\\buildbot'
+        ],
         "make": [
             sys.executable,
             os.path.join(
