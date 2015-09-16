@@ -4752,71 +4752,60 @@ Parser<FullParseHandler>::exportDeclaration()
     TokenKind tt;
     if (!tokenStream.getToken(&tt))
         return null();
-    bool isExportStar = tt == TOK_MUL;
     switch (tt) {
-      case TOK_LC:
-      case TOK_MUL:
+      case TOK_LC: {
         kid = handler.newList(PNK_EXPORT_SPEC_LIST);
         if (!kid)
             return null();
 
-        if (tt == TOK_LC) {
-            while (true) {
-                // Handle the forms |export {}| and |export { ..., }| (where ...
-                // is non empty), by escaping the loop early if the next token
-                // is }.
-                if (!tokenStream.peekToken(&tt))
-                    return null();
-                if (tt == TOK_RC)
-                    break;
+        while (true) {
+            // Handle the forms |export {}| and |export { ..., }| (where ...
+            // is non empty), by escaping the loop early if the next token
+            // is }.
+            if (!tokenStream.peekToken(&tt))
+                return null();
+            if (tt == TOK_RC)
+                break;
 
-                MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_BINDING_NAME);
-                Node bindingName = newName(tokenStream.currentName());
-                if (!bindingName)
-                    return null();
+            MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_BINDING_NAME);
+            Node bindingName = newName(tokenStream.currentName());
+            if (!bindingName)
+                return null();
 
-                if (!tokenStream.getToken(&tt))
+            if (!tokenStream.getToken(&tt))
+                return null();
+            if (tt == TOK_NAME && tokenStream.currentName() == context->names().as) {
+                if (!tokenStream.getToken(&tt, TokenStream::KeywordIsName))
                     return null();
-                if (tt == TOK_NAME && tokenStream.currentName() == context->names().as) {
-                    if (!tokenStream.getToken(&tt, TokenStream::KeywordIsName))
-                        return null();
-                    if (tt != TOK_NAME) {
-                        report(ParseError, false, null(), JSMSG_NO_EXPORT_NAME);
-                        return null();
-                    }
-                } else {
-                    tokenStream.ungetToken();
+                if (tt != TOK_NAME) {
+                    report(ParseError, false, null(), JSMSG_NO_EXPORT_NAME);
+                    return null();
                 }
-                Node exportName = newName(tokenStream.currentName());
-                if (!exportName)
-                    return null();
-
-                if (!addExportName(exportName->pn_atom))
-                    return null();
-
-                Node exportSpec = handler.newBinary(PNK_EXPORT_SPEC, bindingName, exportName);
-                if (!exportSpec)
-                    return null();
-
-                handler.addList(kid, exportSpec);
-
-                bool matched;
-                if (!tokenStream.matchToken(&matched, TOK_COMMA))
-                    return null();
-                if (!matched)
-                    break;
+            } else {
+                tokenStream.ungetToken();
             }
+            Node exportName = newName(tokenStream.currentName());
+            if (!exportName)
+                return null();
 
-            MUST_MATCH_TOKEN(TOK_RC, JSMSG_RC_AFTER_EXPORT_SPEC_LIST);
-        } else {
-            // Handle the form |export *| by adding a special export batch
-            // specifier to the list.
-            Node exportSpec = handler.newNullary(PNK_EXPORT_BATCH_SPEC, JSOP_NOP, pos());
+            if (!addExportName(exportName->pn_atom))
+                return null();
+
+            Node exportSpec = handler.newBinary(PNK_EXPORT_SPEC, bindingName, exportName);
             if (!exportSpec)
                 return null();
 
             handler.addList(kid, exportSpec);
+
+            bool matched;
+            if (!tokenStream.matchToken(&matched, TOK_COMMA))
+                return null();
+            if (!matched)
+                break;
         }
+
+        MUST_MATCH_TOKEN(TOK_RC, JSMSG_RC_AFTER_EXPORT_SPEC_LIST);
+
         if (!tokenStream.getToken(&tt))
             return null();
         if (tt == TOK_NAME && tokenStream.currentName() == context->names().from) {
@@ -4830,9 +4819,6 @@ Parser<FullParseHandler>::exportDeclaration()
                 return null();
 
             return handler.newExportFromDeclaration(begin, kid, moduleSpec);
-        } else if (isExportStar) {
-            report(ParseError, false, null(), JSMSG_FROM_AFTER_EXPORT_STAR);
-            return null();
         } else {
             tokenStream.ungetToken();
         }
@@ -4840,6 +4826,43 @@ Parser<FullParseHandler>::exportDeclaration()
         if (!MatchOrInsertSemicolon(tokenStream))
             return null();
         break;
+      }
+
+      case TOK_MUL: {
+        kid = handler.newList(PNK_EXPORT_SPEC_LIST);
+        if (!kid)
+            return null();
+
+        // Handle the form |export *| by adding a special export batch
+        // specifier to the list.
+        Node exportSpec = handler.newNullary(PNK_EXPORT_BATCH_SPEC, JSOP_NOP, pos());
+        if (!exportSpec)
+            return null();
+
+        handler.addList(kid, exportSpec);
+
+        if (!tokenStream.getToken(&tt))
+            return null();
+        if (tt == TOK_NAME && tokenStream.currentName() == context->names().from) {
+            MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
+
+            Node moduleSpec = stringLiteral();
+            if (!moduleSpec)
+                return null();
+
+            if (!MatchOrInsertSemicolon(tokenStream))
+                return null();
+
+            return handler.newExportFromDeclaration(begin, kid, moduleSpec);
+        } else {
+            report(ParseError, false, null(), JSMSG_FROM_AFTER_EXPORT_STAR);
+            return null();
+        }
+
+        if (!MatchOrInsertSemicolon(tokenStream))
+            return null();
+        break;
+      }
 
       case TOK_FUNCTION:
         kid = functionStmt(YieldIsKeyword, NameRequired);
