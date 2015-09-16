@@ -7,7 +7,7 @@
 const { Cc, Ci, Cu } = require("chrome");
 const l10n = require("gcli/l10n");
 const { Services } = require("resource://gre/modules/Services.jsm");
-const LayoutHelpers = require("devtools/toolkit/layout-helpers");
+const { getRect } = require("devtools/toolkit/layout/utils");
 
 loader.lazyImporter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
 loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm");
@@ -274,8 +274,7 @@ function createScreenshotData(document, args) {
     height = window.innerHeight + window.scrollMaxY;
   }
   else if (args.selector) {
-    const lh = new LayoutHelpers(window);
-    ({ top, left, width, height } = lh.getRect(args.selector, window));
+    ({ top, left, width, height } = getRect(window, args.selector, window));
   }
   else {
     left = window.scrollX;

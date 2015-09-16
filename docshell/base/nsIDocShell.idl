@@ -43,10 +43,10 @@ interface nsIPrivacyTransitionObserver;
 interface nsIReflowObserver;
 interface nsIScrollObserver;
 interface nsITabParent;
- 
+
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(35a26f70-dbb9-450d-b634-cd0bbb9b8e13)]
+[scriptable, builtinclass, uuid(e534b6ee-c35d-4ee2-acce-1bcd08a91230)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -57,7 +57,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    *
    * @param uri        - The URI to load.
    * @param loadInfo   - This is the extended load info for this load.  This
-   *                     most often will be null, but if you need to do 
+   *                     most often will be null, but if you need to do
    *                     additional setup for this load you can get a loadInfo
    *                     object by calling createLoadInfo.  Once you have this
    *                     object you can set the needed properties on it and
@@ -86,10 +86,10 @@ interface nsIDocShell : nsIDocShellTreeItem
    * @param aContentType    - The type (MIME) of data being loaded (empty if unknown).
    * @param aContentCharset - The charset of the data being loaded (empty if unknown).
    * @param aLoadInfo       - This is the extended load info for this load.  This
-   *                          most often will be null, but if you need to do 
+   *                          most often will be null, but if you need to do
    *                          additional setup for this load you can get a
    *                          loadInfo object by calling createLoadInfo.  Once
-   *                          you have this object you can set the needed 
+   *                          you have this object you can set the needed
    *                          properties on it and then pass it to loadStream.
    */
   [noscript]void loadStream(in nsIInputStream aStream,
@@ -125,7 +125,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * @param aURI            - The URI to load.
    * @param aReferrer       - Referring URI
    * @param aReferrerPolicy - Referrer policy
-   * @param aOwner          - Owner (security principal) 
+   * @param aOwner          - Owner (security principal)
    * @param aInheritOwner   - Flag indicating whether the owner of the current
    *                          document should be inherited if aOwner is null.
    * @param aStopActiveDoc  - Flag indicating whether loading the current
@@ -191,7 +191,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * For editors and suchlike who wish to change the URI associated with the
    * document. Note if you want to get the current URI, use the read-only
    * property on nsIWebNavigation.
-   */ 
+   */
   void setCurrentURI(in nsIURI aURI);
 
   /**
@@ -324,7 +324,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * not supporting zoom.  Implementations not supporting zoom should return
    * 1.0 all the time for the Get operation.  1.0 by the way is the default
    * of zoom.  This means 100% of normal scaling or in other words normal size
-   * no zoom. 
+   * no zoom.
    */
   attribute float zoom;
 
@@ -363,7 +363,7 @@ interface nsIDocShell : nsIDocShellTreeItem
   const unsigned long BUSY_FLAGS_PAGE_LOADING     = 4;
 
   /**
-   * Load commands for the document 
+   * Load commands for the document
    */
   const unsigned long LOAD_CMD_NORMAL  = 0x1;   // Normal load
   const unsigned long LOAD_CMD_RELOAD  = 0x2;   // Reload
@@ -372,7 +372,7 @@ interface nsIDocShell : nsIDocShellTreeItem
 
   readonly attribute unsigned long busyFlags;
 
-  /* 
+  /*
    * attribute to access the loadtype  for the document
    */
   attribute unsigned long  loadType;
@@ -509,7 +509,7 @@ interface nsIDocShell : nsIDocShellTreeItem
   void addSessionStorage(in nsIPrincipal principal, in nsIDOMStorage storage);
 
   /**
-   * Gets the channel for the currently loaded document, if any. 
+   * Gets the channel for the currently loaded document, if any.
    * For a new document load, this will be the channel of the previous document
    * until after OnLocationChange fires.
    */
@@ -597,7 +597,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * is actively being rendered to the screen (ex. painted on a canvas)
    * and should be treated accordingly.
    **/
-  attribute boolean isOffScreenBrowser;    
+  attribute boolean isOffScreenBrowser;
 
   /**
    * If the current content viewer isn't initialized for print preview,
@@ -842,6 +842,12 @@ interface nsIDocShell : nsIDocShellTreeItem
   nsIDocShell getSameTypeParentIgnoreBrowserAndAppBoundaries();
 
   /**
+   * Like nsIDocShellTreeItem::GetSameTypeRootTreeItem, except this ignores
+   * <iframe mozbrowser> and <iframe mozapp> boundaries.
+   */
+  nsIDocShell getSameTypeRootTreeItemIgnoreBrowserAndAppBoundaries();
+
+  /**
    * True iff asynchronous panning and zooming is enabled for this
    * docshell.
    */
@@ -896,9 +902,9 @@ interface nsIDocShell : nsIDocShellTreeItem
   /**
    * Checks whether the channel associated with the root docShell is equal to
    * mMixedContentChannel. If they are the same, allowMixedContent is set to true.
-   * Checks if the root document has a secure connection. If it is, sets 
-   * rootHasSecureConnection to true. If the docShell is the root doc shell, 
-   * isRootDocShell is set to true. 
+   * Checks if the root document has a secure connection. If it is, sets
+   * rootHasSecureConnection to true. If the docShell is the root doc shell,
+   * isRootDocShell is set to true.
    */
   void GetAllowMixedContentAndConnectionData(out boolean rootHasSecureConnection, out boolean allowMixedContent, out boolean isRootDocShell);
 
@@ -910,7 +916,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * not be allowed.
    */
   [noscript, notxpcom] bool pluginsAllowedInCurrentDoc();
-  
+
 
   /**
    * Attribute that determines whether fullscreen is allowed to be entered for
@@ -923,7 +929,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * exception.
    */
   [infallible] readonly attribute boolean fullscreenAllowed;
-  
+
   void setFullscreenAllowed(in boolean allowed);
 
   [notxpcom] uint32_t orientationLock();
@@ -940,14 +946,14 @@ interface nsIDocShell : nsIDocShellTreeItem
            attribute  nsIEditor editor;
   readonly attribute  boolean   editable;             /* this docShell is editable */
   readonly attribute  boolean   hasEditingSession;    /* this docShell has an editing session */
-    
+
   /**
    * Make this docShell editable, setting a flag that causes
    * an editor to get created, either immediately, or after
    * a url has been loaded.
    *      @param  inWaitForUriLoad    true to wait for a URI before
    *                                  creating the editor.
-   */     
+   */
   void makeEditable(in boolean inWaitForUriLoad);
 
   /**

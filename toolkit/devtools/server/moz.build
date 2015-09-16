@@ -50,7 +50,7 @@ EXTRA_JS_MODULES.devtools.server.actors += [
     'actors/eventlooplag.js',
     'actors/framerate.js',
     'actors/gcli.js',
-    'actors/highlighter.js',
+    'actors/highlighters.js',
     'actors/inspector.js',
     'actors/layout.js',
     'actors/memory.js',
@@ -89,4 +89,19 @@ EXTRA_JS_MODULES.devtools.server.actors.utils += [
     'actors/utils/ScriptStore.js',
     'actors/utils/stack.js',
     'actors/utils/TabSources.js'
+]
+
+EXTRA_JS_MODULES.devtools.server.actors.highlighters += [
+    'actors/highlighters/auto-refresh.js',
+    'actors/highlighters/box-model.js',
+    'actors/highlighters/css-transform.js',
+    'actors/highlighters/geometry-editor.js',
+    'actors/highlighters/rect.js',
+    'actors/highlighters/rulers.js',
+    'actors/highlighters/selector.js',
+    'actors/highlighters/simple-outline.js'
+]
+
+EXTRA_JS_MODULES.devtools.server.actors.highlighters.utils += [
+    'actors/highlighters/utils/markup.js'
 ]

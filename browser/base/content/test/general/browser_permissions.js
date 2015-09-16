@@ -18,15 +18,19 @@ add_task(function* testMainViewVisible() {
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   yield promiseTabLoadEvent(tab, PERMISSIONS_PAGE);
 
+  let permissionsList = document.getElementById("identity-popup-permission-list");
+  let emptyLabel = permissionsList.nextSibling;
+
   gIdentityHandler._identityBox.click();
-  ok(is_hidden(gIdentityHandler._permissionsContainer), "The container is hidden");
+  ok(!is_hidden(emptyLabel), "List of permissions is empty");
   gIdentityHandler._identityPopup.hidden = true;
 
   gIdentityHandler.setPermission("install", 1);
 
   gIdentityHandler._identityBox.click();
-  ok(!is_hidden(gIdentityHandler._permissionsContainer), "The container is visible");
-  let menulists = gIdentityHandler._permissionsContainer.querySelectorAll("menulist");
+  ok(is_hidden(emptyLabel), "List of permissions is not empty");
+
+  let menulists = permissionsList.querySelectorAll("menulist");
   is(menulists.length, 1, "One permission visible in main view");
   is(menulists[0].id, "identity-popup-permission:install", "Install permission visible");
   is(menulists[0].value, "1", "Correct value on install menulist");
@@ -35,6 +39,6 @@ add_task(function* testMainViewVisible() {
   gIdentityHandler.setPermission("install", SitePermissions.getDefault("install"));
 
   gIdentityHandler._identityBox.click();
-  ok(is_hidden(gIdentityHandler._permissionsContainer), "The container is hidden");
+  ok(!is_hidden(emptyLabel), "List of permissions is empty");
   gIdentityHandler._identityPopup.hidden = true;
 });

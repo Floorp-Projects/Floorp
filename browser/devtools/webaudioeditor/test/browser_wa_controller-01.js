@@ -18,7 +18,8 @@ add_task(function*() {
 
   let [actors] = yield Promise.all([
     once(gAudioNodes, "add", 2),
-    once(gAudioNodes, "disconnect")
+    once(gAudioNodes, "disconnect"),
+    waitForGraphRendered(panelWin, 2, 0)
   ]);
 
   ok(true, "Successfully disconnected a just-created node.");

@@ -25,6 +25,8 @@
             Cu.import("resource://gre/modules/SettingsRequestManager.jsm");
           }
 
+          Services.prefs.setBoolPref("devtools.webide.sidebars", false);
+
           if (!DebuggerServer.initialized) {
             DebuggerServer.init();
             DebuggerServer.addBrowserActors();
