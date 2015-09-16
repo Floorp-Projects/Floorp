@@ -2803,7 +2803,7 @@ var DefaultBrowserCheck = {
 
       this._setAsDefaultButtonClickStartTime = Math.floor(Date.now() / 1000);
       this._setAsDefaultTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      this._setAsDefaultTimer.init(function() {
+      this._setAsDefaultTimer.init(() => {
         let isDefault = false;
         let isDefaultError = false;
         try {

@@ -7390,6 +7390,12 @@
     "releaseChannelCollection": "opt-out",
     "description": "The number of times that a profile has seen the 'Set Default Browser' dialog."
   },
+  "BROWSER_SET_DEFAULT_ALWAYS_CHECK": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "True if the profile has `browser.shell.checkDefaultBrowser` set to true."
+  },
   "BROWSER_SET_DEFAULT_RESULT": {
     "expires_in_version": "never",
     "kind": "enumerated",
