@@ -509,9 +509,6 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           oldEffect->Properties() = newEffect->Properties();
         }
 
-        // Reset compositor state so animation will be re-synchronized.
-        oldAnim->ClearIsRunningOnCompositor();
-
         // Handle changes in play state. If the animation is idle, however,
         // changes to animation-play-state should *not* restart it.
         if (oldAnim->PlayState() != AnimationPlayState::Idle) {

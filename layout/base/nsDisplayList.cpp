@@ -473,7 +473,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
     }
 
     AddAnimationForProperty(aFrame, *property, anim, aLayer, aData, aPending);
-    anim->SetIsRunningOnCompositor();
+    effect->SetIsRunningOnCompositor(aProperty, true);
   }
 }
 
@@ -522,11 +522,16 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
   aLayer->SetAnimationGeneration(animationGeneration);
 
   nsPresContext* presContext = aFrame->PresContext();
+  presContext->TransitionManager()->ClearIsRunningOnCompositor(aFrame,
+                                                               aProperty);
+  presContext->AnimationManager()->ClearIsRunningOnCompositor(aFrame,
+                                                              aProperty);
   AnimationCollection* transitions =
-    presContext->TransitionManager()->GetAnimationsForCompositor(aFrame, aProperty);
+    presContext->TransitionManager()->GetAnimationsForCompositor(aFrame,
+                                                                 aProperty);
   AnimationCollection* animations =
-    presContext->AnimationManager()->GetAnimationsForCompositor(aFrame, aProperty);
-
+    presContext->AnimationManager()->GetAnimationsForCompositor(aFrame,
+                                                                aProperty);
   if (!animations && !transitions) {
     return;
   }
