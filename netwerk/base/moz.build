@@ -189,7 +189,6 @@ UNIFIED_SOURCES += [
     'CaptivePortalService.cpp',
     'ChannelDiverterChild.cpp',
     'ChannelDiverterParent.cpp',
-    'ClosingService.cpp',
     'Dashboard.cpp',
     'EventTokenBucket.cpp',
     'LoadContextInfo.cpp',

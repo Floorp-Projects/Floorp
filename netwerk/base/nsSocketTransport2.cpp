@@ -16,7 +16,6 @@
 #include "nsProxyInfo.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
-#include "ClosingService.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "plstr.h"
@@ -1195,7 +1194,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
         if (NS_FAILED(rv)) {
             SOCKET_LOG(("  error pushing io layer [%u:%s rv=%x]\n", i, mTypes[i], rv));
             if (fd) {
-                PR_Close(fd);
+                CloseSocket(fd, mSocketTransportService->IsTelemetryEnabled());
             }
         }
     }
@@ -1323,9 +1322,6 @@ nsSocketTransport::InitiateSocket()
     // Attach network activity monitor
     mozilla::net::NetworkActivityMonitor::AttachIOLayer(fd);
 
-    // Attach closing service.
-    ClosingService::AttachIOLayer(fd);
-
     PRStatus status;
 
     // Make the socket non-blocking...
@@ -1362,7 +1358,7 @@ nsSocketTransport::InitiateSocket()
     // inform socket transport about this newly created socket...
     rv = mSocketTransportService->AttachSocket(fd, this);
     if (NS_FAILED(rv)) {
-        PR_Close(fd);
+        CloseSocket(fd, mSocketTransportService->IsTelemetryEnabled());
         return rv;
     }
     mAttached = true;
@@ -1702,7 +1698,8 @@ public:
 
   NS_IMETHOD Run()
   {
-    PR_Close(mFD);
+    nsSocketTransport::CloseSocket(mFD,
+      gSocketTransportService->IsTelemetryEnabled());
     return NS_OK;
   }
 private:
@@ -1734,7 +1731,7 @@ nsSocketTransport::ReleaseFD_Locked(PRFileDesc *fd)
     if (--mFDref == 0) {
         if (PR_GetCurrentThread() == gSocketThread) {
             SOCKET_LOG(("nsSocketTransport: calling PR_Close [this=%p]\n", this));
-            PR_Close(mFD);
+            CloseSocket(mFD, mSocketTransportService->IsTelemetryEnabled());
         } else {
             // Can't PR_Close() a socket off STS thread. Thunk it to STS to die
             STS_PRCloseOnSocketTransport(mFD);
@@ -3040,6 +3037,29 @@ nsSocketTransport::PRFileDescAutoLock::SetKeepaliveVals(bool aEnabled,
                "called on unsupported platform!");
     return NS_ERROR_UNEXPECTED;
 #endif
+}
+
+void
+nsSocketTransport::CloseSocket(PRFileDesc *aFd, bool aTelemetryEnabled) {
+
+    // We use PRIntervalTime here because we need
+    // nsIOService::LastOfflineStateChange time and
+    // nsIOService::LastConectivityChange time to be atomic.
+    PRIntervalTime closeStarted;
+    if (aTelemetryEnabled) {
+        closeStarted = PR_IntervalNow();
+    }
+
+    PR_Close(aFd);
+
+    if (aTelemetryEnabled) {
+        SendPRBlockingTelemetry(closeStarted,
+            Telemetry::PRCLOSE_BLOCKING_TIME_NORMAL,
+            Telemetry::PRCLOSE_BLOCKING_TIME_SHUTDOWN,
+            Telemetry::PRCLOSE_BLOCKING_TIME_CONNECTIVITY_CHANGE,
+            Telemetry::PRCLOSE_BLOCKING_TIME_LINK_CHANGE,
+            Telemetry::PRCLOSE_BLOCKING_TIME_OFFLINE);
+    }
 }
 
 void
