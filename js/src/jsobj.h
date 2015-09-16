@@ -618,14 +618,16 @@ struct JSObject_Slots16 : JSObject { void* data[3]; js::Value fslots[16]; };
 /* static */ MOZ_ALWAYS_INLINE void
 JSObject::readBarrier(JSObject* obj)
 {
-    if (!isNullLike(obj) && obj->isTenured())
+    MOZ_ASSERT_IF(obj, !isNullLike(obj));
+    if (obj && obj->isTenured())
         obj->asTenured().readBarrier(&obj->asTenured());
 }
 
 /* static */ MOZ_ALWAYS_INLINE void
 JSObject::writeBarrierPre(JSObject* obj)
 {
-    if (!isNullLike(obj) && obj->isTenured())
+    MOZ_ASSERT_IF(obj, !isNullLike(obj));
+    if (obj && obj->isTenured())
         obj->asTenured().writeBarrierPre(&obj->asTenured());
 }
 
@@ -633,13 +635,15 @@ JSObject::writeBarrierPre(JSObject* obj)
 JSObject::writeBarrierPost(void* cellp, JSObject* prev, JSObject* next)
 {
     MOZ_ASSERT(cellp);
+    MOZ_ASSERT_IF(next, !IsNullTaggedPointer(next));
+    MOZ_ASSERT_IF(prev, !IsNullTaggedPointer(prev));
 
     // If the target needs an entry, add it.
     js::gc::StoreBuffer* buffer;
-    if (!IsNullTaggedPointer(next) && (buffer = next->storeBuffer())) {
+    if (next && (buffer = next->storeBuffer())) {
         // If we know that the prev has already inserted an entry, we can skip
         // doing the lookup to add the new entry.
-        if (!IsNullTaggedPointer(prev) && prev->storeBuffer()) {
+        if (prev && prev->storeBuffer()) {
             buffer->assertHasCellEdge(static_cast<js::gc::Cell**>(cellp));
             return;
         }
@@ -648,7 +652,7 @@ JSObject::writeBarrierPost(void* cellp, JSObject* prev, JSObject* next)
     }
 
     // Remove the prev entry if the new value does not need it.
-    if (!IsNullTaggedPointer(prev) && (buffer = prev->storeBuffer()))
+    if (prev && (buffer = prev->storeBuffer()))
         buffer->unputCellFromAnyThread(static_cast<js::gc::Cell**>(cellp));
 }
 
