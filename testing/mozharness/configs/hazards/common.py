@@ -76,6 +76,7 @@ config = {
     "mock_files": [
         ("/home/cltbld/.ssh", "/home/mock_mozilla/.ssh"),
         ("/tools/tooltool.py", "/tools/tooltool.py"),
+        ('/usr/local/lib/hgext', '/usr/local/lib/hgext'),
     ],
     "env_replacements": {
         "pythondir": PYTHON_DIR,
