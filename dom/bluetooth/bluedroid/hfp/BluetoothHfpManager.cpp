@@ -1399,9 +1399,7 @@ BluetoothHfpManager::ConnectionStateNotification(
 
   } else if (aState == HFP_CONNECTION_STATE_CONNECTED) {
     // Once RFCOMM is connected, enable NREC before each new SLC connection
-    mNrecEnabled = HFP_NREC_STARTED;
-    NotifyConnectionStateChanged(
-      NS_LITERAL_STRING(BLUETOOTH_HFP_NREC_STATUS_CHANGED_ID));
+    NRECNotification(HFP_NREC_STARTED, mDeviceAddress);
   }
 }
 
@@ -1478,6 +1476,12 @@ BluetoothHfpManager::DtmfNotification(char aDtmf, const nsAString& aBdAddress)
   NotifyDialer(NS_ConvertUTF8toUTF16(message));
 }
 
+/**
+ * NREC status will be set when:
+ * 1. Get an AT command from HF device.
+ *    (Bluetooth HFP spec v1.6 merely defines for the "Disable" part.)
+ * 2. Once RFCOMM is connected, enable NREC before each new SLC connection.
+ */
 void
 BluetoothHfpManager::NRECNotification(BluetoothHandsfreeNRECState aNrec,
                                       const nsAString& aBdAddr)
@@ -1488,7 +1492,6 @@ BluetoothHfpManager::NRECNotification(BluetoothHandsfreeNRECState aNrec,
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   NS_ENSURE_TRUE_VOID(obs);
 
-  // Set NREC status once getting AT command
   mNrecEnabled = static_cast<bool>(aNrec);
 
   // Notify audio manager
