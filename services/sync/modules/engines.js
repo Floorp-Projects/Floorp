@@ -310,6 +310,7 @@ Store.prototype = {
       } catch (ex if !Async.isShutdownException(ex)) {
         this._log.warn("Failed to apply incoming record " + record.id);
         this._log.warn("Encountered exception: " + Utils.exceptionStr(ex));
+        this.engine._noteApplyFailure();
         failed.push(record.id);
       }
     };
@@ -1065,6 +1066,7 @@ SyncEngine.prototype = {
               // Fall through to error case.
             case SyncEngine.kRecoveryStrategy.error:
               self._log.warn("Error decrypting record: " + Utils.exceptionStr(ex));
+              self._noteApplyFailure();
               failed.push(item.id);
               return;
             case SyncEngine.kRecoveryStrategy.ignore:
@@ -1075,6 +1077,7 @@ SyncEngine.prototype = {
         }
       } catch (ex) {
         self._log.warn("Error decrypting record: " + Utils.exceptionStr(ex));
+        self._noteApplyFailure();
         failed.push(item.id);
         return;
       }
@@ -1084,11 +1087,13 @@ SyncEngine.prototype = {
         shouldApply = self._reconcile(item);
       } catch (ex if (ex.code == Engine.prototype.eEngineAbortApplyIncoming)) {
         self._log.warn("Reconciliation failed: aborting incoming processing.");
+        self._noteApplyFailure();
         failed.push(item.id);
         aborting = ex.cause;
       } catch (ex if !Async.isShutdownException(ex)) {
         self._log.warn("Failed to reconcile incoming record " + item.id);
         self._log.warn("Encountered exception: " + Utils.exceptionStr(ex));
+        self._noteApplyFailure();
         failed.push(item.id);
         return;
       }
@@ -1194,7 +1199,13 @@ SyncEngine.prototype = {
     // Apply remaining items.
     doApplyBatchAndPersistFailed.call(this);
 
-    count.newFailed = Utils.arraySub(this.previousFailed, failedInPreviousSync).length;
+    count.newFailed = this.previousFailed.reduce((count, engine) => {
+      if (failedInPreviousSync.indexOf(engine) == -1) {
+        count++;
+        this._noteApplyNewFailure();
+      }
+      return count;
+    }, 0);
     count.succeeded = Math.max(0, count.applied - count.failed);
     this._log.info(["Records:",
                     count.applied, "applied,",
@@ -1203,6 +1214,16 @@ SyncEngine.prototype = {
                     count.newFailed, "newly failed to apply,",
                     count.reconciled, "reconciled."].join(" "));
     Observers.notify("weave:engine:sync:applied", count, this.name);
+  },
+
+  _noteApplyFailure: function () {
+    Services.telemetry.getKeyedHistogramById(
+      "WEAVE_ENGINE_APPLY_FAILURES").add(this.name);
+  },
+
+  _noteApplyNewFailure: function () {
+    Services.telemetry.getKeyedHistogramById(
+      "WEAVE_ENGINE_APPLY_NEW_FAILURES").add(this.name);
   },
 
   /**
