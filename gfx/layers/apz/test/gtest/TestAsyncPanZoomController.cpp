@@ -947,8 +947,8 @@ TEST_F(APZCBasicTester, Overzoom) {
   EXPECT_EQ(0.8f, fm.GetZoom().ToScaleFactor().scale);
   // bug 936721 - PGO builds introduce rounding error so
   // use a fuzzy match instead
-  EXPECT_LT(abs(fm.GetScrollOffset().x), 1e-5);
-  EXPECT_LT(abs(fm.GetScrollOffset().y), 1e-5);
+  EXPECT_LT(std::abs(fm.GetScrollOffset().x), 1e-5);
+  EXPECT_LT(std::abs(fm.GetScrollOffset().y), 1e-5);
 }
 
 TEST_F(APZCBasicTester, SimpleTransform) {
