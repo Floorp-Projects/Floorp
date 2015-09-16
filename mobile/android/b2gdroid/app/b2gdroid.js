@@ -1003,12 +1003,12 @@ pref("dom.mozTCPSocket.enabled", true);
 pref("dom.mozContacts.enabled", true);
 
 // OOP apps.
-pref("dom.ipc.tabs.disabled", true);
+pref("dom.ipc.tabs.disabled", false);
 pref("dom.ipc.processCount", 100000);
 
 // Enable pre-launching content processes for improved startup time
 // (hiding latency).
-pref("dom.ipc.processPrelaunch.enabled", false);
+pref("dom.ipc.processPrelaunch.enabled", true);
 // Wait this long before pre-launching a new subprocess.
 pref("dom.ipc.processPrelaunch.delayMs", 5000);
 
