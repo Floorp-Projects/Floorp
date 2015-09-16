@@ -36,6 +36,7 @@ import org.mozilla.gecko.annotation.WebRTCJNITarget;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoAppShell.AppStateListener;
 
+
 // Wrapper for android Camera, with support for direct local preview rendering.
 // Threading notes: this class is called from ViE C++ code, and from Camera &
 // SurfaceHolder Java callbacks.  Since these calls happen on different threads,
@@ -269,7 +270,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
 
       // Check if requested fps range is supported by camera,
       // otherwise calculate frame drop ratio.
-      List<int[]> supportedFpsRanges = parameters.getSupportedPreviewFpsRange();
+      List<int[]> supportedFpsRanges =
+          VideoCaptureDeviceInfoAndroid.getFpsRangesRobust(parameters);
       frameDropRatio = Integer.MAX_VALUE;
       for (int i = 0; i < supportedFpsRanges.size(); i++) {
         int[] range = supportedFpsRanges.get(i);
