@@ -62,7 +62,7 @@ EXPORTS += [
     'nsVersionComparator.h',
     'nsWeakReference.h',
     'nsXPTCUtils.h',
-    'pldhash.h',
+    'PLDHashTable.h',
 ]
 
 EXPORTS.mozilla += [

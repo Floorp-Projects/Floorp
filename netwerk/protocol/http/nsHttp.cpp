@@ -8,7 +8,7 @@
 #include "HttpLog.h"
 
 #include "nsHttp.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/HashFunctions.h"
 #include "nsCRT.h"
