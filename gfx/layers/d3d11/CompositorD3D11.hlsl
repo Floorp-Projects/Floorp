@@ -163,11 +163,25 @@ float4 RGBAShaderMask(const VS_MASK_OUTPUT aVertex) : SV_Target
   return tRGB.Sample(sSampler, aVertex.vTexCoords) * fLayerOpacity * mask;
 }
 
+float4 RGBAShaderMaskPremul(const VS_MASK_OUTPUT aVertex) : SV_Target
+{
+  float4 result = RGBAShaderMask(aVertex);
+  result.rgb *= result.a;
+  return result;
+}
+
 float4 RGBAShaderMask3D(const VS_MASK_3D_OUTPUT aVertex) : SV_Target
 {
   float2 maskCoords = aVertex.vMaskCoords.xy / aVertex.vMaskCoords.z;
   float mask = tMask.Sample(LayerTextureSamplerLinear, maskCoords).r;
   return tRGB.Sample(sSampler, aVertex.vTexCoords) * fLayerOpacity * mask;
+}
+
+float4 RGBAShaderMask3DPremul(const VS_MASK_3D_OUTPUT aVertex) : SV_Target
+{
+  float4 result = RGBAShaderMask3D(aVertex);
+  result.rgb *= result.a;
+  return result;
 }
 
 float4 RGBShaderMask(const VS_MASK_OUTPUT aVertex) : SV_Target
@@ -246,6 +260,13 @@ float4 SolidColorShaderMask(const VS_MASK_OUTPUT aVertex) : SV_Target
 float4 RGBAShader(const VS_OUTPUT aVertex) : SV_Target
 {
   return tRGB.Sample(sSampler, aVertex.vTexCoords) * fLayerOpacity;
+}
+
+float4 RGBAShaderPremul(const VS_OUTPUT aVertex) : SV_Target
+{
+  float4 result = RGBAShader(aVertex);
+  result.rgb *= result.a;
+  return result;
 }
 
 float4 RGBShader(const VS_OUTPUT aVertex) : SV_Target
