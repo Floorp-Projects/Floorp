@@ -6211,12 +6211,23 @@
           else
             aMenuitem.removeAttribute("selected");
 
+          function addEndImage() {
+            let endImage = document.createElement("image");
+            endImage.setAttribute("class", "alltabs-endimage");
+            let endImageContainer = document.createElement("hbox");
+            endImageContainer.setAttribute("align", "center");
+            endImageContainer.setAttribute("pack", "center");
+            endImageContainer.appendChild(endImage);
+            aMenuitem.appendChild(endImageContainer);
+            return endImage;
+          }
+
+          if (aMenuitem.firstChild)
+            aMenuitem.firstChild.remove();
           if (aTab.hasAttribute("muted"))
-            aMenuitem.setAttribute("endimage", "chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-muted");
+            addEndImage().setAttribute("muted", "true");
           else if (aTab.hasAttribute("soundplaying"))
-            aMenuitem.setAttribute("endimage", "chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio");
-          else
-            aMenuitem.removeAttribute("endimage");
+            addEndImage().setAttribute("soundplaying", "true");
         ]]></body>
       </method>
     </implementation>

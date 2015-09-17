@@ -77,12 +77,6 @@ menuitem[src] > .menu-iconic-left > .menu-iconic-icon {
   width: 16px;
 }
 
-menuitem[endimage] > .menu-iconic-right > .menu-iconic-icon {
-  -moz-margin-start: 2px;
-  -moz-margin-end: 0;
-  width: 16px;
-}
-
 /* ..... menu arrow box ..... */
 
 .menu-right,
