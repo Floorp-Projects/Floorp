@@ -3943,7 +3943,8 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       // 3D-transformed layers don't necessarily draw in the order in which
       // they're added to their parent container layer.
       bool mayDrawOutOfOrder = itemType == nsDisplayItem::TYPE_TRANSFORM &&
-        (item->Frame()->Preserves3D() || item->Frame()->Preserves3DChildren());
+        (item->Frame()->Combines3DTransformWithAncestors() ||
+         item->Frame()->Extend3DContext());
 
       // Let mPaintedLayerDataTree know about this item, so that
       // FindPaintedLayerFor and FindOpaqueBackgroundColor are aware of this
