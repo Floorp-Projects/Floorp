@@ -817,7 +817,7 @@ public:
                                                      msg);
       trackunion->GetStream()->AsProcessedStream()->SetAutofinish(true);
       nsRefPtr<MediaInputPort> port = trackunion->GetStream()->AsProcessedStream()->
-        AllocateInputPort(stream, MediaInputPort::FLAG_BLOCK_OUTPUT);
+        AllocateInputPort(stream);
       trackunion->mSourceStream = stream;
       trackunion->mPort = port.forget();
       // Log the relationship between SourceMediaStream and TrackUnion stream

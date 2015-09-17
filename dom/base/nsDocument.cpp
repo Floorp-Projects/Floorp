@@ -1429,7 +1429,8 @@ nsDOMStyleSheetSetList::EnsureFresh()
 
 // ==================================================================
 nsIDocument::SelectorCache::SelectorCache()
-  : nsExpirationTracker<SelectorCacheKey, 4>(1000) { }
+  : nsExpirationTracker<SelectorCacheKey, 4>(1000, "nsIDocument::SelectorCache")
+{ }
 
 // CacheList takes ownership of aSelectorList.
 void nsIDocument::SelectorCache::CacheList(const nsAString& aSelector,

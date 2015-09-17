@@ -575,7 +575,7 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   , mStartCalled(false)
 {
   AudioBufferSourceNodeEngine* engine = new AudioBufferSourceNodeEngine(this, aContext->Destination());
-  mStream = AudioNodeStream::Create(aContext->Graph(), engine,
+  mStream = AudioNodeStream::Create(aContext, engine,
                                     AudioNodeStream::NEED_MAIN_THREAD_FINISHED);
   engine->SetSourceStream(mStream);
   mStream->AddMainThreadListener(this);

@@ -13,7 +13,7 @@
 #include "nsSMILAnimationFunction.h"
 #include "nsSMILTargetIdentifier.h"
 #include "nsSMILCompositorTable.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 
 //----------------------------------------------------------------------
 // nsSMILCompositor

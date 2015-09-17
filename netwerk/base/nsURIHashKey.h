@@ -5,7 +5,7 @@
 #ifndef nsURIHashKey_h__
 #define nsURIHashKey_h__
 
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsHashKeys.h"

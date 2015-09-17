@@ -11,6 +11,15 @@ if (getJitCompilerOptions()["ion.warmup.trigger"] != 30)
 if (getJitCompilerOptions()["baseline.warmup.trigger"] != 10)
   setJitCompilerOption("baseline.warmup.trigger", 10);
 
+/*
+ * These test cases are annotated with the output produced by LCOV [1].  Comment
+ * starting with //<key> without any spaces are used as a reference for the code
+ * coverage output.  Any "$" in these line comments are replaced by the current
+ * line number, and any "%" are replaced with the current function name (defined
+ * by the FN key).
+ *
+ * [1]  http://ltp.sourceforge.net/coverage/lcov/geninfo.1.php
+ */
 function checkLcov(fun) {
   var keys = [ "TN", "SF", "FN", "FNDA", "FNF", "FNH", "BRDA", "BRF", "BRH", "DA", "LF", "LH" ];
   function startsWithKey(s) {
@@ -213,3 +222,6 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //BRF:0
   //BRH:0
 });
+
+// If you add a test case here, do the same in
+// jit-test/tests/debug/Script-getOffsetsCoverage-01.js

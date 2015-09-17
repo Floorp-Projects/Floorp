@@ -6,7 +6,7 @@
 #ifndef nsContentSupportMap_h__
 #define nsContentSupportMap_h__
 
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "nsTemplateMatch.h"
 
 /**

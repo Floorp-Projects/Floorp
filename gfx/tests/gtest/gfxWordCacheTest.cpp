@@ -36,7 +36,9 @@ class FrameTextRunCache final : public nsExpirationTracker<gfxTextRun,3> {
 public:
   enum { TIMEOUT_SECONDS = 10 };
   FrameTextRunCache()
-    : nsExpirationTracker<gfxTextRun,3>(TIMEOUT_SECONDS*1000) {}
+    : nsExpirationTracker<gfxTextRun,3>(TIMEOUT_SECONDS * 1000,
+                                        "FrameTextRunCache")
+  {}
   ~FrameTextRunCache() {
     AgeAllGenerations();
   }

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for bug 1203766</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<style>
+.x { color: red; }
+body > .x { color: green; }
+.y { color: green; }
+body > .y { display: none; color: red; }
+div > .z { color: red; }
+.z { color: green; }
+.a { color: red; }
+body > .a { display: none; color: green; }
+.b { display: none; }
+.c { color: red; }
+.b > .c { color: green; }
+.e { color: red; }
+.d > .e { color: green; }
+.f { color: red; }
+.g { color: green; }
+.h > .i { color: red; }
+.j > .i { color: green; }
+</style>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1203766">Mozilla Bug 1203766</a>
+<p id="display"></p>
+<div class=y></div>
+<div class=b></div>
+<pre id="test">
+<script class="testbody">
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+
+  // Element that goes from being out of the document to in the document.
+  var e = document.createElement("div");
+  e.className = "x";
+  var cs = getComputedStyle(e);
+  is(cs.color, "rgb(255, 0, 0)");
+  document.body.appendChild(e);
+  is(cs.color, "rgb(0, 128, 0)");
+
+  // Element that goes from in the document (and display:none) to out of
+  // the document.
+  e = document.querySelector(".y");
+  cs = getComputedStyle(e);
+  is(cs.color, "rgb(255, 0, 0)");
+  e.remove();
+  is(cs.color, "rgb(0, 128, 0)");
+
+  // Element that is removed from an out-of-document tree.
+  e = document.createElement("div");
+  f = document.createElement("span");
+  f.className = "z";
+  e.appendChild(f);
+  cs = getComputedStyle(f);
+  is(cs.color, "rgb(255, 0, 0)");
+  f.remove();
+  is(cs.color, "rgb(0, 128, 0)");
+
+  // Element going from not in document to in document and display:none.
+  e = document.createElement("div");
+  e.className = "a";
+  cs = getComputedStyle(e);
+  is(cs.color, "rgb(255, 0, 0)");
+  document.body.appendChild(e);
+  is(cs.color, "rgb(0, 128, 0)");
+
+  // Element going from not in document to in document and child of
+  // display:none element.
+  e = document.createElement("div");
+  e.className = "c";
+  cs = getComputedStyle(e);
+  is(cs.color, "rgb(255, 0, 0)");
+  document.querySelector(".b").appendChild(e);
+  is(cs.color, "rgb(0, 128, 0)");
+
+  // Element that is added to an out-of-document tree.
+  e = document.createElement("div");
+  e.className = "d";
+  f = document.createElement("span");
+  f.className = "e";
+  cs = getComputedStyle(f);
+  is(cs.color, "rgb(255, 0, 0)");
+  e.appendChild(f);
+  is(cs.color, "rgb(0, 128, 0)");
+
+  // Element that is outside the document when an attribute is modified to
+  // cause a different rule to match.
+  e = document.createElement("div");
+  e.className = "f";
+  cs = getComputedStyle(e);
+  is(cs.color, "rgb(255, 0, 0)");
+  e.className = "g";
+  is(cs.color, "rgb(0, 128, 0)");
+
+  // Element that is outside the document when an ancestor is modified to
+  // cause a different rule to match.
+  e = document.createElement("div");
+  e.className = "h";
+  f = document.createElement("span");
+  f.className = "i";
+  e.appendChild(f);
+  cs = getComputedStyle(f);
+  is(cs.color, "rgb(255, 0, 0)");
+  e.className = "j";
+  is(cs.color, "rgb(0, 128, 0)");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>

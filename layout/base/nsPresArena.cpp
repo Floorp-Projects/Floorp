@@ -23,8 +23,11 @@
 #include "nsDebug.h"
 #include "nsArenaMemoryStats.h"
 #include "nsPrintfCString.h"
+#include "nsStyleContext.h"
 
 #include <inttypes.h>
+
+using namespace mozilla;
 
 // Size to use for PLArena block allocations.
 static const size_t ARENA_PAGE_SIZE = 8192;
@@ -36,6 +39,8 @@ nsPresArena::nsPresArena()
 
 nsPresArena::~nsPresArena()
 {
+  ClearArenaRefPtrs();
+
 #if defined(MOZ_HAVE_MEM_CHECKS)
   for (auto iter = mFreeLists.Iter(); !iter.Done(); iter.Next()) {
     FreeList* entry = iter.Get();
@@ -47,7 +52,60 @@ nsPresArena::~nsPresArena()
     }
   }
 #endif
+
   PL_FinishArenaPool(&mPool);
+}
+
+/* inline */ void
+nsPresArena::ClearArenaRefPtrWithoutDeregistering(void* aPtr,
+                                                  ArenaObjectID aObjectID)
+{
+  switch (aObjectID) {
+#define PRES_ARENA_OBJECT_WITH_ARENAREFPTR_SUPPORT(name_)                     \
+    case eArenaObjectID_##name_:                                              \
+      static_cast<ArenaRefPtr<name_>*>(aPtr)->ClearWithoutDeregistering();    \
+      return;
+#include "nsPresArenaObjectList.h"
+#undef PRES_ARENA_OBJECT_WITH_ARENAREFPTR_SUPPORT
+    default:
+      break;
+  }
+  switch (aObjectID) {
+#define PRES_ARENA_OBJECT_WITHOUT_ARENAREFPTR_SUPPORT(name_)                  \
+    case eArenaObjectID_##name_:                                              \
+      MOZ_ASSERT(false, #name_ " must be declared in nsPresArenaObjectList.h "\
+                        "with PRES_ARENA_OBJECT_SUPPORTS_ARENAREFPTR");       \
+      break;
+#include "nsPresArenaObjectList.h"
+#undef PRES_ARENA_OBJECT_WITHOUT_ARENAREFPTR_SUPPORT
+    default:
+      MOZ_ASSERT(false, "unexpected ArenaObjectID value");
+      break;
+  }
+}
+
+void
+nsPresArena::ClearArenaRefPtrs()
+{
+  for (auto iter = mArenaRefPtrs.Iter(); !iter.Done(); iter.Next()) {
+    void* ptr = iter.Key();
+    ArenaObjectID id = iter.UserData();
+    ClearArenaRefPtrWithoutDeregistering(ptr, id);
+  }
+  mArenaRefPtrs.Clear();
+}
+
+void
+nsPresArena::ClearArenaRefPtrs(ArenaObjectID aObjectID)
+{
+  for (auto iter = mArenaRefPtrs.Iter(); !iter.Done(); iter.Next()) {
+    void* ptr = iter.Key();
+    ArenaObjectID id = iter.UserData();
+    if (id == aObjectID) {
+      ClearArenaRefPtrWithoutDeregistering(ptr, id);
+      iter.Remove();
+    }
+  }
 }
 
 void*
@@ -162,17 +220,17 @@ nsPresArena::AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
         break;
 #include "nsFrameIdList.h"
 #undef FRAME_ID
-      case nsLineBox_id:
+      case eArenaObjectID_nsLineBox:
         p = &aArenaStats->mLineBoxes;
         break;
-      case nsRuleNode_id:
+      case eArenaObjectID_nsRuleNode:
         p = &aArenaStats->mRuleNodes;
         break;
-      case nsStyleContext_id:
+      case eArenaObjectID_nsStyleContext:
         p = &aArenaStats->mStyleContexts;
         break;
 #define STYLE_STRUCT(name_, checkdata_cb_)      \
-        case nsStyle##name_##_id:
+        case eArenaObjectID_nsStyle##name_:
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
         p = &aArenaStats->mStyleStructs;

@@ -134,29 +134,6 @@ GetIMEStateSetOpenName(IMEState::Open aOpen)
 }
 
 static const char*
-GetEventMessageName(EventMessage aMessage)
-{
-  switch (aMessage) {
-    case eCompositionStart:
-      return "eCompositionStart";
-    case eCompositionEnd:
-      return "eCompositionEnd";
-    case eCompositionUpdate:
-      return "eCompositionUpdate";
-    case eCompositionChange:
-      return "eCompositionChange";
-    case eCompositionCommitAsIs:
-      return "eCompositionCommitAsIs";
-    case eCompositionCommit:
-      return "eCompositionCommit";
-    case eSetSelection:
-      return "eSetSelection";
-    default:
-      return "unacceptable event message";
-  }
-}
-
-static const char*
 GetNotifyIMEMessageName(IMEMessage aMessage)
 {
   switch (aMessage) {
@@ -1137,7 +1114,7 @@ IMEStateManager::DispatchCompositionEvent(
      "mFlags={ mIsTrusted=%s, mPropagationStopped=%s } }, "
      "aIsSynthesized=%s), tabParent=%p",
      aEventTargetNode, aPresContext,
-     GetEventMessageName(aCompositionEvent->mMessage),
+     ToChar(aCompositionEvent->mMessage),
      GetBoolName(aCompositionEvent->mFlags.mIsTrusted),
      GetBoolName(aCompositionEvent->mFlags.mPropagationStopped),
      GetBoolName(aIsSynthesized), tabParent.get()));
@@ -1235,7 +1212,7 @@ IMEStateManager::HandleSelectionEvent(nsPresContext* aPresContext,
      "aEventTargetContent=0x%p, aSelectionEvent={ mMessage=%s, "
      "mFlags={ mIsTrusted=%s } }), tabParent=%p",
      aPresContext, aEventTargetContent,
-     GetEventMessageName(aSelectionEvent->mMessage),
+     ToChar(aSelectionEvent->mMessage),
      GetBoolName(aSelectionEvent->mFlags.mIsTrusted),
      tabParent.get()));
 
@@ -1268,7 +1245,7 @@ IMEStateManager::OnCompositionEventDiscarded(
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::OnCompositionEventDiscarded(aCompositionEvent={ "
      "mMessage=%s, mFlags={ mIsTrusted=%s } })",
-     GetEventMessageName(aCompositionEvent->mMessage),
+     ToChar(aCompositionEvent->mMessage),
      GetBoolName(aCompositionEvent->mFlags.mIsTrusted)));
 
   if (!aCompositionEvent->mFlags.mIsTrusted) {

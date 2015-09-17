@@ -159,11 +159,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsTimeout)
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsTimeout)
 
-  nsresult InitTimer(nsTimerCallbackFunc aFunc, uint32_t aDelay)
-  {
-    return mTimer->InitWithFuncCallback(aFunc, this, aDelay,
-                                        nsITimer::TYPE_ONE_SHOT);
-  }
+  nsresult InitTimer(uint32_t aDelay);
 
   bool HasRefCntOne();
 
@@ -1428,6 +1424,8 @@ public:
   // fire after it, but no earlier than mTimeoutInsertionPoint, if any.
   void InsertTimeoutIntoList(nsTimeout *aTimeout);
   static void TimerCallback(nsITimer *aTimer, void *aClosure);
+  static void TimerNameCallback(nsITimer* aTimer, void* aClosure, char* aBuf,
+                                size_t aLen);
 
   // Helper Functions
   already_AddRefed<nsIDocShellTreeOwner> GetTreeOwner();
