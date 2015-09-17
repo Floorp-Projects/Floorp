@@ -250,8 +250,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0xe8fdd227, 0x27da, 0x46ee, \
-  { 0xbe, 0xf3, 0x1a, 0xef, 0x5a, 0x8f, 0xc5, 0xb4 } }
+{ 0x70ba4547, 0x7699, 0x44fc, \
+  { 0xb3, 0x20, 0x52, 0xdb, 0xe3, 0xd1, 0xf9, 0x0a } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -949,6 +949,9 @@ public:
                                 const mozilla::dom::Nullable<bool>& aWantsUntrusted,
                                 mozilla::ErrorResult& aRv) override;
   using nsIDOMEventTarget::AddSystemEventListener;
+
+  virtual bool HasApzAwareListeners() const override;
+
   virtual nsIDOMWindow* GetOwnerGlobalForBindings() override;
   virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
@@ -1495,6 +1498,8 @@ private:
     ElementHasWeirdParserInsertionMode,
     // Parser sets this flag if it has notified about the node.
     ParserHasNotified,
+    // EventListenerManager sets this flag in case we have apz aware listeners.
+    MayHaveApzAwareListeners,
     // Guard value
     BooleanFlagCount
   };
@@ -1637,6 +1642,12 @@ public:
   void SetHasRelevantHoverRules() { SetBoolFlag(NodeHasRelevantHoverRules); }
   void SetParserHasNotified() { SetBoolFlag(ParserHasNotified); };
   bool HasParserNotified() { return GetBoolFlag(ParserHasNotified); }
+
+  void SetMayHaveApzAwareListeners() { SetBoolFlag(MayHaveApzAwareListeners); }
+  bool NodeMayHaveApzAwareListeners() const
+  {
+    return GetBoolFlag(MayHaveApzAwareListeners);
+  }
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
   void SetInDocument() { SetBoolFlag(IsInDocument); }
