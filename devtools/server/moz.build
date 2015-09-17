@@ -8,6 +8,7 @@ include('../templates.mozbuild')
 
 DIRS += [
     'actors',
+    'shims',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
@@ -30,7 +31,6 @@ DevToolsModules(
     'child.js',
     'content-globals.js',
     'content-server.jsm',
-    'dbg-server.jsm',
     'main.js',
     'protocol.js',
     'worker.js'

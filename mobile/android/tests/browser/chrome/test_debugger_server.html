@@ -19,8 +19,9 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   const DEBUGGER_USB_ENABLED = "devtools.remote.usb.enabled";
 
   Cu.import("resource://gre/modules/Services.jsm");
-  const { DebuggerServer } =
-    Cu.import("resource://gre/modules/devtools/server/dbg-server.jsm", {});
+  const { require } =
+    Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+  const { DebuggerServer } = require("devtools/server/main");
 
   let win = Services.wm.getMostRecentWindow("navigator:browser");
 
