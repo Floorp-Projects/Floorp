@@ -1862,9 +1862,6 @@ public:
                  "Residual transform can only be a translation");
     if (!gfx::ThebesPoint(residual.GetTranslation()).WithinEpsilonOf(mResidualTranslation, 1e-3f)) {
       mResidualTranslation = gfx::ThebesPoint(residual.GetTranslation());
-      NS_ASSERTION(-0.5 <= mResidualTranslation.x && mResidualTranslation.x < 0.5 &&
-                   -0.5 <= mResidualTranslation.y && mResidualTranslation.y < 0.5,
-                   "Residual translation out of range");
       mValidRegion.SetEmpty();
     }
     ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
