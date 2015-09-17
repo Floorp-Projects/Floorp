@@ -359,7 +359,7 @@ ElementManager.prototype = {
         }
         else if (val.nodeType == 1) {
           let elementId = this.addToKnownElements(val);
-          result = {'ELEMENT': elementId, 'element-6066-11e4-a52e-4f735466cecf': elementId};
+          result = {[this.elementKey]: elementId, [this.w3cElementKey]: elementId};
         }
         else {
           result = {};
@@ -517,12 +517,17 @@ ElementManager.prototype = {
       if (isArrayLike) {
         let ids = []
         for (let i = 0 ; i < found.length ; i++) {
-          ids.push({"ELEMENT": this.addToKnownElements(found[i])});
+          let foundElement = this.addToKnownElements(found[i]);
+          let returnElement = {
+            [this.elementKey] : foundElement,
+            [this.w3cElementKey] : foundElement,
+          };
+          ids.push(returnElement);
         }
         on_success(ids, command_id);
       } else {
         let id = this.addToKnownElements(found);
-        on_success({"ELEMENT": id}, command_id);
+        on_success({[this.elementKey]: id, [this.w3cElementKey]:id}, command_id);
       }
     }
   },
