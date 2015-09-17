@@ -9,6 +9,8 @@
 #define nsComputedDOMStyle_h__
 
 #include "nsAutoPtr.h"
+#include "mozilla/ArenaRefPtr.h"
+#include "mozilla/ArenaRefPtrInlines.h"
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nscore.h"
@@ -595,12 +597,23 @@ private:
   nsWeakPtr mDocumentWeak;
   nsCOMPtr<nsIContent> mContent;
 
-  /*
-   * Strong reference to the style context while we're accessing the data from
-   * it.  This can be either a style context we resolved ourselves or a style
-   * context we got from our frame.
+  /**
+   * Strong reference to the style context we access data from.  This can be
+   * either a style context we resolved ourselves or a style context we got
+   * from our frame.
+   *
+   * If we got the style context from the frame, we clear out mStyleContext
+   * in ClearCurrentStyleSources.  If we resolved one ourselves, then
+   * ClearCurrentStyleSources leaves it in mStyleContext for use the next
+   * time this nsComputedDOMStyle object is queried.  UpdateCurrentStyleSources
+   * in this case will check that the style context is still valid to be used,
+   * by checking whether flush styles results in any restyles having been
+   * processed.
+   *
+   * Since an ArenaRefPtr is used to hold the style context, it will be cleared
+   * if the pres arena from which it was allocated goes away.
    */
-  nsRefPtr<nsStyleContext> mStyleContext;
+  mozilla::ArenaRefPtr<nsStyleContext> mStyleContext;
   nsCOMPtr<nsIAtom> mPseudo;
 
   /*
@@ -626,7 +639,19 @@ private:
    */
   StyleType mStyleType;
 
+  /**
+   * The nsComputedDOMStyle generation at the time we last resolved a style
+   * context and stored it in mStyleContext.
+   */
+  uint64_t mStyleContextGeneration;
+
   bool mExposeVisitedStyle;
+
+  /**
+   * Whether we resolved a style context last time we called
+   * UpdateCurrentStyleSources.  Initially false.
+   */
+  bool mResolvedStyleContext;
 
 #ifdef DEBUG
   bool mFlushedPendingReflows;
