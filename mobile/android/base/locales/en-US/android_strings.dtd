@@ -724,6 +724,6 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!--LOCALIZATION NOTE (bookmarks_marketplace):link title for https://marketplace.firefox.com -->
 <!ENTITY bookmarks_marketplace "Firefox Marketplace">
 <!-- LOCALIZATION NOTE (bookmarks_restricted_support): link title for https://support.mozilla.org/kb/controlledaccess -->
-<!ENTITY bookmarks_restricted_support "Firefox Help and Support for a simplified kid-friendly version of Firefox">
+<!ENTITY bookmarks_restricted_support2 "Firefox Help and Support for restricted profiles on Android tablets">
 <!-- LOCALIZATION NOTE (bookmarks_restricted_webmaker):link title for https://webmaker.org -->
 <!ENTITY bookmarks_restricted_webmaker "Learn the Web: Mozilla Webmaker">
