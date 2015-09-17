@@ -744,7 +744,22 @@ RenderTargetIntRect
 Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
 {
   ContainerLayer* container = GetParent();
-  NS_ASSERTION(container, "This can't be called on the root!");
+  ContainerLayer* containerChild = nullptr;
+  NS_ASSERTION(GetParent(), "This can't be called on the root!");
+
+  // Find the layer creating the 3D context.
+  while (container->Extend3DContext()) {
+    containerChild = container;
+    container = container->GetParent();
+    MOZ_ASSERT(container);
+  }
+
+  // Find the nearest layer with a clip, or this layer.
+  // ContainerState::SetupScrollingMetadata() may install a clip on
+  // the layer.
+  Layer *clipLayer =
+    containerChild && containerChild->GetEffectiveClipRect() ?
+    containerChild : this;
 
   // Establish initial clip rect: it's either the one passed in, or
   // if the parent has an intermediate surface, it's the extents of that surface.
@@ -755,7 +770,7 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
     currentClip = aCurrentScissorRect;
   }
 
-  if (!GetEffectiveClipRect()) {
+  if (!clipLayer->GetEffectiveClipRect()) {
     return currentClip;
   }
 
@@ -767,7 +782,7 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
   }
 
   const RenderTargetIntRect clipRect =
-    ViewAs<RenderTargetPixel>(*GetEffectiveClipRect(),
+    ViewAs<RenderTargetPixel>(*clipLayer->GetEffectiveClipRect(),
                               PixelCastJustification::RenderTargetIsParentLayerForRoot);
   if (clipRect.IsEmpty()) {
     // We might have a non-translation transform in the container so we can't
@@ -1226,6 +1241,22 @@ ContainerLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 }
 
 bool
+ContainerLayer::Creates3DContextWithExtendingChildren()
+{
+  if (Extend3DContext()) {
+    return false;
+  }
+  for (Layer* child = GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+      if (child->Extend3DContext()) {
+        return true;
+      }
+  }
+  return false;
+}
+
+bool
 ContainerLayer::HasMultipleChildren()
 {
   uint32_t count = 0;
@@ -1243,6 +1274,22 @@ ContainerLayer::HasMultipleChildren()
   return false;
 }
 
+/**
+ * Collect all leaf descendants of the current 3D context.
+ */
+void
+ContainerLayer::Collect3DContextLeaves(nsTArray<Layer*>& aToSort)
+{
+  for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
+    ContainerLayer* container = l->AsContainerLayer();
+    if (container && container->Extend3DContext()) {
+      container->Collect3DContextLeaves(aToSort);
+    } else {
+      aToSort.AppendElement(l);
+    }
+  }
+}
+
 void
 ContainerLayer::SortChildrenBy3DZOrder(nsTArray<Layer*>& aArray)
 {
@@ -1250,8 +1297,8 @@ ContainerLayer::SortChildrenBy3DZOrder(nsTArray<Layer*>& aArray)
 
   for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
     ContainerLayer* container = l->AsContainerLayer();
-    if (container && container->GetContentFlags() & CONTENT_EXTEND_3D_CONTEXT) {
-      toSort.AppendElement(l);
+    if (container && container->Extend3DContext()) {
+      container->Collect3DContextLeaves(toSort);
     } else {
       if (toSort.Length() > 0) {
         SortLayersBy3DZOrder(toSort);
@@ -1277,21 +1324,25 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
 {
   Matrix residual;
   Matrix4x4 idealTransform = GetLocalTransform() * aTransformToSurface;
-  idealTransform.ProjectTo2D();
-  mEffectiveTransform = SnapTransformTranslation(idealTransform, &residual);
+
+  // Keep 3D transforms for leaves to keep z-order sorting correct.
+  if (!Extend3DContext() && !Is3DContextLeaf()) {
+    idealTransform.ProjectTo2D();
+  }
 
   bool useIntermediateSurface;
   if (HasMaskLayers() ||
       GetForceIsolatedGroup()) {
     useIntermediateSurface = true;
 #ifdef MOZ_DUMP_PAINTING
-  } else if (gfxUtils::sDumpPaintingIntermediate) {
+  } else if (gfxUtils::sDumpPaintingIntermediate && !Extend3DContext()) {
     useIntermediateSurface = true;
 #endif
   } else {
     float opacity = GetEffectiveOpacity();
     CompositionOp blendMode = GetEffectiveMixBlendMode();
-    if ((opacity != 1.0f || blendMode != CompositionOp::OP_OVER) && HasMultipleChildren()) {
+    if (((opacity != 1.0f || blendMode != CompositionOp::OP_OVER) && HasMultipleChildren()) ||
+        (!idealTransform.Is2D() && Creates3DContextWithExtendingChildren())) {
       useIntermediateSurface = true;
     } else {
       useIntermediateSurface = false;
@@ -1299,7 +1350,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
       bool checkClipRect = false;
       bool checkMaskLayers = false;
 
-      if (!mEffectiveTransform.Is2D(&contTransform)) {
+      if (!idealTransform.Is2D(&contTransform)) {
         // In 3D case, always check if we should use IntermediateSurface.
         checkClipRect = true;
         checkMaskLayers = true;
@@ -1340,6 +1391,19 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
     }
   }
 
+  if (useIntermediateSurface) {
+    mEffectiveTransform = SnapTransformTranslation(idealTransform, &residual);
+  } else {
+    mEffectiveTransform = idealTransform;
+  }
+
+  // For layers extending 3d context, its ideal transform should be
+  // applied on children.
+  if (!Extend3DContext()) {
+    // Without this projection, non-container children would get a 3D
+    // transform while 2D is expected.
+    idealTransform.ProjectTo2D();
+  }
   mUseIntermediateSurface = useIntermediateSurface && !GetEffectiveVisibleRegion().IsEmpty();
   if (useIntermediateSurface) {
     ComputeEffectiveTransformsForChildren(Matrix4x4::From2D(residual));
@@ -1950,6 +2014,23 @@ Layer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
                                        compressedData.get());
     layer->set_displaylistlog(compressedData.get(), compressedSize);
   }
+}
+
+bool
+Layer::IsBackfaceHidden()
+{
+  if (GetContentFlags() & CONTENT_BACKFACE_HIDDEN) {
+    Layer* container = AsContainerLayer() ? this : GetParent();
+    if (container) {
+      // The effective transform can include non-preserve-3d parent
+      // transforms, since we don't always require an intermediate.
+      if (container->Extend3DContext() || container->Is3DContextLeaf()) {
+        return container->GetEffectiveTransform().IsBackfaceVisible();
+      }
+      return container->GetBaseTransform().IsBackfaceVisible();
+    }
+  }
+  return false;
 }
 
 void
