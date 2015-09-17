@@ -26,6 +26,15 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/workers/bindings/ServiceWorker.h"
 
+#ifndef MOZ_SIMPLEPUSH
+#include "nsIUnicodeDecoder.h"
+#include "nsIUnicodeEncoder.h"
+
+#include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/dom/FetchUtil.h"
+#include "mozilla/dom/TypedArray.h"
+#endif
+
 #include "WorkerPrivate.h"
 
 using namespace mozilla::dom;
@@ -435,16 +444,82 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(ExtendableEvent, Event, mPromises)
 
 #ifndef MOZ_SIMPLEPUSH
 
-PushMessageData::PushMessageData(const nsAString& aData)
-  : mData(aData)
+namespace {
+nsresult
+ExtractBytesFromArrayBufferView(const ArrayBufferView& aView, nsTArray<uint8_t>& aBytes)
 {
+  MOZ_ASSERT(aBytes.IsEmpty());
+  aView.ComputeLengthAndData();
+  aBytes.InsertElementsAt(0, aView.Data(), aView.Length());
+  return NS_OK;
 }
+
+nsresult
+ExtractBytesFromArrayBuffer(const ArrayBuffer& aBuffer, nsTArray<uint8_t>& aBytes)
+{
+  MOZ_ASSERT(aBytes.IsEmpty());
+  aBuffer.ComputeLengthAndData();
+  aBytes.InsertElementsAt(0, aBuffer.Data(), aBuffer.Length());
+  return NS_OK;
+}
+
+nsresult
+ExtractBytesFromUSVString(const nsAString& aStr, nsTArray<uint8_t>& aBytes)
+{
+  MOZ_ASSERT(aBytes.IsEmpty());
+  nsCOMPtr<nsIUnicodeEncoder> encoder = EncodingUtils::EncoderForEncoding("UTF-8");
+  if (!encoder) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  int32_t srcLen = aStr.Length();
+  int32_t destBufferLen;
+  nsresult rv = encoder->GetMaxLength(aStr.BeginReading(), srcLen, &destBufferLen);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  aBytes.SetLength(destBufferLen);
+
+  char* destBuffer = reinterpret_cast<char*>(aBytes.Elements());
+  int32_t outLen = destBufferLen;
+  rv = encoder->Convert(aStr.BeginReading(), &srcLen, destBuffer, &outLen);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(outLen <= destBufferLen);
+  aBytes.SetLength(outLen);
+
+  return NS_OK;
+}
+
+nsresult
+ExtractBytesFromData(const OwningArrayBufferViewOrArrayBufferOrUSVString& aDataInit, nsTArray<uint8_t>& aBytes)
+{
+  if (aDataInit.IsArrayBufferView()) {
+    const ArrayBufferView& view = aDataInit.GetAsArrayBufferView();
+    return ExtractBytesFromArrayBufferView(view, aBytes);
+  } else if (aDataInit.IsArrayBuffer()) {
+    const ArrayBuffer& buffer = aDataInit.GetAsArrayBuffer();
+    return ExtractBytesFromArrayBuffer(buffer, aBytes);
+  } else if (aDataInit.IsUSVString()) {
+    return ExtractBytesFromUSVString(aDataInit.GetAsUSVString(), aBytes);
+  }
+  NS_NOTREACHED("Unexpected push message data");
+  return NS_ERROR_FAILURE;
+}
+}
+
+PushMessageData::PushMessageData(nsISupports* aOwner,
+                                 const nsTArray<uint8_t>& aBytes)
+  : mOwner(aOwner), mBytes(aBytes) {}
 
 PushMessageData::~PushMessageData()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(PushMessageData);
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PushMessageData, mOwner)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PushMessageData)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PushMessageData)
@@ -455,37 +530,113 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PushMessageData)
 NS_INTERFACE_MAP_END
 
 void
-PushMessageData::Json(JSContext* cx, JS::MutableHandle<JSObject*> aRetval)
+PushMessageData::Json(JSContext* cx, JS::MutableHandle<JS::Value> aRetval,
+                      ErrorResult& aRv)
 {
-  //todo bug 1149195.  Don't be lazy.
-   NS_ABORT();
+  if (NS_FAILED(EnsureDecodedText())) {
+    aRv.Throw(NS_ERROR_DOM_UNKNOWN_ERR);
+    return;
+  }
+  FetchUtil::ConsumeJson(cx, aRetval, mDecodedText, aRv);
 }
 
 void
 PushMessageData::Text(nsAString& aData)
 {
-  aData = mData;
+  if (NS_SUCCEEDED(EnsureDecodedText())) {
+    aData = mDecodedText;
+  }
 }
 
 void
-PushMessageData::ArrayBuffer(JSContext* cx, JS::MutableHandle<JSObject*> aRetval)
+PushMessageData::ArrayBuffer(JSContext* cx,
+                             JS::MutableHandle<JSObject*> aRetval,
+                             ErrorResult& aRv)
 {
-  //todo bug 1149195.  Don't be lazy.
-   NS_ABORT();
+  uint8_t* data = GetContentsCopy();
+  if (data) {
+    FetchUtil::ConsumeArrayBuffer(cx, aRetval, mBytes.Length(), data, aRv);
+  }
 }
 
-mozilla::dom::Blob*
-PushMessageData::Blob()
+already_AddRefed<mozilla::dom::Blob>
+PushMessageData::Blob(ErrorResult& aRv)
 {
-  //todo bug 1149195.  Don't be lazy.
-  NS_ABORT();
+  uint8_t* data = GetContentsCopy();
+  if (data) {
+    nsRefPtr<mozilla::dom::Blob> blob = FetchUtil::ConsumeBlob(
+      mOwner, EmptyString(), mBytes.Length(), data, aRv);
+    if (blob) {
+      return blob.forget();
+    }
+  }
   return nullptr;
+}
+
+NS_METHOD
+PushMessageData::EnsureDecodedText()
+{
+  if (mBytes.IsEmpty() || !mDecodedText.IsEmpty()) {
+    return NS_OK;
+  }
+  nsresult rv = FetchUtil::ConsumeText(
+    mBytes.Length(),
+    reinterpret_cast<uint8_t*>(mBytes.Elements()),
+    mDecodedText
+  );
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mDecodedText.Truncate();
+    return rv;
+  }
+  return NS_OK;
+}
+
+uint8_t*
+PushMessageData::GetContentsCopy()
+{
+  uint32_t length = mBytes.Length();
+  void* data = malloc(length);
+  if (!data) {
+    return nullptr;
+  }
+  memcpy(data, mBytes.Elements(), length);
+  return reinterpret_cast<uint8_t*>(data);
 }
 
 PushEvent::PushEvent(EventTarget* aOwner)
   : ExtendableEvent(aOwner)
 {
 }
+
+already_AddRefed<PushEvent>
+PushEvent::Constructor(mozilla::dom::EventTarget* aOwner,
+                       const nsAString& aType,
+                       const PushEventInit& aOptions,
+                       ErrorResult& aRv)
+{
+  nsRefPtr<PushEvent> e = new PushEvent(aOwner);
+  bool trusted = e->Init(aOwner);
+  e->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
+  e->SetTrusted(trusted);
+  if(aOptions.mData.WasPassed()){
+    nsTArray<uint8_t> bytes;
+    nsresult rv = ExtractBytesFromData(aOptions.mData.Value(), bytes);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return nullptr;
+    }
+    e->mData = new PushMessageData(aOwner, bytes);
+  }
+  return e.forget();
+}
+
+NS_IMPL_ADDREF_INHERITED(PushEvent, ExtendableEvent)
+NS_IMPL_RELEASE_INHERITED(PushEvent, ExtendableEvent)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(PushEvent)
+NS_INTERFACE_MAP_END_INHERITING(ExtendableEvent)
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(PushEvent, ExtendableEvent, mData)
 
 #endif /* ! MOZ_SIMPLEPUSH */
 

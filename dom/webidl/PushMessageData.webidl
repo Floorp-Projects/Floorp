@@ -11,10 +11,11 @@
  Exposed=ServiceWorker]
 interface PushMessageData
 {
-    // FIXME(nsm): Bug 1149195.
-    // These methods will be exposed once encryption is supported.
-    // ArrayBuffer arrayBuffer();
-    // Blob        blob();
-    // object      json();
-    // USVString   text();
+    [Throws]
+    ArrayBuffer arrayBuffer();
+    [Throws]
+    Blob        blob();
+    [Throws]
+    any         json();
+    USVString   text();
 };
