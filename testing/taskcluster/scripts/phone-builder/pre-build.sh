@@ -26,9 +26,6 @@ tc-vcs repo-checkout $WORKSPACE/B2G https://git.mozilla.org/b2g/B2G.git $MANIFES
 rm -f $WORKSPACE/B2G/gecko
 ln -s $WORKSPACE/gecko $WORKSPACE/B2G/gecko
 
-### Install package dependencies
-. ../builder/install-packages.sh $WORKSPACE/gecko
-
 debug_flag=""
 if [ 0$B2G_DEBUG -ne 0 ]; then
   debug_flag='--debug'

@@ -17,7 +17,6 @@ task:
     env:
       TARGET: 'aries'
       MOZHARNESS_CONFIG: b2g/taskcluster-spark.py
-      TOOLTOOL_MANIFEST: 'b2g/config/aries/releng-aries.tt'
   extra:
     treeherderEnv:
       - production
