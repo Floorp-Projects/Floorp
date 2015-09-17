@@ -10,11 +10,14 @@
 #ifndef nsPresArena_h___
 #define nsPresArena_h___
 
+#include "mozilla/ArenaObjectID.h"
+#include "mozilla/ArenaRefPtr.h"
 #include "mozilla/MemoryChecking.h" // Note: Do not remove this, needed for MOZ_HAVE_MEM_CHECKS below
 #include "mozilla/MemoryReporting.h"
 #include <stdint.h>
 #include "nscore.h"
-#include "nsQueryFrame.h"
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "plarena.h"
@@ -26,51 +29,18 @@ public:
   nsPresArena();
   ~nsPresArena();
 
-  enum ObjectID {
-    nsLineBox_id = nsQueryFrame::NON_FRAME_MARKER,
-    nsRuleNode_id,
-    nsStyleContext_id,
-    nsInheritedStyleData_id,
-    nsResetStyleData_id,
-    nsConditionalResetStyleData_id,
-    nsConditionalResetStyleDataEntry_id,
-    nsFrameList_id,
-
-    CustomCounterStyle_id,
-    DependentBuiltinCounterStyle_id,
-
-    First_nsStyleStruct_id,
-    DummyBeforeStyleStructs_id = First_nsStyleStruct_id - 1,
-
-    #define STYLE_STRUCT(name_, checkdata_cb_) \
-      nsStyle##name_##_id,
-    #include "nsStyleStructList.h"
-    #undef STYLE_STRUCT
-
-    DummyAfterStyleStructs_id,
-    Last_nsStyleStruct_id = DummyAfterStyleStructs_id - 1,
-
-    /**
-     * The PresArena implementation uses this bit to distinguish objects
-     * allocated by size from objects allocated by type ID (that is, frames
-     * using AllocateByFrameID and other objects using AllocateByObjectID).
-     * It should not collide with any Object ID (above) or frame ID (in
-     * nsQueryFrame.h).  It is not 0x80000000 to avoid the question of
-     * whether enumeration constants are signed.
-     */
-    NON_OBJECT_MARKER = 0x40000000
-  };
-
   /**
    * Pool allocation with recycler lists indexed by object size, aSize.
    */
   void* AllocateBySize(size_t aSize)
   {
-    return Allocate(uint32_t(aSize) | uint32_t(NON_OBJECT_MARKER), aSize);
+    return Allocate(uint32_t(aSize) |
+                    uint32_t(mozilla::eArenaObjectID_NON_OBJECT_MARKER), aSize);
   }
   void FreeBySize(size_t aSize, void* aPtr)
   {
-    Free(uint32_t(aSize) | uint32_t(NON_OBJECT_MARKER), aPtr);
+    Free(uint32_t(aSize) |
+         uint32_t(mozilla::eArenaObjectID_NON_OBJECT_MARKER), aPtr);
   }
 
   /**
@@ -90,14 +60,53 @@ public:
    * Pool allocation with recycler lists indexed by object-type ID (see above).
    * Every aID must always be used with the same object size, aSize.
    */
-  void* AllocateByObjectID(ObjectID aID, size_t aSize)
+  void* AllocateByObjectID(mozilla::ArenaObjectID aID, size_t aSize)
   {
     return Allocate(aID, aSize);
   }
-  void FreeByObjectID(ObjectID aID, void* aPtr)
+  void FreeByObjectID(mozilla::ArenaObjectID aID, void* aPtr)
   {
     Free(aID, aPtr);
   }
+
+  /**
+   * Register an ArenaRefPtr to be cleared when this arena is about to
+   * be destroyed.
+   *
+   * (Defined in ArenaRefPtrInlines.h.)
+   *
+   * @param aPtr The ArenaRefPtr to clear.
+   * @param aObjectID The ArenaObjectID value that uniquely identifies
+   *   the type of object the ArenaRefPtr holds.
+   */
+  template<typename T>
+  void RegisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr);
+
+  /**
+   * Deregister an ArenaRefPtr that was previously registered with
+   * RegisterArenaRefPtr.
+   */
+  template<typename T>
+  void DeregisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr)
+  {
+    MOZ_ASSERT(mArenaRefPtrs.Contains(aPtr));
+    mArenaRefPtrs.Remove(aPtr);
+  }
+
+  /**
+   * Clears all currently registered ArenaRefPtrs.  This will be called during
+   * the destructor, but can be called by users of nsPresArena who want to
+   * ensure arena-allocated objects are released earlier.
+   */
+  void ClearArenaRefPtrs();
+
+  /**
+   * Clears all currently registered ArenaRefPtrs for the given ArenaObjectID.
+   * This is called when we reconstruct the rule tree so that style contexts
+   * pointing into the old rule tree aren't released afterwards, triggering an
+   * assertion in ~nsStyleContext.
+   */
+  void ClearArenaRefPtrs(mozilla::ArenaObjectID aObjectID);
 
   /**
    * Increment aArenaStats with sizes of interesting objects allocated in this
@@ -109,6 +118,10 @@ public:
 private:
   void* Allocate(uint32_t aCode, size_t aSize);
   void Free(uint32_t aCode, void* aPtr);
+
+  inline void ClearArenaRefPtrWithoutDeregistering(
+      void* aPtr,
+      mozilla::ArenaObjectID aObjectID);
 
   // All keys to this hash table fit in 32 bits (see below) so we do not
   // bother actually hashing them.
@@ -144,6 +157,7 @@ private:
 
   nsTHashtable<FreeList> mFreeLists;
   PLArenaPool mPool;
+  nsDataHashtable<nsPtrHashKey<void>, mozilla::ArenaObjectID> mArenaRefPtrs;
 };
 
 #endif

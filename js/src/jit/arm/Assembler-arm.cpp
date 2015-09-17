@@ -711,9 +711,6 @@ const uint32_t*
 Assembler::GetCF32Target(Iter* iter)
 {
     Instruction* inst1 = iter->cur();
-    Instruction* inst2 = iter->next();
-    Instruction* inst3 = iter->next();
-    Instruction* inst4 = iter->next();
 
     if (inst1->is<InstBranchImm>()) {
         // See if we have a simple case, b #offset.
@@ -723,8 +720,7 @@ Assembler::GetCF32Target(Iter* iter)
         return imm.getDest(inst1)->raw();
     }
 
-    if (inst1->is<InstMovW>() && inst2->is<InstMovT>() &&
-        (inst3->is<InstNOP>() || inst3->is<InstBranchReg>() || inst4->is<InstBranchReg>()))
+    if (inst1->is<InstMovW>())
     {
         // See if we have the complex case:
         //  movw r_temp, #imm1
@@ -746,6 +742,8 @@ Assembler::GetCF32Target(Iter* iter)
         bottom->extractDest(&temp);
 
         // Extract the top part of the immediate.
+        Instruction* inst2 = iter->next();
+        MOZ_ASSERT(inst2->is<InstMovT>());
         InstMovT* top = inst2->as<InstMovT>();
         top->extractImm(&targ_top);
 
@@ -756,9 +754,15 @@ Assembler::GetCF32Target(Iter* iter)
 #ifdef DEBUG
         // A toggled call sometimes has a NOP instead of a branch for the third
         // instruction. No way to assert that it's valid in that situation.
+        Instruction* inst3 = iter->next();
         if (!inst3->is<InstNOP>()) {
-            InstBranchReg* realBranch = inst3->is<InstBranchReg>() ? inst3->as<InstBranchReg>()
-                                                                   : inst4->as<InstBranchReg>();
+            InstBranchReg* realBranch = nullptr;
+            if (inst3->is<InstBranchReg>()) {
+                realBranch = inst3->as<InstBranchReg>();
+            } else {
+                Instruction* inst4 = iter->next();
+                realBranch = inst4->as<InstBranchReg>();
+            }
             MOZ_ASSERT(realBranch->checkDest(temp));
         }
 #endif
@@ -1409,6 +1413,17 @@ Assembler::bytesNeeded() const
 }
 
 #ifdef JS_DISASM_ARM
+
+void
+Assembler::spewInst(Instruction* i)
+{
+    disasm::NameConverter converter;
+    disasm::Disassembler dasm(converter);
+    disasm::EmbeddedVector<char, disasm::ReasonableBufferSize> buffer;
+    uint8_t* loc = reinterpret_cast<uint8_t*>(const_cast<uint32_t*>(i->raw()));
+    dasm.InstructionDecode(buffer, loc);
+    printf("   %08x  %s\n", reinterpret_cast<uint32_t>(loc), buffer.start());
+}
 
 // Labels are named as they are encountered by adding names to a
 // table, using the Label address as the key.  This is made tricky by

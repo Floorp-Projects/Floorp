@@ -176,7 +176,7 @@ var ignoreFunctions = {
     "void js::AutoCompartment::AutoCompartment(js::ExclusiveContext*, JSCompartment*)": true,
 
     // The nsScriptNameSpaceManager functions can't actually GC.  They
-    // just use a pldhash which has function pointers, which makes the
+    // just use a PLDHashTable which has function pointers, which makes the
     // analysis think maybe they can.
     "nsGlobalNameStruct* nsScriptNameSpaceManager::LookupNavigatorName(nsAString_internal*)": true,
     "nsGlobalNameStruct* nsScriptNameSpaceManager::LookupName(nsAString_internal*, uint16**)": true,

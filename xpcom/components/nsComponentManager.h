@@ -25,7 +25,7 @@
 #include "nsIFactory.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "prtime.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"

@@ -23,7 +23,7 @@
 #endif /* _WIN32 */
 
 #include "plstr.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "plbase64.h"
 #include "mozilla/Logging.h"
 #include "prprf.h"

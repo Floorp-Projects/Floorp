@@ -7,7 +7,7 @@
 
 #include "nscore.h"
 #include "nspr.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
 

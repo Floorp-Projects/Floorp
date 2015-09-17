@@ -493,12 +493,30 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         """VirtualenvMixin.create_virtualenv() assuemes we're using
         self.config['virtualenv_modules']. Since we are installing
         talos from its source, we have to wrap that method here."""
-        # XXX This method could likely be replaced with a PreScriptAction hook.
+        # install mozbase first, so we use in-tree versions
+        if not self.run_local:
+            mozbase_requirements = os.path.join(
+                self.query_abs_dirs()['abs_work_dir'],
+                'tests',
+                'config',
+                'mozbase_requirements.txt'
+            )
+        else:
+            mozbase_requirements = os.path.join(
+                os.path.dirname(self.talos_path),
+                'config',
+                'mozbase_requirements.txt'
+            )
+        self.register_virtualenv_module(
+            requirements=[mozbase_requirements],
+            two_pass=True,
+            editable=True,
+        )
         # require pip >= 1.5 so pip will prefer .whl files to install
         super(Talos, self).create_virtualenv(
-            modules=['mozinstall', 'pip>=1.5']
+            modules=['pip>=1.5']
         )
-        # talos in harness requires mozinstall and what is
+        # talos in harness requires what else is
         # listed in talos requirements.txt file.
         self.install_module(
             requirements=[os.path.join(self.talos_path,

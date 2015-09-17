@@ -82,10 +82,11 @@ public:
    * period is zero, then we don't use a timer and rely on someone calling
    * AgeOneGeneration explicitly.
    */
-  explicit nsExpirationTracker(uint32_t aTimerPeriod)
+  explicit nsExpirationTracker(uint32_t aTimerPeriod, const char* aName)
     : mTimerPeriod(aTimerPeriod)
     , mNewestGeneration(0)
     , mInAgeOneGeneration(false)
+    , mName(aName)
   {
     static_assert(K >= 2 && K <= nsExpirationState::NOT_TRACKED,
                   "Unsupported number of generations (must be 2 <= K <= 15)");
@@ -308,6 +309,7 @@ private:
   uint32_t           mTimerPeriod;
   uint32_t           mNewestGeneration;
   bool               mInAgeOneGeneration;
+  const char* const  mName;   // Used for timer firing profiling.
 
   /**
    * Whenever "memory-pressure" is observed, it calls AgeAllGenerations()
@@ -358,8 +360,8 @@ private:
     if (!mTimer) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    mTimer->InitWithFuncCallback(TimerCallback, this, mTimerPeriod,
-                                 nsITimer::TYPE_REPEATING_SLACK);
+    mTimer->InitWithNamedFuncCallback(TimerCallback, this, mTimerPeriod,
+                                      nsITimer::TYPE_REPEATING_SLACK, mName);
     return NS_OK;
   }
 };

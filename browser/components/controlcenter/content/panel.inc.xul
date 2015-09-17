@@ -10,7 +10,7 @@
        orient="vertical">
 
   <broadcasterset>
-    <broadcaster id="identity-popup-content-host" class="identity-popup-headline" crop="end"/>
+    <broadcaster id="identity-popup-content-host" class="identity-popup-headline" crop="start"/>
     <broadcaster id="identity-popup-mcb-learn-more" class="text-link plain" value="&identity.learnMore;"/>
   </broadcasterset>
 

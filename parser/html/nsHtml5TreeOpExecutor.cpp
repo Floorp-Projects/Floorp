@@ -275,8 +275,9 @@ nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync()
       // The timer value 50 should not hopefully slow down background pages too
       // much, yet lets event loop to process enough between ticks.
       // See bug 734015.
-      gFlushTimer->InitWithFuncCallback(FlushTimerCallback, nullptr,
-                                        50, nsITimer::TYPE_REPEATING_SLACK);
+      gFlushTimer->InitWithNamedFuncCallback(FlushTimerCallback, nullptr,
+                                             50, nsITimer::TYPE_REPEATING_SLACK,
+                                             "FlushTimerCallback");
     }
   }
 }

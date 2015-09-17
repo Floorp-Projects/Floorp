@@ -48,33 +48,6 @@ ToChar(bool aBool)
 }
 
 static const char*
-ToChar(EventMessage aEventMessage)
-{
-  switch (aEventMessage) {
-    case eQuerySelectedText:
-      return "eQuerySelectedText";
-    case eQueryTextContent:
-      return "eQueryTextContent";
-    case eQueryCaretRect:
-      return "eQueryCaretRect";
-    case eQueryTextRect:
-      return "eQueryTextRect";
-    case eQueryEditorRect:
-      return "eQueryEditorRect";
-    case eQueryContentState:
-      return "eQueryContentState";
-    case eQuerySelectionAsTransferable:
-      return "eQuerySelectionAsTransferable";
-    case eQueryCharacterAtPoint:
-      return "eQueryCharacterAtPoint";
-    case eQueryDOMWidgetHittest:
-      return "eQueryDOMWidgetHittest";
-    default:
-      return "Unsupported message";
-  }
-}
-
-static const char*
 ToChar(IMEMessage aIMEMessage)
 {
   switch (aIMEMessage) {

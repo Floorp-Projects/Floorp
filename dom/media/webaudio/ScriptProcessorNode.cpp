@@ -501,7 +501,7 @@ ScriptProcessorNode::ScriptProcessorNode(AudioContext* aContext,
                                   aContext->Destination(),
                                   BufferSize(),
                                   aNumberOfInputChannels);
-  mStream = AudioNodeStream::Create(aContext->Graph(), engine,
+  mStream = AudioNodeStream::Create(aContext, engine,
                                     AudioNodeStream::NO_STREAM_FLAGS);
   engine->SetSourceStream(mStream);
 }

@@ -9,7 +9,7 @@
 #include "nscore.h"
 #include "prclist.h"
 #include "prnetdb.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
 #include "nsISupportsImpl.h"
