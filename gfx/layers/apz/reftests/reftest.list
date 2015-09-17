@@ -10,5 +10,5 @@ chaos-mode skip-if(!asyncPan) == async-scrollbar-1-vh-rtl.html async-scrollbar-1
 # Different async zoom levels. Since the scrollthumb gets async-scaled in the
 # compositor, the border-radius ends of the scrollthumb are going to be a little
 # off, hence the fuzzy-if clauses.
-chaos-mode skip-if(!asyncZoom) fuzzy-if(B2G,77,82) == async-scrollbar-zoom-1.html async-scrollbar-zoom-1-ref.html
+chaos-mode skip-if(!asyncZoom) fuzzy-if(B2G,98,82) == async-scrollbar-zoom-1.html async-scrollbar-zoom-1-ref.html
 chaos-mode skip-if(!asyncZoom) fuzzy-if(B2G,94,146) == async-scrollbar-zoom-2.html async-scrollbar-zoom-2-ref.html
