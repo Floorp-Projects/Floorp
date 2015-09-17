@@ -19,7 +19,6 @@
 #include "gfxPrefs.h"
 #include "gfxEnv.h"
 #include "gfxTextRun.h"
-#include "gfxVR.h"
 
 #ifdef XP_WIN
 #include <process.h>
@@ -127,6 +126,8 @@ class mozilla::gl::SkiaGLGlue : public GenericAtomicRefCounted {
 #include "SoftwareVsyncSource.h"
 #include "nscore.h" // for NS_FREE_PERMANENT_DATA
 #include "mozilla/dom/ContentChild.h"
+#include "gfxVR.h"
+#include "VRManagerChild.h"
 
 namespace mozilla {
 namespace layers {
@@ -445,8 +446,7 @@ gfxPlatform::gfxPlatform()
                      contentMask, BackendType::CAIRO);
     mTotalSystemMemory = mozilla::hal::GetTotalSystemMemory();
 
-    // give HMDs a chance to be initialized very early on
-    VRHMDManager::ManagerInit();
+    VRManager::ManagerInit();
 }
 
 gfxPlatform*
@@ -735,6 +735,7 @@ gfxPlatform::InitLayersIPC()
         SharedBufferManagerChild::StartUp();
 #endif
         mozilla::layers::ImageBridgeChild::StartUp();
+        gfx::VRManagerChild::StartUpSameProcess();
     }
 }
 
@@ -750,22 +751,22 @@ gfxPlatform::ShutdownLayersIPC()
     {
         // This must happen after the shutdown of media and widgets, which
         // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
+        gfx::VRManagerChild::ShutDown();
         layers::ImageBridgeChild::ShutDown();
 #ifdef MOZ_WIDGET_GONK
         layers::SharedBufferManagerChild::ShutDown();
 #endif
 
         layers::CompositorParent::ShutDown();
-    }
+	} else if (XRE_GetProcessType() == GeckoProcessType_Content) {
+		gfx::VRManagerChild::ShutDown();
+	}
 }
 
 gfxPlatform::~gfxPlatform()
 {
     mScreenReferenceSurface = nullptr;
     mScreenReferenceDrawTarget = nullptr;
-
-    // Clean up any VR stuff
-    VRHMDManager::ManagerDestroy();
 
     // The cairo folks think we should only clean up in debug builds,
     // but we're generally in the habit of trying to shut down as

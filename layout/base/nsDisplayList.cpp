@@ -6207,7 +6207,7 @@ nsDisplaySVGEffects::~nsDisplaySVGEffects()
 #endif
 
 nsDisplayVR::nsDisplayVR(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                         nsDisplayList* aList, mozilla::gfx::VRHMDInfo* aHMD)
+                         nsDisplayList* aList, mozilla::gfx::VRDeviceProxy* aHMD)
   : nsDisplayOwnLayer(aBuilder, aFrame, aList)
   , mHMD(aHMD)
 {
@@ -6225,7 +6225,7 @@ nsDisplayVR::BuildLayer(nsDisplayListBuilder* aBuilder,
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
                            newContainerParameters, nullptr, flags);
 
-  container->SetVRHMDInfo(mHMD);
+  container->SetVRDeviceID(mHMD->GetDeviceInfo().GetDeviceID());
   container->SetUserData(nsIFrame::LayerIsPrerenderedDataKey(),
                          /*the value is irrelevant*/nullptr);
 
