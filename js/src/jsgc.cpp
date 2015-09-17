@@ -5580,28 +5580,11 @@ GCRuntime::finishCollection(JS::gcreason::Reason reason)
     }
 }
 
-static const char*
-HeapStateToLabel(JS::HeapState heapState)
-{
-    switch (heapState) {
-      case JS::HeapState::MinorCollecting:
-        return "js::Nursery::collect";
-      case JS::HeapState::MajorCollecting:
-        return "js::GCRuntime::collect";
-      case JS::HeapState::Tracing:
-        return "JS_IterateCompartments";
-      case JS::HeapState::Idle:
-        MOZ_CRASH("Should never have an Idle heap state when pushing GC pseudo frames!");
-    }
-    MOZ_ASSERT_UNREACHABLE("Should have exhausted every JS::HeapState variant!");
-}
-
 /* Start a new heap session. */
 AutoTraceSession::AutoTraceSession(JSRuntime* rt, JS::HeapState heapState)
   : lock(rt),
     runtime(rt),
-    prevState(rt->heapState_),
-    pseudoFrame(rt, HeapStateToLabel(heapState), ProfileEntry::Category::GC)
+    prevState(rt->heapState_)
 {
     MOZ_ASSERT(rt->heapState_ == JS::HeapState::Idle);
     MOZ_ASSERT(heapState != JS::HeapState::Idle);
