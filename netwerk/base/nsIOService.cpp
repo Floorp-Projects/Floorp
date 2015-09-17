@@ -668,22 +668,17 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
     // * and attach the loadInfo to the channel wrapper
     nsCOMPtr<nsIChannel> channel;
     nsCOMPtr<nsIProxiedProtocolHandler> pph = do_QueryInterface(handler);
-
-    // temporary fix for 41 to not break any addons that do not implement newChannel2.
-    bool newChannel2Succeeded = true;
-
     if (pph) {
         rv = pph->NewProxiedChannel2(aURI, nullptr, aProxyFlags, aProxyURI,
                                      aLoadInfo, getter_AddRefs(channel));
         // if calling NewProxiedChannel2() fails we try to fall back to
         // creating a new proxied channel by calling NewProxiedChannel().
         if (NS_FAILED(rv)) {
-            newChannel2Succeeded = false;
             rv = pph->NewProxiedChannel(aURI, nullptr, aProxyFlags, aProxyURI,
                                         getter_AddRefs(channel));
             NS_ENSURE_SUCCESS(rv, rv);
-            // temporary fix for 41: do not wrap any channels
-            // channel = new nsSecCheckWrapChannel(channel, aLoadInfo);
+            // we have to wrap that channel
+            channel = new nsSecCheckWrapChannel(channel, aLoadInfo);
         }
     }
     else {
@@ -691,19 +686,15 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
         // if calling newChannel2() fails we try to fall back to
         // creating a new channel by calling NewChannel().
         if (NS_FAILED(rv)) {
-            newChannel2Succeeded = false;
             rv = handler->NewChannel(aURI, getter_AddRefs(channel));
             NS_ENSURE_SUCCESS(rv, rv);
-            // temporary fix for 41: do not wrap any channels
-            // channel = new nsSecCheckWrapChannel(channel, aLoadInfo);
+            // we have to wrap that channel
+            channel = new nsSecCheckWrapChannel(channel, aLoadInfo);
         }
     }
 
     // Make sure that all the individual protocolhandlers attach a loadInfo.
-
-    // temporary fix for 41: only check the loadInfo if the call to
-    // newChannel2 succeeded.
-    if (aLoadInfo && newChannel2Succeeded) {
+    if (aLoadInfo) {
       // make sure we have the same instance of loadInfo on the newly created channel
       nsCOMPtr<nsILoadInfo> loadInfo;
       channel->GetLoadInfo(getter_AddRefs(loadInfo));
