@@ -32,7 +32,9 @@ BluetoothDaemonSocketModule::ListenCmd(BluetoothSocketType aType,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x02, 0x01, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_LISTEN,
+                        0));
 
   nsresult rv = PackPDU(
     aType,
@@ -61,7 +63,9 @@ BluetoothDaemonSocketModule::ConnectCmd(const nsAString& aBdAddr,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x02, 0x02, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_CONNECT,
+                        0));
 
   nsresult rv = PackPDU(
     PackConversion<nsAString, BluetoothAddress>(aBdAddr),
@@ -166,9 +170,9 @@ BluetoothDaemonSocketModule::HandleSvc(const DaemonSocketPDUHeader& aHeader,
     const DaemonSocketPDUHeader&,
     DaemonSocketPDU&,
     BluetoothSocketResultHandler*) = {
-    [0x00] = &BluetoothDaemonSocketModule::ErrorRsp,
-    [0x01] = &BluetoothDaemonSocketModule::ListenRsp,
-    [0x02] = &BluetoothDaemonSocketModule::ConnectRsp
+    [OPCODE_ERROR] = &BluetoothDaemonSocketModule::ErrorRsp,
+    [OPCODE_LISTEN] = &BluetoothDaemonSocketModule::ListenRsp,
+    [OPCODE_CONNECT] = &BluetoothDaemonSocketModule::ConnectRsp
   };
 
   if (NS_WARN_IF(MOZ_ARRAY_LENGTH(HandleRsp) <= aHeader.mOpcode) ||
