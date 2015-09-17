@@ -2013,7 +2013,9 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     *(NPBool*)result = true;
     return NPERR_NO_ERROR;
   }
+#endif
 
+#if defined(XP_MACOSX) || defined(XP_WIN)
   case NPNVcontentsScaleFactor: {
     nsNPAPIPluginInstance *inst =
       (nsNPAPIPluginInstance *) (npp ? npp->ndata : nullptr);

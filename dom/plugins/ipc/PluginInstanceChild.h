@@ -410,7 +410,7 @@ private:
     InfallibleTArray<nsCString> mValues;
     NPP_t mData;
     NPWindow mWindow;
-#if defined(XP_DARWIN)
+#if defined(XP_DARWIN) || defined(XP_WIN)
     double mContentsScaleFactor;
 #endif
     double mCSSZoomFactor;
