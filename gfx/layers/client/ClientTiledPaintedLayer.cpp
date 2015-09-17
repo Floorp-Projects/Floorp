@@ -418,7 +418,8 @@ ClientTiledPaintedLayer::RenderLayer()
 
   if (!mContentClient) {
     if (mCreationHint == LayerManager::NONE &&
-        SingleTiledContentClient::ClientSupportsLayerSize(layerSize, ClientManager())) {
+        SingleTiledContentClient::ClientSupportsLayerSize(layerSize, ClientManager()) &&
+        gfxPrefs::LayersSingleTileEnabled()) {
       mContentClient = new SingleTiledContentClient(this, ClientManager());
     } else {
       mContentClient = new MultiTiledContentClient(this, ClientManager());
