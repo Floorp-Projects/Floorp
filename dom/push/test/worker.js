@@ -3,6 +3,7 @@
 
 this.onpush = handlePush;
 this.onmessage = handleMessage;
+this.onpushsubscriptionchange = handleSubscriptionChange;
 
 function getJSON(data) {
   var result = {
@@ -54,4 +55,14 @@ function handleMessage(event) {
     });
   }
   */
+}
+
+function handleSubscriptionChange(event) {
+  event.waitUntil(self.registration.pushManager.subscribe().then(subscription =>
+    self.clients.matchAll()
+  ).then(([client]) => {
+    client.postMessage({type: "changed", okay: "yes"});
+  }).catch(err => {
+    dump("handleSubscriptionChange: Error notifying client: " + err + "\n");
+  }));
 }
