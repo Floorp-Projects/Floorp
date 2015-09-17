@@ -174,6 +174,30 @@ private:
 
 // ----------------------------------------------------------------------
 
+class AutoDriver : public OutputStreamDriver
+{
+public:
+  explicit AutoDriver(SourceMediaStream* aSourceStream,
+                      const TrackID& aTrackId)
+    : OutputStreamDriver(aSourceStream, aTrackId) {}
+
+  void NewFrame(already_AddRefed<Image> aImage) override
+  {
+    // Don't reset `mFrameCaptureRequested` since AutoDriver shall always have
+    // `mFrameCaptureRequested` set to true.
+    // This also means we should accept every frame as NewFrame is called only
+    // after something changed.
+
+    nsRefPtr<Image> image = aImage;
+    SetImage(image.forget());
+  }
+
+protected:
+  virtual ~AutoDriver() {}
+};
+
+// ----------------------------------------------------------------------
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(CanvasCaptureMediaStream, DOMMediaStream,
                                    mCanvas)
 
@@ -216,9 +240,8 @@ CanvasCaptureMediaStream::Init(const dom::Optional<double>& aFPS,
                                const TrackID& aTrackId)
 {
   if (!aFPS.WasPassed()) {
-    // TODO (Bug 1152298): Implement a real AutoDriver.
-    // We use a 30FPS TimerDriver for now.
-    mOutputStreamDriver = new TimerDriver(GetStream()->AsSourceStream(), 30.0, aTrackId);
+    mOutputStreamDriver =
+      new AutoDriver(GetStream()->AsSourceStream(), aTrackId);
   } else if (aFPS.Value() < 0) {
     return NS_ERROR_ILLEGAL_VALUE;
   } else {
