@@ -5230,7 +5230,6 @@ nsContentUtils::LeaveMicroTask()
   MOZ_ASSERT(NS_IsMainThread());
   if (--sMicroTaskLevel == 0) {
     PerformMainThreadMicroTaskCheckpoint();
-    nsDocument::ProcessBaseElementQueue();
   }
 }
 
