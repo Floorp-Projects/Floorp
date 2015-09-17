@@ -44,6 +44,8 @@ function PushRecord(props) {
   this.originAttributes = props.originAttributes;
   this.pushCount = props.pushCount || 0;
   this.lastPush = props.lastPush || 0;
+  this.p256dhPublicKey = props.p256dhPublicKey;
+  this.p256dhPrivateKey = props.p256dhPrivateKey;
   this.setQuota(props.quota);
   this.ctime = (typeof props.ctime === "number") ? props.ctime : 0;
 }
@@ -191,12 +193,14 @@ PushRecord.prototype = {
       pushEndpoint: this.pushEndpoint,
       lastPush: this.lastPush,
       pushCount: this.pushCount,
+      p256dhKey: this.p256dhPublicKey,
     };
   },
 
   toRegister() {
     return {
       pushEndpoint: this.pushEndpoint,
+      p256dhKey: this.p256dhPublicKey,
     };
   },
 };
