@@ -680,7 +680,7 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyFilePickerResult(JNIEnv* jenv, jclass
 {
     class NotifyFilePickerResultRunnable : public nsRunnable {
     public:
-        NotifyFilePickerResultRunnable(nsString& fileDir, long callback) : 
+        NotifyFilePickerResultRunnable(nsString& fileDir, long callback) :
             mFileDir(fileDir), mCallback(callback) {}
 
         NS_IMETHODIMP Run() {
@@ -694,7 +694,7 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyFilePickerResult(JNIEnv* jenv, jclass
         long mCallback;
     };
     nsString path = nsJNIString(filePath, jenv);
-    
+
     nsCOMPtr<nsIRunnable> runnable =
         new NotifyFilePickerResultRunnable(path, (long)callback);
     NS_DispatchToMainThread(runnable);
@@ -767,7 +767,7 @@ Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits(JNIEnv* jenv, jclass, jobjec
     for (int i = 0; i < srcHeight; i++) {
         memcpy(bitsCopy + ((dstHeight - i - 1) * dstWidth * bpp), bits + (i * srcStride * bpp), srcStride * bpp);
     }
-    
+
     if (!jSurfaceBitsClass) {
         jSurfaceBitsClass = (jclass)jenv->NewGlobalRef(jenv->FindClass("org/mozilla/gecko/SurfaceBits"));
         jSurfaceBitsCtor = jenv->GetMethodID(jSurfaceBitsClass, "<init>", "()V");
@@ -850,15 +850,6 @@ NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure(JNIEnv* jenv, jclass)
 {
     NS_DispatchMemoryPressure(MemPressure_New);
-}
-
-NS_EXPORT jdouble JNICALL
-Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime(JNIEnv *jenv, jclass jc)
-{
-  if (!profiler_is_active()) {
-    return 0.0;
-  }
-  return profiler_time();
 }
 
 NS_EXPORT void JNICALL
